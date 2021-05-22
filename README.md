@@ -1,4 +1,9 @@
 # galaxy-todos
+Galaxy Maps is an online learning platform.
+
+## Screenshots
+![Screenshot1](./screenshots/screen1.png)
+![Screenshot2](./screenshots/screen2.png)
 
 ## Project setup
 ```
