@@ -1,18 +1,40 @@
 <template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
-  </div>
+  <v-app class="bg">
+    
+    <NavBar />  
+    <router-view></router-view>
+    <UserBar/>
+
+  </v-app>
 </template>
 
 <script>
 // @ is an alias to /src
-import HelloWorld from '@/components/HelloWorld.vue'
+import UserBar from "../components/UserBar";
+import NavBar from "../components/NavBar";
 
 export default {
-  name: 'Home',
+  name: "Home",
   components: {
-    HelloWorld
-  }
-}
+    UserBar,
+    NavBar,
+  },
+  data() {
+    return {
+      activeTab: `/home/galaxy`,
+      tabs: [
+        { id: 1, name: "GALAXIES", route: `/galaxy` },
+        { id: 2, name: "SCHOOLS", route: `/schools` },
+        { id: 3, name: "ALL STUDENTS", route: `/students` },
+      ],
+    };
+  },
+};
 </script>
+
+<style lang="scss" scoped>
+.bg {
+  background: var(--v-background-base);
+}
+
+</style>
