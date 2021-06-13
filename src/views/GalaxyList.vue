@@ -2,50 +2,18 @@
   <v-container class="d-flex justify-center align-center fullHeight">
     <div class="flexContainer">
       <div class="flexRow">
-        <div v-for="galaxy in courses" :key="galaxy.id" class="box" :style="{width: courseWidth}">
-          <!-- Galaxy card -->
-          <v-card width="100%"> 
-            <!-- Galaxy Image -->
-            <v-img height="150" :src="galaxy.image"></v-img>
-            <!-- Galaxy Title -->
-            <v-card-title>{{ galaxy.title }}</v-card-title>
-            <!-- Galaxy Description -->
-            <v-card-text>
-              <div>
-                {{ galaxy.description }}
-              </div>
-            </v-card-text>
-
-            <!-- <v-divider class="mx-4"></v-divider>
-          <v-card-title>Schools</v-card-title>
-          <v-card-text>
-            <v-chip-group
-              v-model="selection"
-              active-class="deep-purple accent-4 white--text"
-              column
-            >
-              <v-chip>Tai Wānanga TŪ TOA</v-chip>
-              <v-chip>Rangitikei College</v-chip>
-              <v-chip>Tai Wānanga ki Ruakura</v-chip>
-            </v-chip-group>
-          </v-card-text> -->
-            <!-- <v-card-actions>
-            <v-btn color="deep-purple lighten-2" text>
-              View Galaxy
-            </v-btn>
-          </v-card-actions> -->
-          </v-card>
-        </div>
+        <Galaxy v-for="galaxy in galaxies" :galaxy="galaxy" :key="galaxy.id" />
       </div>
     </div>
-     <div class="createButton">
-          <CreateGalaxy />
-        </div>
+    <div class="createButton">
+      <CreateGalaxy />
+    </div>
   </v-container>
 </template>
 
 <script>
 import CreateGalaxy from "../components/CreateGalaxy";
+import Galaxy from "../components/Galaxy";
 
 import { mapGetters } from "vuex";
 
@@ -53,29 +21,30 @@ export default {
   name: "GalaxyList",
   components: {
     CreateGalaxy,
+    Galaxy,
+  },
+  mounted() {
+    
   },
   computed: {
-    ...mapGetters(["courses"]),
+    ...mapGetters(["courses", "galaxies"]),
     courseWidth() {
-      console.log("this.courses.length =",this.courses.length)
-      var width = 100 / this.courses.length
+      console.log("this.courses.length =", this.courses.length);
+      var width = 100 / this.courses.length;
       if (width < 25) {
-        return "25%"
+        return "25%";
       } else {
-        return width+"%"
+        return width + "%";
       }
-    }
+    },
   },
   data() {
-    return {
-      
-    };
+    return {};
   },
 };
 </script>
 
 <style lang="scss" scoped>
-
 .fullHeight {
   height: 100vh;
   overflow: scroll;
@@ -96,7 +65,6 @@ export default {
     justify-content: center;
     width: 100%;
     // border: solid pink 2px;
-    
 
     .box {
       // width: 25%;

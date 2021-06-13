@@ -7,9 +7,10 @@
           dark
           slider-color="neon"
           v-model="activeTab"
+          height=""
         >
           <v-tab v-for="tab in tabs" :key="tab.id" :to="tab.route" exact>
-            <div class="neon--text">{{ tab.name }}</div>
+            <div class="neon--text tab">{{ tab.name }}</div>
           </v-tab>
 
         </v-tabs>
@@ -77,5 +78,9 @@ export default {
   justify-content: center;
   align-items: center;
   padding: 0 10px;
+}
+
+.tab {
+  // font-size: 0.8rem;
 }
 </style>
