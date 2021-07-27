@@ -14,9 +14,11 @@ export default new Vuetify({
       light: {
         primary: colors.grey.darken4, // #E53935
         secondary: colors.red.lighten4, // #FFCDD2
-        accent: colors.indigo.base, // #3F,51B5
+        accent: colors.indigo.base, // #3F51B5
         neon: colors.green.accent3,
         background: colors.grey.darken3,
+        galaxyAccent: "#E269CF",
+        missionAccent: "#69A1E2",
       },
     },
   },

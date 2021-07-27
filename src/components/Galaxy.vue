@@ -1,16 +1,17 @@
 <template>
-  <div class="galaxy">
+  <div class="galaxy" @click="routeToGalaxy(galaxy)">
     <div class="scene">
-      <ul v-for="system in galaxy" :key="system.id" class="system">
+      <ul class="system">
         <li class="orbit top-most-orbit">
-          <h2 :style="{ color: system.color }" class="sphere">Jupiter</h2>
+          <h2 :style="{ color: stringToColour(galaxy.name) }" class="sphere">{{ galaxy.name }}</h2>
           <ol class="system">
-            <li v-for="(planet, i) in system.planets" :key="planet.id" class="orbit" :style="{animationDuration: orbits[i] +'s' }">
+            <li v-for="(planet, i) in galaxy.planets" :key="planet.id" class="orbit" :style="{animationDuration: orbits[i] +'s' }">
               <h3 style="color: #BDC5C7" class="sphere" :style="{animationDuration: orbits[i] +'s'}">{{ planet.name }}</h3>
             </li>
           </ol>
         </li>
       </ul>
+
     </div>
   </div>
 </template>
@@ -36,9 +37,32 @@ export default {
       ]
     }
   },
-  mounted() {},
+  mounted() {
+    console.log("from Galaxy.vue mounted: ", this.galaxy) 
+  },
   computed: {},
-  methods: {},
+  methods: {
+    // string to colour, thanks to: https://stackoverflow.com/questions/3426404/create-a-hexadecimal-colour-based-on-a-string-with-javascript
+    hashCode(str) {
+        let hash = 0;
+        for (var i = 0; i < str.length; i++) {
+          hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        return hash;
+    },
+    stringToColour(str) {
+      return `hsl(${this.hashCode(str) % 360}, 100%, 70%)`;
+    },
+    routeToGalaxy() {
+      this.$router.push({ 
+        name: "GalaxyView",
+        params: {
+          galaxyId: this.galaxy.id,
+          galaxy: this.galaxy
+        }
+      })
+    }
+  },
 };
 </script>
 
@@ -67,6 +91,7 @@ export default {
   height: 100%;
   font-size: 0.25em;
   border-radius: 100%;
+  cursor: pointer;
 }
 .scene .orbit {
   position: absolute;

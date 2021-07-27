@@ -2,7 +2,7 @@
   <v-container class="d-flex justify-center align-center fullHeight">
     <div class="flexContainer">
       <div class="flexRow">
-        <Galaxy v-for="galaxy in galaxies" :galaxy="galaxy" :key="galaxy.id" />
+        <Galaxy v-for="course in courses" :galaxy="course" :key="course.id" />
       </div>
     </div>
     <div class="createButton">
@@ -15,7 +15,7 @@
 import CreateGalaxy from "../components/CreateGalaxy";
 import Galaxy from "../components/Galaxy";
 
-import { mapGetters } from "vuex";
+import { mapState, mapGetters } from 'vuex'
 
 export default {
   name: "GalaxyList",
@@ -24,10 +24,10 @@ export default {
     Galaxy,
   },
   mounted() {
-    
+    this.getCourses()
   },
   computed: {
-    ...mapGetters(["courses", "galaxies"]),
+    ...mapGetters(["courses"]),
     courseWidth() {
       console.log("this.courses.length =", this.courses.length);
       var width = 100 / this.courses.length;
@@ -36,6 +36,11 @@ export default {
       } else {
         return width + "%";
       }
+    },
+  },
+  methods: {
+    getCourses () {
+      this.$store.dispatch('bindCourses')
     },
   },
   data() {

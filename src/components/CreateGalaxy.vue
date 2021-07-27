@@ -16,12 +16,12 @@
           <!-- DIALOG (TODO: make as a component)-->
           <div class="createGalaxyDialog">
             <!-- TITLE -->
-            <div class="tile" :style="{ backgroundColor: colors[0] }">
+            <div class="tile">
               <v-text-field label="TITLE" v-model="course.title"></v-text-field>
             </div>
 
             <!-- DESCRIPTION -->
-            <div class="tile" :style="{ backgroundColor: colors[1] }">
+            <div class="tile">
               <v-textarea
                 auto-grow
                 clearable
@@ -32,44 +32,29 @@
             </div>
 
             <!-- UPLOAD IMAGE -->
-            <div
-              class="tile"
-              :style="{ backgroundColor: colors[2], justifyContent: 'center' }"
-            >
-              <v-file-input
-                accept="image/*"
-                label="Upload Image"
-                v-model="course.image"
-              ></v-file-input>
+            <div class="tile" id="uploadContainer">
+              <v-col>
+                <v-row v-if="this.course.image">
+                  <v-img :src="this.course.image"></v-img>
+                </v-row>
+                <v-row v-if="percentage">
+                  <v-progress-linear :value="percentage"></v-progress-linear>
+                </v-row>
+                <v-row>
+                  <v-file-input
+                    accept="image/*"
+                    label="Upload Image"
+                    v-model="uploadedImage"
+                    @change="storeImage()"
+                    style="width:100% "
+                  ></v-file-input>
+                </v-row>
+              </v-col>
             </div>
 
-            <!-- ASSIGN STUDENTS -->
-            <!-- <div
-              class="tile"
-              :style="{ backgroundColor: colors[2], justifyContent: 'center' }"
-              style="width: 66.66%"
-            >
-              <v-btn outlined color="#777" v-bind="attrs" v-on="on">
-                <v-icon left>
-                  mdi-account-group
-                </v-icon>
-                ASSIGN STUDENTS
-              </v-btn>
-            </div> -->
-
             <!-- SAVE -->
-            <div
-              class="tile"
-              :style="{ backgroundColor: colors[4], justifyContent: 'center' }"
-              style="width: 100%"
-            >
-              <v-btn
-                outlined
-                color="green darken-1"
-                v-bind="attrs"
-                v-on="on"
-                @click="saveCourse()"
-              >
+            <div class="tile saveButton">
+              <v-btn outlined color="green darken-1" @click="saveCourse()">
                 <v-icon left>
                   mdi-check
                 </v-icon>
@@ -84,8 +69,8 @@
 </template>
 
 <script>
-
-import { mapMutations } from 'vuex'
+import { mapMutations } from "vuex";
+import { db, storage } from "../store/firestoreConfig";
 
 export default {
   name: "CreateGalaxy",
@@ -100,22 +85,67 @@ export default {
       description: "",
       image: "",
     },
+    uploadedImage: "",
+    percentage: "",
   }),
   methods: {
-    ...mapMutations(['addCourse']),
-
+    // ...mapMutations(['addCourse']),
     saveCourse() {
-      this.addCourse(this.course)
-      this.dialog = false
-      this.course = {}
+      // this.addCourse(this.course)
+      this.dialog = false;
+      // Add a new document in collection "cities"
+      db.collection("courses")
+        .doc(this.camelize(this.course.title))
+        .set(this.course)
+        .then(() => {
+          console.log("Document successfully written!");
+        })
+        .catch((error) => {
+          console.error("Error writing document: ", error);
+        });
+      this.course = {};
+    },
+    camelize(str) {
+      return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
+        if (+match === 0) return ""; // or if (/\s+/.test(match)) for white spaces
+        return index === 0 ? match.toLowerCase() : match.toUpperCase();
+      });
+    },
+    storeImage() {
+      // ceate a storage ref
+      var storageRef = storage.ref("course-images/" + this.uploadedImage.name);
 
+      // upload a file
+      var uploadTask = storageRef.put(this.uploadedImage);
+
+      // update progress bar
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          // show progress on uploader bar
+          this.percentage =
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        },
+        // upload error
+        (err) => {
+          console.log(err);
+        },
+        // upload complete
+        () => {
+          // get image url
+          uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+            console.log("image url is: " + downloadURL);
+            // add image url to course obj
+            this.course.image = downloadURL;
+          });
+        }
+      );
     },
   },
 };
 </script>
 
 <style>
-
 /* Dialog */
 .createGalaxyDialog {
   color: black;
@@ -139,5 +169,18 @@ export default {
 
 .v-input .v-label {
   font-size: 0.8em;
+}
+
+/* #uploadContainer {
+  border: 1px solid blue;
+  display: flex; 
+  flex-direction: column;
+  justify-content: center !important;
+  align-items: center;
+} */
+
+.saveButton {
+  width: 100%;
+  justify-content: center;
 }
 </style>
