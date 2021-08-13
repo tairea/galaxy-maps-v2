@@ -74,12 +74,8 @@ import { db, storage } from "../store/firestoreConfig";
 
 export default {
   name: "CreateGalaxy",
-
   data: () => ({
     dialog: false,
-    createGalaxyButtons: ["Title", "Desc", "Img", "Assign Students", "Save"],
-    // colors: ["#F06292", "#9575CD", "#64B5F6", "#4DD0E1", "#81C784", "#DCE775"],
-    colors: ["", "", "", "", "", ""],
     course: {
       title: "",
       description: "",
@@ -92,19 +88,23 @@ export default {
     // ...mapMutations(['addCourse']),
     saveCourse() {
       // this.addCourse(this.course)
-      this.dialog = false;
+
       // Add a new document in collection "cities"
       db.collection("courses")
         .doc(this.camelize(this.course.title))
         .set(this.course)
         .then(() => {
           console.log("Document successfully written!");
+          this.dialog = false;
+          //TODO: route to GalaxyView
+          
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
         });
       this.course = {};
     },
+    // TODO: remove db doc titles. use unique id instead
     camelize(str) {
       return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
         if (+match === 0) return ""; // or if (/\s+/.test(match)) for white spaces
@@ -170,14 +170,6 @@ export default {
 .v-input .v-label {
   font-size: 0.8em;
 }
-
-/* #uploadContainer {
-  border: 1px solid blue;
-  display: flex; 
-  flex-direction: column;
-  justify-content: center !important;
-  align-items: center;
-} */
 
 .saveButton {
   width: 100%;
