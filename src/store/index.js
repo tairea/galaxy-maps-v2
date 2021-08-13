@@ -14,18 +14,31 @@ export default new Vuex.Store({
   state: {
     count: 0,
     courses: [],
-    // galaxies: []
+    // galaxies: [mercury, venus, earth]
   },
   getters: {
     courses: (state) => state.courses,
-    galaxies: (state) => state.galaxies,
+    getCourseById: (state) => (id) => {
+      console.log("IN STORE: Getting course by id: " + id)
+      return state.courses.find(course => course.id === id)
+    },
+    getTasksByCourseId: (state) => (id) => {
+      console.log("IN STORE: Getting tasks by course id: " + id)
+      const course = state.courses.find(course => course.id === id)
+      return course.tasks
+    },
+
+    // completedCourses: (state) => {
+    //   return state.courses.filter(course => course.status.completed)
+    // }
+    // completedCoursesCount: (state, getters) => {
+    //   return getters.doneTodos.length
+    // }
+
+    // galaxies: (state) => state.galaxies,
   },
   mutations: {
     ...vuexfireMutations,
-    addCourse (state, payload) {
-        console.log("from store payload", payload)
-        state.courses.push(payload)
-      }
   },
   actions: {
     bindCourses: firestoreAction(({ bindFirestoreRef }) => {

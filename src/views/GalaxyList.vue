@@ -2,7 +2,7 @@
   <v-container class="d-flex justify-center align-center fullHeight">
     <div class="flexContainer">
       <div class="flexRow">
-        <Galaxy v-for="course in courses" :galaxy="course" :key="course.id" />
+        <Galaxy v-for="course in courses" :course="course" :key="course.id" />
       </div>
     </div>
     <div class="createButton">
@@ -24,6 +24,7 @@ export default {
     Galaxy,
   },
   mounted() {
+    // trigger VuexFire bindCourses in Store
     this.getCourses()
   },
   computed: {
@@ -52,7 +53,7 @@ export default {
 <style lang="scss" scoped>
 .fullHeight {
   height: 100vh;
-  overflow: scroll;
+  // overflow: scroll;
 }
 
 .flexContainer {
