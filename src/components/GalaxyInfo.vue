@@ -1,28 +1,19 @@
 <template>
   <div id="galaxy-info">
     <h2 class="galaxy-label">Galaxy</h2>
-    <h1 class="galaxy-title">{{ galaxy.name }}</h1>
-    <!-- <v-img class="galaxy-image" width="auto" :src="galaxy.image"></v-img> -->
-    <p class="galaxy-description">{{ galaxy.description }}</p>
+    <h1 class="galaxy-title">{{ course.name }}</h1>
+    <v-img class="galaxy-image" width="auto" :src="course.image"></v-img>
+    <p class="galaxy-description">{{ course.description }}</p>
   </div>
 </template>
 
 <script>
 export default {
   name: "GalaxyInfo",
-  props: ["galaxy"],
-  mounted() {
-    console.log(this.galaxy)
-  },
+  props: ["course"],
+  mounted() {},
   data() {
-    return {
-      // galaxy: {
-      //   title: "Web Development",
-      //   image:
-      //     "https://cdn.mos.cms.futurecdn.net/8Y8jVFchXJF6TPpQ6i6weW-320-80.jpg",
-      //     description: "Web development foundations course"
-      // },
-    };
+    return {};
   },
 };
 </script>

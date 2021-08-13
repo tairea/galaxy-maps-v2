@@ -1,12 +1,12 @@
 <template>
   <div id="container" class="bg">
     <div id="left-section">
-      <GalaxyInfo :galaxy="galaxy"/>
+      <GalaxyInfo :course="getCourseById(courseId)"/>
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <AssignedInfo />
     </div>
     <div id="main-section">
-      <MissionsList :missions="galaxy.planets" />
+      <MissionsList :tasks="getTasksByCourseId(courseId)" :courseId="courseId"/>
     </div>
     <div id="right-section"></div>
   </div>
@@ -28,18 +28,20 @@ export default {
     MissionsInfo,
     MissionsList,
   },
-  props: ["galaxy"],
+  props: ["courseName","courseId"],
   mounted() {
-    console.log(this.galaxy);
+    console.log("course id is:",this.courseId);
+    console.log("course name is:",this.courseName);
   },
-  computed: {},
-  methods: {},
   data() {
     return {
-      // galaxyId: this.$route.params.galaxyId,
-      // studentsNsn: this.$route.query.nsn,
+
     };
   },
+  computed: {
+    ...mapGetters(['getCourseById','getTasksByCourseId']),
+  },
+  methods: {},
 };
 </script>
 

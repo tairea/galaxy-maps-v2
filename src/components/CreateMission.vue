@@ -20,7 +20,7 @@
               <v-text-field
                 label="MISSION TITLE"
                 color="missionAccent"
-                v-model="course.title"
+                v-model="task.title"
               ></v-text-field>
             </div>
 
@@ -32,7 +32,7 @@
                 rows="1"
                 color="missionAccent"
                 label="MISSION DESCRIPTION"
-                v-model="course.description"
+                v-model="task.description"
               ></v-textarea>
             </div>
 
@@ -44,7 +44,7 @@
                 rows="1"
                 label="MISSION DURATION"
                 color="missionAccent"
-                v-model="course.duration"
+                v-model="task.duration"
               ></v-textarea>
             </div>
 
@@ -56,7 +56,7 @@
                 rows="1"
                 label="MISSION VIDEO"
                 color="missionAccent"
-                v-model="course.video"
+                v-model="task.video"
               ></v-textarea>
             </div>
 
@@ -68,7 +68,7 @@
                 rows="1"
                 label="MISSION SLIDES"
                 color="missionAccent"
-                v-model="course.slides"
+                v-model="task.slides"
               ></v-textarea>
             </div>
 
@@ -79,7 +79,7 @@
                 color="missionAccent"
                 v-bind="attrs"
                 v-on="on"
-                @click="saveCourse()"
+                @click="saveTask(task)"
               >
                 <v-icon left>
                   mdi-check
@@ -99,24 +99,38 @@ import { mapMutations } from "vuex";
 
 export default {
   name: "CreateGalaxy",
-
+  props: ["courseId"],
   data: () => ({
     dialog: false,
-    createGalaxyButtons: ["Title", "Desc", "Img", "Assign Students", "Save"],
-    // colors: ["#F06292", "#9575CD", "#64B5F6", "#4DD0E1", "#81C784", "#DCE775"],
-    colors: ["", "", "", "", "", ""],
-    course: {
+    task: {
       title: "",
       description: "",
-      image: "",
+      duration: "",
+      video: "",
+      slides: "",
     },
   }),
   methods: {
     ...mapMutations(["addCourse"]),
 
-    saveCourse() {
-      this.addCourse(this.course);
-      this.dialog = false;
+    saveTask(task) {
+      // this.addCourse(this.course)
+
+      // Add a new document in collection "courses"
+      db.collection("courses")
+        .doc(this.courseId)
+        .update({
+          // update tasks array with new task
+          tasks: firebase.firestore.FieldValue.arrayUnion(task)
+        })
+        .then((res) => {
+          console.log("TASK successfully written!");
+          console.log(res)
+          this.dialog = false;
+        })
+        .catch((error) => {
+          console.error("Error writing document: ", error);
+        });
       this.course = {};
     },
   },

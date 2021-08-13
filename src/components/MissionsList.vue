@@ -1,19 +1,23 @@
 <template>
   <div class="mission-container">
     <h2 class="missions-label">Missions</h2>
-    <div style="width:100%" v-if="missions.length > 0">
-      <div v-for="mission in missions" :key="mission.id" class="mission-card">
-        <h1 class="mission-title">{{ mission.name }}</h1>
-        <p class="mission-description">{{ mission.color }}</p>
+
+    <div v-if="tasks.length > 0" style="width:100%">
+      <div v-for="task in tasks" :key="task.id" class="mission-card">
+        <h1 class="mission-title">{{ task.name }}</h1>
+        <p class="mission-description">{{ task.description }}</p>
+        <p class="mission-description">Duration: {{ task.duration }}</p>
+        <p class="mission-description">Video: {{ task.video }}</p>
+        <p class="mission-description">Slides: {{ task.slides }}</p>
       </div>
     </div>
 
-    <div style="width:100%" v-else>
+    <div v-else style="width:100%" >
       <h2 class="mission-label">No Missions</h2>
     </div>
 
     <div class="createButton">
-      <CreateMission />
+      <CreateMission :courseId="courseId" />
     </div>
 
   </div>
@@ -28,7 +32,7 @@ export default {
   components: {
     CreateMission
   },
-  props: ["missions"],
+  props: ["tasks", "courseId"],
   data() {
     return {
       // missions: [

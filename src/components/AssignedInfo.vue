@@ -31,7 +31,7 @@ export default {
 <style lang="scss">
 
 #assigned-info {
-  width: 90%;
+  width: calc(100% - 30px);
   // height: 400px;
   border: 1px solid var(--v-neon-base);
   margin-top: 10%;

@@ -17,7 +17,7 @@
           <div class="createGalaxyDialog">
             <!-- TITLE -->
             <div class="tile">
-              <v-text-field label="TITLE" v-model="course.title"></v-text-field>
+              <v-text-field label="TITLE" v-model="course.name"></v-text-field>
             </div>
 
             <!-- DESCRIPTION -->
@@ -34,9 +34,6 @@
             <!-- UPLOAD IMAGE -->
             <div class="tile" id="uploadContainer">
               <v-col>
-                <v-row v-if="this.course.image">
-                  <v-img :src="this.course.image"></v-img>
-                </v-row>
                 <v-row v-if="percentage">
                   <v-progress-linear :value="percentage"></v-progress-linear>
                 </v-row>
@@ -49,12 +46,15 @@
                     style="width:100% "
                   ></v-file-input>
                 </v-row>
+                 <v-row v-if="this.course.image">
+                  <v-img :src="this.course.image"></v-img>
+                </v-row>
               </v-col>
             </div>
 
             <!-- SAVE -->
             <div class="tile saveButton">
-              <v-btn outlined color="green darken-1" @click="saveCourse()">
+              <v-btn outlined color="green darken-1" @click="saveCourse(course)">
                 <v-icon left>
                   mdi-check
                 </v-icon>
@@ -77,7 +77,7 @@ export default {
   data: () => ({
     dialog: false,
     course: {
-      title: "",
+      name: "",
       description: "",
       image: "",
     },
@@ -86,25 +86,25 @@ export default {
   }),
   methods: {
     // ...mapMutations(['addCourse']),
-    saveCourse() {
+    saveCourse(course) {
       // this.addCourse(this.course)
 
-      // Add a new document in collection "cities"
+      // Add a new document in collection "courses"
       db.collection("courses")
-        .doc(this.camelize(this.course.title))
-        .set(this.course)
-        .then(() => {
+        .add(course)
+        .then((docRef) => {
           console.log("Document successfully written!");
           this.dialog = false;
-          //TODO: route to GalaxyView
-          
+          //get doc id from firestore (aka course id)
+          const courseId = docRef.id
+          this.$router.push({name:"GalaxyView", params: { courseName: this.camelize(course.name), courseId: courseId } })
+
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
         });
       this.course = {};
     },
-    // TODO: remove db doc titles. use unique id instead
     camelize(str) {
       return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
         if (+match === 0) return ""; // or if (/\s+/.test(match)) for white spaces
@@ -156,7 +156,7 @@ export default {
 
 .tile {
   width: 33.33%;
-  height: 200px;
+  min-height: 200px;
   display: flex;
   justify-content: flex-start;
   align-items: center;

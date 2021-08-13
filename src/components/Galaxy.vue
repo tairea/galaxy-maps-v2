@@ -1,12 +1,12 @@
 <template>
-  <div class="galaxy" @click="routeToGalaxy(galaxy)">
+  <div class="galaxy" @click="routeToGalaxy(course)">
     <div class="scene">
       <ul class="system">
         <li class="orbit top-most-orbit">
-          <h2 :style="{ color: stringToColour(galaxy.name) }" class="sphere">{{ galaxy.name }}</h2>
+          <h2 :style="{ color: stringToColour(course.name) }" class="sphere">{{ course.name }}</h2>
           <ol class="system">
-            <li v-for="(planet, i) in galaxy.planets" :key="planet.id" class="orbit" :style="{animationDuration: orbits[i] +'s' }">
-              <h3 style="color: #BDC5C7" class="sphere" :style="{animationDuration: orbits[i] +'s'}">{{ planet.name }}</h3>
+            <li v-for="(task, i) in course.tasks" :key="task.id" class="orbit" :style="{animationDuration: orbits[i] +'s' }">
+              <h3 style="color: #BDC5C7" class="sphere" :style="{animationDuration: orbits[i] +'s'}">{{ task.name }}</h3>
             </li>
           </ol>
         </li>
@@ -19,7 +19,7 @@
 <script>
 export default {
   name: "Galaxy",
-  props: ["galaxy"],
+  props: ["course"],
   data() {
     let durationRanges = [[0,0],[9.6,12.4],[12.4,21.6],[21.6,38.4],[38.4,60],[60,86.4],[86.4,117.6],[117.6,153.6],[153.6,194.4],[194.4,240]]
     return {
@@ -38,7 +38,7 @@ export default {
     }
   },
   mounted() {
-    console.log("from Galaxy.vue mounted: ", this.galaxy) 
+    console.log("from Galaxy.vue mounted: Course = ", this.course) 
   },
   computed: {},
   methods: {
@@ -57,11 +57,17 @@ export default {
       this.$router.push({ 
         name: "GalaxyView",
         params: {
-          galaxyId: this.galaxy.id,
-          galaxy: this.galaxy
+          courseName: this.camelize(this.course.name),
+          courseId: this.course.id
         }
       })
-    }
+    },
+    camelize(str) {
+      return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
+        if (+match === 0) return ""; // or if (/\s+/.test(match)) for white spaces
+        return index === 0 ? match.toLowerCase() : match.toUpperCase();
+      });
+    },
   },
 };
 </script>
