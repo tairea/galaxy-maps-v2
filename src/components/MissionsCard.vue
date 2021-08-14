@@ -58,7 +58,7 @@ a {
 
 .mission-card {
   border: 1px dashed var(--v-missionAccent-base);
-  margin: 10px;
+  margin: 20px 10px;
   display: flex;
 
   .mission-section {
@@ -71,7 +71,8 @@ a {
   }
 
   .mission-main-section {
-    flex-grow: 2 !important;
+    // flex-grow: 2 !important;
+    width: 30%;
     position: relative;
 
     .mission-edit-button {

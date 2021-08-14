@@ -34,7 +34,7 @@ const routes = [
     component: GalaxyList,
   },
   {
-    path: "/galaxy/:courseTitle",
+    path: "/galaxy/:courseId/:courseTitle",
     name: "GalaxyView",
     component: GalaxyView,
     props: true

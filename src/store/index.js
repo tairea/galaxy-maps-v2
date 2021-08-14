@@ -14,6 +14,7 @@ export default new Vuex.Store({
   state: {
     count: 0,
     courses: [],
+    currentCourseId: ""
     // galaxies: [mercury, venus, earth]
   },
   getters: {
@@ -39,6 +40,9 @@ export default new Vuex.Store({
   },
   mutations: {
     ...vuexfireMutations,
+    setCurrentCourseId (state, courseId) {
+      state.currentCourseId = courseId
+    }
   },
   actions: {
     bindCourses: firestoreAction(({ bindFirestoreRef }) => {

@@ -30,7 +30,7 @@ export default {
   border: 1px solid var(--v-galaxyAccent-base);
   margin-top: 30px;
   padding: 20px;
-  // background: var(--v-neon-base);
+  // background: var(--v-baseAccent-base);
   position: relative;
 }
 
@@ -40,7 +40,6 @@ h1 {
 
 .galaxy-label {
   font-size: 0.8rem;
-  color: var(--v-neon-base);
   font-weight: 400;
   text-transform: uppercase;
   // ribbon label
@@ -64,6 +63,6 @@ h1 {
 .galaxy-description {
   margin-top: 10px;
   color: var(--v-galaxyAccent-base);
-  font-size: 0.9rem;
+  // font-size: 0.9rem;
 }
 </style>

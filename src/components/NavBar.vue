@@ -5,12 +5,12 @@
           fixed-tabs
           background-color="transparent"
           dark
-          slider-color="neon"
+          slider-color="baseAccent"
           v-model="activeTab"
           height=""
         >
           <v-tab v-for="tab in tabs" :key="tab.id" :to="tab.route" exact>
-            <div class="neon--text tab">{{ tab.name }}</div>
+            <div class="baseAccent--text tab">{{ tab.name }}</div>
           </v-tab>
 
         </v-tabs>
@@ -63,7 +63,7 @@ export default {
 }
 
 .neon {
-  color: var(--v-neon);
+  color: var(--v-baseAccent);
 }
 
 .profilePic {

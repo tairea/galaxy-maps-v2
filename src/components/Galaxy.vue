@@ -1,10 +1,10 @@
 <template>
   <div class="galaxy" @click="routeToGalaxy(course)">
     <div class="scene">
-      <ul class="system">
+      <ul class="system" :style="{fontSize: size}">
         <li class="orbit top-most-orbit">
           <h2 :style="{ color: stringToColour(course.title) }" class="sphere">{{ course.title }}</h2>
-          <ol class="system">
+          <ol class="system" :style="{fontSize: size}">
             <li v-for="(task, i) in course.tasks" :key="task.id" class="orbit" :style="{animationDuration: orbits[i] +'s' }">
               <h3 style="color: #BDC5C7" class="sphere" :style="{animationDuration: orbits[i] +'s'}">{{ task.title }}</h3>
             </li>
@@ -19,7 +19,7 @@
 <script>
 export default {
   name: "Galaxy",
-  props: ["course"],
+  props: ["course", "size"],
   data() {
     let durationRanges = [[0,0],[9.6,12.4],[12.4,21.6],[21.6,38.4],[38.4,60],[60,86.4],[86.4,117.6],[117.6,153.6],[153.6,194.4],[194.4,240]]
     return {
@@ -40,7 +40,8 @@ export default {
   mounted() {
     console.log("from Galaxy.vue mounted: Course = ", this.course) 
   },
-  computed: {},
+  computed: {
+  },
   methods: {
     // string to colour, thanks to: https://stackoverflow.com/questions/3426404/create-a-hexadecimal-colour-based-on-a-string-with-javascript
     hashCode(str) {
@@ -54,6 +55,11 @@ export default {
       return `hsl(${this.hashCode(str) % 360}, 100%, 70%)`;
     },
     routeToGalaxy() {
+      // if on GalaxyView route ignore router.push
+      if (this.$route.name == 'GalaxyView') {return}
+      // on clicking galaxy, add its courseID to Store state (so not relying on router params)
+      this.$store.commit('setCurrentCourseId', this.course.id)
+      // route to Galaxy View (passing params as props)
       this.$router.push({ 
         name: "GalaxyView",
         params: {
@@ -75,7 +81,8 @@ export default {
 <style lang="scss" scoped>
 
 .galaxy {
-  width: 33%;
+  // width: 33%;
+  width: 100%;
   height: 300px;
 }
 
@@ -95,7 +102,7 @@ export default {
   position: absolute;
   width: 100%;
   height: 100%;
-  font-size: 0.25em;
+  // font-size: 0.25em;
   border-radius: 100%;
   cursor: pointer;
 }

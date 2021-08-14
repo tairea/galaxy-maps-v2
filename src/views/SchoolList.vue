@@ -3,7 +3,7 @@
     <v-row class="text-center fullHeight" align="center">
       <v-col cols="12">
        
-        <p class="neon--text">V-FOR SCHOOLS</p>
+        <p class="baseAccent--text">V-FOR SCHOOLS</p>
           
       </v-col>
     </v-row>

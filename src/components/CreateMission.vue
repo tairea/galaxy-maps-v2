@@ -118,7 +118,13 @@ export default {
     ...mapMutations(["addCourse"]),
 
     saveTask(task) {
-      // this.addCourse(this.course)
+      // format video & slides url
+      if (!/^https?:\/\//i.test(task.video)) {
+          task.video = 'http://' + task.video;
+      }
+      if (!/^https?:\/\//i.test(task.slides)) {
+          task.slides = 'http://' + task.slides;
+      }
 
       // Add a new document in collection "courses"
       db.collection("courses")
@@ -142,6 +148,7 @@ export default {
 </script>
 
 <style scoped lang="scss">
+
 /* Dialog */
 .createMissionDialog {
   color: var(--v-missionAccent-base);

@@ -26,7 +26,6 @@ export default {
   border: 1px solid var(--v-missionAccent-base);
   margin-top: 10%;
   padding: 20px;
-  // background: var(--v-neon-base);
   position: relative;
 }
 
@@ -36,7 +35,6 @@ h1 {
 
 .missions-label {
   font-size: 0.8rem;
-  color: var(--v-neon-base);
   font-weight: 400;
   text-transform: uppercase;
   // ribbon label

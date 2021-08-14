@@ -5,7 +5,7 @@
         <v-dialog v-model="dialog" width="70%">
           <!-- CREATE BUTTON -->
           <template v-slot:activator="{ on, attrs }">
-            <v-btn outlined color="neon" v-bind="attrs" v-on="on">
+            <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on">
               <v-icon left>
                 mdi-plus
               </v-icon>

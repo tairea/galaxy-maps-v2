@@ -2,7 +2,7 @@
   <v-container class="d-flex justify-center align-center fullHeight">
     <div class="flexContainer">
       <div class="flexRow">
-        <Galaxy v-for="course in courses" :course="course" :key="course.id" />
+        <Galaxy v-for="course in courses" :course="course" :key="course.id" :size="'0.25em'" />
       </div>
     </div>
     <div class="createButton">

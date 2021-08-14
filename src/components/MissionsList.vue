@@ -9,7 +9,7 @@
     </div>
 
     <div v-else style="width:100%">
-      <h2 class="mission-label">No Missions</h2>
+      <p class="no-missions-label">No Missions</p>
     </div>
 
     <div class="createButton">
@@ -51,11 +51,17 @@ a {
   padding: 20px;
   border: 1px solid var(--v-missionAccent-base);
   position: relative;
+  overflow: scroll;
+   overflow-x: hidden; /* Hide horizontal scrollbar */
 }
+
+.mission-container ::-webkit-scrollbar {
+  display: none;
+}
+
 
 .missions-label {
   font-size: 0.8rem;
-  color: var(--v-neon-base);
   font-weight: 400;
   text-transform: uppercase;
   // ribbon label
@@ -66,6 +72,14 @@ a {
   color: var(--v-background-base);
   padding: 0px 15px 0px 5px;
   clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%);
+}
+
+.no-missions-label {
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--v-missionAccent-base);
+  font-size: 0.8rem;
+  // letter-spacing: 2px;
 }
 
 </style>
