@@ -95,6 +95,10 @@
 </template>
 
 <script>
+
+import firebase from "firebase/app";
+
+import { db } from "../store/firestoreConfig";
 import { mapMutations } from "vuex";
 
 export default {

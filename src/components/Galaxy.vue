@@ -3,10 +3,10 @@
     <div class="scene">
       <ul class="system">
         <li class="orbit top-most-orbit">
-          <h2 :style="{ color: stringToColour(course.name) }" class="sphere">{{ course.name }}</h2>
+          <h2 :style="{ color: stringToColour(course.title) }" class="sphere">{{ course.title }}</h2>
           <ol class="system">
             <li v-for="(task, i) in course.tasks" :key="task.id" class="orbit" :style="{animationDuration: orbits[i] +'s' }">
-              <h3 style="color: #BDC5C7" class="sphere" :style="{animationDuration: orbits[i] +'s'}">{{ task.name }}</h3>
+              <h3 style="color: #BDC5C7" class="sphere" :style="{animationDuration: orbits[i] +'s'}">{{ task.title }}</h3>
             </li>
           </ol>
         </li>
@@ -57,7 +57,7 @@ export default {
       this.$router.push({ 
         name: "GalaxyView",
         params: {
-          courseName: this.camelize(this.course.name),
+          courseTitle: this.camelize(this.course.title),
           courseId: this.course.id
         }
       })

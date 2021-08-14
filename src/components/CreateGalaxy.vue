@@ -17,7 +17,7 @@
           <div class="createGalaxyDialog">
             <!-- TITLE -->
             <div class="tile">
-              <v-text-field label="TITLE" v-model="course.name"></v-text-field>
+              <v-text-field label="TITLE" v-model="course.title"></v-text-field>
             </div>
 
             <!-- DESCRIPTION -->
@@ -77,7 +77,7 @@ export default {
   data: () => ({
     dialog: false,
     course: {
-      name: "",
+      title: "",
       description: "",
       image: "",
     },
@@ -97,7 +97,7 @@ export default {
           this.dialog = false;
           //get doc id from firestore (aka course id)
           const courseId = docRef.id
-          this.$router.push({name:"GalaxyView", params: { courseName: this.camelize(course.name), courseId: courseId } })
+          this.$router.push({name:"GalaxyView", params: { courseTitle: this.camelize(course.title), courseId: courseId } })
 
         })
         .catch((error) => {

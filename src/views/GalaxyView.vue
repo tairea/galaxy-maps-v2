@@ -28,10 +28,10 @@ export default {
     MissionsInfo,
     MissionsList,
   },
-  props: ["courseName","courseId"],
+  props: ["courseTitle","courseId"],
   mounted() {
     console.log("course id is:",this.courseId);
-    console.log("course name is:",this.courseName);
+    console.log("course title is:",this.courseTitle);
   },
   data() {
     return {

@@ -1,7 +1,7 @@
 <template>
   <div id="galaxy-info">
     <h2 class="galaxy-label">Galaxy</h2>
-    <h1 class="galaxy-title">{{ course.name }}</h1>
+    <h1 class="galaxy-title">{{ course.title }}</h1>
     <v-img class="galaxy-image" width="auto" :src="course.image"></v-img>
     <p class="galaxy-description">{{ course.description }}</p>
   </div>
