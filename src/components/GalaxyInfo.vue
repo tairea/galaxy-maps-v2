@@ -4,6 +4,11 @@
     <h1 class="galaxy-title">{{ course.title }}</h1>
     <v-img class="galaxy-image" width="auto" :src="course.image"></v-img>
     <p class="galaxy-description">{{ course.description }}</p>
+    <v-btn class="mission-edit-button" outlined color="galaxyAccent" small>
+        <v-icon small>
+          mdi-pencil 
+        </v-icon>
+      </v-btn>
   </div>
 </template>
 
