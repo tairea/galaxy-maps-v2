@@ -15,12 +15,12 @@
     <div class="mission-section mission-section-overUnder">
       <!-- VIDEO -->
       <div class="section-overUnder">
-        <a v-if="task.video" :href="task.video" class="text-overline text-uppercase ">Video</a>
+        <a v-if="task.video" :href="task.video" target="_blank" class="text-overline text-uppercase ">Video</a>
         <p v-else class="text-overline text-uppercase" style="color: #707070">Video</p>
       </div>
       <!-- SLIDES -->
       <div class="section-overUnder">
-        <a v-if="task.slides" :href="task.slides" class="text-overline text-uppercase">Slides</a>
+        <a v-if="task.slides" :href="task.slides" target="_blank" class="text-overline text-uppercase">Slides</a>
         <p v-else class="text-overline text-uppercase" style="color: #707070">Slides</p>
       </div>
     </div>

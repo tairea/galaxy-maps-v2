@@ -5,9 +5,16 @@
         <v-dialog v-model="dialog" width="70%">
           <!-- EDIT BUTTON -->
           <template v-slot:activator="{ on, attrs }">
-            <v-btn v-bind="attrs" v-on="on" class="mission-edit-button" outlined color="galaxyAccent" small>
+            <v-btn
+              v-bind="attrs"
+              v-on="on"
+              class="mission-edit-button"
+              outlined
+              color="galaxyAccent"
+              small
+            >
               <v-icon small>
-                mdi-pencil 
+                mdi-pencil
               </v-icon>
             </v-btn>
           </template>
@@ -45,26 +52,89 @@
                     style="width:100% "
                   ></v-file-input>
                 </v-row>
-                <v-row v-if="this.course.image">
-                  <v-img :src="this.course.image"></v-img>
+                <v-row v-if="this.course.image.url">
+                  <v-img :src="this.course.image.url"></v-img>
                 </v-row>
               </v-col>
             </div>
 
-            <!-- SAVE -->
             <div class="tile saveButton">
+              <!-- SAVE -->
               <v-btn
                 outlined
                 color="green darken-1"
                 @click="updateCourse(course)"
+                class="mr-2"
               >
                 <v-icon left>
                   mdi-check
                 </v-icon>
                 SAVE
               </v-btn>
+              <!-- DELETE -->
+              <v-btn
+                outlined
+                color="error"
+                @click="deleteDialog()"
+                class="ml-2"
+              >
+                <v-icon left>
+                  mdi-delete
+                </v-icon>
+                DELETE
+              </v-btn>
             </div>
           </div>
+        </v-dialog>
+
+        <!-- CONFIRM DELETE DIALOG -->
+        <v-dialog v-model="dialogConfirm" width="500">
+          <v-card>
+            <v-card-title class="text-h5 grey lighten-2">
+              Warning
+            </v-card-title>
+
+            <v-card-text class="py-8 px-6">
+              Are you sure you want to <strong>DELETE</strong> this
+              <span class="galaxy-text">{{ course.title }} Galaxy Map</span>?
+              <br />
+              <br />
+              Deleting is permanent!!!
+              <br />
+              <br />
+              <strong>YOU WILL LOSE ALL </strong>
+              <span class="galaxy-text">Galaxy</span> and related
+              <span class="mission-text">Mission</span> data.
+            </v-card-text>
+
+            <v-divider></v-divider>
+
+            <v-card-actions class="pa-4">
+              <v-spacer></v-spacer>
+              <v-btn
+                outlined
+                color="primary"
+                @click="cancelDeleteDialog()"
+                class="ml-2"
+              >
+                <v-icon left>
+                  mdi-close
+                </v-icon>
+                CANCEL
+              </v-btn>
+              <v-btn
+                outlined
+                color="error"
+                @click="confirmDeleteCourse(course)"
+                class="ml-2"
+              >
+                <v-icon left>
+                  mdi-delete
+                </v-icon>
+                CONFIRM DELETE GALAXY
+              </v-btn>
+            </v-card-actions>
+          </v-card>
         </v-dialog>
       </v-col>
     </v-row>
@@ -72,7 +142,6 @@
 </template>
 
 <script>
-import { mapMutations } from "vuex";
 import { db, storage } from "../store/firestoreConfig";
 
 export default {
@@ -80,10 +149,43 @@ export default {
   props: ["course"],
   data: () => ({
     dialog: false,
+    dialogConfirm: false,
     uploadedImage: "",
     percentage: 0,
   }),
   methods: {
+    deleteDialog() {
+      (this.dialog = false), (this.dialogConfirm = true);
+    },
+    cancelDeleteDialog() {
+      this.dialogConfirm = false;
+      this.dialog = true;
+    },
+    confirmDeleteCourse(course) {
+      // delete document in collection "courses"
+      db.collection("courses")
+        .doc(course.id)
+        .delete()
+        .then(() => {
+          console.log("Document successfully deleted!");
+          this.dialog = false;
+          // after delete... route back to home
+          this.$router.push({path: "/galaxy"});
+        })
+        .catch((error) => {
+          console.error("Error deleting document: ", error);
+        });
+        //TODO: delete course image from storage
+        // Create a reference to the file to delete
+        var storageRef = storage.ref("course-images/" + this.course.title + "-" + this.course.image.name);
+        // Delete the file
+        storageRef.delete().then(() => {          
+          console.log("Image successfully deleted!")
+        }).catch((error) => {
+          console.log("Uh-oh, an error occurred!",error)
+        });
+
+    },
     updateCourse(course) {
       // update document in collection "courses"
       db.collection("courses")
@@ -166,5 +268,16 @@ export default {
 .saveButton {
   width: 100%;
   justify-content: center;
+}
+
+.galaxy-text {
+  color: var(--v-galaxyAccent-base);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.mission-text {
+  color: var(--v-missionAccent-base);
+  text-transform: uppercase;
+  font-weight: 700;
 }
 </style>

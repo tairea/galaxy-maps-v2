@@ -46,8 +46,8 @@
                     style="width:100% "
                   ></v-file-input>
                 </v-row>
-                <v-row v-if="this.course.image">
-                  <v-img :src="this.course.image"></v-img>
+                <v-row v-if="course.image.url">
+                  <v-img :src="course.image.url"></v-img>
                 </v-row>
               </v-col>
             </div>
@@ -83,7 +83,10 @@ export default {
     course: {
       title: "",
       description: "",
-      image: "",
+      image: {
+        url: "",
+        name: ""
+      },
     },
     uploadedImage: "",
     percentage: 0,
@@ -121,8 +124,9 @@ export default {
       });
     },
     storeImage() {
+      console.log("this.uploadedImage",this.uploadedImage)
       // ceate a storage ref
-      var storageRef = storage.ref("course-images/" + this.uploadedImage.name);
+      var storageRef = storage.ref("course-images/" + this.course.title + "-" + this.uploadedImage.name);
 
       // upload a file
       var uploadTask = storageRef.put(this.uploadedImage);
@@ -145,7 +149,8 @@ export default {
           uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
             console.log("image url is: " + downloadURL);
             // add image url to course obj
-            this.course.image = downloadURL;
+            this.course.image.url = downloadURL;
+            this.course.image.name = this.uploadedImage.name;
           });
         }
       );

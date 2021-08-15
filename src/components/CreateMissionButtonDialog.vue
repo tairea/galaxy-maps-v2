@@ -131,9 +131,8 @@ export default {
           // update tasks array with new task
           tasks: firebase.firestore.FieldValue.arrayUnion(task)
         })
-        .then((res) => {
-          console.log("TASK successfully written!");
-          console.log(res)
+        .then(() => {
+          console.log("Task successfully written!");
           this.dialog = false;
         })
         .catch((error) => {
