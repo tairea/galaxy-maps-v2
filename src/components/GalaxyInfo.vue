@@ -4,18 +4,20 @@
     <h1 class="galaxy-title">{{ course.title }}</h1>
     <v-img class="galaxy-image" width="auto" :src="course.image"></v-img>
     <p class="galaxy-description">{{ course.description }}</p>
-    <v-btn class="mission-edit-button" outlined color="galaxyAccent" small>
-        <v-icon small>
-          mdi-pencil 
-        </v-icon>
-      </v-btn>
+    <EditGalaxyButtonDialog :course="course" />
   </div>
 </template>
 
 <script>
+
+import EditGalaxyButtonDialog from "../components/EditGalaxyButtonDialog";
+
 export default {
   name: "GalaxyInfo",
   props: ["course"],
+  components: {
+    EditGalaxyButtonDialog
+  },
   mounted() {},
   data() {
     return {};

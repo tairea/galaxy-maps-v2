@@ -20,11 +20,9 @@ export default new Vuex.Store({
   getters: {
     courses: (state) => state.courses,
     getCourseById: (state) => (id) => {
-      console.log("IN STORE: Getting course by id: " + id)
       return state.courses.find(course => course.id === id)
     },
     getTasksByCourseId: (state) => (id) => {
-      console.log("IN STORE: Getting tasks by course id: " + id)
       const course = state.courses.find(course => course.id === id)
       return course.tasks
     },

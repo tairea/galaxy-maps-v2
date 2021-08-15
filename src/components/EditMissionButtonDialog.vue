@@ -1,13 +1,20 @@
 <template>
   <v-container>
-    <v-row class="text-center" align="center">
-      <v-col cols="12">
+    <v-row>
+      <v-col cols="12" class="pa-0">
         <v-dialog v-model="dialog" width="70%">
-          <!-- CREATE BUTTON -->
+          <!-- EDIT BUTTON -->
           <template v-slot:activator="{ on, attrs }">
-            <v-btn v-bind="attrs" v-on="on" class="mission-edit-button mt-4" outlined color="missionAccent" small>
+            <v-btn
+              v-bind="attrs"
+              v-on="on"
+              class="mission-edit-button mt-4"
+              outlined
+              color="missionAccent"
+              small
+            >
               <v-icon small>
-                mdi-pencil 
+                mdi-pencil
               </v-icon>
             </v-btn>
           </template>
@@ -78,7 +85,7 @@
                 color="missionAccent"
                 v-bind="attrs"
                 v-on="on"
-                @click="saveTask(task, index)"
+                @click="updateTask(task, index)"
               >
                 <v-icon left>
                   mdi-check
@@ -94,7 +101,6 @@
 </template>
 
 <script>
-
 import firebase from "firebase/app";
 
 import { db } from "../store/firestoreConfig";
@@ -106,38 +112,38 @@ export default {
   data: () => ({
     dialog: false,
   }),
-    computed: {
+  computed: {
     // ...mapGetters(["getTasksByCourseId"]),
   },
   methods: {
-    saveTask(task, index) {
+    updateTask(task, index) {
       // format video & slides url with "http://"
       if (task.video) {
         if (!/^https?:\/\//i.test(task.video)) {
-            task.video = 'http://' + task.video;
+          task.video = "http://" + task.video;
         }
       }
       if (task.slides) {
         if (!/^https?:\/\//i.test(task.slides)) {
-            task.slides = 'http://' + task.slides;
+          task.slides = "http://" + task.slides;
         }
       }
 
-      // get all tasks array. so can update task with changes. 
+      // get all tasks array. so can update task with changes.
       // (cant update single task by index in firestore, so have to get all tasks, make the change, then update all the tasks)
-      let courseTasks = this.$store.getters.getTasksByCourseId(this.courseId)
-      courseTasks[index] = task
+      let courseTasks = this.$store.getters.getTasksByCourseId(this.courseId);
+      courseTasks[index] = task;
 
       // Add a new document in collection "courses"
       db.collection("courses")
         .doc(this.courseId)
         .update({
           // update tasks array with new task
-          tasks: courseTasks
+          tasks: courseTasks,
         })
         .then((res) => {
-          console.log("TASK successfully written!");
-          console.log(res)
+          console.log("Task successfully updated!");
+          console.log(res);
           this.dialog = false;
         })
         .catch((error) => {
@@ -150,7 +156,6 @@ export default {
 </script>
 
 <style scoped lang="scss">
-
 /* Dialog */
 .createMissionDialog {
   color: var(--v-missionAccent-base);
@@ -185,7 +190,6 @@ export default {
   border-color: var(--v-missionAccent-base);
 }
 
-
 .theme--light.v-label {
   color: var(--v-missionAccent-base);
 }
@@ -193,5 +197,12 @@ export default {
 .theme--light.v-input:not(.v-input--is-disabled) input,
 .theme--light.v-input:not(.v-input--is-disabled) textarea {
   color: var(--v-missionAccent-base);
+}
+
+.mission-edit-button {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  // font-size: 0.5rem;
 }
 </style>

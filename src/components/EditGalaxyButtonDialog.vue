@@ -1,15 +1,14 @@
 <template>
   <v-container>
-    <v-row class="text-center" align="center">
-      <v-col cols="12">
+    <v-row>
+      <v-col cols="12" class="pa-0">
         <v-dialog v-model="dialog" width="70%">
-          <!-- CREATE BUTTON -->
+          <!-- EDIT BUTTON -->
           <template v-slot:activator="{ on, attrs }">
-            <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on">
-              <v-icon left>
-                mdi-plus
+            <v-btn v-bind="attrs" v-on="on" class="mission-edit-button" outlined color="galaxyAccent" small>
+              <v-icon small>
+                mdi-pencil 
               </v-icon>
-              CREATE GALAXY
             </v-btn>
           </template>
 
@@ -57,7 +56,7 @@
               <v-btn
                 outlined
                 color="green darken-1"
-                @click="saveCourse(course)"
+                @click="updateCourse(course)"
               >
                 <v-icon left>
                   mdi-check
@@ -77,42 +76,26 @@ import { mapMutations } from "vuex";
 import { db, storage } from "../store/firestoreConfig";
 
 export default {
-  name: "CreateGalaxyButtonDialog",
+  name: "EditGalaxyButtonDialog",
+  props: ["course"],
   data: () => ({
     dialog: false,
-    course: {
-      title: "",
-      description: "",
-      image: "",
-    },
     uploadedImage: "",
     percentage: 0,
   }),
   methods: {
-    saveCourse(course) {
-      // Add a new document in collection "courses"
+    updateCourse(course) {
+      // update document in collection "courses"
       db.collection("courses")
-        .add(course)
-        .then((docRef) => {
-          console.log("Document successfully written!");
+        .doc(course.id)
+        .update(course)
+        .then(() => {
+          console.log("Document successfully updated!");
           this.dialog = false;
-          //get doc id from firestore (aka course id)
-          const courseId = docRef.id;
-          //set courseID to Store state 'state.currentCourseId' (so not relying on router params)
-          this.$store.commit("setCurrentCourseId", courseId);
-          // route to newly created galaxy
-          this.$router.push({
-            name: "GalaxyView",
-            params: {
-              courseTitle: this.camelize(course.title),
-              courseId: courseId,
-            },
-          });
         })
         .catch((error) => {
-          console.error("Error writing document: ", error);
+          console.error("Error updating document: ", error);
         });
-      this.course = {};
     },
     camelize(str) {
       return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {

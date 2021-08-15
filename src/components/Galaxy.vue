@@ -57,7 +57,7 @@ export default {
     routeToGalaxy() {
       // if on GalaxyView route ignore router.push
       if (this.$route.name == 'GalaxyView') {return}
-      // on clicking galaxy, add its courseID to Store state (so not relying on router params)
+      // on clicking galaxy, set its courseID to Store state (so not relying on router params)
       this.$store.commit('setCurrentCourseId', this.course.id)
       // route to Galaxy View (passing params as props)
       this.$router.push({ 
