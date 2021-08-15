@@ -4,7 +4,7 @@
 
     <div v-if="tasks" style="width:100%">
       <div v-for="(task, index) in tasks" :key="task.id">
-        <MissionsCard :task="task" :index="index"/>
+        <MissionsCard :task="task" :index="index" :courseId="courseId"/>
       </div>
     </div>
 
@@ -13,20 +13,20 @@
     </div>
 
     <div class="createButton">
-      <CreateMission :courseId="courseId" />
+      <CreateMissionButtonDialog :courseId="courseId" />
     </div>
   </div>
 </template>
 
 <script>
 import MissionsCard from "../components/MissionsCard";
-import CreateMission from "../components/CreateMission";
+import CreateMissionButtonDialog from "../components/CreateMissionButtonDialog";
 
 export default {
   name: "MissionsList",
   components: {
     MissionsCard,
-    CreateMission,
+    CreateMissionButtonDialog,
   },
   props: ["tasks", "courseId"],
   data() {

@@ -8,7 +8,7 @@
     <div id="main-section">
       <MissionsList
         :tasks="getTasksByCourseId(currentCourseId)"
-        :courseId="courseId"
+        :courseId="currentCourseId"
       />
     </div>
     <div id="right-section">

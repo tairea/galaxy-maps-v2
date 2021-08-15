@@ -6,13 +6,13 @@
       </div>
     </div>
     <div class="createButton">
-      <CreateGalaxy />
+      <CreateGalaxyButtonDialog />
     </div>
   </v-container>
 </template>
 
 <script>
-import CreateGalaxy from "../components/CreateGalaxy";
+import CreateGalaxyButtonDialog from "../components/CreateGalaxyButtonDialog";
 import Galaxy from "../components/Galaxy";
 
 import { mapState, mapGetters } from 'vuex'
@@ -20,7 +20,7 @@ import { mapState, mapGetters } from 'vuex'
 export default {
   name: "GalaxyList",
   components: {
-    CreateGalaxy,
+    CreateGalaxyButtonDialog,
     Galaxy,
   },
   mounted() {

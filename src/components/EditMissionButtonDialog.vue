@@ -5,11 +5,10 @@
         <v-dialog v-model="dialog" width="70%">
           <!-- CREATE BUTTON -->
           <template v-slot:activator="{ on, attrs }">
-            <v-btn outlined color="missionAccent" v-bind="attrs" v-on="on">
-              <v-icon left>
-                mdi-plus
+            <v-btn v-bind="attrs" v-on="on" class="mission-edit-button mt-4" outlined color="missionAccent" small>
+              <v-icon small>
+                mdi-pencil 
               </v-icon>
-              CREATE MISSION
             </v-btn>
           </template>
 
@@ -79,7 +78,7 @@
                 color="missionAccent"
                 v-bind="attrs"
                 v-on="on"
-                @click="saveTask(task)"
+                @click="saveTask(task, index)"
               >
                 <v-icon left>
                   mdi-check
@@ -102,36 +101,39 @@ import { db } from "../store/firestoreConfig";
 import { mapMutations } from "vuex";
 
 export default {
-  name: "CreateGalaxy",
-  props: ["courseId"],
+  name: "EditMissionButtonDialog",
+  props: ["task", "index", "courseId", "on", "attrs"],
   data: () => ({
     dialog: false,
-    task: {
-      title: "",
-      description: "",
-      duration: "",
-      video: "",
-      slides: "",
-    },
   }),
+    computed: {
+    // ...mapGetters(["getTasksByCourseId"]),
+  },
   methods: {
-    ...mapMutations(["addCourse"]),
+    saveTask(task, index) {
+      // format video & slides url with "http://"
+      if (task.video) {
+        if (!/^https?:\/\//i.test(task.video)) {
+            task.video = 'http://' + task.video;
+        }
+      }
+      if (task.slides) {
+        if (!/^https?:\/\//i.test(task.slides)) {
+            task.slides = 'http://' + task.slides;
+        }
+      }
 
-    saveTask(task) {
-      // format video & slides url
-      if (!/^https?:\/\//i.test(task.video)) {
-          task.video = 'http://' + task.video;
-      }
-      if (!/^https?:\/\//i.test(task.slides)) {
-          task.slides = 'http://' + task.slides;
-      }
+      // get all tasks array. so can update task with changes. 
+      // (cant update single task by index in firestore, so have to get all tasks, make the change, then update all the tasks)
+      let courseTasks = this.$store.getters.getTasksByCourseId(this.courseId)
+      courseTasks[index] = task
 
       // Add a new document in collection "courses"
       db.collection("courses")
         .doc(this.courseId)
         .update({
           // update tasks array with new task
-          tasks: firebase.firestore.FieldValue.arrayUnion(task)
+          tasks: courseTasks
         })
         .then((res) => {
           console.log("TASK successfully written!");

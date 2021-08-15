@@ -10,11 +10,7 @@
       <!-- DESCRIPTION -->
       <p>{{ task.description }}</p>
       <!-- EDIT BUTTON -->
-      <v-btn class="mission-edit-button mt-4" outlined color="missionAccent" small>
-        <v-icon small>
-          mdi-pencil 
-        </v-icon>
-      </v-btn>
+        <EditMissionButtonDialog :task="task" :index="index" :courseId="courseId"/>
     </div>
     <div class="mission-section mission-section-overUnder">
       <!-- VIDEO -->
@@ -33,16 +29,26 @@
         {{ task.duration }}
       </p>
     </div>
+
+    <!-- EDIT MISSION DIALOG-->
+
   </div>
 </template>
 
 <script>
+
+import EditMissionButtonDialog from "../components/EditMissionButtonDialog";
+
 export default {
   name: "MissionsCard",
-  components: {},
-  props: ["task", "index"],
+  components: {
+    EditMissionButtonDialog,
+  },
+  props: ["task", "index", "courseId"],
   data() {
-    return {};
+    return {
+      editing: false
+    };
   },
 };
 </script>

@@ -82,7 +82,7 @@ export default {
       image: "",
     },
     uploadedImage: "",
-    percentage: "",
+    percentage: 0,
   }),
   methods: {
     // ...mapMutations(['addCourse']),
