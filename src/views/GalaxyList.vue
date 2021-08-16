@@ -53,7 +53,7 @@ export default {
 <style lang="scss" scoped>
 .fullHeight {
   height: 100vh;
-  // overflow: scroll;
+  overflow: hidden;
 }
 
 .flexContainer {

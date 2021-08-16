@@ -2,7 +2,7 @@
   <v-container>
     <v-row>
       <v-col cols="12" class="pa-0">
-        <v-dialog v-model="dialog" width="70%">
+        <v-dialog v-model="dialog" width="70%" light>
           <!-- EDIT BUTTON -->
           <template v-slot:activator="{ on, attrs }">
             <v-btn
@@ -109,7 +109,7 @@
         </v-dialog>
 
         <!-- CONFIRM DELETE DIALOG -->
-        <v-dialog v-model="dialogConfirm" width="500">
+        <v-dialog v-model="dialogConfirm" width="500" light>
           <v-card>
             <v-card-title class="text-h5 grey lighten-2">
               Warning

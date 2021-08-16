@@ -2,7 +2,7 @@
   <v-container>
     <v-row class="text-center" align="center">
       <v-col cols="12">
-        <v-dialog v-model="dialog" width="70%">
+        <v-dialog v-model="dialog" width="70%" light>
           <!-- CREATE BUTTON -->
           <template v-slot:activator="{ on, attrs }">
             <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on">
