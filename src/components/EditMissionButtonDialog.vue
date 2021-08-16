@@ -92,8 +92,69 @@
                 </v-icon>
                 SAVE
               </v-btn>
+               <!-- DELETE -->
+              <v-btn
+                outlined
+                color="error"
+                @click="deleteDialog()"
+                class="ml-2"
+              >
+                <v-icon left>
+                  mdi-delete
+                </v-icon>
+                DELETE
+              </v-btn>
             </div>
           </div>
+        </v-dialog>
+
+        <!-- CONFIRM DELETE DIALOG -->
+        <v-dialog v-model="dialogConfirm" width="500">
+          <v-card>
+            <v-card-title class="text-h5 grey lighten-2">
+              Warning
+            </v-card-title>
+
+            <v-card-text class="py-8 px-6">
+              Are you sure you want to <strong>DELETE</strong> this
+              <span class="mission-text">{{ task.title }} Mission</span>?
+              <br />
+              <br />
+              Deleting is permanent!!!
+              <br />
+              <br />
+              <strong>YOU WILL LOSE ALL </strong>
+              <span class="mission-text">Mission</span> data.
+            </v-card-text>
+
+            <v-divider></v-divider>
+
+            <v-card-actions class="pa-4">
+              <v-spacer></v-spacer>
+              <v-btn
+                outlined
+                color="primary"
+                @click="cancelDeleteDialog()"
+                class="ml-2"
+              >
+                <v-icon left>
+                  mdi-close
+                </v-icon>
+                CANCEL
+              </v-btn>
+              <v-btn
+                outlined
+                color="error"
+                @click="confirmDeleteTask()"
+                class="ml-2"
+              >
+                <v-icon left>
+                  mdi-delete
+                </v-icon>
+                CONFIRM DELETE MISSION
+              </v-btn>
+            </v-card-actions>
+          </v-card>
         </v-dialog>
       </v-col>
     </v-row>
@@ -111,11 +172,41 @@ export default {
   props: ["task", "index", "courseId", "on", "attrs"],
   data: () => ({
     dialog: false,
+    dialogConfirm: false,
   }),
   computed: {
     // ...mapGetters(["getTasksByCourseId"]),
   },
   methods: {
+    deleteDialog() {
+      (this.dialog = false), (this.dialogConfirm = true);
+    },
+    cancelDeleteDialog() {
+      this.dialogConfirm = false;
+      this.dialog = true;
+    },
+    confirmDeleteTask() {
+      // get all tasks
+      let courseTasks = this.$store.getters.getTasksByCourseId(this.courseId);
+      // remove index
+      courseTasks.splice(this.index, 1);
+      // db set edited array
+      db.collection("courses")
+        .doc(this.courseId)
+        .update({
+          // update tasks array with new task
+          tasks: courseTasks,
+        })
+        .then(() => {
+          console.log("Task successfully deleted!");
+          this.dialog = false;
+        })
+        .catch((error) => {
+          console.error("Error writing document: ", error);
+        });
+        // close dialog
+        this.dialogConfirm = false;
+    },
     updateTask(task, index) {
       // format video & slides url with "http://"
       if (task.video) {
@@ -204,5 +295,11 @@ export default {
   top: 10px;
   right: 20px;
   // font-size: 0.5rem;
+}
+
+.mission-text {
+  color: var(--v-missionAccent-base);
+  text-transform: uppercase;
+  font-weight: 700;
 }
 </style>

@@ -184,7 +184,6 @@ export default {
         }).catch((error) => {
           console.log("Uh-oh, an error occurred!",error)
         });
-
     },
     updateCourse(course) {
       // update document in collection "courses"

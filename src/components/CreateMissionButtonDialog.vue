@@ -116,12 +116,16 @@ export default {
   }),
   methods: {
     saveTask(task) {
-      // format video & slides url
-      if (!/^https?:\/\//i.test(task.video)) {
-          task.video = 'http://' + task.video;
+      // format video & slides url with "http://"
+      if (task.video) {
+        if (!/^https?:\/\//i.test(task.video)) {
+          task.video = "http://" + task.video;
+        }
       }
-      if (!/^https?:\/\//i.test(task.slides)) {
-          task.slides = 'http://' + task.slides;
+      if (task.slides) {
+        if (!/^https?:\/\//i.test(task.slides)) {
+          task.slides = "http://" + task.slides;
+        }
       }
 
       // Add a new document in collection "courses"
@@ -138,7 +142,7 @@ export default {
         .catch((error) => {
           console.error("Error writing document: ", error);
         });
-      this.course = {};
+      this.task = {};
     },
   },
 };
