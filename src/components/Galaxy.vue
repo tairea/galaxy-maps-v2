@@ -1,17 +1,30 @@
 <template>
   <div class="galaxy" @click="routeToGalaxy(course)">
     <div class="scene">
-      <ul class="system" :style="{fontSize: size}">
+      <ul class="system" :style="{ fontSize: size }">
         <li class="orbit top-most-orbit">
-          <h2 :style="{ color: stringToColour(course.title) }" class="sphere">{{ course.title }}</h2>
-          <ol class="system" :style="{fontSize: size}">
-            <li v-for="(task, i) in course.tasks" :key="task.id" class="orbit" :style="{animationDuration: orbits[i] +'s' }">
-              <h3 style="color: #BDC5C7" class="sphere" :style="{animationDuration: orbits[i] +'s'}">{{ task.title }}</h3>
+          <h2 :style="{ color: stringToColour(course.title) }" class="sphere">
+            {{ course.title }}
+          </h2>
+          <ol class="system" :style="{ fontSize: size }">
+            <li
+              v-for="(task, i) in course.tasks"
+              :key="task.id"
+              class="orbit"
+              :class="$vuetify.theme.dark ? 'darkOrbit' : 'lightOrbit'"
+              :style="{ animationDuration: orbits[i] + 's' }"
+            >
+              <h3
+                style="color: #BDC5C7"
+                class="sphere"
+                :style="{ animationDuration: orbits[i] + 's' }"
+              >
+                {{ task.title }}
+              </h3>
             </li>
           </ol>
         </li>
       </ul>
-
     </div>
   </div>
 </template>
@@ -21,52 +34,64 @@ export default {
   name: "Galaxy",
   props: ["course", "size"],
   data() {
-    let durationRanges = [[0,0],[9.6,12.4],[12.4,21.6],[21.6,38.4],[38.4,60],[60,86.4],[86.4,117.6],[117.6,153.6],[153.6,194.4],[194.4,240]]
+    let durationRanges = [
+      [0, 0],
+      [9.6, 12.4],
+      [12.4, 21.6],
+      [21.6, 38.4],
+      [38.4, 60],
+      [60, 86.4],
+      [86.4, 117.6],
+      [117.6, 153.6],
+      [153.6, 194.4],
+      [194.4, 240],
+    ];
     return {
       counterDuration: null,
       orbits: [
-        Math.floor(Math.random() *  durationRanges[1][1]) +  durationRanges[1][0],
-        Math.floor(Math.random() *  durationRanges[2][1]) +  durationRanges[2][0],
-        Math.floor(Math.random() *  durationRanges[3][1]) +  durationRanges[3][0],
-        Math.floor(Math.random() *  durationRanges[4][1]) +  durationRanges[4][0],
-        Math.floor(Math.random() *  durationRanges[5][1]) +  durationRanges[5][0],
-        Math.floor(Math.random() *  durationRanges[6][1]) +  durationRanges[6][0],
-        Math.floor(Math.random() *  durationRanges[7][1]) +  durationRanges[7][0],
-        Math.floor(Math.random() *  durationRanges[8][1]) +  durationRanges[8][0],
-        Math.floor(Math.random() *  durationRanges[9][1]) +  durationRanges[9][0]
-      ]
-    }
+        Math.floor(Math.random() * durationRanges[1][1]) + durationRanges[1][0],
+        Math.floor(Math.random() * durationRanges[2][1]) + durationRanges[2][0],
+        Math.floor(Math.random() * durationRanges[3][1]) + durationRanges[3][0],
+        Math.floor(Math.random() * durationRanges[4][1]) + durationRanges[4][0],
+        Math.floor(Math.random() * durationRanges[5][1]) + durationRanges[5][0],
+        Math.floor(Math.random() * durationRanges[6][1]) + durationRanges[6][0],
+        Math.floor(Math.random() * durationRanges[7][1]) + durationRanges[7][0],
+        Math.floor(Math.random() * durationRanges[8][1]) + durationRanges[8][0],
+        Math.floor(Math.random() * durationRanges[9][1]) + durationRanges[9][0],
+      ],
+    };
   },
   mounted() {
-    console.log("from Galaxy.vue mounted: Course = ", this.course) 
+    console.log("from Galaxy.vue mounted: Course = ", this.course);
   },
-  computed: {
-  },
+  computed: {},
   methods: {
     // string to colour, thanks to: https://stackoverflow.com/questions/3426404/create-a-hexadecimal-colour-based-on-a-string-with-javascript
     hashCode(str) {
-        let hash = 0;
-        for (var i = 0; i < str.length; i++) {
-          hash = str.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        return hash;
+      let hash = 0;
+      for (var i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return hash;
     },
     stringToColour(str) {
       return `hsl(${this.hashCode(str) % 360}, 100%, 70%)`;
     },
     routeToGalaxy() {
       // if on GalaxyView route ignore router.push
-      if (this.$route.name == 'GalaxyView') {return}
+      if (this.$route.name == "GalaxyView") {
+        return;
+      }
       // on clicking galaxy, set its courseID to Store state (so not relying on router params)
-      this.$store.commit('setCurrentCourseId', this.course.id)
+      this.$store.commit("setCurrentCourseId", this.course.id);
       // route to Galaxy View (passing params as props)
-      this.$router.push({ 
+      this.$router.push({
         name: "GalaxyView",
         params: {
           courseTitle: this.camelize(this.course.title),
-          courseId: this.course.id
-        }
-      })
+          courseId: this.course.id,
+        },
+      });
     },
     camelize(str) {
       return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
@@ -79,7 +104,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
 .galaxy {
   // width: 33%;
   width: 100%;
@@ -111,10 +135,20 @@ export default {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  border: 1px solid rgba(127, 255, 255, 0.1);
-  box-shadow: 0 0 75em rgba(0, 255, 255, 0.05);
+  // border: 1px solid rgba(127, 255, 255, 0.1);
+  // box-shadow: 0 0 75em rgba(0, 255, 255, 0.05);
   border-radius: 100%;
   transform-style: preserve-3d;
+}
+
+.scene .orbit .darkOrbit {
+  border: 1px solid rgba(127, 255, 255, 0.1);
+  box-shadow: 0 0 75em rgba(0, 255, 255, 0.05);
+}
+
+.scene .orbit .lightOrbit {
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  // box-shadow: 0 0 75em rgba(0, 0, 0, 0.05);
 }
 
 // orbit 0

@@ -35,6 +35,7 @@ export default {
 <style lang="scss" scoped>
 .bg {
   background: var(--v-background-base);
+  overflow: hidden;
 }
 
 </style>
