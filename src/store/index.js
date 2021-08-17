@@ -32,9 +32,10 @@ export default new Vuex.Store({
     },
     getCohortsByOrganisationId: (state) => (id) => {
       // TODO:
-      if (id == 'none') {
-        return state.cohorts.filter(cohort => cohort.organisation.name = "none")
-      }
+      const cohorts = state.cohorts.filter(cohort => cohort.organisation.id == id);
+      console.log("filtered cohorts for id: ", id)
+      console.log(cohorts)
+      return cohorts
     }
 
     // completedCourses: (state) => {

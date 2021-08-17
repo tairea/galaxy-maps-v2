@@ -117,7 +117,7 @@ export default {
         .catch((error) => {
           console.error("Error writing document: ", error);
         });
-      this.course = {};
+      this.organisation = {};
     },
     // camelize(str) {
     //   return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {

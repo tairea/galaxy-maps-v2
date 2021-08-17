@@ -58,9 +58,10 @@
             <!-- ORGANISATION -->
             <div class="tile fullWidth">
               <v-select
-                v-model="cohort.organisation"
+                v-model="cohort.organisation.id"
                 :items="organisationsToSelect"
                 item-text="name"
+                item-value="id"
                 label="ORGANISATION"
               >
               </v-select>
@@ -87,7 +88,7 @@
 </template>
 
 <script>
-import { mapMutations } from "vuex";
+import { mapState } from "vuex";
 import { db, storage } from "../store/firestoreConfig";
 
 export default {
@@ -130,13 +131,13 @@ export default {
           //set cohortId to Store state 'state.currentcohortId' (so not relying on router params)
           this.$store.commit("setCurrentCohortId", cohortId);
           // route to newly created galaxy
-          this.$router.push({
-            name: "CohortView",
-            params: {
-              cohortName: this.camelize(cohort.name),
-              cohortId: cohortId,
-            },
-          });
+          // this.$router.push({
+          //   name: "CohortView",
+          //   params: {
+          //     cohortName: this.camelize(cohort.name),
+          //     cohortId: cohortId,
+          //   },
+          // });
         })
         .catch((error) => {
           console.error("Error writing document: ", error);

@@ -4,11 +4,12 @@
       <div class="flexRow">
         
         <!-- COHORTS with no attached org -->
-        <Cohorts v-for="cohort in getCohortsByOrganisationId(0)" :cohort="cohort" :key="cohort.id" :size="'0.25em'" />
+        <Cohort v-for="cohort in getCohortsByOrganisationId(0)" :cohort="cohort" :key="cohort.id" :size="'0.25em'" />
         <!-- ORGANISATIONS -->
-        <Organisations v-for="organisation in organisations" :organisation="organisation" :key="organisation.id" :size="'0.25em'" />
+        <Organisation v-for="organisation in organisations" :organisation="organisation" :key="organisation.id" :size="'0.25em'">
           <!-- Their COHORTS -->
-          <Cohorts v-for="cohort in getCohortsByOrganisationId(organisation.id)" :cohort="cohort" :key="cohort.id" :size="'0.25em'" />
+          <Cohort v-for="cohort in getCohortsByOrganisationId(organisation.id)" :cohort="cohort" :key="cohort.id" :size="'0.25em'" />
+        </Organisation>
 
       </div>
     </div>
@@ -23,14 +24,18 @@
 // @ is an alias to /src
 import CreateCohortButtonDialog from "../components/CreateCohortButtonDialog";
 import CreateOrganisationButtonDialog from "../components/CreateOrganisationButtonDialog";
+import Cohort from "../components/Cohort";
+import Organisation from "../components/Organisation";
 
-import { mapGetters } from "vuex";
+import { mapState, mapGetters } from "vuex";
 
 export default {
-  name: "StudentList",
+  name: "CohortList",
   components: {
     CreateCohortButtonDialog,
     CreateOrganisationButtonDialog,
+    Cohort,
+    Organisation
   },
    mounted() {
     // trigger VuexFire bindCohorts & bindOrganisations in Store
