@@ -176,21 +176,21 @@ export default {
 }
 
 // color of textareas
-.theme--light.v-text-field > .v-input__control > .v-input__slot:before {
-  border-color: var(--v-missionAccent-base);
-}
+// .theme--light.v-text-field > .v-input__control > .v-input__slot:before {
+//   border-color: var(--v-missionAccent-base);
+// }
 
-.theme--light.v-text-field:hover {
-  border-color: var(--v-missionAccent-base);
-}
+// .theme--light.v-text-field:hover {
+//   border-color: var(--v-missionAccent-base);
+// }
 
 
-.theme--light.v-label {
-  color: var(--v-missionAccent-base);
-}
+// .theme--light.v-label {
+//   color: var(--v-missionAccent-base);
+// }
 
-.theme--light.v-input:not(.v-input--is-disabled) input,
-.theme--light.v-input:not(.v-input--is-disabled) textarea {
-  color: var(--v-missionAccent-base);
-}
+// .theme--light.v-input:not(.v-input--is-disabled) input,
+// .theme--light.v-input:not(.v-input--is-disabled) textarea {
+//   color: var(--v-missionAccent-base);
+// }
 </style>

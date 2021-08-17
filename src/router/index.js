@@ -3,7 +3,7 @@ import VueRouter from "vue-router";
 import Home from "../views/Home.vue";
 import GalaxyList from "../views/GalaxyList.vue";
 import GalaxyView from "../views/GalaxyView.vue";
-import SchoolList from "../views/SchoolList.vue";
+import CohortList from "../views/CohortList.vue";
 import StudentList from "../views/StudentList.vue";
 
 Vue.use(VueRouter);
@@ -19,8 +19,8 @@ const routes = [
         component: GalaxyList,
       },
       {
-        path: "schools",
-        component: SchoolList,
+        path: "cohorts",
+        component: CohortList,
       },
       {
         path: "students",

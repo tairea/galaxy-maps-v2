@@ -9,15 +9,18 @@
               <v-icon left>
                 mdi-plus
               </v-icon>
-              CREATE GALAXY
+              CREATE COHORT
             </v-btn>
           </template>
 
           <!-- DIALOG (TODO: make as a component)-->
-          <div class="createGalaxyDialog">
-            <!-- TITLE -->
+          <div class="createCohortDialog">
+            <!-- NAME -->
             <div class="tile">
-              <v-text-field label="TITLE" v-model="course.title"></v-text-field>
+              <v-text-field
+                label="COHORT TITLE"
+                v-model="cohort.name"
+              ></v-text-field>
             </div>
 
             <!-- DESCRIPTION -->
@@ -26,12 +29,12 @@
                 auto-grow
                 clearable
                 rows="1"
-                label="DESCRIPTION"
-                v-model="course.description"
+                label="COHORT DESCRIPTION"
+                v-model="cohort.description"
               ></v-textarea>
             </div>
 
-            <!-- UPLOAD IMAGE -->
+            <!-- UPLOAD COHORT IMAGE -->
             <div class="tile" id="uploadContainer">
               <v-col>
                 <v-row v-if="percentage > 0">
@@ -41,28 +44,39 @@
                   <v-file-input
                     accept="image/*"
                     v-model="uploadedImage"
-                    label="Upload Image"
+                    label="UPLOAD COHORT IMAGE"
                     @change="storeImage()"
                     style="width:100% "
                   ></v-file-input>
                 </v-row>
-                <v-row v-if="course.image.url">
-                  <v-img :src="course.image.url"></v-img>
+                <v-row v-if="cohort.image.url">
+                  <v-img :src="cohort.image.url"></v-img>
                 </v-row>
               </v-col>
             </div>
 
+            <!-- ORGANISATION -->
+            <div class="tile fullWidth">
+              <v-select
+                v-model="cohort.organisation"
+                :items="organisationsToSelect"
+                item-text="name"
+                label="ORGANISATION"
+              >
+              </v-select>
+            </div>
+
             <!-- SAVE -->
-            <div class="tile saveButton">
+            <div class="tile fullWidth">
               <v-btn
                 outlined
                 color="green darken-1"
-                @click="saveCourse(course)"
+                @click="saveCohort(cohort)"
               >
                 <v-icon left>
                   mdi-check
                 </v-icon>
-                SAVE GALAXY
+                SAVE COHORT
               </v-btn>
             </div>
           </div>
@@ -77,38 +91,50 @@ import { mapMutations } from "vuex";
 import { db, storage } from "../store/firestoreConfig";
 
 export default {
-  name: "CreateGalaxyButtonDialog",
+  name: "CreateCohortButtonDialog",
+  computed: {
+    ...mapState(["organisations"]),
+    organisationsToSelect() {
+      return [{ name: "none", id: 0 }, ...this.organisations];
+    },
+  },
   data: () => ({
     dialog: false,
-    course: {
-      title: "",
+    cohort: {
+      name: "",
       description: "",
+      organisation: {
+        name: "",
+        id: "",
+      },
+      people: [],
+      courses: [],
       image: {
+        name: "",
         url: "",
-        name: ""
       },
     },
     uploadedImage: "",
     percentage: 0,
   }),
   methods: {
-    saveCourse(course) {
-      // Add a new document in collection "courses"
-      db.collection("courses")
-        .add(course)
+    saveCohort(cohort) {
+      // Add a new document in collection "cohorts"
+      db.collection("cohorts")
+        .add(cohort)
         .then((docRef) => {
           console.log("Document successfully written!");
           this.dialog = false;
           //get doc id from firestore (aka course id)
-          const courseId = docRef.id;
-          //set courseID to Store state 'state.currentCourseId' (so not relying on router params)
-          this.$store.commit("setCurrentCourseId", courseId);
+          const cohortId = docRef.id;
+          //set cohortId to Store state 'state.currentcohortId' (so not relying on router params)
+          this.$store.commit("setCurrentCohortId", cohortId);
           // route to newly created galaxy
           this.$router.push({
-            name: "GalaxyView",
+            name: "CohortView",
             params: {
-              courseTitle: this.camelize(course.title),
-              courseId: courseId,
+              cohortName: this.camelize(cohort.name),
+              cohortId: cohortId,
             },
           });
         })
@@ -124,9 +150,10 @@ export default {
       });
     },
     storeImage() {
-      console.log("this.uploadedImage",this.uploadedImage)
       // ceate a storage ref
-      var storageRef = storage.ref("course-images/" + this.course.title + "-" + this.uploadedImage.name);
+      var storageRef = storage.ref(
+        "cohort-images/" + this.cohort.name + "-" + this.uploadedImage.name
+      );
 
       // upload a file
       var uploadTask = storageRef.put(this.uploadedImage);
@@ -148,9 +175,9 @@ export default {
           // get image url
           uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
             console.log("image url is: " + downloadURL);
-            // add image url to course obj
-            this.course.image.url = downloadURL;
-            this.course.image.name = this.uploadedImage.name;
+            // add image url to cohort obj
+            this.cohort.image.url = downloadURL;
+            this.cohort.image.name = this.uploadedImage.name;
           });
         }
       );
@@ -160,9 +187,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
 /* Dialog */
-.createGalaxyDialog {
+.createCohortDialog {
   color: black;
   background: lightGrey;
   display: flex;
@@ -186,7 +212,7 @@ export default {
   font-size: 0.8em;
 }
 
-.saveButton {
+.fullWidth {
   width: 100%;
   justify-content: center;
 }

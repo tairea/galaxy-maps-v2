@@ -14,7 +14,11 @@ export default new Vuex.Store({
   state: {
     count: 0,
     courses: [],
-    currentCourseId: ""
+    cohorts: [],
+    organisations: [],
+    students: [],
+    currentCourseId: "",
+    currentCohortId: ""
     // galaxies: [mercury, venus, earth]
   },
   getters: {
@@ -26,6 +30,12 @@ export default new Vuex.Store({
       const course = state.courses.find(course => course.id === id)
       return course.tasks
     },
+    getCohortsByOrganisationId: (state) => (id) => {
+      // TODO:
+      if (id == 'none') {
+        return state.cohorts.filter(cohort => cohort.organisation.name = "none")
+      }
+    }
 
     // completedCourses: (state) => {
     //   return state.courses.filter(course => course.status.completed)
@@ -40,11 +50,23 @@ export default new Vuex.Store({
     ...vuexfireMutations,
     setCurrentCourseId (state, courseId) {
       state.currentCourseId = courseId
+    },
+    setCurrentCohortId (state, cohortId) {
+      state.currentCohortId = cohortId
     }
   },
   actions: {
     bindCourses: firestoreAction(({ bindFirestoreRef }) => {
       return bindFirestoreRef("courses", db.collection("courses"));
     }),
+    bindCohorts: firestoreAction(({ bindFirestoreRef }) => {
+      return bindFirestoreRef("cohorts", db.collection("cohorts"));
+    }),
+    bindOrganisations: firestoreAction(({ bindFirestoreRef }) => {
+      return bindFirestoreRef("organisations", db.collection("organisations"));
+    }),
+    // bindStudents: firestoreAction(({ bindFirestoreRef }) => {
+    //   return bindFirestoreRef("students", db.collection("students"));
+    // }),
   }
 });

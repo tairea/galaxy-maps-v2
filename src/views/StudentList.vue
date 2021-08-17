@@ -3,7 +3,7 @@
     <v-row class="text-center fullHeight" align="center">
       <v-col cols="12">
        
-        <p class="baseAccent--text">V-FOR ALL STUDENTS</p>
+        <p class="baseAccent--text">V-FOR SCHOOLS</p>
           
       </v-col>
     </v-row>
@@ -15,7 +15,7 @@
 // import ButtonCreateGalaxy from "../components/ButtonCreateGalaxy";
 
 export default {
-  name: "StudentList",
+  name: "SchoolList",
   components: {
     // ButtonCreateGalaxy,
   },
@@ -26,4 +26,5 @@ export default {
 .fullHeight {
   height: 100vh;
 }
+
 </style>

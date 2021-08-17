@@ -27,7 +27,7 @@ export default {
       activeTab: `/home/galaxy`,
       tabs: [
         { id: 1, name: "GALAXIES", route: `/galaxy` },
-        { id: 2, name: "SCHOOLS", route: `/schools` },
+        { id: 2, name: "COHORTS", route: `/cohorts` },
         { id: 3, name: "ALL STUDENTS", route: `/students` },
       ],
     };
