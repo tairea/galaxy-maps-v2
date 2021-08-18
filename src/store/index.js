@@ -63,8 +63,9 @@ export default new Vuex.Store({
     },
     getCoursesInThisCohort: (state) => (id) => {
       //go to cohorts, and check if they in courses with this id
-      const cohort = state.cohorts.find((cohort) => cohort.id === id);
+      const cohort = state.cohorts.find(cohort => cohort.id === id);
       const cohortsCoursesArrOfObj = [];
+      console.log("cohort = ",cohort)
       cohort.courses.forEach(courseId => {
         // console.log("courseId = ", courseId);
         const courseObj = state.courses.find(course => course.id == courseId)

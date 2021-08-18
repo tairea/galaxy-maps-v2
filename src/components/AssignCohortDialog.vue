@@ -5,11 +5,19 @@
         <v-dialog v-model="dialog" width="40%" light>
           <!-- CREATE BUTTON -->
           <template v-slot:activator="{ on, attrs }">
-            <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on">
+            <!-- ASSIGN COHORT -->
+            <v-btn v-if="assignCohorts" outlined color="baseAccent" v-bind="attrs" v-on="on">
               <v-icon left>
                 mdi-account-multiple-plus
               </v-icon>
               ASSIGN COHORT
+            </v-btn>
+            <!-- ASSIGN GALAXY -->
+            <v-btn v-else-if="assignCourses" outlined color="baseAccent" v-bind="attrs" v-on="on">
+              <v-icon left>
+                mdi-chart-timeline-variant-shimmer
+              </v-icon>
+              ASSIGN GALAXY
             </v-btn>
           </template>
 
@@ -18,6 +26,7 @@
             <!-- AVAILABLE COHORTS -->
             <div class="tile" >
               <v-select
+              v-if="assignCohorts"
                 v-model="cohort.id"
                 :items="cohorts"
                 item-text="name"
@@ -25,11 +34,21 @@
                 label="COHORTS"
               >
               </v-select>
+              <v-select
+              v-else-if="assignCourses"
+                v-model="course.id"
+                :items="courses"
+                item-text="title"
+                item-value="id"
+                label="GALAXY MAP"
+              >
+              </v-select>
             </div>
 
             <!-- SAVE -->
             <div class="tile saveButton">
               <v-btn
+              v-if="assignCohorts"
                 outlined
                 color="green darken-1"
                 @click="assignCohort(cohort)"
@@ -38,6 +57,17 @@
                   mdi-check
                 </v-icon>
                 ADD COHORT
+              </v-btn>
+              <v-btn
+              v-else-if="assignCourses"
+                outlined
+                color="green darken-1"
+                @click="assignCourse(course)"
+              >
+                <v-icon left>
+                  mdi-check
+                </v-icon>
+                ADD GALAXY MAP
               </v-btn>
             </div>
           </div>
@@ -56,14 +86,18 @@ import { db, storage } from "../store/firestoreConfig";
 
 export default {
   name: "AssignCohortDialog",
+  props: ["assignCohorts", "assignCourses"],
   data: () => ({
     dialog: false,
     cohort: {
       id: ""
+    },
+    course: {
+      id: ""
     }
   }),
     computed: {
-    ...mapState(["organisations", "cohorts", "currentCourseId"]),
+    ...mapState(["courses", "cohorts", "currentCourseId", "currentCohortId"]),
     // ...mapState(["currentCohortId", "currentCourseId", "courses", "cohorts"]),
     ...mapGetters(["getCohortsByOrganisationId"]),
   },
@@ -74,6 +108,22 @@ export default {
         .doc(cohort.id)
         .update({
           courses: firebase.firestore.FieldValue.arrayUnion(this.currentCourseId)
+        })
+        .then(() => {
+          console.log("Document successfully updated! Cohort assigned to Course!");
+          this.dialog = false;
+        })
+        .catch((error) => {
+          console.error("Error writing document: ", error);
+        });
+      this.course = {};
+    },
+    assignCourse(course) {
+      // Add a cohort into collection "courses"
+      db.collection("cohorts")
+        .doc(this.currentCohortId)
+        .update({
+          courses: firebase.firestore.FieldValue.arrayUnion(course.id)
         })
         .then(() => {
           console.log("Document successfully updated! Cohort assigned to Course!");

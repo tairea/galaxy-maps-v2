@@ -41,7 +41,7 @@ export default {
   },
   props: ["cohortId", "cohortName"],
   mounted() {
-    this.bindAll()
+    // this.bindAll()
   },
   data() {
     return {

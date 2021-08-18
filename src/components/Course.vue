@@ -1,6 +1,6 @@
 <template>
   <v-col
-    class="d-flex flex-column justify-start align-center cohort"
+    class="d-flex flex-column justify-start align-center course"
     :cols="cols"
     @click="routeToCourse(course)"
   >

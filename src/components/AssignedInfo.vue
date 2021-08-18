@@ -8,7 +8,7 @@
         <Cohort v-for="cohort in cohorts" :cohort="cohort" :key="cohort.id" />
       </div>
       <p v-else class="assigned-status">No Cohorts assigned to this Galaxy</p>
-      <AssignCohortDialog />
+      <AssignCohortDialog :assignCohorts="true" />
     </div>
 
     <!-- ASSIGNED COURSES INFO -->
@@ -17,7 +17,7 @@
         <Course v-for="course in courses" :course="course" :key="course.id" />
       </div>
       <p v-else class="assigned-status">No Galaxies assigned to this Cohort</p>
-      <AssignCohortDialog />
+      <AssignCohortDialog  :assignCourses="true"  />
     </div>
 
   </div>
