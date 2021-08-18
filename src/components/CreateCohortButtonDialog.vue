@@ -49,8 +49,8 @@
                     style="width:100% "
                   ></v-file-input>
                 </v-row>
-                <v-row v-if="cohort.image.url">
-                  <v-img :src="cohort.image.url"></v-img>
+                <v-row v-if="cohort.image.url" class="d-flex justify-center">
+                  <v-img :src="cohort.image.url" max-height="150px" max-width="150px"></v-img>
                 </v-row>
               </v-col>
             </div>
@@ -115,7 +115,7 @@ export default {
         url: "",
       },
     },
-    uploadedImage: "",
+    uploadedImage: {},
     percentage: 0,
   }),
   methods: {

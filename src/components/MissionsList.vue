@@ -52,7 +52,7 @@ a {
   border: 1px solid var(--v-missionAccent-base);
   position: relative;
   overflow: scroll;
-   overflow-x: hidden; /* Hide horizontal scrollbar */
+  overflow-x: hidden; /* Hide horizontal scrollbar */
 }
 
 .mission-container ::-webkit-scrollbar {

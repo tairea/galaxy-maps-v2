@@ -1,22 +1,53 @@
 <template>
-   <v-container class="d-flex justify-center align-center fullHeight">
-    <div class="flexContainer">
-      <div class="flexRow">
-        
+  <v-container class="d-flex flex-column fullHeight">
+    <v-row class="cohort-main">
+      <v-col>
+        <h3 class="cohort-heading overline baseAccent--text">
+          Cohorts (No Organisation)
+        </h3>
         <!-- COHORTS with no attached org -->
-        <Cohort v-for="cohort in getCohortsByOrganisationId(0)" :cohort="cohort" :key="cohort.id" :size="'0.25em'" />
-        <!-- ORGANISATIONS -->
-        <Organisation v-for="organisation in organisations" :organisation="organisation" :key="organisation.id" :size="'0.25em'">
-          <!-- Their COHORTS -->
-          <Cohort v-for="cohort in getCohortsByOrganisationId(organisation.id)" :cohort="cohort" :key="cohort.id" :size="'0.25em'" />
-        </Organisation>
+        <v-row class="mb-5">
+          <v-col>
+            <v-row>
+              <Cohort
+                v-for="cohort in getCohortsByOrganisationId(0)"
+                :cohort="cohort"
+                :key="cohort.id"
+                :size="'0.25em'"
+                :cols="3"
+              />
+            </v-row>
+          </v-col>
+        </v-row>
 
-      </div>
-    </div>
-    <div class="createButton">
-      <CreateCohortButtonDialog />
-      <CreateOrganisationButtonDialog />
-    </div>
+        <!-- ORGANISATIONS -->
+        <h3 class="cohort-heading overline baseAccent--text">Organisation > Cohorts</h3>
+        <v-row class="d-flex flex-column">
+          <v-col v-for="organisation in organisations" :key="organisation.id">
+            <v-row>
+              <Organisation :organisation="organisation" :size="'0.25em'" />
+              <hr width="95%" class="ml-4" />
+            </v-row>
+            <v-row class="mb-6">
+              <!-- Their COHORTS -->
+              <Cohort
+                v-for="cohort in getCohortsByOrganisationId(organisation.id)"
+                :cohort="cohort"
+                :key="cohort.id"
+                :size="'0.25em'"
+                :cols="3"
+              />
+            </v-row>
+          </v-col>
+        </v-row>
+      </v-col>
+    </v-row>
+    <v-row class="cohort-bottom">
+      <v-col>
+        <CreateCohortButtonDialog />
+        <CreateOrganisationButtonDialog />
+      </v-col>
+    </v-row>
   </v-container>
 </template>
 
@@ -35,66 +66,68 @@ export default {
     CreateCohortButtonDialog,
     CreateOrganisationButtonDialog,
     Cohort,
-    Organisation
+    Organisation,
   },
-   mounted() {
+  mounted() {
     // trigger VuexFire bindCohorts & bindOrganisations in Store
-    this.getCohortsAndOrganisations()
+    this.getCohortsAndOrganisations();
   },
   computed: {
     ...mapState(["organisations"]),
     ...mapGetters(["getCohortsByOrganisationId"]),
   },
   methods: {
-    getCohortsAndOrganisations () {
-      this.$store.dispatch('bindCohorts')
-      this.$store.dispatch('bindOrganisations')
+    getCohortsAndOrganisations() {
+      this.$store.dispatch("bindCohorts");
+      this.$store.dispatch("bindOrganisations");
     },
   },
-
 };
 </script>
 
 <style lang="scss" scoped>
-.fullHeight {
-  height: 100vh;
-  overflow: hidden;
+hr {
+  border: 1px solid rgba(200, 200, 200, 0.3);
 }
 
-.flexContainer {
-  height: 100%;
-  width: 80%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  // border: solid blue 2px;
+.fullHeight {
+  height: 100vh;
+  width: 50%;
+  overflow: hidden;
+  // border: 1px solid blue;
+}
 
-  .flexRow {
-    display: flex;
-    // height: 50%;
-    flex-wrap: wrap;
-    justify-content: center;
-    width: 100%;
-    // border: solid pink 2px;
+.cohort-main {
+  height: 80%;
+  margin-top: 9%;
+  overflow: scroll;
+  overflow-x: hidden; /* Hide horizontal scrollbar */
+  // border: 1px solid red;
 
-    .box {
-      // width: 25%;
-      max-width: 25%;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      // margin: 10px;
-      padding: 2%;
-      box-sizing: border-box;
-      // border: 1px solid yellow;
-    }
+  .cohort-heading {
+    border-bottom: 1px solid var(--v-baseAccent-base);
+    margin-bottom: 20px;
   }
 }
 
-.createButton {
-  position: absolute;
-  bottom: 30px;
-  left: 50%;
-  transform: translate(-50%, 0%);
+// ---- SCROLLBAR STYLES ----
+/* width */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: var(--v-background-base);
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: var(--v-baseAccent-base);
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: var(--v-baseAccent-base);
 }
 </style>
