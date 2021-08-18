@@ -4,6 +4,8 @@
       <GalaxyInfo :course="getCourseById(currentCourseId)" />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <AssignedInfo :assignCohorts="true" :cohorts="getCohortsInThisCourse(currentCourseId)" />
+
+      <BackButton :toPath="'/galaxy'"/>
     </div>
     <div id="main-section">
       <MissionsList
@@ -26,6 +28,7 @@ import AssignedInfo from "../components/AssignedInfo";
 import MissionsInfo from "../components/MissionsInfo";
 import MissionsList from "../components/MissionsList";
 import Galaxy from "../components/Galaxy";
+import BackButton from "../components/BackButton";
 
 import { mapState, mapGetters } from "vuex";
 
@@ -37,6 +40,7 @@ export default {
     MissionsInfo,
     MissionsList,
     Galaxy,
+    BackButton
   },
   props: ["courseId", "courseTitle"],
   mounted() {

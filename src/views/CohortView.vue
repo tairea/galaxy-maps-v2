@@ -3,7 +3,12 @@
     <div id="left-section">
       <CohortInfo :cohort="getCohortById(currentCohortId)" />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
-      <AssignedInfo :assignCourses="true" :courses="getCoursesInThisCohort(currentCohortId)" />
+      <AssignedInfo
+        :assignCourses="true"
+        :courses="getCoursesInThisCohort(currentCohortId)"
+      />
+
+      <BackButton :toPath="'/cohorts'" />
     </div>
     <div id="main-section">
       <!-- <MissionsList
@@ -27,6 +32,7 @@ import AssignedInfo from "../components/AssignedInfo";
 import MissionsInfo from "../components/MissionsInfo";
 import MissionsList from "../components/MissionsList";
 import Galaxy from "../components/Galaxy";
+import BackButton from "../components/BackButton";
 
 import { mapState, mapGetters } from "vuex";
 
@@ -38,6 +44,7 @@ export default {
     MissionsInfo,
     MissionsList,
     Galaxy,
+    BackButton,
   },
   props: ["cohortId", "cohortName"],
   mounted() {
@@ -45,7 +52,7 @@ export default {
   },
   data() {
     return {
-      cohort: {}
+      cohort: {},
     };
   },
   computed: {
@@ -53,10 +60,10 @@ export default {
     ...mapGetters(["getCohortById", "getCoursesInThisCohort"]),
   },
   methods: {
-       bindAll () {
-      this.$store.dispatch('bindCourses')
-      this.$store.dispatch('bindCohorts')
-      this.$store.dispatch('bindOrganisations')
+    bindAll() {
+      this.$store.dispatch("bindCourses");
+      this.$store.dispatch("bindCohorts");
+      this.$store.dispatch("bindOrganisations");
     },
   },
 };
@@ -94,7 +101,6 @@ export default {
   align-items: center;
   flex-direction: column;
   // border: 1px solid pink;
-
 }
 
 #right-section {
@@ -127,7 +133,7 @@ export default {
   width: 10px;
 }
 
-  /* Track */
+/* Track */
 ::-webkit-scrollbar-track {
   background: var(--v-background-base);
 }
