@@ -1,27 +1,28 @@
 <template>
   <div id="container" class="bg">
     <div id="left-section">
-      <GalaxyInfo :course="getCourseById(currentCourseId)" />
+      <CohortInfo :cohort="getCohortById(currentCohortId)" />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
-      <AssignedInfo :assignCohorts="true" :cohorts="getCohortsInThisCourse(currentCourseId)" />
+      <AssignedInfo :assignCourses="true" :courses="getCoursesInThisCohort(currentCohortId)" />
     </div>
     <div id="main-section">
-      <MissionsList
+      <!-- <MissionsList
         :tasks="getTasksByCourseId(currentCourseId)"
         :courseId="currentCourseId"
-      />
+      /> -->
+      <!-- <PeopleList :people="cohort.people"/> -->
     </div>
     <div id="right-section">
-      <div class="galaxy-frame">
+      <!-- <div class="galaxy-frame">
         <h2 class="galaxy-label">Map</h2>
-        <Galaxy :course="getCourseById(currentCourseId)" :size="'0.27em'" />
-      </div>
+        
+      </div> -->
     </div>
   </div>
 </template>
 
 <script>
-import GalaxyInfo from "../components/GalaxyInfo";
+import CohortInfo from "../components/CohortInfo";
 import AssignedInfo from "../components/AssignedInfo";
 import MissionsInfo from "../components/MissionsInfo";
 import MissionsList from "../components/MissionsList";
@@ -30,25 +31,33 @@ import Galaxy from "../components/Galaxy";
 import { mapState, mapGetters } from "vuex";
 
 export default {
-  name: "GalaxyView",
+  name: "CohortView",
   components: {
-    GalaxyInfo,
+    CohortInfo,
     AssignedInfo,
     MissionsInfo,
     MissionsList,
     Galaxy,
   },
-  props: ["courseId", "courseTitle"],
+  props: ["cohortId", "cohortName"],
   mounted() {
+    this.bindAll()
   },
   data() {
-    return {};
+    return {
+      cohort: {}
+    };
   },
   computed: {
-    ...mapState(["currentCourseId"]),
-    ...mapGetters(["getCourseById", "getTasksByCourseId","getCohortsInThisCourse"]),
+    ...mapState(["currentCohortId"]),
+    ...mapGetters(["getCohortById", "getCoursesInThisCohort"]),
   },
   methods: {
+       bindAll () {
+      this.$store.dispatch('bindCourses')
+      this.$store.dispatch('bindCohorts')
+      this.$store.dispatch('bindOrganisations')
+    },
   },
 };
 </script>

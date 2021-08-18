@@ -58,7 +58,7 @@
             <!-- ORGANISATION -->
             <div class="tile fullWidth">
               <v-select
-                v-model="cohort.organisation.id"
+                v-model="cohort.organisation"
                 :items="organisationsToSelect"
                 item-text="name"
                 item-value="id"
@@ -104,10 +104,7 @@ export default {
     cohort: {
       name: "",
       description: "",
-      organisation: {
-        name: "",
-        id: "",
-      },
+      organisation: "",
       people: [],
       courses: [],
       image: {

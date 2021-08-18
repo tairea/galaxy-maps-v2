@@ -2,24 +2,24 @@
   <v-col
     class="d-flex flex-column justify-start align-center cohort"
     :cols="cols"
-    @click="routeToCohort(cohort)"
+    @click="routeToCourse(course)"
   >
     <v-img
-      v-if="cohort.image.url"
-      :src="cohort.image.url"
+      v-if="course.image.url"
+      :src="course.image.url"
       max-width="60px"
       max-height="60px"
-      class="cohort-image"
+      class="course-image"
     ></v-img>
-    <div v-else class="imagePlaceholder">{{ first3Letters(cohort.name) }}</div>
-    <h3 class="overline">{{ cohort.name }}</h3>
+    <div v-else class="imagePlaceholder">{{ first3Letters(course.title) }}</div>
+    <h3 class="overline">{{ course.title }}</h3>
   </v-col>
 </template>
 
 <script>
 export default {
-  name: "Cohort",
-  props: ["cohort", "cols"],
+  name: "Course",
+  props: ["course", "cols"],
   data() {
     return {};
   },
@@ -29,15 +29,15 @@ export default {
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
-    routeToCohort(cohort) {
-      // on clicking cohort, set its cohortID to Store state (so not relying on router params)
-      this.$store.commit("setCurrentCohortId", this.cohort.id);
+    routeToCourse(course) {
+      // on clicking course, set its courseID to Store state (so not relying on router params)
+      this.$store.commit("setCurrentCourseId", this.course.id);
       // route to Galaxy View (passing params as props)
       this.$router.push({
-        name: "CohortView",
+        name: "GalaxyView",
         params: {
-          cohortName: this.camelize(this.cohort.name),
-          cohortId: this.cohort.id,
+          courseTitle: this.camelize(this.course.title),
+          courseId: this.course.id,
         },
       });
     },
@@ -52,10 +52,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.cohort {
+.course {
   cursor: pointer;
 
-  .cohort-image {
+  .course-image {
     width: 100px;
     height: 100px;
     border-radius: 50%;

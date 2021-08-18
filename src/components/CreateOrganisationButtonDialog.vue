@@ -82,13 +82,13 @@ export default {
   data: () => ({
     dialog: false,
     organisation: {
-      id: "",
       name: "",
       description:"",
       image: {
         name: "",
         url: "",
-      }
+      },
+      cohorts: []
     },
     uploadedImage: {},
     percentage: 0,

@@ -62,7 +62,6 @@ export default {
     };
   },
   mounted() {
-    console.log("from Galaxy.vue mounted: Course = ", this.course);
   },
   computed: {},
   methods: {
@@ -104,6 +103,11 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+
+::marker {
+  color: transparent;
+}
+
 .galaxy {
   // width: 33%;
   width: 100%;
@@ -134,7 +138,7 @@ export default {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  // transform: translate(-10%, -10%);
   // border: 1px solid rgba(127, 255, 255, 0.1);
   // box-shadow: 0 0 75em rgba(0, 255, 255, 0.05);
   border-radius: 100%;

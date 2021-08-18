@@ -8,9 +8,9 @@
         <!-- COHORTS with no attached org -->
         <v-row class="mb-5">
           <v-col>
-            <v-row>
+            <v-row class="d-flex flex-column">
               <Cohort
-                v-for="cohort in getCohortsByOrganisationId(0)"
+                v-for="cohort in getCohortsByOrganisationId()"
                 :cohort="cohort"
                 :key="cohort.id"
                 :size="'0.25em'"
@@ -24,11 +24,11 @@
         <h3 class="cohort-heading overline baseAccent--text">Organisation > Cohorts</h3>
         <v-row class="d-flex flex-column">
           <v-col v-for="organisation in organisations" :key="organisation.id">
-            <v-row>
+            <v-row class="organisation-banner">
               <Organisation :organisation="organisation" :size="'0.25em'" />
               <hr width="95%" class="ml-4" />
             </v-row>
-            <v-row class="mb-6">
+            <v-row class="d-flex flex-column mb-6">
               <!-- Their COHORTS -->
               <Cohort
                 v-for="cohort in getCohortsByOrganisationId(organisation.id)"
@@ -73,7 +73,7 @@ export default {
     this.getCohortsAndOrganisations();
   },
   computed: {
-    ...mapState(["organisations"]),
+    ...mapState(["organisations", "cohorts"]),
     ...mapGetters(["getCohortsByOrganisationId"]),
   },
   methods: {
@@ -87,7 +87,7 @@ export default {
 
 <style lang="scss" scoped>
 hr {
-  border: 1px solid rgba(200, 200, 200, 0.3);
+  border: 1px solid rgba(200, 200, 200, 0.2);
 }
 
 .fullHeight {
@@ -106,7 +106,12 @@ hr {
 
   .cohort-heading {
     border-bottom: 1px solid var(--v-baseAccent-base);
-    margin-bottom: 20px;
+    margin-bottom: 10px;
+  }
+
+ .organisation-banner {
+    // border: 1px solid rgba(200, 200, 200, 0.5);
+    margin: 0px 1px;
   }
 }
 

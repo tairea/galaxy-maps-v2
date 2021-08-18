@@ -13,7 +13,7 @@ export default new Vuetify({
     },
     themes: {
       light: {
-        primary: colors.grey.darken4, // #E53935
+        primary:  "#212121", //colors.grey.darken4
         // secondary: colors.red.lighten4, // #FFCDD2
         // accent: colors.indigo.base, // #3F51B5
         background: "#f7f7ff",
@@ -21,15 +21,16 @@ export default new Vuetify({
         baseAccent: "#495867",
         galaxyAccent: "#fe5f55",
         missionAccent: "#577399",
+        cohortAccent: "#",
       },
       dark: {
-        primary: colors.grey.darken4,
-        // primary: colors.green.accent3,
-        background: colors.grey.darken3,
+        primary: "#212121", //colors.grey.darken4
+        background: "#424242", //colors.grey.darken3
         subBackground: "#000",
-        baseAccent: colors.green.accent3,
+        baseAccent: "#00E676", //colors.green.accent3
         galaxyAccent: "#E269CF",
         missionAccent: "#69A1E2",
+        cohortAccent: "#FAF200",
       },
     },
   },

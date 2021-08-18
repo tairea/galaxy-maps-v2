@@ -25,12 +25,11 @@ export default {
   },
   mounted() {
     // trigger VuexFire bindCourses in Store
-    this.getCourses()
+    this.bindAll()
   },
   computed: {
     ...mapGetters(["courses"]),
     courseWidth() {
-      console.log("this.courses.length =", this.courses.length);
       var width = 100 / this.courses.length;
       if (width < 25) {
         return "25%";
@@ -40,8 +39,10 @@ export default {
     },
   },
   methods: {
-    getCourses () {
+    bindAll () {
       this.$store.dispatch('bindCourses')
+      this.$store.dispatch('bindCohorts')
+      this.$store.dispatch('bindOrganisations')
     },
   },
   data() {

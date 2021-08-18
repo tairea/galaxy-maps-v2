@@ -10,7 +10,7 @@
               v-on="on"
               class="mission-edit-button"
               outlined
-              color="galaxyAccent"
+              color="cohortAccent"
               small
             >
               <v-icon small>
@@ -23,7 +23,7 @@
           <div class="createGalaxyDialog">
             <!-- TITLE -->
             <div class="tile">
-              <v-text-field label="TITLE" v-model="course.title"></v-text-field>
+              <v-text-field label="TITLE" v-model="cohort.name"></v-text-field>
             </div>
 
             <!-- DESCRIPTION -->
@@ -33,7 +33,7 @@
                 clearable
                 rows="1"
                 label="DESCRIPTION"
-                v-model="course.description"
+                v-model="cohort.description"
               ></v-textarea>
             </div>
 
@@ -52,8 +52,8 @@
                     style="width:100% "
                   ></v-file-input>
                 </v-row>
-                <v-row v-if="this.course.image.url">
-                  <v-img :src="this.course.image.url"></v-img>
+                <v-row v-if="this.cohort.image.url">
+                  <v-img :src="this.cohort.image.url"></v-img>
                 </v-row>
               </v-col>
             </div>
@@ -63,7 +63,7 @@
               <v-btn
                 outlined
                 color="green darken-1"
-                @click="updateCourse(course)"
+                @click="updateCohort(cohort)"
                 class="mr-2"
               >
                 <v-icon left>
@@ -96,15 +96,15 @@
 
             <v-card-text class="py-8 px-6">
               Are you sure you want to <strong>DELETE</strong> this
-              <span class="galaxy-text">{{ course.title }} Galaxy Map</span>?
+              <span class="cohort-text">{{ cohort.name }} Cohort</span>?
               <br />
               <br />
               Deleting is permanent!!!
               <br />
               <br />
               <strong>YOU WILL LOSE ALL </strong>
-              <span class="galaxy-text">Galaxy</span> and related
-              <span class="mission-text">Mission</span> data.
+              <span class="mission-text">PEOPLE</span> and related
+              <span class="mission-text">PROGRESS</span> data.
             </v-card-text>
 
             <v-divider></v-divider>
@@ -125,13 +125,13 @@
               <v-btn
                 outlined
                 color="error"
-                @click="confirmDeleteCourse(course)"
+                @click="confirmDeleteCohort(cohort)"
                 class="ml-2"
               >
                 <v-icon left>
                   mdi-delete
                 </v-icon>
-                CONFIRM DELETE GALAXY
+                CONFIRM DELETE COHORT
               </v-btn>
             </v-card-actions>
           </v-card>
@@ -145,12 +145,12 @@
 import { db, storage } from "../store/firestoreConfig";
 
 export default {
-  name: "EditGalaxyButtonDialog",
-  props: ["course"],
+  name: "EditCohortButtonDialog",
+  props: ["cohort"],
   data: () => ({
     dialog: false,
     dialogConfirm: false,
-    uploadedImage: "",
+    uploadedImage: {},
     percentage: 0,
   }),
   methods: {
@@ -161,23 +161,23 @@ export default {
       this.dialogConfirm = false;
       this.dialog = true;
     },
-    confirmDeleteCourse(course) {
+    confirmDeleteCohort(cohort) {
       // delete document in collection "courses"
-      db.collection("courses")
-        .doc(course.id)
+      db.collection("cohorts")
+        .doc(cohort.id)
         .delete()
         .then(() => {
-          console.log("Document successfully deleted!");
+          console.log("Cohort successfully deleted!");
           this.dialog = false;
           // after delete... route back to home
-          this.$router.push({path: "/galaxy"});
+          this.$router.push({path: "/cohorts"});
         })
         .catch((error) => {
           console.error("Error deleting document: ", error);
         });
         //TODO: delete course image from storage
         // Create a reference to the file to delete
-        var storageRef = storage.ref("course-images/" + this.course.title + "-" + this.course.image.name);
+        var storageRef = storage.ref("cohort-images/" + this.cohort.name + "-" + this.cohort.image.name);
         // Delete the file
         storageRef.delete().then(() => {          
           console.log("Image successfully deleted!")
@@ -185,11 +185,11 @@ export default {
           console.log("Uh-oh, an error occurred!",error)
         });
     },
-    updateCourse(course) {
+    updateCohort(cohort) {
       // update document in collection "courses"
-      db.collection("courses")
-        .doc(course.id)
-        .update(course)
+      db.collection("cohorts")
+        .doc(cohort.id)
+        .update(cohort)
         .then(() => {
           console.log("Document successfully updated!");
           this.dialog = false;
@@ -206,7 +206,7 @@ export default {
     },
     storeImage() {
       // ceate a storage ref
-      var storageRef = storage.ref("course-images/" + this.uploadedImage.name);
+      var storageRef = storage.ref("cohort-images/" + this.uploadedImage.name);
 
       // upload a file
       var uploadTask = storageRef.put(this.uploadedImage);
@@ -229,7 +229,7 @@ export default {
           uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
             console.log("image url is: " + downloadURL);
             // add image url to course obj
-            this.course.image.url = downloadURL;
+            this.cohort.image.url = downloadURL;
           });
         }
       );
@@ -276,6 +276,11 @@ export default {
 }
 .mission-text {
   color: var(--v-missionAccent-base);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.cohort-text {
+  color: var(--v-cohortAccent-base);
   text-transform: uppercase;
   font-weight: 700;
 }
