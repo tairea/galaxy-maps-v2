@@ -19,7 +19,7 @@
             <div class="tile">
               <v-text-field
                 label="ORGANISATION TITLE"
-                v-model="organisation.name"
+                :value="organisation.name"
               ></v-text-field>
             </div>
 
@@ -30,7 +30,7 @@
                 clearable
                 rows="1"
                 label="ORGANISATION DESCRIPTION"
-                v-model="organisation.description"
+                :value="organisation.description"
               ></v-textarea>
             </div>
 
@@ -68,7 +68,9 @@
                 outlined
                 color="green darken-1"
                 class="mr-2"
-                @click="updateOrganisation(organisation)"
+                @click="updateOrganisation(combinePropAndLocalOrganisation)"
+                :disabled="disabled"
+                :loading="loading"
               >
                 <v-icon left>
                   mdi-check
@@ -157,7 +159,11 @@ export default {
   name: "EditOrganisationButtonDialog",
   props: ["open", "organisation"],
   mounted() {},
-  computed: {},
+  computed: {
+    combinePropAndLocalOrganisation() {
+      return {...this.organisation,...this.localOrganisation}
+    }
+  },
   data: () => ({
     loading: false,
     disabled: false,
@@ -168,19 +174,21 @@ export default {
     // organisation: null,
     uploadedImage: {},
     percentage: 0,
-    // localOrganisation: this.organisation
+    localOrganisation: {}
   }),
   methods: {
     closeDialog() {
       this.$emit("closeOrganisationEditDialog");
     },
     updateOrganisation(organisation) {
+      this.loading = true
       // Add a new document in collection "cohorts"
       db.collection("organisations")
         .doc(organisation.id)
-        .set(organisation)
+        .update(organisation)
         .then((docRef) => {
           console.log("Organisation successfully updated!");
+          this.loading = false
           this.closeDialog();
           //get doc id from firestore (aka course id)
           // const organisationId = docRef.id;
@@ -207,6 +215,7 @@ export default {
     //   });
     // },
     storeImage() {
+      this.disabled = true
       // ceate a storage ref
       var storageRef = storage.ref(
         "organisation-images/" +
@@ -238,6 +247,7 @@ export default {
             // add image url to organisation obj
             this.organisation.image.url = downloadURL;
             this.organisation.image.name = this.uploadedImage.name;
+            this.disabled = false
           });
         }
       );

@@ -48,7 +48,7 @@ export default {
   },
   props: ["cohortId", "cohortName"],
   mounted() {
-    // this.bindAll()
+    this.bindAll()
   },
   data() {
     return {
@@ -62,7 +62,7 @@ export default {
   methods: {
     bindAll() {
       this.$store.dispatch("bindCourses");
-      this.$store.dispatch("bindCohorts");
+      // this.$store.dispatch("bindCohorts");
       this.$store.dispatch("bindOrganisations");
     },
   },

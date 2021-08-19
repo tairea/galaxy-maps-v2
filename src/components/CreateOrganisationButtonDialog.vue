@@ -135,6 +135,7 @@ export default {
           console.error("Error writing document: ", error);
         });
       this.organisation = {};
+      this.uploadedImage = null
     },
     // camelize(str) {
     //   return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
@@ -171,6 +172,7 @@ export default {
             this.organisation.image.url = downloadURL;
             this.organisation.image.name = this.organisation.name + "-" + this.uploadedImage.name;
             this.disabled = false;
+            this.percentage = 0
           });
         }
       );

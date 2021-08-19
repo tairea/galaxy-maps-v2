@@ -154,9 +154,8 @@ export default {
           // });
 
           // reset cohort
-          console.log("this.cohort", this.cohort);
           this.cohort = {};
-          console.log("this.cohort", this.cohort);
+          this.uploadedImage = null
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
@@ -201,6 +200,7 @@ export default {
               this.cohort.name + "-" + this.uploadedImage.name;
             console.log("upload percentage is: " + this.percentage);
             this.disabled = false
+            this.percentage = 0
           });
         }
       );
