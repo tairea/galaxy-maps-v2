@@ -157,6 +157,7 @@ import { db, storage } from "../store/firestoreConfig";
 
 export default {
   name: "EditOrganisationButtonDialog",
+  //TODO: manipulating prop error. Fix by v-model to a new obj and emit that up to replace the prop. Like this: https://javascript.plainenglish.io/avoid-mutating-a-prop-directly-7b127b9bca5b
   props: ["open", "organisation"],
   mounted() {},
   computed: {

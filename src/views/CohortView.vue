@@ -11,11 +11,7 @@
       <BackButton :toPath="'/cohorts'" />
     </div>
     <div id="main-section">
-      <!-- <MissionsList
-        :tasks="getTasksByCourseId(currentCourseId)"
-        :courseId="currentCourseId"
-      /> -->
-      <!-- <PeopleList :people="cohort.people"/> -->
+          <ImportCsv/>
     </div>
     <div id="right-section">
       <!-- <div class="galaxy-frame">
@@ -33,6 +29,7 @@ import MissionsInfo from "../components/MissionsInfo";
 import MissionsList from "../components/MissionsList";
 import Galaxy from "../components/Galaxy";
 import BackButton from "../components/BackButton";
+import ImportCsv from "../components/ImportCsv";
 
 import { mapState, mapGetters } from "vuex";
 
@@ -45,6 +42,7 @@ export default {
     MissionsList,
     Galaxy,
     BackButton,
+    ImportCsv,
   },
   props: ["cohortId", "cohortName"],
   mounted() {
