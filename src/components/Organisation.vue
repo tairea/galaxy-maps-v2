@@ -1,8 +1,16 @@
 <template>
   <v-container>
     <v-row>
-      <v-col class="d-flex justify-start align-center">
-        <v-img :src="organisation.image.url" max-width="60px" max-height="60px" class="organisation-image"></v-img>
+      <v-col
+        class="d-flex justify-start align-center cursor"
+        @click="editOrg()"
+      >
+        <v-img
+          :src="organisation.image.url"
+          max-width="60px"
+          max-height="60px"
+          class="organisation-image"
+        ></v-img>
         <h3 class="ml-6 overline">{{ organisation.name }}</h3>
       </v-col>
     </v-row>
@@ -14,20 +22,26 @@ export default {
   name: "Organisation",
   props: ["organisation"],
   data() {
-    return {
-     
-    };
+    return {};
   },
-  mounted() {
-  },
+  mounted() {},
   computed: {},
   methods: {
-  
+    editOrg() {
+      this.$emit("editOrg", this.organisation.id);
+    },
   },
 };
 </script>
 
 <style lang="scss" scoped>
+.cursor {
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.cursor:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
 
 .organisation-image {
   // width: 100px;
@@ -35,5 +49,4 @@ export default {
   border-radius: 50%;
   // object-fit: cover;
 }
-
 </style>

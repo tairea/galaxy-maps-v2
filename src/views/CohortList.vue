@@ -25,7 +25,7 @@
         <v-row class="d-flex flex-column">
           <v-col v-for="organisation in organisations" :key="organisation.id">
             <v-row class="organisation-banner">
-              <Organisation :organisation="organisation" :size="'0.25em'" />
+              <Organisation @editOrg="editOrgDialog" :organisation="organisation" :size="'0.25em'" />
               <hr width="95%" class="ml-4" />
             </v-row>
             <v-row class="d-flex flex-column mb-6">
@@ -48,6 +48,10 @@
         <CreateOrganisationButtonDialog />
       </v-col>
     </v-row>
+
+    <!-- Edit Org Dialog -->
+    <EditOrganisationButtonDialog :open="openOrganisationDialog" :organisation="editingOrgansation" @closeOrganisationEditDialog="openOrganisationDialog = false"/>
+
   </v-container>
 </template>
 
@@ -55,6 +59,7 @@
 // @ is an alias to /src
 import CreateCohortButtonDialog from "../components/CreateCohortButtonDialog";
 import CreateOrganisationButtonDialog from "../components/CreateOrganisationButtonDialog";
+import EditOrganisationButtonDialog from "../components/EditOrganisationButtonDialog";
 import Cohort from "../components/Cohort";
 import Organisation from "../components/Organisation";
 
@@ -67,20 +72,31 @@ export default {
     CreateOrganisationButtonDialog,
     Cohort,
     Organisation,
+    EditOrganisationButtonDialog,
   },
+  data: () => ({
+    openOrganisationDialog: false,
+    editingOrgansation: null
+  }),
   mounted() {
     // trigger VuexFire bindCohorts & bindOrganisations in Store
     this.getCohortsAndOrganisations();
   },
   computed: {
     ...mapState(["organisations", "cohorts"]),
-    ...mapGetters(["getCohortsByOrganisationId"]),
+    ...mapGetters(["getCohortsByOrganisationId", "getOrganisationById"]),
   },
   methods: {
     getCohortsAndOrganisations() {
       this.$store.dispatch("bindCohorts");
       this.$store.dispatch("bindOrganisations");
     },
+    editOrgDialog(orgId) {
+      this.openOrganisationDialog = true
+      console.log("getting org with id = ", orgId)
+      this.editingOrgansation = this.getOrganisationById(orgId)
+      console.log("got org = ", this.editingOrgansation)
+    }
   },
 };
 </script>

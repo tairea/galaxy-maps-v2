@@ -38,6 +38,9 @@ export default new Vuex.Store({
     getCohortById: (state) => (id) => {
       return state.cohorts.find((cohort) => cohort.id === id);
     },
+    getOrganisationById: (state) => (id) => {
+      return state.organisations.find((organisation) => organisation.id === id);
+    },
     getTasksByCourseId: (state) => (id) => {
       const course = state.courses.find((course) => course.id === id);
       return course.tasks;
