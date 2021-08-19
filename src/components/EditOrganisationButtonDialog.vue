@@ -258,7 +258,8 @@ export default {
         .then(() => {
           console.log("Organisation successfully deleted!");
           this.loadingDelete = false;
-          this.dialog = false;
+          this.dialogConfirm = false
+          this.closeDialog()
         })
         .catch((error) => {
           console.error("Error deleting document: ", error);
@@ -276,8 +277,6 @@ export default {
               .update({ organisation: "" })
               .then(() => {
                 console.log("Organisation removed from Cohort.")
-                this.dialogConfirm = false
-                this.closeDialog()
               });
           });
         })
