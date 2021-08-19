@@ -20,6 +20,7 @@
               <v-text-field
                 label="COHORT TITLE"
                 v-model="cohort.name"
+                clearable
               ></v-text-field>
             </div>
 
@@ -45,12 +46,16 @@
                     accept="image/*"
                     v-model="uploadedImage"
                     label="UPLOAD COHORT IMAGE"
-                    @change="storeImage()"
                     style="width:100% "
+                    @change="storeImage()"
                   ></v-file-input>
                 </v-row>
-                <v-row v-if="cohort.image.url" class="d-flex justify-center">
-                  <v-img :src="cohort.image.url" max-height="150px" max-width="150px"></v-img>
+                <v-row v-if="imgUrl" class="d-flex justify-center">
+                  <v-img
+                    :src="imgUrl"
+                    max-height="150px"
+                    max-width="150px"
+                  ></v-img>
                 </v-row>
               </v-col>
             </div>
@@ -73,6 +78,8 @@
                 outlined
                 color="green darken-1"
                 @click="saveCohort(cohort)"
+                :disabled="disabled"
+                :loading="loading"
               >
                 <v-icon left>
                   mdi-check
@@ -98,9 +105,16 @@ export default {
     organisationsToSelect() {
       return [{ name: "none", id: 0 }, ...this.organisations];
     },
+    // easy image preview thanks to: https://stackoverflow.com/questions/60678840/vuetify-image-upload-preview
+    imgUrl() {
+      if (!this.uploadedImage) return;
+      return URL.createObjectURL(this.uploadedImage);
+    },
   },
   data: () => ({
     dialog: false,
+    loading: false,
+    disabled: false,
     cohort: {
       name: "",
       description: "",
@@ -111,18 +125,21 @@ export default {
         name: "",
         url: "",
       },
-    },
-    uploadedImage: {},
+    },    
+    uploadedImage: null,
     percentage: 0,
   }),
   methods: {
     saveCohort(cohort) {
+      this.loading = true;
       // Add a new document in collection "cohorts"
       db.collection("cohorts")
         .add(cohort)
         .then((docRef) => {
           console.log("Document successfully written!");
+          this.loading = false;
           this.dialog = false;
+
           //get doc id from firestore (aka course id)
           const cohortId = docRef.id;
           //set cohortId to Store state 'state.currentcohortId' (so not relying on router params)
@@ -135,11 +152,15 @@ export default {
           //     cohortId: cohortId,
           //   },
           // });
+
+          // reset cohort
+          console.log("this.cohort", this.cohort);
+          this.cohort = {};
+          console.log("this.cohort", this.cohort);
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
         });
-      this.course = {};
     },
     camelize(str) {
       return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
@@ -148,6 +169,7 @@ export default {
       });
     },
     storeImage() {
+      this.disabled = true
       // ceate a storage ref
       var storageRef = storage.ref(
         "cohort-images/" + this.cohort.name + "-" + this.uploadedImage.name
@@ -175,7 +197,10 @@ export default {
             console.log("image url is: " + downloadURL);
             // add image url to cohort obj
             this.cohort.image.url = downloadURL;
-            this.cohort.image.name = this.uploadedImage.name;
+            this.cohort.image.name =
+              this.cohort.name + "-" + this.uploadedImage.name;
+            console.log("upload percentage is: " + this.percentage);
+            this.disabled = false
           });
         }
       );

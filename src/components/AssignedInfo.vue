@@ -1,6 +1,6 @@
 <template>
   <div id="assigned-info">
-    <h2 class="assigned-label">Assigned</h2>
+    <h2 class="assigned-label">Assigned {{assignCourses ? "Galaxy Maps" : assignCohorts ? "Cohorts" : "?"}}</h2>
 
     <!-- ASSIGNED COHORTS INFO -->
     <div v-if="assignCohorts">
@@ -68,7 +68,7 @@ export default {
     background-color: var(--v-baseAccent-base);
     color: var(--v-background-base);
     padding: 0px 15px 0px 5px;
-    clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%);
+    clip-path: polygon(0 0, 100% 0, 90% 100%, 0% 100%);
   }
 
   .assigned-status {

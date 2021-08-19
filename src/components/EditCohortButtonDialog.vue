@@ -48,12 +48,14 @@
                     accept="image/*"
                     v-model="uploadedImage"
                     label="Upload Image"
-                    @change="storeImage()"
                     style="width:100% "
+                    @change="storeImage()"
+                    
                   ></v-file-input>
                 </v-row>
-                <v-row v-if="this.cohort.image.url">
-                  <v-img :src="this.cohort.image.url"></v-img>
+                <v-row v-if="this.cohort.image.url" class="d-flex justify-center">
+                  <v-img :src="this.cohort.image.url" max-height="150px"
+                    max-width="150px"></v-img>
                 </v-row>
               </v-col>
             </div>
@@ -65,6 +67,8 @@
                 color="green darken-1"
                 @click="updateCohort(cohort)"
                 class="mr-2"
+                :disabled="disabled"
+                :loading="loading"
               >
                 <v-icon left>
                   mdi-check
@@ -95,16 +99,17 @@
             </v-card-title>
 
             <v-card-text class="py-8 px-6">
-              Are you sure you want to <strong>DELETE</strong> this
+              Are you sure you want to <strong>DELETE</strong> the
               <span class="cohort-text">{{ cohort.name }} Cohort</span>?
               <br />
               <br />
               Deleting is permanent!!!
               <br />
               <br />
-              <strong>YOU WILL LOSE ALL </strong>
-              <span class="mission-text">PEOPLE</span> and related
-              <span class="mission-text">PROGRESS</span> data.
+              <!-- <strong>YOU WILL LOSE ALL </strong> -->
+              <span class="mission-text">PEOPLE</span> in this
+              <strong>COHORT</strong> will no longer be able to access the
+              assigned <span class="galaxy-text">GALAXY MAPS</span>
             </v-card-text>
 
             <v-divider></v-divider>
@@ -127,6 +132,8 @@
                 color="error"
                 @click="confirmDeleteCohort(cohort)"
                 class="ml-2"
+                :disabled="disabledDelete"
+                :loading="loadingDelete"
               >
                 <v-icon left>
                   mdi-delete
@@ -149,6 +156,10 @@ export default {
   props: ["cohort"],
   data: () => ({
     dialog: false,
+    loading: false,
+    disabled: false,
+    loadingDelete: false,
+    disabledDelete: false,
     dialogConfirm: false,
     uploadedImage: {},
     percentage: 0,
@@ -162,36 +173,49 @@ export default {
       this.dialog = true;
     },
     confirmDeleteCohort(cohort) {
+      this.loadingDelete = true
       // delete document in collection "courses"
       db.collection("cohorts")
         .doc(cohort.id)
         .delete()
         .then(() => {
           console.log("Cohort successfully deleted!");
+          this.loadingDelete = false
           this.dialog = false;
           // after delete... route back to home
-          this.$router.push({path: "/cohorts"});
+          this.$router.push({ path: "/cohorts" });
         })
         .catch((error) => {
           console.error("Error deleting document: ", error);
         });
-        //TODO: delete course image from storage
-        // Create a reference to the file to delete
-        var storageRef = storage.ref("cohort-images/" + this.cohort.name + "-" + this.cohort.image.name);
-        // Delete the file
-        storageRef.delete().then(() => {          
-          console.log("Image successfully deleted!")
-        }).catch((error) => {
-          console.log("Uh-oh, an error occurred!",error)
+      //TODO: delete course image from storage
+      this.deleteImage()
+    },
+    deleteImage() {
+      console.log("deleting image...");
+      // Create a reference to the file to delete
+      var storageRef = storage.ref(
+        "cohort-images/" + this.cohort.image.name
+      );
+      // Delete the file
+      storageRef
+        .delete()
+        .then(() => {
+          console.log("Image successfully deleted!");
+        })
+        .catch((error) => {
+          console.log("Uh-oh, an error occurred!", error);
         });
     },
     updateCohort(cohort) {
+      this.loading = true
       // update document in collection "courses"
       db.collection("cohorts")
         .doc(cohort.id)
         .update(cohort)
         .then(() => {
           console.log("Document successfully updated!");
+          this.loading = false
           this.dialog = false;
         })
         .catch((error) => {
@@ -205,8 +229,9 @@ export default {
       });
     },
     storeImage() {
+      this.disabled = true
       // ceate a storage ref
-      var storageRef = storage.ref("cohort-images/" + this.uploadedImage.name);
+      var storageRef = storage.ref("cohort-images/" + this.cohort.name + "-" + this.uploadedImage.name);
 
       // upload a file
       var uploadTask = storageRef.put(this.uploadedImage);
@@ -229,7 +254,10 @@ export default {
           uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
             console.log("image url is: " + downloadURL);
             // add image url to course obj
+            this.cohort.image.name =
+              this.cohort.name + "-" + this.uploadedImage.name;
             this.cohort.image.url = downloadURL;
+            this.disabled = false
           });
         }
       );
@@ -283,5 +311,7 @@ export default {
   color: var(--v-cohortAccent-base);
   text-transform: uppercase;
   font-weight: 700;
+  background-color: var(--v-subBackground-base);
+  padding: 0px 5px;
 }
 </style>
