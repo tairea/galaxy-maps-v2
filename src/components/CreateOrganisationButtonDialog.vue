@@ -47,8 +47,12 @@
                     style="width:100% "
                   ></v-file-input>
                 </v-row>
-                <v-row v-if="organisation.image.url" class="d-flex justify-center">
-                  <v-img :src="organisation.image.url" max-height="150px" max-width="150px"></v-img>
+                <v-row v-if="imgUrl" class="d-flex justify-center">
+                  <v-img
+                    :src="imgUrl"
+                    max-height="150px"
+                    max-width="150px"
+                  ></v-img>
                 </v-row>
               </v-col>
             </div>
@@ -58,6 +62,8 @@
               <v-btn
                 outlined
                 color="green darken-1"
+                 :disabled="disabled"
+                :loading="loading"
                 @click="saveOrganisation(organisation)"
               >
                 <v-icon left>
@@ -79,8 +85,17 @@ import { db, storage } from "../store/firestoreConfig";
 
 export default {
   name: "CreateOrganisationButtonDialog",
+   computed: {
+    // easy image preview thanks to: https://stackoverflow.com/questions/60678840/vuetify-image-upload-preview
+    imgUrl() {
+      if (!this.uploadedImage) return;
+      return URL.createObjectURL(this.uploadedImage);
+    },
+  },
   data: () => ({
     dialog: false,
+        loading: false,
+    disabled: false,
     organisation: {
       name: "",
       description:"",
@@ -90,16 +105,18 @@ export default {
       },
       cohorts: []
     },
-    uploadedImage: {},
+    uploadedImage: null,
     percentage: 0,
   }),
   methods: {
     saveOrganisation(organisation) {
+      this.loading = true;
       // Add a new document in collection "cohorts"
       db.collection("organisations")
         .add(organisation)
         .then((docRef) => {
           console.log("Document successfully written!");
+          this.loading = false;
           this.dialog = false;
           //get doc id from firestore (aka course id)
           // const organisationId = docRef.id;
@@ -126,6 +143,7 @@ export default {
     //   });
     // },
     storeImage() {
+      this.disabled = true;
       // ceate a storage ref
       var storageRef = storage.ref("organisation-images/" + this.organisation.name + "-" + this.uploadedImage.name);
 
@@ -151,7 +169,8 @@ export default {
             console.log("image url is: " + downloadURL);
             // add image url to organisation obj
             this.organisation.image.url = downloadURL;
-            this.organisation.image.name = this.uploadedImage.name;
+            this.organisation.image.name = this.organisation.name + "-" + this.uploadedImage.name;
+            this.disabled = false;
           });
         }
       );

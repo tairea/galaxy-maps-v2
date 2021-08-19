@@ -192,6 +192,8 @@ export default {
       this.deleteImage()
     },
     deleteImage() {
+      // if no image, dont worry bout it cuz
+      if(this.cohort.image.name == "") return
       console.log("deleting image...");
       // Create a reference to the file to delete
       var storageRef = storage.ref(

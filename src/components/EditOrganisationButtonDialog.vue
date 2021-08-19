@@ -67,6 +67,7 @@
               <v-btn
                 outlined
                 color="green darken-1"
+                class="mr-2"
                 @click="updateOrganisation(organisation)"
               >
                 <v-icon left>
@@ -74,8 +75,74 @@
                 </v-icon>
                 UPDATE ORGANISATION
               </v-btn>
+              <!-- DELETE -->
+              <v-btn
+                outlined
+                color="error"
+                @click="deleteDialog()"
+                class="ml-2"
+              >
+                <v-icon left>
+                  mdi-delete
+                </v-icon>
+                DELETE ORGANISATION
+              </v-btn>
             </div>
           </div>
+        </v-dialog>
+
+        <!-- CONFIRM DELETE DIALOG -->
+        <v-dialog v-model="dialogConfirm" width="500" light>
+          <v-card>
+            <v-card-title class="text-h5 grey lighten-2">
+              Warning
+            </v-card-title>
+
+            <v-card-text class="py-8 px-6">
+              Are you sure you want to <strong>DELETE</strong> the
+              <span class="organisation-text"
+                >{{ organisation.name }} ORGANISATION</span
+              >?
+              <br />
+              <br />
+              Deleting is permanent!!!
+              <br />
+              <br />
+              <!-- <strong>YOU WILL LOSE ALL </strong> -->
+              <strong>COHORTS</strong> will no longer be associated with this
+              <strong>ORGANISATION</strong>
+            </v-card-text>
+
+            <v-divider></v-divider>
+
+            <v-card-actions class="pa-4">
+              <v-spacer></v-spacer>
+              <v-btn
+                outlined
+                color="primary"
+                @click="cancelDeleteDialog()"
+                class="ml-2"
+              >
+                <v-icon left>
+                  mdi-close
+                </v-icon>
+                CANCEL
+              </v-btn>
+              <v-btn
+                outlined
+                color="error"
+                @click="confirmDeleteOrganisation(organisation)"
+                class="ml-2"
+                :disabled="disabledDelete"
+                :loading="loadingDelete"
+              >
+                <v-icon left>
+                  mdi-delete
+                </v-icon>
+                CONFIRM DELETE ORGANISATION
+              </v-btn>
+            </v-card-actions>
+          </v-card>
         </v-dialog>
       </v-col>
     </v-row>
@@ -89,13 +156,14 @@ import { db, storage } from "../store/firestoreConfig";
 export default {
   name: "EditOrganisationButtonDialog",
   props: ["open", "organisation"],
-  mounted() {
-    
-  },
-  computed: {
-    
-  },
+  mounted() {},
+  computed: {},
   data: () => ({
+    loading: false,
+    disabled: false,
+    loadingDelete: false,
+    disabledDelete: false,
+    dialogConfirm: false,
     // dialog: false,
     // organisation: null,
     uploadedImage: {},
@@ -174,6 +242,69 @@ export default {
         }
       );
     },
+    deleteDialog() {
+      (this.dialog = false), (this.dialogConfirm = true);
+    },
+    cancelDeleteDialog() {
+      this.dialogConfirm = false;
+      this.dialog = true;
+    },
+    confirmDeleteOrganisation(organisation) {
+      this.loadingDelete = true;
+      // delete document in collection "organisations"
+      db.collection("organisations")
+        .doc(organisation.id)
+        .delete()
+        .then(() => {
+          console.log("Organisation successfully deleted!");
+          this.loadingDelete = false;
+          this.dialog = false;
+        })
+        .catch((error) => {
+          console.error("Error deleting document: ", error);
+        });
+
+      // TODO:  search cohorts.organisations for "organisation.id" and delete/or set as empty
+      db.collection("cohorts")
+        .where("organisation", "==", organisation.id)
+        .get()
+        .then((querySnapshot) => {
+          querySnapshot.forEach((doc) => {
+            // where id matches organisations in cohort, set emmpty org (removing org from cohort)
+            db.collection("cohorts")
+              .doc(doc.id)
+              .update({ organisation: "" })
+              .then(() => {
+                console.log("Organisation removed from Cohort.")
+                this.dialogConfirm = false
+                this.closeDialog()
+              });
+          });
+        })
+        .catch((error) => {
+          console.log("Error getting documents: ", error);
+        });
+
+      this.deleteImage();
+    },
+    deleteImage() {
+      // if no image, dont worry bout it cuz
+      if(this.organisation.image.name == "") return
+      console.log("deleting image...");
+      // Create a reference to the file to delete
+      var storageRef = storage.ref(
+        "organisation-images/" + this.organisation.image.name
+      );
+      // Delete the file
+      storageRef
+        .delete()
+        .then(() => {
+          console.log("Image successfully deleted!");
+        })
+        .catch((error) => {
+          console.log("Uh-oh, an error occurred!", error);
+        });
+    },
   },
 };
 </script>
@@ -207,5 +338,13 @@ export default {
 .saveButton {
   width: 100%;
   justify-content: center;
+}
+
+.organisation-text {
+  color: var(--v-primary-base);
+  text-transform: uppercase;
+  font-weight: 700;
+  // background-color: var(--v-subBackground-base);
+  padding: 0px 5px;
 }
 </style>

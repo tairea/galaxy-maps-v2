@@ -175,7 +175,11 @@ export default {
         .catch((error) => {
           console.error("Error deleting document: ", error);
         });
-        //TODO: delete course image from storage
+       this.deleteImage()
+    },
+    deleteImage() {
+       // if no image, dont worry bout it cuz
+      if(this.course.image.title == "") return
         // Create a reference to the file to delete
         var storageRef = storage.ref("course-images/" + this.course.title + "-" + this.course.image.name);
         // Delete the file

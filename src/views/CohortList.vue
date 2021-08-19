@@ -50,7 +50,7 @@
     </v-row>
 
     <!-- Edit Org Dialog -->
-    <EditOrganisationButtonDialog :open="openOrganisationDialog" :organisation="editingOrgansation" @closeOrganisationEditDialog="openOrganisationDialog = false"/>
+    <EditOrganisationButtonDialog v-if="editingOrgansation" :open="openOrganisationDialog" :organisation="editingOrgansation" @closeOrganisationEditDialog="openOrganisationDialog = false"/>
 
   </v-container>
 </template>
