@@ -21,7 +21,7 @@ export default new Vuetify({
         baseAccent: "#495867",
         galaxyAccent: "#fe5f55",
         missionAccent: "#577399",
-        cohortAccent: "#",
+        cohortAccent: "#fe5f55",
       },
       dark: {
         primary: "#212121", //colors.grey.darken4

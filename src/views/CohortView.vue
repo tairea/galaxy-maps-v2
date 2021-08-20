@@ -2,25 +2,30 @@
   <div id="container" class="bg">
     <div id="left-section">
       <CohortInfo :cohort="getCohortById(currentCohortId)" />
-      <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <AssignedInfo
         :assignCourses="true"
         :courses="getCoursesInThisCohort(currentCohortId)"
       />
-
       <BackButton :toPath="'/cohorts'" />
     </div>
+
     <div id="main-section">
       <div class="people-frame">
         <h2 class="people-label">STUDENTS</h2>
+        <!-- <StudentCard v-for="student in getStudentsByCohortId(currentCohortId)" :key="student.id" :student="student" /> -->
+       <!-- <StudentDataTable :students="getStudentsByCohortId(currentCohortId)"/> -->
+       <StudentDataIterator :students="getStudentsByCohortId(currentCohortId)"/>
+
+
       </div>
     </div>
-    <div id="right-section">
+
+    <!-- <div id="right-section">
       <div class="people-right-frame mb-5">
         <h2 class="people-label">ADD STUDENTS</h2>
         <ImportCsv :currentCohortId="currentCohortId" />
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -29,6 +34,9 @@ import CohortInfo from "../components/CohortInfo";
 import AssignedInfo from "../components/AssignedInfo";
 import MissionsInfo from "../components/MissionsInfo";
 import MissionsList from "../components/MissionsList";
+import StudentCard from "../components/StudentCard";
+import StudentDataTable from "../components/StudentDataTable";
+import StudentDataIterator from "../components/StudentDataIterator";
 import Galaxy from "../components/Galaxy";
 import BackButton from "../components/BackButton";
 import ImportCsv from "../components/ImportCsv";
@@ -45,6 +53,9 @@ export default {
     Galaxy,
     BackButton,
     ImportCsv,
+    StudentCard,
+    StudentDataTable,
+    StudentDataIterator
   },
   props: ["cohortId", "cohortName"],
   mounted() {
@@ -53,16 +64,21 @@ export default {
   data() {
     return {
       cohort: {},
+     
     };
   },
   computed: {
     ...mapState(["currentCohortId"]),
-    ...mapGetters(["getCohortById", "getCoursesInThisCohort"]),
+    ...mapGetters([
+      "getCohortById",
+      "getCoursesInThisCohort",
+      "getStudentsByCohortId",
+    ]),
   },
   methods: {
     bindAll() {
       this.$store.dispatch("bindCourses");
-      // this.$store.dispatch("bindCohorts");
+      this.$store.dispatch("bindStudents");
       this.$store.dispatch("bindOrganisations");
     },
   },
@@ -70,6 +86,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.searchInput >>> .v-text-field__slot input {
+  color: var(--v-missionAccent-base);
+}
+
 .bg {
   background: var(--v-background-base);
 }
@@ -94,7 +114,7 @@ export default {
 }
 
 #main-section {
-  width: 50%;
+  width: 75%; // change back to 50% when turn right-section back on
   height: 100%;
   display: flex;
   justify-content: flex-start;
@@ -109,6 +129,7 @@ export default {
     height: 90%;
     // margin: 30px 20px;
     border: 1px solid var(--v-missionAccent-base);
+    overflow: scroll;
 
     .people-label {
       font-size: 0.8rem;

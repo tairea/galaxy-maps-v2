@@ -78,6 +78,18 @@ export default new Vuex.Store({
       // console.log("cohort courses = ", cohortsCoursesArrOfObj);
       return cohortsCoursesArrOfObj
     },
+    getStudentsByCohortId: (state) => (id) => {
+      //go to cohorts, and check if they in courses with this id
+      let studentsInCohort = []
+      state.students.forEach(student => {
+        // if student is enrolled in this cohort...
+        if (student.enrolledCohorts.some(cohortId => cohortId === id )) {
+          // push them into array
+          studentsInCohort.push(student)
+        }
+      });
+      return studentsInCohort
+    },
 
     // completedCourses: (state) => {
     //   return state.courses.filter(course => course.status.completed)
@@ -107,8 +119,8 @@ export default new Vuex.Store({
     bindOrganisations: firestoreAction(({ bindFirestoreRef }) => {
       return bindFirestoreRef("organisations", db.collection("organisations"));
     }),
-    // bindStudents: firestoreAction(({ bindFirestoreRef }) => {
-    //   return bindFirestoreRef("students", db.collection("students"));
-    // }),
+    bindStudents: firestoreAction(({ bindFirestoreRef }) => {
+      return bindFirestoreRef("students", db.collection("people"));
+    }),
   },
 });
