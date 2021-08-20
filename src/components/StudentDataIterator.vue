@@ -7,6 +7,7 @@
       :sort-by="sortBy"
       :sort-desc="sortDesc"
       hide-default-footer
+      no-data-text="No Students"
     >
       <!-- HEADER -->
       <template v-slot:header>
@@ -16,11 +17,13 @@
               v-model="search"
               clearable
               flat
-              solo-inverted
+              
               hide-details
               prepend-inner-icon="mdi-magnify"
               label="Search"
               dense
+              outlined
+              color="missionAccent"
             ></v-text-field>
           </v-col>
           <v-col cols="6"  class="d-flex">
@@ -30,16 +33,17 @@
               <v-select
                 v-model="sortBy"
                 flat
-                solo-inverted
+                
                 hide-details
                 :items="keys"
                 prepend-inner-icon="mdi-sort-alphabetical-variant"
                 label="Sort by"
                 dense
                 color="missionAccent"
+                outlined
               ></v-select>
               <!-- <v-spacer></v-spacer> -->
-              <v-btn-toggle v-model="sortDesc" mandatory style="background-color: transparent;" tile class="d-flex justify-center align-center">
+              <v-btn-toggle v-model="sortDesc" mandatory style="background-color: transparent;" tile class="d-flex justify-center align-center ml-2">
                 <v-btn depressed color="missionAccent" :value="false" small>
                   <v-icon small>mdi-arrow-up</v-icon>
                 </v-btn class="d-flex justify-center align-center">
@@ -61,6 +65,10 @@
           :key="student.id"
           :student="student"
         />
+      </template>
+
+      <template v-slot:no-data>
+        <p class="ma-10 noStudents">No Students in this Cohort</p>
       </template>
     </v-data-iterator>
   </v-container>
@@ -186,5 +194,13 @@ a {
       border-bottom: 1px dashed var(--v-missionAccent-base);
     }
   }
+}
+
+.noStudents {
+font-size: 0.8rem;
+      letter-spacing: 2px;
+      text-align: center;
+      color: var(--v-missionAccent-base);
+      text-transform: uppercase;
 }
 </style>

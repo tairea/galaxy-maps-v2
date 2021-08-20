@@ -20,12 +20,12 @@
       </div>
     </div>
 
-    <!-- <div id="right-section">
+    <div id="right-section">
       <div class="people-right-frame mb-5">
         <h2 class="people-label">ADD STUDENTS</h2>
         <ImportCsv :currentCohortId="currentCohortId" />
       </div>
-    </div> -->
+    </div>
   </div>
 </template>
 
@@ -114,7 +114,7 @@ export default {
 }
 
 #main-section {
-  width: 75%; // change back to 50% when turn right-section back on
+  width: 50%; // change back to 50% when turn right-section back on
   height: 100%;
   display: flex;
   justify-content: flex-start;
