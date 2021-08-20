@@ -11,13 +11,15 @@
       <BackButton :toPath="'/cohorts'" />
     </div>
     <div id="main-section">
-          <ImportCsv/>
+      <div class="people-frame">
+        <h2 class="people-label">STUDENTS</h2>
+      </div>
     </div>
     <div id="right-section">
-      <!-- <div class="galaxy-frame">
-        <h2 class="galaxy-label">Map</h2>
-        
-      </div> -->
+      <div class="people-right-frame mb-5">
+        <h2 class="people-label">ADD STUDENTS</h2>
+        <ImportCsv :currentCohortId="currentCohortId" />
+      </div>
     </div>
   </div>
 </template>
@@ -46,7 +48,7 @@ export default {
   },
   props: ["cohortId", "cohortName"],
   mounted() {
-    this.bindAll()
+    this.bindAll();
   },
   data() {
     return {
@@ -99,6 +101,29 @@ export default {
   align-items: center;
   flex-direction: column;
   // border: 1px solid pink;
+
+  .people-frame {
+    position: relative;
+    width: 100%;
+    margin: 30px 20px;
+    height: 90%;
+    // margin: 30px 20px;
+    border: 1px solid var(--v-missionAccent-base);
+
+    .people-label {
+      font-size: 0.8rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      // ribbon label
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      background-color: var(--v-missionAccent-base);
+      color: var(--v-background-base);
+      padding: 0px 30px 0px 5px;
+      clip-path: polygon(0 0, 100% 0, 90% 100%, 0% 100%);
+    }
+  }
 }
 
 #right-section {
@@ -107,25 +132,31 @@ export default {
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
-}
 
-.galaxy-frame {
-  position: relative;
-  width: 100%;
-  margin: 30px 20px;
-  border: 1px solid var(--v-galaxyAccent-base);
+  .people-right-frame {
+    position: relative;
+    width: 100%;
+    margin: 30px 20px;
+    min-height: 40%;
+    // margin: 30px 20px;
+    border: 1px solid var(--v-missionAccent-base);
 
-  .galaxy-label {
-    // ribbon label
-    position: absolute;
-    top: 0;
-    left: -1px;
-    background-color: var(--v-galaxyAccent-base);
-    color: var(--v-background-base);
-    padding: 0px 15px 0px 5px;
-    clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%);
+    .people-label {
+      font-size: 0.8rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      // ribbon label
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      background-color: var(--v-missionAccent-base);
+      color: var(--v-background-base);
+      padding: 0px 30px 0px 5px;
+      clip-path: polygon(0 0, 100% 0, 90% 100%, 0% 100%);
+    }
   }
 }
+
 /* width */
 ::-webkit-scrollbar {
   width: 10px;

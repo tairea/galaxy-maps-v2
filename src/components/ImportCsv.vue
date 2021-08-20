@@ -1,18 +1,8 @@
 <template>
   <div class="importContainer">
-    <div class="people-frame mb-5">
-      <h2 class="people-label">IMPORT STUDENTS</h2>
-      <v-row class="pt-9 pl-2">
+      <v-row class="pt-2 pl-2">
         <v-col cols="6">
           <div class="d-flex justify-center align-center">
-            <!-- <input
-              label="Upload CSV File"
-              type="file"
-              id="csv_file"
-              name="csv_file"
-              class="form-control"
-              @change="loadCSV($event)"
-            > -->
             <v-file-input
               label="Upload CSV File"
               outlined
@@ -22,14 +12,16 @@
               name="csv_file"
               class="form-control"
               @change="loadCSV"
+              ref="csvFile"
             ></v-file-input>
           </div>
         </v-col>
+        <v-col cols="6">
+          <p class="downloadCsv" >download csv template</p>
+        </v-col>
       </v-row>
-    </div>
 
     <div v-if="showTable" class="people-frame">
-      <h2 class="people-label">IMPORTED</h2>
       <v-simple-table v-if="parse_csv" class="table">
         <thead>
           <tr>
@@ -54,10 +46,11 @@
     </div>
 
     <v-btn
+      v-if="parse_csv.length > 0"
       @click="saveStudents"
       color="missionAccent"
       depressed
-      class="mt-6"
+      class="ml-4 mt-4"
       :loading="loading"
       :disabled="disabled"
       >{{buttonLabel}}
@@ -73,7 +66,7 @@ import { db, storage } from "../store/firestoreConfig";
 export default {
   name: "ImportCsv",
   components: {},
-  props: [],
+  props: ["currentCohortId"],
   data() {
     return {
       channel_name: "",
@@ -100,6 +93,7 @@ export default {
       let counter = 0;
       // Add a new document in collection "people"
       this.parse_csv.forEach((student, index, array) => {
+        student.enrolledCohorts = [this.currentCohortId]
         db.collection("people")
           .doc(student.nsnNumber)
           .set(student)
@@ -109,20 +103,6 @@ export default {
             if(counter === array.length) {
               this.saveStudentsCompleted()
             }
-            // console.log("Document successfully written!");
-            // this.dialog = false;
-            //get doc id from firestore (aka course id)
-            // const courseId = docRef.id;
-            //set courseID to Store state 'state.currentCourseId' (so not relying on router params)
-            // this.$store.commit("setCurrentCourseId", courseId);
-            // route to newly created galaxy
-            // this.$router.push({
-            //   name: "GalaxyView",
-            //   params: {
-            //     courseTitle: this.camelize(course.title),
-            //     courseId: courseId,
-            //   },
-            // });
           })
           .catch((error) => {
             console.error("Error writing document: ", error);
@@ -131,8 +111,10 @@ export default {
     },
     saveStudentsCompleted() {
       console.log("All students written to database");
+      // this.$refs.csvFile.value = null;
       this.buttonLabel = "Students Successfully Added to Database"
       this.loading = false
+      this.showTable = false
       this.disabled = true
     },
     sortBy: function(key) {
@@ -175,6 +157,7 @@ export default {
       return result; // JavaScript object
     },
     loadCSV(e) {
+      this.resetButton()
       this.showTable = true;
       console.log("loaded", e);
       var vm = this;
@@ -204,6 +187,10 @@ export default {
         return index === 0 ? match.toLowerCase() : match.toUpperCase();
       });
     },
+    resetButton() {
+      this.disabled = false
+      this.buttonLabel = "Add Students to Database"
+    }
   },
 };
 </script>
@@ -212,31 +199,38 @@ export default {
 .importContainer {
   width: 100%;
   margin: 30px 0px;
-}
 
-.people-frame {
-  position: relative;
-  width: 100%;
-  // margin: 30px 20px;
-  border: 1px solid var(--v-missionAccent-base);
-
-  .people-label {
+  .downloadCsv {
     font-size: 0.8rem;
-    font-weight: 400;
     text-transform: uppercase;
-    // ribbon label
-    position: absolute;
-    top: -1px;
-    left: -1px;
-    background-color: var(--v-missionAccent-base);
-    color: var(--v-background-base);
-    padding: 0px 30px 0px 5px;
-    clip-path: polygon(0 0, 100% 0, 90% 100%, 0% 100%);
+    color: var(--v-missionAccent-base);
   }
 }
 
 .table {
   font-size: 0.75rem;
   padding: 20px;
+}
+
+// ---- SCROLLBAR STYLES ----
+/* width */
+.table .v-data-table__wrapper::-webkit-scrollbar {
+  width: 10px;
+  height: 10px; 
+}
+
+/* Track */
+.table .v-data-table__wrapper::-webkit-scrollbar-track {
+  background: var(--v-background-base);
+}
+
+/* Handle */
+.table .v-data-table__wrapper::-webkit-scrollbar-thumb:horizontal {
+  background: var(--v-missionAccent-base);
+}
+
+/* Handle on hover */
+.table .v-data-table__wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--v-missionAccent-base);
 }
 </style>
