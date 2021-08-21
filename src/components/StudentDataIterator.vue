@@ -46,7 +46,7 @@
               <v-btn-toggle v-model="sortDesc" mandatory style="background-color: transparent;" tile class="d-flex justify-center align-center ml-2">
                 <v-btn depressed color="missionAccent" :value="false" small>
                   <v-icon small>mdi-arrow-up</v-icon>
-                </v-btn class="d-flex justify-center align-center">
+                </v-btn>
                 <v-btn depressed color="missionAccent" :value="true" small>
                   <v-icon small>mdi-arrow-down</v-icon>
                 </v-btn>

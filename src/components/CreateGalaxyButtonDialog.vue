@@ -47,7 +47,7 @@
                   ></v-file-input>
                 </v-row>
                 <v-row v-if="course.image.url">
-                  <v-img :src="course.image.url"></v-img>
+                  <v-img :src="course.image.url" max-width="150px" max-height="150px"></v-img>
                 </v-row>
               </v-col>
             </div>
@@ -58,6 +58,7 @@
                 outlined
                 color="green darken-1"
                 @click="saveCourse(course)"
+                :disabled="disabled"
               >
                 <v-icon left>
                   mdi-check
@@ -90,15 +91,19 @@ export default {
     },
     uploadedImage: "",
     percentage: 0,
+    disabled: false,
+    loading: false,
   }),
   methods: {
     saveCourse(course) {
+      this.loading = true
       // Add a new document in collection "courses"
       db.collection("courses")
         .add(course)
         .then((docRef) => {
           console.log("Document successfully written!");
           this.dialog = false;
+          this.loading = false
           //get doc id from firestore (aka course id)
           const courseId = docRef.id;
           //set courseID to Store state 'state.currentCourseId' (so not relying on router params)
@@ -124,6 +129,7 @@ export default {
       });
     },
     storeImage() {
+      this.disabled = true
       console.log("this.uploadedImage",this.uploadedImage)
       // ceate a storage ref
       var storageRef = storage.ref("course-images/" + this.course.title + "-" + this.uploadedImage.name);
@@ -151,6 +157,7 @@ export default {
             // add image url to course obj
             this.course.image.url = downloadURL;
             this.course.image.name = this.uploadedImage.name;
+            this.disabled = false
           });
         }
       );
