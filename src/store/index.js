@@ -28,6 +28,8 @@ export default new Vuex.Store({
     students: [],
     currentCourseId: "",
     currentCohortId: "",
+    currentCourseNodes: [],
+    currentCourseEdges: [],
     // galaxies: [mercury, venus, earth]
   },
   getters: {
@@ -90,6 +92,15 @@ export default new Vuex.Store({
       });
       return studentsInCohort
     },
+    getGalaxyMapByCourseId: (state) => (id) => {
+      //go to cohorts, and check if they in courses with this id
+      let course = state.courses.find((course) => course.id === id)
+      console.log("course is",course)
+      console.log("map nodes",course.map-nodes)
+      console.log("map edges",course.map-edges)
+      const map = {nodes: course.map-nodes, edges: course.map-edges}
+      return map
+    },
 
     // completedCourses: (state) => {
     //   return state.courses.filter(course => course.status.completed)
@@ -111,7 +122,7 @@ export default new Vuex.Store({
   },
   actions: {
     bindCourses: firestoreAction(({ bindFirestoreRef }) => {
-      return bindFirestoreRef("courses", db.collection("courses"));
+      return bindFirestoreRef("courses", db.collection("courses"), { maxRefDepth: 2 });
     }),
     bindCohorts: firestoreAction(({ bindFirestoreRef }) => {
       return bindFirestoreRef("cohorts", db.collection("cohorts"));
@@ -121,6 +132,12 @@ export default new Vuex.Store({
     }),
     bindStudents: firestoreAction(({ bindFirestoreRef }) => {
       return bindFirestoreRef("students", db.collection("people"));
+    }),
+    bindNodes: firestoreAction(({ bindFirestoreRef }, id) => {
+      return bindFirestoreRef("currentCourseNodes", db.collection("courses").doc(id).collection("map-nodes"));
+    }),
+    bindEdges: firestoreAction(({ bindFirestoreRef }, id)  => {
+      return bindFirestoreRef("currentCourseEdges", db.collection("courses").doc(id).collection("map-edges"));
     }),
   },
 });
