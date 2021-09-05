@@ -55,6 +55,7 @@ export default {
   padding: 20px;
   // background: var(--v-baseAccent-base);
   position: relative;
+  backdrop-filter: blur(2px);
 
   .assigned-label {
     font-size: 0.8rem;

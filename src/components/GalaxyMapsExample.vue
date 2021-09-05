@@ -8,21 +8,27 @@
       :options="network.options"
       @click="click()"
       @double-click="doubleClick"
-      @oncontext="networkEvent('oncontext')"
-      @hold="networkEvent('hold')"
-      @release="networkEvent('release')"
-      @select="networkEvent('select')"
-      @select-node="networkEvent('selectNode')"
-      @select-edge="networkEvent('selectEdge')"
-      @deselect-node="networkEvent('deselectNode')"
-      @deselect-edge="networkEvent('deselectEdge')"
-      @drag-start="networkEvent('dragStart')"
-      @dragging="networkEvent('dragging')"
+      @select-node="selectNode"
+      @select-edge="selectEdge"
+      @nodes-add="addNode"
+      @nodes-update="updateNode"
+      @nodes-remove="deleteNode"
+      @edges-add="addEdge"
+      @edges-update="updateEdge"
+      @edges-remove="deleteEdge"
       @drag-end="dragEnd"
       @hover-node="networkEvent('hoverNode')"
       @blur-node="networkEvent('blurNode')"
       @hover-edge="networkEvent('hoverEdge')"
       @blur-edge="networkEvent('blurEdge')"
+      @oncontext="networkEvent('oncontext')"
+      @hold="networkEvent('hold')"
+      @release="networkEvent('release')"
+      @select="networkEvent('select')"
+      @deselect-node="networkEvent('deselectNode')"
+      @deselect-edge="networkEvent('deselectEdge')"
+      @drag-start="networkEvent('dragStart')"
+      @dragging="networkEvent('dragging')"
       @zoom="networkEvent('zoom')"
       @show-popup="networkEvent('showPopup')"
       @hide-popup="networkEvent('hidePopup')"
@@ -36,15 +42,9 @@
       @animation-finished="networkEvent('animationFinished')"
       @config-change="networkEvent('configChange')"
       @nodes-mounted="networkEvent('nodes-mounted')"
-      @nodes-add="addNode"
-      @nodes-update="updateNode"
-      @nodes-remove="deleteNode"
       @edges-mounted="networkEvent('edges-mounted')"
       @control-node-dragging="networkEvent('control node dragging')"
       @control-node-drag-end="networkEvent('control node drag end')"
-      @edges-add="addEdge"
-      @edges-update="updateEdge"
-      @edges-remove="deleteEdge"
     ></network>
 
     <v-dialog v-model="dialog" width="40%" light>
@@ -81,7 +81,7 @@
         <div class="tile saveButton">
           <!-- SAVE -->
           <v-btn
-          v-if="!editingType == 'edge' || editingType == ''"
+            v-if="!editingType == 'edge' || editingType == ''"
             outlined
             color="green darken-1"
             @click="saveNode(newNodeData)"
@@ -130,13 +130,14 @@ import "vue2vis/dist/vue2vis.css";
 import { mapState, mapGetters } from "vuex";
 
 export default {
+  name: "GalaxyViewExample",
+  props: ["editing"],
   data: () => ({
     nowActive: false,
     dialog: false,
     dialogTitle: "",
     loading: false,
     deleting: false,
-    editing: false,
     editingType: "",
     newNodeData: {
       id: "",
@@ -190,6 +191,9 @@ export default {
 
     network: {
       options: {
+        // interaction: {
+        //   hover: true,
+        // },
         physics: {
           enabled: false,
           solver: "repulsion",
@@ -200,13 +204,16 @@ export default {
         edges: {
           length: 50, // Longer edges between nodes.
           smooth: false,
+          color: {
+            color: "#848484",
+          },
         },
         nodes: {
           shape: "dot",
           size: 7,
           color: {
             border: "grey",
-
+            background: "#69A1E2",
             highlight: {
               border: "black",
               background: "white",
@@ -215,6 +222,10 @@ export default {
               border: "orange",
               background: "grey",
             },
+          },
+          fixed: {
+            x: true,
+            y: true,
           },
           font: { color: "white" },
           // shapeProperties: {
@@ -227,7 +238,7 @@ export default {
               enabled: true,
               // min: 14,
               // max: 30,
-              maxVisible: 20,
+              maxVisible: 2,
               // drawThreshold: 5,
             },
             // customScalingFunction: function(min, max, total, value) {
@@ -240,10 +251,10 @@ export default {
             // },
           },
         },
-        manipulation: {
-          enabled: true,
-          initiallyActive: false,
-        },
+        // manipulation: {
+        //   enabled: true,
+        //   initiallyActive: false,
+        // },
       },
     },
   }),
@@ -264,15 +275,33 @@ export default {
       "currentCourseNodes",
       "currentCourseEdges",
     ]),
-    bindLabel() {
-      const label =
-        this.editingType == "node"
-          ? this.newNodeData.label
-          : this.newEdgeData.id;
-      console.log("label", label);
-      return label;
-    },
     // ...mapGetters(["getGalaxyMapByCourseId"]),
+  },
+  watch: {
+    editing: function(isEditing) {
+      // EDITING
+      if (this.editing) {
+        console.log("EDITING");
+        // update options
+        this.network.options.nodes.color.background = "#00E676";
+        this.network.options.edges.color.color = "#00E676";
+        this.network.options.nodes.fixed.x = false
+        this.network.options.nodes.fixed.y = false
+        this.$refs.network.setOptions(this.network.options);
+
+        // add node mode
+        this.$refs.network.enableEditMode();
+      }
+      // NOT EDITING
+      else {
+        console.log("NOT EDITING");
+        this.network.options.nodes.color.background = "#69A1E2";
+        this.network.options.edges.color.color = "#848484";
+        this.network.options.nodes.fixed.x = true
+        this.network.options.nodes.fixed.y = true
+        this.$refs.network.setOptions(this.network.options);
+      }
+    },
   },
   methods: {
     //      @before-drawing="drawBg"   //removed event
@@ -301,36 +330,38 @@ export default {
       console.log("resize");
       // resive event used as loaded flag
       this.nowActive = true;
+      // this.$refs.network.stabilize();
     },
+
     doubleClick(data) {
-      console.log("double click");
-      console.log(data);
-      // if double click an exisiting node. edit node
-      if (data.nodes[0]) {
-        this.editing = true;
-        console.log("node double-clicked");
-        const nodeId = data.nodes[0];
-        this.newNodeData = this.$refs.network.getNode(nodeId);
-        console.log("selected node", this.newNodeData);
-        this.editingType = "node";
-        this.dialogTitle = "Edit Node";
-        this.dialog = true;
-      }
-      // if double click an exisiting edge. edit edge
-      else if (data.edges[0] && !data.nodes[0]) {
-        this.editing = true;
-        console.log("edge double-clicked");
-        const edgeId = data.edges[0];
-        this.newEdgeData = this.$refs.network.getEdge(edgeId);
-        console.log("selected edge", this.newEdgeData);
-        this.editingType = "edge";
-        this.dialogTitle = "Delete Edge";
-        this.dialog = true;
-      } else {
-        // nothing double clicked
-        console.log("nothing double-clicked");
-        this.$refs.network.addNodeMode();
-      }
+      // console.log("double click");
+      // console.log(data);
+      // // if double click an exisiting node. edit node
+      // if (data.nodes[0]) {
+      //   this.editing = true;
+      //   console.log("node double-clicked");
+      //   const nodeId = data.nodes[0];
+      //   this.newNodeData = this.$refs.network.getNode(nodeId);
+      //   console.log("selected node", this.newNodeData);
+      //   this.editingType = "node";
+      //   this.dialogTitle = "Edit Node";
+      //   this.dialog = true;
+      // }
+      // // if double click an exisiting edge. edit edge
+      // else if (data.edges[0] && !data.nodes[0]) {
+      //   this.editing = true;
+      //   console.log("edge double-clicked");
+      //   const edgeId = data.edges[0];
+      //   this.newEdgeData = this.$refs.network.getEdge(edgeId);
+      //   console.log("selected edge", this.newEdgeData);
+      //   this.editingType = "edge";
+      //   this.dialogTitle = "Delete Edge";
+      //   this.dialog = true;
+      // } else {
+      //   // nothing double clicked
+      //   console.log("nothing double-clicked");
+      //   this.$refs.network.addNodeMode();
+      // }
     },
     cancel(data) {
       // delete new node if not in Database (removing node that never got saved (ie. cancelled))
@@ -340,8 +371,8 @@ export default {
       if (!doesNodeExist.length > 0) {
         // console.log("doesnt exists");
         // this.$refs.network.disableEditMode();
-        this.$refs.network.deleteSelected(this.newNodeData.id);
-        console.log("why cancel no delete!!! :( ");
+        // this.$refs.network.deleteSelected(this.newNodeData.id);
+        // console.log("why cancel no delete!!! :( ");
       }
       this.dialog = false;
       this.editingType = "";
@@ -349,90 +380,119 @@ export default {
     dragEnd(data) {
       console.log("drag end:", data);
       // only get positions if a node is dragged
-      if (data.nodes[0]) {
-        const nodeId = data.nodes[0];
-        const position = this.$refs.network.getPositions(data.nodes[0]);
-        console.log("after drag position", position[nodeId]);
-        // update node position in DB
-        db.collection("courses")
-          .doc(this.currentCourseId)
-          .collection("map-nodes")
-          .doc(nodeId)
-          .update({
-            x: position[nodeId].x,
-            y: position[nodeId].y,
-          })
-          .then(() => {
-            console.log("Node position successfully updated!");
-          })
-          .catch((error) => {
-            console.error("Error writing node position: ", error);
-          });
+      if (this.editing) {
+        if (data.nodes[0]) {
+          const nodeId = data.nodes[0];
+          const position = this.$refs.network.getPositions(data.nodes[0]);
+          console.log("after drag position", position[nodeId]);
+          // update node position in DB
+          db.collection("courses")
+            .doc(this.currentCourseId)
+            .collection("map-nodes")
+            .doc(nodeId)
+            .update({
+              x: position[nodeId].x,
+              y: position[nodeId].y,
+            })
+            .then(() => {
+              console.log("Node position successfully updated!");
+            })
+            .catch((error) => {
+              console.error("Error writing node position: ", error);
+            });
+        }
       }
     },
-    // =========== ADD METHODS ===========
-    addNode(data) {
-      this.newNodeData = {};
-      this.editing = false;
-      // prevents dialog opening when nodes first load. wait till nowActive by clicking on canvas
-      if (this.nowActive == true) {
+    // =========== SELECT METHODS ===========
+    selectNode(data) {
+      if (this.editing) {
+        console.log("node selected", data);
+        const nodeId = data.nodes[0];
+        this.newNodeData = this.$refs.network.getNode(nodeId);
+        console.log("selected node", this.newNodeData);
+        this.editingType = "node";
+        this.dialogTitle = "Edit Node";
+        this.dialog = true;
+      } else {
+        console.log("route to system");
+      }
+    },
+    selectEdge(data) {
+      if (this.editing) {
+        const edgeId = data.edges[0];
+        console.log("edge id", edgeId);
+        this.newEdgeData = this.$refs.network.getEdge(edgeId);
+        console.log("selected edge", this.newEdgeData);
+        this.editingType = "edge";
+        this.dialogTitle = "Edit Edge";
         this.dialog = true;
       }
-        this.dialogTitle = "New Node";
-      console.log("addNode");
-      console.log(data);
-      const nodeId = data.properties.items[0];
-      this.newNodeData.id = nodeId;
-      const position = this.$refs.network.getPositions(nodeId);
-      this.newNodeData.x = position[nodeId].x;
-      this.newNodeData.y = position[nodeId].y;
-      console.log("this.newNodeData", this.newNodeData);
-      // this.newNodeData.id = new Date().getTime()
-      // this.$refs.network.stabilize();
-    },
-    addEdge(data) {
-      // console.log("edge is nowActive?", this.nowActive)
-      if (this.nowActive) {
-        console.log("adding edge");
-        this.newEdgeData = this.$refs.network.getEdge(data.properties.items[0]);
-        console.log("new edge info:", this.newEdgeData);
-        db.collection("courses")
-          .doc(this.currentCourseId)
-          .collection("map-edges")
-          .doc(this.newEdgeData.id)
-          .set(this.newEdgeData)
-          .then(() => {
-            console.log("Edge successfully written!");
-          })
-          .catch((error) => {
-            console.error("Error writing node: ", error);
-          });
-        this.newEdgeData = {};
-      }
-      // this.nowActive = false
     },
     // =========== SAVE METHODS ===========
     saveNode(data) {
-      this.loading = true;
-      this.newNodeData.id = data.id;
-      this.newNodeData.label = data.label;
-      console.log("newNodeData node data:", this.newNodeData);
-      db.collection("courses")
-        .doc(this.currentCourseId)
-        .collection("map-nodes")
-        .doc(this.newNodeData.id)
-        .set(this.newNodeData)
-        .then((docRef) => {
-          console.log("Node successfully written!");
-          this.loading = false;
-          this.dialog = false;
-        })
-        .catch((error) => {
-          console.error("Error writing node: ", error);
-        });
+      console.log("save node", data);
+      // this.loading = true;
+      // this.newNodeData.id = data.id;
+      // this.newNodeData.label = data.label;
+      // console.log("newNodeData node data:", this.newNodeData);
+      // db.collection("courses")
+      //   .doc(this.currentCourseId)
+      //   .collection("map-nodes")
+      //   .doc(this.newNodeData.id)
+      //   .set(this.newNodeData)
+      //   .then((docRef) => {
+      //     console.log("Node successfully written!");
+      //     this.loading = false;
+      //     this.dialog = false;
+      //   })
+      //   .catch((error) => {
+      //     console.error("Error writing node: ", error);
+      //   });
     },
     saveEdge(data) {
       console.log("saving Edge data:", data);
+    },
+    // =========== ADD METHODS ===========
+    addNode(data) {
+      console.log("add node", data);
+      // this.newNodeData = {};
+      // // prevents dialog opening when nodes first load. wait till nowActive by clicking on canvas
+      // if (this.nowActive == true) {
+      //   this.dialog = true;
+      // }
+      // this.dialogTitle = "New Node";
+      // console.log("addNode");
+      // console.log(data);
+      // const nodeId = data.properties.items[0];
+      // this.newNodeData.id = nodeId;
+      // const position = this.$refs.network.getPositions(nodeId);
+      // this.newNodeData.x = position[nodeId].x;
+      // this.newNodeData.y = position[nodeId].y;
+      // console.log("this.newNodeData", this.newNodeData);
+      // // this.newNodeData.id = new Date().getTime()
+      // // this.$refs.network.stabilize();
+    },
+    addEdge(data) {
+      console.log("add node", data);
+      // console.log("edge is nowActive?", this.nowActive)
+      // if (this.nowActive) {
+      //   console.log("adding edge");
+      //   this.newEdgeData = this.$refs.network.getEdge(data.properties.items[0]);
+      //   console.log("new edge info:", this.newEdgeData);
+      //   db.collection("courses")
+      //     .doc(this.currentCourseId)
+      //     .collection("map-edges")
+      //     .doc(this.newEdgeData.id)
+      //     .set(this.newEdgeData)
+      //     .then(() => {
+      //       console.log("Edge successfully written!");
+      //     })
+      //     .catch((error) => {
+      //       console.error("Error writing node: ", error);
+      //     });
+      //   this.newEdgeData = {};
+      // }
+      // this.nowActive = false
     },
     // =========== DELETE METHODS ===========
     deleteFromMap() {
@@ -441,8 +501,8 @@ export default {
       } else if (this.editingType == "edge") {
         this.deleteEdge();
       }
-      this.resetEditing()
-      this.resetNewData()
+      this.resetEditing();
+      this.resetNewData();
     },
     deleteNode(data) {
       console.log("deleteNode data:", data);
@@ -494,14 +554,14 @@ export default {
       this.$refs.network.redraw();
     },
     // =========== RESET METHODS ===========
-     resetEditing() {
-      this.editing = false
-      this.editingType = ""
+    resetEditing() {
+      // this.editing = false;
+      this.editingType = "";
     },
     resetNewData() {
-      this.newNodeData = {}
-      this.newEdgeData = {}
-    }
+      this.newNodeData = {};
+      this.newEdgeData = {};
+    },
   },
 };
 </script>
@@ -510,11 +570,15 @@ export default {
 .full-height {
   width: 100%;
   height: 100%;
+  // position: absolute;
+  // top: 0;
+  // z-index: 1;
 }
 
 div.vis-network div.vis-edit-mode {
   top: 20px !important;
-  left: 0px !important;
+  left: 50% !important;
+  width: 30%;
 
   div.vis-button.vis-edit {
     // ICON
@@ -537,10 +601,13 @@ div.vis-network div.vis-edit-mode {
 }
 
 div.vis-network div.vis-manipulation {
-  top: auto !important;
-  bottom: 0px !important;
+  top: 10px !important;
+  // bottom: 0px !important;
   background: var(--v-missionAccent-base) !important;
   border: none !important;
+  width: 30%;
+  left: 50%;
+  transform: translateX(-50%);
 
   .vis-label {
     color: var(--v-background-base);
@@ -550,6 +617,12 @@ div.vis-network div.vis-manipulation {
 
   .vis-add {
     background-image: url("../assets/svgIcons/star-plus.svg") !important;
+  }
+
+  .vis-close {
+    background-image: url("../assets/svgIcons/close.svg") !important;
+    right: 100px !important;
+    top: 10px !important;
   }
 
   .vis-connect {

@@ -11,32 +11,19 @@
       <BackButton :toPath="'/galaxy'" />
     </div>
     <div id="main-section">
-
-      <Vis ref="vis" :currentCourseId="currentCourseId" @edit-item="editItem" />
-      <!-- <VisEdit ref="edit" /> -->
-
-       <v-speed-dial v-model="fab" left top direction="right" class="fab-button">
-        <template #activator>
-          <v-btn v-model="fab" fab dark color="galaxyAccent" outlined tile>
-            <v-icon v-if="fab">mdi-check</v-icon>
-            <v-icon v-else>mdi-plus</v-icon>
-          </v-btn>
-        </template>
+      <div class="mission-frame">
+        <h2 class="mission-label">Map</h2> -->
       
-        <v-btn color="missionAccent" fab dark small outlined tile title="Add Node"  @click="$refs.vis.addNode()">
-          <v-icon>mdi-dots-hexagon</v-icon>
-        </v-btn>
-          <v-btn color="missionAccent" fab dark small outlined tile title="Add Edge" @click="$refs.vis.addEdge()">
-          <v-icon>mdi-chart-timeline-variant</v-icon>
-        </v-btn>
-        <v-btn fab dark small color="baseAccent" outlined tile title="Edit" @click="$refs.vis.Edit()">
-          <v-icon>mdi-pencil</v-icon>
-        </v-btn>
-        <v-btn fab dark small color="red" outlined tile title="Delete" @click="$refs.vis.deleteSelected()">
-          <v-icon>mdi-delete</v-icon>
-        </v-btn>
-      </v-speed-dial>
-     
+      <MissionsList
+        :tasks="getTasksByCourseId(currentCourseId)"
+        :courseId="currentCourseId"
+      />
+    </div>
+    <div id="right-section">
+      <div class="galaxy-frame">
+        <h2 class="galaxy-label">Map</h2>
+        <Galaxy :course="getCourseById(currentCourseId)" :size="'0.27em'" />
+      </div>
     </div>
   </div>
 </template>
@@ -51,13 +38,10 @@ import GalaxyMap from "../components/GalaxyMap";
 import GalaxyMapsExample from "../components/GalaxyMapsExample";
 import BackButton from "../components/BackButton";
 
-import Vis from "../components/Vis";
-import VisEdit from "../components/VisEdit";
-
 import { mapState, mapGetters } from "vuex";
 
 export default {
-  name: "GalaxyView",
+  name: "SystemView",
   components: {
     GalaxyInfo,
     AssignedInfo,
@@ -67,14 +51,12 @@ export default {
     GalaxyMap,
     BackButton,
     GalaxyMapsExample,
-    Vis,
-    VisEdit
   },
   props: ["courseId", "courseTitle"],
   mounted() {},
   data() {
     return {
-      fab: "",
+      editing: false,
     };
   },
   computed: {
@@ -85,11 +67,7 @@ export default {
       "getCohortsInThisCourse",
     ]),
   },
-  methods: {
-    editItem (item, callback) {
-      this.$refs.edit.edit(item, callback)
-    }
-  },
+  methods: {},
 };
 </script>
 
@@ -123,9 +101,9 @@ export default {
 
 #main-section {
   // width: calc(100% - 30px);
-  position: absolute;
+  // position: absolute;
   width: 100vw;
-  // margin: 0px 30px 0 15px;
+  margin: 0px 30px 0 15px;
   height: 100%;
   display: flex;
   justify-content: flex-start;
@@ -133,14 +111,6 @@ export default {
   flex-direction: column;
   // border: 1px solid pink;
   z-index: 2;
-
-  .fab-button {
-    position: fixed; 
-    margin-top: 14px; 
-    padding: 0; 
-    left: 20%;
-    z-index: 4;
-  }
 
   .map-edit-button {
     margin-top: 30px;

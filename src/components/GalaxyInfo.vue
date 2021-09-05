@@ -2,10 +2,8 @@
   <div id="galaxy-info">
     <h2 class="galaxy-label">Galaxy</h2>
     <h1 class="galaxy-title">{{ course.title }}</h1>
-    <!-- <div class="d-flex justify-center align-center"> -->
-    <v-img class="galaxy-image" width="auto" :src="course.image.url"></v-img>
-    <!-- </div> -->
     <p class="galaxy-description">{{ course.description }}</p>
+    <v-img class="galaxy-image" :src="course.image.url"></v-img>
     <EditGalaxyButtonDialog :course="course" />
   </div>
 </template>
@@ -36,6 +34,7 @@ export default {
   padding: 20px;
   // background: var(--v-baseAccent-base);
   position: relative;
+  backdrop-filter: blur(2px);
 
   .galaxy-image {
     // --- CIRCLE IMAGE ---
@@ -43,6 +42,8 @@ export default {
     // width: 200px !important;
     // height: 200px !important;
     // margin: auto;
+    // max-width: 60px;
+    margin-bottom: 20px;
   }
 }
 
@@ -73,7 +74,7 @@ h1 {
 }
 
 .galaxy-description {
-  margin-top: 10px;
+  // margin-top: 10px;
   color: var(--v-galaxyAccent-base);
   // font-size: 0.9rem;
 }

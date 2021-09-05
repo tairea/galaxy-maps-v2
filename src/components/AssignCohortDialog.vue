@@ -7,10 +7,10 @@
           <template v-slot:activator="{ on, attrs }">
             <!-- ASSIGN COHORT -->
             <v-btn v-if="assignCohorts" outlined color="baseAccent" v-bind="attrs" v-on="on">
-              <v-icon left>
+              <v-icon small>
                 mdi-account-multiple-plus
               </v-icon>
-              ASSIGN COHORT
+              <!-- ASSIGN COHORT -->
             </v-btn>
             <!-- ASSIGN GALAXY -->
             <v-btn v-else-if="assignCourses" outlined color="baseAccent" v-bind="attrs" v-on="on">
@@ -169,4 +169,5 @@ export default {
   width: 100%;
   justify-content: center;
 }
+
 </style>

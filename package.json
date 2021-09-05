@@ -10,6 +10,7 @@
     "core-js": "^3.6.5",
     "firebase": "^8.7.1",
     "vis-data": "^7.1.2",
+    "vis-network": "^9.1.0",
     "vue": "^2.6.11",
     "vue-router": "^3.2.0",
     "vue2vis": "0.0.18",

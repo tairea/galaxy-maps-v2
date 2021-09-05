@@ -119,6 +119,11 @@ export default new Vuex.Store({
     setCurrentCohortId(state, cohortId) {
       state.currentCohortId = cohortId;
     },
+    addNodeToCurrentNodes(state, node) {
+      console.log("commiting node")
+      state.currentCourseNodes.push(node)
+      console.log(state.currentCourseNodes)
+    }
   },
   actions: {
     bindCourses: firestoreAction(({ bindFirestoreRef }) => {
