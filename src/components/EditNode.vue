@@ -1,0 +1,293 @@
+<template>
+  <div>
+    <v-dialog v-model="dialog" width="40%" light>
+      <div class="createNodeDialog">
+        <div class="create-field">
+          <div class="dialog-info">
+            <p class="dialog-title">{{ dialogTitle }}</p>
+            <div class="d-flex align-center">
+              <v-icon left color="missionAccent"
+                >mdi-information-variant</v-icon
+              >
+              <p class="dialog-description">{{ dialogDescription }}</p>
+            </div>
+          </div>
+
+          <v-text-field
+            class="input-field"
+            solo
+            color="missionAccent"
+            v-model="currentNode.label"
+            :autofocus="!editing"
+            background-color="white"
+          ></v-text-field>
+
+          <div class="action-buttons">
+            <v-btn
+              v-if="!editingType == 'edge' || editingType == ''"
+              outlined
+              color="green darken-1"
+              @click="saveNode(currentNode)"
+              class="mr-2"
+              :loading="loading"
+            >
+              <v-icon left>
+                mdi-check
+              </v-icon>
+              SAVE
+            </v-btn>
+
+            <v-btn
+              v-if="editing"
+              outlined
+              color="error"
+              @click="deleteFromMap"
+              class="mr-2"
+            >
+              <v-icon left>
+                mdi-delete
+              </v-icon>
+              DELETE
+            </v-btn>
+
+            <v-btn
+              outlined
+              color="white"
+              class="ml-2"
+              @click="cancel"
+              :disabled="loading"
+            >
+              <v-icon left>
+                mdi-close
+              </v-icon>
+              Cancel
+            </v-btn>
+          </div>
+        </div>
+      </div>
+    </v-dialog>
+
+    <!-- POPUP -->
+    <!-- popup follow drag -> :style="{ top: getCoords.y - 100 + 'px', left: getCoords.x + 30 + 'px' }" -->
+    <div
+      v-if="infoPopupShow"
+      ref="popup"
+      class="node-info-panel"
+      :style="{
+        top: infoPopupPosition.y - 100 + 'px',
+        left: infoPopupPosition.x + 30 + 'px',
+      }"
+    >
+      <p class="info-panel-label">
+        Node: <span style="color: white">{{ currentNode.label }}</span>
+      </p>
+      <p class="info-panel-label">
+        X: <span style="color: white">{{ currentNode.x }}</span>
+      </p>
+      <p class="info-panel-label">
+        Y: <span style="color: white">{{ currentNode.y }}</span>
+      </p>
+
+      <v-btn
+        class="map-button"
+        fab
+        dark
+        small
+        color="baseAccent"
+        outlined
+        tile
+        title="Edit"
+        @click="editNode"
+      >
+        <v-icon>mdi-pencil</v-icon>
+      </v-btn>
+      <v-btn
+        class="map-button ml-4"
+        fab
+        dark
+        small
+        color="red"
+        outlined
+        tile
+        title="Delete"
+        @click="deleteNode"
+        :loading="deleting"
+      >
+        <v-icon>mdi-delete</v-icon>
+      </v-btn>
+    </div>
+  </div>
+</template>
+
+<script>
+import { db } from "../store/firestoreConfig";
+import { mapState, mapGetters } from "vuex";
+
+export default {
+  name: "EditNode",
+  props: ["course", "coords"],
+  mounted() {},
+  data() {
+    return {
+      dialog: false,
+      dialogTitle: "Edit something hmmm...",
+      dialogDescription: "some kind of description",
+      newNodeData: {},
+      editing: false,
+      editingType: "",
+      loading: false,
+      deleting: false,
+      currentNode: {},
+      infoPopupShow: false,
+      infoPopupPosition: {},
+    };
+  },
+  computed: {
+    getCoords() {
+      return this.coords;
+    },
+  },
+  methods: {
+    cancel() {
+      console.log("cancel");
+      this.dialog = false;
+    },
+    deleteFromMap() {
+      console.log("delete");
+    },
+    saveNode(node) {
+      console.log("save", node);
+      this.loading = true;
+      console.log("saving node:", node);
+      db.collection("courses")
+        .doc(this.course.id)
+        .collection("map-nodes")
+        .doc(node.id)
+        .set(node)
+        .then((docRef) => {
+          console.log("Node successfully written!");
+          this.loading = false;
+          this.dialog = false;
+        })
+        .catch((error) => {
+          console.error("Error writing node: ", error);
+        });
+    },
+    add(node) {
+      console.log("from edit: ADD", node);
+      this.currentNode = node;
+      this.dialogTitle = "Enter the name of this Solar System";
+      this.dialogDescription =
+        "A Solar System is an Objective of the " +
+        this.course.title +
+        " Galaxy map";
+      this.dialog = true;
+    },
+    edit(node) {
+      console.log("from edit: EDIT", node);
+      this.currentNode = node;
+      this.infoPopupShow = true;
+    },
+    selected(node) {
+      // console.log("from edit: SELECTED", node);
+      this.type = node.type;
+      this.infoPopupPosition.x = node.DOMx;
+      this.infoPopupPosition.y = node.DOMy;
+      this.currentNode = node;
+      this.infoPopupShow = true;
+    },
+    deselect() {
+      this.infoPopupShow = false;
+    },
+    editNode() {
+      console.log("edit node");
+      this.dialog = true;
+    },
+    deleteFromMap() {
+      if (this.type == "node") {
+        this.deleteNode();
+      } else if (this.type == "edge") {
+        this.deleteEdge();
+      }
+      this.resetEditing();
+      this.resetNewData();
+    },
+    deleteNode() {
+      console.log("deleting node");
+      this.deleting = true;
+      db.collection("courses")
+        .doc(this.course.id)
+        .collection("map-nodes")
+        .doc(this.currentNode.id)
+        .delete()
+        .then(() => {
+          console.log("Node successfully deleted!");
+          this.deleting = false;
+          this.infoPopupShow = false;
+        })
+        .catch((error) => {
+          console.error("Error deleting node: ", error);
+        });
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.createNodeDialog {
+  color: var(--v-missionAccent-base);
+  background-color: var(--v-background-base);
+  border: 1px solid var(--v-missionAccent-base);
+  // background: lightGrey;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+}
+
+.create-field {
+  // width: 33.33%;
+  min-height: 400px;
+  display: flex;
+  justify-content: space-around;
+  align-items: space-around;
+  flex-direction: column;
+  color: var(--v-missionAccent-base);
+  padding: 20px;
+  text-transform: uppercase;
+  width: 100%;
+  // font-size: 0.6rem;
+  // border: 1px solid var(--v-missionAccent-base);
+
+  .dialog-title {
+    color: var(--v-missionAccent-base);
+    text-transform: uppercase;
+  }
+  .dialog-description {
+    color: var(--v-missionAccent-base);
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    margin: 0;
+    font-style: italic;
+  }
+
+  .input-field {
+    width: 100%;
+    text-align: center;
+    flex: none;
+  }
+}
+
+.node-info-panel {
+  border: 1px solid var(--v-missionAccent-base);
+  padding: 20px;
+  position: absolute;
+  backdrop-filter: blur(2px);
+  z-index: 3;
+
+  .info-panel-label {
+    color: var(--v-missionAccent-base);
+    text-transform: uppercase;
+    font-size: 0.8rem;
+  }
+}
+</style>

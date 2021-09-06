@@ -1,227 +1,142 @@
 <template>
-  <div>
+  <div class="full-height">
     <network
       ref="network"
-      :nodes="nodes"
-      :edges="edges"
-      :options="options"
-      class="galaxy-map"
-    ></network>
+      class="full-height"
+      :nodes="currentCourseNodes"
+      :edges="currentCourseEdges"
+      :options="network.options"
+      
+      @nodes-add="addNode"
 
-    <div id="network-popUp">
-      <span id="operation">node</span> <br />
-      <table style="margin: auto">
-        <tbody>
-          <tr>
-            <td>id</td>
-            <td><input id="node-id" value="new value" /></td>
-          </tr>
-          <tr>
-            <td>label</td>
-            <td><input id="node-label" value="new value" /></td>
-          </tr>
-        </tbody>
-      </table>
-      <input type="button" value="save" id="saveButton" />
-      <input type="button" value="cancel" id="cancelButton" />
-    </div>
+      @dragging="dragging"
+      
+      @drag-end="dragEnd"
+
+      @select-node="selectNode"
+      @deselect-node="deselectNode"
+
+    ></network>
   </div>
 </template>
 
 <script>
-// demo: https://visjs.github.io/vis-network/examples/network/other/manipulation.html
-// library: https://github.com/r3code/vue-vis-network
-// docs: https://visjs.github.io/vis-network/docs/network/
-
-import Vue from "vue";
-
 import { Network } from "vue2vis";
 
-// import "vue-vis-network/node_modules/vis-network/dist/vis-network.css";
+import { db } from "../store/firestoreConfig";
 
-Vue.component("network", Network);
+import "vue2vis/dist/vue2vis.css";
+
+import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "GalaxyMap",
-  props: [],
-
-  data() {
-    return {
-      // randomly create some nodes and edges
-      seed: 2,
-      nodes: [
-        { id: 0, label: 0, x: -147, y: -77 },
-        { id: 1, label: 1, x: -186, y: 88 },
-        { id: 2, label: 2, x: 8, y: 160 },
-        { id: 3, label: 3, x: 159, y: 28 },
-        { id: 4, label: 4, x: 45, y: -111 },
-      ],
-      edges: [
-        { from: 0, to: 1 },
-        { from: 0, to: 1 },
-        { from: 0, to: 2 },
-        { from: 0, to: 3 },
-        { from: 0, to: 4 },
-        { from: 0, to: 4 },
-        { from: 1, to: 2 },
-        { from: 1, to: 3 },
-        { from: 1, to: 3 },
-        { from: 2, to: 3 },
-        { from: 2, to: 4 },
-        { from: 3, to: 4 },
-      ],
+  data: () => ({
+    network: {
       options: {
-        layout: { randomSeed: this.seed },
-        manipulation: {
-          enabled: true,
-          initiallyActive: false,
-          addNode: (data, callback) => {
-            // filling in the popup DOM elements
-            document.getElementById("operation").innerText = "Add Node";
-            document.getElementById("node-id").value = data.id;
-            document.getElementById("node-label").value = data.label;
-            document.getElementById("saveButton").onclick = this.saveData(
-              data,
-              callback
-            );
-            document.getElementById("cancelButton").onclick = this.clearPopUp();
-            document.getElementById("network-popUp").style.display = "block";
+        physics: {
+          enabled: false,
+          solver: "repulsion",
+          repulsion: {
+            nodeDistance: 200, // Put more distance between the nodes.
           },
-          editNode: (data, callback) => {
-            // filling in the popup DOM elements
-            document.getElementById("operation").innerText = "Edit Node";
-            document.getElementById("node-id").value = data.id;
-            document.getElementById("node-label").value = data.label;
-            document.getElementById("saveButton").onclick = this.saveData.bind(
-              this,
-              data,
-              callback
-            );
-            document.getElementById("cancelButton").onclick = cancelEdit.bind(
-              this,
-              callback
-            );
-            document.getElementById("network-popUp").style.display = "block";
-          },
-          addEdge: (data, callback) => {
-            if (data.from == data.to) {
-              var r = confirm("Do you want to connect the node to itself?");
-              if (r == true) {
-                callback(data);
-              }
-            } else {
-              callback(data);
-            }
-          },
+        },
+        edges: {
+          length: 50, // Longer edges between nodes.
+          smooth: false,
         },
         nodes: {
-          physics: false,
+          shape: "dot",
+          size: 7,
+          color: {
+            border: "grey",
+            highlight: {
+              border: "black",
+              background: "white",
+            },
+            hover: {
+              border: "orange",
+              background: "grey",
+            },
+          },
+          font: { color: "white" },
+        },
+        interaction:{
+          hover:true
         },
       },
-      container: "",
-    };
+    },
+  }),
+  components: {
+    Network,
   },
-  computed: {},
+  async mounted() {
+    console.log("current course id:", this.currentCourseId);
+    await this.$store.dispatch("bindNodes", this.currentCourseId);
+    await this.$store.dispatch("bindEdges", this.currentCourseId);
+    console.log("nodes:", this.currentCourseNodes);
+    // console.log("edges:", this.currentCourseEdges);
+    console.log(this.$refs.network);
+  },
+  computed: {
+    ...mapState([
+      "currentCourseId",
+      "currentCourseNodes",
+      "currentCourseEdges",
+    ]),
+  },
   methods: {
-    clearPopUp() {
-      document.getElementById("saveButton").onclick = null;
-      document.getElementById("cancelButton").onclick = null;
-      document.getElementById("network-popUp").style.display = "none";
+    addNodeMode() {
+      console.log("add node mode")
+      this.$emit("setUiMessage", "Click on the map to add a node")
+      this.$refs.network.addNodeMode()
     },
-
-    cancelEdit(callback) {
-      clearPopUp();
-      callback(null);
+    addNode(data) {
+      console.log("node added",data)
+      const newNodeId = data.properties.items[0]
+      const newNode = this.$refs.network.getNode(newNodeId)
+      console.log("newNode",newNode)
+      this.$emit("add-node",newNode)
     },
-
-    saveData(data, callback) {
-      data.id = document.getElementById("node-id").value;
-      data.label = document.getElementById("node-label").value;
-      clearPopUp();
-      callback(data);
+    click() {
+      console.log("click")
+      this.$emit("setUiMessage", "")
     },
+    dragStart(data) {
+      console.log("drag start",data)
+    },
+    dragging(data) {
+      if (!data.nodes[0]) return
+      console.log("dragging",data)
+      // emit the x y drag coordinates
+      this.$emit("drag-coords",data.event.center)
+    },
+    dragEnd(data) {
+      console.log("drag End",data)
+    },
+    selectNode(data) {
+      console.log("select node:", data)
+      if (data.nodes.length == 1) {
+        // is type node
+        const nodeId = data.nodes[0]
+        const selectedNode = this.$refs.network.getNode(nodeId)
+        selectedNode.type = "node"
+        selectedNode.DOMx = data.pointer.DOM.x,
+        selectedNode.DOMy = data.pointer.DOM.y      
+        this.$emit("node-selected",selectedNode)
+      }
+    },
+    deselectNode() {
+      this.$emit("node-deselected")
+    }
   },
 };
 </script>
 
-<style lang="scss" scoped>
-.full {
+<style lang="scss">
+.full-height {
   width: 100%;
   height: 100%;
 }
-.galaxy-map {
-  width: 100%;
-  height: 100%;
-}
-</style>
 
-<style lang="scss" scoped>
-div.vis-network div.vis-edit-mode {
-  top: 20px !important;
-  left: 0px !important;
-
-  div.vis-button.vis-edit {
-    // ICON
-    /* svg in css: https://stackoverflow.com/questions/10768451/inline-svg-in-css */
-    background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNSIgaGVpZ2h0PSIxNSIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0MjQyNDIiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cG9seWdvbiBwb2ludHM9IjE2IDMgMjEgOCA4IDIxIDMgMjEgMyAxNiAxNiAzIj48L3BvbHlnb24+PC9zdmc+");
-    background-position: 4px 3px;
-    // LABEL
-    margin: 0px !important;
-    background-color: var(--v-missionAccent-base) !important;
-    border: none !important;
-    text-transform: uppercase;
-    font-family: Arial, Helvetica, sans-serif !important;
-    padding: 0px 5px 0px 0px !important;
-    border-radius: 0px !important;
-
-    .vis-label {
-      color: var(--v-background-base);
-    }
-  }
-}
-
-div.vis-network div.vis-manipulation {
-  top: auto !important;
-  bottom: 0px !important;
-  background: var(--v-missionAccent-base) !important;
-  border: none !important;
-
-  .vis-label {
-    color: var(--v-background-base);
-    text-transform: uppercase;
-    font-family: Arial, Helvetica, sans-serif !important;
-  }
-
-  .vis-add {
-    background-image: url("../assets/svgIcons/star-plus.svg") !important;
-  }
-
-  .vis-connect {
-    background-image: url("../assets/svgIcons/vector-polyline-edit.svg") !important;
-  }
-}
-
-.vis-separator-line {
-  display: none !important;
-}
-
-// from manipulation example
-#operation {
-  font-size: 28px;
-}
-#network-popUp {
-  display: none;
-  position: absolute;
-  top: 350px;
-  left: 170px;
-  z-index: 299;
-  width: 250px;
-  height: 120px;
-  background-color: #f9f9f9;
-  border-style: solid;
-  border-width: 3px;
-  border-color: #5394ed;
-  padding: 10px;
-  text-align: center;
-}
 </style>

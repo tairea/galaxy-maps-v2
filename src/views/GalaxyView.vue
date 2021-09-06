@@ -7,26 +7,61 @@
         :assignCohorts="true"
         :cohorts="getCohortsInThisCourse(currentCourseId)"
       />
-
       <BackButton :toPath="'/galaxy'" />
     </div>
     <div id="main-section">
-      <div class="mission-frame">
-        <h2 class="mission-label">Map</h2>
-        <!-- <GalaxyMap /> -->
-        <GalaxyMapsExample />
+      <!-- Map Buttons -->
+      <div class="map-buttons">
+        <v-btn
+          class="map-button"
+          color="missionAccent"
+          fab
+          dark
+          small
+          outlined
+          tile
+          title="Add Node"
+          @click="$refs.vis.addNodeMode()"
+        >
+          <v-icon>mdi-dots-hexagon</v-icon>
+        </v-btn>
+        <v-btn
+          class="map-button"
+          color="missionAccent"
+          fab
+          dark
+          small
+          outlined
+          tile
+          title="Add Edge"
+        >
+          <v-icon>mdi-chart-timeline-variant</v-icon>
+        </v-btn>
+       
+
+        <div class="ui-message-wrap">
+          <p class="ui-message">{{ uiMessage }}</p>
+        </div>
       </div>
-      <!-- <MissionsList
-        :tasks="getTasksByCourseId(currentCourseId)"
-        :courseId="currentCourseId"
-      /> -->
+
+      <!-- Galaxy Map -->
+      <GalaxyMap
+        ref="vis"
+        @add-node="addNode"
+        @edit-node="editNode"
+        @setUiMessage="setUiMessage"
+        @drag-coords="updateDragCoords"
+        @node-selected="nodeSelected"
+        @node-deselected="nodeDeselected"
+      />
+
+      <!-- Edit -->
+      <EditNode
+        :course="getCourseById(currentCourseId)"
+        :coords="coords"
+        ref="edit"
+      />
     </div>
-    <!-- <div id="right-section">
-      <div class="galaxy-frame">
-        <h2 class="galaxy-label">Map</h2>
-        <Galaxy :course="getCourseById(currentCourseId)" :size="'0.27em'" />
-      </div>
-    </div> -->
   </div>
 </template>
 
@@ -37,8 +72,8 @@ import MissionsInfo from "../components/MissionsInfo";
 import MissionsList from "../components/MissionsList";
 import Galaxy from "../components/Galaxy";
 import GalaxyMap from "../components/GalaxyMap";
-import GalaxyMapsExample from "../components/GalaxyMapsExample";
 import BackButton from "../components/BackButton";
+import EditNode from "../components/EditNode";
 
 import { mapState, mapGetters } from "vuex";
 
@@ -52,12 +87,15 @@ export default {
     Galaxy,
     GalaxyMap,
     BackButton,
-    GalaxyMapsExample
+    EditNode,
   },
   props: ["courseId", "courseTitle"],
   mounted() {},
   data() {
-    return {};
+    return {
+      uiMessage: "",
+      coords: {},
+    };
   },
   computed: {
     ...mapState(["currentCourseId"]),
@@ -67,7 +105,32 @@ export default {
       "getCohortsInThisCourse",
     ]),
   },
-  methods: {},
+  methods: {
+    addNode(node) {
+      this.uiMessage = "";
+      this.coords.x = node.x;
+      this.coords.y = node.y;
+      this.$refs.edit.add(node);
+    },
+    editNode(node) {
+      this.uiMessage = "";
+      this.coords.x = node.x;
+      this.coords.y = node.y;
+      this.$refs.edit.edit(node);
+    },
+    setUiMessage(message) {
+      this.uiMessage = message;
+    },
+    updateDragCoords(coords) {
+      this.coords = coords;
+    },
+    nodeSelected(node) {
+      this.$refs.edit.selected(node);
+    },
+    nodeDeselected() {
+      this.$refs.edit.deselect()
+    }
+  },
 };
 </script>
 
@@ -96,35 +159,37 @@ export default {
 }
 
 #main-section {
-  width: calc(100% - 30px);
-  margin: 0px 30px 0 15px;
+  position: absolute;
+  width: 100vw;
+  margin: 0px;
   height: 100%;
   display: flex;
   justify-content: flex-start;
   align-items: center;
   flex-direction: column;
+  z-index: 1;
   // border: 1px solid pink;
 
-  .mission-frame {
-    position: relative;
-    width: 100%;
-    margin: 30px 0px;
-    border: 1px solid var(--v-missionAccent-base);
-    height: 90%;
+  .map-buttons {
+    position: fixed;
+    top: 20px;
+    // margin-left: 80px;
+    z-index: 2;
 
-    .mission-label {
-      font-size: 0.8rem;
-      color: var(--v-baseAccent-base);
-      font-weight: 400;
+    .map-button {
+      margin: 10px;
+      background-color: var(--v-background-base);
+    }
+  }
+
+  .ui-message-wrap {
+    // border: 1px solid var(--v-missionAccent-base);
+
+    .ui-message {
+      color: var(--v-missionAccent-base);
       text-transform: uppercase;
-      // ribbon label
-      position: absolute;
-      top: 0;
-      left: -1px;
-      background-color: var(--v-missionAccent-base);
-      color: var(--v-background-base);
-      padding: 0px 15px 0px 5px;
-      clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%);
+      font-size: 0.8rem;
+      text-align: center;
     }
   }
 }
@@ -137,24 +202,6 @@ export default {
   align-items: flex-start;
 }
 
-// .galaxy-frame {
-//   position: relative;
-//   width: 100%;
-//   margin: 30px 20px;
-//   border: 1px solid var(--v-galaxyAccent-base);
-//   height: 500px;
-
-//   .galaxy-label {
-//     // ribbon label
-//     position: absolute;
-//     top: 0;
-//     left: -1px;
-//     background-color: var(--v-galaxyAccent-base);
-//     color: var(--v-background-base);
-//     padding: 0px 15px 0px 5px;
-//     clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%);
-//   }
-// }
 /* width */
 ::-webkit-scrollbar {
   width: 10px;

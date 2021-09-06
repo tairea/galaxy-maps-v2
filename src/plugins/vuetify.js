@@ -25,7 +25,7 @@ export default new Vuetify({
       },
       dark: {
         primary: "#212121", //colors.grey.darken4
-        background: "#424242", //colors.grey.darken3
+        background: "#141E30", //colors.grey.darken3
         subBackground: "#000",
         baseAccent: "#00E676", //colors.green.accent3
         galaxyAccent: "#E269CF",

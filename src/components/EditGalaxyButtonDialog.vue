@@ -242,7 +242,7 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 /* Dialog */
 .createGalaxyDialog {
   color: black;
