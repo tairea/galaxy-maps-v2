@@ -24,7 +24,6 @@
 
           <div class="action-buttons">
             <v-btn
-              v-if="!editingType == 'edge' || editingType == ''"
               outlined
               color="green darken-1"
               @click="saveNode(currentNode)"
@@ -78,6 +77,7 @@
         left: infoPopupPosition.x + 30 + 'px',
       }"
     >
+    <div v-if="type == 'node'">
       <p class="info-panel-label">
         Node: <span style="color: white">{{ currentNode.label }}</span>
       </p>
@@ -87,6 +87,18 @@
       <p class="info-panel-label">
         Y: <span style="color: white">{{ currentNode.y }}</span>
       </p>
+      </div>
+      <div  v-else-if="type == 'edge'">
+      <p class="info-panel-label">
+        Edge: <span style="color: white">{{ currentEdge.id }}</span>
+      </p>
+      <p class="info-panel-label">
+        X: <span style="color: white">{{ currentEdge.DOMx }}</span>
+      </p>
+      <p class="info-panel-label">
+        Y: <span style="color: white">{{ currentEdge.DOMy }}</span>
+      </p>
+      </div>
 
       <v-btn
         class="map-button"
@@ -110,7 +122,7 @@
         outlined
         tile
         title="Delete"
-        @click="deleteNode"
+        @click="deleteFromMap"
         :loading="deleting"
       >
         <v-icon>mdi-delete</v-icon>
@@ -134,10 +146,11 @@ export default {
       dialogDescription: "some kind of description",
       newNodeData: {},
       editing: false,
-      editingType: "",
+      type: "",
       loading: false,
       deleting: false,
       currentNode: {},
+      currentEdge: {},
       infoPopupShow: false,
       infoPopupPosition: {},
     };
@@ -178,7 +191,7 @@ export default {
       this.currentNode = node;
       this.dialogTitle = "Enter the name of this Solar System";
       this.dialogDescription =
-        "A Solar System is an Objective of the " +
+        "This Solar System is an Objective of the " +
         this.course.title +
         " Galaxy map";
       this.dialog = true;
@@ -188,12 +201,16 @@ export default {
       this.currentNode = node;
       this.infoPopupShow = true;
     },
-    selected(node) {
-      // console.log("from edit: SELECTED", node);
-      this.type = node.type;
-      this.infoPopupPosition.x = node.DOMx;
-      this.infoPopupPosition.y = node.DOMy;
-      this.currentNode = node;
+    selected(selected) {
+      console.log("from edit: SELECTED", selected);
+      this.type = selected.type;
+      this.infoPopupPosition.x = selected.DOMx;
+      this.infoPopupPosition.y = selected.DOMy;
+      if (selected.type == 'node') {
+        this.currentNode = selected;
+      } else if (selected.type == 'edge') {
+        this.currentEdge = selected;
+      }
       this.infoPopupShow = true;
     },
     deselect() {
@@ -204,17 +221,23 @@ export default {
       this.dialog = true;
     },
     deleteFromMap() {
-      if (this.type == "node") {
+      if (this.currentNode.label == "new") {
+        console.log("emiting to remove unsaved")
+        this.$emit("removeUnsavedNode")
+        this.currentNode.label = {}
+      }
+      else if (this.type == "node") {
         this.deleteNode();
       } else if (this.type == "edge") {
         this.deleteEdge();
       }
-      this.resetEditing();
-      this.resetNewData();
+      // this.resetEditing();
+      // this.resetNewData();
     },
     deleteNode() {
       console.log("deleting node");
       this.deleting = true;
+      // delete node
       db.collection("courses")
         .doc(this.course.id)
         .collection("map-nodes")
@@ -228,7 +251,39 @@ export default {
         .catch((error) => {
           console.error("Error deleting node: ", error);
         });
+      // delete conneceted edge (if there is one)
+      if (this.currentNode.connectedEdge) {
+        db.collection("courses")
+        .doc(this.course.id)
+        .collection("map-edges")
+        .doc(this.currentNode.connectedEdge)
+        .delete()
+        .then(() => {
+          console.log("Edge successfully deleted!");
+          this.deleting = false;
+          this.infoPopupShow = false;
+        })
+        .catch((error) => {
+          console.error("Error deleting edge: ", error);
+        });
+      }
     },
+    deleteEdge() {
+      this.deleting = true;
+      db.collection("courses")
+        .doc(this.course.id)
+        .collection("map-edges")
+        .doc(this.currentEdge.id)
+        .delete()
+        .then(() => {
+          console.log("Edge successfully deleted!");
+          this.deleting = false;
+          this.infoPopupShow = false;
+        })
+        .catch((error) => {
+          console.error("Error deleting edge: ", error);
+        });
+    }
   },
 };
 </script>
