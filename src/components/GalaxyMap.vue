@@ -8,13 +8,19 @@
       :options="network.options"
       
       @nodes-add="addNode"
+      @edges-add="addEdge"
 
       @dragging="dragging"
       
       @drag-end="dragEnd"
 
       @select-node="selectNode"
+      @select-edge="selectEdge"
+
       @deselect-node="deselectNode"
+      @deselect-edge="deselectEdge"
+
+      @zoom="zoom"
 
     ></network>
   </div>
@@ -32,6 +38,7 @@ import { mapState, mapGetters } from "vuex";
 export default {
   name: "GalaxyMap",
   data: () => ({
+    active: false,
     network: {
       options: {
         physics: {
@@ -77,6 +84,7 @@ export default {
     console.log("nodes:", this.currentCourseNodes);
     // console.log("edges:", this.currentCourseEdges);
     console.log(this.$refs.network);
+    this.$refs.network.fit()
   },
   computed: {
     ...mapState([
@@ -87,16 +95,41 @@ export default {
   },
   methods: {
     addNodeMode() {
+      this.active = true
       console.log("add node mode")
       this.$emit("setUiMessage", "Click on the map to add a node")
       this.$refs.network.addNodeMode()
     },
+    addEdgeMode() {
+      this.active = true
+      console.log("add edge mode")
+      this.$emit("setUiMessage", "Click and drag to connect two nodes")
+      this.$refs.network.addEdgeMode()
+    },
     addNode(data) {
+      if (!this.active) return
       console.log("node added",data)
       const newNodeId = data.properties.items[0]
       const newNode = this.$refs.network.getNode(newNodeId)
       console.log("newNode",newNode)
       this.$emit("add-node",newNode)
+    },
+    addEdge(data) {
+      if (!this.active) return
+      console.log("edge add",data);
+      this.$emit("setUiMessage", "")
+      const newEdgeData = this.$refs.network.getEdge(data.properties.items[0]);
+      db.collection("courses")
+          .doc(this.currentCourseId)
+          .collection("map-edges")
+          .doc(newEdgeData.id)
+          .set(newEdgeData)
+          .then(() => {
+            console.log("Edge successfully written!");
+          })
+          .catch((error) => {
+            console.error("Error writing node: ", error);
+          });
     },
     click() {
       console.log("click")
@@ -115,19 +148,44 @@ export default {
       console.log("drag End",data)
     },
     selectNode(data) {
+      this.active = true
       console.log("select node:", data)
       if (data.nodes.length == 1) {
         // is type node
         const nodeId = data.nodes[0]
         const selectedNode = this.$refs.network.getNode(nodeId)
         selectedNode.type = "node"
+        selectedNode.connectedEdge = data.edges[0]
         selectedNode.DOMx = data.pointer.DOM.x,
         selectedNode.DOMy = data.pointer.DOM.y      
-        this.$emit("node-selected",selectedNode)
+        this.$emit("selected",selectedNode)
+      }
+    },
+    selectEdge(data) {
+      this.active = true
+      console.log("select edge:", data)
+      if (data.edges.length == 1) {
+      const edgeId = data.edges[0]
+      const selectedEdge =  this.$refs.network.getEdge(edgeId)
+        selectedEdge.type = "edge"
+        selectedEdge.DOMx = data.pointer.DOM.x,
+        selectedEdge.DOMy = data.pointer.DOM.y      
+        this.$emit("selected",selectedEdge)
       }
     },
     deselectNode() {
-      this.$emit("node-deselected")
+      this.$emit("deselected")
+    },
+    deselectEdge() {
+      this.$emit("deselected")
+    },
+    removeUnsavedNode() {
+      console.log("deleting selected")
+      this.$refs.network.deleteSelected()
+      this.$emit("deselected")
+    },
+    zoom(data) {
+      console.log("zoom",data)
     }
   },
 };

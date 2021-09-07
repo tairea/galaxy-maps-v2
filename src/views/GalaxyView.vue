@@ -34,6 +34,7 @@
           outlined
           tile
           title="Add Edge"
+          @click="$refs.vis.addEdgeMode()"
         >
           <v-icon>mdi-chart-timeline-variant</v-icon>
         </v-btn>
@@ -51,14 +52,15 @@
         @edit-node="editNode"
         @setUiMessage="setUiMessage"
         @drag-coords="updateDragCoords"
-        @node-selected="nodeSelected"
-        @node-deselected="nodeDeselected"
+        @selected="selected"
+        @deselected="deselected"
       />
 
       <!-- Edit -->
       <EditNode
         :course="getCourseById(currentCourseId)"
         :coords="coords"
+        @removeUnsavedNode="removeUnsavedNode"
         ref="edit"
       />
     </div>
@@ -124,11 +126,14 @@ export default {
     updateDragCoords(coords) {
       this.coords = coords;
     },
-    nodeSelected(node) {
+    selected(node) {
       this.$refs.edit.selected(node);
     },
-    nodeDeselected() {
+    deselected() {
       this.$refs.edit.deselect()
+    },
+    removeUnsavedNode() {
+      this.$refs.vis.removeUnsavedNode()
     }
   },
 };
