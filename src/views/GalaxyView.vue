@@ -76,7 +76,7 @@
       />
 
       <!-- Edit -->
-      <EditNode
+      <GalaxyMapEdit
         :course="getCourseById(currentCourseId)"
         :coords="coords"
         @removeUnsavedNode="removeUnsavedNode"
@@ -94,7 +94,7 @@ import MissionsList from "../components/MissionsList";
 import Galaxy from "../components/Galaxy";
 import GalaxyMap from "../components/GalaxyMap";
 import BackButton from "../components/BackButton";
-import EditNode from "../components/EditNode";
+import GalaxyMapEdit from "../components/GalaxyMapEdit";
 
 import { mapState, mapGetters } from "vuex";
 
@@ -108,7 +108,7 @@ export default {
     Galaxy,
     GalaxyMap,
     BackButton,
-    EditNode,
+    GalaxyMapEdit,
   },
   props: ["courseId", "courseTitle"],
   mounted() {},

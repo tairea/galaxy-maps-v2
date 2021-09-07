@@ -158,7 +158,6 @@ export default {
     },
     selectNode(data) {
       this.active = true;
-      console.log("select node:", data);
       if (data.nodes.length == 1) {
         // is type node
         const nodeId = data.nodes[0];
@@ -174,7 +173,6 @@ export default {
     },
     selectEdge(data) {
       this.active = true;
-      console.log("select edge:", data);
       if (data.edges.length == 1) {
         const edgeId = data.edges[0];
         const selectedEdge = this.$refs.network.getEdge(edgeId);
@@ -203,7 +201,6 @@ export default {
       this.$refs.network.disableEditMode();
     },
     animationFinished(data) {
-      console.log("animation finished", data);
       // show popup
       const nodeId = this.$refs.network.getSelection().nodes[0];
       const focusedNode = this.$refs.network.getNode(nodeId);
@@ -212,7 +209,7 @@ export default {
       // console.log("centered position of node is = ", this.$refs.network.canvasToDom(nodeId))
     },
     hoverNode(data) {
-      console.log("hover node", data);
+      this.stopNodeAnimation()
       const nodeId = data.node;
       const hoveredNode = this.$refs.network.getNode(nodeId);
       hoveredNode.type = "node";
@@ -256,7 +253,7 @@ export default {
       this.updateFrameVar();
     },
     stopNodeAnimation() {
-      this.animateRadius = true
+      this.animateRadius = false
       clearInterval(this.intervalid1);
     },
   },

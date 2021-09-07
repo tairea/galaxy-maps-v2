@@ -204,7 +204,6 @@ export default {
     //   this.infoPopupShow = true;
     // },
     selected(selected) {
-      console.log("from edit: SELECTED", selected);
       this.type = selected.type;
       this.infoPopupPosition.x = selected.DOMx;
       this.infoPopupPosition.y = selected.DOMy;
@@ -226,12 +225,10 @@ export default {
     },
     centerFocus(centerFocusNode) {
       this.centerFocusPosition = true
-      console.log("centered",centerFocusNode)
       this.type = centerFocusNode.type;
       this.infoPopupPosition.x = "50%"; // 50%
       this.infoPopupPosition.y = "50%"; // 50%
       this.currentNode = centerFocusNode;
-      console.log("open center focus")
       this.infoPopupShow = true;
     },
     deselect() {
