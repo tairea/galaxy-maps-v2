@@ -14,29 +14,46 @@
       <div class="map-buttons">
         <v-btn
           class="map-button"
-          color="missionAccent"
+          :color=" !addNodeMode ? 'missionAccent' : 'baseAccent'"
           fab
           dark
           small
           outlined
           tile
           title="Add Node"
-          @click="$refs.vis.addNodeMode()"
+          @click="toggleAddNodeMode"
         >
-          <v-icon>mdi-dots-hexagon</v-icon>
+          <v-icon v-if="!addNodeMode">mdi-dots-hexagon</v-icon>
+          <v-icon v-else color="baseAccent">mdi-close</v-icon>
+          <!-- 
+            <v-btn
+          v-model="fab"
+          color="blue darken-2"
+          dark
+          fab
+        >
+          <v-icon v-if="fab">
+            mdi-close
+          </v-icon>
+          <v-icon v-else>
+            mdi-account-circle
+          </v-icon>
+        </v-btn>
+           -->
         </v-btn>
         <v-btn
           class="map-button"
-          color="missionAccent"
+           :color=" !addEdgeMode ? 'missionAccent' : 'baseAccent'"
           fab
           dark
           small
           outlined
           tile
           title="Add Edge"
-          @click="$refs.vis.addEdgeMode()"
+          @click="toggleAddEdgeMode"
         >
-          <v-icon>mdi-chart-timeline-variant</v-icon>
+          <v-icon v-if="!addEdgeMode">mdi-chart-timeline-variant</v-icon>
+          <v-icon v-else color="baseAccent">mdi-close</v-icon>
         </v-btn>
        
 
@@ -54,6 +71,8 @@
         @drag-coords="updateDragCoords"
         @selected="selected"
         @deselected="deselected"
+        @hovered="hovered"
+        @centerFocus="centerFocus"
       />
 
       <!-- Edit -->
@@ -95,6 +114,8 @@ export default {
   mounted() {},
   data() {
     return {
+      addNodeMode: false,
+      addEdgeMode: false,
       uiMessage: "",
       coords: {},
     };
@@ -108,7 +129,26 @@ export default {
     ]),
   },
   methods: {
+    toggleAddNodeMode() {
+      this.addNodeMode = !this.addNodeMode;
+      if (this.addNodeMode == true) {
+        this.$refs.vis.addNodeMode()
+      } else if (this.addNodeMode == false) {
+        this.$refs.vis.disableEditMode()
+        this.uiMessage = "";
+      }
+    },
+    toggleAddEdgeMode() {
+      this.addEdgeMode = !this.addEdgeMode;
+      if (this.addEdgeMode == true) {
+        this.$refs.vis.addEdgeMode()
+      } else if (this.addEdgeMode == false) {
+        this.$refs.vis.disableEditMode()
+        this.uiMessage = "";
+      }
+    },
     addNode(node) {
+      this.addNodeMode = false
       this.uiMessage = "";
       this.coords.x = node.x;
       this.coords.y = node.y;
@@ -129,11 +169,17 @@ export default {
     selected(node) {
       this.$refs.edit.selected(node);
     },
+    hovered(node) {
+      this.$refs.edit.hovered(node);
+    },
     deselected() {
       this.$refs.edit.deselect()
     },
     removeUnsavedNode() {
       this.$refs.vis.removeUnsavedNode()
+    },
+    centerFocus(node) {
+      this.$refs.edit.centerFocus(node)
     }
   },
 };
@@ -180,6 +226,7 @@ export default {
     top: 20px;
     // margin-left: 80px;
     z-index: 2;
+    width: 50%;
 
     .map-button {
       margin: 10px;
@@ -194,7 +241,8 @@ export default {
       color: var(--v-missionAccent-base);
       text-transform: uppercase;
       font-size: 0.8rem;
-      text-align: center;
+      text-align: left;
+      margin-left: 10px;
     }
   }
 }

@@ -72,9 +72,10 @@
       v-if="infoPopupShow"
       ref="popup"
       class="node-info-panel"
+      :class="{ centeredFocus : centerFocusPosition }"
       :style="{
-        top: infoPopupPosition.y - 100 + 'px',
-        left: infoPopupPosition.x + 30 + 'px',
+        top: centerFocusPosition ? infoPopupPosition.y : infoPopupPosition.y - 100 + 'px',
+        left: centerFocusPosition ? infoPopupPosition.x :  infoPopupPosition.x + 30 + 'px',
       }"
     >
     <div v-if="type == 'node'">
@@ -144,6 +145,8 @@ export default {
       dialog: false,
       dialogTitle: "Edit something hmmm...",
       dialogDescription: "some kind of description",
+      nodeDialogTitle: "Enter the name of this Solar System",
+      nodeDialogDescription: "This Solar System is an Objective of the " + this.course.title + " Galaxy map",
       newNodeData: {},
       editing: false,
       type: "",
@@ -153,6 +156,7 @@ export default {
       currentEdge: {},
       infoPopupShow: false,
       infoPopupPosition: {},
+      centerFocusPosition: false
     };
   },
   computed: {
@@ -164,6 +168,7 @@ export default {
     cancel() {
       console.log("cancel");
       this.dialog = false;
+      // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
     },
     deleteFromMap() {
       console.log("delete");
@@ -189,18 +194,15 @@ export default {
     add(node) {
       console.log("from edit: ADD", node);
       this.currentNode = node;
-      this.dialogTitle = "Enter the name of this Solar System";
-      this.dialogDescription =
-        "This Solar System is an Objective of the " +
-        this.course.title +
-        " Galaxy map";
+      this.dialogTitle = this.nodeDialogTitle
+      this.dialogDescription = this.nodeDialogDescription
       this.dialog = true;
     },
-    edit(node) {
-      console.log("from edit: EDIT", node);
-      this.currentNode = node;
-      this.infoPopupShow = true;
-    },
+    // edit(node) {
+    //   console.log("from edit: EDIT", node);
+    //   this.currentNode = node;
+    //   this.infoPopupShow = true;
+    // },
     selected(selected) {
       console.log("from edit: SELECTED", selected);
       this.type = selected.type;
@@ -213,11 +215,32 @@ export default {
       }
       this.infoPopupShow = true;
     },
+    hovered(hoveredNode) {
+      this.infoPopupShow = false;
+      this.centerFocusPosition = false
+      this.type = hoveredNode.type;
+      this.infoPopupPosition.x = hoveredNode.DOMx;
+      this.infoPopupPosition.y = hoveredNode.DOMy;
+      this.currentNode = hoveredNode;
+      this.infoPopupShow = true;
+    },
+    centerFocus(centerFocusNode) {
+      this.centerFocusPosition = true
+      console.log("centered",centerFocusNode)
+      this.type = centerFocusNode.type;
+      this.infoPopupPosition.x = "50%"; // 50%
+      this.infoPopupPosition.y = "50%"; // 50%
+      this.currentNode = centerFocusNode;
+      console.log("open center focus")
+      this.infoPopupShow = true;
+    },
     deselect() {
       this.infoPopupShow = false;
+      this.centerFocusPosition = false
     },
     editNode() {
-      console.log("edit node");
+      this.dialogTitle = this.nodeDialogTitle
+      this.dialogDescription = this.nodeDialogDescription
       this.dialog = true;
     },
     deleteFromMap() {
@@ -283,7 +306,8 @@ export default {
         .catch((error) => {
           console.error("Error deleting edge: ", error);
         });
-    }
+    },
+
   },
 };
 </script>
@@ -333,10 +357,11 @@ export default {
 }
 
 .node-info-panel {
+  // background-color: var(--v-background-base);
   border: 1px solid var(--v-missionAccent-base);
   padding: 20px;
   position: absolute;
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(8px);
   z-index: 3;
 
   .info-panel-label {
@@ -345,4 +370,10 @@ export default {
     font-size: 0.8rem;
   }
 }
+
+.centeredFocus {
+  margin-top: -100px;
+  margin-left: 50px;
+}
+
 </style>
