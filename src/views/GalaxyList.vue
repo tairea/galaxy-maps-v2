@@ -1,9 +1,9 @@
 <template>
   <v-container class="d-flex justify-center align-center fullHeight">
     <div class="flexContainer">
-      <div class="flexRow">
-        <Galaxy v-for="course in courses" :course="course" :key="course.id" :size="'0.25em'" />
-      </div>
+      
+        <Galaxy :nodes="getAllNodes" :edges="getAllEdges" />
+      
     </div>
     <div class="createButton">
       <CreateGalaxyButtonDialog />
@@ -15,7 +15,9 @@
 import CreateGalaxyButtonDialog from "../components/CreateGalaxyButtonDialog";
 import Galaxy from "../components/Galaxy";
 
-import { mapState, mapGetters } from 'vuex'
+import { db } from "../store/firestoreConfig";
+
+import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "GalaxyList",
@@ -25,24 +27,17 @@ export default {
   },
   mounted() {
     // trigger VuexFire bindCourses in Store
-    this.bindAll()
+    this.bindAll();
+    console.log("this.courses", this.courses);
   },
   computed: {
     ...mapGetters(["courses"]),
-    courseWidth() {
-      var width = 100 / this.courses.length;
-      if (width < 25) {
-        return "25%";
-      } else {
-        return width + "%";
-      }
-    },
   },
   methods: {
-    bindAll () {
-      this.$store.dispatch('bindCourses')
-      this.$store.dispatch('bindCohorts')
-      this.$store.dispatch('bindOrganisations')
+    bindAll() {
+      this.$store.dispatch("bindCourses");
+      this.$store.dispatch("bindCohorts");
+      this.$store.dispatch("bindOrganisations");
     },
   },
   data() {
@@ -59,7 +54,7 @@ export default {
 
 .flexContainer {
   height: 100%;
-  width: 80%;
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;

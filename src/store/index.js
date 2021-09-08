@@ -4,38 +4,31 @@ import Vuex from "vuex";
 import { db } from "./firestoreConfig";
 import { vuexfireMutations, firestoreAction } from "vuexfire";
 
-// import { courses } from "../mocks/courses";
-import {
-  mercury,
-  venus,
-  earth,
-  mars,
-  jupiter,
-  saturn,
-  uranus,
-  neptune,
-  pluto,
-} from "../mocks/galaxies";
-
 Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
     count: 0,
     courses: [],
+    topics: [],
     cohorts: [],
     organisations: [],
     students: [],
     currentCourseId: "",
+    currentTopicId: "",
     currentCohortId: "",
     currentCourseNodes: [],
     currentCourseEdges: [],
-    // galaxies: [mercury, venus, earth]
+    allNodes: [],
+    allEdges: [],
   },
   getters: {
     courses: (state) => state.courses,
     getCourseById: (state) => (id) => {
       return state.courses.find((course) => course.id === id);
+    },
+    getTopicById: (state) => (id) => {
+      return state.topics.find((topic) => topic.id === id);
     },
     getCohortById: (state) => (id) => {
       return state.cohorts.find((cohort) => cohort.id === id);
@@ -68,38 +61,38 @@ export default new Vuex.Store({
     },
     getCoursesInThisCohort: (state) => (id) => {
       //go to cohorts, and check if they in courses with this id
-      const cohort = state.cohorts.find(cohort => cohort.id === id);
+      const cohort = state.cohorts.find((cohort) => cohort.id === id);
       const cohortsCoursesArrOfObj = [];
-      console.log("cohort = ",cohort)
-      cohort.courses.forEach(courseId => {
+      console.log("cohort = ", cohort);
+      cohort.courses.forEach((courseId) => {
         // console.log("courseId = ", courseId);
-        const courseObj = state.courses.find(course => course.id == courseId)
+        const courseObj = state.courses.find((course) => course.id == courseId);
         // console.log("courses obj = ", courseObj);
-        cohortsCoursesArrOfObj.push(courseObj) 
+        cohortsCoursesArrOfObj.push(courseObj);
       });
       // console.log("cohort courses = ", cohortsCoursesArrOfObj);
-      return cohortsCoursesArrOfObj
+      return cohortsCoursesArrOfObj;
     },
     getStudentsByCohortId: (state) => (id) => {
       //go to cohorts, and check if they in courses with this id
-      let studentsInCohort = []
-      state.students.forEach(student => {
+      let studentsInCohort = [];
+      state.students.forEach((student) => {
         // if student is enrolled in this cohort...
-        if (student.enrolledCohorts.some(cohortId => cohortId === id )) {
+        if (student.enrolledCohorts.some((cohortId) => cohortId === id)) {
           // push them into array
-          studentsInCohort.push(student)
+          studentsInCohort.push(student);
         }
       });
-      return studentsInCohort
+      return studentsInCohort;
     },
     getGalaxyMapByCourseId: (state) => (id) => {
       //go to cohorts, and check if they in courses with this id
-      let course = state.courses.find((course) => course.id === id)
-      console.log("course is",course)
-      console.log("map nodes",course.map-nodes)
-      console.log("map edges",course.map-edges)
-      const map = {nodes: course.map-nodes, edges: course.map-edges}
-      return map
+      let course = state.courses.find((course) => course.id === id);
+      console.log("course is", course);
+      console.log("map nodes", course.map - nodes);
+      console.log("map edges", course.map - edges);
+      const map = { nodes: course.map - nodes, edges: course.map - edges };
+      return map;
     },
 
     // completedCourses: (state) => {
@@ -116,13 +109,18 @@ export default new Vuex.Store({
     setCurrentCourseId(state, courseId) {
       state.currentCourseId = courseId;
     },
+    setCurrentTopicId(state, topicId) {
+      state.currentTopicId = topicId;
+    },
     setCurrentCohortId(state, cohortId) {
       state.currentCohortId = cohortId;
     },
   },
   actions: {
     bindCourses: firestoreAction(({ bindFirestoreRef }) => {
-      return bindFirestoreRef("courses", db.collection("courses"), { maxRefDepth: 2 });
+      return bindFirestoreRef("courses", db.collection("courses"), {
+        maxRefDepth: 2,
+      });
     }),
     bindCohorts: firestoreAction(({ bindFirestoreRef }) => {
       return bindFirestoreRef("cohorts", db.collection("cohorts"));
@@ -134,10 +132,81 @@ export default new Vuex.Store({
       return bindFirestoreRef("students", db.collection("people"));
     }),
     bindNodes: firestoreAction(({ bindFirestoreRef }, id) => {
-      return bindFirestoreRef("currentCourseNodes", db.collection("courses").doc(id).collection("map-nodes"));
+      return bindFirestoreRef(
+        "currentCourseNodes",
+        db
+          .collection("courses")
+          .doc(id)
+          .collection("map-nodes")
+      );
     }),
-    bindEdges: firestoreAction(({ bindFirestoreRef }, id)  => {
-      return bindFirestoreRef("currentCourseEdges", db.collection("courses").doc(id).collection("map-edges"));
+    bindEdges: firestoreAction(({ bindFirestoreRef }, id) => {
+      return bindFirestoreRef(
+        "currentCourseEdges",
+        db
+          .collection("courses")
+          .doc(id)
+          .collection("map-edges")
+      );
     }),
+    bindTopics: firestoreAction(({ bindFirestoreRef }, id) => {
+      return bindFirestoreRef(
+        "topics",
+        db
+          .collection("courses")
+          .doc(id)
+          .collection("topics")
+      );
+    }),
+    getAllNodes({state}) {
+      const allNodes = [];
+      db.collection("courses")
+        .get()
+        .then((querySnapshot) => {
+          querySnapshot.forEach((doc) => {
+            // doc.data() is never undefined for query doc snapshots
+            db.collection("courses")
+              .doc(doc.id)
+              .collection("map-nodes")
+              .get()
+              .then((subQuerySnapshot) => {
+                subQuerySnapshot.forEach((subDoc) => {
+                  // push each subDoc aka map-node into allNodes
+                  allNodes.push(subDoc.data());
+                });
+              })
+              .catch((error) => {
+                console.log("Error getting documents: ", error);
+              });
+          });
+          console.log("all nodes from FS: ", allNodes);
+          state.allNodes = allNodes
+        });
+    },
+     getAllEdges({state}) {
+      const allEdges = [];
+      db.collection("courses")
+        .get()
+        .then((querySnapshot) => {
+          querySnapshot.forEach((doc) => {
+            // doc.data() is never undefined for query doc snapshots
+             db.collection("courses")
+              .doc(doc.id)
+              .collection("map-edges")
+              .get()
+              .then((subQuerySnapshot) => {
+                subQuerySnapshot.forEach((subDoc) => {
+                  // push each subDoc aka map-node into allNodes
+                  allEdges.push(subDoc.data());
+                });
+              })
+              .catch((error) => {
+                console.log("Error getting documents: ", error);
+              });
+          });
+          console.log("all edges from FS: ", allEdges);
+          state.allEdges = allEdges
+        });
+    },
   },
 });

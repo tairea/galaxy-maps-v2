@@ -71,34 +71,39 @@
     <div
       v-if="infoPopupShow"
       ref="popup"
-      class="node-info-panel"
-      :class="{ centeredFocus : centerFocusPosition }"
+      class="ss-info-panel"
+      :class="{ centeredFocus: centerFocusPosition }"
       :style="{
-        top: centerFocusPosition ? infoPopupPosition.y : infoPopupPosition.y - 100 + 'px',
-        left: centerFocusPosition ? infoPopupPosition.x :  infoPopupPosition.x + 30 + 'px',
+        top: centerFocusPosition
+          ? infoPopupPosition.y
+          : infoPopupPosition.y - 100 + 'px',
+        left: centerFocusPosition
+          ? infoPopupPosition.x
+          : infoPopupPosition.x + 30 + 'px',
       }"
     >
-    <div v-if="type == 'node'">
-      <p class="info-panel-label">
-        Node: <span style="color: white">{{ currentNode.label }}</span>
-      </p>
-      <p class="info-panel-label">
-        X: <span style="color: white">{{ currentNode.x }}</span>
-      </p>
-      <p class="info-panel-label">
-        Y: <span style="color: white">{{ currentNode.y }}</span>
-      </p>
+      <div class="ss-details">
+      <div v-if="type == 'node'">
+        <p class="info-panel-label">
+          Node: <span style="color: white">{{ currentNode.label }}</span>
+        </p>
+        <p class="info-panel-label">
+          X: <span style="color: white">{{ currentNode.x }}</span>
+        </p>
+        <p class="info-panel-label">
+          Y: <span style="color: white">{{ currentNode.y }}</span>
+        </p>
       </div>
-      <div  v-else-if="type == 'edge'">
-      <p class="info-panel-label">
-        Edge: <span style="color: white">{{ currentEdge.id }}</span>
-      </p>
-      <p class="info-panel-label">
-        X: <span style="color: white">{{ currentEdge.DOMx }}</span>
-      </p>
-      <p class="info-panel-label">
-        Y: <span style="color: white">{{ currentEdge.DOMy }}</span>
-      </p>
+      <div v-else-if="type == 'edge'">
+        <p class="info-panel-label">
+          Edge: <span style="color: white">{{ currentEdge.id }}</span>
+        </p>
+        <p class="info-panel-label">
+          X: <span style="color: white">{{ currentEdge.DOMx }}</span>
+        </p>
+        <p class="info-panel-label">
+          Y: <span style="color: white">{{ currentEdge.DOMy }}</span>
+        </p>
       </div>
 
       <v-btn
@@ -128,25 +133,40 @@
       >
         <v-icon>mdi-delete</v-icon>
       </v-btn>
+      </div>
+      <div class="ss-preview">
+        <SolarSystem :topic="getTopic" :size="'0.25em'" />
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 import { db } from "../store/firestoreConfig";
-import { mapState, mapGetters } from "vuex";
+import { mapGetters } from "vuex";
+
+import SolarSystem from "../components/SolarSystem";
 
 export default {
   name: "EditNode",
+  components: {
+    SolarSystem,
+  },
   props: ["course", "coords"],
-  mounted() {},
+  async mounted() {
+    // bind to store all topics for this course
+    await this.$store.dispatch("bindTopics", this.currentCourseId);
+  },
   data() {
     return {
       dialog: false,
       dialogTitle: "Edit something hmmm...",
       dialogDescription: "some kind of description",
       nodeDialogTitle: "Enter the name of this Solar System",
-      nodeDialogDescription: "This Solar System is an Objective of the " + this.course.title + " Galaxy map",
+      nodeDialogDescription:
+        "This Solar System is an Objective of the " +
+        this.course.title +
+        " Galaxy map",
       newNodeData: {},
       editing: false,
       type: "",
@@ -156,10 +176,11 @@ export default {
       currentEdge: {},
       infoPopupShow: false,
       infoPopupPosition: {},
-      centerFocusPosition: false
+      centerFocusPosition: false,
     };
   },
   computed: {
+    ...mapGetters([ "getTopicById"]),
     getCoords() {
       return this.coords;
     },
@@ -190,12 +211,25 @@ export default {
         .catch((error) => {
           console.error("Error writing node: ", error);
         });
+      db.collection("courses")
+        .doc(this.course.id)
+        .collection("topics")
+        .doc(node.id)
+        .set(node)
+        .then((docRef) => {
+          console.log("Topic successfully written!");
+          this.loading = false;
+          this.dialog = false;
+        })
+        .catch((error) => {
+          console.error("Error writing node: ", error);
+        });
     },
     add(node) {
       console.log("from edit: ADD", node);
       this.currentNode = node;
-      this.dialogTitle = this.nodeDialogTitle
-      this.dialogDescription = this.nodeDialogDescription
+      this.dialogTitle = this.nodeDialogTitle;
+      this.dialogDescription = this.nodeDialogDescription;
       this.dialog = true;
     },
     // edit(node) {
@@ -207,16 +241,21 @@ export default {
       this.type = selected.type;
       this.infoPopupPosition.x = selected.DOMx;
       this.infoPopupPosition.y = selected.DOMy;
-      if (selected.type == 'node') {
+      if (selected.type == "node") {
         this.currentNode = selected;
-      } else if (selected.type == 'edge') {
+      } else if (selected.type == "edge") {
         this.currentEdge = selected;
       }
       this.infoPopupShow = true;
     },
+    getTopic() {
+      // getting topic
+      console.log("getting topic")
+      return this.getTopicById(this.currentNode.id)
+    },
     hovered(hoveredNode) {
       this.infoPopupShow = false;
-      this.centerFocusPosition = false
+      this.centerFocusPosition = false;
       this.type = hoveredNode.type;
       this.infoPopupPosition.x = hoveredNode.DOMx;
       this.infoPopupPosition.y = hoveredNode.DOMy;
@@ -224,7 +263,7 @@ export default {
       this.infoPopupShow = true;
     },
     centerFocus(centerFocusNode) {
-      this.centerFocusPosition = true
+      this.centerFocusPosition = true;
       this.type = centerFocusNode.type;
       this.infoPopupPosition.x = "50%"; // 50%
       this.infoPopupPosition.y = "50%"; // 50%
@@ -233,20 +272,19 @@ export default {
     },
     deselect() {
       this.infoPopupShow = false;
-      this.centerFocusPosition = false
+      this.centerFocusPosition = false;
     },
     editNode() {
-      this.dialogTitle = this.nodeDialogTitle
-      this.dialogDescription = this.nodeDialogDescription
+      this.dialogTitle = this.nodeDialogTitle;
+      this.dialogDescription = this.nodeDialogDescription;
       this.dialog = true;
     },
     deleteFromMap() {
       if (this.currentNode.label == "new") {
-        console.log("emiting to remove unsaved")
-        this.$emit("removeUnsavedNode")
-        this.currentNode.label = {}
-      }
-      else if (this.type == "node") {
+        console.log("emiting to remove unsaved");
+        this.$emit("removeUnsavedNode");
+        this.currentNode.label = {};
+      } else if (this.type == "node") {
         this.deleteNode();
       } else if (this.type == "edge") {
         this.deleteEdge();
@@ -274,18 +312,18 @@ export default {
       // delete conneceted edge (if there is one)
       if (this.currentNode.connectedEdge) {
         db.collection("courses")
-        .doc(this.course.id)
-        .collection("map-edges")
-        .doc(this.currentNode.connectedEdge)
-        .delete()
-        .then(() => {
-          console.log("Edge successfully deleted!");
-          this.deleting = false;
-          this.infoPopupShow = false;
-        })
-        .catch((error) => {
-          console.error("Error deleting edge: ", error);
-        });
+          .doc(this.course.id)
+          .collection("map-edges")
+          .doc(this.currentNode.connectedEdge)
+          .delete()
+          .then(() => {
+            console.log("Edge successfully deleted!");
+            this.deleting = false;
+            this.infoPopupShow = false;
+          })
+          .catch((error) => {
+            console.error("Error deleting edge: ", error);
+          });
       }
     },
     deleteEdge() {
@@ -304,7 +342,6 @@ export default {
           console.error("Error deleting edge: ", error);
         });
     },
-
   },
 };
 </script>
@@ -353,13 +390,22 @@ export default {
   }
 }
 
-.node-info-panel {
+.ss-info-panel {
   // background-color: var(--v-background-base);
   border: 1px solid var(--v-missionAccent-base);
-  padding: 20px;
   position: absolute;
   backdrop-filter: blur(8px);
+  display: flex;
   z-index: 3;
+
+  .ss-preview {
+    border-left: 1px solid var(--v-missionAccent-base);
+    min-width: 15vw;
+    min-height: 20vh;
+  }
+  .ss-details {
+    padding: 20px;
+  }
 
   .info-panel-label {
     color: var(--v-missionAccent-base);
@@ -372,5 +418,4 @@ export default {
   margin-top: -100px;
   margin-left: 50px;
 }
-
 </style>

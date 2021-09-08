@@ -3,6 +3,7 @@ import VueRouter from "vue-router";
 import Home from "../views/Home.vue";
 import GalaxyList from "../views/GalaxyList.vue";
 import GalaxyView from "../views/GalaxyView.vue";
+import SolarSystemView from "../views/SolarSystemView.vue";
 import CohortView from "../views/CohortView.vue";
 import CohortList from "../views/CohortList.vue";
 import StudentList from "../views/StudentList.vue";
@@ -35,9 +36,15 @@ const routes = [
     component: GalaxyList,
   },
   {
-    path: "/galaxy/:courseId/:courseTitle",
+    path: "/galaxy/:courseId",
     name: "GalaxyView",
     component: GalaxyView,
+    props: true
+  },
+  {
+    path: "/solarsystem/:topicId",
+    name: "SolarSystemView",
+    component: SolarSystemView,
     props: true
   },
   {
