@@ -26,5 +26,6 @@ export default {
 .backButton {
   position: absolute;
   bottom: 30px;
+  z-index: 2;
 }
 </style>

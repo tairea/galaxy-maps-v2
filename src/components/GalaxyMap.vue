@@ -79,6 +79,7 @@ export default {
         this.updateFrameTimer();
       }, 60);
     },
+    newNodePositions: {},
   }),
   components: {
     Network,
@@ -135,6 +136,7 @@ export default {
         .set(newEdgeData)
         .then(() => {
           console.log("Edge successfully written!");
+          this.$emit("edgeSaved")
         })
         .catch((error) => {
           console.error("Error writing node: ", error);
@@ -148,13 +150,73 @@ export default {
       console.log("drag start", data);
     },
     dragging(data) {
-      if (!data.nodes[0]) return;
-      console.log("dragging", data);
-      // emit the x y drag coordinates
-      this.$emit("drag-coords", data.event.center);
+      // if (!data.nodes[0]) return;
+      // follow drag coords
+      // this.$emit("drag-coords", data.event.center);
     },
     dragEnd(data) {
-      console.log("drag End", data);
+      if (data.nodes.length < 1) {
+        return;
+      }
+      const nodeId = data.nodes[0];
+      const newPosition = this.$refs.network.getPositions(data.nodes[0]);
+      const nodes = this.$refs.network.nodes;
+      const node = nodes.find((node) => node.id === nodeId);
+      console.log("node", node);
+      console.log("new position", newPosition);
+      // check if coords changed
+      if (
+        newPosition[nodeId].x !== node.x ||
+        newPosition[nodeId].y !== node.y
+      ) {
+        console.log("node position has changed");
+        // flag save new positions button
+        this.$emit("nodePositionsChanged");
+        //   // commit new positions to newNodePositions
+        const newPositionObj = {
+          id: nodeId,
+          x: newPosition[nodeId].x,
+          y: newPosition[nodeId].y,
+        };
+        this.newNodePositions[nodeId] = newPositionObj;
+      }
+      // console.log("old node positions", nodes)
+      // console.log("new node positions", this.newNodePositions)
+    },
+    async saveNodePositions() {
+      this.$emit("nodePositionsChangeLoading");
+      const nodes = this.$refs.network.nodes;
+      // spread/or map new positions to nodes
+      console.log("current nodes:", nodes);
+      console.log("changed nodes:", this.newNodePositions);
+      for (const changedNode in this.newNodePositions) {
+        const changedNodeObj = this.newNodePositions[changedNode];
+        console.log("changed node:", changedNodeObj);
+        const node = nodes.find((node) => node.id === changedNodeObj.id);
+        if (changedNodeObj.x !== node.x || changedNodeObj.y !== node.y) {
+          node.x = changedNodeObj.x;
+          node.y = changedNodeObj.y;
+          // console.log("updated node:", node);
+          // save to firestore db
+          await db
+            .collection("courses")
+            .doc(this.currentCourseId)
+            .collection("map-nodes")
+            .doc(node.id)
+            .set(node)
+            .then(() => {
+              console.log("Node position successfully updated!");
+              // loading button
+              // hide button
+            })
+            .catch((error) => {
+              console.error("Error writing node positions: ", error);
+            });
+        } else {
+          return;
+        }
+        this.$emit("nodePositionsChangeSaved");
+      }
     },
     selectNode(data) {
       this.active = true;
@@ -167,7 +229,7 @@ export default {
         selectedNode.connectedEdge = data.edges[0];
         (selectedNode.DOMx = data.pointer.DOM.x),
           (selectedNode.DOMy = data.pointer.DOM.y);
-        this.startNodeAnimation()
+        this.startNodeAnimation();
         this.$emit("selected", selectedNode);
       }
     },
@@ -184,7 +246,7 @@ export default {
     },
     deselectNode() {
       this.$emit("deselected");
-      this.stopNodeAnimation()
+      this.stopNodeAnimation();
     },
     deselectEdge() {
       this.$emit("deselected");
@@ -209,7 +271,7 @@ export default {
       // console.log("centered position of node is = ", this.$refs.network.canvasToDom(nodeId))
     },
     hoverNode(data) {
-      this.stopNodeAnimation()
+      this.stopNodeAnimation();
       const nodeId = data.node;
       const hoveredNode = this.$refs.network.getNode(nodeId);
       hoveredNode.type = "node";
@@ -248,12 +310,12 @@ export default {
       }
     },
     startNodeAnimation() {
-      this.animateRadius = true
+      this.animateRadius = true;
       // start interval
       this.updateFrameVar();
     },
     stopNodeAnimation() {
-      this.animateRadius = false
+      this.animateRadius = false;
       clearInterval(this.intervalid1);
     },
   },

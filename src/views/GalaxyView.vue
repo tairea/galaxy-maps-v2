@@ -25,22 +25,9 @@
         >
           <v-icon v-if="!addNodeMode">mdi-dots-hexagon</v-icon>
           <v-icon v-else color="baseAccent">mdi-close</v-icon>
-          <!-- 
-            <v-btn
-          v-model="fab"
-          color="blue darken-2"
-          dark
-          fab
-        >
-          <v-icon v-if="fab">
-            mdi-close
-          </v-icon>
-          <v-icon v-else>
-            mdi-account-circle
-          </v-icon>
         </v-btn>
-           -->
-        </v-btn>
+
+        <!-- Add edge button -->
         <v-btn
           class="map-button"
            :color=" !addEdgeMode ? 'missionAccent' : 'baseAccent'"
@@ -54,6 +41,22 @@
         >
           <v-icon v-if="!addEdgeMode">mdi-chart-timeline-variant</v-icon>
           <v-icon v-else color="baseAccent">mdi-close</v-icon>
+        </v-btn>
+
+        <!-- New node positions Save Button -->
+        <v-btn
+          v-if="changeInPositions"
+          class="map-button pa-5"
+          color="baseAccent"
+          dark
+          small
+          outlined
+          tile
+          title="Save new node positions"
+          @click="saveNodePositions"
+          :loading="nodePositionsChangeLoading"
+        >
+         Save new positions
         </v-btn>
        
 
@@ -73,6 +76,10 @@
         @deselected="deselected"
         @hovered="hovered"
         @centerFocus="centerFocus"
+        @nodePositionsChanged="nodePositionsChanged"
+        @nodePositionsChangeLoading="nodePositionsChangeLoading = true"
+        @nodePositionsChangeSaved="nodePositionsChangeSaved"
+        @edgeSaved="toggleAddEdgeMode"
       />
 
       <!-- Edit -->
@@ -118,6 +125,8 @@ export default {
       addEdgeMode: false,
       uiMessage: "",
       coords: {},
+      changeInPositions: false,
+      nodePositionsChangeLoading: false,
     };
   },
   computed: {
@@ -180,6 +189,16 @@ export default {
     },
     centerFocus(node) {
       this.$refs.edit.centerFocus(node)
+    },
+    nodePositionsChanged() {
+      this.changeInPositions = true
+    },
+    saveNodePositions() {
+      this.$refs.vis.saveNodePositions()
+    },
+    nodePositionsChangeSaved() {
+      this.nodePositionsChangeLoading = false
+      this.changeInPositions = false
     }
   },
 };
@@ -224,9 +243,9 @@ export default {
   .map-buttons {
     position: fixed;
     top: 20px;
-    // margin-left: 80px;
+    left: 25%;
     z-index: 2;
-    width: 50%;
+    width: auto;
 
     .map-button {
       margin: 10px;
