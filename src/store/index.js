@@ -160,24 +160,40 @@ export default new Vuex.Store({
     }),
     getAllNodes({state}) {
       const allNodes = [];
+      //get courses
+      let count = 0
       db.collection("courses")
         .get()
         .then((querySnapshot) => {
+          
+          
+          // get the topics (nodes) in that course
           querySnapshot.forEach((doc) => {
-            // doc.data() is never undefined for query doc snapshots
+            
             db.collection("courses")
               .doc(doc.id)
               .collection("map-nodes")
               .get()
               .then((subQuerySnapshot) => {
+                
                 subQuerySnapshot.forEach((subDoc) => {
                   // push each subDoc aka map-node into allNodes
-                  allNodes.push(subDoc.data());
+                  const topicNodeFromDb = subDoc.data()
+                  // console.log("topicNodeFromDb",topicNodeFromDb)
+                  // modify x y coords offset by 200px to for a grid of galaxies
+                  // console.log("count",count)
+                  if (count !== 0) {                    
+                    topicNodeFromDb.x = topicNodeFromDb.x + (count * 1000) 
+                  }
+                  topicNodeFromDb.group = count
+                  allNodes.push(topicNodeFromDb);
                 });
+                count++
               })
               .catch((error) => {
                 console.log("Error getting documents: ", error);
               });
+              
           });
           console.log("all nodes from FS: ", allNodes);
           state.allNodes = allNodes

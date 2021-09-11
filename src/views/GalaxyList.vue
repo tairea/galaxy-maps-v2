@@ -2,7 +2,7 @@
   <v-container class="d-flex justify-center align-center fullHeight">
     <div class="flexContainer">
       
-        <Galaxy :nodes="getAllNodes" :edges="getAllEdges" />
+        <Galaxy />
       
     </div>
     <div class="createButton">
