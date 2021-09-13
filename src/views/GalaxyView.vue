@@ -1,11 +1,11 @@
 <template>
   <div id="container" class="bg">
     <div id="left-section">
-      <GalaxyInfo :course="getCourseById(currentCourseId)" />
+      <GalaxyInfo :course="getCourseById(courseId)" />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <AssignedInfo
         :assignCohorts="true"
-        :cohorts="getCohortsInThisCourse(currentCourseId)"
+        :cohorts="getCohortsInThisCourse(courseId)"
       />
       <BackButton :toPath="'/galaxy'" />
     </div>
@@ -84,7 +84,7 @@
 
       <!-- Edit -->
       <GalaxyMapEdit
-        :course="getCourseById(currentCourseId)"
+        :course="getCourseById(courseId)"
         :coords="coords"
         @removeUnsavedNode="removeUnsavedNode"
         ref="edit"
@@ -117,7 +117,7 @@ export default {
     BackButton,
     GalaxyMapEdit,
   },
-  props: ["courseId", "courseTitle"],
+  props: ["courseId"],
   mounted() {},
   data() {
     return {

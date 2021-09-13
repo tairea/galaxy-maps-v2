@@ -1,14 +1,12 @@
 <template>
-  <v-container class="d-flex justify-center align-center fullHeight">
+  <div class="fullHeight">
     <div class="flexContainer">
-      
-        <Galaxy />
-      
+      <Galaxy />
     </div>
     <div class="createButton">
       <CreateGalaxyButtonDialog />
     </div>
-  </v-container>
+  </div>
 </template>
 
 <script>
@@ -33,15 +31,17 @@ export default {
   computed: {
     ...mapGetters(["courses"]),
   },
+  data() {
+    return {
+      loading: true,
+    };
+  },
   methods: {
     bindAll() {
       this.$store.dispatch("bindCourses");
       this.$store.dispatch("bindCohorts");
       this.$store.dispatch("bindOrganisations");
     },
-  },
-  data() {
-    return {};
   },
 };
 </script>

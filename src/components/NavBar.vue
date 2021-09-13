@@ -51,7 +51,7 @@ export default {
   display: flex;
   justify-content: center;
   color: white;
-  z-index: 100;
+  z-index: 999;
 
   .inner {
     width: 80%;

@@ -99,11 +99,11 @@
 import firebase from "firebase/app";
 
 import { db } from "../store/firestoreConfig";
-import { mapMutations } from "vuex";
+import { mapState } from "vuex";
 
 export default {
   name: "CreateMissionButtonDialog",
-  props: ["courseId", "on", "attrs"],
+  props: ["topicId", "on", "attrs"],
   data: () => ({
     dialog: false,
     task: {
@@ -114,6 +114,9 @@ export default {
       slides: "",
     },
   }),
+  computed: {
+    ...mapState(["currentCourseId"]),
+  },
   methods: {
     saveTask(task) {
       // format video & slides url with "http://"
@@ -130,7 +133,9 @@ export default {
 
       // Add a new document in collection "courses"
       db.collection("courses")
-        .doc(this.courseId)
+        .doc(this.currentCourseId)
+        .collection("topics")
+        .doc(this.topicId)
         .update({
           // update tasks array with new task
           tasks: firebase.firestore.FieldValue.arrayUnion(task)

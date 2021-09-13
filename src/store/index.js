@@ -36,9 +36,9 @@ export default new Vuex.Store({
     getOrganisationById: (state) => (id) => {
       return state.organisations.find((organisation) => organisation.id === id);
     },
-    getTasksByCourseId: (state) => (id) => {
-      const course = state.courses.find((course) => course.id === id);
-      return course.tasks;
+    getTasksByTopicId: (state) => (id) => {
+      const topic = state.topics.find((topic) => topic.id === id);
+      return topic.tasks;
     },
     getCohortsByOrganisationId: (state) => (id) => {
       // TODO:
@@ -186,6 +186,7 @@ export default new Vuex.Store({
                     topicNodeFromDb.x = topicNodeFromDb.x + (count * 1000) 
                   }
                   topicNodeFromDb.group = count
+                  topicNodeFromDb.courseId = doc.id
                   allNodes.push(topicNodeFromDb);
                 });
                 count++

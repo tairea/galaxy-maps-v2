@@ -1,5 +1,6 @@
 <template>
   <div class="full-height">
+    <LoadingSpinner v-if="loading" />
     <network
       ref="network"
       class="full-height"
@@ -19,11 +20,14 @@ import "vue2vis/dist/vue2vis.css";
 
 import { mapState, mapGetters } from "vuex";
 
+import LoadingSpinner from "../components/LoadingSpinner";
+
 export default {
   name: "GalaxyMap",
   // props: ["nodes",  "edges"],
   components: {
     Network,
+    LoadingSpinner,
   },
   async mounted() {
     // console.log("current course id:", this.course.id);
@@ -40,6 +44,8 @@ export default {
       console.log("scale");
       var scaleOption = { scale: 0.28 };
       this.$refs.network.moveTo(scaleOption);
+      // stop loading spinner
+      this.loading = false;
     }, 2000);
   },
   computed: {
@@ -47,6 +53,7 @@ export default {
   },
   data: () => ({
     active: false,
+    loading: true,
     network: {
       options: {
         physics: {
@@ -84,6 +91,9 @@ export default {
     },
   }),
   methods: {
+    // toggleLoadingSpinner() {
+    //   this.loading = !this.loading
+    // },
     click(data) {
       // get click location
       const clickedPosition = data.pointer.canvas;
@@ -118,13 +128,23 @@ export default {
         "closest node is " +
           closestNode.label +
           " in group " +
-          closestNode.group
+          closestNode.group +
+          " in course id " +
+          closestNode.courseId
       );
 
+      // set save current course clicked in store
+      this.$store.commit("setCurrentCourseId", closestNode.courseId);
       // router to the group's galaxy
+      this.$router.push({
+        name: "GalaxyView",
+        params: {
+          courseId: closestNode.courseId,
+        },
+      });
     },
     hoverNode(data) {
-      console.log("hover",data)
+      console.log("hover", data);
       // const connectedNodes = this.$refs.network.getConnectedNodes(data.node)
       // console.log("connectedNodes",connectedNodes)
       // console.log("BoundingBox", this.$refs.network.getBoundingBox(data.node));
@@ -145,5 +165,7 @@ export default {
 .full-height {
   width: 100%;
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 </style>

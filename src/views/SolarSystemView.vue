@@ -5,29 +5,29 @@
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <AssignedInfo :assignCohorts="true" :cohorts="getCohortsInThisCourse(currentCourseId)" />
 
-      <BackButton :toPath="`'/galaxy/' + ${ currentCourseId }`"/>
+      <BackButton :toPath="'/galaxy/' + currentCourseId"/>
     </div>
     <div id="main-section">
       <MissionsList
-        :tasks="getTasksByCourseId(currentCourseId)"
-        :courseId="currentCourseId"
+        :tasks="getTasksByTopicId(currentTopicId)"
+        :topicId="currentTopicId"
       />
     </div>
     <div id="right-section">
-      <div class="galaxy-frame">
+      <!-- <div class="galaxy-frame">
         <h2 class="galaxy-label">Map</h2>
-        <Galaxy :course="getCourseById(currentCourseId)" :size="'0.27em'" />
-      </div>
+        <SolarSystem :topic="getTopicById(currentTopicId)" :size="'0.25em'" />
+      </div> -->
     </div>
   </div>
 </template>
 
 <script>
-import GalaxyInfo from "../components/GalaxyInfo";
+import SolarSystemInfo from "../components/SolarSystemInfo";
 import AssignedInfo from "../components/AssignedInfo";
 import MissionsInfo from "../components/MissionsInfo";
 import MissionsList from "../components/MissionsList";
-import Galaxy from "../components/Galaxy";
+import SolarSystem from "../components/SolarSystem";
 import BackButton from "../components/BackButton";
 
 import { mapState, mapGetters } from "vuex";
@@ -35,22 +35,24 @@ import { mapState, mapGetters } from "vuex";
 export default {
   name: "SolarSystemView",
   components: {
-    GalaxyInfo,
+    SolarSystemInfo,
     AssignedInfo,
     MissionsInfo,
     MissionsList,
-    Galaxy,
+    SolarSystem,
     BackButton
   },
-  props: ["courseId", "courseTitle"],
+  props: ["topicId"],
   mounted() {
+    console.log("current topic id is:",this.currentTopicId)
+    console.log("current course id is:",this.currentCourseId)
   },
   data() {
     return {};
   },
   computed: {
-    ...mapState(["currentCourseId"]),
-    ...mapGetters(["getCourseById", "getTasksByCourseId","getCohortsInThisCourse"]),
+    ...mapState(["currentTopicId", "currentCourseId"]),
+    ...mapGetters(["getTopicById", "getTasksByTopicId","getCohortsInThisCourse"]),
   },
   methods: {
   },

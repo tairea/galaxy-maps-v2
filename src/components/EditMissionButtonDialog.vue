@@ -92,7 +92,7 @@
                 </v-icon>
                 SAVE
               </v-btn>
-               <!-- DELETE -->
+              <!-- DELETE -->
               <v-btn
                 outlined
                 color="error"
@@ -165,16 +165,17 @@
 import firebase from "firebase/app";
 
 import { db } from "../store/firestoreConfig";
-import { mapMutations } from "vuex";
+import { mapState } from "vuex";
 
 export default {
   name: "EditMissionButtonDialog",
-  props: ["task", "index", "courseId", "on", "attrs"],
+  props: ["task", "index", "topicId", "on", "attrs"],
   data: () => ({
     dialog: false,
     dialogConfirm: false,
   }),
   computed: {
+    ...mapState(["currentCourseId"]),
     // ...mapGetters(["getTasksByCourseId"]),
   },
   methods: {
@@ -187,15 +188,17 @@ export default {
     },
     confirmDeleteTask() {
       // get all tasks
-      let courseTasks = this.$store.getters.getTasksByCourseId(this.courseId);
+      let topicTasks = this.$store.getters.getTasksByTopicId(this.topicId);
       // remove index
-      courseTasks.splice(this.index, 1);
+      topicTasks.splice(this.index, 1);
       // db set edited array
       db.collection("courses")
-        .doc(this.courseId)
+        .doc(this.currentCourseId)
+        .collection("topics")
+        .doc(this.topicId)
         .update({
           // update tasks array with new task
-          tasks: courseTasks,
+          tasks: topicTasks,
         })
         .then(() => {
           console.log("Task successfully deleted!");
@@ -204,8 +207,8 @@ export default {
         .catch((error) => {
           console.error("Error writing document: ", error);
         });
-        // close dialog
-        this.dialogConfirm = false;
+      // close dialog
+      this.dialogConfirm = false;
     },
     updateTask(task, index) {
       // format video & slides url with "http://"
@@ -222,15 +225,17 @@ export default {
 
       // get all tasks array. so can update task with changes.
       // (cant update single task by index in firestore, so have to get all tasks, make the change, then update all the tasks)
-      let courseTasks = this.$store.getters.getTasksByCourseId(this.courseId);
-      courseTasks[index] = task;
+      let topicTasks = this.$store.getters.getTasksByTopicId(this.topicId);
+      topicTasks[index] = task;
 
       // Add a new document in collection "courses"
       db.collection("courses")
-        .doc(this.courseId)
+        .doc(this.currentCourseId)
+        .collection("topics")
+        .doc(this.topicId)
         .update({
           // update tasks array with new task
-          tasks: courseTasks,
+          tasks: topicTasks,
         })
         .then((res) => {
           console.log("Task successfully updated!");
@@ -240,7 +245,6 @@ export default {
         .catch((error) => {
           console.error("Error writing document: ", error);
         });
-      this.course = {};
     },
   },
 };

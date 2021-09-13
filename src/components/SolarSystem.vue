@@ -1,5 +1,5 @@
 <template>
-  <div class="solarsystem" @click="routeToTopic(topic)">
+  <div class="solarsystem" :style="{height: height ? height : 'auto'}" @click="routeToTopic(topic)">
     <div class="scene">
       <ul class="system" :style="{ fontSize: size }">
         <li class="orbit top-most-orbit">
@@ -30,9 +30,12 @@
 </template>
 
 <script>
+
+import { mapState } from "vuex";
+
 export default {
   name: "SolarSystem",
-  props: ["topic", "size"],
+  props: ["topic", "size", "height"],
   data() {
     let durationRanges = [
       [0, 0],
@@ -61,9 +64,12 @@ export default {
       ],
     };
   },
-  mounted() {
+  mounted() {},
+    computed: {
+    ...mapState([
+      "currentCourseId",
+    ]),
   },
-  computed: {},
   methods: {
     // string to colour, thanks to: https://stackoverflow.com/questions/3426404/create-a-hexadecimal-colour-based-on-a-string-with-javascript
     hashCode(str) {
@@ -110,7 +116,7 @@ export default {
 .solarsystem {
   // width: 33%;
   width: 100%;
-  height: 100%;
+  // height: 100%;
 }
 
 .galaxy:hover {

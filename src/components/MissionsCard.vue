@@ -10,7 +10,7 @@
       <!-- DESCRIPTION -->
       <p>{{ task.description }}</p>
       <!-- EDIT BUTTON -->
-        <EditMissionButtonDialog :task="task" :index="index" :courseId="courseId"/>
+        <EditMissionButtonDialog :task="task" :index="index" :topicId="topicId"/>
     </div>
     <div class="mission-section mission-section-overUnder">
       <!-- VIDEO -->
@@ -46,7 +46,7 @@ export default {
   components: {
     EditMissionButtonDialog,
   },
-  props: ["task", "index", "courseId"],
+  props: ["task", "index", "topicId"],
   data() {
     return {
       editing: false

@@ -4,7 +4,7 @@
 
     <div v-if="tasks" style="width:100%">
       <div v-for="(task, index) in tasks" :key="task.id">
-        <MissionsCard :task="task" :index="index" :courseId="courseId"/>
+        <MissionsCard :task="task" :index="index" :topicId="topicId"/>
       </div>
     </div>
 
@@ -13,7 +13,7 @@
     </div>
 
     <div class="createButton">
-      <CreateMissionButtonDialog :courseId="courseId" />
+      <CreateMissionButtonDialog :topicId="topicId" />
     </div>
   </div>
 </template>
@@ -28,7 +28,7 @@ export default {
     MissionsCard,
     CreateMissionButtonDialog,
   },
-  props: ["tasks", "courseId"],
+  props: ["tasks", "topicId"],
   data() {
     return {};
   },
