@@ -15,11 +15,12 @@
       @deselect-node="deselectNode"
       @deselect-edge="deselectEdge"
       @hover-node="hoverNode"
-      @blur-node="blurNode"
       @zoom="zoom"
       @animation-finished="animationFinished"
       @before-drawing="beforeDrawing"
+      @click="click"
     ></network>
+      <!-- @blur-node="blurNode" -->
   </div>
 </template>
 
@@ -36,6 +37,7 @@ export default {
   name: "GalaxyMap",
   data: () => ({
     active: false,
+    addingEdge: false,
     network: {
       options: {
         physics: {
@@ -116,6 +118,8 @@ export default {
       console.log("add edge mode");
       this.$emit("setUiMessage", "Click and drag to connect two nodes");
       this.$refs.network.addEdgeMode();
+      // disable node hover
+      this.addingEdge = true
     },
     addNode(data) {
       if (!this.active) return;
@@ -138,14 +142,17 @@ export default {
         .then(() => {
           console.log("Edge successfully written!");
           this.$emit("edgeSaved")
+          this.addingEdge = false
         })
         .catch((error) => {
           console.error("Error writing node: ", error);
         });
     },
-    click() {
-      console.log("click");
-      this.$emit("setUiMessage", "");
+    click(data) {
+      if (data.edges.length === 0 && data.nodes.length === 0 ) {
+        this.deselectNode()
+      }
+      // this.$emit("setUiMessage", "");
     },
     dragStart(data) {
       console.log("drag start", data);
@@ -246,6 +253,7 @@ export default {
       }
     },
     deselectNode() {
+      console.log("deselect node")
       this.$emit("deselected");
       this.stopNodeAnimation();
     },
@@ -272,6 +280,7 @@ export default {
       // console.log("centered position of node is = ", this.$refs.network.canvasToDom(nodeId))
     },
     hoverNode(data) {
+      if (this.addingEdge == true) { return }
       this.stopNodeAnimation();
       const nodeId = data.node;
       const hoveredNode = this.$refs.network.getNode(nodeId);

@@ -137,7 +137,7 @@
       <div class="ss-preview">
         <SolarSystem :topic="getTopicById(this.currentNode.id)" :size="'0.25em'" />
         <v-btn
-          class="view-ss-button pa-5 ma-5"
+          class="view-ss-button pa-5"
           dark
           small
           color="missionAccent"
@@ -145,9 +145,17 @@
           tile
           title="Delete"
           @click="routeToSolarSystem"
-          :loading="deleting"
         >
           View Solar System
+        </v-btn>
+        <v-btn
+        text
+        x-small
+        color="missionAccent"
+        class="close-button"
+        @click="close"
+        >
+          <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
     </div>
@@ -203,6 +211,9 @@ export default {
       console.log("cancel");
       this.dialog = false;
       // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
+    },
+    close() {
+      this.deselect()
     },
     deleteFromMap() {
       console.log("delete");
@@ -427,12 +438,20 @@ export default {
     justify-content: center;
     align-items: center;
     flex-direction: column;
+    overflow:hidden;
 
 
     .view-ss-button {
       position: absolute;
-      bottom: 0;
+      bottom: 20px; // matches 20px padding of ss-details
       background-color: var(--v-background-base);
+    }
+
+    .close-button {
+      position: absolute;
+      top: 10px;
+      right: 0px;
+      padding: 0px !important;
     }
   }
   .ss-details {

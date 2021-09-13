@@ -36,6 +36,8 @@ export default {
 .bg {
   background: var(--v-background-base);
   overflow: hidden;
+  overflow-y: hidden; // hide vertical
+  overflow-x: hidden; // hide horizontal
 }
 
 </style>
