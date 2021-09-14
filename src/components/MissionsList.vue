@@ -13,20 +13,20 @@
     </div>
 
     <div class="createButton">
-      <CreateMissionButtonDialog :topicId="topicId" />
+      <CreateEditDeleteMissionDialog :topicId="topicId" />
     </div>
   </div>
 </template>
 
 <script>
 import MissionsCard from "../components/MissionsCard";
-import CreateMissionButtonDialog from "../components/CreateMissionButtonDialog";
+import CreateEditDeleteMissionDialog from "../components/CreateEditDeleteMissionDialog";
 
 export default {
   name: "MissionsList",
   components: {
     MissionsCard,
-    CreateMissionButtonDialog,
+    CreateEditDeleteMissionDialog,
   },
   props: ["tasks", "topicId"],
   data() {

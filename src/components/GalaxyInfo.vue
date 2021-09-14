@@ -3,21 +3,22 @@
     <h2 class="galaxy-label">Galaxy</h2>
     <h1 class="galaxy-title">{{ course.title }}</h1>
     <!-- <div class="d-flex justify-center align-center"> -->
-    <v-img class="galaxy-image" width="auto" :src="course.image.url"></v-img>
+    <v-img class="galaxy-image" :src="course.image.url"></v-img>
     <!-- </div> -->
     <p class="galaxy-description">{{ course.description }}</p>
-    <EditGalaxyButtonDialog :course="course" />
+    <CreateEditDeleteGalaxyDialog :edit="true" :courseToEdit="course" />
   </div>
 </template>
 
 <script>
-import EditGalaxyButtonDialog from "../components/EditGalaxyButtonDialog";
+// import EditGalaxyButtonDialog from "../components/EditGalaxyButtonDialog";
+import CreateEditDeleteGalaxyDialog from "../components/CreateEditDeleteGalaxyDialog";
 
 export default {
   name: "GalaxyInfo",
   props: ["course"],
   components: {
-    EditGalaxyButtonDialog,
+    CreateEditDeleteGalaxyDialog,
   },
   mounted() {},
   data() {
@@ -26,7 +27,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 #galaxy-info {
   width: calc(100% - 30px);
   // height: 400px;
@@ -59,6 +60,10 @@ export default {
     text-transform: uppercase;
     margin: 20px 0px 5px 0px;
     color: white;
+  }
+
+  .galaxy-image {
+    width: 100%;
   }
 
   .galaxy-description {

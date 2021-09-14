@@ -4,13 +4,13 @@
       <Galaxy />
     </div>
     <div class="createButton">
-      <CreateGalaxyButtonDialog />
+      <CreateEditDeleteGalaxyDialog :edit="false"/>
     </div>
   </div>
 </template>
 
 <script>
-import CreateGalaxyButtonDialog from "../components/CreateGalaxyButtonDialog";
+import CreateEditDeleteGalaxyDialog from "../components/CreateEditDeleteGalaxyDialog";
 import Galaxy from "../components/Galaxy";
 
 import { db } from "../store/firestoreConfig";
@@ -20,7 +20,7 @@ import { mapState, mapGetters } from "vuex";
 export default {
   name: "GalaxyList",
   components: {
-    CreateGalaxyButtonDialog,
+    CreateEditDeleteGalaxyDialog,
     Galaxy,
   },
   mounted() {

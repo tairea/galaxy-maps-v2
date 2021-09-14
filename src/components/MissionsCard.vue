@@ -10,7 +10,7 @@
       <!-- DESCRIPTION -->
       <p>{{ task.description }}</p>
       <!-- EDIT BUTTON -->
-        <EditMissionButtonDialog :task="task" :index="index" :topicId="topicId"/>
+        <CreateEditDeleteMissionDialog :edit="true" :taskToEdit="task" :index="index" :topicId="topicId"/>
     </div>
     <div class="mission-section mission-section-overUnder">
       <!-- VIDEO -->
@@ -39,14 +39,16 @@
 
 <script>
 
-import EditMissionButtonDialog from "../components/EditMissionButtonDialog";
+import CreateEditDeleteMissionDialog from "../components/CreateEditDeleteMissionDialog";
 
 export default {
   name: "MissionsCard",
   components: {
-    EditMissionButtonDialog,
+    CreateEditDeleteMissionDialog,
   },
   props: ["task", "index", "topicId"],
+  mounted() {
+  },
   data() {
     return {
       editing: false

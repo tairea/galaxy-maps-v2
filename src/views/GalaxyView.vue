@@ -1,11 +1,11 @@
 <template>
   <div id="container" class="bg">
     <div id="left-section">
-      <GalaxyInfo :course="getCourseById(courseId)" />
+      <GalaxyInfo :course="getCourseById(courseId ? courseId : courseIdFromRouter )" />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <AssignedInfo
         :assignCohorts="true"
-        :cohorts="getCohortsInThisCourse(courseId)"
+        :cohorts="getCohortsInThisCourse(courseId ? courseId : courseIdFromRouter )"
       />
       <BackButton :toPath="'/galaxy'" />
     </div>
@@ -61,7 +61,8 @@
        
 
         <div class="ui-message-wrap">
-          <p class="ui-message">{{ uiMessage }}</p>
+          <p v-if="currentCourseNodes.length === 0 && !addNodeMode" class="ui-message" style="margin-left:20px;"><v-icon color="missionAccent" class="bounce">mdi-hand-pointing-up</v-icon> Add a new node to start creating a Galaxy map</p>
+          <p v-else class="ui-message">{{ uiMessage }}</p>
         </div>
       </div>
 
@@ -118,9 +119,15 @@ export default {
     GalaxyMapEdit,
   },
   props: ["courseId"],
-  mounted() {},
+  mounted() {
+    console.log("courseId",this.courseId)
+    console.log("courseIdFromRouter",this.courseIdFromRouter)
+    if (this.courseId) {return}
+    this.$store.commit("setCurrentCourseId", this.courseIdFromRouter);
+  },
   data() {
     return {
+      courseIdFromRouter: this.$route.params.courseId,
       addNodeMode: false,
       addEdgeMode: false,
       uiMessage: "",
@@ -130,7 +137,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(["currentCourseId"]),
+    ...mapState(["currentCourseId","currentCourseNodes"]),
     ...mapGetters([
       "getCourseById",
       "getTasksByCourseId",
@@ -293,4 +300,22 @@ export default {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--v-missionAccent-base);
 }
+
+.bounce {
+    -webkit-animation: mover 1s infinite  alternate;
+    animation: mover 1s infinite  alternate;
+}
+.bounce {
+    -webkit-animation: mover 1s infinite  alternate;
+    animation: mover 1s infinite  alternate;
+}
+@-webkit-keyframes mover {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-5px); }
+}
+@keyframes mover {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-5px); }
+}
+
 </style>

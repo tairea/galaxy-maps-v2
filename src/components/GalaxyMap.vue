@@ -9,6 +9,7 @@
       @nodes-add="addNode"
       @edges-add="addEdge"
       @dragging="dragging"
+      @drag-start="dragStart"
       @drag-end="dragEnd"
       @select-node="selectNode"
       @select-edge="selectEdge"
@@ -156,6 +157,7 @@ export default {
     },
     dragStart(data) {
       console.log("drag start", data);
+      this.deselectNode()
     },
     dragging(data) {
       // if (!data.nodes[0]) return;

@@ -45,7 +45,7 @@ $duration: 1.4s;
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 777;
+  z-index: 199;
   background-color: var(--v-background-base);
 }
 .spinner {
