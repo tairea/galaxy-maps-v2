@@ -116,6 +116,7 @@ export default {
 .solarsystem {
   // width: 33%;
   width: 100%;
+  margin-top: -40px;
   // height: 100%;
 }
 

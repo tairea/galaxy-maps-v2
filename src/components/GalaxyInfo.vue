@@ -11,14 +11,13 @@
 </template>
 
 <script>
-
 import EditGalaxyButtonDialog from "../components/EditGalaxyButtonDialog";
 
 export default {
   name: "GalaxyInfo",
   props: ["course"],
   components: {
-    EditGalaxyButtonDialog
+    EditGalaxyButtonDialog,
   },
   mounted() {},
   data() {
@@ -39,44 +38,33 @@ export default {
   backdrop-filter: blur(2px);
   z-index: 3;
 
-  .galaxy-image {
-    // --- CIRCLE IMAGE ---
-    // border-radius: 50%;
-    // width: 200px !important;
-    // height: 200px !important;
-    // margin: auto;
+  .galaxy-label {
+    font-size: 0.8rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    // ribbon label
+    position: absolute;
+    top: 0;
+    left: -1px;
+    background-color: var(--v-galaxyAccent-base);
+    color: var(--v-background-base);
+    padding: 0px 15px 0px 5px;
+    clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%);
   }
-}
 
-h1 {
-  color: white;
-}
+  .galaxy-title {
+    font-size: 1.2rem;
+    color: var(--v-galaxyAccent-base) !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin: 20px 0px 5px 0px;
+    color: white;
+  }
 
-.galaxy-label {
-  font-size: 0.8rem;
-  font-weight: 400;
-  text-transform: uppercase;
-  // ribbon label
-  position: absolute;
-  top: 0;
-  left: -1px;
-  background-color: var(--v-galaxyAccent-base);
-  color: var(--v-background-base);
-  padding: 0px 15px 0px 5px;
-  clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%);
-}
-
-.galaxy-title {
-  font-size: 1.2rem;
-  color: var(--v-galaxyAccent-base);
-  font-weight: 600;
-  text-transform: uppercase;
-  margin: 20px 0px 5px 0px;
-}
-
-.galaxy-description {
-  margin-top: 10px;
-  color: var(--v-galaxyAccent-base);
-  // font-size: 0.9rem;
+  .galaxy-description {
+    margin-top: 10px;
+    color: var(--v-galaxyAccent-base);
+    // font-size: 0.9rem;
+  }
 }
 </style>

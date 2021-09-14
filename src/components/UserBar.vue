@@ -65,7 +65,7 @@ export default {
     text-align: right;
     display: flex;
     justify-content: flex-end;
-    z-index: 999;
+    z-index: 200;
     // border: 1px yellow solid;
 
     .profilePic {

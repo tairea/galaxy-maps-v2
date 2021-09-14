@@ -1,8 +1,12 @@
 <template>
   <div>
     <v-dialog v-model="dialog" width="40%" light>
-      <div class="createNodeDialog">
-        <div class="create-field">
+
+      <div class="create-dialog">
+
+        <div class="create-dialog-content">
+
+          <!-- Title/Desc Header -->
           <div class="dialog-info">
             <p class="dialog-title">{{ dialogTitle }}</p>
             <div class="d-flex align-center">
@@ -13,6 +17,7 @@
             </div>
           </div>
 
+          <!-- Fields -->
           <v-text-field
             class="input-field"
             solo
@@ -22,6 +27,7 @@
             background-color="white"
           ></v-text-field>
 
+          <!-- Action buttons -->
           <div class="action-buttons">
             <v-btn
               outlined
@@ -62,12 +68,15 @@
               Cancel
             </v-btn>
           </div>
+          <!-- End action-buttons -->
         </div>
+        <!-- End create-dialog-content -->
       </div>
+      <!-- End create-dialog -->
     </v-dialog>
 
     <!-- POPUP -->
-    <!-- popup follow drag -> :style="{ top: getCoords.y - 100 + 'px', left: getCoords.x + 30 + 'px' }" -->
+    <!-- follow drag -> :style="{ top: getCoords.y - 100 + 'px', left: getCoords.x + 30 + 'px' }" -->
     <div
       v-if="infoPopupShow"
       ref="popup"
@@ -378,7 +387,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.createNodeDialog {
+.create-dialog {
   color: var(--v-missionAccent-base);
   background-color: var(--v-background-base);
   border: 1px solid var(--v-missionAccent-base);
@@ -388,7 +397,7 @@ export default {
   flex-wrap: wrap;
 }
 
-.create-field {
+.create-dialog-content {
   // width: 33.33%;
   min-height: 400px;
   display: flex;
@@ -406,6 +415,7 @@ export default {
     color: var(--v-missionAccent-base);
     text-transform: uppercase;
   }
+
   .dialog-description {
     color: var(--v-missionAccent-base);
     text-transform: uppercase;
@@ -421,6 +431,7 @@ export default {
   }
 }
 
+// POPUP
 .ss-info-panel {
   // background-color: var(--v-background-base);
   border: 1px solid var(--v-missionAccent-base);
@@ -439,7 +450,6 @@ export default {
     align-items: center;
     flex-direction: column;
     overflow:hidden;
-
 
     .view-ss-button {
       position: absolute;
