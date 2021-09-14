@@ -44,7 +44,7 @@
     </v-row>
     <v-row class="cohort-bottom">
       <v-col>
-        <CreateCohortButtonDialog />
+        <CreateEditDeleteCohortDialog />
         <CreateOrganisationButtonDialog />
       </v-col>
     </v-row>
@@ -57,7 +57,7 @@
 
 <script>
 // @ is an alias to /src
-import CreateCohortButtonDialog from "../components/CreateCohortButtonDialog";
+import CreateEditDeleteCohortDialog from "../components/CreateEditDeleteCohortDialog";
 import CreateOrganisationButtonDialog from "../components/CreateOrganisationButtonDialog";
 import EditOrganisationButtonDialog from "../components/EditOrganisationButtonDialog";
 import Cohort from "../components/Cohort";
@@ -68,7 +68,7 @@ import { mapState, mapGetters } from "vuex";
 export default {
   name: "CohortList",
   components: {
-    CreateCohortButtonDialog,
+    CreateEditDeleteCohortDialog,
     CreateOrganisationButtonDialog,
     Cohort,
     Organisation,

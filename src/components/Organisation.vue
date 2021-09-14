@@ -2,7 +2,7 @@
   <v-container>
     <v-row>
       <v-col
-        class="d-flex justify-start align-center cursor"
+        class="d-flex justify-center align-center cursor"
         @click="editOrg()"
       >
         <v-img
@@ -28,7 +28,9 @@ export default {
   data() {
     return {};
   },
-  mounted() {},
+  mounted() {
+    console.log("from organisation",this.organisation)
+  },
   computed: {},
   methods: {
     editOrg() {

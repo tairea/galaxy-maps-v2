@@ -6,15 +6,11 @@
     <p class="galaxy-description">Part of the</p>
     <h1 class="galaxy-title">{{ getCourseById(currentCourseId).title }}</h1>
     <p class="galaxy-description">Galaxy</p>
-    <!-- <div class="d-flex justify-center align-center"> -->
-    <!-- </div> -->
-    <!-- <EditGalaxyButtonDialog :course="course" /> -->
   </div>
 </template>
 
 <script>
 
-import EditGalaxyButtonDialog from "../components/EditGalaxyButtonDialog";
 import SolarSystem from "../components/SolarSystem";
 
 import { mapState, mapGetters } from "vuex";
@@ -23,7 +19,6 @@ export default {
   name: "GalaxyInfo",
   props: ["topic"],
   components: {
-    EditGalaxyButtonDialog,
     SolarSystem
   },
   computed: {

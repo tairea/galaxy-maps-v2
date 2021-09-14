@@ -11,7 +11,7 @@
 </template>
 
 <script>
-// import EditGalaxyButtonDialog from "../components/EditGalaxyButtonDialog";
+
 import CreateEditDeleteGalaxyDialog from "../components/CreateEditDeleteGalaxyDialog";
 
 export default {

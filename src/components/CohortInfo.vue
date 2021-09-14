@@ -8,20 +8,34 @@
     </div>
     <!-- </div> -->
     <p class="cohort-description">{{ cohort.description }}</p>
-    <EditCohortButtonDialog :cohort="cohort" />
+    <div class="d-flex justify-center align-center">
+      <Organisation
+        v-if="cohort.organisation"
+        :organisation="getOrganisationById(cohort.organisation)"
+        :size="'0.25em'"
+      />
+    </div>
+    <CreateEditDeleteCohortDialog :edit="true" :cohortToEdit="cohort" />
   </div>
 </template>
 
 <script>
-import EditCohortButtonDialog from "../components/EditCohortButtonDialog";
+import Organisation from "../components/Organisation";
+import CreateEditDeleteCohortDialog from "../components/CreateEditDeleteCohortDialog";
+
+import { mapGetters } from "vuex";
 
 export default {
   name: "CohortInfo",
   props: ["cohort"],
   components: {
-    EditCohortButtonDialog,
+    Organisation,
+    CreateEditDeleteCohortDialog,
   },
   mounted() {},
+  computed: {
+    ...mapGetters(["getOrganisationById"]),
+  },
   data() {
     return {};
   },
@@ -36,45 +50,36 @@ export default {
   padding: 20px;
   position: relative;
 
-  .cohort-image {
-    // max-height: 300px;
-    // --- CIRCLE IMAGE ---
-    // border-radius: 50%;
-    // width: 200px !important;
-    // height: 200px !important;
-    // margin: auto;
+  .cohort-label {
+    font-size: 0.8rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    // ribbon label
+    position: absolute;
+    top: 0;
+    left: -1px;
+    background-color: var(--v-cohortAccent-base);
+    color: var(--v-background-base);
+    padding: 0px 15px 0px 5px;
+    clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%);
+  }
+
+  .cohort-title {
+    font-size: 1.2rem;
+    color: var(--v-cohortAccent-base);
+    font-weight: 600;
+    text-transform: uppercase;
+    margin: 20px 0px 5px 0px;
+  }
+
+  .cohort-description {
+    margin-top: 10px;
+    color: var(--v-cohortAccent-base);
+    // font-size: 0.9rem;
   }
 }
 
 h1 {
   color: white;
-}
-
-.cohort-label {
-  font-size: 0.8rem;
-  font-weight: 400;
-  text-transform: uppercase;
-  // ribbon label
-  position: absolute;
-  top: 0;
-  left: -1px;
-  background-color: var(--v-cohortAccent-base);
-  color: var(--v-background-base);
-  padding: 0px 15px 0px 5px;
-  clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%);
-}
-
-.cohort-title {
-  font-size: 1.2rem;
-  color: var(--v-cohortAccent-base);
-  font-weight: 600;
-  text-transform: uppercase;
-  margin: 20px 0px 5px 0px;
-}
-
-.cohort-description {
-  margin-top: 10px;
-  color: var(--v-cohortAccent-base);
-  // font-size: 0.9rem;
 }
 </style>

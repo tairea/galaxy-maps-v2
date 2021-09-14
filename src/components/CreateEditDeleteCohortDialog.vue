@@ -1,0 +1,594 @@
+<template>
+  <v-container>
+    <v-row class="text-center" align="center">
+      <v-col cols="12">
+        <v-dialog v-model="dialog" width="40%" light>
+          <!-- CREATE BUTTON -->
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn
+              v-if="edit"
+              v-bind="attrs"
+              v-on="on"
+              class="mission-edit-button"
+              outlined
+              color="cohortAccent"
+              small
+            >
+              <v-icon small>
+                mdi-pencil
+              </v-icon>
+            </v-btn>
+            <v-btn v-else outlined color="baseAccent" v-bind="attrs" v-on="on">
+              <v-icon left>
+                mdi-plus
+              </v-icon>
+              CREATE COHORT
+            </v-btn>
+          </template>
+
+          <!-- DIALOG (TODO: make as a component)-->
+          <div class="create-dialog">
+            <!-- HEADER -->
+            <div class="dialog-header">
+              <p class="dialog-title">
+                {{ edit ? "Edit Cohort " + cohort.name : dialogTitle }}
+              </p>
+              <div class="d-flex align-center">
+                <v-icon left color="missionAccent"
+                  >mdi-information-variant</v-icon
+                >
+                <p class="dialog-description">{{ dialogDescription }}</p>
+              </div>
+            </div>
+
+            <div
+              class="left-side"
+              :style="cohort.name ? 'width:50%' : 'width:100%'"
+            >
+              <div class="create-dialog-content">
+                <!-- NAME -->
+                <!-- TITLE -->
+                <p class="input-description">Cohort Name:</p>
+                <v-text-field
+                  class="input-field"
+                  solo
+                  color="missionAccent"
+                  v-model="cohort.name"
+                  background-color="white"
+                ></v-text-field>
+
+                <!-- DESCRIPTION -->
+                <p class="input-description">Cohort Description:</p>
+                <v-textarea
+                  class="input-field"
+                  solo
+                  color="missionAccent"
+                  auto-grow
+                  clearable
+                  rows="1"
+                  v-model="cohort.description"
+                  background-color="white"
+                ></v-textarea>
+
+                <!-- IMAGE UPLOAD -->
+                <p class="input-description">Cohort Image:</p>
+                <v-progress-linear
+                  color="missionAccent"
+                  :value="percentage"
+                ></v-progress-linear>
+                <v-file-input
+                  class="input-field"
+                  solo
+                  color="missionAccent"
+                  accept="image/*"
+                  v-model="uploadedImage"
+                  @change="storeImage()"
+                  prepend-icon=""
+                ></v-file-input>
+
+                <!-- ORGANISATION -->
+                <p class="input-description">Organisation:</p>
+                <v-select
+                  class="input-field"
+                  solo
+                  v-model="cohort.organisation"
+                  :items="organisationsToSelect"
+                  item-text="name"
+                  item-value="id"
+                  @change="selectChange"
+                >
+                </v-select>
+              </div>
+              <!-- End create-dialog-content -->
+            </div>
+            <!-- End of left-side -->
+
+            <!-- RIGHT SIDE -->
+            <div
+              class="right-side"
+              :style="cohort.name ? 'width:50%' : 'width:0%'"
+            >
+              <!-- Cohort Preview -->
+              <div id="cohort-info" v-if="cohort.name">
+                <h2 class="cohort-label">Cohort</h2>
+                <h1 class="cohort-title">{{ cohort.name }}</h1>
+                <v-img
+                  v-if="cohort.image.url"
+                  :src="cohort.image.url"
+                  width="100%"
+                ></v-img>
+                <p class="cohort-description">{{ cohort.description }}</p>
+                <!-- Organisation -->
+                <div class="d-flex justify-center align-center">
+                  <Organisation
+                    v-if="cohort.organisation"
+                    :organisation="getOrganisationById(cohort.organisation)"
+                    :size="'0.25em'"
+                  />
+                </div>
+              </div>
+            </div>
+            <!-- End of right-side -->
+            <!-- ACTION BUTTONS -->
+            <div class="action-buttons">
+              <v-btn
+                v-if="edit"
+                outlined
+                color="green darken-1"
+                @click="updateCohort(cohort)"
+                class="mr-2"
+                :loading="loading"
+                :disabled="disabled"
+              >
+                <v-icon left>
+                  mdi-check
+                </v-icon>
+                UPDATE
+              </v-btn>
+              <v-btn
+                v-else
+                outlined
+                color="green darken-1"
+                @click="saveCohort(cohort)"
+                class="mr-2"
+                :loading="loading"
+                :disabled="disabled"
+              >
+                <v-icon left>
+                  mdi-check
+                </v-icon>
+                SAVE
+              </v-btn>
+
+              <!-- DELETE -->
+              <v-btn
+                v-if="edit"
+                outlined
+                color="error"
+                @click="deleteDialog()"
+                class="ml-2"
+              >
+                <v-icon left>
+                  mdi-delete
+                </v-icon>
+                DELETE
+              </v-btn>
+
+              <v-btn
+                outlined
+                :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
+                class="ml-2"
+                @click="cancel"
+                :disabled="disabled || loading"
+              >
+                <v-icon left>
+                  mdi-close
+                </v-icon>
+                Cancel
+              </v-btn>
+            </div>
+            <!-- End action-buttons -->
+          </div>
+          <!-- End create-dialog -->
+        </v-dialog>
+
+        <!-- CONFIRM DELETE DIALOG -->
+        <v-dialog v-model="dialogConfirm" width="40%" light>
+          <div class="create-dialog">
+            <!-- HEADER -->
+            <div class="dialog-header py-10">
+              <p class="dialog-title">
+                <strong>Warning!</strong> Delete Cohort?
+              </p>
+              <div class="d-flex align-start">
+                <v-icon left color="missionAccent"
+                  >mdi-information-variant</v-icon
+                >
+                <p class="dialog-description">
+                  Are you sure you want to <strong>DELETE</strong> this
+                  <span class="cohort-text">{{ cohort.name }} Cohort</span>?
+                  <br />
+                  <br />
+                  Deleting is permanent!!!
+                  <br />
+                  <br />
+                  <span class="mission-text">PEOPLE</span> in this
+                  <strong>COHORT</strong> will no longer be able to access the
+                  assigned <span class="galaxy-text">GALAXY MAPS</span>
+                </p>
+              </div>
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div class="action-buttons">
+              <!-- DELETE -->
+              <v-btn
+                outlined
+                color="error"
+                @click="confirmDeleteCohort(cohort)"
+                class="ml-2"
+                :loading="deleting"
+              >
+                <v-icon left>
+                  mdi-delete
+                </v-icon>
+                DELETE
+              </v-btn>
+
+              <v-btn
+                outlined
+                :color="$vuetify.theme.dark ? 'yellow' : 'f7f7ff'"
+                class="ml-2"
+                @click="cancelDeleteDialog"
+                :disabled="disabled || loading"
+              >
+                <v-icon left>
+                  mdi-close
+                </v-icon>
+                Cancel
+              </v-btn>
+            </div>
+            <!-- End action-buttons -->
+          </div>
+          <!-- End create-dialog-content -->
+        </v-dialog>
+      </v-col>
+    </v-row>
+  </v-container>
+</template>
+
+<script>
+import Organisation from "../components/Organisation";
+
+import { mapState, mapGetters } from "vuex";
+import { db, storage } from "../store/firestoreConfig";
+
+export default {
+  name: "CreateEditDeleteCohortDialog",
+  props: ["edit", "cohortToEdit"],
+  components: {
+    Organisation,
+  },
+  mounted() {
+    if (this.cohortToEdit) {
+      console.log("editing cohort");
+      this.cohort = this.cohortToEdit;
+    }
+  },
+  computed: {
+    ...mapState(["organisations"]),
+    ...mapGetters(["getOrganisationById"]),
+    organisationsToSelect() {
+      return [{ name: "none", id: 0 }, ...this.organisations];
+    },
+    // easy image preview thanks to: https://stackoverflow.com/questions/60678840/vuetify-image-upload-preview
+    imgUrl() {
+      if (!this.uploadedImage) return;
+      return URL.createObjectURL(this.uploadedImage);
+    },
+  },
+  data: () => ({
+    dialog: false,
+    dialogConfirm: false,
+    dialogTitle: "Create A New Cohort",
+    dialogDescription:
+      "A Cohort is a group of learners. This is typically a class of students.",
+    loading: false,
+    disabled: false,
+    deleting: false,
+    cohort: {
+      name: "",
+      description: "",
+      organisation: "",
+      people: [],
+      courses: [],
+      image: {
+        name: "",
+        url: "",
+      },
+    },
+    uploadedImage: null,
+    percentage: 0,
+  }),
+  methods: {
+    selectChange(data) {
+      console.log("select change:", data);
+      console.log("after select. cohort =", this.cohort);
+    },
+    cancel() {
+      console.log("cancel");
+      this.dialog = false;
+      // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
+    },
+    saveCohort(cohort) {
+      this.loading = true;
+      // Add a new document in collection "cohorts"
+      db.collection("cohorts")
+        .add(cohort)
+        .then((docRef) => {
+          console.log("Document successfully written!");
+          this.loading = false;
+          this.dialog = false;
+
+          //get doc id from firestore (aka course id)
+          const cohortId = docRef.id;
+          //set cohortId to Store state 'state.currentcohortId' (so not relying on router params)
+          this.$store.commit("setCurrentCohortId", cohortId);
+          // reset cohort
+          this.cohort = {};
+          this.uploadedImage = null;
+        })
+        .catch((error) => {
+          console.error("Error writing document: ", error);
+        });
+    },
+    camelize(str) {
+      return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
+        if (+match === 0) return ""; // or if (/\s+/.test(match)) for white spaces
+        return index === 0 ? match.toLowerCase() : match.toUpperCase();
+      });
+    },
+    storeImage() {
+      this.disabled = true;
+      // ceate a storage ref
+      var storageRef = storage.ref(
+        "cohort-images/" + this.cohort.name + "-" + this.uploadedImage.name
+      );
+
+      // upload a file
+      var uploadTask = storageRef.put(this.uploadedImage);
+
+      // update progress bar
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          // show progress on uploader bar
+          this.percentage =
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        },
+        // upload error
+        (err) => {
+          console.log(err);
+        },
+        // upload complete
+        () => {
+          // get image url
+          uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+            console.log("image url is: " + downloadURL);
+            // add image url to cohort obj
+            this.cohort.image.url = downloadURL;
+            this.cohort.image.name =
+              this.cohort.name + "-" + this.uploadedImage.name;
+            console.log("upload percentage is: " + this.percentage);
+            this.disabled = false;
+            this.percentage = 0;
+          });
+        }
+      );
+    },
+    // delete
+    deleteDialog() {
+      (this.dialog = false), (this.dialogConfirm = true);
+    },
+    cancelDeleteDialog() {
+      this.dialogConfirm = false;
+      this.dialog = true;
+    },
+    confirmDeleteCohort(cohort) {
+      this.loadingDelete = true;
+      // delete document in collection "courses"
+      db.collection("cohorts")
+        .doc(cohort.id)
+        .delete()
+        .then(() => {
+          console.log("Cohort successfully deleted!");
+          this.loadingDelete = false;
+          this.dialog = false;
+          // after delete... route back to home
+          this.$router.push({ path: "/cohorts" });
+        })
+        .catch((error) => {
+          console.error("Error deleting document: ", error);
+        });
+      //TODO: delete course image from storage
+      this.deleteImage();
+    },
+    deleteImage() {
+      // if no image, dont worry bout it cuz
+      if (this.cohort.image.name == "") return;
+      console.log("deleting image...");
+      // Create a reference to the file to delete
+      var storageRef = storage.ref("cohort-images/" + this.cohort.image.name);
+      // Delete the file
+      storageRef
+        .delete()
+        .then(() => {
+          console.log("Image successfully deleted!");
+        })
+        .catch((error) => {
+          console.log("Uh-oh, an error occurred!", error);
+        });
+    },
+    updateCohort(cohort) {
+      this.loading = true;
+      // update document in collection "courses"
+      db.collection("cohorts")
+        .doc(cohort.id)
+        .update(cohort)
+        .then(() => {
+          console.log("Document successfully updated!");
+          this.loading = false;
+          this.dialog = false;
+        })
+        .catch((error) => {
+          console.error("Error updating document: ", error);
+        });
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+// new dialog ui
+.create-dialog {
+  color: var(--v-missionAccent-base);
+  background-color: var(--v-background-base);
+  border: 1px solid var(--v-missionAccent-base);
+  // background: lightGrey;
+  display: flex;
+  // flex-direction: column;
+  flex-wrap: wrap;
+  overflow-x: hidden;
+
+  .dialog-header {
+    width: 100%;
+    padding: 20px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--v-missionAccent-base);
+
+    .dialog-title {
+      color: var(--v-missionAccent-base);
+      text-transform: uppercase;
+    }
+
+    .dialog-description {
+      color: var(--v-missionAccent-base);
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      margin: 0;
+      font-style: italic;
+    }
+  }
+
+  .left-side {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    transition: all 0.3s;
+  }
+
+  .right-side {
+    width: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    transition: all 0.3s;
+    // flex-direction: column;
+    // border-left: 1px solid var(--v-missionAccent-base);
+
+    // cohort info
+    #cohort-info {
+      width: calc(100% - 40px);
+      // min-height: 100%;
+      border: 1px solid var(--v-cohortAccent-base);
+      margin-top: 30px;
+      padding: 20px;
+      // background: var(--v-baseAccent-base);
+      position: relative;
+      z-index: 3;
+
+      .cohort-label {
+        font-size: 0.8rem;
+        font-weight: 400;
+        text-transform: uppercase;
+        // ribbon label
+        position: absolute;
+        top: -1px;
+        left: -1px;
+        background-color: var(--v-cohortAccent-base);
+        color: var(--v-background-base);
+        padding: 0px 15px 0px 5px;
+        clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%);
+      }
+
+      .cohort-title {
+        font-size: 1.2rem;
+        color: var(--v-cohortAccent-base);
+        font-weight: 600;
+        text-transform: uppercase;
+        margin: 20px 0px 5px 0px;
+      }
+
+      .cohort-description {
+        margin-top: 10px;
+        color: var(--v-cohortAccent-base);
+        // font-size: 0.9rem;
+      }
+    }
+  }
+
+  .action-buttons {
+    width: 100%;
+    padding: 20px;
+  }
+}
+
+.create-dialog-content {
+  // width: 33.33%;
+  min-height: 400px;
+  display: flex;
+  justify-content: space-around;
+  align-items: space-around;
+  flex-direction: column;
+  color: var(--v-missionAccent-base);
+  padding: 20px;
+  text-transform: uppercase;
+  width: 100%;
+  // font-size: 0.6rem;
+  // border: 1px solid var(--v-missionAccent-base);
+
+  .input-field {
+    width: 100%;
+    text-align: center;
+    flex: none;
+    font-size: 0.9rem;
+  }
+}
+
+.input-description {
+  color: var(--v-missionAccent-base);
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  margin: 0;
+  font-style: italic;
+
+  .galaxy-text {
+    color: var(--v-galaxyAccent-base);
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .mission-text {
+    color: var(--v-missionAccent-base);
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .cohort-text {
+    color: var(--v-cohortAccent-base);
+    text-transform: uppercase;
+    font-weight: 700;
+    background-color: var(--v-subBackground-base);
+    padding: 0px 5px;
+  }
+}
+</style>
