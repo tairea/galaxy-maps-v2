@@ -29,7 +29,6 @@ export default {
     return {};
   },
   mounted() {
-    console.log("from organisation",this.organisation)
   },
   computed: {},
   methods: {

@@ -45,12 +45,12 @@
     <v-row class="cohort-bottom">
       <v-col>
         <CreateEditDeleteCohortDialog />
-        <CreateOrganisationButtonDialog />
+        <CreateEditDeleteOrganisationDialog ref="organisationDialog" :edit="openOrganisationDialog" :organisationToEdit="editingOrgansation" />
       </v-col>
     </v-row>
 
     <!-- Edit Org Dialog -->
-    <EditOrganisationButtonDialog v-if="editingOrgansation" :open="openOrganisationDialog" :organisation="editingOrgansation" @closeOrganisationEditDialog="openOrganisationDialog = false"/>
+    <!-- <EditOrganisationButtonDialog v-if="editingOrgansation" :open="openOrganisationDialog" :organisation="editingOrgansation" @closeOrganisationEditDialog="openOrganisationDialog = false"/> -->
 
   </v-container>
 </template>
@@ -58,7 +58,7 @@
 <script>
 // @ is an alias to /src
 import CreateEditDeleteCohortDialog from "../components/CreateEditDeleteCohortDialog";
-import CreateOrganisationButtonDialog from "../components/CreateOrganisationButtonDialog";
+import CreateEditDeleteOrganisationDialog from "../components/CreateEditDeleteOrganisationDialog";
 import EditOrganisationButtonDialog from "../components/EditOrganisationButtonDialog";
 import Cohort from "../components/Cohort";
 import Organisation from "../components/Organisation";
@@ -69,7 +69,7 @@ export default {
   name: "CohortList",
   components: {
     CreateEditDeleteCohortDialog,
-    CreateOrganisationButtonDialog,
+    CreateEditDeleteOrganisationDialog,
     Cohort,
     Organisation,
     EditOrganisationButtonDialog,
@@ -96,6 +96,10 @@ export default {
       console.log("getting org with id = ", orgId)
       this.editingOrgansation = this.getOrganisationById(orgId)
       console.log("got org = ", this.editingOrgansation)
+      this.$refs.organisationDialog.openDialog()
+    },
+    closeOrgDialog() {
+
     }
   },
 };
