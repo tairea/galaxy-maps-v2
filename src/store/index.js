@@ -20,6 +20,7 @@ export default new Vuex.Store({
     currentCourseNodes: [],
     currentCourseEdges: [],
     allNodes: [],
+    allNodesLength: 0,
     allEdges: [],
   },
   getters: {
@@ -147,11 +148,11 @@ export default new Vuex.Store({
           .collection("topics")
       );
     }),
-    getAllNodes({state}) {
+    async getAllNodes({state}) {
       const allNodes = [];
       //get courses
       let count = 0
-      db.collection("courses")
+      await db.collection("courses")
         .get()
         .then((querySnapshot) => {
           
@@ -185,9 +186,9 @@ export default new Vuex.Store({
               });
               
           });
-          console.log("all nodes from FS: ", allNodes);
-          state.allNodes = allNodes
         });
+        // console.log("all nodes from Firestore: ", allNodes);
+        state.allNodes = allNodes
     },
      getAllEdges({state}) {
       const allEdges = [];
@@ -210,7 +211,6 @@ export default new Vuex.Store({
                 console.log("Error getting documents: ", error);
               });
           });
-          console.log("all edges from FS: ", allEdges);
           state.allEdges = allEdges
         });
     },

@@ -12,6 +12,12 @@
       @hover-node="hoverNode"
       @after-drawing="afterDrawing"
     ></network>
+    <PopupPreview
+      v-if="popupPreview"
+      :course="getCourseById(currentCourseId)"
+      @togglePopup="togglePopup"
+      class="popupPanel"
+    />
   </div>
 </template>
 
@@ -19,9 +25,10 @@
 import { Network } from "vue2vis";
 import "vue2vis/dist/vue2vis.css";
 
-import { mapState, mapGetters, mapActions } from "vuex";
+import { mapState, mapGetters } from "vuex";
 
 import LoadingSpinner from "../components/LoadingSpinner";
+import PopupPreview from "../components/PopupPreview";
 
 export default {
   name: "GalaxyMap",
@@ -29,13 +36,16 @@ export default {
   components: {
     Network,
     LoadingSpinner,
+    PopupPreview,
   },
   watch: {
     allNodes: function(n, o) {
-      if (n.length == this.allNodesLength) {
-        // this.loading = false;
-        // this.fitToAllNodes();
-      }
+      // if (this.allNodesLength == 0) { return}
+      // if (n.length == this.allNodesLength) {
+      //   console.log("n length: " + n.length + " all nodes length: " + this.allNodesLength)
+      //   this.loading = false;
+      //   // this.fitToAllNodes();
+      // }
     },
   },
   async mounted() {
@@ -44,7 +54,7 @@ export default {
     await this.$store.dispatch("getAllEdges");
 
     //total nodes
-    this.allNodesLength = this.allNodes.length;
+    // this.allNodesLength = this.allNodesLength;
 
     // see available methods
     console.log(this.$refs.network);
@@ -65,19 +75,27 @@ export default {
       // fit to nodes
       this.fitToAllNodes();
 
-
       // stop loading spinner
       this.loading = false;
     }, 2000);
   },
   computed: {
-    ...mapState(["allNodes", "allEdges", "courses", "topics"]),
+    ...mapState([
+      "allNodes",
+      "allEdges",
+      "courses",
+      "topics",
+      "currentCourseId",
+      "allNodesLength",
+    ]),
+    ...mapGetters(["getCourseById"]),
   },
   data: () => ({
     active: false,
     loading: true,
+    popupPreview: false,
     allNodeIds: [],
-    allNodesLength: 0,
+    // allNodesLength: 0,
     canvasWidth: 0,
     canvasHeight: 0,
     numberOfGalaxiesPerRow: 3, // hardcoded num of galaxies in a row
@@ -172,16 +190,32 @@ export default {
       this.$store.commit("setCurrentCourseId", closestNode.courseId);
 
       // get topic ids
-      let topicsNodes = this.allNodes.filter(node => node.courseId == closestNode.courseId )
+      let topicsNodes = this.allNodes.filter(
+        (node) => node.courseId == closestNode.courseId
+      );
       let topicsNodeIds = topicsNodes.reduce(function(output, node) {
         output.push(node.id);
         return output;
       }, []);
-      console.log("topics ids", topicsNodeIds)
+      console.log("topics ids", topicsNodeIds);
 
       // network fit to array of topic ids
-      this.$refs.network.fit({nodes: topicsNodeIds, minZoomLevel: 0.8, maxZoomLevel: 0.8, animation: true, })
+      this.$refs.network.fit({
+        nodes: topicsNodeIds,
+        minZoomLevel: 0.8,
+        maxZoomLevel: 0.8,
+        animation: true,
+      });
 
+      this.popupPreview = true;
+      // network focus to closest node
+      // this.$refs.network.focus(closestNode.id, {
+      //   scale: 0.8,
+      //   offset: {
+      //     x: -150,
+      //   },
+      //   animation: true,
+      // });
 
       // router to the group's galaxy
       // this.$router.push({
@@ -198,7 +232,7 @@ export default {
       // console.log("BoundingBox", this.$refs.network.getBoundingBox(data.node));
     },
     zoom(data) {
-      console.log("zoom", data);
+      // console.log("zoom", data);
     },
     distSquared(pt1, pt2) {
       var diffX = pt1.x - pt2.x;
@@ -209,6 +243,7 @@ export default {
       let courseCanvasBoundaries = [];
       // get all coords for nodes
       const allNodes = this.$refs.network.nodes;
+      console.log("allNodes from calcBoundaries: ", allNodes);
       // per course/galaxy, determine boundaries ie. highest y, highest x, lowest y, lowest x (this is a boundary we want to hover)
       for (let i = 0; i < this.courses.length; i++) {
         let boundary = {
@@ -246,26 +281,29 @@ export default {
         });
         // DOM equivalent
         allNodes.forEach((node) => {
-          const nodeWithDOMXY = this.$refs.network.canvasToDom({
-            x: node.x,
-            y: node.y,
-          });
           if (node.courseId == this.courses[i].id) {
-            // get lowest y (top)
-            if (nodeWithDOMXY.y < DOMboundary.top) {
-              DOMboundary.top = nodeWithDOMXY.y;
-            }
-            // get highest x (right)
-            if (nodeWithDOMXY.x > DOMboundary.right) {
-              DOMboundary.right = nodeWithDOMXY.x;
-            }
-            // get highest y (bottom)
-            if (nodeWithDOMXY.y > DOMboundary.bottom) {
-              DOMboundary.bottom = nodeWithDOMXY.y;
-            }
-            // get lowest x (left)
-            if (nodeWithDOMXY.x < DOMboundary.left) {
-              DOMboundary.left = nodeWithDOMXY.x;
+            const nodeWithDOMXY = this.$refs.network.canvasToDom({
+              x: node.x,
+              y: node.y,
+            });
+            console.log("canvas -> dom: " + node.label + " ", nodeWithDOMXY);
+            if (node.courseId == this.courses[i].id) {
+              // get lowest y (top)
+              if (nodeWithDOMXY.y < DOMboundary.top) {
+                DOMboundary.top = nodeWithDOMXY.y;
+              }
+              // get highest x (right)
+              if (nodeWithDOMXY.x > DOMboundary.right) {
+                DOMboundary.right = nodeWithDOMXY.x;
+              }
+              // get highest y (bottom)
+              if (nodeWithDOMXY.y > DOMboundary.bottom) {
+                DOMboundary.bottom = nodeWithDOMXY.y;
+              }
+              // get lowest x (left)
+              if (nodeWithDOMXY.x < DOMboundary.left) {
+                DOMboundary.left = nodeWithDOMXY.x;
+              }
             }
           }
         });
@@ -275,7 +313,6 @@ export default {
         // in DOM x y
         boundary.widthDOM = DOMboundary.right - DOMboundary.left;
         boundary.heightDOM = DOMboundary.bottom - DOMboundary.top;
- 
 
         // add course id to boundary
         boundary.id = this.courses[i].id;
@@ -283,12 +320,13 @@ export default {
         // console.log("boundary",boundary)
         courseCanvasBoundaries.push(boundary);
       }
-      // console.log("courseCanvasBoundaries", courseCanvasBoundaries);
+      console.log("courseCanvasBoundaries", courseCanvasBoundaries);
       return courseCanvasBoundaries;
     },
     repositionCoursesBasedOnBoundaries() {
       const courseCanvasBoundaries = this.calcCourseCanvasBoundaries();
       const allNodes = this.$refs.network.nodes;
+      // console.log("allNodes from reposition nodes: ",allNodes)
       let newAllNodes = [];
 
       // canvas / 3
@@ -306,15 +344,22 @@ export default {
       for (let i = 0; i < courseCanvasBoundaries.length; i++) {
         allNodes.forEach((node) => {
           if (node.courseId == courseCanvasBoundaries[i].id) {
-            // if a negative number
+            // get dom position
             const domXY = this.$refs.network.canvasToDom({
               x: node.x,
               y: node.y,
             });
             // console.log(domXY)
-
-            console.log(node.label + " x: " + node.x + " vs " + domXY.x)
-            console.log(node.label + " y: " + node.y + " vs " + domXY.y)
+            console.log(
+              node.label +
+                " x: " +
+                node.x +
+                " vs " +
+                domXY.x +
+                " currentColWidth: " +
+                currentColWidth
+            );
+            // console.log(node.label + " y: " + node.y + " vs " + domXY.y);
             let newNode = {
               ...node,
               x: currentColWidth + domXY.x,
@@ -350,10 +395,11 @@ export default {
         }
       }
       // pad the end of row
-      this.largestRowWidth += (this.largestRowWidth / this.numberOfGalaxiesPerRow) / 2
+      this.largestRowWidth +=
+        this.largestRowWidth / this.numberOfGalaxiesPerRow / 2;
       this.$refs.network.storePositions();
-      // console.log("allNodes",allNodes)
-      // console.log("newAllNodes",newAllNodes)
+      console.log("allNodes", allNodes);
+      console.log("newAllNodes", newAllNodes);
       return newAllNodes;
     },
     afterDrawing(ctx) {
@@ -370,51 +416,33 @@ export default {
     },
     fitToAllNodes() {
       console.log("fit all nodes GO...");
+      // console.log("all nodes from store", this.allNodes);
 
-      console.log("all nodes from store", this.allNodes);
+      // console.log("courseCanvasBoundaries", courseCanvasBoundaries);
 
-      // calc width of 3 rows
-      const courseCanvasBoundaries = this.calcCourseCanvasBoundaries();
-      console.log("courseCanvasBoundaries", courseCanvasBoundaries);
-      // const width = 0
-      // for (let i = 0; i < 3; i++) {
-      //   width += courseCanvasBoundaries[i].widthDOM
-      // }
-      // const height =
-
-      // this.$refs.network.storePositions()
-
-      // this.$refs.network.nodes = this.allNodes
-
-      // console.log("all nodes from network", this.$refs.network.nodes)
-
-      // console.log("positions", this.$refs.network.getPositions())
-
-      // console.log("course max width",this.courseMaxWidth)
-      // console.log("course cols",this.courseCols)
-      // console.log("course max height",this.courseMaxHeight)
-      // console.log("course rows",this.courseRows)
-      console.log("scale:")
-       console.log("this.canvasWidth / this.largestRowWidth ")
-       console.log(this.canvasWidth + " / " + this.largestRowWidth + " = ")
-       console.log(this.canvasWidth / this.largestRowWidth)
-       console.log("---")
-      console.log("position x:")
-      console.log("this.largestRowWidth / 2 = ")
-      console.log(this.largestRowWidth + " / 2  = " )
-      console.log(this.largestRowWidth / 2)
-      console.log("---")
-      console.log("position y:")
-      console.log("(this.largestRowHeight * this.courseRows) / 2 = ")
-      console.log(this.largestRowHeight + " * " +   this.courseRows + " / 2  = ")
-      console.log((this.largestRowHeight * this.courseRows) / 2)
+      // console.log("scale:");
+      // console.log("this.canvasWidth / this.largestRowWidth ");
+      // console.log(this.canvasWidth + " / " + this.largestRowWidth + " = ");
+      // console.log(this.canvasWidth / this.largestRowWidth);
+      // console.log("---");
+      // console.log("position x:");
+      // console.log("this.largestRowWidth / 2 = ");
+      // console.log(this.largestRowWidth + " / 2  = ");
+      // console.log(this.largestRowWidth / 2);
+      // console.log("---");
+      // console.log("position y:");
+      // console.log("(this.largestRowHeight * this.courseRows) / 2 = ");
+      // console.log(this.largestRowHeight + " * " + this.courseRows + " / 2  = ");
+      // console.log((this.largestRowHeight * this.courseRows) / 2);
 
       var scaleX = this.canvasWidth / this.largestRowWidth;
-      var scaleY = this.canvasHeight/(this.largestRowHeight * this.courseRows);
+      var scaleY =
+        this.canvasHeight / (this.largestRowHeight * this.courseRows);
       var scale = scaleX;
-      if (scale * (this.largestRowHeight * this.courseRows) > this.canvasHeight ) scale = scaleY;
+      if (scale * (this.largestRowHeight * this.courseRows) > this.canvasHeight)
+        scale = scaleY;
 
-      if (scale>1) scale = 0.9*scale;
+      if (scale > 1) scale = 0.9 * scale;
 
       this.$refs.network.moveTo({
         scale: scale,
@@ -422,22 +450,27 @@ export default {
           x: this.largestRowWidth / 2,
           y: (this.largestRowHeight * this.courseRows) / 2,
         },
-        animation: true
+        animation: true,
       });
     },
     zoomToNodes(nodes) {
       // get node ids
-      var allNodeIds = nodes.reduce(function(output, node) {
+      var nodeIds = nodes.reduce(function(output, node) {
         output.push(node.id);
         return output;
       }, []);
       // this.allNodeIds = allNodeIds;
-      console.log("allNodeIds", allNodeIds);
+      console.log("nodeIds to fit", nodeIds);
       // // fit
       console.log("fit");
       this.$refs.network.fit({
-        nodes: allNodeIds,
+        nodes: nodeIds,
+        animation: true,
       });
+    },
+    togglePopup() {
+      this.popupPreview = !this.popupPreview;
+      this.zoomToNodes(this.allNodes);
     },
   },
 };
@@ -449,5 +482,11 @@ export default {
   height: 100%;
   display: flex;
   flex-direction: column;
+}
+
+.popupPanel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
 }
 </style>
