@@ -10,6 +10,7 @@
       @zoom="zoom"
       @click="click"
       @hover-node="hoverNode"
+      @after-drawing="afterDrawing"
     ></network>
   </div>
 </template>
@@ -18,7 +19,7 @@
 import { Network } from "vue2vis";
 import "vue2vis/dist/vue2vis.css";
 
-import { mapState, mapGetters } from "vuex";
+import { mapState, mapGetters, mapActions } from "vuex";
 
 import LoadingSpinner from "../components/LoadingSpinner";
 
@@ -29,38 +30,72 @@ export default {
     Network,
     LoadingSpinner,
   },
+  watch: {
+    allNodes: function(n, o) {
+      if (n.length == this.allNodesLength) {
+        // this.loading = false;
+        // this.fitToAllNodes();
+      }
+    },
+  },
   async mounted() {
     // console.log("current course id:", this.course.id);
     await this.$store.dispatch("getAllNodes");
     await this.$store.dispatch("getAllEdges");
+
+    //total nodes
+    this.allNodesLength = this.allNodes.length;
+
     // see available methods
     console.log(this.$refs.network);
+
     // timeout to give time for nodes to load before refocussing. TODO: loading wheel before timeout
     setTimeout(() => {
-      // fit
-      console.log("fit");
-      this.$refs.network.fit();
       // scale
-      console.log("scale");
-      var scaleOption = { scale: 0.28 };
-      this.$refs.network.moveTo(scaleOption);
+      // console.log("scale");
+      // var scaleOption = { scale: 0.4 };
+      // this.$refs.network.moveTo(scaleOption);
+
+      // recalc node positions
+      this.$store.commit(
+        "updateAllNodes",
+        this.repositionCoursesBasedOnBoundaries()
+      );
+
+      // fit to nodes
+      this.fitToAllNodes();
+
+
       // stop loading spinner
       this.loading = false;
     }, 2000);
   },
   computed: {
-    ...mapState(["allNodes", "allEdges"]),
+    ...mapState(["allNodes", "allEdges", "courses", "topics"]),
   },
   data: () => ({
     active: false,
     loading: true,
+    allNodeIds: [],
+    allNodesLength: 0,
+    canvasWidth: 0,
+    canvasHeight: 0,
+    numberOfGalaxiesPerRow: 3, // hardcoded num of galaxies in a row
+    courseCols: 1,
+    courseRows: 1,
+    largestRowWidth: 0,
+    largestRowHeight: 0,
     network: {
       options: {
         physics: {
           enabled: false,
           solver: "repulsion",
           repulsion: {
-            nodeDistance: 200, // Put more distance between the nodes.
+            centralGravity: 1,
+            springLength: 100,
+            springConstant: 0.3,
+            nodeDistance: 300,
+            damping: 0.2,
           },
         },
         edges: {
@@ -94,7 +129,7 @@ export default {
     // toggleLoadingSpinner() {
     //   this.loading = !this.loading
     // },
-    click(data) {
+    async click(data) {
       // get click location
       const clickedPosition = data.pointer.canvas;
       // get all node locations (returns an object)
@@ -135,13 +170,26 @@ export default {
 
       // set save current course clicked in store
       this.$store.commit("setCurrentCourseId", closestNode.courseId);
+
+      // get topic ids
+      let topicsNodes = this.allNodes.filter(node => node.courseId == closestNode.courseId )
+      let topicsNodeIds = topicsNodes.reduce(function(output, node) {
+        output.push(node.id);
+        return output;
+      }, []);
+      console.log("topics ids", topicsNodeIds)
+
+      // network fit to array of topic ids
+      this.$refs.network.fit({nodes: topicsNodeIds, minZoomLevel: 0.8, maxZoomLevel: 0.8, animation: true, })
+
+
       // router to the group's galaxy
-      this.$router.push({
-        name: "GalaxyView",
-        params: {
-          courseId: closestNode.courseId,
-        },
-      });
+      // this.$router.push({
+      //   name: "GalaxyView",
+      //   params: {
+      //     courseId: closestNode.courseId,
+      //   },
+      // });
     },
     hoverNode(data) {
       console.log("hover", data);
@@ -150,12 +198,246 @@ export default {
       // console.log("BoundingBox", this.$refs.network.getBoundingBox(data.node));
     },
     zoom(data) {
-      // console.log("zoom", data);
+      console.log("zoom", data);
     },
     distSquared(pt1, pt2) {
       var diffX = pt1.x - pt2.x;
       var diffY = pt1.y - pt2.y;
       return diffX * diffX + diffY * diffY;
+    },
+    calcCourseCanvasBoundaries() {
+      let courseCanvasBoundaries = [];
+      // get all coords for nodes
+      const allNodes = this.$refs.network.nodes;
+      // per course/galaxy, determine boundaries ie. highest y, highest x, lowest y, lowest x (this is a boundary we want to hover)
+      for (let i = 0; i < this.courses.length; i++) {
+        let boundary = {
+          top: 0,
+          bottom: 0,
+          left: 0,
+          right: 0,
+        };
+        let DOMboundary = {
+          top: 0,
+          bottom: 0,
+          left: 0,
+          right: 0,
+        };
+        // loop nodes in that course
+        allNodes.forEach((node) => {
+          if (node.courseId == this.courses[i].id) {
+            // get lowest y (top)
+            if (node.y < boundary.top) {
+              boundary.top = node.y;
+            }
+            // get highest x (right)
+            if (node.x > boundary.right) {
+              boundary.right = node.x;
+            }
+            // get highest y (bottom)
+            if (node.y > boundary.bottom) {
+              boundary.bottom = node.y;
+            }
+            // get lowest x (left)
+            if (node.x < boundary.left) {
+              boundary.left = node.x;
+            }
+          }
+        });
+        // DOM equivalent
+        allNodes.forEach((node) => {
+          const nodeWithDOMXY = this.$refs.network.canvasToDom({
+            x: node.x,
+            y: node.y,
+          });
+          if (node.courseId == this.courses[i].id) {
+            // get lowest y (top)
+            if (nodeWithDOMXY.y < DOMboundary.top) {
+              DOMboundary.top = nodeWithDOMXY.y;
+            }
+            // get highest x (right)
+            if (nodeWithDOMXY.x > DOMboundary.right) {
+              DOMboundary.right = nodeWithDOMXY.x;
+            }
+            // get highest y (bottom)
+            if (nodeWithDOMXY.y > DOMboundary.bottom) {
+              DOMboundary.bottom = nodeWithDOMXY.y;
+            }
+            // get lowest x (left)
+            if (nodeWithDOMXY.x < DOMboundary.left) {
+              DOMboundary.left = nodeWithDOMXY.x;
+            }
+          }
+        });
+        //boundary width & height
+        boundary.width = boundary.right - boundary.left;
+        boundary.height = boundary.bottom - boundary.top;
+        // in DOM x y
+        boundary.widthDOM = DOMboundary.right - DOMboundary.left;
+        boundary.heightDOM = DOMboundary.bottom - DOMboundary.top;
+ 
+
+        // add course id to boundary
+        boundary.id = this.courses[i].id;
+        boundary.title = this.courses[i].title;
+        // console.log("boundary",boundary)
+        courseCanvasBoundaries.push(boundary);
+      }
+      // console.log("courseCanvasBoundaries", courseCanvasBoundaries);
+      return courseCanvasBoundaries;
+    },
+    repositionCoursesBasedOnBoundaries() {
+      const courseCanvasBoundaries = this.calcCourseCanvasBoundaries();
+      const allNodes = this.$refs.network.nodes;
+      let newAllNodes = [];
+
+      // canvas / 3
+      let galaxyColsCount = 0;
+
+      // SCALE calc num of galaxy rows
+      // const canvasRowHeight = this.canvasHeight / maxHeight;
+
+      // set offset variables
+      let currentColWidth = 0;
+      let currrentRowHeight = 0;
+      let maxRowHeight = 0;
+
+      // loop nodes and add x y offsets
+      for (let i = 0; i < courseCanvasBoundaries.length; i++) {
+        allNodes.forEach((node) => {
+          if (node.courseId == courseCanvasBoundaries[i].id) {
+            // if a negative number
+            const domXY = this.$refs.network.canvasToDom({
+              x: node.x,
+              y: node.y,
+            });
+            // console.log(domXY)
+
+            console.log(node.label + " x: " + node.x + " vs " + domXY.x)
+            console.log(node.label + " y: " + node.y + " vs " + domXY.y)
+            let newNode = {
+              ...node,
+              x: currentColWidth + domXY.x,
+              y: currrentRowHeight + domXY.y,
+            };
+            newAllNodes.push(newNode);
+          }
+        });
+
+        // increase offset for next galaxy column
+        currentColWidth += courseCanvasBoundaries[i].widthDOM;
+        // keep track of largest height
+        if (courseCanvasBoundaries[i].heightDOM > maxRowHeight) {
+          maxRowHeight = courseCanvasBoundaries[i].heightDOM;
+        }
+
+        // count ++
+        galaxyColsCount++;
+        // if max num of galaxys per row. go to next row
+        if (galaxyColsCount == this.numberOfGalaxiesPerRow) {
+          // set max width and heights from these rows
+          if (currentColWidth > this.largestRowWidth) {
+            this.largestRowWidth = currentColWidth;
+          }
+          if (maxRowHeight > this.largestRowHeight) {
+            this.largestRowHeight = maxRowHeight;
+          }
+          // reset for next row
+          currentColWidth = 0;
+          currrentRowHeight += maxRowHeight;
+          this.courseRows += 1;
+          galaxyColsCount = 0;
+        }
+      }
+      // pad the end of row
+      this.largestRowWidth += (this.largestRowWidth / this.numberOfGalaxiesPerRow) / 2
+      this.$refs.network.storePositions();
+      // console.log("allNodes",allNodes)
+      // console.log("newAllNodes",newAllNodes)
+      return newAllNodes;
+    },
+    afterDrawing(ctx) {
+      // console.log("after drawing");
+      // console.log(ctx.canvas)
+      const { width, height } = ctx.canvas.getBoundingClientRect();
+      this.canvasWidth = width;
+      this.canvasHeight = height;
+      // this.canvasWidth = ctx.canvas.width;
+      // this.canvasHeight = ctx.canvas.height;
+
+      // console.log("w = ",this.canvasWidth)
+      // console.log("h = ",this.canvasHeight)
+    },
+    fitToAllNodes() {
+      console.log("fit all nodes GO...");
+
+      console.log("all nodes from store", this.allNodes);
+
+      // calc width of 3 rows
+      const courseCanvasBoundaries = this.calcCourseCanvasBoundaries();
+      console.log("courseCanvasBoundaries", courseCanvasBoundaries);
+      // const width = 0
+      // for (let i = 0; i < 3; i++) {
+      //   width += courseCanvasBoundaries[i].widthDOM
+      // }
+      // const height =
+
+      // this.$refs.network.storePositions()
+
+      // this.$refs.network.nodes = this.allNodes
+
+      // console.log("all nodes from network", this.$refs.network.nodes)
+
+      // console.log("positions", this.$refs.network.getPositions())
+
+      // console.log("course max width",this.courseMaxWidth)
+      // console.log("course cols",this.courseCols)
+      // console.log("course max height",this.courseMaxHeight)
+      // console.log("course rows",this.courseRows)
+      console.log("scale:")
+       console.log("this.canvasWidth / this.largestRowWidth ")
+       console.log(this.canvasWidth + " / " + this.largestRowWidth + " = ")
+       console.log(this.canvasWidth / this.largestRowWidth)
+       console.log("---")
+      console.log("position x:")
+      console.log("this.largestRowWidth / 2 = ")
+      console.log(this.largestRowWidth + " / 2  = " )
+      console.log(this.largestRowWidth / 2)
+      console.log("---")
+      console.log("position y:")
+      console.log("(this.largestRowHeight * this.courseRows) / 2 = ")
+      console.log(this.largestRowHeight + " * " +   this.courseRows + " / 2  = ")
+      console.log((this.largestRowHeight * this.courseRows) / 2)
+
+      var scaleX = this.canvasWidth / this.largestRowWidth;
+      var scaleY = this.canvasHeight/(this.largestRowHeight * this.courseRows);
+      var scale = scaleX;
+      if (scale * (this.largestRowHeight * this.courseRows) > this.canvasHeight ) scale = scaleY;
+
+      if (scale>1) scale = 0.9*scale;
+
+      this.$refs.network.moveTo({
+        scale: scale,
+        position: {
+          x: this.largestRowWidth / 2,
+          y: (this.largestRowHeight * this.courseRows) / 2,
+        },
+        animation: true
+      });
+    },
+    zoomToNodes(nodes) {
+      // get node ids
+      var allNodeIds = nodes.reduce(function(output, node) {
+        output.push(node.id);
+        return output;
+      }, []);
+      // this.allNodeIds = allNodeIds;
+      console.log("allNodeIds", allNodeIds);
+      // // fit
+      console.log("fit");
+      this.$refs.network.fit({
+        nodes: allNodeIds,
+      });
     },
   },
 };

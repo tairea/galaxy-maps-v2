@@ -85,24 +85,10 @@ export default new Vuex.Store({
       });
       return studentsInCohort;
     },
-    getGalaxyMapByCourseId: (state) => (id) => {
-      //go to cohorts, and check if they in courses with this id
-      let course = state.courses.find((course) => course.id === id);
-      console.log("course is", course);
-      console.log("map nodes", course.map - nodes);
-      console.log("map edges", course.map - edges);
-      const map = { nodes: course.map - nodes, edges: course.map - edges };
-      return map;
-    },
-
+    //
     // completedCourses: (state) => {
     //   return state.courses.filter(course => course.status.completed)
     // }
-    // completedCoursesCount: (state, getters) => {
-    //   return getters.doneTodos.length
-    // }
-
-    // galaxies: (state) => state.galaxies,
   },
   mutations: {
     ...vuexfireMutations,
@@ -115,6 +101,9 @@ export default new Vuex.Store({
     setCurrentCohortId(state, cohortId) {
       state.currentCohortId = cohortId;
     },
+    updateAllNodes(state, newNodePositions) {
+      state.allNodes = newNodePositions
+    }
   },
   actions: {
     bindCourses: firestoreAction(({ bindFirestoreRef }) => {
@@ -182,10 +171,10 @@ export default new Vuex.Store({
                   // console.log("topicNodeFromDb",topicNodeFromDb)
                   // modify x y coords offset by 200px to for a grid of galaxies
                   // console.log("count",count)
-                  if (count !== 0) {                    
-                    topicNodeFromDb.x = topicNodeFromDb.x + (count * 1000) 
-                  }
-                  topicNodeFromDb.group = count
+                  // if (count !== 0) {                    
+                  //   topicNodeFromDb.x = topicNodeFromDb.x + (count * 1000) 
+                  // }
+                  // topicNodeFromDb.group = count
                   topicNodeFromDb.courseId = doc.id
                   allNodes.push(topicNodeFromDb);
                 });
