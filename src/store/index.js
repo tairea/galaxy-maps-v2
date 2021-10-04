@@ -22,6 +22,7 @@ export default new Vuex.Store({
     allNodes: [],
     allNodesLength: 0,
     allEdges: [],
+    allNodesForDisplay: [],
   },
   getters: {
     courses: (state) => state.courses,
@@ -104,6 +105,13 @@ export default new Vuex.Store({
     },
     updateAllNodes(state, newNodePositions) {
       state.allNodes = newNodePositions
+    },
+    updateAllNodesForDisplay(state, newNodePositions) {
+      state.allNodesForDisplay = newNodePositions
+    },
+    clearAllNodes(state) {
+      console.log(" ======== clear all nodes before bind ======== ")
+      state.allNodes = []
     }
   },
   actions: {
@@ -150,69 +158,43 @@ export default new Vuex.Store({
     }),
     async getAllNodes({state}) {
       const allNodes = [];
-      //get courses
-      let count = 0
-      await db.collection("courses")
-        .get()
-        .then((querySnapshot) => {
-          
-          
-          // get the topics (nodes) in that course
-          querySnapshot.forEach((doc) => {
-            
-            db.collection("courses")
-              .doc(doc.id)
-              .collection("map-nodes")
-              .get()
-              .then((subQuerySnapshot) => {
-                
-                subQuerySnapshot.forEach((subDoc) => {
-                  // push each subDoc aka map-node into allNodes
-                  const topicNodeFromDb = subDoc.data()
-                  // console.log("topicNodeFromDb",topicNodeFromDb)
-                  // modify x y coords offset by 200px to for a grid of galaxies
-                  // console.log("count",count)
-                  // if (count !== 0) {                    
-                  //   topicNodeFromDb.x = topicNodeFromDb.x + (count * 1000) 
-                  // }
-                  // topicNodeFromDb.group = count
-                  topicNodeFromDb.courseId = doc.id
-                  allNodes.push(topicNodeFromDb);
-                });
-                count++
-              })
-              .catch((error) => {
-                console.log("Error getting documents: ", error);
-              });
-              
-          });
-        });
-        // console.log("all nodes from Firestore: ", allNodes);
-        state.allNodes = allNodes
+  
+      const querySnapshot = await db.collection("courses").get()
+      
+      // get the topics (nodes) in that course
+      for (const doc of querySnapshot.docs) {
+        const subQuerySnapshot = await db.collection("courses")
+          .doc(doc.id)
+          .collection("map-nodes")
+          .get();
+
+        allNodes.push(...subQuerySnapshot.docs.map((subDoc) => {
+          const node = subDoc.data();
+          node.courseId = doc.id; // add course id to nodes list for some reason
+          return node;
+        }));
+      }
+
+      // console.log("all nodes from Firestore: ", allNodes);
+      state.allNodes = allNodes // source of truth
+      state.allNodesForDisplay = allNodes // store all nodes
     },
-     getAllEdges({state}) {
+    async getAllEdges({state}) {
       const allEdges = [];
-      db.collection("courses")
-        .get()
-        .then((querySnapshot) => {
-          querySnapshot.forEach((doc) => {
-            // doc.data() is never undefined for query doc snapshots
-             db.collection("courses")
-              .doc(doc.id)
-              .collection("map-edges")
-              .get()
-              .then((subQuerySnapshot) => {
-                subQuerySnapshot.forEach((subDoc) => {
-                  // push each subDoc aka map-node into allNodes
-                  allEdges.push(subDoc.data());
-                });
-              })
-              .catch((error) => {
-                console.log("Error getting documents: ", error);
-              });
-          });
-          state.allEdges = allEdges
-        });
+      const querySnapshot = await db.collection("courses").get();
+
+      for (const doc of querySnapshot.docs) {
+        // doc.data() is never undefined for query doc snapshots
+        const subQuerySnapshot = await db.collection("courses")
+        .doc(doc.id)
+        .collection("map-edges")
+        .get();
+
+
+        allEdges.push(...subQuerySnapshot.docs.map((subDoc) => subDoc.data()))
+      }
+
+      state.allEdges = allEdges
     },
   },
 });
