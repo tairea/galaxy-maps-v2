@@ -8,23 +8,26 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    count: 0,
+    user: {
+      loggedIn: false,
+      data: null,
+    },
     courses: [],
     topics: [],
     cohorts: [],
     organisations: [],
-    students: [],
+    people: [],
     currentCourseId: "",
     currentTopicId: "",
     currentCohortId: "",
     currentCourseNodes: [],
     currentCourseEdges: [],
     allNodes: [],
-    allNodesLength: 0,
     allEdges: [],
     allNodesForDisplay: [],
   },
   getters: {
+    user: (state) => state.user,
     courses: (state) => state.courses,
     getCourseById: (state) => (id) => {
       return state.courses.find((course) => course.id === id);
@@ -56,10 +59,30 @@ export default new Vuex.Store({
     },
     getCohortsInThisCourse: (state) => (id) => {
       //go to cohorts, and check if they in courses with this id
-      let cohortsInCourse = state.cohorts.filter((cohort) =>
-        cohort.courses.some((courseId) => courseId == id)
-      );
+      let cohortsInCourse = state.cohorts.filter((cohort) => {
+        if (cohort.courses) {
+          cohort.courses.some((courseId) => courseId == id);
+        }
+      });
       return cohortsInCourse;
+    },
+    getOrganisationsInThisCourse: (state) => (id) => {
+      console.log("state.organisations", state.organisations);
+      let organisationsInCourse = state.organisations.filter((organisation) => {
+        if (organisation.courses) {
+          organisation.courses.some((courseId) => courseId == id);
+        }
+      });
+      return organisationsInCourse;
+    },
+    getPeopleInThisCourse: (state) => (id) => {
+      console.log("state.people", state.people);
+      let peopleInCourse = state.people.filter((person) => {
+        if (person.assignedCourses) {
+          person.assignedCourses.some((courseId) => courseId == id);
+        }
+      });
+      return peopleInCourse;
     },
     getCoursesInThisCohort: (state) => (id) => {
       //go to cohorts, and check if they in courses with this id
@@ -94,6 +117,12 @@ export default new Vuex.Store({
   },
   mutations: {
     ...vuexfireMutations,
+    SET_LOGGED_IN(state, value) {
+      state.user.loggedIn = value;
+    },
+    SET_USER(state, data) {
+      state.user.data = data;
+    },
     setCurrentCourseId(state, courseId) {
       state.currentCourseId = courseId;
     },
@@ -104,17 +133,29 @@ export default new Vuex.Store({
       state.currentCohortId = cohortId;
     },
     updateAllNodes(state, newNodePositions) {
-      state.allNodes = newNodePositions
+      state.allNodes = newNodePositions;
     },
     updateAllNodesForDisplay(state, newNodePositions) {
-      state.allNodesForDisplay = newNodePositions
+      state.allNodesForDisplay = newNodePositions;
     },
     clearAllNodes(state) {
-      console.log(" ======== clear all nodes before bind ======== ")
-      state.allNodes = []
-    }
+      // console.log(" ======== clear all nodes before bind ======== ")
+      state.allNodes = [];
+    },
   },
   actions: {
+    setUser({ commit }, user) {
+      commit("SET_LOGGED_IN", user !== null);
+      if (user) {
+        commit("SET_USER", {
+          displayName: user.displayName,
+          email: user.email,
+        });
+      } else {
+        commit("SET_USER", null);
+      }
+      console.log("signed in user:", user.email);
+    },
     bindCourses: firestoreAction(({ bindFirestoreRef }) => {
       return bindFirestoreRef("courses", db.collection("courses"), {
         maxRefDepth: 2,
@@ -126,8 +167,8 @@ export default new Vuex.Store({
     bindOrganisations: firestoreAction(({ bindFirestoreRef }) => {
       return bindFirestoreRef("organisations", db.collection("organisations"));
     }),
-    bindStudents: firestoreAction(({ bindFirestoreRef }) => {
-      return bindFirestoreRef("students", db.collection("people"));
+    bindPeople: firestoreAction(({ bindFirestoreRef }) => {
+      return bindFirestoreRef("people", db.collection("people"));
     }),
     bindNodes: firestoreAction(({ bindFirestoreRef }, id) => {
       return bindFirestoreRef(
@@ -156,45 +197,52 @@ export default new Vuex.Store({
           .collection("topics")
       );
     }),
-    async getAllNodes({state}) {
+    async getAllNodes({ state }) {
       const allNodes = [];
-  
-      const querySnapshot = await db.collection("courses").get()
-      
+
+      const querySnapshot = await db.collection("courses").get();
+
+      let count = 0;
+
       // get the topics (nodes) in that course
       for (const doc of querySnapshot.docs) {
-        const subQuerySnapshot = await db.collection("courses")
+        const subQuerySnapshot = await db
+          .collection("courses")
           .doc(doc.id)
           .collection("map-nodes")
           .get();
 
-        allNodes.push(...subQuerySnapshot.docs.map((subDoc) => {
-          const node = subDoc.data();
-          node.courseId = doc.id; // add course id to nodes list for some reason
-          return node;
-        }));
+        allNodes.push(
+          ...subQuerySnapshot.docs.map((subDoc) => {
+            const node = subDoc.data();
+            node.courseId = doc.id; // add course id to nodes list for some reason
+            //node.group = count; // add group to nodes list for some reason
+            return node;
+          })
+        );
+        count++;
       }
 
       // console.log("all nodes from Firestore: ", allNodes);
-      state.allNodes = allNodes // source of truth
-      state.allNodesForDisplay = allNodes // store all nodes
+      state.allNodes = allNodes; // source of truth
+      state.allNodesForDisplay = allNodes; // store all nodes
     },
-    async getAllEdges({state}) {
+    async getAllEdges({ state }) {
       const allEdges = [];
       const querySnapshot = await db.collection("courses").get();
 
       for (const doc of querySnapshot.docs) {
         // doc.data() is never undefined for query doc snapshots
-        const subQuerySnapshot = await db.collection("courses")
-        .doc(doc.id)
-        .collection("map-edges")
-        .get();
+        const subQuerySnapshot = await db
+          .collection("courses")
+          .doc(doc.id)
+          .collection("map-edges")
+          .get();
 
-
-        allEdges.push(...subQuerySnapshot.docs.map((subDoc) => subDoc.data()))
+        allEdges.push(...subQuerySnapshot.docs.map((subDoc) => subDoc.data()));
       }
 
-      state.allEdges = allEdges
+      state.allEdges = allEdges;
     },
   },
 });

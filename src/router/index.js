@@ -7,6 +7,11 @@ import SolarSystemView from "../views/SolarSystemView.vue";
 import CohortView from "../views/CohortView.vue";
 import CohortList from "../views/CohortList.vue";
 import StudentList from "../views/StudentList.vue";
+import Login from "../views/Login.vue";
+import Register from "../views/Register.vue";
+
+import firebase from "firebase";
+import store from '../store'
 
 Vue.use(VueRouter);
 
@@ -19,6 +24,9 @@ const routes = [
       {
         path: "galaxy", //selected tab by default
         component: GalaxyList,
+        meta: {
+          authRequired: true,
+        },
       },
       {
         path: "cohorts",
@@ -31,9 +39,22 @@ const routes = [
     ],
   },
   {
+    path: "/login",
+    name: "Login",
+    component: Login,
+  },
+  {
+    path: "/register",
+    name: "Register",
+    component: Register,
+  },
+  {
     path: "/galaxyList",
     name: "GalaxyList",
     component: GalaxyList,
+    meta: {
+      authRequired: true,
+    },
   },
   {
     path: "/galaxy/:courseId",
@@ -53,21 +74,28 @@ const routes = [
     component: CohortView,
     props: true
   },
-  // {
-  //   path: "/about",
-  //   name: "About",
-  //   // route level code-splitting
-  //   // this generates a separate chunk (about.[hash].js) for this route
-  //   // which is lazy-loaded when the route is visited.
-  //   component: () =>
-  //     import(/* webpackChunkName: "about" */ "../views/About.vue"),
-  // },
 ];
 
 const router = new VueRouter({
   mode: "history",
   base: process.env.BASE_URL,
   routes,
+});
+
+router.beforeEach((to, from, next) => {
+  if (to.matched.some(record => record.meta.authRequired)) {
+    console.log("store.getters.user.loggedIn",store.getters.user.loggedIn)
+    if (store.getters.user.loggedIn) {
+      next();
+    } else {
+      alert('You must be logged in to see this page');
+      next({
+        path: '/login',
+      });
+    }
+  } else {
+    next();
+  }
 });
 
 export default router;

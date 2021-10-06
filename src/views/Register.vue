@@ -1,0 +1,164 @@
+<template>
+  <div class="register">
+    <div id="register-info">
+      <h2 class="register-label">{{ closed ? "aplha" : "register" }}</h2>
+      <!-- <h1 class="register-title">Register</h1> -->
+      <p v-if="closed" class="register-description mt-4">
+        GALAXY MAPS is currently in ALPHA testing.
+        <br /><br />
+        If you would like early access, please email your request to
+        <a href="mailto:team@galaxymaps.io">team@galaxymaps.io</a>
+      </p>
+
+      <v-form v-else ref="form" v-model="valid" lazy-validation class="my-4">
+        <v-text-field
+          type="email"
+          v-model="email"
+          label="E-mail"
+          :rules="emailRules"
+          required
+          color="missionAccent"
+          outlined
+          class="custom-input mt-6"
+        ></v-text-field>
+        <v-text-field
+          type="password"
+          v-model="password"
+          label="Password"
+          required
+          color="missionAccent"
+          outlined
+          class="custom-input"
+        ></v-text-field>
+        <v-btn
+          :disabled="!valid"
+          color="missionAccent"
+          class="mr-4"
+          @click="register"
+          outlined
+          width="100%"
+        >
+          Register
+        </v-btn>
+      </v-form>
+    </div>
+    <!-- <v-img :src="`https://i.pravatar.cc/300`" class="gm-logo"></v-img> -->
+
+    <BackButton :toPath="'/login'" />
+
+    <!-- <div id="firebaseui-auth-container"></div> -->
+  </div>
+</template>
+
+<script>
+import firebase from "firebase";
+
+import BackButton from "../components/BackButton";
+
+export default {
+  name: "Register",
+  components: {
+    BackButton,
+  },
+  data: () => ({
+    closed: false,
+    valid: true,
+    email: "",
+    password: "",
+    emailRules: [
+      (v) => !!v || "E-mail is required",
+      (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
+    ],
+  }),
+  mounted() {},
+  methods: {
+    register() {
+      // add user the auth
+      firebase
+        .auth()
+        .createUserWithEmailAndPassword(this.email, this.password)
+        .then(() => {
+          alert("Successfully registered! Please login.");
+          this.$router.push("/login");
+        })
+        .catch((error) => {
+          alert(error.message);
+        });
+
+      // TODO: add them to database (people collection in firestore)
+
+    },
+    validate() {
+      this.$refs.form.validate();
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.register {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  background-color: #393e46;
+  background-image: url("../assets/hudf_big.jpeg");
+  background-size: cover;
+  box-shadow: inset 0 0 0 2000px rgba(20, 30, 48, 0.9);
+
+  p {
+    font-size: 0.9rem;
+  }
+
+  .custom-input {
+    color: var(--v-missionAccent-base);
+  }
+}
+
+#register-info {
+  width: 300px;
+  // height: 400px;
+  border: 1px solid var(--v-missionAccent-base);
+  margin-top: 30px;
+  padding: 20px;
+  // background: var(--v-baseAccent-base);
+  position: relative;
+  backdrop-filter: blur(2px);
+  z-index: 3;
+
+  .register-label {
+    font-size: 0.8rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    // ribbon label
+    position: absolute;
+    top: 0;
+    left: -1px;
+    background-color: var(--v-missionAccent-base);
+    color: var(--v-background-base);
+    padding: 0px 15px 0px 5px;
+    clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%);
+  }
+
+  .register-title {
+    font-size: 1.2rem;
+    color: var(--v-missionAccent-base) !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin: 20px 0px 5px 0px;
+    color: white;
+  }
+
+  .register-image {
+    width: 100%;
+  }
+
+  .register-description {
+    margin-top: 10px;
+    color: var(--v-missionAccent-base);
+    // font-size: 0.9rem;
+  }
+}
+</style>

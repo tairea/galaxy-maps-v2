@@ -1,13 +1,23 @@
 <template>
   <div id="assigned-info">
-    <h2 class="assigned-label">Assigned {{assignCourses ? "Galaxy Maps" : assignCohorts ? "Cohorts" : "?"}}</h2>
+    <h2 class="assigned-label">Assign to {{assignCourses ? "Galaxy Maps" : assignCohorts ? "Cohorts" : "?"}}</h2>
 
     <!-- ASSIGNED COHORTS INFO -->
     <div v-if="assignCohorts">
+      <!-- Cohorts -->
       <div v-if="cohorts.length > 0">
         <Cohort v-for="cohort in cohorts" :cohort="cohort" :key="cohort.id" />
       </div>
-      <p v-else class="assigned-status">No Cohorts assigned to this Galaxy</p>
+      <!-- Organisations -->
+      <div v-if="organisations.length > 0">
+        <Organisation v-for="organisation in organisations" :organisation="organisation" :key="organisation.id" />
+      </div>
+      <!-- People -->
+      <div v-if="people.length > 0">
+        <Person v-for="person in people" :person="person" :key="person.id" />
+      </div>
+
+      <p v-else class="assigned-status">Nobody is assigned to this Galaxy</p>
       <AssignCohortDialog :assignCohorts="true" />
     </div>
 
@@ -27,14 +37,18 @@
 import { mapState, mapGetters } from "vuex";
 
 import AssignCohortDialog from "../components/AssignCohortDialog";
-import Cohort from "../components/Cohort";
 import Course from "../components/Course";
+import Cohort from "../components/Cohort";
+import Organisation from "../components/Organisation";
+import Person from "../components/Person";
 
 export default {
   name: "AssignedInfo",
-  props: ["assignCohorts", "assignCourses", "cohorts", "courses"],
+  props: ["assignCohorts", "assignCourses", "cohorts", "organisations", "people", "courses"],
   components: {
     Cohort,
+    Organisation,
+    Person,
     Course,
     AssignCohortDialog,
   },

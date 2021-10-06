@@ -113,10 +113,6 @@ export default {
   },
   methods: {
     addNodeMode() {
-      console.log(" =============== destroy network ===============")
-    this.$refs.network.destroy()
-    this.currentCourseNodes = null
-
       this.active = true;
       console.log("add node mode");
       this.$emit("setUiMessage", "Click on the map to add a node");

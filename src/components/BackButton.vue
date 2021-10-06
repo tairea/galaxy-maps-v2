@@ -4,7 +4,7 @@
       <v-icon left>
         mdi-arrow-left
       </v-icon>
-      Back to {{toPath.includes("galaxy") ? "Galaxies" : toPath.includes("cohorts") ? "Cohorts" : "?"}}
+      Back to {{toPath.includes("galaxy") ? "Galaxies" : toPath.includes("cohorts") ? "Cohorts" : toPath.includes("login") ? "Login" : "?"}}
     </v-btn>
   </div>
 </template>

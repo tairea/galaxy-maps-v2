@@ -11,7 +11,7 @@
       @zoom="zoom"
       @click="click"
       @hover-node="hoverNode"
-      @after-drawing="afterDrawing"
+      @after-drawing=""
     ></network>
     <PopupPreview
       v-if="popupPreview"
@@ -49,13 +49,13 @@ export default {
       // }
     },
   },
-  beforeDestroy() {
-    console.log(" =============== destroy network ===============")
-    this.$refs.network.destroy()
-  },
+  // beforeDestroy() {
+  //   console.log(" =============== destroy network ===============")
+  //   this.$refs.network.destroy()
+  // },
   async mounted() {
-    console.log("clear all nodes before bind")
-    this.$store.commit("clearAllNodes");
+    // console.log("clear all nodes before bind")
+    // this.$store.commit("clearAllNodes");
     // console.log("current course id:", this.course.id);
     await this.$store.dispatch("getAllNodes");
     await this.$store.dispatch("getAllEdges");
@@ -75,7 +75,7 @@ export default {
     // stop loading spinner
     this.loading = false;
 
-    setTimeout(() => this.fitToAllNodes(), 250);
+    setTimeout(() => this.zoomToNodes(this.allNodesForDisplay), 250);
   },
   computed: {
     ...mapState([
@@ -95,10 +95,6 @@ export default {
     popupPreview: false,
     allNodeIds: [],
     // allNodesLength: 0,
-    canvasWidth: 0,
-    canvasHeight: 0,
-    canvasWidthClient: 0,
-    canvasHeightClient: 0,
     numberOfGalaxiesPerRow: 3, // hardcoded num of galaxies in a row
     courseCols: 1,
     courseRows: 1,
@@ -240,7 +236,7 @@ export default {
       // get all coords for nodes
       // const allNodes = this.$refs.network.nodes;
       const allNodes = this.allNodesForDisplay;
-      console.log("allNodes from calcBoundaries: ", allNodes);
+      // console.log("allNodes from calcBoundaries: ", allNodes);
 
       // per course/galaxy, determine boundaries ie. highest y, highest x, lowest y, lowest x (this is a boundary we want to hover)
       for (let i = 0; i < this.courses.length; i++) {
@@ -288,35 +284,6 @@ export default {
           }
         }
 
-        // DOM equivalent
-        // for (const node of allNodes) {
-        //   if (node.courseId == this.courses[i].id) {
-        //     const nodeWithDOMXY = this.$refs.network.canvasToDom({
-        //       x: node.x,
-        //       y: node.y,
-        //     });
-        //     console.log(node.x + " " +node.y + " " + node.label + " ", nodeWithDOMXY);
-        //     if (node.courseId == this.courses[i].id) {
-        //       // get lowest y (top)
-        //       if (nodeWithDOMXY.y < DOMboundary.top) {
-        //         DOMboundary.top = nodeWithDOMXY.y;
-        //       }
-        //       // get highest x (right)
-        //       if (nodeWithDOMXY.x > DOMboundary.right) {
-        //         DOMboundary.right = nodeWithDOMXY.x;
-        //       }
-        //       // get highest y (bottom)
-        //       if (nodeWithDOMXY.y > DOMboundary.bottom) {
-        //         DOMboundary.bottom = nodeWithDOMXY.y;
-        //       }
-        //       // get lowest x (left)
-        //       if (nodeWithDOMXY.x < DOMboundary.left) {
-        //         DOMboundary.left = nodeWithDOMXY.x;
-        //       }
-        //     }
-        //   }
-        // }
-
         //boundary width & height
         boundary.width = boundary.right - boundary.left;
         boundary.height = boundary.bottom - boundary.top;
@@ -332,7 +299,7 @@ export default {
         // console.log("boundary",boundary)
         courseCanvasBoundaries.push(boundary);
       }
-      console.log("courseCanvasBoundaries", courseCanvasBoundaries);
+      // console.log("courseCanvasBoundaries", courseCanvasBoundaries);
       return courseCanvasBoundaries;
     },
     repositionCoursesBasedOnBoundaries() {
@@ -365,22 +332,7 @@ export default {
 
         for (const node of allNodes) {
           if (node.courseId == courseCanvasBoundaries[i].id) {
-            // get dom position
-            // const domXY = this.$refs.network.canvasToDom({
-            //   x: node.x,
-            //   y: node.y,
-            // });
-            // console.log(domXY)
-            // console.log(
-            //   node.label +
-            //     " x: " +
-            //     node.x +
-            //     " vs " +
-            //     domXY.x +
-            //     " currentColWidth: " +
-            //     currentColWidth
-            // );
-            // console.log(node.label + " y: " + node.y + " vs " + domXY.y);
+
             let newNode = {
               ...node,
               x: currentColWidth + node.x - courseCanvasBoundaries[i].centerX,
@@ -418,22 +370,22 @@ export default {
       // pad the end of row
       // this.largestRowWidth += this.largestRowWidth / this.numberOfGalaxiesPerRow / 2;
       // this.$refs.network.storePositions();
-      console.log("allNodes", allNodes);
-      console.log("newAllNodes", newAllNodes);
+      // console.log("allNodes", allNodes);
+      // console.log("newAllNodes", newAllNodes);
       return newAllNodes;
     },
-    afterDrawing(ctx) {
-      // console.log("after drawing");
-      // console.log(ctx.canvas)
-      const { width, height } = ctx.canvas.getBoundingClientRect();
-      this.canvasWidthClient = width;
-      this.canvasHeightClient = height;
-      this.canvasWidth = ctx.canvas.width;
-      this.canvasHeight = ctx.canvas.height;
+    // afterDrawing(ctx) {
+    //   // console.log("after drawing");
+    //   // console.log(ctx.canvas)
+    //   const { width, height } = ctx.canvas.getBoundingClientRect();
+    //   this.canvasWidthClient = width;
+    //   this.canvasHeightClient = height;
+    //   this.canvasWidth = ctx.canvas.width;
+    //   this.canvasHeight = ctx.canvas.height;
 
-      // console.log("w = ",this.canvasWidth)
-      // console.log("h = ",this.canvasHeight)
-    },
+    //   // console.log("w = ",this.canvasWidth)
+    //   // console.log("h = ",this.canvasHeight)
+    // },
     fitToAllNodes() {
       console.log("fit all nodes GO...");
       // console.log("all nodes from store", this.allNodes);
@@ -477,7 +429,7 @@ export default {
       // get node ids
       var nodeIds = nodes.map((x => x.id));
       // this.allNodeIds = allNodeIds;
-      console.log("nodeIds to fit", nodeIds);
+      // console.log("nodeIds to fit", nodeIds);
       // // fit
       console.log("fit");
       this.$refs.network.fit({

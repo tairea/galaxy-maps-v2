@@ -6,6 +6,8 @@
       <AssignedInfo
         :assignCohorts="true"
         :cohorts="getCohortsInThisCourse(courseId ? courseId : courseIdFromRouter )"
+        :organisations="getOrganisationsInThisCourse(courseId ? courseId : courseIdFromRouter )"
+        :people="getPeopleInThisCourse(courseId ? courseId : courseIdFromRouter )"
       />
       <BackButton :toPath="'/galaxy'" />
     </div>
@@ -140,8 +142,9 @@ export default {
     ...mapState(["currentCourseId","currentCourseNodes"]),
     ...mapGetters([
       "getCourseById",
-      "getTasksByCourseId",
       "getCohortsInThisCourse",
+      "getOrganisationsInThisCourse",
+      "getPeopleInThisCourse",
     ]),
   },
   methods: {

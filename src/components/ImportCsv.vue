@@ -95,8 +95,7 @@ export default {
       this.parse_csv.forEach((student, index, array) => {
         student.enrolledCohorts = [this.currentCohortId]
         db.collection("people")
-          .doc(student.nsnNumber)
-          .set(student)
+          .add(student)
           .then((docRef) => {
             counter++
             // check all students are saved to DB

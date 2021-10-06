@@ -41,6 +41,7 @@ export default {
       this.$store.dispatch("bindCourses");
       this.$store.dispatch("bindCohorts");
       this.$store.dispatch("bindOrganisations");
+      this.$store.dispatch("bindPeople");
     },
   },
 };

@@ -19,11 +19,14 @@
         @change="changeTheme()"
       ></v-switch>
       <!-- <ThemeColourPicker/> -->
+      <v-btn @click="logout">Logout</v-btn>
     </div>
   </div>
 </template>
 
 <script>
+import firebase from "firebase";
+
 import ThemeColourPicker from "../components/ThemeColourPicker";
 
 export default {
@@ -37,6 +40,19 @@ export default {
   methods: {
     changeTheme() {
       this.$vuetify.theme.dark = this.darkSwitch;
+    },
+    logout() {
+      firebase
+        .auth()
+        .signOut()
+        .then(() => {
+          alert("Successfully logged out");
+          this.$router.push("/login");
+        })
+        .catch((error) => {
+          alert(error.message);
+          this.$router.push("/");
+        });
     },
   },
 };
