@@ -39,23 +39,7 @@ export default {
     LoadingSpinner,
     PopupPreview,
   },
-  watch: {
-    allNodes: function(n, o) {
-      // if (this.allNodesLength == 0) { return}
-      // if (n.length == this.allNodesLength) {
-      //   console.log("n length: " + n.length + " all nodes length: " + this.allNodesLength)
-      //   this.loading = false;
-      //   // this.fitToAllNodes();
-      // }
-    },
-  },
-  // beforeDestroy() {
-  //   console.log(" =============== destroy network ===============")
-  //   this.$refs.network.destroy()
-  // },
   async mounted() {
-    // console.log("clear all nodes before bind")
-    // this.$store.commit("clearAllNodes");
     // console.log("current course id:", this.course.id);
     await this.$store.dispatch("getAllNodes");
     await this.$store.dispatch("getAllEdges");

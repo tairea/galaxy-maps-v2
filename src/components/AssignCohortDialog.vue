@@ -33,7 +33,7 @@
           </template>
 
           <!-- NEW DIALOG -->
-          <div class="create-dialog">
+          <div v-if="assignCohorts" class="create-dialog">
             <v-tabs
               v-model="tab"
               fixed-tabs
@@ -228,6 +228,65 @@
             <!-- </div> -->
           </div>
           <!-- End create-dialog -->
+
+
+          <div v-else-if="assignCourses" class="create-dialog">
+          <!-- HEADER -->
+                <div class="dialog-header">
+                  <p class="dialog-title">Assign this Cohort to a Course</p>
+                  <div class="d-flex align-center">
+                    <v-icon left color="missionAccent"
+                      >mdi-information-variant</v-icon
+                    >
+                    <p class="dialog-description">
+                      Assign this Cohort to a specific Galaxy Map that you have
+                      already created.
+                    </p>
+                  </div>
+                </div>
+                <div class="create-dialog-content">
+                  <!-- TITLE -->
+                  <p class="dialog-description">Galaxy Maps:</p>
+                  <v-select
+                    v-if="assignCohorts"
+                    v-model="courses.id"
+                    :items="courses"
+                    item-text="name"
+                    item-value="id"
+                  >
+                  </v-select>
+                </div>
+                <!-- ACTION BUTTONS -->
+                <div class="action-buttons">
+                  <v-btn
+                    v-if="assignCourses"
+                    outlined
+                    color="green darken-1"
+                    @click="assignCourse(course)"
+                    :loading="loading"
+                  >
+                    <v-icon left>
+                      mdi-check
+                    </v-icon>
+                    ASSIGN GALAXY MAP
+                  </v-btn>
+
+                  <v-btn
+                    outlined
+                    :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
+                    class="ml-2"
+                    @click="cancel"
+                    :disabled="loading"
+                  >
+                    <v-icon left>
+                      mdi-close
+                    </v-icon>
+                    Cancel
+                  </v-btn>
+                </div>
+          </div>
+          <!-- End Assign Courses create-dialog -->
+
         </v-dialog>
 
         <!-- DIALOG (TODO: make as a component)-->

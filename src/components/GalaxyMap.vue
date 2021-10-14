@@ -93,9 +93,9 @@ export default {
   },
   async mounted() {
     console.log("current course id:", this.currentCourseId);
-    await this.$store.dispatch("bindNodes", this.currentCourseId);
-    await this.$store.dispatch("bindEdges", this.currentCourseId);
-    await this.$store.dispatch("bindTopics", this.currentCourseId);
+    await this.$store.dispatch("bindAllCourseNodes", this.currentCourseId);
+    await this.$store.dispatch("bindAllCourseEdges", this.currentCourseId);
+    await this.$store.dispatch("bindAllCourseTopics", this.currentCourseId);
     console.log("nodes:", this.currentCourseNodes);
     // console.log("edges:", this.currentCourseEdges);
     console.log(this.$refs.network);

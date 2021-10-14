@@ -14,6 +14,8 @@
         <h2 class="people-label">STUDENTS</h2>
         <!-- <StudentCard v-for="student in getStudentsByCohortId(currentCohortId)" :key="student.id" :student="student" /> -->
        <!-- <StudentDataTable :students="getStudentsByCohortId(currentCohortId)"/> -->
+
+       <!-- TODO: student iterator doesnt update when students added to database. Requires a refresh -->
        <StudentDataIterator :students="getStudentsByCohortId(currentCohortId)"/>
 
 
@@ -77,9 +79,9 @@ export default {
   },
   methods: {
     bindAll() {
-      this.$store.dispatch("bindCourses");
-      this.$store.dispatch("bindStudents");
-      this.$store.dispatch("bindOrganisations");
+      this.$store.dispatch("bindAllCourses");
+      this.$store.dispatch("bindAllPeople");
+      this.$store.dispatch("bindAllOrganisations");
     },
   },
 };

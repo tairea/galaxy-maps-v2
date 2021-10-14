@@ -100,15 +100,17 @@ export default new Vuex.Store({
     },
     getStudentsByCohortId: (state) => (id) => {
       //go to cohorts, and check if they in courses with this id
-      let studentsInCohort = [];
-      state.students.forEach((student) => {
-        // if student is enrolled in this cohort...
-        if (student.enrolledCohorts.some((cohortId) => cohortId === id)) {
-          // push them into array
-          studentsInCohort.push(student);
+      let peopleInCohort = [];
+      state.people.forEach((person) => {
+        if (person.assignedCohorts) {
+          // if student is assigned in this cohort...
+          if (person.assignedCohorts.some((cohortId) => cohortId === id)) {
+            // push them into array
+            peopleInCohort.push(person);
+          }
         }
       });
-      return studentsInCohort;
+      return peopleInCohort;
     },
     //
     // completedCourses: (state) => {
@@ -156,21 +158,22 @@ export default new Vuex.Store({
       }
       console.log("signed in user:", user.email);
     },
-    bindCourses: firestoreAction(({ bindFirestoreRef }) => {
+    // ===== Firestore - BIND ALL
+    bindAllCourses: firestoreAction(({ bindFirestoreRef }) => {
       return bindFirestoreRef("courses", db.collection("courses"), {
         maxRefDepth: 2,
       });
     }),
-    bindCohorts: firestoreAction(({ bindFirestoreRef }) => {
+    bindAllCohorts: firestoreAction(({ bindFirestoreRef }) => {
       return bindFirestoreRef("cohorts", db.collection("cohorts"));
     }),
-    bindOrganisations: firestoreAction(({ bindFirestoreRef }) => {
+    bindAllOrganisations: firestoreAction(({ bindFirestoreRef }) => {
       return bindFirestoreRef("organisations", db.collection("organisations"));
     }),
-    bindPeople: firestoreAction(({ bindFirestoreRef }) => {
+    bindAllPeople: firestoreAction(({ bindFirestoreRef }) => {
       return bindFirestoreRef("people", db.collection("people"));
     }),
-    bindNodes: firestoreAction(({ bindFirestoreRef }, id) => {
+    bindAllCourseNodes: firestoreAction(({ bindFirestoreRef }, id) => {
       return bindFirestoreRef(
         "currentCourseNodes",
         db
@@ -179,7 +182,7 @@ export default new Vuex.Store({
           .collection("map-nodes")
       );
     }),
-    bindEdges: firestoreAction(({ bindFirestoreRef }, id) => {
+    bindAllCourseEdges: firestoreAction(({ bindFirestoreRef }, id) => {
       return bindFirestoreRef(
         "currentCourseEdges",
         db
@@ -188,7 +191,7 @@ export default new Vuex.Store({
           .collection("map-edges")
       );
     }),
-    bindTopics: firestoreAction(({ bindFirestoreRef }, id) => {
+    bindAllCourseTopics: firestoreAction(({ bindFirestoreRef }, id) => {
       return bindFirestoreRef(
         "topics",
         db
@@ -222,7 +225,6 @@ export default new Vuex.Store({
         );
         count++;
       }
-
       // console.log("all nodes from Firestore: ", allNodes);
       state.allNodes = allNodes; // source of truth
       state.allNodesForDisplay = allNodes; // store all nodes
@@ -244,5 +246,7 @@ export default new Vuex.Store({
 
       state.allEdges = allEdges;
     },
+
+    // ===== Firestore - BIND For USER
   },
 });

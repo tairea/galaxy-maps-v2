@@ -69,7 +69,13 @@ export default {
     login() {
       firebase
         .auth()
-        .signInWithEmailAndPassword(this.email, this.password)
+        .setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+        .then(() => {
+          // New sign-in will be persisted with session persistence.
+          return firebase
+            .auth()
+            .signInWithEmailAndPassword(this.email, this.password);
+        })
         .then(() => {
           alert("Successfully logged in");
           this.$router.push("/galaxy");

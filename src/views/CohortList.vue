@@ -88,8 +88,8 @@ export default {
   },
   methods: {
     getCohortsAndOrganisations() {
-      this.$store.dispatch("bindCohorts");
-      this.$store.dispatch("bindOrganisations");
+      this.$store.dispatch("bindAllCohorts");
+      this.$store.dispatch("bindAllOrganisations");
     },
     editOrgDialog(orgId) {
       this.openOrganisationDialog = true

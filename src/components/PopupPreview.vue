@@ -64,8 +64,7 @@ export default {
   components: {},
   props: ["course"],
   async mounted() {
-    // bind to store all topics for this course
-    // await this.$store.dispatch("bindTopics", this.currentCourseId);
+
   },
   computed: {
     // ...mapState(["currentCourseId"]),

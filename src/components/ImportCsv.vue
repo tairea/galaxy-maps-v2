@@ -1,25 +1,25 @@
 <template>
   <div class="importContainer">
-      <v-row class="pt-2 pl-2">
-        <v-col cols="6">
-          <div class="d-flex justify-center align-center">
-            <v-file-input
-              label="Upload CSV File"
-              outlined
-              dense
-              color="missionAccent"
-              id="csv_file"
-              name="csv_file"
-              class="form-control"
-              @change="loadCSV"
-              ref="csvFile"
-            ></v-file-input>
-          </div>
-        </v-col>
-        <v-col cols="6">
-          <p class="downloadCsv" >download csv template</p>
-        </v-col>
-      </v-row>
+    <v-row class="pt-2 pl-2">
+      <v-col cols="6">
+        <div class="d-flex justify-center align-center">
+          <v-file-input
+            label="Upload CSV File"
+            outlined
+            dense
+            color="missionAccent"
+            id="csv_file"
+            name="csv_file"
+            class="form-control"
+            @change="loadCSV"
+            ref="csvFile"
+          ></v-file-input>
+        </div>
+      </v-col>
+      <v-col cols="6">
+        <p class="downloadCsv">download csv template</p>
+      </v-col>
+    </v-row>
 
     <div v-if="showTable" class="people-frame">
       <v-simple-table v-if="parse_csv" class="table">
@@ -53,13 +53,13 @@
       class="ml-4 mt-4"
       :loading="loading"
       :disabled="disabled"
-      >{{buttonLabel}}
-      </v-btn
-    >
+      >{{ buttonLabel }}
+    </v-btn>
   </div>
 </template>
 
 <script>
+import firebase from "firebase/app";
 import { db, storage } from "../store/firestoreConfig";
 
 // csv import: https://codepen.io/edward1995/pen/QmXdwz?editors=1010
@@ -93,28 +93,49 @@ export default {
       let counter = 0;
       // Add a new document in collection "people"
       this.parse_csv.forEach((student, index, array) => {
-        student.enrolledCohorts = [this.currentCohortId]
-        db.collection("people")
-          .add(student)
-          .then((docRef) => {
-            counter++
-            // check all students are saved to DB
-            if(counter === array.length) {
-              this.saveStudentsCompleted()
-            }
-          })
-          .catch((error) => {
-            console.error("Error writing document: ", error);
-          });
+        student.assignedCohorts = [this.currentCohortId];
+
+        
+        const usersRef = db.collection("people").doc(student.nsnNumber);
+
+        usersRef.get().then((docSnapshot) => {
+          // if student exists, update assignedCohorts
+          if (docSnapshot.exists) {
+            usersRef.update({
+              assignedCohorts: firebase.firestore.FieldValue.arrayUnion(
+                this.currentCohortId
+              ),
+            }).then(() => {
+              counter++;
+                // check all students are saved to DB
+                if (counter === array.length) {
+                  this.saveStudentsCompleted();
+                }
+            });
+          } else {
+            usersRef
+              .set(student)
+              .then((docRef) => {
+                counter++;
+                // check all students are saved to DB
+                if (counter === array.length) {
+                  this.saveStudentsCompleted();
+                }
+              })
+              .catch((error) => {
+                console.error("Error writing document: ", error);
+              });
+          }
+        });
       });
     },
     saveStudentsCompleted() {
       console.log("All students written to database");
       // this.$refs.csvFile.value = null;
-      this.buttonLabel = "Students Successfully Added to Database"
-      this.loading = false
-      this.showTable = false
-      this.disabled = true
+      this.buttonLabel = "Students Successfully Added to Database";
+      this.loading = false;
+      this.showTable = false;
+      this.disabled = true;
     },
     sortBy: function(key) {
       var vm = this;
@@ -126,12 +147,12 @@ export default {
       var lines = csv.split("\n");
       var result = [];
       var headers = lines[0].split(",");
-      console.log("headers",headers)
+      console.log("headers", headers);
       vm.parse_header = lines[0].split(",");
       // camelize headers
-      vm.parse_header = vm.parse_header.map(header => {
-        return vm.camelize(header)
-      })
+      vm.parse_header = vm.parse_header.map((header) => {
+        return vm.camelize(header);
+      });
       lines[0].split(",").forEach(function(key) {
         vm.sortOrders[key] = 1;
       });
@@ -156,7 +177,7 @@ export default {
       return result; // JavaScript object
     },
     loadCSV(e) {
-      this.resetButton()
+      this.resetButton();
       this.showTable = true;
       console.log("loaded", e);
       var vm = this;
@@ -187,9 +208,9 @@ export default {
       });
     },
     resetButton() {
-      this.disabled = false
-      this.buttonLabel = "Add Students to Database"
-    }
+      this.disabled = false;
+      this.buttonLabel = "Add Students to Database";
+    },
   },
 };
 </script>
@@ -215,7 +236,7 @@ export default {
 /* width */
 .table .v-data-table__wrapper::-webkit-scrollbar {
   width: 10px;
-  height: 10px; 
+  height: 10px;
 }
 
 /* Track */

@@ -11,7 +11,7 @@ import Login from "../views/Login.vue";
 import Register from "../views/Register.vue";
 
 import firebase from "firebase";
-import store from '../store'
+import store from "../store";
 
 Vue.use(VueRouter);
 
@@ -19,14 +19,14 @@ const routes = [
   {
     path: "/",
     name: "Home",
+    meta: {
+      authRequired: true,
+    },
     component: Home,
     children: [
       {
         path: "galaxy", //selected tab by default
         component: GalaxyList,
-        meta: {
-          authRequired: true,
-        },
       },
       {
         path: "cohorts",
@@ -60,19 +60,19 @@ const routes = [
     path: "/galaxy/:courseId",
     name: "GalaxyView",
     component: GalaxyView,
-    props: true
+    props: true,
   },
   {
     path: "/solarsystem/:topicId",
     name: "SolarSystemView",
     component: SolarSystemView,
-    props: true
+    props: true,
   },
   {
     path: "/cohort/:cohortId/:cohortName",
     name: "CohortView",
     component: CohortView,
-    props: true
+    props: true,
   },
 ];
 
@@ -82,15 +82,26 @@ const router = new VueRouter({
   routes,
 });
 
-router.beforeEach((to, from, next) => {
-  if (to.matched.some(record => record.meta.authRequired)) {
-    console.log("store.getters.user.loggedIn",store.getters.user.loggedIn)
+// 
+const initialAuth = new Promise((resolve, reject) => {
+  const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
+    unsubscribe();
+    resolve(user);
+  }, reject);
+});
+
+router.beforeEach(async (to, from, next) => {
+  if (to.matched.some((record) => record.meta.authRequired)) {
+    await initialAuth;
+
+    console.log("store.getters.user.loggedIn", store.getters.user.loggedIn); // false
+
     if (store.getters.user.loggedIn) {
       next();
     } else {
-      alert('You must be logged in to see this page');
+      alert("You must be logged in to see this page");
       next({
-        path: '/login',
+        path: "/login",
       });
     }
   } else {

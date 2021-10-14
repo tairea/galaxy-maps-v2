@@ -38,10 +38,10 @@ export default {
   },
   methods: {
     bindAll() {
-      this.$store.dispatch("bindCourses");
-      this.$store.dispatch("bindCohorts");
-      this.$store.dispatch("bindOrganisations");
-      this.$store.dispatch("bindPeople");
+      this.$store.dispatch("bindAllCourses");
+      this.$store.dispatch("bindAllCohorts");
+      this.$store.dispatch("bindAllOrganisations");
+      this.$store.dispatch("bindAllPeople");
     },
   },
 };
