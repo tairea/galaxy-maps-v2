@@ -3,14 +3,16 @@
     <div class="flexContainer">
       <Galaxy />
     </div>
-    <div class="createButton">
+    <div class="buttons">
       <CreateEditDeleteGalaxyDialog :edit="false"/>
+      <DiscoverGalaxyButton/>
     </div>
   </div>
 </template>
 
 <script>
 import CreateEditDeleteGalaxyDialog from "../components/CreateEditDeleteGalaxyDialog";
+import DiscoverGalaxyButton from "../components/DiscoverGalaxyButton";
 import Galaxy from "../components/Galaxy";
 
 import { db } from "../store/firestoreConfig";
@@ -21,6 +23,7 @@ export default {
   name: "GalaxyList",
   components: {
     CreateEditDeleteGalaxyDialog,
+    DiscoverGalaxyButton,
     Galaxy,
   },
   mounted() {
@@ -83,10 +86,11 @@ export default {
   }
 }
 
-.createButton {
+.buttons {
   position: absolute;
   bottom: 30px;
   left: 50%;
   transform: translate(-50%, 0%);
+  display: flex;
 }
 </style>

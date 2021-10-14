@@ -46,7 +46,6 @@
 
     <BackButton :toPath="'/login'" />
 
-    <!-- <div id="firebaseui-auth-container"></div> -->
   </div>
 </template>
 

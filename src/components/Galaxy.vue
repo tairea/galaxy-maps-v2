@@ -11,7 +11,7 @@
       @zoom="zoom"
       @click="click"
       @hover-node="hoverNode"
-      @after-drawing=""
+
     ></network>
     <PopupPreview
       v-if="popupPreview"
@@ -87,11 +87,11 @@ export default {
     network: {
       options: {
         physics: {
-          enabled: false,
+          enabled: true,
           solver: "repulsion",
           repulsion: {
-            centralGravity: 1,
-            springLength: 100,
+            // centralGravity: 1,
+            // springLength: 100,
             springConstant: 0.3,
             nodeDistance: 300,
             damping: 0.2,

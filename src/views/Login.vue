@@ -44,14 +44,12 @@
       >
     </div>
 
-    <!-- <div id="firebaseui-auth-container"></div> -->
+  
   </div>
 </template>
 
 <script>
 import firebase from "firebase";
-import * as firebaseui from "firebaseui";
-// import "firebaseui/dist/firebaseui.css";
 
 export default {
   name: "Login",

@@ -185,7 +185,7 @@ export default {
   props: ["course", "coords"],
   async mounted() {
     // bind to store all topics for this course
-    await this.$store.dispatch("bindAllTopics", this.currentCourseId);
+    await this.$store.dispatch("bindAllCourseTopics", this.currentCourseId);
   },
   data() {
     return {
