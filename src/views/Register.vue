@@ -13,17 +13,35 @@
       <v-form v-else ref="form" v-model="valid" lazy-validation class="my-4">
         <v-text-field
           type="email"
-          v-model="email"
-          label="E-mail"
-          :rules="emailRules"
+          v-model="person.firstName"
+          label="First Name"
           required
           color="missionAccent"
           outlined
           class="custom-input mt-6"
         ></v-text-field>
         <v-text-field
+          type="email"
+          v-model="person.lastName"
+          label="Last Name"
+          required
+          color="missionAccent"
+          outlined
+          class="custom-input"
+        ></v-text-field>
+        <v-text-field
+          type="email"
+          v-model="person.email"
+          label="E-mail"
+          :rules="emailRules"
+          required
+          color="missionAccent"
+          outlined
+          class="custom-input"
+        ></v-text-field>
+        <v-text-field
           type="password"
-          v-model="password"
+          v-model="person.password"
           label="Password"
           required
           color="missionAccent"
@@ -45,12 +63,12 @@
     <!-- <v-img :src="`https://i.pravatar.cc/300`" class="gm-logo"></v-img> -->
 
     <BackButton :toPath="'/login'" />
-
   </div>
 </template>
 
 <script>
 import firebase from "firebase";
+import { db } from "../store/firestoreConfig";
 
 import BackButton from "../components/BackButton";
 
@@ -62,8 +80,13 @@ export default {
   data: () => ({
     closed: false,
     valid: true,
-    email: "",
-    password: "",
+    person: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      id: ""
+    },
     emailRules: [
       (v) => !!v || "E-mail is required",
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
@@ -72,20 +95,35 @@ export default {
   mounted() {},
   methods: {
     register() {
-      // add user the auth
-      firebase
-        .auth()
-        .createUserWithEmailAndPassword(this.email, this.password)
-        .then(() => {
-          alert("Successfully registered! Please login.");
-          this.$router.push("/login");
-        })
-        .catch((error) => {
-          alert(error.message);
-        });
+            // add user the auth
+            firebase
+              .auth()
+              .createUserWithEmailAndPassword(
+                this.person.email,
+                this.person.password
+              )
+              .then((userRef) => {
+                console.log(userRef.user.uid)
+                // get new user id
+                this.person.id = userRef.user.uid
+                // add user to people database
+                db.collection("people")
+                  .doc(this.person.id)
+                  .set(this.person)
+                  .then(() => {
+                    alert("Successfully registered! Please login.");
+                    // route to login screen
+                    this.$router.push("/login");
+                  })
+                  .catch((error) => {
+                    console.error("Error writing document: ", error);
+                  });
 
-      // TODO: add them to database (people collection in firestore)
-
+              })
+              .catch((error) => {
+                alert(error.message);
+                this.person = {}
+              });
     },
     validate() {
       this.$refs.form.validate();
