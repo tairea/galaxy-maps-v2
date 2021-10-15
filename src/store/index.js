@@ -186,7 +186,7 @@ export default new Vuex.Store({
     bindAllPeople: firestoreAction(({ bindFirestoreRef }) => {
       return bindFirestoreRef("people", db.collection("people"));
     }),
-    bindAllCourseNodes: firestoreAction(({ bindFirestoreRef }, id) => {
+    bindCourseNodes: firestoreAction(({ bindFirestoreRef }, id) => {
       return bindFirestoreRef(
         "currentCourseNodes",
         db
@@ -195,7 +195,7 @@ export default new Vuex.Store({
           .collection("map-nodes")
       );
     }),
-    bindAllCourseEdges: firestoreAction(({ bindFirestoreRef }, id) => {
+    bindCourseEdges: firestoreAction(({ bindFirestoreRef }, id) => {
       return bindFirestoreRef(
         "currentCourseEdges",
         db
@@ -204,7 +204,7 @@ export default new Vuex.Store({
           .collection("map-edges")
       );
     }),
-    bindAllCourseTopics: firestoreAction(({ bindFirestoreRef }, id) => {
+    bindCourseTopics: firestoreAction(({ bindFirestoreRef }, id) => {
       return bindFirestoreRef(
         "topics",
         db
@@ -271,7 +271,7 @@ export default new Vuex.Store({
 
       const querySnapshot = await db.collection("courses").where("mappedBy.personId", "==", personId).get()
 
-      let count = 0;
+      // let count = 0;
 
       // get the topics (nodes) in that course
       for (const doc of querySnapshot.docs) {
@@ -286,10 +286,11 @@ export default new Vuex.Store({
             const node = subDoc.data();
             node.courseId = doc.id; // add course id to nodes list for some reason
             //node.group = count; // add group to nodes list for some reason
+            // node.color = stringToColour(node.label)
             return node;
           })
         );
-        count++;
+        // count++;
       }
       console.log("personsNodes from Firestore: ", personsNodes);
       state.personsNodes = personsNodes; // source of truth
@@ -308,7 +309,11 @@ export default new Vuex.Store({
           .collection("map-edges")
           .get();
 
-          personsEdges.push(...subQuerySnapshot.docs.map((subDoc) => subDoc.data()));
+          personsEdges.push(...subQuerySnapshot.docs.map((subDoc) => {
+            const edge = subDoc.data()
+            // edge.color = '#848484'
+            return edge
+          }));
       }
 
       state.personsEdges = personsEdges;
@@ -323,3 +328,16 @@ export default new Vuex.Store({
     }),
   },
 });
+
+// colour functions to colour nodes
+function hashCode(str) {
+  let hash = 0;
+  for (var i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return hash;
+}
+
+function stringToColour(str) {
+  return `hsl(${hashCode(str) % 360}, 100%, 70%)`;
+}

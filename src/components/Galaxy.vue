@@ -107,6 +107,9 @@ export default {
         edges: {
           length: 50, // Longer edges between nodes.
           smooth: false,
+          color: {
+            inherit: false
+          }
         },
         nodes: {
           shape: "dot",
