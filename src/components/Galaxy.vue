@@ -5,8 +5,8 @@
       
       ref="network"
       class="full-height"
-      :nodes="allNodesForDisplay"
-      :edges="allEdges"
+      :nodes="personsNodesForDisplay"
+      :edges="personsEdges"
       :options="network.options"
       @zoom="zoom"
       @click="click"
@@ -40,9 +40,13 @@ export default {
     PopupPreview,
   },
   async mounted() {
-    // console.log("current course id:", this.course.id);
-    await this.$store.dispatch("getAllNodes");
-    await this.$store.dispatch("getAllEdges");
+    // GET ALL!!
+    // await this.$store.dispatch("getAllNodes");
+    // await this.$store.dispatch("getAllEdges");
+
+    // GET ONLY USERS!!
+    await this.$store.dispatch("getNodesByPersonId",this.user.data.id);
+    await this.$store.dispatch("getEdgesByPersonId",this.user.data.id);
 
     //total nodes
     // this.allNodesLength = this.allNodesLength;
@@ -52,7 +56,7 @@ export default {
 
     const updatedNodes = this.repositionCoursesBasedOnBoundaries();
     this.$store.commit(
-      "updateAllNodesForDisplay",
+      "updatePersonsNodesForDisplay",
       updatedNodes
     );
   
@@ -70,8 +74,10 @@ export default {
       "topics",
       "currentCourseId",
       "allNodesLength",
+      "personsNodesForDisplay",
+      "personsEdges"
     ]),
-    ...mapGetters(["getCourseById"]),
+    ...mapGetters(["getCourseById","user"]),
   },
   data: () => ({
     active: false,
@@ -87,7 +93,8 @@ export default {
     network: {
       options: {
         physics: {
-          enabled: true,
+          enabled: false,
+          // enabled: true,
           solver: "repulsion",
           repulsion: {
             // centralGravity: 1,
@@ -219,7 +226,7 @@ export default {
       let courseCanvasBoundaries = [];
       // get all coords for nodes
       // const allNodes = this.$refs.network.nodes;
-      const allNodes = this.allNodesForDisplay;
+      const allNodes = this.personsNodesForDisplay;
       // console.log("allNodes from calcBoundaries: ", allNodes);
 
       // per course/galaxy, determine boundaries ie. highest y, highest x, lowest y, lowest x (this is a boundary we want to hover)

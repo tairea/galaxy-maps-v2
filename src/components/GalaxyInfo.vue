@@ -69,7 +69,7 @@ export default {
   .galaxy-description {
     margin-top: 10px;
     color: var(--v-galaxyAccent-base);
-    // font-size: 0.9rem;
+    font-size: 0.9rem;
   }
 }
 </style>

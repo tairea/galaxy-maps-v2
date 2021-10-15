@@ -32,7 +32,7 @@ export default {
     console.log("this.courses", this.courses);
   },
   computed: {
-    ...mapGetters(["courses"]),
+    ...mapGetters(["courses", "user"]),
   },
   data() {
     return {
@@ -41,10 +41,12 @@ export default {
   },
   methods: {
     bindAll() {
-      this.$store.dispatch("bindAllCourses");
+      // this.$store.dispatch("bindAllCourses");
+      this.$store.dispatch("bindCoursesByPersonId", this.user.data.id);
       this.$store.dispatch("bindAllCohorts");
       this.$store.dispatch("bindAllOrganisations");
       this.$store.dispatch("bindAllPeople");
+      this.$store.dispatch("getPersonById", this.user.data.id);
     },
   },
 };
@@ -92,5 +94,6 @@ export default {
   left: 50%;
   transform: translate(-50%, 0%);
   display: flex;
+  
 }
 </style>

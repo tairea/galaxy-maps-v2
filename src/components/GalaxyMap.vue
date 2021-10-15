@@ -16,10 +16,12 @@
       @deselect-node="deselectNode"
       @deselect-edge="deselectEdge"
       @hover-node="hoverNode"
+       @blur-node="blurNode"
       @zoom="zoom"
       @animation-finished="animationFinished"
       @before-drawing="beforeDrawing"
       @click="click"
+      @double-click="doubleClick"
     ></network>
       <!-- @blur-node="blurNode" -->
   </div>
@@ -112,8 +114,12 @@ export default {
     ]),
   },
   methods: {
+    doubleClick() {
+      this.addNodeMode()
+    },
     addNodeMode() {
       this.active = true;
+      // this.$emit("toggleAddNodeButton")
       console.log("add node mode");
       this.$emit("setUiMessage", "Click on the map to add a node");
       this.$refs.network.addNodeMode();
@@ -198,6 +204,7 @@ export default {
       // console.log("new node positions", this.newNodePositions)
     },
     async saveNodePositions() {
+      
       this.$emit("nodePositionsChangeLoading");
       const nodes = this.$refs.network.nodes;
       // spread/or map new positions to nodes
@@ -207,6 +214,7 @@ export default {
         const changedNodeObj = this.newNodePositions[changedNode];
         console.log("changed node:", changedNodeObj);
         const node = nodes.find((node) => node.id === changedNodeObj.id);
+        // TODO: only saves changes once. not the second time
         if (changedNodeObj.x !== node.x || changedNodeObj.y !== node.y) {
           node.x = changedNodeObj.x;
           node.y = changedNodeObj.y;
@@ -227,6 +235,7 @@ export default {
               console.error("Error writing node positions: ", error);
             });
         } else {
+          this.$emit("nodePositionsChangeSaved");
           return;
         }
         this.$emit("nodePositionsChangeSaved");
@@ -276,6 +285,7 @@ export default {
     },
     disableEditMode() {
       this.$refs.network.disableEditMode();
+      // this.$emit("toggleAddNodeButton")
     },
     animationFinished(data) {
       // show popup

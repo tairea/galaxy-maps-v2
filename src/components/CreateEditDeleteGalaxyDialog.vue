@@ -38,7 +38,10 @@
             </div>
 
             <!-- LEFT SIDE -->
-            <div class="left-side" :style="course.title ? 'width:50%' : 'width:100%'">
+            <div
+              class="left-side"
+              :style="course.title ? 'width:50%' : 'width:100%'"
+            >
               <!-- DIALOG FIELDS -->
               <div class="create-dialog-content">
                 <!-- TITLE -->
@@ -67,7 +70,7 @@
                 <p class="dialog-description">Galaxy Image:</p>
                 <v-progress-linear
                   color="missionAccent"
-                  :value="percentage"
+                  :value="percentageGalaxy"
                 ></v-progress-linear>
                 <v-file-input
                   class="input-field"
@@ -79,13 +82,84 @@
                   @change="storeImage()"
                   prepend-icon=""
                 ></v-file-input>
+
+                <div
+                  class="author-checkbox-wrap d-flex align-end flex-column mb-4"
+                >
+                  <v-checkbox
+                    v-model="notAuthor"
+                    dense
+                    color="missionAccent"
+                    class="author-checkbox ma-0"
+                    hide-details
+                  >
+                    <template v-slot:label>
+                      <span class="author-checkbox-label"
+                        >Not an original course</span
+                      >
+                    </template>
+                  </v-checkbox>
+                  <div class="d-flex align-center">
+                    <v-icon left color="missionAccent"
+                      >mdi-information-variant</v-icon
+                    >
+                    <p class="dialog-description" style="text-align: right;">
+                      Tick this box if your are mapping someone elses content
+                    </p>
+                  </div>
+                </div>
+                <!-- ORIGINAL AUTHOR -->
+                <div v-if="notAuthor">
+                  <!-- AUTHOR -->
+                  <p class="dialog-description">Name of content creator:</p>
+                  <v-text-field
+                    class="input-field"
+                    solo
+                    color="missionAccent"
+                    v-model="course.contentBy.name"
+                    background-color="white"
+                  ></v-text-field>
+
+                  <!-- AUTHOR IMAGE UPLOAD -->
+                  <p class="dialog-description">Image of content creator:</p>
+                  <v-progress-linear
+                    color="missionAccent"
+                    :value="percentageAuthor"
+                  ></v-progress-linear>
+                  <v-file-input
+                    class="input-field"
+                    solo
+                    color="missionAccent"
+                    accept="image/*"
+                    v-model="authorImage"
+                    label="Upload Image"
+                    @change="storeAuthorImage()"
+                    prepend-icon=""
+                  ></v-file-input>
+
+                  <!-- SOURCE OF ORIGINAL CONTENT -->
+                  <p class="dialog-description">
+                    Source URL of original content:
+                  </p>
+                  <v-text-field
+                    class="input-field"
+                    solo
+                    color="missionAccent"
+                    v-model="course.contentBy.source"
+                    background-color="white"
+                  ></v-text-field>
+                </div>
+                <!-- End original author -->
               </div>
               <!-- End create-dialog-content -->
             </div>
             <!-- End of left-side -->
 
             <!-- RIGHT SIDE -->
-            <div class="right-side" :style="course.title ? 'width:50%' : 'width:0%'" >
+            <div
+              class="right-side"
+              :style="course.title ? 'width:50%' : 'width:0%'"
+            >
               <div id="galaxy-info" v-if="course.title">
                 <h2 class="galaxy-label">Galaxy</h2>
                 <h1 class="galaxy-title">{{ course.title }}</h1>
@@ -213,13 +287,14 @@
 </template>
 
 <script>
-import { mapMutations } from "vuex";
+import { mapState, mapGetters } from "vuex";
 import { db, storage } from "../store/firestoreConfig";
 
 export default {
   name: "CreateGalaxyButtonDialog",
   props: ["edit", "courseToEdit"],
   data: () => ({
+    notAuthor: false,
     dialog: false,
     dialogConfirm: false,
     dialogTitle: "Create a new Galaxy",
@@ -232,17 +307,38 @@ export default {
         url: "",
         name: "",
       },
+      contentBy: {
+        name: "",
+        image: {
+          url: "",
+          name: "",
+        },
+        source: "",
+      },
+      mappedBy: {
+        name: "",
+        image: {
+          url: "",
+          name: "",
+        },
+        source: "",
+      },
     },
     uploadedImage: {},
-    percentage: 0,
+    authorImage: {},
+    percentageGalaxy: 0,
+    percentageAuthor: 0,
     disabled: false,
     loading: false,
     deleting: false,
   }),
-  mounted() {
+  computed: {
+    ...mapGetters(["person"]),
+  },
+  async mounted() {
     if (this.courseToEdit) {
-      console.log("editing course")
-      this.course = this.courseToEdit
+      console.log("editing course");
+      this.course = this.courseToEdit;
     }
   },
   methods: {
@@ -253,6 +349,25 @@ export default {
     },
     saveCourse(course) {
       this.loading = true;
+
+      console.log("saving course created by:", this.person.firstName);
+
+      // not notAuthor means user is the author
+      if (!this.notAuthor) {
+        // TODO: add users photo to contentBy
+        // TODO: need to allow users to add their photo first
+        // get user. save them to contentBy & mappedBy
+        this.course.contentBy = {
+          name: this.person.firstName + " " + this.person.lastName,
+          personId: this.person.id,
+        };
+      }
+      // add user to mappedBy
+      this.course.mappedBy = {
+        name: this.person.firstName + " " + this.person.lastName,
+        personId: this.person.id,
+      };
+
       // Add a new document in collection "courses"
       db.collection("courses")
         .add(course)
@@ -300,7 +415,7 @@ export default {
         "state_changed",
         (snapshot) => {
           // show progress on uploader bar
-          this.percentage =
+          this.percentageGalaxy =
             (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         },
         // upload error
@@ -315,6 +430,42 @@ export default {
             // add image url to course obj
             this.course.image.url = downloadURL;
             this.course.image.name = this.uploadedImage.name;
+            this.disabled = false;
+          });
+        }
+      );
+    },
+    storeAuthorImage() {
+      this.disabled = true;
+      console.log("this.authorImage", this.authorImage);
+      // ceate a storage ref
+      var storageRef = storage.ref(
+        "author-images/" + this.course.author + "-" + this.authorImage.name
+      );
+
+      // upload a file
+      var uploadTask = storageRef.put(this.authorImage);
+
+      // update progress bar
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          // show progress on uploader bar
+          this.percentageAuthor =
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        },
+        // upload error
+        (err) => {
+          console.log(err);
+        },
+        // upload complete
+        () => {
+          // get image url
+          uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+            console.log("author image url is: " + downloadURL);
+            // add image url to course obj
+            this.course.contentBy.image.url = downloadURL;
+            this.course.contentBy.image.name = this.uploadedImage.name;
             this.disabled = false;
           });
         }
@@ -368,7 +519,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
 // new dialog ui
 .create-dialog {
   color: var(--v-missionAccent-base);
@@ -392,7 +542,19 @@ export default {
     display: flex;
     flex-direction: column;
     flex-wrap: wrap;
-    transition:all 0.3s;
+    transition: all 0.3s;
+
+    .author-checkbox .theme--light.v-icon {
+      color: var(--v-missionAccent-base) !important;
+    }
+
+    .author-checkbox-label {
+      font-size: 0.8rem !important;
+      // padding: 10px 20px;
+      color: var(--v-missionAccent-base) !important;
+      // border-top: 1px solid var(--v-missionAccent-base);
+      // border-bottom: 1px solid var(--v-missionAccent-base);
+    }
   }
 
   .right-side {
@@ -400,7 +562,7 @@ export default {
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    transition:all 0.3s;
+    transition: all 0.3s;
     // flex-direction: column;
     // border-left: 1px solid var(--v-missionAccent-base);
 
@@ -495,5 +657,9 @@ export default {
     text-transform: uppercase;
     font-weight: 700;
   }
+}
+
+.v-btn:not(.v-btn--round).v-size--default {
+  background-color: var(--v-background-base) !important;
 }
 </style>

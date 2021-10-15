@@ -106,6 +106,8 @@ export default {
                 console.log(userRef.user.uid)
                 // get new user id
                 this.person.id = userRef.user.uid
+                // remove password so its not saved to database
+                delete this.person.password
                 // add user to people database
                 db.collection("people")
                   .doc(this.person.id)

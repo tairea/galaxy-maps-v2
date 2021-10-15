@@ -68,7 +68,7 @@
         </div>
       </div>
 
-      <!-- Galaxy Map -->
+      <!-- ===== Galaxy Map ===== -->
       <GalaxyMap
         ref="vis"
         @add-node="addNode"

@@ -12,6 +12,7 @@ export default new Vuex.Store({
       loggedIn: false,
       data: null,
     },
+    person: {},
     courses: [],
     topics: [],
     cohorts: [],
@@ -25,9 +26,13 @@ export default new Vuex.Store({
     allNodes: [],
     allEdges: [],
     allNodesForDisplay: [],
+    personsNodes: [],
+    personsNodesForDisplay: [],
+    personsEdges: [],
   },
   getters: {
     user: (state) => state.user,
+    person: (state) => state.person,
     courses: (state) => state.courses,
     getCourseById: (state) => (id) => {
       return state.courses.find((course) => course.id === id);
@@ -56,6 +61,9 @@ export default new Vuex.Store({
     getCoursesByCohortId: (state) => (id) => {
       //TODO: not complete
       state.cohorts.filter((cohort) => cohort.id === id);
+    },
+    getPersonById: (state) => (id) => {
+      state.people.filter((person) => person.id === id);
     },
     getCohortsInThisCourse: (state) => (id) => {
       //go to cohorts, and check if they in courses with this id
@@ -140,6 +148,9 @@ export default new Vuex.Store({
     updateAllNodesForDisplay(state, newNodePositions) {
       state.allNodesForDisplay = newNodePositions;
     },
+    updatePersonsNodesForDisplay(state, newNodePositions) {
+      state.personsNodesForDisplay = newNodePositions;
+    },
     clearAllNodes(state) {
       // console.log(" ======== clear all nodes before bind ======== ")
       state.allNodes = [];
@@ -149,9 +160,11 @@ export default new Vuex.Store({
     setUser({ commit }, user) {
       commit("SET_LOGGED_IN", user !== null);
       if (user) {
+        console.log("SETTING USER",user.uid)
         commit("SET_USER", {
           displayName: user.displayName,
           email: user.email,
+          id: user.uid
         });
       } else {
         commit("SET_USER", null);
@@ -246,7 +259,67 @@ export default new Vuex.Store({
 
       state.allEdges = allEdges;
     },
+    // ===== Firestore - BIND by USER
+    async getPersonById({ state }, id) {
+      console.log("user id:",id)
+      await db.collection("people").doc(id).get().then((doc) => {
+        state.person = doc.data()
+      })
+    },
+    async getNodesByPersonId({ state }, personId) {
+      const personsNodes = [];
 
-    // ===== Firestore - BIND For USER
+      const querySnapshot = await db.collection("courses").where("mappedBy.personId", "==", personId).get()
+
+      let count = 0;
+
+      // get the topics (nodes) in that course
+      for (const doc of querySnapshot.docs) {
+        const subQuerySnapshot = await db
+          .collection("courses")
+          .doc(doc.id)
+          .collection("map-nodes")
+          .get();
+
+          personsNodes.push(
+          ...subQuerySnapshot.docs.map((subDoc) => {
+            const node = subDoc.data();
+            node.courseId = doc.id; // add course id to nodes list for some reason
+            //node.group = count; // add group to nodes list for some reason
+            return node;
+          })
+        );
+        count++;
+      }
+      console.log("personsNodes from Firestore: ", personsNodes);
+      state.personsNodes = personsNodes; // source of truth
+      state.personsNodesForDisplay = personsNodes; // store all nodes
+    },
+    async getEdgesByPersonId({ state }, personId) {
+      const personsEdges = [];
+
+      const querySnapshot = await db.collection("courses").where("mappedBy.personId", "==", personId).get();
+
+      for (const doc of querySnapshot.docs) {
+        // doc.data() is never undefined for query doc snapshots
+        const subQuerySnapshot = await db
+          .collection("courses")
+          .doc(doc.id)
+          .collection("map-edges")
+          .get();
+
+          personsEdges.push(...subQuerySnapshot.docs.map((subDoc) => subDoc.data()));
+      }
+
+      state.personsEdges = personsEdges;
+    },
+    bindCoursesByPersonId: firestoreAction(({ bindFirestoreRef }, personId) => {
+      return bindFirestoreRef(
+        "courses",
+        db
+          .collection("courses")
+          .where("mappedBy.personId", "==", personId)
+      );
+    }),
   },
 });
