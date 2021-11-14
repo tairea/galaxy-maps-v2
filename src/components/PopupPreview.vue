@@ -5,7 +5,7 @@
     <div class="ss-details">
       <div>
         <p class="info-panel-label">
-          Galaxy: <span style="color: white">{{ course.title }}</span>
+          <span class="galaxyColour">Galaxy:</span> <span style="color: white">{{ course.title }}</span>
         </p>
         <!-- <p class="info-panel-label">
           X: <span style="color: white">{{ currentNode.x }}</span>
@@ -46,7 +46,7 @@
       <v-btn
         text
         x-small
-        color="galaxyAccent"
+        color="missionAccent"
         class="close-button"
         @click="close"
       >
@@ -152,5 +152,10 @@ export default {
 .centeredFocus {
   margin-top: -100px;
   margin-left: 50px;
+}
+
+.galaxyColour {
+  color: var(--v-galaxyAccent-base);
+  font-weight: 800;
 }
 </style>

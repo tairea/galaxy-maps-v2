@@ -159,12 +159,9 @@ export default {
         if (d < shortestDistance) {
           closest = allNodePositionsArray[i];
           shortestDistance = d;
-          // console.log("new shortestDistance",shortestDistance)
         }
       }
 
-      // console.log("shortestDistance",shortestDistance)
-      // console.log("closest",closest)
       const closestNode = this.$refs.network.getNode(closest.id);
       console.log(
         "closest node is " +
@@ -179,9 +176,10 @@ export default {
       this.$store.commit("setCurrentCourseId", closestNode.courseId);
 
       // get topic ids
-      let topicsNodes = this.allNodes.filter(
+      let topicsNodes = this.personsNodesForDisplay.filter(
         (node) => node.courseId == closestNode.courseId
       );
+
       let topicsNodeIds = topicsNodes.reduce(function(output, node) {
         output.push(node.id);
         return output;
@@ -190,6 +188,9 @@ export default {
       // network fit to array of topic ids
       this.$refs.network.fit({
         nodes: topicsNodeIds,
+        offset: {
+          x: 500,
+        },
         animation: true,
       });
 
@@ -449,7 +450,8 @@ export default {
 
 .popupPanel {
   position: absolute;
-  top: 50%;
-  left: 50%;
+  // position of the PopupPreview panel
+  top: calc(50% - 10vh);
+  left: calc(75% - 10vw);
 }
 </style>
