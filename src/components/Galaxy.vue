@@ -337,8 +337,9 @@ export default {
           }
         }
 
-        // increase offset for next galaxy column
-          currentColWidth += (courseCanvasBoundaries[i].width / 2) + 300;
+        // increase offset for next galaxy column aka ** PADDING BETWEEN GALAXIES **
+
+          currentColWidth += (courseCanvasBoundaries[i].width / 2) + 600;
         // keep track of largest height
         if (courseCanvasBoundaries[i].height > maxRowHeight) {
           maxRowHeight = courseCanvasBoundaries[i].height + 300;
@@ -420,6 +421,7 @@ export default {
         animation: true,
       });
     },
+    // this controls the fit zoom animation
     zoomToNodes(nodes) {
       // get node ids
       var nodeIds = nodes.map((x => x.id));
@@ -429,8 +431,13 @@ export default {
       console.log("fit");
       this.$refs.network.fit({
         nodes: nodeIds,
+        minZoomLevel: 0.2, // <-- this doesnt work on this version of vis-network. needs to be at least v8.5.0. but vue2vis is v7.4.0
         animation: true,
       });
+      // this.$refs.network.moveTo({
+      //   scale: 0.2,
+      //   animation: true
+      // }); 
     },
     togglePopup() {
       this.popupPreview = !this.popupPreview;

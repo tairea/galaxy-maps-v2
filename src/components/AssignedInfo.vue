@@ -17,7 +17,7 @@
         <Person v-for="person in people" :person="person" :key="person.id" />
       </div>
 
-      <p v-else class="assigned-status">Nobody is assigned to this Galaxy</p>
+      <p v-if="cohorts.length == 0 && organisations.length == 0 && people.length == 0" class="assigned-status">Nobody is assigned to this Galaxy</p>
       <AssignCohortDialog :assignCohorts="true" />
     </div>
 
@@ -52,7 +52,9 @@ export default {
     Course,
     AssignCohortDialog,
   },
-  mounted() {},
+  mounted() {
+    console.log("got cohorts FROM ASSIGNED: ", this.cohorts)
+  },
   computed: {},
   data() {
     return {};

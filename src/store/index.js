@@ -38,7 +38,9 @@ export default new Vuex.Store({
       return state.courses.find((course) => course.id === id);
     },
     getTopicById: (state) => (id) => {
-      return state.topics.find((topic) => topic.id === id);
+      const topic = state.topics.find((topic) => topic.id === id);
+      console.log("TOPIC IS:", topic)
+      return topic
     },
     getCohortById: (state) => (id) => {
       return state.cohorts.find((cohort) => cohort.id === id);
@@ -65,29 +67,39 @@ export default new Vuex.Store({
     getPersonById: (state) => (id) => {
       state.people.filter((person) => person.id === id);
     },
+
+
+
     getCohortsInThisCourse: (state) => (id) => {
       //go to cohorts, and check if they in courses with this id
       let cohortsInCourse = state.cohorts.filter((cohort) => {
         if (cohort.courses) {
-          cohort.courses.some((courseId) => courseId == id);
+          return cohort.courses.some((courseId) => courseId == id);
+        } else {
+          return false
         }
       });
       return cohortsInCourse;
     },
+
+
+
     getOrganisationsInThisCourse: (state) => (id) => {
-      console.log("state.organisations", state.organisations);
       let organisationsInCourse = state.organisations.filter((organisation) => {
         if (organisation.courses) {
-          organisation.courses.some((courseId) => courseId == id);
+          return organisation.courses.some((courseId) => courseId == id);
+        } else {
+          return false
         }
       });
       return organisationsInCourse;
     },
     getPeopleInThisCourse: (state) => (id) => {
-      console.log("state.people", state.people);
       let peopleInCourse = state.people.filter((person) => {
         if (person.assignedCourses) {
-          person.assignedCourses.some((courseId) => courseId == id);
+          return person.assignedCourses.some((courseId) => courseId == id);
+        } else {
+          return false
         }
       });
       return peopleInCourse;

@@ -16,19 +16,26 @@
       @deselect-node="deselectNode"
       @deselect-edge="deselectEdge"
       @hover-node="hoverNode"
-       @blur-node="blurNode"
+      @blur-node="blurNode"
       @zoom="zoom"
       @animation-finished="animationFinished"
       @before-drawing="beforeDrawing"
       @click="click"
       @double-click="doubleClick"
     ></network>
-      <!-- @blur-node="blurNode" -->
+    <!-- @blur-node="blurNode" -->
+
+    <!-- Attempt to put systems on top of nodes. need to explore drawing solar systems in canvas -->
+    <!-- <div v-for="system in currentCourseNodes" :key="system.id">
+      <SolarSystem :topic="getTopicById(system.id)" :coords="getDomCoords(system)" :size="'0.25em'" />
+    </div> -->
   </div>
 </template>
 
 <script>
 import { Network } from "vue2vis";
+
+import SolarSystem from "../components/SolarSystem";
 
 import { db } from "../store/firestoreConfig";
 
@@ -38,6 +45,10 @@ import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "GalaxyMap",
+  components: {
+    Network,
+    SolarSystem,
+  },
   data: () => ({
     active: false,
     addingEdge: false,
@@ -86,12 +97,8 @@ export default {
     },
     newNodePositions: {},
   }),
-  components: {
-    Network,
-  },
-    beforeDestroy() {
-    console.log(" =============== destroy gmaps network ===============")
-    this.$refs.network.destroy()
+  beforeDestroy() {
+    this.$refs.network.destroy();
   },
   async mounted() {
     console.log("current course id:", this.currentCourseId);
@@ -107,6 +114,7 @@ export default {
     clearInterval(this.intervalid1);
   },
   computed: {
+    ...mapGetters(["getTopicById"]),
     ...mapState([
       "currentCourseId",
       "currentCourseNodes",
@@ -114,8 +122,13 @@ export default {
     ]),
   },
   methods: {
+    getDomCoords(node) {
+      let domCoords = this.$refs.network.canvasToDom({x:node.x, y:node.y})
+      console.log("DOM COOOORDS: ", domCoords)
+      return domCoords
+    },
     doubleClick() {
-      this.addNodeMode()
+      this.addNodeMode();
     },
     addNodeMode() {
       this.active = true;
@@ -130,7 +143,7 @@ export default {
       this.$emit("setUiMessage", "Click and drag to connect two nodes");
       this.$refs.network.addEdgeMode();
       // disable node hover
-      this.addingEdge = true
+      this.addingEdge = true;
     },
     addNode(data) {
       if (!this.active) return;
@@ -152,22 +165,22 @@ export default {
         .set(newEdgeData)
         .then(() => {
           console.log("Edge successfully written!");
-          this.$emit("edgeSaved")
-          this.addingEdge = false
+          this.$emit("edgeSaved");
+          this.addingEdge = false;
         })
         .catch((error) => {
           console.error("Error writing node: ", error);
         });
     },
     click(data) {
-      if (data.edges.length === 0 && data.nodes.length === 0 ) {
-        this.deselectNode()
+      if (data.edges.length === 0 && data.nodes.length === 0) {
+        this.deselectNode();
       }
       // this.$emit("setUiMessage", "");
     },
     dragStart(data) {
       console.log("drag start", data);
-      this.deselectNode()
+      this.deselectNode();
     },
     dragging(data) {
       // if (!data.nodes[0]) return;
@@ -204,7 +217,6 @@ export default {
       // console.log("new node positions", this.newNodePositions)
     },
     async saveNodePositions() {
-      
       this.$emit("nodePositionsChangeLoading");
       const nodes = this.$refs.network.nodes;
       // spread/or map new positions to nodes
@@ -268,7 +280,7 @@ export default {
       }
     },
     deselectNode() {
-      console.log("deselect node")
+      console.log("deselect node");
       this.$emit("deselected");
       this.stopNodeAnimation();
     },
@@ -296,7 +308,9 @@ export default {
       // console.log("centered position of node is = ", this.$refs.network.canvasToDom(nodeId))
     },
     hoverNode(data) {
-      if (this.addingEdge == true) { return }
+      if (this.addingEdge == true) {
+        return;
+      }
       this.stopNodeAnimation();
       const nodeId = data.node;
       const hoveredNode = this.$refs.network.getNode(nodeId);
@@ -352,5 +366,6 @@ export default {
 .full-height {
   width: 100%;
   height: 100%;
+
 }
 </style>

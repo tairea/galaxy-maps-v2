@@ -3,10 +3,10 @@
     <!-- USER MENU TOPBAR -->
     <div class="blackBar ">
       <div class="d-flex justify-center align-center">
-        <v-img :src="`https://i.pravatar.cc/300`" class="profilePic"></v-img>
+        <v-img :src="`http://tutoa.co.nz/portal/img/ian.23cb54e5.jpg`" class="profilePic"></v-img>
       </div>
       <div class="username" style="">
-        Pā Ian
+        {{person.firstName}} {{person.lastName}}
       </div>
     </div>
     <!-- USER MENU HIDDEN-->
@@ -27,6 +27,8 @@
 <script>
 import firebase from "firebase";
 
+import { mapState } from "vuex";
+
 import ThemeColourPicker from "../components/ThemeColourPicker";
 
 export default {
@@ -37,6 +39,11 @@ export default {
   data: () => ({
     darkSwitch: true,
   }),
+  computed: {
+  ...mapState([
+        "person"
+      ]),
+  },
   methods: {
     changeTheme() {
       this.$vuetify.theme.dark = this.darkSwitch;

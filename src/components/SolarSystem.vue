@@ -1,5 +1,6 @@
 <template>
   <div class="solarsystem" :style="{height: height ? height : 'auto'}" @click="routeToTopic(topic)">
+  <!-- <div class="solarsystem" :style="{height: height ? height : 'auto', top: coords.x + 'px', left: coords.y + 'px'}" @click="routeToTopic(topic)"> -->
     <div class="scene">
       <ul class="system" :style="{ fontSize: size }">
         <li class="orbit top-most-orbit">
@@ -35,7 +36,7 @@ import { mapState } from "vuex";
 
 export default {
   name: "SolarSystem",
-  props: ["topic", "size", "height"],
+  props: ["topic", "size", "height", "coords"],
   data() {
     let durationRanges = [
       [0, 0],

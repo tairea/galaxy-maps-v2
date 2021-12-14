@@ -1,11 +1,8 @@
 <template>
   <div>
     <v-dialog v-model="dialog" width="40%" light>
-
       <div class="create-dialog">
-
         <div class="create-dialog-content">
-
           <!-- Title/Desc Header -->
           <div class="dialog-info">
             <p class="dialog-title">{{ dialogTitle }}</p>
@@ -91,60 +88,11 @@
           : infoPopupPosition.x + 30 + 'px',
       }"
     >
-      <div class="ss-details">
-        <div v-if="type == 'node'">
-          <p class="info-panel-label">
-            Node: <span style="color: white">{{ currentNode.label }}</span>
-          </p>
-          <p class="info-panel-label">
-            X: <span style="color: white">{{ currentNode.x }}</span>
-          </p>
-          <p class="info-panel-label">
-            Y: <span style="color: white">{{ currentNode.y }}</span>
-          </p>
-        </div>
-        <div v-else-if="type == 'edge'">
-          <p class="info-panel-label">
-            Edge: <span style="color: white">{{ currentEdge.id }}</span>
-          </p>
-          <p class="info-panel-label">
-            X: <span style="color: white">{{ currentEdge.DOMx }}</span>
-          </p>
-          <p class="info-panel-label">
-            Y: <span style="color: white">{{ currentEdge.DOMy }}</span>
-          </p>
-        </div>
-
-        <v-btn
-          class="map-button"
-          fab
-          dark
-          small
-          color="baseAccent"
-          outlined
-          tile
-          title="Edit"
-          @click="editNode"
-        >
-          <v-icon>mdi-pencil</v-icon>
-        </v-btn>
-        <v-btn
-          class="map-button ml-4"
-          fab
-          dark
-          small
-          color="red"
-          outlined
-          tile
-          title="Delete"
-          @click="deleteFromMap"
-          :loading="deleting"
-        >
-          <v-icon>mdi-delete</v-icon>
-        </v-btn>
-      </div>
       <div class="ss-preview">
-        <SolarSystem :topic="getTopicById(this.currentNode.id)" :size="'0.25em'" />
+        <SolarSystem
+          :topic="getTopicById(this.currentNode.id)"
+          :size="'0.25em'"
+        />
         <v-btn
           class="view-ss-button pa-5"
           dark
@@ -158,14 +106,59 @@
           View Solar System
         </v-btn>
         <v-btn
-        text
-        x-small
-        color="missionAccent"
-        class="close-button"
-        @click="close"
+          text
+          x-small
+          color="missionAccent"
+          class="close-button"
+          @click="close"
         >
           <v-icon>mdi-close</v-icon>
         </v-btn>
+      </div>
+
+      <div class="ss-details">
+        {{ this.currentNode.label }}
+        <div class="ss-details-buttons">
+          <v-btn
+            class="map-button"
+            fab
+            dark
+            x-small
+            color="baseAccent"
+            outlined
+            tile
+            title="Edit"
+            @click="editNode"
+          >
+            <v-icon>mdi-pencil</v-icon>
+          </v-btn>
+          <v-btn
+            class="map-button ml-2"
+            fab
+            dark
+            x-small
+            color="red"
+            outlined
+            tile
+            title="Delete"
+            @click="deleteFromMap"
+            :loading="deleting"
+          >
+            <v-icon>mdi-delete</v-icon>
+          </v-btn>
+        </div>
+      </div>
+
+      <div class="ss-missions">
+        <div v-for="(task, index) in getTopicTasks()" :key="task.id">
+          <v-simple-table>
+            <tr>
+              <td><h5 class="mission-text">MISSION {{ index + 1 }}:</h5></td>
+              <td><h5 class="mission-text">{{ task.title }}</h5></td>
+              <td v-if="task.duration"><h5 class="mission-text">{{ task.duration }} MINS</h5></td>
+            </tr>
+          </v-simple-table>
+        </div>
       </div>
     </div>
   </div>
@@ -185,7 +178,7 @@ export default {
   props: ["course", "coords"],
   async mounted() {
     // bind to store all topics for this course
-    await this.$store.dispatch("bindAllCourseTopics", this.currentCourseId);
+    // await this.$store.dispatch("bindAllCourseTopics", this.currentCourseId);
   },
   data() {
     return {
@@ -216,13 +209,17 @@ export default {
     },
   },
   methods: {
+    getTopicTasks() {
+      const topic = this.getTopicById(this.currentNode.id);
+      return topic.tasks;
+    },
     cancel() {
       console.log("cancel");
       this.dialog = false;
       // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
     },
     close() {
-      this.deselect()
+      this.deselect();
     },
     deleteFromMap() {
       console.log("delete");
@@ -371,7 +368,7 @@ export default {
         });
     },
     routeToSolarSystem() {
-      console.log("route to ss", this.currentNode.id)
+      console.log("route to ss", this.currentNode.id);
       // save current topic to store
       this.$store.commit("setCurrentTopicId", this.currentNode.id);
       // route to topic/solar system
@@ -381,7 +378,7 @@ export default {
           topicId: this.currentNode.id,
         },
       });
-    }
+    },
   },
 };
 </script>
@@ -438,18 +435,18 @@ export default {
   position: absolute;
   backdrop-filter: blur(8px);
   display: flex;
+  flex-direction: column;
   z-index: 3;
 
   .ss-preview {
-    border-left: 1px solid var(--v-missionAccent-base);
-    min-width: 20vw;
+    min-width: 25vw;
     min-height: 20vh;
     position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    overflow:hidden;
+    overflow: hidden;
 
     .view-ss-button {
       position: absolute;
@@ -465,7 +462,19 @@ export default {
     }
   }
   .ss-details {
+    border-top: 1px solid var(--v-missionAccent-base);
     padding: 20px;
+    text-align: center;
+
+    .ss-details-buttons {
+      
+      
+      // border: 1px solid yellow;
+    }
+  }
+
+  .ss-missions {
+    border-top: 1px solid var(--v-missionAccent-base);
   }
 
   .info-panel-label {
@@ -478,5 +487,10 @@ export default {
 .centeredFocus {
   margin-top: -100px;
   margin-left: 50px;
+}
+
+.mission-text {
+  color: var(--v-missionAccent-base);
+  padding: 10px 20px;
 }
 </style>
