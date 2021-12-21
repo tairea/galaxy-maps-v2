@@ -9,6 +9,7 @@ import CohortList from "../views/CohortList.vue";
 import StudentList from "../views/StudentList.vue";
 import Login from "../views/Login.vue";
 import Register from "../views/Register.vue";
+import LandingPage from "../views/LandingPage.vue";
 
 import firebase from "firebase";
 import store from "../store";
@@ -18,6 +19,11 @@ Vue.use(VueRouter);
 const routes = [
   {
     path: "/",
+    name: "Landing",
+    component: LandingPage,
+  },
+  {
+    path: "/base",
     name: "Home",
     meta: {
       authRequired: true,

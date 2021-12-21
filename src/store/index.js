@@ -28,7 +28,10 @@ export default new Vuex.Store({
     allNodesForDisplay: [],
     personsNodes: [],
     personsNodesForDisplay: [],
+    personsAssignedNodes: [],
+    personsAssignedNodesForDisplay: [],
     personsEdges: [],
+    personsAssignedEdges: [],
   },
   getters: {
     user: (state) => state.user,
@@ -67,9 +70,6 @@ export default new Vuex.Store({
     getPersonById: (state) => (id) => {
       state.people.filter((person) => person.id === id);
     },
-
-
-
     getCohortsInThisCourse: (state) => (id) => {
       //go to cohorts, and check if they in courses with this id
       let cohortsInCourse = state.cohorts.filter((cohort) => {
@@ -81,9 +81,6 @@ export default new Vuex.Store({
       });
       return cohortsInCourse;
     },
-
-
-
     getOrganisationsInThisCourse: (state) => (id) => {
       let organisationsInCourse = state.organisations.filter((organisation) => {
         if (organisation.courses) {
@@ -282,9 +279,7 @@ export default new Vuex.Store({
       const personsNodes = [];
 
       const querySnapshot = await db.collection("courses").where("mappedBy.personId", "==", personId).get()
-
-      // let count = 0;
-
+      // let count = 0; // if counting groups
       // get the topics (nodes) in that course
       for (const doc of querySnapshot.docs) {
         const subQuerySnapshot = await db
@@ -302,12 +297,42 @@ export default new Vuex.Store({
             return node;
           })
         );
+
         // count++;
       }
       console.log("personsNodes from Firestore: ", personsNodes);
       state.personsNodes = personsNodes; // source of truth
       state.personsNodesForDisplay = personsNodes; // store all nodes
     },
+    // TODO: WIP (get assigned courses)
+    // async getAssignedNodesByPersonId({state}, personId) {
+    //   const personsAssignedNodes = [];
+    //     // get the courseId from assignedCourses
+    //     await db.collection("people").doc(personId).get().then((doc) => {
+    //       // loop array of assigned courses
+    //       for (const courseId of doc.data().assignedCourses) {
+    //         console.log("course id from assigned ==>> ", courseId)
+    //         const subQuerySnapshot = await db
+    //           .collection("courses")
+    //           .doc(courseId)
+    //           .collection("map-nodes")
+    //           .get();
+    
+    //           personsAssignedNodes.push(
+    //           ...subQuerySnapshot.docs.map((subDoc) => {
+    //             const node = subDoc.data();
+    //             node.courseId = courseId; // add course id to nodes list for some reason
+    //             //node.group = count; // add group to nodes list for some reason
+    //             // node.color = stringToColour(node.label)
+    //             return node;
+    //           })
+    //         );
+    //       }
+    //       console.log("personsAssignedNodes from Firestore: ", personsAssignedNodes);
+    //       state.personsAssignedNodes = personsAssignedNodes; // source of truth
+    //       state.personsAssignedNodesForDisplay = personsAssignedNodes; // store all nodes
+    //     })
+    // },
     async getEdgesByPersonId({ state }, personId) {
       const personsEdges = [];
 

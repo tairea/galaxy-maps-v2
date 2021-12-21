@@ -1,25 +1,45 @@
 <template>
-  <v-col
-    class="d-flex flex-column justify-start align-center cohort"
-    :cols="cols"
-    @click="routeToCohort(cohort)"
-  >
-    <v-img
-      v-if="cohort.image.url"
-      :src="cohort.image.url"
-      max-width="60px"
-      max-height="60px"
-      class="cohort-image"
-    ></v-img>
-    <div v-else class="imagePlaceholder">{{ first3Letters(cohort.name) }}</div>
-    <h3 class="overline">{{ cohort.name }}</h3>
+  <v-col :cols="cols" @click="routeToCohort(cohort)" class="d-flex flex-column justify-start align-center cohort">
+    <div
+      class="d-flex flex-column justify-start align-center cohort"
+      v-if="!tooltip"
+    >
+      <v-img
+        v-if="cohort.image.url"
+        :src="cohort.image.url"
+        max-width="60px"
+        max-height="60px"
+        class="cohort-image"
+      ></v-img>
+      <div v-else class="imagePlaceholder">
+        {{ first3Letters(cohort.name) }}
+      </div>
+      <h3 class="overline">{{ cohort.name }}</h3>
+    </div>
+    <v-tooltip v-else bottom>
+      <template v-slot:activator="{ on, attrs }">
+        <div v-bind="attrs" v-on="on">
+          <v-img
+            v-if="cohort.image.url"
+            :src="cohort.image.url"
+            max-width="40px"
+            max-height="40px"
+            class="cohort-image"
+          ></v-img>
+          <div v-else class="imagePlaceholder">
+            {{ first3Letters(cohort.name) }}
+          </div>
+        </div>
+      </template>
+      <h3 class="overline">{{ cohort.name }}</h3>
+    </v-tooltip>
   </v-col>
 </template>
 
 <script>
 export default {
   name: "Cohort",
-  props: ["cohort", "cols"],
+  props: ["cohort", "cols", "tooltip"],
   data() {
     return {};
   },

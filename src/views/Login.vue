@@ -7,7 +7,7 @@
       <!-- <div class="d-flex justify-center align-center"> -->
       <!-- <v-img class="galaxy-image" :src=""></v-img> -->
       <!-- </div> -->
-      <v-form ref="form" v-model="valid" lazy-validation class="my-6">
+      <v-form ref="form" v-model="valid" lazy-validation class="my-6" @keyup.native.enter="valid && login($event)">
         <v-text-field
           type="email"
           v-model="email"
@@ -44,7 +44,15 @@
       >
     </div>
 
-  
+    <!-- Snackbar -->
+    <v-snackbar v-model="snackbar">
+      {{ snackbarText }}
+      <template v-slot:action="{ attrs }">
+        <v-btn color="pink" text v-bind="attrs" :to="{ path: '/base/galaxy'}">
+          OK
+        </v-btn>
+      </template>
+    </v-snackbar>
   </div>
 </template>
 
@@ -61,6 +69,8 @@ export default {
       (v) => !!v || "E-mail is required",
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
     ],
+    snackbar: false,
+    snackbarText: 'Successfully signed in',
   }),
   mounted() {},
   methods: {
@@ -75,8 +85,7 @@ export default {
             .signInWithEmailAndPassword(this.email, this.password);
         })
         .then(() => {
-          alert("Successfully logged in");
-          this.$router.push("/galaxy");
+          this.snackbar = true;       
         })
         .catch((error) => {
           alert(error.message);

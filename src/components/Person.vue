@@ -17,17 +17,16 @@
           <div class="imagePlaceholder">
             {{ first3Letters(person.firstName) }}
           </div>
-          <h3 class="overline">{{ cohortOrg.name }}</h3>
         </div>
       </template>
-      <span>{{ person.firstName }}</span>
+      <span>{{ person.firstName + " " + person.lastName }}</span>
     </v-tooltip>
   </v-col>
 </template>
 
 <script>
 export default {
-  name: "Cohort",
+  name: "Person",
   props: ["person", "cols"],
   data() {
     return {};
@@ -57,13 +56,14 @@ export default {
   }
 
   .imagePlaceholder {
-    width: 60px;
-    height: 60px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background-color: rgba(200, 200, 200, 0.3);
     display: flex;
     justify-content: center;
     align-items: center;
+    font-size: 0.8rem;
   }
 }
 </style>

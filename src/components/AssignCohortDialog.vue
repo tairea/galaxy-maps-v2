@@ -425,25 +425,26 @@ export default {
         });
 
       // if not create new id (new person in people collection)
-      db.collection("people")
-        .add({
-          email: person.email,
-          assignedCourses: firebase.firestore.FieldValue.arrayUnion(
-            this.currentCourseId
-          ),
-        })
-        .then(() => {
-          console.log(
-            "Document successfully updated! New Person Created and assigned to Course!"
-          );
-          this.loading = false;
-          this.dialog = false;
-          // empty field
-          this.person.email = "";
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
-        });
+      // TODO: At the moment it does both
+      // db.collection("people")
+      //   .add({
+      //     email: person.email,
+      //     assignedCourses: firebase.firestore.FieldValue.arrayUnion(
+      //       this.currentCourseId
+      //     ),
+      //   })
+      //   .then(() => {
+      //     console.log(
+      //       "Document successfully updated! New Person Created and assigned to Course!"
+      //     );
+      //     this.loading = false;
+      //     this.dialog = false;
+      //     // empty field
+      //     this.person.email = "";
+      //   })
+      //   .catch((error) => {
+      //     console.error("Error writing document: ", error);
+      //   });
     },
     assignCohortToCourse(cohort) {
       this.loading = true;

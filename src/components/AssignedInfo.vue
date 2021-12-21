@@ -1,23 +1,50 @@
 <template>
   <div id="assigned-info">
-    <h2 class="assigned-label">Assign to {{assignCourses ? "Galaxy Maps" : assignCohorts ? "Cohorts" : "?"}}</h2>
+    <h2 class="assigned-label">
+      Assigned to:
+    </h2>
 
     <!-- ASSIGNED COHORTS INFO -->
     <div v-if="assignCohorts">
       <!-- Cohorts -->
       <div v-if="cohorts.length > 0">
-        <Cohort v-for="cohort in cohorts" :cohort="cohort" :key="cohort.id" />
+        <p class="overline assignedToLabel ma-0">Cohorts</p>
+        <v-row class="my-1">
+          <Cohort
+            v-for="cohort in cohorts"
+            :cohort="cohort"
+            :key="cohort.id"
+            :tooltip="true"
+          />
+        </v-row>
       </div>
       <!-- Organisations -->
       <div v-if="organisations.length > 0">
-        <Organisation v-for="organisation in organisations" :organisation="organisation" :key="organisation.id" />
+        <p class="overline assignedToLabel ma-0">Organisations</p>
+        <v-row class="my-1">
+          <Organisation
+            v-for="organisation in organisations"
+            :organisation="organisation"
+            :key="organisation.id"
+          />
+        </v-row>
       </div>
       <!-- People -->
       <div v-if="people.length > 0">
-        <Person v-for="person in people" :person="person" :key="person.id" />
+        <p class="overline assignedToLabel ma-0">Individuals</p>
+        <v-row class="my-1">
+          <Person v-for="person in people" :person="person" :key="person.id" />
+        </v-row>
       </div>
 
-      <p v-if="cohorts.length == 0 && organisations.length == 0 && people.length == 0" class="assigned-status">Nobody is assigned to this Galaxy</p>
+      <p
+        v-if="
+          cohorts.length == 0 && organisations.length == 0 && people.length == 0
+        "
+        class="assigned-status"
+      >
+        Nobody is assigned to this Galaxy
+      </p>
       <AssignCohortDialog :assignCohorts="true" />
     </div>
 
@@ -27,9 +54,8 @@
         <Course v-for="course in courses" :course="course" :key="course.id" />
       </div>
       <p v-else class="assigned-status">No Galaxies assigned to this Cohort</p>
-      <AssignCohortDialog  :assignCourses="true"  />
+      <AssignCohortDialog :assignCourses="true" />
     </div>
-
   </div>
 </template>
 
@@ -44,7 +70,14 @@ import Person from "../components/Person";
 
 export default {
   name: "AssignedInfo",
-  props: ["assignCohorts", "assignCourses", "cohorts", "organisations", "people", "courses"],
+  props: [
+    "assignCohorts",
+    "assignCourses",
+    "cohorts",
+    "organisations",
+    "people",
+    "courses",
+  ],
   components: {
     Cohort,
     Organisation,
@@ -53,7 +86,7 @@ export default {
     AssignCohortDialog,
   },
   mounted() {
-    console.log("got cohorts FROM ASSIGNED: ", this.cohorts)
+    console.log("got cohorts FROM ASSIGNED: ", this.cohorts);
   },
   computed: {},
   data() {
@@ -87,6 +120,12 @@ export default {
     color: var(--v-background-base);
     padding: 0px 15px 0px 5px;
     clip-path: polygon(0 0, 100% 0, 90% 100%, 0% 100%);
+  }
+
+  .assignedToLabel {
+    font-size: 0.8rem;
+    color: var(--v-baseAccent-base);
+    border-bottom: 1px solid var(--v-baseAccent-base);
   }
 
   .assigned-status {

@@ -9,7 +9,7 @@
         :organisations="getOrganisationsInThisCourse(courseId ? courseId : courseIdFromRouter )"
         :people="getPeopleInThisCourse(courseId ? courseId : courseIdFromRouter )"
       />
-      <BackButton :toPath="'/galaxy'" />
+      <BackButton :toPath="'/base/galaxy'" />
     </div>
     <div id="main-section">
       <!-- Map Buttons -->

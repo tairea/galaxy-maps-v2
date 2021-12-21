@@ -47,7 +47,8 @@ export default {
     // GET ONLY USERS!!
     await this.$store.dispatch("getNodesByPersonId",this.user.data.id);
     await this.$store.dispatch("getEdgesByPersonId",this.user.data.id);
-
+    // get assigned nodes & edges
+    await this.$store.dispatch("getAssignedNodesByPersonId",this.user.data.id);
     //total nodes
     // this.allNodesLength = this.allNodesLength;
 

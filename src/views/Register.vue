@@ -7,6 +7,7 @@
         GALAXY MAPS is currently in ALPHA testing.
         <br /><br />
         If you would like early access, please email your request to
+        <br /><br />
         <a href="mailto:team@galaxymaps.io">team@galaxymaps.io</a>
       </p>
 
@@ -78,7 +79,7 @@ export default {
     BackButton,
   },
   data: () => ({
-    closed: false,
+    closed: true,
     valid: true,
     person: {
       firstName: "",

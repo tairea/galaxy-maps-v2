@@ -6,7 +6,7 @@
         :assignCourses="true"
         :courses="getCoursesInThisCohort(currentCohortId)"
       />
-      <BackButton :toPath="'/cohorts'" />
+      <BackButton :toPath="'/base/cohorts'" />
     </div>
 
     <div id="main-section">

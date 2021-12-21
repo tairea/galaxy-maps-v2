@@ -5,6 +5,8 @@
     <router-view></router-view>
     <UserBar/>
 
+    <p>Yoza</p>
+
   </v-app>
 </template>
 
