@@ -374,6 +374,37 @@ export default new Vuex.Store({
 
       state.personsEdges = personsEdges;
     },
+    async getAssignedEdgesByPersonId({ state }, personId) {
+      const personsAssignedEdges = [];
+      // get the courseId from assignedCourses
+      const doc = await db
+        .collection("people")
+        .doc(personId)
+        .get();
+      // loop array of assigned courses
+      if (doc.data().assignedCourses) {
+        for (const courseId of doc.data().assignedCourses) {
+          console.log("course id from assigned ==>> ", courseId);
+          const subQuerySnapshot = await db
+            .collection("courses")
+            .doc(courseId)
+            .collection("map-edges")
+            .get();
+
+            personsAssignedEdges.push(
+            ...subQuerySnapshot.docs.map((subDoc) => {
+              const edge = subDoc.data();
+              return edge;
+            })
+          );
+        }
+      }
+      console.log(
+        "personsAssignedEdges from Firestore: ",
+        personsAssignedEdges
+      );
+      state.personsAssignedEdges = personsAssignedEdges; // source of truth
+    },
     bindCoursesByPersonId: firestoreAction(({ bindFirestoreRef }, personId) => {
       return bindFirestoreRef(
         "courses",

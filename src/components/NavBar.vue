@@ -1,34 +1,61 @@
 <template>
   <div class="topCenterBar">
-      <div class="inner">
-        <v-tabs
-          fixed-tabs
-          background-color="transparent"
-          dark
-          slider-color="baseAccent"
-          v-model="activeTab"
-          height=""
-        >
-          <v-tab v-for="tab in tabs" :key="tab.id" :to="tab.route" exact>
-            <div class="baseAccent--text tab">{{ tab.name }}</div>
-          </v-tab>
-
-        </v-tabs>
-      </div>
+    <div class="inner">
+      <v-tabs
+        v-if="userType === 'student'"
+        fixed-tabs
+        background-color="transparent"
+        dark
+        slider-color="baseAccent"
+        v-model="activeTab"
+        height=""
+      >
+        <v-tab v-for="tab in tabsStudent" :key="tab.id" :to="tab.route" exact>
+          <div class="baseAccent--text tab">{{ tab.name }}</div>
+        </v-tab>
+      </v-tabs>
+      <v-tabs
+        v-else
+        fixed-tabs
+        background-color="transparent"
+        dark
+        slider-color="baseAccent"
+        v-model="activeTab"
+        height=""
+      >
+        <v-tab v-for="tab in tabs" :key="tab.id" :to="tab.route" exact>
+          <div class="baseAccent--text tab">{{ tab.name }}</div>
+        </v-tab>
+      </v-tabs>
     </div>
+  </div>
 </template>
 
 <script>
 export default {
   name: "NavBar",
-
+  props: ["userType"],
  data() {
     return {
-      activeTab: `/home/galaxy`,
+      activeTab: `/base/galaxy`,
       tabs: [
         { id: 1, name: "MY GALAXIES", route: `/base/galaxy` },
         { id: 2, name: "COHORTS", route: `/base/cohorts` },
         { id: 3, name: "ALL STUDENTS", route: `/base/students` },
+      ],
+      tabsUser: [
+        { id: 1, name: "MY GALAXIES", route: `/base/galaxy` },
+        { id: 2, name: "COHORTS", route: `/base/cohorts` },
+        { id: 3, name: "ALL STUDENTS", route: `/base/students` },
+      ],
+      tabsTeacher: [
+        { id: 2, name: "COHORTS", route: `/base/cohorts` },
+        { id: 3, name: "ALL STUDENTS", route: `/base/students` },
+      ],
+      tabsStudent: [
+        { id: 1, name: "ASSIGNED GALAXIES", route: { name: '/base/galaxy', params: { assigned: true }} },
+        { id: 2, name: "MY GALAXIES", route: `/base/galaxy` },
+        { id: 3, name: "MY DASHBOARD", route: `/base/dashboard` },
       ],
     };
   },
@@ -36,10 +63,9 @@ export default {
 </script>
 
 <style lang="scss">
-
 .topCenterBar {
   position: absolute;
-  top:0;
+  top: 0;
   left: 50%;
   transform: translate(-50%, 0%);
 

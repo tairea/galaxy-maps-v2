@@ -1,7 +1,7 @@
 <template>
   <div class="fullHeight">
     <div class="flexContainer">
-      <Galaxy />
+      <Galaxy :showAssigned="assignedGalaxies" />
     </div>
     <div class="buttons">
       <CreateEditDeleteGalaxyDialog :edit="false"/>
@@ -28,7 +28,7 @@ export default {
   },
   mounted() {
     // trigger VuexFire bindCourses in Store
-    this.bindAll();
+    // this.bindAll(); // <== DO WE NEED TO BIND HERE??
     console.log("this.courses", this.courses);
   },
   computed: {
@@ -37,6 +37,7 @@ export default {
   data() {
     return {
       loading: true,
+      assignedGalaxies: this.$route.params.assigned, // true or false (from navbar.vue to route)
     };
   },
   methods: {
@@ -46,7 +47,7 @@ export default {
       this.$store.dispatch("bindAllCohorts");
       this.$store.dispatch("bindAllOrganisations");
       this.$store.dispatch("bindAllPeople");
-      this.$store.dispatch("getPersonById", this.user.data.id);
+      // this.$store.dispatch("getPersonById", this.user.data.id); // already dispatched on main.js
     },
   },
 };

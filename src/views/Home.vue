@@ -1,11 +1,9 @@
 <template>
   <v-app class="bg">
     
-    <NavBar />  
+    <NavBar :userType="userType()" />  
     <router-view></router-view>
     <UserBar/>
-
-    <p>Yoza</p>
 
   </v-app>
 </template>
@@ -15,22 +13,32 @@
 import UserBar from "../components/UserBar";
 import NavBar from "../components/NavBar";
 
+import { mapGetters } from "vuex";
+
 export default {
-  name: "Home",
+  name: "HomeLearner",
   components: {
     UserBar,
     NavBar,
   },
+  mounted() {
+    console.log("have we got the person?",this.person)
+  },
+  computed: {
+    ...mapGetters(["person"]),
+  },
   data() {
     return {
-      activeTab: `/home/galaxy`,
-      tabs: [
-        { id: 1, name: "GALAXIES", route: `/galaxy` },
-        { id: 2, name: "SCHOOLS", route: `/schools` },
-        { id: 3, name: "ALL STUDENTS", route: `/students` },
-      ],
+      
     };
   },
+  methods: {
+    userType() {
+      console.log("usertype is:",this.person)
+      //return either user, teacher, student
+      return "student"
+    }
+  }
 };
 </script>
 

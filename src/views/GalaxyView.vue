@@ -129,7 +129,6 @@ export default {
   },
   data() {
     return {
-      courseIdFromRouter: this.$route.params.courseId,
       addNodeMode: false,
       addEdgeMode: false,
       uiMessage: "",
