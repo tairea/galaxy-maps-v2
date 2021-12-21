@@ -178,7 +178,7 @@ export default new Vuex.Store({
       } else {
         commit("SET_USER", null);
       }
-      console.log("signed in user:", user.email);
+      console.log("signed in user:", user?.email);
     },
     // ===== Firestore - BIND ALL
     bindAllCourses: firestoreAction(({ bindFirestoreRef }) => {
@@ -320,8 +320,8 @@ export default new Vuex.Store({
         .doc(personId)
         .get();
       // loop array of assigned courses
-      if (doc.data().assignedCourses) {
-        for (const courseId of doc.data().assignedCourses) {
+      if (doc.data()?.assignedCourses) {
+        for (const courseId of doc.data()?.assignedCourses) {
           console.log("course id from assigned ==>> ", courseId);
           const subQuerySnapshot = await db
             .collection("courses")

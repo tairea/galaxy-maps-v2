@@ -1,12 +1,15 @@
 <template>
   <div class="userMenu">
     <!-- USER MENU TOPBAR -->
-    <div class="blackBar ">
+    <div class="blackBar">
       <div class="d-flex justify-center align-center">
-        <v-img :src="`http://tutoa.co.nz/portal/img/ian.23cb54e5.jpg`" class="profilePic"></v-img>
+        <v-img
+          :src="`http://tutoa.co.nz/portal/img/ian.23cb54e5.jpg`"
+          class="profilePic"
+        ></v-img>
       </div>
       <div class="username" style="">
-        {{person.firstName}} {{person.lastName}}
+        {{ person.firstName }} {{ person.lastName }}
       </div>
     </div>
     <!-- USER MENU HIDDEN-->
@@ -24,45 +27,46 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { Component, Vue } from "vue-property-decorator";
+
 import firebase from "firebase";
 
 import { mapState } from "vuex";
 
-import ThemeColourPicker from "../components/ThemeColourPicker";
+import ThemeColourPicker from "@/components/ThemeColourPicker.vue";
 
-export default {
-  name: "UserBar",
+const UserBarBase = Vue.extend({
+  computed: {
+    ...mapState(["person"]),
+  },
+});
+
+@Component({
   components: {
     ThemeColourPicker,
   },
-  data: () => ({
-    darkSwitch: true,
-  }),
-  computed: {
-  ...mapState([
-        "person"
-      ]),
-  },
-  methods: {
-    changeTheme() {
-      this.$vuetify.theme.dark = this.darkSwitch;
-    },
-    logout() {
-      firebase
-        .auth()
-        .signOut()
-        .then(() => {
-          alert("Successfully logged out");
-          this.$router.push("/login");
-        })
-        .catch((error) => {
-          alert(error.message);
-          this.$router.push("/");
-        });
-    },
-  },
-};
+})
+export default class UserBar extends UserBarBase {
+  darkSwitch = true;
+
+  changeTheme() {
+    this.$vuetify.theme.dark = this.darkSwitch;
+  }
+  logout() {
+    firebase
+      .auth()
+      .signOut()
+      .then(() => {
+        alert("Successfully logged out");
+        this.$router.push("/login");
+      })
+      .catch((error) => {
+        alert(error.message);
+        this.$router.push("/");
+      });
+  }
+}
 </script>
 
 <style lang="scss" scoped>

@@ -1,45 +1,30 @@
 <template>
   <v-app class="bg">
-    
-    <NavBar />  
+    <NavBar />
     <router-view></router-view>
-    <UserBar/>
+    <UserBar />
 
     <p>Yoza</p>
-
   </v-app>
 </template>
 
-<script>
-// @ is an alias to /src
-import UserBar from "../components/UserBar";
-import NavBar from "../components/NavBar";
+<script lang="ts">
+import { Component, Vue } from "vue-property-decorator";
+import UserBar from "@/components/UserBar.vue";
+import NavBar from "@/components/NavBar.vue";
 
-export default {
-  name: "Home",
+@Component({
   components: {
     UserBar,
     NavBar,
   },
-  data() {
-    return {
-      activeTab: `/home/galaxy`,
-      tabs: [
-        { id: 1, name: "GALAXIES", route: `/galaxy` },
-        { id: 2, name: "SCHOOLS", route: `/schools` },
-        { id: 3, name: "ALL STUDENTS", route: `/students` },
-      ],
-    };
-  },
-};
-</script>
-
-<style lang="scss" scoped>
-.bg {
-  background: var(--v-background-base);
-  overflow: hidden;
-  overflow-y: hidden; // hide vertical
-  overflow-x: hidden; // hide horizontal
+})
+export default class Home extends Vue {
+  activeTab = `/home/galaxy`;
+  tabs = [
+    { id: 1, name: "GALAXIES", route: `/galaxy` },
+    { id: 2, name: "SCHOOLS", route: `/schools` },
+    { id: 3, name: "ALL STUDENTS", route: `/students` },
+  ];
 }
-
-</style>
+</script>
