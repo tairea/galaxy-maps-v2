@@ -44,11 +44,11 @@
       >
     </div>
 
-    <!-- Snackbar -->
+    <!-- Login Error Snackbar -->
     <v-snackbar v-model="snackbar">
-      {{ snackbarText }}
+      {{ errorMsg }}
       <template v-slot:action="{ attrs }">
-        <v-btn color="pink" text v-bind="attrs" :to="{ path: '/base/galaxy'}">
+        <v-btn color="pink" text v-bind="attrs" @click="snackbar = false">
           OK
         </v-btn>
       </template>
@@ -71,6 +71,7 @@ export default {
     ],
     snackbar: false,
     snackbarText: 'Successfully signed in',
+    errorMsg: ""
   }),
   mounted() {},
   methods: {
@@ -85,10 +86,13 @@ export default {
             .signInWithEmailAndPassword(this.email, this.password);
         })
         .then(() => {
-          this.snackbar = true;       
+          console.log("Successfully logged in");
+          this.$router.push("/base/galaxy");
         })
         .catch((error) => {
-          alert(error.message);
+          this.errorMsg = error
+          this.snackbar = true
+          console.log("Login error:", error)
         });
     },
     validate() {
