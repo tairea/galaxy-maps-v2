@@ -33,7 +33,7 @@ import PopupPreview from "../components/PopupPreview";
 
 export default {
   name: "GalaxyMap",
-  // props: ["nodes",  "edges"],
+  props: ["showAssigned"],
   components: {
     Network,
     LoadingSpinner,
@@ -45,10 +45,14 @@ export default {
     // await this.$store.dispatch("getAllEdges");
 
     // GET ONLY USERS!!
-    await this.$store.dispatch("getNodesByPersonId",this.user.data.id);
-    await this.$store.dispatch("getEdgesByPersonId",this.user.data.id);
-    // get assigned nodes & edges
-    await this.$store.dispatch("getAssignedNodesByPersonId",this.user.data.id);
+    if (!showAssigned) {
+      await this.$store.dispatch("getNodesByPersonId",this.user.data.id);
+      await this.$store.dispatch("getEdgesByPersonId",this.user.data.id);
+    } else if (showAssigned) {
+      // get assigned nodes & edges
+      await this.$store.dispatch("getAssignedNodesByPersonId",this.user.data.id);
+      await this.$store.dispatch("getAssignedEdgesByPersonId",this.user.data.id);
+    }
     //total nodes
     // this.allNodesLength = this.allNodesLength;
 
@@ -76,7 +80,9 @@ export default {
       "currentCourseId",
       "allNodesLength",
       "personsNodesForDisplay",
-      "personsEdges"
+      "personsEdges",
+      "personsAssignedNodesForDisplay",
+      
     ]),
     ...mapGetters(["getCourseById","user"]),
   },
