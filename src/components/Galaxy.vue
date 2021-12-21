@@ -2,7 +2,18 @@
   <div class="full-height">
     <LoadingSpinner v-if="loading" />
     <network
-      
+      v-if="assignedOrOwned == 'assigned'"
+      ref="network"
+      class="full-height"
+      :nodes="personsAssignedNodesForDisplay"
+      :edges="personsAssignedEdges"
+      :options="network.options"
+      @zoom="zoom"
+      @click="click"
+      @hover-node="hoverNode"
+    ></network>
+    <network
+      v-else-if="assignedOrOwned == 'owned'"
       ref="network"
       class="full-height"
       :nodes="personsNodesForDisplay"
@@ -11,7 +22,6 @@
       @zoom="zoom"
       @click="click"
       @hover-node="hoverNode"
-
     ></network>
     <PopupPreview
       v-if="popupPreview"
@@ -33,7 +43,7 @@ import PopupPreview from "../components/PopupPreview";
 
 export default {
   name: "GalaxyMap",
-  props: ["showAssigned"],
+  props: ["assignedOrOwned"],
   components: {
     Network,
     LoadingSpinner,
@@ -45,26 +55,37 @@ export default {
     // await this.$store.dispatch("getAllEdges");
 
     // GET ONLY USERS!!
-    if (!showAssigned) {
-      await this.$store.dispatch("getNodesByPersonId",this.user.data.id);
-      await this.$store.dispatch("getEdgesByPersonId",this.user.data.id);
-    } else if (showAssigned) {
+    console.log("assignedOrOwned = ", this.assignedOrOwned);
+    if (this.assignedOrOwned == "owned") {
+      await this.$store.dispatch("getNodesByPersonId", this.user.data.id);
+      await this.$store.dispatch("getEdgesByPersonId", this.user.data.id);
+      console.log("nodes by person:", this.personsNodesForDisplay);
+      console.log("edges by person:", this.personsEdges);
+    } else if (this.assignedOrOwned == "assigned") {
       // get assigned nodes & edges
-      await this.$store.dispatch("getAssignedNodesByPersonId",this.user.data.id);
-      await this.$store.dispatch("getAssignedEdgesByPersonId",this.user.data.id);
+      await this.$store.dispatch(
+        "getAssignedNodesByPersonId",
+        this.user.data.id
+      );
+      await this.$store.dispatch(
+        "getAssignedEdgesByPersonId",
+        this.user.data.id
+      );
+      console.log(
+        "assigned nodes by person:",
+        this.personsAssignedNodesForDisplay
+      );
+      console.log("assigned edges by person:", this.personsAssignedEdges);
     }
     //total nodes
     // this.allNodesLength = this.allNodesLength;
 
     // see available methods
-    console.log(this.$refs.network);
+    // console.log(this.$refs.network);
 
     const updatedNodes = this.repositionCoursesBasedOnBoundaries();
-    this.$store.commit(
-      "updatePersonsNodesForDisplay",
-      updatedNodes
-    );
-  
+    this.$store.commit("updatePersonsNodesForDisplay", updatedNodes);
+
     // stop loading spinner
     this.loading = false;
 
@@ -82,9 +103,9 @@ export default {
       "personsNodesForDisplay",
       "personsEdges",
       "personsAssignedNodesForDisplay",
-      
+      "personsAssignedEdges",
     ]),
-    ...mapGetters(["getCourseById","user"]),
+    ...mapGetters(["getCourseById", "user"]),
   },
   data: () => ({
     active: false,
@@ -115,8 +136,8 @@ export default {
           length: 50, // Longer edges between nodes.
           smooth: false,
           color: {
-            inherit: false
-          }
+            inherit: false,
+          },
         },
         nodes: {
           shape: "dot",
@@ -250,7 +271,7 @@ export default {
           left: 0,
           right: 0,
           centerY: 0,
-          centerX: 0
+          centerX: 0,
         };
         // let DOMboundary = {
         //   top: 0,
@@ -334,7 +355,6 @@ export default {
 
         for (const node of allNodes) {
           if (node.courseId == courseCanvasBoundaries[i].id) {
-
             let newNode = {
               ...node,
               x: currentColWidth + node.x - courseCanvasBoundaries[i].centerX,
@@ -346,7 +366,7 @@ export default {
 
         // increase offset for next galaxy column aka ** PADDING BETWEEN GALAXIES **
 
-          currentColWidth += (courseCanvasBoundaries[i].width / 2) + 600;
+        currentColWidth += courseCanvasBoundaries[i].width / 2 + 600;
         // keep track of largest height
         if (courseCanvasBoundaries[i].height > maxRowHeight) {
           maxRowHeight = courseCanvasBoundaries[i].height + 300;
@@ -431,7 +451,7 @@ export default {
     // this controls the fit zoom animation
     zoomToNodes(nodes) {
       // get node ids
-      var nodeIds = nodes.map((x => x.id));
+      var nodeIds = nodes.map((x) => x.id);
       // this.allNodeIds = allNodeIds;
       // console.log("nodeIds to fit", nodeIds);
       // // fit
@@ -444,7 +464,7 @@ export default {
       // this.$refs.network.moveTo({
       //   scale: 0.2,
       //   animation: true
-      // }); 
+      // });
     },
     togglePopup() {
       this.popupPreview = !this.popupPreview;

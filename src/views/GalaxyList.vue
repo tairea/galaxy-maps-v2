@@ -1,11 +1,11 @@
 <template>
   <div class="fullHeight">
     <div class="flexContainer">
-      <Galaxy :showAssigned="assignedGalaxies" />
+      <Galaxy :assignedOrOwned="assignedOrOwned" />
     </div>
     <div class="buttons">
-      <CreateEditDeleteGalaxyDialog :edit="false"/>
-      <DiscoverGalaxyButton/>
+      <CreateEditDeleteGalaxyDialog :edit="false" />
+      <DiscoverGalaxyButton />
     </div>
   </div>
 </template>
@@ -28,16 +28,22 @@ export default {
   },
   mounted() {
     // trigger VuexFire bindCourses in Store
-    // this.bindAll(); // <== DO WE NEED TO BIND HERE??
-    console.log("this.courses", this.courses);
+    this.bindAll(); // <== DO WE NEED TO BIND HERE?? (eg. courses needed for popup in galaxy.vue)
+    // console.log("this.courses", this.courses);
   },
   computed: {
-    ...mapGetters(["courses", "user"]),
+    ...mapGetters(["courses", "user", "person"]),
+
+    // assignedGalaxies() {
+    //   return this.person.accountType == "student";
+    // },
   },
   data() {
     return {
       loading: true,
-      assignedGalaxies: this.$route.params.assigned, // true or false (from navbar.vue to route)
+      assignedOrOwned: this.$route.params.assignedOrOwned
+        ? this.$route.params.assignedOrOwned
+        : "",
     };
   },
   methods: {
@@ -95,6 +101,5 @@ export default {
   left: 50%;
   transform: translate(-50%, 0%);
   display: flex;
-  
 }
 </style>

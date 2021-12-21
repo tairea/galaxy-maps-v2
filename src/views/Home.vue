@@ -1,7 +1,7 @@
 <template>
   <v-app class="bg">
     <NavBar :userType="userType()" />
-    <router-view></router-view>
+    <router-view :key="$route.fullPath"></router-view>
     <UserBar />
   </v-app>
 </template>
@@ -27,9 +27,8 @@ const HomeBase = Vue.extend({
 })
 export default class Home extends HomeBase {
   userType() {
-    console.log("usertype is:", this.person);
     //return either user, teacher, student
-    return "student";
+    return this.person.accountType;
   }
 }
 </script>

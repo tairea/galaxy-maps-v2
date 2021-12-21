@@ -9,7 +9,7 @@ Vue.config.productionTip = false;
 
 firebase.auth().onAuthStateChanged((user) => {
   store.dispatch("setUser", user);
-  store.dispatch("getPersonById", user.uid);
+  store.dispatch("getPersonById", user?.uid);
 });
 
 new Vue({

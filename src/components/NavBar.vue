@@ -1,6 +1,7 @@
 <template>
   <div class="topCenterBar">
     <div class="inner">
+      <!-- Student tabs -->
       <v-tabs
         v-if="userType === 'student'"
         fixed-tabs
@@ -10,10 +11,28 @@
         v-model="activeTab"
         height=""
       >
-        <v-tab v-for="tab in tabsStudent" :key="tab.id" :to="tab.route" exact>
+        <v-tab v-for="tab in tabsStudent" :key="tab.id" :to="tab.route">
           <div class="baseAccent--text tab">{{ tab.name }}</div>
         </v-tab>
       </v-tabs>
+      <!-- Teacher tabs (user tabs + cohors/students) -->
+      <v-tabs
+        v-else-if="userType === 'teacher'"
+        fixed-tabs
+        background-color="transparent"
+        dark
+        slider-color="baseAccent"
+        v-model="activeTab"
+        height=""
+      >
+        <v-tab v-for="tab in tabs" :key="tab.id" :to="tab.route">
+          <div class="baseAccent--text tab">{{ tab.name }}</div>
+        </v-tab>
+        <v-tab v-for="tab in tabsTeacher" :key="tab.id" :to="tab.route">
+          <div class="baseAccent--text tab">{{ tab.name }}</div>
+        </v-tab>
+      </v-tabs>
+      <!-- Normal user tabs -->
       <v-tabs
         v-else
         fixed-tabs
@@ -23,7 +42,7 @@
         v-model="activeTab"
         height=""
       >
-        <v-tab v-for="tab in tabs" :key="tab.id" :to="tab.route" exact>
+        <v-tab v-for="tab in tabs" :key="tab.id" :to="tab.route">
           <div class="baseAccent--text tab">{{ tab.name }}</div>
         </v-tab>
       </v-tabs>
@@ -35,29 +54,40 @@
 export default {
   name: "NavBar",
   props: ["userType"],
- data() {
+  data() {
     return {
-      activeTab: `/base/galaxy`,
+      activeTab: null,
+      // studentActiveTab: `/base/assigned-galaxies`,
       tabs: [
-        { id: 1, name: "MY GALAXIES", route: `/base/galaxy` },
-        { id: 2, name: "COHORTS", route: `/base/cohorts` },
-        { id: 3, name: "ALL STUDENTS", route: `/base/students` },
-      ],
-      tabsUser: [
-        { id: 1, name: "MY GALAXIES", route: `/base/galaxy` },
-        { id: 2, name: "COHORTS", route: `/base/cohorts` },
-        { id: 3, name: "ALL STUDENTS", route: `/base/students` },
+        { id: 1, name: "MY GALAXIES", route: `/base/galaxies/owned` },
+        { id: 2, name: "ALL GALAXIES", route: `/base/galaxies/all` },
       ],
       tabsTeacher: [
-        { id: 2, name: "COHORTS", route: `/base/cohorts` },
-        { id: 3, name: "ALL STUDENTS", route: `/base/students` },
+        { id: 6, name: "COHORTS", route: `/base/cohorts` },
+        { id: 7, name: "ALL STUDENTS", route: `/base/students` },
       ],
       tabsStudent: [
-        { id: 1, name: "ASSIGNED GALAXIES", route: { name: '/base/galaxy', params: { assigned: true }} },
-        { id: 2, name: "MY GALAXIES", route: `/base/galaxy` },
-        { id: 3, name: "MY DASHBOARD", route: `/base/dashboard` },
+        { id: 3, name: "ASSIGNED GALAXIES", route: `/base/galaxies/assigned` },
+        { id: 4, name: "MY GALAXIES", route: `/base/galaxies/owned` },
+        { id: 5, name: "MY DASHBOARD", route: `/base/dashboard` },
       ],
     };
+  },
+  methods: {
+    // routeTo(path) {
+    //   let assignedOrOwned = "";
+    //   if (path == "/base/my-galaxies") {
+    //     assignedOrOwned = "owned";
+    //   } else if (path == "/base/assigned-galaxies") {
+    //     assignedOrOwned = "assigned";
+    //   }
+    //   this.$router.push({
+    //     name: "GalaxyList",
+    //     params: {
+    //       assignedOrOwned: assignedOrOwned,
+    //     },
+    //   });
+    // },
   },
 };
 </script>

@@ -38,6 +38,8 @@ export default new Vuex.Store({
     person: (state) => state.person,
     courses: (state) => state.courses,
     getCourseById: (state) => (id) => {
+      console.log("FROM getCourseById. state.courses = ", state.courses);
+      console.log("FROM getCourseById. course id = ", id);
       return state.courses.find((course) => course.id === id);
     },
     getTopicById: (state) => (id) => {
@@ -169,7 +171,8 @@ export default new Vuex.Store({
     setUser({ commit }, user) {
       commit("SET_LOGGED_IN", user !== null);
       if (user) {
-        console.log("SETTING USER", user.uid);
+        console.log("authenticated user id: ", user.uid);
+        console.log("authenticated user email:", user?.email);
         commit("SET_USER", {
           displayName: user.displayName,
           email: user.email,
@@ -178,7 +181,6 @@ export default new Vuex.Store({
       } else {
         commit("SET_USER", null);
       }
-      console.log("signed in user:", user?.email);
     },
     // ===== Firestore - BIND ALL
     bindAllCourses: firestoreAction(({ bindFirestoreRef }) => {
@@ -268,15 +270,24 @@ export default new Vuex.Store({
 
       state.allEdges = allEdges;
     },
+    async getCourseFromFirestoreById({ state }, id) {
+      await db
+        .collection("courses")
+        .doc(id)
+        .get()
+        .then((doc) => {
+          state.courses.push({ ...doc.data(), id: doc.id });
+        });
+    },
     // ===== Firestore - BIND by USER
     async getPersonById({ state }, id) {
-      console.log("user id:", id);
       await db
         .collection("people")
         .doc(id)
         .get()
         .then((doc) => {
           state.person = doc.data();
+          console.log("user data stored in state.person", doc.data());
         });
     },
     async getNodesByPersonId({ state }, personId) {
@@ -307,7 +318,6 @@ export default new Vuex.Store({
 
         // count++;
       }
-      console.log("personsNodes from Firestore: ", personsNodes);
       state.personsNodes = personsNodes; // source of truth
       state.personsNodesForDisplay = personsNodes; // store all nodes
     },
@@ -322,7 +332,9 @@ export default new Vuex.Store({
       // loop array of assigned courses
       if (doc.data()?.assignedCourses) {
         for (const courseId of doc.data()?.assignedCourses) {
-          console.log("course id from assigned ==>> ", courseId);
+          // add assigned course to state.courses
+          this.dispatch("getCourseFromFirestoreById", courseId);
+
           const subQuerySnapshot = await db
             .collection("courses")
             .doc(courseId)
@@ -340,10 +352,6 @@ export default new Vuex.Store({
           );
         }
       }
-      console.log(
-        "personsAssignedNodes from Firestore: ",
-        personsAssignedNodes
-      );
       state.personsAssignedNodes = personsAssignedNodes; // source of truth
       state.personsAssignedNodesForDisplay = personsAssignedNodes; // store all nodes
     },
@@ -384,14 +392,13 @@ export default new Vuex.Store({
       // loop array of assigned courses
       if (doc.data().assignedCourses) {
         for (const courseId of doc.data().assignedCourses) {
-          console.log("course id from assigned ==>> ", courseId);
           const subQuerySnapshot = await db
             .collection("courses")
             .doc(courseId)
             .collection("map-edges")
             .get();
 
-            personsAssignedEdges.push(
+          personsAssignedEdges.push(
             ...subQuerySnapshot.docs.map((subDoc) => {
               const edge = subDoc.data();
               return edge;
@@ -399,10 +406,6 @@ export default new Vuex.Store({
           );
         }
       }
-      console.log(
-        "personsAssignedEdges from Firestore: ",
-        personsAssignedEdges
-      );
       state.personsAssignedEdges = personsAssignedEdges; // source of truth
     },
     bindCoursesByPersonId: firestoreAction(({ bindFirestoreRef }, personId) => {

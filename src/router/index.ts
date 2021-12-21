@@ -31,9 +31,16 @@ const routes = [
     component: Home,
     children: [
       {
-        path: "galaxy", //selected tab by default
+        path: "galaxies/:assignedOrOwned", 
+        name: "GalaxyList",
         component: GalaxyList,
-        props: true // my galaxies OR assigned galaxies
+        props: true,
+      },
+      {
+        path: "galaxies/:assignedOrOwned",
+        name: "GalaxyList",
+        component: GalaxyList,
+        props: true,
       },
       {
         path: "cohorts",
@@ -100,9 +107,6 @@ const initialAuth = new Promise((resolve, reject) => {
 router.beforeEach(async (to, from, next) => {
   if (to.matched.some((record) => record.meta.authRequired)) {
     await initialAuth;
-
-    console.log("store.getters.user", store.getters.user); // user
-    console.log("store.getters.user.loggedIn", store.getters.user.loggedIn); // false
 
     if (store.getters.user.loggedIn) {
       next();
