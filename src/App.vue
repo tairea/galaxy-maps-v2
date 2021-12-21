@@ -6,14 +6,9 @@
   </v-app>
 </template>
 
-<script>
-export default {
-  name: "App",
+<script lang="ts">
+import { Component, Vue } from "vue-property-decorator";
 
-  components: {},
-
-  data: () => ({
-    //
-  }),
-};
+@Component({})
+export default class App extends Vue {}
 </script>

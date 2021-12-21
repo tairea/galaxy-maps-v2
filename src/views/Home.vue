@@ -1,45 +1,37 @@
 <template>
   <v-app class="bg">
-    
-    <NavBar :userType="userType()" />  
+    <NavBar :userType="userType()" />
     <router-view></router-view>
-    <UserBar/>
-
+    <UserBar />
   </v-app>
 </template>
 
-<script>
-// @ is an alias to /src
-import UserBar from "../components/UserBar";
-import NavBar from "../components/NavBar";
+<script lang="ts">
+import { Component, Vue } from "vue-property-decorator";
+import UserBar from "@/components/UserBar.vue";
+import NavBar from "@/components/NavBar.vue";
 
 import { mapGetters } from "vuex";
 
-export default {
-  name: "HomeLearner",
+const HomeBase = Vue.extend({
+  computed: {
+    ...mapGetters(["person"]),
+  },
+});
+
+@Component({
   components: {
     UserBar,
     NavBar,
   },
-  mounted() {
-    console.log("have we got the person?",this.person)
-  },
-  computed: {
-    ...mapGetters(["person"]),
-  },
-  data() {
-    return {
-      
-    };
-  },
-  methods: {
-    userType() {
-      console.log("usertype is:",this.person)
-      //return either user, teacher, student
-      return "student"
-    }
+})
+export default class Home extends HomeBase {
+  userType() {
+    console.log("usertype is:", this.person);
+    //return either user, teacher, student
+    return "student";
   }
-};
+}
 </script>
 
 <style lang="scss" scoped>
@@ -49,5 +41,4 @@ export default {
   overflow-y: hidden; // hide vertical
   overflow-x: hidden; // hide horizontal
 }
-
 </style>

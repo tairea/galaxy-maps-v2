@@ -5,20 +5,12 @@
     <p class="overline">Galaxy Maps are branching paths of learning</p>
     <p class="overline">Using Galaxy Maps you can navigate your learning</p>
 
-    <v-btn
-      outlined
-      color="baseAccent"
-      v-bind="attrs"
-      v-on="on"
-      class="mt-8"
-      :to="{ path: 'login' }"
-    >
+    <v-btn outlined color="baseAccent" class="mt-8" :to="{ path: 'login' }">
       <!-- <v-icon small>
         mdi-account-multiple-plus
       </v-icon> -->
       SIGN IN TO GALAXY MAPS
     </v-btn>
-
   </div>
 </template>
 

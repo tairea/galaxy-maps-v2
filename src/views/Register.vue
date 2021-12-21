@@ -79,14 +79,14 @@ export default {
     BackButton,
   },
   data: () => ({
-    closed: true,
+    closed: false,
     valid: true,
     person: {
       firstName: "",
       lastName: "",
       email: "",
       password: "",
-      id: ""
+      id: "",
     },
     emailRules: [
       (v) => !!v || "E-mail is required",
@@ -96,37 +96,33 @@ export default {
   mounted() {},
   methods: {
     register() {
-            // add user the auth
-            firebase
-              .auth()
-              .createUserWithEmailAndPassword(
-                this.person.email,
-                this.person.password
-              )
-              .then((userRef) => {
-                console.log(userRef.user.uid)
-                // get new user id
-                this.person.id = userRef.user.uid
-                // remove password so its not saved to database
-                delete this.person.password
-                // add user to people database
-                db.collection("people")
-                  .doc(this.person.id)
-                  .set(this.person)
-                  .then(() => {
-                    alert("Successfully registered! Please login.");
-                    // route to login screen
-                    this.$router.push("/login");
-                  })
-                  .catch((error) => {
-                    console.error("Error writing document: ", error);
-                  });
-
-              })
-              .catch((error) => {
-                alert(error.message);
-                this.person = {}
-              });
+      // add user the auth
+      firebase
+        .auth()
+        .createUserWithEmailAndPassword(this.person.email, this.person.password)
+        .then((userRef) => {
+          console.log(userRef.user.uid);
+          // get new user id
+          this.person.id = userRef.user.uid;
+          // remove password so its not saved to database
+          delete this.person.password;
+          // add user to people database
+          db.collection("people")
+            .doc(this.person.id)
+            .set(this.person)
+            .then(() => {
+              alert("Successfully registered! Please login.");
+              // route to login screen
+              this.$router.push("/login");
+            })
+            .catch((error) => {
+              console.error("Error writing document: ", error);
+            });
+        })
+        .catch((error) => {
+          alert(error.message);
+          this.person = {};
+        });
     },
     validate() {
       this.$refs.form.validate();

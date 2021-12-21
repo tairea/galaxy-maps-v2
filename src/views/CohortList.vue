@@ -55,7 +55,7 @@
   </v-container>
 </template>
 
-<script>
+<script lang="js">
 // @ is an alias to /src
 import CreateEditDeleteCohortDialog from "../components/CreateEditDeleteCohortDialog";
 import CreateEditDeleteOrganisationDialog from "../components/CreateEditDeleteOrganisationDialog";
