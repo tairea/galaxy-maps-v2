@@ -10,18 +10,41 @@
       <!-- DESCRIPTION -->
       <p>{{ task.description }}</p>
       <!-- EDIT BUTTON -->
-        <CreateEditDeleteMissionDialog :edit="true" :taskToEdit="task" :index="index" :topicId="topicId"/>
+      <div v-if="!person.accountType == 'student'">
+        <CreateEditDeleteMissionDialog
+          :edit="true"
+          :taskToEdit="task"
+          :index="index"
+          :topicId="topicId"
+        />
+      </div>
     </div>
     <div class="mission-section mission-section-overUnder">
       <!-- VIDEO -->
       <div class="section-overUnder">
-        <a v-if="task.video" :href="task.video" target="_blank" class="text-overline text-uppercase ">Video</a>
-        <p v-else class="text-overline text-uppercase" style="color: #707070">Video</p>
+        <a
+          v-if="task.video"
+          :href="task.video"
+          target="_blank"
+          class="text-overline text-uppercase "
+          >Video</a
+        >
+        <p v-else class="text-overline text-uppercase" style="color: #707070">
+          Video
+        </p>
       </div>
       <!-- SLIDES -->
       <div class="section-overUnder">
-        <a v-if="task.slides" :href="task.slides" target="_blank" class="text-overline text-uppercase">Slides</a>
-        <p v-else class="text-overline text-uppercase" style="color: #707070">Slides</p>
+        <a
+          v-if="task.slides"
+          :href="task.slides"
+          target="_blank"
+          class="text-overline text-uppercase"
+          >Slides</a
+        >
+        <p v-else class="text-overline text-uppercase" style="color: #707070">
+          Slides
+        </p>
       </div>
     </div>
     <div class="mission-section">
@@ -33,13 +56,14 @@
     </div>
 
     <!-- EDIT MISSION DIALOG-->
-
   </div>
 </template>
 
 <script>
 
 import CreateEditDeleteMissionDialog from "../components/CreateEditDeleteMissionDialog";
+
+import { mapGetters } from "vuex";
 
 export default {
   name: "MissionsCard",
@@ -48,6 +72,9 @@ export default {
   },
   props: ["task", "index", "topicId"],
   mounted() {
+  },
+  computed: {
+    ...mapGetters(["person"]),
   },
   data() {
     return {

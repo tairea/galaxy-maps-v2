@@ -4,7 +4,7 @@
 
     <div v-if="tasks" style="width:100%">
       <div v-for="(task, index) in tasks" :key="task.id">
-        <MissionsCard :task="task" :index="index" :topicId="topicId"/>
+        <MissionsCard :task="task" :index="index" :topicId="topicId" />
       </div>
     </div>
 
@@ -12,7 +12,7 @@
       <p class="no-missions-label">No Missions</p>
     </div>
 
-    <div class="createButton">
+    <div class="createButton" v-if="!person.accountType == 'student'">
       <CreateEditDeleteMissionDialog :topicId="topicId" />
     </div>
   </div>
@@ -22,6 +22,8 @@
 import MissionsCard from "../components/MissionsCard";
 import CreateEditDeleteMissionDialog from "../components/CreateEditDeleteMissionDialog";
 
+import { mapGetters } from "vuex";
+
 export default {
   name: "MissionsList",
   components: {
@@ -29,6 +31,9 @@ export default {
     CreateEditDeleteMissionDialog,
   },
   props: ["tasks", "topicId"],
+  computed: {
+    ...mapGetters(["person"]),
+  },
   data() {
     return {};
   },
@@ -59,7 +64,6 @@ a {
   display: none;
 }
 
-
 .missions-label {
   font-size: 0.8rem;
   font-weight: 400;
@@ -81,5 +85,4 @@ a {
   font-size: 0.8rem;
   // letter-spacing: 2px;
 }
-
 </style>

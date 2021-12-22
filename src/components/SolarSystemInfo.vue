@@ -1,8 +1,12 @@
 <template>
   <div id="ss-info">
-    <h2 class="ss-label">Solar System</h2>
+    <h2 class="ss-label">System</h2>
     <h1 class="ss-title">{{ topic.label }}</h1>
-    <SolarSystem :topic="getTopicById(currentTopicId)" :size="'0.25em'" :height="'200px'" />
+    <SolarSystem
+      :topic="getTopicById(currentTopicId)"
+      :size="'0.25em'"
+      :height="'200px'"
+    />
     <p class="galaxy-description">Part of the</p>
     <h1 class="galaxy-title">{{ getCourseById(currentCourseId).title }}</h1>
     <p class="galaxy-description">Galaxy</p>
@@ -87,8 +91,6 @@ h1 {
   text-transform: uppercase;
   margin: 0px;
 }
-
-
 
 .galaxy-description {
   // margin-top: 10px;
