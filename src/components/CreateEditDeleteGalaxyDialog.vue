@@ -490,7 +490,7 @@ export default {
           this.deleting = false;
           this.dialog = false;
           // after delete... route back to home
-          this.$router.push({ path: "/galaxy" });
+          this.$router.push({ path: "/base/galaxies/my" });
         })
         .catch((error) => {
           console.error("Error deleting document: ", error);

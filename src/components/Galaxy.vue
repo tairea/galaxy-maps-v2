@@ -2,7 +2,7 @@
   <div class="full-height">
     <LoadingSpinner v-if="loading" />
     <network
-      v-if="whichCoursesToDisplay == 'assigned'"
+      v-if="personsAssignedNodesForDisplay.length > 0 && whichCoursesToDisplay == 'assigned'"
       ref="network"
       class="full-height"
       :nodes="personsAssignedNodesForDisplay"
@@ -13,7 +13,7 @@
       @hover-node="hoverNode"
     ></network>
     <network
-      v-else-if="whichCoursesToDisplay == 'my'"
+      v-else-if="personsNodesForDisplay.length > 0 && whichCoursesToDisplay == 'my'"
       ref="network"
       class="full-height"
       :nodes="personsNodesForDisplay"
@@ -24,7 +24,7 @@
       @hover-node="hoverNode"
     ></network>
     <network
-      v-else-if="whichCoursesToDisplay == 'all'"
+      v-else-if="allNodesForDisplay.length > 0 && whichCoursesToDisplay == 'all'"
       ref="network"
       class="full-height"
       :nodes="allNodesForDisplay"
@@ -34,6 +34,10 @@
       @click="click"
       @hover-node="hoverNode"
     ></network>
+    <p v-else class="noGalaxies overline">
+      NO {{whichCoursesToDisplay == 'assigned'?"ASSIGNED":""}} GALAXIES TO
+      DISPLAY
+    </p>
     <PopupPreview
       v-if="popupPreview"
       :course="getCourseById(currentCourseId)"
@@ -112,21 +116,25 @@ export default {
     // see available Vue2Vis methods
     // console.log(this.$refs.network);
 
-    const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
+    if (this.nodesToDisplay.length > 0) {
+      const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
 
-    if (this.whichCoursesToDisplay == "my") {
-      this.$store.commit("updatePersonsNodesForDisplay", repositionedNodes);
-    } else if (this.whichCoursesToDisplay == "assigned") {
-      this.$store.commit("updatePersonsAssignedNodesForDisplay", repositionedNodes);
-    } else if (this.whichCoursesToDisplay == "all") {
-      this.$store.commit("updateAllNodesForDisplay", repositionedNodes);
+      if (this.whichCoursesToDisplay == "my") {
+        this.$store.commit("updatePersonsNodesForDisplay", repositionedNodes);
+      } else if (this.whichCoursesToDisplay == "assigned") {
+        this.$store.commit("updatePersonsAssignedNodesForDisplay", repositionedNodes);
+      } else if (this.whichCoursesToDisplay == "all") {
+        this.$store.commit("updateAllNodesForDisplay", repositionedNodes);
+      }
     }
 
     // stop loading spinner
     this.loading = false;
 
     // short timer to give time to load all before zoom
-    setTimeout(() => this.zoomToNodes(this.nodesToDisplay), 250);
+    if (this.nodesToDisplay.length > 0) {
+      setTimeout(() => this.zoomToNodes(this.nodesToDisplay), 250);
+    }
   },
   computed: {
     ...mapState([
@@ -520,6 +528,15 @@ export default {
   height: 100%;
   display: flex;
   flex-direction: column;
+
+  .noGalaxies {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--v-baseAccent-base);
+  }
 }
 
 .popupPanel {

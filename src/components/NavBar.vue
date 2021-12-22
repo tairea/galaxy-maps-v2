@@ -119,7 +119,7 @@ export default {
 }
 
 .neon {
-  color: var(--v-baseAccent);
+  color: var(--v-baseAccent-base);
 }
 
 .profilePic {
