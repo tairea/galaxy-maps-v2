@@ -1,6 +1,7 @@
 <template>
   <div>
     <v-dialog v-model="dialog" width="40%" light>
+      <!-- Start create-dialog -->
       <div class="create-dialog">
         <div class="create-dialog-content">
           <!-- Title/Desc Header -->
@@ -89,6 +90,7 @@
       }"
     >
       <div class="ss-preview">
+        <!-- Preview: Solar System -->
         <SolarSystem
           :topic="getTopicById(this.currentNode.id)"
           :size="'0.25em'"
@@ -103,43 +105,36 @@
           title="Delete"
           @click="routeToSolarSystem"
         >
-          View Solar System
+          View System
         </v-btn>
-        <v-btn
-          text
-          x-small
-          color="missionAccent"
-          class="close-button"
-          @click="close"
-        >
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
-      </div>
-
-      <div class="ss-details">
-        {{ this.currentNode.label }}
-        <div class="ss-details-buttons">
+        <div class="ss-details-buttons mr-2">
           <v-btn
-            class="map-button"
-            fab
+            icon
+            small
+            color="missionAccent"
+            class="close-button"
+            @click="close"
+          >
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+          <v-btn
+            v-if="!person.accountType == 'student'"
+            class="my-2"
+            icon
             dark
             x-small
             color="baseAccent"
-            outlined
-            tile
             title="Edit"
             @click="editNode"
           >
             <v-icon>mdi-pencil</v-icon>
           </v-btn>
           <v-btn
-            class="map-button ml-2"
-            fab
+            v-if="!person.accountType == 'student'"
+            icon
             dark
             x-small
             color="red"
-            outlined
-            tile
             title="Delete"
             @click="deleteFromMap"
             :loading="deleting"
@@ -148,14 +143,29 @@
           </v-btn>
         </div>
       </div>
-
+      <!-- Preview: Topic Label -->
+      <div class="ss-details">
+        {{ this.currentNode.label }}
+      </div>
+      <!-- Preview: Table of Topic's Tasks -->
       <div class="ss-missions">
-        <div v-for="(task, index) in getTopicTasks()" :key="task.id">
-          <v-simple-table>
+        <div v-if="!getTopicTasks()">
+          <h5 class="mission-text" style="text-align:center">
+            NO MISSIONS SET
+          </h5>
+        </div>
+        <div v-else v-for="(task, index) in getTopicTasks()" :key="task.id">
+          <v-simple-table class="task-table">
             <tr>
-              <td><h5 class="mission-text">MISSION {{ index + 1 }}:</h5></td>
-              <td><h5 class="mission-text">{{ task.title }}</h5></td>
-              <td v-if="task.duration"><h5 class="mission-text">{{ task.duration }} MINS</h5></td>
+              <td>
+                <h5 class="mission-text">MISSION {{ index + 1 }}:</h5>
+              </td>
+              <td>
+                <h5 class="mission-text">{{ task.title }}</h5>
+              </td>
+              <td v-if="task.duration">
+                <h5 class="mission-text">{{ task.duration }} MINS</h5>
+              </td>
             </tr>
           </v-simple-table>
         </div>
@@ -166,12 +176,12 @@
 
 <script>
 import { db } from "../store/firestoreConfig";
-import { mapGetters } from "vuex";
+import { mapState, mapGetters } from "vuex";
 
 import SolarSystem from "../components/SolarSystem";
 
 export default {
-  name: "EditNode",
+  name: "GalaxyMapEdit",
   components: {
     SolarSystem,
   },
@@ -185,9 +195,9 @@ export default {
       dialog: false,
       dialogTitle: "Edit something hmmm...",
       dialogDescription: "some kind of description",
-      nodeDialogTitle: "Enter the name of this Solar System",
+      nodeDialogTitle: "Enter the name of this System",
       nodeDialogDescription:
-        "This Solar System is an Objective of the " +
+        "This System is an Objective of the " +
         this.course.title +
         " Galaxy map",
       newNodeData: {},
@@ -200,9 +210,11 @@ export default {
       infoPopupShow: false,
       infoPopupPosition: {},
       centerFocusPosition: false,
+      gotTasks: true
     };
   },
   computed: {
+    ...mapState(["person"]),
     ...mapGetters(["getTopicById"]),
     getCoords() {
       return this.coords;
@@ -210,6 +222,7 @@ export default {
   },
   methods: {
     getTopicTasks() {
+      console.log("current node",this.currentNode.id)
       const topic = this.getTopicById(this.currentNode.id);
       return topic.tasks;
     },
@@ -220,9 +233,6 @@ export default {
     },
     close() {
       this.deselect();
-    },
-    deleteFromMap() {
-      console.log("delete");
     },
     saveNode(node) {
       console.log("save", node);
@@ -454,27 +464,33 @@ export default {
       background-color: var(--v-background-base);
     }
 
-    .close-button {
+    .ss-details-buttons {
       position: absolute;
       top: 10px;
       right: 0px;
       padding: 0px !important;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .close-button {
     }
   }
   .ss-details {
     border-top: 1px solid var(--v-missionAccent-base);
     padding: 20px;
     text-align: center;
-
-    .ss-details-buttons {
-      
-      
-      // border: 1px solid yellow;
-    }
   }
 
   .ss-missions {
     border-top: 1px solid var(--v-missionAccent-base);
+    background-color: var(--v-background-base);
+
+    .task-table {
+      background-color: var(--v-background-base);
+    }
   }
 
   .info-panel-label {

@@ -344,6 +344,8 @@ export default new Vuex.Store({
             .collection("map-nodes")
             .get();
 
+            //TODO: this only pushes nodes. not the course info
+
           personsAssignedNodes.push(
             ...subQuerySnapshot.docs.map((subDoc) => {
               const node = subDoc.data();

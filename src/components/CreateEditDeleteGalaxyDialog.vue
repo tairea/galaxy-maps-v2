@@ -299,7 +299,7 @@ export default {
     dialogConfirm: false,
     dialogTitle: "Create a new Galaxy",
     dialogDescription:
-      "A Galaxy is a journey of learning. Kind of like a course.",
+      "A Galaxy is a path of learning. Kind of like a course.",
     course: {
       title: "",
       description: "",
@@ -383,8 +383,9 @@ export default {
           this.$router.push({
             name: "GalaxyView",
             params: {
-              courseTitle: this.camelize(course.title),
               courseId: courseId,
+              courseTitle: course.title,
+              fromCreate: true // flag to detect from creating a new Galaxy. TODO: add starting intro node
             },
           });
         })
@@ -392,12 +393,6 @@ export default {
           console.error("Error writing document: ", error);
         });
       this.course = {};
-    },
-    camelize(str) {
-      return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
-        if (+match === 0) return ""; // or if (/\s+/.test(match)) for white spaces
-        return index === 0 ? match.toLowerCase() : match.toUpperCase();
-      });
     },
     storeImage() {
       this.disabled = true;

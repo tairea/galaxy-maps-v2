@@ -4,7 +4,8 @@
       <v-icon left>
         mdi-arrow-left
       </v-icon>
-      Back to {{toPath.includes("galaxy") ? "Galaxies" : toPath.includes("cohorts") ? "Cohorts" : toPath.includes("login") ? "Login" : "?"}}
+      Back to
+      {{backToWhat(toPath)}}
     </v-btn>
   </div>
 </template>
@@ -18,7 +19,21 @@ export default {
   },
   mounted() {},
   computed: {},
-  methods: {},
+  methods: {
+    backToWhat(path) {
+      if(path.includes("galaxies")) {
+        return "Galaxies"
+      } else if (path.includes("galaxy")) {
+        return "Galaxy"
+      } else if (path.includes("cohorts")){
+        return "Cohorts"
+      } else if (path.includes("login")) {
+        return "Login"
+      } else {
+        return "?"
+      }
+    }
+  },
 };
 </script>
 

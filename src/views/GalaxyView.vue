@@ -1,19 +1,20 @@
 <template>
   <div id="container" class="bg">
     <div id="left-section">
-      <GalaxyInfo :course="getCourseById(courseId ? courseId : courseIdFromRouter )" />
+      <GalaxyInfo :course="getCourseById(courseId)" />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <AssignedInfo
+        v-if="person.accountType != 'student'"
         :assignCohorts="true"
-        :cohorts="getCohortsInThisCourse(courseId ? courseId : courseIdFromRouter )"
-        :organisations="getOrganisationsInThisCourse(courseId ? courseId : courseIdFromRouter )"
-        :people="getPeopleInThisCourse(courseId ? courseId : courseIdFromRouter )"
+        :cohorts="getCohortsInThisCourse(courseId)"
+        :organisations="getOrganisationsInThisCourse(courseId)"
+        :people="getPeopleInThisCourse(courseId)"
       />
-      <BackButton :toPath="'/base/galaxy'" />
+      <BackButton :toPath="'/base/galaxies/my'" />
     </div>
     <div id="main-section">
       <!-- Map Buttons -->
-      <div class="map-buttons">
+      <div class="map-buttons" v-if="person.accountType != 'student'">
         <v-btn
           class="map-button"
           :color=" !addNodeMode ? 'missionAccent' : 'baseAccent'"
@@ -32,7 +33,7 @@
         <!-- Add edge button -->
         <v-btn
           class="map-button"
-           :color=" !addEdgeMode ? 'missionAccent' : 'baseAccent'"
+          :color=" !addEdgeMode ? 'missionAccent' : 'baseAccent'"
           fab
           dark
           small
@@ -58,12 +59,20 @@
           @click="saveNodePositions"
           :loading="nodePositionsChangeLoading"
         >
-         Save new positions
+          Save new positions
         </v-btn>
-       
 
         <div class="ui-message-wrap">
-          <p v-if="currentCourseNodes.length === 0 && !addNodeMode" class="ui-message" style="margin-left:20px;"><v-icon color="missionAccent" class="bounce">mdi-hand-pointing-up</v-icon> Add a new node to start creating a Galaxy map</p>
+          <p
+            v-if="currentCourseNodes.length === 0 && !addNodeMode"
+            class="ui-message"
+            style="margin-left:20px;"
+          >
+            <v-icon color="missionAccent" class="bounce"
+              >mdi-hand-pointing-up</v-icon
+            >
+            Add a new node to start creating a Galaxy map
+          </p>
           <p v-else class="ui-message">{{ uiMessage }}</p>
         </div>
       </div>
@@ -106,6 +115,7 @@ import GalaxyMap from "../components/GalaxyMap";
 import BackButton from "../components/BackButton";
 import GalaxyMapEdit from "../components/GalaxyMapEdit";
 
+import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
 
 export default {
@@ -121,11 +131,60 @@ export default {
     GalaxyMapEdit,
   },
   props: ["courseId"],
-  mounted() {
+  async mounted() {
+    if(this.fromCreate) {
+      let nodeId = null
+      // create first node (hard coded)
+      console.log("trying to add default intro node")
+      await db.collection("courses")
+        .doc(this.courseId)
+        .collection("map-nodes")
+        .add({
+          // hardcoded first node
+          label: this.courseTitle + " Intro",
+          type: "intro",
+          x: 0,
+          y:0,
+        })
+        .then((docRef) => {
+          console.log("Node successfully written! With ID:",docRef.id);
+          // update node obj with docRef.id aka nodeId
+          db.collection("courses").doc(this.courseId).collection("map-nodes").doc(docRef.id).update({id: docRef.id});
+          // this.loading = false;
+          // this.dialog = false;
+        })
+        .catch((error) => {
+          console.error("Error writing node: ", error);
+        });
+      // get the node id
+      const querySnapshot = await db.collection("courses").doc(this.courseId).collection("map-nodes").get()
+      for (const doc of querySnapshot.docs) {
+        nodeId = doc.id
+      }
+      // create topic with node id
+      db.collection("courses")
+        .doc(this.course.id)
+        .collection("topics")
+        .doc(nodeId)
+        .set({
+          // hardcoded first node topic
+          id: nodeId,
+          label: "Intro",
+        })
+        .then((docRef) => {
+          console.log("Topic successfully written!");
+          // this.loading = false;
+          // this.dialog = false;
+        })
+        .catch((error) => {
+          console.error("Error writing node: ", error);
+        });
+    }
+
     console.log("courseId",this.courseId)
-    console.log("courseIdFromRouter",this.courseIdFromRouter)
     if (this.courseId) {return}
-    this.$store.commit("setCurrentCourseId", this.courseIdFromRouter);
+
+
   },
   data() {
     return {
@@ -135,10 +194,12 @@ export default {
       coords: {},
       changeInPositions: false,
       nodePositionsChangeLoading: false,
+      fromCreate: this.$route.params.fromCreate,
+      courseTitle: this.$route.params.courseTitle,
     };
   },
   computed: {
-    ...mapState(["currentCourseId","currentCourseNodes"]),
+    ...mapState(["currentCourseId","currentCourseNodes","person"]),
     ...mapGetters([
       "getCourseById",
       "getCohortsInThisCourse",
@@ -304,20 +365,27 @@ export default {
 }
 
 .bounce {
-    -webkit-animation: mover 1s infinite  alternate;
-    animation: mover 1s infinite  alternate;
+  -webkit-animation: mover 1s infinite alternate;
+  animation: mover 1s infinite alternate;
 }
 .bounce {
-    -webkit-animation: mover 1s infinite  alternate;
-    animation: mover 1s infinite  alternate;
+  -webkit-animation: mover 1s infinite alternate;
+  animation: mover 1s infinite alternate;
 }
 @-webkit-keyframes mover {
-    0% { transform: translateY(0); }
-    100% { transform: translateY(-5px); }
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-5px);
+  }
 }
 @keyframes mover {
-    0% { transform: translateY(0); }
-    100% { transform: translateY(-5px); }
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-5px);
+  }
 }
-
 </style>

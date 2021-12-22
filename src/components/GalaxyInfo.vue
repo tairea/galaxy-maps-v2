@@ -6,13 +6,19 @@
     <v-img class="galaxy-image" :src="course.image.url"></v-img>
     <!-- </div> -->
     <p class="galaxy-description">{{ course.description }}</p>
-    <CreateEditDeleteGalaxyDialog :edit="true" :courseToEdit="course" />
+    <CreateEditDeleteGalaxyDialog
+      v-if="person.accountType != 'student'"
+      :edit="true"
+      :courseToEdit="course"
+    />
   </div>
 </template>
 
 <script>
 
 import CreateEditDeleteGalaxyDialog from "../components/CreateEditDeleteGalaxyDialog";
+
+import { mapState } from "vuex";
 
 export default {
   name: "GalaxyInfo",
@@ -21,6 +27,9 @@ export default {
     CreateEditDeleteGalaxyDialog,
   },
   mounted() {},
+  computed: {
+    ...mapState(["person"]),
+  },
   data() {
     return {};
   },

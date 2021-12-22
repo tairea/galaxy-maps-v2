@@ -114,7 +114,7 @@ export default {
     clearInterval(this.intervalid1);
   },
   computed: {
-    ...mapGetters(["getTopicById"]),
+    ...mapGetters(["getTopicById","person"]),
     ...mapState([
       "currentCourseId",
       "currentCourseNodes",
@@ -122,12 +122,26 @@ export default {
     ]),
   },
   methods: {
+    fakeClickCanvas() {
+      console.log("doing a fake click")
+      document.getElementsByTagName('canvas')[0].dispatchEvent(
+            new MouseEvent(
+                "click", // or "mousedown" if the canvas listens for such an event
+                {
+                    clientX: 0,
+                    clientY: 0,
+                    bubbles: true
+                }
+            )
+        );
+    },
     getDomCoords(node) {
       let domCoords = this.$refs.network.canvasToDom({x:node.x, y:node.y})
       console.log("DOM COOOORDS: ", domCoords)
       return domCoords
     },
     doubleClick() {
+      if (this.person.accountType == 'student'){ return }
       this.addNodeMode();
     },
     addNodeMode() {
@@ -366,6 +380,5 @@ export default {
 .full-height {
   width: 100%;
   height: 100%;
-
 }
 </style>
