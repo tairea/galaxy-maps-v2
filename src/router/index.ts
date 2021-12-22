@@ -31,13 +31,7 @@ const routes = [
     component: Home,
     children: [
       {
-        path: "galaxies/:assignedOrOwned", 
-        name: "GalaxyList",
-        component: GalaxyList,
-        props: true,
-      },
-      {
-        path: "galaxies/:assignedOrOwned",
+        path: "galaxies/:mineOrAssignedOrAll", 
         name: "GalaxyList",
         component: GalaxyList,
         props: true,

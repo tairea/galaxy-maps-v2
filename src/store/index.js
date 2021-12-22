@@ -162,6 +162,9 @@ export default new Vuex.Store({
     updatePersonsNodesForDisplay(state, newNodePositions) {
       state.personsNodesForDisplay = newNodePositions;
     },
+    updatePersonsAssignedNodesForDisplay(state, newNodePositions) {
+      state.personsAssignedNodesForDisplay = newNodePositions;
+    },
     clearAllNodes(state) {
       // console.log(" ======== clear all nodes before bind ======== ")
       state.allNodes = [];

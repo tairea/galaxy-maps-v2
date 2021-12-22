@@ -2,7 +2,7 @@
   <div class="full-height">
     <LoadingSpinner v-if="loading" />
     <network
-      v-if="assignedOrOwned == 'assigned'"
+      v-if="whichCoursesToDisplay == 'assigned'"
       ref="network"
       class="full-height"
       :nodes="personsAssignedNodesForDisplay"
@@ -13,11 +13,22 @@
       @hover-node="hoverNode"
     ></network>
     <network
-      v-else-if="assignedOrOwned == 'owned'"
+      v-else-if="whichCoursesToDisplay == 'my'"
       ref="network"
       class="full-height"
       :nodes="personsNodesForDisplay"
       :edges="personsEdges"
+      :options="network.options"
+      @zoom="zoom"
+      @click="click"
+      @hover-node="hoverNode"
+    ></network>
+    <network
+      v-else-if="whichCoursesToDisplay == 'all'"
+      ref="network"
+      class="full-height"
+      :nodes="allNodesForDisplay"
+      :edges="allEdges"
       :options="network.options"
       @zoom="zoom"
       @click="click"
@@ -43,25 +54,30 @@ import PopupPreview from "../components/PopupPreview";
 
 export default {
   name: "GalaxyMap",
-  props: ["assignedOrOwned"],
+  props: ["whichCoursesToDisplay"],
   components: {
     Network,
     LoadingSpinner,
     PopupPreview,
   },
   async mounted() {
-    // GET ALL!!
-    // await this.$store.dispatch("getAllNodes");
-    // await this.$store.dispatch("getAllEdges");
+    console.log("whichCoursesToDisplay = ", this.whichCoursesToDisplay);
 
-    // GET ONLY USERS!!
-    console.log("assignedOrOwned = ", this.assignedOrOwned);
-    if (this.assignedOrOwned == "owned") {
+    /* ===========================
+        Only show MY Galaxies
+    =========================== */
+    if (this.whichCoursesToDisplay == "my") {
       await this.$store.dispatch("getNodesByPersonId", this.user.data.id);
       await this.$store.dispatch("getEdgesByPersonId", this.user.data.id);
       console.log("nodes by person:", this.personsNodesForDisplay);
       console.log("edges by person:", this.personsEdges);
-    } else if (this.assignedOrOwned == "assigned") {
+      this.nodesToDisplay = this.personsNodesForDisplay
+    }
+
+    /* ===========================
+        Only show ASSIGNED Galaxies
+    =========================== */
+    else if (this.whichCoursesToDisplay == "assigned") {
       // get assigned nodes & edges
       await this.$store.dispatch(
         "getAssignedNodesByPersonId",
@@ -76,20 +92,41 @@ export default {
         this.personsAssignedNodesForDisplay
       );
       console.log("assigned edges by person:", this.personsAssignedEdges);
+      this.nodesToDisplay = this.personsAssignedNodesForDisplay
     }
-    //total nodes
-    // this.allNodesLength = this.allNodesLength;
 
-    // see available methods
+    /* ===========================
+        Only show ALL Galaxies in DATABASE!! (so I can see what maps users have created)
+    =========================== */
+    else if (this.whichCoursesToDisplay == "all") {
+        await this.$store.dispatch("getAllNodes");
+        await this.$store.dispatch("getAllEdges");
+        console.log(
+        "all nodes ever:",
+        this.allNodesForDisplay
+      );
+      console.log("all edges ever:", this.allEdges);
+       this.nodesToDisplay = this.allNodesForDisplay
+    }
+
+    // see available Vue2Vis methods
     // console.log(this.$refs.network);
 
-    const updatedNodes = this.repositionCoursesBasedOnBoundaries();
-    this.$store.commit("updatePersonsNodesForDisplay", updatedNodes);
+    const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
+
+    if (this.whichCoursesToDisplay == "my") {
+      this.$store.commit("updatePersonsNodesForDisplay", repositionedNodes);
+    } else if (this.whichCoursesToDisplay == "assigned") {
+      this.$store.commit("updatePersonsAssignedNodesForDisplay", repositionedNodes);
+    } else if (this.whichCoursesToDisplay == "all") {
+      this.$store.commit("updateAllNodesForDisplay", repositionedNodes);
+    }
 
     // stop loading spinner
     this.loading = false;
 
-    setTimeout(() => this.zoomToNodes(this.allNodesForDisplay), 250);
+    // short timer to give time to load all before zoom
+    setTimeout(() => this.zoomToNodes(this.nodesToDisplay), 250);
   },
   computed: {
     ...mapState([
@@ -112,6 +149,7 @@ export default {
     loading: true,
     popupPreview: false,
     allNodeIds: [],
+    nodesToDisplay: [],
     // allNodesLength: 0,
     numberOfGalaxiesPerRow: 3, // hardcoded num of galaxies in a row
     courseCols: 1,
@@ -258,7 +296,7 @@ export default {
       let courseCanvasBoundaries = [];
       // get all coords for nodes
       // const allNodes = this.$refs.network.nodes;
-      const allNodes = this.personsNodesForDisplay;
+      const allNodes = this.nodesToDisplay;
       // console.log("allNodes from calcBoundaries: ", allNodes);
 
       // per course/galaxy, determine boundaries ie. highest y, highest x, lowest y, lowest x (this is a boundary we want to hover)
@@ -450,6 +488,8 @@ export default {
     },
     // this controls the fit zoom animation
     zoomToNodes(nodes) {
+      // nodes to zoom
+      console.log("nodes to zoom", nodes);
       // get node ids
       var nodeIds = nodes.map((x) => x.id);
       // this.allNodeIds = allNodeIds;
@@ -458,7 +498,7 @@ export default {
       console.log("fit");
       this.$refs.network.fit({
         nodes: nodeIds,
-        minZoomLevel: 0.2, // <-- this doesnt work on this version of vis-network. needs to be at least v8.5.0. but vue2vis is v7.4.0
+        minZoomLevel: 0.2, // <-- TODO: this doesnt work on this version of vis-network. needs to be at least v8.5.0. but vue2vis is v7.4.0
         animation: true,
       });
       // this.$refs.network.moveTo({

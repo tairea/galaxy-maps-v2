@@ -59,7 +59,7 @@ export default {
       activeTab: null,
       // studentActiveTab: `/base/assigned-galaxies`,
       tabs: [
-        { id: 1, name: "MY GALAXIES", route: `/base/galaxies/owned` },
+        { id: 1, name: "MY GALAXIES", route: `/base/galaxies/my` },
         { id: 2, name: "ALL GALAXIES", route: `/base/galaxies/all` },
       ],
       tabsTeacher: [
@@ -68,7 +68,7 @@ export default {
       ],
       tabsStudent: [
         { id: 3, name: "ASSIGNED GALAXIES", route: `/base/galaxies/assigned` },
-        { id: 4, name: "MY GALAXIES", route: `/base/galaxies/owned` },
+        { id: 4, name: "MY GALAXIES", route: `/base/galaxies/my` },
         { id: 5, name: "MY DASHBOARD", route: `/base/dashboard` },
       ],
     };

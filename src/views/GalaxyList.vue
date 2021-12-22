@@ -1,7 +1,7 @@
 <template>
   <div class="fullHeight">
     <div class="flexContainer">
-      <Galaxy :assignedOrOwned="assignedOrOwned" />
+      <Galaxy :whichCoursesToDisplay="whichCoursesToDisplay" />
     </div>
     <div class="buttons">
       <CreateEditDeleteGalaxyDialog :edit="false" />
@@ -33,17 +33,13 @@ export default {
   },
   computed: {
     ...mapGetters(["courses", "user", "person"]),
-
-    // assignedGalaxies() {
-    //   return this.person.accountType == "student";
-    // },
   },
   data() {
     return {
       loading: true,
-      assignedOrOwned: this.$route.params.assignedOrOwned
-        ? this.$route.params.assignedOrOwned
-        : "",
+      whichCoursesToDisplay: this.$route.params.mineOrAssignedOrAll
+        ? this.$route.params.mineOrAssignedOrAll
+        : "",  // my, assigned OR all
     };
   },
   methods: {

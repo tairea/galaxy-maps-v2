@@ -7,7 +7,13 @@
       <!-- <div class="d-flex justify-center align-center"> -->
       <!-- <v-img class="galaxy-image" :src=""></v-img> -->
       <!-- </div> -->
-      <v-form ref="form" v-model="valid" lazy-validation class="my-6" @keyup.native.enter="valid && login($event)">
+      <v-form
+        ref="form"
+        v-model="valid"
+        lazy-validation
+        class="my-6"
+        @keyup.native.enter="valid && login($event)"
+      >
         <v-text-field
           type="email"
           v-model="email"
@@ -87,7 +93,7 @@ export default {
         })
         .then(() => {
           console.log("Successfully logged in");
-          this.$router.push("/base/galaxy");
+          this.$router.push("/base/galaxies/my");
         })
         .catch((error) => {
           this.errorMsg = error
