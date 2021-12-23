@@ -2,11 +2,14 @@
   <div class="login">
     <!-- <v-img :src="`https://i.pravatar.cc/300`" class="gm-logo"></v-img> -->
     <div id="galaxy-info">
-      <h2 class="galaxy-label">LOGIN</h2>
+      <h2 class="galaxy-label">RESET PASSWORD</h2>
       <!-- <h1 class="galaxy-title">Login</h1> -->
       <!-- <div class="d-flex justify-center align-center"> -->
       <!-- <v-img class="galaxy-image" :src=""></v-img> -->
       <!-- </div> -->
+      <p class="overline mt-3 baseAccent--text">
+        Enter your email to reset your password
+      </p>
       <v-form
         ref="form"
         v-model="valid"
@@ -24,39 +27,24 @@
           outlined
           class="custom-input"
         ></v-text-field>
-        <v-text-field
-          type="password"
-          v-model="password"
-          label="Password"
-          required
-          color="baseAccent"
-          outlined
-          class="custom-input"
-        ></v-text-field>
         <v-btn
           :disabled="!valid"
           color="baseAccent"
           class="mr-4"
-          @click="login"
+          @click="resetPassword"
           outlined
           width="100%"
         >
-          Sign-in
+          Reset Password
         </v-btn>
       </v-form>
-
-      <router-link to="/register" class="overline mt-4" color="baseAccent--text"
-        >Register</router-link
-      >
-      <br />
-      <router-link to="/reset" class="overline mt-4" color="baseAccent--text"
-        >Reset Password</router-link
-      >
     </div>
+
+    <BackButton :toPath="'/login'" />
 
     <!-- Login Error Snackbar -->
     <v-snackbar v-model="snackbar">
-      {{ errorMsg }}
+      {{ snackbarText }}
       <template v-slot:action="{ attrs }">
         <v-btn color="pink" text v-bind="attrs" @click="snackbar = false">
           OK
@@ -69,8 +57,13 @@
 <script>
 import firebase from "firebase";
 
+import BackButton from "../components/BackButton";
+
 export default {
-  name: "Login",
+  name: "Reset Password",
+  components: {
+    BackButton,
+  },
   data: () => ({
     valid: true,
     email: "",
@@ -80,8 +73,7 @@ export default {
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
     ],
     snackbar: false,
-    snackbarText: "Successfully signed in",
-    errorMsg: "",
+    snackbarText: "",
   }),
   mounted() {},
   methods: {
@@ -100,7 +92,7 @@ export default {
           this.$router.push("/base/galaxies/my");
         })
         .catch((error) => {
-          this.errorMsg = error;
+          this.snackbarText = "Error: " + error.message;
           this.snackbar = true;
           console.log("Login error:", error);
         });
@@ -180,7 +172,7 @@ export default {
     left: -1px;
     background-color: var(--v-baseAccent-base);
     color: var(--v-background-base);
-    padding: 0px 15px 0px 5px;
+    padding: 0px 25px 0px 5px;
     clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%);
   }
 

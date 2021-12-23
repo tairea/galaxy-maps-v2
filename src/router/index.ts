@@ -8,6 +8,7 @@ import CohortView from "../views/CohortView.vue";
 import CohortList from "../views/CohortList.vue";
 import StudentList from "../views/StudentList.vue";
 import Login from "../views/Login.vue";
+import ResetPassword from "../views/ResetPassword.vue";
 import Register from "../views/Register.vue";
 import LandingPage from "../views/LandingPage.vue";
 
@@ -50,6 +51,11 @@ const routes = [
     path: "/login",
     name: "Login",
     component: Login,
+  },
+  {
+    path: "/reset",
+    name: "Reset",
+    component: ResetPassword,
   },
   {
     path: "/register",
