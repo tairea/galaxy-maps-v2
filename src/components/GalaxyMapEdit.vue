@@ -150,102 +150,13 @@
 
     <!-- POPUP -->
     <!-- follow drag -> :style="{ top: getCoords.y - 100 + 'px', left: getCoords.x + 30 + 'px' }" -->
-    <div
-      v-if="infoPopupShow"
-      ref="popup"
-      class="ss-info-panel"
-      :class="{ centeredFocus: centerFocusPosition }"
-      :style="{
-        top: centerFocusPosition
-          ? infoPopupPosition.y
-          : infoPopupPosition.y - 100 + 'px',
-        left: centerFocusPosition
-          ? infoPopupPosition.x
-          : infoPopupPosition.x + 30 + 'px',
-      }"
-    >
-      <div class="ss-preview">
-        <!-- Preview: Solar System -->
-        <SolarSystem
-          :topic="getPersonsTopicById(this.currentNode.id)"
-          :size="'0.25em'"
-        />
-        <v-btn
-          class="view-ss-button pa-5"
-          dark
-          small
-          color="missionAccent"
-          outlined
-          tile
-          title="Delete"
-          @click="routeToSolarSystem"
-        >
-          View System
-        </v-btn>
-        <div class="ss-details-buttons mr-2">
-          <v-btn
-            icon
-            small
-            color="missionAccent"
-            class="close-button"
-            @click="close"
-          >
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-          <v-btn
-            v-if="person.accountType != 'student'"
-            class="my-2"
-            icon
-            dark
-            x-small
-            color="baseAccent"
-            title="Edit"
-            @click="editNode"
-          >
-            <v-icon>mdi-pencil</v-icon>
-          </v-btn>
-          <v-btn
-            v-if="person.accountType != 'student'"
-            icon
-            dark
-            x-small
-            color="red"
-            title="Delete"
-            @click="deleteFromMap"
-            :loading="deleting"
-          >
-            <v-icon>mdi-delete</v-icon>
-          </v-btn>
-        </div>
-      </div>
-      <!-- Preview: Topic Label -->
-      <div class="ss-details">
-        {{ currentNode.label }}
-      </div>
-      <!-- Preview: Table of Topic's Tasks -->
-      <div class="ss-missions">
-        <div v-if="!getTopicTasks()">
-          <h5 class="mission-text" style="text-align: center">
-            NO MISSIONS SET
-          </h5>
-        </div>
-        <div v-else v-for="(task, index) in getTopicTasks()" :key="task.id">
-          <v-simple-table class="task-table">
-            <tr>
-              <td>
-                <h5 class="mission-text">MISSION {{ index + 1 }}:</h5>
-              </td>
-              <td>
-                <h5 class="mission-text">{{ task.title }}</h5>
-              </td>
-              <td v-if="task.duration">
-                <h5 class="mission-text">{{ task.duration }} MINS</h5>
-              </td>
-            </tr>
-          </v-simple-table>
-        </div>
-      </div>
-    </div>
+    <PopupSystemPreview
+      :infoPopupShow="infoPopupShow"
+      :infoPopupPosition="infoPopupPosition"
+      :currentNode="currentNode"
+      :centerFocusPosition="centerFocusPosition"
+      @deleteFromMap="deleteFromMap"
+    />
   </div>
 </template>
 
@@ -253,19 +164,18 @@
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
 
-import SolarSystem from "../components/SolarSystem";
+import PopupSystemPreview from "../components/PopupSystemPreview";
 
 export default {
   name: "GalaxyMapEdit",
   components: {
-    SolarSystem,
+    PopupSystemPreview,
   },
   props: ["course", "coords"],
   async mounted() {
     // bind to store all topics for this course
     // await this.$store.dispatch("bindAllCourseTopics", this.currentCourseId);
     console.log("person account type is: ", this.person.accountType);
-    this.getTopicTasks();
   },
   data() {
     return {
@@ -284,8 +194,7 @@ export default {
       infoPopupShow: false,
       infoPopupPosition: {},
       centerFocusPosition: false,
-      gotTasks: true,
-      topicTasks: [],
+
       nodeTypes: [
         {
           type: "Introduction",
@@ -311,24 +220,21 @@ export default {
     },
   },
   methods: {
-    getTopicTasks() {
-      console.log("current node", this.currentNode.id);
-      let topic = this.getPersonsTopicById(this.currentNode.id);
-      console.log("topic is === ", topic);
-      if (!topic) {
-        return;
-      }
-      this.topicTasks = topic.tasks;
-      console.log("this.topicTasks", this.topicTasks);
-      return this.topicTasks;
-    },
+    // getTopicTasks() {
+    //   console.log("current node", this.currentNode.id);
+    //   let topic = this.getPersonsTopicById(this.currentNode.id);
+    //   console.log("topic is === ", topic);
+    //   if (!topic) {
+    //     return;
+    //   }
+    //   this.topicTasks = topic.tasks;
+    //   console.log("this.topicTasks", this.topicTasks);
+    //   return this.topicTasks;
+    // },
     cancel() {
       console.log("cancel");
       this.dialog = false;
       // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
-    },
-    close() {
-      this.deselect();
     },
     saveNode(node) {
       console.log("save", node);
@@ -487,17 +393,18 @@ export default {
           console.error("Error deleting edge: ", error);
         });
     },
-    routeToSolarSystem() {
-      console.log("route to ss", this.currentNode.id);
-      // save current topic to store
-      this.$store.commit("setCurrentTopicId", this.currentNode.id);
-      // route to topic/solar system
-      this.$router.push({
-        name: "SolarSystemView",
-        params: {
-          topicId: this.currentNode.id,
-        },
-      });
+    deleteFromMap() {
+      if (this.currentNode.label == "new") {
+        console.log("emiting to remove unsaved");
+        this.$emit("removeUnsavedNode");
+        this.currentNode.label = {};
+      } else if (this.type == "node") {
+        this.deleteNode();
+      } else if (this.type == "edge") {
+        this.deleteEdge();
+      }
+      // this.resetEditing();
+      // this.resetNewData();
     },
   },
 };

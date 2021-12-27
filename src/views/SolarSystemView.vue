@@ -1,15 +1,19 @@
 <template>
   <div id="container" class="bg">
     <div id="left-section">
-      <SolarSystemInfo :topic="getTopicById(currentTopicId)" />
+      <SolarSystemInfo :topic="getPersonsTopicById(currentTopicId)" />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
-      <AssignedInfo :assignCohorts="true" :cohorts="getCohortsInThisCourse(currentCourseId)" />
+      <AssignedInfo
+        v-if="person.accountType != 'student'"
+        :assignCohorts="true"
+        :cohorts="getCohortsInThisCourse(currentCourseId)"
+      />
 
-      <BackButton :toPath="'/galaxy/' + currentCourseId"/>
+      <BackButton :toPath="'/galaxy/' + currentCourseId" />
     </div>
     <div id="main-section">
       <MissionsList
-        :tasks="getTasksByTopicId(currentTopicId)"
+        :tasks="getPersonsTasksByTopicId(currentTopicId)"
         :topicId="currentTopicId"
       />
     </div>
@@ -40,22 +44,26 @@ export default {
     MissionsInfo,
     MissionsList,
     SolarSystem,
-    BackButton
+    BackButton,
   },
   props: ["topicId"],
   mounted() {
-    console.log("current topic id is:",this.currentTopicId)
-    console.log("current course id is:",this.currentCourseId)
+    console.log("current topic id is:", this.currentTopicId);
+    console.log("current course id is:", this.currentCourseId);
   },
   data() {
     return {};
   },
   computed: {
     ...mapState(["currentTopicId", "currentCourseId"]),
-    ...mapGetters(["getTopicById", "getTasksByTopicId","getCohortsInThisCourse"]),
+    ...mapGetters([
+      "person",
+      "getPersonsTopicById",
+      "getPersonsTasksByTopicId",
+      "getCohortsInThisCourse",
+    ]),
   },
-  methods: {
-  },
+  methods: {},
 };
 </script>
 
@@ -116,7 +124,7 @@ export default {
 ::-webkit-scrollbar {
   width: 10px;
 }
-  /* Track */
+/* Track */
 ::-webkit-scrollbar-track {
   background: var(--v-background-base);
 }
