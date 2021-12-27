@@ -32,19 +32,21 @@ export default new Vuex.Store({
     personsAssignedNodesForDisplay: [],
     personsEdges: [],
     personsAssignedEdges: [],
+    personsTopics: [],
   },
   getters: {
     user: (state) => state.user,
     person: (state) => state.person,
     courses: (state) => state.courses,
     getCourseById: (state) => (id) => {
-      console.log("FROM getCourseById. state.courses = ", state.courses);
-      console.log("FROM getCourseById. course id = ", id);
       return state.courses.find((course) => course.id === id);
     },
     getTopicById: (state) => (id) => {
       const topic = state.topics.find((topic) => topic.id === id);
-      console.log("TOPIC IS:", topic);
+      return topic;
+    },
+    getPersonsTopicById: (state) => (id) => {
+      const topic = state.personsTopics.find((topic) => topic.id === id);
       return topic;
     },
     getCohortById: (state) => (id) => {
@@ -203,28 +205,19 @@ export default new Vuex.Store({
     bindCourseNodes: firestoreAction(({ bindFirestoreRef }, id) => {
       return bindFirestoreRef(
         "currentCourseNodes",
-        db
-          .collection("courses")
-          .doc(id)
-          .collection("map-nodes")
+        db.collection("courses").doc(id).collection("map-nodes")
       );
     }),
     bindCourseEdges: firestoreAction(({ bindFirestoreRef }, id) => {
       return bindFirestoreRef(
         "currentCourseEdges",
-        db
-          .collection("courses")
-          .doc(id)
-          .collection("map-edges")
+        db.collection("courses").doc(id).collection("map-edges")
       );
     }),
     bindCourseTopics: firestoreAction(({ bindFirestoreRef }, id) => {
       return bindFirestoreRef(
         "topics",
-        db
-          .collection("courses")
-          .doc(id)
-          .collection("topics")
+        db.collection("courses").doc(id).collection("topics")
       );
     }),
     async getAllNodes({ state }) {
@@ -328,10 +321,7 @@ export default new Vuex.Store({
     async getAssignedNodesByPersonId({ state }, personId) {
       const personsAssignedNodes = [];
       // get the courseId from assignedCourses
-      const doc = await db
-        .collection("people")
-        .doc(personId)
-        .get();
+      const doc = await db.collection("people").doc(personId).get();
       // loop array of assigned courses
       if (doc.data()?.assignedCourses) {
         for (const courseId of doc.data()?.assignedCourses) {
@@ -344,7 +334,7 @@ export default new Vuex.Store({
             .collection("map-nodes")
             .get();
 
-            //TODO: this only pushes nodes. not the course info
+          //TODO: this only pushes nodes. not the course info
 
           personsAssignedNodes.push(
             ...subQuerySnapshot.docs.map((subDoc) => {
@@ -390,10 +380,7 @@ export default new Vuex.Store({
     async getAssignedEdgesByPersonId({ state }, personId) {
       const personsAssignedEdges = [];
       // get the courseId from assignedCourses
-      const doc = await db
-        .collection("people")
-        .doc(personId)
-        .get();
+      const doc = await db.collection("people").doc(personId).get();
       // loop array of assigned courses
       if (doc.data().assignedCourses) {
         for (const courseId of doc.data().assignedCourses) {
@@ -419,6 +406,17 @@ export default new Vuex.Store({
         db.collection("courses").where("mappedBy.personId", "==", personId)
       );
     }),
+    bindThisPersonsCourseTopics: firestoreAction(
+      ({ bindFirestoreRef }, payload) => {
+        return bindFirestoreRef(
+          "personsTopics",
+          db
+            .collection("people")
+            .doc(payload.personId)
+            .collection(payload.courseId)
+        );
+      }
+    ),
   },
 });
 

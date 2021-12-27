@@ -9,7 +9,11 @@
           <br />
           <span style="color: white">{{ course.title }}</span>
         </p>
-        <v-img v-if="course.image.url" class="galaxy-image" :src="course.image.url"></v-img>
+        <v-img
+          v-if="course.image.url"
+          class="galaxy-image"
+          :src="course.image.url"
+        ></v-img>
         <!-- <p class="info-panel-label">
           X: <span style="color: white">{{ currentNode.x }}</span>
         </p>
@@ -51,9 +55,7 @@
             :src="course.contentBy.image.url"
           ></v-img>
         </div>
-        <p class="ma-0">
-          Content By:
-        </p>
+        <p class="ma-0">Content By:</p>
         <a :href="course.contentBy.source"
           ><span style="color: white">{{ course.contentBy.name }}</span></a
         >
@@ -61,7 +63,6 @@
       <div class="right">
         <div v-if="course.mappedBy.image">
           <v-img
-           
             class="mappedBy-image"
             :src="course.mappedBy.image.url"
           ></v-img>
@@ -71,32 +72,61 @@
       </div>
     </div>
 
-    <div class="ss-preview">
-      <v-btn
-        class="view-ss-button pa-5"
-        dark
-        small
-        color="galaxyAccent"
-        outlined
-        tile
-        title="View Galaxy"
-        @click="routeToGalaxyEdit"
-      >
-        View Galaxy
-      </v-btn>
+    <div>
+      <div v-if="person.accountType != 'student'" class="ss-actions">
+        <v-btn
+          class="view-ss-button pa-5"
+          dark
+          small
+          color="galaxyAccent"
+          outlined
+          tile
+          title="View Galaxy"
+          @click="routeToGalaxyEdit"
+        >
+          View Galaxy
+        </v-btn>
 
-      <v-btn
-        class="view-ss-button pa-5"
-        dark
-        small
-        color="missionAccent"
-        outlined
-        tile
-        title="View Analytics"
-        @click="routeToGalaxyAnalytics"
-      >
-        View Analytics
-      </v-btn>
+        <v-btn
+          class="view-ss-button pa-5"
+          dark
+          small
+          color="missionAccent"
+          outlined
+          tile
+          title="View Analytics"
+          @click="routeToGalaxyAnalytics"
+        >
+          View Analytics
+        </v-btn>
+      </div>
+      <!-- Student Galaxy Actions -->
+      <div v-else class="ss-actions">
+        <v-btn
+          class="view-ss-button pa-5"
+          dark
+          small
+          color="galaxyAccent"
+          outlined
+          tile
+          title="View Galaxy"
+          @click="startThisGalaxy"
+        >
+          Start Galaxy
+        </v-btn>
+        <v-btn
+          class="view-ss-button pa-5"
+          dark
+          small
+          color="galaxyAccent"
+          outlined
+          tile
+          title="View Galaxy"
+          @click="routeToGalaxyEdit"
+        >
+          Resume Galaxy
+        </v-btn>
+      </div>
     </div>
   </div>
 </template>
@@ -104,13 +134,15 @@
 <script>
 import { mapState } from "vuex";
 
+import { db } from "../store/firestoreConfig";
+
 export default {
   name: "PopupPreview",
   components: {},
   props: ["course"],
   async mounted() {},
   computed: {
-    // ...mapState(["currentCourseId"]),
+    ...mapState(["person"]),
   },
   data() {
     return {};
@@ -140,6 +172,36 @@ export default {
       //     topicId: this.currentCourseId,
       //   },
       // });
+    },
+    async startThisGalaxy() {
+      // add this galaxy metadata (eg. topics) to this persons course database
+      // 1) get topics in this course
+      const querySnapshot = await db
+        .collection("courses")
+        .doc(this.course.id)
+        .collection("topics")
+        .get();
+      // 2) add them to person (this will store their progression data for this course )
+      for (const doc of querySnapshot.docs) {
+        console.log("person ID... ", this.person.id);
+        console.log("course ID... ", this.course.id);
+        console.log("doc.data()... ", doc.data());
+        await db
+          .collection("people")
+          .doc(this.person.id)
+          .collection(this.course.id)
+          .doc(doc.data().id)
+          .set({
+            ...doc.data(),
+            status: "locked",
+          });
+      }
+      this.$router.push({
+        name: "GalaxyView",
+        params: {
+          courseId: this.course.id,
+        },
+      });
     },
   },
 };
@@ -205,7 +267,7 @@ export default {
     }
   }
 
-  .ss-preview {
+  .ss-actions {
     border-top: 1px solid var(--v-missionAccent-base);
     // min-width: 20vw;
     min-height: 20vh;

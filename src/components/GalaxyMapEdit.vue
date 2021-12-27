@@ -11,19 +11,100 @@
               <v-icon left color="missionAccent"
                 >mdi-information-variant</v-icon
               >
-              <p class="dialog-description">{{ dialogDescription }}</p>
+              <p class="dialog-description">
+                This System is an Objective of the
+                <span class="galaxy-text">{{ this.course.title }}</span> Galaxy
+                map
+              </p>
             </div>
           </div>
 
           <!-- Fields -->
-          <v-text-field
-            class="input-field"
-            solo
-            color="missionAccent"
-            v-model="currentNode.label"
-            :autofocus="!editing"
-            background-color="white"
-          ></v-text-field>
+          <div class="fields my-4 py-4">
+            <!-- Node Label -->
+            <p class="dialog-description">Objective Title:</p>
+            <v-text-field
+              class="input-field"
+              solo
+              color="missionAccent"
+              v-model="currentNode.label"
+              :autofocus="!editing"
+              background-color="white"
+              placeholder="Enter name of this node/objective"
+            ></v-text-field>
+
+            <!-- Node Type -->
+            <p class="dialog-description">
+              Node Types:
+              <v-tooltip right>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    left
+                    color="missionAccent"
+                    small
+                    class="circle-outline ma-1"
+                    v-bind="attrs"
+                    v-on="on"
+                    >mdi-information-variant</v-icon
+                  >
+                </template>
+                <span>
+                  INTRODUCTION Nodes - Introduce the user to the start of a
+                  branch<br /><br />
+                  TASKS nodes - Have a number of missions/tasks/activities for a
+                  user to complete<br /><br />
+                  PROJECT nodes - Represent a project task for the user to
+                  complete
+                </span>
+              </v-tooltip>
+            </p>
+            <v-select
+              v-model="currentNode.group"
+              :items="nodeTypes"
+              item-text="type"
+              item-value="value"
+              solo
+            ></v-select>
+
+            <!-- Node Pre-requisites -->
+            <p class="dialog-description">
+              Node Prerequisites:
+              <v-tooltip right>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    left
+                    color="missionAccent"
+                    small
+                    class="circle-outline ma-1"
+                    v-bind="attrs"
+                    v-on="on"
+                    >mdi-information-variant</v-icon
+                  >
+                </template>
+                <span>
+                  Prerequisites are objectives that need to be completed for
+                  this one to be unlocked
+                </span>
+              </v-tooltip>
+            </p>
+            <v-checkbox v-model="prerequisites" class="ma-0 pa-0" color="blue">
+              <template v-slot:label>
+                <span class="dialog-description"
+                  >Does this Objective have Prerequisites?</span
+                >
+              </template>
+            </v-checkbox>
+            <v-select
+              v-if="prerequisites"
+              v-model="currentNode.prerequisites"
+              :items="currentCourseNodes"
+              item-text="label"
+              item-value="id"
+              solo
+              multiple
+              chips
+            ></v-select>
+          </div>
 
           <!-- Action buttons -->
           <div class="action-buttons">
@@ -34,9 +115,7 @@
               class="mr-2"
               :loading="loading"
             >
-              <v-icon left>
-                mdi-check
-              </v-icon>
+              <v-icon left> mdi-check </v-icon>
               SAVE
             </v-btn>
 
@@ -47,9 +126,7 @@
               @click="deleteFromMap"
               class="mr-2"
             >
-              <v-icon left>
-                mdi-delete
-              </v-icon>
+              <v-icon left> mdi-delete </v-icon>
               DELETE
             </v-btn>
 
@@ -60,9 +137,7 @@
               @click="cancel"
               :disabled="loading"
             >
-              <v-icon left>
-                mdi-close
-              </v-icon>
+              <v-icon left> mdi-close </v-icon>
               Cancel
             </v-btn>
           </div>
@@ -92,7 +167,7 @@
       <div class="ss-preview">
         <!-- Preview: Solar System -->
         <SolarSystem
-          :topic="getTopicById(this.currentNode.id)"
+          :topic="getPersonsTopicById(this.currentNode.id)"
           :size="'0.25em'"
         />
         <v-btn
@@ -118,7 +193,7 @@
             <v-icon>mdi-close</v-icon>
           </v-btn>
           <v-btn
-            v-if="!person.accountType == 'student'"
+            v-if="person.accountType != 'student'"
             class="my-2"
             icon
             dark
@@ -130,7 +205,7 @@
             <v-icon>mdi-pencil</v-icon>
           </v-btn>
           <v-btn
-            v-if="!person.accountType == 'student'"
+            v-if="person.accountType != 'student'"
             icon
             dark
             x-small
@@ -145,12 +220,12 @@
       </div>
       <!-- Preview: Topic Label -->
       <div class="ss-details">
-        {{ this.currentNode.label }}
+        {{ currentNode.label }}
       </div>
       <!-- Preview: Table of Topic's Tasks -->
       <div class="ss-missions">
         <div v-if="!getTopicTasks()">
-          <h5 class="mission-text" style="text-align:center">
+          <h5 class="mission-text" style="text-align: center">
             NO MISSIONS SET
           </h5>
         </div>
@@ -189,6 +264,8 @@ export default {
   async mounted() {
     // bind to store all topics for this course
     // await this.$store.dispatch("bindAllCourseTopics", this.currentCourseId);
+    console.log("person account type is: ", this.person.accountType);
+    this.getTopicTasks();
   },
   data() {
     return {
@@ -196,10 +273,7 @@ export default {
       dialogTitle: "Edit something hmmm...",
       dialogDescription: "some kind of description",
       nodeDialogTitle: "Enter the name of this System",
-      nodeDialogDescription:
-        "This System is an Objective of the " +
-        this.course.title +
-        " Galaxy map",
+      nodeDialogDescription: "",
       newNodeData: {},
       editing: false,
       type: "",
@@ -210,21 +284,43 @@ export default {
       infoPopupShow: false,
       infoPopupPosition: {},
       centerFocusPosition: false,
-      gotTasks: true
+      gotTasks: true,
+      topicTasks: [],
+      nodeTypes: [
+        {
+          type: "Introduction",
+          value: "introduction",
+        },
+        {
+          type: "Tasks",
+          value: "tasks",
+        },
+        {
+          type: "Project",
+          value: "project",
+        },
+      ],
+      prerequisites: false,
     };
   },
   computed: {
-    ...mapState(["person"]),
-    ...mapGetters(["getTopicById"]),
+    ...mapState(["person", "currentCourseNodes", "personsTopics"]),
+    ...mapGetters(["getTopicById", "getPersonsTopicById"]),
     getCoords() {
       return this.coords;
     },
   },
   methods: {
     getTopicTasks() {
-      console.log("current node",this.currentNode.id)
-      const topic = this.getTopicById(this.currentNode.id);
-      return topic.tasks;
+      console.log("current node", this.currentNode.id);
+      let topic = this.getPersonsTopicById(this.currentNode.id);
+      console.log("topic is === ", topic);
+      if (!topic) {
+        return;
+      }
+      this.topicTasks = topic.tasks;
+      console.log("this.topicTasks", this.topicTasks);
+      return this.topicTasks;
     },
     cancel() {
       console.log("cancel");
@@ -330,14 +426,28 @@ export default {
     deleteNode() {
       console.log("deleting node");
       this.deleting = true;
-      // delete node
+      // delete node from firestore > map-nodes
       db.collection("courses")
         .doc(this.course.id)
         .collection("map-nodes")
         .doc(this.currentNode.id)
         .delete()
         .then(() => {
-          console.log("Node successfully deleted!");
+          console.log("Node successfully deleted from map-nodes!");
+          this.deleting = false;
+          this.infoPopupShow = false;
+        })
+        .catch((error) => {
+          console.error("Error deleting node: ", error);
+        });
+      // delete node from firestore > topics
+      db.collection("courses")
+        .doc(this.course.id)
+        .collection("topics")
+        .doc(this.currentNode.id)
+        .delete()
+        .then(() => {
+          console.log("Node successfully deleted from topics!");
           this.deleting = false;
           this.infoPopupShow = false;
         })
@@ -408,8 +518,8 @@ export default {
   // width: 33.33%;
   min-height: 400px;
   display: flex;
-  justify-content: space-around;
-  align-items: space-around;
+  // justify-content: space-around;
+  // align-items: space-around;
   flex-direction: column;
   color: var(--v-missionAccent-base);
   padding: 20px;
@@ -435,6 +545,18 @@ export default {
     width: 100%;
     text-align: center;
     flex: none;
+  }
+
+  .fields {
+    border-top: 1px solid var(--v-missionAccent-base);
+  }
+
+  .dialog-description {
+    color: var(--v-missionAccent-base);
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    margin: 0;
+    font-style: italic;
   }
 }
 
@@ -505,8 +627,18 @@ export default {
   margin-left: 50px;
 }
 
+.galaxy-text {
+  color: var(--v-galaxyAccent-base);
+  text-transform: uppercase;
+  font-weight: 700;
+}
 .mission-text {
   color: var(--v-missionAccent-base);
   padding: 10px 20px;
+}
+
+.circle-outline {
+  border: 1px solid var(--v-missionAccent-base);
+  border-radius: 50%;
 }
 </style>

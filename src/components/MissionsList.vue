@@ -2,17 +2,17 @@
   <div class="mission-container">
     <h2 class="missions-label">Missions</h2>
 
-    <div v-if="tasks" style="width:100%">
+    <div v-if="tasks" style="width: 100%">
       <div v-for="(task, index) in tasks" :key="task.id">
         <MissionsCard :task="task" :index="index" :topicId="topicId" />
       </div>
     </div>
 
-    <div v-else style="width:100%">
+    <div v-else style="width: 100%">
       <p class="no-missions-label">No Missions</p>
     </div>
 
-    <div class="createButton" v-if="!person.accountType == 'student'">
+    <div class="createButton" v-if="person.accountType != 'student'">
       <CreateEditDeleteMissionDialog :topicId="topicId" />
     </div>
   </div>

@@ -2,7 +2,7 @@
   <div class="mission-card">
     <div class="mission-section mission-number-section">
       <p class="text-overline text-uppercase">Mission</p>
-      <p style="font-size: 50px; text-align: center;">{{ index + 1 }}</p>
+      <p style="font-size: 50px; text-align: center">{{ index + 1 }}</p>
     </div>
     <div class="mission-section mission-main-section">
       <!-- TITLE -->
@@ -10,7 +10,7 @@
       <!-- DESCRIPTION -->
       <p>{{ task.description }}</p>
       <!-- EDIT BUTTON -->
-      <div v-if="!person.accountType == 'student'">
+      <div v-if="person.accountType != 'student'">
         <CreateEditDeleteMissionDialog
           :edit="true"
           :taskToEdit="task"
@@ -26,7 +26,7 @@
           v-if="task.video"
           :href="task.video"
           target="_blank"
-          class="text-overline text-uppercase "
+          class="text-overline text-uppercase"
           >Video</a
         >
         <p v-else class="text-overline text-uppercase" style="color: #707070">
@@ -50,7 +50,7 @@
     <div class="mission-section">
       <!-- DURATION -->
       <p class="text-overline text-uppercase">Duration:</p>
-      <p style="font-size: 30px; text-align: center;">
+      <p style="font-size: 30px; text-align: center">
         {{ task.duration }}
       </p>
     </div>
@@ -60,7 +60,6 @@
 </template>
 
 <script>
-
 import CreateEditDeleteMissionDialog from "../components/CreateEditDeleteMissionDialog";
 
 import { mapGetters } from "vuex";
@@ -71,14 +70,13 @@ export default {
     CreateEditDeleteMissionDialog,
   },
   props: ["task", "index", "topicId"],
-  mounted() {
-  },
+  mounted() {},
   computed: {
     ...mapGetters(["person"]),
   },
   data() {
     return {
-      editing: false
+      editing: false,
     };
   },
 };

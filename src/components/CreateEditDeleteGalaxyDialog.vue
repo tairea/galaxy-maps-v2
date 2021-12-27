@@ -13,14 +13,10 @@
               color="galaxyAccent"
               small
             >
-              <v-icon small>
-                mdi-pencil
-              </v-icon>
+              <v-icon small> mdi-pencil </v-icon>
             </v-btn>
             <v-btn v-else outlined color="baseAccent" v-bind="attrs" v-on="on">
-              <v-icon left>
-                mdi-plus
-              </v-icon>
+              <v-icon left> mdi-plus </v-icon>
               CREATE GALAXY
             </v-btn>
           </template>
@@ -103,7 +99,7 @@
                     <v-icon left color="missionAccent"
                       >mdi-information-variant</v-icon
                     >
-                    <p class="dialog-description" style="text-align: right;">
+                    <p class="dialog-description" style="text-align: right">
                       Tick this box if your are mapping someone elses content
                     </p>
                   </div>
@@ -182,9 +178,7 @@
                 :loading="loading"
                 :disabled="disabled"
               >
-                <v-icon left>
-                  mdi-check
-                </v-icon>
+                <v-icon left> mdi-check </v-icon>
                 SAVE
               </v-btn>
 
@@ -196,9 +190,7 @@
                 @click="deleteDialog()"
                 class="ml-2"
               >
-                <v-icon left>
-                  mdi-delete
-                </v-icon>
+                <v-icon left> mdi-delete </v-icon>
                 DELETE
               </v-btn>
 
@@ -209,9 +201,7 @@
                 @click="cancel"
                 :disabled="disabled || loading"
               >
-                <v-icon left>
-                  mdi-close
-                </v-icon>
+                <v-icon left> mdi-close </v-icon>
                 Cancel
               </v-btn>
             </div>
@@ -258,9 +248,7 @@
                 class="ml-2"
                 :loading="deleting"
               >
-                <v-icon left>
-                  mdi-delete
-                </v-icon>
+                <v-icon left> mdi-delete </v-icon>
                 DELETE
               </v-btn>
 
@@ -271,9 +259,7 @@
                 @click="cancelDeleteDialog"
                 :disabled="disabled || loading"
               >
-                <v-icon left>
-                  mdi-close
-                </v-icon>
+                <v-icon left> mdi-close </v-icon>
                 Cancel
               </v-btn>
             </div>
@@ -298,8 +284,7 @@ export default {
     dialog: false,
     dialogConfirm: false,
     dialogTitle: "Create a new Galaxy",
-    dialogDescription:
-      "A Galaxy is a path of learning. Kind of like a course.",
+    dialogDescription: "A Galaxy is a path of learning. Kind of like a course.",
     course: {
       title: "",
       description: "",
@@ -385,7 +370,7 @@ export default {
             params: {
               courseId: courseId,
               courseTitle: course.title,
-              fromCreate: true // flag to detect from creating a new Galaxy. TODO: add starting intro node
+              fromCreate: true, // flag to detect from creating a new Galaxy. TODO: add starting intro node
             },
           });
         })
@@ -490,6 +475,8 @@ export default {
         .catch((error) => {
           console.error("Error deleting document: ", error);
         });
+      //TODO: this does not delete the subcollections of the course
+
       this.deleteImage();
     },
     deleteImage() {

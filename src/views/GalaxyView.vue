@@ -17,7 +17,7 @@
       <div class="map-buttons" v-if="person.accountType != 'student'">
         <v-btn
           class="map-button"
-          :color=" !addNodeMode ? 'missionAccent' : 'baseAccent'"
+          :color="!addNodeMode ? 'missionAccent' : 'baseAccent'"
           fab
           dark
           small
@@ -33,7 +33,7 @@
         <!-- Add edge button -->
         <v-btn
           class="map-button"
-          :color=" !addEdgeMode ? 'missionAccent' : 'baseAccent'"
+          :color="!addEdgeMode ? 'missionAccent' : 'baseAccent'"
           fab
           dark
           small
@@ -66,7 +66,7 @@
           <p
             v-if="currentCourseNodes.length === 0 && !addNodeMode"
             class="ui-message"
-            style="margin-left:20px;"
+            style="margin-left: 20px"
           >
             <v-icon color="missionAccent" class="bounce"
               >mdi-hand-pointing-up</v-icon
@@ -132,24 +132,29 @@ export default {
   },
   props: ["courseId"],
   async mounted() {
-    if(this.fromCreate) {
-      let nodeId = null
+    if (this.fromCreate) {
+      let nodeId = null;
       // create first node (hard coded)
-      console.log("trying to add default intro node")
-      await db.collection("courses")
+      console.log("trying to add default intro node");
+      await db
+        .collection("courses")
         .doc(this.courseId)
         .collection("map-nodes")
         .add({
           // hardcoded first node
           label: this.courseTitle + " Intro",
-          type: "intro",
+          group: "introduction",
           x: 0,
-          y:0,
+          y: 0,
         })
         .then((docRef) => {
-          console.log("Node successfully written! With ID:",docRef.id);
+          console.log("Node successfully written! With ID:", docRef.id);
           // update node obj with docRef.id aka nodeId
-          db.collection("courses").doc(this.courseId).collection("map-nodes").doc(docRef.id).update({id: docRef.id});
+          db.collection("courses")
+            .doc(this.courseId)
+            .collection("map-nodes")
+            .doc(docRef.id)
+            .update({ id: docRef.id });
           // this.loading = false;
           // this.dialog = false;
         })
@@ -157,13 +162,17 @@ export default {
           console.error("Error writing node: ", error);
         });
       // get the node id
-      const querySnapshot = await db.collection("courses").doc(this.courseId).collection("map-nodes").get()
+      const querySnapshot = await db
+        .collection("courses")
+        .doc(this.courseId)
+        .collection("map-nodes")
+        .get();
       for (const doc of querySnapshot.docs) {
-        nodeId = doc.id
+        nodeId = doc.id;
       }
       // create topic with node id
       db.collection("courses")
-        .doc(this.course.id)
+        .doc(this.courseId)
         .collection("topics")
         .doc(nodeId)
         .set({
@@ -181,10 +190,10 @@ export default {
         });
     }
 
-    console.log("courseId",this.courseId)
-    if (this.courseId) {return}
-
-
+    console.log("courseId", this.courseId);
+    if (this.courseId) {
+      return;
+    }
   },
   data() {
     return {
@@ -199,7 +208,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(["currentCourseId","currentCourseNodes","person"]),
+    ...mapState(["currentCourseId", "currentCourseNodes", "person"]),
     ...mapGetters([
       "getCourseById",
       "getCohortsInThisCourse",
@@ -211,23 +220,23 @@ export default {
     toggleAddNodeMode() {
       this.addNodeMode = !this.addNodeMode;
       if (this.addNodeMode == true) {
-        this.$refs.vis.addNodeMode()
+        this.$refs.vis.addNodeMode();
       } else if (this.addNodeMode == false) {
-        this.$refs.vis.disableEditMode()
+        this.$refs.vis.disableEditMode();
         this.uiMessage = "";
       }
     },
     toggleAddEdgeMode() {
       this.addEdgeMode = !this.addEdgeMode;
       if (this.addEdgeMode == true) {
-        this.$refs.vis.addEdgeMode()
+        this.$refs.vis.addEdgeMode();
       } else if (this.addEdgeMode == false) {
-        this.$refs.vis.disableEditMode()
+        this.$refs.vis.disableEditMode();
         this.uiMessage = "";
       }
     },
     addNode(node) {
-      this.addNodeMode = false
+      this.addNodeMode = false;
       this.uiMessage = "";
       this.coords.x = node.x;
       this.coords.y = node.y;
@@ -252,24 +261,24 @@ export default {
       this.$refs.edit.hovered(node);
     },
     deselected() {
-      this.$refs.edit.deselect()
+      this.$refs.edit.deselect();
     },
     removeUnsavedNode() {
-      this.$refs.vis.removeUnsavedNode()
+      this.$refs.vis.removeUnsavedNode();
     },
     centerFocus(node) {
-      this.$refs.edit.centerFocus(node)
+      this.$refs.edit.centerFocus(node);
     },
     nodePositionsChanged() {
-      this.changeInPositions = true
+      this.changeInPositions = true;
     },
     saveNodePositions() {
-      this.$refs.vis.saveNodePositions()
+      this.$refs.vis.saveNodePositions();
     },
     nodePositionsChangeSaved() {
-      this.nodePositionsChangeLoading = false
-      this.changeInPositions = false
-    }
+      this.nodePositionsChangeLoading = false;
+      this.changeInPositions = false;
+    },
   },
 };
 </script>

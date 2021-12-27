@@ -64,6 +64,10 @@ export default {
         edges: {
           length: 50, // Longer edges between nodes.
           smooth: false,
+          color: {
+            color: "#848484",
+            inherit: false,
+          },
         },
         nodes: {
           shape: "dot",
@@ -81,6 +85,44 @@ export default {
           },
           font: { color: "white" },
         },
+        // TODO: node/edge groups
+        groups: {
+          locked: {
+            color: { background: "red", border: "white" },
+            shape: "diamond",
+          },
+          unlocked: {
+            label: "I'm a dot!",
+            shape: "dot",
+            color: "cyan",
+          },
+          current: { color: "rgb(0,255,140)" },
+          inReview: {
+            shape: "icon",
+            icon: {
+              face: "FontAwesome",
+              code: "\uf0c0",
+              size: 50,
+              color: "orange",
+            },
+          },
+          locked: {
+            color: { background: "red", border: "white" },
+            shape: "diamond",
+          },
+          tasks: {
+            color: { background: "yellow", border: "white" },
+            shape: "diamond",
+          },
+          introduction: {
+            shape: "dot",
+            color: "orange",
+          },
+          project: {
+            shape: "dot",
+            color: "purple",
+          },
+        },
         interaction: {
           hover: true,
           hoverConnectedEdges: false,
@@ -90,7 +132,7 @@ export default {
     // functions to animate:
     currentRadius: 0,
     animateRadius: true, // can disable or enable animation
-    updateFrameVar: function() {
+    updateFrameVar: function () {
       this.intervalid1 = setInterval(() => {
         this.updateFrameTimer();
       }, 60);
@@ -104,44 +146,79 @@ export default {
     console.log("current course id:", this.currentCourseId);
     await this.$store.dispatch("bindCourseNodes", this.currentCourseId);
     await this.$store.dispatch("bindCourseEdges", this.currentCourseId);
-    await this.$store.dispatch("bindCourseTopics", this.currentCourseId);
-    console.log("nodes:", this.currentCourseNodes);
+    await this.$store.dispatch("bindThisPersonsCourseTopics", {
+      personId: this.person.id,
+      courseId: this.currentCourseId,
+    });
+    // console.log("nodes:", this.currentCourseNodes);
     // console.log("edges:", this.currentCourseEdges);
-    console.log(this.$refs.network);
+    // console.log("personsTopics:", this.personsTopics);
+    // console.log(this.$refs.network);
+
+    // get topic status and change node colours
+    this.updateStudentsTopicStatus();
+
     this.$refs.network.fit();
   },
   beforeDestroy() {
     clearInterval(this.intervalid1);
   },
   computed: {
-    ...mapGetters(["getTopicById","person"]),
+    ...mapGetters(["getTopicById", "person"]),
     ...mapState([
       "currentCourseId",
       "currentCourseNodes",
       "currentCourseEdges",
+      "personsTopics",
     ]),
   },
   methods: {
+    updateStudentsTopicStatus() {
+      // loop each topic
+      for (var i = 0; i < this.personsTopics.length; i++) {
+        // find the netowrk node that matches the topic
+        let matchingNode = this.$refs.network.nodes.find((node) => {
+          return node.id == this.personsTopics[i].id;
+        });
+        // replace the network node with the topic status (ie. set the group)
+        // console.log(
+        //   "changing node " +
+        //     matchingNode.label +
+        //     " to group " +
+        //     this.personsTopics[i].status
+        // );
+        matchingNode.group = this.personsTopics[i].status;
+        // console.log("node after change", matchingNode);
+      }
+
+      // change node group accordingly (locked. color #848484 opacity 0.7)
+
+      // for (topic of this.personsTopics) {
+
+      // }
+    },
     fakeClickCanvas() {
-      console.log("doing a fake click")
-      document.getElementsByTagName('canvas')[0].dispatchEvent(
-            new MouseEvent(
-                "click", // or "mousedown" if the canvas listens for such an event
-                {
-                    clientX: 0,
-                    clientY: 0,
-                    bubbles: true
-                }
-            )
-        );
+      console.log("doing a fake click");
+      document.getElementsByTagName("canvas")[0].dispatchEvent(
+        new MouseEvent(
+          "click", // or "mousedown" if the canvas listens for such an event
+          {
+            clientX: 0,
+            clientY: 0,
+            bubbles: true,
+          }
+        )
+      );
     },
     getDomCoords(node) {
-      let domCoords = this.$refs.network.canvasToDom({x:node.x, y:node.y})
-      console.log("DOM COOOORDS: ", domCoords)
-      return domCoords
+      let domCoords = this.$refs.network.canvasToDom({ x: node.x, y: node.y });
+      console.log("DOM COOOORDS: ", domCoords);
+      return domCoords;
     },
     doubleClick() {
-      if (this.person.accountType == 'student'){ return }
+      if (this.person.accountType == "student") {
+        return;
+      }
       this.addNodeMode();
     },
     addNodeMode() {
