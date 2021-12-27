@@ -3,70 +3,220 @@
     <!-- USER MENU TOPBAR -->
     <div class="blackBar">
       <div class="d-flex justify-center align-center">
-        <v-img
+        <!-- <v-img
           :src="`http://tutoa.co.nz/portal/img/ian.23cb54e5.jpg`"
           class="profilePic"
-        ></v-img>
+        ></v-img> -->
+        <v-hover v-slot="{ hover }">
+          <v-progress-circular
+            v-if="uploading"
+            :rotate="360"
+            :size="50"
+            :width="2"
+            :value="uploadPercentage"
+            color="teal"
+          >
+            {{ uploadPercentage + "%" }}
+          </v-progress-circular>
+          <v-avatar v-else color="secondary">
+            <img v-if="person.image"
+              :src="person.image.url"
+              :alt="person.firstName"
+              style="object-fit: cover;"
+            >
+            <!-- <v-icon v-if="hover">mdi-pencil</v-icon> -->
+            <v-icon v-else>mdi-account</v-icon>
+            <v-fade-transition>
+              <v-overlay
+                v-if="hover"
+                absolute
+                color="#036358"
+              >
+                  <v-icon small @click="onButtonClick">mdi-pencil</v-icon>  
+              </v-overlay>
+            </v-fade-transition>
+            <input
+              ref="uploader"
+              class="d-none"
+              type="file"
+              accept="image/*"
+              @change="onFileChanged"
+            >
+          </v-avatar>
+        </v-hover>
       </div>
-      <div class="username" style="">
+      <div class="username mx-4" style="">
         {{ person.firstName }} {{ person.lastName }}
       </div>
     </div>
     <!-- USER MENU HIDDEN-->
     <div class="userMenuHidden">
-      <p class="text-overline" color="primary">Colour Theme</p>
-      <!-- LIGHT/DARK MODE SWITCH -->
-      <v-switch
-        v-model="darkSwitch"
-        :label="`${darkSwitch ? 'Dark' : 'Light'}`"
-        @change="changeTheme()"
-      ></v-switch>
+      <v-row>
+        <p class="text-overline mr-8 mt-4" color="primary">Colour Theme</p>
+        <!-- LIGHT/DARK MODE SWITCH -->
+        <v-switch
+          v-model="darkSwitch"
+          :label="`${darkSwitch ? 'Dark' : 'Light'}`"
+          @change="changeTheme()"
+          class="mb-4"
+        ></v-switch>
+      </v-row>
+
       <!-- <ThemeColourPicker/> -->
       <v-btn @click="logout">Logout</v-btn>
     </div>
   </div>
 </template>
 
-<script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
-
+<script>
+// import { Component, Vue } from "vue-property-decorator";
 import firebase from "firebase";
-
-import { mapState } from "vuex";
-
+import { mapState, mapActions } from "vuex";
 import ThemeColourPicker from "@/components/ThemeColourPicker.vue";
+import { db, storage } from "../store/firestoreConfig";
 
-const UserBarBase = Vue.extend({
-  computed: {
-    ...mapState(["person"]),
-  },
-});
-
-@Component({
+export default {
+  name: "UserBar",
   components: {
     ThemeColourPicker,
   },
-})
-export default class UserBar extends UserBarBase {
-  darkSwitch = true;
+  data () {
+    return {
+      darkSwitch: true,
+      editProfile: false,
+      selectedFile: {},
+      uploading: false,
+      uploadPercentage: 0,
+      image: {}
+    }
+  },
+  computed: {
+    ...mapState(["person"]),
+  },
+  methods: {
+    ...mapActions(['getPersonById']),
+    changeTheme() {
+      this.$vuetify.theme.dark = this.darkSwitch;
+    },
+    logout() {
+      firebase
+        .auth()
+        .signOut()
+        .then(() => {
+          alert("Successfully logged out");
+          this.$router.push("/login");
+        })
+        .catch((error) => {
+          alert(error.message);
+          this.$router.push("/");
+        });
+    },
+    onButtonClick() {
+      this.$refs.uploader?.click()
+    },
+    async onFileChanged(e) {
+      console.log('e: ', e)
+      this.selectedFile = e.target.files[0]
+      await this.storeImage()
+    },
+    storeImage() {
+      this.uploading = true;
+      console.log('selectedfile: ', this.selectedFile)
+      // ceate a storage ref
+      var storageRef = storage.ref(
+        "avatar-images/" + this.person.firstname + this.person.lastname + "-" + this.selectedFile.name
+      );
 
-  changeTheme() {
-    this.$vuetify.theme.dark = this.darkSwitch;
-  }
-  logout() {
-    firebase
-      .auth()
-      .signOut()
-      .then(() => {
-        alert("Successfully logged out");
-        this.$router.push("/login");
-      })
-      .catch((error) => {
-        alert(error.message);
-        this.$router.push("/");
-      });
+      // upload a file
+      var uploadTask = storageRef.put(this.selectedFile);
+
+      // update progress bar
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          // show progress on uploader bar
+          this.uploadPercentage =
+            Math.floor((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+        },
+        // upload error
+        (err) => {
+          console.log(err);
+        },
+        // upload complete
+        () => {
+          // get image url
+          uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+            console.log("image url is: " + downloadURL);
+            // add image url to course obj
+           this.uploading = false
+           this.image.url = downloadURL;
+            this.image.name = this.selectedFile.name;
+            console.log("image: ", this.image)
+            this.updateProfile()
+          });
+        }
+      )
+    },
+    updateProfile() {
+      db.collection("people")
+        .doc(this.person.id)
+        .update({
+          image: this.image,
+        })
+        .then(() => {
+          console.log(
+            "Image successfully updated!"
+          );
+          this.getPersonById(this.person.id)
+        })
+        .catch((error) => {
+          console.error("Error writing document: ", error);
+        });
+    }
   }
 }
+
+// const UserBarBase = Vue.extend({
+//   computed: {
+//     ...mapState(["person"]),
+//   },
+// });
+
+// @Component({
+//   components: {
+//     ThemeColourPicker,
+//   },
+// })
+// export default class UserBar extends UserBarBase {
+//   darkSwitch = true;
+//   editProfile = false;
+//   selectedFile = null;
+
+//   changeTheme() {
+//     this.$vuetify.theme.dark = this.darkSwitch;
+//   }
+//   logout() {
+//     firebase
+//       .auth()
+//       .signOut()
+//       .then(() => {
+//         alert("Successfully logged out");
+//         this.$router.push("/login");
+//       })
+//       .catch((error) => {
+//         alert(error.message);
+//         this.$router.push("/");
+//       });
+//   }
+//   onButtonClick() {
+//     this.$refs.uploader.click()
+//   }
+//   onFileChanged(e) {
+//     this.selectedFile = e.target.files[0]
+    
+//     // do something
+//   }
+// }
 </script>
 
 <style lang="scss" scoped>
