@@ -12,7 +12,8 @@
                 >mdi-information-variant</v-icon
               >
               <p class="dialog-description">
-                This System is an Objective of the
+                This <span class="mission-text">System</span> is an Objective of
+                the
                 <span class="galaxy-text">{{ this.course.title }}</span> Galaxy
                 map
               </p>
@@ -35,7 +36,7 @@
 
             <!-- Node Type -->
             <p class="dialog-description">
-              Node Types:
+              Node Type:
               <v-tooltip right>
                 <template v-slot:activator="{ on, attrs }">
                   <v-icon
@@ -156,6 +157,8 @@
       :currentNode="currentNode"
       :centerFocusPosition="centerFocusPosition"
       @deleteFromMap="deleteFromMap"
+      @deselect="deselect"
+      @editNode="editNode"
     />
   </div>
 </template>
@@ -541,7 +544,8 @@ export default {
 }
 .mission-text {
   color: var(--v-missionAccent-base);
-  padding: 10px 20px;
+  text-transform: uppercase;
+  font-weight: 700;
 }
 
 .circle-outline {

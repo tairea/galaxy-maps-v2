@@ -146,10 +146,16 @@ export default {
     console.log("current course id:", this.currentCourseId);
     await this.$store.dispatch("bindCourseNodes", this.currentCourseId);
     await this.$store.dispatch("bindCourseEdges", this.currentCourseId);
-    await this.$store.dispatch("bindThisPersonsCourseTopics", {
-      personId: this.person.id,
-      courseId: this.currentCourseId,
-    });
+    // bind topics for course creator
+    if (this.person.accountType != "student") {
+      await this.$store.dispatch("bindCourseTopics", this.currentCourseId);
+    } else {
+      // bind topics for student
+      await this.$store.dispatch("bindThisPersonsCourseTopics", {
+        personId: this.person.id,
+        courseId: this.currentCourseId,
+      });
+    }
     // console.log("nodes:", this.currentCourseNodes);
     // console.log("edges:", this.currentCourseEdges);
     // console.log("personsTopics:", this.personsTopics);

@@ -18,7 +18,11 @@
     <div class="ss-preview">
       <!-- Preview: Solar System -->
       <SolarSystem
-        :topic="getPersonsTopicById(this.currentNode.id)"
+        :topic="
+          person.accountType == 'student'
+            ? getPersonsTopicById(this.currentNode.id)
+            : getTopicById(this.currentNode.id)
+        "
         :size="'0.25em'"
       />
       <v-btn
@@ -63,7 +67,6 @@
           color="red"
           title="Delete"
           @click="deleteFromMap"
-          :loading="deleting"
         >
           <v-icon>mdi-delete</v-icon>
         </v-btn>
@@ -128,15 +131,22 @@ export default {
     };
   },
   methods: {
+    editNode() {
+      this.$emit("editNode");
+    },
     getTopicTasks() {
-      console.log("current node", this.currentNode.id);
-      let topic = this.getPersonsTopicById(this.currentNode.id);
-      console.log("topic is === ", topic);
+      console.log("node = ", this.currentNode.id);
+      // get the topics for this current node
+      let topic =
+        this.person.accountType == "student"
+          ? this.getPersonsTopicById(this.currentNode.id)
+          : this.getTopicById(this.currentNode.id);
+      console.log("topic = ", topic);
       if (!topic) {
         return;
       }
       this.topicTasks = topic.tasks;
-      console.log("this.topicTasks", this.topicTasks);
+      console.log("topic tasks = ", this.topicTasks);
       return this.topicTasks;
     },
     routeToSolarSystem() {
@@ -152,7 +162,7 @@ export default {
       });
     },
     close() {
-      this.deselect();
+      this.$emit("deselect");
     },
     deleteFromMap() {
       this.$emit("deleteFromMap");

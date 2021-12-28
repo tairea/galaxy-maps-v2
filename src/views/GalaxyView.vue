@@ -14,68 +14,18 @@
     </div>
     <div id="main-section">
       <!-- Map Buttons -->
-      <div class="map-buttons" v-if="person.accountType != 'student'">
-        <v-btn
-          class="map-button"
-          :color="!addNodeMode ? 'missionAccent' : 'baseAccent'"
-          fab
-          dark
-          small
-          outlined
-          tile
-          title="Add Node"
-          @click="toggleAddNodeMode"
-        >
-          <v-icon v-if="!addNodeMode">mdi-dots-hexagon</v-icon>
-          <v-icon v-else color="baseAccent">mdi-close</v-icon>
-        </v-btn>
-
-        <!-- Add edge button -->
-        <v-btn
-          class="map-button"
-          :color="!addEdgeMode ? 'missionAccent' : 'baseAccent'"
-          fab
-          dark
-          small
-          outlined
-          tile
-          title="Add Edge"
-          @click="toggleAddEdgeMode"
-        >
-          <v-icon v-if="!addEdgeMode">mdi-chart-timeline-variant</v-icon>
-          <v-icon v-else color="baseAccent">mdi-close</v-icon>
-        </v-btn>
-
-        <!-- New node positions Save Button -->
-        <v-btn
-          v-if="changeInPositions"
-          class="map-button pa-5"
-          color="baseAccent"
-          dark
-          small
-          outlined
-          tile
-          title="Save new node positions"
-          @click="saveNodePositions"
-          :loading="nodePositionsChangeLoading"
-        >
-          Save new positions
-        </v-btn>
-
-        <div class="ui-message-wrap">
-          <p
-            v-if="currentCourseNodes.length === 0 && !addNodeMode"
-            class="ui-message"
-            style="margin-left: 20px"
-          >
-            <v-icon color="missionAccent" class="bounce"
-              >mdi-hand-pointing-up</v-icon
-            >
-            Add a new node to start creating a Galaxy map
-          </p>
-          <p v-else class="ui-message">{{ uiMessage }}</p>
-        </div>
-      </div>
+      <GalaxyMapButtons
+        v-if="person.accountType != 'student'"
+        :addNodeMode="addNodeMode"
+        :addEdgeMode="addEdgeMode"
+        :uiMessage="uiMessage ? uiMessage : ''"
+        :changeInPositions="changeInPositions"
+        :nodePositionsChangeLoading="nodePositionsChangeLoading"
+        @toggleAddNodeMode="toggleAddNodeMode"
+        @toggleAddEdgeMode="toggleAddEdgeMode"
+        @addNode="addNode"
+        @saveNodePositions="saveNodePositions"
+      />
 
       <!-- ===== Galaxy Map ===== -->
       <GalaxyMap
@@ -114,6 +64,7 @@ import Galaxy from "../components/Galaxy";
 import GalaxyMap from "../components/GalaxyMap";
 import BackButton from "../components/BackButton";
 import GalaxyMapEdit from "../components/GalaxyMapEdit";
+import GalaxyMapButtons from "../components/GalaxyMapButtons";
 
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
@@ -129,6 +80,7 @@ export default {
     GalaxyMap,
     BackButton,
     GalaxyMapEdit,
+    GalaxyMapButtons,
   },
   props: ["courseId"],
   async mounted() {
