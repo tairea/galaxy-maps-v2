@@ -7,18 +7,18 @@
           :src="`http://tutoa.co.nz/portal/img/ian.23cb54e5.jpg`"
           class="profilePic"
         ></v-img> -->
-        <v-hover v-slot="{ hover }">
-          <v-progress-circular
-            v-if="uploading"
-            :rotate="360"
-            :size="50"
-            :width="2"
-            :value="uploadPercentage"
-            color="teal"
-          >
-            {{ uploadPercentage + "%" }}
-          </v-progress-circular>
-          <v-avatar v-else color="secondary">
+        <v-progress-circular
+          v-if="uploading"
+          :rotate="360"
+          :size="50"
+          :width="2"
+          :value="uploadPercentage"
+          color="baseAccent"
+        >
+          {{ uploadPercentage + "%" }}
+        </v-progress-circular>
+        <!-- <v-hover v-else v-slot="{ hover }"> -->
+          <v-avatar v-else color="secondary" @mouseenter="onhover = true" @mouseleave="onhover = false">
             <img v-if="person.image"
               :src="person.image.url"
               :alt="person.firstName"
@@ -28,9 +28,9 @@
             <v-icon v-else>mdi-account</v-icon>
             <v-fade-transition>
               <v-overlay
-                v-if="hover"
+                v-if="onhover"
                 absolute
-                color="#036358"
+                color="baseAccent"
               >
                   <v-icon small @click="onButtonClick">mdi-pencil</v-icon>  
               </v-overlay>
@@ -43,7 +43,7 @@
               @change="onFileChanged"
             >
           </v-avatar>
-        </v-hover>
+        <!-- </v-hover> -->
       </div>
       <div class="username mx-4" style="">
         {{ person.firstName }} {{ person.lastName }}
@@ -87,7 +87,8 @@ export default {
       selectedFile: {},
       uploading: false,
       uploadPercentage: 0,
-      image: {}
+      image: {},
+      onhover: false
     }
   },
   computed: {
@@ -168,6 +169,7 @@ export default {
             "Image successfully updated!"
           );
           this.getPersonById(this.person.id)
+          this.onhover = false
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
@@ -175,48 +177,6 @@ export default {
     }
   }
 }
-
-// const UserBarBase = Vue.extend({
-//   computed: {
-//     ...mapState(["person"]),
-//   },
-// });
-
-// @Component({
-//   components: {
-//     ThemeColourPicker,
-//   },
-// })
-// export default class UserBar extends UserBarBase {
-//   darkSwitch = true;
-//   editProfile = false;
-//   selectedFile = null;
-
-//   changeTheme() {
-//     this.$vuetify.theme.dark = this.darkSwitch;
-//   }
-//   logout() {
-//     firebase
-//       .auth()
-//       .signOut()
-//       .then(() => {
-//         alert("Successfully logged out");
-//         this.$router.push("/login");
-//       })
-//       .catch((error) => {
-//         alert(error.message);
-//         this.$router.push("/");
-//       });
-//   }
-//   onButtonClick() {
-//     this.$refs.uploader.click()
-//   }
-//   onFileChanged(e) {
-//     this.selectedFile = e.target.files[0]
-    
-//     // do something
-//   }
-// }
 </script>
 
 <style lang="scss" scoped>
