@@ -45,11 +45,12 @@
       />
 
       <!-- Edit -->
-      <GalaxyMapEdit
+      <GalaxyMapEditDialog
+        ref="edit"
         :course="getCourseById(courseId)"
         :coords="coords"
         @removeUnsavedNode="removeUnsavedNode"
-        ref="edit"
+        @closePopup="closePopup"
       />
     </div>
   </div>
@@ -63,7 +64,7 @@ import MissionsList from "../components/MissionsList";
 import Galaxy from "../components/Galaxy";
 import GalaxyMap from "../components/GalaxyMap";
 import BackButton from "../components/BackButton";
-import GalaxyMapEdit from "../components/GalaxyMapEdit";
+import GalaxyMapEditDialog from "../components/GalaxyMapEditDialog";
 import GalaxyMapButtons from "../components/GalaxyMapButtons";
 
 import { db } from "../store/firestoreConfig";
@@ -79,7 +80,7 @@ export default {
     Galaxy,
     GalaxyMap,
     BackButton,
-    GalaxyMapEdit,
+    GalaxyMapEditDialog,
     GalaxyMapButtons,
   },
   props: ["courseId"],
@@ -231,6 +232,10 @@ export default {
       this.nodePositionsChangeLoading = false;
       this.changeInPositions = false;
     },
+    closePopup() {
+      // TODO: this doesnt reset the node correctly
+      this.$refs.vis.deselectNode()
+    }
   },
 };
 </script>
