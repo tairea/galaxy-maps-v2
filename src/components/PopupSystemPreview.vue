@@ -14,6 +14,8 @@
         ? infoPopupPosition.x
         : infoPopupPosition.x + 30 + 'px',
     }"
+    @mouseover="$emit('focus')"
+    @mouseleave="$emit('blur')"
   >
     <div class="ss-preview">
       <!-- Preview: Solar System -->
@@ -128,6 +130,7 @@ export default {
   data() {
     return {
       topicTasks: [],
+      hoverPopup: false
     };
   },
   methods: {
@@ -135,18 +138,16 @@ export default {
       this.$emit("editNode");
     },
     getTopicTasks() {
-      console.log("node = ", this.currentNode.id);
       // get the topics for this current node
       let topic =
         this.person.accountType == "student"
           ? this.getPersonsTopicById(this.currentNode.id)
           : this.getTopicById(this.currentNode.id);
-      console.log("topic = ", topic);
+
       if (!topic) {
         return;
       }
       this.topicTasks = topic.tasks;
-      console.log("topic tasks = ", this.topicTasks);
       return this.topicTasks;
     },
     routeToSolarSystem() {
@@ -162,7 +163,7 @@ export default {
       });
     },
     close() {
-      this.$emit("deselect");
+      this.$emit("close");
     },
     deleteFromMap() {
       this.$emit("deleteFromMap");

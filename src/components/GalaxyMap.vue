@@ -156,10 +156,6 @@ export default {
         courseId: this.currentCourseId,
       });
     }
-    // console.log("nodes:", this.currentCourseNodes);
-    // console.log("edges:", this.currentCourseEdges);
-    // console.log("personsTopics:", this.personsTopics);
-    // console.log(this.$refs.network);
 
     // get topic status and change node colours
     this.updateStudentsTopicStatus();
@@ -377,7 +373,7 @@ export default {
       }
     },
     deselectNode() {
-      console.log("deselect node");
+      this.active = false
       this.$emit("deselected");
       this.stopNodeAnimation();
     },
@@ -391,10 +387,6 @@ export default {
     },
     zoom(data) {
       console.log("zoom", data);
-    },
-    disableEditMode() {
-      this.$refs.network.disableEditMode();
-      // this.$emit("toggleAddNodeButton")
     },
     animationFinished(data) {
       // show popup
@@ -417,7 +409,10 @@ export default {
       this.$emit("hovered", hoveredNode);
     },
     blurNode() {
-      this.$emit("deselected");
+      if (this.active) return
+      setTimeout(() => {
+        this.$emit("deselected")
+      }, 1000)
     },
     // Canvas Node Animation
     beforeDrawing(ctx) {
