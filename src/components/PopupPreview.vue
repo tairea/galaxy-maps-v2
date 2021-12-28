@@ -103,18 +103,7 @@
       <!-- Student Galaxy Actions -->
       <div v-else class="ss-actions">
         <v-btn
-          class="view-ss-button pa-5"
-          dark
-          small
-          color="galaxyAccent"
-          outlined
-          tile
-          title="View Galaxy"
-          @click="startThisGalaxy"
-        >
-          Start Galaxy
-        </v-btn>
-        <v-btn
+          v-if="enrolled"
           class="view-ss-button pa-5"
           dark
           small
@@ -125,6 +114,19 @@
           @click="routeToGalaxyEdit"
         >
           Resume Galaxy
+        </v-btn>
+        <v-btn
+          v-else
+          class="view-ss-button pa-5"
+          dark
+          small
+          color="galaxyAccent"
+          outlined
+          tile
+          title="View Galaxy"
+          @click="startThisGalaxy"
+        >
+          Start Galaxy
         </v-btn>
       </div>
     </div>
@@ -140,12 +142,30 @@ export default {
   name: "PopupPreview",
   components: {},
   props: ["course"],
-  async mounted() {},
+  async mounted() {
+    // check is student is already in this course
+    const querySnapshot = await db
+      .collection("people")
+      .doc(this.person.id)
+      .collection(this.course.id)
+      .limit(1)
+      .get();
+
+    if (querySnapshot.empty) {
+      console.log("snapshot DOES NOT exist");
+      this.enrolled = false;
+    } else {
+      console.log("snapshot exists");
+      this.enrolled = true;
+    }
+  },
   computed: {
     ...mapState(["person"]),
   },
   data() {
-    return {};
+    return {
+      enrolled: false,
+    };
   },
   methods: {
     close() {
