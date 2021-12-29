@@ -10,7 +10,7 @@
         :organisations="getOrganisationsInThisCourse(courseId)"
         :people="getPeopleInThisCourse(courseId)"
       />
-      <BackButton :toPath="'/base/galaxies/my'" />
+      <BackButton :toPath="'/base/galaxies/all'" />
     </div>
     <div id="main-section">
       <!-- Map Buttons -->
