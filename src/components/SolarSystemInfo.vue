@@ -3,7 +3,7 @@
     <h2 class="ss-label">System</h2>
     <h1 class="ss-title">{{ topic.label }}</h1>
     <SolarSystem
-      :topic="getPersonsTopicById(currentTopicId)"
+      :topic="person.accountType != 'student' ? getTopicById(currentTopicId) : getPersonsTopicById(currentTopicId)"
       :size="'0.25em'"
       :height="'200px'"
     />
@@ -19,14 +19,14 @@ import SolarSystem from "../components/SolarSystem";
 import { mapState, mapGetters } from "vuex";
 
 export default {
-  name: "GalaxyInfo",
+  name: "SolarSystemInfo",
   props: ["topic"],
   components: {
     SolarSystem,
   },
   computed: {
     ...mapState(["currentTopicId", "currentCourseId"]),
-    ...mapGetters(["getPersonsTopicById", "getCourseById"]),
+    ...mapGetters(["person", "getPersonsTopicById", "getCourseById", "getTopicById"]),
   },
   mounted() {},
   data() {

@@ -14,9 +14,13 @@
     <v-tooltip bottom>
       <template v-slot:activator="{ on, attrs }">
         <div v-bind="attrs" v-on="on">
-          <div class="imagePlaceholder">
-            {{ first3Letters(person.firstName) }}
-          </div>
+          <v-avatar color="secondary">
+            <img v-if="person.image"
+              :src="person.image.url"
+              :alt="person.firstName"
+              style="object-fit: cover;"
+            >
+          </v-avatar>
         </div>
       </template>
       <span>{{ person.firstName + " " + person.lastName }}</span>
