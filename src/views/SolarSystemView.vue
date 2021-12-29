@@ -1,19 +1,20 @@
 <template>
   <div id="container" class="bg">
     <div id="left-section">
-      <SolarSystemInfo :topic="getPersonsTopicById(currentTopicId)" />
+      <SolarSystemInfo :topic="person.accountType != 'student' ? getTopicById(currentTopicId) : getPersonsTopicById(currentTopicId)" />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <AssignedInfo
         v-if="person.accountType != 'student'"
         :assignCohorts="true"
         :cohorts="getCohortsInThisCourse(currentCourseId)"
+        :people="getPeopleInThisCourse(currentCourseId)"
       />
 
       <BackButton :toPath="'/galaxy/' + currentCourseId" />
     </div>
     <div id="main-section">
       <MissionsList
-        :tasks="getPersonsTasksByTopicId(currentTopicId)"
+        :tasks="person.accountType != 'student' ? getTasksByTopicId(currentTopicId) : getPersonsTasksByTopicId(currentTopicId)"
         :topicId="currentTopicId"
       />
     </div>
@@ -47,13 +48,6 @@ export default {
     BackButton,
   },
   props: ["topicId"],
-  mounted() {
-    console.log("current topic id is:", this.currentTopicId);
-    console.log("current course id is:", this.currentCourseId);
-  },
-  data() {
-    return {};
-  },
   computed: {
     ...mapState(["currentTopicId", "currentCourseId"]),
     ...mapGetters([
@@ -61,9 +55,11 @@ export default {
       "getPersonsTopicById",
       "getPersonsTasksByTopicId",
       "getCohortsInThisCourse",
-    ]),
-  },
-  methods: {},
+      "getTopicById",
+      "getPeopleInThisCourse",
+      "getTasksByTopicId"
+    ])
+  }
 };
 </script>
 
