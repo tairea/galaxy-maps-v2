@@ -1,19 +1,20 @@
 <template>
   <div id="container" class="bg">
     <div id="left-section">
-      <SolarSystemInfo :topic="getPersonsTopicById(currentTopicId)" />
+      <SolarSystemInfo :topic="person.accountType != 'student' ? getTopicById(currentTopicId) : getPersonsTopicById(currentTopicId)" />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <AssignedInfo
         v-if="person.accountType != 'student'"
         :assignCohorts="true"
         :cohorts="getCohortsInThisCourse(currentCourseId)"
+        :people="getPeopleInThisCourse(currentCourseId)"
       />
 
       <BackButton :toPath="'/galaxy/' + currentCourseId" />
     </div>
     <div id="main-section">
       <MissionsList
-        :tasks="getPersonsTasksByTopicId(currentTopicId)"
+        :tasks="person.accountType != 'student' ? getTasksByTopicId(currentTopicId) : getPersonsTasksByTopicId(currentTopicId)"
         :topicId="currentTopicId"
       />
     </div>
@@ -48,8 +49,8 @@ export default {
   },
   props: ["topicId"],
   mounted() {
-    console.log("current topic id is:", this.currentTopicId);
-    console.log("current course id is:", this.currentCourseId);
+    console.log("currentTopicId:", this.currentTopicId);
+    console.log("currentCourseId:", this.currentCourseId);
   },
   data() {
     return {};
@@ -61,7 +62,15 @@ export default {
       "getPersonsTopicById",
       "getPersonsTasksByTopicId",
       "getCohortsInThisCourse",
+      "getTopicById",
+      "getPeopleInThisCourse",
+      "getTasksByTopicId"
     ]),
+    missionTasks() {
+      const tasks = this.getPersonsTasksByTopicId(this.currentTopicId)
+      console.log('tasks: ', tasks)
+      return []
+    }
   },
   methods: {},
 };

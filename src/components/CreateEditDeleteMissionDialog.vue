@@ -350,6 +350,7 @@ export default {
         })
         .then((res) => {
           console.log("Task successfully updated!");
+          this.$emit("success")
           this.dialog = false;
         })
         .catch((error) => {

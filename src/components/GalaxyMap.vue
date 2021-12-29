@@ -372,7 +372,6 @@ export default {
       }
     },
     deselectNode() {
-      console.log("deselect node");
       this.$emit("deselected");
       this.stopNodeAnimation();
     },
@@ -406,7 +405,6 @@ export default {
       this.stopNodeAnimation();
       const nodeId = data.node;
       const hoveredNode = this.$refs.network.getNode(nodeId);
-      console.log("hovered => ", hoveredNode);
       hoveredNode.type = "node";
       (hoveredNode.DOMx = data.pointer.DOM.x),
         (hoveredNode.DOMy = data.pointer.DOM.y);
