@@ -54,6 +54,15 @@
         {{ task.duration }}
       </p>
     </div>
+    <div class="mission-section">
+      <!-- COMPLETION -->
+      <p class="text-overline text-uppercase">COMPLETED:</p>
+      <div class="d-flex align-center justify-center">
+        <MissionCompletedDialog :task="task" />
+      </div>
+    </div>
+
+    <!-- Completed Dialog -->
 
     <!-- EDIT MISSION DIALOG-->
   </div>
@@ -61,6 +70,7 @@
 
 <script>
 import CreateEditDeleteMissionDialog from "../components/CreateEditDeleteMissionDialog";
+import MissionCompletedDialog from "../components/MissionCompletedDialog";
 
 import { mapGetters } from "vuex";
 
@@ -68,6 +78,7 @@ export default {
   name: "MissionsCard",
   components: {
     CreateEditDeleteMissionDialog,
+    MissionCompletedDialog,
   },
   props: ["task", "index", "topicId"],
   mounted() {},
@@ -77,6 +88,7 @@ export default {
   data() {
     return {
       editing: false,
+      completedCheckbox: false,
     };
   },
 };
