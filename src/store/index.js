@@ -61,7 +61,13 @@ export default new Vuex.Store({
       return topic.tasks;
     },
     getPersonsTasksByTopicId: (state) => (id) => {
-      const topic = state.personsTopics.find((topic) => topic.id === id);
+      console.log('index id: ', id)
+      if (state.personsTopics.length) {
+        var topic = state.personsTopics.find((topic) => topic.id === id);
+      } else var topic = {
+        tasks: []
+      } 
+      console.log('index topic: ', topic)
       return topic.tasks;
     },
     getCohortsByOrganisationId: (state) => (id) => {

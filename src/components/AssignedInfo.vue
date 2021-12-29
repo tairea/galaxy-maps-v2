@@ -19,7 +19,7 @@
         </v-row>
       </div>
       <!-- Organisations -->
-      <div v-if="organisations.length > 0">
+      <!-- <div v-if="organisations.length > 0">
         <p class="overline assignedToLabel ma-0">Organisations</p>
         <v-row class="my-1">
           <Organisation
@@ -28,7 +28,7 @@
             :key="organisation.id"
           />
         </v-row>
-      </div>
+      </div> -->
       <!-- People -->
       <div v-if="people.length > 0">
         <p class="overline assignedToLabel ma-0">Individuals</p>
@@ -39,7 +39,7 @@
 
       <p
         v-if="
-          cohorts.length == 0 && organisations.length == 0 && people.length == 0
+          cohorts.length == 0 && people.length == 0
         "
         class="assigned-status"
       >
