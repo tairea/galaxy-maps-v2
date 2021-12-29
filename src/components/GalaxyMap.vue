@@ -3,8 +3,8 @@
     <network
       ref="network"
       class="full-height"
-      :nodes="currentCourseNodes"
-      :edges="currentCourseEdges"
+      :nodes="person.accountType == 'student' ? currentCourseNodesWithStatus : currentCourseNodes"
+      :edges="person.accountType == 'student' ? currentCourseEdgesWithStatusStyles : currentCourseEdges"
       :options="network.options"
       @nodes-add="addNode"
       @edges-add="addEdge"
@@ -65,8 +65,7 @@ export default {
           length: 50, // Longer edges between nodes.
           smooth: false,
           color: {
-            color: "#848484",
-            inherit: false,
+            inherit: "to",
           },
         },
         nodes: {
@@ -87,28 +86,21 @@ export default {
         },
         // TODO: node/edge groups
         groups: {
+          // useDefaultGroups: false,
           locked: {
-            color: { background: "red", border: "white" },
-            shape: "diamond",
+            color: "rgba(132,132,132,0.2)",
+            shape: "dot",
+            // opacity: 0.1,
           },
           unlocked: {
-            label: "I'm a dot!",
             shape: "dot",
-            color: "cyan",
+            color: "#848484",
+            opacity: 1,
           },
           current: { color: "rgb(0,255,140)" },
           inReview: {
-            shape: "icon",
-            icon: {
-              face: "FontAwesome",
-              code: "\uf0c0",
-              size: 50,
-              color: "orange",
-            },
-          },
-          locked: {
-            color: { background: "red", border: "white" },
-            shape: "diamond",
+            shape: "dot",
+            color: "orange",
           },
           tasks: {
             color: { background: "yellow", border: "white" },
@@ -156,13 +148,10 @@ export default {
         courseId: this.currentCourseId,
       });
     }
-    // console.log("nodes:", this.currentCourseNodes);
+    // console.log("currentCourseNodes:", this.currentCourseNodes);
     // console.log("edges:", this.currentCourseEdges);
     // console.log("personsTopics:", this.personsTopics);
     // console.log(this.$refs.network);
-
-    // get topic status and change node colours
-    this.updateStudentsTopicStatus();
 
     this.$refs.network.fit();
   },
@@ -177,45 +166,51 @@ export default {
       "currentCourseEdges",
       "personsTopics",
     ]),
+    currentCourseNodesWithStatus() {
+      let nodesWithStatus = [];
+      // loop each node
+      for (const node of this.currentCourseNodes) {
+        // find the topic node with status
+        let matchingNode = this.personsTopics.find((x) => {
+          return x.id === node.id;
+        });
+        // console.log("matchingNode",matchingNode)
+        // push node with status
+        nodesWithStatus.push({
+          ...node,
+          // color: this.stringToColour(matchingNode.label),  // Attempt to match node color to System color
+          group: matchingNode?.status ?? "unlocked",
+        });
+      }
+      // console.log("nodesWithStatus",nodesWithStatus)
+      // return nodes with status to network map
+      return nodesWithStatus;
+    },
+    currentCourseEdgesWithStatusStyles() {
+      let edgesWithStatusStyles = [];
+      let hasDashes = false
+
+      for (const edge of this.currentCourseEdges) {
+        // find the topic node with status
+        let matchingEdge = this.personsTopics.find((x) => {
+          // add dashes to the edge (if topic is locked)
+          if (x.status == 'locked') {
+            hasDashes = true
+            // hasDashes = [2,2]
+          }
+          return x.id === edge.to;
+        });
+        // push node with status
+        edgesWithStatusStyles.push({
+          ...edge,
+          dashes: hasDashes,
+        });
+      }
+      // return nodes with status to network map
+      return edgesWithStatusStyles;
+    }
   },
   methods: {
-    updateStudentsTopicStatus() {
-      // loop each topic
-      for (var i = 0; i < this.personsTopics.length; i++) {
-        // find the netowrk node that matches the topic
-        let matchingNode = this.$refs.network.nodes.find((node) => {
-          return node.id == this.personsTopics[i].id;
-        });
-        // replace the network node with the topic status (ie. set the group)
-        // console.log(
-        //   "changing node " +
-        //     matchingNode.label +
-        //     " to group " +
-        //     this.personsTopics[i].status
-        // );
-        matchingNode.group = this.personsTopics[i].status;
-        // console.log("node after change", matchingNode);
-      }
-
-      // change node group accordingly (locked. color #848484 opacity 0.7)
-
-      // for (topic of this.personsTopics) {
-
-      // }
-    },
-    fakeClickCanvas() {
-      console.log("doing a fake click");
-      document.getElementsByTagName("canvas")[0].dispatchEvent(
-        new MouseEvent(
-          "click", // or "mousedown" if the canvas listens for such an event
-          {
-            clientX: 0,
-            clientY: 0,
-            bubbles: true,
-          }
-        )
-      );
-    },
     getDomCoords(node) {
       let domCoords = this.$refs.network.canvasToDom({ x: node.x, y: node.y });
       console.log("DOM COOOORDS: ", domCoords);
@@ -411,6 +406,7 @@ export default {
       this.stopNodeAnimation();
       const nodeId = data.node;
       const hoveredNode = this.$refs.network.getNode(nodeId);
+      console.log("hovered => ", hoveredNode);
       hoveredNode.type = "node";
       (hoveredNode.DOMx = data.pointer.DOM.x),
         (hoveredNode.DOMy = data.pointer.DOM.y);
@@ -455,8 +451,31 @@ export default {
       this.animateRadius = false;
       clearInterval(this.intervalid1);
     },
+    hashCode(str) {
+      let hash = 0;
+      for (var i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return hash;
+    },
+    stringToColour(str) {
+      if (!str) return
+      console.log("stringToColour ...",str)
+      return this.hslToHex(this.hashCode(str) % 360,100,70)
+      // return `hsl(${this.hashCode(str) % 360}, 100%, 70%)`;
+    },
+    hslToHex(h, s, l) {
+      l /= 100;
+      const a = s * Math.min(l, 1 - l) / 100;
+      const f = n => {
+        const k = (n + h / 30) % 12;
+        const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+        return Math.round(255 * color).toString(16).padStart(2, '0');   // convert to Hex and prefix "0" if needed
+      };
+      return `#${f(0)}${f(8)}${f(4)}`;
+    }
   },
-};
+    };
 </script>
 
 <style lang="scss" scoped>

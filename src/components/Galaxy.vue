@@ -2,7 +2,10 @@
   <div class="full-height">
     <LoadingSpinner v-if="loading" />
     <network
-      v-if="personsAssignedNodesForDisplay.length > 0 && whichCoursesToDisplay == 'assigned'"
+      v-if="
+        personsAssignedNodesForDisplay.length > 0 &&
+        whichCoursesToDisplay == 'assigned'
+      "
       ref="network"
       class="full-height"
       :nodes="personsAssignedNodesForDisplay"
@@ -13,7 +16,9 @@
       @hover-node="hoverNode"
     ></network>
     <network
-      v-else-if="personsNodesForDisplay.length > 0 && whichCoursesToDisplay == 'my'"
+      v-else-if="
+        personsNodesForDisplay.length > 0 && whichCoursesToDisplay == 'my'
+      "
       ref="network"
       class="full-height"
       :nodes="personsNodesForDisplay"
@@ -24,7 +29,9 @@
       @hover-node="hoverNode"
     ></network>
     <network
-      v-else-if="allNodesForDisplay.length > 0 && whichCoursesToDisplay == 'all'"
+      v-else-if="
+        allNodesForDisplay.length > 0 && whichCoursesToDisplay == 'all'
+      "
       ref="network"
       class="full-height"
       :nodes="allNodesForDisplay"
@@ -35,7 +42,7 @@
       @hover-node="hoverNode"
     ></network>
     <p v-else class="noGalaxies overline">
-      NO {{whichCoursesToDisplay == 'assigned'?"ASSIGNED":""}} GALAXIES TO
+      NO {{ whichCoursesToDisplay == "assigned" ? "ASSIGNED" : "" }} GALAXIES TO
       DISPLAY
     </p>
     <PopupPreview
@@ -75,13 +82,11 @@ export default {
       await this.$store.dispatch("getEdgesByPersonId", this.user.data.id);
       console.log("nodes by person:", this.personsNodesForDisplay);
       console.log("edges by person:", this.personsEdges);
-      this.nodesToDisplay = this.personsNodesForDisplay
-    }
-
-    /* ===========================
+      this.nodesToDisplay = this.personsNodesForDisplay;
+    } else if (this.whichCoursesToDisplay == "assigned") {
+      /* ===========================
         Only show ASSIGNED Galaxies
     =========================== */
-    else if (this.whichCoursesToDisplay == "assigned") {
       // get assigned nodes & edges
       await this.$store.dispatch(
         "getAssignedNodesByPersonId",
@@ -96,21 +101,16 @@ export default {
         this.personsAssignedNodesForDisplay
       );
       console.log("assigned edges by person:", this.personsAssignedEdges);
-      this.nodesToDisplay = this.personsAssignedNodesForDisplay
-    }
-
-    /* ===========================
+      this.nodesToDisplay = this.personsAssignedNodesForDisplay;
+    } else if (this.whichCoursesToDisplay == "all") {
+      /* ===========================
         Only show ALL Galaxies in DATABASE!! (so I can see what maps users have created)
     =========================== */
-    else if (this.whichCoursesToDisplay == "all") {
-        await this.$store.dispatch("getAllNodes");
-        await this.$store.dispatch("getAllEdges");
-        console.log(
-        "all nodes ever:",
-        this.allNodesForDisplay
-      );
+      await this.$store.dispatch("getAllNodes");
+      await this.$store.dispatch("getAllEdges");
+      console.log("all nodes ever:", this.allNodesForDisplay);
       console.log("all edges ever:", this.allEdges);
-       this.nodesToDisplay = this.allNodesForDisplay
+      this.nodesToDisplay = this.allNodesForDisplay;
     }
 
     // see available Vue2Vis methods
@@ -122,7 +122,10 @@ export default {
       if (this.whichCoursesToDisplay == "my") {
         this.$store.commit("updatePersonsNodesForDisplay", repositionedNodes);
       } else if (this.whichCoursesToDisplay == "assigned") {
-        this.$store.commit("updatePersonsAssignedNodesForDisplay", repositionedNodes);
+        this.$store.commit(
+          "updatePersonsAssignedNodesForDisplay",
+          repositionedNodes
+        );
       } else if (this.whichCoursesToDisplay == "all") {
         this.$store.commit("updateAllNodesForDisplay", repositionedNodes);
       }
@@ -134,6 +137,7 @@ export default {
     // short timer to give time to load all before zoom
     if (this.nodesToDisplay.length > 0) {
       setTimeout(() => this.zoomToNodes(this.nodesToDisplay), 250);
+      // setTimeout(() => this.fitToAllNodes(), 250);
     }
   },
   computed: {
@@ -254,7 +258,7 @@ export default {
         (node) => node.courseId == closestNode.courseId
       );
 
-      let topicsNodeIds = topicsNodes.reduce(function(output, node) {
+      let topicsNodeIds = topicsNodes.reduce(function (output, node) {
         output.push(node.id);
         return output;
       }, []);
@@ -443,39 +447,8 @@ export default {
       // console.log("newAllNodes", newAllNodes);
       return newAllNodes;
     },
-    // afterDrawing(ctx) {
-    //   // console.log("after drawing");
-    //   // console.log(ctx.canvas)
-    //   const { width, height } = ctx.canvas.getBoundingClientRect();
-    //   this.canvasWidthClient = width;
-    //   this.canvasHeightClient = height;
-    //   this.canvasWidth = ctx.canvas.width;
-    //   this.canvasHeight = ctx.canvas.height;
-
-    //   // console.log("w = ",this.canvasWidth)
-    //   // console.log("h = ",this.canvasHeight)
-    // },
     fitToAllNodes() {
       console.log("fit all nodes GO...");
-      // console.log("all nodes from store", this.allNodes);
-
-      // console.log("courseCanvasBoundaries", courseCanvasBoundaries);
-
-      // console.log("scale:");
-      // console.log("this.canvasWidth / this.largestRowWidth ");
-      // console.log(this.canvasWidth + " / " + this.largestRowWidth + " = ");
-      // console.log(this.canvasWidth / this.largestRowWidth);
-      // console.log("---");
-      // console.log("position x:");
-      // console.log("this.largestRowWidth / 2 = ");
-      // console.log(this.largestRowWidth + " / 2  = ");
-      // console.log(this.largestRowWidth / 2);
-      // console.log("---");
-      // console.log("position y:");
-      // console.log("(this.largestRowHeight * this.courseRows) / 2 = ");
-      // console.log(this.largestRowHeight + " * " + this.courseRows + " / 2  = ");
-      // console.log((this.largestRowHeight * this.courseRows) / 2);
-
       var scaleX = this.canvasWidth / this.largestRowWidth;
       var scaleY =
         this.canvasHeight / (this.largestRowHeight * this.courseRows);
@@ -516,7 +489,7 @@ export default {
     },
     togglePopup() {
       this.popupPreview = !this.popupPreview;
-      this.zoomToNodes(this.allNodesForDisplay);
+      this.zoomToNodes(this.nodesToDisplay);
     },
   },
 };
