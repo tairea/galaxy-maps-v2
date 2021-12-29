@@ -138,25 +138,30 @@ import { mapState } from "vuex";
 
 import { db } from "../store/firestoreConfig";
 
+import { mapGetters } from "vuex";
+
 export default {
   name: "PopupPreview",
   components: {},
   props: ["course"],
+  computed: {
+    ...mapGetters(["person"]),
+  },
   async mounted() {
     // check is student is already in this course
-    const querySnapshot = await db
-      .collection("people")
-      .doc(this.person.id)
-      .collection(this.course.id)
-      .limit(1)
-      .get();
+    if (this.person.accountType == "student") {
+      const querySnapshot = await db
+        .collection("people")
+        .doc(this.person.id)
+        .collection(this.course.id)
+        .limit(1)
+        .get();
 
-    if (querySnapshot.empty) {
-      console.log("snapshot DOES NOT exist");
-      this.enrolled = false;
-    } else {
-      console.log("snapshot exists");
-      this.enrolled = true;
+      if (querySnapshot.empty) {
+        this.enrolled = false;
+      } else {
+        this.enrolled = true;
+      }
     }
   },
   computed: {

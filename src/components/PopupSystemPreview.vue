@@ -27,14 +27,21 @@
         "
         :size="'0.25em'"
       />
+      <v-icon
+        v-if="checkIfTopicLocked()"
+        color="missionAccent"
+        class="ss-lock-button"
+      >
+        mdi-lock-outline
+      </v-icon>
       <v-btn
+        v-else
         class="view-ss-button pa-5"
         dark
         small
         color="missionAccent"
         outlined
         tile
-        title="Delete"
         @click="routeToSolarSystem"
       >
         View System
@@ -124,16 +131,26 @@ export default {
     this.getTopicTasks();
   },
   computed: {
-    ...mapState(["person"]),
+    ...mapState(["person", "personsTopics"]),
     ...mapGetters(["getTopicById", "getPersonsTopicById"]),
   },
   data() {
     return {
       topicTasks: [],
-      hoverPopup: false
+      hoverPopup: false,
     };
   },
   methods: {
+    checkIfTopicLocked() {
+      for (const topic of this.personsTopics) {
+        // find the topic node with status
+        if (topic.id === this.currentNode.id) {
+          if (topic.status == "locked") {
+            return true;
+          }
+        }
+      }
+    },
     editNode() {
       this.$emit("editNode");
     },
@@ -143,7 +160,6 @@ export default {
         this.person.accountType == "student"
           ? this.getPersonsTopicById(this.currentNode.id)
           : this.getTopicById(this.currentNode.id);
-
       if (!topic) {
         return;
       }
@@ -151,7 +167,7 @@ export default {
       return this.topicTasks;
     },
     routeToSolarSystem() {
-      console.log("route to ss", this.currentNode.id);
+      // console.log("route to ss", this.currentNode.id);
       // save current topic to store
       this.$store.commit("setCurrentTopicId", this.currentNode.id);
       // route to topic/solar system
@@ -192,6 +208,11 @@ export default {
     align-items: center;
     flex-direction: column;
     overflow: hidden;
+
+    .ss-lock-button {
+      position: absolute;
+      bottom: 20px; // matches 20px padding of ss-details
+    }
 
     .view-ss-button {
       position: absolute;
