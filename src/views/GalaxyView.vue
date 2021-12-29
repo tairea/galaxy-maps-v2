@@ -207,6 +207,9 @@ export default {
     updateDragCoords(coords) {
       this.coords = coords;
     },
+    // TODO: This patetrn feels bad and is hard to manage and understand. This should be updated
+    // Current pattern: emit action from a child component to parent which refs method and changes state in other child component
+    // Update to: manage state in parent component and prop down into children components
     selected(node) {
       this.$refs.edit.selected(node);
     },
