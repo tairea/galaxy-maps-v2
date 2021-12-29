@@ -13,7 +13,7 @@
     </div>
 
     <div class="createButton" v-if="person.accountType != 'student'">
-      <CreateEditDeleteMissionDialog :topicId="topicId" @success="$emit('newTaskAdded')" />
+      <CreateEditDeleteMissionDialog :topicId="topicId" />
     </div>
   </div>
 </template>

@@ -48,13 +48,6 @@ export default {
     BackButton,
   },
   props: ["topicId"],
-  mounted() {
-    console.log("currentTopicId:", this.currentTopicId);
-    console.log("currentCourseId:", this.currentCourseId);
-  },
-  data() {
-    return {};
-  },
   computed: {
     ...mapState(["currentTopicId", "currentCourseId"]),
     ...mapGetters([
@@ -65,14 +58,8 @@ export default {
       "getTopicById",
       "getPeopleInThisCourse",
       "getTasksByTopicId"
-    ]),
-    missionTasks() {
-      const tasks = this.getPersonsTasksByTopicId(this.currentTopicId)
-      console.log('tasks: ', tasks)
-      return []
-    }
-  },
-  methods: {},
+    ])
+  }
 };
 </script>
 
