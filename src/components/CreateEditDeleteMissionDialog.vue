@@ -14,9 +14,7 @@
               color="missionAccent"
               small
             >
-              <v-icon small>
-                mdi-pencil
-              </v-icon>
+              <v-icon small> mdi-pencil </v-icon>
             </v-btn>
 
             <v-btn
@@ -26,9 +24,7 @@
               v-bind="attrs"
               v-on="on"
             >
-              <v-icon left>
-                mdi-plus
-              </v-icon>
+              <v-icon left> mdi-plus </v-icon>
               CREATE MISSION
             </v-btn>
           </template>
@@ -102,6 +98,46 @@
                 background-color="white"
               ></v-text-field>
 
+              <!-- SUBMISSION REQUIRED? -->
+              <p class="dialog-description submission-colour">
+                Does this Mission require the student to submit evidence of
+                work?
+                <v-tooltip right max-width="300">
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-icon
+                      left
+                      color="cohortAccent"
+                      small
+                      class="circle-outline ma-1"
+                      v-bind="attrs"
+                      v-on="on"
+                      >mdi-information-variant</v-icon
+                    >
+                  </template>
+                  <span>
+                    With this option checked, students are required to submit a
+                    link to evidence of their work.<br /><br />Once the student
+                    has submitted a link to their work, you will be notified to
+                    review their submission to check if it is completed.
+                  </span>
+                </v-tooltip>
+              </p>
+              <v-checkbox
+                v-model="task.submissionRequired"
+                class="ma-0 pa-0 submission-colour"
+                color="cohortAccent"
+              >
+                <template v-slot:label>
+                  <span class="dialog-description submission-colour"
+                    >Tick this box to request a submission of evidence for this
+                    Mission</span
+                  >
+                </template>
+                <p v-if="task.submissionRequired" class="submission-colour">
+                  SUBMISSION REQUIRED FOR THIS MISSION
+                </p>
+              </v-checkbox>
+
               <!-- ACTION BUTTONS -->
               <div class="action-buttons">
                 <v-btn
@@ -115,9 +151,7 @@
                   v-bind="attrs"
                   v-on="on"
                 >
-                  <v-icon left>
-                    mdi-check
-                  </v-icon>
+                  <v-icon left> mdi-check </v-icon>
                   UPDATE
                 </v-btn>
                 <v-btn
@@ -131,9 +165,7 @@
                   v-bind="attrs"
                   v-on="on"
                 >
-                  <v-icon left>
-                    mdi-check
-                  </v-icon>
+                  <v-icon left> mdi-check </v-icon>
                   SAVE
                 </v-btn>
 
@@ -145,9 +177,7 @@
                   @click="deleteDialog()"
                   class="ml-2"
                 >
-                  <v-icon left>
-                    mdi-delete
-                  </v-icon>
+                  <v-icon left> mdi-delete </v-icon>
                   DELETE
                 </v-btn>
 
@@ -158,9 +188,7 @@
                   @click="cancel"
                   :disabled="disabled || loading"
                 >
-                  <v-icon left>
-                    mdi-close
-                  </v-icon>
+                  <v-icon left> mdi-close </v-icon>
                   Cancel
                 </v-btn>
               </div>
@@ -222,9 +250,7 @@
                 class="ml-2"
                 :loading="deleting"
               >
-                <v-icon left>
-                  mdi-delete
-                </v-icon>
+                <v-icon left> mdi-delete </v-icon>
                 DELETE
               </v-btn>
 
@@ -235,9 +261,7 @@
                 @click="cancelDeleteDialog"
                 :disabled="disabled || loading"
               >
-                <v-icon left>
-                  mdi-close
-                </v-icon>
+                <v-icon left> mdi-close </v-icon>
                 Cancel
               </v-btn>
             </div>
@@ -271,6 +295,7 @@ export default {
       duration: "",
       video: "",
       slides: "",
+      submissionRequired: "",
     },
     loading: false,
     disabled: false,
@@ -530,6 +555,15 @@ export default {
   top: 10px;
   right: 20px;
   // font-size: 0.5rem;
+}
+
+.circle-outline {
+  border: 1px solid var(--v-cohortAccent-base);
+  border-radius: 50%;
+}
+
+.submission-colour {
+  color: var(--v-cohortAccent-base);
 }
 
 /* width */
