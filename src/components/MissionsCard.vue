@@ -54,11 +54,29 @@
         {{ task.duration }}
       </p>
     </div>
-    <div class="mission-section">
+    <div
+      class="mission-section"
+      :class="{
+        'topic-in-review': getTopicStatus == 'inreview',
+        'topic-completed': getTopicStatus == 'completed',
+      }"
+    >
       <!-- COMPLETION -->
-      <p class="text-overline text-uppercase">COMPLETED:</p>
+      <p class="text-overline text-uppercase">
+        {{
+          getTopicStatus == "completed"
+            ? "COMPLETED"
+            : getTopicStatus == "inreview"
+            ? "IN REVIEW"
+            : "COMPLETED?"
+        }}
+      </p>
       <div class="d-flex align-center justify-center">
-        <MissionCompletedDialog :task="task" />
+        <MissionCompletedDialog
+          :task="task"
+          :topicId="topicId"
+          :missionStatus="getTopicStatus"
+        />
       </div>
     </div>
 
@@ -72,7 +90,8 @@
 import CreateEditDeleteMissionDialog from "../components/CreateEditDeleteMissionDialog";
 import MissionCompletedDialog from "../components/MissionCompletedDialog";
 
-import { mapGetters } from "vuex";
+import { db } from "../store/firestoreConfig";
+import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "MissionsCard",
@@ -83,12 +102,19 @@ export default {
   props: ["task", "index", "topicId"],
   mounted() {},
   computed: {
+    ...mapState(["currentCourseId", "personsTopics"]),
     ...mapGetters(["person"]),
+    getTopicStatus() {
+      // get topic status eg. inreview / completed / introduction / locked
+      const topic = this.personsTopics.find(
+        (topic) => topic.id === this.topicId
+      );
+      return topic.status;
+    },
   },
   data() {
     return {
       editing: false,
-      completedCheckbox: false,
     };
   },
 };
@@ -115,6 +141,16 @@ a {
     border-left: 1px dashed var(--v-missionAccent-base);
     padding: 20px;
     flex-grow: 1;
+  }
+
+  .topic-in-review {
+    border: 1px solid var(--v-cohortAccent-base);
+    color: var(--v-cohortAccent-base);
+  }
+
+  .topic-completed {
+    border: 1px solid var(--v-baseAccent-base);
+    color: var(--v-baseAccent-base);
   }
 
   .mission-main-section {
