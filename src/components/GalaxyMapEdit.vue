@@ -65,6 +65,10 @@
               item-text="type"
               item-value="value"
               solo
+              :menu-props="{
+                closeOnClick: true,
+                closeOnContentClick: true,
+              }"
             ></v-select>
 
             <!-- Node Pre-requisites -->
@@ -104,6 +108,10 @@
               solo
               multiple
               chips
+              :menu-props="{
+                closeOnClick: true,
+                closeOnContentClick: true,
+              }"
             ></v-select>
           </div>
 

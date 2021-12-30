@@ -54,14 +54,16 @@
         {{ task.duration }}
       </p>
     </div>
+
+    <!-- COMPLETION -->
     <div
+      v-if="person.accountType == 'student'"
       class="mission-section"
       :class="{
         'topic-in-review': getTopicStatus == 'inreview',
         'topic-completed': getTopicStatus == 'completed',
       }"
     >
-      <!-- COMPLETION -->
       <p class="text-overline text-uppercase">
         {{
           getTopicStatus == "completed"
@@ -78,6 +80,11 @@
           :missionStatus="getTopicStatus"
         />
       </div>
+    </div>
+    <div v-else class="mission-section">
+      <p class="text-overline text-uppercase">Analytics:</p>
+      <v-btn color="missionAccent" outlined> PREVIEW </v-btn>
+      <v-btn color="missionAccent" outlined class="mt-2"> SEE FULL </v-btn>
     </div>
 
     <!-- Completed Dialog -->
@@ -105,6 +112,9 @@ export default {
     ...mapState(["currentCourseId", "personsTopics"]),
     ...mapGetters(["person"]),
     getTopicStatus() {
+      if (this.person.accountType != "student") {
+        return;
+      }
       // get topic status eg. inreview / completed / introduction / locked
       const topic = this.personsTopics.find(
         (topic) => topic.id === this.topicId
@@ -154,8 +164,8 @@ a {
   }
 
   .mission-main-section {
-    // flex-grow: 2 !important;
-    width: 30%;
+    // flex-grow: 4 !important;
+    width: 50%;
     position: relative;
 
     .mission-edit-button {
@@ -192,6 +202,7 @@ a {
       align-items: center;
       width: 100%;
       height: 100%;
+      padding: 10px;
     }
 
     .section-overUnder:first-child {

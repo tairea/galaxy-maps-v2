@@ -3,8 +3,16 @@
     <network
       ref="network"
       class="full-height"
-      :nodes="person.accountType == 'student' ? currentCourseNodesWithStatus : currentCourseNodes"
-      :edges="person.accountType == 'student' ? currentCourseEdgesWithStatusStyles : currentCourseEdges"
+      :nodes="
+        person.accountType == 'student'
+          ? currentCourseNodesWithStatus
+          : currentCourseNodes
+      "
+      :edges="
+        person.accountType == 'student'
+          ? currentCourseEdgesWithStatusStyles
+          : currentCourseEdges
+      "
       :options="network.options"
       @nodes-add="addNode"
       @edges-add="addEdge"
@@ -98,17 +106,23 @@ export default {
             opacity: 1,
           },
           current: { color: "rgb(0,255,140)" },
-          inReview: {
+          // node status
+          inreview: {
+            shape: "dot",
+            color: "#FAF200",
+          },
+          completed: {
+            shape: "dot",
+            color: "#00E676",
+          },
+          // node types
+          introduction: {
             shape: "dot",
             color: "orange",
           },
           tasks: {
             color: { background: "yellow", border: "white" },
             shape: "diamond",
-          },
-          introduction: {
-            shape: "dot",
-            color: "orange",
           },
           project: {
             shape: "dot",
@@ -188,14 +202,14 @@ export default {
     },
     currentCourseEdgesWithStatusStyles() {
       let edgesWithStatusStyles = [];
-      let hasDashes = false
+      let hasDashes = false;
 
       for (const edge of this.currentCourseEdges) {
         // find the topic node with status
         let matchingEdge = this.personsTopics.find((x) => {
           // add dashes to the edge (if topic is locked)
-          if (x.status == 'locked') {
-            hasDashes = true
+          if (x.status == "locked") {
+            hasDashes = true;
             // hasDashes = [2,2]
           }
           return x.id === edge.to;
@@ -208,7 +222,7 @@ export default {
       }
       // return nodes with status to network map
       return edgesWithStatusStyles;
-    }
+    },
   },
   methods: {
     getDomCoords(node) {
@@ -457,23 +471,25 @@ export default {
       return hash;
     },
     stringToColour(str) {
-      if (!str) return
-      console.log("stringToColour ...",str)
-      return this.hslToHex(this.hashCode(str) % 360,100,70)
+      if (!str) return;
+      console.log("stringToColour ...", str);
+      return this.hslToHex(this.hashCode(str) % 360, 100, 70);
       // return `hsl(${this.hashCode(str) % 360}, 100%, 70%)`;
     },
     hslToHex(h, s, l) {
       l /= 100;
-      const a = s * Math.min(l, 1 - l) / 100;
-      const f = n => {
+      const a = (s * Math.min(l, 1 - l)) / 100;
+      const f = (n) => {
         const k = (n + h / 30) % 12;
         const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
-        return Math.round(255 * color).toString(16).padStart(2, '0');   // convert to Hex and prefix "0" if needed
+        return Math.round(255 * color)
+          .toString(16)
+          .padStart(2, "0"); // convert to Hex and prefix "0" if needed
       };
       return `#${f(0)}${f(8)}${f(4)}`;
-    }
+    },
   },
-    };
+};
 </script>
 
 <style lang="scss" scoped>
