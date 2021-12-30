@@ -134,6 +134,7 @@
             </div>
             <!-- End submission-create-dialog -->
           </div>
+
           <!-- DIALOG CONTENT IF ALREADY SUBMITTED -->
           <div v-else class="create-dialog">
             <!-- HEADER -->
@@ -143,69 +144,15 @@
                 <v-icon left color="missionAccent"
                   >mdi-information-variant</v-icon
                 >
-                <p class="dialog-description">{{ dialogDescription }}</p>
+                <p class="dialog-description">
+                  You have already submitted your work for this mission
+                </p>
               </div>
             </div>
 
             <div class="submission-create-dialog">
-              <!-- SUBMISSION FIELDS -->
-              <div v-if="submissionRequired">
-                <div class="submission-dialog-header">
-                  <p class="submission-dialog-title">Submission Requirements</p>
-                  <div class="d-flex align-center">
-                    <v-icon left color="cohortAccent">mdi-alert-outline</v-icon>
-                    <p class="submission-dialog-description">
-                      {{ submissionInstructions }}
-                    </p>
-                  </div>
-                </div>
-
-                <div class="submission-create-dialog-content">
-                  <!-- TITLE -->
-                  <p class="submission-dialog-description">Link to work:</p>
-                  <v-text-field
-                    class="input-field"
-                    solo
-                    color="cohortAccent"
-                    v-model="submissionLink"
-                    background-color="white"
-                  ></v-text-field>
-                </div>
-              </div>
-              <!-- End of v-if="submission" -->
-
               <!-- ACTION BUTTONS -->
               <div class="action-buttons">
-                <!-- YES, I HAVE COMPLETED -->
-                <v-btn
-                  v-if="submissionRequired"
-                  outlined
-                  color="green darken-1"
-                  @click="submitWorkForReview()"
-                  class="mr-2"
-                  :loading="loading"
-                  :disabled="disabled"
-                  v-bind="attrs"
-                  v-on="on"
-                >
-                  <v-icon left> mdi-check </v-icon>
-                  SUBMIT WORK FOR REVIEW
-                </v-btn>
-                <v-btn
-                  v-else
-                  outlined
-                  color="baseAccent"
-                  @click="markAsCompleted()"
-                  class="mr-2"
-                  :loading="loading"
-                  :disabled="disabled"
-                  v-bind="attrs"
-                  v-on="on"
-                >
-                  <v-icon left> mdi-check </v-icon>
-                  YES, I HAVE COMPLETED THIS MISSION
-                </v-btn>
-
                 <!-- CANCEL -->
                 <v-btn
                   outlined
@@ -215,7 +162,7 @@
                   :disabled="disabled || loading"
                 >
                   <v-icon left> mdi-close </v-icon>
-                  Cancel
+                  CLOSE
                 </v-btn>
                 <!-- End action-buttons -->
               </div>
