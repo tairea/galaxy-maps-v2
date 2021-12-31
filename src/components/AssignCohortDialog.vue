@@ -44,7 +44,7 @@
             >
               <v-tab><p class="baseAccent--text tab">Individual</p></v-tab>
               <v-tab><p class="baseAccent--text tab">Cohort</p></v-tab>
-              <v-tab><p class="baseAccent--text tab">Organisation</p></v-tab>
+              <!-- <v-tab><p class="baseAccent--text tab">Organisation</p></v-tab> -->
             </v-tabs>
 
             <v-tabs-items v-model="tab">
@@ -128,9 +128,28 @@
                     v-if="assignCohorts"
                     v-model="cohort.id"
                     :items="cohorts"
-                    item-text="name"
                     item-value="id"
                   >
+                    <template v-slot:selection="{item}"> 
+                      <v-avatar size="40">
+                        <img
+                          :src="item.image.url"
+                          :alt="item.name"
+                          style="object-fit: cover;"
+                        >
+                      </v-avatar>
+                      <p class="ml-4">{{item.name}}</p>
+                    </template>
+                    <template v-slot:item="{item}"> 
+                      <v-avatar size="40">
+                        <img
+                          :src="item.image.url"
+                          :alt="item.name"
+                          style="object-fit: cover;"
+                        >
+                      </v-avatar>
+                      <p class="ml-4 mt-4">{{item.name}}</p>
+                    </template>
                   </v-select>
                 </div>
                 <!-- ACTION BUTTONS -->
@@ -165,8 +184,7 @@
               </v-tab-item>
 
               <!-- Organisations -->
-              <v-tab-item>
-                <!-- HEADER -->
+              <!-- <v-tab-item>
                 <div class="dialog-header">
                   <p class="dialog-title">Assign to an Organisation</p>
                   <div class="d-flex align-center">
@@ -181,7 +199,6 @@
                   </div>
                 </div>
                 <div class="create-dialog-content">
-                  <!-- TITLE -->
                   <p class="dialog-description">Organsations:</p>
                   <v-select
                     v-if="assignCohorts"
@@ -192,8 +209,6 @@
                   >
                   </v-select>
                 </div>
-                <!-- End create-dialog-content -->
-                <!-- ACTION BUTTONS -->
                 <div class="action-buttons">
                   <v-btn
                     v-if="assignCohorts"
@@ -221,125 +236,93 @@
                     Cancel
                   </v-btn>
                 </div>
-                <!-- End action-buttons -->
-              </v-tab-item>
+              </v-tab-item> -->
             </v-tabs-items>
 
             <!-- </div> -->
           </div>
           <!-- End create-dialog -->
 
-
           <div v-else-if="assignCourses" class="create-dialog">
-          <!-- HEADER -->
-                <div class="dialog-header">
-                  <p class="dialog-title">Assign this Cohort to a Course</p>
-                  <div class="d-flex align-center">
-                    <v-icon left color="missionAccent"
-                      >mdi-information-variant</v-icon
-                    >
-                    <p class="dialog-description">
-                      Assign this Cohort to a specific Galaxy Map that you have
-                      already created.
-                    </p>
-                  </div>
-                </div>
-                <div class="create-dialog-content">
-                  <!-- TITLE -->
-                  <p class="dialog-description">Galaxy Maps:</p>
-                  <v-select
-                    v-if="assignCohorts"
-                    v-model="courses.id"
-                    :items="courses"
-                    item-text="name"
-                    item-value="id"
-                  >
-                  </v-select>
-                </div>
-                <!-- ACTION BUTTONS -->
-                <div class="action-buttons">
-                  <v-btn
-                    v-if="assignCourses"
-                    outlined
-                    color="green darken-1"
-                    @click="assignCourse(course)"
-                    :loading="loading"
-                  >
-                    <v-icon left>
-                      mdi-check
-                    </v-icon>
-                    ASSIGN GALAXY MAP
-                  </v-btn>
+            <!-- HEADER -->
+            <div class="dialog-header">
+              <p class="dialog-title">Assign this Cohort to a Course</p>
+              <div class="d-flex align-center">
+                <v-icon left color="missionAccent"
+                  >mdi-information-variant</v-icon
+                >
+                <p class="dialog-description">
+                  Assign this Cohort to a specific Galaxy Map that you have
+                  already created.
+                </p>
+              </div>
+            </div>
 
-                  <v-btn
-                    outlined
-                    :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
-                    class="ml-2"
-                    @click="cancel"
-                    :disabled="loading"
-                  >
-                    <v-icon left>
-                      mdi-close
-                    </v-icon>
-                    Cancel
-                  </v-btn>
-                </div>
+            <div class="create-dialog-content">
+              <p class="dialog-description">Galaxy Maps:</p>
+              <v-select
+                v-if="assignCourses"
+                v-model="course.id"
+                :items="courses"
+                item-value="id"
+                dark
+              >
+                <template v-slot:selection="{item}"> 
+                  <v-avatar size="40" tile>
+                    <img
+                      :src="item.image.url"
+                      :alt="item.title"
+                      style="object-fit: cover;"
+                    >
+                  </v-avatar> 
+                  <p class="ml-4">{{item.title}}</p>
+                </template>
+                <template v-slot:item="{item}"> 
+                  <v-avatar size="40" tile>
+                    <img
+                      :src="item.image.url"
+                      :alt="item.title"
+                      style="object-fit: cover;"
+                    >
+                  </v-avatar>
+                  <p class="ml-4 mt-4">{{item.title}}</p>
+                </template>
+              </v-select>
+            </div>
+
+
+            <!-- ACTION BUTTONS -->
+            <div class="action-buttons">
+              <v-btn
+                v-if="assignCourses"
+                outlined
+                color="green darken-1"
+                @click="assignCourseToCohort(course)"
+                :loading="loading"
+              >
+                <v-icon left>
+                  mdi-check
+                </v-icon>
+                ASSIGN GALAXY MAP
+              </v-btn>
+
+              <v-btn
+                outlined
+                :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
+                class="ml-2"
+                @click="cancel"
+                :disabled="loading"
+              >
+                <v-icon left>
+                  mdi-close
+                </v-icon>
+                Cancel
+              </v-btn>
+            </div>
           </div>
           <!-- End Assign Courses create-dialog -->
 
         </v-dialog>
-
-        <!-- DIALOG (TODO: make as a component)-->
-        <!-- <div class="assignCohortDialog"> -->
-        <!-- AVAILABLE COHORTS -->
-        <!-- <div class="tile">
-            <v-select
-              v-if="assignCohorts"
-              v-model="cohort.id"
-              :items="cohorts"
-              item-text="name"
-              item-value="id"
-              label="COHORTS"
-            >
-            </v-select>
-            <v-select
-              v-else-if="assignCourses"
-              v-model="course.id"
-              :items="courses"
-              item-text="title"
-              item-value="id"
-              label="GALAXY MAP"
-            >
-            </v-select>
-          </div> -->
-
-        <!-- SAVE -->
-        <!-- <div class="tile saveButton">
-            <v-btn
-              v-if="assignCohorts"
-              outlined
-              color="green darken-1"
-              @click="assignCohortToCohort(cohort)"
-            >
-              <v-icon left>
-                mdi-check
-              </v-icon>
-              ADD COHORT
-            </v-btn>
-            <v-btn
-              v-else-if="assignCourses"
-              outlined
-              color="green darken-1"
-              @click="assignCourse(course)"
-            >
-              <v-icon left>
-                mdi-check
-              </v-icon>
-              ADD GALAXY MAP
-            </v-btn>
-          </div> -->
-        <!-- </div> -->
-        <!-- </v-dialog> -->
       </v-col>
     </v-row>
   </v-container>
@@ -490,7 +473,8 @@ export default {
         });
       // this.course = {};
     },
-    assignCourse(course) {
+    assignCourseToCohort(course) {
+      console.log('course: ', course)
       this.loading = true;
       // Add a cohort into collection "courses"
       db.collection("cohorts")
@@ -597,6 +581,11 @@ export default {
     flex: none;
     font-size: 0.8rem;
     color: var(--v-missionAccent-base) !important;
+  }
+
+  .v-application .primary--text {
+    color: var(--v-missionAccent-base) !important;
+    caret-color: var(--v-missionAccent-base) !important;
   }
 }
 

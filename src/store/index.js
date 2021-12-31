@@ -75,10 +75,6 @@ export default new Vuex.Store({
         return state.cohorts.filter((cohort) => cohort.organisation == "");
       }
     },
-    getCoursesByCohortId: (state) => (id) => {
-      //TODO: not complete
-      state.cohorts.filter((cohort) => cohort.id === id);
-    },
     getPersonById: (state) => (id) => {
       state.people.filter((person) => person.id === id);
     },
