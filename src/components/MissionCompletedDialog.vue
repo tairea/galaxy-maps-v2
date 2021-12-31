@@ -185,7 +185,7 @@ import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "MissionCompletedDialog",
-  props: ["task", "topicId", "missionStatus", "on", "attrs"],
+  props: ["task", "topicId", "taskId", "missionStatus", "on", "attrs"],
   data: () => ({
     submissionInstructions:
       "Please paste a Google Drive share link to your completed work with 'Anyone with link can access' settings on", //TODO: get this value from creator database
@@ -224,21 +224,17 @@ export default {
           this.disabled = false;
           this.dialog = false;
 
-          // unlock next-step nodes
-          // This will unlock next node, even though current topic is only IN REVIEW
-          // TODO: perhaps only unlock once teacher has reviewed and marked complete
+          // check if all tasks/missions are completed
           db.collection("people")
             .doc(this.person.id)
             .collection(this.currentCourseId)
-            .where("prerequisites", "array-contains", this.topicId)
+            .doc(this.topicId)
             .get()
-            .then((querySnapshot) => {
-              querySnapshot.forEach((doc) => {
-                doc.ref.update({
-                  status: "unlocked", // change status to unlocked
-                });
-              });
-            });
+            .then((doc) => {});
+
+          // if all tasks/missions are completed .then this.unlockNextTopics()
+          // This will unlock next node, even though current topic is only IN REVIEW
+          // TODO: perhaps only unlock once teacher has reviewed and marked complete
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
@@ -263,23 +259,27 @@ export default {
           this.disabled = false;
           this.dialog = false;
 
-          // ==== unlock next-step nodes ====
-          // go to firestore > people > personId > courseId > where prerequesites "array-contains" this.topicId
-          db.collection("people")
-            .doc(this.person.id)
-            .collection(this.currentCourseId)
-            .where("prerequisites", "array-contains", this.topicId)
-            .get()
-            .then((querySnapshot) => {
-              querySnapshot.forEach((doc) => {
-                doc.ref.update({
-                  status: "unlocked", // change status to unlocked
-                });
-              });
-            });
+          // check if all tasks/missions are completed
+
+          // if all tasks/missions are completed .then this.unlockNextTopics()
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
+        });
+    },
+    unlockNextTopics() {
+      // ==== all tasks/missions completed. unlock next topics ====
+      db.collection("people")
+        .doc(this.person.id)
+        .collection(this.currentCourseId)
+        .where("prerequisites", "array-contains", this.topicId)
+        .get()
+        .then((querySnapshot) => {
+          querySnapshot.forEach((doc) => {
+            doc.ref.update({
+              status: "unlocked", // change status to unlocked
+            });
+          });
         });
     },
     cancel() {

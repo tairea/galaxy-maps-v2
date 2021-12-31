@@ -14,6 +14,7 @@
         <CreateEditDeleteMissionDialog
           :edit="true"
           :taskToEdit="task"
+          :taskId="id"
           :index="index"
           :topicId="topicId"
         />
@@ -83,6 +84,7 @@
       <div class="d-flex align-center justify-center">
         <MissionCompletedDialog
           :task="task"
+          :taskId="id"
           :topicId="topicId"
           :missionStatus="getTopicStatus"
         />
@@ -119,7 +121,7 @@ export default {
     CreateEditDeleteMissionDialog,
     MissionCompletedDialog,
   },
-  props: ["task", "index", "topicId"],
+  props: ["task", "id", "index", "topicId"],
   mounted() {},
   computed: {
     ...mapState(["currentCourseId", "personsTopics"]),

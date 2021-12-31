@@ -4,7 +4,12 @@
 
     <div v-if="tasks" style="width: 100%">
       <div v-for="(task, index) in tasks" :key="task.id">
-        <MissionsCard :task="task" :index="index" :topicId="topicId" />
+        <MissionsCard
+          :task="task"
+          :id="task.id"
+          :index="index"
+          :topicId="topicId"
+        />
       </div>
     </div>
 

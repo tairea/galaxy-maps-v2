@@ -33,6 +33,7 @@ export default new Vuex.Store({
     personsEdges: [],
     personsAssignedEdges: [],
     personsTopics: [],
+    topicsTasks: [],
   },
   getters: {
     user: (state) => state.user,
@@ -62,9 +63,10 @@ export default new Vuex.Store({
     getPersonsTasksByTopicId: (state) => (id) => {
       if (state.personsTopics.length) {
         var topic = state.personsTopics.find((topic) => topic.id === id);
-      } else var topic = {
-        tasks: []
-      } 
+      } else
+        var topic = {
+          tasks: [],
+        };
       return topic.tasks;
     },
     getCohortsByOrganisationId: (state) => (id) => {
@@ -421,6 +423,31 @@ export default new Vuex.Store({
         );
       }
     ),
+    // bind tasks by topic id
+    bindTasksByTopicId: firestoreAction(({ bindFirestoreRef }, payload) => {
+      return bindFirestoreRef(
+        "topicsTasks",
+        db
+          .collection("courses")
+          .doc(payload.courseId)
+          .collection("topics")
+          .doc(payload.topicId)
+          .collection("tasks")
+      );
+    }),
+    // bind persons tasks by topic id
+    // bindPersonsTasksByTopicId: firestoreAction(
+    //   ({ bindFirestoreRef }, payload) => {
+    //     return bindFirestoreRef(
+    //       "personsTopics",
+    //       db
+    //         .collection("people")
+    //         .doc(payload.personId)
+    //         .collection(payload.courseId)
+
+    //     );
+    //   }
+    // ),
   },
 });
 
