@@ -64,12 +64,16 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import PopupPreview from "../components/PopupPreview";
 
 export default {
-  name: "GalaxyMap",
+  name: "Galaxy",
   props: ["whichCoursesToDisplay"],
   components: {
     Network,
     LoadingSpinner,
     PopupPreview,
+  },
+  beforeDestroy() {
+    console.log("destroy map");
+    this.$refs.network.destroy();
   },
   async mounted() {
     console.log("whichCoursesToDisplay = ", this.whichCoursesToDisplay);
@@ -78,6 +82,7 @@ export default {
         Only show MY Galaxies
     =========================== */
     if (this.whichCoursesToDisplay == "my") {
+      await this.$store.dispatch("bindCoursesByPersonId", this.user.data.id); // bind courses created by this user id
       await this.$store.dispatch("getNodesByPersonId", this.user.data.id);
       await this.$store.dispatch("getEdgesByPersonId", this.user.data.id);
       console.log("nodes by person:", this.personsNodesForDisplay);
@@ -96,20 +101,21 @@ export default {
         "getAssignedEdgesByPersonId",
         this.user.data.id
       );
-      console.log(
-        "assigned nodes by person:",
-        this.personsAssignedNodesForDisplay
-      );
-      console.log("assigned edges by person:", this.personsAssignedEdges);
+      // console.log(
+      //   "assigned nodes by person:",
+      //   this.personsAssignedNodesForDisplay
+      // );
+      // console.log("assigned edges by person:", this.personsAssignedEdges);
       this.nodesToDisplay = this.personsAssignedNodesForDisplay;
     } else if (this.whichCoursesToDisplay == "all") {
       /* ===========================
         Only show ALL Galaxies in DATABASE!! (so I can see what maps users have created)
     =========================== */
-      await this.$store.dispatch("getAllNodes");
-      await this.$store.dispatch("getAllEdges");
-      console.log("all nodes ever:", this.allNodesForDisplay);
-      console.log("all edges ever:", this.allEdges);
+      await this.$store.dispatch("bindAllCourses"); // course data
+      await this.$store.dispatch("getAllNodes"); // node data for course
+      await this.$store.dispatch("getAllEdges"); // edge data for course
+      // console.log("all nodes ever:", this.allNodesForDisplay);
+      // console.log("all edges ever:", this.allEdges);
       this.nodesToDisplay = this.allNodesForDisplay;
     }
 
@@ -146,59 +152,15 @@ export default {
       "allNodesForDisplay",
       "allEdges",
       "courses",
-      "topics",
       "currentCourseId",
-      "allNodesLength",
       "personsNodesForDisplay",
       "personsEdges",
       "personsAssignedNodesForDisplay",
       "personsAssignedEdges",
-      "personsTopics",
+      // "topics",
+      // "personsTopics",
     ]),
     ...mapGetters(["getCourseById", "user"]),
-    currentCourseNodesWithStatus(currentNodes) {
-      let nodesWithStatus = [];
-      // loop each node
-      for (const node of currentNodes) {
-        // find the topic node with status
-        let matchingNode = this.personsTopics.find((x) => {
-          return x.id === node.id;
-        });
-        // console.log("matchingNode",matchingNode)
-        // push node with status
-        nodesWithStatus.push({
-          ...node,
-          // color: this.stringToColour(matchingNode.label),  // Attempt to match node color to System color
-          group: matchingNode?.status ?? "unlocked",
-        });
-      }
-      // console.log("nodesWithStatus",nodesWithStatus)
-      // return nodes with status to network map
-      return nodesWithStatus;
-    },
-    currentCourseEdgesWithStatusStyles(currentEdges) {
-      let edgesWithStatusStyles = [];
-      let hasDashes = false;
-
-      for (const edge of currentEdges) {
-        // find the topic node with status
-        let matchingEdge = this.personsTopics.find((x) => {
-          // add dashes to the edge (if topic is locked)
-          if (x.status == "locked") {
-            hasDashes = true;
-            // hasDashes = [2,2]
-          }
-          return x.id === edge.to;
-        });
-        // push node with status
-        edgesWithStatusStyles.push({
-          ...edge,
-          dashes: hasDashes,
-        });
-      }
-      // return nodes with status to network map
-      return edgesWithStatusStyles;
-    },
   },
   data: () => ({
     active: false,
@@ -537,7 +499,7 @@ export default {
     // this controls the fit zoom animation
     zoomToNodes(nodes) {
       // nodes to zoom
-      console.log("nodes to zoom", nodes);
+      // console.log("nodes to zoom", nodes);
       // get node ids
       var nodeIds = nodes.map((x) => x.id);
       // this.allNodeIds = allNodeIds;
