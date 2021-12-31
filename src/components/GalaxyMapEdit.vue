@@ -313,6 +313,8 @@ export default {
       this.infoPopupShow = true;
     },
     centerFocus(centerFocusNode) {
+      if (centerFocusNode.length > 1) return; // this avoids pop up when no specific node selected
+      console.log("centerFocus ???? ", centerFocusNode);
       this.centerFocusPosition = true;
       this.type = centerFocusNode.type;
       this.infoPopupPosition.x = "50%"; // 50%
