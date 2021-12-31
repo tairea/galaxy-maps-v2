@@ -59,7 +59,9 @@
       </div>
       <div class="section-overUnder d-flex justify-center flex-column">
         <p class="text-overline text-uppercase text-center">SUBMISSION REQ:</p>
-        <p>{{ task.submissionRequired ? "YES" : "NO" }}</p>
+        <p :style="[task.submissionRequired ? { color: '#FAF200' } : '']">
+          {{ task.submissionRequired ? "YES" : "NO" }}
+        </p>
       </div>
     </div>
 

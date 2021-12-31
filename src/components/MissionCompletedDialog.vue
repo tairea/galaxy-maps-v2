@@ -213,6 +213,8 @@ export default {
         .doc(this.person.id)
         .collection(this.currentCourseId)
         .doc(this.topicId)
+        .collection("tasks")
+        .doc(this.taskId)
         .update({
           // update tasks array with new task
           submittedWork: this.submissionLink,
@@ -225,12 +227,14 @@ export default {
           this.dialog = false;
 
           // check if all tasks/missions are completed
-          db.collection("people")
-            .doc(this.person.id)
-            .collection(this.currentCourseId)
-            .doc(this.topicId)
-            .get()
-            .then((doc) => {});
+          // TODO: instead of going to db do we already have tasks in store?
+          // db.collection("people")
+          //   .doc(this.person.id)
+          //   .collection(this.currentCourseId)
+          //   .doc(this.topicId)
+          //   .collection("tasks")
+          //   .get()
+          //   .then((doc) => {});
 
           // if all tasks/missions are completed .then this.unlockNextTopics()
           // This will unlock next node, even though current topic is only IN REVIEW
@@ -249,6 +253,8 @@ export default {
         .doc(this.person.id)
         .collection(this.currentCourseId)
         .doc(this.topicId)
+        .collection("tasks")
+        .doc(this.taskId)
         .update({
           // update tasks array with new task
           status: "completed",

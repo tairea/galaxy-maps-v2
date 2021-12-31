@@ -332,7 +332,7 @@ export default {
         .collection("topics")
         .doc(this.topicId)
         .collection("tasks")
-        .add(task)
+        .add({ ...task, timestamp: new Date() })
         .then(() => {
           console.log("Task successfully written!");
           this.loading = false;
