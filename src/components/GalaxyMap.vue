@@ -17,13 +17,11 @@
       @deselect-edge="deselectEdge"
       @hover-node="hoverNode"
       @blur-node="blurNode"
-      @zoom="zoom"
       @animation-finished="animationFinished"
       @before-drawing="beforeDrawing"
       @click="click"
       @double-click="doubleClick"
     ></network>
-    <!-- @blur-node="blurNode" -->
 
     <!-- Attempt to put systems on top of nodes. need to explore drawing solar systems in canvas -->
     <!-- <div v-for="system in currentCourseNodes" :key="system.id">
@@ -271,7 +269,6 @@ export default {
       // this.$emit("setUiMessage", "");
     },
     dragStart(data) {
-      console.log("drag start", data);
       this.deselectNode();
     },
     dragging(data) {
@@ -382,9 +379,6 @@ export default {
       console.log("deleting selected");
       this.$refs.network.deleteSelected();
       this.$emit("deselected");
-    },
-    zoom(data) {
-      console.log("zoom", data);
     },
     disableEditMode() {
       this.$refs.network.disableEditMode();

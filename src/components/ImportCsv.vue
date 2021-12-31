@@ -1,12 +1,13 @@
 <template>
   <div class="importContainer">
-    <v-row class="pt-2 pl-2">
-      <v-col cols="6">
+    <v-row class="pt-2 pl-2 pb-0">
+      <v-col cols="10">
         <div class="d-flex justify-center align-center">
           <v-file-input
             label="Upload CSV File"
             outlined
             dense
+            hide-details
             color="missionAccent"
             id="csv_file"
             name="csv_file"
@@ -16,8 +17,10 @@
           ></v-file-input>
         </div>
       </v-col>
-      <v-col cols="6">
-        <p class="downloadCsv">download csv template</p>
+      <v-col cols="6" class="pt-0">
+        <v-btn text @click="downloadCsv()">
+          <span class="downloadCsv">download csv template</span>
+        </v-btn>
       </v-col>
     </v-row>
 
@@ -61,6 +64,7 @@
 <script>
 import firebase from "firebase/app";
 import { db, storage } from "../store/firestoreConfig";
+import isEmpty from "lodash"
 
 // csv import: https://codepen.io/edward1995/pen/QmXdwz?editors=1010
 export default {
@@ -80,6 +84,7 @@ export default {
       buttonLabel: "Add Students to Database",
       loading: false,
       disabled: false,
+      csvColumns: ["Nsn Number","First Name","Last Name","Student Email","Parent Email"]
     };
   },
   filters: {
@@ -172,9 +177,9 @@ export default {
         result.push(obj);
       });
 
-      //result.pop(); // remove the last item because undefined values
-      console.log("result = ", result);
-      return result; // JavaScript object
+      var students = result.filter(student => (student.firstName))
+
+      return students; // JavaScript object
     },
     loadCSV(e) {
       this.resetButton();
@@ -211,6 +216,14 @@ export default {
       this.disabled = false;
       this.buttonLabel = "Add Students to Database";
     },
+    downloadCsv () {
+      var csv = this.csvColumns.join(',') + '\n'
+      var hiddenElement = document.createElement('a')
+      hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv)
+      hiddenElement.target = '_blank'
+      hiddenElement.download = 'students-list.csv'
+      hiddenElement.click()
+    }
   },
 };
 </script>
@@ -222,6 +235,7 @@ export default {
 
   .downloadCsv {
     font-size: 0.8rem;
+    font-weight:400;
     text-transform: uppercase;
     color: var(--v-missionAccent-base);
   }
