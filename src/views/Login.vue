@@ -97,7 +97,7 @@ export default {
         })
         .then(() => {
           console.log("Successfully logged in");
-          this.$router.push("/base/galaxies/my");
+          this.$router.push("/base/galaxies/all");
         })
         .catch((error) => {
           this.errorMsg = error;

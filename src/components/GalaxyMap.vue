@@ -371,7 +371,6 @@ export default {
       }
     },
     selectNode(data) {
-      console.log("selected ?????  ", data);
       this.active = true;
       if (data.nodes.length == 1) {
         // is type node
