@@ -12,7 +12,7 @@
               class="mission-edit-button mt-4"
               outlined
               color="missionAccent"
-              small
+              x-small
             >
               <v-icon small> mdi-pencil </v-icon>
             </v-btn>

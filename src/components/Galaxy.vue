@@ -230,7 +230,7 @@ export default {
           length: 50, // Longer edges between nodes.
           smooth: false,
           color: {
-            inherit: false,
+            inherit: "to",
           },
         },
         nodes: {
@@ -248,6 +248,44 @@ export default {
             },
           },
           font: { color: "white" },
+        },
+        groups: {
+          // useDefaultGroups: false,
+          locked: {
+            color: "rgba(132,132,132,0.2)",
+            shape: "dot",
+            // opacity: 0.1,
+          },
+          unlocked: {
+            shape: "dot",
+            color: "#848484",
+            opacity: 1,
+          },
+          current: { color: "rgb(0,255,140)" },
+          // node status
+          inreview: {
+            shape: "dot",
+            color: "#FAF200",
+          },
+          completed: {
+            shape: "dot",
+            color: "#00E676",
+          },
+          // node types
+          introduction: {
+            shape: "dot",
+            color: "#00E676",
+          },
+          tasks: {
+            // color: { background: "yellow", border: "white" },
+            // shape: "diamond",
+            shape: "dot",
+            color: "#69A1E2",
+          },
+          project: {
+            shape: "dot",
+            color: "#E269CF",
+          },
         },
         interaction: {
           hover: true,
@@ -297,19 +335,24 @@ export default {
       // set save current course clicked in store
       this.$store.commit("setCurrentCourseId", closestNode.courseId);
 
-      // get topic ids
-      let topicsNodes = this.personsNodesForDisplay.filter(
+      // get all topic nodes by the closest clicked
+      let coursesTopicNodes = this.nodesToDisplay.filter(
         (node) => node.courseId == closestNode.courseId
       );
 
-      let topicsNodeIds = topicsNodes.reduce(function (output, node) {
+      // get just the ids of the topic nodes to fit/zoom to
+      let coursesTopicNodesIds = coursesTopicNodes.reduce(function (
+        output,
+        node
+      ) {
         output.push(node.id);
         return output;
-      }, []);
+      },
+      []);
 
       // network fit to array of topic ids
       this.$refs.network.fit({
-        nodes: topicsNodeIds,
+        nodes: coursesTopicNodesIds,
         offset: {
           x: 500,
         },

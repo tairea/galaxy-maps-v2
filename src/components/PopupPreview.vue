@@ -218,7 +218,9 @@ export default {
           .doc(doc.data().id)
           .set({
             ...doc.data(),
-            status: "locked",
+            // set the status of topics to locked unless they are introduction nodes
+            status:
+              doc.data().group == "introduction" ? "introduction" : "locked",
           });
       }
       this.$router.push({

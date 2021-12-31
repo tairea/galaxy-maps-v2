@@ -47,12 +47,19 @@
         </p>
       </div>
     </div>
-    <div class="mission-section">
+    <div class="mission-section mission-section-overUnder">
       <!-- DURATION -->
-      <p class="text-overline text-uppercase">Duration:</p>
-      <p style="font-size: 30px; text-align: center">
-        {{ task.duration }}
-      </p>
+      <div class="section-overUnder d-flex justify-center flex-column">
+        <p class="text-overline text-uppercase text-center">Duration:</p>
+        <!-- <p style="font-size: 30px; text-align: center"> -->
+        <p class="text-center">
+          {{ task.duration }}
+        </p>
+      </div>
+      <div class="section-overUnder d-flex justify-center flex-column">
+        <p class="text-overline text-uppercase text-center">SUBMISSION REQ:</p>
+        <p>{{ task.submissionRequired ? "YES" : "NO" }}</p>
+      </div>
     </div>
 
     <!-- COMPLETION -->
@@ -64,7 +71,7 @@
         'topic-completed': getTopicStatus == 'completed',
       }"
     >
-      <p class="text-overline text-uppercase">
+      <p class="text-overline text-uppercase text-center">
         {{
           getTopicStatus == "completed"
             ? "COMPLETED"
@@ -81,10 +88,16 @@
         />
       </div>
     </div>
+
+    <!-- ANALYTICS (for type teacher) -->
     <div v-else class="mission-section">
-      <p class="text-overline text-uppercase">Analytics:</p>
-      <v-btn color="missionAccent" outlined> PREVIEW </v-btn>
-      <v-btn color="missionAccent" outlined class="mt-2"> SEE FULL </v-btn>
+      <p class="text-overline text-uppercase text-center">Analytics:</p>
+      <div class="d-flex justify-center flex-column mt-2">
+        <v-btn color="missionAccent" outlined x-small> OVERVIEW </v-btn>
+        <v-btn color="missionAccent" outlined class="mt-2" x-small>
+          SEE FULL
+        </v-btn>
+      </div>
     </div>
 
     <!-- Completed Dialog -->
@@ -165,7 +178,7 @@ a {
 
   .mission-main-section {
     // flex-grow: 4 !important;
-    width: 50%;
+    width: 40%;
     position: relative;
 
     .mission-edit-button {
