@@ -19,14 +19,7 @@
       <BackButton :toPath="'/galaxy/' + currentCourseId" />
     </div>
     <div id="main-section">
-      <MissionsList
-        :tasks="
-          person.accountType != 'student'
-            ? getTasksByTopicId(currentTopicId)
-            : getPersonsTasksByTopicId(currentTopicId)
-        "
-        :topicId="currentTopicId"
-      />
+      <MissionsList :tasks="topicsTasks" :topicId="currentTopicId" />
     </div>
     <div id="right-section">
       <!-- <div class="galaxy-frame">
@@ -58,8 +51,19 @@ export default {
     BackButton,
   },
   props: ["topicId"],
+  async mounted() {
+    if (this.person.accountType == "student") {
+      // store bindPersonsTasksByTopicId
+    } else {
+      //store bindTasksByTopicId
+      await this.$store.dispatch("bindTasksByTopicId", {
+        courseId: this.currentCourseId,
+        topicId: this.currentTopicId,
+      });
+    }
+  },
   computed: {
-    ...mapState(["currentTopicId", "currentCourseId"]),
+    ...mapState(["currentTopicId", "currentCourseId", "topicsTasks"]),
     ...mapGetters([
       "person",
       "getPersonsTopicById",

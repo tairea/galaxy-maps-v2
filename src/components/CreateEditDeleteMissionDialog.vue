@@ -282,7 +282,7 @@ import { mapState } from "vuex";
 
 export default {
   name: "CreateEditDeleteMissionDialog",
-  props: ["taskToEdit", "index", "topicId", "on", "attrs", "edit"],
+  props: ["taskToEdit", "taskId", "index", "topicId", "on", "attrs", "edit"],
   data: () => ({
     dialog: false,
     dialogConfirm: false,
@@ -331,10 +331,8 @@ export default {
         .doc(this.currentCourseId)
         .collection("topics")
         .doc(this.topicId)
-        .update({
-          // update tasks array with new task
-          tasks: firebase.firestore.FieldValue.arrayUnion(task),
-        })
+        .collection("tasks")
+        .add(task)
         .then(() => {
           console.log("Task successfully written!");
           this.loading = false;
@@ -359,20 +357,14 @@ export default {
         }
       }
 
-      // get all tasks array. so can update task with changes.
-      // (cant update single task by index in firestore, so have to get all tasks, make the change, then update all the tasks)
-      let topicTasks = this.$store.getters.getTasksByTopicId(this.topicId);
-      topicTasks[index] = task;
-
       // Add a new document in collection "courses"
       db.collection("courses")
         .doc(this.currentCourseId)
         .collection("topics")
         .doc(this.topicId)
-        .update({
-          // update tasks array with new task
-          tasks: topicTasks,
-        })
+        .collection("tasks")
+        .doc(this.taskId)
+        .update(this.task)
         .then((res) => {
           console.log("Task successfully updated!");
           this.dialog = false;
@@ -393,19 +385,13 @@ export default {
       this.dialog = true;
     },
     confirmDeleteTask() {
-      // get all tasks
-      let topicTasks = this.$store.getters.getTasksByTopicId(this.topicId);
-      // remove index
-      topicTasks.splice(this.index, 1);
-      // db set edited array
       db.collection("courses")
         .doc(this.currentCourseId)
         .collection("topics")
         .doc(this.topicId)
-        .update({
-          // update tasks array with new task
-          tasks: topicTasks,
-        })
+        .collection("tasks")
+        .doc(this.taskId)
+        .delete()
         .then(() => {
           console.log("Task successfully deleted!");
           this.dialog = false;
