@@ -2,7 +2,7 @@
   <!-- POPUP -->
   <!-- follow drag -> :style="{ top: getCoords.y - 100 + 'px', left: getCoords.x + 30 + 'px' }" -->
   <div
-    v-if="infoPopupShow"
+    v-if="infoPopupShow && this.currentNode"
     ref="popup"
     class="ss-info-panel"
     :class="{ centeredFocus: centerFocusPosition }"
@@ -25,9 +25,9 @@
         "
         :size="'0.25em'"
       />
-      <v-icon 
-        v-if="checkIfTopicLocked()" 
-        color="missionAccent"  
+      <v-icon
+        v-if="checkIfTopicLocked()"
+        color="missionAccent"
         class="ss-lock-button"
       >
         mdi-lock-outline
@@ -139,14 +139,14 @@ export default {
   },
   methods: {
     checkIfTopicLocked() {
-       for (const topic of this.personsTopics) {
+      for (const topic of this.personsTopics) {
         // find the topic node with status
         if (topic.id === this.currentNode.id) {
           if (topic.status == "locked") {
-            return true
+            return true;
           }
         }
-       }
+      }
     },
     editNode() {
       this.$emit("editNode");
