@@ -2,7 +2,7 @@
   <div class="mission-container">
     <h2 class="missions-label">Missions</h2>
 
-    <div v-if="tasks" style="width: 100%">
+    <div v-if="tasks.length > 0" style="width: 100%">
       <div v-for="(task, index) in tasks" :key="task.id">
         <MissionsCard
           :task="task"
@@ -14,7 +14,7 @@
     </div>
 
     <div v-else style="width: 100%">
-      <p class="no-missions-label">No Missions</p>
+      <p class="no-missions-label">No Missions in this system</p>
     </div>
 
     <div class="createButton" v-if="person.accountType != 'student'">

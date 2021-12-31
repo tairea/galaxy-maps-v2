@@ -433,6 +433,7 @@ export default new Vuex.Store({
           .collection("topics")
           .doc(payload.topicId)
           .collection("tasks")
+          .orderBy("timestamp") // this is important to ordering the tasks in MissionList.vue
       );
     }),
     // bind persons tasks by topic id
