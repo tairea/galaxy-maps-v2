@@ -10,7 +10,7 @@
               v-if="missionStatus != 'inreview' && missionStatus != 'completed'"
               v-bind="attrs"
               v-on="on"
-              class="mission-edit-button mt-4"
+              class="mission-edit-button"
               color="missionAccent"
               icon
               x-large
@@ -60,7 +60,7 @@
 
             <div class="submission-create-dialog">
               <!-- SUBMISSION FIELDS -->
-              <div v-if="submissionRequired">
+              <div v-if="task.submissionRequired">
                 <div class="submission-dialog-header">
                   <p class="submission-dialog-title">Submission Requirements</p>
                   <div class="d-flex align-center">
@@ -89,7 +89,7 @@
               <div class="action-buttons">
                 <!-- YES, I HAVE COMPLETED -->
                 <v-btn
-                  v-if="submissionRequired"
+                  v-if="task.submissionRequired"
                   outlined
                   color="green darken-1"
                   @click="submitWorkForReview()"
@@ -187,7 +187,6 @@ export default {
   name: "MissionCompletedDialog",
   props: ["task", "topicId", "missionStatus", "on", "attrs"],
   data: () => ({
-    submissionRequired: true, //TODO: get this value from creator database
     submissionInstructions:
       "Please paste a Google Drive share link to your completed work with 'Anyone with link can access' settings on", //TODO: get this value from creator database
     submissionLink: null,
@@ -224,6 +223,22 @@ export default {
           this.loading = false;
           this.disabled = false;
           this.dialog = false;
+
+          // unlock next-step nodes
+          // This will unlock next node, even though current topic is only IN REVIEW
+          // TODO: perhaps only unlock once teacher has reviewed and marked complete
+          db.collection("people")
+            .doc(this.person.id)
+            .collection(this.currentCourseId)
+            .where("prerequisites", "array-contains", this.topicId)
+            .get()
+            .then((querySnapshot) => {
+              querySnapshot.forEach((doc) => {
+                doc.ref.update({
+                  status: "unlocked", // change status to unlocked
+                });
+              });
+            });
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
@@ -247,6 +262,21 @@ export default {
           this.loading = false;
           this.disabled = false;
           this.dialog = false;
+
+          // ==== unlock next-step nodes ====
+          // go to firestore > people > personId > courseId > where prerequesites "array-contains" this.topicId
+          db.collection("people")
+            .doc(this.person.id)
+            .collection(this.currentCourseId)
+            .where("prerequisites", "array-contains", this.topicId)
+            .get()
+            .then((querySnapshot) => {
+              querySnapshot.forEach((doc) => {
+                doc.ref.update({
+                  status: "unlocked", // change status to unlocked
+                });
+              });
+            });
         })
         .catch((error) => {
           console.error("Error writing document: ", error);

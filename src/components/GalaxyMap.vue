@@ -96,14 +96,16 @@ export default {
         groups: {
           // useDefaultGroups: false,
           locked: {
-            color: "rgba(132,132,132,0.2)",
+            color: "rgba(132,132,132,0.4)", // opaque styling to appear locked
             shape: "dot",
+            font: {
+              color: "rgba(132,132,132,0.4)", // opaque styling to appear locked
+            },
             // opacity: 0.1,
           },
           unlocked: {
             shape: "dot",
-            color: "#848484",
-            opacity: 1,
+            color: "#69A1E2",
           },
           current: { color: "rgb(0,255,140)" },
           // node status
@@ -118,15 +120,17 @@ export default {
           // node types
           introduction: {
             shape: "dot",
-            color: "orange",
+            color: "#00E676",
           },
           tasks: {
-            color: { background: "yellow", border: "white" },
-            shape: "diamond",
+            // color: { background: "yellow", border: "white" },
+            // shape: "diamond",
+            shape: "dot",
+            color: "#69A1E2",
           },
           project: {
             shape: "dot",
-            color: "purple",
+            color: "#E269CF",
           },
         },
         interaction: {
@@ -167,7 +171,10 @@ export default {
     // console.log("personsTopics:", this.personsTopics);
     // console.log(this.$refs.network);
 
-    this.$refs.network.fit();
+    // zoom fit on load
+    if (this.$refs.network.nodes.length > 0) {
+      setTimeout(() => this.zoomToNodes(this.$refs.network.nodes), 250);
+    }
   },
   beforeDestroy() {
     clearInterval(this.intervalid1);
@@ -211,6 +218,8 @@ export default {
           if (x.status == "locked") {
             hasDashes = true;
             // hasDashes = [2,2]
+          } else {
+            hasDashes = false;
           }
           return x.id === edge.to;
         });
@@ -271,8 +280,10 @@ export default {
         .set(newEdgeData)
         .then(() => {
           console.log("Edge successfully written!");
-          this.$emit("edgeSaved");
+          this.$emit("toggleAddEdgeMode");
           this.addingEdge = false;
+          // toggle edge mode again so to stay in edit edge mode (this is so you can continuously add edges)
+          this.$emit("toggleAddEdgeMode");
         })
         .catch((error) => {
           console.error("Error writing node: ", error);
@@ -360,6 +371,7 @@ export default {
       }
     },
     selectNode(data) {
+      console.log("selected ?????  ", data);
       this.active = true;
       if (data.nodes.length == 1) {
         // is type node
@@ -487,6 +499,17 @@ export default {
           .padStart(2, "0"); // convert to Hex and prefix "0" if needed
       };
       return `#${f(0)}${f(8)}${f(4)}`;
+    },
+    // this controls the fit zoom animation
+    zoomToNodes(nodes) {
+      // nodes to zoom to
+      // get node ids
+      var nodeIds = nodes.map((x) => x.id);
+      console.log("fit");
+      this.$refs.network.fit({
+        nodes: nodeIds,
+        animation: true,
+      });
     },
   },
 };

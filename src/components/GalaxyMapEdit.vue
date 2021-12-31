@@ -95,7 +95,8 @@
             <v-checkbox v-model="prerequisites" class="ma-0 pa-0" color="blue">
               <template v-slot:label>
                 <span class="dialog-description"
-                  >Does this Objective have Prerequisites?</span
+                  >Does another objective need to be completed before starting
+                  this one?</span
                 >
               </template>
             </v-checkbox>
@@ -187,6 +188,7 @@ export default {
     // bind to store all topics for this course
     // await this.$store.dispatch("bindAllCourseTopics", this.currentCourseId);
     console.log("person account type is: ", this.person.accountType);
+    this.infoPopupShow = false;
   },
   data() {
     return {

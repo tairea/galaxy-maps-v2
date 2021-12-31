@@ -41,7 +41,7 @@
         @nodePositionsChanged="nodePositionsChanged"
         @nodePositionsChangeLoading="nodePositionsChangeLoading = true"
         @nodePositionsChangeSaved="nodePositionsChangeSaved"
-        @edgeSaved="toggleAddEdgeMode"
+        @toggleAddEdgeMode="toggleAddEdgeMode"
       />
 
       <!-- Edit -->
