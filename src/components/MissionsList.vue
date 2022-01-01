@@ -10,7 +10,12 @@
           :index="index"
           :topicId="topicId"
         />
-        <ActiveMissionsCard v-if="task.taskStatus == 'active'" />
+        <ActiveMissionsCard
+          v-if="task.taskStatus == 'active'"
+          :task="task"
+          :id="task.id"
+          :topicId="topicId"
+        />
       </div>
     </div>
 
@@ -41,6 +46,7 @@ export default {
   props: ["tasks", "topicId"],
   mounted() {
     // check which task is active
+    console.log("tasks from prop: ", this.tasks);
   },
   computed: {
     ...mapState(["personsTopicsTasks"]),

@@ -15,7 +15,7 @@
               icon
               x-large
             >
-              <v-icon> mdi-checkbox-blank-outline </v-icon>
+              <v-icon> mdi-cloud-upload-outline </v-icon>
             </v-btn>
             <!-- checked icon if inreview or completed -->
             <v-btn
@@ -32,7 +32,8 @@
               icon
               x-large
             >
-              <v-icon> mdi-checkbox-outline </v-icon>
+              <v-icon> mdi-check </v-icon>
+              <!-- <v-icon> mdi-checkbox-outline </v-icon> -->
             </v-btn>
           </template>
 
@@ -257,7 +258,7 @@ export default {
         .doc(this.taskId)
         .update({
           // update tasks array with new task
-          status: "completed",
+          taskStatus: "completed",
         })
         .then(() => {
           console.log("Task status successfully written as completed!");
@@ -283,7 +284,7 @@ export default {
         .then((querySnapshot) => {
           querySnapshot.forEach((doc) => {
             doc.ref.update({
-              status: "unlocked", // change status to unlocked
+              topicStatus: "unlocked", // change status to unlocked
             });
           });
         });
