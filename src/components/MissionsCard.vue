@@ -1,5 +1,8 @@
 <template>
-  <div class="mission-card">
+  <div
+    class="mission-card"
+    :class="{ lockedOpacity: getTaskStatus == 'locked' }"
+  >
     <div class="mission-section mission-number-section">
       <p class="text-overline text-uppercase">Mission</p>
       <p style="font-size: 50px; text-align: center">{{ index + 1 }}</p>
@@ -65,31 +68,43 @@
       </div>
     </div>
 
-    <!-- COMPLETION -->
+    <!-- MISSION STATUS -->
     <div
       v-if="person.accountType == 'student'"
-      class="mission-section"
+      class="mission-section d-flex justify-center align-center flex-column"
+      style="width: 20%"
       :class="{
-        'topic-in-review': getTopicStatus == 'inreview',
-        'topic-completed': getTopicStatus == 'completed',
+        'topic-in-review': getTaskStatus == 'inreview',
+        'topic-completed': getTaskStatus == 'completed',
+        'topic-completed': getTaskStatus == 'active',
       }"
     >
       <p class="text-overline text-uppercase text-center">
         {{
-          getTopicStatus == "completed"
+          getTaskStatus == "completed"
             ? "COMPLETED"
-            : getTopicStatus == "inreview"
+            : getTaskStatus == "inreview"
             ? "IN REVIEW"
-            : "COMPLETED?"
+            : getTaskStatus == "unlocked"
+            ? "START MISSION"
+            : getTaskStatus == "active"
+            ? "ACTIVE MISSION"
+            : "LOCKED"
         }}
       </p>
-      <div class="d-flex align-center justify-center">
-        <MissionCompletedDialog
-          :task="task"
-          :taskId="id"
-          :topicId="topicId"
-          :missionStatus="getTopicStatus"
-        />
+
+      <div v-if="getTaskStatus == 'unlocked'" class="d-flex justify-center">
+        <!-- Start Mission button -->
+        <StartMissionDialog :topicId="topicId" :taskId="id" :task="task" />
+      </div>
+      <div v-if="getTaskStatus == 'active'" class="d-flex justify-center">
+        <!-- no icon -->
+      </div>
+
+      <div v-else class="d-flex justify-center align-center">
+        <v-btn color="missionAccent" icon large>
+          <v-icon large>mdi-lock-outline</v-icon>
+        </v-btn>
       </div>
     </div>
 
@@ -103,16 +118,12 @@
         </v-btn>
       </div>
     </div>
-
-    <!-- Completed Dialog -->
-
-    <!-- EDIT MISSION DIALOG-->
   </div>
 </template>
 
 <script>
 import CreateEditDeleteMissionDialog from "../components/CreateEditDeleteMissionDialog";
-import MissionCompletedDialog from "../components/MissionCompletedDialog";
+import StartMissionDialog from "../components/StartMissionDialog";
 
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
@@ -121,28 +132,38 @@ export default {
   name: "MissionsCard",
   components: {
     CreateEditDeleteMissionDialog,
-    MissionCompletedDialog,
+    StartMissionDialog,
   },
   props: ["task", "id", "index", "topicId"],
   mounted() {},
   computed: {
-    ...mapState(["currentCourseId", "personsTopics"]),
+    ...mapState([
+      "currentCourseId",
+      "personsTopics",
+      "topicsTasks",
+      "personsTopicsTasks",
+    ]),
     ...mapGetters(["person"]),
-    getTopicStatus() {
+    getTaskStatus() {
       if (this.person.accountType != "student") {
         return;
       }
-      // get topic status eg. inreview / completed / introduction / locked
-      const topic = this.personsTopics.find(
-        (topic) => topic.id === this.topicId
-      );
-      return topic.status;
+      // get topic status eg. unlocked / inreview / completed / locked
+      const task = this.personsTopicsTasks.find((task) => task.id === this.id);
+      return task.taskStatus;
     },
   },
   data() {
     return {
       editing: false,
+      activeTask: false,
+      panel: [],
     };
+  },
+  methods: {
+    makeActive() {
+      this.$emit("makeActive");
+    },
   },
 };
 </script>
@@ -154,6 +175,10 @@ p {
 
 a {
   color: var(--v-missionAccent-base) !important;
+}
+
+.lockedOpacity {
+  opacity: 0.4;
 }
 
 .mission-card {
@@ -226,5 +251,11 @@ a {
       border-bottom: 1px dashed var(--v-missionAccent-base);
     }
   }
+}
+
+.active-mission-card {
+  border: 1px solid var(--v-baseAccent-base);
+  margin: 20px 10px;
+  display: flex;
 }
 </style>

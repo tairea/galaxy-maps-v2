@@ -7,7 +7,9 @@
             ? getTopicById(currentTopicId)
             : getPersonsTopicById(currentTopicId)
         "
-        :tasks="topicsTasks"
+        :tasks="
+          person.accountType == 'student' ? personsTopicsTasks : topicsTasks
+        "
       />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <AssignedInfo
@@ -20,7 +22,12 @@
       <BackButton :toPath="'/galaxy/' + currentCourseId" />
     </div>
     <div id="main-section">
-      <MissionsList :tasks="topicsTasks" :topicId="currentTopicId" />
+      <MissionsList
+        :tasks="
+          person.accountType == 'student' ? personsTopicsTasks : topicsTasks
+        "
+        :topicId="currentTopicId"
+      />
     </div>
     <div id="right-section">
       <!-- <div class="galaxy-frame">
@@ -55,6 +62,11 @@ export default {
   async mounted() {
     if (this.person.accountType == "student") {
       // store bindPersonsTasksByTopicId
+      await this.$store.dispatch("bindPersonsTasksByTopicId", {
+        personId: this.person.id,
+        courseId: this.currentCourseId,
+        topicId: this.currentTopicId,
+      });
     } else {
       //store bindTasksByTopicId
       await this.$store.dispatch("bindTasksByTopicId", {
@@ -64,7 +76,12 @@ export default {
     }
   },
   computed: {
-    ...mapState(["currentTopicId", "currentCourseId", "topicsTasks"]),
+    ...mapState([
+      "currentTopicId",
+      "currentCourseId",
+      "topicsTasks",
+      "personsTopicsTasks",
+    ]),
     ...mapGetters([
       "person",
       "getPersonsTopicById",

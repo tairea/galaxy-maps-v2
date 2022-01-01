@@ -2,7 +2,7 @@
   <!-- POPUP -->
   <!-- follow drag -> :style="{ top: getCoords.y - 100 + 'px', left: getCoords.x + 30 + 'px' }" -->
   <div
-    v-if="infoPopupShow && this.currentNode"
+    v-if="infoPopupShow && this.currentTopic"
     ref="popup"
     class="ss-info-panel"
     :class="{ centeredFocus: centerFocusPosition }"
@@ -20,8 +20,8 @@
       <SolarSystem
         :topic="
           person.accountType == 'student'
-            ? getPersonsTopicById(this.currentNode.id)
-            : getTopicById(this.currentNode.id)
+            ? getPersonsTopicById(this.currentTopic.id)
+            : getTopicById(this.currentTopic.id)
         "
         :tasks="tasks"
         :size="'0.25em'"
@@ -82,7 +82,7 @@
     </div>
     <!-- Preview: Topic Label -->
     <div class="ss-details">
-      {{ currentNode.label }}
+      {{ currentTopic.label }}
     </div>
     <!-- Preview: Table of Topic's Tasks -->
     <div class="ss-missions">
@@ -124,7 +124,7 @@ export default {
     "infoPopupShow",
     "infoPopupPosition",
     "centerFocusPosition",
-    "currentNode",
+    "currentTopic",
     "tasks",
   ],
   async mounted() {
@@ -143,6 +143,7 @@ export default {
       "personsTopics",
       "currentCourseId",
       "currentTopicId",
+      "personsTopicsTasks",
     ]),
     ...mapGetters(["getTopicById", "getPersonsTopicById"]),
   },
@@ -155,8 +156,8 @@ export default {
     checkIfTopicLocked() {
       for (const topic of this.personsTopics) {
         // find the topic node with status
-        if (topic.id === this.currentNode.id) {
-          if (topic.status == "locked") {
+        if (topic.id === this.currentTopic.id) {
+          if (topic.topicStatus == "locked") {
             return true;
           }
         }
@@ -166,12 +167,12 @@ export default {
       this.$emit("editNode");
     },
     getTopicTasks() {
-      // console.log("node = ", this.currentNode.id);
+      // console.log("node = ", this.currentTopic.id);
       // get the topics for this current node
       let topic =
         this.person.accountType == "student"
-          ? this.getPersonsTopicById(this.currentNode.id)
-          : this.getTopicById(this.currentNode.id);
+          ? this.getPersonsTopicById(this.currentTopic.id)
+          : this.getTopicById(this.currentTopic.id);
       // console.log("topic = ", topic);
       if (!topic) {
         return;
@@ -181,14 +182,14 @@ export default {
       return this.topicTasks;
     },
     routeToSolarSystem() {
-      // console.log("route to ss", this.currentNode.id);
+      // console.log("route to ss", this.currentTopic.id);
       // save current topic to store
-      this.$store.commit("setCurrentTopicId", this.currentNode.id);
+      this.$store.commit("setCurrentTopicId", this.currentTopic.id);
       // route to topic/solar system
       this.$router.push({
         name: "SolarSystemView",
         params: {
-          topicId: this.currentNode.id,
+          topicId: this.currentTopic.id,
         },
       });
     },

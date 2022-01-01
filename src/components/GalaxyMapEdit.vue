@@ -163,9 +163,11 @@
     <PopupSystemPreview
       :infoPopupShow="infoPopupShow"
       :infoPopupPosition="infoPopupPosition"
-      :currentNode="currentNode"
+      :currentTopic="currentNode"
       :centerFocusPosition="centerFocusPosition"
-      :tasks="topicsTasks"
+      :tasks="
+        person.accountType == 'student' ? personsTopicsTasks : topicsTasks
+      "
       @deleteFromMap="deleteFromMap"
       @deselect="deselect"
       @editNode="editNode"
@@ -233,6 +235,7 @@ export default {
       "personsTopics",
       "currentCourseId",
       "topicsTasks",
+      "personsTopicsTasks",
     ]),
     ...mapGetters(["getTopicById", "getPersonsTopicById"]),
     getCoords() {
@@ -432,10 +435,18 @@ export default {
       // this.resetNewData();
     },
     async bindTasks(courseId, topicId) {
-      await this.$store.dispatch("bindTasksByTopicId", {
-        courseId: courseId,
-        topicId: topicId,
-      });
+      if (this.person.accountType == "student") {
+        await this.$store.dispatch("bindPersonsTasksByTopicId", {
+          personId: this.person.id,
+          courseId: courseId,
+          topicId: topicId,
+        });
+      } else {
+        await this.$store.dispatch("bindTasksByTopicId", {
+          courseId: courseId,
+          topicId: topicId,
+        });
+      }
     },
   },
 };
