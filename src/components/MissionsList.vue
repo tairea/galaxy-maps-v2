@@ -10,6 +10,7 @@
           :index="index"
           :topicId="topicId"
         />
+        <ActiveMissionsCard v-if="task.taskStatus == 'active'" />
       </div>
     </div>
 
@@ -25,23 +26,32 @@
 
 <script>
 import MissionsCard from "../components/MissionsCard";
+import ActiveMissionsCard from "../components/ActiveMissionsCard";
 import CreateEditDeleteMissionDialog from "../components/CreateEditDeleteMissionDialog";
 
-import { mapGetters } from "vuex";
+import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "MissionsList",
   components: {
     MissionsCard,
+    ActiveMissionsCard,
     CreateEditDeleteMissionDialog,
   },
   props: ["tasks", "topicId"],
+  mounted() {
+    // check which task is active
+  },
   computed: {
+    ...mapState(["personsTopicsTasks"]),
     ...mapGetters(["person"]),
   },
   data() {
-    return {};
+    return {
+      activeMission: false,
+    };
   },
+  methods: {},
 };
 </script>
 
