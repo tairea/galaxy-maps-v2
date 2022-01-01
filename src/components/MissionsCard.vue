@@ -23,8 +23,9 @@
         />
       </div>
     </div>
-    <div class="mission-section mission-section-overUnder">
-      <!-- VIDEO -->
+
+    <!-- <div class="mission-section mission-section-overUnder">
+      
       <div class="section-overUnder">
         <a
           v-if="task.video"
@@ -37,7 +38,7 @@
           Video
         </p>
       </div>
-      <!-- SLIDES -->
+      
       <div class="section-overUnder">
         <a
           v-if="task.slides"
@@ -50,7 +51,8 @@
           Slides
         </p>
       </div>
-    </div>
+    </div> -->
+
     <div class="mission-section mission-section-overUnder">
       <!-- DURATION -->
       <div class="section-overUnder d-flex justify-center flex-column">
@@ -76,7 +78,7 @@
       :class="{
         'topic-in-review': getTaskStatus == 'inreview',
         'topic-completed': getTaskStatus == 'completed',
-        'topic-completed': getTaskStatus == 'active',
+        'topic-active': getTaskStatus == 'active',
       }"
     >
       <p class="text-overline text-uppercase text-center">
@@ -160,11 +162,7 @@ export default {
       panel: [],
     };
   },
-  methods: {
-    makeActive() {
-      this.$emit("makeActive");
-    },
-  },
+  methods: {},
 };
 </script>
 
@@ -200,10 +198,20 @@ a {
     color: var(--v-cohortAccent-base);
   }
 
-  .topic-completed {
+  .topic-completed,
+  .topic-active {
     border: 1px solid var(--v-baseAccent-base);
     color: var(--v-baseAccent-base);
   }
+
+  // .topic-active {
+  //   border-top: 1px solid var(--v-baseAccent-base);
+  //   border-right: 1px solid var(--v-baseAccent-base);
+  //   border-left: 1px solid var(--v-baseAccent-base);
+  //   border-bottom: 3px solid var(--v-background-base);
+  //   color: var(--v-baseAccent-base);
+  //   z-index: 101;
+  // }
 
   .mission-main-section {
     // flex-grow: 4 !important;
