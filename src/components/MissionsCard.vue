@@ -99,7 +99,19 @@
         <!-- Start Mission button -->
         <StartMissionDialog :topicId="topicId" :taskId="id" :task="task" />
       </div>
-      <div v-if="getTaskStatus == 'active'" class="d-flex justify-center">
+      <div
+        v-else-if="getTaskStatus == 'completed' || getTaskStatus == 'inreview'"
+        class="d-flex justify-center"
+      >
+        <!-- Start Mission button -->
+        <MissionCompletedDialog
+          :topicId="topicId"
+          :taskId="id"
+          :task="task"
+          :missionStatus="getTaskStatus"
+        />
+      </div>
+      <div v-else-if="getTaskStatus == 'active'" class="d-flex justify-center">
         <!-- no icon -->
       </div>
 
@@ -126,6 +138,7 @@
 <script>
 import CreateEditDeleteMissionDialog from "../components/CreateEditDeleteMissionDialog";
 import StartMissionDialog from "../components/StartMissionDialog";
+import MissionCompletedDialog from "../components/MissionCompletedDialog";
 
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
@@ -135,6 +148,7 @@ export default {
   components: {
     CreateEditDeleteMissionDialog,
     StartMissionDialog,
+    MissionCompletedDialog,
   },
   props: ["task", "id", "index", "topicId"],
   mounted() {},
