@@ -13,7 +13,7 @@
           </h2>
           <ol class="system" :style="{ fontSize: size }">
             <li
-              v-for="(task, i) in topicsTasks"
+              v-for="(task, i) in tasks"
               :key="task.id"
               class="orbit"
               :class="$vuetify.theme.dark ? 'darkOrbit' : 'lightOrbit'"
@@ -43,7 +43,7 @@ import { mapState } from "vuex";
 
 export default {
   name: "SolarSystem",
-  props: ["topic", "size", "height", "coords"],
+  props: ["topic", "tasks", "size", "height", "coords"],
   data() {
     let durationRanges = [
       [0, 0],
@@ -74,7 +74,7 @@ export default {
   },
   mounted() {},
   computed: {
-    ...mapState(["currentCourseId", "topicsTasks"]),
+    ...mapState(["currentCourseId"]),
   },
   methods: {
     // string to colour, thanks to: https://stackoverflow.com/questions/3426404/create-a-hexadecimal-colour-based-on-a-string-with-javascript

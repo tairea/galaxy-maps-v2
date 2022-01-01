@@ -7,6 +7,7 @@
             ? getTopicById(currentTopicId)
             : getPersonsTopicById(currentTopicId)
         "
+        :tasks="topicsTasks"
       />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <AssignedInfo
