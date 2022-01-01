@@ -34,6 +34,7 @@ export default new Vuex.Store({
     personsAssignedEdges: [],
     personsTopics: [],
     topicsTasks: [],
+    personsTopicsTasks: [],
   },
   getters: {
     user: (state) => state.user,
@@ -59,6 +60,16 @@ export default new Vuex.Store({
     getTasksByTopicId: (state) => (id) => {
       const topic = state.topics.find((topic) => topic.id === id);
       return topic.tasks;
+    },
+    getTaskStatusByTaskId: (state) => (taskId) => {
+      if (state.person.accountType != "student") {
+        return;
+      }
+      // get topic status eg. unlocked / inreview / completed / locked
+      const task = state.personsTopicsTasks.find(
+        (topicTask) => topicTask.id === taskId
+      );
+      return task.taskStatus;
     },
     getPersonsTasksByTopicId: (state) => (id) => {
       if (state.personsTopics.length) {
@@ -437,18 +448,20 @@ export default new Vuex.Store({
       );
     }),
     // bind persons tasks by topic id
-    // bindPersonsTasksByTopicId: firestoreAction(
-    //   ({ bindFirestoreRef }, payload) => {
-    //     return bindFirestoreRef(
-    //       "personsTopics",
-    //       db
-    //         .collection("people")
-    //         .doc(payload.personId)
-    //         .collection(payload.courseId)
-
-    //     );
-    //   }
-    // ),
+    bindPersonsTasksByTopicId: firestoreAction(
+      ({ bindFirestoreRef }, payload) => {
+        return bindFirestoreRef(
+          "personsTopicsTasks",
+          db
+            .collection("people")
+            .doc(payload.personId)
+            .collection(payload.courseId)
+            .doc(payload.topicId)
+            .collection("tasks")
+            .orderBy("timestamp")
+        );
+      }
+    ),
   },
 });
 

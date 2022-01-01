@@ -150,7 +150,9 @@ export default {
     newNodePositions: {},
   }),
   beforeDestroy() {
-    this.$refs.network.destroy();
+    if (this.$refs.network) {
+      this.$refs.network.destroy();
+    }
   },
   async mounted() {
     console.log("current course id:", this.currentCourseId);
@@ -200,7 +202,7 @@ export default {
         nodesWithStatus.push({
           ...node,
           // color: this.stringToColour(matchingNode.label),  // Attempt to match node color to System color
-          group: matchingNode?.status ?? "unlocked",
+          group: matchingNode?.topicStatus ?? "unlocked",
         });
       }
       // console.log("nodesWithStatus",nodesWithStatus)
@@ -215,7 +217,7 @@ export default {
         // find the topic node with status
         let matchingEdge = this.personsTopics.find((x) => {
           // add dashes to the edge (if topic is locked)
-          if (x.status == "locked") {
+          if (x.topicStatus == "locked") {
             hasDashes = true;
             // hasDashes = [2,2]
           } else {

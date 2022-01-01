@@ -125,6 +125,7 @@
           tile
           title="View Galaxy"
           @click="startThisGalaxy"
+          :loading="loading"
         >
           Start Galaxy
         </v-btn>
@@ -170,6 +171,7 @@ export default {
   data() {
     return {
       enrolled: false,
+      loading: false,
     };
   },
   methods: {
@@ -199,18 +201,18 @@ export default {
       // });
     },
     async startThisGalaxy() {
+      this.loading = true;
       // add this galaxy metadata (eg. topics) to this persons course database
+
       // 1) get topics in this course
       const querySnapshot = await db
         .collection("courses")
         .doc(this.course.id)
         .collection("topics")
         .get();
-      // 2) add them to person (this will store their progression data for this course )
+
+      // 2) add them to person (this will store their TOPIC progression data for this course )
       for (const doc of querySnapshot.docs) {
-        console.log("person ID... ", this.person.id);
-        console.log("course ID... ", this.course.id);
-        console.log("doc.data()... ", doc.data());
         await db
           .collection("people")
           .doc(this.person.id)
@@ -219,10 +221,44 @@ export default {
           .set({
             ...doc.data(),
             // set the status of topics to locked unless they are introduction nodes
-            status:
+            topicStatus:
               doc.data().group == "introduction" ? "introduction" : "locked",
           });
+
+        // 3) check if this topic has tasks
+        const subquerySnapshot = await db
+          .collection("courses")
+          .doc(this.course.id)
+          .collection("topics")
+          .doc(doc.data().id)
+          .collection("tasks")
+          // order by timestamp is important otherwise index == 0 (in the next step) wont necessarily be the first mission
+          .orderBy("timestamp")
+          .get();
+
+        // 4) if tasks exist. add them to person
+        for (const [index, subDoc] of subquerySnapshot.docs.entries()) {
+          console.log(doc.data().label + " -> " + subDoc.data().title);
+          console.log(
+            "is index: " + index + " of " + subquerySnapshot.docs.length
+          );
+          if (subDoc.exists) {
+            await db
+              .collection("people")
+              .doc(this.person.id)
+              .collection(this.course.id)
+              .doc(doc.data().id)
+              .collection("tasks")
+              .add({
+                ...subDoc.data(),
+                // set the status of topics to locked unless they are the first mission (index == 0)
+                taskStatus: index == 0 ? "unlocked" : "locked",
+              });
+          }
+        }
       }
+
+      this.loading = false;
       this.$router.push({
         name: "GalaxyView",
         params: {
