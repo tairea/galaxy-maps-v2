@@ -165,6 +165,17 @@
                   <v-icon left> mdi-close </v-icon>
                   CLOSE
                 </v-btn>
+                <!-- LINK TO WORK -->
+                <a
+                  :href="task.submissionLink"
+                  target="_blank"
+                  style="text-decoration: none"
+                >
+                  <v-btn outlined color="cohortAccent" class="ml-2">
+                    <!-- <v-icon left> mdi-close </v-icon> -->
+                    VIEW SUBMISSION
+                  </v-btn>
+                </a>
                 <!-- End action-buttons -->
               </div>
               <!-- End submission-create-dialog-content -->
@@ -186,7 +197,7 @@ import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "MissionCompletedDialog",
-  props: ["task", "topicId", "taskId", "missionStatus", "on", "attrs"],
+  props: ["topicId", "taskId", "task", "missionStatus", "on", "attrs"],
   data: () => ({
     submissionInstructions:
       "Please paste a Google Drive share link to your completed work with 'Anyone with link can access' settings on", //TODO: get this value from creator database
@@ -199,10 +210,14 @@ export default {
     deleting: false,
   }),
   mounted() {
-    console.log("MissionCompletedDialog Task = ", this.task);
+    // console.log("MissionCompletedDialog Task = ", this.task);
+    // console.log(
+    //   "from store/in mission completed: this.personsTopicsTasks = ",
+    //   this.personsTopicsTasks
+    // );
   },
   computed: {
-    ...mapState(["currentCourseId"]),
+    ...mapState(["currentCourseId", "personsTopicsTasks"]),
     ...mapGetters(["person"]),
   },
   methods: {
@@ -218,8 +233,8 @@ export default {
         .doc(this.taskId)
         .update({
           // update tasks array with new task
-          submittedWork: this.submissionLink,
-          status: "inreview",
+          submissionLink: this.submissionLink,
+          taskStatus: "inreview",
         })
         .then(() => {
           console.log("Task work successfully submitted for review!");
@@ -227,18 +242,12 @@ export default {
           this.disabled = false;
           this.dialog = false;
 
-          // check if all tasks/missions are completed
-          // TODO: instead of going to db do we already have tasks in store?
-          // db.collection("people")
-          //   .doc(this.person.id)
-          //   .collection(this.currentCourseId)
-          //   .doc(this.topicId)
-          //   .collection("tasks")
-          //   .get()
-          //   .then((doc) => {});
+          // unlock next task
+          this.unlockNextTask();
 
-          // if all tasks/missions are completed .then this.unlockNextTopics()
-          // This will unlock next node, even though current topic is only IN REVIEW
+          // check if all tasks/missions are completed
+          this.checkIfAllTasksCompleted();
+
           // TODO: perhaps only unlock once teacher has reviewed and marked complete
         })
         .catch((error) => {
@@ -266,13 +275,75 @@ export default {
           this.disabled = false;
           this.dialog = false;
 
-          // check if all tasks/missions are completed
+          // unlock next task
+          this.unlockNextTask();
 
-          // if all tasks/missions are completed .then this.unlockNextTopics()
+          // check if all tasks/missions are completed
+          this.checkIfAllTasksCompleted();
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
         });
+    },
+    async unlockNextTask() {
+      console.log("unlocking next task...");
+      // 1) get all tasks in this topic
+      const currentTasks = await db
+        .collection("people")
+        .doc(this.person.id)
+        .collection(this.currentCourseId)
+        .doc(this.topicId)
+        .collection("tasks")
+        // order by timestamp is important otherwise index == 0 (in the next step) wont necessarily be the first mission
+        .orderBy("timestamp")
+        .get();
+
+      // 2) loops the tasks. the first task to have taskStatus locked, update to unlocked, then return to exit loop
+      for (const [index, task] of currentTasks.docs.entries()) {
+        if (task.data().taskStatus == "locked") {
+          task.ref.update({ taskStatus: "unlocked" });
+          console.log(
+            "NEW TASK UNLOCKED (" + index + ") : " + task.data().title
+          );
+          return;
+        }
+      }
+    },
+    checkIfAllTasksCompleted() {
+      // 1) check how many tasks in store are completed
+      const numOfTasksCompleted = this.personsTopicsTasks.filter(
+        (obj) => obj.taskStatus === "completed"
+      ).length;
+      // 2) check if that the same as total
+      if (numOfTasksCompleted === this.personsTopicsTasks.length) {
+        // TODO: some kind of notification to signal that Topic has been completed
+        // all tasks are completed. unlock next topic
+        this.unlockNextTopics();
+      } else {
+        console.log("topic not yet completed...");
+        console.log("total tasks = ", this.personsTopicsTasks.length);
+        console.log(
+          "completed = ",
+          this.personsTopicsTasks.filter(
+            (obj) => obj.taskStatus === "completed"
+          ).length
+        );
+        console.log(
+          "in review = ",
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "inreview")
+            .length
+        );
+        console.log(
+          "active = ",
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked")
+            .length
+        );
+        console.log(
+          "locked = ",
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked")
+            .length
+        );
+      }
     },
     unlockNextTopics() {
       // ==== all tasks/missions completed. unlock next topics ====
@@ -283,9 +354,20 @@ export default {
         .get()
         .then((querySnapshot) => {
           querySnapshot.forEach((doc) => {
-            doc.ref.update({
-              topicStatus: "unlocked", // change status to unlocked
-            });
+            doc.ref
+              .update({
+                topicStatus: "unlocked", // change status to unlocked
+              })
+              // route back to map
+              .then(() => {
+                console.log("NEW TOPIC UNLOCKED: " + doc.data().label);
+                this.$router.push({
+                  name: "GalaxyView",
+                  params: {
+                    courseId: this.currentCourseId,
+                  },
+                });
+              });
           });
         });
     },
