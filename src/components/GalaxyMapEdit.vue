@@ -165,6 +165,7 @@
       :infoPopupPosition="infoPopupPosition"
       :currentNode="currentNode"
       :centerFocusPosition="centerFocusPosition"
+      :tasks="topicsTasks"
       @deleteFromMap="deleteFromMap"
       @deselect="deselect"
       @editNode="editNode"
@@ -226,7 +227,13 @@ export default {
     };
   },
   computed: {
-    ...mapState(["person", "currentCourseNodes", "personsTopics"]),
+    ...mapState([
+      "person",
+      "currentCourseNodes",
+      "personsTopics",
+      "currentCourseId",
+      "topicsTasks",
+    ]),
     ...mapGetters(["getTopicById", "getPersonsTopicById"]),
     getCoords() {
       return this.coords;
@@ -304,6 +311,7 @@ export default {
       this.infoPopupShow = true;
     },
     hovered(hoveredNode) {
+      // console.log("hovered node is ==== ", hoveredNode);
       this.infoPopupShow = false;
       this.centerFocusPosition = false;
       this.type = hoveredNode.type;
@@ -311,6 +319,8 @@ export default {
       this.infoPopupPosition.y = hoveredNode.DOMy;
       this.currentNode = hoveredNode;
       this.infoPopupShow = true;
+      //bind tasks for popup preview
+      this.bindTasks(this.currentCourseId, hoveredNode.id);
     },
     centerFocus(centerFocusNode) {
       if (centerFocusNode.length > 1) return; // this avoids pop up when no specific node selected
@@ -420,6 +430,12 @@ export default {
       }
       // this.resetEditing();
       // this.resetNewData();
+    },
+    async bindTasks(courseId, topicId) {
+      await this.$store.dispatch("bindTasksByTopicId", {
+        courseId: courseId,
+        topicId: topicId,
+      });
     },
   },
 };
