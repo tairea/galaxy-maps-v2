@@ -10,7 +10,7 @@
         :organisations="getOrganisationsInThisCourse(courseId)"
         :people="getPeopleInThisCourse(courseId)"
       />
-      <BackButton :toPath="'/base/galaxies/my'" />
+      <BackButton :toPath="pathDependingOnAccountType()" />
     </div>
     <div id="main-section">
       <!-- Map Buttons -->
@@ -41,7 +41,7 @@
         @nodePositionsChanged="nodePositionsChanged"
         @nodePositionsChangeLoading="nodePositionsChangeLoading = true"
         @nodePositionsChangeSaved="nodePositionsChangeSaved"
-        @edgeSaved="toggleAddEdgeMode"
+        @toggleAddEdgeMode="toggleAddEdgeMode"
       />
 
       <!-- Edit -->
@@ -170,6 +170,13 @@ export default {
     ]),
   },
   methods: {
+    pathDependingOnAccountType() {
+      if (this.person.accountType == "student") {
+        return "/base/galaxies/assigned";
+      } else {
+        return "/base/galaxies/my";
+      }
+    },
     toggleAddNodeMode() {
       this.addNodeMode = !this.addNodeMode;
       if (this.addNodeMode == true) {

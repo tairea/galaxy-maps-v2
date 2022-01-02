@@ -18,31 +18,33 @@
           {{ uploadPercentage + "%" }}
         </v-progress-circular>
         <!-- <v-hover v-else v-slot="{ hover }"> -->
-          <v-avatar v-else color="secondary" @mouseenter="onhover = true" @mouseleave="onhover = false">
-            <img v-if="person.image"
-              :src="person.image.url"
-              :alt="person.firstName"
-              style="object-fit: cover;"
-            >
-            <!-- <v-icon v-if="hover">mdi-pencil</v-icon> -->
-            <v-icon v-else>mdi-account</v-icon>
-            <v-fade-transition>
-              <v-overlay
-                v-if="onhover"
-                absolute
-                color="baseAccent"
-              >
-                  <v-icon small @click="onButtonClick">mdi-pencil</v-icon>  
-              </v-overlay>
-            </v-fade-transition>
-            <input
-              ref="uploader"
-              class="d-none"
-              type="file"
-              accept="image/*"
-              @change="onFileChanged"
-            >
-          </v-avatar>
+        <v-avatar
+          v-else
+          color="secondary"
+          @mouseenter="onhover = true"
+          @mouseleave="onhover = false"
+        >
+          <img
+            v-if="person.image"
+            :src="person.image.url"
+            :alt="person.firstName"
+            style="object-fit: cover"
+          />
+          <!-- <v-icon v-if="hover">mdi-pencil</v-icon> -->
+          <v-icon v-else>mdi-account</v-icon>
+          <v-fade-transition>
+            <v-overlay v-if="onhover" absolute color="baseAccent">
+              <v-icon small @click="onButtonClick">mdi-pencil</v-icon>
+            </v-overlay>
+          </v-fade-transition>
+          <input
+            ref="uploader"
+            class="d-none"
+            type="file"
+            accept="image/*"
+            @change="onFileChanged"
+          />
+        </v-avatar>
         <!-- </v-hover> -->
       </div>
       <div class="username mx-4" style="">
@@ -65,6 +67,16 @@
       <!-- <ThemeColourPicker/> -->
       <v-btn @click="logout">Logout</v-btn>
     </div>
+
+    <!-- Login Error Snackbar -->
+    <v-snackbar v-model="snackbar">
+      {{ snackbarMsg }}
+      <template v-slot:action="{ attrs }">
+        <v-btn color="pink" text v-bind="attrs" @click="snackbar = false">
+          OK
+        </v-btn>
+      </template>
+    </v-snackbar>
   </div>
 </template>
 
@@ -80,22 +92,24 @@ export default {
   components: {
     ThemeColourPicker,
   },
-  data () {
+  data() {
     return {
+      snackbar: false,
+      snackbarMsg: "",
       darkSwitch: true,
       editProfile: false,
       selectedFile: {},
       uploading: false,
       uploadPercentage: 0,
       image: {},
-      onhover: false
-    }
+      onhover: false,
+    };
   },
   computed: {
     ...mapState(["person"]),
   },
   methods: {
-    ...mapActions(['getPersonById']),
+    ...mapActions(["getPersonById"]),
     changeTheme() {
       this.$vuetify.theme.dark = this.darkSwitch;
     },
@@ -104,28 +118,36 @@ export default {
         .auth()
         .signOut()
         .then(() => {
-          alert("Successfully logged out");
+          // alert("Successfully signed out");
+          this.snackbarMsg = "Successfully signed out";
+          this.snackbar = true;
           this.$router.push("/login");
         })
         .catch((error) => {
-          alert(error.message);
+          // alert(error.message);
+          this.snackbarMsg = error.message;
+          this.snackbar = true;
           this.$router.push("/");
         });
     },
     onButtonClick() {
-      this.$refs.uploader?.click()
+      this.$refs.uploader?.click();
     },
     async onFileChanged(e) {
-      console.log('e: ', e)
-      this.selectedFile = e.target.files[0]
-      await this.storeImage()
+      console.log("e: ", e);
+      this.selectedFile = e.target.files[0];
+      await this.storeImage();
     },
     storeImage() {
       this.uploading = true;
-      console.log('selectedfile: ', this.selectedFile)
+      console.log("selectedfile: ", this.selectedFile);
       // ceate a storage ref
       var storageRef = storage.ref(
-        "avatar-images/" + this.person.firstname + this.person.lastname + "-" + this.selectedFile.name
+        "avatar-images/" +
+          this.person.firstname +
+          this.person.lastname +
+          "-" +
+          this.selectedFile.name
       );
 
       // upload a file
@@ -136,8 +158,9 @@ export default {
         "state_changed",
         (snapshot) => {
           // show progress on uploader bar
-          this.uploadPercentage =
-            Math.floor((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+          this.uploadPercentage = Math.floor(
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+          );
         },
         // upload error
         (err) => {
@@ -149,14 +172,14 @@ export default {
           uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
             console.log("image url is: " + downloadURL);
             // add image url to course obj
-           this.uploading = false
-           this.image.url = downloadURL;
+            this.uploading = false;
+            this.image.url = downloadURL;
             this.image.name = this.selectedFile.name;
-            console.log("image: ", this.image)
-            this.updateProfile()
+            console.log("image: ", this.image);
+            this.updateProfile();
           });
         }
-      )
+      );
     },
     updateProfile() {
       db.collection("people")
@@ -165,18 +188,16 @@ export default {
           image: this.image,
         })
         .then(() => {
-          console.log(
-            "Image successfully updated!"
-          );
-          this.getPersonById(this.person.id)
-          this.onhover = false
+          console.log("Image successfully updated!");
+          this.getPersonById(this.person.id);
+          this.onhover = false;
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
         });
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style lang="scss" scoped>

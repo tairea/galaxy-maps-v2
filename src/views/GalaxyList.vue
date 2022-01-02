@@ -27,9 +27,7 @@ export default {
     Galaxy,
   },
   mounted() {
-    // trigger VuexFire bindCourses in Store
-    this.bindAll(); // <== DO WE NEED TO BIND HERE?? (eg. courses needed for popup in galaxy.vue)
-    // console.log("this.courses", this.courses);
+    this.bindAll(); // <== DO WE NEED TO BIND cohorts/orgs/people HERE??
   },
   computed: {
     ...mapGetters(["courses", "user", "person"]),
@@ -39,17 +37,14 @@ export default {
       loading: true,
       whichCoursesToDisplay: this.$route.params.mineOrAssignedOrAll
         ? this.$route.params.mineOrAssignedOrAll
-        : "",  // my, assigned OR all
+        : "", // my, assigned OR all
     };
   },
   methods: {
     bindAll() {
-      // this.$store.dispatch("bindAllCourses");
-      this.$store.dispatch("bindCoursesByPersonId", this.user.data.id);
       this.$store.dispatch("bindAllCohorts");
       this.$store.dispatch("bindAllOrganisations");
       this.$store.dispatch("bindAllPeople");
-      // this.$store.dispatch("getPersonById", this.user.data.id); // already dispatched on main.js
     },
   },
 };
