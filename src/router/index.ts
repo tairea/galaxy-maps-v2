@@ -78,7 +78,7 @@ const routes = [
     props: true,
   },
   {
-    path: "/solarsystem/:topicId",
+    path: "/system/:topicId",
     name: "SolarSystemView",
     component: SolarSystemView,
     props: true,

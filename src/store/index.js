@@ -33,6 +33,8 @@ export default new Vuex.Store({
     personsEdges: [],
     personsAssignedEdges: [],
     personsTopics: [],
+    topicsTasks: [],
+    personsTopicsTasks: [],
   },
   getters: {
     user: (state) => state.user,
@@ -59,12 +61,23 @@ export default new Vuex.Store({
       const topic = state.topics.find((topic) => topic.id === id);
       return topic.tasks;
     },
+    getTaskStatusByTaskId: (state) => (taskId) => {
+      if (state.person.accountType != "student") {
+        return;
+      }
+      // get topic status eg. unlocked / inreview / completed / locked
+      const task = state.personsTopicsTasks.find(
+        (topicTask) => topicTask.id === taskId
+      );
+      return task.taskStatus;
+    },
     getPersonsTasksByTopicId: (state) => (id) => {
       if (state.personsTopics.length) {
         var topic = state.personsTopics.find((topic) => topic.id === id);
-      } else var topic = {
-        tasks: []
-      } 
+      } else
+        var topic = {
+          tasks: [],
+        };
       return topic.tasks;
     },
     getCohortsByOrganisationId: (state) => (id) => {
@@ -414,6 +427,34 @@ export default new Vuex.Store({
             .collection("people")
             .doc(payload.personId)
             .collection(payload.courseId)
+        );
+      }
+    ),
+    // bind tasks by topic id
+    bindTasksByTopicId: firestoreAction(({ bindFirestoreRef }, payload) => {
+      return bindFirestoreRef(
+        "topicsTasks",
+        db
+          .collection("courses")
+          .doc(payload.courseId)
+          .collection("topics")
+          .doc(payload.topicId)
+          .collection("tasks")
+          .orderBy("timestamp") // this is important to ordering the tasks in MissionList.vue
+      );
+    }),
+    // bind persons tasks by topic id
+    bindPersonsTasksByTopicId: firestoreAction(
+      ({ bindFirestoreRef }, payload) => {
+        return bindFirestoreRef(
+          "personsTopicsTasks",
+          db
+            .collection("people")
+            .doc(payload.personId)
+            .collection(payload.courseId)
+            .doc(payload.topicId)
+            .collection("tasks")
+            .orderBy("timestamp")
         );
       }
     ),

@@ -1,6 +1,10 @@
 <template>
-  <div class="solarsystem" :style="{height: height ? height : 'auto'}" @click="routeToTopic(topic)">
-  <!-- <div class="solarsystem" :style="{height: height ? height : 'auto', top: coords.x + 'px', left: coords.y + 'px'}" @click="routeToTopic(topic)"> -->
+  <div
+    class="solarsystem"
+    :style="{ height: height ? height : 'auto' }"
+    @click="routeToTopic(topic)"
+  >
+    <!-- <div class="solarsystem" :style="{height: height ? height : 'auto', top: coords.x + 'px', left: coords.y + 'px'}" @click="routeToTopic(topic)"> -->
     <div class="scene">
       <ul class="system" :style="{ fontSize: size }">
         <li class="orbit top-most-orbit">
@@ -9,14 +13,14 @@
           </h2>
           <ol class="system" :style="{ fontSize: size }">
             <li
-              v-for="(task, i) in topic.tasks"
+              v-for="(task, i) in tasks"
               :key="task.id"
               class="orbit"
               :class="$vuetify.theme.dark ? 'darkOrbit' : 'lightOrbit'"
               :style="{ animationDuration: orbits[i] + 's' }"
             >
               <h3
-                style="color: #BDC5C7"
+                style="color: #bdc5c7"
                 class="sphere"
                 :style="{ animationDuration: orbits[i] + 's' }"
               >
@@ -31,12 +35,15 @@
 </template>
 
 <script>
-
 import { mapState } from "vuex";
+
+/* ==============
+ Solar System inspired by Mustafa Enes (https://codepen.io/pavlovsk/pen/owNqXW)
+   ============== */
 
 export default {
   name: "SolarSystem",
-  props: ["topic", "size", "height", "coords"],
+  props: ["topic", "tasks", "size", "height", "coords"],
   data() {
     let durationRanges = [
       [0, 0],
@@ -66,10 +73,8 @@ export default {
     };
   },
   mounted() {},
-    computed: {
-    ...mapState([
-      "currentCourseId",
-    ]),
+  computed: {
+    ...mapState(["currentCourseId"]),
   },
   methods: {
     // string to colour, thanks to: https://stackoverflow.com/questions/3426404/create-a-hexadecimal-colour-based-on-a-string-with-javascript
@@ -99,7 +104,7 @@ export default {
       });
     },
     camelize(str) {
-      return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
+      return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {
         if (+match === 0) return ""; // or if (/\s+/.test(match)) for white spaces
         return index === 0 ? match.toLowerCase() : match.toUpperCase();
       });
@@ -109,7 +114,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
 ::marker {
   color: transparent;
 }

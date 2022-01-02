@@ -1,5 +1,8 @@
 <template>
-  <div class="mission-card">
+  <div
+    class="mission-card"
+    :class="{ lockedOpacity: getTaskStatus == 'locked' }"
+  >
     <div class="mission-section mission-number-section">
       <p class="text-overline text-uppercase">Mission</p>
       <p style="font-size: 50px; text-align: center">{{ index + 1 }}</p>
@@ -14,13 +17,15 @@
         <CreateEditDeleteMissionDialog
           :edit="true"
           :taskToEdit="task"
+          :taskId="id"
           :index="index"
           :topicId="topicId"
         />
       </div>
     </div>
-    <div class="mission-section mission-section-overUnder">
-      <!-- VIDEO -->
+
+    <!-- <div class="mission-section mission-section-overUnder">
+      
       <div class="section-overUnder">
         <a
           v-if="task.video"
@@ -33,7 +38,7 @@
           Video
         </p>
       </div>
-      <!-- SLIDES -->
+      
       <div class="section-overUnder">
         <a
           v-if="task.slides"
@@ -46,39 +51,132 @@
           Slides
         </p>
       </div>
-    </div>
-    <div class="mission-section">
+    </div> -->
+
+    <div class="mission-section mission-section-overUnder">
       <!-- DURATION -->
-      <p class="text-overline text-uppercase">Duration:</p>
-      <p style="font-size: 30px; text-align: center">
-        {{ task.duration }}
-      </p>
+      <div class="section-overUnder d-flex justify-center flex-column">
+        <p class="text-overline text-uppercase text-center">Duration:</p>
+        <!-- <p style="font-size: 30px; text-align: center"> -->
+        <p class="text-center">
+          {{ task.duration }}
+        </p>
+      </div>
+      <div class="section-overUnder d-flex justify-center flex-column">
+        <p class="text-overline text-uppercase text-center">SUBMISSION REQ:</p>
+        <p :style="[task.submissionRequired ? { color: '#FAF200' } : '']">
+          {{ task.submissionRequired ? "YES" : "NO" }}
+        </p>
+      </div>
     </div>
 
-    <!-- EDIT MISSION DIALOG-->
+    <!-- MISSION STATUS -->
+    <div
+      v-if="person.accountType == 'student'"
+      class="mission-section d-flex justify-center align-center flex-column"
+      style="width: 20%"
+      :class="{
+        'topic-in-review': getTaskStatus == 'inreview',
+        'topic-completed': getTaskStatus == 'completed',
+        'topic-active': getTaskStatus == 'active',
+      }"
+    >
+      <p class="text-overline text-uppercase text-center">
+        {{
+          getTaskStatus == "completed"
+            ? "COMPLETED"
+            : getTaskStatus == "inreview"
+            ? "IN REVIEW"
+            : getTaskStatus == "unlocked"
+            ? "START MISSION"
+            : getTaskStatus == "active"
+            ? "ACTIVE MISSION"
+            : "LOCKED"
+        }}
+      </p>
+
+      <div v-if="getTaskStatus == 'unlocked'" class="d-flex justify-center">
+        <!-- Start Mission button -->
+        <StartMissionDialog :topicId="topicId" :taskId="id" :task="task" />
+      </div>
+      <div
+        v-else-if="getTaskStatus == 'completed' || getTaskStatus == 'inreview'"
+        class="d-flex justify-center"
+      >
+        <!-- Start Mission button -->
+        <MissionCompletedDialog
+          :topicId="topicId"
+          :taskId="id"
+          :task="task"
+          :missionStatus="getTaskStatus"
+        />
+      </div>
+      <div v-else-if="getTaskStatus == 'active'" class="d-flex justify-center">
+        <!-- no icon -->
+      </div>
+
+      <div v-else class="d-flex justify-center align-center">
+        <v-btn color="missionAccent" icon large>
+          <v-icon large>mdi-lock-outline</v-icon>
+        </v-btn>
+      </div>
+    </div>
+
+    <!-- ANALYTICS (for type teacher) -->
+    <div v-else class="mission-section">
+      <p class="text-overline text-uppercase text-center">Analytics:</p>
+      <div class="d-flex justify-center flex-column mt-2">
+        <v-btn color="missionAccent" outlined x-small> OVERVIEW </v-btn>
+        <v-btn color="missionAccent" outlined class="mt-2" x-small>
+          SEE FULL
+        </v-btn>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import CreateEditDeleteMissionDialog from "../components/CreateEditDeleteMissionDialog";
+import StartMissionDialog from "../components/StartMissionDialog";
+import MissionCompletedDialog from "../components/MissionCompletedDialog";
 
-import { mapGetters } from "vuex";
+import { db } from "../store/firestoreConfig";
+import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "MissionsCard",
   components: {
     CreateEditDeleteMissionDialog,
+    StartMissionDialog,
+    MissionCompletedDialog,
   },
-  props: ["task", "index", "topicId"],
+  props: ["task", "id", "index", "topicId"],
   mounted() {},
   computed: {
+    ...mapState([
+      "currentCourseId",
+      "personsTopics",
+      "topicsTasks",
+      "personsTopicsTasks",
+    ]),
     ...mapGetters(["person"]),
+    getTaskStatus() {
+      if (this.person.accountType != "student") {
+        return;
+      }
+      // get topic status eg. unlocked / inreview / completed / locked
+      const task = this.personsTopicsTasks.find((task) => task.id === this.id);
+      return task.taskStatus;
+    },
   },
   data() {
     return {
       editing: false,
+      activeTask: false,
+      panel: [],
     };
   },
+  methods: {},
 };
 </script>
 
@@ -89,6 +187,10 @@ p {
 
 a {
   color: var(--v-missionAccent-base) !important;
+}
+
+.lockedOpacity {
+  opacity: 0.4;
 }
 
 .mission-card {
@@ -105,9 +207,29 @@ a {
     flex-grow: 1;
   }
 
+  .topic-in-review {
+    border: 1px solid var(--v-cohortAccent-base);
+    color: var(--v-cohortAccent-base);
+  }
+
+  .topic-completed,
+  .topic-active {
+    border: 1px solid var(--v-baseAccent-base);
+    color: var(--v-baseAccent-base);
+  }
+
+  // .topic-active {
+  //   border-top: 1px solid var(--v-baseAccent-base);
+  //   border-right: 1px solid var(--v-baseAccent-base);
+  //   border-left: 1px solid var(--v-baseAccent-base);
+  //   border-bottom: 3px solid var(--v-background-base);
+  //   color: var(--v-baseAccent-base);
+  //   z-index: 101;
+  // }
+
   .mission-main-section {
-    // flex-grow: 2 !important;
-    width: 30%;
+    // flex-grow: 4 !important;
+    width: 40%;
     position: relative;
 
     .mission-edit-button {
@@ -144,11 +266,18 @@ a {
       align-items: center;
       width: 100%;
       height: 100%;
+      padding: 10px;
     }
 
     .section-overUnder:first-child {
       border-bottom: 1px dashed var(--v-missionAccent-base);
     }
   }
+}
+
+.active-mission-card {
+  border: 1px solid var(--v-baseAccent-base);
+  margin: 20px 10px;
+  display: flex;
 }
 </style>
