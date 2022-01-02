@@ -9,9 +9,14 @@
     <!-- </div> -->
     <p class="cohort-description">{{ cohort.description }}</p>
     <div class="d-flex justify-center align-center">
-      <Organisation
+      <!-- <Organisation
         v-if="cohort.organisation"
         :organisation="getOrganisationById(cohort.organisation)"
+        :size="'0.25em'"
+      /> -->
+      <Organisation
+        v-if="cohort.organisation"
+        :organisation="org"
         :size="'0.25em'"
       />
     </div>
@@ -33,12 +38,30 @@ export default {
     CreateEditDeleteCohortDialog,
   },
   mounted() {},
+  // computed: {
+  //   ...mapGetters(["getOrganisationById"]),
+  // },
+  data() {
+    return {
+      organisation: {
+        image: {
+          url: "https://firebasestorage.googleapis.com/v0/b/galaxy-maps-ac367.appspot.com/o/organisation-images%2FTe%20W%C4%81nanga%20o%20Aotearoa-te-w%C4%81nanga-o-aotearoa-squarelogo-1572608234372.png?alt=media&token=faba7645-f168-4bfd-93ee-a5693551b61c"
+
+        },
+        name: "my school"
+      }
+    };
+  },
   computed: {
     ...mapGetters(["getOrganisationById"]),
-  },
-  data() {
-    return {};
-  },
+    org () {
+      let org = this.getOrganisationById(this.cohort.organisation)
+      if (org) return org 
+      else return {}
+      // console.log("org: ", org)
+      // return org
+    }
+  }
 };
 </script>
 

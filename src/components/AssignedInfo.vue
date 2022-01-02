@@ -84,14 +84,7 @@ export default {
     Person,
     Course,
     AssignCohortDialog,
-  },
-  mounted() {
-    console.log("got cohorts FROM ASSIGNED: ", this.cohorts);
-  },
-  computed: {},
-  data() {
-    return {};
-  },
+  }
 };
 </script>
 

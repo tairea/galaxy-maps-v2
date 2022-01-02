@@ -38,6 +38,7 @@ const routes = [
         props: true,
       },
       {
+        name: "CohortsList",
         path: "cohorts",
         component: CohortList,
       },

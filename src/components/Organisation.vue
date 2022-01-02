@@ -1,21 +1,22 @@
 <template>
-  <v-container>
+  <v-container class="pl-0">
+    <span v-if="cohortView" class="caption" style="color: var(--v-cohortAccent-base);">Organisation</span>
     <v-row>
       <v-col
-        class="d-flex justify-center align-center cursor"
+        class="d-flex justify-start align-center cursor"
         @click="editOrg()"
       >
         <v-img
-          v-if="organisation.image.url"
+          v-if="organisation.image"
           :src="organisation.image.url"
-          max-width="60px"
-          max-height="60px"
+          max-width="30px"
+          max-height="30px"
           class="organisation-image"
         ></v-img>
-        <div v-else class="imagePlaceholder">
+        <div v-else-if="organisation.name" class="imagePlaceholder">
           {{ first3Letters(organisation.name) }}
         </div>
-        <h3 class="ml-6 overline">{{ organisation.name }}</h3>
+        <span class="ml-6 overline">{{ organisation.name }}</span>
       </v-col>
     </v-row>
   </v-container>
@@ -30,7 +31,11 @@ export default {
   },
   mounted() {
   },
-  computed: {},
+  computed: {
+    cohortView () {
+      return this.$route.name === "CohortView"
+    }
+  },
   methods: {
     editOrg() {
       this.$emit("editOrg", this.organisation.id);
