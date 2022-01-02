@@ -14,6 +14,8 @@
         ? infoPopupPosition.x
         : infoPopupPosition.x + 30 + 'px',
     }"
+    @mouseover="$emit('focus')"
+    @mouseleave="$emit('blur')"
   >
     <div class="ss-preview">
       <!-- Preview: Solar System -->
@@ -150,6 +152,7 @@ export default {
   data() {
     return {
       topicTasks: [],
+      hoverPopup: false,
     };
   },
   methods: {
@@ -178,7 +181,6 @@ export default {
         return;
       }
       this.topicTasks = topic.tasks;
-      // console.log("topic tasks = ", this.topicTasks);
       return this.topicTasks;
     },
     routeToSolarSystem() {
@@ -194,7 +196,7 @@ export default {
       });
     },
     close() {
-      this.$emit("deselect");
+      this.$emit("close");
     },
     deleteFromMap() {
       this.$emit("deleteFromMap");

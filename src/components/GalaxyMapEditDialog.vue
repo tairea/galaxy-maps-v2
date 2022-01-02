@@ -169,8 +169,10 @@
         person.accountType == 'student' ? personsTopicsTasks : topicsTasks
       "
       @deleteFromMap="deleteFromMap"
-      @deselect="deselect"
+      @close="$emit('closePopup')"
       @editNode="editNode"
+      @focus="focusPopup"
+      @blur="blurPopup"
     />
   </div>
 </template>
@@ -182,7 +184,7 @@ import { mapState, mapGetters } from "vuex";
 import PopupSystemPreview from "../components/PopupSystemPreview";
 
 export default {
-  name: "GalaxyMapEdit",
+  name: "GalaxyMapEditDialog",
   components: {
     PopupSystemPreview,
   },
@@ -226,6 +228,7 @@ export default {
         },
       ],
       prerequisites: false,
+      hoverPopup: false
     };
   },
   computed: {
@@ -254,6 +257,13 @@ export default {
     //   console.log("this.topicTasks", this.topicTasks);
     //   return this.topicTasks;
     // },
+    focusPopup() {
+      this.hoverPopup = true
+    },
+    blurPopup() {
+      this.hoverPopup = false
+      this.deselect()
+    },
     cancel() {
       console.log("cancel");
       this.dialog = false;
@@ -335,9 +345,12 @@ export default {
       this.currentNode = centerFocusNode;
       this.infoPopupShow = true;
     },
+
     deselect() {
-      this.infoPopupShow = false;
-      this.centerFocusPosition = false;
+      if (!this.hoverPopup) {
+        this.infoPopupShow = false;
+        this.centerFocusPosition = false;
+      }
     },
     editNode() {
       this.dialogTitle = this.nodeDialogTitle;
