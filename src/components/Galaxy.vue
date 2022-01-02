@@ -64,12 +64,16 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import PopupPreview from "../components/PopupPreview";
 
 export default {
-  name: "GalaxyMap",
+  name: "Galaxy",
   props: ["whichCoursesToDisplay"],
   components: {
     Network,
     LoadingSpinner,
     PopupPreview,
+  },
+  beforeDestroy() {
+    console.log("destroy map");
+    this.$refs.network.destroy();
   },
   async mounted() {
     console.log("whichCoursesToDisplay = ", this.whichCoursesToDisplay);
@@ -78,6 +82,7 @@ export default {
         Only show MY Galaxies
     =========================== */
     if (this.whichCoursesToDisplay == "my") {
+      await this.$store.dispatch("bindCoursesByPersonId", this.user.data.id); // bind courses created by this user id
       await this.$store.dispatch("getNodesByPersonId", this.user.data.id);
       await this.$store.dispatch("getEdgesByPersonId", this.user.data.id);
       console.log("nodes by person:", this.personsNodesForDisplay);
@@ -96,20 +101,21 @@ export default {
         "getAssignedEdgesByPersonId",
         this.user.data.id
       );
-      console.log(
-        "assigned nodes by person:",
-        this.personsAssignedNodesForDisplay
-      );
-      console.log("assigned edges by person:", this.personsAssignedEdges);
+      // console.log(
+      //   "assigned nodes by person:",
+      //   this.personsAssignedNodesForDisplay
+      // );
+      // console.log("assigned edges by person:", this.personsAssignedEdges);
       this.nodesToDisplay = this.personsAssignedNodesForDisplay;
     } else if (this.whichCoursesToDisplay == "all") {
       /* ===========================
         Only show ALL Galaxies in DATABASE!! (so I can see what maps users have created)
     =========================== */
-      await this.$store.dispatch("getAllNodes");
-      await this.$store.dispatch("getAllEdges");
-      console.log("all nodes ever:", this.allNodesForDisplay);
-      console.log("all edges ever:", this.allEdges);
+      await this.$store.dispatch("bindAllCourses"); // course data
+      await this.$store.dispatch("getAllNodes"); // node data for course
+      await this.$store.dispatch("getAllEdges"); // edge data for course
+      // console.log("all nodes ever:", this.allNodesForDisplay);
+      // console.log("all edges ever:", this.allEdges);
       this.nodesToDisplay = this.allNodesForDisplay;
     }
 
@@ -146,13 +152,13 @@ export default {
       "allNodesForDisplay",
       "allEdges",
       "courses",
-      "topics",
       "currentCourseId",
-      "allNodesLength",
       "personsNodesForDisplay",
       "personsEdges",
       "personsAssignedNodesForDisplay",
       "personsAssignedEdges",
+      // "topics",
+      // "personsTopics",
     ]),
     ...mapGetters(["getCourseById", "user"]),
   },
@@ -186,7 +192,7 @@ export default {
           length: 50, // Longer edges between nodes.
           smooth: false,
           color: {
-            inherit: false,
+            inherit: "to",
           },
         },
         nodes: {
@@ -204,6 +210,44 @@ export default {
             },
           },
           font: { color: "white" },
+        },
+        groups: {
+          // useDefaultGroups: false,
+          locked: {
+            color: "rgba(132,132,132,0.2)",
+            shape: "dot",
+            // opacity: 0.1,
+          },
+          unlocked: {
+            shape: "dot",
+            color: "#848484",
+            opacity: 1,
+          },
+          current: { color: "rgb(0,255,140)" },
+          // node status
+          inreview: {
+            shape: "dot",
+            color: "#FAF200",
+          },
+          completed: {
+            shape: "dot",
+            color: "#00E676",
+          },
+          // node types
+          introduction: {
+            shape: "dot",
+            color: "#00E676",
+          },
+          tasks: {
+            // color: { background: "yellow", border: "white" },
+            // shape: "diamond",
+            shape: "dot",
+            color: "#69A1E2",
+          },
+          project: {
+            shape: "dot",
+            color: "#E269CF",
+          },
         },
         interaction: {
           hover: true,
@@ -253,19 +297,24 @@ export default {
       // set save current course clicked in store
       this.$store.commit("setCurrentCourseId", closestNode.courseId);
 
-      // get topic ids
-      let topicsNodes = this.personsNodesForDisplay.filter(
+      // get all topic nodes by the closest clicked
+      let coursesTopicNodes = this.nodesToDisplay.filter(
         (node) => node.courseId == closestNode.courseId
       );
 
-      let topicsNodeIds = topicsNodes.reduce(function (output, node) {
+      // get just the ids of the topic nodes to fit/zoom to
+      let coursesTopicNodesIds = coursesTopicNodes.reduce(function (
+        output,
+        node
+      ) {
         output.push(node.id);
         return output;
-      }, []);
+      },
+      []);
 
       // network fit to array of topic ids
       this.$refs.network.fit({
-        nodes: topicsNodeIds,
+        nodes: coursesTopicNodesIds,
         offset: {
           x: 500,
         },
@@ -303,77 +352,6 @@ export default {
       var diffX = pt1.x - pt2.x;
       var diffY = pt1.y - pt2.y;
       return diffX * diffX + diffY * diffY;
-    },
-    calcCourseCanvasBoundaries() {
-      let courseCanvasBoundaries = [];
-      // get all coords for nodes
-      // const allNodes = this.$refs.network.nodes;
-      const allNodes = this.nodesToDisplay;
-      // console.log("allNodes from calcBoundaries: ", allNodes);
-
-      // per course/galaxy, determine boundaries ie. highest y, highest x, lowest y, lowest x (this is a boundary we want to hover)
-      for (let i = 0; i < this.courses.length; i++) {
-        let boundary = {
-          maxHeightOffset: 0,
-          maxWidthOffset: 0,
-          top: 0,
-          bottom: 0,
-          left: 0,
-          right: 0,
-          centerY: 0,
-          centerX: 0,
-        };
-        // let DOMboundary = {
-        //   top: 0,
-        //   bottom: 0,
-        //   left: 0,
-        //   right: 0,
-        // };
-        // loop nodes in that course
-        for (const node of allNodes) {
-          if (node.courseId == this.courses[i].id) {
-            if (Math.abs(node.y) > boundary.maxHeightOffset) {
-              boundary.maxHeightOffset = Math.abs(node.y);
-            }
-            if (Math.abs(node.x) > boundary.maxWidthOffset) {
-              boundary.maxWidthOffset = Math.abs(node.x);
-            }
-            // get lowest y (top)
-            if (node.y < boundary.top) {
-              boundary.top = node.y;
-            }
-            // get highest x (right)
-            if (node.x > boundary.right) {
-              boundary.right = node.x;
-            }
-            // get highest y (bottom)
-            if (node.y > boundary.bottom) {
-              boundary.bottom = node.y;
-            }
-            // get lowest x (left)
-            if (node.x < boundary.left) {
-              boundary.left = node.x;
-            }
-          }
-        }
-
-        //boundary width & height
-        boundary.width = boundary.right - boundary.left;
-        boundary.height = boundary.bottom - boundary.top;
-        boundary.centerX = (boundary.right + boundary.left) / 2;
-        boundary.centerY = (boundary.top + boundary.bottom) / 2;
-        // in DOM x y
-        // boundary.widthDOM = DOMboundary.right - DOMboundary.left;
-        // boundary.heightDOM = DOMboundary.bottom - DOMboundary.top;
-
-        // add course id to boundary
-        boundary.id = this.courses[i].id;
-        boundary.title = this.courses[i].title;
-        // console.log("boundary",boundary)
-        courseCanvasBoundaries.push(boundary);
-      }
-      // console.log("courseCanvasBoundaries", courseCanvasBoundaries);
-      return courseCanvasBoundaries;
     },
     repositionCoursesBasedOnBoundaries() {
       const courseCanvasBoundaries = this.calcCourseCanvasBoundaries();
@@ -447,30 +425,81 @@ export default {
       // console.log("newAllNodes", newAllNodes);
       return newAllNodes;
     },
-    fitToAllNodes() {
-      console.log("fit all nodes GO...");
-      var scaleX = this.canvasWidth / this.largestRowWidth;
-      var scaleY =
-        this.canvasHeight / (this.largestRowHeight * this.courseRows);
-      var scale = scaleX;
-      if (scale * (this.largestRowHeight * this.courseRows) > this.canvasHeight)
-        scale = scaleY;
+    calcCourseCanvasBoundaries() {
+      let courseCanvasBoundaries = [];
+      // get all coords for nodes
+      // const allNodes = this.$refs.network.nodes;
+      const allNodes = this.nodesToDisplay;
+      // console.log("allNodes from calcBoundaries: ", allNodes);
 
-      if (scale > 1) scale = 0.9 * scale;
+      // per course/galaxy, determine boundaries ie. highest y, highest x, lowest y, lowest x (this is a boundary we want to hover)
+      for (let i = 0; i < this.courses.length; i++) {
+        let boundary = {
+          maxHeightOffset: 0,
+          maxWidthOffset: 0,
+          top: 0,
+          bottom: 0,
+          left: 0,
+          right: 0,
+          centerY: 0,
+          centerX: 0,
+        };
+        // let DOMboundary = {
+        //   top: 0,
+        //   bottom: 0,
+        //   left: 0,
+        //   right: 0,
+        // };
+        // loop nodes in that course
+        for (const node of allNodes) {
+          if (node.courseId == this.courses[i].id) {
+            if (Math.abs(node.y) > boundary.maxHeightOffset) {
+              boundary.maxHeightOffset = Math.abs(node.y);
+            }
+            if (Math.abs(node.x) > boundary.maxWidthOffset) {
+              boundary.maxWidthOffset = Math.abs(node.x);
+            }
+            // get lowest y (top)
+            if (node.y < boundary.top) {
+              boundary.top = node.y;
+            }
+            // get highest x (right)
+            if (node.x > boundary.right) {
+              boundary.right = node.x;
+            }
+            // get highest y (bottom)
+            if (node.y > boundary.bottom) {
+              boundary.bottom = node.y;
+            }
+            // get lowest x (left)
+            if (node.x < boundary.left) {
+              boundary.left = node.x;
+            }
+          }
+        }
 
-      this.$refs.network.moveTo({
-        scale: scale,
-        position: {
-          x: this.largestRowWidth / 2,
-          y: (this.largestRowHeight * this.courseRows) / 2,
-        },
-        animation: true,
-      });
+        //boundary width & height
+        boundary.width = boundary.right - boundary.left;
+        boundary.height = boundary.bottom - boundary.top;
+        boundary.centerX = (boundary.right + boundary.left) / 2;
+        boundary.centerY = (boundary.top + boundary.bottom) / 2;
+        // in DOM x y
+        // boundary.widthDOM = DOMboundary.right - DOMboundary.left;
+        // boundary.heightDOM = DOMboundary.bottom - DOMboundary.top;
+
+        // add course id to boundary
+        boundary.id = this.courses[i].id;
+        boundary.title = this.courses[i].title;
+        // console.log("boundary",boundary)
+        courseCanvasBoundaries.push(boundary);
+      }
+      // console.log("courseCanvasBoundaries", courseCanvasBoundaries);
+      return courseCanvasBoundaries;
     },
     // this controls the fit zoom animation
     zoomToNodes(nodes) {
       // nodes to zoom
-      console.log("nodes to zoom", nodes);
+      // console.log("nodes to zoom", nodes);
       // get node ids
       var nodeIds = nodes.map((x) => x.id);
       // this.allNodeIds = allNodeIds;

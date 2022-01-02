@@ -68,6 +68,7 @@
 
 <script>
 import firebase from "firebase";
+import { mapGetters } from "vuex";
 
 export default {
   name: "Login",
@@ -84,6 +85,9 @@ export default {
     errorMsg: "",
   }),
   mounted() {},
+  computed: {
+    ...mapGetters(["person"]),
+  },
   methods: {
     login() {
       firebase
@@ -97,7 +101,16 @@ export default {
         })
         .then(() => {
           console.log("Successfully logged in");
-          this.$router.push("/base/galaxies/my");
+
+          // this routing doesnt work because this.person not loaded yet
+          // if (this.person.accountType == "student") {
+          //   this.$router.push("/base/galaxies/assigned");
+          // } else {
+          //   this.$router.push("/base/galaxies/my");
+          // }
+
+          // TODO: route to appropriate page (eg. for student -> /base/galaxies/assigned for teacher -> /base/galaxies/my)
+          this.$router.push("/base/galaxies/all");
         })
         .catch((error) => {
           this.errorMsg = error;

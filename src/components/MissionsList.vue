@@ -2,14 +2,25 @@
   <div class="mission-container">
     <h2 class="missions-label">Missions</h2>
 
-    <div v-if="tasks" style="width: 100%">
+    <div v-if="tasks.length > 0" style="width: 100%">
       <div v-for="(task, index) in tasks" :key="task.id">
-        <MissionsCard :task="task" :index="index" :topicId="topicId" />
+        <MissionsCard
+          :task="task"
+          :id="task.id"
+          :index="index"
+          :topicId="topicId"
+        />
+        <ActiveMissionsCard
+          v-if="task.taskStatus == 'active'"
+          :task="task"
+          :id="task.id"
+          :topicId="topicId"
+        />
       </div>
     </div>
 
     <div v-else style="width: 100%">
-      <p class="no-missions-label">No Missions</p>
+      <p class="no-missions-label">No Missions in this system</p>
     </div>
 
     <div class="createButton" v-if="person.accountType != 'student'">
@@ -20,23 +31,33 @@
 
 <script>
 import MissionsCard from "../components/MissionsCard";
+import ActiveMissionsCard from "../components/ActiveMissionsCard";
 import CreateEditDeleteMissionDialog from "../components/CreateEditDeleteMissionDialog";
 
-import { mapGetters } from "vuex";
+import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "MissionsList",
   components: {
     MissionsCard,
+    ActiveMissionsCard,
     CreateEditDeleteMissionDialog,
   },
   props: ["tasks", "topicId"],
+  mounted() {
+    // check which task is active
+    console.log("tasks from prop: ", this.tasks);
+  },
   computed: {
+    ...mapState(["personsTopicsTasks"]),
     ...mapGetters(["person"]),
   },
   data() {
-    return {};
+    return {
+      activeMission: false,
+    };
   },
+  methods: {},
 };
 </script>
 

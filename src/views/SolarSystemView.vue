@@ -1,7 +1,16 @@
 <template>
   <div id="container" class="bg">
     <div id="left-section">
-      <SolarSystemInfo :topic="person.accountType != 'student' ? getTopicById(currentTopicId) : getPersonsTopicById(currentTopicId)" />
+      <SolarSystemInfo
+        :topic="
+          person.accountType != 'student'
+            ? getTopicById(currentTopicId)
+            : getPersonsTopicById(currentTopicId)
+        "
+        :tasks="
+          person.accountType == 'student' ? personsTopicsTasks : topicsTasks
+        "
+      />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <AssignedInfo
         v-if="person.accountType != 'student'"
@@ -14,7 +23,9 @@
     </div>
     <div id="main-section">
       <MissionsList
-        :tasks="person.accountType != 'student' ? getTasksByTopicId(currentTopicId) : getPersonsTasksByTopicId(currentTopicId)"
+        :tasks="
+          person.accountType == 'student' ? personsTopicsTasks : topicsTasks
+        "
         :topicId="currentTopicId"
       />
     </div>
@@ -48,8 +59,29 @@ export default {
     BackButton,
   },
   props: ["topicId"],
+  async mounted() {
+    if (this.person.accountType == "student") {
+      // store bindPersonsTasksByTopicId
+      await this.$store.dispatch("bindPersonsTasksByTopicId", {
+        personId: this.person.id,
+        courseId: this.currentCourseId,
+        topicId: this.currentTopicId,
+      });
+    } else {
+      //store bindTasksByTopicId
+      await this.$store.dispatch("bindTasksByTopicId", {
+        courseId: this.currentCourseId,
+        topicId: this.currentTopicId,
+      });
+    }
+  },
   computed: {
-    ...mapState(["currentTopicId", "currentCourseId"]),
+    ...mapState([
+      "currentTopicId",
+      "currentCourseId",
+      "topicsTasks",
+      "personsTopicsTasks",
+    ]),
     ...mapGetters([
       "person",
       "getPersonsTopicById",
@@ -57,9 +89,9 @@ export default {
       "getCohortsInThisCourse",
       "getTopicById",
       "getPeopleInThisCourse",
-      "getTasksByTopicId"
-    ])
-  }
+      "getTasksByTopicId",
+    ]),
+  },
 };
 </script>
 
@@ -85,7 +117,7 @@ export default {
   // border: 1px solid yellow;
 }
 #main-section {
-  width: 50%;
+  width: 60%;
   height: 100%;
   display: flex;
   justify-content: flex-start;
@@ -94,7 +126,7 @@ export default {
   // border: 1px solid pink;
 }
 #right-section {
-  width: 30%;
+  width: 20%;
   height: 100%;
   display: flex;
   justify-content: flex-start;

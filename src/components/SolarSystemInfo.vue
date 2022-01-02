@@ -3,9 +3,14 @@
     <h2 class="ss-label">System</h2>
     <h1 class="ss-title">{{ topic.label }}</h1>
     <SolarSystem
-      :topic="person.accountType != 'student' ? getTopicById(currentTopicId) : getPersonsTopicById(currentTopicId)"
+      :topic="
+        person.accountType != 'student'
+          ? getTopicById(currentTopicId)
+          : getPersonsTopicById(currentTopicId)
+      "
       :size="'0.25em'"
       :height="'200px'"
+      :tasks="tasks"
     />
     <p class="galaxy-description">Part of the</p>
     <h1 class="galaxy-title">{{ getCourseById(currentCourseId).title }}</h1>
@@ -20,13 +25,18 @@ import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "SolarSystemInfo",
-  props: ["topic"],
+  props: ["topic", "tasks"],
   components: {
     SolarSystem,
   },
   computed: {
     ...mapState(["currentTopicId", "currentCourseId"]),
-    ...mapGetters(["person", "getPersonsTopicById", "getCourseById", "getTopicById"]),
+    ...mapGetters([
+      "person",
+      "getPersonsTopicById",
+      "getCourseById",
+      "getTopicById",
+    ]),
   },
   mounted() {},
   data() {

@@ -65,6 +65,10 @@
               item-text="type"
               item-value="value"
               solo
+              :menu-props="{
+                closeOnClick: true,
+                closeOnContentClick: true,
+              }"
             ></v-select>
 
             <!-- Node Pre-requisites -->
@@ -91,7 +95,8 @@
             <v-checkbox v-model="prerequisites" class="ma-0 pa-0" color="blue">
               <template v-slot:label>
                 <span class="dialog-description"
-                  >Does this Objective have Prerequisites?</span
+                  >Does another objective need to be completed before starting
+                  this one?</span
                 >
               </template>
             </v-checkbox>
@@ -104,6 +109,10 @@
               solo
               multiple
               chips
+              :menu-props="{
+                closeOnClick: true,
+                closeOnContentClick: true,
+              }"
             ></v-select>
           </div>
 
@@ -154,8 +163,11 @@
     <PopupSystemPreview
       :infoPopupShow="infoPopupShow"
       :infoPopupPosition="infoPopupPosition"
-      :currentNode="currentNode"
+      :currentTopic="currentNode"
       :centerFocusPosition="centerFocusPosition"
+      :tasks="
+        person.accountType == 'student' ? personsTopicsTasks : topicsTasks
+      "
       @deleteFromMap="deleteFromMap"
       @close="$emit('closePopup')"
       @editNode="editNode"
@@ -181,6 +193,7 @@ export default {
     // bind to store all topics for this course
     // await this.$store.dispatch("bindAllCourseTopics", this.currentCourseId);
     console.log("person account type is: ", this.person.accountType);
+    this.infoPopupShow = false;
   },
   data() {
     return {
@@ -219,7 +232,14 @@ export default {
     };
   },
   computed: {
-    ...mapState(["person", "currentCourseNodes", "personsTopics"]),
+    ...mapState([
+      "person",
+      "currentCourseNodes",
+      "personsTopics",
+      "currentCourseId",
+      "topicsTasks",
+      "personsTopicsTasks",
+    ]),
     ...mapGetters(["getTopicById", "getPersonsTopicById"]),
     getCoords() {
       return this.coords;
@@ -304,6 +324,7 @@ export default {
       this.infoPopupShow = true;
     },
     hovered(hoveredNode) {
+      // console.log("hovered node is ==== ", hoveredNode);
       this.infoPopupShow = false;
       this.centerFocusPosition = false;
       this.type = hoveredNode.type;
@@ -311,8 +332,12 @@ export default {
       this.infoPopupPosition.y = hoveredNode.DOMy;
       this.currentNode = hoveredNode;
       this.infoPopupShow = true;
+      //bind tasks for popup preview
+      this.bindTasks(this.currentCourseId, hoveredNode.id);
     },
     centerFocus(centerFocusNode) {
+      if (centerFocusNode.length > 1) return; // this avoids pop up when no specific node selected
+      console.log("centerFocus ???? ", centerFocusNode);
       this.centerFocusPosition = true;
       this.type = centerFocusNode.type;
       this.infoPopupPosition.x = "50%"; // 50%
@@ -421,6 +446,20 @@ export default {
       }
       // this.resetEditing();
       // this.resetNewData();
+    },
+    async bindTasks(courseId, topicId) {
+      if (this.person.accountType == "student") {
+        await this.$store.dispatch("bindPersonsTasksByTopicId", {
+          personId: this.person.id,
+          courseId: courseId,
+          topicId: topicId,
+        });
+      } else {
+        await this.$store.dispatch("bindTasksByTopicId", {
+          courseId: courseId,
+          topicId: topicId,
+        });
+      }
     },
   },
 };
