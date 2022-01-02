@@ -3,8 +3,16 @@
     <network
       ref="network"
       class="full-height"
-      :nodes="person.accountType == 'student' ? currentCourseNodesWithStatus : currentCourseNodes"
-      :edges="person.accountType == 'student' ? currentCourseEdgesWithStatusStyles : currentCourseEdges"
+      :nodes="
+        person.accountType == 'student'
+          ? currentCourseNodesWithStatus
+          : currentCourseNodes
+      "
+      :edges="
+        person.accountType == 'student'
+          ? currentCourseEdgesWithStatusStyles
+          : currentCourseEdges
+      "
       :options="network.options"
       @nodes-add="addNode"
       @edges-add="addEdge"
@@ -86,31 +94,41 @@ export default {
         groups: {
           // useDefaultGroups: false,
           locked: {
-            color: "rgba(132,132,132,0.2)",
+            color: "rgba(132,132,132,0.4)", // opaque styling to appear locked
             shape: "dot",
+            font: {
+              color: "rgba(132,132,132,0.4)", // opaque styling to appear locked
+            },
             // opacity: 0.1,
           },
           unlocked: {
             shape: "dot",
-            color: "#848484",
-            opacity: 1,
+            color: "#69A1E2",
           },
           current: { color: "rgb(0,255,140)" },
-          inReview: {
+          // node status
+          inreview: {
             shape: "dot",
-            color: "orange",
+            color: "#FAF200",
           },
-          tasks: {
-            color: { background: "yellow", border: "white" },
-            shape: "diamond",
+          completed: {
+            shape: "dot",
+            color: "#00E676",
           },
+          // node types
           introduction: {
             shape: "dot",
-            color: "orange",
+            color: "#00E676",
+          },
+          tasks: {
+            // color: { background: "yellow", border: "white" },
+            // shape: "diamond",
+            shape: "dot",
+            color: "#69A1E2",
           },
           project: {
             shape: "dot",
-            color: "purple",
+            color: "#E269CF",
           },
         },
         interaction: {
@@ -130,7 +148,9 @@ export default {
     newNodePositions: {},
   }),
   beforeDestroy() {
-    this.$refs.network.destroy();
+    if (this.$refs.network) {
+      this.$refs.network.destroy();
+    }
   },
   async mounted() {
     console.log("current course id:", this.currentCourseId);
@@ -146,12 +166,11 @@ export default {
         courseId: this.currentCourseId,
       });
     }
-    // console.log("currentCourseNodes:", this.currentCourseNodes);
-    // console.log("edges:", this.currentCourseEdges);
-    // console.log("personsTopics:", this.personsTopics);
-    // console.log(this.$refs.network);
 
-    this.$refs.network.fit();
+    // zoom fit on load
+    if (this.$refs.network.nodes.length > 0) {
+      setTimeout(() => this.zoomToNodes(this.$refs.network.nodes), 250);
+    }
   },
   beforeDestroy() {
     clearInterval(this.intervalid1);
@@ -177,7 +196,7 @@ export default {
         nodesWithStatus.push({
           ...node,
           // color: this.stringToColour(matchingNode.label),  // Attempt to match node color to System color
-          group: matchingNode?.status ?? "unlocked",
+          group: matchingNode?.topicStatus ?? "unlocked",
         });
       }
       // console.log("nodesWithStatus",nodesWithStatus)
@@ -186,15 +205,17 @@ export default {
     },
     currentCourseEdgesWithStatusStyles() {
       let edgesWithStatusStyles = [];
-      let hasDashes = false
+      let hasDashes = false;
 
       for (const edge of this.currentCourseEdges) {
         // find the topic node with status
         let matchingEdge = this.personsTopics.find((x) => {
           // add dashes to the edge (if topic is locked)
-          if (x.status == 'locked') {
-            hasDashes = true
+          if (x.topicStatus == "locked") {
+            hasDashes = true;
             // hasDashes = [2,2]
+          } else {
+            hasDashes = false;
           }
           return x.id === edge.to;
         });
@@ -206,7 +227,7 @@ export default {
       }
       // return nodes with status to network map
       return edgesWithStatusStyles;
-    }
+    },
   },
   methods: {
     getDomCoords(node) {
@@ -255,8 +276,10 @@ export default {
         .set(newEdgeData)
         .then(() => {
           console.log("Edge successfully written!");
-          this.$emit("edgeSaved");
+          this.$emit("toggleAddEdgeMode");
           this.addingEdge = false;
+          // toggle edge mode again so to stay in edit edge mode (this is so you can continuously add edges)
+          this.$emit("toggleAddEdgeMode");
         })
         .catch((error) => {
           console.error("Error writing node: ", error);
@@ -369,6 +392,7 @@ export default {
       }
     },
     deselectNode() {
+      this.active = false;
       this.$emit("deselected");
       this.stopNodeAnimation();
     },
@@ -405,7 +429,10 @@ export default {
       this.$emit("hovered", hoveredNode);
     },
     blurNode() {
-      this.$emit("deselected");
+      if (this.active) return;
+      setTimeout(() => {
+        this.$emit("deselected");
+      }, 1000);
     },
     // Canvas Node Animation
     beforeDrawing(ctx) {
@@ -451,23 +478,36 @@ export default {
       return hash;
     },
     stringToColour(str) {
-      if (!str) return
-      console.log("stringToColour ...",str)
-      return this.hslToHex(this.hashCode(str) % 360,100,70)
+      if (!str) return;
+      console.log("stringToColour ...", str);
+      return this.hslToHex(this.hashCode(str) % 360, 100, 70);
       // return `hsl(${this.hashCode(str) % 360}, 100%, 70%)`;
     },
     hslToHex(h, s, l) {
       l /= 100;
-      const a = s * Math.min(l, 1 - l) / 100;
-      const f = n => {
+      const a = (s * Math.min(l, 1 - l)) / 100;
+      const f = (n) => {
         const k = (n + h / 30) % 12;
         const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
-        return Math.round(255 * color).toString(16).padStart(2, '0');   // convert to Hex and prefix "0" if needed
+        return Math.round(255 * color)
+          .toString(16)
+          .padStart(2, "0"); // convert to Hex and prefix "0" if needed
       };
       return `#${f(0)}${f(8)}${f(4)}`;
-    }
+    },
+    // this controls the fit zoom animation
+    zoomToNodes(nodes) {
+      // nodes to zoom to
+      // get node ids
+      var nodeIds = nodes.map((x) => x.id);
+      console.log("fit");
+      this.$refs.network.fit({
+        nodes: nodeIds,
+        animation: true,
+      });
+    },
   },
-    };
+};
 </script>
 
 <style lang="scss" scoped>
