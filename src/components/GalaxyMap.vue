@@ -3,8 +3,16 @@
     <network
       ref="network"
       class="full-height"
-      :nodes="person.accountType == 'student' ? currentCourseNodesWithStatus : currentCourseNodes"
-      :edges="person.accountType == 'student' ? currentCourseEdgesWithStatusStyles : currentCourseEdges"
+      :nodes="
+        person.accountType == 'student'
+          ? currentCourseNodesWithStatus
+          : currentCourseNodes
+      "
+      :edges="
+        person.accountType == 'student'
+          ? currentCourseEdgesWithStatusStyles
+          : currentCourseEdges
+      "
       :options="network.options"
       @nodes-add="addNode"
       @edges-add="addEdge"
@@ -148,10 +156,6 @@ export default {
         courseId: this.currentCourseId,
       });
     }
-    // console.log("currentCourseNodes:", this.currentCourseNodes);
-    // console.log("edges:", this.currentCourseEdges);
-    // console.log("personsTopics:", this.personsTopics);
-    // console.log(this.$refs.network);
 
     this.$refs.network.fit();
   },
@@ -188,14 +192,14 @@ export default {
     },
     currentCourseEdgesWithStatusStyles() {
       let edgesWithStatusStyles = [];
-      let hasDashes = false
+      let hasDashes = false;
 
       for (const edge of this.currentCourseEdges) {
         // find the topic node with status
         let matchingEdge = this.personsTopics.find((x) => {
           // add dashes to the edge (if topic is locked)
-          if (x.status == 'locked') {
-            hasDashes = true
+          if (x.status == "locked") {
+            hasDashes = true;
             // hasDashes = [2,2]
           }
           return x.id === edge.to;
@@ -208,7 +212,7 @@ export default {
       }
       // return nodes with status to network map
       return edgesWithStatusStyles;
-    }
+    },
   },
   methods: {
     getDomCoords(node) {
@@ -372,6 +376,7 @@ export default {
       }
     },
     deselectNode() {
+      this.active = false;
       this.$emit("deselected");
       this.stopNodeAnimation();
     },
@@ -385,10 +390,6 @@ export default {
     },
     zoom(data) {
       console.log("zoom", data);
-    },
-    disableEditMode() {
-      this.$refs.network.disableEditMode();
-      // this.$emit("toggleAddNodeButton")
     },
     animationFinished(data) {
       // show popup
@@ -411,7 +412,10 @@ export default {
       this.$emit("hovered", hoveredNode);
     },
     blurNode() {
-      this.$emit("deselected");
+      if (this.active) return;
+      setTimeout(() => {
+        this.$emit("deselected");
+      }, 1000);
     },
     // Canvas Node Animation
     beforeDrawing(ctx) {
@@ -457,23 +461,25 @@ export default {
       return hash;
     },
     stringToColour(str) {
-      if (!str) return
-      console.log("stringToColour ...",str)
-      return this.hslToHex(this.hashCode(str) % 360,100,70)
+      if (!str) return;
+      console.log("stringToColour ...", str);
+      return this.hslToHex(this.hashCode(str) % 360, 100, 70);
       // return `hsl(${this.hashCode(str) % 360}, 100%, 70%)`;
     },
     hslToHex(h, s, l) {
       l /= 100;
-      const a = s * Math.min(l, 1 - l) / 100;
-      const f = n => {
+      const a = (s * Math.min(l, 1 - l)) / 100;
+      const f = (n) => {
         const k = (n + h / 30) % 12;
         const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
-        return Math.round(255 * color).toString(16).padStart(2, '0');   // convert to Hex and prefix "0" if needed
+        return Math.round(255 * color)
+          .toString(16)
+          .padStart(2, "0"); // convert to Hex and prefix "0" if needed
       };
       return `#${f(0)}${f(8)}${f(4)}`;
-    }
+    },
   },
-    };
+};
 </script>
 
 <style lang="scss" scoped>
