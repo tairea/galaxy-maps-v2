@@ -45,11 +45,12 @@
       />
 
       <!-- Edit -->
-      <GalaxyMapEdit
+      <GalaxyMapEditDialog
+        ref="edit"
         :course="getCourseById(courseId)"
         :coords="coords"
         @removeUnsavedNode="removeUnsavedNode"
-        ref="edit"
+        @closePopup="closePopup"
       />
     </div>
   </div>
@@ -63,7 +64,7 @@ import MissionsList from "../components/MissionsList";
 import Galaxy from "../components/Galaxy";
 import GalaxyMap from "../components/GalaxyMap";
 import BackButton from "../components/BackButton";
-import GalaxyMapEdit from "../components/GalaxyMapEdit";
+import GalaxyMapEditDialog from "../components/GalaxyMapEditDialog";
 import GalaxyMapButtons from "../components/GalaxyMapButtons";
 
 import { db } from "../store/firestoreConfig";
@@ -79,7 +80,7 @@ export default {
     Galaxy,
     GalaxyMap,
     BackButton,
-    GalaxyMapEdit,
+    GalaxyMapEditDialog,
     GalaxyMapButtons,
   },
   props: ["courseId"],
@@ -213,6 +214,9 @@ export default {
     updateDragCoords(coords) {
       this.coords = coords;
     },
+    // TODO: This patetrn feels bad and is hard to manage and understand. This should be updated
+    // Current pattern: emit action from a child component to parent which refs method and changes state in other child component
+    // Update to: manage state in parent component and prop down into children components
     selected(node) {
       this.$refs.edit.selected(node);
     },
@@ -238,6 +242,10 @@ export default {
       this.nodePositionsChangeLoading = false;
       this.changeInPositions = false;
     },
+    closePopup() {
+      // TODO: this doesnt reset the node correctly
+      this.$refs.vis.deselectNode()
+    }
   },
 };
 </script>
