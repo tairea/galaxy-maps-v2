@@ -1,260 +1,256 @@
 <template>
-  <v-container>
-    <v-row class="text-center" align="center">
-      <v-col cols="12">
-        <v-dialog v-model="dialog" width="40%" light>
-          <!-- CREATE BUTTON -->
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn
-              v-if="edit"
-              v-bind="attrs"
-              v-on="on"
-              class="mission-edit-button"
-              outlined
-              color="cohortAccent"
-              small
+  <div :class="cohortView ? 'text-end':'text-center'" :align="cohortView ? 'end':'center'">
+    <v-dialog v-model="dialog" width="40%" light>
+      <!-- CREATE BUTTON -->
+      <template v-slot:activator="{ on, attrs }">
+        <v-btn
+          v-if="edit"
+          v-bind="attrs"
+          v-on="on"
+          class="mission-edit-button"
+          outlined
+          color="cohortAccent"
+          small
+        >
+          <v-icon small>
+            mdi-pencil
+          </v-icon>
+        </v-btn>
+        <v-btn v-else outlined color="baseAccent" v-bind="attrs" v-on="on">
+          <v-icon left>
+            mdi-plus
+          </v-icon>
+          CREATE COHORT
+        </v-btn>
+      </template>
+
+      <!-- DIALOG (TODO: make as a component)-->
+      <div class="create-dialog">
+        <!-- HEADER -->
+        <div class="dialog-header">
+          <p class="dialog-title">
+            {{ edit ? "Edit Cohort " + cohort.name : dialogTitle }}
+          </p>
+          <div class="d-flex align-center">
+            <v-icon left color="missionAccent"
+              >mdi-information-variant</v-icon
             >
-              <v-icon small>
-                mdi-pencil
-              </v-icon>
-            </v-btn>
-            <v-btn v-else outlined color="baseAccent" v-bind="attrs" v-on="on">
-              <v-icon left>
-                mdi-plus
-              </v-icon>
-              CREATE COHORT
-            </v-btn>
-          </template>
-
-          <!-- DIALOG (TODO: make as a component)-->
-          <div class="create-dialog">
-            <!-- HEADER -->
-            <div class="dialog-header">
-              <p class="dialog-title">
-                {{ edit ? "Edit Cohort " + cohort.name : dialogTitle }}
-              </p>
-              <div class="d-flex align-center">
-                <v-icon left color="missionAccent"
-                  >mdi-information-variant</v-icon
-                >
-                <p class="dialog-description">{{ dialogDescription }}</p>
-              </div>
-            </div>
-
-            <div
-              class="left-side"
-              :style="cohort.name ? 'width:50%' : 'width:100%'"
-            >
-              <div class="create-dialog-content">
-                <!-- NAME -->
-                <!-- TITLE -->
-                <p class="input-description">Cohort Name:</p>
-                <v-text-field
-                  class="input-field"
-                  solo
-                  color="missionAccent"
-                  v-model="cohort.name"
-                  background-color="white"
-                ></v-text-field>
-
-                <!-- DESCRIPTION -->
-                <p class="input-description">Cohort Description:</p>
-                <v-textarea
-                  class="input-field"
-                  solo
-                  color="missionAccent"
-                  auto-grow
-                  clearable
-                  rows="1"
-                  v-model="cohort.description"
-                  background-color="white"
-                ></v-textarea>
-
-                <!-- IMAGE UPLOAD -->
-                <p class="input-description">Cohort Image:</p>
-                <v-progress-linear
-                  color="missionAccent"
-                  :value="percentage"
-                ></v-progress-linear>
-                <v-file-input
-                  class="input-field"
-                  solo
-                  color="missionAccent"
-                  accept="image/*"
-                  v-model="uploadedImage"
-                  @change="storeImage()"
-                  prepend-icon=""
-                ></v-file-input>
-
-                <!-- ORGANISATION -->
-                <p class="input-description">Organisation:</p>
-                <v-select
-                  class="input-field"
-                  solo
-                  v-model="cohort.organisation"
-                  :items="organisationsToSelect"
-                  item-text="name"
-                  item-value="id"
-                  @change="selectChange"
-                >
-                </v-select>
-              </div>
-              <!-- End create-dialog-content -->
-            </div>
-            <!-- End of left-side -->
-
-            <!-- RIGHT SIDE -->
-            <div
-              class="right-side"
-              :style="cohort.name ? 'width:50%' : 'width:0%'"
-            >
-              <!-- Cohort Preview -->
-              <div id="cohort-info" v-if="cohort.name">
-                <h2 class="cohort-label">Cohort</h2>
-                <h1 class="cohort-title">{{ cohort.name }}</h1>
-                <v-img
-                  v-if="cohort.image.url"
-                  :src="cohort.image.url"
-                  width="100%"
-                ></v-img>
-                <p class="cohort-description">{{ cohort.description }}</p>
-                <!-- Organisation -->
-                <div class="d-flex justify-center align-center">
-                  <Organisation
-                    v-if="cohort.organisation"
-                    :organisation="getOrganisationById(cohort.organisation)"
-                    :size="'0.25em'"
-                  />
-                </div>
-              </div>
-            </div>
-            <!-- End of right-side -->
-            <!-- ACTION BUTTONS -->
-            <div class="action-buttons">
-              <v-btn
-                v-if="edit"
-                outlined
-                color="green darken-1"
-                @click="updateCohort(cohort)"
-                class="mr-2"
-                :loading="loading"
-                :disabled="disabled"
-              >
-                <v-icon left>
-                  mdi-check
-                </v-icon>
-                UPDATE
-              </v-btn>
-              <v-btn
-                v-else
-                outlined
-                color="green darken-1"
-                @click="saveCohort(cohort)"
-                class="mr-2"
-                :loading="loading"
-                :disabled="disabled"
-              >
-                <v-icon left>
-                  mdi-check
-                </v-icon>
-                SAVE
-              </v-btn>
-
-              <!-- DELETE -->
-              <v-btn
-                v-if="edit"
-                outlined
-                color="error"
-                @click="deleteDialog()"
-                class="ml-2"
-              >
-                <v-icon left>
-                  mdi-delete
-                </v-icon>
-                DELETE
-              </v-btn>
-
-              <v-btn
-                outlined
-                :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
-                class="ml-2"
-                @click="cancel"
-                :disabled="disabled || loading"
-              >
-                <v-icon left>
-                  mdi-close
-                </v-icon>
-                Cancel
-              </v-btn>
-            </div>
-            <!-- End action-buttons -->
+            <p class="dialog-description">{{ dialogDescription }}</p>
           </div>
-          <!-- End create-dialog -->
-        </v-dialog>
+        </div>
 
-        <!-- CONFIRM DELETE DIALOG -->
-        <v-dialog v-model="dialogConfirm" width="40%" light>
-          <div class="create-dialog">
-            <!-- HEADER -->
-            <div class="dialog-header py-10">
-              <p class="dialog-title">
-                <strong>Warning!</strong> Delete Cohort?
-              </p>
-              <div class="d-flex align-start">
-                <v-icon left color="missionAccent"
-                  >mdi-information-variant</v-icon
-                >
-                <p class="dialog-description">
-                  Are you sure you want to <strong>DELETE</strong> this
-                  <span class="cohort-text">{{ cohort.name }} Cohort</span>?
-                  <br />
-                  <br />
-                  Deleting is permanent!!!
-                  <br />
-                  <br />
-                  <span class="mission-text">PEOPLE</span> in this
-                  <strong>COHORT</strong> will no longer be able to access the
-                  assigned <span class="galaxy-text">GALAXY MAPS</span>
-                </p>
-              </div>
-            </div>
+        <div
+          class="left-side"
+          :style="cohort.name ? 'width:50%' : 'width:100%'"
+        >
+          <div class="create-dialog-content">
+            <!-- NAME -->
+            <!-- TITLE -->
+            <p class="input-description">Cohort Name:</p>
+            <v-text-field
+              class="input-field"
+              solo
+              color="missionAccent"
+              v-model="cohort.name"
+              background-color="white"
+            ></v-text-field>
 
-            <!-- ACTION BUTTONS -->
-            <div class="action-buttons">
-              <!-- DELETE -->
-              <v-btn
-                outlined
-                color="error"
-                @click="confirmDeleteCohort(cohort)"
-                class="ml-2"
-                :loading="deleting"
-              >
-                <v-icon left>
-                  mdi-delete
-                </v-icon>
-                DELETE
-              </v-btn>
+            <!-- DESCRIPTION -->
+            <p class="input-description">Cohort Description:</p>
+            <v-textarea
+              class="input-field"
+              solo
+              color="missionAccent"
+              auto-grow
+              clearable
+              rows="1"
+              v-model="cohort.description"
+              background-color="white"
+            ></v-textarea>
 
-              <v-btn
-                outlined
-                :color="$vuetify.theme.dark ? 'yellow' : 'f7f7ff'"
-                class="ml-2"
-                @click="cancelDeleteDialog"
-                :disabled="disabled || loading"
-              >
-                <v-icon left>
-                  mdi-close
-                </v-icon>
-                Cancel
-              </v-btn>
-            </div>
-            <!-- End action-buttons -->
+            <!-- IMAGE UPLOAD -->
+            <p class="input-description">Cohort Image:</p>
+            <v-progress-linear
+              color="missionAccent"
+              :value="percentage"
+            ></v-progress-linear>
+            <v-file-input
+              class="input-field"
+              solo
+              color="missionAccent"
+              accept="image/*"
+              v-model="uploadedImage"
+              @change="storeImage()"
+              prepend-icon=""
+            ></v-file-input>
+
+            <!-- ORGANISATION -->
+            <p class="input-description">Organisation:</p>
+            <v-select
+              class="input-field"
+              solo
+              v-model="cohort.organisation"
+              :items="organisationsToSelect"
+              item-text="name"
+              item-value="id"
+              @change="selectChange"
+            >
+            </v-select>
           </div>
           <!-- End create-dialog-content -->
-        </v-dialog>
-      </v-col>
-    </v-row>
-  </v-container>
+        </div>
+        <!-- End of left-side -->
+
+        <!-- RIGHT SIDE -->
+        <div
+          class="right-side"
+          :style="cohort.name ? 'width:50%' : 'width:0%'"
+        >
+          <!-- Cohort Preview -->
+          <div id="cohort-info" v-if="cohort.name">
+            <h2 class="cohort-label">Cohort</h2>
+            <h1 class="cohort-title">{{ cohort.name }}</h1>
+            <v-img
+              v-if="cohort.image.url"
+              :src="cohort.image.url"
+              width="100%"
+            ></v-img>
+            <p class="cohort-description">{{ cohort.description }}</p>
+            <!-- Organisation -->
+            <div class="d-flex justify-center align-center">
+              <Organisation
+                v-if="cohort.organisation"
+                :organisation="getOrganisationById(cohort.organisation)"
+                :size="'0.25em'"
+              />
+            </div>
+          </div>
+        </div>
+        <!-- End of right-side -->
+        <!-- ACTION BUTTONS -->
+        <div class="action-buttons">
+          <v-btn
+            v-if="edit"
+            outlined
+            color="green darken-1"
+            @click="updateCohort(cohort)"
+            class="mr-2"
+            :loading="loading"
+            :disabled="disabled"
+          >
+            <v-icon left>
+              mdi-check
+            </v-icon>
+            UPDATE
+          </v-btn>
+          <v-btn
+            v-else
+            outlined
+            color="green darken-1"
+            @click="saveCohort(cohort)"
+            class="mr-2"
+            :loading="loading"
+            :disabled="disabled"
+          >
+            <v-icon left>
+              mdi-check
+            </v-icon>
+            SAVE
+          </v-btn>
+
+          <!-- DELETE -->
+          <v-btn
+            v-if="edit"
+            outlined
+            color="error"
+            @click="deleteDialog()"
+            class="ml-2"
+          >
+            <v-icon left>
+              mdi-delete
+            </v-icon>
+            DELETE
+          </v-btn>
+
+          <v-btn
+            outlined
+            :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
+            class="ml-2"
+            @click="cancel"
+            :disabled="disabled || loading"
+          >
+            <v-icon left>
+              mdi-close
+            </v-icon>
+            Cancel
+          </v-btn>
+        </div>
+        <!-- End action-buttons -->
+      </div>
+      <!-- End create-dialog -->
+    </v-dialog>
+
+    <!-- CONFIRM DELETE DIALOG -->
+    <v-dialog v-model="dialogConfirm" width="40%" light>
+      <div class="create-dialog">
+        <!-- HEADER -->
+        <div class="dialog-header py-10">
+          <p class="dialog-title">
+            <strong>Warning!</strong> Delete Cohort?
+          </p>
+          <div class="d-flex align-start">
+            <v-icon left color="missionAccent"
+              >mdi-information-variant</v-icon
+            >
+            <p class="dialog-description">
+              Are you sure you want to <strong>DELETE</strong> this
+              <span class="cohort-text">{{ cohort.name }} Cohort</span>?
+              <br />
+              <br />
+              Deleting is permanent!!!
+              <br />
+              <br />
+              <span class="mission-text">PEOPLE</span> in this
+              <strong>COHORT</strong> will no longer be able to access the
+              assigned <span class="galaxy-text">GALAXY MAPS</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="action-buttons">
+          <!-- DELETE -->
+          <v-btn
+            outlined
+            color="error"
+            @click="confirmDeleteCohort(cohort)"
+            class="ml-2"
+            :loading="deleting"
+          >
+            <v-icon left>
+              mdi-delete
+            </v-icon>
+            DELETE
+          </v-btn>
+
+          <v-btn
+            outlined
+            :color="$vuetify.theme.dark ? 'yellow' : 'f7f7ff'"
+            class="ml-2"
+            @click="cancelDeleteDialog"
+            :disabled="disabled || loading"
+          >
+            <v-icon left>
+              mdi-close
+            </v-icon>
+            Cancel
+          </v-btn>
+        </div>
+        <!-- End action-buttons -->
+      </div>
+      <!-- End create-dialog-content -->
+    </v-dialog>
+  </div>
 </template>
 
 <script>
@@ -278,6 +274,10 @@ export default {
   computed: {
     ...mapState(["organisations"]),
     ...mapGetters(["getOrganisationById"]),
+    cohortView () {
+      console.log('route: ', this.$route)
+      return this.$route.name === "CohortView"
+    },
     organisationsToSelect() {
       return [{ name: "none", id: 0 }, ...this.organisations];
     },
