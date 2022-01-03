@@ -72,8 +72,15 @@ export default {
     PopupPreview,
   },
   beforeDestroy() {
-    console.log("destroy map");
-    this.$refs.network.destroy();
+    // TODO: trying to fix error: "Error in mounted hook: "Error: Cannot add item: item with id 056aa885-c01c-45bb-b96f-ebe7ca9967c9 already exists
+    // console.log("destroy map");
+    console.log("before destroy");
+    // this.$refs.network.destroy();
+    this.$refs.network.setData = { nodes: [], edges: [] };
+    this.$refs.network.visData = { nodes: [], edges: [] };
+    console.log(
+      "visData nodes length: " + this.$refs.network.visData.nodes.length
+    );
   },
   async mounted() {
     console.log("whichCoursesToDisplay = ", this.whichCoursesToDisplay);
@@ -120,7 +127,7 @@ export default {
     }
 
     // see available Vue2Vis methods
-    // console.log(this.$refs.network);
+    console.log(this.$refs.network);
 
     if (this.nodesToDisplay.length > 0) {
       const repositionedNodes = this.repositionCoursesBasedOnBoundaries();

@@ -115,6 +115,8 @@
         >
           Resume Galaxy
         </v-btn>
+        <!-- starting galaxy status-->
+
         <v-btn
           v-else
           class="view-ss-button pa-5"
@@ -129,6 +131,9 @@
         >
           Start Galaxy
         </v-btn>
+        <div v-if="loading" style="width: 100%">
+          <p class="starting-status">{{ startingGalaxyStatus }}</p>
+        </div>
       </div>
     </div>
   </div>
@@ -172,6 +177,7 @@ export default {
     return {
       enrolled: false,
       loading: false,
+      startingGalaxyStatus: "",
     };
   },
   methods: {
@@ -238,10 +244,11 @@ export default {
 
         // 4) if tasks exist. add them to person
         for (const [index, subDoc] of subquerySnapshot.docs.entries()) {
-          console.log(doc.data().label + " -> " + subDoc.data().title);
-          console.log(
-            "is index: " + index + " of " + subquerySnapshot.docs.length
-          );
+          // cool lil status to show whats happening during loading
+          this.startingGalaxyStatus = "...adding " + subDoc.data().title;
+          // this.startingGalaxyStatus ="...adding " + doc.data().label + " -> " + subDoc.data().title;
+          console.log("...adding " + subDoc.id + ": " + subDoc.data().title);
+
           if (subDoc.exists) {
             await db
               .collection("people")
@@ -249,7 +256,8 @@ export default {
               .collection(this.course.id)
               .doc(doc.data().id)
               .collection("tasks")
-              .add({
+              .doc(subDoc.id)
+              .set({
                 ...subDoc.data(),
                 // set the status of topics to locked unless they are the first mission (index == 0)
                 taskStatus: index == 0 ? "unlocked" : "locked",
@@ -362,5 +370,14 @@ export default {
 .galaxyColour {
   color: var(--v-galaxyAccent-base);
   font-weight: 800;
+}
+
+.starting-status {
+  color: var(--v-galaxyAccent-base);
+  font-style: italic;
+  font-size: 0.7rem;
+  text-align: left;
+  padding: 20px;
+  // text-transform: uppercase;
 }
 </style>
