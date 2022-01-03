@@ -16,7 +16,7 @@
             />
           </v-avatar>
         </div>
-        <p class="request-text">{{ request.requestForHelpMessage }}</p>
+        <p class="request-text">"{{ request.requestForHelpMessage }}"</p>
       </div>
       <!-- divder line -->
       <div style="border-top: 1px solid var(--v-missionAccent-base)"></div>
