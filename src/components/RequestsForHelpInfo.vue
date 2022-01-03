@@ -1,10 +1,11 @@
 <template>
   <div id="ss-info">
     <h2 class="ss-label">Requests for Help</h2>
-    <p class="overline requestsLabel ma-0">Re: {{ activeMission.title }}</p>
+    <p class="overline requestsLabel">Re: {{ activeMission.title }}</p>
 
     <div v-for="request in requestsForHelp" :key="request.id" class="request">
-      <div class="d-flex">
+      <!-- requester message -->
+      <div class="d-flex request-msg">
         <div class="requester-image">
           <v-avatar size="30">
             <img
@@ -16,6 +17,31 @@
           </v-avatar>
         </div>
         <p class="request-text">{{ request.requestForHelpMessage }}</p>
+      </div>
+      <!-- divder line -->
+      <div style="border-top: 1px solid var(--v-missionAccent-base)"></div>
+      <!-- instructor response -->
+      <div class="d-flex request-msg">
+        <p
+          class="request-text text-center"
+          style="color: var(--v-galaxyAccent-base)"
+        >
+          {{
+            request.requestForHelpResponse
+              ? request.requestForHelpResponse
+              : "...waiting for instructors response"
+          }}
+        </p>
+        <div v-if="request.requestForHelpResponse" class="requester-image">
+          <v-avatar size="30">
+            <img
+              v-if="getPerson(request.requestForHelpPersonId).image"
+              :src="getPerson(request.requestForHelpPersonId).image.url"
+              :alt="getPerson(request.requestForHelpPersonId).firstName"
+              style="object-fit: cover"
+            />
+          </v-avatar>
+        </div>
       </div>
     </div>
     <!-- <h1 class="ss-title">{{ topic.label }}</h1>
@@ -106,12 +132,17 @@ h1 {
   font-size: 0.8rem;
   color: var(--v-missionAccent-base);
   border-bottom: 1px solid var(--v-missionAccent-base);
+  margin-bottom: 20px;
 }
 
 .request {
   margin: 10px 0px;
   border: 1px solid var(--v-missionAccent-base);
-  padding: 10px;
+  border-radius: 5px;
+
+  .request-msg {
+    padding: 10px;
+  }
 
   .request-text {
     color: var(--v-missionAccent-base);
