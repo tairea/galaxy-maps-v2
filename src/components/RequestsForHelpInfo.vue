@@ -1,5 +1,5 @@
 <template>
-  <div id="ss-info">
+  <div v-if="requestsForHelp.length > 0" id="ss-info">
     <h2 class="ss-label">Requests for Help</h2>
     <p class="overline requestsLabel">Re: {{ activeMission.title }}</p>
 

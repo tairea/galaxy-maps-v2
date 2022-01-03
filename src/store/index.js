@@ -37,6 +37,8 @@ export default new Vuex.Store({
     topicsTasks: [],
     personsTopicsTasks: [],
     requestsForHelp: [],
+    teachersSubmissionsToReview: [],
+    teachersRequestsForHelp: [],
   },
   getters: {
     user: (state) => state.user,
@@ -44,6 +46,11 @@ export default new Vuex.Store({
     courses: (state) => state.courses,
     getCourseById: (state) => (id) => {
       return state.courses.find((course) => course.id === id);
+    },
+    getCoursesByWhoMadeThem: (state) => (personId) => {
+      return state.courses.filter(
+        (course) => course.mappedBy.personId == personId
+      );
     },
     getTopicById: (state) => (id) => {
       const topic = state.topics.find((topic) => topic.id === id);
@@ -399,6 +406,46 @@ export default new Vuex.Store({
 
       state.personsEdges = personsEdges;
     },
+    async getSubmittedWorkByTeachersId({ state }, personId) {
+      const myCourses = this.getters.getCoursesByWhoMadeThem(personId);
+
+      const allWorkForReview = [];
+      for (const course of myCourses) {
+        // get all work for review
+        const querySnapshot = await db
+          .collection("courses")
+          .doc(course.id)
+          .collection("submissionsForReview")
+          .where("taskStatus", "==", "inreview")
+          .orderBy("taskSubmittedTimestamp")
+          .get();
+
+        for (const doc of querySnapshot.docs) {
+          allWorkForReview.push(doc.data());
+        }
+      }
+      state.teachersSubmissionsToReview = allWorkForReview;
+    },
+    async getRequestsForHelpByTeachersId({ state }, personId) {
+      const myCourses = this.getters.getCoursesByWhoMadeThem(personId);
+
+      const allRequestsForHelp = [];
+      for (const course of myCourses) {
+        // get all work for review
+        const querySnapshot = await db
+          .collection("courses")
+          .doc(course.id)
+          .collection("requestsForHelp")
+          .where("requestForHelpStatus", "==", "unanswered")
+          .orderBy("requestSubmittedTimestamp")
+          .get();
+
+        for (const doc of querySnapshot.docs) {
+          allRequestsForHelp.push(doc.data());
+        }
+      }
+      state.teachersRequestsForHelp = allRequestsForHelp;
+    },
     async getAssignedEdgesByPersonId({ state }, personId) {
       const personsAssignedEdges = [];
       // get the courseId from assignedCourses
@@ -422,6 +469,7 @@ export default new Vuex.Store({
       }
       state.personsAssignedEdges = personsAssignedEdges; // source of truth
     },
+
     bindCoursesByPersonId: firestoreAction(({ bindFirestoreRef }, personId) => {
       return bindFirestoreRef(
         "courses",
@@ -469,20 +517,15 @@ export default new Vuex.Store({
     ),
     // bind courses requests for help
     bindRequestsForHelp: firestoreAction(({ bindFirestoreRef }, payload) => {
-      console.log(" from bindRequestsForHelp...");
-      console.log("payload courseId: ", payload.courseId);
-      console.log("payload topicId: ", payload.topicId);
-      console.log("payload taskId: ", payload.taskId);
-
       return bindFirestoreRef(
         "requestsForHelp",
         db
           .collection("courses")
           .doc(payload.courseId)
-          .collection("topics")
-          .doc(payload.topicId)
-          .collection("tasks")
-          .doc(payload.taskId)
+          // .collection("topics")
+          // .doc(payload.topicId)
+          // .collection("tasks")
+          // .doc(payload.taskId)
           .collection("requestsForHelp")
         // .orderBy("timestamp")
       );

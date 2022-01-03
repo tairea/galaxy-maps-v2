@@ -34,7 +34,10 @@
         <h2 class="galaxy-label">Map</h2>
         <SolarSystem :topic="getTopicById(currentTopicId)" :size="'0.25em'" />
       </div> -->
-      <RequestsForHelpInfo :activeMission="activeMission" />
+      <RequestsForHelpInfo
+        v-if="activeMission"
+        :activeMission="activeMission"
+      />
     </div>
   </div>
 </template>
