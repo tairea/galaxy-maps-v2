@@ -137,6 +137,34 @@
                   SUBMISSION REQUIRED FOR THIS MISSION
                 </p>
               </v-checkbox>
+              <!-- SUBMISSION INSTRUCTIONS -->
+              <div v-if="task.submissionRequired" class="px-6">
+                <p class="dialog-description submission-colour">
+                  Submission Instructions:
+                  <v-tooltip right max-width="300">
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-icon
+                        left
+                        color="cohortAccent"
+                        small
+                        class="circle-outline ma-1"
+                        v-bind="attrs"
+                        v-on="on"
+                        >mdi-information-variant</v-icon
+                      >
+                    </template>
+                    <span>
+                      Please provide submission instructions. Eg. what type of
+                      evidence do you want the student to provide a link to?
+                    </span>
+                  </v-tooltip>
+                </p>
+                <v-textarea
+                  v-model="task.submissionInstructions"
+                  class="ma-0 pa-0 submission-colour"
+                  solo
+                ></v-textarea>
+              </div>
 
               <!-- ACTION BUTTONS -->
               <div class="action-buttons">
@@ -296,6 +324,7 @@ export default {
       video: "",
       slides: "",
       submissionRequired: "",
+      submissionInstructions: "",
     },
     loading: false,
     disabled: false,
@@ -333,7 +362,8 @@ export default {
         .doc(this.topicId)
         .collection("tasks")
         .add({ ...task, timestamp: new Date() })
-        .then(() => {
+        .then((docRef) => {
+          docRef.update({ id: docRef.id }); // add task id to task
           console.log("Task successfully written!");
           this.loading = false;
           this.disabled = false;

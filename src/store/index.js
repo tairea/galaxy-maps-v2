@@ -20,6 +20,7 @@ export default new Vuex.Store({
     people: [],
     currentCourseId: "",
     currentTopicId: "",
+    currentTaskId: "",
     currentCohortId: "",
     currentCourseNodes: [],
     currentCourseEdges: [],
@@ -35,6 +36,7 @@ export default new Vuex.Store({
     personsTopics: [],
     topicsTasks: [],
     personsTopicsTasks: [],
+    requestsForHelp: [],
   },
   getters: {
     user: (state) => state.user,
@@ -168,6 +170,9 @@ export default new Vuex.Store({
     },
     setCurrentTopicId(state, topicId) {
       state.currentTopicId = topicId;
+    },
+    setCurrentTaskId(state, taskId) {
+      state.currentTaskId = taskId;
     },
     setCurrentCohortId(state, cohortId) {
       state.currentCohortId = cohortId;
@@ -462,6 +467,30 @@ export default new Vuex.Store({
         );
       }
     ),
+    // bind courses requests for help
+    bindRequestsForHelp: firestoreAction(({ bindFirestoreRef }, payload) => {
+      console.log(" from bindRequestsForHelp...");
+      console.log("payload courseId: ", payload.courseId);
+      console.log("payload topicId: ", payload.topicId);
+      console.log("payload taskId: ", payload.taskId);
+
+      return bindFirestoreRef(
+        "requestsForHelp",
+        db
+          .collection("courses")
+          .doc(payload.courseId)
+          .collection("topics")
+          .doc(payload.topicId)
+          .collection("tasks")
+          .doc(payload.taskId)
+          .collection("requestsForHelp")
+        // .orderBy("timestamp")
+      );
+    }),
+    async getPersonByIdFromDB({ state }, personId) {
+      const person = await db.collection("people").doc(personId).get();
+      return person.data();
+    },
   },
 });
 

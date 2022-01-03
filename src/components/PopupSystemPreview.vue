@@ -94,14 +94,28 @@
       <div v-else v-for="(task, index) in tasks" :key="task.id">
         <v-simple-table class="task-table">
           <tr>
-            <td>
-              <h5 class="mission-text">MISSION {{ index + 1 }}:</h5>
+            <!-- Table: Mission # -->
+            <td style="width: 100px">
+              <h5 class="mission-text text-left">MISSION {{ index + 1 }}:</h5>
             </td>
-            <td>
+            <!-- Table: Title -->
+            <td style="min-width: 150px; max-width: 200px">
               <h5 class="mission-text">{{ task.title }}</h5>
             </td>
-            <td v-if="task.duration">
-              <h5 class="mission-text">{{ task.duration }} MINS</h5>
+            <!-- Table: Duration -->
+            <td style="width: 90px">
+              <h5 class="mission-text">
+                {{ task.duration ? task.duration + " MINS" : "" }}
+              </h5>
+            </td>
+            <!-- Table: Status -->
+            <td style="width: 100px">
+              <h5
+                class="mission-text text-right"
+                :class="getStatusColour(task.taskStatus)"
+              >
+                {{ task.taskStatus }}
+              </h5>
             </td>
           </tr>
         </v-simple-table>
@@ -138,6 +152,13 @@ export default {
     //   courseId: this.currentCourseId,
     //   topicId: this.currentTopicId,
     // });
+
+    // set active mission
+    this.activeMission = this.personsTopicsTasks.find(
+      (topicObj) => topicObj.taskStatus == "active"
+    );
+    console.log("setCurrentTaskId: ", this.activeMission.id);
+    this.$store.commit("setCurrentTaskId", this.activeMission.id);
   },
   computed: {
     ...mapState([
@@ -151,11 +172,20 @@ export default {
   },
   data() {
     return {
-      topicTasks: [],
       hoverPopup: false,
+      activeMission: null,
     };
   },
   methods: {
+    getStatusColour(status) {
+      if (status == "completed") {
+        return "baseColour";
+      } else if (status == "inreview") {
+        return "cohortColour";
+      } else {
+        return "missionColour";
+      }
+    },
     checkIfTopicLocked() {
       for (const topic of this.personsTopics) {
         // find the topic node with status
@@ -169,24 +199,20 @@ export default {
     editNode() {
       this.$emit("editNode");
     },
-    getTopicTasks() {
-      // console.log("node = ", this.currentTopic.id);
-      // get the topics for this current node
-      let topic =
-        this.person.accountType == "student"
-          ? this.getPersonsTopicById(this.currentTopic.id)
-          : this.getTopicById(this.currentTopic.id);
-      // console.log("topic = ", topic);
-      if (!topic) {
-        return;
-      }
-      this.topicTasks = topic.tasks;
-      return this.topicTasks;
-    },
     routeToSolarSystem() {
       // console.log("route to ss", this.currentTopic.id);
       // save current topic to store
       this.$store.commit("setCurrentTopicId", this.currentTopic.id);
+      // save active task to store if we know it
+      const activeMission = this.personsTopicsTasks.find(
+        (topicObj) => topicObj.taskStatus == "active"
+      );
+      if (activeMission) {
+        this.$store.commit("setCurrentTaskId", activeMission.id);
+        console.log(
+          "setCurrentTaskId: " + activeMission.id + " " + activeMission.title
+        );
+      }
       // route to topic/solar system
       this.$router.push({
         name: "SolarSystemView",
@@ -261,8 +287,18 @@ export default {
     border-top: 1px solid var(--v-missionAccent-base);
     background-color: var(--v-background-base);
 
+    .mission-text {
+      color: var(--v-missionAccent-base);
+      padding: 10px;
+      text-transform: uppercase;
+    }
+
     .task-table {
       background-color: var(--v-background-base);
+
+      td {
+        // border: 1px red solid;
+      }
     }
   }
 
@@ -272,14 +308,19 @@ export default {
     font-size: 0.8rem;
   }
 
-  .mission-text {
-    color: var(--v-missionAccent-base);
-    padding: 10px 20px;
-  }
-
   .centeredFocus {
     margin-top: -100px;
     margin-left: 50px;
   }
+}
+
+.baseColour {
+  color: var(--v-baseAccent-base) !important;
+}
+.cohortColour {
+  color: var(--v-cohortAccent-base) !important;
+}
+.missionColour {
+  color: var(--v-missionAccent-base) !important;
 }
 </style>

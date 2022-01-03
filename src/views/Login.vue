@@ -56,7 +56,7 @@
 
     <!-- Login Error Snackbar -->
     <v-snackbar v-model="snackbar">
-      {{ errorMsg }}
+      {{ snackbarText }}
       <template v-slot:action="{ attrs }">
         <v-btn color="pink" text v-bind="attrs" @click="snackbar = false">
           OK
@@ -81,8 +81,7 @@ export default {
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
     ],
     snackbar: false,
-    snackbarText: "Successfully signed in",
-    errorMsg: "",
+    snackbarText: "",
   }),
   mounted() {},
   computed: {
@@ -113,7 +112,7 @@ export default {
           this.$router.push("/base/galaxies/all");
         })
         .catch((error) => {
-          this.errorMsg = error;
+          this.snackbarText = error;
           this.snackbar = true;
           console.log("Login error:", error);
         });
