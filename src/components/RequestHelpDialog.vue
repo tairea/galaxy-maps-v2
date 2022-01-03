@@ -120,13 +120,16 @@ export default {
       // Add a new request for help to the "courses" db
       db.collection("courses")
         .doc(this.currentCourseId)
-        .collection("topics")
-        .doc(this.topicId)
-        .collection("tasks")
-        .doc(this.taskId)
+        // .collection("topics")
+        // .doc(this.topicId)
+        // .collection("tasks")
+        // .doc(this.taskId)
         .collection("requestsForHelp")
         .add({
           // add request for help to database
+          courseId: this.currentCourseId,
+          topicId: this.topicId,
+          taskId: this.taskId,
           requestForHelpPersonId: this.person.id,
           requestForHelpMessage: this.requestForHelp,
           requestForHelpStatus: "unanswered",
