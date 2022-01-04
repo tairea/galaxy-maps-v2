@@ -9,6 +9,7 @@
         :cohorts="getCohortsInThisCourse(courseId)"
         :organisations="getOrganisationsInThisCourse(courseId)"
         :people="getPeopleInThisCourse(courseId)"
+        @snackbarToggle="snackbarToggle"
       />
       <BackButton :toPath="pathDependingOnAccountType()" />
     </div>
@@ -131,7 +132,8 @@ export default {
         .set({
           // hardcoded first node topic
           id: nodeId,
-          label: "Intro",
+          label: this.courseTitle + " Intro",
+          group: "introduction",
         })
         .then((docRef) => {
           console.log("Topic successfully written!");

@@ -22,6 +22,10 @@ export default new Vuex.Store({
     currentTopicId: "",
     currentTaskId: "",
     currentCohortId: "",
+    currentCourse: {},
+    currentTopic: {},
+    currentTask: {},
+    currentCohort: {},
     currentCourseNodes: [],
     currentCourseEdges: [],
     allNodes: [],
@@ -176,14 +180,26 @@ export default new Vuex.Store({
     setCurrentCourseId(state, courseId) {
       state.currentCourseId = courseId;
     },
+    setCurrentCourse(state, course) {
+      state.currentCourse = course;
+    },
     setCurrentTopicId(state, topicId) {
       state.currentTopicId = topicId;
+    },
+    setCurrentTopic(state, topic) {
+      state.currentTopic = topic;
     },
     setCurrentTaskId(state, taskId) {
       state.currentTaskId = taskId;
     },
+    setCurrentTask(state, task) {
+      state.currentTask = task;
+    },
     setCurrentCohortId(state, cohortId) {
       state.currentCohortId = cohortId;
+    },
+    setCurrentCohort(state, cohort) {
+      state.currentCohort = cohort;
     },
     updateAllNodes(state, newNodePositions) {
       state.allNodes = newNodePositions;

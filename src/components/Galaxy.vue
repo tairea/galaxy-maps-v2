@@ -45,7 +45,7 @@
       NO {{ whichCoursesToDisplay == "assigned" ? "ASSIGNED" : "" }} GALAXIES TO
       DISPLAY
     </p>
-    <PopupPreview
+    <PopupGalaxyPreview
       v-if="popupPreview"
       :course="getCourseById(currentCourseId)"
       @togglePopup="togglePopup"
@@ -61,7 +61,7 @@ import "vue2vis/dist/vue2vis.css";
 import { mapState, mapGetters } from "vuex";
 
 import LoadingSpinner from "../components/LoadingSpinner";
-import PopupPreview from "../components/PopupPreview";
+import PopupGalaxyPreview from "../components/PopupGalaxyPreview";
 
 export default {
   name: "Galaxy",
@@ -69,7 +69,7 @@ export default {
   components: {
     Network,
     LoadingSpinner,
-    PopupPreview,
+    PopupGalaxyPreview,
   },
   beforeDestroy() {
     // TODO: trying to fix error: "Error in mounted hook: "Error: Cannot add item: item with id 056aa885-c01c-45bb-b96f-ebe7ca9967c9 already exists
