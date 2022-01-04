@@ -147,11 +147,6 @@ export default {
     },
     newNodePositions: {},
   }),
-  beforeDestroy() {
-    if (this.$refs.network) {
-      this.$refs.network.destroy();
-    }
-  },
   async mounted() {
     console.log("current course id:", this.currentCourseId);
     await this.$store.dispatch("bindCourseNodes", this.currentCourseId);
@@ -174,6 +169,9 @@ export default {
   },
   beforeDestroy() {
     clearInterval(this.intervalid1);
+    if (this.$refs.network) {
+      this.$refs.network.destroy();
+    }
   },
   computed: {
     ...mapGetters(["getTopicById", "person"]),
