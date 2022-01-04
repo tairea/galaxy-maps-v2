@@ -35,8 +35,8 @@
         <SolarSystem :topic="getTopicById(currentTopicId)" :size="'0.25em'" />
       </div> -->
       <RequestsForHelpInfo
-        v-if="activeMission"
-        :activeMission="activeMission"
+        :requests="requestsForHelp"
+        :activeMission="getActiveMission"
       />
     </div>
   </div>
@@ -80,10 +80,17 @@ export default {
         topicId: this.currentTopicId,
       });
     }
-    // set active mission
-    this.activeMission = this.personsTopicsTasks.find(
-      (topicObj) => topicObj.taskStatus == "active"
-    );
+
+    // bind requests for help
+    await this.$store.dispatch("bindRequestsForHelp", {
+      courseId: this.currentCourseId,
+      topicId: this.currentTopicId,
+      taskId: this.currentTaskId,
+    });
+
+    // check if requests are binded
+    console.log("from store requestsForHelp: ", this.requestsForHelp);
+
     // console.log("setCurrentTaskId: ", this.activeMission.id);
     // this.$store.commit("setCurrentTaskId", this.activeMission.id);
   },
@@ -94,6 +101,7 @@ export default {
       "currentTaskId",
       "topicsTasks",
       "personsTopicsTasks",
+      "requestsForHelp",
     ]),
     ...mapGetters([
       "person",
@@ -104,17 +112,19 @@ export default {
       "getPeopleInThisCourse",
       "getTasksByTopicId",
     ]),
-    // getActiveMission() {
-    //   return this.personsTopicsTasks.find(
-    //     (topicObj) => topicObj.taskStatus == "active"
-    //   );
-    // },
+
+    getActiveMission() {
+      return this.personsTopicsTasks.find(
+        (topicObj) => topicObj.taskStatus == "active"
+      );
+    },
   },
   data() {
     return {
       activeMission: null,
     };
   },
+  methods: {},
 };
 </script>
 

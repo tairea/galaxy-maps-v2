@@ -4,14 +4,22 @@
     <div id="left-section">
       <div id="review-panel">
         <h2 class="review-label">Work ready for review</h2>
-        <!-- <WorkToReview v-for="submission in submissions" :key="submission.id" /> -->
-
-        <div
-          v-for="submission in teachersSubmissionsToReview"
-          :key="submission.id"
-        >
-          {{ submission.submissionLink }}
+        <!-- 
+        <div v-if="teachersSubmissionsToReview.length > 0">
+          <SubmissionToReview
+            v-for="submission in teachersSubmissionsToReview"
+            :key="submission.id"
+            :submission="submission"
+          />
         </div>
+        <div class="d-flex justify-center align-center mt-4">
+          <v-btn
+            v-if="submissionsLoading"
+            :loading="submissionsLoading"
+            icon
+            color="cohortAccent"
+          ></v-btn>
+        </div> -->
       </div>
     </div>
 
@@ -27,8 +35,22 @@
       <div id="help-panel">
         <h2 class="help-label">Requests for help</h2>
 
-        <div v-for="request in teachersRequestsForHelp" :key="request.id">
-          {{ request.requestForHelpMessage }}
+        <div v-if="teachersRequestsForHelp.length > 0">
+          <RequestForHelpTeacherCard
+            v-for="request in teachersRequestsForHelp"
+            :key="request.id"
+            :request="request"
+            style="border: solid 1px red"
+          />
+        </div>
+        <!-- loading spinner -->
+        <div class="d-flex justify-center align-center mt-4">
+          <v-btn
+            v-if="requestsForHelpLoading"
+            :loading="requestsForHelpLoading"
+            icon
+            color="missionAccent"
+          ></v-btn>
         </div>
       </div>
     </div>
@@ -39,34 +61,42 @@
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
 
+import SubmissionToReview from "../components/SubmissionToReview";
+import RequestForHelpTeacherCard from "../components/RequestForHelpTeacherCard";
+
 export default {
   name: "AllStudentView",
-  components: {},
+  components: {
+    SubmissionToReview,
+    RequestForHelpTeacherCard,
+  },
   props: [],
   async mounted() {
-    await this.$store.dispatch("bindAllCourses");
-    // bind all submissions (for courses that ive made)
-    await this.$store.dispatch("getSubmittedWorkByTeachersId", this.person.id);
-    // bind all requests for help (for courses that ive made)
+    // bind all courses (so we can filter the ones this teacher created)
+    await this.$store.dispatch("bindCoursesByPersonId", this.user.data.id);
+    // bind all requests
+    this.requestsForHelpLoading = true;
     await this.$store.dispatch(
       "getRequestsForHelpByTeachersId",
-      this.person.id
+      this.user.data.id
     );
-    // console.log("my courses:",this.getCoursesByWhoMadeThem(this.person.id))
-  },
-  data() {
-    return {
-      submissions: [{}],
-    };
+
+    console.log("teachersRequestsForHelp", this.teachersRequestsForHelp);
+
+    // bind all tasks *needs this to get the task names for request.taskId :(
+
+    this.requestsForHelpLoading = false;
   },
   computed: {
     ...mapState([
+      "user",
       "currentCourseId",
       "currentCourseNodes",
       "person",
       "courses",
       "teachersSubmissionsToReview",
       "teachersRequestsForHelp",
+      "allTasks",
     ]),
     ...mapGetters([
       "getCourseById",
@@ -76,6 +106,15 @@ export default {
       "getCoursesByWhoMadeThem",
     ]),
   },
+  data() {
+    return {
+      submissionsLoading: false,
+      requestsForHelpLoading: false,
+      allSubmissions: [],
+      allRequestsForHelp: [],
+    };
+  },
+
   methods: {
     // getCoursesByWhoMadeThem(personId) {
     //   return this.courses.filter((course) => {

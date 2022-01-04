@@ -127,16 +127,21 @@ export default {
         .collection("requestsForHelp")
         .add({
           // add request for help to database
-          courseId: this.currentCourseId,
-          topicId: this.topicId,
-          taskId: this.taskId,
-          requestForHelpPersonId: this.person.id,
+          // TODO: currentCourse, currentTopic, currentTask in store
+          courseId: this.currentCourse.id,
+          courseName: this.currentCourse.title,
+          topicId: this.currentTopic.id,
+          topicName: this.currentTopic.label,
+          taskId: this.currentTask.id,
+          taskName: this.currentTask.title,
+          personId: this.person.id,
           requestForHelpMessage: this.requestForHelp,
           requestForHelpStatus: "unanswered",
           requestSubmittedTimestamp: new Date(),
         })
         .then(() => {
           console.log("Request for help successfully submitted for review!");
+          this.requestForHelp = "";
           this.loading = false;
           this.dialog = false;
 

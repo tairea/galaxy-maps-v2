@@ -1,31 +1,57 @@
 <template>
-  <div v-if="requestsForThisTask.length > 0">
-    <!-- <div v-if="requestsForHelp.length > 0" id="ss-info"> -->
-    <div id="ss-info">
-      <h2 class="ss-label">Requests for Help</h2>
-      <p class="overline requestsLabel">Re: {{ activeMission.title }}</p>
-
-      <div
-        v-for="request in requestsForThisTask"
-        :key="request.id"
-        class="request"
+  <div>
+    <!-- requester message -->
+    <div class="d-flex request-msg">
+      <div class="requester-image">
+        <v-avatar size="30">
+          <img
+            v-if="requesterPerson.image"
+            :src="requesterPerson.image.url"
+            :alt="requesterPerson.firstName"
+            style="object-fit: cover"
+          />
+        </v-avatar>
+      </div>
+      <p class="request-text">"{{ request.requestForHelpMessage }}"</p>
+    </div>
+    <!-- divder line -->
+    <div style="border-top: 1px solid var(--v-missionAccent-base)"></div>
+    <!-- instructor response -->
+    <div class="d-flex request-msg">
+      <p
+        class="request-text text-center"
+        style="color: var(--v-galaxyAccent-base)"
       >
-        <RequestsForHelpStudentCard :request="request" />
+        {{
+          request.requestForHelpResponse
+            ? request.requestForHelpResponse
+            : "...waiting for instructors response"
+        }}
+      </p>
+      <div v-if="request.requestForHelpResponse" class="requester-image">
+        <v-avatar size="30">
+          <img
+            v-if="requesterPerson.image"
+            :src="requesterPerson.image.url"
+            :alt="requesterPerson.firstName"
+            style="object-fit: cover"
+          />
+        </v-avatar>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import RequestsForHelpStudentCard from "../components/RequestsForHelpStudentCard";
+import SolarSystem from "../components/SolarSystem";
 
 import { mapState, mapGetters } from "vuex";
 
 export default {
-  name: "RequestsForHelpInfo",
-  props: ["activeMission", "requests"],
+  name: "RequestsForHelpStudentCard",
+  props: ["request"],
   components: {
-    RequestsForHelpStudentCard,
+    SolarSystem,
   },
   computed: {
     ...mapState([
@@ -37,13 +63,19 @@ export default {
     ]),
     requestsForThisTask() {
       return this.requests.filter(
-        (request) => request.taskId == this.currentTaskId
+        (request) => request.taskId == this.activeMission.id
       );
     },
   },
   async mounted() {
-    console.log("active mission is:", this.activeMission);
+    // console.log("active mission is:", this.activeMission);
     // console.log("from store people: ", this.people);
+    const person = await this.$store.dispatch(
+      "getPersonByIdFromDB",
+      this.request.personId
+    );
+    console.log("person who requested this question:", person);
+    this.requesterPerson = person;
   },
   data() {
     return {
