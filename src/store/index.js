@@ -182,7 +182,13 @@ export default new Vuex.Store({
     },
     clearAllNodes(state) {
       // console.log(" ======== clear all nodes before bind ======== ")
-      state.allNodes = [];
+      state.allNodes = []
+      state.personsAssignedNodesForDisplay = []
+      state.personsAssignedEdges = []
+      state.personsNodesForDisplay = []
+      state.personsEdges = []
+      state.allNodesForDisplay = []
+      state.allEdges = []
     },
   },
   actions: {
