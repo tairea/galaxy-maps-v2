@@ -73,6 +73,10 @@ export default {
         courseId: this.currentCourseId,
         topicId: this.currentTopicId,
       });
+      console.log(
+        "Persons Tasks for Topic: " + this.currentTopic.label + "..."
+      );
+      console.log(this.personsTopicsTasks);
     } else {
       //store bindTasksByTopicId
       await this.$store.dispatch("bindTasksByTopicId", {
@@ -99,6 +103,9 @@ export default {
       "currentCourseId",
       "currentTopicId",
       "currentTaskId",
+      "currentCourse",
+      "currentTopic",
+      "currentTask",
       "topicsTasks",
       "personsTopicsTasks",
       "requestsForHelp",
@@ -114,9 +121,15 @@ export default {
     ]),
 
     getActiveMission() {
-      return this.personsTopicsTasks.find(
-        (topicObj) => topicObj.taskStatus == "active"
-      );
+      const activeMissionObj = this.personsTopicsTasks.find((taskObj) => {
+        taskObj.taskStatus == "active";
+      });
+      if (activeMissionObj) {
+        // set as current/active task
+        this.$store.commit("setCurrentTaskId", activeMissionObj.id);
+        this.$store.commit("setCurrentTask", activeMissionObj);
+      }
+      return activeMissionObj;
     },
   },
   data() {

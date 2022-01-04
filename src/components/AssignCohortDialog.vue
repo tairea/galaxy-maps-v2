@@ -320,16 +320,6 @@
         <!-- </v-dialog> -->
       </v-col>
     </v-row>
-
-    <!-- DB Status Snackbar -->
-    <v-snackbar v-model="snackbar">
-      {{ snackbarMsg }}
-      <template v-slot:action="{ attrs }">
-        <v-btn color="pink" text v-bind="attrs" @click="snackbar = false">
-          OK
-        </v-btn>
-      </template>
-    </v-snackbar>
   </v-container>
 </template>
 
@@ -346,8 +336,7 @@ export default {
     tab: null,
     dialog: false,
     loading: false,
-    snackbar: false,
-    snackbarMsg: "",
+
     person: {
       id: "",
       email: "",
@@ -405,8 +394,9 @@ export default {
               );
 
               // snackbar message
-              this.snackbarMsg = "Individual assigned to Course";
-              this.snackbar = true;
+              // this.snackbarMsg = "Individual assigned to Course";
+              // this.snackbar = true;
+              this.$emit("snackbarToggle", "Individual assigned to Course");
 
               this.loading = false;
               this.dialog = false;

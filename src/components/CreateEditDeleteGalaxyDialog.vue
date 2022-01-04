@@ -357,6 +357,7 @@ export default {
       db.collection("courses")
         .add(course)
         .then((docRef) => {
+          docRef.update({ id: docRef.id }); // add course id to course
           console.log("Document successfully written!");
           this.dialog = false;
           this.loading = false;
@@ -461,9 +462,11 @@ export default {
     },
     confirmDeleteCourse(course) {
       this.deleting = true;
+
+      const documentRef = db.collection("courses").doc(course.id);
+
       // delete document in collection "courses"
-      db.collection("courses")
-        .doc(course.id)
+      documentRef
         .delete()
         .then(() => {
           console.log("Document successfully deleted!");
@@ -475,9 +478,14 @@ export default {
         .catch((error) => {
           console.error("Error deleting document: ", error);
         });
-      //TODO: this does not delete the subcollections of the course
+
+      // TODO: test if this is deleting course's subcollections (eg. map-nodes, map-edges, topics)
+      // recursiveDelete() to delete subcollections of course
+      db.recursiveDelete(documentRef);
 
       this.deleteImage();
+
+      // TODO: remove this courseID from students assignedCourses
     },
     deleteImage() {
       // if no image, dont worry bout it cuz

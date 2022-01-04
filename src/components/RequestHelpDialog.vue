@@ -111,7 +111,7 @@ export default {
   }),
   mounted() {},
   computed: {
-    ...mapState(["currentCourseId"]),
+    ...mapState(["currentCourse", "currentTopic", "currentTask"]),
     ...mapGetters(["person"]),
   },
   methods: {
@@ -119,7 +119,7 @@ export default {
       this.loading = true;
       // Add a new request for help to the "courses" db
       db.collection("courses")
-        .doc(this.currentCourseId)
+        .doc(this.currentCourse.id)
         // .collection("topics")
         // .doc(this.topicId)
         // .collection("tasks")
@@ -128,12 +128,9 @@ export default {
         .add({
           // add request for help to database
           // TODO: currentCourse, currentTopic, currentTask in store
-          courseId: this.currentCourse.id,
-          courseName: this.currentCourse.title,
-          topicId: this.currentTopic.id,
-          topicName: this.currentTopic.label,
-          taskId: this.currentTask.id,
-          taskName: this.currentTask.title,
+          contextCourse: this.currentCourse,
+          contextTopic: this.currentTopic,
+          contextTask: this.currentTask,
           personId: this.person.id,
           requestForHelpMessage: this.requestForHelp,
           requestForHelpStatus: "unanswered",

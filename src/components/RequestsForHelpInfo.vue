@@ -3,7 +3,7 @@
     <!-- <div v-if="requestsForHelp.length > 0" id="ss-info"> -->
     <div id="ss-info">
       <h2 class="ss-label">Requests for Help</h2>
-      <p class="overline requestsLabel">Re: {{ activeMission.title }}</p>
+      <p class="overline requestsLabel">Re: {{ currentTask.title }}</p>
 
       <div
         v-for="request in requestsForThisTask"
@@ -32,8 +32,10 @@ export default {
       "currentCourseId",
       "currentTopicId",
       "currentTaskId",
-
-      "people",
+      "currentCourse",
+      "currentTopic",
+      "currentTask",
+      // "people",
     ]),
     requestsForThisTask() {
       return this.requests.filter(
