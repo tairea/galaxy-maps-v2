@@ -433,7 +433,7 @@ export default new Vuex.Store({
           .collection("courses")
           .doc(course.id)
           .collection("submissionsForReview")
-          .where("taskStatus", "==", "inreview")
+          .where("taskSubmissionStatus", "==", "inreview")
           .orderBy("taskSubmittedTimestamp")
           .get();
 
