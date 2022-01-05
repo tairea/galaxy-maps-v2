@@ -40,7 +40,7 @@
             v-for="request in teachersRequestsForHelp"
             :key="request.id"
             :request="request"
-            style="border: solid 1px red"
+            @snackbarToggle="snackbarToggle($event)"
           />
         </div>
         <!-- loading spinner -->
@@ -54,6 +54,16 @@
         </div>
       </div>
     </div>
+
+    <!-- Request submitted Snackbar -->
+    <v-snackbar v-model="snackbar">
+      {{ snackbarMsg }}
+      <template v-slot:action="{ attrs }">
+        <v-btn color="pink" text v-bind="attrs" @click="snackbar = false">
+          OK
+        </v-btn>
+      </template>
+    </v-snackbar>
   </div>
 </template>
 
@@ -72,14 +82,12 @@ export default {
   },
   props: [],
   async mounted() {
+    this.requestsForHelpLoading = true;
     // bind all courses (so we can filter the ones this teacher created)
     await this.$store.dispatch("bindCoursesByPersonId", this.user.data.id);
+
     // bind all requests
-    this.requestsForHelpLoading = true;
-    await this.$store.dispatch(
-      "getRequestsForHelpByTeachersId",
-      this.user.data.id
-    );
+    this.bindRequestsForHelp();
 
     console.log("teachersRequestsForHelp", this.teachersRequestsForHelp);
 
@@ -112,15 +120,25 @@ export default {
       requestsForHelpLoading: false,
       allSubmissions: [],
       allRequestsForHelp: [],
+      snackbarMsg: "",
+      snackbar: false,
     };
   },
 
   methods: {
-    // getCoursesByWhoMadeThem(personId) {
-    //   return this.courses.filter((course) => {
-    //     return course.mappedBy.personId == personId;
-    //   });
-    // },
+    snackbarToggle(msg) {
+      console.log("snackbar toggled...", msg);
+
+      this.snackbarMsg = msg;
+      this.snackbar = true;
+      this.bindRequestsForHelp();
+    },
+    async bindRequestsForHelp() {
+      await this.$store.dispatch(
+        "getRequestsForHelpByTeachersId",
+        this.user.data.id
+      );
+    },
   },
 };
 </script>

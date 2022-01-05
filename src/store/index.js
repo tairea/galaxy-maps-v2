@@ -583,7 +583,6 @@ export default new Vuex.Store({
     },
     async getPersonByIdFromDB({ state }, personId) {
       const person = await db.collection("people").doc(personId).get();
-      console.log("from STORE: getPersonByIdFromDB", person.data());
       return person.data();
     },
   },
