@@ -224,7 +224,12 @@ export default {
     // );
   },
   computed: {
-    ...mapState(["currentCourseId", "personsTopicsTasks"]),
+    ...mapState([
+      "currentCourse",
+      "currentTopic",
+      "currentTask",
+      "personsTopicsTasks",
+    ]),
     ...mapGetters(["person"]),
   },
   methods: {
@@ -239,9 +244,15 @@ export default {
         }
       }
 
+      console.log("submitting...");
+      console.log("person...", this.person);
+      console.log("course...", this.currentCourse);
+      console.log("topic...", this.currentTopic);
+      console.log("task...", this.currentTask);
+
       // 1) add submission to course (for teacher to review)
       db.collection("courses")
-        .doc(this.currentCourseId)
+        .doc(this.currentCourse.id)
         // .collection("topics")
         // .doc(this.topicId)
         // .collection("tasks")
@@ -250,21 +261,21 @@ export default {
         .add({
           // update "courses" database with task submission
           studentId: this.person.id,
-          course: this.currentCourseId,
-          topic: this.topicId,
-          task: this.taskId,
+          contextCourse: this.currentCourse,
+          contextTopic: this.currentTopic,
+          contextTask: this.currentTask,
           submissionLink: this.submissionLink,
-          taskStatus: "inreview",
+          taskSubmissionStatus: "inreview",
           taskSubmittedTimestamp: new Date(),
         });
 
       // 2) Add submission to students task (for students progression)
       db.collection("people")
         .doc(this.person.id)
-        .collection(this.currentCourseId)
-        .doc(this.topicId)
+        .collection(this.currentCourse.id)
+        .doc(this.currentTopic.id)
         .collection("tasks")
-        .doc(this.taskId)
+        .doc(this.currentTask.id)
         .update({
           // update "people" database with task submission
           submissionLink: this.submissionLink,
@@ -296,10 +307,10 @@ export default {
       // Add a new document in collection "courses"
       db.collection("people")
         .doc(this.person.id)
-        .collection(this.currentCourseId)
-        .doc(this.topicId)
+        .collection(this.currentCourse.id)
+        .doc(this.currentTopic.id)
         .collection("tasks")
-        .doc(this.taskId)
+        .doc(this.currentTask.id)
         .update({
           // update tasks array with new task
           taskStatus: "completed",
@@ -327,8 +338,8 @@ export default {
       const currentTasks = await db
         .collection("people")
         .doc(this.person.id)
-        .collection(this.currentCourseId)
-        .doc(this.topicId)
+        .collection(this.currentCourse.id)
+        .doc(this.currentTopic.id)
         .collection("tasks")
         // order by timestamp is important otherwise index == 0 (in the next step) wont necessarily be the first mission
         .orderBy("timestamp")
@@ -385,8 +396,8 @@ export default {
       // ==== all tasks/missions completed. unlock next topics ====
       db.collection("people")
         .doc(this.person.id)
-        .collection(this.currentCourseId)
-        .where("prerequisites", "array-contains", this.topicId)
+        .collection(this.currentCourse.id)
+        .where("prerequisites", "array-contains", this.currentTopic.id)
         .get()
         .then((querySnapshot) => {
           querySnapshot.forEach((doc) => {
@@ -400,7 +411,7 @@ export default {
                 this.$router.push({
                   name: "GalaxyView",
                   params: {
-                    courseId: this.currentCourseId,
+                    courseId: this.currentCourse.id,
                   },
                 });
               });

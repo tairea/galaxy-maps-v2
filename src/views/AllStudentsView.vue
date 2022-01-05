@@ -20,6 +20,24 @@
             color="cohortAccent"
           ></v-btn>
         </div> -->
+
+        <div v-if="teachersSubmissionsToReview.length > 0">
+          <SubmissionTeacherCard
+            v-for="submission in teachersSubmissionsToReview"
+            :key="submission.id"
+            :submission="submission"
+            @snackbarToggle="snackbarToggle($event)"
+          />
+        </div>
+        <!-- loading spinner -->
+        <div class="d-flex justify-center align-center mt-4">
+          <v-btn
+            v-if="requestsForHelpLoading"
+            :loading="requestsForHelpLoading"
+            icon
+            color="cohortAccent"
+          ></v-btn>
+        </div>
       </div>
     </div>
 
@@ -71,13 +89,13 @@
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
 
-import SubmissionToReview from "../components/SubmissionToReview";
+import SubmissionTeacherCard from "../components/SubmissionTeacherCard";
 import RequestForHelpTeacherCard from "../components/RequestForHelpTeacherCard";
 
 export default {
   name: "AllStudentView",
   components: {
-    SubmissionToReview,
+    SubmissionTeacherCard,
     RequestForHelpTeacherCard,
   },
   props: [],
@@ -88,7 +106,13 @@ export default {
 
     // bind all requests
     this.bindRequestsForHelp();
+    // bind all submissions
+    this.bindSubmissions();
 
+    console.log(
+      "teachersSubmissionsToReview",
+      this.teachersSubmissionsToReview
+    );
     console.log("teachersRequestsForHelp", this.teachersRequestsForHelp);
 
     // bind all tasks *needs this to get the task names for request.taskId :(
@@ -136,6 +160,12 @@ export default {
     async bindRequestsForHelp() {
       await this.$store.dispatch(
         "getRequestsForHelpByTeachersId",
+        this.user.data.id
+      );
+    },
+    async bindSubmissions() {
+      await this.$store.dispatch(
+        "getAllSubmittedWorkForTeacher",
         this.user.data.id
       );
     },
