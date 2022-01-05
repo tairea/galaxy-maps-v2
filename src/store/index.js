@@ -538,7 +538,7 @@ export default new Vuex.Store({
           // .collection("tasks")
           // .doc(payload.taskId)
           .collection("requestsForHelp")
-        // .orderBy("timestamp")
+          .orderBy("requestSubmittedTimestamp")
       );
     }),
     // bind courses requests for help

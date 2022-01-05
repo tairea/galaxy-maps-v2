@@ -206,8 +206,6 @@ export default {
   name: "MissionCompletedDialog",
   props: ["topicId", "taskId", "task", "missionStatus", "on", "attrs"],
   data: () => ({
-    submissionInstructions:
-      "Please paste a Google Drive share link to your completed work with 'Anyone with link can access' settings on", //TODO: get this value from creator database
     submissionLink: null,
     dialog: false,
     dialogDescription:
@@ -267,6 +265,22 @@ export default {
           submissionLink: this.submissionLink,
           taskSubmissionStatus: "inreview",
           taskSubmittedTimestamp: new Date(),
+        })
+        .then((docRef) => {
+          docRef.update({ id: docRef.id });
+          console.log("Submission successfully submitted for review!");
+          this.requestForHelp = "";
+          this.loading = false;
+          this.dialog = false;
+
+          this.snackbarMsg =
+            "Submission submitted. You will be notified when your instructor has reviewd your work.";
+          this.snackbar = true;
+        })
+        .catch((error) => {
+          console.error("Error writing document: ", error);
+          this.snackbarMsg = "Error: " + error;
+          this.snackbar = true;
         });
 
       // 2) Add submission to students task (for students progression)
@@ -460,6 +474,8 @@ export default {
 }
 
 .submission-create-dialog {
+  width: 100%;
+
   .submission-dialog-header {
     width: 100%;
     padding: 20px;
