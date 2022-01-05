@@ -364,11 +364,12 @@ export default {
       }
     },
     selectNode(data) {
+      console.log("selected node");
       this.active = true;
       if (data.nodes.length == 1) {
         // is type node
         const nodeId = data.nodes[0];
-        this.$refs.network.focus(nodeId, { animation: true });
+        this.$refs.network.focus(nodeId, { scale: 1.2, animation: true });
         const selectedNode = this.$refs.network.getNode(nodeId);
         selectedNode.type = "node";
         selectedNode.connectedEdge = data.edges[0];
@@ -390,6 +391,7 @@ export default {
       }
     },
     deselectNode() {
+      console.log("deselected node");
       this.active = false;
       this.$emit("deselected");
       this.stopNodeAnimation();

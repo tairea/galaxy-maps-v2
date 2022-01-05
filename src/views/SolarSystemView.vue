@@ -34,6 +34,10 @@
         <h2 class="galaxy-label">Map</h2>
         <SolarSystem :topic="getTopicById(currentTopicId)" :size="'0.25em'" />
       </div> -->
+      <RequestsForHelpInfo
+        :requests="requestsForHelp"
+        :activeMission="getActiveMission"
+      />
     </div>
   </div>
 </template>
@@ -43,6 +47,7 @@ import SolarSystemInfo from "../components/SolarSystemInfo";
 import AssignedInfo from "../components/AssignedInfo";
 import MissionsInfo from "../components/MissionsInfo";
 import MissionsList from "../components/MissionsList";
+import RequestsForHelpInfo from "../components/RequestsForHelpInfo";
 import SolarSystem from "../components/SolarSystem";
 import BackButton from "../components/BackButton";
 
@@ -55,6 +60,7 @@ export default {
     AssignedInfo,
     MissionsInfo,
     MissionsList,
+    RequestsForHelpInfo,
     SolarSystem,
     BackButton,
   },
@@ -74,13 +80,28 @@ export default {
         topicId: this.currentTopicId,
       });
     }
+
+    // bind requests for help
+    await this.$store.dispatch("bindRequestsForHelp", {
+      courseId: this.currentCourseId,
+      topicId: this.currentTopicId,
+      taskId: this.currentTaskId,
+    });
+
+    // check if requests are binded
+    console.log("from store requestsForHelp: ", this.requestsForHelp);
+
+    // console.log("setCurrentTaskId: ", this.activeMission.id);
+    // this.$store.commit("setCurrentTaskId", this.activeMission.id);
   },
   computed: {
     ...mapState([
-      "currentTopicId",
       "currentCourseId",
+      "currentTopicId",
+      "currentTaskId",
       "topicsTasks",
       "personsTopicsTasks",
+      "requestsForHelp",
     ]),
     ...mapGetters([
       "person",
@@ -91,7 +112,19 @@ export default {
       "getPeopleInThisCourse",
       "getTasksByTopicId",
     ]),
+
+    getActiveMission() {
+      return this.personsTopicsTasks.find(
+        (topicObj) => topicObj.taskStatus == "active"
+      );
+    },
   },
+  data() {
+    return {
+      activeMission: null,
+    };
+  },
+  methods: {},
 };
 </script>
 

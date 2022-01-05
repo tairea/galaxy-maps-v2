@@ -44,13 +44,7 @@
           class="mission-section d-flex align-center justify-center flex-column"
         >
           <p class="text-overline text-uppercase text-center">
-            {{
-              getTaskStatus == "completed"
-                ? "COMPLETED"
-                : getTaskStatus == "inreview"
-                ? "IN REVIEW"
-                : "SUBMIT WORK"
-            }}
+            {{ getSubmitTitle }}
           </p>
           <MissionCompletedDialog
             :task="task"
@@ -65,7 +59,7 @@
           class="mission-section d-flex align-center justify-center flex-column"
         >
           <p class="text-overline text-uppercase text-center">REQUEST HELP</p>
-          <v-icon color="missionAccent">mdi-hand-front-left-outline</v-icon>
+          <RequestHelpDialog :task="task" :taskId="id" :topicId="topicId" />
         </div>
       </div>
     </v-row>
@@ -75,6 +69,7 @@
 
 <script>
 import MissionCompletedDialog from "../components/MissionCompletedDialog";
+import RequestHelpDialog from "../components/RequestHelpDialog";
 
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
@@ -83,12 +78,32 @@ export default {
   name: "ActiveMissionsCard",
   components: {
     MissionCompletedDialog,
+    RequestHelpDialog,
   },
   props: ["task", "id", "topicId"],
   mounted() {},
   computed: {
     ...mapState(["personsTopicsTasks"]),
     ...mapGetters(["person"]),
+    getSubmitTitle() {
+      if (this.getTaskStatus == "completed") {
+        return "COMPLETED";
+      } else if (this.getTaskStatus == "inreview") {
+        return "IN REVIEW";
+      } else if (
+        this.getTaskStatus == "active" &&
+        this.task.submissionRequired == true
+      ) {
+        return "SUBMIT WORK";
+      } else if (
+        this.getTaskStatus == "active" &&
+        this.task.submissionRequired == false
+      ) {
+        return "MARK AS COMPLETED";
+      } else {
+        return;
+      }
+    },
     getTaskStatus() {
       if (this.person.accountType != "student") {
         return;

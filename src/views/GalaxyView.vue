@@ -191,7 +191,7 @@ export default {
       if (this.addEdgeMode == true) {
         this.$refs.vis.addEdgeMode();
       } else if (this.addEdgeMode == false) {
-        this.$refs.vis.disableEditMode();
+        this.$refs.vis.disableEditMode(); // TODO: edge bug here. wtf disableEditMode was a function?
         this.uiMessage = "";
       }
     },
@@ -244,8 +244,8 @@ export default {
     },
     closePopup() {
       // TODO: this doesnt reset the node correctly
-      this.$refs.vis.deselectNode()
-    }
+      this.$refs.vis.deselectNode();
+    },
   },
 };
 </script>
