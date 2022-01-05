@@ -4,7 +4,7 @@
       <CohortInfo :cohort="getCohortById(currentCohortId)" />
       <AssignedInfo
         :assignCourses="true"
-        :courses="getCoursesInThisCohort(currentCohortId)"
+        :courses="courses"
       />
       <BackButton :toPath="'/base/cohorts'" />
     </div>
@@ -76,6 +76,12 @@ export default {
       "getCoursesInThisCohort",
       "getStudentsByCohortId",
     ]),
+    courses() {
+      let courses = this.getCoursesInThisCohort(this.currentCohortId)
+      // needed so courses props arent returned undefined 
+      if (courses[0]) return courses 
+      else return {}
+    } 
   },
   methods: {
     bindAll() {
@@ -97,12 +103,11 @@ export default {
 }
 
 #container {
-  height: 100vh;
+  // height: 100vh;
   width: 100%;
   display: flex;
-  overflow: hidden;
+  // overflow: hidden;
   margin: 0 !important;
-  // border: 1px solid red;
 }
 
 #left-section {
@@ -112,17 +117,15 @@ export default {
   justify-content: flex-start;
   align-items: center;
   flex-direction: column;
-  // border: 1px solid yellow;
 }
 
 #main-section {
-  width: 50%; // change back to 50% when turn right-section back on
+  width: 50%;
   height: 100%;
   display: flex;
   justify-content: flex-start;
   align-items: center;
   flex-direction: column;
-  // border: 1px solid pink;
 
   .people-frame {
     position: relative;
