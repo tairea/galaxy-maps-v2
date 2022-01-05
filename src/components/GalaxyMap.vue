@@ -25,13 +25,11 @@
       @deselect-edge="deselectEdge"
       @hover-node="hoverNode"
       @blur-node="blurNode"
-      @zoom="zoom"
       @animation-finished="animationFinished"
       @before-drawing="beforeDrawing"
       @click="click"
       @double-click="doubleClick"
     ></network>
-    <!-- @blur-node="blurNode" -->
 
     <!-- Attempt to put systems on top of nodes. need to explore drawing solar systems in canvas -->
     <!-- <div v-for="system in currentCourseNodes" :key="system.id">
@@ -149,11 +147,6 @@ export default {
     },
     newNodePositions: {},
   }),
-  beforeDestroy() {
-    if (this.$refs.network) {
-      this.$refs.network.destroy();
-    }
-  },
   async mounted() {
     console.log("current course id:", this.currentCourseId);
     await this.$store.dispatch("bindCourseNodes", this.currentCourseId);
@@ -176,6 +169,9 @@ export default {
   },
   beforeDestroy() {
     clearInterval(this.intervalid1);
+    if (this.$refs.network) {
+      this.$refs.network.destroy();
+    }
   },
   computed: {
     ...mapGetters(["getTopicById", "person"]),
@@ -294,7 +290,6 @@ export default {
       // this.$emit("setUiMessage", "");
     },
     dragStart(data) {
-      console.log("drag start", data);
       this.deselectNode();
     },
     dragging(data) {
@@ -409,8 +404,9 @@ export default {
       this.$refs.network.deleteSelected();
       this.$emit("deselected");
     },
-    zoom(data) {
-      console.log("zoom", data);
+    disableEditMode() {
+      this.$refs.network.disableEditMode();
+      // this.$emit("toggleAddNodeButton")
     },
     animationFinished(data) {
       // show popup
