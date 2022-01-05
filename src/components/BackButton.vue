@@ -1,6 +1,6 @@
 <template>
-  <div class="backButton">
-    <v-btn :to="toPath" class="ma-1" color="baseAccent" plain>
+  <div class="backButtonDiv">
+    <v-btn :to="toPath" class="backButton" color="baseAccent" outlined>
       <v-icon left>
         mdi-arrow-left
       </v-icon>
@@ -38,9 +38,12 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.backButtonDiv {
+  margin-top: 30px;
+  width: calc(100% - 30px)
+}
 .backButton {
-  position: absolute;
-  bottom: 30px;
-  z-index: 2;
+  border-radius: 0px;
+  width: 100%;
 }
 </style>

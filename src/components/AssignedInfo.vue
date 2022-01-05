@@ -51,7 +51,7 @@
     <!-- ASSIGNED COURSES INFO -->
     <div v-else-if="assignCourses">
       <div v-if="courses.length > 0">
-        <Course v-for="course in courses" :course="course" :key="course.id" />
+        <Course v-for="(course, i) in courses" :course="course" :key="i" />
       </div>
       <p v-else class="assigned-status">No Galaxies assigned to this Cohort</p>
       <AssignCohortDialog :assignCourses="true" />
@@ -84,14 +84,7 @@ export default {
     Person,
     Course,
     AssignCohortDialog,
-  },
-  mounted() {
-    console.log("got cohorts FROM ASSIGNED: ", this.cohorts);
-  },
-  computed: {},
-  data() {
-    return {};
-  },
+  }
 };
 </script>
 

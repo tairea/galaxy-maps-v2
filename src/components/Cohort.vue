@@ -57,7 +57,7 @@ export default {
         name: "CohortView",
         params: {
           cohortName: this.camelize(this.cohort.name),
-          cohortId: this.cohort.id,
+          cohortId: this.cohort.id
         },
       });
     },
