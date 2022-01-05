@@ -46,7 +46,7 @@ export default {
   props: ["tasks", "topicId"],
   mounted() {
     // check which task is active
-    console.log("tasks from prop: ", this.tasks);
+    // console.log("tasks from prop: ", this.tasks);
   },
   computed: {
     ...mapState(["personsTopicsTasks"]),

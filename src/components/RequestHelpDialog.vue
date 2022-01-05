@@ -136,7 +136,8 @@ export default {
           requestForHelpStatus: "unanswered",
           requestSubmittedTimestamp: new Date(),
         })
-        .then(() => {
+        .then((docRef) => {
+          docRef.update({ id: docRef.id });
           console.log("Request for help successfully submitted for review!");
           this.requestForHelp = "";
           this.loading = false;

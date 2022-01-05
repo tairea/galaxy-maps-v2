@@ -1,5 +1,5 @@
 <template>
-  <div v-if="requestsForThisTask.length > 0">
+  <div class="help-info" v-if="requestsForThisTask.length > 0">
     <!-- <div v-if="requestsForHelp.length > 0" id="ss-info"> -->
     <div id="ss-info">
       <h2 class="ss-label">Requests for Help</h2>
@@ -39,12 +39,12 @@ export default {
     ]),
     requestsForThisTask() {
       return this.requests.filter(
-        (request) => request.taskId == this.currentTaskId
+        (request) => request.contextTask.id == this.currentTaskId
       );
     },
   },
   async mounted() {
-    console.log("active mission is:", this.activeMission);
+    console.log("active mission is:", this.currentTask);
     // console.log("from store people: ", this.people);
   },
   data() {
@@ -76,6 +76,10 @@ export default {
 
 h1 {
   color: white;
+}
+
+.help-info {
+  width: 100%;
 }
 
 .ss-label {
