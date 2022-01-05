@@ -22,6 +22,10 @@ export default new Vuex.Store({
     currentTopicId: "",
     currentTaskId: "",
     currentCohortId: "",
+    currentCourse: {},
+    currentTopic: {},
+    currentTask: {},
+    currentCohort: {},
     currentCourseNodes: [],
     currentCourseEdges: [],
     allNodes: [],
@@ -172,14 +176,26 @@ export default new Vuex.Store({
     setCurrentCourseId(state, courseId) {
       state.currentCourseId = courseId;
     },
+    setCurrentCourse(state, course) {
+      state.currentCourse = course;
+    },
     setCurrentTopicId(state, topicId) {
       state.currentTopicId = topicId;
+    },
+    setCurrentTopic(state, topic) {
+      state.currentTopic = topic;
     },
     setCurrentTaskId(state, taskId) {
       state.currentTaskId = taskId;
     },
+    setCurrentTask(state, task) {
+      state.currentTask = task;
+    },
     setCurrentCohortId(state, cohortId) {
       state.currentCohortId = cohortId;
+    },
+    setCurrentCohort(state, cohort) {
+      state.currentCohort = cohort;
     },
     updateAllNodes(state, newNodePositions) {
       state.allNodes = newNodePositions;
@@ -411,7 +427,7 @@ export default new Vuex.Store({
           .collection("courses")
           .doc(course.id)
           .collection("submissionsForReview")
-          .where("taskStatus", "==", "inreview")
+          .where("taskSubmissionStatus", "==", "inreview")
           .orderBy("taskSubmittedTimestamp")
           .get();
 
@@ -516,7 +532,7 @@ export default new Vuex.Store({
           // .collection("tasks")
           // .doc(payload.taskId)
           .collection("requestsForHelp")
-        // .orderBy("timestamp")
+          .orderBy("requestSubmittedTimestamp")
       );
     }),
     // bind courses requests for help
@@ -561,7 +577,6 @@ export default new Vuex.Store({
     },
     async getPersonByIdFromDB({ state }, personId) {
       const person = await db.collection("people").doc(personId).get();
-      console.log("from STORE: getPersonByIdFromDB", person.data());
       return person.data();
     },
   },

@@ -1,8 +1,6 @@
 <template>
   <div id="assigned-info">
-    <h2 class="assigned-label">
-      Assigned to:
-    </h2>
+    <h2 class="assigned-label">Assigned to:</h2>
 
     <!-- ASSIGNED COHORTS INFO -->
     <div v-if="assignCohorts">
@@ -38,14 +36,15 @@
       </div>
 
       <p
-        v-if="
-          cohorts.length == 0 && people.length == 0
-        "
+        v-if="cohorts.length == 0 && people.length == 0"
         class="assigned-status"
       >
         Nobody is assigned to this Galaxy
       </p>
-      <AssignCohortDialog :assignCohorts="true" />
+      <AssignCohortDialog
+        :assignCohorts="true"
+        @snackbarToggle="snackbarToggle"
+      />
     </div>
 
     <!-- ASSIGNED COURSES INFO -->
@@ -56,6 +55,16 @@
       <p v-else class="assigned-status">No Galaxies assigned to this Cohort</p>
       <AssignCohortDialog :assignCourses="true" />
     </div>
+
+    <!-- DB Status Snackbar -->
+    <v-snackbar v-model="snackbar">
+      {{ snackbarMsg }}
+      <template v-slot:action="{ attrs }">
+        <v-btn color="pink" text v-bind="attrs" @click="snackbar = false">
+          OK
+        </v-btn>
+      </template>
+    </v-snackbar>
   </div>
 </template>
 
@@ -84,7 +93,23 @@ export default {
     Person,
     Course,
     AssignCohortDialog,
-  }
+  },
+  mounted() {
+    console.log("got cohorts FROM ASSIGNED: ", this.cohorts);
+  },
+  computed: {},
+  data() {
+    return {
+      snackbar: false,
+      snackbarMsg: "",
+    };
+  },
+  methods: {
+    snackbarToggle(msg) {
+      this.snackbarMsg = msg;
+      this.snackbar = true;
+    },
+  },
 };
 </script>
 

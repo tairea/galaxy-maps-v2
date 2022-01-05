@@ -1,10 +1,10 @@
 <template>
-  <div class="request-card">
+  <div class="submission-card">
     <v-expansion-panels flat>
       <v-expansion-panel class="panel">
         <v-expansion-panel-header class="pa-0">
           <!-- Avatar -->
-          <div class="requester-image d-flex justify-center align-center">
+          <div class="submission-image d-flex justify-center align-center">
             <v-avatar v-if="requesterPerson" size="30">
               <img
                 v-if="requesterPerson.image"
@@ -15,32 +15,45 @@
             </v-avatar>
           </div>
           <!-- Course/Topic/Task -->
-          <div class="requester-context">
-            <p class="requester-context-task">
-              {{ request.contextTask.title }}
+          <div class="submission-context">
+            <p class="submission-context-task">
+              {{ submission.contextTask.title }}
             </p>
-            <p class="requester-context-topic">
-              {{ request.contextTopic.label }}
+            <p class="submission-context-topic">
+              {{ submission.contextTopic.label }}
             </p>
-            <p class="requester-context-course">
-              {{ request.contextCourse.title }}
+            <p class="submission-context-course">
+              {{ submission.contextCourse.title }}
             </p>
           </div>
-          <div class="requester-time">
-            {{ getHumanDate(request.requestSubmittedTimestamp) }}
+          <div class="submission-time">
+            {{ getHumanDate(submission.taskSubmittedTimestamp) }}
           </div>
           <template v-slot:actions>
             <v-icon color="missionAccent"> </v-icon>
           </template>
         </v-expansion-panel-header>
         <v-expansion-panel-content>
-          <div class="d-flex justify-center align-center">
-            <p class="requester-msg">"{{ request.requestForHelpMessage }}"</p>
+          <div
+            class="d-flex justify-center align-center"
+            style="padding-top: 16px"
+          >
+            <!-- View submission button -->
+            <a
+              style="text-decoration: none"
+              :href="submission.submissionLink"
+              target="_blank"
+            >
+              <v-btn outlined color="cohortAccent" class="ma-2" small>
+                <v-icon left> mdi-text-box-search-outline </v-icon>
+                VIEW SUBMISSION
+              </v-btn>
+            </a>
           </div>
           <div class="divider"></div>
           <div class="action-button">
-            <RequestForHelpResponseDialog
-              :request="request"
+            <MarkSubmissionCompleted
+              :submission="submission"
               :requesterPerson="requesterPerson"
               @snackbarToggle="snackbarToggle($event)"
             />
@@ -55,49 +68,48 @@
 import { mapState, mapActions } from "vuex";
 import moment from "moment";
 
-import RequestForHelpResponseDialog from "../components/RequestForHelpResponseDialog";
+import MarkSubmissionCompleted from "../components/MarkSubmissionCompleted";
 
 export default {
-  name: "RequestForHelpTeacherCard",
-  props: ["request"],
+  name: "SubmissionTeacherCard",
+  props: ["submission"],
   components: {
-    RequestForHelpResponseDialog,
+    MarkSubmissionCompleted,
   },
   async mounted() {
+    // bind student profile
     const person = await this.$store.dispatch(
       "getPersonByIdFromDB",
-      this.request.personId
+      this.submission.studentId
     );
     this.requesterPerson = person;
+
+    // bind students tasks related to this submission (used for unlocking next topic)
+    await this.$store.dispatch("bindPersonsTasksByTopicId", {
+      personId: this.submission.studentId,
+      courseId: this.submission.contextCourse.id,
+      topicId: this.submission.contextTopic.id,
+    });
+    console.log(
+      "this.personsTopicsTasks from SubmissionTeacherCard.vue: ",
+      this.personsTopicsTasks
+    );
   },
   computed: {
     ...mapState([
       // "currentCourseId",
       // "currentTopicId",
       // "currentTaskId",
-      "allTasks",
-      "people",
+      "personsTopicsTasks",
     ]),
-    ...mapActions(["getTaskByTaskId"]),
+    // ...mapActions(["getTaskByTaskId"]),
   },
   data() {
     return {
       requesterPerson: null,
-      topicsTasks: [],
-      contextObj: {
-        courseId: this.request.courseId,
-        topicId: this.request.topicId,
-        taskId: this.request.taskId,
-      },
     };
   },
   methods: {
-    getTask(id) {
-      return this.topicsTasks.find((task) => task.id == id);
-    },
-    getPerson(id) {
-      // return this.people.find((person) => person.id === id);
-    },
     getHumanDate(ts) {
       return moment(ts.seconds * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
     },
@@ -116,40 +128,40 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.request-card {
+.submission-card {
   width: 100%;
   display: flex;
   margin: 20px 0px;
   padding: 10px;
-  border: 1px solid var(--v-missionAccent-base);
+  border: 1px solid var(--v-cohortAccent-base);
   border-radius: 5px;
 
   .panel {
     background-color: transparent !important;
   }
 
-  .requester-image {
+  .submission-image {
     width: 10%;
   }
 
-  .requester-context {
+  .submission-context {
     margin-left: 10px;
     width: 60%;
 
-    .requester-context-task {
+    .submission-context-task {
       margin: 0px;
       text-transform: uppercase;
       font-size: 0.8rem;
       color: var(--v-missionAccent-base);
       font-weight: 800;
     }
-    .requester-context-topic {
+    .submission-context-topic {
       margin: 0px;
       text-transform: uppercase;
       font-size: 0.6rem;
       color: var(--v-missionAccent-base);
     }
-    .requester-context-course {
+    .submission-context-course {
       margin: 0px;
       text-transform: uppercase;
       font-size: 0.6rem;
@@ -157,7 +169,7 @@ export default {
     }
   }
 
-  .requester-time {
+  .submission-time {
     margin: 0px;
     text-transform: uppercase;
     font-size: 0.8rem;
@@ -169,13 +181,6 @@ export default {
   .divider {
     border-bottom: 1px solid var(--v-missionAccent-base);
     margin: 20px 0px;
-  }
-
-  .requester-msg {
-    margin: 0px;
-    margin-top: 16px;
-    color: var(--v-missionAccent-base);
-    font-style: italic;
   }
 }
 

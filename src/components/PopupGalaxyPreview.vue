@@ -147,7 +147,7 @@ import { db } from "../store/firestoreConfig";
 import { mapGetters } from "vuex";
 
 export default {
-  name: "PopupPreview",
+  name: "PopupGalaxyPreview",
   components: {},
   props: ["course"],
   computed: {
@@ -186,8 +186,9 @@ export default {
     },
     routeToGalaxyEdit() {
       console.log("route to galaxy", this.course.id);
-      // save current topic to store
-      // this.$store.commit("setCurrentCourseId", this.currentCourseId);
+      // save current course to store
+      this.$store.commit("setCurrentCourse", this.course);
+      this.$store.commit("setCurrentCourseId", this.course.id);
       // route to topic/solar system
       this.$router.push({
         name: "GalaxyView",
@@ -199,6 +200,10 @@ export default {
     routeToGalaxyAnalytics() {
       console.log("route to galaxy analytics", this.currentCourseId);
 
+      // save current course to store
+      this.$store.commit("setCurrentCourse", this.course);
+      this.$store.commit("setCurrentCourseId", this.course.id);
+
       // this.$router.push({
       //   name: "GalaxyView",
       //   params: {
@@ -209,6 +214,10 @@ export default {
     async startThisGalaxy() {
       this.loading = true;
       // add this galaxy metadata (eg. topics) to this persons course database
+
+      // save current course to store
+      this.$store.commit("setCurrentCourse", this.course);
+      this.$store.commit("setCurrentCourseId", this.course.id);
 
       // 1) get topics in this course
       const querySnapshot = await db
@@ -245,9 +254,17 @@ export default {
         // 4) if tasks exist. add them to person
         for (const [index, subDoc] of subquerySnapshot.docs.entries()) {
           // cool lil status to show whats happening during loading
-          this.startingGalaxyStatus = "...adding " + subDoc.data().title;
-          // this.startingGalaxyStatus ="...adding " + doc.data().label + " -> " + subDoc.data().title;
-          console.log("...adding " + subDoc.id + ": " + subDoc.data().title);
+          // this.startingGalaxyStatus = "...adding " + subDoc.data().title;
+          this.startingGalaxyStatus =
+            "...adding " + doc.data().label + " - " + subDoc.data().title;
+          console.log(
+            "...adding " +
+              subDoc.id +
+              ": " +
+              doc.data().label +
+              " - " +
+              subDoc.data().title
+          );
 
           if (subDoc.exists) {
             await db
