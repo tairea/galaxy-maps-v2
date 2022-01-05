@@ -102,10 +102,6 @@ export default new Vuex.Store({
         return state.cohorts.filter((cohort) => cohort.organisation == "");
       }
     },
-    getCoursesByCohortId: (state) => (id) => {
-      //TODO: not complete
-      state.cohorts.filter((cohort) => cohort.id === id);
-    },
     getPersonById: (state) => (id) => {
       state.people.filter((person) => person.id === id);
     },
@@ -212,11 +208,7 @@ export default new Vuex.Store({
     },
     updatePersonsAssignedNodesForDisplay(state, newNodePositions) {
       state.personsAssignedNodesForDisplay = newNodePositions;
-    },
-    clearAllNodes(state) {
-      // console.log(" ======== clear all nodes before bind ======== ")
-      state.allNodes = [];
-    },
+    }
   },
   actions: {
     setUser({ commit }, user) {
@@ -363,9 +355,10 @@ export default new Vuex.Store({
       state.personsNodes = personsNodes; // source of truth
       state.personsNodesForDisplay = personsNodes; // store all nodes
     },
-    // TODO: WIP (get assigned courses)
     async getAssignedNodesByPersonId({ state }, personId) {
       const personsAssignedNodes = [];
+      
+      state.courses = []
       // get the courseId from assignedCourses
       const doc = await db.collection("people").doc(personId).get();
       // loop array of assigned courses
@@ -373,6 +366,7 @@ export default new Vuex.Store({
         for (const courseId of doc.data()?.assignedCourses) {
           // add assigned course to state.courses
           this.dispatch("getCourseFromFirestoreById", courseId);
+
 
           const subQuerySnapshot = await db
             .collection("courses")

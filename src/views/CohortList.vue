@@ -8,7 +8,7 @@
         <!-- COHORTS with no attached org -->
         <v-row class="mb-5">
           <v-col>
-            <v-row class="d-flex flex-column">
+            <v-row>
               <Cohort
                 v-for="cohort in getCohortsByOrganisationId()"
                 :cohort="cohort"
@@ -26,9 +26,8 @@
           <v-col v-for="organisation in organisations" :key="organisation.id">
             <v-row class="organisation-banner">
               <Organisation @editOrg="editOrgDialog" :organisation="organisation" :size="'0.25em'" />
-              <hr width="95%" class="ml-4" />
             </v-row>
-            <v-row class="d-flex flex-column mb-6">
+            <v-row class="mb-6">
               <!-- Their COHORTS -->
               <Cohort
                 v-for="cohort in getCohortsByOrganisationId(organisation.id)"
@@ -38,6 +37,7 @@
                 :cols="3"
               />
             </v-row>
+            <hr width="100%" />
           </v-col>
         </v-row>
       </v-col>
@@ -45,6 +45,8 @@
     <v-row class="cohort-bottom">
       <v-col>
         <CreateEditDeleteCohortDialog />
+      </v-col>
+      <v-col>  
         <CreateEditDeleteOrganisationDialog ref="organisationDialog" :edit="openOrganisationDialog" :organisationToEdit="editingOrgansation" />
       </v-col>
     </v-row>
@@ -97,9 +99,6 @@ export default {
       this.editingOrgansation = this.getOrganisationById(orgId)
       console.log("got org = ", this.editingOrgansation)
       this.$refs.organisationDialog.openDialog()
-    },
-    closeOrgDialog() {
-
     }
   },
 };
