@@ -1,11 +1,6 @@
 <template>
   <div class="full-height">
     <LoadingSpinner v-if="loading" />
-    <!-- <NetworkView v-if="whichCoursesToDisplay === 'assigned' && personsAssignedNodesForDisplay.length > 0"
-      :nodes="personsAssignedNodesForDisplay"
-      :edges="personsAssignedEdges"
-      :network="network"
-    /> -->
     <network
       v-if="
         personsAssignedNodesForDisplay.length > 0 &&
@@ -67,7 +62,6 @@ import { mapState, mapGetters, mapMutations } from "vuex";
 
 import LoadingSpinner from "../components/LoadingSpinner";
 import PopupPreview from "../components/PopupPreview";
-import NetworkView from "../components/NetworkView"
 
 export default {
   name: "Galaxy",
@@ -77,8 +71,7 @@ export default {
   components: {
     Network,
     LoadingSpinner,
-    PopupPreview,
-    NetworkView
+    PopupPreview
   },
   data: () => ({
     active: false,

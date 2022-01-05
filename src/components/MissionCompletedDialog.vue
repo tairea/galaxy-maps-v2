@@ -15,7 +15,10 @@
               icon
               x-large
             >
-              <v-icon> mdi-cloud-upload-outline </v-icon>
+              <v-icon v-if="task.submissionRequired">
+                mdi-cloud-upload-outline
+              </v-icon>
+              <v-icon v-else> mdi-checkbox-blank-outline </v-icon>
             </v-btn>
             <!-- checked icon if inreview or completed -->
             <v-btn
@@ -67,7 +70,11 @@
                   <div class="d-flex align-center">
                     <v-icon left color="cohortAccent">mdi-alert-outline</v-icon>
                     <p class="submission-dialog-description">
-                      {{ submissionInstructions }}
+                      {{
+                        task.submissionInstructions
+                          ? task.submissionInstructions
+                          : "Please provide a link to your work, showing that you have completed this mission"
+                      }}
                     </p>
                   </div>
                 </div>
@@ -224,7 +231,34 @@ export default {
     submitWorkForReview() {
       this.loading = true;
       this.disabled = true;
-      // Add a new document in collection "courses"
+
+      // format submission url with "http://"
+      if (this.submissionLink) {
+        if (!/^https?:\/\//i.test(this.submissionLink)) {
+          this.submissionLink = "http://" + this.submissionLink;
+        }
+      }
+
+      // 1) add submission to course (for teacher to review)
+      db.collection("courses")
+        .doc(this.currentCourseId)
+        // .collection("topics")
+        // .doc(this.topicId)
+        // .collection("tasks")
+        // .doc(this.taskId)
+        .collection("submissionsForReview")
+        .add({
+          // update "courses" database with task submission
+          studentId: this.person.id,
+          course: this.currentCourseId,
+          topic: this.topicId,
+          task: this.taskId,
+          submissionLink: this.submissionLink,
+          taskStatus: "inreview",
+          taskSubmittedTimestamp: new Date(),
+        });
+
+      // 2) Add submission to students task (for students progression)
       db.collection("people")
         .doc(this.person.id)
         .collection(this.currentCourseId)
@@ -232,9 +266,10 @@ export default {
         .collection("tasks")
         .doc(this.taskId)
         .update({
-          // update tasks array with new task
+          // update "people" database with task submission
           submissionLink: this.submissionLink,
           taskStatus: "inreview",
+          taskSubmittedTimestamp: new Date(),
         })
         .then(() => {
           console.log("Task work successfully submitted for review!");
@@ -248,7 +283,7 @@ export default {
           // check if all tasks/missions are completed
           this.checkIfAllTasksCompleted();
 
-          // TODO: perhaps only unlock once teacher has reviewed and marked complete
+          // TODO: perhaps only unlock once teacher has reviewed and marked complete. SOLUTION: leave as is. can progress to next task, but cant progress to next topic until all work is reviewed.
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
@@ -268,6 +303,7 @@ export default {
         .update({
           // update tasks array with new task
           taskStatus: "completed",
+          taskCompletedTimestamp: new Date(),
         })
         .then(() => {
           console.log("Task status successfully written as completed!");

@@ -109,6 +109,7 @@
           :taskId="id"
           :task="task"
           :missionStatus="getTaskStatus"
+          @missionActivated="$emit('missionActivated')"
         />
       </div>
       <div v-else-if="getTaskStatus == 'active'" class="d-flex justify-center">

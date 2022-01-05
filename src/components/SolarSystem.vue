@@ -1,9 +1,6 @@
 <template>
-  <div
-    class="solarsystem"
-    :style="{ height: height ? height : 'auto' }"
-    @click="routeToTopic(topic)"
-  >
+  <div class="solarsystem" :style="{ height: height ? height : 'auto' }">
+    <!-- @click="routeToTopic(topic)" -->
     <!-- <div class="solarsystem" :style="{height: height ? height : 'auto', top: coords.x + 'px', left: coords.y + 'px'}" @click="routeToTopic(topic)"> -->
     <div class="scene">
       <ul class="system" :style="{ fontSize: size }">
@@ -143,7 +140,7 @@ export default {
   height: 100%;
   // font-size: 0.25em;
   border-radius: 100%;
-  cursor: pointer;
+  // cursor: pointer;
 }
 .scene .orbit {
   position: absolute;

@@ -228,7 +228,7 @@ export default {
         },
       ],
       prerequisites: false,
-      hoverPopup: false
+      hoverPopup: false,
     };
   },
   computed: {
@@ -258,11 +258,11 @@ export default {
     //   return this.topicTasks;
     // },
     focusPopup() {
-      this.hoverPopup = true
+      this.hoverPopup = true;
     },
     blurPopup() {
-      this.hoverPopup = false
-      this.deselect()
+      this.hoverPopup = false;
+      this.deselect();
     },
     cancel() {
       console.log("cancel");

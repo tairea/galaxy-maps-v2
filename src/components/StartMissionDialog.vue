@@ -36,7 +36,8 @@
                       >{{ task.duration ? task.duration : "UKNOWN" }} minutes</i
                     ></strong
                   >
-                  to complete.
+                  to complete. Your time to complete this mission will begin
+                  once you click 'start mission'
                 </p>
               </div>
             </div>
@@ -102,9 +103,10 @@ export default {
     startMission() {
       this.loading = true;
 
-      // update taskStatus to active
+      // set as current/active task
+      this.$store.commit("setCurrentTaskId", this.task.id);
 
-      // Add a new document in collection "courses"
+      // update taskStatus to active
       db.collection("people")
         .doc(this.person.id)
         .collection(this.currentCourseId)
@@ -113,7 +115,7 @@ export default {
         .doc(this.task.id)
         .update({
           taskStatus: "active",
-          startTimestamp: new Date(),
+          taskStartedTimestamp: new Date(),
         })
         .then(() => {
           console.log("Task status successfully written as Active!");
