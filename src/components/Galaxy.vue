@@ -11,9 +11,7 @@
       :nodes="personsAssignedNodesForDisplay"
       :edges="personsAssignedEdges"
       :options="network.options"
-      @zoom="zoom"
       @click="click"
-      @hover-node="hoverNode"
     ></network>
     <network
       v-else-if="
@@ -24,9 +22,7 @@
       :nodes="personsNodesForDisplay"
       :edges="personsEdges"
       :options="network.options"
-      @zoom="zoom"
       @click="click"
-      @hover-node="hoverNode"
     ></network>
     <network
       v-else-if="
@@ -37,15 +33,13 @@
       :nodes="allNodesForDisplay"
       :edges="allEdges"
       :options="network.options"
-      @zoom="zoom"
       @click="click"
-      @hover-node="hoverNode"
     ></network>
     <p v-else class="noGalaxies overline">
       NO {{ whichCoursesToDisplay == "assigned" ? "ASSIGNED" : "" }} GALAXIES TO
       DISPLAY
     </p>
-    <PopupPreview
+    <PopupGalaxyPreview
       v-if="popupPreview"
       :course="getCourseById(currentCourseId)"
       @togglePopup="togglePopup"
@@ -61,17 +55,17 @@ import "vue2vis/dist/vue2vis.css";
 import { mapState, mapGetters, mapMutations } from "vuex";
 
 import LoadingSpinner from "../components/LoadingSpinner";
-import PopupPreview from "../components/PopupPreview";
+import PopupGalaxyPreview from "../components/PopupGalaxyPreview";
 
 export default {
   name: "Galaxy",
   props: {
-    whichCoursesToDisplay: { type: String, default: ""}
+    whichCoursesToDisplay: { type: String, default: "" },
   },
   components: {
     Network,
     LoadingSpinner,
-    PopupPreview
+    PopupGalaxyPreview,
   },
   data: () => ({
     active: false,
@@ -167,7 +161,7 @@ export default {
       },
     },
   }),
-   computed: {
+  computed: {
     ...mapState([
       "allNodes",
       "allNodesForDisplay",
@@ -185,11 +179,10 @@ export default {
   },
 
   async mounted() {
-    this.setNodesToDisplay()
+    this.setNodesToDisplay();
   },
   methods: {
     async setNodesToDisplay() {
-
       if (this.whichCoursesToDisplay == "my") {
         /* ===========================
             Only show MY Galaxies
@@ -202,8 +195,14 @@ export default {
         /* ===========================
           Only show ASSIGNED Galaxies
       =========================== */
-        await this.$store.dispatch("getAssignedNodesByPersonId", this.user.data.id);
-        await this.$store.dispatch("getAssignedEdgesByPersonId", this.user.data.id);
+        await this.$store.dispatch(
+          "getAssignedNodesByPersonId",
+          this.user.data.id
+        );
+        await this.$store.dispatch(
+          "getAssignedEdgesByPersonId",
+          this.user.data.id
+        );
         this.nodesToDisplay = this.personsAssignedNodesForDisplay;
       } else if (this.whichCoursesToDisplay == "all") {
         /* ===========================
@@ -214,7 +213,7 @@ export default {
         await this.$store.dispatch("getAllEdges"); // edge data for course
         this.nodesToDisplay = this.allNodesForDisplay;
       }
-      
+
       if (this.nodesToDisplay.length > 0) {
         const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
 
@@ -229,7 +228,7 @@ export default {
           this.$store.commit("updateAllNodesForDisplay", repositionedNodes);
         }
       }
-      
+
       // stop loading spinner
       this.loading = false;
 
@@ -491,7 +490,6 @@ export default {
   height: 100%;
   display: flex;
   flex-direction: column;
-
 }
 
 .noGalaxies {

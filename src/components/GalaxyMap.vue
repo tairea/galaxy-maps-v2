@@ -162,6 +162,9 @@ export default {
       });
     }
 
+    // see network methods
+    console.log(this.$refs.network);
+
     // zoom fit on load
     if (this.$refs.network.nodes.length > 0) {
       setTimeout(() => this.zoomToNodes(this.$refs.network.nodes), 250);
@@ -228,6 +231,9 @@ export default {
     },
   },
   methods: {
+    disableEditMode() {
+      this.$refs.network.disableEditMode();
+    },
     getDomCoords(node) {
       let domCoords = this.$refs.network.canvasToDom({ x: node.x, y: node.y });
       console.log("DOM COOOORDS: ", domCoords);
@@ -263,7 +269,7 @@ export default {
       this.$emit("add-node", newNode);
     },
     addEdge(data) {
-      if (!this.active) return;
+      // if (!this.active) return; // this was breaking edge saving. why was there?
       console.log("edge add", data);
       this.$emit("setUiMessage", "");
       const newEdgeData = this.$refs.network.getEdge(data.properties.items[0]);
