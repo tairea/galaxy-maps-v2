@@ -175,6 +175,7 @@ export default {
   justify-content: flex-start;
   align-items: flex-start;
 }
+
 .galaxy-frame {
   position: relative;
   width: 100%;

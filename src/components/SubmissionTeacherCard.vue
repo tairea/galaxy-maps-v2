@@ -52,11 +52,11 @@
           </div>
           <div class="divider"></div>
           <div class="action-button">
-            <!-- <RequestForHelpResponseDialog
-              :request="request"
+            <MarkSubmissionCompleted
+              :submission="submission"
               :requesterPerson="requesterPerson"
               @snackbarToggle="snackbarToggle($event)"
-            /> -->
+            />
           </div>
         </v-expansion-panel-content>
       </v-expansion-panel>
@@ -68,49 +68,48 @@
 import { mapState, mapActions } from "vuex";
 import moment from "moment";
 
-import RequestForHelpResponseDialog from "../components/RequestForHelpResponseDialog";
+import MarkSubmissionCompleted from "../components/MarkSubmissionCompleted";
 
 export default {
   name: "SubmissionTeacherCard",
   props: ["submission"],
   components: {
-    RequestForHelpResponseDialog,
+    MarkSubmissionCompleted,
   },
   async mounted() {
+    // bind student profile
     const person = await this.$store.dispatch(
       "getPersonByIdFromDB",
-      this.request.personId
+      this.submission.studentId
     );
     this.requesterPerson = person;
+
+    // bind students tasks related to this submission (used for unlocking next topic)
+    await this.$store.dispatch("bindPersonsTasksByTopicId", {
+      personId: this.submission.studentId,
+      courseId: this.submission.contextCourse.id,
+      topicId: this.submission.contextTopic.id,
+    });
+    console.log(
+      "this.personsTopicsTasks from SubmissionTeacherCard.vue: ",
+      this.personsTopicsTasks
+    );
   },
   computed: {
     ...mapState([
       // "currentCourseId",
       // "currentTopicId",
       // "currentTaskId",
-      "allTasks",
-      "people",
+      "personsTopicsTasks",
     ]),
-    ...mapActions(["getTaskByTaskId"]),
+    // ...mapActions(["getTaskByTaskId"]),
   },
   data() {
     return {
       requesterPerson: null,
-      topicsTasks: [],
-      contextObj: {
-        courseId: this.request.courseId,
-        topicId: this.request.topicId,
-        taskId: this.request.taskId,
-      },
     };
   },
   methods: {
-    getTask(id) {
-      return this.topicsTasks.find((task) => task.id == id);
-    },
-    getPerson(id) {
-      // return this.people.find((person) => person.id === id);
-    },
     getHumanDate(ts) {
       return moment(ts.seconds * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
     },
