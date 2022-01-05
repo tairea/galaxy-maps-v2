@@ -190,73 +190,12 @@ export default {
     ]),
     ...mapGetters(["getCourseById", "user"]),
   },
-  watch: {
-    async whichCoursesToDisplay (newVal) {
-      console.log("whichCoursesToDisplay = ", newVal);
-      this.setNodesToDisplay()
-    }
-  },
+
   async mounted() {
-    console.log("whichCoursesToDisplay = ", this.whichCoursesToDisplay);
-
     this.setNodesToDisplay()
-    // if (this.whichCoursesToDisplay == "my") {
-    //   /* ===========================
-    //       Only show MY Galaxies
-    //   =========================== */
-    //   await this.$store.dispatch("bindCoursesByPersonId", this.user.data.id); // bind courses created by this user id
-    //   await this.$store.dispatch("getNodesByPersonId", this.user.data.id);
-    //   await this.$store.dispatch("getEdgesByPersonId", this.user.data.id);
-    //   this.nodesToDisplay = this.personsNodesForDisplay;
-    // } else if (this.whichCoursesToDisplay == "assigned") {
-    //   /* ===========================
-    //     Only show ASSIGNED Galaxies
-    // =========================== */
-    //   await this.$store.dispatch("getAssignedNodesByPersonId", this.user.data.id);
-    //   await this.$store.dispatch("getAssignedEdgesByPersonId", this.user.data.id);
-    //   this.nodesToDisplay = this.personsAssignedNodesForDisplay;
-    // } else if (this.whichCoursesToDisplay == "all") {
-    //   /* ===========================
-    //     Only show ALL Galaxies in DATABASE!! (so I can see what maps users have created)
-    // =========================== */
-    //   await this.$store.dispatch("bindAllCourses"); // course data
-    //   await this.$store.dispatch("getAllNodes"); // node data for course
-    //   await this.$store.dispatch("getAllEdges"); // edge data for course
-    //   this.nodesToDisplay = this.allNodesForDisplay;
-    // }
-
-    // // see available Vue2Vis methods
-    // // console.log(this.$refs.network);
-
-    // if (this.nodesToDisplay.length > 0) {
-    //   const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
-
-    //   if (this.whichCoursesToDisplay == "my") {
-    //     this.$store.commit("updatePersonsNodesForDisplay", repositionedNodes);
-    //   } else if (this.whichCoursesToDisplay == "assigned") {
-    //     this.$store.commit(
-    //       "updatePersonsAssignedNodesForDisplay",
-    //       repositionedNodes
-    //     );
-    //   } else if (this.whichCoursesToDisplay == "all") {
-    //     this.$store.commit("updateAllNodesForDisplay", repositionedNodes);
-    //   }
-    // }
-
-    // console.log("mounting finished")
-    // // stop loading spinner
-    // this.loading = false;
-
-    // // short timer to give time to load all before zoom
-    // if (this.nodesToDisplay.length > 0) {
-    //   setTimeout(() => this.zoomToNodes(this.nodesToDisplay), 250);
-    //   // setTimeout(() => this.fitToAllNodes(), 250);
-    // }
   },
   methods: {
-    ...mapMutations(['clearAllNodes']),
     async setNodesToDisplay() {
-      // await this.clearAllNodes()
 
       if (this.whichCoursesToDisplay == "my") {
         /* ===========================
@@ -282,7 +221,7 @@ export default {
         await this.$store.dispatch("getAllEdges"); // edge data for course
         this.nodesToDisplay = this.allNodesForDisplay;
       }
-
+      
       if (this.nodesToDisplay.length > 0) {
         const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
 
@@ -297,8 +236,7 @@ export default {
           this.$store.commit("updateAllNodesForDisplay", repositionedNodes);
         }
       }
-
-      console.log("mounting finished")
+      
       // stop loading spinner
       this.loading = false;
 
@@ -333,14 +271,6 @@ export default {
       }
 
       const closestNode = this.$refs.network.getNode(closest.id);
-      console.log(
-        "closest node is " +
-          closestNode.label +
-          " in group " +
-          closestNode.group +
-          " in course id " +
-          closestNode.courseId
-      );
 
       // set save current course clicked in store
       this.$store.commit("setCurrentCourseId", closestNode.courseId);
@@ -387,15 +317,6 @@ export default {
       //   },
       // });
     },
-    hoverNode(data) {
-      console.log("hover", data);
-      // const connectedNodes = this.$refs.network.getConnectedNodes(data.node)
-      // console.log("connectedNodes",connectedNodes)
-      // console.log("BoundingBox", this.$refs.network.getBoundingBox(data.node));
-    },
-    zoom(data) {
-      // console.log("zoom", data);
-    },
     distSquared(pt1, pt2) {
       var diffX = pt1.x - pt2.x;
       var diffY = pt1.y - pt2.y;
@@ -404,7 +325,6 @@ export default {
     repositionCoursesBasedOnBoundaries() {
       const courseCanvasBoundaries = this.calcCourseCanvasBoundaries();
       const allNodes = this.$refs.network.nodes;
-      // console.log("allNodes from reposition nodes: ",allNodes)
       let newAllNodes = [];
 
       // canvas / 3
