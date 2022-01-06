@@ -11,9 +11,7 @@
       :nodes="personsAssignedNodesForDisplay"
       :edges="personsAssignedEdges"
       :options="network.options"
-      @zoom="zoom"
       @click="click"
-      @hover-node="hoverNode"
     ></network>
     <network
       v-else-if="
@@ -24,9 +22,7 @@
       :nodes="personsNodesForDisplay"
       :edges="personsEdges"
       :options="network.options"
-      @zoom="zoom"
       @click="click"
-      @hover-node="hoverNode"
     ></network>
     <network
       v-else-if="
@@ -37,9 +33,7 @@
       :nodes="allNodesForDisplay"
       :edges="allEdges"
       :options="network.options"
-      @zoom="zoom"
       @click="click"
-      @hover-node="hoverNode"
     ></network>
     <p v-else class="noGalaxies overline">
       NO {{ whichCoursesToDisplay == "assigned" ? "ASSIGNED" : "" }} GALAXIES TO

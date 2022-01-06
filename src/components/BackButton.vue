@@ -20,6 +20,9 @@ export default {
   mounted() {},
   computed: {},
   methods: {
+    click() {
+      console.log('click back button')
+    },
     backToWhat(path) {
       if(path.includes("galaxies")) {
         return "Galaxies"
@@ -40,7 +43,8 @@ export default {
 <style lang="scss" scoped>
 .backButtonDiv {
   margin-top: 30px;
-  width: calc(100% - 30px)
+  width: calc(100% - 30px);
+  z-index: 10
 }
 .backButton {
   border-radius: 0px;
