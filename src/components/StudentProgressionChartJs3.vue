@@ -11,7 +11,7 @@ import LineChart from "./LineChart.js";
 // import EditStudentButtonDialog from "../components/EditStudentButtonDialog";
 
 export default {
-  name: "StudentProgressionChart",
+  name: "StudentProgressionChartJs3",
   components: {
     // EditStudentButtonDialog,
     // Graph2d,
