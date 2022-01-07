@@ -1,23 +1,27 @@
 <!-- BarLine.vue -->
 <template>
-<div class="chart-container">
-  <div v-for="studentData in studentsProgressionData" :key="studentData.id" class="chartCard">
-    <v-avatar v-if="person" size="30">
-      <img
-        v-if="person.image"
-        :src="person.image.url"
-        :alt="person.firstName"
-        style="object-fit: cover"
+  <div class="chart-container">
+    <div
+      v-for="studentData in studentsProgressionData"
+      :key="studentData.id"
+      class="chartCard"
+    >
+      <v-avatar v-if="person" size="30">
+        <img
+          v-if="person.image"
+          :src="person.image.url"
+          :alt="person.firstName"
+          style="object-fit: cover"
+        />
+      </v-avatar>
+      <Chart
+        id="chartImage"
+        :chartData="chartData"
+        :chartOptions="chartOptions"
+        :chartType="chartType"
+        :style="{ width: '100%', height: '200px' }"
       />
-    </v-avatar>
-    <Chart
-      id="chartImage"
-      :chartData="chartData"
-      :chartOptions="chartOptions"
-      :chartType="chartType"
-      :style="{ width: '100%', height: '200px' }"
-    />
-  </div>
+    </div>
 
     <!-- Legend -->
     <div
@@ -27,7 +31,6 @@
     >
       LEGEND:
     </div>
-  </div>
   </div>
 </template>
 
@@ -50,8 +53,33 @@ export default {
     return {
       studentsProgressionData: [
         {
-          
-        }
+          studentId: 123,
+          firstName: "Ian",
+          tasksWorkedOnForThisCourse: [
+            {
+              taskStatus: "completed",
+              timestamp: 1234,
+            },
+            {
+              taskStatus: "completed",
+              timestamp: 1234,
+            },
+          ],
+        },
+        {
+          studentId: 123,
+          firstName: "Ian",
+          tasksWorkedOnForThisCourse: [
+            {
+              taskStatus: "completed",
+              timestamp: 1234,
+            },
+            {
+              taskStatus: "completed",
+              timestamp: 1234,
+            },
+          ],
+        },
       ],
       chartType: "line",
       chartData: {
@@ -208,7 +236,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
 .chartCard {
   border: 1px solid var(--v-missionAccent-base);
   margin: 10px;
@@ -222,6 +249,5 @@ export default {
   position: absolute;
   bottom: 0px;
   width: 100%;
-
 }
 </style>
