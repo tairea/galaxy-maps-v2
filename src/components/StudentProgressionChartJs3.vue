@@ -58,32 +58,40 @@ export default {
           tasksWorkedOnForThisCourse: [
             {
               taskStatus: "completed",
-              timestamp: 1234,
+              timestamp: new Date(2022, 1, 5),
             },
             {
-              taskStatus: "completed",
-              timestamp: 1234,
+              taskStatus: "inreview",
+              timestamp: new Date(2022, 1, 10),
+            },
+            {
+              taskStatus: "active",
+              timestamp: new Date(2022, 1, 15),
             },
           ],
         },
         {
-          studentId: 123,
-          firstName: "Ian",
+          studentId: 456,
+          firstName: "Ben",
           tasksWorkedOnForThisCourse: [
             {
               taskStatus: "completed",
-              timestamp: 1234,
+              timestamp: new Date(2022, 1, 5),
             },
             {
               taskStatus: "completed",
-              timestamp: 1234,
+              timestamp: new Date(2022, 1, 8),
+            },
+            {
+              taskStatus: "active",
+              timestamp: new Date(2022, 1, 16),
             },
           ],
         },
       ],
       chartType: "line",
       chartData: {
-        labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+        // labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
         datasets: [
           {
             type: "line",
