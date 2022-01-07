@@ -38,7 +38,9 @@
     <div id="main-section">
       <div id="progression-panel">
         <h2 class="progression-label">Student progression</h2>
-        <StudentProgressionChartJs3 />
+        <div class="progression-charts">
+          <StudentProgressionChartJs3 />
+        </div>
       </div>
     </div>
 
@@ -263,7 +265,7 @@ export default {
     height: 80%;
     border: 1px solid var(--v-missionAccent-base);
     margin-top: 30px;
-    padding: 20px;
+
     // background: var(--v-baseAccent-base);
     position: relative;
     backdrop-filter: blur(2px);
@@ -281,6 +283,10 @@ export default {
       color: var(--v-background-base);
       padding: 0px 20px 0px 5px;
       clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
+    }
+
+    .progression-charts {
+      // padding: 20px;
     }
   }
 }
