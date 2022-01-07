@@ -4,23 +4,6 @@
     <div id="left-section">
       <div id="review-panel">
         <h2 class="review-label">Work submitted for review</h2>
-        <!-- 
-        <div v-if="teachersSubmissionsToReview.length > 0">
-          <SubmissionToReview
-            v-for="submission in teachersSubmissionsToReview"
-            :key="submission.id"
-            :submission="submission"
-          />
-        </div>
-        <div class="d-flex justify-center align-center mt-4">
-          <v-btn
-            v-if="submissionsLoading"
-            :loading="submissionsLoading"
-            icon
-            color="cohortAccent"
-          ></v-btn>
-        </div> -->
-
         <div v-if="teachersSubmissionsToReview.length > 0">
           <SubmissionTeacherCard
             v-for="submission in teachersSubmissionsToReview"
@@ -55,6 +38,7 @@
     <div id="main-section">
       <div id="progression-panel">
         <h2 class="progression-label">Student progression</h2>
+        <StudentProgressionChartJs3 />
       </div>
     </div>
 
@@ -111,12 +95,14 @@ import { mapState, mapGetters } from "vuex";
 
 import SubmissionTeacherCard from "../components/SubmissionTeacherCard";
 import RequestForHelpTeacherCard from "../components/RequestForHelpTeacherCard";
+import StudentProgressionChartJs3 from "../components/StudentProgressionChartJs3";
 
 export default {
   name: "AllStudentView",
   components: {
     SubmissionTeacherCard,
     RequestForHelpTeacherCard,
+    StudentProgressionChartJs3,
   },
   props: [],
   async mounted() {
