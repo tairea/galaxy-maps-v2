@@ -1,6 +1,6 @@
 <!-- BarLine.vue -->
 <template>
-  <div class="chart-container">
+  <div class="chart-container d-flex">
     <div
       v-for="studentData in studentsProgressionData"
       :key="studentData.id"
@@ -8,15 +8,15 @@
     >
       <v-avatar v-if="person" size="30">
         <img
-          v-if="person.image"
-          :src="person.image.url"
-          :alt="person.firstName"
+          v-if="studentData.image"
+          :src="studentData.image.url"
+          :alt="studentData.firstName"
           style="object-fit: cover"
         />
       </v-avatar>
       <Chart
         id="chartImage"
-        :chartData="chartData"
+        :chartData="formatStudentsChartData(studentData)"
         :chartOptions="chartOptions"
         :chartType="chartType"
         :style="{ width: '100%', height: '200px' }"
@@ -36,7 +36,11 @@
 
 <script>
 import Chart from "@/components/Chart.vue";
+
+import { DateTime } from "luxon";
 import { mapGetters } from "vuex";
+
+import "chartjs-adapter-luxon";
 
 export default {
   props: {
@@ -55,16 +59,29 @@ export default {
         {
           studentId: 123,
           firstName: "Ian",
+          image: {
+            url: "https://picsum.photos/200",
+          },
+          contextCourse: "Māori Performing Arts",
           tasksWorkedOnForThisCourse: [
             {
+              contextCourse: "Māori Performing Arts",
+              contextTopic: "Wiri",
+              contextTask: "Wiri",
               taskStatus: "completed",
               timestamp: new Date(2022, 1, 5),
             },
             {
+              contextCourse: "Māori Performing Arts",
+              contextTopic: "Pukana",
+              contextTask: "Pukana",
               taskStatus: "inreview",
               timestamp: new Date(2022, 1, 10),
             },
             {
+              contextCourse: "Māori Performing Arts",
+              contextTopic: "Takahi",
+              contextTask: "Takahi",
               taskStatus: "active",
               timestamp: new Date(2022, 1, 15),
             },
@@ -73,16 +90,29 @@ export default {
         {
           studentId: 456,
           firstName: "Ben",
+          image: {
+            url: "https://picsum.photos/200",
+          },
+          contextCourse: "Web Development",
           tasksWorkedOnForThisCourse: [
             {
+              contextCourse: "Web Development",
+              contextTopic: "HTML",
+              contextTask: "Tags",
               taskStatus: "completed",
               timestamp: new Date(2022, 1, 5),
             },
             {
+              contextCourse: "Web Development",
+              contextTopic: "CSS",
+              contextTask: "Classes",
               taskStatus: "completed",
               timestamp: new Date(2022, 1, 8),
             },
             {
+              contextCourse: "Web Development",
+              contextTopic: "Flexbox",
+              contextTask: "Flex",
               taskStatus: "active",
               timestamp: new Date(2022, 1, 16),
             },
@@ -135,6 +165,25 @@ export default {
           htmlLegend: {
             // ID of the container to put the legend in
             containerID: "chartLegend",
+          },
+        },
+        scales: {
+          x: {
+            type: "time",
+            time: {
+              // Luxon format string
+              tooltipFormat: "DD T",
+            },
+            // title: {
+            //   display: true,
+            //   text: "Date",
+            // },
+          },
+          y: {
+            // title: {
+            //   display: true,
+            //   text: "value",
+            // },
           },
         },
         maintainAspectRatio: false,
@@ -217,11 +266,50 @@ export default {
     };
   },
   methods: {
-    // example of line segment logic (use to color line according to taskStatus eg. active/inreview/completed)
-    down(ctx, value) {
-      console.log("getting segment down logic...");
-      return ctx.p0.parsed.y > ctx.p1.parsed.y ? value : undefined;
+    formatStudentsChartData(studentObj) {
+      const courseColour = this.stringToColour(studentObj.contextCourse);
+
+      // TODO: loop many course (creating many studentData objects)
+      let studentData = {
+        type: "line",
+        backgroundColor: courseColour,
+        borderColor: courseColour,
+        data: studentObj.tasksWorkedOnForThisCourse.map((tasks, index) => {
+          return {
+            x: tasks.timestamp,
+            y: index + 1,
+          };
+        }),
+        label: studentObj.contextCourse,
+        segment: {
+          borderColor: (ctx) => this.getColourBasedOnStatus(ctx, studentObj),
+        },
+      };
+      const datasetsObj = {
+        datasets: [studentData],
+      };
+      console.log("formatted studentData: ", datasetsObj);
+      return datasetsObj;
     },
+    getColourBasedOnStatus(ctx, studentObj) {
+      switch (
+        studentObj.tasksWorkedOnForThisCourse[ctx.p1DataIndex].taskStatus
+      ) {
+        case "active":
+          return this.$vuetify.theme.themes.dark.missionAccent;
+        case "inreview":
+          return this.$vuetify.theme.themes.dark.cohortAccent;
+        // case "completed":
+        //   return this.$vuetify.theme.themes.dark.baseAccent;
+        default:
+          return;
+      }
+    },
+    // example of line segment logic (use to color line according to taskStatus eg. active/inreview/completed)
+    // down(ctx, value) {
+    //   console.log("getting segment down logic...");
+    //   return ctx.p0.parsed.y > ctx.p1.parsed.y ? value : undefined;
+    // },
     // create a listContainer for the legend
     getOrCreateLegendList(chart, id) {
       const legendContainer = document.getElementById(id);
@@ -238,6 +326,16 @@ export default {
       }
 
       return listContainer;
+    },
+    hashCode(str) {
+      let hash = 0;
+      for (var i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return hash;
+    },
+    stringToColour(str) {
+      return `hsl(${this.hashCode(str) % 360}, 100%, 70%)`;
     },
   },
 };
