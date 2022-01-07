@@ -4,6 +4,11 @@ import router from "./router";
 import vuetify from "./plugins/vuetify";
 import store from "./store";
 import firebase from "firebase";
+import { Chart, registerables } from "chart.js";
+import VComp from "@vue/composition-api";
+
+Chart.register(...registerables);
+Vue.use(VComp);
 
 Vue.config.productionTip = false;
 
