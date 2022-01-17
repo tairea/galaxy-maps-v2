@@ -41,6 +41,15 @@
         <div class="progression-charts">
           <StudentProgressionChartJs3 />
         </div>
+        <!-- loading spinner -->
+        <div class="d-flex justify-center align-center mt-4">
+          <v-btn
+            v-if="progressLoading"
+            :loading="progressLoading"
+            icon
+            color="missionAccent"
+          ></v-btn>
+        </div>
       </div>
     </div>
 
@@ -110,13 +119,18 @@ export default {
   async mounted() {
     this.requestsForHelpLoading = true;
     this.submissionsLoading = true;
+    this.progressLoading = true;
     // bind all courses (so we can filter the ones this teacher created)
     await this.$store.dispatch("bindCoursesByPersonId", this.user.data.id);
 
-    // bind all requests
-    this.bindRequestsForHelp();
     // bind all submissions
     this.bindSubmissions();
+
+    // bind all student task progress
+    this.bindStudentTaskProgress();
+
+    // bind all requests
+    this.bindRequestsForHelp();
 
     console.log(
       "teachersSubmissionsToReview",
@@ -149,6 +163,7 @@ export default {
     return {
       submissionsLoading: false,
       requestsForHelpLoading: false,
+      progressLoading: false,
       allSubmissions: [],
       allRequestsForHelp: [],
       snackbarMsg: "",
@@ -182,6 +197,13 @@ export default {
         this.user.data.id
       );
       this.submissionsLoading = false;
+    },
+    async bindStudentTaskProgress() {
+      await this.$store.dispatch(
+        "getStudentProgressForTeacher",
+        this.user.data.id
+      );
+      this.progressLoading = false;
     },
   },
 };
