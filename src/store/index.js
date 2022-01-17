@@ -208,7 +208,7 @@ export default new Vuex.Store({
     },
     updatePersonsAssignedNodesForDisplay(state, newNodePositions) {
       state.personsAssignedNodesForDisplay = newNodePositions;
-    }
+    },
   },
   actions: {
     setUser({ commit }, user) {
@@ -357,8 +357,8 @@ export default new Vuex.Store({
     },
     async getAssignedNodesByPersonId({ state }, personId) {
       const personsAssignedNodes = [];
-      
-      state.courses = []
+
+      state.courses = [];
       // get the courseId from assignedCourses
       const doc = await db.collection("people").doc(personId).get();
       // loop array of assigned courses
@@ -366,7 +366,6 @@ export default new Vuex.Store({
         for (const courseId of doc.data()?.assignedCourses) {
           // add assigned course to state.courses
           this.dispatch("getCourseFromFirestoreById", courseId);
-
 
           const subQuerySnapshot = await db
             .collection("courses")
@@ -436,6 +435,98 @@ export default new Vuex.Store({
         }
       }
       state.teachersSubmissionsToReview = allWorkForReview;
+    },
+    //TODO: WIP
+    async getStudentProgressForTeacher({ state }) {
+      // get teachers courses. (returns array of course objects eg. id, title, description, image, mappedBy, contentBy)
+      const myCourses = this.getters.getCoursesByWhoMadeThem(state.person.id);
+      // make an array of course.id's
+      let teachersCourseIds = myCourses.map((course) => course.id);
+      // console.log("teachersCourseIds : ", teachersCourseIds);
+
+      // search people database where assignedCourses arrayContains
+      const studentsInTeachersCourses = [];
+      for (const course of myCourses) {
+        // get all work for review
+        const querySnapshot = await db
+          .collection("people")
+          .where("assignedCourses", "array-contains-any", teachersCourseIds)
+          .get();
+
+        for (const doc of querySnapshot.docs) {
+          studentsInTeachersCourses.push(doc.data());
+        }
+      }
+      console.log("studentsInTeachersCourses : ", studentsInTeachersCourses);
+
+      // allStudentProgressObj
+      let allStudentProgressObj = {};
+
+      // for each of the students, check if their assignedCourses matches teachers courses
+      for (const student of studentsInTeachersCourses) {
+        const studentData = (allStudentProgressObj[student.id] =
+          allStudentProgressObj[student.id] ?? {});
+        // const studentData = (allStudentProgressObj[student.id] ??=
+        //   {});
+
+        for (var x = 0; x < student.assignedCourses.length; x++) {
+          // check which assignedCourse matches with teacher
+          for (var y = 0; y < teachersCourseIds.length; y++) {
+            const teachersCourseId = teachersCourseIds[y];
+
+            const courseData = (studentData[teachersCourseId] =
+              studentData[teachersCourseId] ?? {});
+            // const courseData = (studentData[teachersCourseId] ??= {});
+
+            if (student.assignedCourses[x] == teachersCourseId) {
+              // there is a match! get these tasks from db
+
+              const studentTaskQuerySnapshot = await db
+                .collection("people")
+                .doc(student.id)
+                .collection(teachersCourseId)
+                .get();
+
+              // push this into an object with indentiying student/course properties
+              for (const topic of studentTaskQuerySnapshot.docs) {
+                const topicData = (courseData[topic.id] =
+                  courseData[topic.id] ?? []);
+                // const topicData = (courseData[topic.id] ??= []);
+
+                // get task data for each topic
+                const topicQuerySnapshot = await db
+                  .collection("people")
+                  .doc(student.id)
+                  .collection(teachersCourseId)
+                  .doc(topic.id)
+                  .collection("tasks")
+                  .get();
+
+                console.log(
+                  "========= saving into allStudentProgressObj... ========= "
+                );
+                console.log(
+                  "Student: " + student.id + " (" + student.firstName + ")"
+                );
+                console.log("Course:", teachersCourseId);
+                console.log("Topic:", topic.id);
+
+                for (const task of topicQuerySnapshot.docs) {
+                  topicData.push(task.data());
+                }
+              }
+            }
+          }
+        }
+      }
+
+      //test did it work?
+      console.log(
+        "FINISHED allStudentProgressObj ===> ",
+        allStudentProgressObj
+      );
+
+      // state.allStudentProgress = allStudentProgressObj;
     },
     async getAssignedEdgesByPersonId({ state }, personId) {
       const personsAssignedEdges = [];

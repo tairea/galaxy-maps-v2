@@ -9,7 +9,6 @@
         :cohorts="getCohortsInThisCourse(courseId)"
         :organisations="getOrganisationsInThisCourse(courseId)"
         :people="getPeopleInThisCourse(courseId)"
-        @snackbarToggle="snackbarToggle"
       />
       <BackButton :toPath="pathDependingOnAccountType()" />
     </div>
