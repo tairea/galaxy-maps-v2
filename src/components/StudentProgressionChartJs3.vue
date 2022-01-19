@@ -14,6 +14,8 @@
           style="object-fit: cover"
         />
       </v-avatar>
+      <p>{{ studentData.firstName }}</p>
+
       <Chart
         id="chartImage"
         :chartData="formatStudentsChartData(studentData)"
@@ -62,28 +64,136 @@ export default {
           image: {
             url: "https://picsum.photos/200",
           },
-          contextCourse: "Māori Performing Arts",
-          tasksWorkedOnForThisCourse: [
+          courses: [
             {
               contextCourse: "Māori Performing Arts",
-              contextTopic: "Wiri",
-              contextTask: "Wiri",
-              taskStatus: "completed",
-              timestamp: new Date(2022, 1, 5),
+              topics: [
+                {
+                  contextTopic: "Wiri",
+                  tasks: [
+                    {
+                      taskName: "wiri1",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 5),
+                    },
+                    {
+                      taskName: "wiri2",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 6),
+                    },
+                    {
+                      taskName: "wiri3",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 7),
+                    },
+                  ],
+                },
+                {
+                  contextTopic: "Pukana",
+                  tasks: [
+                    {
+                      taskName: "pukana1",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 9),
+                    },
+                    {
+                      taskName: "pukana2",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 11),
+                    },
+                    {
+                      taskName: "pukana3",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 12),
+                    },
+                  ],
+                },
+                {
+                  contextTopic: "Takahi",
+                  tasks: [
+                    {
+                      taskName: "takahi1",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 13),
+                    },
+                    {
+                      taskName: "takahi2",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 13),
+                    },
+                    {
+                      taskName: "takahi3",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 14),
+                    },
+                  ],
+                },
+              ],
             },
             {
-              contextCourse: "Māori Performing Arts",
-              contextTopic: "Pukana",
-              contextTask: "Pukana",
-              taskStatus: "inreview",
-              timestamp: new Date(2022, 1, 10),
-            },
-            {
-              contextCourse: "Māori Performing Arts",
-              contextTopic: "Takahi",
-              contextTask: "Takahi",
-              taskStatus: "active",
-              timestamp: new Date(2022, 1, 15),
+              contextCourse: "Web Development",
+              topics: [
+                {
+                  contextTopic: "HTML",
+                  tasks: [
+                    {
+                      taskName: "html1",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 5),
+                    },
+                    {
+                      taskName: "html2",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 5),
+                    },
+                    {
+                      taskName: "html3",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 8),
+                    },
+                  ],
+                },
+                {
+                  contextTopic: "CSS",
+                  tasks: [
+                    {
+                      taskName: "css1",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 9),
+                    },
+                    {
+                      taskName: "css2",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 10),
+                    },
+                    {
+                      taskName: "css3",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 10),
+                    },
+                  ],
+                },
+                {
+                  contextTopic: "Flexbox",
+                  tasks: [
+                    {
+                      taskName: "flexbox1",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 11),
+                    },
+                    {
+                      taskName: "flexbox2",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 12),
+                    },
+                    {
+                      taskName: "flexbox3",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 13),
+                    },
+                  ],
+                },
+              ],
             },
           ],
         },
@@ -91,30 +201,138 @@ export default {
           studentId: 456,
           firstName: "Ben",
           image: {
-            url: "https://picsum.photos/200",
+            url: "https://picsum.photos/300",
           },
-          contextCourse: "Web Development",
-          tasksWorkedOnForThisCourse: [
+          courses: [
             {
-              contextCourse: "Web Development",
-              contextTopic: "HTML",
-              contextTask: "Tags",
-              taskStatus: "completed",
-              timestamp: new Date(2022, 1, 5),
+              contextCourse: "Māori Performing Arts",
+              topics: [
+                {
+                  contextTopic: "Wiri",
+                  tasks: [
+                    {
+                      taskName: "wiri1",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 5),
+                    },
+                    {
+                      taskName: "wiri2",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 5),
+                    },
+                    {
+                      taskName: "wiri3",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 6),
+                    },
+                  ],
+                },
+                {
+                  contextTopic: "Pukana",
+                  tasks: [
+                    {
+                      taskName: "pukana1",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 7),
+                    },
+                    {
+                      taskName: "pukana2",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 7),
+                    },
+                    {
+                      taskName: "pukana3",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 7),
+                    },
+                  ],
+                },
+                {
+                  contextTopic: "Takahi",
+                  tasks: [
+                    {
+                      taskName: "takahi1",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 8),
+                    },
+                    {
+                      taskName: "takahi2",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 9),
+                    },
+                    {
+                      taskName: "takahi3",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 10),
+                    },
+                  ],
+                },
+              ],
             },
             {
               contextCourse: "Web Development",
-              contextTopic: "CSS",
-              contextTask: "Classes",
-              taskStatus: "completed",
-              timestamp: new Date(2022, 1, 8),
-            },
-            {
-              contextCourse: "Web Development",
-              contextTopic: "Flexbox",
-              contextTask: "Flex",
-              taskStatus: "active",
-              timestamp: new Date(2022, 1, 16),
+              topics: [
+                {
+                  contextTopic: "HTML",
+                  tasks: [
+                    {
+                      taskName: "html1",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 5),
+                    },
+                    {
+                      taskName: "html2",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 5),
+                    },
+                    {
+                      taskName: "html3",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 8),
+                    },
+                  ],
+                },
+                {
+                  contextTopic: "CSS",
+                  tasks: [
+                    {
+                      taskName: "css1",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 9),
+                    },
+                    {
+                      taskName: "css2",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 10),
+                    },
+                    {
+                      taskName: "css3",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 10),
+                    },
+                  ],
+                },
+                {
+                  contextTopic: "Flexbox",
+                  tasks: [
+                    {
+                      taskName: "flexbox1",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 11),
+                    },
+                    {
+                      taskName: "flexbox2",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 12),
+                    },
+                    {
+                      taskName: "flexbox3",
+                      taskStatus: "completed",
+                      timestamp: new Date(2022, 1, 13),
+                    },
+                  ],
+                },
+              ],
             },
           ],
         },
@@ -267,27 +485,67 @@ export default {
   },
   methods: {
     formatStudentsChartData(studentObj) {
-      const courseColour = this.stringToColour(studentObj.contextCourse);
+      let datasets = [];
 
-      // TODO: loop many course (creating many studentData objects)
-      let studentData = {
-        type: "line",
-        backgroundColor: courseColour,
-        borderColor: courseColour,
-        data: studentObj.tasksWorkedOnForThisCourse.map((tasks, index) => {
-          return {
-            x: tasks.timestamp,
-            y: index + 1,
-          };
-        }),
-        label: studentObj.contextCourse,
-        segment: {
-          borderColor: (ctx) => this.getColourBasedOnStatus(ctx, studentObj),
-        },
-      };
+      // loops the students courses
+      for (const course of studentObj.courses) {
+        const courseName = course.contextCourse;
+
+        const courseColour = this.stringToColour(courseName);
+
+        let courseTaskData = [];
+        let taskCount = 0;
+
+        // push task data into array
+        for (const topic of course.topics) {
+          const taskData = topic.tasks.map((task, index) => {
+            taskCount++;
+            return {
+              x: task.timestamp,
+              y: taskCount,
+            };
+          });
+          courseTaskData.push(taskData);
+        }
+
+        let studentCourseData = {
+          type: "line",
+          backgroundColor: courseColour,
+          borderColor: courseColour,
+          data: courseTaskData.flat(),
+          label: courseName,
+          // segment: {
+          //   borderColor: (ctx) => this.getColourBasedOnStatus(ctx, studentObj),
+          // },
+        };
+
+        // push course to datasets
+        datasets.push(studentCourseData);
+      }
+
       const datasetsObj = {
-        datasets: [studentData],
+        datasets: datasets,
       };
+
+      // // TODO: loop many course (creating many studentData objects)
+      // let studentData = {
+      //   type: "line",
+      //   backgroundColor: courseColour,
+      //   borderColor: courseColour,
+      //   data: studentObj.tasksWorkedOnForThisCourse.map((tasks, index) => {
+      //     return {
+      //       x: tasks.timestamp,
+      //       y: index + 1,
+      //     };
+      //   }),
+      //   label: studentObj.contextCourse,
+      //   segment: {
+      //     borderColor: (ctx) => this.getColourBasedOnStatus(ctx, studentObj),
+      //   },
+      // };
+      // const datasetsObj = {
+      //   datasets: [studentData],
+      // };
       console.log("formatted studentData: ", datasetsObj);
       return datasetsObj;
     },
@@ -295,8 +553,8 @@ export default {
       switch (
         studentObj.tasksWorkedOnForThisCourse[ctx.p1DataIndex].taskStatus
       ) {
-        case "active":
-          return this.$vuetify.theme.themes.dark.missionAccent;
+        // case "active":
+        //   return this.$vuetify.theme.themes.dark.missionAccent;
         case "inreview":
           return this.$vuetify.theme.themes.dark.cohortAccent;
         // case "completed":
