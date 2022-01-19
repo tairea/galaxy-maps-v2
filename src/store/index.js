@@ -1,7 +1,7 @@
 import Vue from "vue";
 import Vuex from "vuex";
 
-import { db } from "./firestoreConfig";
+import { db, functions } from "./firestoreConfig";
 import { vuexfireMutations, firestoreAction } from "vuexfire";
 
 Vue.use(Vuex);
@@ -325,33 +325,8 @@ export default new Vuex.Store({
         });
     },
     async getNodesByPersonId({ state }, personId) {
-      const personsNodes = [];
-
-      const querySnapshot = await db
-        .collection("courses")
-        .where("mappedBy.personId", "==", personId)
-        .get();
-      // let count = 0; // if counting groups
-      // get the topics (nodes) in that course
-      for (const doc of querySnapshot.docs) {
-        const subQuerySnapshot = await db
-          .collection("courses")
-          .doc(doc.id)
-          .collection("map-nodes")
-          .get();
-
-        personsNodes.push(
-          ...subQuerySnapshot.docs.map((subDoc) => {
-            const node = subDoc.data();
-            node.courseId = doc.id; // add course id to nodes list for some reason
-            //node.group = count; // add group to nodes list for some reason
-            // node.color = stringToColour(node.label)
-            return node;
-          })
-        );
-
-        // count++;
-      }
+      const getAllCourseNodesByPersonId = functions.httpsCallable('getAllCourseNodesByPersonId');
+      const personsNodes = await getAllCourseNodesByPersonId({ personId: personId }).then((res) => res.data);
       state.personsNodes = personsNodes; // source of truth
       state.personsNodesForDisplay = personsNodes; // store all nodes
     },

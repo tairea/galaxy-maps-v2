@@ -1,0 +1,75 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "people",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "assignedCourses",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "taskSubmittedTimestamp",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "requestsForHelp",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "requestForHelpStatus",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "requestSubmittedTimestamp",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "submissionsForReview",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "taskStatus",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "taskSubmittedTimestamp",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "submissionsForReview",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "taskSubmissionStatus",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "taskSubmittedTimestamp",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "tasks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "taskStatus",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "taskSubmittedTimestamp",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
