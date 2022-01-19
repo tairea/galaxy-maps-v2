@@ -200,6 +200,7 @@ export default {
       this.bindSubmissions();
     },
     async bindRequestsForHelp() {
+      // binds teachersRequestsForHelp
       await this.$store.dispatch(
         "getRequestsForHelpByTeachersId",
         this.user.data.id
@@ -208,6 +209,7 @@ export default {
     },
     async bindSubmissions() {
       await this.$store.dispatch(
+        // binds teachersSubmissionsToReview
         "getAllSubmittedWorkForTeacher",
         this.user.data.id
       );
