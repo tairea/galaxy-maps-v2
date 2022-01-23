@@ -9,7 +9,7 @@
         :cohorts="getCohortsInThisCourse(courseId)"
         :organisations="getOrganisationsInThisCourse(courseId)"
         :people="getPeopleInThisCourse(courseId)"
-        @snackbarToggle="snackbarToggle"
+        @snackbarToggle="snackbarToggle($event)"
       />
       <BackButton :toPath="pathDependingOnAccountType()" />
     </div>
@@ -54,6 +54,16 @@
         @closePopup="closePopup"
       />
     </div>
+
+    <!-- DB Status Snackbar -->
+    <v-snackbar v-model="snackbar">
+      {{ snackbarMsg }}
+      <template v-slot:action="{ attrs }">
+        <v-btn color="pink" text v-bind="attrs" @click="snackbar = false">
+          OK
+        </v-btn>
+      </template>
+    </v-snackbar>
   </div>
 </template>
 
@@ -160,6 +170,8 @@ export default {
       nodePositionsChangeLoading: false,
       fromCreate: this.$route.params.fromCreate,
       courseTitle: this.$route.params.courseTitle,
+      snackbar: false,
+      snackbarMsg: "",
     };
   },
   computed: {
@@ -248,6 +260,10 @@ export default {
       // TODO: this doesnt reset the node correctly
       this.$refs.vis.deselectNode();
     },
+    snackbarToggle(msg) {
+      this.snackbarMsg = msg;
+      this.snackbar = true;
+    },
   },
 };
 </script>
@@ -274,6 +290,7 @@ export default {
   align-items: center;
   flex-direction: column;
   // border: 1px solid yellow;
+  overflow-y: scroll;
 }
 
 #main-section {
@@ -334,12 +351,12 @@ export default {
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-  background: var(--v-missionAccent-base);
+  background: var(--v-background-base);
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--v-missionAccent-base);
+  background: var(--v-background-base);
 }
 
 .bounce {

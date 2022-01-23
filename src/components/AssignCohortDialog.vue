@@ -122,25 +122,25 @@
                     :items="cohorts"
                     item-value="id"
                   >
-                    <template v-slot:selection="{item}"> 
+                    <template v-slot:selection="{ item }">
                       <v-avatar size="40">
                         <img
                           :src="item.image.url"
                           :alt="item.name"
-                          style="object-fit: cover;"
-                        >
+                          style="object-fit: cover"
+                        />
                       </v-avatar>
-                      <p class="ml-4">{{item.name}}</p>
+                      <p class="ml-4">{{ item.name }}</p>
                     </template>
-                    <template v-slot:item="{item}"> 
+                    <template v-slot:item="{ item }">
                       <v-avatar size="40">
                         <img
                           :src="item.image.url"
                           :alt="item.name"
-                          style="object-fit: cover;"
-                        >
+                          style="object-fit: cover"
+                        />
                       </v-avatar>
-                      <p class="ml-4 mt-4">{{item.name}}</p>
+                      <p class="ml-4 mt-4">{{ item.name }}</p>
                     </template>
                   </v-select>
                 </div>
@@ -251,29 +251,28 @@
                 item-value="id"
                 dark
               >
-                <template v-slot:selection="{item}"> 
+                <template v-slot:selection="{ item }">
                   <v-avatar size="40" tile>
                     <img
                       :src="item.image.url"
                       :alt="item.title"
-                      style="object-fit: cover;"
-                    >
-                  </v-avatar> 
-                  <p class="ml-4">{{item.title}}</p>
-                </template>
-                <template v-slot:item="{item}"> 
-                  <v-avatar size="40" tile>
-                    <img
-                      :src="item.image.url"
-                      :alt="item.title"
-                      style="object-fit: cover;"
-                    >
+                      style="object-fit: cover"
+                    />
                   </v-avatar>
-                  <p class="ml-4 mt-4">{{item.title}}</p>
+                  <p class="ml-4">{{ item.title }}</p>
+                </template>
+                <template v-slot:item="{ item }">
+                  <v-avatar size="40" tile>
+                    <img
+                      :src="item.image.url"
+                      :alt="item.title"
+                      style="object-fit: cover"
+                    />
+                  </v-avatar>
+                  <p class="ml-4 mt-4">{{ item.title }}</p>
                 </template>
               </v-select>
             </div>
-
 
             <!-- ACTION BUTTONS -->
             <div class="action-buttons">
@@ -281,12 +280,10 @@
                 v-if="assignCourses"
                 outlined
                 color="green darken-1"
-                @click="assignCourseToCohort(course)"
+                @click="assignCohortToCourse(course)"
                 :loading="loading"
               >
-                <v-icon left>
-                  mdi-check
-                </v-icon>
+                <v-icon left> mdi-check </v-icon>
                 ASSIGN GALAXY MAP
               </v-btn>
 
@@ -430,8 +427,7 @@ export default {
         .catch((error) => {
           console.log("Error getting documents: ", error);
           // snackbar message
-          this.snackbarMsg = "Error: " + error;
-          this.snackbar = true;
+          this.$emit("snackbarToggle", "Error writing document: " + error);
         });
     },
     assignCohortToCourse(cohort) {
@@ -448,11 +444,13 @@ export default {
           console.log(
             "Document successfully updated! Course assigned to Cohort!"
           );
+          this.$emit("snackbarToggle", "Cohort assigned to Course");
           this.loading = false;
           this.dialog = false;
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
+          this.$emit("snackbarToggle", "Error writing document: " + error);
         });
       // this.course = {};
     },
@@ -470,32 +468,13 @@ export default {
           console.log(
             "Document successfully updated! Organisation assigned to Course!"
           );
+          this.$emit("snackbarToggle", "Organisation assigned to Course");
           this.loading = false;
           this.dialog = false;
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
-        });
-      // this.course = {};
-    },
-    assignCourseToCohort(course) {
-      console.log('course: ', course)
-      this.loading = true;
-      // Add a cohort into collection "courses"
-      db.collection("cohorts")
-        .doc(this.currentCohortId)
-        .update({
-          courses: firebase.firestore.FieldValue.arrayUnion(course.id),
-        })
-        .then(() => {
-          console.log(
-            "Document successfully updated! Cohort assigned to Course!"
-          );
-          this.loading = false;
-          this.dialog = false;
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
+          this.$emit("snackbarToggle", "Error writing document: " + error);
         });
       // this.course = {};
     },
