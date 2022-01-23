@@ -43,7 +43,7 @@
       </p>
       <AssignCohortDialog
         :assignCohorts="true"
-        @snackbarToggle="snackbarToggle"
+        @snackbarToggle="snackbarToggle($event)"
       />
     </div>
 
@@ -55,16 +55,6 @@
       <p v-else class="assigned-status">No Galaxies assigned to this Cohort</p>
       <AssignCohortDialog :assignCourses="true" />
     </div>
-
-    <!-- DB Status Snackbar -->
-    <v-snackbar v-model="snackbar">
-      {{ snackbarMsg }}
-      <template v-slot:action="{ attrs }">
-        <v-btn color="pink" text v-bind="attrs" @click="snackbar = false">
-          OK
-        </v-btn>
-      </template>
-    </v-snackbar>
   </div>
 </template>
 
@@ -99,15 +89,13 @@ export default {
   },
   computed: {},
   data() {
-    return {
-      snackbar: false,
-      snackbarMsg: "",
-    };
+    return {};
   },
   methods: {
     snackbarToggle(msg) {
-      this.snackbarMsg = msg;
-      this.snackbar = true;
+      this.$emit("snackbarToggle", msg);
+      // this.snackbarMsg = msg;
+      // this.snackbar = true;
     },
   },
 };
