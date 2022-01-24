@@ -76,8 +76,9 @@
       </v-form>
     </div>
     <!-- <v-img :src="`https://i.pravatar.cc/300`" class="gm-logo"></v-img> -->
-
-    <BackButton :toPath="'/login'" />
+    <div style="width: 300px; margin: 0px auto">
+      <BackButton :toPath="'/login'" />
+    </div>
   </div>
 </template>
 

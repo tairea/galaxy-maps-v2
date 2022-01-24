@@ -1,17 +1,16 @@
 <template>
-  <div v-if="requestsForThisTask.length > 0">
+  <div class="help-info" v-if="requestsForThisTask.length > 0">
     <!-- <div v-if="requestsForHelp.length > 0" id="ss-info"> -->
-    <div id="ss-info">
-      <h2 class="ss-label">Requests for Help</h2>
-      <p class="overline requestsLabel">Re: {{ activeMission.title }}</p>
 
-      <div
-        v-for="request in requestsForThisTask"
-        :key="request.id"
-        class="request"
-      >
-        <RequestsForHelpStudentCard :request="request" />
-      </div>
+    <h2 class="ss-label">Requests for Help</h2>
+    <p class="overline requestsLabel">Re: {{ currentTask.title }}</p>
+
+    <div
+      v-for="request in requestsForThisTask"
+      :key="request.id"
+      class="request"
+    >
+      <RequestsForHelpStudentCard :request="request" />
     </div>
   </div>
 </template>
@@ -32,17 +31,19 @@ export default {
       "currentCourseId",
       "currentTopicId",
       "currentTaskId",
-
-      "people",
+      "currentCourse",
+      "currentTopic",
+      "currentTask",
+      // "people",
     ]),
     requestsForThisTask() {
       return this.requests.filter(
-        (request) => request.taskId == this.currentTaskId
+        (request) => request.contextTask.id == this.currentTaskId
       );
     },
   },
   async mounted() {
-    console.log("active mission is:", this.activeMission);
+    console.log("active mission is:", this.currentTask);
     // console.log("from store people: ", this.people);
   },
   data() {
@@ -59,9 +60,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-#ss-info {
+h1 {
+  color: white;
+}
+
+.help-info {
   width: calc(100% - 30px);
-  // height: 400px;
+  max-height: calc(100% - 60px);
   border: 1px solid var(--v-missionAccent-base);
   margin-top: 30px;
   padding: 20px;
@@ -69,11 +74,12 @@ export default {
   position: relative;
   backdrop-filter: blur(2px);
   z-index: 3;
-  height: auto;
+  overflow: scroll;
+  overflow-x: hidden;
 }
 
-h1 {
-  color: white;
+.help-info ::-webkit-scrollbar {
+  display: none;
 }
 
 .ss-label {
