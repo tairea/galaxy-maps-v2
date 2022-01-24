@@ -57,6 +57,7 @@ export default {
   },
   data: () => ({
     active: false,
+    addingMode: false,
     addingEdge: false,
     network: {
       options: {
@@ -241,6 +242,7 @@ export default {
     },
     addNodeMode() {
       this.active = true;
+      this.addingNode = true; 
       // this.$emit("toggleAddNodeButton")
       console.log("add node mode");
       this.$emit("setUiMessage", "Click on the map to add a node");
@@ -255,12 +257,14 @@ export default {
       this.addingEdge = true;
     },
     addNode(data) {
+      console.log('click add node')
       if (!this.active) return;
       console.log("node added", data);
       const newNodeId = data.properties.items[0];
       const newNode = this.$refs.network.getNode(newNodeId);
       console.log("newNode", newNode);
       this.$emit("add-node", newNode);
+      this.addingNode = false
     },
     addEdge(data) {
       if (!this.active) return;
@@ -284,6 +288,8 @@ export default {
         });
     },
     click(data) {
+      console.log('click data: ', data)
+      if (this.addingNode || this.addingEdge) return
       if (data.edges.length === 0 && data.nodes.length === 0) {
         this.deselectNode();
       }
