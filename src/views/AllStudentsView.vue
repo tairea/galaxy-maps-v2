@@ -3,7 +3,7 @@
     <!-- REVIEW WORK PANEL -->
     <div id="left-section">
       <div id="review-panel">
-        <h2 class="review-label">Work ready for review</h2>
+        <h2 class="review-label">Work submitted for review</h2>
         <!-- 
         <div v-if="teachersSubmissionsToReview.length > 0">
           <SubmissionToReview
@@ -20,6 +20,34 @@
             color="cohortAccent"
           ></v-btn>
         </div> -->
+
+        <div v-if="teachersSubmissionsToReview.length > 0">
+          <SubmissionTeacherCard
+            v-for="submission in teachersSubmissionsToReview"
+            :key="submission.id"
+            :submission="submission"
+            @snackbarToggle="snackbarToggleSubmission($event)"
+          />
+        </div>
+        <div
+          v-if="!submissionsLoading && teachersSubmissionsToReview.length == 0"
+        >
+          <p
+            class="overline pt-4 text-center"
+            style="color: var(--v-cohortAccent-base)"
+          >
+            NO WORK TO REVIEW
+          </p>
+        </div>
+        <!-- loading spinner -->
+        <div class="d-flex justify-center align-center mt-4">
+          <v-btn
+            v-if="requestsForHelpLoading"
+            :loading="requestsForHelpLoading"
+            icon
+            color="cohortAccent"
+          ></v-btn>
+        </div>
       </div>
     </div>
 
@@ -40,8 +68,18 @@
             v-for="request in teachersRequestsForHelp"
             :key="request.id"
             :request="request"
-            style="border: solid 1px red"
+            @snackbarToggle="snackbarToggleHelp($event)"
           />
+        </div>
+        <div
+          v-if="!requestsForHelpLoading && teachersRequestsForHelp.length == 0"
+        >
+          <p
+            class="overline pt-4 text-center"
+            style="color: var(--v-missionAccent-base)"
+          >
+            NO REQUESTS FOR HELP
+          </p>
         </div>
         <!-- loading spinner -->
         <div class="d-flex justify-center align-center mt-4">
@@ -54,6 +92,16 @@
         </div>
       </div>
     </div>
+
+    <!-- Request submitted Snackbar -->
+    <v-snackbar v-model="snackbar">
+      {{ snackbarMsg }}
+      <template v-slot:action="{ attrs }">
+        <v-btn color="pink" text v-bind="attrs" @click="snackbar = false">
+          OK
+        </v-btn>
+      </template>
+    </v-snackbar>
   </div>
 </template>
 
@@ -61,31 +109,34 @@
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
 
-import SubmissionToReview from "../components/SubmissionToReview";
+import SubmissionTeacherCard from "../components/SubmissionTeacherCard";
 import RequestForHelpTeacherCard from "../components/RequestForHelpTeacherCard";
 
 export default {
   name: "AllStudentView",
   components: {
-    SubmissionToReview,
+    SubmissionTeacherCard,
     RequestForHelpTeacherCard,
   },
   props: [],
   async mounted() {
+    this.requestsForHelpLoading = true;
+    this.submissionsLoading = true;
     // bind all courses (so we can filter the ones this teacher created)
     await this.$store.dispatch("bindCoursesByPersonId", this.user.data.id);
-    // bind all requests
-    this.requestsForHelpLoading = true;
-    await this.$store.dispatch(
-      "getRequestsForHelpByTeachersId",
-      this.user.data.id
-    );
 
+    // bind all requests
+    this.bindRequestsForHelp();
+    // bind all submissions
+    this.bindSubmissions();
+
+    console.log(
+      "teachersSubmissionsToReview",
+      this.teachersSubmissionsToReview
+    );
     console.log("teachersRequestsForHelp", this.teachersRequestsForHelp);
 
     // bind all tasks *needs this to get the task names for request.taskId :(
-
-    this.requestsForHelpLoading = false;
   },
   computed: {
     ...mapState([
@@ -112,15 +163,38 @@ export default {
       requestsForHelpLoading: false,
       allSubmissions: [],
       allRequestsForHelp: [],
+      snackbarMsg: "",
+      snackbar: false,
     };
   },
 
   methods: {
-    // getCoursesByWhoMadeThem(personId) {
-    //   return this.courses.filter((course) => {
-    //     return course.mappedBy.personId == personId;
-    //   });
-    // },
+    snackbarToggleHelp(msg) {
+      console.log("snackbar toggled...", msg);
+      this.snackbarMsg = msg;
+      this.snackbar = true;
+      this.bindRequestsForHelp();
+    },
+    snackbarToggleSubmission(msg) {
+      console.log("snackbar toggled...", msg);
+      this.snackbarMsg = msg;
+      this.snackbar = true;
+      this.bindSubmissions();
+    },
+    async bindRequestsForHelp() {
+      await this.$store.dispatch(
+        "getRequestsForHelpByTeachersId",
+        this.user.data.id
+      );
+      this.requestsForHelpLoading = false;
+    },
+    async bindSubmissions() {
+      await this.$store.dispatch(
+        "getAllSubmittedWorkForTeacher",
+        this.user.data.id
+      );
+      this.submissionsLoading = false;
+    },
   },
 };
 </script>
@@ -147,6 +221,12 @@ export default {
   align-items: center;
   flex-direction: column;
   // border: 1px solid yellow;
+  overflow: scroll;
+  overflow-x: hidden; /* Hide horizontal scrollbar */
+
+  #left-section ::-webkit-scrollbar {
+    display: none;
+  }
 
   #review-panel {
     width: calc(100% - 30px);
@@ -185,6 +265,12 @@ export default {
   flex-direction: column;
   z-index: 1;
   // border: 1px solid pink;
+  overflow: scroll;
+  overflow-x: hidden; /* Hide horizontal scrollbar */
+
+  #main-section ::-webkit-scrollbar {
+    display: none;
+  }
 
   #progression-panel {
     width: calc(100% - 30px);
@@ -220,6 +306,12 @@ export default {
   justify-content: center;
   align-items: center;
   // border: 1px solid red;
+  overflow: scroll;
+  overflow-x: hidden; /* Hide horizontal scrollbar */
+
+  #right-section ::-webkit-scrollbar {
+    display: none;
+  }
 
   #help-panel {
     width: calc(100% - 30px);

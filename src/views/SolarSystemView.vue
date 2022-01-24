@@ -34,10 +34,7 @@
         <h2 class="galaxy-label">Map</h2>
         <SolarSystem :topic="getTopicById(currentTopicId)" :size="'0.25em'" />
       </div> -->
-      <RequestsForHelpInfo
-        :requests="requestsForHelp"
-        :activeMission="getActiveMission"
-      />
+      <RequestsForHelpInfo v-if="activeMission" :requests="requestsForHelp" />
     </div>
   </div>
 </template>
@@ -73,6 +70,7 @@ export default {
         courseId: this.currentCourseId,
         topicId: this.currentTopicId,
       });
+      console.log("persons topic tasks: ", this.personsTopicsTasks);
     } else {
       //store bindTasksByTopicId
       await this.$store.dispatch("bindTasksByTopicId", {
@@ -91,6 +89,8 @@ export default {
     // check if requests are binded
     console.log("from store requestsForHelp: ", this.requestsForHelp);
 
+    this.getActiveMission();
+
     // console.log("setCurrentTaskId: ", this.activeMission.id);
     // this.$store.commit("setCurrentTaskId", this.activeMission.id);
   },
@@ -99,6 +99,9 @@ export default {
       "currentCourseId",
       "currentTopicId",
       "currentTaskId",
+      "currentCourse",
+      "currentTopic",
+      "currentTask",
       "topicsTasks",
       "personsTopicsTasks",
       "requestsForHelp",
@@ -112,19 +115,26 @@ export default {
       "getPeopleInThisCourse",
       "getTasksByTopicId",
     ]),
-
-    getActiveMission() {
-      return this.personsTopicsTasks.find(
-        (topicObj) => topicObj.taskStatus == "active"
-      );
-    },
   },
   data() {
     return {
       activeMission: null,
     };
   },
-  methods: {},
+  methods: {
+    getActiveMission() {
+      const activeMissionObj = this.personsTopicsTasks.find((taskObj) => {
+        return taskObj.taskStatus == "active";
+      });
+      if (activeMissionObj) {
+        this.activeMission = true;
+        // set as current/active task (if not already?)
+        this.$store.commit("setCurrentTaskId", activeMissionObj.id);
+        this.$store.commit("setCurrentTask", activeMissionObj);
+      }
+      return activeMissionObj;
+    },
+  },
 };
 </script>
 
@@ -165,6 +175,7 @@ export default {
   justify-content: flex-start;
   align-items: flex-start;
 }
+
 .galaxy-frame {
   position: relative;
   width: 100%;

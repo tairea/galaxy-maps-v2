@@ -3,37 +3,39 @@
     <!-- requester message -->
     <div class="d-flex request-msg">
       <div class="requester-image">
-        <v-avatar size="30">
+        <v-avatar v-if="requester" size="30">
           <img
-            v-if="requesterPerson.image"
-            :src="requesterPerson.image.url"
-            :alt="requesterPerson.firstName"
+            v-if="requester.image"
+            :src="requester.image.url"
+            :alt="requester.firstName"
             style="object-fit: cover"
           />
         </v-avatar>
       </div>
-      <p class="request-text">"{{ request.requestForHelpMessage }}"</p>
+      <p class="request-text text-left">
+        "{{ request.requestForHelpMessage }}"
+      </p>
     </div>
     <!-- divder line -->
     <div style="border-top: 1px solid var(--v-missionAccent-base)"></div>
     <!-- instructor response -->
     <div class="d-flex request-msg">
       <p
-        class="request-text text-center"
+        class="response-text text-right"
         style="color: var(--v-galaxyAccent-base)"
       >
         {{
-          request.requestForHelpResponse
-            ? request.requestForHelpResponse
+          request.responseMessage
+            ? '"' + request.responseMessage + '"'
             : "...waiting for instructors response"
         }}
       </p>
-      <div v-if="request.requestForHelpResponse" class="requester-image">
-        <v-avatar size="30">
+      <div v-if="request.responseMessage" class="requester-image">
+        <v-avatar v-if="responder" size="30">
           <img
-            v-if="requesterPerson.image"
-            :src="requesterPerson.image.url"
-            :alt="requesterPerson.firstName"
+            v-if="responder.image"
+            :src="responder.image.url"
+            :alt="responder.firstName"
             style="object-fit: cover"
           />
         </v-avatar>
@@ -54,39 +56,29 @@ export default {
     SolarSystem,
   },
   computed: {
-    ...mapState([
-      "currentCourseId",
-      "currentTopicId",
-      "currentTaskId",
-
-      "people",
-    ]),
-    requestsForThisTask() {
-      return this.requests.filter(
-        (request) => request.taskId == this.activeMission.id
-      );
-    },
+    ...mapState(["currentCourseId", "currentTopicId", "currentTaskId"]),
   },
   async mounted() {
-    // console.log("active mission is:", this.activeMission);
-    // console.log("from store people: ", this.people);
-    const person = await this.$store.dispatch(
+    const requesterPerson = await this.$store.dispatch(
       "getPersonByIdFromDB",
       this.request.personId
     );
-    console.log("person who requested this question:", person);
-    this.requesterPerson = person;
+    this.requester = requesterPerson;
+    const responderPerson = await this.$store.dispatch(
+      "getPersonByIdFromDB",
+      this.request.responderPersonId
+    );
+    this.responder = responderPerson;
+    console.log("requester person:", this.requester);
+    console.log("responder person:", this.responder);
   },
   data() {
     return {
-      requesterPerson: null,
+      requester: null,
+      responder: null,
     };
   },
-  methods: {
-    getPerson(id) {
-      return this.people.find((person) => person.id === id);
-    },
-  },
+  methods: {},
 };
 </script>
 
@@ -138,12 +130,25 @@ h1 {
     padding: 10px;
   }
 
+  .requester-image {
+    width: 10%;
+  }
+
   .request-text {
+    width: 90%;
     color: var(--v-missionAccent-base);
     font-size: 0.8rem;
     margin: 0px;
     font-style: italic;
     padding-left: 10px;
+  }
+  .response-text {
+    width: 90%;
+    color: var(--v-missionAccent-base);
+    font-size: 0.8rem;
+    margin: 0px;
+    font-style: italic;
+    padding-right: 10px;
   }
 }
 </style>

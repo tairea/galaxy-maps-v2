@@ -105,6 +105,7 @@ export default {
 
       // set as current/active task
       this.$store.commit("setCurrentTaskId", this.task.id);
+      this.$store.commit("setCurrentTask", this.task);
 
       // update taskStatus to active
       db.collection("people")

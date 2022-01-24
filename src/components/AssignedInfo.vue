@@ -1,8 +1,6 @@
 <template>
   <div id="assigned-info">
-    <h2 class="assigned-label">
-      Assigned to:
-    </h2>
+    <h2 class="assigned-label">Assigned to:</h2>
 
     <!-- ASSIGNED COHORTS INFO -->
     <div v-if="assignCohorts">
@@ -38,14 +36,15 @@
       </div>
 
       <p
-        v-if="
-          cohorts.length == 0 && people.length == 0
-        "
+        v-if="cohorts.length == 0 && people.length == 0"
         class="assigned-status"
       >
         Nobody is assigned to this Galaxy
       </p>
-      <AssignCohortDialog :assignCohorts="true" />
+      <AssignCohortDialog
+        :assignCohorts="true"
+        @snackbarToggle="snackbarToggle($event)"
+      />
     </div>
 
     <!-- ASSIGNED COURSES INFO -->
@@ -84,7 +83,21 @@ export default {
     Person,
     Course,
     AssignCohortDialog,
-  }
+  },
+  mounted() {
+    console.log("got cohorts FROM ASSIGNED: ", this.cohorts);
+  },
+  computed: {},
+  data() {
+    return {};
+  },
+  methods: {
+    snackbarToggle(msg) {
+      this.$emit("snackbarToggle", msg);
+      // this.snackbarMsg = msg;
+      // this.snackbar = true;
+    },
+  },
 };
 </script>
 

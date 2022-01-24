@@ -203,6 +203,7 @@ export default {
       // console.log("route to ss", this.currentTopic.id);
       // save current topic to store
       this.$store.commit("setCurrentTopicId", this.currentTopic.id);
+      this.$store.commit("setCurrentTopic", this.currentTopic);
       // save active task to store if we know it
       const activeMission = this.personsTopicsTasks.find(
         (topicObj) => topicObj.taskStatus == "active"

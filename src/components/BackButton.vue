@@ -1,11 +1,9 @@
 <template>
   <div class="backButtonDiv">
     <v-btn :to="toPath" class="backButton" color="baseAccent" outlined>
-      <v-icon left>
-        mdi-arrow-left
-      </v-icon>
+      <v-icon left> mdi-arrow-left </v-icon>
       Back to
-      {{backToWhat(toPath)}}
+      {{ backToWhat(toPath) }}
     </v-btn>
   </div>
 </template>
@@ -24,18 +22,18 @@ export default {
       console.log('click back button')
     },
     backToWhat(path) {
-      if(path.includes("galaxies")) {
-        return "Galaxies"
+      if (path.includes("galaxies")) {
+        return "Galaxies";
       } else if (path.includes("galaxy")) {
-        return "Galaxy"
-      } else if (path.includes("cohorts")){
-        return "Cohorts"
+        return "Galaxy";
+      } else if (path.includes("cohorts")) {
+        return "Cohorts";
       } else if (path.includes("login")) {
-        return "Login"
+        return "Login";
       } else {
-        return "?"
+        return "?";
       }
-    }
+    },
   },
 };
 </script>
@@ -44,7 +42,9 @@ export default {
 .backButtonDiv {
   margin-top: 30px;
   width: calc(100% - 30px);
-  z-index: 10
+  z-index: 999;
+  margin-left: auto;
+  margin-right: auto;
 }
 .backButton {
   border-radius: 0px;
