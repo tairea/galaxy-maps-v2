@@ -283,7 +283,6 @@ export default {
           console.log("Node successfully written!");
           this.loading = false;
           this.dialog = false;
-          this.$refs.popup.routeToSolarSystem()
         })
         .catch((error) => {
           console.error("Error writing node: ", error);

@@ -294,12 +294,10 @@ export default {
         });
     },
     click(data) {
-      console.log('click data: ', data)
       if (this.addingNode || this.addingEdge) return
       if (data.edges.length === 0 && data.nodes.length === 0) {
         this.deselectNode();
       }
-      // this.$emit("setUiMessage", "");
     },
     dragStart(data) {
       this.deselectNode();
@@ -403,7 +401,6 @@ export default {
       }
     },
     deselectNode() {
-      console.log("deselected node");
       this.active = false;
       this.$emit("deselected");
       this.stopNodeAnimation();
