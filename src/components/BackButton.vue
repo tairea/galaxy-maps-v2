@@ -18,6 +18,9 @@ export default {
   mounted() {},
   computed: {},
   methods: {
+    click() {
+      console.log('click back button')
+    },
     backToWhat(path) {
       if (path.includes("galaxies")) {
         return "Galaxies";

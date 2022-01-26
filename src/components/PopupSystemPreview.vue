@@ -157,8 +157,8 @@ export default {
     this.activeMission = this.personsTopicsTasks.find(
       (topicObj) => topicObj.taskStatus == "active"
     );
-    console.log("setCurrentTaskId: ", this.activeMission.id);
-    this.$store.commit("setCurrentTaskId", this.activeMission.id);
+    console.log("setCurrentTaskId: ", this.activeMission?.id);
+    this.$store.commit("setCurrentTaskId", this.activeMission?.id);
   },
   computed: {
     ...mapState([

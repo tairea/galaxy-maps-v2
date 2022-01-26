@@ -161,6 +161,7 @@
     <!-- POPUP -->
     <!-- follow drag -> :style="{ top: getCoords.y - 100 + 'px', left: getCoords.x + 30 + 'px' }" -->
     <PopupSystemPreview
+      ref="popup"
       :infoPopupShow="infoPopupShow"
       :infoPopupPosition="infoPopupPosition"
       :currentTopic="currentNode"
