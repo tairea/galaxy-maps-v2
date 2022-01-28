@@ -143,6 +143,11 @@ import firebase from "firebase/app";
 import moment from "moment";
 
 import { db } from "../store/firestoreConfig";
+import {
+  sendStudentXAPIStatement,
+  sendTeacherXAPIStatement,
+} from "../store/veracityLRS";
+
 import { mapState, mapGetters } from "vuex";
 
 export default {
@@ -181,6 +186,19 @@ export default {
         })
         .then(() => {
           console.log("Response successfully submitted for review!");
+
+          // teacher assissted student
+          sendTeacherXAPIStatement(
+            this.person.email,
+            "https://w3id.org/xapi/dod-isd/verbs/assisted",
+            {
+              student: this.requesterPerson,
+              galaxyName: this.request.contextCourse.title,
+              systemName: this.request.contextTopic.label,
+              missionName: this.request.contextTask.title,
+            }
+          );
+
           this.requestForHelp = "";
           this.loading = false;
           this.dialog = false;

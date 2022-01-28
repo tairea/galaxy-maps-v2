@@ -40,6 +40,7 @@
           @click="login"
           outlined
           width="100%"
+          :loading="loading"
         >
           Sign-in
         </v-btn>
@@ -82,6 +83,7 @@ export default {
     ],
     snackbar: false,
     snackbarText: "",
+    loading: false,
   }),
   mounted() {},
   computed: {
@@ -89,6 +91,7 @@ export default {
   },
   methods: {
     login() {
+      this.loading = true;
       firebase
         .auth()
         .setPersistence(firebase.auth.Auth.Persistence.LOCAL)
@@ -101,20 +104,30 @@ export default {
         .then(() => {
           console.log("Successfully logged in");
 
-          // this routing doesnt work because this.person not loaded yet
-          // if (this.person.accountType == "student") {
-          //   this.$router.push("/base/galaxies/assigned");
-          // } else {
-          //   this.$router.push("/base/galaxies/my");
-          // }
-
-          // TODO: route to appropriate page (eg. for student -> /base/galaxies/assigned for teacher -> /base/galaxies/my)
-          this.$router.push("/base/galaxies/all");
+          // hack: delay 3secs while person is loaded (from main.ts firebase.auth().onAuthStateChanged())
+          this.delay(3000).then(() => {
+            // before the delay hack this routing didnt work because this.person not loaded yet
+            switch (this.person.accountType) {
+              case "student":
+                this.$router.push("/base/dashboard");
+                break;
+              case "teacher":
+                this.$router.push("/base/students");
+                break;
+              case "admin":
+                this.$router.push("/base/cohorts");
+                break;
+              default:
+                this.$router.push("/base");
+            }
+          });
+          // this.$router.push("/base/galaxies/all");
         })
         .catch((error) => {
           this.snackbarText = error;
           this.snackbar = true;
           console.log("Login error:", error);
+          this.loading = false;
         });
     },
     validate() {
@@ -138,6 +151,10 @@ export default {
           var errorMessage = error.message;
           // ..
         });
+    },
+    // hack delay to wait for person to load before routing
+    delay(ms) {
+      return new Promise((res) => setTimeout(res, ms));
     },
   },
 };

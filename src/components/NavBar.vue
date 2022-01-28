@@ -15,7 +15,7 @@
           <div class="baseAccent--text tab">{{ tab.name }}</div>
         </v-tab>
       </v-tabs>
-      <!-- Teacher tabs (user tabs + cohors/students) -->
+      <!-- Teacher tabs (user tabs + students) -->
       <v-tabs
         v-else-if="userType === 'teacher'"
         fixed-tabs
@@ -25,10 +25,21 @@
         v-model="activeTab"
         height=""
       >
-        <v-tab v-for="tab in tabs" :key="tab.id" :to="tab.route">
+        <v-tab v-for="tab in tabsTeacher" :key="tab.id" :to="tab.route">
           <div class="baseAccent--text tab">{{ tab.name }}</div>
         </v-tab>
-        <v-tab v-for="tab in tabsTeacher" :key="tab.id" :to="tab.route">
+      </v-tabs>
+      <!-- Admin tabs (user tabs + students + cohorts) -->
+      <v-tabs
+        v-else-if="userType === 'admin'"
+        fixed-tabs
+        background-color="transparent"
+        dark
+        slider-color="baseAccent"
+        v-model="activeTab"
+        height=""
+      >
+        <v-tab v-for="tab in tabsAdmin" :key="tab.id" :to="tab.route">
           <div class="baseAccent--text tab">{{ tab.name }}</div>
         </v-tab>
       </v-tabs>
@@ -58,18 +69,20 @@ export default {
     return {
       activeTab: null,
       // studentActiveTab: `/base/assigned-galaxies`,
-      tabs: [
-        { id: 1, name: "MY GALAXIES", route: `/base/galaxies/my` },
-        { id: 2, name: "ALL GALAXIES", route: `/base/galaxies/all` },
+      tabsStudent: [
+        { id: 5, name: "MY DASHBOARD", route: `/base/dashboard` },
+        { id: 3, name: "ASSIGNED GALAXIES", route: `/base/galaxies/assigned` },
+        // { id: 4, name: "ALL GALAXIES", route: `/base/galaxies/all` },
       ],
       tabsTeacher: [
+        { id: 1, name: "GALAXIES", route: `/base/galaxies/my` },
+        { id: 7, name: "STUDENTS", route: `/base/students` },
         { id: 6, name: "COHORTS", route: `/base/cohorts` },
-        { id: 7, name: "ALL STUDENTS", route: `/base/students` },
       ],
-      tabsStudent: [
-        { id: 3, name: "ASSIGNED GALAXIES", route: `/base/galaxies/assigned` },
-        { id: 4, name: "ALL GALAXIES", route: `/base/galaxies/all` },
-        { id: 5, name: "MY DASHBOARD", route: `/base/dashboard` },
+      tabsAdmin: [
+        { id: 2, name: "ALL GALAXIES", route: `/base/galaxies/all` },
+        { id: 8, name: "ALL COHORTS", route: `/base/cohorts` },
+        { id: 9, name: "ALL STUDENTS", route: `/base/students` },
       ],
     };
   },

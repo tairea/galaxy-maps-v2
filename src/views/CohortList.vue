@@ -21,11 +21,17 @@
         </v-row>
 
         <!-- ORGANISATIONS -->
-        <h3 class="cohort-heading overline baseAccent--text">Organisation > Cohorts</h3>
+        <h3 class="cohort-heading overline baseAccent--text">
+          Organisation > Cohorts
+        </h3>
         <v-row class="d-flex flex-column">
           <v-col v-for="organisation in organisations" :key="organisation.id">
             <v-row class="organisation-banner">
-              <Organisation @editOrg="editOrgDialog" :organisation="organisation" :size="'0.25em'" />
+              <Organisation
+                @editOrg="editOrgDialog"
+                :organisation="organisation"
+                :size="'0.25em'"
+              />
             </v-row>
             <v-row class="mb-6">
               <!-- Their COHORTS -->
@@ -42,18 +48,21 @@
         </v-row>
       </v-col>
     </v-row>
-    <v-row class="cohort-bottom">
+    <v-row v-if="person.accountType == 'admin'" class="cohort-bottom">
       <v-col>
         <CreateEditDeleteCohortDialog />
       </v-col>
-      <v-col>  
-        <CreateEditDeleteOrganisationDialog ref="organisationDialog" :edit="openOrganisationDialog" :organisationToEdit="editingOrgansation" />
+      <v-col>
+        <CreateEditDeleteOrganisationDialog
+          ref="organisationDialog"
+          :edit="openOrganisationDialog"
+          :organisationToEdit="editingOrgansation"
+        />
       </v-col>
     </v-row>
 
     <!-- Edit Org Dialog -->
     <!-- <EditOrganisationButtonDialog v-if="editingOrgansation" :open="openOrganisationDialog" :organisation="editingOrgansation" @closeOrganisationEditDialog="openOrganisationDialog = false"/> -->
-
   </v-container>
 </template>
 
@@ -85,7 +94,7 @@ export default {
     this.getCohortsAndOrganisations();
   },
   computed: {
-    ...mapState(["organisations", "cohorts"]),
+    ...mapState(["organisations", "cohorts", "person"]),
     ...mapGetters(["getCohortsByOrganisationId", "getOrganisationById"]),
   },
   methods: {
@@ -128,7 +137,7 @@ hr {
     margin-bottom: 10px;
   }
 
- .organisation-banner {
+  .organisation-banner {
     // border: 1px solid rgba(200, 200, 200, 0.5);
     margin: 0px 1px;
   }

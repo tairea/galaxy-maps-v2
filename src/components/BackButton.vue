@@ -1,6 +1,6 @@
 <template>
   <div class="backButtonDiv">
-    <v-btn :to="toPath" class="backButton" color="baseAccent" outlined>
+    <v-btn :to="toPath" class="backButton" color="baseAccent" text>
       <v-icon left> mdi-arrow-left </v-icon>
       Back to
       {{ backToWhat(toPath) }}

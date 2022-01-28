@@ -282,6 +282,7 @@ export default {
     position: relative;
     backdrop-filter: blur(2px);
     z-index: 3;
+    overflow-y: scroll;
 
     .progression-label {
       font-size: 0.8rem;
@@ -323,6 +324,7 @@ export default {
     position: relative;
     backdrop-filter: blur(2px);
     // z-index: 3;
+    overflow-y: scroll;
 
     .help-label {
       font-size: 0.8rem;
