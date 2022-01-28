@@ -55,8 +55,12 @@
       <v-col>
         <CreateEditDeleteCohortDialog />
       </v-col>
-      <v-col>  
-        <CreateEditDeleteOrganisationDialog ref="organisationDialog" :edit="openOrganisationDialog" :organisationToEdit="editingOrgansation" />
+      <v-col>
+        <CreateEditDeleteOrganisationDialog
+          ref="organisationDialog"
+          :edit="openOrganisationDialog"
+          :organisationToEdit="editingOrgansation"
+        />
       </v-col>
       <v-col>
         <CreateAdminDialog />
@@ -65,7 +69,6 @@
 
     <!-- Edit Org Dialog -->
     <!-- <EditOrganisationButtonDialog v-if="editingOrgansation" :open="openOrganisationDialog" :organisation="editingOrgansation" @closeOrganisationEditDialog="openOrganisationDialog = false"/> -->
-
   </v-container>
 </template>
 
@@ -99,7 +102,8 @@ export default {
     this.getCohortsAndOrganisations();
   },
   computed: {
-    ...mapGetters(["getOrganisationById", "user", "cohorts", "organisations", "person"]),
+    ...mapState(["organisations", "cohorts", "person", "user"]),
+    ...mapGetters(["getCohortsByOrganisationId"]),
     cohortView () {
       return this.$route.name === "CohortView"
     }
@@ -157,7 +161,7 @@ hr {
     text-align: start
   }
 
- .organisation-banner {
+  .organisation-banner {
     // border: 1px solid rgba(200, 200, 200, 0.5);
     margin: 0px 1px;
   }
