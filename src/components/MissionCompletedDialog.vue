@@ -200,6 +200,11 @@
 import firebase from "firebase/app";
 
 import { db } from "../store/firestoreConfig";
+import {
+  sendStudentXAPIStatement,
+  sendTeacherXAPIStatement,
+} from "../store/veracityLRS";
+
 import { mapState, mapGetters } from "vuex";
 
 export default {
@@ -242,11 +247,11 @@ export default {
         }
       }
 
-      console.log("submitting...");
-      console.log("person...", this.person);
-      console.log("course...", this.currentCourse);
-      console.log("topic...", this.currentTopic);
-      console.log("task...", this.currentTask);
+      // console.log("submitting...");
+      // console.log("person...", this.person);
+      // console.log("course...", this.currentCourse);
+      // console.log("topic...", this.currentTopic);
+      // console.log("task...", this.currentTask);
 
       // 1) add submission to course (for teacher to review)
       db.collection("courses")
@@ -269,6 +274,19 @@ export default {
         .then((docRef) => {
           docRef.update({ id: docRef.id });
           console.log("Submission successfully submitted for review!");
+
+          // send xAPI statement to LRS
+          sendStudentXAPIStatement(
+            this.person.email,
+            "http://adlnet.gov/expapi/verbs/completed",
+            // this.currentTask.id
+            {
+              galaxyName: this.currentCourse.title,
+              systemName: this.currentTopic.label,
+              missionName: this.currentTask.title,
+            }
+          );
+
           this.requestForHelp = "";
           this.loading = false;
           this.dialog = false;
@@ -332,6 +350,17 @@ export default {
         })
         .then(() => {
           console.log("Task status successfully written as completed!");
+          // send xAPI statement to LRS
+          sendStudentXAPIStatement(
+            this.person.email,
+            "http://adlnet.gov/expapi/verbs/completed",
+            // this.currentTask.id
+            {
+              galaxyName: this.currentCourse.title,
+              systemName: this.currentTopic.label,
+              missionName: this.currentTask.title,
+            }
+          );
           this.loading = false;
           this.disabled = false;
           this.dialog = false;
@@ -377,7 +406,16 @@ export default {
       ).length;
       // 2) check if that the same as total
       if (numOfTasksCompleted === this.personsTopicsTasks.length) {
-        // TODO: some kind of notification to signal that Topic has been completed
+        // TODO: some kind of notification to UI signal that Topic has been completed
+        sendStudentXAPIStatement(
+          this.person.email,
+          "http://adlnet.gov/expapi/verbs/completed",
+          // this.currentTask.id
+          {
+            galaxyName: this.currentCourse.title,
+            systemName: this.currentTopic.label,
+          }
+        );
         // all tasks are completed. unlock next topic
         this.unlockNextTopics();
       } else {
