@@ -93,9 +93,51 @@
               :items="organisationsToSelect"
               item-text="name"
               item-value="id"
-              @change="selectChange"
             >
             </v-select>
+            <!-- Select teachers from list -->
+            <p class="input-description">Cohort teachers:</p>
+            <v-combobox
+              v-model="cohort.teachers"
+              :items="teachers"
+              class="input-field text-lowercase"
+              solo
+              chips
+              item-text="firstName"
+              item-value="id"
+              multiple
+            >
+              <template v-slot:selection="data">
+                <v-chip
+                  v-bind="data.attrs"
+                  :input-value="data.selected"
+                  close
+                  @click="data.select"
+                  @click:close="remove(data.item)"
+                >
+                 <template v-if="checkType(data.item) !== 'object'">
+                    {{ data.item }}
+                  </template>
+                  <template v-else>
+                    <v-avatar v-if="data.item.image && data.item.image.url" left>
+                      <v-img :src="data.item.image.url"></v-img>
+                    </v-avatar>
+                    {{ data.item.email }}
+                  </template>
+                </v-chip>
+              </template>
+              <template v-slot:item="data">
+                <template>
+                  <v-list-item-avatar v-if="data.item.image && data.item.image.url">
+                    <img :src="data.item.image.url">
+                  </v-list-item-avatar>
+                  <v-list-item-content>
+                    <v-list-item-title v-html="data.item.firstName"></v-list-item-title>
+                    <v-list-item-subtitle v-html="data.item.email"></v-list-item-subtitle>
+                  </v-list-item-content>
+                </template>
+              </template>
+            </v-combobox>
           </div>
           <!-- End create-dialog-content -->
         </div>
@@ -255,6 +297,7 @@
 
 <script>
 import Organisation from "../components/Organisation";
+import { getAuth } from "firebase/auth"
 
 import { mapState, mapGetters } from "vuex";
 import { db, storage } from "../store/firestoreConfig";
@@ -272,8 +315,12 @@ export default {
     }
   },
   computed: {
-    ...mapState(["organisations"]),
+    ...mapState(["organisations", "people"]),
     ...mapGetters(["getOrganisationById"]),
+    teachers () {
+      const teachers = this.people.filter(person => person.accountType === "teacher")
+      return teachers
+    },
     cohortView () {
       console.log('route: ', this.$route)
       return this.$route.name === "CohortView"
@@ -306,14 +353,20 @@ export default {
         name: "",
         url: "",
       },
+      teachers: []
     },
     uploadedImage: null,
     percentage: 0,
   }),
   methods: {
-    selectChange(data) {
-      console.log("select change:", data);
-      console.log("after select. cohort =", this.cohort);
+    remove (item) {
+      let index
+      if (item.firstName) index = this.cohort.teachers.findIndex(n => item.firstName === n.firstName)
+      else index = this.cohort.teachers.indexOf(item)
+      if (index >= 0) this.cohort.teachers.splice(index, 1)
+    },
+    checkType(data) {
+      return typeof data
     },
     cancel() {
       console.log("cancel");
@@ -321,26 +374,53 @@ export default {
       // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
     },
     saveCohort(cohort) {
+      console.log('cohort teachers: ', cohort.teachers)
       this.loading = true;
-      // Add a new document in collection "cohorts"
-      db.collection("cohorts")
-        .add(cohort)
-        .then((docRef) => {
-          console.log("Document successfully written!");
-          this.loading = false;
-          this.dialog = false;
+      // Create new teachers accounts if needed 
+      const newTeachers = cohort.teachers.filter(teacher => typeof teacher !== "object")
+      console.log("new teachers array: ", newTeachers)
+      if (newTeachers.length) newTeachers.forEach(email => {
+        console.log('new teacher: ', email)
+        // create new teacher account
+        getAuth()
+          .createUser({
+            email: email,
+          })
+          .then((newUser) => {
+            // add teacher to people in DB
 
-          //get doc id from firestore (aka course id)
-          const cohortId = docRef.id;
-          //set cohortId to Store state 'state.currentcohortId' (so not relying on router params)
-          this.$store.commit("setCurrentCohortId", cohortId);
-          // reset cohort
-          this.cohort = {};
-          this.uploadedImage = null;
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
-        });
+            // send teacher invitation email
+            
+            console.log('Successfully created new user:', newUser.uid);
+          })
+          .catch((error) => {
+            console.log('Error creating new user:', error);
+          });
+
+
+
+        // update teachers array in cohort object to only include profile id's of teachers
+
+      })
+      // Add a new document in collection "cohorts"
+      // db.collection("cohorts")
+      //   .add(cohort)
+      //   .then((docRef) => {
+      //     console.log("Document successfully written!");
+      //     this.loading = false;
+      //     this.dialog = false;
+
+      //     //get doc id from firestore (aka course id)
+      //     const cohortId = docRef.id;
+      //     //set cohortId to Store state 'state.currentcohortId' (so not relying on router params)
+      //     this.$store.commit("setCurrentCohortId", cohortId);
+      //     // reset cohort
+      //     this.cohort = {};
+      //     this.uploadedImage = null;
+      //   })
+      //   .catch((error) => {
+      //     console.error("Error writing document: ", error);
+      //   });
     },
     camelize(str) {
       return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
