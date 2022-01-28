@@ -7,6 +7,7 @@ import SolarSystemView from "../views/SolarSystemView.vue";
 import CohortView from "../views/CohortView.vue";
 import CohortList from "../views/CohortList.vue";
 import AllStudentsView from "../views/AllStudentsView.vue";
+import StudentDashboard from "../views/StudentDashboard.vue";
 import Login from "../views/Login.vue";
 import ResetPassword from "../views/ResetPassword.vue";
 import Register from "../views/Register.vue";
@@ -52,6 +53,10 @@ const routes = [
         name: "CohortView",
         component: CohortView,
         props: true,
+      },
+      {
+        path: "dashboard",
+        component: StudentDashboard,
       },
     ],
   },

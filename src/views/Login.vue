@@ -40,6 +40,7 @@
           @click="login"
           outlined
           width="100%"
+          :loading="loading"
         >
           Sign-in
         </v-btn>
@@ -82,6 +83,7 @@ export default {
     ],
     snackbar: false,
     snackbarText: "",
+    loading: false,
   }),
   mounted() {},
   computed: {
@@ -89,6 +91,7 @@ export default {
   },
   methods: {
     login() {
+      this.loading = true;
       firebase
         .auth()
         .setPersistence(firebase.auth.Auth.Persistence.LOCAL)
@@ -105,6 +108,7 @@ export default {
           this.snackbarText = error;
           this.snackbar = true;
           console.log("Login error:", error);
+          this.loading = false;
         });
     },
     proceed() {
@@ -136,6 +140,10 @@ export default {
           var errorMessage = error.message;
           // ..
         });
+    },
+    // hack delay to wait for person to load before routing
+    delay(ms) {
+      return new Promise((res) => setTimeout(res, ms));
     },
   },
 };

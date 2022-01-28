@@ -78,6 +78,11 @@
 import firebase from "firebase/app";
 
 import { db } from "../store/firestoreConfig";
+import {
+  sendStudentXAPIStatement,
+  sendTeacherXAPIStatement,
+} from "../store/veracityLRS";
+
 import { mapState, mapGetters } from "vuex";
 
 export default {
@@ -135,6 +140,30 @@ export default {
         })
         .then(() => {
           console.log("Task successfully updated as completed!");
+
+          // send xAPI statement to LRS
+          // student completed work
+          sendStudentXAPIStatement(
+            this.requesterPerson.email,
+            "http://adlnet.gov/expapi/verbs/completed",
+            {
+              galaxyName: this.submission.contextCourse.title,
+              systemName: this.submission.contextTopic.label,
+              missionName: this.submission.contextTask.title,
+            }
+          );
+          // teacher reviewed work
+          sendTeacherXAPIStatement(
+            this.person.email,
+            "https://w3id.org/xapi/dod-isd/verbs/reviewed",
+            {
+              student: this.requesterPerson,
+              galaxyName: this.submission.contextCourse.title,
+              systemName: this.submission.contextTopic.label,
+              missionName: this.submission.contextTask.title,
+            }
+          );
+
           this.loading = false;
           this.disabled = false;
           this.dialog = false;

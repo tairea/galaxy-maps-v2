@@ -3,7 +3,7 @@
     <div class="flexContainer">
       <Galaxy :whichCoursesToDisplay="whichCoursesToDisplay" />
     </div>
-    <div v-if="whichCoursesToDisplay != 'assigned'" class="buttons">
+    <div v-if="person.accountType == 'admin'" class="buttons">
       <CreateEditDeleteGalaxyDialog :edit="false" />
       <DiscoverGalaxyButton />
     </div>
