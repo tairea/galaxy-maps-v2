@@ -17,7 +17,7 @@
       </v-tabs>
       <!-- Teacher tabs (user tabs + cohors/students) -->
       <v-tabs
-        v-else-if="userType === 'teacher'"
+        v-else-if="userType === 'teacher' || userType === 'admin' "
         fixed-tabs
         background-color="transparent"
         dark

@@ -1,5 +1,6 @@
 import Vue from "vue";
 import Vuex from "vuex";
+import createPersistedState from "vuex-persistedstate";
 
 import { db } from "./firestoreConfig";
 import { vuexfireMutations, firestoreAction } from "vuexfire";
@@ -580,6 +581,7 @@ export default new Vuex.Store({
       return person.data();
     },
   },
+  plugins: [createPersistedState()]
 });
 
 // colour functions to colour nodes
