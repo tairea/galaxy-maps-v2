@@ -49,6 +49,9 @@
       <v-col>  
         <CreateEditDeleteOrganisationDialog ref="organisationDialog" :edit="openOrganisationDialog" :organisationToEdit="editingOrgansation" />
       </v-col>
+      <v-col v-if="user.data.admin">
+        <CreateAdminDialog />
+      </v-col>
     </v-row>
 
     <!-- Edit Org Dialog -->
@@ -61,6 +64,7 @@
 // @ is an alias to /src
 import CreateEditDeleteCohortDialog from "../components/CreateEditDeleteCohortDialog";
 import CreateEditDeleteOrganisationDialog from "../components/CreateEditDeleteOrganisationDialog";
+import CreateAdminDialog from "../components/CreateAdminDialog";
 import EditOrganisationButtonDialog from "../components/EditOrganisationButtonDialog";
 import Cohort from "../components/Cohort";
 import Organisation from "../components/Organisation";
@@ -75,6 +79,7 @@ export default {
     Cohort,
     Organisation,
     EditOrganisationButtonDialog,
+    CreateAdminDialog
   },
   data: () => ({
     openOrganisationDialog: false,
@@ -86,7 +91,10 @@ export default {
   },
   computed: {
     ...mapState(["organisations", "cohorts"]),
-    ...mapGetters(["getCohortsByOrganisationId", "getOrganisationById"]),
+    ...mapGetters(["getCohortsByOrganisationId", "getOrganisationById", "user"]),
+    cohortView () {
+      return this.$route.name === "CohortView"
+    }
   },
   methods: {
     getCohortsAndOrganisations() {

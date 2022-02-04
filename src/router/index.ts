@@ -109,6 +109,7 @@ router.beforeEach(async (to, from, next) => {
   if (to.matched.some((record) => record.meta.authRequired)) {
     await initialAuth;
 
+    console.log("logged in : ", store.getters.user.loggedIn)
     if (store.getters.user.loggedIn) {
       next();
     } else {

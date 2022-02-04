@@ -8,8 +8,13 @@ import firebase from "firebase";
 Vue.config.productionTip = false;
 
 firebase.auth().onAuthStateChanged((user) => {
-  store.dispatch("setUser", user);
-  store.dispatch("getPersonById", user?.uid);
+  if (user) {
+    user?.getIdTokenResult().then(idTokenResult => {
+      Object.assign(user, {admin: idTokenResult.claims.admin})
+      store.dispatch("setUser", user);
+      store.dispatch("getPersonById", user?.uid);
+    })
+  } else store.dispatch("setUser", user);
 });
 
 new Vue({

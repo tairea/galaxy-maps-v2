@@ -97,7 +97,7 @@
             </v-select>
             <!-- Select teachers from list -->
             <p class="input-description">Cohort teachers:</p>
-            <v-combobox
+            <v-autocomplete
               v-model="cohort.teachers"
               :items="teachers"
               class="input-field text-lowercase"
@@ -115,10 +115,7 @@
                   @click="data.select"
                   @click:close="remove(data.item)"
                 >
-                 <template v-if="checkType(data.item) !== 'object'">
-                    {{ data.item }}
-                  </template>
-                  <template v-else>
+                  <template>
                     <v-avatar v-if="data.item.image && data.item.image.url" left>
                       <v-img :src="data.item.image.url"></v-img>
                     </v-avatar>
@@ -137,7 +134,56 @@
                   </v-list-item-content>
                 </template>
               </template>
-            </v-combobox>
+            </v-autocomplete>
+            <template v-if="user.data.admin">
+              <p class="input-description">Add Admin:</p>
+              <v-autocomplete
+                v-model="administrator"
+                :items="people"
+                class="input-field text-lowercase"
+                solo
+                chips
+                item-text="firstName"
+                item-value="id"
+              >
+                <template v-slot:selection="data">
+                  <v-chip
+                    v-bind="data.attrs"
+                    :input-value="data.selected"
+                    close
+                    @click="data.select"
+                    @click:close="remove(data.item)"
+                  >
+                    <template>
+                      <v-avatar v-if="data.item.image && data.item.image.url" left>
+                        <v-img :src="data.item.image.url"></v-img>
+                      </v-avatar>
+                      {{ data.item.email }}
+                    </template>
+                  </v-chip>
+                </template>
+                <template v-slot:item="data">
+                  <template>
+                    <v-list-item-avatar v-if="data.item.image && data.item.image.url">
+                      <img :src="data.item.image.url">
+                    </v-list-item-avatar>
+                    <v-list-item-content>
+                      <v-list-item-title v-html="data.item.firstName"></v-list-item-title>
+                      <v-list-item-subtitle v-html="data.item.email"></v-list-item-subtitle>
+                    </v-list-item-content>
+                  </template>
+                </template>
+              </v-autocomplete>
+              <v-btn
+                  class="ma-2"
+                  :loading="addingAdmin"
+                  :disabled="loading"
+                  color="secondary"
+                  @click="addAdmin()"
+                >
+                  + Add Admin
+                </v-btn>
+            </template>
           </div>
           <!-- End create-dialog-content -->
         </div>
@@ -296,11 +342,12 @@
 </template>
 
 <script>
+import firebase from "firebase";
+
 import Organisation from "../components/Organisation";
-import { getAuth } from "firebase/auth"
 
 import { mapState, mapGetters } from "vuex";
-import { db, storage } from "../store/firestoreConfig";
+import { db, storage, functions } from "../store/firestoreConfig";
 
 export default {
   name: "CreateEditDeleteCohortDialog",
@@ -310,13 +357,12 @@ export default {
   },
   mounted() {
     if (this.cohortToEdit) {
-      console.log("editing cohort");
       this.cohort = this.cohortToEdit;
     }
   },
   computed: {
     ...mapState(["organisations", "people"]),
-    ...mapGetters(["getOrganisationById"]),
+    ...mapGetters(["getOrganisationById", "user"]),
     teachers () {
       const teachers = this.people.filter(person => person.accountType === "teacher")
       return teachers
@@ -335,6 +381,8 @@ export default {
     },
   },
   data: () => ({
+    administrator: "",
+    addingAdmin: false,
     dialog: false,
     dialogConfirm: false,
     dialogTitle: "Create A New Cohort",
@@ -344,6 +392,7 @@ export default {
     disabled: false,
     deleting: false,
     cohort: {
+      id: "",
       name: "",
       description: "",
       organisation: "",
@@ -365,62 +414,55 @@ export default {
       else index = this.cohort.teachers.indexOf(item)
       if (index >= 0) this.cohort.teachers.splice(index, 1)
     },
-    checkType(data) {
-      return typeof data
-    },
     cancel() {
       console.log("cancel");
       this.dialog = false;
       // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
     },
-    saveCohort(cohort) {
-      console.log('cohort teachers: ', cohort.teachers)
+    addAdmin () {
+      if (this.administrator) {
+        this.addingAdmin = true
+        console.log("admin: ", this.administrator)
+        const addAdminRole = functions.httpsCallable('addAdminRole')
+        addAdminRole(this.administrator).then(result => {
+          console.log(result)
+          this.addingAdmin = false
+          this.administrator = ""
+        }).catch(err => {
+          console.error(err)
+        })
+        
+      }
+    },
+    saveCohort() {
       this.loading = true;
+      console.log('cohort', this.cohort)
+      // remove teachers from cohort 
+      
+      const newCohort = (({ id, teachers, ...o }) => o)(this.cohort) // remove b and c
+      // Add a new document in collection "cohorts"
+      db.collection("cohorts")
+        .add(newCohort)
+        .then((docRef) => {
+          //get doc id from firestore (aka course id)
+          this.cohort.id = docRef.id;
+        })
+      .catch((error) => {
+        console.error("Error writing document: ", error);
+      });
+      console.log("step 2: this.cohort ", this.cohort)
+      
       // Create new teachers accounts if needed 
-      const newTeachers = cohort.teachers.filter(teacher => typeof teacher !== "object")
-      console.log("new teachers array: ", newTeachers)
-      if (newTeachers.length) newTeachers.forEach(email => {
-        console.log('new teacher: ', email)
-        // create new teacher account
-        getAuth()
-          .createUser({
-            email: email,
-          })
-          .then((newUser) => {
-            // add teacher to people in DB
+      this.cohort.teachers.forEach(teacher => {
+        console.log('new teacher: ', teacher)
 
-            // send teacher invitation email
-            
-            console.log('Successfully created new user:', newUser.uid);
-          })
-          .catch((error) => {
-            console.log('Error creating new user:', error);
-          });
+        // update exisiting teachers with new cohort
 
-
-
-        // update teachers array in cohort object to only include profile id's of teachers
+      // update teachers array in cohort object to only include profile id's of teachers
 
       })
-      // Add a new document in collection "cohorts"
-      // db.collection("cohorts")
-      //   .add(cohort)
-      //   .then((docRef) => {
-      //     console.log("Document successfully written!");
-      //     this.loading = false;
-      //     this.dialog = false;
 
-      //     //get doc id from firestore (aka course id)
-      //     const cohortId = docRef.id;
-      //     //set cohortId to Store state 'state.currentcohortId' (so not relying on router params)
-      //     this.$store.commit("setCurrentCohortId", cohortId);
-      //     // reset cohort
-      //     this.cohort = {};
-      //     this.uploadedImage = null;
-      //   })
-      //   .catch((error) => {
-      //     console.error("Error writing document: ", error);
-      //   });
+
     },
     camelize(str) {
       return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
