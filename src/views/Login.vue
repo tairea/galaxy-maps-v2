@@ -85,7 +85,7 @@ export default {
   }),
   mounted() {},
   computed: {
-    ...mapGetters(["person"]),
+    ...mapGetters(["person", "user"]),
   },
   methods: {
     login() {
@@ -99,23 +99,26 @@ export default {
             .signInWithEmailAndPassword(this.email, this.password);
         })
         .then(() => {
-          console.log("Successfully logged in");
-
-          // this routing doesnt work because this.person not loaded yet
-          // if (this.person.accountType == "student") {
-          //   this.$router.push("/base/galaxies/assigned");
-          // } else {
-          //   this.$router.push("/base/galaxies/my");
-          // }
-
-          // TODO: route to appropriate page (eg. for student -> /base/galaxies/assigned for teacher -> /base/galaxies/my)
-          this.$router.push("/base/galaxies/all");
+          this.proceed()
         })
         .catch((error) => {
           this.snackbarText = error;
           this.snackbar = true;
           console.log("Login error:", error);
         });
+    },
+    proceed() {
+      if (!this.user?.data?.id || !this.person?.id) {
+        setTimeout(() => {
+          this.proceed()
+        }, 500)
+        return
+      } 
+      if (this.person.accountType == "student") {
+        this.$router.push("/base/galaxies/assigned");
+      } else {
+        this.$router.push("/base/galaxies/my");
+      }
     },
     validate() {
       this.$refs.form.validate();

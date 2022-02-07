@@ -134,56 +134,10 @@
                   </v-list-item-content>
                 </template>
               </template>
+              <template v-slot:no-data>
+                <CreateAccountDialog accountType="teacher" @addAccount="addTeacher($event)"/>
+              </template>
             </v-autocomplete>
-            <template v-if="user.data.admin">
-              <p class="input-description">Add Admin:</p>
-              <v-autocomplete
-                v-model="administrator"
-                :items="people"
-                class="input-field text-lowercase"
-                solo
-                chips
-                item-text="firstName"
-                item-value="id"
-              >
-                <template v-slot:selection="data">
-                  <v-chip
-                    v-bind="data.attrs"
-                    :input-value="data.selected"
-                    close
-                    @click="data.select"
-                    @click:close="remove(data.item)"
-                  >
-                    <template>
-                      <v-avatar v-if="data.item.image && data.item.image.url" left>
-                        <v-img :src="data.item.image.url"></v-img>
-                      </v-avatar>
-                      {{ data.item.email }}
-                    </template>
-                  </v-chip>
-                </template>
-                <template v-slot:item="data">
-                  <template>
-                    <v-list-item-avatar v-if="data.item.image && data.item.image.url">
-                      <img :src="data.item.image.url">
-                    </v-list-item-avatar>
-                    <v-list-item-content>
-                      <v-list-item-title v-html="data.item.firstName"></v-list-item-title>
-                      <v-list-item-subtitle v-html="data.item.email"></v-list-item-subtitle>
-                    </v-list-item-content>
-                  </template>
-                </template>
-              </v-autocomplete>
-              <v-btn
-                  class="ma-2"
-                  :loading="addingAdmin"
-                  :disabled="loading"
-                  color="secondary"
-                  @click="addAdmin()"
-                >
-                  + Add Admin
-                </v-btn>
-            </template>
           </div>
           <!-- End create-dialog-content -->
         </div>
@@ -239,6 +193,7 @@
             class="mr-2"
             :loading="loading"
             :disabled="disabled"
+            width="40%"
           >
             <v-icon left>
               mdi-check
@@ -253,6 +208,7 @@
             color="error"
             @click="deleteDialog()"
             class="ml-2"
+            width="40%"
           >
             <v-icon left>
               mdi-delete
@@ -266,6 +222,7 @@
             class="ml-2"
             @click="cancel"
             :disabled="disabled || loading"
+            width="40%"
           >
             <v-icon left>
               mdi-close
@@ -342,47 +299,23 @@
 </template>
 
 <script>
-import firebase from "firebase";
-
 import Organisation from "../components/Organisation";
+import CreateAccountDialog from "../components/CreateAccountDialog";
 
 import { mapState, mapGetters } from "vuex";
-import { db, storage, functions } from "../store/firestoreConfig";
+import { db, storage } from "../store/firestoreConfig";
 
 export default {
   name: "CreateEditDeleteCohortDialog",
   props: ["edit", "cohortToEdit"],
   components: {
     Organisation,
-  },
-  mounted() {
-    if (this.cohortToEdit) {
-      this.cohort = this.cohortToEdit;
-    }
-  },
-  computed: {
-    ...mapState(["organisations", "people"]),
-    ...mapGetters(["getOrganisationById", "user"]),
-    teachers () {
-      const teachers = this.people.filter(person => person.accountType === "teacher")
-      return teachers
-    },
-    cohortView () {
-      console.log('route: ', this.$route)
-      return this.$route.name === "CohortView"
-    },
-    organisationsToSelect() {
-      return [{ name: "none", id: 0 }, ...this.organisations];
-    },
-    // easy image preview thanks to: https://stackoverflow.com/questions/60678840/vuetify-image-upload-preview
-    imgUrl() {
-      if (!this.uploadedImage) return;
-      return URL.createObjectURL(this.uploadedImage);
-    },
+    CreateAccountDialog
   },
   data: () => ({
     administrator: "",
     addingAdmin: false,
+    teacherDialog: false,
     dialog: false,
     dialogConfirm: false,
     dialogTitle: "Create A New Cohort",
@@ -407,7 +340,51 @@ export default {
     uploadedImage: null,
     percentage: 0,
   }),
+  mounted() {
+    if (this.cohortToEdit) {
+      console.log('cohortToEdit: ', this.cohort.Edit)
+      let exisitingCohort = this.cohortToEdit 
+      const teacherProfiles = this.cohortToEdit.teachers?.forEach( teacher => {
+        this.getPersonByIdFromDB(teacher.id)
+      })
+      console.log("teacherIds: ", teacherIds)
+      exisitingCohort.teachers = teacherProfiles
+      this.cohort = exisitingCohort;
+    }
+  },
+  computed: {
+    ...mapState(["organisations", "people"]),
+    ...mapGetters(["getOrganisationById", "user", "getPersonByIdFromDB"]),
+    teachers () {
+      const teachers = this.people.filter(person => person.accountType === "teacher")
+      return teachers
+    },
+    cohortView () {
+      console.log('route: ', this.$route)
+      return this.$route.name === "CohortView"
+    },
+    organisationsToSelect() {
+      return [{ name: "none", id: 0 }, ...this.organisations];
+    },
+    // easy image preview thanks to: https://stackoverflow.com/questions/60678840/vuetify-image-upload-preview
+    imgUrl() {
+      if (!this.uploadedImage) return;
+      return URL.createObjectURL(this.uploadedImage);
+    },
+  },
+
   methods: {
+    addTeacher (person) {
+      console.log("teachers before: ", this.cohort.teachers)
+      this.cohort.teachers = this.cohort.teachers.filter(e => {
+        return e !== typeof 'object'
+      })
+      console.log("teachers after: ", this.cohort.teachers)
+      return this.cohort.teachers.push(person)
+    },
+    toggleTeacherDialog () {
+      this.teacherDialog = !this.teacherDialog
+    },
     remove (item) {
       let index
       if (item.firstName) index = this.cohort.teachers.findIndex(n => item.firstName === n.firstName)
@@ -419,27 +396,17 @@ export default {
       this.dialog = false;
       // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
     },
-    addAdmin () {
-      if (this.administrator) {
-        this.addingAdmin = true
-        console.log("admin: ", this.administrator)
-        const addAdminRole = functions.httpsCallable('addAdminRole')
-        addAdminRole(this.administrator).then(result => {
-          console.log(result)
-          this.addingAdmin = false
-          this.administrator = ""
-        }).catch(err => {
-          console.error(err)
-        })
-        
-      }
-    },
-    saveCohort() {
+    saveCohort(cohort) {
       this.loading = true;
-      console.log('cohort', this.cohort)
-      // remove teachers from cohort 
-      
-      const newCohort = (({ id, teachers, ...o }) => o)(this.cohort) // remove b and c
+      console.log('cohort', cohort)
+
+      const teacherIds = this.cohort.teachers?.forEach(teacher => {
+        return teacher.id
+      })
+      console.log("teachersIds: ", teacherIds)
+
+      cohort.teachers = teacherIds
+
       // Add a new document in collection "cohorts"
       db.collection("cohorts")
         .add(newCohort)
@@ -455,10 +422,9 @@ export default {
       // Create new teachers accounts if needed 
       this.cohort.teachers.forEach(teacher => {
         console.log('new teacher: ', teacher)
-
         // update exisiting teachers with new cohort
 
-      // update teachers array in cohort object to only include profile id's of teachers
+        // update teachers array in cohort object to only include profile id's of teachers
 
       })
 

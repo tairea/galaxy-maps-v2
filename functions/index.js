@@ -62,6 +62,7 @@ exports.generateEmailLink = functions.https.onCall((data, context) => {
     return error
   })
 })
+
 // CUSTOM INVITE EMAIL
 // Configure the email transport using the default SMTP transport and a GMail account.
 // For Gmail, enable these:

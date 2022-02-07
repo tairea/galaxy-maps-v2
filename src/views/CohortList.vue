@@ -42,14 +42,14 @@
         </v-row>
       </v-col>
     </v-row>
-    <v-row class="cohort-bottom">
+    <v-row  v-if="user.data.admin" class="cohort-bottom">
       <v-col>
         <CreateEditDeleteCohortDialog />
       </v-col>
       <v-col>  
         <CreateEditDeleteOrganisationDialog ref="organisationDialog" :edit="openOrganisationDialog" :organisationToEdit="editingOrgansation" />
       </v-col>
-      <v-col v-if="user.data.admin">
+      <v-col>
         <CreateAdminDialog />
       </v-col>
     </v-row>
