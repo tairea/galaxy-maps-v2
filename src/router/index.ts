@@ -10,6 +10,7 @@ import AllStudentsView from "../views/AllStudentsView.vue";
 import Login from "../views/Login.vue";
 import ResetPassword from "../views/ResetPassword.vue";
 import Register from "../views/Register.vue";
+import EmailSignIn from "../views/EmailSignIn.vue";
 import LandingPage from "../views/LandingPage.vue";
 
 import firebase from "firebase";
@@ -64,6 +65,11 @@ const routes = [
     component: Register,
   },
   {
+    path: "/email_signin",
+    name: "EmailSignIn",
+    component: EmailSignIn,
+  },
+  {
     path: "/galaxyList",
     name: "GalaxyList",
     component: GalaxyList,
@@ -109,7 +115,6 @@ router.beforeEach(async (to, from, next) => {
   if (to.matched.some((record) => record.meta.authRequired)) {
     await initialAuth;
 
-    console.log("logged in : ", store.getters.user.loggedIn)
     if (store.getters.user.loggedIn) {
       next();
     } else {

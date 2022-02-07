@@ -103,9 +103,6 @@ export default new Vuex.Store({
         return state.cohorts.filter((cohort) => cohort.organisation == "");
       }
     },
-    getPersonById: (state) => (id) => {
-      state.people.filter((person) => person.id === id);
-    },
     getCohortsInThisCourse: (state) => (id) => {
       //go to cohorts, and check if they in courses with this id
       let cohortsInCourse = state.cohorts.filter((cohort) => {
@@ -173,6 +170,9 @@ export default new Vuex.Store({
     },
     SET_USER(state, data) {
       state.user.data = data;
+    },
+    SET_PERSON(state, data) {
+      state.person = data;
     },
     setCurrentCourseId(state, courseId) {
       state.currentCourseId = courseId;
@@ -314,15 +314,19 @@ export default new Vuex.Store({
         });
     },
     // ===== Firestore - BIND by USER
-    async getPersonById({ state }, id) {
-      await db
-        .collection("people")
-        .doc(id)
-        .get()
-        .then((doc) => {
-          state.person = doc.data();
-          console.log("user data stored in state.person", doc.data());
-        });
+    async getPersonById({ commit }, id) {
+      if (id) {
+        console.log('setting person: ', id)
+        await db
+          .collection("people")
+          .doc(id)
+          .get()
+          .then((doc) => {
+            commit("SET_PERSON", doc.data())
+          });
+      } else {
+        commit("SET_PERSON", {})
+      }
     },
     async getNodesByPersonId({ state }, personId) {
       const personsNodes = [];
@@ -575,6 +579,7 @@ export default new Vuex.Store({
       }
       state.teachersRequestsForHelp = allRequestsForHelp;
     },
+    // TODO: Consider putting this into a mixin or somewhere else as it doesnt have anything to do with the store
     async getPersonByIdFromDB({ state }, personId) {
       const person = await db.collection("people").doc(personId).get();
       return person.data();

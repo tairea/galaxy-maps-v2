@@ -188,6 +188,7 @@ export default {
           image: this.image,
         })
         .then(() => {
+          // TODO: Use firebase reactive functions to make person reactive
           console.log("Image successfully updated!");
           this.getPersonById(this.person.id);
           this.onhover = false;

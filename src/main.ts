@@ -12,9 +12,12 @@ firebase.auth().onAuthStateChanged((user) => {
     user?.getIdTokenResult().then(idTokenResult => {
       Object.assign(user, {admin: idTokenResult.claims.admin})
       store.dispatch("setUser", user);
-      store.dispatch("getPersonById", user?.uid);
+      store.dispatch("getPersonById", user.uid);
     })
-  } else store.dispatch("setUser", user);
+  } else {
+    store.dispatch("setUser", user);
+    store.dispatch("getPersonById", user);
+  }
 });
 
 new Vue({

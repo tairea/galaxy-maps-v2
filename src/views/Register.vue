@@ -13,6 +13,7 @@
 
       <v-form v-else ref="form" v-model="valid" lazy-validation class="my-4">
         <v-text-field
+          dark
           type="email"
           v-model="person.firstName"
           label="First Name"

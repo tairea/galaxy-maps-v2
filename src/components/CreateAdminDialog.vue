@@ -29,6 +29,7 @@
             chips
             item-text="firstName"
             item-value="id"
+            clearable
           >
             <template v-slot:selection="data">
               <v-chip
@@ -36,7 +37,6 @@
                 :input-value="data.selected"
                 close
                 @click="data.select"
-                @click:close="remove(data.item)"
               >
                 <template>
                   <v-avatar v-if="data.item.image && data.item.image.url" left>
@@ -58,26 +58,43 @@
               </template>
             </template>
           </v-autocomplete>
-          <v-btn
-              class="ma-2"
-              :loading="addingAdmin"
-              :disabled="addingAdmin"
-              color="secondary"
-              @click="addAdmin()"
-            >
-              + Add Admin
-          </v-btn>
+          <v-row>
+            <v-btn
+                class="ma-2"
+                :loading="addingAdmin"
+                :disabled="addingAdmin"
+                color="secondary"
+                @click="addAdmin()"
+              >
+                + Add Admin
+            </v-btn>
+            <v-btn
+                class="ma-2"
+                color="secondary"
+                @click="cancel()"
+              >
+                Cancel
+            </v-btn>
+          </v-row>
         </div>
       </div>
       <!-- End create-dialog -->
     </v-dialog>
+    <v-snackbar v-model="snackbar">
+      {{ snackbarText }}
+      <template v-slot:action="{ attrs }">
+        <v-btn color="pink" text v-bind="attrs" @click="snackbar = false">
+          OK
+        </v-btn>
+      </template>
+    </v-snackbar>
   </div>
 </template>
 
 <script>
 
 import { mapState, mapGetters } from "vuex";
-import { db, storage, functions } from "../store/firestoreConfig";
+import { functions } from "../store/firestoreConfig";
 
 export default {
   name: "CreateAdminDialog",
@@ -92,23 +109,25 @@ export default {
     administrator: "",
     addingAdmin: false,
     dialog: false,
+    snackbar: false,
+    snackbarText: "",
   }),
   methods: {
     cancel() {
-      console.log("cancel");
       this.dialog = false;
-      // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
     },
     addAdmin () {
       if (this.administrator) {
         this.addingAdmin = true
-        console.log("admin: ", this.administrator)
         const addAdminRole = functions.httpsCallable('addAdminRole')
         addAdminRole(this.administrator).then(result => {
-          console.log(result)
+          this.snackbarText = "admin role successfully added for " + this.administrator ;
+          this.snackbar = true;
           this.addingAdmin = false
           this.administrator = ""
         }).catch(err => {
+          this.snackbarText = "something went wrong trying to add admin: " + err;
+          this.snackbar = true;
           console.error(err)
         })
         
@@ -124,9 +143,7 @@ export default {
   color: var(--v-missionAccent-base);
   background-color: var(--v-background-base);
   border: 1px solid var(--v-missionAccent-base);
-  // background: lightGrey;
   display: flex;
-  // flex-direction: column;
   flex-wrap: wrap;
   overflow-x: hidden;
 
@@ -135,88 +152,10 @@ export default {
     padding: 20px;
     text-transform: uppercase;
     border-bottom: 1px solid var(--v-missionAccent-base);
-
-    .dialog-title {
-      color: var(--v-missionAccent-base);
-      text-transform: uppercase;
-    }
-
-    .dialog-description {
-      color: var(--v-missionAccent-base);
-      text-transform: uppercase;
-      font-size: 0.8rem;
-      margin: 0;
-      font-style: italic;
-    }
-  }
-
-  .left-side {
-    width: 50%;
-    display: flex;
-    flex-direction: column;
-    flex-wrap: wrap;
-    transition: all 0.3s;
-  }
-
-  .right-side {
-    width: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    transition: all 0.3s;
-    // flex-direction: column;
-    // border-left: 1px solid var(--v-missionAccent-base);
-
-    // cohort info
-    #cohort-info {
-      width: calc(100% - 40px);
-      // min-height: 100%;
-      border: 1px solid var(--v-cohortAccent-base);
-      margin-top: 30px;
-      padding: 20px;
-      // background: var(--v-baseAccent-base);
-      position: relative;
-      z-index: 3;
-
-      .cohort-label {
-        font-size: 0.8rem;
-        font-weight: 400;
-        text-transform: uppercase;
-        // ribbon label
-        position: absolute;
-        top: -1px;
-        left: -1px;
-        background-color: var(--v-cohortAccent-base);
-        color: var(--v-background-base);
-        padding: 0px 15px 0px 5px;
-        clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%);
-      }
-
-      .cohort-title {
-        font-size: 1.2rem;
-        color: var(--v-cohortAccent-base);
-        font-weight: 600;
-        text-transform: uppercase;
-        margin: 20px 0px 5px 0px;
-      }
-
-      .cohort-description {
-        margin-top: 10px;
-        color: var(--v-cohortAccent-base);
-        // font-size: 0.9rem;
-      }
-    }
-  }
-
-  .action-buttons {
-    width: 100%;
-    padding: 20px;
   }
 }
 
 .create-dialog-content {
-  // width: 33.33%;
-  min-height: 400px;
   display: flex;
   justify-content: space-around;
   align-items: space-around;
@@ -225,15 +164,6 @@ export default {
   padding: 20px;
   text-transform: uppercase;
   width: 100%;
-  // font-size: 0.6rem;
-  // border: 1px solid var(--v-missionAccent-base);
-
-  .input-field {
-    width: 100%;
-    text-align: center;
-    flex: none;
-    font-size: 0.9rem;
-  }
 }
 
 .input-description {
@@ -242,23 +172,5 @@ export default {
   font-size: 0.7rem;
   margin: 0;
   font-style: italic;
-
-  .galaxy-text {
-    color: var(--v-galaxyAccent-base);
-    text-transform: uppercase;
-    font-weight: 700;
-  }
-  .mission-text {
-    color: var(--v-missionAccent-base);
-    text-transform: uppercase;
-    font-weight: 700;
-  }
-  .cohort-text {
-    color: var(--v-cohortAccent-base);
-    text-transform: uppercase;
-    font-weight: 700;
-    background-color: var(--v-subBackground-base);
-    padding: 0px 5px;
-  }
 }
 </style>
