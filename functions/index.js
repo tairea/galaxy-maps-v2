@@ -38,7 +38,9 @@ exports.createUser = functions.https.onCall((data, context) => {
     .then((data) => {
       return data
     })
-  .catch(console.error);
+  .catch((err) => {
+    return err
+  });
 });
 
 // Generate a magic email link

@@ -65,7 +65,7 @@
             <v-btn
               :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
               class="ma-4"
-              @click="cancel()"
+              @click="close()"
               outlined
               width="30%"
             >
@@ -104,24 +104,17 @@ export default {
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
     ]
   }),
-  watch: {
-    dialog(newVal) {
-      if (newVal === true) {
-        const emptyPerson = {
-          id: "",
-          firstName: "",
-          lastName: "",
-          email: "",
-          accountType: "",
-          displayName: "",
-        }
-        this.person = emptyPerson
-      }
-    }
-  },
   methods: {
-    cancel() {
+    close() {
       this.dialog = false;
+      this.person = {
+        id: "",
+        firstName: "",
+        lastName: "",
+        email: "",
+        accountType: "",
+        displayName: "",
+      }
     },
     create () {
       this.$refs.form.validate()
@@ -141,13 +134,11 @@ export default {
           return this.sendEmailInvite(link)
         }).then(() => {
           this.addingAccount = false
-          debugger
-          this.$emit('addAccount', this.person)
-          this.cancel()
+          this.close()
         })
         .catch((error) => {
           console.log(error)
-        });
+      });
     },
     addPerson () {
       const profile = (({ displayName, ...o }) => o)(this.person) // remove id and teachers

@@ -76,10 +76,11 @@ export default {
       "getCoursesInThisCohort",
       "getStudentsByCohortId",
     ]),
-    courses() {
-      let courses = this.getCoursesInThisCohort(this.currentCohortId)
+    courses () {
+      let cohortcourses = this.getCoursesInThisCohort(this.currentCohortId)
+      console.log('cohort courses: ', cohortcourses)
       // needed so courses props arent returned undefined 
-      if (courses[0]) return courses 
+      if (cohortcourses.length) return cohortcourses 
       else return {}
     } 
   },
