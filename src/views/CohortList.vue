@@ -2,44 +2,54 @@
   <v-container class="d-flex flex-column fullHeight">
     <v-row class="cohort-main">
       <v-col>
-        <h3 class="cohort-heading overline baseAccent--text">
-          Cohorts (No Organisation)
-        </h3>
-        <!-- COHORTS with no attached org -->
-        <v-row class="mb-5">
-          <v-col>
-            <v-row>
-              <Cohort
-                v-for="cohort in getCohortsByOrganisationId()"
-                :cohort="cohort"
-                :key="cohort.id"
-                :size="'0.25em'"
-                :cols="3"
-              />
-            </v-row>
-          </v-col>
-        </v-row>
-
+        
         <!-- ORGANISATIONS -->
-        <h3 class="cohort-heading overline baseAccent--text">Organisation > Cohorts</h3>
-        <v-row class="d-flex flex-column">
-          <v-col v-for="organisation in organisations" :key="organisation.id">
-            <v-row class="organisation-banner">
-              <Organisation @editOrg="editOrgDialog" :organisation="organisation" :size="'0.25em'" />
-            </v-row>
-            <v-row class="mb-6">
-              <!-- Their COHORTS -->
-              <Cohort
-                v-for="cohort in getCohortsByOrganisationId(organisation.id)"
-                :cohort="cohort"
-                :key="cohort.id"
-                :size="'0.25em'"
-                :cols="3"
-              />
-            </v-row>
-            <hr width="100%" />
-          </v-col>
-        </v-row>
+        <div v-if="myOrganisations">
+          <h3 class="cohort-heading overline baseAccent--text">Organisation cohorts</h3>
+          <v-row class="d-flex flex-column">
+            <v-col v-for="organisation in organisations" :key="organisation.id">
+              <v-row class="organisation-banner">
+                <Organisation @editOrg="editOrgDialog" :organisation="organisation" :size="'0.25em'" />
+              </v-row>
+              <v-row class="mb-6">
+                <!-- Their COHORTS -->
+                <Cohort
+                  v-for="cohort in getCohortsByOrganisationId(organisation.id)"
+                  :cohort="cohort"
+                  :key="cohort.id"
+                  :size="'0.25em'"
+                  :cols="3"
+                />
+              </v-row>
+            </v-col>
+          </v-row>
+        </div>
+        <!-- COHORTS NOT IN ORGS -->
+        <div v-if="cohorts">
+          <h3 class="cohort-heading overline baseAccent--text">
+            Cohorts
+          </h3>
+          <!-- COHORTS with no attached org -->
+          <v-row class="mb-5">
+            <v-col>
+              <v-row>
+                <Cohort
+                  v-for="cohort in getCohortsByOrganisationId()"
+                  :cohort="cohort"
+                  :key="cohort.id"
+                  :size="'0.25em'"
+                  :cols="3"
+                />
+              </v-row>
+            </v-col>
+          </v-row>
+        </div>
+        <div v-else>
+          <h3 class="cohort-heading overline baseAccent--text">
+            No Cohorts Found
+          </h3>
+        </div>
+
       </v-col>
     </v-row>
     <v-row  v-if="user.data.admin" class="cohort-bottom">
@@ -69,7 +79,7 @@ import EditOrganisationButtonDialog from "../components/EditOrganisationButtonDi
 import Cohort from "../components/Cohort";
 import Organisation from "../components/Organisation";
 
-import { mapState, mapGetters } from "vuex";
+import { mapState, mapGetters, mapActions } from "vuex";
 
 export default {
   name: "CohortList",
@@ -90,16 +100,29 @@ export default {
     this.getCohortsAndOrganisations();
   },
   computed: {
-    ...mapState(["organisations", "cohorts"]),
-    ...mapGetters(["getCohortsByOrganisationId", "getOrganisationById", "user"]),
+    ...mapGetters(["getOrganisationById", "user", "cohorts", "organisations", "person"]),
     cohortView () {
       return this.$route.name === "CohortView"
     }
   },
   methods: {
+    ...mapActions(["bindAllCohorts", "bindAllOrganisations", "getCohortsByPersonId"]),
+    getCohortsByOrganisationId(id) {
+      if (id) {
+        return this.cohorts.filter((cohort) => cohort.organisation === id);
+      } else {
+        return this.cohorts.filter((cohort) => cohort.organisation == "");
+      }
+    },
     getCohortsAndOrganisations() {
-      this.$store.dispatch("bindAllCohorts");
-      this.$store.dispatch("bindAllOrganisations");
+      if (this.user.data.admin){
+        // this.$store.dispatch("bindAllCohorts");
+        this.bindAllCohorts()
+        this.bindAllOrganisations();
+      } else {
+        console.log("not an admin")
+        this.getCohortsByPersonId(this.person)
+      }
     },
     editOrgDialog(orgId) {
       this.openOrganisationDialog = true
@@ -134,6 +157,7 @@ hr {
   .cohort-heading {
     border-bottom: 1px solid var(--v-baseAccent-base);
     margin-bottom: 10px;
+    text-align: start
   }
 
  .organisation-banner {

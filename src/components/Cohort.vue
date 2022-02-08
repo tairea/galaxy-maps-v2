@@ -14,7 +14,7 @@
       <div v-else class="imagePlaceholder">
         {{ first3Letters(cohort.name) }}
       </div>
-      <h3 class="overline">{{ cohort.name }}</h3>
+      <h3 class="overline cohort-name">{{ cohort.name }}</h3>
     </div>
     <v-tooltip v-else bottom>
       <template v-slot:activator="{ on, attrs }">
@@ -26,7 +26,7 @@
             max-height="40px"
             class="cohort-image"
           ></v-img>
-          <div v-else class="imagePlaceholder">
+          <div v-else class="imagePlaceholder cohort-name">
             {{ first3Letters(cohort.name) }}
           </div>
         </div>
@@ -90,6 +90,13 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
+  }
+
+  .cohort-name {
+    text-align: center;
+    font-size: 0.65rem !important;
+    line-height: 1rem;
+    padding-top: 10px;
   }
 }
 </style>

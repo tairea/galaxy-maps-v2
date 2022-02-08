@@ -50,6 +50,8 @@ export default new Vuex.Store({
     user: (state) => state.user,
     person: (state) => state.person,
     courses: (state) => state.courses,
+    cohorts: (state) => state.cohorts,
+    organisations: state => state.organisations,
     getCourseById: (state) => (id) => {
       return state.courses.find((course) => course.id === id);
     },
@@ -94,14 +96,6 @@ export default new Vuex.Store({
           tasks: [],
         };
       return topic.tasks;
-    },
-    getCohortsByOrganisationId: (state) => (id) => {
-      // TODO:
-      if (id) {
-        return state.cohorts.filter((cohort) => cohort.organisation === id);
-      } else {
-        return state.cohorts.filter((cohort) => cohort.organisation == "");
-      }
     },
     getCohortsInThisCourse: (state) => (id) => {
       //go to cohorts, and check if they in courses with this id
@@ -209,6 +203,12 @@ export default new Vuex.Store({
     },
     updatePersonsAssignedNodesForDisplay(state, newNodePositions) {
       state.personsAssignedNodesForDisplay = newNodePositions;
+    },
+    setCohorts(state, cohorts) {
+      state.cohorts = cohorts
+    },
+    setOrganisations (state, orgs) {
+      state.organisations = orgs
     }
   },
   actions: {
@@ -584,6 +584,60 @@ export default new Vuex.Store({
       const person = await db.collection("people").doc(personId).get();
       return person.data();
     },
+
+    async getCohortsByPersonId ({ commit, dispatch }, person) {
+      const dbCohorts = []
+      let querySnapShot = {}
+      
+      if (person.accountType == "teacher") {
+        querySnapShot = await db.
+          collection("cohorts")
+          .where("teachers", "array-contains", person.id)
+          .get();
+      } else {
+        querySnapShot = await db.
+        collection("cohorts")
+        .where("students", "array-contains", person.id)
+        .get();
+      }
+
+      for (const doc of querySnapShot.docs) {
+        dbCohorts.push(doc.data());
+      }
+      commit("setCohorts", dbCohorts)
+      dispatch("getOrganisationsByCohorts", dbCohorts)
+    },
+
+    async getOrganisationsByCohorts ({ commit }, cohorts) {
+      const orgs = []
+      const querySnapShot = await db.
+        collection("organisations")
+        // .doc(cohort)
+        .where("cohorts", "array-contains-any", cohorts)
+        .get();
+      
+      console.log("snapshot: ", querySnapShot)
+      if (querySnapShot.docs.length) {
+        for (const doc of querySnapShot.docs) {
+          console.log("doc: ", doc)
+          orgs.push(doc.data());
+        }
+      }
+
+      console.log('orgs: ', orgs)
+      commit("setOrganisations", orgs)
+    },
+    resetState ({ state }) {
+      console.log("reset state")
+      let newState = {};
+
+      Object.keys(state).forEach(key => {
+        newState[key] = null; // or = initialState[key]
+      });
+
+      state.replaceState(newState);
+      console.log("state reset: ", state)
+    }
   },
   plugins: [createPersistedState()]
 });
