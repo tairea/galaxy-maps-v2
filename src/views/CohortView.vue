@@ -80,7 +80,7 @@ export default {
       let cohortcourses = this.getCoursesInThisCohort(this.currentCohortId)
       console.log('cohort courses: ', cohortcourses)
       // needed so courses props arent returned undefined 
-      if (cohortcourses.length) return cohortcourses 
+      if (cohortcourses[0]) return cohortcourses 
       else return {}
     } 
   },
@@ -104,7 +104,7 @@ export default {
 }
 
 #container {
-  // height: 100vh;
+  height: 100vh;
   width: 100%;
   display: flex;
   // overflow: hidden;
@@ -135,7 +135,7 @@ export default {
     height: 90%;
     // margin: 30px 20px;
     border: 1px solid var(--v-missionAccent-base);
-    overflow: scroll;
+    overflow: auto;
 
     .people-label {
       font-size: 0.8rem;

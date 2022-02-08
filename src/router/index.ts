@@ -70,14 +70,6 @@ const routes = [
     component: EmailSignIn,
   },
   {
-    path: "/galaxyList",
-    name: "GalaxyList",
-    component: GalaxyList,
-    meta: {
-      authRequired: true,
-    },
-  },
-  {
     path: "/galaxy/:courseId",
     name: "GalaxyView",
     component: GalaxyView,

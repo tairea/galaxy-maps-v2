@@ -343,13 +343,11 @@ export default {
     uploadedImage: null,
     percentage: 0,
     search: "",
-    exisitingTeachers: []
   }),
   watch: {
     dialog (newVal) {
       if (newVal && this.edit) {
         this.cohort = this.cohortToEdit 
-        this.loadTeacherProfiles()
       } 
     }
   },
@@ -406,39 +404,14 @@ export default {
     },
     saveCohort(cohort) {
       this.loading = true;      
-      const newCohort = cohort
-      delete newcohort.id
-
       // Add a new document in collection "cohorts"
       db.collection("cohorts")
-        .add(newCohort)
+        .add(cohort)
         .then((docRef) => {
-          //get doc id from firestore (aka course id)
-          this.cohort.id = docRef.id;
+          this.close()       
         })
-      .catch((error) => {
-        console.error("Error writing document: ", error);
-      });
-      console.log("step 2: this.cohort ", this.cohort)
-      
-      // Create new teachers accounts if needed 
-      this.cohort.teachers.forEach(teacher => {
-        console.log('new teacher: ', teacher)
-        // update exisiting teachers with new cohort
-        db.collection("people")
-          .doc(teacher)
-          .update({
-            hostCohorts: firebase.firestore.FieldValue.arrayUnion(
-              this.cohort.id
-            ),
-          })
-          .then(() => {
-            console.log('cohort added to teacher')
-            this.close()
-          })
-          .catch((error) => {
-            console.error(error);
-          });
+        .catch((error) => {
+          console.error("Error writing document: ", error);
       })
     },
     camelize(str) {
@@ -504,7 +477,7 @@ export default {
           this.loadingDelete = false;
           this.dialog = false;
           // after delete... route back to home
-          this.$router.push({ path: "/cohorts" });
+          this.$router.push({ name: "CohortsList" });
         })
         .catch((error) => {
           console.error("Error deleting document: ", error);
