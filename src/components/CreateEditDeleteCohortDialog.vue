@@ -99,11 +99,14 @@
             <p class="input-description">Cohort teachers:</p>
             <v-autocomplete
               v-model="cohort.teachers"
+              :search-input.sync="search"
               :items="teachers"
+              @change="search = ''"
+              menu-props="closeOnContentClick"
               class="input-field text-lowercase"
               solo
               chips
-              item-text="firstName"
+              item-text="email"
               item-value="id"
               multiple
             >
@@ -135,7 +138,7 @@
                 </template>
               </template>
               <template v-slot:no-data>
-                <CreateAccountDialog accountType="teacher" @addAccount="addTeacher($event)"/>
+                <CreateAccountDialog accountType="teacher" @addAccount="addTeacher(teacher)"/>
               </template>
             </v-autocomplete>
           </div>
@@ -220,7 +223,7 @@
             outlined
             :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
             class="ml-2"
-            @click="cancel"
+            @click="close"
             :disabled="disabled || loading"
             width="40%"
           >
@@ -301,6 +304,7 @@
 <script>
 import Organisation from "../components/Organisation";
 import CreateAccountDialog from "../components/CreateAccountDialog";
+import firebase from "firebase";
 
 import { mapState, mapGetters } from "vuex";
 import { db, storage } from "../store/firestoreConfig";
@@ -325,11 +329,10 @@ export default {
     disabled: false,
     deleting: false,
     cohort: {
-      id: "",
       name: "",
       description: "",
       organisation: "",
-      people: [],
+      students: [],
       courses: [],
       image: {
         name: "",
@@ -339,22 +342,20 @@ export default {
     },
     uploadedImage: null,
     percentage: 0,
+    search: "",
+    exisitingTeachers: []
   }),
-  mounted() {
-    if (this.cohortToEdit) {
-      console.log('cohortToEdit: ', this.cohort.Edit)
-      let exisitingCohort = this.cohortToEdit 
-      const teacherProfiles = this.cohortToEdit.teachers?.forEach( teacher => {
-        this.getPersonByIdFromDB(teacher.id)
-      })
-      console.log("teacherIds: ", teacherIds)
-      exisitingCohort.teachers = teacherProfiles
-      this.cohort = exisitingCohort;
+  watch: {
+    dialog (newVal) {
+      if (newVal && this.edit) {
+        this.cohort = this.cohortToEdit 
+        this.loadTeacherProfiles()
+      } 
     }
   },
   computed: {
     ...mapState(["organisations", "people"]),
-    ...mapGetters(["getOrganisationById", "user", "getPersonByIdFromDB"]),
+    ...mapGetters(["getOrganisationById", "user"]),
     teachers () {
       const teachers = this.people.filter(person => person.accountType === "teacher")
       return teachers
@@ -370,42 +371,43 @@ export default {
     imgUrl() {
       if (!this.uploadedImage) return;
       return URL.createObjectURL(this.uploadedImage);
-    },
+    }
   },
 
   methods: {
-    addTeacher (person) {
-      console.log("teachers before: ", this.cohort.teachers)
-      this.cohort.teachers = this.cohort.teachers.filter(e => {
-        return e !== typeof 'object'
-      })
-      console.log("teachers after: ", this.cohort.teachers)
-      return this.cohort.teachers.push(person)
+    addTeacher (teacher) {
+      return this.cohort.teachers.push(teacher)
     },
     toggleTeacherDialog () {
       this.teacherDialog = !this.teacherDialog
     },
     remove (item) {
-      let index
-      if (item.firstName) index = this.cohort.teachers.findIndex(n => item.firstName === n.firstName)
-      else index = this.cohort.teachers.indexOf(item)
+      let index = this.cohort.teachers.findIndex(n => item.id === n)
       if (index >= 0) this.cohort.teachers.splice(index, 1)
     },
-    cancel() {
-      console.log("cancel");
+    close() {
       this.dialog = false;
-      // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
+      if (!this.edit) {
+        this.cohort = {
+          cohort: {
+            name: "",
+            description: "",
+            organisation: "",
+            students: [],
+            courses: [],
+            image: {
+              name: "",
+              url: "",
+            },
+            teachers: []
+          },
+        }
+      }
     },
     saveCohort(cohort) {
-      this.loading = true;
-      console.log('cohort', cohort)
-
-      const teacherIds = this.cohort.teachers?.forEach(teacher => {
-        return teacher.id
-      })
-      console.log("teachersIds: ", teacherIds)
-
-      cohort.teachers = teacherIds
+      this.loading = true;      
+      const newCohort = cohort
+      delete newcohort.id
 
       // Add a new document in collection "cohorts"
       db.collection("cohorts")
@@ -423,12 +425,21 @@ export default {
       this.cohort.teachers.forEach(teacher => {
         console.log('new teacher: ', teacher)
         // update exisiting teachers with new cohort
-
-        // update teachers array in cohort object to only include profile id's of teachers
-
+        db.collection("people")
+          .doc(teacher)
+          .update({
+            hostCohorts: firebase.firestore.FieldValue.arrayUnion(
+              this.cohort.id
+            ),
+          })
+          .then(() => {
+            console.log('cohort added to teacher')
+            this.close()
+          })
+          .catch((error) => {
+            console.error(error);
+          });
       })
-
-
     },
     camelize(str) {
       return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {

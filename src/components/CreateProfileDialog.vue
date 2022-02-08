@@ -260,7 +260,7 @@ export default {
             this.uploading = false;
             this.profile.image.url = downloadURL;
             this.profile.image.name = this.selectedFile.name;
-            this.updateProfile(this.profile.image);
+            this.updateProfile(this.profile);
           });
         }
       );
