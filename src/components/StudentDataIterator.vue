@@ -7,11 +7,32 @@
       :sort-by="sortBy"
       :sort-desc="sortDesc"
       hide-default-footer
-      no-data-text="No Students"
     >
       <!-- HEADER -->
       <template v-slot:header>
-        <v-row class="mt-3"> 
+        <div class="d-flex justify-end">
+          <div v-if="students.length" class="mx-1" style="width:30%">
+            <v-text-field
+              v-model="search"
+              clearable
+              flat
+              width="50%"
+              hide-details
+              prepend-inner-icon="mdi-magnify"
+              label="Search"
+              dense
+              outlined
+              color="missionAccent"
+            ></v-text-field>
+          </div>
+          <div class="mx-1">
+            <CreateAccountDialog accountType="student"/>
+          </div> 
+          <div class="mx-1">
+            <ImportCsvDialog />
+          </div>
+        </div>
+        <!-- <v-row v-if="students" class="mt-3"> 
           <v-col cols="6">
             <v-text-field
               v-model="search"
@@ -25,8 +46,8 @@
               outlined
               color="missionAccent"
             ></v-text-field>
-          </v-col>
-          <v-col cols="6"  class="d-flex">
+          </v-col> -->
+          <!-- <v-col cols="6"  class="d-flex">
             <template v-if="$vuetify.breakpoint.mdAndUp">
               
               <v-spacer></v-spacer>
@@ -42,7 +63,6 @@
                 color="missionAccent"
                 outlined
               ></v-select>
-              <!-- <v-spacer></v-spacer> -->
               <v-btn-toggle v-model="sortDesc" mandatory style="background-color: transparent;" tile class="d-flex justify-center align-center ml-2">
                 <v-btn depressed color="missionAccent" :value="false" small>
                   <v-icon small>mdi-arrow-up</v-icon>
@@ -54,7 +74,7 @@
             
             </template>
           </v-col>
-        </v-row>
+        </v-row> -->
       </template>
       <!-- END HEADER -->
 
@@ -76,31 +96,46 @@
 
 <script>
 import StudentCard from "../components/StudentCard";
+import CreateAccountDialog from "../components/CreateAccountDialog";
+import ImportCsvDialog from "../components/ImportCsvDialog";
+import { mapActions } from "vuex"
 
 export default {
-  name: "StudentsDataTable",
+  name: "StudentsDataIterator",
   components: {
     // EditStudentButtonDialog,
     StudentCard,
+    CreateAccountDialog,
+    ImportCsvDialog
   },
-  props: ["students"],
+  props: ["studentIds"],
   data() {
     return {
       search: "",
       sortDesc: false,
       sortBy: "firstName",
       keys: ["firstName", "lastName", "nsnNumber", "studentEmail"],
+      students: []
     };
   },
-  mounted() {
-    console.log("this.students", this.students);
+  mounted () {
+    this.getStudentProfiles()
   },
   computed: {
     filteredKeys() {
       return this.keys.filter((key) => key !== "Name");
-    },
+    }
   },
   methods: {
+    ...mapActions(['getPersonByIdFromDB']),
+    getStudentProfiles () {
+      if (!this.studentIds.length) return
+      this.studentIds.forEach(async id => {
+        const student = await this.getPersonByIdFromDB(id)
+        this.students.push(student)
+      })
+      console.log(this.students)
+    },
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },

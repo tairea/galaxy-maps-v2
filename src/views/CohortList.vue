@@ -2,9 +2,8 @@
   <v-container class="d-flex flex-column fullHeight">
     <v-row class="cohort-main">
       <v-col>
-        
         <!-- ORGANISATIONS -->
-        <div v-if="myOrganisations">
+        <div v-if="organisations.length">
           <h3 class="cohort-heading overline baseAccent--text">Organisation cohorts</h3>
           <v-row class="d-flex flex-column">
             <v-col v-for="organisation in organisations" :key="organisation.id">
@@ -116,11 +115,9 @@ export default {
     },
     getCohortsAndOrganisations() {
       if (this.user.data.admin){
-        // this.$store.dispatch("bindAllCohorts");
         this.bindAllCohorts()
         this.bindAllOrganisations();
       } else {
-        console.log("not an admin")
         this.getCohortsByPersonId(this.person)
       }
     },

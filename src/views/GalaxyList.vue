@@ -26,9 +26,6 @@ export default {
     DiscoverGalaxyButton,
     Galaxy,
   },
-  mounted() {
-    this.bindAll(); // <== DO WE NEED TO BIND cohorts/orgs/people HERE??
-  },
   computed: {
     ...mapGetters(["courses", "user", "person"]),
   },
@@ -39,14 +36,7 @@ export default {
         ? this.$route.params.mineOrAssignedOrAll
         : "", // my, assigned OR all
     };
-  },
-  methods: {
-    bindAll() {
-      this.$store.dispatch("bindAllCohorts");
-      this.$store.dispatch("bindAllOrganisations");
-      this.$store.dispatch("bindAllPeople");
-    },
-  },
+  }
 };
 </script>
 

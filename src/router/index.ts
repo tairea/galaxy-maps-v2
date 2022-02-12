@@ -47,6 +47,12 @@ const routes = [
         path: "students",
         component: AllStudentsView,
       },
+      {
+        path: "/cohort/:cohortId/:cohortName",
+        name: "CohortView",
+        component: CohortView,
+        props: true,
+      },
     ],
   },
   {
@@ -79,12 +85,6 @@ const routes = [
     path: "/system/:topicId",
     name: "SolarSystemView",
     component: SolarSystemView,
-    props: true,
-  },
-  {
-    path: "/cohort/:cohortId/:cohortName",
-    name: "CohortView",
-    component: CohortView,
     props: true,
   },
 ];

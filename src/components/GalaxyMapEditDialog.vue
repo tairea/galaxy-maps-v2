@@ -191,9 +191,6 @@ export default {
   },
   props: ["course", "coords"],
   async mounted() {
-    // bind to store all topics for this course
-    // await this.$store.dispatch("bindAllCourseTopics", this.currentCourseId);
-    console.log("person account type is: ", this.person.accountType);
     this.infoPopupShow = false;
   },
   data() {
