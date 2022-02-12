@@ -13,7 +13,7 @@
           <v-form ref="form" v-model="valid" lazy-validation>
             <v-text-field
               dark
-              type="string"
+              type="text"
               v-model="profile.firstName"
               label="First Name"
               color="missionAccent"
@@ -23,7 +23,7 @@
             ></v-text-field>
             <v-text-field
               dark
-              type="string"
+              type="text"
               v-model="profile.lastName"
               label="Last Name"
               color="missionAccent"

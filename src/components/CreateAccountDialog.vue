@@ -1,13 +1,13 @@
 <template>
   <div>
-    <v-dialog v-model="dialog" width="35%" light>
+    <v-dialog v-model="dialog" width="35%" :light="dark" :dark="!dark">
       <!-- CREATE BUTTON -->
       <template v-slot:activator="{ on, attrs }">
-        <v-btn text color="baseAccent" v-bind="attrs" v-on="on">
+        <v-btn class="cohort-btn" :light="dark" :dark="!dark" :text="teacher" :color="teacher ? 'baseAccent':'missionAccent'" v-bind="attrs" v-on="on">
           <v-icon left>
             mdi-plus
           </v-icon>
-          new teacher
+          {{teacher ? "New Teacher" : "add student"}}
         </v-btn>
       </template>
 
@@ -15,40 +15,69 @@
       <div class="create-dialog">
         <!-- HEADER -->
         <div class="dialog-header">
-          <p class="dialog-title">
+          <p class="mb-0">
             Add {{this.accountType}}
           </p>
         </div>
         <div class="create-dialog-content">
+          <p v-if="!teacher" class="caption mb-0">Adding this student will send a registration link to their email</p>
           <v-form ref="form" v-model="valid" lazy-validation>
             <v-text-field
-              dark
-              type="string"
-              v-model="person.firstName"
+              :dark="dark"
+              :light="!dark"
+              type="text"
+              v-model="account.firstName"
               label="First Name"
               color="missionAccent"
               outlined
               class="custom-input mt-6"
             ></v-text-field>
             <v-text-field
-              dark
-              type="string"
-              v-model="person.lastName"
+              :dark="dark"
+              :light="!dark"
+              type="text"
+              v-model="account.lastName"
               label="Last Name"
               color="missionAccent"
               outlined
               class="custom-input"
             ></v-text-field>
             <v-text-field
-              dark
+              :dark="dark"
+              :light="!dark"
               type="email"
-              v-model="person.email"
+              v-model="account.email"
               label="E-mail"
               :rules="emailRules"
               required
               color="missionAccent"
               outlined
               class="custom-input"
+            ></v-text-field>
+            <v-text-field
+              v-if="!teacher"
+              :dark="dark"
+              :light="!dark"
+              type="text"
+              v-model="nsn"
+              label="Student NSN"
+              required
+              color="missionAccent"
+              outlined
+              class="custom-input"
+            ></v-text-field>
+            <v-text-field
+              v-if="!teacher"
+              :dark="dark"
+              :light="!dark"
+              type="text"
+              v-model="inviter"
+              label="Added by"
+              required
+              color="missionAccent"
+              outlined
+              class="custom-input"
+              :value="person.firstName + ' ' + person.lastName" 
             ></v-text-field>
           </v-form>
           <v-row>
@@ -59,15 +88,18 @@
               @click="create()"
               outlined
               width="30%"
+              :loading="addingAccount"
             >
               Create
             </v-btn>
             <v-btn
-              :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
+              :dark="dark"
+              :light="!dark"
               class="ma-4"
               @click="close()"
               outlined
               width="30%"
+              :disabled="addingAccount"
             >
               cancel
             </v-btn>
@@ -81,17 +113,19 @@
 <script>
 
 import { db, functions } from "../store/firestoreConfig";
+import { mapGetters } from "vuex"
+import firebase from "firebase"
 
 export default {
   name: "CreateAccountDialog",
   props: {
-    accountType: { type: String, default: "teacher"}
+    accountType: { type: String, default: "teacher"},
   },
   data: () => ({
     addingAccount: false,
     dialog: false,
     valid: true,
-    person: {
+    account: {
       id: "",
       firstName: "",
       lastName: "",
@@ -102,13 +136,23 @@ export default {
     emailRules: [
       (v) => !!v || "E-mail is required",
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
-    ]
+    ],
+    nsn: "",
+    inviter: ""
   }),
+  computed: {
+    ...mapGetters(['person', 'currentCohortId']),
+    teacher() {
+      return this.accountType === "teacher"
+    },
+    dark () {
+      return this.$vuetify.theme.isDark
+    }
+  },
   methods: {
     close() {
       this.dialog = false;
-      this.person = {
-        id: "",
+      this.account = {
         firstName: "",
         lastName: "",
         email: "",
@@ -118,21 +162,24 @@ export default {
     },
     create () {
       this.$refs.form.validate()
-      if (!this.person.email) return
+      if (!this.account.email) return
       this.addingAccount = true
-      this.person.accountType = this.accountType
-
+      this.account.accountType = this.accountType
+      this.account.displayName = this.account.firstName + ' ' + this.account.lastName
       // create user
       const createUser = functions.httpsCallable('createUser')
-      createUser(this.person)
+      createUser(this.account)
         .then(result => {
-          this.person.id = result.data.uid
-          return this.addPerson()
+          this.account.id = result.data.uid
+          return this.addAccount()
         }).then(() => {
           return this.generateLink()
         }).then(link => {
           return this.sendEmailInvite(link)
         }).then(() => {
+          if (!this.teacher) {
+            this.addStudentToCohort()
+          }
           this.addingAccount = false
           this.close()
         })
@@ -140,10 +187,16 @@ export default {
           console.log(error)
       });
     },
-    addPerson () {
-      const profile = (({ displayName, ...o }) => o)(this.person) // remove id and teachers
+    addAccount () { 
+      const profile = {
+        ...this.account,
+      }
+      if (!this.teacher) {
+        profile.nsn = this.nsn
+      }
+      delete profile.id
       db.collection("people")
-        .doc(profile.id)
+        .doc(this.account.id)
         .set(profile)
         .catch((error) => {
           console.error("Error writing document: ", error);
@@ -151,11 +204,11 @@ export default {
     },
     generateLink() {
       // generate magic email link
-      this.person.displayName = this.person.firstName + " " + this.person.lastName
       const data = {
-        ...this.person,
+        ...this.account,
         host: window.location.origin
       }
+
       const generateEmailLink = functions.httpsCallable('generateEmailLink')
       return generateEmailLink(data)
         .then((link) => {
@@ -166,11 +219,26 @@ export default {
       });
     },
     sendEmailInvite(link) {
-      this.person.link = link.data
+      this.account.link = link.data
+      if (!this.teacher) {
+        this.account.inviter = this.inviter
+      }
       const sendInviteEmail = functions.httpsCallable('sendInviteEmail')
-      sendInviteEmail(this.person)
+      sendInviteEmail(this.account)
       .catch((error) => {
         console.error(error)
+      });
+    },
+    addStudentToCohort () {
+       db.collection("cohorts")
+        .doc(this.currentCohortId)
+        .update({
+          students: firebase.firestore.FieldValue.arrayUnion(
+            this.account.id
+          ),
+        })
+        .catch((error) => {
+          console.error("Error writing document: ", error);
       });
     }
   },
@@ -215,6 +283,10 @@ export default {
   font-size: 0.7rem;
   margin: 0;
   font-style: italic;
+}
+
+.cohort-btn {
+  font-weight: 400;
 }
 
 </style>

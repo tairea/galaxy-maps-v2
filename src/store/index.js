@@ -52,6 +52,8 @@ export default new Vuex.Store({
     courses: (state) => state.courses,
     cohorts: (state) => state.cohorts,
     organisations: state => state.organisations,
+    currentCohortId: state => state.currentCohortId,
+    currentCohort: state => state.currentCohort,
     getCourseById: (state) => (id) => {
       return state.courses.find((course) => course.id === id);
     },
@@ -187,6 +189,7 @@ export default new Vuex.Store({
       state.currentTask = task;
     },
     setCurrentCohortId(state, cohortId) {
+      console.log('setting cohort id: ', cohortId)
       state.currentCohortId = cohortId;
     },
     setCurrentCohort(state, cohort) {
@@ -581,31 +584,29 @@ export default new Vuex.Store({
     },
     // TODO: Consider putting this into a mixin or somewhere else as it doesnt have anything to do with the store
     async getPersonByIdFromDB({ state }, personId) {
-      const person = await db.collection("people").doc(personId).get();
-      return person.data();
+      let person = await db.collection("people").doc(personId).get();
+      person = {
+        id: person.id,
+        ...person.data()
+      }
+      return person;
     },
 
     async getCohortsByPersonId ({ commit, dispatch }, person) {
-      const dbCohorts = []
-      let querySnapShot = {}
-      
-      if (person.accountType == "teacher") {
-        querySnapShot = await db.
-          collection("cohorts")
-          .where("teachers", "array-contains", person.id)
-          .get();
-      } else {
-        querySnapShot = await db.
-        collection("cohorts")
-        .where("students", "array-contains", person.id)
-        .get();
-      }
+      await db.
+      collection("cohorts")
+      .where(person.accountType + "s", "array-contains", person.id)
+      .onSnapshot(querySnapShot => {
+        const cohorts = querySnapShot.docs.map(doc => {
+          return {
+            id: doc.id,
+            ...doc.data()
+          }
+        })
+        commit("setCohorts", cohorts)
+        dispatch("getOrganisationsByCohorts", cohorts)
+      })
 
-      for (const doc of querySnapShot.docs) {
-        dbCohorts.push(doc.data());
-      }
-      commit("setCohorts", dbCohorts)
-      dispatch("getOrganisationsByCohorts", dbCohorts)
     },
 
     async getOrganisationsByCohorts ({ commit }, cohorts) {
@@ -637,7 +638,10 @@ export default new Vuex.Store({
 
       state.replaceState(newState);
       console.log("state reset: ", state)
-    }
+    },
+    setCurrentCohort({commit}, cohort) {
+      return commit("setCurrentCohort", cohort)
+    },
   },
   plugins: [createPersistedState()]
 });

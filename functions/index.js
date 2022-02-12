@@ -30,9 +30,6 @@ exports.addAdminRole = functions.https.onCall((uid, context) => {
 // Create new user
 exports.createUser = functions.https.onCall((data, context) => {
   // check request is made by an admin
-  if ( context.auth.token.admin !== true ) {
-    return {error: "Only admins can add other accounts"};
-  }
 
   return admin.auth().createUser(data)
     .then((data) => {
@@ -45,9 +42,6 @@ exports.createUser = functions.https.onCall((data, context) => {
 
 // Generate a magic email link
 exports.generateEmailLink = functions.https.onCall((data, context) => {
-  if ( context.auth.token.admin !== true ) {
-    return {error: "Only admins can add other accounts"};
-  }
 
   // set magic link parameters
   const actionCodeSettings = {
@@ -89,15 +83,15 @@ const mailTransport = nodemailer.createTransport({
  
  
 exports.sendInviteEmail = functions.https.onCall((data, context) => {
-  const email = data.email;
-  const displayName = data.displayName;
-  const link = data.link;
+  const { email, displayName, link, inviter, accountType } = data
 
-  return sendWelcomeEmail(email, displayName, link);
+  if (accountType == "teacher") {
+    return sendTeacherInviteEmail(email, displayName, link);
+  } else return sendStudentInviteEmail(email, displayName, link, inviter);
 });
 
-// Sends a welcome email to the given user.
-async function sendWelcomeEmail(email, displayName, link) {
+// Sends an invite email to a new teacher.
+async function sendTeacherInviteEmail(email, displayName, link) {
   const mailOptions = {
     from: `${APP_NAME} <noreply@galaxymaps.com>`,
     to: email,
@@ -116,7 +110,31 @@ If you have any issues please contact support@galaxymaps.com
   
 Galaxy Maps Robot`;
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log('New invite email sent to:', email);
+  functions.logger.log('New teacher invite email sent to:', email);
+  return null;
+}
+ 
+// Sends an invite email to a new student.
+async function sendStudentInviteEmail(email, displayName, link, inviter) {
+  const mailOptions = {
+    from: `${APP_NAME} <noreply@galaxymaps.com>`,
+    to: email,
+  };
+
+  // The user subscribed to the newsletter.
+  mailOptions.subject = `Account created for ${APP_NAME}!`;
+  mailOptions.text = `Hi ${displayName || ''}
+
+Your teacher ${inviter}, has created you an account for ${APP_NAME}. 
+Please click this link to sign into your account and setup your profile
+
+${link}
+
+If you have any issues please contact support@galaxymaps.com
+  
+Galaxy Maps Robot`;
+  await mailTransport.sendMail(mailOptions);
+  functions.logger.log('New student invite email sent to:', email);
   return null;
 }
  

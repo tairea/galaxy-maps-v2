@@ -1,7 +1,7 @@
 <template>
   <div id="container" class="bg">
     <div id="left-section">
-      <CohortInfo :cohort="getCohortById(currentCohortId)" />
+      <CohortInfo :cohort="currentCohort" />
       <AssignedInfo
         :assignCourses="true"
         :courses="courses"
@@ -12,13 +12,7 @@
     <div id="main-section">
       <div class="people-frame">
         <h2 class="people-label">STUDENTS</h2>
-        <!-- <StudentCard v-for="student in getStudentsByCohortId(currentCohortId)" :key="student.id" :student="student" /> -->
-       <!-- <StudentDataTable :students="getStudentsByCohortId(currentCohortId)"/> -->
-
-       <!-- TODO: student iterator doesnt update when students added to database. Requires a refresh -->
-       <StudentDataIterator :students="getStudentsByCohortId(currentCohortId)"/>
-
-
+       <StudentDataIterator :studentIds="currentCohort.students"/>
       </div>
     </div>
 
@@ -60,21 +54,13 @@ export default {
     StudentDataIterator
   },
   props: ["cohortId", "cohortName"],
-  mounted() {
-    this.bindAll();
-  },
-  data() {
-    return {
-      cohort: {},
-     
-    };
-  },
   computed: {
     ...mapState(["currentCohortId"]),
     ...mapGetters([
       "getCohortById",
       "getCoursesInThisCohort",
       "getStudentsByCohortId",
+      "currentCohort"
     ]),
     courses () {
       let cohortcourses = this.getCoursesInThisCohort(this.currentCohortId)
@@ -83,13 +69,6 @@ export default {
       if (cohortcourses[0]) return cohortcourses 
       else return {}
     } 
-  },
-  methods: {
-    bindAll() {
-      this.$store.dispatch("bindAllCourses");
-      this.$store.dispatch("bindAllPeople");
-      this.$store.dispatch("bindAllOrganisations");
-    },
   },
 };
 </script>
@@ -108,7 +87,7 @@ export default {
   width: 100%;
   display: flex;
   // overflow: hidden;
-  margin: 0 !important;
+  padding-top: 50px;
 }
 
 #left-section {

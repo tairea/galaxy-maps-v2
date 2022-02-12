@@ -3,10 +3,6 @@
     <!-- USER MENU TOPBAR -->
     <div class="blackBar">
       <div class="d-flex justify-center align-center">
-        <!-- <v-img
-          :src="`http://tutoa.co.nz/portal/img/ian.23cb54e5.jpg`"
-          class="profilePic"
-        ></v-img> -->
         <v-progress-circular
           v-if="uploading"
           :rotate="360"
@@ -216,10 +212,10 @@ export default {
 .userMenu {
   background: var(--v-subBackground-base);
   width: 25%;
-  height: 400px;
+  height: 200px;
   position: absolute;
   // bottom: 0px;
-  bottom: -400px;
+  bottom: -200px;
   right: 0;
   transition: all 0.3s ease-out;
 
