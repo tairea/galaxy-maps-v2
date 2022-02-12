@@ -30,7 +30,7 @@
             <span class="caption pt-2">Current Mission</span>
           </v-row>
           <v-row>
-            <h2 :class="topic ? 'active-title':'inactive-title'">{{topic || 'No active Planet'}} </h2>
+            <h3 :class="topic ? 'active-title':'inactive-title'">{{topic || 'No active Planet'}} </h3>
           </v-row>
         </div>
         <div class="mt-6 mission-section">
@@ -38,7 +38,7 @@
             <span class="caption">Current Task</span>
           </v-row>
           <v-row>
-            <h2 :class="task ? 'active-title':'inactive-title'">{{task || 'No active mission'}} </h2>
+            <h3 :class="task ? 'active-title':'inactive-title'">{{task || 'No active mission'}} </h3>
           </v-row>
         </div>
     </div>

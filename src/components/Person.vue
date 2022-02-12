@@ -1,16 +1,9 @@
 <template>
   <v-col
-    class="d-flex flex-column justify-start align-center cohort"
+    class="d-flex flex-column justify-start cohort"
     :cols="cols"
     @click="routeToPerson(person)"
   >
-    <!-- <v-img
-      v-if="cohortOrg.image.url"
-      :src="cohortOrg.image.url"
-      max-width="60px"
-      max-height="60px"
-      class="cohort-image"
-    ></v-img> -->
     <v-tooltip bottom>
       <template v-slot:activator="{ on, attrs }">
         <div v-bind="attrs" v-on="on">
