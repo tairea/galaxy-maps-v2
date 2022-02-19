@@ -85,7 +85,8 @@
 import firebase from "firebase/app";
 
 import { db } from "../store/firestoreConfig";
-import { sendStudentXAPIStatement } from "../store/veracityLRS";
+// import { sendStudentXAPIStatement } from "../store/veracityLRS";
+import { sendStudentXAPIStatement } from "../store/tinCanJs";
 
 import { mapState, mapGetters } from "vuex";
 
