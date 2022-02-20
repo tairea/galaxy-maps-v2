@@ -1,6 +1,7 @@
 <template>
   <div id="container" class="bg">
     <div id="left-section">
+      <BackButton :toPath="pathDependingOnAccountType()" />
       <GalaxyInfo :course="getCourseById(courseId)" />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <AssignedInfo
@@ -11,7 +12,6 @@
         :people="getPeopleInThisCourse(courseId)"
         @snackbarToggle="snackbarToggle($event)"
       />
-      <BackButton :toPath="pathDependingOnAccountType()" />
     </div>
     <div id="main-section">
       <!-- Map Buttons -->
@@ -291,6 +291,7 @@ export default {
   flex-direction: column;
   // border: 1px solid yellow;
   overflow-y: scroll;
+  padding-bottom: 50px;
 }
 
 #main-section {

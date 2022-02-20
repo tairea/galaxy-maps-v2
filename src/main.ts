@@ -4,6 +4,7 @@ import router from "./router";
 import vuetify from "./plugins/vuetify";
 import store from "./store";
 import firebase from "firebase";
+import './css/main.css';
 
 Vue.config.productionTip = false;
 
@@ -17,6 +18,7 @@ firebase.auth().onAuthStateChanged((user) => {
   } else {
     store.dispatch("setUser", user);
     store.dispatch("getPersonById", user);
+    store.dispatch("resetState")
   }
 });
 

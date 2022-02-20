@@ -79,7 +79,7 @@
 <script>
 // import { Component, Vue } from "vue-property-decorator";
 import firebase from "firebase";
-import { mapState, mapActions } from "vuex";
+import { mapState, mapActions, mapMutations } from "vuex";
 import ThemeColourPicker from "@/components/ThemeColourPicker.vue";
 import { db, storage } from "../store/firestoreConfig";
 
@@ -117,7 +117,6 @@ export default {
           // alert("Successfully signed out");
           this.snackbarMsg = "Successfully signed out";
           this.snackbar = true;
-          this.resetState()
           this.$router.push("/login");
         })
         .catch((error) => {
@@ -126,16 +125,6 @@ export default {
           this.snackbar = true;
           this.$router.push("/");
         });
-    },
-    resetState () {
-      let state = this.$store.state;
-      let newState = {};
-
-      Object.keys(state).forEach(key => {
-        newState[key] = null; // or = initialState[key]
-      });
-      delete newstate.user
-      this.$store.replaceState(newState);
     },
     onButtonClick() {
       this.$refs.uploader?.click();

@@ -27,7 +27,7 @@ export default {
     Galaxy,
   },
   computed: {
-    ...mapGetters(["courses", "user", "person"]),
+    ...mapGetters(["user", "person"]),
   },
   data() {
     return {

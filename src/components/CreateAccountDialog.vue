@@ -58,8 +58,20 @@
               v-if="!teacher"
               :dark="dark"
               :light="!dark"
+              type="email"
+              v-model="account.parentEmail"
+              label="Parent E-mail"
+              :rules="parentEmailRules"
+              color="missionAccent"
+              outlined
+              class="custom-input"
+            ></v-text-field>
+            <v-text-field
+              v-if="!teacher"
+              :dark="dark"
+              :light="!dark"
               type="text"
-              v-model="nsn"
+              v-model="account.nsn"
               label="Student NSN"
               required
               color="missionAccent"
@@ -71,7 +83,7 @@
               :dark="dark"
               :light="!dark"
               type="text"
-              v-model="inviter"
+              v-model="account.inviter"
               label="Added by"
               required
               color="missionAccent"
@@ -114,10 +126,11 @@
 
 import { db, functions } from "../store/firestoreConfig";
 import { mapGetters } from "vuex"
-import firebase from "firebase"
+import { dbMixins } from "../mixins/DbMixins"
 
 export default {
   name: "CreateAccountDialog",
+  mixins: [dbMixins],
   props: {
     accountType: { type: String, default: "teacher"},
   },
@@ -132,16 +145,20 @@ export default {
       email: "",
       accountType: "",
       displayName: "",
+      nsn: "",
+      inviter: "",
+      parentEmail: ""
     },
     emailRules: [
       (v) => !!v || "E-mail is required",
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
     ],
-    nsn: "",
-    inviter: ""
+    parentEmailRules: [      
+      (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
+    ]
   }),
   computed: {
-    ...mapGetters(['person', 'currentCohortId']),
+    ...mapGetters(['person', 'currentCohort']),
     teacher() {
       return this.accountType === "teacher"
     },
@@ -158,89 +175,160 @@ export default {
         email: "",
         accountType: "",
         displayName: "",
+        nsn: "",
+        inviter: "",
+        parentEmail: ""
       }
     },
-    create () {
+    async create () {
       this.$refs.form.validate()
       if (!this.account.email) return
       this.addingAccount = true
-      this.account.accountType = this.accountType
-      this.account.displayName = this.account.firstName + ' ' + this.account.lastName
-      // create user
-      const createUser = functions.httpsCallable('createUser')
-      createUser(this.account)
-        .then(result => {
-          this.account.id = result.data.uid
-          return this.addAccount()
-        }).then(() => {
-          return this.generateLink()
-        }).then(link => {
-          return this.sendEmailInvite(link)
-        }).then(() => {
+      const personExists = await this.MXgetPersonByEmail(this.account.email)
+      if (personExists) {
+        this.account = personExists
+        this.MXaddExistingUserToCohort(personExists).then(() => {
+          this.addingAccount = false
+          this.close()
+        }).catch(err => {
+          this.addingAccount = false
+          console.error("something went wrong adding existing person: ", err)
+        })
+      }
+      else {
+        const person = {
+          ...this.account, 
+          accountType: this.accountType,
+          displayName: this.account.firstName + ' ' + this.account.lastName
+
+        }
+        this.MXcreateUser(person).then((personId) => {
           if (!this.teacher) {
-            this.addStudentToCohort()
+            this.MXaddStudentToCohort(personId)
           }
           this.addingAccount = false
           this.close()
         })
         .catch((error) => {
-          console.log(error)
-      });
+          console.error(error)
+        });
+      }
     },
-    addAccount () { 
-      const profile = {
-        ...this.account,
-      }
-      if (!this.teacher) {
-        profile.nsn = this.nsn
-      }
-      delete profile.id
-      db.collection("people")
-        .doc(this.account.id)
-        .set(profile)
-        .catch((error) => {
-          console.error("Error writing document: ", error);
-      });
-    },
-    generateLink() {
-      // generate magic email link
-      const data = {
-        ...this.account,
-        host: window.location.origin
-      }
+    // addExistingUser (person) {
+      // return this.addStudentToCohort()
+      //   .then(() => {
+      //     this.sendNewCohortEmail(person)
+      //   }).then(() => {
+      //     this.addingAccount = false
+      //     this.close()
+      //   }).catch(err => {
+      //     this.addingAccount = false
+      //     console.error("something went wrong adding existing person: ", err)
+      //   })
+    // },
+    // createUser () {
+    //   this.account.accountType = this.accountType
+    //   this.account.displayName = this.account.firstName + ' ' + this.account.lastName
+    //   // create user
+    //   const createUser = functions.httpsCallable('createUser')
+    //   createUser(this.account)
+    //     .then(result => {
+    //       this.account.id = result.data.uid
+    //       return this.addAccount()
+    //     }).then(() => {
+    //       return this.generateLink()
+    //     }).then(link => {
+    //       return this.sendEmailInvite(link)
+    //     }).then(() => {
+    //       if (!this.teacher) {
+    //         this.addStudentToCohort()
+    //       }
+    //       this.addingAccount = false
+    //       this.close()
+    //     })
+    //     .catch((error) => {
+    //       console.error(error)
+    //   });
+    // },
+    // addAccount () { 
+    //   const profile = {
+    //     ...this.account,
+    //   }
+    //   if (!this.teacher) {
+    //     profile.nsn = this.nsn
+    //     profile.parentEamil = this.parentEmail
+    //   }
+    //   delete profile.id
+    //   db.collection("people")
+    //     .doc(this.account.id)
+    //     .set(profile)
+    //     .catch((error) => {
+    //       console.error("Error writing document: ", error);
+    //   });
+    // },
+    // generateLink() {
+    //   // generate magic email link
+    //   const data = {
+    //     ...this.account,
+    //     host: window.location.origin
+    //   }
 
-      const generateEmailLink = functions.httpsCallable('generateEmailLink')
-      return generateEmailLink(data)
-        .then((link) => {
-          return link
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
-      });
-    },
-    sendEmailInvite(link) {
-      this.account.link = link.data
-      if (!this.teacher) {
-        this.account.inviter = this.inviter
-      }
-      const sendInviteEmail = functions.httpsCallable('sendInviteEmail')
-      sendInviteEmail(this.account)
-      .catch((error) => {
-        console.error(error)
-      });
-    },
-    addStudentToCohort () {
-       db.collection("cohorts")
-        .doc(this.currentCohortId)
-        .update({
-          students: firebase.firestore.FieldValue.arrayUnion(
-            this.account.id
-          ),
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
-      });
-    }
+    //   const generateEmailLink = functions.httpsCallable('generateEmailLink')
+    //   return generateEmailLink(data)
+    //     .then((link) => {
+    //       return link
+    //     })
+    //     .catch((error) => {
+    //       console.error("Error writing document: ", error);
+    //   });
+    // },
+    // sendEmailInvite(link) {
+    //   this.account.link = link.data
+    //   if (!this.teacher) {
+    //     this.account.inviter = this.inviter
+    //   }
+    //   const sendInviteEmail = functions.httpsCallable('sendInviteEmail')
+    //   sendInviteEmail(this.account)
+    //   .catch((error) => {
+    //     console.error(error)
+    //   });
+    // },
+    // sendNewCohortEmail(profile) {
+    //   const person = {
+    //     ...profile,
+    //     cohort: this.currentCohort.name,
+    //     inviter: this.inviter || 'Galaxy Maps Admin'
+    //   }
+    //   const sendNewCohortEmail = functions.httpsCallable('sendNewCohortEmail')
+    //   return sendNewCohortEmail(person)
+    // },
+
+    // addStudentToCohort () {
+    //   return db.collection("cohorts")
+    //     .doc(this.currentCohort.id)
+    //     .update({
+    //       students: firebase.firestore.FieldValue.arrayUnion(
+    //         this.account.id
+    //       ),
+    //     })
+    //     .catch((error) => {
+    //       console.error("Error writing document: ", error);
+    //   });
+    // },
+    // async getPersonByEmail (email) {
+    //   const query = await db.collection("people")
+    //     .where('email', '==', email)
+    //     .get()
+    //   for (const doc of query.docs) {
+    //     if (doc) {
+    //       const person = {
+    //         id: doc.id,
+    //         ...doc.data()
+    //       }
+    //       return person
+    //     }
+    //   }
+    // }
   },
 };
 </script>

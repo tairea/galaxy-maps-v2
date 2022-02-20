@@ -23,6 +23,7 @@
               dense
               outlined
               color="missionAccent"
+              class="search"
             ></v-text-field>
           </div>
           <div class="mx-1">
@@ -32,6 +33,8 @@
             <ImportCsvDialog />
           </div>
         </div>
+
+        <!-- =============OLD HEADER================ -->
         <!-- <v-row v-if="students" class="mt-3"> 
           <v-col cols="6">
             <v-text-field
@@ -75,6 +78,8 @@
             </template>
           </v-col>
         </v-row> -->
+
+
       </template>
       <!-- END HEADER -->
 
@@ -98,7 +103,8 @@
 import StudentCard from "../components/StudentCard";
 import CreateAccountDialog from "../components/CreateAccountDialog";
 import ImportCsvDialog from "../components/ImportCsvDialog";
-import { mapActions } from "vuex"
+import { mapGetters } from "vuex"
+import { dbMixins } from "../mixins/DbMixins"
 
 export default {
   name: "StudentsDataIterator",
@@ -108,7 +114,7 @@ export default {
     CreateAccountDialog,
     ImportCsvDialog
   },
-  props: ["studentIds"],
+  mixins: [dbMixins],
   data() {
     return {
       search: "",
@@ -118,28 +124,46 @@ export default {
       students: []
     };
   },
-  mounted () {
-    this.getStudentProfiles()
+  mounted() {
+    // this is needed incase there is no change in currentCohort to catch with the watch
+    if (this.$route.params.cohortId === this.currentCohort.id) {
+      this.getStudentProfiles()
+    }
+  },
+  watch: {
+    currentCohort: {
+      deep: true,
+      handler (newVal, oldVal) {
+        if (oldVal.students?.length !== newVal.students?.length) {
+          this.getStudentProfiles()
+        }
+      }
+    }
   },
   computed: {
+    ...mapGetters(['currentCohort']),
     filteredKeys() {
       return this.keys.filter((key) => key !== "Name");
     }
   },
   methods: {
-    ...mapActions(['getPersonByIdFromDB']),
     getStudentProfiles () {
-      if (!this.studentIds.length) return
-      this.studentIds.forEach(async id => {
-        const student = await this.getPersonByIdFromDB(id)
-        this.students.push(student)
-      })
-      console.log(this.students)
+      if (this.currentCohort.students?.length) {
+        const studentsArr = this.currentCohort.students.filter(a => {
+          return !this.students.some(b => a === b.id)
+        })
+        studentsArr.forEach(async id => {
+          const student = await this.MXgetPersonByIdFromDB(id)
+          if (!this.students.some(a => a.id === student.id)) {
+            this.students.push(student)
+          }
+        })
+      }
     },
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
-  },
+  }
 };
 </script>
 
@@ -232,10 +256,15 @@ a {
 }
 
 .noStudents {
-font-size: 0.8rem;
-      letter-spacing: 2px;
-      text-align: center;
-      color: var(--v-missionAccent-base);
-      text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+  text-align: center;
+  color: var(--v-missionAccent-base);
+  text-transform: uppercase;
 }
+
+// overide vuetify default height 
+.search ::v-deep .v-input__slot {
+    min-height: 37px !important;
+  }
 </style>

@@ -81,7 +81,7 @@ const mailTransport = nodemailer.createTransport({
   },
 });
  
- 
+//======GM APP INVITE EMAIL================== 
 exports.sendInviteEmail = functions.https.onCall((data, context) => {
   const { email, displayName, link, inviter, accountType } = data
 
@@ -93,7 +93,7 @@ exports.sendInviteEmail = functions.https.onCall((data, context) => {
 // Sends an invite email to a new teacher.
 async function sendTeacherInviteEmail(email, displayName, link) {
   const mailOptions = {
-    from: `${APP_NAME} <noreply@galaxymaps.com>`,
+    from: `${APP_NAME} <noreply@galaxymaps.io>`,
     to: email,
   };
 
@@ -106,7 +106,7 @@ Please click this link to sign into your account and setup your profile
 
 ${link}
   
-If you have any issues please contact support@galaxymaps.com
+If you have any issues please contact support@galaxymaps.io
   
 Galaxy Maps Robot`;
   await mailTransport.sendMail(mailOptions);
@@ -117,7 +117,7 @@ Galaxy Maps Robot`;
 // Sends an invite email to a new student.
 async function sendStudentInviteEmail(email, displayName, link, inviter) {
   const mailOptions = {
-    from: `${APP_NAME} <noreply@galaxymaps.com>`,
+    from: `${APP_NAME} <noreply@galaxymaps.io>`,
     to: email,
   };
 
@@ -130,11 +130,73 @@ Please click this link to sign into your account and setup your profile
 
 ${link}
 
-If you have any issues please contact support@galaxymaps.com
+If you have any issues please contact support@galaxymaps.io
   
 Galaxy Maps Robot`;
   await mailTransport.sendMail(mailOptions);
   functions.logger.log('New student invite email sent to:', email);
   return null;
 }
+
+
+//======COHORT REGISTRATION NOTIFICATION==================
+exports.sendNewCohortEmail = functions.https.onCall((data, context) => {
+  const { email, displayName, firstName, inviter, accountType, cohort } = data
+  return sendNewCohortEmail(email, displayName, firstName, inviter, accountType, cohort);
+});
+
+// Sends an invite email to a new teacher.
+async function sendNewCohortEmail(email, displayName, firstName, inviter, accountType, cohort) {
+  const mailOptions = {
+    from: `${APP_NAME} <noreply@galaxymaps.io>`,
+    to: email,
+  };
+
+  // The user subscribed to the newsletter.
+  mailOptions.subject = `New cohort registration`;
+  mailOptions.text = `Hi ${displayName || firstName || ''}
+
+You have been added as a ${accountType} to ${cohort} cohort by ${inviter} 
+Sign into your Galaxy Maps account to view your new cohort.
+
+https://galaxymaps.io
+  
+If you have any issues please contact support@galaxymaps.io
+  
+Galaxy Maps Robot`;
+  await mailTransport.sendMail(mailOptions);
+  functions.logger.log('New cohort invite email sent to:', email);
+  return null;
+}
+
+//======COURSE REGISTRATION NOTIFICATION==================
+exports.sendNewCourseEmail = functions.https.onCall((data, context) => {
+  const { email, name, course } = data
+  return sendNewCourseEmail(email, name, course);
+});
+
+// Sends an invite email to a new student.
+async function sendNewCourseEmail(email, name, course) {
+  const mailOptions = {
+    from: `${APP_NAME} <noreply@galaxymaps.io>`,
+    to: email,
+  };
+
+  // The user subscribed to the newsletter.
+  mailOptions.subject = `New Galaxy Assignment`;
+  mailOptions.text = `Hi ${name || ''}
+
+You have been assigned to ${course} Galaxy Map. 
+Sign into your Galaxy Maps account to view your new course.
+
+https://galaxymaps.io
+  
+If you have any issues please contact support@galaxymaps.io
+  
+Galaxy Maps Robot`;
+  await mailTransport.sendMail(mailOptions);
+  functions.logger.log('New assignment email sent to:', email);
+  return null;
+}
+
  
