@@ -9,7 +9,7 @@
           v-on="on"
           class="mission-edit-button"
           outlined
-          color="cohortAccent"
+          color="baseAccent"
           small
         >
           <v-icon small>
@@ -84,63 +84,65 @@
               prepend-icon=""
             ></v-file-input>
 
-            <!-- ORGANISATION -->
-            <p class="input-description">Organisation:</p>
-            <v-select
-              class="input-field"
-              solo
-              v-model="cohort.organisation"
-              :items="organisationsToSelect"
-              item-text="name"
-              item-value="id"
-            >
-            </v-select>
-            <!-- Select teachers from list -->
-            <p class="input-description">Cohort teachers:</p>
-            <v-autocomplete
-              v-model="cohort.teachers"
-              :search-input.sync="search"
-              :items="teachers"
-              @change="search = ''"
-              menu-props="closeOnContentClick"
-              class="input-field text-lowercase"
-              solo
-              chips
-              item-text="email"
-              item-value="id"
-              multiple
-            >
-              <template v-slot:selection="data">
-                <v-chip
-                  v-bind="data.attrs"
-                  :input-value="data.selected"
-                  close
-                  @click="data.select"
-                  @click:close="remove(data.item)"
-                >
-                  <template>
-                    <v-avatar v-if="data.item.image && data.item.image.url" left>
-                      <v-img :src="data.item.image.url"></v-img>
-                    </v-avatar>
-                    {{ data.item.email }}
-                  </template>
-                </v-chip>
-              </template>
-              <template v-slot:item="data">
-                <template>
-                  <v-list-item-avatar v-if="data.item.image && data.item.image.url">
-                    <img :src="data.item.image.url">
-                  </v-list-item-avatar>
-                  <v-list-item-content>
-                    <v-list-item-title v-html="data.item.firstName"></v-list-item-title>
-                    <v-list-item-subtitle v-html="data.item.email"></v-list-item-subtitle>
-                  </v-list-item-content>
+            <div v-if="user.data.admin">
+              <!-- ORGANISATION -->
+              <p class="input-description">Organisation:</p>
+              <v-select
+                class="input-field"
+                solo
+                v-model="cohort.organisation"
+                :items="organisationsToSelect"
+                item-text="name"
+                item-value="id"
+              >
+              </v-select>
+              <!-- Select teachers from list -->
+              <p class="input-description">Cohort teachers:</p>
+              <v-autocomplete
+                v-model="cohort.teachers"
+                :search-input.sync="search"
+                :items="teachers"
+                @change="search = ''"
+                menu-props="closeOnContentClick"
+                class="input-field text-lowercase"
+                solo
+                chips
+                item-text="email"
+                item-value="id"
+                multiple
+              >
+                <template v-slot:selection="data">
+                  <v-chip
+                    v-bind="data.attrs"
+                    :input-value="data.selected"
+                    close
+                    @click="data.select"
+                    @click:close="remove(data.item)"
+                  >
+                    <template>
+                      <v-avatar v-if="data.item.image && data.item.image.url" left>
+                        <v-img :src="data.item.image.url"></v-img>
+                      </v-avatar>
+                      {{ data.item.email }}
+                    </template>
+                  </v-chip>
                 </template>
-              </template>
-              <template v-slot:no-data>
-                <CreateAccountDialog accountType="teacher" @addAccount="addTeacher(teacher)"/>
-              </template>
-            </v-autocomplete>
+                <template v-slot:item="data">
+                  <template>
+                    <v-list-item-avatar v-if="data.item.image && data.item.image.url">
+                      <img :src="data.item.image.url">
+                    </v-list-item-avatar>
+                    <v-list-item-content>
+                      <v-list-item-title v-html="data.item.firstName"></v-list-item-title>
+                      <v-list-item-subtitle v-html="data.item.email"></v-list-item-subtitle>
+                    </v-list-item-content>
+                  </template>
+                </template>
+                <template v-slot:no-data>
+                  <CreateAccountDialog accountType="teacher"/>
+                </template>
+              </v-autocomplete>
+            </div>
           </div>
           <!-- End create-dialog-content -->
         </div>
@@ -173,15 +175,16 @@
         </div>
         <!-- End of right-side -->
         <!-- ACTION BUTTONS -->
-        <div class="action-buttons">
+        <v-row class="action-buttons">
           <v-btn
             v-if="edit"
             outlined
             color="green darken-1"
             @click="updateCohort(cohort)"
-            class="mr-2"
+            class="mx-2"
             :loading="loading"
             :disabled="disabled"
+            width="30%" 
           >
             <v-icon left>
               mdi-check
@@ -193,10 +196,10 @@
             outlined
             color="green darken-1"
             @click="saveCohort(cohort)"
-            class="mr-2"
+            class="mx-2"
             :loading="loading"
             :disabled="disabled"
-            width="40%"
+            width="30%"
           >
             <v-icon left>
               mdi-check
@@ -210,8 +213,8 @@
             outlined
             color="error"
             @click="deleteDialog()"
-            class="ml-2"
-            width="40%"
+            class="mx-2"
+            width="30%"
           >
             <v-icon left>
               mdi-delete
@@ -222,17 +225,17 @@
           <v-btn
             outlined
             :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
-            class="ml-2"
+            class="mx-2"
             @click="close"
             :disabled="disabled || loading"
-            width="40%"
+            width="30%"
           >
             <v-icon left>
               mdi-close
             </v-icon>
             Cancel
           </v-btn>
-        </div>
+        </v-row>
         <!-- End action-buttons -->
       </div>
       <!-- End create-dialog -->
@@ -306,8 +309,8 @@ import Organisation from "../components/Organisation";
 import CreateAccountDialog from "../components/CreateAccountDialog";
 import firebase from "firebase";
 
-import { mapState, mapGetters } from "vuex";
-import { db, storage } from "../store/firestoreConfig";
+import { mapState, mapGetters, mapActions } from "vuex";
+import { db, storage, functions } from "../store/firestoreConfig";
 
 export default {
   name: "CreateEditDeleteCohortDialog",
@@ -344,22 +347,23 @@ export default {
     percentage: 0,
     search: "",
   }),
+  mounted () {
+    if (this.user.data.admin) this.bindAllPeople()
+  },
   watch: {
     dialog (newVal) {
       if (newVal && this.edit) {
-        this.cohort = this.cohortToEdit 
+        Object.assign(this.cohort, this.cohortToEdit)
       } 
     }
   },
   computed: {
-    ...mapState(["organisations", "people"]),
-    ...mapGetters(["getOrganisationById", "user"]),
+    ...mapGetters(["getOrganisationById", "user", "people", "organisations"]),
     teachers () {
       const teachers = this.people.filter(person => person.accountType === "teacher")
       return teachers
     },
     cohortView () {
-      console.log('route: ', this.$route)
       return this.$route.name === "CohortView"
     },
     organisationsToSelect() {
@@ -373,9 +377,7 @@ export default {
   },
 
   methods: {
-    addTeacher (teacher) {
-      return this.cohort.teachers.push(teacher)
-    },
+    ...mapActions(['bindAllPeople']),
     toggleTeacherDialog () {
       this.teacherDialog = !this.teacherDialog
     },
@@ -385,6 +387,7 @@ export default {
     },
     close() {
       this.dialog = false;
+      this.loading = false;
       if (!this.edit) {
         this.cohort = {
           cohort: {
@@ -404,6 +407,7 @@ export default {
     },
     saveCohort(cohort) {
       this.loading = true;      
+  
       // Add a new document in collection "cohorts"
       db.collection("cohorts")
         .add(cohort)
@@ -413,6 +417,25 @@ export default {
         .catch((error) => {
           console.error("Error writing document: ", error);
       })
+
+      // notify teachers of new cohort assignment 
+      if (this.cohort.teachers.length) {
+        for (const teacher of newTeachers) {
+          const profile = this.people.find(person => teacher === person.id)
+          console.log(profile)
+          this.sendNewCohortEmail(profile)
+        }
+      }
+    },
+
+    sendNewCohortEmail(profile) {
+      const person = {
+        ...profile,
+        cohort: this.cohort.name,
+        inviter: this.inviter || 'Galaxy Maps Admin'
+      }
+      const sendNewCohortEmail = functions.httpsCallable('sendNewCohortEmail')
+      return sendNewCohortEmail(person)
     },
     camelize(str) {
       return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
@@ -502,19 +525,31 @@ export default {
         });
     },
     updateCohort(cohort) {
+      console.log('update cohort')
       this.loading = true;
+
       // update document in collection "courses"
       db.collection("cohorts")
         .doc(cohort.id)
         .update(cohort)
         .then(() => {
           console.log("Document successfully updated!");
-          this.loading = false;
-          this.dialog = false;
+          this.close()
         })
         .catch((error) => {
           console.error("Error updating document: ", error);
-        });
+      });
+
+      if (this.cohort.teachers.length > this.cohortToEdit.teachers) {
+        const newTeachers = this.cohort.teachers.filter(({ id: id1 }) => !this.cohortToEdit.teachers.some(({ id: id2 }) => id2 === id1));
+        if (newTeachers.length) {
+          for (const teacher of newTeachers) {
+            const profile = this.people.find(person => teacher === person.id)
+            console.log(profile)
+            this.sendNewCohortEmail(profile)
+          }
+        }
+      }
     },
   },
 };

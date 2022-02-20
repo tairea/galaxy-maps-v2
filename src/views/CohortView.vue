@@ -1,26 +1,25 @@
 <template>
   <div id="container" class="bg">
     <div id="left-section">
-      <CohortInfo :cohort="currentCohort" />
-      <AssignedInfo
-        :assignCourses="true"
-        :courses="courses"
-      />
+      <CohortInfo/>
+      <AssignedInfo/>
       <BackButton :toPath="'/base/cohorts'" />
     </div>
 
     <div id="main-section">
       <div class="people-frame">
         <h2 class="people-label">STUDENTS</h2>
-       <StudentDataIterator :studentIds="currentCohort.students"/>
+       <StudentDataIterator/>
       </div>
     </div>
 
     <div id="right-section">
-      <div class="people-right-frame mb-5">
+      <!-- <div class="people-right-frame mb-5">
         <h2 class="people-label">ADD STUDENTS</h2>
-        <ImportCsv :currentCohortId="currentCohortId" />
-      </div>
+        <ImportCsv />
+      </div> -->
+     <RequestForHelpTeacherCard />
+     <SubmissionTeacherCard />
     </div>
   </div>
 </template>
@@ -35,9 +34,12 @@ import StudentDataTable from "../components/StudentDataTable";
 import StudentDataIterator from "../components/StudentDataIterator";
 import Galaxy from "../components/Galaxy";
 import BackButton from "../components/BackButton";
-import ImportCsv from "../components/ImportCsv";
+import RequestForHelpTeacherCard from "../components/RequestForHelpTeacherCard";
+import SubmissionTeacherCard from "../components/SubmissionTeacherCard";
 
-import { mapState, mapGetters } from "vuex";
+// import ImportCsv from "../components/ImportCsv";
+import { mapGetters } from "vuex";
+
 
 export default {
   name: "CohortView",
@@ -48,27 +50,12 @@ export default {
     MissionsList,
     Galaxy,
     BackButton,
-    ImportCsv,
+    // ImportCsv,
     StudentCard,
     StudentDataTable,
-    StudentDataIterator
-  },
-  props: ["cohortId", "cohortName"],
-  computed: {
-    ...mapState(["currentCohortId"]),
-    ...mapGetters([
-      "getCohortById",
-      "getCoursesInThisCohort",
-      "getStudentsByCohortId",
-      "currentCohort"
-    ]),
-    courses () {
-      let cohortcourses = this.getCoursesInThisCohort(this.currentCohortId)
-      console.log('cohort courses: ', cohortcourses)
-      // needed so courses props arent returned undefined 
-      if (cohortcourses[0]) return cohortcourses 
-      else return {}
-    } 
+    StudentDataIterator,
+    RequestForHelpTeacherCard,
+    SubmissionTeacherCard
   },
 };
 </script>
@@ -86,8 +73,9 @@ export default {
   height: 100vh;
   width: 100%;
   display: flex;
-  // overflow: hidden;
+  overflow: hidden;
   padding-top: 50px;
+  margin: 0 !important
 }
 
 #left-section {
@@ -97,6 +85,8 @@ export default {
   justify-content: flex-start;
   align-items: center;
   flex-direction: column;
+  overflow-y: scroll;
+  padding-bottom: 50px;
 }
 
 #main-section {
@@ -135,9 +125,6 @@ export default {
 #right-section {
   width: 30%;
   height: 100%;
-  display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
 
   .people-right-frame {
     position: relative;
@@ -163,9 +150,10 @@ export default {
   }
 }
 
+
 /* width */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 1px;
 }
 
 /* Track */
@@ -175,11 +163,11 @@ export default {
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-  background: var(--v-missionAccent-base);
+  background: var(--v-background-base);
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--v-missionAccent-base);
+  background: var(--v-background-base);
 }
 </style>

@@ -25,46 +25,48 @@
       <p class="login pt-2">{{lastLoggedIn}}</p>
     </div>
     <div class="student-section student-main-section">
-        <div>
-          <v-row>
-            <span class="caption pt-2">Current Mission</span>
-          </v-row>
-          <v-row>
-            <h3 :class="topic ? 'active-title':'inactive-title'">{{topic || 'No active Planet'}} </h3>
-          </v-row>
-        </div>
-        <div class="mt-6 mission-section">
-          <v-row>
-            <span class="caption">Current Task</span>
-          </v-row>
-          <v-row>
-            <h3 :class="task ? 'active-title':'inactive-title'">{{task || 'No active mission'}} </h3>
-          </v-row>
-        </div>
+      <div v-if="topic">
+        <v-row>
+          <span class="caption pt-2">Current Mission</span>
+        </v-row>
+        <v-row>
+          <h3 class="titles">{{ topic }} </h3>
+        </v-row>
+      </div>
+      <div v-if="task" class="mt-6 mission-section">
+        <v-row>
+          <span class="caption">Current Task</span>
+        </v-row>
+        <v-row>
+          <h3 class="titles">{{ task }} </h3>
+        </v-row>
+      </div>
+      <h3 v-if="!topic" class="inactive-title">No active galaxies</h3>
     </div>
-    <div class="student-section student-minor-section">
+    <div v-if="missions.length" class="student-section student-minor-section">
       <v-row class="justify-center">
         <span class="caption pt-2">Completed Missions</span>
       </v-row>
       <v-row class="justify-center">
-        <span :class="missions ? 'active-number' : 'inactive-number'">{{missions || '0'}}</span>
+        <span class="numbers'">{{missions || '0'}}</span>
       </v-row>
     </div>
-    <div class="student-section student-minor-section">
+    <div v-if="hours" class="student-section student-minor-section">
       <v-row class="justify-center">
         <span class="caption pt-2">Completed hours</span>
       </v-row>
       <v-row class="justify-center">
-        <span :class="hours ? 'active-number' : 'inactive-number'">{{hours || '0'}}</span>
+        <span class="numbers">{{hours || '0'}}</span>
       </v-row>
     </div>
-    <div class="student-section student-section-overUnder">
-      <div class="section-overUnder">
+    <!--======= if requests and submissions =========-->
+    <div v-if="work.length || help.length" class="student-section student-section-overUnder">
+      <div v-if="work" class="section-overUnder">
         <v-row class="justify-center">
           <v-icon  :class="work.length ? 'active-icon' : 'inactive-icon'" large>mdi-attachment</v-icon>
         </v-row>
       </div>
-      <div class="section-overUnder">
+      <div v-if="help" class="section-overUnder">
         <v-row class="justify-center">
           <v-icon :class="help.length ? 'active-icon' : 'inactive-icon'" large>mdi-message</v-icon>
         </v-row>
@@ -89,7 +91,7 @@ export default {
       course: "", 
       topic: "", 
       task: "",
-      missions: "",
+      missions: [],
       hours: "",
       work: [],
       help: []
@@ -188,7 +190,7 @@ a {
   .student-image-section {
     // flex-grow: 0 !important;
     // flex-shrink: 1 !important;
-    width: 30px;
+    max-width: 18%;
 
     .imagePlaceholder {
       width: 60px;
@@ -226,30 +228,17 @@ a {
     }
   }
   	
-  .active-title {
+  .titles {
     text-transform: uppercase;
     font-weight: 500;
     color: var(--v-baseAccent-base);
   }
-
-  .inactive-title {
-    text-transform: uppercase;
-    font-weight: 500;
-    color: var(--v-galaxyAccent-base);
-    opacity: 50%;
-  }
-
-  .inactive-number {
-    font-size: 4rem;
-    color: var(--v-galaxyAccent-base);
-    opacity: 50%;
-  }
   
-  .active-number {
+  .numbers {
     font-size: 4rem;
     color: var(--v-baseAccent-base);
   }
-  
+
   .inactive-icon {
     color: var(--v-galaxyAccent-base);
     opacity: 50%;
@@ -258,5 +247,15 @@ a {
   .active-icon {
     color: var(--v-cohortAccent-base);
   }
+
+  .inactive-title {
+    color: var(--v-missionAccent-base);
+    text-transform: uppercase;
+    font-weight: 500;
+    display: flex;
+    justify-content: center;
+    padding: 30px
+  }
+  
 }
 </style>

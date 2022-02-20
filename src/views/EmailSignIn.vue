@@ -82,11 +82,10 @@ export default {
     },
     proceed() {
       if (!this.user?.data?.id || !this.person?.id) {
-        setTimeout(() => {
+        return setTimeout(() => {
           this.proceed()
         }, 500)
-        return
-      } 
+      }
       // open dialog to set password and profile information
       this.dialog = true
     },

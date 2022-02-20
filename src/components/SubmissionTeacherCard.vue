@@ -1,190 +1,108 @@
 <template>
-  <div class="submission-card">
-    <v-expansion-panels flat>
-      <v-expansion-panel class="panel">
-        <v-expansion-panel-header class="pa-0">
-          <!-- Avatar -->
-          <div class="submission-image d-flex justify-center align-center">
-            <v-avatar v-if="requesterPerson" size="30">
-              <img
-                v-if="requesterPerson.image"
-                :src="requesterPerson.image.url"
-                :alt="requesterPerson.firstName"
-                style="object-fit: cover"
-              />
-            </v-avatar>
-          </div>
-          <!-- Course/Topic/Task -->
-          <div class="submission-context">
-            <p class="submission-context-task">
-              {{ submission.contextTask.title }}
-            </p>
-            <p class="submission-context-topic">
-              {{ submission.contextTopic.label }}
-            </p>
-            <p class="submission-context-course">
-              {{ submission.contextCourse.title }}
-            </p>
-          </div>
-          <div class="submission-time">
-            {{ getHumanDate(submission.taskSubmittedTimestamp) }}
-          </div>
-          <template v-slot:actions>
-            <v-icon color="missionAccent"> </v-icon>
-          </template>
-        </v-expansion-panel-header>
-        <v-expansion-panel-content>
-          <div
-            class="d-flex justify-center align-center"
-            style="padding-top: 16px"
-          >
-            <!-- View submission button -->
-            <a
-              style="text-decoration: none"
-              :href="submission.submissionLink"
-              target="_blank"
-            >
-              <v-btn outlined color="cohortAccent" class="ma-2" small>
-                <v-icon left> mdi-text-box-search-outline </v-icon>
-                VIEW SUBMISSION
-              </v-btn>
-            </a>
-          </div>
-          <div class="divider"></div>
-          <div class="action-button">
-            <MarkSubmissionCompleted
-              :submission="submission"
-              :requesterPerson="requesterPerson"
-              @snackbarToggle="snackbarToggle($event)"
-            />
-          </div>
-        </v-expansion-panel-content>
-      </v-expansion-panel>
-    </v-expansion-panels>
+  <div id="cohort-review-panel">
+    <h2 class="review-label">Work submitted for review</h2>
+    <div v-if="teachersSubmissionsToReview.length > 0">
+      <SubmissionTeacherPanel
+        v-for="submission in teachersSubmissionsToReview"
+        :key="submission.id"
+        :submission="submission"
+        @snackbarToggle="snackbarToggleSubmission($event)"
+      />
+    </div>
+    <div
+      v-if="!submissionsLoading && teachersSubmissionsToReview.length == 0"
+    >
+      <p
+        class="overline pt-4 text-center"
+        style="color: var(--v-cohortAccent-base)"
+      >
+        NO WORK TO REVIEW
+      </p>
+    </div>
+    <!-- loading spinner -->
+    <div class="d-flex justify-center align-center mt-4">
+      <v-btn
+        v-if="submissionsLoading"
+        :loading="submissionsLoading"
+        icon
+        color="cohortAccent"
+      ></v-btn>
+    </div>
   </div>
 </template>
-
 <script>
-import { mapState, mapActions } from "vuex";
-import moment from "moment";
 
-import MarkSubmissionCompleted from "../components/MarkSubmissionCompleted";
+import SubmissionTeacherPanel from "../components/SubmissionTeacherPanel";
+import { mapState } from "vuex"
 
 export default {
   name: "SubmissionTeacherCard",
-  props: ["submission"],
   components: {
-    MarkSubmissionCompleted,
-  },
-  async mounted() {
-    // bind student profile
-    const person = await this.$store.dispatch(
-      "getPersonByIdFromDB",
-      this.submission.studentId
-    );
-    this.requesterPerson = person;
-
-    // bind students tasks related to this submission (used for unlocking next topic)
-    await this.$store.dispatch("bindPersonsTasksByTopicId", {
-      personId: this.submission.studentId,
-      courseId: this.submission.contextCourse.id,
-      topicId: this.submission.contextTopic.id,
-    });
-    console.log(
-      "this.personsTopicsTasks from SubmissionTeacherCard.vue: ",
-      this.personsTopicsTasks
-    );
-  },
-  computed: {
-    ...mapState([
-      // "currentCourseId",
-      // "currentTopicId",
-      // "currentTaskId",
-      "personsTopicsTasks",
-    ]),
-    // ...mapActions(["getTaskByTaskId"]),
+    SubmissionTeacherPanel
   },
   data() {
     return {
-      requesterPerson: null,
-    };
+      submissionsLoading: false,
+      allSubmissions: [],
+      snackbarMsg: "",
+      snackbar: false,
+    }
+  },
+  async mounted() {
+    this.submissionsLoading = true;
+
+    // bind all submissions
+    this.bindSubmissions();
+
+    console.log(
+      "teachersSubmissionsToReview",
+      this.teachersSubmissionsToReview
+    );
+  },
+  computed: {
+    ...mapState(['teachersSubmissionsToReview', 'user'])
   },
   methods: {
-    getHumanDate(ts) {
-      return moment(ts.seconds * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
+    snackbarToggleSubmission(msg) {
+      console.log("snackbar toggled...", msg);
+      this.snackbarMsg = msg;
+      this.snackbar = true;
+      this.bindSubmissions();
     },
-    snackbarToggle(msg) {
-      this.$emit("snackbarToggle", msg);
+    async bindSubmissions() {
+      await this.$store.dispatch(
+        "getAllSubmittedWorkForTeacher",
+        this.user.data.id
+      );
+      this.submissionsLoading = false;
     },
-    // first3Letters(name) {
-    //   return name.substring(0, 3).toUpperCase();
-    // },
-    // TODO: route to students page
-    // routeToStudentsProfile(id) {
-    //   console.log("TODO: route to persons page:", id);
-    // },
   },
-};
+}
 </script>
-
 <style lang="scss" scoped>
-.submission-card {
-  width: 100%;
-  display: flex;
-  margin: 20px 0px;
-  padding: 10px;
+#cohort-review-panel {
+  width: calc(100% - 30px);
   border: 1px solid var(--v-cohortAccent-base);
-  border-radius: 5px;
+  margin: 0px 15px;
+  padding: 20px;
+  // background: var(--v-baseAccent-base);
+  position: relative;
+  backdrop-filter: blur(2px);
+  z-index: 3;
 
-  .panel {
-    background-color: transparent !important;
-  }
-
-  .submission-image {
-    width: 10%;
-  }
-
-  .submission-context {
-    margin-left: 10px;
-    width: 60%;
-
-    .submission-context-task {
-      margin: 0px;
-      text-transform: uppercase;
-      font-size: 0.8rem;
-      color: var(--v-missionAccent-base);
-      font-weight: 800;
-    }
-    .submission-context-topic {
-      margin: 0px;
-      text-transform: uppercase;
-      font-size: 0.6rem;
-      color: var(--v-missionAccent-base);
-    }
-    .submission-context-course {
-      margin: 0px;
-      text-transform: uppercase;
-      font-size: 0.6rem;
-      color: var(--v-galaxyAccent-base);
-    }
-  }
-
-  .submission-time {
-    margin: 0px;
-    text-transform: uppercase;
+  .review-label {
     font-size: 0.8rem;
-    color: var(--v-missionAccent-base);
-    width: 30%;
-    text-align: right;
-  }
-
-  .divider {
-    border-bottom: 1px solid var(--v-missionAccent-base);
-    margin: 20px 0px;
+    font-weight: 400;
+    text-transform: uppercase;
+    // ribbon label
+    position: absolute;
+    top: 0;
+    left: -1px;
+    background-color: var(--v-cohortAccent-base);
+    color: var(--v-background-base);
+    padding: 0px 20px 0px 5px;
+    clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
   }
 }
 
-.v-expansion-panel-content__wrap {
-  padding: 0px !important;
-}
 </style>
