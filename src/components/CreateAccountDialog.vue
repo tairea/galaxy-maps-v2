@@ -28,9 +28,9 @@
               type="text"
               v-model="account.firstName"
               label="First Name"
-              color="missionAccent"
               outlined
-              class="custom-input mt-6"
+              class="mt-6"
+              color="missionAccent"
             ></v-text-field>
             <v-text-field
               :dark="dark"
@@ -38,9 +38,8 @@
               type="text"
               v-model="account.lastName"
               label="Last Name"
-              color="missionAccent"
               outlined
-              class="custom-input"
+              color="missionAccent"
             ></v-text-field>
             <v-text-field
               :dark="dark"
@@ -50,9 +49,8 @@
               label="E-mail"
               :rules="emailRules"
               required
-              color="missionAccent"
               outlined
-              class="custom-input"
+              color="missionAccent"
             ></v-text-field>
             <v-text-field
               v-if="!teacher"
@@ -62,9 +60,8 @@
               v-model="account.parentEmail"
               label="Parent E-mail"
               :rules="parentEmailRules"
-              color="missionAccent"
               outlined
-              class="custom-input"
+              color="missionAccent"
             ></v-text-field>
             <v-text-field
               v-if="!teacher"
@@ -74,9 +71,8 @@
               v-model="account.nsn"
               label="Student NSN"
               required
-              color="missionAccent"
               outlined
-              class="custom-input"
+              color="missionAccent"
             ></v-text-field>
             <v-text-field
               v-if="!teacher"
@@ -86,32 +82,33 @@
               v-model="account.inviter"
               label="Added by"
               required
-              color="missionAccent"
               outlined
-              class="custom-input"
+              color="missionAccent"
               :value="person.firstName + ' ' + person.lastName" 
             ></v-text-field>
           </v-form>
           <v-row>
             <v-btn
               :disabled="!valid || addingAccount"
-              color="missionAccent"
-              class="ma-4"
-              @click="create()"
-              outlined
-              width="30%"
               :loading="addingAccount"
+              @click="create()"
+              width="30%"
+              class="ma-4 disabledButton"
+              color="missionAccent"
+              outlined
+              :dark="dark"
+              :light="!dark"
             >
               Create
             </v-btn>
             <v-btn
+              :disabled="addingAccount"
+              @click="close()"
+              outlined
               :dark="dark"
               :light="!dark"
               class="ma-4"
-              @click="close()"
-              outlined
               width="30%"
-              :disabled="addingAccount"
             >
               cancel
             </v-btn>
@@ -214,121 +211,6 @@ export default {
         });
       }
     },
-    // addExistingUser (person) {
-      // return this.addStudentToCohort()
-      //   .then(() => {
-      //     this.sendNewCohortEmail(person)
-      //   }).then(() => {
-      //     this.addingAccount = false
-      //     this.close()
-      //   }).catch(err => {
-      //     this.addingAccount = false
-      //     console.error("something went wrong adding existing person: ", err)
-      //   })
-    // },
-    // createUser () {
-    //   this.account.accountType = this.accountType
-    //   this.account.displayName = this.account.firstName + ' ' + this.account.lastName
-    //   // create user
-    //   const createUser = functions.httpsCallable('createUser')
-    //   createUser(this.account)
-    //     .then(result => {
-    //       this.account.id = result.data.uid
-    //       return this.addAccount()
-    //     }).then(() => {
-    //       return this.generateLink()
-    //     }).then(link => {
-    //       return this.sendEmailInvite(link)
-    //     }).then(() => {
-    //       if (!this.teacher) {
-    //         this.addStudentToCohort()
-    //       }
-    //       this.addingAccount = false
-    //       this.close()
-    //     })
-    //     .catch((error) => {
-    //       console.error(error)
-    //   });
-    // },
-    // addAccount () { 
-    //   const profile = {
-    //     ...this.account,
-    //   }
-    //   if (!this.teacher) {
-    //     profile.nsn = this.nsn
-    //     profile.parentEamil = this.parentEmail
-    //   }
-    //   delete profile.id
-    //   db.collection("people")
-    //     .doc(this.account.id)
-    //     .set(profile)
-    //     .catch((error) => {
-    //       console.error("Error writing document: ", error);
-    //   });
-    // },
-    // generateLink() {
-    //   // generate magic email link
-    //   const data = {
-    //     ...this.account,
-    //     host: window.location.origin
-    //   }
-
-    //   const generateEmailLink = functions.httpsCallable('generateEmailLink')
-    //   return generateEmailLink(data)
-    //     .then((link) => {
-    //       return link
-    //     })
-    //     .catch((error) => {
-    //       console.error("Error writing document: ", error);
-    //   });
-    // },
-    // sendEmailInvite(link) {
-    //   this.account.link = link.data
-    //   if (!this.teacher) {
-    //     this.account.inviter = this.inviter
-    //   }
-    //   const sendInviteEmail = functions.httpsCallable('sendInviteEmail')
-    //   sendInviteEmail(this.account)
-    //   .catch((error) => {
-    //     console.error(error)
-    //   });
-    // },
-    // sendNewCohortEmail(profile) {
-    //   const person = {
-    //     ...profile,
-    //     cohort: this.currentCohort.name,
-    //     inviter: this.inviter || 'Galaxy Maps Admin'
-    //   }
-    //   const sendNewCohortEmail = functions.httpsCallable('sendNewCohortEmail')
-    //   return sendNewCohortEmail(person)
-    // },
-
-    // addStudentToCohort () {
-    //   return db.collection("cohorts")
-    //     .doc(this.currentCohort.id)
-    //     .update({
-    //       students: firebase.firestore.FieldValue.arrayUnion(
-    //         this.account.id
-    //       ),
-    //     })
-    //     .catch((error) => {
-    //       console.error("Error writing document: ", error);
-    //   });
-    // },
-    // async getPersonByEmail (email) {
-    //   const query = await db.collection("people")
-    //     .where('email', '==', email)
-    //     .get()
-    //   for (const doc of query.docs) {
-    //     if (doc) {
-    //       const person = {
-    //         id: doc.id,
-    //         ...doc.data()
-    //       }
-    //       return person
-    //     }
-    //   }
-    // }
   },
 };
 </script>
@@ -363,14 +245,6 @@ export default {
   .custom-input {
     color: var(--v-missionAccent-base);
   }
-}
-
-.input-description {
-  color: var(--v-missionAccent-base);
-  text-transform: uppercase;
-  font-size: 0.7rem;
-  margin: 0;
-  font-style: italic;
 }
 
 .cohort-btn {

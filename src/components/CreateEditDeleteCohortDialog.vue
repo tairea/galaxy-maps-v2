@@ -1,6 +1,6 @@
 <template>
   <div :class="cohortView ? 'text-end':'text-center'" :align="cohortView ? 'end':'center'">
-    <v-dialog v-model="dialog" width="40%" light>
+    <v-dialog v-model="dialog" width="40%" light style="overflow: hidden">
       <!-- CREATE BUTTON -->
       <template v-slot:activator="{ on, attrs }">
         <v-btn
@@ -49,23 +49,25 @@
             <p class="input-description">Cohort Name:</p>
             <v-text-field
               class="input-field"
-              solo
+              outlined
+              :dark="dark"
+              :light="!dark"
               color="missionAccent"
               v-model="cohort.name"
-              background-color="white"
             ></v-text-field>
 
             <!-- DESCRIPTION -->
             <p class="input-description">Cohort Description:</p>
             <v-textarea
               class="input-field"
-              solo
+              outlined
+              :dark="dark"
+              :light="!dark"
               color="missionAccent"
               auto-grow
               clearable
               rows="1"
               v-model="cohort.description"
-              background-color="white"
             ></v-textarea>
 
             <!-- IMAGE UPLOAD -->
@@ -76,7 +78,9 @@
             ></v-progress-linear>
             <v-file-input
               class="input-field"
-              solo
+              outlined
+              :dark="dark"
+              :light="!dark"
               color="missionAccent"
               accept="image/*"
               v-model="uploadedImage"
@@ -89,7 +93,10 @@
               <p class="input-description">Organisation:</p>
               <v-select
                 class="input-field"
-                solo
+                outlined
+                :dark="dark"
+                :light="!dark"
+                color="missionAccent"
                 v-model="cohort.organisation"
                 :items="organisationsToSelect"
                 item-text="name"
@@ -105,7 +112,10 @@
                 @change="search = ''"
                 menu-props="closeOnContentClick"
                 class="input-field text-lowercase"
-                solo
+                color="missionAccent"
+                outlined
+                :dark="dark"
+                :light="!dark"
                 chips
                 item-text="email"
                 item-value="id"
@@ -359,6 +369,9 @@ export default {
   },
   computed: {
     ...mapGetters(["getOrganisationById", "user", "people", "organisations"]),
+    dark () {
+      return this.$vuetify.theme.isDark
+    },
     teachers () {
       const teachers = this.people.filter(person => person.accountType === "teacher")
       return teachers
@@ -697,5 +710,9 @@ export default {
     background-color: var(--v-subBackground-base);
     padding: 0px 5px;
   }
+}
+
+.no-overflow {
+  overflow: hidden ;
 }
 </style>
