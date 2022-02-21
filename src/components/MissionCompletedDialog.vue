@@ -201,8 +201,9 @@ import firebase from "firebase/app";
 
 import { db } from "../store/firestoreConfig";
 import {
-  sendStudentXAPIStatement,
-  sendTeacherXAPIStatement,
+  submitWorkForReviewXAPIStatement,
+  taskMarkedAsCompletedXAPIStatement,
+  topicCompletedXAPIStatement,
 } from "../store/veracityLRS";
 
 import { mapState, mapGetters } from "vuex";
@@ -276,14 +277,16 @@ export default {
           console.log("Submission successfully submitted for review!");
 
           // send xAPI statement to LRS
-          sendStudentXAPIStatement(
+          submitWorkForReviewXAPIStatement(
             this.person.email,
-            "http://adlnet.gov/expapi/verbs/completed",
-            // this.currentTask.id
+            this.currentTask.id,
             {
-              galaxyName: this.currentCourse.title,
-              systemName: this.currentTopic.label,
-              missionName: this.currentTask.title,
+              // galaxyName: this.currentCourse.title,
+              // systemName: this.currentTopic.label,
+              // missionName: this.currentTask.title,
+              galaxy: this.currentCourse,
+              system: this.currentTopic,
+              mission: this.currentTask,
             }
           );
 
@@ -351,14 +354,13 @@ export default {
         .then(() => {
           console.log("Task status successfully written as completed!");
           // send xAPI statement to LRS
-          sendStudentXAPIStatement(
+          taskMarkedAsCompletedXAPIStatement(
             this.person.email,
-            "http://adlnet.gov/expapi/verbs/completed",
-            // this.currentTask.id
+            this.currentTask.id,
             {
-              galaxyName: this.currentCourse.title,
-              systemName: this.currentTopic.label,
-              missionName: this.currentTask.title,
+              galaxy: this.currentCourse,
+              system: this.currentTopic,
+              mission: this.currentTask,
             }
           );
           this.loading = false;
@@ -406,16 +408,12 @@ export default {
       ).length;
       // 2) check if that the same as total
       if (numOfTasksCompleted === this.personsTopicsTasks.length) {
+        console.log("Topic Completed! (all tasks in this topic completed)");
         // TODO: some kind of notification to UI signal that Topic has been completed
-        sendStudentXAPIStatement(
-          this.person.email,
-          "http://adlnet.gov/expapi/verbs/completed",
-          // this.currentTask.id
-          {
-            galaxyName: this.currentCourse.title,
-            systemName: this.currentTopic.label,
-          }
-        );
+        topicCompletedXAPIStatement(this.person.email, this.currentTopic.id, {
+          galaxy: this.currentCourse,
+          system: this.currentTopic,
+        });
         // all tasks are completed. unlock next topic
         this.unlockNextTopics();
       } else {

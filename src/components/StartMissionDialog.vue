@@ -85,8 +85,7 @@
 import firebase from "firebase/app";
 
 import { db } from "../store/firestoreConfig";
-// import { sendStudentXAPIStatement } from "../store/veracityLRS";
-import { sendStudentXAPIStatement } from "../store/tinCanJs";
+import { startTaskXAPIStatement } from "../store/veracityLRS";
 
 import { mapState, mapGetters } from "vuex";
 
@@ -123,16 +122,11 @@ export default {
         })
         .then(() => {
           console.log("Task status successfully written as Active!");
-          sendStudentXAPIStatement(
-            this.person.email,
-            "https://w3id.org/xapi/dod-isd/verbs/started",
-            // this.task.id
-            {
-              galaxyName: this.currentCourse.title,
-              systemName: this.currentTopic.label,
-              missionName: this.currentTask.title,
-            }
-          );
+          startTaskXAPIStatement(this.person.email, this.currentTask.id, {
+            galaxy: this.currentCourse,
+            system: this.currentTopic,
+            mission: this.currentTask,
+          });
           this.loading = false;
           this.dialog = false;
         })

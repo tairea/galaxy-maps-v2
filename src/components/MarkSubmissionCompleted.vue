@@ -79,8 +79,8 @@ import firebase from "firebase/app";
 
 import { db } from "../store/firestoreConfig";
 import {
-  sendStudentXAPIStatement,
-  sendTeacherXAPIStatement,
+  studentWorkMarkedCompletedXAPIStatement,
+  teacherReviewedStudentWorkXAPIStatement,
 } from "../store/veracityLRS";
 
 import { mapState, mapGetters } from "vuex";
@@ -143,24 +143,24 @@ export default {
 
           // send xAPI statement to LRS
           // student completed work
-          sendStudentXAPIStatement(
+          studentWorkMarkedCompletedXAPIStatement(
             this.requesterPerson.email,
-            "http://adlnet.gov/expapi/verbs/completed",
+            this.submission.contextTask.id,
             {
-              galaxyName: this.submission.contextCourse.title,
-              systemName: this.submission.contextTopic.label,
-              missionName: this.submission.contextTask.title,
+              galaxy: this.submission.contextCourse,
+              system: this.submission.contextTopic,
+              mission: this.submission.contextTask,
             }
           );
           // teacher reviewed work
-          sendTeacherXAPIStatement(
+          teacherReviewedStudentWorkXAPIStatement(
             this.person.email,
-            "https://w3id.org/xapi/dod-isd/verbs/reviewed",
+            this.submission.contextTask.id,
             {
               student: this.requesterPerson,
-              galaxyName: this.submission.contextCourse.title,
-              systemName: this.submission.contextTopic.label,
-              missionName: this.submission.contextTask.title,
+              galaxy: this.submission.contextCourse,
+              system: this.submission.contextTopic,
+              mission: this.submission.contextTask,
             }
           );
 
