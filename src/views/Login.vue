@@ -70,6 +70,7 @@
 <script>
 import firebase from "firebase";
 import { mapGetters } from "vuex";
+import { queryXAPIStatement } from "../store/veracityLRS";
 
 export default {
   name: "Login",
@@ -85,7 +86,15 @@ export default {
     snackbarText: "",
     loading: false,
   }),
-  mounted() {},
+  mounted() {
+    queryXAPIStatement({
+      verb: "http://adlnet.gov/expapi/verbs/completed",
+      email: "waipuna@gmail.com",
+    }).then((result) => {
+      console.log("result");
+      console.log(result);
+    });
+  },
   computed: {
     ...mapGetters(["person"]),
   },
