@@ -109,7 +109,7 @@
               </h5>
             </td>
             <!-- Table: Status -->
-            <td style="width: 100px">
+            <td v-if="person.accountType == 'student'" style="width: 100px">
               <h5
                 class="mission-text text-right"
                 :class="getStatusColour(task.taskStatus)"

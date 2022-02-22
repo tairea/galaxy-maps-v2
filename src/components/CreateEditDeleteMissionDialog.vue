@@ -46,56 +46,61 @@
 
             <div class="create-dialog-content">
               <!-- TITLE -->
-              <p class="dialog-description">Mission Title:</p>
+              <!-- <p class="dialog-description">Mission Title:</p> -->
               <v-text-field
                 class="input-field"
-                solo
+                outlined
+                dark
                 color="missionAccent"
                 v-model="task.title"
-                background-color="white"
+                label="Mission Title"
               ></v-text-field>
 
               <!-- DESCRIPTION -->
-              <p class="dialog-description">Mission Description:</p>
+              <!-- <p class="dialog-description">Mission Description:</p> -->
               <v-textarea
                 class="input-field"
-                solo
+                outlined
+                dark
                 color="missionAccent"
                 auto-grow
                 clearable
                 rows="1"
                 v-model="task.description"
-                background-color="white"
+                label="Mission Description"
               ></v-textarea>
 
               <!-- DURATION -->
-              <p class="dialog-description">Duration:</p>
+              <!-- <p class="dialog-description">Duration:</p> -->
               <v-text-field
                 class="input-field"
-                solo
+                outlined
+                dark
                 color="missionAccent"
                 v-model="task.duration"
-                background-color="white"
+                label="Duration"
               ></v-text-field>
 
               <!-- VIDEO -->
-              <p class="dialog-description">Video:</p>
+              <!-- <p class="dialog-description">Video:</p> -->
               <v-text-field
                 class="input-field"
-                solo
+                outlined
+                dark
                 color="missionAccent"
                 v-model="task.video"
-                background-color="white"
+                label="Video"
               ></v-text-field>
 
               <!-- SLIDES -->
-              <p class="dialog-description">Slides:</p>
+              <!-- <p class="dialog-description">Slides:</p> -->
               <v-text-field
                 class="input-field"
-                solo
+                outlined
+                dark
                 color="missionAccent"
                 v-model="task.slides"
-                background-color="white"
+                label="slides"
               ></v-text-field>
 
               <!-- SUBMISSION REQUIRED? -->
@@ -126,6 +131,7 @@
                 v-model="task.submissionRequired"
                 class="ma-0 pa-0 submission-colour"
                 color="cohortAccent"
+                dark
               >
                 <template v-slot:label>
                   <span class="dialog-description submission-colour"
@@ -162,7 +168,9 @@
                 <v-textarea
                   v-model="task.submissionInstructions"
                   class="ma-0 pa-0 submission-colour"
-                  solo
+                  outlined
+                  dark
+                  color="cohortAccent"
                 ></v-textarea>
               </div>
 
@@ -544,6 +552,7 @@ export default {
     text-align: center;
     flex: none;
     font-size: 0.8rem;
+    color: var(--v-missionAccent-base);
   }
 }
 

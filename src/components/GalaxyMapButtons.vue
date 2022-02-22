@@ -48,15 +48,11 @@
     </v-btn>
 
     <div class="ui-message-wrap">
-      <p
-        v-if="currentCourseNodes.length === 0 && !addNodeMode"
-        class="ui-message"
-        style="margin-left: 20px"
-      >
+      <p v-if="!addNodeMode" class="ui-message" style="margin-left: 20px">
         <v-icon color="missionAccent" class="bounce"
           >mdi-hand-pointing-up</v-icon
         >
-        Add a new node to start creating a Galaxy map
+        Add a new node to extend your Galaxy map
       </p>
       <p v-else class="ui-message">{{ uiMessage }}</p>
     </div>

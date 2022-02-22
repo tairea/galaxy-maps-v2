@@ -3,9 +3,12 @@
     <div class="flexContainer">
       <Galaxy :whichCoursesToDisplay="whichCoursesToDisplay" />
     </div>
-    <div v-if="person.accountType == 'admin'" class="buttons">
-      <CreateEditDeleteGalaxyDialog :edit="false" />
-      <DiscoverGalaxyButton />
+    <div v-if="whichCoursesToDisplay != 'assigned'" class="buttons">
+      <CreateEditDeleteGalaxyDialog
+        :edit="false"
+        v-if="myGalaxies"
+      />
+      <!-- <DiscoverGalaxyButton /> -->
     </div>
   </div>
 </template>
@@ -28,6 +31,9 @@ export default {
   },
   computed: {
     ...mapGetters(["user", "person"]),
+    myGalaxies () {
+      return this.$route.path.includes('/my')
+    }
   },
   data() {
     return {
@@ -36,7 +42,7 @@ export default {
         ? this.$route.params.mineOrAssignedOrAll
         : "", // my, assigned OR all
     };
-  }
+  },
 };
 </script>
 

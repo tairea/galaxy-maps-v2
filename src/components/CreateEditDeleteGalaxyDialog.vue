@@ -37,44 +37,49 @@
             <div
               class="left-side"
               :style="course.title ? 'width:50%' : 'width:100%'"
+              style="margin-top: 10px"
             >
               <!-- DIALOG FIELDS -->
               <div class="create-dialog-content">
                 <!-- TITLE -->
-                <p class="dialog-description">Galaxy Name:</p>
+                <!-- <p class="dialog-description">Galaxy Name:</p> -->
                 <v-text-field
+                  dark
                   class="input-field"
-                  solo
+                  outlined
                   color="missionAccent"
                   v-model="course.title"
-                  background-color="white"
+                  label="Galaxy name"
                 ></v-text-field>
 
                 <!-- DESCRIPTION -->
-                <p class="dialog-description">Galaxy Description:</p>
+                <!-- <p class="dialog-description">Galaxy Description:</p> -->
                 <v-textarea
+                  dark
                   class="input-field"
-                  solo
+                  outlined
                   color="missionAccent"
                   auto-grow
                   clearable
                   rows="1"
                   v-model="course.description"
+                  label="Galaxy description"
                 ></v-textarea>
 
                 <!-- IMAGE UPLOAD -->
-                <p class="dialog-description">Galaxy Image:</p>
+                <!-- <p class="dialog-description">Galaxy Image:</p> -->
                 <v-progress-linear
                   color="missionAccent"
                   :value="percentageGalaxy"
                 ></v-progress-linear>
                 <v-file-input
                   class="input-field"
-                  solo
+                  outlined
+                  dark
                   color="missionAccent"
                   accept="image/*"
                   v-model="uploadedImage"
-                  label="Upload Image"
+                  label="Upload Galaxy Image"
                   @change="storeImage()"
                   prepend-icon=""
                 ></v-file-input>
@@ -85,6 +90,7 @@
                   <v-checkbox
                     v-model="notAuthor"
                     dense
+                    dark
                     color="missionAccent"
                     class="author-checkbox ma-0"
                     hide-details
@@ -107,42 +113,45 @@
                 <!-- ORIGINAL AUTHOR -->
                 <div v-if="notAuthor">
                   <!-- AUTHOR -->
-                  <p class="dialog-description">Name of content creator:</p>
+                  <!-- <p class="dialog-description">Name of content creator:</p> -->
                   <v-text-field
                     class="input-field"
-                    solo
+                    outlined
                     color="missionAccent"
                     v-model="course.contentBy.name"
-                    background-color="white"
+                    dark
+                    label="Name of content creator"
                   ></v-text-field>
 
                   <!-- AUTHOR IMAGE UPLOAD -->
-                  <p class="dialog-description">Image of content creator:</p>
+                  <!-- <p class="dialog-description">Image of content creator:</p> -->
                   <v-progress-linear
                     color="missionAccent"
                     :value="percentageAuthor"
                   ></v-progress-linear>
                   <v-file-input
                     class="input-field"
-                    solo
+                    outlined
+                    dark
                     color="missionAccent"
                     accept="image/*"
                     v-model="authorImage"
-                    label="Upload Image"
+                    label="Upload content creator image"
                     @change="storeAuthorImage()"
                     prepend-icon=""
                   ></v-file-input>
 
                   <!-- SOURCE OF ORIGINAL CONTENT -->
-                  <p class="dialog-description">
+                  <!-- <p class="dialog-description">
                     Source URL of original content:
-                  </p>
+                  </p> -->
                   <v-text-field
                     class="input-field"
-                    solo
+                    outlined
+                    dark
                     color="missionAccent"
                     v-model="course.contentBy.source"
-                    background-color="white"
+                    label="Source URL of original content"
                   ></v-text-field>
                 </div>
                 <!-- End original author -->
@@ -612,7 +621,7 @@ export default {
   flex-direction: column;
   color: var(--v-missionAccent-base);
   padding: 20px;
-  text-transform: uppercase;
+  // text-transform: uppercase;
   width: 100%;
   // font-size: 0.6rem;
   // border: 1px solid var(--v-missionAccent-base);
@@ -627,6 +636,7 @@ export default {
     text-align: center;
     flex: none;
     font-size: 0.8rem;
+    color: var(--v-missionAccent-base);
   }
 }
 
