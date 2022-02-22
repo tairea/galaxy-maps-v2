@@ -12,7 +12,6 @@
               color="baseAccent"
               v-bind="attrs"
               v-on="on"
-              class="assignButton d-inline-flex text-truncate"
             >
               <v-icon small> mdi-account-multiple-plus </v-icon>
             </v-btn>
@@ -23,7 +22,6 @@
               color="baseAccent"
               v-bind="attrs"
               v-on="on"
-              class="assignButton d-inline-flex text-truncate"
             >
               <v-icon left> mdi-chart-timeline-variant-shimmer </v-icon>
               ASSIGN GALAXY
@@ -80,7 +78,7 @@
                     v-if="assignCohorts"
                     outlined
                     color="green darken-1"
-                    @click="assignCourseToPerson(person)"
+                    @click="assignPersonToCourse(person)"
                     :loading="loading"
                   >
                     <v-icon left> mdi-check </v-icon>
@@ -91,7 +89,7 @@
                     outlined
                     :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
                     class="ml-2"
-                    @click="close"
+                    @click="cancel"
                     :disabled="loading"
                   >
                     <v-icon left> mdi-close </v-icon>
@@ -110,7 +108,8 @@
                       >mdi-information-variant</v-icon
                     >
                     <p class="dialog-description">
-                      Assign this Galaxy Map to a specific Cohort
+                      Assign this Galaxy Map to a specific Cohort that you have
+                      already created.
                     </p>
                   </div>
                 </div>
@@ -119,26 +118,29 @@
                   <p class="dialog-description">Cohorts:</p>
                   <v-select
                     v-if="assignCohorts"
-                    v-model="cohort"
+                    v-model="cohort.id"
                     :items="cohorts"
+                    item-value="id"
                   >
                     <template v-slot:selection="{ item }">
-                      <img
-                        v-if="item.image.url"
-                        :src="item.image.url"
-                        style="object-fit: cover"
-                      />
-                      <v-icon v-else>mdi-star-three-points</v-icon>
-                      <p class="ml-4">{{ item.title }}</p>
-                    </template>
-                    <template v-slot:item="{ item }">
+                      <v-avatar size="40">
                         <img
-                          v-if="item.image.url"
                           :src="item.image.url"
+                          :alt="item.name"
                           style="object-fit: cover"
                         />
-                        <v-icon v-else>mdi-star-three-points</v-icon>
-                      <p class="ml-4 mt-4">{{ item.title }}</p>
+                      </v-avatar>
+                      <p class="ml-4">{{ item.name }}</p>
+                    </template>
+                    <template v-slot:item="{ item }">
+                      <v-avatar size="40">
+                        <img
+                          :src="item.image.url"
+                          :alt="item.name"
+                          style="object-fit: cover"
+                        />
+                      </v-avatar>
+                      <p class="ml-4 mt-4">{{ item.name }}</p>
                     </template>
                   </v-select>
                 </div>
@@ -148,7 +150,7 @@
                     v-if="assignCohorts"
                     outlined
                     color="green darken-1"
-                    @click="assignCourseToCohort(cohort)"
+                    @click="assignCohortToCourse(cohort)"
                     :loading="loading"
                   >
                     <v-icon left> mdi-check </v-icon>
@@ -159,7 +161,7 @@
                     outlined
                     :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
                     class="ml-2"
-                    @click="close"
+                    @click="cancel"
                     :disabled="loading"
                   >
                     <v-icon left> mdi-close </v-icon>
@@ -168,6 +170,57 @@
                 </div>
                 <!-- End action-buttons -->
               </v-tab-item>
+
+              <!-- Organisations -->
+              <!-- <v-tab-item>
+                <div class="dialog-header">
+                  <p class="dialog-title">Assign to an Organisation</p>
+                  <div class="d-flex align-center">
+                    <v-icon left color="missionAccent"
+                      >mdi-information-variant</v-icon
+                    >
+                    <p class="dialog-description">
+                      Assign this Galaxy Map to an Organisation.<br />(This will
+                      assign this Galaxy Map to all Cohorts and Individuals in
+                      this Organisation.)
+                    </p>
+                  </div>
+                </div>
+                <div class="create-dialog-content">
+                  <p class="dialog-description">Organsations:</p>
+                  <v-select
+                    v-if="assignCohorts"
+                    v-model="organisation.id"
+                    :items="organisations"
+                    item-text="name"
+                    item-value="id"
+                  >
+                  </v-select>
+                </div>
+                <div class="action-buttons">
+                  <v-btn
+                    v-if="assignCohorts"
+                    outlined
+                    color="green darken-1"
+                    @click="assignOrganisationToCourse(organisation)"
+                    :loading="loading"
+                  >
+                    <v-icon left> mdi-check </v-icon>
+                    ASSIGN ORGANISATION
+                  </v-btn>
+
+                  <v-btn
+                    outlined
+                    :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
+                    class="ml-2"
+                    @click="cancel"
+                    :disabled="loading"
+                  >
+                    <v-icon left> mdi-close </v-icon>
+                    Cancel
+                  </v-btn>
+                </div>
+              </v-tab-item> -->
             </v-tabs-items>
 
             <!-- </div> -->
@@ -179,8 +232,12 @@
             <div class="dialog-header">
               <p class="dialog-title">Assign this Cohort to a Course</p>
               <div class="d-flex align-center">
+                <v-icon left color="missionAccent"
+                  >mdi-information-variant</v-icon
+                >
                 <p class="dialog-description">
-                  Assign this Cohort to a specific Galaxy Map
+                  Assign this Cohort to a specific Galaxy Map that you have
+                  already created.
                 </p>
               </div>
             </div>
@@ -189,28 +246,29 @@
               <p class="dialog-description">Galaxy Maps:</p>
               <v-select
                 v-if="assignCourses"
-                v-model="course"
+                v-model="course.id"
                 :items="courses"
+                item-value="id"
                 dark
               >
                 <template v-slot:selection="{ item }">
-                  <img
-                    width="50"
-                    v-if="item.image.url"
-                    :src="item.image.url"
-                    style="object-fit: cover"
-                  />
-                  <v-icon v-else>mdi-star-three-points</v-icon>
+                  <v-avatar size="40" tile>
+                    <img
+                      :src="item.image.url"
+                      :alt="item.title"
+                      style="object-fit: cover"
+                    />
+                  </v-avatar>
                   <p class="ml-4">{{ item.title }}</p>
                 </template>
                 <template v-slot:item="{ item }">
+                  <v-avatar size="40" tile>
                     <img
-                      width="50"
-                      v-if="item.image.url"
                       :src="item.image.url"
+                      :alt="item.title"
                       style="object-fit: cover"
                     />
-                    <v-icon v-else>mdi-star-three-points</v-icon>
+                  </v-avatar>
                   <p class="ml-4 mt-4">{{ item.title }}</p>
                 </template>
               </v-select>
@@ -222,7 +280,7 @@
                 v-if="assignCourses"
                 outlined
                 color="green darken-1"
-                @click="assignCourseToCohort(null, course)"
+                @click="assignCohortToCourse(course)"
                 :loading="loading"
               >
                 <v-icon left> mdi-check </v-icon>
@@ -233,7 +291,7 @@
                 outlined
                 :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
                 class="ml-2"
-                @click="close"
+                @click="cancel"
                 :disabled="loading"
               >
                 <v-icon left> mdi-close </v-icon>
@@ -251,13 +309,11 @@
 <script>
 import firebase from "firebase/app";
 
-import { mapState, mapActions } from "vuex";
+import { mapState, mapGetters } from "vuex";
 import { db, storage } from "../store/firestoreConfig";
-import { dbMixins } from "../mixins/DbMixins"
 
 export default {
-  name: "AssignCourseDialog",
-  mixins: [dbMixins],
+  name: "AssignCohortDialog",
   props: ["assignCohorts", "assignCourses"],
   data: () => ({
     tab: null,
@@ -268,8 +324,15 @@ export default {
       id: "",
       email: "",
     },
-    cohort: "",
-    course: "",
+    cohort: {
+      id: "",
+    },
+    organisation: {
+      id: "",
+    },
+    course: {
+      id: "",
+    },
   }),
   computed: {
     ...mapState([
@@ -277,81 +340,144 @@ export default {
       "cohorts",
       "organisations",
       "currentCourseId",
-      "currentCourse",
-      "currentCohort"
+      "currentCohortId",
     ]),
+    // ...mapState(["currentCohortId", "currentCourseId", "courses", "cohorts"]),
+    ...mapGetters(["getCohortsByOrganisationId"]),
   },
   methods: {
-    close() {
+    cancel() {
       this.dialog = false;
-      this.loading = false;
-      this.person = {
-        id: "", 
-        email: ""
-      }
-      this.cohort = "",
-      this.course = ""
     },
-    async assignCourseToPerson(person) {
+    async assignPersonToCourse(person) {
       this.loading = true;
+      // check if person exists in database. if they do. get their id then update their assignedCourses
+      await db
+        .collection("people")
+        .where("email", "==", person.email)
+        // .limit(1)
+        .get()
+        .then((querySnapshot) => {
+          // if (querySnapshot.exists) {   // exists doesnt work // TODO: fix this. if person doesnt exist, create a new person
+          querySnapshot.forEach((doc) => {
+            console.log(doc.id, " => ", doc.data());
+            this.person.id = doc.id;
+          });
+          // now got the persons id. assigned them to course
+          db.collection("people")
+            .doc(this.person.id)
+            .update({
+              assignedCourses: firebase.firestore.FieldValue.arrayUnion(
+                this.currentCourseId
+              ),
+            })
+            .then(() => {
+              console.log(
+                "Document successfully updated! Person assigned to Course!"
+              );
 
-      // If we dont already have the students Id, check if they already have an account using their email
-      const personExists = await this.MXgetPersonByEmail(person.email)
-      if (personExists) {
-        this.handleAssignment(personExists, this.currentCourse)
-      } else {
-        //create the persons account 
-        this.MXcreateUser(person)
-        .then(person => {
-           this.handleAssignment(person, this.currentCourse)
+              // snackbar message
+              // this.snackbarMsg = "Individual assigned to Course";
+              // this.snackbar = true;
+              this.$emit("snackbarToggle", "Individual assigned to Course");
+
+              this.loading = false;
+              this.dialog = false;
+              // empty field
+              this.person.email = "";
+            })
+            .catch((error) => {
+              console.error("Error writing document: ", error);
+              // snackbar message
+              this.snackbarMsg = "Error: " + error;
+              this.snackbar = true;
+            });
+          //   } else {
+          //     // if not, create new id (new person in people collection)
+          //     // TODO: At the moment it does both
+          //     db.collection("people")
+          //       .add({
+          //         email: person.email,
+          //         assignedCourses: firebase.firestore.FieldValue.arrayUnion(
+          //           this.currentCourseId
+          //         ),
+          //       })
+          //       .then(() => {
+          //         console.log(
+          //           "Document successfully updated! New Person Created and assigned to Course!"
+          //         );
+          //         // snackbar message
+          //         this.snackbarMsg =
+          //           "Individual not in database. New user created and assigned to this Course.";
+          //         this.snackbar = true;
+
+          //         this.loading = false;
+          //         this.dialog = false;
+          //         // empty field
+          //         this.person.email = "";
+          //       })
+          //       .catch((error) => {
+          //         console.error("Error writing document: ", error);
+          //         // snackbar message
+          //         this.snackbarMsg = "Error: " + error;
+          //         this.snackbar = true;
+          //       });
+          //   }
         })
-      }
+        .catch((error) => {
+          console.log("Error getting documents: ", error);
+          // snackbar message
+          this.$emit("snackbarToggle", "Error writing document: " + error);
+        });
     },
-
-    handleAssignment (person, course) {
-      this.MXassignCourseToStudent(person, course).then(() => {
-        console.log("Document successfully updated! Person assigned to Course!");
-        this.$emit("snackbarToggle", "Individual assigned to Course");
-        this.close()
-      })
-      .catch((error) => {
-        console.error("Error writing document: ", error);
-        // snackbar message
-        this.$emit("snackbarToggle", "Error: " + error);
-        this.close()
-      });
-    },
-    assignCourseToCohort(cohort, course) {
-      if (!cohort) cohort = this.currentCohort
-      if (!course) course = this.currentCourse
+    assignCohortToCourse(cohort) {
       this.loading = true;
       // Add a cohort into collection "courses"
       db.collection("cohorts")
         .doc(cohort.id)
         .update({
           courses: firebase.firestore.FieldValue.arrayUnion(
-            course.id
+            this.currentCourseId
           ),
         })
         .then(() => {
-          // add courses as assignedCourse to each student in the cohort
-          if (cohort.students?.length) {
-            cohort.students.forEach(async student => {
-              let person = await this.MXgetPersonByIdFromDB(student)
-              return this.MXassignCourseToStudent(person, course)
-            })
-          }
-        })
-        .then(() => {
-          console.log("courses added to all students!");
+          console.log(
+            "Document successfully updated! Course assigned to Cohort!"
+          );
           this.$emit("snackbarToggle", "Cohort assigned to Course");
-          this.close()
+          this.loading = false;
+          this.dialog = false;
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
           this.$emit("snackbarToggle", "Error writing document: " + error);
-      });
-    }
+        });
+      // this.course = {};
+    },
+    assignOrganisationToCourse(organisation) {
+      this.loading = true;
+      // Add a cohort into collection "courses"
+      db.collection("organisations")
+        .doc(organisation.id)
+        .update({
+          courses: firebase.firestore.FieldValue.arrayUnion(
+            this.currentCourseId
+          ),
+        })
+        .then(() => {
+          console.log(
+            "Document successfully updated! Organisation assigned to Course!"
+          );
+          this.$emit("snackbarToggle", "Organisation assigned to Course");
+          this.loading = false;
+          this.dialog = false;
+        })
+        .catch((error) => {
+          console.error("Error writing document: ", error);
+          this.$emit("snackbarToggle", "Error writing document: " + error);
+        });
+      // this.course = {};
+    },
   },
 };
 </script>
@@ -465,7 +591,8 @@ export default {
     font-weight: 700;
   }
 }
-.assignButton {
-  max-width: 100%;
+
+.tab {
+  // padding: 20px 0px;
 }
 </style>

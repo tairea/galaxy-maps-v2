@@ -65,12 +65,12 @@
 import firebase from "firebase/app";
 import { db, storage } from "../store/firestoreConfig";
 import isEmpty from "lodash"
-import { mapGetters } from "vuex"
 
 // csv import: https://codepen.io/edward1995/pen/QmXdwz?editors=1010
 export default {
   name: "ImportCsv",
   components: {},
+  props: ["currentCohortId"],
   data() {
     return {
       channel_name: "",
@@ -92,16 +92,13 @@ export default {
       return str.charAt(0).toUpperCase() + str.slice(1);
     },
   },
-  computed: {
-    ...mapGetters(['currentCohort'])
-  },
   methods: {
     saveStudents() {
       this.loading = true;
       let counter = 0;
       // Add a new document in collection "people"
       this.parse_csv.forEach((student, index, array) => {
-        student.assignedCohorts = [this.currentCohort.id];
+        student.assignedCohorts = [this.currentCohortId];
 
         
         const usersRef = db.collection("people").doc(student.nsnNumber);
@@ -111,7 +108,7 @@ export default {
           if (docSnapshot.exists) {
             usersRef.update({
               assignedCohorts: firebase.firestore.FieldValue.arrayUnion(
-                this.currentCohort.id
+                this.currentCohortId
               ),
             }).then(() => {
               counter++;

@@ -24,12 +24,8 @@
           <v-autocomplete
             v-model="administrator"
             :items="people"
-            class="text-lowercase"
-            color="missionAccent"
-            outlined
-            dense
-            :dark="dark"
-            :light="!dark"            
+            class="input-field text-lowercase"
+            solo
             chips
             item-text="firstName"
             item-value="id"
@@ -64,23 +60,18 @@
           </v-autocomplete>
           <v-row>
             <v-btn
-              class="ma-4"
-              :loading="addingAdmin"
-              :disabled="addingAdmin"
-              color="missionAccent"
-              @click="addAdmin()"
-              outlined
-              width="30%"
-            >
-              + Add Admin
+                class="ma-2"
+                :loading="addingAdmin"
+                :disabled="addingAdmin"
+                color="secondary"
+                @click="addAdmin()"
+              >
+                + Add Admin
             </v-btn>
             <v-btn
-                :dark="dark"
-                :light="!dark"
-                class="ma-4"
+                class="ma-2"
+                color="secondary"
                 @click="cancel()"
-                outlined
-                width="30%"
               >
                 Cancel
             </v-btn>
@@ -107,6 +98,13 @@ import { functions } from "../store/firestoreConfig";
 
 export default {
   name: "CreateAdminDialog",
+  computed: {
+    ...mapState(["people"]),
+    ...mapGetters(["user"]),
+    cohortView () {
+      return this.$route.name === "CohortView"
+    }
+  },
   data: () => ({
     administrator: "",
     addingAdmin: false,
@@ -114,16 +112,6 @@ export default {
     snackbar: false,
     snackbarText: "",
   }),
-  computed: {
-    ...mapState(["people"]),
-    ...mapGetters(["user"]),
-    cohortView () {
-      return this.$route.name === "CohortView"
-    },
-    dark () {
-      return this.$vuetify.theme.isDark
-    }
-  },
   methods: {
     cancel() {
       this.dialog = false;

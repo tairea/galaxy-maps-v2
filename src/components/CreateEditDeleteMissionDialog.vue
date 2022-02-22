@@ -582,4 +582,20 @@ export default {
   color: var(--v-cohortAccent-base);
 }
 
+/* width */
+*::-webkit-scrollbar {
+  width: 10px;
+}
+/* Track */
+*::-webkit-scrollbar-track {
+  background: var(--v-background-base);
+}
+/* Handle */
+*::-webkit-scrollbar-thumb {
+  background: var(--v-missionAccent-base);
+}
+/* Handle on hover */
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--v-missionAccent-base);
+}
 </style>

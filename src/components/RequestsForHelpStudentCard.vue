@@ -48,12 +48,10 @@
 import SolarSystem from "../components/SolarSystem";
 
 import { mapState, mapGetters } from "vuex";
-import { dbMixins } from "../mixins/DbMixins"
 
 export default {
   name: "RequestsForHelpStudentCard",
   props: ["request"],
-  mixins: [dbMixins],
   components: {
     SolarSystem,
   },
@@ -61,8 +59,16 @@ export default {
     ...mapState(["currentCourseId", "currentTopicId", "currentTaskId"]),
   },
   async mounted() {
-    this.requester = await this.MXgetPersonByIdFromDB(this.request.personId)
-    this.responder = await this.MXgetPersonByIdFromDB(this.request.responderPersonId)
+    const requesterPerson = await this.$store.dispatch(
+      "getPersonByIdFromDB",
+      this.request.personId
+    );
+    this.requester = requesterPerson;
+    const responderPerson = await this.$store.dispatch(
+      "getPersonByIdFromDB",
+      this.request.responderPersonId
+    );
+    this.responder = responderPerson;
     console.log("requester person:", this.requester);
     console.log("responder person:", this.responder);
   },

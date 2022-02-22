@@ -166,13 +166,12 @@ export default {
       "allNodes",
       "allNodesForDisplay",
       "allEdges",
+      "courses",
       "currentCourseId",
       "personsNodesForDisplay",
       "personsEdges",
       "personsAssignedNodesForDisplay",
       "personsAssignedEdges",
-      "courses", 
-      "personsCourses"
       // "topics",
       // "personsTopics",
     ]),
@@ -387,8 +386,6 @@ export default {
       return newAllNodes;
     },
     calcCourseCanvasBoundaries() {
-
-      const courses = this.whichCoursesToDisplay == 'all' ? this.courses : this.personsCourses
       let courseCanvasBoundaries = [];
       // get all coords for nodes
       // const allNodes = this.$refs.network.nodes;
@@ -396,7 +393,7 @@ export default {
       // console.log("allNodes from calcBoundaries: ", allNodes);
 
       // per course/galaxy, determine boundaries ie. highest y, highest x, lowest y, lowest x (this is a boundary we want to hover)
-      for (let i = 0; i < courses.length; i++) {
+      for (let i = 0; i < this.courses.length; i++) {
         let boundary = {
           maxHeightOffset: 0,
           maxWidthOffset: 0,
@@ -415,7 +412,7 @@ export default {
         // };
         // loop nodes in that course
         for (const node of allNodes) {
-          if (node.courseId == courses[i].id) {
+          if (node.courseId == this.courses[i].id) {
             if (Math.abs(node.y) > boundary.maxHeightOffset) {
               boundary.maxHeightOffset = Math.abs(node.y);
             }
@@ -451,8 +448,8 @@ export default {
         // boundary.heightDOM = DOMboundary.bottom - DOMboundary.top;
 
         // add course id to boundary
-        boundary.id = courses[i].id;
-        boundary.title = courses[i].title;
+        boundary.id = this.courses[i].id;
+        boundary.title = this.courses[i].title;
         // console.log("boundary",boundary)
         courseCanvasBoundaries.push(boundary);
       }

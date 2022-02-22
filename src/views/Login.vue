@@ -109,11 +109,16 @@ export default {
     },
     proceed() {
       if (!this.user?.data?.id || !this.person?.id) {
-        return setTimeout(() => {
+        setTimeout(() => {
           this.proceed()
         }, 500)
+        return
       } 
-      this.$router.push("/base/cohorts");
+      if (this.person.accountType == "student") {
+        this.$router.push("/base/galaxies/assigned");
+      } else {
+        this.$router.push("/base/galaxies/my");
+      }
     },
     validate() {
       this.$refs.form.validate();

@@ -191,6 +191,18 @@ export default {
           console.log("Organisation successfully updated!");
           this.loading = false
           this.closeDialog();
+          //get doc id from firestore (aka course id)
+          // const organisationId = docRef.id;
+          //set cohortId to Store state 'state.currentcohortId' (so not relying on router params)
+          // this.$store.commit("setCurrentOrganisationId", organisationId);
+          // route to newly created galaxy
+          // this.$router.push({
+          //   name: "CohortView",
+          //   params: {
+          //     cohortName: this.camelize(cohort.name),
+          //     cohortId: cohortId,
+          //   },
+          // });
         })
         .catch((error) => {
           console.error("Error writing document: ", error);

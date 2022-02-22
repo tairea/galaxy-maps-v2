@@ -1,6 +1,6 @@
 <template>
-  <div
-    class="d-flex justify-start cohort"
+  <v-col
+    class="d-flex flex-column justify-start cohort"
     :cols="cols"
     @click="routeToPerson(person)"
   >
@@ -13,14 +13,12 @@
               :alt="person.firstName"
               style="object-fit: cover;"
             >
-            <!-- <v-icon v-if="hover">mdi-pencil</v-icon> -->
-            <v-icon v-else>mdi-account</v-icon>
           </v-avatar>
         </div>
       </template>
       <span>{{ person.firstName + " " + person.lastName }}</span>
     </v-tooltip>
-  </div>
+  </v-col>
 </template>
 
 <script>
@@ -30,9 +28,7 @@ export default {
   data() {
     return {};
   },
-  mounted() {
-    console.log('person mounted')
-  },
+  mounted() {},
   computed: {},
   methods: {
     first3Letters(name) {
@@ -47,7 +43,6 @@ export default {
 
 <style lang="scss" scoped>
 .cohort {
-  padding: 0px 10px;
   cursor: pointer;
 
   .cohort-image {

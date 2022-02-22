@@ -45,12 +45,16 @@ export default {
   data() {
     return {};
   },
+  mounted() {},
+  computed: {},
   methods: {
     ...mapActions(['setCurrentCohort']),
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
-    routeToCohort() {
+    routeToCohort(cohort) {
+      // on clicking cohort, set its cohortID to Store state (so not relying on router params)
+      this.$store.commit("setCurrentCohortId", this.cohort.id);
       this.setCurrentCohort(this.cohort)
       // route to Galaxy View (passing params as props)
       this.$router.push({

@@ -1,6 +1,6 @@
 <template>
   <div>
-     <v-dialog v-model="dialog" width="50%" :light="dark" :dark="!dark">
+     <v-dialog v-model="dialog" width="35%" :light="dark" :dark="!dark">
       <!-- CREATE BUTTON -->
       <template v-slot:activator="{ on, attrs }">
         <v-btn :light="dark" :dark="!dark" style="font-weight:400" color="missionAccent" v-bind="attrs" v-on="on">
@@ -52,7 +52,7 @@
           </v-row>
 
           <div v-if="showTable" class="people-frame">
-            <v-simple-table :dark="dark" :light="!dark" v-if="parse_csv" class="table">
+            <v-simple-table v-if="parse_csv" class="table">
               <thead>
                 <tr>
                   <th
@@ -68,32 +68,32 @@
                 </tr>
               </thead>
               <tr v-for="csv in parse_csv" :key="csv.id">
-                <td class="pl-4" v-for="key in parse_header" :key="key.id">
+                <td v-for="key in parse_header" :key="key.id">
                   {{ csv[key] }}
                 </td>
               </tr>
             </v-simple-table>
           </div>
-          <v-row class="ma-2 mt-4">
-            <v-btn
-              v-if="parse_csv.length > 0"
-              @click="saveStudents"
-              color="missionAccent"
-              depressed
-              class="mr-4"
-              :loading="loading"
-              :disabled="disabled"
-              width="40%"
-              >{{ buttonLabel }}
-            </v-btn>
-            <v-btn
-              @click="close"
-              color="baseAccent"
-              depressed
-              width="40%"
-              >cancel
-            </v-btn>
-          </v-row>
+
+          <v-btn
+            v-if="parse_csv.length > 0"
+            @click="saveStudents"
+            color="missionAccent"
+            depressed
+            class="ml-4 mt-4"
+            :loading="loading"
+            :disabled="disabled"
+            width="40%"
+            >{{ buttonLabel }}
+          </v-btn>
+          <v-btn
+            @click="close"
+            color="baseAccent"
+            depressed
+            class="ml-4 mt-4"
+            width="40%"
+            >cancel
+          </v-btn>
         </div>
       </div>
     </v-dialog>
@@ -104,14 +104,12 @@
 import firebase from "firebase/app";
 import { db, storage } from "../store/firestoreConfig";
 import isEmpty from "lodash"
-import { mapGetters } from "vuex"
-import { dbMixins } from "../mixins/DbMixins"
 
 // csv import: https://codepen.io/edward1995/pen/QmXdwz?editors=1010
 export default {
   name: "ImportCsvDialog",
-  mixins: [dbMixins],
   components: {},
+  props: ["currentCohortId"],
   data() {
     return {
       dialog: false,
@@ -123,7 +121,7 @@ export default {
       sortOrders: {},
       sortKey: "",
       showTable: false,
-      buttonLabel: "Add Students",
+      buttonLabel: "Add Students to Database",
       loading: false,
       disabled: false,
       csvColumns: ["Nsn Number","First Name","Last Name","Student Email","Parent Email"]
@@ -135,7 +133,6 @@ export default {
     },
   },
   computed: {
-    ...mapGetters(['currentCohort']),
     dark () {
       return this.$vuetify.theme.isDark
     }
@@ -154,63 +151,52 @@ export default {
     },
     saveStudents() {
       this.loading = true;
-      console.log("saving students")
       let counter = 0;
       // Add a new document in collection "people"
-      this.parse_csv.forEach(async (student, index, array) => {
-        console.log("saving student: ", index, ":", student)
+      this.parse_csv.forEach((student, index, array) => {
+        student.assignedCohorts = [this.currentCohortId];
 
-        // resctructure data to match db fields
-        const person = {
-          ...student,
-          email: student.studentEmail,
-          nsn: student.nsnNumber
-        }
-        delete person.nsnNumber
-        delete person.studentEmail
+        
+        const usersRef = db.collection("people").doc(student.nsnNumber);
 
-        console.log('person: ', person)
-
-        // check if student exisits
-        const personExists = await this.MXgetPersonByEmail(person.email);
-
-        if (personExists) {
-          console.log('personExisits: ', personExists)
-          // add existing person to cohort
-          this.MXaddExistingUserToCohort(personExists).then(() => {
-            console.log('exisitng person successfully added')
-            counter++;
-              // check all students are saved to DB
-              if (counter === array.length) {
-                this.saveStudentsCompleted();
-              }
-          });
-        } else {
-          console.log("creating new student: ", index, ":", person)
-          // create user and then add them to cohort
-          this.MXcreateUser(person)
-            .then(() => this.MXaddStudentToCohort(person.id))
-            .then((docRef) => {
-              console.log("new student successfully added")
+        usersRef.get().then((docSnapshot) => {
+          // if student exists, update assignedCohorts
+          if (docSnapshot.exists) {
+            usersRef.update({
+              assignedCohorts: firebase.firestore.FieldValue.arrayUnion(
+                this.currentCohortId
+              ),
+            }).then(() => {
               counter++;
-              // check all students are saved to DB
-              if (counter === array.length) {
-                this.saveStudentsCompleted();
-              }
-            })
-            .catch((error) => {
-              console.error("Error writing document: ", error);
-          });
-        }
+                // check all students are saved to DB
+                if (counter === array.length) {
+                  this.saveStudentsCompleted();
+                }
+            });
+          } else {
+            usersRef
+              .set(student)
+              .then((docRef) => {
+                counter++;
+                // check all students are saved to DB
+                if (counter === array.length) {
+                  this.saveStudentsCompleted();
+                }
+              })
+              .catch((error) => {
+                console.error("Error writing document: ", error);
+              });
+          }
+        });
       });
     },
     saveStudentsCompleted() {
       console.log("All students written to database");
       // this.$refs.csvFile.value = null;
+      this.buttonLabel = "Students Successfully Added to Database";
       this.loading = false;
       this.showTable = false;
       this.disabled = true;
-      this.dialog = false;
     },
     sortBy: function(key) {
       var vm = this;
@@ -284,7 +270,7 @@ export default {
     },
     resetButton() {
       this.disabled = false;
-      this.buttonLabel = "Add Students";
+      this.buttonLabel = "Add Students to Database";
     },
     downloadCsv () {
       var csv = this.csvColumns.join(',') + '\n'
@@ -312,15 +298,8 @@ export default {
 }
 
 .table {
-  font-size: 0.8rem;
-  margin: 20px;
-  border: 1px solid var(--v-missionAccent-base);
-  border-radius: 0px;
-  padding: 5px
-}
-
-.theme--dark.v-data-table {
-  background: #141e30
+  font-size: 0.75rem;
+  padding: 20px;
 }
 
 // ---- SCROLLBAR STYLES ----
@@ -374,5 +353,4 @@ export default {
     color: var(--v-missionAccent-base);
   }
 }
-
 </style>

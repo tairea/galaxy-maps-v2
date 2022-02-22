@@ -7,8 +7,8 @@ import { vuexfireMutations, firestoreAction } from "vuexfire";
 
 Vue.use(Vuex);
 
-const getDefaultState = () => {
-  return {
+export default new Vuex.Store({
+  state: {
     user: {
       loggedIn: false,
       data: null,
@@ -19,10 +19,11 @@ const getDefaultState = () => {
     cohorts: [],
     organisations: [],
     people: [],
-    currentCourse: {},
+    currentCourseId: "",
     currentTopicId: "",
     currentTaskId: "",
-    currentCourseId: {},
+    currentCohortId: "",
+    currentCourse: {},
     currentTopic: {},
     currentTask: {},
     currentCohort: {},
@@ -32,7 +33,6 @@ const getDefaultState = () => {
     allEdges: [],
     allNodesForDisplay: [],
     allTasks: [],
-    personsCourses: [],
     personsNodes: [],
     personsNodesForDisplay: [],
     personsAssignedNodes: [],
@@ -45,21 +45,14 @@ const getDefaultState = () => {
     requestsForHelp: [],
     teachersSubmissionsToReview: [],
     teachersRequestsForHelp: [],
-  }
-} 
-
-const state = getDefaultState()
-
-export default new Vuex.Store({
-  state: state,
+  },
   getters: {
-    people: (state) => state.people,
-    organisations: (state) => state.organisations,
     user: (state) => state.user,
     person: (state) => state.person,
     courses: (state) => state.courses,
     cohorts: (state) => state.cohorts,
     organisations: state => state.organisations,
+    currentCohortId: state => state.currentCohortId,
     currentCohort: state => state.currentCohort,
     getCourseById: (state) => (id) => {
       return state.courses.find((course) => course.id === id);
@@ -195,6 +188,10 @@ export default new Vuex.Store({
     setCurrentTask(state, task) {
       state.currentTask = task;
     },
+    setCurrentCohortId(state, cohortId) {
+      console.log('setting cohort id: ', cohortId)
+      state.currentCohortId = cohortId;
+    },
     setCurrentCohort(state, cohort) {
       state.currentCohort = cohort;
     },
@@ -211,16 +208,10 @@ export default new Vuex.Store({
       state.personsAssignedNodesForDisplay = newNodePositions;
     },
     setCohorts(state, cohorts) {
-      if (state.currentCohort) {
-        state.currentCohort = cohorts.find(cohort => cohort.id === state.currentCohort.id)
-      } 
       state.cohorts = cohorts
     },
     setOrganisations (state, orgs) {
       state.organisations = orgs
-    }, 
-    resetState (state) {
-      Object.assign(state, getDefaultState())
     }
   },
   actions: {
@@ -328,16 +319,13 @@ export default new Vuex.Store({
     // ===== Firestore - BIND by USER
     async getPersonById({ commit }, id) {
       if (id) {
+        console.log('setting person: ', id)
         await db
           .collection("people")
           .doc(id)
           .get()
           .then((doc) => {
-            const person = {
-              id,
-              ...doc.data()
-            }
-            commit("SET_PERSON", person)
+            commit("SET_PERSON", doc.data())
           });
       } else {
         commit("SET_PERSON", {})
@@ -482,7 +470,7 @@ export default new Vuex.Store({
 
     bindCoursesByPersonId: firestoreAction(({ bindFirestoreRef }, personId) => {
       return bindFirestoreRef(
-        "personsCourses",
+        "courses",
         db.collection("courses").where("mappedBy.personId", "==", personId)
       );
     }),
@@ -594,6 +582,15 @@ export default new Vuex.Store({
       }
       state.teachersRequestsForHelp = allRequestsForHelp;
     },
+    // TODO: Consider putting this into a mixin or somewhere else as it doesnt have anything to do with the store
+    async getPersonByIdFromDB({ state }, personId) {
+      let person = await db.collection("people").doc(personId).get();
+      person = {
+        id: person.id,
+        ...person.data()
+      }
+      return person;
+    },
 
     async getCohortsByPersonId ({ commit, dispatch }, person) {
       await db.
@@ -605,10 +602,11 @@ export default new Vuex.Store({
             id: doc.id,
             ...doc.data()
           }
-        }) 
+        })
         commit("setCohorts", cohorts)
-        dispatch("getOrganisationsByCohorts", cohorts) 
+        dispatch("getOrganisationsByCohorts", cohorts)
       })
+
     },
 
     async getOrganisationsByCohorts ({ commit }, cohorts) {
@@ -619,8 +617,10 @@ export default new Vuex.Store({
         .where("cohorts", "array-contains-any", cohorts)
         .get();
       
+      console.log("snapshot: ", querySnapShot)
       if (querySnapShot.docs.length) {
         for (const doc of querySnapShot.docs) {
+          console.log("doc: ", doc)
           orgs.push(doc.data());
         }
       }
@@ -628,21 +628,19 @@ export default new Vuex.Store({
       console.log('orgs: ', orgs)
       commit("setOrganisations", orgs)
     },
-    resetState ({ commit }) {
-      commit("resetState")  
+    resetState ({ state }) {
+      console.log("reset state")
+      let newState = {};
+
+      Object.keys(state).forEach(key => {
+        newState[key] = null; // or = initialState[key]
+      });
+
+      state.replaceState(newState);
+      console.log("state reset: ", state)
     },
-    async setCurrentCohort({commit}, cohort) {
-      await db.
-      collection("cohorts")
-      .doc(cohort.id)
-      .onSnapshot(doc => {
-        console.log('setting cohort')
-        const cohort = {
-            id: doc.id,
-            ...doc.data()
-          }
-        commit("setCurrentCohort", cohort)
-      })
+    setCurrentCohort({commit}, cohort) {
+      return commit("setCurrentCohort", cohort)
     },
   },
   plugins: [createPersistedState()]

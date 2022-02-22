@@ -71,9 +71,11 @@ export default {
   name: "AssignedInfo",
   props: [
     "assignCohorts",
+    "assignCourses",
     "cohorts",
     "organisations",
     "people",
+    "courses",
   ],
   components: {
     Cohort,
@@ -82,22 +84,14 @@ export default {
     Course,
     AssignCohortDialog,
   },
-  computed: {
-    ...mapState(['person', 'currentCohort']),
-    ...mapGetters(['getCoursesInThisCohort']),
-    assignCourses () {
-      return this.person.accountType !== "student"
-    },
-    courses () {
-      if (!this.currentCohort.courses) return []
-      // let cohortCourses = this.getCohortCourses()
-      return this.getCoursesInThisCohort(this.currentCohort.id)
-    }
+  mounted() {
+    console.log("got cohorts FROM ASSIGNED: ", this.cohorts);
+  },
+  computed: {},
+  data() {
+    return {};
   },
   methods: {
-    // async getCohortCourses () {
-    //   return await this.getCoursesInThisCohort(this.currentCohort.id)
-    // },
     snackbarToggle(msg) {
       this.$emit("snackbarToggle", msg);
       // this.snackbarMsg = msg;

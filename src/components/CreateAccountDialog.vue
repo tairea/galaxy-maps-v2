@@ -28,9 +28,9 @@
               type="text"
               v-model="account.firstName"
               label="First Name"
-              outlined
-              class="mt-6"
               color="missionAccent"
+              outlined
+              class="custom-input mt-6"
             ></v-text-field>
             <v-text-field
               :dark="dark"
@@ -38,8 +38,9 @@
               type="text"
               v-model="account.lastName"
               label="Last Name"
-              outlined
               color="missionAccent"
+              outlined
+              class="custom-input"
             ></v-text-field>
             <v-text-field
               :dark="dark"
@@ -49,66 +50,56 @@
               label="E-mail"
               :rules="emailRules"
               required
-              outlined
               color="missionAccent"
-            ></v-text-field>
-            <v-text-field
-              v-if="!teacher"
-              :dark="dark"
-              :light="!dark"
-              type="email"
-              v-model="account.parentEmail"
-              label="Parent E-mail"
-              :rules="parentEmailRules"
               outlined
-              color="missionAccent"
+              class="custom-input"
             ></v-text-field>
             <v-text-field
               v-if="!teacher"
               :dark="dark"
               :light="!dark"
               type="text"
-              v-model="account.nsn"
+              v-model="nsn"
               label="Student NSN"
               required
-              outlined
               color="missionAccent"
+              outlined
+              class="custom-input"
             ></v-text-field>
             <v-text-field
               v-if="!teacher"
               :dark="dark"
               :light="!dark"
               type="text"
-              v-model="account.inviter"
+              v-model="inviter"
               label="Added by"
               required
-              outlined
               color="missionAccent"
+              outlined
+              class="custom-input"
               :value="person.firstName + ' ' + person.lastName" 
             ></v-text-field>
           </v-form>
           <v-row>
             <v-btn
               :disabled="!valid || addingAccount"
-              :loading="addingAccount"
-              @click="create()"
-              width="30%"
-              class="ma-4 disabledButton"
               color="missionAccent"
+              class="ma-4"
+              @click="create()"
               outlined
-              :dark="dark"
-              :light="!dark"
+              width="30%"
+              :loading="addingAccount"
             >
               Create
             </v-btn>
             <v-btn
-              :disabled="addingAccount"
-              @click="close()"
-              outlined
               :dark="dark"
               :light="!dark"
               class="ma-4"
+              @click="close()"
+              outlined
               width="30%"
+              :disabled="addingAccount"
             >
               cancel
             </v-btn>
@@ -123,11 +114,10 @@
 
 import { db, functions } from "../store/firestoreConfig";
 import { mapGetters } from "vuex"
-import { dbMixins } from "../mixins/DbMixins"
+import firebase from "firebase"
 
 export default {
   name: "CreateAccountDialog",
-  mixins: [dbMixins],
   props: {
     accountType: { type: String, default: "teacher"},
   },
@@ -142,20 +132,16 @@ export default {
       email: "",
       accountType: "",
       displayName: "",
-      nsn: "",
-      inviter: "",
-      parentEmail: ""
     },
     emailRules: [
       (v) => !!v || "E-mail is required",
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
     ],
-    parentEmailRules: [      
-      (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
-    ]
+    nsn: "",
+    inviter: ""
   }),
   computed: {
-    ...mapGetters(['person', 'currentCohort']),
+    ...mapGetters(['person', 'currentCohortId']),
     teacher() {
       return this.accountType === "teacher"
     },
@@ -172,45 +158,89 @@ export default {
         email: "",
         accountType: "",
         displayName: "",
-        nsn: "",
-        inviter: "",
-        parentEmail: ""
       }
     },
-    async create () {
+    create () {
       this.$refs.form.validate()
       if (!this.account.email) return
       this.addingAccount = true
-      const personExists = await this.MXgetPersonByEmail(this.account.email)
-      if (personExists) {
-        this.account = personExists
-        this.MXaddExistingUserToCohort(personExists).then(() => {
-          this.addingAccount = false
-          this.close()
-        }).catch(err => {
-          this.addingAccount = false
-          console.error("something went wrong adding existing person: ", err)
-        })
-      }
-      else {
-        const person = {
-          ...this.account, 
-          accountType: this.accountType,
-          displayName: this.account.firstName + ' ' + this.account.lastName
-
-        }
-        this.MXcreateUser(person).then((personId) => {
+      this.account.accountType = this.accountType
+      this.account.displayName = this.account.firstName + ' ' + this.account.lastName
+      // create user
+      const createUser = functions.httpsCallable('createUser')
+      createUser(this.account)
+        .then(result => {
+          this.account.id = result.data.uid
+          return this.addAccount()
+        }).then(() => {
+          return this.generateLink()
+        }).then(link => {
+          return this.sendEmailInvite(link)
+        }).then(() => {
           if (!this.teacher) {
-            this.MXaddStudentToCohort(personId)
+            this.addStudentToCohort()
           }
           this.addingAccount = false
           this.close()
         })
         .catch((error) => {
-          console.error(error)
-        });
-      }
+          console.log(error)
+      });
     },
+    addAccount () { 
+      const profile = {
+        ...this.account,
+      }
+      if (!this.teacher) {
+        profile.nsn = this.nsn
+      }
+      delete profile.id
+      db.collection("people")
+        .doc(this.account.id)
+        .set(profile)
+        .catch((error) => {
+          console.error("Error writing document: ", error);
+      });
+    },
+    generateLink() {
+      // generate magic email link
+      const data = {
+        ...this.account,
+        host: window.location.origin
+      }
+
+      const generateEmailLink = functions.httpsCallable('generateEmailLink')
+      return generateEmailLink(data)
+        .then((link) => {
+          return link
+        })
+        .catch((error) => {
+          console.error("Error writing document: ", error);
+      });
+    },
+    sendEmailInvite(link) {
+      this.account.link = link.data
+      if (!this.teacher) {
+        this.account.inviter = this.inviter
+      }
+      const sendInviteEmail = functions.httpsCallable('sendInviteEmail')
+      sendInviteEmail(this.account)
+      .catch((error) => {
+        console.error(error)
+      });
+    },
+    addStudentToCohort () {
+       db.collection("cohorts")
+        .doc(this.currentCohortId)
+        .update({
+          students: firebase.firestore.FieldValue.arrayUnion(
+            this.account.id
+          ),
+        })
+        .catch((error) => {
+          console.error("Error writing document: ", error);
+      });
+    }
   },
 };
 </script>
@@ -245,6 +275,14 @@ export default {
   .custom-input {
     color: var(--v-missionAccent-base);
   }
+}
+
+.input-description {
+  color: var(--v-missionAccent-base);
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  margin: 0;
+  font-style: italic;
 }
 
 .cohort-btn {

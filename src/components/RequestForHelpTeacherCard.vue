@@ -1,141 +1,185 @@
- <template>
-  <div id="cohort-help-panel">
-    <h2 class="help-label">Requests for help</h2>
-
-    <div v-if="teachersRequestsForHelp.length > 0">
-      <RequestForHelpTeacherPanel
-        v-for="request in teachersRequestsForHelp"
-        :key="request.id"
-        :request="request"
-        @snackbarToggle="snackbarToggleHelp($event)"
-      />
-    </div>
-    <div
-      v-if="!requestsForHelpLoading && teachersRequestsForHelp.length == 0"
-    >
-      <p
-        class="overline pt-4 text-center"
-        style="color: var(--v-galaxyAccent-base)"
-      >
-        NO REQUESTS FOR HELP
-      </p>
-    </div>
-    <!-- loading spinner -->
-    <div class="d-flex justify-center align-center mt-4">
-      <v-btn
-        v-if="requestsForHelpLoading"
-        :loading="requestsForHelpLoading"
-        icon
-        color="galaxyAccent"
-      ></v-btn>
-    </div>
-    <!-- Request submitted Snackbar -->
-    <v-snackbar v-model="snackbar">
-      {{ snackbarMsg }}
-      <template v-slot:action="{ attrs }">
-        <v-btn color="pink" text v-bind="attrs" @click="snackbar = false">
-          OK
-        </v-btn>
-      </template>
-    </v-snackbar>
+<template>
+  <div class="request-card">
+    <v-expansion-panels flat>
+      <v-expansion-panel class="panel">
+        <v-expansion-panel-header class="pa-0">
+          <!-- Avatar -->
+          <div class="requester-image d-flex justify-center align-center">
+            <v-avatar v-if="requesterPerson" size="30">
+              <img
+                v-if="requesterPerson.image"
+                :src="requesterPerson.image.url"
+                :alt="requesterPerson.firstName"
+                style="object-fit: cover"
+              />
+            </v-avatar>
+          </div>
+          <!-- Course/Topic/Task -->
+          <div class="requester-context">
+            <p class="requester-context-task">
+              {{ request.contextTask.title }}
+            </p>
+            <p class="requester-context-topic">
+              {{ request.contextTopic.label }}
+            </p>
+            <p class="requester-context-course">
+              {{ request.contextCourse.title }}
+            </p>
+          </div>
+          <div class="requester-time">
+            {{ getHumanDate(request.requestSubmittedTimestamp) }}
+          </div>
+          <template v-slot:actions>
+            <v-icon color="missionAccent"> </v-icon>
+          </template>
+        </v-expansion-panel-header>
+        <v-expansion-panel-content>
+          <div class="d-flex justify-center align-center">
+            <p class="requester-msg">"{{ request.requestForHelpMessage }}"</p>
+          </div>
+          <div class="divider"></div>
+          <div class="action-button">
+            <RequestForHelpResponseDialog
+              :request="request"
+              :requesterPerson="requesterPerson"
+              @snackbarToggle="snackbarToggle($event)"
+            />
+          </div>
+        </v-expansion-panel-content>
+      </v-expansion-panel>
+    </v-expansion-panels>
   </div>
 </template>
-<script>
 
-import RequestForHelpTeacherPanel from "../components/RequestForHelpTeacherCard"
-import { mapState } from "vuex";
+<script>
+import { mapState, mapActions } from "vuex";
+import moment from "moment";
+
+import RequestForHelpResponseDialog from "../components/RequestForHelpResponseDialog";
 
 export default {
   name: "RequestForHelpTeacherCard",
+  props: ["request"],
   components: {
-    RequestForHelpTeacherPanel
-  },
-  data () {
-    return {
-      submissionsLoading: false,
-      requestsForHelpLoading: false,
-      allSubmissions: [],
-      allRequestsForHelp: [],
-      snackbarMsg: "",
-      snackbar: false,
-    }
-  },
-  computed: {
-    ...mapState(['teachersRequestsForHelp', 'user']),
+    RequestForHelpResponseDialog,
   },
   async mounted() {
-    this.requestsForHelpLoading = true;
-    this.submissionsLoading = true;
-    // bind all courses (so we can filter the ones this teacher created)
-    // await this.$store.dispatch("bindCoursesByPersonId", this.user.data.id);
-
-    // bind all requests
-    this.bindRequestsForHelp();
-    // bind all submissions
-    this.bindSubmissions();
-
-    console.log(
-      "teachersSubmissionsToReview",
-      this.teachersSubmissionsToReview
+    const person = await this.$store.dispatch(
+      "getPersonByIdFromDB",
+      this.request.personId
     );
-    console.log("teachersRequestsForHelp", this.teachersRequestsForHelp);
-
-    // bind all tasks *needs this to get the task names for request.taskId :(
+    this.requesterPerson = person;
+  },
+  computed: {
+    ...mapState([
+      // "currentCourseId",
+      // "currentTopicId",
+      // "currentTaskId",
+      "allTasks",
+      "people",
+    ]),
+    ...mapActions(["getTaskByTaskId"]),
+  },
+  data() {
+    return {
+      requesterPerson: null,
+      topicsTasks: [],
+      contextObj: {
+        courseId: this.request.courseId,
+        topicId: this.request.topicId,
+        taskId: this.request.taskId,
+      },
+    };
   },
   methods: {
-    snackbarToggleHelp(msg) {
-      console.log("snackbar toggled...", msg);
-      this.snackbarMsg = msg;
-      this.snackbar = true;
-      this.bindRequestsForHelp();
+    getTask(id) {
+      return this.topicsTasks.find((task) => task.id == id);
     },
-    snackbarToggleSubmission(msg) {
-      console.log("snackbar toggled...", msg);
-      this.snackbarMsg = msg;
-      this.snackbar = true;
-      this.bindSubmissions();
+    getPerson(id) {
+      // return this.people.find((person) => person.id === id);
     },
-    async bindRequestsForHelp() {
-      await this.$store.dispatch(
-        "getRequestsForHelpByTeachersId",
-        this.user.data.id
-      );
-      this.requestsForHelpLoading = false;
+    getHumanDate(ts) {
+      return moment(ts.seconds * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
     },
-    async bindSubmissions() {
-      await this.$store.dispatch(
-        "getAllSubmittedWorkForTeacher",
-        this.user.data.id
-      );
-      this.submissionsLoading = false;
+    snackbarToggle(msg) {
+      this.$emit("snackbarToggle", msg);
+    },
+    // first3Letters(name) {
+    //   return name.substring(0, 3).toUpperCase();
+    // },
+    // TODO: route to students page
+    // routeToStudentsProfile(id) {
+    //   console.log("TODO: route to persons page:", id);
+    // },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.request-card {
+  width: 100%;
+  display: flex;
+  margin: 20px 0px;
+  padding: 10px;
+  border: 1px solid var(--v-missionAccent-base);
+  border-radius: 5px;
+
+  .panel {
+    background-color: transparent !important;
+  }
+
+  .requester-image {
+    width: 10%;
+  }
+
+  .requester-context {
+    margin-left: 10px;
+    width: 60%;
+
+    .requester-context-task {
+      margin: 0px;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      color: var(--v-missionAccent-base);
+      font-weight: 800;
+    }
+    .requester-context-topic {
+      margin: 0px;
+      text-transform: uppercase;
+      font-size: 0.6rem;
+      color: var(--v-missionAccent-base);
+    }
+    .requester-context-course {
+      margin: 0px;
+      text-transform: uppercase;
+      font-size: 0.6rem;
+      color: var(--v-galaxyAccent-base);
     }
   }
-}
-</script>
-<style scoped lang="scss">
 
-#cohort-help-panel {
-  width: calc(100% - 30px);
-  border: 1px solid var(--v-galaxyAccent-base);
-  margin: 30px 15px;
-  padding: 20px;
-  // background: var(--v-baseAccent-base);
-  position: relative;
-  backdrop-filter: blur(2px);
-  // z-index: 3;
-
-  .help-label {
-    font-size: 0.8rem;
-    font-weight: 400;
+  .requester-time {
+    margin: 0px;
     text-transform: uppercase;
-    // ribbon label
-    position: absolute;
-    top: 0;
-    left: -1px;
-    background-color: var(--v-galaxyAccent-base);
-    color: var(--v-background-base);
-    padding: 0px 20px 0px 5px;
-    clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
+    font-size: 0.8rem;
+    color: var(--v-missionAccent-base);
+    width: 30%;
+    text-align: right;
   }
+
+  .divider {
+    border-bottom: 1px solid var(--v-missionAccent-base);
+    margin: 20px 0px;
+  }
+
+  .requester-msg {
+    margin: 0px;
+    margin-top: 16px;
+    color: var(--v-missionAccent-base);
+    font-style: italic;
+  }
+}
+
+.v-expansion-panel-content__wrap {
+  padding: 0px !important;
 }
 </style>

@@ -1,25 +1,25 @@
 <template>
   <div id="cohort-info">
     <h2 class="cohort-label">Cohort</h2>
-    <h1 class="cohort-title">{{ currentCohort.name }}</h1>
-    <div v-if="currentCohort.image.url">
-      <v-img class="cohort-image" width="auto" :src="currentCohort.image.url"></v-img>
+    <h1 class="cohort-title">{{ cohort.name }}</h1>
+    <div v-if="cohort.image.url">
+      <v-img class="cohort-image" width="auto" :src="cohort.image.url"></v-img>
     </div>
-    <p class="cohort-description">{{ currentCohort.description }}</p>
+    <p class="cohort-description">{{ cohort.description }}</p>
     <div class="d-flex justify-center align-center">
       <Organisation
-        v-if="currentCohort.organisation"
+        v-if="cohort.organisation"
         :organisation="org"
         :size="'0.25em'"
       />
     </div>
     <div v-if="teachers.length > 0">
-      <p class="overline ma-0" style="color: var(--v-baseAccent-base);">Teachers</p>
+      <p class="overline ma-0" style="color: var(--v-cohortAccent-base);">Teachers</p>
       <v-row class="my-1">
         <Person v-for="person in teachers" :person="person" :key="person.id" />
       </v-row>
     </div>
-    <CreateEditDeleteCohortDialog v-if="!isStudent" :edit="true" :cohortToEdit="currentCohort" />
+    <CreateEditDeleteCohortDialog :edit="true" :cohortToEdit="cohort" />
   </div>
 </template>
 
@@ -28,12 +28,11 @@ import Organisation from "../components/Organisation";
 import CreateEditDeleteCohortDialog from "../components/CreateEditDeleteCohortDialog";
 import Person from "../components/Person"
 
-import { mapGetters } from "vuex";
-import { dbMixins } from "../mixins/DbMixins"
+import { mapGetters, mapActions } from "vuex";
 
 export default {
   name: "CohortInfo",
-  mixins: [dbMixins],
+  props: ["cohort"],
   components: {
     Person,
     Organisation,
@@ -45,43 +44,24 @@ export default {
     };
   },
   mounted() {
-    // this is needed incase there is no change in currentCohort to catch with the watch
-    if (this.$route.params.cohortId === this.currentCohort.id) {
-      this.getTeacherProfiles()
-    }
-  },
-  watch: {
-    currentCohort: {
-      deep: true,
-      handler(newVal, oldVal) {
-        if (oldVal.teachers?.length !== newVal.teachers?.length) {
-          this.getTeacherProfiles()
-        }
-      }
-    }
+    this.getTeacherProfiles()
   },
   computed: {
-    ...mapGetters(["getOrganisationById", "currentCohort", "person"]),
+    ...mapGetters(["getOrganisationById"]),
     org () {
-      let org = this.getOrganisationById(this.currentCohort.organisation)
+      let org = this.getOrganisationById(this.cohort.organisation)
       if (org) return org 
       else return {}
-    },
-    isStudent () {
-      return this.person.accountType === 'student'
     }
   },
   methods: {
+    ...mapActions(['getPersonByIdFromDB']),
     getTeacherProfiles () {
-      if (this.currentCohort.teachers?.length) {
-        const teachersArr = this.currentCohort.teachers.filter(a => {
-          return !this.teachers.some(b => a === b.id)
-        })
-        teachersArr.forEach(async id => {
-          const teacher = await this.MXgetPersonByIdFromDB(id)
-          this.teachers.push(teacher)
-        })
-      }
+      if (!this.cohort.teachers.length) return
+      this.cohort.teachers.forEach(async id => {
+        const teacher = await this.getPersonByIdFromDB(id)
+        this.teachers.push(teacher)
+      })
     },
   }
 };
@@ -90,7 +70,7 @@ export default {
 <style lang="scss">
 #cohort-info {
   width: calc(100% - 30px);
-  border: 1px solid var(--v-baseAccent-base);
+  border: 1px solid var(--v-cohortAccent-base);
   margin-top: 30px;
   padding: 20px;
   position: relative;
@@ -103,7 +83,7 @@ export default {
     position: absolute;
     top: 0;
     left: -1px;
-    background-color: var(--v-baseAccent-base);
+    background-color: var(--v-cohortAccent-base);
     color: var(--v-background-base);
     padding: 0px 15px 0px 5px;
     clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%);
@@ -111,7 +91,7 @@ export default {
 
   .cohort-title {
     font-size: 1.2rem;
-    color: var(--v-baseAccent-base);
+    color: var(--v-cohortAccent-base);
     font-weight: 600;
     text-transform: uppercase;
     margin: 20px 0px 5px 0px;
@@ -119,7 +99,7 @@ export default {
 
   .cohort-description {
     margin-top: 10px;
-    color: var(--v-baseAccent-base);
+    color: var(--v-cohortAccent-base);
     // font-size: 0.9rem;
   }
 }
