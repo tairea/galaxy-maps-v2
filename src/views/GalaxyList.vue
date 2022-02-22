@@ -4,8 +4,11 @@
       <Galaxy :whichCoursesToDisplay="whichCoursesToDisplay" />
     </div>
     <div v-if="whichCoursesToDisplay != 'assigned'" class="buttons">
-      <CreateEditDeleteGalaxyDialog :edit="false" />
-      <DiscoverGalaxyButton />
+      <CreateEditDeleteGalaxyDialog
+        :edit="false"
+        v-if="$route.path.includes('/my')"
+      />
+      <!-- <DiscoverGalaxyButton /> -->
     </div>
   </div>
 </template>
@@ -36,7 +39,7 @@ export default {
         ? this.$route.params.mineOrAssignedOrAll
         : "", // my, assigned OR all
     };
-  }
+  },
 };
 </script>
 
