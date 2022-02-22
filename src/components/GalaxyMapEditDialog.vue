@@ -12,8 +12,7 @@
                 >mdi-information-variant</v-icon
               >
               <p class="dialog-description">
-                This <span class="mission-text">System</span> is an Objective of
-                the
+                This <span class="mission-text">System</span> is a Topic of the
                 <span class="galaxy-text">{{ this.course.title }}</span> Galaxy
                 map
               </p>
@@ -23,15 +22,16 @@
           <!-- Fields -->
           <div class="fields my-4 py-4">
             <!-- Node Label -->
-            <p class="dialog-description">Objective Title:</p>
+            <!-- <p class="dialog-description">Topic Title:</p> -->
             <v-text-field
-              class="input-field"
-              solo
+              class="input-field mt-4"
+              outlined
+              dark
               color="missionAccent"
               v-model="currentNode.label"
               :autofocus="!editing"
-              background-color="white"
-              placeholder="Enter name of this node/objective"
+              label="Topic title"
+              placeholder="Enter name of this node/topic"
             ></v-text-field>
 
             <!-- Node Type -->
@@ -64,7 +64,10 @@
               :items="nodeTypes"
               item-text="type"
               item-value="value"
-              solo
+              outlined
+              dark
+              color="missionAccent"
+              class="input-field"
               :menu-props="{
                 closeOnClick: true,
                 closeOnContentClick: true,
@@ -87,16 +90,21 @@
                   >
                 </template>
                 <span>
-                  Prerequisites are objectives that need to be completed for
-                  this one to be unlocked
+                  Prerequisites are topics that need to be completed for this
+                  one to be unlocked
                 </span>
               </v-tooltip>
             </p>
-            <v-checkbox v-model="prerequisites" class="ma-0 pa-0" color="blue">
+            <v-checkbox
+              v-model="prerequisites"
+              class="ma-0 pa-0"
+              color="blue"
+              dark
+            >
               <template v-slot:label>
                 <span class="dialog-description"
-                  >Does another objective need to be completed before starting
-                  this one?</span
+                  >Does another topic need to be completed before starting this
+                  one?</span
                 >
               </template>
             </v-checkbox>
@@ -106,7 +114,10 @@
               :items="currentCourseNodes"
               item-text="label"
               item-value="id"
-              solo
+              outlined
+              dark
+              class="input-field"
+              color="missionAccent"
               multiple
               chips
               :menu-props="{
@@ -192,6 +203,12 @@ export default {
   props: ["course", "coords"],
   async mounted() {
     this.infoPopupShow = false;
+    // hack to make active select white
+    if (this.$vuetify.theme.isDark) {
+      this.$vuetify.theme.themes.dark.primary = "white";
+    } else {
+      this.$vuetify.theme.themes.dark.primary = "black";
+    }
   },
   data() {
     return {
@@ -341,7 +358,7 @@ export default {
       this.infoPopupPosition.x = "50%"; // 50%
       this.infoPopupPosition.y = "50%"; // 50%
       this.currentNode = centerFocusNode;
-      this.infoPopupShow = true;
+      // this.infoPopupShow = true;
     },
 
     deselect() {
@@ -505,6 +522,7 @@ export default {
     width: 100%;
     text-align: center;
     flex: none;
+    text-transform: none;
   }
 
   .fields {

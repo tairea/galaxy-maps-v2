@@ -96,6 +96,7 @@
           tile
           title="View Analytics"
           @click="routeToGalaxyAnalytics"
+          disabled
         >
           View Analytics
         </v-btn>

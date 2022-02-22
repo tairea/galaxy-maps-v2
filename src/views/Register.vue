@@ -111,7 +111,14 @@ export default {
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
     ],
   }),
-  mounted() {},
+  mounted() {
+    // hack to make active select white
+    if (this.$vuetify.theme.isDark) {
+      this.$vuetify.theme.themes.dark.primary = "white";
+    } else {
+      this.$vuetify.theme.themes.dark.primary = "black";
+    }
+  },
   methods: {
     register() {
       // add user the auth
