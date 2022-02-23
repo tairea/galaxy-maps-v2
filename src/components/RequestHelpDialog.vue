@@ -94,6 +94,8 @@
 import firebase from "firebase/app";
 
 import { db } from "../store/firestoreConfig";
+import { studentRequestForHelpXAPIStatement } from "../store/veracityLRS";
+
 import { mapState, mapGetters } from "vuex";
 
 export default {
@@ -138,7 +140,17 @@ export default {
         })
         .then((docRef) => {
           docRef.update({ id: docRef.id });
-          console.log("Request for help successfully submitted for review!");
+          console.log("Request for help successfully submitted to instructor!");
+          // send xAPI statement to LRS
+          studentRequestForHelpXAPIStatement(
+            this.person.email,
+            this.currentTask.id,
+            {
+              galaxy: this.currentCourse,
+              system: this.currentTopic,
+              mission: this.currentTask,
+            }
+          );
           this.requestForHelp = "";
           this.loading = false;
           this.dialog = false;

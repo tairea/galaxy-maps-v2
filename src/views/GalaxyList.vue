@@ -4,10 +4,7 @@
       <Galaxy :whichCoursesToDisplay="whichCoursesToDisplay" />
     </div>
     <div v-if="whichCoursesToDisplay != 'assigned'" class="buttons">
-      <CreateEditDeleteGalaxyDialog
-        :edit="false"
-        v-if="$route.path.includes('/my')"
-      />
+      <CreateEditDeleteGalaxyDialog :edit="false" v-if="myGalaxies" />
       <!-- <DiscoverGalaxyButton /> -->
     </div>
   </div>
@@ -31,6 +28,9 @@ export default {
   },
   computed: {
     ...mapGetters(["courses", "user", "person"]),
+    myGalaxies() {
+      return this.$route.path.includes("/my");
+    },
   },
   data() {
     return {

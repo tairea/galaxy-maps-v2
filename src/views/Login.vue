@@ -40,6 +40,7 @@
           @click="login"
           outlined
           width="100%"
+          :loading="loading"
         >
           Sign-in
         </v-btn>
@@ -69,6 +70,7 @@
 <script>
 import firebase from "firebase";
 import { mapGetters } from "vuex";
+import { queryXAPIStatement } from "../store/veracityLRS";
 
 export default {
   name: "Login",
@@ -82,13 +84,23 @@ export default {
     ],
     snackbar: false,
     snackbarText: "",
+    loading: false,
   }),
-  mounted() {},
+  mounted() {
+    queryXAPIStatement({
+      verb: "http://adlnet.gov/expapi/verbs/completed",
+      email: "waipuna@gmail.com",
+    }).then((result) => {
+      console.log("result");
+      console.log(result);
+    });
+  },
   computed: {
     ...mapGetters(["person", "user"]),
   },
   methods: {
     login() {
+      this.loading = true;
       firebase
         .auth()
         .setPersistence(firebase.auth.Auth.Persistence.LOCAL)
@@ -99,21 +111,22 @@ export default {
             .signInWithEmailAndPassword(this.email, this.password);
         })
         .then(() => {
-          this.proceed()
+          this.proceed();
         })
         .catch((error) => {
           this.snackbarText = error;
           this.snackbar = true;
           console.log("Login error:", error);
+          this.loading = false;
         });
     },
     proceed() {
       if (!this.user?.data?.id || !this.person?.id) {
         setTimeout(() => {
-          this.proceed()
-        }, 500)
-        return
-      } 
+          this.proceed();
+        }, 500);
+        return;
+      }
       if (this.person.accountType == "student") {
         this.$router.push("/base/galaxies/assigned");
       } else {
@@ -141,6 +154,10 @@ export default {
           var errorMessage = error.message;
           // ..
         });
+    },
+    // hack delay to wait for person to load before routing
+    delay(ms) {
+      return new Promise((res) => setTimeout(res, ms));
     },
   },
 };

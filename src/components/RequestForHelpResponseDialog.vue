@@ -143,6 +143,8 @@ import firebase from "firebase/app";
 import moment from "moment";
 
 import { db } from "../store/firestoreConfig";
+import { teacherRespondedToRequestForHelpXAPIStatement } from "../store/veracityLRS";
+
 import { mapState, mapGetters } from "vuex";
 
 export default {
@@ -181,6 +183,19 @@ export default {
         })
         .then(() => {
           console.log("Response successfully submitted for review!");
+
+          // teacher assissted student
+          teacherRespondedToRequestForHelpXAPIStatement(
+            this.person.email,
+            this.request.contextTask.id,
+            {
+              student: this.requesterPerson,
+              galaxy: this.request.contextCourse,
+              system: this.request.contextTopic,
+              mission: this.request.contextTask,
+            }
+          );
+
           this.requestForHelp = "";
           this.loading = false;
           this.dialog = false;

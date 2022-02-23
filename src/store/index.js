@@ -48,6 +48,7 @@ export default new Vuex.Store({
     peopleInCourse: [],
     cohortsInCourse: [],
     darkMode: true,
+    teachersStudentsProgress: [],
   },
   getters: {
     user: (state) => state.user,
@@ -450,6 +451,121 @@ export default new Vuex.Store({
       }
       state.teachersSubmissionsToReview = allWorkForReview;
     },
+    //TODO: WIP
+    async getStudentProgressForTeacher({ state }) {
+      // get teachers courses. (returns array of course objects eg. id, title, description, image, mappedBy, contentBy)
+      const myCourses = this.getters.getCoursesByWhoMadeThem(state.person.id);
+      // make an array of course.id's
+      let teachersCourseIds = myCourses.map((course) => course.id);
+      // console.log("teachersCourseIds : ", teachersCourseIds);
+
+      // search people database where assignedCourses arrayContains
+      const studentsInTeachersCourses = [];
+      for (const course of myCourses) {
+        // get all work for review
+        const querySnapshot = await db
+          .collection("people")
+          .where("assignedCourses", "array-contains-any", teachersCourseIds)
+          .get();
+
+        for (const doc of querySnapshot.docs) {
+          studentsInTeachersCourses.push(doc.data());
+        }
+      }
+      console.log("studentsInTeachersCourses : ", studentsInTeachersCourses);
+
+      //TODO: there are duplicates of students in studentsInTeachersCourses, even though array-contains-any is supposed to be de-duped (https://firebase.google.com/docs/firestore/query-data/queries#array-contains-any)
+      // flatten array to remove duplicate students
+      // const flatStudents = getUniqueListBy(studentsInTeachersCourses, "email");
+      const ids = studentsInTeachersCourses.map((o) => o.id);
+      const flatStudents = studentsInTeachersCourses.filter(
+        ({ id }, index) => !ids.includes(id, index + 1)
+      );
+      console.log("flat students", flatStudents);
+
+      // allStudentProgress
+      let allStudentProgress = [];
+
+      // for each of the students, check if their assignedCourses matches teachers courses
+      for (const student of flatStudents) {
+        // new student. reset array
+        let currentStudentProgress = [];
+
+        for (var x = 0; x < student.assignedCourses.length; x++) {
+          // check which assignedCourse matches with teacher
+          for (var y = 0; y < teachersCourseIds.length; y++) {
+            const teachersCourseId = teachersCourseIds[y];
+            if (student.assignedCourses[x] == teachersCourseId) {
+              // there is a match! get these tasks from db
+
+              // new course. reset array
+              let currentCourseProgress = [];
+              // reset task count (task count is Y axes of chart. ie. line increments as you complete tasks)
+              let taskCount = 0;
+
+              const studentTaskQuerySnapshot = await db
+                .collection("people")
+                .doc(student.id)
+                .collection(teachersCourseId)
+                .get();
+
+              for (const topic of studentTaskQuerySnapshot.docs) {
+                // new topic. reset array
+                let currentTopicProgress = [];
+
+                // get task data for each topic
+                const topicQuerySnapshot = await db
+                  .collection("people")
+                  .doc(student.id)
+                  .collection(teachersCourseId)
+                  .doc(topic.id)
+                  .collection("tasks")
+                  // only get tasks with completed OR inreview status
+                  .where("taskStatus", "in", [
+                    "completed",
+                    "inreview",
+                    "active",
+                  ])
+                  .orderBy("taskSubmittedTimestamp")
+                  .get();
+
+                for (const task of topicQuerySnapshot.docs) {
+                  taskCount++;
+                  // topicData.push(task.data());
+                  currentTopicProgress.push({
+                    x: task.data().taskSubmittedTimestamp,
+                    y: taskCount,
+                    courseId: teachersCourseId,
+                    topicId: topic.id,
+                    taskTitle: task.data().title,
+                    task: task.data(),
+                  });
+                }
+                currentCourseProgress.push({
+                  topicId: topic.id,
+                  topic: topic.data(),
+                  topicProgressData: currentTopicProgress,
+                });
+              }
+              currentStudentProgress.push({
+                courseId: teachersCourseId,
+                courseProgressData: currentCourseProgress,
+              });
+            }
+          }
+        }
+        allStudentProgress.push({
+          studentId: student.id,
+          student: student,
+          studentProgressData: currentStudentProgress,
+        });
+      }
+
+      //test did it work?
+      console.log("FINISHED allStudentProgress ===> ", allStudentProgress);
+
+      state.teachersStudentsProgress = allStudentProgress;
+    },
     async getAssignedEdgesByPersonId({ state }, personId) {
       const personsAssignedEdges = [];
       // get the courseId from assignedCourses
@@ -678,4 +794,8 @@ function hashCode(str) {
 
 function stringToColour(str) {
   return `hsl(${hashCode(str) % 360}, 100%, 70%)`;
+}
+
+function getUniqueListBy(arr, key) {
+  return [...new Map(arr.map((item) => [item[key], item])).values()];
 }

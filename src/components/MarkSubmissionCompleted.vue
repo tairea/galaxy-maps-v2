@@ -78,6 +78,11 @@
 import firebase from "firebase/app";
 
 import { db } from "../store/firestoreConfig";
+import {
+  studentWorkMarkedCompletedXAPIStatement,
+  teacherReviewedStudentWorkXAPIStatement,
+} from "../store/veracityLRS";
+
 import { mapState, mapGetters } from "vuex";
 
 export default {
@@ -135,6 +140,30 @@ export default {
         })
         .then(() => {
           console.log("Task successfully updated as completed!");
+
+          // send xAPI statement to LRS
+          // student completed work
+          studentWorkMarkedCompletedXAPIStatement(
+            this.requesterPerson.email,
+            this.submission.contextTask.id,
+            {
+              galaxy: this.submission.contextCourse,
+              system: this.submission.contextTopic,
+              mission: this.submission.contextTask,
+            }
+          );
+          // teacher reviewed work
+          teacherReviewedStudentWorkXAPIStatement(
+            this.person.email,
+            this.submission.contextTask.id,
+            {
+              student: this.requesterPerson,
+              galaxy: this.submission.contextCourse,
+              system: this.submission.contextTopic,
+              mission: this.submission.contextTask,
+            }
+          );
+
           this.loading = false;
           this.disabled = false;
           this.dialog = false;
