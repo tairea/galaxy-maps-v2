@@ -133,14 +133,14 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
-
 import { db } from "../store/firestoreConfig";
+import { dbMixins } from "../mixins/DbMixins"
 
-import { mapGetters } from "vuex";
+import { mapGetters, mapState } from "vuex";
 
 export default {
   name: "PopupGalaxyPreview",
+  mixins: [dbMixins],
   components: {},
   props: ["course"],
   computed: {
@@ -289,11 +289,8 @@ export default {
     },
 
     async getPersonsImage(personId) {
-      const person = await this.$store.dispatch(
-        "getPersonByIdFromDB",
-        personId
-      );
-      console.log("getting person for image: ", person.image.url);
+      const person = await this.MXgetPersonByIdFromDb(personId)
+     console.log("getting person for image: ", person.image.url);
       return person.image.url;
     },
   },
