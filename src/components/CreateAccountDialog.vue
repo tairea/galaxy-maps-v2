@@ -3,11 +3,17 @@
     <v-dialog v-model="dialog" width="35%" :light="dark" :dark="!dark">
       <!-- CREATE BUTTON -->
       <template v-slot:activator="{ on, attrs }">
-        <v-btn class="cohort-btn" :light="dark" :dark="!dark" :text="teacher" :color="teacher ? 'baseAccent':'missionAccent'" v-bind="attrs" v-on="on">
-          <v-icon left>
-            mdi-plus
-          </v-icon>
-          {{teacher ? "New Teacher" : "add student"}}
+        <v-btn
+          class="cohort-btn"
+          :light="dark"
+          :dark="!dark"
+          :text="teacher"
+          :color="teacher ? 'baseAccent' : 'missionAccent'"
+          v-bind="attrs"
+          v-on="on"
+        >
+          <v-icon left> mdi-plus </v-icon>
+          {{ teacher ? "New Teacher" : "add student" }}
         </v-btn>
       </template>
 
@@ -15,12 +21,13 @@
       <div class="create-dialog">
         <!-- HEADER -->
         <div class="dialog-header">
-          <p class="mb-0">
-            Add {{this.accountType}}
-          </p>
+          <p class="mb-0">Add {{ this.accountType }}</p>
         </div>
         <div class="create-dialog-content">
-          <p v-if="!teacher" class="caption mb-0">Adding this student will send a registration link to their email</p>
+          <p v-if="!teacher" class="caption mb-0">
+            Adding this student will send a registration link to their email
+          </p>
+          <!-- TODO: info description for adding a teacher? -->
           <v-form ref="form" v-model="valid" lazy-validation>
             <v-text-field
               :dark="dark"
@@ -120,7 +127,6 @@
 </template>
 
 <script>
-
 import { db, functions } from "../store/firestoreConfig";
 import { mapGetters } from "vuex"
 import { dbMixins } from "../mixins/DbMixins"
@@ -129,7 +135,8 @@ export default {
   name: "CreateAccountDialog",
   mixins: [dbMixins],
   props: {
-    accountType: { type: String, default: "teacher"},
+    accountType: { type: String, default: "teacher" },
+    addingToCohort: { type: Boolean, default: false },
   },
   data: () => ({
     addingAccount: false,
@@ -157,11 +164,11 @@ export default {
   computed: {
     ...mapGetters(['person', 'currentCohort']),
     teacher() {
-      return this.accountType === "teacher"
+      return this.accountType === "teacher";
     },
-    dark () {
-      return this.$vuetify.theme.isDark
-    }
+    dark() {
+      return this.$vuetify.theme.isDark;
+    },
   },
   methods: {
     close() {
@@ -250,5 +257,4 @@ export default {
 .cohort-btn {
   font-weight: 400;
 }
-
 </style>
