@@ -507,7 +507,11 @@ export default new Vuex.Store({
                   .doc(topic.id)
                   .collection("tasks")
                   // only get tasks with completed OR inreview status
-                  .where("taskStatus", "in", ["completed", "inreview"])
+                  .where("taskStatus", "in", [
+                    "completed",
+                    "inreview",
+                    "active",
+                  ])
                   .orderBy("taskSubmittedTimestamp")
                   .get();
 
