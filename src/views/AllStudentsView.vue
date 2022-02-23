@@ -4,23 +4,6 @@
     <div id="left-section">
       <div id="review-panel">
         <h2 class="review-label">Work submitted for review</h2>
-        <!-- 
-        <div v-if="teachersSubmissionsToReview.length > 0">
-          <SubmissionToReview
-            v-for="submission in teachersSubmissionsToReview"
-            :key="submission.id"
-            :submission="submission"
-          />
-        </div>
-        <div class="d-flex justify-center align-center mt-4">
-          <v-btn
-            v-if="submissionsLoading"
-            :loading="submissionsLoading"
-            icon
-            color="cohortAccent"
-          ></v-btn>
-        </div> -->
-
         <div v-if="teachersSubmissionsToReview.length > 0">
           <SubmissionTeacherCard
             v-for="submission in teachersSubmissionsToReview"
@@ -123,12 +106,14 @@ import { mapState, mapGetters } from "vuex";
 
 import SubmissionTeacherCard from "../components/SubmissionTeacherCard";
 import RequestForHelpTeacherCard from "../components/RequestForHelpTeacherCard";
+import StudentProgressionChartJs3 from "../components/StudentProgressionChartJs3";
 
 export default {
   name: "AllStudentView",
   components: {
     SubmissionTeacherCard,
     RequestForHelpTeacherCard,
+    StudentProgressionChartJs3,
   },
   props: [],
   async mounted() {
@@ -323,6 +308,10 @@ export default {
       color: var(--v-background-base);
       padding: 0px 20px 0px 5px;
       clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
+    }
+
+    .progression-charts {
+      // padding: 20px;
     }
   }
 }
