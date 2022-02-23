@@ -1,5 +1,9 @@
 <template>
-  <div class="solarsystem" :style="{ height: height ? height : 'auto' }">
+  <div
+    v-if="topic"
+    class="solarsystem"
+    :style="{ height: height ? height : 'auto' }"
+  >
     <!-- @click="routeToTopic(topic)" -->
     <!-- <div class="solarsystem" :style="{height: height ? height : 'auto', top: coords.x + 'px', left: coords.y + 'px'}" @click="routeToTopic(topic)"> -->
     <div class="scene">

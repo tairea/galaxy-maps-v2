@@ -1,6 +1,6 @@
 <template>
   <div class="backButtonDiv">
-    <v-btn :to="toPath" class="backButton" color="baseAccent" text>
+    <v-btn :to="toPath" class="backButton" color="baseAccent" outlined>
       <v-icon left> mdi-arrow-left </v-icon>
       Back to
       {{ backToWhat(toPath) }}
@@ -40,8 +40,6 @@ export default {
   margin-top: 30px;
   width: calc(100% - 30px);
   z-index: 999;
-  margin-left: auto;
-  margin-right: auto;
 }
 .backButton {
   border-radius: 0px;
