@@ -65,7 +65,7 @@
           :organisationToEdit="editingOrgansation"
         />
       </v-col>
-      <v-col>
+      <v-col v-if="person.accountType == 'admin'">
         <CreateAdminDialog />
       </v-col>
     </v-row>
@@ -106,7 +106,7 @@ export default {
   },
   computed: {
     ...mapState(["organisations", "cohorts", "person", "user"]),
-    ...mapGetters(["getCohortsByOrganisationId", "getOrganisationById"]),
+    ...mapGetters(["getOrganisationById"]),
     cohortView () {
       return this.$route.name === "CohortView"
     }

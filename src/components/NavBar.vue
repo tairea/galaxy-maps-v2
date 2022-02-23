@@ -17,7 +17,7 @@
       </v-tabs>
       <!-- Teacher tabs (user tabs + students) -->
       <v-tabs
-        v-else-if="userType === 'teacher' || userType === 'admin' "
+        v-else-if="userType === 'teacher'"
         fixed-tabs
         background-color="transparent"
         dark
@@ -70,14 +70,16 @@ export default {
       activeTab: null,
       // studentActiveTab: `/base/assigned-galaxies`,
       tabsStudent: [
-        { id: 5, name: "MY DASHBOARD", route: `/base/dashboard` },
         { id: 3, name: "ASSIGNED GALAXIES", route: `/base/galaxies/assigned` },
+        { id: 6, name: "COHORTS", route: `/base/cohorts` },
+        { id: 5, name: "MY DASHBOARD", route: `/base/dashboard` },
         // { id: 4, name: "ALL GALAXIES", route: `/base/galaxies/all` },
       ],
       tabsTeacher: [
-        { id: 1, name: "GALAXIES", route: `/base/galaxies/my` },
-        { id: 7, name: "STUDENTS", route: `/base/students` },
+        { id: 1, name: "MY GALAXIES", route: `/base/galaxies/my` },
+        { id: 7, name: "ALL GALAXIES", route: `/base/galaxies/all` },
         { id: 6, name: "COHORTS", route: `/base/cohorts` },
+        { id: 9, name: "DASHBOARD", route: `/base/students` },
       ],
       tabsAdmin: [
         { id: 2, name: "ALL GALAXIES", route: `/base/galaxies/all` },
