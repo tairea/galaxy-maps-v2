@@ -4,23 +4,6 @@
     <div id="left-section">
       <div id="review-panel">
         <h2 class="review-label">Work submitted for review</h2>
-        <!-- 
-        <div v-if="teachersSubmissionsToReview.length > 0">
-          <SubmissionToReview
-            v-for="submission in teachersSubmissionsToReview"
-            :key="submission.id"
-            :submission="submission"
-          />
-        </div>
-        <div class="d-flex justify-center align-center mt-4">
-          <v-btn
-            v-if="submissionsLoading"
-            :loading="submissionsLoading"
-            icon
-            color="cohortAccent"
-          ></v-btn>
-        </div> -->
-
         <div v-if="teachersSubmissionsToReview.length > 0">
           <SubmissionTeacherCard
             v-for="submission in teachersSubmissionsToReview"
@@ -55,6 +38,18 @@
     <div id="main-section">
       <div id="progression-panel">
         <h2 class="progression-label">Student progression</h2>
+        <div class="progression-charts">
+          <StudentProgressionChartJs3 />
+        </div>
+        <!-- loading spinner -->
+        <div class="d-flex justify-center align-center mt-4">
+          <v-btn
+            v-if="progressLoading"
+            :loading="progressLoading"
+            icon
+            color="missionAccent"
+          ></v-btn>
+        </div>
       </div>
     </div>
 
@@ -111,24 +106,31 @@ import { mapState, mapGetters } from "vuex";
 
 import SubmissionTeacherCard from "../components/SubmissionTeacherCard";
 import RequestForHelpTeacherCard from "../components/RequestForHelpTeacherCard";
+import StudentProgressionChartJs3 from "../components/StudentProgressionChartJs3";
 
 export default {
   name: "AllStudentView",
   components: {
     SubmissionTeacherCard,
     RequestForHelpTeacherCard,
+    StudentProgressionChartJs3,
   },
   props: [],
   async mounted() {
     this.requestsForHelpLoading = true;
     this.submissionsLoading = true;
+    this.progressLoading = true;
     // bind all courses (so we can filter the ones this teacher created)
     await this.$store.dispatch("bindCoursesByPersonId", this.user.data.id);
 
-    // bind all requests
-    this.bindRequestsForHelp();
     // bind all submissions
     this.bindSubmissions();
+
+    // bind all student task progress
+    this.bindStudentTaskProgress();
+
+    // bind all requests
+    this.bindRequestsForHelp();
 
     console.log(
       "teachersSubmissionsToReview",
@@ -161,6 +163,7 @@ export default {
     return {
       submissionsLoading: false,
       requestsForHelpLoading: false,
+      progressLoading: false,
       allSubmissions: [],
       allRequestsForHelp: [],
       snackbarMsg: "",
@@ -182,6 +185,7 @@ export default {
       this.bindSubmissions();
     },
     async bindRequestsForHelp() {
+      // binds teachersRequestsForHelp
       await this.$store.dispatch(
         "getRequestsForHelpByTeachersId",
         this.user.data.id
@@ -190,10 +194,18 @@ export default {
     },
     async bindSubmissions() {
       await this.$store.dispatch(
+        // binds teachersSubmissionsToReview
         "getAllSubmittedWorkForTeacher",
         this.user.data.id
       );
       this.submissionsLoading = false;
+    },
+    async bindStudentTaskProgress() {
+      await this.$store.dispatch(
+        "getStudentProgressForTeacher",
+        this.user.data.id
+      );
+      this.progressLoading = false;
     },
   },
 };
@@ -277,7 +289,7 @@ export default {
     height: 80%;
     border: 1px solid var(--v-missionAccent-base);
     margin-top: 30px;
-    padding: 20px;
+
     // background: var(--v-baseAccent-base);
     position: relative;
     backdrop-filter: blur(2px);
@@ -296,6 +308,10 @@ export default {
       color: var(--v-background-base);
       padding: 0px 20px 0px 5px;
       clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
+    }
+
+    .progression-charts {
+      // padding: 20px;
     }
   }
 }
