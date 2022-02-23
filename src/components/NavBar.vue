@@ -17,7 +17,7 @@
       </v-tabs>
       <!-- Teacher tabs (user tabs + students) -->
       <v-tabs
-        v-else-if="userType === 'teacher' || userType === 'admin' "
+        v-else-if="userType === 'teacher'"
         fixed-tabs
         background-color="transparent"
         dark
@@ -26,6 +26,20 @@
         height=""
       >
         <v-tab v-for="tab in tabsTeacher" :key="tab.id" :to="tab.route">
+          <div class="baseAccent--text tab">{{ tab.name }}</div>
+        </v-tab>
+      </v-tabs>
+      <!-- Admin tabs (user tabs + students + cohorts) -->
+      <v-tabs
+        v-else-if="userType === 'admin'"
+        fixed-tabs
+        background-color="transparent"
+        dark
+        slider-color="baseAccent"
+        v-model="activeTab"
+        height=""
+      >
+        <v-tab v-for="tab in tabsAdmin" :key="tab.id" :to="tab.route">
           <div class="baseAccent--text tab">{{ tab.name }}</div>
         </v-tab>
       </v-tabs>
