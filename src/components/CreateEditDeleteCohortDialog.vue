@@ -1,6 +1,6 @@
 <template>
   <div :class="cohortView ? 'text-end':'text-center'" :align="cohortView ? 'end':'center'">
-    <v-dialog v-model="dialog" width="40%" light style="overflow: hidden">
+    <v-dialog v-model="dialog" width="45%" light  content-class="no-overflow">
       <!-- CREATE BUTTON -->
       <template v-slot:activator="{ on, attrs }">
         <v-btn
@@ -92,7 +92,7 @@
               <!-- ORGANISATION -->
               <p class="input-description">Organisation:</p>
               <v-select
-                class="input-field"
+                class="input-field select-color"
                 outlined
                 :dark="dark"
                 :light="!dark"
@@ -111,7 +111,7 @@
                 :items="teachers"
                 @change="search = ''"
                 menu-props="closeOnContentClick"
-                class="input-field text-lowercase"
+                class="input-field text-lowercase select-color"
                 color="missionAccent"
                 outlined
                 :dark="dark"
@@ -660,7 +660,7 @@ export default {
 
   .action-buttons {
     width: 100%;
-    padding: 20px;
+    padding: 5px 20px;
   }
 }
 
@@ -712,7 +712,4 @@ export default {
   }
 }
 
-.no-overflow {
-  overflow: hidden ;
-}
 </style>
