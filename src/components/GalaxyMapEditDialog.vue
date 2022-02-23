@@ -26,7 +26,8 @@
             <v-text-field
               class="input-field mt-4"
               outlined
-              dark
+              :dark="dark"
+              :light="!dark"
               color="missionAccent"
               v-model="currentNode.label"
               :autofocus="!editing"
@@ -65,7 +66,8 @@
               item-text="type"
               item-value="value"
               outlined
-              dark
+              :dark="dark"
+              :light="!dark"
               color="missionAccent"
               class="input-field"
               :menu-props="{
@@ -99,7 +101,8 @@
               v-model="prerequisites"
               class="ma-0 pa-0"
               color="blue"
-              dark
+              :dark="dark"
+              :light="!dark"
             >
               <template v-slot:label>
                 <span class="dialog-description"
@@ -115,7 +118,8 @@
               item-text="label"
               item-value="id"
               outlined
-              dark
+              :dark="dark"
+              :light="!dark"
               class="input-field"
               color="missionAccent"
               multiple
@@ -205,9 +209,9 @@ export default {
     this.infoPopupShow = false;
     // hack to make active select white
     if (this.$vuetify.theme.isDark) {
-      this.$vuetify.theme.themes.dark.primary = "white";
+      this.$vuetify.theme.themes.dark.primary = "#fff";
     } else {
-      this.$vuetify.theme.themes.dark.primary = "black";
+      this.$vuetify.theme.themes.dark.primary = "#000";
     }
   },
   data() {
@@ -258,6 +262,9 @@ export default {
     ...mapGetters(["getTopicById", "getPersonsTopicById"]),
     getCoords() {
       return this.coords;
+    },
+    dark() {
+      return this.$vuetify.theme.isDark;
     },
   },
   methods: {

@@ -4,9 +4,7 @@
       <!-- CREATE BUTTON -->
       <template v-slot:activator="{ on, attrs }">
         <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on">
-          <v-icon left>
-            mdi-plus
-          </v-icon>
+          <v-icon left> mdi-plus </v-icon>
           CREATE ORGANISATION
         </v-btn>
       </template>
@@ -16,9 +14,7 @@
         <div class="dialog-header">
           <p class="dialog-title">{{ dialogTitle }}</p>
           <div class="d-flex align-center">
-            <v-icon left color="missionAccent"
-              >mdi-information-variant</v-icon
-            >
+            <v-icon left color="missionAccent">mdi-information-variant</v-icon>
             <p class="dialog-description">{{ dialogDescription }}</p>
           </div>
         </div>
@@ -29,42 +25,46 @@
           :style="organisation.name ? 'width:50%' : 'width:100%'"
         >
           <!-- DIALOG FIELDS -->
-          <div class="create-dialog-content">
+          <div class="create-dialog-content mt-8">
             <!-- TITLE -->
-            <p class="dialog-description">Organisation Name:</p>
             <v-text-field
               class="input-field"
-              solo
+              outlined
+              :dark="dark"
+              :light="!dark"
               color="missionAccent"
               v-model="organisation.name"
-              background-color="white"
+              label="Organisation name"
             ></v-text-field>
 
             <!-- DESCRIPTION -->
-            <p class="dialog-description">Organisation Description:</p>
             <v-textarea
               class="input-field"
-              solo
+              outlined
+              :dark="dark"
+              :light="!dark"
               color="missionAccent"
               auto-grow
               clearable
               rows="1"
               v-model="organisation.description"
+              label="Organisation description"
             ></v-textarea>
 
             <!-- IMAGE UPLOAD -->
-            <p class="dialog-description">Organisation Image:</p>
             <v-progress-linear
               color="missionAccent"
               :value="percentage"
             ></v-progress-linear>
             <v-file-input
               class="input-field"
-              solo
+              outlined
+              :dark="dark"
+              :light="!dark"
               color="missionAccent"
               accept="image/*"
               v-model="uploadedImage"
-              label="Upload Image"
+              label="Organisation image upload"
               @change="storeImage()"
               prepend-icon=""
             ></v-file-input>
@@ -79,9 +79,7 @@
           :style="organisation.name ? 'width:50%' : 'width:0%'"
         >
           <div v-if="organisation.name">
-            <div
-              class="d-flex flex-column justify-center align-center cursor"
-            >
+            <div class="d-flex flex-column justify-center align-center cursor">
               <v-img
                 v-if="organisation.image.url"
                 :src="organisation.image.url"
@@ -110,9 +108,7 @@
             :loading="loading"
             :disabled="disabled"
           >
-            <v-icon left>
-              mdi-check
-            </v-icon>
+            <v-icon left> mdi-check </v-icon>
             SAVE
           </v-btn>
 
@@ -124,9 +120,7 @@
             @click="deleteDialog()"
             class="ml-2"
           >
-            <v-icon left>
-              mdi-delete
-            </v-icon>
+            <v-icon left> mdi-delete </v-icon>
             DELETE
           </v-btn>
 
@@ -137,9 +131,7 @@
             @click="cancel"
             :disabled="disabled || loading"
           >
-            <v-icon left>
-              mdi-close
-            </v-icon>
+            <v-icon left> mdi-close </v-icon>
             Cancel
           </v-btn>
         </div>
@@ -157,9 +149,7 @@
             <strong>Warning!</strong> Delete Organisation?
           </p>
           <div class="d-flex align-start">
-            <v-icon left color="missionAccent"
-              >mdi-information-variant</v-icon
-            >
+            <v-icon left color="missionAccent">mdi-information-variant</v-icon>
             <p class="dialog-description">
               Are you sure you want to <strong>DELETE</strong> the
               <span class="organisation-text"
@@ -171,8 +161,7 @@
               <br />
               <br />
               <!-- <strong>YOU WILL LOSE ALL </strong> -->
-              <strong>COHORTS</strong> will no longer be associated with
-              this
+              <strong>COHORTS</strong> will no longer be associated with this
               <strong>ORGANISATION</strong>
             </p>
           </div>
@@ -188,9 +177,7 @@
             class="ml-2"
             :loading="deleting"
           >
-            <v-icon left>
-              mdi-delete
-            </v-icon>
+            <v-icon left> mdi-delete </v-icon>
             DELETE
           </v-btn>
 
@@ -201,9 +188,7 @@
             @click="cancelDeleteDialog"
             :disabled="disabled || loading"
           >
-            <v-icon left>
-              mdi-close
-            </v-icon>
+            <v-icon left> mdi-close </v-icon>
             Cancel
           </v-btn>
         </div>
@@ -244,19 +229,22 @@ export default {
   }),
   mounted() {
     if (this.organisationToEdit) {
-      this.organisation = this.organisationToEdit
+      this.organisation = this.organisationToEdit;
     }
   },
   watch: {
-    organisationToEdit: function (n,o) {
-      this.organisation = n
-    }
+    organisationToEdit: function (n, o) {
+      this.organisation = n;
+    },
   },
   computed: {
     // easy image preview thanks to: https://stackoverflow.com/questions/60678840/vuetify-image-upload-preview
     imgUrl() {
       if (!this.uploadedImage) return;
       return URL.createObjectURL(this.uploadedImage);
+    },
+    dark() {
+      return this.$vuetify.theme.isDark;
     },
   },
   methods: {
@@ -265,7 +253,7 @@ export default {
       // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
     },
     openDialog() {
-      this.dialog = true
+      this.dialog = true;
     },
     closeDialog() {
       this.$emit("closeOrganisationEditDialog");
@@ -479,10 +467,10 @@ export default {
 
 .create-dialog-content {
   // width: 33.33%;
-  min-height: 400px;
+  // min-height: 400px;
   display: flex;
-  justify-content: space-around;
-  align-items: space-around;
+  // justify-content: space-around;
+  // align-items: space-around;
   flex-direction: column;
   color: var(--v-missionAccent-base);
   padding: 20px;
@@ -501,6 +489,7 @@ export default {
     text-align: center;
     flex: none;
     font-size: 0.8rem;
+    text-transform: none;
   }
 }
 

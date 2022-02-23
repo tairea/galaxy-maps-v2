@@ -63,13 +63,14 @@
                 </div>
                 <div class="create-dialog-content">
                   <!-- TITLE -->
-                  <p class="dialog-description">Person's E-mail address:</p>
+                  <!-- <p class="dialog-description">Person's E-mail address:</p> -->
                   <v-text-field
                     class="input-field"
-                    solo
+                    outlined
+                    dark
                     color="missionAccent"
                     v-model="person.email"
-                    background-color="white"
+                    label="Person's email address"
                     light
                   ></v-text-field>
                 </div>
@@ -439,6 +440,7 @@ export default {
     flex: none;
     font-size: 0.8rem;
     color: var(--v-missionAccent-base) !important;
+    text-transform: none;
   }
 
   .v-application .primary--text {
