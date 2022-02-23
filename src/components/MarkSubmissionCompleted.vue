@@ -136,7 +136,7 @@ export default {
           // update "people" database with task submission
           teacherId: this.person.id,
           taskStatus: "completed",
-          taskSubmittedTimestamp: new Date(),
+          taskReviewedAndCompletedTimestamp: new Date(),
         })
         .then(() => {
           console.log("Task successfully updated as completed!");
@@ -195,7 +195,7 @@ export default {
         .doc(this.submission.contextTopic.id)
         .collection("tasks")
         // order by timestamp is important otherwise index == 0 (in the next step) wont necessarily be the first mission
-        .orderBy("timestamp")
+        .orderBy("taskCreatedTimestamp")
         .get();
 
       // 2) loops the tasks. the first task to have taskStatus locked, update to unlocked, then return to exit loop

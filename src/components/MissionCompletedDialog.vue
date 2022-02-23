@@ -270,7 +270,7 @@ export default {
           contextTask: this.currentTask,
           submissionLink: this.submissionLink,
           taskSubmissionStatus: "inreview",
-          taskSubmittedTimestamp: new Date(),
+          taskSubmittedForReviewTimestamp: new Date(),
         })
         .then((docRef) => {
           docRef.update({ id: docRef.id });
@@ -315,7 +315,7 @@ export default {
           // update "people" database with task submission
           submissionLink: this.submissionLink,
           taskStatus: "inreview",
-          taskSubmittedTimestamp: new Date(),
+          taskSubmittedForReviewTimestamp: new Date(),
         })
         .then(() => {
           console.log("Task work successfully submitted for review!");
@@ -387,7 +387,7 @@ export default {
         .doc(this.currentTopic.id)
         .collection("tasks")
         // order by timestamp is important otherwise index == 0 (in the next step) wont necessarily be the first mission
-        .orderBy("timestamp")
+        .orderBy("taskCreatedTimestamp")
         .get();
 
       // 2) loops the tasks. the first task to have taskStatus locked, update to unlocked, then return to exit loop
