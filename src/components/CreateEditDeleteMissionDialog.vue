@@ -379,7 +379,7 @@ export default {
         .collection("topics")
         .doc(this.topicId)
         .collection("tasks")
-        .add({ ...task, timestamp: new Date() })
+        .add({ ...task, timestampCreated: new Date() })
         .then((docRef) => {
           docRef.update({ id: docRef.id }); // add task id to task
           console.log("Task successfully written!");
