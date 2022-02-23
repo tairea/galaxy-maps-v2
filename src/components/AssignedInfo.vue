@@ -69,14 +69,7 @@ import Person from "../components/Person";
 
 export default {
   name: "AssignedInfo",
-  props: [
-    "assignCohorts",
-    "assignCourses",
-    "cohorts",
-    "organisations",
-    "people",
-    "courses",
-  ],
+  props: ["assignCohorts", "assignCourses", "cohorts", "people", "courses"],
   components: {
     Cohort,
     Organisation,
@@ -86,6 +79,7 @@ export default {
   },
   mounted() {
     console.log("got cohorts FROM ASSIGNED: ", this.cohorts);
+    console.log("people:", this.people);
   },
   computed: {},
   data() {

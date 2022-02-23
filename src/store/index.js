@@ -45,15 +45,18 @@ export default new Vuex.Store({
     requestsForHelp: [],
     teachersSubmissionsToReview: [],
     teachersRequestsForHelp: [],
+    peopleInCourse: [],
+    cohortsInCourse: [],
+    darkMode: true,
   },
   getters: {
     user: (state) => state.user,
     person: (state) => state.person,
     courses: (state) => state.courses,
     cohorts: (state) => state.cohorts,
-    organisations: state => state.organisations,
-    currentCohortId: state => state.currentCohortId,
-    currentCohort: state => state.currentCohort,
+    organisations: (state) => state.organisations,
+    currentCohortId: (state) => state.currentCohortId,
+    currentCohort: (state) => state.currentCohort,
     getCourseById: (state) => (id) => {
       return state.courses.find((course) => course.id === id);
     },
@@ -99,37 +102,38 @@ export default new Vuex.Store({
         };
       return topic.tasks;
     },
-    getCohortsInThisCourse: (state) => (id) => {
-      //go to cohorts, and check if they in courses with this id
-      let cohortsInCourse = state.cohorts.filter((cohort) => {
-        if (cohort.courses) {
-          return cohort.courses.some((courseId) => courseId == id);
-        } else {
-          return false;
-        }
-      });
-      return cohortsInCourse;
-    },
-    getOrganisationsInThisCourse: (state) => (id) => {
-      let organisationsInCourse = state.organisations.filter((organisation) => {
-        if (organisation.courses) {
-          return organisation.courses.some((courseId) => courseId == id);
-        } else {
-          return false;
-        }
-      });
-      return organisationsInCourse;
-    },
-    getPeopleInThisCourse: (state) => (id) => {
-      let peopleInCourse = state.people.filter((person) => {
-        if (person.assignedCourses) {
-          return person.assignedCourses.some((courseId) => courseId == id);
-        } else {
-          return false;
-        }
-      });
-      return peopleInCourse;
-    },
+    // getCohortsInThisCourse: (state) => (id) => {
+    //   //go to cohorts, and check if they in courses with this id
+    //   let cohortsInCourse = state.cohorts.filter((cohort) => {
+    //     if (cohort.courses) {
+    //       return cohort.courses.some((courseId) => courseId == id);
+    //     } else {
+    //       return false;
+    //     }
+    //   });
+    //   return cohortsInCourse;
+    // },
+    // getOrganisationsInThisCourse: (state) => (id) => {
+    //   let organisationsInCourse = state.organisations.filter((organisation) => {
+    //     if (organisation.courses) {
+    //       return organisation.courses.some((courseId) => courseId == id);
+    //     } else {
+    //       return false;
+    //     }
+    //   });
+    //   return organisationsInCourse;
+    // },
+    // TODO: people not binded so just gonna do a db call. See bindPeopleInCourse action (@ben thoughts?)
+    // getPeopleInThisCourse: (state) => (id) => {
+    //   let peopleInCourse = state.people.filter((person) => {
+    //     if (person.assignedCourses) {
+    //       return person.assignedCourses.some((courseId) => courseId == id);
+    //     } else {
+    //       return false;
+    //     }
+    //   });
+    //   return peopleInCourse;
+    // },
     getCoursesInThisCohort: (state) => (id) => {
       //go to cohorts, and check if they in courses with this id
       const cohort = state.cohorts.find((cohort) => cohort.id === id);
@@ -189,7 +193,7 @@ export default new Vuex.Store({
       state.currentTask = task;
     },
     setCurrentCohortId(state, cohortId) {
-      console.log('setting cohort id: ', cohortId)
+      console.log("setting cohort id: ", cohortId);
       state.currentCohortId = cohortId;
     },
     setCurrentCohort(state, cohort) {
@@ -208,11 +212,14 @@ export default new Vuex.Store({
       state.personsAssignedNodesForDisplay = newNodePositions;
     },
     setCohorts(state, cohorts) {
-      state.cohorts = cohorts
+      state.cohorts = cohorts;
     },
-    setOrganisations (state, orgs) {
-      state.organisations = orgs
-    }
+    setOrganisations(state, orgs) {
+      state.organisations = orgs;
+    },
+    setDarkMode(state, dark) {
+      state.darkMode = dark;
+    },
   },
   actions: {
     setUser({ commit }, user) {
@@ -319,16 +326,16 @@ export default new Vuex.Store({
     // ===== Firestore - BIND by USER
     async getPersonById({ commit }, id) {
       if (id) {
-        console.log('setting person: ', id)
+        console.log("setting person: ", id);
         await db
           .collection("people")
           .doc(id)
           .get()
           .then((doc) => {
-            commit("SET_PERSON", doc.data())
+            commit("SET_PERSON", doc.data());
           });
       } else {
-        commit("SET_PERSON", {})
+        commit("SET_PERSON", {});
       }
     },
     async getNodesByPersonId({ state }, personId) {
@@ -364,8 +371,8 @@ export default new Vuex.Store({
     },
     async getAssignedNodesByPersonId({ state }, personId) {
       const personsAssignedNodes = [];
-      
-      state.courses = []
+
+      state.courses = [];
       // get the courseId from assignedCourses
       const doc = await db.collection("people").doc(personId).get();
       // loop array of assigned courses
@@ -373,7 +380,6 @@ export default new Vuex.Store({
         for (const courseId of doc.data()?.assignedCourses) {
           // add assigned course to state.courses
           this.dispatch("getCourseFromFirestoreById", courseId);
-
 
           const subQuerySnapshot = await db
             .collection("courses")
@@ -587,63 +593,78 @@ export default new Vuex.Store({
       let person = await db.collection("people").doc(personId).get();
       person = {
         id: person.id,
-        ...person.data()
-      }
+        ...person.data(),
+      };
       return person;
     },
 
-    async getCohortsByPersonId ({ commit, dispatch }, person) {
-      await db.
-      collection("cohorts")
-      .where(person.accountType + "s", "array-contains", person.id)
-      .onSnapshot(querySnapShot => {
-        const cohorts = querySnapShot.docs.map(doc => {
-          return {
-            id: doc.id,
-            ...doc.data()
-          }
-        })
-        commit("setCohorts", cohorts)
-        dispatch("getOrganisationsByCohorts", cohorts)
-      })
-
+    async getCohortsByPersonId({ commit, dispatch }, person) {
+      await db
+        .collection("cohorts")
+        .where(person.accountType + "s", "array-contains", person.id)
+        .onSnapshot((querySnapShot) => {
+          const cohorts = querySnapShot.docs.map((doc) => {
+            return {
+              id: doc.id,
+              ...doc.data(),
+            };
+          });
+          commit("setCohorts", cohorts);
+          dispatch("getOrganisationsByCohorts", cohorts);
+        });
     },
 
-    async getOrganisationsByCohorts ({ commit }, cohorts) {
-      const orgs = []
-      const querySnapShot = await db.
-        collection("organisations")
+    async getOrganisationsByCohorts({ commit }, cohorts) {
+      const orgs = [];
+      const querySnapShot = await db
+        .collection("organisations")
         // .doc(cohort)
         .where("cohorts", "array-contains-any", cohorts)
         .get();
-      
-      console.log("snapshot: ", querySnapShot)
+
+      console.log("snapshot: ", querySnapShot);
       if (querySnapShot.docs.length) {
         for (const doc of querySnapShot.docs) {
-          console.log("doc: ", doc)
+          console.log("doc: ", doc);
           orgs.push(doc.data());
         }
       }
 
-      console.log('orgs: ', orgs)
-      commit("setOrganisations", orgs)
+      console.log("orgs: ", orgs);
+      commit("setOrganisations", orgs);
     },
-    resetState ({ state }) {
-      console.log("reset state")
+    resetState({ state }) {
+      console.log("reset state");
       let newState = {};
 
-      Object.keys(state).forEach(key => {
+      Object.keys(state).forEach((key) => {
         newState[key] = null; // or = initialState[key]
       });
 
       state.replaceState(newState);
-      console.log("state reset: ", state)
+      console.log("state reset: ", state);
     },
-    setCurrentCohort({commit}, cohort) {
-      return commit("setCurrentCohort", cohort)
+    setCurrentCohort({ commit }, cohort) {
+      return commit("setCurrentCohort", cohort);
     },
+    // bind the PEOPLE that are in a course
+    bindPeopleInCourse: firestoreAction(({ bindFirestoreRef }, courseId) => {
+      return bindFirestoreRef(
+        "peopleInCourse",
+        db
+          .collection("people")
+          .where("assignedCourses", "array-contains", courseId)
+      );
+    }),
+    // bind the COHORTS that are in a course
+    bindCohortsInCourse: firestoreAction(({ bindFirestoreRef }, courseId) => {
+      return bindFirestoreRef(
+        "cohortsInCourse",
+        db.collection("cohorts").where("courses", "array-contains", courseId)
+      );
+    }),
   },
-  plugins: [createPersistedState()]
+  plugins: [createPersistedState()],
 });
 
 // colour functions to colour nodes

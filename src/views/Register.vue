@@ -114,9 +114,9 @@ export default {
   mounted() {
     // hack to make active select white
     if (this.$vuetify.theme.isDark) {
-      this.$vuetify.theme.themes.dark.primary = "white";
+      this.$vuetify.theme.themes.dark.primary = "#ffffff"; // white
     } else {
-      this.$vuetify.theme.themes.dark.primary = "black";
+      this.$vuetify.theme.themes.dark.primary = "#000000"; // black
     }
   },
   methods: {

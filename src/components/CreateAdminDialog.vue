@@ -4,9 +4,7 @@
       <!-- CREATE BUTTON -->
       <template v-slot:activator="{ on, attrs }">
         <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on">
-          <v-icon left>
-            mdi-plus
-          </v-icon>
+          <v-icon left> mdi-plus </v-icon>
           CREATE ADMIN
         </v-btn>
       </template>
@@ -15,21 +13,29 @@
       <div class="create-dialog">
         <!-- HEADER -->
         <div class="dialog-header">
-          <p class="dialog-title">
-            Add Admin
-          </p>
+          <p class="dialog-title">Add Admin</p>
+          <div class="d-flex align-center">
+            <v-icon left color="missionAccent">mdi-information-variant</v-icon>
+            <p class="dialog-description">
+              *TODO: Description of what an admin is*
+            </p>
+          </div>
         </div>
         <div class="create-dialog-content">
-          <p class="input-description">Add Admin:</p>
+          <!-- <p class="input-description">Add Admin:</p> -->
           <v-autocomplete
             v-model="administrator"
             :items="people"
-            class="input-field text-lowercase"
-            solo
+            class="input-field my-6"
+            outlined
+            :dark="dark"
+            :light="!dark"
             chips
             item-text="firstName"
             item-value="id"
             clearable
+            label="Add admin"
+            color="missionAccent"
           >
             <template v-slot:selection="data">
               <v-chip
@@ -48,32 +54,40 @@
             </template>
             <template v-slot:item="data">
               <template>
-                <v-list-item-avatar v-if="data.item.image && data.item.image.url">
-                  <img :src="data.item.image.url">
+                <v-list-item-avatar
+                  v-if="data.item.image && data.item.image.url"
+                >
+                  <img :src="data.item.image.url" />
                 </v-list-item-avatar>
                 <v-list-item-content>
-                  <v-list-item-title v-html="data.item.firstName"></v-list-item-title>
-                  <v-list-item-subtitle v-html="data.item.email"></v-list-item-subtitle>
+                  <v-list-item-title
+                    v-html="data.item.firstName"
+                  ></v-list-item-title>
+                  <v-list-item-subtitle
+                    v-html="data.item.email"
+                  ></v-list-item-subtitle>
                 </v-list-item-content>
               </template>
             </template>
           </v-autocomplete>
           <v-row>
             <v-btn
-                class="ma-2"
-                :loading="addingAdmin"
-                :disabled="addingAdmin"
-                color="secondary"
-                @click="addAdmin()"
-              >
-                + Add Admin
+              class="ma-2"
+              :loading="addingAdmin"
+              :disabled="addingAdmin"
+              color="missionAccent"
+              @click="addAdmin()"
+              outlined
+            >
+              + Add Admin
             </v-btn>
             <v-btn
-                class="ma-2"
-                color="secondary"
-                @click="cancel()"
-              >
-                Cancel
+              class="ma-2"
+              outlined
+              :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
+              @click="cancel()"
+            >
+              Cancel
             </v-btn>
           </v-row>
         </div>
@@ -92,7 +106,6 @@
 </template>
 
 <script>
-
 import { mapState, mapGetters } from "vuex";
 import { functions } from "../store/firestoreConfig";
 
@@ -101,9 +114,12 @@ export default {
   computed: {
     ...mapState(["people"]),
     ...mapGetters(["user"]),
-    cohortView () {
-      return this.$route.name === "CohortView"
-    }
+    cohortView() {
+      return this.$route.name === "CohortView";
+    },
+    dark() {
+      return this.$vuetify.theme.isDark;
+    },
   },
   data: () => ({
     administrator: "",
@@ -116,23 +132,26 @@ export default {
     cancel() {
       this.dialog = false;
     },
-    addAdmin () {
+    addAdmin() {
       if (this.administrator) {
-        this.addingAdmin = true
-        const addAdminRole = functions.httpsCallable('addAdminRole')
-        addAdminRole(this.administrator).then(result => {
-          this.snackbarText = "admin role successfully added for " + this.administrator ;
-          this.snackbar = true;
-          this.addingAdmin = false
-          this.administrator = ""
-        }).catch(err => {
-          this.snackbarText = "something went wrong trying to add admin: " + err;
-          this.snackbar = true;
-          console.error(err)
-        })
-        
+        this.addingAdmin = true;
+        const addAdminRole = functions.httpsCallable("addAdminRole");
+        addAdminRole(this.administrator)
+          .then((result) => {
+            this.snackbarText =
+              "admin role successfully added for " + this.administrator;
+            this.snackbar = true;
+            this.addingAdmin = false;
+            this.administrator = "";
+          })
+          .catch((err) => {
+            this.snackbarText =
+              "something went wrong trying to add admin: " + err;
+            this.snackbar = true;
+            console.error(err);
+          });
       }
-    }
+    },
   },
 };
 </script>
@@ -152,6 +171,14 @@ export default {
     padding: 20px;
     text-transform: uppercase;
     border-bottom: 1px solid var(--v-missionAccent-base);
+
+    .dialog-description {
+      color: var(--v-missionAccent-base);
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      margin: 0;
+      font-style: italic;
+    }
   }
 }
 
@@ -164,6 +191,15 @@ export default {
   padding: 20px;
   text-transform: uppercase;
   width: 100%;
+
+  .input-field {
+    width: 100%;
+    text-align: center;
+    flex: none;
+    font-size: 0.9rem;
+    color: var(--v-missionAccent-base);
+    text-transform: none;
+  }
 }
 
 .input-description {

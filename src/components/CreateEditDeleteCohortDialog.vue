@@ -1,5 +1,8 @@
 <template>
-  <div :class="cohortView ? 'text-end':'text-center'" :align="cohortView ? 'end':'center'">
+  <div
+    :class="cohortView ? 'text-end' : 'text-center'"
+    :align="cohortView ? 'end' : 'center'"
+  >
     <v-dialog v-model="dialog" width="40%" light>
       <!-- CREATE BUTTON -->
       <template v-slot:activator="{ on, attrs }">
@@ -12,14 +15,10 @@
           color="cohortAccent"
           small
         >
-          <v-icon small>
-            mdi-pencil
-          </v-icon>
+          <v-icon small> mdi-pencil </v-icon>
         </v-btn>
         <v-btn v-else outlined color="baseAccent" v-bind="attrs" v-on="on">
-          <v-icon left>
-            mdi-plus
-          </v-icon>
+          <v-icon left> mdi-plus </v-icon>
           CREATE COHORT
         </v-btn>
       </template>
@@ -32,9 +31,7 @@
             {{ edit ? "Edit Cohort " + cohort.name : dialogTitle }}
           </p>
           <div class="d-flex align-center">
-            <v-icon left color="missionAccent"
-              >mdi-information-variant</v-icon
-            >
+            <v-icon left color="missionAccent">mdi-information-variant</v-icon>
             <p class="dialog-description">{{ dialogDescription }}</p>
           </div>
         </div>
@@ -43,52 +40,58 @@
           class="left-side"
           :style="cohort.name ? 'width:50%' : 'width:100%'"
         >
-          <div class="create-dialog-content">
+          <div class="create-dialog-content mt-4">
             <!-- NAME -->
             <!-- TITLE -->
-            <p class="input-description">Cohort Name:</p>
             <v-text-field
               class="input-field"
-              solo
+              outlined
+              :dark="dark"
+              :light="!dark"
               color="missionAccent"
               v-model="cohort.name"
-              background-color="white"
+              label="Cohort name"
             ></v-text-field>
 
             <!-- DESCRIPTION -->
-            <p class="input-description">Cohort Description:</p>
             <v-textarea
               class="input-field"
-              solo
+              outlined
+              :dark="dark"
+              :light="!dark"
               color="missionAccent"
               auto-grow
               clearable
               rows="1"
               v-model="cohort.description"
-              background-color="white"
+              label="Cohort description"
             ></v-textarea>
 
             <!-- IMAGE UPLOAD -->
-            <p class="input-description">Cohort Image:</p>
             <v-progress-linear
               color="missionAccent"
               :value="percentage"
             ></v-progress-linear>
             <v-file-input
               class="input-field"
-              solo
+              outlined
+              :dark="dark"
+              :light="!dark"
               color="missionAccent"
               accept="image/*"
               v-model="uploadedImage"
               @change="storeImage()"
               prepend-icon=""
+              label="Cohort image upload"
             ></v-file-input>
 
             <!-- ORGANISATION -->
             <p class="input-description">Organisation:</p>
             <v-select
               class="input-field"
-              solo
+              outlined
+              :dark="dark"
+              :light="!dark"
               v-model="cohort.organisation"
               :items="organisationsToSelect"
               item-text="name"
@@ -96,7 +99,7 @@
             >
             </v-select>
             <!-- Select teachers from list -->
-            <p class="input-description">Cohort teachers:</p>
+            <!-- <p class="input-description">Cohort teachers:</p>
             <v-autocomplete
               v-model="cohort.teachers"
               :search-input.sync="search"
@@ -104,7 +107,9 @@
               @change="search = ''"
               menu-props="closeOnContentClick"
               class="input-field text-lowercase"
-              solo
+              outlined
+              :dark="dark"
+              :light="!dark"
               chips
               item-text="email"
               item-value="id"
@@ -119,7 +124,10 @@
                   @click:close="remove(data.item)"
                 >
                   <template>
-                    <v-avatar v-if="data.item.image && data.item.image.url" left>
+                    <v-avatar
+                      v-if="data.item.image && data.item.image.url"
+                      left
+                    >
                       <v-img :src="data.item.image.url"></v-img>
                     </v-avatar>
                     {{ data.item.email }}
@@ -128,29 +136,36 @@
               </template>
               <template v-slot:item="data">
                 <template>
-                  <v-list-item-avatar v-if="data.item.image && data.item.image.url">
-                    <img :src="data.item.image.url">
+                  <v-list-item-avatar
+                    v-if="data.item.image && data.item.image.url"
+                  >
+                    <img :src="data.item.image.url" />
                   </v-list-item-avatar>
                   <v-list-item-content>
-                    <v-list-item-title v-html="data.item.firstName"></v-list-item-title>
-                    <v-list-item-subtitle v-html="data.item.email"></v-list-item-subtitle>
+                    <v-list-item-title
+                      v-html="data.item.firstName"
+                    ></v-list-item-title>
+                    <v-list-item-subtitle
+                      v-html="data.item.email"
+                    ></v-list-item-subtitle>
                   </v-list-item-content>
                 </template>
               </template>
               <template v-slot:no-data>
-                <CreateAccountDialog accountType="teacher" @addAccount="addTeacher(teacher)"/>
+                <CreateAccountDialog
+                  accountType="teacher"
+                  :addingToCohort="true"
+                  @addAccount="addTeacher(teacher)"
+                />
               </template>
-            </v-autocomplete>
+            </v-autocomplete> -->
           </div>
           <!-- End create-dialog-content -->
         </div>
         <!-- End of left-side -->
 
         <!-- RIGHT SIDE -->
-        <div
-          class="right-side"
-          :style="cohort.name ? 'width:50%' : 'width:0%'"
-        >
+        <div class="right-side" :style="cohort.name ? 'width:50%' : 'width:0%'">
           <!-- Cohort Preview -->
           <div id="cohort-info" v-if="cohort.name">
             <h2 class="cohort-label">Cohort</h2>
@@ -182,10 +197,10 @@
             class="mr-2"
             :loading="loading"
             :disabled="disabled"
+            :dark="dark"
+            :light="!dark"
           >
-            <v-icon left>
-              mdi-check
-            </v-icon>
+            <v-icon left> mdi-check </v-icon>
             UPDATE
           </v-btn>
           <v-btn
@@ -197,10 +212,10 @@
             :loading="loading"
             :disabled="disabled"
             width="40%"
+            :dark="dark"
+            :light="!dark"
           >
-            <v-icon left>
-              mdi-check
-            </v-icon>
+            <v-icon left> mdi-check </v-icon>
             SAVE
           </v-btn>
 
@@ -212,10 +227,10 @@
             @click="deleteDialog()"
             class="ml-2"
             width="40%"
+            :dark="dark"
+            :light="!dark"
           >
-            <v-icon left>
-              mdi-delete
-            </v-icon>
+            <v-icon left> mdi-delete </v-icon>
             DELETE
           </v-btn>
 
@@ -226,10 +241,10 @@
             @click="close"
             :disabled="disabled || loading"
             width="40%"
+            :dark="dark"
+            :light="!dark"
           >
-            <v-icon left>
-              mdi-close
-            </v-icon>
+            <v-icon left> mdi-close </v-icon>
             Cancel
           </v-btn>
         </div>
@@ -243,13 +258,9 @@
       <div class="create-dialog">
         <!-- HEADER -->
         <div class="dialog-header py-10">
-          <p class="dialog-title">
-            <strong>Warning!</strong> Delete Cohort?
-          </p>
+          <p class="dialog-title"><strong>Warning!</strong> Delete Cohort?</p>
           <div class="d-flex align-start">
-            <v-icon left color="missionAccent"
-              >mdi-information-variant</v-icon
-            >
+            <v-icon left color="missionAccent">mdi-information-variant</v-icon>
             <p class="dialog-description">
               Are you sure you want to <strong>DELETE</strong> this
               <span class="cohort-text">{{ cohort.name }} Cohort</span>?
@@ -275,9 +286,7 @@
             class="ml-2"
             :loading="deleting"
           >
-            <v-icon left>
-              mdi-delete
-            </v-icon>
+            <v-icon left> mdi-delete </v-icon>
             DELETE
           </v-btn>
 
@@ -288,9 +297,7 @@
             @click="cancelDeleteDialog"
             :disabled="disabled || loading"
           >
-            <v-icon left>
-              mdi-close
-            </v-icon>
+            <v-icon left> mdi-close </v-icon>
             Cancel
           </v-btn>
         </div>
@@ -314,7 +321,7 @@ export default {
   props: ["edit", "cohortToEdit"],
   components: {
     Organisation,
-    CreateAccountDialog
+    CreateAccountDialog,
   },
   data: () => ({
     administrator: "",
@@ -338,29 +345,39 @@ export default {
         name: "",
         url: "",
       },
-      teachers: []
+      teachers: [],
     },
     uploadedImage: null,
     percentage: 0,
     search: "",
   }),
   watch: {
-    dialog (newVal) {
+    dialog(newVal) {
       if (newVal && this.edit) {
-        this.cohort = this.cohortToEdit 
-      } 
+        this.cohort = this.cohortToEdit;
+      }
+    },
+  },
+  mounted() {
+    // hack to make active select white
+    if (this.$vuetify.theme.isDark) {
+      this.$vuetify.theme.themes.dark.primary = "#ffffff"; // white
+    } else {
+      this.$vuetify.theme.themes.dark.primary = "#000000"; // black
     }
   },
   computed: {
     ...mapState(["organisations", "people"]),
     ...mapGetters(["getOrganisationById", "user"]),
-    teachers () {
-      const teachers = this.people.filter(person => person.accountType === "teacher")
-      return teachers
+    teachers() {
+      const teachers = this.people.filter(
+        (person) => person.accountType === "teacher"
+      );
+      return teachers;
     },
-    cohortView () {
-      console.log('route: ', this.$route)
-      return this.$route.name === "CohortView"
+    cohortView() {
+      console.log("route: ", this.$route);
+      return this.$route.name === "CohortView";
     },
     organisationsToSelect() {
       return [{ name: "none", id: 0 }, ...this.organisations];
@@ -369,19 +386,22 @@ export default {
     imgUrl() {
       if (!this.uploadedImage) return;
       return URL.createObjectURL(this.uploadedImage);
-    }
+    },
+    dark() {
+      return this.$vuetify.theme.isDark;
+    },
   },
 
   methods: {
-    addTeacher (teacher) {
-      return this.cohort.teachers.push(teacher)
+    addTeacher(teacher) {
+      return this.cohort.teachers.push(teacher);
     },
-    toggleTeacherDialog () {
-      this.teacherDialog = !this.teacherDialog
+    toggleTeacherDialog() {
+      this.teacherDialog = !this.teacherDialog;
     },
-    remove (item) {
-      let index = this.cohort.teachers.findIndex(n => item.id === n)
-      if (index >= 0) this.cohort.teachers.splice(index, 1)
+    remove(item) {
+      let index = this.cohort.teachers.findIndex((n) => item.id === n);
+      if (index >= 0) this.cohort.teachers.splice(index, 1);
     },
     close() {
       this.dialog = false;
@@ -397,25 +417,25 @@ export default {
               name: "",
               url: "",
             },
-            teachers: []
+            teachers: [],
           },
-        }
+        };
       }
     },
     saveCohort(cohort) {
-      this.loading = true;      
+      this.loading = true;
       // Add a new document in collection "cohorts"
       db.collection("cohorts")
         .add(cohort)
         .then((docRef) => {
-          this.close()       
+          this.close();
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
-      })
+        });
     },
     camelize(str) {
-      return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
+      return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {
         if (+match === 0) return ""; // or if (/\s+/.test(match)) for white spaces
         return index === 0 ? match.toLowerCase() : match.toUpperCase();
       });
@@ -635,6 +655,8 @@ export default {
     text-align: center;
     flex: none;
     font-size: 0.9rem;
+    color: var(--v-missionAccent-base);
+    text-transform: none;
   }
 }
 

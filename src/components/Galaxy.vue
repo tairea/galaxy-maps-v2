@@ -114,7 +114,9 @@ export default {
               background: "grey",
             },
           },
-          font: { color: "white" },
+          font: {
+            color: "white",
+          },
         },
         groups: {
           // useDefaultGroups: false,
@@ -172,14 +174,29 @@ export default {
       "personsEdges",
       "personsAssignedNodesForDisplay",
       "personsAssignedEdges",
+      "darkMode",
       // "topics",
       // "personsTopics",
     ]),
     ...mapGetters(["getCourseById", "user"]),
+    isDark() {
+      return this.$vuetify.theme.isDark;
+    },
   },
-
   async mounted() {
     this.setNodesToDisplay();
+  },
+  watch: {
+    darkMode(dark) {
+      console.log("darkMode: ", dark);
+      if (dark == false) {
+        this.makeGalaxyLabelsColour(
+          this.$vuetify.theme.themes.light.baseAccent
+        );
+      } else {
+        this.makeGalaxyLabelsColour("#ffffff");
+      }
+    },
   },
   methods: {
     async setNodesToDisplay() {
@@ -234,7 +251,15 @@ export default {
 
       // short timer to give time to load all before zoom
       if (this.nodesToDisplay.length > 0) {
-        setTimeout(() => this.zoomToNodes(this.nodesToDisplay), 250);
+        setTimeout(() => {
+          this.zoomToNodes(this.nodesToDisplay);
+          // set label colours (important if in light mode)
+          this.makeGalaxyLabelsColour(
+            this.$vuetify.theme.isDark
+              ? "#fff"
+              : this.$vuetify.theme.themes.light.baseAccent
+          );
+        }, 250);
         // setTimeout(() => this.fitToAllNodes(), 250);
       }
     },
@@ -479,6 +504,12 @@ export default {
     togglePopup() {
       this.popupPreview = !this.popupPreview;
       this.zoomToNodes(this.nodesToDisplay);
+    },
+    makeGalaxyLabelsColour(colour) {
+      var options = { ...this.network.options };
+      options.nodes.font.color = colour;
+      this.$refs.network.setOptions(options);
+      this.$refs.network.fit();
     },
   },
 };
