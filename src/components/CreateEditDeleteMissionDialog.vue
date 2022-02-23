@@ -50,7 +50,8 @@
               <v-text-field
                 class="input-field"
                 outlined
-                dark
+                :dark="dark"
+                :light="!dark"
                 color="missionAccent"
                 v-model="task.title"
                 label="Mission Title"
@@ -61,7 +62,8 @@
               <v-textarea
                 class="input-field"
                 outlined
-                dark
+                :dark="dark"
+                :light="!dark"
                 color="missionAccent"
                 auto-grow
                 clearable
@@ -75,7 +77,8 @@
               <v-text-field
                 class="input-field"
                 outlined
-                dark
+                :dark="dark"
+                :light="!dark"
                 color="missionAccent"
                 v-model="task.duration"
                 label="Duration"
@@ -86,7 +89,8 @@
               <v-text-field
                 class="input-field"
                 outlined
-                dark
+                :dark="dark"
+                :light="!dark"
                 color="missionAccent"
                 v-model="task.video"
                 label="Video"
@@ -97,7 +101,8 @@
               <v-text-field
                 class="input-field"
                 outlined
-                dark
+                :dark="dark"
+                :light="!dark"
                 color="missionAccent"
                 v-model="task.slides"
                 label="slides"
@@ -131,7 +136,8 @@
                 v-model="task.submissionRequired"
                 class="ma-0 pa-0 submission-colour"
                 color="cohortAccent"
-                dark
+                :dark="dark"
+                :light="!dark"
               >
                 <template v-slot:label>
                   <span class="dialog-description submission-colour"
@@ -169,7 +175,8 @@
                   v-model="task.submissionInstructions"
                   class="ma-0 pa-0 submission-colour"
                   outlined
-                  dark
+                  :dark="dark"
+                  :light="!dark"
                   color="cohortAccent"
                 ></v-textarea>
               </div>
@@ -346,6 +353,9 @@ export default {
   },
   computed: {
     ...mapState(["currentCourseId"]),
+    dark() {
+      return this.$vuetify.theme.isDark;
+    },
   },
   methods: {
     saveTask(task) {

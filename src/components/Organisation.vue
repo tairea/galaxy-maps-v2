@@ -1,7 +1,12 @@
 <template>
   <v-container class="pl-0">
-    <span v-if="cohortView" class="caption" style="color: var(--v-cohortAccent-base);">Organisation</span>
-    <v-row>
+    <span
+      v-if="cohortView"
+      class="caption"
+      style="color: var(--v-cohortAccent-base)"
+      >Organisation</span
+    >
+    <v-row :class="cohortView ? 'my-1' : ''">
       <v-col
         class="d-flex justify-start align-center cursor"
         @click="editOrg()"
@@ -29,12 +34,11 @@ export default {
   data() {
     return {};
   },
-  mounted() {
-  },
+  mounted() {},
   computed: {
-    cohortView () {
-      return this.$route.name === "CohortView"
-    }
+    cohortView() {
+      return this.$route.name === "CohortView";
+    },
   },
   methods: {
     editOrg() {
@@ -61,16 +65,19 @@ export default {
   // height: 100px;
   border-radius: 50%;
   // object-fit: cover;
-  
 }
 
 .imagePlaceholder {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background-color: rgba(200, 200, 200, 0.3);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: rgba(200, 200, 200, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.overline {
+  line-height: 1rem !important;
+}
 </style>

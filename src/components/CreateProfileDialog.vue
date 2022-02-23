@@ -5,14 +5,13 @@
       <div class="create-dialog">
         <!-- HEADER -->
         <div class="dialog-header">
-          <p class="mb-0">
-            Update profile
-          </p>
+          <p class="mb-0">Update profile</p>
         </div>
         <div class="create-dialog-content pt-0">
           <v-form ref="form" v-model="valid" lazy-validation>
             <v-text-field
-              dark
+              :dark="dark"
+              :light="!dark"
               type="text"
               v-model="profile.firstName"
               label="First Name"
@@ -22,7 +21,8 @@
               required
             ></v-text-field>
             <v-text-field
-              dark
+              :dark="dark"
+              :light="!dark"
               type="text"
               v-model="profile.lastName"
               label="Last Name"
@@ -32,7 +32,8 @@
               required
             ></v-text-field>
             <v-text-field
-              dark
+              :dark="dark"
+              :light="!dark"
               type="email"
               v-model="profile.email"
               label="E-mail"
@@ -43,7 +44,8 @@
               class="custom-input"
             ></v-text-field>
             <v-text-field
-              dark
+              :dark="dark"
+              :light="!dark"
               type="password"
               v-model="password"
               label="Password"
@@ -54,7 +56,8 @@
               class="custom-input"
             ></v-text-field>
             <v-text-field
-              dark
+              :dark="dark"
+              :light="!dark"
               type="password"
               v-model="confirmPassword"
               label="Confirm password"
@@ -93,7 +96,7 @@
                 style="object-fit: cover"
               />
               <!-- <v-icon v-if="hover">mdi-pencil</v-icon> -->
-              <v-icon dark v-else>mdi-account</v-icon>
+              <v-icon :dark="dark" :light="!dark" v-else>mdi-account</v-icon>
               <v-fade-transition>
                 <v-overlay v-if="onhover" absolute color="baseAccent">
                   <v-icon small @click="onButtonClick">mdi-pencil</v-icon>
@@ -137,11 +140,9 @@
 </template>
 
 <script>
-
 import { db, storage } from "../store/firestoreConfig";
-import { mapGetters, mapActions } from "vuex"
+import { mapGetters, mapActions } from "vuex";
 import firebase from "firebase";
-
 
 export default {
   name: "CreateProfileDialog",
@@ -154,7 +155,7 @@ export default {
       firstName: "",
       lastName: "",
       email: "",
-      image: {}
+      image: {},
     },
     password: "",
     confirmPassword: "",
@@ -168,55 +169,63 @@ export default {
     ],
     passwordRules: [
       (v) => !!v || "Password is required",
-      (v) => (v && v.length >= 8) || 'Password must have a minimum of 8 characters',
+      (v) =>
+        (v && v.length >= 8) || "Password must have a minimum of 8 characters",
     ],
   }),
   watch: {
-    person () {
+    person() {
       Object.assign(this.profile, this.person);
-    }
+    },
   },
   computed: {
-    ...mapGetters(['user', 'person']),
-    confirmPasswordRules () {
+    ...mapGetters(["user", "person"]),
+    confirmPasswordRules() {
       return [
-        (v) => !!v || 'Please confirm password',
-        (v) => v === this.password || 'The password confirmation does not match.',
-      ]
-    }, 
-      
+        (v) => !!v || "Please confirm password",
+        (v) =>
+          v === this.password || "The password confirmation does not match.",
+      ];
+    },
+    dark() {
+      return this.$vuetify.theme.isDark;
+    },
   },
   methods: {
-    ...mapActions(['getPersonById']),
+    ...mapActions(["getPersonById"]),
     cancel() {
       this.dialog = false;
-      this.$refs.form.reset()
-      this.person.id = ""
-      this.displayName = ""
+      this.$refs.form.reset();
+      this.person.id = "";
+      this.displayName = "";
     },
-    update () {
-      this.$refs.form.validate()
-      if (!this.profile.email || !this.confirmPassword) return
-      this.updatingAccount = true
+    update() {
+      this.$refs.form.validate();
+      if (!this.profile.email || !this.confirmPassword) return;
+      this.updatingAccount = true;
 
       // update user password
       this.updatePassword()
         .then(() => {
           // update profile with user names
-          this.updateProfile(this.profile)
-        }).then(() => {
+          this.updateProfile(this.profile);
+        })
+        .then(() => {
           // login and navigate to my cohorts
-          this.$emit('login')
-        }).catch(err => {
-          console.error("something went wrong: ", err)
-      })   
+          this.$emit("login");
+        })
+        .catch((err) => {
+          console.error("something went wrong: ", err);
+        });
     },
-    updatePassword () {
+    updatePassword() {
       const user = firebase.auth().currentUser;
-      return user.updatePassword(this.confirmPassword).then(() => {
-      }).catch((error) => {
-        console.error("something went wrong updating password: ", error)
-      });
+      return user
+        .updatePassword(this.confirmPassword)
+        .then(() => {})
+        .catch((error) => {
+          console.error("something went wrong updating password: ", error);
+        });
     },
     onButtonClick() {
       this.$refs.uploader?.click();
@@ -321,5 +330,4 @@ export default {
   margin: 0;
   font-style: italic;
 }
-
 </style>

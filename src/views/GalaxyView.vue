@@ -7,9 +7,8 @@
       <AssignedInfo
         v-if="person.accountType != 'student'"
         :assignCohorts="true"
-        :cohorts="getCohortsInThisCourse(courseId)"
-        :organisations="getOrganisationsInThisCourse(courseId)"
-        :people="getPeopleInThisCourse(courseId)"
+        :people="peopleInCourse"
+        :cohorts="cohortsInCourse"
         @snackbarToggle="snackbarToggle($event)"
       />
     </div>
@@ -155,6 +154,11 @@ export default {
         });
     }
 
+    // bind assigned people in this course
+    await this.$store.dispatch("bindPeopleInCourse", this.courseId);
+    // bind assigned cohorts in this course
+    await this.$store.dispatch("bindCohortsInCourse", this.courseId);
+
     console.log("courseId", this.courseId);
     if (this.courseId) {
       return;
@@ -175,13 +179,14 @@ export default {
     };
   },
   computed: {
-    ...mapState(["currentCourseId", "currentCourseNodes", "person"]),
-    ...mapGetters([
-      "getCourseById",
-      "getCohortsInThisCourse",
-      "getOrganisationsInThisCourse",
-      "getPeopleInThisCourse",
+    ...mapState([
+      "currentCourseId",
+      "currentCourseNodes",
+      "person",
+      "peopleInCourse",
+      "cohortsInCourse",
     ]),
+    ...mapGetters(["getCourseById"]),
   },
   methods: {
     pathDependingOnAccountType() {

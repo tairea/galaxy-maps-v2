@@ -108,6 +108,7 @@ export default {
     ...mapActions(["getPersonById"]),
     changeTheme() {
       this.$vuetify.theme.dark = this.darkSwitch;
+      this.$store.commit("setDarkMode", this.$vuetify.theme.isDark);
     },
     logout() {
       firebase
@@ -117,6 +118,7 @@ export default {
           // alert("Successfully signed out");
           this.snackbarMsg = "Successfully signed out";
           this.snackbar = true;
+          this.resetState();
           this.$router.push("/login");
         })
         .catch((error) => {
@@ -125,6 +127,16 @@ export default {
           this.snackbar = true;
           this.$router.push("/");
         });
+    },
+    resetState() {
+      let state = this.$store.state;
+      let newState = {};
+
+      Object.keys(state).forEach((key) => {
+        newState[key] = null; // or = initialState[key]
+      });
+      delete newstate.user;
+      this.$store.replaceState(newState);
     },
     onButtonClick() {
       this.$refs.uploader?.click();

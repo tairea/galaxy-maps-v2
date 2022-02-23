@@ -169,6 +169,12 @@ export default {
     // zoom fit on load
     if (this.$refs.network.nodes.length > 0) {
       setTimeout(() => this.zoomToNodes(this.$refs.network.nodes), 250);
+      // set label colours (important if in light mode)
+      this.makeGalaxyLabelsColour(
+        this.$vuetify.theme.isDark
+          ? "#fff"
+          : this.$vuetify.theme.themes.light.baseAccent
+      );
     }
   },
   beforeDestroy() {
@@ -248,7 +254,7 @@ export default {
     },
     addNodeMode() {
       this.active = true;
-      this.addingNode = true; 
+      this.addingNode = true;
       // this.$emit("toggleAddNodeButton")
       console.log("add node mode");
       this.$emit("setUiMessage", "Click on the map to add a node");
@@ -263,14 +269,14 @@ export default {
       this.addingEdge = true;
     },
     addNode(data) {
-      console.log('click add node')
+      console.log("click add node");
       if (!this.active) return;
       console.log("node added", data);
       const newNodeId = data.properties.items[0];
       const newNode = this.$refs.network.getNode(newNodeId);
       console.log("newNode", newNode);
       this.$emit("add-node", newNode);
-      this.addingNode = false
+      this.addingNode = false;
     },
     addEdge(data) {
       // if (!this.active) return; // this was breaking edge saving. why was there?
@@ -294,7 +300,7 @@ export default {
         });
     },
     click(data) {
-      if (this.addingNode || this.addingEdge) return
+      if (this.addingNode || this.addingEdge) return;
       if (data.edges.length === 0 && data.nodes.length === 0) {
         this.deselectNode();
       }
@@ -514,6 +520,12 @@ export default {
         nodes: nodeIds,
         animation: true,
       });
+    },
+    makeGalaxyLabelsColour(colour) {
+      var options = { ...this.network.options };
+      options.nodes.font.color = colour;
+      this.$refs.network.setOptions(options);
+      this.$refs.network.fit();
     },
   },
 };

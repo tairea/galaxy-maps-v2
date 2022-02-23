@@ -7,35 +7,14 @@
         <p class="info-panel-label mb-2">
           <span class="galaxyColour">Galaxy:</span>
           <br />
-          <span style="color: white">{{ course.title }}</span>
+          <span>{{ course.title }}</span>
         </p>
         <v-img
           v-if="course.image.url"
           class="galaxy-image"
           :src="course.image.url"
         ></v-img>
-        <!-- <p class="info-panel-label">
-          X: <span style="color: white">{{ currentNode.x }}</span>
-        </p>
-        <p class="info-panel-label">
-          Y: <span style="color: white">{{ currentNode.y }}</span>
-        </p> -->
       </div>
-
-      <!-- <v-btn
-        class="map-button"
-        fab
-        dark
-        small
-        color="baseAccent"
-        outlined
-        tile
-        title="Edit"
-        @click="routeToGalaxyEdit"
-      >
-        <v-icon>mdi-pencil</v-icon>
-      </v-btn> -->
-
       <v-btn
         text
         x-small
@@ -55,9 +34,15 @@
             :src="course.contentBy.image.url"
           ></v-img>
         </div>
+        <div v-else-if="course.contentBy.personId">
+          <v-img
+            class="contentBy-image mb-2"
+            :src="getPersonsImage(course.contentBy.personId)"
+          ></v-img>
+        </div>
         <p class="ma-0">Content By:</p>
         <a :href="course.contentBy.source"
-          ><span style="color: white">{{ course.contentBy.name }}</span></a
+          ><span>{{ course.contentBy.name }}</span></a
         >
       </div>
       <div class="right">
@@ -67,8 +52,14 @@
             :src="course.mappedBy.image.url"
           ></v-img>
         </div>
+        <div v-else-if="course.mappedBy.personId">
+          <v-img
+            class="mappedBy-image"
+            :src="getPersonsImage(course.mappedBy.personId)"
+          ></v-img>
+        </div>
         <p class="ma-0">Mapped By:</p>
-        <span style="color: white">{{ course.mappedBy.name }}</span>
+        <span>{{ course.mappedBy.name }}</span>
       </div>
     </div>
 
@@ -89,7 +80,8 @@
 
         <v-btn
           class="view-ss-button pa-5"
-          dark
+          :dark="dark"
+          :light="!dark"
           small
           color="missionAccent"
           outlined
@@ -173,6 +165,9 @@ export default {
   },
   computed: {
     ...mapState(["person"]),
+    dark() {
+      return this.$vuetify.theme.isDark;
+    },
   },
   data() {
     return {
@@ -292,6 +287,15 @@ export default {
         },
       });
     },
+
+    async getPersonsImage(personId) {
+      const person = await this.$store.dispatch(
+        "getPersonByIdFromDB",
+        personId
+      );
+      console.log("getting person for image: ", person.image.url);
+      return person.image.url;
+    },
   },
 };
 </script>
@@ -316,13 +320,6 @@ export default {
 
   .galaxy-image {
     width: 100%;
-  }
-
-  .contentBy-image {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    object-fit: cover;
   }
 
   .close-button {
@@ -377,6 +374,16 @@ export default {
   }
   .ss-details {
     padding: 20px;
+
+    .ss-makers {
+      .contentBy-image,
+      .mappedBy-image {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+    }
   }
 }
 

@@ -44,7 +44,8 @@
                 <!-- TITLE -->
                 <!-- <p class="dialog-description">Galaxy Name:</p> -->
                 <v-text-field
-                  dark
+                  :dark="dark"
+                  :light="!dark"
                   class="input-field"
                   outlined
                   color="missionAccent"
@@ -55,7 +56,8 @@
                 <!-- DESCRIPTION -->
                 <!-- <p class="dialog-description">Galaxy Description:</p> -->
                 <v-textarea
-                  dark
+                  :dark="dark"
+                  :light="!dark"
                   class="input-field"
                   outlined
                   color="missionAccent"
@@ -75,7 +77,8 @@
                 <v-file-input
                   class="input-field"
                   outlined
-                  dark
+                  :dark="dark"
+                  :light="!dark"
                   color="missionAccent"
                   accept="image/*"
                   v-model="uploadedImage"
@@ -90,7 +93,8 @@
                   <v-checkbox
                     v-model="notAuthor"
                     dense
-                    dark
+                    :dark="dark"
+                    :light="!dark"
                     color="missionAccent"
                     class="author-checkbox ma-0"
                     hide-details
@@ -119,7 +123,8 @@
                     outlined
                     color="missionAccent"
                     v-model="course.contentBy.name"
-                    dark
+                    :dark="dark"
+                    :light="!dark"
                     label="Name of content creator"
                   ></v-text-field>
 
@@ -132,7 +137,8 @@
                   <v-file-input
                     class="input-field"
                     outlined
-                    dark
+                    :dark="dark"
+                    :light="!dark"
                     color="missionAccent"
                     accept="image/*"
                     v-model="authorImage"
@@ -148,7 +154,8 @@
                   <v-text-field
                     class="input-field"
                     outlined
-                    dark
+                    :dark="dark"
+                    :light="!dark"
                     color="missionAccent"
                     v-model="course.contentBy.source"
                     label="Source URL of original content"
@@ -328,6 +335,9 @@ export default {
   }),
   computed: {
     ...mapGetters(["person"]),
+    dark() {
+      return this.$vuetify.theme.isDark;
+    },
   },
   async mounted() {
     if (this.courseToEdit) {

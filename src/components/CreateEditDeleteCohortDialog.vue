@@ -1,6 +1,9 @@
 <template>
-  <div :class="cohortView ? 'text-end':'text-center'" :align="cohortView ? 'end':'center'">
-    <v-dialog v-model="dialog" width="45%" light  content-class="no-overflow">
+  <div
+    :class="cohortView ? 'text-end' : 'text-center'"
+    :align="cohortView ? 'end' : 'center'"
+  >
+    <v-dialog v-model="dialog" width="40%" light content-class="no-overflow">
       <!-- CREATE BUTTON -->
       <template v-slot:activator="{ on, attrs }">
         <v-btn
@@ -12,14 +15,10 @@
           color="baseAccent"
           small
         >
-          <v-icon small>
-            mdi-pencil
-          </v-icon>
+          <v-icon small> mdi-pencil </v-icon>
         </v-btn>
         <v-btn v-else outlined color="baseAccent" v-bind="attrs" v-on="on">
-          <v-icon left>
-            mdi-plus
-          </v-icon>
+          <v-icon left> mdi-plus </v-icon>
           CREATE COHORT
         </v-btn>
       </template>
@@ -32,9 +31,7 @@
             {{ edit ? "Edit Cohort " + cohort.name : dialogTitle }}
           </p>
           <div class="d-flex align-center">
-            <v-icon left color="missionAccent"
-              >mdi-information-variant</v-icon
-            >
+            <v-icon left color="missionAccent">mdi-information-variant</v-icon>
             <p class="dialog-description">{{ dialogDescription }}</p>
           </div>
         </div>
@@ -43,10 +40,9 @@
           class="left-side"
           :style="cohort.name ? 'width:50%' : 'width:100%'"
         >
-          <div class="create-dialog-content">
+          <div class="create-dialog-content mt-4">
             <!-- NAME -->
             <!-- TITLE -->
-            <p class="input-description">Cohort Name:</p>
             <v-text-field
               class="input-field"
               outlined
@@ -54,10 +50,10 @@
               :light="!dark"
               color="missionAccent"
               v-model="cohort.name"
+              label="Cohort name"
             ></v-text-field>
 
             <!-- DESCRIPTION -->
-            <p class="input-description">Cohort Description:</p>
             <v-textarea
               class="input-field"
               outlined
@@ -68,10 +64,10 @@
               clearable
               rows="1"
               v-model="cohort.description"
+              label="Cohort description"
             ></v-textarea>
 
             <!-- IMAGE UPLOAD -->
-            <p class="input-description">Cohort Image:</p>
             <v-progress-linear
               color="missionAccent"
               :value="percentage"
@@ -86,6 +82,7 @@
               v-model="uploadedImage"
               @change="storeImage()"
               prepend-icon=""
+              label="Cohort image upload"
             ></v-file-input>
 
             <div v-if="user.data.admin">
@@ -159,10 +156,7 @@
         <!-- End of left-side -->
 
         <!-- RIGHT SIDE -->
-        <div
-          class="right-side"
-          :style="cohort.name ? 'width:50%' : 'width:0%'"
-        >
+        <div class="right-side" :style="cohort.name ? 'width:50%' : 'width:0%'">
           <!-- Cohort Preview -->
           <div id="cohort-info" v-if="cohort.name">
             <h2 class="cohort-label">Cohort</h2>
@@ -195,10 +189,10 @@
             :loading="loading"
             :disabled="disabled"
             width="30%" 
+            :dark="dark"
+            :light="!dark"
           >
-            <v-icon left>
-              mdi-check
-            </v-icon>
+            <v-icon left> mdi-check </v-icon>
             UPDATE
           </v-btn>
           <v-btn
@@ -210,10 +204,10 @@
             :loading="loading"
             :disabled="disabled"
             width="30%"
+            :dark="dark"
+            :light="!dark"
           >
-            <v-icon left>
-              mdi-check
-            </v-icon>
+            <v-icon left> mdi-check </v-icon>
             SAVE
           </v-btn>
 
@@ -225,10 +219,10 @@
             @click="deleteDialog()"
             class="mx-2"
             width="30%"
+            :dark="dark"
+            :light="!dark"
           >
-            <v-icon left>
-              mdi-delete
-            </v-icon>
+            <v-icon left> mdi-delete </v-icon>
             DELETE
           </v-btn>
 
@@ -239,10 +233,10 @@
             @click="close"
             :disabled="disabled || loading"
             width="30%"
+            :dark="dark"
+            :light="!dark"
           >
-            <v-icon left>
-              mdi-close
-            </v-icon>
+            <v-icon left> mdi-close </v-icon>
             Cancel
           </v-btn>
         </v-row>
@@ -256,13 +250,9 @@
       <div class="create-dialog">
         <!-- HEADER -->
         <div class="dialog-header py-10">
-          <p class="dialog-title">
-            <strong>Warning!</strong> Delete Cohort?
-          </p>
+          <p class="dialog-title"><strong>Warning!</strong> Delete Cohort?</p>
           <div class="d-flex align-start">
-            <v-icon left color="missionAccent"
-              >mdi-information-variant</v-icon
-            >
+            <v-icon left color="missionAccent">mdi-information-variant</v-icon>
             <p class="dialog-description">
               Are you sure you want to <strong>DELETE</strong> this
               <span class="cohort-text">{{ cohort.name }} Cohort</span>?
@@ -288,9 +278,7 @@
             class="ml-2"
             :loading="deleting"
           >
-            <v-icon left>
-              mdi-delete
-            </v-icon>
+            <v-icon left> mdi-delete </v-icon>
             DELETE
           </v-btn>
 
@@ -301,9 +289,7 @@
             @click="cancelDeleteDialog"
             :disabled="disabled || loading"
           >
-            <v-icon left>
-              mdi-close
-            </v-icon>
+            <v-icon left> mdi-close </v-icon>
             Cancel
           </v-btn>
         </div>
@@ -327,7 +313,7 @@ export default {
   props: ["edit", "cohortToEdit"],
   components: {
     Organisation,
-    CreateAccountDialog
+    CreateAccountDialog,
   },
   data: () => ({
     administrator: "",
@@ -351,7 +337,7 @@ export default {
         name: "",
         url: "",
       },
-      teachers: []
+      teachers: [],
     },
     uploadedImage: null,
     percentage: 0,
@@ -359,9 +345,14 @@ export default {
   }),
   mounted () {
     if (this.user.data.admin) this.bindAllPeople()
+    if (this.$vuetify.theme.isDark) {
+      this.$vuetify.theme.themes.dark.primary = "#ffffff"; // white
+    } else {
+      this.$vuetify.theme.themes.dark.primary = "#000000"; // black
+    }
   },
   watch: {
-    dialog (newVal) {
+    dialog(newVal) {
       if (newVal && this.edit) {
         Object.assign(this.cohort, this.cohortToEdit)
       } 
@@ -386,7 +377,10 @@ export default {
     imgUrl() {
       if (!this.uploadedImage) return;
       return URL.createObjectURL(this.uploadedImage);
-    }
+    },
+    dark() {
+      return this.$vuetify.theme.isDark;
+    },
   },
 
   methods: {
@@ -394,9 +388,9 @@ export default {
     toggleTeacherDialog () {
       this.teacherDialog = !this.teacherDialog
     },
-    remove (item) {
-      let index = this.cohort.teachers.findIndex(n => item.id === n)
-      if (index >= 0) this.cohort.teachers.splice(index, 1)
+    remove(item) {
+      let index = this.cohort.teachers.findIndex((n) => item.id === n);
+      if (index >= 0) this.cohort.teachers.splice(index, 1);
     },
     close() {
       this.dialog = false;
@@ -413,9 +407,9 @@ export default {
               name: "",
               url: "",
             },
-            teachers: []
+            teachers: [],
           },
-        }
+        };
       }
     },
     saveCohort(cohort) {
@@ -425,7 +419,7 @@ export default {
       db.collection("cohorts")
         .add(cohort)
         .then((docRef) => {
-          this.close()       
+          this.close();
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
@@ -433,7 +427,7 @@ export default {
 
       // notify teachers of new cohort assignment 
       if (this.cohort.teachers.length) {
-        for (const teacher of newTeachers) {
+        for (const teacher of this.cohort.teachers.length) {
           const profile = this.people.find(person => teacher === person.id)
           console.log(profile)
           this.sendNewCohortEmail(profile)
@@ -451,7 +445,7 @@ export default {
       return sendNewCohortEmail(person)
     },
     camelize(str) {
-      return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
+      return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {
         if (+match === 0) return ""; // or if (/\s+/.test(match)) for white spaces
         return index === 0 ? match.toLowerCase() : match.toUpperCase();
       });
@@ -683,6 +677,8 @@ export default {
     text-align: center;
     flex: none;
     font-size: 0.9rem;
+    color: var(--v-missionAccent-base);
+    text-transform: none;
   }
 }
 
