@@ -312,7 +312,7 @@ export default {
         .doc(this.course.id)
         .collection("topics")
         .doc(node.id)
-        .set({ ...node, timestampCreated: new Date() })
+        .set({ ...node, topicCreatedTimestamp: new Date() })
         .then((docRef) => {
           console.log("Topic successfully written!");
           this.loading = false;

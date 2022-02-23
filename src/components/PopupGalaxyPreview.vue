@@ -244,7 +244,7 @@ export default {
           .doc(doc.data().id)
           .collection("tasks")
           // order by timestamp is important otherwise index == 0 (in the next step) wont necessarily be the first mission
-          .orderBy("timestamp")
+          .orderBy("taskCreatedTimestamp")
           .get();
 
         // 4) if tasks exist. add them to person

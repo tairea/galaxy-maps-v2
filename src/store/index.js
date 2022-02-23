@@ -617,7 +617,7 @@ export default new Vuex.Store({
           .collection("topics")
           .doc(payload.topicId)
           .collection("tasks")
-          .orderBy("timestamp") // this is important to ordering the tasks in MissionList.vue
+          .orderBy("taskCreatedTimestamp") // this is important to ordering the tasks in MissionList.vue
       );
     }),
     // bind persons tasks by topic id
@@ -631,7 +631,7 @@ export default new Vuex.Store({
             .collection(payload.courseId)
             .doc(payload.topicId)
             .collection("tasks")
-            .orderBy("timestamp")
+            .orderBy("taskCreatedTimestamp")
         );
       }
     ),
@@ -680,7 +680,7 @@ export default new Vuex.Store({
           // .collection("tasks")
           // .doc(payload.taskId)
           // .collection("requestsForHelp")
-          // .orderBy("timestamp")
+          // .orderBy("taskCreatedTimestamp")
         );
       }
     ),
