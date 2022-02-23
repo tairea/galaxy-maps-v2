@@ -3,11 +3,17 @@
     <v-dialog v-model="dialog" width="35%" :light="dark" :dark="!dark">
       <!-- CREATE BUTTON -->
       <template v-slot:activator="{ on, attrs }">
-        <v-btn class="cohort-btn" :light="dark" :dark="!dark" :text="teacher" :color="teacher ? 'baseAccent':'missionAccent'" v-bind="attrs" v-on="on">
-          <v-icon left>
-            mdi-plus
-          </v-icon>
-          {{teacher ? "New Teacher" : "add student"}}
+        <v-btn
+          class="cohort-btn"
+          :light="dark"
+          :dark="!dark"
+          :text="teacher"
+          :color="teacher ? 'baseAccent' : 'missionAccent'"
+          v-bind="attrs"
+          v-on="on"
+        >
+          <v-icon left> mdi-plus </v-icon>
+          {{ teacher ? "New Teacher" : "add student" }}
         </v-btn>
       </template>
 
@@ -15,12 +21,13 @@
       <div class="create-dialog">
         <!-- HEADER -->
         <div class="dialog-header">
-          <p class="mb-0">
-            Add {{this.accountType}}
-          </p>
+          <p class="mb-0">Add {{ this.accountType }}</p>
         </div>
         <div class="create-dialog-content">
-          <p v-if="!teacher" class="caption mb-0">Adding this student will send a registration link to their email</p>
+          <p v-if="!teacher" class="caption mb-0">
+            Adding this student will send a registration link to their email
+          </p>
+          <!-- TODO: info description for adding a teacher? -->
           <v-form ref="form" v-model="valid" lazy-validation>
             <v-text-field
               :dark="dark"
@@ -77,7 +84,7 @@
               color="missionAccent"
               outlined
               class="custom-input"
-              :value="person.firstName + ' ' + person.lastName" 
+              :value="person.firstName + ' ' + person.lastName"
             ></v-text-field>
           </v-form>
           <v-row>
@@ -111,15 +118,15 @@
 </template>
 
 <script>
-
 import { db, functions } from "../store/firestoreConfig";
-import { mapGetters } from "vuex"
-import firebase from "firebase"
+import { mapGetters } from "vuex";
+import firebase from "firebase";
 
 export default {
   name: "CreateAccountDialog",
   props: {
-    accountType: { type: String, default: "teacher"},
+    accountType: { type: String, default: "teacher" },
+    addingToCohort: { type: Boolean, default: false },
   },
   data: () => ({
     addingAccount: false,
@@ -138,16 +145,16 @@ export default {
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
     ],
     nsn: "",
-    inviter: ""
+    inviter: "",
   }),
   computed: {
-    ...mapGetters(['person', 'currentCohortId']),
+    ...mapGetters(["person", "currentCohortId"]),
     teacher() {
-      return this.accountType === "teacher"
+      return this.accountType === "teacher";
     },
-    dark () {
-      return this.$vuetify.theme.isDark
-    }
+    dark() {
+      return this.$vuetify.theme.isDark;
+    },
   },
   methods: {
     close() {
@@ -158,89 +165,98 @@ export default {
         email: "",
         accountType: "",
         displayName: "",
-      }
+      };
     },
-    create () {
-      this.$refs.form.validate()
-      if (!this.account.email) return
-      this.addingAccount = true
-      this.account.accountType = this.accountType
-      this.account.displayName = this.account.firstName + ' ' + this.account.lastName
+    create() {
+      this.$refs.form.validate();
+      if (!this.account.email) return;
+      this.addingAccount = true;
+      this.account.accountType = this.accountType;
+      this.account.displayName =
+        this.account.firstName + " " + this.account.lastName;
       // create user
-      const createUser = functions.httpsCallable('createUser')
+      const createUser = functions.httpsCallable("createUser");
       createUser(this.account)
-        .then(result => {
-          this.account.id = result.data.uid
-          return this.addAccount()
-        }).then(() => {
-          return this.generateLink()
-        }).then(link => {
-          return this.sendEmailInvite(link)
-        }).then(() => {
+        .then((result) => {
+          this.account.id = result.data.uid;
+          console.log(result); // TODO: result throws an error if email already exists and so no account.id and so no student created/added to cohort
+          console.log(this.account.id);
+          return this.addAccount();
+        })
+        .then(() => {
+          return this.generateLink();
+        })
+        .then((link) => {
+          return this.sendEmailInvite(link);
+        })
+        .then(() => {
           if (!this.teacher) {
-            this.addStudentToCohort()
+            this.addStudentToCohort();
           }
-          this.addingAccount = false
-          this.close()
+          this.addingAccount = false;
+          this.close();
         })
         .catch((error) => {
-          console.log(error)
-      });
+          console.log(error);
+        });
     },
-    addAccount () { 
+    addAccount() {
+      // TODO: adding a teacher (where their email already existed) created a duplicate.
       const profile = {
         ...this.account,
-      }
+      };
       if (!this.teacher) {
-        profile.nsn = this.nsn
+        profile.nsn = this.nsn;
       }
-      delete profile.id
+      delete profile.id;
       db.collection("people")
         .doc(this.account.id)
         .set(profile)
         .catch((error) => {
           console.error("Error writing document: ", error);
-      });
+        })
+        .then(() => {
+          if (this.addingToCohort) {
+            // TODO: add teacher to cohort
+          }
+        });
     },
     generateLink() {
       // generate magic email link
       const data = {
         ...this.account,
-        host: window.location.origin
-      }
+        host: window.location.origin,
+      };
 
-      const generateEmailLink = functions.httpsCallable('generateEmailLink')
+      const generateEmailLink = functions.httpsCallable("generateEmailLink");
       return generateEmailLink(data)
         .then((link) => {
-          return link
+          return link;
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
-      });
+        });
     },
     sendEmailInvite(link) {
-      this.account.link = link.data
+      this.account.link = link.data;
       if (!this.teacher) {
-        this.account.inviter = this.inviter
+        this.account.inviter = this.inviter;
       }
-      const sendInviteEmail = functions.httpsCallable('sendInviteEmail')
-      sendInviteEmail(this.account)
-      .catch((error) => {
-        console.error(error)
+      const sendInviteEmail = functions.httpsCallable("sendInviteEmail");
+      sendInviteEmail(this.account).catch((error) => {
+        console.error(error);
       });
     },
-    addStudentToCohort () {
-       db.collection("cohorts")
+    addStudentToCohort() {
+      db.collection("cohorts")
         .doc(this.currentCohortId)
         .update({
-          students: firebase.firestore.FieldValue.arrayUnion(
-            this.account.id
-          ),
+          students: firebase.firestore.FieldValue.arrayUnion(this.account.id),
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
-      });
-    }
+        });
+    },
   },
 };
 </script>
@@ -288,5 +304,4 @@ export default {
 .cohort-btn {
   font-weight: 400;
 }
-
 </style>
