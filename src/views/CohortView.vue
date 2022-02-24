@@ -1,15 +1,15 @@
 <template>
   <div id="container" class="bg">
     <div id="left-section">
-      <CohortInfo/>
-      <AssignedInfo/>
+      <CohortInfo />
+      <AssignedInfo />
       <BackButton :toPath="'/base/cohorts'" />
     </div>
 
     <div id="main-section">
       <div class="people-frame">
         <h2 class="people-label">STUDENTS</h2>
-       <StudentDataIterator/>
+        <StudentDataIterator />
       </div>
     </div>
 
@@ -18,8 +18,8 @@
         <h2 class="people-label">ADD STUDENTS</h2>
         <ImportCsv />
       </div> -->
-     <RequestForHelpTeacherCard />
-     <SubmissionTeacherCard />
+      <RequestForHelpTeacherFrame />
+      <SubmissionTeacherFrame />
     </div>
   </div>
 </template>
@@ -34,12 +34,11 @@ import StudentDataTable from "../components/StudentDataTable";
 import StudentDataIterator from "../components/StudentDataIterator";
 import Galaxy from "../components/Galaxy";
 import BackButton from "../components/BackButton";
-import RequestForHelpTeacherCard from "../components/RequestForHelpTeacherCard";
-import SubmissionTeacherCard from "../components/SubmissionTeacherCard";
+import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame";
+import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame";
 
 // import ImportCsv from "../components/ImportCsv";
 import { mapGetters } from "vuex";
-
 
 export default {
   name: "CohortView",
@@ -54,8 +53,8 @@ export default {
     StudentCard,
     StudentDataTable,
     StudentDataIterator,
-    RequestForHelpTeacherCard,
-    SubmissionTeacherCard
+    RequestForHelpTeacherFrame,
+    SubmissionTeacherFrame,
   },
 };
 </script>
@@ -75,7 +74,7 @@ export default {
   display: flex;
   overflow: hidden;
   padding-top: 50px;
-  margin: 0 !important
+  margin: 0 !important;
 }
 
 #left-section {
@@ -149,7 +148,6 @@ export default {
     }
   }
 }
-
 
 /* width */
 ::-webkit-scrollbar {

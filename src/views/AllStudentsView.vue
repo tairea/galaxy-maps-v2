@@ -2,36 +2,7 @@
   <div id="container" class="bg">
     <!-- REVIEW WORK PANEL -->
     <div id="left-section">
-      <div id="review-panel">
-        <h2 class="review-label">Work submitted for review</h2>
-        <div v-if="teachersSubmissionsToReview.length > 0">
-          <SubmissionTeacherCard
-            v-for="submission in teachersSubmissionsToReview"
-            :key="submission.id"
-            :submission="submission"
-            @snackbarToggle="snackbarToggleSubmission($event)"
-          />
-        </div>
-        <div
-          v-if="!submissionsLoading && teachersSubmissionsToReview.length == 0"
-        >
-          <p
-            class="overline pt-4 text-center"
-            style="color: var(--v-cohortAccent-base)"
-          >
-            NO WORK TO REVIEW
-          </p>
-        </div>
-        <!-- loading spinner -->
-        <div class="d-flex justify-center align-center mt-4">
-          <v-btn
-            v-if="requestsForHelpLoading"
-            :loading="requestsForHelpLoading"
-            icon
-            color="cohortAccent"
-          ></v-btn>
-        </div>
-      </div>
+      <SubmissionTeacherFrame />
     </div>
 
     <!-- STUDENT PROGRESSION PANEL -->
@@ -55,37 +26,7 @@
 
     <!-- REQUESTS FOR HELP PANEL -->
     <div id="right-section">
-      <div id="help-panel">
-        <h2 class="help-label">Requests for help</h2>
-
-        <div v-if="teachersRequestsForHelp.length > 0">
-          <RequestForHelpTeacherCard
-            v-for="request in teachersRequestsForHelp"
-            :key="request.id"
-            :request="request"
-            @snackbarToggle="snackbarToggleHelp($event)"
-          />
-        </div>
-        <div
-          v-if="!requestsForHelpLoading && teachersRequestsForHelp.length == 0"
-        >
-          <p
-            class="overline pt-4 text-center"
-            style="color: var(--v-missionAccent-base)"
-          >
-            NO REQUESTS FOR HELP
-          </p>
-        </div>
-        <!-- loading spinner -->
-        <div class="d-flex justify-center align-center mt-4">
-          <v-btn
-            v-if="requestsForHelpLoading"
-            :loading="requestsForHelpLoading"
-            icon
-            color="missionAccent"
-          ></v-btn>
-        </div>
-      </div>
+      <RequestForHelpTeacherFrame />
     </div>
 
     <!-- Request submitted Snackbar -->
@@ -104,15 +45,15 @@
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
 
-import SubmissionTeacherCard from "../components/SubmissionTeacherCard";
-import RequestForHelpTeacherCard from "../components/RequestForHelpTeacherCard";
+import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame";
+import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame";
 import StudentProgressionChartJs3 from "../components/StudentProgressionChartJs3";
 
 export default {
   name: "AllStudentView",
   components: {
-    SubmissionTeacherCard,
-    RequestForHelpTeacherCard,
+    SubmissionTeacherFrame,
+    RequestForHelpTeacherFrame,
     StudentProgressionChartJs3,
   },
   props: [],
@@ -239,32 +180,6 @@ export default {
   #left-section ::-webkit-scrollbar {
     display: none;
   }
-
-  #review-panel {
-    width: calc(100% - 30px);
-    height: 80%;
-    border: 1px solid var(--v-cohortAccent-base);
-    margin-top: 30px;
-    padding: 20px;
-    // background: var(--v-baseAccent-base);
-    position: relative;
-    backdrop-filter: blur(2px);
-    z-index: 3;
-
-    .review-label {
-      font-size: 0.8rem;
-      font-weight: 400;
-      text-transform: uppercase;
-      // ribbon label
-      position: absolute;
-      top: 0;
-      left: -1px;
-      background-color: var(--v-cohortAccent-base);
-      color: var(--v-background-base);
-      padding: 0px 20px 0px 5px;
-      clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
-    }
-  }
 }
 
 #main-section {
@@ -328,33 +243,6 @@ export default {
 
   #right-section ::-webkit-scrollbar {
     display: none;
-  }
-
-  #help-panel {
-    width: calc(100% - 30px);
-    height: 80%;
-    border: 1px solid var(--v-missionAccent-base);
-    margin-top: 30px;
-    padding: 20px;
-    // background: var(--v-baseAccent-base);
-    position: relative;
-    backdrop-filter: blur(2px);
-    // z-index: 3;
-    overflow-y: scroll;
-
-    .help-label {
-      font-size: 0.8rem;
-      font-weight: 400;
-      text-transform: uppercase;
-      // ribbon label
-      position: absolute;
-      top: 0;
-      left: -1px;
-      background-color: var(--v-missionAccent-base);
-      color: var(--v-background-base);
-      padding: 0px 20px 0px 5px;
-      clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
-    }
   }
 }
 

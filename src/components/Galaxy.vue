@@ -235,15 +235,20 @@ export default {
       if (this.nodesToDisplay.length > 0) {
         const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
 
-        if (this.whichCoursesToDisplay == "my") {
-          this.$store.commit("updatePersonsNodesForDisplay", repositionedNodes);
-        } else if (this.whichCoursesToDisplay == "assigned") {
-          this.$store.commit(
-            "updatePersonsAssignedNodesForDisplay",
-            repositionedNodes
-          );
-        } else if (this.whichCoursesToDisplay == "all") {
-          this.$store.commit("updateAllNodesForDisplay", repositionedNodes);
+        if (repositionedNodes.length) {
+          if (this.whichCoursesToDisplay == "my") {
+            this.$store.commit(
+              "updatePersonsNodesForDisplay",
+              repositionedNodes
+            );
+          } else if (this.whichCoursesToDisplay == "assigned") {
+            this.$store.commit(
+              "updatePersonsAssignedNodesForDisplay",
+              repositionedNodes
+            );
+          } else if (this.whichCoursesToDisplay == "all") {
+            this.$store.commit("updateAllNodesForDisplay", repositionedNodes);
+          }
         }
       }
 

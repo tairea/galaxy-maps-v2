@@ -1,5 +1,5 @@
 <template>
-  <div id="cohort-help-panel">
+  <div :id="isCohortView">
     <h2 class="help-label">Requests for help</h2>
 
     <div v-if="teachersRequestsForHelp.length > 0">
@@ -39,11 +39,11 @@
   </div>
 </template>
 <script>
-import RequestForHelpTeacherPanel from "../components/RequestForHelpTeacherCard";
+import RequestForHelpTeacherPanel from "../components/RequestForHelpTeacherPanel";
 import { mapState } from "vuex";
 
 export default {
-  name: "RequestForHelpTeacherCard",
+  name: "RequestForHelpTeacherFrame",
   components: {
     RequestForHelpTeacherPanel,
   },
@@ -59,6 +59,11 @@ export default {
   },
   computed: {
     ...mapState(["teachersRequestsForHelp", "user"]),
+    isCohortView() {
+      return this.$route.name == "CohortView"
+        ? "cohort-help-panel"
+        : "help-panel";
+    },
   },
   async mounted() {
     this.requestsForHelpLoading = true;
@@ -110,6 +115,19 @@ export default {
 };
 </script>
 <style scoped lang="scss">
+#help-panel {
+  width: calc(100% - 30px);
+  height: 80%;
+  border: 1px solid var(--v-galaxyAccent-base);
+  margin-top: 30px;
+  padding: 20px;
+  // background: var(--v-baseAccent-base);
+  position: relative;
+  backdrop-filter: blur(2px);
+  // z-index: 3;
+  overflow-y: scroll;
+}
+
 #cohort-help-panel {
   width: calc(100% - 30px);
   border: 1px solid var(--v-galaxyAccent-base);
@@ -119,19 +137,19 @@ export default {
   position: relative;
   backdrop-filter: blur(2px);
   // z-index: 3;
+}
 
-  .help-label {
-    font-size: 0.8rem;
-    font-weight: 400;
-    text-transform: uppercase;
-    // ribbon label
-    position: absolute;
-    top: 0;
-    left: -1px;
-    background-color: var(--v-galaxyAccent-base);
-    color: var(--v-background-base);
-    padding: 0px 20px 0px 5px;
-    clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
-  }
+.help-label {
+  font-size: 0.8rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  // ribbon label
+  position: absolute;
+  top: 0;
+  left: -1px;
+  background-color: var(--v-galaxyAccent-base);
+  color: var(--v-background-base);
+  padding: 0px 20px 0px 5px;
+  clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
 }
 </style>

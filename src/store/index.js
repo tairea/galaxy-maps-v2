@@ -433,7 +433,6 @@ export default new Vuex.Store({
     },
     async getAllSubmittedWorkForTeacher({ state }) {
       const myCourses = this.getters.getCoursesByWhoMadeThem(state.person.id);
-
       const allWorkForReview = [];
       for (const course of myCourses) {
         // get all work for review
@@ -442,7 +441,7 @@ export default new Vuex.Store({
           .doc(course.id)
           .collection("submissionsForReview")
           .where("taskSubmissionStatus", "==", "inreview")
-          .orderBy("taskSubmittedTimestamp")
+          .orderBy("taskSubmittedForReviewTimestamp")
           .get();
 
         for (const doc of querySnapshot.docs) {
