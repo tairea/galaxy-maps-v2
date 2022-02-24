@@ -27,7 +27,7 @@
             </p>
           </div>
           <div class="submission-time">
-            {{ getHumanDate(submission.taskSubmittedTimestamp) }}
+            {{ getHumanDate(submission.taskSubmittedForReviewTimestamp) }}
           </div>
           <template v-slot:actions>
             <v-icon color="missionAccent"> </v-icon>
@@ -69,7 +69,7 @@ import { mapState, mapActions } from "vuex";
 import moment from "moment";
 
 import MarkSubmissionCompleted from "../components/MarkSubmissionCompleted";
-import { dbMixins } from "../mixins/DbMixins"
+import { dbMixins } from "../mixins/DbMixins";
 
 export default {
   name: "SubmissionTeacherPanel",
@@ -80,7 +80,9 @@ export default {
   },
   async mounted() {
     // bind student profile
-    this.requesterPerson = await this.MXgetPersonByIdFromDB(this.submission.studentId)
+    this.requesterPerson = await this.MXgetPersonByIdFromDB(
+      this.submission.studentId
+    );
 
     // bind students tasks related to this submission (used for unlocking next topic)
     await this.$store.dispatch("bindPersonsTasksByTopicId", {
@@ -89,7 +91,7 @@ export default {
       topicId: this.submission.contextTopic.id,
     });
     console.log(
-      "this.personsTopicsTasks from SubmissionTeacherCard.vue: ",
+      "this.personsTopicsTasks from SubmissionTeacherFrame.vue: ",
       this.personsTopicsTasks
     );
   },
