@@ -173,7 +173,7 @@ export default {
       "personsEdges",
       "personsAssignedNodesForDisplay",
       "personsAssignedEdges",
-      "courses", 
+      "courses",
       "personsCourses",
       "darkMode",
       // "topics",
@@ -412,8 +412,10 @@ export default {
       return newAllNodes;
     },
     calcCourseCanvasBoundaries() {
-
-      const courses = this.whichCoursesToDisplay == 'all' ? this.courses : this.personsCourses
+      const courses =
+        this.whichCoursesToDisplay == "all"
+          ? this.courses
+          : this.personsCourses;
       let courseCanvasBoundaries = [];
       // get all coords for nodes
       // const allNodes = this.$refs.network.nodes;

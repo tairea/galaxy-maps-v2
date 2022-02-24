@@ -31,7 +31,7 @@
             outlined
             dense
             :dark="dark"
-            :light="!dark"            
+            :light="!dark"
             chips
             item-text="firstName"
             item-value="id"
@@ -84,14 +84,14 @@
               + Add Admin
             </v-btn>
             <v-btn
-                :dark="dark"
-                :light="!dark"
-                class="ma-4"
-                @click="cancel()"
-                outlined
-                width="30%"
-              >
-                Cancel
+              :dark="dark"
+              :light="!dark"
+              class="ma-4"
+              @click="cancel()"
+              outlined
+              width="30%"
+            >
+              Cancel
             </v-btn>
           </v-row>
         </div>
@@ -101,7 +101,12 @@
     <v-snackbar v-model="snackbar">
       {{ snackbarText }}
       <template v-slot:action="{ attrs }">
-        <v-btn color="pink" text v-bind="attrs" @click="snackbar = false">
+        <v-btn
+          :color="snackbarColour"
+          text
+          v-bind="attrs"
+          @click="snackbar = false"
+        >
           OK
         </v-btn>
       </template>
@@ -121,16 +126,17 @@ export default {
     dialog: false,
     snackbar: false,
     snackbarText: "",
+    snackbarColour: "",
   }),
   computed: {
     ...mapState(["people"]),
     ...mapGetters(["user"]),
-    cohortView () {
-      return this.$route.name === "CohortView"
+    cohortView() {
+      return this.$route.name === "CohortView";
     },
-    dark () {
-      return this.$vuetify.theme.isDark
-    }
+    dark() {
+      return this.$vuetify.theme.isDark;
+    },
   },
   methods: {
     cancel() {
@@ -144,11 +150,13 @@ export default {
           .then((result) => {
             this.snackbarText =
               "admin role successfully added for " + this.administrator;
+            this.snackbarColour = "baseAccent";
             this.snackbar = true;
             this.addingAdmin = false;
             this.administrator = "";
           })
           .catch((err) => {
+            this.snackbarColour = "pink";
             this.snackbarText =
               "something went wrong trying to add admin: " + err;
             this.snackbar = true;

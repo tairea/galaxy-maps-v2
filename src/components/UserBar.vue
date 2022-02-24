@@ -68,7 +68,12 @@
     <v-snackbar v-model="snackbar">
       {{ snackbarMsg }}
       <template v-slot:action="{ attrs }">
-        <v-btn color="pink" text v-bind="attrs" @click="snackbar = false">
+        <v-btn
+          :color="snackbarColour"
+          text
+          v-bind="attrs"
+          @click="snackbar = false"
+        >
           OK
         </v-btn>
       </template>
@@ -92,6 +97,7 @@ export default {
     return {
       snackbar: false,
       snackbarMsg: "",
+      snackbarColour: "",
       darkSwitch: true,
       editProfile: false,
       selectedFile: {},
@@ -116,6 +122,7 @@ export default {
         .signOut()
         .then(() => {
           // alert("Successfully signed out");
+          this.snackbarColour = "baseAccent";
           this.snackbarMsg = "Successfully signed out";
           this.snackbar = true;
           this.resetState();
@@ -123,6 +130,7 @@ export default {
         })
         .catch((error) => {
           // alert(error.message);
+          this.snackbarColour = "pink";
           this.snackbarMsg = error.message;
           this.snackbar = true;
           this.$router.push("/");

@@ -1,4 +1,4 @@
- <template>
+<template>
   <div id="cohort-help-panel">
     <h2 class="help-label">Requests for help</h2>
 
@@ -10,9 +10,7 @@
         @snackbarToggle="snackbarToggleHelp($event)"
       />
     </div>
-    <div
-      v-if="!requestsForHelpLoading && teachersRequestsForHelp.length == 0"
-    >
+    <div v-if="!requestsForHelpLoading && teachersRequestsForHelp.length == 0">
       <p
         class="overline pt-4 text-center"
         style="color: var(--v-galaxyAccent-base)"
@@ -33,7 +31,7 @@
     <v-snackbar v-model="snackbar">
       {{ snackbarMsg }}
       <template v-slot:action="{ attrs }">
-        <v-btn color="pink" text v-bind="attrs" @click="snackbar = false">
+        <v-btn color="baseAccent" text v-bind="attrs" @click="snackbar = false">
           OK
         </v-btn>
       </template>
@@ -41,16 +39,15 @@
   </div>
 </template>
 <script>
-
-import RequestForHelpTeacherPanel from "../components/RequestForHelpTeacherCard"
+import RequestForHelpTeacherPanel from "../components/RequestForHelpTeacherCard";
 import { mapState } from "vuex";
 
 export default {
   name: "RequestForHelpTeacherCard",
   components: {
-    RequestForHelpTeacherPanel
+    RequestForHelpTeacherPanel,
   },
-  data () {
+  data() {
     return {
       submissionsLoading: false,
       requestsForHelpLoading: false,
@@ -58,10 +55,10 @@ export default {
       allRequestsForHelp: [],
       snackbarMsg: "",
       snackbar: false,
-    }
+    };
   },
   computed: {
-    ...mapState(['teachersRequestsForHelp', 'user']),
+    ...mapState(["teachersRequestsForHelp", "user"]),
   },
   async mounted() {
     this.requestsForHelpLoading = true;
@@ -108,12 +105,11 @@ export default {
         this.user.data.id
       );
       this.submissionsLoading = false;
-    }
-  }
-}
+    },
+  },
+};
 </script>
 <style scoped lang="scss">
-
 #cohort-help-panel {
   width: calc(100% - 30px);
   border: 1px solid var(--v-galaxyAccent-base);

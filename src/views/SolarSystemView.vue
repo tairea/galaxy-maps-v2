@@ -15,8 +15,8 @@
       <AssignedInfo
         v-if="person.accountType != 'student'"
         :assignCohorts="true"
-        :cohorts="getCohortsInThisCourse(currentCourseId)"
-        :people="getPeopleInThisCourse(currentCourseId)"
+        :people="peopleInCourse"
+        :cohorts="cohortsInCourse"
       />
 
       <BackButton :toPath="'/galaxy/' + currentCourseId" />
@@ -105,12 +105,12 @@ export default {
       "topicsTasks",
       "personsTopicsTasks",
       "requestsForHelp",
+      "peopleInCourse",
+      "cohortsInCourse",
     ]),
     ...mapGetters([
       "person",
       "getPersonsTopicById",
-      "getPersonsTasksByTopicId",
-      "getCohortsInThisCourse",
       "getTopicById",
       "getPeopleInThisCourse",
       "getTasksByTopicId",

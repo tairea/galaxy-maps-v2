@@ -46,7 +46,12 @@
     <v-snackbar v-model="snackbar">
       {{ snackbarText }}
       <template v-slot:action="{ attrs }">
-        <v-btn color="pink" text v-bind="attrs" @click="snackbar = false">
+        <v-btn
+          :color="snackbarColour"
+          text
+          v-bind="attrs"
+          @click="snackbar = false"
+        >
           OK
         </v-btn>
       </template>
@@ -74,6 +79,7 @@ export default {
     ],
     snackbar: false,
     snackbarText: "",
+    snackbarColour: "",
   }),
   mounted() {},
   methods: {
@@ -92,6 +98,7 @@ export default {
           this.$router.push("/base/galaxies/my");
         })
         .catch((error) => {
+          this.snackbarColour = "pink";
           this.snackbarText = "Error: " + error.message;
           this.snackbar = true;
           console.log("Login error:", error);
@@ -106,12 +113,14 @@ export default {
         .auth()
         .sendPasswordResetEmail(this.email)
         .then(() => {
+          this.snackbarColour = "baseAccent";
           this.snackbarText = "Reset Password Email Sent";
           this.snackbar = true;
           // Password reset email sent!
           // ..
         })
         .catch((error) => {
+          this.snackbarColour = "pink";
           this.snackbarText = "Error: " + error.message;
           this.snackbar = true;
           var errorCode = error.code;

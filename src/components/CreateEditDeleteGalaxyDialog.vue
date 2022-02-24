@@ -193,6 +193,8 @@
                 class="mr-2"
                 :loading="loading"
                 :disabled="disabled"
+                :dark="dark"
+                :light="!dark"
               >
                 <v-icon left> mdi-check </v-icon>
                 SAVE
@@ -205,6 +207,8 @@
                 color="error"
                 @click="deleteDialog()"
                 class="ml-2"
+                :dark="dark"
+                :light="!dark"
               >
                 <v-icon left> mdi-delete </v-icon>
                 DELETE
@@ -216,6 +220,8 @@
                 class="ml-2"
                 @click="cancel"
                 :disabled="disabled || loading"
+                :dark="dark"
+                :light="!dark"
               >
                 <v-icon left> mdi-close </v-icon>
                 Cancel

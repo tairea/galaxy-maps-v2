@@ -57,8 +57,8 @@ export default new Vuex.Store({
     person: (state) => state.person,
     courses: (state) => state.courses,
     cohorts: (state) => state.cohorts,
-    organisations: state => state.organisations,
-    currentCohort: state => state.currentCohort,
+    organisations: (state) => state.organisations,
+    currentCohort: (state) => state.currentCohort,
     getCourseById: (state) => (id) => {
       return state.courses.find((course) => course.id === id);
     },
@@ -331,9 +331,9 @@ export default new Vuex.Store({
           .then((doc) => {
             const person = {
               id,
-              ...doc.data()
-            }
-            commit("SET_PERSON", person)
+              ...doc.data(),
+            };
+            commit("SET_PERSON", person);
           });
       } else {
         commit("SET_PERSON", {});
@@ -379,7 +379,7 @@ export default new Vuex.Store({
       // loop array of assigned courses
       if (doc.data()?.assignedCourses) {
         for (const courseId of doc.data()?.assignedCourses) {
-          // add assigned course to state.courses
+          // this action pushes assigned courses data into state.courses
           this.dispatch("getCourseFromFirestoreById", courseId);
 
           const subQuerySnapshot = await db
@@ -449,6 +449,8 @@ export default new Vuex.Store({
           allWorkForReview.push(doc.data());
         }
       }
+      console.log("allWorkForReview");
+      console.log(allWorkForReview);
       state.teachersSubmissionsToReview = allWorkForReview;
     },
     //TODO: WIP
@@ -705,20 +707,20 @@ export default new Vuex.Store({
       state.teachersRequestsForHelp = allRequestsForHelp;
     },
 
-    async getCohortsByPersonId ({ commit, dispatch }, person) {
-      await db.
-      collection("cohorts")
-      .where(person.accountType + "s", "array-contains", person.id)
-      .onSnapshot(querySnapShot => {
-        const cohorts = querySnapShot.docs.map(doc => {
-          return {
-            id: doc.id,
-            ...doc.data()
-          }
-        }) 
-        commit("setCohorts", cohorts)
-        dispatch("getOrganisationsByCohorts", cohorts) 
-      })
+    async getCohortsByPersonId({ commit, dispatch }, person) {
+      await db
+        .collection("cohorts")
+        .where(person.accountType + "s", "array-contains", person.id)
+        .onSnapshot((querySnapShot) => {
+          const cohorts = querySnapShot.docs.map((doc) => {
+            return {
+              id: doc.id,
+              ...doc.data(),
+            };
+          });
+          commit("setCohorts", cohorts);
+          dispatch("getOrganisationsByCohorts", cohorts);
+        });
     },
 
     async getOrganisationsByCohorts({ commit }, cohorts) {
@@ -728,7 +730,7 @@ export default new Vuex.Store({
         // .doc(cohort)
         .where("cohorts", "array-contains-any", cohorts)
         .get();
-      
+
       if (querySnapShot.docs.length) {
         for (const doc of querySnapShot.docs) {
           orgs.push(doc.data());
@@ -739,18 +741,18 @@ export default new Vuex.Store({
       commit("setOrganisations", orgs);
     },
 
-    async setCurrentCohort({commit}, cohort) {
-      await db.
-      collection("cohorts")
-      .doc(cohort.id)
-      .onSnapshot(doc => {
-        console.log('setting cohort')
-        const cohort = {
+    async setCurrentCohort({ commit }, cohort) {
+      await db
+        .collection("cohorts")
+        .doc(cohort.id)
+        .onSnapshot((doc) => {
+          console.log("setting cohort");
+          const cohort = {
             id: doc.id,
-            ...doc.data()
-          }
-        commit("setCurrentCohort", cohort)
-      })
+            ...doc.data(),
+          };
+          commit("setCurrentCohort", cohort);
+        });
     },
     // bind the PEOPLE that are in a course
     bindPeopleInCourse: firestoreAction(({ bindFirestoreRef }, courseId) => {

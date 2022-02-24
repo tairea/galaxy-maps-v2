@@ -3,7 +3,11 @@
     <h2 class="cohort-label">Cohort</h2>
     <h1 class="cohort-title">{{ currentCohort.name }}</h1>
     <div v-if="currentCohort.image.url">
-      <v-img class="cohort-image" width="auto" :src="currentCohort.image.url"></v-img>
+      <v-img
+        class="cohort-image"
+        width="auto"
+        :src="currentCohort.image.url"
+      ></v-img>
     </div>
     <p class="cohort-description">{{ currentCohort.description }}</p>
     <div class="d-flex justify-center align-center">
@@ -14,22 +18,28 @@
       />
     </div>
     <div v-if="teachers.length > 0">
-      <p class="overline ma-0" style="color: var(--v-baseAccent-base);">Teachers</p>
+      <p class="overline ma-0" style="color: var(--v-baseAccent-base)">
+        Teachers
+      </p>
       <v-row class="my-1">
         <Person v-for="person in teachers" :person="person" :key="person.id" />
       </v-row>
     </div>
-    <CreateEditDeleteCohortDialog v-if="!isStudent" :edit="true" :cohortToEdit="currentCohort" />
+    <CreateEditDeleteCohortDialog
+      v-if="!isStudent"
+      :edit="true"
+      :cohortToEdit="currentCohort"
+    />
   </div>
 </template>
 
 <script>
 import Organisation from "../components/Organisation";
 import CreateEditDeleteCohortDialog from "../components/CreateEditDeleteCohortDialog";
-import Person from "../components/Person"
+import Person from "../components/Person";
 
 import { mapGetters } from "vuex";
-import { dbMixins } from "../mixins/DbMixins"
+import { dbMixins } from "../mixins/DbMixins";
 
 export default {
   name: "CohortInfo",
@@ -41,13 +51,13 @@ export default {
   },
   data() {
     return {
-      teachers: []
+      teachers: [],
     };
   },
   mounted() {
     // this is needed incase there is no change in currentCohort to catch with the watch
     if (this.$route.params.cohortId === this.currentCohort.id) {
-      this.getTeacherProfiles()
+      this.getTeacherProfiles();
     }
   },
   watch: {
@@ -55,35 +65,35 @@ export default {
       deep: true,
       handler(newVal, oldVal) {
         if (oldVal.teachers?.length !== newVal.teachers?.length) {
-          this.getTeacherProfiles()
+          this.getTeacherProfiles();
         }
-      }
-    }
+      },
+    },
   },
   computed: {
     ...mapGetters(["getOrganisationById", "currentCohort", "person"]),
-    org () {
-      let org = this.getOrganisationById(this.currentCohort.organisation)
-      if (org) return org 
-      else return {}
+    org() {
+      let org = this.getOrganisationById(this.currentCohort.organisation);
+      if (org) return org;
+      else return {};
     },
-    isStudent () {
-      return this.person.accountType === 'student'
-    }
+    isStudent() {
+      return this.person.accountType === "student";
+    },
   },
   methods: {
-    getTeacherProfiles () {
+    getTeacherProfiles() {
       if (this.currentCohort.teachers?.length) {
-        const teachersArr = this.currentCohort.teachers.filter(a => {
-          return !this.teachers.some(b => a === b.id)
-        })
-        teachersArr.forEach(async id => {
-          const teacher = await this.MXgetPersonByIdFromDB(id)
-          this.teachers.push(teacher)
-        })
+        const teachersArr = this.currentCohort.teachers.filter((a) => {
+          return !this.teachers.some((b) => a === b.id);
+        });
+        teachersArr.forEach(async (id) => {
+          const teacher = await this.MXgetPersonByIdFromDB(id);
+          this.teachers.push(teacher);
+        });
       }
     },
-  }
+  },
 };
 </script>
 

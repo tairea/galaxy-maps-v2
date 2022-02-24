@@ -6,7 +6,7 @@ const auth = "Basic " + btoa(process.env.VUE_APP_VERACITY_LRS_SECRET);
 
 // ========== Start Task (make task active)
 export const startTaskXAPIStatement = (actorMbox, taskId, context) => {
-  console.log("sending student xAPI statement... submitted work for review...");
+  console.log("sending student xAPI statement... task started...");
   const statement = {
     actor: {
       mbox: "mailto:" + actorMbox,

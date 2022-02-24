@@ -1,7 +1,6 @@
 <template>
   <div id="container" class="bg">
     <div id="left-section">
-      <BackButton :toPath="pathDependingOnAccountType()" />
       <GalaxyInfo :course="getCourseById(courseId)" />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <AssignedInfo
@@ -11,6 +10,7 @@
         :cohorts="cohortsInCourse"
         @snackbarToggle="snackbarToggle($event)"
       />
+      <BackButton :toPath="pathDependingOnAccountType()" />
     </div>
     <div id="main-section">
       <!-- Map Buttons -->
@@ -58,7 +58,7 @@
     <v-snackbar v-model="snackbar">
       {{ snackbarMsg }}
       <template v-slot:action="{ attrs }">
-        <v-btn color="pink" text v-bind="attrs" @click="snackbar = false">
+        <v-btn color="baseAccent" text v-bind="attrs" @click="snackbar = false">
           OK
         </v-btn>
       </template>
@@ -107,6 +107,7 @@ export default {
           // hardcoded first node
           label: this.courseTitle + " Intro",
           group: "introduction",
+          topicCreatedTimestamp: new Date(),
           x: 0,
           y: 0,
         })

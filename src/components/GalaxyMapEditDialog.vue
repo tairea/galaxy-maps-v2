@@ -299,7 +299,7 @@ export default {
         .doc(this.course.id)
         .collection("map-nodes")
         .doc(node.id)
-        .set(node)
+        .set({ ...node, nodeCreatedTimestamp: new Date() })
         .then((docRef) => {
           console.log("Node successfully written!");
           this.loading = false;
