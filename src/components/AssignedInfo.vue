@@ -30,7 +30,7 @@
       <!-- People -->
       <div v-if="people.length > 0">
         <p class="overline assignedToLabel ma-0">Individuals</p>
-        <v-row class="my-1">
+        <v-row class="my-4">
           <Person v-for="person in people" :person="person" :key="person.id" />
         </v-row>
       </div>
@@ -69,12 +69,7 @@ import Person from "../components/Person";
 
 export default {
   name: "AssignedInfo",
-  props: [
-    "assignCohorts",
-    "cohorts",
-    "organisations",
-    "people",
-  ],
+  props: ["assignCohorts", "cohorts", "organisations", "people"],
   components: {
     Cohort,
     Organisation,
@@ -83,16 +78,16 @@ export default {
     AssignCohortDialog,
   },
   computed: {
-    ...mapState(['person', 'currentCohort']),
-    ...mapGetters(['getCoursesInThisCohort']),
-    assignCourses () {
-      return this.person.accountType !== "student"
+    ...mapState(["person", "currentCohort"]),
+    ...mapGetters(["getCoursesInThisCohort"]),
+    assignCourses() {
+      return this.person.accountType !== "student";
     },
-    courses () {
-      if (!this.currentCohort.courses) return []
+    courses() {
+      if (!this.currentCohort.courses) return [];
       // let cohortCourses = this.getCohortCourses()
-      return this.getCoursesInThisCohort(this.currentCohort.id)
-    }
+      return this.getCoursesInThisCohort(this.currentCohort.id);
+    },
   },
   methods: {
     // async getCohortCourses () {

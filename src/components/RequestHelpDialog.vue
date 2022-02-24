@@ -31,12 +31,15 @@
             <!-- REQUEST INPUT FIELDS -->
             <div class="create-dialog-content">
               <!-- TITLE -->
-              <p class="dialog-description">Enter your question:</p>
+              <!-- <p class="dialog-description">Enter your question:</p> -->
               <v-textarea
-                class="input-field"
-                solo
+                class="input-field mt-6"
+                outlined
+                :dark="dark"
+                :light="!dark"
                 v-model="requestForHelp"
-                background-color="white"
+                label="Enter your question"
+                color="missionAccent"
               ></v-textarea>
             </div>
 
@@ -51,6 +54,8 @@
                 :loading="loading"
                 v-bind="attrs"
                 v-on="on"
+                :dark="dark"
+                :light="!dark"
               >
                 <v-icon left> mdi-check </v-icon>
                 SUBMIT REQUEST FOR HELP
@@ -62,6 +67,8 @@
                 :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
                 class="ml-2"
                 @click="cancel"
+                :dark="dark"
+                :light="!dark"
               >
                 <v-icon left> mdi-close </v-icon>
                 Cancel
@@ -82,7 +89,12 @@
     <v-snackbar v-model="snackbar">
       {{ snackbarMsg }}
       <template v-slot:action="{ attrs }">
-        <v-btn color="pink" text v-bind="attrs" @click="snackbar = false">
+        <v-btn
+          :color="snackbarColour"
+          text
+          v-bind="attrs"
+          @click="snackbar = false"
+        >
           OK
         </v-btn>
       </template>
@@ -108,6 +120,7 @@ export default {
     requestForHelp: "",
     snackbar: false,
     snackbarMsg: "",
+    snackbarColour: "",
     loading: false,
     deleting: false,
   }),
@@ -115,6 +128,9 @@ export default {
   computed: {
     ...mapState(["currentCourse", "currentTopic", "currentTask"]),
     ...mapGetters(["person"]),
+    dark() {
+      return this.$vuetify.theme.isDark;
+    },
   },
   methods: {
     submitRequestForHelp() {
@@ -155,12 +171,14 @@ export default {
           this.loading = false;
           this.dialog = false;
 
+          this.snackbarColour = "baseAccent";
           this.snackbarMsg =
             "Request submitted. You will be notified when your instructor has responded.";
           this.snackbar = true;
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
+          this.snackbarColour = "pink";
           this.snackbarMsg = "Error: " + error;
           this.snackbar = true;
         });
@@ -216,6 +234,7 @@ export default {
       text-align: center;
       flex: none;
       font-size: 0.8rem;
+      text-transform: none;
     }
   }
 

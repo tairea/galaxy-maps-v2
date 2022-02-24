@@ -59,7 +59,12 @@
     <v-snackbar v-model="snackbar">
       {{ snackbarText }}
       <template v-slot:action="{ attrs }">
-        <v-btn color="pink" text v-bind="attrs" @click="snackbar = false">
+        <v-btn
+          :color="snackbarColour"
+          text
+          v-bind="attrs"
+          @click="snackbar = false"
+        >
           OK
         </v-btn>
       </template>
@@ -84,6 +89,7 @@ export default {
     ],
     snackbar: false,
     snackbarText: "",
+    snackbarColour: "",
     loading: false,
   }),
   mounted() {
@@ -112,9 +118,10 @@ export default {
             .signInWithEmailAndPassword(this.email, this.password);
         })
         .then(() => {
-          this.proceed()
+          this.proceed();
         })
         .catch((error) => {
+          this.snackbarColour = "pink";
           this.snackbarText = error;
           this.snackbar = true;
           console.log("Login error:", error);
@@ -124,10 +131,14 @@ export default {
     proceed() {
       if (!this.user?.data?.id || !this.person?.id) {
         return setTimeout(() => {
-          this.proceed()
-        }, 500)
-      } 
-      this.$router.push("/base/cohorts");
+          this.proceed();
+        }, 500);
+      }
+      if (this.person.accountType == "student") {
+        this.$router.push("/base/galaxies/assigned");
+      } else {
+        this.$router.push("/base/cohorts");
+      }
     },
     validate() {
       this.$refs.form.validate();
@@ -138,12 +149,14 @@ export default {
         .auth()
         .sendPasswordResetEmail(this.email)
         .then(() => {
+          this.snackbarColour = "baseAccent";
           this.snackbarText = "Reset Password Email Sent";
           this.snackbar = true;
           // Password reset email sent!
           // ..
         })
         .catch((error) => {
+          this.snackbarColour = "pink";
           this.snackbarText = "Error: " + error.message;
           this.snackbar = true;
           var errorCode = error.code;

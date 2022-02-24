@@ -134,7 +134,7 @@
 
 <script>
 import { db } from "../store/firestoreConfig";
-import { dbMixins } from "../mixins/DbMixins"
+import { dbMixins } from "../mixins/DbMixins";
 
 import { mapGetters, mapState } from "vuex";
 
@@ -220,6 +220,7 @@ export default {
         .collection("courses")
         .doc(this.course.id)
         .collection("topics")
+        .orderBy("topicCreatedTimestamp")
         .get();
 
       // 2) add them to person (this will store their TOPIC progression data for this course )
@@ -289,8 +290,8 @@ export default {
     },
 
     async getPersonsImage(personId) {
-      const person = await this.MXgetPersonByIdFromDb(personId)
-     console.log("getting person for image: ", person.image.url);
+      const person = await this.MXgetPersonByIdFromDb(personId);
+      console.log("getting person for image: ", person.image.url);
       return person.image.url;
     },
   },
