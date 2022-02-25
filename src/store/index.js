@@ -49,6 +49,7 @@ export default new Vuex.Store({
     peopleInCourse: [],
     cohortsInCourse: [],
     darkMode: true,
+    sortedArr: [],
   },
   getters: {
     people: (state) => state.people,
@@ -217,6 +218,17 @@ export default new Vuex.Store({
     },
     setDarkMode(state, dark) {
       state.darkMode = dark;
+    },
+    sortAsc(state, arr) {
+      console.log("arr: ", arr);
+      const sortedArr = arr.sort((a, b) =>
+        a.topic.topicCreatedTimestamp.seconds >
+        b.topic.topicCreatedTimestamp.seconds
+          ? 1
+          : -1
+      );
+      console.log("sortedArr: ", sortedArr);
+      state.sortedArr = sortedArr;
     },
   },
   actions: {
@@ -448,12 +460,10 @@ export default new Vuex.Store({
           allWorkForReview.push(doc.data());
         }
       }
-      console.log("allWorkForReview");
-      console.log(allWorkForReview);
       state.teachersSubmissionsToReview = allWorkForReview;
     },
     //TODO: WIP
-    async getStudentProgressForTeacher({ state }) {
+    async getStudentProgressForTeacher({ state, commit }) {
       // get teachers courses. (returns array of course objects eg. id, title, description, image, mappedBy, contentBy)
       const myCourses = this.getters.getCoursesByWhoMadeThem(state.person.id);
       // make an array of course.id's
@@ -510,7 +520,16 @@ export default new Vuex.Store({
                 .collection(teachersCourseId)
                 .get();
 
-              for (const topic of studentTaskQuerySnapshot.docs) {
+              // sort topics by topic.topicCreatedTimestamp (so that y axes: taskCount is close to being in order)
+              let sortedTopics = studentTaskQuerySnapshot.docs.sort((a, b) =>
+                a.data().topicCreatedTimestamp > b.data().topicCreatedTimestamp
+                  ? 1
+                  : -1
+              );
+              // console.log("sortedTopics: ", sortedTopics.data());
+
+              for (const topic of sortedTopics) {
+                // console.log("sorted topic: ", topic.data());
                 // new topic. reset array
                 let currentTopicProgress = [];
 
@@ -527,30 +546,44 @@ export default new Vuex.Store({
                     "inreview",
                     "active",
                   ])
-                  .orderBy("taskSubmittedTimestamp")
+                  .orderBy("taskStartedTimestamp")
                   .get();
 
                 for (const task of topicQuerySnapshot.docs) {
                   taskCount++;
                   // topicData.push(task.data());
                   currentTopicProgress.push({
-                    x: task.data().taskSubmittedTimestamp,
+                    x: task.data().taskStartedTimestamp,
                     y: taskCount,
                     courseId: teachersCourseId,
                     topicId: topic.id,
                     taskTitle: task.data().title,
+                    taskStatus: "started",
+                    task: task.data(),
+                  });
+                  currentTopicProgress.push({
+                    x: task.data().taskCompletedTimestamp
+                      ? task.data().taskCompletedTimestamp
+                      : task.data().taskSubmittedForReviewTimestamp,
+                    y: taskCount,
+                    courseId: teachersCourseId,
+                    topicId: topic.id,
+                    taskTitle: task.data().title,
+                    taskStatus: task.data().taskStatus,
                     task: task.data(),
                   });
                 }
                 currentCourseProgress.push({
                   topicId: topic.id,
                   topic: topic.data(),
-                  topicProgressData: currentTopicProgress,
+                  topicTitle: topic.data().label,
+                  topicTaskData: currentTopicProgress,
                 });
               }
+
               currentStudentProgress.push({
                 courseId: teachersCourseId,
-                courseProgressData: currentCourseProgress,
+                courseTopicData: currentCourseProgress,
               });
             }
           }
@@ -558,7 +591,7 @@ export default new Vuex.Store({
         allStudentProgress.push({
           studentId: student.id,
           student: student,
-          studentProgressData: currentStudentProgress,
+          studentCoursesData: currentStudentProgress,
         });
       }
 
@@ -567,6 +600,7 @@ export default new Vuex.Store({
 
       state.teachersStudentsProgress = allStudentProgress;
     },
+
     async getAssignedEdgesByPersonId({ state }, personId) {
       const personsAssignedEdges = [];
       // get the courseId from assignedCourses

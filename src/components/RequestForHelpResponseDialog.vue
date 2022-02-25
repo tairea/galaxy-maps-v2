@@ -65,7 +65,7 @@
                       class="dialog-context-description"
                       style="color: var(--v-missionAccent-base)"
                     >
-                      <td>Objective:</td>
+                      <td>System:</td>
                       <td>{{ request.contextTopic.label }}</td>
                     </tr>
                     <tr
@@ -92,9 +92,11 @@
               <p class="dialog-description">Enter your response:</p>
               <v-textarea
                 class="input-field"
-                solo
+                outlined
+                :dark="dark"
+                :light="!dark"
                 v-model="response"
-                background-color="white"
+                color="missionAccent"
               ></v-textarea>
             </div>
 
@@ -163,6 +165,9 @@ export default {
   computed: {
     ...mapState(["currentCourse", "currentTopic", "currentTask"]),
     ...mapGetters(["person"]),
+    dark() {
+      return this.$vuetify.theme.isDark;
+    },
   },
   methods: {
     getHumanDate(ts) {
