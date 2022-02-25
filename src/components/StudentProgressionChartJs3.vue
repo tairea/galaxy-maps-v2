@@ -1,26 +1,35 @@
 <!-- BarLine.vue -->
 <template>
-  <div class="chart-container d-flex">
+  <div v-if="teachersStudentsProgress.length" class="chart-container d-flex">
     <div
-      v-for="studentData in studentsProgressionData"
-      :key="studentData.id"
+      v-for="studentData in teachersStudentsProgress"
+      :key="studentData.studentId"
       class="chartCard"
     >
-      <v-avatar v-if="person" size="30">
-        <img
-          v-if="studentData.image"
-          :src="studentData.image.url"
-          :alt="studentData.firstName"
-          style="object-fit: cover"
-        />
-      </v-avatar>
-      <p>{{ studentData.firstName }}</p>
-
+      <div class="d-flex align-center">
+        <v-avatar v-if="studentData.student.image" size="30">
+          <img
+            v-if="studentData.student.image"
+            :src="studentData.student.image.url"
+            :alt="studentData.student.firstName"
+            style="object-fit: cover"
+          />
+        </v-avatar>
+        <div v-else class="imagePlaceholder">
+          {{ first3Letters(studentData.student.firstName) }}
+        </div>
+        <p class="ml-2 mt-6">
+          {{
+            studentData.student.firstName + " " + studentData.student.lastName
+          }}
+        </p>
+      </div>
       <Chart
+        ref="chart"
         id="chartImage"
+        :chartType="chartType"
         :chartData="formatStudentsChartData(studentData)"
         :chartOptions="chartOptions"
-        :chartType="chartType"
         :style="{ width: '100%', height: '200px' }"
       />
     </div>
@@ -28,7 +37,7 @@
     <!-- Legend -->
     <div
       id="chartLegend"
-      class="overline"
+      class="overline pa-2"
       style="color: var(--v-missionAccent-base)"
     >
       LEGEND:
@@ -40,7 +49,7 @@
 import Chart from "@/components/Chart.vue";
 
 import { DateTime } from "luxon";
-import { mapGetters } from "vuex";
+import { mapState, mapGetters } from "vuex";
 
 import "chartjs-adapter-luxon";
 
@@ -53,290 +62,15 @@ export default {
     Chart,
   },
   computed: {
-    ...mapGetters(["person"]),
+    ...mapState(["teachersStudentsProgress"]),
+    ...mapGetters(["person", "getCourseById"]),
+  },
+  mounted() {
+    console.log("teachersStudentsProgress");
+    console.log(this.teachersStudentsProgress);
   },
   data() {
     return {
-      studentsProgressionData: [
-        {
-          studentId: 123,
-          firstName: "Ian",
-          image: {
-            url: "https://picsum.photos/200",
-          },
-          courses: [
-            {
-              contextCourse: "Māori Performing Arts",
-              topics: [
-                {
-                  contextTopic: "Wiri",
-                  tasks: [
-                    {
-                      taskName: "wiri1",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 5),
-                    },
-                    {
-                      taskName: "wiri2",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 6),
-                    },
-                    {
-                      taskName: "wiri3",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 7),
-                    },
-                  ],
-                },
-                {
-                  contextTopic: "Pukana",
-                  tasks: [
-                    {
-                      taskName: "pukana1",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 9),
-                    },
-                    {
-                      taskName: "pukana2",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 11),
-                    },
-                    {
-                      taskName: "pukana3",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 12),
-                    },
-                  ],
-                },
-                {
-                  contextTopic: "Takahi",
-                  tasks: [
-                    {
-                      taskName: "takahi1",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 13),
-                    },
-                    {
-                      taskName: "takahi2",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 13),
-                    },
-                    {
-                      taskName: "takahi3",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 14),
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              contextCourse: "Web Development",
-              topics: [
-                {
-                  contextTopic: "HTML",
-                  tasks: [
-                    {
-                      taskName: "html1",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 5),
-                    },
-                    {
-                      taskName: "html2",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 5),
-                    },
-                    {
-                      taskName: "html3",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 8),
-                    },
-                  ],
-                },
-                {
-                  contextTopic: "CSS",
-                  tasks: [
-                    {
-                      taskName: "css1",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 9),
-                    },
-                    {
-                      taskName: "css2",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 10),
-                    },
-                    {
-                      taskName: "css3",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 10),
-                    },
-                  ],
-                },
-                {
-                  contextTopic: "Flexbox",
-                  tasks: [
-                    {
-                      taskName: "flexbox1",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 11),
-                    },
-                    {
-                      taskName: "flexbox2",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 12),
-                    },
-                    {
-                      taskName: "flexbox3",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 13),
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-        {
-          studentId: 456,
-          firstName: "Ben",
-          image: {
-            url: "https://picsum.photos/300",
-          },
-          courses: [
-            {
-              contextCourse: "Māori Performing Arts",
-              topics: [
-                {
-                  contextTopic: "Wiri",
-                  tasks: [
-                    {
-                      taskName: "wiri1",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 5),
-                    },
-                    {
-                      taskName: "wiri2",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 5),
-                    },
-                    {
-                      taskName: "wiri3",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 6),
-                    },
-                  ],
-                },
-                {
-                  contextTopic: "Pukana",
-                  tasks: [
-                    {
-                      taskName: "pukana1",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 7),
-                    },
-                    {
-                      taskName: "pukana2",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 7),
-                    },
-                    {
-                      taskName: "pukana3",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 7),
-                    },
-                  ],
-                },
-                {
-                  contextTopic: "Takahi",
-                  tasks: [
-                    {
-                      taskName: "takahi1",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 8),
-                    },
-                    {
-                      taskName: "takahi2",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 9),
-                    },
-                    {
-                      taskName: "takahi3",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 10),
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              contextCourse: "Web Development",
-              topics: [
-                {
-                  contextTopic: "HTML",
-                  tasks: [
-                    {
-                      taskName: "html1",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 5),
-                    },
-                    {
-                      taskName: "html2",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 5),
-                    },
-                    {
-                      taskName: "html3",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 8),
-                    },
-                  ],
-                },
-                {
-                  contextTopic: "CSS",
-                  tasks: [
-                    {
-                      taskName: "css1",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 9),
-                    },
-                    {
-                      taskName: "css2",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 10),
-                    },
-                    {
-                      taskName: "css3",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 10),
-                    },
-                  ],
-                },
-                {
-                  contextTopic: "Flexbox",
-                  tasks: [
-                    {
-                      taskName: "flexbox1",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 11),
-                    },
-                    {
-                      taskName: "flexbox2",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 12),
-                    },
-                    {
-                      taskName: "flexbox3",
-                      taskStatus: "completed",
-                      timestamp: new Date(2022, 1, 13),
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      ],
       chartType: "line",
       chartData: {
         // labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
@@ -369,6 +103,10 @@ export default {
         ],
       },
       chartOptions: {
+        // interaction: {
+        //   mode: "index",
+        //   axis: "y",
+        // },
         layout: {
           padding: {
             // left: 5,
@@ -390,7 +128,7 @@ export default {
             type: "time",
             time: {
               // Luxon format string
-              tooltipFormat: "DD T",
+              tooltipFormat: "tt DDDD",
             },
             // title: {
             //   display: true,
@@ -398,10 +136,9 @@ export default {
             // },
           },
           y: {
-            // title: {
-            //   display: true,
-            //   text: "value",
-            // },
+            ticks: {
+              precision: 0,
+            },
           },
         },
         maintainAspectRatio: false,
@@ -488,35 +225,46 @@ export default {
       let datasets = [];
 
       // loops the students courses
-      for (const course of studentObj.courses) {
-        const courseName = course.contextCourse;
+      for (const course of studentObj.studentCoursesData) {
+        const courseId = course.courseId;
 
-        const courseColour = this.stringToColour(courseName);
+        // get course name
+        const courseContext = this.getCourseById(courseId);
+
+        const courseColour = this.stringToColour(courseContext.title);
 
         let courseTaskData = [];
         let taskCount = 0;
 
         // push task data into array
-        for (const topic of course.topics) {
-          const taskData = topic.tasks.map((task, index) => {
+        for (const topic of course.courseTopicData) {
+          const taskData = topic.topicTaskData.map((task, index) => {
+            if (!task.x) return;
             taskCount++;
             return {
-              x: task.timestamp,
-              y: taskCount,
+              x: new DateTime.fromSeconds(task.x.seconds),
+              y: task.y,
+              topic: topic.topicTitle,
+              taskStatus: task.taskStatus,
+              taskTitle: task.taskTitle,
             };
           });
           courseTaskData.push(taskData);
         }
 
+        console.log("courseTaskData:", courseTaskData);
+
         let studentCourseData = {
           type: "line",
           backgroundColor: courseColour,
           borderColor: courseColour,
+          borderRadius: 5,
+          borderWidth: 1,
           data: courseTaskData.flat(),
-          label: courseName,
-          // segment: {
-          //   borderColor: (ctx) => this.getColourBasedOnStatus(ctx, studentObj),
-          // },
+          label: courseContext.title,
+          segment: {
+            borderColor: (ctx) => this.getColourBasedOnStatus(ctx, course),
+          },
         };
 
         // push course to datasets
@@ -546,22 +294,42 @@ export default {
       // const datasetsObj = {
       //   datasets: [studentData],
       // };
-      console.log("formatted studentData: ", datasetsObj);
+      // console.log("formatted studentData: ", datasetsObj);
       return datasetsObj;
     },
-    getColourBasedOnStatus(ctx, studentObj) {
-      switch (
-        studentObj.tasksWorkedOnForThisCourse[ctx.p1DataIndex].taskStatus
-      ) {
-        // case "active":
-        //   return this.$vuetify.theme.themes.dark.missionAccent;
-        case "inreview":
-          return this.$vuetify.theme.themes.dark.cohortAccent;
-        // case "completed":
-        //   return this.$vuetify.theme.themes.dark.baseAccent;
-        default:
-          return;
-      }
+    getColourBasedOnStatus(ctx, course) {
+      // TODO: dunno why this doesnt work (supposed to change border colour depending on status)
+      // console.log("ctx");
+      // console.log(ctx);
+      // console.log("course.courseTopicData[ctx.p1DataIndex]");
+      // console.log(course.courseTopicData[ctx.p1DataIndex]);
+
+      course.courseTopicData[ctx.p1DataIndex].topicTaskData.forEach(
+        (taskPoint) => {
+          // console.log("taskPoint: ", taskPoint);
+          switch (taskPoint.taskStatus) {
+            case "inreview":
+              return this.$vuetify.theme.themes.dark.cohortAccent;
+            case "completed":
+              return this.$vuetify.theme.themes.dark.baseAccent;
+            default:
+              return;
+          }
+        }
+      );
+
+      // switch (
+      //   course.courseTopicData[ctx.p1DataIndex].topicTaskData.taskStatus
+      // ) {
+      //   // case "active":
+      //   //   return this.$vuetify.theme.themes.dark.missionAccent;
+      //   case "inreview":
+      //     return this.$vuetify.theme.themes.dark.cohortAccent;
+      //   // case "completed":
+      //   //   return this.$vuetify.theme.themes.dark.baseAccent;
+      //   default:
+      //     return;
+      // }
     },
     // example of line segment logic (use to color line according to taskStatus eg. active/inreview/completed)
     // down(ctx, value) {
@@ -595,16 +363,22 @@ export default {
     stringToColour(str) {
       return `hsl(${this.hashCode(str) % 360}, 100%, 70%)`;
     },
+    first3Letters(name) {
+      return name.substring(0, 3).toUpperCase();
+    },
   },
 };
 </script>
 
 <style lang="scss" scoped>
+.chart-container {
+  flex-wrap: wrap;
+}
 .chartCard {
   border: 1px solid var(--v-missionAccent-base);
   margin: 10px;
   padding: 10px;
-  width: 33%;
+  width: 100%;
   border-radius: 10px;
 }
 #chartLegend {
@@ -613,5 +387,15 @@ export default {
   position: absolute;
   bottom: 0px;
   width: 100%;
+}
+.imagePlaceholder {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: rgba(200, 200, 200, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 10px;
 }
 </style>

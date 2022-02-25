@@ -90,10 +90,6 @@ export default {
       courseId: this.submission.contextCourse.id,
       topicId: this.submission.contextTopic.id,
     });
-    console.log(
-      "this.personsTopicsTasks from SubmissionTeacherFrame.vue: ",
-      this.personsTopicsTasks
-    );
   },
   computed: {
     ...mapState([
