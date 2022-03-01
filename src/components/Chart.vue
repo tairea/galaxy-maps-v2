@@ -33,8 +33,8 @@ export default {
         const { chart, tooltip } = context;
         const tooltipEl = this.getOrCreateTooltip(chart);
 
-        console.log("tooltipEl", tooltipEl);
-        console.log("tooltip", tooltip);
+        // console.log("tooltipEl", tooltipEl);
+        // console.log("tooltip", tooltip);
 
         // Hide if no tooltip
         if (tooltip.opacity === 0) {
