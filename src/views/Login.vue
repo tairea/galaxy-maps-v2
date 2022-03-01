@@ -95,8 +95,8 @@ export default {
   mounted() {
     // testing xApi query
     queryXAPIStatement({
-      verb: "http://adlnet.gov/expapi/verbs/completed",
-      email: "waipuna@gmail.com",
+      // verb: "http://adlnet.gov/expapi/verbs/completed",
+      // email: "waipuna@gmail.com",
     }).then((result) => {
       console.log("result");
       console.log(result);

@@ -40,7 +40,32 @@
       class="overline pa-2"
       style="color: var(--v-missionAccent-base)"
     >
-      LEGEND:
+      <!-- LEGEND: -->
+      <v-row>
+        <v-col cols="2"> START:</v-col>
+        <v-col cols="4">
+          <input
+            type="date"
+            class="date-picker"
+            placeholder="dd-mm-yyyy"
+            value=""
+            min="2022-01-01"
+            max="2023-01-01"
+            :style="dark ? 'color-scheme: dark' : 'color-scheme: light'"
+          />
+        </v-col>
+        <v-col cols="2">END:</v-col>
+        <v-col cols="4"
+          ><input
+            type="date"
+            class="date-picker"
+            placeholder="dd-mm-yyyy"
+            value=""
+            min="2022-01-01"
+            max="2023-01-01"
+            :style="dark ? 'color-scheme: dark' : 'color-scheme: light'"
+        /></v-col>
+      </v-row>
     </div>
   </div>
 </template>
@@ -64,6 +89,9 @@ export default {
   computed: {
     ...mapState(["teachersStudentsProgress"]),
     ...mapGetters(["person", "getCourseById"]),
+    dark() {
+      return this.$vuetify.theme.isDark;
+    },
   },
   mounted() {
     console.log("teachersStudentsProgress");
@@ -71,6 +99,8 @@ export default {
   },
   data() {
     return {
+      date: new Date(),
+      modal: false,
       chartType: "line",
       chartData: {
         // labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
@@ -397,5 +427,9 @@ export default {
   justify-content: center;
   align-items: center;
   font-size: 10px;
+}
+
+.date-picker {
+  color: var(--v-missionAccent-base);
 }
 </style>
