@@ -44,74 +44,72 @@ export default {
 
         // Set Text
         if (tooltip.body) {
+          // Get data from tooltip
           const dataPoints = tooltip.dataPoints || [];
 
-          // const tableHead = document.createElement("thead");
+          // ===== Create row elements =====
           const divTopRow = document.createElement("div");
           const divMiddleRow = document.createElement("div");
           const divBottomRow = document.createElement("div");
+
           dataPoints.forEach((dataPoint, i) => {
             const colors = tooltip.labelColors[i];
-            // create a table row
-            // const divTopRow = document.createElement("div");
-            // tr.style.borderWidth = 0;
-            // create a table header
-            // const th = document.createElement("th");
-            // th.style.borderWidth = 0;
+
+            // ===== Top Row (Task Context) =====
             divTopRow.innerHTML = `
-
-            <table>
-                    <tr
-                      class="dialog-context-description"
-                      style="
-                        color: var(--v-missionAccent-base);
-                        font-size: 0.8rem;
-                        font-weight: 800;
-                      "
-                    >
-                      <td>MISSION:</td>
-                      <td>${dataPoint.raw.taskTitle}</td>
-                    </tr>
-                    <tr
-                      class="dialog-context-description"
-                      style="color: var(--v-missionAccent-base)"
-                    >
-                      <td>System:</td>
-                      <td>${dataPoint.raw.topic}</td>
-                    </tr>
-                    <tr
-                      class="dialog-context-description"
-                      style="color: var(--v-galaxyAccent-base)"
-                    >
-                      <td>Galaxy:</td>
-                      <td>${dataPoint.dataset.label}</td>
-                    </tr>
-                  </table>
-
+              <table style="padding: 10px;">
+                <tr
+                  class="dialog-context-description"
+                  style="
+                    color: var(--v-missionAccent-base);
+                    text-transform: uppercase;
+                    font-size: 0.8rem;
+                    font-weight: 800;
+                    margin: 0;
+                    font-style: italic;
+                  "
+                >
+                  <td>MISSION:</td>
+                  <td>${dataPoint.raw.taskTitle}</td>
+                </tr>
+                <tr
+                  class="dialog-context-description"
+                  style="color: var(--v-missionAccent-base);
+                  text-transform: uppercase;
+                  font-size: 0.6rem;
+                  margin: 0;
+                  font-style: italic;
+                  "
+                >
+                  <td>System:</td>
+                  <td>${dataPoint.raw.topic}</td>
+                </tr>
+                <tr
+                  class="dialog-context-description"
+                  style="color: var(--v-galaxyAccent-base);
+                  text-transform: uppercase;
+                  font-size: 0.6rem;
+                  margin: 0;
+                  font-style: italic;"
+                >
+                  <td>Galaxy:</td>
+                  <td>${dataPoint.dataset.label}</td>
+                </tr>
+              </table>
             `;
-
-            // divTopRow.classList.add("text-overline");
-            divTopRow.style.borderBottom =
-              "1px solid " + this.dark
+            divTopRow.style.borderBottom = `1px solid ${
+              this.dark
                 ? this.$vuetify.theme.themes.dark.missionAccent
-                : this.$vuetify.theme.themes.light.missionAccent;
+                : this.$vuetify.theme.themes.light.missionAccent
+            }`;
 
-            // const tableBody = document.createElement("tbody");
-
-            // coloured box of line
-            // const span = document.createElement("span");
-            // span.style.background = colors.backgroundColor;
-            // span.style.borderColor = colors.borderColor;
-            // span.style.borderWidth = "2px";
-            // span.style.marginRight = "10px";
-            // span.style.height = "10px";
-            // span.style.width = "10px";
-            // span.style.display = "inline-block";
-
-            // Middle Row (Task Status)
+            // ===== Middle Row (Task Status) =====
             divMiddleRow.style.textAlign = "center";
-            // divMiddleRow.classList.add("text-overline");
-            divMiddleRow.innerHTML = dataPoint.raw.taskStatus;
+            divMiddleRow.classList.add("text-overline");
+            divMiddleRow.innerHTML = dataPoint.raw.taskStatus.toUpperCase();
+            divMiddleRow.style.padding = "5px";
+            divMiddleRow.style.fontSize = "0.9rem";
+            divMiddleRow.style.fontWeight = "800";
             switch (dataPoint.raw.taskStatus) {
               case "inreview":
                 divMiddleRow.style.color = this.dark
@@ -130,15 +128,27 @@ export default {
                 break;
               default:
             }
-            divMiddleRow.style.borderBottom =
-              "1px solid " + this.dark
+            divMiddleRow.style.borderBottom = `1px solid ${
+              this.dark
                 ? this.$vuetify.theme.themes.dark.missionAccent
-                : this.$vuetify.theme.themes.light.missionAccent;
+                : this.$vuetify.theme.themes.light.missionAccent
+            }`;
 
-            // Bottom (Date & Time)
+            // ===== Bottom Row (Date & Time) =====
             divBottomRow.style.textAlign = "center";
-            divBottomRow.classList.add("text-overline");
-            divBottomRow.innerHTML = dataPoint.label;
+            // divBottomRow.classList.add("text-overline");
+            divBottomRow.innerHTML = `
+            <p
+            class="dialog-context-description"
+                      style="color: var(--v-missionAccent-base);
+                      text-transform: uppercase;
+                      font-size: 0.8rem;
+                      margin: 0;
+                      font-style: italic;
+                      padding: 10px;"
+                      
+            >${dataPoint.label}</p>
+            `;
           });
           const subDiv = document.getElementById("subDiv");
 
@@ -160,8 +170,8 @@ export default {
         tooltipEl.style.left = positionX + tooltip.caretX + "px";
         tooltipEl.style.top = positionY + tooltip.caretY + "px";
         tooltipEl.style.font = tooltip.options.bodyFont.string;
-        tooltipEl.style.padding =
-          tooltip.options.padding + "px " + tooltip.options.padding + "px";
+        // tooltipEl.style.padding =
+        //   tooltip.options.padding + "px " + tooltip.options.padding + "px";
       },
     }),
       this.chartConstructor(chartType, chartData, chartOptions);
@@ -185,10 +195,11 @@ export default {
 
         tooltipEl.style.background = "rgba(0, 0, 0, 0.7)";
         tooltipEl.style.borderRadius = "3px";
-        tooltipEl.style.border =
-          "1px solid " + this.dark
+        tooltipEl.style.border = `1px solid ${
+          this.dark
             ? this.$vuetify.theme.themes.dark.missionAccent
-            : this.$vuetify.theme.themes.light.missionAccent;
+            : this.$vuetify.theme.themes.light.missionAccent
+        }`;
         tooltipEl.style.color = "white";
         tooltipEl.style.opacity = 1;
         tooltipEl.style.pointerEvents = "none";
@@ -211,12 +222,4 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
-.dialog-context-description {
-  color: var(--v-missionAccent-base);
-  text-transform: uppercase;
-  font-size: 0.6rem;
-  margin: 0;
-  font-style: italic;
-}
-</style>
+<style lang="scss" scoped></style>
