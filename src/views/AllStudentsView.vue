@@ -143,7 +143,7 @@ export default {
     },
     async bindStudentTaskProgress() {
       await this.$store.dispatch(
-        "getStudentProgressForTeacher",
+        "getEachStudentsProgressForTeacher",
         this.user.data.id
       );
       this.progressLoading = false;
