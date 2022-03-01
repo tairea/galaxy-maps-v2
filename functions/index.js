@@ -1,6 +1,7 @@
 const admin = require('firebase-admin');
 const functions = require('firebase-functions');
 const nodemailer = require('nodemailer');
+const cors = require('cors');
 
 admin.initializeApp();
 
@@ -112,7 +113,7 @@ Galaxy Maps Robot`;
   await mailTransport.sendMail(mailOptions);
   functions.logger.log('New teacher invite email sent to:', email);
   return null;
-}
+};
  
 // Sends an invite email to a new student.
 async function sendStudentInviteEmail(email, displayName, link, inviter) {
@@ -136,7 +137,7 @@ Galaxy Maps Robot`;
   await mailTransport.sendMail(mailOptions);
   functions.logger.log('New student invite email sent to:', email);
   return null;
-}
+};
 
 
 //======COHORT REGISTRATION NOTIFICATION==================
@@ -167,15 +168,15 @@ Galaxy Maps Robot`;
   await mailTransport.sendMail(mailOptions);
   functions.logger.log('New cohort invite email sent to:', email);
   return null;
-}
+};
 
 //======COURSE REGISTRATION NOTIFICATION==================
 exports.sendNewCourseEmail = functions.https.onCall((data, context) => {
   const { email, name, course } = data
-  return sendNewCourseEmail(email, name, course);
+  sendNewCourseEmail(email, name, course);
 });
 
-// Sends an invite email to a new student.
+// Sends a invite email to a new student.
 async function sendNewCourseEmail(email, name, course) {
   const mailOptions = {
     from: `${APP_NAME} <noreply@galaxymaps.io>`,
@@ -197,6 +198,6 @@ Galaxy Maps Robot`;
   await mailTransport.sendMail(mailOptions);
   functions.logger.log('New assignment email sent to:', email);
   return null;
-}
+};
 
  

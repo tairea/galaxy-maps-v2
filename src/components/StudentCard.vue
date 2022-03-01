@@ -5,7 +5,7 @@
         color="secondary"
         @mouseenter="onhover = true"
         @mouseleave="onhover = false"
-        size="70"
+        size="50"
       >
         <img
           v-if="student.image"
@@ -30,18 +30,26 @@
           <span class="caption pt-2">Current Mission</span>
         </v-row>
         <v-row>
-          <h3 class="titles">{{ topic }} </h3>
+          <h4 class="titles">{{ topic }} </h4>
         </v-row>
       </div>
-      <div v-if="task" class="mt-6 mission-section">
+      <div v-else-if="assignedCourse">
+        <v-row>
+          <span class="caption pt-2">Assigned Course</span>
+        </v-row>
+        <v-row>
+          <h4 class="titles">{{ assignedCourse.title }} </h4>
+        </v-row>
+      </div>
+      <div v-if="task" class="mt-4 mission-section">
         <v-row>
           <span class="caption">Current Task</span>
         </v-row>
         <v-row>
-          <h3 class="titles">{{ task }} </h3>
+          <h4 class="titles">{{ task }} </h4>
         </v-row>
       </div>
-      <h3 v-if="!topic" class="inactive-title">No active galaxies</h3>
+      <h4 v-if="!topic && !assignedCourse" class="inactive-title">No active galaxies</h4>
     </div>
     <div v-if="missions.length" class="student-section student-minor-section">
       <v-row class="justify-center">
@@ -78,9 +86,10 @@
 <script>
 import { min } from 'moment';
 // import EditStudentButtonDialog from "../components/EditStudentButtonDialog";
+import { mapState, mapGetters } from 'vuex'
 
 export default {
-  name: "StudentsCard",
+  name: "StudentCard",
   components: {
     // EditStudentButtonDialog,
   },
@@ -88,22 +97,34 @@ export default {
   data() {
     return {
       editing: false,
-      course: "", 
       topic: "", 
       task: "",
       missions: [],
       hours: "",
       work: [],
-      help: []
+      help: [],
+      assignedCourse: null
     };
   },
+  mounted () {
+    if (this.currentCohort.courses?.length) {
+      this.getAssignedCourse()
+    }
+  },
   computed: {
+    ...mapState(['currentCohort']),
+    ...mapGetters(['getCourseById']),
     lastLoggedIn () {
       if (!this.student.lastLoggedIn) return ''
       return this.timePassed()
-    },
+    }
   },
   methods: {
+    async getAssignedCourse () {
+      const courseId = this.student.assignedCourses?.find(course => this.currentCohort.courses.includes(course))
+      const course = this.getCourseById(courseId)
+      this.assignedCourse = course
+    },
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
@@ -204,7 +225,7 @@ a {
     }
 
     .studentName {
-      font-size: 0.9rem;
+      font-size: 0.7rem;
       letter-spacing: 2px;
       text-align: center;
     }

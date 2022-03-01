@@ -50,6 +50,7 @@ export default new Vuex.Store({
     cohortsInCourse: [],
     darkMode: true,
     sortedArr: [],
+    snackbar: {}
   },
   getters: {
     people: (state) => state.people,
@@ -230,6 +231,9 @@ export default new Vuex.Store({
       console.log("sortedArr: ", sortedArr);
       state.sortedArr = sortedArr;
     },
+    setSnackbar(state, snackbar) {
+      state.snackbar = snackbar
+    }
   },
   actions: {
     setUser({ commit }, user) {

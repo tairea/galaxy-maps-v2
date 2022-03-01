@@ -55,20 +55,7 @@
       >
     </div>
 
-    <!-- Login Error Snackbar -->
-    <v-snackbar v-model="snackbar">
-      {{ snackbarText }}
-      <template v-slot:action="{ attrs }">
-        <v-btn
-          :color="snackbarColour"
-          text
-          v-bind="attrs"
-          @click="snackbar = false"
-        >
-          OK
-        </v-btn>
-      </template>
-    </v-snackbar>
+    <SnackBar />
   </div>
 </template>
 
@@ -76,9 +63,13 @@
 import firebase from "firebase";
 import { mapGetters } from "vuex";
 import { queryXAPIStatement } from "../store/veracityLRS";
+import SnackBar from "@/components/SnackBar.vue"
 
 export default {
   name: "Login",
+  components: {
+    SnackBar
+  },
   data: () => ({
     valid: true,
     email: "",
@@ -87,12 +78,17 @@ export default {
       (v) => !!v || "E-mail is required",
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
     ],
-    snackbar: false,
-    snackbarText: "",
-    snackbarColour: "",
     loading: false,
   }),
   mounted() {
+    console.log('checking props: ', this.$route.params)
+    if (this.$route.params?.verified) {
+      this.$store.commit("setSnackbar",{
+        show: true,
+        text: 'Email successfully verified',
+        color: 'baseAccent'
+      })
+    }
     // testing xApi query
     queryXAPIStatement({
       verb: "http://adlnet.gov/expapi/verbs/completed",
@@ -121,9 +117,11 @@ export default {
           this.proceed();
         })
         .catch((error) => {
-          this.snackbarColour = "pink";
-          this.snackbarText = error;
-          this.snackbar = true;
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: error.message,
+            color: "pink"
+          })
           console.log("Login error:", error);
           this.loading = false;
         });
