@@ -2,7 +2,7 @@
   <v-app class="bg">
     <NavBar :userType="userType()" />
     <router-view :key="$route.fullPath"></router-view>
-    <Snackbar />
+    <SnackBar />
     <UserBar />
   </v-app>
 </template>
