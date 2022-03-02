@@ -14,10 +14,12 @@ firebase.auth().onAuthStateChanged((user) => {
       Object.assign(user, {admin: idTokenResult.claims.admin})
       store.dispatch("setUser", user);
       store.dispatch("getPersonById", user.uid);
+      store.dispatch("userLoggedIn", user)
     })
   } else {
     store.dispatch("setUser", user);
     store.dispatch("getPersonById", user);
+    store.dispatch("userLoggedOut")
     store.dispatch("resetState")
   }
 });
