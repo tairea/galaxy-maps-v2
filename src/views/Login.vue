@@ -89,6 +89,7 @@ export default {
         color: 'baseAccent'
       })
     }
+    console.log("mounted on login user: ", firebase.auth().currentUser)
     // testing xApi query
     queryXAPIStatement({
       // verb: "http://adlnet.gov/expapi/verbs/completed",

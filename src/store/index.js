@@ -345,8 +345,8 @@ export default new Vuex.Store({
         await db
           .collection("people")
           .doc(id)
-          .get()
-          .then((doc) => {
+          .onSnapshot((doc) => {
+            console.log("person updated")
             const person = {
               id,
               ...doc.data(),
@@ -958,6 +958,31 @@ export default new Vuex.Store({
         db.collection("cohorts").where("courses", "array-contains", courseId)
       );
     }),
+    // userLoggedIn (user) {
+    //   userStatusFirestoreRef.onSnapshot(function(doc) {
+    //     var isOnline = doc.data().state == 'online';
+    //     console.log("isOnline: ", isOnline)
+    // });
+    
+      // const timeStamp = Date.now()
+      // console.log('time stamp: ', timeStamp)
+      // db.collection("people")
+      // .doc(user.id)
+      // .set({lastLoggedIn: timeStamp})
+      // .catch((error) => {
+      //   console.error("Error writing document: ", error);
+      // });
+    // },
+    // userLoggedOut ({state}, user) {
+    //   const timeStamp = Date.now()
+    //   console.log('time stamp: ', timeStamp)
+    //   return db.collection("people")
+    //   .doc(state.user.data.id)
+    //   .set({lastLoggedOut: timeStamp})
+    //   .catch((error) => {
+    //     console.error("Error writing document: ", error);
+    //   });
+    // }
   },
   plugins: [createPersistedState()],
 });
