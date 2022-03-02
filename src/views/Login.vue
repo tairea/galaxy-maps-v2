@@ -93,15 +93,17 @@ export default {
     loading: false,
   }),
   mounted() {
-    // testing xApi query
+    // working test xApi query (requests galaxy info from specific user)
     queryXAPIStatement({
-      // verb: "http://adlnet.gov/expapi/verbs/completed",
-      // email: "waipuna@gmail.com",
+      "statement.actor.mbox": "mailto:email.thebro@gmail.com",
+      "statement.context.contextActivities.grouping.id":
+        "https://www.galaxymaps.io/course/52YbN7eoE8ol5aPzvEap",
     }).then((result) => {
       console.log("result");
       console.log(result);
     });
   },
+
   computed: {
     ...mapGetters(["person", "user"]),
   },
