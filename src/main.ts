@@ -10,10 +10,6 @@ Vue.config.productionTip = false;
 
 firebase.auth().onAuthStateChanged((user) => {
   if (user) {
-    // check if email has been verified
-
-    // email has been verified, go to login
-
     user?.getIdTokenResult().then(idTokenResult => {
       Object.assign(user, {admin: idTokenResult.claims.admin})
       store.dispatch("setUser", user);
