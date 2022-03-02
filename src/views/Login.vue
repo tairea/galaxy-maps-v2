@@ -132,7 +132,16 @@ export default {
           this.proceed();
         }, 500);
       }
-      if (this.person.accountType == "student") {
+      if (!this.user.data.verified) {
+        var actionCodeSettings = {
+          // TODO: Update to galaxymaps.io on deployment
+          url: window.location.origin + '/login',
+          handleCodeInApp: true,
+        };
+        firebase.auth().currentUser.sendEmailVerification(actionCodeSettings)
+        throw new Error("New email verification link sent. Please check your emails")  
+      }
+      else if (this.person.accountType == "student") {
         this.$router.push("/base/galaxies/assigned");
       } else {
         this.$router.push("/base/cohorts");
