@@ -2,6 +2,7 @@
   <v-app class="bg">
     <NavBar :userType="userType()" />
     <router-view :key="$route.fullPath"></router-view>
+    <Snackbar />
     <UserBar />
   </v-app>
 </template>
@@ -10,6 +11,7 @@
 import { Component, Vue } from "vue-property-decorator";
 import UserBar from "@/components/UserBar.vue";
 import NavBar from "@/components/NavBar.vue";
+import SnackBar from "@/components/SnackBar.vue"
 
 import { mapGetters } from "vuex";
 
@@ -23,6 +25,7 @@ const HomeBase = Vue.extend({
   components: {
     UserBar,
     NavBar,
+    SnackBar
   },
 })
 export default class Home extends HomeBase {
