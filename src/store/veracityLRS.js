@@ -464,16 +464,13 @@ export const studentRequestForHelpXAPIStatement = (
 ------------------------- */
 
 export const queryXAPIStatement = (payloadObj) => {
-  const url = new URL("https://galaxymaps.lrs.io/xapi/statements");
+  const url = new URL("https://galaxymaps.lrs.io/xapi/statements/search");
   const parameters = url.searchParams;
-
-  if (payloadObj.verb) {
-    parameters.set("verb", payloadObj.verb);
-  }
-  if (payloadObj.email) {
-    parameters.set("agent", '{"mbox": "mailto:' + payloadObj.email + '"}');
-  }
-
+  // use veracist LRS v2 mode
+  parameters.set("mode", "v2");
+  // add search params as json
+  url.searchParams.set("query", JSON.stringify(payloadObj));
+  // get query from LRS
   return fetch(url, {
     method: "GET",
     headers: {
