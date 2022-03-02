@@ -2,7 +2,7 @@
   <div id="cohort-info">
     <h2 class="cohort-label">Cohort</h2>
     <h1 class="cohort-title">{{ currentCohort.name }}</h1>
-    <div v-if="currentCohort.image.url">
+    <div v-if="cohortImage">
       <v-img
         class="cohort-image"
         width="auto"
@@ -72,6 +72,9 @@ export default {
   },
   computed: {
     ...mapGetters(["getOrganisationById", "currentCohort", "person"]),
+    cohortImage () {
+      return this.currentCohort?.image.url
+    },
     org() {
       let org = this.getOrganisationById(this.currentCohort.organisation);
       if (org) return org;
