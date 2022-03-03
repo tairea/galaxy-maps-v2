@@ -14,6 +14,9 @@
           class="galaxy-image"
           :src="course.image.url"
         ></v-img>
+        <p class="my-2 galaxy-description">
+          {{ course.description }}
+        </p>
       </div>
       <v-btn
         text
@@ -35,10 +38,7 @@
           ></v-img>
         </div>
         <div v-else-if="course.contentBy.personId">
-          <v-img
-            class="contentBy-image mb-2"
-            :src="getPersonsImage(course.contentBy.personId)"
-          ></v-img>
+          <v-img class="contentBy-image mb-2" :src="contentByImageURL"></v-img>
         </div>
         <p class="ma-0">Content By:</p>
         <a :href="course.contentBy.source"
@@ -48,15 +48,12 @@
       <div class="right">
         <div v-if="course.mappedBy.image">
           <v-img
-            class="mappedBy-image"
+            class="mappedBy-image mb-2"
             :src="course.mappedBy.image.url"
           ></v-img>
         </div>
         <div v-else-if="course.mappedBy.personId">
-          <v-img
-            class="mappedBy-image"
-            :src="getPersonsImage(course.mappedBy.personId)"
-          ></v-img>
+          <v-img class="mappedBy-image mb-2" :src="mappedByImageURL"></v-img>
         </div>
         <p class="ma-0">Mapped By:</p>
         <span>{{ course.mappedBy.name }}</span>
@@ -162,6 +159,14 @@ export default {
         this.enrolled = true;
       }
     }
+    // get contentBy image
+    if (!this.course.contentBy.image) {
+      this.getContentByPersonsImage(this.course.contentBy.personId);
+    }
+    // get mappedBy image
+    if (!this.course.mappedBy.image) {
+      this.getMappedByPersonsImage(this.course.mappedBy.personId);
+    }
   },
   computed: {
     ...mapState(["person"]),
@@ -174,6 +179,8 @@ export default {
       enrolled: false,
       loading: false,
       startingGalaxyStatus: "",
+      contentByImageURL: "",
+      mappedByImageURL: "",
     };
   },
   methods: {
@@ -289,10 +296,17 @@ export default {
       });
     },
 
-    async getPersonsImage(personId) {
-      const person = await this.MXgetPersonByIdFromDb(personId);
+    async getContentByPersonsImage(personId) {
+      const person = await this.MXgetPersonByIdFromDB(personId);
       console.log("getting person for image: ", person.image.url);
-      return person.image.url;
+      // return person.image.url;
+      this.contentByImageURL = person.image.url;
+    },
+    async getMappedByPersonsImage(personId) {
+      const person = await this.MXgetPersonByIdFromDB(personId);
+      console.log("getting person for image: ", person.image.url);
+      // return person.image.url;
+      this.mappedByImageURL = person.image.url;
     },
   },
 };
@@ -318,6 +332,8 @@ export default {
 
   .galaxy-image {
     width: 100%;
+    max-height: 250px;
+    // width: 100%;
   }
 
   .close-button {
@@ -335,6 +351,14 @@ export default {
     min-height: 10vh;
     border-top: 1px solid var(--v-missionAccent-base);
     display: flex;
+
+    .contentBy-image,
+    .mappedBy-image {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
 
     .left,
     .right {
@@ -354,7 +378,7 @@ export default {
   .ss-actions {
     border-top: 1px solid var(--v-missionAccent-base);
     // min-width: 20vw;
-    min-height: 20vh;
+    // min-height: 10vh;
     // position: relative;
     display: flex;
     justify-content: center;
@@ -364,23 +388,20 @@ export default {
 
     .view-ss-button {
       width: 80%;
-      margin: 5px;
+      margin: 20px;
       // position: absolute;
       // bottom: 20px; // matches 20px padding of ss-details
       background-color: var(--v-background-base);
+      z-index: 3;
     }
   }
   .ss-details {
     padding: 20px;
 
-    .ss-makers {
-      .contentBy-image,
-      .mappedBy-image {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        object-fit: cover;
-      }
+    .galaxy-description {
+      color: var(--v-missionAccent-base);
+      font-size: 0.9rem;
+      font-style: italic;
     }
   }
 }
