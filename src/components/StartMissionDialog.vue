@@ -122,7 +122,7 @@ export default {
         })
         .then(() => {
           console.log("Task status successfully written as Active!");
-          startTaskXAPIStatement(this.person.email, this.currentTask.id, {
+          startTaskXAPIStatement(this.person, this.currentTask.id, {
             galaxy: this.currentCourse,
             system: this.currentTopic,
             mission: this.currentTask,

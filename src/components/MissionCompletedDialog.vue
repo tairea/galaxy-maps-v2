@@ -277,18 +277,11 @@ export default {
           console.log("Submission successfully submitted for review!");
 
           // send xAPI statement to LRS
-          submitWorkForReviewXAPIStatement(
-            this.person.email,
-            this.currentTask.id,
-            {
-              // galaxyName: this.currentCourse.title,
-              // systemName: this.currentTopic.label,
-              // missionName: this.currentTask.title,
-              galaxy: this.currentCourse,
-              system: this.currentTopic,
-              mission: this.currentTask,
-            }
-          );
+          submitWorkForReviewXAPIStatement(this.person, this.currentTask.id, {
+            galaxy: this.currentCourse,
+            system: this.currentTopic,
+            mission: this.currentTask,
+          });
 
           this.requestForHelp = "";
           this.loading = false;
@@ -354,15 +347,11 @@ export default {
         .then(() => {
           console.log("Task status successfully written as completed!");
           // send xAPI statement to LRS
-          taskMarkedAsCompletedXAPIStatement(
-            this.person.email,
-            this.currentTask.id,
-            {
-              galaxy: this.currentCourse,
-              system: this.currentTopic,
-              mission: this.currentTask,
-            }
-          );
+          taskMarkedAsCompletedXAPIStatement(this.person, this.currentTask.id, {
+            galaxy: this.currentCourse,
+            system: this.currentTopic,
+            mission: this.currentTask,
+          });
           this.loading = false;
           this.disabled = false;
           this.dialog = false;
@@ -410,7 +399,7 @@ export default {
       if (numOfTasksCompleted === this.personsTopicsTasks.length) {
         console.log("Topic Completed! (all tasks in this topic completed)");
         // TODO: some kind of notification to UI signal that Topic has been completed
-        topicCompletedXAPIStatement(this.person.email, this.currentTopic.id, {
+        topicCompletedXAPIStatement(this.person, this.currentTopic.id, {
           galaxy: this.currentCourse,
           system: this.currentTopic,
         });

@@ -144,7 +144,7 @@ export default {
           // send xAPI statement to LRS
           // student completed work
           studentWorkMarkedCompletedXAPIStatement(
-            this.requesterPerson.email,
+            this.requesterPerson,
             this.submission.contextTask.id,
             {
               galaxy: this.submission.contextCourse,
@@ -154,7 +154,7 @@ export default {
           );
           // teacher reviewed work
           teacherReviewedStudentWorkXAPIStatement(
-            this.person.email,
+            this.person,
             this.submission.contextTask.id,
             {
               student: this.requesterPerson,

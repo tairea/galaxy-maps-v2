@@ -158,15 +158,11 @@ export default {
           docRef.update({ id: docRef.id });
           console.log("Request for help successfully submitted to instructor!");
           // send xAPI statement to LRS
-          studentRequestForHelpXAPIStatement(
-            this.person.email,
-            this.currentTask.id,
-            {
-              galaxy: this.currentCourse,
-              system: this.currentTopic,
-              mission: this.currentTask,
-            }
-          );
+          studentRequestForHelpXAPIStatement(this.person, this.currentTask.id, {
+            galaxy: this.currentCourse,
+            system: this.currentTopic,
+            mission: this.currentTask,
+          });
           this.requestForHelp = "";
           this.loading = false;
           this.dialog = false;
