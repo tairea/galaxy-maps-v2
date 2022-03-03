@@ -122,7 +122,7 @@
           Start Galaxy
         </v-btn>
         <div v-if="loading" style="width: 100%">
-          <p class="starting-status">{{ startingGalaxyStatus }}</p>
+          <p class="starting-status ma-0">{{ startingGalaxyStatus }}</p>
         </div>
       </div>
     </div>
@@ -134,6 +134,8 @@ import { db } from "../store/firestoreConfig";
 import { dbMixins } from "../mixins/DbMixins";
 
 import { mapGetters, mapState } from "vuex";
+
+import { startGalaxyXAPIStatement } from "../store/veracityLRS";
 
 export default {
   name: "PopupGalaxyPreview",
@@ -287,6 +289,9 @@ export default {
         }
       }
 
+      // Send Galaxy Started statment to LRS
+      startGalaxyXAPIStatement(this.person, { galaxy: this.course });
+
       this.loading = false;
       this.$router.push({
         name: "GalaxyView",
@@ -295,17 +300,12 @@ export default {
         },
       });
     },
-
     async getContentByPersonsImage(personId) {
       const person = await this.MXgetPersonByIdFromDB(personId);
-      console.log("getting person for image: ", person.image.url);
-      // return person.image.url;
       this.contentByImageURL = person.image.url;
     },
     async getMappedByPersonsImage(personId) {
       const person = await this.MXgetPersonByIdFromDB(personId);
-      console.log("getting person for image: ", person.image.url);
-      // return person.image.url;
       this.mappedByImageURL = person.image.url;
     },
   },
@@ -421,7 +421,7 @@ export default {
   font-style: italic;
   font-size: 0.7rem;
   text-align: left;
-  padding: 20px;
+  padding: 10px;
   // text-transform: uppercase;
 }
 </style>
