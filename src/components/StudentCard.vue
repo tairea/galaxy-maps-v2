@@ -13,7 +13,6 @@
           :alt="student.firstName"
           style="object-fit: cover"
         />
-        <!-- <v-icon v-if="hover">mdi-pencil</v-icon> -->
         <v-icon v-else>mdi-account</v-icon>
       </v-avatar>
       <v-tooltip bottom>
@@ -22,7 +21,7 @@
         </template>
         <span>{{student.firstName + ' ' + student.lastName}}</span>
       </v-tooltip>
-      <p class="login pt-2">{{lastLoggedIn}}</p>
+      <p :color="online" class="login">{{loggedIn}}</p>
     </div>
     <div class="student-section student-main-section">
       <div v-if="topic">
@@ -87,9 +86,11 @@
 import { min } from 'moment';
 // import EditStudentButtonDialog from "../components/EditStudentButtonDialog";
 import { mapState, mapGetters } from 'vuex'
+import { dbMixins } from "../mixins/DbMixins"
 
 export default {
   name: "StudentCard",
+  mixins: [dbMixins],
   components: {
     // EditStudentButtonDialog,
   },
@@ -114,40 +115,44 @@ export default {
   computed: {
     ...mapState(['currentCohort']),
     ...mapGetters(['getCourseById']),
-    lastLoggedIn () {
-      if (!this.student.lastLoggedIn) return ''
-      return this.timePassed()
+    loggedIn () {
+      if (!this.student.state) return 'inactive'
+      if (this.student.state == 'online') return 'online'
+      else return this.timePassed() 
+    },
+    online () {
+      if (this.loggedIn === 'online') return 'cohortAccent'
+      else return 'baseAccent'
     }
   },
   methods: {
     async getAssignedCourse () {
       const courseId = this.student.assignedCourses?.find(course => this.currentCohort.courses.includes(course))
-      const course = this.getCourseById(courseId)
+      const course = await this.MXgetCourseById(courseId)
       this.assignedCourse = course
     },
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
     timePassed () {
-      console.log(Date.now)
-      // get total seconds between the times
-      var delta = Math.abs(this.student.lastLoggedIn - Date.now) / 1000;
+      var date = Math.round(Date.now() / 1000)
+      var delta =  date - this.student.last_changed.seconds;
+
+      console.log("delta: ", delta)
 
       // calculate (and subtract) whole days
       var days = Math.floor(delta / 86400);
-      delta -= days * 86400;
 
       // calculate (and subtract) whole hours
-      var hours = Math.floor(delta / 3600) % 24;
-      delta -= hours * 3600;
+      var hours = Math.floor(delta / 3600);
 
       // calculate (and subtract) whole minutes
-      var minutes = Math.floor(delta / 60) % 60;
-      delta -= minutes * 60;
-
-      if (minutes < 60) return minutes
-      if (hours < 24) return hours
-      return days 
+      var minutes = Math.floor(delta / 60);
+      
+      if (minutes < 1) return `just now` 
+      if (minutes < 60) return `${minutes}mins` 
+      if (hours < 24) return `${hours}hrs`
+      return `${days}days`
     }
   },
 };
@@ -163,7 +168,7 @@ a {
 }
 
 .login {
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   letter-spacing: 2px;
 }
 
@@ -209,9 +214,8 @@ a {
   }
 
   .student-image-section {
-    // flex-grow: 0 !important;
-    // flex-shrink: 1 !important;
     max-width: 18%;
+    padding-bottom: 2px !important;
 
     .imagePlaceholder {
       width: 60px;

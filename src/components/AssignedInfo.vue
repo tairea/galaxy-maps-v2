@@ -66,10 +66,11 @@ import Course from "../components/Course";
 import Cohort from "../components/Cohort";
 import Organisation from "../components/Organisation";
 import Person from "../components/Person";
+import { dbMixins } from "../mixins/DbMixins"
 
 export default {
   name: "AssignedInfo",
-  props: ["assignCohorts", "cohorts", "organisations", "people"],
+  mixins: [dbMixins],
   components: {
     Cohort,
     Organisation,
@@ -77,22 +78,31 @@ export default {
     Course,
     AssignCohortDialog,
   },
+  props: ["assignCohorts", "cohorts", "organisations", "people"],
+  data () {
+    return {
+      courses: []
+    }
+  },
+  mounted () {
+    this.getCohortCourses()
+  },
   computed: {
     ...mapState(["person", "currentCohort"]),
     ...mapGetters(["getCoursesInThisCohort"]),
     assignCourses() {
       return this.person.accountType !== "student";
-    },
-    courses() {
-      if (!this.currentCohort.courses) return [];
-      // let cohortCourses = this.getCohortCourses()
-      return this.getCoursesInThisCohort(this.currentCohort.id);
-    },
+    }
   },
   methods: {
-    // async getCohortCourses () {
-    //   return await this.getCoursesInThisCohort(this.currentCohort.id)
-    // },
+    async getCohortCourses () {
+      let courses = await Promise.all(this.currentCohort.courses.map(courseId => {
+        return this.MXgetCourseById(courseId)
+      }))
+      if (courses.length) {
+        this.courses = courses
+      }
+    },
     snackbarToggle(msg) {
       this.$emit("snackbarToggle", msg);
       // this.snackbarMsg = msg;

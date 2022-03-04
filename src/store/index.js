@@ -1,22 +1,23 @@
 import Vue from "vue";
 import Vuex from "vuex";
 import createPersistedState from "vuex-persistedstate";
+import { dbMixins } from '../mixins/DbMixins'
 
 import { db } from "./firestoreConfig";
 import { vuexfireMutations, firestoreAction } from "vuexfire";
 
 Vue.use(Vuex);
 
-export default new Vuex.Store({
-  state: {
+const getDefaultState = () => {
+  return { 
     user: {
       loggedIn: false,
       data: null,
     },
     person: {},
-    courses: [],
     topics: [],
     cohorts: [],
+    assignedCourses: [],
     organisations: [],
     people: [],
     currentCourse: {},
@@ -51,13 +52,17 @@ export default new Vuex.Store({
     darkMode: true,
     sortedArr: [],
     snackbar: {}
-  },
+  }
+}
+
+export default new Vuex.Store({
+  state: getDefaultState(),
   getters: {
     people: (state) => state.people,
     organisations: (state) => state.organisations,
     user: (state) => state.user,
     person: (state) => state.person,
-    courses: (state) => state.courses,
+    assignedCourses: (state) => state.assignedCourses,
     cohorts: (state) => state.cohorts,
     organisations: (state) => state.organisations,
     currentCohort: (state) => state.currentCohort,
@@ -162,13 +167,12 @@ export default new Vuex.Store({
       });
       return peopleInCohort;
     },
-    //
-    // completedCourses: (state) => {
-    //   return state.courses.filter(course => course.status.completed)
-    // }
   },
   mutations: {
     ...vuexfireMutations,
+    RESET_STATE(state) {
+      Object.assign(state, getDefaultState())
+    },
     SET_LOGGED_IN(state, value) {
       state.user.loggedIn = value;
     },
@@ -239,7 +243,6 @@ export default new Vuex.Store({
     setUser({ commit }, user) {
       commit("SET_LOGGED_IN", user !== null);
       if (user) {
-        console.log("user: ", user)
         commit("SET_USER", {
           admin: user.admin,
           displayName: user.displayName,
@@ -330,15 +333,6 @@ export default new Vuex.Store({
 
       state.allEdges = allEdges;
     },
-    async getCourseFromFirestoreById({ state }, id) {
-      await db
-        .collection("courses")
-        .doc(id)
-        .get()
-        .then((doc) => {
-          state.courses.push({ ...doc.data(), id: doc.id });
-        });
-    },
     // ===== Firestore - BIND by USER
     async getPersonById({ commit }, id) {
       if (id) {
@@ -398,7 +392,8 @@ export default new Vuex.Store({
       if (doc.data()?.assignedCourses) {
         for (const courseId of doc.data()?.assignedCourses) {
           // this action pushes assigned courses data into state.courses
-          this.dispatch("getCourseFromFirestoreById", courseId);
+          let course = dbMixins.MXgetCourseById(courseId);
+          this.state.assignedCourses.push(course)
 
           const subQuerySnapshot = await db
             .collection("courses")
@@ -958,31 +953,6 @@ export default new Vuex.Store({
         db.collection("cohorts").where("courses", "array-contains", courseId)
       );
     }),
-    // userLoggedIn (user) {
-    //   userStatusFirestoreRef.onSnapshot(function(doc) {
-    //     var isOnline = doc.data().state == 'online';
-    //     console.log("isOnline: ", isOnline)
-    // });
-    
-      // const timeStamp = Date.now()
-      // console.log('time stamp: ', timeStamp)
-      // db.collection("people")
-      // .doc(user.id)
-      // .set({lastLoggedIn: timeStamp})
-      // .catch((error) => {
-      //   console.error("Error writing document: ", error);
-      // });
-    // },
-    // userLoggedOut ({state}, user) {
-    //   const timeStamp = Date.now()
-    //   console.log('time stamp: ', timeStamp)
-    //   return db.collection("people")
-    //   .doc(state.user.data.id)
-    //   .set({lastLoggedOut: timeStamp})
-    //   .catch((error) => {
-    //     console.error("Error writing document: ", error);
-    //   });
-    // }
   },
   plugins: [createPersistedState()],
 });

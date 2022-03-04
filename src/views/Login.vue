@@ -81,15 +81,6 @@ export default {
     loading: false,
   }),
   mounted() {
-    console.log('checking props: ', this.$route.params)
-    if (this.$route.params?.verified) {
-      this.$store.commit("setSnackbar",{
-        show: true,
-        text: 'Email successfully verified',
-        color: 'baseAccent'
-      })
-    }
-    console.log("mounted on login user: ", firebase.auth().currentUser)
     // testing xApi query
     queryXAPIStatement({
       // verb: "http://adlnet.gov/expapi/verbs/completed",
@@ -120,10 +111,10 @@ export default {
         .catch((error) => {
           this.$store.commit("setSnackbar", {
             show: true,
-            text: error.message,
+            text: error.error,
             color: "pink"
           })
-          console.log("Login error:", error);
+          console.error("Login error:", error);
           this.loading = false;
         });
     },
@@ -140,7 +131,7 @@ export default {
           handleCodeInApp: true,
         };
         firebase.auth().currentUser.sendEmailVerification(actionCodeSettings)
-        throw new Error("New email verification link sent. Please check your emails")  
+        throw new Error("Please check your emails to verify your account")  
       }
       else if (this.person.accountType == "student") {
         this.$router.push("/base/galaxies/assigned");
