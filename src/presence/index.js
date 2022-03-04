@@ -1,5 +1,6 @@
 //=========== USER PRECENSE SYSTEM ===================
 import firebase from 'firebase'
+// import store from './store'
 
 export const startPresenceSystem = (uid) => {
   console.log("starting presence system: ", uid)
@@ -35,19 +36,41 @@ export const startPresenceSystem = (uid) => {
   };
 
 
- return firebase.database().ref('.info/connected').on('value', function(snapshot) {
-      if (snapshot.val() == false) {
-          // If offline we'll set Firestore's state to offline
-          userStatusFirestoreRef.set(isOfflineForFirestore);
-          return;
-      };
-  
-      // if online well set the database and firestore
-      userStatusDatabaseRef.onDisconnect().set(isOfflineForDatabase).then(function() {
-        console.log("setting online for uid: ", uid)
-        userStatusDatabaseRef.set(isOnlineForDatabase);
-        userStatusFirestoreRef.set(isOnlineForFirestore);
-      });
+  firebase.database().ref('.info/connected').on('value', function(snapshot) {
+    if (snapshot.val() == false) {
+        // If offline we'll set Firestore's state to offline
+        userStatusFirestoreRef.set(isOfflineForFirestore);
+        return;
+    };
+
+    // if online well set the database and firestore
+    userStatusDatabaseRef.onDisconnect().set(isOfflineForDatabase).then(function() {
+      console.log("setting online for uid: ", uid)
+      userStatusDatabaseRef.set(isOnlineForDatabase);
+      userStatusFirestoreRef.set(isOnlineForFirestore);
+    });
   });
 }
+
+//   firebase.firestore().collection('status')
+//     .where('state', '==', 'online')
+//       .onSnapshot(function(snapshot) {
+//         // get all users
+
+//         // fliter by 
+//         // snapshot.docChanges().forEach(function(change) {
+//         //   if (change.type === 'added') {
+//         //       var msg = 'User ' + change.doc.id + ' is online.';
+//         //       console.log(msg);
+//         //       // ...
+//         //   }
+//         //   if (change.type === 'removed') {
+//         //       var msg = 'User ' + change.doc.id + ' is offline.';
+//         //       console.log(msg);
+//         //       // ...
+//         //   }
+//         // });
+//         this.$store.commit
+//     });
+// }
 

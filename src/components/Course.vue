@@ -4,14 +4,14 @@
     :cols="cols"
     @click="routeToCourse(course)"
   >
-    <v-img
+    <!-- <v-img
       v-if="course.image"
       :src="course.image.url"
       max-width="60px"
       max-height="60px"
       class="course-image"
-    ></v-img>
-    <div v-else-if="course.title" class="imagePlaceholder">{{ first3Letters(course.title) }}</div>
+    ></v-img> -->
+    <div v-if="course.title" class="imagePlaceholder">{{ first3Letters(course.title) }}</div>
     <h3 class="overline">{{ course.title }}</h3>
   </v-col>
 </template>
