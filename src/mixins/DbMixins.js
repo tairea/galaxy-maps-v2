@@ -135,12 +135,10 @@ export const dbMixins = {
       });
     },
     async MXgetPersonByIdFromDB(personId) {
-      let person = await db.collection("people").doc(personId).get().catch(err => console.err(err));
-      let status = await db.collection("status").doc(personId).get().catch(err => console.err(err));      
+      let person = await db.collection("people").doc(personId).get().catch(err => console.err(err));    
       person = {
         id: person.id,
         ...person.data(),
-        ...status.data()
       }
       return person;
     },

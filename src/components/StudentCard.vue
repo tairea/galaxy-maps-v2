@@ -21,7 +21,7 @@
         </template>
         <span>{{student.firstName + ' ' + student.lastName}}</span>
       </v-tooltip>
-      <p :color="online" class="login">{{loggedIn}}</p>
+      <p :class="online" class="login">{{loggedIn}}</p>
     </div>
     <div class="student-section student-main-section">
       <div v-if="topic">
@@ -104,7 +104,8 @@ export default {
       hours: "",
       work: [],
       help: [],
-      assignedCourse: null
+      assignedCourse: null,
+      studetProfile: [],
     };
   },
   mounted () {
@@ -113,16 +114,20 @@ export default {
     }
   },
   computed: {
-    ...mapState(['currentCohort']),
+    ...mapState(['currentCohort', 'userStatus']),
     ...mapGetters(['getCourseById']),
+    status () {
+      return this.userStatus[this.student.id]
+    },
     loggedIn () {
-      if (!this.student.state) return 'inactive'
-      if (this.student.state == 'online') return 'online'
+      if (!this.status) return 'inactive'
+      if (this.status.state === 'online') {
+        return 'online'
+      }
       else return this.timePassed() 
     },
     online () {
-      if (this.loggedIn === 'online') return 'cohortAccent'
-      else return 'baseAccent'
+      if (this.loggedIn === 'online') return 'online'
     }
   },
   methods: {
@@ -136,9 +141,7 @@ export default {
     },
     timePassed () {
       var date = Math.round(Date.now() / 1000)
-      var delta =  date - this.student.last_changed.seconds;
-
-      console.log("delta: ", delta)
+      var delta =  date - this.status.last_changed.seconds;
 
       // calculate (and subtract) whole days
       var days = Math.floor(delta / 86400);
@@ -282,5 +285,8 @@ a {
     padding: 30px
   }
   
+  .online {
+    color: var(--v-baseAccent-base);
+  }
 }
 </style>
