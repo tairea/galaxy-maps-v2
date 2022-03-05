@@ -97,7 +97,6 @@ export default {
       "getCohortsInThisCourse",
       "getOrganisationsInThisCourse",
       "getPeopleInThisCourse",
-      "getCoursesByWhoMadeThem",
     ]),
   },
   data() {

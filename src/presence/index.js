@@ -1,8 +1,10 @@
 //=========== USER PRECENSE SYSTEM ===================
+import store from '@/store';
 import firebase from 'firebase'
 // import store from './store'
 
 export const startPresenceSystem = (uid) => {
+  if (!uid) return
   console.log("starting presence system: ", uid)
 
   // This is where we will store data about being online/offline.
@@ -45,32 +47,31 @@ export const startPresenceSystem = (uid) => {
 
     // if online well set the database and firestore
     userStatusDatabaseRef.onDisconnect().set(isOfflineForDatabase).then(function() {
-      console.log("setting online for uid: ", uid)
       userStatusDatabaseRef.set(isOnlineForDatabase);
       userStatusFirestoreRef.set(isOnlineForFirestore);
     });
   });
+
+  firebase.firestore().collection('status')
+    .where('state', '==', 'online')
+    .onSnapshot((snapshot) => {
+      // watch for changes to user status and update 
+      snapshot.docChanges().forEach(function(change) {
+        if (change.type === 'added') {
+          store.state.userStatus[change.doc.id] = change.doc.data()
+        }
+        else if (change.type === 'removed') {
+          // db still returns online because the watch is triggered locally
+          const data = {
+            ...change.doc.data(),
+            ...{state: 'offline'}
+          }
+          store.state.userStatus[change.doc.id] = data
+        }
+      });
+  });
+
+  store.dispatch("getAllUsersStatus")
 }
 
-//   firebase.firestore().collection('status')
-//     .where('state', '==', 'online')
-//       .onSnapshot(function(snapshot) {
-//         // get all users
-
-//         // fliter by 
-//         // snapshot.docChanges().forEach(function(change) {
-//         //   if (change.type === 'added') {
-//         //       var msg = 'User ' + change.doc.id + ' is online.';
-//         //       console.log(msg);
-//         //       // ...
-//         //   }
-//         //   if (change.type === 'removed') {
-//         //       var msg = 'User ' + change.doc.id + ' is offline.';
-//         //       console.log(msg);
-//         //       // ...
-//         //   }
-//         // });
-//         this.$store.commit
-//     });
-// }
 

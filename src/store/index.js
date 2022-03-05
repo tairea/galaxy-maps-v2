@@ -17,6 +17,7 @@ const getDefaultState = () => {
     person: {},
     topics: [],
     cohorts: [],
+    courses: [],
     assignedCourses: [],
     organisations: [],
     people: [],
@@ -51,7 +52,8 @@ const getDefaultState = () => {
     cohortsInCourse: [],
     darkMode: true,
     sortedArr: [],
-    snackbar: {}
+    snackbar: {},
+    userStatus: {}
   }
 }
 
@@ -942,8 +944,8 @@ export default new Vuex.Store({
       return bindFirestoreRef(
         "peopleInCourse",
         db
-          .collection("people")
-          .where("assignedCourses", "array-contains", courseId)
+        .collection("people")
+        .where("assignedCourses", "array-contains", courseId)
       );
     }),
     // bind the COHORTS that are in a course
@@ -953,6 +955,18 @@ export default new Vuex.Store({
         db.collection("cohorts").where("courses", "array-contains", courseId)
       );
     }),
+    async getAllUsersStatus({state}) {
+      const users = {}
+      await db.collection('status').get().then((snapShot) => {
+        snapShot.docs.forEach(doc => {
+          var obj = {}
+          obj[doc.id] = doc.data()
+          Object.assign(users, obj)
+        })
+      }).then(() => {
+        state.userStatus = users
+      })
+    }
   },
   plugins: [createPersistedState()],
 });

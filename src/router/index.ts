@@ -67,12 +67,6 @@ const routes = [
     component: Login,
   },
   {
-    path: "/login/:verified",
-    name: "Login",
-    component: Login,
-    props: true
-  },
-  {
     path: "/verify",
     name: "Verify",
     component: VerifyEmail,
