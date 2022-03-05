@@ -7,8 +7,7 @@
   </v-app>
 </template>
 
-<script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+<script>
 import UserBar from "@/components/UserBar.vue";
 import NavBar from "@/components/NavBar.vue";
 import SnackBar from "@/components/SnackBar.vue"
@@ -25,7 +24,7 @@ export default {
   computed: {
     ...mapGetters(["person"]),
     userType() {
-      return this.person.accountType;
+      return this.person.accountType
     }
   }
 
