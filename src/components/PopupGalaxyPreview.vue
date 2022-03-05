@@ -6,7 +6,7 @@
       <div>
         <p class="info-panel-label mb-2">
           <span class="galaxyColour">Galaxy:</span>
-          <br />
+            <br />
           <span>{{ course.title }}</span>
         </p>
         <v-img
@@ -30,14 +30,16 @@
       <div class="left">
         <div v-if="course.contentBy.image">
           <v-img
+            width="50px"
             class="contentBy-image mb-2"
             :src="course.contentBy.image.url"
           ></v-img>
         </div>
         <div v-else-if="course.contentBy.personId">
           <v-img
+            width="50px"
             class="contentBy-image mb-2"
-            :src="getPersonsImage(course.contentBy.personId)"
+            :src="contentAuthorImage"
           ></v-img>
         </div>
         <p class="ma-0">Content By:</p>
@@ -48,14 +50,16 @@
       <div class="right">
         <div v-if="course.mappedBy.image">
           <v-img
+            width="50px"
             class="mappedBy-image"
             :src="course.mappedBy.image.url"
           ></v-img>
         </div>
         <div v-else-if="course.mappedBy.personId">
           <v-img
+            width="50px"
             class="mappedBy-image"
-            :src="getPersonsImage(course.mappedBy.personId)"
+            :src="mappedAuthorImage"
           ></v-img>
         </div>
         <p class="ma-0">Mapped By:</p>
@@ -146,6 +150,15 @@ export default {
   computed: {
     ...mapGetters(["person"]),
   },
+  data() {
+    return {
+      enrolled: false,
+      loading: false,
+      startingGalaxyStatus: "",
+      contentAuthorImage: "",
+      mappedAuthorImage: ""
+    };
+  },
   async mounted() {
     // check is student is already in this course
     if (this.person.accountType == "student") {
@@ -162,19 +175,15 @@ export default {
         this.enrolled = true;
       }
     }
+    this.mappedAuthorImage = await this.getPersonsImage(this.course.mappedBy.personId)
+    this.contentAuthorImage = await this.getPersonsImage(this.course.contentBy.personId)
   },
   computed: {
     ...mapState(["person"]),
+
     dark() {
       return this.$vuetify.theme.isDark;
     },
-  },
-  data() {
-    return {
-      enrolled: false,
-      loading: false,
-      startingGalaxyStatus: "",
-    };
   },
   methods: {
     close() {
@@ -290,8 +299,7 @@ export default {
     },
 
     async getPersonsImage(personId) {
-      const person = await this.MXgetPersonByIdFromDb(personId);
-      console.log("getting person for image: ", person.image.url);
+      const person = await this.MXgetPersonByIdFromDB(personId);
       return person.image.url;
     },
   },

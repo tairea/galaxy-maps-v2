@@ -29,26 +29,6 @@ export default {
   }
 
 }
-// const HomeBase = Vue.extend({
-//   computed: {
-//     ...mapGetters(["person"]),
-//   },
-// });
-
-
-// @Component({
-//   components: {
-//     UserBar,
-//     NavBar,
-//     SnackBar
-//   },
-// })
-// export default class Home extends HomeBase {
-//   userType() {
-//     //return either user, teacher, student
-//     return this.person.accountType;
-//   }
-// }
 </script>
 
 <style lang="scss" scoped>
