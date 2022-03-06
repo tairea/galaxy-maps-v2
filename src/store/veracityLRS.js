@@ -5,11 +5,60 @@ const auth = "Basic " + btoa(process.env.VUE_APP_VERACITY_LRS_SECRET);
 ------------------------- */
 
 // ========== Start Task (make task active)
-export const startTaskXAPIStatement = (actorMbox, taskId, context) => {
+export const startGalaxyXAPIStatement = (actor, context) => {
+  console.log("sending student xAPI statement... galaxy started...");
+  const statement = {
+    actor: {
+      name: actor.firstName + " " + actor.lastName,
+      mbox: "mailto:" + actor.email,
+    },
+    verb: {
+      id: "https://w3id.org/xapi/dod-isd/verbs/started",
+      display: { "en-nz": "started" },
+    },
+    object: {
+      //   id: "https://www.galaxymaps.io/" + context,
+      id: context.galaxy.id,
+      definition: {
+        name: {
+          "en-nz": "Course: " + context.galaxy.title,
+        },
+      },
+    },
+    context: {
+      contextActivities: {
+        parent: [
+          {
+            id: "https://www.galaxymaps.io/course/" + context.galaxy.id,
+            objectType: "Activity",
+          },
+        ],
+        grouping: [
+          {
+            id: "https://www.galaxymaps.io/course/" + context.galaxy.id,
+            objectType: "Activity",
+          },
+        ],
+      },
+    },
+  };
+
+  fetch("https://galaxymaps.lrs.io/xapi/statements", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: auth,
+    },
+    body: JSON.stringify(statement),
+  }).catch((error) => console.error(error.message));
+};
+// ========== Start Task (make task active)
+export const startTaskXAPIStatement = (actor, taskId, context) => {
   console.log("sending student xAPI statement... task started...");
   const statement = {
     actor: {
-      mbox: "mailto:" + actorMbox,
+      name: actor.firstName + " " + actor.lastName,
+      mbox: "mailto:" + actor.email,
     },
     verb: {
       id: "https://w3id.org/xapi/dod-isd/verbs/started",
@@ -34,13 +83,13 @@ export const startTaskXAPIStatement = (actorMbox, taskId, context) => {
       contextActivities: {
         parent: [
           {
-            id: context.system.id,
+            id: "https://www.galaxymaps.io/topic/" + context.system.id,
             objectType: "Activity",
           },
         ],
         grouping: [
           {
-            id: context.galaxy.id,
+            id: "https://www.galaxymaps.io/course/" + context.galaxy.id,
             objectType: "Activity",
           },
         ],
@@ -58,15 +107,12 @@ export const startTaskXAPIStatement = (actorMbox, taskId, context) => {
   }).catch((error) => console.error(error.message));
 };
 // ========== Submit work for review (by student)
-export const submitWorkForReviewXAPIStatement = (
-  actorMbox,
-  taskId,
-  context
-) => {
+export const submitWorkForReviewXAPIStatement = (actor, taskId, context) => {
   console.log("sending student xAPI statement... submitted work for review...");
   const statement = {
     actor: {
-      mbox: "mailto:" + actorMbox,
+      name: actor.firstName + " " + actor.lastName,
+      mbox: "mailto:" + actor.email,
     },
     verb: {
       id: "https://w3id.org/xapi/dod-isd/verbs/submitted",
@@ -91,13 +137,13 @@ export const submitWorkForReviewXAPIStatement = (
       contextActivities: {
         parent: [
           {
-            id: context.system.id,
+            id: "https://www.galaxymaps.io/topic/" + context.system.id,
             objectType: "Activity",
           },
         ],
         grouping: [
           {
-            id: context.galaxy.id,
+            id: "https://www.galaxymaps.io/course/" + context.galaxy.id,
             objectType: "Activity",
           },
         ],
@@ -116,15 +162,12 @@ export const submitWorkForReviewXAPIStatement = (
 };
 
 // ========== Task Marked as Completed (by student)
-export const taskMarkedAsCompletedXAPIStatement = (
-  actorMbox,
-  taskId,
-  context
-) => {
+export const taskMarkedAsCompletedXAPIStatement = (actor, taskId, context) => {
   console.log("sending student xAPI statement... task marked as completed...");
   const statement = {
     actor: {
-      mbox: "mailto:" + actorMbox,
+      name: actor.firstName + " " + actor.lastName,
+      mbox: "mailto:" + actor.email,
     },
     verb: {
       id: "http://adlnet.gov/expapi/verbs/completed",
@@ -149,13 +192,13 @@ export const taskMarkedAsCompletedXAPIStatement = (
       contextActivities: {
         parent: [
           {
-            id: context.system.id,
+            id: "https://www.galaxymaps.io/topic/" + context.system.id,
             objectType: "Activity",
           },
         ],
         grouping: [
           {
-            id: context.galaxy.id,
+            id: "https://www.galaxymaps.io/course/" + context.galaxy.id,
             objectType: "Activity",
           },
         ],
@@ -174,11 +217,12 @@ export const taskMarkedAsCompletedXAPIStatement = (
 };
 
 // ========== Topic Completed (by student)
-export const topicCompletedXAPIStatement = (actorMbox, topicId, context) => {
+export const topicCompletedXAPIStatement = (actor, topicId, context) => {
   console.log("sending student xAPI statement... topic completed...");
   const statement = {
     actor: {
-      mbox: "mailto:" + actorMbox,
+      name: actor.firstName + " " + actor.lastName,
+      mbox: "mailto:" + actor.email,
     },
     verb: {
       id: "http://adlnet.gov/expapi/verbs/completed",
@@ -201,13 +245,13 @@ export const topicCompletedXAPIStatement = (actorMbox, topicId, context) => {
       contextActivities: {
         parent: [
           {
-            id: context.galaxy.id,
+            id: "https://www.galaxymaps.io/topic/" + context.system.id,
             objectType: "Activity",
           },
         ],
         grouping: [
           {
-            id: context.galaxy.id,
+            id: "https://www.galaxymaps.io/course/" + context.galaxy.id,
             objectType: "Activity",
           },
         ],
@@ -227,14 +271,15 @@ export const topicCompletedXAPIStatement = (actorMbox, topicId, context) => {
 
 // ========== Student work marked completed (by teacher)
 export const studentWorkMarkedCompletedXAPIStatement = (
-  actorMbox,
+  actor,
   taskId,
   context
 ) => {
   console.log("sending student xAPI statement... work marked as completed...");
   const statement = {
     actor: {
-      mbox: "mailto:" + actorMbox,
+      name: actor.firstName + " " + actor.lastName,
+      mbox: "mailto:" + actor.email,
     },
     verb: {
       id: "http://adlnet.gov/expapi/verbs/completed",
@@ -259,13 +304,13 @@ export const studentWorkMarkedCompletedXAPIStatement = (
       contextActivities: {
         parent: [
           {
-            id: context.system.id,
+            id: "https://www.galaxymaps.io/topic/" + context.system.id,
             objectType: "Activity",
           },
         ],
         grouping: [
           {
-            id: context.galaxy.id,
+            id: "https://www.galaxymaps.io/course/" + context.galaxy.id,
             objectType: "Activity",
           },
         ],
@@ -285,14 +330,15 @@ export const studentWorkMarkedCompletedXAPIStatement = (
 
 // ========== Teacher reviewed student work (by teacher)
 export const teacherReviewedStudentWorkXAPIStatement = (
-  actorMbox,
+  actor,
   taskId,
   context
 ) => {
   console.log("sending student xAPI statement... work marked as completed...");
   const statement = {
     actor: {
-      mbox: "mailto:" + actorMbox,
+      name: actor.firstName + " " + actor.lastName,
+      mbox: "mailto:" + actor.email,
     },
     verb: {
       id: "https://w3id.org/xapi/dod-isd/verbs/reviewed",
@@ -343,7 +389,7 @@ export const teacherReviewedStudentWorkXAPIStatement = (
 
 // ========== Teacher responed to request for help (by teacher)
 export const teacherRespondedToRequestForHelpXAPIStatement = (
-  actorMbox,
+  actor,
   taskId,
   context
 ) => {
@@ -352,7 +398,8 @@ export const teacherRespondedToRequestForHelpXAPIStatement = (
   );
   const statement = {
     actor: {
-      mbox: "mailto:" + actorMbox,
+      name: actor.firstName + " " + actor.lastName,
+      mbox: "mailto:" + actor.email,
     },
     verb: {
       id: "https://w3id.org/xapi/dod-isd/verbs/assisted",
@@ -402,15 +449,12 @@ export const teacherRespondedToRequestForHelpXAPIStatement = (
 };
 
 // ========== Request for help (by student)
-export const studentRequestForHelpXAPIStatement = (
-  actorMbox,
-  taskId,
-  context
-) => {
+export const studentRequestForHelpXAPIStatement = (actor, taskId, context) => {
   console.log("sending student xAPI statement... student requesting help...");
   const statement = {
     actor: {
-      mbox: "mailto:" + actorMbox,
+      name: actor.firstName + " " + actor.lastName,
+      mbox: "mailto:" + actor.email,
     },
     verb: {
       id: "http://id.tincanapi.com/verb/requested-attention",
@@ -464,16 +508,13 @@ export const studentRequestForHelpXAPIStatement = (
 ------------------------- */
 
 export const queryXAPIStatement = (payloadObj) => {
-  const url = new URL("https://galaxymaps.lrs.io/xapi/statements");
+  const url = new URL("https://galaxymaps.lrs.io/xapi/statements/search");
   const parameters = url.searchParams;
-
-  if (payloadObj.verb) {
-    parameters.set("verb", payloadObj.verb);
-  }
-  if (payloadObj.email) {
-    parameters.set("agent", '{"mbox": "mailto:' + payloadObj.email + '"}');
-  }
-
+  // use veracist LRS v2 mode
+  parameters.set("mode", "v2");
+  // add search params as json
+  url.searchParams.set("query", JSON.stringify(payloadObj));
+  // get query from LRS
   return fetch(url, {
     method: "GET",
     headers: {

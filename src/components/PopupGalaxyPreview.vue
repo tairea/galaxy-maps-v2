@@ -14,6 +14,9 @@
           class="galaxy-image"
           :src="course.image.url"
         ></v-img>
+        <p class="my-2 galaxy-description">
+          {{ course.description }}
+        </p>
       </div>
       <v-btn
         text
@@ -68,7 +71,7 @@
     </div>
 
     <div>
-      <div v-if="person.accountType != 'student'" class="ss-actions">
+      <div v-if="person.accountType != 'student'" class="ss-actions py-2">
         <v-btn
           class="view-ss-button pa-5"
           dark
@@ -98,7 +101,7 @@
         </v-btn>
       </div>
       <!-- Student Galaxy Actions -->
-      <div v-else class="ss-actions">
+      <div v-else class="ss-actions py-2">
         <v-btn
           v-if="enrolled"
           class="view-ss-button pa-5"
@@ -129,7 +132,7 @@
           Start Galaxy
         </v-btn>
         <div v-if="loading" style="width: 100%">
-          <p class="starting-status">{{ startingGalaxyStatus }}</p>
+          <p class="starting-status ma-0">{{ startingGalaxyStatus }}</p>
         </div>
       </div>
     </div>
@@ -141,6 +144,8 @@ import { db } from "../store/firestoreConfig";
 import { dbMixins } from "../mixins/DbMixins";
 
 import { mapGetters, mapState } from "vuex";
+
+import { startGalaxyXAPIStatement } from "../store/veracityLRS";
 
 export default {
   name: "PopupGalaxyPreview",
@@ -289,6 +294,9 @@ export default {
         }
       }
 
+      // Send Galaxy Started statment to LRS
+      startGalaxyXAPIStatement(this.person, { galaxy: this.course });
+
       this.loading = false;
       this.$router.push({
         name: "GalaxyView",
@@ -326,6 +334,8 @@ export default {
 
   .galaxy-image {
     width: 100%;
+    max-height: 250px;
+    // width: 100%;
   }
 
   .close-button {
@@ -343,6 +353,14 @@ export default {
     min-height: 10vh;
     border-top: 1px solid var(--v-missionAccent-base);
     display: flex;
+
+    .contentBy-image,
+    .mappedBy-image {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
 
     .left,
     .right {
@@ -362,7 +380,7 @@ export default {
   .ss-actions {
     border-top: 1px solid var(--v-missionAccent-base);
     // min-width: 20vw;
-    min-height: 20vh;
+    // min-height: 10vh;
     // position: relative;
     display: flex;
     justify-content: center;
@@ -376,19 +394,16 @@ export default {
       // position: absolute;
       // bottom: 20px; // matches 20px padding of ss-details
       background-color: var(--v-background-base);
+      z-index: 3;
     }
   }
   .ss-details {
     padding: 20px;
 
-    .ss-makers {
-      .contentBy-image,
-      .mappedBy-image {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        object-fit: cover;
-      }
+    .galaxy-description {
+      color: var(--v-missionAccent-base);
+      font-size: 0.9rem;
+      font-style: italic;
     }
   }
 }
@@ -408,7 +423,7 @@ export default {
   font-style: italic;
   font-size: 0.7rem;
   text-align: left;
-  padding: 20px;
+  padding: 10px;
   // text-transform: uppercase;
 }
 </style>
