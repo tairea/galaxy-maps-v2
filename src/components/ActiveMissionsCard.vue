@@ -97,7 +97,7 @@ export default {
         return "SUBMIT WORK";
       } else if (
         this.getTaskStatus == "active" &&
-        this.task.submissionRequired == false
+        (this.task.submissionRequired == false || !this.task.submissionRequired)
       ) {
         return "MARK AS COMPLETED";
       } else {
