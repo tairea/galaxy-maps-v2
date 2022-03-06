@@ -149,7 +149,6 @@ export default {
     newNodePositions: {},
   }),
   async mounted() {
-    console.log("current course id:", this.currentCourseId);
     await this.$store.dispatch("bindCourseNodes", this.currentCourseId);
     await this.$store.dispatch("bindCourseEdges", this.currentCourseId);
     // bind topics for course creator
@@ -162,9 +161,6 @@ export default {
         courseId: this.currentCourseId,
       });
     }
-
-    // see network methods
-    console.log(this.$refs.network);
 
     // zoom fit on load
     if (this.$refs.network.nodes.length > 0) {
@@ -199,7 +195,6 @@ export default {
         let matchingNode = this.personsTopics.find((x) => {
           return x.id === node.id;
         });
-        // console.log("matchingNode",matchingNode)
         // push node with status
         nodesWithStatus.push({
           ...node,
@@ -207,7 +202,6 @@ export default {
           group: matchingNode?.topicStatus ?? "unlocked",
         });
       }
-      // console.log("nodesWithStatus",nodesWithStatus)
       // return nodes with status to network map
       return nodesWithStatus;
     },
@@ -243,7 +237,6 @@ export default {
     },
     getDomCoords(node) {
       let domCoords = this.$refs.network.canvasToDom({ x: node.x, y: node.y });
-      console.log("DOM COOOORDS: ", domCoords);
       return domCoords;
     },
     doubleClick() {
@@ -256,31 +249,25 @@ export default {
       this.active = true;
       this.addingNode = true;
       // this.$emit("toggleAddNodeButton")
-      console.log("add node mode");
       this.$emit("setUiMessage", "Click on the map to add a node");
       this.$refs.network.addNodeMode();
     },
     addEdgeMode() {
       this.active = true;
-      console.log("add edge mode");
       this.$emit("setUiMessage", "Click and drag to connect two nodes");
       this.$refs.network.addEdgeMode();
       // disable node hover
       this.addingEdge = true;
     },
     addNode(data) {
-      console.log("click add node");
       if (!this.active) return;
-      console.log("node added", data);
       const newNodeId = data.properties.items[0];
       const newNode = this.$refs.network.getNode(newNodeId);
-      console.log("newNode", newNode);
       this.$emit("add-node", newNode);
       this.addingNode = false;
     },
     addEdge(data) {
       // if (!this.active) return; // this was breaking edge saving. why was there?
-      console.log("edge add", data);
       this.$emit("setUiMessage", "");
       const newEdgeData = this.$refs.network.getEdge(data.properties.items[0]);
       db.collection("courses")
@@ -289,7 +276,6 @@ export default {
         .doc(newEdgeData.id)
         .set(newEdgeData)
         .then(() => {
-          console.log("Edge successfully written!");
           this.$emit("toggleAddEdgeMode");
           this.addingEdge = false;
           // toggle edge mode again so to stay in edit edge mode (this is so you can continuously add edges)
@@ -321,14 +307,11 @@ export default {
       const newPosition = this.$refs.network.getPositions(data.nodes[0]);
       const nodes = this.$refs.network.nodes;
       const node = nodes.find((node) => node.id === nodeId);
-      console.log("node", node);
-      console.log("new position", newPosition);
       // check if coords changed
       if (
         newPosition[nodeId].x !== node.x ||
         newPosition[nodeId].y !== node.y
       ) {
-        console.log("node position has changed");
         // flag save new positions button
         this.$emit("nodePositionsChanged");
         //   // commit new positions to newNodePositions
@@ -339,24 +322,18 @@ export default {
         };
         this.newNodePositions[nodeId] = newPositionObj;
       }
-      // console.log("old node positions", nodes)
-      // console.log("new node positions", this.newNodePositions)
     },
     async saveNodePositions() {
       this.$emit("nodePositionsChangeLoading");
       const nodes = this.$refs.network.nodes;
       // spread/or map new positions to nodes
-      console.log("current nodes:", nodes);
-      console.log("changed nodes:", this.newNodePositions);
       for (const changedNode in this.newNodePositions) {
         const changedNodeObj = this.newNodePositions[changedNode];
-        console.log("changed node:", changedNodeObj);
         const node = nodes.find((node) => node.id === changedNodeObj.id);
         // TODO: only saves changes once. not the second time
         if (changedNodeObj.x !== node.x || changedNodeObj.y !== node.y) {
           node.x = changedNodeObj.x;
           node.y = changedNodeObj.y;
-          // console.log("updated node:", node);
           // save to firestore db
           await db
             .collection("courses")
@@ -364,11 +341,6 @@ export default {
             .collection("map-nodes")
             .doc(node.id)
             .set(node)
-            .then(() => {
-              console.log("Node position successfully updated!");
-              // loading button
-              // hide button
-            })
             .catch((error) => {
               console.error("Error writing node positions: ", error);
             });
@@ -380,7 +352,6 @@ export default {
       }
     },
     selectNode(data) {
-      console.log("selected node");
       this.active = true;
       if (data.nodes.length == 1) {
         // is type node
@@ -415,7 +386,6 @@ export default {
       this.$emit("deselected");
     },
     removeUnsavedNode() {
-      console.log("deleting selected");
       this.$refs.network.deleteSelected();
       this.$emit("deselected");
     },
@@ -429,7 +399,6 @@ export default {
       const focusedNode = this.$refs.network.getNode(nodeId);
       focusedNode.type = "node";
       this.$emit("centerFocus", focusedNode);
-      // console.log("centered position of node is = ", this.$refs.network.canvasToDom(nodeId))
     },
     hoverNode(data) {
       if (this.addingEdge == true) {
@@ -441,9 +410,10 @@ export default {
       hoveredNode.type = "node";
       (hoveredNode.DOMx = data.pointer.DOM.x),
         (hoveredNode.DOMy = data.pointer.DOM.y);
-      this.$emit("hovered", hoveredNode);
+      this.$emit("hoverNode", hoveredNode);
     },
     blurNode() {
+      this.$emit('blurNode')
       if (this.active) return;
       setTimeout(() => {
         this.$emit("deselected");
@@ -494,7 +464,6 @@ export default {
     },
     stringToColour(str) {
       if (!str) return;
-      console.log("stringToColour ...", str);
       return this.hslToHex(this.hashCode(str) % 360, 100, 70);
       // return `hsl(${this.hashCode(str) % 360}, 100%, 70%)`;
     },
@@ -515,7 +484,6 @@ export default {
       // nodes to zoom to
       // get node ids
       var nodeIds = nodes.map((x) => x.id);
-      console.log("fit");
       this.$refs.network.fit({
         nodes: nodeIds,
         animation: true,

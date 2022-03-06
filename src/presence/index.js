@@ -49,6 +49,8 @@ export const startPresenceSystem = (uid) => {
     userStatusDatabaseRef.onDisconnect().set(isOfflineForDatabase).then(function() {
       userStatusDatabaseRef.set(isOnlineForDatabase);
       userStatusFirestoreRef.set(isOnlineForFirestore);
+      // record online to LRS
+      
     });
   });
 

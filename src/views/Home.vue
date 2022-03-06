@@ -3,14 +3,12 @@
     <NavBar :userType="userType" />
     <router-view :key="$route.fullPath"></router-view>
     <UserBar />
-    <SnackBar />
   </v-app>
 </template>
 
 <script>
 import UserBar from "@/components/UserBar.vue";
 import NavBar from "@/components/NavBar.vue";
-import SnackBar from "@/components/SnackBar.vue"
 
 import { mapGetters } from "vuex";
 
@@ -19,7 +17,6 @@ export default {
   components: {
     UserBar,
     NavBar,
-    SnackBar
   },
   computed: {
     ...mapGetters(["person"]),
