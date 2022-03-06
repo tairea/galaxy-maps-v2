@@ -16,18 +16,6 @@
           />
         </v-row>
       </div>
-      <!-- Organisations -->
-      <!-- <div v-if="organisations.length > 0">
-        <p class="overline assignedToLabel ma-0">Organisations</p>
-        <v-row class="my-1">
-          <Organisation
-            v-for="organisation in organisations"
-            :organisation="organisation"
-            :key="organisation.id"
-          />
-        </v-row>
-      </div> -->
-      <!-- People -->
       <div v-if="people.length > 0">
         <p class="overline assignedToLabel ma-0">Individuals</p>
         <v-row class="my-4">
@@ -43,7 +31,6 @@
       </p>
       <AssignCohortDialog
         :assignCohorts="true"
-        @snackbarToggle="snackbarToggle($event)"
       />
     </div>
 
@@ -102,11 +89,6 @@ export default {
       if (courses.length) {
         this.courses = courses
       }
-    },
-    snackbarToggle(msg) {
-      this.$emit("snackbarToggle", msg);
-      // this.snackbarMsg = msg;
-      // this.snackbar = true;
     },
   },
 };

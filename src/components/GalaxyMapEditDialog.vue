@@ -159,7 +159,7 @@
               outlined
               color="white"
               class="ml-2"
-              @click="cancel"
+              @click="close"
               :disabled="loading"
             >
               <v-icon left> mdi-close </v-icon>
@@ -173,23 +173,7 @@
       <!-- End create-dialog -->
     </v-dialog>
 
-    <!-- POPUP -->
-    <!-- follow drag -> :style="{ top: getCoords.y - 100 + 'px', left: getCoords.x + 30 + 'px' }" -->
-    <PopupSystemPreview
-      ref="popup"
-      :infoPopupShow="infoPopupShow"
-      :infoPopupPosition="infoPopupPosition"
-      :currentTopic="currentNode"
-      :centerFocusPosition="centerFocusPosition"
-      :tasks="
-        person.accountType == 'student' ? personsTopicsTasks : topicsTasks
-      "
-      @deleteFromMap="deleteFromMap"
-      @close="$emit('closePopup')"
-      @editNode="editNode"
-      @focus="focusPopup"
-      @blur="blurPopup"
-    />
+    
   </div>
 </template>
 
@@ -197,14 +181,9 @@
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
 
-import PopupSystemPreview from "../components/PopupSystemPreview";
-
 export default {
   name: "GalaxyMapEditDialog",
-  components: {
-    PopupSystemPreview,
-  },
-  props: ["course", "coords"],
+  props: ["course", "dialog", "dialogTitle", "dialogDescription", "editing", "currentNode", "currentEdge"],
   async mounted() {
     this.infoPopupShow = false;
     // hack to make active select white
@@ -216,22 +195,10 @@ export default {
   },
   data() {
     return {
-      dialog: false,
-      dialogTitle: "Edit something hmmm...",
-      dialogDescription: "some kind of description",
-      nodeDialogTitle: "Enter the name of this System",
-      nodeDialogDescription: "",
       newNodeData: {},
-      editing: false,
       type: "",
       loading: false,
       deleting: false,
-      currentNode: {},
-      currentEdge: {},
-      infoPopupShow: false,
-      infoPopupPosition: {},
-      centerFocusPosition: false,
-
       nodeTypes: [
         {
           type: "Introduction",
@@ -247,7 +214,6 @@ export default {
         },
       ],
       prerequisites: false,
-      hoverPopup: false,
     };
   },
   computed: {
@@ -256,13 +222,10 @@ export default {
       "currentCourseNodes",
       "personsTopics",
       "currentCourseId",
-      "topicsTasks",
-      "personsTopicsTasks",
+      "currentTopic",
+      "currentTopicId"
     ]),
     ...mapGetters(["getTopicById", "getPersonsTopicById"]),
-    getCoords() {
-      return this.coords;
-    },
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -279,16 +242,10 @@ export default {
     //   console.log("this.topicTasks", this.topicTasks);
     //   return this.topicTasks;
     // },
-    focusPopup() {
-      this.hoverPopup = true;
-    },
-    blurPopup() {
-      this.hoverPopup = false;
-      this.deselect();
-    },
-    cancel() {
+
+    close() {
       console.log("cancel");
-      this.dialog = false;
+      this.$emit('closeDialog')
       // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
     },
     saveNode(node) {
@@ -322,76 +279,7 @@ export default {
           console.error("Error writing node: ", error);
         });
     },
-    add(node) {
-      console.log("from edit: ADD", node);
-      this.currentNode = node;
-      this.dialogTitle = this.nodeDialogTitle;
-      this.dialogDescription = this.nodeDialogDescription;
-      this.dialog = true;
-    },
-    // edit(node) {
-    //   console.log("from edit: EDIT", node);
-    //   this.currentNode = node;
-    //   this.infoPopupShow = true;
-    // },
-    selected(selected) {
-      this.type = selected.type;
-      this.infoPopupPosition.x = selected.DOMx;
-      this.infoPopupPosition.y = selected.DOMy;
-      if (selected.type == "node") {
-        this.currentNode = selected;
-      } else if (selected.type == "edge") {
-        this.currentEdge = selected;
-      }
-      this.infoPopupShow = true;
-    },
-    hovered(hoveredNode) {
-      // console.log("hovered node is ==== ", hoveredNode);
-      this.infoPopupShow = false;
-      this.centerFocusPosition = false;
-      this.type = hoveredNode.type;
-      this.infoPopupPosition.x = hoveredNode.DOMx;
-      this.infoPopupPosition.y = hoveredNode.DOMy;
-      this.currentNode = hoveredNode;
-      this.infoPopupShow = true;
-      //bind tasks for popup preview
-      this.bindTasks(this.currentCourseId, hoveredNode.id);
-    },
-    centerFocus(centerFocusNode) {
-      if (centerFocusNode.length > 1) return; // this avoids pop up when no specific node selected
-      console.log("centerFocus ???? ", centerFocusNode);
-      this.centerFocusPosition = true;
-      this.type = centerFocusNode.type;
-      this.infoPopupPosition.x = "50%"; // 50%
-      this.infoPopupPosition.y = "50%"; // 50%
-      this.currentNode = centerFocusNode;
-      // this.infoPopupShow = true;
-    },
 
-    deselect() {
-      if (!this.hoverPopup) {
-        this.infoPopupShow = false;
-        this.centerFocusPosition = false;
-      }
-    },
-    editNode() {
-      this.dialogTitle = this.nodeDialogTitle;
-      this.dialogDescription = this.nodeDialogDescription;
-      this.dialog = true;
-    },
-    deleteFromMap() {
-      if (this.currentNode.label == "new") {
-        console.log("emiting to remove unsaved");
-        this.$emit("removeUnsavedNode");
-        this.currentNode.label = {};
-      } else if (this.type == "node") {
-        this.deleteNode();
-      } else if (this.type == "edge") {
-        this.deleteEdge();
-      }
-      // this.resetEditing();
-      // this.resetNewData();
-    },
     deleteNode() {
       console.log("deleting node");
       this.deleting = true;
@@ -468,21 +356,7 @@ export default {
       }
       // this.resetEditing();
       // this.resetNewData();
-    },
-    async bindTasks(courseId, topicId) {
-      if (this.person.accountType == "student") {
-        await this.$store.dispatch("bindPersonsTasksByTopicId", {
-          personId: this.person.id,
-          courseId: courseId,
-          topicId: topicId,
-        });
-      } else {
-        await this.$store.dispatch("bindTasksByTopicId", {
-          courseId: courseId,
-          topicId: topicId,
-        });
-      }
-    },
+    }
   },
 };
 </script>

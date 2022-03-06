@@ -2,13 +2,19 @@
   <v-app>
     <v-main>
       <router-view />
+      <SnackBar />
     </v-main>
   </v-app>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
+import SnackBar from "@/components/SnackBar.vue"
 
-@Component({})
-export default class App extends Vue {}
+export default {
+  name: "App",
+  components: {
+    SnackBar
+  }
+}
 </script>
