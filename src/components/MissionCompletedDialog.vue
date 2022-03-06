@@ -71,15 +71,20 @@
                   <v-row>
                     <v-col cols="10">
                       <v-row
-                        class="d-flex align-center justify-space-around speech-bubble"
+                        class="
+                          d-flex
+                          align-center
+                          justify-space-around
+                          speech-bubble
+                        "
                       >
-                        <v-col cols="1">
+                        <v-col cols="1" class="pa-0">
                           <v-icon left color="cohortAccent"
                             >mdi-alert-outline</v-icon
                           >
                         </v-col>
                         <v-col cols="11">
-                          <p class="submission-dialog-description">
+                          <p class="submission-dialog-description ma-0">
                             {{
                               task.submissionInstructions
                                 ? task.submissionInstructions
@@ -96,8 +101,13 @@
                           :src="mappedByImageURL"
                         ></v-img>
                       </div>
-                      <p>{{ currentCourse.mappedBy.name }}</p>
-                      <p>(Instructor)</p>
+                      <p class="ma-0">{{ currentCourse.mappedBy.name }}</p>
+                      <p
+                        class="ma-0"
+                        style="font-size: 0.7rem; font-style: italic"
+                      >
+                        (Instructor)
+                      </p>
                     </v-col>
                   </v-row>
                 </div>
@@ -558,16 +568,16 @@ export default {
     color: var(--v-cohortAccent-base);
     text-transform: uppercase;
     font-size: 0.7rem;
-    margin: 0;
+    padding: 0px 10px;
     font-style: italic;
   }
 
   .speech-bubble {
     position: relative;
     width: auto;
-    max-width: 80%;
-    padding: 10px 100px;
-    margin: 50px auto;
+    max-width: 90%;
+    padding: 10px;
+    margin: 40px auto;
     text-align: center;
     // background-color: #fff;
     -moz-border-radius: 5px;
@@ -616,7 +626,6 @@ export default {
 .instructor-details {
   color: var(--v-missionAccent-base);
   font-size: 0.9rem;
-  border: 1px solid yellow;
   display: flex;
   flex-direction: column;
   justify-content: center;
