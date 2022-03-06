@@ -136,6 +136,7 @@ export default {
     };
   },
   async mounted() {
+    console.log("this.fromCreate", this.fromCreate);
     if (this.fromCreate) {
       let nodeId = null;
       // create first node (hard coded)
@@ -183,6 +184,7 @@ export default {
           id: nodeId,
           label: this.courseTitle + " Intro",
           group: "introduction",
+          topicCreatedTimestamp: new Date(),
         })
         .catch((error) => {
           console.error("Error writing node: ", error);

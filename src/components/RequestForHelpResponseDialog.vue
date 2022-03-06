@@ -191,7 +191,7 @@ export default {
 
           // teacher assissted student
           teacherRespondedToRequestForHelpXAPIStatement(
-            this.person.email,
+            this.person,
             this.request.contextTask.id,
             {
               student: this.requesterPerson,

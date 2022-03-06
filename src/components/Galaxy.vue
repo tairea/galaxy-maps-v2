@@ -545,7 +545,7 @@ export default {
 .popupPanel {
   position: absolute;
   // position of the PopupPreview panel
-  top: calc(50% - 300px);
+  top: calc(50% - 350px);
   left: calc(75% - 5vw);
 }
 </style>
