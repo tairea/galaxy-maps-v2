@@ -61,7 +61,7 @@
     </div>
 
     <div>
-      <div v-if="person.accountType != 'student'" class="ss-actions">
+      <div v-if="person.accountType != 'student'" class="ss-actions py-2">
         <v-btn
           class="view-ss-button pa-5"
           dark
@@ -91,7 +91,7 @@
         </v-btn>
       </div>
       <!-- Student Galaxy Actions -->
-      <div v-else class="ss-actions">
+      <div v-else class="ss-actions py-2">
         <v-btn
           v-if="enrolled"
           class="view-ss-button pa-5"
@@ -388,7 +388,7 @@ export default {
 
     .view-ss-button {
       width: 80%;
-      margin: 20px;
+      margin: 5px;
       // position: absolute;
       // bottom: 20px; // matches 20px padding of ss-details
       background-color: var(--v-background-base);
