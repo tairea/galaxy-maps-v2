@@ -299,12 +299,12 @@ export default {
       // If we dont already have the students Id, check if they already have an account using their email
       const personExists = await this.MXgetPersonByEmail(person.email)
       if (personExists) {
-        this.handleAssignment(personExists, this.currentCourse)
+        this.handleAssignment(personExists, this.currentCourse.id)
       } else {
         //create the persons account 
         this.MXcreateUser(person)
         .then(person => {
-           this.handleAssignment(person, this.currentCourse)
+           this.handleAssignment(person, this.currentCourse.id)
         })
       }
     },
@@ -326,7 +326,7 @@ export default {
       if (!cohort) cohort = this.currentCohort
       if (!course) course = this.currentCourse
       this.loading = true;
-      // Add a cohort into collection "courses"
+      // Add a course to a cohort
       db.collection("cohorts")
         .doc(cohort.id)
         .update({
