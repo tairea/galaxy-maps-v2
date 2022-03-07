@@ -1,6 +1,8 @@
 const admin = require('firebase-admin');
 const functions = require('firebase-functions');
 const nodemailer = require('nodemailer');
+require('dotenv').config();
+const { studentOnlineXAPIStatement, studentOfflineXAPIStatement } = require('./veracityLRS')
 
 admin.initializeApp();
 
@@ -205,6 +207,7 @@ Galaxy Maps Robot`;
 // Watch realtime DB for changes and trigger function on change
 exports.onUserStatusChanged = functions.database.ref('/status/{uid}').onUpdate(
   async (change, context) => {
+    functions.logger.log('====context===: ', context)
     // Get the data written to Realtime Database
     const eventStatus = change.after.val();
 
@@ -226,7 +229,17 @@ exports.onUserStatusChanged = functions.database.ref('/status/{uid}').onUpdate(
 
     // Otherwise, we convert the last_changed field to a Date
     eventStatus.last_changed = new Date(eventStatus.last_changed);
+    let person = await firestore.collection("people").doc(context.params.uid).get()
+    person = {
+      id: person.id,
+      ...person.data()
+    }
+    functions.logger.log('========person: ', person)
+    if (eventStatus.state === 'online') studentOnlineXAPIStatement(person)
+    if (eventStatus.state === 'offline') studentOfflineXAPIStatement(person)
+
     functions.logger.log('========updating firestore: ', context.params.uid, 'with: ', eventStatus)
+    // push XAPI statement here
     // ... and write it to Firestore.
     return userStatusFirestoreRef.set(eventStatus);
 });
