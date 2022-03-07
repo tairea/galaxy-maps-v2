@@ -136,7 +136,6 @@ export default {
     };
   },
   async mounted() {
-    console.log("this.fromCreate", this.fromCreate);
     if (this.fromCreate) {
       let nodeId = null;
       // create first node (hard coded)
@@ -306,7 +305,6 @@ export default {
     },
     centerFocus(centerFocusNode) {
       if (centerFocusNode.length > 1) return; // this avoids pop up when no specific node selected
-      console.log("centerFocus ???? ", centerFocusNode);
       this.centerFocusPosition = true;
       this.type = centerFocusNode.type;
       this.infoPopupPosition.x = "50%"; // 50%
@@ -314,7 +312,6 @@ export default {
       // this.currentNode = centerFocusNode;
     },
     showAddDialog(node) {
-      console.log('edit node: ', node)
       this.addNodeMode = false;
       this.uiMessage = "";
       this.coords.x = node.x;
@@ -324,7 +321,6 @@ export default {
       this.dialog = true;
     },
     showEditDialog(node) {
-      console.log('edit node: ', node)
       this.uiMessage = "";
       this.coords.x = node.x;
       this.coords.y = node.y;
