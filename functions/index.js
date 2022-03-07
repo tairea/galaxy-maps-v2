@@ -207,7 +207,6 @@ Galaxy Maps Robot`;
 // Watch realtime DB for changes and trigger function on change
 exports.onUserStatusChanged = functions.database.ref('/status/{uid}').onUpdate(
   async (change, context) => {
-    functions.logger.log('====context===: ', context)
     // Get the data written to Realtime Database
     const eventStatus = change.after.val();
 
@@ -220,7 +219,6 @@ exports.onUserStatusChanged = functions.database.ref('/status/{uid}').onUpdate(
     // and compare the timestamps.
     const statusSnapshot = await change.after.ref.once('value');
     const status = statusSnapshot.val();
-    functions.logger.log(status, eventStatus);
     // If the current timestamp for this data is newer than
     // the data that triggered this event, we exit this function.
     if (status.last_changed > eventStatus.last_changed) {
@@ -234,11 +232,9 @@ exports.onUserStatusChanged = functions.database.ref('/status/{uid}').onUpdate(
       id: person.id,
       ...person.data()
     }
-    functions.logger.log('========person: ', person)
     if (eventStatus.state === 'online') studentOnlineXAPIStatement(person)
     if (eventStatus.state === 'offline') studentOfflineXAPIStatement(person)
 
-    functions.logger.log('========updating firestore: ', context.params.uid, 'with: ', eventStatus)
     // push XAPI statement here
     // ... and write it to Firestore.
     return userStatusFirestoreRef.set(eventStatus);
