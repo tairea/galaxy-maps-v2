@@ -40,7 +40,32 @@
       class="overline pa-2"
       style="color: var(--v-missionAccent-base)"
     >
-      LEGEND:
+      <!-- LEGEND: -->
+      <v-row>
+        <v-col cols="2"> START:</v-col>
+        <v-col cols="4">
+          <input
+            type="date"
+            class="date-picker"
+            placeholder="dd-mm-yyyy"
+            value=""
+            min="2022-01-01"
+            max="2023-01-01"
+            :style="dark ? 'color-scheme: dark' : 'color-scheme: light'"
+          />
+        </v-col>
+        <v-col cols="2">END:</v-col>
+        <v-col cols="4"
+          ><input
+            type="date"
+            class="date-picker"
+            placeholder="dd-mm-yyyy"
+            value=""
+            min="2022-01-01"
+            max="2023-01-01"
+            :style="dark ? 'color-scheme: dark' : 'color-scheme: light'"
+        /></v-col>
+      </v-row>
     </div>
   </div>
 </template>
@@ -64,6 +89,9 @@ export default {
   computed: {
     ...mapState(["teachersStudentsProgress"]),
     ...mapGetters(["person", "getCourseById"]),
+    dark() {
+      return this.$vuetify.theme.isDark;
+    },
   },
   mounted() {
     console.log("teachersStudentsProgress");
@@ -71,6 +99,8 @@ export default {
   },
   data() {
     return {
+      date: new Date(),
+      modal: false,
       chartType: "line",
       chartData: {
         // labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
@@ -275,62 +305,69 @@ export default {
         datasets: datasets,
       };
 
-      // // TODO: loop many course (creating many studentData objects)
-      // let studentData = {
-      //   type: "line",
-      //   backgroundColor: courseColour,
-      //   borderColor: courseColour,
-      //   data: studentObj.tasksWorkedOnForThisCourse.map((tasks, index) => {
-      //     return {
-      //       x: tasks.timestamp,
-      //       y: index + 1,
-      //     };
-      //   }),
-      //   label: studentObj.contextCourse,
-      //   segment: {
-      //     borderColor: (ctx) => this.getColourBasedOnStatus(ctx, studentObj),
-      //   },
-      // };
-      // const datasetsObj = {
-      //   datasets: [studentData],
-      // };
-      // console.log("formatted studentData: ", datasetsObj);
       return datasetsObj;
     },
     getColourBasedOnStatus(ctx, course) {
       // TODO: dunno why this doesnt work (supposed to change border colour depending on status)
-      // console.log("ctx");
-      // console.log(ctx);
-      // console.log("course.courseTopicData[ctx.p1DataIndex]");
-      // console.log(course.courseTopicData[ctx.p1DataIndex]);
 
-      course.courseTopicData[ctx.p1DataIndex].topicTaskData.forEach(
-        (taskPoint) => {
-          // console.log("taskPoint: ", taskPoint);
-          switch (taskPoint.taskStatus) {
-            case "inreview":
-              return this.$vuetify.theme.themes.dark.cohortAccent;
-            case "completed":
-              return this.$vuetify.theme.themes.dark.baseAccent;
-            default:
-              return;
+      if (ctx.p0DataIndex >= course.courseTopicData.length) {
+        return;
+      }
+      if (
+        course.courseTopicData[ctx.p0DataIndex].topicTaskData &&
+        course.courseTopicData[ctx.p0DataIndex].topicTaskData.length > 0
+      ) {
+        course.courseTopicData[ctx.p0DataIndex].topicTaskData.forEach(
+          (taskPoint) => {
+            switch (taskPoint.taskStatus) {
+              case "inreview":
+                console.log(
+                  taskPoint.taskTitle + " taskPoint is: ",
+                  taskPoint.taskStatus
+                );
+                console.log(
+                  "returning colour:",
+                  this.hexToRgb(this.$vuetify.theme.themes.dark.cohortAccent)
+                );
+                return this.hexToRgb(
+                  this.$vuetify.theme.themes.dark.cohortAccent
+                );
+              case "completed":
+                console.log(
+                  taskPoint.taskTitle + " taskPoint is: ",
+                  taskPoint.taskStatus
+                );
+                console.log(
+                  "returning colour:",
+                  this.hexToRgb(this.$vuetify.theme.themes.dark.baseAccent)
+                );
+                return this.hexToRgb(
+                  this.$vuetify.theme.themes.dark.baseAccent
+                );
+              default:
+                return;
+            }
           }
-        }
-      );
-
-      // switch (
-      //   course.courseTopicData[ctx.p1DataIndex].topicTaskData.taskStatus
-      // ) {
-      //   // case "active":
-      //   //   return this.$vuetify.theme.themes.dark.missionAccent;
-      //   case "inreview":
-      //     return this.$vuetify.theme.themes.dark.cohortAccent;
-      //   // case "completed":
-      //   //   return this.$vuetify.theme.themes.dark.baseAccent;
-      //   default:
-      //     return;
-      // }
+        );
+      } else {
+        return;
+      }
     },
+    hexToRgb(hex) {
+      var c;
+      if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
+        c = hex.substring(1).split("");
+        if (c.length == 3) {
+          c = [c[0], c[0], c[1], c[1], c[2], c[2]];
+        }
+        c = "0x" + c.join("");
+        return (
+          "rgb  (" + [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(",") + ")"
+        );
+      }
+      throw new Error("Bad Hex");
+    },
+
     // example of line segment logic (use to color line according to taskStatus eg. active/inreview/completed)
     // down(ctx, value) {
     //   console.log("getting segment down logic...");
@@ -384,8 +421,8 @@ export default {
 #chartLegend {
   border-top: 1px solid var(--v-missionAccent-base);
   height: auto;
-  position: absolute;
-  bottom: 0px;
+  // position: absolute;
+  // bottom: 0px;
   width: 100%;
 }
 .imagePlaceholder {
@@ -397,5 +434,9 @@ export default {
   justify-content: center;
   align-items: center;
   font-size: 10px;
+}
+
+.date-picker {
+  color: var(--v-missionAccent-base);
 }
 </style>

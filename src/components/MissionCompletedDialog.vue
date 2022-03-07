@@ -67,16 +67,49 @@
               <div v-if="task.submissionRequired">
                 <div class="submission-dialog-header">
                   <p class="submission-dialog-title">Submission Requirements</p>
-                  <div class="d-flex align-center">
-                    <v-icon left color="cohortAccent">mdi-alert-outline</v-icon>
-                    <p class="submission-dialog-description">
-                      {{
-                        task.submissionInstructions
-                          ? task.submissionInstructions
-                          : "Please provide a link to your work, showing that you have completed this mission"
-                      }}
-                    </p>
-                  </div>
+                  <!-- submission message speech bubble -->
+                  <v-row>
+                    <v-col cols="10">
+                      <v-row
+                        class="
+                          d-flex
+                          align-center
+                          justify-space-around
+                          speech-bubble
+                        "
+                      >
+                        <v-col cols="1" class="pa-0">
+                          <v-icon left color="cohortAccent"
+                            >mdi-alert-outline</v-icon
+                          >
+                        </v-col>
+                        <v-col cols="11">
+                          <p class="submission-dialog-description ma-0">
+                            {{
+                              task.submissionInstructions
+                                ? task.submissionInstructions
+                                : "Please provide a link to your work, showing that you have completed this mission"
+                            }}
+                          </p>
+                        </v-col>
+                      </v-row>
+                    </v-col>
+                    <v-col cols="2" class="instructor-details">
+                      <div>
+                        <v-img
+                          class="instructor-image mb-2"
+                          :src="mappedByImageURL"
+                        ></v-img>
+                      </div>
+                      <p class="ma-0">{{ currentCourse.mappedBy.name }}</p>
+                      <p
+                        class="ma-0"
+                        style="font-size: 0.7rem; font-style: italic"
+                      >
+                        (Instructor)
+                      </p>
+                    </v-col>
+                  </v-row>
                 </div>
 
                 <div class="submission-create-dialog-content">
@@ -206,10 +239,13 @@ import {
   topicCompletedXAPIStatement,
 } from "../store/veracityLRS";
 
+import { dbMixins } from "../mixins/DbMixins";
+
 import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "MissionCompletedDialog",
+  mixins: [dbMixins],
   props: ["topicId", "taskId", "task", "missionStatus", "on", "attrs"],
   data: () => ({
     submissionLink: null,
@@ -219,13 +255,13 @@ export default {
     loading: false,
     disabled: false,
     deleting: false,
+    mappedByImageURL: "",
   }),
   mounted() {
-    // console.log("MissionCompletedDialog Task = ", this.task);
-    // console.log(
-    //   "from store/in mission completed: this.personsTopicsTasks = ",
-    //   this.personsTopicsTasks
-    // );
+    // get mappedBy image
+    if (!this.currentCourse.mappedBy.image) {
+      this.getMappedByPersonsImage(this.currentCourse.mappedBy.personId);
+    }
   },
   computed: {
     ...mapState([
@@ -277,18 +313,11 @@ export default {
           console.log("Submission successfully submitted for review!");
 
           // send xAPI statement to LRS
-          submitWorkForReviewXAPIStatement(
-            this.person.email,
-            this.currentTask.id,
-            {
-              // galaxyName: this.currentCourse.title,
-              // systemName: this.currentTopic.label,
-              // missionName: this.currentTask.title,
-              galaxy: this.currentCourse,
-              system: this.currentTopic,
-              mission: this.currentTask,
-            }
-          );
+          submitWorkForReviewXAPIStatement(this.person, this.currentTask.id, {
+            galaxy: this.currentCourse,
+            system: this.currentTopic,
+            mission: this.currentTask,
+          });
 
           this.requestForHelp = "";
           this.loading = false;
@@ -354,15 +383,11 @@ export default {
         .then(() => {
           console.log("Task status successfully written as completed!");
           // send xAPI statement to LRS
-          taskMarkedAsCompletedXAPIStatement(
-            this.person.email,
-            this.currentTask.id,
-            {
-              galaxy: this.currentCourse,
-              system: this.currentTopic,
-              mission: this.currentTask,
-            }
-          );
+          taskMarkedAsCompletedXAPIStatement(this.person, this.currentTask.id, {
+            galaxy: this.currentCourse,
+            system: this.currentTopic,
+            mission: this.currentTask,
+          });
           this.loading = false;
           this.disabled = false;
           this.dialog = false;
@@ -410,7 +435,7 @@ export default {
       if (numOfTasksCompleted === this.personsTopicsTasks.length) {
         console.log("Topic Completed! (all tasks in this topic completed)");
         // TODO: some kind of notification to UI signal that Topic has been completed
-        topicCompletedXAPIStatement(this.person.email, this.currentTopic.id, {
+        topicCompletedXAPIStatement(this.person, this.currentTopic.id, {
           galaxy: this.currentCourse,
           system: this.currentTopic,
         });
@@ -470,6 +495,10 @@ export default {
     },
     cancel() {
       this.dialog = false;
+    },
+    async getMappedByPersonsImage(personId) {
+      const person = await this.MXgetPersonByIdFromDB(personId);
+      this.mappedByImageURL = person.image.url;
     },
   },
 };
@@ -539,13 +568,67 @@ export default {
     color: var(--v-cohortAccent-base);
     text-transform: uppercase;
     font-size: 0.7rem;
-    margin: 0;
+    padding: 0px 10px;
     font-style: italic;
+  }
+
+  .speech-bubble {
+    position: relative;
+    width: auto;
+    max-width: 90%;
+    padding: 10px;
+    margin: 40px auto;
+    text-align: center;
+    // background-color: #fff;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+    border: 2px solid var(--v-missionAccent-base);
+  }
+  .speech-bubble p {
+    // font-size: 1.25em;
+  }
+
+  .speech-bubble:before,
+  .speech-bubble:after {
+    content: "\0020";
+    display: block;
+    position: absolute;
+    top: 20px;
+    right: -10px;
+    z-index: 2;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    border: solid 10px transparent;
+    border-left: 0;
+    border-bottom-color: var(--v-missionAccent-base);
+  }
+  .speech-bubble:before {
+    top: -30px;
+    z-index: 1;
+    border-bottom-color: rgba(0, 0, 0, 0.095);
   }
 }
 
 .action-buttons {
   width: 100%;
   padding: 20px;
+}
+
+.instructor-image {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.instructor-details {
+  color: var(--v-missionAccent-base);
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 </style>
