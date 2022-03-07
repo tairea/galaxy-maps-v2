@@ -117,6 +117,11 @@ export default {
       this.$store.commit("setDarkMode", this.$vuetify.theme.isDark);
     },
     logout() {
+      firebase.firestore().doc('/status/' + this.person.id).set({
+        state: 'offline',
+        last_changed: firebase.firestore.FieldValue.serverTimestamp()
+      })
+
       firebase
         .auth()
         .signOut()
@@ -125,26 +130,15 @@ export default {
           this.snackbarColour = "baseAccent";
           this.snackbarMsg = "Successfully signed out";
           this.snackbar = true;
-          this.resetState();
           this.$router.push("/login");
         })
         .catch((error) => {
-          // alert(error.message);
+          alert(error.message);
           this.snackbarColour = "pink";
           this.snackbarMsg = error.message;
           this.snackbar = true;
           this.$router.push("/");
         });
-    },
-    resetState() {
-      let state = this.$store.state;
-      let newState = {};
-
-      Object.keys(state).forEach((key) => {
-        newState[key] = null; // or = initialState[key]
-      });
-      delete newstate.user;
-      this.$store.replaceState(newState);
     },
     onButtonClick() {
       this.$refs.uploader?.click();
