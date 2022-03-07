@@ -1,25 +1,20 @@
 <template>
   <div id="container" class="bg">
-    <!-- REVIEW WORK PANEL -->
-    <div id="left-section"></div>
-
-    <!-- STUDENT PROGRESSION PANEL -->
-    <div id="main-section">
-      <img src="../assets/student-dashboard-mockup.png" />
+    <!-- STUDENTS INFO FRAME -->
+    <div id="left-section">
+      <StudentInfo :person="person" />
     </div>
 
-    <!-- REQUESTS FOR HELP PANEL -->
-    <div id="right-section"></div>
+    <div id="main-section">
+      <!-- STUDENTS ACTIVITY FRAME -->
+      <StudentActivityTimeline />
 
-    <!-- Request submitted Snackbar -->
-    <!-- <v-snackbar v-model="snackbar">
-      {{ snackbarMsg }}
-      <template v-slot:action="{ attrs }">
-        <v-btn color="baseAccent" text v-bind="attrs" @click="snackbar = false">
-          OK
-        </v-btn>
-      </template>
-    </v-snackbar> -->
+      <!-- STUDENTS COURSE PROGRESSOIN FRAME -->
+      <!-- TODO: v-for="courseData in studentsCoursesProgressionData" -->
+      <div>
+        <StudentCourseProgression />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -27,9 +22,17 @@
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
 
+import StudentInfo from "../components/StudentInfo";
+import StudentActivityTimeline from "../components/StudentActivityTimeline";
+import StudentCourseProgression from "../components/StudentCourseProgression";
+
 export default {
   name: "StudentDashboard",
-  components: {},
+  components: {
+    StudentInfo,
+    StudentActivityTimeline,
+    StudentCourseProgression,
+  },
   props: [],
   async mounted() {},
   computed: {
@@ -77,7 +80,7 @@ export default {
 }
 
 #left-section {
-  width: 0%;
+  width: 25%;
   height: 100%;
   display: flex;
   justify-content: center;
@@ -90,36 +93,10 @@ export default {
   #left-section ::-webkit-scrollbar {
     display: none;
   }
-
-  #review-panel {
-    width: calc(100% - 30px);
-    height: 80%;
-    border: 1px solid var(--v-cohortAccent-base);
-    margin-top: 30px;
-    padding: 20px;
-    // background: var(--v-baseAccent-base);
-    position: relative;
-    backdrop-filter: blur(2px);
-    z-index: 3;
-
-    .review-label {
-      font-size: 0.8rem;
-      font-weight: 400;
-      text-transform: uppercase;
-      // ribbon label
-      position: absolute;
-      top: 0;
-      left: -1px;
-      background-color: var(--v-cohortAccent-base);
-      color: var(--v-background-base);
-      padding: 0px 20px 0px 5px;
-      clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
-    }
-  }
 }
 
 #main-section {
-  width: 100%;
+  width: 75%;
   // margin: 0px;
   height: 100%;
   display: flex;
@@ -127,24 +104,13 @@ export default {
   align-items: center;
   flex-direction: column;
   z-index: 1;
-  // border: 1px solid pink;
+  border: 1px solid pink;
   overflow: scroll;
   overflow-x: hidden; /* Hide horizontal scrollbar */
 
   #main-section ::-webkit-scrollbar {
     display: none;
   }
-}
-
-#right-section {
-  width: 0%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  // border: 1px solid red;
-  overflow: scroll;
-  overflow-x: hidden; /* Hide horizontal scrollbar */
 }
 
 /* width */

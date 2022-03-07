@@ -50,6 +50,7 @@ export default new Vuex.Store({
     cohortsInCourse: [],
     darkMode: true,
     sortedArr: [],
+    studentCourseDataFromLRS: [],
   },
   getters: {
     people: (state) => state.people,
@@ -229,6 +230,9 @@ export default new Vuex.Store({
       );
       console.log("sortedArr: ", sortedArr);
       state.sortedArr = sortedArr;
+    },
+    setStudentCourseDataFromLRS(state, courseData) {
+      state.studentCourseDataFromLRS = courseData;
     },
   },
   actions: {
@@ -833,6 +837,19 @@ export default new Vuex.Store({
           return doc.data();
         });
     },
+    async getTopicByTopicId({ state }, payload) {
+      // console.log("payload from getTopicByTopicId", payload);
+      await db
+        .collection("courses")
+        .doc(payload.courseId)
+        .collection("topics")
+        .doc(payload.topicId)
+        .get()
+        .then((doc) => {
+          // console.log("doc.data()", doc.data());
+          return doc.data();
+        });
+    },
     // bind courses requests for help
     bindRequestsForHelp: firestoreAction(({ bindFirestoreRef }, payload) => {
       return bindFirestoreRef(
@@ -919,7 +936,7 @@ export default new Vuex.Store({
         }
       }
 
-      console.log("orgs: ", orgs);
+      // console.log("orgs: ", orgs);
       commit("setOrganisations", orgs);
     },
 
