@@ -3,7 +3,7 @@
     :class="cohortView ? 'text-end' : 'text-center'"
     :align="cohortView ? 'end' : 'center'"
   >
-    <v-dialog v-model="dialog" width="40%" light content-class="no-overflow">
+    <v-dialog v-model="dialog" width="40%" light content-class="dialog-border">
       <!-- CREATE BUTTON -->
       <template v-slot:activator="{ on, attrs }">
         <v-btn
@@ -572,7 +572,7 @@ export default {
   display: flex;
   // flex-direction: column;
   flex-wrap: wrap;
-  overflow-x: hidden;
+  overflow: hidden !important;
 
   .dialog-header {
     width: 100%;
@@ -655,6 +655,7 @@ export default {
   .action-buttons {
     width: 100%;
     padding: 5px 20px;
+    padding-bottom: 100px;
   }
 }
 

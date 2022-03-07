@@ -5,9 +5,6 @@ import { db, functions } from "../store/firestoreConfig";
 import { mapGetters } from "vuex"
 
 export const dbMixins = {
-  computed: {
-    ...mapGetters(['getCourseById'])
-  },
   methods : {
     MXaddExistingUserToCohort (person) {
       return this.MXaddStudentToCohort(person).then(() => {
@@ -25,7 +22,7 @@ export const dbMixins = {
         .then(() => {
           if (this.currentCohort.courses.length) {
             this.currentCohort.courses.forEach(async courseId => {
-              let course = await this.getCourseById(courseId)
+              let course = await this.MXgetCourseById(courseId)
               this.MXassignCourseToStudent(student, course)
             })
           }
@@ -138,12 +135,30 @@ export const dbMixins = {
       });
     },
     async MXgetPersonByIdFromDB(personId) {
-      let person = await db.collection("people").doc(personId).get().catch(err => console.err(err));
+      let person = await db.collection("people").doc(personId).get().catch(err => console.err(err));    
       person = {
         id: person.id,
-        ...person.data()
+        ...person.data(),
       }
       return person;
     },
+    async MXgetCourseById(id) {
+      const course = await db.collection('courses').doc(id).get().then(doc => {
+        return {
+          id,
+          ...doc.data()
+        }
+      })
+      return course
+    },
+    async MXsaveProfile(profile) {
+      console.log('profile: ', profile)
+      return await db.collection("people")
+      .doc(profile.id)
+      .update(profile)
+      .catch((error) => {
+        console.error("Error writing document: ", error);
+    });
+    }
   }
 }

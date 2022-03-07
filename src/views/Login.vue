@@ -113,7 +113,7 @@ export default {
         .catch((error) => {
           this.$store.commit("setSnackbar", {
             show: true,
-            text: error.message,
+            text: error.error,
             color: "pink"
           })
           this.loading = false;
@@ -132,7 +132,7 @@ export default {
           handleCodeInApp: true,
         };
         firebase.auth().currentUser.sendEmailVerification(actionCodeSettings)
-        throw new Error("New email verification link sent. Please check your emails")  
+        throw new Error("Please check your emails to verify your account")  
       }
       else if (this.person.accountType == "student") {
         this.$router.push("/base/galaxies/assigned");
