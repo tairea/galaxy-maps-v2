@@ -55,20 +55,7 @@
       >
     </div>
 
-    <!-- Login Error Snackbar -->
-    <v-snackbar v-model="snackbar">
-      {{ snackbarText }}
-      <template v-slot:action="{ attrs }">
-        <v-btn
-          :color="snackbarColour"
-          text
-          v-bind="attrs"
-          @click="snackbar = false"
-        >
-          OK
-        </v-btn>
-      </template>
-    </v-snackbar>
+    <SnackBar />
   </div>
 </template>
 
@@ -76,9 +63,13 @@
 import firebase from "firebase";
 import { mapGetters } from "vuex";
 import { queryXAPIStatement } from "../store/veracityLRS";
+import SnackBar from "@/components/SnackBar.vue"
 
 export default {
   name: "Login",
+  components: {
+    SnackBar
+  },
   data: () => ({
     valid: true,
     email: "",
@@ -87,9 +78,6 @@ export default {
       (v) => !!v || "E-mail is required",
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
     ],
-    snackbar: false,
-    snackbarText: "",
-    snackbarColour: "",
     loading: false,
   }),
   mounted() {
@@ -123,10 +111,11 @@ export default {
           this.proceed();
         })
         .catch((error) => {
-          this.snackbarColour = "pink";
-          this.snackbarText = error;
-          this.snackbar = true;
-          console.log("Login error:", error);
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: error.message,
+            color: "pink"
+          })
           this.loading = false;
         });
     },
@@ -136,7 +125,16 @@ export default {
           this.proceed();
         }, 500);
       }
-      if (this.person.accountType == "student") {
+      if (!this.user.data.verified) {
+        var actionCodeSettings = {
+          // TODO: Update to galaxymaps.io on deployment
+          url: window.location.origin + '/login',
+          handleCodeInApp: true,
+        };
+        firebase.auth().currentUser.sendEmailVerification(actionCodeSettings)
+        throw new Error("New email verification link sent. Please check your emails")  
+      }
+      else if (this.person.accountType == "student") {
         this.$router.push("/base/galaxies/assigned");
       } else {
         this.$router.push("/base/cohorts");
