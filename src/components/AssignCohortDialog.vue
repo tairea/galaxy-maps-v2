@@ -299,26 +299,33 @@ export default {
       // If we dont already have the students Id, check if they already have an account using their email
       const personExists = await this.MXgetPersonByEmail(person.email)
       if (personExists) {
-        this.handleAssignment(personExists, this.currentCourse.id)
+        this.handleAssignment(personExists, this.currentCourse)
       } else {
         //create the persons account 
         this.MXcreateUser(person)
         .then(person => {
-           this.handleAssignment(person, this.currentCourse.id)
+           this.handleAssignment(person, this.currentCourse)
         })
       }
     },
 
     handleAssignment (person, course) {
       this.MXassignCourseToStudent(person, course).then(() => {
-        console.log("Document successfully updated! Person assigned to Course!");
-        this.$emit("snackbarToggle", "Individual assigned to Course");
+        this.$store.commit("setSnackbar", {
+          show: true,
+          text: "Individual assigned to Course",
+          color: "baseAccent"
+        })
         this.close()
       })
       .catch((error) => {
         console.error("Error writing document: ", error);
         // snackbar message
-        this.$emit("snackbarToggle", "Error: " + error);
+        this.$store.commit("setSnackbar", {
+          show: true,
+          text: error,
+          color: "pink"
+        })
         this.close()
       });
     },
@@ -345,12 +352,20 @@ export default {
         })
         .then(() => {
           console.log("courses added to all students!");
-          this.$emit("snackbarToggle", "Cohort assigned to Course");
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: "Cohort assigned to Course",
+            color: "baseAccent"
+          })
           this.close()
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
-          this.$emit("snackbarToggle", "Error writing document: " + error);
+            this.$store.commit("setSnackbar", {
+            show: true,
+            text: error,
+            color: "pink"
+          })
       });
     }
   },

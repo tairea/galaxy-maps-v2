@@ -159,6 +159,18 @@ export const dbMixins = {
       .catch((error) => {
         console.error("Error writing document: ", error);
     });
+    },
+    async MXbindRequestsForHelp () {
+      await this.$store.dispatch(
+        "getRequestsForHelpByTeachersId",
+        this.user.data.id
+      );
+    },
+    async MXbindSubmissions() {
+      await this.$store.dispatch(
+        "getAllSubmittedWorkForTeacher",
+        this.user.data.id
+      );
     }
   }
 }

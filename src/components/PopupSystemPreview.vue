@@ -65,7 +65,7 @@
           x-small
           color="baseAccent"
           title="Edit"
-          @click="editNode"
+          @click="showEditDialog"
         >
           <v-icon>mdi-pencil</v-icon>
         </v-btn>
@@ -144,7 +144,6 @@ export default {
     "tasks",
   ],
   async mounted() {
-    console.log("topics tasks from popup === ", this.tasks);
     // this.getTopicTasks();
 
     // bind tasksbytopic here aka on preview
@@ -157,7 +156,6 @@ export default {
     this.activeMission = this.personsTopicsTasks.find(
       (topicObj) => topicObj.taskStatus == "active"
     );
-    console.log("setCurrentTaskId: ", this.activeMission?.id);
     this.$store.commit("setCurrentTaskId", this.activeMission?.id);
   },
   computed: {
@@ -172,7 +170,6 @@ export default {
   },
   data() {
     return {
-      hoverPopup: false,
       activeMission: null,
     };
   },
@@ -196,8 +193,8 @@ export default {
         }
       }
     },
-    editNode() {
-      this.$emit("editNode");
+    showEditDialog() {
+      this.$emit("showEditDialog", this.currentTopic);
     },
     routeToSolarSystem() {
       // console.log("route to ss", this.currentTopic.id);
@@ -210,9 +207,6 @@ export default {
       );
       if (activeMission) {
         this.$store.commit("setCurrentTaskId", activeMission.id);
-        console.log(
-          "setCurrentTaskId: " + activeMission.id + " " + activeMission.title
-        );
       }
       // route to topic/solar system
       this.$router.push({

@@ -1,12 +1,11 @@
 //=========== USER PRECENSE SYSTEM ===================
 import store from '@/store';
 import firebase from 'firebase'
+import { studentOnlineXAPIStatement, studentOfflineXAPIStatement } from '@/store/veracityLRS'
 // import store from './store'
 
 export const startPresenceSystem = (uid) => {
   if (!uid) return
-  console.log("starting presence system: ", uid)
-
   // This is where we will store data about being online/offline.
   var userStatusDatabaseRef = firebase.database().ref('/status/' + uid);
 
@@ -46,16 +45,17 @@ export const startPresenceSystem = (uid) => {
     };
 
     // if online well set the database and firestore
-    userStatusDatabaseRef.onDisconnect().set(isOfflineForDatabase).then(function() {
+    userStatusDatabaseRef.onDisconnect().set(isOfflineForDatabase)
+    .then(function() {
       userStatusDatabaseRef.set(isOnlineForDatabase);
       userStatusFirestoreRef.set(isOnlineForFirestore);
-    });
-  });
+    })
+  })
 
   firebase.firestore().collection('status')
     .where('state', '==', 'online')
     .onSnapshot((snapshot) => {
-      // watch for changes to user status and update 
+      // watch for changes to user status and update the our store
       snapshot.docChanges().forEach(function(change) {
         if (change.type === 'added') {
           store.state.userStatus[change.doc.id] = change.doc.data()
@@ -66,7 +66,7 @@ export const startPresenceSystem = (uid) => {
             ...change.doc.data(),
             ...{state: 'offline'}
           }
-          store.state.userStatus[change.doc.id] = data
+          store.state.userStatus[change.doc.id] = datax
         }
       });
   });
