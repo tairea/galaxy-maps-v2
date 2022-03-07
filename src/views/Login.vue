@@ -110,7 +110,6 @@ export default {
             text: error.error,
             color: "pink"
           })
-          console.error("Login error:", error);
           this.loading = false;
         });
     },
