@@ -221,6 +221,7 @@ export default {
   bottom: -200px;
   right: 0;
   transition: all 0.3s ease-out;
+  z-index: 200;
 
   .blackBar {
     position: absolute;
@@ -234,7 +235,6 @@ export default {
     text-align: right;
     display: flex;
     justify-content: flex-end;
-    z-index: 200;
     // border: 1px yellow solid;
 
     .profilePic {
