@@ -6,7 +6,6 @@
         v-for="submission in teachersSubmissionsToReview"
         :key="submission.id"
         :submission="submission"
-        @snackbarToggle="snackbarToggleSubmission($event)"
       />
     </div>
     <div v-if="!submissionsLoading && teachersSubmissionsToReview.length == 0">
@@ -31,9 +30,11 @@
 <script>
 import SubmissionTeacherPanel from "../components/SubmissionTeacherPanel";
 import { mapState } from "vuex";
+import { dbMixins, dmMixins } from "../mixins/DbMixins"
 
 export default {
   name: "SubmissionTeacherFrame",
+  mixins: [dbMixins],
   components: {
     SubmissionTeacherPanel,
   },
@@ -41,8 +42,6 @@ export default {
     return {
       submissionsLoading: false,
       allSubmissions: [],
-      snackbarMsg: "",
-      snackbar: false,
     };
   },
   async mounted() {
@@ -60,17 +59,8 @@ export default {
     },
   },
   methods: {
-    snackbarToggleSubmission(msg) {
-      console.log("snackbar toggled...", msg);
-      this.snackbarMsg = msg;
-      this.snackbar = true;
-      this.bindSubmissions();
-    },
     async bindSubmissions() {
-      await this.$store.dispatch(
-        "getAllSubmittedWorkForTeacher",
-        this.user.data.id
-      );
+      this.MXbindSubmissions()
       this.submissionsLoading = false;
     },
   },

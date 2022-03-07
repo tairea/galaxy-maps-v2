@@ -146,11 +146,12 @@ import moment from "moment";
 
 import { db } from "../store/firestoreConfig";
 import { teacherRespondedToRequestForHelpXAPIStatement } from "../store/veracityLRS";
-
+import { dbMixins } from "../mixins/DbMixins"; 
 import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "RequestForHelpResponseDialog",
+  mixins: [dbMixins],
   props: ["request", "requesterPerson", "on", "attrs"],
   data: () => ({
     dialog: false,
@@ -204,18 +205,22 @@ export default {
           this.requestForHelp = "";
           this.loading = false;
           this.dialog = false;
-
-          this.$emit(
-            "snackbarToggle",
-            "Response submitted to Mission for students to see."
-          );
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: "Response submitted to Mission for students to see.",
+            color: "baseAccent"
+          })
+          this.MXbindRequestsForHelp()
 
           // TODO: update requests. (to remove answered requests)
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
-          this.snackbarMsg = "Error: " + error;
-          this.snackbar = true;
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: "Error: " + error,
+            color: "pink"
+          })
         });
     },
     cancel() {

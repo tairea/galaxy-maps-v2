@@ -55,7 +55,6 @@
             <MarkSubmissionCompleted
               :submission="submission"
               :requesterPerson="requesterPerson"
-              @snackbarToggle="snackbarToggle($event)"
             />
           </div>
         </v-expansion-panel-content>
@@ -93,12 +92,8 @@ export default {
   },
   computed: {
     ...mapState([
-      // "currentCourseId",
-      // "currentTopicId",
-      // "currentTaskId",
       "personsTopicsTasks",
     ]),
-    // ...mapActions(["getTaskByTaskId"]),
   },
   data() {
     return {
@@ -109,16 +104,6 @@ export default {
     getHumanDate(ts) {
       return moment(ts.seconds * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
     },
-    snackbarToggle(msg) {
-      this.$emit("snackbarToggle", msg);
-    },
-    // first3Letters(name) {
-    //   return name.substring(0, 3).toUpperCase();
-    // },
-    // TODO: route to students page
-    // routeToStudentsProfile(id) {
-    //   console.log("TODO: route to persons page:", id);
-    // },
   },
 };
 </script>
