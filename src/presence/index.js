@@ -69,9 +69,9 @@ export const startPresenceSystem = (uid) => {
           
           // if the change is mine set and XAPI statement
           // if (change.doc.id === store.state.user.data.id) {
-            //   console.log('im online')
-            //   studentOnlineXAPIStatement(store.state.person)
-            // }
+          //     console.log('im online')
+          //     studentOnlineXAPIStatement(store.state.person)
+          //   }
           }
           else if (change.type === 'removed') {
             // db still returns online because the watch is triggered locally
@@ -83,9 +83,9 @@ export const startPresenceSystem = (uid) => {
           store.state.userStatus[change.doc.id] = data
           
           // if the change is mine set and XAPI statement
-        //   if (change.doc.id === store.state.user.data.id) {
-        //     studentOfflineXAPIStatement(store.state.person)
-        //   }
+          // if (change.doc.id === store.state.user.data.id) {
+          //   studentOfflineXAPIStatement(store.state.person)
+          // }
         }
       });
   });

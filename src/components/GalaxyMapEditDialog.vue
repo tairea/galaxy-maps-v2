@@ -260,7 +260,7 @@ export default {
         .then((docRef) => {
           console.log("Node successfully written!");
           this.loading = false;
-          this.dialog = false;
+          this.close();
         })
         .catch((error) => {
           console.error("Error writing node: ", error);
@@ -273,7 +273,7 @@ export default {
         .then((docRef) => {
           console.log("Topic successfully written!");
           this.loading = false;
-          this.dialog = false;
+          this.close();
         })
         .catch((error) => {
           console.error("Error writing node: ", error);
