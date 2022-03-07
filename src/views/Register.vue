@@ -80,14 +80,12 @@
     <div style="width: 300px; margin: 0px auto">
       <BackButton :toPath="'/login'" />
     </div>
-    <SnackBar />
   </div>
 </template>
 
 <script>
 import firebase from "firebase";
 import { db } from "../store/firestoreConfig";
-import SnackBar from "@/components/SnackBar"
 
 import BackButton from "../components/BackButton";
 
@@ -95,7 +93,6 @@ export default {
   name: "Register",
   components: {
     BackButton,
-    SnackBar
   },
   data: () => ({
     closed: false,

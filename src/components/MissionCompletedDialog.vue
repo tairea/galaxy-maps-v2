@@ -323,14 +323,19 @@ export default {
           this.loading = false;
           this.dialog = false;
 
-          this.snackbarMsg =
-            "Submission submitted. You will be notified when your instructor has reviewd your work.";
-          this.snackbar = true;
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: "Submission submitted. You will be notified when your instructor has reviewd your work.",
+            color: "baseAccent"
+          })
         })
         .catch((error) => {
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: "Error: " + error,
+            color: "baseAccent"
+          })
           console.error("Error writing document: ", error);
-          this.snackbarMsg = "Error: " + error;
-          this.snackbar = true;
         });
 
       // 2) Add submission to students task (for students progression)

@@ -41,21 +41,6 @@
     </div>
 
     <BackButton :toPath="'/login'" />
-
-    <!-- Login Error Snackbar -->
-    <v-snackbar v-model="snackbar">
-      {{ snackbarText }}
-      <template v-slot:action="{ attrs }">
-        <v-btn
-          :color="snackbarColour"
-          text
-          v-bind="attrs"
-          @click="snackbar = false"
-        >
-          OK
-        </v-btn>
-      </template>
-    </v-snackbar>
   </div>
 </template>
 
@@ -77,9 +62,6 @@ export default {
       (v) => !!v || "E-mail is required",
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
     ],
-    snackbar: false,
-    snackbarText: "",
-    snackbarColour: "",
   }),
   mounted() {},
   methods: {
@@ -98,9 +80,11 @@ export default {
           this.$router.push("/base/galaxies/my");
         })
         .catch((error) => {
-          this.snackbarColour = "pink";
-          this.snackbarText = "Error: " + error.message;
-          this.snackbar = true;
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: error.message,
+            color: 'pink'
+          })
           console.log("Login error:", error);
         });
     },
@@ -113,19 +97,18 @@ export default {
         .auth()
         .sendPasswordResetEmail(this.email)
         .then(() => {
-          this.snackbarColour = "baseAccent";
-          this.snackbarText = "Reset Password Email Sent";
-          this.snackbar = true;
-          // Password reset email sent!
-          // ..
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: "Reset Password Email Sent",
+            color: 'baseAccent'
+          })
         })
         .catch((error) => {
-          this.snackbarColour = "pink";
-          this.snackbarText = "Error: " + error.message;
-          this.snackbar = true;
-          var errorCode = error.code;
-          var errorMessage = error.message;
-          // ..
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: error.message,
+            color: 'pink'
+          })  
         });
     },
   },
