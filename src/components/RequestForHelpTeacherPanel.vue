@@ -42,7 +42,6 @@
             <RequestForHelpResponseDialog
               :request="request"
               :requesterPerson="requesterPerson"
-              @snackbarToggle="snackbarToggle($event)"
             />
           </div>
         </v-expansion-panel-content>
@@ -98,9 +97,6 @@ export default {
     },
     getHumanDate(ts) {
       return moment(ts.seconds * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
-    },
-    snackbarToggle(msg) {
-      this.$emit("snackbarToggle", msg);
     },
     // first3Letters(name) {
     //   return name.substring(0, 3).toUpperCase();

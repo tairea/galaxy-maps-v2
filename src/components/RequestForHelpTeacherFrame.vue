@@ -7,7 +7,6 @@
         v-for="request in teachersRequestsForHelp"
         :key="request.id"
         :request="request"
-        @snackbarToggle="snackbarToggleHelp($event)"
       />
     </div>
     <div v-if="!requestsForHelpLoading && teachersRequestsForHelp.length == 0">
@@ -27,23 +26,16 @@
         color="galaxyAccent"
       ></v-btn>
     </div>
-    <!-- Request submitted Snackbar -->
-    <v-snackbar v-model="snackbar">
-      {{ snackbarMsg }}
-      <template v-slot:action="{ attrs }">
-        <v-btn color="baseAccent" text v-bind="attrs" @click="snackbar = false">
-          OK
-        </v-btn>
-      </template>
-    </v-snackbar>
   </div>
 </template>
 <script>
 import RequestForHelpTeacherPanel from "../components/RequestForHelpTeacherPanel";
 import { mapState } from "vuex";
+import { dbMixins } from "../mixins/DbMixins"
 
 export default {
   name: "RequestForHelpTeacherFrame",
+  mixins: [dbMixins],
   components: {
     RequestForHelpTeacherPanel,
   },
@@ -53,8 +45,6 @@ export default {
       requestsForHelpLoading: false,
       allSubmissions: [],
       allRequestsForHelp: [],
-      snackbarMsg: "",
-      snackbar: false,
     };
   },
   computed: {
@@ -85,30 +75,12 @@ export default {
     // bind all tasks *needs this to get the task names for request.taskId :(
   },
   methods: {
-    snackbarToggleHelp(msg) {
-      console.log("snackbar toggled...", msg);
-      this.snackbarMsg = msg;
-      this.snackbar = true;
-      this.bindRequestsForHelp();
-    },
-    snackbarToggleSubmission(msg) {
-      console.log("snackbar toggled...", msg);
-      this.snackbarMsg = msg;
-      this.snackbar = true;
-      this.bindSubmissions();
-    },
     async bindRequestsForHelp() {
-      await this.$store.dispatch(
-        "getRequestsForHelpByTeachersId",
-        this.user.data.id
-      );
+      this.MXbindRequestsForHelp()
       this.requestsForHelpLoading = false;
     },
     async bindSubmissions() {
-      await this.$store.dispatch(
-        "getAllSubmittedWorkForTeacher",
-        this.user.data.id
-      );
+      this.MXbindSubmissions()
       this.submissionsLoading = false;
     },
   },

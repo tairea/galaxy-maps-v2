@@ -8,9 +8,8 @@
         :assignCohorts="true"
         :people="peopleInCourse"
         :cohorts="cohortsInCourse"
-        @snackbarToggle="snackbarToggle($event)"
       />
-      <BackButton :toPath="pathDependingOnAccountType()" />
+      <BackButton :toPath="goBackPath" />
     </div>
     <div id="main-section">
       <!-- Map Buttons -->
@@ -23,20 +22,21 @@
         :nodePositionsChangeLoading="nodePositionsChangeLoading"
         @toggleAddNodeMode="toggleAddNodeMode"
         @toggleAddEdgeMode="toggleAddEdgeMode"
-        @addNode="addNode"
+        @addNode="showAddDialog"
         @saveNodePositions="saveNodePositions"
       />
 
       <!-- ===== Galaxy Map ===== -->
       <GalaxyMap
         ref="vis"
-        @add-node="addNode"
-        @edit-node="editNode"
+        @add-node="showAddDialog"
+        @edit-node="showEditDialog"
         @setUiMessage="setUiMessage"
         @drag-coords="updateDragCoords"
         @selected="selected"
-        @deselected="deselected"
-        @hovered="hovered"
+        @deselected="deselect"
+        @hoverNode="hovered"
+        @blurNode="blurNode"
         @centerFocus="centerFocus"
         @nodePositionsChanged="nodePositionsChanged"
         @nodePositionsChangeLoading="nodePositionsChangeLoading = true"
@@ -46,23 +46,37 @@
 
       <!-- Edit -->
       <GalaxyMapEditDialog
+        v-if="dialog"
         ref="edit"
+        :dialog="dialog"
+        :dialogTitle="dialogTitle"
+        :dialogDescription="dialogDescription"
+        :editing="editing"
         :course="getCourseById(courseId)"
         :coords="coords"
+        :currentNode="currentNode"
+        :currentEdge="currentEdge"
         @removeUnsavedNode="removeUnsavedNode"
-        @closePopup="closePopup"
+        @closeDialog="closeDialog"
+      />
+      <!-- POPUP -->
+      <PopupSystemPreview
+        v-if="infoPopupShow"
+        ref="popup"
+        :infoPopupShow="infoPopupShow"
+        :infoPopupPosition="infoPopupPosition"
+        :currentTopic="currentNode"
+        :centerFocusPosition="centerFocusPosition"
+        :tasks="
+          person.accountType == 'student' ? personsTopicsTasks : topicsTasks
+        "
+        @deleteFromMap="deleteFromMap"
+        @close="closePopup"
+        @showEditDialog="showEditDialog"
+        @focus="focusPopup"
+        @blur="blurPopup"
       />
     </div>
-
-    <!-- DB Status Snackbar -->
-    <v-snackbar v-model="snackbar">
-      {{ snackbarMsg }}
-      <template v-slot:action="{ attrs }">
-        <v-btn color="baseAccent" text v-bind="attrs" @click="snackbar = false">
-          OK
-        </v-btn>
-      </template>
-    </v-snackbar>
   </div>
 </template>
 
@@ -76,6 +90,8 @@ import GalaxyMap from "../components/GalaxyMap";
 import BackButton from "../components/BackButton";
 import GalaxyMapEditDialog from "../components/GalaxyMapEditDialog";
 import GalaxyMapButtons from "../components/GalaxyMapButtons";
+import PopupSystemPreview from "../components/PopupSystemPreview";
+
 
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
@@ -92,14 +108,37 @@ export default {
     BackButton,
     GalaxyMapEditDialog,
     GalaxyMapButtons,
+    PopupSystemPreview
   },
   props: ["courseId"],
+  data() {
+    return {
+      addNodeMode: false,
+      addEdgeMode: false,
+      uiMessage: "",
+      coords: {},
+      changeInPositions: false,
+      nodePositionsChangeLoading: false,
+      fromCreate: this.$route.params.fromCreate,
+      courseTitle: this.$route.params.courseTitle,
+      infoPopupShow: false,
+      infoPopupPosition: {},
+      centerFocusPosition: false,
+      type: "",
+      currentNode: {},
+      currentEdge: {},
+      hoverPopup: false,
+      hoverNode: false,
+      dialog: false, 
+      dialogTitle: "", 
+      dialogDescription: "",
+      editing: false
+    };
+  },
   async mounted() {
-    console.log("this.fromCreate", this.fromCreate);
     if (this.fromCreate) {
       let nodeId = null;
       // create first node (hard coded)
-      console.log("trying to add default intro node");
       await db
         .collection("courses")
         .doc(this.courseId)
@@ -113,7 +152,6 @@ export default {
           y: 0,
         })
         .then((docRef) => {
-          console.log("Node successfully written! With ID:", docRef.id);
           // update node obj with docRef.id aka nodeId
           db.collection("courses")
             .doc(this.courseId)
@@ -147,11 +185,6 @@ export default {
           group: "introduction",
           topicCreatedTimestamp: new Date(),
         })
-        .then((docRef) => {
-          console.log("Topic successfully written!");
-          // this.loading = false;
-          // this.dialog = false;
-        })
         .catch((error) => {
           console.error("Error writing node: ", error);
         });
@@ -162,24 +195,9 @@ export default {
     // bind assigned cohorts in this course
     await this.$store.dispatch("bindCohortsInCourse", this.courseId);
 
-    console.log("courseId", this.courseId);
     if (this.courseId) {
       return;
     }
-  },
-  data() {
-    return {
-      addNodeMode: false,
-      addEdgeMode: false,
-      uiMessage: "",
-      coords: {},
-      changeInPositions: false,
-      nodePositionsChangeLoading: false,
-      fromCreate: this.$route.params.fromCreate,
-      courseTitle: this.$route.params.courseTitle,
-      snackbar: false,
-      snackbarMsg: "",
-    };
   },
   computed: {
     ...mapState([
@@ -188,16 +206,37 @@ export default {
       "person",
       "peopleInCourse",
       "cohortsInCourse",
+      "topicsTasks",
+      "personsTopicsTasks",
     ]),
     ...mapGetters(["getCourseById"]),
-  },
-  methods: {
-    pathDependingOnAccountType() {
+    goBackPath() {
       if (this.person.accountType == "student") {
         return "/base/galaxies/assigned";
       } else {
         return "/base/galaxies/my";
       }
+    },
+  },
+  methods: {
+    setUiMessage(message) {
+      this.uiMessage = message;
+    },
+    updateDragCoords(coords) {
+      this.coords = coords;
+    },
+    nodePositionsChanged() {
+      this.changeInPositions = true;
+    },
+    saveNodePositions() {
+      this.$refs.vis.saveNodePositions();
+    },
+    nodePositionsChangeSaved() {
+      this.nodePositionsChangeLoading = false;
+      this.changeInPositions = false;
+    },
+    removeUnsavedNode() {
+      this.$refs.vis.removeUnsavedNode();
     },
     toggleAddNodeMode() {
       this.addNodeMode = !this.addNodeMode;
@@ -217,60 +256,108 @@ export default {
         this.uiMessage = "";
       }
     },
-    addNode(node) {
+    async bindTasks(courseId, topicId) {
+      if (this.person.accountType == "student") {
+        await this.$store.dispatch("bindPersonsTasksByTopicId", {
+          personId: this.person.id,
+          courseId: courseId,
+          topicId: topicId,
+        });
+      } else {
+        await this.$store.dispatch("bindTasksByTopicId", {
+          courseId: courseId,
+          topicId: topicId,
+        });
+      }
+    },
+    deleteFromMap() {
+      if (this.currentNode.label == "new") {
+        this.$emit("removeUnsavedNode");
+        this.currentNode.label = {};
+      } else if (this.type == "node") {
+        this.deleteNode();
+      } else if (this.type == "edge") {
+        this.deleteEdge();
+      }
+    },
+    async hovered(hoveredNode) {
+      this.hoverNode = true
+      // this.infoPopupShow = false;
+      this.centerFocusPosition = false;
+      this.type = hoveredNode.type;
+      this.infoPopupPosition.x = hoveredNode.DOMx;
+      this.infoPopupPosition.y = hoveredNode.DOMy;
+      this.currentNode = hoveredNode;
+      //bind tasks for popup preview
+      await this.bindTasks(this.currentCourseId, hoveredNode.id);
+      this.infoPopupShow = true;
+    },
+    selected(selected) {
+      this.type = selected.type;
+      this.infoPopupPosition.x = selected.DOMx;
+      this.infoPopupPosition.y = selected.DOMy;
+      if (selected.type == "node") {
+        this.currentNode = selected;
+      } else if (selected.type == "edge") {
+        this.currentEdge = selected;
+      }
+      this.infoPopupShow = true;
+    },
+    centerFocus(centerFocusNode) {
+      if (centerFocusNode.length > 1) return; // this avoids pop up when no specific node selected
+      this.centerFocusPosition = true;
+      this.type = centerFocusNode.type;
+      this.infoPopupPosition.x = "50%"; // 50%
+      this.infoPopupPosition.y = "50%"; // 50%
+      // this.currentNode = centerFocusNode;
+    },
+    showAddDialog(node) {
       this.addNodeMode = false;
       this.uiMessage = "";
       this.coords.x = node.x;
       this.coords.y = node.y;
-      this.$refs.edit.add(node);
+      this.dialogTitle = 'add new node';
+      this.dialogDescription = "add a new system to this galaxy";
+      this.dialog = true;
     },
-    editNode(node) {
+    showEditDialog(node) {
       this.uiMessage = "";
       this.coords.x = node.x;
       this.coords.y = node.y;
-      this.$refs.edit.edit(node);
+      this.dialogTitle = node.label
+      this.dialogDescription = "edit this system";
+      this.dialog = true;
+      this.editing = true
     },
-    setUiMessage(message) {
-      this.uiMessage = message;
-    },
-    updateDragCoords(coords) {
-      this.coords = coords;
-    },
-    // TODO: This patetrn feels bad and is hard to manage and understand. This should be updated
-    // Current pattern: emit action from a child component to parent which refs method and changes state in other child component
-    // Update to: manage state in parent component and prop down into children components
-    selected(node) {
-      this.$refs.edit.selected(node);
-    },
-    hovered(node) {
-      this.$refs.edit.hovered(node);
-    },
-    deselected() {
-      this.$refs.edit.deselect();
-    },
-    removeUnsavedNode() {
-      this.$refs.vis.removeUnsavedNode();
-    },
-    centerFocus(node) {
-      this.$refs.edit.centerFocus(node);
-    },
-    nodePositionsChanged() {
-      this.changeInPositions = true;
-    },
-    saveNodePositions() {
-      this.$refs.vis.saveNodePositions();
-    },
-    nodePositionsChangeSaved() {
-      this.nodePositionsChangeLoading = false;
-      this.changeInPositions = false;
-    },
-    closePopup() {
+    closeDialog() {
       // TODO: this doesnt reset the node correctly
       this.$refs.vis.deselectNode();
+      this.dialog = false
+      this.editing = false
+      this.dialogTitle = ""
+      this.dialogDescription = ""
+      this.currentNode = {}
+      this.currentEdge= {}
     },
-    snackbarToggle(msg) {
-      this.snackbarMsg = msg;
-      this.snackbar = true;
+    blurNode() {
+      this.hoverNode = false
+    },
+    focusPopup() {
+      this.hoverPopup = true;
+    },
+    closePopup() {
+      this.$refs.vis.deselectNode()
+      this.blurPopup()
+    },
+    blurPopup() {
+      this.hoverPopup = false;
+      this.deselect();
+    },
+    deselect() {
+      if (!this.hoverPopup && !this.hoverNode) {
+        this.infoPopupShow = false;
+        this.centerFocusPosition = false;
+      }
     },
   },
 };

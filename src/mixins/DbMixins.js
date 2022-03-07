@@ -2,21 +2,30 @@
 
 import firebase from 'firebase';
 import { db, functions } from "../store/firestoreConfig";
+import { mapGetters } from "vuex"
 
 export const dbMixins = {
   methods : {
     MXaddExistingUserToCohort (person) {
-      return this.MXaddStudentToCohort(person.id).then(() => {
+      return this.MXaddStudentToCohort(person).then(() => {
         this.MXsendNewCohortEmail(person)
       })
     },
-    MXaddStudentToCohort (studentId) {
+    MXaddStudentToCohort (student) {
       return db.collection("cohorts")
         .doc(this.currentCohort.id)
         .update({
           students: firebase.firestore.FieldValue.arrayUnion(
-            studentId
+            student.id
           ),
+        })
+        .then(() => {
+          if (this.currentCohort.courses.length) {
+            this.currentCohort.courses.forEach(async courseId => {
+              let course = await this.MXgetCourseById(courseId)
+              this.MXassignCourseToStudent(student, course)
+            })
+          }
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
@@ -34,7 +43,7 @@ export const dbMixins = {
     async MXgetPersonByEmail (email) {
       const query = await db.collection("people")
         .where('email', '==', email)
-        .get()
+        .get()  
       for (const doc of query.docs) {
         if (doc) {
           const person = {
@@ -107,30 +116,61 @@ export const dbMixins = {
       .update({
         assignedCourses: firebase.firestore.FieldValue.arrayUnion(course.id),
       })
-      // TODO: Activate this when FB billing is sorted 
-      // .then(() => {
-      //   this.sendNewCourseEmail(person, course)
-      // })
+      .then(() => {
+        console.log('course successfully assigned: ', person, course)
+        this.sendNewCourseEmail(person, course)
+      })
     },
     sendNewCourseEmail(person, course) {
       const data = {
-        name: person.name, 
+        name: person.firstName, 
         email: person.email, 
-        course: course.name
+        course: course.title
       }
+      console.log("new course email to: ", data)
       const sendNewCourseEmail = functions.httpsCallable('sendNewCourseEmail')
-      sendNewCourseEmail(data)
+      return sendNewCourseEmail(data)
       .catch((error) => {
         console.error(error)
       });
     },
     async MXgetPersonByIdFromDB(personId) {
-      let person = await db.collection("people").doc(personId).get().catch(err => console.err(err));
+      let person = await db.collection("people").doc(personId).get().catch(err => console.err(err));    
       person = {
         id: person.id,
-        ...person.data()
+        ...person.data(),
       }
       return person;
     },
+    async MXgetCourseById(id) {
+      const course = await db.collection('courses').doc(id).get().then(doc => {
+        return {
+          id,
+          ...doc.data()
+        }
+      })
+      return course
+    },
+    async MXsaveProfile(profile) {
+      console.log('profile: ', profile)
+      return await db.collection("people")
+      .doc(profile.id)
+      .update(profile)
+      .catch((error) => {
+        console.error("Error writing document: ", error);
+    });
+    },
+    async MXbindRequestsForHelp () {
+      await this.$store.dispatch(
+        "getRequestsForHelpByTeachersId",
+        this.user.data.id
+      );
+    },
+    async MXbindSubmissions() {
+      await this.$store.dispatch(
+        "getAllSubmittedWorkForTeacher",
+        this.user.data.id
+      );
+    }
   }
 }

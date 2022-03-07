@@ -55,10 +55,7 @@ export default {
     ]),
   },
   data() {
-    return {
-      snackbarMsg: "",
-      snackbar: false,
-    };
+    return {};
   },
 
   methods: {},

@@ -84,21 +84,6 @@
         </v-dialog>
       </v-col>
     </v-row>
-
-    <!-- Request submitted Snackbar -->
-    <v-snackbar v-model="snackbar">
-      {{ snackbarMsg }}
-      <template v-slot:action="{ attrs }">
-        <v-btn
-          :color="snackbarColour"
-          text
-          v-bind="attrs"
-          @click="snackbar = false"
-        >
-          OK
-        </v-btn>
-      </template>
-    </v-snackbar>
   </v-container>
 </template>
 
@@ -118,9 +103,6 @@ export default {
     dialogDescription:
       "Write what you need help with, then submit, and your instructor will be notified to leave you a response.",
     requestForHelp: "",
-    snackbar: false,
-    snackbarMsg: "",
-    snackbarColour: "",
     loading: false,
     deleting: false,
   }),
@@ -166,17 +148,20 @@ export default {
           this.requestForHelp = "";
           this.loading = false;
           this.dialog = false;
-
-          this.snackbarColour = "baseAccent";
-          this.snackbarMsg =
-            "Request submitted. You will be notified when your instructor has responded.";
-          this.snackbar = true;
+          
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text:  "Request submitted. You will be notified when your instructor has responded.",
+            color: "baseAccent"
+          })
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
-          this.snackbarColour = "pink";
-          this.snackbarMsg = "Error: " + error;
-          this.snackbar = true;
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text:  "Error: " + error,
+            color: "pink"
+          })
         });
     },
     cancel() {

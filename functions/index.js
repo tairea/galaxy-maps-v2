@@ -1,8 +1,12 @@
 const admin = require('firebase-admin');
 const functions = require('firebase-functions');
 const nodemailer = require('nodemailer');
+require('dotenv').config();
+const { studentOnlineXAPIStatement, studentOfflineXAPIStatement } = require('./veracityLRS')
 
 admin.initializeApp();
+
+const firestore = admin.firestore();
 
 // upgrade someones account to admin
 exports.addAdminRole = functions.https.onCall((uid, context) => {
@@ -112,7 +116,7 @@ Galaxy Maps Robot`;
   await mailTransport.sendMail(mailOptions);
   functions.logger.log('New teacher invite email sent to:', email);
   return null;
-}
+};
  
 // Sends an invite email to a new student.
 async function sendStudentInviteEmail(email, displayName, link, inviter) {
@@ -136,7 +140,7 @@ Galaxy Maps Robot`;
   await mailTransport.sendMail(mailOptions);
   functions.logger.log('New student invite email sent to:', email);
   return null;
-}
+};
 
 
 //======COHORT REGISTRATION NOTIFICATION==================
@@ -167,15 +171,15 @@ Galaxy Maps Robot`;
   await mailTransport.sendMail(mailOptions);
   functions.logger.log('New cohort invite email sent to:', email);
   return null;
-}
+};
 
 //======COURSE REGISTRATION NOTIFICATION==================
 exports.sendNewCourseEmail = functions.https.onCall((data, context) => {
   const { email, name, course } = data
-  return sendNewCourseEmail(email, name, course);
+  sendNewCourseEmail(email, name, course);
 });
 
-// Sends an invite email to a new student.
+// Sends a invite email to a new student.
 async function sendNewCourseEmail(email, name, course) {
   const mailOptions = {
     from: `${APP_NAME} <noreply@galaxymaps.io>`,
@@ -197,6 +201,41 @@ Galaxy Maps Robot`;
   await mailTransport.sendMail(mailOptions);
   functions.logger.log('New assignment email sent to:', email);
   return null;
-}
+};
 
- 
+//  ============ Presence system sync ============
+// Watch realtime DB for changes and trigger function on change
+exports.onUserStatusChanged = functions.database.ref('/status/{uid}').onUpdate(
+  async (change, context) => {
+    // Get the data written to Realtime Database
+    const eventStatus = change.after.val();
+
+    // get the doc from the firestore DB
+    const userStatusFirestoreRef = firestore.doc(`status/${context.params.uid}`);
+
+    // It is likely that the Realtime Database change that triggered
+    // this event has already been overwritten by a fast change in
+    // online / offline status, so we'll re-read the current data
+    // and compare the timestamps.
+    const statusSnapshot = await change.after.ref.once('value');
+    const status = statusSnapshot.val();
+    // If the current timestamp for this data is newer than
+    // the data that triggered this event, we exit this function.
+    if (status.last_changed > eventStatus.last_changed) {
+      return null;
+    }
+
+    // Otherwise, we convert the last_changed field to a Date
+    eventStatus.last_changed = new Date(eventStatus.last_changed);
+    let person = await firestore.collection("people").doc(context.params.uid).get()
+    person = {
+      id: person.id,
+      ...person.data()
+    }
+    if (eventStatus.state === 'online') studentOnlineXAPIStatement(person)
+    if (eventStatus.state === 'offline') studentOfflineXAPIStatement(person)
+
+    // push XAPI statement here
+    // ... and write it to Firestore.
+    return userStatusFirestoreRef.set(eventStatus);
+});

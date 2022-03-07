@@ -135,17 +135,26 @@ export default {
           db.collection("people")
             .doc(this.person.id)
             .set(this.person)
-            .then(() => {
-              alert("Successfully registered! Please login.");
-              // route to login screen
-              this.$router.push("/login");
-            })
             .catch((error) => {
               console.error("Error writing document: ", error);
             });
+        }).then(() => {
+          var actionCodeSettings = {
+            // TODO: Update to galaxymaps.io on deployment
+            url: window.location.origin + '/login',
+            handleCodeInApp: true,
+          };
+          firebase.auth().currentUser.sendEmailVerification(actionCodeSettings)
+        }).then(() => {
+          // route to verify email
+          this.$router.push("/verify");
         })
         .catch((error) => {
-          alert(error.message);
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: error.message,
+            color: 'pink'
+          })
           this.person = {};
         });
     },

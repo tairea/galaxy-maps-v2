@@ -5,7 +5,7 @@
         color="secondary"
         @mouseenter="onhover = true"
         @mouseleave="onhover = false"
-        size="70"
+        size="50"
       >
         <img
           v-if="student.image"
@@ -13,7 +13,6 @@
           :alt="student.firstName"
           style="object-fit: cover"
         />
-        <!-- <v-icon v-if="hover">mdi-pencil</v-icon> -->
         <v-icon v-else>mdi-account</v-icon>
       </v-avatar>
       <v-tooltip bottom>
@@ -22,7 +21,7 @@
         </template>
         <span>{{student.firstName + ' ' + student.lastName}}</span>
       </v-tooltip>
-      <p class="login pt-2">{{lastLoggedIn}}</p>
+      <p :class="online" class="login">{{loggedIn}}</p>
     </div>
     <div class="student-section student-main-section">
       <div v-if="topic">
@@ -30,18 +29,26 @@
           <span class="caption pt-2">Current Mission</span>
         </v-row>
         <v-row>
-          <h3 class="titles">{{ topic }} </h3>
+          <h4 class="titles">{{ topic }} </h4>
         </v-row>
       </div>
-      <div v-if="task" class="mt-6 mission-section">
+      <div v-else-if="assignedCourse">
+        <v-row>
+          <span class="caption pt-2">Assigned Course</span>
+        </v-row>
+        <v-row>
+          <h4 class="titles">{{ assignedCourse.title }} </h4>
+        </v-row>
+      </div>
+      <div v-if="task" class="mt-4 mission-section">
         <v-row>
           <span class="caption">Current Task</span>
         </v-row>
         <v-row>
-          <h3 class="titles">{{ task }} </h3>
+          <h4 class="titles">{{ task }} </h4>
         </v-row>
       </div>
-      <h3 v-if="!topic" class="inactive-title">No active galaxies</h3>
+      <h4 v-if="!topic && !assignedCourse" class="inactive-title">No active galaxies</h4>
     </div>
     <div v-if="missions.length" class="student-section student-minor-section">
       <v-row class="justify-center">
@@ -78,9 +85,12 @@
 <script>
 import { min } from 'moment';
 // import EditStudentButtonDialog from "../components/EditStudentButtonDialog";
+import { mapState, mapGetters } from 'vuex'
+import { dbMixins } from "../mixins/DbMixins"
 
 export default {
-  name: "StudentsCard",
+  name: "StudentCard",
+  mixins: [dbMixins],
   components: {
     // EditStudentButtonDialog,
   },
@@ -88,45 +98,64 @@ export default {
   data() {
     return {
       editing: false,
-      course: "", 
       topic: "", 
       task: "",
       missions: [],
       hours: "",
       work: [],
-      help: []
+      help: [],
+      assignedCourse: null,
+      studetProfile: [],
     };
   },
+  mounted () {
+    if (this.currentCohort.courses?.length) {
+      this.getAssignedCourse()
+    }
+  },
   computed: {
-    lastLoggedIn () {
-      if (!this.student.lastLoggedIn) return ''
-      return this.timePassed()
+    ...mapState(['currentCohort', 'userStatus']),
+    ...mapGetters(['getCourseById']),
+    status () {
+      return this.userStatus[this.student.id]
     },
+    loggedIn () {
+      if (!this.status) return 'inactive'
+      if (this.status.state === 'online') {
+        return 'online'
+      }
+      else return this.timePassed() 
+    },
+    online () {
+      if (this.loggedIn === 'online') return 'online'
+    }
   },
   methods: {
+    async getAssignedCourse () {
+      const courseId = this.student.assignedCourses?.find(course => this.currentCohort.courses.includes(course))
+      const course = await this.MXgetCourseById(courseId)
+      this.assignedCourse = course
+    },
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
     timePassed () {
-      console.log(Date.now)
-      // get total seconds between the times
-      var delta = Math.abs(this.student.lastLoggedIn - Date.now) / 1000;
+      var date = Math.round(Date.now() / 1000)
+      var delta =  date - this.status.last_changed.seconds;
 
       // calculate (and subtract) whole days
       var days = Math.floor(delta / 86400);
-      delta -= days * 86400;
 
       // calculate (and subtract) whole hours
-      var hours = Math.floor(delta / 3600) % 24;
-      delta -= hours * 3600;
+      var hours = Math.floor(delta / 3600);
 
       // calculate (and subtract) whole minutes
-      var minutes = Math.floor(delta / 60) % 60;
-      delta -= minutes * 60;
-
-      if (minutes < 60) return minutes
-      if (hours < 24) return hours
-      return days 
+      var minutes = Math.floor(delta / 60);
+      
+      if (minutes < 1) return `just now` 
+      if (minutes < 60) return `${minutes}mins` 
+      if (hours < 24) return `${hours}hrs`
+      return `${days}days`
     }
   },
 };
@@ -142,7 +171,7 @@ a {
 }
 
 .login {
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   letter-spacing: 2px;
 }
 
@@ -188,9 +217,8 @@ a {
   }
 
   .student-image-section {
-    // flex-grow: 0 !important;
-    // flex-shrink: 1 !important;
     max-width: 18%;
+    padding-bottom: 2px !important;
 
     .imagePlaceholder {
       width: 60px;
@@ -204,7 +232,7 @@ a {
     }
 
     .studentName {
-      font-size: 0.9rem;
+      font-size: 0.7rem;
       letter-spacing: 2px;
       text-align: center;
     }
@@ -257,5 +285,8 @@ a {
     padding: 30px
   }
   
+  .online {
+    color: var(--v-baseAccent-base);
+  }
 }
 </style>

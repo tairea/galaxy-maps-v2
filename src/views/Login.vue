@@ -54,21 +54,6 @@
         >Reset Password</router-link
       >
     </div>
-
-    <!-- Login Error Snackbar -->
-    <v-snackbar v-model="snackbar">
-      {{ snackbarText }}
-      <template v-slot:action="{ attrs }">
-        <v-btn
-          :color="snackbarColour"
-          text
-          v-bind="attrs"
-          @click="snackbar = false"
-        >
-          OK
-        </v-btn>
-      </template>
-    </v-snackbar>
   </div>
 </template>
 
@@ -87,9 +72,6 @@ export default {
       (v) => !!v || "E-mail is required",
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
     ],
-    snackbar: false,
-    snackbarText: "",
-    snackbarColour: "",
     loading: false,
   }),
   mounted() {
@@ -123,10 +105,11 @@ export default {
           this.proceed();
         })
         .catch((error) => {
-          this.snackbarColour = "pink";
-          this.snackbarText = error;
-          this.snackbar = true;
-          console.log("Login error:", error);
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: error.error,
+            color: "pink"
+          })
           this.loading = false;
         });
     },
@@ -136,7 +119,16 @@ export default {
           this.proceed();
         }, 500);
       }
-      if (this.person.accountType == "student") {
+      if (!this.user.data.verified) {
+        var actionCodeSettings = {
+          // TODO: Update to galaxymaps.io on deployment
+          url: window.location.origin + '/login',
+          handleCodeInApp: true,
+        };
+        firebase.auth().currentUser.sendEmailVerification(actionCodeSettings)
+        throw new Error("Please check your emails to verify your account")  
+      }
+      else if (this.person.accountType == "student") {
         this.$router.push("/base/galaxies/assigned");
       } else {
         this.$router.push("/base/cohorts");
@@ -151,19 +143,18 @@ export default {
         .auth()
         .sendPasswordResetEmail(this.email)
         .then(() => {
-          this.snackbarColour = "baseAccent";
-          this.snackbarText = "Reset Password Email Sent";
-          this.snackbar = true;
-          // Password reset email sent!
-          // ..
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: "Reset Password Email Sent",
+            color: "baseAccent"
+          })
         })
         .catch((error) => {
-          this.snackbarColour = "pink";
-          this.snackbarText = "Error: " + error.message;
-          this.snackbar = true;
-          var errorCode = error.code;
-          var errorMessage = error.message;
-          // ..
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: error.message,
+            color: "pink"
+          })
         });
     },
     // hack delay to wait for person to load before routing

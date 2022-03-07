@@ -1,22 +1,24 @@
 import Vue from "vue";
 import Vuex from "vuex";
 import createPersistedState from "vuex-persistedstate";
+import { dbMixins } from "../mixins/DbMixins";
 
 import { db } from "./firestoreConfig";
 import { vuexfireMutations, firestoreAction } from "vuexfire";
 
 Vue.use(Vuex);
 
-export default new Vuex.Store({
-  state: {
+const getDefaultState = () => {
+  return {
     user: {
       loggedIn: false,
       data: null,
     },
     person: {},
-    courses: [],
     topics: [],
     cohorts: [],
+    courses: [],
+    assignedCourses: [],
     organisations: [],
     people: [],
     currentCourse: {},
@@ -51,13 +53,19 @@ export default new Vuex.Store({
     darkMode: true,
     sortedArr: [],
     studentCourseDataFromLRS: [],
-  },
+    snackbar: {},
+    userStatus: {},
+  };
+};
+
+export default new Vuex.Store({
+  state: getDefaultState(),
   getters: {
     people: (state) => state.people,
     organisations: (state) => state.organisations,
     user: (state) => state.user,
     person: (state) => state.person,
-    courses: (state) => state.courses,
+    assignedCourses: (state) => state.assignedCourses,
     cohorts: (state) => state.cohorts,
     organisations: (state) => state.organisations,
     currentCohort: (state) => state.currentCohort,
@@ -162,13 +170,12 @@ export default new Vuex.Store({
       });
       return peopleInCohort;
     },
-    //
-    // completedCourses: (state) => {
-    //   return state.courses.filter(course => course.status.completed)
-    // }
   },
   mutations: {
     ...vuexfireMutations,
+    RESET_STATE(state) {
+      Object.assign(state, getDefaultState());
+    },
     SET_LOGGED_IN(state, value) {
       state.user.loggedIn = value;
     },
@@ -234,6 +241,9 @@ export default new Vuex.Store({
     setStudentCourseDataFromLRS(state, courseData) {
       state.studentCourseDataFromLRS = courseData;
     },
+    setSnackbar(state, snackbar) {
+      state.snackbar = snackbar;
+    },
   },
   actions: {
     setUser({ commit }, user) {
@@ -243,6 +253,7 @@ export default new Vuex.Store({
           admin: user.admin,
           displayName: user.displayName,
           email: user.email,
+          verified: user.emailVerified,
           id: user.uid,
         });
       } else {
@@ -328,23 +339,14 @@ export default new Vuex.Store({
 
       state.allEdges = allEdges;
     },
-    async getCourseFromFirestoreById({ state }, id) {
-      await db
-        .collection("courses")
-        .doc(id)
-        .get()
-        .then((doc) => {
-          state.courses.push({ ...doc.data(), id: doc.id });
-        });
-    },
     // ===== Firestore - BIND by USER
     async getPersonById({ commit }, id) {
       if (id) {
         await db
           .collection("people")
           .doc(id)
-          .get()
-          .then((doc) => {
+          .onSnapshot((doc) => {
+            console.log("person updated");
             const person = {
               id,
               ...doc.data(),
@@ -396,7 +398,8 @@ export default new Vuex.Store({
       if (doc.data()?.assignedCourses) {
         for (const courseId of doc.data()?.assignedCourses) {
           // this action pushes assigned courses data into state.courses
-          this.dispatch("getCourseFromFirestoreById", courseId);
+          let course = dbMixins.MXgetCourseById(courseId);
+          this.state.assignedCourses.push(course);
 
           const subQuerySnapshot = await db
             .collection("courses")
@@ -969,6 +972,22 @@ export default new Vuex.Store({
         db.collection("cohorts").where("courses", "array-contains", courseId)
       );
     }),
+    async getAllUsersStatus({ state }) {
+      const users = {};
+      await db
+        .collection("status")
+        .get()
+        .then((snapShot) => {
+          snapShot.docs.forEach((doc) => {
+            var obj = {};
+            obj[doc.id] = doc.data();
+            Object.assign(users, obj);
+          });
+        })
+        .then(() => {
+          state.userStatus = users;
+        });
+    },
   },
   plugins: [createPersistedState()],
 });
