@@ -23,7 +23,6 @@ export default {
     },
   },
   mounted() {
-    console.log("from CHART:", this.chartData);
     let { chartType, chartData, chartOptions } = this;
 
     (chartOptions.plugins["tooltip"] = {
