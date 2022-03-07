@@ -14,6 +14,9 @@
           class="galaxy-image"
           :src="course.image.url"
         ></v-img>
+        <p class="my-2 galaxy-description">
+          {{ course.description }}
+        </p>
       </div>
       <v-btn
         text
@@ -35,10 +38,7 @@
           ></v-img>
         </div>
         <div v-else-if="course.contentBy.personId">
-          <v-img
-            class="contentBy-image mb-2"
-            :src="getPersonsImage(course.contentBy.personId)"
-          ></v-img>
+          <v-img class="contentBy-image mb-2" :src="contentByImageURL"></v-img>
         </div>
         <p class="ma-0">Content By:</p>
         <a :href="course.contentBy.source"
@@ -48,15 +48,12 @@
       <div class="right">
         <div v-if="course.mappedBy.image">
           <v-img
-            class="mappedBy-image"
+            class="mappedBy-image mb-2"
             :src="course.mappedBy.image.url"
           ></v-img>
         </div>
         <div v-else-if="course.mappedBy.personId">
-          <v-img
-            class="mappedBy-image"
-            :src="getPersonsImage(course.mappedBy.personId)"
-          ></v-img>
+          <v-img class="mappedBy-image mb-2" :src="mappedByImageURL"></v-img>
         </div>
         <p class="ma-0">Mapped By:</p>
         <span>{{ course.mappedBy.name }}</span>
@@ -64,7 +61,7 @@
     </div>
 
     <div>
-      <div v-if="person.accountType != 'student'" class="ss-actions">
+      <div v-if="person.accountType != 'student'" class="ss-actions py-2">
         <v-btn
           class="view-ss-button pa-5"
           dark
@@ -94,7 +91,7 @@
         </v-btn>
       </div>
       <!-- Student Galaxy Actions -->
-      <div v-else class="ss-actions">
+      <div v-else class="ss-actions py-2">
         <v-btn
           v-if="enrolled"
           class="view-ss-button pa-5"
@@ -125,7 +122,7 @@
           Start Galaxy
         </v-btn>
         <div v-if="loading" style="width: 100%">
-          <p class="starting-status">{{ startingGalaxyStatus }}</p>
+          <p class="starting-status ma-0">{{ startingGalaxyStatus }}</p>
         </div>
       </div>
     </div>
@@ -137,6 +134,8 @@ import { db } from "../store/firestoreConfig";
 import { dbMixins } from "../mixins/DbMixins";
 
 import { mapGetters, mapState } from "vuex";
+
+import { startGalaxyXAPIStatement } from "../store/veracityLRS";
 
 export default {
   name: "PopupGalaxyPreview",
@@ -162,6 +161,14 @@ export default {
         this.enrolled = true;
       }
     }
+    // get contentBy image
+    if (!this.course.contentBy.image) {
+      this.getContentByPersonsImage(this.course.contentBy.personId);
+    }
+    // get mappedBy image
+    if (!this.course.mappedBy.image) {
+      this.getMappedByPersonsImage(this.course.mappedBy.personId);
+    }
   },
   computed: {
     ...mapState(["person"]),
@@ -174,6 +181,8 @@ export default {
       enrolled: false,
       loading: false,
       startingGalaxyStatus: "",
+      contentByImageURL: "",
+      mappedByImageURL: "",
     };
   },
   methods: {
@@ -280,6 +289,9 @@ export default {
         }
       }
 
+      // Send Galaxy Started statment to LRS
+      startGalaxyXAPIStatement(this.person, { galaxy: this.course });
+
       this.loading = false;
       this.$router.push({
         name: "GalaxyView",
@@ -288,11 +300,13 @@ export default {
         },
       });
     },
-
-    async getPersonsImage(personId) {
-      const person = await this.MXgetPersonByIdFromDb(personId);
-      console.log("getting person for image: ", person.image.url);
-      return person.image.url;
+    async getContentByPersonsImage(personId) {
+      const person = await this.MXgetPersonByIdFromDB(personId);
+      this.contentByImageURL = person.image.url;
+    },
+    async getMappedByPersonsImage(personId) {
+      const person = await this.MXgetPersonByIdFromDB(personId);
+      this.mappedByImageURL = person.image.url;
     },
   },
 };
@@ -318,6 +332,8 @@ export default {
 
   .galaxy-image {
     width: 100%;
+    max-height: 250px;
+    // width: 100%;
   }
 
   .close-button {
@@ -335,6 +351,14 @@ export default {
     min-height: 10vh;
     border-top: 1px solid var(--v-missionAccent-base);
     display: flex;
+
+    .contentBy-image,
+    .mappedBy-image {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
 
     .left,
     .right {
@@ -354,7 +378,7 @@ export default {
   .ss-actions {
     border-top: 1px solid var(--v-missionAccent-base);
     // min-width: 20vw;
-    min-height: 20vh;
+    // min-height: 10vh;
     // position: relative;
     display: flex;
     justify-content: center;
@@ -368,19 +392,16 @@ export default {
       // position: absolute;
       // bottom: 20px; // matches 20px padding of ss-details
       background-color: var(--v-background-base);
+      z-index: 3;
     }
   }
   .ss-details {
     padding: 20px;
 
-    .ss-makers {
-      .contentBy-image,
-      .mappedBy-image {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        object-fit: cover;
-      }
+    .galaxy-description {
+      color: var(--v-missionAccent-base);
+      font-size: 0.9rem;
+      font-style: italic;
     }
   }
 }
@@ -400,7 +421,7 @@ export default {
   font-style: italic;
   font-size: 0.7rem;
   text-align: left;
-  padding: 20px;
+  padding: 10px;
   // text-transform: uppercase;
 }
 </style>
