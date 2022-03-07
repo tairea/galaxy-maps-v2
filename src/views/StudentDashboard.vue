@@ -11,7 +11,7 @@
 
       <!-- STUDENTS COURSE PROGRESSOIN FRAME -->
       <!-- TODO: v-for="courseData in studentsCoursesProgressionData" -->
-      <div>
+      <div style="width: 100%">
         <StudentCourseProgression />
       </div>
     </div>
@@ -101,7 +101,7 @@ export default {
   align-items: center;
   flex-direction: column;
   z-index: 1;
-  border: 1px solid pink;
+  // border: 1px solid pink;
   overflow: scroll;
   overflow-x: hidden; /* Hide horizontal scrollbar */
 
