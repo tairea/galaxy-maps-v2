@@ -28,22 +28,13 @@
     <div id="right-section">
       <RequestForHelpTeacherFrame />
     </div>
-
-    <!-- Request submitted Snackbar -->
-    <v-snackbar v-model="snackbar">
-      {{ snackbarMsg }}
-      <template v-slot:action="{ attrs }">
-        <v-btn color="baseAccent" text v-bind="attrs" @click="snackbar = false">
-          OK
-        </v-btn>
-      </template>
-    </v-snackbar>
   </div>
 </template>
 
 <script>
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
+import { dbMixins } from "../mixins/DbMixins"
 
 import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame";
 import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame";
@@ -51,6 +42,7 @@ import StudentProgressionChartJs3 from "../components/StudentProgressionChartJs3
 
 export default {
   name: "AllStudentView",
+  mixins: [dbMixins],
   components: {
     SubmissionTeacherFrame,
     RequestForHelpTeacherFrame,
@@ -97,6 +89,7 @@ export default {
       "getCohortsInThisCourse",
       "getOrganisationsInThisCourse",
       "getPeopleInThisCourse",
+      "getCoursesByWhoMadeThem",
     ]),
   },
   data() {
@@ -106,38 +99,17 @@ export default {
       progressLoading: false,
       allSubmissions: [],
       allRequestsForHelp: [],
-      snackbarMsg: "",
-      snackbar: false,
     };
   },
 
   methods: {
-    snackbarToggleHelp(msg) {
-      console.log("snackbar toggled...", msg);
-      this.snackbarMsg = msg;
-      this.snackbar = true;
-      this.bindRequestsForHelp();
-    },
-    snackbarToggleSubmission(msg) {
-      console.log("snackbar toggled...", msg);
-      this.snackbarMsg = msg;
-      this.snackbar = true;
-      this.bindSubmissions();
-    },
     async bindRequestsForHelp() {
       // binds teachersRequestsForHelp
-      await this.$store.dispatch(
-        "getRequestsForHelpByTeachersId",
-        this.user.data.id
-      );
+     this.MXbindRequestsForHelp()
       this.requestsForHelpLoading = false;
     },
     async bindSubmissions() {
-      await this.$store.dispatch(
-        // binds teachersSubmissionsToReview
-        "getAllSubmittedWorkForTeacher",
-        this.user.data.id
-      );
+      this.MXbindSubmissions()
       this.submissionsLoading = false;
     },
     async bindStudentTaskProgress() {

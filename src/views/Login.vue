@@ -54,8 +54,6 @@
         >Reset Password</router-link
       >
     </div>
-
-    <SnackBar />
   </div>
 </template>
 
@@ -63,13 +61,9 @@
 import firebase from "firebase";
 import { mapGetters } from "vuex";
 import { queryXAPIStatement } from "../store/veracityLRS";
-import SnackBar from "@/components/SnackBar.vue"
 
 export default {
   name: "Login",
-  components: {
-    SnackBar
-  },
   data: () => ({
     valid: true,
     email: "",
@@ -149,19 +143,18 @@ export default {
         .auth()
         .sendPasswordResetEmail(this.email)
         .then(() => {
-          this.snackbarColour = "baseAccent";
-          this.snackbarText = "Reset Password Email Sent";
-          this.snackbar = true;
-          // Password reset email sent!
-          // ..
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: "Reset Password Email Sent",
+            color: "baseAccent"
+          })
         })
         .catch((error) => {
-          this.snackbarColour = "pink";
-          this.snackbarText = "Error: " + error.message;
-          this.snackbar = true;
-          var errorCode = error.code;
-          var errorMessage = error.message;
-          // ..
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: error.message,
+            color: "pink"
+          })
         });
     },
     // hack delay to wait for person to load before routing

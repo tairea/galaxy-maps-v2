@@ -84,6 +84,7 @@ import {
 } from "../store/veracityLRS";
 
 import { mapState, mapGetters } from "vuex";
+import { dbMixins } from '../mixins/DbMixins'
 
 export default {
   name: "MarkSubmissionCompleted",
@@ -168,11 +169,12 @@ export default {
           this.disabled = false;
           this.dialog = false;
 
-          this.$emit(
-            "snackbarToggle",
-            "Student's Mission now marked as completed"
-          );
-
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: "Student's Mission now marked as completed",
+            color: "baseAccent"
+          })
+          this.MXbindSubmissions()
           // unlock next task
           this.unlockNextTask();
 
@@ -218,15 +220,17 @@ export default {
       if (numOfTasksCompleted === this.personsTopicsTasks.length) {
         // TODO: some kind of notification to signal that Topic has been completed
         // all tasks are completed. unlock next topic
-        // snackbar message telling teacher whats happend
-        this.$emit(
-          "snackbarToggle",
-          this.requesterPerson.firstName +
+        // message telling teacher whats happend
+        
+        this.$store.commit("setSnackbar", {
+          show: true,
+          text: this.requesterPerson.firstName +
             " " +
             this.requesterPerson.lastName +
             " completed all tasks for topic " +
-            this.submission.contextTopic.label
-        );
+            this.submission.contextTopic.label,
+          color: "baseAccent"
+        })
 
         this.unlockNextTopics();
       } else {
@@ -274,16 +278,17 @@ export default {
               })
               // route back to map
               .then(() => {
-                // snackbar message telling teacher whats happend
-                this.$emit(
-                  "snackbarToggle",
-                  "NEW TOPIC: " +
+                // message telling teacher whats happend
+                this.$store.commit("setSnackbar", {
+                  show: true,
+                  text: "NEW TOPIC: " +
                     doc.data().label +
                     " UNLOCKED FOR: " +
                     this.requesterPerson.firstName +
                     " " +
-                    this.requesterPerson.lastName
-                );
+                    this.requesterPerson.lastName,
+                  color: "baseAccent"
+                })
               });
           });
         });

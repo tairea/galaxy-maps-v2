@@ -98,19 +98,6 @@
       </div>
       <!-- End create-dialog -->
     </v-dialog>
-    <v-snackbar v-model="snackbar">
-      {{ snackbarText }}
-      <template v-slot:action="{ attrs }">
-        <v-btn
-          :color="snackbarColour"
-          text
-          v-bind="attrs"
-          @click="snackbar = false"
-        >
-          OK
-        </v-btn>
-      </template>
-    </v-snackbar>
   </div>
 </template>
 
@@ -124,9 +111,6 @@ export default {
     administrator: "",
     addingAdmin: false,
     dialog: false,
-    snackbar: false,
-    snackbarText: "",
-    snackbarColour: "",
   }),
   computed: {
     ...mapState(["people"]),
@@ -148,18 +132,20 @@ export default {
         const addAdminRole = functions.httpsCallable("addAdminRole");
         addAdminRole(this.administrator)
           .then((result) => {
-            this.snackbarText =
-              "admin role successfully added for " + this.administrator;
-            this.snackbarColour = "baseAccent";
-            this.snackbar = true;
+            this.$store.commit("setSnackbar", {
+              show: true,
+              text: "admin role successfully added for " + this.administrator,
+              color: "baseAccent"
+            })
             this.addingAdmin = false;
             this.administrator = "";
           })
           .catch((err) => {
-            this.snackbarColour = "pink";
-            this.snackbarText =
-              "something went wrong trying to add admin: " + err;
-            this.snackbar = true;
+            this.$store.commit("setSnackbar", {
+              show: true,
+              text: "something went wrong trying to add admin: " + err,
+              color: "pink"
+            })
             console.error(err);
           });
       }

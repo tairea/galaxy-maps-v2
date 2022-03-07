@@ -10,16 +10,6 @@
 
     <!-- REQUESTS FOR HELP PANEL -->
     <div id="right-section"></div>
-
-    <!-- Request submitted Snackbar -->
-    <!-- <v-snackbar v-model="snackbar">
-      {{ snackbarMsg }}
-      <template v-slot:action="{ attrs }">
-        <v-btn color="baseAccent" text v-bind="attrs" @click="snackbar = false">
-          OK
-        </v-btn>
-      </template>
-    </v-snackbar> -->
   </div>
 </template>
 
@@ -53,8 +43,6 @@ export default {
   },
   data() {
     return {
-      snackbarMsg: "",
-      snackbar: false,
     };
   },
 

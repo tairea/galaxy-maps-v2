@@ -6,7 +6,7 @@
       <div>
         <p class="info-panel-label mb-2">
           <span class="galaxyColour">Galaxy:</span>
-          <br />
+            <br />
           <span>{{ course.title }}</span>
         </p>
         <v-img
@@ -33,12 +33,17 @@
       <div class="left">
         <div v-if="course.contentBy.image">
           <v-img
+            width="50px"
             class="contentBy-image mb-2"
             :src="course.contentBy.image.url"
           ></v-img>
         </div>
         <div v-else-if="course.contentBy.personId">
-          <v-img class="contentBy-image mb-2" :src="contentByImageURL"></v-img>
+          <v-img
+            width="50px"
+            class="contentBy-image mb-2"
+            :src="contentAuthorImage"
+          ></v-img>
         </div>
         <p class="ma-0">Content By:</p>
         <a :href="course.contentBy.source"
@@ -48,12 +53,17 @@
       <div class="right">
         <div v-if="course.mappedBy.image">
           <v-img
-            class="mappedBy-image mb-2"
+            width="50px"
+            class="mappedBy-image"
             :src="course.mappedBy.image.url"
           ></v-img>
         </div>
         <div v-else-if="course.mappedBy.personId">
-          <v-img class="mappedBy-image mb-2" :src="mappedByImageURL"></v-img>
+          <v-img
+            width="50px"
+            class="mappedBy-image"
+            :src="mappedAuthorImage"
+          ></v-img>
         </div>
         <p class="ma-0">Mapped By:</p>
         <span>{{ course.mappedBy.name }}</span>
@@ -145,6 +155,15 @@ export default {
   computed: {
     ...mapGetters(["person"]),
   },
+  data() {
+    return {
+      enrolled: false,
+      loading: false,
+      startingGalaxyStatus: "",
+      contentAuthorImage: "",
+      mappedAuthorImage: ""
+    };
+  },
   async mounted() {
     // check is student is already in this course
     if (this.person.accountType == "student") {
@@ -161,29 +180,15 @@ export default {
         this.enrolled = true;
       }
     }
-    // get contentBy image
-    if (!this.course.contentBy.image) {
-      this.getContentByPersonsImage(this.course.contentBy.personId);
-    }
-    // get mappedBy image
-    if (!this.course.mappedBy.image) {
-      this.getMappedByPersonsImage(this.course.mappedBy.personId);
-    }
+    this.mappedAuthorImage = await this.getPersonsImage(this.course.mappedBy.personId)
+    this.contentAuthorImage = await this.getPersonsImage(this.course.contentBy.personId)
   },
   computed: {
     ...mapState(["person"]),
+
     dark() {
       return this.$vuetify.theme.isDark;
     },
-  },
-  data() {
-    return {
-      enrolled: false,
-      loading: false,
-      startingGalaxyStatus: "",
-      contentByImageURL: "",
-      mappedByImageURL: "",
-    };
   },
   methods: {
     close() {
@@ -300,13 +305,10 @@ export default {
         },
       });
     },
-    async getContentByPersonsImage(personId) {
+
+    async getPersonsImage(personId) {
       const person = await this.MXgetPersonByIdFromDB(personId);
-      this.contentByImageURL = person.image.url;
-    },
-    async getMappedByPersonsImage(personId) {
-      const person = await this.MXgetPersonByIdFromDB(personId);
-      this.mappedByImageURL = person.image.url;
+      return person.image.url;
     },
   },
 };

@@ -1,6 +1,8 @@
 const admin = require('firebase-admin');
 const functions = require('firebase-functions');
 const nodemailer = require('nodemailer');
+require('dotenv').config();
+const { studentOnlineXAPIStatement, studentOfflineXAPIStatement } = require('./veracityLRS')
 
 admin.initializeApp();
 
@@ -217,7 +219,6 @@ exports.onUserStatusChanged = functions.database.ref('/status/{uid}').onUpdate(
     // and compare the timestamps.
     const statusSnapshot = await change.after.ref.once('value');
     const status = statusSnapshot.val();
-    functions.logger.log(status, eventStatus);
     // If the current timestamp for this data is newer than
     // the data that triggered this event, we exit this function.
     if (status.last_changed > eventStatus.last_changed) {
@@ -226,7 +227,15 @@ exports.onUserStatusChanged = functions.database.ref('/status/{uid}').onUpdate(
 
     // Otherwise, we convert the last_changed field to a Date
     eventStatus.last_changed = new Date(eventStatus.last_changed);
+    let person = await firestore.collection("people").doc(context.params.uid).get()
+    person = {
+      id: person.id,
+      ...person.data()
+    }
+    if (eventStatus.state === 'online') studentOnlineXAPIStatement(person)
+    if (eventStatus.state === 'offline') studentOfflineXAPIStatement(person)
 
+    // push XAPI statement here
     // ... and write it to Firestore.
     return userStatusFirestoreRef.set(eventStatus);
 });
