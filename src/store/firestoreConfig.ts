@@ -6,6 +6,7 @@ import "firebase/functions";
 var firebaseConfig = {
   apiKey: "AIzaSyBSOVegvIYfI49DykugprcD-yJFLf-WgNs",
   authDomain: "galaxy-maps-ac367.firebaseapp.com",
+  databaseURL: "https://galaxy-maps-ac367-default-rtdb.firebaseio.com",
   projectId: "galaxy-maps-ac367",
   storageBucket: "galaxy-maps-ac367.appspot.com",
   messagingSenderId: "527578025987",
@@ -19,3 +20,6 @@ export const db = firebaseApp.firestore();
 export const storage = firebaseApp.storage();
 // Intialize Firebase Cloud Functions
 export const functions = firebaseApp.functions()
+
+// Get a reference to the database service
+export const database = firebase.database();

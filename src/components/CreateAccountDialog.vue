@@ -189,9 +189,20 @@ export default {
       if (!this.account.email) return
       this.addingAccount = true
       const personExists = await this.MXgetPersonByEmail(this.account.email)
-      if (personExists) {
-        this.account = personExists
-        this.MXaddExistingUserToCohort(personExists).then(() => {
+      if (personExists) {   
+        console.log('account: ', this.account)
+        console.log("personExists: ", personExists)
+        const profile = {
+          ...this.account, 
+          ...personExists
+        }
+        console.log('output profile: ', profile)
+        // this.account = profile
+        this.MXsaveProfile(profile)
+        .then(() => {
+          this.MXaddExistingUserToCohort(personExists)
+        })
+        .then(() => {
           this.addingAccount = false
           this.close()
         }).catch(err => {
@@ -206,9 +217,9 @@ export default {
           displayName: this.account.firstName + ' ' + this.account.lastName
 
         }
-        this.MXcreateUser(person).then((personId) => {
+        this.MXcreateUser(person).then(() => {
           if (!this.teacher) {
-            this.MXaddStudentToCohort(personId)
+            this.MXaddStudentToCohort(person)
           }
           this.addingAccount = false
           this.close()

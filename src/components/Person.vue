@@ -7,7 +7,7 @@
     <v-tooltip bottom>
       <template v-slot:activator="{ on, attrs }">
         <div v-bind="attrs" v-on="on">
-          <v-avatar color="secondary">
+          <v-avatar class="mb-4" color="secondary">
             <img v-if="person.image"
               :src="person.image.url"
               :alt="person.firstName"
@@ -27,13 +27,6 @@
 export default {
   name: "Person",
   props: ["person", "cols"],
-  data() {
-    return {};
-  },
-  mounted() {
-    console.log('person mounted')
-  },
-  computed: {},
   methods: {
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();

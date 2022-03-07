@@ -311,14 +311,21 @@ export default {
 
     handleAssignment (person, course) {
       this.MXassignCourseToStudent(person, course).then(() => {
-        console.log("Document successfully updated! Person assigned to Course!");
-        this.$emit("snackbarToggle", "Individual assigned to Course");
+        this.$store.commit("setSnackbar", {
+          show: true,
+          text: "Individual assigned to Course",
+          color: "baseAccent"
+        })
         this.close()
       })
       .catch((error) => {
         console.error("Error writing document: ", error);
         // snackbar message
-        this.$emit("snackbarToggle", "Error: " + error);
+        this.$store.commit("setSnackbar", {
+          show: true,
+          text: error,
+          color: "pink"
+        })
         this.close()
       });
     },
@@ -326,7 +333,7 @@ export default {
       if (!cohort) cohort = this.currentCohort
       if (!course) course = this.currentCourse
       this.loading = true;
-      // Add a cohort into collection "courses"
+      // Add a course to a cohort
       db.collection("cohorts")
         .doc(cohort.id)
         .update({
@@ -345,12 +352,20 @@ export default {
         })
         .then(() => {
           console.log("courses added to all students!");
-          this.$emit("snackbarToggle", "Cohort assigned to Course");
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: "Cohort assigned to Course",
+            color: "baseAccent"
+          })
           this.close()
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
-          this.$emit("snackbarToggle", "Error writing document: " + error);
+            this.$store.commit("setSnackbar", {
+            show: true,
+            text: error,
+            color: "pink"
+          })
       });
     }
   },

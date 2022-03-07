@@ -16,18 +16,6 @@
           />
         </v-row>
       </div>
-      <!-- Organisations -->
-      <!-- <div v-if="organisations.length > 0">
-        <p class="overline assignedToLabel ma-0">Organisations</p>
-        <v-row class="my-1">
-          <Organisation
-            v-for="organisation in organisations"
-            :organisation="organisation"
-            :key="organisation.id"
-          />
-        </v-row>
-      </div> -->
-      <!-- People -->
       <div v-if="people.length > 0">
         <p class="overline assignedToLabel ma-0">Individuals</p>
         <v-row class="my-4">
@@ -43,7 +31,6 @@
       </p>
       <AssignCohortDialog
         :assignCohorts="true"
-        @snackbarToggle="snackbarToggle($event)"
       />
     </div>
 
@@ -66,10 +53,11 @@ import Course from "../components/Course";
 import Cohort from "../components/Cohort";
 import Organisation from "../components/Organisation";
 import Person from "../components/Person";
+import { dbMixins } from "../mixins/DbMixins"
 
 export default {
   name: "AssignedInfo",
-  props: ["assignCohorts", "cohorts", "organisations", "people"],
+  mixins: [dbMixins],
   components: {
     Cohort,
     Organisation,
@@ -77,26 +65,30 @@ export default {
     Course,
     AssignCohortDialog,
   },
+  props: ["assignCohorts", "cohorts", "organisations", "people"],
+  data () {
+    return {
+      courses: []
+    }
+  },
+  mounted () {
+    this.getCohortCourses()
+  },
   computed: {
     ...mapState(["person", "currentCohort"]),
     ...mapGetters(["getCoursesInThisCohort"]),
     assignCourses() {
       return this.person.accountType !== "student";
-    },
-    courses() {
-      if (!this.currentCohort.courses) return [];
-      // let cohortCourses = this.getCohortCourses()
-      return this.getCoursesInThisCohort(this.currentCohort.id);
-    },
+    }
   },
   methods: {
-    // async getCohortCourses () {
-    //   return await this.getCoursesInThisCohort(this.currentCohort.id)
-    // },
-    snackbarToggle(msg) {
-      this.$emit("snackbarToggle", msg);
-      // this.snackbarMsg = msg;
-      // this.snackbar = true;
+    async getCohortCourses () {
+      let courses = await Promise.all(this.currentCohort.courses.map(courseId => {
+        return this.MXgetCourseById(courseId)
+      }))
+      if (courses.length) {
+        this.courses = courses
+      }
     },
   },
 };
