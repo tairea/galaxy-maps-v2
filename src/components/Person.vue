@@ -27,13 +27,6 @@
 export default {
   name: "Person",
   props: ["person", "cols"],
-  data() {
-    return {};
-  },
-  mounted() {
-    console.log('person mounted')
-  },
-  computed: {},
   methods: {
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
