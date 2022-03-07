@@ -6,8 +6,6 @@ import { studentOnlineXAPIStatement, studentOfflineXAPIStatement } from '@/store
 
 export const startPresenceSystem = (uid) => {
   if (!uid) return
-  console.log("starting presence system: ", uid)
-
   // This is where we will store data about being online/offline.
   var userStatusDatabaseRef = firebase.database().ref('/status/' + uid);
 
