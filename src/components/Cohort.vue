@@ -55,8 +55,10 @@ export default {
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
-    routeToCohort() {
-      this.setCurrentCohort(this.cohort);
+    async routeToCohort() { 
+      // this.$store.commit("setCurrentCohort", {})
+      await this.setCurrentCohort(this.cohort);
+      // console.log('cohort set: ', cohort)
       // route to Galaxy View (passing params as props)
       this.$router.push({
         name: "CohortView",

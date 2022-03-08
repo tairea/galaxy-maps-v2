@@ -74,6 +74,11 @@ export default {
   mounted () {
     this.getCohortCourses()
   },
+  watch: {
+    currentCohort () {
+      this.getCohortCourses()
+    }
+  },
   computed: {
     ...mapState(["person", "currentCohort"]),
     ...mapGetters(["getCoursesInThisCohort"]),
@@ -83,7 +88,8 @@ export default {
   },
   methods: {
     async getCohortCourses () {
-      let courses = await Promise.all(this.currentCohort.courses.map(courseId => {
+      console.log('getting cohort courses')
+      let courses = await Promise.all(this.currentCohort?.courses.map(courseId => {
         return this.MXgetCourseById(courseId)
       }))
       if (courses.length) {
