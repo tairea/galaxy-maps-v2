@@ -28,7 +28,20 @@
             :style="{ width: '100%', height: '200px', padding: '20px' }"
           />
         </v-col>
-        <v-col cols="3" class=""></v-col>
+        <v-col cols="4" class="pa-0">
+          <div class="top-row">
+            <p class="label">ACTIVE MISSION:</p>
+          </div>
+          <div class="bottom-row">
+            <v-progress-circular
+              :value="value + '%'"
+              color="baseAccent"
+              size="100"
+              width="10"
+              >{{ value }}
+            </v-progress-circular>
+          </div>
+        </v-col>
       </v-row>
     </div>
   </div>
@@ -63,6 +76,7 @@ export default {
   },
   data() {
     return {
+      value: 80,
       santisedCourses: [],
       previousTickTitle: "",
       chartType: "line",
@@ -263,5 +277,24 @@ export default {
   margin-top: 10px;
   color: var(--v-galaxyAccent-base);
   font-size: 0.9rem;
+}
+
+.top-row {
+  width: 100%;
+  border-bottom: 1px solid var(--v-galaxyAccent-base);
+  height: 30%;
+}
+
+.bottom-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 70%;
+}
+
+.label {
+  color: var(--v-galaxyAccent-base);
+  font-size: 0.7rem;
+  margin: 10px;
 }
 </style>
