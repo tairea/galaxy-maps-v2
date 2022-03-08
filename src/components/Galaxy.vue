@@ -223,14 +223,15 @@ export default {
         );
         this.nodesToDisplay = this.personsAssignedNodesForDisplay;
       } else if (this.whichCoursesToDisplay == "all") {
+        console.log('getAllNodes')
         /* ===========================
           Only show ALL Galaxies in DATABASE!! (so I can see what maps users have created)
       =========================== */
-        await this.$store.dispatch("bindAllCourses"); // course data
         await this.$store.dispatch("getAllNodes"); // node data for course
         await this.$store.dispatch("getAllEdges"); // edge data for course
         this.nodesToDisplay = this.allNodesForDisplay;
       }
+      debugger
 
       if (this.nodesToDisplay.length > 0) {
         const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
@@ -251,6 +252,7 @@ export default {
           }
         }
       }
+      console.log('done getting nodes')
 
       // stop loading spinner
       this.loading = false;
