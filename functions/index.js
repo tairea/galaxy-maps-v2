@@ -1,8 +1,11 @@
-const admin = require('firebase-admin');
-const functions = require('firebase-functions');
-const nodemailer = require('nodemailer');
-require('dotenv').config();
-const { studentOnlineXAPIStatement, studentOfflineXAPIStatement } = require('./veracityLRS')
+const admin = require("firebase-admin");
+const functions = require("firebase-functions");
+const nodemailer = require("nodemailer");
+require("dotenv").config();
+const {
+  studentOnlineXAPIStatement,
+  studentOfflineXAPIStatement,
+} = require("./veracityLRS");
 
 admin.initializeApp();
 
@@ -11,57 +14,65 @@ const firestore = admin.firestore();
 // upgrade someones account to admin
 exports.addAdminRole = functions.https.onCall((uid, context) => {
   // check request is made by an admin
-  if ( context.auth.token.admin !== true ) {
-    return {error: "Only admins can add other admins"};
+  if (context.auth.token.admin !== true) {
+    return { error: "Only admins can add other admins" };
   }
   // get user and add admin custom claim
-  return admin.auth().getUser(uid).then((user) => {
-
-    return admin.auth().setCustomUserClaims(user.uid, {
-      admin: true,
+  return admin
+    .auth()
+    .getUser(uid)
+    .then((user) => {
+      return admin.auth().setCustomUserClaims(user.uid, {
+        admin: true,
+      });
+    })
+    .then((data) => {
+      return {
+        message: `Success! ${data} has been made an admin.`,
+      };
+    })
+    .catch((err) => {
+      return {
+        error: `something went wrong ${err}`,
+      };
     });
-  }).then((data) => {
-    return {
-      message: `Success! ${data} has been made an admin.`,
-    };
-  }).catch((err) => {
-    return {
-      error: `something went wrong ${err}`,
-    }
-  });
 });
 
 // Create new user
 exports.createUser = functions.https.onCall((data, context) => {
   // check request is made by an admin
 
-  return admin.auth().createUser(data)
+  return admin
+    .auth()
+    .createUser(data)
     .then((data) => {
-      return data
+      return data;
     })
-  .catch((err) => {
-    return err
-  });
+    .catch((err) => {
+      return err;
+    });
 });
 
 // Generate a magic email link
 exports.generateEmailLink = functions.https.onCall((data, context) => {
-
   // set magic link parameters
   const actionCodeSettings = {
     url: data.host + "/email_signin",
     handleCodeInApp: true,
   };
 
-  return admin.auth().generateSignInWithEmailLink(data.email, actionCodeSettings)
-  .then((link) => {
-    functions.logger.log('link successfully created:', link);
-    return link;
-  }).catch((error) => {
-    functions.logger.log('error creating link:', error);
-    return error
-  })
-})
+  return admin
+    .auth()
+    .generateSignInWithEmailLink(data.email, actionCodeSettings)
+    .then((link) => {
+      functions.logger.log("link successfully created:", link);
+      return link;
+    })
+    .catch((error) => {
+      functions.logger.log("error creating link:", error);
+      return error;
+    });
+});
 
 // CUSTOM INVITE EMAIL
 // Configure the email transport using the default SMTP transport and a GMail account.
@@ -71,23 +82,23 @@ exports.generateEmailLink = functions.https.onCall((data, context) => {
 // For other types of transports such as Sendgrid see https://nodemailer.com/transports/
 
 // TODO: Configure the `gmail.email` and `gmail.password` Google Cloud environment variables.
-// Set the gmail.email and gmail.password Google Cloud environment variables to match the email and password of the Gmail account used to send emails (or the app password if your account has 2-step verification enabled). 
+// Set the gmail.email and gmail.password Google Cloud environment variables to match the email and password of the Gmail account used to send emails (or the app password if your account has 2-step verification enabled).
 // For this use: `firebase functions:config:set gmail.email="myusername@gmail.com" gmail.password="secretpassword"`
 
-const APP_NAME = 'Galaxy Maps';
+const APP_NAME = "Galaxy Maps";
 const gmailEmail = functions.config().gmail.email;
 const gmailPassword = functions.config().gmail.password;
 const mailTransport = nodemailer.createTransport({
-  service: 'gmail',
+  service: "gmail",
   auth: {
     user: gmailEmail,
     pass: gmailPassword,
   },
 });
- 
-//======GM APP INVITE EMAIL================== 
+
+//======GM APP INVITE EMAIL==================
 exports.sendInviteEmail = functions.https.onCall((data, context) => {
-  const { email, displayName, link, inviter, accountType } = data
+  const { email, displayName, link, inviter, accountType } = data;
 
   if (accountType == "teacher") {
     return sendTeacherInviteEmail(email, displayName, link);
@@ -103,7 +114,7 @@ async function sendTeacherInviteEmail(email, displayName, link) {
 
   // The user subscribed to the newsletter.
   mailOptions.subject = `Account created for ${APP_NAME}!`;
-  mailOptions.text = `Hi ${displayName || ''}
+  mailOptions.text = `Hi ${displayName || ""}
 
 Your teacher account has been created for ${APP_NAME}. 
 Please click this link to sign into your account and setup your profile
@@ -114,10 +125,10 @@ If you have any issues please contact support@galaxymaps.io
   
 Galaxy Maps Robot`;
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log('New teacher invite email sent to:', email);
+  functions.logger.log("New teacher invite email sent to:", email);
   return null;
-};
- 
+}
+
 // Sends an invite email to a new student.
 async function sendStudentInviteEmail(email, displayName, link, inviter) {
   const mailOptions = {
@@ -127,7 +138,7 @@ async function sendStudentInviteEmail(email, displayName, link, inviter) {
 
   // The user subscribed to the newsletter.
   mailOptions.subject = `Account created for ${APP_NAME}!`;
-  mailOptions.text = `Hi ${displayName || ''}
+  mailOptions.text = `Hi ${displayName || ""}
 
 Your teacher ${inviter}, has created you an account for ${APP_NAME}. 
 Please click this link to sign into your account and setup your profile
@@ -138,19 +149,32 @@ If you have any issues please contact support@galaxymaps.io
   
 Galaxy Maps Robot`;
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log('New student invite email sent to:', email);
+  functions.logger.log("New student invite email sent to:", email);
   return null;
-};
-
+}
 
 //======COHORT REGISTRATION NOTIFICATION==================
 exports.sendNewCohortEmail = functions.https.onCall((data, context) => {
-  const { email, displayName, firstName, inviter, accountType, cohort } = data
-  return sendNewCohortEmail(email, displayName, firstName, inviter, accountType, cohort);
+  const { email, displayName, firstName, inviter, accountType, cohort } = data;
+  return sendNewCohortEmail(
+    email,
+    displayName,
+    firstName,
+    inviter,
+    accountType,
+    cohort
+  );
 });
 
 // Sends an invite email to a new teacher.
-async function sendNewCohortEmail(email, displayName, firstName, inviter, accountType, cohort) {
+async function sendNewCohortEmail(
+  email,
+  displayName,
+  firstName,
+  inviter,
+  accountType,
+  cohort
+) {
   const mailOptions = {
     from: `${APP_NAME} <noreply@galaxymaps.io>`,
     to: email,
@@ -158,7 +182,7 @@ async function sendNewCohortEmail(email, displayName, firstName, inviter, accoun
 
   // The user subscribed to the newsletter.
   mailOptions.subject = `New cohort registration`;
-  mailOptions.text = `Hi ${displayName || firstName || ''}
+  mailOptions.text = `Hi ${displayName || firstName || ""}
 
 You have been added as a ${accountType} to ${cohort} cohort by ${inviter} 
 Sign into your Galaxy Maps account to view your new cohort.
@@ -169,13 +193,13 @@ If you have any issues please contact support@galaxymaps.io
   
 Galaxy Maps Robot`;
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log('New cohort invite email sent to:', email);
+  functions.logger.log("New cohort invite email sent to:", email);
   return null;
-};
+}
 
 //======COURSE REGISTRATION NOTIFICATION==================
 exports.sendNewCourseEmail = functions.https.onCall((data, context) => {
-  const { email, name, course } = data
+  const { email, name, course } = data;
   sendNewCourseEmail(email, name, course);
 });
 
@@ -188,7 +212,7 @@ async function sendNewCourseEmail(email, name, course) {
 
   // The user subscribed to the newsletter.
   mailOptions.subject = `New Galaxy Assignment`;
-  mailOptions.text = `Hi ${name || ''}
+  mailOptions.text = `Hi ${name || ""}
 
 You have been assigned to ${course} Galaxy Map. 
 Sign into your Galaxy Maps account to view your new course.
@@ -199,25 +223,28 @@ If you have any issues please contact support@galaxymaps.io
   
 Galaxy Maps Robot`;
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log('New assignment email sent to:', email);
+  functions.logger.log("New assignment email sent to:", email);
   return null;
-};
+}
 
 //  ============ Presence system sync ============
 // Watch realtime DB for changes and trigger function on change
-exports.onUserStatusChanged = functions.database.ref('/status/{uid}').onUpdate(
-  async (change, context) => {
+exports.onUserStatusChanged = functions.database
+  .ref("/status/{uid}")
+  .onUpdate(async (change, context) => {
     // Get the data written to Realtime Database
     const eventStatus = change.after.val();
 
     // get the doc from the firestore DB
-    const userStatusFirestoreRef = firestore.doc(`status/${context.params.uid}`);
+    const userStatusFirestoreRef = firestore.doc(
+      `status/${context.params.uid}`
+    );
 
     // It is likely that the Realtime Database change that triggered
     // this event has already been overwritten by a fast change in
     // online / offline status, so we'll re-read the current data
     // and compare the timestamps.
-    const statusSnapshot = await change.after.ref.once('value');
+    const statusSnapshot = await change.after.ref.once("value");
     const status = statusSnapshot.val();
     // If the current timestamp for this data is newer than
     // the data that triggered this event, we exit this function.
@@ -227,15 +254,32 @@ exports.onUserStatusChanged = functions.database.ref('/status/{uid}').onUpdate(
 
     // Otherwise, we convert the last_changed field to a Date
     eventStatus.last_changed = new Date(eventStatus.last_changed);
-    let person = await firestore.collection("people").doc(context.params.uid).get()
+    let person = await firestore
+      .collection("people")
+      .doc(context.params.uid)
+      .get();
     person = {
       id: person.id,
-      ...person.data()
-    }
-    if (eventStatus.state === 'online') studentOnlineXAPIStatement(person)
-    if (eventStatus.state === 'offline') studentOfflineXAPIStatement(person)
+      ...person.data(),
+    };
+    if (eventStatus.state === "online") studentOnlineXAPIStatement(person);
+    if (eventStatus.state === "offline") studentOfflineXAPIStatement(person);
 
     // push XAPI statement here
     // ... and write it to Firestore.
     return userStatusFirestoreRef.set(eventStatus);
-});
+  });
+
+// keep count of topics and tasks
+exports.updateTaskCount = functions.firestore
+  .collection("/courses/{courseId}/topics/{topicId}/tasks/")
+  .onWrite(
+    (snapshot, context) => {
+      const values = snapshot.data();
+      console.log("values: ", values);
+      console.log("context: ", context);
+    },
+    (error) => {
+      console.log("error:", error.message);
+    }
+  );

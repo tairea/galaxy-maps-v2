@@ -27,6 +27,10 @@ export const startGalaxyXAPIStatement = (actor, context) => {
         description: {
           "en-nz": "Started Course: " + context.galaxy.title,
         },
+        extensions: {
+          "https://www.galaxymaps.io/course/id/": context.galaxy.id,
+          "https://www.galaxymaps.io/person/id/": actor.id,
+        },
       },
     },
     context: {
@@ -83,6 +87,12 @@ export const startTaskXAPIStatement = (actor, taskId, context) => {
         description: {
           "en-nz": "Started Task: " + context.mission.title,
         },
+        extensions: {
+          "https://www.galaxymaps.io/course/id/": context.galaxy.id,
+          "https://www.galaxymaps.io/topic/id/": context.system.id,
+          "https://www.galaxymaps.io/task/id/": context.mission.id,
+          "https://www.galaxymaps.io/person/id/": actor.id,
+        },
       },
     },
     context: {
@@ -138,6 +148,12 @@ export const submitWorkForReviewXAPIStatement = (actor, taskId, context) => {
         },
         description: {
           "en-nz": "Submitted work for Task: " + context.mission.title,
+        },
+        extensions: {
+          "https://www.galaxymaps.io/course/id/": context.galaxy.id,
+          "https://www.galaxymaps.io/topic/id/": context.system.id,
+          "https://www.galaxymaps.io/task/id/": context.mission.id,
+          "https://www.galaxymaps.io/person/id/": actor.id,
         },
       },
     },
@@ -196,6 +212,12 @@ export const taskMarkedAsCompletedXAPIStatement = (actor, taskId, context) => {
         description: {
           "en-nz": "Completed Task: " + context.mission.title,
         },
+        extensions: {
+          "https://www.galaxymaps.io/course/id/": context.galaxy.id,
+          "https://www.galaxymaps.io/topic/id/": context.system.id,
+          "https://www.galaxymaps.io/task/id/": context.mission.id,
+          "https://www.galaxymaps.io/person/id/": actor.id,
+        },
       },
     },
     context: {
@@ -251,6 +273,11 @@ export const topicCompletedXAPIStatement = (actor, topicId, context) => {
         },
         description: {
           "en-nz": "Completed Topic: " + context.system.label,
+        },
+        extensions: {
+          "https://www.galaxymaps.io/course/id/": context.galaxy.id,
+          "https://www.galaxymaps.io/topic/id/": context.system.id,
+          "https://www.galaxymaps.io/person/id/": actor.id,
         },
       },
     },
@@ -314,6 +341,12 @@ export const studentWorkMarkedCompletedXAPIStatement = (
         description: {
           "en-nz": "Work completed for Task: " + context.mission.title,
         },
+        extensions: {
+          "https://www.galaxymaps.io/course/id/": context.galaxy.id,
+          "https://www.galaxymaps.io/topic/id/": context.system.id,
+          "https://www.galaxymaps.io/task/id/": context.mission.id,
+          "https://www.galaxymaps.io/person/id/": actor.id,
+        },
       },
     },
     context: {
@@ -374,6 +407,12 @@ export const teacherReviewedStudentWorkXAPIStatement = (
         },
         description: {
           "en-nz": "Teacher marked work for Task: " + context.mission.title,
+        },
+        extensions: {
+          "https://www.galaxymaps.io/course/id/": context.galaxy.id,
+          "https://www.galaxymaps.io/topic/id/": context.system.id,
+          "https://www.galaxymaps.io/task/id/": context.mission.id,
+          "https://www.galaxymaps.io/person/id/": actor.id,
         },
       },
     },
@@ -439,6 +478,12 @@ export const teacherRespondedToRequestForHelpXAPIStatement = (
           "en-nz":
             "Teacher responded to help for Task: " + context.mission.title,
         },
+        extensions: {
+          "https://www.galaxymaps.io/course/id/": context.galaxy.id,
+          "https://www.galaxymaps.io/topic/id/": context.system.id,
+          "https://www.galaxymaps.io/task/id/": context.mission.id,
+          "https://www.galaxymaps.io/person/id/": actor.id,
+        },
       },
     },
     context: {
@@ -497,7 +542,10 @@ export const studentRequestForHelpXAPIStatement = (actor, taskId, context) => {
           "en-nz": "Student requested help for Task: " + context.mission.title,
         },
         extensions: {
-          "https://www.galaxymaps.io/extensions/studentId": actor.email,
+          "https://www.galaxymaps.io/course/id/": context.galaxy.id,
+          "https://www.galaxymaps.io/topic/id/": context.system.id,
+          "https://www.galaxymaps.io/task/id/": context.mission.id,
+          "https://www.galaxymaps.io/person/id/": actor.id,
         },
       },
     },

@@ -71,12 +71,7 @@
                   <v-row>
                     <v-col cols="10">
                       <v-row
-                        class="
-                          d-flex
-                          align-center
-                          justify-space-around
-                          speech-bubble
-                        "
+                        class="d-flex align-center justify-space-around speech-bubble"
                       >
                         <v-col cols="1" class="pa-0">
                           <v-icon left color="cohortAccent"
@@ -101,9 +96,11 @@
                           :src="mappedByImageURL"
                         ></v-img>
                       </div>
-                      <p class="ma-0">{{ currentCourse.mappedBy.name }}</p>
+                      <p class="ma-0 text-center">
+                        {{ currentCourse.mappedBy.name }}
+                      </p>
                       <p
-                        class="ma-0"
+                        class="ma-0 text-center"
                         style="font-size: 0.7rem; font-style: italic"
                       >
                         (Instructor)
@@ -326,15 +323,15 @@ export default {
           this.$store.commit("setSnackbar", {
             show: true,
             text: "Submission submitted. You will be notified when your instructor has reviewd your work.",
-            color: "baseAccent"
-          })
+            color: "baseAccent",
+          });
         })
         .catch((error) => {
           this.$store.commit("setSnackbar", {
             show: true,
             text: "Error: " + error,
-            color: "baseAccent"
-          })
+            color: "baseAccent",
+          });
           console.error("Error writing document: ", error);
         });
 
