@@ -73,7 +73,7 @@ export default {
   computed: {
     ...mapGetters(["getOrganisationById", "currentCohort", "person"]),
     cohortImage () {
-      return this.currentCohort?.image.url
+      return this.currentCohort?.image?.url
     },
     org() {
       let org = this.getOrganisationById(this.currentCohort.organisation);
