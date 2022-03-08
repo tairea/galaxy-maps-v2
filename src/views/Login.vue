@@ -107,7 +107,7 @@ export default {
         .catch((error) => {
           this.$store.commit("setSnackbar", {
             show: true,
-            text: error.error,
+            text: error.message,
             color: "pink",
           });
           this.loading = false;

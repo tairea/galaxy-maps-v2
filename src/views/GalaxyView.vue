@@ -53,7 +53,6 @@
         :dialogDescription="dialogDescription"
         :editing="editing"
         :course="getCourseById(courseId)"
-        :coords="coords"
         :currentNode="currentNode"
         :currentEdge="currentEdge"
         @removeUnsavedNode="removeUnsavedNode"
@@ -314,8 +313,9 @@ export default {
     showAddDialog(node) {
       this.addNodeMode = false;
       this.uiMessage = "";
-      this.coords.x = node.x;
-      this.coords.y = node.y;
+      // this.coords.x = node.x;
+      // this.coords.y = node.y;
+      this.currentNode = node;
       this.dialogTitle = 'add new node';
       this.dialogDescription = "add a new system to this galaxy";
       this.dialog = true;
