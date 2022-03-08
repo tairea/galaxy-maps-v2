@@ -272,14 +272,14 @@ exports.onUserStatusChanged = functions.database
 
 // keep count of topics and tasks
 exports.updateTaskCount = functions.firestore
-  .collection("/courses/{courseId}/topics/{topicId}/tasks/")
+  .document("courses/{courseId}/{topicId}/{taskId}")
   .onWrite(
     (snapshot, context) => {
       const values = snapshot.data();
-      console.log("values: ", values);
-      console.log("context: ", context);
+      functions.logger.log("values: ", values);
+      functions.logger.log("text: ", context);
     },
     (error) => {
-      console.log("error:", error.message);
+      functions.logger.log("error:", error.message);
     }
   );
