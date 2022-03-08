@@ -26,6 +26,14 @@ export default {
     DiscoverGalaxyButton,
     Galaxy,
   },
+  mounted() {
+    // if account type teacher, bind all courses to store
+    if (this.person.accountType == "student") {
+      this.$store.dispatch("getAssignedCourses", this.person.assignedCourses);
+    } else {
+      this.$store.dispatch("bindAllCourses");
+    }
+  },
   computed: {
     ...mapGetters(["user", "person"]),
     myGalaxiesPath() {

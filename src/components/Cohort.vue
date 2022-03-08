@@ -1,5 +1,10 @@
 <template>
-  <v-col :cols="cols" @click="routeToCohort(cohort)" class="d-flex flex-column justify-start align-center cohort">
+  <v-col
+    :cols="cols"
+    @click="!studentView ? routeToCohort(cohort) : null"
+    class="d-flex flex-column justify-start align-center cohort"
+    :style="!studentView ? 'cursor: pointer;' : ''"
+  >
     <div
       class="d-flex flex-column justify-start align-center cohort"
       v-if="!tooltip"
@@ -37,32 +42,32 @@
 </template>
 
 <script>
-import { mapActions } from "vuex"
+import { mapActions } from "vuex";
 
 export default {
   name: "Cohort",
-  props: ["cohort", "cols", "tooltip"],
+  props: ["cohort", "cols", "tooltip", "studentView"],
   data() {
     return {};
   },
   methods: {
-    ...mapActions(['setCurrentCohort']),
+    ...mapActions(["setCurrentCohort"]),
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
     routeToCohort() {
-      this.setCurrentCohort(this.cohort)
+      this.setCurrentCohort(this.cohort);
       // route to Galaxy View (passing params as props)
       this.$router.push({
         name: "CohortView",
         params: {
           cohortName: this.camelize(this.cohort.name),
-          cohortId: this.cohort.id
+          cohortId: this.cohort.id,
         },
       });
     },
     camelize(str) {
-      return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
+      return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {
         if (+match === 0) return ""; // or if (/\s+/.test(match)) for white spaces
         return index === 0 ? match.toLowerCase() : match.toUpperCase();
       });
@@ -73,8 +78,6 @@ export default {
 
 <style lang="scss" scoped>
 .cohort {
-  cursor: pointer;
-
   .cohort-image {
     width: 100px;
     height: 100px;

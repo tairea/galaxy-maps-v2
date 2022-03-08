@@ -1,7 +1,7 @@
 import Vue from "vue";
 import Vuex from "vuex";
 import createPersistedState from "vuex-persistedstate";
-import { dbMixins } from '../mixins/DbMixins'
+import { dbMixins } from "../mixins/DbMixins";
 
 import { db } from "./firestoreConfig";
 import { vuexfireMutations, firestoreAction } from "vuexfire";
@@ -9,7 +9,7 @@ import { vuexfireMutations, firestoreAction } from "vuexfire";
 Vue.use(Vuex);
 
 const getDefaultState = () => {
-  return { 
+  return {
     user: {
       loggedIn: false,
       data: null,
@@ -52,10 +52,11 @@ const getDefaultState = () => {
     cohortsInCourse: [],
     darkMode: true,
     sortedArr: [],
+    studentCourseDataFromLRS: [],
     snackbar: {},
-    userStatus: {}
-  }
-}
+    userStatus: {},
+  };
+};
 
 export default new Vuex.Store({
   state: getDefaultState(),
@@ -173,7 +174,7 @@ export default new Vuex.Store({
   mutations: {
     ...vuexfireMutations,
     RESET_STATE(state) {
-      Object.assign(state, getDefaultState())
+      Object.assign(state, getDefaultState());
     },
     SET_LOGGED_IN(state, value) {
       state.user.loggedIn = value;
@@ -237,9 +238,12 @@ export default new Vuex.Store({
       console.log("sortedArr: ", sortedArr);
       state.sortedArr = sortedArr;
     },
+    setStudentCourseDataFromLRS(state, courseData) {
+      state.studentCourseDataFromLRS = courseData;
+    },
     setSnackbar(state, snackbar) {
-      state.snackbar = snackbar
-    }
+      state.snackbar = snackbar;
+    },
   },
   actions: {
     setUser({ commit }, user) {
@@ -342,7 +346,7 @@ export default new Vuex.Store({
           .collection("people")
           .doc(id)
           .onSnapshot((doc) => {
-            console.log("person updated")
+            // console.log("person updated");
             const person = {
               id,
               ...doc.data(),
@@ -394,8 +398,19 @@ export default new Vuex.Store({
       if (doc.data()?.assignedCourses) {
         for (const courseId of doc.data()?.assignedCourses) {
           // this action pushes assigned courses data into state.courses
-          let course = dbMixins.MXgetCourseById(courseId);
-          this.state.assignedCourses.push(course)
+
+          let course = await db
+            .collection("courses")
+            .doc(courseId)
+            .get()
+            .then((doc) => {
+              return {
+                id: courseId,
+                ...doc.data(),
+              };
+            });
+
+          this.state.assignedCourses.push(course);
 
           const subQuerySnapshot = await db
             .collection("courses")
@@ -777,6 +792,17 @@ export default new Vuex.Store({
       state.personsAssignedEdges = personsAssignedEdges; // source of truth
     },
 
+    async getAssignedCourses({ state }, assignedCoursesArray) {
+      const studentsAssignedCourses = [];
+
+      assignedCoursesArray.forEach(async (assignedCourse) => {
+        const doc = await db.collection("courses").doc(assignedCourse).get();
+        studentsAssignedCourses.push(doc.data());
+      });
+
+      state.courses = studentsAssignedCourses; // source of truth
+    },
+
     bindCoursesByPersonId: firestoreAction(({ bindFirestoreRef }, personId) => {
       return bindFirestoreRef(
         "personsCourses",
@@ -833,6 +859,19 @@ export default new Vuex.Store({
         .doc(payload.taskId)
         .get()
         .then((doc) => {
+          return doc.data();
+        });
+    },
+    async getTopicByTopicId({ state }, payload) {
+      // console.log("payload from getTopicByTopicId", payload);
+      await db
+        .collection("courses")
+        .doc(payload.courseId)
+        .collection("topics")
+        .doc(payload.topicId)
+        .get()
+        .then((doc) => {
+          // console.log("doc.data()", doc.data());
           return doc.data();
         });
     },
@@ -922,7 +961,7 @@ export default new Vuex.Store({
         }
       }
 
-      console.log("orgs: ", orgs);
+      // console.log("orgs: ", orgs);
       commit("setOrganisations", orgs);
     },
 
@@ -944,8 +983,8 @@ export default new Vuex.Store({
       return bindFirestoreRef(
         "peopleInCourse",
         db
-        .collection("people")
-        .where("assignedCourses", "array-contains", courseId)
+          .collection("people")
+          .where("assignedCourses", "array-contains", courseId)
       );
     }),
     // bind the COHORTS that are in a course
@@ -955,18 +994,22 @@ export default new Vuex.Store({
         db.collection("cohorts").where("courses", "array-contains", courseId)
       );
     }),
-    async getAllUsersStatus({state}) {
-      const users = {}
-      await db.collection('status').get().then((snapShot) => {
-        snapShot.docs.forEach(doc => {
-          var obj = {}
-          obj[doc.id] = doc.data()
-          Object.assign(users, obj)
+    async getAllUsersStatus({ state }) {
+      const users = {};
+      await db
+        .collection("status")
+        .get()
+        .then((snapShot) => {
+          snapShot.docs.forEach((doc) => {
+            var obj = {};
+            obj[doc.id] = doc.data();
+            Object.assign(users, obj);
+          });
         })
-      }).then(() => {
-        state.userStatus = users
-      })
-    }
+        .then(() => {
+          state.userStatus = users;
+        });
+    },
   },
   plugins: [createPersistedState()],
 });
