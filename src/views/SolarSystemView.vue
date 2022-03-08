@@ -150,6 +150,7 @@ export default {
   margin: 0 !important;
   // border: 1px solid red;
 }
+
 #left-section {
   width: 20%;
   height: 100%;
@@ -158,6 +159,8 @@ export default {
   align-items: center;
   flex-direction: column;
   // border: 1px solid yellow;
+  overflow-y: scroll;
+  padding-bottom: 50px;
 }
 #main-section {
   width: 60%;
@@ -192,20 +195,24 @@ export default {
     clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%);
   }
 }
+
 /* width */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 0px;
 }
+
 /* Track */
 ::-webkit-scrollbar-track {
   background: var(--v-background-base);
 }
+
 /* Handle */
 ::-webkit-scrollbar-thumb {
-  background: var(--v-missionAccent-base);
+  background: var(--v-background-base);
 }
+
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--v-missionAccent-base);
+  background: var(--v-background-base);
 }
 </style>

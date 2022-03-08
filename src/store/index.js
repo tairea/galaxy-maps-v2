@@ -976,7 +976,7 @@ export default new Vuex.Store({
             ...doc.data(),
           };
           commit("setCurrentCohort", cohort);
-        });
+        })
     },
     // bind the PEOPLE that are in a course
     bindPeopleInCourse: firestoreAction(({ bindFirestoreRef }, courseId) => {
