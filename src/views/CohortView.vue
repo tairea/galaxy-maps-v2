@@ -73,7 +73,6 @@ export default {
   width: 100%;
   display: flex;
   overflow: hidden;
-  padding-top: 50px;
   margin: 0 !important;
 }
 
@@ -86,6 +85,8 @@ export default {
   flex-direction: column;
   overflow-y: scroll;
   padding-bottom: 50px;
+  padding-top: 50px;
+
 }
 
 #main-section {
@@ -95,6 +96,8 @@ export default {
   justify-content: flex-start;
   align-items: center;
   flex-direction: column;
+  padding-top: 50px;
+
 
   .people-frame {
     position: relative;
@@ -124,6 +127,8 @@ export default {
 #right-section {
   width: 30%;
   height: 100%;
+  padding-top: 50px;
+
 
   .people-right-frame {
     position: relative;
