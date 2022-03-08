@@ -174,7 +174,6 @@ export default {
       "personsAssignedNodesForDisplay",
       "personsAssignedEdges",
       "courses",
-      "personsCourses",
       "darkMode",
       // "topics",
       // "personsTopics",
@@ -226,14 +225,14 @@ export default {
         /* ===========================
           Only show ALL Galaxies in DATABASE!! (so I can see what maps users have created)
       =========================== */
-        await this.$store.dispatch("bindAllCourses"); // course data
         await this.$store.dispatch("getAllNodes"); // node data for course
         await this.$store.dispatch("getAllEdges"); // edge data for course
         this.nodesToDisplay = this.allNodesForDisplay;
       }
-
       if (this.nodesToDisplay.length > 0) {
         const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
+        
+        console.log("repositionedNodes: ", repositionedNodes)
 
         if (repositionedNodes.length) {
           if (this.whichCoursesToDisplay == "my") {
@@ -251,7 +250,6 @@ export default {
           }
         }
       }
-
       // stop loading spinner
       this.loading = false;
 
@@ -417,10 +415,7 @@ export default {
       return newAllNodes;
     },
     calcCourseCanvasBoundaries() {
-      const courses =
-        this.whichCoursesToDisplay == "all"
-          ? this.courses
-          : this.personsCourses;
+      const courses = this.courses
       let courseCanvasBoundaries = [];
       // get all coords for nodes
       // const allNodes = this.$refs.network.nodes;
