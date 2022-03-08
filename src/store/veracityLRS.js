@@ -640,7 +640,7 @@ export const advancedQueryXAPIStatement = (payloadObj) => {
     .then((res) => console.log("res:", res));
 };
 
-export const getStudentsCoursesXAPIQuery = (person) => {
+export const getStudentsCoursesXAPIQuery = async (person) => {
   console.log("querying students course records from LRS...");
   const aggregationQuery = [
     {
@@ -673,7 +673,7 @@ export const getStudentsCoursesXAPIQuery = (person) => {
     },
   ];
 
-  fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
+  await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
