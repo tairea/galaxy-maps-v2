@@ -398,7 +398,18 @@ export default new Vuex.Store({
       if (doc.data()?.assignedCourses) {
         for (const courseId of doc.data()?.assignedCourses) {
           // this action pushes assigned courses data into state.courses
-          let course = dbMixins.MXgetCourseById(courseId);
+
+          let course = await db
+            .collection("courses")
+            .doc(courseId)
+            .get()
+            .then((doc) => {
+              return {
+                id: courseId,
+                ...doc.data(),
+              };
+            });
+
           this.state.assignedCourses.push(course);
 
           const subQuerySnapshot = await db
@@ -779,6 +790,22 @@ export default new Vuex.Store({
         }
       }
       state.personsAssignedEdges = personsAssignedEdges; // source of truth
+    },
+
+    async getAssignedCourses({ state }, assignedCoursesArray) {
+      const studentsAssignedCourses = [];
+
+      assignedCoursesArray.forEach(async (assignedCourse) => {
+        console.log("assignedCourse", assignedCourse);
+        const doc = await db.collection("courses").doc(assignedCourse).get();
+
+        console.log("doc.date()", doc.data());
+        studentsAssignedCourses.push(doc.data());
+      });
+
+      console.log("studentsAssignedCourses", studentsAssignedCourses);
+
+      state.courses = studentsAssignedCourses; // source of truth
     },
 
     bindCoursesByPersonId: firestoreAction(({ bindFirestoreRef }, personId) => {

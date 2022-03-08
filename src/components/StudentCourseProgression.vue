@@ -1,32 +1,33 @@
 <template>
-  <div v-if="studentCourseDataFromLRS.length">
+  <div v-if="santisedCourses">
     <div
-      v-for="courseData in studentCourseDataFromLRS"
-      :key="courseData.id"
+      v-for="course in santisedCourses"
+      :key="course.id"
       class="course-frame"
     >
       <v-row>
         <v-col cols="2" class="left-col">
           <h1 class="galaxy-title">
-            {{ courseIRIToCourseId(courseData).title }}
+            {{ course.courseContext.title }}
           </h1>
           <v-img
             class="galaxy-image"
-            :src="courseIRIToCourseId(courseData).image.url"
+            :src="course.courseContext.image.url"
           ></v-img>
           <!-- <p class="galaxy-description">
-            {{ courseIRIToCourseId(courseData).description }}
+            {{ course.courseContext.description }}
           </p> -->
         </v-col>
-        <v-col cols="6" class="center-col"
-          ><Chart
+        <v-col cols="6" class="center-col">
+          <Chart
             ref="chart"
             id="chartImage"
             :chartType="chartType"
-            :chartData="formatStudentsChartData(courseData)"
+            :chartData="formatStudentsChartData(course)"
             :chartOptions="chartOptions"
             :style="{ width: '100%', height: '200px', padding: '20px' }"
-        /></v-col>
+          />
+        </v-col>
         <v-col cols="3" class=""></v-col>
       </v-row>
     </div>
@@ -37,6 +38,7 @@
 import { mapState, mapGetters } from "vuex";
 import Chart from "@/components/Chart.vue";
 import { DateTime } from "luxon";
+import { dbMixins } from "../mixins/DbMixins";
 
 import {
   queryXAPIStatement,
@@ -49,8 +51,11 @@ export default {
   components: {
     Chart,
   },
-  mounted() {
-    getStudentsCoursesXAPIQuery(this.person);
+  mixins: [dbMixins],
+  async mounted() {
+    await getStudentsCoursesXAPIQuery(this.person);
+    //get courses from LRS
+    this.sanitiseCourseDataFromLRS();
   },
   computed: {
     ...mapState(["studentCourseDataFromLRS"]),
@@ -58,6 +63,7 @@ export default {
   },
   data() {
     return {
+      santisedCourses: [],
       previousTickTitle: "",
       chartType: "line",
       chartOptions: {
@@ -97,24 +103,24 @@ export default {
             ticks: {
               // precision: 0,
               callback: function (value, index) {
-                console.log(this.chart._sortedMetasets[0]._dataset.data[index]);
-
-                const tickTaskTitle =
-                  this.chart._sortedMetasets[0]._dataset.data[index].taskTitle;
-
-                if (tickTaskTitle) {
-                  console.log(
-                    "returning tick: " +
-                      tickTaskTitle +
-                      " for index: " +
-                      index +
-                      " value: " +
-                      value
-                  );
-                  return tickTaskTitle;
-                } else {
-                  return value;
-                }
+                // console.log(
+                //   this.chart._sortedMetasets[0]._dataset.data[index].taskTitle
+                // );
+                // const tickTaskTitle =
+                //   this.chart._sortedMetasets[0]._dataset.data[index].taskTitle;
+                // if (tickTaskTitle) {
+                //   console.log(
+                //     "returning tick: " +
+                //       tickTaskTitle +
+                //       " for index: " +
+                //       index +
+                //       " value: " +
+                //       value
+                //   );
+                //   return tickTaskTitle;
+                // } else {
+                //   return value;
+                // }
                 //   console.log(value);
                 //   console.log(index);
               },
@@ -130,63 +136,58 @@ export default {
     };
   },
   methods: {
-    courseIRIToCourseId(course) {
+    async sanitiseCourseDataFromLRS() {
+      console.log("data from LRS:", this.studentCourseDataFromLRS);
+
+      const santisedCourses = [];
+
+      for (const course of this.studentCourseDataFromLRS) {
+        // get course info
+        const courseContext = await this.courseIRIToCourseId(course);
+
+        // sanitise statements data
+        const courseData = course.statements.map((statement, index) => {
+          const contextSplit = statement.context.split(
+            /Course: | > Topic: | > Task: /
+          );
+          const topicTitle = contextSplit[2];
+          const taskTitle = contextSplit[3];
+
+          const newStatement = {
+            x: statement.timestamp,
+            y: index,
+            taskStatus: statement.verb.display["en-nz"],
+            context: statement.context,
+            topic: topicTitle,
+            taskTitle: taskTitle,
+          };
+          return newStatement;
+        });
+
+        const courseObj = {
+          courseContext,
+          courseData,
+        };
+
+        this.santisedCourses.push(courseObj);
+      }
+      console.log("santisedCourses", this.santisedCourses);
+    },
+    async courseIRIToCourseId(course) {
       // get course id from iri
       const courseIRI = course._id.course[0];
       const courseId = courseIRI.split("/course/")[1];
       // get course name
-      const courseContext = this.getCourseById(courseId);
+      const courseContext = await this.getCourseById(courseId);
       return courseContext;
     },
-    formatStudentsChartData(courseData) {
-      console.log("courseData", courseData);
+
+    formatStudentsChartData(course) {
+      console.log("course", course);
       let datasets = [];
-      // get course id from iri
-      const courseIRI = courseData._id.course[0];
-      const courseId = courseIRI.split("/course/")[1];
 
-      // get course name
-      const courseContext = this.getCourseById(courseId);
       // get a colour based on course name
-      const courseColour = this.stringToColour(courseContext.title);
-
-      let courseTaskData = [];
-      let taskCount = 0;
-      let previousTaskTitle = "";
-
-      // push task data into array
-      for (const statement of courseData.statements) {
-        // only display points that have topics (eg. not just course started)
-        // const isTopic = statement.topic[0].includes("/topic/");
-        // if (!isTopic) continue;
-
-        // split context
-        const contextSplit = statement.context.split(
-          /Course: | > Topic: | > Task: /
-        );
-        const courseTitle = contextSplit[1];
-        const topicTitle = contextSplit[2];
-        const taskTitle = contextSplit[3];
-
-        // skip if there is no task (because topic only completed stuffs the order)
-        if (!taskTitle) continue;
-
-        // if (taskTitle == previousTaskTitle) taskCount -= 1;
-
-        const taskData = {
-          x: statement.timestamp,
-          y: taskCount,
-          taskStatus: statement.verb.display["en-nz"],
-          context: statement.context,
-          topic: topicTitle,
-          taskTitle: taskTitle,
-        };
-        courseTaskData.push(taskData);
-        previousTaskTitle = taskTitle;
-        taskCount++;
-      }
-
-      // console.log("courseTaskData:", courseTaskData);
+      const courseColour = this.stringToColour(course.courseContext.title);
 
       let studentCourseData = {
         type: "line",
@@ -195,8 +196,8 @@ export default {
         borderRadius: 5,
         borderWidth: 1,
         // data: courseTaskData.flat(),
-        data: courseTaskData,
-        label: courseContext.title,
+        data: course.courseData,
+        label: course.courseContext.title,
         segment: {
           // borderColor: (ctx) => this.getColourBasedOnStatus(ctx, course),
         },
@@ -239,7 +240,7 @@ export default {
   }
 
   .center-col {
-    border-left: 1px solid var(--v-galaxyAccent-base);
+    // border-left: 1px solid var(--v-galaxyAccent-base);
     border-right: 1px solid var(--v-galaxyAccent-base);
   }
 }
