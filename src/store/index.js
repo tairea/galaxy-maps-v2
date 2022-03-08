@@ -346,7 +346,7 @@ export default new Vuex.Store({
           .collection("people")
           .doc(id)
           .onSnapshot((doc) => {
-            console.log("person updated");
+            // console.log("person updated");
             const person = {
               id,
               ...doc.data(),
@@ -796,14 +796,9 @@ export default new Vuex.Store({
       const studentsAssignedCourses = [];
 
       assignedCoursesArray.forEach(async (assignedCourse) => {
-        console.log("assignedCourse", assignedCourse);
         const doc = await db.collection("courses").doc(assignedCourse).get();
-
-        console.log("doc.date()", doc.data());
         studentsAssignedCourses.push(doc.data());
       });
-
-      console.log("studentsAssignedCourses", studentsAssignedCourses);
 
       state.courses = studentsAssignedCourses; // source of truth
     },

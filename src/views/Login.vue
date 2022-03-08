@@ -76,14 +76,14 @@ export default {
   }),
   mounted() {
     // working test xApi query (requests galaxy info from specific user)
-    queryXAPIStatement({
-      "statement.actor.mbox": "mailto:email.thebro@gmail.com",
-      "statement.context.contextActivities.grouping.id":
-        "https://www.galaxymaps.io/course/52YbN7eoE8ol5aPzvEap",
-    }).then((result) => {
-      console.log("result");
-      console.log(result);
-    });
+    // queryXAPIStatement({
+    //   "statement.actor.mbox": "mailto:email.thebro@gmail.com",
+    //   "statement.context.contextActivities.grouping.id":
+    //     "https://www.galaxymaps.io/course/52YbN7eoE8ol5aPzvEap",
+    // }).then((result) => {
+    //   console.log("result");
+    //   console.log(result);
+    // });
   },
 
   computed: {
@@ -108,8 +108,8 @@ export default {
           this.$store.commit("setSnackbar", {
             show: true,
             text: error.error,
-            color: "pink"
-          })
+            color: "pink",
+          });
           this.loading = false;
         });
     },
@@ -122,13 +122,12 @@ export default {
       if (!this.user.data.verified) {
         var actionCodeSettings = {
           // TODO: Update to galaxymaps.io on deployment
-          url: window.location.origin + '/login',
+          url: window.location.origin + "/login",
           handleCodeInApp: true,
         };
-        firebase.auth().currentUser.sendEmailVerification(actionCodeSettings)
-        throw new Error("Please check your emails to verify your account")  
-      }
-      else if (this.person.accountType == "student") {
+        firebase.auth().currentUser.sendEmailVerification(actionCodeSettings);
+        throw new Error("Please check your emails to verify your account");
+      } else if (this.person.accountType == "student") {
         this.$router.push("/base/galaxies/assigned");
       } else {
         this.$router.push("/base/cohorts");
@@ -146,15 +145,15 @@ export default {
           this.$store.commit("setSnackbar", {
             show: true,
             text: "Reset Password Email Sent",
-            color: "baseAccent"
-          })
+            color: "baseAccent",
+          });
         })
         .catch((error) => {
           this.$store.commit("setSnackbar", {
             show: true,
             text: error.message,
-            color: "pink"
-          })
+            color: "pink",
+          });
         });
     },
     // hack delay to wait for person to load before routing
