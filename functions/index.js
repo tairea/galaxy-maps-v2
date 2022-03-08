@@ -273,13 +273,104 @@ exports.onUserStatusChanged = functions.database
 // keep count of topics and tasks
 exports.updateTaskCount = functions.firestore
   .document("courses/{courseId}/{topicId}/{taskId}")
-  .onWrite(
-    (snapshot, context) => {
-      const values = snapshot.data();
-      functions.logger.log("values: ", values);
-      functions.logger.log("text: ", context);
-    },
-    (error) => {
-      functions.logger.log("error:", error.message);
+  .onWrite((change, context) => {
+    // Change contains before and after documents snapshots
+    const { before, after } = change;
+
+    // before doesnt exists = Created
+    if (!before.exists) {
+      const courseId = context.params.courseId;
+
+      // == check what was created
+      // - created a topic
+      if (
+        context.resource.name.includes("topics") &&
+        !context.resource.name.includes("tasks")
+      ) {
+        updateTopicTotals(courseId);
+      }
+      // - created a task
+      else if (
+        context.resource.name.includes("topics") &&
+        context.resource.name.includes("tasks")
+      ) {
+        updateTaskTotals(courseId);
+      } else {
+        return;
+      }
     }
-  );
+
+    // after doesnt exists = Deleted
+    if (!after.exists) {
+      // == check what was deleted
+      // - deleted a topic
+      if (
+        context.resource.name.includes("topics") &&
+        !context.resource.name.includes("tasks")
+      ) {
+        updateTopicTotals(courseId);
+      }
+      // - deleted a task
+      else if (
+        context.resource.name.includes("topics") &&
+        context.resource.name.includes("tasks")
+      ) {
+        updateTaskTotals(courseId);
+      } else {
+        return;
+      }
+    }
+    // else = Updated
+    console.log("task updated", { from: before.data(), to: after.data() });
+  });
+
+async function updateTopicTotals(courseId) {
+  const topicCount = 0;
+  // count topics
+  await firestore
+    .collection("courses")
+    .doc(courseId)
+    .collection("topics")
+    .get()
+    .then((topicsSnapshot) => {
+      functions.logger.log("topics count", topicsSnapshot.size);
+      topicCount += topicsSnapshot.size;
+
+      //write topic totals to course
+      firebase.collection("courses").doc(courseId).update({
+        totalTopics: topicCount,
+      });
+    });
+}
+
+async function updateTaskTotals(courseId) {
+  // count tasks
+  const topics = await firestore
+    .collection("courses")
+    .doc(courseId)
+    .collection("topics")
+    .get();
+
+  const taskCount = 0;
+
+  for (const topic of topics.docs) {
+    // get task data for each topic
+    const tasks = await db
+      .collection("courses")
+      .doc(courseId)
+      .collection("topics")
+      .doc(topic.id)
+      .collection("tasks")
+      .get()
+      .then((tasksSnapshot) => {
+        functions.logger.log("tasks count", tasksSnapshot.size);
+        taskCount += tasksSnapshot.size;
+      });
+  }
+  functions.logger.log("total taskCount: ", taskCount);
+
+  //write task totals to course
+  await firebase.collection("courses").doc(courseId).update({
+    totaltasks: taskCount,
+  });
+}
