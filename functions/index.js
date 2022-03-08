@@ -277,6 +277,11 @@ exports.updateTaskCount = functions.firestore
     // Change contains before and after documents snapshots
     const { before, after } = change;
 
+    functions.logger.log(
+      "=============== context.resource.name: ",
+      context.resource.name
+    );
+
     // before doesnt exists = Created
     if (!before.exists) {
       const courseId = context.params.courseId;
@@ -333,7 +338,7 @@ async function updateTopicTotals(courseId) {
     .collection("topics")
     .get()
     .then((topicsSnapshot) => {
-      functions.logger.log("topics count", topicsSnapshot.size);
+      functions.logger.log("------- topics count", topicsSnapshot.size);
       topicCount += topicsSnapshot.size;
 
       //write topic totals to course
@@ -367,7 +372,7 @@ async function updateTaskTotals(courseId) {
         taskCount += tasksSnapshot.size;
       });
   }
-  functions.logger.log("total taskCount: ", taskCount);
+  functions.logger.log("------- total taskCount: ", taskCount);
 
   //write task totals to course
   await firebase.collection("courses").doc(courseId).update({
