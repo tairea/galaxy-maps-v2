@@ -55,27 +55,25 @@
         :course="getCourseById(courseId)"
         :currentNode="currentNode"
         :currentEdge="currentEdge"
-        @removeUnsavedNode="removeUnsavedNode"
         @closeDialog="closeDialog"
         @openDialog="openDialog"
       />
       <!-- POPUP -->
-      <PopupSystemPreview
-        v-if="infoPopupShow"
-        ref="popup"
-        :infoPopupShow="infoPopupShow"
-        :infoPopupPosition="infoPopupPosition"
-        :currentTopic="currentNode"
-        :centerFocusPosition="centerFocusPosition"
-        :tasks="
-          person.accountType == 'student' ? personsTopicsTasks : topicsTasks
-        "
-        @deleteFromMap="deleteFromMap"
-        @close="closePopup"
-        @showEditDialog="showEditDialog"
-        @focus="focusPopup"
-        @blur="blurPopup"
-      />
+      <v-scale-transition>
+        <PopupSystemPreview
+          v-if="infoPopupShow"
+          ref="popup"
+          :infoPopupShow="infoPopupShow"
+          :infoPopupPosition="infoPopupPosition"
+          :currentTopic="currentNode"
+          :centerFocusPosition="centerFocusPosition"
+          :tasks="person.accountType == 'student' ? personsTopicsTasks : topicsTasks"        
+          @close="closePopup"
+          @showEditDialog="showEditDialog"
+          @focus="focusPopup"
+          @blur="blurPopup"
+        />
+      </v-scale-transition>
     </div>
   </div>
 </template>
@@ -239,26 +237,21 @@ export default {
       this.nodePositionsChangeLoading = false;
       this.changeInPositions = false;
     },
-    removeUnsavedNode() {
-      this.$refs.vis.removeUnsavedNode();
-    },
     toggleAddNodeMode() {
+      this.$refs.vis.disableEditMode()
       this.addNodeMode = !this.addNodeMode;
       if (this.addNodeMode == true) {
         this.$refs.vis.addNodeMode();
-      } else if (this.addNodeMode == false) {
-        this.$refs.vis.disableEditMode();
-        this.uiMessage = "";
       }
+      if (this.addEdgeMode) this.addEdgeMode = false
     },
     toggleAddEdgeMode() {
+      this.$refs.vis.disableEditMode()
       this.addEdgeMode = !this.addEdgeMode;
       if (this.addEdgeMode == true) {
         this.$refs.vis.addEdgeMode();
-      } else if (this.addEdgeMode == false) {
-        this.$refs.vis.disableEditMode(); // TODO: edge bug here. wtf disableEditMode was a function?
-        this.uiMessage = "";
       }
+      if (this.addNodeMode) this.addNodeMode = false
     },
     async bindTasks(courseId, topicId) {
       if (this.person.accountType == "student") {
@@ -274,17 +267,8 @@ export default {
         });
       }
     },
-    deleteFromMap() {
-      if (this.currentNode.label == "new") {
-        this.$emit("removeUnsavedNode");
-        this.currentNode.label = {};
-      } else if (this.type == "node") {
-        this.$refs.edit.deleteNode();
-      } else if (this.type == "edge") {
-        this.deleteEdge();
-      }
-    },
     async hovered(hoveredNode) {
+
       this.hoverNode = true;
       // this.infoPopupShow = false;
       this.centerFocusPosition = false;
@@ -335,7 +319,11 @@ export default {
       this.editing = true;
     },
     closeDialog() {
-      // TODO: this doesnt reset the node correctly
+      console.log('closeDialog: ', this.editing)
+      if (!this.editing) {
+        this.$refs.vis.removeUnsavedNode()
+        this.deselect()
+      }
       this.$refs.vis.deselectNode();
       this.dialog = false;
       this.editing = false;
