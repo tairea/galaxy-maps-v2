@@ -26,12 +26,17 @@ export default {
     DiscoverGalaxyButton,
     Galaxy,
   },
-  mounted() {
-    // if account type teacher, bind all courses to store
+  async mounted() {
+    // if account type student, bind assignedCourses to store.courses
+    // else if account type teacher, bind all courses to store.courses
     if (this.person.accountType == "student") {
-      this.$store.dispatch("getAssignedCourses", this.person.assignedCourses);
+      await this.$store.dispatch(
+        "getAssignedCourses",
+        this.person.assignedCourses
+      );
+      console.log("this.courses from assigned galaxies view", this.courses);
     } else {
-      this.$store.dispatch("bindAllCourses");
+      await this.$store.dispatch("bindAllCourses");
     }
   },
   computed: {

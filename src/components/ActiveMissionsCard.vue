@@ -2,7 +2,10 @@
   <div class="active-mission-card">
     <v-row>
       <div class="mission-card">
-        <div class="mission-section mission-section-overUnder">
+        <div
+          class="mission-section mission-section-overUnder"
+          style="width: 70%"
+        >
           <!-- VIDEO -->
           <div class="section-overUnder">
             <a
@@ -40,26 +43,30 @@
         </div>
 
         <!-- SUBMIT WORK -->
-        <div
+        <!-- <div
           class="mission-section d-flex align-center justify-center flex-column"
-        >
-          <p class="text-overline text-uppercase text-center">
-            {{ getSubmitTitle }}
-          </p>
-          <MissionCompletedDialog
-            :task="task"
-            :taskId="id"
-            :topicId="topicId"
-            :missionStatus="getTaskStatus"
-          />
-        </div>
-
-        <!-- REQUEST HELP -->
+        > -->
         <div
-          class="mission-section d-flex align-center justify-center flex-column"
+          class="mission-section mission-section-overUnder"
+          style="width: 30%"
         >
-          <p class="text-overline text-uppercase text-center">REQUEST HELP</p>
-          <RequestHelpDialog :task="task" :taskId="id" :topicId="topicId" />
+          <!-- REQUEST HELP -->
+          <div class="section-overUnder flex-column">
+            <p class="text-overline text-uppercase text-center">REQUEST HELP</p>
+            <RequestHelpDialog :task="task" :taskId="id" :topicId="topicId" />
+          </div>
+          <!-- MARK AS COMPLETED -->
+          <div class="section-overUnder flex-column">
+            <p class="text-overline text-uppercase text-center">
+              {{ getSubmitTitle }}
+            </p>
+            <MissionCompletedDialog
+              :task="task"
+              :taskId="id"
+              :topicId="topicId"
+              :missionStatus="getTaskStatus"
+            />
+          </div>
         </div>
       </div>
     </v-row>

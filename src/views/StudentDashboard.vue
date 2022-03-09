@@ -34,7 +34,9 @@ export default {
     StudentCourseProgression,
   },
   props: [],
-  async mounted() {},
+  async mounted() {
+    console.log("this.courses from dashboard", this.courses);
+  },
   computed: {
     ...mapState([
       "user",

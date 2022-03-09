@@ -31,14 +31,16 @@
         <v-col cols="4" class="pa-0">
           <div class="top-row">
             <p class="label">ACTIVE MISSION:</p>
+            *last started task here*
           </div>
           <div class="bottom-row">
             <v-progress-circular
-              :value="value + '%'"
+              :value="calcTaskCompletedPercentage(course)"
               color="baseAccent"
               size="100"
               width="10"
-              >{{ value }}
+              :rotate="-90"
+              >{{ calcTaskCompletedPercentage(course) + "%" }}
             </v-progress-circular>
           </div>
         </v-col>
@@ -155,6 +157,8 @@ export default {
 
       const santisedCourses = [];
 
+      let taskCompletedCount = 0;
+
       for (const course of this.studentCourseDataFromLRS) {
         // get course info
         const courseContext = await this.courseIRIToCourseId(course);
@@ -167,6 +171,9 @@ export default {
           const topicTitle = contextSplit[2];
           const taskTitle = contextSplit[3];
 
+          if (statement.description.includes("Completed Task:"))
+            taskCompletedCount++;
+
           const newStatement = {
             x: statement.timestamp,
             y: index,
@@ -174,13 +181,17 @@ export default {
             context: statement.context,
             topic: topicTitle,
             taskTitle: taskTitle,
+            description: statement.description,
           };
           return newStatement;
         });
 
+        // count number of "Completed Task:..." in description
+
         const courseObj = {
           courseContext,
           courseData,
+          taskCompletedCount,
         };
 
         this.santisedCourses.push(courseObj);
@@ -235,6 +246,11 @@ export default {
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
       }
       return hash;
+    },
+    calcTaskCompletedPercentage(course) {
+      let percentage =
+        (course.taskCompletedCount / course.courseContext.taskTotal) * 100;
+      return Math.round(percentage);
     },
   },
 };
