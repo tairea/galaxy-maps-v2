@@ -55,6 +55,7 @@ const getDefaultState = () => {
     studentCourseDataFromLRS: [],
     snackbar: {},
     userStatus: {},
+    studentsActiveTasks: [],
   };
 };
 
@@ -240,6 +241,9 @@ export default new Vuex.Store({
     },
     setStudentCourseDataFromLRS(state, courseData) {
       state.studentCourseDataFromLRS = courseData;
+    },
+    setStudentsActiveTasks(state, activeTasksArr) {
+      state.studentsActiveTasks = activeTasksArr;
     },
     setSnackbar(state, snackbar) {
       state.snackbar = snackbar;
@@ -838,6 +842,30 @@ export default new Vuex.Store({
           dispatch("getOrganisationsByCohorts", cohorts);
         });
     },
+    async getPersonsActiveTasks({ commit, dispatch }, payload) {
+      const personsCourseTopics = await db
+        .collection("people")
+        .doc(payload.personId)
+        .collection(payload.courseId)
+        .get();
+
+      const activeTasksArr = [];
+      for (const topic of personsCourseTopics.docs) {
+        const activeTasks = await db
+          .collection("people")
+          .doc(payload.personId)
+          .collection(payload.courseId)
+          .doc(topic.id)
+          .collection("tasks")
+          .where("taskStatus", "==", "active")
+          .get();
+
+        for (const activeTask of activeTasks.docs) {
+          activeTasksArr.push(activeTask.data());
+        }
+      }
+      return activeTasksArr;
+    },
 
     // ===== Firestore - get Course related stuff
     async getAssignedCourses({ state }, assignedCoursesArray) {
@@ -863,7 +891,7 @@ export default new Vuex.Store({
       );
     }),
     async getTaskByTaskId({ state }, payload) {
-      console.log("payload from getTaskByTaskId", payload);
+      // console.log("payload from getTaskByTaskId", payload);
       await db
         .collection("courses")
         .doc(payload.courseId)
@@ -888,6 +916,47 @@ export default new Vuex.Store({
           // console.log("doc.data()", doc.data());
           return doc.data();
         });
+    },
+    async getAllCourseTopicsAndTasks({ state }, coursesArr) {
+      const allCourseTopicsAndTasks = [];
+      // loop courses
+      for (const course of coursesArr) {
+        const topics = await db
+          .collection("courses")
+          .doc(course.id)
+          .collection("topics")
+          .get();
+        const topicsData = [];
+        for (const topic of topics.docs) {
+          // save topic
+          topicsData[topic.id] = topic.data();
+
+          // get task data for each topic
+          const tasks = await db
+            .collection("courses")
+            .doc(course.id)
+            .collection("topics")
+            .doc(topic.id)
+            .collection("tasks")
+            .get();
+          const tasksData = [];
+          for (const task of tasks.docs) {
+            // save task
+            tasksData[task.id] = task.data();
+          }
+
+          // add all tasks to a topic
+          topicsData[topic.id].tasks = tasksData;
+        }
+
+        const courseObj = {
+          ...course,
+          topics: topicsData,
+        };
+
+        allCourseTopicsAndTasks.push(courseObj);
+      }
+      console.log(allCourseTopicsAndTasks);
     },
     // ===== Firestore - get student data for teachers
     // bind courses requests for help

@@ -31,7 +31,7 @@
         <v-col cols="4" class="pa-0">
           <div class="top-row">
             <p class="label">ACTIVE MISSION:</p>
-            *last started task here*
+            <ActiveMissions :courseId="course.courseContext.id" />
           </div>
           <div class="bottom-row">
             <v-progress-circular
@@ -52,12 +52,13 @@
 <script>
 import { mapState, mapGetters } from "vuex";
 import Chart from "@/components/Chart.vue";
+import ActiveMissions from "@/components/ActiveMissions.vue";
 import { DateTime } from "luxon";
 import { dbMixins } from "../mixins/DbMixins";
 
 import {
-  queryXAPIStatement,
   getStudentsCoursesXAPIQuery,
+  getActiveTaskXAPIQuery,
 } from "../store/veracityLRS";
 
 export default {
@@ -65,15 +66,18 @@ export default {
   props: [],
   components: {
     Chart,
+    ActiveMissions,
   },
   mixins: [dbMixins],
   async mounted() {
     await getStudentsCoursesXAPIQuery(this.person);
     //get courses from LRS
     this.sanitiseCourseDataFromLRS();
+
+    // await getActiveTaskXAPIQuery(this.person);
   },
   computed: {
-    ...mapState(["studentCourseDataFromLRS"]),
+    ...mapState(["studentCourseDataFromLRS", "studentsActiveTasks"]),
     ...mapGetters(["person", "getCourseById", "getTopicById"]),
   },
   data() {
@@ -153,7 +157,7 @@ export default {
   },
   methods: {
     async sanitiseCourseDataFromLRS() {
-      console.log("data from LRS:", this.studentCourseDataFromLRS);
+      // console.log("data from LRS:", this.studentCourseDataFromLRS);
 
       const santisedCourses = [];
 
@@ -208,7 +212,8 @@ export default {
     },
 
     formatStudentsChartData(course) {
-      console.log("course", course);
+      // console.log("course", course);
+
       let datasets = [];
 
       // get a colour based on course name
@@ -246,6 +251,42 @@ export default {
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
       }
       return hash;
+    },
+    async getActiveTask(courseId) {
+      // ====== using Firestore data ======
+      const activeTasks = await this.$store.dispatch("getPersonsActiveTasks", {
+        courseId: courseId,
+        personId: this.person.id,
+      });
+
+      console.log("returing active tasks:", activeTasks);
+
+      return activeTasks;
+
+      // ====== using XAPI data ======
+      // const course = this.studentsActiveTasks.find(
+      //   (course) => course._id.course == courseId
+      // );
+
+      // const topicId = course.lastStatement.topic;
+      // const taskId = course.lastStatement.task;
+
+      // return taskId;
+
+      // const task = await this.$store.dispatch("getTaskByTaskId", {
+      //   courseId: courseId,
+      //   topicId: course.lastStatement.topic,
+      //   taskId: course.lastStatement.task,
+      // });
+      // const topic = await this.$store.dispatch("getTopicByTopicId", {
+      //   courseId: courseId,
+      //   topicId: course.lastStatement.topic,
+      // });
+
+      // console.log("task:", task);
+      // console.log("topic:", topic);
+
+      // return topic.label + " " + task.title;
     },
     calcTaskCompletedPercentage(course) {
       let percentage =
