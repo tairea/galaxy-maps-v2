@@ -69,17 +69,6 @@
         >
           <v-icon>mdi-pencil</v-icon>
         </v-btn>
-        <!-- <v-btn
-          v-if="person.accountType != 'student'"
-          icon
-          dark
-          x-small
-          color="red"
-          title="Delete"
-          @click="deleteFromMap"
-        >
-          <v-icon>mdi-delete</v-icon>
-        </v-btn> -->
       </div>
     </div>
     <!-- Preview: Topic Label -->
