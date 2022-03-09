@@ -69,7 +69,7 @@
         >
           <v-icon>mdi-pencil</v-icon>
         </v-btn>
-        <v-btn
+        <!-- <v-btn
           v-if="person.accountType != 'student'"
           icon
           dark
@@ -79,7 +79,7 @@
           @click="deleteFromMap"
         >
           <v-icon>mdi-delete</v-icon>
-        </v-btn>
+        </v-btn> -->
       </div>
     </div>
     <!-- Preview: Topic Label -->
@@ -194,6 +194,8 @@ export default {
       }
     },
     showEditDialog() {
+      this.$store.commit("setCurrentTopicId", this.currentTopic.id);
+      this.$store.commit("setCurrentTopic", this.currentTopic);
       this.$emit("showEditDialog", this.currentTopic);
     },
     routeToSolarSystem() {

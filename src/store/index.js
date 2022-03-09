@@ -339,6 +339,7 @@ export default new Vuex.Store({
 
       state.allEdges = allEdges;
     },
+
     // ===== Firestore - BIND by USER
     async getPersonById({ commit }, id) {
       if (id) {
@@ -767,7 +768,6 @@ export default new Vuex.Store({
 
       state.teachersStudentsProgress = allStudentProgress;
     },
-
     async getAssignedEdgesByPersonId({ state }, personId) {
       const personsAssignedEdges = [];
       // get the courseId from assignedCourses
@@ -791,18 +791,6 @@ export default new Vuex.Store({
       }
       state.personsAssignedEdges = personsAssignedEdges; // source of truth
     },
-
-    async getAssignedCourses({ state }, assignedCoursesArray) {
-      const studentsAssignedCourses = [];
-
-      assignedCoursesArray.forEach(async (assignedCourse) => {
-        const doc = await db.collection("courses").doc(assignedCourse).get();
-        studentsAssignedCourses.push(doc.data());
-      });
-
-      state.courses = studentsAssignedCourses; // source of truth
-    },
-
     bindCoursesByPersonId: firestoreAction(({ bindFirestoreRef }, personId) => {
       return bindFirestoreRef(
         "personsCourses",
@@ -820,19 +808,6 @@ export default new Vuex.Store({
         );
       }
     ),
-    // bind tasks by topic id
-    bindTasksByTopicId: firestoreAction(({ bindFirestoreRef }, payload) => {
-      return bindFirestoreRef(
-        "topicsTasks",
-        db
-          .collection("courses")
-          .doc(payload.courseId)
-          .collection("topics")
-          .doc(payload.topicId)
-          .collection("tasks")
-          .orderBy("taskCreatedTimestamp") // this is important to ordering the tasks in MissionList.vue
-      );
-    }),
     // bind persons tasks by topic id
     bindPersonsTasksByTopicId: firestoreAction(
       ({ bindFirestoreRef }, payload) => {
@@ -848,6 +823,45 @@ export default new Vuex.Store({
         );
       }
     ),
+    async getCohortsByPersonId({ commit, dispatch }, person) {
+      await db
+        .collection("cohorts")
+        .where(person.accountType + "s", "array-contains", person.id)
+        .onSnapshot((querySnapShot) => {
+          const cohorts = querySnapShot.docs.map((doc) => {
+            return {
+              id: doc.id,
+              ...doc.data(),
+            };
+          });
+          commit("setCohorts", cohorts);
+          dispatch("getOrganisationsByCohorts", cohorts);
+        });
+    },
+
+    // ===== Firestore - get Course related stuff
+    async getAssignedCourses({ state }, assignedCoursesArray) {
+      const studentsAssignedCourses = [];
+
+      assignedCoursesArray.forEach(async (assignedCourse) => {
+        const doc = await db.collection("courses").doc(assignedCourse).get();
+        studentsAssignedCourses.push(doc.data());
+      });
+
+      state.courses = studentsAssignedCourses; // source of truth
+    },
+    bindTasksByTopicId: firestoreAction(({ bindFirestoreRef }, payload) => {
+      return bindFirestoreRef(
+        "topicsTasks",
+        db
+          .collection("courses")
+          .doc(payload.courseId)
+          .collection("topics")
+          .doc(payload.topicId)
+          .collection("tasks")
+          .orderBy("taskCreatedTimestamp") // this is important to ordering the tasks in MissionList.vue
+      );
+    }),
     async getTaskByTaskId({ state }, payload) {
       console.log("payload from getTaskByTaskId", payload);
       await db
@@ -875,6 +889,7 @@ export default new Vuex.Store({
           return doc.data();
         });
     },
+    // ===== Firestore - get student data for teachers
     // bind courses requests for help
     bindRequestsForHelp: firestoreAction(({ bindFirestoreRef }, payload) => {
       return bindFirestoreRef(
@@ -890,7 +905,6 @@ export default new Vuex.Store({
           .orderBy("requestSubmittedTimestamp")
       );
     }),
-    // bind courses requests for help
     bindSpecificTeachersRequestsForHelp: firestoreAction(
       ({ bindFirestoreRef }, personId) => {
         // const myCourses = this.getters.getCoursesByWhoMadeThem(personId);
@@ -930,23 +944,46 @@ export default new Vuex.Store({
       }
       state.teachersRequestsForHelp = allRequestsForHelp;
     },
+    async getCourseTotalTasksCount({ state }, courseId) {
+      const topics = await db
+        .collection("courses")
+        .doc(courseId)
+        .collection("topics")
+        .get();
 
-    async getCohortsByPersonId({ commit, dispatch }, person) {
-      await db
-        .collection("cohorts")
-        .where(person.accountType + "s", "array-contains", person.id)
-        .onSnapshot((querySnapShot) => {
-          const cohorts = querySnapShot.docs.map((doc) => {
-            return {
-              id: doc.id,
-              ...doc.data(),
-            };
+      let taskCount = 0;
+
+      for (const topic of topics.docs) {
+        // get task data for each topic
+        const tasks = await db
+          .collection("courses")
+          .doc(courseId)
+          .collection("topics")
+          .doc(topic.id)
+          .collection("tasks")
+          .get()
+          .then((tasksSnapshot) => {
+            // console.log("tasks count", tasksSnapshot.size);
+            taskCount += tasksSnapshot.size;
           });
-          commit("setCohorts", cohorts);
-          dispatch("getOrganisationsByCohorts", cohorts);
+      }
+      console.log("------- total taskCount: ", taskCount);
+      return taskCount;
+    },
+    async getCourseTotalTopicsCount({ state }, courseId) {
+      let topicCount = 0;
+      await db
+        .collection("courses")
+        .doc(courseId)
+        .collection("topics")
+        .get()
+        .then((topicsSnapshot) => {
+          console.log("------- topics count", topicsSnapshot.size);
+          topicCount += topicsSnapshot.size;
+          return topicCount;
         });
     },
-
+    // ===== Firestore - Cohorts & Orgs
     async getOrganisationsByCohorts({ commit }, cohorts) {
       const orgs = [];
       const querySnapShot = await db
@@ -964,7 +1001,6 @@ export default new Vuex.Store({
       // console.log("orgs: ", orgs);
       commit("setOrganisations", orgs);
     },
-
     async setCurrentCohort({ commit }, cohort) {
       await db
         .collection("cohorts")
@@ -976,7 +1012,7 @@ export default new Vuex.Store({
             ...doc.data(),
           };
           commit("setCurrentCohort", cohort);
-        })
+        });
     },
     // bind the PEOPLE that are in a course
     bindPeopleInCourse: firestoreAction(({ bindFirestoreRef }, courseId) => {
@@ -994,6 +1030,8 @@ export default new Vuex.Store({
         db.collection("cohorts").where("courses", "array-contains", courseId)
       );
     }),
+
+    // ===== Firestore - Other
     async getAllUsersStatus({ state }) {
       const users = {};
       await db
