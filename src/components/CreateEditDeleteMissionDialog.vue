@@ -390,6 +390,18 @@ export default {
         .catch((error) => {
           console.error("Error writing document: ", error);
         });
+
+      // increment taskTotals by 1
+      db.collection("courses")
+        .doc(this.currentCourseId)
+        .update("taskTotal", firebase.firestore.FieldValue.increment(1))
+        .then(() => {
+          console.log("Task total increased by 1");
+        })
+        .catch((error) => {
+          console.error("Error incrementing taskTotal: ", error);
+        });
+
       this.task = {};
     },
     updateTask(task, index) {
@@ -447,6 +459,18 @@ export default {
         .catch((error) => {
           console.error("Error writing document: ", error);
         });
+
+      // decrement taskTotals by 1
+      db.collection("courses")
+        .doc(this.currentCourseId)
+        .update("taskTotal", firebase.firestore.FieldValue.increment(-1))
+        .then(() => {
+          console.log("Task total decreased by 1");
+        })
+        .catch((error) => {
+          console.error("Error decrementing taskTotal: ", error);
+        });
+
       // close dialog
       this.dialogConfirm = false;
     },
@@ -600,5 +624,4 @@ export default {
 .submission-colour {
   color: var(--v-cohortAccent-base);
 }
-
 </style>

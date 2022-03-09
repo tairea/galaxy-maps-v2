@@ -57,6 +57,7 @@
         :currentEdge="currentEdge"
         @removeUnsavedNode="removeUnsavedNode"
         @closeDialog="closeDialog"
+        @openDialog="openDialog"
       />
       <!-- POPUP -->
       <PopupSystemPreview
@@ -91,7 +92,6 @@ import GalaxyMapEditDialog from "../components/GalaxyMapEditDialog";
 import GalaxyMapButtons from "../components/GalaxyMapButtons";
 import PopupSystemPreview from "../components/PopupSystemPreview";
 
-
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
 
@@ -107,7 +107,7 @@ export default {
     BackButton,
     GalaxyMapEditDialog,
     GalaxyMapButtons,
-    PopupSystemPreview
+    PopupSystemPreview,
   },
   props: ["courseId"],
   data() {
@@ -128,16 +128,16 @@ export default {
       currentEdge: {},
       hoverPopup: false,
       hoverNode: false,
-      dialog: false, 
-      dialogTitle: "", 
+      dialog: false,
+      dialogTitle: "",
       dialogDescription: "",
-      editing: false
+      editing: false,
     };
   },
   async mounted() {
+    // create first node, when galaxy first created (hard coded)
     if (this.fromCreate) {
       let nodeId = null;
-      // create first node (hard coded)
       await db
         .collection("courses")
         .doc(this.courseId)
@@ -193,6 +193,11 @@ export default {
     await this.$store.dispatch("bindPeopleInCourse", this.courseId);
     // bind assigned cohorts in this course
     await this.$store.dispatch("bindCohortsInCourse", this.courseId);
+
+    // count tasks
+    // this.$store.dispatch("getCourseTotalTasksCount", this.courseId);
+    // count topics
+    // this.$store.dispatch("getCourseTotalTopicsCount", this.courseId);
 
     if (this.courseId) {
       return;
@@ -274,13 +279,13 @@ export default {
         this.$emit("removeUnsavedNode");
         this.currentNode.label = {};
       } else if (this.type == "node") {
-        this.deleteNode();
+        this.$refs.edit.deleteNode();
       } else if (this.type == "edge") {
         this.deleteEdge();
       }
     },
     async hovered(hoveredNode) {
-      this.hoverNode = true
+      this.hoverNode = true;
       // this.infoPopupShow = false;
       this.centerFocusPosition = false;
       this.type = hoveredNode.type;
@@ -316,7 +321,7 @@ export default {
       // this.coords.x = node.x;
       // this.coords.y = node.y;
       this.currentNode = node;
-      this.dialogTitle = 'add new node';
+      this.dialogTitle = "add new node";
       this.dialogDescription = "add a new system to this galaxy";
       this.dialog = true;
     },
@@ -324,30 +329,37 @@ export default {
       this.uiMessage = "";
       this.coords.x = node.x;
       this.coords.y = node.y;
-      this.dialogTitle = node.label
+      this.dialogTitle = node.label;
       this.dialogDescription = "edit this system";
       this.dialog = true;
-      this.editing = true
+      this.editing = true;
     },
     closeDialog() {
       // TODO: this doesnt reset the node correctly
       this.$refs.vis.deselectNode();
-      this.dialog = false
-      this.editing = false
-      this.dialogTitle = ""
-      this.dialogDescription = ""
-      this.currentNode = {}
-      this.currentEdge= {}
+      this.dialog = false;
+      this.editing = false;
+      this.dialogTitle = "";
+      this.dialogDescription = "";
+      this.currentNode = {};
+      this.currentEdge = {};
+      // fit
+      this.$refs.vis.zoomToNodes(this.currentCourseNodes);
+    },
+    openDialog() {
+      // TODO: this doesnt reset the node correctly
+      this.dialog = true;
+      this.editing = true;
     },
     blurNode() {
-      this.hoverNode = false
+      this.hoverNode = false;
     },
     focusPopup() {
       this.hoverPopup = true;
     },
     closePopup() {
-      this.$refs.vis.deselectNode()
-      this.blurPopup()
+      this.$refs.vis.deselectNode();
+      this.blurPopup();
     },
     blurPopup() {
       this.hoverPopup = false;
