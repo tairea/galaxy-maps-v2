@@ -841,13 +841,13 @@ export default new Vuex.Store({
 
     // ===== Firestore - get Course related stuff
     async getAssignedCourses({ state }, assignedCoursesArray) {
-      const studentsAssignedCourses = [];
+      let studentsAssignedCourses = [];
 
       assignedCoursesArray.forEach(async (assignedCourse) => {
         const doc = await db.collection("courses").doc(assignedCourse).get();
         studentsAssignedCourses.push(doc.data());
       });
-
+      console.log("studentsAssignedCourses", studentsAssignedCourses);
       state.courses = studentsAssignedCourses; // source of truth
     },
     bindTasksByTopicId: firestoreAction(({ bindFirestoreRef }, payload) => {

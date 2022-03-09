@@ -6,7 +6,7 @@
       <div>
         <p class="info-panel-label mb-2">
           <span class="galaxyColour">Galaxy:</span>
-            <br />
+          <br />
           <span>{{ course.title }}</span>
         </p>
         <v-img
@@ -161,7 +161,7 @@ export default {
       loading: false,
       startingGalaxyStatus: "",
       contentAuthorImage: "",
-      mappedAuthorImage: ""
+      mappedAuthorImage: "",
     };
   },
   async mounted() {
@@ -180,8 +180,12 @@ export default {
         this.enrolled = true;
       }
     }
-    this.mappedAuthorImage = await this.getPersonsImage(this.course.mappedBy.personId)
-    this.contentAuthorImage = await this.getPersonsImage(this.course.contentBy.personId)
+    this.mappedAuthorImage = await this.getPersonsImage(
+      this.course.mappedBy.personId
+    );
+    this.contentAuthorImage = await this.getPersonsImage(
+      this.course.contentBy.personId
+    );
   },
   computed: {
     ...mapState(["person"]),
@@ -268,14 +272,14 @@ export default {
           // this.startingGalaxyStatus = "...adding " + subDoc.data().title;
           this.startingGalaxyStatus =
             "...adding " + doc.data().label + " - " + subDoc.data().title;
-          console.log(
-            "...adding " +
-              subDoc.id +
-              ": " +
-              doc.data().label +
-              " - " +
-              subDoc.data().title
-          );
+          // console.log(
+          //   "...adding " +
+          //     subDoc.id +
+          //     ": " +
+          //     doc.data().label +
+          //     " - " +
+          //     subDoc.data().title
+          // );
 
           if (subDoc.exists) {
             await db

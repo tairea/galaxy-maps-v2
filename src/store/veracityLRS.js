@@ -732,6 +732,7 @@ export const getStudentsCoursesXAPIQuery = async (person) => {
     .then((res) => res.json())
     .catch((error) => console.error(error.message))
     .then((res) => {
+      console.log("getStudentsCoursesXAPIQuery: res => ", res);
       store.commit("setStudentCourseDataFromLRS", res);
     });
 };

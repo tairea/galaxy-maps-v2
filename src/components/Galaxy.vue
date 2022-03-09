@@ -231,8 +231,8 @@ export default {
       }
       if (this.nodesToDisplay.length > 0) {
         const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
-        
-        console.log("repositionedNodes: ", repositionedNodes)
+
+        // console.log("repositionedNodes: ", repositionedNodes);
 
         if (repositionedNodes.length) {
           if (this.whichCoursesToDisplay == "my") {
@@ -415,7 +415,7 @@ export default {
       return newAllNodes;
     },
     calcCourseCanvasBoundaries() {
-      const courses = this.courses
+      const courses = this.courses;
       let courseCanvasBoundaries = [];
       // get all coords for nodes
       // const allNodes = this.$refs.network.nodes;
