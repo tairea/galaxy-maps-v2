@@ -689,7 +689,7 @@ export const advancedQueryXAPIStatement = (payloadObj) => {
 };
 
 export const getStudentsCoursesXAPIQuery = async (person) => {
-  console.log("querying students course records from LRS...");
+  // console.log("querying students course records from LRS...");
   const aggregationQuery = [
     {
       $match: {
@@ -732,7 +732,86 @@ export const getStudentsCoursesXAPIQuery = async (person) => {
     .then((res) => res.json())
     .catch((error) => console.error(error.message))
     .then((res) => {
-      console.log("getStudentsCoursesXAPIQuery: res => ", res);
+      // console.log("getStudentsCoursesXAPIQuery: res => ", res);
       store.commit("setStudentCourseDataFromLRS", res);
+    });
+};
+export const getActiveTaskXAPIQuery = async (person) => {
+  // console.log("querying LRS for students active tasks...");
+  const aggregationQuery = [
+    // only for this person
+    {
+      $match: {
+        "statement.actor.mbox": {
+          $parseRegex: { regex: person.email },
+        },
+      },
+    },
+    // sort by ascending
+    {
+      $sort: {
+        "statement.timestamp": 1,
+      },
+    },
+    // group by actor, course and task. pushing statements
+    {
+      $group: {
+        _id: {
+          actor: "$statement.actor.mbox",
+          course:
+            "$statement.object.definition.extensions.https://www.galaxymaps.io/course/id/",
+          task: "$statement.object.definition.extensions.https://www.galaxymaps.io/task/id/",
+        },
+        lastStatement: {
+          $last: {
+            verb: "$statement.verb.display.en-nz",
+            timestamp: "$statement.timestamp",
+            description: "$statement.object.definition.description.en-nz",
+            task: "$statement.object.definition.extensions.https://www.galaxymaps.io/task/id/",
+            topic:
+              "$statement.object.definition.extensions.https://www.galaxymaps.io/topic/id/",
+          },
+        },
+      },
+    },
+    //filter started
+    {
+      $match: {
+        "lastStatement.verb": "started",
+      },
+    },
+    // group just by course
+    {
+      $group: {
+        _id: {
+          actor: "$_id.actor",
+          course: "$_id.course",
+        },
+        lastStatement: {
+          $last: {
+            verb: "$lastStatement.verb",
+            timestamp: "$lastStatement.timestamp",
+            description: "$lastStatement.description",
+            task: "$lastStatement.task",
+            topic: "$lastStatement.topic",
+          },
+        },
+      },
+    },
+  ];
+
+  await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: auth,
+    },
+    body: JSON.stringify(aggregationQuery),
+  })
+    .then((res) => res.json())
+    .catch((error) => console.error(error.message))
+    .then((res) => {
+      console.log("getActiveTaskXAPIQuery: res => ", res);
+      store.commit("setStudentsActiveTasks", res);
     });
 };
