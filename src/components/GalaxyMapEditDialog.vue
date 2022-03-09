@@ -148,20 +148,14 @@
               v-if="editing"
               outlined
               color="error"
-              @click="deleteFromMap"
+              @click="deleteDialog()"
               class="mr-2"
             >
               <v-icon left> mdi-delete </v-icon>
               DELETE
             </v-btn>
 
-            <v-btn
-              outlined
-              color="white"
-              class="ml-2"
-              @click="close"
-              :disabled="loading"
-            >
+            <v-btn outlined color="white" class="ml-2" @click="close">
               <v-icon left> mdi-close </v-icon>
               Cancel
             </v-btn>
@@ -173,17 +167,77 @@
       <!-- End create-dialog -->
     </v-dialog>
 
-    
+    <!-- CONFIRM DELETE DIALOG -->
+    <v-dialog v-model="dialogConfirm" width="40%" light>
+      <div class="create-dialog">
+        <!-- HEADER -->
+        <div class="dialog-header py-10">
+          <p class="dialog-title">
+            <strong>Warning!</strong> Delete {{ currentTopic.title }} System?
+          </p>
+          <div class="d-flex align-start">
+            <v-icon left color="missionAccent">mdi-information-variant</v-icon>
+            <p class="dialog-description">
+              Are you sure you want to <strong>DELETE</strong> this
+              <span class="mission-text">{{ currentTopic.title }} System</span>?
+              <br />
+              <br />
+              Deleting is permanent!!!
+              <br />
+              <br />
+              <strong>YOU WILL LOSE ALL </strong>
+              <span class="mission-text">Mission</span> data.
+            </p>
+          </div>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="action-buttons">
+          <!-- DELETE -->
+          <v-btn
+            outlined
+            color="error"
+            @click="deleteNode()"
+            class="ml-2"
+            :loading="deleting"
+          >
+            <v-icon left> mdi-delete </v-icon>
+            DELETE
+          </v-btn>
+
+          <v-btn
+            outlined
+            :color="$vuetify.theme.dark ? 'yellow' : 'f7f7ff'"
+            class="ml-2"
+            @click="cancelDeleteDialog()"
+          >
+            <v-icon left> mdi-close </v-icon>
+            Cancel
+          </v-btn>
+        </div>
+        <!-- End action-buttons -->
+      </div>
+      <!-- End create-dialog-content -->
+    </v-dialog>
   </div>
 </template>
 
 <script>
+import firebase from "firebase/app";
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "GalaxyMapEditDialog",
-  props: ["course", "dialog", "dialogTitle", "dialogDescription", "editing", "currentNode", "currentEdge"],
+  props: [
+    "course",
+    "dialog",
+    "dialogTitle",
+    "dialogDescription",
+    "editing",
+    "currentNode",
+    "currentEdge",
+  ],
   async mounted() {
     this.infoPopupShow = false;
     // hack to make active select white
@@ -195,6 +249,7 @@ export default {
   },
   data() {
     return {
+      dialogConfirm: false,
       newNodeData: {},
       type: "",
       loading: false,
@@ -223,7 +278,7 @@ export default {
       "personsTopics",
       "currentCourseId",
       "currentTopic",
-      "currentTopicId"
+      "currentTopicId",
     ]),
     ...mapGetters(["getTopicById", "getPersonsTopicById"]),
     dark() {
@@ -244,14 +299,15 @@ export default {
     // },
 
     close() {
-      console.log("cancel");
-      this.$emit('closeDialog')
+      this.$emit("closeDialog");
       // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
     },
+
     saveNode(node) {
       console.log("save", node);
       this.loading = true;
       console.log("saving node:", node);
+      // save topic node info to map-nodes
       db.collection("courses")
         .doc(this.course.id)
         .collection("map-nodes")
@@ -265,6 +321,7 @@ export default {
         .catch((error) => {
           console.error("Error writing node: ", error);
         });
+      // save topic info to topics
       db.collection("courses")
         .doc(this.course.id)
         .collection("topics")
@@ -278,8 +335,24 @@ export default {
         .catch((error) => {
           console.error("Error writing node: ", error);
         });
+      // increment topicTotals by 1
+      db.collection("courses")
+        .doc(this.course.id)
+        .update("topicTotal", firebase.firestore.FieldValue.increment(1))
+        .then(() => {
+          console.log("Topic total increased by 1");
+        })
+        .catch((error) => {
+          console.error("Error incrementing topicTotal: ", error);
+        });
     },
-
+    deleteDialog() {
+      this.dialogConfirm = true;
+    },
+    cancelDeleteDialog() {
+      this.dialogConfirm = false;
+      this.$emit("openDialog");
+    },
     deleteNode() {
       console.log("deleting node");
       this.deleting = true;
@@ -327,6 +400,18 @@ export default {
             console.error("Error deleting edge: ", error);
           });
       }
+      // decrement topicTotals by 1
+      db.collection("courses")
+        .doc(this.course.id)
+        .update("topicTotal", firebase.firestore.FieldValue.increment(-1))
+        .then(() => {
+          console.log("Topic total decreased by 1");
+        })
+        .catch((error) => {
+          console.error("Error decrementing topicTotal: ", error);
+        });
+      // close
+      this.close();
     },
     deleteEdge() {
       this.deleting = true;
@@ -356,7 +441,7 @@ export default {
       }
       // this.resetEditing();
       // this.resetNewData();
-    }
+    },
   },
 };
 </script>
@@ -370,6 +455,13 @@ export default {
   display: flex;
   flex-direction: column;
   flex-wrap: wrap;
+
+  .dialog-header {
+    width: 100%;
+    padding: 20px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--v-missionAccent-base);
+  }
 }
 
 .create-dialog-content {
@@ -391,14 +483,6 @@ export default {
     text-transform: uppercase;
   }
 
-  .dialog-description {
-    color: var(--v-missionAccent-base);
-    text-transform: uppercase;
-    font-size: 0.7rem;
-    margin: 0;
-    font-style: italic;
-  }
-
   .input-field {
     width: 100%;
     text-align: center;
@@ -409,14 +493,14 @@ export default {
   .fields {
     border-top: 1px solid var(--v-missionAccent-base);
   }
+}
 
-  .dialog-description {
-    color: var(--v-missionAccent-base);
-    text-transform: uppercase;
-    font-size: 0.7rem;
-    margin: 0;
-    font-style: italic;
-  }
+.dialog-description {
+  color: var(--v-missionAccent-base);
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  margin: 0;
+  font-style: italic;
 }
 
 // POPUP
@@ -500,5 +584,10 @@ export default {
 .circle-outline {
   border: 1px solid var(--v-missionAccent-base);
   border-radius: 50%;
+}
+
+.action-buttons {
+  width: 100%;
+  padding: 20px;
 }
 </style>
