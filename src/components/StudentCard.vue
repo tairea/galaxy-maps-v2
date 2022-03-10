@@ -84,6 +84,8 @@
 
 <script>
 import { min } from 'moment';
+import { queryXAPIStatement } from "../store/veracityLRS";
+
 // import EditStudentButtonDialog from "../components/EditStudentButtonDialog";
 import { mapState, mapGetters } from 'vuex'
 import { dbMixins } from "../mixins/DbMixins"
@@ -112,6 +114,7 @@ export default {
     if (this.currentCohort.courses?.length) {
       this.getAssignedCourse()
     }
+    this.getStudentActivity()
   },
   computed: {
     ...mapState(['currentCohort', 'userStatus']),
@@ -156,6 +159,18 @@ export default {
       if (minutes < 60) return `${minutes}mins` 
       if (hours < 24) return `${hours}hrs`
       return `${days}days`
+    },
+    getStudentActivity() {
+      console.log('getting student activity')
+      
+      queryXAPIStatement({
+        "statement.actor.mbox": "mailto:wotolex698@toudrum.com",
+        "statement.context.contextActivities.grouping.id":
+          "https://www.galaxymaps.io/course/52YbN7eoE8ol5aPzvEap",
+      }).then((result) => {
+        console.log("result");
+        console.log(result);
+      });
     }
   },
 };

@@ -47,24 +47,11 @@ export default {
 
 <style lang="scss" scoped>
 #ss-info {
-  width: calc(100% - 30px);
-  // height: 400px;
+  height: 400px;
   border: 1px solid var(--v-missionAccent-base);
   margin-top: 30px;
   padding: 20px;
-  // background: var(--v-baseAccent-base);
-  position: relative;
   backdrop-filter: blur(2px);
-  z-index: 3;
-  height: auto;
-
-  .galaxy-image {
-    // --- CIRCLE IMAGE ---
-    // border-radius: 50%;
-    // width: 200px !important;
-    // height: 200px !important;
-    // margin: auto;
-  }
 }
 
 h1 {
