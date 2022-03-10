@@ -591,6 +591,11 @@ export const studentOnlineXAPIStatement = (actor) => {
     },
     object: {
       id: "https://www.galaxymaps.io/isonline/" + actor.id + "/" + new Date(),
+      definition: {
+        description: {
+          "en-nz": "Logged in",
+        },
+      },
     },
     context: {
       contextActivities: {
@@ -628,6 +633,9 @@ export const studentOfflineXAPIStatement = (actor) => {
     },
     object: {
       id: "https://www.galaxymaps.io/isOffline/" + actor.id + "/" + new Date(),
+      description: {
+        "en-nz": "Logged off",
+      },
     },
     context: {
       contextActivities: {
@@ -813,5 +821,59 @@ export const getActiveTaskXAPIQuery = async (person) => {
     .then((res) => {
       console.log("getActiveTaskXAPIQuery: res => ", res);
       store.commit("setStudentsActiveTasks", res);
+    });
+};
+export const getActivityLogXAPIQuery = async (person) => {
+  // console.log("querying LRS for students active tasks...");
+  const aggregationQuery = [
+    // only for this person
+    {
+      $match: {
+        "statement.actor.mbox": {
+          $parseRegex: { regex: person.email },
+        },
+      },
+    },
+    // sort by ascending
+    {
+      $sort: {
+        "statement.timestamp": -1,
+      },
+    },
+    // group by actor, course and task. pushing statements
+    {
+      $group: {
+        _id: {
+          actor: "$statement.actor.mbox",
+        },
+        statements: {
+          $push: {
+            verb: "$statement.verb.display.en-nz",
+            timestamp: "$statement.timestamp",
+            description: "$statement.object.definition.description.en-nz",
+            task: "$statement.object.definition.extensions.https://www.galaxymaps.io/task/id/",
+            topic:
+              "$statement.object.definition.extensions.https://www.galaxymaps.io/topic/id/",
+            course:
+              "$statement.object.definition.extensions.https://www.galaxymaps.io/course/id/",
+          },
+        },
+      },
+    },
+  ];
+
+  await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: auth,
+    },
+    body: JSON.stringify(aggregationQuery),
+  })
+    .then((res) => res.json())
+    .catch((error) => console.error(error.message))
+    .then((res) => {
+      console.log("getActivityLogXAPIQuery: res => ", res[0].statements);
+      store.commit("setStudentsActivityLog", res[0].statements);
     });
 };

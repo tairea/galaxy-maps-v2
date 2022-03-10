@@ -56,6 +56,7 @@ const getDefaultState = () => {
     snackbar: {},
     userStatus: {},
     studentsActiveTasks: [],
+    studentsActivityLog: [],
   };
 };
 
@@ -244,6 +245,9 @@ export default new Vuex.Store({
     },
     setStudentsActiveTasks(state, activeTasksArr) {
       state.studentsActiveTasks = activeTasksArr;
+    },
+    setStudentsActivityLog(state, activityStatements) {
+      state.studentsActivityLog = activityStatements;
     },
     setSnackbar(state, snackbar) {
       state.snackbar = snackbar;
