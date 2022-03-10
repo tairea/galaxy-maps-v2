@@ -270,8 +270,8 @@ export default {
 .course-frame {
   width: 80%;
   border: 1px solid var(--v-galaxyAccent-base);
-  margin-bottom: 50px;
-  margin-left: auto;
+  margin-bottom: 30px;
+  margin-left: 5%;
   margin-right: auto;
   padding: 12px;
 
