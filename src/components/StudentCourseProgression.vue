@@ -30,18 +30,23 @@
         </v-col>
         <v-col cols="4" class="pa-0">
           <div class="top-row">
-            <p class="label">ACTIVE MISSION:</p>
-            <ActiveMissions :courseId="course.courseContext.id" />
+            <p class="label">RESUME MISSION:</p>
+            <div class="d-flex justify-center align-center">
+              <ActiveMissions :courseId="course.courseContext.id" />
+            </div>
           </div>
           <div class="bottom-row">
-            <v-progress-circular
-              :value="calcTaskCompletedPercentage(course)"
-              color="baseAccent"
-              size="100"
-              width="10"
-              :rotate="-90"
-              >{{ calcTaskCompletedPercentage(course) + "%" }}
-            </v-progress-circular>
+            <p class="label">GALAXY PROGRESS:</p>
+            <div class="d-flex justify-center align-center pb-3">
+              <v-progress-circular
+                :value="calcTaskCompletedPercentage(course)"
+                color="baseAccent"
+                size="100"
+                width="10"
+                :rotate="-90"
+                >{{ calcTaskCompletedPercentage(course) + "%" }}
+              </v-progress-circular>
+            </div>
           </div>
         </v-col>
       </v-row>
@@ -74,7 +79,7 @@ export default {
     //get courses from LRS
     this.sanitiseCourseDataFromLRS();
 
-    // await getActiveTaskXAPIQuery(this.person);
+    await getActiveTaskXAPIQuery(this.person);
   },
   computed: {
     ...mapState(["studentCourseDataFromLRS", "studentsActiveTasks"]),
@@ -252,42 +257,6 @@ export default {
       }
       return hash;
     },
-    async getActiveTask(courseId) {
-      // ====== using Firestore data ======
-      const activeTasks = await this.$store.dispatch("getPersonsActiveTasks", {
-        courseId: courseId,
-        personId: this.person.id,
-      });
-
-      console.log("returing active tasks:", activeTasks);
-
-      return activeTasks;
-
-      // ====== using XAPI data ======
-      // const course = this.studentsActiveTasks.find(
-      //   (course) => course._id.course == courseId
-      // );
-
-      // const topicId = course.lastStatement.topic;
-      // const taskId = course.lastStatement.task;
-
-      // return taskId;
-
-      // const task = await this.$store.dispatch("getTaskByTaskId", {
-      //   courseId: courseId,
-      //   topicId: course.lastStatement.topic,
-      //   taskId: course.lastStatement.task,
-      // });
-      // const topic = await this.$store.dispatch("getTopicByTopicId", {
-      //   courseId: courseId,
-      //   topicId: course.lastStatement.topic,
-      // });
-
-      // console.log("task:", task);
-      // console.log("topic:", topic);
-
-      // return topic.label + " " + task.title;
-    },
     calcTaskCompletedPercentage(course) {
       let percentage =
         (course.taskCompletedCount / course.courseContext.taskTotal) * 100;
@@ -339,14 +308,10 @@ export default {
 .top-row {
   width: 100%;
   border-bottom: 1px solid var(--v-galaxyAccent-base);
-  height: 30%;
+  // height: 30%;
 }
 
 .bottom-row {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 70%;
 }
 
 .label {

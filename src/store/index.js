@@ -864,6 +864,7 @@ export default new Vuex.Store({
           activeTasksArr.push(activeTask.data());
         }
       }
+
       return activeTasksArr;
     },
 
@@ -892,30 +893,27 @@ export default new Vuex.Store({
     }),
     async getTaskByTaskId({ state }, payload) {
       // console.log("payload from getTaskByTaskId", payload);
-      await db
+      const task = await db
         .collection("courses")
         .doc(payload.courseId)
         .collection("topics")
         .doc(payload.topicId)
         .collection("tasks")
         .doc(payload.taskId)
-        .get()
-        .then((doc) => {
-          return doc.data();
-        });
+        .get();
+
+      return task.data();
     },
     async getTopicByTopicId({ state }, payload) {
       // console.log("payload from getTopicByTopicId", payload);
-      await db
+      const topic = await db
         .collection("courses")
         .doc(payload.courseId)
         .collection("topics")
         .doc(payload.topicId)
-        .get()
-        .then((doc) => {
-          // console.log("doc.data()", doc.data());
-          return doc.data();
-        });
+        .get();
+
+      return topic.data();
     },
     async getAllCourseTopicsAndTasks({ state }, coursesArr) {
       const allCourseTopicsAndTasks = [];
