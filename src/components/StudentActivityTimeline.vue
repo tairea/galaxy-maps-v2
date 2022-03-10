@@ -49,7 +49,8 @@ export default {
   margin-left: 5%;
   margin-right: auto;
   margin-bottom: 30px;
-  overflow: scroll;
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
 
 .label {

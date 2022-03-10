@@ -819,7 +819,7 @@ export const getActiveTaskXAPIQuery = async (person) => {
     .then((res) => res.json())
     .catch((error) => console.error(error.message))
     .then((res) => {
-      console.log("getActiveTaskXAPIQuery: res => ", res);
+      // console.log("getActiveTaskXAPIQuery: res => ", res);
       store.commit("setStudentsActiveTasks", res);
     });
 };
@@ -873,7 +873,7 @@ export const getActivityLogXAPIQuery = async (person) => {
     .then((res) => res.json())
     .catch((error) => console.error(error.message))
     .then((res) => {
-      console.log("getActivityLogXAPIQuery: res => ", res[0].statements);
+      // console.log("getActivityLogXAPIQuery: res => ", res[0].statements);
       store.commit("setStudentsActivityLog", res[0].statements);
     });
 };

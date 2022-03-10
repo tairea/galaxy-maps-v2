@@ -205,7 +205,7 @@ export default {
 
         this.santisedCourses.push(courseObj);
       }
-      console.log("santisedCourses", this.santisedCourses);
+      // console.log("santisedCourses", this.santisedCourses);
     },
     async courseIRIToCourseId(course) {
       // get course id from iri
