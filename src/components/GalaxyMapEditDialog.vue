@@ -531,9 +531,6 @@ export default {
       justify-content: space-between;
       align-items: center;
     }
-
-    .close-button {
-    }
   }
   .ss-details {
     border-top: 1px solid var(--v-missionAccent-base);
