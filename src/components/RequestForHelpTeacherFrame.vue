@@ -48,7 +48,6 @@ export default {
   },
   computed: {
     ...mapState(["teachersRequestsForHelp", "user"]),
-    ...mapGetters(["getUnansweredRequestsForHelp"]),
     isCohortView() {
       return this.$route.name == "CohortView"
         ? "cohort-help-panel"
@@ -61,7 +60,7 @@ export default {
     },
   },
   async mounted() {
-    // this.loading = true;
+    this.loading = true;
     for (const course of this.courses) {
       const unsubscribe = await this.$store.dispatch(
         "getRequestsForHelpByCourseId",
@@ -69,8 +68,7 @@ export default {
       );
       this.unsubscribes.push(unsubscribe);
     }
-
-    console.log("teachersRequestsForHelp", this.teachersRequestsForHelp);
+    this.loading = false;
   },
   destroyed() {
     for (const unsubscribe of this.unsubscribes) {

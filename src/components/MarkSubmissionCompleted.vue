@@ -84,7 +84,7 @@ import {
 } from "../store/veracityLRS";
 
 import { mapState, mapGetters } from "vuex";
-import { dbMixins } from '../mixins/DbMixins'
+import { dbMixins } from "../mixins/DbMixins";
 
 export default {
   name: "MarkSubmissionCompleted",
@@ -172,9 +172,9 @@ export default {
           this.$store.commit("setSnackbar", {
             show: true,
             text: "Student's Mission now marked as completed",
-            color: "baseAccent"
-          })
-          this.MXbindSubmissions()
+            color: "baseAccent",
+          });
+
           // unlock next task
           this.unlockNextTask();
 
@@ -221,16 +221,17 @@ export default {
         // TODO: some kind of notification to signal that Topic has been completed
         // all tasks are completed. unlock next topic
         // message telling teacher whats happend
-        
+
         this.$store.commit("setSnackbar", {
           show: true,
-          text: this.requesterPerson.firstName +
+          text:
+            this.requesterPerson.firstName +
             " " +
             this.requesterPerson.lastName +
             " completed all tasks for topic " +
             this.submission.contextTopic.label,
-          color: "baseAccent"
-        })
+          color: "baseAccent",
+        });
 
         this.unlockNextTopics();
       } else {
@@ -281,14 +282,15 @@ export default {
                 // message telling teacher whats happend
                 this.$store.commit("setSnackbar", {
                   show: true,
-                  text: "NEW TOPIC: " +
+                  text:
+                    "NEW TOPIC: " +
                     doc.data().label +
                     " UNLOCKED FOR: " +
                     this.requesterPerson.firstName +
                     " " +
                     this.requesterPerson.lastName,
-                  color: "baseAccent"
-                })
+                  color: "baseAccent",
+                });
               });
           });
         });
