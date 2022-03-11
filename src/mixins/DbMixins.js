@@ -1,8 +1,8 @@
-// Use this file to store reusable functions
+// Use this file to store reusable functions that require data from the component
 
 import firebase from "firebase";
 import { db, functions } from "../store/firestoreConfig";
-import { mapGetters } from "vuex";
+import { getCourseById } from "../lib/ff"
 
 export const dbMixins = {
   methods: {
@@ -21,7 +21,7 @@ export const dbMixins = {
         .then(() => {
           if (this.currentCohort.courses.length) {
             this.currentCohort.courses.forEach(async (courseId) => {
-              let course = await this.MXgetCourseById(courseId);
+              let course = await getCourseById(courseId);
               this.MXassignCourseToStudent(student, course);
             });
           }
@@ -146,19 +146,6 @@ export const dbMixins = {
         ...person.data(),
       };
       return person;
-    },
-    async MXgetCourseById(id) {
-      const course = await db
-        .collection("courses")
-        .doc(id)
-        .get()
-        .then((doc) => {
-          return {
-            id,
-            ...doc.data(),
-          };
-        });
-      return course;
     },
     async MXsaveProfile(profile) {
       console.log("profile: ", profile);

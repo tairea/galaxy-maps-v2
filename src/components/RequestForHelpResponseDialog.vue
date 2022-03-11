@@ -145,7 +145,7 @@ import firebase from "firebase/app";
 import moment from "moment";
 
 import { db } from "../store/firestoreConfig";
-import { teacherRespondedToRequestForHelpXAPIStatement } from "../store/veracityLRS";
+import { teacherRespondedToRequestForHelpXAPIStatement } from "../lib/veracityLRS";
 import { dbMixins } from "../mixins/DbMixins"; 
 import { mapState, mapGetters } from "vuex";
 
