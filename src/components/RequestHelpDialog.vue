@@ -91,7 +91,7 @@
 import firebase from "firebase/app";
 
 import { db } from "../store/firestoreConfig";
-import { studentRequestForHelpXAPIStatement } from "../store/veracityLRS";
+import { studentRequestForHelpXAPIStatement } from "../lib/veracityLRS";
 
 import { mapState, mapGetters } from "vuex";
 

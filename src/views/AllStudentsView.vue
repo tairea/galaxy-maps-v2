@@ -88,7 +88,6 @@ export default {
       "getCourseById",
       "getCohortsInThisCourse",
       "getOrganisationsInThisCourse",
-      "getPeopleInThisCourse",
       "getCoursesByWhoMadeThem",
     ]),
   },

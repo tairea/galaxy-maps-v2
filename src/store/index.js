@@ -115,38 +115,6 @@ export default new Vuex.Store({
         };
       return topic.tasks;
     },
-    // getCohortsInThisCourse: (state) => (id) => {
-    //   //go to cohorts, and check if they in courses with this id
-    //   let cohortsInCourse = state.cohorts.filter((cohort) => {
-    //     if (cohort.courses) {
-    //       return cohort.courses.some((courseId) => courseId == id);
-    //     } else {
-    //       return false;
-    //     }
-    //   });
-    //   return cohortsInCourse;
-    // },
-    // getOrganisationsInThisCourse: (state) => (id) => {
-    //   let organisationsInCourse = state.organisations.filter((organisation) => {
-    //     if (organisation.courses) {
-    //       return organisation.courses.some((courseId) => courseId == id);
-    //     } else {
-    //       return false;
-    //     }
-    //   });
-    //   return organisationsInCourse;
-    // },
-    // TODO: people not binded so just gonna do a db call. See bindPeopleInCourse action (@ben thoughts?)
-    // getPeopleInThisCourse: (state) => (id) => {
-    //   let peopleInCourse = state.people.filter((person) => {
-    //     if (person.assignedCourses) {
-    //       return person.assignedCourses.some((courseId) => courseId == id);
-    //     } else {
-    //       return false;
-    //     }
-    //   });
-    //   return peopleInCourse;
-    // },
     getCoursesInThisCohort: (state) => (id) => {
       //go to cohorts, and check if they in courses with this id
       const cohort = state.cohorts.find((cohort) => cohort.id === id);
@@ -1074,8 +1042,7 @@ export default new Vuex.Store({
       await db
         .collection("cohorts")
         .doc(cohort.id)
-        .onSnapshot((doc) => {
-          console.log("setting cohort");
+        .onSnapshot(async (doc) => {
           const cohort = {
             id: doc.id,
             ...doc.data(),

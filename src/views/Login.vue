@@ -60,7 +60,7 @@
 <script>
 import firebase from "firebase";
 import { mapGetters } from "vuex";
-import { queryXAPIStatement } from "../store/veracityLRS";
+import { queryXAPIStatement } from "../lib/veracityLRS";
 
 export default {
   name: "Login",

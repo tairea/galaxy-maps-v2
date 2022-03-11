@@ -81,7 +81,7 @@ import { db } from "../store/firestoreConfig";
 import {
   studentWorkMarkedCompletedXAPIStatement,
   teacherReviewedStudentWorkXAPIStatement,
-} from "../store/veracityLRS";
+} from "../lib/veracityLRS";
 
 import { mapState, mapGetters } from "vuex";
 import { dbMixins } from '../mixins/DbMixins'

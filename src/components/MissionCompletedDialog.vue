@@ -234,7 +234,7 @@ import {
   submitWorkForReviewXAPIStatement,
   taskMarkedAsCompletedXAPIStatement,
   topicCompletedXAPIStatement,
-} from "../store/veracityLRS";
+} from "../lib/veracityLRS";
 
 import { dbMixins } from "../mixins/DbMixins";
 
