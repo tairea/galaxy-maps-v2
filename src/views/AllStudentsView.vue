@@ -86,7 +86,6 @@ export default {
     ]),
     ...mapGetters([
       "getCourseById",
-      "getCohortsInThisCourse",
       "getOrganisationsInThisCourse",
       "getCoursesByWhoMadeThem",
     ]),

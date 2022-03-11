@@ -841,15 +841,12 @@ async function sanitiseCourseDataFromLRS(res) {
         taskCompletedCount++;
 
       let [action, title] = statement.description.split(": ")
-      let [type, status] = action.split(" ")
+      let [status, type] = action.split(" ")
 
       const newStatement = {
         timeStamp: statement.timestamp,
         index, status, type, title, 
         context: statement.context,
-        // topic: topicTitle,
-        // taskTitle: taskTitle,
-        // description: statement.description,
       };
       // const contextSplit = statement.context.split(
       //   /Course: | > Topic: | > Task: /

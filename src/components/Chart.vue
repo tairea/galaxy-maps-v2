@@ -70,7 +70,7 @@ export default {
                   "
                 >
                   <td>MISSION:</td>
-                  <td>${dataPoint.raw.taskTitle}</td>
+                  <td>${dataPoint.raw.title}</td>
                 </tr>
                 <tr
                   class="dialog-context-description"
@@ -82,7 +82,7 @@ export default {
                   "
                 >
                   <td>System:</td>
-                  <td>${dataPoint.raw.topic}</td>
+                  <td>${dataPoint.raw.title}</td>
                 </tr>
                 <tr
                   class="dialog-context-description"
@@ -106,11 +106,11 @@ export default {
             // ===== Middle Row (Task Status) =====
             divMiddleRow.style.textAlign = "center";
             divMiddleRow.classList.add("text-overline");
-            divMiddleRow.innerHTML = dataPoint.raw.taskStatus.toUpperCase();
+            divMiddleRow.innerHTML = dataPoint.raw.status.toUpperCase();
             divMiddleRow.style.padding = "5px";
             divMiddleRow.style.fontSize = "0.9rem";
             divMiddleRow.style.fontWeight = "800";
-            switch (dataPoint.raw.taskStatus) {
+            switch (dataPoint.raw.status) {
               case "inreview":
                 divMiddleRow.style.color = this.dark
                   ? this.$vuetify.theme.themes.dark.cohortAccent

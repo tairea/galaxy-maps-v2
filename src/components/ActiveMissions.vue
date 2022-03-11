@@ -1,7 +1,7 @@
 <template>
-  <div v-if="activeMissions">
+  <div v-if="activeMissions.length">
     <div v-for="activeMission in activeMissions" :key="activeMission.id">
-      {{ acitveMission.title }}
+      {{ activeMission.title }}
     </div>
   </div>
 </template>
@@ -13,6 +13,11 @@ export default {
   name: "ActiveMissions",
   props: ["courseId"],
   components: {},
+  data() {
+    return {
+      activeMissions: "null",
+    };
+  },
   async mounted() {
     this.activeMissions = await this.$store.dispatch("getPersonsActiveTasks", {
       courseId: this.courseId,
@@ -22,11 +27,6 @@ export default {
   },
   computed: {
     ...mapGetters(["person"]),
-  },
-  data() {
-    return {
-      activeMissions: "null",
-    };
   },
 };
 </script>
