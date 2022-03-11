@@ -149,7 +149,7 @@ export default {
     this.santisedCourses = await getStudentsCoursesXAPIQuery(this.person);
   },
   computed: {
-    ...mapState(["studentCourseDataFromLRS", "studentsActiveTasks"]),
+    ...mapState(["studentsActiveTasks"]),
     ...mapGetters(["person", "getCourseById", "getTopicById"]),
   },
   methods: {
@@ -191,42 +191,6 @@ export default {
       }
       return hash;
     },
-    async getActiveTask(courseId) {
-      // ====== using Firestore data ======
-      const activeTasks = await this.$store.dispatch("getPersonsActiveTasks", {
-        courseId: courseId,
-        personId: this.person.id,
-      });
-
-      console.log("returing active tasks:", activeTasks);
-
-      return activeTasks;
-
-      // ====== using XAPI data ======
-      // const course = this.studentsActiveTasks.find(
-      //   (course) => course._id.course == courseId
-      // );
-
-      // const topicId = course.lastStatement.topic;
-      // const taskId = course.lastStatement.task;
-
-      // return taskId;
-
-      // const task = await this.$store.dispatch("getTaskByTaskId", {
-      //   courseId: courseId,
-      //   topicId: course.lastStatement.topic,
-      //   taskId: course.lastStatement.task,
-      // });
-      // const topic = await this.$store.dispatch("getTopicByTopicId", {
-      //   courseId: courseId,
-      //   topicId: course.lastStatement.topic,
-      // });
-
-      // console.log("task:", task);
-      // console.log("topic:", topic);
-
-      // return topic.label + " " + task.title;
-    },
     calcTaskCompletedPercentage(course) {
       let percentage =
         (course.taskCompletedCount / course.courseContext.taskTotal) * 100;
@@ -240,8 +204,8 @@ export default {
 .course-frame {
   width: 80%;
   border: 1px solid var(--v-galaxyAccent-base);
-  margin-bottom: 50px;
-  margin-left: auto;
+  margin-bottom: 30px;
+  margin-left: 5%;
   margin-right: auto;
   padding: 12px;
 
@@ -278,14 +242,7 @@ export default {
 .top-row {
   width: 100%;
   border-bottom: 1px solid var(--v-galaxyAccent-base);
-  height: 30%;
-}
-
-.bottom-row {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 70%;
+  // height: 30%;
 }
 
 .label {

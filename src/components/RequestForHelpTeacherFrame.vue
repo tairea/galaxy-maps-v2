@@ -2,14 +2,14 @@
   <div :id="isCohortView">
     <h2 class="help-label">Requests for help</h2>
 
-    <div v-if="teachersRequestsForHelp.length > 0">
+    <div v-if="unansweredRequests.length > 0">
       <RequestForHelpTeacherPanel
-        v-for="request in teachersRequestsForHelp"
+        v-for="request in unansweredRequests"
         :key="request.id"
         :request="request"
       />
     </div>
-    <div v-if="!requestsForHelpLoading && teachersRequestsForHelp.length == 0">
+    <div v-if="!loading && unansweredRequests.length == 0">
       <p
         class="overline pt-4 text-center"
         style="color: var(--v-galaxyAccent-base)"
@@ -20,8 +20,8 @@
     <!-- loading spinner -->
     <div class="d-flex justify-center align-center mt-4">
       <v-btn
-        v-if="requestsForHelpLoading"
-        :loading="requestsForHelpLoading"
+        v-if="loading"
+        :loading="loading"
         icon
         color="galaxyAccent"
       ></v-btn>
@@ -30,8 +30,8 @@
 </template>
 <script>
 import RequestForHelpTeacherPanel from "../components/RequestForHelpTeacherPanel";
-import { mapState } from "vuex";
-import { dbMixins } from "../mixins/DbMixins"
+import { mapState, mapGetters } from "vuex";
+import { dbMixins } from "../mixins/DbMixins";
 
 export default {
   name: "RequestForHelpTeacherFrame",
@@ -39,12 +39,11 @@ export default {
   components: {
     RequestForHelpTeacherPanel,
   },
+  props: ["courses"],
   data() {
     return {
-      submissionsLoading: false,
-      requestsForHelpLoading: false,
-      allSubmissions: [],
-      allRequestsForHelp: [],
+      loading: false,
+      unsubscribes: [],
     };
   },
   computed: {
@@ -54,36 +53,29 @@ export default {
         ? "cohort-help-panel"
         : "help-panel";
     },
+    unansweredRequests() {
+      return this.teachersRequestsForHelp.filter(
+        (request) => request.requestForHelpStatus == "unanswered"
+      );
+    },
   },
   async mounted() {
-    this.requestsForHelpLoading = true;
-    this.submissionsLoading = true;
-    // bind all courses (so we can filter the ones this teacher created)
-    // await this.$store.dispatch("bindCoursesByPersonId", this.user.data.id);
-
-    // bind all requests
-    this.bindRequestsForHelp();
-    // bind all submissions
-    this.bindSubmissions();
-
-    console.log(
-      "teachersSubmissionsToReview",
-      this.teachersSubmissionsToReview
-    );
-    console.log("teachersRequestsForHelp", this.teachersRequestsForHelp);
-
-    // bind all tasks *needs this to get the task names for request.taskId :(
+    this.loading = true;
+    for (const course of this.courses) {
+      const unsubscribe = await this.$store.dispatch(
+        "getRequestsForHelpByCourseId",
+        course.id
+      );
+      this.unsubscribes.push(unsubscribe);
+    }
+    this.loading = false;
   },
-  methods: {
-    async bindRequestsForHelp() {
-      this.MXbindRequestsForHelp()
-      this.requestsForHelpLoading = false;
-    },
-    async bindSubmissions() {
-      this.MXbindSubmissions()
-      this.submissionsLoading = false;
-    },
+  destroyed() {
+    for (const unsubscribe of this.unsubscribes) {
+      unsubscribe();
+    }
   },
+  methods: {},
 };
 </script>
 <style scoped lang="scss">
