@@ -16,6 +16,7 @@
           />
         </v-row>
       </div>
+
       <div v-if="people.length > 0">
         <p class="overline assignedToLabel ma-0">Individuals</p>
         <v-row class="my-4">
@@ -29,9 +30,7 @@
       >
         Nobody is assigned to this Galaxy
       </p>
-      <AssignCohortDialog
-        :assignCohorts="true"
-      />
+      <AssignCohortDialog :assignCohorts="true" />
     </div>
 
     <!-- ASSIGNED COURSES INFO -->
@@ -69,16 +68,16 @@ export default {
   props: ["assignCohorts", "assignCourses", "cohorts", "organisations", "people"],
   data () {
     return {
-      courses: []
-    }
+      courses: [],
+    };
   },
   beforeMount () {
     this.getCohortCourses()
   },
   watch: {
-    currentCohort () {
-      this.getCohortCourses()
-    }
+    currentCohort() {
+      this.getCohortCourses();
+    },
   },
   computed: {
     ...mapState(["person", "currentCohort"]),
@@ -93,7 +92,7 @@ export default {
         return getCourseById(courseId)
       }))
       if (courses.length) {
-        this.courses = courses
+        this.courses = courses;
       }
     },
   },

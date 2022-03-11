@@ -175,6 +175,7 @@ export default {
       return moment(ts.seconds * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
     },
     submitHelpResponse() {
+      console.log("updating request: ", this.request);
       this.loading = true;
       // Add response to request for help
       db.collection("courses")
@@ -208,9 +209,9 @@ export default {
           this.$store.commit("setSnackbar", {
             show: true,
             text: "Response submitted to Mission for students to see.",
-            color: "baseAccent"
-          })
-          this.MXbindRequestsForHelp()
+            color: "baseAccent",
+          });
+          // this.MXbindRequestsForHelp();
 
           // TODO: update requests. (to remove answered requests)
         })
@@ -219,11 +220,12 @@ export default {
           this.$store.commit("setSnackbar", {
             show: true,
             text: "Error: " + error,
-            color: "pink"
-          })
+            color: "pink",
+          });
         });
     },
     cancel() {
+      this.loading = false;
       this.dialog = false;
     },
   },
@@ -329,9 +331,6 @@ export default {
   -webkit-border-radius: 5px;
   border-radius: 5px;
   border: 2px solid var(--v-missionAccent-base);
-}
-.speech-bubble p {
-  // font-size: 1.25em;
 }
 
 .speech-bubble:before,

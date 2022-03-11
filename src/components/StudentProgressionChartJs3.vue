@@ -282,7 +282,7 @@ export default {
           courseTaskData.push(taskData);
         }
 
-        console.log("courseTaskData:", courseTaskData);
+        // console.log("courseTaskData:", courseTaskData);
 
         let studentCourseData = {
           type: "line",
@@ -321,26 +321,26 @@ export default {
           (taskPoint) => {
             switch (taskPoint.taskStatus) {
               case "inreview":
-                console.log(
-                  taskPoint.taskTitle + " taskPoint is: ",
-                  taskPoint.taskStatus
-                );
-                console.log(
-                  "returning colour:",
-                  this.hexToRgb(this.$vuetify.theme.themes.dark.cohortAccent)
-                );
+                // console.log(
+                //   taskPoint.taskTitle + " taskPoint is: ",
+                //   taskPoint.taskStatus
+                // );
+                // console.log(
+                //   "returning colour:",
+                //   this.hexToRgb(this.$vuetify.theme.themes.dark.cohortAccent)
+                // );
                 return this.hexToRgb(
                   this.$vuetify.theme.themes.dark.cohortAccent
                 );
               case "completed":
-                console.log(
-                  taskPoint.taskTitle + " taskPoint is: ",
-                  taskPoint.taskStatus
-                );
-                console.log(
-                  "returning colour:",
-                  this.hexToRgb(this.$vuetify.theme.themes.dark.baseAccent)
-                );
+                // console.log(
+                //   taskPoint.taskTitle + " taskPoint is: ",
+                //   taskPoint.taskStatus
+                // );
+                // console.log(
+                //   "returning colour:",
+                //   this.hexToRgb(this.$vuetify.theme.themes.dark.baseAccent)
+                // );
                 return this.hexToRgb(
                   this.$vuetify.theme.themes.dark.baseAccent
                 );
