@@ -8,7 +8,7 @@
     <!-- STUDENT PROGRESSION PANEL -->
     <div id="main-section">
       <div id="progression-panel">
-        <h2 class="progression-label">Student progression</h2>
+        <h2 class="progression-label">Cohort progression</h2>
         <div class="progression-charts">
           <!-- <StudentProgressionChartJs3 /> -->
         </div>

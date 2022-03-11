@@ -16,6 +16,7 @@
           />
         </v-row>
       </div>
+
       <div v-if="people.length > 0">
         <p class="overline assignedToLabel ma-0">Individuals</p>
         <v-row class="my-4">
@@ -29,9 +30,7 @@
       >
         Nobody is assigned to this Galaxy
       </p>
-      <AssignCohortDialog
-        :assignCohorts="true"
-      />
+      <AssignCohortDialog :assignCohorts="true" />
     </div>
 
     <!-- ASSIGNED COURSES INFO -->
@@ -53,7 +52,7 @@ import Course from "../components/Course";
 import Cohort from "../components/Cohort";
 import Organisation from "../components/Organisation";
 import Person from "../components/Person";
-import { dbMixins } from "../mixins/DbMixins"
+import { dbMixins } from "../mixins/DbMixins";
 
 export default {
   name: "AssignedInfo",
@@ -66,34 +65,36 @@ export default {
     AssignCohortDialog,
   },
   props: ["assignCohorts", "cohorts", "organisations", "people"],
-  data () {
+  data() {
     return {
-      courses: []
-    }
+      courses: [],
+    };
   },
-  mounted () {
-    this.getCohortCourses()
+  mounted() {
+    this.getCohortCourses();
   },
   watch: {
-    currentCohort () {
-      this.getCohortCourses()
-    }
+    currentCohort() {
+      this.getCohortCourses();
+    },
   },
   computed: {
     ...mapState(["person", "currentCohort"]),
     ...mapGetters(["getCoursesInThisCohort"]),
     assignCourses() {
       return this.person.accountType !== "student";
-    }
+    },
   },
   methods: {
-    async getCohortCourses () {
-      console.log('getting cohort courses')
-      let courses = await Promise.all(this.currentCohort?.courses.map(courseId => {
-        return this.MXgetCourseById(courseId)
-      }))
+    async getCohortCourses() {
+      console.log("getting cohort courses");
+      let courses = await Promise.all(
+        this.currentCohort?.courses.map((courseId) => {
+          return this.MXgetCourseById(courseId);
+        })
+      );
       if (courses.length) {
-        this.courses = courses
+        this.courses = courses;
       }
     },
   },
