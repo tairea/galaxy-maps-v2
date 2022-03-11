@@ -48,7 +48,7 @@
 import SolarSystem from "../components/SolarSystem";
 
 import { mapState, mapGetters } from "vuex";
-import { dbMixins } from "../mixins/DbMixins"
+import { dbMixins } from "../mixins/DbMixins";
 
 export default {
   name: "RequestsForHelpStudentCard",
@@ -57,12 +57,20 @@ export default {
   components: {
     SolarSystem,
   },
+  watch: {
+    request: {
+      handler: "getResponder",
+      deep: true,
+    },
+  },
   computed: {
     ...mapState(["currentCourseId", "currentTopicId", "currentTaskId"]),
   },
   async mounted() {
-    this.requester = await this.MXgetPersonByIdFromDB(this.request.personId)
-    this.responder = await this.MXgetPersonByIdFromDB(this.request.responderPersonId)
+    this.requester = await this.MXgetPersonByIdFromDB(this.request.personId);
+    this.responder = await this.MXgetPersonByIdFromDB(
+      this.request.responderPersonId
+    );
     console.log("requester person:", this.requester);
     console.log("responder person:", this.responder);
   },
@@ -72,7 +80,14 @@ export default {
       responder: null,
     };
   },
-  methods: {},
+  methods: {
+    async getResponder() {
+      // get responsers image when request is updated
+      this.responder = await this.MXgetPersonByIdFromDB(
+        this.request.responderPersonId
+      );
+    },
+  },
 };
 </script>
 

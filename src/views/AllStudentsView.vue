@@ -10,23 +10,23 @@
       <div id="progression-panel">
         <h2 class="progression-label">Student progression</h2>
         <div class="progression-charts">
-          <StudentProgressionChartJs3 />
+          <!-- <StudentProgressionChartJs3 /> -->
         </div>
         <!-- loading spinner -->
         <div class="d-flex justify-center align-center mt-4">
-          <v-btn
+          <!-- <v-btn
             v-if="progressLoading"
             :loading="progressLoading"
             icon
             color="missionAccent"
-          ></v-btn>
+          ></v-btn> -->
         </div>
       </div>
     </div>
 
     <!-- REQUESTS FOR HELP PANEL -->
     <div id="right-section">
-      <RequestForHelpTeacherFrame />
+      <RequestForHelpTeacherFrame :courses="personsCourses" />
     </div>
   </div>
 </template>
@@ -34,7 +34,7 @@
 <script>
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
-import { dbMixins } from "../mixins/DbMixins"
+import { dbMixins } from "../mixins/DbMixins";
 
 import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame";
 import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame";
@@ -53,23 +53,27 @@ export default {
     this.requestsForHelpLoading = true;
     this.submissionsLoading = true;
     this.progressLoading = true;
+
     // bind all courses (so we can filter the ones this teacher created)
+    // populates "personsCourses"
     await this.$store.dispatch("bindCoursesByPersonId", this.user.data.id);
 
+    console.log("this.personsCourses", this.personsCourses);
+
     // bind all submissions
-    this.bindSubmissions();
+    // this.bindSubmissions();
 
     // bind all student task progress
-    this.bindStudentTaskProgress();
+    // this.bindStudentTaskProgress();
 
     // bind all requests
-    this.bindRequestsForHelp();
+    // this.bindRequestsForHelp();
 
-    console.log(
-      "teachersSubmissionsToReview",
-      this.teachersSubmissionsToReview
-    );
-    console.log("teachersRequestsForHelp", this.teachersRequestsForHelp);
+    // console.log(
+    //   "teachersSubmissionsToReview",
+    //   this.teachersSubmissionsToReview
+    // );
+    // console.log("teachersRequestsForHelp", this.teachersRequestsForHelp);
 
     // bind all tasks *needs this to get the task names for request.taskId :(
   },
@@ -83,6 +87,7 @@ export default {
       "teachersSubmissionsToReview",
       "teachersRequestsForHelp",
       "allTasks",
+      "personsCourses",
     ]),
     ...mapGetters([
       "getCourseById",
@@ -103,22 +108,22 @@ export default {
   },
 
   methods: {
-    async bindRequestsForHelp() {
-      // binds teachersRequestsForHelp
-     this.MXbindRequestsForHelp()
-      this.requestsForHelpLoading = false;
-    },
-    async bindSubmissions() {
-      this.MXbindSubmissions()
-      this.submissionsLoading = false;
-    },
-    async bindStudentTaskProgress() {
-      await this.$store.dispatch(
-        "getEachStudentsProgressForTeacher",
-        this.user.data.id
-      );
-      this.progressLoading = false;
-    },
+    // async bindRequestsForHelp() {
+    //   // binds teachersRequestsForHelp
+    //   this.MXbindRequestsForHelp();
+    //   this.requestsForHelpLoading = false;
+    // },
+    // async bindSubmissions() {
+    //   this.MXbindSubmissions();
+    //   this.submissionsLoading = false;
+    // },
+    // async bindStudentTaskProgress() {
+    //   await this.$store.dispatch(
+    //     "getEachStudentsProgressForTeacher",
+    //     this.user.data.id
+    //   );
+    //   this.progressLoading = false;
+    // },
   },
 };
 </script>
