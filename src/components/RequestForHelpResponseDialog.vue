@@ -146,7 +146,7 @@ import moment from "moment";
 
 import { db } from "../store/firestoreConfig";
 import { teacherRespondedToRequestForHelpXAPIStatement } from "../store/veracityLRS";
-import { dbMixins } from "../mixins/DbMixins"; 
+import { dbMixins } from "../mixins/DbMixins";
 import { mapState, mapGetters } from "vuex";
 
 export default {
@@ -175,6 +175,7 @@ export default {
       return moment(ts.seconds * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
     },
     submitHelpResponse() {
+      console.log("updating request: ", this.request);
       this.loading = true;
       // Add response to request for help
       db.collection("courses")
@@ -208,9 +209,9 @@ export default {
           this.$store.commit("setSnackbar", {
             show: true,
             text: "Response submitted to Mission for students to see.",
-            color: "baseAccent"
-          })
-          this.MXbindRequestsForHelp()
+            color: "baseAccent",
+          });
+          // this.MXbindRequestsForHelp();
 
           // TODO: update requests. (to remove answered requests)
         })
@@ -219,11 +220,12 @@ export default {
           this.$store.commit("setSnackbar", {
             show: true,
             text: "Error: " + error,
-            color: "pink"
-          })
+            color: "pink",
+          });
         });
     },
     cancel() {
+      this.loading = false;
       this.dialog = false;
     },
   },

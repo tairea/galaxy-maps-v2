@@ -172,6 +172,11 @@ export default new Vuex.Store({
       });
       return peopleInCohort;
     },
+    getUnansweredRequestsForHelp: (state) => {
+      return state.teachersRequestsForHelp.filter(
+        (request) => request.requestForHelpStatus == "unanswered"
+      );
+    },
   },
   mutations: {
     ...vuexfireMutations,
@@ -481,11 +486,12 @@ export default new Vuex.Store({
           .collection("submissionsForReview")
           .where("taskSubmissionStatus", "==", "inreview")
           .orderBy("taskSubmittedForReviewTimestamp")
-          .get();
-
-        for (const doc of querySnapshot.docs) {
-          allWorkForReview.push(doc.data());
-        }
+          // real-time listener
+          .onSnapshot((querySnapshot) => {
+            for (const doc of querySnapshot.docs) {
+              allWorkForReview.push(doc.data());
+            }
+          });
       }
       state.teachersSubmissionsToReview = allWorkForReview;
     },
@@ -976,44 +982,55 @@ export default new Vuex.Store({
           .orderBy("requestSubmittedTimestamp")
       );
     }),
-    bindSpecificTeachersRequestsForHelp: firestoreAction(
-      ({ bindFirestoreRef }, personId) => {
-        // const myCourses = this.getters.getCoursesByWhoMadeThem(personId);
 
-        return bindFirestoreRef(
-          "teachersRequestsForHelp",
-          db
-            .collection("courses")
-            .where("mappedBy.personId", "==", personId)
-            .collection("requestsForHelp")
-            .where("requestsForHelpStatus", "==", "unanswered")
-          // .doc(payload.topicId)
-          // .collection("tasks")
-          // .doc(payload.taskId)
-          // .collection("requestsForHelp")
-          // .orderBy("taskCreatedTimestamp")
-        );
-      }
-    ),
-    async getRequestsForHelpByTeachersId({ state }, personId) {
-      const myCourses = this.getters.getCoursesByWhoMadeThem(personId);
+    async getRequestsForHelpByCourseId({ state }, courseId) {
+      console.log("getRequests called");
 
-      const allRequestsForHelp = [];
-      for (const course of myCourses) {
-        // get all work for review
-        const querySnapshot = await db
-          .collection("courses")
-          .doc(course.id)
-          .collection("requestsForHelp")
-          .where("requestForHelpStatus", "==", "unanswered")
-          // .orderBy("requestSubmittedTimestamp")
-          .get();
+      // get all work for review
+      const unsubscribe = db
+        .collection("courses")
+        .doc(courseId)
+        .collection("requestsForHelp")
+        .where("requestForHelpStatus", "==", "unanswered")
+        // .orderBy("requestSubmittedTimestamp")
+        .onSnapshot((querySnapshot) => {
+          const allRequestsForHelp = [...state.teachersRequestsForHelp];
 
-        for (const doc of querySnapshot.docs) {
-          allRequestsForHelp.push(doc.data());
-        }
-      }
-      state.teachersRequestsForHelp = allRequestsForHelp;
+          for (const change of querySnapshot.docChanges()) {
+            console.log("change.type", change.type);
+
+            if (change.type === "added") {
+              allRequestsForHelp.push({
+                id: change.doc.data().id,
+                ...change.doc.data(),
+              });
+            } else if (change.type === "modified") {
+              allRequestsForHelp.splice(
+                allRequestsForHelp.findIndex(
+                  (i) => i.id === change.doc.data().id
+                ),
+                1,
+                {
+                  id: change.doc.data().id,
+                  ...change.doc.data(),
+                }
+              );
+            } else if (change.type === "removed") {
+              allRequestsForHelp.splice(
+                allRequestsForHelp.findIndex(
+                  (i) => i.id === change.doc.data().id
+                ),
+                1
+              );
+            }
+          }
+          console.log("========= allRequestsForHelp", allRequestsForHelp);
+          state.teachersRequestsForHelp = allRequestsForHelp;
+        });
+
+      return unsubscribe;
+
+      // state.teachersRequestsForHelp = allRequestsForHelp;
     },
     async getCourseTotalTasksCount({ state }, courseId) {
       const topics = await db

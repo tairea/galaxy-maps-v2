@@ -36,7 +36,7 @@
           </v-tooltip>
 
           <!-- Avatar -->
-          <v-tooltip bottom color="subBackground">
+          <v-tooltip v-if="requesterPerson" bottom color="subBackground">
             <template v-slot:activator="{ on, attrs }">
               <div
                 class="submission-image d-flex justify-center align-center"
