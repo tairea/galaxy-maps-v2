@@ -475,25 +475,52 @@ export default new Vuex.Store({
 
       state.personsEdges = personsEdges;
     },
-    async getAllSubmittedWorkForTeacher({ state }) {
-      const myCourses = this.getters.getCoursesByWhoMadeThem(state.person.id);
-      const allWorkForReview = [];
-      for (const course of myCourses) {
-        // get all work for review
-        const querySnapshot = await db
-          .collection("courses")
-          .doc(course.id)
-          .collection("submissionsForReview")
-          .where("taskSubmissionStatus", "==", "inreview")
-          .orderBy("taskSubmittedForReviewTimestamp")
-          // real-time listener
-          .onSnapshot((querySnapshot) => {
-            for (const doc of querySnapshot.docs) {
-              allWorkForReview.push(doc.data());
+    async getAllSubmittedWorkByCourseId({ state }, courseId) {
+      // get all work for review
+      const unsubscribe = db
+        .collection("courses")
+        .doc(courseId)
+        .collection("submissionsForReview")
+        .where("taskSubmissionStatus", "==", "inreview")
+        .orderBy("taskSubmittedForReviewTimestamp")
+        // .orderBy("requestSubmittedTimestamp")
+        .onSnapshot((querySnapshot) => {
+          const allWorkForReview = [...state.teachersSubmissionsToReview];
+
+          for (const change of querySnapshot.docChanges()) {
+            console.log("change.type", change.type);
+
+            if (change.type === "added") {
+              allWorkForReview.push({
+                id: change.doc.data().id,
+                ...change.doc.data(),
+              });
+            } else if (change.type === "modified") {
+              allWorkForReview.splice(
+                allWorkForReview.findIndex(
+                  (i) => i.id === change.doc.data().id
+                ),
+                1,
+                {
+                  id: change.doc.data().id,
+                  ...change.doc.data(),
+                }
+              );
+            } else if (change.type === "removed") {
+              allWorkForReview.splice(
+                allWorkForReview.findIndex(
+                  (i) => i.id === change.doc.data().id
+                ),
+                1
+              );
             }
-          });
-      }
-      state.teachersSubmissionsToReview = allWorkForReview;
+          }
+          console.log("========= allWorkForReview", allWorkForReview);
+          state.teachersSubmissionsToReview = allWorkForReview;
+        });
+
+      return unsubscribe;
+      // state.teachersSubmissionsToReview = allWorkForReview;
     },
     //TODO: WIP
     async getEachStudentsProgressForTeacher({ state, commit }) {
@@ -984,7 +1011,7 @@ export default new Vuex.Store({
     }),
 
     async getRequestsForHelpByCourseId({ state }, courseId) {
-      console.log("getRequests called");
+      // console.log("getRequests called");
 
       // get all work for review
       const unsubscribe = db
@@ -1024,7 +1051,7 @@ export default new Vuex.Store({
               );
             }
           }
-          console.log("========= allRequestsForHelp", allRequestsForHelp);
+          // console.log("allRequestsForHelp", allRequestsForHelp);
           state.teachersRequestsForHelp = allRequestsForHelp;
         });
 

@@ -2,7 +2,7 @@
   <div id="container" class="bg">
     <!-- REVIEW WORK PANEL -->
     <div id="left-section">
-      <SubmissionTeacherFrame />
+      <SubmissionTeacherFrame :courses="personsCourses" />
     </div>
 
     <!-- STUDENT PROGRESSION PANEL -->
@@ -50,52 +50,13 @@ export default {
   },
   props: [],
   async mounted() {
-    this.requestsForHelpLoading = true;
-    this.submissionsLoading = true;
     this.progressLoading = true;
 
-    // bind all courses (so we can filter the ones this teacher created)
-    // populates "personsCourses"
+    // get courses created by this person (populates state.personsCourses)
     await this.$store.dispatch("bindCoursesByPersonId", this.user.data.id);
-
-    console.log("this.personsCourses", this.personsCourses);
-
-    // bind all submissions
-    // this.bindSubmissions();
-
-    // bind all student task progress
-    // this.bindStudentTaskProgress();
-
-    // bind all requests
-    // this.bindRequestsForHelp();
-
-    // console.log(
-    //   "teachersSubmissionsToReview",
-    //   this.teachersSubmissionsToReview
-    // );
-    // console.log("teachersRequestsForHelp", this.teachersRequestsForHelp);
-
-    // bind all tasks *needs this to get the task names for request.taskId :(
   },
   computed: {
-    ...mapState([
-      "user",
-      "currentCourseId",
-      "currentCourseNodes",
-      "person",
-      "courses",
-      "teachersSubmissionsToReview",
-      "teachersRequestsForHelp",
-      "allTasks",
-      "personsCourses",
-    ]),
-    ...mapGetters([
-      "getCourseById",
-      "getCohortsInThisCourse",
-      "getOrganisationsInThisCourse",
-      "getPeopleInThisCourse",
-      "getCoursesByWhoMadeThem",
-    ]),
+    ...mapState(["user", "person", "personsCourses"]),
   },
   data() {
     return {
@@ -108,15 +69,6 @@ export default {
   },
 
   methods: {
-    // async bindRequestsForHelp() {
-    //   // binds teachersRequestsForHelp
-    //   this.MXbindRequestsForHelp();
-    //   this.requestsForHelpLoading = false;
-    // },
-    // async bindSubmissions() {
-    //   this.MXbindSubmissions();
-    //   this.submissionsLoading = false;
-    // },
     // async bindStudentTaskProgress() {
     //   await this.$store.dispatch(
     //     "getEachStudentsProgressForTeacher",
