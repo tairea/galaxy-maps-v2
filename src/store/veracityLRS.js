@@ -1,4 +1,5 @@
 import store from "../store";
+import { db } from "./firestoreConfig";
 
 const auth = "Basic " + btoa(process.env.VUE_APP_VERACITY_LRS_SECRET);
 
@@ -591,6 +592,11 @@ export const studentOnlineXAPIStatement = (actor) => {
     },
     object: {
       id: "https://www.galaxymaps.io/isonline/" + actor.id + "/" + new Date(),
+      definition: {
+        description: {
+          "en-nz": "Logged in",
+        },
+      },
     },
     context: {
       contextActivities: {
@@ -628,6 +634,9 @@ export const studentOfflineXAPIStatement = (actor) => {
     },
     object: {
       id: "https://www.galaxymaps.io/isOffline/" + actor.id + "/" + new Date(),
+      description: {
+        "en-nz": "Logged off",
+      },
     },
     context: {
       contextActivities: {
@@ -689,7 +698,7 @@ export const advancedQueryXAPIStatement = (payloadObj) => {
 };
 
 export const getStudentsCoursesXAPIQuery = async (person) => {
-  console.log("querying students course records from LRS...");
+  // console.log("querying students course records from LRS...");
   const aggregationQuery = [
     {
       $match: {
@@ -732,6 +741,214 @@ export const getStudentsCoursesXAPIQuery = async (person) => {
     .then((res) => res.json())
     .catch((error) => console.error(error.message))
     .then((res) => {
+      // console.log("getStudentsCoursesXAPIQuery: res => ", res);
       store.commit("setStudentCourseDataFromLRS", res);
+    });
+};
+export const getActiveTaskXAPIQuery = async (person) => {
+  // console.log("querying LRS for students active tasks...");
+  const aggregationQuery = [
+    // only for this person
+    {
+      $match: {
+        "statement.actor.mbox": {
+          $parseRegex: { regex: person.email },
+        },
+      },
+    },
+    // sort by ascending
+    {
+      $sort: {
+        "statement.timestamp": 1,
+      },
+    },
+    // group by actor, course and task. pushing statements
+    {
+      $group: {
+        _id: {
+          actor: "$statement.actor.mbox",
+          course:
+            "$statement.object.definition.extensions.https://www.galaxymaps.io/course/id/",
+          task: "$statement.object.definition.extensions.https://www.galaxymaps.io/task/id/",
+        },
+        lastStatement: {
+          $last: {
+            verb: "$statement.verb.display.en-nz",
+            timestamp: "$statement.timestamp",
+            description: "$statement.object.definition.description.en-nz",
+            task: "$statement.object.definition.extensions.https://www.galaxymaps.io/task/id/",
+            topic:
+              "$statement.object.definition.extensions.https://www.galaxymaps.io/topic/id/",
+          },
+        },
+      },
+    },
+    //filter started
+    {
+      $match: {
+        "lastStatement.verb": "started",
+      },
+    },
+    // group just by course
+    {
+      $group: {
+        _id: {
+          actor: "$_id.actor",
+          course: "$_id.course",
+        },
+        lastStatement: {
+          $last: {
+            verb: "$lastStatement.verb",
+            timestamp: "$lastStatement.timestamp",
+            description: "$lastStatement.description",
+            task: "$lastStatement.task",
+            topic: "$lastStatement.topic",
+          },
+        },
+      },
+    },
+  ];
+
+  await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: auth,
+    },
+    body: JSON.stringify(aggregationQuery),
+  })
+    .then((res) => res.json())
+    .catch((error) => console.error(error.message))
+    .then((res) => {
+      // console.log("getActiveTaskXAPIQuery: res => ", res);
+      store.commit("setStudentsActiveTasks", res);
+    });
+};
+export const getActivityLogXAPIQuery = async (person) => {
+  // console.log("querying LRS for students active tasks...");
+  const aggregationQuery = [
+    // only for this person
+    {
+      $match: {
+        "statement.actor.mbox": {
+          $parseRegex: { regex: person.email },
+        },
+      },
+    },
+    // sort by ascending
+    {
+      $sort: {
+        "statement.timestamp": -1,
+      },
+    },
+    // group by actor, course and task. pushing statements
+    {
+      $group: {
+        _id: {
+          actor: "$statement.actor.mbox",
+        },
+        statements: {
+          $push: {
+            verb: "$statement.verb.display.en-nz",
+            timestamp: "$statement.timestamp",
+            description: "$statement.object.definition.description.en-nz",
+            task: "$statement.object.definition.extensions.https://www.galaxymaps.io/task/id/",
+            topic:
+              "$statement.object.definition.extensions.https://www.galaxymaps.io/topic/id/",
+            course:
+              "$statement.object.definition.extensions.https://www.galaxymaps.io/course/id/",
+          },
+        },
+      },
+    },
+  ];
+
+  await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: auth,
+    },
+    body: JSON.stringify(aggregationQuery),
+  })
+    .then((res) => res.json())
+    .catch((error) => console.error(error.message))
+    .then((res) => {
+      // console.log("getActivityLogXAPIQuery: res => ", res[0].statements);
+      store.commit("setStudentsActivityLog", res[0].statements);
+    });
+};
+
+export const getCohortsCourseDataXAPIQuery = async (payload) => {
+  if (!payload.studentsArr || !payload.coursesArr) return;
+
+  // convert studentIds to mailto:email string
+  const personIdsArrToEmailsArr = [];
+  for (const studentId of payload.studentsArr) {
+    const studentSnapshot = await db.collection("people").doc(studentId).get();
+    personIdsArrToEmailsArr.push("mailto:" + studentSnapshot.data().email);
+  }
+
+  // convert courseIds to courseId strings
+  const courseIdsAsStrings = [];
+  for (const courseId of payload.coursesArr) {
+    courseIdsAsStrings.push(String(courseId));
+  }
+
+  const aggregationQuery = [
+    // only for this person
+    {
+      $match: {
+        "statement.object.definition.extensions.https://www.galaxymaps.io/course/id/":
+          {
+            $in: courseIdsAsStrings,
+          },
+        // "statement.actor.mbox": { $in: personIdsArrToEmailsArr },
+      },
+    },
+    // sort by ascending
+    // {
+    //   $sort: {
+    //     "statement.timestamp": 1,
+    //   },
+    // },
+    // group by actor, course and task. pushing statements
+    {
+      $group: {
+        _id: {
+          actor: "$statement.actor.mbox",
+          course:
+            "$statement.object.definition.extensions.https://www.galaxymaps.io/course/id/",
+        },
+        statement: {
+          $push: {
+            verb: "$statement.verb.display.en-nz",
+            timestamp: "$statement.timestamp",
+            description: "$statement.object.definition.description.en-nz",
+            task: "$statement.object.definition.extensions.https://www.galaxymaps.io/task/id/",
+            topic:
+              "$statement.object.definition.extensions.https://www.galaxymaps.io/topic/id/",
+          },
+        },
+      },
+    },
+  ];
+
+  await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: auth,
+    },
+    body: JSON.stringify(aggregationQuery),
+  })
+    .then((res) => res.json())
+    .catch((error) => console.error(error.message))
+    .then((res) => {
+      console.log(
+        "getCohortsCourseDataXAPIQuery: res => for cohort " + payload.cohortName
+      );
+      console.log(res);
+      // return res;
     });
 };

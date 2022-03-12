@@ -30,16 +30,23 @@
         </v-col>
         <v-col cols="4" class="pa-0">
           <div class="top-row">
-            <p class="label">ACTIVE MISSION:</p>
+            <p class="label">RESUME MISSION:</p>
+            <div class="d-flex justify-center align-center">
+              <ActiveMissions :courseId="course.courseContext.id" />
+            </div>
           </div>
           <div class="bottom-row">
-            <v-progress-circular
-              :value="value + '%'"
-              color="baseAccent"
-              size="100"
-              width="10"
-              >{{ value }}
-            </v-progress-circular>
+            <p class="label">GALAXY PROGRESS:</p>
+            <div class="d-flex justify-center align-center pb-3">
+              <v-progress-circular
+                :value="calcTaskCompletedPercentage(course)"
+                color="baseAccent"
+                size="100"
+                width="10"
+                :rotate="-90"
+                >{{ calcTaskCompletedPercentage(course) + "%" }}
+              </v-progress-circular>
+            </div>
           </div>
         </v-col>
       </v-row>
@@ -50,12 +57,13 @@
 <script>
 import { mapState, mapGetters } from "vuex";
 import Chart from "@/components/Chart.vue";
+import ActiveMissions from "@/components/ActiveMissions.vue";
 import { DateTime } from "luxon";
 import { dbMixins } from "../mixins/DbMixins";
 
 import {
-  queryXAPIStatement,
   getStudentsCoursesXAPIQuery,
+  getActiveTaskXAPIQuery,
 } from "../store/veracityLRS";
 
 export default {
@@ -63,15 +71,18 @@ export default {
   props: [],
   components: {
     Chart,
+    ActiveMissions,
   },
   mixins: [dbMixins],
   async mounted() {
     await getStudentsCoursesXAPIQuery(this.person);
     //get courses from LRS
     this.sanitiseCourseDataFromLRS();
+
+    await getActiveTaskXAPIQuery(this.person);
   },
   computed: {
-    ...mapState(["studentCourseDataFromLRS"]),
+    ...mapState(["studentCourseDataFromLRS", "studentsActiveTasks"]),
     ...mapGetters(["person", "getCourseById", "getTopicById"]),
   },
   data() {
@@ -151,9 +162,11 @@ export default {
   },
   methods: {
     async sanitiseCourseDataFromLRS() {
-      console.log("data from LRS:", this.studentCourseDataFromLRS);
+      // console.log("data from LRS:", this.studentCourseDataFromLRS);
 
       const santisedCourses = [];
+
+      let taskCompletedCount = 0;
 
       for (const course of this.studentCourseDataFromLRS) {
         // get course info
@@ -167,6 +180,9 @@ export default {
           const topicTitle = contextSplit[2];
           const taskTitle = contextSplit[3];
 
+          if (statement.description.includes("Completed Task:"))
+            taskCompletedCount++;
+
           const newStatement = {
             x: statement.timestamp,
             y: index,
@@ -174,18 +190,22 @@ export default {
             context: statement.context,
             topic: topicTitle,
             taskTitle: taskTitle,
+            description: statement.description,
           };
           return newStatement;
         });
 
+        // count number of "Completed Task:..." in description
+
         const courseObj = {
           courseContext,
           courseData,
+          taskCompletedCount,
         };
 
         this.santisedCourses.push(courseObj);
       }
-      console.log("santisedCourses", this.santisedCourses);
+      // console.log("santisedCourses", this.santisedCourses);
     },
     async courseIRIToCourseId(course) {
       // get course id from iri
@@ -197,7 +217,8 @@ export default {
     },
 
     formatStudentsChartData(course) {
-      console.log("course", course);
+      // console.log("course", course);
+
       let datasets = [];
 
       // get a colour based on course name
@@ -236,6 +257,11 @@ export default {
       }
       return hash;
     },
+    calcTaskCompletedPercentage(course) {
+      let percentage =
+        (course.taskCompletedCount / course.courseContext.taskTotal) * 100;
+      return Math.round(percentage);
+    },
   },
 };
 </script>
@@ -244,8 +270,8 @@ export default {
 .course-frame {
   width: 80%;
   border: 1px solid var(--v-galaxyAccent-base);
-  margin-bottom: 50px;
-  margin-left: auto;
+  margin-bottom: 30px;
+  margin-left: 5%;
   margin-right: auto;
   padding: 12px;
 
@@ -282,14 +308,10 @@ export default {
 .top-row {
   width: 100%;
   border-bottom: 1px solid var(--v-galaxyAccent-base);
-  height: 30%;
+  // height: 30%;
 }
 
 .bottom-row {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 70%;
 }
 
 .label {

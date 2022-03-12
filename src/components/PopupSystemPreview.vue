@@ -83,11 +83,11 @@
       </div>
     </div>
     <!-- Preview: Topic Label -->
-    <div class="ss-details">
+    <div class="ss-details overline">
       {{ currentTopic.label }}
     </div>
     <!-- Preview: Table of Topic's Tasks -->
-    <div class="ss-missions">
+    <div v-if="!checkIfTopicLocked()" class="ss-missions">
       <div v-if="tasks.length == 0">
         <h5 class="mission-text" style="text-align: center">NO MISSIONS SET</h5>
       </div>
@@ -99,15 +99,15 @@
               <h5 class="mission-text text-left">MISSION {{ index + 1 }}:</h5>
             </td>
             <!-- Table: Title -->
-            <td style="min-width: 150px; max-width: 200px">
-              <h5 class="mission-text">{{ task.title }}</h5>
+            <td style="width: 200px">
+              <h5 class="mission-text text-center">{{ task.title }}</h5>
             </td>
             <!-- Table: Duration -->
-            <td style="width: 90px">
+            <!-- <td style="width: 90px">
               <h5 class="mission-text">
                 {{ task.duration ? task.duration + " MINS" : "" }}
               </h5>
-            </td>
+            </td> -->
             <!-- Table: Status -->
             <td v-if="person.accountType == 'student'" style="width: 100px">
               <h5
@@ -278,6 +278,9 @@ export default {
     border-top: 1px solid var(--v-missionAccent-base);
     padding: 20px;
     text-align: center;
+    // color: var(--v-missionAccent-base);
+    // font-size: 0.9rem;
+    // text-transform: uppercase;
   }
 
   .ss-missions {

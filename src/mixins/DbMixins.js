@@ -136,16 +136,18 @@ export const dbMixins = {
       });
     },
     async MXgetPersonByIdFromDB(personId) {
-      let person = await db
-        .collection("people")
-        .doc(personId)
-        .get()
-        .catch((err) => console.err(err));
-      person = {
-        id: person.id,
-        ...person.data(),
-      };
-      return person;
+      if (personId) {
+        let person = await db
+          .collection("people")
+          .doc(personId)
+          .get()
+          .catch((err) => console.err(err));
+        person = {
+          id: person.id,
+          ...person.data(),
+        };
+        return person;
+      }
     },
     async MXgetCourseById(id) {
       const course = await db
@@ -170,17 +172,17 @@ export const dbMixins = {
           console.error("Error writing document: ", error);
         });
     },
-    async MXbindRequestsForHelp() {
-      await this.$store.dispatch(
-        "getRequestsForHelpByTeachersId",
-        this.user.data.id
-      );
-    },
-    async MXbindSubmissions() {
-      await this.$store.dispatch(
-        "getAllSubmittedWorkForTeacher",
-        this.user.data.id
-      );
-    },
+    // async MXbindRequestsForHelp() {
+    //   await this.$store.dispatch(
+    //     "getRequestsForHelpByTeachersId",
+    //     this.user.data.id
+    //   );
+    // },
+    // async MXbindSubmissions() {
+    //   await this.$store.dispatch(
+    //     "getAllSubmittedWorkForTeacher",
+    //     this.user.data.id
+    //   );
+    // },
   },
 };

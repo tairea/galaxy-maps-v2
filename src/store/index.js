@@ -55,6 +55,8 @@ const getDefaultState = () => {
     studentCourseDataFromLRS: [],
     snackbar: {},
     userStatus: {},
+    studentsActiveTasks: [],
+    studentsActivityLog: [],
   };
 };
 
@@ -170,6 +172,11 @@ export default new Vuex.Store({
       });
       return peopleInCohort;
     },
+    getUnansweredRequestsForHelp: (state) => {
+      return state.teachersRequestsForHelp.filter(
+        (request) => request.requestForHelpStatus == "unanswered"
+      );
+    },
   },
   mutations: {
     ...vuexfireMutations,
@@ -240,6 +247,12 @@ export default new Vuex.Store({
     },
     setStudentCourseDataFromLRS(state, courseData) {
       state.studentCourseDataFromLRS = courseData;
+    },
+    setStudentsActiveTasks(state, activeTasksArr) {
+      state.studentsActiveTasks = activeTasksArr;
+    },
+    setStudentsActivityLog(state, activityStatements) {
+      state.studentsActivityLog = activityStatements;
     },
     setSnackbar(state, snackbar) {
       state.snackbar = snackbar;
@@ -462,24 +475,52 @@ export default new Vuex.Store({
 
       state.personsEdges = personsEdges;
     },
-    async getAllSubmittedWorkForTeacher({ state }) {
-      const myCourses = this.getters.getCoursesByWhoMadeThem(state.person.id);
-      const allWorkForReview = [];
-      for (const course of myCourses) {
-        // get all work for review
-        const querySnapshot = await db
-          .collection("courses")
-          .doc(course.id)
-          .collection("submissionsForReview")
-          .where("taskSubmissionStatus", "==", "inreview")
-          .orderBy("taskSubmittedForReviewTimestamp")
-          .get();
+    async getAllSubmittedWorkByCourseId({ state }, courseId) {
+      // get all work for review
+      const unsubscribe = db
+        .collection("courses")
+        .doc(courseId)
+        .collection("submissionsForReview")
+        .where("taskSubmissionStatus", "==", "inreview")
+        .orderBy("taskSubmittedForReviewTimestamp")
+        // .orderBy("requestSubmittedTimestamp")
+        .onSnapshot((querySnapshot) => {
+          const allWorkForReview = [...state.teachersSubmissionsToReview];
 
-        for (const doc of querySnapshot.docs) {
-          allWorkForReview.push(doc.data());
-        }
-      }
-      state.teachersSubmissionsToReview = allWorkForReview;
+          for (const change of querySnapshot.docChanges()) {
+            console.log("change.type", change.type);
+
+            if (change.type === "added") {
+              allWorkForReview.push({
+                id: change.doc.data().id,
+                ...change.doc.data(),
+              });
+            } else if (change.type === "modified") {
+              allWorkForReview.splice(
+                allWorkForReview.findIndex(
+                  (i) => i.id === change.doc.data().id
+                ),
+                1,
+                {
+                  id: change.doc.data().id,
+                  ...change.doc.data(),
+                }
+              );
+            } else if (change.type === "removed") {
+              allWorkForReview.splice(
+                allWorkForReview.findIndex(
+                  (i) => i.id === change.doc.data().id
+                ),
+                1
+              );
+            }
+          }
+          console.log("========= allWorkForReview", allWorkForReview);
+          state.teachersSubmissionsToReview = allWorkForReview;
+        });
+
+      return unsubscribe;
+      // state.teachersSubmissionsToReview = allWorkForReview;
     },
     //TODO: WIP
     async getEachStudentsProgressForTeacher({ state, commit }) {
@@ -838,16 +879,41 @@ export default new Vuex.Store({
           dispatch("getOrganisationsByCohorts", cohorts);
         });
     },
+    async getPersonsActiveTasks({ commit, dispatch }, payload) {
+      const personsCourseTopics = await db
+        .collection("people")
+        .doc(payload.personId)
+        .collection(payload.courseId)
+        .get();
+
+      const activeTasksArr = [];
+      for (const topic of personsCourseTopics.docs) {
+        const activeTasks = await db
+          .collection("people")
+          .doc(payload.personId)
+          .collection(payload.courseId)
+          .doc(topic.id)
+          .collection("tasks")
+          .where("taskStatus", "==", "active")
+          .get();
+
+        for (const activeTask of activeTasks.docs) {
+          activeTasksArr.push(activeTask.data());
+        }
+      }
+
+      return activeTasksArr;
+    },
 
     // ===== Firestore - get Course related stuff
     async getAssignedCourses({ state }, assignedCoursesArray) {
-      const studentsAssignedCourses = [];
+      let studentsAssignedCourses = [];
 
       assignedCoursesArray.forEach(async (assignedCourse) => {
         const doc = await db.collection("courses").doc(assignedCourse).get();
         studentsAssignedCourses.push(doc.data());
       });
-
+      console.log("studentsAssignedCourses", studentsAssignedCourses);
       state.courses = studentsAssignedCourses; // source of truth
     },
     bindTasksByTopicId: firestoreAction(({ bindFirestoreRef }, payload) => {
@@ -863,31 +929,69 @@ export default new Vuex.Store({
       );
     }),
     async getTaskByTaskId({ state }, payload) {
-      console.log("payload from getTaskByTaskId", payload);
-      await db
+      // console.log("payload from getTaskByTaskId", payload);
+      const task = await db
         .collection("courses")
         .doc(payload.courseId)
         .collection("topics")
         .doc(payload.topicId)
         .collection("tasks")
         .doc(payload.taskId)
-        .get()
-        .then((doc) => {
-          return doc.data();
-        });
+        .get();
+
+      return task.data();
     },
     async getTopicByTopicId({ state }, payload) {
       // console.log("payload from getTopicByTopicId", payload);
-      await db
+      const topic = await db
         .collection("courses")
         .doc(payload.courseId)
         .collection("topics")
         .doc(payload.topicId)
-        .get()
-        .then((doc) => {
-          // console.log("doc.data()", doc.data());
-          return doc.data();
-        });
+        .get();
+
+      return topic.data();
+    },
+    async getAllCourseTopicsAndTasks({ state }, coursesArr) {
+      const allCourseTopicsAndTasks = [];
+      // loop courses
+      for (const course of coursesArr) {
+        const topics = await db
+          .collection("courses")
+          .doc(course.id)
+          .collection("topics")
+          .get();
+        const topicsData = [];
+        for (const topic of topics.docs) {
+          // save topic
+          topicsData[topic.id] = topic.data();
+
+          // get task data for each topic
+          const tasks = await db
+            .collection("courses")
+            .doc(course.id)
+            .collection("topics")
+            .doc(topic.id)
+            .collection("tasks")
+            .get();
+          const tasksData = [];
+          for (const task of tasks.docs) {
+            // save task
+            tasksData[task.id] = task.data();
+          }
+
+          // add all tasks to a topic
+          topicsData[topic.id].tasks = tasksData;
+        }
+
+        const courseObj = {
+          ...course,
+          topics: topicsData,
+        };
+
+        allCourseTopicsAndTasks.push(courseObj);
+      }
+      console.log(allCourseTopicsAndTasks);
     },
     // ===== Firestore - get student data for teachers
     // bind courses requests for help
@@ -905,44 +1009,55 @@ export default new Vuex.Store({
           .orderBy("requestSubmittedTimestamp")
       );
     }),
-    bindSpecificTeachersRequestsForHelp: firestoreAction(
-      ({ bindFirestoreRef }, personId) => {
-        // const myCourses = this.getters.getCoursesByWhoMadeThem(personId);
 
-        return bindFirestoreRef(
-          "teachersRequestsForHelp",
-          db
-            .collection("courses")
-            .where("mappedBy.personId", "==", personId)
-            .collection("requestsForHelp")
-            .where("requestsForHelpStatus", "==", "unanswered")
-          // .doc(payload.topicId)
-          // .collection("tasks")
-          // .doc(payload.taskId)
-          // .collection("requestsForHelp")
-          // .orderBy("taskCreatedTimestamp")
-        );
-      }
-    ),
-    async getRequestsForHelpByTeachersId({ state }, personId) {
-      const myCourses = this.getters.getCoursesByWhoMadeThem(personId);
+    async getRequestsForHelpByCourseId({ state }, courseId) {
+      // console.log("getRequests called");
 
-      const allRequestsForHelp = [];
-      for (const course of myCourses) {
-        // get all work for review
-        const querySnapshot = await db
-          .collection("courses")
-          .doc(course.id)
-          .collection("requestsForHelp")
-          .where("requestForHelpStatus", "==", "unanswered")
-          // .orderBy("requestSubmittedTimestamp")
-          .get();
+      // get all work for review
+      const unsubscribe = db
+        .collection("courses")
+        .doc(courseId)
+        .collection("requestsForHelp")
+        .where("requestForHelpStatus", "==", "unanswered")
+        // .orderBy("requestSubmittedTimestamp")
+        .onSnapshot((querySnapshot) => {
+          const allRequestsForHelp = [...state.teachersRequestsForHelp];
 
-        for (const doc of querySnapshot.docs) {
-          allRequestsForHelp.push(doc.data());
-        }
-      }
-      state.teachersRequestsForHelp = allRequestsForHelp;
+          for (const change of querySnapshot.docChanges()) {
+            console.log("change.type", change.type);
+
+            if (change.type === "added") {
+              allRequestsForHelp.push({
+                id: change.doc.data().id,
+                ...change.doc.data(),
+              });
+            } else if (change.type === "modified") {
+              allRequestsForHelp.splice(
+                allRequestsForHelp.findIndex(
+                  (i) => i.id === change.doc.data().id
+                ),
+                1,
+                {
+                  id: change.doc.data().id,
+                  ...change.doc.data(),
+                }
+              );
+            } else if (change.type === "removed") {
+              allRequestsForHelp.splice(
+                allRequestsForHelp.findIndex(
+                  (i) => i.id === change.doc.data().id
+                ),
+                1
+              );
+            }
+          }
+          // console.log("allRequestsForHelp", allRequestsForHelp);
+          state.teachersRequestsForHelp = allRequestsForHelp;
+        });
+
+      return unsubscribe;
+
+      // state.teachersRequestsForHelp = allRequestsForHelp;
     },
     async getCourseTotalTasksCount({ state }, courseId) {
       const topics = await db

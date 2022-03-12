@@ -4,15 +4,17 @@
     :cols="cols"
     @click="routeToCourse(course)"
   >
-    <!-- <v-img
+    <v-img
       v-if="course.image"
       :src="course.image.url"
       max-width="60px"
       max-height="60px"
       class="course-image"
-    ></v-img> -->
-    <div v-if="course.title" class="imagePlaceholder">{{ first3Letters(course.title) }}</div>
-    <h3 class="overline">{{ course.title }}</h3>
+    ></v-img>
+    <div v-else-if="course.title" class="imagePlaceholder">
+      {{ first3Letters(course.title) }}
+    </div>
+    <h3 class="overline text-center">{{ course.title }}</h3>
   </v-col>
 </template>
 
@@ -42,7 +44,7 @@ export default {
       });
     },
     camelize(str) {
-      return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
+      return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {
         if (+match === 0) return ""; // or if (/\s+/.test(match)) for white spaces
         return index === 0 ? match.toLowerCase() : match.toUpperCase();
       });

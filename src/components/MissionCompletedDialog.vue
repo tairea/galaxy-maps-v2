@@ -322,7 +322,7 @@ export default {
 
           this.$store.commit("setSnackbar", {
             show: true,
-            text: "Submission submitted. You will be notified when your instructor has reviewd your work.",
+            text: "Link submitted. You will be notified when your instructor has reviewd your work.",
             color: "baseAccent",
           });
         })
