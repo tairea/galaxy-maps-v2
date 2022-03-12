@@ -246,6 +246,10 @@ export default {
     } else {
       this.$vuetify.theme.themes.dark.primary = "#000";
     }
+    if (!this.editing) {
+      this.currentNode.label = ""
+      console.log('not editing: ', this.currentNode)
+    }
   },
   data() {
     return {
@@ -299,6 +303,7 @@ export default {
     // },
 
     close() {
+      console.log('close')
       this.$emit("closeDialog");
       // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
     },
@@ -448,20 +453,7 @@ export default {
         .catch((error) => {
           console.error("Error deleting edge: ", error);
         });
-    },
-    deleteFromMap() {
-      if (this.currentNode.label == "new") {
-        console.log("emiting to remove unsaved");
-        this.$emit("removeUnsavedNode");
-        this.currentNode.label = {};
-      } else if (this.type == "node") {
-        this.deleteNode();
-      } else if (this.type == "edge") {
-        this.deleteEdge();
-      }
-      // this.resetEditing();
-      // this.resetNewData();
-    },
+    }
   },
 };
 </script>
@@ -558,9 +550,6 @@ export default {
       flex-direction: column;
       justify-content: space-between;
       align-items: center;
-    }
-
-    .close-button {
     }
   }
   .ss-details {

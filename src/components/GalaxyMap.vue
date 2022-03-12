@@ -3,11 +3,7 @@
     <network
       ref="network"
       class="full-height"
-      :nodes="
-        person.accountType == 'student'
-          ? currentCourseNodesWithStatus
-          : currentCourseNodes
-      "
+      :nodes="nodesToDisplay"
       :edges="
         person.accountType == 'student'
           ? currentCourseEdgesWithStatusStyles
@@ -57,7 +53,7 @@ export default {
   },
   data: () => ({
     active: false,
-    addingMode: false,
+    addingNode: false,
     addingEdge: false,
     network: {
       options: {
@@ -131,6 +127,10 @@ export default {
             shape: "dot",
             color: "#E269CF",
           },
+          inactive: {
+            shape: "dot",
+            color: "#696969",
+          },
         },
         interaction: {
           hover: true,
@@ -187,6 +187,25 @@ export default {
       "currentCourseEdges",
       "personsTopics",
     ]),
+    nodesToDisplay () {
+      if (this.addingNode || this.addingEdge) {
+        return this.inActiveNodes
+      } else if (this.person.accountType === 'student') {
+        return this.currentCourseNodesWithStatus
+      } else return this.currentCourseNodes
+    },
+    inActiveNodes() {
+      let inActiveNodes = []
+      for (const node of this.currentCourseNodes) {
+        inActiveNodes.push({
+          ...node,
+          // color: this.stringToColour(matchingNode.label),  // Attempt to match node color to System color
+          group: "inactive",
+        });
+      }
+      // return nodes with status to network map
+      return inActiveNodes;
+    },
     currentCourseNodesWithStatus() {
       let nodesWithStatus = [];
       // loop each node
@@ -233,7 +252,11 @@ export default {
   },
   methods: {
     disableEditMode() {
+      console.log('disable edit mode')
       this.$refs.network.disableEditMode();
+      this.addingNode = false,
+      this.addingEdge = false
+      this.active = false
     },
     getDomCoords(node) {
       let domCoords = this.$refs.network.canvasToDom({ x: node.x, y: node.y });
@@ -246,6 +269,7 @@ export default {
       this.addNodeMode();
     },
     addNodeMode() {
+      console.log('add node mode activated')
       this.active = true;
       this.addingNode = true;
       // this.$emit("toggleAddNodeButton")
@@ -352,6 +376,7 @@ export default {
       }
     },
     selectNode(data) {
+      if (this.addingNode || this.addingEdge) return
       this.active = true;
       if (data.nodes.length == 1) {
         // is type node
@@ -386,12 +411,9 @@ export default {
       this.$emit("deselected");
     },
     removeUnsavedNode() {
+      console.log('removeUnsavedNode')
+      this.active = false
       this.$refs.network.deleteSelected();
-      this.$emit("deselected");
-    },
-    disableEditMode() {
-      this.$refs.network.disableEditMode();
-      // this.$emit("toggleAddNodeButton")
     },
     animationFinished(data) {
       // show popup
@@ -401,9 +423,8 @@ export default {
       this.$emit("centerFocus", focusedNode);
     },
     hoverNode(data) {
-      if (this.addingEdge == true) {
-        return;
-      }
+      console.log('hovered node')
+      if (this.addingEdge == true || this.addingNode) return;
       this.stopNodeAnimation();
       const nodeId = data.node;
       const hoveredNode = this.$refs.network.getNode(nodeId);
