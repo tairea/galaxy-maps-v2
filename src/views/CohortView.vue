@@ -2,7 +2,7 @@
   <div id="container" class="bg">
     <div id="left-section">
       <CohortInfo />
-      <AssignedInfo assignCourses="true"/>
+      <AssignedInfo assignCourses="true" />
       <BackButton :toPath="'/base/cohorts'" />
     </div>
 
@@ -18,8 +18,8 @@
         <h2 class="people-label">ADD STUDENTS</h2>
         <ImportCsv />
       </div> -->
-      <RequestForHelpTeacherFrame />
-      <SubmissionTeacherFrame />
+      <!-- <RequestForHelpTeacherFrame />
+      <SubmissionTeacherFrame /> -->
     </div>
   </div>
 </template>
@@ -86,7 +86,6 @@ export default {
   overflow-y: scroll;
   padding-bottom: 50px;
   padding-top: 50px;
-
 }
 
 #main-section {
@@ -97,7 +96,6 @@ export default {
   align-items: center;
   flex-direction: column;
   padding-top: 50px;
-
 
   .people-frame {
     position: relative;
@@ -128,7 +126,6 @@ export default {
   width: 30%;
   height: 100%;
   padding-top: 50px;
-
 
   .people-right-frame {
     position: relative;

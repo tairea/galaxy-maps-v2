@@ -130,10 +130,7 @@
 
                   <!-- AUTHOR IMAGE UPLOAD -->
                   <!-- <p class="dialog-description">Image of content creator:</p> -->
-                  <v-progress-linear
-                    color="missionAccent"
-                    :value="percentageAuthor"
-                  ></v-progress-linear>
+
                   <v-file-input
                     class="input-field"
                     outlined
@@ -146,6 +143,10 @@
                     @change="storeAuthorImage()"
                     prepend-icon=""
                   ></v-file-input>
+                  <v-progress-linear
+                    color="missionAccent"
+                    :value="percentageAuthor"
+                  ></v-progress-linear>
 
                   <!-- SOURCE OF ORIGINAL CONTENT -->
                   <!-- <p class="dialog-description">

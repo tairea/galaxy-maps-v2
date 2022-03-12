@@ -33,7 +33,20 @@
       </div>
     </div>
     <div>
-      <div style="padding: 100px"></div>
+      <div v-if="cohortsCoursesData" style="padding: 20px">
+        <ProgressionChart
+          v-for="courseData in cohortsCoursesData"
+          :key="courseData.id"
+          :courseData="courseData"
+        />
+      </div>
+      <div
+        v-else
+        class="d-flex justify-center align-center"
+        style="padding: 50px 0px"
+      >
+        <p class="label" style="font-weight: 800">NO COURSE DATA</p>
+      </div>
     </div>
   </div>
 </template>
@@ -41,6 +54,7 @@
 <script>
 import { mapActions } from "vuex";
 import Avatar from "../components/Avatar";
+import ProgressionChart from "../components/ProgressionChart";
 import { getCohortsCourseDataXAPIQuery } from "../lib/veracityLRS";
 
 export default {
@@ -48,6 +62,7 @@ export default {
   props: ["cohort", "cols", "tooltip", "studentView"],
   components: {
     Avatar,
+    ProgressionChart,
   },
   data() {
     return {
@@ -64,8 +79,8 @@ export default {
     // .then(() => {
     //   console.log("get cohort data from LRS done");
     // });
-    // this.cohortsCoursesData = getCourseData;
-    // console.log("this.cohortsCoursesData", this.cohortsCoursesData);
+    this.cohortsCoursesData = getCourseData;
+    console.log("this.cohortsCoursesData", this.cohortsCoursesData);
   },
   methods: {
     ...mapActions(["setCurrentCohort"]),
@@ -98,8 +113,9 @@ export default {
 <style lang="scss" scoped>
 .cohort-panel {
   border: 1px solid var(--v-missionAccent-base);
-  width: 100%;
-  margin: 20px;
+  width: 90%;
+  margin: auto;
+  margin-bottom: 50px;
 
   .cohort-image {
     width: 100px;

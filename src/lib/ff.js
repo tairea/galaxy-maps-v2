@@ -13,4 +13,14 @@ export const getCourseById = async (id) => {
       };
     });
   return course;
-}
+};
+export const getStudentByEmail = async (email) => {
+  const people = await db
+    .collection("people")
+    .where("email", "==", email)
+    .get();
+
+  for (const person of people.docs) {
+    return person.data();
+  }
+};

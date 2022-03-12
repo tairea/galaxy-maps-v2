@@ -16,6 +16,7 @@ export default {
     chartType: String,
     chartData: Object,
     chartOptions: Object,
+    toolTipEnable: Boolean,
   },
   computed: {
     dark() {
@@ -24,41 +25,39 @@ export default {
   },
   mounted() {
     let { chartType, chartData, chartOptions } = this;
+    if (this.toolTipEnable) {
+      chartOptions.plugins["tooltip"] = {
+        enabled: false,
+        position: "nearest",
+        external: (context) => {
+          // Tooltip Element
+          const { chart, tooltip } = context;
+          const tooltipEl = this.getOrCreateTooltip(chart);
 
-    (chartOptions.plugins["tooltip"] = {
-      enabled: false,
-      position: "nearest",
-      external: (context) => {
-        // Tooltip Element
-        const { chart, tooltip } = context;
-        const tooltipEl = this.getOrCreateTooltip(chart);
+          // console.log("tooltipEl", tooltipEl);
+          // console.log("tooltip", tooltip);
 
-        // console.log("tooltipEl", tooltipEl);
-        // console.log("tooltip", tooltip);
+          // Hide if no tooltip
+          if (tooltip.opacity === 0) {
+            tooltipEl.style.opacity = 0;
+            return;
+          }
 
-        // Hide if no tooltip
-        if (tooltip.opacity === 0) {
-          tooltipEl.style.opacity = 0;
-          return;
-        }
+          // Set Text
+          if (tooltip.body) {
+            // Get data from tooltip
+            const dataPoints = tooltip.dataPoints || [];
 
-        // Set Text
-        if (tooltip.body) {
-          // Get data from tooltip
-          const dataPoints = tooltip.dataPoints || [];
+            // ===== Create row elements =====
+            const divTopRow = document.createElement("div");
+            const divMiddleRow = document.createElement("div");
+            const divBottomRow = document.createElement("div");
 
-          console.log("dataPoints: ", dataPoints)
+            dataPoints.forEach((dataPoint, i) => {
+              const colors = tooltip.labelColors[i];
 
-          // ===== Create row elements =====
-          const divTopRow = document.createElement("div");
-          const divMiddleRow = document.createElement("div");
-          const divBottomRow = document.createElement("div");
-
-          dataPoints.forEach((dataPoint, i) => {
-            const colors = tooltip.labelColors[i];
-
-            // ===== Top Row (Task Context) =====
-            divTopRow.innerHTML = `
+              // ===== Top Row (Task Context) =====
+              divTopRow.innerHTML = `
               <table style="padding: 10px;">
                 <tr
                   class="dialog-context-description"
@@ -88,48 +87,48 @@ export default {
                 </tr>
               </table>
             `;
-            divTopRow.style.borderBottom = `1px solid ${
-              this.dark
-                ? this.$vuetify.theme.themes.dark.missionAccent
-                : this.$vuetify.theme.themes.light.missionAccent
-            }`;
-            divTopRow.style.textAlign = "center";
-
-            // ===== Middle Row (Task Status) =====
-            divMiddleRow.style.textAlign = "center";
-            divMiddleRow.classList.add("text-overline");
-            divMiddleRow.innerHTML = dataPoint.raw.status.toUpperCase();
-            divMiddleRow.style.padding = "5px";
-            divMiddleRow.style.fontSize = "0.9rem";
-            divMiddleRow.style.fontWeight = "800";
-            switch (dataPoint.raw.taskStatus) {
-              case "inreview":
-                divMiddleRow.style.color = this.dark
-                  ? this.$vuetify.theme.themes.dark.cohortAccent
-                  : this.$vuetify.theme.themes.light.cohortAccent;
-                break;
-              case "completed":
-                divMiddleRow.style.color = this.dark
-                  ? this.$vuetify.theme.themes.dark.baseAccent
-                  : this.$vuetify.theme.themes.light.baseAccent;
-                break;
-              case "started":
-                divMiddleRow.style.color = this.dark
+              divTopRow.style.borderBottom = `1px solid ${
+                this.dark
                   ? this.$vuetify.theme.themes.dark.missionAccent
-                  : this.$vuetify.theme.themes.light.missionAccent;
-                break;
-              default:
-            }
-            divMiddleRow.style.borderBottom = `1px solid ${
-              this.dark
-                ? this.$vuetify.theme.themes.dark.missionAccent
-                : this.$vuetify.theme.themes.light.missionAccent
-            }`;
+                  : this.$vuetify.theme.themes.light.missionAccent
+              }`;
+              divTopRow.style.textAlign = "center";
 
-            // ===== Bottom Row (Date & Time) =====
-            divBottomRow.style.textAlign = "center";
-            // divBottomRow.classList.add("text-overline");
-            divBottomRow.innerHTML = `
+              // ===== Middle Row (Task Status) =====
+              divMiddleRow.style.textAlign = "center";
+              divMiddleRow.classList.add("text-overline");
+              divMiddleRow.innerHTML = dataPoint.raw.status.toUpperCase();
+              divMiddleRow.style.padding = "5px";
+              divMiddleRow.style.fontSize = "0.9rem";
+              divMiddleRow.style.fontWeight = "800";
+              switch (dataPoint.raw.taskStatus) {
+                case "inreview":
+                  divMiddleRow.style.color = this.dark
+                    ? this.$vuetify.theme.themes.dark.cohortAccent
+                    : this.$vuetify.theme.themes.light.cohortAccent;
+                  break;
+                case "completed":
+                  divMiddleRow.style.color = this.dark
+                    ? this.$vuetify.theme.themes.dark.baseAccent
+                    : this.$vuetify.theme.themes.light.baseAccent;
+                  break;
+                case "started":
+                  divMiddleRow.style.color = this.dark
+                    ? this.$vuetify.theme.themes.dark.missionAccent
+                    : this.$vuetify.theme.themes.light.missionAccent;
+                  break;
+                default:
+              }
+              divMiddleRow.style.borderBottom = `1px solid ${
+                this.dark
+                  ? this.$vuetify.theme.themes.dark.missionAccent
+                  : this.$vuetify.theme.themes.light.missionAccent
+              }`;
+
+              // ===== Bottom Row (Date & Time) =====
+              divBottomRow.style.textAlign = "center";
+              // divBottomRow.classList.add("text-overline");
+              divBottomRow.innerHTML = `
             <p
             class="dialog-context-description"
                       style="color: var(--v-missionAccent-base);
@@ -138,35 +137,37 @@ export default {
                       margin: 0;
                       font-style: italic;
                       padding: 10px;"
-                      
+
             >${dataPoint.label}</p>
             `;
-          });
-          const subDiv = document.getElementById("subDiv");
+            });
+            const subDiv = document.getElementById("subDiv");
 
-          // Remove old children
-          while (subDiv.firstChild) {
-            subDiv.firstChild.remove();
+            // Remove old children
+            while (subDiv.firstChild) {
+              subDiv.firstChild.remove();
+            }
+
+            // Add new children
+            subDiv.appendChild(divTopRow);
+            subDiv.appendChild(divMiddleRow);
+            subDiv.appendChild(divBottomRow);
           }
+          const { offsetLeft: positionX, offsetTop: positionY } =
+            this.chart.canvas;
 
-          // Add new children
-          subDiv.appendChild(divTopRow);
-          subDiv.appendChild(divMiddleRow);
-          subDiv.appendChild(divBottomRow);
-        }
-        const { offsetLeft: positionX, offsetTop: positionY } =
-          this.chart.canvas;
+          // Display, position, and set styles for font
+          tooltipEl.style.opacity = 1;
+          tooltipEl.style.left = positionX + tooltip.caretX + "px";
+          tooltipEl.style.top = positionY + tooltip.caretY + "px";
+          tooltipEl.style.font = tooltip.options.bodyFont.string;
+          // tooltipEl.style.padding =
+          //   tooltip.options.padding + "px " + tooltip.options.padding + "px";
+        },
+      };
+    }
 
-        // Display, position, and set styles for font
-        tooltipEl.style.opacity = 1;
-        tooltipEl.style.left = positionX + tooltip.caretX + "px";
-        tooltipEl.style.top = positionY + tooltip.caretY + "px";
-        tooltipEl.style.font = tooltip.options.bodyFont.string;
-        // tooltipEl.style.padding =
-        //   tooltip.options.padding + "px " + tooltip.options.padding + "px";
-      },
-    }),
-      this.chartConstructor(chartType, chartData, chartOptions);
+    this.chartConstructor(chartType, chartData, chartOptions);
 
     this.chart.update();
   },

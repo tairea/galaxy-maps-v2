@@ -89,6 +89,14 @@ export default {
       onhover: false,
     };
   },
+  async mounted() {
+    // === BINDS UESFUL FOR ALL COMPONENTS
+
+    if (this.person.accountType == "teacher") {
+      // get courses created by this person (populates state.personsCourses)
+      await this.$store.dispatch("bindCoursesByPersonId", this.person.id);
+    }
+  },
   computed: {
     ...mapState(["person"]),
   },
@@ -99,10 +107,13 @@ export default {
       this.$store.commit("setDarkMode", this.$vuetify.theme.isDark);
     },
     logout() {
-      firebase.firestore().doc('/status/' + this.person.id).set({
-        state: 'offline',
-        last_changed: firebase.firestore.FieldValue.serverTimestamp()
-      })
+      firebase
+        .firestore()
+        .doc("/status/" + this.person.id)
+        .set({
+          state: "offline",
+          last_changed: firebase.firestore.FieldValue.serverTimestamp(),
+        });
 
       firebase
         .auth()
@@ -111,18 +122,18 @@ export default {
           // alert("Successfully signed out");
           this.$store.commit("setSnackbar", {
             show: true,
-            text:  "Successfully signed out",
-            color: "baseAccent"
-          })
+            text: "Successfully signed out",
+            color: "baseAccent",
+          });
           this.$router.push("/login");
         })
         .catch((error) => {
           alert(error.message);
           this.$store.commit("setSnackbar", {
             show: true,
-            text:  error.message,
-            color: "pink"
-          })
+            text: error.message,
+            color: "pink",
+          });
           this.$router.push("/");
         });
     },

@@ -10,10 +10,7 @@
           <h1 class="galaxy-title">
             {{ data.course.title }}
           </h1>
-          <v-img
-            class="galaxy-image"
-            :src="data.course.image.url"
-          ></v-img>
+          <v-img class="galaxy-image" :src="data.course.image.url"></v-img>
           <!-- <p class="galaxy-description">
             {{ course.courseContext.description }}
           </p> -->
@@ -33,15 +30,18 @@
             <p class="label">ACTIVE MISSION:</p>
             <ActiveMissions :data="data.activities" />
           </div>
-          <div class="bottom-row">
-            <v-progress-circular
-              :value="calcTaskCompletedPercentage(data)"
-              color="baseAccent"
-              size="100"
-              width="10"
-              :rotate="-90"
-              >{{ calcTaskCompletedPercentage(data) + "%" }}
-            </v-progress-circular>
+          <div class="bottom-row my-3">
+            <p class="label">COURSE PROGRESSION:</p>
+            <div class="d-flex justify-center align-center">
+              <v-progress-circular
+                :value="calcTaskCompletedPercentage(data)"
+                color="baseAccent"
+                size="100"
+                width="10"
+                :rotate="-90"
+                >{{ calcTaskCompletedPercentage(data) + "%" }}
+              </v-progress-circular>
+            </div>
           </div>
         </v-col>
       </v-row>
@@ -57,7 +57,8 @@ import { DateTime } from "luxon";
 import { dbMixins } from "../mixins/DbMixins";
 
 import {
-  getStudentsCoursesXAPIQuery, getActiveTaskXAPIQuery
+  getStudentsCoursesXAPIQuery,
+  getActiveTaskXAPIQuery,
 } from "../lib/veracityLRS";
 
 export default {
@@ -142,28 +143,26 @@ export default {
           easing: "easeInOutQuart",
         },
       },
-
     };
-  }, 
+  },
   async mounted() {
     this.santisedCourses = await getStudentsCoursesXAPIQuery(this.person);
-    this.studentsActiveTasks = await getActiveTaskXAPIQuery(this.person)
+    this.studentsActiveTasks = await getActiveTaskXAPIQuery(this.person);
   },
   computed: {
     ...mapGetters(["person", "getCourseById", "getTopicById"]),
   },
   methods: {
     formatStudentsChartData(data) {
-
       const courseColour = this.stringToColour(data.course.title);
 
       const activities = data.activities.map((activity) => {
         return {
           ...activity,
           x: activity.timeStamp,
-          y: activity.index
-        }
-      })
+          y: activity.index,
+        };
+      });
 
       let studentData = {
         type: "line",
@@ -172,14 +171,14 @@ export default {
         borderRadius: 5,
         borderWidth: 1,
         data: activities,
-        label: data.course.title
-      }
+        label: data.course.title,
+      };
 
       const datasetsObj = {
         datasets: [studentData],
       };
 
-      console.log("datasets: ", datasetsObj)
+      console.log("datasets: ", datasetsObj);
       return datasetsObj;
     },
     stringToColour(str) {
@@ -193,8 +192,7 @@ export default {
       return hash;
     },
     calcTaskCompletedPercentage(data) {
-      let percentage =
-        (data.taskCompletedCount / data.course.taskTotal) * 100;
+      let percentage = (data.taskCompletedCount / data.course.taskTotal) * 100;
       return Math.round(percentage);
     },
   },
