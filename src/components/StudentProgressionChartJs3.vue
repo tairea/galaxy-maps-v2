@@ -30,6 +30,7 @@
         :chartType="chartType"
         :chartData="formatStudentsChartData(studentData)"
         :chartOptions="chartOptions"
+        :toolTipEnable="true"
         :style="{ width: '100%', height: '200px' }"
       />
     </div>
