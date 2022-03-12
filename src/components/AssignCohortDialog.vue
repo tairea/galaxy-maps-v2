@@ -257,7 +257,7 @@ import { db, storage } from "../store/firestoreConfig";
 import { dbMixins } from "../mixins/DbMixins";
 
 export default {
-  name: "AssignCourseDialog",
+  name: "AssignCohortDialog",
   mixins: [dbMixins],
   props: ["assignCohorts", "assignCourses"],
   data: () => ({

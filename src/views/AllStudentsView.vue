@@ -51,9 +51,6 @@ export default {
   props: [],
   async mounted() {
     this.progressLoading = true;
-
-    // get courses created by this person (populates state.personsCourses)
-    await this.$store.dispatch("bindCoursesByPersonId", this.user.data.id);
   },
   computed: {
     ...mapState(["user", "person", "personsCourses"]),

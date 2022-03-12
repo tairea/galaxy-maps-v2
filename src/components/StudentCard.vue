@@ -17,11 +17,13 @@
       </v-avatar>
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
-          <p v-on="on" class="text-uppercase studentName text-truncate pt-2">{{student.firstName}}</p>
+          <p v-on="on" class="text-uppercase studentName text-truncate pt-2">
+            {{ student.firstName }}
+          </p>
         </template>
-        <span>{{student.firstName + ' ' + student.lastName}}</span>
+        <span>{{ student.firstName + " " + student.lastName }}</span>
       </v-tooltip>
-      <p :class="online" class="status">{{loggedIn}}</p>
+      <p :class="online" class="status mb-2">{{ loggedIn }}</p>
     </div>
     <div class="student-section student-main-section">
       <div v-if="topic">
@@ -29,7 +31,7 @@
           <span class="caption pt-2">Current Mission</span>
         </v-row>
         <v-row>
-          <h4 class="titles">{{ topic }} </h4>
+          <h4 class="titles">{{ topic }}</h4>
         </v-row>
       </div>
       <div v-else-if="assignedCourse">
@@ -37,7 +39,7 @@
           <span class="caption pt-2">Assigned Course</span>
         </v-row>
         <v-row>
-          <h4 class="titles">{{ assignedCourse.title }} </h4>
+          <h4 class="titles">{{ assignedCourse.title }}</h4>
         </v-row>
       </div>
       <div v-if="task" class="mt-4 mission-section">
@@ -45,17 +47,19 @@
           <span class="caption">Current Task</span>
         </v-row>
         <v-row>
-          <h4 class="titles">{{ task }} </h4>
+          <h4 class="titles">{{ task }}</h4>
         </v-row>
       </div>
-      <h4 v-if="!topic && !assignedCourse" class="inactive-title">No active galaxies</h4>
+      <h4 v-if="!topic && !assignedCourse" class="inactive-title">
+        No active galaxies
+      </h4>
     </div>
     <div v-if="missions.length" class="student-section student-minor-section">
       <v-row class="justify-center">
         <span class="caption pt-2">Completed Missions</span>
       </v-row>
       <v-row class="justify-center">
-        <span class="numbers'">{{missions || '0'}}</span>
+        <span class="numbers'">{{ missions || "0" }}</span>
       </v-row>
     </div>
     <div v-if="hours" class="student-section student-minor-section">
@@ -63,19 +67,26 @@
         <span class="caption pt-2">Completed hours</span>
       </v-row>
       <v-row class="justify-center">
-        <span class="numbers">{{hours || '0'}}</span>
+        <span class="numbers">{{ hours || "0" }}</span>
       </v-row>
     </div>
     <!--======= if requests and submissions =========-->
-    <div v-if="work.length || help.length" class="student-section student-section-overUnder">
+    <div
+      v-if="work.length || help.length"
+      class="student-section student-section-overUnder"
+    >
       <div v-if="work" class="section-overUnder">
         <v-row class="justify-center">
-          <v-icon  :class="work.length ? 'active-icon' : 'inactive-icon'" large>mdi-attachment</v-icon>
+          <v-icon :class="work.length ? 'active-icon' : 'inactive-icon'" large
+            >mdi-attachment</v-icon
+          >
         </v-row>
       </div>
       <div v-if="help" class="section-overUnder">
         <v-row class="justify-center">
-          <v-icon :class="help.length ? 'active-icon' : 'inactive-icon'" large>mdi-message</v-icon>
+          <v-icon :class="help.length ? 'active-icon' : 'inactive-icon'" large
+            >mdi-message</v-icon
+          >
         </v-row>
       </div>
     </div>
@@ -83,13 +94,16 @@
 </template>
 
 <script>
-import { min } from 'moment';
-import { getStudentsCoursesXAPIQuery, queryXAPIStatement } from "../lib/veracityLRS";
+import { min } from "moment";
+import {
+  getStudentsCoursesXAPIQuery,
+  queryXAPIStatement,
+} from "../lib/veracityLRS";
 
 // import EditStudentButtonDialog from "../components/EditStudentButtonDialog";
-import { mapState, mapGetters } from 'vuex'
-import { dbMixins } from "../mixins/DbMixins"
-import { getCourseById } from "../lib/ff"
+import { mapState, mapGetters } from "vuex";
+import { dbMixins } from "../mixins/DbMixins";
+import { getCourseById } from "../lib/ff";
 
 export default {
   name: "StudentCard",
@@ -101,7 +115,7 @@ export default {
   data() {
     return {
       editing: false,
-      topic: "", 
+      topic: "",
       task: "",
       missions: [],
       hours: "",
@@ -109,51 +123,52 @@ export default {
       help: [],
       assignedCourse: null,
       studetProfile: [],
-      courseActivity: []
+      courseActivity: [],
     };
   },
-  async mounted () {
+  async mounted() {
     if (this.currentCohort.courses?.length) {
-      this.getAssignedCourse()
+      this.getAssignedCourse();
     }
-    const studentCourses = await getStudentsCoursesXAPIQuery(this.student)
+    const studentCourses = await getStudentsCoursesXAPIQuery(this.student);
     // this.courseActivity = studentCourses.filter(course => this.assignedCourse.id === course.courseContext.id).reverse()
   },
   computed: {
-    ...mapState(['currentCohort', 'userStatus']),
-    ...mapGetters(['getCourseById']),
-    status () {
-      return this.userStatus[this.student.id]
+    ...mapState(["currentCohort", "userStatus"]),
+    ...mapGetters(["getCourseById"]),
+    status() {
+      return this.userStatus[this.student.id];
     },
-    loggedIn () {
-      if (!this.status) return 'inactive'
-      if (this.status.state === 'online') {
-        return 'online'
-      }
-      else return this.timePassed() 
+    loggedIn() {
+      if (!this.status) return "inactive";
+      if (this.status.state === "online") {
+        return "online";
+      } else return this.timePassed();
     },
-    online () {
-      if (this.loggedIn === 'online') return 'online'
+    online() {
+      if (this.loggedIn === "online") return "online";
     },
     // topic () {
     //   const topic = this.courseActivity.courseData.find(course => course.topic.length)
     //   return {
-    //     status: 
+    //     status:
     //   }
     // }
   },
   methods: {
-    async getAssignedCourse () {
-      const courseId = this.student.assignedCourses?.find(course => this.currentCohort.courses.includes(course))
-      const course = await getCourseById(courseId)
-      this.assignedCourse = course
+    async getAssignedCourse() {
+      const courseId = this.student.assignedCourses?.find((course) =>
+        this.currentCohort.courses.includes(course)
+      );
+      const course = await getCourseById(courseId);
+      this.assignedCourse = course;
     },
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
-    timePassed () {
-      var date = Math.round(Date.now() / 1000)
-      var delta =  date - this.status.last_changed.seconds;
+    timePassed() {
+      var date = Math.round(Date.now() / 1000);
+      var delta = date - this.status.last_changed.seconds;
 
       // calculate (and subtract) whole days
       var days = Math.floor(delta / 86400);
@@ -163,11 +178,11 @@ export default {
 
       // calculate (and subtract) whole minutes
       var minutes = Math.floor(delta / 60);
-      
-      if (minutes < 1) return `just now` 
-      if (minutes < 60) return `${minutes}mins` 
-      if (hours < 24) return `${hours}hrs`
-      return `${days}days`
+
+      if (minutes < 1) return `just now`;
+      if (minutes < 60) return `${minutes}mins`;
+      if (hours < 24) return `${hours}hrs`;
+      return `${days}days`;
     },
   },
 };
@@ -185,6 +200,7 @@ a {
 .status {
   font-size: 0.6rem;
   letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
 .student-card {
@@ -211,7 +227,7 @@ a {
   }
 
   .student-minor-section {
-    max-width:18%;
+    max-width: 18%;
   }
 
   .student-title {
@@ -261,13 +277,13 @@ a {
       border-bottom: 1px dashed var(--v-missionAccent-base);
     }
   }
-  	
+
   .titles {
     text-transform: uppercase;
     font-weight: 500;
     color: var(--v-baseAccent-base);
   }
-  
+
   .numbers {
     font-size: 4rem;
     color: var(--v-baseAccent-base);
@@ -288,9 +304,9 @@ a {
     font-weight: 500;
     display: flex;
     justify-content: center;
-    padding: 30px
+    padding: 30px;
   }
-  
+
   .online {
     color: var(--v-baseAccent-base);
   }

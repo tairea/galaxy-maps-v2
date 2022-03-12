@@ -1,5 +1,5 @@
 import store from "../store";
-import { getCourseById } from "../lib/ff"
+import { getCourseById, getStudentByEmail } from "../lib/ff";
 import { db } from "../store/firestoreConfig";
 
 const auth = "Basic " + btoa(process.env.VUE_APP_VERACITY_LRS_SECRET);
@@ -739,12 +739,12 @@ export const getStudentsCoursesXAPIQuery = async (person) => {
     },
     body: JSON.stringify(aggregationQuery),
   })
-  .then((res) => res.json())
-  .catch((error) => console.error(error.message))
-  .then((res) => {
-    const courses =  sanitiseCourseDataFromLRS(res)
-    return courses
-  });
+    .then((res) => res.json())
+    .catch((error) => console.error(error.message))
+    .then((res) => {
+      const courses = sanitiseCourseDataFromLRS(res);
+      return courses;
+    });
 };
 
 export const getActiveTaskXAPIQuery = async (person) => {
@@ -825,7 +825,6 @@ export const getActiveTaskXAPIQuery = async (person) => {
       // console.log("getActiveTaskXAPIQuery: res => ", res);
       return res;
       // return sanitiseCourseDataFromLRS(res)
-
     });
 };
 
@@ -842,13 +841,17 @@ async function sanitiseCourseDataFromLRS(res) {
       if (statement.description.includes("Completed Task:"))
         taskCompletedCount++;
 
-      let [action, title] = statement.description.split(": ")
-      let [status, type] = action.split(" ")
-      let id = statement.task.split("/").pop()
+      let [action, title] = statement.description.split(": ");
+      let [status, type] = action.split(" ");
+      let id = statement.task.split("/").pop();
 
       const newStatement = {
         timeStamp: statement.timestamp,
-        index, status, type, title, id,
+        index,
+        status,
+        type,
+        title,
+        id,
         context: statement.context,
       };
       // const contextSplit = statement.context.split(
@@ -880,7 +883,63 @@ async function sanitiseCourseDataFromLRS(res) {
 
     santisedCourses.push(courseObj);
   }
-  return santisedCourses
+  return santisedCourses;
+}
+async function sanitiseCohortsCourseDataFromLRS(res) {
+  const santisedCourses = [];
+
+  // group = course
+  for (const group of res) {
+    // get course
+    const courseId = group._id.course;
+    const course = await getCourseById(courseId);
+
+    // array for many students course data
+    const students = [];
+    // (for getCohortsCourseDataXAPIQuery) statements are nested under actors
+    for (const student of group.actors) {
+      // get person from db
+      const email = student.actor.split(":")[1];
+      const person = await getStudentByEmail(email);
+
+      let taskCompletedCount = 0;
+      const activities = student.statements.map((statement, index) => {
+        if (statement.description.includes("Completed Task:"))
+          taskCompletedCount++;
+
+        let [action, title] = statement.description.split(": ");
+        let [status, type] = action.split(" ");
+        let id = statement.task;
+
+        const newStatement = {
+          timeStamp: statement.timestamp,
+          index,
+          status,
+          type,
+          title,
+          id,
+        };
+        return newStatement;
+      });
+
+      // individual student course data (in loop)
+      const studentObj = {
+        activities: activities.reverse(),
+        taskCompletedCount,
+        person: person,
+      };
+      // push individual student data to students array
+      students.push(studentObj);
+    }
+    // courses have many students data (of the cohort)
+    const courseObj = {
+      course,
+      students: students,
+    };
+    santisedCourses.push(courseObj);
+  }
+
+  return santisedCourses;
 }
 
 async function courseIRIToCourseId(course) {
@@ -963,24 +1022,18 @@ export const getCohortsCourseDataXAPIQuery = async (payload) => {
     courseIdsAsStrings.push(String(courseId));
   }
 
+  // console.log("cohorts query people:", personIdsArrToEmailsArr);
+  // console.log("cohorts query courses:", courseIdsAsStrings);
+
   const aggregationQuery = [
-    // only for this person
+    // match with cohorts courses
     {
       $match: {
         "statement.object.definition.extensions.https://www.galaxymaps.io/course/id/":
-          {
-            $in: courseIdsAsStrings,
-          },
-        // "statement.actor.mbox": { $in: personIdsArrToEmailsArr },
+          { $in: courseIdsAsStrings },
       },
     },
-    // sort by ascending
-    // {
-    //   $sort: {
-    //     "statement.timestamp": 1,
-    //   },
-    // },
-    // group by actor, course and task. pushing statements
+    // group by actor & course
     {
       $group: {
         _id: {
@@ -988,7 +1041,7 @@ export const getCohortsCourseDataXAPIQuery = async (payload) => {
           course:
             "$statement.object.definition.extensions.https://www.galaxymaps.io/course/id/",
         },
-        statement: {
+        statements: {
           $push: {
             verb: "$statement.verb.display.en-nz",
             timestamp: "$statement.timestamp",
@@ -1000,9 +1053,29 @@ export const getCohortsCourseDataXAPIQuery = async (payload) => {
         },
       },
     },
+    // filter these by cohorts students
+    {
+      $match: {
+        "_id.actor": { $in: personIdsArrToEmailsArr },
+      },
+    },
+    // group by course. nesting actor and their statements
+    {
+      $group: {
+        _id: {
+          course: "$_id.course",
+        },
+        actors: {
+          $push: {
+            actor: "$_id.actor",
+            statements: "$statements",
+          },
+        },
+      },
+    },
   ];
 
-  await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
+  return await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -1013,10 +1086,6 @@ export const getCohortsCourseDataXAPIQuery = async (payload) => {
     .then((res) => res.json())
     .catch((error) => console.error(error.message))
     .then((res) => {
-      console.log(
-        "getCohortsCourseDataXAPIQuery: res => for cohort " + payload.cohortName
-      );
-      console.log(res);
-      // return res;
+      return sanitiseCohortsCourseDataFromLRS(res);
     });
 };

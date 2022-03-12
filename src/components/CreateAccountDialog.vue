@@ -66,7 +66,6 @@
               type="email"
               v-model="account.parentEmail"
               label="Parent E-mail"
-              :rules="parentEmailRules"
               outlined
               color="missionAccent"
             ></v-text-field>
@@ -91,7 +90,7 @@
               required
               outlined
               color="missionAccent"
-              :value="person.firstName + ' ' + person.lastName" 
+              :value="person.firstName + ' ' + person.lastName"
             ></v-text-field>
           </v-form>
           <v-row>
@@ -128,8 +127,8 @@
 
 <script>
 import { db, functions } from "../store/firestoreConfig";
-import { mapGetters } from "vuex"
-import { dbMixins } from "../mixins/DbMixins"
+import { mapGetters } from "vuex";
+import { dbMixins } from "../mixins/DbMixins";
 
 export default {
   name: "CreateAccountDialog",
@@ -151,18 +150,16 @@ export default {
       displayName: "",
       nsn: "",
       inviter: "",
-      parentEmail: ""
+      parentEmail: "",
     },
     emailRules: [
       (v) => !!v || "E-mail is required",
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
     ],
-    parentEmailRules: [      
-      (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
-    ]
+    parentEmailRules: [(v) => /.+@.+\..+/.test(v) || "E-mail must be valid"],
   }),
   computed: {
-    ...mapGetters(['person', 'currentCohort']),
+    ...mapGetters(["person", "currentCohort"]),
     teacher() {
       return this.accountType === "teacher";
     },
@@ -181,52 +178,52 @@ export default {
         displayName: "",
         nsn: "",
         inviter: "",
-        parentEmail: ""
-      }
+        parentEmail: "",
+      };
     },
-    async create () {
-      this.$refs.form.validate()
-      if (!this.account.email) return
-      this.addingAccount = true
-      const personExists = await this.MXgetPersonByEmail(this.account.email)
-      if (personExists) {   
-        console.log('account: ', this.account)
-        console.log("personExists: ", personExists)
+    async create() {
+      this.$refs.form.validate();
+      if (!this.account.email) return;
+      this.addingAccount = true;
+      const personExists = await this.MXgetPersonByEmail(this.account.email);
+      if (personExists) {
+        console.log("account: ", this.account);
+        console.log("personExists: ", personExists);
         const profile = {
-          ...this.account, 
-          ...personExists
-        }
-        console.log('output profile: ', profile)
+          ...this.account,
+          ...personExists,
+        };
+        console.log("output profile: ", profile);
         // this.account = profile
         this.MXsaveProfile(profile)
-        .then(() => {
-          this.MXaddExistingUserToCohort(personExists)
-        })
-        .then(() => {
-          this.addingAccount = false
-          this.close()
-        }).catch(err => {
-          this.addingAccount = false
-          console.error("something went wrong adding existing person: ", err)
-        })
-      }
-      else {
+          .then(() => {
+            this.MXaddExistingUserToCohort(personExists);
+          })
+          .then(() => {
+            this.addingAccount = false;
+            this.close();
+          })
+          .catch((err) => {
+            this.addingAccount = false;
+            console.error("something went wrong adding existing person: ", err);
+          });
+      } else {
         const person = {
-          ...this.account, 
+          ...this.account,
           accountType: this.accountType,
-          displayName: this.account.firstName + ' ' + this.account.lastName
-
-        }
-        this.MXcreateUser(person).then(() => {
-          if (!this.teacher) {
-            this.MXaddStudentToCohort(person)
-          }
-          this.addingAccount = false
-          this.close()
-        })
-        .catch((error) => {
-          console.error(error)
-        });
+          displayName: this.account.firstName + " " + this.account.lastName,
+        };
+        this.MXcreateUser(person)
+          .then(() => {
+            if (!this.teacher) {
+              this.MXaddStudentToCohort(person);
+            }
+            this.addingAccount = false;
+            this.close();
+          })
+          .catch((error) => {
+            console.error(error);
+          });
       }
     },
   },
