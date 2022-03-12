@@ -1,6 +1,6 @@
 import store from "../store";
 import { getCourseById } from "../lib/ff"
-import { db } from "./firestoreConfig";
+import { db } from "../store/firestoreConfig";
 
 const auth = "Basic " + btoa(process.env.VUE_APP_VERACITY_LRS_SECRET);
 
@@ -742,10 +742,7 @@ export const getStudentsCoursesXAPIQuery = async (person) => {
   .then((res) => res.json())
   .catch((error) => console.error(error.message))
   .then((res) => {
-    // console.log("getStudentsCoursesXAPIQuery: res => ", res);
-    // store.commit("setStudentCourseDataFromLRS", res);
     const courses =  sanitiseCourseDataFromLRS(res)
-    console.log('all done: ', courses)
     return courses
   });
 };
@@ -814,7 +811,7 @@ export const getActiveTaskXAPIQuery = async (person) => {
     },
   ];
 
-  await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
+  return await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -826,35 +823,32 @@ export const getActiveTaskXAPIQuery = async (person) => {
     .catch((error) => console.error(error.message))
     .then((res) => {
       // console.log("getActiveTaskXAPIQuery: res => ", res);
-      store.commit("setStudentsActiveTasks", res);
+      return res;
       // return sanitiseCourseDataFromLRS(res)
 
     });
 };
 
 async function sanitiseCourseDataFromLRS(res) {
-  console.log("data from LRS:", res);
-
   const santisedCourses = [];
 
   let taskCompletedCount = 0;
 
   for (const group of res) {
-    console.log('santising group: ', group)
     const course = await courseIRIToCourseId(group);
 
     // sanitise statements data
-    const data = group.statements.map((statement, index) => {
-      
+    const activities = group.statements.map((statement, index) => {
       if (statement.description.includes("Completed Task:"))
         taskCompletedCount++;
 
       let [action, title] = statement.description.split(": ")
       let [status, type] = action.split(" ")
+      let id = statement.task.split("/").pop()
 
       const newStatement = {
         timeStamp: statement.timestamp,
-        index, status, type, title, 
+        index, status, type, title, id,
         context: statement.context,
       };
       // const contextSplit = statement.context.split(
@@ -878,17 +872,14 @@ async function sanitiseCourseDataFromLRS(res) {
       return newStatement;
     });
 
-    // count number of "Completed Task:..." in description
-
     const courseObj = {
       course,
-      ...data,
-      ...taskCompletedCount,
+      activities: activities.reverse(),
+      taskCompletedCount,
     };
 
     santisedCourses.push(courseObj);
   }
-  console.log("santisedCourses", santisedCourses);
   return santisedCourses
 }
 

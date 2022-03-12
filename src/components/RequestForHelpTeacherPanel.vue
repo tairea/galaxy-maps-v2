@@ -141,7 +141,6 @@ export default {
       "allTasks",
       "people",
     ]),
-    ...mapActions(["getTaskByTaskId"]),
   },
   methods: {
     getTask(id) {

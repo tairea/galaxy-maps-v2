@@ -117,7 +117,6 @@ export default {
       this.getAssignedCourse()
     }
     const studentCourses = await getStudentsCoursesXAPIQuery(this.student)
-    console.log("studentCourses: ", studentCourses)
     // this.courseActivity = studentCourses.filter(course => this.assignedCourse.id === course.courseContext.id).reverse()
   },
   computed: {
