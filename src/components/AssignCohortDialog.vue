@@ -133,12 +133,12 @@
                       <p class="ml-4">{{ item.title }}</p>
                     </template>
                     <template v-slot:item="{ item }">
-                        <img
-                          v-if="item.image.url"
-                          :src="item.image.url"
-                          style="object-fit: cover"
-                        />
-                        <v-icon v-else>mdi-star-three-points</v-icon>
+                      <img
+                        v-if="item.image.url"
+                        :src="item.image.url"
+                        style="object-fit: cover"
+                      />
+                      <v-icon v-else>mdi-star-three-points</v-icon>
                       <p class="ml-4 mt-4">{{ item.title }}</p>
                     </template>
                   </v-select>
@@ -191,7 +191,7 @@
               <v-select
                 v-if="assignCourses"
                 v-model="course"
-                :items="courses"
+                :items="personsCourses"
                 dark
               >
                 <template v-slot:selection="{ item }">
@@ -205,13 +205,13 @@
                   <p class="ml-4">{{ item.title }}</p>
                 </template>
                 <template v-slot:item="{ item }">
-                    <img
-                      width="50"
-                      v-if="item.image.url"
-                      :src="item.image.url"
-                      style="object-fit: cover"
-                    />
-                    <v-icon v-else>mdi-star-three-points</v-icon>
+                  <img
+                    width="50"
+                    v-if="item.image.url"
+                    :src="item.image.url"
+                    style="object-fit: cover"
+                  />
+                  <v-icon v-else>mdi-star-three-points</v-icon>
                   <p class="ml-4 mt-4">{{ item.title }}</p>
                 </template>
               </v-select>
@@ -254,7 +254,7 @@ import firebase from "firebase/app";
 
 import { mapState, mapActions } from "vuex";
 import { db, storage } from "../store/firestoreConfig";
-import { dbMixins } from "../mixins/DbMixins"
+import { dbMixins } from "../mixins/DbMixins";
 
 export default {
   name: "AssignCourseDialog",
@@ -279,7 +279,8 @@ export default {
       "organisations",
       "currentCourseId",
       "currentCourse",
-      "currentCohort"
+      "currentCohort",
+      "personsCourses",
     ]),
   },
   methods: {
@@ -287,67 +288,64 @@ export default {
       this.dialog = false;
       this.loading = false;
       this.person = {
-        id: "", 
-        email: ""
-      }
-      this.cohort = "",
-      this.course = ""
+        id: "",
+        email: "",
+      };
+      (this.cohort = ""), (this.course = "");
     },
     async assignCourseToPerson(person) {
       this.loading = true;
 
       // If we dont already have the students Id, check if they already have an account using their email
-      const personExists = await this.MXgetPersonByEmail(person.email)
+      const personExists = await this.MXgetPersonByEmail(person.email);
       if (personExists) {
-        this.handleAssignment(personExists, this.currentCourse)
+        this.handleAssignment(personExists, this.currentCourse);
       } else {
-        //create the persons account 
-        this.MXcreateUser(person)
-        .then(person => {
-           this.handleAssignment(person, this.currentCourse)
-        })
+        //create the persons account
+        this.MXcreateUser(person).then((person) => {
+          this.handleAssignment(person, this.currentCourse);
+        });
       }
     },
 
-    handleAssignment (person, course) {
-      this.MXassignCourseToStudent(person, course).then(() => {
-        this.$store.commit("setSnackbar", {
-          show: true,
-          text: "Individual assigned to Course",
-          color: "baseAccent"
+    handleAssignment(person, course) {
+      this.MXassignCourseToStudent(person, course)
+        .then(() => {
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: "Individual assigned to Course",
+            color: "baseAccent",
+          });
+          this.close();
         })
-        this.close()
-      })
-      .catch((error) => {
-        console.error("Error writing document: ", error);
-        // snackbar message
-        this.$store.commit("setSnackbar", {
-          show: true,
-          text: error,
-          color: "pink"
-        })
-        this.close()
-      });
+        .catch((error) => {
+          console.error("Error writing document: ", error);
+          // snackbar message
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: error,
+            color: "pink",
+          });
+          this.close();
+        });
     },
     assignCourseToCohort(cohort, course) {
-      if (!cohort) cohort = this.currentCohort
-      if (!course) course = this.currentCourse
+      if (!cohort) cohort = this.currentCohort;
+      if (!course) course = this.currentCourse;
       this.loading = true;
       // Add a course to a cohort
       db.collection("cohorts")
         .doc(cohort.id)
         .update({
-          courses: firebase.firestore.FieldValue.arrayUnion(
-            course.id
-          ),
+          courses: firebase.firestore.FieldValue.arrayUnion(course.id),
         })
         .then(() => {
           // add courses as assignedCourse to each student in the cohort
           if (cohort.students?.length) {
-            cohort.students.forEach(async student => {
-              let person = await this.MXgetPersonByIdFromDB(student)
-              return this.MXassignCourseToStudent(person, course)
-            })
+            cohort.students.forEach(async (student) => {
+              let person = await this.MXgetPersonByIdFromDB(student);
+              return this.MXassignCourseToStudent(person, course);
+            });
           }
         })
         .then(() => {
@@ -355,19 +353,19 @@ export default {
           this.$store.commit("setSnackbar", {
             show: true,
             text: "Cohort assigned to Course",
-            color: "baseAccent"
-          })
-          this.close()
+            color: "baseAccent",
+          });
+          this.close();
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
-            this.$store.commit("setSnackbar", {
+          this.$store.commit("setSnackbar", {
             show: true,
             text: error,
-            color: "pink"
-          })
-      });
-    }
+            color: "pink",
+          });
+        });
+    },
   },
 };
 </script>

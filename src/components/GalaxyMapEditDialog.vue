@@ -306,7 +306,7 @@ export default {
     saveNode(node) {
       console.log("save", node);
       this.loading = true;
-      console.log("saving node:", node);
+      node.connectedEdge = node.connectedEdge ? node.connectedEdge : "";
       // save topic node info to map-nodes
       db.collection("courses")
         .doc(this.course.id)
@@ -315,6 +315,26 @@ export default {
         .set({ ...node, nodeCreatedTimestamp: new Date() })
         .then((docRef) => {
           console.log("Node successfully written!");
+          // check if prerequisite
+          if (this.currentNode.prerequisites) {
+            for (const prereq of this.currentNode.prerequisites) {
+              const from = prereq;
+              const to = this.currentNode.id;
+              db.collection("courses")
+                .doc(this.course.id)
+                .collection("map-edges")
+                .add({
+                  id: 1234,
+                  from: from,
+                  to: to,
+                  dashes: false,
+                })
+                .then((docRef) => {
+                  docRef.update({ id: docRef.id });
+                });
+            }
+          }
+          // get to and from and save to map edges
           this.loading = false;
           this.close();
         })

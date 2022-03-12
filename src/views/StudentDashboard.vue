@@ -34,7 +34,12 @@ export default {
     StudentCourseProgression,
   },
   props: [],
-  async mounted() {},
+  async mounted() {
+    console.log("this.courses from dashboard", this.courses);
+
+    // get all courses topics and tasks
+    // this.$store.dispatch("getAllCourseTopicsAndTasks", this.courses);
+  },
   computed: {
     ...mapState([
       "user",

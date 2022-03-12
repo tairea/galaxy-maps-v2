@@ -8,7 +8,7 @@
         :submission="submission"
       />
     </div>
-    <div v-if="!submissionsLoading && teachersSubmissionsToReview.length == 0">
+    <div v-if="!loading && teachersSubmissionsToReview.length == 0">
       <p
         class="overline pt-4 text-center"
         style="color: var(--v-cohortAccent-base)"
@@ -19,8 +19,8 @@
     <!-- loading spinner -->
     <div class="d-flex justify-center align-center mt-4">
       <v-btn
-        v-if="submissionsLoading"
-        :loading="submissionsLoading"
+        v-if="loading"
+        :loading="loading"
         icon
         color="cohortAccent"
       ></v-btn>
@@ -30,40 +30,47 @@
 <script>
 import SubmissionTeacherPanel from "../components/SubmissionTeacherPanel";
 import { mapState } from "vuex";
-import { dbMixins, dmMixins } from "../mixins/DbMixins"
+import { dbMixins, dmMixins } from "../mixins/DbMixins";
 
 export default {
   name: "SubmissionTeacherFrame",
   mixins: [dbMixins],
+  props: ["courses"],
   components: {
     SubmissionTeacherPanel,
   },
   data() {
     return {
-      submissionsLoading: false,
+      loading: false,
       allSubmissions: [],
+      unsubscribes: [],
     };
   },
   async mounted() {
-    this.submissionsLoading = true;
-
-    // bind all submissions
-    this.bindSubmissions();
+    this.loading = true;
+    for (const course of this.courses) {
+      const unsubscribe = await this.$store.dispatch(
+        "getAllSubmittedWorkByCourseId",
+        course.id
+      );
+      this.unsubscribes.push(unsubscribe);
+    }
+    this.loading = false;
+  },
+  destroy() {
+    for (const unsubscribe of this.unsubscribes) {
+      unsubscribe();
+    }
   },
   computed: {
-    ...mapState(["teachersSubmissionsToReview", "user"]),
+    ...mapState(["teachersSubmissionsToReview", "person"]),
     isCohortView() {
       return this.$route.name == "CohortView"
         ? "cohort-review-panel"
         : "review-panel";
     },
   },
-  methods: {
-    async bindSubmissions() {
-      this.MXbindSubmissions()
-      this.submissionsLoading = false;
-    },
-  },
+  methods: {},
 };
 </script>
 <style lang="scss" scoped>

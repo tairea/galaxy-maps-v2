@@ -2,16 +2,29 @@
   <div>
     <!-- requester message -->
     <div class="d-flex request-msg">
-      <div class="requester-image">
-        <v-avatar v-if="requester" size="30">
-          <img
-            v-if="requester.image"
-            :src="requester.image.url"
-            :alt="requester.firstName"
-            style="object-fit: cover"
-          />
-        </v-avatar>
-      </div>
+      <v-tooltip v-if="requester" bottom color="subBackground">
+        <template v-slot:activator="{ on, attrs }">
+          <div class="requester-image" v-bind="attrs" v-on="on">
+            <v-avatar size="30">
+              <img
+                v-if="requester.image"
+                :src="requester.image.url"
+                :alt="requester.firstName"
+                style="object-fit: cover"
+              />
+            </v-avatar>
+          </div>
+        </template>
+        <div>
+          <p class="ma-0 person-tooltip">Person:</p>
+          <p
+            class="ma-0 person-tooltip"
+            style="font-size: 0.8rem; font-weight: 800"
+          >
+            {{ requester.firstName + " " + requester.lastName }}
+          </p>
+        </div>
+      </v-tooltip>
       <p class="request-text text-left">
         "{{ request.requestForHelpMessage }}"
       </p>
@@ -30,16 +43,34 @@
             : "...waiting for instructors response"
         }}
       </p>
-      <div v-if="request.responseMessage" class="requester-image">
-        <v-avatar v-if="responder" size="30">
-          <img
-            v-if="responder.image"
-            :src="responder.image.url"
-            :alt="responder.firstName"
-            style="object-fit: cover"
-          />
-        </v-avatar>
-      </div>
+      <v-tooltip v-if="responder" bottom color="subBackground">
+        <template v-slot:activator="{ on, attrs }">
+          <div
+            v-if="request.responseMessage"
+            class="requester-image"
+            v-bind="attrs"
+            v-on="on"
+          >
+            <v-avatar size="30">
+              <img
+                v-if="responder.image"
+                :src="responder.image.url"
+                :alt="responder.firstName"
+                style="object-fit: cover"
+              />
+            </v-avatar>
+          </div>
+        </template>
+        <div>
+          <p class="ma-0 person-tooltip">Person:</p>
+          <p
+            class="ma-0 person-tooltip"
+            style="font-size: 0.8rem; font-weight: 800"
+          >
+            {{ responder.firstName + " " + responder.lastName }}
+          </p>
+        </div>
+      </v-tooltip>
     </div>
   </div>
 </template>
@@ -48,7 +79,7 @@
 import SolarSystem from "../components/SolarSystem";
 
 import { mapState, mapGetters } from "vuex";
-import { dbMixins } from "../mixins/DbMixins"
+import { dbMixins } from "../mixins/DbMixins";
 
 export default {
   name: "RequestsForHelpStudentCard",
@@ -57,12 +88,20 @@ export default {
   components: {
     SolarSystem,
   },
+  watch: {
+    request: {
+      handler: "getResponder",
+      deep: true,
+    },
+  },
   computed: {
     ...mapState(["currentCourseId", "currentTopicId", "currentTaskId"]),
   },
   async mounted() {
-    this.requester = await this.MXgetPersonByIdFromDB(this.request.personId)
-    this.responder = await this.MXgetPersonByIdFromDB(this.request.responderPersonId)
+    this.requester = await this.MXgetPersonByIdFromDB(this.request.personId);
+    this.responder = await this.MXgetPersonByIdFromDB(
+      this.request.responderPersonId
+    );
     console.log("requester person:", this.requester);
     console.log("responder person:", this.responder);
   },
@@ -72,7 +111,14 @@ export default {
       responder: null,
     };
   },
-  methods: {},
+  methods: {
+    async getResponder() {
+      // get responsers image when request is updated
+      this.responder = await this.MXgetPersonByIdFromDB(
+        this.request.responderPersonId
+      );
+    },
+  },
 };
 </script>
 
@@ -144,5 +190,11 @@ h1 {
     font-style: italic;
     padding-right: 10px;
   }
+}
+
+.person-tooltip {
+  color: var(--v-missionAccent-base);
+  font-size: 0.6rem;
+  text-transform: uppercase;
 }
 </style>
