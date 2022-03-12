@@ -896,30 +896,6 @@ export default new Vuex.Store({
           .orderBy("taskCreatedTimestamp") // this is important to ordering the tasks in MissionList.vue
       );
     }),
-    async getTaskByTaskId({ state }, payload) {
-      // console.log("payload from getTaskByTaskId", payload);
-      const task = await db
-        .collection("courses")
-        .doc(payload.courseId)
-        .collection("topics")
-        .doc(payload.topicId)
-        .collection("tasks")
-        .doc(payload.taskId)
-        .get();
-
-      return task.data();
-    },
-    async getTopicByTopicId({ state }, payload) {
-      // console.log("payload from getTopicByTopicId", payload);
-      const topic = await db
-        .collection("courses")
-        .doc(payload.courseId)
-        .collection("topics")
-        .doc(payload.topicId)
-        .get();
-
-      return topic.data();
-    },
     async getAllCourseTopicsAndTasks({ state }, coursesArr) {
       const allCourseTopicsAndTasks = [];
       // loop courses

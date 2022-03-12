@@ -15,7 +15,7 @@
 
 <script>
 import { mapState, mapGetters } from "vuex";
-import { getActivityLogXAPIQuery } from "../store/veracityLRS";
+import { getActivityLogXAPIQuery } from "../lib/veracityLRS";
 import { DateTime } from "luxon";
 export default {
   name: "StudentActivityTimeline",

@@ -31,17 +31,17 @@
         <v-col cols="4" class="pa-0">
           <div class="top-row">
             <p class="label">ACTIVE MISSION:</p>
-            <ActiveMissions :courseId="data.course.id" />
+            <ActiveMissions :data="data.activities" />
           </div>
           <div class="bottom-row">
-            <!-- <v-progress-circular
+            <v-progress-circular
               :value="calcTaskCompletedPercentage(data)"
               color="baseAccent"
               size="100"
               width="10"
               :rotate="-90"
               >{{ calcTaskCompletedPercentage(data) + "%" }}
-            </v-progress-circular> -->
+            </v-progress-circular>
           </div>
         </v-col>
       </v-row>
@@ -57,8 +57,7 @@ import { DateTime } from "luxon";
 import { dbMixins } from "../mixins/DbMixins";
 
 import {
-  getStudentsCoursesXAPIQuery,
-  getActiveTaskXAPIQuery,
+  getStudentsCoursesXAPIQuery, getActiveTaskXAPIQuery
 } from "../lib/veracityLRS";
 
 export default {
@@ -73,6 +72,7 @@ export default {
     return {
       value: 80,
       santisedCourses: [],
+      studentsActiveTasks: [],
       previousTickTitle: "",
       chartType: "line",
       chartOptions: {
@@ -141,44 +141,45 @@ export default {
           duration: 1000,
           easing: "easeInOutQuart",
         },
-        santisedCourses: []
       },
+
     };
   }, 
   async mounted() {
     this.santisedCourses = await getStudentsCoursesXAPIQuery(this.person);
+    this.studentsActiveTasks = await getActiveTaskXAPIQuery(this.person)
   },
   computed: {
-    ...mapState(["studentsActiveTasks"]),
     ...mapGetters(["person", "getCourseById", "getTopicById"]),
   },
   methods: {
     formatStudentsChartData(data) {
-      // console.log("course", course);
-      data.x = data.timeStamp
-      data.y = data.index
 
-      // get a colour based on course name
       const courseColour = this.stringToColour(data.course.title);
 
-      let studentCourseData = {
+      const activities = data.activities.map((activity) => {
+        return {
+          ...activity,
+          x: activity.timeStamp,
+          y: activity.index
+        }
+      })
+
+      let studentData = {
         type: "line",
         backgroundColor: courseColour,
         borderColor: courseColour,
         borderRadius: 5,
         borderWidth: 1,
-        // data: courseTaskData.flat(),
-        data: data,
-        label: data.course.title,
-        segment: {
-          // borderColor: (ctx) => this.getColourBasedOnStatus(ctx, course),
-        },
-      };
+        data: activities,
+        label: data.course.title
+      }
 
       const datasetsObj = {
-        datasets: [studentCourseData],
+        datasets: [studentData],
       };
 
+      console.log("datasets: ", datasetsObj)
       return datasetsObj;
     },
     stringToColour(str) {
@@ -191,9 +192,9 @@ export default {
       }
       return hash;
     },
-    calcTaskCompletedPercentage(course) {
+    calcTaskCompletedPercentage(data) {
       let percentage =
-        (course.taskCompletedCount / course.courseContext.taskTotal) * 100;
+        (data.taskCompletedCount / data.course.taskTotal) * 100;
       return Math.round(percentage);
     },
   },

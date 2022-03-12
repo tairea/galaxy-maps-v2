@@ -41,7 +41,7 @@
 <script>
 import { mapActions } from "vuex";
 import Avatar from "../components/Avatar";
-import { getCohortsCourseDataXAPIQuery } from "../store/veracityLRS";
+import { getCohortsCourseDataXAPIQuery } from "../lib/veracityLRS";
 
 export default {
   name: "CohortPanel",
