@@ -132,6 +132,7 @@ export default {
       dialogTitle: "",
       dialogDescription: "",
       editing: false,
+      moveNodes: false,
     };
   },
   async mounted() {
@@ -213,7 +214,7 @@ export default {
       "topicsTasks",
       "personsTopicsTasks",
     ]),
-    ...mapGetters(["getCourseById"]),
+    ...mapGetters(["getCourseById", "person"]),
     goBackPath() {
       if (this.person.accountType == "student") {
         return "/base/galaxies/assigned";
