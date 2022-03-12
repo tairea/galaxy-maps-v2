@@ -38,7 +38,7 @@
       <div v-if="courses.length > 0">
         <Course v-for="(course, i) in courses" :course="course" :key="i" />
       </div>
-      <p v-else class="assigned-status">No Galaxies assigned to this Cohort</p>
+      <p v-if="cohortTeacher" class="assigned-status">No Galaxies assigned to this Cohort</p>
       <AssignCohortDialog :assignCourses="true" />
     </div>
   </div>
@@ -52,7 +52,8 @@ import Course from "../components/Course";
 import Cohort from "../components/Cohort";
 import Organisation from "../components/Organisation";
 import Person from "../components/Person";
-import { dbMixins } from "../mixins/DbMixins";
+import { dbMixins } from "../mixins/DbMixins"
+import { getCourseById } from "../lib/ff";
 
 export default {
   name: "AssignedInfo",
@@ -64,14 +65,14 @@ export default {
     Course,
     AssignCohortDialog,
   },
-  props: ["assignCohorts", "cohorts", "organisations", "people"],
-  data() {
+  props: ["assignCohorts", "assignCourses", "cohorts", "organisations", "people"],
+  data () {
     return {
       courses: [],
     };
   },
-  mounted() {
-    this.getCohortCourses();
+  beforeMount () {
+    this.getCohortCourses()
   },
   watch: {
     currentCohort() {
@@ -81,18 +82,15 @@ export default {
   computed: {
     ...mapState(["person", "currentCohort"]),
     ...mapGetters(["getCoursesInThisCohort"]),
-    assignCourses() {
-      return this.person.accountType !== "student";
-    },
+    cohortTeacher() {
+      return this.currentCohort.teachers.some(id => id === this.person.id)
+    }
   },
   methods: {
-    async getCohortCourses() {
-      console.log("getting cohort courses");
-      let courses = await Promise.all(
-        this.currentCohort?.courses.map((courseId) => {
-          return this.MXgetCourseById(courseId);
-        })
-      );
+    async getCohortCourses () {
+      let courses = await Promise.all(this.currentCohort?.courses.map(courseId => {
+        return getCourseById(courseId)
+      }))
       if (courses.length) {
         this.courses = courses;
       }

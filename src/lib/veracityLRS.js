@@ -1,5 +1,6 @@
 import store from "../store";
-import { db } from "./firestoreConfig";
+import { getCourseById } from "../lib/ff"
+import { db } from "../store/firestoreConfig";
 
 const auth = "Basic " + btoa(process.env.VUE_APP_VERACITY_LRS_SECRET);
 
@@ -730,7 +731,7 @@ export const getStudentsCoursesXAPIQuery = async (person) => {
     },
   ];
 
-  await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
+  return await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -738,13 +739,14 @@ export const getStudentsCoursesXAPIQuery = async (person) => {
     },
     body: JSON.stringify(aggregationQuery),
   })
-    .then((res) => res.json())
-    .catch((error) => console.error(error.message))
-    .then((res) => {
-      // console.log("getStudentsCoursesXAPIQuery: res => ", res);
-      store.commit("setStudentCourseDataFromLRS", res);
-    });
+  .then((res) => res.json())
+  .catch((error) => console.error(error.message))
+  .then((res) => {
+    const courses =  sanitiseCourseDataFromLRS(res)
+    return courses
+  });
 };
+
 export const getActiveTaskXAPIQuery = async (person) => {
   // console.log("querying LRS for students active tasks...");
   const aggregationQuery = [
@@ -809,7 +811,7 @@ export const getActiveTaskXAPIQuery = async (person) => {
     },
   ];
 
-  await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
+  return await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -821,9 +823,75 @@ export const getActiveTaskXAPIQuery = async (person) => {
     .catch((error) => console.error(error.message))
     .then((res) => {
       // console.log("getActiveTaskXAPIQuery: res => ", res);
-      store.commit("setStudentsActiveTasks", res);
+      return res;
+      // return sanitiseCourseDataFromLRS(res)
+
     });
 };
+
+async function sanitiseCourseDataFromLRS(res) {
+  const santisedCourses = [];
+
+  let taskCompletedCount = 0;
+
+  for (const group of res) {
+    const course = await courseIRIToCourseId(group);
+
+    // sanitise statements data
+    const activities = group.statements.map((statement, index) => {
+      if (statement.description.includes("Completed Task:"))
+        taskCompletedCount++;
+
+      let [action, title] = statement.description.split(": ")
+      let [status, type] = action.split(" ")
+      let id = statement.task.split("/").pop()
+
+      const newStatement = {
+        timeStamp: statement.timestamp,
+        index, status, type, title, id,
+        context: statement.context,
+      };
+      // const contextSplit = statement.context.split(
+      //   /Course: | > Topic: | > Task: /
+      // );
+      // const topicTitle = contextSplit[2];
+      // const taskTitle = contextSplit[3];
+
+      // if (statement.description.includes("Completed Task:"))
+      //   taskCompletedCount++;
+
+      // const newStatement = {
+      //   x: statement.timestamp,
+      //   y: index,
+      //   taskStatus: statement.verb.display["en-nz"],
+      //   context: statement.context,
+      //   topic: topicTitle,
+      //   taskTitle: taskTitle,
+      //   description: statement.description,
+      // };
+      return newStatement;
+    });
+
+    const courseObj = {
+      course,
+      activities: activities.reverse(),
+      taskCompletedCount,
+    };
+
+    santisedCourses.push(courseObj);
+  }
+  return santisedCourses
+}
+
+async function courseIRIToCourseId(course) {
+  // get course id from iri
+  const courseIRI = course._id.course[0];
+  const courseId = courseIRI.split("/course/")[1];
+  // get course name
+  const courseContext = await getCourseById(courseId);
+  return courseContext;
+}
+
 export const getActivityLogXAPIQuery = async (person) => {
   // console.log("querying LRS for students active tasks...");
   const aggregationQuery = [

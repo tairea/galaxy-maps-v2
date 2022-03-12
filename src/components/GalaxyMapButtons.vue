@@ -81,9 +81,7 @@ export default {
     ...mapState(["currentCourseId", "currentCourseNodes", "person"]),
     ...mapGetters([
       "getCourseById",
-      "getCohortsInThisCourse",
       "getOrganisationsInThisCourse",
-      "getPeopleInThisCourse",
     ]),
   },
   methods: {

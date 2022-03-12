@@ -21,7 +21,7 @@
         </template>
         <span>{{student.firstName + ' ' + student.lastName}}</span>
       </v-tooltip>
-      <p :class="online" class="login">{{loggedIn}}</p>
+      <p :class="online" class="status">{{loggedIn}}</p>
     </div>
     <div class="student-section student-main-section">
       <div v-if="topic">
@@ -84,9 +84,12 @@
 
 <script>
 import { min } from 'moment';
+import { getStudentsCoursesXAPIQuery, queryXAPIStatement } from "../lib/veracityLRS";
+
 // import EditStudentButtonDialog from "../components/EditStudentButtonDialog";
 import { mapState, mapGetters } from 'vuex'
 import { dbMixins } from "../mixins/DbMixins"
+import { getCourseById } from "../lib/ff"
 
 export default {
   name: "StudentCard",
@@ -106,12 +109,15 @@ export default {
       help: [],
       assignedCourse: null,
       studetProfile: [],
+      courseActivity: []
     };
   },
-  mounted () {
+  async mounted () {
     if (this.currentCohort.courses?.length) {
       this.getAssignedCourse()
     }
+    const studentCourses = await getStudentsCoursesXAPIQuery(this.student)
+    // this.courseActivity = studentCourses.filter(course => this.assignedCourse.id === course.courseContext.id).reverse()
   },
   computed: {
     ...mapState(['currentCohort', 'userStatus']),
@@ -128,12 +134,18 @@ export default {
     },
     online () {
       if (this.loggedIn === 'online') return 'online'
-    }
+    },
+    // topic () {
+    //   const topic = this.courseActivity.courseData.find(course => course.topic.length)
+    //   return {
+    //     status: 
+    //   }
+    // }
   },
   methods: {
     async getAssignedCourse () {
       const courseId = this.student.assignedCourses?.find(course => this.currentCohort.courses.includes(course))
-      const course = await this.MXgetCourseById(courseId)
+      const course = await getCourseById(courseId)
       this.assignedCourse = course
     },
     first3Letters(name) {
@@ -156,7 +168,7 @@ export default {
       if (minutes < 60) return `${minutes}mins` 
       if (hours < 24) return `${hours}hrs`
       return `${days}days`
-    }
+    },
   },
 };
 </script>
@@ -170,9 +182,9 @@ a {
   color: var(--v-missionAccent-base) !important;
 }
 
-.login {
+.status {
   font-size: 0.6rem;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
 }
 
 .student-card {
@@ -181,7 +193,6 @@ a {
   display: flex;
 
   .student-section {
-    // margin: 0px;
     color: var(--v-missionAccent-base);
     font-size: 0.9rem;
     border-left: 1px dashed var(--v-missionAccent-base);
@@ -190,16 +201,11 @@ a {
   }
 
   .student-main-section {
-    // flex-grow: 2 !important;
     padding-left: 20px;
     padding-right: 20px;
     width: 30%;
-    // position: relative;
 
     .student-edit-button {
-      // position: absolute;
-      // bottom: 10px;
-      // left: 10px;
       font-size: 0.7rem;
     }
   }

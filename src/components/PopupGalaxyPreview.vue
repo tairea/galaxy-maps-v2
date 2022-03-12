@@ -145,7 +145,7 @@ import { dbMixins } from "../mixins/DbMixins";
 
 import { mapGetters, mapState } from "vuex";
 
-import { startGalaxyXAPIStatement } from "../store/veracityLRS";
+import { startGalaxyXAPIStatement } from "../lib/veracityLRS";
 
 export default {
   name: "PopupGalaxyPreview",

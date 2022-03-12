@@ -1,11 +1,6 @@
 //=========== USER PRECENSE SYSTEM ===================
 import store from "@/store";
 import firebase from "firebase";
-import {
-  studentOnlineXAPIStatement,
-  studentOfflineXAPIStatement,
-} from "@/store/veracityLRS";
-// import store from './store'
 
 export const startPresenceSystem = (uid) => {
   if (!uid) return;

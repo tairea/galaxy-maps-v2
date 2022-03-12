@@ -16,72 +16,34 @@
 
   <!-- v-btn above OR custom div button. which is better? -->
   <div class="active-mission-card" @click="routeToTasksSystem()">
-    <p class="ma-0">{{ activeTopic.label }}</p>
+    <p class="ma-0">{{ activeTopic }}</p>
     <p class="ma-0" style="font-weight: 900; padding: 0px 5px">></p>
-    <p class="ma-0" style="font-weight: 900">{{ activeTask.title }}</p>
+    <p class="ma-0" style="font-weight: 900">{{ activeTask }}</p>
   </div>
 </template>
 
 <script>
-import { mapState, mapGetters } from "vuex";
-
 export default {
   name: "ActiveMissions",
-  props: ["courseId"],
+  props: ["data"],
   components: {},
-  async mounted() {
-    // === get active task (from FIRESTORE)
-    // const activeMissionsFromDB = await this.$store.dispatch(
-    //   "getPersonsActiveTasks",
-    //   {
-    //     courseId: this.courseId,
-    //     personId: this.person.id,
-    //   }
-    // );
-    // this.activeMissionsData = activeMissionsFromDB;
-
-    // === get active task (from XAPI LRS) NOTE: LRS Query only returns 1 active mission. The above firestore method returns all active mission but no topic.
-    const course = this.studentsActiveTasks.find(
-      (course) => course._id.course == this.courseId
-    );
-
-    const topicId = course.lastStatement.topic;
-    const taskId = course.lastStatement.task;
-
-    // return taskId;
-
-    const task = await this.$store.dispatch("getTaskByTaskId", {
-      courseId: this.courseId,
-      topicId: course.lastStatement.topic,
-      taskId: course.lastStatement.task,
-    });
-
-    const topic = await this.$store.dispatch("getTopicByTopicId", {
-      courseId: this.courseId,
-      topicId: course.lastStatement.topic,
-    });
-
-    this.activeTopic = topic;
-    this.activeTask = task;
-
-    // console.log("task:", task);
-    // console.log("topic:", topic);
-
-    // return topic.label + " " + task.title;
-  },
-  computed: {
-    ...mapState(["studentCourseDataFromLRS", "studentsActiveTasks"]),
-    ...mapGetters(["person"]),
-    dark() {
-      return this.$vuetify.theme.isDark;
-    },
-  },
   data() {
     return {
       activeMissionsData: [],
-      activeTopic: null,
-      activeTask: null,
     };
+  },
+
+  computed: {
+    activeTopic () {
+      const topic = this.data.find(topic => topic.type === 'Topic')
+      if (topic?.status === 'Started') return topic.title
+      else return 'no active topic'
+    },
+    activeTask () {
+      const task = this.data.find(task => task.type === 'Task')
+      if (task?.status === 'Started') return task.title
+      else return 'no active task'
+    }
   },
   methods: {
     routeToTasksSystem() {

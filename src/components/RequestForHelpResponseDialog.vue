@@ -145,8 +145,8 @@ import firebase from "firebase/app";
 import moment from "moment";
 
 import { db } from "../store/firestoreConfig";
-import { teacherRespondedToRequestForHelpXAPIStatement } from "../store/veracityLRS";
-import { dbMixins } from "../mixins/DbMixins";
+import { teacherRespondedToRequestForHelpXAPIStatement } from "../lib/veracityLRS";
+import { dbMixins } from "../mixins/DbMixins"; 
 import { mapState, mapGetters } from "vuex";
 
 export default {
@@ -331,9 +331,6 @@ export default {
   -webkit-border-radius: 5px;
   border-radius: 5px;
   border: 2px solid var(--v-missionAccent-base);
-}
-.speech-bubble p {
-  // font-size: 1.25em;
 }
 
 .speech-bubble:before,

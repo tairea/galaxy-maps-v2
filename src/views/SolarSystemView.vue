@@ -112,7 +112,6 @@ export default {
       "person",
       "getPersonsTopicById",
       "getTopicById",
-      "getPeopleInThisCourse",
       "getTasksByTopicId",
     ]),
   },

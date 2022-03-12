@@ -1,9 +1,9 @@
 const fetch = require("node-fetch");
 require("dotenv").config();
 
-// const btoa = (text) => {
-//   return Buffer.from(text, "binary").toString("base64");
-// };
+const btoa = (text) => {
+  return Buffer.from(text, "binary").toString("base64");
+};
 
 const auth = "Basic " + btoa(process.env.VERACITY_LRS_SECRET);
 

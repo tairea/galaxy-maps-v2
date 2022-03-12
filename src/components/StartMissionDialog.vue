@@ -85,7 +85,7 @@
 import firebase from "firebase/app";
 
 import { db } from "../store/firestoreConfig";
-import { startTaskXAPIStatement } from "../store/veracityLRS";
+import { startTaskXAPIStatement } from "../lib/veracityLRS";
 
 import { mapState, mapGetters } from "vuex";
 

@@ -11,10 +11,8 @@
       max-height="60px"
       class="course-image"
     ></v-img>
-    <div v-else-if="course.title" class="imagePlaceholder">
-      {{ first3Letters(course.title) }}
-    </div>
-    <h3 class="overline text-center">{{ course.title }}</h3>
+    <div v-else class="imagePlaceholder">{{ first3Letters(course.title) }}</div>
+    <p class="title text-center pt-2 mb-0">{{ course.title }}</p>
   </v-col>
 </template>
 
@@ -56,6 +54,14 @@ export default {
 <style lang="scss" scoped>
 .course {
   cursor: pointer;
+
+  .title {
+    font-size: 0.65rem !important;
+    font-weight: 500;
+    line-height: 1rem;
+    text-transform: uppercase;
+    font-family: "Roboto", sans-serif !important;
+  }
 
   .course-image {
     width: 100px;

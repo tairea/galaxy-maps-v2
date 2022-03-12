@@ -1,18 +1,18 @@
 <template>
   <div v-if="santisedCourses">
     <div
-      v-for="course in santisedCourses"
-      :key="course.id"
+      v-for="data in santisedCourses"
+      :key="data.course.id"
       class="course-frame"
     >
       <v-row>
         <v-col cols="2" class="left-col">
           <h1 class="galaxy-title">
-            {{ course.courseContext.title }}
+            {{ data.course.title }}
           </h1>
           <v-img
             class="galaxy-image"
-            :src="course.courseContext.image.url"
+            :src="data.course.image.url"
           ></v-img>
           <!-- <p class="galaxy-description">
             {{ course.courseContext.description }}
@@ -23,30 +23,25 @@
             ref="chart"
             id="chartImage"
             :chartType="chartType"
-            :chartData="formatStudentsChartData(course)"
+            :chartData="formatStudentsChartData(data)"
             :chartOptions="chartOptions"
             :style="{ width: '100%', height: '200px', padding: '20px' }"
           />
         </v-col>
         <v-col cols="4" class="pa-0">
           <div class="top-row">
-            <p class="label">RESUME MISSION:</p>
-            <div class="d-flex justify-center align-center">
-              <ActiveMissions :courseId="course.courseContext.id" />
-            </div>
+            <p class="label">ACTIVE MISSION:</p>
+            <ActiveMissions :data="data.activities" />
           </div>
           <div class="bottom-row">
-            <p class="label">GALAXY PROGRESS:</p>
-            <div class="d-flex justify-center align-center pb-3">
-              <v-progress-circular
-                :value="calcTaskCompletedPercentage(course)"
-                color="baseAccent"
-                size="100"
-                width="10"
-                :rotate="-90"
-                >{{ calcTaskCompletedPercentage(course) + "%" }}
-              </v-progress-circular>
-            </div>
+            <v-progress-circular
+              :value="calcTaskCompletedPercentage(data)"
+              color="baseAccent"
+              size="100"
+              width="10"
+              :rotate="-90"
+              >{{ calcTaskCompletedPercentage(data) + "%" }}
+            </v-progress-circular>
           </div>
         </v-col>
       </v-row>
@@ -62,9 +57,8 @@ import { DateTime } from "luxon";
 import { dbMixins } from "../mixins/DbMixins";
 
 import {
-  getStudentsCoursesXAPIQuery,
-  getActiveTaskXAPIQuery,
-} from "../store/veracityLRS";
+  getStudentsCoursesXAPIQuery, getActiveTaskXAPIQuery
+} from "../lib/veracityLRS";
 
 export default {
   name: "StudentCourseProgression",
@@ -74,21 +68,11 @@ export default {
     ActiveMissions,
   },
   mixins: [dbMixins],
-  async mounted() {
-    await getStudentsCoursesXAPIQuery(this.person);
-    //get courses from LRS
-    this.sanitiseCourseDataFromLRS();
-
-    await getActiveTaskXAPIQuery(this.person);
-  },
-  computed: {
-    ...mapState(["studentCourseDataFromLRS", "studentsActiveTasks"]),
-    ...mapGetters(["person", "getCourseById", "getTopicById"]),
-  },
   data() {
     return {
       value: 80,
       santisedCourses: [],
+      studentsActiveTasks: [],
       previousTickTitle: "",
       chartType: "line",
       chartOptions: {
@@ -158,93 +142,44 @@ export default {
           easing: "easeInOutQuart",
         },
       },
+
     };
+  }, 
+  async mounted() {
+    this.santisedCourses = await getStudentsCoursesXAPIQuery(this.person);
+    this.studentsActiveTasks = await getActiveTaskXAPIQuery(this.person)
+  },
+  computed: {
+    ...mapGetters(["person", "getCourseById", "getTopicById"]),
   },
   methods: {
-    async sanitiseCourseDataFromLRS() {
-      // console.log("data from LRS:", this.studentCourseDataFromLRS);
+    formatStudentsChartData(data) {
 
-      const santisedCourses = [];
+      const courseColour = this.stringToColour(data.course.title);
 
-      let taskCompletedCount = 0;
+      const activities = data.activities.map((activity) => {
+        return {
+          ...activity,
+          x: activity.timeStamp,
+          y: activity.index
+        }
+      })
 
-      for (const course of this.studentCourseDataFromLRS) {
-        // get course info
-        const courseContext = await this.courseIRIToCourseId(course);
-
-        // sanitise statements data
-        const courseData = course.statements.map((statement, index) => {
-          const contextSplit = statement.context.split(
-            /Course: | > Topic: | > Task: /
-          );
-          const topicTitle = contextSplit[2];
-          const taskTitle = contextSplit[3];
-
-          if (statement.description.includes("Completed Task:"))
-            taskCompletedCount++;
-
-          const newStatement = {
-            x: statement.timestamp,
-            y: index,
-            taskStatus: statement.verb.display["en-nz"],
-            context: statement.context,
-            topic: topicTitle,
-            taskTitle: taskTitle,
-            description: statement.description,
-          };
-          return newStatement;
-        });
-
-        // count number of "Completed Task:..." in description
-
-        const courseObj = {
-          courseContext,
-          courseData,
-          taskCompletedCount,
-        };
-
-        this.santisedCourses.push(courseObj);
-      }
-      // console.log("santisedCourses", this.santisedCourses);
-    },
-    async courseIRIToCourseId(course) {
-      // get course id from iri
-      const courseIRI = course._id.course[0];
-      const courseId = courseIRI.split("/course/")[1];
-      // get course name
-      const courseContext = await this.getCourseById(courseId);
-      return courseContext;
-    },
-
-    formatStudentsChartData(course) {
-      // console.log("course", course);
-
-      let datasets = [];
-
-      // get a colour based on course name
-      const courseColour = this.stringToColour(course.courseContext.title);
-
-      let studentCourseData = {
+      let studentData = {
         type: "line",
         backgroundColor: courseColour,
         borderColor: courseColour,
         borderRadius: 5,
         borderWidth: 1,
-        // data: courseTaskData.flat(),
-        data: course.courseData,
-        label: course.courseContext.title,
-        segment: {
-          // borderColor: (ctx) => this.getColourBasedOnStatus(ctx, course),
-        },
-      };
-
-      // push course to datasets
-      datasets.push(studentCourseData);
+        data: activities,
+        label: data.course.title
+      }
 
       const datasetsObj = {
-        datasets: datasets,
+        datasets: [studentData],
       };
 
+      console.log("datasets: ", datasetsObj)
       return datasetsObj;
     },
     stringToColour(str) {
@@ -257,9 +192,9 @@ export default {
       }
       return hash;
     },
-    calcTaskCompletedPercentage(course) {
+    calcTaskCompletedPercentage(data) {
       let percentage =
-        (course.taskCompletedCount / course.courseContext.taskTotal) * 100;
+        (data.taskCompletedCount / data.course.taskTotal) * 100;
       return Math.round(percentage);
     },
   },
@@ -309,9 +244,6 @@ export default {
   width: 100%;
   border-bottom: 1px solid var(--v-galaxyAccent-base);
   // height: 30%;
-}
-
-.bottom-row {
 }
 
 .label {

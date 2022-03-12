@@ -47,6 +47,8 @@ export default {
           // Get data from tooltip
           const dataPoints = tooltip.dataPoints || [];
 
+          console.log("dataPoints: ", dataPoints)
+
           // ===== Create row elements =====
           const divTopRow = document.createElement("div");
           const divMiddleRow = document.createElement("div");
@@ -69,31 +71,20 @@ export default {
                     font-style: italic;
                   "
                 >
-                  <td>MISSION:</td>
-                  <td>${dataPoint.raw.taskTitle}</td>
+                  <td>${dataPoint.raw.type}:</td>
                 </tr>
                 <tr
                   class="dialog-context-description"
-                  style="color: var(--v-missionAccent-base);
-                  text-transform: uppercase;
-                  font-size: 0.6rem;
-                  margin: 0;
-                  font-style: italic;
+                  style="
+                    color: var(--v-baseAccent-base);
+                    text-transform: uppercase;
+                    font-size: 0.8rem;
+                    font-weight: 800;
+                    margin: 0;
+                    font-style: italic;
                   "
                 >
-                  <td>System:</td>
-                  <td>${dataPoint.raw.topic}</td>
-                </tr>
-                <tr
-                  class="dialog-context-description"
-                  style="color: var(--v-galaxyAccent-base);
-                  text-transform: uppercase;
-                  font-size: 0.6rem;
-                  margin: 0;
-                  font-style: italic;"
-                >
-                  <td>Galaxy:</td>
-                  <td>${dataPoint.dataset.label}</td>
+                   <td>${dataPoint.raw.title}</td>
                 </tr>
               </table>
             `;
@@ -102,11 +93,12 @@ export default {
                 ? this.$vuetify.theme.themes.dark.missionAccent
                 : this.$vuetify.theme.themes.light.missionAccent
             }`;
+            divTopRow.style.textAlign = "center";
 
             // ===== Middle Row (Task Status) =====
             divMiddleRow.style.textAlign = "center";
             divMiddleRow.classList.add("text-overline");
-            divMiddleRow.innerHTML = dataPoint.raw.taskStatus.toUpperCase();
+            divMiddleRow.innerHTML = dataPoint.raw.status.toUpperCase();
             divMiddleRow.style.padding = "5px";
             divMiddleRow.style.fontSize = "0.9rem";
             divMiddleRow.style.fontWeight = "800";
