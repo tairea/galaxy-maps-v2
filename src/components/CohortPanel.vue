@@ -35,7 +35,7 @@
     <!-- Middle chip row -->
     <div v-if="cohortsCoursesData" class="row-border d-flex justify-end">
       <v-chip
-        class="ma-2 custom-chip"
+        class="my-2 mx-1 custom-chip"
         color="missionAccent"
         outlined
         x-small
@@ -44,7 +44,7 @@
         <
       </v-chip>
       <v-chip
-        class="ma-2 custom-chip"
+        class="my-2 mx-1 custom-chip"
         color="missionAccent"
         outlined
         x-small
@@ -56,7 +56,7 @@
         Day
       </v-chip>
       <v-chip
-        class="ma-2 custom-chip"
+        class="my-2 mx-1 custom-chip"
         color="missionAccent"
         outlined
         x-small
@@ -68,7 +68,7 @@
         Week
       </v-chip>
       <v-chip
-        class="ma-2 custom-chip"
+        class="my-2 mx-1 custom-chip"
         color="missionAccent"
         :input-value="chipFortnightActive"
         filter
@@ -80,7 +80,7 @@
         Fortnight
       </v-chip>
       <v-chip
-        class="ma-2 custom-chip"
+        class="my-2 mx-1 custom-chip"
         color="missionAccent"
         outlined
         x-small
@@ -89,6 +89,23 @@
         >
       </v-chip>
     </div>
+    <!-- Middle student avatars row -->
+    <div class="row-border">
+      <div v-if="cohort.students" class="d-flex justify-center align-center">
+        <Avatar
+          v-for="(person, index) in studentsWithData"
+          ref="avatar"
+          :key="person.id"
+          :size="30"
+          :personId="person.id"
+          class="my-2 mx-1 avatar"
+          :colourBorder="true"
+          @click.native="clickedPerson(person, index)"
+        />
+      </div>
+      <p v-else class="label" style="font-weight: 800">NO TEACHERS</p>
+    </div>
+    <!-- Bottom chart row -->
     <div>
       <div v-if="cohortsCoursesData" style="padding: 20px">
         <ProgressionChart
@@ -96,6 +113,8 @@
           :key="courseData.id"
           :courseData="courseData"
           :timeframe="timeframe"
+          :selectedPersons="selectedPersons"
+          :unselectedPersons="unselectedPersons"
         />
       </div>
       <div
@@ -130,24 +149,89 @@ export default {
       chipDayActive: false,
       chipWeekActive: true,
       chipFortnightActive: false,
+      studentsWithData: [],
+      selectedIndexs: [],
+      selectedPersons: [],
+      unselectedPersons: [],
     };
   },
-  computed: {},
+
   async mounted() {
-    console.log("cohort panel loaded for: ", this.cohort.name);
     const getCourseData = await getCohortsCourseDataXAPIQuery({
       studentsArr: this.cohort.students,
       coursesArr: this.cohort.courses,
       cohortName: this.cohort.name,
     });
-    // .then(() => {
-    //   console.log("get cohort data from LRS done");
-    // });
     this.cohortsCoursesData = getCourseData;
-    console.log("this.cohortsCoursesData", this.cohortsCoursesData);
+    // console.log("this.cohortsCoursesData", this.cohortsCoursesData);
+
+    // add students with data
+    const studentsArr = [];
+    if (this.cohortsCoursesData) {
+      for (const course of this.cohortsCoursesData) {
+        for (const person of course.students) {
+          studentsArr.push(person.person);
+        }
+      }
+      // this flattens any duplicates of students (eg. student 1 is in more than one course. but only want to show them once)
+      this.studentsWithData = studentsArr.filter(
+        (v, i, a) => a.findIndex((t) => t.id === v.id) === i
+      );
+    }
   },
+  computed: {},
   methods: {
     ...mapActions(["setCurrentCohort"]),
+    clickedPerson(person, index) {
+      // get all avatar elements
+      const avatarEls = this.$refs.avatar;
+      // loop avatar els
+      for (var i = 0; i < avatarEls.length; i++) {
+        // add index to selected if not already. else remove
+        if (i == index && !this.selectedIndexs.includes(index)) {
+          this.selectedIndexs.push(index);
+          this.selectedPersons.push(person);
+        }
+        // remove
+        else if (i == index && this.selectedIndexs.includes(index)) {
+          this.selectedIndexs = this.selectedIndexs.filter(
+            (item) => item !== index
+          );
+          this.selectedPersons = this.selectedPersons.filter(
+            (selectedPerson) => selectedPerson.id !== person.id
+          );
+          this.unselectedPersons.push(person);
+        }
+
+        //anyone not in selectedPersons becomes unselected (this is used to hide data in chart)
+        this.unselectedPersons = this.diffTwoArraysOfObjects(
+          this.studentsWithData,
+          this.selectedPersons
+        );
+
+        // add dim to all avatar els
+        for (var y = 0; y < avatarEls.length; y++) {
+          avatarEls[y].$el.classList.add("dim");
+        }
+        //remove dim for selected avatar els
+        for (var x = 0; x < this.selectedIndexs.length; x++) {
+          avatarEls[this.selectedIndexs[x]].$el.classList.remove("dim");
+        }
+      }
+    },
+    diffTwoArraysOfObjects(array1, array2) {
+      return array1.filter((object1) => {
+        return !array2.some((object2) => {
+          return object1.id === object2.id;
+        });
+      });
+    },
+    hoverOn(event) {
+      console.log("hover on:", event);
+    },
+    hoverOff(event) {
+      console.log("hover off:", event);
+    },
     timeframeFortnight() {
       this.chipActiveType = "fortnight";
       this.chipDayActive = false;
@@ -184,14 +268,12 @@ export default {
     getStartDay() {
       let startDay = new Date().setHours(0);
       startDay = new Date(startDay);
-      console.log("startDay:", startDay);
       return startDay;
     },
     getEndDay() {
       let endDay = new Date().setHours(23);
       endDay = new Date(endDay).setMinutes(59);
       endDay = new Date(endDay);
-      console.log("endDay:", endDay);
       return endDay;
     },
     previous() {
@@ -262,7 +344,6 @@ export default {
           break;
       }
     },
-
     previousDays(num, start) {
       if (!start) {
         var d = new Date();
@@ -357,5 +438,9 @@ export default {
 .custom-chip {
   padding: 10px;
   text-transform: uppercase;
+}
+
+.dim {
+  filter: opacity(30%);
 }
 </style>

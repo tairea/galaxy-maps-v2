@@ -34,6 +34,8 @@
           :style="{ width: '100%', height: '200px', padding: '20px' }"
           :toolTipEnable="false"
           :timeframe="timeframe"
+          :selectedPersons="selectedPersons"
+          :unselectedPersons="unselectedPersons"
         />
       </v-col>
       <!-- <v-col cols="4" class="pa-0">
@@ -56,7 +58,7 @@ import { dbMixins } from "../mixins/DbMixins";
 
 export default {
   name: "ProgressionChart",
-  props: ["courseData", "timeframe"],
+  props: ["courseData", "timeframe", "selectedPersons", "unselectedPersons"],
   components: {
     Chart,
   },
@@ -115,13 +117,17 @@ export default {
   },
   methods: {
     formatStudentsChartData(courseData) {
+      // console.log("courseData", courseData);
       const datasets = [];
+      const labels = [];
 
       // more than one student per course
       for (const student of courseData.students) {
         const studentColour = this.stringToColour(
           student.person.firstName + student.person.lastName
         );
+        const label = student.person.firstName + " " + student.person.lastName;
+
         const activities = student.activities.map((activity) => {
           return {
             ...activity,
@@ -138,13 +144,14 @@ export default {
           pointRadius: 2,
           borderWidth: 1,
           data: activities,
-          label: courseData.course.title,
+          label: label,
         };
-
+        labels.push(label);
         datasets.push(studentData);
       }
 
       const datasetsObj = {
+        labels,
         datasets,
       };
 

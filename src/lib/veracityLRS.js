@@ -1007,6 +1007,7 @@ export const getActivityLogXAPIQuery = async (person) => {
 };
 
 export const getCohortsCourseDataXAPIQuery = async (payload) => {
+  // if no data, dont bother
   if (!payload.studentsArr || !payload.coursesArr) return;
 
   // convert studentIds to mailto:email string
@@ -1022,15 +1023,13 @@ export const getCohortsCourseDataXAPIQuery = async (payload) => {
     courseIdsAsStrings.push(String(courseId));
   }
 
-  // console.log("cohorts query people:", personIdsArrToEmailsArr);
-  // console.log("cohorts query courses:", courseIdsAsStrings);
-
   const aggregationQuery = [
-    // match with cohorts courses
+    // match with cohorts courses. and only started & completed statements
     {
       $match: {
         "statement.object.definition.extensions.https://www.galaxymaps.io/course/id/":
           { $in: courseIdsAsStrings },
+        "statement.verb.display.en-nz": { $in: ["started", "completed"] },
       },
     },
     // group by actor & course

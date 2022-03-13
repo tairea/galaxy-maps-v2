@@ -19,6 +19,8 @@ export default {
     chartOptions: Object,
     toolTipEnable: Boolean,
     timeframe: Object,
+    selectedPersons: Array,
+    unselectedPersons: Array,
   },
   computed: {
     dark() {
@@ -26,9 +28,31 @@ export default {
     },
   },
   watch: {
+    unselectedPersons: {
+      handler(newUnselectedPersons) {
+        // console.log("this.chart", this.chart);
+        for (const person of newUnselectedPersons) {
+          const personsName = person.firstName + " " + person.lastName;
+          const personsIndexForDataset =
+            this.chart.data.labels.indexOf(personsName);
+          if (!(personsIndexForDataset < 0))
+            this.chart.hide(personsIndexForDataset);
+        }
+      },
+    },
+    selectedPersons: {
+      handler(newSelectedPersons) {
+        for (const person of newSelectedPersons) {
+          const personsName = person.firstName + " " + person.lastName;
+          const personsIndexForDataset =
+            this.chart.data.labels.indexOf(personsName);
+          if (!(personsIndexForDataset < 0))
+            this.chart.show(personsIndexForDataset);
+        }
+      },
+    },
     timeframe: {
       handler(newTimeframe) {
-        console.log("newTimeframe", newTimeframe);
         this.chartOptions.scales.x.min = newTimeframe.min;
         this.chartOptions.scales.x.max = newTimeframe.max;
         this.chartOptions.scales.x.time.unit = newTimeframe.unit;
