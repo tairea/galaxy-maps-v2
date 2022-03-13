@@ -239,6 +239,7 @@ export default {
     "currentEdge",
   ],
   async mounted() {
+    console.log(this.currentNode.prerequisites);
     this.infoPopupShow = false;
     // hack to make active select white
     if (this.$vuetify.theme.isDark) {

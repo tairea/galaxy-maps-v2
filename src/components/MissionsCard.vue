@@ -125,11 +125,24 @@
 
     <!-- ANALYTICS (for type teacher) -->
     <div v-else class="mission-section">
-      <p class="text-overline text-uppercase text-center">Analytics:</p>
+      <p class="text-overline text-uppercase text-center">Mission Info:</p>
       <div class="d-flex justify-center flex-column mt-2">
-        <v-btn color="missionAccent" outlined x-small> OVERVIEW </v-btn>
-        <v-btn color="missionAccent" outlined class="mt-2" x-small>
-          SEE FULL
+        <v-btn
+          color="missionAccent"
+          outlined
+          x-small
+          :disabled="this.taskVideo"
+        >
+          LINK TO VIDEO
+        </v-btn>
+        <v-btn
+          color="missionAccent"
+          outlined
+          class="mt-2"
+          x-small
+          :disabled="this.taskSlides"
+        >
+          LINK TO SLIDES
         </v-btn>
       </div>
     </div>
@@ -175,7 +188,18 @@ export default {
       editing: false,
       activeTask: false,
       panel: [],
+
+      taskSlides: false,
+      taskVideo: false,
     };
+  },
+  async mounted() {
+    if (this.task.slides == "") {
+      this.taskSlides = true;
+    }
+    if (this.task.video == "") {
+      this.taskVideo = true;
+    }
   },
   methods: {},
 };
