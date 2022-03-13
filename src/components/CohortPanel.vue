@@ -1,11 +1,11 @@
 <template>
-  <div
-    @click="!studentView ? routeToCohort(cohort) : null"
-    class="d-flex flex-column cohort-panel"
-    :style="!studentView ? 'cursor: pointer;' : ''"
-  >
+  <div class="d-flex flex-column cohort-panel">
     <!-- top row -->
-    <div class="row-border">
+    <div
+      class="row-border"
+      @click="!studentView ? routeToCohort(cohort) : null"
+      :style="!studentView ? 'cursor: pointer;' : ''"
+    >
       <div class="d-flex justify-start align-center pa-2">
         <v-img
           v-if="cohort.image.url"
@@ -32,12 +32,70 @@
         </div>
       </div>
     </div>
+    <!-- Middle chip row -->
+    <div v-if="cohortsCoursesData" class="row-border d-flex justify-end">
+      <v-chip
+        class="ma-2 custom-chip"
+        color="missionAccent"
+        outlined
+        x-small
+        @click="previous"
+      >
+        <
+      </v-chip>
+      <v-chip
+        class="ma-2 custom-chip"
+        color="missionAccent"
+        outlined
+        x-small
+        :input-value="chipDayActive"
+        filter
+        filter-icon="mdi-circle-small"
+        @click="timeframeDay"
+      >
+        Day
+      </v-chip>
+      <v-chip
+        class="ma-2 custom-chip"
+        color="missionAccent"
+        outlined
+        x-small
+        :input-value="chipWeekActive"
+        filter
+        filter-icon="mdi-circle-small"
+        @click="timeframeWeek"
+      >
+        Week
+      </v-chip>
+      <v-chip
+        class="ma-2 custom-chip"
+        color="missionAccent"
+        :input-value="chipFortnightActive"
+        filter
+        filter-icon="mdi-circle-small"
+        outlined
+        x-small
+        @click="timeframeFortnight"
+      >
+        Fortnight
+      </v-chip>
+      <v-chip
+        class="ma-2 custom-chip"
+        color="missionAccent"
+        outlined
+        x-small
+        @click="next"
+      >
+        >
+      </v-chip>
+    </div>
     <div>
       <div v-if="cohortsCoursesData" style="padding: 20px">
         <ProgressionChart
           v-for="courseData in cohortsCoursesData"
           :key="courseData.id"
           :courseData="courseData"
+          :timeframe="timeframe"
         />
       </div>
       <div
@@ -67,8 +125,14 @@ export default {
   data() {
     return {
       cohortsCoursesData: [],
+      timeframe: { min: this.previousDays(7), max: new Date(), unit: "day" }, // by default show past 7 days
+      chipActiveType: "week",
+      chipDayActive: false,
+      chipWeekActive: true,
+      chipFortnightActive: false,
     };
   },
+  computed: {},
   async mounted() {
     console.log("cohort panel loaded for: ", this.cohort.name);
     const getCourseData = await getCohortsCourseDataXAPIQuery({
@@ -84,6 +148,139 @@ export default {
   },
   methods: {
     ...mapActions(["setCurrentCohort"]),
+    timeframeFortnight() {
+      this.chipActiveType = "fortnight";
+      this.chipDayActive = false;
+      this.chipWeekActive = false;
+      this.chipFortnightActive = true;
+      this.timeframe = {
+        min: this.previousDays(14),
+        max: new Date(),
+        unit: "day",
+      };
+    },
+    timeframeWeek() {
+      this.chipActiveType = "week";
+      this.chipDayActive = false;
+      this.chipFortnightActive = false;
+      this.chipWeekActive = true;
+      this.timeframe = {
+        min: this.previousDays(7),
+        max: new Date(),
+        unit: "day",
+      };
+    },
+    timeframeDay() {
+      this.chipActiveType = "day";
+      this.chipFortnightActive = false;
+      this.chipWeekActive = false;
+      this.chipDayActive = true;
+      this.timeframe = {
+        min: this.getStartDay(),
+        max: this.getEndDay(),
+        unit: "hour",
+      };
+    },
+    getStartDay() {
+      let startDay = new Date().setHours(0);
+      startDay = new Date(startDay);
+      console.log("startDay:", startDay);
+      return startDay;
+    },
+    getEndDay() {
+      let endDay = new Date().setHours(23);
+      endDay = new Date(endDay).setMinutes(59);
+      endDay = new Date(endDay);
+      console.log("endDay:", endDay);
+      return endDay;
+    },
+    previous() {
+      let previousTimeframe = {};
+      switch (this.chipActiveType) {
+        case "day":
+          // change min max by 1 day
+          previousTimeframe = {
+            min: this.previousDays(1, this.timeframe.min),
+            max: this.previousDays(1, this.timeframe.max),
+            unit: this.timeframe.unit,
+          };
+          this.timeframe = previousTimeframe;
+          break;
+        case "week":
+          // change min max by 7 day
+          previousTimeframe = {
+            min: this.previousDays(7, this.timeframe.min),
+            max: this.previousDays(7, this.timeframe.max),
+            unit: this.timeframe.unit,
+          };
+          this.timeframe = previousTimeframe;
+          break;
+        case "fortnight":
+          // change min max by 14 day
+          previousTimeframe = {
+            min: this.previousDays(14, this.timeframe.min),
+            max: this.previousDays(14, this.timeframe.max),
+            unit: this.timeframe.unit,
+          };
+          this.timeframe = previousTimeframe;
+          break;
+        default:
+          break;
+      }
+    },
+    next() {
+      let nextTimeframe = {};
+      switch (this.chipActiveType) {
+        case "day":
+          // change min max by 1 day
+          nextTimeframe = {
+            min: this.nextDays(1, this.timeframe.min),
+            max: this.nextDays(1, this.timeframe.max),
+            unit: this.timeframe.unit,
+          };
+          this.timeframe = nextTimeframe;
+          break;
+        case "week":
+          // change min max by 7 day
+          nextTimeframe = {
+            min: this.nextDays(7, this.timeframe.min),
+            max: this.nextDays(7, this.timeframe.max),
+            unit: this.timeframe.unit,
+          };
+          this.timeframe = nextTimeframe;
+          break;
+        case "fortnight":
+          // change min max by 14 day
+          nextTimeframe = {
+            min: this.nextDays(14, this.timeframe.min),
+            max: this.nextDays(14, this.timeframe.max),
+            unit: this.timeframe.unit,
+          };
+          this.timeframe = nextTimeframe;
+          break;
+        default:
+          break;
+      }
+    },
+
+    previousDays(num, start) {
+      if (!start) {
+        var d = new Date();
+      } else {
+        var d = new Date(start);
+      }
+      d.setDate(d.getDate() - num);
+      return d;
+    },
+    nextDays(num, start) {
+      if (!start) {
+        var d = new Date();
+      } else {
+        var d = new Date(start);
+      }
+      d.setDate(d.getDate() + num);
+      return d;
+    },
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
@@ -154,6 +351,11 @@ export default {
   color: var(--v-missionAccent-base);
   font-size: 0.7rem;
   margin: 10px;
+  text-transform: uppercase;
+}
+
+.custom-chip {
+  padding: 10px;
   text-transform: uppercase;
 }
 </style>

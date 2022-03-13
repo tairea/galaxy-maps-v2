@@ -8,6 +8,7 @@
 <script>
 import { Chart, registerables } from "chart.js";
 Chart.register(...registerables);
+import { DateTime } from "luxon";
 
 // Chart.defaults.elements.point.radius = 0;
 
@@ -17,10 +18,34 @@ export default {
     chartData: Object,
     chartOptions: Object,
     toolTipEnable: Boolean,
+    timeframe: Object,
   },
   computed: {
     dark() {
       return this.$vuetify.theme.isDark;
+    },
+  },
+  watch: {
+    timeframe: {
+      handler(newTimeframe) {
+        console.log("newTimeframe", newTimeframe);
+        this.chartOptions.scales.x.min = newTimeframe.min;
+        this.chartOptions.scales.x.max = newTimeframe.max;
+        this.chartOptions.scales.x.time.unit = newTimeframe.unit;
+        if (newTimeframe.unit == "hour") {
+          const titleObj = {
+            display: true,
+            text: DateTime.fromJSDate(newTimeframe.max).toFormat(
+              "ccc dd LLL   "
+            ),
+          };
+          this.chartOptions.scales.x.title = titleObj;
+        } else {
+          this.chartOptions.scales.x.title = {};
+        }
+
+        this.chart.update();
+      },
     },
   },
   mounted() {

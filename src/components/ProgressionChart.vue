@@ -1,16 +1,30 @@
 <template>
   <div class="course-frame">
     <v-row>
-      <v-col cols="2" class="left-col">
-        <h1 class="galaxy-title">
+      <v-col cols="12" class="d-flex pa-0">
+        <img
+          v-if="courseData.course.image.url"
+          class="galaxy-image"
+          :src="courseData.course.image.url"
+        />
+        <div
+          v-else
+          class="imagePlaceholder"
+          :style="{
+            width: '40px',
+            height: '40px',
+            backgroundColor: stringToColour(courseData.course.title),
+          }"
+        >
+          {{ first3Letters(courseData.course.title) }}
+        </div>
+        <h1 class="galaxy-title pt-2 pl-2">
           {{ courseData.course.title }}
         </h1>
-        <v-img class="galaxy-image" :src="courseData.course.image.url"></v-img>
-        <!-- <p class="galaxy-description">
-            {{ course.courseContext.description }}
-          </p> -->
       </v-col>
-      <v-col cols="10" class="center-col">
+    </v-row>
+    <v-row>
+      <v-col cols="12" class="center-col pa-0">
         <Chart
           ref="chart"
           id="chartImage"
@@ -19,6 +33,7 @@
           :chartOptions="chartOptions"
           :style="{ width: '100%', height: '200px', padding: '20px' }"
           :toolTipEnable="false"
+          :timeframe="timeframe"
         />
       </v-col>
       <!-- <v-col cols="4" class="pa-0">
@@ -41,11 +56,12 @@ import { dbMixins } from "../mixins/DbMixins";
 
 export default {
   name: "ProgressionChart",
-  props: ["courseData"],
+  props: ["courseData", "timeframe"],
   components: {
     Chart,
   },
   mixins: [dbMixins],
+
   data() {
     return {
       value: 80,
@@ -70,18 +86,14 @@ export default {
         scales: {
           x: {
             type: "time",
+            min: this.timeframe.min,
+            max: this.timeframe.max,
             time: {
-              precision: 0,
-              // Luxon format string
-              tooltipFormat: "tt DDDD",
-              // unit: "day",
-              // unit: "hour",
-              // displayFormats: {
-              //   hour: "(d EEE) h a ",
-              //   day: "t EEE d MMM",
-              // },
+              unit: "day",
+              displayFormats: {
+                day: "EEE d MMM",
+              },
             },
-            ticks: {},
           },
           y: {
             ticks: {
@@ -136,7 +148,7 @@ export default {
         datasets,
       };
 
-      console.log("datasets: ", datasetsObj);
+      // console.log("datasets: ", datasetsObj);
       return datasetsObj;
     },
     stringToColour(str) {
@@ -148,6 +160,10 @@ export default {
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
       }
       return hash;
+    },
+    first3Letters(name) {
+      if (!name) return;
+      return name.substring(0, 3).toUpperCase();
     },
   },
 };
@@ -181,7 +197,9 @@ export default {
 }
 
 .galaxy-image {
-  width: 100%;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   object-fit: cover;
 }
 
@@ -205,5 +223,14 @@ export default {
   color: var(--v-galaxyAccent-base);
   font-size: 0.7rem;
   margin: 10px;
+}
+
+.imagePlaceholder {
+  border-radius: 50%;
+  background-color: rgba(200, 200, 200, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.6rem;
 }
 </style>
