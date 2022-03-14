@@ -103,7 +103,9 @@
           @click.native="clickedPerson(person, index)"
         />
       </div>
-      <p v-else class="label" style="font-weight: 800">NO TEACHERS</p>
+      <p v-else class="label text-center pa-4" style="font-weight: 800">
+        NO STUDENT DATA
+      </p>
     </div>
     <!-- Bottom chart row -->
     <div>
@@ -132,7 +134,11 @@
 import { mapActions } from "vuex";
 import Avatar from "../components/Avatar";
 import ProgressionChart from "../components/ProgressionChart";
-import { getCohortsCourseDataXAPIQuery } from "../lib/veracityLRS";
+import {
+  getCohortsCourseDataXAPIQuery,
+  getCohortsActivityDataXAPIQuery,
+  VQLXAPIQuery,
+} from "../lib/veracityLRS";
 
 export default {
   name: "CohortPanel",
@@ -157,6 +163,7 @@ export default {
   },
 
   async mounted() {
+    // ==== get cohort course data from LRS
     const getCourseData = await getCohortsCourseDataXAPIQuery({
       studentsArr: this.cohort.students,
       coursesArr: this.cohort.courses,
@@ -178,6 +185,14 @@ export default {
         (v, i, a) => a.findIndex((t) => t.id === v.id) === i
       );
     }
+
+    // ==== get cohort activity data from LRS
+    const getActivityData = await getCohortsActivityDataXAPIQuery({
+      studentsArr: this.cohort.students,
+    });
+
+    // ==== VQL Test
+    // const VQL = await VQLXAPIQuery();
   },
   computed: {},
   methods: {
@@ -225,12 +240,6 @@ export default {
           return object1.id === object2.id;
         });
       });
-    },
-    hoverOn(event) {
-      console.log("hover on:", event);
-    },
-    hoverOff(event) {
-      console.log("hover off:", event);
     },
     timeframeFortnight() {
       this.chipActiveType = "fortnight";

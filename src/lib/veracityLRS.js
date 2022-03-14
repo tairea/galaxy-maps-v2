@@ -828,129 +828,6 @@ export const getActiveTaskXAPIQuery = async (person) => {
     });
 };
 
-async function sanitiseCourseDataFromLRS(res) {
-  const santisedCourses = [];
-
-  let taskCompletedCount = 0;
-
-  for (const group of res) {
-    const course = await courseIRIToCourseId(group);
-
-    // sanitise statements data
-    const activities = group.statements.map((statement, index) => {
-      if (statement.description.includes("Completed Task:"))
-        taskCompletedCount++;
-
-      let [action, title] = statement.description.split(": ");
-      let [status, type] = action.split(" ");
-      let id = statement.task.split("/").pop();
-
-      const newStatement = {
-        timeStamp: statement.timestamp,
-        index,
-        status,
-        type,
-        title,
-        id,
-        context: statement.context,
-      };
-      // const contextSplit = statement.context.split(
-      //   /Course: | > Topic: | > Task: /
-      // );
-      // const topicTitle = contextSplit[2];
-      // const taskTitle = contextSplit[3];
-
-      // if (statement.description.includes("Completed Task:"))
-      //   taskCompletedCount++;
-
-      // const newStatement = {
-      //   x: statement.timestamp,
-      //   y: index,
-      //   taskStatus: statement.verb.display["en-nz"],
-      //   context: statement.context,
-      //   topic: topicTitle,
-      //   taskTitle: taskTitle,
-      //   description: statement.description,
-      // };
-      return newStatement;
-    });
-
-    const courseObj = {
-      course,
-      activities: activities.reverse(),
-      taskCompletedCount,
-    };
-
-    santisedCourses.push(courseObj);
-  }
-  return santisedCourses;
-}
-async function sanitiseCohortsCourseDataFromLRS(res) {
-  const santisedCourses = [];
-
-  // group = course
-  for (const group of res) {
-    // get course
-    const courseId = group._id.course;
-    const course = await getCourseById(courseId);
-
-    // array for many students course data
-    const students = [];
-    // (for getCohortsCourseDataXAPIQuery) statements are nested under actors
-    for (const student of group.actors) {
-      // get person from db
-      const email = student.actor.split(":")[1];
-      const person = await getStudentByEmail(email);
-
-      let taskCompletedCount = 0;
-      const activities = student.statements.map((statement, index) => {
-        if (statement.description.includes("Completed Task:"))
-          taskCompletedCount++;
-
-        let [action, title] = statement.description.split(": ");
-        let [status, type] = action.split(" ");
-        let id = statement.task;
-
-        const newStatement = {
-          timeStamp: statement.timestamp,
-          index,
-          status,
-          type,
-          title,
-          id,
-        };
-        return newStatement;
-      });
-
-      // individual student course data (in loop)
-      const studentObj = {
-        activities: activities.reverse(),
-        taskCompletedCount,
-        person: person,
-      };
-      // push individual student data to students array
-      students.push(studentObj);
-    }
-    // courses have many students data (of the cohort)
-    const courseObj = {
-      course,
-      students: students,
-    };
-    santisedCourses.push(courseObj);
-  }
-
-  return santisedCourses;
-}
-
-async function courseIRIToCourseId(course) {
-  // get course id from iri
-  const courseIRI = course._id.course[0];
-  const courseId = courseIRI.split("/course/")[1];
-  // get course name
-  const courseContext = await getCourseById(courseId);
-  return courseContext;
-}
-
 export const getActivityLogXAPIQuery = async (person) => {
   // console.log("querying LRS for students active tasks...");
   const aggregationQuery = [
@@ -1088,3 +965,211 @@ export const getCohortsCourseDataXAPIQuery = async (payload) => {
       return sanitiseCohortsCourseDataFromLRS(res);
     });
 };
+
+export const getCohortsActivityDataXAPIQuery = async (payload) => {
+  // if no data, dont bother
+  if (!payload.studentsArr) return;
+
+  // convert studentIds to mailto:email string
+  const personIdsArrToEmailsArr = [];
+  for (const studentId of payload.studentsArr) {
+    const studentSnapshot = await db.collection("people").doc(studentId).get();
+    personIdsArrToEmailsArr.push("mailto:" + studentSnapshot.data().email);
+  }
+
+  const aggregationQuery = [
+    // match with cohorts courses. and only started & completed statements
+    {
+      $match: {
+        "statement.actor.mbox": { $in: personIdsArrToEmailsArr },
+        // "statement.verb.display.en-nz": "logged in" ,
+        "statement.verb.display.en-nz": { $in: ["logged in", "logged out"] },
+      },
+    },
+    // group by actor & course
+    {
+      $group: {
+        _id: {
+          actor: "$statement.actor.mbox",
+        },
+        activity: {
+          $push: {
+            verb: "$statement.verb.display.en-nz",
+            timestamp: "$statement.timestamp",
+          },
+        },
+      },
+    },
+  ];
+
+  return await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: auth,
+    },
+    body: JSON.stringify(aggregationQuery),
+  })
+    .then((res) => res.json())
+    .catch((error) => console.error(error.message))
+    .then((res) => {
+      console.log("Activity status for Students in Cohort:", res);
+      // return sanitiseCohortsActivityDataFromLRS(res);
+    });
+};
+
+// export const VQLXAPIQuery = async () => {
+//   const VQLQuery = [
+//     {
+//       filter: {
+//         "actor.id": "mailto:waipuna@gmail.com",
+//       },
+//       process: [{}],
+//     },
+//   ];
+
+//   return await fetch("https://galaxymaps.lrs.io/xapi/statements/analyze", {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json",
+//       Authorization: auth,
+//     },
+//     body: JSON.stringify(VQLQuery),
+//   })
+//     .then((res) => res.json())
+//     .catch((error) => console.error(error.message))
+//     .then((res) => {
+//       console.log("res:", res);
+//     });
+// };
+
+//============ SANITISE FUNCTIONS
+
+async function sanitiseCourseDataFromLRS(res) {
+  const santisedCourses = [];
+
+  let taskCompletedCount = 0;
+
+  for (const group of res) {
+    const course = await courseIRIToCourseId(group);
+
+    // sanitise statements data
+    const activities = group.statements.map((statement, index) => {
+      if (statement.description.includes("Completed Task:"))
+        taskCompletedCount++;
+
+      let [action, title] = statement.description.split(": ");
+      let [status, type] = action.split(" ");
+      let id = statement.task.split("/").pop();
+
+      const newStatement = {
+        timeStamp: statement.timestamp,
+        index,
+        status,
+        type,
+        title,
+        id,
+        context: statement.context,
+      };
+      // const contextSplit = statement.context.split(
+      //   /Course: | > Topic: | > Task: /
+      // );
+      // const topicTitle = contextSplit[2];
+      // const taskTitle = contextSplit[3];
+
+      // if (statement.description.includes("Completed Task:"))
+      //   taskCompletedCount++;
+
+      // const newStatement = {
+      //   x: statement.timestamp,
+      //   y: index,
+      //   taskStatus: statement.verb.display["en-nz"],
+      //   context: statement.context,
+      //   topic: topicTitle,
+      //   taskTitle: taskTitle,
+      //   description: statement.description,
+      // };
+      return newStatement;
+    });
+
+    const courseObj = {
+      course,
+      activities: activities.reverse(),
+      taskCompletedCount,
+    };
+
+    santisedCourses.push(courseObj);
+  }
+  return santisedCourses;
+}
+async function sanitiseCohortsCourseDataFromLRS(res) {
+  const santisedCourses = [];
+
+  // group = course
+  for (const group of res) {
+    // get course
+    const courseId = group._id.course;
+    const course = await getCourseById(courseId);
+
+    // array for many students course data
+    const students = [];
+    // (for getCohortsCourseDataXAPIQuery) statements are nested under actors
+    for (const student of group.actors) {
+      // get person from db
+      const email = student.actor.split(":")[1];
+      const person = await getStudentByEmail(email);
+
+      let taskCompletedCount = 0;
+      const activities = student.statements.map((statement, index) => {
+        if (statement.description.includes("Completed Task:"))
+          taskCompletedCount++;
+
+        let [action, title] = statement.description.split(": ");
+        let [status, type] = action.split(" ");
+        let id = statement.task;
+
+        const newStatement = {
+          timeStamp: statement.timestamp,
+          index,
+          status,
+          type,
+          title,
+          id,
+        };
+        return newStatement;
+      });
+
+      // individual student course data (in loop)
+      const studentObj = {
+        activities: activities.reverse(),
+        taskCompletedCount,
+        person: person,
+      };
+      // push individual student data to students array
+      students.push(studentObj);
+    }
+    // courses have many students data (of the cohort)
+    const courseObj = {
+      course,
+      students: students,
+    };
+    santisedCourses.push(courseObj);
+  }
+
+  return santisedCourses;
+}
+
+async function sanitiseCohortsActivityDataFromLRS(res) {
+  const santisedActivity = [];
+
+  return santisedActivity;
+}
+
+async function courseIRIToCourseId(course) {
+  // get course id from iri
+  const courseIRI = course._id.course[0];
+  const courseId = courseIRI.split("/course/")[1];
+  // get course name
+  const courseContext = await getCourseById(courseId);
+  return courseContext;
+}
