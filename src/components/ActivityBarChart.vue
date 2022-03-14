@@ -1,6 +1,11 @@
 <template>
   <div class="course-frame">
     <v-row>
+      <v-col cols="12" class="d-flex pa-0">
+        <h1 class="galaxy-title pt-2 pl-2">HOURS ACTIVE</h1>
+      </v-col>
+    </v-row>
+    <v-row>
       <v-col cols="12" class="center-col pa-0">
         <Chart
           ref="chart"
@@ -65,6 +70,9 @@ export default {
         scales: {
           x: {
             type: "category",
+            title: {
+              align: "center",
+            },
             // min: this.timeframe.min,
             // max: this.timeframe.max,
             // time: {
@@ -215,8 +223,8 @@ export default {
 
 <style lang="scss" scoped>
 .course-frame {
-  border: 1px solid var(--v-galaxyAccent-base);
-  margin-bottom: 30px;
+  border: 1px solid var(--v-baseAccent-base);
+  // margin-bottom: 30px;
   margin-left: auto;
   margin-right: auto;
   padding: 30px;
@@ -233,7 +241,7 @@ export default {
 
 .galaxy-title {
   font-size: 0.8rem;
-  color: var(--v-galaxyAccent-base) !important;
+  color: var(--v-missionAccent-base) !important;
   font-weight: 600;
   text-transform: uppercase;
   // margin: 20px 0px 5px 0px;
