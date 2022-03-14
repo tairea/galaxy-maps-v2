@@ -1,35 +1,12 @@
 <template>
   <div class="course-frame">
     <v-row>
-      <v-col cols="12" class="d-flex pa-0">
-        <img
-          v-if="courseData.course.image.url"
-          class="galaxy-image"
-          :src="courseData.course.image.url"
-        />
-        <div
-          v-else
-          class="imagePlaceholder"
-          :style="{
-            width: '40px',
-            height: '40px',
-            backgroundColor: stringToColour(courseData.course.title),
-          }"
-        >
-          {{ first3Letters(courseData.course.title) }}
-        </div>
-        <h1 class="galaxy-title pt-2 pl-2">
-          {{ courseData.course.title }}
-        </h1>
-      </v-col>
-    </v-row>
-    <v-row>
       <v-col cols="12" class="center-col pa-0">
         <Chart
           ref="chart"
           id="chartImage"
           :chartType="chartType"
-          :chartData="formatStudentsChartData(courseData)"
+          :chartData="formatStudentsChartData(activityData)"
           :chartOptions="chartOptions"
           :style="{ width: '100%', height: '200px', padding: '20px' }"
           :toolTipEnable="false"
@@ -57,8 +34,8 @@ import { DateTime } from "luxon";
 import { dbMixins } from "../mixins/DbMixins";
 
 export default {
-  name: "ProgressionChart",
-  props: ["courseData", "timeframe", "selectedPersons", "unselectedPersons"],
+  name: "ActivityBarChart",
+  props: ["activityData", "timeframe", "selectedPersons", "unselectedPersons"],
   components: {
     Chart,
   },
@@ -68,7 +45,7 @@ export default {
     return {
       value: 80,
       previousTickTitle: "",
-      chartType: "line",
+      chartType: "bar",
       chartOptions: {
         layout: {
           padding: {
@@ -87,21 +64,21 @@ export default {
         },
         scales: {
           x: {
-            type: "time",
-            min: this.timeframe.min,
-            max: this.timeframe.max,
-            time: {
-              unit: "day",
-              displayFormats: {
-                day: "EEE d MMM",
-              },
-            },
+            type: "category",
+            // min: this.timeframe.min,
+            // max: this.timeframe.max,
+            // time: {
+            //   unit: "day",
+            //   displayFormats: {
+            //     day: "EEE d MMM",
+            //   },
+            // },
           },
-          y: {
-            ticks: {
-              precision: 0,
-            },
-          },
+          // y: {
+          //   // ticks: {
+          //   //   precision: 0,
+          //   // },
+          // },
         },
         maintainAspectRatio: false,
         animation: {
@@ -116,35 +93,95 @@ export default {
     // ...mapGetters(["person", "getCourseById", "getTopicById"]),
   },
   methods: {
-    formatStudentsChartData(courseData) {
+    formatStudentsChartData(studentData) {
       // console.log("courseData", courseData);
       const datasets = [];
       const labels = [];
 
-      // more than one student per course
-      for (const student of courseData.students) {
-        const studentColour = this.stringToColour(
-          student.person.firstName + student.person.lastName
-        );
-        const label = student.person.firstName + " " + student.person.lastName;
+      // more than one student in a cohort so loop
+      for (const [index, student] of studentData.entries()) {
+        const person = student.person;
 
-        const activities = student.activities.map((activity) => {
-          return {
-            ...activity,
-            x: activity.timeStamp,
-            y: activity.index,
-          };
-        });
+        const studentColour = this.stringToColour(
+          person.firstName + person.lastName
+        );
+        const label = person.firstName + " " + person.lastName;
+
+        // console.log(
+        //   "formating data for bar chart. timeframe is:",
+        //   this.timeframe
+        // );
+
+        // calc total depending on timeframe.type (eg. fortnight, calculate days totals for that timeframes fortnight)
+        const time = 0;
+        switch (this.timeframe.type) {
+          case "day":
+            const dayRes = student.activity.find((day) => {
+              const statement = DateTime.fromISO(
+                day.dayISOTimestamp
+              ).toMillis();
+              let timeframe = DateTime.fromJSDate(
+                this.timeframe.max
+              ).toISODate();
+              timeframe = DateTime.fromISO(timeframe).toMillis();
+              return statement == timeframe;
+            });
+            if (dayRes) {
+              time = dayRes.minutesActiveTotal;
+            }
+            break;
+          case "week":
+            const weekRes = student.activity
+              .filter((day) => {
+                return (
+                  DateTime.fromISO(day.dayISOTimestamp) >
+                    DateTime.fromJSDate(this.timeframe.min) &&
+                  DateTime.fromISO(day.dayISOTimestamp) <
+                    DateTime.fromJSDate(this.timeframe.max)
+                );
+              })
+              .reduce((sum, activity) => sum + activity.minutesActiveTotal, 0);
+            console.log("got week total");
+            console.log(weekRes);
+            time = weekRes;
+            break;
+
+          case "fortnight":
+            const fortnightRes = student.activity
+              .filter((day) => {
+                return (
+                  DateTime.fromISO(day.dayISOTimestamp) >
+                    DateTime.fromJSDate(this.timeframe.min) &&
+                  DateTime.fromISO(day.dayISOTimestamp) <
+                    DateTime.fromJSDate(this.timeframe.max)
+                );
+              })
+              .reduce((sum, activity) => sum + activity.minutesActiveTotal, 0);
+            console.log("got fortnight total");
+            console.log(fortnightRes);
+            time = fortnightRes;
+            break;
+          default:
+        }
+
+        console.log("total minutes for " + this.timeframe.type + " = " + time);
+
+        const dataPointObj = [
+          {
+            x: label,
+            y: time / 60, // minutes to hours
+            // y: Math.random(0, 100) * 100,
+          },
+        ];
 
         let studentData = {
-          type: "line",
+          label: label,
+          data: dataPointObj,
           backgroundColor: studentColour,
           borderColor: studentColour,
           borderRadius: 2,
           pointRadius: 2,
           borderWidth: 1,
-          data: activities,
-          label: label,
         };
         labels.push(label);
         datasets.push(studentData);
@@ -155,7 +192,7 @@ export default {
         datasets,
       };
 
-      // console.log("datasets: ", datasetsObj);
+      console.log("datasets: ", datasetsObj);
       return datasetsObj;
     },
     stringToColour(str) {
@@ -178,11 +215,11 @@ export default {
 
 <style lang="scss" scoped>
 .course-frame {
-  // border: 1px solid var(--v-missionAccent-base);
+  border: 1px solid var(--v-galaxyAccent-base);
   margin-bottom: 30px;
   margin-left: auto;
   margin-right: auto;
-  padding: 12px;
+  padding: 30px;
 
   .left-col {
     padding: 20px;

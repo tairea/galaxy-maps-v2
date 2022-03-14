@@ -53,19 +53,22 @@ export default {
     },
     timeframe: {
       handler(newTimeframe) {
-        this.chartOptions.scales.x.min = newTimeframe.min;
-        this.chartOptions.scales.x.max = newTimeframe.max;
-        this.chartOptions.scales.x.time.unit = newTimeframe.unit;
-        if (newTimeframe.unit == "hour") {
-          const titleObj = {
-            display: true,
-            text: DateTime.fromJSDate(newTimeframe.max).toFormat(
-              "ccc dd LLL   "
-            ),
-          };
-          this.chartOptions.scales.x.title = titleObj;
-        } else {
-          this.chartOptions.scales.x.title = {};
+        if (this.chartType !== "bar") {
+          this.chartOptions.scales.x.min = newTimeframe.min;
+          this.chartOptions.scales.x.max = newTimeframe.max;
+
+          this.chartOptions.scales.x.time.unit = newTimeframe.unit;
+          if (newTimeframe.unit == "hour") {
+            const titleObj = {
+              display: true,
+              text: DateTime.fromJSDate(newTimeframe.max).toFormat(
+                "ccc dd LLL   "
+              ),
+            };
+            this.chartOptions.scales.x.title = titleObj;
+          } else {
+            this.chartOptions.scales.x.title = {};
+          }
         }
 
         this.chart.update();

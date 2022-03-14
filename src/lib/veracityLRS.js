@@ -1,6 +1,8 @@
 import store from "../store";
 import { getCourseById, getStudentByEmail } from "../lib/ff";
 import { db } from "../store/firestoreConfig";
+import { DateTime } from "luxon";
+import { _ } from "core-js";
 
 const auth = "Basic " + btoa(process.env.VUE_APP_VERACITY_LRS_SECRET);
 
@@ -1014,7 +1016,7 @@ export const getCohortsActivityDataXAPIQuery = async (payload) => {
     .catch((error) => console.error(error.message))
     .then((res) => {
       console.log("Activity status for Students in Cohort:", res);
-      // return sanitiseCohortsActivityDataFromLRS(res);
+      return sanitiseCohortsActivityDataFromLRS(res);
     });
 };
 
@@ -1162,6 +1164,71 @@ async function sanitiseCohortsCourseDataFromLRS(res) {
 async function sanitiseCohortsActivityDataFromLRS(res) {
   const santisedActivity = [];
 
+  for (const student of res) {
+    // get person from db
+    const email = student._id.actor.split(":")[1];
+    const person = await getStudentByEmail(email);
+
+    const personDaysActivity = [];
+    const day = 0;
+    const newStatement = {
+      dayISOTimestamp: "",
+      minutesActiveTotal: 0,
+    };
+    // loop activities
+    for (const [index, statement] of student.activity.entries()) {
+      if (!statement.timestamp || !statement.verb) continue;
+      // get date to compare
+      const dayISOTimestamp = statement.timestamp.split("T")[0];
+      const newTimestamp = DateTime.fromISO(statement.timestamp);
+      const newDay = newTimestamp.get("day");
+      //same day
+      if (day == newDay) {
+        const prevStatement = student.activity[index - 1];
+        // if (!prevStatement) continue
+        // console.log("prevStatement", prevStatement);
+        // console.log("statement", statement);
+        if (
+          statement.verb == "logged out" &&
+          prevStatement.verb == "logged in"
+        ) {
+          // calc off - on
+          const timeLoggedOff = DateTime.fromISO(statement.timestamp);
+          const timeLoggedOn = DateTime.fromISO(prevStatement.timestamp);
+          const diff = timeLoggedOff.diff(timeLoggedOn).as("minutes");
+          // add to days totals
+          newStatement.minutesActiveTotal += diff;
+        }
+      }
+      // set new day
+      if (day !== newDay) {
+        day = newDay;
+      }
+      // check if last activity for that day. if it is save time totals for the day.
+      const nextDay = 0;
+      const nextStatement = student.activity[index + 1];
+      if (!nextStatement) {
+        nextDay = day + 1; // if there is no nextStatement... just increment to save last days statements
+      } else {
+        nextDay = DateTime.fromISO(nextStatement.timestamp).get("day");
+      }
+      if (nextDay > day) {
+        // save previous day totals
+        newStatement.dayISOTimestamp = dayISOTimestamp;
+        personDaysActivity.push(newStatement);
+        // reset newStatement object
+        newStatement = {
+          dayISOTimestamp: "",
+          minutesActiveTotal: 0,
+        };
+      }
+    } // end persons statments
+    const studentActivity = {
+      person: person,
+      activity: personDaysActivity,
+    };
+    santisedActivity.push(studentActivity);
+  } // end person
   return santisedActivity;
 }
 
