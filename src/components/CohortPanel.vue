@@ -107,10 +107,28 @@
         NO STUDENT DATA
       </p>
     </div>
+    <!-- Middle Bar chart row -->
+    <div>
+      <div v-if="cohortActivityData" style="padding: 20px">
+        <ActivityBarChart
+          :activityData="cohortActivityData"
+          :timeframe="timeframe"
+          :selectedPersons="selectedPersons"
+          :unselectedPersons="unselectedPersons"
+        />
+      </div>
+      <div
+        v-else
+        class="d-flex justify-center align-center"
+        style="padding: 50px 0px"
+      >
+        <p class="label" style="font-weight: 800">NO COURSE DATA</p>
+      </div>
+    </div>
     <!-- Bottom chart row -->
     <div>
       <div v-if="cohortsCoursesData" style="padding: 20px">
-        <ProgressionChart
+        <ProgressionLineChart
           v-for="courseData in cohortsCoursesData"
           :key="courseData.id"
           :courseData="courseData"
@@ -133,7 +151,8 @@
 <script>
 import { mapActions } from "vuex";
 import Avatar from "../components/Avatar";
-import ProgressionChart from "../components/ProgressionChart";
+import ProgressionLineChart from "../components/ProgressionLineChart";
+import ActivityBarChart from "../components/ActivityBarChart";
 import {
   getCohortsCourseDataXAPIQuery,
   getCohortsActivityDataXAPIQuery,
@@ -145,12 +164,19 @@ export default {
   props: ["cohort", "cols", "tooltip", "studentView"],
   components: {
     Avatar,
-    ProgressionChart,
+    ProgressionLineChart,
+    ActivityBarChart,
   },
   data() {
     return {
       cohortsCoursesData: [],
-      timeframe: { min: this.previousDays(7), max: new Date(), unit: "day" }, // by default show past 7 days
+      cohortActivityData: [],
+      timeframe: {
+        min: this.previousDays(7),
+        max: new Date(),
+        unit: "day",
+        type: "week",
+      }, // by default show past 7 days
       chipActiveType: "week",
       chipDayActive: false,
       chipWeekActive: true,
@@ -190,6 +216,8 @@ export default {
     const getActivityData = await getCohortsActivityDataXAPIQuery({
       studentsArr: this.cohort.students,
     });
+    this.cohortActivityData = getActivityData;
+    console.log("this.cohortActivityData", this.cohortActivityData);
 
     // ==== VQL Test
     // const VQL = await VQLXAPIQuery();
@@ -250,6 +278,7 @@ export default {
         min: this.previousDays(14),
         max: new Date(),
         unit: "day",
+        type: "fortnight",
       };
     },
     timeframeWeek() {
@@ -261,6 +290,7 @@ export default {
         min: this.previousDays(7),
         max: new Date(),
         unit: "day",
+        type: "week",
       };
     },
     timeframeDay() {
@@ -272,10 +302,12 @@ export default {
         min: this.getStartDay(),
         max: this.getEndDay(),
         unit: "hour",
+        type: "day",
       };
     },
     getStartDay() {
       let startDay = new Date().setHours(0);
+      startDay = new Date(startDay).setMinutes(0);
       startDay = new Date(startDay);
       return startDay;
     },
@@ -294,6 +326,7 @@ export default {
             min: this.previousDays(1, this.timeframe.min),
             max: this.previousDays(1, this.timeframe.max),
             unit: this.timeframe.unit,
+            type: this.timeframe.type,
           };
           this.timeframe = previousTimeframe;
           break;
@@ -303,6 +336,7 @@ export default {
             min: this.previousDays(7, this.timeframe.min),
             max: this.previousDays(7, this.timeframe.max),
             unit: this.timeframe.unit,
+            type: this.timeframe.type,
           };
           this.timeframe = previousTimeframe;
           break;
@@ -312,6 +346,7 @@ export default {
             min: this.previousDays(14, this.timeframe.min),
             max: this.previousDays(14, this.timeframe.max),
             unit: this.timeframe.unit,
+            type: this.timeframe.type,
           };
           this.timeframe = previousTimeframe;
           break;
@@ -328,6 +363,7 @@ export default {
             min: this.nextDays(1, this.timeframe.min),
             max: this.nextDays(1, this.timeframe.max),
             unit: this.timeframe.unit,
+            type: this.timeframe.type,
           };
           this.timeframe = nextTimeframe;
           break;
@@ -337,6 +373,7 @@ export default {
             min: this.nextDays(7, this.timeframe.min),
             max: this.nextDays(7, this.timeframe.max),
             unit: this.timeframe.unit,
+            type: this.timeframe.type,
           };
           this.timeframe = nextTimeframe;
           break;
@@ -346,6 +383,7 @@ export default {
             min: this.nextDays(14, this.timeframe.min),
             max: this.nextDays(14, this.timeframe.max),
             unit: this.timeframe.unit,
+            type: this.timeframe.type,
           };
           this.timeframe = nextTimeframe;
           break;
