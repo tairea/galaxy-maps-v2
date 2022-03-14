@@ -114,7 +114,7 @@
             <v-select
               v-if="prerequisites"
               v-model="currentNode.prerequisites"
-              :items="currentCourseNodes"
+              :items="this.sortedObjArr"
               item-text="label"
               item-value="id"
               outlined
@@ -239,7 +239,37 @@ export default {
     "currentEdge",
   ],
   async mounted() {
-    console.log(this.currentNode.prerequisites);
+    let timeCreatedArrs = [];
+
+    for (let index in this.currentCourseNodes) {
+      let timeCreatedNode =
+        this.currentCourseNodes[index].nodeCreatedTimestamp.seconds;
+
+      timeCreatedArrs.push(timeCreatedNode);
+      // console.log("unsorted arr", timeCreatedArrs);
+    }
+
+    timeCreatedArrs.sort(function (a, b) {
+      return a - b;
+    });
+
+    // NOTE: the last int in the arr is the largest
+    // console.log("sorted arr", timeCreatedArrs);
+
+    for (let a in timeCreatedArrs) {
+      // loop over the ordered time array
+      let arrTime = timeCreatedArrs[a];
+      for (let b in timeCreatedArrs) {
+        let timeStamp = this.currentCourseNodes[b].nodeCreatedTimestamp.seconds;
+        if (arrTime == timeStamp) {
+          let node = this.currentCourseNodes[b];
+          this.sortedObjArr.push(node);
+        }
+      }
+    }
+
+    this.sortedObjArr = this.sortedObjArr.reverse();
+
     this.infoPopupShow = false;
     // hack to make active select white
     if (this.$vuetify.theme.isDark) {
@@ -250,6 +280,7 @@ export default {
   },
   data() {
     return {
+      sortedObjArr: [],
       dialogConfirm: false,
       newNodeData: {},
       type: "",
