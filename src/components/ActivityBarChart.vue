@@ -177,8 +177,8 @@ export default {
         const dataPointObj = [
           {
             x: label,
-            y: time / 60, // minutes to hours
-            // y: Math.random(0, 100) * 100,
+            // y: time / 60, // minutes to hours
+            y: Math.random(0, 100) * 100,
           },
         ];
 

@@ -6,6 +6,7 @@ import GalaxyView from "../views/GalaxyView.vue";
 import SolarSystemView from "../views/SolarSystemView.vue";
 import CohortView from "../views/CohortView.vue";
 import CohortList from "../views/CohortList.vue";
+import CohortListV2 from "../views/CohortListV2.vue";
 import AllStudentsView from "../views/AllStudentsView.vue";
 import StudentDashboard from "../views/StudentDashboard.vue";
 import Login from "../views/Login.vue";
@@ -43,7 +44,8 @@ const routes = [
       {
         name: "CohortsList",
         path: "cohorts",
-        component: CohortList,
+        // component: CohortList,
+        component: CohortListV2,
       },
       {
         path: "students",
