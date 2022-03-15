@@ -1,25 +1,33 @@
 <template>
-  <div class="d-flex flex-column cohort-panel">
+  <div class="d-flex cohort-panel">
     <!-- top row -->
     <div
-      class="row-border"
       @click="!studentView ? routeToCohort(cohort) : null"
       :style="!studentView ? 'cursor: pointer;' : ''"
+      class="left-col"
     >
-      <div class="d-flex justify-start align-center pa-2">
+      <div class="d-flex flex-column justify-start align-center pa-2">
         <v-img
           v-if="cohort.image.url"
           :src="cohort.image.url"
-          max-width="60px"
-          max-height="60px"
+          width="100px"
+          height="100px"
           class="cohort-image"
         ></v-img>
         <div v-else class="imagePlaceholder">
           {{ first3Letters(cohort.name) }}
         </div>
-        <h3 class="ml-4" style="width: 50%">{{ cohort.name }}</h3>
-        <div class="d-flex">
-          <p class="label">Teachers:</p>
+        <!-- Cohort Name -->
+        <h3 class="text-center mt-4">{{ cohort.name }}</h3>
+        <!-- Organisation Name -->
+        <!-- <div v-if="cohort.organisation">
+          <Organisation
+            :organisation="getOrganisationById(cohort.organisation)"
+          />
+        </div> -->
+        <!-- Teacher -->
+        <div class="d-flex flex-column">
+          <p class="label text-center">Teachers:</p>
           <div v-if="cohort.teachers">
             <Avatar
               v-for="teacherId in cohort.teachers"
@@ -32,127 +40,78 @@
         </div>
       </div>
     </div>
-    <!-- Middle chip row -->
-    <div v-if="cohortsCoursesData" class="row-border d-flex justify-end">
-      <v-chip
-        class="my-2 mx-1 custom-chip"
-        color="missionAccent"
-        outlined
-        x-small
-        @click="previous"
-      >
-        <
-      </v-chip>
-      <v-chip
-        class="my-2 mx-1 custom-chip"
-        color="missionAccent"
-        outlined
-        x-small
-        :input-value="chipDayActive"
-        filter
-        filter-icon="mdi-circle-small"
-        @click="timeframeDay"
-      >
-        Day
-      </v-chip>
-      <v-chip
-        class="my-2 mx-1 custom-chip"
-        color="missionAccent"
-        outlined
-        x-small
-        :input-value="chipWeekActive"
-        filter
-        filter-icon="mdi-circle-small"
-        @click="timeframeWeek"
-      >
-        Week
-      </v-chip>
-      <v-chip
-        class="my-2 mx-1 custom-chip"
-        color="missionAccent"
-        :input-value="chipFortnightActive"
-        filter
-        filter-icon="mdi-circle-small"
-        outlined
-        x-small
-        @click="timeframeFortnight"
-      >
-        Fortnight
-      </v-chip>
-      <v-chip
-        class="my-2 mx-1 custom-chip"
-        color="missionAccent"
-        outlined
-        x-small
-        @click="next"
-      >
+
+    <div class="main-col">
+      <!-- Progression Line Charts -->
+      <div>
+        <div v-if="cohortsCoursesData" style="padding: 20px">
+          <ProgressionLineChart
+            v-for="courseData in cohortsCoursesData"
+            :key="courseData.id"
+            :courseData="courseData"
+            :timeframe="timeframe"
+            :selectedPersons="selectedPersons"
+            :unselectedPersons="unselectedPersons"
+            class="line-chart"
+          />
+        </div>
+        <div
+          v-else
+          class="d-flex justify-center align-center"
+          style="padding: 50px 0px"
         >
-      </v-chip>
-    </div>
-    <!-- Middle student avatars row -->
-    <div class="row-border">
-      <div v-if="cohort.students" class="d-flex justify-center align-center">
-        <Avatar
-          v-for="(person, index) in studentsWithData"
-          ref="avatar"
-          :key="person.id"
-          :size="30"
-          :personId="person.id"
-          class="my-2 mx-1 avatar"
-          :colourBorder="true"
-          @click.native="clickedPerson(person, index)"
-        />
+          <p class="label" style="font-weight: 800">NO COURSE DATA</p>
+        </div>
       </div>
-      <p v-else class="label text-center pa-4" style="font-weight: 800">
-        NO STUDENT DATA
-      </p>
-    </div>
-    <!-- Middle Bar chart row -->
-    <div>
-      <div v-if="cohortActivityData" style="padding: 20px">
-        <ActivityBarChart
-          :activityData="cohortActivityData"
-          :timeframe="timeframe"
-          :selectedPersons="selectedPersons"
-          :unselectedPersons="unselectedPersons"
-        />
+      <!-- Activity Bar Chart -->
+      <div>
+        <div v-if="cohortActivityData" style="padding: 0px 20px">
+          <ActivityBarChart
+            :activityData="cohortActivityData"
+            :timeframe="timeframe"
+            :selectedPersons="selectedPersons"
+            :unselectedPersons="unselectedPersons"
+          />
+        </div>
+        <div
+          v-else
+          class="d-flex justify-center align-center"
+          style="padding: 50px 0px"
+        >
+          <p class="label" style="font-weight: 800">NO COURSE DATA</p>
+        </div>
       </div>
-      <div
-        v-else
-        class="d-flex justify-center align-center"
-        style="padding: 50px 0px"
-      >
-        <p class="label" style="font-weight: 800">NO COURSE DATA</p>
-      </div>
-    </div>
-    <!-- Bottom chart row -->
-    <div>
-      <div v-if="cohortsCoursesData" style="padding: 20px">
-        <ProgressionLineChart
-          v-for="courseData in cohortsCoursesData"
-          :key="courseData.id"
-          :courseData="courseData"
-          :timeframe="timeframe"
-          :selectedPersons="selectedPersons"
-          :unselectedPersons="unselectedPersons"
-        />
-      </div>
-      <div
-        v-else
-        class="d-flex justify-center align-center"
-        style="padding: 50px 0px"
-      >
-        <p class="label" style="font-weight: 800">NO COURSE DATA</p>
+      <!-- Students avatars row -->
+      <div class="row-border">
+        <div
+          v-if="cohort.students"
+          class="d-flex justify-center align-center pb-3"
+        >
+          <Avatar
+            v-for="(person, index) in studentsWithData"
+            ref="avatar"
+            :key="person.id"
+            :size="30"
+            :personId="person.id"
+            class="my-2 mx-1 avatar"
+            :colourBorder="true"
+            @click.native="clickedPerson(person, index)"
+          />
+        </div>
+        <p v-else class="label text-center pa-4" style="font-weight: 800">
+          NO STUDENT DATA
+        </p>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { mapActions } from "vuex";
+import { mapGetters, mapActions } from "vuex";
 import Avatar from "../components/Avatar";
 import ProgressionLineChart from "../components/ProgressionLineChart";
 import ActivityBarChart from "../components/ActivityBarChart";
+import Organisation from "../components/Organisation";
 import {
   getCohortsCourseDataXAPIQuery,
   getCohortsActivityDataXAPIQuery,
@@ -160,27 +119,26 @@ import {
 } from "../lib/veracityLRS";
 
 export default {
-  name: "CohortPanel",
-  props: ["cohort", "cols", "tooltip", "studentView"],
+  name: "CohortPanelV2",
+  props: ["cohort", "cols", "tooltip", "studentView", "timeframe"],
   components: {
     Avatar,
     ProgressionLineChart,
     ActivityBarChart,
+    Organisation,
   },
+
   data() {
     return {
       cohortsCoursesData: [],
       cohortActivityData: [],
-      timeframe: {
-        min: this.previousDays(7),
-        max: new Date(),
-        unit: "day",
-        type: "week",
-      }, // by default show past 7 days
-      chipActiveType: "week",
-      chipDayActive: false,
-      chipWeekActive: true,
-      chipFortnightActive: false,
+      // timeframe: {
+      //   min: this.previousDays(7),
+      //   max: new Date(),
+      //   unit: "day",
+      //   type: "week",
+      // }, // by default show past 7 days
+      // chipActiveType: "week",
       studentsWithData: [],
       selectedIndexs: [],
       selectedPersons: [],
@@ -196,7 +154,7 @@ export default {
       cohortName: this.cohort.name,
     });
     this.cohortsCoursesData = getCourseData;
-    // console.log("this.cohortsCoursesData", this.cohortsCoursesData);
+    console.log("this.cohortsCoursesData", this.cohortsCoursesData);
 
     // add students with data
     const studentsArr = [];
@@ -222,7 +180,9 @@ export default {
     // ==== VQL Test
     // const VQL = await VQLXAPIQuery();
   },
-  computed: {},
+  computed: {
+    ...mapGetters(["getOrganisationById"]),
+  },
   methods: {
     ...mapActions(["setCurrentCohort"]),
     clickedPerson(person, index) {
@@ -269,128 +229,6 @@ export default {
         });
       });
     },
-    timeframeFortnight() {
-      this.chipActiveType = "fortnight";
-      this.chipDayActive = false;
-      this.chipWeekActive = false;
-      this.chipFortnightActive = true;
-      this.timeframe = {
-        min: this.previousDays(14),
-        max: new Date(),
-        unit: "day",
-        type: "fortnight",
-      };
-    },
-    timeframeWeek() {
-      this.chipActiveType = "week";
-      this.chipDayActive = false;
-      this.chipFortnightActive = false;
-      this.chipWeekActive = true;
-      this.timeframe = {
-        min: this.previousDays(7),
-        max: new Date(),
-        unit: "day",
-        type: "week",
-      };
-    },
-    timeframeDay() {
-      this.chipActiveType = "day";
-      this.chipFortnightActive = false;
-      this.chipWeekActive = false;
-      this.chipDayActive = true;
-      this.timeframe = {
-        min: this.getStartDay(),
-        max: this.getEndDay(),
-        unit: "hour",
-        type: "day",
-      };
-    },
-    getStartDay() {
-      let startDay = new Date().setHours(0);
-      startDay = new Date(startDay).setMinutes(0);
-      startDay = new Date(startDay);
-      return startDay;
-    },
-    getEndDay() {
-      let endDay = new Date().setHours(23);
-      endDay = new Date(endDay).setMinutes(59);
-      endDay = new Date(endDay);
-      return endDay;
-    },
-    previous() {
-      let previousTimeframe = {};
-      switch (this.chipActiveType) {
-        case "day":
-          // change min max by 1 day
-          previousTimeframe = {
-            min: this.previousDays(1, this.timeframe.min),
-            max: this.previousDays(1, this.timeframe.max),
-            unit: this.timeframe.unit,
-            type: this.timeframe.type,
-          };
-          this.timeframe = previousTimeframe;
-          break;
-        case "week":
-          // change min max by 7 day
-          previousTimeframe = {
-            min: this.previousDays(7, this.timeframe.min),
-            max: this.previousDays(7, this.timeframe.max),
-            unit: this.timeframe.unit,
-            type: this.timeframe.type,
-          };
-          this.timeframe = previousTimeframe;
-          break;
-        case "fortnight":
-          // change min max by 14 day
-          previousTimeframe = {
-            min: this.previousDays(14, this.timeframe.min),
-            max: this.previousDays(14, this.timeframe.max),
-            unit: this.timeframe.unit,
-            type: this.timeframe.type,
-          };
-          this.timeframe = previousTimeframe;
-          break;
-        default:
-          break;
-      }
-    },
-    next() {
-      let nextTimeframe = {};
-      switch (this.chipActiveType) {
-        case "day":
-          // change min max by 1 day
-          nextTimeframe = {
-            min: this.nextDays(1, this.timeframe.min),
-            max: this.nextDays(1, this.timeframe.max),
-            unit: this.timeframe.unit,
-            type: this.timeframe.type,
-          };
-          this.timeframe = nextTimeframe;
-          break;
-        case "week":
-          // change min max by 7 day
-          nextTimeframe = {
-            min: this.nextDays(7, this.timeframe.min),
-            max: this.nextDays(7, this.timeframe.max),
-            unit: this.timeframe.unit,
-            type: this.timeframe.type,
-          };
-          this.timeframe = nextTimeframe;
-          break;
-        case "fortnight":
-          // change min max by 14 day
-          nextTimeframe = {
-            min: this.nextDays(14, this.timeframe.min),
-            max: this.nextDays(14, this.timeframe.max),
-            unit: this.timeframe.unit,
-            type: this.timeframe.type,
-          };
-          this.timeframe = nextTimeframe;
-          break;
-        default:
-          break;
-      }
-    },
     previousDays(num, start) {
       if (!start) {
         var d = new Date();
@@ -398,15 +236,6 @@ export default {
         var d = new Date(start);
       }
       d.setDate(d.getDate() - num);
-      return d;
-    },
-    nextDays(num, start) {
-      if (!start) {
-        var d = new Date();
-      } else {
-        var d = new Date(start);
-      }
-      d.setDate(d.getDate() + num);
       return d;
     },
     first3Letters(name) {
@@ -438,36 +267,47 @@ export default {
 <style lang="scss" scoped>
 .cohort-panel {
   border: 1px solid var(--v-missionAccent-base);
-  width: 90%;
-  margin: auto;
+  width: calc(50% - 40px);
+  min-height: 60%;
+  margin: 20px;
   margin-bottom: 50px;
 
-  .cohort-image {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    object-fit: cover;
+  .left-col {
+    width: 20%;
+    height: 100%;
+    // border-right: 1px solid var(--v-missionAccent-base);
+
+    .cohort-image {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .imagePlaceholder {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background-color: rgba(200, 200, 200, 0.3);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .cohort-name {
+      text-align: center;
+      font-size: 0.65rem !important;
+      line-height: 1rem;
+      padding-top: 10px;
+    }
   }
 
-  .imagePlaceholder {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background-color: rgba(200, 200, 200, 0.3);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
+  .main-col {
+    width: 80%;
 
-  .cohort-name {
-    text-align: center;
-    font-size: 0.65rem !important;
-    line-height: 1rem;
-    padding-top: 10px;
-  }
-
-  .row-border {
-    border-bottom: 1px solid var(--v-missionAccent-base);
+    .line-chart:not(:last-child) {
+      margin-bottom: 20px;
+    }
   }
 }
 

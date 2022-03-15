@@ -12,14 +12,22 @@
       <v-img
         v-if="cohort.image.url"
         :src="cohort.image.url"
-        max-width="60px"
-        max-height="60px"
+        :max-width="size ? size + 'px' : '60px'"
+        :max-height="size ? size + 'px' : '60px'"
         class="cohort-image"
       ></v-img>
-      <div v-else class="imagePlaceholder">
+      <div
+        v-else
+        class="imagePlaceholder"
+        :style="
+          size
+            ? 'max-width:' + size + 'px; max-height:' + size + 'px'
+            : 'max-width: 60px;max-height:60px'
+        "
+      >
         {{ first3Letters(cohort.name) }}
       </div>
-      <h3 class="overline cohort-name">{{ cohort.name }}</h3>
+      <h3 v-if="!hideNames" class="overline cohort-name">{{ cohort.name }}</h3>
     </div>
     <v-tooltip v-else bottom>
       <template v-slot:activator="{ on, attrs }">
@@ -27,11 +35,19 @@
           <v-img
             v-if="cohort.image.url"
             :src="cohort.image.url"
-            max-width="40px"
-            max-height="40px"
+            :max-width="size ? size + 'px' : '60px'"
+            :max-height="size ? size + 'px' : '60px'"
             class="cohort-image"
           ></v-img>
-          <div v-else class="imagePlaceholder cohort-name">
+          <div
+            v-else
+            class="imagePlaceholder cohort-name"
+            :style="
+              size
+                ? 'max-width:' + size + 'px; max-height:' + size + 'px'
+                : 'max-width: 60px;max-height:60px'
+            "
+          >
             {{ first3Letters(cohort.name) }}
           </div>
         </div>
@@ -46,7 +62,7 @@ import { mapActions } from "vuex";
 
 export default {
   name: "Cohort",
-  props: ["cohort", "cols", "tooltip", "studentView"],
+  props: ["cohort", "cols", "tooltip", "studentView", "hideNames", "size"],
   data() {
     return {};
   },
@@ -55,8 +71,8 @@ export default {
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
-    routeToCohort() { 
-      this.$store.commit("setCurrentCohort", this.cohort)
+    routeToCohort() {
+      this.$store.commit("setCurrentCohort", this.cohort);
       this.setCurrentCohort(this.cohort);
       this.$router.push({
         name: "CohortView",

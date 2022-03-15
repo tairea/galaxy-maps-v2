@@ -27,11 +27,11 @@
       <v-col cols="12" class="center-col pa-0">
         <Chart
           ref="chart"
-          id="chartImage"
+          class="chart"
           :chartType="chartType"
           :chartData="formatStudentsChartData(courseData)"
           :chartOptions="chartOptions"
-          :style="{ width: '100%', height: '200px', padding: '20px' }"
+          :style="{ width: '100%', height: '150px', padding: '0px 20px' }"
           :toolTipEnable="false"
           :timeframe="timeframe"
           :selectedPersons="selectedPersons"
@@ -55,6 +55,7 @@ import { mapState, mapGetters } from "vuex";
 import Chart from "@/components/Chart.vue";
 import { DateTime } from "luxon";
 import { dbMixins } from "../mixins/DbMixins";
+import { colours } from "../lib/utils";
 
 export default {
   name: "ProgressionLineChart",
@@ -121,6 +122,19 @@ export default {
       const datasets = [];
       const labels = [];
 
+      // ======= test data - 30 students =======
+      // for (var x = 0; x < 30; x++) {
+      //   const studentColour = colours[x];
+      //   const label = colours[x];
+      //   const activities = [];
+      //   // --- 10 statements ---
+      //   for (var i = 0; i < 10; i++) {
+      //     activities.push({
+      //       x: DateTime.local(2022, 3, Math.floor(Math.random(0, 30) * 100)),
+      //       y: Math.random(1, 100) * 100,
+      //     });
+      //   }
+
       // more than one student per course
       for (const student of courseData.students) {
         const studentColour = this.stringToColour(
@@ -179,10 +193,11 @@ export default {
 <style lang="scss" scoped>
 .course-frame {
   border: 1px solid var(--v-galaxyAccent-base);
-  margin-bottom: 30px;
   margin-left: auto;
   margin-right: auto;
-  padding: 30px;
+  padding: 20px;
+  border-radius: 5px;
+  // margin-bottom: 20px;
 
   .left-col {
     padding: 20px;

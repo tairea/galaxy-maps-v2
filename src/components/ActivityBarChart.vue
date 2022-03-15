@@ -9,7 +9,7 @@
       <v-col cols="12" class="center-col pa-0">
         <Chart
           ref="chart"
-          id="chartImage"
+          class="chart"
           :chartType="chartType"
           :chartData="formatStudentsChartData(activityData)"
           :chartOptions="chartOptions"
@@ -37,6 +37,7 @@ import { mapState, mapGetters } from "vuex";
 import Chart from "@/components/Chart.vue";
 import { DateTime } from "luxon";
 import { dbMixins } from "../mixins/DbMixins";
+import { colours, names } from "../lib/utils";
 
 export default {
   name: "ActivityBarChart",
@@ -52,6 +53,7 @@ export default {
       previousTickTitle: "",
       chartType: "bar",
       chartOptions: {
+        // maintainAspectRatio: false,
         layout: {
           padding: {
             // left: 5,
@@ -68,10 +70,14 @@ export default {
           },
         },
         scales: {
-          x: {
-            type: "category",
-            title: {
-              align: "center",
+          xAxis: {
+            // type: "category",
+            ticks: {
+              display: true,
+
+              autoSkip: false,
+              maxRotation: 90,
+              minRotation: 90,
             },
             // min: this.timeframe.min,
             // max: this.timeframe.max,
@@ -80,6 +86,11 @@ export default {
             //   displayFormats: {
             //     day: "EEE d MMM",
             //   },
+            // },
+            // ticks: {
+            //   display: true,
+            //   precision: 0,
+            //   padding: 0,
             // },
           },
           // y: {
@@ -99,102 +110,130 @@ export default {
   async mounted() {},
   computed: {
     // ...mapGetters(["person", "getCourseById", "getTopicById"]),
+    dark() {
+      return this.$vuetify.theme.isDark;
+    },
   },
   methods: {
     formatStudentsChartData(studentData) {
       // console.log("courseData", courseData);
       const datasets = [];
-      const labels = [];
+      const data = [];
+      let labels = [];
 
       // more than one student in a cohort so loop
-      for (const [index, student] of studentData.entries()) {
-        const person = student.person;
+      // for (const [index, student] of studentData.entries()) {
+      //   const person = student.person;
 
-        const studentColour = this.stringToColour(
-          person.firstName + person.lastName
-        );
-        const label = person.firstName + " " + person.lastName;
+      //   const studentColour = this.stringToColour(
+      //     person.firstName + person.lastName
+      //   );
+      //   const label = person.firstName + " " + person.lastName;
 
-        // console.log(
-        //   "formating data for bar chart. timeframe is:",
-        //   this.timeframe
-        // );
+      //   // calc total depending on timeframe.type (eg. fortnight, calculate days totals for that timeframes fortnight)
+      //   const time = 0;
+      //   switch (this.timeframe.type) {
+      //     case "day":
+      //       const dayRes = student.activity.find((day) => {
+      //         const statement = DateTime.fromISO(
+      //           day.dayISOTimestamp
+      //         ).toMillis();
+      //         let timeframe = DateTime.fromJSDate(
+      //           this.timeframe.max
+      //         ).toISODate();
+      //         timeframe = DateTime.fromISO(timeframe).toMillis();
+      //         return statement == timeframe;
+      //       });
+      //       if (dayRes) {
+      //         time = dayRes.minutesActiveTotal;
+      //       }
+      //       break;
+      //     case "week":
+      //       const weekRes = student.activity
+      //         .filter((day) => {
+      //           return (
+      //             DateTime.fromISO(day.dayISOTimestamp) >
+      //               DateTime.fromJSDate(this.timeframe.min) &&
+      //             DateTime.fromISO(day.dayISOTimestamp) <
+      //               DateTime.fromJSDate(this.timeframe.max)
+      //           );
+      //         })
+      //         .reduce((sum, activity) => sum + activity.minutesActiveTotal, 0);
+      //       console.log("got week total");
+      //       console.log(weekRes);
+      //       time = weekRes;
+      //       break;
 
-        // calc total depending on timeframe.type (eg. fortnight, calculate days totals for that timeframes fortnight)
-        const time = 0;
-        switch (this.timeframe.type) {
-          case "day":
-            const dayRes = student.activity.find((day) => {
-              const statement = DateTime.fromISO(
-                day.dayISOTimestamp
-              ).toMillis();
-              let timeframe = DateTime.fromJSDate(
-                this.timeframe.max
-              ).toISODate();
-              timeframe = DateTime.fromISO(timeframe).toMillis();
-              return statement == timeframe;
-            });
-            if (dayRes) {
-              time = dayRes.minutesActiveTotal;
-            }
-            break;
-          case "week":
-            const weekRes = student.activity
-              .filter((day) => {
-                return (
-                  DateTime.fromISO(day.dayISOTimestamp) >
-                    DateTime.fromJSDate(this.timeframe.min) &&
-                  DateTime.fromISO(day.dayISOTimestamp) <
-                    DateTime.fromJSDate(this.timeframe.max)
-                );
-              })
-              .reduce((sum, activity) => sum + activity.minutesActiveTotal, 0);
-            console.log("got week total");
-            console.log(weekRes);
-            time = weekRes;
-            break;
+      //     case "fortnight":
+      //       const fortnightRes = student.activity
+      //         .filter((day) => {
+      //           return (
+      //             DateTime.fromISO(day.dayISOTimestamp) >
+      //               DateTime.fromJSDate(this.timeframe.min) &&
+      //             DateTime.fromISO(day.dayISOTimestamp) <
+      //               DateTime.fromJSDate(this.timeframe.max)
+      //           );
+      //         })
+      //         .reduce((sum, activity) => sum + activity.minutesActiveTotal, 0);
+      //       console.log("got fortnight total");
+      //       console.log(fortnightRes);
+      //       time = fortnightRes;
+      //       break;
+      //     default:
+      //   }
 
-          case "fortnight":
-            const fortnightRes = student.activity
-              .filter((day) => {
-                return (
-                  DateTime.fromISO(day.dayISOTimestamp) >
-                    DateTime.fromJSDate(this.timeframe.min) &&
-                  DateTime.fromISO(day.dayISOTimestamp) <
-                    DateTime.fromJSDate(this.timeframe.max)
-                );
-              })
-              .reduce((sum, activity) => sum + activity.minutesActiveTotal, 0);
-            console.log("got fortnight total");
-            console.log(fortnightRes);
-            time = fortnightRes;
-            break;
-          default:
-        }
+      //   console.log("total minutes for " + this.timeframe.type + " = " + time);
 
-        console.log("total minutes for " + this.timeframe.type + " = " + time);
+      //   const dataPointObj = [
+      //     {
+      //       x: label,
+      //       // y: time / 60, // minutes to hours
+      //       y: Math.random(0, 100) * 100,
+      //     },
+      //   ];
 
-        const dataPointObj = [
-          {
-            x: label,
-            // y: time / 60, // minutes to hours
-            y: Math.random(0, 100) * 100,
-          },
-        ];
+      //   let studentData = {
+      //     label: label,
+      //     data: dataPointObj,
+      //     backgroundColor: studentColour,
+      //     borderColor: studentColour,
+      //     borderRadius: 2,
+      //     pointRadius: 2,
+      //     borderWidth: 1,
+      //   };
+      //   labels.push(label);
+      //   datasets.push(studentData);
 
-        let studentData = {
-          label: label,
-          data: dataPointObj,
-          backgroundColor: studentColour,
-          borderColor: studentColour,
-          borderRadius: 2,
-          pointRadius: 2,
-          borderWidth: 1,
+      // ==== test 30 students ===
+      for (var x = 0; x < 50; x++) {
+        const label = names[x];
+
+        const dataPointObj = {
+          x: label,
+          // y: time / 60, // minutes to hours
+          y: Math.random() * 10,
         };
-        labels.push(label);
-        datasets.push(studentData);
-      }
 
+        labels.push(label);
+        data.push(dataPointObj);
+      }
+      let dataset = {
+        label: "Hours Online",
+        data: data,
+        backgroundColor: this.dark
+          ? this.$vuetify.theme.themes.dark.baseAccent
+          : this.$vuetify.theme.themes.light.baseAccent,
+        borderColor: this.dark
+          ? this.$vuetify.theme.themes.dark.baseAccent
+          : this.$vuetify.theme.themes.light.baseAccent,
+        // borderRadius: 2,
+        // pointRadius: 2,
+        // borderWidth: 100,
+        categoryPercentage: 1.0,
+        barPercentage: 0.7,
+        //barThickness: "flex", // notice here
+      };
+      datasets.push(dataset);
       const datasetsObj = {
         labels,
         datasets,
@@ -223,11 +262,11 @@ export default {
 
 <style lang="scss" scoped>
 .course-frame {
-  border: 1px solid var(--v-baseAccent-base);
+  // border: 1px solid var(--v-baseAccent-base);
   // margin-bottom: 30px;
   margin-left: auto;
   margin-right: auto;
-  padding: 30px;
+  padding: 0px 20px;
 
   .left-col {
     padding: 20px;
