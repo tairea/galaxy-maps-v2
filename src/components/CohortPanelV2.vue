@@ -6,6 +6,7 @@
       :style="!studentView ? 'cursor: pointer;' : ''"
       class="left-col"
     >
+      <p class="label text-center">Cohort:</p>
       <div class="d-flex flex-column justify-start align-center pa-2">
         <v-img
           v-if="cohort.image.url"
@@ -18,7 +19,9 @@
           {{ first3Letters(cohort.name) }}
         </div>
         <!-- Cohort Name -->
-        <h3 class="text-center mt-4">{{ cohort.name }}</h3>
+        <h3 class="overline text-center mt-4">
+          {{ cohort.name }}
+        </h3>
         <!-- Organisation Name -->
         <!-- <div v-if="cohort.organisation">
           <Organisation
@@ -26,9 +29,9 @@
           />
         </div> -->
         <!-- Teacher -->
-        <div class="d-flex flex-column">
+        <div v-if="cohort.teachers" class="d-flex flex-column mt-8">
           <p class="label text-center">Teachers:</p>
-          <div v-if="cohort.teachers">
+          <div>
             <Avatar
               v-for="teacherId in cohort.teachers"
               :key="teacherId.id"
@@ -36,14 +39,28 @@
               :personId="teacherId"
             />
           </div>
-          <p v-else class="label" style="font-weight: 800">NO TEACHERS</p>
         </div>
+        <p v-else class="label mt-8" style="font-weight: 800">
+          NO TEACHER DATA
+        </p>
       </div>
     </div>
 
     <div class="main-col">
       <!-- Progression Line Charts -->
       <div>
+        <!-- loading spinner -->
+        <div
+          class="d-flex justify-center align-center"
+          style="padding: 50px"
+          v-if="cohortsCoursesDataLoading"
+        >
+          <v-btn
+            :loading="cohortsCoursesDataLoading"
+            icon
+            color="galaxyAccent"
+          ></v-btn>
+        </div>
         <div v-if="cohortsCoursesData" style="padding: 20px">
           <ProgressionLineChart
             v-for="courseData in cohortsCoursesData"
@@ -65,6 +82,16 @@
       </div>
       <!-- Activity Bar Chart -->
       <div>
+        <!-- loading spinner -->
+        <div>
+          <v-btn
+            v-if="cohortActivityDataLoading && !cohortActivityData"
+            :loading="cohortActivityDataLoading"
+            icon
+            color="baseAccent"
+            class="d-flex justify-center align-center"
+          ></v-btn>
+        </div>
         <div v-if="cohortActivityData" style="padding: 0px 20px">
           <ActivityBarChart
             :activityData="cohortActivityData"
@@ -78,14 +105,14 @@
           class="d-flex justify-center align-center"
           style="padding: 50px 0px"
         >
-          <p class="label" style="font-weight: 800">NO COURSE DATA</p>
+          <p class="label" style="font-weight: 800">NO ACTIVITY DATA</p>
         </div>
       </div>
       <!-- Students avatars row -->
-      <div class="row-border">
+      <div class="student-row">
         <div
           v-if="cohort.students"
-          class="d-flex justify-center align-center pb-3"
+          class="d-flex justify-center align-center flex-wrap py-2"
         >
           <Avatar
             v-for="(person, index) in studentsWithData"
@@ -132,21 +159,18 @@ export default {
     return {
       cohortsCoursesData: [],
       cohortActivityData: [],
-      // timeframe: {
-      //   min: this.previousDays(7),
-      //   max: new Date(),
-      //   unit: "day",
-      //   type: "week",
-      // }, // by default show past 7 days
-      // chipActiveType: "week",
       studentsWithData: [],
       selectedIndexs: [],
       selectedPersons: [],
       unselectedPersons: [],
+      cohortsCoursesDataLoading: false,
+      cohortActivityDataLoading: false,
     };
   },
 
   async mounted() {
+    this.cohortsCoursesDataLoading = true;
+    this.cohortActivityDataLoading = true;
     // ==== get cohort course data from LRS
     const getCourseData = await getCohortsCourseDataXAPIQuery({
       studentsArr: this.cohort.students,
@@ -154,7 +178,7 @@ export default {
       cohortName: this.cohort.name,
     });
     this.cohortsCoursesData = getCourseData;
-    console.log("this.cohortsCoursesData", this.cohortsCoursesData);
+    // console.log("this.cohortsCoursesData", this.cohortsCoursesData);
 
     // add students with data
     const studentsArr = [];
@@ -170,12 +194,15 @@ export default {
       );
     }
 
+    this.cohortsCoursesDataLoading = false;
+
     // ==== get cohort activity data from LRS
     const getActivityData = await getCohortsActivityDataXAPIQuery({
       studentsArr: this.cohort.students,
     });
     this.cohortActivityData = getActivityData;
-    console.log("this.cohortActivityData", this.cohortActivityData);
+    // console.log("this.cohortActivityData", this.cohortActivityData);
+    this.cohortActivityDataLoading = false;
 
     // ==== VQL Test
     // const VQL = await VQLXAPIQuery();
@@ -271,10 +298,11 @@ export default {
   min-height: 60%;
   margin: 20px;
   margin-bottom: 50px;
+  flex-wrap: wrap;
 
   .left-col {
     width: 20%;
-    height: 100%;
+    // height: 100%;
     // border-right: 1px solid var(--v-missionAccent-base);
 
     .cohort-image {
@@ -308,6 +336,11 @@ export default {
     .line-chart:not(:last-child) {
       margin-bottom: 20px;
     }
+  }
+
+  .student-row {
+    width: 100%;
+    // border-top: 1px solid var(--v-missionAccent-base)
   }
 }
 
