@@ -239,7 +239,7 @@ export default {
         datasets,
       };
 
-      console.log("datasets: ", datasetsObj);
+      // console.log("datasets: ", datasetsObj);
       return datasetsObj;
     },
     stringToColour(str) {

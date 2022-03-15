@@ -20,12 +20,18 @@
         <div class="mb-3 d-flex flex-column justify-center align-center">
           <!-- Their COHORTS -->
           <Cohort
-            v-for="cohort in getCohortsByOrganisationId(organisation.id)"
+            v-for="(cohort, index) in getCohortsByOrganisationId(
+              organisation.id
+            )"
+            ref="cohort"
             :cohort="cohort"
             :key="cohort.id"
             :size="40"
             :hideNames="true"
             :tooltip="true"
+            :studentView="true"
+            style="cursor: pointer"
+            @click.native="clickedCohort(cohort, index)"
           />
         </div>
       </div>
@@ -39,12 +45,15 @@
           <v-col>
             <v-row>
               <Cohort
-                v-for="cohort in getCohortsByOrganisationId()"
+                ref="cohort"
+                v-for="(cohort, index) in getCohortsByOrganisationId()"
                 :cohort="cohort"
                 :key="cohort.id"
                 :size="40"
                 :hideNames="true"
                 :tooltip="true"
+                :studentView="true"
+                @click.native="clickedCohort(cohort, index)"
               />
             </v-row>
           </v-col>
@@ -123,7 +132,10 @@ export default {
   data: () => ({
     openOrganisationDialog: false,
     editingOrgansation: null,
-    timeframe: {}
+    timeframe: {},
+    selectedIndexs: [],
+    selectedCohorts: [],
+    unselectedCohorts: [],
   }),
   mounted() {
     // trigger VuexFire bindCohorts & bindOrganisations in Store
@@ -163,7 +175,54 @@ export default {
     setTimeframe(timeframeEmitted) {
       console.log("setting timeframe from emitter:", timeframeEmitted)
       this.timeframe = timeframeEmitted
-    }
+    },
+    clickedCohort(cohort, index) {
+      // get all avatar elements
+      const cohortEls = this.$refs.cohort;
+      // loop cohort els
+      for (var i = 0; i < cohortEls.length; i++) {
+        // add index to selected if not already. else remove
+        if (i == index && !this.selectedIndexs.includes(index)) {
+          this.selectedIndexs.push(index);
+          this.selectedCohorts.push(cohort);
+        }
+        // remove
+        else if (i == index && this.selectedIndexs.includes(index)) {
+          this.selectedIndexs = this.selectedIndexs.filter(
+            (item) => item !== index
+          );
+          this.selectedCohorts = this.selectedCohorts.filter(
+            (selectedCohort) => selectedCohort.id !== cohort.id
+          );
+          this.unselectedCohorts.push(cohort);
+        }
+
+        //anyone not in selectedCohorts becomes unselected (this is used to hide data in chart)
+        this.unselectedCohorts = this.diffTwoArraysOfObjects(
+          this.cohorts,
+          this.selectedCohorts
+        );
+
+        // add dim to all cohort els
+        for (var y = 0; y < cohortEls.length; y++) {
+          cohortEls[y].$el.classList.add("dim");
+        }
+        //remove dim for selected cohort els
+        for (var x = 0; x < this.selectedIndexs.length; x++) {
+          cohortEls[this.selectedIndexs[x]].$el.classList.remove("dim");
+        }
+      }
+      console.log("selected indexes:",this.selectedIndexs)
+      console.log("selected cohorts:",this.selectedCohort)
+      console.log("unselected cohorts:",this.unselectedCohorts)
+    },
+    diffTwoArraysOfObjects(array1, array2) {
+      return array1.filter((object1) => {
+        return !array2.some((object2) => {
+          return object1.id === object2.id;
+        });
+      });
+    },
   },
 };
 </script>
@@ -205,10 +264,11 @@ hr {
 
   .main-col {
     margin-top: 50px;
+    padding-top: 30px;
     width: 90%;
-    // border: 1px solid red;
     overflow: scroll;
     overflow-x: hidden;
+    // border: 1px solid red;
   }
 
   .cohort-heading {
@@ -221,6 +281,10 @@ hr {
     border-bottom: 1px solid rgba(200, 200, 200, 0.5);
     margin: 0px 20px;
   }
+}
+
+.dim {
+  filter: opacity(30%);
 }
 
 // ---- SCROLLBAR STYLES ----
