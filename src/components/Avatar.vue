@@ -13,11 +13,37 @@
               :src="personData.image.url"
               :alt="personData.firstName"
               style="object-fit: cover"
+              :style="[
+                colourBorder
+                  ? {
+                      border:
+                        '2px solid ' +
+                        stringToColour(
+                          personData.firstName + personData.lastName
+                        ),
+                    }
+                  : {},
+              ]"
             />
             <div
               v-else
               class="imagePlaceholder"
-              :style="{ width: size + 'px', height: size + 'px' }"
+              :style="[
+                colourBorder
+                  ? {
+                      width: size + 'px',
+                      height: size + 'px',
+                      border:
+                        '2px solid ' +
+                        stringToColour(
+                          personData.firstName + personData.lastName
+                        ),
+                      backgroundColor: stringToColour(
+                        personData.firstName + personData.lastName
+                      ),
+                    }
+                  : { width: size + 'px', height: size + 'px' },
+              ]"
             >
               {{ first3Letters(personData.firstName) }}
             </div>
@@ -41,7 +67,7 @@ import { db } from "../store/firestoreConfig";
 
 export default {
   name: "Avatar",
-  props: ["personId", "size"],
+  props: ["personId", "size", "colourBorder"],
   async mounted() {
     await db
       .collection("people")
@@ -62,6 +88,16 @@ export default {
       if (!name) return;
       return name.substring(0, 3).toUpperCase();
     },
+    stringToColour(str) {
+      return `hsl(${this.hashCode(str) % 360}, 100%, 70%)`;
+    },
+    hashCode(str) {
+      let hash = 0;
+      for (var i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return hash;
+    },
   },
 };
 </script>
@@ -73,6 +109,7 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
+  font-size: 0.6rem;
 }
 
 .person-tooltip {

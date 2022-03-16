@@ -17,6 +17,19 @@
         >
           <v-icon small> mdi-pencil </v-icon>
         </v-btn>
+
+        <v-btn
+          v-else-if="hideText"
+          outlined
+          color="baseAccent"
+          v-bind="attrs"
+          v-on="on"
+          :fab="true"
+          small
+        >
+          <v-icon> mdi-plus </v-icon>
+        </v-btn>
+
         <v-btn v-else outlined color="baseAccent" v-bind="attrs" v-on="on">
           <v-icon left> mdi-plus </v-icon>
           CREATE COHORT
@@ -127,7 +140,10 @@
                     @click:close="remove(data.item)"
                   >
                     <template>
-                      <v-avatar v-if="data.item.image && data.item.image.url" left>
+                      <v-avatar
+                        v-if="data.item.image && data.item.image.url"
+                        left
+                      >
                         <v-img :src="data.item.image.url"></v-img>
                       </v-avatar>
                       {{ data.item.email }}
@@ -136,17 +152,23 @@
                 </template>
                 <template v-slot:item="data">
                   <template>
-                    <v-list-item-avatar v-if="data.item.image && data.item.image.url">
-                      <img :src="data.item.image.url">
+                    <v-list-item-avatar
+                      v-if="data.item.image && data.item.image.url"
+                    >
+                      <img :src="data.item.image.url" />
                     </v-list-item-avatar>
                     <v-list-item-content>
-                      <v-list-item-title v-html="data.item.firstName"></v-list-item-title>
-                      <v-list-item-subtitle v-html="data.item.email"></v-list-item-subtitle>
+                      <v-list-item-title
+                        v-html="data.item.firstName"
+                      ></v-list-item-title>
+                      <v-list-item-subtitle
+                        v-html="data.item.email"
+                      ></v-list-item-subtitle>
                     </v-list-item-content>
                   </template>
                 </template>
                 <template v-slot:no-data>
-                  <CreateAccountDialog accountType="teacher"/>
+                  <CreateAccountDialog accountType="teacher" />
                 </template>
               </v-autocomplete>
             </div>
@@ -172,7 +194,7 @@
               <Organisation
                 v-if="cohort.organisation"
                 :organisation="getOrganisationById(cohort.organisation)"
-                :size="'0.25em'"
+                :size="40"
               />
             </div>
           </div>
@@ -188,7 +210,7 @@
             class="mx-2"
             :loading="loading"
             :disabled="disabled"
-            width="30%" 
+            width="30%"
             :dark="dark"
             :light="!dark"
           >
@@ -310,7 +332,7 @@ import { db, storage, functions } from "../store/firestoreConfig";
 
 export default {
   name: "CreateEditDeleteCohortDialog",
-  props: ["edit", "cohortToEdit"],
+  props: ["edit", "cohortToEdit", "hideText"],
   components: {
     Organisation,
     CreateAccountDialog,
@@ -343,8 +365,8 @@ export default {
     percentage: 0,
     search: "",
   }),
-  mounted () {
-    if (this.user.data.admin) this.bindAllPeople()
+  mounted() {
+    if (this.user.data.admin) this.bindAllPeople();
     if (this.$vuetify.theme.isDark) {
       this.$vuetify.theme.themes.dark.primary = "#ffffff"; // white
     } else {
@@ -354,21 +376,23 @@ export default {
   watch: {
     dialog(newVal) {
       if (newVal && this.edit) {
-        Object.assign(this.cohort, this.cohortToEdit)
-      } 
-    }
+        Object.assign(this.cohort, this.cohortToEdit);
+      }
+    },
   },
   computed: {
     ...mapGetters(["getOrganisationById", "user", "people", "organisations"]),
-    dark () {
-      return this.$vuetify.theme.isDark
+    dark() {
+      return this.$vuetify.theme.isDark;
     },
-    teachers () {
-      const teachers = this.people.filter(person => person.accountType === "teacher")
-      return teachers
+    teachers() {
+      const teachers = this.people.filter(
+        (person) => person.accountType === "teacher"
+      );
+      return teachers;
     },
-    cohortView () {
-      return this.$route.name === "CohortView"
+    cohortView() {
+      return this.$route.name === "CohortView";
     },
     organisationsToSelect() {
       return [{ name: "none", id: 0 }, ...this.organisations];
@@ -384,9 +408,9 @@ export default {
   },
 
   methods: {
-    ...mapActions(['bindAllPeople']),
-    toggleTeacherDialog () {
-      this.teacherDialog = !this.teacherDialog
+    ...mapActions(["bindAllPeople"]),
+    toggleTeacherDialog() {
+      this.teacherDialog = !this.teacherDialog;
     },
     remove(item) {
       let index = this.cohort.teachers.findIndex((n) => item.id === n);
@@ -413,8 +437,8 @@ export default {
       }
     },
     saveCohort(cohort) {
-      this.loading = true;      
-  
+      this.loading = true;
+
       // Add a new document in collection "cohorts"
       db.collection("cohorts")
         .add(cohort)
@@ -423,14 +447,14 @@ export default {
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
-      })
+        });
 
-      // notify teachers of new cohort assignment 
+      // notify teachers of new cohort assignment
       if (this.cohort.teachers.length) {
         for (const teacher of this.cohort.teachers.length) {
-          const profile = this.people.find(person => teacher === person.id)
-          console.log(profile)
-          this.sendNewCohortEmail(profile)
+          const profile = this.people.find((person) => teacher === person.id);
+          console.log(profile);
+          this.sendNewCohortEmail(profile);
         }
       }
     },
@@ -439,10 +463,10 @@ export default {
       const person = {
         ...profile,
         cohort: this.cohort.name,
-        inviter: this.inviter || 'Galaxy Maps Admin'
-      }
-      const sendNewCohortEmail = functions.httpsCallable('sendNewCohortEmail')
-      return sendNewCohortEmail(person)
+        inviter: this.inviter || "Galaxy Maps Admin",
+      };
+      const sendNewCohortEmail = functions.httpsCallable("sendNewCohortEmail");
+      return sendNewCohortEmail(person);
     },
     camelize(str) {
       return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {
@@ -532,7 +556,7 @@ export default {
         });
     },
     updateCohort(cohort) {
-      console.log('update cohort')
+      console.log("update cohort");
       this.loading = true;
 
       // update document in collection "courses"
@@ -541,19 +565,22 @@ export default {
         .update(cohort)
         .then(() => {
           console.log("Document successfully updated!");
-          this.close()
+          this.close();
         })
         .catch((error) => {
           console.error("Error updating document: ", error);
-      });
+        });
 
       if (this.cohort.teachers.length > this.cohortToEdit.teachers) {
-        const newTeachers = this.cohort.teachers.filter(({ id: id1 }) => !this.cohortToEdit.teachers.some(({ id: id2 }) => id2 === id1));
+        const newTeachers = this.cohort.teachers.filter(
+          ({ id: id1 }) =>
+            !this.cohortToEdit.teachers.some(({ id: id2 }) => id2 === id1)
+        );
         if (newTeachers.length) {
           for (const teacher of newTeachers) {
-            const profile = this.people.find(person => teacher === person.id)
-            console.log(profile)
-            this.sendNewCohortEmail(profile)
+            const profile = this.people.find((person) => teacher === person.id);
+            console.log(profile);
+            this.sendNewCohortEmail(profile);
           }
         }
       }
@@ -708,5 +735,4 @@ export default {
     padding: 0px 5px;
   }
 }
-
 </style>
