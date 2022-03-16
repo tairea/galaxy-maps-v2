@@ -134,7 +134,6 @@ export default {
   },
   computed: {},
   async mounted() {
-    console.log("cohort panel loaded for: ", this.cohort.name);
     const getCourseData = await getCohortsCourseDataXAPIQuery({
       studentsArr: this.cohort.students,
       coursesArr: this.cohort.courses,
@@ -144,7 +143,6 @@ export default {
     //   console.log("get cohort data from LRS done");
     // });
     this.cohortsCoursesData = getCourseData;
-    console.log("this.cohortsCoursesData", this.cohortsCoursesData);
   },
   methods: {
     ...mapActions(["setCurrentCohort"]),
@@ -184,14 +182,12 @@ export default {
     getStartDay() {
       let startDay = new Date().setHours(0);
       startDay = new Date(startDay);
-      console.log("startDay:", startDay);
       return startDay;
     },
     getEndDay() {
       let endDay = new Date().setHours(23);
       endDay = new Date(endDay).setMinutes(59);
       endDay = new Date(endDay);
-      console.log("endDay:", endDay);
       return endDay;
     },
     previous() {

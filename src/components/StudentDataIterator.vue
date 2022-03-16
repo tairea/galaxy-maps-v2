@@ -100,7 +100,7 @@
 </template>
 
 <script>
-import StudentCard from "../components/StudentCard";
+import StudentCard from "../components/StudentCard/StudentCard";
 import CreateAccountDialog from "../components/CreateAccountDialog";
 import ImportCsvDialog from "../components/ImportCsvDialog";
 import { mapGetters } from "vuex"

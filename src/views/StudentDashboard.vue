@@ -7,7 +7,7 @@
 
     <div id="main-section">
       <!-- STUDENTS ACTIVITY FRAME -->
-      <StudentActivityTimeline />
+      <StudentActivityTimeline :person="person"/>
 
       <!-- STUDENTS COURSE PROGRESSOIN FRAME -->
       <!-- TODO: v-for="courseData in studentsCoursesProgressionData" -->

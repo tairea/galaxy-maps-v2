@@ -27,31 +27,17 @@
 <script>
 import CohortInfo from "../components/CohortInfo";
 import AssignedInfo from "../components/AssignedInfo";
-import MissionsInfo from "../components/MissionsInfo";
-import MissionsList from "../components/MissionsList";
-import StudentCard from "../components/StudentCard";
-import StudentDataTable from "../components/StudentDataTable";
 import StudentDataIterator from "../components/StudentDataIterator";
-import Galaxy from "../components/Galaxy";
 import BackButton from "../components/BackButton";
 import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame";
 import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame";
-
-// import ImportCsv from "../components/ImportCsv";
-import { mapGetters } from "vuex";
 
 export default {
   name: "CohortView",
   components: {
     CohortInfo,
     AssignedInfo,
-    MissionsInfo,
-    MissionsList,
-    Galaxy,
     BackButton,
-    // ImportCsv,
-    StudentCard,
-    StudentDataTable,
     StudentDataIterator,
     RequestForHelpTeacherFrame,
     SubmissionTeacherFrame,
