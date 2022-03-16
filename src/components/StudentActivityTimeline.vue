@@ -102,8 +102,15 @@ export default {
 
 .label {
   color: var(--v-missionAccent-base);
-  font-size: 0.7rem;
-  margin: 10px;
+  margin: 10px 10px 0 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.statements {
+  padding: 10px 20px;
+  font-size: 0.8rem;
 }
 
 .student-card-label {
@@ -114,14 +121,14 @@ export default {
 
 .student-card-statement {
   color: var(--v-missionAccent-base);
-  max-height: 37px;
-  width: 250px;
+  max-height: 35px;
+  width: 100%;
   overflow: hidden;
 }
 
 .student-card-log {
   font-size: 0.6rem;
-  max-height: 100%;
+  max-height: 80%;
   padding:2px;
   transition: all .2s ease-in-out; 
 }
@@ -132,17 +139,20 @@ export default {
   transform: scale(1.2);
   font-size: 0.6rem;
   background-color: #141e30;  
-  min-height: 100px;
+  // min-height: 300px;
+  position:relative;
+  z-index: 10;
   
   .student-card-statement{
     border: 1px solid var(--v-missionAccent-base);
     box-shadow: 0 0 30px var(--v-missionAccent-base);
     padding: 5px;
     background-color: #141e30;  
-    max-height: 100px;
+    max-height: 200px;
     width: 320px;
     overflow: scroll;
-    overflow-x: hidden
+    overflow-x: hidden;
+    z-index: 1000
   }
   /* width */
 ::-webkit-scrollbar {

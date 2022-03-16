@@ -7,7 +7,7 @@
 
     <div id="main-section">
       <!-- STUDENTS ACTIVITY FRAME -->
-      <StudentActivityTimeline :person="person"/>
+      <StudentActivityTimeline :student="person"/>
 
       <!-- STUDENTS COURSE PROGRESSOIN FRAME -->
       <!-- TODO: v-for="courseData in studentsCoursesProgressionData" -->
@@ -97,7 +97,7 @@ export default {
 
 #main-section {
   width: 75%;
-  // margin: 0px;
+  margin-top: 10%;
   height: 100%;
   display: flex;
   justify-content: center;

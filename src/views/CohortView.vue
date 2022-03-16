@@ -14,10 +14,6 @@
     </div>
 
     <div id="right-section">
-      <!-- <div class="people-right-frame mb-5">
-        <h2 class="people-label">ADD STUDENTS</h2>
-        <ImportCsv />
-      </div> -->
       <!-- <RequestForHelpTeacherFrame />
       <SubmissionTeacherFrame /> -->
     </div>

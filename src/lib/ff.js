@@ -41,3 +41,19 @@ export const getStudentTasksByTopicId = async (payload) => {
   }
   return tasks
 }
+
+export const getStudentCohortsById = async (studentId) => {
+  return await db
+    .collection("cohorts")
+    .where("students", "array-contains", studentId)
+    .get()
+    .then((querySnapShot) => {
+      const cohorts = querySnapShot.docs.map((doc) => {
+        return {
+          id: doc.id,
+          ...doc.data(),
+        };
+      });
+      return cohorts;
+    });
+}
