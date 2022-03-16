@@ -30,24 +30,59 @@ export default {
   watch: {
     unselectedPersons: {
       handler(newUnselectedPersons) {
-        // console.log("this.chart", this.chart);
+        // console.log(this.chartType + " this.chart", this.chart.data);
+        // console.log("newUnselectedPersons", newUnselectedPersons);
+        // hide data
         for (const person of newUnselectedPersons) {
           const personsName = person.firstName + " " + person.lastName;
           const personsIndexForDataset =
             this.chart.data.labels.indexOf(personsName);
-          if (!(personsIndexForDataset < 0))
-            this.chart.hide(personsIndexForDataset);
+
+          if (!(personsIndexForDataset < 0)) {
+            if (this.chartType == "line") {
+              // line chart
+              this.chart.hide(personsIndexForDataset);
+            } else if (this.chartType == "bar") {
+              console.log(
+                personsName +
+                  " UNselected. index = " +
+                  personsIndexForDataset +
+                  " " +
+                  this.chartType
+              );
+              // bar chart
+              this.chart.hide(0, personsIndexForDataset);
+            }
+          }
         }
       },
     },
     selectedPersons: {
       handler(newSelectedPersons) {
+        // console.log(this.chartType + " this.chart", this.chart.data);
+        // console.log("newSelectedPersons", newSelectedPersons);
+        // show data
         for (const person of newSelectedPersons) {
           const personsName = person.firstName + " " + person.lastName;
           const personsIndexForDataset =
             this.chart.data.labels.indexOf(personsName);
-          if (!(personsIndexForDataset < 0))
-            this.chart.show(personsIndexForDataset);
+
+          if (!(personsIndexForDataset < 0)) {
+            if (this.chartType == "line") {
+              // line chart
+              this.chart.show(personsIndexForDataset);
+            } else if (this.chartType == "bar") {
+              console.log(
+                personsName +
+                  " Selected. index = " +
+                  personsIndexForDataset +
+                  " " +
+                  this.chartType
+              );
+              // bar chart
+              this.chart.show(0, personsIndexForDataset);
+            }
+          }
         }
       },
     },
