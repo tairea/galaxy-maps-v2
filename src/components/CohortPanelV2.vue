@@ -203,7 +203,7 @@ export default {
       studentsArr: this.cohort.students,
     });
     this.cohortActivityData = getActivityData;
-    console.log("this.cohortActivityData", this.cohortActivityData);
+    // console.log("this.cohortActivityData", this.cohortActivityData);
     this.cohortActivityDataLoading = false;
 
     // ==== VQL Test
