@@ -3,9 +3,27 @@
     <v-dialog v-model="dialog" width="40%" light>
       <!-- CREATE BUTTON -->
       <template v-slot:activator="{ on, attrs }">
-        <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on">
+        <v-btn
+          v-if="!hideText"
+          outlined
+          color="baseAccent"
+          v-bind="attrs"
+          v-on="on"
+        >
           <v-icon left> mdi-plus </v-icon>
           CREATE ORGANISATION
+        </v-btn>
+        <v-btn
+          v-else
+          outlined
+          color="baseAccent"
+          v-bind="attrs"
+          v-on="on"
+          :fab="true"
+          class="mt-4"
+          small
+        >
+          <v-icon> mdi-plus </v-icon>
         </v-btn>
       </template>
 
@@ -205,7 +223,7 @@ import { db, storage } from "../store/firestoreConfig";
 
 export default {
   name: "CreateEditDeleteOrganisationDialog",
-  props: ["edit", "organisationToEdit"],
+  props: ["edit", "organisationToEdit", "hideText"],
   data: () => ({
     dialog: false,
     dialogConfirm: false,

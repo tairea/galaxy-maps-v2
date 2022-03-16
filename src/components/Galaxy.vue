@@ -103,6 +103,10 @@ export default {
         nodes: {
           shape: "dot",
           size: 7,
+          fixed: {
+            x: true,
+            y: true,
+          },
           color: {
             border: "grey",
             highlight: {
@@ -159,6 +163,7 @@ export default {
         interaction: {
           hover: true,
           hoverConnectedEdges: false,
+          dragNodes: false,
         },
       },
     },
@@ -512,6 +517,7 @@ export default {
     makeGalaxyLabelsColour(colour) {
       var options = { ...this.network.options };
       options.nodes.font.color = colour;
+      options.nodes.fixed = true;
       this.$refs.network.setOptions(options);
       this.$refs.network.fit();
     },

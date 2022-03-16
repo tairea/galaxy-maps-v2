@@ -27,13 +27,15 @@
       <v-col cols="12" class="center-col pa-0">
         <Chart
           ref="chart"
-          id="chartImage"
+          class="chart"
           :chartType="chartType"
           :chartData="formatStudentsChartData(courseData)"
           :chartOptions="chartOptions"
-          :style="{ width: '100%', height: '200px', padding: '20px' }"
+          :style="{ width: '100%', height: '150px', padding: '0px 20px' }"
           :toolTipEnable="false"
           :timeframe="timeframe"
+          :selectedPersons="selectedPersons"
+          :unselectedPersons="unselectedPersons"
         />
       </v-col>
       <!-- <v-col cols="4" class="pa-0">
@@ -53,10 +55,11 @@ import { mapState, mapGetters } from "vuex";
 import Chart from "@/components/Chart.vue";
 import { DateTime } from "luxon";
 import { dbMixins } from "../mixins/DbMixins";
+import { colours } from "../lib/utils";
 
 export default {
-  name: "ProgressionChart",
-  props: ["courseData", "timeframe"],
+  name: "ProgressionLineChart",
+  props: ["courseData", "timeframe", "selectedPersons", "unselectedPersons"],
   components: {
     Chart,
   },
@@ -115,13 +118,30 @@ export default {
   },
   methods: {
     formatStudentsChartData(courseData) {
+      // console.log("courseData", courseData);
       const datasets = [];
+      const labels = [];
+
+      // ======= test data - 30 students =======
+      // for (var x = 0; x < 30; x++) {
+      //   const studentColour = colours[x];
+      //   const label = colours[x];
+      //   const activities = [];
+      //   // --- 10 statements ---
+      //   for (var i = 0; i < 10; i++) {
+      //     activities.push({
+      //       x: DateTime.local(2022, 3, Math.floor(Math.random(0, 30) * 100)),
+      //       y: Math.random(1, 100) * 100,
+      //     });
+      //   }
 
       // more than one student per course
       for (const student of courseData.students) {
         const studentColour = this.stringToColour(
           student.person.firstName + student.person.lastName
         );
+        const label = student.person.firstName + " " + student.person.lastName;
+
         const activities = student.activities.map((activity) => {
           return {
             ...activity,
@@ -138,17 +158,18 @@ export default {
           pointRadius: 2,
           borderWidth: 1,
           data: activities,
-          label: courseData.course.title,
+          label: label,
         };
-
+        labels.push(label);
         datasets.push(studentData);
       }
 
       const datasetsObj = {
+        labels,
         datasets,
       };
 
-      // console.log("datasets: ", datasetsObj);
+      // console.log("progress line chart datasets: ", datasetsObj);
       return datasetsObj;
     },
     stringToColour(str) {
@@ -171,11 +192,12 @@ export default {
 
 <style lang="scss" scoped>
 .course-frame {
-  // border: 1px solid var(--v-missionAccent-base);
-  margin-bottom: 30px;
+  border: 1px solid var(--v-galaxyAccent-base);
   margin-left: auto;
   margin-right: auto;
-  padding: 12px;
+  padding: 20px;
+  border-radius: 5px;
+  // margin-bottom: 20px;
 
   .left-col {
     padding: 20px;
