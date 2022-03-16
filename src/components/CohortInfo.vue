@@ -14,7 +14,7 @@
       <Organisation
         v-if="currentCohort.organisation"
         :organisation="org"
-        :size="'0.25em'"
+        :size="40"
       />
     </div>
     <div v-if="teachers.length > 0">
@@ -72,8 +72,8 @@ export default {
   },
   computed: {
     ...mapGetters(["getOrganisationById", "currentCohort", "person"]),
-    cohortImage () {
-      return this.currentCohort?.image?.url
+    cohortImage() {
+      return this.currentCohort?.image?.url;
     },
     org() {
       let org = this.getOrganisationById(this.currentCohort.organisation);

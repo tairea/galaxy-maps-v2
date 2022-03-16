@@ -8,8 +8,9 @@
     <v-row>
       <v-col cols="12" class="center-col pa-0">
         <Chart
+          v-if="activityData"
           ref="chart"
-          id="chartImage"
+          class="chart"
           :chartType="chartType"
           :chartData="formatStudentsChartData(activityData)"
           :chartOptions="chartOptions"
@@ -37,6 +38,7 @@ import { mapState, mapGetters } from "vuex";
 import Chart from "@/components/Chart.vue";
 import { DateTime } from "luxon";
 import { dbMixins } from "../mixins/DbMixins";
+import { colours, names } from "../lib/utils";
 
 export default {
   name: "ActivityBarChart",
@@ -52,6 +54,7 @@ export default {
       previousTickTitle: "",
       chartType: "bar",
       chartOptions: {
+        // maintainAspectRatio: false,
         layout: {
           padding: {
             // left: 5,
@@ -68,19 +71,18 @@ export default {
           },
         },
         scales: {
-          x: {
+          xAxis: {
             type: "category",
-            title: {
-              align: "center",
+            ticks: {
+              display: true,
+
+              autoSkip: false,
+              maxRotation: 90,
+              minRotation: 90,
+              font: {
+                size: 10,
+              },
             },
-            // min: this.timeframe.min,
-            // max: this.timeframe.max,
-            // time: {
-            //   unit: "day",
-            //   displayFormats: {
-            //     day: "EEE d MMM",
-            //   },
-            // },
           },
           // y: {
           //   // ticks: {
@@ -99,26 +101,22 @@ export default {
   async mounted() {},
   computed: {
     // ...mapGetters(["person", "getCourseById", "getTopicById"]),
+    dark() {
+      return this.$vuetify.theme.isDark;
+    },
   },
   methods: {
     formatStudentsChartData(studentData) {
       // console.log("courseData", courseData);
       const datasets = [];
-      const labels = [];
+      const data = [];
+      let labels = [];
 
       // more than one student in a cohort so loop
       for (const [index, student] of studentData.entries()) {
         const person = student.person;
 
-        const studentColour = this.stringToColour(
-          person.firstName + person.lastName
-        );
         const label = person.firstName + " " + person.lastName;
-
-        // console.log(
-        //   "formating data for bar chart. timeframe is:",
-        //   this.timeframe
-        // );
 
         // calc total depending on timeframe.type (eg. fortnight, calculate days totals for that timeframes fortnight)
         const time = 0;
@@ -149,8 +147,8 @@ export default {
                 );
               })
               .reduce((sum, activity) => sum + activity.minutesActiveTotal, 0);
-            console.log("got week total");
-            console.log(weekRes);
+            // console.log("got week total");
+            // console.log(weekRes);
             time = weekRes;
             break;
 
@@ -165,42 +163,59 @@ export default {
                 );
               })
               .reduce((sum, activity) => sum + activity.minutesActiveTotal, 0);
-            console.log("got fortnight total");
-            console.log(fortnightRes);
+            // console.log("got fortnight total");
+            // console.log(fortnightRes);
             time = fortnightRes;
             break;
           default:
         }
 
-        console.log("total minutes for " + this.timeframe.type + " = " + time);
+        // console.log("total minutes for " + this.timeframe.type + " = " + time);
 
-        const dataPointObj = [
-          {
-            x: label,
-            y: time / 60, // minutes to hours
-            // y: Math.random(0, 100) * 100,
-          },
-        ];
-
-        let studentData = {
-          label: label,
-          data: dataPointObj,
-          backgroundColor: studentColour,
-          borderColor: studentColour,
-          borderRadius: 2,
-          pointRadius: 2,
-          borderWidth: 1,
+        const dataPointObj = {
+          x: label,
+          y: time / 60, // minutes to hours
+          // y: Math.random(0, 100) * 100,
         };
+
         labels.push(label);
-        datasets.push(studentData);
+        data.push(dataPointObj);
       }
 
+      // ==== test 30 students ===
+      // for (var x = 0; x < 50; x++) {
+      //   const label = names[x];
+
+      //   const dataPointObj = {
+      //     x: label,
+      //     // y: time / 60, // minutes to hours
+      //     y: Math.random() * 10,
+      //   };
+
+      //   labels.push(label);
+      //   data.push(dataPointObj);
+      // }
+
+      let dataset = {
+        label: "Hours Online",
+        data: data,
+        backgroundColor: this.dark
+          ? this.$vuetify.theme.themes.dark.baseAccent
+          : this.$vuetify.theme.themes.light.baseAccent,
+        borderColor: this.dark
+          ? this.$vuetify.theme.themes.dark.baseAccent
+          : this.$vuetify.theme.themes.light.baseAccent,
+        categoryPercentage: 1.0,
+        barPercentage: 0.7,
+      };
+
+      datasets.push(dataset);
       const datasetsObj = {
         labels,
         datasets,
       };
 
-      console.log("datasets: ", datasetsObj);
+      // console.log("bar chart datasets: ", datasetsObj);
       return datasetsObj;
     },
     stringToColour(str) {
@@ -223,11 +238,11 @@ export default {
 
 <style lang="scss" scoped>
 .course-frame {
-  border: 1px solid var(--v-baseAccent-base);
+  // border: 1px solid var(--v-baseAccent-base);
   // margin-bottom: 30px;
   margin-left: auto;
   margin-right: auto;
-  padding: 30px;
+  padding: 0px 20px;
 
   .left-col {
     padding: 20px;

@@ -1,5 +1,5 @@
 <template>
-  <v-container class="pl-0">
+  <v-container>
     <span
       v-if="cohortView"
       class="caption"
@@ -8,20 +8,22 @@
     >
     <v-row :class="cohortView ? 'my-1' : ''">
       <v-col
-        class="d-flex justify-start align-center cursor"
+        class="d-flex justify-center align-center cursor"
         @click="editOrg()"
       >
         <v-img
           v-if="organisation.image"
           :src="organisation.image.url"
-          max-width="30px"
-          max-height="30px"
+          :max-width="size ? size + 'px' : '30px'"
+          :max-height="size ? size + 'px' : '30px'"
           class="organisation-image"
         ></v-img>
         <div v-else-if="organisation.name" class="imagePlaceholder">
           {{ first3Letters(organisation.name) }}
         </div>
-        <span class="ml-6 overline">{{ organisation.name }}</span>
+        <span v-if="!hideName" class="ml-6 overline">{{
+          organisation.name
+        }}</span>
       </v-col>
     </v-row>
   </v-container>
@@ -30,7 +32,7 @@
 <script>
 export default {
   name: "Organisation",
-  props: ["organisation"],
+  props: ["organisation", "hideName", "size"],
   data() {
     return {};
   },
