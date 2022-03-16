@@ -47,6 +47,7 @@ import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "GalaxyMap",
+  props: [],
   components: {
     Network,
     SolarSystem,
@@ -74,6 +75,10 @@ export default {
         nodes: {
           shape: "dot",
           size: 7,
+          fixed: {
+            x: true,
+            y: true,
+          },
           color: {
             border: "grey",
             highlight: {
@@ -135,6 +140,7 @@ export default {
         interaction: {
           hover: true,
           hoverConnectedEdges: false,
+          dragNodes: false,
         },
       },
     },
@@ -149,6 +155,22 @@ export default {
     newNodePositions: {},
   }),
   async mounted() {
+    // var course = this.getCourseById(this.courseId);
+    var person = this.person.id;
+    // var contentMadeBy = course.contentBy.personId;
+
+    // determine if person logged in and on galaxy view page is a teacher
+    // if so, allow them to move the nodes
+    if (
+      this.person.accountType == "teacher" &&
+      this.$route.name == "GalaxyView"
+    ) {
+      console.log("teacher is detected");
+      this.network.options.interaction.dragNodes = true;
+    } else {
+      this.network.options.interaction.dragNodes = false;
+    }
+
     await this.$store.dispatch("bindCourseNodes", this.currentCourseId);
     await this.$store.dispatch("bindCourseEdges", this.currentCourseId);
     // bind topics for course creator
@@ -180,7 +202,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(["getTopicById", "person"]),
+    ...mapGetters(["getTopicById", "person", "getCourseById"]),
     ...mapState([
       "currentCourseId",
       "currentCourseNodes",
@@ -434,7 +456,7 @@ export default {
       this.$emit("hoverNode", hoveredNode);
     },
     blurNode() {
-      this.$emit('blurNode')
+      this.$emit("blurNode");
       if (this.active) return;
       setTimeout(() => {
         this.$emit("deselected");
