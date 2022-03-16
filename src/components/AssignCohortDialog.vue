@@ -191,7 +191,7 @@
               <v-select
                 v-if="assignCourses"
                 v-model="course"
-                :items="personsCourses"
+                :items="courses"
                 dark
               >
                 <template v-slot:selection="{ item }">
@@ -272,6 +272,10 @@ export default {
     cohort: "",
     course: "",
   }),
+  async mounted () {
+    // we need to think about what courses are available to assign for a teacher
+    await this.$store.dispatch("bindAllCourses");
+  },
   computed: {
     ...mapState([
       "courses",

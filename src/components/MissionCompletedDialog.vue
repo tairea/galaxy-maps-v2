@@ -390,15 +390,19 @@ export default {
             system: this.currentTopic,
             mission: this.currentTask,
           });
+        }).
+        then(() => {
+          // unlock next task
+          this.unlockNextTask();
+        }).
+        then(() => {
+          // check if all tasks/missions are completed
+          this.checkIfAllTasksCompleted();
+        }).
+        then(() => {
           this.loading = false;
           this.disabled = false;
           this.dialog = false;
-
-          // unlock next task
-          this.unlockNextTask();
-
-          // check if all tasks/missions are completed
-          this.checkIfAllTasksCompleted();
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
@@ -485,12 +489,6 @@ export default {
               // route back to map
               .then(() => {
                 console.log("NEW TOPIC UNLOCKED: " + doc.data().label);
-                this.$router.push({
-                  name: "GalaxyView",
-                  params: {
-                    courseId: this.currentCourse.id,
-                  },
-                });
               });
           });
         });

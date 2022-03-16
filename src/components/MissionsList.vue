@@ -9,6 +9,7 @@
           :id="task.id"
           :index="index"
           :topicId="topicId"
+          :topicActive="topicActive"
         />
         <ActiveMissionsCard
           v-if="task.taskStatus == 'active'"
@@ -44,18 +45,20 @@ export default {
     CreateEditDeleteMissionDialog,
   },
   props: ["tasks", "topicId"],
+   data() {
+    return {
+      activeMission: false,
+      topicActive: false
+    };
+  },
   mounted() {
     // check which task is active
-    // console.log("tasks from prop: ", this.tasks);
+    const activeTasks = this.tasks.find(task => task.taskStatus == 'active')
+    if (activeTasks) this.topicActive = true
   },
   computed: {
     ...mapState(["personsTopicsTasks"]),
     ...mapGetters(["person"]),
-  },
-  data() {
-    return {
-      activeMission: false,
-    };
   },
   methods: {},
 };
