@@ -1015,7 +1015,7 @@ export const getCohortsActivityDataXAPIQuery = async (payload) => {
     .then((res) => res.json())
     .catch((error) => console.error(error.message))
     .then((res) => {
-      console.log("Activity status for Students in Cohort:", res);
+      // console.log("Activity status for Students in Cohort:", res);
       return sanitiseCohortsActivityDataFromLRS(res);
     });
 };

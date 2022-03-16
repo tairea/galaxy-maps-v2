@@ -194,7 +194,7 @@
               <Organisation
                 v-if="cohort.organisation"
                 :organisation="getOrganisationById(cohort.organisation)"
-                :size="'0.25em'"
+                :size="40"
               />
             </div>
           </div>

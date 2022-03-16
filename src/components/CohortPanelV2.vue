@@ -29,7 +29,7 @@
           />
         </div> -->
         <!-- Teacher -->
-        <div v-if="cohort.teachers" class="d-flex flex-column mt-8">
+        <div v-if="cohort.teachers.length > 0" class="d-flex flex-column mt-8">
           <p class="label text-center">Teachers:</p>
           <div>
             <Avatar
@@ -40,7 +40,7 @@
             />
           </div>
         </div>
-        <p v-else class="label mt-8" style="font-weight: 800">
+        <p v-else class="label text-center mt-8" style="font-weight: 800">
           NO TEACHER DATA
         </p>
       </div>
@@ -61,7 +61,7 @@
             color="galaxyAccent"
           ></v-btn>
         </div>
-        <div v-if="cohortsCoursesData" style="padding: 20px">
+        <div v-if="cohortsCoursesData.length > 0" style="padding: 20px">
           <ProgressionLineChart
             v-for="courseData in cohortsCoursesData"
             :key="courseData.id"
@@ -83,16 +83,18 @@
       <!-- Activity Bar Chart -->
       <div>
         <!-- loading spinner -->
-        <div>
+        <div
+          class="d-flex justify-center align-center"
+          v-if="cohortActivityDataLoading && !(cohortActivityData.length > 0)"
+        >
           <v-btn
-            v-if="cohortActivityDataLoading && !cohortActivityData"
             :loading="cohortActivityDataLoading"
             icon
             color="baseAccent"
             class="d-flex justify-center align-center"
           ></v-btn>
         </div>
-        <div v-if="cohortActivityData" style="padding: 0px 20px">
+        <div v-if="cohortActivityData.length > 0" style="padding: 0px 20px">
           <ActivityBarChart
             :activityData="cohortActivityData"
             :timeframe="timeframe"
@@ -201,7 +203,7 @@ export default {
       studentsArr: this.cohort.students,
     });
     this.cohortActivityData = getActivityData;
-    // console.log("this.cohortActivityData", this.cohortActivityData);
+    console.log("this.cohortActivityData", this.cohortActivityData);
     this.cohortActivityDataLoading = false;
 
     // ==== VQL Test
