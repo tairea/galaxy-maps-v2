@@ -11,7 +11,7 @@
           <StudentActivityTimeline :student="student" studentCard/>
           <!-- <StudentCardActivities :student="student" :activities="activities"/> -->
         </div>
-        <div class="d-flex flex-row">
+        <div class="d-flex flex-row ">
             <v-col class="pa-0">
               <StudentHours />
             </v-col>
@@ -22,7 +22,7 @@
       </div>
       <div class="student-actions-overUnder">
         <div class="top-row">
-            <StudentCohorts />
+            <StudentCohorts :student="student"/>
         </div>
         <div>
           <StudentActions />
@@ -166,7 +166,6 @@ a {
   .student-actions-overUnder {
     display: flex;
     flex-direction: column;
-    justify-content: center;
     width: 20%;
     border-left: 1px dashed var(--v-missionAccent-base);
   }

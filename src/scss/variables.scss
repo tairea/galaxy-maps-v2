@@ -3,6 +3,11 @@ $btn-border-radius: 0;
 $text-field-border-radius: 0;
 $progress-circular-underlay-stroke: none;
 
+//change tooltip styling
+$tooltip-background-color: var(--v-background-base);
+$tooltip-text-color: var(--var-missionAccent-base);
+$tooltip-border-radius: 0px;
+
 /* width */
 ::-webkit-scrollbar {
   width: 10px;

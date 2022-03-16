@@ -33,55 +33,7 @@
             <ImportCsvDialog />
           </div>
         </div>
-
-        <!-- =============OLD HEADER================ -->
-        <!-- <v-row v-if="students" class="mt-3"> 
-          <v-col cols="6">
-            <v-text-field
-              v-model="search"
-              clearable
-              flat
-              
-              hide-details
-              prepend-inner-icon="mdi-magnify"
-              label="Search"
-              dense
-              outlined
-              color="missionAccent"
-            ></v-text-field>
-          </v-col> -->
-          <!-- <v-col cols="6"  class="d-flex">
-            <template v-if="$vuetify.breakpoint.mdAndUp">
-              
-              <v-spacer></v-spacer>
-              <v-select
-                v-model="sortBy"
-                flat
-                
-                hide-details
-                :items="keys"
-                prepend-inner-icon="mdi-sort-alphabetical-variant"
-                label="Sort by"
-                dense
-                color="missionAccent"
-                outlined
-              ></v-select>
-              <v-btn-toggle v-model="sortDesc" mandatory style="background-color: transparent;" tile class="d-flex justify-center align-center ml-2">
-                <v-btn depressed color="missionAccent" :value="false" small>
-                  <v-icon small>mdi-arrow-up</v-icon>
-                </v-btn>
-                <v-btn depressed color="missionAccent" :value="true" small>
-                  <v-icon small>mdi-arrow-down</v-icon>
-                </v-btn>
-              </v-btn-toggle>
-            
-            </template>
-          </v-col>
-        </v-row> -->
-
-
       </template>
-      <!-- END HEADER -->
 
       <!-- PROPS -->
       <template v-slot:default="props">
