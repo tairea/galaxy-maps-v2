@@ -195,7 +195,6 @@ export default {
       this.$refs.organisationDialog.openDialog()
     },
     setTimeframe(timeframeEmitted) {
-      console.log("setting timeframe from emitter:", timeframeEmitted)
       this.timeframe = timeframeEmitted
     },
     clickedCohort(cohort, orgIndex, cohortIndex) {
