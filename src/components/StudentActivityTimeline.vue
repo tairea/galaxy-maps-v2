@@ -127,7 +127,7 @@ export default {
 
 .student-card-statement {
   color: var(--v-missionAccent-base);
-  max-height: calc(100% - 20px);
+  max-height: calc(100% - 14px); // overflow of statements
   width: 100%;
   overflow: hidden;
 }
