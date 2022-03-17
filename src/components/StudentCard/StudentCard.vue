@@ -2,7 +2,7 @@
   <div class="student-card" :class="status ? '' : 'not-active'">
     <StudentCardStatus :student="student" :loggedIn="loggedIn" />
     <template v-if="!status" class="second-block">
-      <span class="not-active text-uppercase ma-auto"
+      <span class="overline not-active text-uppercase ma-auto"
         >hasn't signed in yet</span
       >
     </template>
@@ -15,14 +15,21 @@
         </div>
       </div>
       <div class="student-actions-overUnder">
-        <div class="top-row" v-if="studentTimeData.length > 0">
+        <div
+          class="top-row d-flex flex-column justify-center align-center"
+          v-if="studentTimeData.length > 0"
+        >
           <StudentHours
             :timeData="studentTimeData"
             :timeframe="timeframe"
             @emitUpHours="emitUpHours($event)"
           />
         </div>
-        <div class="pa-0" v-if="activities.length > 0">
+        <div
+          v-if="activities.length > 0"
+          class="pa-0 d-flex flex-column justify-center align-center"
+          style="height: 50%"
+        >
           <StudentCompletedTasks
             :taskData="activities"
             :timeframe="timeframe"
@@ -195,7 +202,7 @@ a {
   border: 1px dashed var(--v-missionAccent-base);
   margin: 20px 10px;
   display: flex;
-  height: 110px;
+  height: 120px;
 
   .student-activities-overUnder {
     display: flex;
@@ -224,6 +231,6 @@ a {
 
 .not-active {
   color: grey;
-  border-color: grey !important;
+  // border-color: grey !important;
 }
 </style>
