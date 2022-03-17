@@ -1,6 +1,7 @@
 <template>
   <div class="d-flex">
     <v-chip
+      v-if="!noArrows"
       class="my-2 mx-1 custom-chip"
       color="missionAccent"
       outlined
@@ -46,6 +47,7 @@
       Fortnight
     </v-chip>
     <v-chip
+      v-if="!noArrows"
       class="my-2 mx-1 custom-chip"
       color="missionAccent"
       outlined
@@ -60,7 +62,7 @@
 <script>
 export default {
   name: "Timeframefilters",
-  props: [],
+  props: ["noArrows"],
   components: {},
   data() {
     return {

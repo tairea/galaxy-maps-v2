@@ -143,7 +143,7 @@ import ActivityBarChart from "../components/ActivityBarChart";
 import Organisation from "../components/Organisation";
 import {
   getCohortsCourseDataXAPIQuery,
-  getCohortsActivityDataXAPIQuery,
+  getStudentsTimeDataXAPIQuery,
   VQLXAPIQuery,
 } from "../lib/veracityLRS";
 
@@ -199,7 +199,7 @@ export default {
     this.cohortsCoursesDataLoading = false;
 
     // ==== get cohort activity data from LRS
-    const getActivityData = await getCohortsActivityDataXAPIQuery({
+    const getActivityData = await getStudentsTimeDataXAPIQuery({
       studentsArr: this.cohort.students,
     });
     this.cohortActivityData = getActivityData;

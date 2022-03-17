@@ -155,7 +155,7 @@ import ProgressionLineChart from "../components/ProgressionLineChart";
 import ActivityBarChart from "../components/ActivityBarChart";
 import {
   getCohortsCourseDataXAPIQuery,
-  getCohortsActivityDataXAPIQuery,
+  getStudentsTimeDataXAPIQuery,
   VQLXAPIQuery,
 } from "../lib/veracityLRS";
 
@@ -211,7 +211,7 @@ export default {
     }
 
     // ==== get cohort activity data from LRS
-    const getActivityData = await getCohortsActivityDataXAPIQuery({
+    const getActivityData = await getStudentsTimeDataXAPIQuery({
       studentsArr: this.cohort.students,
     });
     this.cohortActivityData = getActivityData;
