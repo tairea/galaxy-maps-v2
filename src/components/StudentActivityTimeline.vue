@@ -6,12 +6,14 @@
         v-for="(activity, i) in courseAcivities"
         :key="i"
         class="ma-0"
-        style="background-color: #141e30;"
+        style="background-color: #141e30"
       >
-         - <span v-if="!studentCard">{{activity.timeStamp.time}} </span>
-         <span>{{activity.timeStamp.date}} </span>
-         <span :style="statusClass(activity)">{{activity.status}} {{activity.type}}: </span>
-         <span>{{activity.title}}</span>
+        - <span v-if="!studentCard">{{ activity.timeStamp.time }} </span>
+        <span>{{ activity.timeStamp.date }} </span>
+        <span :style="statusClass(activity)"
+          >{{ activity.status }} {{ activity.type }}:
+        </span>
+        <span>{{ activity.title }}</span>
       </p>
     </div>
   </div>
@@ -24,41 +26,42 @@ import { DateTime } from "luxon";
 export default {
   name: "StudentActivityTimeline",
   props: {
-    studentCard: {type: Boolean, default: false},
-    student: {type: Object}
+    studentCard: { type: Boolean, default: false },
+    student: { type: Object },
   },
-  data () {
+  data() {
     return {
-      studentsActivityLog: []
-    }
+      studentsActivityLog: [],
+    };
   },
   async mounted() {
     this.studentsActivityLog = await getActivityLogXAPIQuery(this.student);
-
   },
   computed: {
     ...mapGetters(["person"]),
-    activityClass () {
-      return this.studentCard ? "student-card-log" : "activity-log"
+    activityClass() {
+      return this.studentCard ? "student-card-log" : "activity-log";
     },
-    activityLabel () {
-      return this.studentCard ? "student-card-label" : "label"
+    activityLabel() {
+      return this.studentCard ? "student-card-label" : "label";
     },
-    statementClass () {
-      return this.studentCard ? "student-card-statement" : "statements"
+    statementClass() {
+      return this.studentCard ? "student-card-statement" : "statements";
     },
     courseAcivities() {
-      const filtered = this.studentsActivityLog.filter(activity => activity.course)
+      const filtered = this.studentsActivityLog.filter(
+        (activity) => activity.course
+      );
       const sanitised = filtered.map((statement, index) => {
         let [action, title] = statement.description.split(": ");
         let [status, type] = action.split(" ");
-        let id = statement.task
+        let id = statement.task;
 
         let isoTime = this.formatTime(statement.timestamp);
-        let [time, date] = isoTime.split(/(?<=^\S+)\s/)
+        let [time, date] = isoTime.split(/(?<=^\S+)\s/);
 
         const newStatement = {
-          timeStamp: {time, date},
+          timeStamp: { time, date },
           index,
           status,
           type,
@@ -68,7 +71,7 @@ export default {
         };
         return newStatement;
       });
-      return sanitised
+      return sanitised;
     },
   },
   methods: {
@@ -77,11 +80,14 @@ export default {
     },
     statusClass(activity) {
       switch (activity.status) {
-        case 'Started': return 'color: var(--v-baseAccent-base);'
-        case 'Completed': return 'color:var(--v-galaxyAccent-base)';
-        case 'in-review': return 'color:var(--v-cohortAccent-base)';
+        case "Started":
+          return "color: var(--v-baseAccent-base);";
+        case "Completed":
+          return "color:var(--v-galaxyAccent-base)";
+        case "in-review":
+          return "color:var(--v-cohortAccent-base)";
       }
-    }
+    },
   },
 };
 </script>
@@ -121,16 +127,16 @@ export default {
 
 .student-card-statement {
   color: var(--v-missionAccent-base);
-  max-height: 35px;
+  max-height: calc(100% - 20px);
   width: 100%;
   overflow: hidden;
 }
 
 .student-card-log {
   font-size: 0.6rem;
-  max-height: 80%;
-  padding:2px;
-  transition: all .2s ease-in-out; 
+  height: 100%;
+  padding: 2px;
+  transition: all 0.2s ease-in-out;
 }
 
 .student-card-log:hover {
@@ -138,26 +144,25 @@ export default {
   width: 100%;
   transform: scale(1.2);
   font-size: 0.6rem;
-  background-color: #141e30;  
+  background-color: #141e30;
   // min-height: 300px;
-  position:relative;
+  position: relative;
   z-index: 10;
-  
-  .student-card-statement{
+
+  .student-card-statement {
     border: 1px solid var(--v-missionAccent-base);
     box-shadow: 0 0 30px var(--v-missionAccent-base);
     padding: 5px;
-    background-color: #141e30;  
+    background-color: #141e30;
     max-height: 200px;
     width: 320px;
     overflow: scroll;
     overflow-x: hidden;
-    z-index: 1000
+    z-index: 1000;
   }
   /* width */
-::-webkit-scrollbar {
-  width: 2px;
-}
-
+  ::-webkit-scrollbar {
+    width: 2px;
+  }
 }
 </style>

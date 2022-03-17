@@ -1,49 +1,61 @@
 <template>
-  <div class="student-card" :class="status ? '':'not-active'">
+  <div class="student-card" :class="status ? '' : 'not-active'">
     <StudentCardStatus :student="student" :loggedIn="loggedIn" />
     <template v-if="!status" class="second-block">
-      <span class="not-active text-uppercase ma-auto">hasn't signed in yet</span>
+      <span class="not-active text-uppercase ma-auto"
+        >hasn't signed in yet</span
+      >
     </template>
     <template v-else>
-      <StudentCardProgress :activities="activities" :student="student"/>
+      <StudentCardProgress :activities="activities" :student="student" />
       <div class="student-activities-overUnder">
-        <div class="top-row">
-          <StudentActivityTimeline :student="student" studentCard/>
+        <div style="height: 100%">
+          <StudentActivityTimeline :student="student" studentCard />
           <!-- <StudentCardActivities :student="student" :activities="activities"/> -->
         </div>
-        <div class="d-flex flex-row ">
-            <v-col class="pa-0">
-              <StudentHours />
-            </v-col>
-            <v-col class="pa-0 second-block">
-              <StudentCompletedTasks />
-            </v-col>
+      </div>
+      <div class="student-actions-overUnder">
+        <div class="top-row" v-if="studentTimeData.length > 0">
+          <StudentHours
+            :timeData="studentTimeData"
+            :timeframe="timeframe"
+            @emitUpHours="emitUpHours($event)"
+          />
+        </div>
+        <div class="pa-0" v-if="activities.length > 0">
+          <StudentCompletedTasks
+            :taskData="activities"
+            :timeframe="timeframe"
+            @emitUpTasks="emitUpTasks($event)"
+          />
         </div>
       </div>
       <div class="student-actions-overUnder">
         <div class="top-row">
-            <StudentCohorts :student="student"/>
+          <StudentCohorts :student="student" />
         </div>
         <div>
           <StudentActions />
         </div>
-      </div>    
+      </div>
     </template>
   </div>
 </template>
 
 <script>
-import StudentCardStatus from "./StudentCardStatus"
-import StudentCardProgress from "./StudentCardProgress.vue"
-import StudentCardActivities from "./StudentCardActivities"
-import StudentHours from "./StudentHours.vue"
-import StudentCompletedTasks from "./StudentCompletedTasks.vue"
-import StudentCohorts from "./StudentCohorts.vue"
-import StudentActions from "./StudentActions.vue"
-import StudentActivityTimeline from "../StudentActivityTimeline.vue"
+import StudentCardStatus from "./StudentCardStatus";
+import StudentCardProgress from "./StudentCardProgress.vue";
+import StudentCardActivities from "./StudentCardActivities";
+import StudentHours from "./StudentHours.vue";
+import StudentCompletedTasks from "./StudentCompletedTasks.vue";
+import StudentCohorts from "./StudentCohorts.vue";
+import StudentActions from "./StudentActions.vue";
+import StudentActivityTimeline from "../StudentActivityTimeline.vue";
 
-
-import { getStudentsCoursesXAPIQuery } from "../../lib/veracityLRS";
+import {
+  getStudentsCoursesXAPIQuery,
+  getStudentsTimeDataXAPIQuery,
+} from "../../lib/veracityLRS";
 import { mapState, mapGetters } from "vuex";
 import { dbMixins } from "../../mixins/DbMixins";
 import { getCourseById } from "../../lib/ff";
@@ -59,9 +71,9 @@ export default {
     StudentCompletedTasks,
     StudentCohorts,
     StudentActions,
-    StudentActivityTimeline
+    StudentActivityTimeline,
   },
-  props: ["student"],
+  props: ["student", "timeframe"],
   data() {
     return {
       topic: "",
@@ -73,20 +85,37 @@ export default {
       assignedCourse: null,
       studetProfile: [],
       activities: [],
+      studentTimeData: [],
+      // studentTimeDataLoading: false
     };
   },
   async mounted() {
     const studentCourses = await getStudentsCoursesXAPIQuery(this.student);
-    const cohortActivities = studentCourses.filter(a => this.currentCohort.courses.some(b => b === a.course.id))
-    this.activities = cohortActivities.map(course => {
-      const currentTopic = course.activities.find(action => action.type === "Topic")
-      const currentTask = course.activities.find(action => action.type === 'Task')
+    const cohortActivities = studentCourses.filter((a) =>
+      this.currentCohort.courses.some((b) => b === a.course.id)
+    );
+    this.activities = cohortActivities.map((course) => {
+      const currentTopic = course.activities.find(
+        (action) => action.type === "Topic"
+      );
+      const currentTask = course.activities.find(
+        (action) => action.type === "Task"
+      );
       return {
-        ...course, 
+        ...course,
         currentTopic,
-        currentTask
-      }
-    })
+        currentTask,
+      };
+    });
+    console.log(this.student.firstName + " this.activities", this.activities);
+
+    // ==== get student activity data from LRS
+    const getActivityData = await getStudentsTimeDataXAPIQuery({
+      studentsArr: [this.student.id],
+    });
+    this.studentTimeData = getActivityData;
+
+    // this.studentTimeDataLoading = false;
   },
   computed: {
     ...mapState(["currentCohort", "userStatus"]),
@@ -137,6 +166,18 @@ export default {
       if (hours < 24) return `${hours}hrs`;
       return `${days}days`;
     },
+    emitUpHours(hours) {
+      this.$emit("updateStudentsWithHours", {
+        person: this.student,
+        hours,
+      });
+    },
+    emitUpTasks(tasks) {
+      this.$emit("updateStudentsWithTasks", {
+        person: this.student,
+        tasks,
+      });
+    },
   },
 };
 </script>
@@ -185,5 +226,4 @@ a {
   color: grey;
   border-color: grey !important;
 }
-
 </style>
