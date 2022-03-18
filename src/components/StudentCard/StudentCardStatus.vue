@@ -30,12 +30,43 @@
 <script>
 export default {
   name: "StudentCardStatus",
-  props: ["student", "loggedIn"],
+  props: ["student", "date", "status"],
+  // data () {
+  //   return {
+  //     now: this.date
+  //   }
+  // },
   computed: {
     online() {
       if (this.loggedIn === "online") return "online";
     },
+    loggedIn() {
+      if (!this.status) return "inactive";
+      if (this.status.state === "online") {
+        return "online";
+      } else return this.timePassed(this.date);
+    },
   },
+  methods: {
+    timePassed(now) {
+      var date = Math.round(now / 1000);
+      var delta = date - this.status.last_changed.seconds;
+
+      // calculate (and subtract) whole days
+      var days = Math.floor(delta / 86400);
+
+      // calculate (and subtract) whole hours
+      var hours = Math.floor(delta / 3600);
+
+      // calculate (and subtract) whole minutes
+      var minutes = Math.floor(delta / 60);
+
+      if (minutes < 1) return `just now`;
+      if (minutes < 60) return `${minutes}mins`;
+      if (hours < 24) return `${hours}hrs`;
+      return `${days}days`;
+    },
+  }
 };
 </script>
 

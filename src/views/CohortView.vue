@@ -1,5 +1,5 @@
 <template>
-  <div id="container" class="bg">
+  <div v-if="currentCohort.id" id="container" class="bg">
     <div id="left-section">
       <CohortInfo />
       <AssignedInfo assignCourses="true" />
@@ -43,7 +43,7 @@ export default {
   computed: {
     ...mapState(['currentCohort']),
     courses() {
-      return this.currentCohort.courses.map((course) => {return { id: course }})
+      return this.currentCohort?.courses?.map((course) => {return { id: course }})
     }
   }
 };

@@ -1037,7 +1037,6 @@ export const getStudentsTimeDataXAPIQuery = async (payload) => {
   // convert studentIds to mailto:email string
   const personIdsArrToEmailsArr = [];
   for (const studentId of payload.studentsArr) {
-    console.log("lrs studentId", studentId);
     const studentSnapshot = await db.collection("people").doc(studentId).get();
     personIdsArrToEmailsArr.push("mailto:" + studentSnapshot.data().email);
   }

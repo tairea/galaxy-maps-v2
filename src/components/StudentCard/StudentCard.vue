@@ -1,6 +1,6 @@
 <template>
   <div class="student-card" :class="status ? '' : 'not-active'">
-    <StudentCardStatus :student="student" :loggedIn="loggedIn" />
+    <StudentCardStatus :student="student" :date="date" :status="status"/>
     <template v-if="!status" class="second-block">
       <span class="overline not-active text-uppercase ma-auto"
         >hasn't signed in yet</span
@@ -80,7 +80,7 @@ export default {
     StudentActions,
     StudentActivityTimeline,
   },
-  props: ["student", "timeframe"],
+  props: ["student", "timeframe", "date"],
   data() {
     return {
       topic: "",
@@ -130,19 +130,6 @@ export default {
     status() {
       return this.userStatus[this.student.id];
     },
-    loggedIn() {
-      if (!this.status) return "inactive";
-      if (this.status.state === "online") {
-        return "online";
-      } else return this.timePassed();
-    },
-
-    // topic () {
-    //   const topic = this.courseActivity.courseData.find(course => course.topic.length)
-    //   return {
-    //     status:
-    //   }
-    // }
   },
   methods: {
     async getAssignedCourse() {
@@ -154,24 +141,6 @@ export default {
     },
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
-    },
-    timePassed() {
-      var date = Math.round(Date.now() / 1000);
-      var delta = date - this.status.last_changed.seconds;
-
-      // calculate (and subtract) whole days
-      var days = Math.floor(delta / 86400);
-
-      // calculate (and subtract) whole hours
-      var hours = Math.floor(delta / 3600);
-
-      // calculate (and subtract) whole minutes
-      var minutes = Math.floor(delta / 60);
-
-      if (minutes < 1) return `just now`;
-      if (minutes < 60) return `${minutes}mins`;
-      if (hours < 24) return `${hours}hrs`;
-      return `${days}days`;
     },
     emitUpHours(hours) {
       this.$emit("updateStudentsWithHours", {

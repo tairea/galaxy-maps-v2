@@ -210,7 +210,7 @@ export default {
     // const VQL = await VQLXAPIQuery();
   },
   computed: {
-    ...mapGetters(["getOrganisationById"]),
+    ...mapGetters(["getOrganisationById", "currentCohort"]),
   },
   methods: {
     ...mapActions(["setCurrentCohort"]),
@@ -271,10 +271,7 @@ export default {
       return name.substring(0, 3).toUpperCase();
     },
     async routeToCohort() {
-      // this.$store.commit("setCurrentCohort", {})
       await this.setCurrentCohort(this.cohort);
-      // console.log('cohort set: ', cohort)
-      // route to Galaxy View (passing params as props)
       this.$router.push({
         name: "CohortView",
         params: {
