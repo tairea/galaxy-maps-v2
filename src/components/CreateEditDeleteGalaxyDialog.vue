@@ -438,6 +438,7 @@ export default {
             this.course.image.url = downloadURL;
             this.course.image.name = this.uploadedImage.name;
             this.disabled = false;
+            console.log("image saved to course?:", this.course);
           });
         }
       );

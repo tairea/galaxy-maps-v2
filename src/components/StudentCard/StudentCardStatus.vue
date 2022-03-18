@@ -35,7 +35,7 @@ export default {
     online() {
       if (this.loggedIn === "online") return "online";
     },
-  }
+  },
 };
 </script>
 
@@ -48,8 +48,8 @@ export default {
 }
 
 .student-image-section {
-  min-width: 20%;
-  max-width: 20%;
+  min-width: 13%;
+  max-width: 13%;
   padding-bottom: 2px !important;
 
   .imagePlaceholder {
@@ -67,7 +67,7 @@ export default {
     font-size: 0.7rem;
     letter-spacing: 2px;
     text-align: center;
-    margin-bottom: 1px
+    margin-bottom: 1px;
   }
 }
 
@@ -79,7 +79,6 @@ export default {
   font-size: 0.5rem;
   letter-spacing: 1px;
   text-transform: uppercase;
-  margin-bottom: 1px
+  margin-bottom: 1px;
 }
-
 </style>

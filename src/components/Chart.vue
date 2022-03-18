@@ -19,6 +19,8 @@ export default {
     chartOptions: Object,
     toolTipEnable: Boolean,
     timeframe: Object,
+    selectedPersons: Array,
+    unselectedPersons: Array,
   },
   computed: {
     dark() {
@@ -26,22 +28,82 @@ export default {
     },
   },
   watch: {
+    unselectedPersons: {
+      handler(newUnselectedPersons) {
+        // console.log(this.chartType + " this.chart", this.chart.data);
+        // console.log("newUnselectedPersons", newUnselectedPersons);
+        // hide data
+        for (const person of newUnselectedPersons) {
+          const personsName = person.firstName + " " + person.lastName;
+          const personsIndexForDataset =
+            this.chart.data.labels.indexOf(personsName);
+
+          if (!(personsIndexForDataset < 0)) {
+            if (this.chartType == "line") {
+              // line chart
+              this.chart.hide(personsIndexForDataset);
+            } else if (this.chartType == "bar") {
+              console.log(
+                personsName +
+                  " UNselected. index = " +
+                  personsIndexForDataset +
+                  " " +
+                  this.chartType
+              );
+              // bar chart
+              this.chart.hide(0, personsIndexForDataset);
+            }
+          }
+        }
+      },
+    },
+    selectedPersons: {
+      handler(newSelectedPersons) {
+        // console.log(this.chartType + " this.chart", this.chart.data);
+        // console.log("newSelectedPersons", newSelectedPersons);
+        // show data
+        for (const person of newSelectedPersons) {
+          const personsName = person.firstName + " " + person.lastName;
+          const personsIndexForDataset =
+            this.chart.data.labels.indexOf(personsName);
+
+          if (!(personsIndexForDataset < 0)) {
+            if (this.chartType == "line") {
+              // line chart
+              this.chart.show(personsIndexForDataset);
+            } else if (this.chartType == "bar") {
+              console.log(
+                personsName +
+                  " Selected. index = " +
+                  personsIndexForDataset +
+                  " " +
+                  this.chartType
+              );
+              // bar chart
+              this.chart.show(0, personsIndexForDataset);
+            }
+          }
+        }
+      },
+    },
     timeframe: {
       handler(newTimeframe) {
-        console.log("newTimeframe", newTimeframe);
-        this.chartOptions.scales.x.min = newTimeframe.min;
-        this.chartOptions.scales.x.max = newTimeframe.max;
-        this.chartOptions.scales.x.time.unit = newTimeframe.unit;
-        if (newTimeframe.unit == "hour") {
-          const titleObj = {
-            display: true,
-            text: DateTime.fromJSDate(newTimeframe.max).toFormat(
-              "ccc dd LLL   "
-            ),
-          };
-          this.chartOptions.scales.x.title = titleObj;
-        } else {
-          this.chartOptions.scales.x.title = {};
+        if (this.chartType !== "bar") {
+          this.chartOptions.scales.x.min = newTimeframe.min;
+          this.chartOptions.scales.x.max = newTimeframe.max;
+
+          this.chartOptions.scales.x.time.unit = newTimeframe.unit;
+          if (newTimeframe.unit == "hour") {
+            const titleObj = {
+              display: true,
+              text: DateTime.fromJSDate(newTimeframe.max).toFormat(
+                "ccc dd LLL   "
+              ),
+            };
+            this.chartOptions.scales.x.title = titleObj;
+          } else {
+            this.chartOptions.scales.x.title = {};
+          }
         }
 
         this.chart.update();

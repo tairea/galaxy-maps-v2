@@ -131,7 +131,7 @@ export default {
       font-weight: 400;
       text-transform: uppercase;
       // ribbon label
-      position: absolute;
+      position: fixed;
       top: -1px;
       left: -1px;
       background-color: var(--v-missionAccent-base);

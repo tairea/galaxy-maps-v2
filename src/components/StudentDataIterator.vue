@@ -11,7 +11,8 @@
       <!-- HEADER -->
       <template v-slot:header>
         <div class="d-flex justify-end">
-          <div v-if="students.length" class="mx-1" style="width:30%">
+          <div v-if="students.length" class="mx-1 d-flex" style="width: 50%">
+            <!-- Search -->
             <v-text-field
               v-model="search"
               clearable
@@ -25,10 +26,38 @@
               color="missionAccent"
               class="search"
             ></v-text-field>
+            <!-- Items Select -->
+            <div class="mx-2" style="width: 50%">
+              <v-select
+                v-model="sortBy"
+                outlined
+                color="missionAccent"
+                hide-details
+                :items="keys"
+                prepend-inner-icon="mdi-sort-alphabetical-variant"
+                label="Sort by"
+                dense
+                class="mb-1"
+              ></v-select>
+            </div>
+            <!-- Arrow buttons -->
+            <!-- <v-btn-toggle
+              background-color="background"
+              v-model="sortDesc"
+              mandatory
+              dense
+            >
+              <v-btn small outlined color="missionAccent" :value="false">
+                <v-icon small>mdi-arrow-up</v-icon>
+              </v-btn>
+              <v-btn small outlined color="missionAccent" :value="true">
+                <v-icon small>mdi-arrow-down</v-icon>
+              </v-btn>
+            </v-btn-toggle> -->
           </div>
           <div class="mx-1">
-            <CreateAccountDialog accountType="student"/>
-          </div> 
+            <CreateAccountDialog accountType="student" />
+          </div>
           <div class="mx-1">
             <ImportCsvDialog />
           </div>
@@ -37,10 +66,19 @@
 
       <!-- PROPS -->
       <template v-slot:default="props">
+        <div class="d-flex justify-center align-center mt-3">
+          <TimeframeFilters
+            :noArrows="true"
+            @timeframe="setTimeframe($event)"
+          />
+        </div>
         <StudentCard
           v-for="student in props.items"
           :key="student.id"
           :student="student"
+          :timeframe="timeframe"
+          @updateStudentsWithHours="updateStudentsWithHours($event)"
+          @updateStudentsWithTasks="updateStudentsWithTasks($event)"
         />
       </template>
 
@@ -55,8 +93,9 @@
 import StudentCard from "../components/StudentCard/StudentCard";
 import CreateAccountDialog from "../components/CreateAccountDialog";
 import ImportCsvDialog from "../components/ImportCsvDialog";
-import { mapGetters } from "vuex"
-import { dbMixins } from "../mixins/DbMixins"
+import TimeframeFilters from "../components/TimeframeFilters";
+import { mapGetters } from "vuex";
+import { dbMixins } from "../mixins/DbMixins";
 
 export default {
   name: "StudentsDataIterator",
@@ -64,7 +103,8 @@ export default {
     // EditStudentButtonDialog,
     StudentCard,
     CreateAccountDialog,
-    ImportCsvDialog
+    ImportCsvDialog,
+    TimeframeFilters,
   },
   mixins: [dbMixins],
   data() {
@@ -72,56 +112,74 @@ export default {
       search: "",
       sortDesc: false,
       sortBy: "firstName",
-      keys: ["firstName", "lastName", "nsnNumber", "studentEmail"],
-      students: []
+      keys: [
+        "firstName",
+        "lastName",
+        "nsnNumber",
+        "studentEmail",
+        "hours",
+        "tasks",
+      ],
+      students: [],
+      timeframe: {},
     };
   },
   mounted() {
     // this is needed incase there is no change in currentCohort to catch with the watch
     if (this.$route.params.cohortId === this.currentCohort.id) {
-      this.getStudentProfiles()
+      this.getStudentProfiles();
     }
   },
   watch: {
     currentCohort: {
       deep: true,
-      handler (newVal, oldVal) {
+      handler(newVal, oldVal) {
         if (oldVal.students?.length !== newVal.students?.length) {
-          this.getStudentProfiles()
+          this.getStudentProfiles();
         }
-      }
-    }
+      },
+    },
   },
   computed: {
-    ...mapGetters(['currentCohort']),
+    ...mapGetters(["currentCohort"]),
     filteredKeys() {
       return this.keys.filter((key) => key !== "Name");
-    }
+    },
   },
   methods: {
-    getStudentProfiles () {
-      // let allStudentRequests = {}
+    getStudentProfiles() {
       if (this.currentCohort.students?.length) {
-        const studentsArr = this.currentCohort.students.filter(a => {
-          return !this.students.some(b => a === b.id)
-        })
-        studentsArr.forEach(async studentId => {
-          const student = await this.MXgetPersonByIdFromDB(studentId)
-          //for each course check if the student has any requests or submissions
-          // for (courseId in this.currentCohort.courses)
-          // const requests = await this.getCourseRequestsByStudentId(courseId, studentId)
-
-
-          if (!this.students.some(a => a.id === student.id)) {
-            this.students.push(student)
+        const studentsArr = this.currentCohort.students.filter((a) => {
+          return !this.students.some((b) => a === b.id);
+        });
+        studentsArr.forEach(async (id) => {
+          const student = await this.MXgetPersonByIdFromDB(id);
+          if (!this.students.some((a) => a.id === student.id)) {
+            this.students.push(student);
           }
-        })
+          console.log("students in data iterator", this.students);
+        });
       }
     },
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
-  }
+    setTimeframe(timeframeEmitted) {
+      this.timeframe = timeframeEmitted;
+    },
+    updateStudentsWithHours(payload) {
+      const foundIndex = this.students.findIndex(
+        (student) => student.id == payload.person.id
+      );
+      this.students[foundIndex].hours = payload.hours;
+    },
+    updateStudentsWithTasks(payload) {
+      const foundIndex = this.students.findIndex(
+        (student) => student.id == payload.person.id
+      );
+      this.students[foundIndex].tasks = payload.tasks;
+    },
+  },
 };
 </script>
 
@@ -221,8 +279,13 @@ a {
   text-transform: uppercase;
 }
 
-// overide vuetify default height 
+// overide vuetify default height
 .search ::v-deep .v-input__slot {
-    min-height: 37px !important;
-  }
+  min-height: 37px !important;
+}
+
+.timeframe-chips {
+  border-top: 1px solid var(--v-missionAccent-base);
+  border-bottom: 1px solid var(--v-missionAccent-base);
+}
 </style>

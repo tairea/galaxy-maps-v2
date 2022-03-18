@@ -4,7 +4,7 @@
     @click="!studentView ? routeToCohort(cohort) : null"
     class="d-flex flex-column justify-start align-center cohort"
     :style="!studentView ? 'cursor: pointer;' : ''"
-    :class="studentCardView ? 'pa-0':''"
+    :class="studentCardView ? 'pa-0' : ''"
   >
     <div
       v-if="!tooltip"
@@ -13,22 +13,27 @@
       <v-img
         v-if="cohort.image.url"
         :src="cohort.image.url"
-        max-width="60px"
-        max-height="60px"
+        :max-width="size ? size + 'px' : '60px'"
+        :max-height="size ? size + 'px' : '60px'"
         class="cohort-image"
       ></v-img>
-      <div v-else class="imagePlaceholder">
+      <div
+        v-else
+        class="imagePlaceholder"
+        :style="
+          size
+            ? 'max-width:' + size + 'px; max-height:' + size + 'px'
+            : 'max-width: 60px;max-height:60px'
+        "
+      >
         {{ first3Letters(cohort.name) }}
       </div>
       <h3 class="overline cohort-name">{{ cohort.name }}</h3>
     </div>
     <v-tooltip v-else bottom class="grow-lg" contentClass="toolTip">
       <template v-slot:activator="{ on, attrs }">
-        <v-avatar :class="avatarClass" v-bind="attrs" v-on="on" :size="cohortSize">
-          <v-img
-            v-if="cohort.image.url"
-            :src="cohort.image.url"
-          ></v-img>
+        <v-avatar :class="avatarClass" v-bind="attrs" v-on="on" :size="size">
+          <v-img v-if="cohort.image.url" :src="cohort.image.url"></v-img>
           <span v-else>
             {{ first3Letters(cohort.name) }}
           </span>
@@ -37,7 +42,7 @@
       <h3 class="overline">{{ cohort.name }}</h3>
     </v-tooltip>
 
-      <!-- <v-avatar v-else :class="avatarClass" :size="cohortSize">
+    <!-- <v-avatar v-else :class="avatarClass" :size="cohortSize">
         <v-img
           v-if="cohort.image.url"
           :src="cohort.image.url"
@@ -55,22 +60,26 @@ import { mapActions } from "vuex";
 
 export default {
   name: "Cohort",
-  props: ["cohort", "cols", "tooltip", "studentView", "studentCardView"],
+  props: [
+    "cohort",
+    "cols",
+    "tooltip",
+    "studentView",
+    "studentCardView",
+    "size",
+  ],
   computed: {
-    cohortSize() {
-      return this.studentCardView ? '25px' : '40px'
-    },
     avatarClass() {
-      return this.studentCardView ? 'avatar' : ''
-    }
+      return this.studentCardView ? "avatar" : "";
+    },
   },
   methods: {
     ...mapActions(["setCurrentCohort"]),
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
-    routeToCohort() { 
-      this.$store.commit("setCurrentCohort", this.cohort)
+    routeToCohort() {
+      this.$store.commit("setCurrentCohort", this.cohort);
       this.setCurrentCohort(this.cohort);
       this.$router.push({
         name: "CohortView",
@@ -91,7 +100,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
 .cohort-image {
   width: 100px;
   height: 100px;
@@ -118,7 +126,7 @@ export default {
 
 .avatar {
   padding: 0px;
-  transition: all .2s ease-in-out; 
+  transition: all 0.2s ease-in-out;
 }
 
 .avatar-label {
@@ -126,19 +134,19 @@ export default {
 }
 
 .avatar:hover {
-  transform: scale(2); 
+  transform: scale(2);
   box-shadow: 0 0 30px var(--v-missionAccent-base);
 }
 
-.avatar:hover + .avatar-label{
+.avatar:hover + .avatar-label {
   display: flex;
-  text-shadow: 0 0 30px var(--v-missionAccent-base);;
+  text-shadow: 0 0 30px var(--v-missionAccent-base);
   width: 100px;
   justify-content: center;
-  align-items: center; 
+  align-items: center;
 }
 
 .toolTip {
-  border: 1px solid var(--v-missionAccent-base)
+  border: 1px solid var(--v-missionAccent-base);
 }
 </style>
