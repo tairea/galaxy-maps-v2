@@ -9,6 +9,7 @@
           :tooltip="true"
           :studentCardView="true"
           cols="4"
+          :size="20"
         />
       </v-row>
   </div>

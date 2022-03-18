@@ -35,7 +35,7 @@
     <!-- Middle chip row -->
     <div v-if="cohortsCoursesData" class="row-border d-flex justify-end">
       <v-chip
-        class="ma-2 custom-chip"
+        class="my-2 mx-1 custom-chip"
         color="missionAccent"
         outlined
         x-small
@@ -44,7 +44,7 @@
         <
       </v-chip>
       <v-chip
-        class="ma-2 custom-chip"
+        class="my-2 mx-1 custom-chip"
         color="missionAccent"
         outlined
         x-small
@@ -56,7 +56,7 @@
         Day
       </v-chip>
       <v-chip
-        class="ma-2 custom-chip"
+        class="my-2 mx-1 custom-chip"
         color="missionAccent"
         outlined
         x-small
@@ -68,7 +68,7 @@
         Week
       </v-chip>
       <v-chip
-        class="ma-2 custom-chip"
+        class="my-2 mx-1 custom-chip"
         color="missionAccent"
         :input-value="chipFortnightActive"
         filter
@@ -80,7 +80,7 @@
         Fortnight
       </v-chip>
       <v-chip
-        class="ma-2 custom-chip"
+        class="my-2 mx-1 custom-chip"
         color="missionAccent"
         outlined
         x-small
@@ -89,13 +89,52 @@
         >
       </v-chip>
     </div>
+    <!-- Middle student avatars row -->
+    <div class="row-border">
+      <div v-if="cohort.students" class="d-flex justify-center align-center">
+        <Avatar
+          v-for="(person, index) in studentsWithData"
+          ref="avatar"
+          :key="person.id"
+          :size="30"
+          :personId="person.id"
+          class="my-2 mx-1 avatar"
+          :colourBorder="true"
+          @click.native="clickedPerson(person, index)"
+        />
+      </div>
+      <p v-else class="label text-center pa-4" style="font-weight: 800">
+        NO STUDENT DATA
+      </p>
+    </div>
+    <!-- Middle Bar chart row -->
+    <div>
+      <div v-if="cohortActivityData" style="padding: 20px">
+        <ActivityBarChart
+          :activityData="cohortActivityData"
+          :timeframe="timeframe"
+          :selectedPersons="selectedPersons"
+          :unselectedPersons="unselectedPersons"
+        />
+      </div>
+      <div
+        v-else
+        class="d-flex justify-center align-center"
+        style="padding: 50px 0px"
+      >
+        <p class="label" style="font-weight: 800">NO COURSE DATA</p>
+      </div>
+    </div>
+    <!-- Bottom chart row -->
     <div>
       <div v-if="cohortsCoursesData" style="padding: 20px">
-        <ProgressionChart
+        <ProgressionLineChart
           v-for="courseData in cohortsCoursesData"
           :key="courseData.id"
           :courseData="courseData"
           :timeframe="timeframe"
+          :selectedPersons="selectedPersons"
+          :unselectedPersons="unselectedPersons"
         />
       </div>
       <div
@@ -112,40 +151,122 @@
 <script>
 import { mapActions } from "vuex";
 import Avatar from "../components/Avatar";
-import ProgressionChart from "../components/ProgressionChart";
-import { getCohortsCourseDataXAPIQuery } from "../lib/veracityLRS";
+import ProgressionLineChart from "../components/ProgressionLineChart";
+import ActivityBarChart from "../components/ActivityBarChart";
+import {
+  getCohortsCourseDataXAPIQuery,
+  getStudentsTimeDataXAPIQuery,
+  VQLXAPIQuery,
+} from "../lib/veracityLRS";
 
 export default {
   name: "CohortPanel",
   props: ["cohort", "cols", "tooltip", "studentView"],
   components: {
     Avatar,
-    ProgressionChart,
+    ProgressionLineChart,
+    ActivityBarChart,
   },
   data() {
     return {
       cohortsCoursesData: [],
-      timeframe: { min: this.previousDays(7), max: new Date(), unit: "day" }, // by default show past 7 days
+      cohortActivityData: [],
+      timeframe: {
+        min: this.previousDays(7),
+        max: new Date(),
+        unit: "day",
+        type: "week",
+      }, // by default show past 7 days
       chipActiveType: "week",
       chipDayActive: false,
       chipWeekActive: true,
       chipFortnightActive: false,
+      studentsWithData: [],
+      selectedIndexs: [],
+      selectedPersons: [],
+      unselectedPersons: [],
     };
   },
-  computed: {},
+
   async mounted() {
     const getCourseData = await getCohortsCourseDataXAPIQuery({
       studentsArr: this.cohort.students,
       coursesArr: this.cohort.courses,
       cohortName: this.cohort.name,
     });
-    // .then(() => {
-    //   console.log("get cohort data from LRS done");
-    // });
     this.cohortsCoursesData = getCourseData;
+    // console.log("this.cohortsCoursesData", this.cohortsCoursesData);
+    // add students with data
+    const studentsArr = [];
+    if (this.cohortsCoursesData) {
+      for (const course of this.cohortsCoursesData) {
+        for (const person of course.students) {
+          studentsArr.push(person.person);
+        }
+      }
+      // this flattens any duplicates of students (eg. student 1 is in more than one course. but only want to show them once)
+      this.studentsWithData = studentsArr.filter(
+        (v, i, a) => a.findIndex((t) => t.id === v.id) === i
+      );
+    }
+
+    // ==== get cohort activity data from LRS
+    const getActivityData = await getStudentsTimeDataXAPIQuery({
+      studentsArr: this.cohort.students,
+    });
+    this.cohortActivityData = getActivityData;
+    console.log("this.cohortActivityData", this.cohortActivityData);
+
+    // ==== VQL Test
+    // const VQL = await VQLXAPIQuery();
   },
+  computed: {},
   methods: {
     ...mapActions(["setCurrentCohort"]),
+    clickedPerson(person, index) {
+      // get all avatar elements
+      const avatarEls = this.$refs.avatar;
+      // loop avatar els
+      for (var i = 0; i < avatarEls.length; i++) {
+        // add index to selected if not already. else remove
+        if (i == index && !this.selectedIndexs.includes(index)) {
+          this.selectedIndexs.push(index);
+          this.selectedPersons.push(person);
+        }
+        // remove
+        else if (i == index && this.selectedIndexs.includes(index)) {
+          this.selectedIndexs = this.selectedIndexs.filter(
+            (item) => item !== index
+          );
+          this.selectedPersons = this.selectedPersons.filter(
+            (selectedPerson) => selectedPerson.id !== person.id
+          );
+          this.unselectedPersons.push(person);
+        }
+
+        //anyone not in selectedPersons becomes unselected (this is used to hide data in chart)
+        this.unselectedPersons = this.diffTwoArraysOfObjects(
+          this.studentsWithData,
+          this.selectedPersons
+        );
+
+        // add dim to all avatar els
+        for (var y = 0; y < avatarEls.length; y++) {
+          avatarEls[y].$el.classList.add("dim");
+        }
+        //remove dim for selected avatar els
+        for (var x = 0; x < this.selectedIndexs.length; x++) {
+          avatarEls[this.selectedIndexs[x]].$el.classList.remove("dim");
+        }
+      }
+    },
+    diffTwoArraysOfObjects(array1, array2) {
+      return array1.filter((object1) => {
+        return !array2.some((object2) => {
+          return object1.id === object2.id;
+        });
+      });
+    },
     timeframeFortnight() {
       this.chipActiveType = "fortnight";
       this.chipDayActive = false;
@@ -155,6 +276,7 @@ export default {
         min: this.previousDays(14),
         max: new Date(),
         unit: "day",
+        type: "fortnight",
       };
     },
     timeframeWeek() {
@@ -166,6 +288,7 @@ export default {
         min: this.previousDays(7),
         max: new Date(),
         unit: "day",
+        type: "week",
       };
     },
     timeframeDay() {
@@ -177,10 +300,12 @@ export default {
         min: this.getStartDay(),
         max: this.getEndDay(),
         unit: "hour",
+        type: "day",
       };
     },
     getStartDay() {
       let startDay = new Date().setHours(0);
+      startDay = new Date(startDay).setMinutes(0);
       startDay = new Date(startDay);
       return startDay;
     },
@@ -199,6 +324,7 @@ export default {
             min: this.previousDays(1, this.timeframe.min),
             max: this.previousDays(1, this.timeframe.max),
             unit: this.timeframe.unit,
+            type: this.timeframe.type,
           };
           this.timeframe = previousTimeframe;
           break;
@@ -208,6 +334,7 @@ export default {
             min: this.previousDays(7, this.timeframe.min),
             max: this.previousDays(7, this.timeframe.max),
             unit: this.timeframe.unit,
+            type: this.timeframe.type,
           };
           this.timeframe = previousTimeframe;
           break;
@@ -217,6 +344,7 @@ export default {
             min: this.previousDays(14, this.timeframe.min),
             max: this.previousDays(14, this.timeframe.max),
             unit: this.timeframe.unit,
+            type: this.timeframe.type,
           };
           this.timeframe = previousTimeframe;
           break;
@@ -233,6 +361,7 @@ export default {
             min: this.nextDays(1, this.timeframe.min),
             max: this.nextDays(1, this.timeframe.max),
             unit: this.timeframe.unit,
+            type: this.timeframe.type,
           };
           this.timeframe = nextTimeframe;
           break;
@@ -242,6 +371,7 @@ export default {
             min: this.nextDays(7, this.timeframe.min),
             max: this.nextDays(7, this.timeframe.max),
             unit: this.timeframe.unit,
+            type: this.timeframe.type,
           };
           this.timeframe = nextTimeframe;
           break;
@@ -251,6 +381,7 @@ export default {
             min: this.nextDays(14, this.timeframe.min),
             max: this.nextDays(14, this.timeframe.max),
             unit: this.timeframe.unit,
+            type: this.timeframe.type,
           };
           this.timeframe = nextTimeframe;
           break;
@@ -258,7 +389,6 @@ export default {
           break;
       }
     },
-
     previousDays(num, start) {
       if (!start) {
         var d = new Date();
@@ -353,5 +483,9 @@ export default {
 .custom-chip {
   padding: 10px;
   text-transform: uppercase;
+}
+
+.dim {
+  filter: opacity(30%);
 }
 </style>
