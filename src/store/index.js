@@ -161,8 +161,10 @@ export default new Vuex.Store({
     SET_PERSON(state, data) {
       state.person = data;
     },
+    resetTeachersSubmissions(state) {
+      state.teachersSubmissionsToReview = []
+    },
     setPanelCard(state, data) {
-      console.log("setPanelCard: ", data)
       state.showPanelCard = data
     },
     setCurrentCourseId(state, courseId) {
