@@ -194,12 +194,13 @@ export default {
 }
 .grow-sm:hover { 
   transform: scale(1.5); 
+
+  .glow {
+    box-shadow: 0 0 60px var(--v-missionAccent-base);
+  }
 }
 .glow { 
   transition: all .2s ease-in-out; 
   z-index: 3;
-}
-.glow:hover { 
-  box-shadow: 0 0 30px var(--v-missionAccent-base);
 }
 </style>

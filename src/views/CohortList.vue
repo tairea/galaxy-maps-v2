@@ -25,11 +25,11 @@
                   :size="'0.25em'"
                   :cols="3"
                 /> -->
-                <CohortPanel
+                <!-- <CohortPanel
                   v-for="cohort in getCohortsByOrganisationId(organisation.id)"
                   :cohort="cohort"
                   :key="cohort.id"
-                />
+                /> -->
               </v-row>
             </v-col>
           </v-row>

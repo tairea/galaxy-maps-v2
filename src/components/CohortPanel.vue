@@ -149,7 +149,7 @@
 </template>
 
 <script>
-import { mapActions } from "vuex";
+import { mapActions, mapState } from "vuex";
 import Avatar from "../components/Avatar";
 import ProgressionLineChart from "../components/ProgressionLineChart";
 import ActivityBarChart from "../components/ActivityBarChart";
@@ -220,7 +220,9 @@ export default {
     // ==== VQL Test
     // const VQL = await VQLXAPIQuery();
   },
-  computed: {},
+  computed: {
+    ...mapState(['currentCohort'])
+  },
   methods: {
     ...mapActions(["setCurrentCohort"]),
     clickedPerson(person, index) {
@@ -411,17 +413,21 @@ export default {
       return name.substring(0, 3).toUpperCase();
     },
     async routeToCohort() {
+      console.log("====== ROUTE TO COHORT =======")
       // this.$store.commit("setCurrentCohort", {})
       await this.setCurrentCohort(this.cohort);
       // console.log('cohort set: ', cohort)
       // route to Galaxy View (passing params as props)
-      this.$router.push({
-        name: "CohortView",
-        params: {
-          cohortName: this.camelize(this.cohort.name),
-          cohortId: this.cohort.id,
-        },
-      });
+      if (this.currentCohort.id) {
+        console.log("------currentCohort-----: ", this.currentCohort)
+        this.$router.push({
+          name: "CohortView",
+          params: {
+            cohortName: this.camelize(this.cohort.name),
+            cohortId: this.cohort.id,
+          },
+        });
+      }
     },
     camelize(str) {
       return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {
