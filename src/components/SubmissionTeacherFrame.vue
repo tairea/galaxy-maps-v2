@@ -1,14 +1,14 @@
 <template>
   <div :id="panelId">
     <h2 class="submission-label">Work submitted for review</h2>
-    <div v-if="teachersSubmissionsToReview.length > 0">
+    <div v-if="submissions.length > 0">
       <SubmissionTeacherPanel
-        v-for="submission in teachersSubmissionsToReview"
+        v-for="submission in submissions"
         :key="submission.id"
         :submission="submission"
       />
     </div>
-    <div v-if="!loading && teachersSubmissionsToReview.length == 0">
+    <div v-if="!loading && submissions.length == 0">
       <p
         class="overline pt-4 text-center"
         style="color: var(--v-cohortAccent-base)"
@@ -57,7 +57,8 @@ export default {
     }
     this.loading = false;
   },
-  destroy() {
+  destroyed() {
+    this.$store.commit("resetTeachersSubmissions")
     for (const unsubscribe of this.unsubscribes) {
       unsubscribe();
     }
@@ -72,10 +73,10 @@ export default {
         ? "cohort-submission-panel"
         : "submission-panel";
     },
-    cohortSubmissions () {
+    submissions () {
       if (this.isCohortView) {
-        return this.teachersSubmissionsToReview.filter(submission => this.currentCohort.students.some(student =>  { return student === submission.personId})).reverse()
-      }
+        return this.teachersSubmissionsToReview.filter(submission => this.currentCohort.students.some(student =>  { return student === submission.studentId})).reverse()
+      } else return this.teachersSubmissionsToReview
     }
   },
   methods: {},
