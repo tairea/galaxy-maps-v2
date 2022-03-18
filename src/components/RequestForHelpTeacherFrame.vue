@@ -45,20 +45,7 @@ export default {
       loading: false,
       unsubscribes: [],
     };
-  },
-  computed: {
-    ...mapState(["teachersRequestsForHelp", "user"]),
-    isCohortView() {
-      return this.$route.name == "CohortView"
-        ? "cohort-help-panel"
-        : "help-panel";
-    },
-    unansweredRequests() {
-      return this.teachersRequestsForHelp.filter(
-        (request) => request.requestForHelpStatus == "unanswered"
-      );
-    },
-  },
+  }, 
   async mounted() {
     this.loading = true;
     for (const course of this.courses) {
@@ -69,6 +56,23 @@ export default {
       this.unsubscribes.push(unsubscribe);
     }
     this.loading = false;
+  },
+  computed: {
+    ...mapState(["teachersRequestsForHelp", "user", "currentCohort", "showPanelCard"]),
+    isCohortView() {
+      return this.$route.name == "CohortView"
+        ? "cohort-help-panel"
+        : "help-panel";
+    },
+    unansweredRequests() {
+      const requests = this.teachersRequestsForHelp.filter(
+        (request) => request.requestForHelpStatus == "unanswered"
+      );
+      if (this.isCohortView) {
+        return requests.filter(request => this.currentCohort.students.some(student =>  { return student === request.personId})).reverse()
+      }
+      return requests
+    },
   },
   destroyed() {
     for (const unsubscribe of this.unsubscribes) {
@@ -85,10 +89,8 @@ export default {
   border: 1px solid var(--v-galaxyAccent-base);
   margin-top: 30px;
   padding: 20px;
-  // background: var(--v-baseAccent-base);
   position: relative;
   backdrop-filter: blur(2px);
-  // z-index: 3;
   overflow-y: scroll;
 }
 
@@ -97,10 +99,16 @@ export default {
   border: 1px solid var(--v-galaxyAccent-base);
   margin: 30px 15px;
   padding: 20px;
-  // background: var(--v-baseAccent-base);
   position: relative;
   backdrop-filter: blur(2px);
-  // z-index: 3;
+  max-height: 40%;
+  overflow: scroll;
+  overflow-x: hidden;
+  transition: all .2s ease-in-out
+}
+
+#cohort-help-panel:hover {
+  max-height:100%
 }
 
 .help-label {
