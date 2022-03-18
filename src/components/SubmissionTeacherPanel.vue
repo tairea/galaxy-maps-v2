@@ -1,7 +1,7 @@
 <template>
   <div class="submission-card">
-    <v-expansion-panels flat>
-      <v-expansion-panel class="panel">
+    <v-expansion-panels flat v-model="showCard">
+      <v-expansion-panel v-for="(sub, i) in [submission]" :key="i" class="panel">
         <v-expansion-panel-header class="pa-0">
           <!-- Course Image -->
           <v-tooltip bottom color="subBackground">
@@ -18,6 +18,7 @@
                     :alt="submission.contextCourse.title"
                     style="object-fit: cover"
                   />
+                  <v-icon v-else>mdi-account</v-icon>
                 </v-avatar>
                 <div v-else class="imagePlaceholder">
                   {{ first3Letters(submission.contextCourse.title) }}
@@ -50,6 +51,7 @@
                     :alt="requesterPerson.firstName"
                     style="object-fit: cover"
                   />
+                  <v-icon v-else>mdi-account</v-icon>
                 </v-avatar>
                 <div v-else class="imagePlaceholder">
                   {{ first3Letters(requesterPerson.firstName) }}
@@ -130,6 +132,11 @@ export default {
   components: {
     MarkSubmissionCompleted,
   },
+  data() {
+    return {
+      requesterPerson: null,
+    };
+  },
   async mounted() {
     // bind student profile
     this.requesterPerson = await this.MXgetPersonByIdFromDB(
@@ -142,14 +149,21 @@ export default {
       courseId: this.submission.contextCourse.id,
       topicId: this.submission.contextTopic.id,
     });
+
+    // this.show.push(0, 1)
   },
   computed: {
-    ...mapState(["personsTopicsTasks"]),
-  },
-  data() {
-    return {
-      requesterPerson: null,
-    };
+    ...mapState(["personsTopicsTasks", "showPanelCard"]),
+    showCard: {
+      get: function () {
+        if (this.showPanelCard?.type === "submission" && this.showPanelCard?.data.id === this.submission.id) return 0
+        return null
+      },
+      // setter
+      set: function (newValue) {
+        this.$store.commit('setPanelCard', {})
+      }
+    },
   },
   methods: {
     getHumanDate(ts) {
@@ -157,7 +171,7 @@ export default {
     },
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
-    },
+    }
   },
 };
 </script>

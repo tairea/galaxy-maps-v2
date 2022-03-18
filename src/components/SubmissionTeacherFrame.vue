@@ -1,6 +1,6 @@
 <template>
-  <div :id="isCohortView">
-    <h2 class="review-label">Work submitted for review</h2>
+  <div :id="panelId">
+    <h2 class="submission-label">Work submitted for review</h2>
     <div v-if="teachersSubmissionsToReview.length > 0">
       <SubmissionTeacherPanel
         v-for="submission in teachersSubmissionsToReview"
@@ -43,7 +43,7 @@ export default {
     return {
       loading: false,
       allSubmissions: [],
-      unsubscribes: [],
+      unsubscribes: []
     };
   },
   async mounted() {
@@ -63,18 +63,26 @@ export default {
     }
   },
   computed: {
-    ...mapState(["teachersSubmissionsToReview", "person"]),
+    ...mapState(["teachersSubmissionsToReview", "person", "currentCohort"]),
     isCohortView() {
       return this.$route.name == "CohortView"
-        ? "cohort-review-panel"
-        : "review-panel";
     },
+    panelId () {
+      return this.isCohortView 
+        ? "cohort-submission-panel"
+        : "submission-panel";
+    },
+    cohortSubmissions () {
+      if (this.isCohortView) {
+        return this.teachersSubmissionsToReview.filter(submission => this.currentCohort.students.some(student =>  { return student === submission.personId})).reverse()
+      }
+    }
   },
   methods: {},
 };
 </script>
 <style lang="scss" scoped>
-#review-panel {
+#submission-panel {
   width: calc(100% - 30px);
   height: 80%;
   border: 1px solid var(--v-cohortAccent-base);
@@ -86,18 +94,20 @@ export default {
   z-index: 3;
 }
 
-#cohort-review-panel {
+#cohort-submission-panel {
   width: calc(100% - 30px);
   border: 1px solid var(--v-cohortAccent-base);
   margin: 0px 15px;
   padding: 20px;
-  // background: var(--v-baseAccent-base);
   position: relative;
   backdrop-filter: blur(2px);
   z-index: 3;
+  max-height: 40%;
+  overflow: scroll;
+  overflow-x: hidden;
 }
 
-.review-label {
+.submission-label {
   font-size: 0.8rem;
   font-weight: 400;
   text-transform: uppercase;

@@ -57,6 +57,7 @@ const getDefaultState = () => {
     userStatus: {},
     studentsActiveTasks: [],
     studentsActivityLog: [],
+    showPanelCard: {},
   };
 };
 
@@ -159,6 +160,10 @@ export default new Vuex.Store({
     },
     SET_PERSON(state, data) {
       state.person = data;
+    },
+    setPanelCard(state, data) {
+      console.log("setPanelCard: ", data)
+      state.showPanelCard = data
     },
     setCurrentCourseId(state, courseId) {
       state.currentCourseId = courseId;
@@ -459,6 +464,7 @@ export default new Vuex.Store({
             console.log("change.type", change.type);
 
             if (change.type === "added") {
+              if (allWorkForReview.some(submission => submission.id === change.doc.data().id)) return
               allWorkForReview.push({
                 id: change.doc.data().id,
                 ...change.doc.data(),
@@ -971,6 +977,7 @@ export default new Vuex.Store({
             console.log("change.type", change.type);
 
             if (change.type === "added") {
+              if (allRequestsForHelp.some(request => request.id === change.doc.data().id)) return
               allRequestsForHelp.push({
                 id: change.doc.data().id,
                 ...change.doc.data(),

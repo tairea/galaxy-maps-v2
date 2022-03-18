@@ -1,5 +1,5 @@
 <template>
-  <section class="text-center" :class="sectionClass" @mouseover="show($event)" @mouseleave="hide()">
+  <section class="text-center" :class="sectionClass">
     <v-progress-circular
       :value="topicsCompletedPercentage"
       color="baseAccent"
@@ -12,6 +12,7 @@
         color="secondary"
         :size="avatarSize"
         class="glow"
+        @mouseover="show($event)" @mouseleave="hide()"
       >
         <img
           v-if="activity.course.image"
@@ -133,7 +134,7 @@ export default {
   }
 }
 </script>
-<style scoped>
+<style scoped lang="scss">
 .student-progress-section {
   width: 25%;
   border-left: 1px dashed var(--v-missionAccent-base);
@@ -181,6 +182,10 @@ export default {
 }
 .grow-lg:hover { 
   transform: scale(2); 
+  
+  .glow {
+    box-shadow: 0 0 30px var(--v-missionAccent-base);
+  }
 }
 .grow-sm { 
   position: relative;
@@ -192,9 +197,9 @@ export default {
 }
 .glow { 
   transition: all .2s ease-in-out; 
+  z-index: 3;
 }
 .glow:hover { 
-  color: rgba(255, 255, 255, 1);
   box-shadow: 0 0 30px var(--v-missionAccent-base);
 }
 </style>

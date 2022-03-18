@@ -22,10 +22,10 @@
       </div>
       <div class="student-actions-overUnder">
         <div class="top-row">
-            <StudentCohorts :student="student"/>
+            <StudentCohorts :size="20" :student="student"/>
         </div>
-        <div>
-          <StudentActions />
+        <div class="bottom-row">
+          <StudentActions :student="student"/>
         </div>
       </div>    
     </template>
@@ -173,6 +173,10 @@ a {
   .top-row {
     border-bottom: 1px dashed var(--v-missionAccent-base);
     height: 50%;
+  }
+
+  .bottom-row {
+    height: 50%
   }
 
   .second-block {

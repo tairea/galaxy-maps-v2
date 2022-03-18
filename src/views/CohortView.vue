@@ -14,8 +14,8 @@
     </div>
 
     <div id="right-section">
-      <!-- <RequestForHelpTeacherFrame />
-      <SubmissionTeacherFrame /> -->
+      <RequestForHelpTeacherFrame :courses="courses"/>
+      <SubmissionTeacherFrame :courses="courses"/> 
     </div>
   </div>
 </template>
@@ -28,6 +28,8 @@ import BackButton from "../components/BackButton";
 import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame";
 import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame";
 
+import { mapState } from "vuex"
+
 export default {
   name: "CohortView",
   components: {
@@ -38,6 +40,12 @@ export default {
     RequestForHelpTeacherFrame,
     SubmissionTeacherFrame,
   },
+  computed: {
+    ...mapState(['currentCohort']),
+    courses() {
+      return this.currentCohort.courses.map((course) => {return { id: course }})
+    }
+  }
 };
 </script>
 
@@ -78,6 +86,7 @@ export default {
   align-items: center;
   flex-direction: column;
   padding-top: 50px;
+  transition: all .2s ease-in-out;
 
   .people-frame {
     position: relative;

@@ -100,12 +100,18 @@ export default {
   },
   methods: {
     getStudentProfiles () {
+      // let allStudentRequests = {}
       if (this.currentCohort.students?.length) {
         const studentsArr = this.currentCohort.students.filter(a => {
           return !this.students.some(b => a === b.id)
         })
-        studentsArr.forEach(async id => {
-          const student = await this.MXgetPersonByIdFromDB(id)
+        studentsArr.forEach(async studentId => {
+          const student = await this.MXgetPersonByIdFromDB(studentId)
+          //for each course check if the student has any requests or submissions
+          // for (courseId in this.currentCohort.courses)
+          // const requests = await this.getCourseRequestsByStudentId(courseId, studentId)
+
+
           if (!this.students.some(a => a.id === student.id)) {
             this.students.push(student)
           }
