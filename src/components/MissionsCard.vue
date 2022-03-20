@@ -123,27 +123,32 @@
       </div>
     </div>
 
-    <!-- ANALYTICS (for type teacher) -->
+    <!-- LINKS TO VIDEOS/SLIDES (for type teacher) -->
     <div v-else class="mission-section">
       <p class="text-overline text-uppercase text-center">Mission Info:</p>
       <div class="d-flex justify-center flex-column mt-2">
-        <v-btn
-          color="missionAccent"
-          outlined
-          x-small
-          :disabled="this.taskVideo"
-        >
-          LINK TO VIDEO
-        </v-btn>
-        <v-btn
-          color="missionAccent"
-          outlined
-          class="mt-2"
-          x-small
-          :disabled="this.taskSlides"
-        >
-          LINK TO SLIDES
-        </v-btn>
+        <a :href="task.video" target="_blank">
+          <v-btn
+            color="missionAccent"
+            outlined
+            x-small
+            :disabled="!task.video"
+            :v-model="task.video"
+          >
+            LINK TO VIDEO
+          </v-btn>
+        </a>
+        <a :href="task.slides" target="_blank">
+          <v-btn
+            color="missionAccent"
+            outlined
+            class="mt-2"
+            x-small
+            :disabled="task.slides"
+          >
+            LINK TO SLIDES
+          </v-btn>
+        </a>
       </div>
     </div>
   </div>
@@ -165,7 +170,10 @@ export default {
     MissionCompletedDialog,
   },
   props: ["task", "id", "index", "topicId"],
-  mounted() {},
+  mounted() {
+    console.log("HELLO? ");
+    console.log(this.taskSlides, this.taskVideo);
+  },
   computed: {
     ...mapState([
       "currentCourseId",
@@ -212,6 +220,7 @@ p {
 
 a {
   color: var(--v-missionAccent-base) !important;
+  text-decoration: none;
 }
 
 .lockedOpacity {

@@ -359,6 +359,7 @@ export default {
   },
   methods: {
     saveTask(task) {
+      console.log(task);
       this.loading = true;
       this.disabled = true;
       // format video & slides url with "http://"
