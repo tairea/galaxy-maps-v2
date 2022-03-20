@@ -150,6 +150,9 @@ export default {
         if (oldVal.students?.length !== newVal.students?.length) {
           this.getStudentProfiles();
         }
+        if (oldVal.id !== newVal.id) {
+          this.getStudentProfiles()
+        }
       },
     },
   },
