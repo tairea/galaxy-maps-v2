@@ -1,10 +1,8 @@
 <template>
  <v-menu
       v-model="show"
-      :position-x="e.clientX"
-      :position-y="e.clientY"
-      absolute
-      offset-y
+      :position-x="e.left + 50"
+      :position-y="e.top + 50"
     >
     <div class="ss-info-panel">
       <p class="caption base-text">
@@ -23,6 +21,7 @@ export default {
   props: [
    "show", "payload", "e"
   ],
+
 }
 </script>
 

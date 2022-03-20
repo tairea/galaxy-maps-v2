@@ -147,7 +147,6 @@ export default {
     currentCohort: {
       deep: true,
       handler(newVal, oldVal) {
-        console.log("new cohortSet: ", oldVal, newVal)
         if (oldVal.students?.length !== newVal.students?.length) {
           this.getStudentProfiles();
         }
@@ -162,22 +161,18 @@ export default {
   },
   methods: {
     setTime() {
-      console.log("+++++setting time++++++++")
       this.date = Date.now()
     },
     getStudentProfiles() {
-      console.log("getting students")
       if (this.currentCohort.students?.length) {
         const studentsArr = this.currentCohort.students.filter((a) => {
           return !this.students.some((b) => a === b.id);
         });
-        console.log("studentsArr: ", studentsArr)
         studentsArr.forEach(async (id) => {
           const student = await this.MXgetPersonByIdFromDB(id);
           if (!this.students.some((a) => a.id === student.id)) {
             this.students.push(student);
           }
-          console.log("students in data iterator", this.students);
         });
       }
     },
