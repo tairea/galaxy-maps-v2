@@ -1,41 +1,42 @@
 <template>
-  <section class="text-center" :class="sectionClass">
-    <v-progress-circular
-      :value="topicsCompletedPercentage"
-      color="baseAccent"
-      :class="courseClass"
-      :size="courseSize"
-      :width="width"
-      :rotate="-90"
-    >
-      <v-avatar
-        color="secondary"
-        :size="avatarSize"
-        class="glow"
-        @mouseover="show($event)" @mouseleave="hide()"
+  <v-hover v-model="hover">
+    <div class="text-center" :class="sectionClass" ref="circle">
+      <v-progress-circular
+        :value="topicsCompletedPercentage"
+        color="baseAccent"
+        :class="courseClass"
+        :size="courseSize"
+        :width="width"
+        :rotate="-90"
       >
-        <img
-          v-if="activity.course.image"
-          :src="activity.course.image.url"
-          :alt="activity.course.firstName"
-          style="object-fit: cover"
-        />
-        <v-icon v-else>mdi-account</v-icon>
-      </v-avatar>
-    </v-progress-circular>
-    <v-progress-circular
-      :value="tasksCompletedPercentage"
-      color="missionAccent"
-      :class="topicClass"
-      :size="topicSize"
-      :width="width"
-      :rotate="-90"
-    >
-    </v-progress-circular>
-    <v-scale-transition>
-      <PopupStudentProgress :show="showPopup" :payload="popupPayload" :e="e"/>
-    </v-scale-transition>
-  </section>
+        <v-avatar
+          color="secondary"
+          :size="avatarSize"
+          class="glow"
+        >
+          <img
+            v-if="activity.course.image"
+            :src="activity.course.image.url"
+            :alt="activity.course.firstName"
+            style="object-fit: cover"
+          />
+          <v-icon v-else>mdi-account</v-icon>
+        </v-avatar>
+      </v-progress-circular>
+      <v-progress-circular
+        :value="tasksCompletedPercentage"
+        color="missionAccent"
+        :class="topicClass"
+        :size="topicSize"
+        :width="width"
+        :rotate="-90"
+      >
+      </v-progress-circular>
+      <v-scale-transition>
+        <PopupStudentProgress :show="hover" :payload="popupPayload" :e="e"/>
+      </v-scale-transition>
+    </div>
+  </v-hover>
 </template>
 <script>
 import PopupStudentProgress from "./PopupStudentProgress.vue"
@@ -51,16 +52,21 @@ export default {
   data () {
     return {
       showPopup: false,
-      e: {},
       completedTasksInTopic: 0,
       tasksInCurrentTopic: [],
       topicsCompletedPercentage: 0,
       tasksCompletedPercentage: 0,
+      hover: false,
+      e: {}
     }
   },
   mounted () {
     this.calcTopicsCompletedPercentage()
     this.calcTasksCompletedPercentage()
+    this.e = {
+      left : this.$refs.circle?.getBoundingClientRect().left,
+      top : this.$refs.circle?.getBoundingClientRect().top
+    }
   },
   computed: {
     courseSize() {
@@ -96,16 +102,22 @@ export default {
         course: this.activity.course.title,
         topic: this.activity.currentTopic?.title
       }
-    }
+    },
   },
   methods: {
     show(e) {
-      if (this.showPopup) return
-      this.e = e
-      this.showPopup = true
+      setTimeout(() => {
+        if (this.showPopup) return
+        else {
+          this.e = e
+          this.showPopup = true
+        }
+      }, 100)
     },
     hide() {
-      this.showPopup = false
+      setTimeout(() => {
+        this.showPopup = false
+      }, 100)
     },
     calcTopicsCompletedPercentage() {
       let percentage = (this.activity.topicCompletedCount / this.activity.course.topicTotal) * 100;
@@ -177,7 +189,7 @@ export default {
 
 .grow-lg { 
   position: relative;
-  right: 5px;
+  z-index: 5;
   transition: all .2s ease-in-out; 
 }
 .grow-lg:hover { 
@@ -190,7 +202,8 @@ export default {
 .grow-sm { 
   position: relative;
   right: 10px;
-  transition: all .2s ease-in-out; 
+  transition: all .2s ease-in-out;
+  z-index: 5;
 }
 .grow-sm:hover { 
   transform: scale(1.5); 
@@ -201,6 +214,5 @@ export default {
 }
 .glow { 
   transition: all .2s ease-in-out; 
-  z-index: 3;
 }
 </style>

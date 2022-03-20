@@ -114,8 +114,7 @@ export default {
         currentTask,
       };
     });
-    console.log(this.student.firstName + " this.activities", this.activities);
-
+    
     // ==== get student activity data from LRS
     const getActivityData = await getStudentsTimeDataXAPIQuery({
       studentsArr: [this.student.id],

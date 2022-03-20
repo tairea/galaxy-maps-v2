@@ -126,7 +126,9 @@ export default {
 
 .avatar {
   padding: 0px;
+  margin: 0px 5px;
   transition: all 0.2s ease-in-out;
+  background-color: rgb(51, 49, 49);
 }
 
 .avatar-label {

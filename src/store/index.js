@@ -463,8 +463,7 @@ export default new Vuex.Store({
           const allWorkForReview = [...state.teachersSubmissionsToReview];
 
           for (const change of querySnapshot.docChanges()) {
-            console.log("change.type", change.type);
-
+            
             if (change.type === "added") {
               if (allWorkForReview.some(submission => submission.id === change.doc.data().id)) return
               allWorkForReview.push({
@@ -491,7 +490,6 @@ export default new Vuex.Store({
               );
             }
           }
-          console.log("========= allWorkForReview", allWorkForReview);
           state.teachersSubmissionsToReview = allWorkForReview;
         });
 
