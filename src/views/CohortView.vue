@@ -1,5 +1,5 @@
 <template>
-  <div id="container" class="bg">
+  <div v-if="currentCohort.id" id="container" class="bg">
     <div id="left-section">
       <CohortInfo />
       <AssignedInfo assignCourses="true" />
@@ -14,12 +14,8 @@
     </div>
 
     <div id="right-section">
-      <!-- <div class="people-right-frame mb-5">
-        <h2 class="people-label">ADD STUDENTS</h2>
-        <ImportCsv />
-      </div> -->
-      <!-- <RequestForHelpTeacherFrame />
-      <SubmissionTeacherFrame /> -->
+      <RequestForHelpTeacherFrame :courses="courses"/>
+      <SubmissionTeacherFrame :courses="courses"/> 
     </div>
   </div>
 </template>
@@ -27,35 +23,29 @@
 <script>
 import CohortInfo from "../components/CohortInfo";
 import AssignedInfo from "../components/AssignedInfo";
-import MissionsInfo from "../components/MissionsInfo";
-import MissionsList from "../components/MissionsList";
-import StudentCard from "../components/StudentCard";
-import StudentDataTable from "../components/StudentDataTable";
 import StudentDataIterator from "../components/StudentDataIterator";
-import Galaxy from "../components/Galaxy";
 import BackButton from "../components/BackButton";
 import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame";
 import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame";
 
-// import ImportCsv from "../components/ImportCsv";
-import { mapGetters } from "vuex";
+import { mapState } from "vuex"
 
 export default {
   name: "CohortView",
   components: {
     CohortInfo,
     AssignedInfo,
-    MissionsInfo,
-    MissionsList,
-    Galaxy,
     BackButton,
-    // ImportCsv,
-    StudentCard,
-    StudentDataTable,
     StudentDataIterator,
     RequestForHelpTeacherFrame,
     SubmissionTeacherFrame,
   },
+  computed: {
+    ...mapState(['currentCohort']),
+    courses() {
+      return this.currentCohort?.courses?.map((course) => {return { id: course }})
+    }
+  }
 };
 </script>
 
@@ -96,6 +86,7 @@ export default {
   align-items: center;
   flex-direction: column;
   padding-top: 50px;
+  transition: all .2s ease-in-out;
 
   .people-frame {
     position: relative;
@@ -140,7 +131,7 @@ export default {
       font-weight: 400;
       text-transform: uppercase;
       // ribbon label
-      position: absolute;
+      position: fixed;
       top: -1px;
       left: -1px;
       background-color: var(--v-missionAccent-base);

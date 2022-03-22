@@ -233,8 +233,10 @@ Galaxy Maps Robot`;
 exports.onUserStatusChanged = functions.database
   .ref("/status/{uid}")
   .onUpdate(async (change, context) => {
+
     // Get the data written to Realtime Database
     const eventStatus = change.after.val();
+    functions.logger.log("=====eventStatus=====: ", eventStatus)
 
     // get the doc from the firestore DB
     const userStatusFirestoreRef = firestore.doc(
@@ -263,6 +265,7 @@ exports.onUserStatusChanged = functions.database
       id: person.id,
       ...person.data(),
     };
+
     if (eventStatus.state === "online") studentOnlineXAPIStatement(person);
     if (eventStatus.state === "offline") studentOfflineXAPIStatement(person);
 

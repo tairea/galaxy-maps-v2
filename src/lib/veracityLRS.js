@@ -64,6 +64,67 @@ export const startGalaxyXAPIStatement = (actor, context) => {
     body: JSON.stringify(statement),
   }).catch((error) => console.error(error.message));
 };
+
+// ========== Start Topic =========
+export const startTopicXAPIStatement = (actor, context) => {
+  console.log("sending student xAPI statement... topic started...");
+  const statement = {
+    actor: {
+      name: actor.firstName + " " + actor.lastName,
+      mbox: "mailto:" + actor.email,
+    },
+    verb: {
+      id: "https://w3id.org/xapi/dod-isd/verbs/started",
+      display: { "en-nz": "started" },
+    },
+    object: {
+      id: "https://www.galaxymaps.io/topic/" + context.system.id,
+      definition: {
+        name: {
+          "en-nz":
+            "Course: " +
+            context.galaxy.title +
+            " > Topic: " +
+            context.system.label,
+        },
+        description: {
+          "en-nz": "Started Topic: " + context.system.label,
+        },
+        extensions: {
+          "https://www.galaxymaps.io/course/id/": context.galaxy.id,
+          "https://www.galaxymaps.io/topic/id/": context.system.id,
+          "https://www.galaxymaps.io/person/id/": actor.id,
+        },
+      },
+    },
+    context: {
+      contextActivities: {
+        parent: [
+          {
+            id: "https://www.galaxymaps.io/topic/" + context.system.id,
+            objectType: "Activity",
+          },
+        ],
+        grouping: [
+          {
+            id: "https://www.galaxymaps.io/course/" + context.galaxy.id,
+            objectType: "Activity",
+          },
+        ],
+      },
+    },
+  };
+
+  fetch("https://galaxymaps.lrs.io/xapi/statements", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: auth,
+    },
+    body: JSON.stringify(statement),
+  }).catch((error) => console.error(error.message));
+};
+
 // ========== Start Task (make task active)
 export const startTaskXAPIStatement = (actor, taskId, context) => {
   console.log("sending student xAPI statement... task started...");
@@ -126,6 +187,7 @@ export const startTaskXAPIStatement = (actor, taskId, context) => {
     body: JSON.stringify(statement),
   }).catch((error) => console.error(error.message));
 };
+
 // ========== Submit work for review (by student)
 export const submitWorkForReviewXAPIStatement = (actor, taskId, context) => {
   console.log("sending student xAPI statement... submitted work for review...");
@@ -869,7 +931,7 @@ export const getActivityLogXAPIQuery = async (person) => {
     },
   ];
 
-  await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
+  return await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -881,7 +943,7 @@ export const getActivityLogXAPIQuery = async (person) => {
     .catch((error) => console.error(error.message))
     .then((res) => {
       // console.log("getActivityLogXAPIQuery: res => ", res[0].statements);
-      store.commit("setStudentsActivityLog", res[0].statements);
+      return res[0].statements;
     });
 };
 
@@ -968,7 +1030,7 @@ export const getCohortsCourseDataXAPIQuery = async (payload) => {
     });
 };
 
-export const getCohortsActivityDataXAPIQuery = async (payload) => {
+export const getStudentsTimeDataXAPIQuery = async (payload) => {
   // if no data, dont bother
   if (!payload.studentsArr) return;
 
@@ -1048,9 +1110,10 @@ export const getCohortsActivityDataXAPIQuery = async (payload) => {
 //============ SANITISE FUNCTIONS
 
 async function sanitiseCourseDataFromLRS(res) {
-  const santisedCourses = [];
+  const sanitisedCourses = [];
 
   let taskCompletedCount = 0;
+  let topicCompletedCount = 0;
 
   for (const group of res) {
     const course = await courseIRIToCourseId(group);
@@ -1059,6 +1122,8 @@ async function sanitiseCourseDataFromLRS(res) {
     const activities = group.statements.map((statement, index) => {
       if (statement.description.includes("Completed Task:"))
         taskCompletedCount++;
+      if (statement.description.includes("Completed Topic:"))
+        topicCompletedCount++;
 
       let [action, title] = statement.description.split(": ");
       let [status, type] = action.split(" ");
@@ -1073,24 +1138,6 @@ async function sanitiseCourseDataFromLRS(res) {
         id,
         context: statement.context,
       };
-      // const contextSplit = statement.context.split(
-      //   /Course: | > Topic: | > Task: /
-      // );
-      // const topicTitle = contextSplit[2];
-      // const taskTitle = contextSplit[3];
-
-      // if (statement.description.includes("Completed Task:"))
-      //   taskCompletedCount++;
-
-      // const newStatement = {
-      //   x: statement.timestamp,
-      //   y: index,
-      //   taskStatus: statement.verb.display["en-nz"],
-      //   context: statement.context,
-      //   topic: topicTitle,
-      //   taskTitle: taskTitle,
-      //   description: statement.description,
-      // };
       return newStatement;
     });
 
@@ -1098,14 +1145,15 @@ async function sanitiseCourseDataFromLRS(res) {
       course,
       activities: activities.reverse(),
       taskCompletedCount,
+      topicCompletedCount,
     };
 
-    santisedCourses.push(courseObj);
+    sanitisedCourses.push(courseObj);
   }
-  return santisedCourses;
+  return sanitisedCourses;
 }
 async function sanitiseCohortsCourseDataFromLRS(res) {
-  const santisedCourses = [];
+  const sanitisedCourses = [];
 
   // group = course
   for (const group of res) {
@@ -1122,9 +1170,13 @@ async function sanitiseCohortsCourseDataFromLRS(res) {
       const person = await getStudentByEmail(email);
 
       let taskCompletedCount = 0;
+      let topicCompletedCount = 0;
+
       const activities = student.statements.map((statement, index) => {
         if (statement.description.includes("Completed Task:"))
           taskCompletedCount++;
+        if (statement.description.includes("Completed Topic:"))
+          topicCompletedCount++;
 
         let [action, title] = statement.description.split(": ");
         let [status, type] = action.split(" ");
@@ -1145,6 +1197,7 @@ async function sanitiseCohortsCourseDataFromLRS(res) {
       const studentObj = {
         activities: activities.reverse(),
         taskCompletedCount,
+
         person: person,
       };
       // push individual student data to students array
@@ -1155,10 +1208,10 @@ async function sanitiseCohortsCourseDataFromLRS(res) {
       course,
       students: students,
     };
-    santisedCourses.push(courseObj);
+    sanitisedCourses.push(courseObj);
   }
 
-  return santisedCourses;
+  return sanitisedCourses;
 }
 
 async function sanitiseCohortsActivityDataFromLRS(res) {

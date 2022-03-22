@@ -97,7 +97,7 @@
 
       <div v-if="getTaskStatus == 'unlocked'" class="d-flex justify-center">
         <!-- Start Mission button -->
-        <StartMissionDialog :topicId="topicId" :taskId="id" :task="task" />
+        <StartMissionDialog :topicId="topicId" :taskId="id" :task="task" :topicActive="topicActive"/>
       </div>
       <div
         v-else-if="getTaskStatus == 'completed' || getTaskStatus == 'inreview'"
@@ -164,7 +164,7 @@ export default {
     StartMissionDialog,
     MissionCompletedDialog,
   },
-  props: ["task", "id", "index", "topicId"],
+  props: ["task", "id", "index", "topicId", "topicActive"],
   mounted() {},
   computed: {
     ...mapState([

@@ -1,14 +1,14 @@
 <template>
-  <div :id="isCohortView">
-    <h2 class="review-label">Work submitted for review</h2>
-    <div v-if="teachersSubmissionsToReview.length > 0">
+  <div :id="panelId">
+    <h2 class="submission-label">Work submitted for review</h2>
+    <div v-if="submissions.length > 0">
       <SubmissionTeacherPanel
-        v-for="submission in teachersSubmissionsToReview"
+        v-for="submission in submissions"
         :key="submission.id"
         :submission="submission"
       />
     </div>
-    <div v-if="!loading && teachersSubmissionsToReview.length == 0">
+    <div v-if="!loading && submissions.length == 0">
       <p
         class="overline pt-4 text-center"
         style="color: var(--v-cohortAccent-base)"
@@ -43,7 +43,7 @@ export default {
     return {
       loading: false,
       allSubmissions: [],
-      unsubscribes: [],
+      unsubscribes: []
     };
   },
   async mounted() {
@@ -57,24 +57,33 @@ export default {
     }
     this.loading = false;
   },
-  destroy() {
+  destroyed() {
+    this.$store.commit("resetTeachersSubmissions")
     for (const unsubscribe of this.unsubscribes) {
       unsubscribe();
     }
   },
   computed: {
-    ...mapState(["teachersSubmissionsToReview", "person"]),
+    ...mapState(["teachersSubmissionsToReview", "person", "currentCohort"]),
     isCohortView() {
       return this.$route.name == "CohortView"
-        ? "cohort-review-panel"
-        : "review-panel";
     },
+    panelId () {
+      return this.isCohortView 
+        ? "cohort-submission-panel"
+        : "submission-panel";
+    },
+    submissions () {
+      if (this.isCohortView) {
+        return this.teachersSubmissionsToReview.filter(submission => this.currentCohort.students.some(student =>  { return student === submission.studentId})).reverse()
+      } else return this.teachersSubmissionsToReview
+    }
   },
   methods: {},
 };
 </script>
 <style lang="scss" scoped>
-#review-panel {
+#submission-panel {
   width: calc(100% - 30px);
   height: 80%;
   border: 1px solid var(--v-cohortAccent-base);
@@ -86,18 +95,20 @@ export default {
   z-index: 3;
 }
 
-#cohort-review-panel {
+#cohort-submission-panel {
   width: calc(100% - 30px);
   border: 1px solid var(--v-cohortAccent-base);
   margin: 0px 15px;
   padding: 20px;
-  // background: var(--v-baseAccent-base);
   position: relative;
   backdrop-filter: blur(2px);
   z-index: 3;
+  max-height: 40%;
+  overflow: scroll;
+  overflow-x: hidden;
 }
 
-.review-label {
+.submission-label {
   font-size: 0.8rem;
   font-weight: 400;
   text-transform: uppercase;
