@@ -24,7 +24,9 @@
           <div class="create-dialog">
             <!-- HEADER -->
             <div class="dialog-header">
-              <p class="dialog-title">{{ dialogTitle }}</p>
+              <p class="dialog-title">
+                {{ edit ? "Edit Galaxy " + course.title : dialogTitle }}
+              </p>
               <div class="d-flex align-center">
                 <v-icon left color="missionAccent"
                   >mdi-information-variant</v-icon
@@ -70,10 +72,7 @@
 
                 <!-- IMAGE UPLOAD -->
                 <!-- <p class="dialog-description">Galaxy Image:</p> -->
-                <v-progress-linear
-                  color="missionAccent"
-                  :value="percentageGalaxy"
-                ></v-progress-linear>
+
                 <v-file-input
                   class="input-field"
                   outlined
@@ -85,10 +84,17 @@
                   label="Upload Galaxy Image"
                   @change="storeImage()"
                   prepend-icon=""
+                  hide-details
                 ></v-file-input>
+                <v-progress-linear
+                  color="missionAccent"
+                  :value="percentageGalaxy"
+                  class=""
+                ></v-progress-linear>
 
+                <!-- ===== Credit other learning content course ==== -->
                 <div
-                  class="author-checkbox-wrap d-flex align-end flex-column mb-4"
+                  class="author-checkbox-wrap d-flex align-end flex-column ma-4"
                 >
                   <v-checkbox
                     v-model="notAuthor"
@@ -142,6 +148,7 @@
                     label="Upload content creator image"
                     @change="storeAuthorImage()"
                     prepend-icon=""
+                    hide-details="true"
                   ></v-file-input>
                   <v-progress-linear
                     color="missionAccent"
@@ -153,7 +160,7 @@
                     Source URL of original content:
                   </p> -->
                   <v-text-field
-                    class="input-field"
+                    class="input-field mt-4"
                     outlined
                     :dark="dark"
                     :light="!dark"
@@ -188,6 +195,21 @@
             <!-- ACTION BUTTONS -->
             <div class="action-buttons">
               <v-btn
+                v-if="edit"
+                outlined
+                color="green darken-1"
+                @click="updateCourse(course)"
+                class="mx-2"
+                :loading="loading"
+                :disabled="disabled"
+                :dark="dark"
+                :light="!dark"
+              >
+                <v-icon left> mdi-check </v-icon>
+                UPDATE
+              </v-btn>
+              <v-btn
+                v-else
                 outlined
                 color="green darken-1"
                 @click="saveCourse(course)"
@@ -405,6 +427,23 @@ export default {
           console.error("Error writing document: ", error);
         });
       this.course = {};
+    },
+    updateCourse(course) {
+      this.loading = true;
+      db.collection("courses")
+        .doc(course.id)
+        .update(course)
+        .then(() => {
+          console.log("Document successfully updated!");
+          this.dialog = false;
+          this.loading = false;
+          //get doc id from firestore (aka course id)
+          //set courseID to Store state 'state.currentCourseId' (so not relying on router params)
+          this.$store.commit("setCurrentCourseId", course.id);
+        })
+        .catch((error) => {
+          console.error("Error updating document: ", error);
+        });
     },
     storeImage() {
       this.disabled = true;

@@ -12,7 +12,7 @@
                 >mdi-information-variant</v-icon
               >
               <p class="dialog-description">
-                This <span class="mission-text">System</span> is a Topic of the
+                This Node is a <span class="mission-text">Topic</span> of the
                 <span class="galaxy-text">{{ this.course.title }}</span> Galaxy
                 map
               </p>
@@ -278,8 +278,8 @@ export default {
       this.$vuetify.theme.themes.dark.primary = "#000";
     }
     if (!this.editing) {
-      this.currentNode.label = ""
-      console.log('not editing: ', this.currentNode)
+      this.currentNode.label = "";
+      console.log("not editing: ", this.currentNode);
     }
   },
   data() {
@@ -335,7 +335,7 @@ export default {
     // },
 
     close() {
-      console.log('close')
+      console.log("close");
       this.$emit("closeDialog");
       // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
     },
@@ -485,7 +485,7 @@ export default {
         .catch((error) => {
           console.error("Error deleting edge: ", error);
         });
-    }
+    },
   },
 };
 </script>

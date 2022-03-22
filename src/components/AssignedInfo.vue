@@ -38,7 +38,9 @@
       <div v-if="courses.length > 0">
         <Course v-for="(course, i) in courses" :course="course" :key="i" />
       </div>
-      <p v-if="cohortTeacher" class="assigned-status">No Galaxies assigned to this Cohort</p>
+      <p v-if="cohortTeacher" class="assigned-status">
+        No Galaxies assigned to this Cohort
+      </p>
       <AssignCohortDialog :assignCourses="true" />
     </div>
   </div>
@@ -52,7 +54,7 @@ import Course from "../components/Course";
 import Cohort from "../components/Cohort";
 import Organisation from "../components/Organisation";
 import Person from "../components/Person";
-import { dbMixins } from "../mixins/DbMixins"
+import { dbMixins } from "../mixins/DbMixins";
 import { getCourseById } from "../lib/ff";
 
 export default {
@@ -65,14 +67,20 @@ export default {
     Course,
     AssignCohortDialog,
   },
-  props: ["assignCohorts", "assignCourses", "cohorts", "organisations", "people"],
-  data () {
+  props: [
+    "assignCohorts",
+    "assignCourses",
+    "cohorts",
+    "organisations",
+    "people",
+  ],
+  data() {
     return {
       courses: [],
     };
   },
-  beforeMount () {
-    this.getCohortCourses()
+  beforeMount() {
+    this.getCohortCourses();
   },
   watch: {
     currentCohort() {
@@ -83,16 +91,20 @@ export default {
     ...mapState(["person", "currentCohort"]),
     ...mapGetters(["getCoursesInThisCohort"]),
     cohortTeacher() {
-      return this.currentCohort.teachers.some(id => id === this.person.id)
-    }
+      return this.currentCohort.teachers.some((id) => id === this.person.id);
+    },
   },
   methods: {
-    async getCohortCourses () {
-      let courses = await Promise.all(this.currentCohort?.courses.map(courseId => {
-        return getCourseById(courseId)
-      }))
-      if (courses.length) {
-        this.courses = courses;
+    async getCohortCourses() {
+      if (this.assignCourses) {
+        let courses = await Promise.all(
+          this.currentCohort?.courses.map((courseId) => {
+            return getCourseById(courseId);
+          })
+        );
+        if (courses.length) {
+          this.courses = courses;
+        }
       }
     },
   },
