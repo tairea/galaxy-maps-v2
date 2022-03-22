@@ -37,10 +37,34 @@
 
 .disabledButton {
   .theme--light.v-btn.v-btn--disabled {
-    color: rgba(66, 99, 137, 0.6) !important
+    color: rgba(66, 99, 137, 0.6) !important;
   }
 }
 
 .dialog-border {
   border: 1px solid var(--v-missionAccent-base);
+}
+
+.w100 {
+  width: 100%;
+}
+
+.h100 {
+  height: 100%;
+}
+
+.yellow-border {
+  border: 1px solid yellow;
+}
+
+.orange-border {
+  border: 1 solid orange;
+}
+
+.red-border {
+  border: 1px solid red;
+}
+
+.purple-border {
+  border: 1px solid purple;
 }

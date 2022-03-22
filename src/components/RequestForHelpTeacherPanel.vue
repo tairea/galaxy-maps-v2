@@ -1,7 +1,7 @@
 <template>
   <div class="request-card">
-    <v-expansion-panels flat>
-      <v-expansion-panel class="panel">
+    <v-expansion-panels flat v-model="showCard">
+      <v-expansion-panel v-for="(sub, i) in [request]" :key="i" class="panel">
         <v-expansion-panel-header class="pa-0">
           <!-- Course Image -->
           <v-tooltip bottom color="subBackground">
@@ -135,12 +135,19 @@ export default {
   },
   computed: {
     ...mapState([
-      // "currentCourseId",
-      // "currentTopicId",
-      // "currentTaskId",
       "allTasks",
       "people",
+      "showPanelCard"
     ]),
+    showCard: {
+      get: function () {
+        if (this.showPanelCard?.type === "request" && this.showPanelCard?.data.id === this.request.id) return 0
+        return null
+      },
+      set: function (newValue) {
+        this.$store.commit('setPanelCard', {})
+      }
+    },
   },
   methods: {
     getTask(id) {

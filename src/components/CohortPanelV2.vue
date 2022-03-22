@@ -143,7 +143,7 @@ import ActivityBarChart from "../components/ActivityBarChart";
 import Organisation from "../components/Organisation";
 import {
   getCohortsCourseDataXAPIQuery,
-  getCohortsActivityDataXAPIQuery,
+  getStudentsTimeDataXAPIQuery,
   VQLXAPIQuery,
 } from "../lib/veracityLRS";
 
@@ -199,7 +199,7 @@ export default {
     this.cohortsCoursesDataLoading = false;
 
     // ==== get cohort activity data from LRS
-    const getActivityData = await getCohortsActivityDataXAPIQuery({
+    const getActivityData = await getStudentsTimeDataXAPIQuery({
       studentsArr: this.cohort.students,
     });
     this.cohortActivityData = getActivityData;
@@ -210,7 +210,7 @@ export default {
     // const VQL = await VQLXAPIQuery();
   },
   computed: {
-    ...mapGetters(["getOrganisationById"]),
+    ...mapGetters(["getOrganisationById", "currentCohort"]),
   },
   methods: {
     ...mapActions(["setCurrentCohort"]),
@@ -271,10 +271,7 @@ export default {
       return name.substring(0, 3).toUpperCase();
     },
     async routeToCohort() {
-      // this.$store.commit("setCurrentCohort", {})
       await this.setCurrentCohort(this.cohort);
-      // console.log('cohort set: ', cohort)
-      // route to Galaxy View (passing params as props)
       this.$router.push({
         name: "CohortView",
         params: {

@@ -24,3 +24,36 @@ export const getStudentByEmail = async (email) => {
     return person.data();
   }
 };
+
+export const getStudentTasksByTopicId = async (payload) => {
+  const tasks = []
+
+  const studentTasks = await db
+    .collection("people")
+    .doc(payload.studentId)
+    .collection(payload.courseId)
+    .doc(payload.topicId)
+    .collection("tasks")
+    .get()
+  
+  for (const task of studentTasks.docs) {
+    tasks.push(task.data())
+  }
+  return tasks
+}
+
+export const getStudentCohortsById = async (studentId) => {
+  return await db
+    .collection("cohorts")
+    .where("students", "array-contains", studentId)
+    .get()
+    .then((querySnapShot) => {
+      const cohorts = querySnapShot.docs.map((doc) => {
+        return {
+          id: doc.id,
+          ...doc.data(),
+        };
+      });
+      return cohorts;
+    });
+}

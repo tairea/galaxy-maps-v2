@@ -149,13 +149,13 @@
 </template>
 
 <script>
-import { mapActions } from "vuex";
+import { mapActions, mapState } from "vuex";
 import Avatar from "../components/Avatar";
 import ProgressionLineChart from "../components/ProgressionLineChart";
 import ActivityBarChart from "../components/ActivityBarChart";
 import {
   getCohortsCourseDataXAPIQuery,
-  getCohortsActivityDataXAPIQuery,
+  getStudentsTimeDataXAPIQuery,
   VQLXAPIQuery,
 } from "../lib/veracityLRS";
 
@@ -189,7 +189,6 @@ export default {
   },
 
   async mounted() {
-    // ==== get cohort course data from LRS
     const getCourseData = await getCohortsCourseDataXAPIQuery({
       studentsArr: this.cohort.students,
       coursesArr: this.cohort.courses,
@@ -197,7 +196,6 @@ export default {
     });
     this.cohortsCoursesData = getCourseData;
     // console.log("this.cohortsCoursesData", this.cohortsCoursesData);
-
     // add students with data
     const studentsArr = [];
     if (this.cohortsCoursesData) {
@@ -213,7 +211,7 @@ export default {
     }
 
     // ==== get cohort activity data from LRS
-    const getActivityData = await getCohortsActivityDataXAPIQuery({
+    const getActivityData = await getStudentsTimeDataXAPIQuery({
       studentsArr: this.cohort.students,
     });
     this.cohortActivityData = getActivityData;
@@ -222,7 +220,9 @@ export default {
     // ==== VQL Test
     // const VQL = await VQLXAPIQuery();
   },
-  computed: {},
+  computed: {
+    ...mapState(['currentCohort'])
+  },
   methods: {
     ...mapActions(["setCurrentCohort"]),
     clickedPerson(person, index) {
@@ -413,17 +413,21 @@ export default {
       return name.substring(0, 3).toUpperCase();
     },
     async routeToCohort() {
+      console.log("====== ROUTE TO COHORT =======")
       // this.$store.commit("setCurrentCohort", {})
       await this.setCurrentCohort(this.cohort);
       // console.log('cohort set: ', cohort)
       // route to Galaxy View (passing params as props)
-      this.$router.push({
-        name: "CohortView",
-        params: {
-          cohortName: this.camelize(this.cohort.name),
-          cohortId: this.cohort.id,
-        },
-      });
+      if (this.currentCohort.id) {
+        console.log("------currentCohort-----: ", this.currentCohort)
+        this.$router.push({
+          name: "CohortView",
+          params: {
+            cohortName: this.camelize(this.cohort.name),
+            cohortId: this.cohort.id,
+          },
+        });
+      }
     },
     camelize(str) {
       return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {

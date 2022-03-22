@@ -85,13 +85,13 @@
 import firebase from "firebase/app";
 
 import { db } from "../store/firestoreConfig";
-import { startTaskXAPIStatement } from "../lib/veracityLRS";
+import { startTaskXAPIStatement, startTopicXAPIStatement } from "../lib/veracityLRS";
 
 import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "StartMissionDialog",
-  props: ["task", "topicId", "on", "attrs"],
+  props: ["task", "topicId", "on", "attrs", "topicActive"],
   data: () => ({
     dialog: false,
     loading: false,
@@ -119,6 +119,15 @@ export default {
         .update({
           taskStatus: "active",
           taskStartedTimestamp: new Date(),
+        })
+        .then(() => {
+          console.log("Topic status successfully written as Active!");
+          if (!this.topicActive) {
+            startTopicXAPIStatement(this.person, {
+              galaxy: this.currentCourse,
+              system: this.currentTopic,
+            });
+          }
         })
         .then(() => {
           console.log("Task status successfully written as Active!");
