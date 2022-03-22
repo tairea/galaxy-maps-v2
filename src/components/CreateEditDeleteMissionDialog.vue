@@ -40,7 +40,11 @@
                 <v-icon left color="missionAccent"
                   >mdi-information-variant</v-icon
                 >
-                <p class="dialog-description">{{ dialogDescription }}</p>
+                <p class="dialog-description">
+                  A Mission is a specific task. <br />Enter the mission details
+                  here or link to an external file eg. Youtube video or Google
+                  Slide.
+                </p>
               </div>
             </div>
 
@@ -55,6 +59,7 @@
                 color="missionAccent"
                 v-model="task.title"
                 label="Mission Title"
+                required
               ></v-text-field>
 
               <!-- DESCRIPTION -->
@@ -65,11 +70,10 @@
                 :dark="dark"
                 :light="!dark"
                 color="missionAccent"
-                auto-grow
                 clearable
-                rows="1"
+                rows="6"
                 v-model="task.description"
-                label="Mission Description"
+                label="Mission Content"
               ></v-textarea>
 
               <!-- DURATION -->
@@ -81,7 +85,8 @@
                 :light="!dark"
                 color="missionAccent"
                 v-model="task.duration"
-                label="Duration"
+                required
+                label="Estimated Duration of Mission (in minutes)"
               ></v-text-field>
 
               <!-- VIDEO -->
@@ -93,7 +98,7 @@
                 :light="!dark"
                 color="missionAccent"
                 v-model="task.video"
-                label="Video"
+                label="Link to Video (Optional)"
               ></v-text-field>
 
               <!-- SLIDES -->
@@ -105,12 +110,12 @@
                 :light="!dark"
                 color="missionAccent"
                 v-model="task.slides"
-                label="slides"
+                label="Link to slides (Optional)"
               ></v-text-field>
 
               <!-- SUBMISSION REQUIRED? -->
               <p class="dialog-description submission-colour">
-                Does this Mission require the student to submit evidence of
+                Does this Mission require the student to submit any evidence of
                 work?
                 <v-tooltip right max-width="300">
                   <template v-slot:activator="{ on, attrs }">
@@ -173,7 +178,7 @@
                 </p>
                 <v-textarea
                   v-model="task.submissionInstructions"
-                  class="ma-0 pa-0 submission-colour"
+                  class="ma-0 pa-0 submission-colour input-field"
                   outlined
                   :dark="dark"
                   :light="!dark"
@@ -330,8 +335,7 @@ export default {
     dialog: false,
     dialogConfirm: false,
     dialogTitle: "Create a new Mission",
-    dialogDescription:
-      "A Mission is a set of specific tasks. \r\nWe recommend linking to a Google Slides file that has all the Mission tasks in it.",
+    dialogDescription: "",
     task: {
       title: "",
       description: "",

@@ -131,7 +131,7 @@
           color="missionAccent"
           outlined
           x-small
-          :disabled="this.taskVideo"
+          :disabled="!task.video || !task.video.length"
         >
           LINK TO VIDEO
         </v-btn>
@@ -140,7 +140,7 @@
           outlined
           class="mt-2"
           x-small
-          :disabled="this.taskSlides"
+          :disabled="!task.slides || !task.slides.length"
         >
           LINK TO SLIDES
         </v-btn>
@@ -193,14 +193,7 @@ export default {
       taskVideo: false,
     };
   },
-  async mounted() {
-    if (this.task.slides == "") {
-      this.taskSlides = true;
-    }
-    if (this.task.video == "") {
-      this.taskVideo = true;
-    }
-  },
+  async mounted() {},
   methods: {},
 };
 </script>
