@@ -83,6 +83,11 @@ export default {
     return {
       activeTab: null,
       // studentActiveTab: `/base/assigned-galaxies`,
+      tabs: [
+        { id: 4, name: "GALAXIES", route: `/base/galaxies/all` },
+        { id: 6, name: "COHORTS", route: `/base/cohorts` },
+        { id: 5, name: "DASHBOARD", route: `/base/dashboard` },
+      ],
       tabsStudent: [
         { id: 3, name: "ASSIGNED GALAXIES", route: `/base/galaxies/assigned` },
         // { id: 6, name: "COHORTS", route: `/base/cohorts` },
