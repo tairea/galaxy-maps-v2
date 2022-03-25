@@ -58,7 +58,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import PopupGalaxyPreview from "../components/PopupGalaxyPreview";
 
 export default {
-  name: "Galaxy",
+  name: "Galaxies",
   props: {
     whichCoursesToDisplay: { type: String, default: "" },
   },

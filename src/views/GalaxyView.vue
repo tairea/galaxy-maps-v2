@@ -83,7 +83,6 @@ import GalaxyInfo from "../components/GalaxyInfo";
 import AssignedInfo from "../components/AssignedInfo";
 import MissionsInfo from "../components/MissionsInfo";
 import MissionsList from "../components/MissionsList";
-import Galaxy from "../components/Galaxy";
 import GalaxyMap from "../components/GalaxyMap";
 import BackButton from "../components/BackButton";
 import GalaxyMapEditDialog from "../components/GalaxyMapEditDialog";
@@ -100,7 +99,6 @@ export default {
     AssignedInfo,
     MissionsInfo,
     MissionsList,
-    Galaxy,
     GalaxyMap,
     BackButton,
     GalaxyMapEditDialog,

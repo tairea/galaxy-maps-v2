@@ -3,63 +3,6 @@
     <div class="inner">
       <!-- Student tabs -->
       <v-tabs
-        v-if="userType === 'student'"
-        fixed-tabs
-        background-color="transparent"
-        dark
-        slider-color="baseAccent"
-        v-model="activeTab"
-        height=""
-      >
-        <v-tab v-for="tab in tabsStudent" :key="tab.id" :to="tab.route">
-          <div class="baseAccent--text tab">{{ tab.name }}</div>
-        </v-tab>
-      </v-tabs>
-      <!-- Teacher tabs (user tabs + students) -->
-      <v-tabs
-        v-else-if="userType === 'teacher'"
-        fixed-tabs
-        background-color="transparent"
-        dark
-        slider-color="baseAccent"
-        v-model="activeTab"
-        height=""
-      >
-        <v-tab v-for="tab in tabsTeacher" :key="tab.id" :to="tab.route">
-          <div class="baseAccent--text tab">{{ tab.name }}</div>
-        </v-tab>
-      </v-tabs>
-      <!-- Admin tabs (user tabs + students + cohorts) -->
-      <v-tabs
-        v-else-if="userType === 'admin'"
-        fixed-tabs
-        background-color="transparent"
-        dark
-        slider-color="baseAccent"
-        v-model="activeTab"
-        height=""
-      >
-        <v-tab v-for="tab in tabsAdmin" :key="tab.id" :to="tab.route">
-          <div class="baseAccent--text tab">{{ tab.name }}</div>
-        </v-tab>
-      </v-tabs>
-      <!-- Admin tabs (user tabs + students + cohorts) -->
-      <!-- <v-tabs
-        v-else-if="userType === 'admin'"
-        fixed-tabs
-        background-color="transparent"
-        dark
-        slider-color="baseAccent"
-        v-model="activeTab"
-        height=""
-      >
-        <v-tab v-for="tab in tabsAdmin" :key="tab.id" :to="tab.route">
-          <div class="baseAccent--text tab">{{ tab.name }}</div>
-        </v-tab>
-      </v-tabs> -->
-      <!-- Normal user tabs -->
-      <v-tabs
-        v-else
         fixed-tabs
         background-color="transparent"
         dark
@@ -82,46 +25,14 @@ export default {
   data() {
     return {
       activeTab: null,
-      // studentActiveTab: `/base/assigned-galaxies`,
       tabs: [
-        { id: 4, name: "GALAXIES", route: `/base/galaxies/all` },
-        { id: 6, name: "COHORTS", route: `/base/cohorts` },
-        { id: 5, name: "DASHBOARD", route: `/base/dashboard` },
-      ],
-      tabsStudent: [
-        { id: 3, name: "ASSIGNED GALAXIES", route: `/base/galaxies/assigned` },
-        // { id: 6, name: "COHORTS", route: `/base/cohorts` },
-        { id: 5, name: "MY DASHBOARD", route: `/base/dashboard` },
-        // { id: 4, name: "ALL GALAXIES", route: `/base/galaxies/all` },
-      ],
-      tabsTeacher: [
-        { id: 1, name: "MY GALAXIES", route: `/base/galaxies/my` },
-        { id: 7, name: "ALL GALAXIES", route: `/base/galaxies/all` },
-        { id: 6, name: "COHORTS", route: `/base/cohorts` },
-        { id: 9, name: "DASHBOARD", route: `/base/students` },
-      ],
-      tabsAdmin: [
-        { id: 2, name: "ALL GALAXIES", route: `/base/galaxies/all` },
-        { id: 8, name: "ALL COHORTS", route: `/base/cohorts` },
-        { id: 9, name: "ALL STUDENTS", route: `/base/students` },
+        { id: 1, name: "GALAXIES", route: `/base/galaxies` },
+        { id: 2, name: "COHORTS", route: `/base/cohorts` },
+        { id: 3, name: "DASHBOARD", route: `/base/dashboard` },
       ],
     };
   },
   methods: {
-    // routeTo(path) {
-    //   let assignedOrOwned = "";
-    //   if (path == "/base/my-galaxies") {
-    //     assignedOrOwned = "owned";
-    //   } else if (path == "/base/assigned-galaxies") {
-    //     assignedOrOwned = "assigned";
-    //   }
-    //   this.$router.push({
-    //     name: "GalaxyList",
-    //     params: {
-    //       assignedOrOwned: assignedOrOwned,
-    //     },
-    //   });
-    // },
   },
 };
 </script>
@@ -132,9 +43,8 @@ export default {
   top: 0;
   left: 50%;
   transform: translate(-50%, 0%);
-
   background: var(--v-background-darken1);
-  width: 50%;
+  width: 60%;
   padding: 10px;
   clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
 

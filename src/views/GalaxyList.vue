@@ -1,10 +1,44 @@
 <template>
   <div class="fullHeight">
-    <div class="flexContainer">
-      <Galaxy :whichCoursesToDisplay="whichCoursesToDisplay" />
+    <div class="d-flex justify-center button-row">
+      <v-btn 
+        v-if="enrolled"
+        small 
+        outlined 
+        color="missionAccent" 
+        class="mx-2"
+        :class="{'focused': enrolled}" 
+        @click="whichCoursesToDisplay = 'assigned'"
+      >
+        ENROLLED
+      </v-btn>
+      <v-btn 
+        small 
+        outlined 
+        color="missionAccent" 
+        class="mx-2"
+        :class="{'focused': created}" 
+        @click="whichCoursesToDisplay = 'my'"
+      >
+        CREATED
+      </v-btn>
+      <v-btn 
+        small 
+        active 
+        outlined 
+        color="missionAccent" 
+        class="mx-2"
+        :class="{'focused': all}" 
+        @click="whichCoursesToDisplay = 'all'"
+      >
+        ALL
+      </v-btn>
     </div>
-    <div v-if="whichCoursesToDisplay != 'assigned'" class="buttons">
-      <CreateEditDeleteGalaxyDialog :edit="false" v-if="myGalaxiesPath" />
+    <div class="flexContainer">
+      <Galaxies :whichCoursesToDisplay="whichCoursesToDisplay" />
+    </div>
+    <div class="buttons">
+      <CreateEditDeleteGalaxyDialog :edit="false" v-if="created" />
       <!-- <DiscoverGalaxyButton /> -->
     </div>
   </div>
@@ -13,7 +47,7 @@
 <script>
 import CreateEditDeleteGalaxyDialog from "../components/CreateEditDeleteGalaxyDialog";
 import DiscoverGalaxyButton from "../components/DiscoverGalaxyButton";
-import Galaxy from "../components/Galaxy";
+import Galaxies from "../components/Galaxies";
 
 import { db } from "../store/firestoreConfig";
 
@@ -24,35 +58,40 @@ export default {
   components: {
     CreateEditDeleteGalaxyDialog,
     DiscoverGalaxyButton,
-    Galaxy,
-  },
-  async mounted() {
-    // if account type student, bind assignedCourses to store.courses
-    // else if account type teacher, bind all courses to store.courses
-    if (this.person.accountType == "student") {
-      await this.$store.dispatch(
-        "getAssignedCourses",
-        this.person.assignedCourses
-      );
-      console.log("this.courses from assigned galaxies view", this.courses);
-    } else {
-      await this.$store.dispatch("bindAllCourses");
-    }
-  },
-  computed: {
-    ...mapGetters(["user", "person"]),
-    myGalaxiesPath() {
-      return this.$route.path.includes("/my");
-    },
+    Galaxies,
   },
   data() {
     return {
       loading: true,
-      whichCoursesToDisplay: this.$route.params.mineOrAssignedOrAll
-        ? this.$route.params.mineOrAssignedOrAll
-        : "", // my, assigned OR all
+      whichCoursesToDisplay: "all"
+      // whichCoursesToDisplay: this.$route.params.mineOrAssignedOrAll
+      //   ? this.$route.params.mineOrAssignedOrAll
+      //   : "", // my, assigned OR all
+      // show: "assigned"
     };
   },
+  async mounted() {
+    if (this.person.assignedCourses) {
+      await this.$store.dispatch(
+        "getAssignedCourses",
+        this.person.assignedCourses
+      );
+    }
+    await this.$store.dispatch("bindAllCourses");
+  },
+  computed: {
+    ...mapGetters(["user", "person"]),
+    created() {
+      return this.whichCoursesToDisplay === 'my'
+    },
+    enrolled() {
+      return this.whichCoursesToDisplay === 'assigned'
+    },
+    all() {
+      return this.whichCoursesToDisplay === 'all'
+    },
+    
+  }
 };
 </script>
 
@@ -98,5 +137,15 @@ export default {
   left: 50%;
   transform: translate(-50%, 0%);
   display: flex;
+}
+
+.button-row {
+  position: relative;
+  top: 80px;
+  z-index: 5
+}
+
+.focused {
+  background-color: var(--v-missionAccent-darken4)
 }
 </style>
