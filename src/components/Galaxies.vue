@@ -35,9 +35,11 @@
       :options="network.options"
       @click="click"
     ></network>
-    <p v-else class="noGalaxies overline">
-      NO {{ whichCoursesToDisplay == "assigned" ? "ASSIGNED" : "" }} GALAXIES TO
-      DISPLAY
+    <p v-if="whichCoursesToDisplay == 'assigned'" class="noGalaxies overline">
+      DISCOVER GALAXIES TO START LEARNING
+    </p>
+    <p v-else-if="whichCoursesToDisplay == 'my'" class="noGalaxies overline">
+      CREATE A GALAXY TO START TEACHING
     </p>
     <PopupGalaxyPreview
       v-if="popupPreview"
