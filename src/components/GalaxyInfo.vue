@@ -3,11 +3,11 @@
     <h2 class="galaxy-label">Galaxy</h2>
     <h1 class="galaxy-title">{{ course.title }}</h1>
     <!-- <div class="d-flex justify-center align-center"> -->
-    <v-img class="galaxy-image" :src="course.image.url"></v-img>
+    <v-img v-if="course.image" class="galaxy-image" :src="course.image.url"></v-img>
     <!-- </div> -->
     <p class="galaxy-description">{{ course.description }}</p>
     <CreateEditDeleteGalaxyDialog
-      v-if="person.accountType != 'student'"
+      v-if="teacher"
       :edit="true"
       :courseToEdit="course"
     />
@@ -22,7 +22,7 @@ import { mapState } from "vuex";
 
 export default {
   name: "GalaxyInfo",
-  props: ["course"],
+  props: ["course", "teacher"],
   components: {
     CreateEditDeleteGalaxyDialog,
   },

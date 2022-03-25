@@ -420,6 +420,7 @@ export default {
               courseId: courseId,
               courseTitle: course.title,
               fromCreate: true, // flag to detect from creating a new Galaxy. TODO: add starting intro node
+              role: 'teacher'
             },
           });
         })

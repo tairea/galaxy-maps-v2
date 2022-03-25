@@ -2,25 +2,24 @@
   <div class="fullHeight">
     <div class="d-flex justify-center button-row">
       <v-btn 
-        v-if="enrolled"
         small 
         outlined 
         color="missionAccent" 
         class="mx-2"
-        :class="{'focused': enrolled}" 
+        :class="{'focused': learn}" 
         @click="whichCoursesToDisplay = 'assigned'"
       >
-        ENROLLED
+        LEARN
       </v-btn>
       <v-btn 
         small 
         outlined 
         color="missionAccent" 
         class="mx-2"
-        :class="{'focused': created}" 
+        :class="{'focused': teach}" 
         @click="whichCoursesToDisplay = 'my'"
       >
-        CREATED
+        TEACH
       </v-btn>
       <v-btn 
         small 
@@ -28,17 +27,17 @@
         outlined 
         color="missionAccent" 
         class="mx-2"
-        :class="{'focused': all}" 
+        :class="{'focused': discover}" 
         @click="whichCoursesToDisplay = 'all'"
       >
-        ALL
+        DISCOVER
       </v-btn>
     </div>
     <div class="flexContainer">
       <Galaxies :whichCoursesToDisplay="whichCoursesToDisplay" />
     </div>
     <div class="buttons">
-      <CreateEditDeleteGalaxyDialog :edit="false" v-if="created" />
+      <CreateEditDeleteGalaxyDialog :edit="false" v-if="teach" />
       <!-- <DiscoverGalaxyButton /> -->
     </div>
   </div>
@@ -49,9 +48,7 @@ import CreateEditDeleteGalaxyDialog from "../components/CreateEditDeleteGalaxyDi
 import DiscoverGalaxyButton from "../components/DiscoverGalaxyButton";
 import Galaxies from "../components/Galaxies";
 
-import { db } from "../store/firestoreConfig";
-
-import { mapState, mapGetters } from "vuex";
+import { mapGetters } from "vuex";
 
 export default {
   name: "GalaxyList",
@@ -64,10 +61,6 @@ export default {
     return {
       loading: true,
       whichCoursesToDisplay: "all"
-      // whichCoursesToDisplay: this.$route.params.mineOrAssignedOrAll
-      //   ? this.$route.params.mineOrAssignedOrAll
-      //   : "", // my, assigned OR all
-      // show: "assigned"
     };
   },
   async mounted() {
@@ -81,13 +74,13 @@ export default {
   },
   computed: {
     ...mapGetters(["user", "person"]),
-    created() {
+    teach() {
       return this.whichCoursesToDisplay === 'my'
     },
-    enrolled() {
+    learn() {
       return this.whichCoursesToDisplay === 'assigned'
     },
-    all() {
+    discover() {
       return this.whichCoursesToDisplay === 'all'
     },
     

@@ -1,7 +1,7 @@
 <template>
   <div id="container" class="bg">
     <div id="left-section">
-      <GalaxyInfo :course="getCourseById(courseId)" />
+      <GalaxyInfo :course="course" :teacher="teacher" />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <AssignedInfo
         v-if="person.accountType != 'student'"
@@ -52,7 +52,7 @@
         :dialogTitle="dialogTitle"
         :dialogDescription="dialogDescription"
         :editing="editing"
-        :course="getCourseById(courseId)"
+        :course="course"
         :currentNode="currentNode"
         :currentEdge="currentEdge"
         @closeDialog="closeDialog"
@@ -91,6 +91,7 @@ import PopupSystemPreview from "../components/PopupSystemPreview";
 
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
+import { getCourseById } from "@/lib/ff"
 
 export default {
   name: "GalaxyView",
@@ -105,7 +106,7 @@ export default {
     GalaxyMapButtons,
     PopupSystemPreview,
   },
-  props: ["courseId"],
+  props: ["courseId", "role"],
   data() {
     return {
       addNodeMode: false,
@@ -129,10 +130,14 @@ export default {
       dialogDescription: "",
       editing: false,
       moveNodes: false,
+      course: {},
     };
   },
   async mounted() {
     // create first node, when galaxy first created (hard coded)
+    this.course = await getCourseById(this.courseId)
+    console.log("role: ", this.role)
+
     if (this.fromCreate) {
       let nodeId = null;
       await db
@@ -190,15 +195,6 @@ export default {
     await this.$store.dispatch("bindPeopleInCourse", this.courseId);
     // bind assigned cohorts in this course
     await this.$store.dispatch("bindCohortsInCourse", this.courseId);
-
-    // count tasks
-    // this.$store.dispatch("getCourseTotalTasksCount", this.courseId);
-    // count topics
-    // this.$store.dispatch("getCourseTotalTopicsCount", this.courseId);
-
-    if (this.courseId) {
-      return;
-    }
   },
   computed: {
     ...mapState([
@@ -210,12 +206,15 @@ export default {
       "topicsTasks",
       "personsTopicsTasks",
     ]),
-    ...mapGetters(["getCourseById", "person"]),
+    ...mapGetters(["person"]),
+    teacher () {
+      return this.role === "teacher"
+    },
     goBackPath() {
-      if (this.person.accountType == "student") {
-        return "/base/galaxies/assigned";
+      if (this.teacher) {
+        return "/base/galaxies:assigned";
       } else {
-        return "/base/galaxies/my";
+        return "/base/galaxies:my";
       }
     },
   },

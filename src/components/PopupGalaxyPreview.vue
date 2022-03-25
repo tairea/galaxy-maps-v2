@@ -1,6 +1,5 @@
 <template>
   <!-- POPUP -->
-  <!-- follow drag -> :style="{ top: getCoords.y - 100 + 'px', left: getCoords.x + 30 + 'px' }" -->
   <div ref="popup" class="ss-info-panel">
     <div class="ss-details">
       <div>
@@ -10,7 +9,7 @@
           <span>{{ course.title }}</span>
         </p>
         <v-img
-          v-if="course.image.url"
+          v-if="course.image"
           class="galaxy-image"
           :src="course.image.url"
         ></v-img>
@@ -71,7 +70,7 @@
     </div>
 
     <div>
-      <div v-if="person.accountType != 'student'" class="ss-actions py-2">
+      <div v-if="teacher" class="ss-actions py-2">
         <v-btn
           class="view-ss-button pa-5"
           dark
@@ -157,6 +156,7 @@ export default {
   },
   data() {
     return {
+      teacher: false,
       enrolled: false,
       loading: false,
       startingGalaxyStatus: "",
@@ -166,7 +166,9 @@ export default {
   },
   async mounted() {
     // check is student is already in this course
-    if (this.person.accountType == "student") {
+    if (this.course.mappedBy.personId === this.personId || this.course.contentBy.personId === this.person.id) {
+      this.teacher = true
+    } else {
       const querySnapshot = await db
         .collection("people")
         .doc(this.person.id)
@@ -208,6 +210,7 @@ export default {
         name: "GalaxyView",
         params: {
           courseId: this.course.id,
+          role: this.teacher ? 'teacher' : 'student'
         },
       });
     },
@@ -306,13 +309,14 @@ export default {
         name: "GalaxyView",
         params: {
           courseId: this.course.id,
+          role: 'student'
         },
       });
     },
 
     async getPersonsImage(personId) {
       const person = await this.MXgetPersonByIdFromDB(personId);
-      return person.image.url;
+      return person.image?.url;
     },
   },
 };
