@@ -21,9 +21,9 @@
       <!-- Preview: Solar System -->
       <SolarSystem
         :topic="
-          person.accountType == 'student'
-            ? getPersonsTopicById(this.currentTopic.id)
-            : getTopicById(this.currentTopic.id)
+          teacher
+            ? getTopicById(this.currentTopic.id)
+            : getPersonsTopicById(this.currentTopic.id)
         "
         :tasks="tasks"
         :size="'0.25em'"
@@ -58,7 +58,7 @@
           <v-icon>mdi-close</v-icon>
         </v-btn>
         <v-btn
-          v-if="person.accountType != 'student'"
+          v-if="teacher"
           class="my-2"
           icon
           dark
@@ -98,7 +98,7 @@
               </h5>
             </td> -->
             <!-- Table: Status -->
-            <td v-if="person.accountType == 'student'" style="width: 100px">
+            <td v-if="!teacher" style="width: 100px">
               <h5
                 class="mission-text text-right"
                 :class="getStatusColour(task.taskStatus)"
@@ -131,6 +131,7 @@ export default {
     "centerFocusPosition",
     "currentTopic",
     "tasks",
+    "teacher"
   ],
   async mounted() {
     // this.getTopicTasks();
@@ -204,6 +205,7 @@ export default {
         name: "SolarSystemView",
         params: {
           topicId: this.currentTopic.id,
+          role: this.role
         },
       });
     },

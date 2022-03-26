@@ -62,7 +62,7 @@ import PopupGalaxyPreview from "../components/PopupGalaxyPreview";
 export default {
   name: "Galaxies",
   props: {
-    whichCoursesToDisplay: { type: String, default: "" },
+    whichCoursesToDisplay: { type: String, default: null },
   },
   components: {
     Network,
@@ -71,7 +71,7 @@ export default {
   },
   data: () => ({
     active: false,
-    loading: true,
+    loading: false,
     popupPreview: false,
     allNodeIds: [],
     nodesToDisplay: [],
@@ -191,7 +191,7 @@ export default {
     },
   },
   async mounted() {
-    this.setNodesToDisplay();
+    this.setNodesToDisplay(this.whichCoursesToDisplay);
   },
   watch: {
     darkMode(dark) {
@@ -204,61 +204,76 @@ export default {
         this.makeGalaxyLabelsColour("#ffffff");
       }
     },
+    whichCoursesToDisplay (newVal) {
+      console.log('newVal: ', newVal)
+      this.setNodesToDisplay(newVal)
+    }
   },
   methods: {
-    async setNodesToDisplay() {
-      if (this.whichCoursesToDisplay == "my") {
-        /* ===========================
-            Only show MY Galaxies
-        =========================== */
-        await this.$store.dispatch("bindCoursesByPersonId", this.user.data.id); // bind courses created by this user id
-        await this.$store.dispatch("getNodesByPersonId", this.user.data.id);
-        await this.$store.dispatch("getEdgesByPersonId", this.user.data.id);
-        this.nodesToDisplay = this.personsNodesForDisplay;
-      } else if (this.whichCoursesToDisplay == "assigned") {
-        /* ===========================
-          Only show ASSIGNED Galaxies
+    setNodesToDisplay(newVal) {
+      this.loading = true
+      if (newVal === 'all') this.setAllNodesToDisplay()
+      if (newVal === 'assigned') this.setAssignedNodesToDisplay()
+      if (newVal === 'my') this.setMyNodesToDisplay()
+    },
+    async setMyNodesToDisplay() {
+      /* ===========================
+          Only show MY Galaxies
       =========================== */
-        await this.$store.dispatch(
-          "getAssignedNodesByPersonId",
-          this.user.data.id
-        );
-        await this.$store.dispatch(
-          "getAssignedEdgesByPersonId",
-          this.user.data.id
-        );
-        this.nodesToDisplay = this.personsAssignedNodesForDisplay;
-      } else if (this.whichCoursesToDisplay == "all") {
-        /* ===========================
-          Only show ALL Galaxies in DATABASE!! (so I can see what maps users have created)
-      =========================== */
-        await this.$store.dispatch("getAllNodes"); // node data for course
-        await this.$store.dispatch("getAllEdges"); // edge data for course
-        this.nodesToDisplay = this.allNodesForDisplay;
-      }
+      await this.$store.dispatch("bindCoursesByPersonId", this.user.data.id); // bind courses created by this user id
+      await this.$store.dispatch("getNodesByPersonId", this.user.data.id);
+      await this.$store.dispatch("getEdgesByPersonId", this.user.data.id);
+      this.nodesToDisplay = this.personsNodesForDisplay;
+
       if (this.nodesToDisplay.length > 0) {
         const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
         
-
         if (repositionedNodes.length) {
-          if (this.whichCoursesToDisplay == "my") {
-            this.$store.commit(
-              "updatePersonsNodesForDisplay",
-              repositionedNodes
-            );
-          } else if (this.whichCoursesToDisplay == "assigned") {
-            this.$store.commit(
-              "updatePersonsAssignedNodesForDisplay",
-              repositionedNodes
-            );
-          } else if (this.whichCoursesToDisplay == "all") {
-            this.$store.commit("updateAllNodesForDisplay", repositionedNodes);
-          }
+          this.$store.commit("updatePersonsNodesForDisplay", repositionedNodes);
         }
       }
+      this.centerAfterReposition()
+    },
+    async setAssignedNodesToDisplay() {
+      /* ===========================
+          Only show ASSIGNED Galaxies
+      =========================== */
+      await this.$store.dispatch("getAssignedNodesByPersonId", this.user.data.id);
+      await this.$store.dispatch("getAssignedEdgesByPersonId", this.user.data.id);
+      this.nodesToDisplay = this.personsAssignedNodesForDisplay;
+      
+      if (this.nodesToDisplay.length > 0) {
+        const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
+        
+        if (repositionedNodes.length) {
+          this.$store.commit("updatePersonsAssignedNodesForDisplay",
+            repositionedNodes
+          );
+        }
+      }
+      this.centerAfterReposition()
+    },
+    async setAllNodesToDisplay() {
+      console.log("settingAllNodes")
+      /* ===========================
+        Only show ALL Galaxies in DATABASE!! (so I can see what maps users have created)
+      =========================== */
+      await this.$store.dispatch("getAllNodes"); // node data for course
+      await this.$store.dispatch("getAllEdges"); // edge data for course
+      this.nodesToDisplay = this.allNodesForDisplay;
+      
+      if (this.nodesToDisplay.length > 0) {
+        const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
+        if (repositionedNodes.length) {
+          this.$store.commit("updateAllNodesForDisplay", repositionedNodes);
+        }
+      }
+
+      this.centerAfterReposition()
+    },
+    centerAfterReposition() {
       // stop loading spinner
       this.loading = false;
-
       // short timer to give time to load all before zoom
       if (this.nodesToDisplay.length > 0) {
         setTimeout(() => {
@@ -298,6 +313,8 @@ export default {
       }
 
       const closestNode = this.$refs.network.getNode(closest.id);
+      console.log("clicked: ", closestNode)
+      // debugger
 
       // set save current course clicked in store
       this.$store.commit("setCurrentCourseId", closestNode.courseId);
@@ -547,7 +564,8 @@ export default {
 .popupPanel {
   position: absolute;
   // position of the PopupPreview panel
-  top: calc(50% - 350px);
+  top: calc(10%);
   left: calc(75% - 5vw);
+  z-index: 2;
 }
 </style>

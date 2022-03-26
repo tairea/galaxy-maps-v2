@@ -243,7 +243,7 @@ export default {
 
     for (let index in this.currentCourseNodes) {
       let timeCreatedNode =
-        this.currentCourseNodes[index].nodeCreatedTimestamp.seconds;
+        this.currentCourseNodes[index].nodeCreatedTimestamp?.seconds;
 
       timeCreatedArrs.push(timeCreatedNode);
       // console.log("unsorted arr", timeCreatedArrs);
@@ -260,7 +260,7 @@ export default {
       // loop over the ordered time array
       let arrTime = timeCreatedArrs[a];
       for (let b in timeCreatedArrs) {
-        let timeStamp = this.currentCourseNodes[b].nodeCreatedTimestamp.seconds;
+        let timeStamp = this.currentCourseNodes[b].nodeCreatedTimestamp?.seconds;
         if (arrTime == timeStamp) {
           let node = this.currentCourseNodes[b];
           this.sortedObjArr.push(node);

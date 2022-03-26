@@ -10,12 +10,14 @@
           :index="index"
           :topicId="topicId"
           :topicActive="topicActive"
+          :teacher="teacher"
         />
         <ActiveMissionsCard
           v-if="task.taskStatus == 'active'"
           :task="task"
           :id="task.id"
           :topicId="topicId"
+          :teacher="teacher"
         />
       </div>
     </div>
@@ -24,7 +26,7 @@
       <p class="no-missions-label">No Missions in this system</p>
     </div>
 
-    <div class="createButton" v-if="person.accountType != 'student'">
+    <div class="createButton" v-if="teacher">
       <CreateEditDeleteMissionDialog :topicId="topicId" />
     </div>
   </div>
@@ -44,7 +46,7 @@ export default {
     ActiveMissionsCard,
     CreateEditDeleteMissionDialog,
   },
-  props: ["tasks", "topicId"],
+  props: ["tasks", "topicId", "teacher"],
    data() {
     return {
       activeMission: false,

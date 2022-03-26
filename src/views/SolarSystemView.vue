@@ -3,30 +3,32 @@
     <div id="left-section">
       <SolarSystemInfo
         :topic="
-          person.accountType != 'student'
-            ? getTopicById(currentTopicId)
-            : getPersonsTopicById(currentTopicId)
+          teacher ? 
+            getPersonsTopicById(currentTopicId)
+            : getTopicById(currentTopicId)
         "
         :tasks="
-          person.accountType == 'student' ? personsTopicsTasks : topicsTasks
+          teacher ? topicsTasks : personsTopicsTasks
         "
+        :teacher="teacher"
       />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <AssignedInfo
-        v-if="person.accountType != 'student'"
+        v-if="teacher"
         :assignCohorts="true"
         :people="peopleInCourse"
         :cohorts="cohortsInCourse"
       />
 
-      <BackButton :toPath="'/galaxy/' + currentCourseId" />
+      <BackButton :toPath="{ path: '/galaxy/' + currentCourseId}" />
     </div>
     <div id="main-section">
       <MissionsList
         :tasks="
-          person.accountType == 'student' ? personsTopicsTasks : topicsTasks
+          teacher ? topicsTasks : personsTopicsTasks
         "
         :topicId="currentTopicId"
+        :teacher="teacher"
       />
     </div>
     <div id="right-section">
@@ -61,9 +63,15 @@ export default {
     SolarSystem,
     BackButton,
   },
-  props: ["topicId"],
+  props: ["topicId", "role"],
   async mounted() {
-    if (this.person.accountType == "student") {
+    if (this.teacher) {
+      //store bindTasksByTopicId
+      await this.$store.dispatch("bindTasksByTopicId", {
+        courseId: this.currentCourseId,
+        topicId: this.currentTopicId,
+      });
+    } else {
       // store bindPersonsTasksByTopicId
       await this.$store.dispatch("bindPersonsTasksByTopicId", {
         personId: this.person.id,
@@ -71,12 +79,6 @@ export default {
         topicId: this.currentTopicId,
       });
       console.log("persons topic tasks: ", this.personsTopicsTasks);
-    } else {
-      //store bindTasksByTopicId
-      await this.$store.dispatch("bindTasksByTopicId", {
-        courseId: this.currentCourseId,
-        topicId: this.currentTopicId,
-      });
     }
 
     // bind requests for help
@@ -114,6 +116,9 @@ export default {
       "getTopicById",
       "getTasksByTopicId",
     ]),
+    teacher () {
+      return this.role == "teacher"  
+    }
   },
   data() {
     return {
