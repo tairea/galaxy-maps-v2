@@ -368,12 +368,18 @@ export default {
       return this.$vuetify.theme.isDark;
     },
   },
-  async mounted() {
-    if (this.courseToEdit) {
-      console.log("editing course");
+  watch: {
+    courseToEdit (newVal) {
+      console.log("courseToEdit changed: ", newVal)
       this.course = this.courseToEdit;
     }
   },
+  // async mounted() {
+  //   if (this.courseToEdit) {
+  //     console.log("i am editing course: ", this.courseToEdit);
+  //     this.course = this.courseToEdit;
+  //   }
+  // },
   methods: {
     cancel() {
       console.log("cancel");
@@ -529,7 +535,7 @@ export default {
     },
     confirmDeleteCourse(course) {
       this.deleting = true;
-
+      console.log('course: ', course)
       const documentRef = db.collection("courses").doc(course.id);
 
       // delete document in collection "courses"
@@ -548,15 +554,15 @@ export default {
 
       // TODO: test if this is deleting course's subcollections (eg. map-nodes, map-edges, topics)
       // recursiveDelete() to delete subcollections of course
-      db.recursiveDelete(documentRef);
-
+      // db.recursiveDelete(documentRef); This doesnt exist
+      
       this.deleteImage();
 
       // TODO: remove this courseID from students assignedCourses
     },
     deleteImage() {
       // if no image, dont worry bout it cuz
-      if (this.course.image.title == "") return;
+      if (this.course.image.name == "") return;
       // Create a reference to the file to delete
       var storageRef = storage.ref(
         "course-images/" + this.course.title + "-" + this.course.image.name
