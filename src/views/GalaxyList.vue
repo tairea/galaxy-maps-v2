@@ -66,6 +66,7 @@ export default {
   },
   async mounted() {
     if (this.display) this.whichCoursesToDisplay = this.display
+    // TODO: Currently navigates to all galaxies by default, this needs to be improved
     await this.$store.dispatch("bindAllCourses");
   },
   computed: {

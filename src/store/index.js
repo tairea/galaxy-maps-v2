@@ -838,19 +838,35 @@ export default new Vuex.Store({
       }
     ),
     async getCohortsByPersonId({ commit, dispatch }, person) {
+      let teacherCohorts
+      let studentCohorts
       await db
         .collection("cohorts")
-        .where(person.accountType + "s", "array-contains", person.id)
+        .where("students", "array-contains", person.id)
         .onSnapshot((querySnapShot) => {
-          const cohorts = querySnapShot.docs.map((doc) => {
+          studentCohorts = querySnapShot.docs.map((doc) => {
             return {
               id: doc.id,
               ...doc.data(),
+              student: true
             };
           });
-          commit("setCohorts", cohorts);
-          dispatch("getOrganisationsByCohorts", cohorts);
         });
+      await db
+        .collection("cohorts")
+        .where("teachers", "array-contains", person.id)
+        .onSnapshot((querySnapShot) => {
+          teacherCohorts = querySnapShot.docs.map((doc) => {
+            return {
+              id: doc.id,
+              ...doc.data(),
+              teacher: true
+            };
+          });
+        });
+      const cohorts = [...studentCohorts, ...teacherCohorts]
+      commit("setCohorts", cohorts);
+      dispatch("getOrganisationsByCohorts", cohorts);
     },
     async getPersonsActiveTasks({ commit, dispatch }, payload) {
       const personsCourseTopics = await db
