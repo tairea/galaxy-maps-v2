@@ -380,7 +380,6 @@ export default new Vuex.Store({
     async getAssignedNodesByPersonId({ state }, personId) {
       const personsAssignedNodes = [];
 
-      state.courses = [];
       // get the courseId from assignedCourses
       const doc = await db.collection("people").doc(personId).get();
       // loop array of assigned courses
@@ -881,6 +880,7 @@ export default new Vuex.Store({
 
     // ===== Firestore - get Course related stuff
     async getAssignedCourses({ state }, assignedCoursesArray) {
+      console.log("assignedCourses: ", assignedCoursesArray)
       let studentsAssignedCourses = [];
 
       assignedCoursesArray.forEach(async (assignedCourse) => {

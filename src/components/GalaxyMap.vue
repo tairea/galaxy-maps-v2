@@ -5,9 +5,9 @@
       class="full-height"
       :nodes="nodesToDisplay"
       :edges="
-        person.accountType == 'student'
-          ? currentCourseEdgesWithStatusStyles
-          : currentCourseEdges
+        teacher
+          ? currentCourseEdges
+          : currentCourseEdgesWithStatusStyles
       "
       :options="network.options"
       @nodes-add="addNode"
@@ -47,7 +47,7 @@ import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "GalaxyMap",
-  props: [],
+  props: ["teacher"],
   components: {
     Network,
     SolarSystem,
@@ -162,7 +162,7 @@ export default {
     // determine if person logged in and on galaxy view page is a teacher
     // if so, allow them to move the nodes
     if (
-      this.person.accountType == "teacher" &&
+      this.teacher &&
       this.$route.name == "GalaxyView"
     ) {
       console.log("teacher is detected");
@@ -174,7 +174,7 @@ export default {
     await this.$store.dispatch("bindCourseNodes", this.currentCourseId);
     await this.$store.dispatch("bindCourseEdges", this.currentCourseId);
     // bind topics for course creator
-    if (this.person.accountType != "student") {
+    if (this.teacher) {
       await this.$store.dispatch("bindCourseTopics", this.currentCourseId);
     } else {
       // bind topics for student
@@ -212,7 +212,7 @@ export default {
     nodesToDisplay () {
       if (this.addingNode || this.addingEdge) {
         return this.inActiveNodes
-      } else if (this.person.accountType === 'student') {
+      } else if (!this.teacher) {
         return this.currentCourseNodesWithStatus
       } else return this.currentCourseNodes
     },
@@ -285,7 +285,7 @@ export default {
       return domCoords;
     },
     doubleClick() {
-      if (this.person.accountType == "student") {
+      if (!this.teacher) {
         return;
       }
       this.addNodeMode();

@@ -52,6 +52,7 @@ import { mapGetters } from "vuex";
 
 export default {
   name: "GalaxyList",
+  props: ['display'],
   components: {
     CreateEditDeleteGalaxyDialog,
     DiscoverGalaxyButton,
@@ -64,12 +65,7 @@ export default {
     };
   },
   async mounted() {
-    if (this.person.assignedCourses) {
-      await this.$store.dispatch(
-        "getAssignedCourses",
-        this.person.assignedCourses
-      );
-    }
+    if (this.display) this.whichCoursesToDisplay = this.display
     await this.$store.dispatch("bindAllCourses");
   },
   computed: {
@@ -135,7 +131,7 @@ export default {
 .button-row {
   position: relative;
   top: 80px;
-  z-index: 5
+  z-index: 1
 }
 
 .focused {

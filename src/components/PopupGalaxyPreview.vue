@@ -13,7 +13,7 @@
           class="galaxy-image"
           :src="course.image.url"
         ></v-img>
-        <p class="my-2 galaxy-description">
+        <p class="mt-2 galaxy-description">
           {{ course.description }}
         </p>
       </div>
@@ -32,19 +32,19 @@
       <div class="left">
         <div v-if="course.contentBy.image">
           <v-img
-            width="50px"
-            class="contentBy-image mb-2"
+            width="40px"
+            class="contentBy-image"
             :src="course.contentBy.image.url"
           ></v-img>
         </div>
         <div v-else-if="course.contentBy.personId">
           <v-img
-            width="50px"
-            class="contentBy-image mb-2"
+            width="40px"
+            class="contentBy-image"
             :src="contentAuthorImage"
           ></v-img>
         </div>
-        <p class="ma-0">Content By:</p>
+        <p class="ma-0 ">Content By:</p>
         <a :href="course.contentBy.source"
           ><span>{{ course.contentBy.name }}</span></a
         >
@@ -52,19 +52,19 @@
       <div class="right">
         <div v-if="course.mappedBy.image">
           <v-img
-            width="50px"
+            width="40px"
             class="mappedBy-image"
             :src="course.mappedBy.image.url"
           ></v-img>
         </div>
         <div v-else-if="course.mappedBy.personId">
           <v-img
-            width="50px"
+            width="40px"
             class="mappedBy-image"
             :src="mappedAuthorImage"
           ></v-img>
         </div>
-        <p class="ma-0">Mapped By:</p>
+        <p class="ma-0 ">Mapped By:</p>
         <span>{{ course.mappedBy.name }}</span>
       </div>
     </div>
@@ -301,6 +301,10 @@ export default {
         }
       }
 
+      // 5) assign course to student
+      this.MXassignCourseToStudent(this.person, this.course)
+
+
       // Send Galaxy Started statment to LRS
       startGalaxyXAPIStatement(this.person, { galaxy: this.course });
 
@@ -342,7 +346,7 @@ export default {
 
   .galaxy-image {
     width: 100%;
-    max-height: 250px;
+    max-height: 200px;
     // width: 100%;
   }
 
@@ -373,11 +377,12 @@ export default {
     .left,
     .right {
       width: 100%;
-      padding: 20px;
+      padding: 5px;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
+      font-size: 0.6rem;
     }
 
     .right {
@@ -410,7 +415,7 @@ export default {
 
     .galaxy-description {
       color: var(--v-missionAccent-base);
-      font-size: 0.9rem;
+      font-size: 0.8rem;
       font-style: italic;
     }
   }

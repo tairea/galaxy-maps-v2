@@ -4,7 +4,7 @@
       <GalaxyInfo :course="course" :teacher="teacher" />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <AssignedInfo
-        v-if="person.accountType != 'student'"
+        v-if="teacher"
         :assignCohorts="true"
         :people="peopleInCourse"
         :cohorts="cohortsInCourse"
@@ -14,7 +14,7 @@
     <div id="main-section">
       <!-- Map Buttons -->
       <GalaxyMapButtons
-        v-if="person.accountType != 'student'"
+        v-if="teacher"
         :addNodeMode="addNodeMode"
         :addEdgeMode="addEdgeMode"
         :uiMessage="uiMessage ? uiMessage : ''"
@@ -42,6 +42,7 @@
         @nodePositionsChangeLoading="nodePositionsChangeLoading = true"
         @nodePositionsChangeSaved="nodePositionsChangeSaved"
         @toggleAddEdgeMode="toggleAddEdgeMode"
+        :teacher="teacher"
       />
 
       <!-- Edit -->
@@ -67,7 +68,8 @@
           :infoPopupPosition="infoPopupPosition"
           :currentTopic="currentNode"
           :centerFocusPosition="centerFocusPosition"
-          :tasks="person.accountType == 'student' ? personsTopicsTasks : topicsTasks"        
+          :tasks="teacher ? topicsTasks : personsTopicsTasks" 
+          :teacher="teacher"       
           @close="closePopup"
           @showEditDialog="showEditDialog"
           @focus="focusPopup"
@@ -212,9 +214,9 @@ export default {
     },
     goBackPath() {
       if (this.teacher) {
-        return "/base/galaxies:assigned";
+        return { path: "/base/galaxies", props: { display: 'my'}};
       } else {
-        return "/base/galaxies:my";
+        return { path: "/base/galaxies", props: { display: 'assigned'}};
       }
     },
   },
