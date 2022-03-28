@@ -74,7 +74,6 @@ export default {
     allNodeIds: [],
     nodesToDisplay: [],
     // allNodesLength: 0,
-    numberOfGalaxiesPerRow: 3, // hardcoded num of galaxies in a row
     courseCols: 1,
     courseRows: 1,
     largestRowWidth: 0,
@@ -235,8 +234,7 @@ export default {
         this.nodesToDisplay = this.allNodesForDisplay;
       }
       if (this.nodesToDisplay.length > 0) {
-        const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
-        
+        const repositionedNodes = this.repositionCoursesBasedOnBoundariesV2();
 
         if (repositionedNodes.length) {
           if (this.whichCoursesToDisplay == "my") {
@@ -350,10 +348,12 @@ export default {
     repositionCoursesBasedOnBoundaries() {
       const courseCanvasBoundaries = this.calcCourseCanvasBoundaries();
       const allNodes = this.$refs.network.nodes;
+      console.log("all nodes", allNodes);
       let newAllNodes = [];
 
       // canvas / 3
       let galaxyColsCount = 0;
+      let numberOfGalaxiesPerRow = 3; // hardcoded num of galaxies in a row
 
       // SCALE calc num of galaxy rows
       // const canvasRowHeight = this.canvasHeight / maxHeight;
@@ -396,7 +396,7 @@ export default {
         // count ++
         galaxyColsCount++;
         // if max num of galaxys per row. go to next row
-        if (galaxyColsCount == this.numberOfGalaxiesPerRow) {
+        if (galaxyColsCount == numberOfGalaxiesPerRow) {
           // set max width and heights from these rows
           if (currentColWidth > this.largestRowWidth) {
             this.largestRowWidth = currentColWidth;
@@ -415,11 +415,111 @@ export default {
       // this.largestRowWidth += this.largestRowWidth / this.numberOfGalaxiesPerRow / 2;
       // this.$refs.network.storePositions();
       // console.log("allNodes", allNodes);
-      // console.log("newAllNodes", newAllNodes);
+      console.log("newAllNodes", newAllNodes);
+      return newAllNodes;
+    },
+    repositionCoursesBasedOnBoundariesV2() {
+      const courseCanvasBoundaries = this.calcCourseCanvasBoundaries();
+      const allNodes = this.$refs.network.nodes;
+      console.log("all nodes", allNodes);
+      let newAllNodes = [];
+
+      // canvas / 3
+      let galaxyColsCount = 0;
+      let numberOfGalaxiesPerRow = 3; // hardcoded num of galaxies in a row
+
+      // SCALE calc num of galaxy rows
+      // const canvasRowHeight = this.canvasHeight / maxHeight;
+
+      // set offset variables
+      let currentColWidth = 0;
+      let currrentRowHeight = 0;
+
+      // loop nodes and add x y offsets
+      for (let i = 0; i < courseCanvasBoundaries.length; i++) {
+        console.log(
+          "positioning course: ==============",
+          courseCanvasBoundaries[i].title
+        );
+        console.log("offsets are: width:" + currentColWidth);
+        console.log("offsets are: height:" + currrentRowHeight);
+
+        let maxRowHeight = 0;
+
+        // const widthOffset = courseCanvasBoundaries[i].maxWidthOffset;
+        // const heightOffset = courseCanvasBoundaries[i].maxHeightOffset;
+
+        for (const node of allNodes) {
+          if (node.courseId == courseCanvasBoundaries[i].id) {
+            let newNode = {
+              ...node,
+              x: currentColWidth + node.x - courseCanvasBoundaries[i].centerX,
+              y: currrentRowHeight + node.y - courseCanvasBoundaries[i].centerY,
+            };
+            newAllNodes.push(newNode);
+            console.log(
+              "node:" + newNode.label + "- x:" + newNode.x + " y:" + newNode.y
+            );
+          }
+        }
+
+        // increase offset for next galaxy column aka ** PADDING BETWEEN GALAXIES **
+        currentColWidth += courseCanvasBoundaries[i].width / 2 + 600; // width / 2 because dont want to pad the whole width over + pad just half the course width + pad
+
+        // keep track of largest height
+        if (courseCanvasBoundaries[i].height > maxRowHeight) {
+          console.log("new max height:", courseCanvasBoundaries[i].height);
+          maxRowHeight = courseCanvasBoundaries[i]?.height + 600;
+          // if (courseCanvasBoundaries[i + 1]?.height > maxRowHeight) {
+          //   maxRowHeight = courseCanvasBoundaries[i + 1].height + 300;
+          // }
+        }
+
+        // count ++
+        galaxyColsCount++;
+        // if max num of galaxys per row. go to next row
+        if (galaxyColsCount == numberOfGalaxiesPerRow) {
+          //   // set max width and heights from these rows
+          // if (currentColWidth > this.largestRowWidth) {
+          //   this.largestRowWidth = currentColWidth;
+          // }
+          // if (maxRowHeight > this.largestRowHeight) {
+          //   this.largestRowHeight = maxRowHeight;
+
+          //check heights of next upcoming rows and adjust maxRowHeight if needed
+          for (var x = 1; x <= numberOfGalaxiesPerRow; x++) {
+            if (courseCanvasBoundaries[i + x]?.height > maxRowHeight) {
+              console.log(
+                "next row has greater height:",
+                courseCanvasBoundaries[i + x]?.height
+              );
+              maxRowHeight = courseCanvasBoundaries[i + x].height / 2 + 600;
+            }
+            if (courseCanvasBoundaries[i - x - 1]?.height > maxRowHeight) {
+              console.log(
+                "current row has greater height:",
+                courseCanvasBoundaries[i - x - 1]?.height
+              );
+              maxRowHeight =
+                courseCanvasBoundaries[i - x - 1]?.height / 2 + 600;
+            }
+          }
+          // }
+          //   // reset for next row
+          currentColWidth = 0;
+          currrentRowHeight += maxRowHeight;
+          galaxyColsCount = 0;
+        }
+      }
+      // pad the end of row
+      // this.largestRowWidth += this.largestRowWidth / this.numberOfGalaxiesPerRow / 2;
+      // this.$refs.network.storePositions();
+      // console.log("allNodes", allNodes);
+      console.log("newAllNodes", newAllNodes);
       return newAllNodes;
     },
     calcCourseCanvasBoundaries() {
-      const courses = this.courses
+      const courses = this.courses;
       let courseCanvasBoundaries = [];
       // get all coords for nodes
       // const allNodes = this.$refs.network.nodes;
@@ -484,10 +584,11 @@ export default {
         // add course id to boundary
         boundary.id = courses[i].id;
         boundary.title = courses[i].title;
+
         // console.log("boundary",boundary)
         courseCanvasBoundaries.push(boundary);
       }
-      // console.log("courseCanvasBoundaries", courseCanvasBoundaries);
+      console.log("courseCanvasBoundaries", courseCanvasBoundaries);
       return courseCanvasBoundaries;
     },
     // this controls the fit zoom animation
