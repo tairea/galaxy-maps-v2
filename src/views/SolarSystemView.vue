@@ -34,6 +34,7 @@
         <h2 class="galaxy-label">Map</h2>
         <SolarSystem :topic="getTopicById(currentTopicId)" :size="'0.25em'" />
       </div> -->
+      <SubmittedWorkInfo v-if="activeMission" />
       <RequestsForHelpInfo v-if="activeMission" :requests="requestsForHelp" />
     </div>
   </div>
@@ -44,6 +45,7 @@ import SolarSystemInfo from "../components/SolarSystemInfo";
 import AssignedInfo from "../components/AssignedInfo";
 import MissionsInfo from "../components/MissionsInfo";
 import MissionsList from "../components/MissionsList";
+import SubmittedWorkInfo from "../components/SubmittedWorkInfo";
 import RequestsForHelpInfo from "../components/RequestsForHelpInfo";
 import SolarSystem from "../components/SolarSystem";
 import BackButton from "../components/BackButton";
@@ -57,6 +59,7 @@ export default {
     AssignedInfo,
     MissionsInfo,
     MissionsList,
+    SubmittedWorkInfo,
     RequestsForHelpInfo,
     SolarSystem,
     BackButton,
@@ -131,6 +134,7 @@ export default {
         this.$store.commit("setCurrentTaskId", activeMissionObj.id);
         this.$store.commit("setCurrentTask", activeMissionObj);
       }
+      console.log("active mission:", activeMissionObj);
       return activeMissionObj;
     },
   },

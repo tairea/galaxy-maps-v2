@@ -3,21 +3,27 @@
     <h2 class="missions-label">Missions</h2>
 
     <div v-if="tasks.length > 0" style="width: 100%">
-      <div v-for="(task, index) in tasks" :key="task.id">
-        <MissionsCard
-          :task="task"
-          :id="task.id"
-          :index="index"
-          :topicId="topicId"
-          :topicActive="topicActive"
-        />
-        <ActiveMissionsCard
-          v-if="task.taskStatus == 'active'"
-          :task="task"
-          :id="task.id"
-          :topicId="topicId"
-        />
-      </div>
+      <v-expansion-panels :flat="true" :multiple="false">
+        <v-expansion-panel
+          class="mission-expansions"
+          v-for="(task, index) in tasks"
+          :key="task.id"
+        >
+          <MissionsCard
+            :task="task"
+            :id="task.id"
+            :index="index"
+            :topicId="topicId"
+            :topicActive="topicActive"
+          />
+          <ActiveMissionsCard
+            v-if="task.taskStatus == 'active'"
+            :task="task"
+            :id="task.id"
+            :topicId="topicId"
+          />
+        </v-expansion-panel>
+      </v-expansion-panels>
     </div>
 
     <div v-else style="width: 100%">
@@ -33,6 +39,7 @@
 <script>
 import MissionsCard from "../components/MissionsCard";
 import ActiveMissionsCard from "../components/ActiveMissionsCard";
+
 import CreateEditDeleteMissionDialog from "../components/CreateEditDeleteMissionDialog";
 
 import { mapState, mapGetters } from "vuex";
@@ -45,22 +52,39 @@ export default {
     CreateEditDeleteMissionDialog,
   },
   props: ["tasks", "topicId"],
-   data() {
+  data() {
     return {
       activeMission: false,
-      topicActive: false
+      topicActive: false,
+      savedTaskStatus: [],
+      isSelected: false,
     };
   },
   mounted() {
     // check which task is active
-    const activeTasks = this.tasks.find(task => task.taskStatus == 'active')
-    if (activeTasks) this.topicActive = true
+    const activeTasks = this.tasks.find((task) => task.taskStatus == "active");
+    if (activeTasks) this.topicActive = true;
+
+    this.savedTaskStatus = [...this.tasks];
+    console.log("this.savedTaskStatus", this.savedTaskStatus);
   },
   computed: {
     ...mapState(["personsTopicsTasks"]),
     ...mapGetters(["person"]),
   },
-  methods: {},
+  methods: {
+    viewMission(taskClicked) {
+      for (var i = 0; i < this.tasks.length; i++) {
+        if (this.tasks[i].id == taskClicked) {
+          this.tasks[i].isSelected = true;
+          console.log("task selected");
+        } else {
+          this.tasks[i].isSelected = false;
+        }
+      }
+      console.log("all tasks -> ", this.tasks);
+    },
+  },
 };
 </script>
 
@@ -108,5 +132,13 @@ a {
   color: var(--v-missionAccent-base);
   font-size: 0.8rem;
   // letter-spacing: 2px;
+}
+
+.mission-expansions {
+  background-color: transparent !important;
+}
+
+.v-expansion-panel-header__icon {
+  display: none;
 }
 </style>
