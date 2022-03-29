@@ -58,7 +58,10 @@
                 <v-icon left color="missionAccent"
                   >mdi-information-variant</v-icon
                 >
-                <p class="dialog-description">{{ dialogDescription }}</p>
+                <p class="dialog-description">
+                  Did you complete all the requirements of the Mission?<br />By
+                  clicking YES your instructor will be notified.
+                </p>
               </div>
             </div>
 
@@ -71,7 +74,12 @@
                   <v-row>
                     <v-col cols="10">
                       <v-row
-                        class="d-flex align-center justify-space-around speech-bubble"
+                        class="
+                          d-flex
+                          align-center
+                          justify-space-around
+                          speech-bubble
+                        "
                       >
                         <v-col cols="1" class="pa-0">
                           <v-icon left color="cohortAccent"
@@ -247,8 +255,6 @@ export default {
   data: () => ({
     submissionLink: null,
     dialog: false,
-    dialogDescription:
-      "Did you complete all the requirements of the Mission? By clicking YES your instructor will be notified.",
     loading: false,
     disabled: false,
     deleting: false,
@@ -390,16 +396,16 @@ export default {
             system: this.currentTopic,
             mission: this.currentTask,
           });
-        }).
-        then(() => {
+        })
+        .then(() => {
           // unlock next task
           this.unlockNextTask();
-        }).
-        then(() => {
+        })
+        .then(() => {
           // check if all tasks/missions are completed
           this.checkIfAllTasksCompleted();
-        }).
-        then(() => {
+        })
+        .then(() => {
           this.loading = false;
           this.disabled = false;
           this.dialog = false;
@@ -585,9 +591,9 @@ export default {
     border-radius: 5px;
     border: 2px solid var(--v-missionAccent-base);
   }
-  .speech-bubble p {
-    // font-size: 1.25em;
-  }
+  // .speech-bubble p {
+  //   // font-size: 1.25em;
+  // }
 
   .speech-bubble:before,
   .speech-bubble:after {

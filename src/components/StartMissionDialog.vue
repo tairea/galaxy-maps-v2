@@ -25,7 +25,7 @@
               <p class="dialog-title">
                 ARE YOU SURE YOU WANT TO START MISSION?
               </p>
-              <div class="d-flex align-center">
+              <div v-if="task.duration" class="d-flex align-center">
                 <v-icon left color="missionAccent"
                   >mdi-information-variant</v-icon
                 >
@@ -36,8 +36,8 @@
                       >{{ task.duration ? task.duration : "UKNOWN" }} minutes</i
                     ></strong
                   >
-                  to complete. Your time to complete this mission will begin
-                  once you click 'start mission'
+                  to complete. <br />Your time to complete this mission will
+                  begin once you click 'start mission'
                 </p>
               </div>
             </div>
@@ -85,7 +85,10 @@
 import firebase from "firebase/app";
 
 import { db } from "../store/firestoreConfig";
-import { startTaskXAPIStatement, startTopicXAPIStatement } from "../lib/veracityLRS";
+import {
+  startTaskXAPIStatement,
+  startTopicXAPIStatement,
+} from "../lib/veracityLRS";
 
 import { mapState, mapGetters } from "vuex";
 

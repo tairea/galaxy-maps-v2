@@ -58,6 +58,7 @@ const getDefaultState = () => {
     studentsActiveTasks: [],
     studentsActivityLog: [],
     showPanelCard: {},
+    studentsSubmissions: []
   };
 };
 
@@ -213,7 +214,7 @@ export default new Vuex.Store({
       console.log("arr: ", arr);
       const sortedArr = arr.sort((a, b) =>
         a.topic.topicCreatedTimestamp.seconds >
-        b.topic.topicCreatedTimestamp.seconds
+          b.topic.topicCreatedTimestamp.seconds
           ? 1
           : -1
       );
@@ -463,7 +464,7 @@ export default new Vuex.Store({
           const allWorkForReview = [...state.teachersSubmissionsToReview];
 
           for (const change of querySnapshot.docChanges()) {
-            
+
             if (change.type === "added") {
               if (allWorkForReview.some(submission => submission.id === change.doc.data().id)) return
               allWorkForReview.push({
@@ -959,7 +960,53 @@ export default new Vuex.Store({
           .orderBy("requestSubmittedTimestamp")
       );
     }),
+    async getSubmittedWorkByStudentAndTaskId({ state }, payload) {
+      console.log("getSubmittedWorkByStudentAndTaskId payload", payload)
+      // get all work for review
+      const unsubscribe = db
+        .collection("courses")
+        .doc(payload.courseId)
+        .collection("submissionsForReview")
+        .where("studentId", "==", payload.studentId)
+        .where("contextTask.id", "==", payload.taskId)
+        .orderBy("taskSubmittedForReviewTimestamp")
+        .onSnapshot((querySnapshot) => {
+          const studentsWorkForReview = [...state.studentsSubmissions];
 
+          for (const change of querySnapshot.docChanges()) {
+
+            if (change.type === "added") {
+              if (studentsWorkForReview.some(submission => submission.id === change.doc.data().id)) return
+              studentsWorkForReview.push({
+                id: change.doc.data().id,
+                ...change.doc.data(),
+              });
+            } else if (change.type === "modified") {
+              studentsWorkForReview.splice(
+                studentsWorkForReview.findIndex(
+                  (i) => i.id === change.doc.data().id
+                ),
+                1,
+                {
+                  id: change.doc.data().id,
+                  ...change.doc.data(),
+                }
+              );
+            } else if (change.type === "removed") {
+              studentsWorkForReview.splice(
+                studentsWorkForReview.findIndex(
+                  (i) => i.id === change.doc.data().id
+                ),
+                1
+              );
+            }
+          }
+          state.studentsSubmissions = studentsWorkForReview;
+        });
+
+      return unsubscribe;
+      // state.teachersSubmissionsToReview = allWorkForReview;
+    },
     async getRequestsForHelpByCourseId({ state }, courseId) {
       // console.log("getRequests called");
 
@@ -1049,6 +1096,7 @@ export default new Vuex.Store({
           return topicCount;
         });
     },
+
     // ===== Firestore - Cohorts & Orgs
     async getOrganisationsByCohorts({ commit }, cohorts) {
       const orgs = [];
