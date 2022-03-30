@@ -105,18 +105,18 @@
 </template>
 
 <script>
-import { db } from "@/store/firestoreConfig";
+import { db, functions } from "@/store/firestoreConfig";
 
 
 export default {
   name: "PublishGalaxy",
-  props: ["course"],
+  props: ["course", "person"],
   data: () => ({
     dialog: false,
     loading: false,
     courseOptions: {
       public: false,
-    }
+    },
 
   }),
   computed: {
@@ -132,7 +132,8 @@ export default {
         public: false,
       }
     },
-    submitCourse() {
+
+    async submitCourse() {
       this.loading = true;
       let course = {
         ...this.course, 
@@ -140,31 +141,79 @@ export default {
       }
       course.status = "submitted"
       console.log("submitted course: ", course )
-      this.updateCourse(course) 
+      await this.updateCourse(course)
+      .then(() => {
+        this.close()
+      }).catch((error) => {
+        console.error("Error updating document: ", error);
+      });
     },
-    publishCourse () {
+
+    async publishCourse () {
       this.loading = true;
       let course = {
         ...this.course, 
         ...this.courseOptions
       }
+      
+      let cohort = {
+        name: course.title,
+        description: course.description,
+        organisation: "",
+        students: [],
+        courses: [course.id],
+        image: {
+          name: course.image?.name,
+          url: course.image?.url,
+        },
+        teachers: [this.person.id],
+      }
+
       course.status = "published"
-      console.log("oublished course: ", course )
-      this.updateCourse(course) 
+      console.log("published course: ", course )
+      console.log("create cohort: ", cohort)
+      await this.updateCourse(course)
+      .then(() => { 
+        this.saveCohort(cohort)
+      }).then(() => {
+        this.close()
+      }).catch((error) => {
+        console.error("Error updating document: ", error);
+      });
     },
-    updateCourse(course) {
-      db.collection("courses")
+
+    async updateCourse(course) {
+      return await db.collection("courses")
         .doc(course.id)
         .update(course)
         .then(() => {
           console.log("Document successfully updated!");
           this.$store.commit("setCurrentCourseId", course.id);
-          this.close()
         })
-        .catch((error) => {
-          console.error("Error updating document: ", error);
-        });
-    }
+    },
+
+    saveCohort(cohort) {
+      // Add a new document in collection "cohorts"
+      db.collection("cohorts").add(cohort)
+
+      // notify teachers of new cohort assignment
+      if (cohort.teachers.length) {
+        cohort.teachers.forEach(teacher => {
+          console.log('send cohort email to: ', this.person);
+          this.sendNewCohortEmail(this.person, cohort);
+        })
+      }
+    },
+
+    sendNewCohortEmail(profile, cohort) {
+      const person = {
+        ...profile,
+        cohort: cohort.name,
+        inviter: this.inviter || "Galaxy Maps Admin",
+      };
+      const sendNewCohortEmail = functions.httpsCallable("sendNewCohortEmail");
+      return sendNewCohortEmail(person);
+    },
   },
 };
 </script>

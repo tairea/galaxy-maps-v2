@@ -1,11 +1,11 @@
 <template>
   <!-- POPUP -->
   <!-- follow drag -> :style="{ top: getCoords.y - 100 + 'px', left: getCoords.x + 30 + 'px' }" -->
-  <div ref="popup" class="ss-info-panel">
+  <div ref="popup" class="ss-info-panel" :class="draft ? 'draft-border' : 'panel-border'">
     <div class="ss-details">
       <div>
         <p class="info-panel-label mb-2">
-          <span class="galaxyColour">Galaxy:</span>
+          <span class="galaxyColour"><span v-if="draft">Draft</span> Galaxy:</span>
           <br />
           <span>{{ course.title }}</span>
         </p>
@@ -189,10 +189,12 @@ export default {
   },
   computed: {
     ...mapState(["person"]),
-
     dark() {
       return this.$vuetify.theme.isDark;
     },
+    draft() {
+      return this.course.status === 'drafting'
+    }
   },
   methods: {
     close() {
@@ -322,7 +324,6 @@ export default {
 // POPUP
 .ss-info-panel {
   // background-color: var(--v-background-base);
-  border: 1px solid var(--v-missionAccent-base);
   position: absolute;
   backdrop-filter: blur(8px);
   display: flex;
@@ -429,5 +430,13 @@ export default {
   text-align: left;
   padding: 10px;
   // text-transform: uppercase;
+}
+
+.draft-border {
+  border: 1px dashed var(--v-missionAccent-base);
+}
+
+.panel-border {
+  border: 1px solid var(--v-missionAccent-base)  
 }
 </style>
