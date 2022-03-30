@@ -3,7 +3,7 @@
     <div id="left-section">
       <GalaxyInfo :course="course" :draft="draft"/>
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
-      <PublishGalaxy v-if="draft" :course="course"/>
+      <PublishGalaxy v-if="draft" :course="course" :person="person"/>
       <AssignedInfo
         v-if="!draft && person.accountType != 'student'"
         :assignCohorts="true"
