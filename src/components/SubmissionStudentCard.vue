@@ -142,8 +142,8 @@ export default {
     this.responder = await this.MXgetPersonByIdFromDB(
       this.work.responderPersonId
     );
-    console.log("requester person:", this.requester);
-    console.log("responder person:", this.responder);
+    // console.log("requester person:", this.requester);
+    // console.log("responder person:", this.responder);
   },
   data() {
     return {
@@ -157,9 +157,6 @@ export default {
       this.responder = await this.MXgetPersonByIdFromDB(
         this.work.responderPersonId
       );
-    },
-    editSubmission() {
-      console.log("edit submission. emit to open dialog");
     },
     humanDate(timestamp) {
       return new DateTime.fromSeconds(timestamp.seconds).toFormat(

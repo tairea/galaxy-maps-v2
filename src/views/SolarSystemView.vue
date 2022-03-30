@@ -35,11 +35,7 @@
     <!--==== Right section ====-->
     <div v-if="task" id="right-section">
       <SubmissionInfo v-if="task.submissionRequired == true" :task="task" />
-      <RequestsForHelpInfo
-        v-if="activeMission"
-        :requests="requests"
-        :task="task"
-      />
+      <RequestsForHelpInfo :requests="requests" :task="task" />
     </div>
   </div>
 </template>
@@ -106,9 +102,18 @@ export default {
   watch: {
     task: {
       handler(newTask) {
+        if (!newTask) return;
         // filter requests for help depending on task/mission clicked (in MissionList expansion panels)
         this.requests = this.requestsForHelp.filter(
           (request) => request.contextTask.id == newTask.id
+        );
+      },
+    },
+    requestsForHelp: {
+      handler(newHelp) {
+        // this updates the request when there is a change
+        this.requests = this.requestsForHelp.filter(
+          (request) => request.contextTask.id == this.task.id
         );
       },
     },
