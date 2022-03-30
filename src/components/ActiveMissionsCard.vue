@@ -53,7 +53,11 @@
           <!-- REQUEST HELP -->
           <div class="section-overUnder flex-column">
             <p class="text-overline text-uppercase text-center">REQUEST HELP</p>
-            <RequestHelpDialog :task="task" :taskId="id" :topicId="topicId" />
+            <RequestHelpDialog
+              :task="task"
+              :taskId="task.id"
+              :topicId="topicId"
+            />
           </div>
           <!-- MARK AS COMPLETED -->
           <div class="section-overUnder flex-column">
@@ -62,7 +66,7 @@
             </p>
             <MissionCompletedDialog
               :task="task"
-              :taskId="id"
+              :taskId="task.id"
               :topicId="topicId"
               :missionStatus="getTaskStatus"
             />
@@ -87,7 +91,7 @@ export default {
     MissionCompletedDialog,
     RequestHelpDialog,
   },
-  props: ["task", "id", "topicId"],
+  props: ["task", "topicId"],
   mounted() {},
   computed: {
     ...mapState(["personsTopicsTasks"]),
@@ -116,7 +120,9 @@ export default {
         return;
       }
       // get topic status eg. unlocked / inreview / completed / locked
-      const task = this.personsTopicsTasks.find((task) => task.id === this.id);
+      const task = this.personsTopicsTasks.find(
+        (task) => task.id === this.task.id
+      );
       return task.taskStatus;
     },
   },
@@ -143,6 +149,14 @@ a {
   min-height: 300px;
   z-index: 200;
   background-color: var(--v-background-base);
+
+  // background-image: repeating-linear-gradient(
+  //   45deg,
+  //   var(--v-baseAccent-base) 10px,
+  //   var(--v-baseAccent-base) 12px,
+  //   transparent 12px,
+  //   transparent 20px
+  // );
 }
 
 .mission-card {
@@ -151,6 +165,7 @@ a {
   display: flex;
   width: 100%;
   height: auto;
+  background-color: var(--v-background-base);
 
   .mission-section {
     margin: 0px;

@@ -52,12 +52,7 @@
         >
           <!-- COMPLETED -->
 
-          <div
-            :class="{
-              'section-overUnder': task.submissionLink,
-              'text-center': !task.submissionLink,
-            }"
-          >
+          <div class="text-center">
             <p
               class="text-overline text-uppercase"
               :class="{
@@ -69,7 +64,9 @@
                 getTaskStatus == "completed"
                   ? "MISSION COMPLETED"
                   : getTaskStatus == "inreview"
-                  ? "MISSION IN REVIEW"
+                  ? "SUBMISSION IN REVIEW"
+                  : getTaskStatus == "declined"
+                  ? "SUBMISSION DECLINED"
                   : "LOCKED"
               }}
             </p>
@@ -80,13 +77,14 @@
                   : getTaskStatus == "inreview"
                   ? "SUBMITTED: " +
                     humanDate(task.taskSubmittedForReviewTimestamp)
+                  : getTaskStatus == "declined"
+                  ? "DECLINED: " + humanDate(task.submissionDeclinedTimestamp)
                   : "LOCKED"
               }}
             </p>
           </div>
-          <!-- MARK AS COMPLETED -->
-          <div v-if="task.submissionLink" class="section-overUnder">
-            <!-- View submission button -->
+          <!-- View submission -->
+          <!-- <div v-if="task.submissionLink" class="section-overUnder">
             <a
               style="text-decoration: none"
               :href="task.submissionLink"
@@ -97,8 +95,7 @@
                 VIEW SUBMISSION
               </v-btn>
             </a>
-            <!-- TODO: Edit submission button -->
-          </div>
+          </div> -->
         </div>
       </div>
     </v-row>
@@ -113,13 +110,15 @@ import { DateTime } from "luxon";
 export default {
   name: "SelectedMissionsCard",
   components: {},
-  props: ["task", "id"],
+  props: ["task"],
   mounted() {},
   computed: {
     ...mapState(["personsTopicsTasks"]),
     getTaskStatus() {
       // get topic status eg. unlocked / inreview / completed / locked
-      const task = this.personsTopicsTasks.find((task) => task.id === this.id);
+      const task = this.personsTopicsTasks.find(
+        (task) => task.id === this.task.id
+      );
       return task.taskStatus;
     },
   },

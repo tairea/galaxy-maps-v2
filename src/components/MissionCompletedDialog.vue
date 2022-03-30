@@ -7,7 +7,11 @@
           <template v-slot:activator="{ on, attrs }">
             <!-- uncheck icon if not inreview or completed -->
             <v-btn
-              v-if="missionStatus != 'inreview' && missionStatus != 'completed'"
+              v-if="
+                missionStatus != 'inreview' &&
+                missionStatus != 'completed' &&
+                !resubmission
+              "
               v-bind="attrs"
               v-on="on"
               class="mission-edit-button"
@@ -20,6 +24,21 @@
               </v-icon>
               <v-icon v-else> mdi-checkbox-blank-outline </v-icon>
             </v-btn>
+            <!-- review declined. re-submission -->
+            <v-btn
+              v-else-if="missionStatus == 'declined' && resubmission"
+              v-bind="attrs"
+              v-on="on"
+              class="mission-edit-button"
+              color="missionAccent"
+              outlined
+              small
+            >
+              <v-icon small left v-if="task.submissionRequired">
+                mdi-cloud-upload-outline
+              </v-icon>
+              RESUBMIT
+            </v-btn>
             <!-- checked icon if inreview or completed -->
             <v-btn
               v-else
@@ -28,6 +47,8 @@
                   ? 'baseAccent'
                   : missionStatus == 'inreview'
                   ? 'cohortAccent'
+                  : missionStatus == 'declined'
+                  ? 'missionAccent'
                   : ''
               "
               v-bind="attrs"
@@ -74,12 +95,7 @@
                   <v-row>
                     <v-col cols="10">
                       <v-row
-                        class="
-                          d-flex
-                          align-center
-                          justify-space-around
-                          speech-bubble
-                        "
+                        class="d-flex align-center justify-space-around speech-bubble"
                       >
                         <v-col cols="1" class="pa-0">
                           <v-icon left color="cohortAccent"
@@ -135,7 +151,7 @@
               <div class="action-buttons">
                 <!-- YES, I HAVE COMPLETED -->
                 <v-btn
-                  v-if="task.submissionRequired"
+                  v-if="task.submissionRequired && !resubmission"
                   outlined
                   color="green darken-1"
                   @click="submitWorkForReview()"
@@ -147,6 +163,20 @@
                 >
                   <v-icon left> mdi-check </v-icon>
                   SUBMIT WORK FOR REVIEW
+                </v-btn>
+                <v-btn
+                  v-else-if="task.submissionRequired && resubmission"
+                  outlined
+                  color="green darken-1"
+                  @click="reSubmitWorkForReview()"
+                  class="mr-2"
+                  :loading="loading"
+                  :disabled="disabled"
+                  v-bind="attrs"
+                  v-on="on"
+                >
+                  <v-icon left> mdi-check </v-icon>
+                  RE-SUBMIT WORK FOR REVIEW
                 </v-btn>
                 <v-btn
                   v-else
@@ -240,6 +270,7 @@ import firebase from "firebase/app";
 import { db } from "../store/firestoreConfig";
 import {
   submitWorkForReviewXAPIStatement,
+  reSubmitWorkForReviewXAPIStatement,
   taskMarkedAsCompletedXAPIStatement,
   topicCompletedXAPIStatement,
 } from "../lib/veracityLRS";
@@ -251,7 +282,16 @@ import { mapState, mapGetters } from "vuex";
 export default {
   name: "MissionCompletedDialog",
   mixins: [dbMixins],
-  props: ["topicId", "taskId", "task", "missionStatus", "on", "attrs"],
+  props: [
+    "topicId",
+    "taskId",
+    "task",
+    "missionStatus",
+    "on",
+    "attrs",
+    "resubmission",
+    "submission",
+  ],
   data: () => ({
     submissionLink: null,
     dialog: false,
@@ -265,6 +305,7 @@ export default {
     if (!this.currentCourse.mappedBy.image) {
       this.getMappedByPersonsImage(this.currentCourse.mappedBy.personId);
     }
+    console.log("from resub", this.task);
   },
   computed: {
     ...mapState([
@@ -276,6 +317,103 @@ export default {
     ...mapGetters(["person"]),
   },
   methods: {
+    reSubmitWorkForReview() {
+      this.loading = true;
+      this.disabled = true;
+
+      // format submission url with "http://"
+      if (this.submissionLink) {
+        if (!/^https?:\/\//i.test(this.submissionLink)) {
+          this.submissionLink = "http://" + this.submissionLink;
+        }
+      }
+
+      // console.log("submitting...");
+      // console.log("person...", this.person);
+      // console.log("course...", this.currentCourse);
+      // console.log("topic...", this.currentTopic);
+      // console.log("task...", this.currentTask);
+
+      // 1) add submission to course (for teacher to review)
+      db.collection("courses")
+        .doc(this.currentCourse.id)
+        // .collection("topics")
+        // .doc(this.topicId)
+        // .collection("tasks")
+        // .doc(this.taskId)
+        .collection("submissionsForReview")
+        .doc(this.submission.id)
+        .update({
+          // update "courses" database with task submission
+          studentId: this.person.id,
+          contextCourse: this.currentCourse,
+          contextTopic: this.currentTopic,
+          contextTask: this.task,
+          submissionLink: this.submissionLink,
+          taskSubmissionStatus: "inreview",
+          taskSubmittedForReviewTimestamp: new Date(),
+          responderPersonId: "",
+          responseMessage: "",
+        })
+        .then(() => {
+          console.log("Re-submission successfully submitted for review!");
+
+          // send xAPI statement to LRS
+          reSubmitWorkForReviewXAPIStatement(this.person, this.task.id, {
+            galaxy: this.currentCourse,
+            system: this.currentTopic,
+            mission: this.task,
+          });
+
+          this.loading = false;
+          this.dialog = false;
+
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: "Link submitted. You will be notified when your instructor has reviewd your work.",
+            color: "baseAccent",
+          });
+        })
+        .catch((error) => {
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: "Error: " + error,
+            color: "baseAccent",
+          });
+          console.error("Error writing document: ", error);
+        });
+
+      // 2) Add submission to students task (for students progression)
+      db.collection("people")
+        .doc(this.person.id)
+        .collection(this.currentCourse.id)
+        .doc(this.currentTopic.id)
+        .collection("tasks")
+        .doc(this.task.id)
+        .update({
+          // update "people" database with task submission
+          submissionLink: this.submissionLink,
+          taskStatus: "inreview",
+          taskSubmittedForReviewTimestamp: new Date(),
+        })
+        .then(() => {
+          console.log("Task work successfully re-submitted for review!");
+          this.loading = false;
+          this.disabled = false;
+          this.dialog = false;
+
+          // unlock next task
+          this.unlockNextTask();
+
+          // check if all tasks/missions are completed
+          this.checkIfAllTasksCompleted();
+
+          // TODO: perhaps only unlock once teacher has reviewed and marked complete. SOLUTION: leave as is. can progress to next task, but cant progress to next topic until all work is reviewed.
+        })
+        .catch((error) => {
+          console.error("Error writing document: ", error);
+        });
+    },
     submitWorkForReview() {
       this.loading = true;
       this.disabled = true;
