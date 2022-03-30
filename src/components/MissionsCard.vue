@@ -164,7 +164,18 @@
     </v-expansion-panel-header>
     <v-expansion-panel-content>
       <!-- expansion content -->
-      <SelectedMissionsCard :task="task" :id="task.id" :topicId="topicId" />
+      <ActiveMissionsCard
+        v-if="task.taskStatus == 'active'"
+        :task="task"
+        :id="task.id"
+        :topicId="topicId"
+      />
+      <SelectedMissionsCard
+        v-else
+        :task="task"
+        :id="task.id"
+        :topicId="topicId"
+      />
     </v-expansion-panel-content>
   </div>
 </template>
@@ -173,6 +184,7 @@
 import CreateEditDeleteMissionDialog from "../components/CreateEditDeleteMissionDialog";
 import StartMissionDialog from "../components/StartMissionDialog";
 import MissionCompletedDialog from "../components/MissionCompletedDialog";
+import ActiveMissionsCard from "../components/ActiveMissionsCard";
 import SelectedMissionsCard from "../components/SelectedMissionsCard";
 
 import { db } from "../store/firestoreConfig";
@@ -184,6 +196,7 @@ export default {
     CreateEditDeleteMissionDialog,
     StartMissionDialog,
     MissionCompletedDialog,
+    ActiveMissionsCard,
     SelectedMissionsCard,
   },
   props: ["task", "id", "index", "topicId", "topicActive"],
@@ -245,6 +258,10 @@ a {
     border-left: 1px dashed var(--v-missionAccent-base);
     padding: 20px;
     flex-grow: 1;
+  }
+
+  .mission-number-section {
+    border-left: none;
   }
 
   .topic-in-review {
@@ -313,11 +330,5 @@ a {
       border-bottom: 1px dashed var(--v-missionAccent-base);
     }
   }
-}
-
-.active-mission-card {
-  border: 1px solid var(--v-baseAccent-base);
-  margin: 20px 10px;
-  display: flex;
 }
 </style>

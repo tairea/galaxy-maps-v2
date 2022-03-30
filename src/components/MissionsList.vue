@@ -3,11 +3,16 @@
     <h2 class="missions-label">Missions</h2>
 
     <div v-if="tasks.length > 0" style="width: 100%">
-      <v-expansion-panels :flat="true" :multiple="false">
+      <v-expansion-panels
+        :flat="true"
+        :multiple="false"
+        v-model="indexOfActiveTask"
+      >
         <v-expansion-panel
           class="mission-expansions"
           v-for="(task, index) in tasks"
           :key="task.id"
+          @click="missionClicked(task)"
         >
           <MissionsCard
             :task="task"
@@ -15,12 +20,6 @@
             :index="index"
             :topicId="topicId"
             :topicActive="topicActive"
-          />
-          <ActiveMissionsCard
-            v-if="task.taskStatus == 'active'"
-            :task="task"
-            :id="task.id"
-            :topicId="topicId"
           />
         </v-expansion-panel>
       </v-expansion-panels>
@@ -38,7 +37,6 @@
 
 <script>
 import MissionsCard from "../components/MissionsCard";
-import ActiveMissionsCard from "../components/ActiveMissionsCard";
 
 import CreateEditDeleteMissionDialog from "../components/CreateEditDeleteMissionDialog";
 
@@ -48,7 +46,6 @@ export default {
   name: "MissionsList",
   components: {
     MissionsCard,
-    ActiveMissionsCard,
     CreateEditDeleteMissionDialog,
   },
   props: ["tasks", "topicId"],
@@ -56,33 +53,23 @@ export default {
     return {
       activeMission: false,
       topicActive: false,
-      savedTaskStatus: [],
-      isSelected: false,
+      indexOfActiveTask: [],
     };
   },
   mounted() {
-    // check which task is active
+    // get active task index for expansion panel vmodel (to expand 'active' task on load)
+    this.indexOfActiveTask = this.tasks.findIndex((object) => {
+      return object.taskStatus == "active";
+    });
     const activeTasks = this.tasks.find((task) => task.taskStatus == "active");
     if (activeTasks) this.topicActive = true;
-
-    this.savedTaskStatus = [...this.tasks];
-    console.log("this.savedTaskStatus", this.savedTaskStatus);
   },
   computed: {
-    ...mapState(["personsTopicsTasks"]),
     ...mapGetters(["person"]),
   },
   methods: {
-    viewMission(taskClicked) {
-      for (var i = 0; i < this.tasks.length; i++) {
-        if (this.tasks[i].id == taskClicked) {
-          this.tasks[i].isSelected = true;
-          console.log("task selected");
-        } else {
-          this.tasks[i].isSelected = false;
-        }
-      }
-      console.log("all tasks -> ", this.tasks);
+    missionClicked(task) {
+      this.$emit("task", task);
     },
   },
 };

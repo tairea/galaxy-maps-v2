@@ -102,8 +102,8 @@ export default {
     this.responder = await this.MXgetPersonByIdFromDB(
       this.request.responderPersonId
     );
-    console.log("requester person:", this.requester);
-    console.log("responder person:", this.responder);
+    // console.log("requester person:", this.requester);
+    // console.log("responder person:", this.responder);
   },
   data() {
     return {

@@ -137,7 +137,7 @@ a {
 
 .active-mission-card {
   border: 1px solid var(--v-baseAccent-base);
-  margin: -21px 10px 20px 10px;
+  margin: -21px 10px 0px 10px;
   display: flex;
   flex-direction: column;
   min-height: 300px;

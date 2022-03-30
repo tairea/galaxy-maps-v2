@@ -51,33 +51,53 @@
           style="width: 50%"
         >
           <!-- COMPLETED -->
-          <div v-if="task.submissionLink">
-            <div class="section-overUnder flex-column">
-              <p class="text-overline text-uppercase text-center">
-                MISSION COMPLETED: {{ task.taskCompletedTimestamp }}
-              </p>
-            </div>
-            <!-- MARK AS COMPLETED -->
-            <div class="section-overUnder flex-column">
-              <!-- View submission button -->
-              <a
-                style="text-decoration: none"
-                :href="task.submissionLink"
-                target="_blank"
-              >
-                <v-btn outlined color="cohortAccent" class="ma-2" small>
-                  <v-icon left> mdi-text-box-search-outline </v-icon>
-                  VIEW SUBMISSION
-                </v-btn>
-              </a>
-            </div>
+
+          <div
+            :class="{
+              'section-overUnder': task.submissionLink,
+              'text-center': !task.submissionLink,
+            }"
+          >
+            <p
+              class="text-overline text-uppercase"
+              :class="{
+                'mission-in-review': getTaskStatus == 'inreview',
+                'mission-completed': getTaskStatus == 'completed',
+              }"
+            >
+              {{
+                getTaskStatus == "completed"
+                  ? "MISSION COMPLETED"
+                  : getTaskStatus == "inreview"
+                  ? "MISSION IN REVIEW"
+                  : "LOCKED"
+              }}
+            </p>
+            <p class="text-overline text-uppercase">
+              {{
+                getTaskStatus == "completed"
+                  ? "SUBMITTED: " + humanDate(task.taskCompletedTimestamp)
+                  : getTaskStatus == "inreview"
+                  ? "SUBMITTED: " +
+                    humanDate(task.taskSubmittedForReviewTimestamp)
+                  : "LOCKED"
+              }}
+            </p>
           </div>
-          <div v-else>
-            <div class="flex-column">
-              <p class="text-overline text-uppercase text-center">
-                MISSION COMPLETED: {{ task.taskCompletedTimestamp }}
-              </p>
-            </div>
+          <!-- MARK AS COMPLETED -->
+          <div v-if="task.submissionLink" class="section-overUnder">
+            <!-- View submission button -->
+            <a
+              style="text-decoration: none"
+              :href="task.submissionLink"
+              target="_blank"
+            >
+              <v-btn outlined color="cohortAccent" class="" small>
+                <v-icon left> mdi-text-box-search-outline </v-icon>
+                VIEW SUBMISSION
+              </v-btn>
+            </a>
+            <!-- TODO: Edit submission button -->
           </div>
         </div>
       </div>
@@ -87,17 +107,31 @@
 </template>
 
 <script>
-import { db } from "../store/firestoreConfig";
-import { mapState, mapGetters } from "vuex";
+import { mapState } from "vuex";
+import { DateTime } from "luxon";
 
 export default {
   name: "SelectedMissionsCard",
   components: {},
-  props: ["task"],
+  props: ["task", "id"],
   mounted() {},
-  computed: {},
+  computed: {
+    ...mapState(["personsTopicsTasks"]),
+    getTaskStatus() {
+      // get topic status eg. unlocked / inreview / completed / locked
+      const task = this.personsTopicsTasks.find((task) => task.id === this.id);
+      return task.taskStatus;
+    },
+  },
   data() {
     return {};
+  },
+  methods: {
+    humanDate(timestamp) {
+      return new DateTime.fromSeconds(timestamp.seconds).toFormat(
+        "ccc dd LLL t"
+      );
+    },
   },
 };
 </script>
@@ -116,7 +150,6 @@ a {
   margin: -21px 10px 0px 10px;
   display: flex;
   flex-direction: column;
-  min-height: 300px;
   z-index: 200;
   background-color: var(--v-background-base);
 }
@@ -133,7 +166,6 @@ a {
     color: var(--v-missionAccent-base);
     font-size: 0.9rem;
     border-left: 1px solid var(--v-missionAccent-base);
-    padding: 10px;
     flex-grow: 1;
   }
   .mission-section:first-child {
@@ -150,14 +182,15 @@ a {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
+    // align-items: center;
 
     .section-overUnder {
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       width: 100%;
-      height: 100%;
+      height: 50%;
       padding: 10px;
     }
 
@@ -165,5 +198,12 @@ a {
       border-bottom: 1px solid var(--v-missionAccent-base);
     }
   }
+}
+
+.mission-in-review {
+  color: var(--v-cohortAccent-base);
+}
+.mission-completed {
+  color: var(--v-baseAccent-base);
 }
 </style>

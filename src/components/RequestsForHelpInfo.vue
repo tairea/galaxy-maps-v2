@@ -1,15 +1,11 @@
 <template>
-  <div class="help-info" v-if="requestsForThisTask.length > 0">
+  <div class="help-info" v-if="requests.length > 0">
     <!-- <div v-if="requestsForHelp.length > 0" id="ss-info"> -->
 
     <h2 class="ss-label">Requests for Help</h2>
-    <p class="overline requestsLabel">Re: {{ currentTask.title }}</p>
+    <p class="overline requestsLabel">Re: {{ task.title }}</p>
 
-    <div
-      v-for="request in requestsForThisTask"
-      :key="request.id"
-      class="request"
-    >
+    <div v-for="request in requests" :key="request.id" class="request">
       <RequestsForHelpStudentCard :request="request" />
     </div>
   </div>
@@ -18,44 +14,18 @@
 <script>
 import RequestsForHelpStudentCard from "../components/RequestsForHelpStudentCard";
 
-import { mapState, mapGetters } from "vuex";
-
 export default {
   name: "RequestsForHelpInfo",
-  props: ["activeMission", "requests"],
+  props: ["requests", "task"],
   components: {
     RequestsForHelpStudentCard,
   },
-  computed: {
-    ...mapState([
-      "currentCourseId",
-      "currentTopicId",
-      "currentTaskId",
-      "currentCourse",
-      "currentTopic",
-      "currentTask",
-      // "people",
-    ]),
-    requestsForThisTask() {
-      return this.requests.filter(
-        (request) => request.contextTask.id == this.currentTaskId
-      );
-    },
-  },
-  async mounted() {
-    console.log("active mission is:", this.currentTask);
-    // console.log("from store people: ", this.people);
-  },
+  computed: {},
+  async mounted() {},
   data() {
-    return {
-      requesterPerson: null,
-    };
+    return {};
   },
-  methods: {
-    getPerson(id) {
-      return this.people.find((person) => person.id === id);
-    },
-  },
+  methods: {},
 };
 </script>
 
