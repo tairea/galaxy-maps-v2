@@ -35,10 +35,23 @@
               placeholder="Enter name of this node/topic"
             ></v-text-field>
 
-            <!-- Node Type -->
+            <!-- Node Color -->
+
             <p class="dialog-description">
-              Node Type:
-              <v-tooltip right>
+              Node color:
+              <v-color-picker
+                v-model="currentNode.color"
+                class="ma-2 color-picker"          
+                show-swatches
+                hide-canvas
+                hide-inputs
+                hide-sliders
+                mode="hexa"
+                value="#69a1e2"
+                width="90%"
+              ></v-color-picker>
+
+              <!-- <v-tooltip right>
                 <template v-slot:activator="{ on, attrs }">
                   <v-icon
                     left
@@ -74,7 +87,7 @@
                 closeOnClick: true,
                 closeOnContentClick: true,
               }"
-            ></v-select>
+            ></v-select> -->
 
             <!-- Node Pre-requisites -->
             <p class="dialog-description">
@@ -114,7 +127,7 @@
             <v-select
               v-if="prerequisites"
               v-model="currentNode.prerequisites"
-              :items="this.sortedObjArr"
+              :items="sortedObjArr"
               item-text="label"
               item-value="id"
               outlined
@@ -228,7 +241,7 @@ import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
 
 export default {
-  name: "GalaxyMapEditDialog",
+  name: "CreateEditDel",
   props: [
     "course",
     "dialog",
@@ -243,7 +256,7 @@ export default {
 
     for (let index in this.currentCourseNodes) {
       let timeCreatedNode =
-        this.currentCourseNodes[index].nodeCreatedTimestamp.seconds;
+        this.currentCourseNodes[index].nodeCreatedTimestamp?.seconds;
 
       timeCreatedArrs.push(timeCreatedNode);
       // console.log("unsorted arr", timeCreatedArrs);
@@ -260,7 +273,7 @@ export default {
       // loop over the ordered time array
       let arrTime = timeCreatedArrs[a];
       for (let b in timeCreatedArrs) {
-        let timeStamp = this.currentCourseNodes[b].nodeCreatedTimestamp.seconds;
+        let timeStamp = this.currentCourseNodes[b].nodeCreatedTimestamp?.seconds;
         if (arrTime == timeStamp) {
           let node = this.currentCourseNodes[b];
           this.sortedObjArr.push(node);
@@ -279,7 +292,7 @@ export default {
     }
     if (!this.editing) {
       this.currentNode.label = "";
-      console.log("not editing: ", this.currentNode);
+      this.currentNode.color = "#69a1e2"
     }
   },
   data() {
@@ -290,20 +303,20 @@ export default {
       type: "",
       loading: false,
       deleting: false,
-      nodeTypes: [
-        {
-          type: "Introduction",
-          value: "introduction",
-        },
-        {
-          type: "Tasks",
-          value: "tasks",
-        },
-        {
-          type: "Project",
-          value: "project",
-        },
-      ],
+      // nodeTypes: [
+      //   {
+      //     type: "Introduction",
+      //     value: "introduction",
+      //   },
+      //   {
+      //     type: "Tasks",
+      //     value: "tasks",
+      //   },
+      //   {
+      //     type: "Project",
+      //     value: "project",
+      //   },
+      // ],
       prerequisites: false,
     };
   },
@@ -341,10 +354,10 @@ export default {
     },
 
     saveNode(node) {
-      console.log("save", node);
       this.loading = true;
       node.connectedEdge = node.connectedEdge ? node.connectedEdge : "";
       // save topic node info to map-nodes
+      console.log("save", node);
       db.collection("courses")
         .doc(this.course.id)
         .collection("map-nodes")
@@ -630,5 +643,12 @@ export default {
 .action-buttons {
   width: 100%;
   padding: 20px;
+}
+
+.color-picker {
+  background-color: var(--v-background-base);
+  ::-webkit-scrollbar-track {
+  background:var(--v-background-lighten1)
+}
 }
 </style>

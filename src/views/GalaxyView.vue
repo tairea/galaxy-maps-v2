@@ -1,10 +1,11 @@
 <template>
   <div id="container" class="bg">
     <div id="left-section">
-      <GalaxyInfo :course="getCourseById(courseId)" />
+      <GalaxyInfo :course="course" :draft="draft"/>
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
+      <PublishGalaxy v-if="draft" :course="course"/>
       <AssignedInfo
-        v-if="person.accountType != 'student'"
+        v-if="!draft && person.accountType != 'student'"
         :assignCohorts="true"
         :people="peopleInCourse"
         :cohorts="cohortsInCourse"
@@ -45,14 +46,14 @@
       />
 
       <!-- Edit -->
-      <GalaxyMapEditDialog
+      <CreateEditDeleteNodeDialog
         v-if="dialog"
         ref="edit"
         :dialog="dialog"
         :dialogTitle="dialogTitle"
         :dialogDescription="dialogDescription"
         :editing="editing"
-        :course="getCourseById(courseId)"
+        :course="course"
         :currentNode="currentNode"
         :currentEdge="currentEdge"
         @closeDialog="closeDialog"
@@ -86,9 +87,10 @@ import MissionsList from "../components/MissionsList";
 import Galaxy from "../components/Galaxy";
 import GalaxyMap from "../components/GalaxyMap";
 import BackButton from "../components/BackButton";
-import GalaxyMapEditDialog from "../components/GalaxyMapEditDialog";
+import CreateEditDeleteNodeDialog from "../components/CreateEditDeleteNodeDialog";
 import GalaxyMapButtons from "../components/GalaxyMapButtons";
 import PopupSystemPreview from "../components/PopupSystemPreview";
+import PublishGalaxy from "../components/GalaxyView/PublishGalaxy"
 
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
@@ -103,9 +105,10 @@ export default {
     Galaxy,
     GalaxyMap,
     BackButton,
-    GalaxyMapEditDialog,
+    CreateEditDeleteNodeDialog,
     GalaxyMapButtons,
     PopupSystemPreview,
+    PublishGalaxy
   },
   props: ["courseId"],
   data() {
@@ -220,6 +223,12 @@ export default {
         return "/base/galaxies/my";
       }
     },
+    course () {
+      return this.getCourseById(this.courseId)
+    },
+    draft () {
+      return this.course?.status === "drafting"
+    }
   },
   methods: {
     setUiMessage(message) {

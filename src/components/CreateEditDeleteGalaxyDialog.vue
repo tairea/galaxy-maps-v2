@@ -10,7 +10,7 @@
               v-bind="attrs"
               v-on="on"
               outlined
-              color="galaxyAccent"
+              :color="draft ? 'cohortAccent' : 'galaxyAccent'"
               small
             >
               <v-icon small> mdi-pencil </v-icon>
@@ -112,9 +112,7 @@
                     </template>
                   </v-checkbox>
                   <div class="d-flex align-center">
-                    <v-icon left color="missionAccent"
-                      >mdi-information-variant</v-icon
-                    >
+                    <v-icon left color="missionAccent">mdi-information-variant</v-icon>
                     <p class="dialog-description" style="text-align: right">
                       Tick this box if your are mapping someone elses content
                     </p>
@@ -323,7 +321,7 @@ import { db, storage } from "../store/firestoreConfig";
 
 export default {
   name: "CreateGalaxyButtonDialog",
-  props: ["edit", "courseToEdit"],
+  props: ["edit", "courseToEdit", "draft"],
   data: () => ({
     notAuthor: false,
     dialog: false,
@@ -353,6 +351,7 @@ export default {
         },
         source: "",
       },
+      status: "drafting"
     },
     uploadedImage: {},
     authorImage: {},
@@ -370,21 +369,16 @@ export default {
   },
   async mounted() {
     if (this.courseToEdit) {
-      console.log("editing course");
       this.course = this.courseToEdit;
     }
   },
   methods: {
     cancel() {
-      console.log("cancel");
       this.dialog = false;
       // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
     },
     saveCourse(course) {
       this.loading = true;
-
-      console.log("saving course created by:", this.person.firstName);
-
       // not notAuthor means user is the author
       if (!this.notAuthor) {
         // TODO: add users photo to contentBy
@@ -406,7 +400,6 @@ export default {
         .add(course)
         .then((docRef) => {
           docRef.update({ id: docRef.id }); // add course id to course
-          console.log("Document successfully written!");
           this.dialog = false;
           this.loading = false;
           //get doc id from firestore (aka course id)
@@ -434,7 +427,6 @@ export default {
         .doc(course.id)
         .update(course)
         .then(() => {
-          console.log("Document successfully updated!");
           this.dialog = false;
           this.loading = false;
           //get doc id from firestore (aka course id)
@@ -447,7 +439,6 @@ export default {
     },
     storeImage() {
       this.disabled = true;
-      console.log("this.uploadedImage", this.uploadedImage);
       // ceate a storage ref
       var storageRef = storage.ref(
         "course-images/" + this.course.title + "-" + this.uploadedImage.name
@@ -472,19 +463,16 @@ export default {
         () => {
           // get image url
           uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
-            console.log("image url is: " + downloadURL);
             // add image url to course obj
             this.course.image.url = downloadURL;
             this.course.image.name = this.uploadedImage.name;
             this.disabled = false;
-            console.log("image saved to course?:", this.course);
           });
         }
       );
     },
     storeAuthorImage() {
       this.disabled = true;
-      console.log("this.authorImage", this.authorImage);
       // ceate a storage ref
       var storageRef = storage.ref(
         "author-images/" + this.course.author + "-" + this.authorImage.name
@@ -535,7 +523,6 @@ export default {
       documentRef
         .delete()
         .then(() => {
-          console.log("Document successfully deleted!");
           this.deleting = false;
           this.dialog = false;
           // after delete... route back to home
@@ -575,6 +562,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.author-checkbox >>> .v-input--selection-controls__input.v-icon {
+  color: purple !important
+}
 // new dialog ui
 .create-dialog {
   color: var(--v-missionAccent-base);
@@ -599,10 +589,6 @@ export default {
     flex-direction: column;
     flex-wrap: wrap;
     transition: all 0.3s;
-
-    .author-checkbox .theme--light.v-icon {
-      color: var(--v-missionAccent-base) !important;
-    }
 
     .author-checkbox-label {
       font-size: 0.8rem !important;
