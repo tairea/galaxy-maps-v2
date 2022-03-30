@@ -58,7 +58,7 @@ const getDefaultState = () => {
     studentsActiveTasks: [],
     studentsActivityLog: [],
     showPanelCard: {},
-    studentsSubmissions: []
+    studentsSubmissions: [],
   };
 };
 
@@ -163,10 +163,10 @@ export default new Vuex.Store({
       state.person = data;
     },
     resetTeachersSubmissions(state) {
-      state.teachersSubmissionsToReview = []
+      state.teachersSubmissionsToReview = [];
     },
     setPanelCard(state, data) {
-      state.showPanelCard = data
+      state.showPanelCard = data;
     },
     setCurrentCourseId(state, courseId) {
       state.currentCourseId = courseId;
@@ -214,7 +214,7 @@ export default new Vuex.Store({
       console.log("arr: ", arr);
       const sortedArr = arr.sort((a, b) =>
         a.topic.topicCreatedTimestamp.seconds >
-          b.topic.topicCreatedTimestamp.seconds
+        b.topic.topicCreatedTimestamp.seconds
           ? 1
           : -1
       );
@@ -464,9 +464,13 @@ export default new Vuex.Store({
           const allWorkForReview = [...state.teachersSubmissionsToReview];
 
           for (const change of querySnapshot.docChanges()) {
-
             if (change.type === "added") {
-              if (allWorkForReview.some(submission => submission.id === change.doc.data().id)) return
+              if (
+                allWorkForReview.some(
+                  (submission) => submission.id === change.doc.data().id
+                )
+              )
+                return;
               allWorkForReview.push({
                 id: change.doc.data().id,
                 ...change.doc.data(),
@@ -961,7 +965,6 @@ export default new Vuex.Store({
       );
     }),
     async getSubmittedWorkByStudentAndTaskId({ state }, payload) {
-      console.log("getSubmittedWorkByStudentAndTaskId payload", payload)
       // get all work for review
       const unsubscribe = db
         .collection("courses")
@@ -969,14 +972,19 @@ export default new Vuex.Store({
         .collection("submissionsForReview")
         .where("studentId", "==", payload.studentId)
         .where("contextTask.id", "==", payload.taskId)
+        .where("taskSubmissionStatus", "in", ["inreview", "declined"])
         .orderBy("taskSubmittedForReviewTimestamp")
         .onSnapshot((querySnapshot) => {
           const studentsWorkForReview = [...state.studentsSubmissions];
 
           for (const change of querySnapshot.docChanges()) {
-
             if (change.type === "added") {
-              if (studentsWorkForReview.some(submission => submission.id === change.doc.data().id)) return
+              if (
+                studentsWorkForReview.some(
+                  (submission) => submission.id === change.doc.data().id
+                )
+              )
+                return;
               studentsWorkForReview.push({
                 id: change.doc.data().id,
                 ...change.doc.data(),
@@ -1024,7 +1032,12 @@ export default new Vuex.Store({
             console.log("change.type", change.type);
 
             if (change.type === "added") {
-              if (allRequestsForHelp.some(request => request.id === change.doc.data().id)) return
+              if (
+                allRequestsForHelp.some(
+                  (request) => request.id === change.doc.data().id
+                )
+              )
+                return;
               allRequestsForHelp.push({
                 id: change.doc.data().id,
                 ...change.doc.data(),

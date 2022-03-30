@@ -71,16 +71,7 @@
               }}
             </p>
             <p class="text-overline text-uppercase">
-              {{
-                getTaskStatus == "completed"
-                  ? "SUBMITTED: " + humanDate(task.taskCompletedTimestamp)
-                  : getTaskStatus == "inreview"
-                  ? "SUBMITTED: " +
-                    humanDate(task.taskSubmittedForReviewTimestamp)
-                  : getTaskStatus == "declined"
-                  ? "DECLINED: " + humanDate(task.submissionDeclinedTimestamp)
-                  : "LOCKED"
-              }}
+              {{ getStatusAndTimestamp }}
             </p>
           </div>
           <!-- View submission -->
@@ -120,6 +111,31 @@ export default {
         (task) => task.id === this.task.id
       );
       return task.taskStatus;
+    },
+    getStatusAndTimestamp() {
+      if (this.getTaskStatus == "completed" && this.task.submissionRequired) {
+        return (
+          "MARKED COMPLETED: " +
+          this.humanDate(this.task.taskReviewedAndCompletedTimestamp)
+        );
+      } else if (
+        this.getTaskStatus == "completed" &&
+        !this.task.submissionRequired
+      ) {
+        return "COMPLETED: " + this.humanDate(this.task.taskCompletedTimestamp);
+      } else if (this.getTaskStatus == "inreview") {
+        return (
+          "SUBMITTED: " +
+          this.humanDate(this.task.taskSubmittedForReviewTimestamp)
+        );
+      } else if (this.getTaskStatus == "declined") {
+        return `SUBMITTED: ${this.humanDate(
+          this.task.taskSubmittedForReviewTimestamp
+        )} 
+        DECLINED: ${this.humanDate(this.task.submissionDeclinedTimestamp)}`;
+      } else {
+        return "LOCKED";
+      }
     },
   },
   data() {
