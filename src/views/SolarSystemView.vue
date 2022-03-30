@@ -1,5 +1,6 @@
 <template>
   <div id="container" class="bg">
+    <!--==== Left section ====-->
     <div id="left-section">
       <SolarSystemInfo
         :topic="
@@ -11,31 +12,33 @@
           person.accountType == 'student' ? personsTopicsTasks : topicsTasks
         "
       />
-      <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <AssignedInfo
         v-if="person.accountType != 'student'"
         :assignCohorts="true"
         :people="peopleInCourse"
         :cohorts="cohortsInCourse"
       />
-
       <BackButton :toPath="'/galaxy/' + currentCourseId" />
     </div>
+
+    <!--==== Main section ====-->
     <div id="main-section">
       <MissionsList
         :tasks="
           person.accountType == 'student' ? personsTopicsTasks : topicsTasks
         "
         :topicId="currentTopicId"
+        @task="taskForHelpInfo($event)"
       />
     </div>
+
+    <!--==== Right section ====-->
     <div id="right-section">
-      <!-- <div class="galaxy-frame">
-        <h2 class="galaxy-label">Map</h2>
-        <SolarSystem :topic="getTopicById(currentTopicId)" :size="'0.25em'" />
-      </div> -->
-      <SubmittedWorkInfo v-if="activeMission" />
-      <RequestsForHelpInfo v-if="activeMission" :requests="requestsForHelp" />
+      <RequestsForHelpInfo
+        v-if="activeMission"
+        :requests="requests"
+        :task="task"
+      />
     </div>
   </div>
 </template>
@@ -45,7 +48,6 @@ import SolarSystemInfo from "../components/SolarSystemInfo";
 import AssignedInfo from "../components/AssignedInfo";
 import MissionsInfo from "../components/MissionsInfo";
 import MissionsList from "../components/MissionsList";
-import SubmittedWorkInfo from "../components/SubmittedWorkInfo";
 import RequestsForHelpInfo from "../components/RequestsForHelpInfo";
 import SolarSystem from "../components/SolarSystem";
 import BackButton from "../components/BackButton";
@@ -59,7 +61,6 @@ export default {
     AssignedInfo,
     MissionsInfo,
     MissionsList,
-    SubmittedWorkInfo,
     RequestsForHelpInfo,
     SolarSystem,
     BackButton,
@@ -67,15 +68,15 @@ export default {
   props: ["topicId"],
   async mounted() {
     if (this.person.accountType == "student") {
-      // store bindPersonsTasksByTopicId
+      // bind student's task data by topic id (from people db)
       await this.$store.dispatch("bindPersonsTasksByTopicId", {
         personId: this.person.id,
         courseId: this.currentCourseId,
         topicId: this.currentTopicId,
       });
-      console.log("persons topic tasks: ", this.personsTopicsTasks);
+      // console.log("persons topic tasks: ", this.personsTopicsTasks);
     } else {
-      //store bindTasksByTopicId
+      //bind tasks for topic (from course db)
       await this.$store.dispatch("bindTasksByTopicId", {
         courseId: this.currentCourseId,
         topicId: this.currentTopicId,
@@ -85,17 +86,29 @@ export default {
     // bind requests for help
     await this.$store.dispatch("bindRequestsForHelp", {
       courseId: this.currentCourseId,
-      topicId: this.currentTopicId,
-      taskId: this.currentTaskId,
+      // topicId: this.currentTopicId,
+      // taskId: this.currentTaskId,
     });
 
     // check if requests are binded
-    console.log("from store requestsForHelp: ", this.requestsForHelp);
+    // console.log("from store requestsForHelp: ", this.requestsForHelp);
 
-    this.getActiveMission();
-
-    // console.log("setCurrentTaskId: ", this.activeMission.id);
-    // this.$store.commit("setCurrentTaskId", this.activeMission.id);
+    // set active task
+    this.task = this.getActiveMission();
+    // filter help for active task
+    this.requests = this.requestsForHelp.filter(
+      (request) => request.contextTask.id == this.currentTaskId
+    );
+  },
+  watch: {
+    task: {
+      handler(newTask) {
+        // filter requests for help depending on task/mission clicked (in MissionList expansion panels)
+        this.requests = this.requestsForHelp.filter(
+          (request) => request.contextTask.id == newTask.id
+        );
+      },
+    },
   },
   computed: {
     ...mapState([
@@ -111,19 +124,19 @@ export default {
       "peopleInCourse",
       "cohortsInCourse",
     ]),
-    ...mapGetters([
-      "person",
-      "getPersonsTopicById",
-      "getTopicById",
-      "getTasksByTopicId",
-    ]),
+    ...mapGetters(["person", "getPersonsTopicById", "getTopicById"]),
   },
   data() {
     return {
       activeMission: null,
+      task: null,
+      requests: [],
     };
   },
   methods: {
+    taskForHelpInfo(task) {
+      this.task = task;
+    },
     getActiveMission() {
       const activeMissionObj = this.personsTopicsTasks.find((taskObj) => {
         return taskObj.taskStatus == "active";
@@ -134,7 +147,7 @@ export default {
         this.$store.commit("setCurrentTaskId", activeMissionObj.id);
         this.$store.commit("setCurrentTask", activeMissionObj);
       }
-      console.log("active mission:", activeMissionObj);
+      // console.log("active mission:", activeMissionObj);
       return activeMissionObj;
     },
   },
