@@ -33,7 +33,8 @@
     </div>
 
     <!--==== Right section ====-->
-    <div id="right-section">
+    <div v-if="task" id="right-section">
+      <SubmissionInfo v-if="task.submissionRequired == true" :task="task" />
       <RequestsForHelpInfo
         v-if="activeMission"
         :requests="requests"
@@ -48,6 +49,7 @@ import SolarSystemInfo from "../components/SolarSystemInfo";
 import AssignedInfo from "../components/AssignedInfo";
 import MissionsInfo from "../components/MissionsInfo";
 import MissionsList from "../components/MissionsList";
+import SubmissionInfo from "../components/SubmissionInfo";
 import RequestsForHelpInfo from "../components/RequestsForHelpInfo";
 import SolarSystem from "../components/SolarSystem";
 import BackButton from "../components/BackButton";
@@ -61,6 +63,7 @@ export default {
     AssignedInfo,
     MissionsInfo,
     MissionsList,
+    SubmissionInfo,
     RequestsForHelpInfo,
     SolarSystem,
     BackButton,
@@ -146,6 +149,8 @@ export default {
         // set as current/active task (if not already?)
         this.$store.commit("setCurrentTaskId", activeMissionObj.id);
         this.$store.commit("setCurrentTask", activeMissionObj);
+      } else {
+        return;
       }
       // console.log("active mission:", activeMissionObj);
       return activeMissionObj;
@@ -193,6 +198,7 @@ export default {
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
+  flex-direction: column;
 }
 
 .galaxy-frame {

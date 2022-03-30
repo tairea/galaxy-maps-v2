@@ -81,6 +81,7 @@
           style="width: 20%"
           :class="{
             'topic-in-review': getTaskStatus == 'inreview',
+            'topic-declined': getTaskStatus == 'declined',
             'topic-completed': getTaskStatus == 'completed',
             'topic-active': getTaskStatus == 'active',
           }"
@@ -95,6 +96,8 @@
                 ? "START MISSION"
                 : getTaskStatus == "active"
                 ? "ACTIVE MISSION"
+                : getTaskStatus == "declined"
+                ? "SUBMISSION DECLINED"
                 : "LOCKED"
             }}
           </p>
@@ -130,6 +133,14 @@
             <!-- no icon -->
           </div>
 
+          <div
+            v-else-if="getTaskStatus == 'declined'"
+            class="d-flex justify-center align-center"
+          >
+            <v-btn color="missionAccent" icon large>
+              <v-icon large>mdi-alert-octagon-outline</v-icon>
+            </v-btn>
+          </div>
           <div v-else class="d-flex justify-center align-center">
             <v-btn color="missionAccent" icon large>
               <v-icon large>mdi-lock-outline</v-icon>
@@ -167,15 +178,9 @@
       <ActiveMissionsCard
         v-if="task.taskStatus == 'active'"
         :task="task"
-        :id="task.id"
         :topicId="topicId"
       />
-      <SelectedMissionsCard
-        v-else
-        :task="task"
-        :id="task.id"
-        :topicId="topicId"
-      />
+      <SelectedMissionsCard v-else :task="task" :topicId="topicId" />
     </v-expansion-panel-content>
   </div>
 </template>
@@ -267,6 +272,10 @@ a {
   .topic-in-review {
     border: 1px solid var(--v-cohortAccent-base);
     color: var(--v-cohortAccent-base);
+  }
+  .topic-declined {
+    border: 1px solid var(--v-missionAccent-base);
+    color: var(--v-missionAccent-base);
   }
 
   .topic-completed,
