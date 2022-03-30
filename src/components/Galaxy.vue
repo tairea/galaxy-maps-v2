@@ -124,26 +124,29 @@ export default {
         },
         groups: {
           // useDefaultGroups: false,
-          locked: {
-            color: "rgba(132,132,132,0.2)",
-            shape: "dot",
-            // opacity: 0.1,
+          default: {
+            shape: "dot"
           },
-          unlocked: {
-            shape: "dot",
-            color: "#848484",
-            opacity: 1,
-          },
-          current: { color: "rgb(0,255,140)" },
-          // node status
-          inreview: {
-            shape: "dot",
-            color: "#FAF200",
-          },
-          completed: {
-            shape: "dot",
-            color: "#00E676",
-          },
+          // locked: {
+          //   color: "rgba(132,132,132,0.2)",
+          //   shape: "dot",
+          //   // opacity: 0.1,
+          // },
+          // unlocked: {
+          //   shape: "dot",
+          //   color: "#848484",
+          //   opacity: 1,
+          // },
+          // current: { color: "rgb(0,255,140)" },
+          // // node status
+          // inreview: {
+          //   shape: "dot",
+          //   color: "#FAF200",
+          // },
+          // completed: {
+          //   shape: "dot",
+          //   color: "#00E676",
+          // },
           // node types
           introduction: {
             shape: "dot",

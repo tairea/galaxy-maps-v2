@@ -92,9 +92,14 @@ export default {
           },
           font: { color: "white" },
         },
-        // TODO: node/edge groups
         groups: {
-          // useDefaultGroups: false,
+          default: {
+            shape: "dot"
+          },
+          completed: {
+            shape: "dot",
+            color: "#00E676",
+          },
           locked: {
             color: "rgba(132,132,132,0.4)", // opaque styling to appear locked
             shape: "dot",
@@ -103,38 +108,37 @@ export default {
             },
             // opacity: 0.1,
           },
-          unlocked: {
-            shape: "dot",
-            color: "#69A1E2",
-          },
-          current: { color: "rgb(0,255,140)" },
+          // unlocked: {
+          //   shape: "dot",
+          //   color: "#69A1E2",
+          // },
+          // current: { color: "rgb(0,255,140)" },
           // node status
-          inreview: {
-            shape: "dot",
-            color: "#FAF200",
-          },
-          completed: {
-            shape: "dot",
-            color: "#00E676",
-          },
+          // inreview: {
+          //   shape: "dot",
+          //   color: "#FAF200",
+          // },
           // node types
           introduction: {
             shape: "dot",
             color: "#00E676",
           },
-          tasks: {
-            // color: { background: "yellow", border: "white" },
-            // shape: "diamond",
-            shape: "dot",
-            color: "#69A1E2",
-          },
-          project: {
-            shape: "dot",
-            color: "#E269CF",
-          },
+          // tasks: {
+          //   // color: { background: "yellow", border: "white" },
+          //   // shape: "diamond",
+          //   shape: "dot",
+          //   color: "#69A1E2",
+          // },
+          // project: {
+          //   shape: "dot",
+          //   color: "#E269CF",
+          // },
           inactive: {
             shape: "dot",
             color: "#696969",
+            font: {
+              color: "#696969",  
+            }
           },
         },
         interaction: {
@@ -214,7 +218,18 @@ export default {
         return this.inActiveNodes
       } else if (this.person.accountType === 'student') {
         return this.currentCourseNodesWithStatus
-      } else return this.currentCourseNodes
+      } else return this.currentCourseNodesGroups
+    },
+    currentCourseNodesGroups() {
+      let courseNodes = []
+      for (const node of this.currentCourseNodes) {
+        courseNodes.push({
+          ...node,
+          group: "default",
+        });
+      }
+      // return nodes with status to network map
+      return courseNodes;
     },
     inActiveNodes() {
       let inActiveNodes = []
@@ -240,7 +255,7 @@ export default {
         nodesWithStatus.push({
           ...node,
           // color: this.stringToColour(matchingNode.label),  // Attempt to match node color to System color
-          group: matchingNode?.topicStatus ?? "unlocked",
+          group: matchingNode?.topicStatus ?? "default",
         });
       }
       // return nodes with status to network map
@@ -274,7 +289,6 @@ export default {
   },
   methods: {
     disableEditMode() {
-      console.log('disable edit mode')
       this.$refs.network.disableEditMode();
       this.addingNode = false,
       this.addingEdge = false
@@ -291,7 +305,6 @@ export default {
       this.addNodeMode();
     },
     addNodeMode() {
-      console.log('add node mode activated')
       this.active = true;
       this.addingNode = true;
       // this.$emit("toggleAddNodeButton")
@@ -308,14 +321,26 @@ export default {
     addNode(data) {
       if (!this.active) return;
       const newNodeId = data.properties.items[0];
+      const selected = this.$refs.network.getSelection()
+      if (selected.nodes.length || selected.edges.length) {
+        // select the new node accidentally created and delete it
+        this.$refs.network.selectNodes([newNodeId]);
+        this.$refs.network.deleteSelected()
+        return
+      }
       const newNode = this.$refs.network.getNode(newNodeId);
       this.$emit("add-node", newNode);
       this.addingNode = false;
     },
     addEdge(data) {
-      // if (!this.active) return; // this was breaking edge saving. why was there?
       this.$emit("setUiMessage", "");
       const newEdgeData = this.$refs.network.getEdge(data.properties.items[0]);
+      if (newEdgeData.from === newEdgeData.to) {
+        // select the new edge accidentally and delete it
+        this.$refs.network.selectEdges([newEdgeData.id]);
+        this.$refs.network.deleteSelected()
+        return
+      }
       db.collection("courses")
         .doc(this.currentCourseId)
         .collection("map-edges")
@@ -372,15 +397,19 @@ export default {
     async saveNodePositions() {
       this.$emit("nodePositionsChangeLoading");
       const nodes = this.$refs.network.nodes;
+      const newNodes = this.newNodePositions
       // spread/or map new positions to nodes
-      for (const changedNode in this.newNodePositions) {
-        const changedNodeObj = this.newNodePositions[changedNode];
+
+      for (const changedNode in newNodes) {
+        const changedNodeObj = newNodes[changedNode];
         const node = nodes.find((node) => node.id === changedNodeObj.id);
         // TODO: only saves changes once. not the second time
         if (changedNodeObj.x !== node.x || changedNodeObj.y !== node.y) {
           node.x = changedNodeObj.x;
           node.y = changedNodeObj.y;
           // save to firestore db
+          if (node.group) delete node.group
+
           await db
             .collection("courses")
             .doc(this.currentCourseId)
@@ -396,9 +425,11 @@ export default {
         }
         this.$emit("nodePositionsChangeSaved");
       }
+      return this.newNodePositions = {}
     },
     selectNode(data) {
       if (this.addingNode || this.addingEdge) return
+      console.log('selectedNode')
       this.active = true;
       if (data.nodes.length == 1) {
         // is type node
@@ -414,6 +445,7 @@ export default {
       }
     },
     selectEdge(data) {
+      if (this.addingNode || this.addingEdge) return
       this.active = true;
       if (data.edges.length == 1) {
         const edgeId = data.edges[0];
@@ -435,7 +467,7 @@ export default {
     removeUnsavedNode() {
       console.log('removeUnsavedNode')
       this.active = false
-      this.$refs.network.deleteSelected();
+      this.$refs.network.deleteSelected()
     },
     animationFinished(data) {
       // show popup

@@ -33,7 +33,7 @@
 
     <!-- New node positions Save Button -->
     <v-btn
-      v-if="changeInPositions"
+      v-if="editMode && changeInPositions "
       class="map-button pa-5"
       color="baseAccent"
       dark
@@ -48,13 +48,13 @@
     </v-btn>
 
     <div class="ui-message-wrap">
-      <p v-if="!addNodeMode" class="ui-message" style="margin-left: 20px">
+      <p v-if="!editMode" class="ui-message" style="margin-left: 20px">
         <v-icon color="missionAccent" class="bounce"
           >mdi-hand-pointing-up</v-icon
         >
         Add a new node to extend your Galaxy map
       </p>
-      <p v-else class="ui-message">{{ uiMessage }}</p>
+      <p v-else class="ui-message active">{{ uiMessage }}</p>
     </div>
   </div>
 </template>
@@ -83,6 +83,9 @@ export default {
       "getCourseById",
       "getOrganisationsInThisCourse",
     ]),
+    editMode () {
+      return this.addNodeMode || this.addEdgeMode
+    }
   },
   methods: {
     toggleAddNodeMode() {
@@ -156,6 +159,10 @@ export default {
       font-size: 0.8rem;
       text-align: left;
       margin-left: 10px;
+
+    }
+    .active {
+      color: var(--v-baseAccent-base) !important
     }
   }
 }

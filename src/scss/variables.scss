@@ -31,3 +31,7 @@ $tooltip-border-radius: 0px;
 .v-dialog {
   border-radius: 0px;
 }
+
+.v-input--selection-controls__input .v-icon {
+  color: var(--v-missionAccent-base);
+}
