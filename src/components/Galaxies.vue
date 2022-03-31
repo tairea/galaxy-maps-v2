@@ -35,9 +35,25 @@
       :options="network.options"
       @click="click"
     ></network>
-    <p v-else class="noGalaxies overline">
-      NO {{ whichCoursesToDisplay == "assigned" ? "ASSIGNED" : "" }} GALAXIES TO
-      DISPLAY
+    <network
+      v-else-if="
+        submittedNodes.length > 0 && whichCoursesToDisplay === 'submitted'
+      "
+      ref="network"
+      class="full-height"
+      :nodes="submittedNodes"
+      :edges="submittedEdges"
+      :options="network.options"
+      @click="click"
+    ></network>
+    <p v-else-if="whichCoursesToDisplay == 'assigned'" class="noGalaxies overline">
+      DISCOVER GALAXIES TO START LEARNING
+    </p>
+    <p v-else-if="whichCoursesToDisplay == 'my'" class="noGalaxies overline">
+      CREATE A GALAXY TO START TEACHING
+    </p>
+    <p v-else-if="whichCoursesToDisplay == 'submitted'" class="noGalaxies overline">
+      NO SUBMITTED GALAXIES TO REVIEW 
     </p>
     <PopupGalaxyPreview
       v-if="popupPreview"
@@ -58,9 +74,9 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import PopupGalaxyPreview from "../components/PopupGalaxyPreview";
 
 export default {
-  name: "Galaxy",
+  name: "Galaxies",
   props: {
-    whichCoursesToDisplay: { type: String, default: "" },
+    whichCoursesToDisplay: { type: String, default: null },
   },
   components: {
     Network,
@@ -69,7 +85,7 @@ export default {
   },
   data: () => ({
     active: false,
-    loading: true,
+    loading: false,
     popupPreview: false,
     allNodeIds: [],
     nodesToDisplay: [],
@@ -124,26 +140,29 @@ export default {
         },
         groups: {
           // useDefaultGroups: false,
-          locked: {
-            color: "rgba(132,132,132,0.2)",
-            shape: "dot",
-            // opacity: 0.1,
+          default: {
+            shape: "dot"
           },
-          unlocked: {
-            shape: "dot",
-            color: "#848484",
-            opacity: 1,
-          },
-          current: { color: "rgb(0,255,140)" },
-          // node status
-          inreview: {
-            shape: "dot",
-            color: "#FAF200",
-          },
-          completed: {
-            shape: "dot",
-            color: "#00E676",
-          },
+          // locked: {
+          //   color: "rgba(132,132,132,0.2)",
+          //   shape: "dot",
+          //   // opacity: 0.1,
+          // },
+          // unlocked: {
+          //   shape: "dot",
+          //   color: "#848484",
+          //   opacity: 1,
+          // },
+          // current: { color: "rgb(0,255,140)" },
+          // // node status
+          // inreview: {
+          //   shape: "dot",
+          //   color: "#FAF200",
+          // },
+          // completed: {
+          //   shape: "dot",
+          //   color: "#00E676",
+          // },
           // node types
           introduction: {
             shape: "dot",
@@ -180,6 +199,8 @@ export default {
       "personsAssignedEdges",
       "courses",
       "darkMode",
+      "submittedNodes", 
+      "submittedEdges"
       // "topics",
       // "personsTopics",
     ]),
@@ -189,7 +210,7 @@ export default {
     },
   },
   async mounted() {
-    this.setNodesToDisplay();
+    this.setNodesToDisplay(this.whichCoursesToDisplay);
   },
   watch: {
     darkMode(dark) {
@@ -202,61 +223,93 @@ export default {
         this.makeGalaxyLabelsColour("#ffffff");
       }
     },
+    whichCoursesToDisplay (newVal) {
+      this.setNodesToDisplay(newVal)
+    }
   },
   methods: {
-    async setNodesToDisplay() {
-      if (this.whichCoursesToDisplay == "my") {
-        /* ===========================
-            Only show MY Galaxies
-        =========================== */
-        await this.$store.dispatch("bindCoursesByPersonId", this.user.data.id); // bind courses created by this user id
-        await this.$store.dispatch("getNodesByPersonId", this.user.data.id);
-        await this.$store.dispatch("getEdgesByPersonId", this.user.data.id);
-        this.nodesToDisplay = this.personsNodesForDisplay;
-      } else if (this.whichCoursesToDisplay == "assigned") {
-        /* ===========================
-          Only show ASSIGNED Galaxies
+    setNodesToDisplay(newVal) {
+      this.loading = true
+      if (newVal === 'all') this.setAllNodesToDisplay()
+      if (newVal === 'assigned') this.setAssignedNodesToDisplay()
+      if (newVal === 'my') this.setMyNodesToDisplay()
+      if (newVal === 'submitted') this.setSubmittedNodesToDisplay()
+    },
+    async setSubmittedNodesToDisplay() {
+      /* ===========================
+          Only show submitted Galaxies to Admin
       =========================== */
-        await this.$store.dispatch(
-          "getAssignedNodesByPersonId",
-          this.user.data.id
-        );
-        await this.$store.dispatch(
-          "getAssignedEdgesByPersonId",
-          this.user.data.id
-        );
-        this.nodesToDisplay = this.personsAssignedNodesForDisplay;
-      } else if (this.whichCoursesToDisplay == "all") {
-        /* ===========================
-          Only show ALL Galaxies in DATABASE!! (so I can see what maps users have created)
-      =========================== */
-        await this.$store.dispatch("getAllNodes"); // node data for course
-        await this.$store.dispatch("getAllEdges"); // edge data for course
-        this.nodesToDisplay = this.allNodesForDisplay;
+      await this.$store.dispatch("getSubmittedNodesAndEdges"); // node data for course
+      // await this.$store.dispatch("getSubmittedEdges"); // edge data for course
+      this.nodesToDisplay = this.submittedNodes;
+      
+      if (this.nodesToDisplay.length > 0) {
+        const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
+        if (repositionedNodes.length) {
+          this.$store.state.submittedNodes = repositionedNodes;
+        }
       }
+
+      this.centerAfterReposition()
+    },
+    async setMyNodesToDisplay() {
+      /* ===========================
+          Only show MY Galaxies
+      =========================== */
+      await this.$store.dispatch("bindCoursesByPersonId", this.user.data.id); // bind courses created by this user id
+      await this.$store.dispatch("getNodesByPersonId", this.user.data.id);
+      await this.$store.dispatch("getEdgesByPersonId", this.user.data.id);
+      this.nodesToDisplay = this.personsNodesForDisplay;
+
       if (this.nodesToDisplay.length > 0) {
         const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
         
-
         if (repositionedNodes.length) {
-          if (this.whichCoursesToDisplay == "my") {
-            this.$store.commit(
-              "updatePersonsNodesForDisplay",
-              repositionedNodes
-            );
-          } else if (this.whichCoursesToDisplay == "assigned") {
-            this.$store.commit(
-              "updatePersonsAssignedNodesForDisplay",
-              repositionedNodes
-            );
-          } else if (this.whichCoursesToDisplay == "all") {
-            this.$store.commit("updateAllNodesForDisplay", repositionedNodes);
-          }
+          this.$store.commit("updatePersonsNodesForDisplay", repositionedNodes);
         }
       }
+      this.centerAfterReposition()
+    },
+    async setAssignedNodesToDisplay() {
+      /* ===========================
+          Only show ASSIGNED Galaxies
+      =========================== */
+      await this.$store.dispatch("getAssignedNodesByPersonId", this.user.data.id);
+      await this.$store.dispatch("getAssignedEdgesByPersonId", this.user.data.id);
+      this.nodesToDisplay = this.personsAssignedNodesForDisplay;
+      
+      if (this.nodesToDisplay.length > 0) {
+        const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
+        
+        if (repositionedNodes.length) {
+          this.$store.commit("updatePersonsAssignedNodesForDisplay",
+            repositionedNodes
+          );
+        }
+      }
+      this.centerAfterReposition()
+    },
+    async setAllNodesToDisplay() {
+      console.log("settingAllNodes")
+      /* ===========================
+        Only show ALL Galaxies in DATABASE!! (so I can see what maps users have created)
+      =========================== */
+      await this.$store.dispatch("getAllNodes"); // node data for course
+      await this.$store.dispatch("getAllEdges"); // edge data for course
+      this.nodesToDisplay = this.allNodesForDisplay;
+      
+      if (this.nodesToDisplay.length > 0) {
+        const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
+        if (repositionedNodes.length) {
+          this.$store.commit("updateAllNodesForDisplay", repositionedNodes);
+        }
+      }
+
+      this.centerAfterReposition()
+    },
+    centerAfterReposition() {
       // stop loading spinner
       this.loading = false;
-
       // short timer to give time to load all before zoom
       if (this.nodesToDisplay.length > 0) {
         setTimeout(() => {
@@ -296,6 +349,8 @@ export default {
       }
 
       const closestNode = this.$refs.network.getNode(closest.id);
+      console.log("clicked: ", closestNode)
+      // debugger
 
       // set save current course clicked in store
       this.$store.commit("setCurrentCourseId", closestNode.courseId);
@@ -545,7 +600,8 @@ export default {
 .popupPanel {
   position: absolute;
   // position of the PopupPreview panel
-  top: calc(50% - 350px);
+  top: calc(10%);
   left: calc(75% - 5vw);
+  z-index: 2;
 }
 </style>

@@ -4,31 +4,30 @@
     <div id="left-section">
       <SolarSystemInfo
         :topic="
-          person.accountType != 'student'
-            ? getTopicById(currentTopicId)
-            : getPersonsTopicById(currentTopicId)
+          teacher
+            ? getPersonsTopicById(currentTopicId)
+            : getTopicById(currentTopicId)
         "
-        :tasks="
-          person.accountType == 'student' ? personsTopicsTasks : topicsTasks
-        "
+        :tasks="teacher ? topicsTasks : personsTopicsTasks"
+        :teacher="teacher"
       />
       <AssignedInfo
-        v-if="person.accountType != 'student'"
+        v-if="!draft && teacher"
         :assignCohorts="true"
         :people="peopleInCourse"
         :cohorts="cohortsInCourse"
       />
-      <BackButton :toPath="'/galaxy/' + currentCourseId" />
+
+      <BackButton :toPath="{ path: '/galaxy/' + currentCourseId }" />
     </div>
 
     <!--==== Main section ====-->
     <div id="main-section">
       <MissionsList
-        :tasks="
-          person.accountType == 'student' ? personsTopicsTasks : topicsTasks
-        "
+        :tasks="teacher ? topicsTasks : personsTopicsTasks"
         :topicId="currentTopicId"
         @task="taskForHelpInfo($event)"
+        :teacher="teacher"
       />
     </div>
 
@@ -66,20 +65,20 @@ export default {
   },
   props: ["topicId"],
   async mounted() {
-    if (this.person.accountType == "student") {
-      // bind student's task data by topic id (from people db)
+    if (this.teacher) {
+      //store bindTasksByTopicId
+      await this.$store.dispatch("bindTasksByTopicId", {
+        courseId: this.currentCourseId,
+        topicId: this.currentTopicId,
+      });
+    } else {
+      // store bindPersonsTasksByTopicId
       await this.$store.dispatch("bindPersonsTasksByTopicId", {
         personId: this.person.id,
         courseId: this.currentCourseId,
         topicId: this.currentTopicId,
       });
-      // console.log("persons topic tasks: ", this.personsTopicsTasks);
-    } else {
-      //bind tasks for topic (from course db)
-      await this.$store.dispatch("bindTasksByTopicId", {
-        courseId: this.currentCourseId,
-        topicId: this.currentTopicId,
-      });
+      console.log("persons topic tasks: ", this.personsTopicsTasks);
     }
 
     // bind requests for help
@@ -132,7 +131,22 @@ export default {
       "peopleInCourse",
       "cohortsInCourse",
     ]),
-    ...mapGetters(["person", "getPersonsTopicById", "getTopicById"]),
+    ...mapGetters([
+      "person",
+      "getPersonsTopicById",
+      "getTopicById",
+      "getTasksByTopicId",
+      "user",
+    ]),
+    draft() {
+      return this.currentCourse.status === "drafting";
+    },
+    teacher() {
+      return (
+        this.currentCourse?.mappedBy?.personId === this.person.id ||
+        this.user.data.admin
+      );
+    },
   },
   data() {
     return {

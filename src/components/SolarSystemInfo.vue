@@ -4,7 +4,7 @@
     <h1 class="ss-title">{{ topic.label }}</h1>
     <SolarSystem
       :topic="
-        person.accountType != 'student'
+        teacher
           ? getTopicById(currentTopicId)
           : getPersonsTopicById(currentTopicId)
       "
@@ -25,7 +25,7 @@ import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "SolarSystemInfo",
-  props: ["topic", "tasks"],
+  props: ["topic", "tasks", "teacher"],
   components: {
     SolarSystem,
   },
@@ -52,6 +52,7 @@ export default {
   margin-top: 30px;
   padding: 20px;
   backdrop-filter: blur(2px);
+  width: 100%
 }
 
 h1 {

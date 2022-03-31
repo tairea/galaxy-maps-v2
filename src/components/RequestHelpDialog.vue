@@ -155,6 +155,13 @@ export default {
             color: "baseAccent"
           })
         })
+        .then(async () => {
+          await this.$store.dispatch("bindRequestsForHelp", {
+            courseId: this.currentCourse.id,
+            topicId: this.currentTopic.id,
+            taskId: this.currentTask.id,
+          });
+        })
         .catch((error) => {
           console.error("Error writing document: ", error);
           this.$store.commit("setSnackbar", {

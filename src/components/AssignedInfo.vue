@@ -116,7 +116,7 @@ export default {
   width: calc(100% - 30px);
   // height: 400px;
   border: 1px solid var(--v-baseAccent-base);
-  margin-top: 10%;
+  margin-top: 30px;
   padding: 20px;
   // background: var(--v-baseAccent-base);
   position: relative;

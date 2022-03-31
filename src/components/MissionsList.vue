@@ -20,6 +20,7 @@
             :index="index"
             :topicId="topicId"
             :topicActive="topicActive"
+            :teacher="teacher"
           />
         </v-expansion-panel>
       </v-expansion-panels>
@@ -29,7 +30,7 @@
       <p class="no-missions-label">No Missions in this system</p>
     </div>
 
-    <div class="createButton" v-if="person.accountType != 'student'">
+    <div class="createButton" v-if="teacher">
       <CreateEditDeleteMissionDialog :topicId="topicId" />
     </div>
   </div>
@@ -48,7 +49,7 @@ export default {
     MissionsCard,
     CreateEditDeleteMissionDialog,
   },
-  props: ["tasks", "topicId"],
+  props: ["tasks", "topicId", "teacher"],
   data() {
     return {
       activeMission: false,

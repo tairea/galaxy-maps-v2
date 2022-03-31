@@ -1,11 +1,56 @@
 <template>
   <div class="fullHeight">
-    <div class="flexContainer">
-      <Galaxy :whichCoursesToDisplay="whichCoursesToDisplay" />
+    <div class="d-flex justify-center button-row">
+      <v-btn 
+        small 
+        outlined 
+        color="missionAccent" 
+        class="mx-2 galaxy-btn"
+        :class="{'focused': learn}" 
+        @click="whichCoursesToDisplay = 'assigned'"
+      >
+        LEARN
+      </v-btn>
+      <v-btn 
+        small 
+        outlined 
+        color="missionAccent" 
+        class="mx-2 galaxy-btn"
+        :class="{'focused': teach}" 
+        @click="whichCoursesToDisplay = 'my'"
+      >
+        TEACH
+      </v-btn>
+      <v-btn 
+        small 
+        active 
+        outlined 
+        color="missionAccent" 
+        class="mx-2 galaxy-btn"
+        :class="{'focused': discover}" 
+        @click="whichCoursesToDisplay = 'all'"
+      >
+        DISCOVER
+      </v-btn>
+      <v-btn
+        v-if="admin" 
+        small 
+        active 
+        outlined 
+        color="missionAccent" 
+        class="mx-2 galaxy-btn"
+        :class="{'focused': submitted}" 
+        @click="whichCoursesToDisplay = 'submitted'"
+      >
+        submitted
+      </v-btn>
     </div>
-    <div v-if="whichCoursesToDisplay != 'assigned'" class="buttons">
-      <CreateEditDeleteGalaxyDialog :edit="false" v-if="myGalaxiesPath" />
-      <!-- <DiscoverGalaxyButton /> -->
+    <div class="flexContainer">
+      <Galaxies :whichCoursesToDisplay="whichCoursesToDisplay" />
+    </div>
+    <div class="buttons">
+      <CreateEditDeleteGalaxyDialog :edit="false" v-if="teach" />
+      <!-- <DiscoverGalaxyButton />  -->
     </div>
   </div>
 </template>
@@ -13,46 +58,48 @@
 <script>
 import CreateEditDeleteGalaxyDialog from "../components/CreateEditDeleteGalaxyDialog";
 import DiscoverGalaxyButton from "../components/DiscoverGalaxyButton";
-import Galaxy from "../components/Galaxy";
+import Galaxies from "../components/Galaxies";
 
-import { db } from "../store/firestoreConfig";
-
-import { mapState, mapGetters } from "vuex";
+import { mapGetters } from "vuex";
 
 export default {
   name: "GalaxyList",
+  props: ['display'],
   components: {
     CreateEditDeleteGalaxyDialog,
     DiscoverGalaxyButton,
-    Galaxy,
-  },
-  async mounted() {
-    // if account type student, bind assignedCourses to store.courses
-    // else if account type teacher, bind all courses to store.courses
-    if (this.person.accountType == "student") {
-      await this.$store.dispatch(
-        "getAssignedCourses",
-        this.person.assignedCourses
-      );
-      console.log("this.courses from assigned galaxies view", this.courses);
-    } else {
-      await this.$store.dispatch("bindAllCourses");
-    }
-  },
-  computed: {
-    ...mapGetters(["user", "person"]),
-    myGalaxiesPath() {
-      return this.$route.path.includes("/my");
-    },
+    Galaxies,
   },
   data() {
     return {
       loading: true,
-      whichCoursesToDisplay: this.$route.params.mineOrAssignedOrAll
-        ? this.$route.params.mineOrAssignedOrAll
-        : "", // my, assigned OR all
+      whichCoursesToDisplay: "all"
     };
   },
+  async mounted() {
+    if (this.display) this.whichCoursesToDisplay = this.display
+    // TODO: Currently navigates to all galaxies by default, this needs to be improved
+    await this.$store.dispatch("bindAllCourses");
+  },
+  computed: {
+    ...mapGetters(["user", "person"]),
+    teach() {
+      return this.whichCoursesToDisplay === 'my'
+    },
+    learn() {
+      return this.whichCoursesToDisplay === 'assigned'
+    },
+    discover() {
+      return this.whichCoursesToDisplay === 'all'
+    },
+    submitted() {
+      return this.whichCoursesToDisplay === 'submitted'
+    },
+    admin() {
+      return this.user.data.admin
+    },
+
+  }
 };
 </script>
 
@@ -98,5 +145,19 @@ export default {
   left: 50%;
   transform: translate(-50%, 0%);
   display: flex;
+}
+
+.button-row {
+  position: relative;
+  top: 80px;
+  z-index: 1
+}
+
+.focused {
+  background-color: var(--v-missionAccent-darken4)
+}
+
+.galaxy-btn {
+  background-color: var(--v-background-base)
 }
 </style>

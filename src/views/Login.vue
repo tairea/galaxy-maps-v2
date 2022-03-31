@@ -127,18 +127,8 @@ export default {
         };
         firebase.auth().currentUser.sendEmailVerification(actionCodeSettings);
         throw new Error("Please check your emails to verify your account");
-      } else if (this.person.accountType == "student") {
-        console.log(
-          this.person.accountType +
-            " signed in - going to route /base/galaxies/assigned"
-        );
-        //TODO: bug: student route goes to cohorts?
-        this.$router.push("/base/galaxies/assigned");
       } else {
-        console.log(
-          this.person.accountType + " signed in - going to route /base/cohorts"
-        );
-        this.$router.push("/base/cohorts");
+        this.$router.push("/base/galaxies");
       }
     },
     validate() {

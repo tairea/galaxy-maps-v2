@@ -1,10 +1,11 @@
 <template>
   <div id="container" class="bg">
     <div id="left-section">
-      <GalaxyInfo :course="getCourseById(courseId)" />
+      <GalaxyInfo :course="course" :teacher="teacher" :draft="draft"/>
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
+      <PublishGalaxy v-if="showPublish" :course="course" :person="person"/>
       <AssignedInfo
-        v-if="person.accountType != 'student'"
+        v-if="!draft && teacher"
         :assignCohorts="true"
         :people="peopleInCourse"
         :cohorts="cohortsInCourse"
@@ -14,7 +15,7 @@
     <div id="main-section">
       <!-- Map Buttons -->
       <GalaxyMapButtons
-        v-if="person.accountType != 'student'"
+        v-if="teacher"
         :addNodeMode="addNodeMode"
         :addEdgeMode="addEdgeMode"
         :uiMessage="uiMessage ? uiMessage : ''"
@@ -42,17 +43,18 @@
         @nodePositionsChangeLoading="nodePositionsChangeLoading = true"
         @nodePositionsChangeSaved="nodePositionsChangeSaved"
         @toggleAddEdgeMode="toggleAddEdgeMode"
+        :teacher="teacher"
       />
 
       <!-- Edit -->
-      <GalaxyMapEditDialog
+      <CreateEditDeleteNodeDialog
         v-if="dialog"
         ref="edit"
         :dialog="dialog"
         :dialogTitle="dialogTitle"
         :dialogDescription="dialogDescription"
         :editing="editing"
-        :course="getCourseById(courseId)"
+        :course="course"
         :currentNode="currentNode"
         :currentEdge="currentEdge"
         @closeDialog="closeDialog"
@@ -67,7 +69,8 @@
           :infoPopupPosition="infoPopupPosition"
           :currentTopic="currentNode"
           :centerFocusPosition="centerFocusPosition"
-          :tasks="person.accountType == 'student' ? personsTopicsTasks : topicsTasks"        
+          :tasks="teacher ? topicsTasks : personsTopicsTasks" 
+          :teacher="teacher"       
           @close="closePopup"
           @showEditDialog="showEditDialog"
           @focus="focusPopup"
@@ -83,15 +86,16 @@ import GalaxyInfo from "../components/GalaxyInfo";
 import AssignedInfo from "../components/AssignedInfo";
 import MissionsInfo from "../components/MissionsInfo";
 import MissionsList from "../components/MissionsList";
-import Galaxy from "../components/Galaxy";
 import GalaxyMap from "../components/GalaxyMap";
 import BackButton from "../components/BackButton";
-import GalaxyMapEditDialog from "../components/GalaxyMapEditDialog";
+import CreateEditDeleteNodeDialog from "../components/CreateEditDeleteNodeDialog";
 import GalaxyMapButtons from "../components/GalaxyMapButtons";
 import PopupSystemPreview from "../components/PopupSystemPreview";
+import PublishGalaxy from "../components/GalaxyView/PublishGalaxy"
 
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
+import { getCourseById } from "@/lib/ff"
 
 export default {
   name: "GalaxyView",
@@ -100,12 +104,12 @@ export default {
     AssignedInfo,
     MissionsInfo,
     MissionsList,
-    Galaxy,
     GalaxyMap,
     BackButton,
-    GalaxyMapEditDialog,
+    CreateEditDeleteNodeDialog,
     GalaxyMapButtons,
     PopupSystemPreview,
+    PublishGalaxy
   },
   props: ["courseId"],
   data() {
@@ -131,10 +135,14 @@ export default {
       dialogDescription: "",
       editing: false,
       moveNodes: false,
+      course: {},
     };
   },
   async mounted() {
     // create first node, when galaxy first created (hard coded)
+    this.course = await getCourseById(this.courseId)
+    this.$store.commit('setCurrentCourse', this.course)
+
     if (this.fromCreate) {
       let nodeId = null;
       await db
@@ -192,15 +200,6 @@ export default {
     await this.$store.dispatch("bindPeopleInCourse", this.courseId);
     // bind assigned cohorts in this course
     await this.$store.dispatch("bindCohortsInCourse", this.courseId);
-
-    // count tasks
-    // this.$store.dispatch("getCourseTotalTasksCount", this.courseId);
-    // count topics
-    // this.$store.dispatch("getCourseTotalTopicsCount", this.courseId);
-
-    if (this.courseId) {
-      return;
-    }
   },
   computed: {
     ...mapState([
@@ -211,15 +210,26 @@ export default {
       "cohortsInCourse",
       "topicsTasks",
       "personsTopicsTasks",
+      "currentCourse"
     ]),
-    ...mapGetters(["getCourseById", "person"]),
+    ...mapGetters(["person", "user"]),
+
     goBackPath() {
-      if (this.person.accountType == "student") {
-        return "/base/galaxies/assigned";
+      if (this.teacher) {
+        return { path: 'galaxies', name: "GalaxyList", params: { display: 'my'}};
       } else {
-        return "/base/galaxies/my";
+        return { path: 'galaxies', name: "GalaxyList", params: { display: 'assigned'}};
       }
     },
+    draft () {
+      return this.course?.status === "drafting"
+    },
+    teacher() {
+      return this.course?.mappedBy?.personId === this.person.id || this.user.data.admin
+    },
+    showPublish() {
+      return (this.user.data.admin && this.course.status === "submitted") || this.draft 
+    }
   },
   methods: {
     setUiMessage(message) {
@@ -255,7 +265,7 @@ export default {
       if (this.addNodeMode) this.addNodeMode = false
     },
     async bindTasks(courseId, topicId) {
-      if (this.person.accountType == "student") {
+      if (!this.teacher) {
         await this.$store.dispatch("bindPersonsTasksByTopicId", {
           personId: this.person.id,
           courseId: courseId,
