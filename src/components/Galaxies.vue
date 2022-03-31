@@ -35,11 +35,25 @@
       :options="network.options"
       @click="click"
     ></network>
-    <p v-if="whichCoursesToDisplay == 'assigned'" class="noGalaxies overline">
+    <network
+      v-else-if="
+        submittedNodes.length > 0 && whichCoursesToDisplay === 'submitted'
+      "
+      ref="network"
+      class="full-height"
+      :nodes="submittedNodes"
+      :edges="submittedEdges"
+      :options="network.options"
+      @click="click"
+    ></network>
+    <p v-else-if="whichCoursesToDisplay == 'assigned'" class="noGalaxies overline">
       DISCOVER GALAXIES TO START LEARNING
     </p>
     <p v-else-if="whichCoursesToDisplay == 'my'" class="noGalaxies overline">
       CREATE A GALAXY TO START TEACHING
+    </p>
+    <p v-else-if="whichCoursesToDisplay == 'submitted'" class="noGalaxies overline">
+      NO SUBMITTED GALAXIES TO REVIEW 
     </p>
     <PopupGalaxyPreview
       v-if="popupPreview"
@@ -126,26 +140,29 @@ export default {
         },
         groups: {
           // useDefaultGroups: false,
-          locked: {
-            color: "rgba(132,132,132,0.2)",
-            shape: "dot",
-            // opacity: 0.1,
+          default: {
+            shape: "dot"
           },
-          unlocked: {
-            shape: "dot",
-            color: "#848484",
-            opacity: 1,
-          },
-          current: { color: "rgb(0,255,140)" },
-          // node status
-          inreview: {
-            shape: "dot",
-            color: "#FAF200",
-          },
-          completed: {
-            shape: "dot",
-            color: "#00E676",
-          },
+          // locked: {
+          //   color: "rgba(132,132,132,0.2)",
+          //   shape: "dot",
+          //   // opacity: 0.1,
+          // },
+          // unlocked: {
+          //   shape: "dot",
+          //   color: "#848484",
+          //   opacity: 1,
+          // },
+          // current: { color: "rgb(0,255,140)" },
+          // // node status
+          // inreview: {
+          //   shape: "dot",
+          //   color: "#FAF200",
+          // },
+          // completed: {
+          //   shape: "dot",
+          //   color: "#00E676",
+          // },
           // node types
           introduction: {
             shape: "dot",
@@ -182,6 +199,8 @@ export default {
       "personsAssignedEdges",
       "courses",
       "darkMode",
+      "submittedNodes", 
+      "submittedEdges"
       // "topics",
       // "personsTopics",
     ]),
@@ -205,7 +224,6 @@ export default {
       }
     },
     whichCoursesToDisplay (newVal) {
-      console.log('newVal: ', newVal)
       this.setNodesToDisplay(newVal)
     }
   },
@@ -215,6 +233,24 @@ export default {
       if (newVal === 'all') this.setAllNodesToDisplay()
       if (newVal === 'assigned') this.setAssignedNodesToDisplay()
       if (newVal === 'my') this.setMyNodesToDisplay()
+      if (newVal === 'submitted') this.setSubmittedNodesToDisplay()
+    },
+    async setSubmittedNodesToDisplay() {
+      /* ===========================
+          Only show submitted Galaxies to Admin
+      =========================== */
+      await this.$store.dispatch("getSubmittedNodesAndEdges"); // node data for course
+      // await this.$store.dispatch("getSubmittedEdges"); // edge data for course
+      this.nodesToDisplay = this.submittedNodes;
+      
+      if (this.nodesToDisplay.length > 0) {
+        const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
+        if (repositionedNodes.length) {
+          this.$store.state.submittedNodes = repositionedNodes;
+        }
+      }
+
+      this.centerAfterReposition()
     },
     async setMyNodesToDisplay() {
       /* ===========================

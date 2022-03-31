@@ -1,6 +1,6 @@
 <template>
-  <div id="galaxy-info">
-    <h2 class="galaxy-label">Galaxy</h2>
+  <div id="galaxy-info" :class="draft ? 'draft-border' : 'galaxy-border'" v-if="course">
+    <h2 class="galaxy-label"><span v-if="draft">Drafting</span> Galaxy</h2>
     <h1 class="galaxy-title">{{ course.title }}</h1>
     <!-- <div class="d-flex justify-center align-center"> -->
     <v-img v-if="course.image" class="galaxy-image" :src="course.image.url"></v-img>
@@ -22,17 +22,14 @@ import { mapState } from "vuex";
 
 export default {
   name: "GalaxyInfo",
-  props: ["course", "teacher"],
+  props: ["course", "teacher", "draft"],
   components: {
     CreateEditDeleteGalaxyDialog,
   },
   mounted() {},
   computed: {
     ...mapState(["person"]),
-  },
-  data() {
-    return {};
-  },
+  }
 };
 </script>
 
@@ -40,7 +37,6 @@ export default {
 #galaxy-info {
   width: calc(100% - 30px);
   // height: 400px;
-  border: 1px solid var(--v-galaxyAccent-base);
   margin-top: 30px;
   padding: 20px;
   // background: var(--v-baseAccent-base);
@@ -56,19 +52,19 @@ export default {
     position: absolute;
     top: 0;
     left: -1px;
-    background-color: var(--v-galaxyAccent-base);
     color: var(--v-background-base);
+    background-color: var(--v-galaxyAccent-base);
     padding: 0px 15px 0px 5px;
     clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%);
   }
 
   .galaxy-title {
     font-size: 1.2rem;
-    color: var(--v-galaxyAccent-base) !important;
     font-weight: 600;
     text-transform: uppercase;
     margin: 20px 0px 5px 0px;
     color: white;
+    color: var(--v-galaxyAccent-base)
   }
 
   .galaxy-image {
@@ -77,8 +73,17 @@ export default {
 
   .galaxy-description {
     margin-top: 10px;
-    color: var(--v-galaxyAccent-base);
     font-size: 0.9rem;
+    color: var(--v-galaxyAccent-base)
   }
 }
+
+.galaxy-border {
+  border: 1px solid var(--v-galaxyAccent-base);
+}
+
+.draft-border {
+  border: 1px dashed var(--v-galaxyAccent-base);
+}
+
 </style>

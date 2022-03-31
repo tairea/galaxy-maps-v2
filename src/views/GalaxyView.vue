@@ -1,10 +1,11 @@
 <template>
   <div id="container" class="bg">
     <div id="left-section">
-      <GalaxyInfo :course="course" :teacher="teacher" />
+      <GalaxyInfo :course="course" :teacher="teacher" :draft="draft"/>
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
+      <PublishGalaxy v-if="draft" :course="course" :person="person"/>
       <AssignedInfo
-        v-if="teacher"
+        v-if="!draft && teacher"
         :assignCohorts="true"
         :people="peopleInCourse"
         :cohorts="cohortsInCourse"
@@ -46,7 +47,7 @@
       />
 
       <!-- Edit -->
-      <GalaxyMapEditDialog
+      <CreateEditDeleteNodeDialog
         v-if="dialog"
         ref="edit"
         :dialog="dialog"
@@ -87,9 +88,10 @@ import MissionsInfo from "../components/MissionsInfo";
 import MissionsList from "../components/MissionsList";
 import GalaxyMap from "../components/GalaxyMap";
 import BackButton from "../components/BackButton";
-import GalaxyMapEditDialog from "../components/GalaxyMapEditDialog";
+import CreateEditDeleteNodeDialog from "../components/CreateEditDeleteNodeDialog";
 import GalaxyMapButtons from "../components/GalaxyMapButtons";
 import PopupSystemPreview from "../components/PopupSystemPreview";
+import PublishGalaxy from "../components/GalaxyView/PublishGalaxy"
 
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
@@ -104,11 +106,12 @@ export default {
     MissionsList,
     GalaxyMap,
     BackButton,
-    GalaxyMapEditDialog,
+    CreateEditDeleteNodeDialog,
     GalaxyMapButtons,
     PopupSystemPreview,
+    PublishGalaxy
   },
-  props: ["courseId", "role"],
+  props: ["courseId"],
   data() {
     return {
       addNodeMode: false,
@@ -138,7 +141,7 @@ export default {
   async mounted() {
     // create first node, when galaxy first created (hard coded)
     this.course = await getCourseById(this.courseId)
-    console.log("role: ", this.role)
+    this.$store.commit('setCurrentCourse', this.course)
 
     if (this.fromCreate) {
       let nodeId = null;
@@ -207,18 +210,23 @@ export default {
       "cohortsInCourse",
       "topicsTasks",
       "personsTopicsTasks",
+      "currentCourse"
     ]),
-    ...mapGetters(["person"]),
-    teacher () {
-      return this.role === "teacher"
-    },
+    ...mapGetters(["person", "user"]),
+
     goBackPath() {
       if (this.teacher) {
-        return { path: "/base/galaxies", props: { display: 'my'}};
+        return { path: 'galaxies', name: "GalaxyList", params: { display: 'my'}};
       } else {
-        return { path: "/base/galaxies", props: { display: 'assigned'}};
+        return { path: 'galaxies', name: "GalaxyList", params: { display: 'assigned'}};
       }
     },
+    draft () {
+      return this.course?.status === "drafting"
+    },
+    teacher() {
+      return this.course?.mappedBy?.personId === this.person.id || this.user.data.admin
+    }
   },
   methods: {
     setUiMessage(message) {
@@ -254,7 +262,7 @@ export default {
       if (this.addNodeMode) this.addNodeMode = false
     },
     async bindTasks(courseId, topicId) {
-      if (this.person.accountType == "student") {
+      if (!this.teacher) {
         await this.$store.dispatch("bindPersonsTasksByTopicId", {
           personId: this.person.id,
           courseId: courseId,

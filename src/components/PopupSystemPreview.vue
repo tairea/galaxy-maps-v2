@@ -205,7 +205,7 @@ export default {
         name: "SolarSystemView",
         params: {
           topicId: this.currentTopic.id,
-          role: this.role
+          teacher: this.teacher
         },
       });
     },
