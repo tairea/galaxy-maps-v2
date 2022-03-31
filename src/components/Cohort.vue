@@ -70,7 +70,7 @@ export default {
   ],
   computed: {
     avatarClass() {
-      return this.studentCardView ? "avatar" : "";
+      return this.studentCardView ? "avatar" : "galaxy-view";
     },
   },
   methods: {
@@ -150,5 +150,9 @@ export default {
 
 .toolTip {
   border: 1px solid var(--v-missionAccent-base);
+}
+
+.galaxy-view {
+  background-color: var(--v-background-lighten2) ;
 }
 </style>

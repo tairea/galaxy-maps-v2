@@ -95,7 +95,7 @@ import PublishGalaxy from "../components/GalaxyView/PublishGalaxy"
 
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
-import { getCourseById } from "@/lib/ff"
+import { getCourseById, getAllPeopleInCourse, getAllCohortsInCourse } from "@/lib/ff"
 
 export default {
   name: "GalaxyView",
@@ -136,6 +136,8 @@ export default {
       editing: false,
       moveNodes: false,
       course: {},
+      peopleInCourse: [],
+      cohortsInCourse: []
     };
   },
   async mounted() {
@@ -197,17 +199,16 @@ export default {
     }
 
     // bind assigned people in this course
-    await this.$store.dispatch("bindPeopleInCourse", this.courseId);
-    // bind assigned cohorts in this course
-    await this.$store.dispatch("bindCohortsInCourse", this.courseId);
+    if (this.teacher) {
+      this.peopleInCourse = await getAllPeopleInCourse(this.courseId);
+      this.cohortsInCourse = await getAllCohortsInCourse(this.courseId)
+    }
   },
   computed: {
     ...mapState([
       "currentCourseId",
       "currentCourseNodes",
       "person",
-      "peopleInCourse",
-      "cohortsInCourse",
       "topicsTasks",
       "personsTopicsTasks",
       "currentCourse"

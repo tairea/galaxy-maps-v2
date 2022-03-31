@@ -4,9 +4,9 @@
     <div id="left-section">
       <SolarSystemInfo
         :topic="
-          teacher
-            ? getPersonsTopicById(currentTopicId)
-            : getTopicById(currentTopicId)
+          teacher ? 
+            getTopicById(currentTopicId) :
+            getPersonsTopicById(currentTopicId)
         "
         :tasks="teacher ? topicsTasks : personsTopicsTasks"
         :teacher="teacher"
@@ -188,6 +188,7 @@ export default {
   display: flex;
   overflow: hidden;
   margin: 0 !important;
+  padding: 0px 20px
   // border: 1px solid red;
 }
 
