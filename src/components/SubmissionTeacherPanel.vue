@@ -1,7 +1,11 @@
 <template>
   <div class="submission-card">
     <v-expansion-panels flat v-model="showCard">
-      <v-expansion-panel v-for="(sub, i) in [submission]" :key="i" class="panel">
+      <v-expansion-panel
+        v-for="(sub, i) in [submission]"
+        :key="i"
+        class="panel"
+      >
         <v-expansion-panel-header class="pa-0">
           <!-- Course Image -->
           <v-tooltip bottom color="subBackground">
@@ -111,6 +115,10 @@
               :submission="submission"
               :requesterPerson="requesterPerson"
             />
+            <SubmissionResponseDialog
+              :submission="submission"
+              :requesterPerson="requesterPerson"
+            />
           </div>
         </v-expansion-panel-content>
       </v-expansion-panel>
@@ -123,6 +131,7 @@ import { mapState, mapActions } from "vuex";
 import moment from "moment";
 
 import MarkSubmissionCompleted from "../components/MarkSubmissionCompleted";
+import SubmissionResponseDialog from "../components/SubmissionResponseDialog";
 import { dbMixins } from "../mixins/DbMixins";
 
 export default {
@@ -131,6 +140,7 @@ export default {
   mixins: [dbMixins],
   components: {
     MarkSubmissionCompleted,
+    SubmissionResponseDialog,
   },
   data() {
     return {
@@ -156,13 +166,17 @@ export default {
     ...mapState(["personsTopicsTasks", "showPanelCard"]),
     showCard: {
       get: function () {
-        if (this.showPanelCard?.type === "submission" && this.showPanelCard?.data.id === this.submission.id) return 0
-        return null
+        if (
+          this.showPanelCard?.type === "submission" &&
+          this.showPanelCard?.data.id === this.submission.id
+        )
+          return 0;
+        return null;
       },
       // setter
       set: function (newValue) {
-        this.$store.commit('setPanelCard', {})
-      }
+        this.$store.commit("setPanelCard", {});
+      },
     },
   },
   methods: {
@@ -171,7 +185,7 @@ export default {
     },
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
-    }
+    },
   },
 };
 </script>

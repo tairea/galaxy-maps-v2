@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container class="pa-2">
     <v-row class="text-center" align="center">
       <v-col cols="12">
         <v-dialog v-model="dialog" width="40%" light>
@@ -8,7 +8,7 @@
             <!-- uncheck icon if not inreview or completed -->
             <v-btn color="baseAccent" v-bind="attrs" v-on="on" outlined small>
               <!-- <v-icon> mdi-check </v-icon> -->
-              <!-- <v-icon> mdi-checkbox-outline </v-icon> -->
+              <v-icon left> mdi-thumb-up-outline </v-icon>
               MARK AS COMPLETED
             </v-btn>
           </template>

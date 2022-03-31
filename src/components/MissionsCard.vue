@@ -1,30 +1,32 @@
 <template>
-  <div
-    class="mission-card"
-    :class="{ lockedOpacity: getTaskStatus == 'locked' }"
-  >
-    <div class="mission-section mission-number-section">
-      <p class="text-overline text-uppercase">Mission</p>
-      <p style="font-size: 50px; text-align: center">{{ index + 1 }}</p>
-    </div>
-    <div class="mission-section mission-main-section">
-      <!-- TITLE -->
-      <h1 class="mission-title">{{ task.title }}</h1>
-      <!-- DESCRIPTION -->
-      <p>{{ task.description }}</p>
-      <!-- EDIT BUTTON -->
-      <div v-if="teacher">
-        <CreateEditDeleteMissionDialog
-          :edit="true"
-          :taskToEdit="task"
-          :taskId="id"
-          :index="index"
-          :topicId="topicId"
-        />
-      </div>
-    </div>
+  <div>
+    <v-expansion-panel-header class="py-0">
+      <div
+        class="mission-card"
+        :class="{ lockedOpacity: getTaskStatus == 'locked' }"
+      >
+        <div class="mission-section mission-number-section">
+          <p class="text-overline text-uppercase">Mission</p>
+          <p style="font-size: 50px; text-align: center">{{ index + 1 }}</p>
+        </div>
+        <div class="mission-section mission-main-section">
+          <!-- TITLE -->
+          <h1 class="mission-title">{{ task.title }}</h1>
+          <!-- DESCRIPTION -->
+          <p>{{ task.description }}</p>
+          <!-- EDIT BUTTON -->
+          <div v-if="teacher">
+            <CreateEditDeleteMissionDialog
+              :edit="true"
+              :taskToEdit="task"
+              :taskId="id"
+              :index="index"
+              :topicId="topicId"
+            />
+          </div>
+        </div>
 
-    <!-- <div class="mission-section mission-section-overUnder">
+        <!-- <div class="mission-section mission-section-overUnder">
       
       <div class="section-overUnder">
         <a
@@ -53,99 +55,133 @@
       </div>
     </div> -->
 
-    <div class="mission-section mission-section-overUnder">
-      <!-- DURATION -->
-      <div class="section-overUnder d-flex justify-center flex-column">
-        <p class="text-overline text-uppercase text-center">Duration:</p>
-        <!-- <p style="font-size: 30px; text-align: center"> -->
-        <p class="text-center">
-          {{ task.duration }}
-        </p>
-      </div>
-      <div class="section-overUnder d-flex justify-center flex-column">
-        <p class="text-overline text-uppercase text-center">SUBMISSION REQ:</p>
-        <p :style="[task.submissionRequired ? { color: '#FAF200' } : '']">
-          {{ task.submissionRequired ? "YES" : "NO" }}
-        </p>
-      </div>
-    </div>
+        <div class="mission-section mission-section-overUnder">
+          <!-- DURATION -->
+          <div class="section-overUnder d-flex justify-center flex-column">
+            <p class="text-overline text-uppercase text-center">Duration:</p>
+            <!-- <p style="font-size: 30px; text-align: center"> -->
+            <p class="text-center">
+              {{ task.duration }}
+            </p>
+          </div>
+          <div class="section-overUnder d-flex justify-center flex-column">
+            <p class="text-overline text-uppercase text-center">
+              SUBMISSION REQ:
+            </p>
+            <p :style="[task.submissionRequired ? { color: '#FAF200' } : '']">
+              {{ task.submissionRequired ? "YES" : "NO" }}
+            </p>
+          </div>
+        </div>
 
-    <!-- MISSION STATUS -->
-    <div
-      v-if="!teacher"
-      class="mission-section d-flex justify-center align-center flex-column"
-      style="width: 20%"
-      :class="{
-        'topic-in-review': getTaskStatus == 'inreview',
-        'topic-completed': getTaskStatus == 'completed',
-        'topic-active': getTaskStatus == 'active',
-      }"
-    >
-      <p class="text-overline text-uppercase text-center">
-        {{
-          getTaskStatus == "completed"
-            ? "COMPLETED"
-            : getTaskStatus == "inreview"
-            ? "IN REVIEW"
-            : getTaskStatus == "unlocked"
-            ? "START MISSION"
-            : getTaskStatus == "active"
-            ? "ACTIVE MISSION"
-            : "LOCKED"
-        }}
-      </p>
-
-      <div v-if="getTaskStatus == 'unlocked'" class="d-flex justify-center">
-        <!-- Start Mission button -->
-        <StartMissionDialog :topicId="topicId" :taskId="id" :task="task" :topicActive="topicActive"/>
-      </div>
-      <div
-        v-else-if="getTaskStatus == 'completed' || getTaskStatus == 'inreview'"
-        class="d-flex justify-center"
-      >
-        <!-- Start Mission button -->
-        <MissionCompletedDialog
-          :topicId="topicId"
-          :taskId="id"
-          :task="task"
-          :missionStatus="getTaskStatus"
-          @missionActivated="$emit('missionActivated')"
-        />
-      </div>
-      <div v-else-if="getTaskStatus == 'active'" class="d-flex justify-center">
-        <!-- no icon -->
-      </div>
-
-      <div v-else class="d-flex justify-center align-center">
-        <v-btn color="missionAccent" icon large>
-          <v-icon large>mdi-lock-outline</v-icon>
-        </v-btn>
-      </div>
-    </div>
-
-    <!-- ANALYTICS (for type teacher) -->
-    <div v-else class="mission-section">
-      <p class="text-overline text-uppercase text-center">Mission Info:</p>
-      <div class="d-flex justify-center flex-column mt-2">
-        <v-btn
-          color="missionAccent"
-          outlined
-          x-small
-          :disabled="!task.video || !task.video.length"
+        <!-- MISSION STATUS -->
+        <div
+          v-if="!teacher"
+          class="mission-section d-flex justify-center align-center flex-column"
+          style="width: 20%"
+          :class="{
+            'topic-in-review': getTaskStatus == 'inreview',
+            'topic-declined': getTaskStatus == 'declined',
+            'topic-completed': getTaskStatus == 'completed',
+            'topic-active': getTaskStatus == 'active',
+          }"
         >
-          LINK TO VIDEO
-        </v-btn>
-        <v-btn
-          color="missionAccent"
-          outlined
-          class="mt-2"
-          x-small
-          :disabled="!task.slides || !task.slides.length"
-        >
-          LINK TO SLIDES
-        </v-btn>
+          <p class="text-overline text-uppercase text-center">
+            {{
+              getTaskStatus == "completed"
+                ? "COMPLETED"
+                : getTaskStatus == "inreview"
+                ? "IN REVIEW"
+                : getTaskStatus == "unlocked"
+                ? "START MISSION"
+                : getTaskStatus == "active"
+                ? "ACTIVE MISSION"
+                : getTaskStatus == "declined"
+                ? "SUBMISSION DECLINED"
+                : "LOCKED"
+            }}
+          </p>
+
+          <div v-if="getTaskStatus == 'unlocked'" class="d-flex justify-center">
+            <!-- Start Mission button -->
+            <StartMissionDialog
+              :topicId="topicId"
+              :taskId="id"
+              :task="task"
+              :topicActive="topicActive"
+            />
+          </div>
+          <div
+            v-else-if="
+              getTaskStatus == 'completed' || getTaskStatus == 'inreview'
+            "
+            class="d-flex justify-center"
+          >
+            <!-- Start Mission button -->
+            <MissionCompletedDialog
+              :topicId="topicId"
+              :taskId="id"
+              :task="task"
+              :missionStatus="getTaskStatus"
+              @missionActivated="$emit('missionActivated')"
+            />
+          </div>
+          <div
+            v-else-if="getTaskStatus == 'active'"
+            class="d-flex justify-center"
+          >
+            <!-- no icon -->
+          </div>
+
+          <div
+            v-else-if="getTaskStatus == 'declined'"
+            class="d-flex justify-center align-center"
+          >
+            <v-btn color="missionAccent" icon large>
+              <v-icon large>mdi-alert-octagon-outline</v-icon>
+            </v-btn>
+          </div>
+          <div v-else class="d-flex justify-center align-center">
+            <v-btn color="missionAccent" icon large>
+              <v-icon large>mdi-lock-outline</v-icon>
+            </v-btn>
+          </div>
+        </div>
+
+        <!-- ANALYTICS (for type teacher) -->
+        <div v-else class="mission-section">
+          <p class="text-overline text-uppercase text-center">Mission Info:</p>
+          <div class="d-flex justify-center flex-column mt-2">
+            <v-btn
+              color="missionAccent"
+              outlined
+              x-small
+              :disabled="!task.video || !task.video.length"
+            >
+              LINK TO VIDEO
+            </v-btn>
+            <v-btn
+              color="missionAccent"
+              outlined
+              class="mt-2"
+              x-small
+              :disabled="!task.slides || !task.slides.length"
+            >
+              LINK TO SLIDES
+            </v-btn>
+          </div>
+        </div>
       </div>
-    </div>
+    </v-expansion-panel-header>
+    <v-expansion-panel-content>
+      <!-- expansion content -->
+      <ActiveMissionsCard
+        v-if="task.taskStatus == 'active'"
+        :task="task"
+        :topicId="topicId"
+      />
+      <SelectedMissionsCard v-else :task="task" :topicId="topicId" />
+    </v-expansion-panel-content>
   </div>
 </template>
 
@@ -153,6 +189,8 @@
 import CreateEditDeleteMissionDialog from "../components/CreateEditDeleteMissionDialog";
 import StartMissionDialog from "../components/StartMissionDialog";
 import MissionCompletedDialog from "../components/MissionCompletedDialog";
+import ActiveMissionsCard from "../components/ActiveMissionsCard";
+import SelectedMissionsCard from "../components/SelectedMissionsCard";
 
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
@@ -163,6 +201,8 @@ export default {
     CreateEditDeleteMissionDialog,
     StartMissionDialog,
     MissionCompletedDialog,
+    ActiveMissionsCard,
+    SelectedMissionsCard,
   },
   props: ["task", "id", "index", "topicId", "topicActive", "teacher"],
   mounted() {},
@@ -175,7 +215,7 @@ export default {
     ]),
     ...mapGetters(["person"]),
     getTaskStatus() {
-      if (this.teacher) return
+      if (this.teacher) return;
       // get topic status eg. unlocked / inreview / completed / locked
       const task = this.personsTopicsTasks.find((task) => task.id === this.id);
       return task.taskStatus;
@@ -223,9 +263,17 @@ a {
     flex-grow: 1;
   }
 
+  .mission-number-section {
+    border-left: none;
+  }
+
   .topic-in-review {
     border: 1px solid var(--v-cohortAccent-base);
     color: var(--v-cohortAccent-base);
+  }
+  .topic-declined {
+    border: 1px solid var(--v-missionAccent-base);
+    color: var(--v-missionAccent-base);
   }
 
   .topic-completed,
@@ -289,11 +337,5 @@ a {
       border-bottom: 1px dashed var(--v-missionAccent-base);
     }
   }
-}
-
-.active-mission-card {
-  border: 1px solid var(--v-baseAccent-base);
-  margin: 20px 10px;
-  display: flex;
 }
 </style>

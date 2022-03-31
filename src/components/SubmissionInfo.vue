@@ -1,27 +1,57 @@
 <template>
-  <div class="help-info" v-if="requests.length > 0">
+  <div class="help-info" v-if="workForThisTask.length > 0">
     <!-- <div v-if="requestsForHelp.length > 0" id="ss-info"> -->
 
-    <h2 class="ss-label">Requests for Help</h2>
+    <h2 class="ss-label">Submitted Work</h2>
     <p class="overline requestsLabel">Re: {{ task.title }}</p>
 
-    <div v-for="request in requests" :key="request.id" class="request">
-      <RequestsForHelpStudentCard :request="request" />
+    <div v-for="work in workForThisTask" :key="work.id" class="request">
+      <SubmissionStudentCard :work="work" />
     </div>
   </div>
 </template>
 
 <script>
-import RequestsForHelpStudentCard from "../components/RequestsForHelpStudentCard";
+import SubmissionStudentCard from "../components/SubmissionStudentCard";
+
+import { mapState, mapGetters } from "vuex";
 
 export default {
-  name: "RequestsForHelpInfo",
-  props: ["requests", "task"],
+  name: "SubmissionInfo",
+  props: ["task"],
   components: {
-    RequestsForHelpStudentCard,
+    SubmissionStudentCard,
   },
-  computed: {},
-  async mounted() {},
+  watch: {
+    // studentsSubmissions: {
+    //   handler() {
+    //     // this updates the request when there is a change
+    //    this.workForThisTask()
+    //   },
+    // },
+  },
+  computed: {
+    ...mapState([
+      "person",
+      "currentTask",
+      "currentCourseId",
+      "studentsSubmissions",
+    ]),
+    workForThisTask() {
+      return this.studentsSubmissions.filter(
+        (work) => work.contextTask.id == this.task.id
+      );
+    },
+  },
+  async mounted() {
+    // bind studentsSubmissions (from courses db)
+    await this.$store.dispatch("getSubmittedWorkByStudentAndTaskId", {
+      courseId: this.currentCourseId,
+      studentId: this.person.id,
+      taskId: this.task.id,
+    });
+    // console.log("studentsSubmissions: ", this.studentsSubmissions);
+  },
   data() {
     return {};
   },
@@ -37,7 +67,7 @@ h1 {
 .help-info {
   width: calc(100% - 30px);
   max-height: calc(100% - 60px);
-  border: 1px solid var(--v-missionAccent-base);
+  border: 1px solid var(--v-cohortAccent-base);
   margin-top: 30px;
   padding: 20px;
   // background: var(--v-baseAccent-base);
@@ -60,7 +90,7 @@ h1 {
   position: absolute;
   top: 0;
   left: -1px;
-  background-color: var(--v-missionAccent-base);
+  background-color: var(--v-cohortAccent-base);
   color: var(--v-background-base);
   padding: 0px 20px 0px 5px;
   clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);

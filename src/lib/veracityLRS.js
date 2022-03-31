@@ -250,6 +250,69 @@ export const submitWorkForReviewXAPIStatement = (actor, taskId, context) => {
     body: JSON.stringify(statement),
   }).catch((error) => console.error(error.message));
 };
+export const reSubmitWorkForReviewXAPIStatement = (actor, taskId, context) => {
+  console.log(
+    "sending student xAPI statement... re-submitted work for review..."
+  );
+  const statement = {
+    actor: {
+      name: actor.firstName + " " + actor.lastName,
+      mbox: "mailto:" + actor.email,
+    },
+    verb: {
+      id: "https://w3id.org/xapi/dod-isd/verbs/submitted",
+      display: { "en-nz": "re-submitted" },
+    },
+    object: {
+      id: "https://www.galaxymaps.io/task/" + taskId,
+      definition: {
+        name: {
+          "en-nz":
+            "Course: " +
+            context.galaxy.title +
+            " > Topic: " +
+            context.system.label +
+            " > Task: " +
+            context.mission.title,
+        },
+        description: {
+          "en-nz": "Submitted work for Task: " + context.mission.title,
+        },
+        extensions: {
+          "https://www.galaxymaps.io/course/id/": context.galaxy.id,
+          "https://www.galaxymaps.io/topic/id/": context.system.id,
+          "https://www.galaxymaps.io/task/id/": context.mission.id,
+          "https://www.galaxymaps.io/person/id/": actor.id,
+        },
+      },
+    },
+    context: {
+      contextActivities: {
+        parent: [
+          {
+            id: "https://www.galaxymaps.io/topic/" + context.system.id,
+            objectType: "Activity",
+          },
+        ],
+        grouping: [
+          {
+            id: "https://www.galaxymaps.io/course/" + context.galaxy.id,
+            objectType: "Activity",
+          },
+        ],
+      },
+    },
+  };
+
+  fetch("https://galaxymaps.lrs.io/xapi/statements", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: auth,
+    },
+    body: JSON.stringify(statement),
+  }).catch((error) => console.error(error.message));
+};
 
 // ========== Task Marked as Completed (by student)
 export const taskMarkedAsCompletedXAPIStatement = (actor, taskId, context) => {
@@ -591,6 +654,73 @@ export const studentRequestForHelpXAPIStatement = (actor, taskId, context) => {
     verb: {
       id: "http://id.tincanapi.com/verb/requested-attention",
       display: { "en-nz": "requested help" },
+    },
+    object: {
+      id: "https://www.galaxymaps.io/task/" + taskId,
+      definition: {
+        name: {
+          "en-nz":
+            "Course: " +
+            context.galaxy.title +
+            " > Topic: " +
+            context.system.label +
+            " > Task: " +
+            context.mission.title,
+        },
+        description: {
+          "en-nz": "Student requested help for Task: " + context.mission.title,
+        },
+        extensions: {
+          "https://www.galaxymaps.io/course/id/": context.galaxy.id,
+          "https://www.galaxymaps.io/topic/id/": context.system.id,
+          "https://www.galaxymaps.io/task/id/": context.mission.id,
+          "https://www.galaxymaps.io/person/id/": actor.id,
+        },
+      },
+    },
+    context: {
+      contextActivities: {
+        parent: [
+          {
+            id: "https://www.galaxymaps.io/topic/" + context.system.id,
+            objectType: "Activity",
+          },
+        ],
+        grouping: [
+          {
+            id: "https://www.galaxymaps.io/course/" + context.galaxy.id,
+            objectType: "Activity",
+          },
+        ],
+      },
+    },
+  };
+
+  fetch("https://galaxymaps.lrs.io/xapi/statements", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: auth,
+    },
+    body: JSON.stringify(statement),
+  }).catch((error) => console.error(error.message));
+};
+export const teacherRespondedSubmissionDeclinedXAPIStatement = (
+  actor,
+  taskId,
+  context
+) => {
+  console.log(
+    "sending student xAPI statement... teacher declined submission..."
+  );
+  const statement = {
+    actor: {
+      name: actor.firstName + " " + actor.lastName,
+      mbox: "mailto:" + actor.email,
+    },
+    verb: {
+      id: "http://activitystrea.ms/schema/1.0/deny",
+      display: { "en-nz": "denied submission" },
     },
     object: {
       id: "https://www.galaxymaps.io/task/" + taskId,

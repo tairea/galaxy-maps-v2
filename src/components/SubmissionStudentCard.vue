@@ -25,71 +25,110 @@
           </p>
         </div>
       </v-tooltip>
-      <p class="request-text text-left">
-        "{{ request.requestForHelpMessage }}"
-      </p>
+      <div class="d-flex flex-column align-center" style="width: 100%">
+        <p class="request-text text-left">
+          Submitted: <br />{{ humanDate(work.taskSubmittedForReviewTimestamp) }}
+        </p>
+      </div>
+    </div>
+    <!-- View submission button -->
+    <div class="pb-3 d-flex justify-center align-center">
+      <a
+        style="text-decoration: none"
+        :href="work.submissionLink"
+        target="_blank"
+      >
+        <v-btn outlined color="cohortAccent" class="ma-2" small>
+          <v-icon left> mdi-text-box-search-outline </v-icon>
+          VIEW SUBMISSION
+        </v-btn>
+      </a>
     </div>
     <!-- divder line -->
     <div style="border-top: 1px solid var(--v-missionAccent-base)"></div>
     <!-- instructor response -->
-    <div class="d-flex request-msg">
-      <p
-        class="response-text text-right"
-        style="color: var(--v-galaxyAccent-base)"
-      >
-        {{
-          request.responseMessage
-            ? '"' + request.responseMessage + '"'
-            : "...waiting for instructors response"
-        }}
-      </p>
-      <v-tooltip v-if="responder" bottom color="subBackground">
-        <template v-slot:activator="{ on, attrs }">
-          <div
-            v-if="request.responseMessage"
-            class="requester-image"
-            v-bind="attrs"
-            v-on="on"
-          >
-            <v-avatar size="30">
-              <img
-                v-if="responder.image"
-                :src="responder.image.url"
-                :alt="responder.firstName"
-                style="object-fit: cover"
-              />
-            </v-avatar>
+    <div class="d-flex flex-column request-msg">
+      <div class="d-flex">
+        <p
+          v-if="work.taskSubmissionStatus == 'declined'"
+          class="request-text text-right mr-4"
+        >
+          Submission Declined: <br />{{
+            humanDate(work.responseSubmittedTimestamp)
+          }}
+        </p>
+        <v-tooltip v-if="responder" bottom color="subBackground">
+          <template v-slot:activator="{ on, attrs }">
+            <div
+              v-if="work.responseMessage"
+              class="requester-image"
+              v-bind="attrs"
+              v-on="on"
+            >
+              <v-avatar size="30">
+                <img
+                  v-if="responder.image"
+                  :src="responder.image.url"
+                  :alt="responder.firstName"
+                  style="object-fit: cover"
+                />
+              </v-avatar>
+            </div>
+          </template>
+          <div>
+            <p class="ma-0 person-tooltip">Person:</p>
+            <p
+              class="ma-0 person-tooltip"
+              style="font-size: 0.8rem; font-weight: 800"
+            >
+              {{ responder.firstName + " " + responder.lastName }}
+            </p>
           </div>
-        </template>
-        <div>
-          <p class="ma-0 person-tooltip">Person:</p>
-          <p
-            class="ma-0 person-tooltip"
-            style="font-size: 0.8rem; font-weight: 800"
-          >
-            {{ responder.firstName + " " + responder.lastName }}
-          </p>
-        </div>
-      </v-tooltip>
+        </v-tooltip>
+      </div>
+      <div class="py-3 d-flex justify-center align-center">
+        <p
+          class="response-text text-right"
+          style="color: var(--v-galaxyAccent-base)"
+        >
+          {{
+            work.responseMessage
+              ? '"' + work.responseMessage + '"'
+              : "...waiting for instructors response"
+          }}
+        </p>
+      </div>
+    </div>
+    <div v-if="work.taskSubmissionStatus == 'declined'" class="resubmit-button">
+      <MissionCompletedDialog
+        :resubmission="true"
+        :submission="work"
+        :task="work.contextTask"
+        :topicId="work.contextTopic.id"
+        missionStatus="declined"
+      />
     </div>
   </div>
 </template>
 
 <script>
 import SolarSystem from "../components/SolarSystem";
+import MissionCompletedDialog from "../components/MissionCompletedDialog";
 
 import { mapState, mapGetters } from "vuex";
 import { dbMixins } from "../mixins/DbMixins";
+import { DateTime } from "luxon";
 
 export default {
-  name: "RequestsForHelpStudentCard",
-  props: ["request"],
+  name: "SubmissionStudentCard",
+  props: ["work"],
   mixins: [dbMixins],
   components: {
     SolarSystem,
+    MissionCompletedDialog,
   },
   watch: {
-    request: {
+    work: {
       handler: "getResponder",
       deep: true,
     },
@@ -98,9 +137,10 @@ export default {
     ...mapState(["currentCourseId", "currentTopicId", "currentTaskId"]),
   },
   async mounted() {
-    this.requester = await this.MXgetPersonByIdFromDB(this.request.personId);
+    console.log("work for work card:", this.work);
+    this.requester = await this.MXgetPersonByIdFromDB(this.work.studentId);
     this.responder = await this.MXgetPersonByIdFromDB(
-      this.request.responderPersonId
+      this.work.responderPersonId
     );
     // console.log("requester person:", this.requester);
     // console.log("responder person:", this.responder);
@@ -115,7 +155,12 @@ export default {
     async getResponder() {
       // get responsers image when request is updated
       this.responder = await this.MXgetPersonByIdFromDB(
-        this.request.responderPersonId
+        this.work.responderPersonId
+      );
+    },
+    humanDate(timestamp) {
+      return new DateTime.fromSeconds(timestamp.seconds).toFormat(
+        "ccc dd LLL t"
       );
     },
   },
@@ -196,5 +241,9 @@ h1 {
   color: var(--v-missionAccent-base);
   font-size: 0.6rem;
   text-transform: uppercase;
+}
+
+.resubmit-button {
+  border-top: 1px solid var(--v-missionAccent-base);
 }
 </style>
