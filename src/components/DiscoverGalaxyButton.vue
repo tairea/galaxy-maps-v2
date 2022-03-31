@@ -106,12 +106,13 @@ export default {
     },
     routeToGalaxy(courseId) {
      // route to galaxy
-          this.$router.push({
-            name: "GalaxyView",
-            params: {
-              courseId: courseId,
-            },
-          });
+      this.$store.commit("setCurrentCourseId", courseId);
+      this.$router.push({
+        name: "GalaxyView",
+        params: {
+          courseId: courseId,
+        },
+      });
       this.courseId = "";
     },
   },

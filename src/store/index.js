@@ -58,6 +58,8 @@ const getDefaultState = () => {
     studentsActiveTasks: [],
     studentsActivityLog: [],
     showPanelCard: {},
+    submittedEdges: [], 
+    submittedNodes: []
   };
 };
 
@@ -281,10 +283,69 @@ export default new Vuex.Store({
         db.collection("courses").doc(id).collection("topics")
       );
     }),
+    async getSubmittedNodesAndEdges({ state }) {
+      const submittedNodes = [];
+      const submittedEdges = []
+
+      const querySnapshot = await db.collection("courses")
+        .where("status", "==", "submitted")
+        .get();
+
+      // get the topics (nodes) in that course
+      for (const doc of querySnapshot.docs) {
+        const nodesSnapshot = await db
+          .collection("courses")
+          .doc(doc.id)
+          .collection("map-nodes")
+          .get();
+
+        submittedNodes.push(
+          ...nodesSnapshot.docs.map((subDoc) => {
+            const node = subDoc.data();
+            node.courseId = doc.id;
+            return node;
+          })
+        );
+        
+        const edgesSnapshot = await db
+        .collection("courses")
+        .doc(doc.id)
+        .collection("map-edges")
+        .get();
+
+        submittedEdges.push(...edgesSnapshot.docs.map((subDoc) => subDoc.data()));
+
+      }
+      state.submittedNodes = submittedNodes
+      state.submittedEdges = submittedEdges
+    },
+    async getSubmittedEdges({ state }) {
+      const submittedEdges = [];
+      const querySnapshot = await db.collection("courses")
+        .where("public", "==", true)
+        .where("status", "==", "published")
+        .get();
+
+      for (const doc of querySnapshot.docs) {
+        // doc.data() is never undefined for query doc snapshots
+        const subQuerySnapshot = await db
+          .collection("courses")
+          .doc(doc.id)
+          .collection("map-edges")
+          .get();
+
+        submittedEdges.push(...subQuerySnapshot.docs.map((subDoc) => subDoc.data()));
+      }
+
+      state.submittedEdges = submittedEdges;
+    },
     async getAllNodes({ state }) {
       const allNodes = [];
 
-      const querySnapshot = await db.collection("courses").get();
+      const querySnapshot = await db.collection("courses")
+        .where("public", "==", true)
+        .where("status", "==", "published")
+        .get();
 
       let count = 0;
 
@@ -312,7 +373,10 @@ export default new Vuex.Store({
     },
     async getAllEdges({ state }) {
       const allEdges = [];
-      const querySnapshot = await db.collection("courses").get();
+      const querySnapshot = await db.collection("courses")
+        .where("public", "==", true)
+        .where("status", "==", "published")
+        .get();
 
       for (const doc of querySnapshot.docs) {
         // doc.data() is never undefined for query doc snapshots

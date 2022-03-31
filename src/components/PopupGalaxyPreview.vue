@@ -1,10 +1,10 @@
 <template>
   <!-- POPUP -->
-  <div ref="popup" class="ss-info-panel">
+  <div ref="popup" class="ss-info-panel" :class="draft ? 'draft-border' : 'panel-border'">
     <div class="ss-details">
       <div>
         <p class="info-panel-label mb-2">
-          <span class="galaxyColour">Galaxy:</span>
+          <span class="galaxyColour"><span v-if="draft">Draft</span> Galaxy:</span>
           <br />
           <span>{{ course.title }}</span>
         </p>
@@ -150,7 +150,9 @@ export default {
   name: "PopupGalaxyPreview",
   mixins: [dbMixins],
   components: {},
-  props: ["course"],
+  props: {
+    course: {type: Object, default: {}}
+  },
   computed: {
     ...mapGetters(["person"]),
   },
@@ -164,53 +166,68 @@ export default {
       mappedAuthorImage: "",
     };
   },
-  async mounted() {
-    // check is student is already in this course
-    if (this.course.mappedBy.personId === this.personId || this.course.contentBy.personId === this.person.id) {
-      this.teacher = true
-    } else {
-      const querySnapshot = await db
-        .collection("people")
-        .doc(this.person.id)
-        .collection(this.course.id)
-        .limit(1)
-        .get();
-
-      if (querySnapshot.empty) {
-        this.enrolled = false;
-      } else {
-        this.enrolled = true;
-      }
+  watch: {
+    course () {
+      console.log('course changed: ', this.course)
+      this.setAccountType()
+      this.setImages()
     }
-    this.mappedAuthorImage = await this.getPersonsImage(
-      this.course.mappedBy.personId
-    );
-    this.contentAuthorImage = await this.getPersonsImage(
-      this.course.contentBy.personId
-    );
+  },
+  async mounted() {
+      this.setAccountType()
+      this.setImages()
   },
   computed: {
-    ...mapState(["person"]),
-
+    ...mapState(["person", "user"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
+    draft() {
+      return this.course.status === 'drafting'
+    }
   },
   methods: {
+    async setImages() {
+      this.mappedAuthorImage = await this.getPersonsImage(
+        this.course.mappedBy.personId
+      );
+      if (this.course.contentBy.personId) {
+        this.contentAuthorImage = await this.getPersonsImage(
+          this.course.contentBy.personId
+        );
+      }
+    },
+    async setAccountType() {
+      this.teacher = false
+      if (this.course.mappedBy.personId === this.person.id || this.user.data.admin) {
+        this.teacher = true
+      } else {
+        const querySnapshot = await db
+          .collection("people")
+          .doc(this.person.id)
+          .collection(this.course.id)
+          .limit(1)
+          .get();
+
+        if (querySnapshot.empty) {
+          this.enrolled = false;
+        } else {
+          this.enrolled = true;
+        }
+      }
+    },
     close() {
       this.$emit("togglePopup", false);
     },
     routeToGalaxyEdit() {
       console.log("route to galaxy", this.course.id);
       // save current course to store
-      this.$store.commit("setCurrentCourse", this.course);
       this.$store.commit("setCurrentCourseId", this.course.id);
       // route to topic/solar system
       this.$router.push({
         name: "GalaxyView",
         params: {
           courseId: this.course.id,
-          role: this.teacher ? 'teacher' : 'student'
         },
       });
     },
@@ -330,7 +347,6 @@ export default {
 // POPUP
 .ss-info-panel {
   // background-color: var(--v-background-base);
-  border: 1px solid var(--v-missionAccent-base);
   position: absolute;
   backdrop-filter: blur(8px);
   display: flex;
@@ -438,5 +454,13 @@ export default {
   text-align: left;
   padding: 10px;
   // text-transform: uppercase;
+}
+
+.draft-border {
+  border: 1px dashed var(--v-missionAccent-base);
+}
+
+.panel-border {
+  border: 1px solid var(--v-missionAccent-base)  
 }
 </style>

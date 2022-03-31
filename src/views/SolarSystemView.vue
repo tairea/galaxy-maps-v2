@@ -14,7 +14,7 @@
       />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <AssignedInfo
-        v-if="teacher"
+        v-if="!draft && teacher"
         :assignCohorts="true"
         :people="peopleInCourse"
         :cohorts="cohortsInCourse"
@@ -63,7 +63,7 @@ export default {
     SolarSystem,
     BackButton,
   },
-  props: ["topicId", "role"],
+  props: ["topicId"],
   async mounted() {
     if (this.teacher) {
       //store bindTasksByTopicId
@@ -115,9 +115,13 @@ export default {
       "getPersonsTopicById",
       "getTopicById",
       "getTasksByTopicId",
+      "user"
     ]),
-    teacher () {
-      return this.role == "teacher"  
+    draft() {
+      return this.currentCourse.status === "drafting"
+    },
+    teacher() {
+      return this.currentCourse?.mappedBy?.personId === this.person.id || this.user.data.admin
     }
   },
   data() {

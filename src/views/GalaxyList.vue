@@ -5,7 +5,7 @@
         small 
         outlined 
         color="missionAccent" 
-        class="mx-2"
+        class="mx-2 galaxy-btn"
         :class="{'focused': learn}" 
         @click="whichCoursesToDisplay = 'assigned'"
       >
@@ -15,7 +15,7 @@
         small 
         outlined 
         color="missionAccent" 
-        class="mx-2"
+        class="mx-2 galaxy-btn"
         :class="{'focused': teach}" 
         @click="whichCoursesToDisplay = 'my'"
       >
@@ -26,11 +26,23 @@
         active 
         outlined 
         color="missionAccent" 
-        class="mx-2"
+        class="mx-2 galaxy-btn"
         :class="{'focused': discover}" 
         @click="whichCoursesToDisplay = 'all'"
       >
         DISCOVER
+      </v-btn>
+      <v-btn
+        v-if="admin" 
+        small 
+        active 
+        outlined 
+        color="missionAccent" 
+        class="mx-2 galaxy-btn"
+        :class="{'focused': submitted}" 
+        @click="whichCoursesToDisplay = 'submitted'"
+      >
+        ADMIN
       </v-btn>
     </div>
     <div class="flexContainer">
@@ -80,7 +92,13 @@ export default {
     discover() {
       return this.whichCoursesToDisplay === 'all'
     },
-    
+    submitted() {
+      return this.whichCoursesToDisplay === 'submitted'
+    },
+    admin() {
+      return this.user.data.admin
+    },
+
   }
 };
 </script>
@@ -137,5 +155,9 @@ export default {
 
 .focused {
   background-color: var(--v-missionAccent-darken4)
+}
+
+.galaxy-btn {
+  background-color: var(--v-background-base)
 }
 </style>

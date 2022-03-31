@@ -168,7 +168,7 @@ export default {
     getIndex() {
        this.currentIndexCount = this.currentIndexCount + 1
        return this.currentIndexCount
-    }
+    },
   },
   methods: {
     ...mapActions(["bindAllCohorts", "bindAllOrganisations", "getCohortsByPersonId"]),
