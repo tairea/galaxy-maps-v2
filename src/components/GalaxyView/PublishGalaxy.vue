@@ -42,7 +42,7 @@
             ></v-radio>
             <v-radio
               label="discoverable"
-              admin="true"
+              :value="true"
               color="missionAccent"
               class="label-text"
             ></v-radio>
@@ -130,8 +130,11 @@
 import { db, functions } from "@/store/firestoreConfig";
 import { mapGetters } from 'vuex'
 
+import { dbMixins } from '@/mixins/DbMixins'
+
 export default {
   name: "PublishGalaxy",
+  mixins: [dbMixins],
   props: ["course", "person"],
   data: () => ({
     dialog: false,
@@ -167,8 +170,10 @@ export default {
         ...this.courseOptions
       }
       course.status = "submitted"
-      console.log("submitted course: ", course )
       await this.updateCourse(course)
+      .then(() => {
+        this.sendNewSubmissionEmail(course)
+      })
       .then(() => {
         this.close()
       }).catch((error) => {
@@ -202,9 +207,11 @@ export default {
       course.status = "published"
       console.log("published course: ", course )
       console.log("create cohort: ", cohort)
-      await this.updateCourse(course)
-      .then(() => { 
-        this.saveCohort(cohort)
+      await this.saveCohort(cohort)
+      .then((cohortId) => { 
+        console.log('cohortId: ', cohortId)
+        course.cohort = cohortId
+        this.updateCourse(course)
       }).then(() => {
         this.close()
       }).catch((error) => {
@@ -222,27 +229,52 @@ export default {
         })
     },
 
-    saveCohort(cohort) {
+    async saveCohort(cohort) {
       // Add a new document in collection "cohorts"
-      db.collection("cohorts").add(cohort)
-
-      // notify teachers of new cohort assignment
-      if (cohort.teachers.length) {
-        cohort.teachers.forEach(teacher => {
-          console.log('send cohort email to: ', this.person);
-          this.sendNewCohortEmail(this.person, cohort);
+      const cohortId = await db.collection("cohorts")
+        .add(cohort)
+        .then( async (docRef) => {
+          if (this.admin) {
+            const person = await this.MXgetPersonByIdFromDB(cohort.teachers[0])
+            console.log('teacher profile: ', person)
+            this.sendCoursePublishedEmail(person, this.course)
+            this.sendNewCohortEmail(person, cohort);
+          } else {
+            this.sendNewCohortEmail(this.person, cohort);
+          } 
+          return docRef.id
         })
-      }
+      return cohortId
     },
 
     sendNewCohortEmail(profile, cohort) {
       const person = {
         ...profile,
         cohort: cohort.name,
-        inviter: this.inviter || "Galaxy Maps Admin",
+        inviter: "Galaxy Maps Admin",
       };
+      if (!person.accountType) person.accountType = 'teacher'
       const sendNewCohortEmail = functions.httpsCallable("sendNewCohortEmail");
       return sendNewCohortEmail(person);
+    },
+    
+    sendNewSubmissionEmail(course) {
+      let data = {
+        author: course.mappedBy.name,
+        title: course.title,
+      }
+      const sendNewSubmissionEmail = functions.httpsCallable("sendNewSubmissionEmail");
+      return sendNewSubmissionEmail(data);
+    },
+
+    sendCoursePublishedEmail(person, course) {
+      let data = {
+        email: person.email,
+        name: person.firstName + ' ' + person.lastName,
+        course: course.title,
+      }
+      const sendCoursePublishedEmail = functions.httpsCallable("sendCoursePublishedEmail");
+      return sendCoursePublishedEmail(data);
     },
   },
 };

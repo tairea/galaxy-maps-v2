@@ -48,8 +48,6 @@ const getDefaultState = () => {
     teachersSubmissionsToReview: [],
     teachersRequestsForHelp: [],
     teachersStudentsProgress: [],
-    peopleInCourse: [],
-    cohortsInCourse: [],
     darkMode: true,
     sortedArr: [],
     studentCourseDataFromLRS: [],
@@ -1159,22 +1157,6 @@ export default new Vuex.Store({
           commit("setCurrentCohort", cohort);
         });
     },
-    // bind the PEOPLE that are in a course
-    bindPeopleInCourse: firestoreAction(({ bindFirestoreRef }, courseId) => {
-      return bindFirestoreRef(
-        "peopleInCourse",
-        db
-          .collection("people")
-          .where("assignedCourses", "array-contains", courseId)
-      );
-    }),
-    // bind the COHORTS that are in a course
-    bindCohortsInCourse: firestoreAction(({ bindFirestoreRef }, courseId) => {
-      return bindFirestoreRef(
-        "cohortsInCourse",
-        db.collection("cohorts").where("courses", "array-contains", courseId)
-      );
-    }),
 
     // ===== Firestore - Other
     async getAllUsersStatus({ state }) {

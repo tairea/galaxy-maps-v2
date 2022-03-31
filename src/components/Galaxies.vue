@@ -209,12 +209,8 @@ export default {
       return this.$vuetify.theme.isDark;
     },
   },
-  async mounted() {
-    this.setNodesToDisplay(this.whichCoursesToDisplay);
-  },
   watch: {
     darkMode(dark) {
-      console.log("darkMode: ", dark);
       if (dark == false) {
         this.makeGalaxyLabelsColour(
           this.$vuetify.theme.themes.light.baseAccent
@@ -547,12 +543,8 @@ export default {
     },
     // this controls the fit zoom animation
     zoomToNodes(nodes) {
-      // nodes to zoom
-      // console.log("nodes to zoom", nodes);
       // get node ids
       var nodeIds = nodes.map((x) => x.id);
-      // this.allNodeIds = allNodeIds;
-      // console.log("nodeIds to fit", nodeIds);
       // // fit
       console.log("fit");
       this.$refs.network.fit({
@@ -560,10 +552,6 @@ export default {
         minZoomLevel: 0.2, // <-- TODO: this doesnt work on this version of vis-network. needs to be at least v8.5.0. but vue2vis is v7.4.0
         animation: true,
       });
-      // this.$refs.network.moveTo({
-      //   scale: 0.2,
-      //   animation: true
-      // });
     },
     togglePopup() {
       this.popupPreview = !this.popupPreview;

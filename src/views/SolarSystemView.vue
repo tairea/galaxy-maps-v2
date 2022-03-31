@@ -4,8 +4,8 @@
       <SolarSystemInfo
         :topic="
           teacher ? 
+            getTopicById(currentTopicId) :
             getPersonsTopicById(currentTopicId)
-            : getTopicById(currentTopicId)
         "
         :tasks="
           teacher ? topicsTasks : personsTopicsTasks
@@ -156,6 +156,7 @@ export default {
   display: flex;
   overflow: hidden;
   margin: 0 !important;
+  padding: 0px 20px
   // border: 1px solid red;
 }
 

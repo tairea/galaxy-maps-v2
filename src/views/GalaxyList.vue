@@ -73,11 +73,12 @@ export default {
   data() {
     return {
       loading: true,
-      whichCoursesToDisplay: "all"
+      whichCoursesToDisplay: null
     };
   },
   async mounted() {
     if (this.display) this.whichCoursesToDisplay = this.display
+    else this.whichCoursesToDisplay = 'all'
     // TODO: Currently navigates to all galaxies by default, this needs to be improved
     await this.$store.dispatch("bindAllCourses");
   },
