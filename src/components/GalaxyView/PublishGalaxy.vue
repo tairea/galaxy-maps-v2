@@ -29,7 +29,7 @@
         </div>
       </div>
       <v-divider dark color="missionAccent"></v-divider>
-      <div class="create-dialog-content">
+      <div v-if="!admin" class="create-dialog-content">
         <!-- LISTED -->
         <div>
           <p class="caption">Choose whether you would like this galaxy to be invite only or publically discoverable</p>
@@ -42,7 +42,7 @@
             ></v-radio>
             <v-radio
               label="discoverable"
-              :value="true"
+              admin="true"
               color="missionAccent"
               class="label-text"
             ></v-radio>
@@ -67,7 +67,29 @@
         </div>
       </div>
           <!-- ACTION BUTTONS -->
-      <div class="action-buttons">
+      <div v-if="admin" class="action-buttons">
+        <v-btn
+          outlined
+          color="green darken-1"
+          @click="publishCourse()"
+          :loading="loading"
+        >
+          <v-icon left> mdi-check </v-icon>
+          publish
+        </v-btn>
+
+        <v-btn
+          outlined
+          :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
+          class="ml-2"
+          @click="close"
+          :disabled="loading"
+        >
+          <v-icon left> mdi-close </v-icon>
+          CANCEL
+        </v-btn>
+      </div>            
+      <div v-else class="action-buttons">
         <v-btn
           v-if="courseOptions.public"
           outlined
@@ -106,7 +128,7 @@
 
 <script>
 import { db, functions } from "@/store/firestoreConfig";
-
+import { mapGetters } from 'vuex'
 
 export default {
   name: "PublishGalaxy",
@@ -120,9 +142,14 @@ export default {
 
   }),
   computed: {
+    ...mapGetters(['user']),
     dark () {
       return this.$vuetify.theme.isDark
+    },
+    admin () {
+      return this.user.data.admin
     }
+
   },
   methods: {
     close() {
@@ -151,9 +178,12 @@ export default {
 
     async publishCourse () {
       this.loading = true;
-      let course = {
-        ...this.course, 
-        ...this.courseOptions
+      let course = this.course
+      if (!this.admin) {
+        course = {
+          ...course, 
+          ...this.courseOptions
+        }
       }
       
       let cohort = {
@@ -166,7 +196,7 @@ export default {
           name: course.image?.name,
           url: course.image?.url,
         },
-        teachers: [this.person.id],
+        teachers: [course.mappedBy.personId],
       }
 
       course.status = "published"

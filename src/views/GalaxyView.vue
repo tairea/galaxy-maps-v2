@@ -3,7 +3,7 @@
     <div id="left-section">
       <GalaxyInfo :course="course" :teacher="teacher" :draft="draft"/>
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
-      <PublishGalaxy v-if="draft" :course="course" :person="person"/>
+      <PublishGalaxy v-if="showPublish" :course="course" :person="person"/>
       <AssignedInfo
         v-if="!draft && teacher"
         :assignCohorts="true"
@@ -226,6 +226,9 @@ export default {
     },
     teacher() {
       return this.course?.mappedBy?.personId === this.person.id || this.user.data.admin
+    },
+    showPublish() {
+      return (this.user.data.admin && this.course.status === "submitted") || this.draft 
     }
   },
   methods: {
