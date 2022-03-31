@@ -116,9 +116,7 @@ export default {
       }
     },
     getTaskStatus() {
-      if (this.person.accountType != "student") {
-        return;
-      }
+      if (this.teacher) return
       // get topic status eg. unlocked / inreview / completed / locked
       const task = this.personsTopicsTasks.find(
         (task) => task.id === this.task.id

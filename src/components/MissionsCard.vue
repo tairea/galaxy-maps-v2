@@ -15,7 +15,7 @@
           <!-- DESCRIPTION -->
           <p>{{ task.description }}</p>
           <!-- EDIT BUTTON -->
-          <div v-if="person.accountType != 'student'">
+          <div v-if="teacher">
             <CreateEditDeleteMissionDialog
               :edit="true"
               :taskToEdit="task"
@@ -76,7 +76,7 @@
 
         <!-- MISSION STATUS -->
         <div
-          v-if="person.accountType == 'student'"
+          v-if="!teacher"
           class="mission-section d-flex justify-center align-center flex-column"
           style="width: 20%"
           :class="{
@@ -204,7 +204,7 @@ export default {
     ActiveMissionsCard,
     SelectedMissionsCard,
   },
-  props: ["task", "id", "index", "topicId", "topicActive"],
+  props: ["task", "id", "index", "topicId", "topicActive", "teacher"],
   mounted() {},
   computed: {
     ...mapState([
@@ -215,9 +215,7 @@ export default {
     ]),
     ...mapGetters(["person"]),
     getTaskStatus() {
-      if (this.person.accountType != "student") {
-        return;
-      }
+      if (this.teacher) return;
       // get topic status eg. unlocked / inreview / completed / locked
       const task = this.personsTopicsTasks.find((task) => task.id === this.id);
       return task.taskStatus;

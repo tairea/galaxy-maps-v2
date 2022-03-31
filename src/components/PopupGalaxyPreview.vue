@@ -1,20 +1,19 @@
 <template>
   <!-- POPUP -->
-  <!-- follow drag -> :style="{ top: getCoords.y - 100 + 'px', left: getCoords.x + 30 + 'px' }" -->
-  <div ref="popup" class="ss-info-panel">
+  <div ref="popup" class="ss-info-panel" :class="draft ? 'draft-border' : 'panel-border'">
     <div class="ss-details">
       <div>
         <p class="info-panel-label mb-2">
-          <span class="galaxyColour">Galaxy:</span>
+          <span class="galaxyColour"><span v-if="draft">Draft</span> Galaxy:</span>
           <br />
           <span>{{ course.title }}</span>
         </p>
         <v-img
-          v-if="course.image.url"
+          v-if="course.image"
           class="galaxy-image"
           :src="course.image.url"
         ></v-img>
-        <p class="my-2 galaxy-description">
+        <p class="mt-2 galaxy-description">
           {{ course.description }}
         </p>
       </div>
@@ -33,19 +32,19 @@
       <div class="left">
         <div v-if="course.contentBy.image">
           <v-img
-            width="50px"
-            class="contentBy-image mb-2"
+            width="40px"
+            class="contentBy-image"
             :src="course.contentBy.image.url"
           ></v-img>
         </div>
         <div v-else-if="course.contentBy.personId">
           <v-img
-            width="50px"
-            class="contentBy-image mb-2"
+            width="40px"
+            class="contentBy-image"
             :src="contentAuthorImage"
           ></v-img>
         </div>
-        <p class="ma-0">Content By:</p>
+        <p class="ma-0 ">Content By:</p>
         <a :href="course.contentBy.source"
           ><span>{{ course.contentBy.name }}</span></a
         >
@@ -53,25 +52,25 @@
       <div class="right">
         <div v-if="course.mappedBy.image">
           <v-img
-            width="50px"
+            width="40px"
             class="mappedBy-image"
             :src="course.mappedBy.image.url"
           ></v-img>
         </div>
         <div v-else-if="course.mappedBy.personId">
           <v-img
-            width="50px"
+            width="40px"
             class="mappedBy-image"
             :src="mappedAuthorImage"
           ></v-img>
         </div>
-        <p class="ma-0">Mapped By:</p>
+        <p class="ma-0 ">Mapped By:</p>
         <span>{{ course.mappedBy.name }}</span>
       </div>
     </div>
 
     <div>
-      <div v-if="person.accountType != 'student'" class="ss-actions py-2">
+      <div v-if="teacher" class="ss-actions py-2">
         <v-btn
           class="view-ss-button pa-5"
           dark
@@ -151,12 +150,15 @@ export default {
   name: "PopupGalaxyPreview",
   mixins: [dbMixins],
   components: {},
-  props: ["course"],
+  props: {
+    course: {type: Object, default: {}}
+  },
   computed: {
     ...mapGetters(["person"]),
   },
   data() {
     return {
+      teacher: false,
       enrolled: false,
       loading: false,
       startingGalaxyStatus: "",
@@ -164,44 +166,62 @@ export default {
       mappedAuthorImage: "",
     };
   },
-  async mounted() {
-    // check is student is already in this course
-    if (this.person.accountType == "student") {
-      const querySnapshot = await db
-        .collection("people")
-        .doc(this.person.id)
-        .collection(this.course.id)
-        .limit(1)
-        .get();
-
-      if (querySnapshot.empty) {
-        this.enrolled = false;
-      } else {
-        this.enrolled = true;
-      }
+  watch: {
+    course () {
+      console.log('course changed: ', this.course)
+      this.setAccountType()
+      this.setImages()
     }
-    this.mappedAuthorImage = await this.getPersonsImage(
-      this.course.mappedBy.personId
-    );
-    this.contentAuthorImage = await this.getPersonsImage(
-      this.course.contentBy.personId
-    );
+  },
+  async mounted() {
+      this.setAccountType()
+      this.setImages()
   },
   computed: {
-    ...mapState(["person"]),
-
+    ...mapState(["person", "user"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
+    draft() {
+      return this.course.status === 'drafting'
+    }
   },
   methods: {
+    async setImages() {
+      this.mappedAuthorImage = await this.getPersonsImage(
+        this.course.mappedBy.personId
+      );
+      if (this.course.contentBy.personId) {
+        this.contentAuthorImage = await this.getPersonsImage(
+          this.course.contentBy.personId
+        );
+      }
+    },
+    async setAccountType() {
+      this.teacher = false
+      if (this.course.mappedBy.personId === this.person.id || this.user.data.admin) {
+        this.teacher = true
+      } else {
+        const querySnapshot = await db
+          .collection("people")
+          .doc(this.person.id)
+          .collection(this.course.id)
+          .limit(1)
+          .get();
+
+        if (querySnapshot.empty) {
+          this.enrolled = false;
+        } else {
+          this.enrolled = true;
+        }
+      }
+    },
     close() {
       this.$emit("togglePopup", false);
     },
     routeToGalaxyEdit() {
       console.log("route to galaxy", this.course.id);
       // save current course to store
-      this.$store.commit("setCurrentCourse", this.course);
       this.$store.commit("setCurrentCourseId", this.course.id);
       // route to topic/solar system
       this.$router.push({
@@ -298,6 +318,10 @@ export default {
         }
       }
 
+      // 5) assign course to student
+      this.MXassignCourseToStudent(this.person, this.course)
+
+
       // Send Galaxy Started statment to LRS
       startGalaxyXAPIStatement(this.person, { galaxy: this.course });
 
@@ -306,13 +330,14 @@ export default {
         name: "GalaxyView",
         params: {
           courseId: this.course.id,
+          role: 'student'
         },
       });
     },
 
     async getPersonsImage(personId) {
       const person = await this.MXgetPersonByIdFromDB(personId);
-      return person.image.url;
+      return person.image?.url;
     },
   },
 };
@@ -322,7 +347,6 @@ export default {
 // POPUP
 .ss-info-panel {
   // background-color: var(--v-background-base);
-  border: 1px solid var(--v-missionAccent-base);
   position: absolute;
   backdrop-filter: blur(8px);
   display: flex;
@@ -338,7 +362,7 @@ export default {
 
   .galaxy-image {
     width: 100%;
-    max-height: 250px;
+    max-height: 200px;
     // width: 100%;
   }
 
@@ -369,11 +393,12 @@ export default {
     .left,
     .right {
       width: 100%;
-      padding: 20px;
+      padding: 5px;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
+      font-size: 0.6rem;
     }
 
     .right {
@@ -406,7 +431,7 @@ export default {
 
     .galaxy-description {
       color: var(--v-missionAccent-base);
-      font-size: 0.9rem;
+      font-size: 0.8rem;
       font-style: italic;
     }
   }
@@ -429,5 +454,13 @@ export default {
   text-align: left;
   padding: 10px;
   // text-transform: uppercase;
+}
+
+.draft-border {
+  border: 1px dashed var(--v-missionAccent-base);
+}
+
+.panel-border {
+  border: 1px solid var(--v-missionAccent-base)  
 }
 </style>

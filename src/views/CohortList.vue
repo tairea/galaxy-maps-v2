@@ -1,3 +1,8 @@
+// ==============
+// !IMPORTANT
+// OLD COMPONENT PLEASE SEE COHORTLIST V2
+// ===============
+
 <template>
   <v-container class="d-flex flex-column fullHeight">
     <v-row class="cohort-main">
@@ -76,7 +81,7 @@
     </v-row>
 
     <!-- Edit Org Dialog -->
-    <!-- <EditOrganisationButtonDialog v-if="editingOrgansation" :open="openOrganisationDialog" :organisation="editingOrgansation" @closeOrganisationEditDialog="openOrganisationDialog = false"/> -->
+    <EditOrganisationButtonDialog v-if="editingOrgansation" :open="openOrganisationDialog" :organisation="editingOrgansation" @closeOrganisationEditDialog="openOrganisationDialog = false"/>
   </v-container>
 </template>
 

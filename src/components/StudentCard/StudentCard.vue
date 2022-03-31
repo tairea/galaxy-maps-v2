@@ -120,8 +120,6 @@ export default {
       studentsArr: [this.student.id],
     });
     this.studentTimeData = getActivityData;
-
-    // this.studentTimeDataLoading = false;
   },
   computed: {
     ...mapState(["currentCohort", "userStatus"]),

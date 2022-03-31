@@ -33,7 +33,7 @@
 
     <!-- New node positions Save Button -->
     <v-btn
-      v-if="changeInPositions"
+      v-if="editMode && changeInPositions"
       class="map-button pa-5"
       color="baseAccent"
       dark
@@ -48,13 +48,13 @@
     </v-btn>
 
     <div class="ui-message-wrap">
-      <p v-if="!addNodeMode" class="ui-message" style="margin-left: 20px">
+      <p v-if="!editMode" class="ui-message" style="margin-left: 20px">
         <v-icon color="missionAccent" class="bounce"
           >mdi-hand-pointing-up</v-icon
         >
         Add a new node to extend your Galaxy map
       </p>
-      <p v-else class="ui-message">{{ uiMessage }}</p>
+      <p v-else class="ui-message active">{{ uiMessage }}</p>
     </div>
   </div>
 </template>
@@ -74,7 +74,13 @@ export default {
   data() {
     return {};
   },
-  computed: {},
+  computed: {
+    ...mapState(["currentCourseId", "currentCourseNodes", "person"]),
+    ...mapGetters(["getCourseById", "getOrganisationsInThisCourse"]),
+    editMode() {
+      return this.addNodeMode || this.addEdgeMode;
+    },
+  },
   methods: {
     toggleAddNodeMode() {
       this.$emit("toggleAddNodeMode");
@@ -101,17 +107,43 @@ export default {
     margin: 10px;
     background-color: var(--v-background-base);
   }
+
+  .ui-message-wrap {
+    // border: 1px solid var(--v-missionAccent-base);
+
+    .ui-message {
+      color: var(--v-missionAccent-base);
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      text-align: left;
+      margin-left: 10px;
+    }
+    .active {
+      color: var(--v-baseAccent-base) !important;
+    }
+  }
 }
 
-.ui-message-wrap {
-  // border: 1px solid var(--v-missionAccent-base);
+#right-section {
+  width: 30%;
+  height: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
 
-  .ui-message {
-    color: var(--v-missionAccent-base);
-    text-transform: uppercase;
-    font-size: 0.8rem;
-    text-align: left;
-    margin-left: 10px;
-  }
+/* width */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: var(--v-background-base);
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: var(--v-missionAccent-base);
 }
 </style>

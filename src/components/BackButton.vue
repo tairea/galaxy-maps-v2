@@ -14,13 +14,13 @@ export default {
   props: ["toPath"],
   methods: {
     backToWhat(path) {
-      if (path.includes("galaxies")) {
+      if (path.path.includes("galaxies")) {
         return "Galaxies";
-      } else if (path.includes("galaxy")) {
+      } else if (path.path.includes("galaxy")) {
         return "Galaxy";
-      } else if (path.includes("cohorts")) {
+      } else if (path.path.includes("cohorts")) {
         return "Cohorts";
-      } else if (path.includes("login")) {
+      } else if (path.path.includes("login")) {
         return "Login";
       } else {
         return "?";

@@ -50,20 +50,6 @@
           outlined
           class="custom-input"
         ></v-text-field>
-        <v-select
-          dark
-          :items="items"
-          label="Account Type"
-          v-model="person.accountType"
-          outlined
-        ></v-select>
-        <!-- <p>Account Type</p> -->
-        <!-- <v-radio-group  row>
-          <v-radio label="Teacher" value="teacher" color="green" dark>
-          </v-radio>
-          <v-radio label="Student" value="student" color="green" dark>
-          </v-radio>
-        </v-radio-group> -->
         <v-btn
           :disabled="!valid"
           color="missionAccent"
@@ -103,9 +89,7 @@ export default {
       email: "",
       password: "",
       id: "",
-      accountType: "teacher",
     },
-    items: ["teacher", "student"],
     emailRules: [
       (v) => !!v || "E-mail is required",
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
