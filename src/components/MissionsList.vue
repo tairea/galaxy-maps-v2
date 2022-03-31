@@ -3,23 +3,27 @@
     <h2 class="missions-label">Missions</h2>
 
     <div v-if="tasks.length > 0" style="width: 100%">
-      <div v-for="(task, index) in tasks" :key="task.id">
-        <MissionsCard
-          :task="task"
-          :id="task.id"
-          :index="index"
-          :topicId="topicId"
-          :topicActive="topicActive"
-          :teacher="teacher"
-        />
-        <ActiveMissionsCard
-          v-if="task.taskStatus == 'active'"
-          :task="task"
-          :id="task.id"
-          :topicId="topicId"
-          :teacher="teacher"
-        />
-      </div>
+      <v-expansion-panels
+        :flat="true"
+        :multiple="false"
+        v-model="indexOfActiveTask"
+      >
+        <v-expansion-panel
+          class="mission-expansions"
+          v-for="(task, index) in tasks"
+          :key="task.id"
+          @click="missionClicked(task)"
+        >
+          <MissionsCard
+            :task="task"
+            :id="task.id"
+            :index="index"
+            :topicId="topicId"
+            :topicActive="topicActive"
+            :teacher="teacher"
+          />
+        </v-expansion-panel>
+      </v-expansion-panels>
     </div>
 
     <div v-else style="width: 100%">
@@ -34,7 +38,7 @@
 
 <script>
 import MissionsCard from "../components/MissionsCard";
-import ActiveMissionsCard from "../components/ActiveMissionsCard";
+
 import CreateEditDeleteMissionDialog from "../components/CreateEditDeleteMissionDialog";
 
 import { mapState, mapGetters } from "vuex";
@@ -43,26 +47,32 @@ export default {
   name: "MissionsList",
   components: {
     MissionsCard,
-    ActiveMissionsCard,
     CreateEditDeleteMissionDialog,
   },
   props: ["tasks", "topicId", "teacher"],
-   data() {
+  data() {
     return {
       activeMission: false,
-      topicActive: false
+      topicActive: false,
+      indexOfActiveTask: [],
     };
   },
   mounted() {
-    // check which task is active
-    const activeTasks = this.tasks.find(task => task.taskStatus == 'active')
-    if (activeTasks) this.topicActive = true
+    // get active task index for expansion panel vmodel (to expand 'active' task on load)
+    this.indexOfActiveTask = this.tasks.findIndex((object) => {
+      return object.taskStatus == "active";
+    });
+    const activeTasks = this.tasks.find((task) => task.taskStatus == "active");
+    if (activeTasks) this.topicActive = true;
   },
   computed: {
-    ...mapState(["personsTopicsTasks"]),
     ...mapGetters(["person"]),
   },
-  methods: {},
+  methods: {
+    missionClicked(task) {
+      this.$emit("task", task);
+    },
+  },
 };
 </script>
 
@@ -110,5 +120,13 @@ a {
   color: var(--v-missionAccent-base);
   font-size: 0.8rem;
   // letter-spacing: 2px;
+}
+
+.mission-expansions {
+  background-color: transparent !important;
+}
+
+.v-expansion-panel-header__icon {
+  display: none;
 }
 </style>

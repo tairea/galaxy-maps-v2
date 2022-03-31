@@ -46,14 +46,20 @@
       :options="network.options"
       @click="click"
     ></network>
-    <p v-else-if="whichCoursesToDisplay == 'assigned'" class="noGalaxies overline">
+    <p
+      v-else-if="whichCoursesToDisplay == 'assigned'"
+      class="noGalaxies overline"
+    >
       DISCOVER GALAXIES TO START LEARNING
     </p>
     <p v-else-if="whichCoursesToDisplay == 'my'" class="noGalaxies overline">
       CREATE A GALAXY TO START TEACHING
     </p>
-    <p v-else-if="whichCoursesToDisplay == 'submitted'" class="noGalaxies overline">
-      NO SUBMITTED GALAXIES TO REVIEW 
+    <p
+      v-else-if="whichCoursesToDisplay == 'submitted'"
+      class="noGalaxies overline"
+    >
+      NO SUBMITTED GALAXIES TO REVIEW
     </p>
     <PopupGalaxyPreview
       v-if="popupPreview"
@@ -90,7 +96,6 @@ export default {
     allNodeIds: [],
     nodesToDisplay: [],
     // allNodesLength: 0,
-    numberOfGalaxiesPerRow: 3, // hardcoded num of galaxies in a row
     courseCols: 1,
     courseRows: 1,
     largestRowWidth: 0,
@@ -141,7 +146,7 @@ export default {
         groups: {
           // useDefaultGroups: false,
           default: {
-            shape: "dot"
+            shape: "dot",
           },
           // locked: {
           //   color: "rgba(132,132,132,0.2)",
@@ -199,8 +204,8 @@ export default {
       "personsAssignedEdges",
       "courses",
       "darkMode",
-      "submittedNodes", 
-      "submittedEdges"
+      "submittedNodes",
+      "submittedEdges",
       // "topics",
       // "personsTopics",
     ]),
@@ -223,17 +228,17 @@ export default {
         this.makeGalaxyLabelsColour("#ffffff");
       }
     },
-    whichCoursesToDisplay (newVal) {
-      this.setNodesToDisplay(newVal)
-    }
+    whichCoursesToDisplay(newVal) {
+      this.setNodesToDisplay(newVal);
+    },
   },
   methods: {
     setNodesToDisplay(newVal) {
-      this.loading = true
-      if (newVal === 'all') this.setAllNodesToDisplay()
-      if (newVal === 'assigned') this.setAssignedNodesToDisplay()
-      if (newVal === 'my') this.setMyNodesToDisplay()
-      if (newVal === 'submitted') this.setSubmittedNodesToDisplay()
+      this.loading = true;
+      if (newVal === "all") this.setAllNodesToDisplay();
+      if (newVal === "assigned") this.setAssignedNodesToDisplay();
+      if (newVal === "my") this.setMyNodesToDisplay();
+      if (newVal === "submitted") this.setSubmittedNodesToDisplay();
     },
     async setSubmittedNodesToDisplay() {
       /* ===========================
@@ -242,15 +247,16 @@ export default {
       await this.$store.dispatch("getSubmittedNodesAndEdges"); // node data for course
       // await this.$store.dispatch("getSubmittedEdges"); // edge data for course
       this.nodesToDisplay = this.submittedNodes;
-      
+
       if (this.nodesToDisplay.length > 0) {
-        const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
+        // const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
+        const repositionedNodes = this.repositionCoursesBasedOnBoundariesV2();
         if (repositionedNodes.length) {
           this.$store.state.submittedNodes = repositionedNodes;
         }
       }
 
-      this.centerAfterReposition()
+      this.centerAfterReposition();
     },
     async setMyNodesToDisplay() {
       /* ===========================
@@ -262,50 +268,61 @@ export default {
       this.nodesToDisplay = this.personsNodesForDisplay;
 
       if (this.nodesToDisplay.length > 0) {
-        const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
-        
+        // const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
+        const repositionedNodes = this.repositionCoursesBasedOnBoundariesV2();
+
         if (repositionedNodes.length) {
           this.$store.commit("updatePersonsNodesForDisplay", repositionedNodes);
         }
       }
-      this.centerAfterReposition()
+      this.centerAfterReposition();
     },
     async setAssignedNodesToDisplay() {
       /* ===========================
           Only show ASSIGNED Galaxies
       =========================== */
-      await this.$store.dispatch("getAssignedNodesByPersonId", this.user.data.id);
-      await this.$store.dispatch("getAssignedEdgesByPersonId", this.user.data.id);
+      await this.$store.dispatch(
+        "getAssignedNodesByPersonId",
+        this.user.data.id
+      );
+      await this.$store.dispatch(
+        "getAssignedEdgesByPersonId",
+        this.user.data.id
+      );
       this.nodesToDisplay = this.personsAssignedNodesForDisplay;
-      
+
       if (this.nodesToDisplay.length > 0) {
-        const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
-        
+        // const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
+
+        const repositionedNodes = this.repositionCoursesBasedOnBoundariesV2();
+
         if (repositionedNodes.length) {
-          this.$store.commit("updatePersonsAssignedNodesForDisplay",
+          this.$store.commit(
+            "updatePersonsAssignedNodesForDisplay",
             repositionedNodes
           );
         }
       }
-      this.centerAfterReposition()
+      this.centerAfterReposition();
     },
     async setAllNodesToDisplay() {
-      console.log("settingAllNodes")
+      console.log("settingAllNodes");
       /* ===========================
         Only show ALL Galaxies in DATABASE!! (so I can see what maps users have created)
       =========================== */
       await this.$store.dispatch("getAllNodes"); // node data for course
       await this.$store.dispatch("getAllEdges"); // edge data for course
       this.nodesToDisplay = this.allNodesForDisplay;
-      
+
       if (this.nodesToDisplay.length > 0) {
-        const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
+        // const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
+        const repositionedNodes = this.repositionCoursesBasedOnBoundariesV2();
         if (repositionedNodes.length) {
           this.$store.commit("updateAllNodesForDisplay", repositionedNodes);
         }
       }
 
-      this.centerAfterReposition()
+      this.centerAfterReposition();
     },
     centerAfterReposition() {
       // stop loading spinner
@@ -349,7 +366,7 @@ export default {
       }
 
       const closestNode = this.$refs.network.getNode(closest.id);
-      console.log("clicked: ", closestNode)
+      console.log("clicked: ", closestNode);
       // debugger
 
       // set save current course clicked in store
@@ -405,10 +422,12 @@ export default {
     repositionCoursesBasedOnBoundaries() {
       const courseCanvasBoundaries = this.calcCourseCanvasBoundaries();
       const allNodes = this.$refs.network.nodes;
+      console.log("all nodes", allNodes);
       let newAllNodes = [];
 
       // canvas / 3
       let galaxyColsCount = 0;
+      let numberOfGalaxiesPerRow = 3; // hardcoded num of galaxies in a row
 
       // SCALE calc num of galaxy rows
       // const canvasRowHeight = this.canvasHeight / maxHeight;
@@ -451,7 +470,7 @@ export default {
         // count ++
         galaxyColsCount++;
         // if max num of galaxys per row. go to next row
-        if (galaxyColsCount == this.numberOfGalaxiesPerRow) {
+        if (galaxyColsCount == numberOfGalaxiesPerRow) {
           // set max width and heights from these rows
           if (currentColWidth > this.largestRowWidth) {
             this.largestRowWidth = currentColWidth;
@@ -470,11 +489,112 @@ export default {
       // this.largestRowWidth += this.largestRowWidth / this.numberOfGalaxiesPerRow / 2;
       // this.$refs.network.storePositions();
       // console.log("allNodes", allNodes);
-      // console.log("newAllNodes", newAllNodes);
+      console.log("newAllNodes", newAllNodes);
+      return newAllNodes;
+    },
+    repositionCoursesBasedOnBoundariesV2() {
+      console.log("v2");
+      const courseCanvasBoundaries = this.calcCourseCanvasBoundaries();
+      const allNodes = this.$refs.network.nodes;
+      console.log("all nodes", allNodes);
+      let newAllNodes = [];
+
+      // canvas / 3
+      let galaxyColsCount = 0;
+      let numberOfGalaxiesPerRow = 3; // hardcoded num of galaxies in a row
+
+      // SCALE calc num of galaxy rows
+      // const canvasRowHeight = this.canvasHeight / maxHeight;
+
+      // set offset variables
+      let currentColWidth = 0;
+      let currrentRowHeight = 0;
+
+      // loop nodes and add x y offsets
+      for (let i = 0; i < courseCanvasBoundaries.length; i++) {
+        console.log(
+          "positioning course: ==============",
+          courseCanvasBoundaries[i].title
+        );
+        console.log("offsets are: width:" + currentColWidth);
+        console.log("offsets are: height:" + currrentRowHeight);
+
+        let maxRowHeight = 0;
+
+        // const widthOffset = courseCanvasBoundaries[i].maxWidthOffset;
+        // const heightOffset = courseCanvasBoundaries[i].maxHeightOffset;
+
+        for (const node of allNodes) {
+          if (node.courseId == courseCanvasBoundaries[i].id) {
+            let newNode = {
+              ...node,
+              x: currentColWidth + node.x - courseCanvasBoundaries[i].centerX,
+              y: currrentRowHeight + node.y - courseCanvasBoundaries[i].centerY,
+            };
+            newAllNodes.push(newNode);
+            console.log(
+              "node:" + newNode.label + "- x:" + newNode.x + " y:" + newNode.y
+            );
+          }
+        }
+
+        // increase offset for next galaxy column aka ** PADDING BETWEEN GALAXIES **
+        currentColWidth += courseCanvasBoundaries[i].width / 2 + 600; // width / 2 because dont want to pad the whole width over + pad just half the course width + pad
+
+        // keep track of largest height
+        if (courseCanvasBoundaries[i].height > maxRowHeight) {
+          console.log("new max height:", courseCanvasBoundaries[i].height);
+          maxRowHeight = courseCanvasBoundaries[i]?.height + 600;
+          // if (courseCanvasBoundaries[i + 1]?.height > maxRowHeight) {
+          //   maxRowHeight = courseCanvasBoundaries[i + 1].height + 300;
+          // }
+        }
+
+        // count ++
+        galaxyColsCount++;
+        // if max num of galaxys per row. go to next row
+        if (galaxyColsCount == numberOfGalaxiesPerRow) {
+          //   // set max width and heights from these rows
+          // if (currentColWidth > this.largestRowWidth) {
+          //   this.largestRowWidth = currentColWidth;
+          // }
+          // if (maxRowHeight > this.largestRowHeight) {
+          //   this.largestRowHeight = maxRowHeight;
+
+          //check heights of next upcoming rows and adjust maxRowHeight if needed
+          for (var x = 1; x <= numberOfGalaxiesPerRow; x++) {
+            if (courseCanvasBoundaries[i + x]?.height > maxRowHeight) {
+              console.log(
+                "next row has greater height:",
+                courseCanvasBoundaries[i + x]?.height
+              );
+              maxRowHeight = courseCanvasBoundaries[i + x].height / 2 + 600;
+            }
+            if (courseCanvasBoundaries[i - x - 1]?.height > maxRowHeight) {
+              console.log(
+                "current row has greater height:",
+                courseCanvasBoundaries[i - x - 1]?.height
+              );
+              maxRowHeight =
+                courseCanvasBoundaries[i - x - 1]?.height / 2 + 600;
+            }
+          }
+          // }
+          //   // reset for next row
+          currentColWidth = 0;
+          currrentRowHeight += maxRowHeight;
+          galaxyColsCount = 0;
+        }
+      }
+      // pad the end of row
+      // this.largestRowWidth += this.largestRowWidth / this.numberOfGalaxiesPerRow / 2;
+      // this.$refs.network.storePositions();
+      // console.log("allNodes", allNodes);
+      console.log("newAllNodes", newAllNodes);
       return newAllNodes;
     },
     calcCourseCanvasBoundaries() {
-      const courses = this.courses
+      const courses = this.courses;
       let courseCanvasBoundaries = [];
       // get all coords for nodes
       // const allNodes = this.$refs.network.nodes;
@@ -539,10 +659,11 @@ export default {
         // add course id to boundary
         boundary.id = courses[i].id;
         boundary.title = courses[i].title;
+
         // console.log("boundary",boundary)
         courseCanvasBoundaries.push(boundary);
       }
-      // console.log("courseCanvasBoundaries", courseCanvasBoundaries);
+      console.log("courseCanvasBoundaries", courseCanvasBoundaries);
       return courseCanvasBoundaries;
     },
     // this controls the fit zoom animation

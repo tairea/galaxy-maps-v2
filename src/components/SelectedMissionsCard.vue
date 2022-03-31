@@ -1,10 +1,10 @@
 <template>
-  <div class="active-mission-card">
+  <div class="selected-mission-card">
     <v-row>
       <div class="mission-card">
         <div
           class="mission-section mission-section-overUnder"
-          style="width: 70%"
+          style="width: 50%"
         >
           <!-- VIDEO -->
           <div class="section-overUnder">
@@ -48,29 +48,45 @@
         > -->
         <div
           class="mission-section mission-section-overUnder"
-          style="width: 30%"
+          style="width: 50%"
         >
-          <!-- REQUEST HELP -->
-          <div class="section-overUnder flex-column">
-            <p class="text-overline text-uppercase text-center">REQUEST HELP</p>
-            <RequestHelpDialog
-              :task="task"
-              :taskId="task.id"
-              :topicId="topicId"
-            />
-          </div>
-          <!-- MARK AS COMPLETED -->
-          <div class="section-overUnder flex-column">
-            <p class="text-overline text-uppercase text-center">
-              {{ getSubmitTitle }}
+          <!-- COMPLETED -->
+
+          <div class="text-center">
+            <p
+              class="text-overline text-uppercase"
+              :class="{
+                'mission-in-review': getTaskStatus == 'inreview',
+                'mission-completed': getTaskStatus == 'completed',
+              }"
+            >
+              {{
+                getTaskStatus == "completed"
+                  ? "MISSION COMPLETED"
+                  : getTaskStatus == "inreview"
+                  ? "SUBMISSION IN REVIEW"
+                  : getTaskStatus == "declined"
+                  ? "SUBMISSION DECLINED"
+                  : "LOCKED"
+              }}
             </p>
-            <MissionCompletedDialog
-              :task="task"
-              :taskId="task.id"
-              :topicId="topicId"
-              :missionStatus="getTaskStatus"
-            />
+            <p class="text-overline text-uppercase">
+              {{ getStatusAndTimestamp }}
+            </p>
           </div>
+          <!-- View submission -->
+          <!-- <div v-if="task.submissionLink" class="section-overUnder">
+            <a
+              style="text-decoration: none"
+              :href="task.submissionLink"
+              target="_blank"
+            >
+              <v-btn outlined color="cohortAccent" class="" small>
+                <v-icon left> mdi-text-box-search-outline </v-icon>
+                VIEW SUBMISSION
+              </v-btn>
+            </a>
+          </div> -->
         </div>
       </div>
     </v-row>
@@ -79,53 +95,58 @@
 </template>
 
 <script>
-import MissionCompletedDialog from "../components/MissionCompletedDialog";
-import RequestHelpDialog from "../components/RequestHelpDialog";
-
-import { db } from "../store/firestoreConfig";
-import { mapState, mapGetters } from "vuex";
+import { mapState } from "vuex";
+import { DateTime } from "luxon";
 
 export default {
-  name: "ActiveMissionsCard",
-  components: {
-    MissionCompletedDialog,
-    RequestHelpDialog,
-  },
-  props: ["task", "topicId"],
+  name: "SelectedMissionsCard",
+  components: {},
+  props: ["task"],
   mounted() {},
   computed: {
     ...mapState(["personsTopicsTasks"]),
-    ...mapGetters(["person"]),
-    getSubmitTitle() {
-      if (this.getTaskStatus == "completed") {
-        return "COMPLETED";
-      } else if (this.getTaskStatus == "inreview") {
-        return "IN REVIEW";
-      } else if (
-        this.getTaskStatus == "active" &&
-        this.task.submissionRequired == true
-      ) {
-        return "SUBMIT WORK";
-      } else if (
-        this.getTaskStatus == "active" &&
-        (this.task.submissionRequired == false || !this.task.submissionRequired)
-      ) {
-        return "MARK AS COMPLETED";
-      } else {
-        return;
-      }
-    },
     getTaskStatus() {
-      if (this.teacher) return
       // get topic status eg. unlocked / inreview / completed / locked
       const task = this.personsTopicsTasks.find(
         (task) => task.id === this.task.id
       );
       return task.taskStatus;
     },
+    getStatusAndTimestamp() {
+      if (this.getTaskStatus == "completed" && this.task.submissionRequired) {
+        return (
+          "MARKED COMPLETED: " +
+          this.humanDate(this.task.taskReviewedAndCompletedTimestamp)
+        );
+      } else if (
+        this.getTaskStatus == "completed" &&
+        !this.task.submissionRequired
+      ) {
+        return "COMPLETED: " + this.humanDate(this.task.taskCompletedTimestamp);
+      } else if (this.getTaskStatus == "inreview") {
+        return (
+          "SUBMITTED: " +
+          this.humanDate(this.task.taskSubmittedForReviewTimestamp)
+        );
+      } else if (this.getTaskStatus == "declined") {
+        return `SUBMITTED: ${this.humanDate(
+          this.task.taskSubmittedForReviewTimestamp
+        )} 
+        DECLINED: ${this.humanDate(this.task.submissionDeclinedTimestamp)}`;
+      } else {
+        return "LOCKED";
+      }
+    },
   },
   data() {
     return {};
+  },
+  methods: {
+    humanDate(timestamp) {
+      return new DateTime.fromSeconds(timestamp.seconds).toFormat(
+        "ccc dd LLL t"
+      );
+    },
   },
 };
 </script>
@@ -139,22 +160,13 @@ a {
   color: var(--v-missionAccent-base) !important;
 }
 
-.active-mission-card {
-  border: 1px solid var(--v-baseAccent-base);
+.selected-mission-card {
+  border: 1px solid var(--v-missionAccent-base);
   margin: -21px 10px 0px 10px;
   display: flex;
   flex-direction: column;
-  min-height: 300px;
   z-index: 200;
   background-color: var(--v-background-base);
-
-  // background-image: repeating-linear-gradient(
-  //   45deg,
-  //   var(--v-baseAccent-base) 10px,
-  //   var(--v-baseAccent-base) 12px,
-  //   transparent 12px,
-  //   transparent 20px
-  // );
 }
 
 .mission-card {
@@ -163,14 +175,12 @@ a {
   display: flex;
   width: 100%;
   height: auto;
-  background-color: var(--v-background-base);
 
   .mission-section {
     margin: 0px;
     color: var(--v-missionAccent-base);
     font-size: 0.9rem;
     border-left: 1px solid var(--v-missionAccent-base);
-    padding: 10px;
     flex-grow: 1;
   }
   .mission-section:first-child {
@@ -187,14 +197,15 @@ a {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
+    // align-items: center;
 
     .section-overUnder {
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       width: 100%;
-      height: 100%;
+      height: 50%;
       padding: 10px;
     }
 
@@ -202,5 +213,12 @@ a {
       border-bottom: 1px solid var(--v-missionAccent-base);
     }
   }
+}
+
+.mission-in-review {
+  color: var(--v-cohortAccent-base);
+}
+.mission-completed {
+  color: var(--v-baseAccent-base);
 }
 </style>

@@ -58,8 +58,9 @@ const getDefaultState = () => {
     studentsActiveTasks: [],
     studentsActivityLog: [],
     showPanelCard: {},
-    submittedEdges: [], 
-    submittedNodes: []
+    studentsSubmissions: [],
+    submittedEdges: [],
+    submittedNodes: [],
   };
 };
 
@@ -164,10 +165,10 @@ export default new Vuex.Store({
       state.person = data;
     },
     resetTeachersSubmissions(state) {
-      state.teachersSubmissionsToReview = []
+      state.teachersSubmissionsToReview = [];
     },
     setPanelCard(state, data) {
-      state.showPanelCard = data
+      state.showPanelCard = data;
     },
     setCurrentCourseId(state, courseId) {
       state.currentCourseId = courseId;
@@ -285,9 +286,10 @@ export default new Vuex.Store({
     }),
     async getSubmittedNodesAndEdges({ state }) {
       const submittedNodes = [];
-      const submittedEdges = []
+      const submittedEdges = [];
 
-      const querySnapshot = await db.collection("courses")
+      const querySnapshot = await db
+        .collection("courses")
         .where("status", "==", "submitted")
         .get();
 
@@ -306,22 +308,24 @@ export default new Vuex.Store({
             return node;
           })
         );
-        
+
         const edgesSnapshot = await db
-        .collection("courses")
-        .doc(doc.id)
-        .collection("map-edges")
-        .get();
+          .collection("courses")
+          .doc(doc.id)
+          .collection("map-edges")
+          .get();
 
-        submittedEdges.push(...edgesSnapshot.docs.map((subDoc) => subDoc.data()));
-
+        submittedEdges.push(
+          ...edgesSnapshot.docs.map((subDoc) => subDoc.data())
+        );
       }
-      state.submittedNodes = submittedNodes
-      state.submittedEdges = submittedEdges
+      state.submittedNodes = submittedNodes;
+      state.submittedEdges = submittedEdges;
     },
     async getSubmittedEdges({ state }) {
       const submittedEdges = [];
-      const querySnapshot = await db.collection("courses")
+      const querySnapshot = await db
+        .collection("courses")
         .where("public", "==", true)
         .where("status", "==", "published")
         .get();
@@ -334,7 +338,9 @@ export default new Vuex.Store({
           .collection("map-edges")
           .get();
 
-        submittedEdges.push(...subQuerySnapshot.docs.map((subDoc) => subDoc.data()));
+        submittedEdges.push(
+          ...subQuerySnapshot.docs.map((subDoc) => subDoc.data())
+        );
       }
 
       state.submittedEdges = submittedEdges;
@@ -342,7 +348,8 @@ export default new Vuex.Store({
     async getAllNodes({ state }) {
       const allNodes = [];
 
-      const querySnapshot = await db.collection("courses")
+      const querySnapshot = await db
+        .collection("courses")
         .where("public", "==", true)
         .where("status", "==", "published")
         .get();
@@ -373,7 +380,8 @@ export default new Vuex.Store({
     },
     async getAllEdges({ state }) {
       const allEdges = [];
-      const querySnapshot = await db.collection("courses")
+      const querySnapshot = await db
+        .collection("courses")
         .where("public", "==", true)
         .where("status", "==", "published")
         .get();
@@ -526,9 +534,13 @@ export default new Vuex.Store({
           const allWorkForReview = [...state.teachersSubmissionsToReview];
 
           for (const change of querySnapshot.docChanges()) {
-            
             if (change.type === "added") {
-              if (allWorkForReview.some(submission => submission.id === change.doc.data().id)) return
+              if (
+                allWorkForReview.some(
+                  (submission) => submission.id === change.doc.data().id
+                )
+              )
+                return;
               allWorkForReview.push({
                 id: change.doc.data().id,
                 ...change.doc.data(),
@@ -902,8 +914,8 @@ export default new Vuex.Store({
       }
     ),
     async getCohortsByPersonId({ commit, dispatch }, person) {
-      let teacherCohorts
-      let studentCohorts
+      let teacherCohorts;
+      let studentCohorts;
       await db
         .collection("cohorts")
         .where("students", "array-contains", person.id)
@@ -912,7 +924,7 @@ export default new Vuex.Store({
             return {
               id: doc.id,
               ...doc.data(),
-              student: true
+              student: true,
             };
           });
         });
@@ -924,11 +936,11 @@ export default new Vuex.Store({
             return {
               id: doc.id,
               ...doc.data(),
-              teacher: true
+              teacher: true,
             };
           });
         });
-      const cohorts = [...studentCohorts, ...teacherCohorts]
+      const cohorts = [...studentCohorts, ...teacherCohorts];
       commit("setCohorts", cohorts);
       dispatch("getOrganisationsByCohorts", cohorts);
     },
@@ -960,7 +972,7 @@ export default new Vuex.Store({
 
     // ===== Firestore - get Course related stuff
     async getAssignedCourses({ state }, assignedCoursesArray) {
-      console.log("assignedCourses: ", assignedCoursesArray)
+      console.log("assignedCourses: ", assignedCoursesArray);
       let studentsAssignedCourses = [];
 
       assignedCoursesArray.forEach(async (assignedCourse) => {
@@ -1039,7 +1051,57 @@ export default new Vuex.Store({
           .orderBy("requestSubmittedTimestamp")
       );
     }),
+    async getSubmittedWorkByStudentAndTaskId({ state }, payload) {
+      // get all work for review
+      const unsubscribe = db
+        .collection("courses")
+        .doc(payload.courseId)
+        .collection("submissionsForReview")
+        .where("studentId", "==", payload.studentId)
+        .where("contextTask.id", "==", payload.taskId)
+        .where("taskSubmissionStatus", "in", ["inreview", "declined"])
+        .orderBy("taskSubmittedForReviewTimestamp")
+        .onSnapshot((querySnapshot) => {
+          const studentsWorkForReview = [...state.studentsSubmissions];
 
+          for (const change of querySnapshot.docChanges()) {
+            if (change.type === "added") {
+              if (
+                studentsWorkForReview.some(
+                  (submission) => submission.id === change.doc.data().id
+                )
+              )
+                return;
+              studentsWorkForReview.push({
+                id: change.doc.data().id,
+                ...change.doc.data(),
+              });
+            } else if (change.type === "modified") {
+              studentsWorkForReview.splice(
+                studentsWorkForReview.findIndex(
+                  (i) => i.id === change.doc.data().id
+                ),
+                1,
+                {
+                  id: change.doc.data().id,
+                  ...change.doc.data(),
+                }
+              );
+            } else if (change.type === "removed") {
+              studentsWorkForReview.splice(
+                studentsWorkForReview.findIndex(
+                  (i) => i.id === change.doc.data().id
+                ),
+                1
+              );
+            }
+          }
+          state.studentsSubmissions = studentsWorkForReview;
+        });
+
+      return unsubscribe;
+      // state.teachersSubmissionsToReview = allWorkForReview;
+    },
     async getRequestsForHelpByCourseId({ state }, courseId) {
       // console.log("getRequests called");
 
@@ -1057,7 +1119,12 @@ export default new Vuex.Store({
             console.log("change.type", change.type);
 
             if (change.type === "added") {
-              if (allRequestsForHelp.some(request => request.id === change.doc.data().id)) return
+              if (
+                allRequestsForHelp.some(
+                  (request) => request.id === change.doc.data().id
+                )
+              )
+                return;
               allRequestsForHelp.push({
                 id: change.doc.data().id,
                 ...change.doc.data(),
@@ -1129,6 +1196,7 @@ export default new Vuex.Store({
           return topicCount;
         });
     },
+
     // ===== Firestore - Cohorts & Orgs
     async getOrganisationsByCohorts({ commit }, cohorts) {
       const orgs = [];

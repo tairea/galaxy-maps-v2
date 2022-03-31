@@ -33,7 +33,7 @@
 
     <!-- New node positions Save Button -->
     <v-btn
-      v-if="editMode && changeInPositions "
+      v-if="editMode && changeInPositions"
       class="map-button pa-5"
       color="baseAccent"
       dark
@@ -60,9 +60,6 @@
 </template>
 
 <script>
-import { db } from "../store/firestoreConfig";
-import { mapState, mapGetters } from "vuex";
-
 export default {
   name: "GalaxyMapButtons",
   components: {},
@@ -78,14 +75,9 @@ export default {
     return {};
   },
   computed: {
-    ...mapState(["currentCourseId", "currentCourseNodes", "person"]),
-    ...mapGetters([
-      "getCourseById",
-      "getOrganisationsInThisCourse",
-    ]),
-    editMode () {
-      return this.addNodeMode || this.addEdgeMode
-    }
+    editMode() {
+      return this.addNodeMode || this.addEdgeMode;
+    },
   },
   methods: {
     toggleAddNodeMode() {
@@ -102,52 +94,16 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.bg {
-  background: var(--v-background-base);
-}
+.map-buttons {
+  position: fixed;
+  top: 20px;
+  left: 25%;
+  z-index: 2;
+  width: auto;
 
-#container {
-  height: 100vh;
-  width: 100%;
-  display: flex;
-  overflow: hidden;
-  margin: 0 !important;
-  // border: 1px solid red;
-}
-
-#left-section {
-  width: 20%;
-  height: 100%;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  flex-direction: column;
-  // border: 1px solid yellow;
-}
-
-#main-section {
-  position: absolute;
-  width: 100vw;
-  margin: 0px;
-  height: 100%;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  flex-direction: column;
-  z-index: 1;
-  // border: 1px solid pink;
-
-  .map-buttons {
-    position: fixed;
-    top: 20px;
-    left: 25%;
-    z-index: 2;
-    width: auto;
-
-    .map-button {
-      margin: 10px;
-      background-color: var(--v-background-base);
-    }
+  .map-button {
+    margin: 10px;
+    background-color: var(--v-background-base);
   }
 
   .ui-message-wrap {
@@ -159,64 +115,10 @@ export default {
       font-size: 0.8rem;
       text-align: left;
       margin-left: 10px;
-
     }
     .active {
-      color: var(--v-baseAccent-base) !important
+      color: var(--v-baseAccent-base) !important;
     }
-  }
-}
-
-#right-section {
-  width: 30%;
-  height: 100%;
-  display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
-}
-
-/* width */
-::-webkit-scrollbar {
-  width: 10px;
-}
-
-/* Track */
-::-webkit-scrollbar-track {
-  background: var(--v-background-base);
-}
-
-/* Handle */
-::-webkit-scrollbar-thumb {
-  background: var(--v-missionAccent-base);
-}
-
-/* Handle on hover */
-::-webkit-scrollbar-thumb:hover {
-  background: var(--v-missionAccent-base);
-}
-
-.bounce {
-  -webkit-animation: mover 1s infinite alternate;
-  animation: mover 1s infinite alternate;
-}
-.bounce {
-  -webkit-animation: mover 1s infinite alternate;
-  animation: mover 1s infinite alternate;
-}
-@-webkit-keyframes mover {
-  0% {
-    transform: translateY(0);
-  }
-  100% {
-    transform: translateY(-5px);
-  }
-}
-@keyframes mover {
-  0% {
-    transform: translateY(0);
-  }
-  100% {
-    transform: translateY(-5px);
   }
 }
 </style>
