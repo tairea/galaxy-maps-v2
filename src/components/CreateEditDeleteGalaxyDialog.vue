@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-row class="text-center" align="center">
-      <v-col cols="12">
+      <v-col cols="12" class="pa-0">
         <v-dialog v-model="dialog" width="50%" light>
           <!-- CREATE BUTTON -->
           <template v-slot:activator="{ on, attrs }">
@@ -12,8 +12,10 @@
               outlined
               :color="draft ? 'cohortAccent' : 'galaxyAccent'"
               small
+              class="pa-o"
             >
-              <v-icon small> mdi-pencil </v-icon>
+              <v-icon class="pr-2" small> mdi-pencil </v-icon>
+               edit galaxy
             </v-btn>
             <v-btn v-else outlined color="baseAccent" v-bind="attrs" v-on="on">
               <v-icon left> mdi-plus </v-icon>
@@ -94,7 +96,7 @@
 
                 <!-- ===== Credit other learning content course ==== -->
                 <div
-                  class="author-checkbox-wrap d-flex align-end flex-column ma-4"
+                  class="author-checkbox-wrap d-flex flex-column my-4"
                 >
                   <v-checkbox
                     v-model="notAuthor"
@@ -112,8 +114,7 @@
                     </template>
                   </v-checkbox>
                   <div class="d-flex align-center">
-                    <v-icon left color="missionAccent">mdi-information-variant</v-icon>
-                    <p class="dialog-description" style="text-align: right">
+                    <p class="dialog-description pt-1">
                       Tick this box if your are mapping someone elses content
                     </p>
                   </div>
@@ -320,8 +321,8 @@ import { mapState, mapGetters } from "vuex";
 import { db, storage } from "../store/firestoreConfig";
 
 export default {
-  name: "CreateGalaxyButtonDialog",
-  props: ["edit", "courseToEdit", "draft"],
+  name: "CreateEditDeleteGalaxyDialog",
+  props: ['edit', 'draft', 'courseToEdit'],
   data: () => ({
     notAuthor: false,
     dialog: false,
@@ -367,9 +368,8 @@ export default {
       return this.$vuetify.theme.isDark;
     },
   },
-  watch: {
-    courseToEdit (newVal) {
-      console.log("courseToEdit changed: ", newVal)
+  mounted () {
+    if (this.courseToEdit) {
       this.course = this.courseToEdit;
     }
   },

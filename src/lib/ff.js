@@ -57,3 +57,48 @@ export const getStudentCohortsById = async (studentId) => {
       return cohorts;
     });
 }
+
+export const getCohortById = async (cohortId) => {
+  return await db
+  .collection("cohorts")
+  .doc(cohortId)
+  .get()
+  .then(doc => {
+    return {
+      id: doc.id,
+      ...doc.data()
+    }
+  })
+}
+
+export const getAllPeopleInCourse = async (courseId) => {
+  return await db 
+    .collection("people")
+    .where("assignedCourses", "array-contains", courseId)
+    .get()
+    .then((querySnapShot) => {
+      const people = querySnapShot.docs.map((doc) => {
+        return {
+          id: doc.id,
+          ...doc.data(),
+        };
+      });
+      return people;
+    })
+}
+
+export const getAllCohortsInCourse = async (courseId) => {
+  return await db
+    .collection('cohorts')
+    .where("courses", "array-contains", courseId)
+    .get()
+    .then((querySnapShot) => {
+      const course = querySnapShot.docs.map((doc) => {
+        return {
+          id: doc.id,
+          ...doc.data()
+        }
+      })
+      return course
+    })
+}
