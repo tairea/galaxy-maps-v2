@@ -75,8 +75,6 @@ export default {
     return {};
   },
   computed: {
-    ...mapState(["currentCourseId", "currentCourseNodes", "person"]),
-    ...mapGetters(["getCourseById", "getOrganisationsInThisCourse"]),
     editMode() {
       return this.addNodeMode || this.addEdgeMode;
     },
@@ -122,28 +120,5 @@ export default {
       color: var(--v-baseAccent-base) !important;
     }
   }
-}
-
-#right-section {
-  width: 30%;
-  height: 100%;
-  display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
-}
-
-/* width */
-::-webkit-scrollbar {
-  width: 10px;
-}
-
-/* Track */
-::-webkit-scrollbar-track {
-  background: var(--v-background-base);
-}
-
-/* Handle */
-::-webkit-scrollbar-thumb {
-  background: var(--v-missionAccent-base);
 }
 </style>
