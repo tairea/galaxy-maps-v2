@@ -42,7 +42,7 @@
         :class="{'focused': submitted}" 
         @click="whichCoursesToDisplay = 'submitted'"
       >
-        ADMIN
+        submitted
       </v-btn>
     </div>
     <div class="flexContainer">
@@ -50,7 +50,7 @@
     </div>
     <div class="buttons">
       <CreateEditDeleteGalaxyDialog :edit="false" v-if="teach" />
-      <!-- <DiscoverGalaxyButton /> -->
+      <!-- <DiscoverGalaxyButton />  -->
     </div>
   </div>
 </template>

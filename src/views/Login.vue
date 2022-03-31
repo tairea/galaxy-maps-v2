@@ -128,7 +128,7 @@ export default {
         firebase.auth().currentUser.sendEmailVerification(actionCodeSettings);
         throw new Error("Please check your emails to verify your account");
       } else {
-        this.$router.push("/base/galaxies/all");
+        this.$router.push("/base/galaxies");
       }
     },
     validate() {
