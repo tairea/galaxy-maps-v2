@@ -13,6 +13,10 @@
           v-for="(task, index) in tasks"
           :key="task.id"
           @click="missionClicked(task)"
+          :readonly="
+            task.taskStatus == 'locked' || task.taskStatus == 'unlocked'
+          "
+          :value="task.taskStatus == 'active'"
         >
           <MissionsCard
             :task="task"
