@@ -97,7 +97,7 @@ const mailTransport = nodemailer.createTransport({
   },
 });
 
-//======GM APP INVITE EMAIL==================
+//====== GM APP INVITE EMAIL ==================
 exports.sendInviteEmail = functions.https.onCall((data, context) => {
   const { email, displayName, link, inviter, accountType } = data;
 
@@ -130,7 +130,7 @@ Galaxy Maps Robot`;
   return null;
 }
 
-// Sends an invite email to a new student.
+// ========== NEW STUDENT ACCOUNT CREATED EMAIL ===========
 async function sendStudentInviteEmail(email, displayName, link, inviter) {
   const mailOptions = {
     from: `${APP_NAME} <noreply@galaxymaps.io>`,
@@ -228,7 +228,61 @@ Galaxy Maps Robot`;
   return null;
 }
 
-//  ============ Presence system sync ============
+//======COURSE SUBMISSION NOTIFICATION==================
+exports.sendNewSubmissionEmail = functions.https.onCall((data, context) => {
+  const { author, title } = data;
+  sendNewSubmissionEmail(author, title);
+});
+
+// Sends a invite email to a new student.
+async function sendNewSubmissionEmail(author, title) {
+  const mailOptions = {
+    from: `${APP_NAME} <noreply@galaxymaps.io>`,
+    to: `jamin.tairea@gmail.com`,
+  };
+
+  // The user subscribed to the newsletter.
+  mailOptions.subject = `New Galaxy Submission`;
+  mailOptions.text = `Hi Team, 
+
+${author} has submitted an new course called ${title}
+
+Navigate to https://galaxymaps.io to approve the submission
+  
+Galaxy Maps Robot`;
+  await mailTransport.sendMail(mailOptions);
+  functions.logger.log("New course submission email sent to admin");
+  return null;
+}
+
+//======COURSE PUBLISHED NOTIFICATION==================
+exports.sendCoursePublishedEmail = functions.https.onCall((data, context) => {
+  const { email, name, course } = data;
+  sendCoursePublishedEmail(email, name, course);
+});
+
+// Sends a invite email to a new student.
+async function sendCoursePublishedEmail(email, name, course) {
+  const mailOptions = {
+    from: `${APP_NAME} <noreply@galaxymaps.io>`,
+    to: email
+  };
+
+  // The user subscribed to the newsletter.
+  mailOptions.subject = `Galaxy Approved`;
+  mailOptions.text = `Hi ${name}, 
+
+Your course ${course} has been approved and is now available on Galaxy Maps
+
+Navigate to https://galaxymaps.io to view your course
+  
+Galaxy Maps Robot`;
+  await mailTransport.sendMail(mailOptions);
+  functions.logger.log("Course published email sent to", email);
+  return null;
+}
+
+//  ============ PRESENCE SYSTEM SYNC ============
 // Watch realtime DB for changes and trigger function on change
 exports.onUserStatusChanged = functions.database
   .ref("/status/{uid}")

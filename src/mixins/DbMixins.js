@@ -6,21 +6,22 @@ import { getCourseById } from "../lib/ff"
 
 export const dbMixins = {
   methods: {
-    MXaddExistingUserToCohort(person) {
-      return this.MXaddStudentToCohort(person).then(() => {
+    MXaddExistingUserToCohort(person, cohort) {
+      return this.MXaddStudentToCohort(person, cohort).then(() => {
         this.MXsendNewCohortEmail(person);
       });
     },
-    MXaddStudentToCohort(student) {
+    MXaddStudentToCohort(student, currentCohort) {
+      let cohort = currentCohort || this.currentCohort
       return db
         .collection("cohorts")
-        .doc(this.currentCohort.id)
+        .doc(cohort.id)
         .update({
           students: firebase.firestore.FieldValue.arrayUnion(student.id),
         })
         .then(() => {
-          if (this.currentCohort.courses.length) {
-            this.currentCohort.courses.forEach(async (courseId) => {
+          if (cohort.courses.length) {
+            cohort.courses.forEach(async (courseId) => {
               let course = await getCourseById(courseId);
               this.MXassignCourseToStudent(student, course);
             });
@@ -121,7 +122,7 @@ export const dbMixins = {
         .then(() => {
           console.log("course successfully assigned: ", person, course);
           this.sendNewCourseEmail(person, course);
-        });
+        }); 
     },
     sendNewCourseEmail(person, course) {
       const data = {
