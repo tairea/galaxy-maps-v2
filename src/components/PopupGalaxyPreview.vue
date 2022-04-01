@@ -141,7 +141,7 @@
 <script>
 import { db } from "../store/firestoreConfig";
 import { dbMixins } from "../mixins/DbMixins";
-
+import { getCohortById } from '../lib/ff'
 import { mapGetters, mapState } from "vuex";
 
 import { startGalaxyXAPIStatement } from "../lib/veracityLRS";
@@ -318,9 +318,10 @@ export default {
         }
       }
 
-      // 5) assign course to student
-      this.MXassignCourseToStudent(this.person, this.course)
-
+      // 5) assign student to cohort and course
+      let cohort = await getCohortById(this.course.cohort)
+      this.MXaddExistingUserToCohort(this.person, cohort)
+      // this.MXassignCourseToStudent(this.person, this.course)
 
       // Send Galaxy Started statment to LRS
       startGalaxyXAPIStatement(this.person, { galaxy: this.course });

@@ -189,7 +189,7 @@ export default {
           console.log("creating new student: ", index, ":", person)
           // create user and then add them to cohort
           this.MXcreateUser(person)
-            .then(() => this.MXaddStudentToCohort(person.id))
+            .then(() => this.MXaddStudentToCohort(person))
             .then((docRef) => {
               console.log("new student successfully added")
               counter++;
