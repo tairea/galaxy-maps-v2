@@ -9,7 +9,30 @@
         <!-- LEARNING -->
         <div>
           <p class="galaxyListPanelLabel overline mx-4">LEARNING</p>
-          <p class="galaxyListPanelContent text-center">NO ENROLLED MAPS</p>
+          <div v-if="getLearningCourses.length">
+            <!-- COURSE CARD -->
+            <div
+              v-for="course in getLearningCourses"
+              :key="course.id"
+              class="galaxyCard"
+              @click="courseClicked(course.id)"
+            >
+              <img
+                v-if="course.image.url"
+                class="galaxyCardImage"
+                :src="course.image.url"
+              />
+              <div v-else class="imagePlaceholder">
+                {{ first3Letters(course.title) }}
+              </div>
+              <p class="galaxyListPanelContent text-left ma-1">
+                {{ course.title }}
+              </p>
+            </div>
+          </div>
+          <p v-else class="galaxyListPanelContent text-center">
+            NO ENROLLED MAPS
+          </p>
         </div>
         <!-- TEACHING -->
         <div>
@@ -102,22 +125,32 @@ export default {
 
     // LEARNING GALAXIES
     getLearningCourses() {
-      const learningCourses = [];
-      this.cohorts.filter((cohort) => {
-        // get cohorts user is in
-        if (cohort.students.includes(this.person.id)) {
-          // get maps cohort is in
-          cohort.courses.forEach((course) => {
-            learningCourses.push(course);
-          });
+      let learningCourses = [];
+
+      const filteredCohorts = this.cohorts.filter(
+        (cohort) => cohort.student == true
+      );
+
+      for (const cohort of filteredCohorts) {
+        for (const course of cohort.courses) {
+          learningCourses.push(course);
         }
+      }
+
+      // remove course duplicates
+      learningCourses = learningCourses.filter(function (
+        item,
+        index,
+        inputArray
+      ) {
+        return inputArray.indexOf(item) == index;
       });
 
       // filter courses
       return this.courses.filter((course) => {
-        for (let x = 0; learningCourses.length; x++) {
+        for (let x = 0; x < learningCourses.length; x++) {
           if (course.id == learningCourses[x]) {
-            return;
+            return course;
           }
         }
       });
