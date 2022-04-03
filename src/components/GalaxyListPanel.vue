@@ -11,24 +11,13 @@
           <p class="galaxyListPanelLabel overline mx-4">LEARNING</p>
           <div v-if="getLearningCourses.length">
             <!-- COURSE CARD -->
-            <div
-              v-for="course in getLearningCourses"
+            <GalaxyListPanelCard
+              v-for="(course, index) in getLearningCourses"
               :key="course.id"
-              class="galaxyCard"
-              @click="courseClicked(course.id)"
-            >
-              <img
-                v-if="course.image.url"
-                class="galaxyCardImage"
-                :src="course.image.url"
-              />
-              <div v-else class="imagePlaceholder">
-                {{ first3Letters(course.title) }}
-              </div>
-              <p class="galaxyListPanelContent text-left ma-1">
-                {{ course.title }}
-              </p>
-            </div>
+              :course="course"
+              :active="index === activeLearning"
+              @click.native="courseClicked(course.id, index, 'learning')"
+            />
           </div>
           <p v-else class="galaxyListPanelContent text-center">
             NO ENROLLED MAPS
@@ -39,24 +28,13 @@
           <p class="galaxyListPanelLabel overline mx-4">TEACHING</p>
           <div v-if="getTeachingCourses.length">
             <!-- COURSE CARD -->
-            <div
-              v-for="course in getTeachingCourses"
+            <GalaxyListPanelCard
+              v-for="(course, index) in getTeachingCourses"
               :key="course.id"
-              class="galaxyCard"
-              @click="courseClicked(course.id)"
-            >
-              <img
-                v-if="course.image.url"
-                class="galaxyCardImage"
-                :src="course.image.url"
-              />
-              <div v-else class="imagePlaceholder">
-                {{ first3Letters(course.title) }}
-              </div>
-              <p class="galaxyListPanelContent text-left ma-1">
-                {{ course.title }}
-              </p>
-            </div>
+              :course="course"
+              :active="index === activeTeaching"
+              @click.native="courseClicked(course.id, index, 'teaching')"
+            />
           </div>
           <p v-else class="galaxyListPanelContent text-center">
             NO CREATED MAPS
@@ -67,24 +45,13 @@
           <p class="galaxyListPanelLabel overline mx-4">ALL GALAXIES</p>
           <div v-if="getPublicCourses.length">
             <!-- COURSE CARD -->
-            <div
-              v-for="course in getPublicCourses"
+            <GalaxyListPanelCard
+              v-for="(course, index) in getPublicCourses"
               :key="course.id"
-              class="galaxyCard"
-              @click="courseClicked(course.id)"
-            >
-              <img
-                v-if="course.image.url"
-                class="galaxyCardImage"
-                :src="course.image.url"
-              />
-              <div v-else class="imagePlaceholder">
-                {{ first3Letters(course.title) }}
-              </div>
-              <p class="galaxyListPanelContent text-left ma-1">
-                {{ course.title }}
-              </p>
-            </div>
+              :course="course"
+              :active="index === activePublic"
+              @click.native="courseClicked(course.id, index, 'public')"
+            />
           </div>
           <p v-else class="galaxyListPanelContent text-center">
             NO PUBLIC MAPS
@@ -100,20 +67,21 @@
 </template>
 
 <script>
-// import { Component, Vue } from "vue-property-decorator";
-import firebase from "firebase";
-import { mapState, mapActions, mapMutations } from "vuex";
-import ThemeColourPicker from "@/components/ThemeColourPicker.vue";
-import { db, storage } from "../store/firestoreConfig";
+import { mapState, mapActions } from "vuex";
+import GalaxyListPanelCard from "@/components/GalaxyListPanelCard.vue";
 
 export default {
   name: "GalaxyListPanel",
   components: {
-    ThemeColourPicker,
+    GalaxyListPanelCard,
   },
   data() {
     return {
       allCourses: [],
+      selectedGalaxy: false,
+      activeLearning: null,
+      activeTeaching: null,
+      activePublic: null,
     };
   },
   async mounted() {
@@ -173,8 +141,27 @@ export default {
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
-    courseClicked(courseId) {
+    courseClicked(courseId, index, type) {
+      this.selectedGalaxy = !this.selectedGalaxy;
+      if (this.selectedGalaxy) {
+        if (type === "learning") {
+          this.activeLearning = index;
+        } else if (type === "teaching") {
+          this.activeTeaching = index;
+        } else if (type === "public") {
+          this.activePublic = index;
+        }
+      } else {
+        this.allInactive();
+        // TODO: zoom out
+      }
+
       this.$emit("courseClicked", courseId);
+    },
+    allInactive() {
+      this.activeLearning = null;
+      this.activeTeaching = null;
+      this.activePublic = null;
     },
   },
 };
