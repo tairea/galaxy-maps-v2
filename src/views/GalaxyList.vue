@@ -1,6 +1,6 @@
 <template>
   <div class="fullHeight">
-    <GalaxyListPanel @courseClicked="courseClicked($event)" />
+    <GalaxyListPanel @courseClicked="courseClicked($event)" @fit="fit()" />
     <div class="d-flex justify-center button-row">
       <!-- <v-btn
         small
@@ -48,6 +48,7 @@
     </div>
     <div class="flexContainer">
       <Galaxies
+        ref="galaxyMap"
         :whichCoursesToDisplay="whichCoursesToDisplay"
         :highlightCourse="clickedCourseId"
       />
@@ -110,6 +111,10 @@ export default {
   methods: {
     courseClicked(courseId) {
       this.clickedCourseId = courseId;
+    },
+    fit() {
+      console.log("go fit yo");
+      this.$refs.galaxyMap.fit();
     },
   },
 };
