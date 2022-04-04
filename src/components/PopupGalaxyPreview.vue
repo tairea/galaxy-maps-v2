@@ -1,10 +1,20 @@
 <template>
   <!-- POPUP -->
-  <div ref="popup" class="ss-info-panel" :class="draft ? 'draft-border' : 'panel-border'">
+  <div
+    ref="popup"
+    class="ss-info-panel"
+    :class="draft ? 'draft-border' : 'panel-border'"
+    :style="
+      galaxyListInfoPanel ? 'backdrop-filter:none;border:none;width:100%' : ''
+    "
+    v-if="course"
+  >
     <div class="ss-details">
       <div>
         <p class="info-panel-label mb-2">
-          <span class="galaxyColour"><span v-if="draft">Draft</span> Galaxy:</span>
+          <span class="galaxyColour"
+            ><span v-if="draft">Draft</span> Galaxy:</span
+          >
           <br />
           <span>{{ course.title }}</span>
         </p>
@@ -44,7 +54,7 @@
             :src="contentAuthorImage"
           ></v-img>
         </div>
-        <p class="ma-0 ">Content By:</p>
+        <p class="ma-0">Content By:</p>
         <a :href="course.contentBy.source"
           ><span>{{ course.contentBy.name }}</span></a
         >
@@ -64,7 +74,7 @@
             :src="mappedAuthorImage"
           ></v-img>
         </div>
-        <p class="ma-0 ">Mapped By:</p>
+        <p class="ma-0">Mapped By:</p>
         <span>{{ course.mappedBy.name }}</span>
       </div>
     </div>
@@ -141,7 +151,7 @@
 <script>
 import { db } from "../store/firestoreConfig";
 import { dbMixins } from "../mixins/DbMixins";
-import { getCohortById } from '../lib/ff'
+import { getCohortById } from "../lib/ff";
 import { mapGetters, mapState } from "vuex";
 
 import { startGalaxyXAPIStatement } from "../lib/veracityLRS";
@@ -151,7 +161,13 @@ export default {
   mixins: [dbMixins],
   components: {},
   props: {
-    course: {type: Object, default: {}}
+    course: {
+      type: Object,
+      default() {
+        return {};
+      },
+    },
+    galaxyListInfoPanel: { type: Boolean, default: false },
   },
   computed: {
     ...mapGetters(["person"]),
@@ -167,15 +183,15 @@ export default {
     };
   },
   watch: {
-    course () {
-      console.log('course changed: ', this.course)
-      this.setAccountType()
-      this.setImages()
-    }
+    course() {
+      console.log("course changed: ", this.course);
+      this.setAccountType();
+      this.setImages();
+    },
   },
   async mounted() {
-      this.setAccountType()
-      this.setImages()
+    this.setAccountType();
+    this.setImages();
   },
   computed: {
     ...mapState(["person", "user"]),
@@ -183,8 +199,8 @@ export default {
       return this.$vuetify.theme.isDark;
     },
     draft() {
-      return this.course.status === 'drafting'
-    }
+      return this.course.status === "drafting";
+    },
   },
   methods: {
     async setImages() {
@@ -198,9 +214,12 @@ export default {
       }
     },
     async setAccountType() {
-      this.teacher = false
-      if (this.course.mappedBy.personId === this.person.id || this.user.data.admin) {
-        this.teacher = true
+      this.teacher = false;
+      if (
+        this.course.mappedBy.personId === this.person.id ||
+        this.user.data.admin
+      ) {
+        this.teacher = true;
       } else {
         const querySnapshot = await db
           .collection("people")
@@ -217,6 +236,9 @@ export default {
       }
     },
     close() {
+      if (this.galaxyListInfoPanel) {
+        this.$emit("closeInfoPanel");
+      }
       this.$emit("togglePopup", false);
     },
     routeToGalaxyEdit() {
@@ -319,8 +341,8 @@ export default {
       }
 
       // 5) assign student to cohort and course
-      let cohort = await getCohortById(this.course.cohort)
-      this.MXaddExistingUserToCohort(this.person, cohort)
+      let cohort = await getCohortById(this.course.cohort);
+      this.MXaddExistingUserToCohort(this.person, cohort);
       // this.MXassignCourseToStudent(this.person, this.course)
 
       // Send Galaxy Started statment to LRS
@@ -331,7 +353,7 @@ export default {
         name: "GalaxyView",
         params: {
           courseId: this.course.id,
-          role: 'student'
+          role: "student",
         },
       });
     },
@@ -462,6 +484,6 @@ export default {
 }
 
 .panel-border {
-  border: 1px solid var(--v-missionAccent-base)  
+  border: 1px solid var(--v-missionAccent-base);
 }
 </style>

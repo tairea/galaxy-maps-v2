@@ -685,6 +685,9 @@ export default {
         animation: true,
       });
     },
+    zoomToAllNodes() {
+      this.zoomToNodes(this.nodesToDisplay);
+    },
     togglePopup() {
       this.popupPreview = !this.popupPreview;
       this.zoomToNodes(this.nodesToDisplay);
