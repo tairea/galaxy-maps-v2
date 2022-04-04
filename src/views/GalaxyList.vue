@@ -1,6 +1,11 @@
 <template>
   <div class="fullHeight">
-    <GalaxyListPanel @courseClicked="courseClicked($event)" @fit="fit()" />
+    <GalaxyListPanel @courseClicked="courseClicked($event)" />
+    <GalaxyListInfoPanel
+      :type="courseType"
+      :selectedCourse="clickedCourseId"
+      @closeInfoPanel="closeInfoPanel"
+    />
     <div class="d-flex justify-center button-row">
       <!-- <v-btn
         small
@@ -64,6 +69,7 @@
 import CreateEditDeleteGalaxyDialog from "../components/CreateEditDeleteGalaxyDialog";
 import DiscoverGalaxyButton from "../components/DiscoverGalaxyButton";
 import GalaxyListPanel from "../components/GalaxyListPanel";
+import GalaxyListInfoPanel from "../components/GalaxyListInfoPanel";
 import Galaxies from "../components/Galaxies";
 
 import { mapGetters } from "vuex";
@@ -74,6 +80,7 @@ export default {
   components: {
     CreateEditDeleteGalaxyDialog,
     GalaxyListPanel,
+    GalaxyListInfoPanel,
     DiscoverGalaxyButton,
     Galaxies,
   },
@@ -82,6 +89,7 @@ export default {
       loading: true,
       whichCoursesToDisplay: "all",
       clickedCourseId: null,
+      courseType: null,
     };
   },
   async mounted() {
@@ -109,12 +117,12 @@ export default {
     },
   },
   methods: {
-    courseClicked(courseId) {
-      this.clickedCourseId = courseId;
+    courseClicked(emittedPayload) {
+      this.clickedCourseId = emittedPayload.courseId;
+      this.courseType = emittedPayload.type;
     },
-    fit() {
-      console.log("go fit yo");
-      this.$refs.galaxyMap.fit();
+    closeInfoPanel() {
+      this.clickedCourseId = null;
     },
   },
 };
