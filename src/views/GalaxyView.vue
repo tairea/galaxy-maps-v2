@@ -1,9 +1,9 @@
 <template>
   <div id="container" class="bg">
     <div id="left-section">
-      <GalaxyInfo :course="course" :teacher="teacher" :draft="draft"/>
+      <GalaxyInfo :course="course" :teacher="teacher" :draft="draft" />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
-      <PublishGalaxy v-if="showPublish" :course="course" :person="person"/>
+      <PublishGalaxy v-if="showPublish" :course="course" :person="person" />
       <AssignedInfo
         v-if="!draft && teacher"
         :assignCohorts="true"
@@ -69,8 +69,8 @@
           :infoPopupPosition="infoPopupPosition"
           :currentTopic="currentNode"
           :centerFocusPosition="centerFocusPosition"
-          :tasks="teacher ? topicsTasks : personsTopicsTasks" 
-          :teacher="teacher"       
+          :tasks="teacher ? topicsTasks : personsTopicsTasks"
+          :teacher="teacher"
           @close="closePopup"
           @showEditDialog="showEditDialog"
           @focus="focusPopup"
@@ -91,11 +91,15 @@ import BackButton from "../components/BackButton";
 import CreateEditDeleteNodeDialog from "../components/CreateEditDeleteNodeDialog";
 import GalaxyMapButtons from "../components/GalaxyMapButtons";
 import PopupSystemPreview from "../components/PopupSystemPreview";
-import PublishGalaxy from "../components/GalaxyView/PublishGalaxy"
+import PublishGalaxy from "../components/GalaxyView/PublishGalaxy";
 
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
-import { getCourseById, getAllPeopleInCourse, getAllCohortsInCourse } from "@/lib/ff"
+import {
+  getCourseById,
+  getAllPeopleInCourse,
+  getAllCohortsInCourse,
+} from "@/lib/ff";
 
 export default {
   name: "GalaxyView",
@@ -109,7 +113,7 @@ export default {
     CreateEditDeleteNodeDialog,
     GalaxyMapButtons,
     PopupSystemPreview,
-    PublishGalaxy
+    PublishGalaxy,
   },
   props: ["courseId"],
   data() {
@@ -137,13 +141,13 @@ export default {
       moveNodes: false,
       course: {},
       peopleInCourse: [],
-      cohortsInCourse: []
+      cohortsInCourse: [],
     };
   },
   async mounted() {
     // create first node, when galaxy first created (hard coded)
-    this.course = await getCourseById(this.courseId)
-    this.$store.commit('setCurrentCourse', this.course)
+    this.course = await getCourseById(this.courseId);
+    this.$store.commit("setCurrentCourse", this.course);
 
     if (this.fromCreate) {
       let nodeId = null;
@@ -201,7 +205,7 @@ export default {
     // bind assigned people in this course
     if (this.teacher) {
       this.peopleInCourse = await getAllPeopleInCourse(this.courseId);
-      this.cohortsInCourse = await getAllCohortsInCourse(this.courseId)
+      this.cohortsInCourse = await getAllCohortsInCourse(this.courseId);
     }
   },
   computed: {
@@ -211,26 +215,40 @@ export default {
       "person",
       "topicsTasks",
       "personsTopicsTasks",
-      "currentCourse"
+      "currentCourse",
     ]),
     ...mapGetters(["person", "user"]),
 
     goBackPath() {
       if (this.teacher) {
-        return { path: 'galaxies', name: "GalaxyList", params: { display: 'my'}};
+        return {
+          path: "galaxies",
+          name: "GalaxyList",
+          params: { display: "all" },
+        };
       } else {
-        return { path: 'galaxies', name: "GalaxyList", params: { display: 'assigned'}};
+        return {
+          path: "galaxies",
+          name: "GalaxyList",
+          params: { display: "all" },
+        };
       }
     },
-    draft () {
-      return this.course?.status === "drafting"
+    draft() {
+      return this.course?.status === "drafting";
     },
     teacher() {
-      return this.course?.mappedBy?.personId === this.person.id || this.user.data.admin
+      return (
+        this.course?.mappedBy?.personId === this.person.id ||
+        this.user.data.admin
+      );
     },
     showPublish() {
-      return (this.user.data.admin && this.course.status === "submitted") || this.draft 
-    }
+      return (
+        (this.user.data.admin && this.course.status === "submitted") ||
+        this.draft
+      );
+    },
   },
   methods: {
     setUiMessage(message) {
@@ -250,20 +268,20 @@ export default {
       this.changeInPositions = false;
     },
     toggleAddNodeMode() {
-      this.$refs.vis.disableEditMode()
+      this.$refs.vis.disableEditMode();
       this.addNodeMode = !this.addNodeMode;
       if (this.addNodeMode == true) {
         this.$refs.vis.addNodeMode();
       }
-      if (this.addEdgeMode) this.addEdgeMode = false
+      if (this.addEdgeMode) this.addEdgeMode = false;
     },
     toggleAddEdgeMode() {
-      this.$refs.vis.disableEditMode()
+      this.$refs.vis.disableEditMode();
       this.addEdgeMode = !this.addEdgeMode;
       if (this.addEdgeMode == true) {
         this.$refs.vis.addEdgeMode();
       }
-      if (this.addNodeMode) this.addNodeMode = false
+      if (this.addNodeMode) this.addNodeMode = false;
     },
     async bindTasks(courseId, topicId) {
       if (!this.teacher) {
@@ -280,7 +298,6 @@ export default {
       }
     },
     async hovered(hoveredNode) {
-
       this.hoverNode = true;
       // this.infoPopupShow = false;
       this.centerFocusPosition = false;
@@ -331,10 +348,10 @@ export default {
       this.editing = true;
     },
     closeDialog() {
-      console.log('closeDialog: ', this.editing)
+      console.log("closeDialog: ", this.editing);
       if (!this.editing) {
-        this.$refs.vis.removeUnsavedNode()
-        this.deselect()
+        this.$refs.vis.removeUnsavedNode();
+        this.deselect();
       }
       this.$refs.vis.deselectNode();
       this.dialog = false;

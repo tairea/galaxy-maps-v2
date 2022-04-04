@@ -60,8 +60,17 @@
       </div>
     </div>
     <div class="blackBar">
-      <div class="d-flex justify-center align-center"></div>
-      <div class="panelTab mx-4" style=""></div>
+      <div class="d-flex justify-center align-center">
+        <div
+          class="panelTab overline"
+          style="color: var(--v-galaxyAccent-base)"
+        >
+          <!-- <v-icon color="galaxyAccent"
+            >mdi-chart-timeline-variant-shimmer</v-icon
+          > -->
+          LIST OF GALAXIES
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -178,7 +187,7 @@ export default {
   position: fixed;
   // bottom: 0px;
   top: calc(50% - 300px);
-  left: 0px;
+  left: -200px;
   transition: all 0.3s ease-out;
   z-index: 200;
 
@@ -195,6 +204,11 @@ export default {
     display: flex;
     justify-content: flex-end;
     // border: 1px yellow solid;
+
+    .panelTab {
+      width: 100%;
+      writing-mode: vertical-rl;
+    }
   }
 
   .panelContent {

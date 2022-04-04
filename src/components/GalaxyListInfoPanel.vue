@@ -102,6 +102,7 @@ export default {
     height: calc(100% - 2px);
     // height: 100%;
     background: var(--v-background-darken1);
+    // background: var(--v-background-base);
     display: block;
     position: absolute;
     top: 1px;

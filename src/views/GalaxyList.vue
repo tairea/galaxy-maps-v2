@@ -1,6 +1,6 @@
 <template>
   <div class="fullHeight">
-    <GalaxyListPanel @courseClicked="courseClicked($event)" />
+    <GalaxyListPanel ref="listPanel" @courseClicked="courseClicked($event)" />
     <GalaxyListInfoPanel
       :type="courseType"
       :selectedCourse="clickedCourseId"
@@ -123,6 +123,7 @@ export default {
     },
     closeInfoPanel() {
       this.clickedCourseId = null;
+      this.$refs.listPanel.courseClicked();
     },
   },
 };
