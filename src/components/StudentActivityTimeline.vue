@@ -2,13 +2,8 @@
   <div :class="activityClass">
     <p :class="activityLabel">ACTIVITY</p>
     <div :class="statementClass">
-      <p
-        v-for="(activity, i) in courseAcivities"
-        :key="i"
-        class="ma-0"
-        style="background-color: #141e30"
-      >
-        - <span v-if="!studentCard">{{ activity.timeStamp.time }} </span>
+      <p v-for="(activity, i) in courseAcivities" :key="i" class="ma-0">
+        <span v-if="!studentCard">{{ activity.timeStamp.time }} </span>
         <span>{{ activity.timeStamp.date }} </span>
         <span :style="statusClass(activity)"
           >{{ activity.status }} {{ activity.type }}:
@@ -76,7 +71,7 @@ export default {
   },
   methods: {
     formatTime(time) {
-      return DateTime.fromISO(time).toFormat("tt ccc dd LLL   ");
+      return DateTime.fromISO(time).toFormat("ccc dd LLL t ");
     },
     statusClass(activity) {
       switch (activity.status) {
@@ -97,8 +92,9 @@ export default {
   color: var(--v-missionAccent-base);
   border: 1px solid var(--v-missionAccent-base);
   font-size: 0.6rem;
-  max-height: 150px;
-  width: 80%;
+  // max-height: 500px;
+  max-height: 100%;
+  width: 90%;
   margin-left: 5%;
   margin-right: auto;
   margin-bottom: 30px;
@@ -144,7 +140,7 @@ export default {
   width: 100%;
   transform: scale(1.2);
   font-size: 0.6rem;
-  background-color: #141e30;
+  background-color: var(--v-background-base);
   // min-height: 300px;
   position: relative;
   z-index: 10;
@@ -153,7 +149,7 @@ export default {
     border: 1px solid var(--v-missionAccent-base);
     box-shadow: 0 0 30px var(--v-missionAccent-base);
     padding: 5px;
-    background-color: #141e30;
+    background-color: var(--v-background-base);
     max-height: 200px;
     width: 320px;
     overflow: scroll;

@@ -83,6 +83,7 @@ export default {
   name: "Galaxies",
   props: {
     whichCoursesToDisplay: { type: String, default: null },
+    highlightCourse: { type: String, default: null },
   },
   components: {
     Network,
@@ -227,6 +228,16 @@ export default {
     whichCoursesToDisplay(newVal) {
       this.setNodesToDisplay(newVal);
     },
+    highlightCourse(newCourseId) {
+      // get all topic nodes by the closest clicked
+      let coursesTopicNodes = this.nodesToDisplay.filter(
+        (node) => node.courseId == newCourseId
+      );
+      this.zoomToNodes(coursesTopicNodes);
+    },
+  },
+  mounted() {
+    this.setNodesToDisplay("all");
   },
   methods: {
     setNodesToDisplay(newVal) {
@@ -418,7 +429,7 @@ export default {
     repositionCoursesBasedOnBoundaries() {
       const courseCanvasBoundaries = this.calcCourseCanvasBoundaries();
       const allNodes = this.$refs.network.nodes;
-      console.log("all nodes", allNodes);
+      // console.log("all nodes", allNodes);
       let newAllNodes = [];
 
       // canvas / 3
@@ -485,14 +496,14 @@ export default {
       // this.largestRowWidth += this.largestRowWidth / this.numberOfGalaxiesPerRow / 2;
       // this.$refs.network.storePositions();
       // console.log("allNodes", allNodes);
-      console.log("newAllNodes", newAllNodes);
+      // console.log("newAllNodes", newAllNodes);
       return newAllNodes;
     },
     repositionCoursesBasedOnBoundariesV2() {
       console.log("v2");
       const courseCanvasBoundaries = this.calcCourseCanvasBoundaries();
       const allNodes = this.$refs.network.nodes;
-      console.log("all nodes", allNodes);
+      // console.log("all nodes", allNodes);
       let newAllNodes = [];
 
       // canvas / 3
@@ -508,12 +519,12 @@ export default {
 
       // loop nodes and add x y offsets
       for (let i = 0; i < courseCanvasBoundaries.length; i++) {
-        console.log(
-          "positioning course: ==============",
-          courseCanvasBoundaries[i].title
-        );
-        console.log("offsets are: width:" + currentColWidth);
-        console.log("offsets are: height:" + currrentRowHeight);
+        // console.log(
+        //   "positioning course: ==============",
+        //   courseCanvasBoundaries[i].title
+        // );
+        // console.log("offsets are: width:" + currentColWidth);
+        // console.log("offsets are: height:" + currrentRowHeight);
 
         let maxRowHeight = 0;
 
@@ -528,9 +539,9 @@ export default {
               y: currrentRowHeight + node.y - courseCanvasBoundaries[i].centerY,
             };
             newAllNodes.push(newNode);
-            console.log(
-              "node:" + newNode.label + "- x:" + newNode.x + " y:" + newNode.y
-            );
+            // console.log(
+            //   "node:" + newNode.label + "- x:" + newNode.x + " y:" + newNode.y
+            // );
           }
         }
 
@@ -539,7 +550,7 @@ export default {
 
         // keep track of largest height
         if (courseCanvasBoundaries[i].height > maxRowHeight) {
-          console.log("new max height:", courseCanvasBoundaries[i].height);
+          // console.log("new max height:", courseCanvasBoundaries[i].height);
           maxRowHeight = courseCanvasBoundaries[i]?.height + 600;
           // if (courseCanvasBoundaries[i + 1]?.height > maxRowHeight) {
           //   maxRowHeight = courseCanvasBoundaries[i + 1].height + 300;
@@ -560,17 +571,17 @@ export default {
           //check heights of next upcoming rows and adjust maxRowHeight if needed
           for (var x = 1; x <= numberOfGalaxiesPerRow; x++) {
             if (courseCanvasBoundaries[i + x]?.height > maxRowHeight) {
-              console.log(
-                "next row has greater height:",
-                courseCanvasBoundaries[i + x]?.height
-              );
+              // console.log(
+              //   "next row has greater height:",
+              //   courseCanvasBoundaries[i + x]?.height
+              // );
               maxRowHeight = courseCanvasBoundaries[i + x].height / 2 + 600;
             }
             if (courseCanvasBoundaries[i - x - 1]?.height > maxRowHeight) {
-              console.log(
-                "current row has greater height:",
-                courseCanvasBoundaries[i - x - 1]?.height
-              );
+              // console.log(
+              //   "current row has greater height:",
+              //   courseCanvasBoundaries[i - x - 1]?.height
+              // );
               maxRowHeight =
                 courseCanvasBoundaries[i - x - 1]?.height / 2 + 600;
             }
@@ -586,7 +597,7 @@ export default {
       // this.largestRowWidth += this.largestRowWidth / this.numberOfGalaxiesPerRow / 2;
       // this.$refs.network.storePositions();
       // console.log("allNodes", allNodes);
-      console.log("newAllNodes", newAllNodes);
+      // console.log("newAllNodes", newAllNodes);
       return newAllNodes;
     },
     calcCourseCanvasBoundaries() {
@@ -659,7 +670,7 @@ export default {
         // console.log("boundary",boundary)
         courseCanvasBoundaries.push(boundary);
       }
-      console.log("courseCanvasBoundaries", courseCanvasBoundaries);
+      // console.log("courseCanvasBoundaries", courseCanvasBoundaries);
       return courseCanvasBoundaries;
     },
     // this controls the fit zoom animation
@@ -673,6 +684,9 @@ export default {
         minZoomLevel: 0.2, // <-- TODO: this doesnt work on this version of vis-network. needs to be at least v8.5.0. but vue2vis is v7.4.0
         animation: true,
       });
+    },
+    zoomToAllNodes() {
+      this.zoomToNodes(this.nodesToDisplay);
     },
     togglePopup() {
       this.popupPreview = !this.popupPreview;
