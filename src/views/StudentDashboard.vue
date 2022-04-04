@@ -6,14 +6,17 @@
     </div>
 
     <div id="main-section">
-      <!-- STUDENTS ACTIVITY FRAME -->
-      <StudentActivityTimeline :student="person"/>
-
       <!-- STUDENTS COURSE PROGRESSOIN FRAME -->
       <!-- TODO: v-for="courseData in studentsCoursesProgressionData" -->
-      <div style="width: 100%">
-        <StudentCourseProgression />
+      <div class="course-progression-wrap">
+        <StudentCourseProgression :student="person" />
       </div>
+    </div>
+
+    <div id="right-section">
+      <!-- STUDENTS ACTIVITY FRAME -->
+
+      <StudentActivityTimeline :student="person" />
     </div>
   </div>
 </template>
@@ -71,45 +74,35 @@ export default {
 }
 
 #container {
-  height: 100vh;
   width: 100%;
   display: flex;
-  overflow: hidden;
-  margin: 0 !important;
-  // border: 1px solid red;
-}
 
-#left-section {
-  width: 25%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  // border: 1px solid yellow;
-  overflow: scroll;
-  overflow-x: hidden; /* Hide horizontal scrollbar */
-
-  #left-section ::-webkit-scrollbar {
-    display: none;
+  #left-section {
+    width: 15%;
+    padding: 100px 50px;
   }
-}
 
-#main-section {
-  width: 75%;
-  margin-top: 10%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  z-index: 1;
-  // border: 1px solid pink;
-  overflow: scroll;
-  overflow-x: hidden; /* Hide horizontal scrollbar */
+  #main-section {
+    width: 60%;
+    height: calc(100vh - 100px);
+    margin-top: 100px;
+    padding: 0px 50px;
+    height: calc(100vh - 200px);
+    // border: 1px solid red;
 
-  #main-section ::-webkit-scrollbar {
-    display: none;
+    .course-progression-wrap {
+      height: 100%;
+      overflow-y: scroll;
+      overflow-x: hidden;
+    }
+  }
+
+  #right-section {
+    width: 25%;
+    height: calc(100vh - 100px);
+    margin-top: 100px;
+    height: calc(100vh - 200px);
+    // border: 1px solid yellow;
   }
 }
 
