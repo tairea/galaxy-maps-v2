@@ -117,7 +117,7 @@ export default {
       // filter courses
       return this.courses.filter((course) => {
         for (let x = 0; x < learningCourses.length; x++) {
-          if (course.id == learningCourses[x]) {
+          if (course.id == learningCourses[x] && course.status == "published") {
             return course;
           }
         }
@@ -156,7 +156,10 @@ export default {
         // TODO: zoom out
       }
 
-      this.$emit("courseClicked", courseId);
+      this.$emit("courseClicked", {
+        courseId,
+        type,
+      });
     },
     allInactive() {
       this.activeLearning = null;
