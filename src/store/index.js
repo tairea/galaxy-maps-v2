@@ -912,33 +912,61 @@ export default new Vuex.Store({
       }
     ),
     async getCohortsByPersonId({ commit, dispatch }, person) {
-      let teacherCohorts;
-      let studentCohorts;
-      await db
+      let teacherCohorts = [];
+      let studentCohorts = [];
+
+      // onSnapshot wasnt working for me. so changed to .get()
+      const studentQuerySnapShot = await db
         .collection("cohorts")
         .where("students", "array-contains", person.id)
-        .onSnapshot((querySnapShot) => {
-          studentCohorts = querySnapShot.docs.map((doc) => {
-            return {
-              id: doc.id,
-              ...doc.data(),
-              student: true,
-            };
-          });
-        });
-      await db
+        .get();
+      const teacherQuerySnapShot = await db
         .collection("cohorts")
         .where("teachers", "array-contains", person.id)
-        .onSnapshot((querySnapShot) => {
-          teacherCohorts = querySnapShot.docs.map((doc) => {
-            return {
-              id: doc.id,
-              ...doc.data(),
-              teacher: true,
-            };
-          });
+        .get();
+
+      for (const cohort of studentQuerySnapShot.docs) {
+        studentCohorts.push({
+          id: cohort.id,
+          student: true,
+          ...cohort.data(),
         });
+      }
+      for (const cohort of teacherQuerySnapShot.docs) {
+        teacherCohorts.push({
+          id: cohort.id,
+          teacher: true,
+          ...cohort.data(),
+        });
+      }
+
+      // await db
+      // .collection("cohorts")
+      // .where("students", "array-contains", person.id)
+      // .onSnapshot((querySnapShot) => {
+      //   studentCohorts = querySnapShot.docs.map((doc) => {
+      //     console.log("doc:", doc.data());
+      //     return {
+      //       id: doc.id,
+      //       ...doc.data(),
+      //       student: true,
+      //     };
+      //   });
+      // });
+      // await db
+      //   .collection("cohorts")
+      //   .where("teachers", "array-contains", person.id)
+      //   .onSnapshot((querySnapShot) => {
+      //     teacherCohorts = querySnapShot.docs.map((doc) => {
+      //       return {
+      //         id: doc.id,
+      //         ...doc.data(),
+      //         teacher: true,
+      //       };
+      //     });
+      //   });
       const cohorts = [...studentCohorts, ...teacherCohorts];
+      console.log("cohorts from store", cohorts);
       commit("setCohorts", cohorts);
       dispatch("getOrganisationsByCohorts", cohorts);
     },

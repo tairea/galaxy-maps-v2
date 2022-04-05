@@ -1,52 +1,62 @@
 <template>
   <div class="fullHeight">
+    <GalaxyListPanel ref="listPanel" @courseClicked="courseClicked($event)" />
+    <GalaxyListInfoPanel
+      :type="courseType"
+      :selectedCourse="clickedCourseId"
+      @closeInfoPanel="closeInfoPanel"
+    />
     <div class="d-flex justify-center button-row">
-      <v-btn 
-        small 
-        outlined 
-        color="missionAccent" 
+      <!-- <v-btn
+        small
+        outlined
+        color="missionAccent"
         class="mx-2 galaxy-btn"
-        :class="{'focused': learn}" 
+        :class="{ focused: learn }"
         @click="whichCoursesToDisplay = 'assigned'"
       >
         LEARN
       </v-btn>
-      <v-btn 
-        small 
-        outlined 
-        color="missionAccent" 
+      <v-btn
+        small
+        outlined
+        color="missionAccent"
         class="mx-2 galaxy-btn"
-        :class="{'focused': teach}" 
+        :class="{ focused: teach }"
         @click="whichCoursesToDisplay = 'my'"
       >
         TEACH
       </v-btn>
-      <v-btn 
-        small 
-        active 
-        outlined 
-        color="missionAccent" 
+      <v-btn
+        small
+        active
+        outlined
+        color="missionAccent"
         class="mx-2 galaxy-btn"
-        :class="{'focused': discover}" 
+        :class="{ focused: discover }"
         @click="whichCoursesToDisplay = 'all'"
       >
         DISCOVER
       </v-btn>
       <v-btn
-        v-if="admin" 
-        small 
-        active 
-        outlined 
-        color="missionAccent" 
+        v-if="admin"
+        small
+        active
+        outlined
+        color="missionAccent"
         class="mx-2 galaxy-btn"
-        :class="{'focused': submitted}" 
+        :class="{ focused: submitted }"
         @click="whichCoursesToDisplay = 'submitted'"
       >
         submitted
-      </v-btn>
+      </v-btn> -->
     </div>
     <div class="flexContainer">
-      <Galaxies :whichCoursesToDisplay="whichCoursesToDisplay" />
+      <Galaxies
+        ref="galaxyMap"
+        :whichCoursesToDisplay="whichCoursesToDisplay"
+        :highlightCourse="clickedCourseId"
+      />
     </div>
     <div class="buttons">
       <CreateEditDeleteGalaxyDialog :edit="false" v-if="teach" />
@@ -58,49 +68,64 @@
 <script>
 import CreateEditDeleteGalaxyDialog from "../components/CreateEditDeleteGalaxyDialog";
 import DiscoverGalaxyButton from "../components/DiscoverGalaxyButton";
+import GalaxyListPanel from "../components/GalaxyListPanel";
+import GalaxyListInfoPanel from "../components/GalaxyListInfoPanel";
 import Galaxies from "../components/Galaxies";
 
 import { mapGetters } from "vuex";
 
 export default {
   name: "GalaxyList",
-  props: ['display'],
+  props: ["display"],
   components: {
     CreateEditDeleteGalaxyDialog,
+    GalaxyListPanel,
+    GalaxyListInfoPanel,
     DiscoverGalaxyButton,
     Galaxies,
   },
   data() {
     return {
       loading: true,
-      whichCoursesToDisplay: null
+      whichCoursesToDisplay: "all",
+      clickedCourseId: null,
+      courseType: null,
     };
   },
   async mounted() {
-    if (this.display) this.whichCoursesToDisplay = this.display
-    else this.whichCoursesToDisplay = 'all'
+    if (this.display) this.whichCoursesToDisplay = this.display;
+    else this.whichCoursesToDisplay = "all";
     // TODO: Currently navigates to all galaxies by default, this needs to be improved
     await this.$store.dispatch("bindAllCourses");
   },
   computed: {
     ...mapGetters(["user", "person"]),
     teach() {
-      return this.whichCoursesToDisplay === 'my'
+      return this.whichCoursesToDisplay === "my";
     },
     learn() {
-      return this.whichCoursesToDisplay === 'assigned'
+      return this.whichCoursesToDisplay === "assigned";
     },
     discover() {
-      return this.whichCoursesToDisplay === 'all'
+      return this.whichCoursesToDisplay === "all";
     },
     submitted() {
-      return this.whichCoursesToDisplay === 'submitted'
+      return this.whichCoursesToDisplay === "submitted";
     },
     admin() {
-      return this.user.data.admin
+      return this.user.data.admin;
     },
-
-  }
+  },
+  methods: {
+    courseClicked(emittedPayload) {
+      this.clickedCourseId = emittedPayload.courseId;
+      this.courseType = emittedPayload.type;
+    },
+    closeInfoPanel() {
+      this.clickedCourseId = null;
+      this.$refs.listPanel.courseClicked();
+    },
+  },
 };
 </script>
 
@@ -151,14 +176,14 @@ export default {
 .button-row {
   position: relative;
   top: 80px;
-  z-index: 1
+  z-index: 1;
 }
 
 .focused {
-  background-color: var(--v-missionAccent-darken4)
+  background-color: var(--v-missionAccent-darken4);
 }
 
 .galaxy-btn {
-  background-color: var(--v-background-base)
+  background-color: var(--v-background-base);
 }
 </style>
