@@ -12,7 +12,7 @@ export const dbMixins = {
       });
     },
     MXaddStudentToCohort(student, currentCohort) {
-      let cohort = currentCohort || this.currentCohort
+      let cohort = currentCohort ? currentCohort : this.currentCohort
       return db
         .collection("cohorts")
         .doc(cohort.id)
@@ -31,11 +31,11 @@ export const dbMixins = {
           console.error("Error writing document: ", error);
         });
     },
-    MXsendNewCohortEmail(profile) {
+    MXsendNewCohortEmail(profile, cohort) {
       if (profile.inviter?.length == 0) profile.inviter = "GalaxyMaps Admin";
       const person = {
         ...profile,
-        cohort: this.currentCohort.name,
+        cohort: cohort ? cohort.name : this.currentCohort.name,
       };
       const sendNewCohortEmail = functions.httpsCallable("sendNewCohortEmail");
       return sendNewCohortEmail(person);
