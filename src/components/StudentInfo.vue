@@ -30,14 +30,16 @@
       <!-- Cohorts -->
       <div style="margin-top: 50px">
         <p class="student-info-label">cohorts:</p>
-        <Cohort
-          v-for="cohort in cohorts"
-          :cohort="cohort"
-          :key="cohort.id"
-          :size="'0.25em'"
-          :cols="3"
-          :studentView="true"
-        />
+        <div class="d-flex">
+          <Cohort
+            v-for="cohort in cohorts"
+            :cohort="cohort"
+            :key="cohort.id"
+            :size="60"
+            :cols="6"
+            :studentView="true"
+          />
+        </div>
       </div>
     </div>
   </div>

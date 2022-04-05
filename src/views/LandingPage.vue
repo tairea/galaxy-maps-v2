@@ -15,7 +15,8 @@
       <!-- Background maps video -->
     </div>
     <video id="background-video" autoplay loop muted>
-      <source src="../assets/gm-maps.mp4" type="video/mp4" />
+      <!-- <source src="../assets/gm-maps.mp4" type="video/mp4" /> -->
+      <source src="../assets/gm-maps-2.mp4" type="video/mp4" />
     </video>
   </div>
 </template>

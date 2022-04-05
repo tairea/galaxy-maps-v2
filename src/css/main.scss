@@ -1,10 +1,16 @@
 /* width */
+body::-webkit-scrollbar {
+  display: none;
+}
+
 *::-webkit-scrollbar {
   width: 10px;
 }
 /* Track */
 *::-webkit-scrollbar-track {
   background: var(--v-background-base);
+  // background: var(--v-background-darken1);
+ 
 }
 /* Handle */
 *::-webkit-scrollbar-thumb {
