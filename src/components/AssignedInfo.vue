@@ -30,7 +30,7 @@
       >
         Nobody is assigned to this Galaxy
       </p>
-      <!-- <AssignCohortDialog :assignCohorts="true" /> -->
+      <AssignCohortDialog :assignCohorts="true" />
     </div>
 
     <!-- ASSIGNED COURSES INFO -->
