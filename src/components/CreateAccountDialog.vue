@@ -198,6 +198,13 @@ export default {
         this.MXsaveProfile(profile)
           .then(() => {
             this.MXaddExistingUserToCohort(personExists);
+          }).then(() => {
+            if (this.currentCohort.courses.length) {
+              this.currentCohort.courses.forEach(async (courseId) => {
+                let course = await getCourseById(courseId);
+                this.MXassignCourseToStudent(personExists, course);
+              });
+            }
           })
           .then(() => {
             this.addingAccount = false;

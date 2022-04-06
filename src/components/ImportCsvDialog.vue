@@ -177,14 +177,23 @@ export default {
         if (personExists) {
           console.log('personExisits: ', personExists)
           // add existing person to cohort
-          this.MXaddExistingUserToCohort(personExists).then(() => {
-            console.log('exisitng person successfully added')
-            counter++;
-              // check all students are saved to DB
-              if (counter === array.length) {
-                this.saveStudentsCompleted();
+          this.MXaddExistingUserToCohort(personExists)
+            .then(() => {
+              if (this.currentCohort.courses.length) {
+                this.currentCohort.courses.forEach(async (courseId) => {
+                  let course = await getCourseById(courseId);
+                  this.MXassignCourseToStudent(personExists, course);
+                });
               }
-          });
+            })
+            .then(() => {
+              console.log('exisitng person successfully added')
+              counter++;
+                // check all students are saved to DB
+                if (counter === array.length) {
+                  this.saveStudentsCompleted();
+                }
+            });
         } else {
           console.log("creating new student: ", index, ":", person)
           // create user and then add them to cohort
