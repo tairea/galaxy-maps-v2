@@ -438,7 +438,7 @@ export default {
     },
     saveCohort(cohort) {
       this.loading = true;
-
+      if (cohort.teacher) delete cohort.teacher
       // Add a new document in collection "cohorts"
       db.collection("cohorts")
         .add(cohort)

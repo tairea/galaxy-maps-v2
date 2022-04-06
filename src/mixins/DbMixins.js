@@ -19,14 +19,6 @@ export const dbMixins = {
         .update({
           students: firebase.firestore.FieldValue.arrayUnion(student.id),
         })
-        .then(() => {
-          if (cohort.courses.length) {
-            cohort.courses.forEach(async (courseId) => {
-              let course = await getCourseById(courseId);
-              this.MXassignCourseToStudent(student, course);
-            });
-          }
-        })
         .catch((error) => {
           console.error("Error writing document: ", error);
         });
@@ -120,7 +112,6 @@ export const dbMixins = {
           assignedCourses: firebase.firestore.FieldValue.arrayUnion(course.id),
         })
         .then(() => {
-          console.log("course successfully assigned: ", person, course);
           this.sendNewCourseEmail(person, course);
         }); 
     },
@@ -130,7 +121,6 @@ export const dbMixins = {
         email: person.email,
         course: course.title,
       };
-      console.log("new course email to: ", data);
       const sendNewCourseEmail = functions.httpsCallable("sendNewCourseEmail");
       return sendNewCourseEmail(data).catch((error) => {
         console.error(error);
@@ -151,7 +141,6 @@ export const dbMixins = {
       }
     },
     async MXsaveProfile(profile) {
-      console.log("profile: ", profile);
       return await db
         .collection("people")
         .doc(profile.id)

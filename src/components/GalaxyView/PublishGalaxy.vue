@@ -202,6 +202,7 @@ export default {
           url: course.image?.url,
         },
         teachers: [course.mappedBy.personId],
+        courseCohort: true
       }
 
       course.status = "published"
