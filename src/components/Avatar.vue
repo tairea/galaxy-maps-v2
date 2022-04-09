@@ -13,17 +13,7 @@
               :src="personData.image.url"
               :alt="personData.firstName"
               style="object-fit: cover"
-              :style="[
-                colourBorder
-                  ? {
-                      border:
-                        '2px solid ' +
-                        stringToColour(
-                          personData.firstName + personData.lastName
-                        ),
-                    }
-                  : {},
-              ]"
+              :style="border"
             />
             <div
               v-else
@@ -33,11 +23,7 @@
                   ? {
                       width: size + 'px',
                       height: size + 'px',
-                      border:
-                        '2px solid ' +
-                        stringToColour(
-                          personData.firstName + personData.lastName
-                        ),
+                      border,
                       backgroundColor: stringToColour(
                         personData.firstName + personData.lastName
                       ),
@@ -64,6 +50,7 @@
 
 <script>
 import { db } from "../store/firestoreConfig";
+import { mapState } from "vuex";
 
 export default {
   name: "Avatar",
@@ -77,7 +64,15 @@ export default {
         this.personData = doc.data();
       });
   },
-  computed: {},
+  computed: {
+    ...mapState(['userStatus']),
+    online() {
+      return this.userStatus[this.personId].state === 'online'
+    },
+    border() {
+      return this.colourBorder && this.online ? 'border: 1px solid var(--v-baseAccent-base)':''
+    }
+  },
   data() {
     return {
       personData: {},
@@ -97,7 +92,7 @@ export default {
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
       }
       return hash;
-    },
+    }
   },
 };
 </script>

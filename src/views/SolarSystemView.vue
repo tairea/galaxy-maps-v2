@@ -84,8 +84,6 @@ export default {
     // bind requests for help
     await this.$store.dispatch("bindRequestsForHelp", {
       courseId: this.currentCourseId,
-      // topicId: this.currentTopicId,
-      // taskId: this.currentTaskId,
     });
 
     // check if requests are binded

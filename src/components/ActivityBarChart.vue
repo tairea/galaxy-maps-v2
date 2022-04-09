@@ -14,7 +14,7 @@
           :chartType="chartType"
           :chartData="formatStudentsChartData(activityData)"
           :chartOptions="chartOptions"
-          :style="{ width: '100%', height: '200px', padding: '20px' }"
+          :style="{ width: '100%', height: '200px' }"
           :toolTipEnable="false"
           :timeframe="timeframe"
           :selectedPersons="selectedPersons"
@@ -238,25 +238,21 @@ export default {
 
 <style lang="scss" scoped>
 .course-frame {
-  // border: 1px solid var(--v-baseAccent-base);
-  // margin-bottom: 30px;
+  border: 1px solid var(--v-galaxyAccent-base);
   margin-left: auto;
   margin-right: auto;
-  padding: 0px 20px;
+  padding: 15px;
+  border-radius: 5px;
+  // margin-bottom: 20px;
 
   .left-col {
     padding: 20px;
-  }
-
-  .center-col {
-    // border-left: 1px solid var(--v-galaxyAccent-base);
-    // border-right: 1px solid var(--v-galaxyAccent-base);
   }
 }
 
 .galaxy-title {
   font-size: 0.8rem;
-  color: var(--v-missionAccent-base) !important;
+  color: var(--v-galaxyAccent-base) !important;
   font-weight: 600;
   text-transform: uppercase;
   // margin: 20px 0px 5px 0px;

@@ -90,13 +90,15 @@
           <div class="d-flex justify-center align-center">
             <p class="requester-msg">"{{ request.requestForHelpMessage }}"</p>
           </div>
-          <div class="divider"></div>
-          <div class="action-button">
-            <RequestForHelpResponseDialog
-              :request="request"
-              :requesterPerson="requesterPerson"
-            />
-          </div>
+          <template v-if="isTeacher">
+            <div class="divider"></div>
+            <div class="action-button">
+              <RequestForHelpResponseDialog
+                :request="request"
+                :requesterPerson="requesterPerson"
+              />
+            </div>
+          </template>
         </v-expansion-panel-content>
       </v-expansion-panel>
     </v-expansion-panels>

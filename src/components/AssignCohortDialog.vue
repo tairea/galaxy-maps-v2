@@ -217,7 +217,7 @@
               <p class="dialog-title">Assign this Cohort to a Course</p>
               <div class="d-flex align-center">
                 <p class="dialog-description">
-                  Assign this Cohort to a specific Galaxy Map
+                  Assign all students in this Cohort to an exisiting galaxy map
                 </p>
               </div>
             </div>
@@ -230,25 +230,29 @@
                 :items="courses"
                 dark
               >
-                <template v-slot:selection="{ item }">
-                  <img
-                    width="50"
-                    v-if="item.image.url"
-                    :src="item.image.url"
-                    style="object-fit: cover"
-                  />
-                  <v-icon v-else>mdi-star-three-points</v-icon>
-                  <p class="ml-4">{{ item.title }}</p>
+                 <template v-slot:selection="{ item }">
+                  <v-list-item-avatar tile>
+                    <img 
+                      v-if="item.image.url" 
+                      :src="item.image.url"
+                    >
+                    <v-icon v-else> mdi-star-three-points </v-icon>
+                  </v-list-item-avatar>
+                  <v-list-item-content>
+                    <v-list-item-title v-html="item.title"></v-list-item-title>
+                  </v-list-item-content>
                 </template>
                 <template v-slot:item="{ item }">
-                  <img
-                    width="50"
-                    v-if="item.image.url"
-                    :src="item.image.url"
-                    style="object-fit: cover"
-                  />
-                  <v-icon v-else>mdi-star-three-points</v-icon>
-                  <p class="ml-4 mt-4">{{ item.title }}</p>
+                  <v-list-item-avatar tile>
+                    <img 
+                      v-if="item.image.url"
+                      :src="item.image.url"
+                    >
+                    <v-icon v-else> mdi-star-three-points </v-icon>
+                  </v-list-item-avatar>
+                  <v-list-item-content>
+                    <v-list-item-title v-html="item.title"></v-list-item-title>
+                  </v-list-item-content>
                 </template>
               </v-select>
             </div>

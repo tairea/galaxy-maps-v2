@@ -1,35 +1,25 @@
 <template>
-  <div class="d-flex cohort-panel">
+  <div class="d-flex cohort-panel" @click="!studentView ? routeToCohort(cohort) : null" :style="borderColor">
     <!-- top row -->
     <div
-      @click="!studentView ? routeToCohort(cohort) : null"
-      :style="!studentView ? 'cursor: pointer;' : ''"
       class="left-col"
     >
       <p class="label text-center">Cohort:</p>
       <div class="d-flex flex-column justify-start align-center pa-2">
-        <v-img
-          v-if="cohort.image.url"
-          :src="cohort.image.url"
-          width="100px"
-          height="100px"
-          class="cohort-image"
-        ></v-img>
+        <v-avatar v-if="cohort.image.url" size="80">
+          <v-img
+            :src="cohort.image.url"
+          ></v-img>
+        </v-avatar>
         <div v-else class="imagePlaceholder">
           {{ first3Letters(cohort.name) }}
         </div>
         <!-- Cohort Name -->
-        <h3 class="overline text-center mt-4">
+        <p class="cohort-name text-center mt-4">
           {{ cohort.name }}
-        </h3>
-        <!-- Organisation Name -->
-        <!-- <div v-if="cohort.organisation">
-          <Organisation
-            :organisation="getOrganisationById(cohort.organisation)"
-          />
-        </div> -->
+        </p>
         <!-- Teacher -->
-        <div v-if="cohort.teachers.length > 0" class="d-flex flex-column mt-8">
+        <div v-if="cohort.teachers.length > 0" class="d-flex justify-center align-center flex-wrap py-2">
           <p class="label text-center">Teachers:</p>
           <div>
             <Avatar
@@ -37,12 +27,35 @@
               :key="teacherId.id"
               :size="40"
               :personId="teacherId"
+              :colourBorder="true"
             />
           </div>
         </div>
-        <p v-else class="label text-center mt-8" style="font-weight: 800">
+        <p v-else class="label text-center" style="font-weight: 800">
           NO TEACHER DATA
         </p>
+             <!-- Students avatars row -->
+      <div class="student-row">
+        <div
+          v-if="cohort.students.length"
+          class="d-flex justify-center align-center flex-wrap py-2"
+        >
+          <p class="label text-center">Students:</p>
+          <Avatar
+            v-for="(person, index) in studentsWithData"
+            ref="avatar"
+            :key="person.id"
+            :size="30"
+            :personId="person.id"
+            class="my-2 mx-1 avatar"
+            :colourBorder="true"
+            @click.native="clickedPerson(person, index)"
+          />
+        </div>
+        <p v-else class="label text-center pa-4" style="font-weight: 800">
+          NO STUDENT DATA
+        </p>
+      </div>
       </div>
     </div>
 
@@ -94,7 +107,7 @@
             class="d-flex justify-center align-center"
           ></v-btn>
         </div>
-        <div v-if="cohortActivityData.length > 0" style="padding: 0px 20px">
+        <div v-if="cohortActivityData.length > 0" class="pt-0 px-5 pb-4" >
           <ActivityBarChart
             :activityData="cohortActivityData"
             :timeframe="timeframe"
@@ -110,33 +123,13 @@
           <p class="label" style="font-weight: 800">NO ACTIVITY DATA</p>
         </div>
       </div>
-      <!-- Students avatars row -->
-      <div class="student-row">
-        <div
-          v-if="cohort.students"
-          class="d-flex justify-center align-center flex-wrap py-2"
-        >
-          <Avatar
-            v-for="(person, index) in studentsWithData"
-            ref="avatar"
-            :key="person.id"
-            :size="30"
-            :personId="person.id"
-            class="my-2 mx-1 avatar"
-            :colourBorder="true"
-            @click.native="clickedPerson(person, index)"
-          />
-        </div>
-        <p v-else class="label text-center pa-4" style="font-weight: 800">
-          NO STUDENT DATA
-        </p>
-      </div>
+ 
     </div>
   </div>
 </template>
 
 <script>
-import { mapGetters, mapActions } from "vuex";
+import { mapGetters, mapMutations } from "vuex";
 import Avatar from "../components/Avatar";
 import ProgressionLineChart from "../components/ProgressionLineChart";
 import ActivityBarChart from "../components/ActivityBarChart";
@@ -211,9 +204,12 @@ export default {
   },
   computed: {
     ...mapGetters(["getOrganisationById", "currentCohort"]),
+    borderColor() {
+      return this.cohort.teacher ? 'border: 1px solid var(--v-baseAccent-base);' : 'border: 1px solid var(--v-missionAccent-base)'
+    }
   },
   methods: {
-    ...mapActions(["setCurrentCohort"]),
+    ...mapMutations(["setCurrentCohort"]),
     clickedPerson(person, index) {
       // get all avatar elements
       const avatarEls = this.$refs.avatar;
@@ -292,12 +288,12 @@ export default {
 
 <style lang="scss" scoped>
 .cohort-panel {
-  border: 1px solid var(--v-missionAccent-base);
   width: calc(50% - 40px);
   min-height: 60%;
   margin: 20px;
   margin-bottom: 50px;
   flex-wrap: wrap;
+  cursor: pointer;
 
   .left-col {
     width: 20%;
@@ -305,8 +301,7 @@ export default {
     // border-right: 1px solid var(--v-missionAccent-base);
 
     .cohort-image {
-      width: 100px;
-      height: 100px;
+      width: 80px;
       border-radius: 50%;
       object-fit: cover;
     }
@@ -326,6 +321,8 @@ export default {
       font-size: 0.65rem !important;
       line-height: 1rem;
       padding-top: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
     }
   }
 
@@ -352,6 +349,7 @@ export default {
   font-size: 0.7rem;
   margin: 10px;
   text-transform: uppercase;
+  width: 100%;
 }
 
 .custom-chip {

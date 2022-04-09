@@ -37,7 +37,8 @@
                 prepend-inner-icon="mdi-sort-alphabetical-variant"
                 label="Sort by"
                 dense
-                class="mb-1"
+                class="mb-1 sort"
+                @click:prepend-inner="sortDesc = !sortDesc"
               ></v-select>
             </div>
             <!-- Arrow buttons -->
@@ -123,7 +124,8 @@ export default {
       ],
       students: [],
       timeframe: {},
-      date: ""
+      date: "",
+      prevVal: ""
     };
   },
  created() {
@@ -196,7 +198,7 @@ export default {
         (student) => student.id == payload.person.id
       );
       this.students[foundIndex].tasks = payload.tasks;
-    },
+    }
   },
 };
 </script>
@@ -300,6 +302,11 @@ a {
 // overide vuetify default height
 .search ::v-deep .v-input__slot {
   min-height: 37px !important;
+}
+// overide vuetify default height
+.sort ::v-deep .v-input__slot {
+  min-height: 37px !important;
+  max-height: 37px !important;
 }
 
 .timeframe-chips {

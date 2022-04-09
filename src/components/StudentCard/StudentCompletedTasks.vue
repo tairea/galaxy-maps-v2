@@ -1,7 +1,7 @@
 <template>
   <div>
-    <p class="label text-center">
-      tasks completed this {{ this.timeframe.type }}
+    <p class="label">
+      tasks completed
     </p>
     <p class="label text-center label-value">{{ calcTaskCompleted }}</p>
   </div>
@@ -44,12 +44,13 @@ export default {
   color: var(--v-missionAccent-base);
   font-size: 0.6rem;
   text-transform: uppercase;
-  margin: 0px;
-  margin-top: 5px;
+  margin: 1px;
+  font-weight: bold;
 }
 
 .label-value {
   font-size: 1.3rem;
   margin: 0px;
+  color: var(--v-baseAccent-base);
 }
 </style>

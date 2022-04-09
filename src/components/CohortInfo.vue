@@ -26,7 +26,7 @@
       </v-row>
     </div>
     <CreateEditDeleteCohortDialog
-      v-if="!isStudent"
+      v-if="isTeacher"
       :edit="true"
       :cohortToEdit="currentCohort"
     />
@@ -71,7 +71,7 @@ export default {
     },
   },
   computed: {
-    ...mapGetters(["getOrganisationById", "currentCohort", "person"]),
+    ...mapGetters(["getOrganisationById", "currentCohort", "person", "user"]),
     cohortImage() {
       return this.currentCohort?.image?.url;
     },
@@ -80,8 +80,8 @@ export default {
       if (org) return org;
       else return {};
     },
-    isStudent() {
-      return this.person.accountType === "student";
+    isTeacher() {
+      return this.currentCohort.teacher || this.user.data.admin;
     },
   },
   methods: {

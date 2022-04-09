@@ -1129,7 +1129,7 @@ export default new Vuex.Store({
       // state.teachersSubmissionsToReview = allWorkForReview;
     },
     async getRequestsForHelpByCourseId({ state }, courseId) {
-      // console.log("getRequests called");
+      console.log("getRequests called");
 
       // get all work for review
       const unsubscribe = db
@@ -1140,14 +1140,17 @@ export default new Vuex.Store({
         // .orderBy("requestSubmittedTimestamp")
         .onSnapshot((querySnapshot) => {
           const allRequestsForHelp = [...state.teachersRequestsForHelp];
-
-          for (const change of querySnapshot.docChanges()) {
-            console.log("change.type", change.type);
+          // WTF!!!! Why does for each fix this?
+          querySnapshot.docChanges().forEach(change => {
+          // for (const change of querySnapshot.docChanges()) {
+            console.log("docChange", change);
+            console.log("docchange.type", change.type);
+            console.log("docChange.doc: ", change.doc.data())
 
             if (change.type === "added") {
               if (
                 allRequestsForHelp.some(
-                  (request) => request.id === change.doc.data().id
+                  (request) => request.id !== change.doc.data().id
                 )
               )
                 return;
@@ -1174,8 +1177,8 @@ export default new Vuex.Store({
                 1
               );
             }
-          }
-          // console.log("allRequestsForHelp", allRequestsForHelp);
+          })
+          console.log("allRequestsForHelp", allRequestsForHelp);
           state.teachersRequestsForHelp = allRequestsForHelp;
         });
 
