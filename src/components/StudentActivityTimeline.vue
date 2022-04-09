@@ -119,6 +119,7 @@ export default {
   color: var(--v-missionAccent-base);
   font-size: 0.6rem;
   margin: 0px;
+  font-weight: bold;
 }
 
 .student-card-statement {
@@ -135,30 +136,30 @@ export default {
   transition: all 0.2s ease-in-out;
 }
 
-.student-card-log:hover {
-  margin: 0px;
-  width: 100%;
-  transform: scale(1.2);
-  font-size: 0.6rem;
-  background-color: var(--v-background-base);
-  // min-height: 300px;
-  position: relative;
-  z-index: 10;
+// .student-card-log:hover {
+//   margin: 0px;
+//   width: 100%;
+//   transform: scale(1.2);
+//   font-size: 0.6rem;
+//   background-color: var(--v-background-base);
+//   // min-height: 300px;
+//   position: relative;
+//   z-index: 10;
 
-  .student-card-statement {
-    border: 1px solid var(--v-missionAccent-base);
-    box-shadow: 0 0 30px var(--v-missionAccent-base);
-    padding: 5px;
-    background-color: var(--v-background-base);
-    max-height: 200px;
-    width: 320px;
-    overflow: scroll;
-    overflow-x: hidden;
-    z-index: 1000;
-  }
-  /* width */
-  ::-webkit-scrollbar {
-    width: 2px;
-  }
-}
+//   .student-card-statement {
+//     border: 1px solid var(--v-missionAccent-base);
+//     box-shadow: 0 0 30px var(--v-missionAccent-base);
+//     padding: 5px;
+//     background-color: var(--v-background-base);
+//     max-height: 200px;
+//     width: 320px;
+//     overflow: scroll;
+//     overflow-x: hidden;
+//     z-index: 1000;
+//   }
+//   /* width */
+//   ::-webkit-scrollbar {
+//     width: 2px;
+//   }
+// }
 </style>

@@ -107,13 +107,10 @@ export default {
       this.$store.commit("setDarkMode", this.$vuetify.theme.isDark);
     },
     logout() {
-      firebase
-        .firestore()
-        .doc("/status/" + this.person.id)
-        .set({
-          state: "offline",
-          last_changed: firebase.firestore.FieldValue.serverTimestamp(),
-        });
+      firebase.database().ref("/status/" + this.person.id).set({
+        state: "offline",
+        last_changed: firebase.database.ServerValue.TIMESTAMP,
+      })
 
       firebase
         .auth()

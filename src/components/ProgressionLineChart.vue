@@ -2,7 +2,7 @@
   <div class="course-frame">
     <v-row>
       <v-col cols="12" class="d-flex pa-0">
-        <img
+        <!-- <img
           v-if="courseData.course.image.url"
           class="galaxy-image"
           :src="courseData.course.image.url"
@@ -20,6 +20,9 @@
         </div>
         <h1 class="galaxy-title pt-2 pl-2">
           {{ courseData.course.title }}
+        </h1> -->
+        <h1 class="galaxy-title pt-2 pl-2">
+          student progress
         </h1>
       </v-col>
     </v-row>
@@ -195,17 +198,12 @@ export default {
   border: 1px solid var(--v-galaxyAccent-base);
   margin-left: auto;
   margin-right: auto;
-  padding: 20px;
+  padding: 10px;
   border-radius: 5px;
   // margin-bottom: 20px;
 
   .left-col {
     padding: 20px;
-  }
-
-  .center-col {
-    // border-left: 1px solid var(--v-galaxyAccent-base);
-    // border-right: 1px solid var(--v-galaxyAccent-base);
   }
 }
 

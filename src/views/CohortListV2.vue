@@ -1,12 +1,7 @@
 <template>
   <div class="main-wrap">
-    <div class="side-col">
-      <!-- COHORTS NOT IN ORGS -->
+    <!-- <div class="side-col">
       <div v-if="cohorts">
-        <!-- <h3 class="cohort-heading overline baseAccent--text text-center">
-          Cohorts
-        </h3> -->
-        <!-- COHORTS with no attached org -->
         <v-row class="mb-5">
           <v-col>
             <v-row>
@@ -26,7 +21,6 @@
           </v-col>
         </v-row>
       </div>
-      <!-- <h3 class="cohort-heading overline baseAccent--text text-center">Orgs</h3> -->
       <div
         v-for="(organisation, orgIndex) in organisations"
         :key="organisation.id"
@@ -43,7 +37,6 @@
           />
         </div>
         <div class="mb-3 d-flex flex-column justify-center align-center">
-          <!-- Their COHORTS -->
           <Cohort
             v-for="(cohort, cohortIndex) in getCohortsByOrganisationId(
               organisation.id
@@ -67,7 +60,6 @@
         </h3>
       </div>
 
-      <!-- Create buttons -->
       <div v-if="user.data.admin">
         <v-tooltip right color="subBackground">
           <template v-slot:activator="{ on, attrs }">
@@ -94,24 +86,26 @@
           <CreateAdminDialog />
         </div>
       </div>
-    </div>
-    <div class="main-col">
-      <!-- Middle chip row -->
+    </div> -->
+    <v-expand-transition>
+      <div class="main-col" v-show="expand">
+        <!-- Middle chip row -->
 
-      <div class="d-flex flex-wrap">
+        <div class="timeframe-chips">
+          <TimeframeFilters @timeframe="setTimeframe($event)" />
+        </div>
+        <div class="d-flex flex-wrap">
         <CohortPanelV2
-          v-for="cohort in selectedCohorts.length > 0
-            ? selectedCohorts
-            : cohorts"
-          :cohort="cohort"
-          :key="cohort.id"
-          :timeframe="timeframe"
-        />
+            v-for="cohort in selectedCohorts.length > 0
+              ? selectedCohorts
+              : orderedCohorts"
+            :cohort="cohort"
+            :key="cohort.id"
+            :timeframe="timeframe"
+          />
+        </div>
       </div>
-    </div>
-    <div class="d-flex justify-center align-center timeframe-chips">
-      <TimeframeFilters @timeframe="setTimeframe($event)" />
-    </div>
+    </v-expand-transition>
   </div>
 
   <!-- Edit Org Dialog -->
@@ -154,10 +148,14 @@ export default {
     selectedIndexs: [],
     selectedCohorts: [],
     unselectedCohorts: [],
+    orderedCohorts: [],
+    expand: false
   }),
   mounted() {
     // trigger VuexFire bindCohorts & bindOrganisations in Store
     this.getCohortsAndOrganisations();
+    this.orderCohorts()
+    this.expand = true
   },
   computed: {
     ...mapState(["organisations", "cohorts", "person", "user"]),
@@ -282,6 +280,11 @@ export default {
         });
       });
     },
+    orderCohorts() {
+      this.orderedCohorts = this.cohorts.sort((a, b) => {
+        return a.teacher ? -1 : 1
+      })
+    }
   },
 };
 </script>
@@ -291,17 +294,11 @@ hr {
   border: 1px solid rgba(200, 200, 200, 0.2);
 }
 
-.timeframe-chips {
-  position: absolute;
-  top: 15px;
-  right: 5%;
-}
-
 .main-wrap {
   height: 100vh;
-  width: 100%;
+  width: 80%;
   display: flex;
-  // border: 1px solid blue;
+  margin: auto;
   overflow: hidden; /* Hide horizontal scrollbar */
 
   .side-col {
@@ -322,9 +319,9 @@ hr {
   }
 
   .main-col {
-    margin-top: 50px;
+    margin-top: 70px;
     padding-top: 30px;
-    width: 90%;
+    width: 100%;
     overflow: scroll;
     overflow-x: hidden;
     // border: 1px solid red;
@@ -369,5 +366,11 @@ hr {
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
   background: var(--v-missionAccent-base);
+}
+
+
+.timeframe-chips {
+display: flex;
+justify-content: center;
 }
 </style>

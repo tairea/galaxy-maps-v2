@@ -1,8 +1,8 @@
 <template>
  <v-menu
       v-model="show"
-      :position-x="e.left + 50"
-      :position-y="e.top + 50"
+      :position-x="e.left"
+      :position-y="e.top + 110"
     >
     <div class="ss-info-panel">
       <p class="caption base-text">

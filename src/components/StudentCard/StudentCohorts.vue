@@ -39,5 +39,6 @@ export default {
   color: var(--v-missionAccent-base);
   font-size: 0.6rem;
   margin: 1px;
+  font-weight: bold;
 }
 </style>

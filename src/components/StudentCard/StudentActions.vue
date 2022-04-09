@@ -28,7 +28,7 @@
       </div>
     </section>
     <section v-if="!submissions.length && !requests.length">
-      <p class="label text-uppercase" style="color: var(--v-missionAccent-base)">no student actions</p>
+      <p class="label text-uppercase" style="color: var(--v-missionAccent-base)">student actions</p>
     </section>
   </div>
 </template>
@@ -82,7 +82,8 @@ export default {
 .label {
   font-size: 0.6rem;
   margin: 1px;
-  width: 100%
+  width: 100%;
+  font-weight: bold;
 }
 
 .requests {

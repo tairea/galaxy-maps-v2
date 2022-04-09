@@ -893,7 +893,6 @@ export const advancedQueryXAPIStatement = (payloadObj) => {
 };
 
 export const getStudentsCoursesXAPIQuery = async (person) => {
-  console.log("querying students course records from LRS...", person);
   const aggregationQuery = [
     {
       $match: {

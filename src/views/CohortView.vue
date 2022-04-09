@@ -3,13 +3,14 @@
     <div id="left-section">
       <CohortInfo />
       <AssignedInfo assignCourses="true" />
-      <BackButton :toPath="'/base/cohorts'" />
+      <BackButton :toPath="{path: '/base/cohorts'}" />
     </div>
 
     <div id="main-section">
       <div class="people-frame">
         <h2 class="people-label">STUDENTS</h2>
         <StudentDataIterator />
+
       </div>
     </div>
 
@@ -44,6 +45,9 @@ export default {
     ...mapState(['currentCohort']),
     courses() {
       return this.currentCohort?.courses?.map((course) => {return { id: course }})
+    },
+    teacher() {
+      return this.currentCohort.teacher
     }
   }
 };

@@ -38,10 +38,10 @@
       <div v-if="courses.length > 0">
         <Course v-for="(course, i) in courses" :course="course" :key="i" />
       </div>
-      <p v-if="cohortTeacher" class="assigned-status">
+      <p v-else class="assigned-status">
         No Galaxies assigned to this Cohort
       </p>
-      <AssignCohortDialog :assignCourses="true" />
+      <AssignCohortDialog v-if="isTeacher && !courseCohort" :assignCourses="true" />
     </div>
   </div>
 </template>
@@ -89,10 +89,13 @@ export default {
   },
   computed: {
     ...mapState(["person", "currentCohort"]),
-    ...mapGetters(["getCoursesInThisCohort"]),
-    cohortTeacher() {
-      return this.currentCohort.teachers.some((id) => id === this.person.id);
+    ...mapGetters(["getCoursesInThisCohort", "user"]),
+    isTeacher() {
+      return this.currentCohort.teacher || this.user.data.admin
     },
+    courseCohort () {
+      return this.currentCohort.courseCohort
+    }
   },
   methods: {
     async getCohortCourses() {

@@ -6,6 +6,7 @@
       @mouseenter="onhover = true"
       @mouseleave="onhover = false"
       size="60"
+      :style="borderColour"
     >
       <img
         v-if="student.image"
@@ -18,10 +19,11 @@
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
         <p v-on="on" class="text-uppercase studentName text-truncate pt-2">
-          {{ student.firstName }}
+          {{ student.firstName || student.email}}
         </p>
       </template>
-      <span>{{ student.firstName + " " + student.lastName }}</span>
+      <span v-if="student.firstName">{{ student.firstName + " " + student.lastName}}</span>
+      <span v-else>{{ student.email }}</span>
     </v-tooltip>
     <p :class="online" class="status">{{ loggedIn }}</p>
   </div>
@@ -31,11 +33,6 @@
 export default {
   name: "StudentCardStatus",
   props: ["student", "date", "status"],
-  // data () {
-  //   return {
-  //     now: this.date
-  //   }
-  // },
   computed: {
     online() {
       if (this.loggedIn === "online") return "online";
@@ -46,6 +43,9 @@ export default {
         return "online";
       } else return this.timePassed(this.date);
     },
+    borderColour() {
+      return this.loggedIn === "online" ? "border: 1px solid var(--v-baseAccent-base) !important" : ""
+    }
   },
   methods: {
     timePassed(now) {

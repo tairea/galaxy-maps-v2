@@ -241,5 +241,6 @@ export default {
 .custom-chip {
   padding: 10px;
   text-transform: uppercase;
+  background-color: var(--v-primary-base) !important;
 }
 </style>

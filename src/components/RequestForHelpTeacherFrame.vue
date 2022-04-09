@@ -7,6 +7,7 @@
         v-for="request in unansweredRequests"
         :key="request.id"
         :request="request"
+        :isTeacher="isTeacher"
       />
     </div>
     <div v-if="!loading && unansweredRequests.length == 0">

@@ -16,7 +16,7 @@
       </div>
       <div class="student-actions-overUnder">
         <div
-          class="top-row d-flex flex-column justify-center align-center"
+          class="top-row d-flex flex-column"
           v-if="studentTimeData.length > 0"
         >
           <StudentHours
@@ -27,7 +27,7 @@
         </div>
         <div
           v-if="activities.length > 0"
-          class="pa-0 d-flex flex-column justify-center align-center"
+          class="pa-0 d-flex flex-column"
           style="height: 50%"
         >
           <StudentCompletedTasks
