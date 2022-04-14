@@ -175,7 +175,6 @@ export default {
         datasets: [studentData],
       };
 
-      console.log("datasets: ", datasetsObj);
       return datasetsObj;
     },
     stringToColour(str) {
