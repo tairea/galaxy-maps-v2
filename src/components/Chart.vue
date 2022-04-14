@@ -270,7 +270,6 @@ export default {
   },
   methods: {
     chartConstructor(chartType, chartData, chartOptions) {
-      console.log('chartData: ', chartData)
       const chartElement = this.$refs.canvas;
       this.chart = new Chart(chartElement, {
         type: chartType,

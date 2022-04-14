@@ -80,7 +80,6 @@ export default {
     };
   },
   async mounted() {
-    console.log("this.courses from dashboard", this.courses);
     this.getCohortsByPersonId(this.person)
     if (this.dashboardView === "" && this.person.assignedCourses?.length) this.setDashboardView("student")
   },
@@ -138,7 +137,6 @@ export default {
     ...mapActions(['getCohortsByPersonId']),
     ...mapMutations(['setDashboardView']),
     setView(val) {
-      console.log('seting view: ', val)
       this.setDashboardView(val)
     }
   },

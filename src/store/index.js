@@ -239,7 +239,6 @@ export default new Vuex.Store({
       state.snackbar = snackbar;
     },
     setDashboardView(state, view) {
-      console.log('setting: ', view)
       state.dashboardView = view
     }
   },
