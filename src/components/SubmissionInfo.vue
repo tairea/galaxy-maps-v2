@@ -22,14 +22,6 @@ export default {
   components: {
     SubmissionStudentCard,
   },
-  watch: {
-    // studentsSubmissions: {
-    //   handler() {
-    //     // this updates the request when there is a change
-    //    this.workForThisTask()
-    //   },
-    // },
-  },
   computed: {
     ...mapState([
       "person",
@@ -45,17 +37,14 @@ export default {
   },
   async mounted() {
     // bind studentsSubmissions (from courses db)
-    await this.$store.dispatch("getSubmittedWorkByStudentAndTaskId", {
-      courseId: this.currentCourseId,
-      studentId: this.person.id,
-      taskId: this.task.id,
-    });
+
+    // await this.$store.dispatch("getSubmittedWorkByStudentAndTaskId", {
+    //   courseId: this.currentCourseId,
+    //   studentId: this.person.id,
+    //   taskId: this.task.id,
+    // });
     // console.log("studentsSubmissions: ", this.studentsSubmissions);
   },
-  data() {
-    return {};
-  },
-  methods: {},
 };
 </script>
 
@@ -107,17 +96,5 @@ h1 {
   margin: 10px 0px;
   border: 1px solid var(--v-missionAccent-base);
   border-radius: 5px;
-
-  .request-msg {
-    padding: 10px;
-  }
-
-  .request-text {
-    color: var(--v-missionAccent-base);
-    font-size: 0.8rem;
-    margin: 0px;
-    font-style: italic;
-    padding-left: 10px;
-  }
 }
 </style>

@@ -88,6 +88,7 @@ export default {
     },
     timeframe: {
       handler(newTimeframe) {
+        console.log('timeframe watcher in chart: ', newTimeframe)
         if (this.chartType !== "bar") {
           this.chartOptions.scales.x.min = newTimeframe.min;
           this.chartOptions.scales.x.max = newTimeframe.max;
@@ -101,14 +102,23 @@ export default {
               ),
             };
             this.chartOptions.scales.x.title = titleObj;
-          } else {
-            this.chartOptions.scales.x.title = {};
           }
+        } else {
+          const data = this.chartData.datasets[0].data
+          this.chart.data.datasets[0].data = data
         }
 
         this.chart.update();
       },
     },
+    chartData: {
+      deep: true,
+      handler(newVal) {
+        if (this.chartType === 'bar') {
+          console.log('chartData watcher: ', newVal)
+        }
+      }
+    }
   },
   mounted() {
     let { chartType, chartData, chartOptions } = this;
@@ -260,6 +270,7 @@ export default {
   },
   methods: {
     chartConstructor(chartType, chartData, chartOptions) {
+      console.log('chartData: ', chartData)
       const chartElement = this.$refs.canvas;
       this.chart = new Chart(chartElement, {
         type: chartType,

@@ -1,27 +1,33 @@
 <template>
-  <div class="backButtonDiv">
-    <v-btn :to="toPath" class="backButton" color="baseAccent" text>
+  <div class="backButtonDiv" v-if="from">
+    <v-btn :to="from" class="backButton" color="baseAccent" text>
       <v-icon left> mdi-arrow-left </v-icon>
       Back to
-      {{ backToWhat(toPath) }}
+      {{ backToWhat(from) }}
     </v-btn>
   </div>
 </template>
 
 <script>
+import { mapState } from 'vuex';
 export default {
   name: "BackButton",
   props: ["toPath"],
+  computed: {
+    ...mapState(['from'])
+  },
   methods: {
     backToWhat(path) {
-      if (path.path.includes("galaxies")) {
+      if (path.includes("galaxies")) {
         return "Galaxies";
-      } else if (path.path.includes("galaxy")) {
+      } else if (path.includes("galaxy")) {
         return "Galaxy";
-      } else if (path.path.includes("cohorts")) {
+      } else if (path.includes("cohorts")) {
         return "Cohorts";
-      } else if (path.path.includes("login")) {
+      } else if (path.includes("login")) {
         return "Login";
+      } else if (path.includes("dashboard")) {
+        return "Dashboard";
       } else {
         return "?";
       }

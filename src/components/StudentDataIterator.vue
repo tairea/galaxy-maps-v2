@@ -69,7 +69,7 @@
       <template v-slot:default="props">
         <div class="d-flex justify-center align-center mt-3">
           <TimeframeFilters
-            :noArrows="true"
+            :showDate="true"
             @timeframe="setTimeframe($event)"
           />
         </div>

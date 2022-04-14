@@ -344,12 +344,7 @@ export default {
       let cohort = await getCohortById(this.course.cohort);
       this.MXaddExistingUserToCohort(this.person, cohort)
         .then(() => {
-          if (cohort.courses.length) {
-            cohort.courses.forEach(async (courseId) => {
-              let course = await getCourseById(courseId);
-              this.MXassignCourseToStudent(this.person, course);
-            });
-          }
+          this.MXassignCourseToStudent(this.person, this.course);
         })
 
       // Send Galaxy Started statment to LRS

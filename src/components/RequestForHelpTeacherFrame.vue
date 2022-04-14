@@ -1,5 +1,5 @@
 <template>
-  <div :id="isCohortView">
+  <div :id="cohortId">
     <h2 class="help-label">Requests for help</h2>
 
     <div v-if="unansweredRequests.length > 0">
@@ -40,7 +40,7 @@ export default {
   components: {
     RequestForHelpTeacherPanel,
   },
-  props: ["courses"],
+  props: ["courses", "isTeacher", "students"],
   data() {
     return {
       loading: false,
@@ -62,8 +62,14 @@ export default {
     ...mapState(["teachersRequestsForHelp", "user", "currentCohort", "showPanelCard"]),
     isCohortView() {
       return this.$route.name == "CohortView"
-        ? "cohort-help-panel"
+    },
+    cohortId() {
+       return this.cohortView
+        ? this.isTeacher ? "cohort-help-panel" : "student-cohort-help-panel"
         : "help-panel";
+    },
+    isDashboardView() {
+      return this.$route.name == "Dashboard"
     },
     unansweredRequests() {
       const requests = this.teachersRequestsForHelp.filter(
@@ -71,6 +77,8 @@ export default {
       );
       if (this.isCohortView) {
         return requests.filter(request => this.currentCohort.students.some(student =>  { return student === request.personId})).reverse()
+      } else if (this.isDashboardView) {
+        return requests.filter(request => this.students?.some(student =>  { return student === request.studentId})).reverse()
       }
       return requests
     },
@@ -86,13 +94,25 @@ export default {
 <style scoped lang="scss">
 #help-panel {
   width: calc(100% - 30px);
-  height: 80%;
   border: 1px solid var(--v-galaxyAccent-base);
   margin-top: 30px;
   padding: 20px;
   position: relative;
   backdrop-filter: blur(2px);
   overflow-y: scroll;
+}
+
+#student-cohort-help-panel {
+  width: calc(100% - 30px);
+  border: 1px solid var(--v-galaxyAccent-base);
+  margin: 30px 15px;
+  padding: 20px;
+  position: relative;
+  backdrop-filter: blur(2px);
+  max-height: 100%;
+  overflow: scroll;
+  overflow-x: hidden;
+  transition: all .2s ease-in-out
 }
 
 #cohort-help-panel {

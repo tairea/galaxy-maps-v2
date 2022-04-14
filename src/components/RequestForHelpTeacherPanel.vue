@@ -115,7 +115,7 @@ import { dbMixins } from "../mixins/DbMixins";
 export default {
   name: "RequestForHelpTeacherPanel",
   mixins: [dbMixins],
-  props: ["request"],
+  props: ["request", "isTeacher"],
   components: {
     RequestForHelpResponseDialog,
   },

@@ -102,6 +102,7 @@
             :cohort="cohort"
             :key="cohort.id"
             :timeframe="timeframe"
+            class="cohort-panel"
           />
         </div>
       </div>
@@ -368,9 +369,12 @@ hr {
   background: var(--v-missionAccent-base);
 }
 
-
 .timeframe-chips {
-display: flex;
-justify-content: center;
+  display: flex;
+  justify-content: center;
+}
+
+.cohort-panel {
+  width: calc(50% - 40px);
 }
 </style>

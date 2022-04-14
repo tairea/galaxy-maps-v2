@@ -84,10 +84,10 @@ h1 {
 
   .request-text {
     color: var(--v-missionAccent-base);
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     margin: 0px;
     font-style: italic;
-    padding-left: 10px;
+    padding-left: 20px;
   }
 }
 </style>

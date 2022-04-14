@@ -10,6 +10,7 @@ Vue.use(Vuex);
 
 const getDefaultState = () => {
   return {
+    from: {},
     user: {
       loggedIn: false,
       data: null,
@@ -59,6 +60,7 @@ const getDefaultState = () => {
     studentsSubmissions: [],
     submittedEdges: [],
     submittedNodes: [],
+    dashboardView: ''
   };
 };
 
@@ -162,6 +164,9 @@ export default new Vuex.Store({
     SET_PERSON(state, data) {
       state.person = data;
     },
+    set_from(state, data) {
+      state.from = data
+    },
     resetTeachersSubmissions(state) {
       state.teachersSubmissionsToReview = [];
     },
@@ -233,6 +238,10 @@ export default new Vuex.Store({
     setSnackbar(state, snackbar) {
       state.snackbar = snackbar;
     },
+    setDashboardView(state, view) {
+      console.log('setting: ', view)
+      state.dashboardView = view
+    }
   },
   actions: {
     setUser({ commit }, user) {
@@ -966,7 +975,6 @@ export default new Vuex.Store({
       //     });
       //   });
       const cohorts = [...studentCohorts, ...teacherCohorts];
-      console.log("cohorts from store", cohorts);
       commit("setCohorts", cohorts);
       dispatch("getOrganisationsByCohorts", cohorts);
     },
@@ -1129,9 +1137,7 @@ export default new Vuex.Store({
       // state.teachersSubmissionsToReview = allWorkForReview;
     },
     async getRequestsForHelpByCourseId({ state }, courseId) {
-      console.log("getRequests called");
-
-      // get all work for review
+     // get all work for review
       const unsubscribe = db
         .collection("courses")
         .doc(courseId)
@@ -1143,9 +1149,6 @@ export default new Vuex.Store({
           // WTF!!!! Why does for each fix this?
           querySnapshot.docChanges().forEach(change => {
           // for (const change of querySnapshot.docChanges()) {
-            console.log("docChange", change);
-            console.log("docchange.type", change.type);
-            console.log("docChange.doc: ", change.doc.data())
 
             if (change.type === "added") {
               if (
@@ -1178,7 +1181,6 @@ export default new Vuex.Store({
               );
             }
           })
-          console.log("allRequestsForHelp", allRequestsForHelp);
           state.teachersRequestsForHelp = allRequestsForHelp;
         });
 
