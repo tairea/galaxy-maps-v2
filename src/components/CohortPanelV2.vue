@@ -142,7 +142,7 @@ import {
 
 export default {
   name: "CohortPanelV2",
-  props: ["cohort", "cols", "tooltip", "studentView", "timeframe"],
+  props: ["cohort", "cols", "tooltip", "studentView", "timeframe", ],
   components: {
     Avatar,
     ProgressionLineChart,
@@ -204,9 +204,14 @@ export default {
   },
   computed: {
     ...mapGetters(["getOrganisationById", "currentCohort"]),
+    isDashboardView() {
+      return this.$route.name === 'Dashboard'
+    },
     borderColor() {
+      if (this.isDashboardView) return 'border: 1px solid var(--v-missionAccent-base)'
       return this.cohort.teacher ? 'border: 1px solid var(--v-baseAccent-base);' : 'border: 1px solid var(--v-missionAccent-base)'
     }
+
   },
   methods: {
     ...mapMutations(["setCurrentCohort"]),
@@ -288,7 +293,7 @@ export default {
 
 <style lang="scss" scoped>
 .cohort-panel {
-  width: calc(50% - 40px);
+  // width: calc(50% - 40px);
   min-height: 60%;
   margin: 20px;
   margin-bottom: 50px;

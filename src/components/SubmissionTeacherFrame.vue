@@ -35,7 +35,7 @@ import { dbMixins, dmMixins } from "../mixins/DbMixins";
 export default {
   name: "SubmissionTeacherFrame",
   mixins: [dbMixins],
-  props: ["courses"],
+  props: ["courses", "students"],
   components: {
     SubmissionTeacherPanel,
   },
@@ -68,6 +68,9 @@ export default {
     isCohortView() {
       return this.$route.name == "CohortView"
     },
+    isDashboardView() {
+      return this.$route.name == "Dashboard"
+    },
     panelId () {
       return this.isCohortView 
         ? "cohort-submission-panel"
@@ -76,7 +79,10 @@ export default {
     submissions () {
       if (this.isCohortView) {
         return this.teachersSubmissionsToReview.filter(submission => this.currentCohort.students.some(student =>  { return student === submission.studentId})).reverse()
-      } else return this.teachersSubmissionsToReview
+      } else if (this.isDashboardView) {
+        return this.teachersSubmissionsToReview.filter(submission => this.students?.some(student =>  { return student === submission.studentId})).reverse()
+      }
+      else return this.teachersSubmissionsToReview
     }
   },
   methods: {},
@@ -85,7 +91,6 @@ export default {
 <style lang="scss" scoped>
 #submission-panel {
   width: calc(100% - 30px);
-  height: 80%;
   border: 1px solid var(--v-cohortAccent-base);
   margin-top: 30px;
   padding: 20px;

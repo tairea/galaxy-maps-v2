@@ -13,14 +13,14 @@
     <v-chip
       class="my-2 mx-1 custom-chip"
       color="missionAccent"
-      outlined
-      x-small
-      :input-value="chipDayActive"
+      :input-value="chipMonthActive"
       filter
       filter-icon="mdi-circle-small"
-      @click="timeframeDay"
+      outlined
+      x-small
+      @click="timeframeMonth"
     >
-      Day
+      month
     </v-chip>
     <v-chip
       class="my-2 mx-1 custom-chip"
@@ -37,14 +37,14 @@
     <v-chip
       class="my-2 mx-1 custom-chip"
       color="missionAccent"
-      :input-value="chipFortnightActive"
-      filter
-      filter-icon="mdi-circle-small"
       outlined
       x-small
-      @click="timeframeFortnight"
+      :input-value="chipDayActive"
+      filter
+      filter-icon="mdi-circle-small"
+      @click="timeframeDay"
     >
-      Fortnight
+      Day
     </v-chip>
     <v-chip
       v-if="!noArrows"
@@ -56,52 +56,72 @@
     >
       >
     </v-chip>
+    <span color="missionAccent" v-if="showDate" class="caption pa-2 date">{{date}}</span>
   </div>
 </template>
 
 <script>
 export default {
   name: "Timeframefilters",
-  props: ["noArrows"],
+  props: ["noArrows", "showDate"],
   components: {},
   data() {
     return {
       timeframe: {
-        min: this.previousDays(7),
+        min: this.previousDays(30),
         max: new Date(),
         unit: "day",
-        type: "week",
+        type: "month",
       }, // by default show past 7 days
-      chipActiveType: "week",
+      chipActiveType: "month",
       chipDayActive: false,
-      chipWeekActive: true,
+      chipWeekActive: false,
       chipFortnightActive: false,
+      chipMonthActive: true,
     };
   },
 
   async mounted() {
     this.$emit("timeframe", this.timeframe);
   },
-  computed: {},
+  computed: {
+    date() {
+      console.log('min: ', this.timeframe.min) 
+      let min = this.timeframe.min.toString().split(' ').slice(1,3).join(' ')
+      let max = this.timeframe.max.toString().split(' ').slice(1,3).join(' ')
+
+      switch (this.timeframe.type) {
+          case "day":
+            return min
+            break;
+          case "week" :
+          case "month":
+            return min + ' - ' + max
+          default:
+        }
+    }
+  },
   methods: {
-    timeframeFortnight() {
-      this.chipActiveType = "fortnight";
+    timeframeMonth() {
+      this.chipActiveType = "month";
       this.chipDayActive = false;
       this.chipWeekActive = false;
-      this.chipFortnightActive = true;
+      this.chipFortnightActive = false;
+      this.chipMonthActive = true;
       this.timeframe = {
-        min: this.previousDays(14),
+        min: this.previousDays(30),
         max: new Date(),
         unit: "day",
-        type: "fortnight",
+        type: "month",
       };
       this.$emit("timeframe", this.timeframe);
     },
     timeframeWeek() {
       this.chipActiveType = "week";
       this.chipDayActive = false;
-      this.chipFortnightActive = false;
       this.chipWeekActive = true;
+      this.chipFortnightActive = false;
+      this.chipMonthActive = false;
       this.timeframe = {
         min: this.previousDays(7),
         max: new Date(),
@@ -112,9 +132,10 @@ export default {
     },
     timeframeDay() {
       this.chipActiveType = "day";
-      this.chipFortnightActive = false;
-      this.chipWeekActive = false;
       this.chipDayActive = true;
+      this.chipWeekActive = false;
+      this.chipFortnightActive = false;
+      this.chipMonthActive = false;
       this.timeframe = {
         min: this.getStartDay(),
         max: this.getEndDay(),
@@ -160,11 +181,11 @@ export default {
           this.timeframe = previousTimeframe;
           this.$emit("timeframe", this.timeframe);
           break;
-        case "fortnight":
-          // change min max by 14 day
+        case "month":
+          // change min max by 30 day
           previousTimeframe = {
-            min: this.previousDays(14, this.timeframe.min),
-            max: this.previousDays(14, this.timeframe.max),
+            min: this.previousDays(30, this.timeframe.min),
+            max: this.previousDays(30, this.timeframe.max),
             unit: this.timeframe.unit,
             type: this.timeframe.type,
           };
@@ -200,11 +221,11 @@ export default {
           this.timeframe = nextTimeframe;
           this.$emit("timeframe", this.timeframe);
           break;
-        case "fortnight":
-          // change min max by 14 day
+        case "month":
+          // change min max by 30 day
           nextTimeframe = {
-            min: this.nextDays(14, this.timeframe.min),
-            max: this.nextDays(14, this.timeframe.max),
+            min: this.nextDays(30, this.timeframe.min),
+            max: this.nextDays(30, this.timeframe.max),
             unit: this.timeframe.unit,
             type: this.timeframe.type,
           };
@@ -242,5 +263,9 @@ export default {
   padding: 10px;
   text-transform: uppercase;
   background-color: var(--v-primary-base) !important;
+}
+
+.date {
+  color: var(--v-missionAccent-base)
 }
 </style>

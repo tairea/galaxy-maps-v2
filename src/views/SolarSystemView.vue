@@ -33,7 +33,7 @@
 
     <!--==== Right section ====-->
     <div v-if="task" id="right-section">
-      <SubmissionInfo v-if="task.submissionRequired == true" :task="task" />
+      <SubmissionInfo v-if="task.submissionRequired == true" :task="task" :submissions="submissions" />
       <RequestsForHelpInfo :requests="requests" :task="task" />
     </div>
   </div>
@@ -64,6 +64,13 @@ export default {
     BackButton,
   },
   props: ["topicId"],
+  data() {
+    return {
+      activeMission: null,
+      task: null,
+      unsubscribes: []
+    };
+  },
   async mounted() {
     if (this.teacher) {
       //store bindTasksByTopicId
@@ -82,9 +89,18 @@ export default {
     }
 
     // bind requests for help
-    await this.$store.dispatch("bindRequestsForHelp", {
-      courseId: this.currentCourseId,
-    });
+    const reqUnsubscribe = await this.$store.dispatch(
+      "getRequestsForHelpByCourseId",
+      this.currentCourseId
+    );
+
+    this.unsubscribes.push(reqUnsubscribe)
+
+    const subUnsubscribe = await this.$store.dispatch(
+      "getAllSubmittedWorkByCourseId",
+      this.currentCourseId
+    );
+    this.unsubscribes.push(subUnsubscribe );
 
     // check if requests are binded
     // console.log("from store requestsForHelp: ", this.requestsForHelp);
@@ -92,28 +108,28 @@ export default {
     // set active task
     this.task = this.getActiveMission();
     // filter help for active task
-    this.requests = this.requestsForHelp.filter(
-      (request) => request.contextTask.id == this.currentTaskId
-    );
+    // this.requests = this.requestsForHelp.filter(
+    //   (request) => request.contextTask.id == this.currentTaskId
+    // );
   },
   watch: {
-    task: {
-      handler(newTask) {
-        if (!newTask) return;
-        // filter requests for help depending on task/mission clicked (in MissionList expansion panels)
-        this.requests = this.requestsForHelp.filter(
-          (request) => request.contextTask.id == newTask.id
-        );
-      },
-    },
-    requestsForHelp: {
-      handler(newHelp) {
-        // this updates the request when there is a change
-        this.requests = this.requestsForHelp.filter(
-          (request) => request.contextTask.id == this.task.id
-        );
-      },
-    },
+    // task: {
+    //   handler(newTask) {
+    //     if (!newTask) return;
+    //     // filter requests for help depending on task/mission clicked (in MissionList expansion panels)
+    //     this.requests = this.requestsForHelp.filter(
+    //       (request) => request.contextTask.id == newTask.id
+    //     );
+    //   },
+    // },
+    // requestsForHelp: {
+    //   handler(newHelp) {
+    //     // this updates the request when there is a change
+    //     this.requests = this.requestsForHelp.filter(
+    //       (request) => request.contextTask.id == this.task.id
+    //     );
+    //   },
+    // },
   },
   computed: {
     ...mapState([
@@ -128,6 +144,8 @@ export default {
       "requestsForHelp",
       "peopleInCourse",
       "cohortsInCourse",
+      "teachersRequestsForHelp",
+      "teachersSubmissionsToReview"
     ]),
     ...mapGetters([
       "person",
@@ -145,13 +163,16 @@ export default {
         this.user.data.admin
       );
     },
-  },
-  data() {
-    return {
-      activeMission: null,
-      task: null,
-      requests: [],
-    };
+    requests() {
+      const taskRequests = this.teachersRequestsForHelp.filter((request) => request.contextTask.id == this.task.id)
+      if (this.teacher) return taskRequests
+      else return taskRequests.filter(req => req.personId === this.person.id)
+    },
+    submissions() {
+      const taskSubmissions = this.teachersSubmissionsToReview.filter((submission) => submission.contextTask.id == this.task.id)
+      if (this.teacher) return taskSubmissions
+      else return taskSubmissions.filter(sub => sub.personId === this.person.id)
+    }
   },
   methods: {
     taskForHelpInfo(task) {
@@ -173,6 +194,11 @@ export default {
       return activeMissionObj;
     },
   },
+  destroyed() {
+    for (const unsubscribe of this.unsubscribes) {
+      unsubscribe()
+    }
+  }
 };
 </script>
 

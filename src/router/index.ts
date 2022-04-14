@@ -8,7 +8,7 @@ import CohortView from "../views/CohortView.vue";
 import CohortList from "../views/CohortList.vue";
 import CohortListV2 from "../views/CohortListV2.vue";
 import AllStudentsView from "../views/AllStudentsView.vue";
-import StudentDashboard from "../views/StudentDashboard.vue";
+import UserDashboard from "../views/UserDashboard.vue";
 import Login from "../views/Login.vue";
 import VerifyEmail from "../views/VerifyEmail.vue";
 import ResetPassword from "../views/ResetPassword.vue";
@@ -58,8 +58,9 @@ const routes = [
         props: true,
       },
       {
+        name: "Dashboard",
         path: "dashboard",
-        component: StudentDashboard,
+        component: UserDashboard,
       },
     ],
   },
@@ -117,9 +118,10 @@ const initialAuth = new Promise((resolve, reject) => {
 });
 
 router.beforeEach(async (to, from, next) => {
+  if (from.path !== '/') store.commit('set_from', from.path);
   if (to.matched.some((record) => record.meta.authRequired)) {
     await initialAuth;
-
+    
     if (store.getters.user.loggedIn) {
       next();
     } else {

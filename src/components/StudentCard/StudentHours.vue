@@ -27,7 +27,8 @@ export default {
           }
           break;
         case "week":
-          const weekRes = this.timeData[0].activity
+        case "month":
+          const result = this.timeData[0].activity
             .filter((day) => {
               return (
                 DateTime.fromISO(day.dayISOTimestamp) >
@@ -37,21 +38,7 @@ export default {
               );
             })
             .reduce((sum, activity) => sum + activity.minutesActiveTotal, 0);
-          time = weekRes;
-          break;
-
-        case "fortnight":
-          const fortnightRes = this.timeData[0].activity
-            .filter((day) => {
-              return (
-                DateTime.fromISO(day.dayISOTimestamp) >
-                  DateTime.fromJSDate(this.timeframe.min) &&
-                DateTime.fromISO(day.dayISOTimestamp) <
-                  DateTime.fromJSDate(this.timeframe.max)
-              );
-            })
-            .reduce((sum, activity) => sum + activity.minutesActiveTotal, 0);
-          time = fortnightRes;
+          time = result;
           break;
         default:
       }

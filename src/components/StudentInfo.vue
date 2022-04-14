@@ -37,7 +37,6 @@
             :key="cohort.id"
             :size="60"
             :cols="6"
-            :studentView="true"
           />
         </div>
       </div>

@@ -8,11 +8,11 @@
     <v-row>
       <v-col cols="12" class="center-col pa-0">
         <Chart
-          v-if="activityData"
+          v-if="chartData"
           ref="chart"
           class="chart"
           :chartType="chartType"
-          :chartData="formatStudentsChartData(activityData)"
+          :chartData="chartData"
           :chartOptions="chartOptions"
           :style="{ width: '100%', height: '200px' }"
           :toolTipEnable="false"
@@ -52,6 +52,7 @@ export default {
     return {
       value: 80,
       previousTickTitle: "",
+      chartData: null,
       chartType: "bar",
       chartOptions: {
         // maintainAspectRatio: false,
@@ -75,7 +76,6 @@ export default {
             type: "category",
             ticks: {
               display: true,
-
               autoSkip: false,
               maxRotation: 90,
               minRotation: 90,
@@ -98,16 +98,22 @@ export default {
       },
     };
   },
-  async mounted() {},
   computed: {
     // ...mapGetters(["person", "getCourseById", "getTopicById"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
   },
+  mounted() {
+    this.formatStudentsChartData(this.activityData)
+  },
+  watch: {
+    timeframe() {
+      this.formatStudentsChartData(this.activityData)
+    }
+  },
   methods: {
     formatStudentsChartData(studentData) {
-      // console.log("courseData", courseData);
       const datasets = [];
       const data = [];
       let labels = [];
@@ -147,13 +153,11 @@ export default {
                 );
               })
               .reduce((sum, activity) => sum + activity.minutesActiveTotal, 0);
-            // console.log("got week total");
-            // console.log(weekRes);
             time = weekRes;
             break;
 
-          case "fortnight":
-            const fortnightRes = student.activity
+          case "month":
+            const monthRes = student.activity
               .filter((day) => {
                 return (
                   DateTime.fromISO(day.dayISOTimestamp) >
@@ -163,26 +167,21 @@ export default {
                 );
               })
               .reduce((sum, activity) => sum + activity.minutesActiveTotal, 0);
-            // console.log("got fortnight total");
-            // console.log(fortnightRes);
-            time = fortnightRes;
+            time = monthRes;
             break;
           default:
         }
 
-        // console.log("total minutes for " + this.timeframe.type + " = " + time);
-
         const dataPointObj = {
           x: label,
           y: time / 60, // minutes to hours
-          // y: Math.random(0, 100) * 100,
         };
 
         labels.push(label);
         data.push(dataPointObj);
       }
 
-      // ==== test 30 students ===
+      // // ==== test 30 students ===
       // for (var x = 0; x < 50; x++) {
       //   const label = names[x];
 
@@ -207,6 +206,7 @@ export default {
           : this.$vuetify.theme.themes.light.baseAccent,
         categoryPercentage: 1.0,
         barPercentage: 0.7,
+        maxBarThickness: 50
       };
 
       datasets.push(dataset);
@@ -216,7 +216,7 @@ export default {
       };
 
       // console.log("bar chart datasets: ", datasetsObj);
-      return datasetsObj;
+      this.chartData = datasetsObj;
     },
     stringToColour(str) {
       return `hsl(${this.hashCode(str) % 360}, 100%, 70%)`;
@@ -232,6 +232,9 @@ export default {
       if (!name) return;
       return name.substring(0, 3).toUpperCase();
     },
+    barWidth(labels) {
+      return 100 / labels.length
+    }
   },
 };
 </script>

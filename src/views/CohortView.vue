@@ -8,15 +8,16 @@
 
     <div id="main-section">
       <div class="people-frame">
-        <h2 class="people-label">STUDENTS</h2>
-        <StudentDataIterator />
-
+        <h2 class="people-label" @click="studentsView = true">STUDENTS</h2>
+        <div class="graph-label text-center" @click="studentsView = false"><span class="pl-4">OVERVIEW</span></div>
+        <StudentDataIterator v-if="studentsView" class="mt-4"/>
+        <CohortGraphs v-else/>
       </div>
     </div>
 
     <div id="right-section">
-      <RequestForHelpTeacherFrame :courses="courses"/>
-      <SubmissionTeacherFrame :courses="courses"/> 
+      <RequestForHelpTeacherFrame :isTeacher="teacher" :courses="courses"/>
+      <SubmissionTeacherFrame v-if="teacher" :courses="courses"/> 
     </div>
   </div>
 </template>
@@ -28,6 +29,7 @@ import StudentDataIterator from "../components/StudentDataIterator";
 import BackButton from "../components/BackButton";
 import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame";
 import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame";
+import CohortGraphs from "../components/CohortView/CohortGraphs"
 
 import { mapState } from "vuex"
 
@@ -40,6 +42,12 @@ export default {
     StudentDataIterator,
     RequestForHelpTeacherFrame,
     SubmissionTeacherFrame,
+    CohortGraphs
+  },
+  data () {
+    return {
+      studentsView: true
+    }
   },
   computed: {
     ...mapState(['currentCohort']),
@@ -113,6 +121,21 @@ export default {
       color: var(--v-background-base);
       padding: 0px 30px 0px 5px;
       clip-path: polygon(0 0, 100% 0, 90% 100%, 0% 100%);
+      cursor: pointer;
+    }
+    .graph-label {
+      font-size: 0.8rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      // ribbon label
+      position: absolute;
+      top: -1px;
+      left: 100px;
+      background-color: var(--v-missionAccent-base);
+      color: var(--v-background-base);
+      padding: 0px 30px 0px 5px;
+      clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
+      cursor: pointer;
     }
   }
 }
