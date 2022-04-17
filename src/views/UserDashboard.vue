@@ -2,7 +2,7 @@
   <div id="container" class="bg">
     <!-- STUDENTS INFO FRAME -->
     <div id="left-section">
-      <StudentInfo :person="person" />
+      <UserInfo :person="person" />
     </div>
     <div v-if="isStudent && isTeacher" class="top-section" >
       <div class="student-border">
@@ -26,7 +26,7 @@
     <template v-else>
       <div id="main-section">
         <div class="timeframe-chips">
-          <TimeframeFilters @timeframe="timeframe = $event" />
+          <TimeframeFilters @timeframe="timeframe = $event" :showDate="true"/>
         </div>
         <div class="cohort-frame">
         <!-- all teacher cohorts progress -->
@@ -55,7 +55,7 @@
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters, mapActions, mapMutations } from "vuex";
 
-import StudentInfo from "../components/StudentInfo";
+import UserInfo from "../components/UserInfo";
 import StudentActivityTimeline from "../components/StudentActivityTimeline";
 import StudentCourseProgression from "../components/StudentCourseProgression";
 import TimeframeFilters from "../components/TimeframeFilters.vue"
@@ -66,7 +66,7 @@ import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame
 export default {
   name: "UserDashboard",
   components: {
-    StudentInfo,
+    UserInfo,
     StudentActivityTimeline,
     StudentCourseProgression,
     TimeframeFilters,
@@ -170,7 +170,7 @@ export default {
     width: 60%;
     height: calc(100vh - 100px);
     margin-top: 140px;
-    padding: 0px 20px 0px 50px;
+    padding: 0px 20px 50px 50px;
     // border: 1px solid red;
 
     .course-progression-wrap {
@@ -306,6 +306,7 @@ export default {
 .cohort-frame {
   height: 100%;
   overflow: scroll;
+  margin-bottom: 10px;
 }
 
 .timeframe-chips {

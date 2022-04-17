@@ -321,7 +321,6 @@ hr {
 
   .main-col {
     margin-top: 70px;
-    padding-top: 30px;
     width: 100%;
     overflow: scroll;
     overflow-x: hidden;

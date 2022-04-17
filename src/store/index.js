@@ -1250,11 +1250,13 @@ export default new Vuex.Store({
         .collection("cohorts")
         .doc(cohort.id)
         .onSnapshot(async (doc) => {
-          const cohort = {
+          const newCohort = {
             id: doc.id,
             ...doc.data(),
           };
-          commit("setCurrentCohort", cohort);
+          if (cohort.teacher) newCohort.teacher = true
+          else if (cohort.student) newCohort.student = true
+          commit("setCurrentCohort", newCohort);
         });
     },
 

@@ -1,52 +1,117 @@
 <template>
-  <div>
-    <v-dialog v-model="dialog" width="35%" :light="dark" :dark="!dark">
-      <!-- CREATE BUTTON -->
-      <template v-slot:activator="{ on, attrs }">
-        <v-btn
-          class="cohort-btn"
-          :light="dark"
-          :dark="!dark"
-          :text="teacher"
-          :color="teacher ? 'baseAccent' : 'missionAccent'"
-          v-bind="attrs"
-          v-on="on"
-        >
-          <v-icon left> mdi-plus </v-icon>
-          {{ teacher ? "New Teacher" : "add student" }}
-        </v-btn>
-      </template>
-
-      <!-- DIALOG (TODO: make as a component)-->
-      <div class="create-dialog">
-        <!-- HEADER -->
-        <div class="dialog-header">
-          <p class="mb-0">Add {{ this.accountType }}</p>
-        </div>
-        <CreateAccountForm :accountType="accountType"/>
-      </div>
-    </v-dialog>
+  <div class="create-dialog-content">
+    <p v-if="!teacher" class="caption mb-0">
+      Adding this student will send a registration link to their email
+    </p>
+    <!-- TODO: info description for adding a teacher? -->
+    <v-form ref="form" v-model="valid" lazy-validation>
+      <v-text-field
+        :dark="dark"
+        :light="!dark"
+        type="text"
+        v-model="account.firstName"
+        label="First Name"
+        outlined
+        class="mt-6"
+        color="missionAccent"
+      ></v-text-field>
+      <v-text-field
+        :dark="dark"
+        :light="!dark"
+        type="text"
+        v-model="account.lastName"
+        label="Last Name"
+        outlined
+        color="missionAccent"
+      ></v-text-field>
+      <v-text-field
+        :dark="dark"
+        :light="!dark"
+        type="email"
+        v-model="account.email"
+        label="E-mail"
+        :rules="emailRules"
+        required
+        outlined
+        color="missionAccent"
+      ></v-text-field>
+      <v-text-field
+        v-if="!teacher"
+        :dark="dark"
+        :light="!dark"
+        type="email"
+        v-model="account.parentEmail"
+        label="Parent E-mail"
+        outlined
+        color="missionAccent"
+        :rules="account.parentEmail.length ? parentEmailRules : []"
+      ></v-text-field>
+      <v-text-field
+        v-if="!teacher"
+        :dark="dark"
+        :light="!dark"
+        type="text"
+        v-model="account.nsn"
+        label="Student NSN"
+        required
+        outlined
+        color="missionAccent"
+      ></v-text-field>
+      <v-text-field
+        v-if="!teacher"
+        :dark="dark"
+        :light="!dark"
+        type="text"
+        v-model="account.inviter"
+        label="Added by"
+        required
+        outlined
+        color="missionAccent"
+        :value="person.firstName + ' ' + person.lastName"
+      ></v-text-field>
+    </v-form>
+    <v-row>
+      <v-btn
+        :disabled="!valid || addingAccount"
+        :loading="addingAccount"
+        @click="create()"
+        width="30%"
+        class="ma-4 disabledButton"
+        color="missionAccent"
+        outlined
+        :dark="dark"
+        :light="!dark"
+      >
+        Create
+      </v-btn>
+      <v-btn
+        :disabled="addingAccount"
+        @click="close()"
+        outlined
+        :dark="dark"
+        :light="!dark"
+        class="ma-4"
+        width="30%"
+      >
+        cancel
+      </v-btn>
+    </v-row>
   </div>
 </template>
 
 <script>
-import CreateAccountForm from "./CreateAccountForm"
-
 import { mapGetters } from "vuex";
 import { dbMixins } from "../mixins/DbMixins";
+import { getCourseById } from "../lib/ff";
 
 export default {
-  name: "CreateAccountDialog",
+  name: "CreateAccountForm",
   mixins: [dbMixins],
-  components: {
-    CreateAccountForm
-  },
   props: {
     accountType: { type: String, default: "teacher" },
   },
   data: () => ({
     addingAccount: false,
-    dialog: false,
     valid: true,
     account: {
       id: "",
@@ -76,7 +141,6 @@ export default {
   },
   methods: {
     close() {
-      this.dialog = false;
       this.account = {
         firstName: "",
         lastName: "",
@@ -87,6 +151,7 @@ export default {
         inviter: "",
         parentEmail: "",
       };
+      this.$emit('close')
     },
     async create() {
       this.$refs.form.validate();
@@ -170,6 +235,7 @@ export default {
   color: var(--v-missionAccent-base);
   padding: 20px;
   width: 100%;
+  background-color: var(--v-background-base);
 
   .custom-input {
     color: var(--v-missionAccent-base);

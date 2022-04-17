@@ -86,7 +86,6 @@ export default {
   },
   computed: {
     date() {
-      console.log('min: ', this.timeframe.min) 
       let min = this.timeframe.min.toString().split(' ').slice(1,3).join(' ')
       let max = this.timeframe.max.toString().split(' ').slice(1,3).join(' ')
 
