@@ -11,7 +11,7 @@
       <!-- HEADER -->
       <template v-slot:header>
         <div class="d-flex justify-end">
-          <div v-if="students.length" class="mx-1 d-flex" style="width: 50%">
+          <div v-if="students.length" class="mx-1 d-flex" style="width: 66%">
             <!-- Search -->
             <v-text-field
               v-model="search"
@@ -57,10 +57,11 @@
             </v-btn-toggle> -->
           </div>
           <div class="mx-1">
-            <CreateAccountDialog accountType="student" />
+            <StudentAccountsDialog v-if="currentCohort.teacher" :students="students"/>
+            <!-- <CreateAccountDialog accountType="student" />
           </div>
           <div class="mx-1">
-            <ImportCsvDialog />
+            <ImportCsvDialog /> -->
           </div>
         </div>
       </template>
@@ -92,9 +93,10 @@
 </template>
 
 <script>
+// import CreateAccountDialog from "../components/CreateAccountDialog";
+// import ImportCsvDialog from "../components/ImportCsvDialog";
+import StudentAccountsDialog from "../components/CohortView/StudentAccountsDialog"
 import StudentCard from "../components/StudentCard/StudentCard";
-import CreateAccountDialog from "../components/CreateAccountDialog";
-import ImportCsvDialog from "../components/ImportCsvDialog";
 import TimeframeFilters from "../components/TimeframeFilters";
 import { mapGetters } from "vuex";
 import { dbMixins } from "../mixins/DbMixins";
@@ -104,9 +106,10 @@ export default {
   components: {
     // EditStudentButtonDialog,
     StudentCard,
-    CreateAccountDialog,
-    ImportCsvDialog,
+    // CreateAccountDialog,
+    // ImportCsvDialog,
     TimeframeFilters,
+    StudentAccountsDialog
   },
   mixins: [dbMixins],
   data() {
@@ -150,7 +153,8 @@ export default {
       deep: true,
       handler(newVal, oldVal) {
         if (oldVal.students?.length !== newVal.students?.length) {
-          this.getStudentProfiles();
+          if (oldVal.students?.length > newVal.students?.length) this.removeStudentProfile()
+          else this.getStudentProfiles();
         }
         if (oldVal.id !== newVal.id) {
           this.getStudentProfiles()
@@ -180,6 +184,11 @@ export default {
           }
         });
       }
+    },
+    removeStudentProfile() {
+      this.students = this.students.filter((a) => {
+        return this.currentCohort.students.some((b) => a.id === b )
+      })
     },
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();

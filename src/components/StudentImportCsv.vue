@@ -1,115 +1,89 @@
 <template>
-  <div>
-     <v-dialog v-model="dialog" width="50%" :light="dark" :dark="!dark">
-      <!-- CREATE BUTTON -->
-      <template v-slot:activator="{ on, attrs }">
-        <v-btn :light="dark" :dark="!dark" style="font-weight:400" color="missionAccent" v-bind="attrs" v-on="on">
-          <v-icon left>
-            mdi-attachment
-          </v-icon>
-          Upload csv
+  <div class="tab-content">
+    <v-row class="pt-2 pl-2 pb-0">
+      <v-col cols="6" class="pa-0">
+        <v-btn 
+          :dark="dark"
+          :light="!dark"
+          text 
+          @click="downloadCsv()"
+        >
+          <v-icon small color="missionAccent">mdi-download</v-icon>
+          <span class="downloadCsv ml-2">download csv template</span>
         </v-btn>
-      </template>
-
-      <!-- DIALOG (TODO: make as a component)-->
-      <div class="create-dialog">
-        <!-- HEADER -->
-        <div class="dialog-header">
-          <p class="mb-0">
-            Add Students
-          </p>
+      </v-col>
+      <v-col cols="10">
+        <div class="d-flex justify-center align-center">
+          <v-file-input
+            :dark="dark"
+            :light="!dark"
+            label="Upload CSV File"
+            outlined
+            dense
+            hide-details
+            color="missionAccent"
+            id="csv_file"
+            name="csv_file"
+            class="form-control"
+            @change="loadCSV"
+            ref="csvFile"
+          ></v-file-input>
         </div>
-        <div class="create-dialog-content">
-          <v-row class="pt-2 pl-2 pb-0">
-            <v-col cols="6" class="pa-0">
-              <v-btn 
-                :dark="dark"
-                :light="!dark"
-                text 
-                @click="downloadCsv()"
-              >
-                <span class="downloadCsv">download csv template</span>
-              </v-btn>
-            </v-col>
-            <v-col cols="10">
-              <div class="d-flex justify-center align-center">
-                <v-file-input
-                  :dark="dark"
-                  :light="!dark"
-                  label="Upload CSV File"
-                  outlined
-                  dense
-                  hide-details
-                  color="missionAccent"
-                  id="csv_file"
-                  name="csv_file"
-                  class="form-control"
-                  @change="loadCSV"
-                  ref="csvFile"
-                ></v-file-input>
-              </div>
-            </v-col>
-          </v-row>
+      </v-col>
+    </v-row>
 
-          <div v-if="showTable" class="people-frame">
-            <v-simple-table :dark="dark" :light="!dark" v-if="parse_csv" class="table">
-              <thead>
-                <tr>
-                  <th
-                    v-for="key in parse_header"
-                    @click="sortBy(key)"
-                    :class="{ active: sortKey == key }"
-                    :key="key.id"
-                  >
-                    {{ key | capitalize }}
-                    <span class="arrow" :class="sortOrders[key] > 0 ? 'asc' : 'dsc'">
-                    </span>
-                  </th>
-                </tr>
-              </thead>
-              <tr v-for="csv in parse_csv" :key="csv.id">
-                <td class="pl-4" v-for="key in parse_header" :key="key.id">
-                  {{ csv[key] }}
-                </td>
-              </tr>
-            </v-simple-table>
-          </div>
-          <v-row class="ma-2 mt-4">
-            <v-btn
-              v-if="parse_csv.length > 0"
-              @click="saveStudents"
-              color="missionAccent"
-              depressed
-              class="mr-4"
-              :loading="loading"
-              :disabled="disabled"
-              width="40%"
-              >{{ buttonLabel }}
-            </v-btn>
-            <v-btn
-              @click="close"
-              color="baseAccent"
-              depressed
-              width="40%"
-              >cancel
-            </v-btn>
-          </v-row>
-        </div>
-      </div>
-    </v-dialog>
+    <div v-if="showTable">
+      <v-simple-table :dark="dark" :light="!dark" v-if="parse_csv" class="table">
+        <thead>
+          <tr>
+            <th
+              v-for="key in parse_header"
+              @click="sortBy(key)"
+              :class="{ active: sortKey == key }"
+              :key="key.id"
+            >
+              {{ key | capitalize }}
+              <span class="arrow" :class="sortOrders[key] > 0 ? 'asc' : 'dsc'">
+              </span>
+            </th>
+          </tr>
+        </thead>
+        <tr v-for="csv in parse_csv" :key="csv.id">
+          <td class="pl-4" v-for="key in parse_header" :key="key.id">
+            {{ csv[key] }}
+          </td>
+        </tr>
+      </v-simple-table>
+    </div>
+    <v-row class="ma-2 mt-4">
+      <v-btn
+        v-if="parse_csv.length > 0"
+        @click="saveStudents"
+        color="missionAccent"
+        depressed
+        class="mr-4"
+        :loading="loading"
+        :disabled="disabled"
+        width="40%"
+        >{{ buttonLabel }}
+      </v-btn>
+      <v-btn
+        @click="close"
+        color="baseAccent"
+        depressed
+        width="40%"
+        >cancel
+      </v-btn>
+    </v-row>
   </div>
 </template>
 
 <script>
-import firebase from "firebase/app";
-import { db, storage } from "../store/firestoreConfig";
-import isEmpty from "lodash"
 import { mapGetters } from "vuex"
 import { dbMixins } from "../mixins/DbMixins"
 
-// csv import: https://codepen.io/edward1995/pen/QmXdwz?editors=1010
 export default {
-  name: "ImportCsvDialog",
+  name: "StudentImportCsv",
   mixins: [dbMixins],
   components: {},
   data() {
@@ -308,16 +282,11 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.importContainer {
-  width: 100%;
-  margin: 30px 0px;
-
-  .downloadCsv {
-    font-size: 0.8rem;
-    font-weight:400;
-    text-transform: uppercase;
-    color: var(--v-missionAccent-base);
-  }
+.downloadCsv {
+  font-size: 0.8rem;
+  font-weight:400;
+  text-transform: uppercase;
+  color: var(--v-missionAccent-base);
 }
 
 .table {
@@ -354,23 +323,7 @@ export default {
   background: var(--v-missionAccent-base);
 }
 
-.create-dialog {
-  color: var(--v-missionAccent-base);
-  background-color: var(--v-background-base);
-  border: 1px solid var(--v-missionAccent-base);
-  display: flex;
-  flex-wrap: wrap;
-  overflow-x: hidden;
-
-  .dialog-header {
-    width: 100%;
-    padding: 20px;
-    text-transform: uppercase;
-    border-bottom: 1px solid var(--v-missionAccent-base);
-  }
-}
-
-.create-dialog-content {
+.tab-content {
   display: flex;
   justify-content: space-around;
   align-items: space-around;
@@ -378,6 +331,7 @@ export default {
   color: var(--v-missionAccent-base);
   padding: 20px;
   width: 100%;
+  background-color: var(--v-background-base);
 
   .custom-input {
     color: var(--v-missionAccent-base);

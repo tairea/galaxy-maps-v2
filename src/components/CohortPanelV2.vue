@@ -129,7 +129,7 @@
 </template>
 
 <script>
-import { mapGetters, mapMutations } from "vuex";
+import { mapGetters, mapActions } from "vuex";
 import Avatar from "../components/Avatar";
 import ProgressionLineChart from "../components/ProgressionLineChart";
 import ActivityBarChart from "../components/ActivityBarChart";
@@ -214,7 +214,7 @@ export default {
 
   },
   methods: {
-    ...mapMutations(["setCurrentCohort"]),
+    ...mapActions(["setCurrentCohort"]),
     clickedPerson(person, index) {
       // get all avatar elements
       const avatarEls = this.$refs.avatar;

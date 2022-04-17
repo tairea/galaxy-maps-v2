@@ -16,8 +16,8 @@
     </div>
 
     <div id="right-section">
-      <RequestForHelpTeacherFrame :isTeacher="teacher" :courses="courses"/>
-      <SubmissionTeacherFrame v-if="teacher" :courses="courses"/> 
+      <RequestForHelpTeacherFrame :isTeacher="teacher" :courses="courses" class="ml-4"/>
+      <SubmissionTeacherFrame v-if="teacher" :courses="courses" class="mt-4"/> 
     </div>
   </div>
 </template>
