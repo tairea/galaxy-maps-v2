@@ -75,21 +75,85 @@ export default {
     loading: false,
   }),
   mounted() {
-    // working test xApi query (requests galaxy info from specific user)
-    // queryXAPIStatement({
-    //   "statement.actor.mbox": "mailto:email.thebro@gmail.com",
-    //   "statement.context.contextActivities.grouping.id":
-    //     "https://www.galaxymaps.io/course/52YbN7eoE8ol5aPzvEap",
-    // }).then((result) => {
-    //   console.log("result");
-    //   console.log(result);
-    // });
-  },
+    // Get the email action to complete.
+    console.log('route query: ', this.$route.query)
+    var mode = this.$route.query.mode || null;
+    var actionCode = this.$route.query.oobCode
+    var auth = firebase.auth()
 
+    // Handle the user management action.
+    switch (mode) {
+      case 'recoverEmail':
+        // Display email recovery handler and UI.
+        this.handleRecoverEmail(auth, actionCode);
+        break;
+      case 'verifyEmail':
+        // Display email verification handler and UI.
+        this.handleVerifyEmail(auth, actionCode);
+        break;
+      default:
+        // Error: invalid mode.
+    }
+  },
   computed: {
     ...mapGetters(["person", "user"]),
   },
   methods: {
+    handleRecoverEmail(auth, actionCode) {
+      console.log('handle recover email')
+      var restoredEmail = null;
+      // Confirm the action code is valid.
+      auth.checkActionCode(actionCode).then((info) => {
+        // Get the restored email address.
+        restoredEmail = info['data']['email'];
+
+        // Revert to the old email.
+        return auth.applyActionCode(actionCode);
+      }).then(() => {
+        // Account email reverted to restoredEmail
+        auth.sendPasswordResetEmail(restoredEmail).then(() => {
+        
+        this.$store.commit("setSnackbar", {
+          show: true,
+          text: "Email successfully reverted. Password reset email sent",
+          color: "baseAccent",
+        });
+
+        }).catch((error) => {
+          // Error encountered while sending password reset code.
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: 'error sending password reset email: '+ error.message,
+            color: "pink",
+          });
+        });
+      }).catch((error) => {
+        this.$store.commit("setSnackbar", {
+          show: true,
+          text: 'invalid or expired code: '+ error.message,
+          color: "pink",
+        });
+      });
+    },
+    handleVerifyEmail(auth, actionCode) {
+      console.log('handle verify email')
+      // Try to apply the email verification code.
+      auth.applyActionCode(actionCode).then((resp) => {
+        // Email address has been verified.
+        this.$store.commit("setSnackbar", {
+          show: true,
+          text: "Email successfully verified. Login to continue",
+          color: "baseAccent",
+        });
+      }).catch((error) => {
+        // Code is invalid or expired. Ask the user to verify their email address
+        this.$store.commit("setSnackbar", {
+          show: true,
+          text: 'invalid or expired code: '+ error.message,
+          color: "pink",
+        });
+      });
+    },
     login() {
       this.loading = true;
       firebase
