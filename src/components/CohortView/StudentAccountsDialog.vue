@@ -34,7 +34,7 @@
               <v-icon small class="mr-2">mdi-account-group</v-icon><div>upload csv</div>
             </v-tab>
             <v-tab class="justify-start">
-              <v-icon small class="mr-2">mdi-account-minus</v-icon><div>remove student</div>
+              <v-icon small class="mr-2">mdi-account-edit</v-icon><div>edit student</div>
             </v-tab>
 
             <v-tab-item>
@@ -49,13 +49,19 @@
                   <thead>
                     <tr>
                       <th>student</th>
-                      <th>action</th>
+                      <th>edit</th>
+                      <th>remove</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr v-for="student in students" :key="student.id">
                       <td class="pl-4">
-                        {{student.firstName + ' ' + student.lastName || student.email}}
+                        {{student.firstName ? student.firstName + ' ' + student.lastName : student.email}}
+                      </td>
+                      <td>
+                        <v-btn text @click="updateStudent(student)">
+                          <v-icon small>mdi-pencil</v-icon>
+                        </v-btn>
                       </td>
                       <td>
                         <v-btn text @click="removeStudent(student)">
@@ -72,79 +78,41 @@
       </div>
     </v-dialog>
     <!-- CONFIRM DELETE DIALOG -->
-    <v-dialog v-model="confirmDialog" width="40%" light>
-      <div class="create-dialog">
-        <!-- HEADER -->
-        <div class="dialog-header">
-          <span class="dialog-title">Remove Student from Cohort?</span>
-        </div>
-        <div class="d-flex align-start pa-4">
-          <v-icon left color="missionAccent">mdi-information-variant</v-icon>
-          <p class="dialog-description">
-            Are you sure you want to <strong>REMOVE</strong>
-            <span> {{ exStudent.firstName + ' ' + exStudent.lastName }} </span> from this cohort
-          </p>
-        </div>
-
-        <!-- ACTION BUTTONS -->
-        <div class="d-flex align-end my-4">
-          <!-- DELETE -->
-          <v-btn
-            outlined
-            color="error"
-            @click="confirmDeleteStudent()"
-            class="ml-4"
-          >
-            <v-icon left> mdi-delete </v-icon>
-            DELETE
-          </v-btn>
-
-          <v-btn
-            outlined
-            :color="$vuetify.theme.dark ? 'yellow' : 'f7f7ff'"
-            class="ml-4"
-            @click="cancelDeleteDialog"
-          >
-            <v-icon left> mdi-close </v-icon>
-            Cancel
-          </v-btn>
-        </div>
-        <!-- End action-buttons -->
-      </div>
-      <!-- End create-dialog-content -->
-    </v-dialog>
+    <ConfirmDeleteStudentDialog :dialog="confirmDialog" :student="exStudent" @cancel="cancelDeleteDialog"/>
+    <EditStudentDialog 
+      v-if="editDialog" 
+      :dialog="editDialog" 
+      :student="editStudent" 
+      @cancel="cancelEditDialog" 
+      @updateStudentProfile="$emit('updateStudentProfile', $event)" />
   </div>
 </template>
 
 <script>
 import CreateAccountForm from "../../components/CreateAccountForm"
 import StudentImportCsv from "../../components/StudentImportCsv"
-
-import firebase from "firebase/app";
-import { db } from "../../store/firestoreConfig";
-import { mapGetters } from "vuex";
-import { dbMixins } from "../../mixins/DbMixins";
+import ConfirmDeleteStudentDialog from "../Dialogs/ConfirmDeleteStudentDialog"
+import EditStudentDialog from "../Dialogs/EditStudentDialog"
 
 export default {
   name: "StudentAccountsDialog",
-  mixins: [dbMixins],
   components: {
     CreateAccountForm,
-    StudentImportCsv
+    StudentImportCsv,
+    ConfirmDeleteStudentDialog,
+    EditStudentDialog
   },
   props: ['students'],
   data() {
     return {
-      exStudent: {},
       dialog: false,
-      confirmDialog: false
+      confirmDialog: false,
+      exStudent: {},
+      editDialog: false,
+      editStudent: {}
     }
   },
   computed: {
-    ...mapGetters(["person", "currentCohort"]),
-    teacher() {
-      return this.currentCohort.teacher;
-    },
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -157,17 +125,18 @@ export default {
       this.confirmDialog = true
       this.exStudent = student
     },
-    confirmDeleteStudent() {
-      db.collection('cohorts')
-        .doc(this.currentCohort.id)
-        .update({students: firebase.firestore.FieldValue.arrayRemove(this.exStudent.id)})
-      this.confirmDialog = false
-      this.exStudent = {}
-    },
     cancelDeleteDialog() {
       this.confirmDialog = false
       this.exStudent = {}
-    }
+    },
+    updateStudent(student) {
+      this.editStudent = student
+      this.editDialog = true
+    },
+    cancelEditDialog() {
+      this.editDialog = false
+      this.editStudent = {}
+    },
   },
 };
 </script>
@@ -216,7 +185,4 @@ export default {
   background-color: var(--v-background-base);
 }
 
-.dialog-description {
-
-}
 </style>

@@ -57,7 +57,11 @@
             </v-btn-toggle> -->
           </div>
           <div class="mx-1">
-            <StudentAccountsDialog v-if="currentCohort.teacher" :students="students"/>
+            <StudentAccountsDialog 
+              v-if="currentCohort.teacher" 
+              :students="students"
+              @updateStudentProfile="updateStudentProfile($event)"
+            />
             <!-- <CreateAccountDialog accountType="student" />
           </div>
           <div class="mx-1">
@@ -169,6 +173,10 @@ export default {
     },
   },
   methods: {
+    updateStudentProfile(obj) {
+      const index = this.students.findIndex(student => student.id === obj.id)
+      this.students.splice(index, 1, obj)
+    },
     setTime() {
       this.date = Date.now()
     },

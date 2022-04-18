@@ -72,6 +72,21 @@
     </v-form>
     <v-row>
       <v-btn
+        v-if="edit"
+        :disabled="!valid || addingAccount"
+        :loading="addingAccount"
+        @click="update()"
+        width="30%"
+        class="ma-4 disabledButton"
+        color="missionAccent"
+        outlined
+        :dark="dark"
+        :light="!dark"
+      >
+        Update
+      </v-btn>
+      <v-btn
+        v-else
         :disabled="!valid || addingAccount"
         :loading="addingAccount"
         @click="create()"
@@ -103,12 +118,22 @@
 import { mapGetters } from "vuex";
 import { dbMixins } from "../mixins/DbMixins";
 import { getCourseById } from "../lib/ff";
+import { db } from "../store/firestoreConfig";
 
 export default {
   name: "CreateAccountForm",
   mixins: [dbMixins],
   props: {
     accountType: { type: String, default: "teacher" },
+    student: { type: Object},
+    edit: { type: Boolean, default: false }
+  },
+  mounted() {
+    if (this.edit) this.account = {
+      ...this.account,
+      ...this.student,
+    }
+
   },
   data: () => ({
     addingAccount: false,
@@ -118,7 +143,6 @@ export default {
       firstName: "",
       lastName: "",
       email: "",
-      accountType: "",
       displayName: "",
       nsn: "",
       inviter: "",
@@ -152,6 +176,24 @@ export default {
         parentEmail: "",
       };
       this.$emit('close')
+    },
+    async update() {
+      let obj = Object.fromEntries(Object.entries(this.account).filter(([_, v]) => v.length));
+
+      db.collection('people')
+        .doc(obj.id)
+        .update(obj)
+        .then(() => {
+          this.$emit('updateStudentProfile', obj)
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: 'student successfully updated',
+            color: "baseAccent",
+          });
+          this.close()
+        }).catch((error) => {
+          console.error("Error updating document: ", error);
+        });
     },
     async create() {
       this.$refs.form.validate();
