@@ -88,7 +88,7 @@
       </div>
     </div> -->
     <v-expand-transition>
-      <div class="main-col" v-show="expand">
+      <div v-if="cohorts.length" class="main-col" v-show="expand">
         <!-- Middle chip row -->
 
         <div class="timeframe-chips">
@@ -105,6 +105,9 @@
             class="cohort-panel"
           />
         </div>
+      </div>
+      <div v-else>
+        <p>create or start a galaxy to join a cohort</p>
       </div>
     </v-expand-transition>
   </div>
