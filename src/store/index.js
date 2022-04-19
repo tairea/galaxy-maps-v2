@@ -975,7 +975,7 @@ export default new Vuex.Store({
       //   });
       const cohorts = [...studentCohorts, ...teacherCohorts];
       commit("setCohorts", cohorts);
-      dispatch("getOrganisationsByCohorts", cohorts);
+      if (cohorts.length) dispatch("getOrganisationsByCohorts", cohorts);
     },
     async getPersonsActiveTasks({ commit, dispatch }, payload) {
       const personsCourseTopics = await db

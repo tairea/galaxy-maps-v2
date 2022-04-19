@@ -106,7 +106,7 @@
           />
         </div>
       </div>
-      <div v-else>
+      <div v-else class="no-cohort">
         <p>create or start a galaxy to join a cohort</p>
       </div>
     </v-expand-transition>
@@ -378,5 +378,17 @@ hr {
 
 .cohort-panel {
   width: calc(50% - 40px);
+}
+
+.no-cohort {
+  font-size: 0.9rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  display: flex;
+  justify-content: center;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 200px;
+  color: var(--v-missionAccent-base);
 }
 </style>

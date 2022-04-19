@@ -8,7 +8,7 @@
         dark
         slider-color="baseAccent"
         v-model="activeTab"
-        height=""
+        height="30"
       >
         <v-tab v-for="tab in tabs" :key="tab.id" :to="tab.route">
           <div class="baseAccent--text tab">{{ tab.name }}</div>
