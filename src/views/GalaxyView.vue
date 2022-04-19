@@ -142,6 +142,7 @@ export default {
       course: {},
       peopleInCourse: [],
       cohortsInCourse: [],
+      selectedNode: {}
     };
   },
   async mounted() {
@@ -157,7 +158,7 @@ export default {
         .collection("map-nodes")
         .add({
           // hardcoded first node
-          label: this.courseTitle + " Intro",
+          label: this.currentCourse.title + " Intro",
           group: "introduction",
           topicCreatedTimestamp: new Date(),
           x: 0,
@@ -315,6 +316,7 @@ export default {
       this.infoPopupPosition.y = selected.DOMy;
       if (selected.type == "node") {
         this.currentNode = selected;
+        this.selectedNode = selected
       } else if (selected.type == "edge") {
         this.currentEdge = selected;
       }
@@ -379,10 +381,14 @@ export default {
       this.blurPopup();
     },
     blurPopup() {
+      console.log('blur popup')
+      if (this.selectedNode === this.currentNode) return
       this.hoverPopup = false;
       this.deselect();
     },
     deselect() {
+      console.log('deselected')
+      this.selectedNode = {}
       if (!this.hoverPopup && !this.hoverNode) {
         this.infoPopupShow = false;
         this.centerFocusPosition = false;

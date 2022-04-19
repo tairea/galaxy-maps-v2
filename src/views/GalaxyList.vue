@@ -1,6 +1,6 @@
 <template>
   <div class="fullHeight">
-    <GalaxyListPanel ref="listPanel" @courseClicked="courseClicked($event)" />
+    <GalaxyListPanel ref="listPanel" @courseClicked="courseClicked($event)" @createGalaxy="showDialog = true" />
     <GalaxyListInfoPanel
       :type="courseType"
       :selectedCourse="clickedCourseId"
@@ -58,10 +58,9 @@
         :highlightCourse="clickedCourseId"
       />
     </div>
-    <div class="buttons">
-      <CreateEditDeleteGalaxyDialog :edit="false" v-if="teach" />
-      <!-- <DiscoverGalaxyButton />  -->
-    </div>
+    <!-- <div class="buttons"> -->
+      <CreateEditDeleteGalaxyDialog :showDialog="showDialog" @close="showDialog = false"/>
+    <!-- </div> -->
   </div>
 </template>
 
@@ -90,6 +89,7 @@ export default {
       whichCoursesToDisplay: "all",
       clickedCourseId: null,
       courseType: null,
+      showDialog: false
     };
   },
   async mounted() {
@@ -100,21 +100,21 @@ export default {
   },
   computed: {
     ...mapGetters(["user", "person"]),
-    teach() {
-      return this.whichCoursesToDisplay === "my";
-    },
-    learn() {
-      return this.whichCoursesToDisplay === "assigned";
-    },
-    discover() {
-      return this.whichCoursesToDisplay === "all";
-    },
-    submitted() {
-      return this.whichCoursesToDisplay === "submitted";
-    },
-    admin() {
-      return this.user.data.admin;
-    },
+    // teach() {
+    //   return this.whichCoursesToDisplay === "my";
+    // },
+    // learn() {
+    //   return this.whichCoursesToDisplay === "assigned";
+    // },
+    // discover() {
+    //   return this.whichCoursesToDisplay === "all";
+    // },
+    // submitted() {
+    //   return this.whichCoursesToDisplay === "submitted";
+    // },
+    // admin() {
+    //   return this.user.data.admin;
+    // },
   },
   methods: {
     courseClicked(emittedPayload) {

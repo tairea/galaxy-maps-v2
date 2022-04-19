@@ -706,9 +706,10 @@ export default {
 <style lang="scss" scoped>
 .full-height {
   width: 100%;
-  height: 100%;
+  height: 95%;
   display: flex;
   flex-direction: column;
+  margin-top: 20px;
 }
 
 .noGalaxies {

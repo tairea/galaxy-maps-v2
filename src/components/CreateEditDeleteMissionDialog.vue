@@ -1,8 +1,8 @@
 <template>
-  <v-container>
+  <v-container class="pa-0">
     <v-row class="text-center" align="center">
       <v-col cols="12">
-        <v-dialog v-model="dialog" width="40%" light>
+        <v-dialog v-model="dialog" width="50%" light>
           <!-- CREATE BUTTON -->
           <template v-slot:activator="{ on, attrs }">
             <v-btn
@@ -14,7 +14,8 @@
               color="missionAccent"
               x-small
             >
-              <v-icon small> mdi-pencil </v-icon>
+              <v-icon class="mr-2" x-small> mdi-pencil</v-icon>
+              edit 
             </v-btn>
 
             <v-btn
@@ -64,7 +65,7 @@
 
               <!-- DESCRIPTION -->
               <!-- <p class="dialog-description">Mission Description:</p> -->
-              <v-textarea
+              <!-- <v-textarea
                 class="input-field"
                 outlined
                 :dark="dark"
@@ -74,7 +75,18 @@
                 rows="6"
                 v-model="task.description"
                 label="Mission Content"
-              ></v-textarea>
+              ></v-textarea> -->
+              <div>
+                <vue-editor 
+                  v-model="task.description" 
+                  class="mb-8 quill" 
+                  :class="{'active-quill' : this.quillFocused}" 
+                  :editor-toolbar="customToolbar"
+                  @focus="quillFocused = true" 
+                  @blur="quillFocused = false"
+                />
+              </div>
+
 
               <!-- DURATION -->
               <!-- <p class="dialog-description">Duration:</p> -->
@@ -324,6 +336,7 @@
 
 <script>
 import firebase from "firebase/app";
+import { VueEditor } from "vue2-editor";
 
 import { db } from "../store/firestoreConfig";
 import { mapState } from "vuex";
@@ -331,6 +344,9 @@ import { mapState } from "vuex";
 export default {
   name: "CreateEditDeleteMissionDialog",
   props: ["taskToEdit", "taskId", "index", "topicId", "on", "attrs", "edit"],
+  components: {
+    VueEditor
+  },
   data: () => ({
     dialog: false,
     dialogConfirm: false,
@@ -348,6 +364,22 @@ export default {
     loading: false,
     disabled: false,
     deleting: false,
+    quillFocused: false,
+    customToolbar: [
+        [{ header: [false, 3, 4, 5] }],
+        ["bold", "italic", "underline", "strike"], // toggled buttons
+        [
+          { align: "" },
+          { align: "center" },
+          { align: "right" },
+          { align: "justify" }
+        ],
+        ["blockquote", "code-block"],
+        [{ list: "ordered" }, { list: "bullet" }],
+        [{ indent: "-1" }, { indent: "+1" }], // outdent/indent
+        ["link"],
+        // ["clean"] // remove formatting button
+    ]
   }),
   mounted() {
     if (this.taskToEdit) {
@@ -485,7 +517,6 @@ export default {
 <style scoped lang="scss">
 // new dialog ui
 .create-dialog {
-  color: var(--v-missionAccent-base);
   background-color: var(--v-background-base);
   border: 1px solid var(--v-missionAccent-base);
   // background: lightGrey;
@@ -573,9 +604,7 @@ export default {
   justify-content: space-around;
   align-items: space-around;
   flex-direction: column;
-  color: var(--v-missionAccent-base);
   padding: 20px;
-  text-transform: uppercase;
   width: 100%;
   // font-size: 0.6rem;
   // border: 1px solid var(--v-missionAccent-base);
@@ -613,13 +642,6 @@ export default {
   }
 }
 
-.mission-edit-button {
-  position: absolute;
-  top: 10px;
-  right: 20px;
-  // font-size: 0.5rem;
-}
-
 .circle-outline {
   border: 1px solid var(--v-cohortAccent-base);
   border-radius: 50%;
@@ -627,5 +649,22 @@ export default {
 
 .submission-colour {
   color: var(--v-cohortAccent-base);
+}
+
+.quill ::v-deep .ql-toolbar{
+  border: 1px solid #ffffff45
+}
+.quill ::v-deep .ql-container{
+  border: 1px solid #ffffff45
+}
+.quill ::v-deep .ql-editor {
+  font-size: 0.9rem
+}
+
+.active-quill ::v-deep .ql-toolbar{
+  border: 1px solid var(--v-missionAccent-base) 
+}
+.active-quill ::v-deep .ql-container{
+  border: 1px solid var(--v-missionAccent-base) 
 }
 </style>

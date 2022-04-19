@@ -20,7 +20,7 @@
             />
           </div>
           <p v-else class="galaxyListPanelContent text-center">
-            NO ENROLLED MAPS
+            NO ENROLLED GALAXIES
           </p>
         </div>
         <!-- TEACHING -->
@@ -36,9 +36,22 @@
               @click.native="courseClicked(course.id, index, 'teaching')"
             />
           </div>
-          <p v-else class="galaxyListPanelContent text-center">
-            NO CREATED MAPS
-          </p>
+          <div v-else>
+            <!-- <p class="galaxyListPanelContent text-center">
+              NO CREATED MAPS
+            </p> -->
+            <div class="d-flex justify-center mb-4">
+              <v-btn 
+                x-small 
+                color="missionAccent" 
+                text
+                @click="$emit('createGalaxy')"
+              >
+                <v-icon x-small class="pr-2">mdi-plus</v-icon> 
+                MAP NEW GALAXY
+              </v-btn>
+            </div>
+          </div>
         </div>
         <!-- ALL -->
         <div>
@@ -235,33 +248,10 @@ export default {
     }
 
     .galaxyListPanelContent {
-      color: var(--v-galaxyAccent-base);
+      color: var(--v-missionAccent-base);
       position: relative;
       font-size: 0.6rem;
       letter-spacing: 1px;
-    }
-
-    .galaxyCard {
-      position: relative;
-      margin: 10px;
-      border: 1px solid var(--v-galaxyAccent-base);
-      display: flex;
-      cursor: pointer;
-
-      .galaxyCardImage {
-        width: 30px;
-        height: 30px;
-      }
-
-      .imagePlaceholder {
-        width: 30px;
-        height: 30px;
-        background-color: rgba(200, 200, 200, 0.3);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 0.6rem;
-      }
     }
   }
 
