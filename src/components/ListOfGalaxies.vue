@@ -13,7 +13,9 @@
           @click.native="courseClicked(course.id, index, 'learning')"
         />
       </div>
-      <p v-else class="galaxyListPanelContent text-center">NO ENROLLED MAPS</p>
+      <p v-else class="galaxyListPanelContent text-center">
+        NO ENROLLED GALAXIES
+      </p>
     </div>
     <!-- TEACHING -->
     <div>
@@ -28,7 +30,22 @@
           @click.native="courseClicked(course.id, index, 'teaching')"
         />
       </div>
-      <p v-else class="galaxyListPanelContent text-center">NO CREATED MAPS</p>
+      <div v-else>
+        <!-- <p class="galaxyListPanelContent text-center">
+              NO CREATED MAPS
+            </p> -->
+        <div class="d-flex justify-center mb-4">
+          <v-btn
+            x-small
+            color="missionAccent"
+            text
+            @click="$emit('createGalaxy')"
+          >
+            <v-icon x-small class="pr-2">mdi-plus</v-icon>
+            MAP NEW GALAXY
+          </v-btn>
+        </div>
+      </div>
     </div>
     <!-- ALL -->
     <div>
