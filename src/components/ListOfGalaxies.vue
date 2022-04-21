@@ -1,28 +1,49 @@
 <template>
-  <div class="galaxyListPanel">
-    <!-- Panel Title Tab -->
-    <div class="blackBar">
-      <div class="d-flex justify-center align-center">
-        <div
-          class="panelTab overline"
-          style="color: var(--v-galaxyAccent-base)"
-        >
-          <!-- <v-icon color="galaxyAccent"
-            >mdi-chart-timeline-variant-shimmer</v-icon
-          > -->
-          LIST OF GALAXIES
-        </div>
+  <div class="panelContentInner">
+    <!-- LEARNING -->
+    <div>
+      <p class="galaxyListPanelLabel overline mx-4">LEARNING</p>
+      <div v-if="getLearningCourses.length">
+        <!-- COURSE CARD -->
+        <GalaxyListPanelCard
+          v-for="(course, index) in getLearningCourses"
+          :key="course.id"
+          :course="course"
+          :active="index === activeLearning"
+          @click.native="courseClicked(course.id, index, 'learning')"
+        />
       </div>
+      <p v-else class="galaxyListPanelContent text-center">NO ENROLLED MAPS</p>
     </div>
-
-    <div class="panelContent">
-      <!-- List of galaxies -->
-      <ListOfGalaxies
-        :show="selectedGalaxy"
-        @courseClicked="courseClicked($event)"
-      />
-
-      <!-- Galaxy preview once a galaxy is clicked -->
+    <!-- TEACHING -->
+    <div>
+      <p class="galaxyListPanelLabel overline mx-4">TEACHING</p>
+      <div v-if="getTeachingCourses.length">
+        <!-- COURSE CARD -->
+        <GalaxyListPanelCard
+          v-for="(course, index) in getTeachingCourses"
+          :key="course.id"
+          :course="course"
+          :active="index === activeTeaching"
+          @click.native="courseClicked(course.id, index, 'teaching')"
+        />
+      </div>
+      <p v-else class="galaxyListPanelContent text-center">NO CREATED MAPS</p>
+    </div>
+    <!-- ALL -->
+    <div>
+      <p class="galaxyListPanelLabel overline mx-4">ALL GALAXIES</p>
+      <div v-if="getPublicCourses.length">
+        <!-- COURSE CARD -->
+        <GalaxyListPanelCard
+          v-for="(course, index) in getPublicCourses"
+          :key="course.id"
+          :course="course"
+          :active="index === activePublic"
+          @click.native="courseClicked(course.id, index, 'public')"
+        />
+      </div>
+      <p v-else class="galaxyListPanelContent text-center">NO PUBLIC MAPS</p>
     </div>
   </div>
 </template>
@@ -30,13 +51,14 @@
 <script>
 import { mapState, mapActions } from "vuex";
 import GalaxyListPanelCard from "@/components/GalaxyListPanelCard.vue";
-import ListOfGalaxies from "@/components/ListOfGalaxies.vue";
 
 export default {
-  name: "GalaxyListPanel",
+  name: "ListOfGalaxies",
   components: {
     GalaxyListPanelCard,
-    ListOfGalaxies,
+  },
+  props: {
+    show: { type: Boolean, default: false },
   },
   data() {
     return {
@@ -104,12 +126,30 @@ export default {
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
-    courseClicked(emittedPayload) {
-      this.selectedGalaxy = true;
+    courseClicked(courseId, index, type) {
+      this.selectedGalaxy = !this.selectedGalaxy;
+      if (this.selectedGalaxy) {
+        if (type === "learning") {
+          this.activeLearning = index;
+        } else if (type === "teaching") {
+          this.activeTeaching = index;
+        } else if (type === "public") {
+          this.activePublic = index;
+        }
+      } else {
+        this.allInactive();
+        // TODO: zoom out
+      }
+
       this.$emit("courseClicked", {
-        courseId: emittedPayload.courseId,
-        type: emittedPayload.type,
+        courseId,
+        type,
       });
+    },
+    allInactive() {
+      this.activeLearning = null;
+      this.activeTeaching = null;
+      this.activePublic = null;
     },
   },
 };

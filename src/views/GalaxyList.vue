@@ -1,61 +1,20 @@
 <template>
   <div class="fullHeight">
+    <!-- left "LIST OF GALAXIES" panel -->
     <GalaxyListPanel ref="listPanel" @courseClicked="courseClicked($event)" />
+    <!-- right "Galaxy info" panel -->
     <GalaxyListInfoPanel
       :type="courseType"
       :selectedCourse="clickedCourseId"
       @closeInfoPanel="closeInfoPanel"
     />
-    <div class="d-flex justify-center button-row">
-      <!-- <v-btn
-        small
-        outlined
-        color="missionAccent"
-        class="mx-2 galaxy-btn"
-        :class="{ focused: learn }"
-        @click="whichCoursesToDisplay = 'assigned'"
-      >
-        LEARN
-      </v-btn>
-      <v-btn
-        small
-        outlined
-        color="missionAccent"
-        class="mx-2 galaxy-btn"
-        :class="{ focused: teach }"
-        @click="whichCoursesToDisplay = 'my'"
-      >
-        TEACH
-      </v-btn>
-      <v-btn
-        small
-        active
-        outlined
-        color="missionAccent"
-        class="mx-2 galaxy-btn"
-        :class="{ focused: discover }"
-        @click="whichCoursesToDisplay = 'all'"
-      >
-        DISCOVER
-      </v-btn>
-      <v-btn
-        v-if="admin"
-        small
-        active
-        outlined
-        color="missionAccent"
-        class="mx-2 galaxy-btn"
-        :class="{ focused: submitted }"
-        @click="whichCoursesToDisplay = 'submitted'"
-      >
-        submitted
-      </v-btn> -->
-    </div>
+    <div class="d-flex justify-center button-row"></div>
     <div class="flexContainer">
       <Galaxies
         ref="galaxyMap"
         :whichCoursesToDisplay="whichCoursesToDisplay"
         :highlightCourse="clickedCourseId"
+        @clickedCourseId="propClickedCourseId($event)"
       />
     </div>
     <div class="buttons">
@@ -118,12 +77,16 @@ export default {
   },
   methods: {
     courseClicked(emittedPayload) {
+      console.log("course clicked was", emittedPayload);
       this.clickedCourseId = emittedPayload.courseId;
       this.courseType = emittedPayload.type;
     },
     closeInfoPanel() {
       this.clickedCourseId = null;
-      this.$refs.listPanel.courseClicked();
+      // this.$refs.listPanel.courseClicked();
+    },
+    propClickedCourseId(courseId) {
+      this.clickedCourseId = courseId;
     },
   },
 };

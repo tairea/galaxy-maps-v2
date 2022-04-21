@@ -395,15 +395,17 @@ export default {
       []);
 
       // network fit to array of topic ids
-      this.$refs.network.fit({
-        nodes: coursesTopicNodesIds,
-        offset: {
-          x: 500,
-        },
-        animation: true,
-      });
+      // this.$refs.network.fit({
+      //   nodes: coursesTopicNodesIds,
+      //   offset: {
+      //     x: 500,
+      //   },
+      //   animation: true,
+      // });
 
-      this.popupPreview = true;
+      // replace this popup with side panel pop-out
+      // this.popupPreview = true;
+      this.$emit("clickedCourseId", closestNode.courseId);
       // network focus to closest node
       // this.$refs.network.focus(closestNode.id, {
       //   scale: 0.8,
