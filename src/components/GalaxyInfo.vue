@@ -35,7 +35,7 @@ export default {
 
 <style lang="scss" scoped>
 #galaxy-info {
-  width: calc(100% - 30px);
+  width: 100%;
   // height: 400px;
   margin-top: 30px;
   padding: 20px;

@@ -5,12 +5,13 @@
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <PublishGalaxy v-if="showPublish" :course="course" :person="person" />
       <AssignedInfo
-        v-if="!draft && teacher"
+        v-if="!draft && cohortsInCourse.length"
         :assignCohorts="true"
         :people="peopleInCourse"
         :cohorts="cohortsInCourse"
+        :teacher="teacher"
       />
-      <BackButton :toPath="goBackPath" />
+      <BackButton />
     </div>
     <div id="main-section">
       <!-- Map Buttons -->
@@ -94,15 +95,17 @@ import PopupSystemPreview from "../components/PopupSystemPreview";
 import PublishGalaxy from "../components/GalaxyView/PublishGalaxy";
 
 import { db } from "../store/firestoreConfig";
-import { mapState, mapGetters } from "vuex";
+import { mapState, mapGetters, mapActions, mapMutations } from "vuex";
 import {
   getCourseById,
   getAllPeopleInCourse,
   getAllCohortsInCourse,
 } from "@/lib/ff";
+import { dbMixins } from '../mixins/DbMixins'
 
 export default {
   name: "GalaxyView",
+  mixins: [dbMixins],
   components: {
     GalaxyInfo,
     AssignedInfo,
@@ -206,7 +209,20 @@ export default {
     // bind assigned people in this course
     if (this.teacher) {
       this.peopleInCourse = await getAllPeopleInCourse(this.courseId);
+      this.setPeopleInCourse(this.peopleInCourse)
       this.cohortsInCourse = await getAllCohortsInCourse(this.courseId);
+    } else {
+      await this.getCohortsByPersonId(this.person)
+      let cohort = await this.cohorts.find(cohort => cohort.courses.some(courseId => courseId === this.currentCourseId)) 
+      this.cohortsInCourse.push(cohort)
+      if (this.cohortsInCourse.length) {
+        this.setCurrentCohort(this.cohortsInCourse[0])
+        const students = await Promise.all(this.cohortsInCourse[0].students.map( async (student) => {
+          return await this.MXgetPersonByIdFromDB(student) 
+        }))
+        this.peopleInCourse = students
+        this.setPeopleInCourse(students)
+      }
     }
   },
   computed: {
@@ -217,24 +233,9 @@ export default {
       "topicsTasks",
       "personsTopicsTasks",
       "currentCourse",
+      "cohorts"
     ]),
     ...mapGetters(["person", "user"]),
-
-    goBackPath() {
-      if (this.teacher) {
-        return {
-          path: "galaxies",
-          name: "GalaxyList",
-          params: { display: "all" },
-        };
-      } else {
-        return {
-          path: "galaxies",
-          name: "GalaxyList",
-          params: { display: "all" },
-        };
-      }
-    },
     draft() {
       return this.course?.status === "drafting";
     },
@@ -244,6 +245,9 @@ export default {
         this.user.data.admin
       );
     },
+    student() {
+      return this.person.assignedCourses.some(courseId => courseId === this.currentCourseId)
+    },
     showPublish() {
       return (
         (this.user.data.admin && this.course.status === "submitted") ||
@@ -252,6 +256,8 @@ export default {
     },
   },
   methods: {
+    ...mapActions(["getCohortsByPersonId", "setCurrentCohort"]),
+    ...mapMutations(["setPeopleInCourse"]),
     setUiMessage(message) {
       this.uiMessage = message;
     },
@@ -350,7 +356,6 @@ export default {
       this.editing = true;
     },
     closeDialog() {
-      console.log("closeDialog: ", this.editing);
       if (!this.editing) {
         this.$refs.vis.removeUnsavedNode();
         this.deselect();
@@ -381,13 +386,11 @@ export default {
       this.blurPopup();
     },
     blurPopup() {
-      console.log('blur popup')
       if (this.selectedNode === this.currentNode) return
       this.hoverPopup = false;
       this.deselect();
     },
     deselect() {
-      console.log('deselected')
       this.selectedNode = {}
       if (!this.hoverPopup && !this.hoverNode) {
         this.infoPopupShow = false;
@@ -421,7 +424,7 @@ export default {
   flex-direction: column;
   // border: 1px solid yellow;
   overflow-y: scroll;
-  padding-bottom: 50px;
+  padding: 0px 20px 50px 20px;
 }
 
 #main-section {

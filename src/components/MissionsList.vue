@@ -25,6 +25,7 @@
             :topicId="topicId"
             :topicActive="topicActive"
             :teacher="teacher"
+            @missionActivated="checkActiveTask"
           />
         </v-expansion-panel>
       </v-expansion-panels>
@@ -63,19 +64,22 @@ export default {
   },
   mounted() {
     // get active task index for expansion panel vmodel (to expand 'active' task on load)
-    this.indexOfActiveTask = this.tasks.findIndex((object) => {
-      return object.taskStatus == "active";
-    });
-    const activeTasks = this.tasks.find((task) => task.taskStatus == "active");
-    if (activeTasks) this.topicActive = true;
+    this.checkActiveTask()
   },
   computed: {
     ...mapGetters(["person"]),
+    ...mapState(['currentTopic'])
   },
   methods: {
     missionClicked(task) {
       this.$emit("task", task);
     },
+    checkActiveTask() {
+      this.indexOfActiveTask = this.tasks.findIndex((object) => {
+        return object.taskStatus == "active";
+      });
+      if (this.currentTopic.topicStatus === 'active') this.topicActive = true;
+    }
   },
 };
 </script>

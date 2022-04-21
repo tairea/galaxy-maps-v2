@@ -123,7 +123,6 @@
               :taskId="id"
               :task="task"
               :missionStatus="getTaskStatus"
-              @missionActivated="$emit('missionActivated')"
             />
           </div>
           <div
@@ -205,7 +204,21 @@ export default {
     SelectedMissionsCard,
   },
   props: ["task", "id", "index", "topicId", "topicActive", "teacher"],
-  mounted() {},
+  data() {
+    return {
+      editing: false,
+      activeTask: false,
+      panel: [],
+
+      taskSlides: false,
+      taskVideo: false,
+    };
+  },
+  watch: {
+    getTaskStatus(newVal, oldVal) {
+      if (oldVal == 'unlocked' && newVal == 'active') this.$emit('missionActivated')
+    }
+  },
   computed: {
     ...mapState([
       "currentCourseId",
@@ -221,18 +234,6 @@ export default {
       return task.taskStatus;
     },
   },
-  data() {
-    return {
-      editing: false,
-      activeTask: false,
-      panel: [],
-
-      taskSlides: false,
-      taskVideo: false,
-    };
-  },
-  async mounted() {},
-  methods: {},
 };
 </script>
 

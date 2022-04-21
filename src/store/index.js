@@ -60,7 +60,8 @@ const getDefaultState = () => {
     studentsSubmissions: [],
     submittedEdges: [],
     submittedNodes: [],
-    dashboardView: ''
+    dashboardView: '',
+    peopleInCourse: []
   };
 };
 
@@ -100,16 +101,6 @@ export default new Vuex.Store({
     getTasksByTopicId: (state) => (topicId) => {
       const topic = state.topics.find((topic) => topic.id === topicId);
       return topic.tasks;
-    },
-    getTaskStatusByTaskId: (state) => (taskId) => {
-      if (state.person.accountType != "student") {
-        return;
-      }
-      // get topic status eg. unlocked / inreview / completed / locked
-      const task = state.personsTopicsTasks.find(
-        (topicTask) => topicTask.id === taskId
-      );
-      return task.taskStatus;
     },
     getPersonsTasksByTopicId: (state) => (id) => {
       if (state.personsTopics.length) {
@@ -240,6 +231,9 @@ export default new Vuex.Store({
     },
     setDashboardView(state, view) {
       state.dashboardView = view
+    },
+    setPeopleInCourse(state, people) {
+      state.peopleInCourse = people
     }
   },
   actions: {

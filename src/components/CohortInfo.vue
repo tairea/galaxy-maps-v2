@@ -102,7 +102,7 @@ export default {
 
 <style lang="scss">
 #cohort-info {
-  width: calc(100% - 30px);
+  width: 100%;
   border: 1px solid var(--v-baseAccent-base);
   margin-top: 30px;
   padding: 20px;

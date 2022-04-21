@@ -305,7 +305,6 @@ export default {
     if (!this.currentCourse.mappedBy.image) {
       this.getMappedByPersonsImage(this.currentCourse.mappedBy.personId);
     }
-    console.log("from resub", this.task);
   },
   computed: {
     ...mapState([

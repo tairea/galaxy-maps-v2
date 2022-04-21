@@ -6,56 +6,12 @@
       :selectedCourse="clickedCourseId"
       @closeInfoPanel="closeInfoPanel"
     />
-    <div class="d-flex justify-center button-row">
-      <!-- <v-btn
-        small
-        outlined
-        color="missionAccent"
-        class="mx-2 galaxy-btn"
-        :class="{ focused: learn }"
-        @click="whichCoursesToDisplay = 'assigned'"
-      >
-        LEARN
-      </v-btn>
-      <v-btn
-        small
-        outlined
-        color="missionAccent"
-        class="mx-2 galaxy-btn"
-        :class="{ focused: teach }"
-        @click="whichCoursesToDisplay = 'my'"
-      >
-        TEACH
-      </v-btn>
-      <v-btn
-        small
-        active
-        outlined
-        color="missionAccent"
-        class="mx-2 galaxy-btn"
-        :class="{ focused: discover }"
-        @click="whichCoursesToDisplay = 'all'"
-      >
-        DISCOVER
-      </v-btn>
-      <v-btn
-        v-if="admin"
-        small
-        active
-        outlined
-        color="missionAccent"
-        class="mx-2 galaxy-btn"
-        :class="{ focused: submitted }"
-        @click="whichCoursesToDisplay = 'submitted'"
-      >
-        submitted
-      </v-btn> -->
-    </div>
     <div class="flexContainer">
       <Galaxies
         ref="galaxyMap"
         :whichCoursesToDisplay="whichCoursesToDisplay"
         :highlightCourse="clickedCourseId"
+        @courseClicked="courseClicked($event)"
       />
     </div>
     <!-- <div class="buttons"> -->
@@ -118,8 +74,9 @@ export default {
   },
   methods: {
     courseClicked(emittedPayload) {
+      console.log('courseClicked')
       this.clickedCourseId = emittedPayload.courseId;
-      this.courseType = emittedPayload.type;
+      if (emittedPayload.type) this.courseType = emittedPayload.type;
     },
     closeInfoPanel() {
       this.clickedCourseId = null;

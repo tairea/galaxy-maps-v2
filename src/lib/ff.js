@@ -102,3 +102,18 @@ export const getAllCohortsInCourse = async (courseId) => {
       return course
     })
 }
+
+export const getPersonsTopicById = async (personId, courseId, topicId) => {
+  return await db
+    .collection('people')
+    .doc(personId)
+    .collection(courseId)
+    .doc(topicId)
+    .get()
+    .then((doc) => {
+      return {
+        id: doc.id, 
+        ...doc.data()
+      }
+    })
+}

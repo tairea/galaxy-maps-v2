@@ -1,11 +1,11 @@
 <template>
   <div id="assigned-info">
-    <h2 class="assigned-label">Assigned to:</h2>
 
+    <h2 class="assigned-label">Assigned to:</h2>
     <!-- ASSIGNED COHORTS INFO -->
     <div v-if="assignCohorts">
       <!-- Cohorts -->
-      <div v-if="cohorts.length > 0">
+      <div v-if="cohorts && cohorts.length > 0">
         <p class="overline assignedToLabel ma-0">Cohorts</p>
         <v-row class="my-1">
           <Cohort
@@ -25,12 +25,12 @@
       </div>
 
       <p
-        v-if="cohorts.length == 0 && people.length == 0"
+        v-if="cohorts && cohorts.length == 0 && people.length == 0"
         class="assigned-status"
       >
         Nobody is assigned to this Galaxy
       </p>
-      <AssignCohortDialog :assignCohorts="true" />
+      <AssignCohortDialog v-if="isTeacher" :assignCohorts="true" />
     </div>
 
     <!-- ASSIGNED COURSES INFO -->
@@ -73,6 +73,7 @@ export default {
     "cohorts",
     "organisations",
     "people",
+    "teacher"
   ],
   data() {
     return {
@@ -80,7 +81,7 @@ export default {
     };
   },
   beforeMount() {
-    this.getCohortCourses();
+    this.getCohortCourses()
   },
   watch: {
     currentCohort() {
@@ -91,7 +92,7 @@ export default {
     ...mapState(["person", "currentCohort"]),
     ...mapGetters(["getCoursesInThisCohort", "user"]),
     isTeacher() {
-      return this.currentCohort.teacher || this.user.data.admin
+      return this.currentCohort.teacher || this.user.data.admin || this.teacher
     },
     courseCohort () {
       return this.currentCohort.courseCohort
@@ -109,14 +110,14 @@ export default {
           this.courses = courses;
         }
       }
-    },
+    }
   },
 };
 </script>
 
 <style lang="scss">
 #assigned-info {
-  width: calc(100% - 30px);
+  width: 100%;
   // height: 400px;
   border: 1px solid var(--v-baseAccent-base);
   margin-top: 30px;
