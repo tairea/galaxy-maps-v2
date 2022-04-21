@@ -99,7 +99,6 @@ export default {
     dialog: false,
     loading: false,
   }),
-  mounted() {},
   computed: {
     ...mapState(["currentCourse", "currentTopic", "currentTask"]),
     ...mapGetters(["person"]),
@@ -112,18 +111,26 @@ export default {
       this.$store.commit("setCurrentTaskId", this.task.id);
       this.$store.commit("setCurrentTask", this.task);
 
-      // update taskStatus to active
-      db.collection("people")
+      const topic = db.collection("people")
         .doc(this.person.id)
         .collection(this.currentCourse.id)
         .doc(this.topicId)
-        .collection("tasks")
-        .doc(this.task.id)
-        .update({
-          taskStatus: "active",
-          taskStartedTimestamp: new Date(),
-        })
-        .then(() => {
+
+      // update taskStatus to active
+        topic
+          .collection("tasks")
+          .doc(this.task.id)
+          .update({
+            taskStatus: "active",
+            taskStartedTimestamp: new Date(),
+        }).then(() => {
+          if (!this.topicActive) {
+            topic.update({
+              topicStatus: 'active',
+              topicStartedTimeStamp: new Date()
+            })
+          }
+        }).then(() => {
           console.log("Topic status successfully written as Active!");
           if (!this.topicActive) {
             startTopicXAPIStatement(this.person, {

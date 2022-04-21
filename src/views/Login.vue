@@ -1,7 +1,12 @@
 <template>
   <div class="login">
-    <!-- <v-img :src="`https://i.pravatar.cc/300`" class="gm-logo"></v-img> -->
-    <div id="galaxy-info">
+    <NewPassword 
+      v-if="isResetPassword" 
+      :actionCode="actionCode"
+      :email="accountEmail"
+      @close="isResetPassword = false"
+    />
+    <div v-else id="galaxy-info">
       <h2 class="galaxy-label">LOGIN</h2>
       <!-- <h1 class="galaxy-title">Login</h1> -->
       <!-- <div class="d-flex justify-center align-center"> -->
@@ -58,12 +63,17 @@
 </template>
 
 <script>
+import NewPassword from "../components/NewPassword.vue"
+
 import firebase from "firebase";
 import { mapGetters } from "vuex";
 import { queryXAPIStatement } from "../lib/veracityLRS";
 
 export default {
   name: "Login",
+  components: {
+    NewPassword
+  },
   data: () => ({
     valid: true,
     email: "",
@@ -73,6 +83,9 @@ export default {
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
     ],
     loading: false,
+    isResetPassword: false,
+    accountEmail: '',
+    actionCode: ''
   }),
   mounted() {
     // Get the email action to complete.
@@ -83,6 +96,10 @@ export default {
 
     // Handle the user management action.
     switch (mode) {
+      case 'resetPassword':
+        // Display reset password handler and UI.
+        this.handleResetPassword(auth, actionCode);
+        break;
       case 'recoverEmail':
         // Display email recovery handler and UI.
         this.handleRecoverEmail(auth, actionCode);
@@ -99,6 +116,21 @@ export default {
     ...mapGetters(["person", "user"]),
   },
   methods: {
+    handleResetPassword(auth, actionCode) {
+      // Verify the password reset code is valid.
+      auth.verifyPasswordResetCode(actionCode).then((email) => {
+        this.isResetPassword = true;
+        this.accountEmail = email;
+        this.actionCode = actionCode
+      }).catch((error) => {
+        // Invalid or expired action code. Ask user to try to reset the password
+        this.$store.commit("setSnackbar", {
+          show: true,
+          text: 'error verifying code: '+ error.message,
+          color: "pink",
+        });
+      });
+    },
     handleRecoverEmail(auth, actionCode) {
       console.log('handle recover email')
       var restoredEmail = null;

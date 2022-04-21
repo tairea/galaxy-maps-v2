@@ -327,3 +327,91 @@ exports.onUserStatusChanged = functions.database
     // ... and write it to Firestore.
     return userStatusFirestoreRef.set(eventStatus);
   });
+
+//======REQUEST FOR HELP SENT ==================
+exports.sendRequestForHelp = functions.https.onCall((data, context) => {
+  const { email, teacher, course, task, student, request, topic } = data;
+  sendRequestForHelp(email, teacher, course, task, student, request, topic);
+});
+
+// Sends a invite email to a new student.
+async function sendRequestForHelp(email, teacher, course, task, student, request, topic) {
+  const mailOptions = {
+    from: `${APP_NAME} <noreply@galaxymaps.io>`,
+    to: email
+  };
+
+  // The user subscribed to the newsletter.
+  mailOptions.subject = `${course} Request for help`;
+  mailOptions.text = `Hi ${teacher}, 
+
+Your student, ${student} has sent a request for help.
+
+Course: ${course}
+Topic: ${topic}
+Task: ${task}
+Request: ${request}
+
+To respond to ${student}, please login to https://galaxymaps.io to view your course
+  
+Galaxy Maps Robot`;
+  
+  mailOptions.html = `<strong>Hi ${teacher},</strong>
+  </br> 
+<p>Your student ${student} has sent a request for help.</p>
+</br> 
+<p>Course: ${course}</p>
+<p>Topic: ${topic}</p>
+<p>Task: ${task}</p>
+<p>Request: ${request} </p>
+</br> 
+<p>To respond to ${student}, please login to <a href="https://galaxymaps.io" target="_blank">https://galaxymaps.io/login</a> to view your course</p>
+</br> 
+<p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Robot</p>`;
+  await mailTransport.sendMail(mailOptions);
+  functions.logger.log("Request notification email sent to", email);
+  return null;
+}
+
+//====== RESPONSE TO REQUEST ==================
+exports.sendResponseToHelp = functions.https.onCall((data, context) => {
+  const { email, teacher, course, task, student, response } = data;
+  sendResponseToHelp(email, teacher, course, task, student, response);
+});
+
+// Sends a invite email to a new student.
+async function sendResponseToHelp(email, teacher, course, task, student, response) {
+  const mailOptions = {
+    from: `${APP_NAME} <noreply@galaxymaps.io>`,
+    to: email
+  };
+
+  // The user subscribed to the newsletter.
+  mailOptions.subject = `${course} Response to your request`;
+  mailOptions.text = `Hi ${student}, 
+
+Your teacher ${teacher} has sent a response to your request for help.
+
+Course: ${course}
+Task: ${task}
+Response: ${response} 
+
+Login to https://galaxymaps.io to continue your course.
+  
+Galaxy Maps Robot`;
+  
+  mailOptions.html = `<p>Hi ${student},</p>
+  </br> 
+<p>Your teacher ${teacher} has sent a response to your request for help.</p>
+</br> 
+<p>Course: ${course}</p>
+<p>Task: ${task}</p>
+<p>Response: ${response} </p>
+</br> 
+<p>Login to <a href="https://galaxymaps.io" target="_blank">https://galaxymaps.io/login</a> to continue your course.</p>
+</br> 
+<p style="style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Robot</p>`;
+  await mailTransport.sendMail(mailOptions);
+  functions.logger.log("Course published email sent to", email);
+  return null;
+}

@@ -372,7 +372,7 @@ export default {
   }
 }
 .publishButton {
-  width: calc(100% - 30px);
+  width: 100%;
   z-index: 3;
   margin-top: 20px
 }

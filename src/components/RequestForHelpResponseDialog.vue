@@ -14,75 +14,80 @@
           <div class="create-dialog">
             <!-- DIALOG HEADER -->
             <div class="dialog-header">
-              <p class="dialog-title">SUBMIT RESPONSE</p>
-              <!-- Request for help details -->
-              <div class="request-details d-flex">
-                <!-- Avatar -->
-                <div class="requester-image d-flex justify-center align-center">
-                  <v-avatar v-if="requesterPerson" size="30">
-                    <img
-                      v-if="requesterPerson.image"
-                      :src="requesterPerson.image.url"
-                      :alt="requesterPerson.firstName"
-                      style="object-fit: cover"
-                    />
-                  </v-avatar>
-                </div>
-                <!-- Message -->
-                <div class="request-details-person">
-                  <p class="dialog-description">
-                    <span style="font-size: 0.8rem; font-weight: 800"
-                      ><i>{{
-                        requesterPerson.firstName +
-                        " " +
-                        requesterPerson.lastName
-                      }}</i></span
-                    >
-                    asked the following question
-                  </p>
-                  <p class="dialog-description">
-                    <i
-                      >@
-                      {{ getHumanDate(request.requestSubmittedTimestamp) }}</i
-                    >
-                  </p>
-                </div>
-                <!-- Context details -->
-                <div class="request-details-context">
-                  <v-simple-table>
-                    <tr
-                      class="dialog-context-description"
-                      style="
-                        color: var(--v-missionAccent-base);
-                        font-size: 0.8rem;
-                        font-weight: 800;
-                      "
-                    >
-                      <td>MISSION:</td>
-                      <td>{{ request.contextTask.title }}</td>
-                    </tr>
-                    <tr
-                      class="dialog-context-description"
-                      style="color: var(--v-missionAccent-base)"
-                    >
-                      <td>System:</td>
-                      <td>{{ request.contextTopic.label }}</td>
-                    </tr>
-                    <tr
-                      class="dialog-context-description"
-                      style="color: var(--v-galaxyAccent-base)"
-                    >
-                      <td>Galaxy:</td>
-                      <td>{{ request.contextCourse.title }}</td>
-                    </tr>
-                  </v-simple-table>
-                </div>
-              </div>
+              <p class="dialog-title mb-0">SUBMIT RESPONSE</p>
             </div>
-
-            <!-- REQUEST INPUT FIELDS -->
             <div class="create-dialog-content">
+              <!-- Request for help details -->
+              <div class="request-details">
+               <!-- Context details -->
+                <v-row>
+
+                  <div class="request-details-context">
+                    <v-simple-table>
+                      <tr
+                        class="dialog-context-description"
+                        style="
+                          color: var(--v-missionAccent-base);
+                          font-weight: 800;
+                        "
+                      >
+                        <td>MISSION:</td>
+                        <td>{{ request.contextTask.title }}</td>
+                      </tr>
+                      <tr
+                        class="dialog-context-description"
+                        style="color: var(--v-missionAccent-base)"
+                      >
+                        <td>System:</td>
+                        <td>{{ request.contextTopic.label }}</td>
+                      </tr>
+                      <tr
+                        class="dialog-context-description"
+                        style="color: var(--v-galaxyAccent-base)"
+                      >
+                        <td>Galaxy:</td>
+                        <td>{{ request.contextCourse.title }}</td>
+                      </tr>
+                    </v-simple-table>
+                  </div>
+                </v-row>
+              </div>
+              <div class="requester-info">
+                <v-row>
+                  <div class="requester-image justify-center align-center">
+                    <v-avatar v-if="requesterPerson" size="30" style='background-color:grey'>
+                      <img
+                        v-if="requesterPerson.image"
+                        :src="requesterPerson.image.url"
+                        :alt="requesterPerson.firstName"
+                        style="object-fit: cover"
+                      />
+                      <v-icon :dark="dark" :ligh="!dark" v-else>mdi-account</v-icon>
+                    </v-avatar>
+                  </div>
+                  <!-- Message -->
+                  <div>
+                    <p class="dialog-description pa-1">
+                      <span style="font-size: 0.8rem; font-weight: 800"
+                        ><i>{{
+                          requesterPerson.firstName +
+                          " " +
+                          requesterPerson.lastName
+                        }}</i></span
+                      >
+                      <i
+                        >@
+                        {{ getHumanDate(request.requestSubmittedTimestamp) }}</i
+                      >
+                    </p>
+                  </div>
+                </v-row>
+              </div>
+            <!-- REQUEST INPUT FIELDS -->
               <p class="dialog-help-message speech-bubble">
+                 <!-- Avatar -->
+
+                
                 "{{ request.requestForHelpMessage }}"
               </p>
 
@@ -242,8 +247,8 @@ export default {
   display: flex;
   // flex-direction: column;
   flex-wrap: wrap;
-  // overflow-x: hidden;
-  // overflow-y: scroll;
+  overflow-x: hidden;
+  overflow-y: scroll;
 
   .dialog-header {
     width: 100%;
@@ -261,14 +266,7 @@ export default {
 
       .requester-image {
         width: 10%;
-      }
-      .request-details-person {
-        width: 50%;
-      }
-      .request-details-context {
-        width: 40%;
-      }
-    }
+      }    }
   }
 
   .create-dialog-content {
@@ -308,7 +306,7 @@ export default {
   .dialog-context-description {
     color: var(--v-missionAccent-base);
     text-transform: uppercase;
-    font-size: 0.6rem;
+    font-size: 0.7rem;
     margin: 0;
     font-style: italic;
   }
@@ -323,7 +321,7 @@ export default {
   position: relative;
   width: auto;
   max-width: 80%;
-  padding: 10px 100px;
+  padding: 10px;
   margin: 50px auto;
   text-align: center;
   // background-color: #fff;
@@ -356,4 +354,12 @@ export default {
 .theme--light.v-data-table {
   background-color: transparent !important;
 }
+
+.requester-info {
+  position: relative;
+  top: 25px;
+  left: 70px;
+  margin-top: 20px;
+}
+
 </style>

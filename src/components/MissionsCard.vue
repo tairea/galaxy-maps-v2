@@ -8,12 +8,6 @@
         <div class="mission-section mission-number-section">
           <p class="text-overline text-uppercase">Mission</p>
           <p style="font-size: 50px; text-align: center">{{ index + 1 }}</p>
-        </div>
-        <div class="mission-section mission-main-section">
-          <!-- TITLE -->
-          <h1 class="mission-title">{{ task.title }}</h1>
-          <!-- DESCRIPTION -->
-          <p>{{ task.description }}</p>
           <!-- EDIT BUTTON -->
           <div v-if="teacher">
             <CreateEditDeleteMissionDialog
@@ -24,6 +18,12 @@
               :topicId="topicId"
             />
           </div>
+        </div>
+        <div class="mission-middle-section mission-main-section">
+          <!-- TITLE -->
+          <h1 class="mission-title pa-4">{{ task.title }}</h1>
+          <!-- DESCRIPTION -->
+          <div v-html="task.description" class="pa-2"></div>
         </div>
 
         <!-- <div class="mission-section mission-section-overUnder">
@@ -123,7 +123,6 @@
               :taskId="id"
               :task="task"
               :missionStatus="getTaskStatus"
-              @missionActivated="$emit('missionActivated')"
             />
           </div>
           <div
@@ -205,7 +204,21 @@ export default {
     SelectedMissionsCard,
   },
   props: ["task", "id", "index", "topicId", "topicActive", "teacher"],
-  mounted() {},
+  data() {
+    return {
+      editing: false,
+      activeTask: false,
+      panel: [],
+
+      taskSlides: false,
+      taskVideo: false,
+    };
+  },
+  watch: {
+    getTaskStatus(newVal, oldVal) {
+      if (oldVal == 'unlocked' && newVal == 'active') this.$emit('missionActivated')
+    }
+  },
   computed: {
     ...mapState([
       "currentCourseId",
@@ -221,18 +234,6 @@ export default {
       return task.taskStatus;
     },
   },
-  data() {
-    return {
-      editing: false,
-      activeTask: false,
-      panel: [],
-
-      taskSlides: false,
-      taskVideo: false,
-    };
-  },
-  async mounted() {},
-  methods: {},
 };
 </script>
 
@@ -260,6 +261,13 @@ a {
     font-size: 0.9rem;
     border-left: 1px dashed var(--v-missionAccent-base);
     padding: 20px;
+    flex-grow: 1;
+  }
+  .mission-middle-section {
+    margin: 0px;
+    color: var(--v-missionAccent-base);
+    font-size: 0.9rem;
+    border-left: 1px dashed var(--v-missionAccent-base);
     flex-grow: 1;
   }
 

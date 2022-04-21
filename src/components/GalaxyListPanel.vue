@@ -171,33 +171,10 @@ export default {
     }
 
     .galaxyListPanelContent {
-      color: var(--v-galaxyAccent-base);
+      color: var(--v-missionAccent-base);
       position: relative;
       font-size: 0.6rem;
       letter-spacing: 1px;
-    }
-
-    .galaxyCard {
-      position: relative;
-      margin: 10px;
-      border: 1px solid var(--v-galaxyAccent-base);
-      display: flex;
-      cursor: pointer;
-
-      .galaxyCardImage {
-        width: 30px;
-        height: 30px;
-      }
-
-      .imagePlaceholder {
-        width: 30px;
-        height: 30px;
-        background-color: rgba(200, 200, 200, 0.3);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 0.6rem;
-      }
     }
   }
 

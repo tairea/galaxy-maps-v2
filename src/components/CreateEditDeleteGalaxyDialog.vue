@@ -4,7 +4,7 @@
       <v-col cols="12" class="pa-0">
         <v-dialog v-model="dialog" width="50%" light>
           <!-- CREATE BUTTON -->
-          <template v-slot:activator="{ on, attrs }">
+          <template v-if="edit" v-slot:activator="{ on, attrs }">
             <v-btn
               v-if="edit"
               v-bind="attrs"
@@ -322,7 +322,7 @@ import { db, storage } from "../store/firestoreConfig";
 
 export default {
   name: "CreateEditDeleteGalaxyDialog",
-  props: ['edit', 'draft', 'courseToEdit'],
+  props: ['showDialog', 'edit', 'draft', 'courseToEdit'],
   data: () => ({
     notAuthor: false,
     dialog: false,
@@ -373,9 +373,16 @@ export default {
       this.course = this.courseToEdit;
     }
   },
+  watch: {
+    showDialog(newVal) {
+      if (newVal) this.dialog = true
+      else this.dialog = false
+    }
+  },
   methods: {
     cancel() {
       this.dialog = false;
+      this.$emit('close')
       // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
     },
     saveCourse(course) {

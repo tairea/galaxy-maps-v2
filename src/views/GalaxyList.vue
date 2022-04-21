@@ -1,14 +1,16 @@
 <template>
   <div class="fullHeight">
-    <!-- left "LIST OF GALAXIES" panel -->
-    <GalaxyListPanel ref="listPanel" @courseClicked="courseClicked($event)" />
-    <!-- right "Galaxy info" panel -->
+    <GalaxyListPanel
+      ref="listPanel"
+      @courseClicked="courseClicked($event)"
+      @createGalaxy="showDialog = true"
+    />
     <GalaxyListInfoPanel
       :type="courseType"
       :selectedCourse="clickedCourseId"
       @closeInfoPanel="closeInfoPanel"
     />
-    <div class="d-flex justify-center button-row"></div>
+
     <div class="flexContainer">
       <Galaxies
         ref="galaxyMap"
@@ -17,10 +19,12 @@
         @clickedCourseId="propClickedCourseId($event)"
       />
     </div>
-    <div class="buttons">
-      <CreateEditDeleteGalaxyDialog :edit="false" v-if="teach" />
-      <!-- <DiscoverGalaxyButton />  -->
-    </div>
+    <!-- <div class="buttons"> -->
+    <CreateEditDeleteGalaxyDialog
+      :showDialog="showDialog"
+      @close="showDialog = false"
+    />
+    <!-- </div> -->
   </div>
 </template>
 
@@ -49,6 +53,7 @@ export default {
       whichCoursesToDisplay: "all",
       clickedCourseId: null,
       courseType: null,
+      showDialog: false,
     };
   },
   async mounted() {
@@ -59,27 +64,27 @@ export default {
   },
   computed: {
     ...mapGetters(["user", "person"]),
-    teach() {
-      return this.whichCoursesToDisplay === "my";
-    },
-    learn() {
-      return this.whichCoursesToDisplay === "assigned";
-    },
-    discover() {
-      return this.whichCoursesToDisplay === "all";
-    },
-    submitted() {
-      return this.whichCoursesToDisplay === "submitted";
-    },
-    admin() {
-      return this.user.data.admin;
-    },
+    // teach() {
+    //   return this.whichCoursesToDisplay === "my";
+    // },
+    // learn() {
+    //   return this.whichCoursesToDisplay === "assigned";
+    // },
+    // discover() {
+    //   return this.whichCoursesToDisplay === "all";
+    // },
+    // submitted() {
+    //   return this.whichCoursesToDisplay === "submitted";
+    // },
+    // admin() {
+    //   return this.user.data.admin;
+    // },
   },
   methods: {
     courseClicked(emittedPayload) {
-      console.log("course clicked was", emittedPayload);
+      console.log("courseClicked");
       this.clickedCourseId = emittedPayload.courseId;
-      this.courseType = emittedPayload.type;
+      if (emittedPayload.type) this.courseType = emittedPayload.type;
     },
     closeInfoPanel() {
       this.clickedCourseId = null;

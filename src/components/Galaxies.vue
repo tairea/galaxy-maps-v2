@@ -61,12 +61,12 @@
     >
       NO SUBMITTED GALAXIES TO REVIEW
     </p>
-    <PopupGalaxyPreview
+    <!-- <PopupGalaxyPreview
       v-if="popupPreview"
       :course="getCourseById(currentCourseId)"
       @togglePopup="togglePopup"
       class="popupPanel"
-    />
+    /> -->
   </div>
 </template>
 
@@ -373,26 +373,33 @@ export default {
       }
 
       const closestNode = this.$refs.network.getNode(closest.id);
-      console.log("clicked: ", closestNode);
-      // debugger
 
       // set save current course clicked in store
       this.$store.commit("setCurrentCourseId", closestNode.courseId);
 
-      // get all topic nodes by the closest clicked
-      let coursesTopicNodes = this.nodesToDisplay.filter(
-        (node) => node.courseId == closestNode.courseId
-      );
+      // // get all topic nodes by the closest clicked
+      // let coursesTopicNodes = this.nodesToDisplay.filter(
+      //   (node) => node.courseId == closestNode.courseId
+      // );
 
-      // get just the ids of the topic nodes to fit/zoom to
-      let coursesTopicNodesIds = coursesTopicNodes.reduce(function (
-        output,
-        node
-      ) {
-        output.push(node.id);
-        return output;
-      },
-      []);
+      // // get just the ids of the topic nodes to fit/zoom to
+      // let coursesTopicNodesIds = coursesTopicNodes.reduce(function (
+      //   output,
+      //   node
+      // ) {
+      //   output.push(node.id);
+      //   return output;
+      // },
+      // []);
+
+      // // network fit to array of topic ids
+      // this.$refs.network.fit({
+      //   nodes: coursesTopicNodesIds,
+      //   offset: {
+      //     x: 500,
+      //   },
+      //   animation: true,
+      // });
 
       // network fit to array of topic ids
       // this.$refs.network.fit({
@@ -708,9 +715,10 @@ export default {
 <style lang="scss" scoped>
 .full-height {
   width: 100%;
-  height: 100%;
+  height: 95%;
   display: flex;
   flex-direction: column;
+  margin-top: 20px;
 }
 
 .noGalaxies {

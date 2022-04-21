@@ -1,6 +1,6 @@
 <template>
   <!-- COURSE CARD -->
-  <div class="galaxyCard" :class="{ 'selected-galaxy': active }">
+  <div class="galaxyCard" :class="{ 'selected-galaxy': active, 'draft-galaxy': draft}">
     <img
       v-if="course.image.url"
       class="galaxyCardImage"
@@ -27,7 +27,11 @@ export default {
     return {};
   },
   async mounted() {},
-  computed: {},
+  computed: {
+    draft() {
+      return this.course.status === 'drafting'
+    }
+  },
   methods: {
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
@@ -73,5 +77,10 @@ export default {
     font-size: 0.6rem;
     letter-spacing: 1px;
   }
+}
+
+.draft-galaxy {
+  border: 1px dashed var(--v-galaxyAccent-base);
+
 }
 </style>
