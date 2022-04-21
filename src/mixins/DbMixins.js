@@ -8,7 +8,7 @@ export const dbMixins = {
   methods: {
     MXaddExistingUserToCohort(person, cohort) {
       return this.MXaddStudentToCohort(person, cohort).then(() => {
-        this.MXsendNewCohortEmail(person);
+        this.MXsendNewCohortEmail(person, cohort);
       });
     },
     MXaddStudentToCohort(student, currentCohort) {

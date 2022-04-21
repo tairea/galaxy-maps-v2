@@ -49,7 +49,7 @@
               <v-btn
                 outlined
                 color="green darken-1"
-                @click="submitRequestForHelp()"
+                @click="submitRequestForHelp(requestForHelp)"
                 class="mr-2"
                 :loading="loading"
                 v-bind="attrs"
@@ -90,13 +90,14 @@
 <script>
 import firebase from "firebase/app";
 
-import { db } from "../store/firestoreConfig";
+import { db, functions } from "../store/firestoreConfig";
 import { studentRequestForHelpXAPIStatement } from "../lib/veracityLRS";
-
+import { dbMixins } from '../mixins/DbMixins'
 import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "RequestHelpDialog",
+  mixins: [dbMixins],
   props: ["topicId", "taskId", "task", "on", "attrs"],
   data: () => ({
     dialog: false,
@@ -108,14 +109,14 @@ export default {
   }),
   mounted() {},
   computed: {
-    ...mapState(["currentCourse", "currentTopic", "currentTask"]),
+    ...mapState(["currentCourse", "currentTopic", "currentTask", "currentCohort"]),
     ...mapGetters(["person"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
   },
   methods: {
-    submitRequestForHelp() {
+    submitRequestForHelp(requestForHelp) {
       this.loading = true;
       // Add a new request for help to the "courses" db
       db.collection("courses")
@@ -135,8 +136,7 @@ export default {
           requestForHelpMessage: this.requestForHelp,
           requestForHelpStatus: "unanswered",
           requestSubmittedTimestamp: new Date(),
-        })
-        .then((docRef) => {
+        }).then((docRef) => {
           docRef.update({ id: docRef.id });
           console.log("Request for help successfully submitted to instructor!");
           // send xAPI statement to LRS
@@ -145,22 +145,26 @@ export default {
             system: this.currentTopic,
             mission: this.currentTask,
           });
-          this.requestForHelp = "";
-          this.loading = false;
-          this.dialog = false;
           
           this.$store.commit("setSnackbar", {
             show: true,
             text:  "Request submitted. You will be notified when your instructor has responded.",
             color: "baseAccent"
           })
-        })
-        .then(async () => {
+        }).then(() => { 
+          this.currentCohort?.teachers.forEach(async (teacherId) => {
+            console.log('sending email to teacher: ', teacherId)
+            await this.emailRequestToTeacher(teacherId, requestForHelp)
+          })
+        }).then(async () => {
           await this.$store.dispatch("bindRequestsForHelp", {
             courseId: this.currentCourse.id,
             topicId: this.currentTopic.id,
             taskId: this.currentTask.id,
           });
+          this.requestForHelp = "";
+          this.loading = false;
+          this.dialog = false;
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
@@ -174,6 +178,22 @@ export default {
     cancel() {
       this.dialog = false;
     },
+    async emailRequestToTeacher(teacherId, request) {
+      const teacher = await this.MXgetPersonByIdFromDB(teacherId)
+      console.log('teacher profile: ', teacher)
+      const data = {
+        course: this.currentCourse.title,
+        topic: this.currentTopic.label,
+        task: this.currentTask.title,
+        student: this.person.firstName + ' ' + this.person.lastName,
+        request: request,
+        teacher: teacher.firstName + ' ' + teacher.lastName,
+        email: teacher.email
+      }
+      console.log('email data: ', data)
+      const sendRequestForHelp = functions.httpsCallable("sendRequestForHelp");
+      return sendRequestForHelp(data)
+    }
   },
 };
 </script>

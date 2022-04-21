@@ -1,6 +1,6 @@
 <template>
   <div class="backButtonDiv" v-if="from">
-    <v-btn :to="from" class="backButton" color="baseAccent" text>
+    <v-btn :to="route" class="backButton" color="baseAccent" text>
       <v-icon left> mdi-arrow-left </v-icon>
       Back to
       {{ backToWhat(from) }}
@@ -14,7 +14,11 @@ export default {
   name: "BackButton",
   props: ["toPath"],
   computed: {
-    ...mapState(['from'])
+    ...mapState(['from']),
+    route() {
+      if (this.from.includes("system")) return "/base/galaxies"
+      return this.from
+    }
   },
   methods: {
     backToWhat(path) {
@@ -28,6 +32,8 @@ export default {
         return "Login";
       } else if (path.includes("dashboard")) {
         return "Dashboard";
+      } else if (path.includes("system")) {
+        return "Galaxies";
       } else {
         return "?";
       }

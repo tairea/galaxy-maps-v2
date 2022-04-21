@@ -12,10 +12,9 @@
         :teacher="teacher"
       />
       <AssignedInfo
-        v-if="!draft && teacher"
+        v-if="!draft && peopleInTopic.length"
         :assignCohorts="true"
-        :people="peopleInCourse"
-        :cohorts="cohortsInCourse"
+        :people="peopleInTopic"
       />
 
       <BackButton :toPath="{ path: '/galaxy/' + currentCourseId }" />
@@ -50,6 +49,8 @@ import SolarSystem from "../components/SolarSystem";
 import BackButton from "../components/BackButton";
 
 import { mapState, mapGetters } from "vuex";
+import { getPersonsTopicById } from "../lib/ff";
+
 
 export default {
   name: "SolarSystemView",
@@ -68,10 +69,12 @@ export default {
     return {
       activeMission: null,
       task: null,
-      unsubscribes: []
+      unsubscribes: [],
+      peopleInTopic: []
     };
   },
   async mounted() {
+    this.getPeopleInTopic()
     if (this.teacher) {
       //store bindTasksByTopicId
       await this.$store.dispatch("bindTasksByTopicId", {
@@ -112,25 +115,6 @@ export default {
     //   (request) => request.contextTask.id == this.currentTaskId
     // );
   },
-  watch: {
-    // task: {
-    //   handler(newTask) {
-    //     if (!newTask) return;
-    //     // filter requests for help depending on task/mission clicked (in MissionList expansion panels)
-    //     this.requests = this.requestsForHelp.filter(
-    //       (request) => request.contextTask.id == newTask.id
-    //     );
-    //   },
-    // },
-    // requestsForHelp: {
-    //   handler(newHelp) {
-    //     // this updates the request when there is a change
-    //     this.requests = this.requestsForHelp.filter(
-    //       (request) => request.contextTask.id == this.task.id
-    //     );
-    //   },
-    // },
-  },
   computed: {
     ...mapState([
       "currentCourseId",
@@ -143,7 +127,6 @@ export default {
       "personsTopicsTasks",
       "requestsForHelp",
       "peopleInCourse",
-      "cohortsInCourse",
       "teachersRequestsForHelp",
       "teachersSubmissionsToReview"
     ]),
@@ -193,6 +176,12 @@ export default {
       // console.log("active mission:", activeMissionObj);
       return activeMissionObj;
     },
+    async getPeopleInTopic () {
+      this.peopleInCourse.forEach(async person => {
+        let personsTopic = await getPersonsTopicById(person.id, this.currentCourse.id, this.currentTopic.id)
+        if (personsTopic.topicStatus == 'active') this.peopleInTopic.push(person)
+      })
+    }
   },
   destroyed() {
     for (const unsubscribe of this.unsubscribes) {

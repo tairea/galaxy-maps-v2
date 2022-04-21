@@ -86,8 +86,7 @@ export default {
   align-items: center;
   flex-direction: column;
   overflow-y: scroll;
-  padding-bottom: 50px;
-  padding-top: 50px;
+  padding: 50px 20px;
 }
 
 #main-section {
