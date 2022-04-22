@@ -9,6 +9,7 @@
     "
     v-if="course"
   >
+    <!-- Galaxy info (title, image, description) -->
     <div class="ss-details">
       <div>
         <p class="info-panel-label mb-2">
@@ -34,11 +35,12 @@
         class="close-button"
         @click="close"
       >
-        <v-icon>mdi-close</v-icon>
+        <v-icon>mdi-arrow-left</v-icon>
       </v-btn>
     </div>
 
-    <div class="ss-makers">
+    <!-- Mapped by info (only for unenrolled students) -->
+    <div v-if="!enrolled && !teacher" class="ss-makers">
       <div class="left">
         <div v-if="course.contentBy.image">
           <v-img
@@ -80,6 +82,7 @@
     </div>
 
     <div>
+      <!-- Teacher can route to edit -->
       <div v-if="teacher" class="ss-actions py-2">
         <v-btn
           class="view-ss-button pa-5"
@@ -88,13 +91,13 @@
           color="galaxyAccent"
           outlined
           tile
-          title="View Galaxy"
+          title="Edit Galaxy"
           @click="routeToGalaxyEdit"
         >
           View Galaxy
         </v-btn>
 
-        <v-btn
+        <!-- <v-btn
           class="view-ss-button pa-5"
           :dark="dark"
           :light="!dark"
@@ -107,11 +110,12 @@
           disabled
         >
           View Analytics
-        </v-btn>
+        </v-btn> -->
       </div>
-      <!-- Student Galaxy Actions -->
+
+      <!-- Student Galaxy Progress -->
       <div v-else class="ss-actions py-2">
-        <v-btn
+        <!-- <v-btn
           v-if="enrolled"
           class="view-ss-button pa-5"
           dark
@@ -123,8 +127,32 @@
           @click="routeToGalaxyEdit"
         >
           Resume Galaxy
-        </v-btn>
+        </v-btn> -->
+
         <!-- starting galaxy status-->
+
+        <div
+          v-if="enrolled"
+          class="d-flex flex-column justify-center align-center"
+        >
+          <p class="missionAccent--text text-center" style="font-size: 0.6rem">
+            **No more 'Resume galaxy' button. (What should we put here
+            instead)**
+          </p>
+          <!-- progress circle % -->
+          <v-progress-circular
+            v-if="course.taskCompletedCount"
+            :value="calcTaskCompletedPercentage(course)"
+            color="baseAccent"
+            size="100"
+            width="10"
+            :rotate="-90"
+            >{{ calcTaskCompletedPercentage(course) }}
+          </v-progress-circular>
+          <p v-else class="label overline missionAccent--text">
+            NO PROGRESS DATA
+          </p>
+        </div>
 
         <v-btn
           v-else
@@ -151,15 +179,21 @@
 <script>
 import { db } from "../store/firestoreConfig";
 import { dbMixins } from "../mixins/DbMixins";
-import { getCohortById } from "../lib/ff";
-import { mapGetters, mapState } from "vuex";
+import {
+  getCohortById,
+  getAllPeopleInCourse,
+  getAllCohortsInCourse,
+} from "../lib/ff";
+import { mapGetters, mapState, mapMutations } from "vuex";
 
 import { startGalaxyXAPIStatement } from "../lib/veracityLRS";
+
+import AssignedInfo from "../components/AssignedInfo";
 
 export default {
   name: "PopupGalaxyPreview",
   mixins: [dbMixins],
-  components: {},
+  components: { AssignedInfo },
   props: {
     course: {
       type: Object,
@@ -180,6 +214,8 @@ export default {
       startingGalaxyStatus: "",
       contentAuthorImage: "",
       mappedAuthorImage: "",
+      peopleInCourse: [],
+      cohortsInCourse: [],
     };
   },
   watch: {
@@ -190,8 +226,15 @@ export default {
     },
   },
   async mounted() {
+    console.log("this.course", this.course);
     this.setAccountType();
     this.setImages();
+    // bind assigned info for teacher
+    if (this.teacher) {
+      this.peopleInCourse = await getAllPeopleInCourse(this.course.id);
+      this.setPeopleInCourse(this.peopleInCourse);
+      this.cohortsInCourse = await getAllCohortsInCourse(this.course.id);
+    }
   },
   computed: {
     ...mapState(["person", "user"]),
@@ -203,6 +246,7 @@ export default {
     },
   },
   methods: {
+    ...mapMutations(["setPeopleInCourse"]),
     async setImages() {
       this.mappedAuthorImage = await this.getPersonsImage(
         this.course.mappedBy.personId
@@ -232,6 +276,8 @@ export default {
           this.enrolled = false;
         } else {
           this.enrolled = true;
+          // enrolled student, so show systems & missions in
+          this.$emit("enrolledStudent");
         }
       }
     },
@@ -342,10 +388,9 @@ export default {
 
       // 5) assign student to cohort and course
       let cohort = await getCohortById(this.course.cohort);
-      this.MXaddExistingUserToCohort(this.person, cohort)
-        .then(() => {
-          this.MXassignCourseToStudent(this.person, this.course);
-        })
+      this.MXaddExistingUserToCohort(this.person, cohort).then(() => {
+        this.MXassignCourseToStudent(this.person, this.course);
+      });
 
       // Send Galaxy Started statment to LRS
       startGalaxyXAPIStatement(this.person, { galaxy: this.course });
