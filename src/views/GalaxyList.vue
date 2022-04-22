@@ -1,16 +1,23 @@
 <template>
   <div class="fullHeight">
-    <GalaxyListPanel
+    <!-- Left Side Panel -->
+    <GalaxyLeftPanel
       ref="listPanel"
+      :selectedCourseId="clickedCourseId"
       @courseClicked="courseClicked($event)"
       @createGalaxy="showDialog = true"
-    />
-    <GalaxyListInfoPanel
-      :type="courseType"
-      :selectedCourse="clickedCourseId"
       @closeInfoPanel="closeInfoPanel"
     />
 
+    <!-- Right Side Panel -->
+    <GalaxyRightPanel
+      :show="showRightPanelYeahNar"
+      :type="courseType"
+      :selectedCourseId="clickedCourseId"
+      @closeInfoPanel="closeInfoPanel"
+    />
+
+    <!-- GALAXIES -->
     <div class="flexContainer">
       <Galaxies
         ref="galaxyMap"
@@ -19,6 +26,7 @@
         @clickedCourseId="propClickedCourseId($event)"
       />
     </div>
+
     <!-- <div class="buttons"> -->
     <CreateEditDeleteGalaxyDialog
       :showDialog="showDialog"
@@ -31,8 +39,8 @@
 <script>
 import CreateEditDeleteGalaxyDialog from "../components/CreateEditDeleteGalaxyDialog";
 import DiscoverGalaxyButton from "../components/DiscoverGalaxyButton";
-import GalaxyListPanel from "../components/GalaxyListPanel";
-import GalaxyListInfoPanel from "../components/GalaxyListInfoPanel";
+import GalaxyLeftPanel from "../components/GalaxyLeftPanel";
+import GalaxyRightPanel from "../components/GalaxyRightPanel";
 import Galaxies from "../components/Galaxies";
 
 import { mapGetters } from "vuex";
@@ -42,8 +50,8 @@ export default {
   props: ["display"],
   components: {
     CreateEditDeleteGalaxyDialog,
-    GalaxyListPanel,
-    GalaxyListInfoPanel,
+    GalaxyLeftPanel,
+    GalaxyRightPanel,
     DiscoverGalaxyButton,
     Galaxies,
   },
@@ -64,21 +72,10 @@ export default {
   },
   computed: {
     ...mapGetters(["user", "person"]),
-    // teach() {
-    //   return this.whichCoursesToDisplay === "my";
-    // },
-    // learn() {
-    //   return this.whichCoursesToDisplay === "assigned";
-    // },
-    // discover() {
-    //   return this.whichCoursesToDisplay === "all";
-    // },
-    // submitted() {
-    //   return this.whichCoursesToDisplay === "submitted";
-    // },
-    // admin() {
-    //   return this.user.data.admin;
-    // },
+    showRightPanelYeahNar() {
+      // TODO: logic for when to show, depending on who is viewing eg. teacher, enrolled, unenrolled
+      return true;
+    },
   },
   methods: {
     courseClicked(emittedPayload) {
@@ -91,6 +88,7 @@ export default {
       // this.$refs.listPanel.courseClicked();
     },
     propClickedCourseId(courseId) {
+      console.log("courseId", courseId);
       this.clickedCourseId = courseId;
     },
   },

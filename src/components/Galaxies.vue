@@ -517,7 +517,7 @@ export default {
 
       // canvas / 3
       let galaxyColsCount = 0;
-      let numberOfGalaxiesPerRow = 3; // hardcoded num of galaxies in a row
+      let numberOfGalaxiesPerRow = 4; // hardcoded num of galaxies in a row
 
       // SCALE calc num of galaxy rows
       // const canvasRowHeight = this.canvasHeight / maxHeight;

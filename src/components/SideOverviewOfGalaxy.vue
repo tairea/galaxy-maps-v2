@@ -1,14 +1,17 @@
 <template>
-  <div class="galaxyInfoPanel" :style="selectedCourse ? 'right: 0px' : ''">
-    <!-- USER MENU TOPBAR -->
-
-    <!-- USER MENU HIDDEN-->
-
+  <div
+    class="galaxyInfoPanel"
+    :style="
+      show
+        ? 'left: 0px; transition-delay: 0.3s;'
+        : 'left:-200px; transition-delay: 0s;'
+    "
+  >
     <div class="panelContent">
       <div class="panelContentInner">
         <PopupGalaxyPreview
-          v-if="selectedCourse"
-          :course="getCourseById(selectedCourse)"
+          v-if="course"
+          :course="course"
           class="popupPanel"
           :galaxyListInfoPanel="true"
           @closeInfoPanel="closeInfoPanel"
@@ -24,8 +27,8 @@ import GalaxyListPanelCard from "@/components/GalaxyListPanelCard.vue";
 import PopupGalaxyPreview from "@/components/PopupGalaxyPreview.vue";
 
 export default {
-  name: "GalaxyListInfoPanel",
-  props: ["selectedCourse"],
+  name: "SideOverviewOfGalaxy",
+  props: ["course", "show"],
   components: {
     GalaxyListPanelCard,
     PopupGalaxyPreview,
@@ -58,10 +61,10 @@ export default {
   // background: var(--v-background-darken1);
   width: 200px;
   height: 600px;
-  position: fixed;
+  position: absolute;
   // bottom: 0px;
   top: calc(50% - 300px);
-  right: -200px;
+  // left: -200px;
   transition: all 0.3s ease-out;
   z-index: 200;
 
@@ -70,7 +73,7 @@ export default {
     width: auto;
     margin: 20px 0px 30px 0px;
     background: var(--v-missionAccent-base);
-    margin-right: -2px;
+    margin-left: -2px;
     // margin-left: 10px;
     position: relative;
 
@@ -80,19 +83,6 @@ export default {
       width: 99.5%;
       overflow-y: scroll;
       overflow-x: hidden;
-    }
-
-    .galaxyListPanelLabel {
-      color: var(--v-galaxyAccent-base);
-      position: relative;
-      border-bottom: 1px solid var(--v-galaxyAccent-base);
-    }
-
-    .galaxyListPanelContent {
-      color: var(--v-galaxyAccent-base);
-      position: relative;
-      font-size: 0.6rem;
-      letter-spacing: 1px;
     }
   }
 
@@ -110,7 +100,7 @@ export default {
   }
   .panelContent,
   .panelContent:before {
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 15% 100%, 0% 95%);
+    clip-path: polygon(0 0, 100% 0, 100% 95%, 85% 100%, 0% 100%);
   }
 }
 
@@ -129,10 +119,10 @@ export default {
 }
 /* Handle */
 *::-webkit-scrollbar-thumb {
-  background: var(--v-galaxyAccent-base);
+  background: var(--v-missionAccent-base);
 }
 /* Handle on hover */
 *::-webkit-scrollbar-thumb:hover {
-  background: var(--v-galaxyAccent-base);
+  background: var(--v-missionAccent-base);
 }
 </style>
