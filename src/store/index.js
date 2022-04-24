@@ -210,7 +210,7 @@ export default new Vuex.Store({
       console.log("arr: ", arr);
       const sortedArr = arr.sort((a, b) =>
         a.topic.topicCreatedTimestamp.seconds >
-        b.topic.topicCreatedTimestamp.seconds
+          b.topic.topicCreatedTimestamp.seconds
           ? 1
           : -1
       );
@@ -901,6 +901,7 @@ export default new Vuex.Store({
     // bind persons tasks by topic id
     bindPersonsTasksByTopicId: firestoreAction(
       ({ bindFirestoreRef }, payload) => {
+        console.log("trying to bind persons tasks", payload)
         return bindFirestoreRef(
           "personsTopicsTasks",
           db
@@ -1062,6 +1063,17 @@ export default new Vuex.Store({
       }
       console.log(allCourseTopicsAndTasks);
     },
+    async getTopicById({ state }, payload) {
+      return await db.collection("courses").doc(payload.courseId).collection("topics").doc(payload.topicId).get().then((snapshot) => {
+        console.log("topic by id =", snapshot.data())
+        return snapshot.data()
+      })
+    },
+    async markTopicAsCompleted({ }, payload) {
+      await db.collection("people").doc(payload.personId).collections(payload.courseId).doc(payload.topicId).update({
+        topicStatus: "completed"
+      })
+    },
     // ===== Firestore - get student data for teachers
     // bind courses requests for help
     bindRequestsForHelp: firestoreAction(({ bindFirestoreRef }, payload) => {
@@ -1130,7 +1142,7 @@ export default new Vuex.Store({
       // state.teachersSubmissionsToReview = allWorkForReview;
     },
     async getRequestsForHelpByCourseId({ state }, courseId) {
-     // get all work for review
+      // get all work for review
       const unsubscribe = db
         .collection("courses")
         .doc(courseId)
@@ -1141,7 +1153,7 @@ export default new Vuex.Store({
           const allRequestsForHelp = [...state.teachersRequestsForHelp];
           // WTF!!!! Why does for each fix this?
           querySnapshot.docChanges().forEach(change => {
-          // for (const change of querySnapshot.docChanges()) {
+            // for (const change of querySnapshot.docChanges()) {
 
             if (change.type === "added") {
               if (

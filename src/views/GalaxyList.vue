@@ -14,6 +14,8 @@
       :show="showRightPanelYeahNar"
       :type="courseType"
       :selectedCourseId="clickedCourseId"
+      :selectedTopic="selectedTopic"
+      :selectedTasks="personsTopicsTasks"
       @closeInfoPanel="closeInfoPanel"
     />
 
@@ -24,6 +26,7 @@
         :whichCoursesToDisplay="whichCoursesToDisplay"
         :highlightCourse="clickedCourseId"
         @clickedCourseId="propClickedCourseId($event)"
+        @hoverNode="systemForRightPanel($event)"
       />
     </div>
 
@@ -43,7 +46,7 @@ import GalaxyLeftPanel from "../components/GalaxyLeftPanel";
 import GalaxyRightPanel from "../components/GalaxyRightPanel";
 import Galaxies from "../components/Galaxies";
 
-import { mapGetters } from "vuex";
+import { mapGetters, mapState } from "vuex";
 
 export default {
   name: "GalaxyList",
@@ -62,6 +65,7 @@ export default {
       clickedCourseId: null,
       courseType: null,
       showDialog: false,
+      selectedTopic: null,
     };
   },
   async mounted() {
@@ -72,12 +76,33 @@ export default {
   },
   computed: {
     ...mapGetters(["user", "person"]),
+    ...mapState(["personsTopicsTasks"]),
     showRightPanelYeahNar() {
       // TODO: logic for when to show, depending on who is viewing eg. teacher, enrolled, unenrolled
       return true;
     },
   },
   methods: {
+    async systemForRightPanel(hoveredNode) {
+      // bind system
+      const topic = await this.$store.dispatch("getTopicById", {
+        personId: this.person.id,
+        courseId: hoveredNode.courseId,
+        topicId: hoveredNode.id,
+      });
+      this.selectedTopic = topic;
+      // bind tasks
+      await this.$store.dispatch("bindPersonsTasksByTopicId", {
+        personId: this.person.id,
+        courseId: hoveredNode.courseId,
+        topicId: hoveredNode.id,
+      });
+      console.log(
+        "persons tasks binded for",
+        this.selectedTopic.label,
+        this.personsTopicsTasks
+      );
+    },
     courseClicked(emittedPayload) {
       console.log("courseClicked");
       this.clickedCourseId = emittedPayload.courseId;

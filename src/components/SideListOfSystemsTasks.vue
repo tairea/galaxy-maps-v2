@@ -9,15 +9,27 @@
   >
     <div class="panelContent">
       <div class="panelContentInner">
-        <p class="topicListPanelLabel overline mx-4">SYSTEMS</p>
+        <p v-if="topic" class="topicListPanelLabel overline mx-4">SYSTEM</p>
+           <p class="systemListTopic-text">
+                {{ topic.label }}
+              </p>
+        <p class="topicListPanelLabel overline mx-4">MISSIONS</p>
           <div
             class="systemListCard"
-            v-for="topic in topics"
-            :key="topic.id"
+            v-for="(task, index) in tasks"
+            :key="task.id"
           >
-          <p class="systemListCard-text">
-            {{ topic.label }}
-          </p>
+              <div class="d-flex ml-2">
+                <div class="systemListCard-number">{{index+1}}</div>
+
+              <p class="systemListCard-text">
+                {{ task.title }}
+              </p>
+              </div>
+              <p class="systemListCard-text text-uppercase" :class="getStatusColour(task.taskStatus)">
+                {{ task.taskStatus }}
+              </p>
+            
           </div>
         </ul>
       </div>
@@ -30,20 +42,31 @@ import { mapState, mapActions } from "vuex";
 import GalaxyListPanelCard from "@/components/GalaxyListPanelCard.vue";
 
 export default {
-  name: "SideListOfGalaxies",
+  name: "SideListOfSystemsTasks",
   components: {
     GalaxyListPanelCard,
   },
-  props: ["topics", "show"],
+  props: ["topic", "tasks", "show"],
   data() {
     return {};
   },
-  async mounted() {},
+  async mounted() {
+    console.log("topic in side:", this.topic);
+  },
   computed: {},
   methods: {
     panelTransitioned() {
       console.log("list panel transitioned");
       // this.galaxyOverview = true;
+    },
+    getStatusColour(status) {
+      if (status == "completed") {
+        return "baseColour";
+      } else if (status == "inreview") {
+        return "cohortColour";
+      } else {
+        return "missionColour";
+      }
     },
   },
 };
@@ -52,7 +75,7 @@ export default {
 <style lang="scss" scoped>
 .topicListPanel {
   // background: var(--v-background-darken1);
-  width: 200px;
+  width: 370px;
   height: 600px;
   position: absolute;
   // bottom: 0px;
@@ -94,16 +117,31 @@ export default {
       }
 
       .systemListCard {
+        position: relative;
         border: 1px solid var(--v-missionAccent-base);
         margin: 5px 10px;
         height: 50px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .systemListCard-number {
+          border: 1px solid var(--v-missionAccent-base);
+          width: 20px;
+          height: 20px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
 
         .systemListCard-text {
+          position: relative;
           height: 100%;
           display: flex;
           justify-content: left;
           align-items: center;
-          border: 1px solid red;
+          // border: 1px solid yellow;
+          margin: 0px 10px;
         }
       }
     }
@@ -124,6 +162,16 @@ export default {
   .panelContent:before {
     clip-path: polygon(0 0, 100% 0, 100% 100%, 15% 100%, 0 95%);
   }
+}
+
+.baseColour {
+  color: var(--v-baseAccent-base) !important;
+}
+.cohortColour {
+  color: var(--v-cohortAccent-base) !important;
+}
+.missionColour {
+  color: var(--v-missionAccent-base) !important;
 }
 
 *::-webkit-scrollbar {

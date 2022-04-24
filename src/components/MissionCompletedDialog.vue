@@ -95,7 +95,12 @@
                   <v-row>
                     <v-col cols="10">
                       <v-row
-                        class="d-flex align-center justify-space-around speech-bubble"
+                        class="
+                          d-flex
+                          align-center
+                          justify-space-around
+                          speech-bubble
+                        "
                       >
                         <v-col cols="1" class="pa-0">
                           <v-icon left color="cohortAccent"
@@ -587,6 +592,12 @@ export default {
         topicCompletedXAPIStatement(this.person, this.currentTopic.id, {
           galaxy: this.currentCourse,
           system: this.currentTopic,
+        });
+        // make topic as completed in persons firestore
+        this.$store.dispatch("markTopicAsCompleted", {
+          personId: this.person.id,
+          courseId: this.currentCourse.id,
+          topicId: this.currentTopic.id,
         });
         // all tasks are completed. unlock next topic
         this.unlockNextTopics();

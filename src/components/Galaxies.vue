@@ -34,6 +34,7 @@
       :edges="allEdges"
       :options="network.options"
       @click="click"
+      @hover-node="hovered"
     ></network>
     <network
       v-else-if="
@@ -240,6 +241,13 @@ export default {
     this.setNodesToDisplay("all");
   },
   methods: {
+    hovered(data) {
+      if (this.addingEdge == true || this.addingNode) return;
+      const nodeId = data.node;
+      const hoveredNode = this.$refs.network.getNode(nodeId);
+      hoveredNode.type = "node";
+      this.$emit("hoverNode", hoveredNode);
+    },
     setNodesToDisplay(newVal) {
       this.loading = true;
       if (newVal === "all") this.setAllNodesToDisplay();

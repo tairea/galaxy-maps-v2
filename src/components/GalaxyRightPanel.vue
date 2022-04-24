@@ -23,10 +23,12 @@
     </div> -->
 
     <!-- List of galaxies -->
-    <SideListOfSystems
+    <SideListOfSystems :show="false" :topics="topics" />
+
+    <SideListOfSystemsTasks
       :show="true"
-      :topics="topics"
-      @courseClicked="courseClicked($event)"
+      :topic="selectedTopic"
+      :tasks="selectedTasks"
     />
   </div>
 </template>
@@ -35,13 +37,15 @@
 import { mapState, mapActions, mapGetters } from "vuex";
 import GalaxyListPanelCard from "@/components/GalaxyListPanelCard.vue";
 import SideListOfSystems from "@/components/SideListOfSystems.vue";
+import SideListOfSystemsTasks from "@/components/SideListOfSystemsTasks.vue";
 
 export default {
   name: "GalaxyRightPanel",
-  props: ["selectedCourseId", "show"],
+  props: ["show", "selectedCourseId", "selectedTopic", "selectedTasks"],
   components: {
     GalaxyListPanelCard,
     SideListOfSystems,
+    SideListOfSystemsTasks,
   },
   data() {
     return {};
@@ -74,7 +78,7 @@ export default {
 <style lang="scss" scoped>
 .galaxyRightPanel {
   background: var(--v-background-darken1);
-  width: 230px;
+  width: 400px;
   height: 600px;
   position: fixed;
   // bottom: 0px;
