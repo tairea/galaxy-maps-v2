@@ -23,23 +23,33 @@
         />
 
         <p class="topicListPanelLabel overline mx-4">MISSIONS</p>
-        <div
-          class="systemListCard"
-          v-for="(task, index) in topicAndTasks.tasks"
-          :key="task.id"
-        >
-          <div class="d-flex ml-2">
-            <div class="systemListCard-number">{{ index + 1 }}</div>
+        <div v-if="topicAndTasks.tasks.length > 0">
+          <div
+            class="systemListCard"
+            v-for="(task, index) in topicAndTasks.tasks"
+            :key="task.id"
+          >
+            <div class="d-flex ml-2">
+              <div class="systemListCard-number">{{ index + 1 }}</div>
 
-            <p class="systemListCard-text">
-              {{ task.title }}
+              <p class="systemListCard-text">
+                {{ task.title }}
+              </p>
+            </div>
+            <p
+              class="systemListCard-text text-uppercase"
+              :class="getStatusColour(task.taskStatus)"
+            >
+              {{ task.taskStatus }}
             </p>
           </div>
+        </div>
+        <div v-else>
           <p
-            class="systemListCard-text text-uppercase"
-            :class="getStatusColour(task.taskStatus)"
+            class="systemListTopic-text mx-4 text-center"
+            style="font-size: 0.6rem"
           >
-            {{ task.taskStatus }}
+            NO MISSIONS
           </p>
         </div>
       </div>
