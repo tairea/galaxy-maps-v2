@@ -11,11 +11,10 @@
 
     <!-- Right Side Panel -->
     <GalaxyRightPanel
-      :show="showRightPanelYeahNar"
+      :show="showRightPanel"
       :type="courseType"
       :selectedCourseId="clickedCourseId"
-      :selectedTopic="selectedTopic"
-      :selectedTasks="personsTopicsTasks"
+      :topicAndTasks="topicAndTasks"
       @closeInfoPanel="closeInfoPanel"
     />
 
@@ -66,6 +65,8 @@ export default {
       courseType: null,
       showDialog: false,
       selectedTopic: null,
+      tasksList: [],
+      topicAndTasks: {},
     };
   },
   async mounted() {
@@ -75,21 +76,21 @@ export default {
     await this.$store.dispatch("bindAllCourses");
   },
   computed: {
-    ...mapGetters(["user", "person"]),
+    ...mapGetters(["user", "person", "getTopicById"]),
     ...mapState(["personsTopicsTasks"]),
-    showRightPanelYeahNar() {
+
+    showRightPanel() {
       // TODO: logic for when to show, depending on who is viewing eg. teacher, enrolled, unenrolled
-      return true;
+      if (this.selectedTopic) {
+        return true;
+      }
     },
   },
   methods: {
+    // topic hovered
     async systemForRightPanel(hoveredNode) {
-      // bind system
-      const topic = await this.$store.dispatch("getTopicById", {
-        personId: this.person.id,
-        courseId: hoveredNode.courseId,
-        topicId: hoveredNode.id,
-      });
+      // bind system/topic
+      const topic = this.getTopicById(hoveredNode.id);
       this.selectedTopic = topic;
       // bind tasks
       await this.$store.dispatch("bindPersonsTasksByTopicId", {
@@ -97,11 +98,12 @@ export default {
         courseId: hoveredNode.courseId,
         topicId: hoveredNode.id,
       });
-      console.log(
-        "persons tasks binded for",
-        this.selectedTopic.label,
-        this.personsTopicsTasks
-      );
+      this.tasksList = this.personsTopicsTasks;
+
+      this.topicAndTasks = {
+        topic: topic,
+        tasks: this.personsTopicsTasks,
+      };
     },
     courseClicked(emittedPayload) {
       console.log("courseClicked");
@@ -110,6 +112,8 @@ export default {
     },
     closeInfoPanel() {
       this.clickedCourseId = null;
+      this.tasksList = null;
+      this.selectedTopic = null;
       // this.$refs.listPanel.courseClicked();
     },
     propClickedCourseId(courseId) {

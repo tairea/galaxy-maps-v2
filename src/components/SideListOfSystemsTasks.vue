@@ -4,34 +4,44 @@
     :style="
       show
         ? 'right: 0px; transition-delay: 0.3s'
-        : 'right: -200px; transition-delay: 0.3s'
+        : 'right: -300px; transition-delay: 0.3s'
     "
   >
     <div class="panelContent">
-      <div class="panelContentInner">
-        <p v-if="topic" class="topicListPanelLabel overline mx-4">SYSTEM</p>
-           <p class="systemListTopic-text">
-                {{ topic.label }}
-              </p>
-        <p class="topicListPanelLabel overline mx-4">MISSIONS</p>
-          <div
-            class="systemListCard"
-            v-for="(task, index) in tasks"
-            :key="task.id"
-          >
-              <div class="d-flex ml-2">
-                <div class="systemListCard-number">{{index+1}}</div>
+      <div v-if="topicAndTasks.topic" class="panelContentInner">
+        <p class="topicListPanelLabel overline mx-4">SYSTEM</p>
+        <p class="systemListTopic-text mx-4 overline font-weight-bold">
+          {{ topicAndTasks.topic.label }}
+        </p>
 
-              <p class="systemListCard-text">
-                {{ task.title }}
-              </p>
-              </div>
-              <p class="systemListCard-text text-uppercase" :class="getStatusColour(task.taskStatus)">
-                {{ task.taskStatus }}
-              </p>
-            
+        <!-- solar system animation -->
+        <SolarSystem
+          :topic="topicAndTasks.topic"
+          :tasks="topicAndTasks.tasks"
+          :size="'0.25em'"
+          style="height: 200px; overflow: hidden"
+        />
+
+        <p class="topicListPanelLabel overline mx-4">MISSIONS</p>
+        <div
+          class="systemListCard"
+          v-for="(task, index) in topicAndTasks.tasks"
+          :key="task.id"
+        >
+          <div class="d-flex ml-2">
+            <div class="systemListCard-number">{{ index + 1 }}</div>
+
+            <p class="systemListCard-text">
+              {{ task.title }}
+            </p>
           </div>
-        </ul>
+          <p
+            class="systemListCard-text text-uppercase"
+            :class="getStatusColour(task.taskStatus)"
+          >
+            {{ task.taskStatus }}
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -40,19 +50,20 @@
 <script>
 import { mapState, mapActions } from "vuex";
 import GalaxyListPanelCard from "@/components/GalaxyListPanelCard.vue";
+import SolarSystem from "../components/SolarSystem";
 
 export default {
   name: "SideListOfSystemsTasks",
   components: {
     GalaxyListPanelCard,
+    SolarSystem,
   },
-  props: ["topic", "tasks", "show"],
+  props: ["topicAndTasks", "show"],
   data() {
     return {};
   },
-  async mounted() {
-    console.log("topic in side:", this.topic);
-  },
+  watch: {},
+  async mounted() {},
   computed: {},
   methods: {
     panelTransitioned() {
@@ -75,7 +86,8 @@ export default {
 <style lang="scss" scoped>
 .topicListPanel {
   // background: var(--v-background-darken1);
-  width: 370px;
+  // width: 370px;
+  width: 300px;
   height: 600px;
   position: absolute;
   // bottom: 0px;
@@ -101,6 +113,14 @@ export default {
       width: 99.5%;
       overflow-y: scroll;
       overflow-x: hidden;
+
+      .systemListTopic-text {
+        color: var(--v-missionAccent-base);
+        position: relative;
+        font-size: 0.8rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
 
       .topicListPanelLabel {
         color: var(--v-missionAccent-base);

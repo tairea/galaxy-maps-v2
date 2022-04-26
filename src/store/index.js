@@ -901,7 +901,6 @@ export default new Vuex.Store({
     // bind persons tasks by topic id
     bindPersonsTasksByTopicId: firestoreAction(
       ({ bindFirestoreRef }, payload) => {
-        console.log("trying to bind persons tasks", payload)
         return bindFirestoreRef(
           "personsTopicsTasks",
           db

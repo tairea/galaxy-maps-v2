@@ -77,7 +77,6 @@ export default {
         courseId: emittedPayload.courseId,
         type: emittedPayload.type,
       });
-      this.galaxyOverview = true;
     },
     closeInfoPanel() {
       this.galaxySelected = false;

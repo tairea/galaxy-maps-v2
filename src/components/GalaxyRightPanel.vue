@@ -5,7 +5,7 @@
     :style="
       show
         ? 'right: 0px; transition-delay: 0.3s'
-        : 'right: -230px; transition-delay: 0.3s'
+        : 'right: -330px; transition-delay: 0.3s'
     "
   >
     <!-- Panel Title Tab -->
@@ -23,12 +23,12 @@
     </div> -->
 
     <!-- List of galaxies -->
-    <SideListOfSystems :show="false" :topics="topics" />
+    <SideListOfSystems :show="showSystems" :topics="topicsList" />
 
     <SideListOfSystemsTasks
-      :show="true"
-      :topic="selectedTopic"
-      :tasks="selectedTasks"
+      v-if="topicAndTasks.topic && topicAndTasks.tasks"
+      :show="showMissions"
+      :topicAndTasks="topicAndTasks"
     />
   </div>
 </template>
@@ -41,36 +41,63 @@ import SideListOfSystemsTasks from "@/components/SideListOfSystemsTasks.vue";
 
 export default {
   name: "GalaxyRightPanel",
-  props: ["show", "selectedCourseId", "selectedTopic", "selectedTasks"],
+  props: ["show", "selectedCourseId", "topicAndTasks"],
   components: {
     GalaxyListPanelCard,
     SideListOfSystems,
     SideListOfSystemsTasks,
   },
   data() {
-    return {};
+    return {
+      topicsList: [],
+    };
   },
   async mounted() {},
+
   watch: {
     async selectedCourseId(newCourseId) {
       //bind topics each time a map is selected
       if (newCourseId) {
         console.log("course id is", newCourseId);
+        // now course so bind new topics
         await this.$store.dispatch("bindCourseTopics", newCourseId);
+        // if course unselected null
+        if (newCourseId == null) {
+          this.topicsList == null;
+        } else {
+          this.topicsList = this.topics;
+        }
       }
+    },
+    selectedTopic() {
+      // false for 0.3s to simulate panel change
     },
   },
   computed: {
     ...mapState(["topics"]),
+    showSystems() {
+      if (this.selectedCourseId && !this.topicAndTasks.topic) {
+        return true;
+      } else {
+        return false;
+      }
+    },
+    showMissions() {
+      if (this.selectedCourseId && this.topicAndTasks.topic) {
+        return true;
+      } else {
+        return false;
+      }
+    },
   },
   methods: {
-    closeInfoPanel() {
-      this.selectedGalaxy = false;
-      this.courseId = null;
-      this.$refs.list.allInactive();
-      console.log("closing info panel");
-      this.$emit("closeInfoPanel");
-    },
+    // closeInfoPanel() {
+    //   this.selectedGalaxy = false;
+    //   this.courseId = null;
+    //   this.$refs.list.allInactive();
+    //   console.log("closing info panel");
+    //   this.$emit("closeInfoPanel");
+    // },
   },
 };
 </script>
@@ -78,7 +105,7 @@ export default {
 <style lang="scss" scoped>
 .galaxyRightPanel {
   background: var(--v-background-darken1);
-  width: 400px;
+  width: 330px;
   height: 600px;
   position: fixed;
   // bottom: 0px;

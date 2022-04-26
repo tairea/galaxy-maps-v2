@@ -4,22 +4,17 @@
     :style="
       show
         ? 'right: 0px; transition-delay: 0.3s'
-        : 'right: -200px; transition-delay: 0.3s'
+        : 'right: -300px; transition-delay: 0.3s'
     "
   >
     <div class="panelContent">
       <div class="panelContentInner">
         <p class="topicListPanelLabel overline mx-4">SYSTEMS</p>
-          <div
-            class="systemListCard"
-            v-for="topic in topics"
-            :key="topic.id"
-          >
+        <div class="systemListCard" v-for="topic in topics" :key="topic.id">
           <p class="systemListCard-text">
             {{ topic.label }}
           </p>
-          </div>
-        </ul>
+        </div>
       </div>
     </div>
   </div>
@@ -30,7 +25,7 @@ import { mapState, mapActions } from "vuex";
 import GalaxyListPanelCard from "@/components/GalaxyListPanelCard.vue";
 
 export default {
-  name: "SideListOfGalaxies",
+  name: "SideListOfSystems",
   components: {
     GalaxyListPanelCard,
   },
@@ -52,7 +47,7 @@ export default {
 <style lang="scss" scoped>
 .topicListPanel {
   // background: var(--v-background-darken1);
-  width: 200px;
+  width: 300px;
   height: 600px;
   position: absolute;
   // bottom: 0px;
@@ -103,7 +98,7 @@ export default {
           display: flex;
           justify-content: left;
           align-items: center;
-          border: 1px solid red;
+          // border: 1px solid red;
         }
       }
     }
