@@ -12,6 +12,7 @@
     <!-- Right Side Panel -->
     <GalaxyRightPanel
       :show="showRightPanel"
+      :panelReady="panelReady"
       :type="courseType"
       :selectedCourseId="clickedCourseId"
       :topicAndTasks="topicAndTasks"
@@ -25,7 +26,7 @@
         :whichCoursesToDisplay="whichCoursesToDisplay"
         :highlightCourse="clickedCourseId"
         @clickedCourseId="propClickedCourseId($event)"
-        @hoverNode="systemForRightPanel($event)"
+        @hoverNode="hoveredSystem($event)"
       />
     </div>
 
@@ -67,6 +68,7 @@ export default {
       selectedTopic: null,
       tasksList: [],
       topicAndTasks: {},
+      panelReady: false,
     };
   },
   async mounted() {
@@ -88,7 +90,8 @@ export default {
   },
   methods: {
     // topic hovered
-    async systemForRightPanel(hoveredNode) {
+    async hoveredSystem(hoveredNode) {
+      this.panelReady = false;
       // bind system/topic
       const topic = this.getTopicById(hoveredNode.id);
       this.selectedTopic = topic;
@@ -104,6 +107,12 @@ export default {
         topic: topic,
         tasks: this.personsTopicsTasks,
       };
+
+      // delay to simulate panel change
+      // setTimeout(() => {
+      //   this.panelReady = true;
+      //   }, 100);
+      this.panelReady = true;
     },
     courseClicked(emittedPayload) {
       console.log("courseClicked");

@@ -41,7 +41,7 @@ import SideListOfSystemsTasks from "@/components/SideListOfSystemsTasks.vue";
 
 export default {
   name: "GalaxyRightPanel",
-  props: ["show", "selectedCourseId", "topicAndTasks"],
+  props: ["show", "selectedCourseId", "topicAndTasks", "panelReady"],
   components: {
     GalaxyListPanelCard,
     SideListOfSystems,
@@ -83,7 +83,11 @@ export default {
       }
     },
     showMissions() {
-      if (this.selectedCourseId && this.topicAndTasks.topic) {
+      if (
+        this.selectedCourseId &&
+        this.topicAndTasks.topic &&
+        this.panelReady
+      ) {
         return true;
       } else {
         return false;

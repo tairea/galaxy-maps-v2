@@ -3,8 +3,8 @@
     class="topicListPanel"
     :style="
       show
-        ? 'right: 0px; transition-delay: 0.3s'
-        : 'right: -300px; transition-delay: 0.3s'
+        ? 'right: 0px; transition-delay: 0.1s'
+        : 'right: -300px; transition-delay: 0.1s'
     "
   >
     <div class="panelContent">
