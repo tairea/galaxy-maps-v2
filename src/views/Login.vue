@@ -6,6 +6,18 @@
       :email="accountEmail"
       @close="isResetPassword = false"
     />
+    <div v-else-if="isVerifyEmail" id="galaxy-info">
+      <h2 class="galaxy-label">EMAIL VERIFIED</h2>
+        <v-btn
+          color="baseAccent"
+          class="mr-4 my-4"
+          @click="redirect"
+          outlined
+          width="100%"
+        >
+          continue to login
+        </v-btn>
+    </div>
     <div v-else id="galaxy-info">
       <h2 class="galaxy-label">LOGIN</h2>
       <!-- <h1 class="galaxy-title">Login</h1> -->
@@ -85,11 +97,11 @@ export default {
     loading: false,
     isResetPassword: false,
     accountEmail: '',
-    actionCode: ''
+    actionCode: '',
+    isVerifyEmail: false
   }),
   mounted() {
     // Get the email action to complete.
-    console.log('route query: ', this.$route.query)
     var mode = this.$route.query.mode || null;
     var actionCode = this.$route.query.oobCode
     var auth = firebase.auth()
@@ -116,6 +128,13 @@ export default {
     ...mapGetters(["person", "user"]),
   },
   methods: {
+    redirect() {
+      this.isVerifyEmail = false
+      firebase
+        .auth()
+        .signOut()
+      this.$router.push("login");
+    },
     handleResetPassword(auth, actionCode) {
       // Verify the password reset code is valid.
       auth.verifyPasswordResetCode(actionCode).then((email) => {
@@ -169,12 +188,13 @@ export default {
     },
     handleVerifyEmail(auth, actionCode) {
       console.log('handle verify email')
+      this.isVerifyEmail = true
       // Try to apply the email verification code.
       auth.applyActionCode(actionCode).then((resp) => {
         // Email address has been verified.
         this.$store.commit("setSnackbar", {
           show: true,
-          text: "Email successfully verified. Login to continue",
+          text: "Email successfully verified",
           color: "baseAccent",
         });
       }).catch((error) => {
@@ -187,6 +207,7 @@ export default {
       });
     },
     login() {
+      console.log('loggin in')
       this.loading = true;
       firebase
         .auth()

@@ -126,7 +126,7 @@ If you have any issues please contact support@galaxymaps.io
   
 Galaxy Maps Robot`;
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("New teacher invite email sent to:", email);
+  functions.logger.log("New teacher invite email sent to: ", email);
   return null;
 }
 
@@ -150,7 +150,7 @@ If you have any issues please contact support@galaxymaps.io
   
 Galaxy Maps Robot`;
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("New student invite email sent to:", email);
+  functions.logger.log("New student invite email sent to: ", email);
   return null;
 }
 
@@ -194,7 +194,7 @@ If you have any issues please contact support@galaxymaps.io
   
 Galaxy Maps Robot`;
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("New cohort invite email sent to:", email);
+  functions.logger.log("New cohort invite email sent to: ", email);
   return null;
 }
 
@@ -224,7 +224,7 @@ If you have any issues please contact support@galaxymaps.io
   
 Galaxy Maps Robot`;
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("New assignment email sent to:", email);
+  functions.logger.log("New assignment email sent to: ", email);
   return null;
 }
 
@@ -278,7 +278,7 @@ Navigate to https://galaxymaps.io to view your course
   
 Galaxy Maps Robot`;
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("Course published email sent to", email);
+  functions.logger.log("Course published email sent to ", email);
   return null;
 }
 
@@ -350,37 +350,41 @@ Your student, ${student} has sent a request for help.
 Course: ${course}
 Topic: ${topic}
 Task: ${task}
+
 Request: ${request}
 
 To respond to ${student}, please login to https://galaxymaps.io to view your course
   
 Galaxy Maps Robot`;
   
-  mailOptions.html = `<strong>Hi ${teacher},</strong>
+  mailOptions.html = `<p>Hi ${teacher},</p>
   </br> 
 <p>Your student ${student} has sent a request for help.</p>
 </br> 
-<p>Course: ${course}</p>
-<p>Topic: ${topic}</p>
-<p>Task: ${task}</p>
-<p>Request: ${request} </p>
+<ul>
+  <li>Course: ${course}</li>
+  <li>Topic: ${topic}</li>
+  <li>Task: ${task}</li>
+</ul>
+</br> 
+<p>Request: <strong>${request}</strong> </p>
 </br> 
 <p>To respond to ${student}, please login to <a href="https://galaxymaps.io" target="_blank">https://galaxymaps.io/login</a> to view your course</p>
 </br> 
 <p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Robot</p>`;
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("Request notification email sent to", email);
+  functions.logger.log("Request notification email sent to ", email);
   return null;
 }
 
 //====== RESPONSE TO REQUEST ==================
 exports.sendResponseToHelp = functions.https.onCall((data, context) => {
-  const { email, teacher, course, task, student, response } = data;
-  sendResponseToHelp(email, teacher, course, task, student, response);
+  const { email, teacher, course, task, student, response, topic, request } = data;
+  sendResponseToHelp(email, teacher, course, task, student, response, topic, request);
 });
 
 // Sends a invite email to a new student.
-async function sendResponseToHelp(email, teacher, course, task, student, response) {
+async function sendResponseToHelp(email, teacher, course, task, student, response, topic, request) {
   const mailOptions = {
     from: `${APP_NAME} <noreply@galaxymaps.io>`,
     to: email
@@ -390,11 +394,15 @@ async function sendResponseToHelp(email, teacher, course, task, student, respons
   mailOptions.subject = `${course} Response to your request`;
   mailOptions.text = `Hi ${student}, 
 
-Your teacher ${teacher} has sent a response to your request for help.
+Your instructor ${teacher} has sent a response to your request for help.
 
 Course: ${course}
+Topic: ${topic}
 Task: ${task}
-Response: ${response} 
+
+Your request: ${request}
+
+Instructors response: ${response} 
 
 Login to https://galaxymaps.io to continue your course.
   
@@ -402,16 +410,329 @@ Galaxy Maps Robot`;
   
   mailOptions.html = `<p>Hi ${student},</p>
   </br> 
-<p>Your teacher ${teacher} has sent a response to your request for help.</p>
+<p>Your instructor ${teacher} has sent a response to your request for help.</p>
 </br> 
-<p>Course: ${course}</p>
-<p>Task: ${task}</p>
-<p>Response: ${response} </p>
+<ul>
+  <li>Course: ${course}</li>
+  <li>Topic: ${topic}</li>
+  <li>Task: ${task}</li>
+</ul>
+</br> 
+<p>Your request: ${request} </p>
+</br> 
+<p>Instructors response: <strong>${response}</strong></p>
 </br> 
 <p>Login to <a href="https://galaxymaps.io" target="_blank">https://galaxymaps.io/login</a> to continue your course.</p>
 </br> 
-<p style="style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Robot</p>`;
+<p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Robot</p>`;
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("Course published email sent to", email);
+  functions.logger.log("Instructor response sent to ", email);
   return null;
+}
+
+//======SUBMISSION FOR TASK SENT ==================
+exports.sendTaskSubmission = functions.https.onCall((data, context) => {
+  const { email, teacher, course, task, student, submission, topic } = data;
+  sendTaskSubmission(email, teacher, course, task, student, submission, topic);
+});
+
+// Sends a invite email to a new student.
+async function sendTaskSubmission(email, teacher, course, task, student, submission, topic) {
+  const mailOptions = {
+    from: `${APP_NAME} <noreply@galaxymaps.io>`,
+    to: email
+  };
+
+  // The user subscribed to the newsletter.
+  mailOptions.subject = `${task} work submission`;
+  mailOptions.text = `Hi ${teacher}, 
+
+Your student, ${student} has submitted work for you review.
+
+Course: ${course}
+Topic: ${topic}
+Task: ${task}
+
+Submission: ${submission}
+
+To respond to ${student}'s submission and unlock the next task from them, please login to https://galaxymaps.io to view your course
+  
+Galaxy Maps Robot`;
+  
+  mailOptions.html = `<p>Hi ${teacher},</p>
+  </br> 
+<p>Your student ${student} has submitted work for you review.</p>
+</br> 
+<ul>
+  <li>Course: ${course}</li>
+  <li>Topic: ${topic}</li>
+  <li>Task: ${task}</li>
+</ul>
+</br> 
+<p>Submission: <strong>${submission}</strong> </p>
+</br> 
+<p>To respond to ${student}, please login to <a href="https://galaxymaps.io" target="_blank">https://galaxymaps.io/login</a> to view your course</p>
+</br> 
+<p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Robot</p>`;
+  await mailTransport.sendMail(mailOptions);
+  functions.logger.log("Task submission notification email sent to ", email);
+  return null;
+}
+
+//====== RESPONSE TO REQUEST ==================
+exports.sendResponseToSubmission = functions.https.onCall((data, context) => {
+  const { email, teacher, course, task, student, outcome, topic, message, submission } = data;
+  sendResponseToSubmission(email, teacher, course, task, student, outcome, topic, message, submission);
+});
+
+// Sends a invite email to a new student.
+async function sendResponseToSubmission(email, teacher, course, task, student, outcome, topic, message, submission) {
+  const mailOptions = {
+    from: `${APP_NAME} <noreply@galaxymaps.io>`,
+    to: email
+  };
+
+  // The user subscribed to the newsletter.
+  mailOptions.subject = `Task submission ${outcome}`;
+  mailOptions.text = `Hi ${student}, 
+
+Your instructor ${teacher} has reviewed your submission to ${task}.
+
+Course: ${course}
+Topic: ${topic}
+Task: ${task}
+
+Your submission: ${submission} 
+
+Submission outcome: ${outcome} 
+
+Instructors message: ${message}
+
+Login to https://galaxymaps.io to continue your course.
+  
+Galaxy Maps Robot`;
+  
+  mailOptions.html = `<p><strong>Hi ${student},</strong></p>
+<p>Your instructor ${teacher} has reviewed your submission to ${task}.</p>
+</br> 
+<ul>
+  <li>Course: ${course}</li>
+  <li>Topic: ${topic}</li>
+  <li>Task: ${task}</li>
+</ul>
+</br> 
+<p><strong>Submission outcome: ${outcome} </strong></p>
+</br> 
+<p>Your Submission: ${submission} </p>
+</br> 
+<p>Instructors message: ${message} </p>
+</br> 
+<p>Login to <a href="https://galaxymaps.io" target="_blank">https://galaxymaps.io/login</a> to continue your course.</p>
+</br> 
+<p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Robot</p>`;
+  await mailTransport.sendMail(mailOptions);
+  functions.logger.log("Submission outcome sent to ", email);
+  return null;
+}
+
+
+//====== SCHEDULE CHECK FOR INACTIVITY  ==================
+function getPreviousDate(preDays) {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate() - preDays).toDateString();
+};
+
+async function getPersonByIdFromDB(personId) {
+  let person = await firestore
+    .collection("people")
+    .doc(personId)
+    .get()
+    .catch((err) => console.err(err));
+  person = {
+    id: person.id,
+    ...person.data(),
+  };
+  return person;
+};
+
+async function getPersonsTeachers(person) {
+  // onSnapshot wasnt working for me. so changed to .get()
+  let teachers = await firestore
+    .collection("cohorts")
+    .where("students", "array-contains", person.id)
+    .get()
+    .then(async (querySnapshot) => {
+      let teachers = [];
+      querySnapshot.forEach(async (doc) => {
+        doc.data().teachers.forEach(teacher => {
+          let profile = {
+            id: teacher, 
+            cohort: doc.data().name
+          }
+          teachers.push(profile)
+        })
+      })
+
+      return teachers
+    }).catch(err => console.log('err: ', err))
+    
+    return teachers
+};
+
+exports.scheduledFunction = functions.pubsub.schedule('0 8 * * *').timeZone('Pacific/Auckland').onRun((context) => {
+// exports.scheduledFunction = functions.pubsub.schedule('every 2 minutes').onRun((context) => {
+  checkInActvity()
+});
+  
+async function checkInActvity () {
+  functions.logger.log('checking activity')
+
+  const oneWeek = getPreviousDate(7);
+  const twoWeeks = getPreviousDate(14);
+
+  const userStatus = {}
+  await firestore
+    .collection("status")
+    .get()
+    .then((snapShot) => {
+      snapShot.docs.forEach((doc) => {
+        var obj = {};
+        obj[doc.id] = doc.data();
+        Object.assign(userStatus, obj);
+      });
+    })
+  
+    functions.logger.log('1 week ago: ', oneWeek)
+    functions.logger.log('2 weeks ago: ', twoWeeks)
+
+  // if user is online push into the array
+  if (userStatus) {
+    const users = []
+    for (const user in userStatus) { 
+      if (userStatus[user].state == 'offline') users.push(Object.assign(userStatus[user], {id: user}));
+    }
+
+    const inActiveOneWeek = []
+    const inActiveTwoWeeks = []
+
+    users.forEach(user => {
+      const date = user.last_changed.toDate().toDateString()
+      if (date === oneWeek) inActiveOneWeek.push(user)
+      if (date === twoWeeks) inActiveTwoWeeks.push(user)
+    })
+
+    if (inActiveOneWeek.length) {
+      inActiveOneWeek.forEach(async user => {
+        const person = await getPersonByIdFromDB(user.id)
+        const teachers = await getPersonsTeachers(user)
+
+        const student = person.firstName + ' ' + person.lastName
+        const studentEmail = person.email
+        const duration = 'one week'
+
+        functions.logger.log('send one week in active email to student :', person.email)
+        sendStudentInActive(student, studentEmail, duration)
+        
+        const teacherProfiles = await Promise.all(teachers.map(async teacher => {
+          let fullProfile = await getPersonByIdFromDB(teacher.id)
+          return {
+            ...fullProfile, 
+            cohort: teacher.cohort
+          }
+        }))
+
+        teacherProfiles.forEach(profile => {
+          const {email, cohort} = profile
+          const teacher = profile.firstName + ' ' + profile.lastName
+          sendTeacherStudentInActive(student, studentEmail, duration, email, cohort, teacher)
+        })
+
+      })
+    }
+
+    if (inActiveTwoWeeks.length) {
+      inActiveTwoWeeks.forEach(async user => {
+        const person = await getPersonByIdFromDB(user.id)
+        const teachers = await getPersonsTeachers(user)
+
+        const student = person.firstName + ' ' + person.lastName
+        const studentEmail = person.email
+        const duration = 'two weeks'
+
+        functions.logger.log('send two weeks in active email to student :', person.email)
+        sendStudentInActive(student, studentEmail, duration)
+        
+        const teacherProfiles = await Promise.all(teachers.map(async teacher => {
+          let fullProfile = await getPersonByIdFromDB(teacher.id)
+          return {
+            ...fullProfile, 
+            cohort: teacher.cohort
+          }
+        }))
+        teacherProfiles.forEach(profile => {
+          const {email, cohort} = profile
+          const teacher = profile.firstName + ' ' + profile.lastName
+          sendTeacherStudentInActive(student, studentEmail, duration, email, cohort, teacher)
+        })
+      })
+    }
+  }
+};
+
+
+async function sendStudentInActive(student, studentEmail, duration) {
+  // send email to student 
+  const mailOptions = {
+    from: `${APP_NAME} <noreply@galaxymaps.io>`,
+    to: studentEmail
+  };
+
+  // The user subscribed to the newsletter.
+  mailOptions.subject = `Student Activity Alert`;
+  mailOptions.text = `Hi ${student}, 
+
+It has been ${duration} since you last signed into Galaxy Maps. 
+
+Sign in to https://galaxymaps.io now to continue your learning journey.
+  
+Galaxy Maps Robot`;
+  
+  mailOptions.html = `<p><strong>Hi ${student},</strong></p>
+<p>It has been <strong>${duration}</strong> since you last signed into Galaxy Maps.</p>
+</br> 
+<p>Sign in to <a href="https://galaxymaps.io" target="_blank">https://galaxymaps.io/login</a> now to continue your learning journey.</p>
+</br> 
+<p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Robot</p>`;
+  await mailTransport.sendMail(mailOptions);
+  functions.logger.log("student low activity alert sent", email);
+  return null;
+  
+}
+
+async function sendTeacherStudentInActive(student, studentEmail, duration, email, cohort, teacher) {
+    // send email to student 
+    const mailOptions = {
+      from: `${APP_NAME} <noreply@galaxymaps.io>`,
+      to: email
+    };
+  
+    // The user subscribed to the newsletter.
+    mailOptions.subject = `Student Activity Alert`;
+    mailOptions.text = `Hi ${teacher}, 
+  
+  It has been ${duration} since your student: ${student} in cohort: ${cohort} last signed into Galaxy Maps. 
+  
+  We recommend checking in on them via email ${studentEmail} to encourage and support them on their learning journey.
+    
+  Galaxy Maps Robot`;
+    
+    mailOptions.html = `<p><strong>Hi ${teacher},</strong></p>
+  <p>It has been <strong>${duration}</strong> since your student: <strong>${student}</strong> in cohort: <strong>${cohort}</strong> last signed into Galaxy Maps.</p>
+  </br> 
+  <p>  We recommend checking in on them via email <a href="mailto:${studentEmail}">${studentEmail}</a> to encourage and support them on their learning journey.</p>
+  </br> 
+  <p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Robot</p>`;
+    await mailTransport.sendMail(mailOptions);
+    functions.logger.log("student low activity alert sent to teacher", email);
+    return null;
 }

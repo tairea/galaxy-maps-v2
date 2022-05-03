@@ -3,7 +3,7 @@
     <v-expansion-panel-header class="py-0">
       <div
         class="mission-card"
-        :class="{ lockedOpacity: getTaskStatus == 'locked' }"
+        :class="{ lockedOpacity: task.taskStatus == 'locked' }"
       >
         <div class="mission-section mission-number-section">
           <p class="text-overline text-uppercase">Mission</p>
@@ -80,29 +80,23 @@
           class="mission-section d-flex justify-center align-center flex-column"
           style="width: 20%"
           :class="{
-            'topic-in-review': getTaskStatus == 'inreview',
-            'topic-declined': getTaskStatus == 'declined',
-            'topic-completed': getTaskStatus == 'completed',
-            'topic-active': getTaskStatus == 'active',
+            'topic-in-review': inreview,
+            'topic-completed': completed,
+            'topic-active': active || declined,
           }"
         >
           <p class="text-overline text-uppercase text-center">
             {{
-              getTaskStatus == "completed"
-                ? "COMPLETED"
-                : getTaskStatus == "inreview"
-                ? "IN REVIEW"
-                : getTaskStatus == "unlocked"
-                ? "START MISSION"
-                : getTaskStatus == "active"
-                ? "ACTIVE MISSION"
-                : getTaskStatus == "declined"
-                ? "SUBMISSION DECLINED"
+              completed ? "COMPLETED"
+                : inreview ? "IN REVIEW"
+                : unlocked ? "START MISSION"
+                : active ? "ACTIVE MISSION"
+                : declined ? "RETRY MISSION"
                 : "LOCKED"
             }}
           </p>
 
-          <div v-if="getTaskStatus == 'unlocked'" class="d-flex justify-center">
+          <div v-if="unlocked" class="d-flex justify-center">
             <!-- Start Mission button -->
             <StartMissionDialog
               :topicId="topicId"
@@ -112,33 +106,10 @@
             />
           </div>
           <div
-            v-else-if="
-              getTaskStatus == 'completed' || getTaskStatus == 'inreview'
-            "
+            v-else-if="active || declined || completed || inreview"
             class="d-flex justify-center"
           >
-            <!-- Start Mission button -->
-            <MissionCompletedDialog
-              :topicId="topicId"
-              :taskId="id"
-              :task="task"
-              :missionStatus="getTaskStatus"
-            />
-          </div>
-          <div
-            v-else-if="getTaskStatus == 'active'"
-            class="d-flex justify-center"
-          >
-            <!-- no icon -->
-          </div>
-
-          <div
-            v-else-if="getTaskStatus == 'declined'"
-            class="d-flex justify-center align-center"
-          >
-            <v-btn color="missionAccent" icon large>
-              <v-icon large>mdi-alert-octagon-outline</v-icon>
-            </v-btn>
+            <v-icon :color="active || completed || declined ? 'baseAccent' : 'cohortAccent'" large>mdi-check</v-icon> 
           </div>
           <div v-else class="d-flex justify-center align-center">
             <v-btn color="missionAccent" icon large>
@@ -175,11 +146,19 @@
     <v-expansion-panel-content>
       <!-- expansion content -->
       <ActiveMissionsCard
-        v-if="task.taskStatus == 'active'"
+        v-if="active || declined"
         :task="task"
         :topicId="topicId"
+        :active="active"
+        :declined="declined"
       />
-      <SelectedMissionsCard v-else :task="task" :topicId="topicId" />
+      <SelectedMissionsCard 
+        v-else 
+        :task="task" 
+        :topicId="topicId" 
+        :completed="completed"
+        :inreview="inreview"
+      />
     </v-expansion-panel-content>
   </div>
 </template>
@@ -187,7 +166,6 @@
 <script>
 import CreateEditDeleteMissionDialog from "../components/CreateEditDeleteMissionDialog";
 import StartMissionDialog from "../components/StartMissionDialog";
-import MissionCompletedDialog from "../components/MissionCompletedDialog";
 import ActiveMissionsCard from "../components/ActiveMissionsCard";
 import SelectedMissionsCard from "../components/SelectedMissionsCard";
 
@@ -199,7 +177,6 @@ export default {
   components: {
     CreateEditDeleteMissionDialog,
     StartMissionDialog,
-    MissionCompletedDialog,
     ActiveMissionsCard,
     SelectedMissionsCard,
   },
@@ -209,14 +186,18 @@ export default {
       editing: false,
       activeTask: false,
       panel: [],
-
       taskSlides: false,
       taskVideo: false,
     };
   },
   watch: {
-    getTaskStatus(newVal, oldVal) {
-      if (oldVal == 'unlocked' && newVal == 'active') this.$emit('missionActivated')
+    task: {
+      deep: true,
+      handler (newVal, oldVal) {
+        if (oldVal.taskStatus == 'unlocked' && newVal.taskStatus == 'active') {
+          this.$emit('missionActivated')
+        }
+      }
     }
   },
   computed: {
@@ -227,12 +208,11 @@ export default {
       "personsTopicsTasks",
     ]),
     ...mapGetters(["person"]),
-    getTaskStatus() {
-      if (this.teacher) return;
-      // get topic status eg. unlocked / inreview / completed / locked
-      const task = this.personsTopicsTasks.find((task) => task.id === this.id);
-      return task.taskStatus;
-    },
+    active() { return this.task.taskStatus == 'active'} ,
+    declined() { return this.task.taskStatus == 'declined'} ,
+    completed() { return this.task.taskStatus == 'completed'} ,
+    inreview() { return this.task.taskStatus == 'inreview'} ,
+    unlocked() { return this.task.taskStatus == 'unlocked'} ,
   },
 };
 </script>
@@ -280,8 +260,8 @@ a {
     color: var(--v-cohortAccent-base);
   }
   .topic-declined {
-    border: 1px solid var(--v-missionAccent-base);
-    color: var(--v-missionAccent-base);
+    border: 1px solid var(--v-cohortAccent-base);
+    color: var(--v-cohortAccent-base);
   }
 
   .topic-completed,

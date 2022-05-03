@@ -3,6 +3,12 @@
     <h2 class="ss-label">System</h2>
     <h1 class="ss-title">{{ topic.label }}</h1>
     <SolarSystem
+      :topic="topic"
+      :size="'0.25em'"
+      :height="'200px'"
+      :tasks="tasks"
+    />
+    <!-- <SolarSystem
       :topic="
         teacher
           ? getTopicById(currentTopicId)
@@ -11,7 +17,7 @@
       :size="'0.25em'"
       :height="'200px'"
       :tasks="tasks"
-    />
+    /> -->
     <p class="galaxy-description">Part of the</p>
     <h1 class="galaxy-title">{{ getCourseById(currentCourseId).title }}</h1>
     <p class="galaxy-description">Galaxy</p>
@@ -47,7 +53,6 @@ export default {
 
 <style lang="scss" scoped>
 #ss-info {
-  height: 400px;
   border: 1px solid var(--v-missionAccent-base);
   margin-top: 30px;
   padding: 20px;

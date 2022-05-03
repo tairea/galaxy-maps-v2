@@ -68,7 +68,9 @@
               :task="task"
               :taskId="task.id"
               :topicId="topicId"
-              :missionStatus="getTaskStatus"
+              :active="active"
+              :declined="declined"
+              :submission="submission"
             />
           </div>
         </div>
@@ -91,42 +93,22 @@ export default {
     MissionCompletedDialog,
     RequestHelpDialog,
   },
-  props: ["task", "topicId"],
-  mounted() {},
+  props: ["task", "topicId", "active", "declined", "inreview", "completed"],
   computed: {
-    ...mapState(["personsTopicsTasks"]),
+    ...mapState(["personsTopicsTasks", "courseSubmissions"]),
     ...mapGetters(["person"]),
     getSubmitTitle() {
-      if (this.getTaskStatus == "completed") {
-        return "COMPLETED";
-      } else if (this.getTaskStatus == "inreview") {
-        return "IN REVIEW";
-      } else if (
-        this.getTaskStatus == "active" &&
-        this.task.submissionRequired == true
-      ) {
+      if ( this.active && this.task.submissionRequired == true ) {
         return "SUBMIT WORK";
-      } else if (
-        this.getTaskStatus == "active" &&
-        (this.task.submissionRequired == false || !this.task.submissionRequired)
-      ) {
+      } else if ( this.declined && this.task.submissionRequired == true ) {
+        return "RESUBMIT WORK";
+      } else if ( this.active && (this.task.submissionRequired == false || !this.task.submissionRequired)) {
         return "MARK AS COMPLETED";
       } else {
         return;
       }
-    },
-    getTaskStatus() {
-      if (this.teacher) return
-      // get topic status eg. unlocked / inreview / completed / locked
-      const task = this.personsTopicsTasks.find(
-        (task) => task.id === this.task.id
-      );
-      return task.taskStatus;
-    },
-  },
-  data() {
-    return {};
-  },
+    }
+  }
 };
 </script>
 

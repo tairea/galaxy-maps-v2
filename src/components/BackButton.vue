@@ -28,6 +28,8 @@ export default {
         return "Galaxy";
       } else if (path.includes("cohorts")) {
         return "Cohorts";
+      } else if (path.includes("cohort")) {
+        return "Cohort";
       } else if (path.includes("login")) {
         return "Login";
       } else if (path.includes("dashboard")) {

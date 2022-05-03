@@ -1,77 +1,22 @@
 <template>
-  <div class="submission-card">
+  <div class="submission-card" :class="reviewed ? 'reviewed-submission':''">
     <v-expansion-panels flat v-model="showCard">
       <v-expansion-panel
         v-for="(sub, i) in [submission]"
         :key="i"
         class="panel"
+        @change="panelChange()" 
       >
-        <v-expansion-panel-header class="pa-0">
-          <!-- Course Image -->
-          <v-tooltip bottom color="subBackground">
-            <template v-slot:activator="{ on, attrs }">
-              <div
-                class="submission-image d-flex justify-center align-center"
-                v-bind="attrs"
-                v-on="on"
-              >
-                <v-avatar v-if="submission.contextCourse.image" size="30">
-                  <img
-                    v-if="submission.contextCourse.image"
-                    :src="submission.contextCourse.image.url"
-                    :alt="submission.contextCourse.title"
-                    style="object-fit: cover"
-                  />
-                  <v-icon v-else>mdi-account</v-icon>
-                </v-avatar>
-                <div v-else class="imagePlaceholder">
-                  {{ first3Letters(submission.contextCourse.title) }}
-                </div>
-              </div>
-            </template>
-            <div>
-              <p class="ma-0 galaxy-tooltip">Galaxy:</p>
-              <p
-                class="ma-0 galaxy-tooltip"
-                style="font-size: 0.8rem; font-weight: 800"
-              >
-                {{ submission.contextCourse.title }}
-              </p>
+        <v-expansion-panel-header ref="panel" class="pa-0">
+          <div class="d-flex flex-row">
+            <Avatar v-if="isDashboardView" :profile="courseContextProfile" size="30" :colourBorder="true"/>
+            <Avatar v-if="requesterPerson" :profile="requesterPerson" size="30" :colourBorder="true"  :class="isDashboardView ? 'request-image':''"/>
+            <div class="submission-time d-flex flex-column align-center ml-auto">
+              <span v-if="reviewed" class="ml-auto status-text">{{submission.taskSubmissionStatus}}</span>
+              <span v-else class="ml-auto status-text">...awaiting review</span>
+              {{ getHumanDate(submission.taskSubmittedForReviewTimestamp) }}
             </div>
-          </v-tooltip>
-
-          <!-- Avatar -->
-          <v-tooltip v-if="requesterPerson" bottom color="subBackground">
-            <template v-slot:activator="{ on, attrs }">
-              <div
-                class="submission-image d-flex justify-center align-center"
-                v-bind="attrs"
-                v-on="on"
-              >
-                <v-avatar v-if="requesterPerson" size="30">
-                  <img
-                    v-if="requesterPerson.image"
-                    :src="requesterPerson.image.url"
-                    :alt="requesterPerson.firstName"
-                    style="object-fit: cover"
-                  />
-                  <v-icon v-else>mdi-account</v-icon>
-                </v-avatar>
-                <div v-else class="imagePlaceholder">
-                  {{ first3Letters(requesterPerson.firstName) }}
-                </div>
-              </div>
-            </template>
-            <div>
-              <p class="ma-0 person-tooltip">Person:</p>
-              <p
-                class="ma-0 person-tooltip"
-                style="font-size: 0.8rem; font-weight: 800; color: white"
-              >
-                {{ requesterPerson.firstName + " " + requesterPerson.lastName }}
-              </p>
-            </div>
-          </v-tooltip>
+          </div>
 
           <!-- Course/Topic/Task -->
           <div class="submission-context">
@@ -85,41 +30,39 @@
               {{ submission.contextCourse.title }}
             </p>
           </div>
-          <div class="submission-time">
-            {{ getHumanDate(submission.taskSubmittedForReviewTimestamp) }}
-          </div>
           <template v-slot:actions>
             <v-icon color="missionAccent"> </v-icon>
           </template>
         </v-expansion-panel-header>
-        <v-expansion-panel-content>
-          <div
-            class="d-flex justify-center align-center"
-            style="padding-top: 16px"
-          >
-            <!-- View submission button -->
-            <a
-              style="text-decoration: none"
-              :href="submission.submissionLink"
-              target="_blank"
+        <v-expansion-panel-content class="panel-content">
+            <!-- <div
+              class="d-flex flex-column"
             >
-              <v-btn outlined color="cohortAccent" class="ma-2" small>
-                <v-icon left> mdi-text-box-search-outline </v-icon>
-                VIEW SUBMISSION
-              </v-btn>
-            </a>
-          </div>
-          <div class="divider"></div>
-          <div class="action-button">
-            <MarkSubmissionCompleted
-              :submission="submission"
-              :requesterPerson="requesterPerson"
-            />
-            <SubmissionResponseDialog
-              :submission="submission"
-              :requesterPerson="requesterPerson"
-            />
-          </div>
+              <p class="instructions-label text-end">Instructions</p>
+              <p class="instructions-text" v-html="submission.contextTask.submissionInstructions"></p>
+              <div class="divider"></div>
+              <p class="submission-label text-end">Submission</p>
+              <p class="submission-text" v-html="submission.submissionLink"></p>
+            </div> -->
+          <template>
+            <div class="divider"></div>
+            <div class="text-center">
+              <SubmissionReviewDialog
+                :submission="submission"
+                :requesterPerson="requesterPerson"
+                :isTeacher="isTeacher"
+                :reviewed="reviewed"
+              />
+              <!-- <MarkSubmissionCompleted
+                :submission="submission"
+                :requesterPerson="requesterPerson"
+              />
+              <SubmissionResponseDialog
+                :submission="submission"
+                :requesterPerson="requesterPerson"
+              /> -->
+            </div>
+          </template>
         </v-expansion-panel-content>
       </v-expansion-panel>
     </v-expansion-panels>
@@ -129,29 +72,32 @@
 <script>
 import { mapState, mapActions } from "vuex";
 import moment from "moment";
+import Avatar from "../components/Avatar.vue"
 
-import MarkSubmissionCompleted from "../components/MarkSubmissionCompleted";
-import SubmissionResponseDialog from "../components/SubmissionResponseDialog";
+// import MarkSubmissionCompleted from "../components/MarkSubmissionCompleted";
+// import SubmissionResponseDialog from "../components/SubmissionResponseDialog";
+import SubmissionReviewDialog from "../components/Dialogs/SubmissionReviewDialog";
 import { dbMixins } from "../mixins/DbMixins";
 
 export default {
   name: "SubmissionTeacherPanel",
-  props: ["submission", "on", "attrs"],
+  props: ["submission", "on", "attrs", "isDashboardView", "isTeacher"],
   mixins: [dbMixins],
   components: {
-    MarkSubmissionCompleted,
-    SubmissionResponseDialog,
+    // MarkSubmissionCompleted,
+    // SubmissionResponseDialog,
+    SubmissionReviewDialog,
+    Avatar
   },
   data() {
     return {
       requesterPerson: null,
+      active: false
     };
   },
   async mounted() {
     // bind student profile
-    this.requesterPerson = await this.MXgetPersonByIdFromDB(
-      this.submission.studentId
-    );
+    this.requesterPerson = await this.MXgetPersonByIdFromDB(this.submission.studentId);
 
     // bind students tasks related to this submission (used for unlocking next topic)
     await this.$store.dispatch("bindPersonsTasksByTopicId", {
@@ -178,6 +124,9 @@ export default {
         this.$store.commit("setPanelCard", {});
       },
     },
+    reviewed() {
+      return this.submission.taskSubmissionStatus === 'completed' || this.submission.taskSubmissionStatus === 'declined'
+    }
   },
   methods: {
     getHumanDate(ts) {
@@ -186,37 +135,38 @@ export default {
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
+    panelChange() {
+      this.active = !this.$refs.panel[0].isActive
+    }
   },
 };
 </script>
 
 <style lang="scss" scoped>
+.panel ::v-deep .v-expansion-panel-header {
+  display: block !important;
+}
+
 .submission-card {
   width: 100%;
-  display: flex;
   margin: 20px 0px;
   padding: 10px;
-  border: 1px solid var(--v-cohortAccent-base);
+  border: 1px solid var(--v-missionAccent-base);
   border-radius: 5px;
 
   .panel {
     background-color: transparent !important;
   }
 
-  .submission-image {
-    width: 10%;
-  }
-
   .submission-context {
-    margin-left: 10px;
-    width: 60%;
+    margin-top: 5px;
 
     .submission-context-task {
       margin: 0px;
       text-transform: uppercase;
-      font-size: 0.8rem;
+      font-size: 0.6rem;
       color: var(--v-missionAccent-base);
-      font-weight: 800;
+      font-weight: 600;
     }
     .submission-context-topic {
       margin: 0px;
@@ -234,16 +184,24 @@ export default {
 
   .submission-time {
     margin: 0px;
-    text-transform: uppercase;
     font-size: 0.8rem;
     color: var(--v-missionAccent-base);
-    width: 30%;
-    text-align: right;
   }
 
   .divider {
     border-bottom: 1px solid var(--v-missionAccent-base);
     margin: 20px 0px;
+  }
+
+  .submission-text {
+    margin: 0px;
+    color: var(--v-missionAccent-base);
+    font-size: 0.8rem;
+  }
+  .instructions-text {
+    margin: 0px;
+    color: var(--v-cohortAccent-base);
+    font-size: 0.8rem;
   }
 }
 
@@ -270,5 +228,32 @@ export default {
   color: var(--v-missionAccent-base);
   font-size: 0.6rem;
   text-transform: uppercase;
+}
+
+.panel-content ::v-deep .v-expansion-panel-content__wrap {
+  padding: 0px !important;
+}
+
+.reviewed-submission {
+  border: 1px solid var(--v-cohortAccent-base);
+}
+
+.instructions-label {
+  font-size: 0.6rem;
+  color: var(--v-cohortAccent-base);
+  font-style: italic;
+}
+
+.submission-label {
+  font-size: 0.6rem;
+  color: var(--v-missionAccent-base);
+  font-style: italic;
+}
+
+.status-text {
+  color: var(--v-cohortAccent-base);
+  font-size:0.6rem;
+  position: relative;
+  top: -8px
 }
 </style>

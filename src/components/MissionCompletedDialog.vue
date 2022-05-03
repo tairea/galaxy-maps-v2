@@ -5,17 +5,13 @@
         <v-dialog v-model="dialog" width="40%" light>
           <!-- COMPLETED BUTTON (looks like checkbox) -->
           <template v-slot:activator="{ on, attrs }">
-            <!-- uncheck icon if not inreview or completed -->
+            <!-- IF ACTIVE -->
             <v-btn
-              v-if="
-                missionStatus != 'inreview' &&
-                missionStatus != 'completed' &&
-                !resubmission
-              "
+              v-if="active || declined"
               v-bind="attrs"
               v-on="on"
               class="mission-edit-button"
-              color="missionAccent"
+              :color="active ? 'missionAccent':'cohortAccent'"
               icon
               x-large
             >
@@ -24,50 +20,33 @@
               </v-icon>
               <v-icon v-else> mdi-checkbox-blank-outline </v-icon>
             </v-btn>
-            <!-- review declined. re-submission -->
-            <v-btn
-              v-else-if="missionStatus == 'declined' && resubmission"
-              v-bind="attrs"
-              v-on="on"
-              class="mission-edit-button"
-              color="missionAccent"
-              outlined
-              small
-            >
-              <v-icon small left v-if="task.submissionRequired">
-                mdi-cloud-upload-outline
-              </v-icon>
-              RESUBMIT
-            </v-btn>
-            <!-- checked icon if inreview or completed -->
-            <v-btn
-              v-else
-              :color="
-                missionStatus == 'completed'
-                  ? 'baseAccent'
-                  : missionStatus == 'inreview'
-                  ? 'cohortAccent'
-                  : missionStatus == 'declined'
-                  ? 'missionAccent'
-                  : ''
-              "
-              v-bind="attrs"
-              v-on="on"
-              icon
-              x-large
-            >
-              <v-icon> mdi-check </v-icon>
-              <!-- <v-icon> mdi-checkbox-outline </v-icon> -->
-            </v-btn>
           </template>
 
           <!-- DIALOG (TODO: make as a component)-->
           <div
-            v-if="missionStatus != 'inreview' && missionStatus != 'completed'"
+            v-if="active || declined"
             class="create-dialog"
           >
             <!-- HEADER -->
-            <div class="dialog-header">
+            <div v-if="task.submissionRequired" class="dialog-header">
+              <p class="dialog-title">
+                Submission requirements for:
+                <strong
+                  ><i>{{ task.title }}</i></strong
+                >
+              </p>
+              <div class="d-flex align-center">
+                <v-icon left color="missionAccent"
+                  >mdi-information-variant</v-icon
+                >
+                <p class="dialog-description">
+                  To complete this task you must submit a response to following instructions
+                </p>
+              </div>
+            </div>
+            
+            <!-- HEADER -->
+            <div v-else class="dialog-header">
               <p class="dialog-title">
                 Have you completed Mission:
                 <strong
@@ -90,59 +69,57 @@
               <!-- SUBMISSION FIELDS -->
               <div v-if="task.submissionRequired">
                 <div class="submission-dialog-header">
-                  <p class="submission-dialog-title">Submission Requirements</p>
                   <!-- submission message speech bubble -->
-                  <v-row>
-                    <v-col cols="10">
-                      <v-row
-                        class="d-flex align-center justify-space-around speech-bubble"
-                      >
-                        <v-col cols="1" class="pa-0">
-                          <v-icon left color="cohortAccent"
-                            >mdi-alert-outline</v-icon
-                          >
-                        </v-col>
-                        <v-col cols="11">
-                          <p class="submission-dialog-description ma-0">
-                            {{
-                              task.submissionInstructions
-                                ? task.submissionInstructions
-                                : "Please provide a link to your work, showing that you have completed this mission"
-                            }}
-                          </p>
-                        </v-col>
-                      </v-row>
-                    </v-col>
-                    <v-col cols="2" class="instructor-details">
-                      <div>
-                        <v-img
-                          class="instructor-image mb-2"
-                          :src="mappedByImageURL"
-                        ></v-img>
-                      </div>
-                      <p class="ma-0 text-center">
+                  <div class="d-inline-flex">
+                    <div>
+                      <v-img
+                        class="instructor-image mb-5 ml-5 mr-2"
+                        :src="mappedByImageURL"
+                      ></v-img>
+                    </div>
+                    <div class="d-flex flex-column instructor-details">
+                      <p class="ma-0">
                         {{ currentCourse.mappedBy.name }}
                       </p>
                       <p
-                        class="ma-0 text-center"
-                        style="font-size: 0.7rem; font-style: italic"
+                        class="ma-0"
+                        style="font-size: 0.6rem;"
                       >
-                        (Instructor)
+                        Instructor
                       </p>
-                    </v-col>
-                  </v-row>
+                    </div>
+                  </div>
+                    <v-row
+                      class="d-flex align-center speech-bubble"
+                    >
+                      <p v-html="task.submissionInstructions" class="submission-dialog-description ma-0"></p>
+                      <!-- <p class="submission-dialog-description ma-0">
+                        {{
+                          task.submissionInstructions
+                            ? task.submissionInstructions
+                            : "Please provide a link to your work, showing that you have completed this mission"
+                        }}
+                      </p> -->
+                    </v-row>
                 </div>
 
                 <div class="submission-create-dialog-content">
-                  <!-- TITLE -->
-                  <p class="submission-dialog-description">Link to work:</p>
-                  <v-text-field
-                    class="input-field"
-                    solo
-                    color="cohortAccent"
-                    v-model="submissionLink"
-                    background-color="white"
-                  ></v-text-field>
+                  <div class="d-flex align-center">
+                    <v-icon left color="missionAccent"
+                      >mdi-information-variant</v-icon
+                    >
+                    <p class="dialog-description pb-4">
+                      submit your response including any links to other related work below
+                    </p>
+                  </div>
+                  <vue-editor 
+                    v-model="submissionLink" 
+                    class="mb-8 quill" 
+                    :class="{'active-quill' : quillFocused}" 
+                    :editor-toolbar="customToolbar"
+                    @focus="quillFocused = true" 
+                    @blur="quillFocused = false"
+                  />
                 </div>
               </div>
               <!-- End of v-if="submission" -->
@@ -151,7 +128,7 @@
               <div class="action-buttons">
                 <!-- YES, I HAVE COMPLETED -->
                 <v-btn
-                  v-if="task.submissionRequired && !resubmission"
+                  v-if="active && task.submissionRequired "
                   outlined
                   color="green darken-1"
                   @click="submitWorkForReview()"
@@ -165,7 +142,7 @@
                   SUBMIT WORK FOR REVIEW
                 </v-btn>
                 <v-btn
-                  v-else-if="task.submissionRequired && resubmission"
+                  v-else-if="declined && task.submissionRequired"
                   outlined
                   color="green darken-1"
                   @click="reSubmitWorkForReview()"
@@ -240,18 +217,6 @@
                   <v-icon left> mdi-close </v-icon>
                   CLOSE
                 </v-btn>
-                <!-- LINK TO WORK -->
-                <a
-                  :href="task.submissionLink"
-                  target="_blank"
-                  style="text-decoration: none"
-                >
-                  <v-btn outlined color="cohortAccent" class="ml-2">
-                    <!-- <v-icon left> mdi-close </v-icon> -->
-                    VIEW SUBMISSION
-                  </v-btn>
-                </a>
-                <!-- End action-buttons -->
               </div>
               <!-- End submission-create-dialog-content -->
             </div>
@@ -265,9 +230,8 @@
 </template>
 
 <script>
-import firebase from "firebase/app";
-
-import { db } from "../store/firestoreConfig";
+import { VueEditor } from "vue2-editor";
+import { db, functions } from "../store/firestoreConfig";
 import {
   submitWorkForReviewXAPIStatement,
   reSubmitWorkForReviewXAPIStatement,
@@ -282,6 +246,9 @@ import { mapState, mapGetters } from "vuex";
 export default {
   name: "MissionCompletedDialog",
   mixins: [dbMixins],
+  components: {
+    VueEditor
+  },
   props: [
     "topicId",
     "taskId",
@@ -289,8 +256,10 @@ export default {
     "missionStatus",
     "on",
     "attrs",
-    "resubmission",
-    "submission",
+    "active",
+    "inreview",
+    "declined",
+    "completed"
   ],
   data: () => ({
     submissionLink: null,
@@ -299,6 +268,22 @@ export default {
     disabled: false,
     deleting: false,
     mappedByImageURL: "",
+    customToolbar: [
+        [{ header: [false, 3, 4, 5] }],
+        ["bold", "italic", "underline", "strike"], // toggled buttons
+        [
+          { align: "" },
+          { align: "center" },
+          { align: "right" },
+          { align: "justify" }
+        ],
+        ["blockquote", "code-block"],
+        [{ list: "ordered" }, { list: "bullet" }],
+        [{ indent: "-1" }, { indent: "+1" }], // outdent/indent
+        ["link"],
+        // ["clean"] // remove formatting button
+    ],
+    quillFocused: false,
   }),
   mounted() {
     // get mappedBy image
@@ -312,34 +297,23 @@ export default {
       "currentTopic",
       "currentTask",
       "personsTopicsTasks",
+      "currentCohort",
+      "courseSubmissions"
     ]),
     ...mapGetters(["person"]),
+    submission() {
+      const submissions = this.courseSubmissions.filter(submission => submission.studentId == this.person.id)
+      return submissions.find(submission => submission.contextTask.id == this.task.id)
+    }
   },
   methods: {
     reSubmitWorkForReview() {
       this.loading = true;
       this.disabled = true;
 
-      // format submission url with "http://"
-      if (this.submissionLink) {
-        if (!/^https?:\/\//i.test(this.submissionLink)) {
-          this.submissionLink = "http://" + this.submissionLink;
-        }
-      }
-
-      // console.log("submitting...");
-      // console.log("person...", this.person);
-      // console.log("course...", this.currentCourse);
-      // console.log("topic...", this.currentTopic);
-      // console.log("task...", this.currentTask);
-
       // 1) add submission to course (for teacher to review)
       db.collection("courses")
         .doc(this.currentCourse.id)
-        // .collection("topics")
-        // .doc(this.topicId)
-        // .collection("tasks")
-        // .doc(this.taskId)
         .collection("submissionsForReview")
         .doc(this.submission.id)
         .update({
@@ -369,7 +343,7 @@ export default {
 
           this.$store.commit("setSnackbar", {
             show: true,
-            text: "Link submitted. You will be notified when your instructor has reviewd your work.",
+            text: "Submission sent. You will be notified when your instructor has reviewd your work.",
             color: "baseAccent",
           });
         })
@@ -396,6 +370,11 @@ export default {
           taskSubmittedForReviewTimestamp: new Date(),
         })
         .then(() => {
+          this.currentCohort?.teachers.forEach(async (teacherId) => {
+            await this.sendTaskSubmission(teacherId, this.submissionLink)
+          })
+        })
+        .then(() => {
           console.log("Task work successfully re-submitted for review!");
           this.loading = false;
           this.disabled = false;
@@ -417,26 +396,9 @@ export default {
       this.loading = true;
       this.disabled = true;
 
-      // format submission url with "http://"
-      if (this.submissionLink) {
-        if (!/^https?:\/\//i.test(this.submissionLink)) {
-          this.submissionLink = "http://" + this.submissionLink;
-        }
-      }
-
-      // console.log("submitting...");
-      // console.log("person...", this.person);
-      // console.log("course...", this.currentCourse);
-      // console.log("topic...", this.currentTopic);
-      // console.log("task...", this.currentTask);
-
       // 1) add submission to course (for teacher to review)
       db.collection("courses")
         .doc(this.currentCourse.id)
-        // .collection("topics")
-        // .doc(this.topicId)
-        // .collection("tasks")
-        // .doc(this.taskId)
         .collection("submissionsForReview")
         .add({
           // update "courses" database with task submission
@@ -447,9 +409,12 @@ export default {
           submissionLink: this.submissionLink,
           taskSubmissionStatus: "inreview",
           taskSubmittedForReviewTimestamp: new Date(),
+        }).then(() => {
+          this.currentCohort?.teachers.forEach(async (teacherId) => {
+            await this.sendTaskSubmission(teacherId, this.submissionLink)
+          })
         })
-        .then((docRef) => {
-          docRef.update({ id: docRef.id });
+        .then(() => {
           console.log("Submission successfully submitted for review!");
 
           // send xAPI statement to LRS
@@ -465,7 +430,7 @@ export default {
 
           this.$store.commit("setSnackbar", {
             show: true,
-            text: "Link submitted. You will be notified when your instructor has reviewd your work.",
+            text: "Submission sent. You will be notified when your instructor has reviewd your work.",
             color: "baseAccent",
           });
         })
@@ -588,6 +553,7 @@ export default {
           galaxy: this.currentCourse,
           system: this.currentTopic,
         });
+        this.completeTopic()
         // all tasks are completed. unlock next topic
         this.unlockNextTopics();
       } else {
@@ -636,6 +602,17 @@ export default {
           });
         });
     },
+    completeTopic() {
+      db.collection("people")
+        .doc(this.person.id)
+        .collection(this.currentCourse.id)
+        .doc(this.currentTopic.id)
+        .update({
+          // update tasks array with new task
+          topicStatus: "completed",
+          topicCompletedTimestamp: new Date(),
+        })
+    },
     cancel() {
       this.dialog = false;
     },
@@ -643,6 +620,20 @@ export default {
       const person = await this.MXgetPersonByIdFromDB(personId);
       this.mappedByImageURL = person.image.url;
     },
+    async sendTaskSubmission(teacherId, submission) {
+      const teacher = await this.MXgetPersonByIdFromDB(teacherId)
+      const data = {
+        course: this.currentCourse.title,
+        topic: this.currentTopic.label,
+        task: this.currentTask.title,
+        student: this.person.firstName + ' ' + this.person.lastName,
+        submission: submission,
+        teacher: teacher.firstName + ' ' + teacher.lastName,
+        email: teacher.email
+      }
+      const sendTaskSubmission = functions.httpsCallable("sendTaskSubmission");
+      return sendTaskSubmission(data)
+    }
   },
 };
 </script>
@@ -670,15 +661,15 @@ export default {
       color: var(--v-missionAccent-base);
       text-transform: uppercase;
     }
-
-    .dialog-description {
-      color: var(--v-missionAccent-base);
-      text-transform: uppercase;
-      font-size: 0.7rem;
-      margin: 0;
-      font-style: italic;
-    }
   }
+}
+
+.dialog-description {
+  color: var(--v-missionAccent-base);
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  margin: 0;
+  font-style: italic;
 }
 
 .submission-create-dialog {
@@ -688,31 +679,31 @@ export default {
     width: 100%;
     padding: 20px;
     text-transform: uppercase;
-    border-bottom: 1px solid var(--v-cohortAccent-base);
+    border-bottom: 1px solid var(--v-missionAccent-base);
     color: var(--v-cohortAccent-base);
   }
 
   .submission-create-dialog-content {
     // width: 33.33%;
     // min-height: 400px;
+    color: #fff;
     display: flex;
     justify-content: space-around;
     align-items: space-around;
     flex-direction: column;
-    color: var(--v-cohortAccent-base);
     padding: 20px;
-    text-transform: uppercase;
     width: 100%;
     // font-size: 0.6rem;
     // border: 1px solid var(--v-missionAccent-base);
   }
 
   .submission-dialog-description {
-    color: var(--v-cohortAccent-base);
+    color: #fff;
     text-transform: uppercase;
     font-size: 0.7rem;
     padding: 0px 10px;
     font-style: italic;
+    width: 100%
   }
 
   .speech-bubble {
@@ -720,13 +711,13 @@ export default {
     width: auto;
     max-width: 90%;
     padding: 10px;
-    margin: 40px auto;
+    margin: 0px 20px 20px 20px;
     text-align: center;
     // background-color: #fff;
     -moz-border-radius: 5px;
     -webkit-border-radius: 5px;
     border-radius: 5px;
-    border: 2px solid var(--v-missionAccent-base);
+    border: 2px solid var(--v-cohortAccent-base);
   }
   // .speech-bubble p {
   //   // font-size: 1.25em;
@@ -737,15 +728,14 @@ export default {
     content: "\0020";
     display: block;
     position: absolute;
-    top: 20px;
-    right: -10px;
+    top: -20px;
+    right: 300px;
     z-index: 2;
     width: 0;
     height: 0;
     overflow: hidden;
     border: solid 10px transparent;
-    border-left: 0;
-    border-bottom-color: var(--v-missionAccent-base);
+    border-bottom-color: var(--v-cohortAccent-base);
   }
   .speech-bubble:before {
     top: -30px;
@@ -767,11 +757,27 @@ export default {
 }
 
 .instructor-details {
-  color: var(--v-missionAccent-base);
+  color: var(--v-cohortAccent-base);
+  margin: 5px;
   font-size: 0.9rem;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
 }
+
+.quill ::v-deep .ql-toolbar{
+  border: 1px solid #ffffff45
+}
+.quill ::v-deep .ql-container{
+  border: 1px solid #ffffff45
+}
+.quill ::v-deep .ql-editor {
+  font-size: 0.9rem
+}
+
+.active-quill ::v-deep .ql-toolbar{
+  border: 1px solid var(--v-cohortAccent-base) 
+}
+.active-quill ::v-deep .ql-container{
+  border: 1px solid var(--v-cohortAccent-base) 
+}
+
 </style>

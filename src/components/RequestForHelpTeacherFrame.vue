@@ -2,17 +2,18 @@
   <div :id="cohortId">
     <h2 class="help-label">Requests for help</h2>
 
-    <div v-if="unansweredRequests.length > 0">
+    <div v-if="requests.length > 0">
       <RequestForHelpTeacherPanel
-        v-for="request in unansweredRequests"
+        v-for="request in requests"
         :key="request.id"
         :request="request"
         :isTeacher="isTeacher"
+        :isDashboardView="isDashboardView"
       />
     </div>
-    <div v-if="!loading && unansweredRequests.length == 0">
+    <div v-if="!loading && requests.length == 0">
       <p
-        class="overline pt-4 text-center"
+        class="overline pt-4 text-center mb-0"
         style="color: var(--v-galaxyAccent-base)"
       >
         NO REQUESTS FOR HELP
@@ -40,7 +41,7 @@ export default {
   components: {
     RequestForHelpTeacherPanel,
   },
-  props: ["courses", "isTeacher", "students"],
+  props: ["courses", "isTeacher", "students", "noSubmissions"],
   data() {
     return {
       loading: false,
@@ -59,26 +60,40 @@ export default {
     this.loading = false;
   },
   computed: {
-    ...mapState(["teachersRequestsForHelp", "user", "currentCohort", "showPanelCard"]),
+    ...mapState(["teachersRequestsForHelp", "user", "currentCohort", "showPanelCard", "currentTopic", "currentTask"]),
+    isGalaxyView() {
+      return this.$route.name == "GalaxyView"
+    },
     isCohortView() {
       return this.$route.name == "CohortView"
-    },
-    cohortId() {
-       return this.cohortView
-        ? this.isTeacher ? "cohort-help-panel" : "student-cohort-help-panel"
-        : "help-panel";
     },
     isDashboardView() {
       return this.$route.name == "Dashboard"
     },
-    unansweredRequests() {
-      const requests = this.teachersRequestsForHelp.filter(
-        (request) => request.requestForHelpStatus == "unanswered"
-      );
-      if (this.isCohortView) {
-        return requests.filter(request => this.currentCohort.students.some(student =>  { return student === request.personId})).reverse()
-      } else if (this.isDashboardView) {
-        return requests.filter(request => this.students?.some(student =>  { return student === request.studentId})).reverse()
+    isSystemView() {
+      return this.$route.name == "SolarSystemView"
+    },
+    cohortId() {
+       return this.noSubmissions ? "student-help-panel" : "help-panel"
+    },
+    requests() {
+      // const requests = this.teachersRequestsForHelp.filter(
+      //   (request) => request.requestForHelpStatus == "unanswered"
+      // );
+      const requests = this.teachersRequestsForHelp.filter(request => this.students?.some((student) => {return student.id ? student.id === request.personId : student === request.personId}))
+      if (this.isTeacher) {
+        requests.sort((a, b) => { return a.requestForHelpStatus == 'unanswered' ? -1 : 1 });
+      } else {
+        requests.sort((a, b) => { return a.requestForHelpStatus == 'unanswered' ? 1 : -1 });
+      }
+      
+      if (this.isCohortView || this.isDashboardView) return requests
+      else if (this.isGalaxyView) {
+        return requests.filter((request) => request.contextCourse.id == this.courses[0].id)
+      } else if (this.isSystemView) {
+        const taskRequests = requests.filter(request => request.contextTopic.id == this.currentTopic.id)
+        if (this.isTeacher) return taskRequests
+        else return taskRequests.filter(req => req.contextTask.id == this.currentTask.id)
       }
       return requests
     },
@@ -93,43 +108,32 @@ export default {
 </script>
 <style scoped lang="scss">
 #help-panel {
-  width: calc(100% - 30px);
+  width: 100%;
   border: 1px solid var(--v-galaxyAccent-base);
   margin-top: 30px;
-  padding: 20px;
+  padding: 20px 15px 20px 20px;
   position: relative;
   backdrop-filter: blur(2px);
   overflow-y: scroll;
+  max-height: 40%;
+  transition: all .2s ease-in-out
 }
 
-#student-cohort-help-panel {
-  width: calc(100% - 30px);
+#help-panel:hover {
+  max-height:90vh
+}
+
+#student-help-panel {
+  width: 100%;
   border: 1px solid var(--v-galaxyAccent-base);
-  margin: 30px 15px;
-  padding: 20px;
+  margin: 30px 0px;
+  padding: 20px 10px 20px 20px;
   position: relative;
   backdrop-filter: blur(2px);
   max-height: 100%;
   overflow: scroll;
   overflow-x: hidden;
   transition: all .2s ease-in-out
-}
-
-#cohort-help-panel {
-  width: calc(100% - 30px);
-  border: 1px solid var(--v-galaxyAccent-base);
-  margin: 30px 15px;
-  padding: 20px;
-  position: relative;
-  backdrop-filter: blur(2px);
-  max-height: 40%;
-  overflow: scroll;
-  overflow-x: hidden;
-  transition: all .2s ease-in-out
-}
-
-#cohort-help-panel:hover {
-  max-height:100%
 }
 
 .help-label {

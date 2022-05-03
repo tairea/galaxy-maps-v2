@@ -149,7 +149,7 @@
 import firebase from "firebase/app";
 import moment from "moment";
 
-import { db } from "../store/firestoreConfig";
+import { db, functions } from "../store/firestoreConfig";
 import { teacherRespondedToRequestForHelpXAPIStatement } from "../lib/veracityLRS";
 import { dbMixins } from "../mixins/DbMixins"; 
 import { mapState, mapGetters } from "vuex";
@@ -169,7 +169,7 @@ export default {
   }),
   mounted() {},
   computed: {
-    ...mapState(["currentCourse", "currentTopic", "currentTask"]),
+    ...mapState(["currentCourse", "currentTopic", "currentTask", "currentCohort"]),
     ...mapGetters(["person"]),
     dark() {
       return this.$vuetify.theme.isDark;
@@ -192,8 +192,9 @@ export default {
           requestForHelpStatus: "answered",
           responseSubmittedTimestamp: new Date(),
           responderPersonId: this.person.id,
-        })
-        .then(() => {
+        }).then(() => {
+          this.emailResponseToStudent(this.requesterPerson, this.response)
+        }).then(() => {
           console.log("Response successfully submitted for review!");
 
           // teacher assissted student
@@ -213,7 +214,7 @@ export default {
           this.dialog = false;
           this.$store.commit("setSnackbar", {
             show: true,
-            text: "Response submitted to Mission for students to see.",
+            text: "Response sent to student",
             color: "baseAccent",
           });
           // this.MXbindRequestsForHelp();
@@ -233,6 +234,21 @@ export default {
       this.loading = false;
       this.dialog = false;
     },
+    async emailResponseToStudent(student, response) {
+      const data = {
+        course: this.currentCourse.title,
+        topic: this.currentTopic.label,
+        task: this.currentTask.title,
+        student: student.firstName + ' ' + student.lastName,
+        response: response,
+        request: this.request.requestForHelpMessage,
+        teacher: this.person.firstName + ' ' + this.person.lastName,
+        email: student.email
+      }
+      console.log('email data: ', data)
+      const sendResponseToHelp = functions.httpsCallable("sendResponseToHelp");
+      return sendResponseToHelp(data)
+    }
   },
 };
 </script>

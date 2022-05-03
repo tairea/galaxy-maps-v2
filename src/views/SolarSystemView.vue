@@ -3,6 +3,11 @@
     <!--==== Left section ====-->
     <div id="left-section">
       <SolarSystemInfo
+        :topic="currentTopic"
+        :tasks="teacher ? topicsTasks : personsTopicsTasks"
+        :teacher="teacher"
+      />
+      <!-- <SolarSystemInfo
         :topic="
           teacher ? 
             getTopicById(currentTopicId) :
@@ -10,7 +15,7 @@
         "
         :tasks="teacher ? topicsTasks : personsTopicsTasks"
         :teacher="teacher"
-      />
+      /> -->
       <AssignedInfo
         v-if="!draft && peopleInTopic.length"
         :assignCohorts="true"
@@ -25,15 +30,17 @@
       <MissionsList
         :tasks="teacher ? topicsTasks : personsTopicsTasks"
         :topicId="currentTopicId"
-        @task="taskForHelpInfo($event)"
         :teacher="teacher"
+        @task="taskForHelpInfo($event)"
+        @missionActivated="peopleInTopic.push(person)"
       />
     </div>
 
     <!--==== Right section ====-->
-    <div v-if="task" id="right-section">
-      <SubmissionInfo v-if="task.submissionRequired == true" :task="task" :submissions="submissions" />
-      <RequestsForHelpInfo :requests="requests" :task="task" />
+    <div id="right-section">
+      <RequestsForHelpTeacherFrame :courses="[currentCourse]" :isTeacher="teacher" :students="peopleInTopic"/>
+      <SubmissionTeacherFrame :courses="[currentCourse]" :isTeacher="teacher" :students="teacher ? peopleInTopic : [person]" class="mt-4"/> 
+      <!-- <SubmissionInfo v-if="task && task.submissionRequired == true" :task="task" :submissions="submissions" /> -->
     </div>
   </div>
 </template>
@@ -44,9 +51,10 @@ import AssignedInfo from "../components/AssignedInfo";
 import MissionsInfo from "../components/MissionsInfo";
 import MissionsList from "../components/MissionsList";
 import SubmissionInfo from "../components/SubmissionInfo";
-import RequestsForHelpInfo from "../components/RequestsForHelpInfo";
 import SolarSystem from "../components/SolarSystem";
 import BackButton from "../components/BackButton";
+import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame";
+import RequestsForHelpTeacherFrame from '../components/RequestForHelpTeacherFrame.vue'
 
 import { mapState, mapGetters } from "vuex";
 import { getPersonsTopicById } from "../lib/ff";
@@ -60,9 +68,11 @@ export default {
     MissionsInfo,
     MissionsList,
     SubmissionInfo,
-    RequestsForHelpInfo,
+    // RequestsForHelpInfo,
     SolarSystem,
     BackButton,
+    RequestsForHelpTeacherFrame,
+    SubmissionTeacherFrame
   },
   props: ["topicId"],
   data() {
@@ -88,22 +98,7 @@ export default {
         courseId: this.currentCourseId,
         topicId: this.currentTopicId,
       });
-      console.log("persons topic tasks: ", this.personsTopicsTasks);
     }
-
-    // bind requests for help
-    const reqUnsubscribe = await this.$store.dispatch(
-      "getRequestsForHelpByCourseId",
-      this.currentCourseId
-    );
-
-    this.unsubscribes.push(reqUnsubscribe)
-
-    const subUnsubscribe = await this.$store.dispatch(
-      "getAllSubmittedWorkByCourseId",
-      this.currentCourseId
-    );
-    this.unsubscribes.push(subUnsubscribe );
 
     // check if requests are binded
     // console.log("from store requestsForHelp: ", this.requestsForHelp);
@@ -125,10 +120,7 @@ export default {
       "currentTask",
       "topicsTasks",
       "personsTopicsTasks",
-      "requestsForHelp",
-      "peopleInCourse",
-      "teachersRequestsForHelp",
-      "teachersSubmissionsToReview"
+      "peopleInCourse"
     ]),
     ...mapGetters([
       "person",
@@ -145,16 +137,6 @@ export default {
         this.currentCourse?.mappedBy?.personId === this.person.id ||
         this.user.data.admin
       );
-    },
-    requests() {
-      const taskRequests = this.teachersRequestsForHelp.filter((request) => request.contextTask.id == this.task.id)
-      if (this.teacher) return taskRequests
-      else return taskRequests.filter(req => req.personId === this.person.id)
-    },
-    submissions() {
-      const taskSubmissions = this.teachersSubmissionsToReview.filter((submission) => submission.contextTask.id == this.task.id)
-      if (this.teacher) return taskSubmissions
-      else return taskSubmissions.filter(sub => sub.personId === this.person.id)
     }
   },
   methods: {
@@ -163,7 +145,7 @@ export default {
     },
     getActiveMission() {
       const activeMissionObj = this.personsTopicsTasks.find((taskObj) => {
-        return taskObj.taskStatus == "active";
+        return taskObj.taskStatus == "active" || taskObj.taskStatus == "declined";
       });
       if (activeMissionObj) {
         this.activeMission = true;
@@ -177,17 +159,14 @@ export default {
       return activeMissionObj;
     },
     async getPeopleInTopic () {
+      let people = []
       this.peopleInCourse.forEach(async person => {
         let personsTopic = await getPersonsTopicById(person.id, this.currentCourse.id, this.currentTopic.id)
-        if (personsTopic.topicStatus == 'active') this.peopleInTopic.push(person)
+        if (personsTopic.topicStatus == 'active') people.push(person)
       })
+      this.peopleInTopic = people
     }
   },
-  destroyed() {
-    for (const unsubscribe of this.unsubscribes) {
-      unsubscribe()
-    }
-  }
 };
 </script>
 

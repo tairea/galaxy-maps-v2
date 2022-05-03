@@ -10,6 +10,7 @@ import { startPresenceSystem } from './presence'
 Vue.config.productionTip = false;
 
 firebase.auth().onAuthStateChanged((user) => {
+  console.log('auth state changed')
   if (user) {
     user?.getIdTokenResult().then(idTokenResult => {
       Object.assign(user, {admin: idTokenResult.claims.admin})

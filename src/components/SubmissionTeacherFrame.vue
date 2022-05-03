@@ -1,11 +1,13 @@
 <template>
-  <div :id="panelId">
+  <div id="submission-panel">
     <h2 class="submission-label">Work submitted for review</h2>
     <div v-if="submissions.length > 0">
       <SubmissionTeacherPanel
         v-for="submission in submissions"
         :key="submission.id"
         :submission="submission"
+        :isDashboardView="isDashboardView"
+        :isTeacher="isTeacher"
       />
     </div>
     <div v-if="!loading && submissions.length == 0">
@@ -35,7 +37,7 @@ import { dbMixins, dmMixins } from "../mixins/DbMixins";
 export default {
   name: "SubmissionTeacherFrame",
   mixins: [dbMixins],
-  props: ["courses", "students"],
+  props: ["courses", "students", "isTeacher"],
   components: {
     SubmissionTeacherPanel,
   },
@@ -51,7 +53,7 @@ export default {
     for (const course of this.courses) {
       const unsubscribe = await this.$store.dispatch(
         "getAllSubmittedWorkByCourseId",
-        course.id
+        course.id || course
       );
       this.unsubscribes.push(unsubscribe);
     }
@@ -64,25 +66,34 @@ export default {
     }
   },
   computed: {
-    ...mapState(["teachersSubmissionsToReview", "person", "currentCohort"]),
+    ...mapState(["courseSubmissions", "person", "currentCohort", "currentTopic", "currentTask"]),
     isCohortView() {
       return this.$route.name == "CohortView"
     },
     isDashboardView() {
       return this.$route.name == "Dashboard"
     },
-    panelId () {
-      return this.isCohortView 
-        ? "cohort-submission-panel"
-        : "submission-panel";
+    isGalaxyView() {
+      return this.$route.name == "GalaxyView"
+    },
+    isSystemView() {
+      return this.$route.name == "SolarSystemView"
     },
     submissions () {
-      if (this.isCohortView) {
-        return this.teachersSubmissionsToReview.filter(submission => this.currentCohort.students.some(student =>  { return student === submission.studentId})).reverse()
-      } else if (this.isDashboardView) {
-        return this.teachersSubmissionsToReview.filter(submission => this.students?.some(student =>  { return student === submission.studentId})).reverse()
+      const submissions = this.courseSubmissions.filter(submission => this.students?.some((student) => {return student.id ? student.id === submission.studentId : student === submission.studentId}))
+      if (this.isTeacher) {
+        submissions.sort((a, b) => { return a.taskSubmissionStatus == 'inreview' ? -1 : 1 });
+      } else {
+        submissions.sort((a, b) => { return a.taskSubmissionStatus == 'completed' ? -1 : 1 });
       }
-      else return this.teachersSubmissionsToReview
+
+      if (this.isCohortView || this.isDashboardView) return submissions
+      else if (this.isGalaxyView) {
+        return submissions.filter((submission) => submission.contextCourse.id == this.courses[0].id)
+      } else if (this.isSystemView) {
+        return submissions.filter((submission) => submission.contextTopic.id == this.currentTopic.id)
+      }
+      return submissions
     }
   },
   methods: {},
@@ -90,27 +101,19 @@ export default {
 </script>
 <style lang="scss" scoped>
 #submission-panel {
-  width: calc(100% - 30px);
+  width: 100%;
   border: 1px solid var(--v-cohortAccent-base);
-  margin-top: 30px;
   padding: 20px;
-  // background: var(--v-baseAccent-base);
   position: relative;
   backdrop-filter: blur(2px);
   z-index: 3;
+  overflow-y: scroll;
+  max-height: 40%;
+  transition: all .2s ease-in-out
 }
 
-#cohort-submission-panel {
-  width: calc(100% - 30px);
-  border: 1px solid var(--v-cohortAccent-base);
-  margin: 0px 15px;
-  padding: 20px;
-  position: relative;
-  backdrop-filter: blur(2px);
-  z-index: 3;
-  max-height: 40%;
-  overflow: scroll;
-  overflow-x: hidden;
+#submission-panel:hover{
+  max-height: 50%
 }
 
 .submission-label {

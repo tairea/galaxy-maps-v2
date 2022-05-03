@@ -56,37 +56,16 @@
             <p
               class="text-overline text-uppercase"
               :class="{
-                'mission-in-review': getTaskStatus == 'inreview',
-                'mission-completed': getTaskStatus == 'completed',
+                'mission-in-review': inreview,
+                'mission-completed': completed,
               }"
             >
-              {{
-                getTaskStatus == "completed"
-                  ? "MISSION COMPLETED"
-                  : getTaskStatus == "inreview"
-                  ? "SUBMISSION IN REVIEW"
-                  : getTaskStatus == "declined"
-                  ? "SUBMISSION DECLINED"
-                  : "LOCKED"
-              }}
+              {{completed ? "MISSION COMPLETED" : inreview ? "SUBMISSION IN REVIEW" : "LOCKED"}}
             </p>
             <p class="text-overline text-uppercase">
               {{ getStatusAndTimestamp }}
             </p>
           </div>
-          <!-- View submission -->
-          <!-- <div v-if="task.submissionLink" class="section-overUnder">
-            <a
-              style="text-decoration: none"
-              :href="task.submissionLink"
-              target="_blank"
-            >
-              <v-btn outlined color="cohortAccent" class="" small>
-                <v-icon left> mdi-text-box-search-outline </v-icon>
-                VIEW SUBMISSION
-              </v-btn>
-            </a>
-          </div> -->
         </div>
       </div>
     </v-row>
@@ -95,51 +74,25 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
 import { DateTime } from "luxon";
 
 export default {
   name: "SelectedMissionsCard",
-  components: {},
-  props: ["task"],
-  mounted() {},
+  props: ["task", "inreview", "completed"],
   computed: {
-    ...mapState(["personsTopicsTasks"]),
-    getTaskStatus() {
-      // get topic status eg. unlocked / inreview / completed / locked
-      const task = this.personsTopicsTasks.find(
-        (task) => task.id === this.task.id
-      );
-      return task.taskStatus;
-    },
     getStatusAndTimestamp() {
-      if (this.getTaskStatus == "completed" && this.task.submissionRequired) {
+      if (this.completed && this.task.submissionRequired) {
         return (
-          "MARKED COMPLETED: " +
-          this.humanDate(this.task.taskReviewedAndCompletedTimestamp)
+          "MARKED COMPLETED: " + this.humanDate(this.task.taskReviewedAndCompletedTimestamp)
         );
-      } else if (
-        this.getTaskStatus == "completed" &&
-        !this.task.submissionRequired
-      ) {
+      } else if (this.completed && !this.task.submissionRequired) {
         return "COMPLETED: " + this.humanDate(this.task.taskCompletedTimestamp);
-      } else if (this.getTaskStatus == "inreview") {
-        return (
-          "SUBMITTED: " +
-          this.humanDate(this.task.taskSubmittedForReviewTimestamp)
-        );
-      } else if (this.getTaskStatus == "declined") {
-        return `SUBMITTED: ${this.humanDate(
-          this.task.taskSubmittedForReviewTimestamp
-        )} 
-        DECLINED: ${this.humanDate(this.task.submissionDeclinedTimestamp)}`;
+      } else if (this.inreview) {
+        return ("SUBMITTED: " + this.humanDate(this.task.taskSubmittedForReviewTimestamp));
       } else {
         return "LOCKED";
       }
     },
-  },
-  data() {
-    return {};
   },
   methods: {
     humanDate(timestamp) {

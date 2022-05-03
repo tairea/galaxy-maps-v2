@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-tooltip v-if="personData" bottom color="subBackground">
+    <v-tooltip v-if="profileData" bottom color="subBackground">
       <template v-slot:activator="{ on, attrs }">
         <div
           class="d-flex justify-center align-center"
@@ -9,29 +9,18 @@
         >
           <v-avatar :size="size">
             <img
-              v-if="personData.image"
-              :src="personData.image.url"
-              :alt="personData.firstName"
+              v-if="profileData.image"
+              :src="profileData.image.url"
+              :alt="profileData.firstName"
               style="object-fit: cover"
               :style="border"
             />
             <div
               v-else
               class="imagePlaceholder"
-              :style="[
-                colourBorder
-                  ? {
-                      width: size + 'px',
-                      height: size + 'px',
-                      border,
-                      backgroundColor: stringToColour(
-                        personData.firstName + personData.lastName
-                      ),
-                    }
-                  : { width: size + 'px', height: size + 'px' },
-              ]"
+              :style="colouredBorder"
             >
-              {{ first3Letters(personData.firstName) }}
+              {{ first3Letters(profileData.firstName) }}
             </div>
           </v-avatar>
         </div>
@@ -41,7 +30,7 @@
           class="ma-0 person-tooltip"
           style="font-size: 0.8rem; font-weight: 800"
         >
-          {{ personData.firstName + " " + personData.lastName }}
+          {{ profileData.firstName + " " + profileData.lastName }}
         </p>
       </div>
     </v-tooltip>
@@ -54,29 +43,44 @@ import { mapState } from "vuex";
 
 export default {
   name: "Avatar",
-  props: ["personId", "size", "colourBorder"],
+  props: ["personId", "size", "colourBorder", "profile"],
+  data() {
+    return {
+      profileData: {},
+    };
+  },
   async mounted() {
-    await db
-      .collection("people")
-      .doc(this.personId)
-      .get()
-      .then((doc) => {
-        this.personData = doc.data();
-      });
+    if (this.profile) { 
+      this.profileData = this.profile
+    } else {
+      await db
+        .collection("people")
+        .doc(this.personId)
+        .get()
+        .then((doc) => {
+          this.profileData = doc.data();
+        });
+    }
   },
   computed: {
     ...mapState(['userStatus']),
     online() {
-      return this.userStatus[this.personId].state === 'online'
+      if (this.profileData.id) return this.userStatus[this.profileData.id]?.state === 'online'
     },
     border() {
       return this.colourBorder && this.online ? 'border: 1px solid var(--v-baseAccent-base)':''
+    },
+    colouredBorder () {
+      return this.colourBorder ? {
+        width: this.size + 'px',
+        height: this.size + 'px',
+        backgroundColor: this.stringToColour(
+          this.profileData.firstName + this.profileData.lastName
+        ),
+        border: this.online ? '1px solid var(--v-baseAccent-base)' : ''
+      }
+      : { width: this.size + 'px', height: this.size + 'px' }
     }
-  },
-  data() {
-    return {
-      personData: {},
-    };
   },
   methods: {
     first3Letters(name) {
@@ -84,7 +88,7 @@ export default {
       return name.substring(0, 3).toUpperCase();
     },
     stringToColour(str) {
-      return `hsl(${this.hashCode(str) % 360}, 100%, 70%)`;
+      return `hsl(${this.hashCode(str) % 360}, 100%, 35%)`;
     },
     hashCode(str) {
       let hash = 0;
@@ -100,7 +104,6 @@ export default {
 <style lang="scss" scoped>
 .imagePlaceholder {
   border-radius: 50%;
-  background-color: rgba(200, 200, 200, 0.3);
   display: flex;
   justify-content: center;
   align-items: center;

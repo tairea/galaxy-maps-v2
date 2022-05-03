@@ -77,7 +77,7 @@
 <script>
 import firebase from "firebase/app";
 
-import { db } from "../store/firestoreConfig";
+import { db, functions } from "../store/firestoreConfig";
 import {
   studentWorkMarkedCompletedXAPIStatement,
   teacherReviewedStudentWorkXAPIStatement,
@@ -109,11 +109,6 @@ export default {
     markSubmissionAsCompleted() {
       this.loading = true;
 
-      console.log("currentCourse", this.submission.contextCourse);
-      console.log("currentTopic", this.submission.contextTopic);
-      console.log("currentTask", this.submission.contextTask);
-      console.log("person", this.person);
-
       // 1) update submission to completed
       db.collection("courses")
         .doc(this.submission.contextCourse.id)
@@ -138,6 +133,8 @@ export default {
           teacherId: this.person.id,
           taskStatus: "completed",
           taskReviewedAndCompletedTimestamp: new Date(),
+        }).then(() => {
+          this.sendResponseToSubmission('completed')
         })
         .then(() => {
           console.log("Task successfully updated as completed!");
@@ -294,6 +291,21 @@ export default {
               });
           });
         });
+    },
+    sendResponseToSubmission(outcome) {
+      const data = {
+        course: this.submission.contextCourse.title,
+        topic: this.submission.contextTopic.label,
+        task: this.submission.contextTask.title,
+        student: this.requesterPerson.firstName + ' ' + this.requesterPerson.lastName,
+        submission: this.submission.submissionLink,
+        outcome: outcome,
+        teacher: this.person.firstName + ' ' + this.person.lastName,
+        email: this.person.email
+      }
+      console.log('send reponse email: ', data)
+      const sendResponseToSubmission = functions.httpsCallable("sendResponseToSubmission");
+      return sendResponseToSubmission(data)
     },
     cancel() {
       this.dialog = false;
