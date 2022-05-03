@@ -153,15 +153,14 @@ export default {
           })
         }).then(() => { 
           this.currentCohort?.teachers.forEach(async (teacherId) => {
-            console.log('sending email to teacher: ', teacherId)
             await this.emailRequestToTeacher(teacherId, requestForHelp)
           })
         }).then(async () => {
-          await this.$store.dispatch("bindRequestsForHelp", {
-            courseId: this.currentCourse.id,
-            topicId: this.currentTopic.id,
-            taskId: this.currentTask.id,
-          });
+          // await this.$store.dispatch("bindRequestsForHelp", {
+          //   courseId: this.currentCourse.id,
+          //   topicId: this.currentTopic.id,
+          //   taskId: this.currentTask.id,
+          // });
           this.requestForHelp = "";
           this.loading = false;
           this.dialog = false;
@@ -180,7 +179,6 @@ export default {
     },
     async emailRequestToTeacher(teacherId, request) {
       const teacher = await this.MXgetPersonByIdFromDB(teacherId)
-      console.log('teacher profile: ', teacher)
       const data = {
         course: this.currentCourse.title,
         topic: this.currentTopic.label,
@@ -190,7 +188,6 @@ export default {
         teacher: teacher.firstName + ' ' + teacher.lastName,
         email: teacher.email
       }
-      console.log('email data: ', data)
       const sendRequestForHelp = functions.httpsCallable("sendRequestForHelp");
       return sendRequestForHelp(data)
     }

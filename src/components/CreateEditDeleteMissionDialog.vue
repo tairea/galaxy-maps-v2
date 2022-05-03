@@ -167,7 +167,7 @@
                 </p>
               </v-checkbox>
               <!-- SUBMISSION INSTRUCTIONS -->
-              <div v-if="task.submissionRequired" class="px-6">
+              <div v-if="task.submissionRequired">
                 <p class="dialog-description submission-colour">
                   Submission Instructions:
                   <v-tooltip right max-width="300">
@@ -188,14 +188,22 @@
                     </span>
                   </v-tooltip>
                 </p>
-                <v-textarea
+                <vue-editor 
+                  v-model="task.submissionInstructions" 
+                  class="mt-2 quill" 
+                  :class="{'active-submission-quill' : this.submissionQuillFocused}" 
+                  :editor-toolbar="customToolbar"
+                  @focus="submissionQuillFocused = true" 
+                  @blur="submissionQuillFocused = false"
+                />
+                <!-- <v-textarea
                   v-model="task.submissionInstructions"
                   class="ma-0 pa-0 submission-colour input-field"
                   outlined
                   :dark="dark"
                   :light="!dark"
                   color="cohortAccent"
-                ></v-textarea>
+                ></v-textarea> -->
               </div>
 
               <!-- ACTION BUTTONS -->
@@ -365,6 +373,7 @@ export default {
     disabled: false,
     deleting: false,
     quillFocused: false,
+    submissionQuillFocused: false,
     customToolbar: [
         [{ header: [false, 3, 4, 5] }],
         ["bold", "italic", "underline", "strike"], // toggled buttons
@@ -666,5 +675,12 @@ export default {
 }
 .active-quill ::v-deep .ql-container{
   border: 1px solid var(--v-missionAccent-base) 
+}
+
+.active-submission-quill ::v-deep .ql-toolbar{
+  border: 1px solid var(--v-cohortAccent-base) 
+}
+.active-submission-quill ::v-deep .ql-container{
+  border: 1px solid var(--v-cohortAccent-base) 
 }
 </style>

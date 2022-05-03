@@ -1,19 +1,30 @@
 <template>
-  <div class="map-buttons">
-    <v-btn
-      class="map-button"
-      :color="!addNodeMode ? 'missionAccent' : 'baseAccent'"
-      fab
-      dark
-      small
-      outlined
-      tile
-      title="Add Node"
-      @click="toggleAddNodeMode"
-    >
-      <v-icon v-if="!addNodeMode">mdi-dots-hexagon</v-icon>
-      <v-icon v-else color="baseAccent">mdi-close</v-icon>
-    </v-btn>
+  <div class="d-flex flex-column map-buttons">
+    <div class="d-inline-flex">
+      <v-btn
+        class="map-button"
+        :color="!addNodeMode ? 'missionAccent' : 'baseAccent'"
+        fab
+        dark
+        small
+        outlined
+        tile
+        title="Add Node"
+        @click="toggleAddNodeMode"
+      >
+        <v-icon v-if="!addNodeMode">mdi-dots-hexagon</v-icon>
+        <v-icon v-else color="baseAccent">mdi-close</v-icon>
+      </v-btn>
+      <div class="ui-message-wrap">
+        <p v-if="!editMode" class="ui-message pt-4 ml-n1">
+          <v-icon color="missionAccent" class="bounce"
+            >mdi-hand-pointing-left</v-icon
+          >
+          Add a new node to extend your Galaxy map
+        </p>
+        <p v-else class="ui-message active">{{ uiMessage }}</p>
+      </div>
+    </div>
 
     <!-- Add edge button -->
     <v-btn
@@ -46,16 +57,6 @@
     >
       Save new positions
     </v-btn>
-
-    <div class="ui-message-wrap">
-      <p v-if="!editMode" class="ui-message" style="margin-left: 20px">
-        <v-icon color="missionAccent" class="bounce"
-          >mdi-hand-pointing-up</v-icon
-        >
-        Add a new node to extend your Galaxy map
-      </p>
-      <p v-else class="ui-message active">{{ uiMessage }}</p>
-    </div>
   </div>
 </template>
 

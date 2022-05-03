@@ -245,6 +245,7 @@ export default {
       console.log("route to galaxy", this.course.id);
       // save current course to store
       this.$store.commit("setCurrentCourseId", this.course.id);
+      this.$store.commit("setCurrentCourse", this.course);
       // route to topic/solar system
       this.$router.push({
         name: "GalaxyView",

@@ -169,6 +169,8 @@ export default {
         return "baseColour";
       } else if (status == "inreview") {
         return "cohortColour";
+      } else if (status == "declined") {
+        return "galaxyColour";
       } else {
         return "missionColour";
       }
@@ -228,7 +230,7 @@ export default {
   backdrop-filter: blur(8px);
   display: flex;
   flex-direction: column;
-  z-index: 3;
+  z-index: 5;
 
   .ss-preview {
     min-width: 25vw;
@@ -313,5 +315,8 @@ export default {
 }
 .missionColour {
   color: var(--v-missionAccent-base) !important;
+}
+.galaxyColour {
+  color: var(--v-galaxyAccent-base) !important;
 }
 </style>

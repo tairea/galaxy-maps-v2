@@ -415,6 +415,7 @@ export default {
         .catch((error) => {
           console.error("Error incrementing topicTotal: ", error);
         });
+        
     },
     deleteDialog() {
       this.dialogConfirm = true;

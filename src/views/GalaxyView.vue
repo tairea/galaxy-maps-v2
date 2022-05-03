@@ -1,9 +1,9 @@
 <template>
   <div id="container" class="bg">
     <div id="left-section">
-      <GalaxyInfo :course="course" :teacher="teacher" :draft="draft" />
+      <GalaxyInfo :course="currentCourse" :teacher="teacher" :draft="draft" />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
-      <PublishGalaxy v-if="showPublish" :course="course" :person="person" />
+      <PublishGalaxy v-if="showPublish" :course="currentCourse" :person="person" />
       <AssignedInfo
         v-if="!draft && cohortsInCourse.length"
         :assignCohorts="true"
@@ -46,8 +46,14 @@
         @toggleAddEdgeMode="toggleAddEdgeMode"
         :teacher="teacher"
       />
-
-      <!-- Edit -->
+    </div>
+    <!--==== Right section ====-->
+    <div id="right-section">
+      <RequestForHelpTeacherFrame :courses="[currentCourse]" :isTeacher="teacher" :students="peopleInCourse"/>
+      <SubmissionTeacherFrame :isTeacher="teacher" :courses="[currentCourse]" :students="teacher ? peopleInCourse : [person]" class="mt-4"/> 
+      <!-- <SubmissionInfo v-if="task && task.submissionRequired == true" :task="task" :submissions="submissions" /> -->
+    </div>
+        <!-- Edit -->
       <CreateEditDeleteNodeDialog
         v-if="dialog"
         ref="edit"
@@ -78,7 +84,6 @@
           @blur="blurPopup"
         />
       </v-scale-transition>
-    </div>
   </div>
 </template>
 
@@ -93,6 +98,8 @@ import CreateEditDeleteNodeDialog from "../components/CreateEditDeleteNodeDialog
 import GalaxyMapButtons from "../components/GalaxyMapButtons";
 import PopupSystemPreview from "../components/PopupSystemPreview";
 import PublishGalaxy from "../components/GalaxyView/PublishGalaxy";
+import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame"
+import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame"
 
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters, mapActions, mapMutations } from "vuex";
@@ -117,6 +124,8 @@ export default {
     GalaxyMapButtons,
     PopupSystemPreview,
     PublishGalaxy,
+    RequestForHelpTeacherFrame,
+    SubmissionTeacherFrame
   },
   props: ["courseId"],
   data() {
@@ -150,8 +159,6 @@ export default {
   },
   async mounted() {
     // create first node, when galaxy first created (hard coded)
-    this.course = await getCourseById(this.courseId);
-    this.$store.commit("setCurrentCourse", this.course);
 
     if (this.fromCreate) {
       let nodeId = null;
@@ -237,11 +244,11 @@ export default {
     ]),
     ...mapGetters(["person", "user"]),
     draft() {
-      return this.course?.status === "drafting";
+      return this.currentCourse?.status === "drafting";
     },
     teacher() {
       return (
-        this.course?.mappedBy?.personId === this.person.id ||
+        this.currentCourse?.mappedBy?.personId === this.person.id ||
         this.user.data.admin
       );
     },
@@ -250,7 +257,7 @@ export default {
     },
     showPublish() {
       return (
-        (this.user.data.admin && this.course.status === "submitted") ||
+        (this.user.data.admin && this.currentCourse.status === "submitted") ||
         this.draft
       );
     },
@@ -425,6 +432,7 @@ export default {
   // border: 1px solid yellow;
   overflow-y: scroll;
   padding: 0px 20px 50px 20px;
+  z-index: 3
 }
 
 #main-section {
@@ -442,7 +450,7 @@ export default {
   .map-buttons {
     position: fixed;
     top: 20px;
-    left: 25%;
+    left: 20%;
     z-index: 2;
     width: auto;
 
@@ -466,11 +474,11 @@ export default {
 }
 
 #right-section {
-  width: 30%;
-  height: 100%;
-  display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
+    width: 20%;
+    height: 100%;
+    z-index: 3;
+    margin-left: auto;
+    margin-right: 20px;
 }
 
 /* width */

@@ -1,74 +1,23 @@
 <template>
-  <div class="request-card">
+  <div class="request-card" :class="responderPerson ? 'response-card':''">
     <v-expansion-panels flat v-model="showCard">
-      <v-expansion-panel v-for="(sub, i) in [request]" :key="i" class="panel">
-        <v-expansion-panel-header class="pa-0">
+      <v-expansion-panel @change="panelChange()" v-for="(sub, i) in [request]" :key="i" class="panel">
+        <v-expansion-panel-header class="pa-0" ref="panel">
           <!-- Course Image -->
-          <v-tooltip bottom color="subBackground">
-            <template v-slot:activator="{ on, attrs }">
-              <div
-                class="submission-image d-flex justify-center align-center"
-                v-bind="attrs"
-                v-on="on"
-              >
-                <v-avatar v-if="request.contextCourse.image" size="30">
-                  <img
-                    v-if="request.contextCourse.image"
-                    :src="request.contextCourse.image.url"
-                    :alt="request.contextCourse.title"
-                    style="object-fit: cover"
-                  />
-                </v-avatar>
-                <div v-else class="imagePlaceholder">
-                  {{ first3Letters(request.contextCourse.title) }}
-                </div>
-              </div>
-            </template>
-            <div>
-              <p class="ma-0 galaxy-tooltip">Galaxy:</p>
-              <p
-                class="ma-0 galaxy-tooltip"
-                style="font-size: 0.8rem; font-weight: 800"
-              >
-                {{ request.contextCourse.title }}
-              </p>
+          <div class="d-flex flex-row">
+            <Avatar v-if="isDashboardView" :profile="courseContextProfile" size="30" :colourBorder="true"/>
+            <Avatar v-if="requesterPerson" :profile="requesterPerson" size="30" :colourBorder="true"  :class="isDashboardView ? 'request-image':''"/>
+            <Avatar v-if="responderPerson && !active" :profile="responderPerson" size="30" :colourBorder="true"  :class="isDashboardView ? 'respond-image' : 'request-image'"/>
+            <div v-if="responderPerson" class="requester-time d-flex flex-column align-center ml-auto">
+              <span class="ml-auto status-text">reponded</span>
+              {{ getHumanDate(request.responseSubmittedTimestamp) }}
             </div>
-          </v-tooltip>
-
-          <!-- Avatar -->
-          <v-tooltip v-if="requesterPerson" bottom color="subBackground">
-            <template v-slot:activator="{ on, attrs }">
-              <div
-                class="request-image d-flex justify-center align-center"
-                v-bind="attrs"
-                v-on="on"
-              >
-                <v-avatar v-if="requesterPerson" size="30">
-                  <img
-                    v-if="requesterPerson.image"
-                    :src="requesterPerson.image.url"
-                    :alt="requesterPerson.firstName"
-                    style="object-fit: cover"
-                  />
-                </v-avatar>
-                <div v-else class="imagePlaceholder">
-                  {{ first3Letters(requesterPerson.firstName) }}
-                </div>
-              </div>
-            </template>
-            <div>
-              <p class="ma-0 person-tooltip">Person:</p>
-              <p
-                class="ma-0 person-tooltip"
-                style="font-size: 0.8rem; font-weight: 800; color: white"
-              >
-                {{ requesterPerson.firstName + " " + requesterPerson.lastName }}
-              </p>
+            <div v-else class="requester-time d-flex flex-column align-center ml-auto">
+              <span class="ml-auto status-text">...waiting response</span>
+              {{ getHumanDate(request.requestSubmittedTimestamp) }}
             </div>
-          </v-tooltip>
-
-          <!-- Course/Topic/Task -->
-          <div class="requester-context">
+          </div>
+          <div v-if="!active" class="requester-context">
             <p class="requester-context-task">
               {{ request.contextTask.title }}
             </p>
@@ -79,24 +28,25 @@
               {{ request.contextCourse.title }}
             </p>
           </div>
-          <div class="requester-time">
-            {{ getHumanDate(request.requestSubmittedTimestamp) }}
-          </div>
-          <template v-slot:actions>
-            <v-icon color="missionAccent"> </v-icon>
-          </template>
         </v-expansion-panel-header>
-        <v-expansion-panel-content>
-          <div class="d-flex justify-center align-center">
+        <v-expansion-panel-content class="panel-content">
+          <div class="d-flex align-start">
             <p class="requester-msg">"{{ request.requestForHelpMessage }}"</p>
           </div>
-          <template v-if="isTeacher">
-            <div class="divider"></div>
-            <div class="action-button">
+          <template v-if="!responderPerson">
+            <div v-if="isTeacher">
+              <div class="divider"></div>
               <RequestForHelpResponseDialog
                 :request="request"
                 :requesterPerson="requesterPerson"
               />
+            </div>
+          </template>
+          <template v-else>
+            <div class="divider"></div>
+            <div class="d-flex align-start justify-end">
+              <span class="requester-msg">"{{ request.responseMessage }}"</span>
+              <Avatar :profile="responderPerson" size="30" :colourBorder="true" class="ml-2"/>
             </div>
           </template>
         </v-expansion-panel-content>
@@ -112,28 +62,32 @@ import moment from "moment";
 import RequestForHelpResponseDialog from "../components/RequestForHelpResponseDialog";
 import { dbMixins } from "../mixins/DbMixins";
 
+import Avatar from "../components/Avatar.vue"
+
 export default {
   name: "RequestForHelpTeacherPanel",
   mixins: [dbMixins],
-  props: ["request", "isTeacher"],
+  props: ["request", "isTeacher", "isDashboardView"],
   components: {
     RequestForHelpResponseDialog,
+    Avatar
   },
   data() {
     return {
       requesterPerson: null,
+      responderPerson: null,
       topicsTasks: [],
       contextObj: {
         courseId: this.request.courseId,
         topicId: this.request.topicId,
         taskId: this.request.taskId,
       },
+      active: false
     };
   },
   async mounted() {
-    this.requesterPerson = await this.MXgetPersonByIdFromDB(
-      this.request.personId
-    );
+    this.requesterPerson = await this.MXgetPersonByIdFromDB(this.request.personId);
+    if (this.request.responderPersonId) this.responderPerson = await this.MXgetPersonByIdFromDB(this.request.responderPersonId)
   },
   computed: {
     ...mapState([
@@ -150,6 +104,14 @@ export default {
         this.$store.commit('setPanelCard', {})
       }
     },
+    courseContextProfile () {
+      const course = this.request.contextCourse
+      return {
+        image: course.image,
+        firstName: course.title,
+        lastName: '',
+      }
+    }
   },
   methods: {
     getTask(id) {
@@ -164,18 +126,20 @@ export default {
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
-    // TODO: route to students page
-    // routeToStudentsProfile(id) {
-    //   console.log("TODO: route to persons page:", id);
-    // },
+    panelChange() {
+      this.active = !this.$refs.panel[0].isActive
+    }
   },
 };
 </script>
 
 <style lang="scss" scoped>
+.panel ::v-deep .v-expansion-panel-header {
+  display: block !important;
+}
+
 .request-card {
   width: 100%;
-  display: flex;
   margin: 20px 0px;
   padding: 10px;
   border: 1px solid var(--v-missionAccent-base);
@@ -185,20 +149,15 @@ export default {
     background-color: transparent !important;
   }
 
-  .requester-image {
-    width: 10%;
-  }
-
   .requester-context {
-    margin-left: 10px;
-    width: 60%;
+    margin-top: 5px;
 
     .requester-context-task {
       margin: 0px;
       text-transform: uppercase;
-      font-size: 0.8rem;
+      font-size: 0.6rem;
       color: var(--v-missionAccent-base);
-      font-weight: 800;
+      font-weight: 600;
     }
     .requester-context-topic {
       margin: 0px;
@@ -216,11 +175,14 @@ export default {
 
   .requester-time {
     margin: 0px;
-    text-transform: uppercase;
     font-size: 0.8rem;
     color: var(--v-missionAccent-base);
-    width: 30%;
-    text-align: right;
+  }
+  
+  .waiting-response {
+    margin: 0px;
+    font-size: 0.8rem;
+    color: var(--v-galaxyAccent-base);
   }
 
   .divider {
@@ -230,13 +192,13 @@ export default {
 
   .requester-msg {
     margin: 0px;
-    margin-top: 16px;
     color: var(--v-missionAccent-base);
     font-style: italic;
+    font-size: 0.8rem;
   }
 }
 
-.v-expansion-panel-content__wrap {
+.panel-content ::v-deep .v-expansion-panel-content__wrap {
   padding: 0px !important;
 }
 
@@ -259,5 +221,26 @@ export default {
   color: var(--v-missionAccent-base);
   font-size: 0.6rem;
   text-transform: uppercase;
+} 
+
+.request-image {
+  position: relative;
+  left: -10px;
+}
+
+.respond-image {
+  position: relative;
+  left: -20px;
+}
+
+.response-card {
+  border: 1px solid var(--v-galaxyAccent-base);
+}
+
+.status-text {
+   color: var(--v-galaxyAccent-base);
+   font-size:0.6rem;
+   position: relative;
+   top: -8px
 }
 </style>

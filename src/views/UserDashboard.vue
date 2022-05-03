@@ -44,7 +44,7 @@
       <div id="right-section">
         <!-- all requests and submissions -->
         <RequestForHelpTeacherFrame :isTeacher="true" :courses="cohortCourses" :students="teachersStudents" class="mt-9"/>
-        <SubmissionTeacherFrame :courses="cohortCourses" :students="teachersStudents"/>
+        <SubmissionTeacherFrame :courses="cohortCourses" :students="teachersStudents" class="mt-5"/>
 
       </div>
     </template>
@@ -90,8 +90,6 @@ export default {
       "currentCourseNodes",
       "person",
       "courses",
-      "teachersSubmissionsToReview",
-      "teachersRequestsForHelp",
       "allTasks",
       "cohorts",
       "dashboardView"
@@ -184,7 +182,7 @@ export default {
     width: 25%;
     margin-top: 140px;
     height: calc(100vh - 200px);
-    // border: 1px solid yellow;
+    margin-right: 30px;
   }
 }
 

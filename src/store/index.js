@@ -46,7 +46,7 @@ const getDefaultState = () => {
     topicsTasks: [],
     personsTopicsTasks: [],
     requestsForHelp: [],
-    teachersSubmissionsToReview: [],
+    courseSubmissions: [],
     teachersRequestsForHelp: [],
     teachersStudentsProgress: [],
     darkMode: true,
@@ -159,7 +159,7 @@ export default new Vuex.Store({
       state.from = data
     },
     resetTeachersSubmissions(state) {
-      state.teachersSubmissionsToReview = [];
+      state.courseSubmissions = [];
     },
     setPanelCard(state, data) {
       state.showPanelCard = data;
@@ -234,6 +234,9 @@ export default new Vuex.Store({
     },
     setPeopleInCourse(state, people) {
       state.peopleInCourse = people
+    },
+    setUserStatus(state, userStatus) {
+      state.userStatus = userStatus
     }
   },
   actions: {
@@ -527,49 +530,51 @@ export default new Vuex.Store({
         .collection("courses")
         .doc(courseId)
         .collection("submissionsForReview")
-        .where("taskSubmissionStatus", "==", "inreview")
+        // .where("taskSubmissionStatus", "==", "inreview")
         .orderBy("taskSubmittedForReviewTimestamp")
         // .orderBy("requestSubmittedTimestamp")
         .onSnapshot((querySnapshot) => {
-          const allWorkForReview = [...state.teachersSubmissionsToReview];
+          console.log('getting submissions')
+          const allWorkForReview = [...state.courseSubmissions];
 
           for (const change of querySnapshot.docChanges()) {
+            console.log('submission: ', change.type, ': ', change.doc.id)
             if (change.type === "added") {
               if (
                 allWorkForReview.some(
-                  (submission) => submission.id === change.doc.data().id
+                  (submission) => submission.id === change.doc.id
                 )
               )
                 return;
               allWorkForReview.push({
-                id: change.doc.data().id,
+                id: change.doc.id,
                 ...change.doc.data(),
               });
             } else if (change.type === "modified") {
               allWorkForReview.splice(
                 allWorkForReview.findIndex(
-                  (i) => i.id === change.doc.data().id
+                  (i) => i.id === change.doc.id
                 ),
                 1,
                 {
-                  id: change.doc.data().id,
+                  id: change.doc.id,
                   ...change.doc.data(),
                 }
               );
             } else if (change.type === "removed") {
               allWorkForReview.splice(
                 allWorkForReview.findIndex(
-                  (i) => i.id === change.doc.data().id
+                  (i) => i.id === change.doc.id
                 ),
                 1
               );
             }
           }
-          state.teachersSubmissionsToReview = allWorkForReview;
+          state.courseSubmissions = allWorkForReview;
         });
 
       return unsubscribe;
-      // state.teachersSubmissionsToReview = allWorkForReview;
+      // state.courseSubmissions = allWorkForReview;
     },
     //TODO: WIP
     async getEachStudentsProgressForTeacher({ state, commit }) {
@@ -1064,20 +1069,20 @@ export default new Vuex.Store({
     },
     // ===== Firestore - get student data for teachers
     // bind courses requests for help
-    bindRequestsForHelp: firestoreAction(({ bindFirestoreRef }, payload) => {
-      return bindFirestoreRef(
-        "requestsForHelp",
-        db
-          .collection("courses")
-          .doc(payload.courseId)
-          // .collection("topics")
-          // .doc(payload.topicId)
-          // .collection("tasks")
-          // .doc(payload.taskId)
-          .collection("requestsForHelp")
-          .orderBy("requestSubmittedTimestamp")
-      );
-    }),
+    // bindRequestsForHelp: firestoreAction(({ bindFirestoreRef }, payload) => {
+    //   return bindFirestoreRef(
+    //     "requestsForHelp",
+    //     db
+    //       .collection("courses")
+    //       .doc(payload.courseId)
+    //       // .collection("topics")
+    //       // .doc(payload.topicId)
+    //       // .collection("tasks")
+    //       // .doc(payload.taskId)
+    //       .collection("requestsForHelp")
+    //       .orderBy("requestSubmittedTimestamp")
+    //   );
+    // }),
     async getSubmittedWorkByStudentAndTaskId({ state }, payload) {
       // get all work for review
       const unsubscribe = db
@@ -1127,7 +1132,7 @@ export default new Vuex.Store({
         });
 
       return unsubscribe;
-      // state.teachersSubmissionsToReview = allWorkForReview;
+      // state.courseSubmissions = allWorkForReview;
     },
     async getRequestsForHelpByCourseId({ state }, courseId) {
      // get all work for review
@@ -1135,21 +1140,15 @@ export default new Vuex.Store({
         .collection("courses")
         .doc(courseId)
         .collection("requestsForHelp")
-        .where("requestForHelpStatus", "==", "unanswered")
+        // .where("requestForHelpStatus", "==", "unanswered")
         // .orderBy("requestSubmittedTimestamp")
         .onSnapshot((querySnapshot) => {
           const allRequestsForHelp = [...state.teachersRequestsForHelp];
           // WTF!!!! Why does for each fix this?
           querySnapshot.docChanges().forEach(change => {
           // for (const change of querySnapshot.docChanges()) {
-
             if (change.type === "added") {
-              if (
-                allRequestsForHelp.some(
-                  (request) => request.id !== change.doc.data().id
-                )
-              )
-                return;
+              if (allRequestsForHelp.some((request) => request.id === change.doc.data().id)) return;
               allRequestsForHelp.push({
                 id: change.doc.data().id,
                 ...change.doc.data(),
@@ -1174,6 +1173,7 @@ export default new Vuex.Store({
               );
             }
           })
+          allRequestsForHelp.sort((a, b) => b.requestSubmittedTimestamp.seconds - a.requestSubmittedTimestamp.seconds)
           state.teachersRequestsForHelp = allRequestsForHelp;
         });
 
@@ -1254,7 +1254,6 @@ export default new Vuex.Store({
         });
     },
 
-    // ===== Firestore - Other
     async getAllUsersStatus({ state }) {
       const users = {};
       await db
