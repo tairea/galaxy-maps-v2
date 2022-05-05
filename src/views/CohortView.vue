@@ -17,7 +17,7 @@
 
     <div id="right-section">
       <RequestForHelpTeacherFrame :isTeacher="teacher" :courses="courses" :students="currentCohort.students" class="ml-4"/>
-      <SubmissionTeacherFrame v-if="teacher" :courses="courses" :students="currentCohort.students" class="mt-4 ml-4"/> 
+      <SubmissionTeacherFrame :isTeacher="teacher" :courses="courses" :students="teacher ? currentCohort.students : [person]" class="mt-4 ml-4"/> 
     </div>
   </div>
 </template>
@@ -61,86 +61,6 @@ export default {
       return this.currentCohort.teacher || this.currentCohort.teachers.some(teacher => teacher === this.person.id)
     }
   },
-  // mounted() {
-  //   // get date 1 week ago
-  //   const oneWeek = this.getPreviousDate(7);
-  //   const twoWeeks = this.getPreviousDate(14);
-
-  //   console.log('1 week ago: ', oneWeek)
-  //   console.log('2 weeks ago: ', twoWeeks)
-
-  //   // if user is online push into the array
-  //   if (this.userStatus) {
-  //     const users = []
-  //     for (const user in this.userStatus) { 
-  //       if (this.userStatus[user].state == 'offline') users.push(Object.assign(this.userStatus[user], {id: user}));
-  //     }
-  
-  //     const inActiveOneWeek = []
-  //     const inActiveTwoWeeks = []
-  
-  //     users.forEach(user => {
-  //       const date = user.last_changed.toDate().toDateString()
-  //       if (date === oneWeek) inActiveOneWeek.push(user)
-  //       if (date === twoWeeks) inActiveTwoWeeks.push(user)
-  //     })
-  
-  //     console.log('one week offline: ', inActiveOneWeek)
-  //     console.log('two weeks offline: ', inActiveTwoWeeks)
-  
-  //     if (inActiveOneWeek.length) {
-  //       inActiveOneWeek.forEach(async user => {
-  //         const person = await this.getPersonByIdFromDB(user.id)
-  //         const teachers = await this.getPersonsTeachers(user)
-  //         console.log('send one week in active email to student :', person.email)
-  //         const teacherPorilfes = await Promise.all(teachers.map(async teacher => {
-  //           return await this.getPersonByIdFromDB(teacher)
-  //         }))
-  //         teacherPorilfes.forEach(teacher => {
-  //           console.log('send one week student: ', person.firstName,  ' inactive email to teacher: ', teacher.email)
-  //         })
-  //       })
-  //     }
-  //   }
-
-  // },
-  // methods: {
-  //   getPreviousDate(preDays) {
-  //     const now = new Date();
-  //     return new Date(now.getFullYear(), now.getMonth(), now.getDate() - preDays).toDateString();
-
-  //   },
-  //   async getPersonByIdFromDB(personId) {
-  //     let person = await db
-  //       .collection("people")
-  //       .doc(personId)
-  //       .get()
-  //       .catch((err) => console.err(err));
-  //     person = {
-  //       id: person.id,
-  //       ...person.data(),
-  //     };
-  //     return person;
-  //   },
-  //   async getPersonsTeachers(person) {
-  //     // onSnapshot wasnt working for me. so changed to .get()
-  //     let teachers = await db
-  //       .collection("cohorts")
-  //       .where("students", "array-contains", person.id)
-  //       .get()
-  //       .then(async (querySnapshot) => {
-  //         let teachers = [];
-  //         querySnapshot.forEach(async (doc) => {
-  //           doc.data().teachers.forEach(teacher => teachers.push(teacher))
-  //         })
-
-  //         return teachers
-  //       }).catch(err => console.log('err: ', err))
-        
-  //       return teachers
-  //   }
-  // }
-
 };
 </script>
 

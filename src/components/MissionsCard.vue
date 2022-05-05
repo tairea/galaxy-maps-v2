@@ -151,6 +151,7 @@
         :topicId="topicId"
         :active="active"
         :declined="declined"
+        @topicCompleted="topicCompleted()"
       />
       <SelectedMissionsCard 
         v-else 
@@ -180,7 +181,7 @@ export default {
     ActiveMissionsCard,
     SelectedMissionsCard,
   },
-  props: ["task", "id", "index", "topicId", "topicActive", "teacher"],
+  props: ["task", "id", "index", "topicId", "teacher"],
   data() {
     return {
       editing: false,
@@ -214,6 +215,12 @@ export default {
     inreview() { return this.task.taskStatus == 'inreview'} ,
     unlocked() { return this.task.taskStatus == 'unlocked'} ,
   },
+  methods: {
+    topicCompleted() {
+      console.log('2')
+      this.$emit('topicCompleted')
+    }
+  }
 };
 </script>
 

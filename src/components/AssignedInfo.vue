@@ -1,7 +1,7 @@
 <template>
   <div id="assigned-info">
 
-    <h2 class="assigned-label">Assigned to:</h2>
+    <h2 class="assigned-label">{{isMissionView ? 'Currently active' : 'Assigned to'}}:</h2>
     <!-- ASSIGNED COHORTS INFO -->
     <div v-if="assignCohorts">
       <!-- Cohorts -->
@@ -96,6 +96,9 @@ export default {
     },
     courseCohort () {
       return this.currentCohort.courseCohort
+    },
+    isMissionView() {
+      return this.$route.name == 'SolarSystemView'
     }
   },
   methods: {

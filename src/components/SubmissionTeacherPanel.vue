@@ -98,15 +98,6 @@ export default {
   async mounted() {
     // bind student profile
     this.requesterPerson = await this.MXgetPersonByIdFromDB(this.submission.studentId);
-
-    // bind students tasks related to this submission (used for unlocking next topic)
-    await this.$store.dispatch("bindPersonsTasksByTopicId", {
-      personId: this.submission.studentId,
-      courseId: this.submission.contextCourse.id,
-      topicId: this.submission.contextTopic.id,
-    });
-
-    // this.show.push(0, 1)
   },
   computed: {
     ...mapState(["personsTopicsTasks", "showPanelCard"]),
@@ -126,6 +117,13 @@ export default {
     },
     reviewed() {
       return this.submission.taskSubmissionStatus === 'completed' || this.submission.taskSubmissionStatus === 'declined'
+    },
+    courseContextProfile() {
+      return {
+        image: this.submission.contextCourse.image,
+        firstName: this.submission.contextCourse.firstName,
+        lastName: ''
+      }
     }
   },
   methods: {
@@ -255,5 +253,10 @@ export default {
   font-size:0.6rem;
   position: relative;
   top: -8px
+}
+
+.request-image {
+  position: relative;
+  left: -10px;
 }
 </style>

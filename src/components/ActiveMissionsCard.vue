@@ -70,7 +70,7 @@
               :topicId="topicId"
               :active="active"
               :declined="declined"
-              :submission="submission"
+              @hello="topicCompleted($event)"
             />
           </div>
         </div>
@@ -107,6 +107,12 @@ export default {
       } else {
         return;
       }
+    }
+  },
+  methods: {
+    topicCompleted(e) {
+      console.log('1', e)
+      this.$emit('topicCompleted')
     }
   }
 };

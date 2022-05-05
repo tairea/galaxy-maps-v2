@@ -180,7 +180,8 @@ a {
   .student-actions-overUnder {
     display: flex;
     flex-direction: column;
-    width: 20%;
+    max-width: 20%;
+    min-width: 20%;
     border-left: 1px dashed var(--v-missionAccent-base);
   }
 

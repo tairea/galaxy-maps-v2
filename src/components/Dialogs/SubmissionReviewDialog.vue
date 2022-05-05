@@ -227,9 +227,15 @@ export default {
   }),
   async mounted() {
     this.instructor = await this.MXgetPersonByIdFromDB(this.submission.contextCourse.mappedBy.personId)
+    // bind students tasks related to this submission (used for unlocking next topic)
+    await this.$store.dispatch("bindPersonsTasksByTopicId", {
+      personId: this.submission.studentId,
+      courseId: this.submission.contextCourse.id,
+      topicId: this.submission.contextTopic.id,
+    });
   },
   computed: {
-    ...mapState(["currentCourse", "currentTopic", "currentTask", "personsTopicTasks"]),
+    ...mapState(["currentCourse", "currentTopic", "currentTask", "personsTopicsTasks"]),
     ...mapGetters(["person"]),
     dark() {
       return this.$vuetify.theme.isDark;

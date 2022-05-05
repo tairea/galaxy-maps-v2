@@ -43,8 +43,18 @@
 
       <div id="right-section">
         <!-- all requests and submissions -->
-        <RequestForHelpTeacherFrame :isTeacher="true" :courses="cohortCourses" :students="teachersStudents" class="mt-9"/>
-        <SubmissionTeacherFrame :courses="cohortCourses" :students="teachersStudents" class="mt-5"/>
+        <RequestForHelpTeacherFrame 
+          :isTeacher="true" 
+          :courses="cohortCourses" 
+          :students="teachersStudents" 
+          class="mt-9"
+        />
+        <SubmissionTeacherFrame 
+          :isTeacher="true" 
+          :courses="cohortCourses" 
+          :students="teachersStudents" 
+          class="mt-5"
+        />
 
       </div>
     </template>
@@ -106,11 +116,17 @@ export default {
       if (!this.isStudent && isTeacher) this.setDashboardView("teacher")
       return isTeacher
     },
+    isTeacherView() {
+      return this.dashboardView === 'teacher'
+    },
+    isStudentView() {
+      return this.dashboardView === 'student'
+    },
     studentLabel() {
-      return this.dashboardView === 'student' ? 'student-label' : 'inactive-student-label'
+      return this.isStudentView ? 'student-label' : 'inactive-student-label'
     },
     teacherLabel() {
-      return this.dashboardView === 'teacher' ? 'teacher-label' : 'inactive-teacher-label'
+      return this.isTeacherView ? 'teacher-label' : 'inactive-teacher-label'
     },
     teacherCohorts() {
       return this.cohorts.filter(cohort => cohort.teacher)
@@ -118,7 +134,7 @@ export default {
     cohortCourses() {
       let courses = []
       this.teacherCohorts.forEach(cohort => {
-        cohort.courses.forEach(course => courses.push(course))
+        cohort.courses.forEach(course => courses.push({id: course}))
       })
       return courses
     },
@@ -217,10 +233,11 @@ export default {
   height: 20px;
 }
 
-.inactive-student-label {
+.student-label {
   font-size: 0.8rem;
   font-weight: 400;
   text-transform: uppercase;
+  
   // ribbon label
   position: relative;
   top: 1px;
@@ -235,7 +252,7 @@ export default {
   cursor: pointer;
 }
 
-.student-label {
+.inactive-student-label {
   font-size: 0.8rem;
   font-weight: 400;
   text-transform: uppercase;
@@ -263,7 +280,7 @@ export default {
   height: 20px;
 }
 
-.inactive-teacher-label {
+.teacher-label {
   font-size: 0.8rem;
   font-weight: 400;
   text-transform: uppercase;
@@ -279,7 +296,7 @@ export default {
   cursor: pointer;
 }
 
-.teacher-label {
+.inactive-teacher-label {
   font-size: 0.8rem;
   font-weight: 400;
   text-transform: uppercase;

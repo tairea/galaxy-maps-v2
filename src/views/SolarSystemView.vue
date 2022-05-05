@@ -33,6 +33,7 @@
         :teacher="teacher"
         @task="taskForHelpInfo($event)"
         @missionActivated="peopleInTopic.push(person)"
+        @topicCompleted="getPeopleInTopic"
       />
     </div>
 
@@ -110,6 +111,11 @@ export default {
     //   (request) => request.contextTask.id == this.currentTaskId
     // );
   },
+  watch: {
+    personsCurrentTopic() {
+      this.getPeopleInTopic()
+    }
+  },
   computed: {
     ...mapState([
       "currentCourseId",
@@ -120,6 +126,7 @@ export default {
       "currentTask",
       "topicsTasks",
       "personsTopicsTasks",
+      "personsTopics",
       "peopleInCourse"
     ]),
     ...mapGetters([
@@ -137,6 +144,9 @@ export default {
         this.currentCourse?.mappedBy?.personId === this.person.id ||
         this.user.data.admin
       );
+    },
+    personsCurrentTopic() {
+      return this.personsTopics.find(topic => topic.id == this.currentTopicId)
     }
   },
   methods: {
@@ -159,6 +169,7 @@ export default {
       return activeMissionObj;
     },
     async getPeopleInTopic () {
+      console.log('4, getting people in topic')
       let people = []
       this.peopleInCourse.forEach(async person => {
         let personsTopic = await getPersonsTopicById(person.id, this.currentCourse.id, this.currentTopic.id)
