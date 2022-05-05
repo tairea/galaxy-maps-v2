@@ -94,13 +94,6 @@ export default {
     dialog: false,
     loading: false,
   }),
-  mounted() {
-    // console.log("MissionCompletedDialog Task = ", this.task);
-    console.log(
-      "this.personsTopicsTasks from MarkSubmissionCompleted.vue: ",
-      this.personsTopicsTasks
-    );
-  },
   computed: {
     ...mapState(["personsTopicsTasks"]),
     ...mapGetters(["person"]),

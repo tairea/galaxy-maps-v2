@@ -51,6 +51,7 @@ export default {
   async mounted() {
     this.loading = true;
     for (const course of this.courses) {
+      console.log('getting requests for course: ', course)
       const unsubscribe = await this.$store.dispatch(
         "getRequestsForHelpByCourseId",
         course.id
@@ -120,7 +121,7 @@ export default {
 }
 
 #help-panel:hover {
-  max-height:90vh
+  max-height: 70vh
 }
 
 #student-help-panel {
@@ -149,4 +150,23 @@ export default {
   padding: 0px 20px 0px 5px;
   clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
 }
+
+*::-webkit-scrollbar {
+  width: 5px;
+}
+/* Track */
+*::-webkit-scrollbar-track {
+  background: var(--v-background-base);
+  margin-top: 1px;
+  margin-bottom: 25px;
+}
+/* Handle */
+*::-webkit-scrollbar-thumb {
+  background: var(--v-galaxyAccent-base) !important;
+}
+/* Handle on hover */
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--v-galaxyAccent-base) !important;
+}
+
 </style>

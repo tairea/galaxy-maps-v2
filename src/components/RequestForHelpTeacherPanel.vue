@@ -89,6 +89,11 @@ export default {
     this.requesterPerson = await this.MXgetPersonByIdFromDB(this.request.personId);
     if (this.request.responderPersonId) this.responderPerson = await this.MXgetPersonByIdFromDB(this.request.responderPersonId)
   },
+  watch: {
+    async request() {
+      if (this.request.responderPersonId) this.responderPerson = await this.MXgetPersonByIdFromDB(this.request.responderPersonId)
+    }
+  },
   computed: {
     ...mapState([
       "allTasks",

@@ -32,6 +32,7 @@ export default {
     routeToCourse(course) {
       // on clicking course, set its courseID to Store state (so not relying on router params)
       this.$store.commit("setCurrentCourseId", this.course.id);
+      this.$store.commit("setCurrentCourse", this.course);
       // route to Galaxy View (passing params as props)
       this.$router.push({
         name: "GalaxyView",

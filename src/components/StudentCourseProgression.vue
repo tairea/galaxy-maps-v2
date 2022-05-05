@@ -3,7 +3,7 @@
     <!-- loading spinner -->
     <div
       class="d-flex justify-center align-center"
-      v-if="loading && !(santisedCourses.length > 0)"
+      v-if="loading && !(studentCourses.length > 0)"
     >
       <v-btn
         :loading="loading"
@@ -12,9 +12,9 @@
         class="d-flex justify-center align-center"
       ></v-btn>
     </div>
-    <div v-if="santisedCourses">
+    <div v-if="studentCourses">
       <GalaxyProgressionCard
-        v-for="data in santisedCourses"
+        v-for="data in studentCourses"
         :key="data.course.id"
         :data="data"
       />
@@ -38,13 +38,16 @@ export default {
   data() {
     return {
       loading: false,
-      santisedCourses: [],
+      studentCourses: [],
     };
   },
   computed: {},
   async mounted() {
     this.loading = true;
-    this.santisedCourses = await getStudentsCoursesXAPIQuery(this.student);
+    const sanitisedCourses = await getStudentsCoursesXAPIQuery(this.student);
+    console.log('sanitisedCourses: ', this.studentCourses)
+    this.studentCourses = sanitisedCourses.filter(a => this.student.assignedCourses.some(b => a.course.id == b))
+    console.log('personsCourses: ', this.studentCourses)
     this.loading = false;
   },
   methods: {},

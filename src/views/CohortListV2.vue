@@ -95,7 +95,7 @@
           <TimeframeFilters @timeframe="setTimeframe($event)" />
         </div>
         <div class="d-flex flex-wrap">
-        <CohortPanelV2
+          <CohortPanelV2
             v-for="cohort in selectedCohorts.length > 0
               ? selectedCohorts
               : orderedCohorts"
@@ -105,10 +105,22 @@
             class="cohort-panel"
           />
         </div>
+        <v-row justify="center">  
+          <v-btn outlined color="baseAccent"> 
+            <v-icon class="mr-2">mdi-plus</v-icon>
+            create cohort
+          </v-btn>
+        </v-row>
       </div>
       <div v-else class="no-cohort">
         <p>create or start a galaxy to join a cohort</p>
+        <v-btn outlined color="baseAccent"> 
+          <v-icon class="mb-1 mr-2">mdi-plus</v-icon>
+          create cohort
+        </v-btn>
       </div>
+        <!-- <p>create or start a galaxy to join a cohort</p> -->
+
     </v-expand-transition>
   </div>
 

@@ -207,7 +207,6 @@ export default new Vuex.Store({
       state.darkMode = dark;
     },
     sortAsc(state, arr) {
-      console.log("arr: ", arr);
       const sortedArr = arr.sort((a, b) =>
         a.topic.topicCreatedTimestamp.seconds >
         b.topic.topicCreatedTimestamp.seconds
@@ -534,11 +533,9 @@ export default new Vuex.Store({
         .orderBy("taskSubmittedForReviewTimestamp")
         // .orderBy("requestSubmittedTimestamp")
         .onSnapshot((querySnapshot) => {
-          console.log('getting submissions')
           const allWorkForReview = [...state.courseSubmissions];
 
           for (const change of querySnapshot.docChanges()) {
-            console.log('submission: ', change.type, ': ', change.doc.id)
             if (change.type === "added") {
               if (
                 allWorkForReview.some(
@@ -906,6 +903,8 @@ export default new Vuex.Store({
     // bind persons tasks by topic id
     bindPersonsTasksByTopicId: firestoreAction(
       ({ bindFirestoreRef }, payload) => {
+        console.log('getting persons tasks: ', payload)
+
         return bindFirestoreRef(
           "personsTopicsTasks",
           db
@@ -1004,14 +1003,12 @@ export default new Vuex.Store({
 
     // ===== Firestore - get Course related stuff
     async getAssignedCourses({ state }, assignedCoursesArray) {
-      console.log("assignedCourses: ", assignedCoursesArray);
       let studentsAssignedCourses = [];
 
       assignedCoursesArray.forEach(async (assignedCourse) => {
         const doc = await db.collection("courses").doc(assignedCourse).get();
         studentsAssignedCourses.push(doc.data());
       });
-      console.log("studentsAssignedCourses", studentsAssignedCourses);
       state.courses = studentsAssignedCourses; // source of truth
     },
     bindTasksByTopicId: firestoreAction(({ bindFirestoreRef }, payload) => {
@@ -1065,7 +1062,6 @@ export default new Vuex.Store({
 
         allCourseTopicsAndTasks.push(courseObj);
       }
-      console.log(allCourseTopicsAndTasks);
     },
     // ===== Firestore - get student data for teachers
     // bind courses requests for help
@@ -1155,11 +1151,7 @@ export default new Vuex.Store({
               });
             } else if (change.type === "modified") {
               allRequestsForHelp.splice(
-                allRequestsForHelp.findIndex(
-                  (i) => i.id === change.doc.data().id
-                ),
-                1,
-                {
+                allRequestsForHelp.findIndex((i) => i.id === change.doc.data().id), 1, {
                   id: change.doc.data().id,
                   ...change.doc.data(),
                 }
@@ -1204,7 +1196,6 @@ export default new Vuex.Store({
             taskCount += tasksSnapshot.size;
           });
       }
-      console.log("------- total taskCount: ", taskCount);
       return taskCount;
     },
     async getCourseTotalTopicsCount({ state }, courseId) {
@@ -1215,7 +1206,6 @@ export default new Vuex.Store({
         .collection("topics")
         .get()
         .then((topicsSnapshot) => {
-          console.log("------- topics count", topicsSnapshot.size);
           topicCount += topicsSnapshot.size;
           return topicCount;
         });

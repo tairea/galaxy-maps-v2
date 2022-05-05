@@ -129,4 +129,13 @@ export default {
   padding: 0px 20px 0px 5px;
   clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
 }
+
+/* Handle */
+*::-webkit-scrollbar-thumb {
+  background: var(--v-cohortAccent-base) !important;
+}
+/* Handle on hover */
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--v-cohortAccent-base) !important;
+}
 </style>
