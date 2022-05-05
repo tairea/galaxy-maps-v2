@@ -50,18 +50,51 @@
     <!-- USER MENU HIDDEN-->
     <div class="userMenuHidden">
       <v-row>
-        <p class="text-overline mr-8 mt-4" color="primary">Colour Theme</p>
+        <v-col
+          class="d-flex"
+          style="border-bottom: 1px solid var(--v-missionAccent-base)"
+        >
+          <v-icon color="missionAccent" small>mdi-cog-outline</v-icon>
+          <p class="settings overline ma-0 pl-1">Settings</p>
+        </v-col>
+      </v-row>
+      <v-row class="pt-3">
+        <v-col class="pa-0 d-flex justify-center">
+          <p class="text-overline ma-0" color="primary">Colour Theme</p>
+        </v-col>
         <!-- LIGHT/DARK MODE SWITCH -->
-        <v-switch
-          v-model="darkSwitch"
-          :label="`${darkSwitch ? 'Dark' : 'Light'}`"
-          @change="changeTheme()"
-          class="mb-4"
-        ></v-switch>
+        <v-col class="pa-0 d-flex justify-center">
+          <v-switch
+            v-model="darkSwitch"
+            :label="`${darkSwitch ? 'Dark' : 'Light'}`"
+            @change="changeTheme()"
+            color="missionAccent"
+            class="ma-o"
+          ></v-switch>
+        </v-col>
       </v-row>
 
-      <!-- <ThemeColourPicker/> -->
-      <v-btn @click="logout">Logout</v-btn>
+      <v-row class="mt-5">
+        <!-- <ThemeColourPicker/> -->
+        <v-btn
+          @click="logout"
+          color="missionAccent"
+          outlined
+          :dark="dark"
+          :light="!dark"
+          >Logout</v-btn
+        >
+        <v-btn
+          href="https://docs.google.com/forms/d/e/1FAIpQLSfJgXGWOeosZfJY7H0tvFzANoX8p95fmgVKom97HMDiNywSnA/viewform?usp=sf_link"
+          target="_blank"
+          color="baseAccent"
+          class="ml-2"
+          outlined
+          :dark="dark"
+          :light="!dark"
+          >Feedback 🙏
+        </v-btn>
+      </v-row>
     </div>
   </div>
 </template>
@@ -99,6 +132,9 @@ export default {
   },
   computed: {
     ...mapState(["person"]),
+    dark() {
+      return this.$vuetify.theme.isDark;
+    },
   },
   methods: {
     ...mapActions(["getPersonById"]),
@@ -107,10 +143,13 @@ export default {
       this.$store.commit("setDarkMode", this.$vuetify.theme.isDark);
     },
     logout() {
-      firebase.database().ref("/status/" + this.person.id).set({
-        state: "offline",
-        last_changed: firebase.database.ServerValue.TIMESTAMP,
-      })
+      firebase
+        .database()
+        .ref("/status/" + this.person.id)
+        .set({
+          state: "offline",
+          last_changed: firebase.database.ServerValue.TIMESTAMP,
+        });
 
       firebase
         .auth()
@@ -248,6 +287,12 @@ export default {
 
   .userMenuHidden {
     padding: 20px 50px;
+
+    .settings {
+      color: var(--v-missionAccent-base);
+
+      width: 100%;
+    }
   }
 }
 
