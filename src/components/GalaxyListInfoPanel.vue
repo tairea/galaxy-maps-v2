@@ -1,9 +1,5 @@
 <template>
   <div class="galaxyInfoPanel" :style="selectedCourse ? 'right: 0px' : ''">
-    <!-- USER MENU TOPBAR -->
-
-    <!-- USER MENU HIDDEN-->
-
     <div class="panelContent">
       <div class="panelContentInner">
         <PopupGalaxyPreview
@@ -55,23 +51,22 @@ export default {
 
 <style lang="scss" scoped>
 .galaxyInfoPanel {
-  // background: var(--v-background-darken1);
-  width: 200px;
+  background: var(--v-background-darken1);
+  width: 250px;
   height: 600px;
   position: fixed;
-  // bottom: 0px;
   top: calc(50% - 300px);
-  right: -200px;
+  right: -250px;
   transition: all 0.3s ease-out;
   z-index: 200;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 15% 100%, 0 95%);
 
   .panelContent {
     height: calc(100% - 40px);
     width: auto;
-    margin: 20px 0px 30px 0px;
+    margin: 20px 0px 30px 20px;
     background: var(--v-missionAccent-base);
     margin-right: -2px;
-    // margin-left: 10px;
     position: relative;
 
     .panelContentInner {
@@ -100,9 +95,7 @@ export default {
     content: "";
     width: 99%;
     height: calc(100% - 2px);
-    // height: 100%;
     background: var(--v-background-darken1);
-    // background: var(--v-background-base);
     display: block;
     position: absolute;
     top: 1px;
