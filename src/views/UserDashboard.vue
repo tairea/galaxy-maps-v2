@@ -4,32 +4,60 @@
     <div id="left-section">
       <UserInfo :person="person" />
     </div>
-    <div v-if="isStudent && isTeacher" class="top-section" >
+    <div v-if="isStudent && isTeacher" class="top-section">
       <div class="student-border">
-        <div :class="studentLabel" @click="setView('student')">student dashboard</div>
+        <div :class="studentLabel" @click="setView('student')">
+          student dashboard
+        </div>
       </div>
       <div class="teacher-border">
-        <div :class="teacherLabel" @click="setView('teacher')">teacher dashboard</div>
+        <div :class="teacherLabel" @click="setView('teacher')">
+          teacher dashboard
+        </div>
       </div>
-      <v-divider class="line" style="border-color:var(--v-missionAccent-base)"></v-divider>
+      <v-divider
+        class="line"
+        style="border-color: var(--v-missionAccent-base)"
+      ></v-divider>
     </div>
+    <!-- STUDENT -->
     <template v-if="dashboardView === 'student'">
+      <!-- Main section -->
       <div id="main-section">
+        <!-- info description -->
+        <div class="d-flex align-center mb-4">
+          <v-icon left class="circle-border" small color="missionAccent"
+            >mdi-information-variant</v-icon
+          >
+          <p class="info-description">
+            These are maps you are completing as a student
+          </p>
+        </div>
         <div class="course-progression-wrap">
           <StudentCourseProgression :student="person" />
         </div>
       </div>
+
       <div id="right-section">
         <StudentActivityTimeline :student="person" />
       </div>
     </template>
     <template v-else>
       <div id="main-section">
+        <!-- info description -->
+        <div class="d-flex align-center mb-4">
+          <v-icon left class="circle-border" color="missionAccent" small
+            >mdi-information-variant</v-icon
+          >
+          <p class="info-description">
+            These are cohorts & maps you are facilitating as a teacher
+          </p>
+        </div>
         <div class="timeframe-chips">
-          <TimeframeFilters @timeframe="timeframe = $event" :showDate="true"/>
+          <TimeframeFilters @timeframe="timeframe = $event" :showDate="true" />
         </div>
         <div class="cohort-frame">
-        <!-- all teacher cohorts progress -->
+          <!-- all teacher cohorts progress -->
           <CohortPanelV2
             v-for="cohort in teacherCohorts"
             :cohort="cohort"
@@ -68,10 +96,10 @@ import { mapState, mapGetters, mapActions, mapMutations } from "vuex";
 import UserInfo from "../components/UserInfo";
 import StudentActivityTimeline from "../components/StudentActivityTimeline";
 import StudentCourseProgression from "../components/StudentCourseProgression";
-import TimeframeFilters from "../components/TimeframeFilters.vue"
-import CohortPanelV2 from "../components/CohortPanelV2.vue"
-import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame.vue"
-import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame.vue"
+import TimeframeFilters from "../components/TimeframeFilters.vue";
+import CohortPanelV2 from "../components/CohortPanelV2.vue";
+import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame.vue";
+import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame.vue";
 
 export default {
   name: "UserDashboard",
@@ -82,16 +110,17 @@ export default {
     TimeframeFilters,
     CohortPanelV2,
     SubmissionTeacherFrame,
-    RequestForHelpTeacherFrame
+    RequestForHelpTeacherFrame,
   },
   data() {
-    return { 
-      timeframe: ''
+    return {
+      timeframe: "",
     };
   },
   async mounted() {
-    this.getCohortsByPersonId(this.person)
-    if (this.dashboardView === "" && this.person.assignedCourses?.length) this.setDashboardView("student")
+    this.getCohortsByPersonId(this.person);
+    if (this.dashboardView === "" && this.person.assignedCourses?.length)
+      this.setDashboardView("student");
   },
   computed: {
     ...mapState([
@@ -102,19 +131,16 @@ export default {
       "courses",
       "allTasks",
       "cohorts",
-      "dashboardView"
+      "dashboardView",
     ]),
-    ...mapGetters([
-      "getCourseById",
-      "getCoursesByWhoMadeThem",
-    ]),
+    ...mapGetters(["getCourseById", "getCoursesByWhoMadeThem"]),
     isStudent() {
-      return this.person.assignedCourses?.length
+      return this.person.assignedCourses?.length;
     },
     isTeacher() {
-      const isTeacher = this.teacherCohorts.length
-      if (!this.isStudent && isTeacher) this.setDashboardView("teacher")
-      return isTeacher
+      const isTeacher = this.teacherCohorts.length;
+      if (!this.isStudent && isTeacher) this.setDashboardView("teacher");
+      return isTeacher;
     },
     isTeacherView() {
       return this.dashboardView === 'teacher'
@@ -129,7 +155,7 @@ export default {
       return this.isTeacherView ? 'teacher-label' : 'inactive-teacher-label'
     },
     teacherCohorts() {
-      return this.cohorts.filter(cohort => cohort.teacher)
+      return this.cohorts.filter((cohort) => cohort.teacher);
     },
     cohortCourses() {
       let courses = []
@@ -139,20 +165,20 @@ export default {
       return courses
     },
     teachersStudents() {
-      let students = []
-      this.teacherCohorts.forEach(cohort => {
-        cohort.students.forEach(course => students.push(course))
-      })
-      return students
-    }
+      let students = [];
+      this.teacherCohorts.forEach((cohort) => {
+        cohort.students.forEach((course) => students.push(course));
+      });
+      return students;
+    },
   },
 
   methods: {
-    ...mapActions(['getCohortsByPersonId']),
-    ...mapMutations(['setDashboardView']),
+    ...mapActions(["getCohortsByPersonId"]),
+    ...mapMutations(["setDashboardView"]),
     setView(val) {
-      this.setDashboardView(val)
-    }
+      this.setDashboardView(val);
+    },
   },
 };
 </script>
@@ -183,9 +209,22 @@ export default {
   #main-section {
     width: 60%;
     height: calc(100vh - 100px);
-    margin-top: 140px;
+    margin-top: 135px;
     padding: 0px 20px 50px 50px;
     // border: 1px solid red;
+
+    .circle-border {
+      border: 1px solid var(--v-missionAccent-base);
+      border-radius: 50%;
+    }
+
+    .info-description {
+      color: var(--v-missionAccent-base);
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      margin: 0;
+      font-style: italic;
+    }
 
     .course-progression-wrap {
       height: 100%;
@@ -315,7 +354,7 @@ export default {
 
 .line {
   position: relative;
-  top: 23px
+  top: 23px;
 }
 
 .cohort-frame {
@@ -328,5 +367,4 @@ export default {
   display: flex;
   justify-content: center;
 }
-
 </style>
