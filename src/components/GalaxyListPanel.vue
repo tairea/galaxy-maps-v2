@@ -25,7 +25,15 @@
         </div>
         <!-- TEACHING -->
         <div>
-          <p class="galaxyListPanelLabel overline mx-4">TEACHING</p>
+          <p class="galaxyListPanelLabel overline mx-4">TEACHING 
+            <v-icon 
+              small 
+              @click="$emit('createGalaxy')" 
+              class="ml-12 add-galaxy-icon" 
+              color="galaxyAccent"
+            >
+              mdi-plus
+            </v-icon></p>
           <div v-if="getTeachingCourses.length">
             <!-- COURSE CARD -->
             <GalaxyListPanelCard
@@ -270,6 +278,13 @@ export default {
   .panelContent:before {
     clip-path: polygon(0 0, 100% 0, 100% 95%, 85% 100%, 0 100%);
   }
+}
+
+.add-galaxy-icon {
+  background-color: rgba(266, 105, 207, 0.2);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
 }
 
 .galaxyListPanel:hover {

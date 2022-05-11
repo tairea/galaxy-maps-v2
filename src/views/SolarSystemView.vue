@@ -192,7 +192,6 @@ export default {
   overflow: hidden;
   margin: 0 !important;
   padding: 0px 20px
-  // border: 1px solid red;
 }
 
 #left-section {
@@ -202,7 +201,6 @@ export default {
   justify-content: flex-start;
   align-items: center;
   flex-direction: column;
-  // border: 1px solid yellow;
   overflow-y: scroll;
   padding-bottom: 50px;
 }

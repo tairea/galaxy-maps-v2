@@ -32,16 +32,16 @@
       <div v-if="!admin" class="create-dialog-content">
         <!-- LISTED -->
         <div>
-          <p class="caption">Choose whether you would like this galaxy to be invite only or publically discoverable</p>
+          <p class="caption">Choose whether you would like this galaxy to be <strong>PRIVATE</strong> (invite only), or <strong>PUBLIC</strong> (discoverable by all Galaxy Maps users)</p>
           <v-radio-group row v-model="courseOptions.public" color="missionAccent" :light="!dark" :dark="dark">
             <v-radio
-              label="invite only"
+              label="private"
               :value="false"
               color="missionAccent"
               class="label-text"
             ></v-radio>
             <v-radio
-              label="discoverable"
+              label="public"
               :value="true"
               color="missionAccent"
               class="label-text"
@@ -128,7 +128,7 @@
 
 <script>
 import { db, functions } from "@/store/firestoreConfig";
-import { mapGetters } from 'vuex'
+import { mapGetters, mapMutations } from 'vuex'
 
 import { dbMixins } from '@/mixins/DbMixins'
 
@@ -155,6 +155,7 @@ export default {
 
   },
   methods: {
+    ...mapMutations(['setCurrentCourse']),
     close() {
       this.dialog = false;
       this.loading = false;
@@ -175,6 +176,8 @@ export default {
         this.sendNewSubmissionEmail(course)
       })
       .then(() => {
+        this.$store.commit("setCurrentCourseId", course.id);
+        this.$store.commit("setCurrentCourse", course)
         this.close()
       }).catch((error) => {
         console.error("Error updating document: ", error);
@@ -206,14 +209,12 @@ export default {
       }
 
       course.status = "published"
-      console.log("published course: ", course )
-      console.log("create cohort: ", cohort)
       await this.saveCohort(cohort)
       .then((cohortId) => { 
-        console.log('cohortId: ', cohortId)
         course.cohort = cohortId
         this.updateCourse(course)
       }).then(() => {
+        this.setCurrentCourse(course)
         this.close()
       }).catch((error) => {
         console.error("Error updating document: ", error);

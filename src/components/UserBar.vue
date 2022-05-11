@@ -1,102 +1,123 @@
 <template>
-  <div class="userMenu">
-    <!-- USER MENU TOPBAR -->
-    <div class="blackBar">
-      <div class="d-flex justify-center align-center">
-        <v-progress-circular
-          v-if="uploading"
-          :rotate="360"
-          :size="50"
-          :width="2"
-          :value="uploadPercentage"
-          color="baseAccent"
-        >
-          {{ uploadPercentage + "%" }}
-        </v-progress-circular>
-        <!-- <v-hover v-else v-slot="{ hover }"> -->
-        <v-avatar
-          v-else
-          color="secondary"
-          @mouseenter="onhover = true"
-          @mouseleave="onhover = false"
-        >
-          <img
-            v-if="person.image"
-            :src="person.image.url"
-            :alt="person.firstName"
-            style="object-fit: cover"
-          />
-          <!-- <v-icon v-if="hover">mdi-pencil</v-icon> -->
-          <v-icon v-else>mdi-account</v-icon>
-          <v-fade-transition>
-            <v-overlay v-if="onhover" absolute color="baseAccent">
-              <v-icon small @click="onButtonClick">mdi-pencil</v-icon>
-            </v-overlay>
-          </v-fade-transition>
-          <input
-            ref="uploader"
-            class="d-none"
-            type="file"
-            accept="image/*"
-            @change="onFileChanged"
-          />
-        </v-avatar>
-        <!-- </v-hover> -->
+  <v-hover v-model="hover">
+    <div ref="userBar" class="userMenu" :class="{'showMenu': hover}">
+      <!-- USER MENU TOPBAR -->
+      <div class="blackBar">
+        <div class="d-flex justify-center align-center">
+          <v-progress-circular
+            v-if="uploading"
+            :rotate="360"
+            :size="50"
+            :width="2"
+            :value="uploadPercentage"
+            color="baseAccent"
+          >
+            {{ uploadPercentage + "%" }}
+          </v-progress-circular>
+          <!-- <v-hover v-else v-slot="{ hover }"> -->
+          <v-avatar
+            v-else
+            color="secondary"
+            @mouseenter="onhover = true"
+            @mouseleave="onhover = false"
+          >
+            <img
+              v-if="person.image"
+              :src="person.image.url"
+              :alt="person.firstName"
+              style="object-fit: cover"
+            />
+            <!-- <v-icon v-if="hover">mdi-pencil</v-icon> -->
+            <v-icon v-else>mdi-account</v-icon>
+            <v-fade-transition>
+              <v-overlay v-if="onhover" absolute color="baseAccent">
+                <v-icon small @click="onButtonClick">mdi-pencil</v-icon>
+              </v-overlay>
+            </v-fade-transition>
+            <input
+              ref="uploader"
+              class="d-none"
+              type="file"
+              accept="image/*"
+              @change="onFileChanged"
+            />
+          </v-avatar>
+          <!-- </v-hover> -->
+        </div>
+        <div class="username mx-4" style="">
+          {{ person.firstName }} {{ person.lastName }}
+        </div>
       </div>
-      <div class="username mx-4" style="">
-        {{ person.firstName }} {{ person.lastName }}
-      </div>
-    </div>
-    <!-- USER MENU HIDDEN-->
-    <div class="userMenuHidden">
-      <v-row>
-        <v-col
-          class="d-flex"
-          style="border-bottom: 1px solid var(--v-missionAccent-base)"
-        >
-          <v-icon color="missionAccent" small>mdi-cog-outline</v-icon>
-          <p class="settings overline ma-0 pl-1">Settings</p>
-        </v-col>
-      </v-row>
-      <v-row class="pt-3">
-        <v-col class="pa-0 d-flex justify-center">
-          <p class="text-overline ma-0" color="primary">Colour Theme</p>
-        </v-col>
-        <!-- LIGHT/DARK MODE SWITCH -->
-        <v-col class="pa-0 d-flex justify-center">
-          <v-switch
-            v-model="darkSwitch"
-            :label="`${darkSwitch ? 'Dark' : 'Light'}`"
-            @change="changeTheme()"
-            color="missionAccent"
-            class="ma-o"
-          ></v-switch>
-        </v-col>
-      </v-row>
+      <!-- USER MENU HIDDEN-->
+      <div class="userMenuHidden">
+        <v-row>
+          <v-col
+            class="d-flex"
+            style="border-bottom: 1px solid var(--v-missionAccent-base)"
+          >
+            <v-icon color="missionAccent" small>mdi-cog-outline</v-icon>
+            <p class="settings overline ma-0 pl-1">Settings</p>
+          </v-col>
+        </v-row>
+        <v-row class="pt-3">
+          <v-col class="pa-0 d-flex justify-center">
+            <p class="text-overline ma-0" color="primary">Colour Theme</p>
+          </v-col>
+          <!-- LIGHT/DARK MODE SWITCH -->
+          <v-col class="pa-0 d-flex justify-center">
+            <v-switch
+              v-model="darkSwitch"
+              :label="`${darkSwitch ? 'Dark' : 'Light'}`"
+              @change="changeTheme()"
+              color="missionAccent"
+              class="ma-o"
+            ></v-switch>
+          </v-col>
+        </v-row>
 
-      <v-row class="mt-5">
-        <!-- <ThemeColourPicker/> -->
-        <v-btn
-          @click="logout"
-          color="missionAccent"
-          outlined
-          :dark="dark"
-          :light="!dark"
-          >Logout</v-btn
-        >
-        <v-btn
-          href="https://docs.google.com/forms/d/e/1FAIpQLSfJgXGWOeosZfJY7H0tvFzANoX8p95fmgVKom97HMDiNywSnA/viewform?usp=sf_link"
-          target="_blank"
-          color="baseAccent"
-          class="ml-2"
-          outlined
-          :dark="dark"
-          :light="!dark"
-          >Feedback 🙏
-        </v-btn>
-      </v-row>
+        <div class="d-flex flex-column mt-5">
+          <!-- <ThemeColourPicker/> -->
+          <!-- <v-btn
+            color="baseAccent"
+            class="ma-4"
+            outlined
+            :dark="dark"
+            :light="!dark"
+            @click="editProfile"
+            >
+            <v-icon class="pr-2">mdi-pencil</v-icon>
+            edit account
+          </v-btn> -->
+          <StudentEditDialog @close="close"/>
+          <v-btn
+            href="https://docs.google.com/forms/d/e/1FAIpQLSfJgXGWOeosZfJY7H0tvFzANoX8p95fmgVKom97HMDiNywSnA/viewform?usp=sf_link"
+            target="_blank"
+            color="galaxyAccent"
+            class="ma-4"
+            outlined
+            :dark="dark"
+            :light="!dark"
+            >
+              <v-icon class="pr-2">mdi-send</v-icon>
+            Feedback
+          </v-btn>
+          
+          <v-btn
+            class="ma-4"
+            @click="logout"
+            color="missionAccent"
+            outlined
+            :dark="dark"
+            :light="!dark"
+            >
+              <v-icon class="pr-2">mdi-door-closed</v-icon>
+            Logout</v-btn
+          >
+          
+        </div>
+      </div>
     </div>
-  </div>
+  </v-hover>
 </template>
 
 <script>
@@ -105,11 +126,13 @@ import firebase from "firebase";
 import { mapState, mapActions, mapMutations } from "vuex";
 import ThemeColourPicker from "@/components/ThemeColourPicker.vue";
 import { db, storage } from "../store/firestoreConfig";
+import StudentEditDialog from "../components/StudentEditDialog.vue"
 
 export default {
   name: "UserBar",
   components: {
     ThemeColourPicker,
+    StudentEditDialog
   },
   data() {
     return {
@@ -120,6 +143,7 @@ export default {
       uploadPercentage: 0,
       image: {},
       onhover: false,
+      hover: false
     };
   },
   async mounted() {
@@ -240,6 +264,9 @@ export default {
           console.error("Error writing document: ", error);
         });
     },
+    close() {
+      this.hover = true
+    }
   },
 };
 </script>
@@ -248,10 +275,10 @@ export default {
 .userMenu {
   background: var(--v-subBackground-base);
   width: 25%;
-  height: 200px;
+  height: 400px;
   position: absolute;
   // bottom: 0px;
-  bottom: -200px;
+  bottom: -400px;
   right: 0;
   transition: all 0.3s ease-out;
   z-index: 200;
@@ -296,7 +323,7 @@ export default {
   }
 }
 
-.userMenu:hover {
+.showMenu {
   bottom: 0px;
 }
 </style>

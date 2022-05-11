@@ -4,6 +4,7 @@
     <!-- CREATE BUTTON -->
     <template v-slot:activator="{ on, attrs }">
       <v-btn
+        v-if="isDashboardView"
         v-bind="attrs"
         v-on="on"
         class="mission-edit-button mt-4"
@@ -12,6 +13,17 @@
         x-small
       >
         <v-icon small> mdi-pencil </v-icon>
+      </v-btn>
+      <v-btn
+        v-else
+        v-bind="attrs"
+        v-on="on"
+        color="baseAccent"
+        class="ma-4"
+        outlined
+        >
+        <v-icon class="pr-2">mdi-pencil</v-icon>
+        edit account
       </v-btn>
     </template>
 
@@ -34,7 +46,7 @@
           :dark="dark"
           :light="!dark"
           color="missionAccent"
-          v-model="person.firstName"
+          v-model="profile.firstName"
           label="First name"
         ></v-text-field>
         <!-- LAST NAME -->
@@ -44,26 +56,36 @@
           :dark="dark"
           :light="!dark"
           color="missionAccent"
-          v-model="person.lastName"
+          v-model="profile.lastName"
           label="Last name"
         ></v-text-field>
         <!-- EMAIL -->
-        <v-text-field
-          class="input-field"
-          outlined
-          :dark="dark"
-          :light="!dark"
-          color="missionAccent"
-          v-model="person.email"
-          label="Email"
-        ></v-text-field>
+        <v-row>
+          <v-col cols="10">
+            <v-text-field
+              class="input-field"
+              outlined
+              :disabled="!editEmail"
+              :dark="dark"
+              :light="!dark"
+              color="missionAccent"
+              v-model="profile.email"
+              label="Email"
+            ></v-text-field>
+          </v-col>
+          <v-col>
+            <v-icon class="mt-2" large color="missionAccent" v-if="!editEmail" @click="editEmail = true">mdi-pencil-box</v-icon>
+            <v-icon class="mt-2" large color="missionAccent" v-else @click="saveEmail">mdi-content-save</v-icon>
+          </v-col>
+        </v-row>
+
 
         <!-- ACTION BUTTONS -->
         <div class="action-buttons">
           <v-btn
             outlined
             color="green darken-1"
-            @click="updatePerson(person)"
+            @click="updatePerson(profile)"
             class="mr-2"
             :loading="loading"
             v-bind="attrs"
@@ -93,12 +115,13 @@
 
 <script>
 import { mapState } from "vuex";
+import firebase from 'firebase';
 
 import { db } from "../store/firestoreConfig";
 
 export default {
   name: "StudentEditDialog",
-  props: ["on", "attrs"],
+  props: ["on", "attrs", "isDashboardView"],
   components: {},
   mounted() {},
   computed: {
@@ -111,23 +134,62 @@ export default {
     return {
       dialog: false,
       loading: false,
+      editEmail: false,
+      profile: {}
     };
   },
+  watch: {
+    dialog(newVal) {
+      if (newVal) {
+        console.log('dialog is true')
+        Object.assign(this.profile, this.person) 
+      }
+    }
+  },
   methods: {
-    updatePerson(person) {
+    updatePerson(profile) {
       db.collection("people")
-        .doc(person.id)
-        .update(person)
+        .doc(profile.id)
+        .update(profile)
         .then((res) => {
-          console.log("Person successfully updated!");
-          this.dialog = false;
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: 'profile successfully updated',
+            color: "baseAccent",
+          });
+          this.cancel();
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: error.message,
+            color: "pink",
+          });
+          this.cancel()
         });
     },
+    saveEmail() {
+      firebase.auth().currentUser.updateEmail(this.profile.email).then(() => {
+        this.$store.commit("setSnackbar", {
+          show: true,
+          text: 'email successfully updated',
+          color: "baseAccent",
+        });
+      }).catch((error) => {
+        this.$store.commit("setSnackbar", {
+          show: true,
+          text: error.message,
+          color: "pink",
+        });
+        this.cancel
+      });
+    },
     cancel() {
-      this.dialog = false;
+      this.dialog = false
+      this.loading = false
+      this.editEmail = false
+      this.$emit('close')
     },
   },
 };

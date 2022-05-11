@@ -8,8 +8,12 @@
 
     <div id="main-section">
       <div class="people-frame">
-        <h2 class="people-label" @click="studentsView = true">STUDENTS</h2>
-        <div class="graph-label text-center" @click="studentsView = false"><span class="pl-4">OVERVIEW</span></div>
+        <div class="people-border">
+          <div :class="peopleLabel" @click="studentsView = true"><span class="pl-3">STUDENTS</span></div>
+        </div>
+        <div class="graph-border">
+          <div :class="graphLabel" class="text-center" @click="studentsView = false"><span class="pl-3">OVERVIEW</span></div>
+        </div>
         <StudentDataIterator v-if="studentsView" class="mt-4"/>
         <CohortGraphs v-else/>
       </div>
@@ -59,7 +63,13 @@ export default {
     },
     teacher() {
       return this.currentCohort.teacher || this.currentCohort.teachers.some(teacher => teacher === this.person.id)
-    }
+    },
+    peopleLabel() {
+      return this.studentsView ? 'people-label' : 'inactive-people-label'
+    },
+    graphLabel() {
+      return this.studentsView ? 'inactive-graph-label' : 'graph-label'
+    },
   },
 };
 </script>
@@ -111,33 +121,97 @@ export default {
     border: 1px solid var(--v-missionAccent-base);
     overflow: auto;
 
-    .people-label {
-      font-size: 0.8rem;
-      font-weight: 400;
-      text-transform: uppercase;
+    .people-border {
       // ribbon label
       position: absolute;
       top: -1px;
       left: -1px;
       background-color: var(--v-missionAccent-base);
-      color: var(--v-background-base);
       padding: 0px 30px 0px 5px;
       clip-path: polygon(0 0, 100% 0, 90% 100%, 0% 100%);
       cursor: pointer;
+      width: 120px;
+      height: 22px
+    }
+    
+    .people-label {
+      font-size: 0.8rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      position: relative;
+      top: 1px;
+      left: -3px;
+      background-color: var(--v-missionAccent-base);
+      color: var(--v-background-base);
+      padding: 0px 30px 0px 5px;
+      -webkit-clip-path: polygon(0 0, 100% 0, 90% 100%, 0% 100%);
+      clip-path: polygon(0 0, 100% 0, 90% 100%, 0% 100%);
+      cursor: pointer;
+      width: 116px;
+      height: 20px;
+    }
+    
+    .inactive-people-label {
+      font-size: 0.8rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      position: relative;
+      top: 1px;
+      left: -3px;
+      background-color: var(--v-background-base);
+      color: var(--v-missionAccent-base);
+      padding: 0px 30px 0px 5px;
+      -webkit-clip-path: polygon(0 0, 100% 0, 90% 100%, 0% 100%);
+      clip-path: polygon(0 0, 100% 0, 90% 100%, 0% 100%);
+      cursor: pointer;
+      width: 116px;
+      height: 20px;
+    }
+    .graph-border {
+      // ribbon label
+      position: absolute;
+      top: -1px;
+      left: 120px;
+      background-color: var(--v-missionAccent-base);
+      color: var(--v-background-base);
+      padding: 0px 30px 0px 5px;
+      clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
+      cursor: pointer;
+      width: 120px;
+      height: 22px;
     }
     .graph-label {
       font-size: 0.8rem;
       font-weight: 400;
       text-transform: uppercase;
       // ribbon label
-      position: absolute;
-      top: -1px;
-      left: 100px;
+      position: relative;
+      top: 1px;
+      left: -3px;
       background-color: var(--v-missionAccent-base);
       color: var(--v-background-base);
       padding: 0px 30px 0px 5px;
       clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
       cursor: pointer;
+      width: 120px;
+      height: 22px;
+    }
+
+    .inactive-graph-label {
+      font-size: 0.8rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      // ribbon label
+      position: relative;
+      top: 1px;
+      left: -3px;
+      background-color: var(--v-background-base);
+      color: var(--v-missionAccent-base);
+      padding: 0px 30px 0px 5px;
+      clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
+      cursor: pointer;
+      width: 116px;
+      height: 20px;
     }
   }
 }
@@ -147,29 +221,6 @@ export default {
   height: 84%;
   padding-top: 50px;
   margin-right: 35px;
-
-  .people-right-frame {
-    position: relative;
-    width: 100%;
-    margin: 30px 20px;
-    min-height: 40%;
-    // margin: 30px 20px;
-    border: 1px solid var(--v-missionAccent-base);
-
-    .people-label {
-      font-size: 0.8rem;
-      font-weight: 400;
-      text-transform: uppercase;
-      // ribbon label
-      position: fixed;
-      top: -1px;
-      left: -1px;
-      background-color: var(--v-missionAccent-base);
-      color: var(--v-background-base);
-      padding: 0px 30px 0px 5px;
-      clip-path: polygon(0 0, 100% 0, 90% 100%, 0% 100%);
-    }
-  }
 }
 
 /* width */

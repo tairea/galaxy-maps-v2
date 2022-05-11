@@ -176,10 +176,10 @@
 
             <!-- RIGHT SIDE -->
             <div
-              class="right-side"
+              class="right-side pr-2"
               :style="course.title ? 'width:50%' : 'width:0%'"
             >
-              <div id="galaxy-info" v-if="course.title">
+              <div id="galaxy-info" v-if="course.title" class="mb-2">
                 <h2 class="galaxy-label">Galaxy</h2>
                 <h1 class="galaxy-title">{{ course.title }}</h1>
                 <v-img
@@ -189,6 +189,17 @@
                 ></v-img>
                 <p class="galaxy-description">{{ course.description }}</p>
               </div>
+              <v-select
+                class="input-field mt-4"
+                outlined
+                :dark="dark"
+                :light="!dark"
+                color="missionAccent"
+                v-model="course.public"
+                :items="[{text: 'Public', value: true}, {text: 'Private', value: false}]"
+                label="Galaxy Access"
+              >
+              </v-select>
             </div>
             <!-- End of right-side -->
             <!-- ACTION BUTTONS -->
@@ -239,7 +250,7 @@
               <v-btn
                 outlined
                 :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
-                class="ml-2"
+                class="ml-4"
                 @click="cancel"
                 :disabled="disabled || loading"
                 :dark="dark"
@@ -252,6 +263,73 @@
             <!-- End action-buttons -->
           </div>
           <!-- End create-dialog -->
+        </v-dialog>
+
+        <v-dialog v-model="privateDialog" width="40%" light>
+          <div v-if="peopleInCourse.length " class="create-dialog">
+            <!-- HEADER -->
+            <div class="dialog-header py-10">
+              <p class="dialog-title">
+                Delete Galaxy Map?
+              </p>
+              <div class="d-flex align-start">
+                <v-icon left color="missionAccent"
+                  >mdi-information-variant</v-icon
+                >
+                <p class="dialog-description">
+                  <strong>Warning!</strong> You have at least one person currently active in this galaxy.
+                  <br>
+                  <br>
+
+                  <span v-if="course.public">
+                    If you like you can choose to make this course private instead of deleteing which will allow currently active learners to continue and finish the galaxy, 
+                    while preventing new learners from being able to start.
+                  </span>
+                  <span v-else>
+                    Are you sure want to continue to Delete this Galaxy
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div class="action-buttons">
+              <!-- DELETE -->
+              <v-btn
+                v-if="course.public"
+                outlined
+                color="missionAccent"
+                @click="changeToPrivate(course)"
+                :loading="deleting"
+              >
+                <v-icon left> mdi-delete </v-icon>
+                make private
+              </v-btn>
+              <v-btn
+                outlined
+                color="error"
+                @click="deleteDialog()"
+                class="ml-4"
+                :loading="deleting"
+              >
+                <v-icon left> mdi-delete </v-icon>
+                confirm delete
+              </v-btn>
+
+              <v-btn
+                outlined
+                :color="$vuetify.theme.dark ? 'yellow' : 'f7f7ff'"
+                class="ml-4"
+                @click="privateDialog = false"
+                :disabled="disabled || loading"
+              >
+                <v-icon left> mdi-close </v-icon>
+                Cancel
+              </v-btn>
+            </div>
+            <!-- End action-buttons -->
+          </div>
+          <!-- End create-dialog-content -->
         </v-dialog>
 
         <!-- CONFIRM DELETE DIALOG -->
@@ -268,7 +346,7 @@
                 >
                 <p class="dialog-description">
                   Are you sure you want to <strong>DELETE</strong> this
-                  <span class="galaxy-text">{{ course.title }} Galaxy Map</span
+                  <span class="galaxy-text">Galaxy {{ course.title }}</span
                   >?
                   <br />
                   <br />
@@ -278,8 +356,20 @@
                   <strong>YOU WILL LOSE ALL </strong>
                   <span class="galaxy-text">Galaxy</span> and related
                   <span class="mission-text">Mission</span> data.
+                  <br />
+                  <br />
+                  To confirm type <span class="destroy">"DESTROY"</span> in the box below
                 </p>
               </div>
+              <v-text-field
+                class="input-field ma-5"
+                outlined
+                color="missionAccent"
+                v-model="destroy"
+                :dark="dark"
+                :light="!dark"
+                placeholder="DESTROY"
+              ></v-text-field>              
             </div>
 
             <!-- ACTION BUTTONS -->
@@ -291,6 +381,7 @@
                 @click="confirmDeleteCourse(course)"
                 class="ml-2"
                 :loading="deleting"
+                :disabled="destroy !== 'DESTROY'"
               >
                 <v-icon left> mdi-delete </v-icon>
                 DELETE
@@ -299,7 +390,7 @@
               <v-btn
                 outlined
                 :color="$vuetify.theme.dark ? 'yellow' : 'f7f7ff'"
-                class="ml-2"
+                class="ml-4"
                 @click="cancelDeleteDialog"
                 :disabled="disabled || loading"
               >
@@ -318,7 +409,8 @@
 
 <script>
 import { mapState, mapGetters } from "vuex";
-import { db, storage } from "../store/firestoreConfig";
+import { db, storage, functions } from "../store/firestoreConfig";
+import firebase from 'firebase'
 
 export default {
   name: "CreateEditDeleteGalaxyDialog",
@@ -327,6 +419,8 @@ export default {
     notAuthor: false,
     dialog: false,
     dialogConfirm: false,
+    privateDialog: false,
+    destroy: "",
     dialogTitle: "Create a new Galaxy",
     dialogDescription: "A Galaxy is a path of learning. Kind of like a course.",
     course: {
@@ -364,13 +458,14 @@ export default {
   }),
   computed: {
     ...mapGetters(["person"]),
+    ...mapState(['peopleInCourse']),
     dark() {
       return this.$vuetify.theme.isDark;
     },
   },
   mounted () {
     if (this.courseToEdit) {
-      this.course = this.courseToEdit;
+      Object.assign(this.course, this.courseToEdit);
     }
   },
   watch: {
@@ -414,6 +509,11 @@ export default {
           const courseId = docRef.id;
           //set courseID to Store state 'state.currentCourseId' (so not relying on router params)
           this.$store.commit("setCurrentCourseId", courseId);
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: "Galaxy created",
+            color: "baseAccent",
+          });
 
           // route to newly created galaxy
           this.$router.push({
@@ -431,15 +531,22 @@ export default {
     },
     updateCourse(course) {
       this.loading = true;
+      if (course.public !== this.courseToEdit.public) course.status = 'drafting'
       db.collection("courses")
         .doc(course.id)
         .update(course)
         .then(() => {
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: "Galaxy updated",
+            color: "baseAccent",
+          });
           this.dialog = false;
           this.loading = false;
           //get doc id from firestore (aka course id)
           //set courseID to Store state 'state.currentCourseId' (so not relying on router params)
           this.$store.commit("setCurrentCourseId", course.id);
+          this.$store.commit("setCurrentCourse", course)
         })
         .catch((error) => {
           console.error("Error updating document: ", error);
@@ -449,7 +556,7 @@ export default {
       this.disabled = true;
       // ceate a storage ref
       var storageRef = storage.ref(
-        "course-images/" + this.course.title + "-" + this.uploadedImage.name
+        "course-images/" + this.course.id + "-" + this.uploadedImage.name
       );
 
       // upload a file
@@ -516,7 +623,10 @@ export default {
     },
     // delete
     deleteDialog() {
-      (this.dialog = false), (this.dialogConfirm = true);
+      if (this.privateDialog == false && this.peopleInCourse.length) { this.privateDialog = true }
+      else {
+        (this.privateDialog = false), (this.dialog = false), (this.dialogConfirm = true);
+      }
     },
     cancelDeleteDialog() {
       this.dialogConfirm = false;
@@ -527,7 +637,7 @@ export default {
       console.log('course: ', course)
       const documentRef = db.collection("courses").doc(course.id);
 
-      // delete document in collection "courses"
+      // // delete document in collection "courses"
       documentRef
         .delete()
         .then(() => {
@@ -535,25 +645,30 @@ export default {
           this.dialog = false;
           // after delete... route back to home
           this.$router.push({ path: "/base/galaxies"});
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: "Galaxy destroyed",
+            color: "baseAccent",
+          });
         })
         .catch((error) => {
           console.error("Error deleting document: ", error);
         });
-
-      // TODO: test if this is deleting course's subcollections (eg. map-nodes, map-edges, topics)
-      // recursiveDelete() to delete subcollections of course
-      // db.recursiveDelete(documentRef); This doesnt exist
       
       this.deleteImage();
 
-      // TODO: remove this courseID from students assignedCourses
+      // delete courseCohort
+      db.collection('cohorts').doc(this.course.cohort).delete()
+
+      // delete for any students in course
+      this.deleteCourseForStudents()
     },
     deleteImage() {
       // if no image, dont worry bout it cuz
       if (this.course.image.name == "") return;
       // Create a reference to the file to delete
       var storageRef = storage.ref(
-        "course-images/" + this.course.title + "-" + this.course.image.name
+        "course-images/" + this.course.id + "-" + this.course.image.name
       );
       // Delete the file
       storageRef
@@ -565,6 +680,44 @@ export default {
           console.log("Uh-oh, an error occurred!", error);
         });
     },
+    deleteCourseForStudents() {
+      this.peopleInCourse.forEach(async person => {
+        const student = await db.collection('people').doc(person.id)
+        
+        student.update({
+          assignedCourses: firebase.firestore.FieldValue.arrayRemove(this.course.id)
+        });
+
+        const data = {
+          email: person.email,
+          teacher: this.person.firstName + ' ' + this.person.lastName,
+          course: this.course.title,
+          student: person.firstName + ' ' + person.lastName,
+          teacherEmail: this.person.email
+        }
+
+        const sendCourseDeleted = functions.httpsCallable("sendNewCohortEmail");
+        return sendCourseDeleted(data);
+
+      })
+    },
+    async changeToPrivate(course) {
+      return await db.collection('courses').doc(course.id).update({public: false}).then(() => {
+        this.$store.commit("setSnackbar", {
+          show: true,
+          text: "Course updated",
+          color: "baseAccent",
+        });
+        this.privateDialog = false;
+        this.dialog = false;
+        this.loading = false;
+        course.public = false;
+        //get doc id from firestore (aka course id)
+        //set courseID to Store state 'state.currentCourseId' (so not relying on router params)
+        this.$store.commit("setCurrentCourseId", course.id);
+        this.$store.commit("setCurrentCourse", course)
+      })
+    }
   },
 };
 </script>
@@ -613,7 +766,7 @@ export default {
     justify-content: center;
     align-items: flex-start;
     transition: all 0.3s;
-    // flex-direction: column;
+    flex-direction: column;
     // border-left: 1px solid var(--v-missionAccent-base);
 
     // galaxy info

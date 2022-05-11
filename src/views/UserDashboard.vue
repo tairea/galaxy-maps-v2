@@ -203,7 +203,7 @@ export default {
 
   #left-section {
     width: 15%;
-    padding: 100px 50px;
+    padding: 100px 50px 100px 20px;
   }
 
   #main-section {

@@ -121,7 +121,7 @@ export default {
           // node types
           introduction: {
             shape: "dot",
-            color: "#00E676",
+            // color: "#00E676",
           },
           // tasks: {
           //   // color: { background: "yellow", border: "white" },
@@ -218,19 +218,19 @@ export default {
         return this.inActiveNodes
       } else if (!this.teacher) {
         return this.currentCourseNodesWithStatus
-      } else return this.currentCourseNodesGroups
+      } else return this.currentCourseNodes
     },
-    currentCourseNodesGroups() {
-      let courseNodes = []
-      for (const node of this.currentCourseNodes) {
-        courseNodes.push({
-          ...node,
-          group: "default",
-        });
-      }
-      // return nodes with status to network map
-      return courseNodes;
-    },
+    // currentCourseNodesGroups() {
+    //   let courseNodes = []
+    //   for (const node of this.currentCourseNodes) {
+    //     courseNodes.push({
+    //       ...node,
+    //       group: node.group"default",
+    //     });
+    //   }
+    //   // return nodes with status to network map
+    //   return courseNodes;
+    // },
     inActiveNodes() {
       let inActiveNodes = []
       for (const node of this.currentCourseNodes) {
