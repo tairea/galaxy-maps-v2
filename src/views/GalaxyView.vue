@@ -61,7 +61,7 @@
         :dialogTitle="dialogTitle"
         :dialogDescription="dialogDescription"
         :editing="editing"
-        :course="course"
+        :course="currentCourse"
         :currentNode="currentNode"
         :currentEdge="currentEdge"
         @closeDialog="closeDialog"
@@ -157,9 +157,21 @@ export default {
       selectedNode: {}
     };
   },
+  watch: {
+    async currentCourse(newVal, oldVal) {
+      if (!oldVal.cohort && newVal.cohort) this.cohortsInCourse = await getAllCohortsInCourse(this.courseId);
+    }
+  },
+  async beforeMount() {
+    // check galaxy params match state.currentCourse
+    if (this.$route.params.courseId != this.currentCourse.id) {
+      const course = await db.collection('courses').doc(this.courseId).get()
+      console.log('params dont match setting currentCourse: ', course.data())
+      this.$store.commit('setCurrentCourse', course.data())
+    }
+  },
   async mounted() {
     // create first node, when galaxy first created (hard coded)
-
     if (this.fromCreate) {
       let nodeId = null;
       await db
@@ -204,7 +216,7 @@ export default {
         .set({
           // hardcoded first node topic
           id: nodeId,
-          label: this.courseTitle + " Intro",
+          label: this.currentCourse.title + " Intro",
           group: "introduction",
           topicCreatedTimestamp: new Date(),
         })

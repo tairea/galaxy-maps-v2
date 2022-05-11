@@ -30,7 +30,7 @@
       >
         Nobody is assigned to this Galaxy
       </p>
-      <AssignCohortDialog v-if="isTeacher" :assignCohorts="true" />
+      <AssignCohortDialog v-if="isTeacher" :assignCohorts="true" @newAssignment="addToPeople($event)" :cohorts="cohorts"/>
     </div>
 
     <!-- ASSIGNED COURSES INFO -->
@@ -113,6 +113,9 @@ export default {
           this.courses = courses;
         }
       }
+    },
+    addToPeople(person) {
+      return this.people.push(person)
     }
   },
 };

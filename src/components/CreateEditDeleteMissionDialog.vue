@@ -390,12 +390,20 @@ export default {
         // ["clean"] // remove formatting button
     ]
   }),
-  mounted() {
-    if (this.taskToEdit) {
-      console.log("editing task");
-      this.task = this.taskToEdit;
+  watch: {
+    dialog(newVal) {
+      if (newVal && this.taskToEdit) {
+        Object.assign(this.task, this.taskToEdit)
+      }
     }
   },
+  // mounted() {
+  //   if (this.taskToEdit) {
+  //     console.log("editing task");
+  //     // this.task = this.taskToEdit;
+  //     Object.assign(this.taskToEdit, this.task)
+  //   }
+  // },
   computed: {
     ...mapState(["currentCourseId"]),
     dark() {
@@ -426,6 +434,10 @@ export default {
         .collection("tasks")
         .add({ ...task, taskCreatedTimestamp: new Date() })
         .then((docRef) => {
+          task.id = docRef.id
+          task.taskCreatedTimestamp = new Date()
+          this.saveTaskToStudents(task)
+
           docRef.update({ id: docRef.id }); // add task id to task
           console.log("Task successfully written!");
           this.loading = false;
@@ -477,6 +489,7 @@ export default {
         .catch((error) => {
           console.error("Error writing document: ", error);
         });
+      this.saveTaskToStudents(task)
     },
     cancel() {
       this.dialog = false;
@@ -515,10 +528,96 @@ export default {
         .catch((error) => {
           console.error("Error decrementing taskTotal: ", error);
         });
+      
+      // delete task from students
+      this.deleteTaskForStudents(this.taskId)
 
       // close dialog
       this.dialogConfirm = false;
     },
+    async saveTaskToStudents(task) {
+      
+      // get all students currently assigned to course
+      const allStudents = await db.collection("people")
+        .where("assignedCourses", "array-contains", this.currentCourseId)
+        .get();
+
+
+      allStudents.forEach(async doc => {
+        const student = doc.id
+
+        // set reference to this course
+        const courseRef = await db.collection('people')
+          .doc(student)
+          .collection(this.currentCourseId)
+        
+        // check if the student has already started the course. If not they will be assigned this task when they start the course  
+        const studentHasStartedCourse = await courseRef.get().then((subQuery) => {return subQuery.docs.length})
+
+        if (studentHasStartedCourse) {
+          if (this.edit) {
+            console.log('only updating task, we dont need to change status: ', task)
+            // assign task to student
+            await courseRef
+              .doc(this.topicId)
+              .collection('tasks')
+              .doc(task.id)
+              .update(task);
+
+          } else {
+            // if they have started the course, get the tasks for this topic
+            const query = await courseRef
+              .doc(this.topicId)
+              .collection('tasks')
+              .get()
+            
+            // get the data from the task
+            const tasks = query.docs.map(doc => {
+              return {
+                id: doc.id,
+                ...doc.data()
+              }
+            })
+  
+            // check if all the tasks are all completed
+            const uncompletedTasks = tasks.filter(task => task.taskStatus !== 'completed')
+  
+            if (uncompletedTasks.length) {
+              // if they arent all completed this task will be locked. If they are completed then this task should be unlocked
+              task.taskStatus = 'locked'
+            } else task.taskStatus = 'unlocked'
+  
+            // assign task to student
+            await courseRef
+              .doc(this.topicId)
+              .collection('tasks')
+              .doc(task.id)
+              .set(task);
+          }
+        }
+      })
+
+    },
+    async deleteTaskForStudents(task) {
+      // get all students currently assigned to course
+      const allStudents = await db.collection("people")
+        .where("assignedCourses", "array-contains", this.currentCourseId)
+        .get();
+      
+      allStudents.forEach(async doc => {
+        const student = doc.id
+        console.log('deleteing ', task,  'for student: ', student)
+        // delete for student
+        await db
+          .collection("people")
+          .doc(student)
+          .collection(this.currentCourseId)
+          .doc(this.topicId)
+          .collection('tasks')
+          .doc(task)
+          .delete()
+      })
+    }
   },
 };
 </script>

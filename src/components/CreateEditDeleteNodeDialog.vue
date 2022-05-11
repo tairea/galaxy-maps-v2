@@ -239,9 +239,10 @@
 import firebase from "firebase/app";
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
+import { getPersonsTopicById } from '@/lib/ff'; 
 
 export default {
-  name: "CreateEditDel",
+  name: "CreateEditDeleteNodeDialog",
   props: [
     "course",
     "dialog",
@@ -359,7 +360,7 @@ export default {
       // save topic node info to map-nodes
       console.log("save", node);
       db.collection("courses")
-        .doc(this.course.id)
+        .doc(this.currentCourseId)
         .collection("map-nodes")
         .doc(node.id)
         .set({ ...node, nodeCreatedTimestamp: new Date() })
@@ -371,7 +372,7 @@ export default {
               const from = prereq;
               const to = this.currentNode.id;
               db.collection("courses")
-                .doc(this.course.id)
+                .doc(this.currentCourseId)
                 .collection("map-edges")
                 .add({
                   id: 1234,
@@ -393,12 +394,14 @@ export default {
         });
       // save topic info to topics
       db.collection("courses")
-        .doc(this.course.id)
+        .doc(this.currentCourseId)
         .collection("topics")
         .doc(node.id)
         .set({ ...node, topicCreatedTimestamp: new Date() })
         .then((docRef) => {
-          console.log("Topic successfully written!");
+          console.log("Topic successfully written!: ", docRef);
+          console.log("Topic node: ", node)
+          this.saveTopicToStudents(node)
           this.loading = false;
           this.close();
         })
@@ -407,7 +410,7 @@ export default {
         });
       // increment topicTotals by 1
       db.collection("courses")
-        .doc(this.course.id)
+        .doc(this.currentCourseId)
         .update("topicTotal", firebase.firestore.FieldValue.increment(1))
         .then(() => {
           console.log("Topic total increased by 1");
@@ -429,7 +432,7 @@ export default {
       this.deleting = true;
       // delete node from firestore > map-nodes
       db.collection("courses")
-        .doc(this.course.id)
+        .doc(this.currentCourseId)
         .collection("map-nodes")
         .doc(this.currentNode.id)
         .delete()
@@ -443,7 +446,7 @@ export default {
         });
       // delete node from firestore > topics
       db.collection("courses")
-        .doc(this.course.id)
+        .doc(this.currentCourseId)
         .collection("topics")
         .doc(this.currentNode.id)
         .delete()
@@ -458,7 +461,7 @@ export default {
       // delete conneceted edge (if there is one)
       if (this.currentNode.connectedEdge) {
         db.collection("courses")
-          .doc(this.course.id)
+          .doc(this.currentCourseId)
           .collection("map-edges")
           .doc(this.currentNode.connectedEdge)
           .delete()
@@ -473,7 +476,7 @@ export default {
       }
       // decrement topicTotals by 1
       db.collection("courses")
-        .doc(this.course.id)
+        .doc(this.currentCourseId)
         .update("topicTotal", firebase.firestore.FieldValue.increment(-1))
         .then(() => {
           console.log("Topic total decreased by 1");
@@ -481,13 +484,15 @@ export default {
         .catch((error) => {
           console.error("Error decrementing topicTotal: ", error);
         });
+      
+      this.deleteTopicForStudents(this.currentNode)
       // close
       this.close();
     },
     deleteEdge() {
       this.deleting = true;
       db.collection("courses")
-        .doc(this.course.id)
+        .doc(this.currentCourseId)
         .collection("map-edges")
         .doc(this.currentEdge.id)
         .delete()
@@ -500,6 +505,76 @@ export default {
           console.error("Error deleting edge: ", error);
         });
     },
+    async saveTopicToStudents(node) {
+
+      // get all students currently assigned to course
+      const allStudents = await db.collection("people")
+        .where("assignedCourses", "array-contains", this.currentCourseId)
+        .get();
+      
+      // for each student
+      allStudents.forEach(async doc => {
+        const student = doc.id
+
+        // set reference to this course
+        const courseRef = await db.collection('people')
+          .doc(student)
+          .collection(this.currentCourseId)
+        
+        // check if the student has already started the course. If not they will be assigned this topic when they start the course  
+        const studentHasStartedCourse = await courseRef.get().then((subQuery) => {return subQuery.docs.length})
+
+        if (studentHasStartedCourse) {
+          
+          // if editing a node dont update the student 
+          if (this.editing) {
+            console.log('only updating node we dont need to check status: ', node)
+            // only updating node we dont need to check status
+            await courseRef.doc(node.id).update(node);
+          } else {
+
+            // if the new node has set prerequisites
+            if (node.prerequisites?.length) {
+              // get the prerequisite topic
+              const topic = await getPersonsTopicById(student, this.currentCourseId, node.prerequisites[0])
+              console.log('topic: ', topic)
+              if (topic.topicStatus) {
+                console.log('student has been assigned the topic')
+                // if that topic is completed, set the topic as unlocked, else set is as locked and it will be unlocked when the student completed the prerequisite
+                if (topic.topicStatus && topic.topicStatus == 'completed') {
+                  node.topicStatus = 'unlocked' 
+                } else node.topicStatus = 'locked'
+              }
+            } else {
+              // if there are no prerequisites than set is as unlocked
+              node.topicStatus = 'unlocked'
+            }
+            console.log(student, ' has started course. Setting new topic as ', node.topicStatus)
+            // assign the topic to each student
+            await courseRef.doc(node.id).set(node);
+          }
+        }
+      })
+    },
+    async deleteTopicForStudents(node) {
+      console.log('node: ', node)
+      // get all students currently assigned to course
+      const allStudents = await db.collection("people")
+        .where("assignedCourses", "array-contains", this.currentCourseId)
+        .get();
+      
+      allStudents.forEach(async doc => {
+        const student = doc.id
+        console.log('deleteing ', node.label,  'for student: ', student)
+        // delete for student
+        await db
+          .collection("people")
+          .doc(student)
+          .collection(this.currentCourseId)
+          .doc(node.id)
+          .delete()
+      })
+    }
   },
 };
 </script>

@@ -181,7 +181,7 @@ export default {
     ActiveMissionsCard,
     SelectedMissionsCard,
   },
-  props: ["task", "id", "index", "topicId", "teacher"],
+  props: ["task", "id", "index", "topicId", "teacher", "topicActive"],
   data() {
     return {
       editing: false,

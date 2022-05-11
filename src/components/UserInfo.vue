@@ -25,7 +25,7 @@
       </div>
       <!-- Edit button -->
       <div style="text-align: right">
-        <StudentEditDialog />
+        <StudentEditDialog :isDashboardView="true"/>
       </div>
       <!-- Cohorts -->
       <div style="margin-top: 50px">

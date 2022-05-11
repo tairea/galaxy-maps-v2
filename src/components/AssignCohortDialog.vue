@@ -83,22 +83,26 @@
                       outlined
                       single-line
                       :disabled="!teacherCohorts.length"
+                      class="cohort-select"
                     >
                       <template v-slot:selection="{ item }">
-                        <v-list-item-avatar v-if="item.image" tile>
-                          <img 
+                        <v-list-item-avatar tile>
+                          <img
+                            v-if="item.image && item.image.url" 
                             :src="item.image.url"
                           >
+                          <v-icon v-else>mdi-star-three-points</v-icon>
                         </v-list-item-avatar>
-                        <v-list-item-content>
-                          <v-list-item-title v-html="item.name"></v-list-item-title>
+                        <v-list-item-content>{{item.name}}
                         </v-list-item-content>
                       </template>
                       <template v-slot:item="{ item }">
-                        <v-list-item-avatar v-if="item.image" tile>
-                          <img 
+                        <v-list-item-avatar tile>
+                          <img
+                            v-if="item.image && item.image.url" 
                             :src="item.image.url"
                           >
+                          <v-icon v-else>mdi-star-three-points</v-icon>
                         </v-list-item-avatar>
                         <v-list-item-content>
                           <v-list-item-title v-html="item.name"></v-list-item-title>
@@ -299,7 +303,7 @@ import { dbMixins } from "../mixins/DbMixins";
 export default {
   name: "AssignCohortDialog",
   mixins: [dbMixins],
-  props: ["assignCohorts", "assignCourses"],
+  props: ["assignCohorts", "assignCourses", "cohorts"],
   data: () => ({
     tab: null,
     dialog: false,
@@ -324,7 +328,6 @@ export default {
   computed: {
     ...mapState([
       "courses",
-      "cohorts",
       "organisations",
       "currentCourseId",
       "currentCourse",
@@ -334,9 +337,7 @@ export default {
     cohortOptions () {
       // teacherCohorts && the courseCohort
       let courseCohort = this.cohorts.filter(cohort => cohort.id === this.currentCourse.cohort)
-      console.log('courseCohort: ', courseCohort)
       this.cohort = courseCohort[0]
-      console.log('cohort: ', this.cohort)
       return [
         ...courseCohort,
         ...this.teacherCohorts
@@ -379,6 +380,7 @@ export default {
             text: "Individual assigned to Course",
             color: "baseAccent",
           });
+          this.$emit('newAssignment', person)
           this.close();
         })
         .catch((error) => {
@@ -434,6 +436,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.cohort-select ::v-deep .v-list-item__content {
+  min-width: 250px;
+}
 /* Dialog */
 .assignCohortDialog {
   color: black;

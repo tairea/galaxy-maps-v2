@@ -124,7 +124,7 @@ ${link}
   
 If you have any issues please contact support@galaxymaps.io
   
-Galaxy Maps Robot`;
+Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);
   functions.logger.log("New teacher invite email sent to: ", email);
   return null;
@@ -148,7 +148,7 @@ ${link}
 
 If you have any issues please contact support@galaxymaps.io
   
-Galaxy Maps Robot`;
+Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);
   functions.logger.log("New student invite email sent to: ", email);
   return null;
@@ -192,7 +192,7 @@ https://galaxymaps.io
   
 If you have any issues please contact support@galaxymaps.io
   
-Galaxy Maps Robot`;
+Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);
   functions.logger.log("New cohort invite email sent to: ", email);
   return null;
@@ -222,7 +222,7 @@ https://galaxymaps.io
   
 If you have any issues please contact support@galaxymaps.io
   
-Galaxy Maps Robot`;
+Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);
   functions.logger.log("New assignment email sent to: ", email);
   return null;
@@ -249,7 +249,7 @@ ${author} has submitted an new course called ${title}
 
 Navigate to https://galaxymaps.io to approve the submission
   
-Galaxy Maps Robot`;
+Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);
   functions.logger.log("New course submission email sent to admin");
   return null;
@@ -276,7 +276,7 @@ Your course ${course} has been approved and is now available on Galaxy Maps
 
 Navigate to https://galaxymaps.io to view your course
   
-Galaxy Maps Robot`;
+Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);
   functions.logger.log("Course published email sent to ", email);
   return null;
@@ -355,7 +355,7 @@ Request: ${request}
 
 To respond to ${student}, please login to https://galaxymaps.io to view your course
   
-Galaxy Maps Robot`;
+Galaxy Maps Team`;
   
   mailOptions.html = `<p>Hi ${teacher},</p>
   </br> 
@@ -371,7 +371,7 @@ Galaxy Maps Robot`;
 </br> 
 <p>To respond to ${student}, please login to <a href="https://galaxymaps.io" target="_blank">https://galaxymaps.io/login</a> to view your course</p>
 </br> 
-<p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Robot</p>`;
+<p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
   await mailTransport.sendMail(mailOptions);
   functions.logger.log("Request notification email sent to ", email);
   return null;
@@ -406,7 +406,7 @@ Instructors response: ${response}
 
 Login to https://galaxymaps.io to continue your course.
   
-Galaxy Maps Robot`;
+Galaxy Maps Team`;
   
   mailOptions.html = `<p>Hi ${student},</p>
   </br> 
@@ -424,7 +424,7 @@ Galaxy Maps Robot`;
 </br> 
 <p>Login to <a href="https://galaxymaps.io" target="_blank">https://galaxymaps.io/login</a> to continue your course.</p>
 </br> 
-<p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Robot</p>`;
+<p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
   await mailTransport.sendMail(mailOptions);
   functions.logger.log("Instructor response sent to ", email);
   return null;
@@ -457,7 +457,7 @@ Submission: ${submission}
 
 To respond to ${student}'s submission and unlock the next task from them, please login to https://galaxymaps.io to view your course
   
-Galaxy Maps Robot`;
+Galaxy Maps Team`;
   
   mailOptions.html = `<p>Hi ${teacher},</p>
   </br> 
@@ -473,7 +473,7 @@ Galaxy Maps Robot`;
 </br> 
 <p>To respond to ${student}, please login to <a href="https://galaxymaps.io" target="_blank">https://galaxymaps.io/login</a> to view your course</p>
 </br> 
-<p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Robot</p>`;
+<p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
   await mailTransport.sendMail(mailOptions);
   functions.logger.log("Task submission notification email sent to ", email);
   return null;
@@ -510,7 +510,7 @@ Instructors message: ${message}
 
 Login to https://galaxymaps.io to continue your course.
   
-Galaxy Maps Robot`;
+Galaxy Maps Team`;
   
   mailOptions.html = `<p><strong>Hi ${student},</strong></p>
 <p>Your instructor ${teacher} has reviewed your submission to ${task}.</p>
@@ -529,7 +529,7 @@ Galaxy Maps Robot`;
 </br> 
 <p>Login to <a href="https://galaxymaps.io" target="_blank">https://galaxymaps.io/login</a> to continue your course.</p>
 </br> 
-<p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Robot</p>`;
+<p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
   await mailTransport.sendMail(mailOptions);
   functions.logger.log("Submission outcome sent to ", email);
   return null;
@@ -695,14 +695,14 @@ It has been ${duration} since you last signed into Galaxy Maps.
 
 Sign in to https://galaxymaps.io now to continue your learning journey.
   
-Galaxy Maps Robot`;
+Galaxy Maps Team`;
   
   mailOptions.html = `<p><strong>Hi ${student},</strong></p>
 <p>It has been <strong>${duration}</strong> since you last signed into Galaxy Maps.</p>
 </br> 
 <p>Sign in to <a href="https://galaxymaps.io" target="_blank">https://galaxymaps.io/login</a> now to continue your learning journey.</p>
 </br> 
-<p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Robot</p>`;
+<p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
   await mailTransport.sendMail(mailOptions);
   functions.logger.log("student low activity alert sent", email);
   return null;
@@ -724,15 +724,51 @@ async function sendTeacherStudentInActive(student, studentEmail, duration, email
   
   We recommend checking in on them via email ${studentEmail} to encourage and support them on their learning journey.
     
-  Galaxy Maps Robot`;
+  Galaxy Maps Team`;
     
     mailOptions.html = `<p><strong>Hi ${teacher},</strong></p>
   <p>It has been <strong>${duration}</strong> since your student: <strong>${student}</strong> in cohort: <strong>${cohort}</strong> last signed into Galaxy Maps.</p>
   </br> 
   <p>  We recommend checking in on them via email <a href="mailto:${studentEmail}">${studentEmail}</a> to encourage and support them on their learning journey.</p>
   </br> 
-  <p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Robot</p>`;
+  <p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
     await mailTransport.sendMail(mailOptions);
     functions.logger.log("student low activity alert sent to teacher", email);
     return null;
+}
+
+//====== ACTIVE COURSE DELETED ==================
+exports.sendCourseDeleted = functions.https.onCall((data, context) => {
+  const { email, teacher, course, student, teacherEmail } = data;
+  sendCourseDeleted(email, teacher, course, student, teacherEmail);
+});
+
+// Sends a invite email to a new student.
+async function sendCourseDeleted(email, teacher, course, student, teacherEmail) {
+  const mailOptions = {
+    from: `${APP_NAME} <noreply@galaxymaps.io>`,
+    to: email
+  };
+
+  // The user subscribed to the newsletter.
+  mailOptions.subject = `Galaxy Deleted`;
+  mailOptions.text = `Hi ${student}, 
+
+Your instructor ${teacher} has deleted the Galaxy ${course}.
+
+If you have any questions or concerns about this please contact your instructor by email at ${teacherEmail}
+  
+Galaxy Maps Team`;
+  
+  mailOptions.html = `<img src="https://drive.google.com/file/d/1NCw9hJLLO89C4dsEUDIB0yv6xJBuWKl7/view?usp=sharing" alt="gm-logo">
+</br>
+<p><strong>Hi ${student},</strong></p>
+<p>Your instructor ${teacher} has deleted the Galaxy ${course}.</p>
+</br> 
+<p>If you have any questions or concerns about this please contact your instructor by email at <a href="mailto:${teacherEmail}">${teacherEmail}</a></p>
+</br> 
+<p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
+  await mailTransport.sendMail(mailOptions);
+  functions.logger.log("Submission outcome sent to ", email);
+  return null;
 }

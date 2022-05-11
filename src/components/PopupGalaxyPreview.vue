@@ -13,7 +13,7 @@
       <div>
         <p class="info-panel-label mb-2">
           <span class="galaxyColour"
-            ><span v-if="draft">Draft</span> Galaxy:</span
+            ><span>{{courseStatus}}</span> Galaxy</span
           >
           <br />
           <span>{{ course.title }}</span>
@@ -201,6 +201,11 @@ export default {
     draft() {
       return this.course.status === "drafting";
     },
+    courseStatus() {
+      if (this.draft) return 'Draft'
+      else if (this.course.status == 'submitted') return 'Draft'
+      else if (!this.course.public) return 'Private'
+    }
   },
   methods: {
     async setImages() {
