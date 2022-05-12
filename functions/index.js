@@ -122,7 +122,7 @@ Please click this link to sign into your account and setup your profile
 
 ${link}
   
-If you have any issues please contact support@galaxymaps.io
+If you have any issues please contact base@galaxymaps.io
   
 Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);
@@ -146,7 +146,7 @@ Please click this link to sign into your account and setup your profile
 
 ${link}
 
-If you have any issues please contact support@galaxymaps.io
+If you have any issues please contact base@galaxymaps.io
   
 Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);
@@ -156,13 +156,12 @@ Galaxy Maps Team`;
 
 //======COHORT REGISTRATION NOTIFICATION==================
 exports.sendNewCohortEmail = functions.https.onCall((data, context) => {
-  const { email, displayName, firstName, inviter, accountType, cohort } = data;
+  const { email, displayName, firstName, inviter, cohort } = data;
   return sendNewCohortEmail(
     email,
     displayName,
     firstName,
     inviter,
-    accountType,
     cohort
   );
 });
@@ -173,7 +172,6 @@ async function sendNewCohortEmail(
   displayName,
   firstName,
   inviter,
-  accountType,
   cohort
 ) {
   const mailOptions = {
@@ -185,12 +183,12 @@ async function sendNewCohortEmail(
   mailOptions.subject = `New cohort registration`;
   mailOptions.text = `Hi ${displayName || firstName || ""}
 
-You have been added as a ${accountType} to ${cohort} cohort by ${inviter} 
+You have been added to cohort: ${cohort} by ${inviter} 
 Sign into your Galaxy Maps account to view your new cohort.
 
 https://galaxymaps.io
   
-If you have any issues please contact support@galaxymaps.io
+If you have any issues please contact base@galaxymaps.io
   
 Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);
@@ -220,7 +218,7 @@ Sign into your Galaxy Maps account to view your new course.
 
 https://galaxymaps.io
   
-If you have any issues please contact support@galaxymaps.io
+If you have any issues please contact base@galaxymaps.io
   
 Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);
@@ -752,7 +750,7 @@ async function sendCourseDeleted(email, teacher, course, student, teacherEmail) 
 
   // The user subscribed to the newsletter.
   mailOptions.subject = `Galaxy Deleted`;
-  mailOptions.text = `Hi ${student}, 
+  mailOptions.text = `Hi ${student || ''}, 
 
 Your instructor ${teacher} has deleted the Galaxy ${course}.
 
@@ -760,15 +758,13 @@ If you have any questions or concerns about this please contact your instructor 
   
 Galaxy Maps Team`;
   
-  mailOptions.html = `<img src="https://drive.google.com/file/d/1NCw9hJLLO89C4dsEUDIB0yv6xJBuWKl7/view?usp=sharing" alt="gm-logo">
-</br>
-<p><strong>Hi ${student},</strong></p>
+  mailOptions.html = `<p><strong>Hi ${student},</strong></p>
 <p>Your instructor ${teacher} has deleted the Galaxy ${course}.</p>
 </br> 
 <p>If you have any questions or concerns about this please contact your instructor by email at <a href="mailto:${teacherEmail}">${teacherEmail}</a></p>
 </br> 
 <p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("Submission outcome sent to ", email);
+  functions.logger.log("Galaxy deleted email sent to ", email);
   return null;
 }
