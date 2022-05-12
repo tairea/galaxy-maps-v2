@@ -70,7 +70,7 @@
 
               <!-- STUDENT SUBMISSION -->
               <div class="requester-info">
-                <v-row>
+                <v-row v-if="requesterPerson">
                   <div class="requester-image justify-center align-center">
                     <Avatar :colourBorder="true" :profile="requesterPerson" :size="30" />
                   </div>

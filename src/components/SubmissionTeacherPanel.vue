@@ -11,7 +11,7 @@
           <div class="d-flex flex-row">
             <Avatar v-if="isDashboardView" :profile="courseContextProfile" size="30" :colourBorder="true"/>
             <Avatar v-if="requesterPerson" :profile="requesterPerson" size="30" :colourBorder="true"  :class="isDashboardView ? 'request-image':''"/>
-            <div class="submission-time d-flex flex-column align-center ml-auto">
+            <div class="submission-time d-flex flex-column align-center ml-auto pl-1">
               <span v-if="reviewed" class="ml-auto status-text">{{submission.taskSubmissionStatus}}</span>
               <span v-else class="ml-auto status-text">...awaiting review</span>
               {{ getHumanDate(submission.taskSubmittedForReviewTimestamp) }}
