@@ -21,8 +21,8 @@
       <p class="overline ma-0" style="color: var(--v-baseAccent-base)">
         Teachers
       </p>
-      <v-row class="my-1">
-        <Person v-for="person in teachers" :person="person" :key="person.id" />
+      <v-row class="my-1 mx-1">
+        <Avatar v-for="person in teachers" :profile="person" :key="person.id" :size="40" :colourBorder="true"/>
       </v-row>
     </div>
     <CreateEditDeleteCohortDialog
@@ -36,7 +36,7 @@
 <script>
 import Organisation from "../components/Organisation";
 import CreateEditDeleteCohortDialog from "../components/CreateEditDeleteCohortDialog";
-import Person from "../components/Person";
+import Avatar from "../components/Avatar";
 
 import { mapGetters } from "vuex";
 import { dbMixins } from "../mixins/DbMixins";
@@ -45,7 +45,7 @@ export default {
   name: "CohortInfo",
   mixins: [dbMixins],
   components: {
-    Person,
+    Avatar,
     Organisation,
     CreateEditDeleteCohortDialog,
   },

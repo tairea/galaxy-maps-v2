@@ -4,7 +4,39 @@
     :cols="cols"
     @click="routeToCourse(course)"
   >
-    <v-img
+   <v-tooltip v-if="course" bottom color="subBackground">
+      <template v-slot:activator="{ on, attrs }">
+        <div
+          class="d-flex justify-center align-center"
+          v-bind="attrs"
+          v-on="on"
+        >
+          <v-avatar size="40">
+            <img
+              v-if="course.image && course.image.url"
+              :src="course.image.url"
+              :alt="course.title"
+              style="object-fit: cover"
+            />
+            <div
+              v-else
+              class="imagePlaceholder"
+            >
+              {{ first3Letters(course.title) }}
+            </div>
+          </v-avatar>
+        </div>
+      </template>
+      <div>
+        <p
+          class="ma-0 person-tooltip"
+          style="font-size: 0.8rem; font-weight: 800"
+        >
+          {{ course.title }}
+        </p>
+      </div>
+    </v-tooltip>
+    <!-- <v-img
       v-if="course.image"
       :src="course.image.url"
       max-width="60px"
@@ -12,7 +44,7 @@
       class="course-image"
     ></v-img>
     <div v-else class="imagePlaceholder">{{ first3Letters(course.title) }}</div>
-    <p class="title text-center pt-2 mb-0">{{ course.title }}</p>
+    <p class="title text-center pt-2 mb-0">{{ course.title }}</p> -->
   </v-col>
 </template>
 

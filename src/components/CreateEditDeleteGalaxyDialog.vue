@@ -463,6 +463,11 @@ export default {
       return this.$vuetify.theme.isDark;
     },
   },
+  watch: {
+    courseToEdit() {
+      Object.assign(this.course, this.courseToEdit)
+    }
+  },
   mounted () {
     if (this.courseToEdit) {
       Object.assign(this.course, this.courseToEdit);
@@ -641,6 +646,14 @@ export default {
       documentRef
         .delete()
         .then(() => {
+          // delete courseCohort
+          db.collection('cohorts').doc(this.course.cohort).delete()
+        })
+        .then(() => {
+          // delete for any students in course
+          this.deleteCourseForStudents()
+        })
+        .then(() => {
           this.deleting = false;
           this.dialog = false;
           // after delete... route back to home
@@ -656,12 +669,6 @@ export default {
         });
       
       this.deleteImage();
-
-      // delete courseCohort
-      db.collection('cohorts').doc(this.course.cohort).delete()
-
-      // delete for any students in course
-      this.deleteCourseForStudents()
     },
     deleteImage() {
       // if no image, dont worry bout it cuz
@@ -692,11 +699,11 @@ export default {
           email: person.email,
           teacher: this.person.firstName + ' ' + this.person.lastName,
           course: this.course.title,
-          student: person.firstName + ' ' + person.lastName,
+          student: person.firstName ? person.firstName + ' ' + person.lastName : '',
           teacherEmail: this.person.email
         }
-
-        const sendCourseDeleted = functions.httpsCallable("sendNewCohortEmail");
+        console.log('sending delete galaxy email: ', data)
+        const sendCourseDeleted = functions.httpsCallable("sendCourseDeleted");
         return sendCourseDeleted(data);
 
       })

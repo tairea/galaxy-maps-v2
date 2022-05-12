@@ -20,7 +20,7 @@
       <div v-if="people.length > 0">
         <p class="overline assignedToLabel ma-0">Individuals</p>
         <v-row class="my-4">
-          <Person v-for="person in people" :person="person" :key="person.id" />
+          <Avatar v-for="person in people" :profile="person" :key="person.id" :size="40" :colourBorder="true"/>
         </v-row>
       </div>
 
@@ -35,6 +35,7 @@
 
     <!-- ASSIGNED COURSES INFO -->
     <div v-else-if="assignCourses">
+      <p class="overline assignedToLabel ma-0">Courses</p>
       <div v-if="courses.length > 0">
         <Course v-for="(course, i) in courses" :course="course" :key="i" />
       </div>
@@ -53,7 +54,7 @@ import AssignCohortDialog from "../components/AssignCohortDialog";
 import Course from "../components/Course";
 import Cohort from "../components/Cohort";
 import Organisation from "../components/Organisation";
-import Person from "../components/Person";
+import Avatar from "../components/Avatar";
 import { dbMixins } from "../mixins/DbMixins";
 import { getCourseById } from "../lib/ff";
 
@@ -63,7 +64,7 @@ export default {
   components: {
     Cohort,
     Organisation,
-    Person,
+    Avatar,
     Course,
     AssignCohortDialog,
   },

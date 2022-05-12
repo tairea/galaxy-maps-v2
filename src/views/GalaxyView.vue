@@ -159,7 +159,7 @@ export default {
   },
   watch: {
     async currentCourse(newVal, oldVal) {
-      if (!oldVal.cohort && newVal.cohort) this.cohortsInCourse = await getAllCohortsInCourse(this.courseId);
+      if (!oldVal.cohort && newVal.cohort) this.cohortsInCourse = await getAllCohortsInCourse(this.courseId, this.person.id);
     }
   },
   async beforeMount() {
@@ -229,7 +229,7 @@ export default {
     if (this.teacher) {
       this.peopleInCourse = await getAllPeopleInCourse(this.courseId);
       this.setPeopleInCourse(this.peopleInCourse)
-      this.cohortsInCourse = await getAllCohortsInCourse(this.courseId);
+      this.cohortsInCourse = await getAllCohortsInCourse(this.courseId, this.person.id);
     } else {
       await this.getCohortsByPersonId(this.person)
       let cohort = await this.cohorts.find(cohort => cohort.courses.some(courseId => courseId === this.currentCourseId)) 

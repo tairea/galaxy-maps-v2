@@ -16,11 +16,18 @@
               :style="border"
             />
             <div
-              v-else
+              v-else-if="profileData.firstName"
               class="imagePlaceholder"
               :style="colouredBorder"
             >
               {{ first3Letters(profileData.firstName) }}
+            </div>
+            <div
+              v-else
+              class="imagePlaceholder"
+              :style="colouredBorder"
+            >
+              <v-icon>mdi-account</v-icon>
             </div>
           </v-avatar>
         </div>
@@ -30,7 +37,7 @@
           class="ma-0 person-tooltip"
           style="font-size: 0.8rem; font-weight: 800"
         >
-          {{ profileData.firstName + " " + profileData.lastName }}
+          {{ profileData.firstName ? profileData.firstName + " " + profileData.lastName : profileData.email }}
         </p>
       </div>
     </v-tooltip>
