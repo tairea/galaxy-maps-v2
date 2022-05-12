@@ -312,8 +312,8 @@ export default {
     }
 
     .imagePlaceholder {
-      width: 100px;
-      height: 100px;
+      width: 80px;
+      height: 80px;
       border-radius: 50%;
       background-color: rgba(200, 200, 200, 0.3);
       display: flex;

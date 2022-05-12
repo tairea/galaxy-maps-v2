@@ -3,11 +3,16 @@
 import firebase from "firebase";
 import { db, functions } from "../store/firestoreConfig";
 import { getCourseById } from "../lib/ff"
+import {mapGetters} from 'vuex'
 
 export const dbMixins = {
+  computed: {
+    ...mapGetters(['person'])
+  },
   methods: {
     MXaddExistingUserToCohort(person, cohort) {
       return this.MXaddStudentToCohort(person, cohort).then(() => {
+        if (person.inviter?.length == 0) person.inviter = this.person.firstName + ' ' + this.person.lastName;
         this.MXsendNewCohortEmail(person, cohort);
       });
     },
@@ -73,7 +78,6 @@ export const dbMixins = {
         delete profile.parentEmail;
       }
       delete profile.inviter;
-      delete profile.id;
       return db
         .collection("people")
         .doc(person.id)
@@ -117,7 +121,7 @@ export const dbMixins = {
     },
     sendNewCourseEmail(person, course) {
       const data = {
-        name: person.firstName,
+        name: person.firstName || '',
         email: person.email,
         course: course.title,
       };

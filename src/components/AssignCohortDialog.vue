@@ -69,7 +69,7 @@
                     outlined
                     dark
                     color="missionAccent"
-                    v-model="person.email"
+                    v-model="profile.email"
                     label="Person's email address"
                     light
                   ></v-text-field>
@@ -119,7 +119,7 @@
                     v-if="assignCohorts"
                     outlined
                     color="green darken-1"
-                    @click="assignCourseToPerson(person)"
+                    @click="assignCourseToPerson(profile)"
                     :loading="loading"
                   >
                     <v-icon left> mdi-check </v-icon>
@@ -296,7 +296,7 @@
 <script>
 import firebase from "firebase/app";
 
-import { mapState, mapActions } from "vuex";
+import { mapState, mapGetters } from "vuex";
 import { db, storage } from "../store/firestoreConfig";
 import { dbMixins } from "../mixins/DbMixins";
 
@@ -309,7 +309,7 @@ export default {
     dialog: false,
     loading: false,
 
-    person: {
+    profile: {
       id: "",
       email: "",
     },
@@ -325,6 +325,11 @@ export default {
       this.teacherCohorts = this.cohorts.filter(cohort => cohort.teacher && !cohort.courseCohort)
     } 
   },
+  watch: {
+    dialog(newVal) {
+      if (newVal && !this.cohort) this.cohort = this.cohorts.find(cohort => cohort.id == this.currentCourseId)
+    }
+  },
   computed: {
     ...mapState([
       "courses",
@@ -334,6 +339,7 @@ export default {
       "currentCohort",
       "personsCourses",
     ]),
+    ...mapGetters(['person']),
     cohortOptions () {
       // teacherCohorts && the courseCohort
       let courseCohort = this.cohorts.filter(cohort => cohort.id === this.currentCourse.cohort)
@@ -348,7 +354,7 @@ export default {
     close() {
       this.dialog = false;
       this.loading = false;
-      this.person = {
+      this.profile = {
         id: "",
         email: "",
       };
@@ -363,8 +369,11 @@ export default {
         this.handleAssignment(personExists, this.currentCourse);
       } else {
         //create the persons account
+        person.inviter = this.person.firstName + ' ' + this.person.lastName
+
         this.MXcreateUser(person).then((person) => {
-          this.handleAssignment(person, this.currentCourse);
+          console.log('1. person created: ', person)
+          this.handleAssignment({id: person}, this.currentCourse);
         });
       }
     },

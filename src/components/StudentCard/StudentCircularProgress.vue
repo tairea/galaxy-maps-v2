@@ -64,8 +64,12 @@ export default {
     this.calcTopicsCompletedPercentage()
     this.calcTasksCompletedPercentage()
     this.e = {
-      left : this.$refs.circle?.getBoundingClientRect().left,
-      top : this.$refs.circle?.getBoundingClientRect().top
+      left : this.$refs.circle?.getBoundingClientRect().left
+    }
+  },
+  watch: {
+    hover() {
+      this.e.top = this.$refs.circle?.getBoundingClientRect().top
     }
   },
   computed: {

@@ -1,6 +1,6 @@
 <template>
   <div class="student-card" :class="status ? '' : 'not-active'">
-    <StudentCardStatus :student="student" :date="date" :status="status"/>
+    <StudentCardStatus :student="student" :date="date" :status="status" class="pl-1"/>
     <template v-if="!status" class="second-block">
       <span class="overline not-active text-uppercase ma-auto"
         >hasn't signed in yet</span

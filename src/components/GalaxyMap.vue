@@ -214,11 +214,13 @@ export default {
       "personsTopics",
     ]),
     nodesToDisplay () {
-      if (this.addingNode || this.addingEdge) {
-        return this.inActiveNodes
-      } else if (!this.teacher) {
-        return this.currentCourseNodesWithStatus
-      } else return this.currentCourseNodes
+      if (this.currentCourseNodes.length) {
+        if (this.addingNode || this.addingEdge) {
+          return this.inActiveNodes
+        } else if (!this.teacher) {
+          return this.currentCourseNodesWithStatus
+        } else return this.currentCourseNodes
+      }
     },
     // currentCourseNodesGroups() {
     //   let courseNodes = []

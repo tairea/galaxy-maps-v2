@@ -87,19 +87,21 @@ export const getAllPeopleInCourse = async (courseId) => {
     })
 }
 
-export const getAllCohortsInCourse = async (courseId) => {
+export const getAllCohortsInCourse = async (courseId, teacherId) => {
   return await db
     .collection('cohorts')
     .where("courses", "array-contains", courseId)
     .get()
     .then((querySnapShot) => {
-      const course = querySnapShot.docs.map((doc) => {
+      const cohort = querySnapShot.docs.map((doc) => {
+        let teacher = doc.data().teachers.some(teacher => teacher == teacherId) 
         return {
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
+          teacher
         }
       })
-      return course
+      return cohort
     })
 }
 
