@@ -201,7 +201,7 @@
         </div>
         <!-- End of right-side -->
         <!-- ACTION BUTTONS -->
-        <v-row class="action-buttons">
+        <v-row class="action-buttons mb-2">
           <v-btn
             v-if="edit"
             outlined
@@ -269,7 +269,34 @@
 
     <!-- CONFIRM DELETE DIALOG -->
     <v-dialog v-model="dialogConfirm" width="40%" light>
-      <div class="create-dialog">
+      <div v-if="edit && cohortToEdit.courseCohort" class="create-dialog">
+        <!-- HEADER -->
+        <div class="dialog-header">
+          <p class="dialog-title"><strong>Warning!</strong> Delete Cohort?</p>
+          <div class="d-flex align-start">
+            <v-icon left color="missionAccent">mdi-information-variant</v-icon>
+            <p class="dialog-description">
+              This cohort is linked to the <span style="color:var(--v-galaxyAccent-base)">{{cohort.name}}</span> Galaxy Map. <br/><br/>
+              To delete this cohort, please navigate to the galaxy map and delete the course. <br/><br/>
+              If you have any questions or require help please contact <a href="mailto:base@galaxymaps.io">base@galaxymaps.io</a>               
+            </p>
+          </div>
+        </div>
+         <!-- ACTION BUTTONS -->
+        <div class="action-buttons">
+          <v-btn
+            outlined
+            :color="$vuetify.theme.dark ? 'yellow' : 'f7f7ff'"
+            class="ml-2"
+            @click="cancelDeleteDialog"
+            :disabled="disabled || loading"
+          >
+            <v-icon left> mdi-close </v-icon>
+            Cancel
+          </v-btn>
+        </div>
+      </div>
+      <div v-else class="create-dialog">
         <!-- HEADER -->
         <div class="dialog-header py-10">
           <p class="dialog-title"><strong>Warning!</strong> Delete Cohort?</p>
@@ -617,7 +644,6 @@ export default {
       text-transform: uppercase;
       font-size: 0.8rem;
       margin: 0;
-      font-style: italic;
     }
   }
 
@@ -681,8 +707,7 @@ export default {
 
   .action-buttons {
     width: 100%;
-    padding: 5px 20px;
-    padding-bottom: 100px;
+    padding: 20px;
   }
 }
 

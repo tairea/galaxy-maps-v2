@@ -20,7 +20,7 @@
       <div v-if="people.length > 0">
         <p class="overline assignedToLabel ma-0">Individuals</p>
         <v-row class="my-4">
-          <Avatar v-for="person in people" :profile="person" :key="person.id" :size="40" :colourBorder="true"/>
+          <Avatar v-for="person in people" :profile="person" :key="person.id" :size="40" :colourBorder="true" class="ma-1"/>
         </v-row>
       </div>
 
