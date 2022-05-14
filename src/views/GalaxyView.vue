@@ -51,7 +51,6 @@
     <div id="right-section">
       <RequestForHelpTeacherFrame :courses="[currentCourse]" :isTeacher="teacher" :students="peopleInCourse"/>
       <SubmissionTeacherFrame :isTeacher="teacher" :courses="[currentCourse]" :students="teacher ? peopleInCourse : [person]" class="mt-4"/> 
-      <!-- <SubmissionInfo v-if="task && task.submissionRequired == true" :task="task" :submissions="submissions" /> -->
     </div>
         <!-- Edit -->
       <CreateEditDeleteNodeDialog

@@ -41,7 +41,6 @@
     <div id="right-section">
       <RequestsForHelpTeacherFrame :courses="[currentCourse]" :isTeacher="teacher" :students="peopleInTopic"/>
       <SubmissionTeacherFrame :courses="[currentCourse]" :isTeacher="teacher" :students="teacher ? peopleInTopic : [person]" class="mt-4"/> 
-      <!-- <SubmissionInfo v-if="task && task.submissionRequired == true" :task="task" :submissions="submissions" /> -->
     </div>
   </div>
 </template>
@@ -51,7 +50,6 @@ import SolarSystemInfo from "../components/SolarSystemInfo";
 import AssignedInfo from "../components/AssignedInfo";
 import MissionsInfo from "../components/MissionsInfo";
 import MissionsList from "../components/MissionsList";
-import SubmissionInfo from "../components/SubmissionInfo";
 import SolarSystem from "../components/SolarSystem";
 import BackButton from "../components/BackButton";
 import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame";
@@ -68,8 +66,6 @@ export default {
     AssignedInfo,
     MissionsInfo,
     MissionsList,
-    SubmissionInfo,
-    // RequestsForHelpInfo,
     SolarSystem,
     BackButton,
     RequestsForHelpTeacherFrame,

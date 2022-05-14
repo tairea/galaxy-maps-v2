@@ -19,7 +19,7 @@
       </div>
     </div>
 
-    <div id="right-section">
+    <div v-if="ready" id="right-section">
       <RequestForHelpTeacherFrame :isTeacher="teacher" :courses="courses" :students="currentCohort.students" class="ml-4"/>
       <SubmissionTeacherFrame :isTeacher="teacher" :courses="courses" :students="teacher ? currentCohort.students : [person]" class="mt-4 ml-4"/> 
     </div>
@@ -42,6 +42,7 @@ import { db } from '../store/firestoreConfig'
 
 export default {
   name: "CohortView",
+  props: ['cohortId'],
   components: {
     CohortInfo,
     AssignedInfo,
@@ -58,6 +59,9 @@ export default {
   },
   computed: {
     ...mapState(['currentCohort', 'person', 'userStatus']),
+    ready() {
+      return this.cohortId === this.currentCohort.id
+    },
     courses() {
       return this.currentCohort?.courses?.map((course) => {return { id: course }})
     },

@@ -50,7 +50,7 @@ export default {
   methods: {
     timePassed(now) {
       var date = Math.round(now / 1000);
-      var delta = date - this.status.last_changed.seconds;
+      var delta = date - this.status?.last_changed?.seconds;
 
       // calculate (and subtract) whole days
       var days = Math.floor(delta / 86400);

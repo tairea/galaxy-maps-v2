@@ -9,7 +9,6 @@
     <div class="flexContainer">
       <Galaxies
         ref="galaxyMap"
-        :whichCoursesToDisplay="whichCoursesToDisplay"
         :highlightCourse="clickedCourseId"
         @courseClicked="courseClicked($event)"
       />
@@ -22,7 +21,7 @@
 
 <script>
 import CreateEditDeleteGalaxyDialog from "../components/CreateEditDeleteGalaxyDialog";
-import DiscoverGalaxyButton from "../components/DiscoverGalaxyButton";
+// import DiscoverGalaxyButton from "../components/DiscoverGalaxyButton";
 import GalaxyListPanel from "../components/GalaxyListPanel";
 import GalaxyListInfoPanel from "../components/GalaxyListInfoPanel";
 import Galaxies from "../components/Galaxies";
@@ -31,26 +30,26 @@ import { mapGetters } from "vuex";
 
 export default {
   name: "GalaxyList",
-  props: ["display"],
+  // props: ["display"],
   components: {
     CreateEditDeleteGalaxyDialog,
     GalaxyListPanel,
     GalaxyListInfoPanel,
-    DiscoverGalaxyButton,
+    // DiscoverGalaxyButton,
     Galaxies,
   },
   data() {
     return {
       loading: true,
-      whichCoursesToDisplay: "all",
+      // whichCoursesToDisplay: "all",
       clickedCourseId: null,
       courseType: null,
       showDialog: false
     };
   },
   async mounted() {
-    if (this.display) this.whichCoursesToDisplay = this.display;
-    else this.whichCoursesToDisplay = "all";
+    // if (this.display) this.whichCoursesToDisplay = this.display;
+    // else this.whichCoursesToDisplay = "all";
     // TODO: Currently navigates to all galaxies by default, this needs to be improved
     await this.$store.dispatch("bindAllCourses");
   },
