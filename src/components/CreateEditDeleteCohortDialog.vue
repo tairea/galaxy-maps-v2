@@ -269,7 +269,7 @@
 
     <!-- CONFIRM DELETE DIALOG -->
     <v-dialog v-model="dialogConfirm" width="40%" light>
-      <div v-if="edit && cohortToEdit.courseCohort" class="create-dialog">
+      <div v-if="edit && cohortToEdit && cohortToEdit.courseCohort" class="create-dialog">
         <!-- HEADER -->
         <div class="dialog-header">
           <p class="dialog-title"><strong>Warning!</strong> Delete Cohort?</p>

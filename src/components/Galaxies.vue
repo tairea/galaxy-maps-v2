@@ -2,32 +2,6 @@
   <div class="full-height">
     <LoadingSpinner v-if="loading" />
     <network
-      v-if="
-        personsAssignedNodesForDisplay.length > 0 &&
-        whichCoursesToDisplay === 'assigned'
-      "
-      ref="network"
-      class="full-height"
-      :nodes="personsAssignedNodesForDisplay"
-      :edges="personsAssignedEdges"
-      :options="network.options"
-      @click="click"
-    ></network>
-    <network
-      v-else-if="
-        personsNodesForDisplay.length > 0 && whichCoursesToDisplay === 'my'
-      "
-      ref="network"
-      class="full-height"
-      :nodes="personsNodesForDisplay"
-      :edges="personsEdges"
-      :options="network.options"
-      @click="click"
-    ></network>
-    <network
-      v-else-if="
-        allNodesForDisplay.length > 0 && whichCoursesToDisplay === 'all'
-      "
       ref="network"
       class="full-height"
       :nodes="allNodesForDisplay"
@@ -35,38 +9,6 @@
       :options="network.options"
       @click="click"
     ></network>
-    <network
-      v-else-if="
-        submittedNodes.length > 0 && whichCoursesToDisplay === 'submitted'
-      "
-      ref="network"
-      class="full-height"
-      :nodes="submittedNodes"
-      :edges="submittedEdges"
-      :options="network.options"
-      @click="click"
-    ></network>
-    <p
-      v-else-if="whichCoursesToDisplay == 'assigned'"
-      class="noGalaxies overline"
-    >
-      DISCOVER GALAXIES TO START LEARNING
-    </p>
-    <p v-else-if="whichCoursesToDisplay == 'my'" class="noGalaxies overline">
-      CREATE A GALAXY TO START TEACHING
-    </p>
-    <p
-      v-else-if="whichCoursesToDisplay == 'submitted'"
-      class="noGalaxies overline"
-    >
-      NO SUBMITTED GALAXIES TO REVIEW
-    </p>
-    <!-- <PopupGalaxyPreview
-      v-if="popupPreview"
-      :course="getCourseById(currentCourseId)"
-      @togglePopup="togglePopup"
-      class="popupPanel"
-    /> -->
   </div>
 </template>
 
@@ -82,7 +24,6 @@ import PopupGalaxyPreview from "../components/PopupGalaxyPreview";
 export default {
   name: "Galaxies",
   props: {
-    whichCoursesToDisplay: { type: String, default: null },
     highlightCourse: { type: String, default: null },
   },
   components: {
@@ -149,26 +90,6 @@ export default {
           default: {
             shape: "dot",
           },
-          // locked: {
-          //   color: "rgba(132,132,132,0.2)",
-          //   shape: "dot",
-          //   // opacity: 0.1,
-          // },
-          // unlocked: {
-          //   shape: "dot",
-          //   color: "#848484",
-          //   opacity: 1,
-          // },
-          // current: { color: "rgb(0,255,140)" },
-          // // node status
-          // inreview: {
-          //   shape: "dot",
-          //   color: "#FAF200",
-          // },
-          // completed: {
-          //   shape: "dot",
-          //   color: "#00E676",
-          // },
           // node types
           introduction: {
             shape: "dot",
@@ -199,21 +120,16 @@ export default {
       "allNodesForDisplay",
       "allEdges",
       "currentCourseId",
-      "personsNodesForDisplay",
-      "personsEdges",
-      "personsAssignedNodesForDisplay",
-      "personsAssignedEdges",
       "courses",
       "darkMode",
-      "submittedNodes",
-      "submittedEdges",
-      // "topics",
-      // "personsTopics",
     ]),
     ...mapGetters(["getCourseById", "user"]),
     isDark() {
       return this.$vuetify.theme.isDark;
     },
+    displayGalaxies() {
+      return  this.courses.filter(course => course.public == true && course.status == 'published')
+    }
   },
   watch: {
     darkMode(dark) {
@@ -225,9 +141,6 @@ export default {
         this.makeGalaxyLabelsColour("#ffffff");
       }
     },
-    whichCoursesToDisplay(newVal) {
-      this.setNodesToDisplay(newVal);
-    },
     highlightCourse(newCourseId) {
       // get all topic nodes by the closest clicked
       let coursesTopicNodes = this.nodesToDisplay.filter(
@@ -237,90 +150,16 @@ export default {
     },
   },
   mounted() {
-    this.setNodesToDisplay("all");
+    this.setAllNodesToDisplay();
   },
   methods: {
-    setNodesToDisplay(newVal) {
-      this.loading = true;
-      if (newVal === "all") this.setAllNodesToDisplay();
-      if (newVal === "assigned") this.setAssignedNodesToDisplay();
-      if (newVal === "my") this.setMyNodesToDisplay();
-      if (newVal === "submitted") this.setSubmittedNodesToDisplay();
-    },
-    async setSubmittedNodesToDisplay() {
-      /* ===========================
-          Only show submitted Galaxies to Admin
-      =========================== */
-      await this.$store.dispatch("getSubmittedNodesAndEdges"); // node data for course
-      // await this.$store.dispatch("getSubmittedEdges"); // edge data for course
-      this.nodesToDisplay = this.submittedNodes;
-
-      if (this.nodesToDisplay.length > 0) {
-        // const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
-        const repositionedNodes = this.repositionCoursesBasedOnBoundariesV2();
-        if (repositionedNodes.length) {
-          this.$store.state.submittedNodes = repositionedNodes;
-        }
-      }
-
-      this.centerAfterReposition();
-    },
-    async setMyNodesToDisplay() {
-      /* ===========================
-          Only show MY Galaxies
-      =========================== */
-      await this.$store.dispatch("bindCoursesByPersonId", this.user.data.id); // bind courses created by this user id
-      await this.$store.dispatch("getNodesByPersonId", this.user.data.id);
-      await this.$store.dispatch("getEdgesByPersonId", this.user.data.id);
-      this.nodesToDisplay = this.personsNodesForDisplay;
-
-      if (this.nodesToDisplay.length > 0) {
-        // const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
-        const repositionedNodes = this.repositionCoursesBasedOnBoundariesV2();
-
-        if (repositionedNodes.length) {
-          this.$store.commit("updatePersonsNodesForDisplay", repositionedNodes);
-        }
-      }
-      this.centerAfterReposition();
-    },
-    async setAssignedNodesToDisplay() {
-      /* ===========================
-          Only show ASSIGNED Galaxies
-      =========================== */
-      await this.$store.dispatch(
-        "getAssignedNodesByPersonId",
-        this.user.data.id
-      );
-      await this.$store.dispatch(
-        "getAssignedEdgesByPersonId",
-        this.user.data.id
-      );
-      this.nodesToDisplay = this.personsAssignedNodesForDisplay;
-
-      if (this.nodesToDisplay.length > 0) {
-        // const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
-
-        const repositionedNodes = this.repositionCoursesBasedOnBoundariesV2();
-
-        if (repositionedNodes.length) {
-          this.$store.commit(
-            "updatePersonsAssignedNodesForDisplay",
-            repositionedNodes
-          );
-        }
-      }
-      this.centerAfterReposition();
-    },
     async setAllNodesToDisplay() {
-      console.log("settingAllNodes");
       /* ===========================
         Only show ALL Galaxies in DATABASE!! (so I can see what maps users have created)
       =========================== */
       await this.$store.dispatch("getAllNodes"); // node data for course
       await this.$store.dispatch("getAllEdges"); // edge data for course
       this.nodesToDisplay = this.allNodesForDisplay;
-
       if (this.nodesToDisplay.length > 0) {
         // const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
         const repositionedNodes = this.repositionCoursesBasedOnBoundariesV2();
@@ -377,127 +216,12 @@ export default {
       // set save current course clicked in store
       this.$store.commit("setCurrentCourseId", closestNode.courseId);
 
-      // // get all topic nodes by the closest clicked
-      // let coursesTopicNodes = this.nodesToDisplay.filter(
-      //   (node) => node.courseId == closestNode.courseId
-      // );
-
-      // // get just the ids of the topic nodes to fit/zoom to
-      // let coursesTopicNodesIds = coursesTopicNodes.reduce(function (
-      //   output,
-      //   node
-      // ) {
-      //   output.push(node.id);
-      //   return output;
-      // },
-      // []);
-
-      // // network fit to array of topic ids
-      // this.$refs.network.fit({
-      //   nodes: coursesTopicNodesIds,
-      //   offset: {
-      //     x: 500,
-      //   },
-      //   animation: true,
-      // });
-
-      // this.popupPreview = true;
       this.$emit('courseClicked', { courseId : this.currentCourseId})
-
-      // network focus to closest node
-      // this.$refs.network.focus(closestNode.id, {
-      //   scale: 0.8,
-      //   offset: {
-      //     x: -150,
-      //   },
-      //   animation: true,
-      // });
-
-      // router to the group's galaxy
-      // this.$router.push({
-      //   name: "GalaxyView",
-      //   params: {
-      //     courseId: closestNode.courseId,
-      //   },
-      // });
     },
     distSquared(pt1, pt2) {
       var diffX = pt1.x - pt2.x;
       var diffY = pt1.y - pt2.y;
       return diffX * diffX + diffY * diffY;
-    },
-    repositionCoursesBasedOnBoundaries() {
-      const courseCanvasBoundaries = this.calcCourseCanvasBoundaries();
-      const allNodes = this.$refs.network.nodes;
-      // console.log("all nodes", allNodes);
-      let newAllNodes = [];
-
-      // canvas / 3
-      let galaxyColsCount = 0;
-      let numberOfGalaxiesPerRow = 3; // hardcoded num of galaxies in a row
-
-      // SCALE calc num of galaxy rows
-      // const canvasRowHeight = this.canvasHeight / maxHeight;
-
-      // set offset variables
-      let currentColWidth = 0;
-      let currrentRowHeight = 0;
-
-      // loop nodes and add x y offsets
-      for (let i = 0; i < courseCanvasBoundaries.length; i++) {
-        let maxRowHeight = 0;
-
-        // const widthOffset = courseCanvasBoundaries[i].maxWidthOffset;
-        // const heightOffset = courseCanvasBoundaries[i].maxHeightOffset;
-
-        if (galaxyColsCount != 0) {
-          // increase offset for next galaxy column
-          currentColWidth += courseCanvasBoundaries[i].width / 2;
-        }
-
-        for (const node of allNodes) {
-          if (node.courseId == courseCanvasBoundaries[i].id) {
-            let newNode = {
-              ...node,
-              x: currentColWidth + node.x - courseCanvasBoundaries[i].centerX,
-              y: currrentRowHeight + node.y - courseCanvasBoundaries[i].centerY,
-            };
-            newAllNodes.push(newNode);
-          }
-        }
-
-        // increase offset for next galaxy column aka ** PADDING BETWEEN GALAXIES **
-
-        currentColWidth += courseCanvasBoundaries[i].width / 2 + 600;
-        // keep track of largest height
-        if (courseCanvasBoundaries[i].height > maxRowHeight) {
-          maxRowHeight = courseCanvasBoundaries[i].height + 300;
-        }
-
-        // count ++
-        galaxyColsCount++;
-        // if max num of galaxys per row. go to next row
-        if (galaxyColsCount == numberOfGalaxiesPerRow) {
-          // set max width and heights from these rows
-          if (currentColWidth > this.largestRowWidth) {
-            this.largestRowWidth = currentColWidth;
-          }
-          if (maxRowHeight > this.largestRowHeight) {
-            this.largestRowHeight = maxRowHeight;
-          }
-          // reset for next row
-          currentColWidth = 0;
-          currrentRowHeight += maxRowHeight;
-          this.courseRows += 1;
-          galaxyColsCount = 0;
-        }
-      }
-      // pad the end of row
-      // this.largestRowWidth += this.largestRowWidth / this.numberOfGalaxiesPerRow / 2;
-      // this.$refs.network.storePositions();
-      // console.log("allNodes", allNodes);
-      // console.log("newAllNodes", newAllNodes);
-      return newAllNodes;
     },
     repositionCoursesBasedOnBoundariesV2() {
       console.log("v2");
@@ -508,7 +232,7 @@ export default {
 
       // canvas / 3
       let galaxyColsCount = 0;
-      let numberOfGalaxiesPerRow = 3; // hardcoded num of galaxies in a row
+      let numberOfGalaxiesPerRow = 4; // hardcoded num of galaxies in a row
 
       // SCALE calc num of galaxy rows
       // const canvasRowHeight = this.canvasHeight / maxHeight;
@@ -519,6 +243,7 @@ export default {
 
       // loop nodes and add x y offsets
       for (let i = 0; i < courseCanvasBoundaries.length; i++) {
+        console.log('galaxy count: ', galaxyColsCount)
         // console.log(
         //   "positioning course: ==============",
         //   courseCanvasBoundaries[i].title
@@ -601,7 +326,7 @@ export default {
       return newAllNodes;
     },
     calcCourseCanvasBoundaries() {
-      const courses = this.courses;
+      const courses = this.user.data.admin ? this.courses : this.displayGalaxies;
       let courseCanvasBoundaries = [];
       // get all coords for nodes
       // const allNodes = this.$refs.network.nodes;
