@@ -6,6 +6,23 @@
 
     <div class="panelContent">
       <div class="panelContentInner">
+        <!-- SUBMITTED -->
+        <div>
+          <p class="galaxyListPanelLabel overline mx-4">SUBMITTED</p>
+          <div v-if="getSubmittedCourses">
+            <!-- COURSE CARD -->
+            <GalaxyListPanelCard
+              v-for="(course, index) in getSubmittedCourses"
+              :key="course.id"
+              :course="course"
+              :active="index === activeSubmitted"
+              @click.native="courseClicked(course.id, index, 'submitted')"
+            />
+          </div>
+          <p v-else class="galaxyListPanelContent text-center">
+            NO ENROLLED GALAXIES
+          </p>
+        </div>
         <!-- LEARNING -->
         <div>
           <p class="galaxyListPanelLabel overline mx-4">LEARNING</p>
@@ -111,6 +128,7 @@ export default {
       selectedGalaxy: false,
       activeLearning: null,
       activeTeaching: null,
+      activeSubmitted: null,
       activePublic: null,
     };
   },
@@ -154,6 +172,12 @@ export default {
       });
     },
     // TEACHERING GALAXIES
+    getSubmittedCourses() {
+      return this.courses.filter(
+        (course) => course.status == "submitted"
+      );
+    },
+    // TEACHERING GALAXIES
     getTeachingCourses() {
       return this.courses.filter(
         (course) => course.mappedBy.personId == this.person.id
@@ -180,6 +204,8 @@ export default {
           this.activeTeaching = index;
         } else if (type === "public") {
           this.activePublic = index;
+        } else if (type === "submitted") {
+          this.activeSubmitted = index;
         }
       } else {
         this.allInactive();
@@ -195,6 +221,7 @@ export default {
       this.activeLearning = null;
       this.activeTeaching = null;
       this.activePublic = null;
+      this.activeSubmitted = null;
     },
   },
 };

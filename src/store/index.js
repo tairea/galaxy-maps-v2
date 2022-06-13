@@ -307,6 +307,18 @@ export default new Vuex.Store({
         );
       }
     ),
+    bindTasksByTopicId: firestoreAction(({ bindFirestoreRef }, payload) => {
+      return bindFirestoreRef(
+        "topicsTasks",
+        db
+          .collection("courses")
+          .doc(payload.courseId)
+          .collection("topics")
+          .doc(payload.topicId)
+          .collection("tasks")
+          .orderBy("taskCreatedTimestamp") // this is important to ordering the tasks in MissionList.vue
+      );
+    }),
     async getAllNodes({ state }) {
       console.log('getallnodes')
       const allNodes = [];

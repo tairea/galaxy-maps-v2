@@ -134,13 +134,6 @@ export default {
     "teacher"
   ],
   async mounted() {
-    // this.getTopicTasks();
-
-    // bind tasksbytopic here aka on preview
-    // await this.$store.dispatch("bindTasksByTopicId", {
-    //   courseId: this.currentCourseId,
-    //   topicId: this.currentTopicId,
-    // });
 
     // set active mission
     this.activeMission = this.personsTopicsTasks.find(

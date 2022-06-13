@@ -33,7 +33,7 @@ export default {
   },
   data: () => ({
     active: false,
-    loading: false,
+    loading: true,
     popupPreview: false,
     allNodeIds: [],
     nodesToDisplay: [],
@@ -171,8 +171,6 @@ export default {
       this.centerAfterReposition();
     },
     centerAfterReposition() {
-      // stop loading spinner
-      this.loading = false;
       // short timer to give time to load all before zoom
       if (this.nodesToDisplay.length > 0) {
         setTimeout(() => {
@@ -403,12 +401,13 @@ export default {
       // get node ids
       var nodeIds = nodes.map((x) => x.id);
       // // fit
-      console.log("fit");
       this.$refs.network.fit({
         nodes: nodeIds,
         minZoomLevel: 0.2, // <-- TODO: this doesnt work on this version of vis-network. needs to be at least v8.5.0. but vue2vis is v7.4.0
         animation: true,
       });
+      // stop loading spinner
+      this.loading = false;
     },
     zoomToAllNodes() {
       this.zoomToNodes(this.nodesToDisplay);

@@ -3,7 +3,7 @@
     <div id="left-section">
       <GalaxyInfo :course="currentCourse" :teacher="teacher" :draft="draft" />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
-      <PublishGalaxy v-if="showPublish" :course="currentCourse" :person="person" />
+      <PublishGalaxy v-if="showPublish" :course="currentCourse" />
       <AssignedInfo
         v-if="!draft && cohortsInCourse.length"
         :assignCohorts="true"
@@ -48,7 +48,7 @@
       />
     </div>
     <!--==== Right section ====-->
-    <div id="right-section">
+    <div v-if="!cohortsInCourse" id="right-section">
       <RequestForHelpTeacherFrame :courses="[currentCourse]" :isTeacher="teacher" :students="peopleInCourse"/>
       <SubmissionTeacherFrame :isTeacher="teacher" :courses="[currentCourse]" :students="teacher ? peopleInCourse : [person]" class="mt-4"/> 
     </div>
@@ -103,7 +103,6 @@ import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame"
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters, mapActions, mapMutations } from "vuex";
 import {
-  getCourseById,
   getAllPeopleInCourse,
   getAllCohortsInCourse,
 } from "@/lib/ff";
@@ -166,6 +165,7 @@ export default {
     if (this.$route.params.courseId != this.currentCourse.id) {
       const course = await db.collection('courses').doc(this.courseId).get()
       console.log('params dont match setting currentCourse: ', course.data())
+      this.course = course.data()
       this.$store.commit('setCurrentCourse', course.data())
     }
   },
@@ -179,7 +179,7 @@ export default {
         .collection("map-nodes")
         .add({
           // hardcoded first node
-          label: this.currentCourse.title + " Intro",
+          label: this.course.title ? this.course.title + " Intro" : "Course intro",
           group: "introduction",
           topicCreatedTimestamp: new Date(),
           x: 0,
@@ -256,6 +256,9 @@ export default {
     ...mapGetters(["person", "user"]),
     draft() {
       return this.currentCourse?.status === "drafting";
+    },
+    submitted() {
+      return this.currentCourse?.status === "submitted";
     },
     teacher() {
       return (

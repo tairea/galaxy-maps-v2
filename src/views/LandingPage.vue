@@ -1,12 +1,13 @@
 <template>
   <div class="bg">
-    <div class="landing-content">
+    <div v-if="!showLogin" class="landing-content">
       <p class="gm-title">GALAXY MAPS</p>
       <p class="overline">Galaxy Maps is a new digital learning experience</p>
       <p class="overline">Galaxy Maps are branching paths of learning</p>
       <p class="overline">Using Galaxy Maps you can navigate your learning</p>
 
-      <v-btn outlined color="baseAccent" class="mt-8" :to="{ path: 'login' }">
+      <!-- <v-btn outlined color="baseAccent" class="mt-8" :to="{ path: 'login' }"> -->
+      <v-btn outlined color="baseAccent" class="mt-8" @click="showLogin = true">
         <!-- <v-icon small>
         mdi-account-multiple-plus
       </v-icon> -->
@@ -14,6 +15,7 @@
       </v-btn>
       <!-- Background maps video -->
     </div>
+    <Login v-else />
     <video id="background-video" autoplay loop muted>
       <!-- <source src="../assets/gm-maps.mp4" type="video/mp4" /> -->
       <source src="../assets/gm-maps-2.mp4" type="video/mp4" />
@@ -22,12 +24,21 @@
 </template>
 
 <script>
+import Login from '@/components/Login.vue'
+
 export default {
   name: "LandingPage",
-  components: {},
-  data() {
-    return {};
+  components: {
+    Login
   },
+  data() {
+    return {
+      showLogin: false
+    };
+  },
+  mounted () {
+    if (this.$route.name === 'Login') this.showLogin = true
+  }
 };
 </script>
 

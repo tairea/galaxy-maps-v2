@@ -1,5 +1,6 @@
 <template>
   <div class="login">
+    <p class="gm-title">GALAXY MAPS</p>
     <NewPassword 
       v-if="isResetPassword" 
       :actionCode="actionCode"
@@ -75,7 +76,7 @@
 </template>
 
 <script>
-import NewPassword from "../components/NewPassword.vue"
+import NewPassword from "./NewPassword.vue"
 
 import firebase from "firebase";
 import { mapGetters } from "vuex";
@@ -222,6 +223,7 @@ export default {
           this.proceed();
         })
         .catch((error) => {
+          console.log('error: ', error)
           this.$store.commit("setSnackbar", {
             show: true,
             text: error.message,
@@ -243,6 +245,7 @@ export default {
           handleCodeInApp: true,
         };
         firebase.auth().currentUser.sendEmailVerification(actionCodeSettings);
+        this.loading = false;
         throw new Error("Please check your emails to verify your account");
       } else {
         this.$router.push("/base/galaxies");
@@ -280,6 +283,12 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.gm-title {
+  font-family: "Genos", sans-serif;
+  font-size: 5vw;
+  color: var(--v-baseAccent-base);
+  letter-spacing: 15px;
+}
 .login {
   width: 100vw;
   height: 100vh;
@@ -288,7 +297,7 @@ export default {
   align-items: center;
   flex-direction: column;
   background-color: #393e46;
-  background-image: url("../assets/hudf_big.jpeg");
+  // background-image: url("../assets/hudf_big.jpeg");
   background-size: cover;
   box-shadow: inset 0 0 0 2000px rgba(20, 30, 48, 0.9);
 

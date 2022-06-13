@@ -4,8 +4,13 @@
     <div id="left-section">
       <UserInfo :person="person" />
     </div>
-    <div v-if="isStudent && isTeacher" class="top-section">
-      <div class="student-border">
+    <div v-if="isStudent && isTeacher || isAdmin" class="top-section">
+      <div v-if="isAdmin" class="student-border">
+        <div :class="adminLabel" @click="setView('admin')">
+          admin dashboard
+        </div>
+      </div>
+      <div v-else class="student-border">
         <div :class="studentLabel" @click="setView('student')">
           student dashboard
         </div>
@@ -42,7 +47,7 @@
         <StudentActivityTimeline :student="person" />
       </div>
     </template>
-    <template v-else>
+    <template v-else-if="dashboardView === 'teacher'">
       <div id="main-section">
         <!-- info description -->
         <div class="d-flex align-center mb-4">
@@ -86,6 +91,11 @@
 
       </div>
     </template>
+    <template v-else-if="dashboardView === 'admin'">
+      <div id="main-section">
+        <CreateAdminDialog />
+      </div>
+    </template>
   </div>
 </template>
 
@@ -100,6 +110,7 @@ import TimeframeFilters from "../components/TimeframeFilters.vue";
 import CohortPanelV2 from "../components/CohortPanelV2.vue";
 import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame.vue";
 import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame.vue";
+import CreateAdminDialog from "../components/CreateAdminDialog";
 
 export default {
   name: "UserDashboard",
@@ -111,6 +122,7 @@ export default {
     CohortPanelV2,
     SubmissionTeacherFrame,
     RequestForHelpTeacherFrame,
+    CreateAdminDialog
   },
   data() {
     return {
@@ -118,9 +130,13 @@ export default {
     };
   },
   async mounted() {
-    this.getCohortsByPersonId(this.person);
-    if (this.dashboardView === "" && this.person.assignedCourses?.length)
-      this.setDashboardView("student");
+    if (this.user.data.admin){
+        this.bindAllCohorts()
+        this.setDashboardView("admin");
+    }
+    if (this.dashboardView === "" && this.person.assignedCourses?.length) {
+    this.setDashboardView("student");
+    }
   },
   computed: {
     ...mapState([
@@ -134,6 +150,9 @@ export default {
       "dashboardView",
     ]),
     ...mapGetters(["getCourseById", "getCoursesByWhoMadeThem"]),
+    isAdmin() {
+      return this.user.data.admin
+    },
     isStudent() {
       return this.person.assignedCourses?.length;
     },
@@ -148,14 +167,21 @@ export default {
     isStudentView() {
       return this.dashboardView === 'student'
     },
+    isAdminView() {
+      return this.dashboardView === 'admin'
+    },
+    adminLabel() {
+      return this.isAdminView ? 'active-label' : 'inactive-label'
+    },
     studentLabel() {
-      return this.isStudentView ? 'student-label' : 'inactive-student-label'
+      return this.isStudentView ? 'active-label' : 'inactive-label'
     },
     teacherLabel() {
-      return this.isTeacherView ? 'teacher-label' : 'inactive-teacher-label'
+      return this.isTeacherView ? 'active-label' : 'inactive-label'
     },
     teacherCohorts() {
-      return this.cohorts.filter((cohort) => cohort.teacher);
+      if (this.isAdmin) return this.cohorts 
+      else return this.cohorts.filter((cohort) => cohort.teacher);
     },
     cohortCourses() {
       let courses = []
@@ -174,7 +200,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(["getCohortsByPersonId"]),
+    ...mapActions(["getCohortsByPersonId", "bindAllCohorts"]),
     ...mapMutations(["setDashboardView"]),
     setView(val) {
       this.setDashboardView(val);
@@ -261,6 +287,52 @@ export default {
   background: var(--v-missionAccent-base);
 }
 
+.admin-border {
+  position: absolute;
+  top: 3px;
+  left: 360px;
+  background-color: var(--v-galaxyAccent-base);
+  padding: 0px 20px;
+  clip-path: polygon(0 100%, 10% 0, 90% 0, 100% 100%);
+  width: 180px;
+  height: 20px;
+}
+
+// .admin-label {
+//   font-size: 0.8rem;
+//   font-weight: 400;
+//   text-transform: uppercase;
+  
+//   // ribbon label
+//   position: relative;
+//   top: 1px;
+//   left: -19px;
+//   height: 20px;
+//   width: 178px;
+//   background-color: var(--v-missionAccent-base);
+//   color: var(--v-background-base);
+//   padding: 0px 20px 0px 20px;
+//   -webkit-clip-path: polygon(0 100%, 10% 0, 90% 0, 100% 100%);
+//   clip-path: polygon(0 100%, 10% 0, 90% 0, 100% 100%);
+//   cursor: pointer;
+// }
+
+// .inactive-admin-label {
+//   font-size: 0.8rem;
+//   font-weight: 400;
+//   text-transform: uppercase;
+//   position: relative;
+//   top: 1px;
+//   left: -19px;
+//   height: 20px;
+//   width: 178px;
+//   background-color: var(--v-background-base);
+//   color: var(--v-missionAccent-base);
+//   padding: 0px 20px 0px 20px;
+//   -webkit-clip-path: polygon(0 100%, 10% 0, 90% 0, 100% 100%);
+//   clip-path: polygon(0 100%, 10% 0, 90% 0, 100% 100%);
+//   cursor: pointer;
+// }
 .student-border {
   position: absolute;
   top: 3px;
@@ -270,42 +342,6 @@ export default {
   clip-path: polygon(0 100%, 10% 0, 90% 0, 100% 100%);
   width: 180px;
   height: 20px;
-}
-
-.student-label {
-  font-size: 0.8rem;
-  font-weight: 400;
-  text-transform: uppercase;
-  
-  // ribbon label
-  position: relative;
-  top: 1px;
-  left: -19px;
-  height: 20px;
-  width: 178px;
-  background-color: var(--v-missionAccent-base);
-  color: var(--v-background-base);
-  padding: 0px 20px 0px 20px;
-  -webkit-clip-path: polygon(0 100%, 10% 0, 90% 0, 100% 100%);
-  clip-path: polygon(0 100%, 10% 0, 90% 0, 100% 100%);
-  cursor: pointer;
-}
-
-.inactive-student-label {
-  font-size: 0.8rem;
-  font-weight: 400;
-  text-transform: uppercase;
-  position: relative;
-  top: 1px;
-  left: -19px;
-  height: 20px;
-  width: 178px;
-  background-color: var(--v-background-base);
-  color: var(--v-missionAccent-base);
-  padding: 0px 20px 0px 20px;
-  -webkit-clip-path: polygon(0 100%, 10% 0, 90% 0, 100% 100%);
-  clip-path: polygon(0 100%, 10% 0, 90% 0, 100% 100%);
-  cursor: pointer;
 }
 
 .teacher-border {
@@ -319,7 +355,7 @@ export default {
   height: 20px;
 }
 
-.teacher-label {
+.active-label {
   font-size: 0.8rem;
   font-weight: 400;
   text-transform: uppercase;
@@ -331,15 +367,15 @@ export default {
   background-color: var(--v-missionAccent-base);
   color: var(--v-background-base);
   padding: 0px 20px 0px 20px;
+  -webkit-clip-path: polygon(0 100%, 10% 0, 90% 0, 100% 100%);
   clip-path: polygon(0 100%, 10% 0, 90% 0, 100% 100%);
   cursor: pointer;
 }
 
-.inactive-teacher-label {
+.inactive-label {
   font-size: 0.8rem;
   font-weight: 400;
   text-transform: uppercase;
-  // ribbon label
   position: relative;
   top: 1px;
   left: -19px;
@@ -348,9 +384,44 @@ export default {
   background-color: var(--v-background-base);
   color: var(--v-missionAccent-base);
   padding: 0px 20px 0px 20px;
+  -webkit-clip-path: polygon(0 100%, 10% 0, 90% 0, 100% 100%);
   clip-path: polygon(0 100%, 10% 0, 90% 0, 100% 100%);
   cursor: pointer;
 }
+
+// .teacher-label {
+//   font-size: 0.8rem;
+//   font-weight: 400;
+//   text-transform: uppercase;
+//   position: relative;
+//   top: 1px;
+//   left: -19px;
+//   height: 20px;
+//   width: 178px;
+//   background-color: var(--v-missionAccent-base);
+//   color: var(--v-background-base);
+//   padding: 0px 20px 0px 20px;
+//   -webkit-clip-path: polygon(0 100%, 10% 0, 90% 0, 100% 100%);
+//   clip-path: polygon(0 100%, 10% 0, 90% 0, 100% 100%);
+//   cursor: pointer;
+// }
+
+// .inactive-teacher-label {
+//   font-size: 0.8rem;
+//   font-weight: 400;
+//   text-transform: uppercase;
+//   // ribbon label
+//   position: relative;
+//   top: 1px;
+//   left: -19px;
+//   height: 20px;
+//   width: 178px;
+//   background-color: var(--v-background-base);
+//   color: var(--v-missionAccent-base);
+//   padding: 0px 20px 0px 20px;
+//   clip-path: polygon(0 100%, 10% 0, 90% 0, 100% 100%);
+//   cursor: pointer;
+// }
 
 .line {
   position: relative;
