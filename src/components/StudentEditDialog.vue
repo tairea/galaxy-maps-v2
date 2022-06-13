@@ -171,9 +171,15 @@ export default {
     },
     saveEmail() {
       firebase.auth().currentUser.updateEmail(this.profile.email).then(() => {
+        // TODO: Possibly add logic to send new email to previous email to confirm email change
+          var actionCodeSettings = {
+          url: window.location.origin + "/login",
+          handleCodeInApp: true,
+        };
+        firebase.auth().currentUser.sendEmailVerification(actionCodeSettings);
         this.$store.commit("setSnackbar", {
           show: true,
-          text: 'email successfully updated',
+          text: 'Email successfully updated, check your email to veriify your new email account',
           color: "baseAccent",
         });
       }).catch((error) => {

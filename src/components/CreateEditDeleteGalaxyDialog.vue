@@ -176,7 +176,7 @@
 
             <!-- RIGHT SIDE -->
             <div
-              class="right-side pr-2"
+              class="right-side"
               :style="course.title ? 'width:50%' : 'width:0%'"
             >
               <div id="galaxy-info" v-if="course.title" class="mb-2">
@@ -190,6 +190,7 @@
                 <p class="galaxy-description">{{ course.description }}</p>
               </div>
               <v-select
+                v-if="edit"
                 class="input-field mt-4"
                 outlined
                 :dark="dark"
@@ -770,7 +771,6 @@ export default {
   .right-side {
     width: 50%;
     display: flex;
-    justify-content: center;
     align-items: flex-start;
     transition: all 0.3s;
     flex-direction: column;
@@ -778,7 +778,7 @@ export default {
 
     // galaxy info
     #galaxy-info {
-      width: calc(100% - 40px);
+      width: calc(100% - 25px);
       // min-height: 100%;
       border: 1px solid var(--v-galaxyAccent-base);
       margin-top: 30px;

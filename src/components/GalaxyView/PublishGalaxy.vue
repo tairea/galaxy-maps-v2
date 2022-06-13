@@ -23,7 +23,10 @@
           <v-icon left color="missionAccent"
             >mdi-information-variant</v-icon
           >
-          <p class="dialog-description">
+          <p v-if="admin" class="dialog-description">
+            Publish this galaxy to list publically 
+          </p>
+          <p v-else class="dialog-description">
             Publish this galaxy to starting teaching
           </p>
         </div>
@@ -48,7 +51,8 @@
             ></v-radio>
           </v-radio-group>
         </div>
-        <div v-if="courseOptions.public">
+        <!-- Is the course editable? -->
+        <!-- <div v-if="courseOptions.public">
           <p class="caption">Would you like others to be able to add to this course</p>
           <v-radio-group row v-model="courseOptions.editable" color="missionAccent" :light="!dark" :dark="dark">
             <v-radio
@@ -64,7 +68,7 @@
               class="label-text"
             ></v-radio>
           </v-radio-group>
-        </div>
+        </div> -->
       </div>
           <!-- ACTION BUTTONS -->
       <div v-if="admin" class="action-buttons">
@@ -135,7 +139,7 @@ import { dbMixins } from '@/mixins/DbMixins'
 export default {
   name: "PublishGalaxy",
   mixins: [dbMixins],
-  props: ["course", "person"],
+  props: ["course"],
   data: () => ({
     dialog: false,
     loading: false,
@@ -228,6 +232,11 @@ export default {
         .then(() => {
           console.log("Document successfully updated!");
           this.$store.commit("setCurrentCourseId", course.id);
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: "Galaxy successfully updated",
+            color: "baseAccent",
+          });
         })
     },
 

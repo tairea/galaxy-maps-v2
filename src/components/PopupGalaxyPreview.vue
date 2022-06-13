@@ -41,18 +41,18 @@
     <div class="ss-makers">
       <div class="left">
         <div v-if="course.contentBy.image">
-          <v-img
-            width="40px"
-            class="contentBy-image"
-            :src="course.contentBy.image.url"
-          ></v-img>
+          <v-avatar size="40px">
+            <v-img
+              :src="course.contentBy.image.url"
+            ></v-img>
+          </v-avatar>
         </div>
         <div v-else-if="course.contentBy.personId">
-          <v-img
-            width="40px"
-            class="contentBy-image"
-            :src="contentAuthorImage"
-          ></v-img>
+          <v-avatar size="40px">
+            <v-img
+              :src="contentAuthorImage"
+            ></v-img>
+          </v-avatar>
         </div>
         <p class="ma-0">Content By:</p>
         <a :href="course.contentBy.source"
@@ -61,18 +61,18 @@
       </div>
       <div class="right">
         <div v-if="course.mappedBy.image">
-          <v-img
-            width="40px"
-            class="mappedBy-image"
-            :src="course.mappedBy.image.url"
-          ></v-img>
+          <v-avatar size="40px">
+            <v-img
+              :src="course.mappedBy.image.url"
+            ></v-img>
+          </v-avatar>
         </div>
         <div v-else-if="course.mappedBy.personId">
-          <v-img
-            width="40px"
-            class="mappedBy-image"
-            :src="mappedAuthorImage"
-          ></v-img>
+          <v-avatar size="40px">
+            <v-img
+              :src="mappedAuthorImage"
+            ></v-img>
+          </v-avatar>
         </div>
         <p class="ma-0">Mapped By:</p>
         <span>{{ course.mappedBy.name }}</span>
@@ -203,7 +203,7 @@ export default {
     },
     courseStatus() {
       if (this.draft) return 'Draft'
-      else if (this.course.status == 'submitted') return 'Draft'
+      else if (this.course.status == 'submitted') return 'Submitted'
       else if (!this.course.public) return 'Private'
     }
   },
@@ -412,14 +412,6 @@ export default {
     min-height: 10vh;
     border-top: 1px solid var(--v-missionAccent-base);
     display: flex;
-
-    .contentBy-image,
-    .mappedBy-image {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
 
     .left,
     .right {

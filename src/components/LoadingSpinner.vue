@@ -1,21 +1,17 @@
 <template>
   <div class="wrap">
-    <svg
-      v-bind:style="styles"
-      class="spinner spinner--circle"
-      viewBox="0 0 66 66"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <circle
-        class="path"
-        fill="none"
-        stroke-width="6"
-        stroke-linecap="round"
-        cx="33"
-        cy="33"
-        r="30"
-      ></circle>
-    </svg>
+    <div class="mt-n12"> 
+      <v-row>
+        <p class="overline" style="color:var(--v-missionAccent-base)">loading learning universe</p>
+      </v-row>
+      <v-row>
+        <v-progress-linear
+          indeterminate
+          color="missionAccent"
+          background-color="0"
+        ></v-progress-linear>
+      </v-row>
+    </div>
   </div>
 </template>
 <script>

@@ -9,7 +9,7 @@ import CohortList from "../views/CohortList.vue";
 import CohortListV2 from "../views/CohortListV2.vue";
 import AllStudentsView from "../views/AllStudentsView.vue";
 import UserDashboard from "../views/UserDashboard.vue";
-import Login from "../views/Login.vue";
+// import Login from "../components/Login.vue";
 import VerifyEmail from "../views/VerifyEmail.vue";
 import ResetPassword from "../views/ResetPassword.vue";
 import Register from "../views/Register.vue";
@@ -67,7 +67,7 @@ const routes = [
   {
     path: "/login/",
     name: "Login",
-    component: Login,
+    component: LandingPage,
   },
   {
     path: "/verify",

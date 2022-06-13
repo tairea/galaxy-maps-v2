@@ -30,13 +30,13 @@
       <!-- Cohorts -->
       <div style="margin-top: 50px">
         <p class="student-info-label">cohorts:</p>
-        <div class="d-flex">
+        <div class="d-flex flex-wrap">
           <Cohort
             v-for="cohort in cohorts"
             :cohort="cohort"
             :key="cohort.id"
             :size="60"
-            :cols="6"
+            :cols="5"
           />
         </div>
       </div>
@@ -63,10 +63,10 @@ export default {
     Cohort,
   },
   async mounted() {
-    await this.$store.dispatch("getCohortsByPersonId", this.person);
+    if (!this.user.data.admin) await this.$store.dispatch("getCohortsByPersonId", this.person);
   },
   computed: {
-    ...mapState(["person", "cohorts"]),
+    ...mapState(["person", "cohorts", "user"]),
   },
   data() {
     return {};

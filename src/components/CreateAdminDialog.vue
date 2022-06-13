@@ -17,7 +17,7 @@
           <div class="d-flex align-center">
             <v-icon left color="missionAccent">mdi-information-variant</v-icon>
             <p class="dialog-description">
-              *TODO: Description of what an admin is*
+              An admin has unlimited access to records and publish submitted galaxies
             </p>
           </div>
         </div>
@@ -102,7 +102,7 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from "vuex";
+import { mapState, mapGetters, mapActions } from "vuex";
 import { functions } from "../store/firestoreConfig";
 
 export default {
@@ -112,6 +112,9 @@ export default {
     addingAdmin: false,
     dialog: false,
   }),
+  mounted () {
+    this.bindAllPeople()
+  },
   computed: {
     ...mapState(["people"]),
     ...mapGetters(["user"]),
@@ -123,6 +126,7 @@ export default {
     },
   },
   methods: {
+    ...mapActions(['bindAllPeople']),
     cancel() {
       this.dialog = false;
     },
