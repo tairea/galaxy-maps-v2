@@ -31,6 +31,7 @@
 
       <!-- ===== Galaxy Map ===== -->
       <GalaxyMap
+        v-if
         ref="vis"
         @add-node="showAddDialog"
         @edit-node="showEditDialog"
@@ -163,68 +164,14 @@ export default {
   },
   async beforeMount() {
     // check galaxy params match state.currentCourse
-    if (this.$route.params.courseId != this.currentCourse.id) {
-      const course = await db.collection('courses').doc(this.courseId).get()
+    if (this.$route.params.courseId != this.currentCourse?.id) {
+      const course = await db.collection('courses').doc(this.$route.params.courseId).get()
       console.log('params dont match setting currentCourse: ', course.data())
       this.course = course.data()
       this.$store.commit('setCurrentCourse', course.data())
-    }
+    } 
   },
   async mounted() {
-    // create first node, when galaxy first created (hard coded)
-    if (this.fromCreate) {
-      let nodeId = null;
-      await db
-        .collection("courses")
-        .doc(this.courseId)
-        .collection("map-nodes")
-        .add({
-          // hardcoded first node
-          label: this.course.title ? this.course.title + " Intro" : "Course intro",
-          group: "introduction",
-          topicCreatedTimestamp: new Date(),
-          x: 0,
-          y: 0,
-        })
-        .then((docRef) => {
-          // update node obj with docRef.id aka nodeId
-          db.collection("courses")
-            .doc(this.courseId)
-            .collection("map-nodes")
-            .doc(docRef.id)
-            .update({ id: docRef.id });
-          // this.loading = false;
-          // this.dialog = false;
-        })
-        .catch((error) => {
-          console.error("Error writing node: ", error);
-        });
-      // get the node id
-      const querySnapshot = await db
-        .collection("courses")
-        .doc(this.courseId)
-        .collection("map-nodes")
-        .get();
-      for (const doc of querySnapshot.docs) {
-        nodeId = doc.id;
-      }
-      // create topic with node id
-      db.collection("courses")
-        .doc(this.courseId)
-        .collection("topics")
-        .doc(nodeId)
-        .set({
-          // hardcoded first node topic
-          id: nodeId,
-          label: this.currentCourse.title + " Intro",
-          group: "introduction",
-          topicCreatedTimestamp: new Date(),
-        })
-        .catch((error) => {
-          console.error("Error writing node: ", error);
-        });
-    }
-
     // bind assigned people in this course
     if (this.teacher) {
       this.peopleInCourse = await getAllPeopleInCourse(this.courseId);
@@ -297,6 +244,7 @@ export default {
       this.changeInPositions = false;
     },
     toggleAddNodeMode() {
+      console.log('toggling')
       this.$refs.vis.disableEditMode();
       this.addNodeMode = !this.addNodeMode;
       if (this.addNodeMode == true) {
