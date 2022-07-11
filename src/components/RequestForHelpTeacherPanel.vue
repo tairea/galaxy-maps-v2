@@ -9,7 +9,7 @@
             <Avatar v-if="requesterPerson" :profile="requesterPerson" size="30" :colourBorder="true"  :class="isDashboardView ? 'request-image':''"/>
             <Avatar v-if="responderPerson && !active" :profile="responderPerson" size="30" :colourBorder="true"  :class="isDashboardView ? 'respond-image' : 'request-image'"/>
             <div v-if="responderPerson" class="requester-time d-flex flex-column align-center ml-auto">
-              <span class="ml-auto status-text">reponded</span>
+              <span class="ml-auto status-text">responded</span>
               {{ getHumanDate(request.responseSubmittedTimestamp) }}
             </div>
             <div v-else class="requester-time d-flex flex-column align-center ml-auto">

@@ -283,7 +283,7 @@
                   <br>
 
                   <span v-if="course.public">
-                    If you like you can choose to make this course private instead of deleteing which will allow currently active learners to continue and finish the galaxy, 
+                    If you like you can choose to make this course private instead of deleteing which will allow active learners to continue and finish the galaxy, 
                     while preventing new learners from being able to start.
                   </span>
                   <span v-else>
@@ -856,7 +856,6 @@ export default {
   text-transform: uppercase;
   font-size: 0.7rem;
   margin: 0;
-  font-style: italic;
 
   .galaxy-text {
     color: var(--v-galaxyAccent-base);

@@ -1,6 +1,7 @@
 <template>
   <div class="full-height">
     <LoadingSpinner v-if="loading" />
+    <!-- <GradientBackground :gradients="gradients"/> -->
     <network
       ref="network"
       class="full-height"
@@ -8,6 +9,7 @@
       :edges="allEdges"
       :options="network.options"
       @click="click"
+      @zoom="recalculateGradient()"
     ></network>
   </div>
 </template>
@@ -32,6 +34,7 @@ export default {
     PopupGalaxyPreview,
   },
   data: () => ({
+    // gradients: [],
     active: false,
     loading: true,
     popupPreview: false,
@@ -153,9 +156,12 @@ export default {
     this.setAllNodesToDisplay();
   },
   methods: {
+    recalculateGradient() {
+      console.log('zooming')
+    },
     async setAllNodesToDisplay() {
       /* ===========================
-        Only show ALL Galaxies in DATABASE!! (so I can see what maps users have created)
+        Show ALL Galaxies in DATABASE!! (so I can see what maps users have created)
       =========================== */
       await this.$store.dispatch("getAllNodes"); // node data for course
       await this.$store.dispatch("getAllEdges"); // edge data for course
@@ -394,6 +400,7 @@ export default {
         courseCanvasBoundaries.push(boundary);
       }
       // console.log("courseCanvasBoundaries", courseCanvasBoundaries);
+      // this.gradients = courseCanvasBoundaries; TODO add gradients to courses to show public/private/drafting 
       return courseCanvasBoundaries;
     },
     // this controls the fit zoom animation

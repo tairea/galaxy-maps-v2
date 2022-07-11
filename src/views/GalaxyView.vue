@@ -16,6 +16,7 @@
     <div id="main-section">
       <!-- Map Buttons -->
       <GalaxyMapButtons
+        class="mt-8"
         v-if="teacher"
         :addNodeMode="addNodeMode"
         :addEdgeMode="addEdgeMode"
