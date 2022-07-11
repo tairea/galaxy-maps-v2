@@ -4,7 +4,7 @@
     <h1 class="galaxy-title">{{ course.title }}</h1>
     <p class="galaxy-status overline mb-0">Status: <span class="font-weight-black">{{ course.status}}</span> </p>
     <p v-if="course.status === 'submitted'" class="galaxy-status overline mb-0">awaiting review</p>
-    <p v-else class="galaxy-status overline mb-0">{{course.public ? 'Public' : 'Private'}}</p>
+    <p v-else class="galaxy-status overline mb-0">Visibility: {{course.public ? 'Public' : 'Private'}}</p>
     <!-- <div class="d-flex justify-center align-center"> -->
     <v-img v-if="course.image" class="galaxy-image" :src="course.image.url"></v-img>
     <!-- </div> -->

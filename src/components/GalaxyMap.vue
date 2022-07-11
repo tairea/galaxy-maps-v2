@@ -215,25 +215,15 @@ export default {
       "personsTopics",
     ]),
     nodesToDisplay () {
-      if (this.currentCourseNodes.length) {
+      if (this.currentCourseNodes.length && this.currentCourseNodes[0]?.id) {
+        console.log(this.currentCourseNodes)
         if (this.addingNode || this.addingEdge) {
           return this.inActiveNodes
         } else if (!this.teacher) {
           return this.currentCourseNodesWithStatus
         } else return this.currentCourseNodes
-      }
+      } return false
     },
-    // currentCourseNodesGroups() {
-    //   let courseNodes = []
-    //   for (const node of this.currentCourseNodes) {
-    //     courseNodes.push({
-    //       ...node,
-    //       group: node.group"default",
-    //     });
-    //   }
-    //   // return nodes with status to network map
-    //   return courseNodes;
-    // },
     inActiveNodes() {
       let inActiveNodes = []
       for (const node of this.currentCourseNodes) {
@@ -292,6 +282,7 @@ export default {
   },
   methods: {
     disableEditMode() {
+      console.log('invis')
       this.$refs.network.disableEditMode();
       this.addingNode = false,
       this.addingEdge = false
@@ -308,6 +299,7 @@ export default {
       this.addNodeMode();
     },
     addNodeMode() {
+      console.log('add node mode')
       this.active = true;
       this.addingNode = true;
       // this.$emit("toggleAddNodeButton")

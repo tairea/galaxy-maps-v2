@@ -486,7 +486,7 @@ export default {
       this.$emit('close')
       // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
     },
-    saveCourse(course) {
+    async saveCourse(course) {
       this.loading = true;
       // not notAuthor means user is the author
       if (!this.notAuthor) {
@@ -504,15 +504,19 @@ export default {
         personId: this.person.id,
       };
 
+      let nodeId
+      let courseId
+
       // Add a new document in collection "courses"
       db.collection("courses")
         .add(course)
         .then((docRef) => {
+          console.log('1')
           docRef.update({ id: docRef.id }); // add course id to course
           this.dialog = false;
           this.loading = false;
           //get doc id from firestore (aka course id)
-          const courseId = docRef.id;
+          courseId = docRef.id;
           //set courseID to Store state 'state.currentCourseId' (so not relying on router params)
           this.$store.commit("setCurrentCourseId", courseId);
           this.$store.commit("setSnackbar", {
@@ -520,17 +524,57 @@ export default {
             text: "Galaxy created",
             color: "baseAccent",
           });
+        }).then( async () => {
+          console.log('2')
+          await db
+          .collection("courses")
+          .doc(courseId)
+          .collection("map-nodes")
+          .add({
+            // hardcoded first node
+            label: this.course.title ? this.course.title + " Intro" : "Course intro",
+            group: "introduction",
+            topicCreatedTimestamp: new Date(),
+            x: 0,
+            y: 0,
+          })
+          .then((docRef) => {
+            console.log('3')
+            nodeId = docRef.id
+            // update node obj with docRef.id aka nodeId
+            db.collection("courses")
+              .doc(courseId)
+              .collection("map-nodes")
+              .doc(docRef.id)
+              .update({ id: docRef.id });
 
+          })
+        }).then(() => {
+          console.log('4')
+          // create topic with node id
+          db.collection("courses")
+            .doc(courseId)
+            .collection("topics")
+            .doc(nodeId)
+            .set({
+              // hardcoded first node topic
+              id: nodeId,
+              label: this.course.title + " Intro",
+              group: "introduction",
+              topicCreatedTimestamp: new Date(),
+            })
+        }).then(() => {
+          console.log('5')
           // route to newly created galaxy
           this.$router.push({
             name: "GalaxyView",
             params: {
               courseId: courseId,
-              fromCreate: true, // flag to detect from creating a new Galaxy. TODO: add starting intro node
             },
           });
         })
         .catch((error) => {
+          this.cancel()
           console.error("Error writing document: ", error);
         });
       this.course = {};
