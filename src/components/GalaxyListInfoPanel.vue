@@ -42,7 +42,6 @@ export default {
   },
   methods: {
     closeInfoPanel() {
-      console.log("closing info panel");
       this.$emit("closeInfoPanel");
     },
   },

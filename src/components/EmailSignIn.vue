@@ -1,7 +1,7 @@
 <template>
   <div class="signin">
     <div id="signin-info">
-      <h2 class="signin-label">"Confirm Email"</h2>
+      <h2 class="signin-label">Confirm Email</h2>
       <p class="signin-description mt-4">
         Please confirm your email address to sign in
       </p>
@@ -28,9 +28,16 @@
         </v-btn>
       </v-form>
     </div>
-    <!-- <v-img :src="`https://i.pravatar.cc/300`" class="gm-logo"></v-img> -->
-    <div style="width: 300px; margin: 0px auto">
-      <BackButton :toPath="'/login'" />
+    <div style="width: 300px; margin: 20px auto; z-index: 1">
+      <v-btn
+        color="missionAccent"
+        to="/login"
+        outlined
+        width="100%"
+      >
+        <v-icon class="pr-4">mdi-keyboard-backspace</v-icon>
+        back to login
+      </v-btn>
     </div>
     <CreateProfileDialog :dialog="dialog" @login="login()"/>
   </div>
@@ -73,6 +80,11 @@ export default {
             this.proceed()
           })
           .catch((error) => {
+            this.$store.commit("setSnackbar", {
+              show: true,
+              text: error.message,
+              color: "pink",
+            });
             console.error("something went wrong signing in: ", error)
           });
       } else console.log("not a sign in link")
@@ -92,7 +104,7 @@ export default {
     login() {
       this.dialog = false
       this.$refs.form.reset()
-      this.$router.push("/base/cohorts");
+      this.$router.push("/base/galaxies/" + this.person.assignedCourse[0]);
     }
   },
 };
@@ -101,7 +113,6 @@ export default {
 <style lang="scss" scoped>
 .signin {
   width: 100vw;
-  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -126,7 +137,7 @@ export default {
   border: 1px solid var(--v-missionAccent-base);
   margin-top: 30px;
   padding: 20px;
-  // background: var(--v-baseAccent-base);
+  // background: var(--v-missionAccent-base);
   position: relative;
   backdrop-filter: blur(2px);
   z-index: 3;

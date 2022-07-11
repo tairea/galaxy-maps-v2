@@ -213,16 +213,26 @@ export default {
       }
 
       course.status = "published"
-      await this.saveCohort(cohort)
-      .then((cohortId) => { 
-        course.cohort = cohortId
+      if (!course.cohort) {
+        await this.saveCohort(cohort)
+        .then((cohortId) => { 
+          course.cohort = cohortId
+          this.updateCourse(course)
+        }).then(() => {
+          this.setCurrentCourse(course)
+          this.close()
+        }).catch((error) => {
+          console.error("Error updating document: ", error);
+        });
+      } else {
         this.updateCourse(course)
-      }).then(() => {
-        this.setCurrentCourse(course)
-        this.close()
-      }).catch((error) => {
-        console.error("Error updating document: ", error);
-      });
+        .then(() => {
+          this.setCurrentCourse(course)
+          this.close()
+        }).catch((error) => {
+          console.error("Error updating document: ", error);
+        });
+      }
     },
 
     async updateCourse(course) {
@@ -247,7 +257,6 @@ export default {
         .then( async (docRef) => {
           if (this.admin) {
             const person = await this.MXgetPersonByIdFromDB(cohort.teachers[0])
-            console.log('teacher profile: ', person)
             this.sendCoursePublishedEmail(person, this.course)
             this.sendNewCohortEmail(person, cohort);
           } else {

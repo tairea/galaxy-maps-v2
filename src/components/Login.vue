@@ -1,8 +1,9 @@
 <template>
   <div class="login">
     <p class="gm-title">GALAXY MAPS</p>
+    <EmailSignIn v-if="showEmailSignin" />
     <NewPassword 
-      v-if="isResetPassword" 
+      v-else-if="isResetPassword" 
       :actionCode="actionCode"
       :email="accountEmail"
       @close="isResetPassword = false"
@@ -77,6 +78,7 @@
 
 <script>
 import NewPassword from "./NewPassword.vue"
+import EmailSignIn from '@/components/EmailSignIn'
 
 import firebase from "firebase";
 import { mapGetters } from "vuex";
@@ -85,7 +87,8 @@ import { queryXAPIStatement } from "../lib/veracityLRS";
 export default {
   name: "Login",
   components: {
-    NewPassword
+    NewPassword,
+    EmailSignIn
   },
   data: () => ({
     valid: true,
@@ -99,14 +102,17 @@ export default {
     isResetPassword: false,
     accountEmail: '',
     actionCode: '',
-    isVerifyEmail: false
+    isVerifyEmail: false,
+    showEmailSignin: false
   }),
   mounted() {
     // Get the email action to complete.
     var mode = this.$route.query.mode || null;
     var actionCode = this.$route.query.oobCode
     var auth = firebase.auth()
+    console.log('route: ', this.$route)
 
+    console.log('mode: ', mode)
     // Handle the user management action.
     switch (mode) {
       case 'resetPassword':
@@ -120,6 +126,12 @@ export default {
       case 'verifyEmail':
         // Display email verification handler and UI.
         this.handleVerifyEmail(auth, actionCode);
+        break;
+      case 'signIn':
+        if (this.$route.fullPath.includes('email_signin')) {
+          console.log('show me the signin component')
+          this.showEmailSignin = true
+        }
         break;
       default:
         // Error: invalid mode.
@@ -288,6 +300,9 @@ export default {
   font-size: 5vw;
   color: var(--v-baseAccent-base);
   letter-spacing: 15px;
+  z-index: 1;
+  // position: relative;
+  // top: 100px;
 }
 .login {
   width: 100vw;

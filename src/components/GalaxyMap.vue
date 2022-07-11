@@ -1,6 +1,7 @@
 <template>
   <div class="full-height">
     <network
+      v-if="nodesToDisplay"
       ref="network"
       class="full-height"
       :nodes="nodesToDisplay"

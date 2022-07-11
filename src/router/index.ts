@@ -13,7 +13,7 @@ import UserDashboard from "../views/UserDashboard.vue";
 import VerifyEmail from "../views/VerifyEmail.vue";
 import ResetPassword from "../views/ResetPassword.vue";
 import Register from "../views/Register.vue";
-import EmailSignIn from "../views/EmailSignIn.vue";
+// import EmailSignIn from "../components/EmailSignIn.vue";
 import LandingPage from "../views/LandingPage.vue";
 
 import firebase from "firebase";
@@ -62,6 +62,18 @@ const routes = [
         path: "dashboard",
         component: UserDashboard,
       },
+      {
+        path: "/galaxy/:courseId",
+        name: "GalaxyView",
+        component: GalaxyView,
+        props: true,
+      },
+      {
+        path: "/system/:topicId",
+        name: "SolarSystemView",
+        component: SolarSystemView,
+        props: true,
+      },
     ],
   },
   {
@@ -84,23 +96,11 @@ const routes = [
     name: "Register",
     component: Register,
   },
-  {
-    path: "/email_signin",
-    name: "EmailSignIn",
-    component: EmailSignIn,
-  },
-  {
-    path: "/galaxy/:courseId",
-    name: "GalaxyView",
-    component: GalaxyView,
-    props: true,
-  },
-  {
-    path: "/system/:topicId",
-    name: "SolarSystemView",
-    component: SolarSystemView,
-    props: true,
-  },
+  // {
+  //   path: "/email_signin",
+  //   name: "EmailSignIn",
+  //   component: EmailSignIn,
+  // },
 ];
 
 const router = new VueRouter({

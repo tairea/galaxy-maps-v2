@@ -187,7 +187,7 @@ export default {
   display: flex;
   overflow: hidden;
   margin: 0 !important;
-  padding: 0px 20px
+  padding: 30px 20px 0px
 }
 
 #left-section {
