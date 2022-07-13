@@ -131,8 +131,8 @@ export default {
       return this.$vuetify.theme.isDark;
     },
     displayGalaxies() {
-      return  this.courses.filter(course => course.public == true && course.status == 'published')
-    }
+      return this.courses.filter((course) => course.status == "published");
+    },
   },
   watch: {
     darkMode(dark) {
@@ -157,7 +157,7 @@ export default {
   },
   methods: {
     recalculateGradient() {
-      console.log('zooming')
+      console.log("zooming");
     },
     async setAllNodesToDisplay() {
       /* ===========================
@@ -220,7 +220,7 @@ export default {
       // set save current course clicked in store
       this.$store.commit("setCurrentCourseId", closestNode.courseId);
 
-      this.$emit('courseClicked', { courseId : this.currentCourseId})
+      this.$emit("courseClicked", { courseId: this.currentCourseId });
     },
     distSquared(pt1, pt2) {
       var diffX = pt1.x - pt2.x;
@@ -247,7 +247,7 @@ export default {
 
       // loop nodes and add x y offsets
       for (let i = 0; i < courseCanvasBoundaries.length; i++) {
-        console.log('galaxy count: ', galaxyColsCount)
+        console.log("galaxy count: ", galaxyColsCount);
         // console.log(
         //   "positioning course: ==============",
         //   courseCanvasBoundaries[i].title
@@ -330,8 +330,11 @@ export default {
       return newAllNodes;
     },
     calcCourseCanvasBoundaries() {
-      const courses = this.user.data.admin ? this.courses : this.displayGalaxies;
+      const courses = this.user.data.admin
+        ? this.courses
+        : this.displayGalaxies;
       let courseCanvasBoundaries = [];
+      console.log("courses not just public.", courses);
       // get all coords for nodes
       // const allNodes = this.$refs.network.nodes;
       const allNodes = this.nodesToDisplay;
@@ -400,13 +403,35 @@ export default {
         courseCanvasBoundaries.push(boundary);
       }
       // console.log("courseCanvasBoundaries", courseCanvasBoundaries);
-      // this.gradients = courseCanvasBoundaries; TODO add gradients to courses to show public/private/drafting 
+      // this.gradients = courseCanvasBoundaries; TODO add gradients to courses to show public/private/drafting
       return courseCanvasBoundaries;
     },
     // this controls the fit zoom animation
     zoomToNodes(nodes) {
       // get node ids
-      var nodeIds = nodes.map((x) => x.id);
+      var nodeIds = nodes.map((x) => {
+        return x.id;
+      });
+      // var networkNodeIds = this.$refs.network.nodes.map((x) => {
+      //   return x.id;
+      // });
+
+      // A diff function to see where the .fit() shape bug is occuring
+      // Array.prototype.diff = function (arr2) {
+      //   return this.filter((x) => !arr2.includes(x));
+      // };
+      // let diffArr = nodeIds.diff(networkNodeIds);
+      // console.log("diff:", diffArr);
+
+      // diffArr.forEach((id) => {
+      //   console.log("node id:", id);
+      //   // let node = this.$refs.network.nodes.filter((x) => {
+      //   let node = nodes.filter((x) => {
+      //     return x.id == id;
+      //   });
+      //   console.log("node:", node);
+      // });
+
       // // fit
       this.$refs.network.fit({
         nodes: nodeIds,
