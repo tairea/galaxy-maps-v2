@@ -244,7 +244,8 @@ export default {
       // get all coords for nodes
       // const allNodes = this.$refs.network.nodes;
       const allNodes = this.nodesToDisplay;
-      // console.log("allNodes from calcBoundaries: ", allNodes);
+
+      console.log("courses: ", courses);
 
       // per course/galaxy, determine boundaries ie. highest y, highest x, lowest y, lowest x (this is a boundary we want to hover)
       for (let i = 0; i < courses.length; i++) {
@@ -267,9 +268,10 @@ export default {
         // };
         // loop nodes in that course
         for (const node of allNodes) {
-          courseNodes.push({ labe: node.label, x: node.x, y: node.y });
+          // console.log("node course id:", node.courseId);
           // sort by course
           if (node.courseId == courses[i].id) {
+            courseNodes.push({ label: node.label, x: node.x, y: node.y });
             if (Math.abs(node.y) > boundary.maxHeightOffset) {
               boundary.maxHeightOffset = Math.abs(node.y);
             }
@@ -308,11 +310,36 @@ export default {
         boundary.id = courses[i].id;
         boundary.title = courses[i].title;
 
+        // get the course status for repositioning colour
+        // draft: status = drafting
+        // public: status = published , public = true
+        // private: status = published , public = false
+        // submitted: status = submitted
+        // owned: boundary.mappedBy.id == this.person.id
+        let status;
+        if (courses[i].status == "drafting") status = "draft";
+        else if (courses[i].status == "published" && courses[i].public == true)
+          status = "public";
+        else if (courses[i].status == "published" && courses[i].public == false)
+          status = "private";
+        else if (courses[i].status == "submitted") status = "submitted";
+        else if (courses[i].mappedBy.personId == this.person.id)
+          status = "owner";
+        boundary.status = status;
+
         // add nodes to boundary for debugging
         boundary.nodes = courseNodes;
 
         courseCanvasBoundaries.push(boundary);
       }
+
+      let noNodes = courseCanvasBoundaries.filter(
+        (course) => course.nodes.length === 0
+      );
+
+      // TODO: i think getALlNodes doesnt get ALL nodes for admins. this breaks admins maps
+      console.log("no nodes", noNodes);
+
       console.log("courseCanvasBoundaries", courseCanvasBoundaries);
       // this.gradients = courseCanvasBoundaries; TODO add gradients to courses to show public/private/drafting
       return courseCanvasBoundaries;
@@ -410,6 +437,15 @@ export default {
           }
         }
 
+        console.log("rel bounds:", {
+          id: courseCanvasBoundaries[i].id,
+          title: courseCanvasBoundaries[i].title,
+          relTop: relativeTop,
+          relRight: relativeRight,
+          relBottom: relativeBottom,
+          relLeft: relativeLeft,
+        });
+
         // get center point of galaxy
         // thanks to: https://www.quora.com/Geometry-How-do-I-calculate-the-center-of-four-X-Y-coordinates
         // 1) calc centroid triangle 1
@@ -441,6 +477,7 @@ export default {
           relativeNodes: newCourseNodes,
           width: courseCanvasBoundaries[i].width,
           height: courseCanvasBoundaries[i].height,
+          status: courseCanvasBoundaries[i].status,
         };
         this.relativeGalaxyBoundaries.push(relativeCenter);
 
@@ -534,7 +571,8 @@ export default {
           ctx,
           relative.centroidX,
           relative.centroidY,
-          relative.width > relative.height ? relative.width : relative.height
+          relative.width > relative.height ? relative.width : relative.height,
+          relative.status
         );
         // draw the galaxy maps bounds (for debugging boundaries)
         // this.drawBounds(
@@ -559,15 +597,38 @@ export default {
       ctx.stroke();
       ctx.closePath();
     },
-    drawGlow(ctx, x, y, radius) {
+    drawGlow(ctx, x, y, radius, status) {
       radius = radius ? radius : 100;
       // create arc (circle)
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, Math.PI * 2, false);
 
+      // colour
+      let colour;
+      switch (status) {
+        case "draft":
+          colour = "rgba(0,230,118,0.3)"; // baseAccent as rgba
+          break;
+        case "owned":
+          colour = "rgba(105,161,226,0.3)"; // missionAccent as rgba
+          break;
+        case "public":
+          colour = "rgba(105,161,226,0.3)"; // missionAccent as rgba
+          break;
+        case "private":
+          colour = "rgba(226,105,207,0.3)"; // galaxyAccent as rgba
+          break;
+        case "submitted":
+          colour = "rgba(250,242,0,0.3)"; // cohortAccent as rgba
+          break;
+        default:
+          colour = "rgba(20, 30, 48, 0)"; // background as rgba
+          break;
+      }
+
       // gradient
       var grd = ctx.createRadialGradient(x, y, 1, x, y, radius);
-      grd.addColorStop(0, "rgba(105, 161, 226, 0.3)");
+      grd.addColorStop(0, colour);
       grd.addColorStop(1, "rgba(20, 30, 48, 0)");
 
       // Fill with gradient
