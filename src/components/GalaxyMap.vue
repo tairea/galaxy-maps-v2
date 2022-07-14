@@ -170,7 +170,6 @@ export default {
       this.teacher &&
       this.$route.name == "GalaxyView"
     ) {
-      console.log("teacher is detected");
       this.network.options.interaction.dragNodes = true;
     } else {
       this.network.options.interaction.dragNodes = false;
@@ -216,7 +215,6 @@ export default {
     ]),
     nodesToDisplay () {
       if (this.currentCourseNodes.length && this.currentCourseNodes[0]?.id) {
-        console.log(this.currentCourseNodes)
         if (this.addingNode || this.addingEdge) {
           return this.inActiveNodes
         } else if (!this.teacher) {
@@ -282,7 +280,6 @@ export default {
   },
   methods: {
     disableEditMode() {
-      console.log('invis')
       this.$refs.network.disableEditMode();
       this.addingNode = false,
       this.addingEdge = false
@@ -299,10 +296,8 @@ export default {
       this.addNodeMode();
     },
     addNodeMode() {
-      console.log('add node mode')
       this.active = true;
       this.addingNode = true;
-      // this.$emit("toggleAddNodeButton")
       this.$emit("setUiMessage", "Click on the map to add a node");
       this.$refs.network.addNodeMode();
     },
@@ -424,7 +419,6 @@ export default {
     },
     selectNode(data) {
       if (this.addingNode || this.addingEdge) return
-      console.log('selectedNode')
       this.active = true;
       if (data.nodes.length == 1) {
         // is type node
@@ -460,7 +454,6 @@ export default {
       this.$emit("deselected");
     },
     removeUnsavedNode() {
-      console.log('removeUnsavedNode')
       this.active = false
       this.$refs.network.deleteSelected()
     },
@@ -472,7 +465,6 @@ export default {
       this.$emit("centerFocus", focusedNode);
     },
     hoverNode(data) {
-      console.log('hovered node')
       if (this.addingEdge == true || this.addingNode) return;
       this.stopNodeAnimation();
       const nodeId = data.node;

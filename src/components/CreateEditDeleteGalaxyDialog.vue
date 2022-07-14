@@ -465,8 +465,11 @@ export default {
     },
   },
   watch: {
-    courseToEdit() {
-      Object.assign(this.course, this.courseToEdit)
+    courseToEdit(newVal) {
+      console.log('new course')
+      if (this.course.id !== newVal.id) {
+        Object.assign(this.course, this.courseToEdit)
+      }
     }
   },
   mounted () {
@@ -705,7 +708,7 @@ export default {
           this.$router.push({ path: "/base/galaxies"});
           this.$store.commit("setSnackbar", {
             show: true,
-            text: "Galaxy destroyed",
+            text: this.destroyedText(),
             color: "baseAccent",
           });
         })
@@ -769,6 +772,10 @@ export default {
         this.$store.commit("setCurrentCourseId", course.id);
         this.$store.commit("setCurrentCourse", course)
       })
+    },
+    destroyedText () {
+      const options = ["Galaxy deleted", "Galaxy destroyed", "Galaxy was destroyed by a deathstar", "Galaxy destroyed by a Space Bat Angel Dragon", "Galaxy destroyed by its own inhabitants", "Galaxy was swallowed by a black hole", "Galaxy has mysteriously disappeared"];
+      return options[Math.floor(Math.random() * options.length)];
     }
   },
 };
