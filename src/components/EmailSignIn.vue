@@ -102,9 +102,10 @@ export default {
       this.dialog = true
     },
     login() {
+      console.log('login')
       this.dialog = false
       this.$refs.form.reset()
-      this.$router.push("/base/galaxies/" + this.person.assignedCourse[0]);
+      this.$router.push({ path: "/base/galaxies"});
     }
   },
 };
