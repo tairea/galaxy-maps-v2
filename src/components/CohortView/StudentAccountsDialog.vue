@@ -38,7 +38,7 @@
             </v-tab>
 
             <v-tab-item>
-              <CreateAccountForm  accountType="student" @close="close"/>
+              <CreateAccountForm @close="close"/>
             </v-tab-item>
             <v-tab-item>
              <StudentImportCsv />

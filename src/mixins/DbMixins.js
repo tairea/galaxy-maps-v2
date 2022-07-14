@@ -29,7 +29,6 @@ export const dbMixins = {
         });
     },
     MXsendNewCohortEmail(profile, cohort) {
-      if (profile.inviter?.length == 0) profile.inviter = "GalaxyMaps Admin";
       const person = {
         ...profile,
         cohort: cohort ? cohort.name : this.currentCohort.name,

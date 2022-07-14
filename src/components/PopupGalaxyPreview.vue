@@ -288,9 +288,12 @@ export default {
         .collection("topics")
         .orderBy("topicCreatedTimestamp")
         .get();
+      
+      console.log('adding topics to student: ', query)
 
       // 2) add them to person (this will store their TOPIC progression data for this course )
       for (const [index, doc] of querySnapshot.docs.entries()) {
+        console.log('add this topic: ', doc.data())
         await db
           .collection("people")
           .doc(this.person.id)
@@ -320,15 +323,6 @@ export default {
           // this.startingGalaxyStatus = "...adding " + subDoc.data().title;
           this.startingGalaxyStatus =
             "...adding " + doc.data().label + " - " + subDoc.data().title;
-          // console.log(
-          //   "...adding " +
-          //     subDoc.id +
-          //     ": " +
-          //     doc.data().label +
-          //     " - " +
-          //     subDoc.data().title
-          // );
-
           if (subDoc.exists) {
             await db
               .collection("people")

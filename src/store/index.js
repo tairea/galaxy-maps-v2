@@ -335,7 +335,9 @@ export default new Vuex.Store({
         // if public || mapped by user || user is assigned to course
         if (doc.data().public === true || 
           doc.data().mappedBy.personId === state.person.id || 
-          state.person.assignedCourses.some(course => course === doc.id)) {
+          state.person.assignedCourses?.some(course => course === doc.id) || 
+          state.user.data.admin
+          ) {
             const subQuerySnapshot = await db
               .collection("courses")
               .doc(doc.id)
@@ -365,7 +367,7 @@ export default new Vuex.Store({
 
         if (doc.data().public === true || 
         doc.data().mappedBy.personId === state.person.id || 
-        state.person.assignedCourses.some(course => course === doc.id) || 
+        state.person.assignedCourses?.some(course => course === doc.id) || 
         state.user.data.admin) {
             // doc.data() is never undefined for query doc snapshots
             const subQuerySnapshot = await db
