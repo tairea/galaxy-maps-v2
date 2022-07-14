@@ -127,6 +127,7 @@ export default {
       "currentCourseId",
       "courses",
       "darkMode",
+      "person",
     ]),
     ...mapGetters(["getCourseById", "user"]),
     isDark() {
@@ -134,7 +135,12 @@ export default {
     },
     displayGalaxies() {
       return this.courses.filter(
-        (course) => course.public == true && course.status == "published"
+        (course) =>
+          course.public === true ||
+          course.mappedBy.personId === this.person.id ||
+          this.person.assignedCourses.some(
+            (assignedCourse) => assignedCourse.id === course.id
+          )
       );
     },
   },
@@ -177,7 +183,6 @@ export default {
           this.$store.commit("updateAllNodesForDisplay", repositionedNodes);
         }
       }
-
       this.centerAfterReposition();
     },
     centerAfterReposition() {
@@ -321,7 +326,7 @@ export default {
 
       // canvas / 3
       let galaxyColsCount = 0;
-      let numberOfGalaxiesPerRow = 4; // hardcoded num of galaxies in a row
+      let numberOfGalaxiesPerRow = Math.ceil(Math.sqrt(this.courses.length)); // hardcoded num of galaxies in a row
 
       // SCALE calc num of galaxy rows
       // const canvasRowHeight = this.canvasHeight / maxHeight;
