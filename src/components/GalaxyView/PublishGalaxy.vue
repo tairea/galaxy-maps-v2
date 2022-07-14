@@ -257,6 +257,7 @@ export default {
         .then( async (docRef) => {
           if (this.admin) {
             const person = await this.MXgetPersonByIdFromDB(cohort.teachers[0])
+            person.inviter = "Galaxy Maps Admin"
             this.sendCoursePublishedEmail(person, this.course)
             this.sendNewCohortEmail(person, cohort);
           } else {
@@ -270,10 +271,8 @@ export default {
     sendNewCohortEmail(profile, cohort) {
       const person = {
         ...profile,
-        cohort: cohort.name,
-        inviter: "Galaxy Maps Admin",
+        cohort: cohort.name
       };
-      if (!person.accountType) person.accountType = 'teacher'
       const sendNewCohortEmail = functions.httpsCallable("sendNewCohortEmail");
       return sendNewCohortEmail(person);
     },

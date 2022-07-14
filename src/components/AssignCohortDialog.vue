@@ -360,20 +360,21 @@ export default {
       };
       (this.cohort = ""), (this.course = "");
     },
-    async assignCourseToPerson(person) {
+    async assignCourseToPerson(profile) {
       this.loading = true;
 
       // If we dont already have the students Id, check if they already have an account using their email
-      const personExists = await this.MXgetPersonByEmail(person.email);
+      const personExists = await this.MXgetPersonByEmail(profile.email);
       if (personExists) {
+        debugger
         this.handleAssignment(personExists, this.currentCourse);
       } else {
         //create the persons account
-        person.inviter = this.person.firstName + ' ' + this.person.lastName
+        profile.inviter = this.person.firstName + ' ' + this.person.lastName
 
-        this.MXcreateUser(person).then((person) => {
-          console.log('1. person created: ', person)
-          this.handleAssignment({id: person}, this.currentCourse);
+        this.MXcreateUser(profile).then((id) => {
+          console.log('1. person created: ', profile)
+          this.handleAssignment({id: id}, this.currentCourse);
         });
       }
     },
@@ -381,9 +382,11 @@ export default {
     handleAssignment(person, course) {
       this.MXassignCourseToStudent(person, course)
         .then(() => {
+          debugger
           this.MXaddExistingUserToCohort(person, this.cohort);
         })
         .then(() => {
+          debugger
           this.$store.commit("setSnackbar", {
             show: true,
             text: "Individual assigned to Course",

@@ -183,7 +183,7 @@ async function sendNewCohortEmail(
   mailOptions.subject = `New cohort registration`;
   mailOptions.text = `Hi ${displayName || firstName || ""}
 
-You have been added to cohort: ${cohort} by ${inviter} 
+You have been added to cohort: ${cohort} ${inviter ? "by " + inviter : ""} 
 Sign into your Galaxy Maps account to view your new cohort.
 
 https://galaxymaps.io

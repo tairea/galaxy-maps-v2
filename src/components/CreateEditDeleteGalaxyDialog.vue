@@ -510,6 +510,8 @@ export default {
       let nodeId
       let courseId
 
+      console.log
+
       // Add a new document in collection "courses"
       db.collection("courses")
         .add(course)
@@ -541,21 +543,21 @@ export default {
             x: 0,
             y: 0,
           })
-          .then((docRef) => {
+          .then( async (docRef) => {
             console.log('3')
             nodeId = docRef.id
             // update node obj with docRef.id aka nodeId
-            db.collection("courses")
+            await db.collection("courses")
               .doc(courseId)
               .collection("map-nodes")
               .doc(docRef.id)
               .update({ id: docRef.id });
 
           })
-        }).then(() => {
+        }).then( async () => {
           console.log('4')
           // create topic with node id
-          db.collection("courses")
+          await db.collection("courses")
             .doc(courseId)
             .collection("topics")
             .doc(nodeId)

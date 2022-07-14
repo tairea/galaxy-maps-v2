@@ -126,7 +126,7 @@ export default {
   name: "CreateAccountForm",
   mixins: [dbMixins],
   props: {
-    accountType: { type: String, default: "teacher" },
+    accountType: { type: String },
     student: { type: Object},
     edit: { type: Boolean, default: false }
   },
@@ -171,7 +171,6 @@ export default {
         firstName: "",
         lastName: "",
         email: "",
-        accountType: "",
         displayName: "",
         nsn: "",
         inviter: "",
@@ -250,14 +249,13 @@ export default {
       } else {
         const person = {
           ...this.account,
-          accountType: this.accountType,
           displayName: this.account.firstName + " " + this.account.lastName,
         };
         this.MXcreateUser(person)
           .then(() => {
              this.$store.commit("setSnackbar", {
               show: true,
-              text: "student account created",
+              text: "Account created",
               color: "baseAccent",
             });
             if (!this.teacher) {

@@ -8,7 +8,6 @@
           <p class="mb-0">Edit Student</p>
         </div>
         <CreateAccountForm 
-          accountType="student" 
           :student="student" 
           :edit="true"
           @updateStudentProfile="$emit('updateStudentProfile', $event)"
