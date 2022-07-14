@@ -256,6 +256,8 @@ export default {
           centerX: 0,
         };
         let courseNodes = [];
+        let allNodeXPositions = [];
+        let allNodeYPositions = [];
         // let DOMboundary = {
         //   top: 0,
         //   bottom: 0,
@@ -267,31 +269,32 @@ export default {
           // console.log("node course id:", node.courseId);
           // sort by course
           if (node.courseId == courses[i].id) {
-            courseNodes.push({ label: node.label, x: node.x, y: node.y });
-            if (Math.abs(node.y) > boundary.maxHeightOffset) {
-              boundary.maxHeightOffset = Math.abs(node.y);
-            }
-            if (Math.abs(node.x) > boundary.maxWidthOffset) {
-              boundary.maxWidthOffset = Math.abs(node.x);
-            }
-            // get lowest y (top)
-            if (node.y <= boundary.top.y) {
-              boundary.top = { x: node.x, y: node.y, id: node.id };
-            }
-            // get highest x (right)
-            if (node.x >= boundary.right.x) {
-              boundary.right = { x: node.x, y: node.y, id: node.id };
-            }
-            // get highest y (bottom)
-            if (node.y >= boundary.bottom.y) {
-              boundary.bottom = { x: node.x, y: node.y, id: node.id };
-            }
-            // get lowest x (left)
-            if (node.x <= boundary.left.x) {
-              boundary.left = { x: node.x, y: node.y, id: node.id };
-            }
+            // push node to course
+            courseNodes.push({
+              nodeLabel: node.label,
+              nodeId: node.id,
+              x: node.x,
+              y: node.y,
+            });
           }
         }
+
+        //find min x = left
+        boundary.left = courseNodes.reduce((prev, curr) =>
+          prev.x < curr.x ? prev : curr
+        );
+        //find max x = right
+        boundary.right = courseNodes.reduce((prev, curr) =>
+          prev.x > curr.x ? prev : curr
+        );
+        //find min y = top
+        boundary.top = courseNodes.reduce((prev, curr) =>
+          prev.y < curr.y ? prev : curr
+        );
+        //find max y = bottom
+        boundary.bottom = courseNodes.reduce((prev, curr) =>
+          prev.y > curr.y ? prev : curr
+        );
 
         //boundary width & height
         boundary.width = boundary.right.x - boundary.left.x;
@@ -384,28 +387,28 @@ export default {
             };
 
             // check if a boundary node, so can capture the new relative boundaries
-            if (node.id == courseCanvasBoundaries[i].top.id) {
+            if (node.id == courseCanvasBoundaries[i].top.nodeId) {
               relativeTop = {
                 label: newNode.label,
                 x: newNode.x,
                 y: newNode.y,
               };
             }
-            if (node.id == courseCanvasBoundaries[i].right.id) {
+            if (node.id == courseCanvasBoundaries[i].right.nodeId) {
               relativeRight = {
                 label: newNode.label,
                 x: newNode.x,
                 y: newNode.y,
               };
             }
-            if (node.id == courseCanvasBoundaries[i].bottom.id) {
+            if (node.id == courseCanvasBoundaries[i].bottom.nodeId) {
               relativeBottom = {
                 label: newNode.label,
                 x: newNode.x,
                 y: newNode.y,
               };
             }
-            if (node.id == courseCanvasBoundaries[i].left.id) {
+            if (node.id == courseCanvasBoundaries[i].left.nodeId) {
               relativeLeft = {
                 label: newNode.label,
                 x: newNode.x,
