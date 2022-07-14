@@ -139,7 +139,7 @@ export default {
           course.public === true ||
           course.mappedBy.personId === this.person.id ||
           this.person.assignedCourses.some(
-            (assignedCourse) => assignedCourse.id === course.id
+            (assignedCourse) => assignedCourse === course.id
           )
       );
     },
@@ -166,9 +166,6 @@ export default {
     this.setAllNodesToDisplay();
   },
   methods: {
-    recalculateGradient() {
-      console.log("zooming");
-    },
     async setAllNodesToDisplay() {
       /* ===========================
         Show ALL Galaxies in DATABASE!! (so I can see what maps users have created)
@@ -345,7 +342,6 @@ export default {
       return courseCanvasBoundaries;
     },
     repositionCoursesBasedOnBoundariesV2() {
-      console.log("v2");
       const courseCanvasBoundaries = this.calcCourseCanvasBoundaries();
       const allNodes = this.$refs.network.nodes;
       // console.log("all nodes ================", allNodes);
@@ -364,9 +360,6 @@ export default {
 
       // loop nodes and add x y offsets
       for (let i = 0; i < courseCanvasBoundaries.length; i++) {
-        let newCourseNodes = [];
-
-        console.log("galaxy count: ", galaxyColsCount);
         // console.log(
         //   "positioning course: ==============",
         //   courseCanvasBoundaries[i].title
