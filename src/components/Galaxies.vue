@@ -434,14 +434,15 @@ export default {
           }
         }
 
-        console.log("rel bounds:", {
-          id: courseCanvasBoundaries[i].id,
-          title: courseCanvasBoundaries[i].title,
-          relTop: relativeTop,
-          relRight: relativeRight,
-          relBottom: relativeBottom,
-          relLeft: relativeLeft,
-        });
+        // relative bounds test
+        // console.log("rel bounds:", {
+        //   id: courseCanvasBoundaries[i].id,
+        //   title: courseCanvasBoundaries[i].title,
+        //   relTop: relativeTop,
+        //   relRight: relativeRight,
+        //   relBottom: relativeBottom,
+        //   relLeft: relativeLeft,
+        // });
 
         // get center point of galaxy
         // thanks to: https://www.quora.com/Geometry-How-do-I-calculate-the-center-of-four-X-Y-coordinates
@@ -526,7 +527,7 @@ export default {
           galaxyColsCount = 0;
         }
       }
-      console.log("relative centers", this.relativeGalaxyBoundaries);
+      // console.log("relative centers", this.relativeGalaxyBoundaries);
       // pad the end of row
       // this.largestRowWidth += this.largestRowWidth / this.numberOfGalaxiesPerRow / 2;
       // this.$refs.network.storePositions();
@@ -602,9 +603,15 @@ export default {
 
       // colour
       let colour;
+      // "rgba(0,230,118,0.3)" <- baseAccent as rgba
+      // "rgba(105,161,226,0.3)" <- missionAccent as rgba
+      // "rgba(226,105,207,0.3)" <- galaxyAccent as rgba
+      // "rgba(250,242,0,0.3)" <- cohortAccent as rgba
+      // "rgba(20, 30, 48, 0)" <- background as rgba
+
       switch (status) {
         case "draft":
-          colour = "rgba(0,230,118,0.3)"; // baseAccent as rgba
+          colour = "rgba(250,242,0,0.3)"; // cohortAccent as rgba
           break;
         case "owned":
           colour = "rgba(105,161,226,0.3)"; // missionAccent as rgba
@@ -616,7 +623,7 @@ export default {
           colour = "rgba(226,105,207,0.3)"; // galaxyAccent as rgba
           break;
         case "submitted":
-          colour = "rgba(250,242,0,0.3)"; // cohortAccent as rgba
+          colour = "rgba(0,230,118,0.3)"; // baseAccent as rgba
           break;
         default:
           colour = "rgba(20, 30, 48, 0)"; // background as rgba
