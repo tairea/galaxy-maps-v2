@@ -9,7 +9,6 @@
       :edges="allEdges"
       :options="network.options"
       @click="click"
-      @zoom="recalculateGradient()"
       @before-drawing="beforeDrawing"
     ></network>
   </div>
@@ -360,6 +359,8 @@ export default {
 
       // loop nodes and add x y offsets
       for (let i = 0; i < courseCanvasBoundaries.length; i++) {
+        let newCourseNodes = [];
+
         // console.log(
         //   "positioning course: ==============",
         //   courseCanvasBoundaries[i].title
