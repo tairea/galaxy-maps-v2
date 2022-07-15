@@ -498,35 +498,7 @@ export default new Vuex.Store({
           orgs.push(doc.data());
         }
       }
-
-      // console.log("orgs: ", orgs);
       commit("setOrganisations", orgs);
-    },
-
-    async getPersonsActiveTasks({ commit, dispatch }, payload) {
-      const personsCourseTopics = await db
-        .collection("people")
-        .doc(payload.personId)
-        .collection(payload.courseId)
-        .get();
-
-      const activeTasksArr = [];
-      for (const topic of personsCourseTopics.docs) {
-        const activeTasks = await db
-          .collection("people")
-          .doc(payload.personId)
-          .collection(payload.courseId)
-          .doc(topic.id)
-          .collection("tasks")
-          .where("taskStatus", "==", "active")
-          .get();
-
-        for (const activeTask of activeTasks.docs) {
-          activeTasksArr.push(activeTask.data());
-        }
-      }
-
-      return activeTasksArr;
     },
 
     async getRequestsForHelpByCourseId({ state }, courseId) {
