@@ -203,6 +203,8 @@ export default {
     this.startNodeAnimation();
   },
   beforeDestroy() {
+    console.log("stop animation");
+    this.stopNodeAnimation();
     clearInterval(this.intervalid1);
     if (this.$refs.network) {
       this.$refs.network.destroy();
@@ -619,7 +621,9 @@ export default {
     //   }
     // },
     updateFrameTimer() {
-      this.$refs.network.redraw();
+      if (this.$refs.network) {
+        this.$refs.network.redraw();
+      }
     },
     startNodeAnimation() {
       // start interval
