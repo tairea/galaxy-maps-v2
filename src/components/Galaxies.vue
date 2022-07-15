@@ -1,6 +1,6 @@
 <template>
   <div class="full-height">
-    <LoadingSpinner v-if="loading" />
+    <LoadingSpinner v-if="loading" text="loading learning universe"/>
     <!-- <GradientBackground :gradients="gradients"/> -->
     <network
       ref="network"
@@ -584,27 +584,22 @@ export default {
 
       // colour
       let colour;
-      // "rgba(0,230,118,0.3)" <- baseAccent as rgba
-      // "rgba(105,161,226,0.3)" <- missionAccent as rgba
-      // "rgba(226,105,207,0.3)" <- galaxyAccent as rgba
-      // "rgba(250,242,0,0.3)" <- cohortAccent as rgba
-      // "rgba(20, 30, 48, 0)" <- background as rgba
 
       switch (status) {
         case "draft":
           colour = "rgba(250,242,0,0.3)"; // cohortAccent as rgba
           break;
         case "public":
-          colour = "rgba(0,230,118,0.3)"; // baseAccent as rgba
+          colour = "rgba(105,161,226,0.3)"; // missionAccent as rgba
           break;
         case "private":
           colour = "rgba(226,105,207,0.3)"; // galaxyAccent as rgba
           break;
         case "submitted":
-          colour = "rgba(105,161,226,0.3)"; // missionAccent as rgba
+          colour = "rgba(0,230,118,0.3)"; // baseAccent as rgba
           break;
         case "assigned":
-          colour = "rgba(0,230,118,0.3)"; // baseAccent as rgba
+          colour = "rgba(105,161,226,0.3)"; // missionAccent as rgba
           break;
         default:
           colour = "rgba(20, 30, 48, 0)"; // background as rgba

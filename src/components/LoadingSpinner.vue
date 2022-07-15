@@ -2,7 +2,7 @@
   <div class="wrap">
     <div class="mt-n12"> 
       <v-row>
-        <p class="overline" style="color:var(--v-missionAccent-base)">loading learning universe</p>
+        <p class="overline" style="color:var(--v-missionAccent-base)">{{ text }}</p>
       </v-row>
       <v-row>
         <v-progress-linear
@@ -20,6 +20,7 @@ export default {
     size: {
       default: "40px",
     },
+    text: String
   },
   computed: {
     styles() {
