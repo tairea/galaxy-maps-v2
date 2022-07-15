@@ -73,7 +73,6 @@ export default {
   },
   methods: {
     courseClicked(emittedPayload) {
-      console.log('courseClicked')
       this.clickedCourseId = emittedPayload.courseId;
       if (emittedPayload.type) this.courseType = emittedPayload.type;
     },
