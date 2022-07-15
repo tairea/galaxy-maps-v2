@@ -9,7 +9,7 @@
       :edges="allEdges"
       :options="network.options"
       @click="click"
-      @zoom="recalculateGradient()"
+      @before-drawing="beforeDrawing"
     ></network>
   </div>
 </template>
@@ -40,6 +40,7 @@ export default {
     popupPreview: false,
     allNodeIds: [],
     nodesToDisplay: [],
+    relativeGalaxyBoundaries: [],
     // allNodesLength: 0,
     courseCols: 1,
     courseRows: 1,
@@ -125,17 +126,22 @@ export default {
       "currentCourseId",
       "courses",
       "darkMode",
-      "person"
+      "person",
     ]),
     ...mapGetters(["getCourseById", "user"]),
     isDark() {
       return this.$vuetify.theme.isDark;
     },
     displayGalaxies() {
-      return  this.courses.filter(course => course.public === true || 
-        course.mappedBy.personId === this.person.id || 
-        this.person.assignedCourses.some(assignedCourse => assignedCourse === course.id))
-    }
+      return this.courses.filter(
+        (course) =>
+          course.public === true ||
+          course.mappedBy.personId === this.person.id ||
+          this.person.assignedCourses.some(
+            (assignedCourse) => assignedCourse === course.id
+          )
+      );
+    },
   },
   watch: {
     darkMode(dark) {
@@ -219,17 +225,109 @@ export default {
       // set save current course clicked in store
       this.$store.commit("setCurrentCourseId", closestNode.courseId);
 
-      this.$emit('courseClicked', { courseId : this.currentCourseId})
+      this.$emit("courseClicked", { courseId: this.currentCourseId });
     },
     distSquared(pt1, pt2) {
       var diffX = pt1.x - pt2.x;
       var diffY = pt1.y - pt2.y;
       return diffX * diffX + diffY * diffY;
     },
+    calcCourseCanvasBoundaries() {
+      const courses = this.user.data.admin
+        ? this.courses
+        : this.displayGalaxies;
+      let courseCanvasBoundaries = [];
+      // get all coords for nodes
+      // const allNodes = this.$refs.network.nodes;
+      const allNodes = this.nodesToDisplay;
+
+      // per course/galaxy, determine boundaries ie. highest y, highest x, lowest y, lowest x (this is a boundary we want to hover)
+      for (let i = 0; i < courses.length; i++) {
+        let boundary = {
+          heightOffset: 0,
+          maxWidthOffset: 0,
+          top: { x: 0, y: 0 },
+          bottom: { x: 0, y: 0 },
+          left: { x: 0, y: 0 },
+          right: { x: 0, y: 0 },
+          centerY: 0,
+          centerX: 0,
+        };
+        let courseNodes = [];
+        let allNodeXPositions = [];
+        let allNodeYPositions = [];
+        // let DOMboundary = {
+        //   top: 0,
+        //   bottom: 0,
+        //   left: 0,
+        //   right: 0,
+        // };
+        // loop nodes in that course
+        for (const node of allNodes) {
+          // console.log("node course id:", node.courseId);
+          // sort by course
+          if (node.courseId == courses[i].id) {
+            // push node to course
+            courseNodes.push({
+              nodeLabel: node.label,
+              nodeId: node.id,
+              x: node.x,
+              y: node.y,
+            });
+          }
+        }
+
+        //find min x = left
+        boundary.left = courseNodes.reduce((prev, curr) =>
+          prev.x < curr.x ? prev : curr
+        );
+        //find max x = right
+        boundary.right = courseNodes.reduce((prev, curr) =>
+          prev.x > curr.x ? prev : curr
+        );
+        //find min y = top
+        boundary.top = courseNodes.reduce((prev, curr) =>
+          prev.y < curr.y ? prev : curr
+        );
+        //find max y = bottom
+        boundary.bottom = courseNodes.reduce((prev, curr) =>
+          prev.y > curr.y ? prev : curr
+        );
+
+        //boundary width & height
+        boundary.width = boundary.right.x - boundary.left.x;
+        boundary.height = boundary.bottom.y - boundary.top.y;
+        boundary.centerX = (boundary.right.x + boundary.left.x) / 2;
+        boundary.centerY = (boundary.bottom.y + boundary.top.y) / 2;
+        // in DOM x y
+        // boundary.widthDOM = DOMboundary.right - DOMboundary.left;
+        // boundary.heightDOM = DOMboundary.bottom - DOMboundary.top;
+
+        // add course id to boundary
+        boundary.id = courses[i].id;
+        boundary.title = courses[i].title;
+
+        // get the course status for glow colour
+        let status;
+        if (courses[i].mappedBy.personId == this.person.id) {
+          if (courses[i].status == "drafting") status = "draft";
+          else if (courses[i].status == "published" && courses[i].public == true) status = "public";
+          else if (courses[i].status == "published" && courses[i].public == false) status = "private";
+          else if (courses[i].status == "submitted") status = "submitted";
+        } else if (this.person.assignedCourses?.some(course => course === courses[i].id)) status = "assigned";
+        boundary.status = status;
+
+        // add nodes to boundary for debugging
+        boundary.nodes = courseNodes;
+
+        courseCanvasBoundaries.push(boundary);
+      }
+      return courseCanvasBoundaries;
+    },
     repositionCoursesBasedOnBoundariesV2() {
       const courseCanvasBoundaries = this.calcCourseCanvasBoundaries();
       const allNodes = this.$refs.network.nodes;
-      // console.log("all nodes", allNodes);
+      // console.log("all nodes ================", allNodes);
       let newAllNodes = [];
 
       // canvas / 3
@@ -245,6 +343,8 @@ export default {
 
       // loop nodes and add x y offsets
       for (let i = 0; i < courseCanvasBoundaries.length; i++) {
+        let newCourseNodes = [];
+
         // console.log(
         //   "positioning course: ==============",
         //   courseCanvasBoundaries[i].title
@@ -257,6 +357,8 @@ export default {
         // const widthOffset = courseCanvasBoundaries[i].maxWidthOffset;
         // const heightOffset = courseCanvasBoundaries[i].maxHeightOffset;
 
+        let relativeTop, relativeRight, relativeBottom, relativeLeft;
+
         for (const node of allNodes) {
           if (node.courseId == courseCanvasBoundaries[i].id) {
             let newNode = {
@@ -264,12 +366,99 @@ export default {
               x: currentColWidth + node.x - courseCanvasBoundaries[i].centerX,
               y: currrentRowHeight + node.y - courseCanvasBoundaries[i].centerY,
             };
+
+            // check if a boundary node, so can capture the new relative boundaries
+            if (node.id == courseCanvasBoundaries[i].top.nodeId) {
+              relativeTop = {
+                label: newNode.label,
+                x: newNode.x,
+                y: newNode.y,
+              };
+            }
+            if (node.id == courseCanvasBoundaries[i].right.nodeId) {
+              relativeRight = {
+                label: newNode.label,
+                x: newNode.x,
+                y: newNode.y,
+              };
+            }
+            if (node.id == courseCanvasBoundaries[i].bottom.nodeId) {
+              relativeBottom = {
+                label: newNode.label,
+                x: newNode.x,
+                y: newNode.y,
+              };
+            }
+            if (node.id == courseCanvasBoundaries[i].left.nodeId) {
+              relativeLeft = {
+                label: newNode.label,
+                x: newNode.x,
+                y: newNode.y,
+              };
+            }
+
             newAllNodes.push(newNode);
+
+            newCourseNodes.push({
+              labe: newNode.label,
+              x: newNode.x,
+              y: newNode.y,
+            });
             // console.log(
-            //   "node:" + newNode.label + "- x:" + newNode.x + " y:" + newNode.y
+            //   "new node:" +
+            //     newNode.label +
+            //     "- x:" +
+            //     newNode.x +
+            //     " y:" +
+            //     newNode.y
             // );
           }
         }
+
+        // relative bounds test
+        // console.log("rel bounds:", {
+        //   id: courseCanvasBoundaries[i].id,
+        //   title: courseCanvasBoundaries[i].title,
+        //   relTop: relativeTop,
+        //   relRight: relativeRight,
+        //   relBottom: relativeBottom,
+        //   relLeft: relativeLeft,
+        // });
+
+        // get center point of galaxy
+        // thanks to: https://www.quora.com/Geometry-How-do-I-calculate-the-center-of-four-X-Y-coordinates
+        // 1) calc centroid triangle 1
+        let centroidTri1X =
+          (relativeTop.x + relativeRight.x + relativeBottom.x) / 3;
+        let centroidTri1Y =
+          (relativeTop.y + relativeRight.y + relativeBottom.y) / 3;
+
+        // 2) calc centroid triangle 2
+        let centroidTri2X =
+          (relativeBottom.x + relativeLeft.x + relativeTop.x) / 3;
+        let centroidTri2Y =
+          (relativeBottom.y + relativeLeft.y + relativeTop.y) / 3;
+
+        // 3) mid point of line between centroids
+        let centroidX = (centroidTri1X + centroidTri2X) / 2;
+        let centroidY = (centroidTri1Y + centroidTri2Y) / 2;
+
+        // relative galaxy centers
+        let relativeCenter = {
+          course: courseCanvasBoundaries[i].title,
+          id: courseCanvasBoundaries[i].id,
+          centroidX: centroidX,
+          centroidY: centroidY,
+          top: relativeTop,
+          right: relativeRight,
+          bottom: relativeBottom,
+          left: relativeLeft,
+          relativeNodes: newCourseNodes,
+          width: courseCanvasBoundaries[i].width,
+          height: courseCanvasBoundaries[i].height,
+          status: courseCanvasBoundaries[i].status,
+        };
+        this.relativeGalaxyBoundaries.push(relativeCenter);
 
         // increase offset for next galaxy column aka ** PADDING BETWEEN GALAXIES **
         currentColWidth += courseCanvasBoundaries[i].width / 2 + 600; // width / 2 because dont want to pad the whole width over + pad just half the course width + pad
@@ -319,86 +508,13 @@ export default {
           galaxyColsCount = 0;
         }
       }
+      // console.log("relative centers", this.relativeGalaxyBoundaries);
       // pad the end of row
       // this.largestRowWidth += this.largestRowWidth / this.numberOfGalaxiesPerRow / 2;
       // this.$refs.network.storePositions();
       // console.log("allNodes", allNodes);
       // console.log("newAllNodes", newAllNodes);
       return newAllNodes;
-    },
-    calcCourseCanvasBoundaries() {
-      const courses = this.user.data.admin ? this.courses : this.displayGalaxies;
-      let courseCanvasBoundaries = [];
-      // get all coords for nodes
-      // const allNodes = this.$refs.network.nodes;
-      const allNodes = this.nodesToDisplay;
-      // console.log("allNodes from calcBoundaries: ", allNodes);
-
-      // per course/galaxy, determine boundaries ie. highest y, highest x, lowest y, lowest x (this is a boundary we want to hover)
-      for (let i = 0; i < courses.length; i++) {
-        let boundary = {
-          maxHeightOffset: 0,
-          maxWidthOffset: 0,
-          top: 0,
-          bottom: 0,
-          left: 0,
-          right: 0,
-          centerY: 0,
-          centerX: 0,
-        };
-        // let DOMboundary = {
-        //   top: 0,
-        //   bottom: 0,
-        //   left: 0,
-        //   right: 0,
-        // };
-        // loop nodes in that course
-        for (const node of allNodes) {
-          if (node.courseId == courses[i].id) {
-            if (Math.abs(node.y) > boundary.maxHeightOffset) {
-              boundary.maxHeightOffset = Math.abs(node.y);
-            }
-            if (Math.abs(node.x) > boundary.maxWidthOffset) {
-              boundary.maxWidthOffset = Math.abs(node.x);
-            }
-            // get lowest y (top)
-            if (node.y < boundary.top) {
-              boundary.top = node.y;
-            }
-            // get highest x (right)
-            if (node.x > boundary.right) {
-              boundary.right = node.x;
-            }
-            // get highest y (bottom)
-            if (node.y > boundary.bottom) {
-              boundary.bottom = node.y;
-            }
-            // get lowest x (left)
-            if (node.x < boundary.left) {
-              boundary.left = node.x;
-            }
-          }
-        }
-
-        //boundary width & height
-        boundary.width = boundary.right - boundary.left;
-        boundary.height = boundary.bottom - boundary.top;
-        boundary.centerX = (boundary.right + boundary.left) / 2;
-        boundary.centerY = (boundary.top + boundary.bottom) / 2;
-        // in DOM x y
-        // boundary.widthDOM = DOMboundary.right - DOMboundary.left;
-        // boundary.heightDOM = DOMboundary.bottom - DOMboundary.top;
-
-        // add course id to boundary
-        boundary.id = courses[i].id;
-        boundary.title = courses[i].title;
-
-        // console.log("boundary",boundary)
-        courseCanvasBoundaries.push(boundary);
-      }
-      // console.log("courseCanvasBoundaries", courseCanvasBoundaries);
-      // this.gradients = courseCanvasBoundaries; TODO add gradients to courses to show public/private/drafting 
-      return courseCanvasBoundaries;
     },
     // this controls the fit zoom animation
     zoomToNodes(nodes) {
@@ -426,6 +542,84 @@ export default {
       options.nodes.fixed = true;
       this.$refs.network.setOptions(options);
       this.$refs.network.fit();
+    },
+    beforeDrawing(ctx) {
+      for (const relative of this.relativeGalaxyBoundaries) {
+        // console.log("relative boundary:", relative);
+        this.drawGlow(
+          ctx,
+          relative.centroidX,
+          relative.centroidY,
+          relative.width > relative.height ? relative.width : relative.height,
+          relative.status
+        );
+        // draw the galaxy maps bounds (for debugging boundaries)
+        // this.drawBounds(
+        //   ctx,
+        //   relative.top,
+        //   relative.right,
+        //   relative.bottom,
+        //   relative.left
+        // );
+      }
+    },
+    drawBounds(ctx, top, right, bottom, left) {
+      ctx.strokeStyle = "rgba(255, 255, 255, 1)";
+      ctx.lineWidth = 10;
+      ctx.beginPath();
+      ctx.moveTo(top.x, top.y);
+      ctx.lineTo(right.x, right.y);
+      ctx.lineTo(bottom.x, bottom.y);
+      ctx.lineTo(left.x, left.y);
+      ctx.lineTo(top.x, top.y);
+      // ctx.fill();
+      ctx.stroke();
+      ctx.closePath();
+    },
+    drawGlow(ctx, x, y, radius, status) {
+      radius = radius ? radius : 100;
+      // create arc (circle)
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2, false);
+
+      // colour
+      let colour;
+      // "rgba(0,230,118,0.3)" <- baseAccent as rgba
+      // "rgba(105,161,226,0.3)" <- missionAccent as rgba
+      // "rgba(226,105,207,0.3)" <- galaxyAccent as rgba
+      // "rgba(250,242,0,0.3)" <- cohortAccent as rgba
+      // "rgba(20, 30, 48, 0)" <- background as rgba
+
+      switch (status) {
+        case "draft":
+          colour = "rgba(250,242,0,0.3)"; // cohortAccent as rgba
+          break;
+        case "public":
+          colour = "rgba(0,230,118,0.3)"; // baseAccent as rgba
+          break;
+        case "private":
+          colour = "rgba(226,105,207,0.3)"; // galaxyAccent as rgba
+          break;
+        case "submitted":
+          colour = "rgba(105,161,226,0.3)"; // missionAccent as rgba
+          break;
+        case "assigned":
+          colour = "rgba(0,230,118,0.3)"; // baseAccent as rgba
+          break;
+        default:
+          colour = "rgba(20, 30, 48, 0)"; // background as rgba
+          break;
+      }
+
+      // gradient
+      var grd = ctx.createRadialGradient(x, y, 1, x, y, radius);
+      grd.addColorStop(0, colour);
+      grd.addColorStop(1, "rgba(20, 30, 48, 0)");
+
+      // Fill with gradient
+      ctx.fillStyle = grd;
+      ctx.fill();
+      ctx.closePath();
     },
   },
 };
