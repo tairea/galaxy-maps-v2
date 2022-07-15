@@ -1,5 +1,6 @@
 <template>
   <div class="full-height">
+    <LoadingSpinner v-if="!planets.length" text="loading galaxy"/>
     <network
       v-if="nodesToDisplay"
       ref="network"
@@ -36,6 +37,7 @@ import { Network } from "vue2vis";
 import { Planet } from "../lib/planet";
 
 import SolarSystem from "../components/SolarSystem";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 import { db } from "../store/firestoreConfig";
 
@@ -49,8 +51,10 @@ export default {
   components: {
     Network,
     SolarSystem,
+    LoadingSpinner
   },
   data: () => ({
+    loading: true,
     active: false,
     addingNode: false,
     addingEdge: false,
@@ -203,7 +207,6 @@ export default {
     this.startNodeAnimation();
   },
   beforeDestroy() {
-    console.log("stop animation");
     this.stopNodeAnimation();
     clearInterval(this.intervalid1);
     if (this.$refs.network) {
@@ -535,15 +538,12 @@ export default {
     },
     async bindCourseTasks() {
       if (!this.teacher) {
-        this.personsCourseTasks = await this.$store.dispatch(
-          "getPersonsCourseTasks",
-          {
+        this.personsCourseTasks = await this.getPersonsCourseTasks({
             personId: this.person.id,
             courseId: this.currentCourseId,
-          }
-        );
+          });
       } else {
-        this.courseTasks = await this.$store.dispatch("getCourseTasks", {
+        this.courseTasks = await this.getCourseTasks({
           courseId: this.currentCourseId,
         });
       }
@@ -599,27 +599,6 @@ export default {
         planet.update(ctx, delta);
       }
     },
-    // Canvas Node PULSE Animation
-    // beforeDrawing(ctx) {
-    //   if (this.animateRadius) {
-    //     // get node to animate on
-    //     const nodeId = this.$refs.network.getSelection().nodes[0];
-    //     const selectedNode = this.$refs.network.getNode(nodeId);
-    //     // check if array of object. if its an object then its the selected node. ifs it an array, means node not yet selected
-    //     if (!Array.isArray(selectedNode)) {
-    //       var colorCircle = "#69A1E2";
-    //       var colorBorder = "rgba(0, 0, 200, 0)";
-    //       ctx.strokeStyle = colorCircle;
-    //       ctx.fillStyle = colorBorder;
-    //       var radius = Math.abs(50 * Math.sin(this.currentRadius + 1 / 50.0));
-    //       ctx.circle(selectedNode.x, selectedNode.y, radius);
-    //       ctx.fill();
-    //       ctx.stroke();
-    //     } else {
-    //       return;
-    //     }
-    //   }
-    // },
     updateFrameTimer() {
       if (this.$refs.network) {
         this.$refs.network.redraw();
@@ -631,6 +610,57 @@ export default {
     },
     stopNodeAnimation() {
       clearInterval(this.intervalid1);
+    },
+    async getPersonsCourseTasks(payload) {
+      const personsCourseTopics = await db
+        .collection("people")
+        .doc(payload.personId)
+        .collection(payload.courseId)
+        .get();
+
+      const tasksArr = [];
+      for (const topic of personsCourseTopics.docs) {
+        if (topic.data().topicStatus !== "locked") {
+          const tasks = await db
+            .collection("people")
+            .doc(payload.personId)
+            .collection(payload.courseId)
+            .doc(topic.id)
+            .collection("tasks")
+            .get();
+  
+          for (const task of tasks.docs) {
+            tasksArr.push({ topicId: topic.id, task: task.data() });
+          }
+        }
+      }
+      // console.log("tasksArr", tasksArr)
+      return tasksArr;
+    },
+    async getCourseTasks(payload) {
+
+      const courseTopics = await db
+        .collection("courses")
+        .doc(payload.courseId)
+        .collection("topics")
+        .get();
+
+      const tasksArr = [];
+      for (const topic of courseTopics.docs) {
+        const tasks = await db
+          .collection("courses")
+          .doc(payload.courseId)
+          .collection("topics")
+          .doc(topic.id)
+          .collection("tasks")
+          .get();
+
+        for (const task of tasks.docs) {
+          tasksArr.push({ topicId: topic.id, task: task.data() });
+        }
+      }
+      // console.log("tasksArr", tasksArr)
+      return tasksArr;
     },
   },
 };
