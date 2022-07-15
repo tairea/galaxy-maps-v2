@@ -5,11 +5,7 @@
       ref="network"
       class="full-height"
       :nodes="nodesToDisplay"
-      :edges="
-        teacher
-          ? currentCourseEdges
-          : currentCourseEdgesWithStatusStyles
-      "
+      :edges="teacher ? currentCourseEdges : currentCourseEdgesWithStatusStyles"
       :options="network.options"
       @nodes-add="addNode"
       @edges-add="addEdge"
@@ -37,6 +33,7 @@
 
 <script>
 import { Network } from "vue2vis";
+import { Planet } from "../lib/planet";
 
 import SolarSystem from "../components/SolarSystem";
 
@@ -95,7 +92,7 @@ export default {
         },
         groups: {
           default: {
-            shape: "dot"
+            shape: "dot",
           },
           completed: {
             shape: "dot",
@@ -138,8 +135,8 @@ export default {
             shape: "dot",
             color: "#696969",
             font: {
-              color: "#696969",  
-            }
+              color: "#696969",
+            },
           },
         },
         interaction: {
@@ -155,9 +152,13 @@ export default {
     updateFrameVar: function () {
       this.intervalid1 = setInterval(() => {
         this.updateFrameTimer();
-      }, 60);
+      }, 33);
     },
     newNodePositions: {},
+    personsCourseTasks: [],
+    courseTasks: [],
+    planets: [],
+    time: null,
   }),
   async mounted() {
     // var course = this.getCourseById(this.courseId);
@@ -166,10 +167,7 @@ export default {
 
     // determine if person logged in and on galaxy view page is a teacher
     // if so, allow them to move the nodes
-    if (
-      this.teacher &&
-      this.$route.name == "GalaxyView"
-    ) {
+    if (this.teacher && this.$route.name == "GalaxyView") {
       this.network.options.interaction.dragNodes = true;
     } else {
       this.network.options.interaction.dragNodes = false;
@@ -198,6 +196,11 @@ export default {
           : this.$vuetify.theme.themes.light.baseAccent
       );
     }
+
+    // set up solar system planets
+    this.setupSolarSystemPlanets();
+    // start animation
+    this.startNodeAnimation();
   },
   beforeDestroy() {
     clearInterval(this.intervalid1);
@@ -206,24 +209,32 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(["getTopicById", "person", "getCourseById"]),
+    ...mapGetters([
+      "getTopicById",
+      "person",
+      "getCourseById",
+      "getTasksByTopicId",
+    ]),
     ...mapState([
       "currentCourseId",
       "currentCourseNodes",
       "currentCourseEdges",
       "personsTopics",
+      "personsTopicsTasks",
+      "topicsTasks",
     ]),
-    nodesToDisplay () {
+    nodesToDisplay() {
       if (this.currentCourseNodes.length && this.currentCourseNodes[0]?.id) {
         if (this.addingNode || this.addingEdge) {
-          return this.inActiveNodes
+          return this.inActiveNodes;
         } else if (!this.teacher) {
-          return this.currentCourseNodesWithStatus
-        } else return this.currentCourseNodes
-      } return false
+          return this.currentCourseNodesWithStatus;
+        } else return this.currentCourseNodes;
+      }
+      return false;
     },
     inActiveNodes() {
-      let inActiveNodes = []
+      let inActiveNodes = [];
       for (const node of this.currentCourseNodes) {
         inActiveNodes.push({
           ...node,
@@ -281,9 +292,8 @@ export default {
   methods: {
     disableEditMode() {
       this.$refs.network.disableEditMode();
-      this.addingNode = false,
-      this.addingEdge = false
-      this.active = false
+      (this.addingNode = false), (this.addingEdge = false);
+      this.active = false;
     },
     getDomCoords(node) {
       let domCoords = this.$refs.network.canvasToDom({ x: node.x, y: node.y });
@@ -311,12 +321,12 @@ export default {
     addNode(data) {
       if (!this.active) return;
       const newNodeId = data.properties.items[0];
-      const selected = this.$refs.network.getSelection()
+      const selected = this.$refs.network.getSelection();
       if (selected.nodes.length || selected.edges.length) {
         // select the new node accidentally created and delete it
         this.$refs.network.selectNodes([newNodeId]);
-        this.$refs.network.deleteSelected()
-        return
+        this.$refs.network.deleteSelected();
+        return;
       }
       const newNode = this.$refs.network.getNode(newNodeId);
       this.$emit("add-node", newNode);
@@ -328,8 +338,8 @@ export default {
       if (newEdgeData.from === newEdgeData.to) {
         // select the new edge accidentally and delete it
         this.$refs.network.selectEdges([newEdgeData.id]);
-        this.$refs.network.deleteSelected()
-        return
+        this.$refs.network.deleteSelected();
+        return;
       }
       db.collection("courses")
         .doc(this.currentCourseId)
@@ -387,7 +397,7 @@ export default {
     async saveNodePositions() {
       this.$emit("nodePositionsChangeLoading");
       const nodes = this.$refs.network.nodes;
-      const newNodes = this.newNodePositions
+      const newNodes = this.newNodePositions;
       // spread/or map new positions to nodes
 
       for (const changedNode in newNodes) {
@@ -398,7 +408,7 @@ export default {
           node.x = changedNodeObj.x;
           node.y = changedNodeObj.y;
           // save to firestore db
-          if (node.group) delete node.group
+          if (node.group) delete node.group;
 
           await db
             .collection("courses")
@@ -415,10 +425,10 @@ export default {
         }
         this.$emit("nodePositionsChangeSaved");
       }
-      return this.newNodePositions = {}
+      return (this.newNodePositions = {});
     },
     selectNode(data) {
-      if (this.addingNode || this.addingEdge) return
+      if (this.addingNode || this.addingEdge) return;
       this.active = true;
       if (data.nodes.length == 1) {
         // is type node
@@ -434,7 +444,7 @@ export default {
       }
     },
     selectEdge(data) {
-      if (this.addingNode || this.addingEdge) return
+      if (this.addingNode || this.addingEdge) return;
       this.active = true;
       if (data.edges.length == 1) {
         const edgeId = data.edges[0];
@@ -448,14 +458,14 @@ export default {
     deselectNode() {
       this.active = false;
       this.$emit("deselected");
-      this.stopNodeAnimation();
+      // this.stopNodeAnimation();
     },
     deselectEdge() {
       this.$emit("deselected");
     },
     removeUnsavedNode() {
-      this.active = false
-      this.$refs.network.deleteSelected()
+      this.active = false;
+      this.$refs.network.deleteSelected();
     },
     animationFinished(data) {
       // show popup
@@ -466,7 +476,7 @@ export default {
     },
     hoverNode(data) {
       if (this.addingEdge == true || this.addingNode) return;
-      this.stopNodeAnimation();
+      // this.stopNodeAnimation();
       const nodeId = data.node;
       const hoveredNode = this.$refs.network.getNode(nodeId);
       hoveredNode.type = "node";
@@ -480,42 +490,6 @@ export default {
       setTimeout(() => {
         this.$emit("deselected");
       }, 1000);
-    },
-    // Canvas Node Animation
-    beforeDrawing(ctx) {
-      if (this.animateRadius) {
-        // get node to animate on
-        const nodeId = this.$refs.network.getSelection().nodes[0];
-        const selectedNode = this.$refs.network.getNode(nodeId);
-        // check if array of object. if its an object then its the selected node. ifs it an array, means node not yet selected
-        if (!Array.isArray(selectedNode)) {
-          var colorCircle = "#69A1E2";
-          var colorBorder = "rgba(0, 0, 200, 0)";
-          ctx.strokeStyle = colorCircle;
-          ctx.fillStyle = colorBorder;
-          var radius = Math.abs(50 * Math.sin(this.currentRadius + 1 / 50.0));
-          ctx.circle(selectedNode.x, selectedNode.y, radius);
-          ctx.fill();
-          ctx.stroke();
-        } else {
-          return;
-        }
-      }
-    },
-    updateFrameTimer() {
-      if (this.animateRadius) {
-        this.$refs.network.redraw();
-        this.currentRadius += 0.05;
-      }
-    },
-    startNodeAnimation() {
-      this.animateRadius = true;
-      // start interval
-      this.updateFrameVar();
-    },
-    stopNodeAnimation() {
-      this.animateRadius = false;
-      clearInterval(this.intervalid1);
     },
     hashCode(str) {
       let hash = 0;
@@ -556,6 +530,103 @@ export default {
       options.nodes.font.color = colour;
       this.$refs.network.setOptions(options);
       this.$refs.network.fit();
+    },
+    async bindCourseTasks() {
+      if (!this.teacher) {
+        this.personsCourseTasks = await this.$store.dispatch(
+          "getPersonsCourseTasks",
+          {
+            personId: this.person.id,
+            courseId: this.currentCourseId,
+          }
+        );
+      } else {
+        this.courseTasks = await this.$store.dispatch("getCourseTasks", {
+          courseId: this.currentCourseId,
+        });
+      }
+    },
+    async setupSolarSystemPlanets() {
+      // get all tasks
+      await this.bindCourseTasks();
+
+      let tasks = [];
+      if (!this.teacher) {
+        tasks = this.personsCourseTasks;
+      } else {
+        tasks = this.courseTasks;
+      }
+
+      // get node ids
+      const nodeIds = this.$refs.network.nodes.map(({ id }) => id);
+      // get node xy positions
+      const nodePositionMap = this.$refs.network.getPositions(nodeIds);
+
+      // loop nodes/topics
+      Object.entries(nodePositionMap).forEach(
+        async ([topicId, topicPosition]) => {
+          const topicsTasks = tasks.filter((task) => task.topicId == topicId);
+
+          for (let i = 1; i <= topicsTasks.length; i++) {
+            this.planets.push(
+              new Planet(
+                topicPosition.x,
+                topicPosition.y,
+                2, // planet size
+                "white", // planet colour
+                6.28 / 5, // planet speed (6.28 radians in a circle. so 6.28 is full circle in 1 second. divide by something to slow it down)
+                20 * i // planet orbit size
+              )
+            );
+          }
+        }
+      );
+    },
+    beforeDrawing(ctx) {
+      // get delta
+      const oldTime = this.time;
+      this.time = new Date();
+      let delta;
+      if (oldTime == null) {
+        delta = 1;
+      } else {
+        delta = (this.time.getTime() - oldTime.getTime()) / 1000;
+      }
+      // update planets orbits
+      for (const planet of this.planets) {
+        planet.update(ctx, delta);
+      }
+    },
+    // Canvas Node PULSE Animation
+    // beforeDrawing(ctx) {
+    //   if (this.animateRadius) {
+    //     // get node to animate on
+    //     const nodeId = this.$refs.network.getSelection().nodes[0];
+    //     const selectedNode = this.$refs.network.getNode(nodeId);
+    //     // check if array of object. if its an object then its the selected node. ifs it an array, means node not yet selected
+    //     if (!Array.isArray(selectedNode)) {
+    //       var colorCircle = "#69A1E2";
+    //       var colorBorder = "rgba(0, 0, 200, 0)";
+    //       ctx.strokeStyle = colorCircle;
+    //       ctx.fillStyle = colorBorder;
+    //       var radius = Math.abs(50 * Math.sin(this.currentRadius + 1 / 50.0));
+    //       ctx.circle(selectedNode.x, selectedNode.y, radius);
+    //       ctx.fill();
+    //       ctx.stroke();
+    //     } else {
+    //       return;
+    //     }
+    //   }
+    // },
+    updateFrameTimer() {
+      this.$refs.network.redraw();
+    },
+    startNodeAnimation() {
+      // start interval
+      this.updateFrameVar();
+    },
+    stopNodeAnimation() {
+      clearInterval(this.intervalid1);
     },
   },
 };
