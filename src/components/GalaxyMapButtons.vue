@@ -1,51 +1,51 @@
 <template>
-  <div class="d-flex flex-column map-buttons">
+  <div class="d-flex map-buttons-bottom">
     <div class="d-inline-flex">
-      <v-btn
-        class="map-button"
-        :color="!addNodeMode ? 'missionAccent' : 'baseAccent'"
-        fab
-        dark
-        small
-        outlined
-        tile
-        title="Add Node"
+      <!-- ADD NODE -->
+      <div
+        class="mapButton"
+        :class="{ active: addNodeMode }"
         @click="toggleAddNodeMode"
       >
-        <v-icon v-if="!addNodeMode">mdi-dots-hexagon</v-icon>
-        <v-icon v-else color="baseAccent">mdi-close</v-icon>
-      </v-btn>
-      <div class="ui-message-wrap">
-        <p v-if="!editMode" class="ui-message pt-4 ml-n1">
-          <v-icon color="missionAccent" class="bounce"
-            >mdi-hand-pointing-left</v-icon
+        <div class="mapButton-text">
+          <p v-if="!addNodeMode" class="overline ma-0">Add a new node</p>
+          <p v-else class="ma-0" style="font-size: 0.7rem">
+            Click on the map to place a new node
+          </p>
+        </div>
+        <div class="mapButton-icon" :class="{ activeIcon: addNodeMode }">
+          <v-icon v-if="!addNodeMode" color="missionAccent"
+            >mdi-dots-hexagon</v-icon
           >
-          Add a new node to extend your Galaxy map
-        </p>
-        <p v-else class="ui-message active">{{ uiMessage }}</p>
+          <v-icon v-else color="baseAccent">mdi-close</v-icon>
+        </div>
+      </div>
+
+      <!-- ADD EDGE -->
+      <div
+        class="mapButton ml-4"
+        :class="{ active: addEdgeMode }"
+        @click="toggleAddEdgeMode"
+      >
+        <div class="mapButton-icon" :class="{ activeIcon: addEdgeMode }">
+          <v-icon v-if="!addEdgeMode" color="missionAccent"
+            >mdi-chart-timeline-variant</v-icon
+          >
+          <v-icon v-else color="baseAccent">mdi-close</v-icon>
+        </div>
+        <div class="mapButton-text">
+          <p v-if="!addEdgeMode" class="overline ma-0">Add a new edge</p>
+          <p v-else class="ma-0" style="font-size: 0.7rem">
+            Click and drag to connect two nodes
+          </p>
+        </div>
       </div>
     </div>
-
-    <!-- Add edge button -->
-    <v-btn
-      class="map-button"
-      :color="!addEdgeMode ? 'missionAccent' : 'baseAccent'"
-      fab
-      dark
-      small
-      outlined
-      tile
-      title="Add Edge"
-      @click="toggleAddEdgeMode"
-    >
-      <v-icon v-if="!addEdgeMode">mdi-chart-timeline-variant</v-icon>
-      <v-icon v-else color="baseAccent">mdi-close</v-icon>
-    </v-btn>
 
     <!-- New node positions Save Button -->
     <v-btn
       v-if="editMode && changeInPositions"
-      class="map-button pa-5"
+      class="map-button-bottom"
       color="baseAccent"
       dark
       small
@@ -95,31 +95,78 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.map-buttons {
+.mapButton {
+  display: flex;
+  color: var(--v-missionAccent-base);
+  border: 1px solid var(--v-missionAccent-base);
+  height: 45px;
+  cursor: pointer;
+}
+
+.active {
+  color: var(--v-baseAccent-base);
+  border: 1px solid var(--v-baseAccent-base);
+}
+
+.mapButton-icon,
+.mapButton-text {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-left: 1px solid var(--v-missionAccent-base);
+  padding: 0px 10px;
+}
+
+.activeIcon {
+  border-left: 1px solid var(--v-baseAccent-base);
+  border-right: 1px solid var(--v-baseAccent-base);
+}
+
+.mapButton-text {
+  text-align: right;
+}
+
+.map-buttons-bottom {
   position: fixed;
-  top: 20px;
-  left: 25%;
+  bottom: 0;
+  left: 50%;
   z-index: 2;
   width: auto;
+  transform: translate(-50%, 0%);
+  margin: 25px 0px;
 
-  .map-button {
-    margin: 10px;
-    background-color: var(--v-background-base);
+  // border: 1px solid blue;
+}
+.map-buttons-left {
+  position: fixed;
+  top: 0;
+  left: 15%;
+  z-index: 2;
+  width: auto;
+  flex-direction: column;
+}
+
+.map-button-bottom {
+  margin: 10px;
+  background-color: var(--v-background-base);
+}
+.map-button {
+  // margin: 10px;
+  background-color: var(--v-background-base);
+}
+
+.ui-message-wrap {
+  // border: 1px solid var(--v-missionAccent-base);
+
+  .ui-message {
+    color: var(--v-missionAccent-base);
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    text-align: left;
+    margin-left: 10px;
   }
-
-  .ui-message-wrap {
-    // border: 1px solid var(--v-missionAccent-base);
-
-    .ui-message {
-      color: var(--v-missionAccent-base);
-      text-transform: uppercase;
-      font-size: 0.8rem;
-      text-align: left;
-      margin-left: 10px;
-    }
-    .active {
-      color: var(--v-baseAccent-base) !important;
-    }
+  .active {
+    color: var(--v-baseAccent-base) !important;
   }
 }
 </style>

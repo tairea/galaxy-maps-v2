@@ -311,10 +311,23 @@ export default {
         let status;
         if (courses[i].mappedBy.personId == this.person.id) {
           if (courses[i].status == "drafting") status = "draft";
-          else if (courses[i].status == "published" && courses[i].public == true) status = "public";
-          else if (courses[i].status == "published" && courses[i].public == false) status = "private";
+          else if (
+            courses[i].status == "published" &&
+            courses[i].public == true
+          )
+            status = "public";
+          else if (
+            courses[i].status == "published" &&
+            courses[i].public == false
+          )
+            status = "private";
           else if (courses[i].status == "submitted") status = "submitted";
-        } else if (this.person.assignedCourses?.some(course => course === courses[i].id)) status = "assigned";
+        } else if (
+          this.person.assignedCourses?.some(
+            (course) => course === courses[i].id
+          )
+        )
+          status = "assigned";
         boundary.status = status;
 
         // add nodes to boundary for debugging
@@ -623,10 +636,10 @@ export default {
 <style lang="scss" scoped>
 .full-height {
   width: 100%;
-  height: 95%;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  margin-top: 20px;
+  // margin-top: 20px;
 }
 
 .noGalaxies {

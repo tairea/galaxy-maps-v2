@@ -5,11 +5,7 @@
       ref="network"
       class="full-height"
       :nodes="nodesToDisplay"
-      :edges="
-        teacher
-          ? currentCourseEdges
-          : currentCourseEdgesWithStatusStyles
-      "
+      :edges="teacher ? currentCourseEdges : currentCourseEdgesWithStatusStyles"
       :options="network.options"
       @nodes-add="addNode"
       @edges-add="addEdge"
@@ -95,7 +91,7 @@ export default {
         },
         groups: {
           default: {
-            shape: "dot"
+            shape: "dot",
           },
           completed: {
             shape: "dot",
@@ -138,8 +134,8 @@ export default {
             shape: "dot",
             color: "#696969",
             font: {
-              color: "#696969",  
-            }
+              color: "#696969",
+            },
           },
         },
         interaction: {
@@ -166,10 +162,7 @@ export default {
 
     // determine if person logged in and on galaxy view page is a teacher
     // if so, allow them to move the nodes
-    if (
-      this.teacher &&
-      this.$route.name == "GalaxyView"
-    ) {
+    if (this.teacher && this.$route.name == "GalaxyView") {
       this.network.options.interaction.dragNodes = true;
     } else {
       this.network.options.interaction.dragNodes = false;
@@ -213,17 +206,18 @@ export default {
       "currentCourseEdges",
       "personsTopics",
     ]),
-    nodesToDisplay () {
+    nodesToDisplay() {
       if (this.currentCourseNodes.length && this.currentCourseNodes[0]?.id) {
         if (this.addingNode || this.addingEdge) {
-          return this.inActiveNodes
+          return this.inActiveNodes;
         } else if (!this.teacher) {
-          return this.currentCourseNodesWithStatus
-        } else return this.currentCourseNodes
-      } return false
+          return this.currentCourseNodesWithStatus;
+        } else return this.currentCourseNodes;
+      }
+      return false;
     },
     inActiveNodes() {
-      let inActiveNodes = []
+      let inActiveNodes = [];
       for (const node of this.currentCourseNodes) {
         inActiveNodes.push({
           ...node,
@@ -281,9 +275,8 @@ export default {
   methods: {
     disableEditMode() {
       this.$refs.network.disableEditMode();
-      this.addingNode = false,
-      this.addingEdge = false
-      this.active = false
+      (this.addingNode = false), (this.addingEdge = false);
+      this.active = false;
     },
     getDomCoords(node) {
       let domCoords = this.$refs.network.canvasToDom({ x: node.x, y: node.y });
@@ -311,12 +304,12 @@ export default {
     addNode(data) {
       if (!this.active) return;
       const newNodeId = data.properties.items[0];
-      const selected = this.$refs.network.getSelection()
+      const selected = this.$refs.network.getSelection();
       if (selected.nodes.length || selected.edges.length) {
         // select the new node accidentally created and delete it
         this.$refs.network.selectNodes([newNodeId]);
-        this.$refs.network.deleteSelected()
-        return
+        this.$refs.network.deleteSelected();
+        return;
       }
       const newNode = this.$refs.network.getNode(newNodeId);
       this.$emit("add-node", newNode);
@@ -328,8 +321,8 @@ export default {
       if (newEdgeData.from === newEdgeData.to) {
         // select the new edge accidentally and delete it
         this.$refs.network.selectEdges([newEdgeData.id]);
-        this.$refs.network.deleteSelected()
-        return
+        this.$refs.network.deleteSelected();
+        return;
       }
       db.collection("courses")
         .doc(this.currentCourseId)
@@ -374,6 +367,7 @@ export default {
         newPosition[nodeId].y !== node.y
       ) {
         // flag save new positions button
+        console.log("EMITTING: node positions changed");
         this.$emit("nodePositionsChanged");
         //   // commit new positions to newNodePositions
         const newPositionObj = {
@@ -387,7 +381,7 @@ export default {
     async saveNodePositions() {
       this.$emit("nodePositionsChangeLoading");
       const nodes = this.$refs.network.nodes;
-      const newNodes = this.newNodePositions
+      const newNodes = this.newNodePositions;
       // spread/or map new positions to nodes
 
       for (const changedNode in newNodes) {
@@ -398,7 +392,7 @@ export default {
           node.x = changedNodeObj.x;
           node.y = changedNodeObj.y;
           // save to firestore db
-          if (node.group) delete node.group
+          if (node.group) delete node.group;
 
           await db
             .collection("courses")
@@ -415,10 +409,10 @@ export default {
         }
         this.$emit("nodePositionsChangeSaved");
       }
-      return this.newNodePositions = {}
+      return (this.newNodePositions = {});
     },
     selectNode(data) {
-      if (this.addingNode || this.addingEdge) return
+      if (this.addingNode || this.addingEdge) return;
       this.active = true;
       if (data.nodes.length == 1) {
         // is type node
@@ -434,7 +428,7 @@ export default {
       }
     },
     selectEdge(data) {
-      if (this.addingNode || this.addingEdge) return
+      if (this.addingNode || this.addingEdge) return;
       this.active = true;
       if (data.edges.length == 1) {
         const edgeId = data.edges[0];
@@ -454,8 +448,8 @@ export default {
       this.$emit("deselected");
     },
     removeUnsavedNode() {
-      this.active = false
-      this.$refs.network.deleteSelected()
+      this.active = false;
+      this.$refs.network.deleteSelected();
     },
     animationFinished(data) {
       // show popup

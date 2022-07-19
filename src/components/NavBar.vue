@@ -1,19 +1,37 @@
 <template>
-  <div class="topCenterBar">
-    <div class="inner">
-      <!-- Student tabs -->
-      <v-tabs
-        fixed-tabs
-        background-color="transparent"
+  <div class="topMenuContainer">
+    <div ref="topNav" class="topCenterBar" :class="{ hide: !showNavMenu }">
+      <div class="inner">
+        <!-- Student tabs -->
+        <v-tabs
+          fixed-tabs
+          background-color="transparent"
+          dark
+          slider-color="baseAccent"
+          v-model="activeTab"
+          height="30"
+        >
+          <v-tab v-for="tab in tabs" :key="tab.id" :to="tab.route">
+            <div class="baseAccent--text tab">{{ tab.name }}</div>
+          </v-tab>
+        </v-tabs>
+      </div>
+    </div>
+    <!-- hamburger menu -->
+    <div v-if="showHamburgerMenu" class="hamburger">
+      <v-btn
+        class="map-button"
+        color="baseAccent"
         dark
-        slider-color="baseAccent"
-        v-model="activeTab"
-        height="30"
+        text
+        small
+        tile
+        title="Add Node"
+        @click="toggleMenu"
       >
-        <v-tab v-for="tab in tabs" :key="tab.id" :to="tab.route">
-          <div class="baseAccent--text tab">{{ tab.name }}</div>
-        </v-tab>
-      </v-tabs>
+        <v-icon v-if="!showNavMenu">mdi-menu</v-icon>
+        <v-icon v-else color="baseAccent">mdi-close</v-icon>
+      </v-btn>
     </div>
   </div>
 </template>
@@ -30,14 +48,35 @@ export default {
         { id: 2, name: "COHORTS", route: `/base/cohorts` },
         { id: 3, name: "DASHBOARD", route: `/base/dashboard` },
       ],
+      showNavMenu: true,
+      showHamburgerMenu: false,
     };
   },
+  watch: {
+    $route(to, from) {
+      console.log("this.$route.name", this.$route.name);
+      if (this.$route.name == "GalaxyView") {
+        this.showNavMenu = false;
+        this.showHamburgerMenu = true;
+      } else {
+        this.showNavMenu = true;
+        this.showHamburgerMenu = false;
+      }
+    },
+  },
+  mounted() {},
   methods: {
+    toggleMenu() {
+      this.showNavMenu = !this.showNavMenu;
+    },
   },
 };
 </script>
 
 <style lang="scss">
+.topMenuContainer {
+  background-color: pink;
+}
 .topCenterBar {
   position: absolute;
   top: 0;
@@ -53,6 +92,8 @@ export default {
   color: white;
   z-index: 200;
 
+  transition: all 0.3s ease-in-out;
+
   .inner {
     width: 80%;
     display: flex;
@@ -60,6 +101,29 @@ export default {
     align-items: center;
     // border: solid 5px yellow;
   }
+}
+
+.hide {
+  transform: translate(-50%, -100%);
+}
+
+.hamburger {
+  position: fixed;
+  top: 0;
+  right: 0;
+  // transform: translate(-50%, 0%);
+  background: var(--v-background-darken1);
+  width: 60px;
+  height: 50px;
+  padding: 10px 0px;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 30% 100%);
+
+  display: flex;
+  justify-content: flex-end;
+  // padding-right: 15px;
+  color: white;
+  z-index: 200;
+  // border: 2px solid pink;
 }
 
 .neon {
