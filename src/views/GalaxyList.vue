@@ -1,6 +1,10 @@
 <template>
   <div class="fullHeight">
-    <GalaxyListPanel ref="listPanel" @courseClicked="courseClicked($event)" @createGalaxy="showDialog = true" />
+    <GalaxyListPanel
+      ref="listPanel"
+      @courseClicked="courseClicked($event)"
+      @createGalaxy="showDialog = true"
+    />
     <GalaxyListInfoPanel
       :type="courseType"
       :selectedCourse="clickedCourseId"
@@ -14,7 +18,10 @@
       />
     </div>
     <!-- <div class="buttons"> -->
-      <CreateEditDeleteGalaxyDialog :showDialog="showDialog" @close="showDialog = false"/>
+    <CreateEditDeleteGalaxyDialog
+      :showDialog="showDialog"
+      @close="showDialog = false"
+    />
     <!-- </div> -->
   </div>
 </template>
@@ -44,7 +51,7 @@ export default {
       // whichCoursesToDisplay: "all",
       clickedCourseId: null,
       courseType: null,
-      showDialog: false
+      showDialog: false,
     };
   },
   async mounted() {
@@ -93,6 +100,7 @@ export default {
 .flexContainer {
   height: 100%;
   width: 100%;
+  position: absolute;
   display: flex;
   justify-content: center;
   align-items: center;

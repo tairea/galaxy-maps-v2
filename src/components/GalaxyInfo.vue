@@ -1,13 +1,33 @@
 <template>
-  <div id="galaxy-info" :class="draft ? 'draft-border' : 'galaxy-border'" v-if="course">
+  <div
+    id="galaxy-info"
+    :class="draft ? 'draft-border' : 'galaxy-border'"
+    v-if="course"
+  >
+    <!-- Label -->
     <h2 class="galaxy-label"><span v-if="draft">Drafting</span> Galaxy</h2>
+    <!-- Map Name  -->
     <h1 class="galaxy-title">{{ course.title }}</h1>
-    <p class="galaxy-status overline mb-0">Status: <span class="font-weight-black">{{ course.status}}</span> </p>
-    <p v-if="course.status === 'submitted'" class="galaxy-status overline mb-0">awaiting review</p>
-    <p v-else class="galaxy-status overline mb-0">Visibility: {{course.public ? 'Public' : 'Private'}}</p>
-    <!-- <div class="d-flex justify-center align-center"> -->
-    <v-img v-if="course.image" class="galaxy-image" :src="course.image.url"></v-img>
-    <!-- </div> -->
+    <!-- Status -->
+    <p class="galaxy-status overline mb-0">
+      Status: <span class="font-weight-black">{{ course.status }}</span>
+    </p>
+    <!-- Visibility -->
+    <p v-if="course.status === 'submitted'" class="galaxy-status overline mb-0">
+      awaiting review
+    </p>
+    <p v-else class="galaxy-status overline mb-0">
+      Visibility:
+      <span class="font-weight-black">{{
+        course.public ? "Public" : "Private"
+      }}</span>
+    </p>
+    <!-- Map Image -->
+    <v-img
+      v-if="course.image"
+      class="galaxy-image mt-2"
+      :src="course.image.url"
+    ></v-img>
     <p class="galaxy-description">{{ course.description }}</p>
     <CreateEditDeleteGalaxyDialog
       v-if="teacher"
@@ -18,7 +38,6 @@
 </template>
 
 <script>
-
 import CreateEditDeleteGalaxyDialog from "../components/CreateEditDeleteGalaxyDialog";
 
 import { mapState } from "vuex";
@@ -32,7 +51,7 @@ export default {
   mounted() {},
   computed: {
     ...mapState(["person"]),
-  }
+  },
 };
 </script>
 
@@ -66,9 +85,8 @@ export default {
     font-size: 1.2rem;
     font-weight: 600;
     text-transform: uppercase;
-    margin: 20px 0px 5px 0px;
-    color: white;
-    color: var(--v-galaxyAccent-base)
+    margin: 5px 0px 5px 0px;
+    color: var(--v-galaxyAccent-base);
   }
 
   .galaxy-image {
@@ -77,8 +95,8 @@ export default {
 
   .galaxy-description {
     margin-top: 10px;
-    font-size: 0.9rem;
-    color: var(--v-galaxyAccent-base)
+    font-size: 0.8rem;
+    color: var(--v-galaxyAccent-base);
   }
 }
 
@@ -94,5 +112,4 @@ export default {
   font-size: 0.6rem !important;
   line-height: 1rem !important;
 }
-
 </style>
