@@ -1,6 +1,6 @@
 <template>
   <div class="full-height">
-    <LoadingSpinner v-if="loading" />
+    <LoadingSpinner v-if="loading" text="loading learning universe"/>
     <!-- <GradientBackground :gradients="gradients"/> -->
     <network
       ref="network"
@@ -612,7 +612,7 @@ export default {
           colour = "rgba(0,230,118,0.3)"; // baseAccent as rgba
           break;
         case "assigned":
-          colour = "rgba(0,230,118,0.3)"; // baseAccent as rgba
+          colour = "rgba(105,161,226,0.3)"; // missionAccent as rgba
           break;
         default:
           colour = "rgba(20, 30, 48, 0)"; // background as rgba

@@ -1,5 +1,6 @@
 <template>
   <div class="full-height">
+    <LoadingSpinner v-if="!planets.length" text="loading galaxy"/>
     <network
       v-if="nodesToDisplay"
       ref="network"
@@ -33,8 +34,10 @@
 
 <script>
 import { Network } from "vue2vis";
+import { Planet } from "../lib/planet";
 
 import SolarSystem from "../components/SolarSystem";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 import { db } from "../store/firestoreConfig";
 
@@ -48,8 +51,10 @@ export default {
   components: {
     Network,
     SolarSystem,
+    LoadingSpinner
   },
   data: () => ({
+    loading: true,
     active: false,
     addingNode: false,
     addingEdge: false,
@@ -151,9 +156,13 @@ export default {
     updateFrameVar: function () {
       this.intervalid1 = setInterval(() => {
         this.updateFrameTimer();
-      }, 60);
+      }, 33);
     },
     newNodePositions: {},
+    personsCourseTasks: [],
+    courseTasks: [],
+    planets: [],
+    time: null,
   }),
   async mounted() {
     // var course = this.getCourseById(this.courseId);
@@ -191,20 +200,33 @@ export default {
           : this.$vuetify.theme.themes.light.baseAccent
       );
     }
+
+    // set up solar system planets
+    this.setupSolarSystemPlanets();
+    // start animation
+    this.startNodeAnimation();
   },
   beforeDestroy() {
+    this.stopNodeAnimation();
     clearInterval(this.intervalid1);
     if (this.$refs.network) {
       this.$refs.network.destroy();
     }
   },
   computed: {
-    ...mapGetters(["getTopicById", "person", "getCourseById"]),
+    ...mapGetters([
+      "getTopicById",
+      "person",
+      "getCourseById",
+      "getTasksByTopicId",
+    ]),
     ...mapState([
       "currentCourseId",
       "currentCourseNodes",
       "currentCourseEdges",
       "personsTopics",
+      "personsTopicsTasks",
+      "topicsTasks",
     ]),
     nodesToDisplay() {
       if (this.currentCourseNodes.length && this.currentCourseNodes[0]?.id) {
@@ -442,7 +464,7 @@ export default {
     deselectNode() {
       this.active = false;
       this.$emit("deselected");
-      this.stopNodeAnimation();
+      // this.stopNodeAnimation();
     },
     deselectEdge() {
       this.$emit("deselected");
@@ -460,7 +482,7 @@ export default {
     },
     hoverNode(data) {
       if (this.addingEdge == true || this.addingNode) return;
-      this.stopNodeAnimation();
+      // this.stopNodeAnimation();
       const nodeId = data.node;
       const hoveredNode = this.$refs.network.getNode(nodeId);
       hoveredNode.type = "node";
@@ -474,42 +496,6 @@ export default {
       setTimeout(() => {
         this.$emit("deselected");
       }, 1000);
-    },
-    // Canvas Node Animation
-    beforeDrawing(ctx) {
-      if (this.animateRadius) {
-        // get node to animate on
-        const nodeId = this.$refs.network.getSelection().nodes[0];
-        const selectedNode = this.$refs.network.getNode(nodeId);
-        // check if array of object. if its an object then its the selected node. ifs it an array, means node not yet selected
-        if (!Array.isArray(selectedNode)) {
-          var colorCircle = "#69A1E2";
-          var colorBorder = "rgba(0, 0, 200, 0)";
-          ctx.strokeStyle = colorCircle;
-          ctx.fillStyle = colorBorder;
-          var radius = Math.abs(50 * Math.sin(this.currentRadius + 1 / 50.0));
-          ctx.circle(selectedNode.x, selectedNode.y, radius);
-          ctx.fill();
-          ctx.stroke();
-        } else {
-          return;
-        }
-      }
-    },
-    updateFrameTimer() {
-      if (this.animateRadius) {
-        this.$refs.network.redraw();
-        this.currentRadius += 0.05;
-      }
-    },
-    startNodeAnimation() {
-      this.animateRadius = true;
-      // start interval
-      this.updateFrameVar();
-    },
-    stopNodeAnimation() {
-      this.animateRadius = false;
-      clearInterval(this.intervalid1);
     },
     hashCode(str) {
       let hash = 0;
@@ -550,6 +536,132 @@ export default {
       options.nodes.font.color = colour;
       this.$refs.network.setOptions(options);
       this.$refs.network.fit();
+    },
+    async bindCourseTasks() {
+      if (!this.teacher) {
+        this.personsCourseTasks = await this.getPersonsCourseTasks({
+            personId: this.person.id,
+            courseId: this.currentCourseId,
+          });
+      } else {
+        this.courseTasks = await this.getCourseTasks({
+          courseId: this.currentCourseId,
+        });
+      }
+    },
+    async setupSolarSystemPlanets() {
+      // get all tasks
+      await this.bindCourseTasks();
+
+      let tasks = [];
+      if (!this.teacher) {
+        tasks = this.personsCourseTasks;
+      } else {
+        tasks = this.courseTasks;
+      }
+
+      // get node ids
+      const nodeIds = this.$refs.network.nodes.map(({ id }) => id);
+      // get node xy positions
+      const nodePositionMap = this.$refs.network.getPositions(nodeIds);
+
+      // loop nodes/topics
+      Object.entries(nodePositionMap).forEach(
+        async ([topicId, topicPosition]) => {
+          const topicsTasks = tasks.filter((task) => task.topicId == topicId);
+
+          for (let i = 1; i <= topicsTasks.length; i++) {
+            this.planets.push(
+              new Planet(
+                topicPosition.x,
+                topicPosition.y,
+                2, // planet size
+                "white", // planet colour
+                6.28 / 5, // planet speed (6.28 radians in a circle. so 6.28 is full circle in 1 second. divide by something to slow it down)
+                20 * i // planet orbit size
+              )
+            );
+          }
+        }
+      );
+    },
+    beforeDrawing(ctx) {
+      // get delta
+      const oldTime = this.time;
+      this.time = new Date();
+      let delta;
+      if (oldTime == null) {
+        delta = 1;
+      } else {
+        delta = (this.time.getTime() - oldTime.getTime()) / 1000;
+      }
+      // update planets orbits
+      for (const planet of this.planets) {
+        planet.update(ctx, delta);
+      }
+    },
+    updateFrameTimer() {
+      if (this.$refs.network) {
+        this.$refs.network.redraw();
+      }
+    },
+    startNodeAnimation() {
+      // start interval
+      this.updateFrameVar();
+    },
+    stopNodeAnimation() {
+      clearInterval(this.intervalid1);
+    },
+    async getPersonsCourseTasks(payload) {
+      const personsCourseTopics = await db
+        .collection("people")
+        .doc(payload.personId)
+        .collection(payload.courseId)
+        .get();
+
+      const tasksArr = [];
+      for (const topic of personsCourseTopics.docs) {
+        if (topic.data().topicStatus !== "locked") {
+          const tasks = await db
+            .collection("people")
+            .doc(payload.personId)
+            .collection(payload.courseId)
+            .doc(topic.id)
+            .collection("tasks")
+            .get();
+  
+          for (const task of tasks.docs) {
+            tasksArr.push({ topicId: topic.id, task: task.data() });
+          }
+        }
+      }
+      // console.log("tasksArr", tasksArr)
+      return tasksArr;
+    },
+    async getCourseTasks(payload) {
+
+      const courseTopics = await db
+        .collection("courses")
+        .doc(payload.courseId)
+        .collection("topics")
+        .get();
+
+      const tasksArr = [];
+      for (const topic of courseTopics.docs) {
+        const tasks = await db
+          .collection("courses")
+          .doc(payload.courseId)
+          .collection("topics")
+          .doc(topic.id)
+          .collection("tasks")
+          .get();
+
+        for (const task of tasks.docs) {
+          tasksArr.push({ topicId: topic.id, task: task.data() });
+        }
+      }
+      // console.log("tasksArr", tasksArr)
+      return tasksArr;
     },
   },
 };
