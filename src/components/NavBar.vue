@@ -54,7 +54,6 @@ export default {
   },
   watch: {
     $route(to, from) {
-      console.log("this.$route.name", this.$route.name);
       if (this.$route.name == "GalaxyView") {
         this.showNavMenu = false;
         this.showHamburgerMenu = true;
