@@ -20,11 +20,13 @@
         v-if="teacher"
         :addNodeMode="addNodeMode"
         :addEdgeMode="addEdgeMode"
+        :dragNodeMode="dragNodeMode"
         :uiMessage="uiMessage ? uiMessage : ''"
         :changeInPositions="changeInPositions"
         :nodePositionsChangeLoading="nodePositionsChangeLoading"
         @toggleAddNodeMode="toggleAddNodeMode"
         @toggleAddEdgeMode="toggleAddEdgeMode"
+        @toggleDragNodeMode="toggleDragNodeMode"
         @addNode="showAddDialog"
         @saveNodePositions="saveNodePositions"
       />
@@ -138,6 +140,7 @@ export default {
     return {
       addNodeMode: false,
       addEdgeMode: false,
+      dragNodeMode: false,
       uiMessage: "",
       coords: {},
       changeInPositions: false,
@@ -273,6 +276,7 @@ export default {
         this.$refs.vis.addNodeMode();
       }
       if (this.addEdgeMode) this.addEdgeMode = false;
+      if (this.dragNodeMode) this.dragNodeMode = false;
     },
     toggleAddEdgeMode() {
       this.$refs.vis.disableEditMode();
@@ -280,6 +284,22 @@ export default {
       if (this.addEdgeMode == true) {
         this.$refs.vis.addEdgeMode();
       }
+      if (this.addNodeMode) this.addNodeMode = false;
+      if (this.dragNodeMode) this.dragNodeMode = false;
+    },
+    toggleDragNodeMode() {
+      console.log("drag mode toggled");
+      this.$refs.vis.disableEditMode();
+      this.dragNodeMode = !this.dragNodeMode;
+      if (this.dragNodeMode == true) {
+        this.$refs.vis.dragNodeMode();
+      } else {
+        this.$refs.vis.disableDragMode();
+        this.changeInPositions = false;
+        // redraw solar systems
+        this.$refs.vis.drawSolarSystems();
+      }
+      if (this.addEdgeMode) this.addEdgeMode = false;
       if (this.addNodeMode) this.addNodeMode = false;
     },
     async bindTasks(courseId, topicId) {
