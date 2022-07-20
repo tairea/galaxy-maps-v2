@@ -1,6 +1,9 @@
 <template>
   <div class="full-height">
-    <LoadingSpinner v-if="!planets.length" text="loading galaxy"/>
+    <LoadingSpinner
+      v-if="!planets.length && !draggingNodes"
+      text="loading galaxy"
+    />
     <network
       v-if="nodesToDisplay"
       ref="network"
@@ -17,13 +20,13 @@
       @select-edge="selectEdge"
       @deselect-node="deselectNode"
       @deselect-edge="deselectEdge"
-      @hover-node="hoverNode"
       @blur-node="blurNode"
       @animation-finished="animationFinished"
       @before-drawing="beforeDrawing"
       @click="click"
       @double-click="doubleClick"
     ></network>
+    <!-- @hover-node="hoverNode" -->
 
     <!-- Attempt to put systems on top of nodes. need to explore drawing solar systems in canvas -->
     <!-- <div v-for="system in currentCourseNodes" :key="system.id">
@@ -51,13 +54,14 @@ export default {
   components: {
     Network,
     SolarSystem,
-    LoadingSpinner
+    LoadingSpinner,
   },
   data: () => ({
     loading: true,
     active: false,
     addingNode: false,
     addingEdge: false,
+    draggingNodes: false,
     network: {
       options: {
         physics: {
@@ -171,11 +175,11 @@ export default {
 
     // determine if person logged in and on galaxy view page is a teacher
     // if so, allow them to move the nodes
-    if (this.teacher && this.$route.name == "GalaxyView") {
-      this.network.options.interaction.dragNodes = true;
-    } else {
-      this.network.options.interaction.dragNodes = false;
-    }
+    // if (this.teacher && this.$route.name == "GalaxyView") {
+    //   this.network.options.interaction.dragNodes = true;
+    // } else {
+    //   this.network.options.interaction.dragNodes = false;
+    // }
 
     await this.$store.dispatch("bindCourseNodes", this.currentCourseId);
     await this.$store.dispatch("bindCourseEdges", this.currentCourseId);
@@ -201,14 +205,12 @@ export default {
       );
     }
 
-    // set up solar system planets
-    this.setupSolarSystemPlanets();
-    // start animation
-    this.startNodeAnimation();
+    console.log("this.network.options", this.network.options);
+
+    this.drawSolarSystems();
   },
   beforeDestroy() {
     this.stopNodeAnimation();
-    clearInterval(this.intervalid1);
     if (this.$refs.network) {
       this.$refs.network.destroy();
     }
@@ -295,10 +297,22 @@ export default {
     },
   },
   methods: {
+    drawSolarSystems() {
+      // set up solar system planets
+      this.setupSolarSystemPlanets();
+      // start animation
+      this.startNodeAnimation();
+    },
     disableEditMode() {
       this.$refs.network.disableEditMode();
-      (this.addingNode = false), (this.addingEdge = false);
-      this.active = false;
+      (this.addingNode = false),
+        (this.addingEdge = false),
+        (this.active = false);
+    },
+    disableDragMode() {
+      this.draggingNodes = false;
+      this.network.options.interaction.dragNodes = false;
+      this.planets = [];
     },
     getDomCoords(node) {
       let domCoords = this.$refs.network.canvasToDom({ x: node.x, y: node.y });
@@ -313,15 +327,27 @@ export default {
     addNodeMode() {
       this.active = true;
       this.addingNode = true;
-      this.$emit("setUiMessage", "Click on the map to add a node");
+      // this.$emit("setUiMessage", "Click on the map to add a node");
       this.$refs.network.addNodeMode();
     },
     addEdgeMode() {
       this.active = true;
-      this.$emit("setUiMessage", "Click and drag to connect two nodes");
+      // this.$emit("setUiMessage", "Click and drag to connect two nodes");
       this.$refs.network.addEdgeMode();
       // disable node hover
       this.addingEdge = true;
+    },
+    dragNodeMode() {
+      // TODO:
+      this.draggingNodes = true;
+      // stop animations
+      this.stopNodeAnimation();
+      // clear solar systems
+      this.planets = [];
+      this.$refs.network.redraw();
+      // enable node dragging
+      this.network.options.interaction.dragNodes = true;
+      //
     },
     addNode(data) {
       if (!this.active) return;
@@ -540,9 +566,9 @@ export default {
     async bindCourseTasks() {
       if (!this.teacher) {
         this.personsCourseTasks = await this.getPersonsCourseTasks({
-            personId: this.person.id,
-            courseId: this.currentCourseId,
-          });
+          personId: this.person.id,
+          courseId: this.currentCourseId,
+        });
       } else {
         this.courseTasks = await this.getCourseTasks({
           courseId: this.currentCourseId,
@@ -629,7 +655,7 @@ export default {
             .doc(topic.id)
             .collection("tasks")
             .get();
-  
+
           for (const task of tasks.docs) {
             tasksArr.push({ topicId: topic.id, task: task.data() });
           }
@@ -639,7 +665,6 @@ export default {
       return tasksArr;
     },
     async getCourseTasks(payload) {
-
       const courseTopics = await db
         .collection("courses")
         .doc(payload.courseId)

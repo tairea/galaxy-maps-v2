@@ -7,17 +7,17 @@
         :class="{ active: addNodeMode }"
         @click="toggleAddNodeMode"
       >
-        <div class="mapButton-text">
-          <p v-if="!addNodeMode" class="overline ma-0">Add a new node</p>
-          <p v-else class="ma-0" style="font-size: 0.7rem">
-            Click on the map to place a new node
-          </p>
-        </div>
         <div class="mapButton-icon" :class="{ activeIcon: addNodeMode }">
           <v-icon v-if="!addNodeMode" color="missionAccent"
             >mdi-dots-hexagon</v-icon
           >
           <v-icon v-else color="baseAccent">mdi-close</v-icon>
+        </div>
+        <div class="mapButton-text">
+          <p v-if="!addNodeMode" class="overline ma-0">Add a new node</p>
+          <p v-else class="ma-0" style="font-size: 0.7rem">
+            Click on the map to place a new node
+          </p>
         </div>
       </div>
 
@@ -34,29 +34,48 @@
           <v-icon v-else color="baseAccent">mdi-close</v-icon>
         </div>
         <div class="mapButton-text">
-          <p v-if="!addEdgeMode" class="overline ma-0">Add a new edge</p>
+          <p v-if="!addEdgeMode" class="overline ma-0">Connect Nodes</p>
           <p v-else class="ma-0" style="font-size: 0.7rem">
             Click and drag to connect two nodes
           </p>
         </div>
       </div>
-    </div>
 
-    <!-- New node positions Save Button -->
-    <v-btn
-      v-if="editMode && changeInPositions"
-      class="map-button-bottom"
-      color="baseAccent"
-      dark
-      small
-      outlined
-      tile
-      title="Save new node positions"
-      @click="saveNodePositions"
-      :loading="nodePositionsChangeLoading"
-    >
-      Save new positions
-    </v-btn>
+      <!-- EDIT NODE POSITIONS -->
+      <div
+        class="mapButton ml-4"
+        :class="{ active: dragNodeMode }"
+        @click="toggleDragNodeMode"
+      >
+        <div class="mapButton-icon" :class="{ activeIcon: dragNodeMode }">
+          <v-icon v-if="!dragNodeMode" color="missionAccent"
+            >mdi-arrow-expand-all</v-icon
+          >
+          <v-icon v-else color="baseAccent">mdi-close</v-icon>
+        </div>
+        <div class="mapButton-text">
+          <p v-if="!dragNodeMode" class="overline ma-0">
+            Change node positions
+          </p>
+          <p v-else class="ma-0" style="font-size: 0.7rem">
+            {{
+              changeInPositions
+                ? "CANCEL or SAVE new positions"
+                : "Click and drag to reposition node"
+            }}
+          </p>
+        </div>
+        <!-- SAVE NODE POSITIONS -->
+        <div
+          class="mapButton-icon"
+          v-if="changeInPositions"
+          :class="{ activeIcon: dragNodeMode }"
+          @click="saveNodePositions"
+        >
+          <v-icon color="baseAccent">mdi-content-save-check</v-icon>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -64,13 +83,21 @@
 export default {
   name: "GalaxyMapButtons",
   components: {},
-  props: [
-    "addNodeMode",
-    "addEdgeMode",
-    "changeInPositions",
-    "nodePositionsChangeLoading",
-    "uiMessage",
-  ],
+  props: {
+    addNodeMode: { default: false },
+    addEdgeMode: { default: false },
+    dragNodeMode: { default: false },
+    changeInPositions: { default: false },
+    nodePositionsChangeLoading: { default: false },
+  },
+  // [
+  //   "addNodeMode",
+  //   "addEdgeMode",
+  //   "dragNodeMode",
+  //   "changeInPositions",
+  //   "nodePositionsChangeLoading",
+  //   "uiMessage",
+  // ],
   async mounted() {},
   data() {
     return {};
@@ -86,6 +113,9 @@ export default {
     },
     toggleAddEdgeMode() {
       this.$emit("toggleAddEdgeMode");
+    },
+    toggleDragNodeMode() {
+      this.$emit("toggleDragNodeMode");
     },
     saveNodePositions() {
       this.$emit("saveNodePositions");
@@ -168,5 +198,9 @@ export default {
   .active {
     color: var(--v-baseAccent-base) !important;
   }
+}
+
+.overline {
+  line-height: 1rem !important;
 }
 </style>
