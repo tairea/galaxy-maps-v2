@@ -1,6 +1,7 @@
 <template>
   <div id="container" class="bg">
-    <div id="left-section">
+    <!-- <div class="left-section" :class="{ hide: hideLeftPanelsFlag }"> -->
+    <div class="left-section">
       <GalaxyInfo :course="currentCourse" :teacher="teacher" :draft="draft" />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <PublishGalaxy v-if="showPublish" :course="currentCourse" />
@@ -11,12 +12,14 @@
         :cohorts="cohortsInCourse"
         :teacher="teacher"
       />
+
       <BackButton />
     </div>
     <div id="main-section">
       <!-- Map Buttons -->
       <GalaxyMapButtons
         class="mt-8"
+        :class="{ hideButtons: hideLeftPanelsFlag }"
         v-if="teacher"
         :addNodeMode="addNodeMode"
         :addEdgeMode="addEdgeMode"
@@ -33,7 +36,6 @@
 
       <!-- ===== Galaxy Map ===== -->
       <GalaxyMap
-        v-if
         ref="vis"
         @add-node="showAddDialog"
         @edit-node="showEditDialog"
@@ -48,6 +50,8 @@
         @nodePositionsChangeLoading="nodePositionsChangeLoading = true"
         @nodePositionsChangeSaved="nodePositionsChangeSaved"
         @toggleAddEdgeMode="toggleAddEdgeMode"
+        @hideLeftPanels="hideLeftPanels"
+        @topicClicked="topicClicked($event)"
         :teacher="teacher"
       />
     </div>
@@ -79,39 +83,34 @@
       @closeDialog="closeDialog"
       @openDialog="openDialog"
     />
-    <!-- POPUP -->
-    <v-scale-transition>
-      <PopupSystemPreview
-        v-if="infoPopupShow"
-        ref="popup"
-        :infoPopupShow="infoPopupShow"
-        :infoPopupPosition="infoPopupPosition"
-        :currentTopic="currentNode"
-        :centerFocusPosition="centerFocusPosition"
-        :tasks="teacher ? topicsTasks : personsTopicsTasks"
-        :teacher="teacher"
-        @close="closePopup"
-        @showEditDialog="showEditDialog"
-        @focus="focusPopup"
-        @blur="blurPopup"
-      />
-    </v-scale-transition>
+
+    <!-- POPUP OUT PANEL-->
+    <SolarSystemInfoPanel
+      :selectedTopic="clickedTopicId"
+      @closeInfoPanel="closeInfoPanel"
+    />
   </div>
 </template>
 
 <script>
 import GalaxyInfo from "../components/GalaxyInfo";
-import AssignedInfo from "../components/AssignedInfo";
-import MissionsInfo from "../components/MissionsInfo";
-import MissionsList from "../components/MissionsList";
-import GalaxyMap from "../components/GalaxyMap";
-import BackButton from "../components/BackButton";
-import CreateEditDeleteNodeDialog from "../components/CreateEditDeleteNodeDialog";
-import GalaxyMapButtons from "../components/GalaxyMapButtons";
-import PopupSystemPreview from "../components/PopupSystemPreview";
 import PublishGalaxy from "../components/GalaxyView/PublishGalaxy";
+import AssignedInfo from "../components/AssignedInfo";
+import BackButton from "../components/BackButton";
+
+import GalaxyMap from "../components/GalaxyMap";
+import GalaxyMapButtons from "../components/GalaxyMapButtons";
+
+import CreateEditDeleteNodeDialog from "../components/CreateEditDeleteNodeDialog";
+
+import PopupSystemPreview from "../components/PopupSystemPreview";
+import SolarSystemInfoPanel from "../components/SolarSystemInfoPanel";
+
 import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame";
 import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame";
+
+import MissionsInfo from "../components/MissionsInfo";
+import MissionsList from "../components/MissionsList";
 
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters, mapActions, mapMutations } from "vuex";
@@ -134,6 +133,7 @@ export default {
     PublishGalaxy,
     RequestForHelpTeacherFrame,
     SubmissionTeacherFrame,
+    SolarSystemInfoPanel,
   },
   props: ["courseId"],
   data() {
@@ -164,6 +164,8 @@ export default {
       peopleInCourse: [],
       cohortsInCourse: [],
       selectedNode: {},
+      hideLeftPanelsFlag: false,
+      clickedTopicId: null,
     };
   },
   watch: {
@@ -328,6 +330,18 @@ export default {
       await this.bindTasks(this.currentCourseId, hoveredNode.id);
       this.infoPopupShow = true;
     },
+    hideLeftPanels(hideFlag) {
+      this.hideLeftPanelsFlag = hideFlag;
+    },
+    closeInfoPanel() {
+      this.clickedTopicId = null;
+      this.hideLeftPanelsFlag = false;
+      this.$refs.vis.exitSolarSystemPreview();
+      // this.$refs.listPanel.courseClicked();
+    },
+    topicClicked(emittedPayload) {
+      this.clickedTopicId = emittedPayload.topicId;
+    },
     selected(selected) {
       this.type = selected.type;
       this.infoPopupPosition.x = selected.DOMx;
@@ -427,7 +441,7 @@ export default {
   // border: 1px solid red;
 }
 
-#left-section {
+.left-section {
   width: 200px;
   height: 100%;
   display: flex;
@@ -438,6 +452,20 @@ export default {
   overflow-y: scroll;
   padding: 0px 0px 50px 20px;
   z-index: 3;
+  transition: all 0.3s;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+}
+
+.hide {
+  left: -200px;
+  top: 100%;
+}
+
+.hideButtons {
+  position: absolute;
+  bottom: -200px;
 }
 
 #main-section {

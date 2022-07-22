@@ -1,6 +1,6 @@
 <template>
   <div class="full-height">
-    <LoadingSpinner v-if="loading" text="loading learning universe"/>
+    <LoadingSpinner v-if="loading" text="loading learning universe" />
     <!-- <GradientBackground :gradients="gradients"/> -->
     <network
       ref="network"

@@ -131,6 +131,7 @@ export default {
   border: 1px solid var(--v-missionAccent-base);
   height: 45px;
   cursor: pointer;
+  backdrop-filter: blur(2px);
 }
 
 .active {

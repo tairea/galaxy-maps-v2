@@ -23,7 +23,8 @@
       @blur-node="blurNode"
       @animation-finished="animationFinished"
       @before-drawing="beforeDrawing"
-      @click="click"
+      @after-drawing="afterDrawing"
+      @click="click2"
       @double-click="doubleClick"
     ></network>
     <!-- @hover-node="hoverNode" -->
@@ -167,6 +168,9 @@ export default {
     courseTasks: [],
     planets: [],
     time: null,
+    inSystemPreviewView: false,
+    previewedNode: null,
+    numberOfTasksForThisTopic: 0,
   }),
   async mounted() {
     // var course = this.getCourseById(this.courseId);
@@ -224,6 +228,7 @@ export default {
     ]),
     ...mapState([
       "currentCourseId",
+      "currentTopicId",
       "currentCourseNodes",
       "currentCourseEdges",
       "personsTopics",
@@ -294,6 +299,9 @@ export default {
       }
       // return nodes with status to network map
       return edgesWithStatusStyles;
+    },
+    dark() {
+      return this.$vuetify.theme.isDark;
     },
   },
   methods: {
@@ -393,6 +401,61 @@ export default {
         this.deselectNode();
       }
     },
+    async click2(data) {
+      // 0) flag we in preview mode
+      this.inSystemPreviewView = true;
+      // 1) get closest node
+      const closestNode = this.getClosestNodeToClick(data);
+      this.previewedNode = closestNode;
+      // 2) zoom to node
+      this.zoomToNode(closestNode);
+      // 3) hide edges and labels
+      var options = { ...this.network.options };
+      options.edges.hidden = true; // hide edges
+      options.nodes.font.size = 0; // hide labels
+      this.$refs.network.setOptions(options);
+      // 4) minimise left panels & buttons
+      this.$emit("hideLeftPanels", true);
+      // 5) emit & save clicked topic node
+      this.$store.commit("setCurrentTopicId", closestNode.id);
+      this.$emit("topicClicked", { topicId: this.currentTopicId });
+      // 6) calc how many tasks for this topic
+      let tasksForThisTopic = this.tasks.filter(
+        (task) => task.topicId == this.currentTopicId
+      );
+      // 7) get number of tasks (used to calc size of circle mask to block out map)
+      this.numberOfTasksForThisTopic = tasksForThisTopic.length;
+    },
+    getClosestNodeToClick(clickData) {
+      // get click location
+      const clickedPosition = clickData.pointer.canvas;
+      // get all node locations (returns an object)
+      let allNodePositions = this.$refs.network.getPositions();
+      // convert object of positions to array of positions
+      const allNodePositionsArray = [];
+      for (const node in allNodePositions) {
+        allNodePositionsArray.push({
+          ...allNodePositions[node],
+          id: node,
+        });
+      }
+      // calc which node is closes to the click
+      let closest = null;
+      let shortestDistance = Number.MAX_SAFE_INTEGER;
+      for (let i = 0; i < allNodePositionsArray.length; i++) {
+        var d = this.distSquared(clickedPosition, allNodePositionsArray[i]);
+        if (d < shortestDistance) {
+          closest = allNodePositionsArray[i];
+          shortestDistance = d;
+        }
+      }
+      return this.$refs.network.getNode(closest.id);
+    },
+    distSquared(pt1, pt2) {
+      var diffX = pt1.x - pt2.x;
+      var diffY = pt1.y - pt2.y;
+      return diffX * diffX + diffY * diffY;
+    },
     dragStart(data) {
       this.deselectNode();
     },
@@ -459,22 +522,22 @@ export default {
       }
       return (this.newNodePositions = {});
     },
-    selectNode(data) {
-      if (this.addingNode || this.addingEdge) return;
-      this.active = true;
-      if (data.nodes.length == 1) {
-        // is type node
-        const nodeId = data.nodes[0];
-        this.$refs.network.focus(nodeId, { scale: 1.2, animation: true });
-        const selectedNode = this.$refs.network.getNode(nodeId);
-        selectedNode.type = "node";
-        selectedNode.connectedEdge = data.edges[0];
-        (selectedNode.DOMx = data.pointer.DOM.x),
-          (selectedNode.DOMy = data.pointer.DOM.y);
-        this.startNodeAnimation();
-        this.$emit("selected", selectedNode);
-      }
-    },
+    // selectNode(data) {
+    //   if (this.addingNode || this.addingEdge) return;
+    //   this.active = true;
+    //   if (data.nodes.length == 1) {
+    //     // is type node
+    //     const nodeId = data.nodes[0];
+    //     // this.$refs.network.focus(nodeId, { scale: 1.2, animation: true });
+    //     const selectedNode = this.$refs.network.getNode(nodeId);
+    //     selectedNode.type = "node";
+    //     selectedNode.connectedEdge = data.edges[0];
+    //     (selectedNode.DOMx = data.pointer.DOM.x),
+    //       (selectedNode.DOMy = data.pointer.DOM.y);
+    //     // this.startNodeAnimation();
+    //     this.$emit("selected", selectedNode);
+    //   }
+    // },
     selectEdge(data) {
       if (this.addingNode || this.addingEdge) return;
       this.active = true;
@@ -506,23 +569,23 @@ export default {
       focusedNode.type = "node";
       this.$emit("centerFocus", focusedNode);
     },
-    hoverNode(data) {
-      if (this.addingEdge == true || this.addingNode) return;
-      // this.stopNodeAnimation();
-      const nodeId = data.node;
-      const hoveredNode = this.$refs.network.getNode(nodeId);
-      hoveredNode.type = "node";
-      (hoveredNode.DOMx = data.pointer.DOM.x),
-        (hoveredNode.DOMy = data.pointer.DOM.y);
-      this.$emit("hoverNode", hoveredNode);
-    },
-    blurNode() {
-      this.$emit("blurNode");
-      if (this.active) return;
-      setTimeout(() => {
-        this.$emit("deselected");
-      }, 1000);
-    },
+    // hoverNode(data) {
+    //   if (this.addingEdge == true || this.addingNode) return;
+    //   // this.stopNodeAnimation();
+    //   const nodeId = data.node;
+    //   const hoveredNode = this.$refs.network.getNode(nodeId);
+    //   hoveredNode.type = "node";
+    //   (hoveredNode.DOMx = data.pointer.DOM.x),
+    //     (hoveredNode.DOMy = data.pointer.DOM.y);
+    //   this.$emit("hoverNode", hoveredNode);
+    // },
+    // blurNode() {
+    //   this.$emit("blurNode");
+    //   if (this.active) return;
+    //   setTimeout(() => {
+    //     this.$emit("deselected");
+    //   }, 1000);
+    // },
     hashCode(str) {
       let hash = 0;
       for (var i = 0; i < str.length; i++) {
@@ -547,6 +610,18 @@ export default {
       };
       return `#${f(0)}${f(8)}${f(4)}`;
     },
+    exitSolarSystemPreview() {
+      // bring edges back
+      var options = { ...this.network.options };
+      options.edges.hidden = false;
+      options.nodes.font.size = 14; // show labels
+      this.$refs.network.setOptions(options);
+      this.previewedNode = null;
+      this.inSystemPreviewView = false;
+      this.numberOfTasksForThisTopic = 0;
+      // this.$refs.network.fit();
+      this.zoomToNodes(this.$refs.network.nodes);
+    },
     // this controls the fit zoom animation
     zoomToNodes(nodes) {
       // nodes to zoom to
@@ -555,6 +630,18 @@ export default {
       this.$refs.network.fit({
         nodes: nodeIds,
         animation: true,
+      });
+    },
+    zoomToNode(node) {
+      // console.log("zooming to node", node);
+      this.$refs.network.moveTo({
+        position: { x: node.x, y: node.y },
+        scale: 3,
+        offset: { x: -200 },
+        animation: {
+          duration: 2000,
+          easingFunction: "easeInOutQuad",
+        },
       });
     },
     makeGalaxyLabelsColour(colour) {
@@ -579,12 +666,13 @@ export default {
       // get all tasks
       await this.bindCourseTasks();
 
-      let tasks = [];
+      this.tasks = [];
       if (!this.teacher) {
-        tasks = this.personsCourseTasks;
+        this.tasks = this.personsCourseTasks;
       } else {
-        tasks = this.courseTasks;
+        this.tasks = this.courseTasks;
       }
+      console.log("this.tasks", this.tasks);
 
       // get node ids
       const nodeIds = this.$refs.network.nodes.map(({ id }) => id);
@@ -594,7 +682,9 @@ export default {
       // loop nodes/topics
       Object.entries(nodePositionMap).forEach(
         async ([topicId, topicPosition]) => {
-          const topicsTasks = tasks.filter((task) => task.topicId == topicId);
+          const topicsTasks = this.tasks.filter(
+            (task) => task.topicId == topicId
+          );
 
           for (let i = 1; i <= topicsTasks.length; i++) {
             this.planets.push(
@@ -624,6 +714,41 @@ export default {
       // update planets orbits
       for (const planet of this.planets) {
         planet.update(ctx, delta);
+      }
+    },
+    // draw a rect with a hole. to blank out rest of map apart from the previewed system
+    // https://stackoverflow.com/questions/6271419/how-to-fill-the-opposite-shape-on-canvas
+    afterDrawing(ctx) {
+      if (this.inSystemPreviewView) {
+        // console.log({
+        //   width: ctx.canvas.width,
+        //   height: ctx.canvas.height,
+        //   clientWidth: ctx.canvas.clientWidth,
+        //   clientHeight: ctx.canvas.clientHeight,
+        //   offsetWidth: ctx.canvas.offsetWidth,
+        //   offsetHeight: ctx.canvas.offsetHeight,
+        // });
+        // console.log("this.previewedNode", this.previewedNode);
+        ctx.fillStyle = this.dark
+          ? this.$vuetify.theme.themes.dark.background
+          : this.$vuetify.theme.themes.light.background;
+        // ctx.fillStyle = "pink";
+        ctx.beginPath();
+        ctx.rect(
+          0 - ctx.canvas.offsetWidth,
+          0 - ctx.canvas.offsetHeight,
+          ctx.canvas.width,
+          ctx.canvas.height
+        );
+        ctx.arc(
+          this.previewedNode.x,
+          this.previewedNode.y,
+          20 * (this.numberOfTasksForThisTopic + 2), // masked circle is 2 rings out from furtherest ring
+          0,
+          2 * Math.PI,
+          true
+        );
+        ctx.fill();
       }
     },
     updateFrameTimer() {
