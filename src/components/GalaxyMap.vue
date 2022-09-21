@@ -16,18 +16,19 @@
       @dragging="dragging"
       @drag-start="dragStart"
       @drag-end="dragEnd"
-      @select-node="selectNode"
       @select-edge="selectEdge"
       @deselect-node="deselectNode"
       @deselect-edge="deselectEdge"
-      @blur-node="blurNode"
       @animation-finished="animationFinished"
       @before-drawing="beforeDrawing"
       @after-drawing="afterDrawing"
       @click="click2"
       @double-click="doubleClick"
     ></network>
-    <!-- @hover-node="hoverNode" -->
+    <!-- @hover-node="hoverNode" 
+          @select-node="selectNode"
+                @blur-node="blurNode"
+    -->
 
     <!-- Attempt to put systems on top of nodes. need to explore drawing solar systems in canvas -->
     <!-- <div v-for="system in currentCourseNodes" :key="system.id">
@@ -672,7 +673,8 @@ export default {
       } else {
         this.tasks = this.courseTasks;
       }
-      console.log("this.tasks", this.tasks);
+      console.log("got tasks in GalaxyMap", this.tasks);
+      this.$emit("courseTasks", this.tasks);
 
       // get node ids
       const nodeIds = this.$refs.network.nodes.map(({ id }) => id);
