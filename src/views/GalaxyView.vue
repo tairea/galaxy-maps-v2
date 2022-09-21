@@ -37,13 +37,13 @@
       <!-- ===== Galaxy Map ===== -->
       <GalaxyMap
         ref="vis"
+        :teacher="teacher"
         @add-node="showAddDialog"
         @edit-node="showEditDialog"
         @setUiMessage="setUiMessage"
         @drag-coords="updateDragCoords"
         @selected="selected"
         @deselected="deselect"
-        @hoverNode="hovered"
         @blurNode="blurNode"
         @centerFocus="centerFocus"
         @nodePositionsChanged="nodePositionsChanged"
@@ -52,8 +52,9 @@
         @toggleAddEdgeMode="toggleAddEdgeMode"
         @hideLeftPanels="hideLeftPanels"
         @topicClicked="topicClicked($event)"
-        :teacher="teacher"
+        @courseTasks="emittedCourseTasks($event)"
       />
+      <!--  @hoverNode="hovered" -->
     </div>
     <!--==== Right section ====-->
     <div v-if="!cohortsInCourse" id="right-section">
@@ -86,7 +87,8 @@
 
     <!-- POPUP OUT PANEL-->
     <SolarSystemInfoPanel
-      :selectedTopic="clickedTopicId"
+      :selectedTopic="clickedTopic"
+      :tasks="topicTasks"
       @closeInfoPanel="closeInfoPanel"
     />
   </div>
@@ -166,6 +168,9 @@ export default {
       selectedNode: {},
       hideLeftPanelsFlag: false,
       clickedTopicId: null,
+      clickedTopic: null,
+      courseTasks: [],
+      topicTasks: [],
     };
   },
   watch: {
@@ -304,43 +309,64 @@ export default {
       if (this.addEdgeMode) this.addEdgeMode = false;
       if (this.addNodeMode) this.addNodeMode = false;
     },
-    async bindTasks(courseId, topicId) {
-      if (!this.teacher) {
-        await this.$store.dispatch("bindPersonsTasksByTopicId", {
-          personId: this.person.id,
-          courseId: courseId,
-          topicId: topicId,
-        });
-      } else {
-        await this.$store.dispatch("bindTasksByTopicId", {
-          courseId: courseId,
-          topicId: topicId,
-        });
-      }
-    },
-    async hovered(hoveredNode) {
-      this.hoverNode = true;
-      // this.infoPopupShow = false;
-      this.centerFocusPosition = false;
-      this.type = hoveredNode.type;
-      this.infoPopupPosition.x = hoveredNode.DOMx;
-      this.infoPopupPosition.y = hoveredNode.DOMy;
-      this.currentNode = hoveredNode;
-      //bind tasks for popup preview
-      await this.bindTasks(this.currentCourseId, hoveredNode.id);
-      this.infoPopupShow = true;
-    },
+    // async bindTasks(courseId, topicId) {
+    //   if (!this.teacher) {
+    //     await this.$store.dispatch("bindPersonsTasksByTopicId", {
+    //       personId: this.person.id,
+    //       courseId: courseId,
+    //       topicId: topicId,
+    //     });
+    //   } else {
+    //     await this.$store.dispatch("bindTasksByTopicId", {
+    //       courseId: courseId,
+    //       topicId: topicId,
+    //     });
+    //   }
+    // },
+    // async hovered(hoveredNode) {
+    //   this.hoverNode = true;
+    //   // this.infoPopupShow = false;
+    //   this.centerFocusPosition = false;
+    //   this.type = hoveredNode.type;
+    //   this.infoPopupPosition.x = hoveredNode.DOMx;
+    //   this.infoPopupPosition.y = hoveredNode.DOMy;
+    //   this.currentNode = hoveredNode;
+    //   //bind tasks for popup preview
+    //   await this.bindTasks(this.currentCourseId, hoveredNode.id);
+    //   this.infoPopupShow = true;
+    // },
     hideLeftPanels(hideFlag) {
       this.hideLeftPanelsFlag = hideFlag;
     },
     closeInfoPanel() {
       this.clickedTopicId = null;
+      this.clickedTopic = null;
+      this.topicTasks = [];
       this.hideLeftPanelsFlag = false;
       this.$refs.vis.exitSolarSystemPreview();
       // this.$refs.listPanel.courseClicked();
     },
-    topicClicked(emittedPayload) {
+    async topicClicked(emittedPayload) {
+      // get topic id
       this.clickedTopicId = emittedPayload.topicId;
+      // get topic
+      this.clickedTopic = this.currentCourseNodes.find(
+        (node) => node.id == this.clickedTopicId
+      );
+      // loop courseTasks for this topic id (= this.topicTasks)
+      for (const task of this.courseTasks) {
+        if (task.topicId == this.clickedTopicId) {
+          this.topicTasks.push(task.task);
+        }
+      }
+      // order topic tasks by created
+      this.topicTasks = this.topicTasks.sort(
+        (objA, objB) =>
+          Number(objA.taskCreatedTimestamp) - Number(objB.taskCreatedTimestamp)
+      );
+    },
+    emittedCourseTasks(emittedPayload) {
+      this.courseTasks = emittedPayload;
     },
     selected(selected) {
       this.type = selected.type;
