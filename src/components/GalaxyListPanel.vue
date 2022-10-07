@@ -43,14 +43,33 @@
         <!-- TEACHING -->
         <div>
           <p class="galaxyListPanelLabel overline mx-4">TEACHING 
-            <v-icon 
+            <!-- <v-icon 
               small 
               @click="$emit('createGalaxy')" 
               class="ml-12 add-galaxy-icon" 
               color="galaxyAccent"
             >
               mdi-plus
-            </v-icon></p>
+            </v-icon> -->
+            </p>
+                <!-- Create NEW GALAXY button -->
+          <!-- <div class="newGalaxyButton">
+            Create New Galaxy +
+          </div> -->
+          <div class="d-flex justify-center mb-4">
+              <v-btn 
+                x-small 
+                color="missionAccent" 
+                
+                @click="$emit('createGalaxy')"
+                outlined
+                class="py-4 px-6"
+              >
+                <v-icon x-small class="pr-2">mdi-plus</v-icon> 
+                MAP NEW GALAXY
+              </v-btn>
+            </div>
+
           <div v-if="getTeachingCourses.length">
             <!-- COURSE CARD -->
             <GalaxyListPanelCard
@@ -65,7 +84,7 @@
             <!-- <p class="galaxyListPanelContent text-center">
               NO CREATED MAPS
             </p> -->
-            <div class="d-flex justify-center mb-4">
+            <!-- <div class="d-flex justify-center mb-4">
               <v-btn 
                 x-small 
                 color="missionAccent" 
@@ -75,7 +94,7 @@
                 <v-icon x-small class="pr-2">mdi-plus</v-icon> 
                 MAP NEW GALAXY
               </v-btn>
-            </div>
+            </div> -->
           </div>
         </div>
         <!-- ALL -->

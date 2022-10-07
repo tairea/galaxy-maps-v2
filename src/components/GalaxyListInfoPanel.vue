@@ -121,10 +121,10 @@ export default {
 }
 /* Handle */
 *::-webkit-scrollbar-thumb {
-  background: var(--v-galaxyAccent-base);
+  background: var(--v-missionAccent-base);
 }
 /* Handle on hover */
 *::-webkit-scrollbar-thumb:hover {
-  background: var(--v-galaxyAccent-base);
+  background: var(--v-missionAccent-base);
 }
 </style>
