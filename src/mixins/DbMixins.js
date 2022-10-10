@@ -11,10 +11,17 @@ export const dbMixins = {
   },
   methods: {
     MXaddExistingUserToCohort(person, cohort) {
-      return this.MXaddStudentToCohort(person, cohort).then(() => {
+      return this.MXaddStudentToCohort(person, cohort)
+      .then(() => {
         if (person.inviter?.length == 0) person.inviter = this.person.firstName + ' ' + this.person.lastName;
         this.MXsendNewCohortEmail(person, cohort);
-      });
+      }).then(() => {
+        this.$store.commit("setSnackbar", {
+          show: true,
+          text: "student added to cohort",
+          color: "baseAccent",
+        });
+      })
     },
     MXaddStudentToCohort(student, currentCohort) {
       let cohort = currentCohort ? currentCohort : this.currentCohort
@@ -116,7 +123,13 @@ export const dbMixins = {
         })
         .then(() => {
           this.sendNewCourseEmail(person, course);
-        }); 
+        }).then(() => {
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: `student assigned to ${course.title} galaxy`,
+            color: "baseAccent",
+          });
+        })
     },
     sendNewCourseEmail(person, course) {
       const data = {

@@ -212,21 +212,11 @@ export default {
           .then(() => {
             this.MXaddExistingUserToCohort(personExists);
           }).then(() => {
-            this.$store.commit("setSnackbar", {
-              show: true,
-              text: "student added to cohort",
-              color: "baseAccent",
-            });
             if (this.currentCohort.courses.length) {
               this.currentCohort.courses.forEach(async (courseId) => {
                 let course = await getCourseById(courseId);
                 this.MXassignCourseToStudent(personExists, course)
                 .then(() => {
-                  this.$store.commit("setSnackbar", {
-                    show: true,
-                    text: `student assigned to ${course.title} galaxy`,
-                    color: "baseAccent",
-                  });
                   this.assignTopicsAndTasksToStudent(personExists, course)
                   .then(() => {
                     this.$store.commit("setSnackbar", {
@@ -271,11 +261,6 @@ export default {
                     let course = await getCourseById(courseId);
                     this.MXassignCourseToStudent(person, course)
                     .then(() => {
-                      this.$store.commit("setSnackbar", {
-                        show: true,
-                        text: `student assigned to ${course.title} galaxy`,
-                        color: "baseAccent",
-                      });
                       this.assignTopicsAndTasksToStudent(person, course)
                       .then(() => {
                         this.$store.commit("setSnackbar", {

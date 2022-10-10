@@ -343,7 +343,7 @@ export default {
 
           this.$store.commit("setSnackbar", {
             show: true,
-            text: "Submission sent. You will be notified when your instructor has reviewd your work.",
+            text: "Submission sent. You will be notified when your instructor has reviewed your work.",
             color: "baseAccent",
           });
         })
@@ -430,7 +430,7 @@ export default {
 
           this.$store.commit("setSnackbar", {
             show: true,
-            text: "Submission sent. You will be notified when your instructor has reviewd your work.",
+            text: "Submission sent. You will be notified when your instructor has reviewed your work.",
             color: "baseAccent",
           });
         })
