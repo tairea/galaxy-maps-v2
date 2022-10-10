@@ -366,7 +366,6 @@ export default {
       // If we dont already have the students Id, check if they already have an account using their email
       const personExists = await this.MXgetPersonByEmail(profile.email);
       if (personExists) {
-        debugger
         this.handleAssignment(personExists, this.currentCourse);
       } else {
         //create the persons account
@@ -382,17 +381,16 @@ export default {
     handleAssignment(person, course) {
       this.MXassignCourseToStudent(person, course)
         .then(() => {
-          debugger
           this.MXaddExistingUserToCohort(person, this.cohort);
         })
         .then(() => {
-          debugger
           this.$store.commit("setSnackbar", {
             show: true,
             text: "Individual assigned to Course",
             color: "baseAccent",
           });
           this.$emit('newAssignment', person)
+          console.log('should assignTopicsAndTasksToStudent')
           this.close();
         })
         .catch((error) => {
