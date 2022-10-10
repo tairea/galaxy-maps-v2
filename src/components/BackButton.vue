@@ -9,16 +9,16 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
+import { mapState } from "vuex";
 export default {
   name: "BackButton",
   props: ["toPath"],
   computed: {
-    ...mapState(['from']),
+    ...mapState(["from"]),
     route() {
-      if (this.from.includes("system")) return "/base/galaxies"
-      return this.from
-    }
+      if (this.from.includes("system")) return "/base/galaxies";
+      return this.from;
+    },
   },
   methods: {
     backToWhat(path) {
@@ -46,7 +46,7 @@ export default {
 
 <style lang="scss" scoped>
 .backButtonDiv {
-  margin-top: 30px;
+  margin-top: 15px;
   width: calc(100% - 30px);
   z-index: 999;
 }

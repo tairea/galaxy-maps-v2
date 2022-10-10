@@ -1,0 +1,264 @@
+<template>
+  <div class="galaxyInfoPanel" :style="selectedTopic ? 'right: 0px' : ''">
+    <div class="panelContent">
+      <div class="panelContentInner" v-if="selectedTopic">
+        <v-btn
+          icon
+          small
+          color="missionAccent"
+          class="close-button"
+          @click="closeInfoPanel"
+        >
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+        <p class="topicTitle overline">{{ selectedTopic.label }}</p>
+        <div class="card-container">
+          <div v-for="(task, index) in tasks" :key="task.id" class="task-card">
+            <p class="task-number overline">MISSION {{ index + 1 }}</p>
+            <p class="task-title m0">{{ task.title }}</p>
+            <p
+              class="task-status oevrline m0"
+              :class="{
+                completed: task.taskStatus == 'completed',
+                locked: task.taskStatus == 'locked',
+                inreview: task.taskStatus == 'inreview',
+                active: task.taskStatus == 'active',
+              }"
+            >
+              {{ task.taskStatus }}
+            </p>
+          </div>
+        </div>
+        <div class="bottom">
+          <v-btn
+            class="view-ss-button pa-5"
+            dark
+            small
+            color="missionAccent"
+            outlined
+            tile
+            @click="routeToSolarSystem"
+          >
+            View System
+          </v-btn>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { mapState, mapGetters } from "vuex";
+
+export default {
+  name: "SolarSystemInfoPanel",
+  props: ["selectedTopic", "tasks"],
+  components: {},
+  data() {
+    return {
+      allCourses: [],
+      selectedGalaxy: false,
+      activeLearning: null,
+      activeTeaching: null,
+      activePublic: null,
+    };
+  },
+  async mounted() {
+    console.log("selected topic is:", this.selectedTopic);
+  },
+  computed: {
+    ...mapState([
+      "person",
+      "courses",
+      "cohorts",
+      "topicsTasks",
+      "personsTopicsTasks",
+    ]),
+    ...mapGetters(["getCourseById"]),
+    // filteredTasks() {
+    //   return this.tasks.filter((task) => task.topicId == this.selectedTopic);
+    // },
+  },
+  methods: {
+    closeInfoPanel() {
+      this.$emit("closeInfoPanel");
+    },
+    routeToSolarSystem() {
+      // console.log("route to ss", this.currentTopic.id);
+      // save current topic to store
+      this.$store.commit("setCurrentTopicId", this.selectedTopic.id);
+      this.$store.commit("setCurrentTopic", this.selectedTopic);
+      // save active task to store if we know it
+      const activeMission = this.tasks.find(
+        (topicObj) => topicObj.taskStatus == "active"
+      );
+      if (activeMission) {
+        this.$store.commit("setCurrentTaskId", activeMission.id);
+      }
+      // route to topic/solar system
+      this.$router.push({
+        name: "SolarSystemView",
+        params: {
+          topicId: this.selectedTopic.id,
+          teacher: this.teacher,
+        },
+      });
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.galaxyInfoPanel {
+  background: var(--v-background-darken1);
+  width: 350px;
+  height: 600px;
+  position: fixed;
+  top: calc(50% - 300px);
+  right: -350px;
+  transition: all 0.3s ease-out;
+  z-index: 200;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 15% 100%, 0 95%);
+
+  .panelContent {
+    height: calc(100% - 40px);
+    width: auto;
+    margin: 20px 0px 30px 20px;
+    background: var(--v-missionAccent-base);
+    margin-right: -2px;
+    position: relative;
+
+    .panelContentInner {
+      position: relative;
+      height: 99%;
+      width: 99.5%;
+      overflow-y: scroll;
+      overflow-x: hidden;
+
+      .topicTitle {
+        color: var(--v-missionAccent-base);
+        border-bottom: 1px solid var(--v-missionAccent-base);
+        padding: 10px 0px 10px 20px;
+        margin: 0px;
+      }
+
+      .close-button {
+        position: absolute;
+        top: 0;
+        right: 0;
+      }
+
+      .card-container {
+        display: flex;
+        flex-wrap: wrap;
+        width: 100%;
+
+        .task-card {
+          border: 1px solid var(--v-missionAccent-base);
+          padding: 10px;
+          margin-top: 20px;
+          margin-left: 20px;
+          color: var(--v-missionAccent-base);
+          width: 125px;
+          height: 100px;
+          font-size: 0.7rem;
+
+          .task-number {
+            font-size: 0.7rem !important;
+            margin: 0px;
+          }
+
+          .task-title,
+          .task-status {
+            margin: 0px;
+          }
+
+          .task-status {
+            margin-top: 10px;
+            text-transform: uppercase;
+            font-weight: 800;
+          }
+
+          .completed {
+            color: var(--v-baseAccent-base);
+          }
+          .inreview {
+            color: var(--v-cohortAccent-base);
+          }
+          .active {
+            color: var(--v-galaxyAccent-base);
+          }
+        }
+      }
+
+      .bottom {
+        position: absolute;
+        bottom: 30px;
+        width: 100%;
+        height: 50px;
+        border-top: 1px solid var(--v-missionAccent-base);
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        .view-ss-button {
+          width: 70%;
+          margin-top: 30px;
+          background-color: var(--v-background-base);
+        }
+      }
+    }
+
+    .galaxyListPanelLabel {
+      color: var(--v-galaxyAccent-base);
+      position: relative;
+      border-bottom: 1px solid var(--v-galaxyAccent-base);
+    }
+
+    .galaxyListPanelContent {
+      color: var(--v-galaxyAccent-base);
+      position: relative;
+      font-size: 0.6rem;
+      letter-spacing: 1px;
+    }
+  }
+
+  .panelContent:before {
+    content: "";
+    width: 99%;
+    height: calc(100% - 2px);
+    background: var(--v-background-darken1);
+    display: block;
+    position: absolute;
+    top: 1px;
+    left: 1px;
+  }
+  .panelContent,
+  .panelContent:before {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 15% 100%, 0% 95%);
+  }
+}
+
+.galaxyListPanel:hover {
+  left: 0px;
+}
+
+*::-webkit-scrollbar {
+  width: 5px;
+}
+/* Track */
+*::-webkit-scrollbar-track {
+  background: var(--v-background-base);
+  margin-top: 1px;
+  margin-bottom: 25px;
+}
+/* Handle */
+*::-webkit-scrollbar-thumb {
+  background: var(--v-galaxyAccent-base);
+}
+/* Handle on hover */
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--v-galaxyAccent-base);
+}
+</style>
