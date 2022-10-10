@@ -609,7 +609,8 @@ export default {
 
       switch (status) {
         case "draft":
-          colour = "rgba(250,242,0,0.3)"; // cohortAccent as rgba
+          //colour = "rgba(250,242,0,0.3)"; // cohortAccent as rgba
+          colour = "rgba(255,255,255,0.3)"; // cohortAccent as rgba
           break;
         case "public":
           colour = "rgba(105,161,226,0.3)"; // missionAccent as rgba

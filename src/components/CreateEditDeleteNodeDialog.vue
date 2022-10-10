@@ -49,6 +49,7 @@
                 mode="hexa"
                 value="#69a1e2"
                 width="90%"
+                :swatches="dark ? darkSwatches : lightSwatches"
               ></v-color-picker>
 
               <!-- <v-tooltip right>
@@ -182,7 +183,12 @@
               DELETE
             </v-btn>
 
-            <v-btn outlined color="white" class="ml-2" @click="close">
+            <v-btn
+              outlined
+              :color="dark ? 'yellow' : '#577399'"
+              class="ml-2"
+              @click="close"
+            >
               <v-icon left> mdi-close </v-icon>
               Cancel
             </v-btn>
@@ -234,7 +240,7 @@
 
           <v-btn
             outlined
-            :color="$vuetify.theme.dark ? 'yellow' : 'f7f7ff'"
+            :color="dark ? 'yellow' : '#577399'"
             class="ml-2"
             @click="cancelDeleteDialog()"
           >
@@ -334,6 +340,8 @@ export default {
       //   },
       // ],
       prerequisites: false,
+      darkSwatches: [["#69A1E2"], ["#E269CF"], ["#00E676"]],
+      lightSwatches: [["#577399"], ["#fe5f55"], ["#495867"]],
     };
   },
   computed: {
@@ -747,7 +755,7 @@ export default {
 
 .action-buttons {
   width: 100%;
-  padding: 20px;
+  padding: 10px;
 }
 
 .color-picker {
