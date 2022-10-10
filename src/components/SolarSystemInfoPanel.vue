@@ -12,7 +12,16 @@
           <v-icon>mdi-close</v-icon>
         </v-btn>
         <div class="topicTitleContainer">
-          <p class="topicTitle overline">{{ selectedTopic.label }}</p>
+          <p
+            class="topicTitle overline"
+            :style="
+              selectedTopic.color
+                ? 'color:' + selectedTopic.color
+                : 'color:var(--v-missionAccent-base)'
+            "
+          >
+            {{ selectedTopic.label }}
+          </p>
           <v-btn
             icon
             x-small
@@ -165,8 +174,8 @@ export default {
       }
 
       .topicTitle {
-        color: var(--v-missionAccent-base);
-
+        // color: var(--v-missionAccent-base);
+        font-weight: 800;
         padding: 10px 0px 10px 20px;
         margin: 0px;
       }

@@ -218,6 +218,19 @@ export default {
       this.$refs.network.destroy();
     }
   },
+  watch: {
+    darkMode(dark) {
+      if (dark == false) {
+        this.makeGalaxyLabelsColour(
+          this.$vuetify.theme.themes.light.baseAccent
+        );
+        this.makePlanetsColour(this.$vuetify.theme.themes.light.missionAccent);
+      } else {
+        this.makeGalaxyLabelsColour("#ffffff");
+        this.makePlanetsColour("white");
+      }
+    },
+  },
   computed: {
     ...mapGetters([
       "getTopicById",
@@ -233,6 +246,7 @@ export default {
       "personsTopics",
       "personsTopicsTasks",
       "topicsTasks",
+      "darkMode",
     ]),
     nodesToDisplay() {
       if (this.currentCourseNodes.length && this.currentCourseNodes[0]?.id) {
@@ -652,6 +666,11 @@ export default {
       this.$refs.network.setOptions(options);
       this.$refs.network.fit();
     },
+    makePlanetsColour(colour) {
+      for (const planet of this.planets) {
+        planet.color = colour;
+      }
+    },
     async bindCourseTasks() {
       if (!this.teacher) {
         this.personsCourseTasks = await this.getPersonsCourseTasks({
@@ -702,7 +721,9 @@ export default {
                 topicPosition.x,
                 topicPosition.y,
                 2, // planet size
-                "white", // planet colour
+                this.dark
+                  ? "white"
+                  : this.$vuetify.theme.themes.light.missionAccent, // planet colour
                 6.28 / 5, // planet speed (6.28 radians in a circle. so 6.28 is full circle in 1 second. divide by something to slow it down)
                 20 * i // planet orbit size
               )
@@ -723,7 +744,11 @@ export default {
       }
       // update planets orbits
       for (const planet of this.planets) {
-        planet.update(ctx, delta);
+        //TODO: does this ternary slow things down
+        const strokeColor = this.dark
+          ? "rgba(255, 255, 255, 0.15)"
+          : "rgba(0, 0, 0, 0.15)";
+        planet.update(ctx, delta, strokeColor);
       }
     },
     // draw a rect with a hole. to blank out rest of map apart from the previewed system

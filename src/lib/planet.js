@@ -19,7 +19,7 @@ export class Planet {
         this.y = this.startingPos.y + Math.sin(this.radian) * this.orbitRadius;
     }
 
-    draw(ctx) {
+    draw(ctx,strokeColor) {
         // Planet Path
         ctx.beginPath();
         ctx.lineWidth = 1;
@@ -31,7 +31,8 @@ export class Planet {
             Math.PI * 2,
             false
         );
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+        // ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+        ctx.strokeStyle = strokeColor;
         ctx.stroke();
         ctx.closePath();
 
@@ -43,8 +44,8 @@ export class Planet {
         ctx.closePath();
     }
 
-    update(ctx, delta) {
-        this.draw(ctx);
+    update(ctx, delta, strokeColor) {
+        this.draw(ctx,strokeColor);
 
         this.radian += this.velocity * delta; // increase our angle every animation frame
         // Get the new x based on our new angle and radius
