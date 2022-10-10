@@ -619,7 +619,8 @@ export default {
           colour = "rgba(226,105,207,0.3)"; // galaxyAccent as rgba
           break;
         case "submitted":
-          colour = "rgba(0,230,118,0.3)"; // baseAccent as rgba
+          //colour = "rgba(0,230,118,0.3)"; // baseAccent as rgba
+          colour = "rgba(250,242,0,0.3)"; // cohortAccent as rgba
           break;
         case "assigned":
           colour = "rgba(105,161,226,0.3)"; // missionAccent as rgba

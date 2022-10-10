@@ -13,7 +13,10 @@
       Status: <span class="font-weight-black">{{ course.status }}</span>
     </p>
     <!-- Visibility -->
-    <p v-if="course.status === 'submitted'" class="galaxy-status overline mb-0">
+    <p
+      v-if="course.status === 'submitted'"
+      class="galaxy-status overline mb-0 in-review"
+    >
       awaiting review
     </p>
     <p v-else class="galaxy-status overline mb-0">
@@ -111,5 +114,9 @@ export default {
 .galaxy-status {
   font-size: 0.6rem !important;
   line-height: 1rem !important;
+}
+
+.in-review {
+  color: var(--v-cohortAccent-base);
 }
 </style>

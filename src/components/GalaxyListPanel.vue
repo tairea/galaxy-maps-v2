@@ -42,7 +42,8 @@
         </div>
         <!-- TEACHING -->
         <div>
-          <p class="galaxyListPanelLabel overline mx-4">TEACHING 
+          <p class="galaxyListPanelLabel overline mx-4">
+            TEACHING
             <!-- <v-icon 
               small 
               @click="$emit('createGalaxy')" 
@@ -51,24 +52,23 @@
             >
               mdi-plus
             </v-icon> -->
-            </p>
-                <!-- Create NEW GALAXY button -->
+          </p>
+          <!-- Create NEW GALAXY button -->
           <!-- <div class="newGalaxyButton">
             Create New Galaxy +
           </div> -->
           <div class="d-flex justify-center mb-4">
-              <v-btn 
-                x-small 
-                color="missionAccent" 
-                
-                @click="$emit('createGalaxy')"
-                outlined
-                class="py-4 px-6"
-              >
-                <v-icon x-small class="pr-2">mdi-plus</v-icon> 
-                MAP NEW GALAXY
-              </v-btn>
-            </div>
+            <v-btn
+              x-small
+              color="missionAccent"
+              @click="$emit('createGalaxy')"
+              outlined
+              class="py-4 px-6"
+            >
+              <v-icon x-small class="pr-2">mdi-plus</v-icon>
+              MAP NEW GALAXY
+            </v-btn>
+          </div>
 
           <div v-if="getTeachingCourses.length">
             <!-- COURSE CARD -->
@@ -192,9 +192,7 @@ export default {
     },
     // TEACHERING GALAXIES
     getSubmittedCourses() {
-      return this.courses.filter(
-        (course) => course.status == "submitted"
-      );
+      return this.courses.filter((course) => course.status == "submitted");
     },
     // TEACHERING GALAXIES
     getTeachingCourses() {
