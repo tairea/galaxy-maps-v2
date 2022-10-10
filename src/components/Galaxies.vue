@@ -1,8 +1,12 @@
 <template>
   <div class="full-height">
     <LoadingSpinner v-if="loading" text="loading learning universe" />
+    <p v-if="nodesToDisplay.length == 0" class="overline noGalaxies">
+      NO GALAXIES TO DISPLAY
+    </p>
     <!-- <GradientBackground :gradients="gradients"/> -->
     <network
+      v-if="allNodesForDisplay.length != 0"
       ref="network"
       class="full-height"
       :nodes="allNodesForDisplay"
@@ -178,6 +182,10 @@ export default {
         if (repositionedNodes.length) {
           this.$store.commit("updateAllNodesForDisplay", repositionedNodes);
         }
+      } else {
+        // no nodes to load
+        this.loading = false;
+        return;
       }
       this.centerAfterReposition();
     },
@@ -531,6 +539,7 @@ export default {
     },
     // this controls the fit zoom animation
     zoomToNodes(nodes) {
+      console.log("zoom to nodes called");
       // get node ids
       var nodeIds = nodes.map((x) => x.id);
       // // fit
@@ -648,7 +657,7 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  color: var(--v-baseAccent-base);
+  color: var(--v-missionAccent-base);
 }
 
 .popupPanel {

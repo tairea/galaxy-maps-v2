@@ -1,9 +1,7 @@
 <template>
   <div class="full-height">
-    <LoadingSpinner
-      v-if="!planets.length && !draggingNodes"
-      text="loading galaxy"
-    />
+    <LoadingSpinner v-if="loading" text="loading galaxy" />
+    <!-- loading = !planets.length && !draggingNodes -->
     <network
       v-if="nodesToDisplay"
       ref="network"
@@ -311,6 +309,8 @@ export default {
       this.setupSolarSystemPlanets();
       // start animation
       this.startNodeAnimation();
+      // if our solar systems are loading, disable spinner
+      this.loading = false;
     },
     disableEditMode() {
       this.$refs.network.disableEditMode();
@@ -403,6 +403,7 @@ export default {
       }
     },
     async click2(data) {
+      if (this.addingNode || this.addingEdge) return;
       // 0) flag we in preview mode
       this.inSystemPreviewView = true;
       // 1) get closest node
@@ -673,6 +674,13 @@ export default {
       } else {
         this.tasks = this.courseTasks;
       }
+
+      // no tasks means no planets
+      if (this.tasks.length == 0) {
+        this.loading = false;
+        return;
+      }
+
       console.log("got tasks in GalaxyMap", this.tasks);
       this.$emit("courseTasks", this.tasks);
 

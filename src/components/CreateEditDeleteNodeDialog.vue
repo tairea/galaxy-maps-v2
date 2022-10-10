@@ -41,7 +41,7 @@
               Node color:
               <v-color-picker
                 v-model="currentNode.color"
-                class="ma-2 color-picker"          
+                class="ma-2 color-picker"
                 show-swatches
                 hide-canvas
                 hide-inputs
@@ -89,7 +89,9 @@
               }"
             ></v-select> -->
 
-            <!-- Node Pre-requisites -->
+              <!-- Node Pre-requisites -->
+            </p>
+
             <p class="dialog-description">
               Node Prerequisites:
               <v-tooltip right>
@@ -147,6 +149,7 @@
           <!-- Action buttons -->
           <div class="action-buttons">
             <v-btn
+              v-if="!editing"
               outlined
               color="green darken-1"
               @click="saveNode(currentNode)"
@@ -155,6 +158,17 @@
             >
               <v-icon left> mdi-check </v-icon>
               SAVE
+            </v-btn>
+            <v-btn
+              v-else
+              outlined
+              color="green darken-1"
+              @click="saveNode(currentNode)"
+              class="mr-2"
+              :loading="loading"
+            >
+              <v-icon left> mdi-check </v-icon>
+              UPDATE
             </v-btn>
 
             <v-btn
@@ -239,7 +253,7 @@
 import firebase from "firebase/app";
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
-import { getPersonsTopicById } from '@/lib/ff'; 
+import { getPersonsTopicById } from "@/lib/ff";
 
 export default {
   name: "CreateEditDeleteNodeDialog",
@@ -274,7 +288,8 @@ export default {
       // loop over the ordered time array
       let arrTime = timeCreatedArrs[a];
       for (let b in timeCreatedArrs) {
-        let timeStamp = this.currentCourseNodes[b].nodeCreatedTimestamp?.seconds;
+        let timeStamp =
+          this.currentCourseNodes[b].nodeCreatedTimestamp?.seconds;
         if (arrTime == timeStamp) {
           let node = this.currentCourseNodes[b];
           this.sortedObjArr.push(node);
@@ -293,7 +308,7 @@ export default {
     }
     if (!this.editing) {
       this.currentNode.label = "";
-      this.currentNode.color = "#69a1e2"
+      this.currentNode.color = "#69a1e2";
     }
   },
   data() {
@@ -400,8 +415,8 @@ export default {
         .set({ ...node, topicCreatedTimestamp: new Date() })
         .then((docRef) => {
           console.log("Topic successfully written!: ", docRef);
-          console.log("Topic node: ", node)
-          this.saveTopicToStudents(node)
+          console.log("Topic node: ", node);
+          this.saveTopicToStudents(node);
           this.loading = false;
           this.close();
         })
@@ -418,7 +433,6 @@ export default {
         .catch((error) => {
           console.error("Error incrementing topicTotal: ", error);
         });
-        
     },
     deleteDialog() {
       this.dialogConfirm = true;
@@ -484,8 +498,8 @@ export default {
         .catch((error) => {
           console.error("Error decrementing topicTotal: ", error);
         });
-      
-      this.deleteTopicForStudents(this.currentNode)
+
+      this.deleteTopicForStudents(this.currentNode);
       // close
       this.close();
     },
@@ -506,75 +520,90 @@ export default {
         });
     },
     async saveTopicToStudents(node) {
-
       // get all students currently assigned to course
-      const allStudents = await db.collection("people")
+      const allStudents = await db
+        .collection("people")
         .where("assignedCourses", "array-contains", this.currentCourseId)
         .get();
-      
+
       // for each student
-      allStudents.forEach(async doc => {
-        const student = doc.id
+      allStudents.forEach(async (doc) => {
+        const student = doc.id;
 
         // set reference to this course
-        const courseRef = await db.collection('people')
+        const courseRef = await db
+          .collection("people")
           .doc(student)
-          .collection(this.currentCourseId)
-        
-        // check if the student has already started the course. If not they will be assigned this topic when they start the course  
-        const studentHasStartedCourse = await courseRef.get().then((subQuery) => {return subQuery.docs.length})
+          .collection(this.currentCourseId);
+
+        // check if the student has already started the course. If not they will be assigned this topic when they start the course
+        const studentHasStartedCourse = await courseRef
+          .get()
+          .then((subQuery) => {
+            return subQuery.docs.length;
+          });
 
         if (studentHasStartedCourse) {
-          
-          // if editing a node dont update the student 
+          // if editing a node dont update the student
           if (this.editing) {
-            console.log('only updating node we dont need to check status: ', node)
+            console.log(
+              "only updating node we dont need to check status: ",
+              node
+            );
             // only updating node we dont need to check status
             await courseRef.doc(node.id).update(node);
           } else {
-
             // if the new node has set prerequisites
             if (node.prerequisites?.length) {
               // get the prerequisite topic
-              const topic = await getPersonsTopicById(student, this.currentCourseId, node.prerequisites[0])
-              console.log('topic: ', topic)
+              const topic = await getPersonsTopicById(
+                student,
+                this.currentCourseId,
+                node.prerequisites[0]
+              );
+              console.log("topic: ", topic);
               if (topic.topicStatus) {
-                console.log('student has been assigned the topic')
+                console.log("student has been assigned the topic");
                 // if that topic is completed, set the topic as unlocked, else set is as locked and it will be unlocked when the student completed the prerequisite
-                if (topic.topicStatus && topic.topicStatus == 'completed') {
-                  node.topicStatus = 'unlocked' 
-                } else node.topicStatus = 'locked'
+                if (topic.topicStatus && topic.topicStatus == "completed") {
+                  node.topicStatus = "unlocked";
+                } else node.topicStatus = "locked";
               }
             } else {
               // if there are no prerequisites than set is as unlocked
-              node.topicStatus = 'unlocked'
+              node.topicStatus = "unlocked";
             }
-            console.log(student, ' has started course. Setting new topic as ', node.topicStatus)
+            console.log(
+              student,
+              " has started course. Setting new topic as ",
+              node.topicStatus
+            );
             // assign the topic to each student
             await courseRef.doc(node.id).set(node);
           }
         }
-      })
+      });
     },
     async deleteTopicForStudents(node) {
-      console.log('node: ', node)
+      console.log("node: ", node);
       // get all students currently assigned to course
-      const allStudents = await db.collection("people")
+      const allStudents = await db
+        .collection("people")
         .where("assignedCourses", "array-contains", this.currentCourseId)
         .get();
-      
-      allStudents.forEach(async doc => {
-        const student = doc.id
-        console.log('deleteing ', node.label,  'for student: ', student)
+
+      allStudents.forEach(async (doc) => {
+        const student = doc.id;
+        console.log("deleteing ", node.label, "for student: ", student);
         // delete for student
         await db
           .collection("people")
           .doc(student)
           .collection(this.currentCourseId)
           .doc(node.id)
-          .delete()
-      })
-    }
+          .delete();
+      });
+    },
   },
 };
 </script>
@@ -724,7 +753,7 @@ export default {
 .color-picker {
   background-color: var(--v-background-base);
   ::-webkit-scrollbar-track {
-  background:var(--v-background-lighten1)
-}
+    background: var(--v-background-lighten1);
+  }
 }
 </style>

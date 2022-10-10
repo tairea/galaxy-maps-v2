@@ -90,6 +90,7 @@
       :selectedTopic="clickedTopic"
       :tasks="topicTasks"
       @closeInfoPanel="closeInfoPanel"
+      @editNode="showEditDialog"
     />
   </div>
 </template>
@@ -212,7 +213,7 @@ export default {
       if (this.cohortsInCourse.length) {
         this.setCurrentCohort(this.cohortsInCourse[0]);
         const students = await Promise.all(
-          this.cohortsInCourse[0].students.map(async (student) => {
+          this.cohortsInCourse[0].students?.map(async (student) => {
             return await this.MXgetPersonByIdFromDB(student);
           })
         );
@@ -399,9 +400,11 @@ export default {
       this.dialog = true;
     },
     showEditDialog(node) {
-      this.uiMessage = "";
-      this.coords.x = node.x;
-      this.coords.y = node.y;
+      console.log("edit node", node);
+      // this.uiMessage = "";
+      // this.coords.x = node.x;
+      // this.coords.y = node.y;
+      this.currentNode = node;
       this.dialogTitle = node.label;
       this.dialogDescription = "edit this system";
       this.dialog = true;
@@ -419,8 +422,8 @@ export default {
       this.dialogDescription = "";
       this.currentNode = {};
       this.currentEdge = {};
-      // fit
-      this.$refs.vis.zoomToNodes(this.currentCourseNodes);
+      // close panel
+      this.closeInfoPanel();
     },
     openDialog() {
       // TODO: this doesnt reset the node correctly
