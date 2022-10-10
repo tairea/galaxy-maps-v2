@@ -6,18 +6,39 @@
           icon
           small
           color="missionAccent"
-          class="close-button"
+          class="close-button mt-2"
           @click="closeInfoPanel"
         >
           <v-icon>mdi-close</v-icon>
         </v-btn>
-        <p class="topicTitle overline">{{ selectedTopic.label }}</p>
+        <div class="topicTitleContainer">
+          <p class="topicTitle overline">{{ selectedTopic.label }}</p>
+          <v-btn
+            icon
+            x-small
+            color="missionAccent"
+            class="ml-2 mt-4"
+            alt="Edit Topic"
+            @click="editNode"
+          >
+            <v-icon>mdi-pencil</v-icon>
+          </v-btn>
+        </div>
         <div class="card-container">
+          <div v-if="tasks.length == 0" class="noMissionWarningContainer">
+            <p class="noMissionWarning">This system has no missions.</p>
+            <p class="noMissionWarning">
+              (Systems must have at least one mission)
+            </p>
+            <p class="noMissionWarning mt-6">
+              <strong>View system to create a mission.</strong>
+            </p>
+          </div>
           <div v-for="(task, index) in tasks" :key="task.id" class="task-card">
             <p class="task-number overline">MISSION {{ index + 1 }}</p>
             <p class="task-title m0">{{ task.title }}</p>
             <p
-              class="task-status oevrline m0"
+              class="task-status overline m0"
               :class="{
                 completed: task.taskStatus == 'completed',
                 locked: task.taskStatus == 'locked',
@@ -83,6 +104,9 @@ export default {
     closeInfoPanel() {
       this.$emit("closeInfoPanel");
     },
+    editNode() {
+      this.$emit("editNode", this.selectedTopic);
+    },
     routeToSolarSystem() {
       // console.log("route to ss", this.currentTopic.id);
       // save current topic to store
@@ -135,9 +159,14 @@ export default {
       overflow-y: scroll;
       overflow-x: hidden;
 
+      .topicTitleContainer {
+        border-bottom: 1px solid var(--v-missionAccent-base);
+        display: flex;
+      }
+
       .topicTitle {
         color: var(--v-missionAccent-base);
-        border-bottom: 1px solid var(--v-missionAccent-base);
+
         padding: 10px 0px 10px 20px;
         margin: 0px;
       }
@@ -152,6 +181,23 @@ export default {
         display: flex;
         flex-wrap: wrap;
         width: 100%;
+
+        .noMissionWarningContainer {
+          margin-top: 30%;
+          width: 100%;
+
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-direction: column;
+
+          .noMissionWarning {
+            color: var(--v-missionAccent-base);
+            font-size: 0.7rem;
+            text-align: center;
+            text-transform: uppercase;
+          }
+        }
 
         .task-card {
           border: 1px solid var(--v-missionAccent-base);

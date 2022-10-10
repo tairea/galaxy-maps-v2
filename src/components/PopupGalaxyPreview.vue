@@ -97,7 +97,7 @@
           View Galaxy
         </v-btn>
 
-        <v-btn
+        <!-- <v-btn
           class="view-ss-button pa-5"
           :dark="dark"
           :light="!dark"
@@ -110,7 +110,7 @@
           disabled
         >
           View Analytics
-        </v-btn>
+        </v-btn> -->
       </div>
       <!-- Student Galaxy Actions -->
       <div v-else class="ss-actions py-4">
