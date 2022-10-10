@@ -49,7 +49,7 @@
                 mode="hexa"
                 value="#69a1e2"
                 width="90%"
-                :swatches="dark ? darkSwatches : lightSwatches"
+                :swatches="darkSwatches"
               ></v-color-picker>
 
               <!-- <v-tooltip right>
@@ -340,8 +340,8 @@ export default {
       //   },
       // ],
       prerequisites: false,
-      darkSwatches: [["#69A1E2"], ["#E269CF"], ["#00E676"]],
-      lightSwatches: [["#577399"], ["#fe5f55"], ["#495867"]],
+      darkSwatches: [["#69A1E2"], ["#E269CF"]], //mission and galaxy colours only
+      lightSwatches: [["#577399"], ["#fe5f55"]],
     };
   },
   computed: {

@@ -20,14 +20,20 @@
       <div class="dialog-header">
         <p class="dialog-title">publish galaxy</p>
         <div class="d-flex align-center">
-          <v-icon left color="missionAccent"
-            >mdi-information-variant</v-icon
-          >
+          <v-icon left color="missionAccent">mdi-information-variant</v-icon>
           <p v-if="admin" class="dialog-description">
-            Publish this galaxy to list publically 
+            Publish
+            <span style="font-weight: 600; color: var(--v-galaxyAccent-base)">{{
+              course.title
+            }}</span>
+            galaxy to make publically visible
           </p>
           <p v-else class="dialog-description">
-            Publish this galaxy to starting teaching
+            Publish
+            <span style="font-weight: 600; color: var(--v-galaxyAccent-base)">{{
+              course.title
+            }}</span>
+            galaxy to make it visible to others
           </p>
         </div>
       </div>
@@ -35,8 +41,21 @@
       <div v-if="!admin" class="create-dialog-content">
         <!-- LISTED -->
         <div>
-          <p class="caption">Choose whether you would like this galaxy to be <strong>PRIVATE</strong> (invite only), or <strong>PUBLIC</strong> (discoverable by all Galaxy Maps users)</p>
-          <v-radio-group row v-model="courseOptions.public" color="missionAccent" :light="!dark" :dark="dark">
+          <p class="caption mb-2">
+            Choose whether you would like this galaxy to be:
+          </p>
+          <p class="caption ma-0"><strong>PRIVATE</strong> (invite only), or</p>
+          <p class="caption ma-0">
+            <strong>PUBLIC</strong> (discoverable by all Galaxy Maps users)
+          </p>
+
+          <v-radio-group
+            row
+            v-model="courseOptions.public"
+            color="missionAccent"
+            :light="!dark"
+            :dark="dark"
+          >
             <v-radio
               label="private"
               :value="false"
@@ -69,8 +88,14 @@
             ></v-radio>
           </v-radio-group>
         </div> -->
+        <p class="caption ma-0" v-if="courseOptions.public">
+          <i
+            >(Public courses need to be submitted for review by Galaxy Map
+            moderators)</i
+          >
+        </p>
       </div>
-          <!-- ACTION BUTTONS -->
+      <!-- ACTION BUTTONS -->
       <div v-if="admin" class="action-buttons">
         <v-btn
           outlined
@@ -92,7 +117,7 @@
           <v-icon left> mdi-close </v-icon>
           CANCEL
         </v-btn>
-      </div>            
+      </div>
       <div v-else class="action-buttons">
         <v-btn
           v-if="courseOptions.public"
@@ -125,16 +150,16 @@
           <v-icon left> mdi-close </v-icon>
           CANCEL
         </v-btn>
-      </div>            
+      </div>
     </div>
   </v-dialog>
 </template>
 
 <script>
 import { db, functions } from "@/store/firestoreConfig";
-import { mapGetters, mapMutations } from 'vuex'
+import { mapGetters, mapMutations } from "vuex";
 
-import { dbMixins } from '@/mixins/DbMixins'
+import { dbMixins } from "@/mixins/DbMixins";
 
 export default {
   name: "PublishGalaxy",
@@ -146,58 +171,57 @@ export default {
     courseOptions: {
       public: false,
     },
-
   }),
   computed: {
-    ...mapGetters(['user']),
-    dark () {
-      return this.$vuetify.theme.isDark
+    ...mapGetters(["user"]),
+    dark() {
+      return this.$vuetify.theme.isDark;
     },
-    admin () {
-      return this.user.data.admin
-    }
-
+    admin() {
+      return this.user.data.admin;
+    },
   },
   methods: {
-    ...mapMutations(['setCurrentCourse']),
+    ...mapMutations(["setCurrentCourse"]),
     close() {
       this.dialog = false;
       this.loading = false;
       this.courseOptions = {
         public: false,
-      }
+      };
     },
 
     async submitCourse() {
       this.loading = true;
       let course = {
-        ...this.course, 
-        ...this.courseOptions
-      }
-      course.status = "submitted"
+        ...this.course,
+        ...this.courseOptions,
+      };
+      course.status = "submitted";
       await this.updateCourse(course)
-      .then(() => {
-        this.sendNewSubmissionEmail(course)
-      })
-      .then(() => {
-        this.$store.commit("setCurrentCourseId", course.id);
-        this.$store.commit("setCurrentCourse", course)
-        this.close()
-      }).catch((error) => {
-        console.error("Error updating document: ", error);
-      });
+        .then(() => {
+          this.sendNewSubmissionEmail(course);
+        })
+        .then(() => {
+          this.$store.commit("setCurrentCourseId", course.id);
+          this.$store.commit("setCurrentCourse", course);
+          this.close();
+        })
+        .catch((error) => {
+          console.error("Error updating document: ", error);
+        });
     },
 
-    async publishCourse () {
+    async publishCourse() {
       this.loading = true;
-      let course = this.course
+      let course = this.course;
       if (!this.admin) {
         course = {
-          ...course, 
-          ...this.courseOptions
-        }
+          ...course,
+          ...this.courseOptions,
+        };
       }
-      
+
       let cohort = {
         name: course.title,
         description: course.description,
@@ -209,34 +233,38 @@ export default {
           url: course.image?.url,
         },
         teachers: [course.mappedBy.personId],
-        courseCohort: true
-      }
+        courseCohort: true,
+      };
 
-      course.status = "published"
+      course.status = "published";
       if (!course.cohort) {
         await this.saveCohort(cohort)
-        .then((cohortId) => { 
-          course.cohort = cohortId
-          this.updateCourse(course)
-        }).then(() => {
-          this.setCurrentCourse(course)
-          this.close()
-        }).catch((error) => {
-          console.error("Error updating document: ", error);
-        });
+          .then((cohortId) => {
+            course.cohort = cohortId;
+            this.updateCourse(course);
+          })
+          .then(() => {
+            this.setCurrentCourse(course);
+            this.close();
+          })
+          .catch((error) => {
+            console.error("Error updating document: ", error);
+          });
       } else {
         this.updateCourse(course)
-        .then(() => {
-          this.setCurrentCourse(course)
-          this.close()
-        }).catch((error) => {
-          console.error("Error updating document: ", error);
-        });
+          .then(() => {
+            this.setCurrentCourse(course);
+            this.close();
+          })
+          .catch((error) => {
+            console.error("Error updating document: ", error);
+          });
       }
     },
 
     async updateCourse(course) {
-      return await db.collection("courses")
+      return await db
+        .collection("courses")
         .doc(course.id)
         .update(course)
         .then(() => {
@@ -247,52 +275,57 @@ export default {
             text: "Galaxy successfully updated",
             color: "baseAccent",
           });
-        })
+        });
     },
 
     async saveCohort(cohort) {
       // Add a new document in collection "cohorts"
-      const cohortId = await db.collection("cohorts")
+      const cohortId = await db
+        .collection("cohorts")
         .add(cohort)
-        .then( async (docRef) => {
+        .then(async (docRef) => {
           if (this.admin) {
-            const person = await this.MXgetPersonByIdFromDB(cohort.teachers[0])
-            person.inviter = "Galaxy Maps Admin"
-            this.sendCoursePublishedEmail(person, this.course)
+            const person = await this.MXgetPersonByIdFromDB(cohort.teachers[0]);
+            person.inviter = "Galaxy Maps Admin";
+            this.sendCoursePublishedEmail(person, this.course);
             this.sendNewCohortEmail(person, cohort);
           } else {
             this.sendNewCohortEmail(this.person, cohort);
-          } 
-          return docRef.id
-        })
-      return cohortId
+          }
+          return docRef.id;
+        });
+      return cohortId;
     },
 
     sendNewCohortEmail(profile, cohort) {
       const person = {
         ...profile,
-        cohort: cohort.name
+        cohort: cohort.name,
       };
       const sendNewCohortEmail = functions.httpsCallable("sendNewCohortEmail");
       return sendNewCohortEmail(person);
     },
-    
+
     sendNewSubmissionEmail(course) {
       let data = {
         author: course.mappedBy.name,
         title: course.title,
-      }
-      const sendNewSubmissionEmail = functions.httpsCallable("sendNewSubmissionEmail");
+      };
+      const sendNewSubmissionEmail = functions.httpsCallable(
+        "sendNewSubmissionEmail"
+      );
       return sendNewSubmissionEmail(data);
     },
 
     sendCoursePublishedEmail(person, course) {
       let data = {
         email: person.email,
-        name: person.firstName + ' ' + person.lastName,
+        name: person.firstName + " " + person.lastName,
         course: course.title,
-      }
-      const sendCoursePublishedEmail = functions.httpsCallable("sendCoursePublishedEmail");
+      };
+      const sendCoursePublishedEmail = functions.httpsCallable(
+        "sendCoursePublishedEmail"
+      );
       return sendCoursePublishedEmail(data);
     },
   },
@@ -392,11 +425,11 @@ export default {
 .publishButton {
   width: 100%;
   z-index: 3;
-  margin-top: 20px
+  margin-top: 20px;
 }
 
 .label-text::v-deep label {
   font-size: 0.8rem;
-  color: var(--v-missionAccent-base) !important
+  color: var(--v-missionAccent-base) !important;
 }
 </style>
