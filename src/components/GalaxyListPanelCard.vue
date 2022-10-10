@@ -1,20 +1,22 @@
 <template>
-  <!-- COURSE CARD -->
-  <div class="galaxyCard" :class="{ 'selected-galaxy': active, 'draft-galaxy': draft}">
-    <img
-      v-if="course.image.url"
-      class="galaxyCardImage"
-      :src="course.image.url"
-    />
-    <div v-else class="imagePlaceholder">
-      {{ first3Letters(course.title) }}
+  <div> 
+    <!-- COURSE CARD -->
+    <div class="galaxyCard" :class="{ 'selected-galaxy': active, 'draft-galaxy': draft}">
+      <img
+        v-if="course.image.url"
+        class="galaxyCardImage"
+        :src="course.image.url"
+      />
+      <div v-else class="imagePlaceholder">
+        {{ first3Letters(course.title) }}
+      </div>
+      <p
+        class="galaxyListPanelContent text-left ma-1"
+        :class="{ 'selected-galaxy': active }"
+      >
+        {{ course.title }}
+      </p>
     </div>
-    <p
-      class="galaxyListPanelContent text-left ma-1"
-      :class="{ 'selected-galaxy': active }"
-    >
-      {{ course.title }}
-    </p>
   </div>
 </template>
 

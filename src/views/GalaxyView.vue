@@ -1,6 +1,7 @@
 <template>
   <div id="container" class="bg">
-    <div id="left-section">
+    <!-- <div class="left-section" :class="{ hide: hideLeftPanelsFlag }"> -->
+    <div class="left-section">
       <GalaxyInfo :course="currentCourse" :teacher="teacher" :draft="draft" />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <PublishGalaxy v-if="showPublish" :course="currentCourse" />
@@ -11,104 +12,112 @@
         :cohorts="cohortsInCourse"
         :teacher="teacher"
       />
+
       <BackButton />
     </div>
     <div id="main-section">
       <!-- Map Buttons -->
       <GalaxyMapButtons
         class="mt-8"
+        :class="{ hideButtons: hideLeftPanelsFlag }"
         v-if="teacher"
         :addNodeMode="addNodeMode"
         :addEdgeMode="addEdgeMode"
+        :dragNodeMode="dragNodeMode"
         :uiMessage="uiMessage ? uiMessage : ''"
         :changeInPositions="changeInPositions"
         :nodePositionsChangeLoading="nodePositionsChangeLoading"
         @toggleAddNodeMode="toggleAddNodeMode"
         @toggleAddEdgeMode="toggleAddEdgeMode"
+        @toggleDragNodeMode="toggleDragNodeMode"
         @addNode="showAddDialog"
         @saveNodePositions="saveNodePositions"
       />
 
       <!-- ===== Galaxy Map ===== -->
       <GalaxyMap
-        v-if
         ref="vis"
+        :teacher="teacher"
         @add-node="showAddDialog"
         @edit-node="showEditDialog"
         @setUiMessage="setUiMessage"
         @drag-coords="updateDragCoords"
         @selected="selected"
         @deselected="deselect"
-        @hoverNode="hovered"
         @blurNode="blurNode"
         @centerFocus="centerFocus"
         @nodePositionsChanged="nodePositionsChanged"
         @nodePositionsChangeLoading="nodePositionsChangeLoading = true"
         @nodePositionsChangeSaved="nodePositionsChangeSaved"
         @toggleAddEdgeMode="toggleAddEdgeMode"
-        :teacher="teacher"
+        @hideLeftPanels="hideLeftPanels"
+        @topicClicked="topicClicked($event)"
+        @courseTasks="emittedCourseTasks($event)"
       />
+      <!--  @hoverNode="hovered" -->
     </div>
     <!--==== Right section ====-->
     <div v-if="!cohortsInCourse" id="right-section">
-      <RequestForHelpTeacherFrame :courses="[currentCourse]" :isTeacher="teacher" :students="peopleInCourse"/>
-      <SubmissionTeacherFrame :isTeacher="teacher" :courses="[currentCourse]" :students="teacher ? peopleInCourse : [person]" class="mt-4"/> 
-    </div>
-        <!-- Edit -->
-      <CreateEditDeleteNodeDialog
-        v-if="dialog"
-        ref="edit"
-        :dialog="dialog"
-        :dialogTitle="dialogTitle"
-        :dialogDescription="dialogDescription"
-        :editing="editing"
-        :course="currentCourse"
-        :currentNode="currentNode"
-        :currentEdge="currentEdge"
-        @closeDialog="closeDialog"
-        @openDialog="openDialog"
+      <RequestForHelpTeacherFrame
+        :courses="[currentCourse]"
+        :isTeacher="teacher"
+        :students="peopleInCourse"
       />
-      <!-- POPUP -->
-      <v-scale-transition>
-        <PopupSystemPreview
-          v-if="infoPopupShow"
-          ref="popup"
-          :infoPopupShow="infoPopupShow"
-          :infoPopupPosition="infoPopupPosition"
-          :currentTopic="currentNode"
-          :centerFocusPosition="centerFocusPosition"
-          :tasks="teacher ? topicsTasks : personsTopicsTasks"
-          :teacher="teacher"
-          @close="closePopup"
-          @showEditDialog="showEditDialog"
-          @focus="focusPopup"
-          @blur="blurPopup"
-        />
-      </v-scale-transition>
+      <SubmissionTeacherFrame
+        :isTeacher="teacher"
+        :courses="[currentCourse]"
+        :students="teacher ? peopleInCourse : [person]"
+        class="mt-4"
+      />
+    </div>
+    <!-- Edit -->
+    <CreateEditDeleteNodeDialog
+      v-if="dialog"
+      ref="edit"
+      :dialog="dialog"
+      :dialogTitle="dialogTitle"
+      :dialogDescription="dialogDescription"
+      :editing="editing"
+      :course="currentCourse"
+      :currentNode="currentNode"
+      :currentEdge="currentEdge"
+      @closeDialog="closeDialog"
+      @openDialog="openDialog"
+    />
+
+    <!-- POPUP OUT PANEL-->
+    <SolarSystemInfoPanel
+      :selectedTopic="clickedTopic"
+      :tasks="topicTasks"
+      @closeInfoPanel="closeInfoPanel"
+    />
   </div>
 </template>
 
 <script>
 import GalaxyInfo from "../components/GalaxyInfo";
+import PublishGalaxy from "../components/GalaxyView/PublishGalaxy";
 import AssignedInfo from "../components/AssignedInfo";
+import BackButton from "../components/BackButton";
+
+import GalaxyMap from "../components/GalaxyMap";
+import GalaxyMapButtons from "../components/GalaxyMapButtons";
+
+import CreateEditDeleteNodeDialog from "../components/CreateEditDeleteNodeDialog";
+
+import PopupSystemPreview from "../components/PopupSystemPreview";
+import SolarSystemInfoPanel from "../components/SolarSystemInfoPanel";
+
+import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame";
+import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame";
+
 import MissionsInfo from "../components/MissionsInfo";
 import MissionsList from "../components/MissionsList";
-import GalaxyMap from "../components/GalaxyMap";
-import BackButton from "../components/BackButton";
-import CreateEditDeleteNodeDialog from "../components/CreateEditDeleteNodeDialog";
-import GalaxyMapButtons from "../components/GalaxyMapButtons";
-import PopupSystemPreview from "../components/PopupSystemPreview";
-import PublishGalaxy from "../components/GalaxyView/PublishGalaxy";
-import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame"
-import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame"
 
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters, mapActions, mapMutations } from "vuex";
-import {
-  getAllPeopleInCourse,
-  getAllCohortsInCourse,
-} from "@/lib/ff";
-import { dbMixins } from '../mixins/DbMixins'
+import { getAllPeopleInCourse, getAllCohortsInCourse } from "@/lib/ff";
+import { dbMixins } from "../mixins/DbMixins";
 
 export default {
   name: "GalaxyView",
@@ -125,13 +134,15 @@ export default {
     PopupSystemPreview,
     PublishGalaxy,
     RequestForHelpTeacherFrame,
-    SubmissionTeacherFrame
+    SubmissionTeacherFrame,
+    SolarSystemInfoPanel,
   },
   props: ["courseId"],
   data() {
     return {
       addNodeMode: false,
       addEdgeMode: false,
+      dragNodeMode: false,
       uiMessage: "",
       coords: {},
       changeInPositions: false,
@@ -154,40 +165,59 @@ export default {
       course: {},
       peopleInCourse: [],
       cohortsInCourse: [],
-      selectedNode: {}
+      selectedNode: {},
+      hideLeftPanelsFlag: false,
+      clickedTopicId: null,
+      clickedTopic: null,
+      courseTasks: [],
+      topicTasks: [],
     };
   },
   watch: {
     async currentCourse(newVal, oldVal) {
-      if (!oldVal.cohort && newVal.cohort) this.cohortsInCourse = await getAllCohortsInCourse(this.courseId, this.person.id);
-    }
+      if (!oldVal.cohort && newVal.cohort)
+        this.cohortsInCourse = await getAllCohortsInCourse(
+          this.courseId,
+          this.person.id
+        );
+    },
   },
   async beforeMount() {
     // check galaxy params match state.currentCourse
     if (this.$route.params.courseId != this.currentCourse?.id) {
-      const course = await db.collection('courses').doc(this.$route.params.courseId).get()
-      console.log('params dont match setting currentCourse: ', course.data())
-      this.course = course.data()
-      this.$store.commit('setCurrentCourse', course.data())
-    } 
+      const course = await db
+        .collection("courses")
+        .doc(this.$route.params.courseId)
+        .get();
+      console.log("params dont match setting currentCourse: ", course.data());
+      this.course = course.data();
+      this.$store.commit("setCurrentCourse", course.data());
+    }
   },
   async mounted() {
     // bind assigned people in this course
     if (this.teacher) {
       this.peopleInCourse = await getAllPeopleInCourse(this.courseId);
-      this.setPeopleInCourse(this.peopleInCourse)
-      this.cohortsInCourse = await getAllCohortsInCourse(this.courseId, this.person.id);
+      this.setPeopleInCourse(this.peopleInCourse);
+      this.cohortsInCourse = await getAllCohortsInCourse(
+        this.courseId,
+        this.person.id
+      );
     } else {
-      await this.getCohortsByPersonId(this.person)
-      let cohort = await this.cohorts.find(cohort => cohort.courses.some(courseId => courseId === this.currentCourseId)) 
-      this.cohortsInCourse.push(cohort)
+      await this.getCohortsByPersonId(this.person);
+      let cohort = await this.cohorts.find((cohort) =>
+        cohort.courses.some((courseId) => courseId === this.currentCourseId)
+      );
+      this.cohortsInCourse.push(cohort);
       if (this.cohortsInCourse.length) {
-        this.setCurrentCohort(this.cohortsInCourse[0])
-        const students = await Promise.all(this.cohortsInCourse[0].students.map( async (student) => {
-          return await this.MXgetPersonByIdFromDB(student) 
-        }))
-        this.peopleInCourse = students
-        this.setPeopleInCourse(students)
+        this.setCurrentCohort(this.cohortsInCourse[0]);
+        const students = await Promise.all(
+          this.cohortsInCourse[0].students.map(async (student) => {
+            return await this.MXgetPersonByIdFromDB(student);
+          })
+        );
+        this.peopleInCourse = students;
+        this.setPeopleInCourse(students);
       }
     }
   },
@@ -199,7 +229,7 @@ export default {
       "topicsTasks",
       "personsTopicsTasks",
       "currentCourse",
-      "cohorts"
+      "cohorts",
     ]),
     ...mapGetters(["person", "user"]),
     draft() {
@@ -215,7 +245,9 @@ export default {
       );
     },
     student() {
-      return this.person.assignedCourses.some(courseId => courseId === this.currentCourseId)
+      return this.person.assignedCourses.some(
+        (courseId) => courseId === this.currentCourseId
+      );
     },
     showPublish() {
       return (
@@ -244,13 +276,14 @@ export default {
       this.changeInPositions = false;
     },
     toggleAddNodeMode() {
-      console.log('toggling')
+      console.log("toggling");
       this.$refs.vis.disableEditMode();
       this.addNodeMode = !this.addNodeMode;
       if (this.addNodeMode == true) {
         this.$refs.vis.addNodeMode();
       }
       if (this.addEdgeMode) this.addEdgeMode = false;
+      if (this.dragNodeMode) this.dragNodeMode = false;
     },
     toggleAddEdgeMode() {
       this.$refs.vis.disableEditMode();
@@ -259,32 +292,81 @@ export default {
         this.$refs.vis.addEdgeMode();
       }
       if (this.addNodeMode) this.addNodeMode = false;
+      if (this.dragNodeMode) this.dragNodeMode = false;
     },
-    async bindTasks(courseId, topicId) {
-      if (!this.teacher) {
-        await this.$store.dispatch("bindPersonsTasksByTopicId", {
-          personId: this.person.id,
-          courseId: courseId,
-          topicId: topicId,
-        });
+    toggleDragNodeMode() {
+      console.log("drag mode toggled");
+      this.$refs.vis.disableEditMode();
+      this.dragNodeMode = !this.dragNodeMode;
+      if (this.dragNodeMode == true) {
+        this.$refs.vis.dragNodeMode();
       } else {
-        await this.$store.dispatch("bindTasksByTopicId", {
-          courseId: courseId,
-          topicId: topicId,
-        });
+        this.$refs.vis.disableDragMode();
+        this.changeInPositions = false;
+        // redraw solar systems
+        this.$refs.vis.drawSolarSystems();
       }
+      if (this.addEdgeMode) this.addEdgeMode = false;
+      if (this.addNodeMode) this.addNodeMode = false;
     },
-    async hovered(hoveredNode) {
-      this.hoverNode = true;
-      // this.infoPopupShow = false;
-      this.centerFocusPosition = false;
-      this.type = hoveredNode.type;
-      this.infoPopupPosition.x = hoveredNode.DOMx;
-      this.infoPopupPosition.y = hoveredNode.DOMy;
-      this.currentNode = hoveredNode;
-      //bind tasks for popup preview
-      await this.bindTasks(this.currentCourseId, hoveredNode.id);
-      this.infoPopupShow = true;
+    // async bindTasks(courseId, topicId) {
+    //   if (!this.teacher) {
+    //     await this.$store.dispatch("bindPersonsTasksByTopicId", {
+    //       personId: this.person.id,
+    //       courseId: courseId,
+    //       topicId: topicId,
+    //     });
+    //   } else {
+    //     await this.$store.dispatch("bindTasksByTopicId", {
+    //       courseId: courseId,
+    //       topicId: topicId,
+    //     });
+    //   }
+    // },
+    // async hovered(hoveredNode) {
+    //   this.hoverNode = true;
+    //   // this.infoPopupShow = false;
+    //   this.centerFocusPosition = false;
+    //   this.type = hoveredNode.type;
+    //   this.infoPopupPosition.x = hoveredNode.DOMx;
+    //   this.infoPopupPosition.y = hoveredNode.DOMy;
+    //   this.currentNode = hoveredNode;
+    //   //bind tasks for popup preview
+    //   await this.bindTasks(this.currentCourseId, hoveredNode.id);
+    //   this.infoPopupShow = true;
+    // },
+    hideLeftPanels(hideFlag) {
+      this.hideLeftPanelsFlag = hideFlag;
+    },
+    closeInfoPanel() {
+      this.clickedTopicId = null;
+      this.clickedTopic = null;
+      this.topicTasks = [];
+      this.hideLeftPanelsFlag = false;
+      this.$refs.vis.exitSolarSystemPreview();
+      // this.$refs.listPanel.courseClicked();
+    },
+    async topicClicked(emittedPayload) {
+      // get topic id
+      this.clickedTopicId = emittedPayload.topicId;
+      // get topic
+      this.clickedTopic = this.currentCourseNodes.find(
+        (node) => node.id == this.clickedTopicId
+      );
+      // loop courseTasks for this topic id (= this.topicTasks)
+      for (const task of this.courseTasks) {
+        if (task.topicId == this.clickedTopicId) {
+          this.topicTasks.push(task.task);
+        }
+      }
+      // order topic tasks by created
+      this.topicTasks = this.topicTasks.sort(
+        (objA, objB) =>
+          Number(objA.taskCreatedTimestamp) - Number(objB.taskCreatedTimestamp)
+      );
+    },
+    emittedCourseTasks(emittedPayload) {
+      this.courseTasks = emittedPayload;
     },
     selected(selected) {
       this.type = selected.type;
@@ -292,7 +374,7 @@ export default {
       this.infoPopupPosition.y = selected.DOMy;
       if (selected.type == "node") {
         this.currentNode = selected;
-        this.selectedNode = selected
+        this.selectedNode = selected;
       } else if (selected.type == "edge") {
         this.currentEdge = selected;
       }
@@ -356,12 +438,12 @@ export default {
       this.blurPopup();
     },
     blurPopup() {
-      if (this.selectedNode === this.currentNode) return
+      if (this.selectedNode === this.currentNode) return;
       this.hoverPopup = false;
       this.deselect();
     },
     deselect() {
-      this.selectedNode = {}
+      this.selectedNode = {};
       if (!this.hoverPopup && !this.hoverNode) {
         this.infoPopupShow = false;
         this.centerFocusPosition = false;
@@ -385,8 +467,8 @@ export default {
   // border: 1px solid red;
 }
 
-#left-section {
-  width: 20%;
+.left-section {
+  width: 200px;
   height: 100%;
   display: flex;
   justify-content: flex-start;
@@ -394,8 +476,22 @@ export default {
   flex-direction: column;
   // border: 1px solid yellow;
   overflow-y: scroll;
-  padding: 0px 20px 50px 20px;
-  z-index: 3
+  padding: 0px 0px 50px 20px;
+  z-index: 3;
+  transition: all 0.3s;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+}
+
+.hide {
+  left: -200px;
+  top: 100%;
+}
+
+.hideButtons {
+  position: absolute;
+  bottom: -200px;
 }
 
 #main-section {
@@ -409,19 +505,6 @@ export default {
   flex-direction: column;
   z-index: 1;
   // border: 1px solid pink;
-
-  .map-buttons {
-    position: fixed;
-    top: 20px;
-    left: 20%;
-    z-index: 2;
-    width: auto;
-
-    .map-button {
-      margin: 10px;
-      background-color: var(--v-background-base);
-    }
-  }
 
   .ui-message-wrap {
     // border: 1px solid var(--v-missionAccent-base);
@@ -437,11 +520,11 @@ export default {
 }
 
 #right-section {
-    width: 20%;
-    height: 100%;
-    z-index: 3;
-    margin-left: auto;
-    margin-right: 20px;
+  width: 20%;
+  height: 100%;
+  z-index: 3;
+  margin-left: auto;
+  margin-right: 20px;
 }
 
 /* width */

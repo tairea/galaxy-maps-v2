@@ -13,7 +13,7 @@
       <div>
         <p class="info-panel-label mb-2">
           <span class="galaxyColour"
-            ><span>{{courseStatus}}</span> Galaxy</span
+            ><span>{{ courseStatus }}</span> Galaxy</span
           >
           <br />
           <span>{{ course.title }}</span>
@@ -39,7 +39,8 @@
     </div>
 
     <div class="ss-makers">
-      <div class="left">
+      <!-- CONTENT BY -->
+      <!-- <div class="left">
         <div v-if="course.contentBy.image">
           <v-avatar size="40px">
             <v-img
@@ -58,29 +59,31 @@
         <a :href="course.contentBy.source"
           ><span>{{ course.contentBy.name }}</span></a
         >
-      </div>
-      <div class="right">
-        <div v-if="course.mappedBy.image">
-          <v-avatar size="40px">
-            <v-img
-              :src="course.mappedBy.image.url"
-            ></v-img>
-          </v-avatar>
+      </div> -->
+      <!-- MAPPED BY -->
+      <div class="mapped-details">
+        <p class="info-panel-label mb-2">
+          <span class="mappedByTitle">MAPPED BY</span>
+        </p>
+        <div class="mappedByContainer">
+          <div v-if="course.mappedBy.image">
+            <v-avatar size="40px">
+              <v-img :src="course.mappedBy.image.url"></v-img>
+            </v-avatar>
+          </div>
+          <div v-else-if="course.mappedBy.personId">
+            <v-avatar size="40px">
+              <v-img :src="mappedAuthorImage"></v-img>
+            </v-avatar>
+          </div>
+          <!-- <p class="ma-0">Mapped By:</p> -->
+          <span class="mt-2">{{ course.mappedBy.name }}</span>
         </div>
-        <div v-else-if="course.mappedBy.personId">
-          <v-avatar size="40px">
-            <v-img
-              :src="mappedAuthorImage"
-            ></v-img>
-          </v-avatar>
-        </div>
-        <p class="ma-0">Mapped By:</p>
-        <span>{{ course.mappedBy.name }}</span>
       </div>
     </div>
 
     <div>
-      <div v-if="teacher" class="ss-actions py-2">
+      <div v-if="teacher" class="ss-actions py-4">
         <v-btn
           class="view-ss-button pa-5"
           dark
@@ -110,7 +113,7 @@
         </v-btn>
       </div>
       <!-- Student Galaxy Actions -->
-      <div v-else class="ss-actions py-2">
+      <div v-else class="ss-actions py-4">
         <v-btn
           v-if="enrolled"
           class="view-ss-button pa-5"
@@ -202,10 +205,10 @@ export default {
       return this.course.status === "drafting";
     },
     courseStatus() {
-      if (this.draft) return 'Draft'
-      else if (this.course.status == 'submitted') return 'Submitted'
-      else if (!this.course.public) return 'Private'
-    }
+      if (this.draft) return "Draft";
+      else if (this.course.status == "submitted") return "Submitted";
+      else if (!this.course.public) return "Private";
+    },
   },
   methods: {
     async setImages() {
@@ -288,7 +291,7 @@ export default {
         .collection("topics")
         .orderBy("topicCreatedTimestamp")
         .get();
-      
+
       // 2) add them to person (this will store their TOPIC progression data for this course )
       for (const [index, doc] of querySnapshot.docs.entries()) {
         await db
@@ -338,10 +341,9 @@ export default {
 
       // 5) assign student to cohort and course
       let cohort = await getCohortById(this.course.cohort);
-      this.MXaddExistingUserToCohort(this.person, cohort)
-        .then(() => {
-          this.MXassignCourseToStudent(this.person, this.course);
-        })
+      this.MXaddExistingUserToCohort(this.person, cohort).then(() => {
+        this.MXassignCourseToStudent(this.person, this.course);
+      });
 
       // Send Galaxy Started statment to LRS
       startGalaxyXAPIStatement(this.person, { galaxy: this.course });
@@ -446,7 +448,27 @@ export default {
       color: var(--v-missionAccent-base);
       font-size: 0.8rem;
       font-style: italic;
+      margin-bottom: 0px;
     }
+  }
+}
+
+.mapped-details {
+  width: 100%;
+  padding: 10px 20px;
+
+  .mappedByTitle {
+    color: var(--v-galaxyAccent-base);
+    font-size: 0.8rem;
+    font-weight: 800;
+  }
+
+  .mappedByContainer {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
   }
 }
 

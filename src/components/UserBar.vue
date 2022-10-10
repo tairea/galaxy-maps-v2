@@ -1,6 +1,10 @@
 <template>
   <v-hover v-model="hover">
-    <div ref="userBar" class="userMenu" :class="{'showMenu': hover}">
+    <div
+      ref="userBar"
+      class="userMenu"
+      :class="{ showMenu: hover, miniMenu: miniNavMenu }"
+    >
       <!-- USER MENU TOPBAR -->
       <div class="blackBar">
         <div class="d-flex justify-center align-center">
@@ -44,7 +48,7 @@
           </v-avatar>
           <!-- </v-hover> -->
         </div>
-        <div class="username mx-4" style="">
+        <div v-if="!miniNavMenu || hover" class="username mx-4" style="">
           {{ person.firstName }} {{ person.lastName }}
         </div>
       </div>
@@ -88,7 +92,7 @@
             <v-icon class="pr-2">mdi-pencil</v-icon>
             edit account
           </v-btn> -->
-          <StudentEditDialog @close="close"/>
+          <StudentEditDialog @close="close" />
           <v-btn
             href="https://docs.google.com/forms/d/e/1FAIpQLSfJgXGWOeosZfJY7H0tvFzANoX8p95fmgVKom97HMDiNywSnA/viewform?usp=sf_link"
             target="_blank"
@@ -97,11 +101,11 @@
             outlined
             :dark="dark"
             :light="!dark"
-            >
-              <v-icon class="pr-2">mdi-send</v-icon>
+          >
+            <v-icon class="pr-2">mdi-send</v-icon>
             Feedback
           </v-btn>
-          
+
           <v-btn
             class="ma-4"
             @click="logout"
@@ -109,11 +113,10 @@
             outlined
             :dark="dark"
             :light="!dark"
-            >
-              <v-icon class="pr-2">mdi-door-closed</v-icon>
+          >
+            <v-icon class="pr-2">mdi-door-closed</v-icon>
             Logout</v-btn
           >
-          
         </div>
       </div>
     </div>
@@ -126,13 +129,13 @@ import firebase from "firebase";
 import { mapState, mapActions, mapMutations } from "vuex";
 import ThemeColourPicker from "@/components/ThemeColourPicker.vue";
 import { db, storage } from "../store/firestoreConfig";
-import StudentEditDialog from "../components/StudentEditDialog.vue"
+import StudentEditDialog from "../components/StudentEditDialog.vue";
 
 export default {
   name: "UserBar",
   components: {
     ThemeColourPicker,
-    StudentEditDialog
+    StudentEditDialog,
   },
   data() {
     return {
@@ -143,8 +146,18 @@ export default {
       uploadPercentage: 0,
       image: {},
       onhover: false,
-      hover: false
+      hover: false,
+      miniNavMenu: false,
     };
+  },
+  watch: {
+    $route(to, from) {
+      if (this.$route.name == "GalaxyView") {
+        this.miniNavMenu = true;
+      } else {
+        this.miniNavMenu = false;
+      }
+    },
   },
   async mounted() {
     // === BINDS UESFUL FOR ALL COMPONENTS
@@ -265,8 +278,8 @@ export default {
         });
     },
     close() {
-      this.hover = true
-    }
+      this.hover = true;
+    },
   },
 };
 </script>
@@ -280,7 +293,8 @@ export default {
   // bottom: 0px;
   bottom: -400px;
   right: 0;
-  transition: all 0.3s ease-out;
+  transition: all 0.3s;
+
   z-index: 200;
 
   .blackBar {
@@ -323,7 +337,14 @@ export default {
   }
 }
 
+.miniMenu {
+  width: 90px;
+  transition: width 0.3s ease-out 0.3s, bottom 0.3s ease-out;
+}
+
 .showMenu {
+  width: 25%;
   bottom: 0px;
+  transition: width 0.3s ease-out, bottom 0.3s ease-out 0.3s;
 }
 </style>
