@@ -1,23 +1,23 @@
 <template>
   <div class="bg">
-    <p class="overline gm-title" style="margin-top: 10%">
-      Account successfully created
-    </p>
-    <p class="overline gm-title">Please verify your email</p>
-    <p class="overline">
-      An email has been sent to the email address that you entered
-    </p>
-    <p class="overline">
-      Please check your emails and click on the link to verify your email.
-    </p>
-    <v-row class="mt-8">
-      <v-btn outlined class="mr-4" color="baseAccent" :to="{ path: 'login' }">
-        Back to login
-      </v-btn>
-      <v-btn outlined color="baseAccent" @click="sendVerificationEmail">
-        resend email
-      </v-btn>
-    </v-row>
+    <div class="verify">
+      <p class="overline gm-title">Account successfully created</p>
+      <p class="overline gm-title">Please verify your email</p>
+      <p class="overline" style="font-size: 0.65rem !important">
+        An email has been sent to the email address that you entered
+      </p>
+      <p class="overline" style="font-size: 0.65rem !important">
+        Please check your emails and click on the link to verify your email.
+      </p>
+      <v-row class="mt-8">
+        <v-btn outlined class="mr-4" color="baseAccent" :to="{ path: 'login' }">
+          Back to login
+        </v-btn>
+        <v-btn outlined color="missionAccent" @click="sendVerificationEmail">
+          resend email
+        </v-btn>
+      </v-row>
+    </div>
   </div>
 </template>
 
@@ -62,5 +62,13 @@ export default {
   flex-direction: column;
   height: 100vh;
   width: 100vw;
+
+  .verify {
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
 }
 </style>

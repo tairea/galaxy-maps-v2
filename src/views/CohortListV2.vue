@@ -105,22 +105,34 @@
             class="cohort-panel"
           />
         </div>
-        <v-row justify="center">  
-          <v-btn outlined color="baseAccent"> 
+        <v-row justify="center">
+          <v-btn outlined color="baseAccent">
             <v-icon class="mr-2">mdi-plus</v-icon>
             create cohort
           </v-btn>
         </v-row>
       </div>
       <div v-else class="no-cohort">
-        <p>create or start a galaxy to join a cohort</p>
-        <v-btn outlined color="baseAccent"> 
-          <v-icon class="mb-1 mr-2">mdi-plus</v-icon>
-          create cohort
-        </v-btn>
-      </div>
-        <!-- <p>create or start a galaxy to join a cohort</p> -->
+        <p class="overline">create or start a galaxy to join a cohort</p>
+        <p class="overline" style="text-align: center"><strong>OR</strong></p>
 
+        <!-- Create Cohort Button -->
+        <v-tooltip bottom close-delay="2000">
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on">
+              <v-icon class="mb-1 mr-2">mdi-plus</v-icon>
+              create cohort
+            </v-btn>
+          </template>
+          <span
+            >Paid feature.
+            <a href="#" style="cursor: pointer; pointer-events: initial"
+              >Click here to Upgrade</a
+            ></span
+          >
+        </v-tooltip>
+      </div>
+      <!-- <p>create or start a galaxy to join a cohort</p> -->
     </v-expand-transition>
   </div>
 
@@ -398,9 +410,9 @@ hr {
   text-transform: uppercase;
   display: flex;
   justify-content: center;
+  flex-direction: column;
   margin-left: auto;
   margin-right: auto;
-  margin-top: 200px;
   color: var(--v-missionAccent-base);
 }
 </style>

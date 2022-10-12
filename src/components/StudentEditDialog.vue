@@ -21,7 +21,7 @@
         color="baseAccent"
         class="ma-4"
         outlined
-        >
+      >
         <v-icon class="pr-2">mdi-pencil</v-icon>
         edit account
       </v-btn>
@@ -74,17 +74,30 @@
             ></v-text-field>
           </v-col>
           <v-col>
-            <v-icon class="mt-2" large color="missionAccent" v-if="!editEmail" @click="editEmail = true">mdi-pencil-box</v-icon>
-            <v-icon class="mt-2" large color="missionAccent" v-else @click="saveEmail">mdi-content-save</v-icon>
+            <v-icon
+              class="mt-2"
+              large
+              color="missionAccent"
+              v-if="!editEmail"
+              @click="editEmail = true"
+              >mdi-pencil-box</v-icon
+            >
+            <v-icon
+              class="mt-2"
+              large
+              color="missionAccent"
+              v-else
+              @click="saveEmail"
+              >mdi-content-save</v-icon
+            >
           </v-col>
         </v-row>
-
 
         <!-- ACTION BUTTONS -->
         <div class="action-buttons">
           <v-btn
             outlined
-            color="green darken-1"
+            color="baseAccent"
             @click="updatePerson(profile)"
             class="mr-2"
             :loading="loading"
@@ -115,7 +128,7 @@
 
 <script>
 import { mapState } from "vuex";
-import firebase from 'firebase';
+import firebase from "firebase";
 
 import { db } from "../store/firestoreConfig";
 
@@ -135,16 +148,16 @@ export default {
       dialog: false,
       loading: false,
       editEmail: false,
-      profile: {}
+      profile: {},
     };
   },
   watch: {
     dialog(newVal) {
       if (newVal) {
-        console.log('dialog is true')
-        Object.assign(this.profile, this.person) 
+        console.log("dialog is true");
+        Object.assign(this.profile, this.person);
       }
-    }
+    },
   },
   methods: {
     updatePerson(profile) {
@@ -154,7 +167,7 @@ export default {
         .then((res) => {
           this.$store.commit("setSnackbar", {
             show: true,
-            text: 'profile successfully updated',
+            text: "profile successfully updated",
             color: "baseAccent",
           });
           this.cancel();
@@ -166,36 +179,40 @@ export default {
             text: error.message,
             color: "pink",
           });
-          this.cancel()
+          this.cancel();
         });
     },
     saveEmail() {
-      firebase.auth().currentUser.updateEmail(this.profile.email).then(() => {
-        // TODO: Possibly add logic to send new email to previous email to confirm email change
+      firebase
+        .auth()
+        .currentUser.updateEmail(this.profile.email)
+        .then(() => {
+          // TODO: Possibly add logic to send new email to previous email to confirm email change
           var actionCodeSettings = {
-          url: window.location.origin + "/login",
-          handleCodeInApp: true,
-        };
-        firebase.auth().currentUser.sendEmailVerification(actionCodeSettings);
-        this.$store.commit("setSnackbar", {
-          show: true,
-          text: 'Email successfully updated, check your email to veriify your new email account',
-          color: "baseAccent",
+            url: window.location.origin + "/login",
+            handleCodeInApp: true,
+          };
+          firebase.auth().currentUser.sendEmailVerification(actionCodeSettings);
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: "Email successfully updated, check your email to veriify your new email account",
+            color: "baseAccent",
+          });
+        })
+        .catch((error) => {
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: error.message,
+            color: "pink",
+          });
+          this.cancel;
         });
-      }).catch((error) => {
-        this.$store.commit("setSnackbar", {
-          show: true,
-          text: error.message,
-          color: "pink",
-        });
-        this.cancel
-      });
     },
     cancel() {
-      this.dialog = false
-      this.loading = false
-      this.editEmail = false
-      this.$emit('close')
+      this.dialog = false;
+      this.loading = false;
+      this.editEmail = false;
+      this.$emit("close");
     },
   },
 };

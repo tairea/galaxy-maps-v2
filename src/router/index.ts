@@ -10,9 +10,9 @@ import CohortListV2 from "../views/CohortListV2.vue";
 import AllStudentsView from "../views/AllStudentsView.vue";
 import UserDashboard from "../views/UserDashboard.vue";
 // import Login from "../components/Login.vue";
-import VerifyEmail from "../views/VerifyEmail.vue";
-import ResetPassword from "../views/ResetPassword.vue";
-import Register from "../views/Register.vue";
+// import VerifyEmail from "../views/VerifyEmail.vue";
+// import ResetPassword from "../views/ResetPassword.vue";
+// import Register from "../views/Register.vue";
 // import EmailSignIn from "../components/EmailSignIn.vue";
 import LandingPage from "../views/LandingPage.vue";
 
@@ -26,6 +26,28 @@ const routes = [
     path: "/",
     name: "Landing",
     component: LandingPage,
+    children: [
+      {
+        path: "/login/",
+        name: "Login",
+        component: LandingPage,
+      },
+      {
+        path: "/verify",
+        name: "Verify",
+        component: LandingPage,
+      },
+      {
+        path: "/reset",
+        name: "Reset",
+        component: LandingPage,
+      },
+      {
+        path: "/register",
+        name: "Register",
+        component: LandingPage,
+      },
+    ]
   },
   {
     path: "/base",
@@ -76,26 +98,7 @@ const routes = [
       },
     ],
   },
-  {
-    path: "/login/",
-    name: "Login",
-    component: LandingPage,
-  },
-  {
-    path: "/verify",
-    name: "Verify",
-    component: VerifyEmail,
-  },
-  {
-    path: "/reset",
-    name: "Reset",
-    component: ResetPassword,
-  },
-  {
-    path: "/register",
-    name: "Register",
-    component: Register,
-  },
+  
   // {
   //   path: "/email_signin",
   //   name: "EmailSignIn",

@@ -4,11 +4,9 @@
     <div id="left-section">
       <UserInfo :person="person" />
     </div>
-    <div v-if="isStudent && isTeacher || isAdmin" class="top-section">
+    <div v-if="(isStudent && isTeacher) || isAdmin" class="top-section">
       <div v-if="isAdmin" class="student-border">
-        <div :class="adminLabel" @click="setView('admin')">
-          admin dashboard
-        </div>
+        <div :class="adminLabel" @click="setView('admin')">admin dashboard</div>
       </div>
       <div v-else class="student-border">
         <div :class="studentLabel" @click="setView('student')">
@@ -24,6 +22,11 @@
         class="line"
         style="border-color: var(--v-missionAccent-base)"
       ></v-divider>
+    </div>
+    <div v-else class="top-section">
+      <p class="overline noData">
+        No data to show. Try creating or enroling in a galaxy.
+      </p>
     </div>
     <!-- STUDENT -->
     <template v-if="dashboardView === 'student'">
@@ -76,19 +79,18 @@
 
       <div id="right-section">
         <!-- all requests and submissions -->
-        <RequestForHelpTeacherFrame 
-          :isTeacher="true" 
-          :courses="cohortCourses" 
-          :students="teachersStudents" 
+        <RequestForHelpTeacherFrame
+          :isTeacher="true"
+          :courses="cohortCourses"
+          :students="teachersStudents"
           class="mt-9"
         />
-        <SubmissionTeacherFrame 
-          :isTeacher="true" 
-          :courses="cohortCourses" 
-          :students="teachersStudents" 
+        <SubmissionTeacherFrame
+          :isTeacher="true"
+          :courses="cohortCourses"
+          :students="teachersStudents"
           class="mt-5"
         />
-
       </div>
     </template>
     <template v-else-if="dashboardView === 'admin'">
@@ -122,7 +124,7 @@ export default {
     CohortPanelV2,
     SubmissionTeacherFrame,
     RequestForHelpTeacherFrame,
-    CreateAdminDialog
+    CreateAdminDialog,
   },
   data() {
     return {
@@ -130,12 +132,12 @@ export default {
     };
   },
   async mounted() {
-    if (this.user.data.admin){
-        this.bindAllCohorts()
-        this.setDashboardView("admin");
+    if (this.user.data.admin) {
+      this.bindAllCohorts();
+      this.setDashboardView("admin");
     }
     if (this.dashboardView === "" && this.person.assignedCourses?.length) {
-    this.setDashboardView("student");
+      this.setDashboardView("student");
     }
   },
   computed: {
@@ -151,7 +153,7 @@ export default {
     ]),
     ...mapGetters(["getCourseById", "getCoursesByWhoMadeThem"]),
     isAdmin() {
-      return this.user.data.admin
+      return this.user.data.admin;
     },
     isStudent() {
       return this.person.assignedCourses?.length;
@@ -162,33 +164,33 @@ export default {
       return isTeacher;
     },
     isTeacherView() {
-      return this.dashboardView === 'teacher'
+      return this.dashboardView === "teacher";
     },
     isStudentView() {
-      return this.dashboardView === 'student'
+      return this.dashboardView === "student";
     },
     isAdminView() {
-      return this.dashboardView === 'admin'
+      return this.dashboardView === "admin";
     },
     adminLabel() {
-      return this.isAdminView ? 'active-label' : 'inactive-label'
+      return this.isAdminView ? "active-label" : "inactive-label";
     },
     studentLabel() {
-      return this.isStudentView ? 'active-label' : 'inactive-label'
+      return this.isStudentView ? "active-label" : "inactive-label";
     },
     teacherLabel() {
-      return this.isTeacherView ? 'active-label' : 'inactive-label'
+      return this.isTeacherView ? "active-label" : "inactive-label";
     },
     teacherCohorts() {
-      if (this.isAdmin) return this.cohorts 
+      if (this.isAdmin) return this.cohorts;
       else return this.cohorts.filter((cohort) => cohort.teacher);
     },
     cohortCourses() {
-      let courses = []
-      this.teacherCohorts.forEach(cohort => {
-        cohort.courses.forEach(course => courses.push({id: course}))
-      })
-      return courses
+      let courses = [];
+      this.teacherCohorts.forEach((cohort) => {
+        cohort.courses.forEach((course) => courses.push({ id: course }));
+      });
+      return courses;
     },
     teachersStudents() {
       let students = [];
@@ -225,6 +227,14 @@ export default {
     left: 15%;
     top: 100px;
     margin-left: 50px;
+
+    .noData {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: var(--v-missionAccent-base);
+      margin-right: 20%;
+    }
   }
 
   #left-section {
@@ -302,7 +312,7 @@ export default {
 //   font-size: 0.8rem;
 //   font-weight: 400;
 //   text-transform: uppercase;
-  
+
 //   // ribbon label
 //   position: relative;
 //   top: 1px;

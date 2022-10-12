@@ -15,7 +15,7 @@
               x-small
             >
               <v-icon class="mr-2" x-small> mdi-pencil</v-icon>
-              edit 
+              edit
             </v-btn>
 
             <v-btn
@@ -77,16 +77,15 @@
                 label="Mission Content"
               ></v-textarea> -->
               <div>
-                <vue-editor 
-                  v-model="task.description" 
-                  class="mb-8 quill" 
-                  :class="{'active-quill' : this.quillFocused}" 
+                <vue-editor
+                  v-model="task.description"
+                  class="mb-8 quill"
+                  :class="{ 'active-quill': this.quillFocused }"
                   :editor-toolbar="customToolbar"
-                  @focus="quillFocused = true" 
+                  @focus="quillFocused = true"
                   @blur="quillFocused = false"
                 />
               </div>
-
 
               <!-- DURATION -->
               <!-- <p class="dialog-description">Duration:</p> -->
@@ -188,12 +187,14 @@
                     </span>
                   </v-tooltip>
                 </p>
-                <vue-editor 
-                  v-model="task.submissionInstructions" 
-                  class="mt-2 quill" 
-                  :class="{'active-submission-quill' : this.submissionQuillFocused}" 
+                <vue-editor
+                  v-model="task.submissionInstructions"
+                  class="mt-2 quill"
+                  :class="{
+                    'active-submission-quill': this.submissionQuillFocused,
+                  }"
                   :editor-toolbar="customToolbar"
-                  @focus="submissionQuillFocused = true" 
+                  @focus="submissionQuillFocused = true"
                   @blur="submissionQuillFocused = false"
                 />
                 <!-- <v-textarea
@@ -211,7 +212,7 @@
                 <v-btn
                   v-if="edit"
                   outlined
-                  color="green darken-1"
+                  color="baseAccent"
                   @click="updateTask(task, index)"
                   class="mr-2"
                   :loading="loading"
@@ -225,7 +226,7 @@
                 <v-btn
                   v-else
                   outlined
-                  color="green darken-1"
+                  color="baseAccent"
                   @click="saveTask(task)"
                   class="mr-2"
                   :loading="loading"
@@ -353,7 +354,7 @@ export default {
   name: "CreateEditDeleteMissionDialog",
   props: ["taskToEdit", "taskId", "index", "topicId", "on", "attrs", "edit"],
   components: {
-    VueEditor
+    VueEditor,
   },
   data: () => ({
     dialog: false,
@@ -375,27 +376,27 @@ export default {
     quillFocused: false,
     submissionQuillFocused: false,
     customToolbar: [
-        [{ header: [false, 3, 4, 5] }],
-        ["bold", "italic", "underline", "strike"], // toggled buttons
-        [
-          { align: "" },
-          { align: "center" },
-          { align: "right" },
-          { align: "justify" }
-        ],
-        ["blockquote", "code-block"],
-        [{ list: "ordered" }, { list: "bullet" }],
-        [{ indent: "-1" }, { indent: "+1" }], // outdent/indent
-        ["link"],
-        // ["clean"] // remove formatting button
-    ]
+      [{ header: [false, 3, 4, 5] }],
+      ["bold", "italic", "underline", "strike"], // toggled buttons
+      [
+        { align: "" },
+        { align: "center" },
+        { align: "right" },
+        { align: "justify" },
+      ],
+      ["blockquote", "code-block"],
+      [{ list: "ordered" }, { list: "bullet" }],
+      [{ indent: "-1" }, { indent: "+1" }], // outdent/indent
+      ["link"],
+      // ["clean"] // remove formatting button
+    ],
   }),
   watch: {
     dialog(newVal) {
       if (newVal && this.taskToEdit) {
-        Object.assign(this.task, this.taskToEdit)
+        Object.assign(this.task, this.taskToEdit);
       }
-    }
+    },
   },
   // mounted() {
   //   if (this.taskToEdit) {
@@ -434,9 +435,9 @@ export default {
         .collection("tasks")
         .add({ ...task, taskCreatedTimestamp: new Date() })
         .then((docRef) => {
-          task.id = docRef.id
-          task.taskCreatedTimestamp = new Date()
-          this.saveTaskToStudents(task)
+          task.id = docRef.id;
+          task.taskCreatedTimestamp = new Date();
+          this.saveTaskToStudents(task);
 
           docRef.update({ id: docRef.id }); // add task id to task
           console.log("Task successfully written!");
@@ -489,7 +490,7 @@ export default {
         .catch((error) => {
           console.error("Error writing document: ", error);
         });
-      this.saveTaskToStudents(task)
+      this.saveTaskToStudents(task);
     },
     cancel() {
       this.dialog = false;
@@ -528,96 +529,104 @@ export default {
         .catch((error) => {
           console.error("Error decrementing taskTotal: ", error);
         });
-      
+
       // delete task from students
-      this.deleteTaskForStudents(this.taskId)
+      this.deleteTaskForStudents(this.taskId);
 
       // close dialog
       this.dialogConfirm = false;
     },
     async saveTaskToStudents(task) {
-      
       // get all students currently assigned to course
-      const allStudents = await db.collection("people")
+      const allStudents = await db
+        .collection("people")
         .where("assignedCourses", "array-contains", this.currentCourseId)
         .get();
 
-
-      allStudents.forEach(async doc => {
-        const student = doc.id
+      allStudents.forEach(async (doc) => {
+        const student = doc.id;
 
         // set reference to this course
-        const courseRef = await db.collection('people')
+        const courseRef = await db
+          .collection("people")
           .doc(student)
-          .collection(this.currentCourseId)
-        
-        // check if the student has already started the course. If not they will be assigned this task when they start the course  
-        const studentHasStartedCourse = await courseRef.get().then((subQuery) => {return subQuery.docs.length})
+          .collection(this.currentCourseId);
+
+        // check if the student has already started the course. If not they will be assigned this task when they start the course
+        const studentHasStartedCourse = await courseRef
+          .get()
+          .then((subQuery) => {
+            return subQuery.docs.length;
+          });
 
         if (studentHasStartedCourse) {
           if (this.edit) {
-            console.log('only updating task, we dont need to change status: ', task)
+            console.log(
+              "only updating task, we dont need to change status: ",
+              task
+            );
             // assign task to student
             await courseRef
               .doc(this.topicId)
-              .collection('tasks')
+              .collection("tasks")
               .doc(task.id)
               .update(task);
-
           } else {
             // if they have started the course, get the tasks for this topic
             const query = await courseRef
               .doc(this.topicId)
-              .collection('tasks')
-              .get()
-            
+              .collection("tasks")
+              .get();
+
             // get the data from the task
-            const tasks = query.docs.map(doc => {
+            const tasks = query.docs.map((doc) => {
               return {
                 id: doc.id,
-                ...doc.data()
-              }
-            })
-  
+                ...doc.data(),
+              };
+            });
+
             // check if all the tasks are all completed
-            const uncompletedTasks = tasks.filter(task => task.taskStatus !== 'completed')
-  
+            const uncompletedTasks = tasks.filter(
+              (task) => task.taskStatus !== "completed"
+            );
+
             if (uncompletedTasks.length) {
               // if they arent all completed this task will be locked. If they are completed then this task should be unlocked
-              task.taskStatus = 'locked'
-            } else task.taskStatus = 'unlocked'
-  
+              task.taskStatus = "locked";
+            } else task.taskStatus = "unlocked";
+
             // assign task to student
             await courseRef
               .doc(this.topicId)
-              .collection('tasks')
+              .collection("tasks")
               .doc(task.id)
               .set(task);
           }
         }
-      })
-
+      });
     },
     async deleteTaskForStudents(task) {
       // get all students currently assigned to course
-      const allStudents = await db.collection("people")
+      const allStudents = await db
+        .collection("people")
         .where("assignedCourses", "array-contains", this.currentCourseId)
         .get();
-      
-      allStudents.forEach(async doc => {
-        const student = doc.id
-        console.log('deleteing ', task,  'for student: ', student)
+
+      allStudents.forEach(async (doc) => {
+        const student = doc.id;
+        console.log("deleteing ", task, "for student: ", student);
         // delete for student
         await db
           .collection("people")
           .doc(student)
           .collection(this.currentCourseId)
           .doc(this.topicId)
-          .collection('tasks')
+          .collection("tasks")
           .doc(task)
-          .delete()
-      })
-    }
+          .delete();
+      });
+    },
   },
 };
 </script>
@@ -759,27 +768,27 @@ export default {
   color: var(--v-cohortAccent-base);
 }
 
-.quill ::v-deep .ql-toolbar{
-  border: 1px solid #ffffff45
+.quill ::v-deep .ql-toolbar {
+  border: 1px solid #ffffff45;
 }
-.quill ::v-deep .ql-container{
-  border: 1px solid #ffffff45
+.quill ::v-deep .ql-container {
+  border: 1px solid #ffffff45;
 }
 .quill ::v-deep .ql-editor {
-  font-size: 0.9rem
+  font-size: 0.9rem;
 }
 
-.active-quill ::v-deep .ql-toolbar{
-  border: 1px solid var(--v-missionAccent-base) 
+.active-quill ::v-deep .ql-toolbar {
+  border: 1px solid var(--v-missionAccent-base);
 }
-.active-quill ::v-deep .ql-container{
-  border: 1px solid var(--v-missionAccent-base) 
+.active-quill ::v-deep .ql-container {
+  border: 1px solid var(--v-missionAccent-base);
 }
 
-.active-submission-quill ::v-deep .ql-toolbar{
-  border: 1px solid var(--v-cohortAccent-base) 
+.active-submission-quill ::v-deep .ql-toolbar {
+  border: 1px solid var(--v-cohortAccent-base);
 }
-.active-submission-quill ::v-deep .ql-container{
-  border: 1px solid var(--v-cohortAccent-base) 
+.active-submission-quill ::v-deep .ql-container {
+  border: 1px solid var(--v-cohortAccent-base);
 }
 </style>

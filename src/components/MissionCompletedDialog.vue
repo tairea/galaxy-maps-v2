@@ -11,7 +11,7 @@
               v-bind="attrs"
               v-on="on"
               class="mission-edit-button"
-              :color="active ? 'missionAccent':'cohortAccent'"
+              :color="active ? 'missionAccent' : 'cohortAccent'"
               icon
               x-large
             >
@@ -23,10 +23,7 @@
           </template>
 
           <!-- DIALOG (TODO: make as a component)-->
-          <div
-            v-if="active || declined"
-            class="create-dialog"
-          >
+          <div v-if="active || declined" class="create-dialog">
             <!-- HEADER -->
             <div v-if="task.submissionRequired" class="dialog-header">
               <p class="dialog-title">
@@ -40,11 +37,12 @@
                   >mdi-information-variant</v-icon
                 >
                 <p class="dialog-description">
-                  To complete this task you must submit a response to following instructions
+                  To complete this task you must submit a response to following
+                  instructions
                 </p>
               </div>
             </div>
-            
+
             <!-- HEADER -->
             <div v-else class="dialog-header">
               <p class="dialog-title">
@@ -81,26 +79,22 @@
                       <p class="ma-0">
                         {{ currentCourse.mappedBy.name }}
                       </p>
-                      <p
-                        class="ma-0"
-                        style="font-size: 0.6rem;"
-                      >
-                        Instructor
-                      </p>
+                      <p class="ma-0" style="font-size: 0.6rem">Instructor</p>
                     </div>
                   </div>
-                    <v-row
-                      class="d-flex align-center speech-bubble"
-                    >
-                      <p v-html="task.submissionInstructions" class="submission-dialog-description ma-0"></p>
-                      <!-- <p class="submission-dialog-description ma-0">
+                  <v-row class="d-flex align-center speech-bubble">
+                    <p
+                      v-html="task.submissionInstructions"
+                      class="submission-dialog-description ma-0"
+                    ></p>
+                    <!-- <p class="submission-dialog-description ma-0">
                         {{
                           task.submissionInstructions
                             ? task.submissionInstructions
                             : "Please provide a link to your work, showing that you have completed this mission"
                         }}
                       </p> -->
-                    </v-row>
+                  </v-row>
                 </div>
 
                 <div class="submission-create-dialog-content">
@@ -109,15 +103,16 @@
                       >mdi-information-variant</v-icon
                     >
                     <p class="dialog-description pb-4">
-                      submit your response including any links to other related work below
+                      submit your response including any links to other related
+                      work below
                     </p>
                   </div>
-                  <vue-editor 
-                    v-model="submissionLink" 
-                    class="mb-8 quill" 
-                    :class="{'active-quill' : quillFocused}" 
+                  <vue-editor
+                    v-model="submissionLink"
+                    class="mb-8 quill"
+                    :class="{ 'active-quill': quillFocused }"
                     :editor-toolbar="customToolbar"
-                    @focus="quillFocused = true" 
+                    @focus="quillFocused = true"
                     @blur="quillFocused = false"
                   />
                 </div>
@@ -128,9 +123,9 @@
               <div class="action-buttons">
                 <!-- YES, I HAVE COMPLETED -->
                 <v-btn
-                  v-if="active && task.submissionRequired "
+                  v-if="active && task.submissionRequired"
                   outlined
-                  color="green darken-1"
+                  color="baseAccent"
                   @click="submitWorkForReview()"
                   class="mr-2"
                   :loading="loading"
@@ -144,7 +139,7 @@
                 <v-btn
                   v-else-if="declined && task.submissionRequired"
                   outlined
-                  color="green darken-1"
+                  color="baseAccent"
                   @click="reSubmitWorkForReview()"
                   class="mr-2"
                   :loading="loading"
@@ -247,7 +242,7 @@ export default {
   name: "MissionCompletedDialog",
   mixins: [dbMixins],
   components: {
-    VueEditor
+    VueEditor,
   },
   props: [
     "topicId",
@@ -259,7 +254,7 @@ export default {
     "active",
     "inreview",
     "declined",
-    "completed"
+    "completed",
   ],
   data: () => ({
     submissionLink: null,
@@ -269,19 +264,19 @@ export default {
     deleting: false,
     mappedByImageURL: "",
     customToolbar: [
-        [{ header: [false, 3, 4, 5] }],
-        ["bold", "italic", "underline", "strike"], // toggled buttons
-        [
-          { align: "" },
-          { align: "center" },
-          { align: "right" },
-          { align: "justify" }
-        ],
-        ["blockquote", "code-block"],
-        [{ list: "ordered" }, { list: "bullet" }],
-        [{ indent: "-1" }, { indent: "+1" }], // outdent/indent
-        ["link"],
-        // ["clean"] // remove formatting button
+      [{ header: [false, 3, 4, 5] }],
+      ["bold", "italic", "underline", "strike"], // toggled buttons
+      [
+        { align: "" },
+        { align: "center" },
+        { align: "right" },
+        { align: "justify" },
+      ],
+      ["blockquote", "code-block"],
+      [{ list: "ordered" }, { list: "bullet" }],
+      [{ indent: "-1" }, { indent: "+1" }], // outdent/indent
+      ["link"],
+      // ["clean"] // remove formatting button
     ],
     quillFocused: false,
   }),
@@ -298,13 +293,17 @@ export default {
       "currentTask",
       "personsTopicsTasks",
       "currentCohort",
-      "courseSubmissions"
+      "courseSubmissions",
     ]),
     ...mapGetters(["person"]),
     submission() {
-      const submissions = this.courseSubmissions.filter(submission => submission.studentId == this.person.id)
-      return submissions.find(submission => submission.contextTask.id == this.task.id)
-    }
+      const submissions = this.courseSubmissions.filter(
+        (submission) => submission.studentId == this.person.id
+      );
+      return submissions.find(
+        (submission) => submission.contextTask.id == this.task.id
+      );
+    },
   },
   methods: {
     reSubmitWorkForReview() {
@@ -371,8 +370,8 @@ export default {
         })
         .then(() => {
           this.currentCohort?.teachers.forEach(async (teacherId) => {
-            await this.sendTaskSubmission(teacherId, this.submissionLink)
-          })
+            await this.sendTaskSubmission(teacherId, this.submissionLink);
+          });
         })
         .then(() => {
           console.log("Task work successfully re-submitted for review!");
@@ -409,10 +408,11 @@ export default {
           submissionLink: this.submissionLink,
           taskSubmissionStatus: "inreview",
           taskSubmittedForReviewTimestamp: new Date(),
-        }).then(() => {
+        })
+        .then(() => {
           this.currentCohort?.teachers.forEach(async (teacherId) => {
-            await this.sendTaskSubmission(teacherId, this.submissionLink)
-          })
+            await this.sendTaskSubmission(teacherId, this.submissionLink);
+          });
         })
         .then(() => {
           console.log("Submission successfully submitted for review!");
@@ -553,7 +553,7 @@ export default {
           galaxy: this.currentCourse,
           system: this.currentTopic,
         });
-        this.completeTopic()
+        this.completeTopic();
         // all tasks are completed. unlock next topic
         this.unlockNextTopics();
       } else {
@@ -611,7 +611,7 @@ export default {
           // update tasks array with new task
           topicStatus: "completed",
           topicCompletedTimestamp: new Date(),
-        })
+        });
     },
     cancel() {
       this.dialog = false;
@@ -621,19 +621,19 @@ export default {
       this.mappedByImageURL = person.image.url;
     },
     async sendTaskSubmission(teacherId, submission) {
-      const teacher = await this.MXgetPersonByIdFromDB(teacherId)
+      const teacher = await this.MXgetPersonByIdFromDB(teacherId);
       const data = {
         course: this.currentCourse.title,
         topic: this.currentTopic.label,
         task: this.currentTask.title,
-        student: this.person.firstName + ' ' + this.person.lastName,
+        student: this.person.firstName + " " + this.person.lastName,
         submission: submission,
-        teacher: teacher.firstName + ' ' + teacher.lastName,
-        email: teacher.email
-      }
+        teacher: teacher.firstName + " " + teacher.lastName,
+        email: teacher.email,
+      };
       const sendTaskSubmission = functions.httpsCallable("sendTaskSubmission");
-      return sendTaskSubmission(data)
-    }
+      return sendTaskSubmission(data);
+    },
   },
 };
 </script>
@@ -703,7 +703,7 @@ export default {
     font-size: 0.7rem;
     padding: 0px 10px;
     font-style: italic;
-    width: 100%
+    width: 100%;
   }
 
   .speech-bubble {
@@ -763,21 +763,20 @@ export default {
   display: flex;
 }
 
-.quill ::v-deep .ql-toolbar{
-  border: 1px solid #ffffff45
+.quill ::v-deep .ql-toolbar {
+  border: 1px solid #ffffff45;
 }
-.quill ::v-deep .ql-container{
-  border: 1px solid #ffffff45
+.quill ::v-deep .ql-container {
+  border: 1px solid #ffffff45;
 }
 .quill ::v-deep .ql-editor {
-  font-size: 0.9rem
+  font-size: 0.9rem;
 }
 
-.active-quill ::v-deep .ql-toolbar{
-  border: 1px solid var(--v-cohortAccent-base) 
+.active-quill ::v-deep .ql-toolbar {
+  border: 1px solid var(--v-cohortAccent-base);
 }
-.active-quill ::v-deep .ql-container{
-  border: 1px solid var(--v-cohortAccent-base) 
+.active-quill ::v-deep .ql-container {
+  border: 1px solid var(--v-cohortAccent-base);
 }
-
 </style>

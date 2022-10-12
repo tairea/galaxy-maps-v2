@@ -56,10 +56,8 @@
     </div> -->
 
         <div class="mission-section mission-section-overUnder">
-          <!-- DURATION -->
           <div class="section-overUnder d-flex justify-center flex-column">
             <p class="text-overline text-uppercase text-center">Duration:</p>
-            <!-- <p style="font-size: 30px; text-align: center"> -->
             <p class="text-center">
               {{ task.duration }}
             </p>
@@ -87,11 +85,16 @@
         >
           <p class="text-overline text-uppercase text-center">
             {{
-              completed ? "COMPLETED"
-                : inreview ? "IN REVIEW"
-                : unlocked ? "START MISSION"
-                : active ? "ACTIVE MISSION"
-                : declined ? "RETRY MISSION"
+              completed
+                ? "COMPLETED"
+                : inreview
+                ? "IN REVIEW"
+                : unlocked
+                ? "START MISSION"
+                : active
+                ? "ACTIVE MISSION"
+                : declined
+                ? "RETRY MISSION"
                 : "LOCKED"
             }}
           </p>
@@ -109,7 +112,13 @@
             v-else-if="active || declined || completed || inreview"
             class="d-flex justify-center"
           >
-            <v-icon :color="active || completed || declined ? 'baseAccent' : 'cohortAccent'" large>mdi-check</v-icon> 
+            <v-icon
+              :color="
+                active || completed || declined ? 'baseAccent' : 'cohortAccent'
+              "
+              large
+              >mdi-check</v-icon
+            >
           </div>
           <div v-else class="d-flex justify-center align-center">
             <v-btn color="missionAccent" icon large>
@@ -120,7 +129,7 @@
 
         <!-- ANALYTICS (for type teacher) -->
         <div v-else class="mission-section">
-          <p class="text-overline text-uppercase text-center">Mission Info:</p>
+          <p class="text-overline text-uppercase text-center">Mission Links:</p>
           <div class="d-flex justify-center flex-column mt-2">
             <v-btn
               color="missionAccent"
@@ -153,10 +162,10 @@
         :declined="declined"
         @topicCompleted="topicCompleted()"
       />
-      <SelectedMissionsCard 
-        v-else 
-        :task="task" 
-        :topicId="topicId" 
+      <SelectedMissionsCard
+        v-else
+        :task="task"
+        :topicId="topicId"
         :completed="completed"
         :inreview="inreview"
       />
@@ -194,12 +203,12 @@ export default {
   watch: {
     task: {
       deep: true,
-      handler (newVal, oldVal) {
-        if (oldVal.taskStatus == 'unlocked' && newVal.taskStatus == 'active') {
-          this.$emit('missionActivated')
+      handler(newVal, oldVal) {
+        if (oldVal.taskStatus == "unlocked" && newVal.taskStatus == "active") {
+          this.$emit("missionActivated");
         }
-      }
-    }
+      },
+    },
   },
   computed: {
     ...mapState([
@@ -209,18 +218,28 @@ export default {
       "personsTopicsTasks",
     ]),
     ...mapGetters(["person"]),
-    active() { return this.task.taskStatus == 'active'} ,
-    declined() { return this.task.taskStatus == 'declined'} ,
-    completed() { return this.task.taskStatus == 'completed'} ,
-    inreview() { return this.task.taskStatus == 'inreview'} ,
-    unlocked() { return this.task.taskStatus == 'unlocked'} ,
+    active() {
+      return this.task.taskStatus == "active";
+    },
+    declined() {
+      return this.task.taskStatus == "declined";
+    },
+    completed() {
+      return this.task.taskStatus == "completed";
+    },
+    inreview() {
+      return this.task.taskStatus == "inreview";
+    },
+    unlocked() {
+      return this.task.taskStatus == "unlocked";
+    },
   },
   methods: {
     topicCompleted() {
-      console.log('2')
-      this.$emit('topicCompleted')
-    }
-  }
+      console.log("2");
+      this.$emit("topicCompleted");
+    },
+  },
 };
 </script>
 

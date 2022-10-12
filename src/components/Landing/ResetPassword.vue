@@ -47,7 +47,7 @@
 <script>
 import firebase from "firebase";
 
-import BackButton from "../components/BackButton";
+import BackButton from "@/components/BackButton";
 
 export default {
   name: "Reset Password",
@@ -83,8 +83,8 @@ export default {
           this.$store.commit("setSnackbar", {
             show: true,
             text: error.message,
-            color: 'pink'
-          })
+            color: "pink",
+          });
           console.log("Login error:", error);
         });
     },
@@ -100,15 +100,15 @@ export default {
           this.$store.commit("setSnackbar", {
             show: true,
             text: "Reset Password Email Sent",
-            color: 'baseAccent'
-          })
+            color: "baseAccent",
+          });
         })
         .catch((error) => {
           this.$store.commit("setSnackbar", {
             show: true,
             text: error.message,
-            color: 'pink'
-          })  
+            color: "pink",
+          });
         });
     },
   },
@@ -124,7 +124,7 @@ export default {
   align-items: center;
   flex-direction: column;
   background-color: #393e46;
-  background-image: url("../assets/hudf_big.jpeg");
+  // background-image: url("../assets/hudf_big.jpeg");
   background-size: cover;
   box-shadow: inset 0 0 0 2000px rgba(20, 30, 48, 0.9);
 
@@ -141,36 +141,42 @@ export default {
   a {
     color: var(--v-baseAccent-base) !important;
   }
-}
 
-#galaxy-info {
-  width: 300px;
-  // height: 400px;
-  border: 1px solid var(--v-baseAccent-base);
-  margin-top: 30px;
-  padding: 20px;
-  // background: var(--v-baseAccent-base);
-  position: relative;
-  backdrop-filter: blur(2px);
-  z-index: 3;
+  #galaxy-info {
+    width: 300px;
+    // height: 400px;
+    border: 1px solid var(--v-baseAccent-base);
+    margin-top: 30px;
+    padding: 20px;
+    // background: var(--v-baseAccent-base);
+    position: relative;
+    backdrop-filter: blur(2px);
+    z-index: 3;
 
-  .galaxy-label {
-    font-size: 0.8rem;
-    font-weight: 400;
-    text-transform: uppercase;
-    // ribbon label
-    position: absolute;
-    top: 0;
-    left: -1px;
-    background-color: var(--v-baseAccent-base);
-    color: var(--v-background-base);
-    padding: 0px 25px 0px 5px;
-    clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%);
+    .galaxy-label {
+      font-size: 0.8rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      // ribbon label
+      position: absolute;
+      top: 0;
+      left: -1px;
+      background-color: var(--v-baseAccent-base);
+      color: var(--v-background-base);
+      padding: 0px 25px 0px 5px;
+      clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%);
+    }
+
+    .resetPassButton {
+      text-decoration: underline;
+      cursor: pointer;
+    }
   }
 
-  .resetPassButton {
-    text-decoration: underline;
-    cursor: pointer;
+  .backButton {
+    margin-top: 15px;
+    width: calc(100% - 30px);
+    z-index: 999;
   }
 }
 </style>

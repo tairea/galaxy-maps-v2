@@ -120,7 +120,7 @@
         <div class="action-buttons">
           <v-btn
             outlined
-            color="green darken-1"
+            color="baseAccent"
             @click="saveOrganisation(organisation)"
             class="mr-2"
             :loading="loading"

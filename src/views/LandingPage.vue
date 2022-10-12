@@ -1,13 +1,18 @@
 <template>
   <div class="bg">
-    <div v-if="!showLogin" class="landing-content">
+    <Login v-if="componentView == 'login'" />
+    <VerifyEmail v-else-if="componentView == 'verify'" />
+    <ResetPassword v-else-if="componentView == 'reset'" />
+    <Register v-else-if="componentView == 'register'" />
+
+    <div v-else class="landing-content">
       <p class="gm-title">GALAXY MAPS</p>
       <p class="overline">Galaxy Maps is a new digital learning experience</p>
       <p class="overline">Galaxy Maps are branching paths of learning</p>
       <p class="overline">Using Galaxy Maps you can navigate your learning</p>
 
       <!-- <v-btn outlined color="baseAccent" class="mt-8" :to="{ path: 'login' }"> -->
-      <v-btn outlined color="baseAccent" class="mt-8" @click="showLogin = true">
+      <v-btn outlined color="baseAccent" class="mt-8" to="/login">
         <!-- <v-icon small>
         mdi-account-multiple-plus
       </v-icon> -->
@@ -15,7 +20,7 @@
       </v-btn>
       <!-- Background maps video -->
     </div>
-    <Login v-else />
+
     <video id="background-video" autoplay loop muted>
       <!-- <source src="../assets/gm-maps.mp4" type="video/mp4" /> -->
       <source src="../assets/gm-maps-2.mp4" type="video/mp4" />
@@ -24,21 +29,67 @@
 </template>
 
 <script>
-import Login from '@/components/Login.vue'
+import Login from "@/components/Landing/Login.vue";
+import VerifyEmail from "@/components/Landing/VerifyEmail.vue";
+import ResetPassword from "@/components/Landing/ResetPassword.vue";
+import Register from "@/components/Landing/Register.vue";
 
 export default {
   name: "LandingPage",
   components: {
-    Login
+    Login,
+    VerifyEmail,
+    ResetPassword,
+    Register,
   },
   data() {
     return {
-      showLogin: false
+      componentView: null,
     };
   },
-  mounted () {
-    if (this.$route.name === 'Login') this.showLogin = true
-  }
+  watch: {
+    "$route.name": {
+      handler: function (route) {
+        console.log("route watch:", route);
+        switch (route) {
+          case "Login":
+            this.componentView = "login";
+            break;
+          case "Verify":
+            this.componentView = "verify";
+            break;
+          case "Reset":
+            this.componentView = "reset";
+            break;
+          case "Register":
+            this.componentView = "register";
+            break;
+          default:
+            break;
+        }
+      },
+      deep: true,
+      immediate: true,
+    },
+  },
+  mounted() {
+    switch (this.$route.name) {
+      case "Login":
+        this.componentView = "login";
+        break;
+      case "Verify":
+        this.componentView = "verify";
+        break;
+      case "Reset":
+        this.componentView = "reset";
+        break;
+      case "Register":
+        this.componentView = "register";
+        break;
+      default:
+        break;
+    }
+  },
 };
 </script>
 

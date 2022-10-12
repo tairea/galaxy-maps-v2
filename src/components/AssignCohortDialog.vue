@@ -41,7 +41,9 @@
               class="mt-4"
             >
               <v-tab><p class="baseAccent--text tab">Individual</p></v-tab>
-              <v-tab v-if="teacherCohorts.length"><p class="baseAccent--text tab">Cohort</p></v-tab>
+              <v-tab v-if="teacherCohorts.length"
+                ><p class="baseAccent--text tab">Cohort</p></v-tab
+              >
               <!-- <v-tab><p class="baseAccent--text tab">Organisation</p></v-tab> -->
             </v-tabs>
 
@@ -75,7 +77,7 @@
                   ></v-text-field>
                   <div>
                     <p class="dialog-description">
-                      Assign the student to a cohort 
+                      Assign the student to a cohort
                     </p>
                     <v-select
                       v-model="cohort"
@@ -88,37 +90,40 @@
                       <template v-slot:selection="{ item }">
                         <v-list-item-avatar tile>
                           <img
-                            v-if="item.image && item.image.url" 
+                            v-if="item.image && item.image.url"
                             :src="item.image.url"
-                          >
+                          />
                           <v-icon v-else>mdi-star-three-points</v-icon>
                         </v-list-item-avatar>
-                        <v-list-item-content>{{item.name}}
+                        <v-list-item-content
+                          >{{ item.name }}
                         </v-list-item-content>
                       </template>
                       <template v-slot:item="{ item }">
                         <v-list-item-avatar tile>
                           <img
-                            v-if="item.image && item.image.url" 
+                            v-if="item.image && item.image.url"
                             :src="item.image.url"
-                          >
+                          />
                           <v-icon v-else>mdi-star-three-points</v-icon>
                         </v-list-item-avatar>
                         <v-list-item-content>
-                          <v-list-item-title v-html="item.name"></v-list-item-title>
+                          <v-list-item-title
+                            v-html="item.name"
+                          ></v-list-item-title>
                         </v-list-item-content>
                       </template>
                     </v-select>
                   </div>
                 </div>
-                
+
                 <!-- End create-dialog-content -->
                 <!-- ACTION BUTTONS -->
                 <div class="action-buttons">
                   <v-btn
                     v-if="assignCohorts"
                     outlined
-                    color="green darken-1"
+                    color="baseAccent"
                     @click="assignCourseToPerson(profile)"
                     :loading="loading"
                   >
@@ -188,7 +193,7 @@
                   <v-btn
                     v-if="assignCohorts"
                     outlined
-                    color="green darken-1"
+                    color="baseAccent"
                     @click="assignCourseToCohort(cohort)"
                     :loading="loading"
                   >
@@ -234,12 +239,9 @@
                 :items="courses"
                 dark
               >
-                 <template v-slot:selection="{ item }">
+                <template v-slot:selection="{ item }">
                   <v-list-item-avatar tile>
-                    <img 
-                      v-if="item.image.url" 
-                      :src="item.image.url"
-                    >
+                    <img v-if="item.image.url" :src="item.image.url" />
                     <v-icon v-else> mdi-star-three-points </v-icon>
                   </v-list-item-avatar>
                   <v-list-item-content>
@@ -248,10 +250,7 @@
                 </template>
                 <template v-slot:item="{ item }">
                   <v-list-item-avatar tile>
-                    <img 
-                      v-if="item.image.url"
-                      :src="item.image.url"
-                    >
+                    <img v-if="item.image.url" :src="item.image.url" />
                     <v-icon v-else> mdi-star-three-points </v-icon>
                   </v-list-item-avatar>
                   <v-list-item-content>
@@ -266,7 +265,7 @@
               <v-btn
                 v-if="assignCourses"
                 outlined
-                color="green darken-1"
+                color="baseAccent"
                 @click="assignCourseToCohort(null, course)"
                 :loading="loading"
               >
@@ -315,20 +314,25 @@ export default {
     },
     cohort: "",
     course: "",
-    teacherCohorts: []
+    teacherCohorts: [],
   }),
-  async mounted () {
+  async mounted() {
     if (this.assignCourses) {
       // TODO: we need to think about what courses are available to assign for a teacher
       await this.$store.dispatch("bindAllCourses");
     } else if (this.assignCohorts) {
-      this.teacherCohorts = this.cohorts.filter(cohort => cohort.teacher && !cohort.courseCohort)
-    } 
+      this.teacherCohorts = this.cohorts.filter(
+        (cohort) => cohort.teacher && !cohort.courseCohort
+      );
+    }
   },
   watch: {
     dialog(newVal) {
-      if (newVal && !this.cohort) this.cohort = this.cohorts.find(cohort => cohort.id == this.currentCourseId)
-    }
+      if (newVal && !this.cohort)
+        this.cohort = this.cohorts.find(
+          (cohort) => cohort.id == this.currentCourseId
+        );
+    },
   },
   computed: {
     ...mapState([
@@ -339,16 +343,15 @@ export default {
       "currentCohort",
       "personsCourses",
     ]),
-    ...mapGetters(['person']),
-    cohortOptions () {
+    ...mapGetters(["person"]),
+    cohortOptions() {
       // teacherCohorts && the courseCohort
-      let courseCohort = this.cohorts.filter(cohort => cohort.id === this.currentCourse.cohort)
-      this.cohort = courseCohort[0]
-      return [
-        ...courseCohort,
-        ...this.teacherCohorts
-      ]
-    }
+      let courseCohort = this.cohorts.filter(
+        (cohort) => cohort.id === this.currentCourse.cohort
+      );
+      this.cohort = courseCohort[0];
+      return [...courseCohort, ...this.teacherCohorts];
+    },
   },
   methods: {
     close() {
@@ -369,11 +372,11 @@ export default {
         this.handleAssignment(personExists, this.currentCourse);
       } else {
         //create the persons account
-        profile.inviter = this.person.firstName + ' ' + this.person.lastName
+        profile.inviter = this.person.firstName + " " + this.person.lastName;
 
         this.MXcreateUser(profile).then((id) => {
-          console.log('1. person created: ', profile)
-          this.handleAssignment({id: id}, this.currentCourse);
+          console.log("1. person created: ", profile);
+          this.handleAssignment({ id: id }, this.currentCourse);
         });
       }
     },
@@ -389,8 +392,8 @@ export default {
             text: "Individual assigned to Course",
             color: "baseAccent",
           });
-          this.$emit('newAssignment', person)
-          console.log('should assignTopicsAndTasksToStudent')
+          this.$emit("newAssignment", person);
+          console.log("should assignTopicsAndTasksToStudent");
           this.close();
         })
         .catch((error) => {

@@ -2,23 +2,23 @@
   <div class="login">
     <p class="gm-title">GALAXY MAPS</p>
     <EmailSignIn v-if="showEmailSignin" />
-    <NewPassword 
-      v-else-if="isResetPassword" 
+    <NewPassword
+      v-else-if="isResetPassword"
       :actionCode="actionCode"
       :email="accountEmail"
       @close="isResetPassword = false"
     />
     <div v-else-if="isVerifyEmail" id="galaxy-info">
       <h2 class="galaxy-label">EMAIL VERIFIED</h2>
-        <v-btn
-          color="baseAccent"
-          class="mr-4 my-4"
-          @click="redirect"
-          outlined
-          width="100%"
-        >
-          continue to login
-        </v-btn>
+      <v-btn
+        color="baseAccent"
+        class="mr-4 my-4"
+        @click="redirect"
+        outlined
+        width="100%"
+      >
+        continue to login
+      </v-btn>
     </div>
     <div v-else id="galaxy-info">
       <h2 class="galaxy-label">LOGIN</h2>
@@ -77,18 +77,18 @@
 </template>
 
 <script>
-import NewPassword from "./NewPassword.vue"
-import EmailSignIn from '@/components/EmailSignIn'
+import NewPassword from "../NewPassword.vue";
+import EmailSignIn from "@/components/EmailSignIn";
 
 import firebase from "firebase";
 import { mapGetters } from "vuex";
-import { queryXAPIStatement } from "../lib/veracityLRS";
+import { queryXAPIStatement } from "@/lib/veracityLRS";
 
 export default {
   name: "Login",
   components: {
     NewPassword,
-    EmailSignIn
+    EmailSignIn,
   },
   data: () => ({
     valid: true,
@@ -100,41 +100,41 @@ export default {
     ],
     loading: false,
     isResetPassword: false,
-    accountEmail: '',
-    actionCode: '',
+    accountEmail: "",
+    actionCode: "",
     isVerifyEmail: false,
-    showEmailSignin: false
+    showEmailSignin: false,
   }),
   mounted() {
     // Get the email action to complete.
     var mode = this.$route.query.mode || null;
-    var actionCode = this.$route.query.oobCode
-    var auth = firebase.auth()
-    console.log('route: ', this.$route)
+    var actionCode = this.$route.query.oobCode;
+    var auth = firebase.auth();
+    console.log("route: ", this.$route);
 
-    console.log('mode: ', mode)
+    console.log("mode: ", mode);
     // Handle the user management action.
     switch (mode) {
-      case 'resetPassword':
+      case "resetPassword":
         // Display reset password handler and UI.
         this.handleResetPassword(auth, actionCode);
         break;
-      case 'recoverEmail':
+      case "recoverEmail":
         // Display email recovery handler and UI.
         this.handleRecoverEmail(auth, actionCode);
         break;
-      case 'verifyEmail':
+      case "verifyEmail":
         // Display email verification handler and UI.
         this.handleVerifyEmail(auth, actionCode);
         break;
-      case 'signIn':
-        if (this.$route.fullPath.includes('email_signin')) {
-          console.log('show me the signin component')
-          this.showEmailSignin = true
+      case "signIn":
+        if (this.$route.fullPath.includes("email_signin")) {
+          console.log("show me the signin component");
+          this.showEmailSignin = true;
         }
         break;
       default:
-        // Error: invalid mode.
+      // Error: invalid mode.
     }
   },
   computed: {
@@ -142,85 +142,94 @@ export default {
   },
   methods: {
     redirect() {
-      this.isVerifyEmail = false
-      firebase
-        .auth()
-        .signOut()
+      this.isVerifyEmail = false;
+      firebase.auth().signOut();
       this.$router.push("login");
     },
     handleResetPassword(auth, actionCode) {
       // Verify the password reset code is valid.
-      auth.verifyPasswordResetCode(actionCode).then((email) => {
-        this.isResetPassword = true;
-        this.accountEmail = email;
-        this.actionCode = actionCode
-      }).catch((error) => {
-        // Invalid or expired action code. Ask user to try to reset the password
-        this.$store.commit("setSnackbar", {
-          show: true,
-          text: 'error verifying code: '+ error.message,
-          color: "pink",
-        });
-      });
-    },
-    handleRecoverEmail(auth, actionCode) {
-      console.log('handle recover email')
-      var restoredEmail = null;
-      // Confirm the action code is valid.
-      auth.checkActionCode(actionCode).then((info) => {
-        // Get the restored email address.
-        restoredEmail = info['data']['email'];
-
-        // Revert to the old email.
-        return auth.applyActionCode(actionCode);
-      }).then(() => {
-        // Account email reverted to restoredEmail
-        auth.sendPasswordResetEmail(restoredEmail).then(() => {
-        
-        this.$store.commit("setSnackbar", {
-          show: true,
-          text: "Email successfully reverted. Password reset email sent",
-          color: "baseAccent",
-        });
-
-        }).catch((error) => {
-          // Error encountered while sending password reset code.
+      auth
+        .verifyPasswordResetCode(actionCode)
+        .then((email) => {
+          this.isResetPassword = true;
+          this.accountEmail = email;
+          this.actionCode = actionCode;
+        })
+        .catch((error) => {
+          // Invalid or expired action code. Ask user to try to reset the password
           this.$store.commit("setSnackbar", {
             show: true,
-            text: 'error sending password reset email: '+ error.message,
+            text: "error verifying code: " + error.message,
             color: "pink",
           });
         });
-      }).catch((error) => {
-        this.$store.commit("setSnackbar", {
-          show: true,
-          text: 'invalid or expired code: '+ error.message,
-          color: "pink",
+    },
+    handleRecoverEmail(auth, actionCode) {
+      console.log("handle recover email");
+      var restoredEmail = null;
+      // Confirm the action code is valid.
+      auth
+        .checkActionCode(actionCode)
+        .then((info) => {
+          // Get the restored email address.
+          restoredEmail = info["data"]["email"];
+
+          // Revert to the old email.
+          return auth.applyActionCode(actionCode);
+        })
+        .then(() => {
+          // Account email reverted to restoredEmail
+          auth
+            .sendPasswordResetEmail(restoredEmail)
+            .then(() => {
+              this.$store.commit("setSnackbar", {
+                show: true,
+                text: "Email successfully reverted. Password reset email sent",
+                color: "baseAccent",
+              });
+            })
+            .catch((error) => {
+              // Error encountered while sending password reset code.
+              this.$store.commit("setSnackbar", {
+                show: true,
+                text: "error sending password reset email: " + error.message,
+                color: "pink",
+              });
+            });
+        })
+        .catch((error) => {
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: "invalid or expired code: " + error.message,
+            color: "pink",
+          });
         });
-      });
     },
     handleVerifyEmail(auth, actionCode) {
-      console.log('handle verify email')
-      this.isVerifyEmail = true
+      console.log("handle verify email");
+      this.isVerifyEmail = true;
       // Try to apply the email verification code.
-      auth.applyActionCode(actionCode).then((resp) => {
-        // Email address has been verified.
-        this.$store.commit("setSnackbar", {
-          show: true,
-          text: "Email successfully verified",
-          color: "baseAccent",
+      auth
+        .applyActionCode(actionCode)
+        .then((resp) => {
+          // Email address has been verified.
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: "Email successfully verified",
+            color: "baseAccent",
+          });
+        })
+        .catch((error) => {
+          // Code is invalid or expired. Ask the user to verify their email address
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: "invalid or expired code: " + error.message,
+            color: "pink",
+          });
         });
-      }).catch((error) => {
-        // Code is invalid or expired. Ask the user to verify their email address
-        this.$store.commit("setSnackbar", {
-          show: true,
-          text: 'invalid or expired code: '+ error.message,
-          color: "pink",
-        });
-      });
     },
     login() {
-      console.log('loggin in')
+      console.log("loggin in");
       this.loading = true;
       firebase
         .auth()
@@ -235,7 +244,7 @@ export default {
           this.proceed();
         })
         .catch((error) => {
-          console.log('error: ', error)
+          console.log("error: ", error);
           this.$store.commit("setSnackbar", {
             show: true,
             text: error.message,

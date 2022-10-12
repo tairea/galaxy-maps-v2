@@ -46,7 +46,7 @@
                     v-model="uploadedImage"
                     label="UPLOAD ORGANISATION IMAGE"
                     @change="storeImage()"
-                    style="width:100% "
+                    style="width: 100%"
                   ></v-file-input>
                 </v-row>
                 <v-row
@@ -66,15 +66,13 @@
             <div class="tile saveButton">
               <v-btn
                 outlined
-                color="green darken-1"
+                color="baseAccent"
                 class="mr-2"
                 @click="updateOrganisation(combinePropAndLocalOrganisation)"
                 :disabled="disabled"
                 :loading="loading"
               >
-                <v-icon left>
-                  mdi-check
-                </v-icon>
+                <v-icon left> mdi-check </v-icon>
                 UPDATE ORGANISATION
               </v-btn>
               <!-- DELETE -->
@@ -84,9 +82,7 @@
                 @click="deleteDialog()"
                 class="ml-2"
               >
-                <v-icon left>
-                  mdi-delete
-                </v-icon>
+                <v-icon left> mdi-delete </v-icon>
                 DELETE ORGANISATION
               </v-btn>
             </div>
@@ -125,9 +121,7 @@
                 @click="cancelDeleteDialog()"
                 class="ml-2"
               >
-                <v-icon left>
-                  mdi-close
-                </v-icon>
+                <v-icon left> mdi-close </v-icon>
                 CANCEL
               </v-btn>
               <v-btn
@@ -138,9 +132,7 @@
                 :disabled="disabledDelete"
                 :loading="loadingDelete"
               >
-                <v-icon left>
-                  mdi-delete
-                </v-icon>
+                <v-icon left> mdi-delete </v-icon>
                 CONFIRM DELETE ORGANISATION
               </v-btn>
             </v-card-actions>
@@ -162,8 +154,8 @@ export default {
   mounted() {},
   computed: {
     combinePropAndLocalOrganisation() {
-      return {...this.organisation,...this.localOrganisation}
-    }
+      return { ...this.organisation, ...this.localOrganisation };
+    },
   },
   data: () => ({
     loading: false,
@@ -175,21 +167,21 @@ export default {
     // organisation: null,
     uploadedImage: {},
     percentage: 0,
-    localOrganisation: {}
+    localOrganisation: {},
   }),
   methods: {
     closeDialog() {
       this.$emit("closeOrganisationEditDialog");
     },
     updateOrganisation(organisation) {
-      this.loading = true
+      this.loading = true;
       // Add a new document in collection "cohorts"
       db.collection("organisations")
         .doc(organisation.id)
         .update(organisation)
         .then((docRef) => {
           console.log("Organisation successfully updated!");
-          this.loading = false
+          this.loading = false;
           this.closeDialog();
         })
         .catch((error) => {
@@ -204,7 +196,7 @@ export default {
     //   });
     // },
     storeImage() {
-      this.disabled = true
+      this.disabled = true;
       // ceate a storage ref
       var storageRef = storage.ref(
         "organisation-images/" +
@@ -236,7 +228,7 @@ export default {
             // add image url to organisation obj
             this.organisation.image.url = downloadURL;
             this.organisation.image.name = this.uploadedImage.name;
-            this.disabled = false
+            this.disabled = false;
           });
         }
       );
@@ -257,8 +249,8 @@ export default {
         .then(() => {
           console.log("Organisation successfully deleted!");
           this.loadingDelete = false;
-          this.dialogConfirm = false
-          this.closeDialog()
+          this.dialogConfirm = false;
+          this.closeDialog();
         })
         .catch((error) => {
           console.error("Error deleting document: ", error);
@@ -275,7 +267,7 @@ export default {
               .doc(doc.id)
               .update({ organisation: "" })
               .then(() => {
-                console.log("Organisation removed from Cohort.")
+                console.log("Organisation removed from Cohort.");
               });
           });
         })
@@ -287,7 +279,7 @@ export default {
     },
     deleteImage() {
       // if no image, dont worry bout it cuz
-      if(this.organisation.image.name == "") return
+      if (this.organisation.image.name == "") return;
       console.log("deleting image...");
       // Create a reference to the file to delete
       var storageRef = storage.ref(
