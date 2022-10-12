@@ -99,7 +99,7 @@
       <div v-if="admin" class="action-buttons">
         <v-btn
           outlined
-          color="green darken-1"
+          color="baseAccent"
           @click="publishCourse()"
           :loading="loading"
         >
@@ -122,7 +122,7 @@
         <v-btn
           v-if="courseOptions.public"
           outlined
-          color="green darken-1"
+          color="baseAccent"
           @click="submitCourse()"
           :loading="loading"
         >
@@ -132,7 +132,7 @@
         <v-btn
           v-else
           outlined
-          color="green darken-1"
+          color="baseAccent"
           @click="publishCourse()"
           :loading="loading"
         >

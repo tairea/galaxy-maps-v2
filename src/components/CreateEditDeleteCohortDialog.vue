@@ -205,7 +205,7 @@
           <v-btn
             v-if="edit"
             outlined
-            color="green darken-1"
+            color="baseAccent"
             @click="updateCohort(cohort)"
             class="mx-2"
             :loading="loading"
@@ -220,7 +220,7 @@
           <v-btn
             v-else
             outlined
-            color="green darken-1"
+            color="baseAccent"
             @click="saveCohort(cohort)"
             class="mx-2"
             :loading="loading"
@@ -269,20 +269,29 @@
 
     <!-- CONFIRM DELETE DIALOG -->
     <v-dialog v-model="dialogConfirm" width="40%" light>
-      <div v-if="edit && cohortToEdit && cohortToEdit.courseCohort" class="create-dialog">
+      <div
+        v-if="edit && cohortToEdit && cohortToEdit.courseCohort"
+        class="create-dialog"
+      >
         <!-- HEADER -->
         <div class="dialog-header">
           <p class="dialog-title"><strong>Warning!</strong> Delete Cohort?</p>
           <div class="d-flex align-start">
             <v-icon left color="missionAccent">mdi-information-variant</v-icon>
             <p class="dialog-description">
-              This cohort is linked to the <span style="color:var(--v-galaxyAccent-base)">{{cohort.name}}</span> Galaxy Map. <br/><br/>
-              To delete this cohort, please navigate to the galaxy map and delete the course. <br/><br/>
-              If you have any questions or require help please contact <a href="mailto:base@galaxymaps.io">base@galaxymaps.io</a>               
+              This cohort is linked to the
+              <span style="color: var(--v-galaxyAccent-base)">{{
+                cohort.name
+              }}</span>
+              Galaxy Map. <br /><br />
+              To delete this cohort, please navigate to the galaxy map and
+              delete the course. <br /><br />
+              If you have any questions or require help please contact
+              <a href="mailto:base@galaxymaps.io">base@galaxymaps.io</a>
             </p>
           </div>
         </div>
-         <!-- ACTION BUTTONS -->
+        <!-- ACTION BUTTONS -->
         <div class="action-buttons">
           <v-btn
             outlined
@@ -465,7 +474,7 @@ export default {
     },
     saveCohort(cohort) {
       this.loading = true;
-      if (cohort.teacher) delete cohort.teacher
+      if (cohort.teacher) delete cohort.teacher;
       // Add a new document in collection "cohorts"
       db.collection("cohorts")
         .add(cohort)

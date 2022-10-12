@@ -14,7 +14,9 @@
           :key="task.id"
           @click="missionClicked(task)"
           :readonly="
-            task.taskStatus == 'locked' || task.taskStatus == 'unlocked'
+            task.taskStatus == 'locked' ||
+            task.taskStatus == 'unlocked' ||
+            teacher
           "
           :value="task.taskStatus == 'active'"
         >
@@ -36,7 +38,7 @@
       <p class="no-missions-label">No Missions in this system</p>
     </div>
 
-    <div class="createButton" v-if="teacher">
+    <div class="createButton mt-8" v-if="teacher">
       <CreateEditDeleteMissionDialog :topicId="topicId" />
     </div>
   </div>
@@ -65,30 +67,30 @@ export default {
   },
   mounted() {
     // get active task index for expansion panel vmodel (to expand 'active' task on load)
-    this.checkActiveTask()
+    this.checkActiveTask();
   },
   computed: {
     ...mapGetters(["person"]),
-    ...mapState(['currentTopic'])
+    ...mapState(["currentTopic"]),
   },
   methods: {
     missionClicked(task) {
       this.$emit("task", task);
     },
     missionActivated() {
-      this.checkActiveTask()
-      this.$emit('missionActivated')
+      this.checkActiveTask();
+      this.$emit("missionActivated");
     },
     checkActiveTask() {
       this.indexOfActiveTask = this.tasks.findIndex((object) => {
         return object.taskStatus == "active" || object.taskStatus == "declined";
       });
-      if (this.currentTopic.topicStatus === 'active') this.topicActive = true;
+      if (this.currentTopic.topicStatus === "active") this.topicActive = true;
     },
     topicCompleted() {
-      console.log('3')
-      this.$emit('topicCompleted')
-    }
+      console.log("3");
+      this.$emit("topicCompleted");
+    },
   },
 };
 </script>

@@ -121,21 +121,20 @@ import { getCourseById } from "../lib/ff";
 import { db } from "../store/firestoreConfig";
 import { startGalaxyXAPIStatement } from "../lib/veracityLRS";
 
-
 export default {
   name: "CreateAccountForm",
   mixins: [dbMixins],
   props: {
     accountType: { type: String },
-    student: { type: Object},
-    edit: { type: Boolean, default: false }
+    student: { type: Object },
+    edit: { type: Boolean, default: false },
   },
   mounted() {
-    if (this.edit) this.account = {
-      ...this.account,
-      ...this.student,
-    }
-
+    if (this.edit)
+      this.account = {
+        ...this.account,
+        ...this.student,
+      };
   },
   data: () => ({
     addingAccount: false,
@@ -176,23 +175,26 @@ export default {
         inviter: "",
         parentEmail: "",
       };
-      this.$emit('close')
+      this.$emit("close");
     },
     async update() {
-      let obj = Object.fromEntries(Object.entries(this.account).filter(([_, v]) => v.length));
+      let obj = Object.fromEntries(
+        Object.entries(this.account).filter(([_, v]) => v.length)
+      );
 
-      db.collection('people')
+      db.collection("people")
         .doc(obj.id)
         .update(obj)
         .then(() => {
-          this.$emit('updateStudentProfile', obj)
+          this.$emit("updateStudentProfile", obj);
           this.$store.commit("setSnackbar", {
             show: true,
-            text: 'student successfully updated',
+            text: "student successfully updated",
             color: "baseAccent",
           });
-          this.close()
-        }).catch((error) => {
+          this.close();
+        })
+        .catch((error) => {
           console.error("Error updating document: ", error);
         });
     },
@@ -211,24 +213,26 @@ export default {
         this.MXsaveProfile(profile)
           .then(() => {
             this.MXaddExistingUserToCohort(personExists);
-          }).then(() => {
+          })
+          .then(() => {
             if (this.currentCohort.courses.length) {
               this.currentCohort.courses.forEach(async (courseId) => {
                 let course = await getCourseById(courseId);
-                this.MXassignCourseToStudent(personExists, course)
-                .then(() => {
-                  this.assignTopicsAndTasksToStudent(personExists, course)
-                  .then(() => {
-                    this.$store.commit("setSnackbar", {
-                      show: true,
-                      text: "student assigned to first mission",
-                      color: "baseAccent",
-                    });
-                  })
+                this.MXassignCourseToStudent(personExists, course).then(() => {
+                  this.assignTopicsAndTasksToStudent(personExists, course).then(
+                    () => {
+                      this.$store.commit("setSnackbar", {
+                        show: true,
+                        text: "student assigned to first mission",
+                        color: "baseAccent",
+                      });
+                    }
+                  );
                 });
-              })
+              });
             }
-          }).then(() => {
+          })
+          .then(() => {
             this.addingAccount = false;
             this.close();
           })
@@ -243,44 +247,45 @@ export default {
         };
         this.MXcreateUser(person)
           .then(() => {
-             this.$store.commit("setSnackbar", {
+            this.$store.commit("setSnackbar", {
               show: true,
               text: "Account created",
               color: "baseAccent",
             });
             if (!this.teacher) {
               this.MXaddStudentToCohort(person)
-              .then(() => {
-                 this.$store.commit("setSnackbar", {
-                  show: true,
-                  text: "student added to cohort",
-                  color: "baseAccent",
-                });
-                if (this.currentCohort.courses.length) {
-                  this.currentCohort.courses.forEach(async (courseId) => {
-                    let course = await getCourseById(courseId);
-                    this.MXassignCourseToStudent(person, course)
-                    .then(() => {
-                      this.assignTopicsAndTasksToStudent(person, course)
-                      .then(() => {
-                        this.$store.commit("setSnackbar", {
-                          show: true,
-                          text: "student assigned to first mission",
-                          color: "baseAccent",
-                        });
-                      })
-                    });
+                .then(() => {
+                  this.$store.commit("setSnackbar", {
+                    show: true,
+                    text: "Student added to Cohort",
+                    color: "baseAccent",
                   });
-                }
-              }).then(() => {
-                this.$store.commit("setSnackbar", {
-                  show: true,
-                  text: "student assigned to first mission. email sent",
-                  color: "baseAccent",
+                  if (this.currentCohort.courses.length) {
+                    this.currentCohort.courses.forEach(async (courseId) => {
+                      let course = await getCourseById(courseId);
+                      this.MXassignCourseToStudent(person, course).then(() => {
+                        this.assignTopicsAndTasksToStudent(person, course).then(
+                          () => {
+                            this.$store.commit("setSnackbar", {
+                              show: true,
+                              text: "student assigned to first mission",
+                              color: "baseAccent",
+                            });
+                          }
+                        );
+                      });
+                    });
+                  }
+                })
+                .then(() => {
+                  this.$store.commit("setSnackbar", {
+                    show: true,
+                    text: "student assigned to first mission. email sent",
+                    color: "baseAccent",
+                  });
+                  this.addingAccount = false;
+                  this.close();
                 });
-                this.addingAccount = false;
-                this.close();
-              })
             } else {
               this.$store.commit("setSnackbar", {
                 show: true,
@@ -298,8 +303,8 @@ export default {
     },
     // add this galaxy metadata (eg. topics) to this persons course database
     async assignTopicsAndTasksToStudent(person, course) {
-      console.log('person: ', person)
-      console.log('course: ', course)
+      console.log("person: ", person);
+      console.log("course: ", course);
 
       // 1) get topics in this course
       const querySnapshot = await db

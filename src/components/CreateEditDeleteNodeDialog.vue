@@ -152,7 +152,7 @@
             <v-btn
               v-if="!editing"
               outlined
-              color="green darken-1"
+              color="baseAccent"
               @click="saveNode(currentNode)"
               class="mr-2"
               :loading="loading"
@@ -163,7 +163,7 @@
             <v-btn
               v-else
               outlined
-              color="green darken-1"
+              color="baseAccent"
               @click="saveNode(currentNode)"
               class="mr-2"
               :loading="loading"
