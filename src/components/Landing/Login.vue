@@ -159,7 +159,7 @@ export default {
           // Invalid or expired action code. Ask user to try to reset the password
           this.$store.commit("setSnackbar", {
             show: true,
-            text: "error verifying code: " + error.message,
+            text: "Error verifying code: " + error.message,
             color: "pink",
           });
         });
@@ -192,7 +192,7 @@ export default {
               // Error encountered while sending password reset code.
               this.$store.commit("setSnackbar", {
                 show: true,
-                text: "error sending password reset email: " + error.message,
+                text: "Error sending password reset email: " + error.message,
                 color: "pink",
               });
             });
@@ -200,7 +200,7 @@ export default {
         .catch((error) => {
           this.$store.commit("setSnackbar", {
             show: true,
-            text: "invalid or expired code: " + error.message,
+            text: "Invalid or expired code: " + error.message,
             color: "pink",
           });
         });
@@ -223,7 +223,7 @@ export default {
           // Code is invalid or expired. Ask the user to verify their email address
           this.$store.commit("setSnackbar", {
             show: true,
-            text: "invalid or expired code: " + error.message,
+            text: "Invalid or expired code: " + error.message,
             color: "pink",
           });
         });

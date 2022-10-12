@@ -167,7 +167,7 @@ export default {
         .then((res) => {
           this.$store.commit("setSnackbar", {
             show: true,
-            text: "profile successfully updated",
+            text: "Profile successfully updated",
             color: "baseAccent",
           });
           this.cancel();

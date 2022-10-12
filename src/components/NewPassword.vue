@@ -6,28 +6,28 @@
     </p>
     <v-form ref="form" v-model="valid" lazy-validation class="my-4">
       <v-text-field
-          :dark="dark"
-          :light="!dark"
-          type="password"
-          v-model="password"
-          label="Password"
-          :rules="passwordRules"
-          required
-          color="missionAccent"
-          outlined
-          class="custom-input"
+        :dark="dark"
+        :light="!dark"
+        type="password"
+        v-model="password"
+        label="Password"
+        :rules="passwordRules"
+        required
+        color="missionAccent"
+        outlined
+        class="custom-input"
       ></v-text-field>
       <v-text-field
-          :dark="dark"
-          :light="!dark"
-          type="password"
-          v-model="confirmPassword"
-          label="Confirm password"
-          :rules="confirmPasswordRules"
-          required
-          color="missionAccent"
-          outlined
-          class="custom-input"
+        :dark="dark"
+        :light="!dark"
+        type="password"
+        v-model="confirmPassword"
+        label="Confirm password"
+        :rules="confirmPasswordRules"
+        required
+        color="missionAccent"
+        outlined
+        class="custom-input"
       ></v-text-field>
       <v-btn
         :disabled="!valid"
@@ -54,13 +54,13 @@
 
 <script>
 import firebase from "firebase";
-import { mapGetters } from "vuex"
+import { mapGetters } from "vuex";
 
 export default {
   name: "NewPassword",
   props: {
-    actionCode: { type: String},
-    email: { type: String }
+    actionCode: { type: String },
+    email: { type: String },
   },
   data: () => ({
     valid: true,
@@ -72,8 +72,8 @@ export default {
         (v && v.length >= 8) || "Password must have a minimum of 8 characters",
     ],
   }),
-  computed : {
-    ...mapGetters(['user', 'person']),
+  computed: {
+    ...mapGetters(["user", "person"]),
     confirmPasswordRules() {
       return [
         (v) => !!v || "Please confirm password",
@@ -88,49 +88,54 @@ export default {
   methods: {
     resetPassword() {
       // Save the new password.
-      firebase.auth().confirmPasswordReset(this.actionCode, this.confirmPassword)
-      .then((resp) => {
-        // Password reset has been confirmed. 
-        this.$store.commit("setSnackbar", {
-          show: true,
-          text: "Password reset",
-          color: "baseAccent",
-        }); 
-      }).then(() => {
-        firebase
-          .auth()
-          .setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-      }).then(() => {
-        // Sign in user
-        return firebase.auth().signInWithEmailAndPassword(this.email, this.confirmPassword);
-      }).then(() => {
-        this.proceed()
-      }).catch((error) => {
-        // Error occurred during confirmation. The code might have expired or the
-        this.$store.commit("setSnackbar", {
-          show: true,
-          text: 'something went wrong please try to reset your password again',
-          color: "pink",
+      firebase
+        .auth()
+        .confirmPasswordReset(this.actionCode, this.confirmPassword)
+        .then((resp) => {
+          // Password reset has been confirmed.
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: "Password reset",
+            color: "baseAccent",
+          });
+        })
+        .then(() => {
+          firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        })
+        .then(() => {
+          // Sign in user
+          return firebase
+            .auth()
+            .signInWithEmailAndPassword(this.email, this.confirmPassword);
+        })
+        .then(() => {
+          this.proceed();
+        })
+        .catch((error) => {
+          // Error occurred during confirmation. The code might have expired or the
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: "Something went wrong please try to reset your password again",
+            color: "pink",
+          });
         });
-      });
     },
     proceed() {
       if (!this.user?.data?.id || !this.person?.id) {
         return setTimeout(() => {
-          this.proceed()
-        }, 500)
-      } else this.login()
+          this.proceed();
+        }, 500);
+      } else this.login();
     },
     login() {
-      this.$refs.form.reset()
+      this.$refs.form.reset();
       this.$router.push("/base/galaxies");
-    }
+    },
   },
 };
 </script>
 
 <style lang="scss" scoped>
-
 #signin-info {
   width: 300px;
   // height: 400px;
