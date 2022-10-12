@@ -55,28 +55,17 @@ export default {
     };
   },
   async mounted() {
-    // if (this.display) this.whichCoursesToDisplay = this.display;
-    // else this.whichCoursesToDisplay = "all";
-    // TODO: Currently navigates to all galaxies by default, this needs to be improved
+    // This binds all courses. Should prob only bind courses relevant to user TODO:
     await this.$store.dispatch("bindAllCourses");
+
+    // 1) get assigned (EXPLORING)
+
+    // 2) get created (CREATED) mappedBy
+
+    // 3) get submitted (IN REVIEW) mappedby && status==submitted
   },
   computed: {
     ...mapGetters(["user", "person"]),
-    // teach() {
-    //   return this.whichCoursesToDisplay === "my";
-    // },
-    // learn() {
-    //   return this.whichCoursesToDisplay === "assigned";
-    // },
-    // discover() {
-    //   return this.whichCoursesToDisplay === "all";
-    // },
-    // submitted() {
-    //   return this.whichCoursesToDisplay === "submitted";
-    // },
-    // admin() {
-    //   return this.user.data.admin;
-    // },
   },
   methods: {
     courseClicked(emittedPayload) {

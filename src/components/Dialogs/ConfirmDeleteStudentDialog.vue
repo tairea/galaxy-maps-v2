@@ -9,7 +9,14 @@
         <v-icon left color="missionAccent">mdi-information-variant</v-icon>
         <p class="dialog-description">
           Are you sure you want to <strong>REMOVE</strong>
-          <span> {{ student.firstName ? student.firstName + ' ' + student.lastName : student.email }} </span> from this cohort
+          <span>
+            {{
+              student.firstName
+                ? student.firstName + " " + student.lastName
+                : student.email
+            }}
+          </span>
+          from this cohort
         </p>
       </div>
 
@@ -43,24 +50,26 @@
 </template>
 <script>
 export default {
-  name: 'ConfirmDeleteStudentDialog',
-  props: ['dialog', 'student'],
+  name: "ConfirmDeleteStudentDialog",
+  props: ["dialog", "student"],
   methods: {
     confirmDeleteStudent() {
-      db.collection('cohorts')
+      db.collection("cohorts")
         .doc(this.currentCohort.id)
-        .update({students: firebase.firestore.FieldValue.arrayRemove(this.student.id)})
+        .update({
+          students: firebase.firestore.FieldValue.arrayRemove(this.student.id),
+        })
         .then(() => {
           this.$store.commit("setSnackbar", {
             show: true,
-            text: 'student removed from cohort',
+            text: "Student removed from Cohort",
             color: "baseAccent",
           });
-        })
-      this.$emit('cancel')
+        });
+      this.$emit("cancel");
     },
-  }
-}
+  },
+};
 </script>
 <style lang="scss" scoped>
 .create-dialog {
