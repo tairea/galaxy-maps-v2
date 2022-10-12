@@ -211,9 +211,10 @@ async function sendNewCourseEmail(email, name, course) {
 
   // The user subscribed to the newsletter.
   mailOptions.subject = `New Galaxy Assignment`;
-  mailOptions.text = `Hi ${name || ""}
+  mailOptions.text = `Greetings Explorer
 
 You have been assigned to ${course} Galaxy Map. 
+
 Sign into your Galaxy Maps account to view your new course.
 
 https://galaxymaps.io
