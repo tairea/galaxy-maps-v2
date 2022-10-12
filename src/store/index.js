@@ -331,9 +331,13 @@ export default new Vuex.Store({
       // get the topics (nodes) in that course
       for (const doc of querySnapShot.docs) {
 
-        // if public || mapped by user || user is assigned to course
-        if (doc.data().public === true ||
+        // if public and not submitted || mapped by user || user is assigned to course
+        if ((
+           // if public and not submitted
+          doc.data().public === true &&  doc.data().status != 'submitted') ||
+          // mapped by user 
           doc.data().mappedBy.personId === state.person.id ||
+          // user is assigned to course
           state.person.assignedCourses.some(course => course === doc.id) ||
           state.user.data.admin) {
           const subQuerySnapshot = await db
@@ -353,6 +357,7 @@ export default new Vuex.Store({
         }
       }
       state.allNodes = allNodes; // source of truth
+      // console.log("all nodes:",allNodes)
       state.allNodesForDisplay = allNodes; // store all nodes
     },
     async getAllEdges({ state }) {
@@ -363,9 +368,13 @@ export default new Vuex.Store({
 
       for (const doc of querySnapshot.docs) {
 
-        if (doc.data().public === true ||
-          doc.data().mappedBy.personId === state.person.id ||
-          state.person.assignedCourses.some(course => course === doc.id) ||
+        if (
+           // if public and not submitted
+           (doc.data().public === true &&  doc.data().status != 'submitted') ||
+           // mapped by user 
+           doc.data().mappedBy.personId === state.person.id ||
+           // user is assigned to course
+           state.person.assignedCourses.some(course => course === doc.id) ||
           state.user.data.admin) {
           // doc.data() is never undefined for query doc snapshots
           const subQuerySnapshot = await db
@@ -379,6 +388,7 @@ export default new Vuex.Store({
       }
 
       state.allEdges = allEdges;
+      // console.log("all edges:",allEdges)
     },
 
     // ===== Firestore - BIND by USER

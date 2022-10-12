@@ -17,7 +17,8 @@
           <div class="d-flex align-center">
             <v-icon left color="missionAccent">mdi-information-variant</v-icon>
             <p class="dialog-description">
-              An admin has unlimited access to records and publish submitted galaxies
+              An admin has unlimited access to records and publish submitted
+              galaxies
             </p>
           </div>
         </div>
@@ -112,8 +113,8 @@ export default {
     addingAdmin: false,
     dialog: false,
   }),
-  mounted () {
-    this.bindAllPeople()
+  mounted() {
+    this.bindAllPeople();
   },
   computed: {
     ...mapState(["people"]),
@@ -126,7 +127,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(['bindAllPeople']),
+    ...mapActions(["bindAllPeople"]),
     cancel() {
       this.dialog = false;
     },
@@ -138,18 +139,18 @@ export default {
           .then((result) => {
             this.$store.commit("setSnackbar", {
               show: true,
-              text: "admin role successfully added for " + this.administrator,
-              color: "baseAccent"
-            })
+              text: "Admin role successfully added for " + this.administrator,
+              color: "baseAccent",
+            });
             this.addingAdmin = false;
             this.administrator = "";
           })
           .catch((err) => {
             this.$store.commit("setSnackbar", {
               show: true,
-              text: "something went wrong trying to add admin: " + err,
-              color: "pink"
-            })
+              text: "Something went wrong trying to add admin: " + err,
+              color: "pink",
+            });
             console.error(err);
           });
       }

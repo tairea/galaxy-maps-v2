@@ -189,7 +189,7 @@ export default {
           this.$emit("updateStudentProfile", obj);
           this.$store.commit("setSnackbar", {
             show: true,
-            text: "student successfully updated",
+            text: "Student successfully updated",
             color: "baseAccent",
           });
           this.close();
@@ -223,7 +223,7 @@ export default {
                     () => {
                       this.$store.commit("setSnackbar", {
                         show: true,
-                        text: "student assigned to first mission",
+                        text: "Student assigned to first mission",
                         color: "baseAccent",
                       });
                     }
@@ -268,7 +268,7 @@ export default {
                           () => {
                             this.$store.commit("setSnackbar", {
                               show: true,
-                              text: "student assigned to first mission",
+                              text: "Student assigned to first mission",
                               color: "baseAccent",
                             });
                           }
@@ -280,7 +280,7 @@ export default {
                 .then(() => {
                   this.$store.commit("setSnackbar", {
                     show: true,
-                    text: "student assigned to first mission. email sent",
+                    text: "Student assigned to first mission. Email sent",
                     color: "baseAccent",
                   });
                   this.addingAccount = false;
@@ -289,7 +289,7 @@ export default {
             } else {
               this.$store.commit("setSnackbar", {
                 show: true,
-                text: "teacher added to course",
+                text: "Teacher added to Galaxy Map",
                 color: "baseAccent",
               });
               this.addingAccount = false;

@@ -12,7 +12,7 @@
     <div class="ss-details">
       <div>
         <p class="info-panel-label mb-2">
-          <span class="galaxyColour"
+          <span class="galaxyColour statusLabel"
             ><span>{{ courseStatus }}</span> Galaxy</span
           >
           <br />
@@ -381,6 +381,12 @@ export default {
     color: var(--v-missionAccent-base);
     text-transform: uppercase;
     font-size: 1.1rem;
+
+    .statusLabel {
+      color: var(--v-galaxyAccent-base);
+      font-size: 0.8rem;
+      // font-weight: 800;
+    }
   }
 
   .galaxy-image {

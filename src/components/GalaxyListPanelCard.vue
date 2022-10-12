@@ -1,12 +1,16 @@
 <template>
-  <div> 
+  <div>
     <!-- COURSE CARD -->
-    <div class="galaxyCard" :class="{ 'selected-galaxy': active, 'draft-galaxy': draft}">
+    <div
+      class="galaxyCard"
+      :class="{ 'selected-galaxy': active, 'draft-galaxy': draft }"
+    >
       <img
         v-if="course.image.url"
-        class="galaxyCardImage"
+        class="galaxyCardImage ma-1"
         :src="course.image.url"
       />
+
       <div v-else class="imagePlaceholder">
         {{ first3Letters(course.title) }}
       </div>
@@ -31,8 +35,8 @@ export default {
   async mounted() {},
   computed: {
     draft() {
-      return this.course.status === 'drafting'
-    }
+      return this.course.status === "drafting";
+    },
   },
   methods: {
     first3Letters(name) {
@@ -43,6 +47,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+* {
+  box-sizing: border-box;
+}
 .selected-galaxy {
   position: relative;
   background-color: var(--v-galaxyAccent-base);
@@ -61,6 +68,7 @@ export default {
   .galaxyCardImage {
     width: 30px;
     height: 30px;
+    object-fit: cover;
   }
 
   .imagePlaceholder {
@@ -83,6 +91,5 @@ export default {
 
 .draft-galaxy {
   border: 1px dashed var(--v-galaxyAccent-base);
-
 }
 </style>
