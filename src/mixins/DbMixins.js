@@ -18,7 +18,7 @@ export const dbMixins = {
       }).then(() => {
         this.$store.commit("setSnackbar", {
           show: true,
-          text: "student added to cohort",
+          text: "Student added to Cohort",
           color: "baseAccent",
         });
       })
@@ -126,7 +126,7 @@ export const dbMixins = {
         }).then(() => {
           this.$store.commit("setSnackbar", {
             show: true,
-            text: `student assigned to ${course.title} galaxy`,
+            text: `Student assigned to ${course.title} galaxy`,
             color: "baseAccent",
           });
         })

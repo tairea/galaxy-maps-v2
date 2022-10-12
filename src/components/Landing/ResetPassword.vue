@@ -50,7 +50,7 @@ import firebase from "firebase";
 import BackButton from "@/components/BackButton";
 
 export default {
-  name: "Reset Password",
+  name: "ResetPassword",
   components: {
     BackButton,
   },

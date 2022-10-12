@@ -6,26 +6,9 @@
 
     <div class="panelContent">
       <div class="panelContentInner">
-        <!-- SUBMITTED -->
-        <div>
-          <p class="galaxyListPanelLabel overline mx-4">SUBMITTED</p>
-          <div v-if="getSubmittedCourses">
-            <!-- COURSE CARD -->
-            <GalaxyListPanelCard
-              v-for="(course, index) in getSubmittedCourses"
-              :key="course.id"
-              :course="course"
-              :active="index === activeSubmitted"
-              @click.native="courseClicked(course.id, index, 'submitted')"
-            />
-          </div>
-          <p v-else class="galaxyListPanelContent text-center">
-            NO ENROLLED GALAXIES
-          </p>
-        </div>
         <!-- LEARNING -->
-        <div>
-          <p class="galaxyListPanelLabel overline mx-4">LEARNING</p>
+        <div class="subPanel">
+          <p class="galaxyListPanelLabel overline mx-4">EXPLORING</p>
           <div v-if="getLearningCourses.length">
             <!-- COURSE CARD -->
             <GalaxyListPanelCard
@@ -37,13 +20,14 @@
             />
           </div>
           <p v-else class="galaxyListPanelContent text-center">
-            NO ENROLLED GALAXIES
+            YOU ARE NOT EXPLORING ANY GALAXIES
           </p>
         </div>
+
         <!-- TEACHING -->
-        <div>
+        <div class="subPanel">
           <p class="galaxyListPanelLabel overline mx-4">
-            TEACHING
+            MAPPED BY YOU
             <!-- <v-icon 
               small 
               @click="$emit('createGalaxy')" 
@@ -63,7 +47,7 @@
               color="missionAccent"
               @click="$emit('createGalaxy')"
               outlined
-              class="py-4 px-6"
+              class="py-4 px-3"
             >
               <v-icon x-small class="pr-2">mdi-plus</v-icon>
               MAP NEW GALAXY
@@ -80,26 +64,26 @@
               @click.native="courseClicked(course.id, index, 'teaching')"
             />
           </div>
-          <div v-else>
-            <!-- <p class="galaxyListPanelContent text-center">
-              NO CREATED MAPS
-            </p> -->
-            <!-- <div class="d-flex justify-center mb-4">
-              <v-btn 
-                x-small 
-                color="missionAccent" 
-                text
-                @click="$emit('createGalaxy')"
-              >
-                <v-icon x-small class="pr-2">mdi-plus</v-icon> 
-                MAP NEW GALAXY
-              </v-btn>
-            </div> -->
+        </div>
+
+        <!-- SUBMITTED (CREATED & IN REVIEW) -->
+        <div class="subPanel" v-if="getSubmittedCourses.length > 0">
+          <p class="galaxyListPanelLabel overline mx-4">IN REVIEW</p>
+          <div>
+            <!-- COURSE CARD -->
+            <GalaxyListPanelCard
+              v-for="(course, index) in getSubmittedCourses"
+              :key="course.id"
+              :course="course"
+              :active="index === activeSubmitted"
+              @click.native="courseClicked(course.id, index, 'submitted')"
+            />
           </div>
         </div>
+
         <!-- ALL -->
-        <div>
-          <p class="galaxyListPanelLabel overline mx-4">ALL GALAXIES</p>
+        <div class="subPanel">
+          <p class="galaxyListPanelLabel overline mx-4">PUBLIC GALAXIES</p>
           <div v-if="getPublicCourses.length">
             <!-- COURSE CARD -->
             <GalaxyListPanelCard
@@ -192,12 +176,18 @@ export default {
     },
     // TEACHERING GALAXIES
     getSubmittedCourses() {
-      return this.courses.filter((course) => course.status == "submitted");
+      return this.courses.filter(
+        (course) =>
+          course.mappedBy.personId == this.person.id &&
+          course.status == "submitted"
+      );
     },
     // TEACHERING GALAXIES
     getTeachingCourses() {
       return this.courses.filter(
-        (course) => course.mappedBy.personId == this.person.id
+        (course) =>
+          course.mappedBy.personId == this.person.id &&
+          course.status != "submitted"
       );
     },
     // ALL GALAXIES
@@ -291,6 +281,12 @@ export default {
       width: 99.5%;
       overflow-y: scroll;
       overflow-x: hidden;
+
+      .subPanel {
+        border: 1px dashed var(--v-galaxyAccent-base);
+        margin: 10px;
+        margin-top: 20px;
+      }
     }
 
     .galaxyListPanelLabel {
