@@ -47,7 +47,7 @@
               color="missionAccent"
               @click="$emit('createGalaxy')"
               outlined
-              class="py-4 px-3"
+              class="py-6 px-4"
             >
               <v-icon x-small class="pr-2">mdi-plus</v-icon>
               MAP NEW GALAXY

@@ -4,7 +4,11 @@
     <div class="left-section">
       <GalaxyInfo :course="currentCourse" :teacher="teacher" :draft="draft" />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
-      <PublishGalaxy v-if="showPublish" :course="currentCourse" />
+      <PublishGalaxy
+        v-if="showPublish"
+        :course="currentCourse"
+        :courseTasks="courseTasks"
+      />
       <AssignedInfo
         v-if="!draft && cohortsInCourse.length"
         :assignCohorts="true"
