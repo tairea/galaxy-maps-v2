@@ -23,6 +23,7 @@
             {{ selectedTopic.label }}
           </p>
           <v-btn
+            v-if="teacher"
             icon
             x-small
             color="missionAccent"
@@ -107,11 +108,18 @@ export default {
       "cohorts",
       "topicsTasks",
       "personsTopicsTasks",
+      "currentCourse",
     ]),
-    ...mapGetters(["getCourseById"]),
+    ...mapGetters(["getCourseById", "person", "user"]),
     // filteredTasks() {
     //   return this.tasks.filter((task) => task.topicId == this.selectedTopic);
     // },
+    teacher() {
+      return (
+        this.currentCourse?.mappedBy?.personId === this.person.id ||
+        this.user.data.admin
+      );
+    },
   },
   methods: {
     closeInfoPanel() {
