@@ -142,6 +142,7 @@ async function sendStudentInviteEmail(email, displayName, link, inviter) {
   mailOptions.text = `Hi ${displayName || ""}
 
 Your teacher ${inviter}, has created you an account for ${APP_NAME}. 
+
 Please click this link to sign into your account and setup your profile
 
 ${link}
@@ -184,6 +185,7 @@ async function sendNewCohortEmail(
   mailOptions.text = `Hi ${displayName || firstName || ""}
 
 You have been added to cohort: ${cohort} ${inviter ? "by " + inviter : ""} 
+
 Sign into your Galaxy Maps account to view your new cohort.
 
 https://galaxymaps.io

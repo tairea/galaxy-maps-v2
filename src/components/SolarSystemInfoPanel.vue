@@ -47,7 +47,8 @@
             <p class="task-number overline">MISSION {{ index + 1 }}</p>
             <p class="task-title m0">{{ task.title }}</p>
             <p
-              class="task-status overline m0"
+              v-if="task.taskStatus != 'locked'"
+              class="task-status overline m0 text-center"
               :class="{
                 completed: task.taskStatus == 'completed',
                 locked: task.taskStatus == 'locked',
@@ -57,6 +58,9 @@
             >
               {{ task.taskStatus }}
             </p>
+            <v-icon v-else color="missionAccent" class="lock-icon"
+              >mdi-lock</v-icon
+            >
           </div>
         </div>
         <div class="bottom">
@@ -215,21 +219,29 @@ export default {
           margin-left: 20px;
           color: var(--v-missionAccent-base);
           width: 125px;
-          height: 100px;
+          // height: 100px;
           font-size: 0.7rem;
+
+          .lock-icon {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 10px 0px;
+          }
 
           .task-number {
             font-size: 0.7rem !important;
             margin: 0px;
           }
 
-          .task-title,
-          .task-status {
+          .task-title {
             margin: 0px;
           }
 
           .task-status {
-            margin-top: 10px;
+            margin: 10px 0px;
+            // padding-bottom: 10px;
             text-transform: uppercase;
             font-weight: 800;
           }

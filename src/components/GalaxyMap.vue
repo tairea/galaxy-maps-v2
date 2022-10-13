@@ -418,10 +418,11 @@ export default {
     },
     async click2(data) {
       if (this.addingNode || this.addingEdge) return;
-      // 0) flag we in preview mode
-      this.inSystemPreviewView = true;
-      // 1) get closest node
+      // 0) get closest node
       const closestNode = this.getClosestNodeToClick(data);
+      if (closestNode.group == "locked") return;
+      // 1) flag we in preview mode
+      this.inSystemPreviewView = true;
       this.previewedNode = closestNode;
       // 2) zoom to node
       this.zoomToNode(closestNode);
@@ -653,7 +654,7 @@ export default {
       this.$refs.network.moveTo({
         position: { x: node.x, y: node.y },
         scale: 3,
-        offset: { x: -200 },
+        offset: { x: -100 },
         animation: {
           duration: 2000,
           easingFunction: "easeInOutQuad",
@@ -755,26 +756,22 @@ export default {
     // https://stackoverflow.com/questions/6271419/how-to-fill-the-opposite-shape-on-canvas
     afterDrawing(ctx) {
       if (this.inSystemPreviewView) {
-        // console.log({
-        //   width: ctx.canvas.width,
-        //   height: ctx.canvas.height,
-        //   clientWidth: ctx.canvas.clientWidth,
-        //   clientHeight: ctx.canvas.clientHeight,
-        //   offsetWidth: ctx.canvas.offsetWidth,
-        //   offsetHeight: ctx.canvas.offsetHeight,
-        // });
-        // console.log("this.previewedNode", this.previewedNode);
+        // Canvas - set fill
         ctx.fillStyle = this.dark
           ? this.$vuetify.theme.themes.dark.background
           : this.$vuetify.theme.themes.light.background;
         // ctx.fillStyle = "pink";
+        // Canvas - start path
         ctx.beginPath();
+        // Canvas - draw rectangle the size of the screen
         ctx.rect(
           0 - ctx.canvas.offsetWidth,
           0 - ctx.canvas.offsetHeight,
           ctx.canvas.width,
           ctx.canvas.height
         );
+        // Canvas - draw arc (circle) the of the numbers of tasks/planet orbits
+        // Note: drawing a rectanlge then a circle in the same path makes the circle a whole
         ctx.arc(
           this.previewedNode.x,
           this.previewedNode.y,

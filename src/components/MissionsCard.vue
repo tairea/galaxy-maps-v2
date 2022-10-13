@@ -23,7 +23,7 @@
           <!-- TITLE -->
           <h1 class="mission-title pa-4">{{ task.title }}</h1>
           <!-- DESCRIPTION -->
-          <div v-html="task.description" class="pa-2"></div>
+          <div v-if="teacher" v-html="task.description" class="pa-2"></div>
         </div>
 
         <!-- <div class="mission-section mission-section-overUnder">
@@ -56,8 +56,13 @@
     </div> -->
 
         <div class="mission-section mission-section-overUnder">
-          <div class="section-overUnder d-flex justify-center flex-column">
-            <p class="text-overline text-uppercase text-center">Duration:</p>
+          <div
+            v-if="task.duration"
+            class="section-overUnder d-flex justify-center flex-column"
+          >
+            <p class="text-overline text-uppercase text-center">
+              Estimated Duration:
+            </p>
             <p class="text-center">
               {{ task.duration }}
             </p>

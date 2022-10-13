@@ -1,19 +1,43 @@
 <template>
-  <div class="submission-card" :class="reviewed ? 'reviewed-submission':''">
+  <div class="submission-card" :class="reviewed ? 'reviewed-submission' : ''">
     <v-expansion-panels flat v-model="showCard">
       <v-expansion-panel
         v-for="(sub, i) in [submission]"
         :key="i"
         class="panel"
-        @change="panelChange()" 
+        @change="panelChange()"
       >
         <v-expansion-panel-header ref="panel" class="pa-0">
           <div class="d-flex flex-row">
-            <Avatar v-if="isDashboardView" :profile="courseContextProfile" size="30" :colourBorder="true"/>
-            <Avatar v-if="requesterPerson" :profile="requesterPerson" size="30" :colourBorder="true"  :class="isDashboardView ? 'request-image':''"/>
-            <div class="submission-time d-flex flex-column align-center ml-auto pl-1">
-              <span v-if="reviewed" class="ml-auto status-text">{{submission.taskSubmissionStatus}}</span>
-              <span v-else class="ml-auto status-text">...awaiting review</span>
+            <Avatar
+              v-if="isDashboardView"
+              :profile="courseContextProfile"
+              size="30"
+              :colourBorder="true"
+            />
+            <Avatar
+              v-if="requesterPerson"
+              :profile="requesterPerson"
+              size="30"
+              :colourBorder="true"
+              :class="isDashboardView ? 'request-image' : ''"
+            />
+            <div
+              class="
+                submission-time
+                d-flex
+                flex-column
+                align-center
+                ml-auto
+                pl-1
+              "
+            >
+              <span v-if="reviewed" class="ml-auto status-text">{{
+                submission.taskSubmissionStatus
+              }}</span>
+              <span v-else class="ml-auto mt-1 status-text text-uppercase"
+                >...awaiting review</span
+              >
               {{ getHumanDate(submission.taskSubmittedForReviewTimestamp) }}
             </div>
           </div>
@@ -35,7 +59,7 @@
           </template>
         </v-expansion-panel-header>
         <v-expansion-panel-content class="panel-content">
-            <!-- <div
+          <!-- <div
               class="d-flex flex-column"
             >
               <p class="instructions-label text-end">Instructions</p>
@@ -72,7 +96,7 @@
 <script>
 import { mapState, mapActions } from "vuex";
 import moment from "moment";
-import Avatar from "../components/Avatar.vue"
+import Avatar from "../components/Avatar.vue";
 
 // import MarkSubmissionCompleted from "../components/MarkSubmissionCompleted";
 // import SubmissionResponseDialog from "../components/SubmissionResponseDialog";
@@ -87,17 +111,19 @@ export default {
     // MarkSubmissionCompleted,
     // SubmissionResponseDialog,
     SubmissionReviewDialog,
-    Avatar
+    Avatar,
   },
   data() {
     return {
       requesterPerson: null,
-      active: false
+      active: false,
     };
   },
   async mounted() {
     // bind student profile
-    this.requesterPerson = await this.MXgetPersonByIdFromDB(this.submission.studentId);
+    this.requesterPerson = await this.MXgetPersonByIdFromDB(
+      this.submission.studentId
+    );
   },
   computed: {
     ...mapState(["personsTopicsTasks", "showPanelCard"]),
@@ -116,15 +142,18 @@ export default {
       },
     },
     reviewed() {
-      return this.submission.taskSubmissionStatus === 'completed' || this.submission.taskSubmissionStatus === 'declined'
+      return (
+        this.submission.taskSubmissionStatus === "completed" ||
+        this.submission.taskSubmissionStatus === "declined"
+      );
     },
     courseContextProfile() {
       return {
         image: this.submission.contextCourse.image,
         firstName: this.submission.contextCourse.firstName,
-        lastName: ''
-      }
-    }
+        lastName: "",
+      };
+    },
   },
   methods: {
     getHumanDate(ts) {
@@ -134,8 +163,8 @@ export default {
       return name.substring(0, 3).toUpperCase();
     },
     panelChange() {
-      this.active = !this.$refs.panel[0].isActive
-    }
+      this.active = !this.$refs.panel[0].isActive;
+    },
   },
 };
 </script>
@@ -250,9 +279,9 @@ export default {
 
 .status-text {
   color: var(--v-cohortAccent-base);
-  font-size:0.6rem;
+  font-size: 0.6rem;
   position: relative;
-  top: -8px
+  top: -8px;
 }
 
 .request-image {
