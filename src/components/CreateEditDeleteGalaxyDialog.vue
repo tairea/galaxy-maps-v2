@@ -33,7 +33,15 @@
                 <v-icon left color="missionAccent"
                   >mdi-information-variant</v-icon
                 >
-                <p class="dialog-description">{{ dialogDescription }}</p>
+                <div>
+                  <p class="dialog-description">
+                    A Galaxy is a path of learning. Kind of like a course.
+                  </p>
+                  <p class="dialog-description">
+                    If you would like to map some learning, create a new Galaxy
+                    Map.
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -95,7 +103,7 @@
                 ></v-progress-linear>
 
                 <!-- ===== Credit other learning content course ==== -->
-                <div class="author-checkbox-wrap d-flex flex-column my-4">
+                <!-- <div class="author-checkbox-wrap d-flex flex-column my-4">
                   <v-checkbox
                     v-model="notAuthor"
                     dense
@@ -117,10 +125,7 @@
                     </p>
                   </div>
                 </div>
-                <!-- ORIGINAL AUTHOR -->
                 <div v-if="notAuthor">
-                  <!-- AUTHOR -->
-                  <!-- <p class="dialog-description">Name of content creator:</p> -->
                   <v-text-field
                     class="input-field"
                     outlined
@@ -130,10 +135,6 @@
                     :light="!dark"
                     label="Name of content creator"
                   ></v-text-field>
-
-                  <!-- AUTHOR IMAGE UPLOAD -->
-                  <!-- <p class="dialog-description">Image of content creator:</p> -->
-
                   <v-file-input
                     class="input-field"
                     outlined
@@ -151,11 +152,6 @@
                     color="missionAccent"
                     :value="percentageAuthor"
                   ></v-progress-linear>
-
-                  <!-- SOURCE OF ORIGINAL CONTENT -->
-                  <!-- <p class="dialog-description">
-                    Source URL of original content:
-                  </p> -->
                   <v-text-field
                     class="input-field mt-4"
                     outlined
@@ -165,7 +161,7 @@
                     v-model="course.contentBy.source"
                     label="Source URL of original content"
                   ></v-text-field>
-                </div>
+                </div> -->
                 <!-- End original author -->
               </div>
               <!-- End create-dialog-content -->
@@ -232,7 +228,7 @@
                 :light="!dark"
               >
                 <v-icon left> mdi-check </v-icon>
-                SAVE
+                CREATE GALAXY
               </v-btn>
 
               <!-- DELETE -->
@@ -426,7 +422,6 @@ export default {
     privateDialog: false,
     destroy: "",
     dialogTitle: "Create a new Galaxy",
-    dialogDescription: "A Galaxy is a path of learning. Kind of like a course.",
     course: {
       title: "",
       description: "",
@@ -434,14 +429,14 @@ export default {
         url: "",
         name: "",
       },
-      contentBy: {
-        name: "",
-        image: {
-          url: "",
-          name: "",
-        },
-        source: "",
-      },
+      // contentBy: {
+      //   name: "",
+      //   image: {
+      //     url: "",
+      //     name: "",
+      //   },
+      //   source: "",
+      // },
       mappedBy: {
         name: "",
         image: {
@@ -906,7 +901,7 @@ export default {
 
 .create-dialog-content {
   // width: 33.33%;
-  min-height: 400px;
+  min-height: 250px;
   display: flex;
   justify-content: space-around;
   align-items: space-around;

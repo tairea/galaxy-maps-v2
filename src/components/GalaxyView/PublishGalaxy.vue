@@ -9,14 +9,65 @@
         v-bind="attrs"
         v-on="on"
         class="publishButton d-inline-flex text-truncate"
+        @click="getTopicsWithoutTasks"
       >
         publish galaxy
       </v-btn>
       <!-- ASSIGN GALAXY -->
     </template>
 
-    <!-- NEW DIALOG -->
-    <div class="create-dialog">
+    <!-- NOT!!!! OK TO PUBLISH DIALOG -->
+    <div v-if="topicsWithoutTasks.length > 0" class="create-dialog">
+      <div class="dialog-header">
+        <div class="d-flex mb-4">
+          <p class="dialog-title ma-0">Important</p>
+          <v-icon color="missionAccent" class="ml-2">mdi-alert-outline</v-icon>
+        </div>
+        <div class="d-flex align-center">
+          <v-icon left color="missionAccent">mdi-information-variant</v-icon>
+          <p class="dialog-description">
+            System's must have <strong>AT LEAST ONE MISSION</strong>
+          </p>
+        </div>
+      </div>
+      <v-divider dark color="missionAccent"></v-divider>
+      <div class="create-dialog-content">
+        <div>
+          <p class="caption mb-2 red--text">
+            The following Systems have no Missions:
+          </p>
+
+          <ul>
+            <li
+              v-for="topic in topicsWithoutTasks"
+              :key="topic.id"
+              class="overline"
+            >
+              {{ topic.label }}
+            </li>
+          </ul>
+
+          <p class="caption mt-2 mb-0">
+            Please create at least one Mission for each of these Systems
+          </p>
+        </div>
+      </div>
+      <!-- ACTION BUTTONS -->
+      <div class="action-buttons">
+        <v-btn
+          outlined
+          :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
+          class="ml-2"
+          @click="close"
+          :disabled="loading"
+        >
+          <v-icon left> mdi-close </v-icon>
+          OK
+        </v-btn>
+      </div>
+    </div>
+    <!-- OK TO PUBLISH DIALOG -->
+    <div v-else class="create-dialog">
       <div class="dialog-header">
         <p class="dialog-title">publish galaxy</p>
         <div class="d-flex align-center">
@@ -157,23 +208,25 @@
 
 <script>
 import { db, functions } from "@/store/firestoreConfig";
-import { mapGetters, mapMutations } from "vuex";
+import { mapGetters, mapMutations, mapState } from "vuex";
 
 import { dbMixins } from "@/mixins/DbMixins";
 
 export default {
   name: "PublishGalaxy",
   mixins: [dbMixins],
-  props: ["course"],
+  props: ["course", "courseTasks"],
   data: () => ({
     dialog: false,
     loading: false,
     courseOptions: {
       public: false,
     },
+    topicsWithoutTasks: 0,
   }),
   computed: {
     ...mapGetters(["user"]),
+    ...mapState(["currentCourseNodes"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -181,8 +234,34 @@ export default {
       return this.user.data.admin;
     },
   },
+  watch: {
+    // courseTasks: function (n, o) {
+    //   console.log("from watch publish. course TASKS", n);
+    // },
+    // currentCourseNodes: function (n, o) {
+    //   console.log("from watch publish. course NODES", n);
+    // },
+  },
+  mounted() {
+    // console.log("from publish. course TASKS", this.courseTasks);
+  },
   methods: {
     ...mapMutations(["setCurrentCourse"]),
+    getTopicsWithoutTasks() {
+      // copy nodes
+      let splicedNodes = [...this.currentCourseNodes];
+      // loop tasks
+      for (const task of this.courseTasks) {
+        // get index of nodes that have tasks
+        var index = splicedNodes.findIndex(function (node) {
+          return node.id === task.topicId;
+        });
+        // remove topics that have tasks
+        if (index !== -1) splicedNodes.splice(index, 1);
+      }
+      // assign splicedNodes (nodes/topics that DO NOT have tasks)
+      this.topicsWithoutTasks = splicedNodes;
+    },
     close() {
       this.dialog = false;
       this.loading = false;
