@@ -39,8 +39,17 @@
 
     <!--==== Right section ====-->
     <div id="right-section">
-      <RequestsForHelpTeacherFrame :courses="[currentCourse]" :isTeacher="teacher" :students="peopleInTopic"/>
-      <SubmissionTeacherFrame :courses="[currentCourse]" :isTeacher="teacher" :students="teacher ? peopleInTopic : [person]" class="mt-4"/> 
+      <RequestForHelpTeacherFrame
+        :courses="[currentCourse]"
+        :isTeacher="teacher"
+        :students="peopleInTopic"
+      />
+      <SubmissionTeacherFrame
+        :courses="[currentCourse]"
+        :isTeacher="teacher"
+        :students="teacher ? peopleInTopic : [person]"
+        class="mt-4"
+      />
     </div>
   </div>
 </template>
@@ -53,11 +62,10 @@ import MissionsList from "../components/MissionsList";
 import SolarSystem from "../components/SolarSystem";
 import BackButton from "../components/BackButton";
 import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame";
-import RequestsForHelpTeacherFrame from '../components/RequestForHelpTeacherFrame.vue'
+import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame.vue";
 
 import { mapState, mapGetters } from "vuex";
 import { getPersonsTopicById } from "../lib/ff";
-
 
 export default {
   name: "SolarSystemView",
@@ -68,8 +76,8 @@ export default {
     MissionsList,
     SolarSystem,
     BackButton,
-    RequestsForHelpTeacherFrame,
-    SubmissionTeacherFrame
+    RequestForHelpTeacherFrame,
+    SubmissionTeacherFrame,
   },
   props: ["topicId"],
   data() {
@@ -77,11 +85,11 @@ export default {
       activeMission: null,
       task: null,
       unsubscribes: [],
-      peopleInTopic: []
+      peopleInTopic: [],
     };
   },
   async mounted() {
-    this.getPeopleInTopic()
+    this.getPeopleInTopic();
     if (this.teacher) {
       //store bindTasksByTopicId
       await this.$store.dispatch("bindTasksByTopicId", {
@@ -109,8 +117,8 @@ export default {
   },
   watch: {
     personsCurrentTopic() {
-      this.getPeopleInTopic()
-    }
+      this.getPeopleInTopic();
+    },
   },
   computed: {
     ...mapState([
@@ -123,7 +131,7 @@ export default {
       "topicsTasks",
       "personsTopicsTasks",
       "personsTopics",
-      "peopleInCourse"
+      "peopleInCourse",
     ]),
     ...mapGetters([
       "person",
@@ -142,8 +150,10 @@ export default {
       );
     },
     personsCurrentTopic() {
-      return this.personsTopics.find(topic => topic.id == this.currentTopicId)
-    }
+      return this.personsTopics.find(
+        (topic) => topic.id == this.currentTopicId
+      );
+    },
   },
   methods: {
     taskForHelpInfo(task) {
@@ -151,7 +161,9 @@ export default {
     },
     getActiveMission() {
       const activeMissionObj = this.personsTopicsTasks.find((taskObj) => {
-        return taskObj.taskStatus == "active" || taskObj.taskStatus == "declined";
+        return (
+          taskObj.taskStatus == "active" || taskObj.taskStatus == "declined"
+        );
       });
       if (activeMissionObj) {
         this.activeMission = true;
@@ -164,15 +176,19 @@ export default {
       // console.log("active mission:", activeMissionObj);
       return activeMissionObj;
     },
-    async getPeopleInTopic () {
-      console.log('4, getting people in topic')
-      let people = []
-      this.peopleInCourse.forEach(async person => {
-        let personsTopic = await getPersonsTopicById(person.id, this.currentCourse.id, this.currentTopic.id)
-        if (personsTopic.topicStatus == 'active') people.push(person)
-      })
-      this.peopleInTopic = people
-    }
+    async getPeopleInTopic() {
+      console.log("4, getting people in topic");
+      let people = [];
+      this.peopleInCourse.forEach(async (person) => {
+        let personsTopic = await getPersonsTopicById(
+          person.id,
+          this.currentCourse.id,
+          this.currentTopic.id
+        );
+        if (personsTopic.topicStatus == "active") people.push(person);
+      });
+      this.peopleInTopic = people;
+    },
   },
 };
 </script>
@@ -187,7 +203,7 @@ export default {
   display: flex;
   overflow: hidden;
   margin: 0 !important;
-  padding: 30px 20px 0px
+  padding: 30px 20px 0px;
 }
 
 #left-section {

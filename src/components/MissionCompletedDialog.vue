@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container class="pa-0">
     <v-row class="text-center" align="center">
       <v-col cols="12">
         <v-dialog v-model="dialog" width="40%" light>

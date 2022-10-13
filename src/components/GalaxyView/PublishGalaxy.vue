@@ -48,7 +48,7 @@
           </ul>
 
           <p class="caption mt-2 mb-0">
-            Please create at least one Mission for each of these Systems
+            Please create at least one Mission for these Systems
           </p>
         </div>
       </div>

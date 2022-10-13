@@ -1,75 +1,53 @@
 <template>
   <div class="selected-mission-card">
-    <v-row>
-      <div class="mission-card">
-        <div
-          class="mission-section mission-section-overUnder"
-          style="width: 50%"
+    <div v-html="task.description" class="task-description pa-2"></div>
+    <v-row class="pb-8">
+      <div v-if="task.video || task.slides" class="supporting-materials">
+        <p class="text-overline missionAccent--text">Supporting Materials</p>
+        <!-- VIDEO -->
+        <a
+          v-if="task.video"
+          :href="task.video"
+          target="_blank"
+          class="resource-button text-overline"
+          >Video</a
         >
-          <!-- VIDEO -->
-          <div class="section-overUnder">
-            <a
-              v-if="task.video"
-              :href="task.video"
-              target="_blank"
-              class="text-overline text-uppercase"
-              >Video</a
-            >
-            <p
-              v-else
-              class="text-overline text-uppercase"
-              style="color: #707070"
-            >
-              Video
-            </p>
-          </div>
-          <!-- SLIDES -->
-          <div class="section-overUnder">
-            <a
-              v-if="task.slides"
-              :href="task.slides"
-              target="_blank"
-              class="text-overline text-uppercase"
-              >Slides</a
-            >
-            <p
-              v-else
-              class="text-overline text-uppercase"
-              style="color: #707070"
-            >
-              Slides
-            </p>
-          </div>
-        </div>
-
-        <!-- SUBMIT WORK -->
-        <!-- <div
-          class="mission-section d-flex align-center justify-center flex-column"
-        > -->
-        <div
-          class="mission-section mission-section-overUnder"
-          style="width: 50%"
+        <!-- SLIDES -->
+        <a
+          v-if="task.slides"
+          :href="task.slides"
+          target="_blank"
+          class="resource-button text-overline"
+          >Slides</a
         >
-          <!-- COMPLETED -->
+      </div>
 
-          <div class="text-center">
-            <p
-              class="text-overline text-uppercase"
-              :class="{
-                'mission-in-review': inreview,
-                'mission-completed': completed,
-              }"
-            >
-              {{completed ? "MISSION COMPLETED" : inreview ? "SUBMISSION IN REVIEW" : "LOCKED"}}
-            </p>
-            <p class="text-overline text-uppercase">
-              {{ getStatusAndTimestamp }}
-            </p>
-          </div>
+      <!-- REQUEST HELP -->
+      <div class="completedContainer">
+        <!-- COMPLETED -->
+
+        <div class="text-center completed">
+          <p
+            class="text-overline text-uppercase"
+            :class="{
+              'mission-in-review': inreview,
+              'mission-completed': completed,
+            }"
+          >
+            {{
+              completed
+                ? "MISSION COMPLETED"
+                : inreview
+                ? "SUBMISSION IN REVIEW"
+                : "LOCKED"
+            }}
+          </p>
+          <p class="text-overline text-uppercase">
+            {{ getStatusAndTimestamp }}
+          </p>
         </div>
       </div>
     </v-row>
-    <v-row> </v-row>
   </div>
 </template>
 
@@ -83,12 +61,16 @@ export default {
     getStatusAndTimestamp() {
       if (this.completed && this.task.submissionRequired) {
         return (
-          "MARKED COMPLETED: " + this.humanDate(this.task.taskReviewedAndCompletedTimestamp)
+          "MARKED COMPLETED: " +
+          this.humanDate(this.task.taskReviewedAndCompletedTimestamp)
         );
       } else if (this.completed && !this.task.submissionRequired) {
         return "COMPLETED: " + this.humanDate(this.task.taskCompletedTimestamp);
       } else if (this.inreview) {
-        return ("SUBMITTED: " + this.humanDate(this.task.taskSubmittedForReviewTimestamp));
+        return (
+          "SUBMITTED: " +
+          this.humanDate(this.task.taskSubmittedForReviewTimestamp)
+        );
       } else {
         return "LOCKED";
       }
@@ -120,53 +102,90 @@ a {
   flex-direction: column;
   z-index: 200;
   background-color: var(--v-background-base);
-}
 
-.mission-card {
-  border: 1px solid var(--v-missionAccent-base);
-  margin: 50px;
-  display: flex;
-  width: 100%;
-  height: auto;
-
-  .mission-section {
-    margin: 0px;
+  .task-description {
     color: var(--v-missionAccent-base);
-    font-size: 0.9rem;
-    border-left: 1px solid var(--v-missionAccent-base);
-    flex-grow: 1;
-  }
-  .mission-section:first-child {
-    margin: 0px;
-    color: var(--v-missionAccent-base);
-    font-size: 0.9rem;
-    border-left: none;
-    padding: 20px;
-    flex-grow: 1;
+    margin: 20px;
   }
 
-  .mission-section-overUnder {
-    padding: 0px !important;
+  .supporting-materials {
+    width: 100%;
     display: flex;
-    flex-direction: column;
     justify-content: center;
-    // align-items: center;
+    align-items: center;
+    flex-direction: column;
+    margin-bottom: 20px;
 
-    .section-overUnder {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-      height: 50%;
-      padding: 10px;
+    .resource-button {
+      text-transform: uppercase;
+      border: 1px solid var(--v-missionAccent-base);
+      margin-bottom: 10px;
+      width: 25%;
+      text-align: center;
+      text-decoration: none;
     }
+  }
 
-    .section-overUnder:first-child {
-      border-bottom: 1px solid var(--v-missionAccent-base);
+  .completedContainer {
+    display: flex;
+    width: 100%;
+    color: var(--v-missionAccent-base);
+    justify-content: center;
+    align-items: center;
+
+    .completed {
+      padding: 20px;
+      width: 50%;
+      border: 1px solid var(--v-missionAccent-base);
     }
   }
 }
+
+// .mission-card {
+//   border: 1px solid var(--v-missionAccent-base);
+//   margin: 50px;
+//   display: flex;
+//   width: 100%;
+//   height: auto;
+
+//   .mission-section {
+//     margin: 0px;
+//     color: var(--v-missionAccent-base);
+//     font-size: 0.9rem;
+//     border-left: 1px solid var(--v-missionAccent-base);
+//     flex-grow: 1;
+//   }
+//   .mission-section:first-child {
+//     margin: 0px;
+//     color: var(--v-missionAccent-base);
+//     font-size: 0.9rem;
+//     border-left: none;
+//     padding: 20px;
+//     flex-grow: 1;
+//   }
+
+//   .mission-section-overUnder {
+//     padding: 0px !important;
+//     display: flex;
+//     flex-direction: column;
+//     justify-content: center;
+//     // align-items: center;
+
+//     .section-overUnder {
+//       display: flex;
+//       flex-direction: column;
+//       justify-content: center;
+//       align-items: center;
+//       width: 100%;
+//       height: 50%;
+//       padding: 10px;
+//     }
+
+//     .section-overUnder:first-child {
+//       border-bottom: 1px solid var(--v-missionAccent-base);
+//     }
+//   }
+// }
 
 .mission-in-review {
   color: var(--v-cohortAccent-base);
