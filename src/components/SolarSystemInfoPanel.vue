@@ -177,7 +177,7 @@ export default {
       position: relative;
       height: 99%;
       width: 99.5%;
-      overflow-y: scroll;
+      overflow-y: hidden;
       overflow-x: hidden;
 
       .topicTitleContainer {
@@ -202,6 +202,10 @@ export default {
         display: flex;
         flex-wrap: wrap;
         width: 100%;
+        height: calc(73% + 25px);
+        overflow-y: scroll;
+        // border: 1px solid red;
+        align-items: flex-start;
 
         .noMissionWarningContainer {
           margin-top: 30%;
@@ -227,16 +231,19 @@ export default {
           margin-left: 20px;
           color: var(--v-missionAccent-base);
           width: 125px;
-          // height: 100px;
+          height: 150px;
           font-size: 0.7rem;
+          position: relative;
+          margin-bottom: auto;
+          align-self: start;
 
-          .lock-icon {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 10px 0px;
-          }
+          // .lock-icon {
+          //   width: 100%;
+          //   display: flex;
+          //   justify-content: center;
+          //   align-items: center;
+          //   margin: 10px 0px;
+          // }
 
           .task-number {
             font-size: 0.7rem !important;
@@ -245,13 +252,20 @@ export default {
 
           .task-title {
             margin: 0px;
+            // margin-bottom: 20px;
           }
 
-          .task-status {
+          .task-status,
+          .lock-icon {
             margin: 10px 0px;
             // padding-bottom: 10px;
             text-transform: uppercase;
             font-weight: 800;
+            position: absolute;
+            bottom: 0px;
+            text-align: center;
+            width: 100%;
+            margin-left: -10px;
           }
 
           .completed {
@@ -268,18 +282,21 @@ export default {
 
       .bottom {
         position: absolute;
-        bottom: 30px;
-        width: 100%;
-        height: 50px;
+        bottom: 23px;
+        width: 99%;
+        height: 75px;
         border-top: 1px solid var(--v-missionAccent-base);
+        margin-left: 1px;
 
         display: flex;
         justify-content: center;
         align-items: center;
 
+        background: var(--v-background-darken1);
+
         .view-ss-button {
           width: 70%;
-          margin-top: 30px;
+          margin-top: 20px;
           background-color: var(--v-background-base);
         }
       }
@@ -330,10 +347,10 @@ export default {
 }
 /* Handle */
 *::-webkit-scrollbar-thumb {
-  background: var(--v-galaxyAccent-base);
+  background: var(--v-missionAccent-base);
 }
 /* Handle on hover */
 *::-webkit-scrollbar-thumb:hover {
-  background: var(--v-galaxyAccent-base);
+  background: var(--v-missionAccent-base);
 }
 </style>

@@ -16,9 +16,9 @@
 
   <!-- v-btn above OR custom div button. which is better? -->
   <div class="active-mission-card" @click="routeToTasksSystem()">
-    <p class="ma-0">{{ activeTopic }}</p>
+    <p class="ma-0">{{ activeTopic.title }}</p>
     <p class="ma-0" style="font-weight: 900; padding: 0px 5px">></p>
-    <p class="ma-0" style="font-weight: 900">{{ activeTask }}</p>
+    <p class="ma-0" style="font-weight: 900">{{ activeTask.title }}</p>
   </div>
 </template>
 
@@ -28,22 +28,19 @@ export default {
   props: ["data"],
   components: {},
   data() {
-    return {
-      activeMissionsData: [],
-    };
+    return {};
   },
-
   computed: {
-    activeTopic () {
-      const topic = this.data.find(topic => topic.type === 'Topic')
-      if (topic?.status === 'Started') return topic.title
-      else return 'no active topic'
+    activeTopic() {
+      const topic = this.data.find((topic) => topic.type === "Topic");
+      if (topic?.status === "Started") return topic;
+      else return "no active topic";
     },
-    activeTask () {
-      const task = this.data.find(task => task.type === 'Task')
-      if (task?.status === 'Started') return task.title
-      else return 'no active task'
-    }
+    activeTask() {
+      const task = this.data.find((task) => task.type === "Task");
+      if (task?.status === "Started") return task;
+      else return "no active task";
+    },
   },
   methods: {
     routeToTasksSystem() {

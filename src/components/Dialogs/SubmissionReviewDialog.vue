@@ -15,15 +15,19 @@
           <div class="create-dialog">
             <!-- DIALOG HEADER -->
             <div class="dialog-header">
-              <p v-if="reviewed" class="dialog-title mb-0">Submission <span :style="status">{{submission.taskSubmissionStatus}}</span></p>
+              <p v-if="reviewed" class="dialog-title mb-0">
+                Submission
+                <span :style="status">{{
+                  submission.taskSubmissionStatus
+                }}</span>
+              </p>
               <p v-else class="dialog-title mb-0">Rewiew submission</p>
             </div>
             <div class="create-dialog-content">
               <!-- Request for help details -->
               <div class="request-details">
-               <!-- Context details -->
+                <!-- Context details -->
                 <v-row>
-
                   <div class="ma-5">
                     <v-simple-table>
                       <tr
@@ -56,23 +60,44 @@
               </div>
 
               <!-- SUBMISSION INSTRUCTIONS -->
-              <div class="instructions-info">              
+              <div class="instructions-info">
                 <v-row class="justify-end align-center mr-4">
-                  <p class="dialog-description px-4 pb-0" style="color: var(--v-cohortAccent-base)">
+                  <p
+                    class="dialog-description px-4 pb-0"
+                    style="color: var(--v-cohortAccent-base)"
+                  >
                     Submission Instructions
                   </p>
-                  <Avatar :colourBorder="true" :profile="instructor" :size="30" class="pb-2"/> 
+                  <Avatar
+                    :colourBorder="true"
+                    :profile="instructor"
+                    :size="30"
+                    class="pb-2"
+                  />
                 </v-row>
-                <div class="mx-4 my-2" style="border:1px solid var(--v-cohortAccent-base);border-radius:5px;">
-                  <p class="ma-2 instructions" v-html="submission.contextTask.submissionInstructions"></p>
-                </div>                
+                <div
+                  class="mx-4 my-2"
+                  style="
+                    border: 1px solid var(--v-cohortAccent-base);
+                    border-radius: 5px;
+                  "
+                >
+                  <p
+                    class="ma-2 instructions"
+                    v-html="submission.contextTask.submissionInstructions"
+                  ></p>
+                </div>
               </div>
 
               <!-- STUDENT SUBMISSION -->
               <div class="requester-info">
                 <v-row v-if="requesterPerson">
                   <div class="requester-image justify-center align-center">
-                    <Avatar :colourBorder="true" :profile="requesterPerson" :size="30" />
+                    <Avatar
+                      :colourBorder="true"
+                      :profile="requesterPerson"
+                      :size="30"
+                    />
                   </div>
                   <!-- Message -->
                   <div>
@@ -86,33 +111,53 @@
                       >
                       <i
                         >@
-                        {{ getHumanDate(submission.taskSubmittedForReviewTimestamp) }}</i
+                        {{
+                          getHumanDate(
+                            submission.taskSubmittedForReviewTimestamp
+                          )
+                        }}</i
                       >
                     </p>
                   </div>
                 </v-row>
               </div>
-              <p class="dialog-help-message speech-bubble" v-html="submission.submissionLink"></p>
-              
+              <p
+                class="dialog-help-message speech-bubble"
+                v-html="submission.submissionLink"
+              ></p>
+
               <!-- INSTRUCTOR RESPONSE -->
               <div v-if="isTeacher && !reviewed">
                 <v-row class="ml-2 checkbox">
-                  <v-checkbox 
-                    v-model="response" 
-                    class="ml-4" 
+                  <v-checkbox
+                    v-model="response"
+                    class="ml-4"
                     :dark="dark"
                     :light="!dark"
                     color="red"
                   />
-                  <p class="dialog-context-description mt-6" style="color: var(--v-cohortAccent-base)">provide the student with feedback</p>
+                  <p
+                    class="dialog-context-description mt-6"
+                    style="color: var(--v-cohortAccent-base)"
+                  >
+                    provide the student with feedback
+                  </p>
                 </v-row>
               </div>
               <div v-if="response" class="ma-5 mt-0">
-                 <v-row class="justify-end align-center mr-4">
-                  <p class="dialog-description px-4 pb-0" style="color: var(--v-cohortAccent-base)">
-                    :stduent feedback
+                <v-row class="justify-end align-center mr-4">
+                  <p
+                    class="dialog-description px-4 pb-0"
+                    style="color: var(--v-cohortAccent-base)"
+                  >
+                    student feedback
                   </p>
-                  <Avatar :colourBorder="true" :profile="instructor" :size="30" class="pb-2"/> 
+                  <Avatar
+                    :colourBorder="true"
+                    :profile="instructor"
+                    :size="30"
+                    class="pb-2"
+                  />
                 </v-row>
                 <v-textarea
                   class="input-field"
@@ -126,21 +171,31 @@
 
               <!-- INSTRUCTOR RESPONSE -->
               <div v-if="submission.responseMessage" class="instructor-info">
-                <v-row class='justify-end'>
+                <v-row class="justify-end">
                   <!-- Message -->
                   <div>
                     <p class="dialog-description pa-1">
                       <i>
-                        {{ getHumanDate(submission.responseSubmittedTimestamp) }}</i
+                        {{
+                          getHumanDate(submission.responseSubmittedTimestamp)
+                        }}</i
                       >
                     </p>
                   </div>
                   <div class="requester-image align-center mr-12">
-                    <Avatar :colourBorder="true" :profile="instructor" :size="30" />
+                    <Avatar
+                      :colourBorder="true"
+                      :profile="instructor"
+                      :size="30"
+                    />
                   </div>
                 </v-row>
               </div>
-              <p v-if="submission.responseMessage" class="dialog-help-message teacher-bubble text-end" v-html="submission.responseMessage"></p>
+              <p
+                v-if="submission.responseMessage"
+                class="dialog-help-message teacher-bubble text-end"
+                v-html="submission.responseMessage"
+              ></p>
               <!-- Divider -->
             </div>
             <!-- ACTION BUTTONS -->
@@ -173,7 +228,6 @@
                 </v-btn>
               </template>
 
-
               <!-- CANCEL -->
               <v-btn
                 outlined
@@ -199,13 +253,13 @@
 import firebase from "firebase/app";
 import moment from "moment";
 
-import Avatar from "@/components/Avatar.vue"
+import Avatar from "@/components/Avatar.vue";
 
 import { db, functions } from "@/store/firestoreConfig";
 import {
   studentWorkMarkedCompletedXAPIStatement,
   teacherReviewedStudentWorkXAPIStatement,
-  teacherRespondedSubmissionDeclinedXAPIStatement
+  teacherRespondedSubmissionDeclinedXAPIStatement,
 } from "@/lib/veracityLRS";
 
 import { mapState, mapGetters } from "vuex";
@@ -214,19 +268,29 @@ import { dbMixins } from "@/mixins/DbMixins";
 export default {
   name: "SubmissionReviewDialog",
   mixins: [dbMixins],
-  props: ["submission", "requesterPerson", "on", "attrs", "reviewed", "studentReview", "isTeacher"],
+  props: [
+    "submission",
+    "requesterPerson",
+    "on",
+    "attrs",
+    "reviewed",
+    "studentReview",
+    "isTeacher",
+  ],
   components: {
-    Avatar
+    Avatar,
   },
   data: () => ({
     response: false,
-    responseMsg: '',
+    responseMsg: "",
     dialog: false,
     loading: false,
     instructor: {},
   }),
   async mounted() {
-    this.instructor = await this.MXgetPersonByIdFromDB(this.submission.contextCourse.mappedBy.personId)
+    this.instructor = await this.MXgetPersonByIdFromDB(
+      this.submission.contextCourse.mappedBy.personId
+    );
     // bind students tasks related to this submission (used for unlocking next topic)
     await this.$store.dispatch("bindPersonsTasksByTopicId", {
       personId: this.submission.studentId,
@@ -235,20 +299,27 @@ export default {
     });
   },
   computed: {
-    ...mapState(["currentCourse", "currentTopic", "currentTask", "personsTopicsTasks"]),
+    ...mapState([
+      "currentCourse",
+      "currentTopic",
+      "currentTask",
+      "personsTopicsTasks",
+    ]),
     ...mapGetters(["person"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
-    declined () {
-      return this.submission.taskSubmissionStatus == 'declined'
+    declined() {
+      return this.submission.taskSubmissionStatus == "declined";
     },
-    completed () {
-      return this.submission.taskSubmissionStatus == 'completed'
+    completed() {
+      return this.submission.taskSubmissionStatus == "completed";
     },
     status() {
-      return this.completed ? 'color:var(--v-baseAccent-base)' : 'color:var(--v-cohortAccent-base)' 
-    }
+      return this.completed
+        ? "color:var(--v-baseAccent-base)"
+        : "color:var(--v-cohortAccent-base)";
+    },
   },
   methods: {
     getHumanDate(ts) {
@@ -267,7 +338,7 @@ export default {
           teacherId: this.person.id,
           taskSubmissionStatus: "completed",
           taskCompletedTimestamp: new Date(),
-          responseMessage: this.responseMsg
+          responseMessage: this.responseMsg,
         });
 
       // 2) update the task status to complete
@@ -282,8 +353,9 @@ export default {
           teacherId: this.person.id,
           taskStatus: "completed",
           taskReviewedAndCompletedTimestamp: new Date(),
-        }).then(() => {
-          this.sendResponseToSubmission('completed')
+        })
+        .then(() => {
+          this.sendResponseToSubmission("completed");
         })
         .then(() => {
           console.log("Task successfully updated as completed!");
@@ -311,7 +383,7 @@ export default {
             }
           );
 
-          this.close()
+          this.close();
 
           this.$store.commit("setSnackbar", {
             show: true,
@@ -444,16 +516,19 @@ export default {
         course: this.submission.contextCourse.title,
         topic: this.submission.contextTopic.label,
         task: this.submission.contextTask.title,
-        student: this.requesterPerson.firstName + ' ' + this.requesterPerson.lastName,
+        student:
+          this.requesterPerson.firstName + " " + this.requesterPerson.lastName,
         submission: this.submission.submissionLink,
         outcome: outcome,
         message: this.responseMsg,
-        teacher: this.person.firstName + ' ' + this.person.lastName,
-        email: this.requesterPerson.email
-      }
-      console.log('send reponse email: ', data)
-      const sendResponseToSubmission = functions.httpsCallable("sendResponseToSubmission");
-      return sendResponseToSubmission(data)
+        teacher: this.person.firstName + " " + this.person.lastName,
+        email: this.requesterPerson.email,
+      };
+      console.log("send reponse email: ", data);
+      const sendResponseToSubmission = functions.httpsCallable(
+        "sendResponseToSubmission"
+      );
+      return sendResponseToSubmission(data);
     },
     declineSubmission() {
       this.loading = true;
@@ -467,7 +542,8 @@ export default {
           taskSubmissionStatus: "declined",
           responseSubmittedTimestamp: new Date(),
           responderPersonId: this.person.id,
-        }).then(() => {
+        })
+        .then(() => {
           // update students task status
           db.collection("people")
             .doc(this.submission.studentId)
@@ -480,10 +556,12 @@ export default {
               taskStatus: "declined",
               submissionDeclinedTimestamp: new Date(),
               responderPersonId: this.person.id,
-            })
-        }).then(() => {
-          this.sendResponseToSubmission('declined')
-        }).then(() => {
+            });
+        })
+        .then(() => {
+          this.sendResponseToSubmission("declined");
+        })
+        .then(() => {
           console.log(
             "Submitted work declined. It did not meet the mission requirements"
           );
@@ -499,7 +577,7 @@ export default {
               mission: this.submission.contextTask,
             }
           );
-          this.close()
+          this.close();
           this.$store.commit("setSnackbar", {
             show: true,
             text: "Students submitted work declined.Feedback sent to student",
@@ -523,7 +601,7 @@ export default {
       this.disabled = false;
       this.dialog = false;
       this.response = false;
-      this.responseMsg = ''
+      this.responseMsg = "";
     },
   },
 };
@@ -533,12 +611,12 @@ export default {
 .input-field {
   padding-top: 10px;
   border-radius: 5px;
-  font-size: 0.9rem
+  font-size: 0.9rem;
 }
 
 .checkbox ::v-deep .primary--text {
-    color: var(--v-cohortAccent-base) !important;
-    caret-color: var(--v-cohortAccent-base) !important;
+  color: var(--v-cohortAccent-base) !important;
+  caret-color: var(--v-cohortAccent-base) !important;
 }
 
 .checkbox ::v-deep .v-input--selection-controls__input .v-icon {
@@ -557,7 +635,7 @@ export default {
   width: 100%;
 
   .create-dialog-content {
-    width: 100%
+    width: 100%;
   }
 
   .dialog-header {
@@ -653,7 +731,7 @@ export default {
   background-color: transparent !important;
 }
 
-.instructions-info{
+.instructions-info {
   margin-top: 10px;
   color: var(--v-missionAccent-base);
   font-size: 0.8rem;
@@ -726,7 +804,4 @@ export default {
   z-index: 1;
   border-bottom-color: rgba(0, 0, 0, 0.095);
 }
-
-
-
 </style>
