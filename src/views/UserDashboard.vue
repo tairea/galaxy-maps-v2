@@ -4,7 +4,12 @@
     <div id="left-section">
       <UserInfo :person="person" />
     </div>
-    <div v-if="(isStudent && isTeacher) || isAdmin" class="top-section">
+    <div v-if="courses.length === 0" class="top-section">
+      <p class="overline noData">
+        No data to show. Try creating or enroling in a galaxy.
+      </p>
+    </div>
+    <div v-else-if="(isStudent && isTeacher) || isAdmin" class="top-section">
       <div v-if="isAdmin" class="student-border">
         <div :class="adminLabel" @click="setView('admin')">admin dashboard</div>
       </div>
@@ -23,11 +28,7 @@
         style="border-color: var(--v-missionAccent-base)"
       ></v-divider>
     </div>
-    <div v-else class="top-section">
-      <p class="overline noData">
-        No data to show. Try creating or enroling in a galaxy.
-      </p>
-    </div>
+
     <!-- STUDENT -->
     <template v-if="dashboardView === 'student'">
       <!-- Main section -->
