@@ -15,6 +15,7 @@
         ref="galaxyMap"
         :highlightCourse="clickedCourseId"
         @courseClicked="courseClicked($event)"
+        @createGalaxy="showDialog = true"
       />
     </div>
     <!-- <div class="buttons"> -->

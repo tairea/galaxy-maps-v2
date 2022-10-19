@@ -6,7 +6,7 @@
     </div>
     <div v-if="courses.length === 0" class="top-section">
       <p class="overline noData">
-        No data to show. Try creating or enroling in a galaxy.
+        No data to show. Try creating or exploring a galaxy.
       </p>
     </div>
     <div v-else-if="(isStudent && isTeacher) || isAdmin" class="top-section">
@@ -15,12 +15,12 @@
       </div>
       <div v-else class="student-border">
         <div :class="studentLabel" @click="setView('student')">
-          student dashboard
+          exploring dashboard
         </div>
       </div>
       <div class="teacher-border">
         <div :class="teacherLabel" @click="setView('teacher')">
-          teacher dashboard
+          mapping dashboard
         </div>
       </div>
       <v-divider
@@ -38,9 +38,7 @@
           <v-icon left class="circle-border" small color="missionAccent"
             >mdi-information-variant</v-icon
           >
-          <p class="info-description">
-            These are maps you are completing as a student
-          </p>
+          <p class="info-description">These are maps you are exploring</p>
         </div>
         <div class="course-progression-wrap">
           <StudentCourseProgression :student="person" />
@@ -59,7 +57,7 @@
             >mdi-information-variant</v-icon
           >
           <p class="info-description">
-            These are cohorts & maps you are facilitating as a teacher
+            These are cohorts & maps you have mapped
           </p>
         </div>
         <div class="timeframe-chips">

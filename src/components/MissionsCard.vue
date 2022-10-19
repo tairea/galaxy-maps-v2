@@ -23,7 +23,7 @@
           <!-- TITLE -->
           <h1 class="mission-title pa-4">{{ task.title }}</h1>
           <!-- DESCRIPTION -->
-          <div v-if="teacher" v-html="task.description" class="pa-2"></div>
+          <div v-if="teacher" v-html="task.description" class="pa-4"></div>
         </div>
 
         <!-- <div class="mission-section mission-section-overUnder">
@@ -55,7 +55,7 @@
       </div>
     </div> -->
 
-        <div class="mission-section mission-section-overUnder">
+        <div v-if="!teacher" class="mission-section mission-section-overUnder">
           <div
             v-if="task.duration"
             class="section-overUnder d-flex justify-center flex-column"
@@ -132,27 +132,61 @@
           </div>
         </div>
 
-        <!-- ANALYTICS (for type teacher) -->
-        <div v-else class="mission-section">
-          <p class="text-overline text-uppercase text-center">Mission Links:</p>
-          <div class="d-flex justify-center flex-column mt-2">
-            <v-btn
-              color="missionAccent"
-              outlined
-              x-small
-              :disabled="!task.video || !task.video.length"
+        <!-- TEACHER VIEW (for type teacher) -->
+        <div v-else class="three-vertical-section">
+          <div class="three-vertical-section-overUnder">
+            <!-- duration -->
+            <div
+              v-if="task.duration"
+              class="d-flex justify-center flex-column three-vertical"
             >
-              LINK TO VIDEO
-            </v-btn>
-            <v-btn
-              color="missionAccent"
-              outlined
-              class="mt-2"
-              x-small
-              :disabled="!task.slides || !task.slides.length"
-            >
-              LINK TO SLIDES
-            </v-btn>
+              <p class="text-overline text-uppercase text-center">
+                Estimated Duration:
+              </p>
+              <p class="text-center">
+                {{ task.duration }}
+              </p>
+            </div>
+            <!-- end duration -->
+            <!-- submission req -->
+            <div class="d-flex justify-center flex-column three-vertical pa-4">
+              <p class="text-overline text-uppercase text-center">
+                SUBMISSION REQ:
+              </p>
+              <p
+                class="text-center"
+                :style="[task.submissionRequired ? { color: '#FAF200' } : '']"
+              >
+                {{ task.submissionRequired ? "YES" : "NO" }}
+              </p>
+            </div>
+            <!-- end submission req -->
+            <!-- mission links -->
+            <div class="three-vertical">
+              <p class="text-overline text-uppercase text-center">
+                Mission Links:
+              </p>
+              <div class="d-flex justify-center flex-column mt-2">
+                <v-btn
+                  color="missionAccent"
+                  outlined
+                  x-small
+                  :disabled="!task.video || !task.video.length"
+                >
+                  LINK TO VIDEO
+                </v-btn>
+                <v-btn
+                  color="missionAccent"
+                  outlined
+                  class="mt-2"
+                  x-small
+                  :disabled="!task.slides || !task.slides.length"
+                >
+                  LINK TO SLIDES
+                </v-btn>
+              </div>
+            </div>
+            <!-- end mission links -->
           </div>
         </div>
       </div>
@@ -354,6 +388,37 @@ a {
 
     .section-overUnder:first-child {
       border-bottom: 1px dashed var(--v-missionAccent-base);
+    }
+  }
+
+  .three-vertical-section {
+    margin: 0px;
+    color: var(--v-missionAccent-base);
+    font-size: 0.9rem;
+    border-left: 1px dashed var(--v-missionAccent-base);
+
+    width: 20%;
+
+    .three-vertical-section-overUnder {
+      padding: 0px !important;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: space-center;
+      height: 100%;
+
+      .three-vertical {
+        width: 100%;
+        height: 33%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .three-vertical:not(:first-child) {
+        border-top: 1px dashed var(--v-missionAccent-base);
+      }
     }
   }
 }

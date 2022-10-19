@@ -12,14 +12,18 @@
         class="d-flex justify-center align-center"
       ></v-btn>
     </div>
-    <div v-if="studentCourses">
+    <div v-if="studentCourses.length > 0">
       <GalaxyProgressionCard
         v-for="data in studentCourses"
         :key="data.course.id"
         :data="data"
       />
     </div>
-    <div v-else><p class="overline galaxyAccent">NO ENROLLED GALAXIES</p></div>
+    <div v-else>
+      <p class="overline missionAccent--text text-center">
+        NO GALAXIES CURRENTLY BEING EXPLORED
+      </p>
+    </div>
   </div>
 </template>
 
@@ -45,9 +49,11 @@ export default {
   async mounted() {
     this.loading = true;
     const sanitisedCourses = await getStudentsCoursesXAPIQuery(this.student);
-    console.log('sanitisedCourses: ', this.studentCourses)
-    this.studentCourses = sanitisedCourses.filter(a => this.student.assignedCourses.some(b => a.course.id == b))
-    console.log('personsCourses: ', this.studentCourses)
+    console.log("sanitisedCourses: ", this.studentCourses);
+    this.studentCourses = sanitisedCourses.filter((a) =>
+      this.student.assignedCourses.some((b) => a.course.id == b)
+    );
+    console.log("personsCourses: ", this.studentCourses);
     this.loading = false;
   },
   methods: {},
