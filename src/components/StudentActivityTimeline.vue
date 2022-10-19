@@ -1,7 +1,7 @@
 <template>
   <div :class="activityClass">
     <p :class="activityLabel">ACTIVITY</p>
-    <div :class="statementClass">
+    <div v-if="courseAcivities.length > 0" :class="statementClass">
       <p v-for="(activity, i) in courseAcivities" :key="i" class="ma-0">
         <span v-if="!studentCard">{{ activity.timeStamp.time }} </span>
         <span>{{ activity.timeStamp.date }} </span>
@@ -10,6 +10,9 @@
         </span>
         <span>{{ activity.title }}</span>
       </p>
+    </div>
+    <div v-else>
+      <p class="missionAccent--text text-center overline">NO ACTIVITY DATA</p>
     </div>
   </div>
 </template>

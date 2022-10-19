@@ -1,9 +1,21 @@
 <template>
-  <div class="full-height">
+  <div class="full-height justify-center align-center">
     <LoadingSpinner v-if="loading" text="loading learning universe" />
-    <p v-if="nodesToDisplay.length == 0" class="overline noGalaxies">
-      NO GALAXIES TO DISPLAY
-    </p>
+    <div v-if="nodesToDisplay.length == 0">
+      <p class="overline noGalaxies">NO GALAXIES TO DISPLAY</p>
+      <div class="d-flex justify-center mb-4">
+        <v-btn
+          x-small
+          color="baseAccent"
+          @click="$emit('createGalaxy')"
+          outlined
+          class="py-6 px-12"
+        >
+          <v-icon x-small class="pr-2">mdi-plus</v-icon>
+          MAP NEW GALAXY
+        </v-btn>
+      </div>
+    </div>
     <!-- <GradientBackground :gradients="gradients"/> -->
     <network
       v-if="allNodesForDisplay.length != 0"

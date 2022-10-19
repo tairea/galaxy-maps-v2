@@ -188,6 +188,8 @@ export default {
       return hash;
     },
     calcTaskCompletedPercentage(data) {
+      console.log("data.taskCompletedCount:", data.taskCompletedCount);
+      console.log("data.course.taskTotal:", data.course.taskTotal);
       let percentage = (data.taskCompletedCount / data.course.taskTotal) * 100;
       return Math.round(percentage) + "%";
     },
