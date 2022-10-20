@@ -417,7 +417,14 @@ export default {
       }
     },
     async click2(data) {
-      if (this.addingNode || this.addingEdge) return;
+      if (
+        this.addingNode ||
+        this.addingEdge ||
+        this.draggingNodes ||
+        (data.items.length > 0 && data.nodes.length == 0) // this means its just an edge
+      )
+        return;
+      console.log("click event:", data);
       // 0) get closest node
       const closestNode = this.getClosestNodeToClick(data);
       if (closestNode.group == "locked") return;
@@ -556,7 +563,8 @@ export default {
     //   }
     // },
     selectEdge(data) {
-      if (this.addingNode || this.addingEdge) return;
+      if (this.addingNode || this.addingEdge || data.nodes != 0) return;
+      console.log("edge clicked", data);
       this.active = true;
       if (data.edges.length == 1) {
         const edgeId = data.edges[0];
@@ -564,7 +572,7 @@ export default {
         selectedEdge.type = "edge";
         (selectedEdge.DOMx = data.pointer.DOM.x),
           (selectedEdge.DOMy = data.pointer.DOM.y);
-        this.$emit("selected", selectedEdge);
+        this.$emit("selectedEdge", selectedEdge);
       }
     },
     deselectNode() {

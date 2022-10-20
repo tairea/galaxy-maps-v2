@@ -397,7 +397,7 @@ a {
     font-size: 0.9rem;
     border-left: 1px dashed var(--v-missionAccent-base);
 
-    width: 20%;
+    width: 30%;
 
     .three-vertical-section-overUnder {
       padding: 0px !important;

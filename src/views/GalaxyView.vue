@@ -47,6 +47,7 @@
         @setUiMessage="setUiMessage"
         @drag-coords="updateDragCoords"
         @selected="selected"
+        @selectedEdge="selectedEdge"
         @deselected="deselect"
         @blurNode="blurNode"
         @centerFocus="centerFocus"
@@ -84,17 +85,21 @@
       :editing="editing"
       :course="currentCourse"
       :currentNode="currentNode"
-      :currentEdge="currentEdge"
       @closeDialog="closeDialog"
       @openDialog="openDialog"
     />
 
-    <!-- POPUP OUT PANEL-->
+    <!-- POPUP OUT PANEL (for system preview)-->
     <SolarSystemInfoPanel
       :selectedTopic="clickedTopic"
       :tasks="topicTasks"
       @closeInfoPanel="closeInfoPanel"
       @editNode="showEditDialog"
+    />
+    <!-- POPUP OUT PANEL (for system preview)-->
+    <EdgeInfoPanel
+      :selectedEdge="currentEdge"
+      @closeInfoPanel="closeInfoPanel"
     />
   </div>
 </template>
@@ -112,6 +117,7 @@ import CreateEditDeleteNodeDialog from "../components/CreateEditDeleteNodeDialog
 
 import PopupSystemPreview from "../components/PopupSystemPreview";
 import SolarSystemInfoPanel from "../components/SolarSystemInfoPanel";
+import EdgeInfoPanel from "../components/EdgeInfoPanel";
 
 import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame";
 import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame";
@@ -141,6 +147,7 @@ export default {
     RequestForHelpTeacherFrame,
     SubmissionTeacherFrame,
     SolarSystemInfoPanel,
+    EdgeInfoPanel,
   },
   props: ["courseId"],
   data() {
@@ -159,7 +166,7 @@ export default {
       centerFocusPosition: false,
       type: "",
       currentNode: {},
-      currentEdge: {},
+      currentEdge: null,
       hoverPopup: false,
       hoverNode: false,
       dialog: false,
@@ -346,6 +353,7 @@ export default {
     closeInfoPanel() {
       this.clickedTopicId = null;
       this.clickedTopic = null;
+      this.currentEdge = null;
       this.topicTasks = [];
       this.hideLeftPanelsFlag = false;
       this.$refs.vis.exitSolarSystemPreview();
@@ -381,7 +389,7 @@ export default {
         this.currentNode = selected;
         this.selectedNode = selected;
       } else if (selected.type == "edge") {
-        this.currentEdge = selected;
+        // this.currentEdge = selected;
       }
       this.infoPopupShow = true;
     },
@@ -425,7 +433,7 @@ export default {
       this.dialogTitle = "";
       this.dialogDescription = "";
       this.currentNode = {};
-      this.currentEdge = {};
+      this.currentEdge = null;
       // close panel
       this.closeInfoPanel();
     },
@@ -455,6 +463,10 @@ export default {
         this.infoPopupShow = false;
         this.centerFocusPosition = false;
       }
+    },
+    selectedEdge(selected) {
+      console.log("selected edge emitted:", selected);
+      this.currentEdge = selected;
     },
   },
 };

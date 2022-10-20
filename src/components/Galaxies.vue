@@ -667,7 +667,7 @@ export default {
 
 .noGalaxies {
   width: 100%;
-  height: 100%;
+  height: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
