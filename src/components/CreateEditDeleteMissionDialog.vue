@@ -102,7 +102,7 @@
 
               <!-- VIDEO -->
               <!-- <p class="dialog-description">Video:</p> -->
-              <v-text-field
+              <!-- <v-text-field
                 class="input-field"
                 outlined
                 :dark="dark"
@@ -110,11 +110,11 @@
                 color="missionAccent"
                 v-model="task.video"
                 label="Link to Video (Optional)"
-              ></v-text-field>
+              ></v-text-field> -->
 
               <!-- SLIDES -->
               <!-- <p class="dialog-description">Slides:</p> -->
-              <v-text-field
+              <!-- <v-text-field
                 class="input-field"
                 outlined
                 :dark="dark"
@@ -122,7 +122,7 @@
                 color="missionAccent"
                 v-model="task.slides"
                 label="Link to slides (Optional)"
-              ></v-text-field>
+              ></v-text-field> -->
 
               <!-- SUBMISSION REQUIRED? -->
               <p class="dialog-description submission-colour">
@@ -216,10 +216,10 @@
                   @click="updateTask(task, index)"
                   class="mr-2"
                   :loading="loading"
-                  :disabled="disabled"
                   v-bind="attrs"
                   v-on="on"
                 >
+                  <!-- :disabled="disabled" -->
                   <v-icon left> mdi-check </v-icon>
                   UPDATE
                 </v-btn>
@@ -230,10 +230,10 @@
                   @click="saveTask(task)"
                   class="mr-2"
                   :loading="loading"
-                  :disabled="disabled"
                   v-bind="attrs"
                   v-on="on"
                 >
+                  <!-- :disabled="disabled" -->
                   <v-icon left> mdi-check </v-icon>
                   SAVE
                 </v-btn>

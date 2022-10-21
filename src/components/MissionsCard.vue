@@ -23,7 +23,11 @@
           <!-- TITLE -->
           <h1 class="mission-title pa-4">{{ task.title }}</h1>
           <!-- DESCRIPTION -->
-          <div v-if="teacher" v-html="task.description" class="pa-4"></div>
+          <div
+            v-if="teacher"
+            v-html="task.description"
+            class="task-description"
+          ></div>
         </div>
 
         <!-- <div class="mission-section mission-section-overUnder">
@@ -138,18 +142,32 @@
             <!-- duration -->
             <div
               v-if="task.duration"
-              class="d-flex justify-center flex-column three-vertical"
+              class="
+                d-flex
+                justify-center
+                flex-column
+                three-vertical
+                pa-4
+                duration
+              "
             >
               <p class="text-overline text-uppercase text-center">
-                Estimated Duration:
+                Est. Duration:
               </p>
-              <p class="text-center">
-                {{ task.duration }}
-              </p>
+              <p class="text-center">{{ task.duration }} MINUTES</p>
             </div>
             <!-- end duration -->
             <!-- submission req -->
-            <div class="d-flex justify-center flex-column three-vertical pa-4">
+            <div
+              class="
+                d-flex
+                justify-center
+                flex-column
+                three-vertical
+                pa-4
+                submission
+              "
+            >
               <p class="text-overline text-uppercase text-center">
                 SUBMISSION REQ:
               </p>
@@ -159,10 +177,15 @@
               >
                 {{ task.submissionRequired ? "YES" : "NO" }}
               </p>
+              <div
+                v-if="task.submissionInstructions"
+                v-html="task.submissionInstructions"
+                class="submissions-instructions"
+              ></div>
             </div>
             <!-- end submission req -->
             <!-- mission links -->
-            <div class="three-vertical">
+            <!-- <div class="three-vertical">
               <p class="text-overline text-uppercase text-center">
                 Mission Links:
               </p>
@@ -185,7 +208,7 @@
                   LINK TO SLIDES
                 </v-btn>
               </div>
-            </div>
+            </div> -->
             <!-- end mission links -->
           </div>
         </div>
@@ -314,6 +337,10 @@ a {
     font-size: 0.9rem;
     border-left: 1px dashed var(--v-missionAccent-base);
     flex-grow: 1;
+
+    .task-description {
+      padding: 0px 16px 16px 16px;
+    }
   }
 
   .mission-number-section {
@@ -404,16 +431,24 @@ a {
       display: flex;
       flex-direction: column;
       justify-content: center;
-      align-items: space-center;
+      align-items: center;
       height: 100%;
 
       .three-vertical {
         width: 100%;
-        height: 33%;
+        // height: 50%;
         display: flex;
-        flex-direction: column;
+        // flex-direction: column;
         justify-content: center;
         align-items: center;
+      }
+
+      .duration {
+        height: 30%;
+      }
+
+      .submission {
+        height: 70%;
       }
 
       .three-vertical:not(:first-child) {
@@ -421,5 +456,22 @@ a {
       }
     }
   }
+}
+.submissions-instructions {
+  color: var(--v-cohortAccent-base);
+  font-size: 0.8rem;
+  font-style: italic;
+  margin-top: 20px;
+  padding: 10px;
+  padding-top: 26px;
+  border: 1px solid var(--v-cohortAccent-base);
+  border-radius: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.v-application p {
+  margin-bottom: 0px !important;
 }
 </style>
