@@ -148,4 +148,22 @@ a {
 .v-expansion-panel-header__icon {
   display: none;
 }
+
+*::-webkit-scrollbar {
+  width: 5px;
+}
+/* Track */
+*::-webkit-scrollbar-track {
+  background: var(--v-background-base);
+  margin-top: 1px;
+  margin-bottom: 25px;
+}
+/* Handle */
+*::-webkit-scrollbar-thumb {
+  background: var(--v-missionAccent-base);
+}
+/* Handle on hover */
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--v-missionAccent-base);
+}
 </style>

@@ -59,13 +59,13 @@
             class="d-flex"
             style="border-bottom: 1px solid var(--v-missionAccent-base)"
           >
-            <v-icon color="missionAccent" small>mdi-cog-outline</v-icon>
-            <p class="settings overline ma-0 pl-1">Settings</p>
+            <p class="settings overline ma-0">Settings</p>
+            <!-- <v-icon color="missionAccent" small>mdi-cog-outline</v-icon> -->
           </v-col>
         </v-row>
         <v-row class="pt-3">
           <v-col class="pa-0 d-flex justify-center">
-            <p class="text-overline ma-0" color="primary">Colour Theme</p>
+            <p class="text-overline missionAccent--text ma-0">Colour Theme</p>
           </v-col>
           <!-- LIGHT/DARK MODE SWITCH -->
           <v-col class="pa-0 d-flex justify-center">
@@ -74,7 +74,7 @@
               :label="`${darkSwitch ? 'Dark' : 'Light'}`"
               @change="changeTheme()"
               color="missionAccent"
-              class="ma-o"
+              class="ma-0"
             ></v-switch>
           </v-col>
         </v-row>

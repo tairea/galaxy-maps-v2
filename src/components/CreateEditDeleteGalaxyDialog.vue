@@ -508,8 +508,6 @@ export default {
       let nodeId;
       let courseId;
 
-      console.log;
-
       // Add a new document in collection "courses"
       db.collection("courses")
         .add(course)
@@ -536,10 +534,9 @@ export default {
             .collection("map-nodes")
             .add({
               // hardcoded first node
-              label: this.course.title
-                ? this.course.title + " Intro"
-                : "Map intro",
+              label: course.title ? course.title + " Intro" : "Map intro",
               group: "introduction",
+              color: "#00E676",
               topicCreatedTimestamp: new Date(),
               x: 0,
               y: 0,
@@ -567,8 +564,9 @@ export default {
             .set({
               // hardcoded first node topic
               id: nodeId,
-              label: this.course.title + " Intro",
+              label: course.title + " Intro",
               group: "introduction",
+              color: "#00E676",
               topicCreatedTimestamp: new Date(),
             });
         })
