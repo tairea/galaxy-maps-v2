@@ -65,7 +65,7 @@ export default {
     };
   },
   async mounted() {
-    console.log("selected edge is:", this.selectedEdge);
+    // console.log("selected edge is:", this.inselectedEdge);
   },
   computed: {
     ...mapState(["currentCourseId"]),
