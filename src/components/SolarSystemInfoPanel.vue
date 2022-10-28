@@ -99,7 +99,7 @@ export default {
     };
   },
   async mounted() {
-    console.log("selected topic is:", this.selectedTopic);
+    // console.log("selected topic is:", this.selectedTopic);
   },
   computed: {
     ...mapState([

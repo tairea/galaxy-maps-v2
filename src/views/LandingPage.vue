@@ -8,8 +8,8 @@
     <div v-else class="landing-content">
       <p class="gm-title">GALAXY MAPS</p>
       <p class="overline">Galaxy Maps is a new digital learning experience</p>
-      <p class="overline">Galaxy Maps are branching paths of learning</p>
-      <p class="overline">Using Galaxy Maps you can navigate your learning</p>
+      <p class="overline">Galaxy Maps are learning paths created by the community</p>
+      <p class="overline">Discover new Galaxies and navigate your learning</p>
 
       <!-- <v-btn outlined color="baseAccent" class="mt-8" :to="{ path: 'login' }"> -->
       <v-btn outlined color="baseAccent" class="mt-8" to="/login">

@@ -338,7 +338,7 @@ export default new Vuex.Store({
           // mapped by user 
           doc.data().mappedBy.personId === state.person.id ||
           // user is assigned to course
-          state.person.assignedCourses.some(course => course === doc.id) ||
+          state.person.assignedCourses?.some(course => course === doc.id) ||
           state.user.data.admin) {
           const subQuerySnapshot = await db
             .collection("courses")

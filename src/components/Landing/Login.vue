@@ -304,6 +304,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import url("https://fonts.googleapis.com/css2?family=Genos:wght@200&display=swap");
+
 .gm-title {
   font-family: "Genos", sans-serif;
   font-size: 5vw;
