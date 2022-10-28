@@ -2,27 +2,12 @@
   <div class="full-height">
     <LoadingSpinner v-if="loading" text="loading galaxy" />
     <!-- loading = !planets.length && !draggingNodes -->
-    <network
-      v-if="nodesToDisplay"
-      ref="network"
-      class="full-height"
-      :nodes="nodesToDisplay"
-      :edges="teacher ? currentCourseEdges : currentCourseEdgesWithStatusStyles"
-      :options="network.options"
-      @nodes-add="addNode"
-      @edges-add="addEdge"
-      @dragging="dragging"
-      @drag-start="dragStart"
-      @drag-end="dragEnd"
-      @select-edge="selectEdge"
-      @deselect-node="deselectNode"
-      @deselect-edge="deselectEdge"
-      @animation-finished="animationFinished"
-      @before-drawing="beforeDrawing"
-      @after-drawing="afterDrawing"
-      @click="click2"
-      @double-click="doubleClick"
-    ></network>
+    <network v-if="nodesToDisplay" ref="network" class="full-height" :nodes="nodesToDisplay"
+      :edges="teacher ? currentCourseEdges : currentCourseEdgesWithStatusStyles" :options="network.options"
+      @nodes-add="addNode" @edges-add="addEdge" @dragging="dragging" @drag-start="dragStart" @drag-end="dragEnd"
+      @select-edge="selectEdge" @deselect-node="deselectNode" @deselect-edge="deselectEdge"
+      @animation-finished="animationFinished" @before-drawing="beforeDrawing" @after-drawing="afterDrawing"
+      @click="click2" @double-click="doubleClick"></network>
     <!-- @hover-node="hoverNode" 
           @select-node="selectNode"
                 @blur-node="blurNode"
@@ -764,6 +749,7 @@ export default {
     // https://stackoverflow.com/questions/6271419/how-to-fill-the-opposite-shape-on-canvas
     afterDrawing(ctx) {
       if (this.inSystemPreviewView) {
+        // console.log("ctx", ctx)
         // Canvas - set fill
         ctx.fillStyle = this.dark
           ? this.$vuetify.theme.themes.dark.background
@@ -773,8 +759,10 @@ export default {
         ctx.beginPath();
         // Canvas - draw rectangle the size of the screen
         ctx.rect(
-          0 - ctx.canvas.offsetWidth,
-          0 - ctx.canvas.offsetHeight,
+          // 0 - ctx.canvas.offsetWidth,
+          // 0 - ctx.canvas.offsetHeight,
+          0 - (ctx.canvas.width / 2),
+          0 - (ctx.canvas.height / 2),
           ctx.canvas.width,
           ctx.canvas.height
         );
