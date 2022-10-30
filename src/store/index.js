@@ -333,8 +333,8 @@ export default new Vuex.Store({
 
         // if public and not submitted || mapped by user || user is assigned to course
         if ((
-           // if public and not submitted
-          doc.data().public === true &&  doc.data().status != 'submitted') ||
+          // if public and not submitted
+          doc.data().public === true && doc.data().status != 'submitted') ||
           // mapped by user 
           doc.data().mappedBy.personId === state.person.id ||
           // user is assigned to course
@@ -369,12 +369,12 @@ export default new Vuex.Store({
       for (const doc of querySnapshot.docs) {
 
         if (
-           // if public and not submitted
-           (doc.data().public === true &&  doc.data().status != 'submitted') ||
-           // mapped by user 
-           doc.data().mappedBy.personId === state.person.id ||
-           // user is assigned to course
-           state.person.assignedCourses.some(course => course === doc.id) ||
+          // if public and not submitted
+          (doc.data().public === true && doc.data().status != 'submitted') ||
+          // mapped by user 
+          doc.data().mappedBy.personId === state.person.id ||
+          // user is assigned to course
+          state.person.assignedCourses?.some(course => course === doc.id) ||
           state.user.data.admin) {
           // doc.data() is never undefined for query doc snapshots
           const subQuerySnapshot = await db
