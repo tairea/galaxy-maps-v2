@@ -1,33 +1,21 @@
 <template>
   <div>
     <v-expansion-panel-header class="py-0">
-      <div
-        class="mission-card"
-        :class="{ lockedOpacity: task.taskStatus == 'locked' }"
-      >
+      <div class="mission-card" :class="{ lockedOpacity: task.taskStatus == 'locked' }">
         <div class="mission-section mission-number-section">
           <p class="text-overline text-uppercase">Mission</p>
           <p style="font-size: 50px; text-align: center">{{ index + 1 }}</p>
           <!-- EDIT BUTTON -->
           <div v-if="teacher">
-            <CreateEditDeleteMissionDialog
-              :edit="true"
-              :taskToEdit="task"
-              :taskId="id"
-              :index="index"
-              :topicId="topicId"
-            />
+            <CreateEditDeleteMissionDialog :edit="true" :taskToEdit="task" :taskId="id" :index="index"
+              :topicId="topicId" />
           </div>
         </div>
         <div class="mission-middle-section mission-main-section">
           <!-- TITLE -->
           <h1 class="mission-title pa-4">{{ task.title }}</h1>
           <!-- DESCRIPTION -->
-          <div
-            v-if="teacher"
-            v-html="task.description"
-            class="task-description"
-          ></div>
+          <div v-if="teacher" v-html="task.description" class="task-description"></div>
         </div>
 
         <!-- <div class="mission-section mission-section-overUnder">
@@ -60,10 +48,7 @@
     </div> -->
 
         <div v-if="!teacher" class="mission-section mission-section-overUnder">
-          <div
-            v-if="task.duration"
-            class="section-overUnder d-flex justify-center flex-column"
-          >
+          <div v-if="task.duration" class="section-overUnder d-flex justify-center flex-column">
             <p class="text-overline text-uppercase text-center">
               Estimated Duration:
             </p>
@@ -82,52 +67,36 @@
         </div>
 
         <!-- MISSION STATUS -->
-        <div
-          v-if="!teacher"
-          class="mission-section d-flex justify-center align-center flex-column"
-          style="width: 20%"
+        <div v-if="!teacher" class="mission-section d-flex justify-center align-center flex-column" style="width: 20%"
           :class="{
             'topic-in-review': inreview,
             'topic-completed': completed,
             'topic-active': active || declined,
-          }"
-        >
+          }">
           <p class="text-overline text-uppercase text-center">
             {{
-              completed
-                ? "COMPLETED"
-                : inreview
-                ? "IN REVIEW"
-                : unlocked
-                ? "START MISSION"
-                : active
-                ? "ACTIVE MISSION"
-                : declined
-                ? "RETRY MISSION"
-                : "LOCKED"
+                completed
+                  ? "COMPLETED"
+                  : inreview
+                    ? "IN REVIEW"
+                    : unlocked
+                      ? "START MISSION"
+                      : active
+                        ? "ACTIVE MISSION"
+                        : declined
+                          ? "RETRY MISSION"
+                          : "LOCKED"
             }}
           </p>
 
           <div v-if="unlocked" class="d-flex justify-center">
             <!-- Start Mission button -->
-            <StartMissionDialog
-              :topicId="topicId"
-              :taskId="id"
-              :task="task"
-              :topicActive="topicActive"
-            />
+            <StartMissionDialog :topicId="topicId" :taskId="id" :task="task" :topicActive="topicActive" />
           </div>
-          <div
-            v-else-if="active || declined || completed || inreview"
-            class="d-flex justify-center"
-          >
-            <v-icon
-              :color="
-                active || completed || declined ? 'baseAccent' : 'cohortAccent'
-              "
-              large
-              >mdi-check</v-icon
-            >
+          <div v-else-if="active || declined || completed || inreview" class="d-flex justify-center">
+            <v-icon :color="
+              active || completed || declined ? 'baseAccent' : 'cohortAccent'
+            " large>mdi-check</v-icon>
           </div>
           <div v-else class="d-flex justify-center align-center">
             <v-btn color="missionAccent" icon large>
@@ -140,17 +109,14 @@
         <div v-else class="three-vertical-section">
           <div class="three-vertical-section-overUnder">
             <!-- duration -->
-            <div
-              v-if="task.duration"
-              class="
+            <div v-if="task.duration" class="
                 d-flex
                 justify-center
                 flex-column
                 three-vertical
                 pa-4
                 duration
-              "
-            >
+              ">
               <p class="text-overline text-uppercase text-center">
                 Est. Duration:
               </p>
@@ -158,30 +124,22 @@
             </div>
             <!-- end duration -->
             <!-- submission req -->
-            <div
-              class="
+            <div class="
                 d-flex
                 justify-center
                 flex-column
                 three-vertical
                 pa-4
                 submission
-              "
-            >
+              ">
               <p class="text-overline text-uppercase text-center">
                 SUBMISSION REQ:
               </p>
-              <p
-                class="text-center"
-                :style="[task.submissionRequired ? { color: '#FAF200' } : '']"
-              >
+              <p class="text-center" :style="[task.submissionRequired ? { color: '#FAF200' } : '']">
                 {{ task.submissionRequired ? "YES" : "NO" }}
               </p>
-              <div
-                v-if="task.submissionInstructions"
-                v-html="task.submissionInstructions"
-                class="submissions-instructions"
-              ></div>
+              <div v-if="task.submissionInstructions" v-html="task.submissionInstructions"
+                class="submissions-instructions"></div>
             </div>
             <!-- end submission req -->
             <!-- mission links -->
@@ -216,21 +174,9 @@
     </v-expansion-panel-header>
     <v-expansion-panel-content>
       <!-- expansion content -->
-      <ActiveMissionsCard
-        v-if="active || declined"
-        :task="task"
-        :topicId="topicId"
-        :active="active"
-        :declined="declined"
-        @topicCompleted="topicCompleted()"
-      />
-      <SelectedMissionsCard
-        v-else
-        :task="task"
-        :topicId="topicId"
-        :completed="completed"
-        :inreview="inreview"
-      />
+      <ActiveMissionsCard v-if="active || declined" :task="task" :topicId="topicId" :active="active"
+        :declined="declined" @topicCompleted="topicCompleted()" />
+      <SelectedMissionsCard v-else :task="task" :topicId="topicId" :completed="completed" :inreview="inreview" />
     </v-expansion-panel-content>
   </div>
 </template>
@@ -305,13 +251,31 @@ export default {
 };
 </script>
 
+<style lang="scss">
+pre {
+  background-color: #23241f;
+  color: #f8f8f2;
+  overflow: visible;
+  padding: 10px;
+}
+
+li {
+  margin-bottom: 16px;
+}
+
+.task-description>p,
+.task-description>ol>li {
+  line-height: 20px !important;
+}
+
+.task-description>p>a {
+  color: var(--v-galaxyAccent-base) !important;
+}
+</style>
+
 <style lang="scss" scoped>
 p {
   margin: 0px !important;
-}
-
-a {
-  color: var(--v-missionAccent-base) !important;
 }
 
 .lockedOpacity {
@@ -331,6 +295,7 @@ a {
     padding: 20px;
     flex-grow: 1;
   }
+
   .mission-middle-section {
     margin: 0px;
     color: var(--v-missionAccent-base);
@@ -340,6 +305,8 @@ a {
 
     .task-description {
       padding: 0px 16px 16px 16px;
+
+
     }
   }
 
@@ -351,6 +318,7 @@ a {
     border: 1px solid var(--v-cohortAccent-base);
     color: var(--v-cohortAccent-base);
   }
+
   .topic-declined {
     border: 1px solid var(--v-cohortAccent-base);
     color: var(--v-cohortAccent-base);
@@ -457,18 +425,20 @@ a {
     }
   }
 }
+
 .submissions-instructions {
   color: var(--v-cohortAccent-base);
   font-size: 0.8rem;
   font-style: italic;
-  margin-top: 20px;
+  margin: 20px 0px;
   padding: 10px;
   padding-top: 26px;
   border: 1px solid var(--v-cohortAccent-base);
   border-radius: 5px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  // display: flex;
+  // justify-content: center;
+  // align-items: center;
+  // flex-direction: column;
 }
 
 .v-application p {
