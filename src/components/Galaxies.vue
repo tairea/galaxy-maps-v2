@@ -4,29 +4,15 @@
     <div v-if="nodesToDisplay.length == 0">
       <p class="overline noGalaxies">NO GALAXIES TO DISPLAY</p>
       <div class="d-flex justify-center mb-4">
-        <v-btn
-          x-small
-          color="baseAccent"
-          @click="$emit('createGalaxy')"
-          outlined
-          class="py-6 px-12"
-        >
+        <v-btn x-small color="baseAccent" @click="$emit('createGalaxy')" outlined class="py-6 px-12">
           <v-icon x-small class="pr-2">mdi-plus</v-icon>
           MAP NEW GALAXY
         </v-btn>
       </div>
     </div>
     <!-- <GradientBackground :gradients="gradients"/> -->
-    <network
-      v-if="allNodesForDisplay.length != 0"
-      ref="network"
-      class="full-height"
-      :nodes="allNodesForDisplay"
-      :edges="allEdges"
-      :options="network.options"
-      @click="click"
-      @before-drawing="beforeDrawing"
-    ></network>
+    <network v-if="allNodesForDisplay.length != 0" ref="network" class="full-height" :nodes="allNodesForDisplay"
+      :edges="allEdges" :options="network.options" @click="click" @before-drawing="beforeDrawing"></network>
   </div>
 </template>
 
@@ -153,7 +139,7 @@ export default {
         (course) =>
           (course.public === true && course.status != "submitted") ||
           course.mappedBy.personId === this.person.id ||
-          this.person.assignedCourses.some(
+          this.person.assignedCourses?.some(
             (assignedCourse) => assignedCourse === course.id
           )
       );

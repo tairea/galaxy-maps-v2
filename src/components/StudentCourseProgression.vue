@@ -1,23 +1,11 @@
 <template>
   <div>
     <!-- loading spinner -->
-    <div
-      class="d-flex justify-center align-center"
-      v-if="loading && !(studentCourses.length > 0)"
-    >
-      <v-btn
-        :loading="loading"
-        icon
-        color="galaxyAccent"
-        class="d-flex justify-center align-center"
-      ></v-btn>
+    <div class="d-flex justify-center align-center" v-if="loading && !(studentCourses.length > 0)">
+      <v-btn :loading="loading" icon color="galaxyAccent" class="d-flex justify-center align-center"></v-btn>
     </div>
     <div v-if="studentCourses.length > 0">
-      <GalaxyProgressionCard
-        v-for="data in studentCourses"
-        :key="data.course.id"
-        :data="data"
-      />
+      <GalaxyProgressionCard v-for="data in studentCourses" :key="data.course.id" :data="data" />
     </div>
     <div v-else>
       <p class="overline missionAccent--text text-center">
@@ -51,7 +39,7 @@ export default {
     const sanitisedCourses = await getStudentsCoursesXAPIQuery(this.student);
     console.log("sanitisedCourses: ", this.studentCourses);
     this.studentCourses = sanitisedCourses.filter((a) =>
-      this.student.assignedCourses.some((b) => a.course.id == b)
+      this.student.assignedCourses?.some((b) => a.course.id == b)
     );
     console.log("personsCourses: ", this.studentCourses);
     this.loading = false;
@@ -60,4 +48,6 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+
+</style>
