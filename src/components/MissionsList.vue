@@ -3,33 +3,15 @@
     <h2 class="missions-label">Missions</h2>
 
     <div v-if="tasks.length > 0" style="width: 100%">
-      <v-expansion-panels
-        :flat="true"
-        :multiple="false"
-        v-model="indexOfActiveTask"
-      >
-        <v-expansion-panel
-          class="mission-expansions"
-          v-for="(task, index) in tasks"
-          :key="task.id"
-          @click="missionClicked(task)"
-          :readonly="
+      <v-expansion-panels :flat="true" :multiple="false" v-model="indexOfActiveTask">
+        <v-expansion-panel class="mission-expansions" v-for="(task, index) in tasks" :key="task.id"
+          @click="missionClicked(task)" :readonly="
             task.taskStatus == 'locked' ||
             task.taskStatus == 'unlocked' ||
             teacher
-          "
-          :value="task.taskStatus == 'active'"
-        >
-          <MissionsCard
-            :task="task"
-            :id="task.id"
-            :index="index"
-            :topicId="topicId"
-            :topicActive="topicActive"
-            :teacher="teacher"
-            @missionActivated="missionActivated"
-            @topicCompleted="topicCompleted"
-          />
+          " :value="task.taskStatus == 'active'">
+          <MissionsCard :task="task" :id="task.id" :index="index" :topicId="topicId" :topicActive="topicActive"
+            :teacher="teacher" @missionActivated="missionActivated" @topicCompleted="topicCompleted" />
         </v-expansion-panel>
       </v-expansion-panels>
     </div>
@@ -112,7 +94,8 @@ a {
   border: 1px solid var(--v-missionAccent-base);
   position: relative;
   overflow: scroll;
-  overflow-x: hidden; /* Hide horizontal scrollbar */
+  overflow-x: hidden;
+  /* Hide horizontal scrollbar */
 }
 
 .mission-container ::-webkit-scrollbar {
@@ -138,6 +121,7 @@ a {
   text-transform: uppercase;
   color: var(--v-missionAccent-base);
   font-size: 0.8rem;
+  margin-top: 50px;
   // letter-spacing: 2px;
 }
 
@@ -152,16 +136,19 @@ a {
 *::-webkit-scrollbar {
   width: 5px;
 }
+
 /* Track */
 *::-webkit-scrollbar-track {
   background: var(--v-background-base);
   margin-top: 1px;
   margin-bottom: 25px;
 }
+
 /* Handle */
 *::-webkit-scrollbar-thumb {
   background: var(--v-missionAccent-base);
 }
+
 /* Handle on hover */
 *::-webkit-scrollbar-thumb:hover {
   background: var(--v-missionAccent-base);

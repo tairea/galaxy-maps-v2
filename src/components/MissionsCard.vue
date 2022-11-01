@@ -4,7 +4,7 @@
       <div class="mission-card" :class="{ lockedOpacity: task.taskStatus == 'locked' }">
         <div class="mission-section mission-number-section">
           <p class="text-overline text-uppercase">Mission</p>
-          <p style="font-size: 50px; text-align: center">{{ index + 1 }}</p>
+          <p class="mission-number">{{ index + 1 }}</p>
           <!-- EDIT BUTTON -->
           <div v-if="teacher">
             <CreateEditDeleteMissionDialog :edit="true" :taskToEdit="task" :taskId="id" :index="index"
@@ -259,12 +259,14 @@ pre {
   padding: 10px;
 }
 
-li {
+li,
+pre {
   margin-bottom: 16px;
 }
 
 .task-description>p,
-.task-description>ol>li {
+.task-description>ol>li,
+.task-description>ul>li {
   line-height: 20px !important;
 }
 
@@ -312,6 +314,14 @@ p {
 
   .mission-number-section {
     border-left: none;
+
+    .mission-number {
+      font-size: 50px;
+      height: 50px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
   }
 
   .topic-in-review {
