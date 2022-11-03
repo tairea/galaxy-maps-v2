@@ -2,21 +2,11 @@
   <div class="login">
     <p class="gm-title">GALAXY MAPS</p>
     <EmailSignIn v-if="showEmailSignin" />
-    <NewPassword
-      v-else-if="isResetPassword"
-      :actionCode="actionCode"
-      :email="accountEmail"
-      @close="isResetPassword = false"
-    />
+    <NewPassword v-else-if="isResetPassword" :actionCode="actionCode" :email="accountEmail"
+      @close="isResetPassword = false" />
     <div v-else-if="isVerifyEmail" id="galaxy-info">
       <h2 class="galaxy-label">EMAIL VERIFIED</h2>
-      <v-btn
-        color="baseAccent"
-        class="mr-4 my-4"
-        @click="redirect"
-        outlined
-        width="100%"
-      >
+      <v-btn color="baseAccent" class="mr-4 my-4" @click="redirect" outlined width="100%">
         continue to login
       </v-btn>
     </div>
@@ -26,52 +16,20 @@
       <!-- <div class="d-flex justify-center align-center"> -->
       <!-- <v-img class="galaxy-image" :src=""></v-img> -->
       <!-- </div> -->
-      <v-form
-        ref="form"
-        v-model="valid"
-        lazy-validation
-        class="my-6"
-        @keyup.native.enter="valid && login($event)"
-      >
-        <v-text-field
-          type="email"
-          v-model="email"
-          label="E-mail"
-          :rules="emailRules"
-          required
-          color="baseAccent"
-          outlined
-          class="custom-input"
-        ></v-text-field>
-        <v-text-field
-          type="password"
-          v-model="password"
-          label="Password"
-          required
-          color="baseAccent"
-          outlined
-          class="custom-input"
-        ></v-text-field>
-        <v-btn
-          :disabled="!valid"
-          color="baseAccent"
-          class="mr-4"
-          @click="login"
-          outlined
-          width="100%"
-          :loading="loading"
-        >
+      <v-form ref="form" v-model="valid" lazy-validation class="my-6" @keyup.native.enter="valid && login($event)">
+        <v-text-field type="email" v-model="email" label="E-mail" :rules="emailRules" required color="baseAccent"
+          outlined class="custom-input"></v-text-field>
+        <v-text-field type="password" v-model="password" label="Password" required color="baseAccent" outlined
+          class="custom-input"></v-text-field>
+        <v-btn :disabled="!valid" color="baseAccent" class="mr-4" @click="login" outlined width="100%"
+          :loading="loading">
           Sign-in
         </v-btn>
       </v-form>
 
-      <router-link to="/register" class="overline mt-4" color="baseAccent--text"
-        >Register</router-link
-      >
+      <router-link to="/register" class="overline mt-4" color="baseAccent--text">Register</router-link>
       <br />
-      <router-link to="/reset" class="overline mt-4" color="baseAccent--text"
-        >Reset Password</router-link
-      >
+      <router-link to="/reset" class="overline mt-4" color="baseAccent--text">Reset Password</router-link>
     </div>
   </div>
 </template>
@@ -315,6 +273,7 @@ export default {
   // position: relative;
   // top: 100px;
 }
+
 .login {
   width: 100vw;
   height: 100vh;

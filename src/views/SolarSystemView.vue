@@ -2,11 +2,7 @@
   <div id="container" class="bg">
     <!--==== Left section ====-->
     <div id="left-section">
-      <SolarSystemInfo
-        :topic="currentTopic"
-        :tasks="teacher ? topicsTasks : personsTopicsTasks"
-        :teacher="teacher"
-      />
+      <SolarSystemInfo :topic="currentTopic" :tasks="teacher ? topicsTasks : personsTopicsTasks" :teacher="teacher" />
       <!-- <SolarSystemInfo
         :topic="
           teacher ? 
@@ -16,40 +12,23 @@
         :tasks="teacher ? topicsTasks : personsTopicsTasks"
         :teacher="teacher"
       /> -->
-      <AssignedInfo
-        v-if="!draft && peopleInTopic.length"
-        :assignCohorts="true"
-        :people="peopleInTopic"
-      />
+      <AssignedInfo v-if="!draft && peopleInTopic.length" :assignCohorts="true" :people="peopleInTopic" />
 
       <BackButton :toPath="{ path: '/galaxy/' + currentCourseId }" />
     </div>
 
     <!--==== Main section ====-->
     <div id="main-section">
-      <MissionsList
-        :tasks="teacher ? topicsTasks : personsTopicsTasks"
-        :topicId="currentTopicId"
-        :teacher="teacher"
-        @task="taskForHelpInfo($event)"
-        @missionActivated="peopleInTopic.push(person)"
-        @topicCompleted="getPeopleInTopic"
-      />
+      <MissionsList :tasks="teacher ? topicsTasks : personsTopicsTasks" :topicId="currentTopicId" :teacher="teacher"
+        @task="taskForHelpInfo($event)" @missionActivated="peopleInTopic.push(person)"
+        @topicCompleted="getPeopleInTopic" />
     </div>
 
     <!--==== Right section ====-->
     <div id="right-section">
-      <RequestForHelpTeacherFrame
-        :courses="[currentCourse]"
-        :isTeacher="teacher"
-        :students="peopleInTopic"
-      />
-      <SubmissionTeacherFrame
-        :courses="[currentCourse]"
-        :isTeacher="teacher"
-        :students="teacher ? peopleInTopic : [person]"
-        class="mt-4"
-      />
+      <RequestForHelpTeacherFrame :courses="[currentCourse]" :isTeacher="teacher" :students="peopleInTopic" />
+      <SubmissionTeacherFrame :courses="[currentCourse]" :isTeacher="teacher"
+        :students="teacher ? peopleInTopic : [person]" class="mt-4" />
     </div>
   </div>
 </template>
@@ -197,6 +176,7 @@ export default {
 .bg {
   background: var(--v-background-base);
 }
+
 #container {
   height: 100vh;
   width: 100%;
@@ -213,9 +193,11 @@ export default {
   justify-content: flex-start;
   align-items: center;
   flex-direction: column;
-  overflow-y: scroll;
+  // overflow-y: scroll;
+  overflow-y: hidden;
   padding-bottom: 50px;
 }
+
 #main-section {
   width: 60%;
   height: 100%;
@@ -225,6 +207,7 @@ export default {
   flex-direction: column;
   // border: 1px solid pink;
 }
+
 #right-section {
   width: 20%;
   height: 100%;
@@ -239,6 +222,7 @@ export default {
   width: 100%;
   margin: 30px 20px;
   border: 1px solid var(--v-galaxyAccent-base);
+
   .galaxy-label {
     // ribbon label
     position: absolute;

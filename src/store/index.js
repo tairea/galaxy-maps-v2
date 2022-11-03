@@ -346,11 +346,16 @@ export default new Vuex.Store({
             .collection("map-nodes")
             .get();
 
+          // grey out node if course.status "submitted" || "drafting"
+          let greyoutFlag = false
+          if (doc.data().status == "submitted" || doc.data().status == "drafting") greyoutFlag = true
+
           allNodes.push(
             ...subQuerySnapshot.docs.map((subDoc) => {
               const node = subDoc.data();
               node.courseId = doc.id; // add course id to nodes list for some reason
               //node.group = count; // add group to nodes list for some reason
+              node.color = greyoutFlag ? "rgb(128,128,128,0.3)" : node.color; // grey out node if course.status "submitted" || "drafting"
               return node;
             })
           );
@@ -383,12 +388,21 @@ export default new Vuex.Store({
             .collection("map-edges")
             .get();
 
-          allEdges.push(...subQuerySnapshot.docs.map((subDoc) => subDoc.data()))
+          // grey out node if course.status "submitted" || "drafting"
+          let greyoutFlag = false
+          if (doc.data().status == "submitted" || doc.data().status == "drafting") greyoutFlag = true
+
+          allEdges.push(...subQuerySnapshot.docs.map((subDoc) => {
+            const edge = subDoc.data()
+            const newEdgeColor = { ...edge.color, opacity: greyoutFlag ? 0.3 : 1 }
+            edge.color = newEdgeColor // grey out node if course.status "submitted" || "drafting"
+            return edge
+          }))
         }
       }
 
       state.allEdges = allEdges;
-      // console.log("all edges:",allEdges)
+      console.log("all edges:", allEdges)
     },
 
     // ===== Firestore - BIND by USER

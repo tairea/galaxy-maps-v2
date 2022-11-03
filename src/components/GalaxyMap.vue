@@ -429,7 +429,7 @@ export default {
       this.$store.commit("setCurrentTopicId", closestNode.id);
       this.$emit("topicClicked", { topicId: this.currentTopicId });
       // 6) calc how many tasks for this topic
-      let tasksForThisTopic = this.tasks.filter(
+      let tasksForThisTopic = this.tasks?.filter(
         (task) => task.topicId == this.currentTopicId
       );
       // 7) get number of tasks (used to calc size of circle mask to block out map)
@@ -751,20 +751,22 @@ export default {
       if (this.inSystemPreviewView) {
         // console.log("ctx", ctx)
         // Canvas - set fill
-        ctx.fillStyle = this.dark
-          ? this.$vuetify.theme.themes.dark.background
-          : this.$vuetify.theme.themes.light.background;
-        // ctx.fillStyle = "pink";
+        // ctx.fillStyle = this.dark
+        //   ? this.$vuetify.theme.themes.dark.background
+        //   : this.$vuetify.theme.themes.light.background;
+        ctx.fillStyle = "pink";
         // Canvas - start path
         ctx.beginPath();
+        // canvas buffer (incase galaxy map is huge)
+        const canvasBoundaryBuffer = 10000
         // Canvas - draw rectangle the size of the screen
         ctx.rect(
           // 0 - ctx.canvas.offsetWidth,
           // 0 - ctx.canvas.offsetHeight,
-          0 - (ctx.canvas.width / 2),
-          0 - (ctx.canvas.height / 2),
-          ctx.canvas.width,
-          ctx.canvas.height
+          0 - (ctx.canvas.width + canvasBoundaryBuffer / 2),
+          0 - (ctx.canvas.height + canvasBoundaryBuffer / 2),
+          ctx.canvas.width + canvasBoundaryBuffer,
+          ctx.canvas.height + canvasBoundaryBuffer
         );
         // Canvas - draw arc (circle) the of the numbers of tasks/planet orbits
         // Note: drawing a rectanlge then a circle in the same path makes the circle a whole
