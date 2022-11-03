@@ -332,8 +332,14 @@ export default {
           this.person.assignedCourses?.some(
             (course) => course === courses[i].id
           )
-        )
+        ) {
           status = "assigned";
+
+        }
+        // glow submitted for admin to easily see submitted galaxies for review 
+        else if (this.user.data.admin && courses[i].status == "submitted") {
+          status = "submitted"
+        }
         boundary.status = status;
 
         // add nodes to boundary for debugging
@@ -618,7 +624,8 @@ export default {
           break;
         case "submitted":
           //colour = "rgba(0,230,118,0.3)"; // baseAccent as rgba
-          colour = "rgba(250,242,0,0.3)"; // cohortAccent as rgba
+          colour = "rgba(250,242,0,0.2)"; // cohortAccent as rgba
+          //colour = "rgba(233,196,106,0.3)"; // cohortAccent as rgba
           break;
         case "assigned":
           colour = "rgba(105,161,226,0.3)"; // missionAccent as rgba

@@ -186,6 +186,7 @@ export default {
       "personsTopicsTasks",
       "currentCourse",
       "cohorts",
+      "user"
     ]),
     ...mapGetters(["person", "user"]),
     draft() {
