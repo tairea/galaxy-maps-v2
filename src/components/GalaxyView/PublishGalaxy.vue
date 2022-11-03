@@ -3,14 +3,8 @@
     <!-- CREATE BUTTON -->
     <template v-slot:activator="{ on, attrs }">
       <!-- ASSIGN COHORT -->
-      <v-btn
-        outlined
-        color="galaxyAccent"
-        v-bind="attrs"
-        v-on="on"
-        class="publishButton d-inline-flex text-truncate"
-        @click="getTopicsWithoutTasks"
-      >
+      <v-btn outlined :color="admin ? 'cohortAccent' : 'galaxyAccent'" v-bind="attrs" v-on="on"
+        class="publishButton d-inline-flex text-truncate" @click="getTopicsWithoutTasks">
         publish galaxy
       </v-btn>
       <!-- ASSIGN GALAXY -->
@@ -38,11 +32,7 @@
           </p>
 
           <ul>
-            <li
-              v-for="topic in topicsWithoutTasks"
-              :key="topic.id"
-              class="overline"
-            >
+            <li v-for="topic in topicsWithoutTasks" :key="topic.id" class="overline">
               {{ topic.label }}
             </li>
           </ul>
@@ -54,13 +44,8 @@
       </div>
       <!-- ACTION BUTTONS -->
       <div class="action-buttons">
-        <v-btn
-          outlined
-          :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
-          class="ml-2"
-          @click="close"
-          :disabled="loading"
-        >
+        <v-btn outlined :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'" class="ml-2" @click="close"
+          :disabled="loading">
           <v-icon left> mdi-close </v-icon>
           OK
         </v-btn>
@@ -72,17 +57,19 @@
         <p class="dialog-title">publish galaxy</p>
         <div class="d-flex align-center">
           <v-icon left color="missionAccent">mdi-information-variant</v-icon>
-          <p v-if="admin" class="dialog-description">
-            Publish
-            <span style="font-weight: 600; color: var(--v-galaxyAccent-base)">{{
-              course.title
-            }}</span>
-            galaxy to make publically visible
-          </p>
+          <div v-if="admin" class="dialog-description">
+            <p style="font-weight: 600; color: var(--v-cohortAccent-base)">I have reviewed this Galaxy Map</p>
+            <p>Publish
+              <span style="font-weight: 600; color: var(--v-galaxyAccent-base)">{{
+                  course.title
+              }}</span>
+              galaxy to make publically visible
+            </p>
+          </div>
           <p v-else class="dialog-description">
             Publish
             <span style="font-weight: 600; color: var(--v-galaxyAccent-base)">{{
-              course.title
+                course.title
             }}</span>
             galaxy to make it visible to others
           </p>
@@ -100,25 +87,9 @@
             <strong>PUBLIC</strong> (discoverable by all Galaxy Maps users)
           </p>
 
-          <v-radio-group
-            row
-            v-model="courseOptions.public"
-            color="missionAccent"
-            :light="!dark"
-            :dark="dark"
-          >
-            <v-radio
-              label="private"
-              :value="false"
-              color="missionAccent"
-              class="label-text"
-            ></v-radio>
-            <v-radio
-              label="public"
-              :value="true"
-              color="missionAccent"
-              class="label-text"
-            ></v-radio>
+          <v-radio-group row v-model="courseOptions.public" color="missionAccent" :light="!dark" :dark="dark">
+            <v-radio label="private" :value="false" color="missionAccent" class="label-text"></v-radio>
+            <v-radio label="public" :value="true" color="missionAccent" class="label-text"></v-radio>
           </v-radio-group>
         </div>
         <!-- Is the course editable? -->
@@ -140,64 +111,35 @@
           </v-radio-group>
         </div> -->
         <p class="caption ma-0" v-if="courseOptions.public">
-          <i
-            >(Public courses need to be submitted for review by Galaxy Map
-            moderators)</i
-          >
+          <i>(Public courses need to be submitted for review by Galaxy Map
+            moderators)</i>
         </p>
       </div>
       <!-- ACTION BUTTONS -->
       <div v-if="admin" class="action-buttons">
-        <v-btn
-          outlined
-          color="baseAccent"
-          @click="publishCourse()"
-          :loading="loading"
-        >
+        <v-btn outlined color="cohortAccent" @click="publishCourse()" :loading="loading">
           <v-icon left> mdi-check </v-icon>
           publish
         </v-btn>
 
-        <v-btn
-          outlined
-          :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
-          class="ml-2"
-          @click="close"
-          :disabled="loading"
-        >
+        <v-btn outlined :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'" class="ml-2" @click="close"
+          :disabled="loading">
           <v-icon left> mdi-close </v-icon>
           CANCEL
         </v-btn>
       </div>
       <div v-else class="action-buttons">
-        <v-btn
-          v-if="courseOptions.public"
-          outlined
-          color="baseAccent"
-          @click="submitCourse()"
-          :loading="loading"
-        >
+        <v-btn v-if="courseOptions.public" outlined color="baseAccent" @click="submitCourse()" :loading="loading">
           <v-icon left> mdi-send </v-icon>
           SUBMIT
         </v-btn>
-        <v-btn
-          v-else
-          outlined
-          color="baseAccent"
-          @click="publishCourse()"
-          :loading="loading"
-        >
+        <v-btn v-else outlined color="baseAccent" @click="publishCourse()" :loading="loading">
           <v-icon left> mdi-check </v-icon>
           publish
         </v-btn>
 
-        <v-btn
-          outlined
-          :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
-          class="ml-2"
-          @click="close"
-          :disabled="loading"
-        >
+        <v-btn outlined :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'" class="ml-2" @click="close"
+          :disabled="loading">
           <v-icon left> mdi-close </v-icon>
           CANCEL
         </v-btn>
@@ -495,12 +437,14 @@ export default {
     text-transform: uppercase;
     font-weight: 700;
   }
+
   .mission-text {
     color: var(--v-missionAccent-base);
     text-transform: uppercase;
     font-weight: 700;
   }
 }
+
 .publishButton {
   width: 100%;
   z-index: 3;

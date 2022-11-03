@@ -6,18 +6,25 @@
 
     <div class="panelContent">
       <div class="panelContentInner">
+        <!-- ADMIN NEEDING TO REVIEW -->
+        <div class="subPanel" style="border-color: var(--v-cohortAccent-base);" v-if="getAllSubmittedCourses">
+          <p class="galaxyListPanelLabel overline mx-4 cohortAccent--text"
+            style="border-bottom: 1px solid var(--v-cohortAccent-base)">PLEASE REVIEW</p>
+          <div>
+            <!-- COURSE CARD -->
+            <GalaxyListPanelCard v-for="(course, index) in getAllSubmittedCourses" :key="course.id" :course="course"
+              :admin="user.data.admin" :active="index === activeSubmitted"
+              @click.native="courseClicked(course.id, index, 'submitted')" />
+          </div>
+        </div>
+
         <!-- LEARNING -->
         <div class="subPanel">
           <p class="galaxyListPanelLabel overline mx-4">EXPLORING</p>
           <div v-if="getLearningCourses.length">
             <!-- COURSE CARD -->
-            <GalaxyListPanelCard
-              v-for="(course, index) in getLearningCourses"
-              :key="course.id"
-              :course="course"
-              :active="index === activeLearning"
-              @click.native="courseClicked(course.id, index, 'learning')"
-            />
+            <GalaxyListPanelCard v-for="(course, index) in getLearningCourses" :key="course.id" :course="course"
+              :active="index === activeLearning" @click.native="courseClicked(course.id, index, 'learning')" />
           </div>
           <p v-else class="galaxyListPanelContent text-center">
             YOU ARE NOT EXPLORING ANY GALAXIES
@@ -42,13 +49,7 @@
             Create New Galaxy +
           </div> -->
           <div class="d-flex justify-center mb-4">
-            <v-btn
-              x-small
-              color="missionAccent"
-              @click="$emit('createGalaxy')"
-              outlined
-              class="py-6 px-4"
-            >
+            <v-btn x-small color="missionAccent" @click="$emit('createGalaxy')" outlined class="py-6 px-4">
               <v-icon x-small class="pr-2">mdi-plus</v-icon>
               MAP NEW GALAXY
             </v-btn>
@@ -56,13 +57,8 @@
 
           <div v-if="getTeachingCourses.length">
             <!-- COURSE CARD -->
-            <GalaxyListPanelCard
-              v-for="(course, index) in getTeachingCourses"
-              :key="course.id"
-              :course="course"
-              :active="index === activeTeaching"
-              @click.native="courseClicked(course.id, index, 'teaching')"
-            />
+            <GalaxyListPanelCard v-for="(course, index) in getTeachingCourses" :key="course.id" :course="course"
+              :active="index === activeTeaching" @click.native="courseClicked(course.id, index, 'teaching')" />
           </div>
         </div>
 
@@ -71,13 +67,8 @@
           <p class="galaxyListPanelLabel overline mx-4">IN REVIEW</p>
           <div>
             <!-- COURSE CARD -->
-            <GalaxyListPanelCard
-              v-for="(course, index) in getSubmittedCourses"
-              :key="course.id"
-              :course="course"
-              :active="index === activeSubmitted"
-              @click.native="courseClicked(course.id, index, 'submitted')"
-            />
+            <GalaxyListPanelCard v-for="(course, index) in getSubmittedCourses" :key="course.id" :course="course"
+              :active="index === activeSubmitted" @click.native="courseClicked(course.id, index, 'submitted')" />
           </div>
         </div>
 
@@ -86,13 +77,8 @@
           <p class="galaxyListPanelLabel overline mx-4">PUBLIC GALAXIES</p>
           <div v-if="getPublicCourses.length">
             <!-- COURSE CARD -->
-            <GalaxyListPanelCard
-              v-for="(course, index) in getPublicCourses"
-              :key="course.id"
-              :course="course"
-              :active="index === activePublic"
-              @click.native="courseClicked(course.id, index, 'public')"
-            />
+            <GalaxyListPanelCard v-for="(course, index) in getPublicCourses" :key="course.id" :course="course"
+              :active="index === activePublic" @click.native="courseClicked(course.id, index, 'public')" />
           </div>
           <p v-else class="galaxyListPanelContent text-center">
             NO PUBLIC MAPS
@@ -102,10 +88,7 @@
     </div>
     <div class="blackBar">
       <div class="d-flex justify-center align-center">
-        <div
-          class="panelTab overline"
-          style="color: var(--v-galaxyAccent-base)"
-        >
+        <div class="panelTab overline" style="color: var(--v-galaxyAccent-base)">
           <!-- <v-icon color="galaxyAccent"
             >mdi-chart-timeline-variant-shimmer</v-icon
           > -->
@@ -140,7 +123,7 @@ export default {
     this.$store.dispatch("getCohortsByPersonId", this.person);
   },
   computed: {
-    ...mapState(["person", "courses", "cohorts"]),
+    ...mapState(["person", "courses", "cohorts", "user"]),
 
     // LEARNING GALAXIES
     getLearningCourses() {
@@ -181,6 +164,18 @@ export default {
           course.mappedBy.personId == this.person.id &&
           course.status == "submitted"
       );
+    },
+    // ADMIN NEEDS TO REVIEW
+    getAllSubmittedCourses() {
+      if (this.user.data.admin) {
+        const submitted = this.courses.filter((course) => course.status == "submitted");
+        if (submitted.length > 0) {
+          return submitted;
+        }
+        else {
+          return false;
+        }
+      }
     },
     // TEACHERING GALAXIES
     getTeachingCourses() {
@@ -314,6 +309,7 @@ export default {
     top: 1px;
     left: 1px;
   }
+
   .panelContent,
   .panelContent:before {
     clip-path: polygon(0 0, 100% 0, 100% 95%, 85% 100%, 0 100%);
@@ -334,16 +330,19 @@ export default {
 *::-webkit-scrollbar {
   width: 5px;
 }
+
 /* Track */
 *::-webkit-scrollbar-track {
   background: var(--v-background-base);
   margin-top: 1px;
   margin-bottom: 25px;
 }
+
 /* Handle */
 *::-webkit-scrollbar-thumb {
   background: var(--v-galaxyAccent-base);
 }
+
 /* Handle on hover */
 *::-webkit-scrollbar-thumb:hover {
   background: var(--v-galaxyAccent-base);
