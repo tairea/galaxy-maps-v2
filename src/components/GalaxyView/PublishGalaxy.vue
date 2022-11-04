@@ -3,8 +3,9 @@
     <!-- CREATE BUTTON -->
     <template v-slot:activator="{ on, attrs }">
       <!-- ASSIGN COHORT -->
-      <v-btn outlined :color="admin ? 'cohortAccent' : 'galaxyAccent'" v-bind="attrs" v-on="on"
-        class="publishButton d-inline-flex text-truncate" @click="getTopicsWithoutTasks">
+      <v-btn outlined
+        :color="admin && course.status == 'submitted' && course.public == true ? 'cohortAccent' : 'galaxyAccent'"
+        v-bind="attrs" v-on="on" class="publishButton d-inline-flex text-truncate" @click="getTopicsWithoutTasks">
         publish galaxy
       </v-btn>
       <!-- ASSIGN GALAXY -->
@@ -51,13 +52,14 @@
         </v-btn>
       </div>
     </div>
+
     <!-- OK TO PUBLISH DIALOG -->
     <div v-else class="create-dialog">
       <div class="dialog-header">
         <p class="dialog-title">publish galaxy</p>
         <div class="d-flex align-center">
           <v-icon left color="missionAccent">mdi-information-variant</v-icon>
-          <div v-if="admin" class="dialog-description">
+          <div v-if="admin && course.status == 'submitted' && course.public == true" class="dialog-description">
             <p style="font-weight: 600; color: var(--v-cohortAccent-base)">I have reviewed this Galaxy Map</p>
             <p>Publish
               <span style="font-weight: 600; color: var(--v-galaxyAccent-base)">{{
@@ -67,16 +69,14 @@
             </p>
           </div>
           <p v-else class="dialog-description">
-            Publish
-            <span style="font-weight: 600; color: var(--v-galaxyAccent-base)">{{
+            Publish this Galaxy <span style="font-weight: 600; color: var(--v-galaxyAccent-base)">{{
                 course.title
             }}</span>
-            galaxy to make it visible to others
           </p>
         </div>
       </div>
       <v-divider dark color="missionAccent"></v-divider>
-      <div v-if="!admin" class="create-dialog-content">
+      <div class="create-dialog-content">
         <!-- LISTED -->
         <div>
           <p class="caption mb-2">
@@ -117,7 +117,9 @@
       </div>
       <!-- ACTION BUTTONS -->
       <div v-if="admin" class="action-buttons">
-        <v-btn outlined color="cohortAccent" @click="publishCourse()" :loading="loading">
+        <v-btn outlined
+          :color="admin && course.status == 'submitted' && course.public == true ? 'cohortAccent' : 'galaxyAccent'"
+          @click="publishCourse()" :loading="loading">
           <v-icon left> mdi-check </v-icon>
           publish
         </v-btn>
