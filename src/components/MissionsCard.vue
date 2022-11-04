@@ -353,6 +353,10 @@ p {
     // flex-grow: 4 !important;
     width: 40%;
     position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: left;
+    flex-direction: column;
 
     .mission-edit-button {
       // position: absolute;
@@ -386,6 +390,7 @@ p {
       display: flex;
       justify-content: center;
       align-items: center;
+
       width: 100%;
       height: 100%;
       padding: 10px;
