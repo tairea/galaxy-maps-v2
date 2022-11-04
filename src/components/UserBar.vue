@@ -1,36 +1,16 @@
 <template>
   <v-hover v-model="hover">
-    <div
-      ref="userBar"
-      class="userMenu"
-      :class="{ showMenu: hover, miniMenu: miniNavMenu }"
-    >
+    <div ref="userBar" class="userMenu" :class="{ showMenu: hover, miniMenu: miniNavMenu }">
       <!-- USER MENU TOPBAR -->
       <div class="blackBar">
         <div class="d-flex justify-center align-center">
-          <v-progress-circular
-            v-if="uploading"
-            :rotate="360"
-            :size="50"
-            :width="2"
-            :value="uploadPercentage"
-            color="baseAccent"
-          >
+          <v-progress-circular v-if="uploading" :rotate="360" :size="50" :width="2" :value="uploadPercentage"
+            color="baseAccent">
             {{ uploadPercentage + "%" }}
           </v-progress-circular>
           <!-- <v-hover v-else v-slot="{ hover }"> -->
-          <v-avatar
-            v-else
-            color="secondary"
-            @mouseenter="onhover = true"
-            @mouseleave="onhover = false"
-          >
-            <img
-              v-if="person.image"
-              :src="person.image.url"
-              :alt="person.firstName"
-              style="object-fit: cover"
-            />
+          <v-avatar v-else color="secondary" @mouseenter="onhover = true" @mouseleave="onhover = false">
+            <img v-if="person.image" :src="person.image.url" :alt="person.firstName" style="object-fit: cover" />
             <!-- <v-icon v-if="hover">mdi-pencil</v-icon> -->
             <v-icon v-else>mdi-account</v-icon>
             <v-fade-transition>
@@ -38,13 +18,7 @@
                 <v-icon small @click="onButtonClick">mdi-pencil</v-icon>
               </v-overlay>
             </v-fade-transition>
-            <input
-              ref="uploader"
-              class="d-none"
-              type="file"
-              accept="image/*"
-              @change="onFileChanged"
-            />
+            <input ref="uploader" class="d-none" type="file" accept="image/*" @change="onFileChanged" />
           </v-avatar>
           <!-- </v-hover> -->
         </div>
@@ -55,10 +29,7 @@
       <!-- USER MENU HIDDEN-->
       <div class="userMenuHidden">
         <v-row>
-          <v-col
-            class="d-flex"
-            style="border-bottom: 1px solid var(--v-missionAccent-base)"
-          >
+          <v-col class="d-flex" style="border-bottom: 1px solid var(--v-missionAccent-base)">
             <p class="settings overline ma-0">Settings</p>
             <!-- <v-icon color="missionAccent" small>mdi-cog-outline</v-icon> -->
           </v-col>
@@ -69,13 +40,8 @@
           </v-col>
           <!-- LIGHT/DARK MODE SWITCH -->
           <v-col class="pa-0 d-flex justify-center">
-            <v-switch
-              v-model="darkSwitch"
-              :label="`${darkSwitch ? 'Dark' : 'Light'}`"
-              @change="changeTheme()"
-              color="missionAccent"
-              class="ma-0"
-            ></v-switch>
+            <v-switch v-model="darkSwitch" :label="`${darkSwitch ? 'Dark' : 'Light'}`" @change="changeTheme()"
+              color="missionAccent" class="ma-0"></v-switch>
           </v-col>
         </v-row>
 
@@ -95,28 +61,15 @@
           <StudentEditDialog @close="close" />
           <v-btn
             href="https://docs.google.com/forms/d/e/1FAIpQLSfJgXGWOeosZfJY7H0tvFzANoX8p95fmgVKom97HMDiNywSnA/viewform?usp=sf_link"
-            target="_blank"
-            color="galaxyAccent"
-            class="ma-4"
-            outlined
-            :dark="dark"
-            :light="!dark"
-          >
+            target="_blank" color="galaxyAccent" class="ma-4" outlined :dark="dark" :light="!dark">
             <v-icon class="pr-2">mdi-send</v-icon>
             Feedback
           </v-btn>
 
-          <v-btn
-            class="ma-4"
-            @click="logout"
-            color="missionAccent"
-            outlined
-            :dark="dark"
-            :light="!dark"
-          >
+          <v-btn class="ma-4" @click="logout" color="missionAccent" outlined :dark="dark" :light="!dark">
             <v-icon class="pr-2">mdi-door-closed</v-icon>
-            Logout</v-btn
-          >
+            Logout
+          </v-btn>
         </div>
       </div>
     </div>
@@ -152,7 +105,7 @@ export default {
   },
   watch: {
     $route(to, from) {
-      if (this.$route.name == "GalaxyView") {
+      if (this.$route.name == "GalaxyView" || this.$route.name == "SolarSystemView") {
         this.miniNavMenu = true;
       } else {
         this.miniNavMenu = false;
@@ -224,10 +177,10 @@ export default {
       // ceate a storage ref
       var storageRef = storage.ref(
         "avatar-images/" +
-          this.person.firstname +
-          this.person.lastname +
-          "-" +
-          this.selectedFile.name
+        this.person.firstname +
+        this.person.lastname +
+        "-" +
+        this.selectedFile.name
       );
 
       // upload a file

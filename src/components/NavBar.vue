@@ -3,14 +3,8 @@
     <div ref="topNav" class="topCenterBar" :class="{ hide: !showNavMenu }">
       <div class="inner">
         <!-- Student tabs -->
-        <v-tabs
-          fixed-tabs
-          background-color="transparent"
-          dark
-          slider-color="baseAccent"
-          v-model="activeTab"
-          height="30"
-        >
+        <v-tabs fixed-tabs background-color="transparent" dark slider-color="baseAccent" v-model="activeTab"
+          height="30">
           <v-tab v-for="tab in tabs" :key="tab.id" :to="tab.route">
             <div class="baseAccent--text tab">{{ tab.name }}</div>
           </v-tab>
@@ -19,16 +13,7 @@
     </div>
     <!-- hamburger menu -->
     <div v-if="showHamburgerMenu" class="hamburger">
-      <v-btn
-        class="map-button"
-        color="baseAccent"
-        dark
-        text
-        small
-        tile
-        title="Add Node"
-        @click="toggleMenu"
-      >
+      <v-btn class="map-button" color="baseAccent" dark text small tile title="Toggle Navigation" @click="toggleMenu">
         <v-icon v-if="!showNavMenu">mdi-menu</v-icon>
         <v-icon v-else color="baseAccent">mdi-close</v-icon>
       </v-btn>
@@ -63,7 +48,7 @@ export default {
       }
     },
   },
-  mounted() {},
+  mounted() { },
   methods: {
     toggleMenu() {
       this.showNavMenu = !this.showNavMenu;
@@ -76,6 +61,7 @@ export default {
 .topMenuContainer {
   background-color: pink;
 }
+
 .topCenterBar {
   position: absolute;
   top: 0;
