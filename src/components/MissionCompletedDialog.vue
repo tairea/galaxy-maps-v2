@@ -6,15 +6,8 @@
           <!-- COMPLETED BUTTON (looks like checkbox) -->
           <template v-slot:activator="{ on, attrs }">
             <!-- IF ACTIVE -->
-            <v-btn
-              v-if="active || declined"
-              v-bind="attrs"
-              v-on="on"
-              class="mission-edit-button"
-              :color="active ? 'missionAccent' : 'cohortAccent'"
-              icon
-              x-large
-            >
+            <v-btn v-if="active || declined" v-bind="attrs" v-on="on" class="mission-edit-button"
+              :color="active ? 'missionAccent' : 'cohortAccent'" icon x-large>
               <v-icon v-if="task.submissionRequired">
                 mdi-cloud-upload-outline
               </v-icon>
@@ -28,14 +21,10 @@
             <div v-if="task.submissionRequired" class="dialog-header">
               <p class="dialog-title">
                 Submission requirements for:
-                <strong
-                  ><i>{{ task.title }}</i></strong
-                >
+                <strong><i>{{ task.title }}</i></strong>
               </p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent"
-                  >mdi-information-variant</v-icon
-                >
+                <v-icon left color="missionAccent">mdi-information-variant</v-icon>
                 <p class="dialog-description">
                   To complete this task you must submit a response to following
                   instructions
@@ -47,18 +36,13 @@
             <div v-else class="dialog-header">
               <p class="dialog-title">
                 Have you completed Mission:
-                <strong
-                  ><i>{{ task.title }}</i></strong
-                >
+                <strong><i>{{ task.title }}</i></strong>
                 ?
               </p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent"
-                  >mdi-information-variant</v-icon
-                >
+                <v-icon left color="missionAccent">mdi-information-variant</v-icon>
                 <p class="dialog-description">
-                  Did you complete all the requirements of the Mission?<br />By
-                  clicking YES your instructor will be notified.
+                  Did you complete all the requirements of the Mission?
                 </p>
               </div>
             </div>
@@ -70,10 +54,7 @@
                   <!-- submission message speech bubble -->
                   <div class="d-inline-flex">
                     <div>
-                      <v-img
-                        class="instructor-image mb-5 ml-5 mr-2"
-                        :src="mappedByImageURL"
-                      ></v-img>
+                      <v-img class="instructor-image mb-5 ml-5 mr-2" :src="mappedByImageURL"></v-img>
                     </div>
                     <div class="d-flex flex-column instructor-details">
                       <p class="ma-0">
@@ -83,10 +64,7 @@
                     </div>
                   </div>
                   <v-row class="d-flex align-center speech-bubble">
-                    <p
-                      v-html="task.submissionInstructions"
-                      class="submission-dialog-description ma-0"
-                    ></p>
+                    <p v-html="task.submissionInstructions" class="submission-dialog-description ma-0"></p>
                     <!-- <p class="submission-dialog-description ma-0">
                         {{
                           task.submissionInstructions
@@ -99,22 +77,13 @@
 
                 <div class="submission-create-dialog-content">
                   <div class="d-flex align-center">
-                    <v-icon left color="missionAccent"
-                      >mdi-information-variant</v-icon
-                    >
+                    <v-icon left color="missionAccent">mdi-information-variant</v-icon>
                     <p class="dialog-description pb-4">
-                      submit your response including any links to other related
-                      work below
+                      submit your response below<br>(include any links to your work if required)
                     </p>
                   </div>
-                  <vue-editor
-                    v-model="submissionLink"
-                    class="mb-8 quill"
-                    :class="{ 'active-quill': quillFocused }"
-                    :editor-toolbar="customToolbar"
-                    @focus="quillFocused = true"
-                    @blur="quillFocused = false"
-                  />
+                  <vue-editor v-model="submissionLink" class="mb-8 quill" :class="{ 'active-quill': quillFocused }"
+                    :editor-toolbar="customToolbar" @focus="quillFocused = true" @blur="quillFocused = false" />
                 </div>
               </div>
               <!-- End of v-if="submission" -->
@@ -122,57 +91,27 @@
               <!-- ACTION BUTTONS -->
               <div class="action-buttons">
                 <!-- YES, I HAVE COMPLETED -->
-                <v-btn
-                  v-if="active && task.submissionRequired"
-                  outlined
-                  color="baseAccent"
-                  @click="submitWorkForReview()"
-                  class="mr-2"
-                  :loading="loading"
-                  :disabled="disabled"
-                  v-bind="attrs"
-                  v-on="on"
-                >
+                <v-btn v-if="active && task.submissionRequired" outlined color="baseAccent"
+                  @click="submitWorkForReview()" class="mr-2" :loading="loading" :disabled="disabled" v-bind="attrs"
+                  v-on="on">
                   <v-icon left> mdi-check </v-icon>
                   SUBMIT WORK FOR REVIEW
                 </v-btn>
-                <v-btn
-                  v-else-if="declined && task.submissionRequired"
-                  outlined
-                  color="baseAccent"
-                  @click="reSubmitWorkForReview()"
-                  class="mr-2"
-                  :loading="loading"
-                  :disabled="disabled"
-                  v-bind="attrs"
-                  v-on="on"
-                >
+                <v-btn v-else-if="declined && task.submissionRequired" outlined color="baseAccent"
+                  @click="reSubmitWorkForReview()" class="mr-2" :loading="loading" :disabled="disabled" v-bind="attrs"
+                  v-on="on">
                   <v-icon left> mdi-check </v-icon>
                   RE-SUBMIT WORK FOR REVIEW
                 </v-btn>
-                <v-btn
-                  v-else
-                  outlined
-                  color="baseAccent"
-                  @click="markAsCompleted()"
-                  class="mr-2"
-                  :loading="loading"
-                  :disabled="disabled"
-                  v-bind="attrs"
-                  v-on="on"
-                >
+                <v-btn v-else outlined color="baseAccent" @click="markAsCompleted()" class="mr-2" :loading="loading"
+                  :disabled="disabled" v-bind="attrs" v-on="on">
                   <v-icon left> mdi-check </v-icon>
                   YES, I HAVE COMPLETED THIS MISSION
                 </v-btn>
 
                 <!-- CANCEL -->
-                <v-btn
-                  outlined
-                  :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
-                  class="ml-2"
-                  @click="cancel"
-                  :disabled="disabled || loading"
-                >
+                <v-btn outlined :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'" class="ml-2" @click="cancel"
+                  :disabled="disabled || loading">
                   <v-icon left> mdi-close </v-icon>
                   Cancel
                 </v-btn>
@@ -189,9 +128,7 @@
             <div class="dialog-header">
               <p class="dialog-title">SUBMISSION COMPLETED</p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent"
-                  >mdi-information-variant</v-icon
-                >
+                <v-icon left color="missionAccent">mdi-information-variant</v-icon>
                 <p class="dialog-description">
                   You have already submitted your work for this mission
                 </p>
@@ -202,13 +139,8 @@
               <!-- ACTION BUTTONS -->
               <div class="action-buttons">
                 <!-- CANCEL -->
-                <v-btn
-                  outlined
-                  :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
-                  class="ml-2"
-                  @click="cancel"
-                  :disabled="disabled || loading"
-                >
+                <v-btn outlined :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'" class="ml-2" @click="cancel"
+                  :disabled="disabled || loading">
                   <v-icon left> mdi-close </v-icon>
                   CLOSE
                 </v-btn>
@@ -370,7 +302,7 @@ export default {
         })
         .then(() => {
           this.currentCohort?.teachers.forEach(async (teacherId) => {
-            await this.sendTaskSubmission(teacherId, this.submissionLink);
+            await this.sendTaskSubmission(teacherId, this.submissionLink, this.task.submissionInstructions);
           });
         })
         .then(() => {
@@ -411,7 +343,7 @@ export default {
         })
         .then(() => {
           this.currentCohort?.teachers.forEach(async (teacherId) => {
-            await this.sendTaskSubmission(teacherId, this.submissionLink);
+            await this.sendTaskSubmission(teacherId, this.submissionLink, this.task.submissionInstructions);
           });
         })
         .then(() => {
@@ -620,14 +552,15 @@ export default {
       const person = await this.MXgetPersonByIdFromDB(personId);
       this.mappedByImageURL = person.image.url;
     },
-    async sendTaskSubmission(teacherId, submission) {
+    async sendTaskSubmission(teacherId, submissionResponse, submissionInstructions) {
       const teacher = await this.MXgetPersonByIdFromDB(teacherId);
       const data = {
         course: this.currentCourse.title,
         topic: this.currentTopic.label,
         task: this.currentTask.title,
         student: this.person.firstName + " " + this.person.lastName,
-        submission: submission,
+        submission: submissionResponse,
+        submissionInstructions: submissionInstructions,
         teacher: teacher.firstName + " " + teacher.lastName,
         email: teacher.email,
       };
@@ -637,6 +570,12 @@ export default {
   },
 };
 </script>
+
+<style>
+.submission-dialog-description>p {
+  margin: 10px 0px !important;
+}
+</style>
 
 <style scoped lang="scss">
 // new dialog ui
@@ -704,6 +643,8 @@ export default {
     padding: 0px 10px;
     font-style: italic;
     width: 100%;
+
+
   }
 
   .speech-bubble {
@@ -719,6 +660,7 @@ export default {
     border-radius: 5px;
     border: 2px solid var(--v-cohortAccent-base);
   }
+
   // .speech-bubble p {
   //   // font-size: 1.25em;
   // }
@@ -737,6 +679,7 @@ export default {
     border: solid 10px transparent;
     border-bottom-color: var(--v-cohortAccent-base);
   }
+
   .speech-bubble:before {
     top: -30px;
     z-index: 1;
@@ -766,9 +709,11 @@ export default {
 .quill ::v-deep .ql-toolbar {
   border: 1px solid #ffffff45;
 }
+
 .quill ::v-deep .ql-container {
   border: 1px solid #ffffff45;
 }
+
 .quill ::v-deep .ql-editor {
   font-size: 0.9rem;
 }
@@ -776,6 +721,7 @@ export default {
 .active-quill ::v-deep .ql-toolbar {
   border: 1px solid var(--v-cohortAccent-base);
 }
+
 .active-quill ::v-deep .ql-container {
   border: 1px solid var(--v-cohortAccent-base);
 }
