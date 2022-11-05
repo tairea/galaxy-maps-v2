@@ -33,7 +33,7 @@
         color="missionAccent"
         class="ss-lock-button"
       >
-        mdi-lock-outline
+        {{ mdiLockOutline }}
       </v-icon>
       <v-btn
         v-else
@@ -55,7 +55,7 @@
           class="close-button"
           @click="close"
         >
-          <v-icon>mdi-close</v-icon>
+          <v-icon>{{ mdiClose }}</v-icon>
         </v-btn>
         <v-btn
           v-if="teacher"
@@ -67,7 +67,7 @@
           title="Edit"
           @click="showEditDialog"
         >
-          <v-icon>mdi-pencil</v-icon>
+          <v-icon>{{ mdiPencil }}</v-icon>
         </v-btn>
       </div>
     </div>
@@ -118,6 +118,8 @@ import { mapState, mapGetters } from "vuex";
 
 import { db } from "../store/firestoreConfig";
 
+import { mdiLockOutline, mdiClose, mdiPencil } from "@mdi/js";
+
 import SolarSystem from "../components/SolarSystem";
 
 export default {
@@ -131,10 +133,9 @@ export default {
     "centerFocusPosition",
     "currentTopic",
     "tasks",
-    "teacher"
+    "teacher",
   ],
   async mounted() {
-
     // set active mission
     this.activeMission = this.personsTopicsTasks.find(
       (topicObj) => topicObj.taskStatus == "active"
@@ -153,6 +154,9 @@ export default {
   },
   data() {
     return {
+      mdiLockOutline,
+      mdiClose,
+      mdiPencil,
       activeMission: null,
     };
   },
@@ -200,7 +204,7 @@ export default {
         name: "SolarSystemView",
         params: {
           topicId: this.currentTopic.id,
-          teacher: this.teacher
+          teacher: this.teacher,
         },
       });
     },
@@ -260,6 +264,7 @@ export default {
     .close-button {
     }
   }
+
   .ss-details {
     border-top: 1px solid var(--v-missionAccent-base);
     padding: 20px;
@@ -303,12 +308,15 @@ export default {
 .baseColour {
   color: var(--v-baseAccent-base) !important;
 }
+
 .cohortColour {
   color: var(--v-cohortAccent-base) !important;
 }
+
 .missionColour {
   color: var(--v-missionAccent-base) !important;
 }
+
 .galaxyColour {
   color: var(--v-galaxyAccent-base) !important;
 }

@@ -421,7 +421,7 @@ export default {
       // 3) hide edges and labels
       var options = { ...this.network.options };
       options.edges.hidden = true; // hide edges
-      options.nodes.font.size = 0; // hide labels
+      options.nodes.font.size = 5; // hide labels
       this.$refs.network.setOptions(options);
       // 4) minimise left panels & buttons
       this.$emit("hideLeftPanels", true);
@@ -758,13 +758,14 @@ export default {
         // Canvas - start path
         ctx.beginPath();
         // Canvas - draw rectangle the size of the screen
+        const cavasSizeBuffer = 10000
         ctx.rect(
           // 0 - ctx.canvas.offsetWidth,
           // 0 - ctx.canvas.offsetHeight,
-          0 - (ctx.canvas.width / 2),
-          0 - (ctx.canvas.height / 2),
-          ctx.canvas.width,
-          ctx.canvas.height
+          0 - (ctx.canvas.width + cavasSizeBuffer / 2),
+          0 - (ctx.canvas.height + cavasSizeBuffer / 2),
+          ctx.canvas.width + cavasSizeBuffer,
+          ctx.canvas.height + cavasSizeBuffer
         );
         // Canvas - draw arc (circle) the of the numbers of tasks/planet orbits
         // Note: drawing a rectanlge then a circle in the same path makes the circle a whole

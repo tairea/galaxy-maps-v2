@@ -6,7 +6,7 @@
         <span class="dialog-title">Remove Student from Cohort?</span>
       </div>
       <div class="d-flex align-start pa-4">
-        <v-icon left color="missionAccent">mdi-information-variant</v-icon>
+        <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
         <p class="dialog-description">
           Are you sure you want to <strong>REMOVE</strong>
           <span>
@@ -29,7 +29,7 @@
           @click="confirmDeleteStudent()"
           class="ml-4"
         >
-          <v-icon left> mdi-delete </v-icon>
+          <v-icon left> {{ mdiDelete }} </v-icon>
           DELETE
         </v-btn>
 
@@ -39,7 +39,7 @@
           class="ml-4"
           @click="$emit('cancel')"
         >
-          <v-icon left> mdi-close </v-icon>
+          <v-icon left> {{ mdiClose }} </v-icon>
           Cancel
         </v-btn>
       </div>
@@ -49,9 +49,18 @@
   </v-dialog>
 </template>
 <script>
+import { mdiInformationVariant, mdiDelete, mdiClose } from "@mdi/js";
+
 export default {
   name: "ConfirmDeleteStudentDialog",
   props: ["dialog", "student"],
+  data() {
+    return {
+      mdiInformationVariant,
+      mdiDelete,
+      mdiClose,
+    };
+  },
   methods: {
     confirmDeleteStudent() {
       db.collection("cohorts")

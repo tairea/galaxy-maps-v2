@@ -15,7 +15,7 @@
           color="baseAccent"
           small
         >
-          <v-icon small> mdi-pencil </v-icon>
+          <v-icon small> {{ mdiPencil }} </v-icon>
         </v-btn>
 
         <v-btn
@@ -27,11 +27,11 @@
           :fab="true"
           small
         >
-          <v-icon> mdi-plus </v-icon>
+          <v-icon> {{ mdiPlus }} </v-icon>
         </v-btn>
 
         <v-btn v-else outlined color="baseAccent" v-bind="attrs" v-on="on">
-          <v-icon left> mdi-plus </v-icon>
+          <v-icon left> {{ mdiPlus }} </v-icon>
           CREATE COHORT
         </v-btn>
       </template>
@@ -44,7 +44,9 @@
             {{ edit ? "Edit Cohort " + cohort.name : dialogTitle }}
           </p>
           <div class="d-flex align-center">
-            <v-icon left color="missionAccent">mdi-information-variant</v-icon>
+            <v-icon left color="missionAccent">{{
+              mdiInformationVariant
+            }}</v-icon>
             <p class="dialog-description">{{ dialogDescription }}</p>
           </div>
         </div>
@@ -214,7 +216,7 @@
             :dark="dark"
             :light="!dark"
           >
-            <v-icon left> mdi-check </v-icon>
+            <v-icon left> {{ mdiCheck }} </v-icon>
             UPDATE
           </v-btn>
           <v-btn
@@ -229,7 +231,7 @@
             :dark="dark"
             :light="!dark"
           >
-            <v-icon left> mdi-check </v-icon>
+            <v-icon left> {{ mdiCheck }} </v-icon>
             SAVE
           </v-btn>
 
@@ -244,7 +246,7 @@
             :dark="dark"
             :light="!dark"
           >
-            <v-icon left> mdi-delete </v-icon>
+            <v-icon left> {{ mdiDelete }} </v-icon>
             DELETE
           </v-btn>
 
@@ -258,7 +260,7 @@
             :dark="dark"
             :light="!dark"
           >
-            <v-icon left> mdi-close </v-icon>
+            <v-icon left> {{ mdiClose }} </v-icon>
             Cancel
           </v-btn>
         </v-row>
@@ -277,7 +279,9 @@
         <div class="dialog-header">
           <p class="dialog-title"><strong>Warning!</strong> Delete Cohort?</p>
           <div class="d-flex align-start">
-            <v-icon left color="missionAccent">mdi-information-variant</v-icon>
+            <v-icon left color="missionAccent">{{
+              mdiInformationVariant
+            }}</v-icon>
             <p class="dialog-description">
               This cohort is linked to the
               <span style="color: var(--v-galaxyAccent-base)">{{
@@ -300,7 +304,7 @@
             @click="cancelDeleteDialog"
             :disabled="disabled || loading"
           >
-            <v-icon left> mdi-close </v-icon>
+            <v-icon left> {{ mdiClose }} </v-icon>
             Cancel
           </v-btn>
         </div>
@@ -310,7 +314,9 @@
         <div class="dialog-header py-10">
           <p class="dialog-title"><strong>Warning!</strong> Delete Cohort?</p>
           <div class="d-flex align-start">
-            <v-icon left color="missionAccent">mdi-information-variant</v-icon>
+            <v-icon left color="missionAccent">{{
+              mdiInformationVariant
+            }}</v-icon>
             <p class="dialog-description">
               Are you sure you want to <strong>DELETE</strong> this
               <span class="cohort-text">{{ cohort.name }} Cohort</span>?
@@ -336,7 +342,7 @@
             class="ml-2"
             :loading="deleting"
           >
-            <v-icon left> mdi-delete </v-icon>
+            <v-icon left> {{ mdiDelete }} </v-icon>
             DELETE
           </v-btn>
 
@@ -347,7 +353,7 @@
             @click="cancelDeleteDialog"
             :disabled="disabled || loading"
           >
-            <v-icon left> mdi-close </v-icon>
+            <v-icon left> {{ mdiClose }} </v-icon>
             Cancel
           </v-btn>
         </div>
@@ -363,6 +369,15 @@ import Organisation from "../components/Organisation";
 import CreateAccountDialog from "../components/CreateAccountDialog";
 import firebase from "firebase";
 
+import {
+  mdiPencil,
+  mdiPlus,
+  mdiClose,
+  mdiCheck,
+  mdiDelete,
+  mdiInformationVariant,
+} from "@mdi/js";
+
 import { mapState, mapGetters, mapActions } from "vuex";
 import { db, storage, functions } from "../store/firestoreConfig";
 
@@ -374,6 +389,12 @@ export default {
     CreateAccountDialog,
   },
   data: () => ({
+    mdiPencil,
+    mdiPlus,
+    mdiClose,
+    mdiDelete,
+    mdiCheck,
+    mdiInformationVariant,
     administrator: "",
     addingAdmin: false,
     teacherDialog: false,
@@ -756,11 +777,13 @@ export default {
     text-transform: uppercase;
     font-weight: 700;
   }
+
   .mission-text {
     color: var(--v-missionAccent-base);
     text-transform: uppercase;
     font-weight: 700;
   }
+
   .cohort-text {
     color: var(--v-cohortAccent-base);
     text-transform: uppercase;

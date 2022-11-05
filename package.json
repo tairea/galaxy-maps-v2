@@ -1,5 +1,5 @@
 {
-  "name": "galaxy-todos",
+  "name": "galaxy-maps",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -28,6 +28,7 @@
     "vuexfire": "^3.2.5"
   },
   "devDependencies": {
+    "@mdi/js": "^7.0.96",
     "@vue/cli-plugin-babel": "~4.5.15",
     "@vue/cli-plugin-router": "~4.5.15",
     "@vue/cli-plugin-typescript": "~4.5.15",

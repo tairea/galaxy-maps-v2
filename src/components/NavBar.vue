@@ -26,22 +26,25 @@
         text
         small
         tile
-        title="Add Node"
+        title="Toggle Navigation"
         @click="toggleMenu"
       >
-        <v-icon v-if="!showNavMenu">mdi-menu</v-icon>
-        <v-icon v-else color="baseAccent">mdi-close</v-icon>
+        <v-icon v-if="!showNavMenu">{{ mdiMenu }}</v-icon>
+        <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
       </v-btn>
     </div>
   </div>
 </template>
 
 <script>
+import { mdiMenu, mdiClose } from "@mdi/js";
 export default {
   name: "NavBar",
   props: ["userType"],
   data() {
     return {
+      mdiMenu,
+      mdiClose,
       activeTab: null,
       tabs: [
         { id: 1, name: "GALAXIES", route: `/base/galaxies` },
@@ -76,6 +79,7 @@ export default {
 .topMenuContainer {
   background-color: pink;
 }
+
 .topCenterBar {
   position: absolute;
   top: 0;

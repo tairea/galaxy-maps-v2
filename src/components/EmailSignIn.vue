@@ -29,23 +29,20 @@
       </v-form>
     </div>
     <div style="width: 300px; margin: 20px auto; z-index: 1">
-      <v-btn
-        color="missionAccent"
-        to="/login"
-        outlined
-        width="100%"
-      >
-        <v-icon class="pr-4">mdi-keyboard-backspace</v-icon>
+      <v-btn color="missionAccent" to="/login" outlined width="100%">
+        <v-icon class="pr-4">{{ mdiKeyboardBackspace }}</v-icon>
         back to login
       </v-btn>
     </div>
-    <CreateProfileDialog :dialog="dialog" @login="login()"/>
+    <CreateProfileDialog :dialog="dialog" @login="login()" />
   </div>
 </template>
 
 <script>
 import firebase from "firebase";
-import { mapGetters } from "vuex"
+import { mapGetters } from "vuex";
+
+import { mdiKeyboardBackspace } from "@mdi/js";
 
 import BackButton from "../components/BackButton";
 import CreateProfileDialog from "../components/CreateProfileDialog";
@@ -54,9 +51,10 @@ export default {
   name: "EmailSignIn",
   components: {
     BackButton,
-    CreateProfileDialog
+    CreateProfileDialog,
   },
   data: () => ({
+    mdiKeyboardBackspace,
     dialog: false,
     valid: true,
     email: "",
@@ -65,19 +63,21 @@ export default {
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
     ],
   }),
-  computed : {
-    ...mapGetters(["user", "person"])
+  computed: {
+    ...mapGetters(["user", "person"]),
   },
   methods: {
     verifyEmail() {
       // Confirm the link is a sign-in with email link.
-      if (firebase.auth().isSignInWithEmailLink(window.location.href)) {       
-        if (!this.email) return
+      if (firebase.auth().isSignInWithEmailLink(window.location.href)) {
+        if (!this.email) return;
         // The client SDK will parse the code from the link for you.
-        firebase.auth().signInWithEmailLink(this.email, window.location.href)
+        firebase
+          .auth()
+          .signInWithEmailLink(this.email, window.location.href)
           .then((result) => {
-            console.log('successfully signed in')
-            this.proceed()
+            console.log("successfully signed in");
+            this.proceed();
           })
           .catch((error) => {
             this.$store.commit("setSnackbar", {
@@ -85,9 +85,9 @@ export default {
               text: error.message,
               color: "pink",
             });
-            console.error("something went wrong signing in: ", error)
+            console.error("something went wrong signing in: ", error);
           });
-      } else console.log("not a sign in link")
+      } else console.log("not a sign in link");
     },
     validate() {
       this.$refs.form.validate();
@@ -95,18 +95,18 @@ export default {
     proceed() {
       if (!this.user?.data?.id || !this.person?.id) {
         return setTimeout(() => {
-          this.proceed()
-        }, 500)
+          this.proceed();
+        }, 500);
       }
       // open dialog to set password and profile information
-      this.dialog = true
+      this.dialog = true;
     },
     login() {
-      console.log('login')
-      this.dialog = false
-      this.$refs.form.reset()
-      this.$router.push({ path: "/base/galaxies"});
-    }
+      console.log("login");
+      this.dialog = false;
+      this.$refs.form.reset();
+      this.$router.push({ path: "/base/galaxies" });
+    },
   },
 };
 </script>
