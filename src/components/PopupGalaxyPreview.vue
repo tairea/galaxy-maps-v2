@@ -34,7 +34,7 @@
         class="close-button"
         @click="close"
       >
-        <v-icon>mdi-close</v-icon>
+        <v-icon>{{ mdiClose }}</v-icon>
       </v-btn>
     </div>
 
@@ -159,6 +159,8 @@ import { mapGetters, mapState } from "vuex";
 
 import { startGalaxyXAPIStatement } from "../lib/veracityLRS";
 
+import { mdiClose } from "@mdi/js";
+
 export default {
   name: "PopupGalaxyPreview",
   mixins: [dbMixins],
@@ -177,6 +179,7 @@ export default {
   },
   data() {
     return {
+      mdiClose,
       teacher: false,
       enrolled: false,
       loading: false,
@@ -447,6 +450,7 @@ export default {
       z-index: 3;
     }
   }
+
   .ss-details {
     padding: 20px;
 

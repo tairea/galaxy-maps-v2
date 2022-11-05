@@ -3,8 +3,14 @@
     <div ref="topNav" class="topCenterBar" :class="{ hide: !showNavMenu }">
       <div class="inner">
         <!-- Student tabs -->
-        <v-tabs fixed-tabs background-color="transparent" dark slider-color="baseAccent" v-model="activeTab"
-          height="30">
+        <v-tabs
+          fixed-tabs
+          background-color="transparent"
+          dark
+          slider-color="baseAccent"
+          v-model="activeTab"
+          height="30"
+        >
           <v-tab v-for="tab in tabs" :key="tab.id" :to="tab.route">
             <div class="baseAccent--text tab">{{ tab.name }}</div>
           </v-tab>
@@ -13,20 +19,32 @@
     </div>
     <!-- hamburger menu -->
     <div v-if="showHamburgerMenu" class="hamburger">
-      <v-btn class="map-button" color="baseAccent" dark text small tile title="Toggle Navigation" @click="toggleMenu">
-        <v-icon v-if="!showNavMenu">mdi-menu</v-icon>
-        <v-icon v-else color="baseAccent">mdi-close</v-icon>
+      <v-btn
+        class="map-button"
+        color="baseAccent"
+        dark
+        text
+        small
+        tile
+        title="Toggle Navigation"
+        @click="toggleMenu"
+      >
+        <v-icon v-if="!showNavMenu">{{ mdiMenu }}</v-icon>
+        <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
       </v-btn>
     </div>
   </div>
 </template>
 
 <script>
+import { mdiMenu, mdiClose } from "@mdi/js";
 export default {
   name: "NavBar",
   props: ["userType"],
   data() {
     return {
+      mdiMenu,
+      mdiClose,
       activeTab: null,
       tabs: [
         { id: 1, name: "GALAXIES", route: `/base/galaxies` },
@@ -48,7 +66,7 @@ export default {
       }
     },
   },
-  mounted() { },
+  mounted() {},
   methods: {
     toggleMenu() {
       this.showNavMenu = !this.showNavMenu;

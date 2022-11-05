@@ -7,14 +7,27 @@
     <div class="panelContent">
       <div class="panelContentInner">
         <!-- ADMIN NEEDING TO REVIEW -->
-        <div class="subPanel" style="border-color: var(--v-cohortAccent-base);" v-if="getAllSubmittedCourses">
-          <p class="galaxyListPanelLabel overline mx-4 cohortAccent--text"
-            style="border-bottom: 1px solid var(--v-cohortAccent-base)">PLEASE REVIEW</p>
+        <div
+          class="subPanel"
+          style="border-color: var(--v-cohortAccent-base)"
+          v-if="getAllSubmittedCourses"
+        >
+          <p
+            class="galaxyListPanelLabel overline mx-4 cohortAccent--text"
+            style="border-bottom: 1px solid var(--v-cohortAccent-base)"
+          >
+            PLEASE REVIEW
+          </p>
           <div>
             <!-- COURSE CARD -->
-            <GalaxyListPanelCard v-for="(course, index) in getAllSubmittedCourses" :key="course.id" :course="course"
-              :admin="user.data.admin" :active="index === activeSubmitted"
-              @click.native="courseClicked(course.id, index, 'submitted')" />
+            <GalaxyListPanelCard
+              v-for="(course, index) in getAllSubmittedCourses"
+              :key="course.id"
+              :course="course"
+              :admin="user.data.admin"
+              :active="index === activeSubmitted"
+              @click.native="courseClicked(course.id, index, 'submitted')"
+            />
           </div>
         </div>
 
@@ -23,8 +36,13 @@
           <p class="galaxyListPanelLabel overline mx-4">EXPLORING</p>
           <div v-if="getLearningCourses.length">
             <!-- COURSE CARD -->
-            <GalaxyListPanelCard v-for="(course, index) in getLearningCourses" :key="course.id" :course="course"
-              :active="index === activeLearning" @click.native="courseClicked(course.id, index, 'learning')" />
+            <GalaxyListPanelCard
+              v-for="(course, index) in getLearningCourses"
+              :key="course.id"
+              :course="course"
+              :active="index === activeLearning"
+              @click.native="courseClicked(course.id, index, 'learning')"
+            />
           </div>
           <p v-else class="galaxyListPanelContent text-center">
             YOU ARE NOT EXPLORING ANY GALAXIES
@@ -33,32 +51,30 @@
 
         <!-- TEACHING -->
         <div class="subPanel">
-          <p class="galaxyListPanelLabel overline mx-4">
-            MAPPED BY YOU
-            <!-- <v-icon 
-              small 
-              @click="$emit('createGalaxy')" 
-              class="ml-12 add-galaxy-icon" 
-              color="galaxyAccent"
-            >
-              mdi-plus
-            </v-icon> -->
-          </p>
+          <p class="galaxyListPanelLabel overline mx-4">MAPPED BY YOU</p>
           <!-- Create NEW GALAXY button -->
-          <!-- <div class="newGalaxyButton">
-            Create New Galaxy +
-          </div> -->
           <div class="d-flex justify-center mb-4">
-            <v-btn x-small color="missionAccent" @click="$emit('createGalaxy')" outlined class="py-6 px-4">
-              <v-icon x-small class="pr-2">mdi-plus</v-icon>
+            <v-btn
+              x-small
+              color="missionAccent"
+              @click="$emit('createGalaxy')"
+              outlined
+              class="py-6 px-4"
+            >
+              <v-icon class="pr-2">{{ mdiPlus }}</v-icon>
               MAP NEW GALAXY
             </v-btn>
           </div>
 
           <div v-if="getTeachingCourses.length">
             <!-- COURSE CARD -->
-            <GalaxyListPanelCard v-for="(course, index) in getTeachingCourses" :key="course.id" :course="course"
-              :active="index === activeTeaching" @click.native="courseClicked(course.id, index, 'teaching')" />
+            <GalaxyListPanelCard
+              v-for="(course, index) in getTeachingCourses"
+              :key="course.id"
+              :course="course"
+              :active="index === activeTeaching"
+              @click.native="courseClicked(course.id, index, 'teaching')"
+            />
           </div>
         </div>
 
@@ -67,8 +83,13 @@
           <p class="galaxyListPanelLabel overline mx-4">IN REVIEW</p>
           <div>
             <!-- COURSE CARD -->
-            <GalaxyListPanelCard v-for="(course, index) in getSubmittedCourses" :key="course.id" :course="course"
-              :active="index === activeSubmitted" @click.native="courseClicked(course.id, index, 'submitted')" />
+            <GalaxyListPanelCard
+              v-for="(course, index) in getSubmittedCourses"
+              :key="course.id"
+              :course="course"
+              :active="index === activeSubmitted"
+              @click.native="courseClicked(course.id, index, 'submitted')"
+            />
           </div>
         </div>
 
@@ -77,8 +98,13 @@
           <p class="galaxyListPanelLabel overline mx-4">PUBLIC GALAXIES</p>
           <div v-if="getPublicCourses.length">
             <!-- COURSE CARD -->
-            <GalaxyListPanelCard v-for="(course, index) in getPublicCourses" :key="course.id" :course="course"
-              :active="index === activePublic" @click.native="courseClicked(course.id, index, 'public')" />
+            <GalaxyListPanelCard
+              v-for="(course, index) in getPublicCourses"
+              :key="course.id"
+              :course="course"
+              :active="index === activePublic"
+              @click.native="courseClicked(course.id, index, 'public')"
+            />
           </div>
           <p v-else class="galaxyListPanelContent text-center">
             NO PUBLIC MAPS
@@ -88,10 +114,10 @@
     </div>
     <div class="blackBar">
       <div class="d-flex justify-center align-center">
-        <div class="panelTab overline" style="color: var(--v-galaxyAccent-base)">
-          <!-- <v-icon color="galaxyAccent"
-            >mdi-chart-timeline-variant-shimmer</v-icon
-          > -->
+        <div
+          class="panelTab overline"
+          style="color: var(--v-galaxyAccent-base)"
+        >
           LIST OF GALAXIES
         </div>
       </div>
@@ -102,6 +128,7 @@
 <script>
 import { mapState, mapActions } from "vuex";
 import GalaxyListPanelCard from "@/components/GalaxyListPanelCard.vue";
+import { mdiPlus } from "@mdi/js";
 
 export default {
   name: "GalaxyListPanel",
@@ -110,6 +137,7 @@ export default {
   },
   data() {
     return {
+      mdiPlus,
       allCourses: [],
       selectedGalaxy: false,
       activeLearning: null,
@@ -168,11 +196,12 @@ export default {
     // ADMIN NEEDS TO REVIEW
     getAllSubmittedCourses() {
       if (this.user.data.admin) {
-        const submitted = this.courses.filter((course) => course.status == "submitted");
+        const submitted = this.courses.filter(
+          (course) => course.status == "submitted"
+        );
         if (submitted.length > 0) {
           return submitted;
-        }
-        else {
+        } else {
           return false;
         }
       }

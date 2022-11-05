@@ -6,12 +6,19 @@
           <!-- COMPLETED BUTTON (looks like checkbox) -->
           <template v-slot:activator="{ on, attrs }">
             <!-- IF ACTIVE -->
-            <v-btn v-if="active || declined" v-bind="attrs" v-on="on" class="mission-edit-button"
-              :color="active ? 'missionAccent' : 'cohortAccent'" icon x-large>
+            <v-btn
+              v-if="active || declined"
+              v-bind="attrs"
+              v-on="on"
+              class="mission-edit-button"
+              :color="active ? 'missionAccent' : 'cohortAccent'"
+              icon
+              x-large
+            >
               <v-icon v-if="task.submissionRequired">
-                mdi-cloud-upload-outline
+                {{ mdiCloudUploadOutline }}
               </v-icon>
-              <v-icon v-else> mdi-checkbox-blank-outline </v-icon>
+              <v-icon v-else> {{ mdiCheck }}box-blank-outline </v-icon>
             </v-btn>
           </template>
 
@@ -21,10 +28,14 @@
             <div v-if="task.submissionRequired" class="dialog-header">
               <p class="dialog-title">
                 Submission requirements for:
-                <strong><i>{{ task.title }}</i></strong>
+                <strong
+                  ><i>{{ task.title }}</i></strong
+                >
               </p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent">mdi-information-variant</v-icon>
+                <v-icon left color="missionAccent">{{
+                  mdiInformationVariant
+                }}</v-icon>
                 <p class="dialog-description">
                   To complete this task you must submit a response to following
                   instructions
@@ -36,11 +47,15 @@
             <div v-else class="dialog-header">
               <p class="dialog-title">
                 Have you completed Mission:
-                <strong><i>{{ task.title }}</i></strong>
+                <strong
+                  ><i>{{ task.title }}</i></strong
+                >
                 ?
               </p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent">mdi-information-variant</v-icon>
+                <v-icon left color="missionAccent">{{
+                  mdiInformationVariant
+                }}</v-icon>
                 <p class="dialog-description">
                   Did you complete all the requirements of the Mission?
                 </p>
@@ -54,7 +69,10 @@
                   <!-- submission message speech bubble -->
                   <div class="d-inline-flex">
                     <div>
-                      <v-img class="instructor-image mb-5 ml-5 mr-2" :src="mappedByImageURL"></v-img>
+                      <v-img
+                        class="instructor-image mb-5 ml-5 mr-2"
+                        :src="mappedByImageURL"
+                      ></v-img>
                     </div>
                     <div class="d-flex flex-column instructor-details">
                       <p class="ma-0">
@@ -64,7 +82,10 @@
                     </div>
                   </div>
                   <v-row class="d-flex align-center speech-bubble">
-                    <p v-html="task.submissionInstructions" class="submission-dialog-description ma-0"></p>
+                    <p
+                      v-html="task.submissionInstructions"
+                      class="submission-dialog-description ma-0"
+                    ></p>
                     <!-- <p class="submission-dialog-description ma-0">
                         {{
                           task.submissionInstructions
@@ -77,13 +98,22 @@
 
                 <div class="submission-create-dialog-content">
                   <div class="d-flex align-center">
-                    <v-icon left color="missionAccent">mdi-information-variant</v-icon>
+                    <v-icon left color="missionAccent">{{
+                      mdiInformationVariant
+                    }}</v-icon>
                     <p class="dialog-description pb-4">
-                      submit your response below<br>(include any links to your work if required)
+                      submit your response below<br />(include any links to your
+                      work if required)
                     </p>
                   </div>
-                  <vue-editor v-model="submissionLink" class="mb-8 quill" :class="{ 'active-quill': quillFocused }"
-                    :editor-toolbar="customToolbar" @focus="quillFocused = true" @blur="quillFocused = false" />
+                  <vue-editor
+                    v-model="submissionLink"
+                    class="mb-8 quill"
+                    :class="{ 'active-quill': quillFocused }"
+                    :editor-toolbar="customToolbar"
+                    @focus="quillFocused = true"
+                    @blur="quillFocused = false"
+                  />
                 </div>
               </div>
               <!-- End of v-if="submission" -->
@@ -91,28 +121,58 @@
               <!-- ACTION BUTTONS -->
               <div class="action-buttons">
                 <!-- YES, I HAVE COMPLETED -->
-                <v-btn v-if="active && task.submissionRequired" outlined color="baseAccent"
-                  @click="submitWorkForReview()" class="mr-2" :loading="loading" :disabled="disabled" v-bind="attrs"
-                  v-on="on">
-                  <v-icon left> mdi-check </v-icon>
+                <v-btn
+                  v-if="active && task.submissionRequired"
+                  outlined
+                  color="baseAccent"
+                  @click="submitWorkForReview()"
+                  class="mr-2"
+                  :loading="loading"
+                  :disabled="disabled"
+                  v-bind="attrs"
+                  v-on="on"
+                >
+                  <v-icon left> {{ mdiCheck }} </v-icon>
                   SUBMIT WORK FOR REVIEW
                 </v-btn>
-                <v-btn v-else-if="declined && task.submissionRequired" outlined color="baseAccent"
-                  @click="reSubmitWorkForReview()" class="mr-2" :loading="loading" :disabled="disabled" v-bind="attrs"
-                  v-on="on">
-                  <v-icon left> mdi-check </v-icon>
+                <v-btn
+                  v-else-if="declined && task.submissionRequired"
+                  outlined
+                  color="baseAccent"
+                  @click="reSubmitWorkForReview()"
+                  class="mr-2"
+                  :loading="loading"
+                  :disabled="disabled"
+                  v-bind="attrs"
+                  v-on="on"
+                >
+                  <v-icon left> {{ mdiCheck }} </v-icon>
                   RE-SUBMIT WORK FOR REVIEW
                 </v-btn>
-                <v-btn v-else outlined color="baseAccent" @click="markAsCompleted()" class="mr-2" :loading="loading"
-                  :disabled="disabled" v-bind="attrs" v-on="on">
-                  <v-icon left> mdi-check </v-icon>
+                <v-btn
+                  v-else
+                  outlined
+                  color="baseAccent"
+                  @click="markAsCompleted()"
+                  class="mr-2"
+                  :loading="loading"
+                  :disabled="disabled"
+                  v-bind="attrs"
+                  v-on="on"
+                >
+                  <v-icon left> {{ mdiCheck }} </v-icon>
                   YES, I HAVE COMPLETED THIS MISSION
                 </v-btn>
 
                 <!-- CANCEL -->
-                <v-btn outlined :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'" class="ml-2" @click="cancel"
-                  :disabled="disabled || loading">
-                  <v-icon left> mdi-close </v-icon>
+                <v-btn
+                  outlined
+                  :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
+                  class="ml-2"
+                  @click="cancel"
+                  :disabled="disabled || loading"
+                >
+                  <v-icon left> {{ mdiClose }} </v-icon>
                   Cancel
                 </v-btn>
                 <!-- End action-buttons -->
@@ -128,7 +188,9 @@
             <div class="dialog-header">
               <p class="dialog-title">SUBMISSION COMPLETED</p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent">mdi-information-variant</v-icon>
+                <v-icon left color="missionAccent">{{
+                  mdiInformationVariant
+                }}</v-icon>
                 <p class="dialog-description">
                   You have already submitted your work for this mission
                 </p>
@@ -139,9 +201,14 @@
               <!-- ACTION BUTTONS -->
               <div class="action-buttons">
                 <!-- CANCEL -->
-                <v-btn outlined :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'" class="ml-2" @click="cancel"
-                  :disabled="disabled || loading">
-                  <v-icon left> mdi-close </v-icon>
+                <v-btn
+                  outlined
+                  :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
+                  class="ml-2"
+                  @click="cancel"
+                  :disabled="disabled || loading"
+                >
+                  <v-icon left> {{ mdiClose }} </v-icon>
                   CLOSE
                 </v-btn>
               </div>
@@ -166,6 +233,13 @@ import {
   topicCompletedXAPIStatement,
 } from "../lib/veracityLRS";
 
+import {
+  mdiCloudUploadOutline,
+  mdiInformationVariant,
+  mdiCheck,
+  mdiClose,
+} from "@mdi/js";
+
 import { dbMixins } from "../mixins/DbMixins";
 
 import { mapState, mapGetters } from "vuex";
@@ -189,6 +263,10 @@ export default {
     "completed",
   ],
   data: () => ({
+    mdiCloudUploadOutline,
+    mdiInformationVariant,
+    mdiCheck,
+    mdiClose,
     submissionLink: null,
     dialog: false,
     loading: false,
@@ -302,7 +380,11 @@ export default {
         })
         .then(() => {
           this.currentCohort?.teachers.forEach(async (teacherId) => {
-            await this.sendTaskSubmission(teacherId, this.submissionLink, this.task.submissionInstructions);
+            await this.sendTaskSubmission(
+              teacherId,
+              this.submissionLink,
+              this.task.submissionInstructions
+            );
           });
         })
         .then(() => {
@@ -343,7 +425,11 @@ export default {
         })
         .then(() => {
           this.currentCohort?.teachers.forEach(async (teacherId) => {
-            await this.sendTaskSubmission(teacherId, this.submissionLink, this.task.submissionInstructions);
+            await this.sendTaskSubmission(
+              teacherId,
+              this.submissionLink,
+              this.task.submissionInstructions
+            );
           });
         })
         .then(() => {
@@ -552,7 +638,11 @@ export default {
       const person = await this.MXgetPersonByIdFromDB(personId);
       this.mappedByImageURL = person.image.url;
     },
-    async sendTaskSubmission(teacherId, submissionResponse, submissionInstructions) {
+    async sendTaskSubmission(
+      teacherId,
+      submissionResponse,
+      submissionInstructions
+    ) {
       const teacher = await this.MXgetPersonByIdFromDB(teacherId);
       const data = {
         course: this.currentCourse.title,
@@ -572,7 +662,7 @@ export default {
 </script>
 
 <style>
-.submission-dialog-description>p {
+.submission-dialog-description > p {
   margin: 10px 0px !important;
 }
 </style>
@@ -643,8 +733,6 @@ export default {
     padding: 0px 10px;
     font-style: italic;
     width: 100%;
-
-
   }
 
   .speech-bubble {

@@ -10,7 +10,7 @@
           v-bind="attrs"
           v-on="on"
         >
-          <v-icon left> mdi-plus </v-icon>
+          <v-icon left> {{ mdiPlus }} </v-icon>
           CREATE ORGANISATION
         </v-btn>
         <v-btn
@@ -23,7 +23,7 @@
           class="mt-4"
           small
         >
-          <v-icon> mdi-plus </v-icon>
+          <v-icon> {{ mdiPlus }} </v-icon>
         </v-btn>
       </template>
 
@@ -32,7 +32,9 @@
         <div class="dialog-header">
           <p class="dialog-title">{{ dialogTitle }}</p>
           <div class="d-flex align-center">
-            <v-icon left color="missionAccent">mdi-information-variant</v-icon>
+            <v-icon left color="missionAccent">{{
+              mdiInformationVariant
+            }}</v-icon>
             <p class="dialog-description">{{ dialogDescription }}</p>
           </div>
         </div>
@@ -121,12 +123,12 @@
           <v-btn
             outlined
             color="baseAccent"
-            @click="saveOrganisation(organisation)"
+            @click="saveOrganisation()"
             class="mr-2"
             :loading="loading"
             :disabled="disabled"
           >
-            <v-icon left> mdi-check </v-icon>
+            <v-icon left> {{ mdiCheck }} </v-icon>
             SAVE
           </v-btn>
 
@@ -138,7 +140,7 @@
             @click="deleteDialog()"
             class="ml-2"
           >
-            <v-icon left> mdi-delete </v-icon>
+            <v-icon left> {{ mdiDelete }} </v-icon>
             DELETE
           </v-btn>
 
@@ -149,7 +151,7 @@
             @click="cancel"
             :disabled="disabled || loading"
           >
-            <v-icon left> mdi-close </v-icon>
+            <v-icon left> {{ mdiClose }} </v-icon>
             Cancel
           </v-btn>
         </div>
@@ -167,7 +169,9 @@
             <strong>Warning!</strong> Delete Organisation?
           </p>
           <div class="d-flex align-start">
-            <v-icon left color="missionAccent">mdi-information-variant</v-icon>
+            <v-icon left color="missionAccent">{{
+              mdiInformationVariant
+            }}</v-icon>
             <p class="dialog-description">
               Are you sure you want to <strong>DELETE</strong> the
               <span class="organisation-text"
@@ -195,7 +199,7 @@
             class="ml-2"
             :loading="deleting"
           >
-            <v-icon left> mdi-delete </v-icon>
+            <v-icon left> {{ mdiDelete }} </v-icon>
             DELETE
           </v-btn>
 
@@ -206,7 +210,7 @@
             @click="cancelDeleteDialog"
             :disabled="disabled || loading"
           >
-            <v-icon left> mdi-close </v-icon>
+            <v-icon left> {{ mdiClose }} </v-icon>
             Cancel
           </v-btn>
         </div>
@@ -523,6 +527,7 @@ export default {
     text-transform: uppercase;
     font-weight: 700;
   }
+
   .mission-text {
     color: var(--v-missionAccent-base);
     text-transform: uppercase;

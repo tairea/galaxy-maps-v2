@@ -7,9 +7,9 @@
           small
           color="missionAccent"
           class="close-button mt-2"
-          @click="closeInfoPanel"
+          @click="closeInfoPanel" 
         >
-          <v-icon>mdi-close</v-icon>
+          <v-icon>{{mdiClose}}</v-icon>
         </v-btn>
         <div class="topicTitleContainer">
           <p class="topicTitle overline">Delete Edge?</p>
@@ -163,6 +163,7 @@ export default {
     top: 1px;
     left: 1px;
   }
+
   .panelContent,
   .panelContent:before {
     clip-path: polygon(0 0, 100% 0, 100% 100%, 15% 100%, 0% 95%);
@@ -176,16 +177,19 @@ export default {
 *::-webkit-scrollbar {
   width: 5px;
 }
+
 /* Track */
 *::-webkit-scrollbar-track {
   background: var(--v-background-base);
   margin-top: 1px;
   margin-bottom: 25px;
 }
+
 /* Handle */
 *::-webkit-scrollbar-thumb {
   background: var(--v-missionAccent-base);
 }
+
 /* Handle on hover */
 *::-webkit-scrollbar-thumb:hover {
   background: var(--v-missionAccent-base);

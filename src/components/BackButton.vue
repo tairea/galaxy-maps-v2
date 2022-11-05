@@ -1,7 +1,7 @@
 <template>
   <div class="backButtonDiv" v-if="from">
     <v-btn :to="route" class="backButton" color="baseAccent" text>
-      <v-icon left> mdi-arrow-left </v-icon>
+      <v-icon left> {{ mdiArrowLeft }} </v-icon>
       Back to
       {{ backToWhat(from) }}
     </v-btn>
@@ -10,6 +10,7 @@
 
 <script>
 import { mapState } from "vuex";
+import { mdiArrowLeft } from '@mdi/js';
 export default {
   name: "BackButton",
   props: ["toPath"],
@@ -19,6 +20,11 @@ export default {
       if (this.from.includes("system")) return "/base/galaxies";
       return this.from;
     },
+  },
+  data() {
+    return {
+      mdiArrowLeft
+    }
   },
   methods: {
     backToWhat(path) {
@@ -50,6 +56,7 @@ export default {
   width: calc(100% - 30px);
   z-index: 999;
 }
+
 .backButton {
   border-radius: 0px;
   width: 100%;

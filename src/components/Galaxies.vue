@@ -4,21 +4,37 @@
     <div v-if="nodesToDisplay.length == 0">
       <p class="overline noGalaxies">NO GALAXIES TO DISPLAY</p>
       <div class="d-flex justify-center mb-4">
-        <v-btn x-small color="baseAccent" @click="$emit('createGalaxy')" outlined class="py-6 px-12">
-          <v-icon x-small class="pr-2">mdi-plus</v-icon>
+        <v-btn
+          x-small
+          color="baseAccent"
+          @click="$emit('createGalaxy')"
+          outlined
+          class="py-6 px-12"
+        >
+          <v-icon x-small class="pr-2">{{ mdiPlus }}</v-icon>
           MAP NEW GALAXY
         </v-btn>
       </div>
     </div>
     <!-- <GradientBackground :gradients="gradients"/> -->
-    <network v-if="allNodesForDisplay.length != 0" ref="network" class="full-height" :nodes="allNodesForDisplay"
-      :edges="allEdges" :options="network.options" @click="click" @before-drawing="beforeDrawing"></network>
+    <network
+      v-if="allNodesForDisplay.length != 0"
+      ref="network"
+      class="full-height"
+      :nodes="allNodesForDisplay"
+      :edges="allEdges"
+      :options="network.options"
+      @click="click"
+      @before-drawing="beforeDrawing"
+    ></network>
   </div>
 </template>
 
 <script>
 import { Network } from "vue2vis";
 import "vue2vis/dist/vue2vis.css";
+
+import { mdiPlus } from "@mdi/js";
 
 import { mapState, mapGetters, mapMutations } from "vuex";
 
@@ -36,6 +52,7 @@ export default {
     PopupGalaxyPreview,
   },
   data: () => ({
+    mdiPlus,
     // gradients: [],
     active: false,
     loading: true,
@@ -334,11 +351,10 @@ export default {
           )
         ) {
           status = "assigned";
-
         }
-        // glow submitted for admin to easily see submitted galaxies for review 
+        // glow submitted for admin to easily see submitted galaxies for review
         else if (this.user.data.admin && courses[i].status == "submitted") {
-          status = "submitted"
+          status = "submitted";
         }
         boundary.status = status;
 

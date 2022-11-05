@@ -7,8 +7,7 @@
           <template v-slot:activator="{ on, attrs }">
             <!-- uncheck icon if not inreview or completed -->
             <v-btn color="baseAccent" v-bind="attrs" v-on="on" outlined small>
-              <!-- <v-icon> mdi-check </v-icon> -->
-              <v-icon left> mdi-thumb-up-outline </v-icon>
+              <v-icon left> {{ mdiThumbUpOutline }} </v-icon>
               MARK AS COMPLETED
             </v-btn>
           </template>
@@ -18,9 +17,9 @@
             <div class="dialog-header">
               <p class="dialog-title">Is the submission completed?</p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent"
-                  >mdi-information-variant</v-icon
-                >
+                <v-icon left color="missionAccent">{{
+                  mdiInformationVariant
+                }}</v-icon>
                 <p class="dialog-description">
                   Has
                   <strong
@@ -46,7 +45,7 @@
                 v-bind="attrs"
                 v-on="on"
               >
-                <v-icon left> mdi-check </v-icon>
+                <v-icon left> {{ mdiCheck }} </v-icon>
                 YES,
                 {{ requesterPerson.firstName + " " + requesterPerson.lastName }}
                 HAS COMPLETED THIS MISSION
@@ -59,7 +58,7 @@
                 class="ml-2"
                 @click="cancel"
               >
-                <v-icon left> mdi-close </v-icon>
+                <v-icon left> {{ mdiClose }} </v-icon>
                 Cancel
               </v-btn>
               <!-- End action-buttons -->
@@ -85,11 +84,21 @@ import {
 
 import { mapState, mapGetters } from "vuex";
 import { dbMixins } from "../mixins/DbMixins";
+import {
+  mdiThumbUpOutline,
+  mdiInformationVariant,
+  mdiCheck,
+  mdiClose,
+} from "@mdi/js";
 
 export default {
   name: "MarkSubmissionCompleted",
   props: ["submission", "requesterPerson", "on", "attrs"],
   data: () => ({
+    mdiThumbUpOutline,
+    mdiInformationVariant,
+    mdiCheck,
+    mdiClose,
     submissionLink: null,
     dialog: false,
     loading: false,
@@ -126,8 +135,9 @@ export default {
           teacherId: this.person.id,
           taskStatus: "completed",
           taskReviewedAndCompletedTimestamp: new Date(),
-        }).then(() => {
-          this.sendResponseToSubmission('completed')
+        })
+        .then(() => {
+          this.sendResponseToSubmission("completed");
         })
         .then(() => {
           console.log("Task successfully updated as completed!");
@@ -290,15 +300,18 @@ export default {
         course: this.submission.contextCourse.title,
         topic: this.submission.contextTopic.label,
         task: this.submission.contextTask.title,
-        student: this.requesterPerson.firstName + ' ' + this.requesterPerson.lastName,
+        student:
+          this.requesterPerson.firstName + " " + this.requesterPerson.lastName,
         submission: this.submission.submissionLink,
         outcome: outcome,
-        teacher: this.person.firstName + ' ' + this.person.lastName,
-        email: this.person.email
-      }
-      console.log('send reponse email: ', data)
-      const sendResponseToSubmission = functions.httpsCallable("sendResponseToSubmission");
-      return sendResponseToSubmission(data)
+        teacher: this.person.firstName + " " + this.person.lastName,
+        email: this.person.email,
+      };
+      console.log("send reponse email: ", data);
+      const sendResponseToSubmission = functions.httpsCallable(
+        "sendResponseToSubmission"
+      );
+      return sendResponseToSubmission(data);
     },
     cancel() {
       this.dialog = false;

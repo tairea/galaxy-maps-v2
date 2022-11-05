@@ -8,10 +8,10 @@
         @click="toggleAddNodeMode"
       >
         <div class="mapButton-icon" :class="{ activeIcon: addNodeMode }">
-          <v-icon v-if="!addNodeMode" color="missionAccent"
-            >mdi-dots-hexagon</v-icon
-          >
-          <v-icon v-else color="baseAccent">mdi-close</v-icon>
+          <v-icon v-if="!addNodeMode" color="missionAccent">{{
+            mdiDotsHexagon
+          }}</v-icon>
+          <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
         </div>
         <div class="mapButton-text">
           <p v-if="!addNodeMode" class="overline ma-0">Add a new node</p>
@@ -28,10 +28,10 @@
         @click="toggleAddEdgeMode"
       >
         <div class="mapButton-icon" :class="{ activeIcon: addEdgeMode }">
-          <v-icon v-if="!addEdgeMode" color="missionAccent"
-            >mdi-chart-timeline-variant</v-icon
-          >
-          <v-icon v-else color="baseAccent">mdi-close</v-icon>
+          <v-icon v-if="!addEdgeMode" color="missionAccent">{{
+            mdiChartTimelineVariant
+          }}</v-icon>
+          <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
         </div>
         <div class="mapButton-text">
           <p v-if="!addEdgeMode" class="overline ma-0">Connect Nodes</p>
@@ -48,10 +48,10 @@
         @click="toggleDragNodeMode"
       >
         <div class="mapButton-icon" :class="{ activeIcon: dragNodeMode }">
-          <v-icon v-if="!dragNodeMode" color="missionAccent"
-            >mdi-arrow-expand-all</v-icon
-          >
-          <v-icon v-else color="baseAccent">mdi-close</v-icon>
+          <v-icon v-if="!dragNodeMode" color="missionAccent">{{
+            mdiArrowExpandAll
+          }}</v-icon>
+          <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
         </div>
         <div class="mapButton-text">
           <p v-if="!dragNodeMode" class="overline ma-0">
@@ -72,7 +72,7 @@
           :class="{ activeIcon: dragNodeMode }"
           @click="saveNodePositions"
         >
-          <v-icon color="baseAccent">mdi-content-save-check</v-icon>
+          <v-icon color="baseAccent">{{ mdiContentSaveCheck }}</v-icon>
         </div>
       </div>
     </div>
@@ -80,6 +80,13 @@
 </template>
 
 <script>
+import {
+  mdiDotsHexagon,
+  mdiClose,
+  mdiChartTimelineVariant,
+  mdiArrowExpandAll,
+  mdiContentSaveCheck,
+} from "@mdi/js";
 export default {
   name: "GalaxyMapButtons",
   components: {},
@@ -100,7 +107,13 @@ export default {
   // ],
   async mounted() {},
   data() {
-    return {};
+    return {
+      mdiDotsHexagon,
+      mdiClose,
+      mdiChartTimelineVariant,
+      mdiArrowExpandAll,
+      mdiContentSaveCheck,
+    };
   },
   computed: {
     editMode() {
@@ -168,6 +181,7 @@ export default {
 
   // border: 1px solid blue;
 }
+
 .map-buttons-left {
   position: fixed;
   top: 0;
@@ -181,6 +195,7 @@ export default {
   margin: 10px;
   background-color: var(--v-background-base);
 }
+
 .map-button {
   // margin: 10px;
   background-color: var(--v-background-base);
@@ -196,6 +211,7 @@ export default {
     text-align: left;
     margin-left: 10px;
   }
+
   .active {
     color: var(--v-baseAccent-base) !important;
   }

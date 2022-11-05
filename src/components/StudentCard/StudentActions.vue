@@ -4,10 +4,10 @@
       <!-- requests for help -->
       <p class="label requests text-uppercase">Requests for help</p>
       <div class="d-flex dots-row">
-        <span 
-          v-for="request in requests" 
-          :key="request.id" 
-          class="dot" 
+        <span
+          v-for="request in requests"
+          :key="request.id"
+          class="dot"
           style="background-color: var(--v-galaxyAccent-base)"
           @click="showRequestCard(request)"
         ></span>
@@ -17,45 +17,56 @@
       <!-- submissions -->
       <p class="label submissions text-uppercase">Work submissions</p>
       <div class="d-flex dots-row">
-        <div 
-          v-for="submission in submissions" 
-          :key="submission.id" 
-          class="dot" 
+        <div
+          v-for="submission in submissions"
+          :key="submission.id"
+          class="dot"
           style="background-color: var(--v-cohortAccent-base)"
           @click="showSubmissionCard(submission)"
-          
         ></div>
       </div>
     </section>
     <section v-if="!submissions.length && !requests.length">
-      <p class="label text-uppercase" style="color: var(--v-missionAccent-base)">student actions</p>
+      <p
+        class="label text-uppercase"
+        style="color: var(--v-missionAccent-base)"
+      >
+        student actions
+      </p>
     </section>
   </div>
 </template>
 <script>
-import { mapState } from "vuex"
+import { mapState } from "vuex";
 
 export default {
   name: "StudentActions",
   props: ["student"],
   computed: {
     ...mapState(["teachersRequestsForHelp", "teachersSubmissionsToReview"]),
-    requests () {
-      return this.teachersRequestsForHelp.filter(request => request.personId === this.student.id)
+    requests() {
+      return this.teachersRequestsForHelp?.filter(
+        (request) => request.personId === this.student.id
+      );
     },
-    submissions () {
-      return this.teachersSubmissionsToReview.filter(submissions => submissions.studentId === this.student.id)
-    }
+    submissions() {
+      return this.teachersSubmissionsToReview?.filter(
+        (submissions) => submissions.studentId === this.student.id
+      );
+    },
   },
   methods: {
-    showRequestCard (request) {
-      this.$store.commit("setPanelCard", {type: "request", data: request})
+    showRequestCard(request) {
+      this.$store.commit("setPanelCard", { type: "request", data: request });
     },
-    showSubmissionCard (submission) {
-      this.$store.commit("setPanelCard", {type: "submission", data: submission})
+    showSubmissionCard(submission) {
+      this.$store.commit("setPanelCard", {
+        type: "submission",
+        data: submission,
+      });
     },
-  }
-}
+  },
+};
 </script>
 <style scoped lang="scss">
 .dot {
@@ -65,7 +76,7 @@ export default {
   border-radius: 50%;
   display: inline-block;
   cursor: pointer;
-  transition: all .1s ease-in-out; 
+  transition: all 0.1s ease-in-out;
 }
 
 .dot:hover {
@@ -75,8 +86,8 @@ export default {
 
 .dots-row {
   position: relative;
-  top:-2px;
-  min-height:10px;
+  top: -2px;
+  min-height: 10px;
 }
 
 .label {
@@ -100,4 +111,5 @@ export default {
 //   transform: scale(1.5);
 //   box-shadow: 0 0 50px var(--v-missionAccent-base);
 // }
-</style>`
+</style>
+`

@@ -7,8 +7,7 @@
           <template v-slot:activator="{ on, attrs }">
             <!-- uncheck icon if not inreview or completed -->
             <v-btn color="cohortAccent" v-bind="attrs" v-on="on" outlined small>
-              <!-- <v-icon> mdi-check </v-icon> -->
-              <v-icon left> mdi-text-box-search-outline </v-icon>
+              <v-icon left> {{ mdiTextBoxSearchOutline }} </v-icon>
               View submission
             </v-btn>
           </template>
@@ -211,7 +210,7 @@
                   v-bind="attrs"
                   v-on="on"
                 >
-                  <v-icon left> mdi-thumb-up-outline </v-icon>
+                  <v-icon left> {{ mdiThumbUpOutline }} </v-icon>
                   approve
                 </v-btn>
                 <v-btn
@@ -223,7 +222,7 @@
                   v-bind="attrs"
                   v-on="on"
                 >
-                  <v-icon left> mdi-thumb-down-outline </v-icon>
+                  <v-icon left> {{ mdiThumbDownOutline }} </v-icon>
                   decline
                 </v-btn>
               </template>
@@ -234,7 +233,7 @@
                 :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
                 @click="close"
               >
-                <v-icon left> mdi-close </v-icon>
+                <v-icon left> {{ mdiClose }} </v-icon>
                 Cancel
               </v-btn>
               <!-- End action-buttons -->
@@ -262,6 +261,13 @@ import {
   teacherRespondedSubmissionDeclinedXAPIStatement,
 } from "@/lib/veracityLRS";
 
+import {
+  mdiTextBoxSearchOutline,
+  mdiThumbUpOutline,
+  mdiThumbDownOutline,
+  mdiClose,
+} from "@mdi/js";
+
 import { mapState, mapGetters } from "vuex";
 import { dbMixins } from "@/mixins/DbMixins";
 
@@ -281,6 +287,10 @@ export default {
     Avatar,
   },
   data: () => ({
+    mdiTextBoxSearchOutline,
+    mdiThumbUpOutline,
+    mdiThumbDownOutline,
+    mdiClose,
     response: false,
     responseMsg: "",
     dialog: false,
@@ -623,6 +633,7 @@ export default {
   color: var(--v-cohortAccent-base) !important;
   caret-color: var(--v-cohortAccent-base) !important;
 }
+
 // new dialog ui
 .create-dialog {
   color: var(--v-missionAccent-base);
@@ -765,6 +776,7 @@ export default {
   border-top: 0;
   border-bottom-color: var(--v-missionAccent-base);
 }
+
 .speech-bubble:before {
   top: -30px;
   z-index: 1;
@@ -799,6 +811,7 @@ export default {
   border-top: 0;
   border-bottom-color: var(--v-cohortAccent-base);
 }
+
 .teacher-bubble:before {
   top: -30px;
   z-index: 1;

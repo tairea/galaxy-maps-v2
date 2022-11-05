@@ -10,7 +10,7 @@
           v-on="on"
           outlined
         >
-          <v-icon left> mdi-account-group </v-icon>
+          <v-icon left> {{ mdiAccountGroup }} </v-icon>
           manage students
         </v-btn>
       </template>
@@ -22,26 +22,25 @@
           <p class="mb-0">Manage Students</p>
         </div>
         <div class="create-dialog-content">
-          <v-tabs
-            background-color="var(--v-background-base)"
-            dark
-            fixed-tabs
-          >
+          <v-tabs background-color="var(--v-background-base)" dark fixed-tabs>
             <v-tab class="justify-start">
-              <v-icon small class="mr-2">mdi-account-plus</v-icon><div>add student</div>
+              <v-icon small class="mr-2">{{ mdiAccountPlus }}</v-icon>
+              <div>add student</div>
             </v-tab>
             <v-tab class="justify-start">
-              <v-icon small class="mr-2">mdi-account-group</v-icon><div>upload csv</div>
+              <v-icon small class="mr-2">{{ mdiAccountGroup }}</v-icon>
+              <div>upload csv</div>
             </v-tab>
             <v-tab class="justify-start">
-              <v-icon small class="mr-2">mdi-account-edit</v-icon><div>edit student</div>
+              <v-icon small class="mr-2">{{ mdiAccountEdit }}</v-icon>
+              <div>edit student</div>
             </v-tab>
 
             <v-tab-item>
-              <CreateAccountForm @close="close"/>
+              <CreateAccountForm @close="close" />
             </v-tab-item>
             <v-tab-item>
-             <StudentImportCsv />
+              <StudentImportCsv />
             </v-tab-item>
             <v-tab-item>
               <div>
@@ -56,16 +55,20 @@
                   <tbody>
                     <tr v-for="student in students" :key="student.id">
                       <td class="pl-4">
-                        {{student.firstName ? student.firstName + ' ' + student.lastName : student.email}}
+                        {{
+                          student.firstName
+                            ? student.firstName + " " + student.lastName
+                            : student.email
+                        }}
                       </td>
                       <td>
                         <v-btn text @click="updateStudent(student)">
-                          <v-icon small>mdi-pencil</v-icon>
+                          <v-icon small>{{ mdiPencil }}</v-icon>
                         </v-btn>
                       </td>
                       <td>
                         <v-btn text @click="removeStudent(student)">
-                          <v-icon small>mdi-delete</v-icon>
+                          <v-icon small>{{ mdiDelete }}</v-icon>
                         </v-btn>
                       </td>
                     </tr>
@@ -78,21 +81,34 @@
       </div>
     </v-dialog>
     <!-- CONFIRM DELETE DIALOG -->
-    <ConfirmDeleteStudentDialog :dialog="confirmDialog" :student="exStudent" @cancel="cancelDeleteDialog"/>
-    <EditStudentDialog 
-      v-if="editDialog" 
-      :dialog="editDialog" 
-      :student="editStudent" 
-      @cancel="cancelEditDialog" 
-      @updateStudentProfile="$emit('updateStudentProfile', $event)" />
+    <ConfirmDeleteStudentDialog
+      :dialog="confirmDialog"
+      :student="exStudent"
+      @cancel="cancelDeleteDialog"
+    />
+    <EditStudentDialog
+      v-if="editDialog"
+      :dialog="editDialog"
+      :student="editStudent"
+      @cancel="cancelEditDialog"
+      @updateStudentProfile="$emit('updateStudentProfile', $event)"
+    />
   </div>
 </template>
 
 <script>
-import CreateAccountForm from "../../components/CreateAccountForm"
-import StudentImportCsv from "../../components/StudentImportCsv"
-import ConfirmDeleteStudentDialog from "../Dialogs/ConfirmDeleteStudentDialog"
-import EditStudentDialog from "../Dialogs/EditStudentDialog"
+import CreateAccountForm from "../../components/CreateAccountForm";
+import StudentImportCsv from "../../components/StudentImportCsv";
+import ConfirmDeleteStudentDialog from "../Dialogs/ConfirmDeleteStudentDialog";
+import EditStudentDialog from "../Dialogs/EditStudentDialog";
+
+import {
+  mdiAccountGroup,
+  mdiAccountPlus,
+  mdiAccountEdit,
+  mdiPencil,
+  mdiDelete,
+} from "@mdi/js";
 
 export default {
   name: "StudentAccountsDialog",
@@ -100,17 +116,22 @@ export default {
     CreateAccountForm,
     StudentImportCsv,
     ConfirmDeleteStudentDialog,
-    EditStudentDialog
+    EditStudentDialog,
   },
-  props: ['students'],
+  props: ["students"],
   data() {
     return {
+      mdiAccountGroup,
+      mdiAccountPlus,
+      mdiAccountEdit,
+      mdiPencil,
+      mdiDelete,
       dialog: false,
       confirmDialog: false,
       exStudent: {},
       editDialog: false,
-      editStudent: {}
-    }
+      editStudent: {},
+    };
   },
   computed: {
     dark() {
@@ -122,20 +143,20 @@ export default {
       this.dialog = false;
     },
     removeStudent(student) {
-      this.confirmDialog = true
-      this.exStudent = student
+      this.confirmDialog = true;
+      this.exStudent = student;
     },
     cancelDeleteDialog() {
-      this.confirmDialog = false
-      this.exStudent = {}
+      this.confirmDialog = false;
+      this.exStudent = {};
     },
     updateStudent(student) {
-      this.editStudent = student
-      this.editDialog = true
+      this.editStudent = student;
+      this.editDialog = true;
     },
     cancelEditDialog() {
-      this.editDialog = false
-      this.editStudent = {}
+      this.editDialog = false;
+      this.editStudent = {};
     },
   },
 };
@@ -178,11 +199,10 @@ export default {
 }
 
 .tab-label {
-  color: var(--v-missionAccent-base)
+  color: var(--v-missionAccent-base);
 }
 
 .table {
   background-color: var(--v-background-base);
 }
-
 </style>

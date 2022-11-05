@@ -2,21 +2,37 @@
   <div class="galaxyInfoPanel" :style="selectedTopic ? 'right: 0px' : ''">
     <div class="panelContent">
       <div class="panelContentInner" v-if="selectedTopic">
-        <v-btn icon small color="missionAccent" class="close-button mt-2" @click="closeInfoPanel">
-          <v-icon>mdi-close</v-icon>
+        <v-btn
+          icon
+          small
+          color="missionAccent"
+          class="close-button mt-2"
+          @click="closeInfoPanel"
+        >
+          <v-icon>{{ mdiClose }}</v-icon>
         </v-btn>
         <div class="topOfPanel">
           <div class="topicTitleContainer">
-            <p class="topicTitle overline" :style="
-              selectedTopic.color
-                ? 'color:' + selectedTopic.color
-                : 'color:var(--v-missionAccent-base)'
-            ">
+            <p
+              class="topicTitle overline"
+              :style="
+                selectedTopic.color
+                  ? 'color:' + selectedTopic.color
+                  : 'color:var(--v-missionAccent-base)'
+              "
+            >
               {{ selectedTopic.label }}
             </p>
-            <v-btn v-if="teacher" icon x-small color="missionAccent" class="ml-2 mt-4" alt="Edit Topic"
-              @click="editNode">
-              <v-icon>mdi-pencil</v-icon>
+            <v-btn
+              v-if="teacher"
+              icon
+              x-small
+              color="missionAccent"
+              class="ml-2 mt-4"
+              alt="Edit Topic"
+              @click="editNode"
+            >
+              <v-icon>{{ mdiPencil }}</v-icon>
             </v-btn>
           </div>
         </div>
@@ -34,19 +50,33 @@
           <div v-for="(task, index) in tasks" :key="task.id" class="task-card">
             <p class="task-number overline">MISSION {{ index + 1 }}</p>
             <p class="task-title m0">{{ task.title }}</p>
-            <p v-if="task.taskStatus != 'locked'" class="task-status overline m0 text-center" :class="{
-              completed: task.taskStatus == 'completed',
-              locked: task.taskStatus == 'locked',
-              inreview: task.taskStatus == 'inreview',
-              active: task.taskStatus == 'active',
-            }">
+            <p
+              v-if="task.taskStatus != 'locked'"
+              class="task-status overline m0 text-center"
+              :class="{
+                completed: task.taskStatus == 'completed',
+                locked: task.taskStatus == 'locked',
+                inreview: task.taskStatus == 'inreview',
+                active: task.taskStatus == 'active',
+              }"
+            >
               {{ task.taskStatus }}
             </p>
-            <v-icon v-else color="missionAccent" class="lock-icon">mdi-lock</v-icon>
+            <v-icon v-else color="missionAccent" class="lock-icon">{{
+              mdiLock
+            }}</v-icon>
           </div>
         </div>
         <div class="bottom">
-          <v-btn class="view-ss-button pa-5" dark small color="missionAccent" outlined tile @click="routeToSolarSystem">
+          <v-btn
+            class="view-ss-button pa-5"
+            dark
+            small
+            color="missionAccent"
+            outlined
+            tile
+            @click="routeToSolarSystem"
+          >
             View System
           </v-btn>
         </div>
@@ -57,6 +87,7 @@
 
 <script>
 import { mapState, mapGetters } from "vuex";
+import { mdiClose, mdiPencil, mdiLock } from "@mdi/js";
 
 export default {
   name: "SolarSystemInfoPanel",
@@ -64,6 +95,9 @@ export default {
   components: {},
   data() {
     return {
+      mdiClose,
+      mdiPencil,
+      mdiLock,
       allCourses: [],
       selectedGalaxy: false,
       activeLearning: null,
@@ -154,13 +188,12 @@ export default {
       overflow-x: hidden;
 
       .topOfPanel {
-
         border-bottom: 1px solid var(--v-missionAccent-base);
       }
 
       .topicTitleContainer {
         display: flex;
-        width: 90%
+        width: 90%;
       }
 
       .topicTitle {
