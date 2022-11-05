@@ -12,7 +12,7 @@
           v-bind="attrs"
           v-on="on"
         >
-          <v-icon left> mdi-plus </v-icon>
+          <v-icon left> {{ mdiPlus }} </v-icon>
           {{ teacher ? "New Teacher" : "add student" }}
         </v-btn>
       </template>
@@ -23,28 +23,31 @@
         <div class="dialog-header">
           <p class="mb-0">Add {{ this.accountType }}</p>
         </div>
-        <CreateAccountForm :accountType="accountType"/>
+        <CreateAccountForm :accountType="accountType" />
       </div>
     </v-dialog>
   </div>
 </template>
 
 <script>
-import CreateAccountForm from "./CreateAccountForm"
+import CreateAccountForm from "./CreateAccountForm";
 
 import { mapGetters } from "vuex";
 import { dbMixins } from "../mixins/DbMixins";
+
+import { mdiPlus } from "@mdi/js";
 
 export default {
   name: "CreateAccountDialog",
   mixins: [dbMixins],
   components: {
-    CreateAccountForm
+    CreateAccountForm,
   },
   props: {
     accountType: { type: String },
   },
   data: () => ({
+    mdiPlus,
     addingAccount: false,
     dialog: false,
     valid: true,
@@ -62,7 +65,7 @@ export default {
     dark() {
       return this.$vuetify.theme.isDark;
     },
-  }
+  },
 };
 </script>
 

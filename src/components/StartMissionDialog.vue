@@ -14,7 +14,7 @@
               outlined
               large
             >
-              <v-icon x-large>mdi-play</v-icon>
+              <v-icon x-large>{{ mdiPlay }}</v-icon>
             </v-btn>
           </template>
 
@@ -26,9 +26,9 @@
                 ARE YOU SURE YOU WANT TO START MISSION?
               </p>
               <div v-if="task.duration" class="d-flex align-center">
-                <v-icon left color="missionAccent"
-                  >mdi-information-variant</v-icon
-                >
+                <v-icon left color="missionAccent">{{
+                  mdiInformationVariant
+                }}</v-icon>
                 <p class="dialog-description">
                   This mission is estmated to take
                   <strong
@@ -54,7 +54,7 @@
                   v-bind="attrs"
                   v-on="on"
                 >
-                  <v-icon left> mdi-check </v-icon>
+                  <v-icon left> {{ mdiCheck }} </v-icon>
                   YES, START MISSION
                 </v-btn>
 
@@ -65,7 +65,7 @@
                   class="ml-2"
                   @click="cancel"
                 >
-                  <v-icon left> mdi-close </v-icon>
+                  <v-icon left> {{ mdiClose }} </v-icon>
                   Cancel
                 </v-btn>
                 <!-- End action-buttons -->
@@ -89,13 +89,17 @@ import {
   startTaskXAPIStatement,
   startTopicXAPIStatement,
 } from "../lib/veracityLRS";
-
+import { mdiPlay, mdiInformationVariant, mdiCheck, mdiClose } from "@mdi/js";
 import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "StartMissionDialog",
   props: ["task", "topicId", "on", "attrs", "topicActive"],
   data: () => ({
+    mdiPlay,
+    mdiInformationVariant,
+    mdiCheck,
+    mdiClose,
     dialog: false,
     loading: false,
   }),
@@ -111,26 +115,29 @@ export default {
       this.$store.commit("setCurrentTaskId", this.task.id);
       this.$store.commit("setCurrentTask", this.task);
 
-      const topic = db.collection("people")
+      const topic = db
+        .collection("people")
         .doc(this.person.id)
         .collection(this.currentCourse.id)
-        .doc(this.topicId)
+        .doc(this.topicId);
 
       // update taskStatus to active
-        topic
-          .collection("tasks")
-          .doc(this.task.id)
-          .update({
-            taskStatus: "active",
-            taskStartedTimestamp: new Date(),
-        }).then(() => {
+      topic
+        .collection("tasks")
+        .doc(this.task.id)
+        .update({
+          taskStatus: "active",
+          taskStartedTimestamp: new Date(),
+        })
+        .then(() => {
           if (!this.topicActive) {
             topic.update({
-              topicStatus: 'active',
-              topicStartedTimeStamp: new Date()
-            })
+              topicStatus: "active",
+              topicStartedTimeStamp: new Date(),
+            });
           }
-        }).then(() => {
+        })
+        .then(() => {
           console.log("Topic status successfully written as Active!");
           if (!this.topicActive) {
             startTopicXAPIStatement(this.person, {

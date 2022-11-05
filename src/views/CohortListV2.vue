@@ -107,7 +107,7 @@
         </div>
         <v-row justify="center">
           <v-btn outlined color="baseAccent">
-            <v-icon class="mr-2">mdi-plus</v-icon>
+            <v-icon class="mr-2">{{ mdiPlus }}</v-icon>
             create cohort
           </v-btn>
         </v-row>
@@ -120,7 +120,7 @@
         <v-tooltip bottom close-delay="2000">
           <template v-slot:activator="{ on, attrs }">
             <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on">
-              <v-icon class="mb-1 mr-2">mdi-plus</v-icon>
+              <v-icon class="mb-1 mr-2">{{ mdiPlus }}</v-icon>
               create cohort
             </v-btn>
           </template>
@@ -153,6 +153,8 @@ import Organisation from "../components/Organisation";
 
 import { mapState, mapGetters, mapActions } from "vuex";
 
+import { mdiPlus} from "@mdi/js";
+
 export default {
   name: "CohortListV2",
   components: {
@@ -167,6 +169,7 @@ export default {
   },
   props: ["on", "attrs"],
   data: () => ({
+    mdiPlus,
     openOrganisationDialog: false,
     editingOrgansation: null,
     timeframe: {},
@@ -188,12 +191,12 @@ export default {
   computed: {
     ...mapState(["organisations", "cohorts", "person", "user"]),
     ...mapGetters(["getOrganisationById"]),
-    cohortView () {
+    cohortView() {
       return this.$route.name === "CohortView"
     },
     getIndex() {
-       this.currentIndexCount = this.currentIndexCount + 1
-       return this.currentIndexCount
+      this.currentIndexCount = this.currentIndexCount + 1
+      return this.currentIndexCount
     },
   },
   methods: {
@@ -206,7 +209,7 @@ export default {
       }
     },
     getCohortsAndOrganisations() {
-      if (this.user.data.admin){
+      if (this.user.data.admin) {
         this.bindAllCohorts()
         this.bindAllOrganisations();
       } else {
@@ -238,7 +241,7 @@ export default {
       // orgs with cohorts
       for (var i = 0; i < numOrgs; i++) {
         // this querys all id's with org and number (eg. id="org1...", id="org2...")
-        orgsCohortsArr.push(document.querySelectorAll('[id^=org'+i+']').length)
+        orgsCohortsArr.push(document.querySelectorAll('[id^=org' + i + ']').length)
       }
 
       // log multi-dim arr of orgs and cohorts
@@ -255,8 +258,8 @@ export default {
         //test cases: org1cohort2 , org3cohort2
         let sum = 0;
         sum += orgsCohortsArr[0]; // sum noOrg cohorts first
-        for (var x = 0; x < orgIndex;x++) {
-          sum += orgsCohortsArr[x+1] // plus 1 because noOrgs is first index
+        for (var x = 0; x < orgIndex; x++) {
+          sum += orgsCohortsArr[x + 1] // plus 1 because noOrgs is first index
         }
         mappedIndex = sum + cohortIndex
       }
@@ -327,7 +330,7 @@ hr {
   width: 80%;
   display: flex;
   margin: auto;
-  overflow: hidden; /* Hide horizontal scrollbar */
+  overflow: hidden;
 
   .side-col {
     width: 10%;

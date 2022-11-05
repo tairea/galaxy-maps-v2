@@ -35,9 +35,9 @@
       <div id="main-section">
         <!-- info description -->
         <div class="d-flex align-center mb-4">
-          <v-icon left class="circle-border" small color="missionAccent"
-            >mdi-information-variant</v-icon
-          >
+          <v-icon left class="circle-border" small color="missionAccent">{{
+            mdiInformationVariant
+          }}</v-icon>
           <p class="info-description">These are maps you are exploring</p>
         </div>
         <div class="course-progression-wrap">
@@ -53,9 +53,9 @@
       <div id="main-section">
         <!-- info description -->
         <div class="d-flex align-center mb-4">
-          <v-icon left class="circle-border" color="missionAccent" small
-            >mdi-information-variant</v-icon
-          >
+          <v-icon left class="circle-border" color="missionAccent" small>{{
+            mdiInformationVariant
+          }}</v-icon>
           <p class="info-description">
             These are cohorts & maps you have mapped
           </p>
@@ -103,6 +103,7 @@
 <script>
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters, mapActions, mapMutations } from "vuex";
+import { mdiInformationVariant } from "@mdi/js";
 
 import UserInfo from "../components/UserInfo";
 import StudentActivityTimeline from "../components/StudentActivityTimeline";
@@ -127,6 +128,7 @@ export default {
   },
   data() {
     return {
+      mdiInformationVariant,
       timeframe: "",
     };
   },

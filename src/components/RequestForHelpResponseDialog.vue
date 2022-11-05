@@ -7,7 +7,6 @@
           <template v-slot:activator="{ on, attrs }">
             <v-btn color="baseAccent" v-bind="attrs" v-on="on" outlined small>
               SUBMIT RESPONSE
-              <!-- <v-icon color="missionAccent">mdi-hand-front-left-outline</v-icon> -->
             </v-btn>
           </template>
 
@@ -19,9 +18,8 @@
             <div class="create-dialog-content">
               <!-- Request for help details -->
               <div class="request-details">
-               <!-- Context details -->
+                <!-- Context details -->
                 <v-row>
-
                   <div class="request-details-context">
                     <v-simple-table>
                       <tr
@@ -55,14 +53,20 @@
               <div class="requester-info">
                 <v-row>
                   <div class="requester-image justify-center align-center">
-                    <v-avatar v-if="requesterPerson" size="30" style='background-color:grey'>
+                    <v-avatar
+                      v-if="requesterPerson"
+                      size="30"
+                      style="background-color: grey"
+                    >
                       <img
                         v-if="requesterPerson.image"
                         :src="requesterPerson.image.url"
                         :alt="requesterPerson.firstName"
                         style="object-fit: cover"
                       />
-                      <v-icon :dark="dark" :ligh="!dark" v-else>mdi-account</v-icon>
+                      <v-icon :dark="dark" :light="!dark" v-else>{{
+                        mdiAccount
+                      }}</v-icon>
                     </v-avatar>
                   </div>
                   <!-- Message -->
@@ -83,11 +87,10 @@
                   </div>
                 </v-row>
               </div>
-            <!-- REQUEST INPUT FIELDS -->
+              <!-- REQUEST INPUT FIELDS -->
               <p class="dialog-help-message speech-bubble">
-                 <!-- Avatar -->
+                <!-- Avatar -->
 
-                
                 "{{ request.requestForHelpMessage }}"
               </p>
 
@@ -117,7 +120,7 @@
                 v-bind="attrs"
                 v-on="on"
               >
-                <v-icon left> mdi-check </v-icon>
+                <v-icon left> {{ mdiCheck }} </v-icon>
                 SUBMIT RESPONSE
               </v-btn>
 
@@ -128,7 +131,7 @@
                 class="ml-2"
                 @click="cancel"
               >
-                <v-icon left> mdi-close </v-icon>
+                <v-icon left> {{ mdiClose }} </v-icon>
                 Cancel
               </v-btn>
               <!-- End action-buttons -->
@@ -151,14 +154,18 @@ import moment from "moment";
 
 import { db, functions } from "../store/firestoreConfig";
 import { teacherRespondedToRequestForHelpXAPIStatement } from "../lib/veracityLRS";
-import { dbMixins } from "../mixins/DbMixins"; 
+import { dbMixins } from "../mixins/DbMixins";
 import { mapState, mapGetters } from "vuex";
+import { mdiAccount, mdiCheck, mdiClose } from "@mdi/js";
 
 export default {
   name: "RequestForHelpResponseDialog",
   mixins: [dbMixins],
   props: ["request", "requesterPerson", "on", "attrs"],
   data: () => ({
+    mdiAccount,
+    mdiCheck,
+    mdiClose,
     dialog: false,
     dialogDescription:
       "Write what you need help with, then submit, and your instructor will be notified to leave you a response.",
@@ -169,7 +176,12 @@ export default {
   }),
   mounted() {},
   computed: {
-    ...mapState(["currentCourse", "currentTopic", "currentTask", "currentCohort"]),
+    ...mapState([
+      "currentCourse",
+      "currentTopic",
+      "currentTask",
+      "currentCohort",
+    ]),
     ...mapGetters(["person"]),
     dark() {
       return this.$vuetify.theme.isDark;
@@ -192,9 +204,11 @@ export default {
           requestForHelpStatus: "answered",
           responseSubmittedTimestamp: new Date(),
           responderPersonId: this.person.id,
-        }).then(() => {
-          this.emailResponseToStudent(this.requesterPerson, this.response)
-        }).then(() => {
+        })
+        .then(() => {
+          this.emailResponseToStudent(this.requesterPerson, this.response);
+        })
+        .then(() => {
           console.log("Response successfully submitted for review!");
 
           // teacher assissted student
@@ -239,16 +253,16 @@ export default {
         course: this.currentCourse.title,
         topic: this.currentTopic.label,
         task: this.currentTask.title,
-        student: student.firstName + ' ' + student.lastName,
+        student: student.firstName + " " + student.lastName,
         response: response,
         request: this.request.requestForHelpMessage,
-        teacher: this.person.firstName + ' ' + this.person.lastName,
-        email: student.email
-      }
-      console.log('email data: ', data)
+        teacher: this.person.firstName + " " + this.person.lastName,
+        email: student.email,
+      };
+      console.log("email data: ", data);
       const sendResponseToHelp = functions.httpsCallable("sendResponseToHelp");
-      return sendResponseToHelp(data)
-    }
+      return sendResponseToHelp(data);
+    },
   },
 };
 </script>
@@ -282,7 +296,8 @@ export default {
 
       .requester-image {
         width: 10%;
-      }    }
+      }
+    }
   }
 
   .create-dialog-content {
@@ -362,11 +377,13 @@ export default {
   border-top: 0;
   border-bottom-color: var(--v-missionAccent-base);
 }
+
 .speech-bubble:before {
   top: -30px;
   z-index: 1;
   border-bottom-color: rgba(0, 0, 0, 0.095);
 }
+
 .theme--light.v-data-table {
   background-color: transparent !important;
 }
@@ -377,5 +394,4 @@ export default {
   left: 70px;
   margin-top: 20px;
 }
-
 </style>

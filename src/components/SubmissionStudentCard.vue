@@ -39,7 +39,7 @@
         target="_blank"
       >
         <v-btn outlined color="cohortAccent" class="ma-2" small>
-          <v-icon left> mdi-text-box-search-outline </v-icon>
+          <v-icon left> {{ mdiTextBoxSearchOutline }} </v-icon>
           VIEW SUBMISSION
         </v-btn>
       </a>
@@ -114,6 +114,7 @@
 <script>
 import SolarSystem from "../components/SolarSystem";
 import MissionCompletedDialog from "../components/MissionCompletedDialog";
+import { mdiTextBoxSearchOutline } from "@mdi/js";
 
 import { mapState, mapGetters } from "vuex";
 import { dbMixins } from "../mixins/DbMixins";
@@ -147,6 +148,7 @@ export default {
   },
   data() {
     return {
+      mdiTextBoxSearchOutline,
       requester: null,
       responder: null,
     };
@@ -227,6 +229,7 @@ h1 {
     font-style: italic;
     padding-left: 10px;
   }
+
   .response-text {
     width: 90%;
     color: var(--v-missionAccent-base);

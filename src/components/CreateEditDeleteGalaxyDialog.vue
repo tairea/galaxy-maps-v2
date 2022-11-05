@@ -14,11 +14,11 @@
               small
               class="pa-o"
             >
-              <v-icon class="pr-2" small> mdi-pencil </v-icon>
+              <v-icon class="pr-2" small> {{ mdiPencil }} </v-icon>
               edit galaxy
             </v-btn>
             <v-btn v-else outlined color="baseAccent" v-bind="attrs" v-on="on">
-              <v-icon left> mdi-plus </v-icon>
+              <v-icon left> {{ mdiPlus }} </v-icon>
               CREATE GALAXY
             </v-btn>
           </template>
@@ -30,9 +30,9 @@
                 {{ edit ? "Edit Galaxy " + course.title : dialogTitle }}
               </p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent"
-                  >mdi-information-variant</v-icon
-                >
+                <v-icon left color="missionAccent">{{
+                  mdiInformationVariant
+                }}</v-icon>
                 <div>
                   <p class="dialog-description">
                     A Galaxy is a path of learning. Kind of like a course.
@@ -213,7 +213,7 @@
                 :dark="dark"
                 :light="!dark"
               >
-                <v-icon left> mdi-check </v-icon>
+                <v-icon left> {{ mdiCheck }} </v-icon>
                 UPDATE
               </v-btn>
               <v-btn
@@ -227,7 +227,7 @@
                 :dark="dark"
                 :light="!dark"
               >
-                <v-icon left> mdi-check </v-icon>
+                <v-icon left> {{ mdiCheck }} </v-icon>
                 CREATE GALAXY
               </v-btn>
 
@@ -241,7 +241,7 @@
                 :dark="dark"
                 :light="!dark"
               >
-                <v-icon left> mdi-delete </v-icon>
+                <v-icon left> {{ mdiDelete }} </v-icon>
                 DELETE
               </v-btn>
 
@@ -254,7 +254,7 @@
                 :dark="dark"
                 :light="!dark"
               >
-                <v-icon left> mdi-close </v-icon>
+                <v-icon left> {{ mdiClose }} </v-icon>
                 Cancel
               </v-btn>
             </div>
@@ -269,9 +269,9 @@
             <div class="dialog-header py-10">
               <p class="dialog-title">Delete Galaxy Map?</p>
               <div class="d-flex align-start">
-                <v-icon left color="missionAccent"
-                  >mdi-information-variant</v-icon
-                >
+                <v-icon left color="missionAccent">{{
+                  mdiInformationVariant
+                }}</v-icon>
                 <p class="dialog-description">
                   <strong>Warning!</strong> You have at least one person
                   currently active in this galaxy.
@@ -301,7 +301,7 @@
                 @click="changeToPrivate(course)"
                 :loading="deleting"
               >
-                <v-icon left> mdi-delete </v-icon>
+                <v-icon left> {{ mdiDelete }} </v-icon>
                 make private
               </v-btn>
               <v-btn
@@ -311,7 +311,7 @@
                 class="ml-4"
                 :loading="deleting"
               >
-                <v-icon left> mdi-delete </v-icon>
+                <v-icon left> {{ mdiDelete }} </v-icon>
                 confirm delete
               </v-btn>
 
@@ -322,7 +322,7 @@
                 @click="privateDialog = false"
                 :disabled="disabled || loading"
               >
-                <v-icon left> mdi-close </v-icon>
+                <v-icon left> {{ mdiClose }} </v-icon>
                 Cancel
               </v-btn>
             </div>
@@ -340,9 +340,9 @@
                 <strong>Warning!</strong> Delete Galaxy Map?
               </p>
               <div class="d-flex align-start">
-                <v-icon left color="missionAccent"
-                  >mdi-information-variant</v-icon
-                >
+                <v-icon left color="missionAccent">{{
+                  mdiInformationVariant
+                }}</v-icon>
                 <p class="dialog-description">
                   Are you sure you want to <strong>DELETE</strong> this
                   <span class="galaxy-text">Galaxy {{ course.title }}</span
@@ -383,7 +383,7 @@
                 :loading="deleting"
                 :disabled="destroy !== 'DESTROY'"
               >
-                <v-icon left> mdi-delete </v-icon>
+                <v-icon left> {{ mdiDelete }} </v-icon>
                 DELETE
               </v-btn>
 
@@ -394,7 +394,7 @@
                 @click="cancelDeleteDialog"
                 :disabled="disabled || loading"
               >
-                <v-icon left> mdi-close </v-icon>
+                <v-icon left> {{ mdiClose }} </v-icon>
                 Cancel
               </v-btn>
             </div>
@@ -411,11 +411,25 @@
 import { mapState, mapGetters } from "vuex";
 import { db, storage, functions } from "../store/firestoreConfig";
 import firebase from "firebase";
+import {
+  mdiPencil,
+  mdiPlus,
+  mdiClose,
+  mdiCheck,
+  mdiDelete,
+  mdiInformationVariant,
+} from "@mdi/js";
 
 export default {
   name: "CreateEditDeleteGalaxyDialog",
   props: ["showDialog", "edit", "draft", "courseToEdit"],
   data: () => ({
+    mdiPencil,
+    mdiPlus,
+    mdiClose,
+    mdiDelete,
+    mdiCheck,
+    mdiInformationVariant,
     notAuthor: false,
     dialog: false,
     dialogConfirm: false,
@@ -808,6 +822,7 @@ export default {
 .author-checkbox >>> .v-input--selection-controls__input.v-icon {
   color: purple !important;
 }
+
 // new dialog ui
 .create-dialog {
   color: var(--v-missionAccent-base);
@@ -936,6 +951,7 @@ export default {
     text-transform: uppercase;
     font-weight: 700;
   }
+
   .mission-text {
     color: var(--v-missionAccent-base);
     text-transform: uppercase;

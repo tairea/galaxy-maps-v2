@@ -7,7 +7,7 @@
           <template v-slot:activator="{ on, attrs }">
             <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on">
               <v-icon left>
-                mdi-rocket-launch-outline
+                {{ mdiRocketLaunchOutline }}
               </v-icon>
               DISCOVER GALAXY
             </v-btn>
@@ -18,30 +18,27 @@
             <div class="dialog-header">
               <p class="dialog-title">{{ dialogTitle }}</p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent"
-                  >mdi-information-variant</v-icon
-                >
+                <v-icon left color="missionAccent">{{
+                  mdiInformationVariant
+                }}</v-icon>
                 <p class="dialog-description">{{ dialogDescription }}</p>
               </div>
             </div>
 
+            <div class="create-dialog-content">
+              <!-- TITLE -->
+              <p class="dialog-description">Galaxy ID#:</p>
+              <v-text-field
+                class="input-field"
+                solo
+                color="missionAccent"
+                v-model="courseId"
+                background-color="white"
+              >
+              </v-text-field>
+            </div>
+            <!-- End create-dialog-content -->
 
-              <div class="create-dialog-content">
-                <!-- TITLE -->
-                <p class="dialog-description">Galaxy ID#:</p>
-                <v-text-field
-                  class="input-field"
-                  solo
-                  color="missionAccent"
-                  v-model="courseId"
-                  background-color="white"
-                ></v-text-field>
-
-              
-               
-              </div>
-              <!-- End create-dialog-content -->
-            
             <!-- ACTION BUTTONS -->
             <div class="action-buttons">
               <v-btn
@@ -51,21 +48,19 @@
                 class="mr-2"
               >
                 <v-icon left>
-                 mdi-rocket-launch-outline
+                  {{ mdiRocketLaunchOutline }}
                 </v-icon>
                 GO TO GALAXY
               </v-btn>
 
-             
               <v-btn
                 outlined
                 :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
                 class="ml-2"
                 @click="cancel"
-         
               >
                 <v-icon left>
-                  mdi-close
+                  {{ mdiClose }}
                 </v-icon>
                 Cancel
               </v-btn>
@@ -74,8 +69,6 @@
           </div>
           <!-- End create-dialog -->
         </v-dialog>
-
-        
       </v-col>
     </v-row>
   </v-container>
@@ -84,20 +77,26 @@
 <script>
 import { mapMutations } from "vuex";
 import { db, storage } from "../store/firestoreConfig";
+import {
+  mdiRocketLaunchOutline,
+  mdiClose,
+  mdiInformationVariant,
+} from "@mdi/js";
 
 export default {
   name: "DiscoverGalaxyButton",
   props: [],
   data: () => ({
+    mdiRocketLaunchOutline,
+    mdiClose,
+    mdiInformationVariant,
     dialog: false,
     dialogTitle: "Discover a hidden Galaxy",
     dialogDescription:
       "Discover a private Galaxy that has been created by another user",
-    courseId: "" ,
+    courseId: "",
   }),
-  mounted() {
-
-  },
+  mounted() {},
   methods: {
     cancel() {
       console.log("cancel");
@@ -105,7 +104,7 @@ export default {
       // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
     },
     routeToGalaxy(courseId) {
-     // route to galaxy
+      // route to galaxy
       this.$store.commit("setCurrentCourseId", courseId);
       this.$router.push({
         name: "GalaxyView",
@@ -120,7 +119,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
 // new dialog ui
 .create-dialog {
   color: var(--v-missionAccent-base);
@@ -144,7 +142,7 @@ export default {
     display: flex;
     flex-direction: column;
     flex-wrap: wrap;
-    transition:all 0.3s;
+    transition: all 0.3s;
   }
 
   .right-side {
@@ -152,7 +150,7 @@ export default {
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    transition:all 0.3s;
+    transition: all 0.3s;
     // flex-direction: column;
     // border-left: 1px solid var(--v-missionAccent-base);
 
@@ -241,6 +239,7 @@ export default {
     text-transform: uppercase;
     font-weight: 700;
   }
+
   .mission-text {
     color: var(--v-missionAccent-base);
     text-transform: uppercase;

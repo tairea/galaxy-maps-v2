@@ -8,14 +8,13 @@
     <div v-else class="landing-content">
       <p class="gm-title">GALAXY MAPS</p>
       <p class="overline">Galaxy Maps is a new digital learning experience</p>
-      <p class="overline">Galaxy Maps are learning paths created by the community</p>
+      <p class="overline">
+        Galaxy Maps are learning paths created by the community
+      </p>
       <p class="overline">Discover new Galaxies and navigate your learning</p>
 
       <!-- <v-btn outlined color="baseAccent" class="mt-8" :to="{ path: 'login' }"> -->
       <v-btn outlined color="baseAccent" class="mt-8" to="/login">
-        <!-- <v-icon small>
-        mdi-account-multiple-plus
-      </v-icon> -->
         SIGN IN TO GALAXY MAPS
       </v-btn>
       <!-- Background maps video -->
@@ -102,6 +101,7 @@ export default {
   color: var(--v-baseAccent-base);
   letter-spacing: 15px;
 }
+
 .bg {
   background: var(--v-background-base);
   // overflow: hidden;

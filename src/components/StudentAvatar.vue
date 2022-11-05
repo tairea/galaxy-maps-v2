@@ -24,11 +24,11 @@
         :alt="person.firstName"
         style="object-fit: cover"
       />
-      <!-- <v-icon v-if="hover">mdi-pencil</v-icon> -->
-      <v-icon v-else>mdi-account</v-icon>
+      <!-- <v-icon v-if="hover">{{mdiPencil}}</v-icon> -->
+      <v-icon v-else>{{ mdiAccount }}</v-icon>
       <v-fade-transition>
         <v-overlay v-if="onhover" absolute color="baseAccent">
-          <v-icon large @click="onButtonClick">mdi-pencil</v-icon>
+          <v-icon large @click="onButtonClick">{{ mdiPencil }}</v-icon>
         </v-overlay>
       </v-fade-transition>
       <input
@@ -49,6 +49,8 @@ import { mapState, mapActions } from "vuex";
 import firebase from "firebase";
 import { db, storage } from "../store/firestoreConfig";
 
+import { mdiPencil, mdiAccount } from "@mdi/js";
+
 export default {
   name: "StudentAvatar",
   props: ["size"],
@@ -58,6 +60,8 @@ export default {
   },
   data() {
     return {
+      mdiPencil,
+      mdiAccount,
       editProfile: false,
       selectedFile: {},
       uploading: false,

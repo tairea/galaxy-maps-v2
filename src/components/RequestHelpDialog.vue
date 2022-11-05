@@ -6,7 +6,9 @@
           <!-- REQUEST HELP BUTTON -->
           <template v-slot:activator="{ on, attrs }">
             <v-btn color="missionAccent" v-bind="attrs" v-on="on" icon x-large>
-              <v-icon color="missionAccent">mdi-hand-front-left-outline</v-icon>
+              <v-icon color="missionAccent">{{
+                mdiHandFrontLeftOutline
+              }}</v-icon>
             </v-btn>
           </template>
 
@@ -21,9 +23,9 @@
                 ?
               </p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent"
-                  >mdi-information-variant</v-icon
-                >
+                <v-icon left color="missionAccent">{{
+                  mdiInformationVariant
+                }}</v-icon>
                 <p class="dialog-description">{{ dialogDescription }}</p>
               </div>
             </div>
@@ -57,7 +59,7 @@
                 :dark="dark"
                 :light="!dark"
               >
-                <v-icon left> mdi-check </v-icon>
+                <v-icon left> {{ mdiCheck }} </v-icon>
                 SUBMIT REQUEST FOR HELP
               </v-btn>
 
@@ -70,7 +72,7 @@
                 :dark="dark"
                 :light="!dark"
               >
-                <v-icon left> mdi-close </v-icon>
+                <v-icon left> {{ mdiClose }} </v-icon>
                 Cancel
               </v-btn>
               <!-- End action-buttons -->
@@ -94,12 +96,22 @@ import { db, functions } from "../store/firestoreConfig";
 import { studentRequestForHelpXAPIStatement } from "../lib/veracityLRS";
 import { dbMixins } from "../mixins/DbMixins";
 import { mapState, mapGetters } from "vuex";
+import {
+  mdiHandFrontLeftOutline,
+  mdiInformationVariant,
+  mdiCheck,
+  mdiClose,
+} from "@mdi/js";
 
 export default {
   name: "RequestHelpDialog",
   mixins: [dbMixins],
   props: ["topicId", "taskId", "task", "on", "attrs"],
   data: () => ({
+    mdiHandFrontLeftOutline,
+    mdiInformationVariant,
+    mdiCheck,
+    mdiClose,
     dialog: false,
     dialogDescription:
       "Write what you need help with, then submit, and your instructor will be notified to leave you a response.",

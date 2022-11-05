@@ -2,13 +2,8 @@
   <div class="tab-content">
     <v-row class="pt-2 pl-2 pb-0">
       <v-col cols="6" class="pa-0">
-        <v-btn 
-          :dark="dark"
-          :light="!dark"
-          text 
-          @click="downloadCsv()"
-        >
-          <v-icon small color="missionAccent">mdi-download</v-icon>
+        <v-btn :dark="dark" :light="!dark" text @click="downloadCsv()">
+          <v-icon small color="missionAccent">{{ mdiDownload }}</v-icon>
           <span class="downloadCsv ml-2">download csv template</span>
         </v-btn>
       </v-col>
@@ -27,13 +22,19 @@
             class="form-control"
             @change="loadCSV"
             ref="csvFile"
-          ></v-file-input>
+          >
+          </v-file-input>
         </div>
       </v-col>
     </v-row>
 
     <div v-if="showTable">
-      <v-simple-table :dark="dark" :light="!dark" v-if="parse_csv" class="table">
+      <v-simple-table
+        :dark="dark"
+        :light="!dark"
+        v-if="parse_csv"
+        class="table"
+      >
         <thead>
           <tr>
             <th
@@ -67,11 +68,7 @@
         width="40%"
         >{{ buttonLabel }}
       </v-btn>
-      <v-btn
-        @click="close"
-        color="baseAccent"
-        depressed
-        width="40%"
+      <v-btn @click="close" color="baseAccent" depressed width="40%"
         >cancel
       </v-btn>
     </v-row>
@@ -79,8 +76,9 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex"
-import { dbMixins } from "../mixins/DbMixins"
+import { mapGetters } from "vuex";
+import { dbMixins } from "../mixins/DbMixins";
+import { mdiDownload } from "@mdi/js";
 
 export default {
   name: "StudentImportCsv",
@@ -88,6 +86,7 @@ export default {
   components: {},
   data() {
     return {
+      mdiDownload,
       dialog: false,
       channel_name: "",
       channel_fields: [],
@@ -100,56 +99,62 @@ export default {
       buttonLabel: "Add Students",
       loading: false,
       disabled: false,
-      csvColumns: ["Nsn Number","First Name","Last Name","Student Email","Parent Email"]
+      csvColumns: [
+        "Nsn Number",
+        "First Name",
+        "Last Name",
+        "Student Email",
+        "Parent Email",
+      ],
     };
   },
   filters: {
-    capitalize: function(str) {
+    capitalize: function (str) {
       return str.charAt(0).toUpperCase() + str.slice(1);
     },
   },
   computed: {
-    ...mapGetters(['currentCohort']),
-    dark () {
-      return this.$vuetify.theme.isDark
-    }
+    ...mapGetters(["currentCohort"]),
+    dark() {
+      return this.$vuetify.theme.isDark;
+    },
   },
   methods: {
     close() {
-      this.dialog = false
-      this.channel_name = ""
-      this.channel_fields = []
-      this.channel_entries = []
-      this.parse_header = []
-      this.parse_csv = []
-      this.sortOrders = {}
-      this.sortKey = ""
-      this.showTable = false
+      this.dialog = false;
+      this.channel_name = "";
+      this.channel_fields = [];
+      this.channel_entries = [];
+      this.parse_header = [];
+      this.parse_csv = [];
+      this.sortOrders = {};
+      this.sortKey = "";
+      this.showTable = false;
     },
     saveStudents() {
       this.loading = true;
-      console.log("saving students")
+      console.log("saving students");
       let counter = 0;
       // Add a new document in collection "people"
       this.parse_csv.forEach(async (student, index, array) => {
-        console.log("saving student: ", index, ":", student)
+        console.log("saving student: ", index, ":", student);
 
         // resctructure data to match db fields
         const person = {
           ...student,
           email: student.studentEmail,
-          nsn: student.nsnNumber
-        }
-        delete person.nsnNumber
-        delete person.studentEmail
+          nsn: student.nsnNumber,
+        };
+        delete person.nsnNumber;
+        delete person.studentEmail;
 
-        console.log('person: ', person)
+        console.log("person: ", person);
 
         // check if student exisits
         const personExists = await this.MXgetPersonByEmail(person.email);
 
         if (personExists) {
-          console.log('personExisits: ', personExists)
+          console.log("personExisits: ", personExists);
           // add existing person to cohort
           this.MXaddExistingUserToCohort(personExists)
             .then(() => {
@@ -161,20 +166,20 @@ export default {
               }
             })
             .then(() => {
-              console.log('exisitng person successfully added')
+              console.log("exisitng person successfully added");
               counter++;
-                // check all students are saved to DB
-                if (counter === array.length) {
-                  this.saveStudentsCompleted();
-                }
+              // check all students are saved to DB
+              if (counter === array.length) {
+                this.saveStudentsCompleted();
+              }
             });
         } else {
-          console.log("creating new student: ", index, ":", person)
+          console.log("creating new student: ", index, ":", person);
           // create user and then add them to cohort
           this.MXcreateUser(person)
             .then(() => this.MXaddStudentToCohort(person))
             .then((docRef) => {
-              console.log("new student successfully added")
+              console.log("new student successfully added");
               counter++;
               // check all students are saved to DB
               if (counter === array.length) {
@@ -183,7 +188,7 @@ export default {
             })
             .catch((error) => {
               console.error("Error writing document: ", error);
-          });
+            });
         }
       });
     },
@@ -195,7 +200,7 @@ export default {
       this.disabled = true;
       this.dialog = false;
     },
-    sortBy: function(key) {
+    sortBy: function (key) {
       var vm = this;
       vm.sortKey = key;
       vm.sortOrders[key] = vm.sortOrders[key] * -1;
@@ -211,7 +216,7 @@ export default {
       vm.parse_header = vm.parse_header.map((header) => {
         return vm.camelize(header);
       });
-      lines[0].split(",").forEach(function(key) {
+      lines[0].split(",").forEach(function (key) {
         vm.sortOrders[key] = 1;
       });
 
@@ -230,7 +235,7 @@ export default {
         result.push(obj);
       });
 
-      var students = result.filter(student => (student.firstName))
+      var students = result.filter((student) => student.firstName);
 
       return students; // JavaScript object
     },
@@ -243,13 +248,13 @@ export default {
         var reader = new FileReader();
         reader.readAsText(e);
         // Handle errors load
-        reader.onload = function(event) {
+        reader.onload = function (event) {
           event.target.result;
           var csv = event.target.result;
           vm.parse_csv = vm.csvJSON(csv);
           console.log("csv = ", vm.parse_csv);
         };
-        reader.onerror = function(evt) {
+        reader.onerror = function (evt) {
           if (evt.target.error.name == "NotReadableError") {
             alert("Cannot read file !");
           }
@@ -260,7 +265,7 @@ export default {
       console.log("this.parse_csv", this.parse_csv);
     },
     camelize(str) {
-      return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
+      return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {
         if (+match === 0) return ""; // or if (/\s+/.test(match)) for white spaces
         return index === 0 ? match.toLowerCase() : match.toUpperCase();
       });
@@ -269,14 +274,14 @@ export default {
       this.disabled = false;
       this.buttonLabel = "Add Students";
     },
-    downloadCsv () {
-      var csv = this.csvColumns.join(',') + '\n'
-      var hiddenElement = document.createElement('a')
-      hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv)
-      hiddenElement.target = '_blank'
-      hiddenElement.download = 'students-list.csv'
-      hiddenElement.click()
-    }
+    downloadCsv() {
+      var csv = this.csvColumns.join(",") + "\n";
+      var hiddenElement = document.createElement("a");
+      hiddenElement.href = "data:text/csv;charset=utf-8," + encodeURI(csv);
+      hiddenElement.target = "_blank";
+      hiddenElement.download = "students-list.csv";
+      hiddenElement.click();
+    },
   },
 };
 </script>
@@ -284,7 +289,7 @@ export default {
 <style lang="scss" scoped>
 .downloadCsv {
   font-size: 0.8rem;
-  font-weight:400;
+  font-weight: 400;
   text-transform: uppercase;
   color: var(--v-missionAccent-base);
 }
@@ -294,11 +299,11 @@ export default {
   margin: 20px;
   border: 1px solid var(--v-missionAccent-base);
   border-radius: 0px;
-  padding: 5px
+  padding: 5px;
 }
 
 .theme--dark.v-data-table {
-  background: #141e30
+  background: #141e30;
 }
 
 // ---- SCROLLBAR STYLES ----
@@ -337,5 +342,4 @@ export default {
     color: var(--v-missionAccent-base);
   }
 }
-
 </style>

@@ -3,9 +3,18 @@
     <!-- CREATE BUTTON -->
     <template v-slot:activator="{ on, attrs }">
       <!-- ASSIGN COHORT -->
-      <v-btn outlined
-        :color="admin && course.status == 'submitted' && course.public == true ? 'cohortAccent' : 'galaxyAccent'"
-        v-bind="attrs" v-on="on" class="publishButton d-inline-flex text-truncate" @click="getTopicsWithoutTasks">
+      <v-btn
+        outlined
+        :color="
+          admin && course.status == 'submitted' && course.public == true
+            ? 'cohortAccent'
+            : 'galaxyAccent'
+        "
+        v-bind="attrs"
+        v-on="on"
+        class="publishButton d-inline-flex text-truncate"
+        @click="getTopicsWithoutTasks"
+      >
         publish galaxy
       </v-btn>
       <!-- ASSIGN GALAXY -->
@@ -16,10 +25,14 @@
       <div class="dialog-header">
         <div class="d-flex mb-4">
           <p class="dialog-title ma-0">Important</p>
-          <v-icon color="missionAccent" class="ml-2">mdi-alert-outline</v-icon>
+          <v-icon color="missionAccent" class="ml-2">{{
+            mdiAlertOutline
+          }}</v-icon>
         </div>
         <div class="d-flex align-center">
-          <v-icon left color="missionAccent">mdi-information-variant</v-icon>
+          <v-icon left color="missionAccent">{{
+            mdiInformationVariant
+          }}</v-icon>
           <p class="dialog-description">
             System's must have <strong>AT LEAST ONE MISSION</strong>
           </p>
@@ -33,7 +46,11 @@
           </p>
 
           <ul>
-            <li v-for="topic in topicsWithoutTasks" :key="topic.id" class="overline">
+            <li
+              v-for="topic in topicsWithoutTasks"
+              :key="topic.id"
+              class="overline"
+            >
               {{ topic.label }}
             </li>
           </ul>
@@ -45,9 +62,14 @@
       </div>
       <!-- ACTION BUTTONS -->
       <div class="action-buttons">
-        <v-btn outlined :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'" class="ml-2" @click="close"
-          :disabled="loading">
-          <v-icon left> mdi-close </v-icon>
+        <v-btn
+          outlined
+          :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
+          class="ml-2"
+          @click="close"
+          :disabled="loading"
+        >
+          <v-icon left> {{ mdiClose }} </v-icon>
           OK
         </v-btn>
       </div>
@@ -58,19 +80,31 @@
       <div class="dialog-header">
         <p class="dialog-title">publish galaxy</p>
         <div class="d-flex align-center">
-          <v-icon left color="missionAccent">mdi-information-variant</v-icon>
-          <div v-if="admin && course.status == 'submitted' && course.public == true" class="dialog-description">
-            <p style="font-weight: 600; color: var(--v-cohortAccent-base)">I have reviewed this Galaxy Map</p>
-            <p>Publish
-              <span style="font-weight: 600; color: var(--v-galaxyAccent-base)">{{
-                  course.title
-              }}</span>
+          <v-icon left color="missionAccent">{{
+            mdiInformationVariant
+          }}</v-icon>
+          <div
+            v-if="
+              admin && course.status == 'submitted' && course.public == true
+            "
+            class="dialog-description"
+          >
+            <p style="font-weight: 600; color: var(--v-cohortAccent-base)">
+              I have reviewed this Galaxy Map
+            </p>
+            <p>
+              Publish
+              <span
+                style="font-weight: 600; color: var(--v-galaxyAccent-base)"
+                >{{ course.title }}</span
+              >
               galaxy to make publically visible
             </p>
           </div>
           <p v-else class="dialog-description">
-            Publish this Galaxy <span style="font-weight: 600; color: var(--v-galaxyAccent-base)">{{
-                course.title
+            Publish this Galaxy
+            <span style="font-weight: 600; color: var(--v-galaxyAccent-base)">{{
+              course.title
             }}</span>
           </p>
         </div>
@@ -87,9 +121,25 @@
             <strong>PUBLIC</strong> (discoverable by all Galaxy Maps users)
           </p>
 
-          <v-radio-group row v-model="courseOptions.public" color="missionAccent" :light="!dark" :dark="dark">
-            <v-radio label="private" :value="false" color="missionAccent" class="label-text"></v-radio>
-            <v-radio label="public" :value="true" color="missionAccent" class="label-text"></v-radio>
+          <v-radio-group
+            row
+            v-model="courseOptions.public"
+            color="missionAccent"
+            :light="!dark"
+            :dark="dark"
+          >
+            <v-radio
+              label="private"
+              :value="false"
+              color="missionAccent"
+              class="label-text"
+            ></v-radio>
+            <v-radio
+              label="public"
+              :value="true"
+              color="missionAccent"
+              class="label-text"
+            ></v-radio>
           </v-radio-group>
         </div>
         <!-- Is the course editable? -->
@@ -111,38 +161,69 @@
           </v-radio-group>
         </div> -->
         <p class="caption ma-0" v-if="courseOptions.public">
-          <i>(Public courses need to be submitted for review by Galaxy Map
-            moderators)</i>
+          <i
+            >(Public courses need to be submitted for review by Galaxy Map
+            moderators)</i
+          >
         </p>
       </div>
       <!-- ACTION BUTTONS -->
       <div v-if="admin" class="action-buttons">
-        <v-btn outlined
-          :color="admin && course.status == 'submitted' && course.public == true ? 'cohortAccent' : 'galaxyAccent'"
-          @click="publishCourse()" :loading="loading">
-          <v-icon left> mdi-check </v-icon>
+        <v-btn
+          outlined
+          :color="
+            admin && course.status == 'submitted' && course.public == true
+              ? 'cohortAccent'
+              : 'galaxyAccent'
+          "
+          @click="publishCourse()"
+          :loading="loading"
+        >
+          <v-icon left> {{ mdiCheck }} </v-icon>
           publish
         </v-btn>
 
-        <v-btn outlined :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'" class="ml-2" @click="close"
-          :disabled="loading">
-          <v-icon left> mdi-close </v-icon>
+        <v-btn
+          outlined
+          :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
+          class="ml-2"
+          @click="close"
+          :disabled="loading"
+        >
+          <v-icon left> {{ mdiClose }} </v-icon>
           CANCEL
         </v-btn>
       </div>
       <div v-else class="action-buttons">
-        <v-btn v-if="courseOptions.public" outlined color="baseAccent" @click="submitCourse()" :loading="loading">
-          <v-icon left> mdi-send </v-icon>
+        <v-btn
+          v-if="courseOptions.public"
+          outlined
+          color="baseAccent"
+          @click="submitCourse()"
+          :loading="loading"
+        >
+          <v-icon left> {{ mdiSend }} </v-icon>
           SUBMIT
         </v-btn>
-        <v-btn v-else outlined color="baseAccent" @click="publishCourse()" :loading="loading">
-          <v-icon left> mdi-check </v-icon>
+        <v-btn
+          v-else
+          outlined
+          color="baseAccent"
+          @click="publishCourse()"
+          :loading="loading"
+        >
+          <v-icon left> {{ mdiCheck }} </v-icon>
           publish
         </v-btn>
 
-        <v-btn outlined :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'" class="ml-2" @click="close"
-          :disabled="loading">
-          <v-icon left> mdi-close </v-icon>
+        <v-btn
+          outlined
+          :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
+          class="ml-2"
+          @click="close"
+          :disabled="loading"
+        >
+          <v-icon left> {{ mdiClose }} </v-icon>
           CANCEL
         </v-btn>
       </div>
@@ -154,6 +235,14 @@
 import { db, functions } from "@/store/firestoreConfig";
 import { mapGetters, mapMutations, mapState } from "vuex";
 
+import {
+  mdiAlertOutline,
+  mdiInformationVariant,
+  mdiClose,
+  mdiCheck,
+  mdiSend,
+} from "@mdi/js";
+
 import { dbMixins } from "@/mixins/DbMixins";
 
 export default {
@@ -161,6 +250,11 @@ export default {
   mixins: [dbMixins],
   props: ["course", "courseTasks"],
   data: () => ({
+    mdiAlertOutline,
+    mdiInformationVariant,
+    mdiClose,
+    mdiCheck,
+    mdiSend,
     dialog: false,
     loading: false,
     courseOptions: {

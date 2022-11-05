@@ -12,11 +12,10 @@
               outlined
               small
             >
-              <v-icon left small color="missionAccent"
-                >mdi-thumb-down-outline</v-icon
-              >
+              <v-icon left small color="missionAccent">{{
+                mdiThumbDownOutline
+              }}</v-icon>
               DECLINE SUBMISSION
-              <!-- <v-icon color="missionAccent">mdi-hand-front-left-outline</v-icon> -->
             </v-btn>
           </template>
 
@@ -101,7 +100,7 @@
                 class="my-3 d-flex justify-center"
               >
                 <v-btn outlined color="cohortAccent" class="mb-4" large>
-                  <v-icon left> mdi-text-box-search-outline </v-icon>
+                  <v-icon left> {{ mdiTextBoxSearchOutline }} </v-icon>
                   VIEW SUBMISSION
                 </v-btn>
               </a>
@@ -135,9 +134,9 @@
                 v-bind="attrs"
                 v-on="on"
               >
-                <v-icon left color="missionAccent"
-                  >mdi-alert-octagon-outline</v-icon
-                >
+                <v-icon left color="missionAccent">{{
+                  mdiAlertOctagonOutline
+                }}</v-icon>
                 DECLINE SUBMISSION
               </v-btn>
 
@@ -148,7 +147,7 @@
                 class="ml-2"
                 @click="cancel"
               >
-                <v-icon left> mdi-close </v-icon>
+                <v-icon left> {{ mdiClose }} </v-icon>
                 Cancel
               </v-btn>
               <!-- End action-buttons -->
@@ -166,19 +165,28 @@
 </template>
 
 <script>
-import firebase from "firebase/app";
 import moment from "moment";
 
 import { db } from "../store/firestoreConfig";
 import { teacherRespondedSubmissionDeclinedXAPIStatement } from "../lib/veracityLRS";
 import { dbMixins } from "../mixins/DbMixins";
 import { mapState, mapGetters } from "vuex";
+import {
+  mdiThumbDownOutline,
+  mdiTextBoxSearchOutline,
+  mdiAlertOctagonOutline,
+  mdiClose,
+} from "@mdi/js";
 
 export default {
   name: "SubmissionResponseDialog",
   mixins: [dbMixins],
   props: ["submission", "requesterPerson", "on", "attrs"],
   data: () => ({
+    mdiThumbDownOutline,
+    mdiTextBoxSearchOutline,
+    mdiAlertOctagonOutline,
+    mdiClose,
     dialog: false,
     loading: false,
     deleting: false,
@@ -300,9 +308,11 @@ export default {
       .requester-image {
         width: 10%;
       }
+
       .request-details-person {
         width: 50%;
       }
+
       .request-details-context {
         width: 40%;
       }
@@ -386,11 +396,13 @@ export default {
   border-top: 0;
   border-bottom-color: var(--v-missionAccent-base);
 }
+
 .speech-bubble:before {
   top: -30px;
   z-index: 1;
   border-bottom-color: rgba(0, 0, 0, 0.095);
 }
+
 .theme--light.v-data-table {
   background-color: transparent !important;
 }
