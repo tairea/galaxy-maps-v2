@@ -273,15 +273,14 @@ export default {
     },
   },
   watch: {
-    // courseTasks: function (n, o) {
-    //   console.log("from watch publish. course TASKS", n);
-    // },
-    // currentCourseNodes: function (n, o) {
-    //   console.log("from watch publish. course NODES", n);
-    // },
-  },
-  mounted() {
-    // console.log("from publish. course TASKS", this.courseTasks);
+    course: {
+      immediate: true,
+      deep: true,
+      handler(newVal) {
+        console.log("newVal", newVal);
+        this.courseOptions.public = newVal.public;
+      },
+    },
   },
   methods: {
     ...mapMutations(["setCurrentCourse"]),
@@ -304,7 +303,7 @@ export default {
       this.dialog = false;
       this.loading = false;
       this.courseOptions = {
-        public: false,
+        public: this.course.public,
       };
     },
 

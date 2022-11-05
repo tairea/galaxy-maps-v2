@@ -3,7 +3,7 @@
 import firebase from "firebase";
 import { db, functions } from "../store/firestoreConfig";
 import { getCourseById } from "../lib/ff"
-import {mapGetters} from 'vuex'
+import { mapGetters } from 'vuex'
 
 export const dbMixins = {
   computed: {
@@ -12,16 +12,16 @@ export const dbMixins = {
   methods: {
     MXaddExistingUserToCohort(person, cohort) {
       return this.MXaddStudentToCohort(person, cohort)
-      .then(() => {
-        if (person.inviter?.length == 0) person.inviter = this.person.firstName + ' ' + this.person.lastName;
-        this.MXsendNewCohortEmail(person, cohort);
-      }).then(() => {
-        this.$store.commit("setSnackbar", {
-          show: true,
-          text: "Student added to Cohort",
-          color: "baseAccent",
-        });
-      })
+        .then(() => {
+          if (person.inviter?.length == 0) person.inviter = this.person.firstName + ' ' + this.person.lastName;
+          this.MXsendNewCohortEmail(person, cohort);
+        }).then(() => {
+          this.$store.commit("setSnackbar", {
+            show: true,
+            text: "Student added to Cohort",
+            color: "baseAccent",
+          });
+        })
     },
     MXaddStudentToCohort(student, currentCohort) {
       let cohort = currentCohort ? currentCohort : this.currentCohort
@@ -35,7 +35,10 @@ export const dbMixins = {
           console.error("Error writing document: ", error);
         });
     },
-    MXsendNewCohortEmail(profile, cohort) {
+    async MXsendNewCohortEmail(profile, cohort) {
+      if (!profile.email) {
+        profile = await this.MXgetPersonByIdFromDB(profile.id)
+      }
       const person = {
         ...profile,
         cohort: cohort ? cohort.name : this.currentCohort.name,

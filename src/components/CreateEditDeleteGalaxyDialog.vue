@@ -419,6 +419,7 @@ import {
   mdiDelete,
   mdiInformationVariant,
 } from "@mdi/js";
+import clone from "lodash/clone";
 
 export default {
   name: "CreateEditDeleteGalaxyDialog",
@@ -486,7 +487,8 @@ export default {
   },
   mounted() {
     if (this.courseToEdit) {
-      Object.assign(this.course, this.courseToEdit);
+      console.log("cloning");
+      this.course = clone(this.courseToEdit);
     }
   },
   watch: {
@@ -602,8 +604,10 @@ export default {
     },
     updateCourse(course) {
       this.loading = true;
-      if (course.public !== this.courseToEdit.public)
+      if (course.public !== this.courseToEdit.public) {
         course.status = "drafting";
+      }
+      console.log("course.status", course.status);
       db.collection("courses")
         .doc(course.id)
         .update(course)
