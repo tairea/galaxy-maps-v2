@@ -357,7 +357,7 @@ Request: ${request}
 To respond to ${student}, please login to https://galaxymaps.io to view your course
   
 Galaxy Maps Team`;
-  
+
   mailOptions.html = `<p>Hi ${teacher},</p>
   </br> 
 <p>Your student ${student} has sent a request for help.</p>
@@ -408,7 +408,7 @@ Instructors response: ${response}
 Login to https://galaxymaps.io to continue your course.
   
 Galaxy Maps Team`;
-  
+
   mailOptions.html = `<p>Hi ${student},</p>
   </br> 
 <p>Your instructor ${teacher} has sent a response to your request for help.</p>
@@ -459,7 +459,7 @@ Submission: ${submission}
 To respond to ${student}'s submission and unlock the next task from them, please login to https://galaxymaps.io to view your course
   
 Galaxy Maps Team`;
-  
+
   mailOptions.html = `<p>Hi ${teacher},</p>
   </br> 
 <p>Your student ${student} has submitted work for you review.</p>
@@ -512,7 +512,7 @@ Instructors message: ${message}
 Login to https://galaxymaps.io to continue your course.
   
 Galaxy Maps Team`;
-  
+
   mailOptions.html = `<p><strong>Hi ${student},</strong></p>
 <p>Your instructor ${teacher} has reviewed your submission to ${task}.</p>
 </br> 
@@ -567,7 +567,7 @@ async function getPersonsTeachers(person) {
       querySnapshot.forEach(async (doc) => {
         doc.data().teachers.forEach(teacher => {
           let profile = {
-            id: teacher, 
+            id: teacher,
             cohort: doc.data().name
           }
           teachers.push(profile)
@@ -576,16 +576,16 @@ async function getPersonsTeachers(person) {
 
       return teachers
     }).catch(err => console.log('err: ', err))
-    
-    return teachers
+
+  return teachers
 };
 
 exports.scheduledFunction = functions.pubsub.schedule('0 8 * * *').timeZone('Pacific/Auckland').onRun((context) => {
-// exports.scheduledFunction = functions.pubsub.schedule('every 2 minutes').onRun((context) => {
+  // exports.scheduledFunction = functions.pubsub.schedule('every 2 minutes').onRun((context) => {
   checkInActvity()
 });
-  
-async function checkInActvity () {
+
+async function checkInActvity() {
   functions.logger.log('checking activity')
 
   const oneWeek = getPreviousDate(7);
@@ -602,15 +602,15 @@ async function checkInActvity () {
         Object.assign(userStatus, obj);
       });
     })
-  
-    functions.logger.log('1 week ago: ', oneWeek)
-    functions.logger.log('2 weeks ago: ', twoWeeks)
+
+  functions.logger.log('1 week ago: ', oneWeek)
+  functions.logger.log('2 weeks ago: ', twoWeeks)
 
   // if user is online push into the array
   if (userStatus) {
     const users = []
-    for (const user in userStatus) { 
-      if (userStatus[user].state == 'offline') users.push(Object.assign(userStatus[user], {id: user}));
+    for (const user in userStatus) {
+      if (userStatus[user].state == 'offline') users.push(Object.assign(userStatus[user], { id: user }));
     }
 
     const inActiveOneWeek = []
@@ -633,17 +633,17 @@ async function checkInActvity () {
 
         functions.logger.log('send one week in active email to student :', person.email)
         sendStudentInActive(student, studentEmail, duration)
-        
+
         const teacherProfiles = await Promise.all(teachers.map(async teacher => {
           let fullProfile = await getPersonByIdFromDB(teacher.id)
           return {
-            ...fullProfile, 
+            ...fullProfile,
             cohort: teacher.cohort
           }
         }))
 
         teacherProfiles.forEach(profile => {
-          const {email, cohort} = profile
+          const { email, cohort } = profile
           const teacher = profile.firstName + ' ' + profile.lastName
           sendTeacherStudentInActive(student, studentEmail, duration, email, cohort, teacher)
         })
@@ -662,16 +662,16 @@ async function checkInActvity () {
 
         functions.logger.log('send two weeks in active email to student :', person.email)
         sendStudentInActive(student, studentEmail, duration)
-        
+
         const teacherProfiles = await Promise.all(teachers.map(async teacher => {
           let fullProfile = await getPersonByIdFromDB(teacher.id)
           return {
-            ...fullProfile, 
+            ...fullProfile,
             cohort: teacher.cohort
           }
         }))
         teacherProfiles.forEach(profile => {
-          const {email, cohort} = profile
+          const { email, cohort } = profile
           const teacher = profile.firstName + ' ' + profile.lastName
           sendTeacherStudentInActive(student, studentEmail, duration, email, cohort, teacher)
         })
@@ -697,7 +697,7 @@ It has been ${duration} since you last signed into Galaxy Maps.
 Sign in to https://galaxymaps.io now to continue your learning journey.
   
 Galaxy Maps Team`;
-  
+
   mailOptions.html = `<p><strong>Hi ${student},</strong></p>
 <p>It has been <strong>${duration}</strong> since you last signed into Galaxy Maps.</p>
 </br> 
@@ -707,35 +707,35 @@ Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);
   functions.logger.log("student low activity alert sent", email);
   return null;
-  
+
 }
 
 async function sendTeacherStudentInActive(student, studentEmail, duration, email, cohort, teacher) {
-    // send email to student 
-    const mailOptions = {
-      from: `${APP_NAME} <noreply@galaxymaps.io>`,
-      to: email
-    };
-  
-    // The user subscribed to the newsletter.
-    mailOptions.subject = `Student Activity Alert`;
-    mailOptions.text = `Hi ${teacher}, 
+  // send email to student 
+  const mailOptions = {
+    from: `${APP_NAME} <noreply@galaxymaps.io>`,
+    to: email
+  };
+
+  // The user subscribed to the newsletter.
+  mailOptions.subject = `Student Activity Alert`;
+  mailOptions.text = `Hi ${teacher}, 
   
   It has been ${duration} since your student: ${student} in cohort: ${cohort} last signed into Galaxy Maps. 
   
   We recommend checking in on them via email ${studentEmail} to encourage and support them on their learning journey.
     
   Galaxy Maps Team`;
-    
-    mailOptions.html = `<p><strong>Hi ${teacher},</strong></p>
+
+  mailOptions.html = `<p><strong>Hi ${teacher},</strong></p>
   <p>It has been <strong>${duration}</strong> since your student: <strong>${student}</strong> in cohort: <strong>${cohort}</strong> last signed into Galaxy Maps.</p>
   </br> 
   <p>  We recommend checking in on them via email <a href="mailto:${studentEmail}">${studentEmail}</a> to encourage and support them on their learning journey.</p>
   </br> 
   <p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
-    await mailTransport.sendMail(mailOptions);
-    functions.logger.log("student low activity alert sent to teacher", email);
-    return null;
+  await mailTransport.sendMail(mailOptions);
+  functions.logger.log("student low activity alert sent to teacher", email);
+  return null;
 }
 
 //====== ACTIVE COURSE DELETED ==================
@@ -760,7 +760,7 @@ Your instructor ${teacher} has deleted the Galaxy ${course}.
 If you have any questions or concerns about this please contact your instructor by email at ${teacherEmail}
   
 Galaxy Maps Team`;
-  
+
   mailOptions.html = `<p><strong>Hi ${student},</strong></p>
 <p>Your instructor ${teacher} has deleted the Galaxy ${course}.</p>
 </br> 
