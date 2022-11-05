@@ -4,7 +4,7 @@
       <!-- CREATE BUTTON -->
       <template v-slot:activator="{ on, attrs }">
         <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on">
-          <v-icon left> mdi-plus </v-icon>
+          <v-icon left> {{ mdiPlus }} </v-icon>
           CREATE ADMIN
         </v-btn>
       </template>
@@ -15,7 +15,9 @@
         <div class="dialog-header">
           <p class="dialog-title">Add Admin</p>
           <div class="d-flex align-center">
-            <v-icon left color="missionAccent">mdi-information-variant</v-icon>
+            <v-icon left color="missionAccent">{{
+              mdiInformationVariant
+            }}</v-icon>
             <p class="dialog-description">
               An admin has unlimited access to records and publish submitted
               galaxies
@@ -105,10 +107,13 @@
 <script>
 import { mapState, mapGetters, mapActions } from "vuex";
 import { functions } from "../store/firestoreConfig";
+import { mdiPlus, mdiInformationVariant } from "@mdi/js";
 
 export default {
   name: "CreateAdminDialog",
   data: () => ({
+    mdiPlus,
+    mdiInformationVariant,
     administrator: "",
     addingAdmin: false,
     dialog: false,

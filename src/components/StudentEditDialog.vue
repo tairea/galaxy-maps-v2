@@ -12,7 +12,7 @@
         color="baseAccent"
         x-small
       >
-        <v-icon small> mdi-pencil </v-icon>
+        <v-icon small> {{ mdiPencil }} </v-icon>
       </v-btn>
       <v-btn
         v-else
@@ -22,7 +22,7 @@
         class="ma-4"
         outlined
       >
-        <v-icon class="pr-2">mdi-pencil</v-icon>
+        <v-icon class="pr-2">{{ mdiPencil }}</v-icon>
         edit account
       </v-btn>
     </template>
@@ -33,7 +33,9 @@
       <div class="dialog-header">
         <p class="dialog-title">Edit your profile details</p>
         <div class="d-flex align-center">
-          <v-icon left color="missionAccent">mdi-information-variant</v-icon>
+          <v-icon left color="missionAccent">{{
+            mdiInformationVariant
+          }}</v-icon>
           <p class="dialog-description">Update your profile information</p>
         </div>
       </div>
@@ -80,15 +82,16 @@
               color="missionAccent"
               v-if="!editEmail"
               @click="editEmail = true"
-              >mdi-pencil-box</v-icon
             >
+              {{ mdiPencilBox }}
+            </v-icon>
             <v-icon
               class="mt-2"
               large
               color="missionAccent"
               v-else
               @click="saveEmail"
-              >mdi-content-save</v-icon
+              >{{ mdiContentSave }}</v-icon
             >
           </v-col>
         </v-row>
@@ -104,7 +107,7 @@
             v-bind="attrs"
             v-on="on"
           >
-            <v-icon left> mdi-check </v-icon>
+            <v-icon left> {{ mdiCheck }} </v-icon>
             UPDATE
           </v-btn>
 
@@ -115,7 +118,7 @@
             @click="cancel"
             :disabled="loading"
           >
-            <v-icon left> mdi-close </v-icon>
+            <v-icon left> {{ mdiClose }} </v-icon>
             Cancel
           </v-btn>
         </div>
@@ -129,7 +132,14 @@
 <script>
 import { mapState } from "vuex";
 import firebase from "firebase";
-
+import {
+  mdiPencil,
+  mdiInformationVariant,
+  mdiPencilBox,
+  mdiContentSave,
+  mdiCheck,
+  mdiClose,
+} from "@mdi/js";
 import { db } from "../store/firestoreConfig";
 
 export default {
@@ -145,6 +155,12 @@ export default {
   },
   data() {
     return {
+      mdiPencil,
+      mdiInformationVariant,
+      mdiPencilBox,
+      mdiContentSave,
+      mdiCheck,
+      mdiClose,
       dialog: false,
       loading: false,
       editEmail: false,

@@ -14,7 +14,7 @@
               v-on="on"
               class="assignButton d-inline-flex text-truncate"
             >
-              <v-icon small> mdi-account-multiple-plus </v-icon>
+              <v-icon small> {{ mdiAccountMultiplePlus }} </v-icon>
             </v-btn>
             <!-- ASSIGN GALAXY -->
             <v-btn
@@ -25,7 +25,7 @@
               v-on="on"
               class="assignButton d-inline-flex text-truncate"
             >
-              <v-icon left> mdi-chart-timeline-variant-shimmer </v-icon>
+              <v-icon left> {{ mdiChartTimelineVariantShimmer }} </v-icon>
               ASSIGN GALAXY
             </v-btn>
           </template>
@@ -40,10 +40,12 @@
               slider-color="baseAccent"
               class="mt-4"
             >
-              <v-tab><p class="baseAccent--text tab">Individual</p></v-tab>
-              <v-tab v-if="teacherCohorts.length"
-                ><p class="baseAccent--text tab">Cohort</p></v-tab
-              >
+              <v-tab>
+                <p class="baseAccent--text tab">Individual</p>
+              </v-tab>
+              <v-tab v-if="teacherCohorts.length">
+                <p class="baseAccent--text tab">Cohort</p>
+              </v-tab>
               <!-- <v-tab><p class="baseAccent--text tab">Organisation</p></v-tab> -->
             </v-tabs>
 
@@ -54,9 +56,9 @@
                 <div class="dialog-header">
                   <p class="dialog-title">Assign to a Person</p>
                   <div class="d-flex align-center">
-                    <v-icon left color="missionAccent"
-                      >mdi-information-variant</v-icon
-                    >
+                    <v-icon left color="missionAccent">{{
+                      mdiInformationVariant
+                    }}</v-icon>
                     <p class="dialog-description">
                       Assign this Galaxy Map to a Person using their e-mail
                       address
@@ -93,7 +95,7 @@
                             v-if="item.image && item.image.url"
                             :src="item.image.url"
                           />
-                          <v-icon v-else>mdi-star-three-points</v-icon>
+                          <v-icon v-else>{{ mdiStarThreePoints }}</v-icon>
                         </v-list-item-avatar>
                         <v-list-item-content
                           >{{ item.name }}
@@ -105,7 +107,7 @@
                             v-if="item.image && item.image.url"
                             :src="item.image.url"
                           />
-                          <v-icon v-else>mdi-star-three-points</v-icon>
+                          <v-icon v-else>{{ mdiStarThreePoints }}</v-icon>
                         </v-list-item-avatar>
                         <v-list-item-content>
                           <v-list-item-title
@@ -127,7 +129,7 @@
                     @click="assignCourseToPerson(profile)"
                     :loading="loading"
                   >
-                    <v-icon left> mdi-check </v-icon>
+                    <v-icon left> {{ mdiCheck }} </v-icon>
                     ASSIGN PERSON
                   </v-btn>
 
@@ -138,7 +140,7 @@
                     @click="close"
                     :disabled="loading"
                   >
-                    <v-icon left> mdi-close </v-icon>
+                    <v-icon left> {{ mdiClose }} </v-icon>
                     Cancel
                   </v-btn>
                 </div>
@@ -150,9 +152,9 @@
                 <div class="dialog-header">
                   <p class="dialog-title">Assign to a Cohort</p>
                   <div class="d-flex align-center">
-                    <v-icon left color="missionAccent"
-                      >mdi-information-variant</v-icon
-                    >
+                    <v-icon left color="missionAccent">{{
+                      mdiInformationVariant
+                    }}</v-icon>
                     <p class="dialog-description">
                       Assign this Galaxy Map to an entire Cohort of learners
                     </p>
@@ -173,7 +175,7 @@
                         style="object-fit: cover"
                         width="40"
                       />
-                      <v-icon v-else>mdi-star-three-points</v-icon>
+                      <v-icon v-else>{{ mdiStarThreePoints }}</v-icon>
                       <p class="ml-4">{{ item.title }}</p>
                     </template>
                     <template v-slot:item="{ item }">
@@ -183,7 +185,7 @@
                         style="object-fit: cover"
                         width="40"
                       />
-                      <v-icon v-else>mdi-star-three-points</v-icon>
+                      <v-icon v-else>{{ mdiStarThreePoints }}</v-icon>
                       <p class="ml-4 mt-4">{{ item.title }}</p>
                     </template>
                   </v-select>
@@ -197,7 +199,7 @@
                     @click="assignCourseToCohort(cohort)"
                     :loading="loading"
                   >
-                    <v-icon left> mdi-check </v-icon>
+                    <v-icon left> {{ mdiCheck }} </v-icon>
                     ASSIGN COHORT
                   </v-btn>
 
@@ -208,7 +210,7 @@
                     @click="close"
                     :disabled="loading"
                   >
-                    <v-icon left> mdi-close </v-icon>
+                    <v-icon left> {{ mdiClose }} </v-icon>
                     Cancel
                   </v-btn>
                 </div>
@@ -242,7 +244,7 @@
                 <template v-slot:selection="{ item }">
                   <v-list-item-avatar tile>
                     <img v-if="item.image.url" :src="item.image.url" />
-                    <v-icon v-else> mdi-star-three-points </v-icon>
+                    <v-icon v-else> mdiStarThreePoints </v-icon>
                   </v-list-item-avatar>
                   <v-list-item-content>
                     <v-list-item-title v-html="item.title"></v-list-item-title>
@@ -251,7 +253,7 @@
                 <template v-slot:item="{ item }">
                   <v-list-item-avatar tile>
                     <img v-if="item.image.url" :src="item.image.url" />
-                    <v-icon v-else> mdi-star-three-points </v-icon>
+                    <v-icon v-else> {{ mdiStarThreePoints }} </v-icon>
                   </v-list-item-avatar>
                   <v-list-item-content>
                     <v-list-item-title v-html="item.title"></v-list-item-title>
@@ -269,7 +271,7 @@
                 @click="assignCourseToCohort(null, course)"
                 :loading="loading"
               >
-                <v-icon left> mdi-check </v-icon>
+                <v-icon left> {{ mdiCheck }} </v-icon>
                 ASSIGN GALAXY MAP
               </v-btn>
 
@@ -280,7 +282,7 @@
                 @click="close"
                 :disabled="loading"
               >
-                <v-icon left> mdi-close </v-icon>
+                <v-icon left> {{ mdiClose }} </v-icon>
                 Cancel
               </v-btn>
             </div>
@@ -294,7 +296,14 @@
 
 <script>
 import firebase from "firebase/app";
-
+import {
+  mdiClose,
+  mdiCheck,
+  mdiStarThreePoints,
+  mdiInformationVariant,
+  mdiAccountMultiplePlus,
+  mdiChartTimelineVariantShimmer,
+} from "@mdi/js";
 import { mapState, mapGetters } from "vuex";
 import { db, storage } from "../store/firestoreConfig";
 import { dbMixins } from "../mixins/DbMixins";
@@ -304,6 +313,13 @@ export default {
   mixins: [dbMixins],
   props: ["assignCohorts", "assignCourses", "cohorts"],
   data: () => ({
+    //icons
+    mdiClose,
+    mdiCheck,
+    mdiStarThreePoints,
+    mdiInformationVariant,
+    mdiAccountMultiplePlus,
+    mdiChartTimelineVariantShimmer,
     tab: null,
     dialog: false,
     loading: false,
@@ -452,6 +468,7 @@ export default {
 .cohort-select ::v-deep .v-list-item__content {
   min-width: 250px;
 }
+
 /* Dialog */
 .assignCohortDialog {
   color: black;
@@ -555,12 +572,14 @@ export default {
     text-transform: uppercase;
     font-weight: 700;
   }
+
   .mission-text {
     color: var(--v-missionAccent-base);
     text-transform: uppercase;
     font-weight: 700;
   }
 }
+
 .assignButton {
   max-width: 100%;
 }

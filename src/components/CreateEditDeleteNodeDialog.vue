@@ -8,9 +8,9 @@
           <div class="dialog-info">
             <p class="dialog-title">{{ dialogTitle }}</p>
             <div class="d-flex align-center">
-              <v-icon left color="missionAccent"
-                >mdi-information-variant</v-icon
-              >
+              <v-icon left color="missionAccent">{{
+                mdiInformationVariant
+              }}</v-icon>
               <p class="dialog-description">
                 This Node is a <span class="mission-text">Topic</span> of the
                 <span class="galaxy-text">{{ this.course.title }}</span> Galaxy
@@ -50,7 +50,8 @@
                 value="#69a1e2"
                 width="90%"
                 :swatches="darkSwatches"
-              ></v-color-picker>
+              >
+              </v-color-picker>
 
               <!-- <v-tooltip right>
                 <template v-slot:activator="{ on, attrs }">
@@ -61,7 +62,7 @@
                     class="circle-outline ma-1"
                     v-bind="attrs"
                     v-on="on"
-                    >mdi-information-variant</v-icon
+                    >{{mdiInformationVariant}}</v-icon
                   >
                 </template>
                 <span>
@@ -104,7 +105,8 @@
                     class="circle-outline ma-1"
                     v-bind="attrs"
                     v-on="on"
-                    >mdi-information-variant</v-icon
+                  >
+                    {{ mdiInformationVariant }}</v-icon
                   >
                 </template>
                 <span>
@@ -141,7 +143,6 @@
               multiple
               chips
               :menu-props="{
-                closeOnClick: true,
                 closeOnContentClick: true,
               }"
             ></v-select>
@@ -157,7 +158,7 @@
               class="mr-2"
               :loading="loading"
             >
-              <v-icon left> mdi-check </v-icon>
+              <v-icon left> {{ mdiCheck }} </v-icon>
               SAVE
             </v-btn>
             <v-btn
@@ -168,7 +169,7 @@
               class="mr-2"
               :loading="loading"
             >
-              <v-icon left> mdi-check </v-icon>
+              <v-icon left> {{ mdiCheck }} </v-icon>
               UPDATE
             </v-btn>
 
@@ -179,7 +180,7 @@
               @click="deleteDialog()"
               class="mr-2"
             >
-              <v-icon left> mdi-delete </v-icon>
+              <v-icon left> {{ mdiDelete }} </v-icon>
               DELETE
             </v-btn>
 
@@ -189,7 +190,7 @@
               class="ml-2"
               @click="close"
             >
-              <v-icon left> mdi-close </v-icon>
+              <v-icon left> {{ mdiClose }} </v-icon>
               Cancel
             </v-btn>
           </div>
@@ -209,7 +210,9 @@
             <strong>Warning!</strong> Delete {{ currentTopic.title }} System?
           </p>
           <div class="d-flex align-start">
-            <v-icon left color="missionAccent">mdi-information-variant</v-icon>
+            <v-icon left color="missionAccent">{{
+              mdiInformationVariant
+            }}</v-icon>
             <p class="dialog-description">
               Are you sure you want to <strong>DELETE</strong> this
               <span class="mission-text">{{ currentTopic.title }} System</span>?
@@ -234,7 +237,7 @@
             class="ml-2"
             :loading="deleting"
           >
-            <v-icon left> mdi-delete </v-icon>
+            <v-icon left> {{ mdiDelete }} </v-icon>
             DELETE
           </v-btn>
 
@@ -244,7 +247,7 @@
             class="ml-2"
             @click="cancelDeleteDialog()"
           >
-            <v-icon left> mdi-close </v-icon>
+            <v-icon left> {{ mdiClose }} </v-icon>
             Cancel
           </v-btn>
         </div>
@@ -260,7 +263,14 @@ import firebase from "firebase/app";
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
 import { getPersonsTopicById } from "@/lib/ff";
-
+import {
+  mdiPencil,
+  mdiPlus,
+  mdiClose,
+  mdiCheck,
+  mdiDelete,
+  mdiInformationVariant,
+} from "@mdi/js";
 export default {
   name: "CreateEditDeleteNodeDialog",
   props: [
@@ -319,6 +329,12 @@ export default {
   },
   data() {
     return {
+      mdiPencil,
+      mdiPlus,
+      mdiClose,
+      mdiDelete,
+      mdiCheck,
+      mdiInformationVariant,
       sortedObjArr: [],
       dialogConfirm: false,
       newNodeData: {},
@@ -710,6 +726,7 @@ export default {
       align-items: center;
     }
   }
+
   .ss-details {
     border-top: 1px solid var(--v-missionAccent-base);
     padding: 20px;
@@ -742,6 +759,7 @@ export default {
   text-transform: uppercase;
   font-weight: 700;
 }
+
 .mission-text {
   color: var(--v-missionAccent-base);
   text-transform: uppercase;
@@ -760,6 +778,7 @@ export default {
 
 .color-picker {
   background-color: var(--v-background-base);
+
   ::-webkit-scrollbar-track {
     background: var(--v-background-lighten1);
   }

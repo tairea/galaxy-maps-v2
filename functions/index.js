@@ -433,12 +433,12 @@ Galaxy Maps Team`;
 
 //======SUBMISSION FOR TASK SENT ==================
 exports.sendTaskSubmission = functions.https.onCall((data, context) => {
-  const { email, teacher, course, task, student, submission, topic } = data;
+  const { email, teacher, course, task, student, submission, topic, submissionInstructions } = data;
   sendTaskSubmission(email, teacher, course, task, student, submission, topic);
 });
 
 // Sends a invite email to a new student.
-async function sendTaskSubmission(email, teacher, course, task, student, submission, topic) {
+async function sendTaskSubmission(email, teacher, course, task, student, submission, topic, submissionInstructions) {
   const mailOptions = {
     from: `${APP_NAME} <noreply@galaxymaps.io>`,
     to: email
@@ -454,7 +454,9 @@ Course: ${course}
 Topic: ${topic}
 Task: ${task}
 
-Submission: ${submission}
+Your Submission Instructions: ${submissionInstructions}
+
+Student's Submission Response: ${submission}
 
 To respond to ${student}'s submission and unlock the next task from them, please login to https://galaxymaps.io to view your course
   

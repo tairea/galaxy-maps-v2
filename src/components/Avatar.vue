@@ -22,12 +22,8 @@
             >
               {{ first3Letters(profileData.firstName) }}
             </div>
-            <div
-              v-else
-              class="imagePlaceholder"
-              :style="colouredBorder"
-            >
-              <v-icon>mdi-account</v-icon>
+            <div v-else class="imagePlaceholder" :style="colouredBorder">
+              <v-icon>{{ mdiAccount }}</v-icon>
             </div>
           </v-avatar>
         </div>
@@ -37,7 +33,11 @@
           class="ma-0 person-tooltip"
           style="font-size: 0.8rem; font-weight: 800"
         >
-          {{ profileData.firstName ? profileData.firstName + " " + profileData.lastName : profileData.email }}
+          {{
+            profileData.firstName
+              ? profileData.firstName + " " + profileData.lastName
+              : profileData.email
+          }}
         </p>
       </div>
     </v-tooltip>
@@ -48,17 +48,20 @@
 import { db } from "../store/firestoreConfig";
 import { mapState } from "vuex";
 
+import { mdiAccount } from "@mdi/js";
+
 export default {
   name: "Avatar",
   props: ["personId", "size", "colourBorder", "profile"],
   data() {
     return {
+      mdiAccount,
       profileData: {},
     };
   },
   async mounted() {
-    if (this.profile) { 
-      this.profileData = this.profile
+    if (this.profile) {
+      this.profileData = this.profile;
     } else {
       await db
         .collection("people")
@@ -70,24 +73,28 @@ export default {
     }
   },
   computed: {
-    ...mapState(['userStatus']),
+    ...mapState(["userStatus"]),
     online() {
-      if (this.profileData.id) return this.userStatus[this.profileData.id]?.state === 'online'
+      if (this.profileData.id)
+        return this.userStatus[this.profileData.id]?.state === "online";
     },
     border() {
-      return this.colourBorder && this.online ? 'border: 1px solid var(--v-baseAccent-base)':''
+      return this.colourBorder && this.online
+        ? "border: 1px solid var(--v-baseAccent-base)"
+        : "";
     },
-    colouredBorder () {
-      return this.colourBorder ? {
-        width: this.size + 'px',
-        height: this.size + 'px',
-        backgroundColor: this.stringToColour(
-          this.profileData.firstName + this.profileData.lastName
-        ),
-        border: this.online ? '1px solid var(--v-baseAccent-base)' : ''
-      }
-      : { width: this.size + 'px', height: this.size + 'px' }
-    }
+    colouredBorder() {
+      return this.colourBorder
+        ? {
+            width: this.size + "px",
+            height: this.size + "px",
+            backgroundColor: this.stringToColour(
+              this.profileData.firstName + this.profileData.lastName
+            ),
+            border: this.online ? "1px solid var(--v-baseAccent-base)" : "",
+          }
+        : { width: this.size + "px", height: this.size + "px" };
+    },
   },
   methods: {
     first3Letters(name) {
@@ -103,7 +110,7 @@ export default {
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
       }
       return hash;
-    }
+    },
   },
 };
 </script>

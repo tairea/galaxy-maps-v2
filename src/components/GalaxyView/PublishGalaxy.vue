@@ -5,7 +5,11 @@
       <!-- ASSIGN COHORT -->
       <v-btn
         outlined
-        color="galaxyAccent"
+        :color="
+          admin && course.status == 'submitted' && course.public == true
+            ? 'cohortAccent'
+            : 'galaxyAccent'
+        "
         v-bind="attrs"
         v-on="on"
         class="publishButton d-inline-flex text-truncate"
@@ -21,10 +25,14 @@
       <div class="dialog-header">
         <div class="d-flex mb-4">
           <p class="dialog-title ma-0">Important</p>
-          <v-icon color="missionAccent" class="ml-2">mdi-alert-outline</v-icon>
+          <v-icon color="missionAccent" class="ml-2">{{
+            mdiAlertOutline
+          }}</v-icon>
         </div>
         <div class="d-flex align-center">
-          <v-icon left color="missionAccent">mdi-information-variant</v-icon>
+          <v-icon left color="missionAccent">{{
+            mdiInformationVariant
+          }}</v-icon>
           <p class="dialog-description">
             System's must have <strong>AT LEAST ONE MISSION</strong>
           </p>
@@ -61,35 +69,48 @@
           @click="close"
           :disabled="loading"
         >
-          <v-icon left> mdi-close </v-icon>
+          <v-icon left> {{ mdiClose }} </v-icon>
           OK
         </v-btn>
       </div>
     </div>
+
     <!-- OK TO PUBLISH DIALOG -->
     <div v-else class="create-dialog">
       <div class="dialog-header">
         <p class="dialog-title">publish galaxy</p>
         <div class="d-flex align-center">
-          <v-icon left color="missionAccent">mdi-information-variant</v-icon>
-          <p v-if="admin" class="dialog-description">
-            Publish
-            <span style="font-weight: 600; color: var(--v-galaxyAccent-base)">{{
-              course.title
-            }}</span>
-            galaxy to make publically visible
-          </p>
+          <v-icon left color="missionAccent">{{
+            mdiInformationVariant
+          }}</v-icon>
+          <div
+            v-if="
+              admin && course.status == 'submitted' && course.public == true
+            "
+            class="dialog-description"
+          >
+            <p style="font-weight: 600; color: var(--v-cohortAccent-base)">
+              I have reviewed this Galaxy Map
+            </p>
+            <p>
+              Publish
+              <span
+                style="font-weight: 600; color: var(--v-galaxyAccent-base)"
+                >{{ course.title }}</span
+              >
+              galaxy to make publically visible
+            </p>
+          </div>
           <p v-else class="dialog-description">
-            Publish
+            Publish this Galaxy
             <span style="font-weight: 600; color: var(--v-galaxyAccent-base)">{{
               course.title
             }}</span>
-            galaxy to make it visible to others
           </p>
         </div>
       </div>
       <v-divider dark color="missionAccent"></v-divider>
-      <div v-if="!admin" class="create-dialog-content">
+      <div class="create-dialog-content">
         <!-- LISTED -->
         <div>
           <p class="caption mb-2">
@@ -150,11 +171,15 @@
       <div v-if="admin" class="action-buttons">
         <v-btn
           outlined
-          color="baseAccent"
+          :color="
+            admin && course.status == 'submitted' && course.public == true
+              ? 'cohortAccent'
+              : 'galaxyAccent'
+          "
           @click="publishCourse()"
           :loading="loading"
         >
-          <v-icon left> mdi-check </v-icon>
+          <v-icon left> {{ mdiCheck }} </v-icon>
           publish
         </v-btn>
 
@@ -165,7 +190,7 @@
           @click="close"
           :disabled="loading"
         >
-          <v-icon left> mdi-close </v-icon>
+          <v-icon left> {{ mdiClose }} </v-icon>
           CANCEL
         </v-btn>
       </div>
@@ -177,7 +202,7 @@
           @click="submitCourse()"
           :loading="loading"
         >
-          <v-icon left> mdi-send </v-icon>
+          <v-icon left> {{ mdiSend }} </v-icon>
           SUBMIT
         </v-btn>
         <v-btn
@@ -187,7 +212,7 @@
           @click="publishCourse()"
           :loading="loading"
         >
-          <v-icon left> mdi-check </v-icon>
+          <v-icon left> {{ mdiCheck }} </v-icon>
           publish
         </v-btn>
 
@@ -198,7 +223,7 @@
           @click="close"
           :disabled="loading"
         >
-          <v-icon left> mdi-close </v-icon>
+          <v-icon left> {{ mdiClose }} </v-icon>
           CANCEL
         </v-btn>
       </div>
@@ -210,6 +235,14 @@
 import { db, functions } from "@/store/firestoreConfig";
 import { mapGetters, mapMutations, mapState } from "vuex";
 
+import {
+  mdiAlertOutline,
+  mdiInformationVariant,
+  mdiClose,
+  mdiCheck,
+  mdiSend,
+} from "@mdi/js";
+
 import { dbMixins } from "@/mixins/DbMixins";
 
 export default {
@@ -217,6 +250,11 @@ export default {
   mixins: [dbMixins],
   props: ["course", "courseTasks"],
   data: () => ({
+    mdiAlertOutline,
+    mdiInformationVariant,
+    mdiClose,
+    mdiCheck,
+    mdiSend,
     dialog: false,
     loading: false,
     courseOptions: {
@@ -495,12 +533,14 @@ export default {
     text-transform: uppercase;
     font-weight: 700;
   }
+
   .mission-text {
     color: var(--v-missionAccent-base);
     text-transform: uppercase;
     font-weight: 700;
   }
 }
+
 .publishButton {
   width: 100%;
   z-index: 3;

@@ -14,15 +14,17 @@
         :alt="student.firstName"
         style="object-fit: cover"
       />
-      <v-icon v-else>mdi-account</v-icon>
+      <v-icon v-else>{{ mdiAccount }}</v-icon>
     </v-avatar>
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
         <p v-on="on" class="text-uppercase studentName text-truncate pt-2">
-          {{ student.firstName || student.email}}
+          {{ student.firstName || student.email }}
         </p>
       </template>
-      <span v-if="student.firstName">{{ student.firstName + " " + student.lastName}}</span>
+      <span v-if="student.firstName">{{
+        student.firstName + " " + student.lastName
+      }}</span>
       <span v-else>{{ student.email }}</span>
     </v-tooltip>
     <p :class="online" class="status">{{ loggedIn }}</p>
@@ -30,6 +32,8 @@
 </template>
 
 <script>
+import { mdiAccount } from "@mdi/js";
+
 export default {
   name: "StudentCardStatus",
   props: ["student", "date", "status"],
@@ -44,8 +48,15 @@ export default {
       } else return this.timePassed(this.date);
     },
     borderColour() {
-      return this.loggedIn === "online" ? "border: 1px solid var(--v-baseAccent-base) !important" : ""
-    }
+      return this.loggedIn === "online"
+        ? "border: 1px solid var(--v-baseAccent-base) !important"
+        : "";
+    },
+  },
+  data() {
+    return {
+      mdiAccount,
+    };
   },
   methods: {
     timePassed(now) {
@@ -66,7 +77,7 @@ export default {
       if (hours < 24) return `${hours}hrs`;
       return `${days}days`;
     },
-  }
+  },
 };
 </script>
 

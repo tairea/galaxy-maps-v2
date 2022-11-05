@@ -14,7 +14,7 @@
               color="missionAccent"
               x-small
             >
-              <v-icon class="mr-2" x-small> mdi-pencil</v-icon>
+              <v-icon class="mr-2" x-small> {{ mdiPencil }}</v-icon>
               edit
             </v-btn>
 
@@ -25,7 +25,7 @@
               v-bind="attrs"
               v-on="on"
             >
-              <v-icon left> mdi-plus </v-icon>
+              <v-icon left> {{ mdiPlus }} </v-icon>
               CREATE MISSION
             </v-btn>
           </template>
@@ -38,9 +38,9 @@
                 {{ edit ? "Edit Mission " + task.title : dialogTitle }}
               </p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent"
-                  >mdi-information-variant</v-icon
-                >
+                <v-icon left color="missionAccent">{{
+                  mdiInformationVariant
+                }}</v-icon>
                 <p class="dialog-description">
                   A Mission is a specific task. <br />Enter the mission details
                   here or link to an external file eg. Youtube video or Google
@@ -137,7 +137,8 @@
                       class="circle-outline ma-1"
                       v-bind="attrs"
                       v-on="on"
-                      >mdi-information-variant</v-icon
+                    >
+                      {{ mdiInformationVariant }}</v-icon
                     >
                   </template>
                   <span>
@@ -178,7 +179,8 @@
                         class="circle-outline ma-1"
                         v-bind="attrs"
                         v-on="on"
-                        >mdi-information-variant</v-icon
+                      >
+                        {{ mdiInformationVariant }}</v-icon
                       >
                     </template>
                     <span>
@@ -220,7 +222,7 @@
                   v-on="on"
                 >
                   <!-- :disabled="disabled" -->
-                  <v-icon left> mdi-check </v-icon>
+                  <v-icon left> {{ mdiCheck }} </v-icon>
                   UPDATE
                 </v-btn>
                 <v-btn
@@ -234,7 +236,7 @@
                   v-on="on"
                 >
                   <!-- :disabled="disabled" -->
-                  <v-icon left> mdi-check </v-icon>
+                  <v-icon left> {{ mdiCheck }} </v-icon>
                   SAVE
                 </v-btn>
 
@@ -246,7 +248,7 @@
                   @click="deleteDialog()"
                   class="ml-2"
                 >
-                  <v-icon left> mdi-delete </v-icon>
+                  <v-icon left> {{ mdiDelete }} </v-icon>
                   DELETE
                 </v-btn>
 
@@ -257,7 +259,7 @@
                   @click="cancel"
                   :disabled="disabled || loading"
                 >
-                  <v-icon left> mdi-close </v-icon>
+                  <v-icon left> {{ mdiClose }} </v-icon>
                   Cancel
                 </v-btn>
               </div>
@@ -275,7 +277,7 @@
                 @click="saveTask(task)"
               >
                 <v-icon left>
-                  mdi-check
+                  {{mdiCheck}}
                 </v-icon>
                 SAVE
               </v-btn>
@@ -292,9 +294,9 @@
                 <strong>Warning!</strong> Delete Mission?
               </p>
               <div class="d-flex align-start">
-                <v-icon left color="missionAccent"
-                  >mdi-information-variant</v-icon
-                >
+                <v-icon left color="missionAccent">{{
+                  mdiInformationVariant
+                }}</v-icon>
                 <p class="dialog-description">
                   Are you sure you want to <strong>DELETE</strong> this
                   <span class="mission-text">{{ task.title }} Mission</span>?
@@ -319,7 +321,7 @@
                 class="ml-2"
                 :loading="deleting"
               >
-                <v-icon left> mdi-delete </v-icon>
+                <v-icon left> {{ mdiDelete }} </v-icon>
                 DELETE
               </v-btn>
 
@@ -330,7 +332,7 @@
                 @click="cancelDeleteDialog"
                 :disabled="disabled || loading"
               >
-                <v-icon left> mdi-close </v-icon>
+                <v-icon left> {{ mdiClose }} </v-icon>
                 Cancel
               </v-btn>
             </div>
@@ -350,6 +352,15 @@ import { VueEditor } from "vue2-editor";
 import { db } from "../store/firestoreConfig";
 import { mapState } from "vuex";
 
+import {
+  mdiPencil,
+  mdiPlus,
+  mdiClose,
+  mdiCheck,
+  mdiDelete,
+  mdiInformationVariant,
+} from "@mdi/js";
+
 export default {
   name: "CreateEditDeleteMissionDialog",
   props: ["taskToEdit", "taskId", "index", "topicId", "on", "attrs", "edit"],
@@ -357,6 +368,12 @@ export default {
     VueEditor,
   },
   data: () => ({
+    mdiPencil,
+    mdiPlus,
+    mdiClose,
+    mdiDelete,
+    mdiCheck,
+    mdiInformationVariant,
     dialog: false,
     dialogConfirm: false,
     dialogTitle: "Create a new Mission",
@@ -752,6 +769,7 @@ export default {
     text-transform: uppercase;
     font-weight: 700;
   }
+
   .mission-text {
     color: var(--v-missionAccent-base);
     text-transform: uppercase;
@@ -771,9 +789,11 @@ export default {
 .quill ::v-deep .ql-toolbar {
   border: 1px solid #ffffff45;
 }
+
 .quill ::v-deep .ql-container {
   border: 1px solid #ffffff45;
 }
+
 .quill ::v-deep .ql-editor {
   font-size: 0.9rem;
 }
@@ -781,6 +801,7 @@ export default {
 .active-quill ::v-deep .ql-toolbar {
   border: 1px solid var(--v-missionAccent-base);
 }
+
 .active-quill ::v-deep .ql-container {
   border: 1px solid var(--v-missionAccent-base);
 }
@@ -788,6 +809,7 @@ export default {
 .active-submission-quill ::v-deep .ql-toolbar {
   border: 1px solid var(--v-cohortAccent-base);
 }
+
 .active-submission-quill ::v-deep .ql-container {
   border: 1px solid var(--v-cohortAccent-base);
 }

@@ -16,9 +16,9 @@
               x-large
             >
               <v-icon v-if="task.submissionRequired">
-                mdi-cloud-upload-outline
+                {{ mdiCloudUploadOutline }}
               </v-icon>
-              <v-icon v-else> mdi-checkbox-blank-outline </v-icon>
+              <v-icon v-else> {{ mdiCheck }}box-blank-outline </v-icon>
             </v-btn>
           </template>
 
@@ -33,9 +33,9 @@
                 >
               </p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent"
-                  >mdi-information-variant</v-icon
-                >
+                <v-icon left color="missionAccent">{{
+                  mdiInformationVariant
+                }}</v-icon>
                 <p class="dialog-description">
                   To complete this task you must submit a response to following
                   instructions
@@ -53,12 +53,11 @@
                 ?
               </p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent"
-                  >mdi-information-variant</v-icon
-                >
+                <v-icon left color="missionAccent">{{
+                  mdiInformationVariant
+                }}</v-icon>
                 <p class="dialog-description">
-                  Did you complete all the requirements of the Mission?<br />By
-                  clicking YES your instructor will be notified.
+                  Did you complete all the requirements of the Mission?
                 </p>
               </div>
             </div>
@@ -99,12 +98,12 @@
 
                 <div class="submission-create-dialog-content">
                   <div class="d-flex align-center">
-                    <v-icon left color="missionAccent"
-                      >mdi-information-variant</v-icon
-                    >
+                    <v-icon left color="missionAccent">{{
+                      mdiInformationVariant
+                    }}</v-icon>
                     <p class="dialog-description pb-4">
-                      submit your response including any links to other related
-                      work below
+                      submit your response below<br />(include any links to your
+                      work if required)
                     </p>
                   </div>
                   <vue-editor
@@ -133,7 +132,7 @@
                   v-bind="attrs"
                   v-on="on"
                 >
-                  <v-icon left> mdi-check </v-icon>
+                  <v-icon left> {{ mdiCheck }} </v-icon>
                   SUBMIT WORK FOR REVIEW
                 </v-btn>
                 <v-btn
@@ -147,7 +146,7 @@
                   v-bind="attrs"
                   v-on="on"
                 >
-                  <v-icon left> mdi-check </v-icon>
+                  <v-icon left> {{ mdiCheck }} </v-icon>
                   RE-SUBMIT WORK FOR REVIEW
                 </v-btn>
                 <v-btn
@@ -161,7 +160,7 @@
                   v-bind="attrs"
                   v-on="on"
                 >
-                  <v-icon left> mdi-check </v-icon>
+                  <v-icon left> {{ mdiCheck }} </v-icon>
                   YES, I HAVE COMPLETED THIS MISSION
                 </v-btn>
 
@@ -173,7 +172,7 @@
                   @click="cancel"
                   :disabled="disabled || loading"
                 >
-                  <v-icon left> mdi-close </v-icon>
+                  <v-icon left> {{ mdiClose }} </v-icon>
                   Cancel
                 </v-btn>
                 <!-- End action-buttons -->
@@ -189,9 +188,9 @@
             <div class="dialog-header">
               <p class="dialog-title">SUBMISSION COMPLETED</p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent"
-                  >mdi-information-variant</v-icon
-                >
+                <v-icon left color="missionAccent">{{
+                  mdiInformationVariant
+                }}</v-icon>
                 <p class="dialog-description">
                   You have already submitted your work for this mission
                 </p>
@@ -209,7 +208,7 @@
                   @click="cancel"
                   :disabled="disabled || loading"
                 >
-                  <v-icon left> mdi-close </v-icon>
+                  <v-icon left> {{ mdiClose }} </v-icon>
                   CLOSE
                 </v-btn>
               </div>
@@ -234,6 +233,13 @@ import {
   topicCompletedXAPIStatement,
 } from "../lib/veracityLRS";
 
+import {
+  mdiCloudUploadOutline,
+  mdiInformationVariant,
+  mdiCheck,
+  mdiClose,
+} from "@mdi/js";
+
 import { dbMixins } from "../mixins/DbMixins";
 
 import { mapState, mapGetters } from "vuex";
@@ -257,6 +263,10 @@ export default {
     "completed",
   ],
   data: () => ({
+    mdiCloudUploadOutline,
+    mdiInformationVariant,
+    mdiCheck,
+    mdiClose,
     submissionLink: null,
     dialog: false,
     loading: false,
@@ -370,7 +380,11 @@ export default {
         })
         .then(() => {
           this.currentCohort?.teachers.forEach(async (teacherId) => {
-            await this.sendTaskSubmission(teacherId, this.submissionLink);
+            await this.sendTaskSubmission(
+              teacherId,
+              this.submissionLink,
+              this.task.submissionInstructions
+            );
           });
         })
         .then(() => {
@@ -411,7 +425,11 @@ export default {
         })
         .then(() => {
           this.currentCohort?.teachers.forEach(async (teacherId) => {
-            await this.sendTaskSubmission(teacherId, this.submissionLink);
+            await this.sendTaskSubmission(
+              teacherId,
+              this.submissionLink,
+              this.task.submissionInstructions
+            );
           });
         })
         .then(() => {
@@ -620,14 +638,19 @@ export default {
       const person = await this.MXgetPersonByIdFromDB(personId);
       this.mappedByImageURL = person.image.url;
     },
-    async sendTaskSubmission(teacherId, submission) {
+    async sendTaskSubmission(
+      teacherId,
+      submissionResponse,
+      submissionInstructions
+    ) {
       const teacher = await this.MXgetPersonByIdFromDB(teacherId);
       const data = {
         course: this.currentCourse.title,
         topic: this.currentTopic.label,
         task: this.currentTask.title,
         student: this.person.firstName + " " + this.person.lastName,
-        submission: submission,
+        submission: submissionResponse,
+        submissionInstructions: submissionInstructions,
         teacher: teacher.firstName + " " + teacher.lastName,
         email: teacher.email,
       };
@@ -637,6 +660,12 @@ export default {
   },
 };
 </script>
+
+<style>
+.submission-dialog-description > p {
+  margin: 10px 0px !important;
+}
+</style>
 
 <style scoped lang="scss">
 // new dialog ui
@@ -719,6 +748,7 @@ export default {
     border-radius: 5px;
     border: 2px solid var(--v-cohortAccent-base);
   }
+
   // .speech-bubble p {
   //   // font-size: 1.25em;
   // }
@@ -737,6 +767,7 @@ export default {
     border: solid 10px transparent;
     border-bottom-color: var(--v-cohortAccent-base);
   }
+
   .speech-bubble:before {
     top: -30px;
     z-index: 1;
@@ -766,9 +797,11 @@ export default {
 .quill ::v-deep .ql-toolbar {
   border: 1px solid #ffffff45;
 }
+
 .quill ::v-deep .ql-container {
   border: 1px solid #ffffff45;
 }
+
 .quill ::v-deep .ql-editor {
   font-size: 0.9rem;
 }
@@ -776,6 +809,7 @@ export default {
 .active-quill ::v-deep .ql-toolbar {
   border: 1px solid var(--v-cohortAccent-base);
 }
+
 .active-quill ::v-deep .ql-container {
   border: 1px solid var(--v-cohortAccent-base);
 }

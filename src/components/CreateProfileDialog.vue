@@ -95,11 +95,13 @@
                 :alt="profile.firstName"
                 style="object-fit: cover"
               />
-              <!-- <v-icon v-if="hover">mdi-pencil</v-icon> -->
-              <v-icon :dark="dark" :light="!dark" v-else>mdi-account</v-icon>
+              <!-- <v-icon v-if="hover">{{mdiPencil}}</v-icon> -->
+              <v-icon :dark="dark" :light="!dark" v-else>{{
+                mdiAccount
+              }}</v-icon>
               <v-fade-transition>
                 <v-overlay v-if="onhover" absolute color="baseAccent">
-                  <v-icon small @click="onButtonClick">mdi-pencil</v-icon>
+                  <v-icon small @click="onButtonClick">{{ mdiPencil }}</v-icon>
                 </v-overlay>
               </v-fade-transition>
               <input
@@ -143,11 +145,14 @@
 import { db, storage } from "../store/firestoreConfig";
 import { mapGetters, mapActions } from "vuex";
 import firebase from "firebase";
+import { mdiPencil, mdiAccount } from "@mdi/js";
 
 export default {
   name: "CreateProfileDialog",
   props: ["dialog"],
   data: () => ({
+    mdiPencil,
+    mdiAccount,
     updatingAccount: false,
     valid: true,
     profile: {

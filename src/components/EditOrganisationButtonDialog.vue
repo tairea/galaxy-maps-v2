@@ -7,7 +7,7 @@
           <!-- <template v-slot:activator="{ on, attrs }">
             <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on">
               <v-icon left>
-                mdi-plus
+                {{mdiPlus}}
               </v-icon>
               UPDATE ORGANISATION
             </v-btn>
@@ -72,7 +72,7 @@
                 :disabled="disabled"
                 :loading="loading"
               >
-                <v-icon left> mdi-check </v-icon>
+                <v-icon left> {{ mdiCheck }} </v-icon>
                 UPDATE ORGANISATION
               </v-btn>
               <!-- DELETE -->
@@ -82,7 +82,7 @@
                 @click="deleteDialog()"
                 class="ml-2"
               >
-                <v-icon left> mdi-delete </v-icon>
+                <v-icon left> {{ mdiDelete }} </v-icon>
                 DELETE ORGANISATION
               </v-btn>
             </div>
@@ -121,7 +121,7 @@
                 @click="cancelDeleteDialog()"
                 class="ml-2"
               >
-                <v-icon left> mdi-close </v-icon>
+                <v-icon left> {{ mdiClose }} </v-icon>
                 CANCEL
               </v-btn>
               <v-btn
@@ -132,7 +132,7 @@
                 :disabled="disabledDelete"
                 :loading="loadingDelete"
               >
-                <v-icon left> mdi-delete </v-icon>
+                <v-icon left> {{ mdiDelete }} </v-icon>
                 CONFIRM DELETE ORGANISATION
               </v-btn>
             </v-card-actions>
@@ -146,6 +146,7 @@
 <script>
 import { mapGetters } from "vuex";
 import { db, storage } from "../store/firestoreConfig";
+import { mdiCheck, mdiDelete, mdiClose } from "@mdi/js";
 
 export default {
   name: "EditOrganisationButtonDialog",
@@ -158,6 +159,9 @@ export default {
     },
   },
   data: () => ({
+    mdiCheck,
+    mdiDelete,
+    mdiClose,
     loading: false,
     disabled: false,
     loadingDelete: false,
@@ -191,12 +195,12 @@ export default {
     },
     // camelize(str) {
     //   return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
-    //     if (+match === 0) return ""; // or if (/\s+/.test(match)) for white spaces
+    //     if +match === 0) return ""; // or if (/\s+/.test(match)) for white spaces
     //     return index === 0 ? match.toLowerCase() : match.toUpperCase();
     //   });
     // },
-    storeImage() {
-      this.disabled = true;
+    reImage() {
+      his.disabled = true;
       // ceate a storage ref
       var storageRef = storage.ref(
         "organisation-images/" +
