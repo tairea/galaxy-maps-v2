@@ -2,12 +2,27 @@
   <div class="full-height">
     <LoadingSpinner v-if="loading" text="loading galaxy" />
     <!-- loading = !planets.length && !draggingNodes -->
-    <network v-if="nodesToDisplay" ref="network" class="full-height" :nodes="nodesToDisplay"
-      :edges="teacher ? currentCourseEdges : currentCourseEdgesWithStatusStyles" :options="network.options"
-      @nodes-add="addNode" @edges-add="addEdge" @dragging="dragging" @drag-start="dragStart" @drag-end="dragEnd"
-      @select-edge="selectEdge" @deselect-node="deselectNode" @deselect-edge="deselectEdge"
-      @animation-finished="animationFinished" @before-drawing="beforeDrawing" @after-drawing="afterDrawing"
-      @click="click2" @double-click="doubleClick"></network>
+    <network
+      v-if="nodesToDisplay"
+      ref="network"
+      class="full-height"
+      :nodes="nodesToDisplay"
+      :edges="teacher ? currentCourseEdges : currentCourseEdgesWithStatusStyles"
+      :options="network.options"
+      @nodes-add="addNode"
+      @edges-add="addEdge"
+      @dragging="dragging"
+      @drag-start="dragStart"
+      @drag-end="dragEnd"
+      @select-edge="selectEdge"
+      @deselect-node="deselectNode"
+      @deselect-edge="deselectEdge"
+      @animation-finished="animationFinished"
+      @before-drawing="beforeDrawing"
+      @after-drawing="afterDrawing"
+      @click="click2"
+      @double-click="doubleClick"
+    ></network>
     <!-- @hover-node="hoverNode" 
           @select-node="selectNode"
                 @blur-node="blurNode"
@@ -148,8 +163,6 @@ export default {
       }, 33);
     },
     newNodePositions: {},
-    personsCourseTasks: [],
-    courseTasks: [],
     planets: [],
     time: null,
     inSystemPreviewView: false,
@@ -157,18 +170,6 @@ export default {
     numberOfTasksForThisTopic: 0,
   }),
   async mounted() {
-    // var course = this.getCourseById(this.courseId);
-    var person = this.person.id;
-    // var contentMadeBy = course.contentBy.personId;
-
-    // determine if person logged in and on galaxy view page is a teacher
-    // if so, allow them to move the nodes
-    // if (this.teacher && this.$route.name == "GalaxyView") {
-    //   this.network.options.interaction.dragNodes = true;
-    // } else {
-    //   this.network.options.interaction.dragNodes = false;
-    // }
-
     await this.$store.dispatch("bindCourseNodes", this.currentCourseId);
     await this.$store.dispatch("bindCourseEdges", this.currentCourseId);
     // bind topics for course creator
@@ -221,7 +222,7 @@ export default {
       "getTopicById",
       "person",
       "getCourseById",
-      "getTasksByTopicId",
+      // "getTasksByTopicId",
     ]),
     ...mapState([
       "currentCourseId",
@@ -232,6 +233,8 @@ export default {
       "personsTopicsTasks",
       "topicsTasks",
       "darkMode",
+      "personsCourseTasks",
+      "courseTasks",
     ]),
     nodesToDisplay() {
       if (this.currentCourseNodes.length && this.currentCourseNodes[0]?.id) {
@@ -308,8 +311,6 @@ export default {
       this.setupSolarSystemPlanets();
       // start animation
       this.startNodeAnimation();
-      // if our solar systems are loading, disable spinner
-      this.loading = false;
     },
     disableEditMode() {
       this.$refs.network.disableEditMode();
@@ -429,7 +430,8 @@ export default {
       this.$store.commit("setCurrentTopicId", closestNode.id);
       this.$emit("topicClicked", { topicId: this.currentTopicId });
       // 6) calc how many tasks for this topic
-      let tasksForThisTopic = this.tasks.filter(
+      let tasksForThisTopic = [];
+      tasksForThisTopic = this.tasks.filter(
         (task) => task.topicId == this.currentTopicId
       );
       // 7) get number of tasks (used to calc size of circle mask to block out map)
@@ -665,21 +667,14 @@ export default {
         planet.color = colour;
       }
     },
-    async bindCourseTasks() {
-      if (!this.teacher) {
-        this.personsCourseTasks = await this.getPersonsCourseTasks({
-          personId: this.person.id,
-          courseId: this.currentCourseId,
-        });
-      } else {
-        this.courseTasks = await this.getCourseTasks({
-          courseId: this.currentCourseId,
-        });
-      }
-    },
     async setupSolarSystemPlanets() {
-      // get all tasks
-      await this.bindCourseTasks();
+      if (!this.teacher && !this.personsCourseTasks.length) {
+        // bind state.personsCourseTasks
+        await this.$store.dispatch("getPersonsCourseTasks");
+      } else if (this.teacher && !this.courseTasks.length) {
+        // bind. state.courseTasks
+        await this.$store.dispatch("getCourseTasks");
+      }
 
       this.tasks = [];
       if (!this.teacher) {
@@ -690,12 +685,17 @@ export default {
 
       // no tasks means no planets
       if (this.tasks.length == 0) {
+        console.log("no tasks. loading - false");
         this.loading = false;
         return;
       }
 
       console.log("got tasks in GalaxyMap", this.tasks);
       this.$emit("courseTasks", this.tasks);
+
+      // if our solar systems are loading, disable spinner
+      console.log("planets and animation done. loading - false");
+      this.loading = false;
 
       // get node ids
       const nodeIds = this.$refs.network.nodes.map(({ id }) => id);
@@ -758,7 +758,7 @@ export default {
         // Canvas - start path
         ctx.beginPath();
         // Canvas - draw rectangle the size of the screen
-        const cavasSizeBuffer = 10000
+        const cavasSizeBuffer = 10000;
         ctx.rect(
           // 0 - ctx.canvas.offsetWidth,
           // 0 - ctx.canvas.offsetHeight,
@@ -791,56 +791,6 @@ export default {
     },
     stopNodeAnimation() {
       clearInterval(this.intervalid1);
-    },
-    async getPersonsCourseTasks(payload) {
-      const personsCourseTopics = await db
-        .collection("people")
-        .doc(payload.personId)
-        .collection(payload.courseId)
-        .get();
-
-      const tasksArr = [];
-      for (const topic of personsCourseTopics.docs) {
-        if (topic.data().topicStatus !== "locked") {
-          const tasks = await db
-            .collection("people")
-            .doc(payload.personId)
-            .collection(payload.courseId)
-            .doc(topic.id)
-            .collection("tasks")
-            .get();
-
-          for (const task of tasks.docs) {
-            tasksArr.push({ topicId: topic.id, task: task.data() });
-          }
-        }
-      }
-      // console.log("tasksArr", tasksArr)
-      return tasksArr;
-    },
-    async getCourseTasks(payload) {
-      const courseTopics = await db
-        .collection("courses")
-        .doc(payload.courseId)
-        .collection("topics")
-        .get();
-
-      const tasksArr = [];
-      for (const topic of courseTopics.docs) {
-        const tasks = await db
-          .collection("courses")
-          .doc(payload.courseId)
-          .collection("topics")
-          .doc(topic.id)
-          .collection("tasks")
-          .get();
-
-        for (const task of tasks.docs) {
-          tasksArr.push({ topicId: topic.id, task: task.data() });
-        }
-      }
-      // console.log("tasksArr", tasksArr)
-      return tasksArr;
     },
   },
 };

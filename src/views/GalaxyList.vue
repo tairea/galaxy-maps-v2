@@ -12,6 +12,7 @@
     />
     <div class="flexContainer">
       <Galaxies
+        v-if="courses.length"
         ref="galaxyMap"
         :highlightCourse="clickedCourseId"
         @courseClicked="courseClicked($event)"
@@ -34,7 +35,7 @@ import GalaxyListPanel from "../components/GalaxyListPanel";
 import GalaxyListInfoPanel from "../components/GalaxyListInfoPanel";
 import Galaxies from "../components/Galaxies";
 
-import { mapGetters } from "vuex";
+import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "GalaxyList",
@@ -66,6 +67,7 @@ export default {
     // 3) get submitted (IN REVIEW) mappedby && status==submitted
   },
   computed: {
+    ...mapState(["courses"]),
     ...mapGetters(["user", "person"]),
   },
   methods: {

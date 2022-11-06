@@ -4,47 +4,103 @@
     <div class="left-section">
       <GalaxyInfo :course="currentCourse" :teacher="teacher" :draft="draft" />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
-      <PublishGalaxy v-if="showPublish" :course="currentCourse" :courseTasks="courseTasks" />
-      <AssignedInfo v-if="!draft && cohortsInCourse.length" :assignCohorts="true" :people="peopleInCourse"
-        :cohorts="cohortsInCourse" :teacher="teacher" />
+      <PublishGalaxy
+        v-if="showPublish"
+        :course="currentCourse"
+        :courseTasks="courseTasks"
+      />
+      <AssignedInfo
+        v-if="!draft && cohortsInCourse.length"
+        :assignCohorts="true"
+        :people="peopleInCourse"
+        :cohorts="cohortsInCourse"
+        :teacher="teacher"
+      />
 
       <BackButton />
     </div>
     <div id="main-section">
       <!-- Map Buttons -->
-      <GalaxyMapButtons class="mt-8" :class="{ hideButtons: hideLeftPanelsFlag }" v-if="teacher"
-        :addNodeMode="addNodeMode" :addEdgeMode="addEdgeMode" :dragNodeMode="dragNodeMode"
-        :uiMessage="uiMessage ? uiMessage : ''" :changeInPositions="changeInPositions"
-        :nodePositionsChangeLoading="nodePositionsChangeLoading" @toggleAddNodeMode="toggleAddNodeMode"
-        @toggleAddEdgeMode="toggleAddEdgeMode" @toggleDragNodeMode="toggleDragNodeMode" @addNode="showAddDialog"
-        @saveNodePositions="saveNodePositions" />
+      <GalaxyMapButtons
+        class="mt-8"
+        :class="{ hideButtons: hideLeftPanelsFlag }"
+        v-if="teacher"
+        :addNodeMode="addNodeMode"
+        :addEdgeMode="addEdgeMode"
+        :dragNodeMode="dragNodeMode"
+        :uiMessage="uiMessage ? uiMessage : ''"
+        :changeInPositions="changeInPositions"
+        :nodePositionsChangeLoading="nodePositionsChangeLoading"
+        @toggleAddNodeMode="toggleAddNodeMode"
+        @toggleAddEdgeMode="toggleAddEdgeMode"
+        @toggleDragNodeMode="toggleDragNodeMode"
+        @addNode="showAddDialog"
+        @saveNodePositions="saveNodePositions"
+      />
 
       <!-- ===== Galaxy Map ===== -->
-      <GalaxyMap ref="vis" :teacher="teacher" @add-node="showAddDialog" @edit-node="showEditDialog"
-        @setUiMessage="setUiMessage" @drag-coords="updateDragCoords" @selected="selected" @selectedEdge="selectedEdge"
-        @deselected="deselect" @blurNode="blurNode" @centerFocus="centerFocus"
-        @nodePositionsChanged="nodePositionsChanged" @nodePositionsChangeLoading="nodePositionsChangeLoading = true"
-        @nodePositionsChangeSaved="nodePositionsChangeSaved" @toggleAddEdgeMode="toggleAddEdgeMode"
-        @hideLeftPanels="hideLeftPanels" @topicClicked="topicClicked($event)"
-        @courseTasks="emittedCourseTasks($event)" />
+      <GalaxyMap
+        ref="vis"
+        :teacher="teacher"
+        @add-node="showAddDialog"
+        @edit-node="showEditDialog"
+        @setUiMessage="setUiMessage"
+        @drag-coords="updateDragCoords"
+        @selected="selected"
+        @selectedEdge="selectedEdge"
+        @deselected="deselect"
+        @blurNode="blurNode"
+        @centerFocus="centerFocus"
+        @nodePositionsChanged="nodePositionsChanged"
+        @nodePositionsChangeLoading="nodePositionsChangeLoading = true"
+        @nodePositionsChangeSaved="nodePositionsChangeSaved"
+        @toggleAddEdgeMode="toggleAddEdgeMode"
+        @hideLeftPanels="hideLeftPanels"
+        @topicClicked="topicClicked($event)"
+        @courseTasks="emittedCourseTasks($event)"
+      />
       <!--  @hoverNode="hovered" -->
     </div>
     <!--==== Right section ====-->
     <div v-if="!cohortsInCourse" id="right-section">
-      <RequestForHelpTeacherFrame :courses="[currentCourse]" :isTeacher="teacher" :students="peopleInCourse" />
-      <SubmissionTeacherFrame :isTeacher="teacher" :courses="[currentCourse]"
-        :students="teacher ? peopleInCourse : [person]" class="mt-4" />
+      <RequestForHelpTeacherFrame
+        :courses="[currentCourse]"
+        :isTeacher="teacher"
+        :students="peopleInCourse"
+      />
+      <SubmissionTeacherFrame
+        :isTeacher="teacher"
+        :courses="[currentCourse]"
+        :students="teacher ? peopleInCourse : [person]"
+        class="mt-4"
+      />
     </div>
     <!-- Edit -->
-    <CreateEditDeleteNodeDialog v-if="dialog" ref="edit" :dialog="dialog" :dialogTitle="dialogTitle"
-      :dialogDescription="dialogDescription" :editing="editing" :course="currentCourse" :currentNode="currentNode"
-      @closeDialog="closeDialog" @openDialog="openDialog" />
+    <CreateEditDeleteNodeDialog
+      v-if="dialog"
+      ref="edit"
+      :dialog="dialog"
+      :dialogTitle="dialogTitle"
+      :dialogDescription="dialogDescription"
+      :editing="editing"
+      :course="currentCourse"
+      :currentNode="currentNode"
+      @closeDialog="closeDialog"
+      @openDialog="openDialog"
+    />
 
     <!-- POPUP OUT PANEL (for system preview)-->
-    <SolarSystemInfoPanel :selectedTopic="clickedTopic" :tasks="topicTasks" @closeInfoPanel="closeInfoPanel"
-      @editNode="showEditDialog" />
+    <SolarSystemInfoPanel
+      :selectedTopic="clickedTopic"
+      :tasks="topicTasks"
+      @closeInfoPanel="closeInfoPanel"
+      @editNode="showEditDialog"
+    />
     <!-- POPUP OUT PANEL (for system preview)-->
-    <EdgeInfoPanel :selectedEdge="currentEdge" @closeInfoPanel="closeInfoPanel" />
+    <EdgeInfoPanel
+      :selectedEdge="currentEdge"
+      @closeInfoPanel="closeInfoPanel"
+    />
   </div>
 </template>
 
@@ -186,7 +242,7 @@ export default {
       "personsTopicsTasks",
       "currentCourse",
       "cohorts",
-      "user"
+      "user",
     ]),
     ...mapGetters(["person", "user"]),
     draft() {
@@ -311,6 +367,8 @@ export default {
       this.clickedTopic = this.currentCourseNodes.find(
         (node) => node.id == this.clickedTopicId
       );
+      // reset topic tasks (to prevent duplicate)
+      this.topicTasks = [];
       // loop courseTasks for this topic id (= this.topicTasks)
       for (const task of this.courseTasks) {
         if (task.topicId == this.clickedTopicId) {

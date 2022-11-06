@@ -25,7 +25,7 @@ const getDefaultState = () => {
     currentCourse: {},
     currentTopicId: "",
     currentTaskId: "",
-    currentCourseId: {},
+    currentCourseId: "",
     currentTopic: {},
     currentTask: {},
     currentCohort: {},
@@ -53,7 +53,9 @@ const getDefaultState = () => {
     showPanelCard: {},
     studentsSubmissions: [],
     dashboardView: '',
-    peopleInCourse: []
+    peopleInCourse: [],
+    personsCourseTasks: [],
+    courseTasks: []
   };
 };
 
@@ -157,6 +159,10 @@ export default new Vuex.Store({
       state.showPanelCard = data;
     },
     setCurrentCourseId(state, courseId) {
+      if (courseId === state.currentCourseId) return
+      // new course, so reset tasks
+      state.personsCourseTasks = []
+      state.courseTasks = []
       state.currentCourseId = courseId;
     },
     setCurrentCourse(state, course) {
@@ -223,7 +229,7 @@ export default new Vuex.Store({
     },
     setUserStatus(state, userStatus) {
       state.userStatus = userStatus
-    }
+    },
   },
   actions: {
     setUser({ commit }, user) {
@@ -319,37 +325,69 @@ export default new Vuex.Store({
           .orderBy("taskCreatedTimestamp") // this is important to ordering the tasks in MissionList.vue
       );
     }),
+    async getPersonsCourseTasks({ state }) {
+      const tasksArr = [];
+      for (const topic of state.personsTopics) {
+        if (topic.topicStatus !== "locked") {
+          const tasks = await db
+            .collection("people")
+            .doc(state.person.id)
+            .collection(state.currentCourseId)
+            .doc(topic.id)
+            .collection("tasks")
+            .get();
+
+          for (const task of tasks.docs) {
+            tasksArr.push({ topicId: topic.id, task: task.data() });
+          }
+        }
+      }
+      // console.log("tasksArr", tasksArr)
+      state.personsCourseTasks = tasksArr
+    },
+    async getCourseTasks({ state }) {
+      const tasksArr = [];
+      for (const topic of state.currentCourseNodes) {
+        const tasks = await db
+          .collection("courses")
+          .doc(state.currentCourseId)
+          .collection("topics")
+          .doc(topic.id)
+          .collection("tasks")
+          .get();
+
+        for (const task of tasks.docs) {
+          tasksArr.push({ topicId: topic.id, task: task.data() });
+        }
+      }
+      // console.log("tasksArr", tasksArr)
+      state.courseTasks = tasksArr
+    },
     async getAllNodes({ state }) {
       const allNodes = [];
 
-      let querySnapShot
-      const snapShot = await db
-        .collection("courses")
-        .get();
-      querySnapShot = snapShot
-
       // get the topics (nodes) in that course
-      for (const doc of querySnapShot.docs) {
+      for (const course of state.courses) {
 
         // if public and not submitted || mapped by user || user is assigned to course
         if ((
           // if public and not submitted
-          doc.data().public === true && doc.data().status != 'submitted') ||
+          course.public === true && course.status != 'submitted') ||
           // mapped by user 
-          doc.data().mappedBy.personId === state.person.id ||
+          course.mappedBy.personId === state.person.id ||
           // user is assigned to course
-          state.person.assignedCourses?.some(course => course === doc.id) ||
+          state.person.assignedCourses?.some(assignedCourse => assignedCourse === course.id) ||
           state.user.data.admin) {
           const subQuerySnapshot = await db
             .collection("courses")
-            .doc(doc.id)
+            .doc(course.id)
             .collection("map-nodes")
             .get();
 
           allNodes.push(
             ...subQuerySnapshot.docs.map((subDoc) => {
               const node = subDoc.data();
-              node.courseId = doc.id; // add course id to nodes list for some reason
+              node.courseId = course.id; // add course id to nodes list for some reason
               //node.group = count; // add group to nodes list for some reason
               return node;
             })
@@ -362,24 +400,21 @@ export default new Vuex.Store({
     },
     async getAllEdges({ state }) {
       const allEdges = [];
-      const querySnapshot = await db
-        .collection("courses")
-        .get();
 
-      for (const doc of querySnapshot.docs) {
+      for (const course of state.courses) {
 
         if (
           // if public and not submitted
-          (doc.data().public === true && doc.data().status != 'submitted') ||
+          (course.public === true && course.status != 'submitted') ||
           // mapped by user 
-          doc.data().mappedBy.personId === state.person.id ||
+          course.mappedBy.personId === state.person.id ||
           // user is assigned to course
-          state.person.assignedCourses?.some(course => course === doc.id) ||
+          state.person.assignedCourses?.some(assignedCourse => assignedCourse === course.id) ||
           state.user.data.admin) {
           // doc.data() is never undefined for query doc snapshots
           const subQuerySnapshot = await db
             .collection("courses")
-            .doc(doc.id)
+            .doc(course.id)
             .collection("map-edges")
             .get();
 
