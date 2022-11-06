@@ -47,24 +47,35 @@
               <strong>View system to create a mission.</strong>
             </p>
           </div>
-          <div v-for="(task, index) in tasks" :key="task.id" class="task-card">
-            <p class="task-number overline">MISSION {{ index + 1 }}</p>
-            <p class="task-title m0">{{ task.title }}</p>
-            <p
-              v-if="task.taskStatus != 'locked'"
-              class="task-status overline m0 text-center"
-              :class="{
-                completed: task.taskStatus == 'completed',
-                locked: task.taskStatus == 'locked',
-                inreview: task.taskStatus == 'inreview',
-                active: task.taskStatus == 'active',
-              }"
-            >
-              {{ task.taskStatus }}
-            </p>
-            <v-icon v-else color="missionAccent" class="lock-icon">{{
-              mdiLock
-            }}</v-icon>
+          <div
+            v-for="(task, index) in tasks"
+            :key="task.id"
+            class="task-card"
+            :style="[
+              task.taskStatus == 'locked' ? { opacity: 0.4 } : { opacity: 1 },
+            ]"
+          >
+            <div class="number-title-container">
+              <p class="task-number overline">MISSION {{ index + 1 }}</p>
+              <p class="task-title m0">{{ task.title }}</p>
+            </div>
+            <div class="status-container">
+              <p
+                v-if="task.taskStatus != 'locked'"
+                class="task-status overline m0 text-center"
+                :class="{
+                  completed: task.taskStatus == 'completed',
+                  locked: task.taskStatus == 'locked',
+                  inreview: task.taskStatus == 'inreview',
+                  active: task.taskStatus == 'active',
+                }"
+              >
+                {{ task.taskStatus }}
+              </p>
+              <v-icon v-else color="missionAccent" class="lock-icon">{{
+                mdiLock
+              }}</v-icon>
+            </div>
           </div>
         </div>
         <div class="bottom">
@@ -201,7 +212,6 @@ export default {
         font-weight: 800;
         padding: 10px 0px 10px 20px;
         margin: 0px;
-        width: 90%;
       }
 
       .close-button {
@@ -212,12 +222,11 @@ export default {
 
       .card-container {
         display: flex;
-        flex-wrap: wrap;
+        flex-direction: column;
         width: 100%;
         height: calc(73% + 25px);
         overflow-y: scroll;
-        // border: 1px solid red;
-        align-items: flex-start;
+        justify-content: flex-start;
 
         .noMissionWarningContainer {
           margin-top: 30%;
@@ -239,57 +248,57 @@ export default {
         .task-card {
           border: 1px solid var(--v-missionAccent-base);
           padding: 10px;
-          margin-top: 20px;
-          margin-left: 20px;
+          margin: 20px;
+          margin-bottom: 0px;
           color: var(--v-missionAccent-base);
-          width: 125px;
-          height: 150px;
+          width: calc(100% - 40px);
           font-size: 0.7rem;
           position: relative;
-          margin-bottom: auto;
           align-self: start;
+          display: flex;
 
-          // .lock-icon {
-          //   width: 100%;
-          //   display: flex;
-          //   justify-content: center;
-          //   align-items: center;
-          //   margin: 10px 0px;
-          // }
+          .number-title-container {
+            width: 70%;
 
-          .task-number {
-            font-size: 0.7rem !important;
-            margin: 0px;
+            .task-number {
+              font-size: 0.7rem !important;
+              margin: 0px;
+            }
+
+            .task-title {
+              margin: 0px;
+              // margin-bottom: 20px;
+            }
           }
+          .status-container {
+            width: 30%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
 
-          .task-title {
-            margin: 0px;
-            // margin-bottom: 20px;
-          }
+            .task-status,
+            .lock-icon {
+              margin-bottom: 0px !important;
+              text-transform: uppercase;
+              font-weight: 800;
+              text-align: center;
+              width: 100%;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+            }
 
-          .task-status,
-          .lock-icon {
-            margin: 10px 0px;
-            // padding-bottom: 10px;
-            text-transform: uppercase;
-            font-weight: 800;
-            position: absolute;
-            bottom: 0px;
-            text-align: center;
-            width: 100%;
-            margin-left: -10px;
-          }
+            .completed {
+              color: var(--v-baseAccent-base);
+            }
 
-          .completed {
-            color: var(--v-baseAccent-base);
-          }
+            .inreview {
+              color: var(--v-cohortAccent-base);
+            }
 
-          .inreview {
-            color: var(--v-cohortAccent-base);
-          }
-
-          .active {
-            color: var(--v-galaxyAccent-base);
+            .active {
+              color: var(--v-galaxyAccent-base);
+            }
           }
         }
       }
