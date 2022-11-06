@@ -23,6 +23,10 @@
         </h1> -->
         <h1 class="galaxy-title pt-2 pl-2">
           student progress
+          <span
+            style="font-weight: 400; text-transform: none; font-style: italic"
+            >(Number of Missions Completed)</span
+          >
         </h1>
       </v-col>
     </v-row>
@@ -35,7 +39,7 @@
           :chartData="formatStudentsChartData(courseData)"
           :chartOptions="chartOptions"
           :style="{ width: '100%', height: '150px', padding: '0px 20px' }"
-          :toolTipEnable="false"
+          :toolTipEnable="true"
           :timeframe="timeframe"
           :selectedPersons="selectedPersons"
           :unselectedPersons="unselectedPersons"

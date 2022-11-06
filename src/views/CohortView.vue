@@ -3,25 +3,43 @@
     <div id="left-section">
       <CohortInfo />
       <AssignedInfo assignCourses="true" />
-      <BackButton :toPath="{path: '/base/cohorts'}" />
+      <BackButton :toPath="{ path: '/base/cohorts' }" />
     </div>
 
     <div id="main-section">
       <div class="people-frame">
         <div class="people-border">
-          <div :class="peopleLabel" @click="studentsView = true"><span class="pl-3">STUDENTS</span></div>
+          <div :class="peopleLabel" @click="studentsView = true">
+            <span class="pl-3">STUDENTS</span>
+          </div>
         </div>
         <div class="graph-border">
-          <div :class="graphLabel" class="text-center" @click="studentsView = false"><span class="pl-3">OVERVIEW</span></div>
+          <div
+            :class="graphLabel"
+            class="text-center"
+            @click="studentsView = false"
+          >
+            <span class="pl-3">OVERVIEW</span>
+          </div>
         </div>
-        <StudentDataIterator v-if="studentsView" class="mt-4"/>
-        <CohortGraphs v-else/>
+        <StudentDataIterator v-if="studentsView" class="mt-4" />
+        <CohortGraphs v-else :cohort="currentCohort" />
       </div>
     </div>
 
     <div v-if="ready" id="right-section">
-      <RequestForHelpTeacherFrame :isTeacher="teacher" :courses="courses" :students="currentCohort.students" class="ml-4"/>
-      <SubmissionTeacherFrame :isTeacher="teacher" :courses="courses" :students="teacher ? currentCohort.students : [person]" class="mt-4 ml-4"/> 
+      <RequestForHelpTeacherFrame
+        :isTeacher="teacher"
+        :courses="courses"
+        :students="currentCohort.students"
+        class="ml-4"
+      />
+      <SubmissionTeacherFrame
+        :isTeacher="teacher"
+        :courses="courses"
+        :students="teacher ? currentCohort.students : [person]"
+        class="mt-4 ml-4"
+      />
     </div>
   </div>
 </template>
@@ -33,16 +51,16 @@ import StudentDataIterator from "../components/StudentDataIterator";
 import BackButton from "../components/BackButton";
 import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame";
 import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame";
-import CohortGraphs from "../components/CohortView/CohortGraphs"
+import CohortGraphs from "../components/CohortView/CohortGraphs";
 
-import { mapState } from "vuex"
+import { mapState } from "vuex";
 
 import moment from "moment";
-import { db } from '../store/firestoreConfig'
+import { db } from "../store/firestoreConfig";
 
 export default {
   name: "CohortView",
-  props: ['cohortId'],
+  props: ["cohortId"],
   components: {
     CohortInfo,
     AssignedInfo,
@@ -50,29 +68,36 @@ export default {
     StudentDataIterator,
     RequestForHelpTeacherFrame,
     SubmissionTeacherFrame,
-    CohortGraphs
+    CohortGraphs,
   },
-  data () {
+  data() {
     return {
-      studentsView: true
-    }
+      studentsView: true,
+    };
   },
   computed: {
-    ...mapState(['currentCohort', 'person', 'userStatus']),
+    ...mapState(["currentCohort", "person", "userStatus"]),
     ready() {
-      return this.cohortId === this.currentCohort.id
+      return this.cohortId === this.currentCohort.id;
     },
     courses() {
-      return this.currentCohort?.courses?.map((course) => {return { id: course }})
+      return this.currentCohort?.courses?.map((course) => {
+        return { id: course };
+      });
     },
     teacher() {
-      return this.currentCohort.teacher || this.currentCohort.teachers.some(teacher => teacher === this.person.id)
+      return (
+        this.currentCohort.teacher ||
+        this.currentCohort.teachers.some(
+          (teacher) => teacher === this.person.id
+        )
+      );
     },
     peopleLabel() {
-      return this.studentsView ? 'people-label' : 'inactive-people-label'
+      return this.studentsView ? "people-label" : "inactive-people-label";
     },
     graphLabel() {
-      return this.studentsView ? 'inactive-graph-label' : 'graph-label'
+      return this.studentsView ? "inactive-graph-label" : "graph-label";
     },
   },
 };
@@ -114,7 +139,7 @@ export default {
   align-items: center;
   flex-direction: column;
   padding-top: 50px;
-  transition: all .2s ease-in-out;
+  transition: all 0.2s ease-in-out;
 
   .people-frame {
     position: relative;
@@ -135,9 +160,9 @@ export default {
       clip-path: polygon(0 0, 100% 0, 90% 100%, 0% 100%);
       cursor: pointer;
       width: 120px;
-      height: 22px
+      height: 22px;
     }
-    
+
     .people-label {
       font-size: 0.8rem;
       font-weight: 400;
@@ -154,7 +179,7 @@ export default {
       width: 116px;
       height: 20px;
     }
-    
+
     .inactive-people-label {
       font-size: 0.8rem;
       font-weight: 400;

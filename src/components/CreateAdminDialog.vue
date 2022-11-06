@@ -3,7 +3,13 @@
     <v-dialog v-model="dialog" width="40%" light>
       <!-- CREATE BUTTON -->
       <template v-slot:activator="{ on, attrs }">
-        <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on">
+        <v-btn
+          outlined
+          color="baseAccent"
+          v-bind="attrs"
+          v-on="on"
+          class="ma-8"
+        >
           <v-icon left> {{ mdiPlus }} </v-icon>
           CREATE ADMIN
         </v-btn>
@@ -63,6 +69,15 @@
                 >
                   <img :src="data.item.image.url" />
                 </v-list-item-avatar>
+                <div
+                  v-else
+                  class="imagePlaceholder"
+                  :style="
+                    colouredBorder(data.item.firstName, data.item.lastName)
+                  "
+                >
+                  {{ first3Letters(data.item.firstName) }}
+                </div>
                 <v-list-item-content>
                   <v-list-item-title
                     v-html="data.item.firstName"
@@ -160,6 +175,24 @@ export default {
           });
       }
     },
+    first3Letters(name) {
+      return name.substring(0, 3).toUpperCase();
+    },
+    stringToColour(str) {
+      return `hsl(${this.hashCode(str) % 360}, 100%, 35%)`;
+    },
+    hashCode(str) {
+      let hash = 0;
+      for (var i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return hash;
+    },
+    colouredBorder(firstName, lastName) {
+      return {
+        backgroundColor: this.stringToColour(firstName + lastName),
+      };
+    },
   },
 };
 </script>
@@ -208,6 +241,17 @@ export default {
     color: var(--v-missionAccent-base);
     text-transform: none;
   }
+}
+
+.imagePlaceholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(200, 200, 200, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 15px;
 }
 
 .input-description {

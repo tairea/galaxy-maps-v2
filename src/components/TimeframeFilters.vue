@@ -1,5 +1,5 @@
 <template>
-  <div class="d-flex">
+  <div class="d-flex mb-2">
     <v-chip
       v-if="!noArrows"
       class="my-2 mx-1 custom-chip"
@@ -14,12 +14,13 @@
       class="my-2 mx-1 custom-chip"
       color="missionAccent"
       :input-value="chipMonthActive"
-      filter
-      filter-icon="mdi-circle-small"
       outlined
       x-small
       @click="timeframeMonth"
     >
+      <v-icon v-if="chipMonthActive" left>
+        {{ mdiCircleSmall }}
+      </v-icon>
       month
     </v-chip>
     <v-chip
@@ -28,10 +29,11 @@
       outlined
       x-small
       :input-value="chipWeekActive"
-      filter
-      filter-icon="mdi-circle-small"
       @click="timeframeWeek"
     >
+      <v-icon v-if="chipWeekActive" left>
+        {{ mdiCircleSmall }}
+      </v-icon>
       Week
     </v-chip>
     <v-chip
@@ -40,10 +42,11 @@
       outlined
       x-small
       :input-value="chipDayActive"
-      filter
-      filter-icon="mdi-circle-small"
       @click="timeframeDay"
     >
+      <v-icon v-if="chipDayActive" left>
+        {{ mdiCircleSmall }}
+      </v-icon>
       Day
     </v-chip>
     <v-chip
@@ -56,17 +59,22 @@
     >
       >
     </v-chip>
-    <span color="missionAccent" v-if="showDate" class="caption pa-2 date">{{date}}</span>
+    <span color="missionAccent" v-if="showDate" class="caption pa-2 date">{{
+      date
+    }}</span>
   </div>
 </template>
 
 <script>
+import { mdiCircleSmall } from "@mdi/js";
+
 export default {
   name: "Timeframefilters",
   props: ["noArrows", "showDate"],
   components: {},
   data() {
     return {
+      mdiCircleSmall,
       timeframe: {
         min: this.previousDays(30),
         max: new Date(),
@@ -86,19 +94,19 @@ export default {
   },
   computed: {
     date() {
-      let min = this.timeframe.min.toString().split(' ').slice(1,3).join(' ')
-      let max = this.timeframe.max.toString().split(' ').slice(1,3).join(' ')
+      let min = this.timeframe.min.toString().split(" ").slice(1, 3).join(" ");
+      let max = this.timeframe.max.toString().split(" ").slice(1, 3).join(" ");
 
       switch (this.timeframe.type) {
-          case "day":
-            return min
-            break;
-          case "week" :
-          case "month":
-            return min + ' - ' + max
-          default:
-        }
-    }
+        case "day":
+          return min;
+          break;
+        case "week":
+        case "month":
+          return min + " - " + max;
+        default:
+      }
+    },
   },
   methods: {
     timeframeMonth() {
@@ -265,6 +273,6 @@ export default {
 }
 
 .date {
-  color: var(--v-missionAccent-base)
+  color: var(--v-missionAccent-base);
 }
 </style>

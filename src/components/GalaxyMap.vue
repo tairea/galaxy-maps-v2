@@ -718,7 +718,7 @@ export default {
                 this.dark
                   ? "white"
                   : this.$vuetify.theme.themes.light.missionAccent, // planet colour
-                6.28 / (5 * i), // planet speed (6.28 radians in a circle. so 6.28 is full circle in 1 second. divide by something to slow it down)
+                6.28 / (10 * i), // planet speed (6.28 radians in a circle. so 6.28 is full circle in 1 second. divide by something to slow it down)
                 20 * i // planet orbit size
               )
             );
