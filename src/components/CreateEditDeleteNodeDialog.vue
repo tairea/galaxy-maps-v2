@@ -356,7 +356,13 @@ export default {
       //   },
       // ],
       prerequisites: false,
-      darkSwatches: [["#69A1E2"], ["#E269CF"]], //mission and galaxy colours only
+      darkSwatches: [
+        ["#69A1E2"],
+        ["#E269CF"],
+        ["#73FBD3"],
+        ["#F3C969"],
+        ["#54428E"],
+      ], //https://coolors.co/69a1e2-e269cf-73fbd3-f3c969-54428e
       lightSwatches: [["#577399"], ["#fe5f55"]],
     };
   },
