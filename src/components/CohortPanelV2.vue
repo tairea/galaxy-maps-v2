@@ -1,15 +1,15 @@
 <template>
-  <div class="d-flex cohort-panel" @click="!studentView ? routeToCohort(cohort) : null" :style="borderColor">
+  <div
+    class="d-flex cohort-panel"
+    @click="!studentView ? routeToCohort(cohort) : null"
+    :style="borderColor"
+  >
     <!-- top row -->
-    <div
-      class="left-col"
-    >
-      <p class="label text-center">Cohort:</p>
+    <div class="left-col">
+      <p class="label text-center mt-4 mb-0">Cohort:</p>
       <div class="d-flex flex-column justify-start align-center pa-2">
         <v-avatar v-if="cohort.image.url" size="80">
-          <v-img
-            :src="cohort.image.url"
-          ></v-img>
+          <v-img :src="cohort.image.url"></v-img>
         </v-avatar>
         <div v-else class="imagePlaceholder">
           {{ first3Letters(cohort.name) }}
@@ -19,8 +19,11 @@
           {{ cohort.name }}
         </p>
         <!-- Teacher -->
-        <div v-if="cohort.teachers.length > 0" class="d-flex justify-center align-center flex-wrap py-2">
-          <p class="label text-center">Teachers:</p>
+        <div
+          v-if="cohort.teachers.length > 0"
+          class="d-flex justify-center align-center flex-wrap py-2"
+        >
+          <p class="label text-center mt-2 mb-2">Teachers:</p>
           <div>
             <Avatar
               v-for="teacherId in cohort.teachers"
@@ -34,28 +37,36 @@
         <p v-else class="label text-center" style="font-weight: 800">
           NO TEACHER DATA
         </p>
-             <!-- Students avatars row -->
-      <div class="student-row">
-        <div
-          v-if="cohort.students.length"
-          class="d-flex justify-center align-center flex-wrap py-2"
-        >
-          <p class="label text-center">Students:</p>
-          <Avatar
-            v-for="(person, index) in studentsWithData"
-            ref="avatar"
-            :key="person.id"
-            :size="30"
-            :personId="person.id"
-            class="my-2 mx-1 avatar"
-            :colourBorder="true"
-            @click.native="clickedPerson(person, index)"
-          />
+        <!-- Students avatars row -->
+        <div class="student-row">
+          <div
+            v-if="cohort.students.length"
+            class="d-flex justify-center align-center flex-wrap py-2"
+          >
+            <v-tooltip top color="subBackground">
+              <template v-slot:activator="{ on, attrs }">
+                <p class="label text-center mt-4 mb-2" v-bind="attrs" v-on="on">
+                  Students:
+                </p>
+              </template>
+              <span>Select students to show only their data</span>
+            </v-tooltip>
+
+            <Avatar
+              v-for="(person, index) in studentsWithData"
+              ref="avatar"
+              :key="person.id"
+              :size="30"
+              :personId="person.id"
+              class="my-2 mx-1 avatar"
+              :colourBorder="true"
+              @click.native="clickedPerson($event, person, index)"
+            />
+          </div>
+          <p v-else class="label text-center pa-4" style="font-weight: 800">
+            NO STUDENT DATA
+          </p>
         </div>
-        <p v-else class="label text-center pa-4" style="font-weight: 800">
-          NO STUDENT DATA
-        </p>
-      </div>
       </div>
     </div>
 
@@ -71,10 +82,10 @@
           <v-btn
             :loading="cohortsCoursesDataLoading"
             icon
-            color="galaxyAccent"
+            color="missionAccent"
           ></v-btn>
         </div>
-        <div v-if="cohortsCoursesData.length > 0" style="padding: 20px">
+        <div v-else-if="cohortsCoursesData.length > 0" style="padding: 20px">
           <ProgressionLineChart
             v-for="courseData in cohortsCoursesData"
             :key="courseData.id"
@@ -90,7 +101,9 @@
           class="d-flex justify-center align-center"
           style="padding: 50px 0px"
         >
-          <p class="label" style="font-weight: 800">NO COURSE DATA</p>
+          <p class="label text-center" style="font-weight: 800">
+            NO COURSE DATA
+          </p>
         </div>
       </div>
       <!-- Activity Bar Chart -->
@@ -103,11 +116,11 @@
           <v-btn
             :loading="cohortActivityDataLoading"
             icon
-            color="baseAccent"
+            color="missionAccent"
             class="d-flex justify-center align-center"
           ></v-btn>
         </div>
-        <div v-if="cohortActivityData.length > 0" class="pt-0 px-5 pb-4" >
+        <div v-else-if="cohortActivityData.length > 0" class="pt-0 px-5 pb-4">
           <ActivityBarChart
             :activityData="cohortActivityData"
             :timeframe="timeframe"
@@ -120,10 +133,11 @@
           class="d-flex justify-center align-center"
           style="padding: 50px 0px"
         >
-          <p class="label" style="font-weight: 800">NO ACTIVITY DATA</p>
+          <p class="label text-center" style="font-weight: 800">
+            NO ACTIVITY DATA
+          </p>
         </div>
       </div>
- 
     </div>
   </div>
 </template>
@@ -139,10 +153,11 @@ import {
   getStudentsTimeDataXAPIQuery,
   VQLXAPIQuery,
 } from "../lib/veracityLRS";
+import { mdiInformationVariant } from "@mdi/js";
 
 export default {
   name: "CohortPanelV2",
-  props: ["cohort", "cols", "tooltip", "studentView", "timeframe", ],
+  props: ["cohort", "cols", "tooltip", "studentView", "timeframe"],
   components: {
     Avatar,
     ProgressionLineChart,
@@ -152,6 +167,7 @@ export default {
 
   data() {
     return {
+      mdiInformationVariant,
       cohortsCoursesData: [],
       cohortActivityData: [],
       studentsWithData: [],
@@ -205,17 +221,21 @@ export default {
   computed: {
     ...mapGetters(["getOrganisationById", "currentCohort"]),
     isDashboardView() {
-      return this.$route.name === 'Dashboard'
+      return this.$route.name === "Dashboard";
     },
     borderColor() {
-      if (this.isDashboardView) return 'border: 1px solid var(--v-missionAccent-base)'
-      return this.cohort.teacher ? 'border: 1px solid var(--v-baseAccent-base);' : 'border: 1px solid var(--v-missionAccent-base)'
-    }
-
+      if (this.isDashboardView)
+        return "border: 1px solid var(--v-missionAccent-base)";
+      return this.cohort.teacher
+        ? "border: 1px solid var(--v-baseAccent-base);"
+        : "border: 1px solid var(--v-missionAccent-base)";
+    },
   },
   methods: {
     ...mapActions(["setCurrentCohort"]),
-    clickedPerson(person, index) {
+    clickedPerson(e, person, index) {
+      // prevent route to cohortView
+      e.stopPropagation();
       // get all avatar elements
       const avatarEls = this.$refs.avatar;
       // loop avatar els
@@ -294,7 +314,7 @@ export default {
 <style lang="scss" scoped>
 .cohort-panel {
   // width: calc(50% - 40px);
-  min-height: 60%;
+  // min-height: 60%;
   margin: 20px;
   margin-bottom: 50px;
   flex-wrap: wrap;
@@ -325,7 +345,6 @@ export default {
       text-align: center;
       font-size: 0.65rem !important;
       line-height: 1rem;
-      padding-top: 10px;
       font-weight: bold;
       text-transform: uppercase;
     }
@@ -352,7 +371,7 @@ export default {
 .label {
   color: var(--v-missionAccent-base);
   font-size: 0.7rem;
-  margin: 10px;
+  // margin: 10px;
   text-transform: uppercase;
   width: 100%;
 }

@@ -19,7 +19,7 @@
               flat
               width="50%"
               hide-details
-              prepend-inner-icon="mdi-magnify"
+              :prepend-inner-icon="mdiMagnify"
               label="Search"
               dense
               outlined
@@ -34,7 +34,7 @@
                 color="missionAccent"
                 hide-details
                 :items="keys"
-                prepend-inner-icon="mdi-sort-alphabetical-variant"
+                :prepend-inner-icon="mdiSortAlphabeticalVariant"
                 label="Sort by"
                 dense
                 class="mb-1 sort"
@@ -42,23 +42,35 @@
               ></v-select>
             </div>
             <!-- Arrow buttons -->
-            <!-- <v-btn-toggle
+            <v-btn-toggle
               background-color="background"
               v-model="sortDesc"
               mandatory
               dense
             >
-              <v-btn small outlined color="missionAccent" :value="false">
-                <v-icon small>mdi-arrow-up</v-icon>
+              <v-btn
+                small
+                outlined
+                color="missionAccent"
+                :value="false"
+                style="padding: 18px"
+              >
+                <v-icon small>{{ mdiArrowUp }}</v-icon>
               </v-btn>
-              <v-btn small outlined color="missionAccent" :value="true">
-                <v-icon small>mdi-arrow-down</v-icon>
+              <v-btn
+                small
+                outlined
+                color="missionAccent"
+                :value="true"
+                style="padding: 18px"
+              >
+                <v-icon small>{{ mdiArrowDown }}</v-icon>
               </v-btn>
-            </v-btn-toggle> -->
+            </v-btn-toggle>
           </div>
           <div class="mx-1">
-            <StudentAccountsDialog 
-              v-if="currentCohort.teacher" 
+            <StudentAccountsDialog
+              v-if="currentCohort.teacher"
               :students="students"
               @updateStudentProfile="updateStudentProfile($event)"
             />
@@ -99,11 +111,17 @@
 <script>
 // import CreateAccountDialog from "../components/CreateAccountDialog";
 // import ImportCsvDialog from "../components/ImportCsvDialog";
-import StudentAccountsDialog from "../components/CohortView/StudentAccountsDialog"
+import StudentAccountsDialog from "../components/CohortView/StudentAccountsDialog";
 import StudentCard from "../components/StudentCard/StudentCard";
 import TimeframeFilters from "../components/TimeframeFilters";
 import { mapGetters } from "vuex";
 import { dbMixins } from "../mixins/DbMixins";
+import {
+  mdiArrowUp,
+  mdiArrowDown,
+  mdiMagnify,
+  mdiSortAlphabeticalVariant,
+} from "@mdi/js";
 
 export default {
   name: "StudentsDataIterator",
@@ -113,11 +131,15 @@ export default {
     // CreateAccountDialog,
     // ImportCsvDialog,
     TimeframeFilters,
-    StudentAccountsDialog
+    StudentAccountsDialog,
   },
   mixins: [dbMixins],
   data() {
     return {
+      mdiArrowUp,
+      mdiArrowDown,
+      mdiMagnify,
+      mdiSortAlphabeticalVariant,
       search: "",
       sortDesc: false,
       sortBy: "firstName",
@@ -132,19 +154,20 @@ export default {
       students: [],
       timeframe: {},
       date: "",
-      prevVal: ""
+      prevVal: "",
     };
   },
- created() {
-    this.counterInterval =  setInterval(
-      function()
-      {
+  created() {
+    this.counterInterval = setInterval(
+      function () {
         this.setTime();
-      }.bind(this), 10000);
+      }.bind(this),
+      10000
+    );
     return this.setTime();
   },
   destroyed() {
-    clearInterval( this.counterInterval )
+    clearInterval(this.counterInterval);
   },
   mounted() {
     // this is needed incase there is no change in currentCohort to catch with the watch
@@ -157,11 +180,12 @@ export default {
       deep: true,
       handler(newVal, oldVal) {
         if (oldVal.students?.length !== newVal.students?.length) {
-          if (oldVal.students?.length > newVal.students?.length) this.removeStudentProfile()
+          if (oldVal.students?.length > newVal.students?.length)
+            this.removeStudentProfile();
           else this.getStudentProfiles();
         }
         if (oldVal.id !== newVal.id) {
-          this.getStudentProfiles()
+          this.getStudentProfiles();
         }
       },
     },
@@ -174,11 +198,11 @@ export default {
   },
   methods: {
     updateStudentProfile(obj) {
-      const index = this.students.findIndex(student => student.id === obj.id)
-      this.students.splice(index, 1, obj)
+      const index = this.students.findIndex((student) => student.id === obj.id);
+      this.students.splice(index, 1, obj);
     },
     setTime() {
-      this.date = Date.now()
+      this.date = Date.now();
     },
     getStudentProfiles() {
       if (this.currentCohort.students?.length) {
@@ -195,8 +219,8 @@ export default {
     },
     removeStudentProfile() {
       this.students = this.students.filter((a) => {
-        return this.currentCohort.students.some((b) => a.id === b )
-      })
+        return this.currentCohort.students.some((b) => a.id === b);
+      });
     },
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
@@ -215,7 +239,7 @@ export default {
         (student) => student.id == payload.person.id
       );
       this.students[foundIndex].tasks = payload.tasks;
-    }
+    },
   },
 };
 </script>

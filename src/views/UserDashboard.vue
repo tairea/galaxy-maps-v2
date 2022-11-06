@@ -1,6 +1,6 @@
 <template>
   <div id="container" class="bg">
-    <!-- STUDENTS INFO FRAME -->
+    <!-- PERSON INFO FRAME -->
     <div id="left-section">
       <UserInfo :person="person" />
     </div>
@@ -11,7 +11,7 @@
     </div>
     <div v-else-if="(isStudent && isTeacher) || isAdmin" class="top-section">
       <div v-if="isAdmin" class="student-border">
-        <div :class="adminLabel" @click="setView('admin')">admin dashboard</div>
+        <div :class="adminLabel" @click="setView('admin')">Create Admin</div>
       </div>
       <div v-else class="student-border">
         <div :class="studentLabel" @click="setView('student')">
@@ -20,7 +20,7 @@
       </div>
       <div class="teacher-border">
         <div :class="teacherLabel" @click="setView('teacher')">
-          mapping dashboard
+          cohort analytics
         </div>
       </div>
       <v-divider
@@ -29,7 +29,7 @@
       ></v-divider>
     </div>
 
-    <!-- STUDENT -->
+    <!-- STUDENT MAIN -->
     <template v-if="dashboardView === 'student'">
       <!-- Main section -->
       <div id="main-section">
@@ -49,6 +49,8 @@
         <StudentActivityTimeline :student="person" />
       </div>
     </template>
+
+    <!-- TEACHER -->
     <template v-else-if="dashboardView === 'teacher'">
       <div id="main-section">
         <!-- info description -->
@@ -56,8 +58,13 @@
           <v-icon left class="circle-border" color="missionAccent" small>{{
             mdiInformationVariant
           }}</v-icon>
-          <p class="info-description">
-            These are cohorts & maps you have mapped
+          <p v-if="isAdmin" class="info-description">
+            Because you are an Admin. These are ALL Galaxy Maps and ALL Cohorts
+            on the Galaxy Maps platform.
+          </p>
+          <p v-else class="info-description">
+            These are Galaxy Maps you have created and the Cohorts working
+            through them.
           </p>
         </div>
         <div class="timeframe-chips">
@@ -94,6 +101,15 @@
     </template>
     <template v-else-if="dashboardView === 'admin'">
       <div id="main-section">
+        <div class="d-flex align-center mb-4">
+          <v-icon left class="circle-border" color="missionAccent" small>{{
+            mdiInformationVariant
+          }}</v-icon>
+          <p class="info-description">
+            Because you are a Galaxy Maps super admin, you can create other
+            admins (for Developers only).
+          </p>
+        </div>
         <CreateAdminDialog />
       </div>
     </template>
