@@ -203,7 +203,8 @@ export default {
     );
     if (this.personsTopics.length && isGalaxyMapComplete) {
       // TODO: better complete congrats
-      alert("Galaxy Map Complete. Well done!");
+      console.log("Galaxy Map Complete. Well done!");
+      this.$emit("galaxyCompleted");
     }
   },
   beforeDestroy() {
