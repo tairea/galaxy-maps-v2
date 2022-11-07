@@ -53,6 +53,7 @@
           class="custom-input"
         ></v-text-field>
         <v-btn
+          data-cy="signin"
           :disabled="!valid"
           color="baseAccent"
           class="mr-4"

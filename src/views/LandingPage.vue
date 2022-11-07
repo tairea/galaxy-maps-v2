@@ -14,7 +14,13 @@
       <p class="overline">Discover new Galaxies and navigate your learning</p>
 
       <!-- <v-btn outlined color="baseAccent" class="mt-8" :to="{ path: 'login' }"> -->
-      <v-btn outlined color="baseAccent" class="mt-8" to="/login">
+      <v-btn
+        data-cy="signInToGM"
+        outlined
+        color="baseAccent"
+        class="mt-8"
+        to="/login"
+      >
         SIGN IN TO GALAXY MAPS
       </v-btn>
       <!-- Background maps video -->
