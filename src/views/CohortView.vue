@@ -86,12 +86,7 @@ export default {
       });
     },
     teacher() {
-      return (
-        this.currentCohort.teacher ||
-        this.currentCohort.teachers.some(
-          (teacher) => teacher === this.person.id
-        )
-      );
+      return this.currentCohort.teachers.includes(this.person.id);
     },
     peopleLabel() {
       return this.studentsView ? "people-label" : "inactive-people-label";

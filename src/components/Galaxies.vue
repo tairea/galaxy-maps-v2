@@ -188,10 +188,10 @@ export default {
       /* ===========================
         Show ALL Galaxies in DATABASE!! (so I can see what maps users have created)
       =========================== */
-      await this.$store.dispatch("getAllNodes"); // node data for course
       await this.$store.dispatch("getAllEdges"); // edge data for course
+      await this.$store.dispatch("getAllNodes"); // node data for course
       this.nodesToDisplay = this.allNodesForDisplay;
-      if (this.nodesToDisplay.length > 0) {
+      if (this.$refs.network?.nodes.length) {
         // const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
         const repositionedNodes = this.repositionCoursesBasedOnBoundariesV2();
         if (repositionedNodes.length) {

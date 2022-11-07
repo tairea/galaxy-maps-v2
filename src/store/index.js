@@ -222,6 +222,7 @@ export default new Vuex.Store({
       state.snackbar = snackbar;
     },
     setDashboardView(state, view) {
+      console.log('setView: ', view)
       state.dashboardView = view
     },
     setPeopleInCourse(state, people) {
