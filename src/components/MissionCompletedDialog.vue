@@ -236,7 +236,6 @@ import {
 import {
   mdiCloudUploadOutline,
   mdiInformationVariant,
-  mdiCheckboxBlankOutline,
   mdiCheck,
   mdiClose,
   mdiCheckboxBlankOutline,
@@ -267,7 +266,6 @@ export default {
   data: () => ({
     mdiCloudUploadOutline,
     mdiInformationVariant,
-    mdiCheckboxBlankOutline,
     mdiCheck,
     mdiClose,
     mdiCheckboxBlankOutline,
