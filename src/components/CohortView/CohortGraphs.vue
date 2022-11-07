@@ -14,10 +14,10 @@
         <v-btn
           :loading="cohortsCoursesDataLoading"
           icon
-          color="galaxyAccent"
+          color="missionAccent"
         ></v-btn>
       </div>
-      <div v-if="cohortsCoursesData.length > 0" style="padding: 20px">
+      <div v-else-if="cohortsCoursesData.length > 0" style="padding: 20px">
         <ProgressionLineChart
           v-for="courseData in cohortsCoursesData"
           :key="courseData.id"
@@ -33,7 +33,7 @@
         class="d-flex justify-center align-center"
         style="padding: 50px 0px"
       >
-        <p class="label" style="font-weight: 800">NO COURSE DATA</p>
+        <p class="label text-center" style="font-weight: 800">NO COURSE DATA</p>
       </div>
     </div>
     <!-- Activity Bar Chart -->
@@ -46,11 +46,11 @@
         <v-btn
           :loading="cohortActivityDataLoading"
           icon
-          color="baseAccent"
+          color="missionAccent"
           class="d-flex justify-center align-center"
         ></v-btn>
       </div>
-      <div v-if="cohortActivityData.length > 0" class="pt-0 px-5 pb-4" >
+      <div v-else-if="cohortActivityData.length > 0" class="pt-0 px-5 pb-4">
         <ActivityBarChart
           :activityData="cohortActivityData"
           :timeframe="timeframe"
@@ -63,8 +63,47 @@
         class="d-flex justify-center align-center"
         style="padding: 50px 0px"
       >
-        <p class="label" style="font-weight: 800">NO ACTIVITY DATA</p>
+        <p class="label text-center" style="font-weight: 800">
+          NO ACTIVITY DATA
+        </p>
       </div>
+    </div>
+
+    <!-- Toggle student data -->
+    <div class="student-row">
+      <!-- loading spinner -->
+      <div
+        class="d-flex justify-center align-center"
+        style="padding: 50px"
+        v-if="cohort.students.length"
+      >
+        <v-btn
+          :loading="cohort.students.length"
+          icon
+          color="missionAccent"
+        ></v-btn>
+      </div>
+      <div
+        v-else-if="cohort.students.length > 0"
+        class="d-flex justify-center align-center flex-wrap py-2"
+      >
+        <p class="label text-center mt-4 mb-2">
+          Students: <i>(Selected students to only show their data)</i>
+        </p>
+        <Avatar
+          v-for="(person, index) in studentsWithData"
+          ref="avatar"
+          :key="person.id"
+          :size="50"
+          :personId="person.id"
+          class="my-2 mx-1 avatar"
+          :colourBorder="true"
+          @click.native="clickedPerson(person, index)"
+        />
+      </div>
+      <p v-else class="label text-center" style="font-weight: 800">
+        NO STUDENT DATA
+      </p>
     </div>
   </div>
 </template>
@@ -72,16 +111,22 @@
 import ProgressionLineChart from "../../components/ProgressionLineChart";
 import ActivityBarChart from "../../components/ActivityBarChart";
 import TimeframeFilters from "../../components/TimeframeFilters";
+import Avatar from "../../components/Avatar";
 
-import { getCohortsCourseDataXAPIQuery, getStudentsTimeDataXAPIQuery } from "../../lib/veracityLRS";
-import { mapGetters } from 'vuex';
+import {
+  getCohortsCourseDataXAPIQuery,
+  getStudentsTimeDataXAPIQuery,
+} from "../../lib/veracityLRS";
+import { mapGetters } from "vuex";
 
 export default {
   name: "CohortGraphs",
+  props: ["cohort"],
   components: {
     ProgressionLineChart,
     ActivityBarChart,
-    TimeframeFilters
+    TimeframeFilters,
+    Avatar,
   },
   data() {
     return {
@@ -89,7 +134,7 @@ export default {
       cohortActivityData: [],
       timeframe: {},
       studentsWithData: [],
-      // selectedIndexs: [],
+      selectedIndexs: [],
       selectedPersons: [],
       unselectedPersons: [],
       cohortsCoursesDataLoading: false,
@@ -131,20 +176,70 @@ export default {
     this.cohortActivityDataLoading = false;
   },
   computed: {
-    ...mapGetters(['currentCohort'])
-  }
-}
+    ...mapGetters(["currentCohort"]),
+  },
+  methods: {
+    clickedPerson(person, index) {
+      // get all avatar elements
+      const avatarEls = this.$refs.avatar;
+      // loop avatar els
+      for (var i = 0; i < avatarEls.length; i++) {
+        // add index to selected if not already. else remove
+        if (i == index && !this.selectedIndexs.includes(index)) {
+          this.selectedIndexs.push(index);
+          this.selectedPersons.push(person);
+        }
+        // remove
+        else if (i == index && this.selectedIndexs.includes(index)) {
+          this.selectedIndexs = this.selectedIndexs.filter(
+            (item) => item !== index
+          );
+          this.selectedPersons = this.selectedPersons.filter(
+            (selectedPerson) => selectedPerson.id !== person.id
+          );
+          this.unselectedPersons.push(person);
+        }
+
+        //anyone not in selectedPersons becomes unselected (this is used to hide data in chart)
+        this.unselectedPersons = this.diffTwoArraysOfObjects(
+          this.studentsWithData,
+          this.selectedPersons
+        );
+
+        // add dim to all avatar els
+        for (var y = 0; y < avatarEls.length; y++) {
+          avatarEls[y].$el.classList.add("dim");
+        }
+        //remove dim for selected avatar els
+        for (var x = 0; x < this.selectedIndexs.length; x++) {
+          avatarEls[this.selectedIndexs[x]].$el.classList.remove("dim");
+        }
+      }
+    },
+    diffTwoArraysOfObjects(array1, array2) {
+      return array1.filter((object1) => {
+        return !array2.some((object2) => {
+          return object1.id === object2.id;
+        });
+      });
+    },
+  },
+};
 </script>
 <style scoped>
 .label {
   color: var(--v-missionAccent-base);
   font-size: 0.7rem;
-  margin: 10px;
+  /* margin: 10px; */
   text-transform: uppercase;
   width: 100%;
 }
 .timeframe-chips {
-display: flex;
-justify-content: center;
+  display: flex;
+  justify-content: center;
+}
+
+.dim {
+  filter: opacity(30%);
 }
 </style>

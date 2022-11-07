@@ -1,6 +1,11 @@
 <template>
   <div class="student-card" :class="status ? '' : 'not-active'">
-    <StudentCardStatus :student="student" :date="date" :status="status" class="pl-1"/>
+    <StudentCardStatus
+      :student="student"
+      :date="date"
+      :status="status"
+      class="pl-1"
+    />
     <template v-if="!status" class="second-block">
       <span class="overline not-active text-uppercase ma-auto"
         >hasn't signed in yet</span
@@ -25,11 +30,7 @@
             @emitUpHours="emitUpHours($event)"
           />
         </div>
-        <div
-          v-if="activities.length > 0"
-          class="pa-0 d-flex flex-column"
-          style="height: 50%"
-        >
+        <div v-if="activities.length > 0" class="bottom-row">
           <StudentCompletedTasks
             :taskData="activities"
             :timeframe="timeframe"
@@ -39,10 +40,10 @@
       </div>
       <div class="student-actions-overUnder">
         <div class="top-row">
-            <StudentCohorts :size="20" :student="student"/>
+          <StudentCohorts :size="20" :student="student" />
         </div>
         <div class="bottom-row">
-          <StudentActions :student="student"/>
+          <StudentActions :student="student" />
         </div>
       </div>
     </template>
@@ -114,7 +115,7 @@ export default {
         currentTask,
       };
     });
-    
+
     // ==== get student activity data from LRS
     const getActivityData = await getStudentsTimeDataXAPIQuery({
       studentsArr: [this.student.id],
@@ -188,10 +189,12 @@ a {
   .top-row {
     border-bottom: 1px dashed var(--v-missionAccent-base);
     height: 50%;
+    padding: 2.5px;
   }
 
   .bottom-row {
-    height: 50%
+    height: 50%;
+    padding: 2.5px;
   }
 
   .second-block {

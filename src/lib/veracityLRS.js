@@ -213,7 +213,7 @@ export const submitWorkForReviewXAPIStatement = (actor, taskId, context) => {
             context.mission.title,
         },
         description: {
-          "en-nz": "Submitted work for Task: " + context.mission.title,
+          "en-nz": "Work submitted for Task: " + context.mission.title,
         },
         extensions: {
           "https://www.galaxymaps.io/course/id/": context.galaxy.id,
@@ -735,7 +735,7 @@ export const teacherRespondedSubmissionDeclinedXAPIStatement = (
             context.mission.title,
         },
         description: {
-          "en-nz": "Student requested help for Task: " + context.mission.title,
+          "en-nz": "Work declined for Task: " + context.mission.title,
         },
         extensions: {
           "https://www.galaxymaps.io/course/id/": context.galaxy.id,

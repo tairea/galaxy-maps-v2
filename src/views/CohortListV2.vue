@@ -106,10 +106,21 @@
           />
         </div>
         <v-row justify="center">
-          <v-btn outlined color="baseAccent">
-            <v-icon class="mr-2">{{ mdiPlus }}</v-icon>
-            create cohort
-          </v-btn>
+          <v-tooltip top close-delay="2000" color="subBackground">
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn
+                outlined
+                color="baseAccent"
+                v-bind="attrs"
+                v-on="on"
+                class="mb-8"
+              >
+                <v-icon class="mb-1 mr-2">{{ mdiPlus }}</v-icon>
+                create cohort
+              </v-btn>
+            </template>
+            <span v-html="paidFeatureMessage"></span>
+          </v-tooltip>
         </v-row>
       </div>
       <div v-else class="no-cohort">
@@ -117,19 +128,14 @@
         <p class="overline" style="text-align: center"><strong>OR</strong></p>
 
         <!-- Create Cohort Button -->
-        <v-tooltip bottom close-delay="2000">
+        <v-tooltip bottom close-delay="2000" color="subBackground">
           <template v-slot:activator="{ on, attrs }">
             <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on">
               <v-icon class="mb-1 mr-2">{{ mdiPlus }}</v-icon>
               create cohort
             </v-btn>
           </template>
-          <span
-            >Paid feature.
-            <a href="#" style="cursor: pointer; pointer-events: initial"
-              >Click here to Upgrade</a
-            ></span
-          >
+          <span v-html="paidFeatureMessage"></span>
         </v-tooltip>
       </div>
       <!-- <p>create or start a galaxy to join a cohort</p> -->
@@ -180,7 +186,8 @@ export default {
     selectedCohorts: [],
     unselectedCohorts: [],
     orderedCohorts: [],
-    expand: false
+    expand: false,
+    paidFeatureMessage: `<div class="ma-2"><p class="text-center">Paid feature.</p><p class="text-center">Contact us to upgrade: <a href="mailto:base@galaxymaps.io">base@galaxymaps.io</a></p></div>`
   }),
   mounted() {
     // trigger VuexFire bindCohorts & bindOrganisations in Store
