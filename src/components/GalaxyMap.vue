@@ -201,7 +201,7 @@ export default {
     let isGalaxyMapComplete = this.personsTopics.every(
       (topic) => topic.topicStatus === "completed"
     );
-    if (isGalaxyMapComplete) {
+    if (this.personsTopics.length && isGalaxyMapComplete) {
       // TODO: better complete congrats
       alert("Galaxy Map Complete. Well done!");
     }

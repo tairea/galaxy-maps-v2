@@ -1,15 +1,28 @@
 <template>
   <div>
     <!-- COURSE CARD -->
-    <div class="galaxyCard"
-      :style="admin ? { 'border': '1px solid var(--v-cohortAccent-base)' } : { 'border': '1px solid var(--v-galaxyAccent-base)' }"
-      :class="{ 'selected-galaxy': active, 'draft-galaxy': draft }">
-      <img v-if="course.image.url" class="galaxyCardImage ma-1" :src="course.image.url" />
+    <div
+      class="galaxyCard"
+      :style="
+        admin
+          ? { border: '1px solid var(--v-cohortAccent-base)' }
+          : { border: '1px solid var(--v-galaxyAccent-base)' }
+      "
+      :class="{ 'selected-galaxy': active, 'draft-galaxy': draft }"
+    >
+      <img
+        v-if="course.image.url"
+        class="galaxyCardImage ma-1"
+        :src="course.image.url"
+      />
 
-      <div v-else class="imagePlaceholder">
+      <div v-else class="imagePlaceholder ma-1">
         {{ first3Letters(course.title) }}
       </div>
-      <p class="galaxyListPanelContent text-left ma-1" :class="{ 'selected-galaxy': active }">
+      <p
+        class="galaxyListPanelContent text-left ma-1"
+        :class="{ 'selected-galaxy': active }"
+      >
         {{ course.title }}
       </p>
     </div>
@@ -24,7 +37,7 @@ export default {
   data() {
     return {};
   },
-  async mounted() { },
+  async mounted() {},
   computed: {
     draft() {
       return this.course.status === "drafting";
