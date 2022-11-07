@@ -18,7 +18,7 @@
               <v-icon v-if="task.submissionRequired">
                 {{ mdiCloudUploadOutline }}
               </v-icon>
-              <v-icon v-else> {{ mdiCheck }}box-blank-outline </v-icon>
+              <v-icon v-else> {{ mdiCheckBoxBlankOutline }} </v-icon>
             </v-btn>
           </template>
 
@@ -132,7 +132,7 @@
                   v-bind="attrs"
                   v-on="on"
                 >
-                  <v-icon left> {{ mdiCheck }} </v-icon>
+                  <v-icon left> {{ mdiCheckBoxBlankOutline }} </v-icon>
                   SUBMIT WORK FOR REVIEW
                 </v-btn>
                 <v-btn
@@ -236,6 +236,7 @@ import {
 import {
   mdiCloudUploadOutline,
   mdiInformationVariant,
+  mdiCheckBoxBlankOutline,
   mdiCheck,
   mdiClose,
 } from "@mdi/js";
@@ -265,6 +266,7 @@ export default {
   data: () => ({
     mdiCloudUploadOutline,
     mdiInformationVariant,
+    mdiCheckBoxBlankOutline,
     mdiCheck,
     mdiClose,
     submissionLink: null,
