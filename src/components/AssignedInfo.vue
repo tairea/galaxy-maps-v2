@@ -1,7 +1,8 @@
 <template>
   <div id="assigned-info">
-
-    <h2 class="assigned-label">{{isMissionView ? 'Currently active' : 'Assigned to'}}:</h2>
+    <h2 class="assigned-label">
+      {{ isMissionView ? "Currently active" : "Assigned to" }}:
+    </h2>
     <!-- ASSIGNED COHORTS INFO -->
     <div v-if="assignCohorts">
       <!-- Cohorts -->
@@ -20,7 +21,14 @@
       <div v-if="people.length > 0">
         <p class="overline assignedToLabel ma-0">Individuals</p>
         <v-row class="my-4">
-          <Avatar v-for="person in people" :profile="person" :key="person.id" :size="40" :colourBorder="true" class="ma-1"/>
+          <Avatar
+            v-for="person in people"
+            :profile="person"
+            :key="person.id"
+            :size="40"
+            :colourBorder="true"
+            class="ma-1"
+          />
         </v-row>
       </div>
 
@@ -30,7 +38,12 @@
       >
         Nobody is assigned to this Galaxy
       </p>
-      <AssignCohortDialog v-if="isTeacher" :assignCohorts="true" @newAssignment="addToPeople($event)" :cohorts="cohorts"/>
+      <AssignCohortDialog
+        v-if="isTeacher && cohorts"
+        :assignCohorts="true"
+        @newAssignment="addToPeople($event)"
+        :cohorts="cohorts"
+      />
     </div>
 
     <!-- ASSIGNED COURSES INFO -->
@@ -39,10 +52,11 @@
       <div v-if="courses.length > 0">
         <Course v-for="(course, i) in courses" :course="course" :key="i" />
       </div>
-      <p v-else class="assigned-status">
-        No Galaxies assigned to this Cohort
-      </p>
-      <AssignCohortDialog v-if="isTeacher && !courseCohort" :assignCourses="true" />
+      <p v-else class="assigned-status">No Galaxies assigned to this Cohort</p>
+      <AssignCohortDialog
+        v-if="isTeacher && !courseCohort"
+        :assignCourses="true"
+      />
     </div>
   </div>
 </template>
@@ -74,7 +88,7 @@ export default {
     "cohorts",
     "organisations",
     "people",
-    "teacher"
+    "teacher",
   ],
   data() {
     return {
@@ -82,7 +96,7 @@ export default {
     };
   },
   beforeMount() {
-    this.getCohortCourses()
+    this.getCohortCourses();
   },
   watch: {
     currentCohort() {
@@ -93,14 +107,18 @@ export default {
     ...mapState(["person", "currentCohort"]),
     ...mapGetters(["getCoursesInThisCohort", "user"]),
     isTeacher() {
-      return this.currentCohort.teacher || this.user.data.admin || this.teacher
+      return (
+        this.user.data.admin ||
+        this.teacher ||
+        this.currentCohort.teachers?.includes(this.person.id)
+      );
     },
-    courseCohort () {
-      return this.currentCohort.courseCohort
+    courseCohort() {
+      return this.currentCohort.courseCohort;
     },
     isMissionView() {
-      return this.$route.name == 'SolarSystemView'
-    }
+      return this.$route.name == "SolarSystemView";
+    },
   },
   methods: {
     async getCohortCourses() {
@@ -116,8 +134,8 @@ export default {
       }
     },
     addToPeople(person) {
-      return this.people.push(person)
-    }
+      return this.people.push(person);
+    },
   },
 };
 </script>
