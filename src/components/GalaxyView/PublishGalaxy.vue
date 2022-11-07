@@ -273,15 +273,14 @@ export default {
     },
   },
   watch: {
-    // courseTasks: function (n, o) {
-    //   console.log("from watch publish. course TASKS", n);
-    // },
-    // currentCourseNodes: function (n, o) {
-    //   console.log("from watch publish. course NODES", n);
-    // },
-  },
-  mounted() {
-    // console.log("from publish. course TASKS", this.courseTasks);
+    course: {
+      immediate: true,
+      deep: true,
+      handler(newVal) {
+        console.log("newVal", newVal);
+        this.courseOptions.public = newVal.public;
+      },
+    },
   },
   methods: {
     ...mapMutations(["setCurrentCourse"]),
@@ -304,7 +303,7 @@ export default {
       this.dialog = false;
       this.loading = false;
       this.courseOptions = {
-        public: false,
+        public: this.course.public,
       };
     },
 
@@ -405,22 +404,21 @@ export default {
             const person = await this.MXgetPersonByIdFromDB(cohort.teachers[0]);
             person.inviter = "Galaxy Maps Admin";
             this.sendCoursePublishedEmail(person, this.course);
-            this.sendNewCohortEmail(person, cohort);
           } else {
-            this.sendNewCohortEmail(this.person, cohort);
+            this.sendCoursePublishedEmail(this.person, cohort);
           }
           return docRef.id;
         });
       return cohortId;
     },
 
-    sendNewCohortEmail(profile, cohort) {
-      const person = {
+    newCohortCreated(profile, cohort) {
+      const data = {
         ...profile,
         cohort: cohort.name,
       };
-      const sendNewCohortEmail = functions.httpsCallable("sendNewCohortEmail");
-      return sendNewCohortEmail(person);
+      const newCohortCreated = functions.httpsCallable("newCohortCreated");
+      return newCohortCreated(data);
     },
 
     sendNewSubmissionEmail(course) {

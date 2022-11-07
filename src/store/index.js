@@ -596,6 +596,7 @@ export default new Vuex.Store({
         .collection("cohorts")
         .doc(cohort.id)
         .onSnapshot(async (doc) => {
+          console.log('cohort DB watcher triggered');
           const newCohort = {
             id: doc.id,
             ...doc.data(),
