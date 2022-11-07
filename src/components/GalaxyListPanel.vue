@@ -217,7 +217,10 @@ export default {
     // ALL GALAXIES
     getPublicCourses() {
       return this.courses.filter(
-        (course) => course.public == true && course.status == "published"
+        (course) =>
+          course.public == true &&
+          course.status == "published" &&
+          !this.getLearningCourses.includes(course)
       );
     },
   },

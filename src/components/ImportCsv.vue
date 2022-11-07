@@ -64,8 +64,8 @@
 <script>
 import firebase from "firebase/app";
 import { db, storage } from "../store/firestoreConfig";
-import isEmpty from "lodash"
-import { mapGetters } from "vuex"
+import isEmpty from "lodash";
+import { mapGetters } from "vuex";
 
 // csv import: https://codepen.io/edward1995/pen/QmXdwz?editors=1010
 export default {
@@ -84,16 +84,16 @@ export default {
       buttonLabel: "Add Students to Database",
       loading: false,
       disabled: false,
-      csvColumns: ["Nsn Number","First Name","Last Name","Student Email","Parent Email"]
+      csvColumns: ["Nsn Number", "First Name", "Last Name", "Student Email"], // Add "Parent Email later
     };
   },
   filters: {
-    capitalize: function(str) {
+    capitalize: function (str) {
       return str.charAt(0).toUpperCase() + str.slice(1);
     },
   },
   computed: {
-    ...mapGetters(['currentCohort'])
+    ...mapGetters(["currentCohort"]),
   },
   methods: {
     saveStudents() {
@@ -103,23 +103,24 @@ export default {
       this.parse_csv.forEach((student, index, array) => {
         student.assignedCohorts = [this.currentCohort.id];
 
-        
         const usersRef = db.collection("people").doc(student.nsnNumber);
 
         usersRef.get().then((docSnapshot) => {
           // if student exists, update assignedCohorts
           if (docSnapshot.exists) {
-            usersRef.update({
-              assignedCohorts: firebase.firestore.FieldValue.arrayUnion(
-                this.currentCohort.id
-              ),
-            }).then(() => {
-              counter++;
+            usersRef
+              .update({
+                assignedCohorts: firebase.firestore.FieldValue.arrayUnion(
+                  this.currentCohort.id
+                ),
+              })
+              .then(() => {
+                counter++;
                 // check all students are saved to DB
                 if (counter === array.length) {
                   this.saveStudentsCompleted();
                 }
-            });
+              });
           } else {
             usersRef
               .set(student)
@@ -145,7 +146,7 @@ export default {
       this.showTable = false;
       this.disabled = true;
     },
-    sortBy: function(key) {
+    sortBy: function (key) {
       var vm = this;
       vm.sortKey = key;
       vm.sortOrders[key] = vm.sortOrders[key] * -1;
@@ -161,7 +162,7 @@ export default {
       vm.parse_header = vm.parse_header.map((header) => {
         return vm.camelize(header);
       });
-      lines[0].split(",").forEach(function(key) {
+      lines[0].split(",").forEach(function (key) {
         vm.sortOrders[key] = 1;
       });
 
@@ -180,7 +181,7 @@ export default {
         result.push(obj);
       });
 
-      var students = result.filter(student => (student.firstName))
+      var students = result.filter((student) => student.firstName);
 
       return students; // JavaScript object
     },
@@ -193,13 +194,13 @@ export default {
         var reader = new FileReader();
         reader.readAsText(e);
         // Handle errors load
-        reader.onload = function(event) {
+        reader.onload = function (event) {
           event.target.result;
           var csv = event.target.result;
           vm.parse_csv = vm.csvJSON(csv);
           console.log("csv = ", vm.parse_csv);
         };
-        reader.onerror = function(evt) {
+        reader.onerror = function (evt) {
           if (evt.target.error.name == "NotReadableError") {
             alert("Cannot read file !");
           }
@@ -210,7 +211,7 @@ export default {
       console.log("this.parse_csv", this.parse_csv);
     },
     camelize(str) {
-      return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function(match, index) {
+      return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {
         if (+match === 0) return ""; // or if (/\s+/.test(match)) for white spaces
         return index === 0 ? match.toLowerCase() : match.toUpperCase();
       });
@@ -219,14 +220,14 @@ export default {
       this.disabled = false;
       this.buttonLabel = "Add Students to Database";
     },
-    downloadCsv () {
-      var csv = this.csvColumns.join(',') + '\n'
-      var hiddenElement = document.createElement('a')
-      hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv)
-      hiddenElement.target = '_blank'
-      hiddenElement.download = 'students-list.csv'
-      hiddenElement.click()
-    }
+    downloadCsv() {
+      var csv = this.csvColumns.join(",") + "\n";
+      var hiddenElement = document.createElement("a");
+      hiddenElement.href = "data:text/csv;charset=utf-8," + encodeURI(csv);
+      hiddenElement.target = "_blank";
+      hiddenElement.download = "students-list.csv";
+      hiddenElement.click();
+    },
   },
 };
 </script>
@@ -238,7 +239,7 @@ export default {
 
   .downloadCsv {
     font-size: 0.8rem;
-    font-weight:400;
+    font-weight: 400;
     text-transform: uppercase;
     color: var(--v-missionAccent-base);
   }

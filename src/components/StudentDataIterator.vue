@@ -70,7 +70,7 @@
           </div>
           <div class="mx-1">
             <StudentAccountsDialog
-              v-if="currentCohort.teacher"
+              v-if="isTeacher"
               :students="students"
               @updateStudentProfile="updateStudentProfile($event)"
             />
@@ -194,6 +194,9 @@ export default {
     ...mapGetters(["currentCohort"]),
     filteredKeys() {
       return this.keys.filter((key) => key !== "Name");
+    },
+    isTeacher() {
+      return this.currentCohort.teachers.includes(this.person.id);
     },
   },
   methods: {

@@ -98,6 +98,7 @@
     />
     <!-- POPUP OUT PANEL (for system preview)-->
     <EdgeInfoPanel
+      v-if="teacher"
       :selectedEdge="currentEdge"
       @closeInfoPanel="closeInfoPanel"
     />

@@ -54,6 +54,7 @@
             :style="[
               task.taskStatus == 'locked' ? { opacity: 0.4 } : { opacity: 1 },
             ]"
+            @click="routeToSolarSystem"
           >
             <div class="number-title-container">
               <p class="task-number overline">MISSION {{ index + 1 }}</p>
@@ -256,6 +257,7 @@ export default {
           position: relative;
           align-self: start;
           display: flex;
+          cursor: pointer;
 
           .number-title-container {
             width: 70%;

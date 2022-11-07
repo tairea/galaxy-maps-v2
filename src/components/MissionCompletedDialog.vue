@@ -132,7 +132,7 @@
                   v-bind="attrs"
                   v-on="on"
                 >
-                  <v-icon left> {{ mdiCheck }} </v-icon>
+                  <v-icon left> {{ mdiCheckboxBlankOutline }} </v-icon>
                   SUBMIT WORK FOR REVIEW
                 </v-btn>
                 <v-btn
@@ -236,6 +236,7 @@ import {
 import {
   mdiCloudUploadOutline,
   mdiInformationVariant,
+  mdiCheckboxBlankOutline,
   mdiCheck,
   mdiClose,
   mdiCheckboxBlankOutline,
@@ -266,6 +267,7 @@ export default {
   data: () => ({
     mdiCloudUploadOutline,
     mdiInformationVariant,
+    mdiCheckboxBlankOutline,
     mdiCheck,
     mdiClose,
     mdiCheckboxBlankOutline,

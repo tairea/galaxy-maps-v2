@@ -307,6 +307,7 @@ import {
 import { mapState, mapGetters } from "vuex";
 import { db, storage } from "../store/firestoreConfig";
 import { dbMixins } from "../mixins/DbMixins";
+import { getCourseById, assignTopicsAndTasksToStudent } from "../lib/ff";
 
 export default {
   name: "AssignCohortDialog",
@@ -346,7 +347,7 @@ export default {
     dialog(newVal) {
       if (newVal && !this.cohort)
         this.cohort = this.cohorts.find(
-          (cohort) => cohort.id == this.currentCourseId
+          (cohort) => cohort.id == this.currentCohort.id
         );
     },
   },
@@ -403,13 +404,22 @@ export default {
           this.MXaddExistingUserToCohort(person, this.cohort);
         })
         .then(() => {
+          if (this.cohort.courses.length) {
+            this.cohort.courses.forEach(async (courseId) => {
+              let course = await getCourseById(courseId);
+              this.MXassignCourseToStudent(person, course).then(() => {
+                assignTopicsAndTasksToStudent(person, course);
+              });
+            });
+          }
+        })
+        .then(() => {
           this.$store.commit("setSnackbar", {
             show: true,
-            text: "Individual assigned to Course",
+            text: "Individual added to cohort and assigned to course",
             color: "baseAccent",
           });
           this.$emit("newAssignment", person);
-          console.log("should assignTopicsAndTasksToStudent");
           this.close();
         })
         .catch((error) => {

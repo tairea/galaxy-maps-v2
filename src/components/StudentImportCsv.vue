@@ -104,7 +104,7 @@ export default {
         "First Name",
         "Last Name",
         "Student Email",
-        "Parent Email",
+        // "Parent Email",
       ],
     };
   },
