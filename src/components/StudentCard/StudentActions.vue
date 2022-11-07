@@ -43,14 +43,14 @@ export default {
   name: "StudentActions",
   props: ["student"],
   computed: {
-    ...mapState(["teachersRequestsForHelp", "teachersSubmissionsToReview"]),
+    ...mapState(["teachersRequestsForHelp", "courseSubmissions"]),
     requests() {
       return this.teachersRequestsForHelp?.filter(
         (request) => request.personId === this.student.id
       );
     },
     submissions() {
-      return this.teachersSubmissionsToReview?.filter(
+      return this.courseSubmissions?.filter(
         (submissions) => submissions.studentId === this.student.id
       );
     },
