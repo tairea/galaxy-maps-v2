@@ -472,6 +472,7 @@ export default {
         .update("taskTotal", firebase.firestore.FieldValue.increment(1))
         .then(() => {
           console.log("Task total increased by 1");
+          this.$store.dispatch("getCourseTasks");
         })
         .catch((error) => {
           console.error("Error incrementing taskTotal: ", error);
