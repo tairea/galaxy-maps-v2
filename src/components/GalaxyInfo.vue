@@ -21,9 +21,7 @@
     </p>
     <p v-else class="galaxy-status overline mb-0">
       Visibility:
-      <span class="font-weight-black">{{
-        course.public ? "Public" : "Private"
-      }}</span>
+      <span class="font-weight-black">{{ visibility }}</span>
     </p>
     <!-- Map Image -->
     <v-img
@@ -54,6 +52,9 @@ export default {
   mounted() {},
   computed: {
     ...mapState(["person"]),
+    visibility() {
+      return this.course.public ? "Public" : "Private";
+    },
   },
 };
 </script>

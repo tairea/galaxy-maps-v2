@@ -239,7 +239,7 @@ exports.sendNewSubmissionEmail = functions.https.onCall((data, context) => {
 async function sendNewSubmissionEmail(author, title) {
   const mailOptions = {
     from: `${APP_NAME} <noreply@galaxymaps.io>`,
-    to: `jamin.tairea@gmail.com`,
+    to: `[jamin.tairea@gmail.com, ian@tairea.io]`,
   };
 
   // The user subscribed to the newsletter.
@@ -270,12 +270,12 @@ async function sendCoursePublishedEmail(email, name, course) {
   };
 
   // The user subscribed to the newsletter.
-  mailOptions.subject = `Galaxy Approved`;
-  mailOptions.text = `Hi ${name}, 
+  mailOptions.subject = `Galaxy Published`;
+  mailOptions.text = `Greetings ${name}, 
 
-Your course ${course} has been approved and is now available on Galaxy Maps
+Your course ${course} has now been successfully published and a learning cohort has been created.
 
-Navigate to https://galaxymaps.io to view your course
+Navigate to https://galaxymaps.io to manage your course content and student cohort.
   
 Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);

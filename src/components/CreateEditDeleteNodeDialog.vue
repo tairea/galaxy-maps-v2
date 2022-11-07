@@ -116,7 +116,7 @@
               </v-tooltip>
             </p>
             <v-checkbox
-              v-model="prerequisites"
+              v-model="prerequisites.length"
               class="ma-0 pa-0"
               color="blue"
               :dark="dark"
@@ -326,6 +326,9 @@ export default {
       this.currentNode.label = "";
       this.currentNode.color = "#69a1e2";
     }
+    if (this.editing) {
+      this.prerequisites = this.currentNode.prerequisites;
+    }
   },
   data() {
     return {
@@ -355,7 +358,7 @@ export default {
       //     value: "project",
       //   },
       // ],
-      prerequisites: false,
+      prerequisites: [],
       darkSwatches: [
         ["#69A1E2"],
         ["#E269CF"],
@@ -444,8 +447,6 @@ export default {
         .doc(node.id)
         .set({ ...node, topicCreatedTimestamp: new Date() })
         .then((docRef) => {
-          console.log("Topic successfully written!: ", docRef);
-          console.log("Topic node: ", node);
           this.saveTopicToStudents(node);
           this.loading = false;
           this.close();
@@ -574,43 +575,33 @@ export default {
           });
 
         if (studentHasStartedCourse) {
-          // if editing a node dont update the student
-          if (this.editing) {
-            console.log(
-              "only updating node we dont need to check status: ",
-              node
-            );
-            // only updating node we dont need to check status
-            await courseRef.doc(node.id).update(node);
-          } else {
-            // if the new node has set prerequisites
-            if (node.prerequisites?.length) {
-              // get the prerequisite topic
-              const topic = await getPersonsTopicById(
-                student,
-                this.currentCourseId,
-                node.prerequisites[0]
-              );
-              console.log("topic: ", topic);
-              if (topic.topicStatus) {
-                console.log("student has been assigned the topic");
-                // if that topic is completed, set the topic as unlocked, else set is as locked and it will be unlocked when the student completed the prerequisite
-                if (topic.topicStatus && topic.topicStatus == "completed") {
-                  node.topicStatus = "unlocked";
-                } else node.topicStatus = "locked";
-              }
-            } else {
-              // if there are no prerequisites than set is as unlocked
-              node.topicStatus = "unlocked";
-            }
-            console.log(
+          // if the new node has set prerequisites
+          if (node.prerequisites?.length) {
+            // get the prerequisite topic
+            const topic = await getPersonsTopicById(
               student,
-              " has started course. Setting new topic as ",
-              node.topicStatus
+              this.currentCourseId,
+              node.prerequisites[0]
             );
-            // assign the topic to each student
-            await courseRef.doc(node.id).set(node);
+            console.log("topic: ", topic);
+            if (topic.topicStatus) {
+              console.log("student has been assigned the topic");
+              // if that topic is completed, set the topic as unlocked, else set is as locked and it will be unlocked when the student completed the prerequisite
+              if (topic.topicStatus && topic.topicStatus == "completed") {
+                node.topicStatus = "unlocked";
+              } else node.topicStatus = "locked";
+            }
+          } else {
+            // if there are no prerequisites than set is as unlocked
+            node.topicStatus = "unlocked";
           }
+          console.log(
+            student,
+            " has started course. Setting new topic as ",
+            node.topicStatus
+          );
+          // assign the topic to each student
+          await courseRef.doc(node.id).set(node);
         }
       });
     },

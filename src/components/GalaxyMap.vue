@@ -693,7 +693,6 @@ export default {
 
       // no tasks means no planets
       if (this.tasks.length == 0) {
-        console.log("no tasks. loading - false");
         this.loading = false;
         return;
       }

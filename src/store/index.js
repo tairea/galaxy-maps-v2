@@ -222,6 +222,7 @@ export default new Vuex.Store({
       state.snackbar = snackbar;
     },
     setDashboardView(state, view) {
+      console.log('setView: ', view)
       state.dashboardView = view
     },
     setPeopleInCourse(state, people) {
@@ -596,6 +597,7 @@ export default new Vuex.Store({
         .collection("cohorts")
         .doc(cohort.id)
         .onSnapshot(async (doc) => {
+          console.log('cohort DB watcher triggered');
           const newCohort = {
             id: doc.id,
             ...doc.data(),

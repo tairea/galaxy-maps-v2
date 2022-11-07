@@ -9,16 +9,16 @@
         No data to show. Try creating or exploring a galaxy.
       </p>
     </div>
-    <div v-else-if="(isStudent && isTeacher) || isAdmin" class="top-section">
+    <div v-else class="top-section">
       <div v-if="isAdmin" class="student-border">
         <div :class="adminLabel" @click="setView('admin')">Create Admin</div>
       </div>
-      <div v-else class="student-border">
+      <div class="student-border">
         <div :class="studentLabel" @click="setView('student')">
           exploring dashboard
         </div>
       </div>
-      <div class="teacher-border">
+      <div v-if="isTeacher" class="teacher-border">
         <div :class="teacherLabel" @click="setView('teacher')">
           cohort analytics
         </div>
@@ -176,9 +176,7 @@ export default {
       return this.person.assignedCourses?.length;
     },
     isTeacher() {
-      const isTeacher = this.teacherCohorts.length;
-      if (!this.isStudent && isTeacher) this.setDashboardView("teacher");
-      return isTeacher;
+      return this.teacherCohorts.length;
     },
     isTeacherView() {
       return this.dashboardView === "teacher";
@@ -200,7 +198,10 @@ export default {
     },
     teacherCohorts() {
       if (this.isAdmin) return this.cohorts;
-      else return this.cohorts.filter((cohort) => cohort.teacher);
+      else
+        return this.cohorts.filter((cohort) =>
+          cohort.teachers?.includes(this.person.id)
+        );
     },
     cohortCourses() {
       let courses = [];
