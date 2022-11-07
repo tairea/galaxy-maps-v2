@@ -115,7 +115,7 @@ a {
   margin: -21px 10px 0px 10px;
   display: flex;
   flex-direction: column;
-  min-height: 300px;
+  // min-height: 300px;
   z-index: 200;
   background-color: var(--v-background-base);
 

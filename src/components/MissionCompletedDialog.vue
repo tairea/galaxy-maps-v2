@@ -18,7 +18,7 @@
               <v-icon v-if="task.submissionRequired">
                 {{ mdiCloudUploadOutline }}
               </v-icon>
-              <v-icon v-else> {{ mdiCheck }}box-blank-outline </v-icon>
+              <v-icon v-else> {{ mdiCheckboxBlankOutline }} </v-icon>
             </v-btn>
           </template>
 
@@ -238,6 +238,7 @@ import {
   mdiInformationVariant,
   mdiCheck,
   mdiClose,
+  mdiCheckboxBlankOutline,
 } from "@mdi/js";
 
 import { dbMixins } from "../mixins/DbMixins";
@@ -267,6 +268,7 @@ export default {
     mdiInformationVariant,
     mdiCheck,
     mdiClose,
+    mdiCheckboxBlankOutline,
     submissionLink: null,
     dialog: false,
     loading: false,
@@ -295,6 +297,10 @@ export default {
     if (!this.currentCourse.mappedBy.image) {
       this.getMappedByPersonsImage(this.currentCourse.mappedBy.personId);
     }
+    console.log(
+      "persons topics from mission completed dialog",
+      this.personsTopics
+    );
   },
   computed: {
     ...mapState([
@@ -304,6 +310,7 @@ export default {
       "personsTopicsTasks",
       "currentCohort",
       "courseSubmissions",
+      "personsTopics",
     ]),
     ...mapGetters(["person"]),
     submission() {
@@ -609,14 +616,53 @@ export default {
         .get()
         .then((querySnapshot) => {
           querySnapshot.forEach((doc) => {
-            doc.ref
-              .update({
-                topicStatus: "unlocked", // change status to unlocked
-              })
-              // route back to map
-              .then(() => {
+            // if has more than one prereq
+            if (doc.data().prerequisites.length > 1) {
+              console.log(
+                "next topic has more than one prerequisite... checking if completed..."
+              );
+              let prereqsArr = doc.data().prerequisites;
+              // minus this completed topic
+              prereqsArr = prereqsArr.filter((e) => e !== this.currentTopic.id);
+              console.log("prereqs after current one removed:", prereqsArr);
+              const prereqsToCompleteCount = prereqsArr.length;
+              let prereqsCompletedCount = 0;
+              for (const preq of prereqsArr) {
+                console.log("checking if prereq " + preq + " is completed...");
+                // check if the other preqs are .status completed
+                const preqObj = this.personsTopics.filter(
+                  (topic) => topic.id === preq
+                );
+                if (preqObj[0].topicStatus == "completed") {
+                  console.log("another prereq completed");
+                  prereqsCompletedCount++;
+                }
+              }
+              // check if preqCounts match. if so, unlock topic
+              if (prereqsCompletedCount == prereqsToCompleteCount) {
+                doc.ref.update({ topicStatus: "unlocked" });
                 console.log("NEW TOPIC UNLOCKED: " + doc.data().label);
-              });
+              } else {
+                console.log(
+                  "other prereqs of next topic not completed. next topic not unlocked."
+                );
+              }
+            } else {
+              doc.ref
+                .update({
+                  topicStatus: "unlocked", // change status to unlocked
+                })
+                // route back to map
+                .then(() => {
+                  console.log("NEW TOPIC UNLOCKED: " + doc.data().label);
+                  this.$router.push({
+                    name: "GalaxyView",
+                    params: {
+                      topicId: this.currentCourse.id,
+                    },
+                  });
+                });
+            }
           });
         });
     },
