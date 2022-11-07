@@ -12,7 +12,7 @@
           v-on="on"
           class="mission-edit-button"
           outlined
-          color="baseAccent"
+          color="cohortAccent"
           small
         >
           <v-icon small> {{ mdiPencil }} </v-icon>

@@ -2,7 +2,7 @@
   <v-hover v-model="hover">
     <div class="text-center" :class="sectionClass" ref="circle">
       <v-progress-circular
-        :value="topicsCompletedPercentage"
+        :value="tasksCompletedPercentage"
         color="baseAccent"
         :class="courseClass"
         :size="courseSize"
@@ -20,7 +20,7 @@
         </v-avatar>
       </v-progress-circular>
       <v-progress-circular
-        :value="tasksCompletedPercentage"
+        :value="topicsCompletedPercentage"
         color="missionAccent"
         :class="topicClass"
         :size="topicSize"
