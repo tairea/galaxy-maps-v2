@@ -168,6 +168,7 @@ export default {
     inSystemPreviewView: false,
     previewedNode: null,
     numberOfTasksForThisTopic: 0,
+    tasks: [],
   }),
   async mounted() {
     await this.$store.dispatch("bindCourseNodes", this.currentCourseId);
@@ -194,9 +195,16 @@ export default {
       );
     }
 
-    console.log("this.network.options", this.network.options);
-
     this.drawSolarSystems();
+
+    // ==== check if all topics completed. if so GALAXY MAP COMPLETE!!! ====
+    let isGalaxyMapComplete = this.personsTopics.every(
+      (topic) => topic.topicStatus === "completed"
+    );
+    if (isGalaxyMapComplete) {
+      // TODO: better complete congrats
+      alert("Galaxy Map Complete. Well done!");
+    }
   },
   beforeDestroy() {
     this.stopNodeAnimation();
@@ -668,10 +676,10 @@ export default {
       }
     },
     async setupSolarSystemPlanets() {
-      if (!this.teacher && !this.personsCourseTasks.length) {
+      if (!this.teacher) {
         // bind state.personsCourseTasks
         await this.$store.dispatch("getPersonsCourseTasks");
-      } else if (this.teacher && !this.courseTasks.length) {
+      } else if (this.teacher) {
         // bind. state.courseTasks
         await this.$store.dispatch("getCourseTasks");
       }

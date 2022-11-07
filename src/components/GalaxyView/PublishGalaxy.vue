@@ -112,7 +112,7 @@
       <v-divider dark color="missionAccent"></v-divider>
       <div class="create-dialog-content">
         <!-- LISTED -->
-        <div>
+        <div v-if="!admin">
           <p class="caption mb-2">
             Choose whether you would like this galaxy to be:
           </p>

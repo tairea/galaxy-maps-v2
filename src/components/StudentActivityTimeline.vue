@@ -50,6 +50,7 @@ export default {
       const filtered = this.studentsActivityLog.filter(
         (activity) => activity.course
       );
+      console.log("filtered", filtered);
       const sanitised = filtered.map((statement, index) => {
         let [action, title] = statement.description.split(": ");
         let [status, type] = action.split(" ");
@@ -67,15 +68,6 @@ export default {
           id,
           context: statement.context,
         };
-
-        // test work and submitted
-        if (
-          newStatement.status != "Started" &&
-          newStatement.status != "Completed"
-        ) {
-          console.log("status", newStatement.status);
-          console.log("type", newStatement.type);
-        }
 
         return newStatement;
       });
