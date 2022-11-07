@@ -33,7 +33,7 @@
         class="d-flex justify-center align-center"
         style="padding: 50px 0px"
       >
-        <p class="label" style="font-weight: 800">NO COURSE DATA</p>
+        <p class="label text-center" style="font-weight: 800">NO COURSE DATA</p>
       </div>
     </div>
     <!-- Activity Bar Chart -->
@@ -63,14 +63,28 @@
         class="d-flex justify-center align-center"
         style="padding: 50px 0px"
       >
-        <p class="label" style="font-weight: 800">NO ACTIVITY DATA</p>
+        <p class="label text-center" style="font-weight: 800">
+          NO ACTIVITY DATA
+        </p>
       </div>
     </div>
 
     <!-- Toggle student data -->
     <div class="student-row">
+      <!-- loading spinner -->
       <div
-        v-if="cohort.students.length > 0"
+        class="d-flex justify-center align-center"
+        style="padding: 50px"
+        v-if="cohort.students.length"
+      >
+        <v-btn
+          :loading="cohort.students.length"
+          icon
+          color="missionAccent"
+        ></v-btn>
+      </div>
+      <div
+        v-else-if="cohort.students.length > 0"
         class="d-flex justify-center align-center flex-wrap py-2"
       >
         <p class="label text-center mt-4 mb-2">
@@ -87,7 +101,7 @@
           @click.native="clickedPerson(person, index)"
         />
       </div>
-      <p v-else class="label text-center pa-4" style="font-weight: 800">
+      <p v-else class="label text-center" style="font-weight: 800">
         NO STUDENT DATA
       </p>
     </div>
@@ -216,7 +230,7 @@ export default {
 .label {
   color: var(--v-missionAccent-base);
   font-size: 0.7rem;
-  margin: 10px;
+  /* margin: 10px; */
   text-transform: uppercase;
   width: 100%;
 }

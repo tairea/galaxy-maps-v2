@@ -6,7 +6,7 @@
         <span v-if="!studentCard">{{ activity.timeStamp.time }} </span>
         <span>{{ activity.timeStamp.date }} </span>
         <span :style="statusClass(activity)"
-          >{{ activity.status }} {{ activity.type }}:
+          >{{ activity.status }} {{ activityReword(activity.type) }}:
         </span>
         <span>{{ activity.title }}</span>
       </p>
@@ -67,6 +67,16 @@ export default {
           id,
           context: statement.context,
         };
+
+        // test work and submitted
+        if (
+          newStatement.status != "Started" &&
+          newStatement.status != "Completed"
+        ) {
+          console.log("status", newStatement.status);
+          console.log("type", newStatement.type);
+        }
+
         return newStatement;
       });
       return sanitised;
@@ -79,11 +89,31 @@ export default {
     statusClass(activity) {
       switch (activity.status) {
         case "Started":
-          return "color: var(--v-baseAccent-base);";
+          if (activity.type === "Task" || activity.type === "Topic") {
+            return "color:var(--v-missionAccent-base)";
+          } else if (activity.type === "Course" || "Topic") {
+            return "color: var(--v-galaxyAccent-base);";
+          }
         case "Completed":
-          return "color:var(--v-galaxyAccent-base)";
-        case "in-review":
-          return "color:var(--v-cohortAccent-base)";
+          return "color:var(--v-baseAccent-base)";
+        case "Work":
+          if (activity.type === "submitted" || activity.type === "declined") {
+            return "color:var(--v-cohortAccent-base)";
+          } else if (activity.type === "completed") {
+            return "color:var(--v-baseAccent-base)";
+          }
+      }
+    },
+    activityReword(type) {
+      switch (type) {
+        case "Task":
+          return "Mission";
+        case "Topic":
+          return "System";
+        case "Course":
+          return "Galaxy Map";
+        default:
+          return type;
       }
     },
   },
@@ -135,34 +165,34 @@ export default {
 .student-card-log {
   font-size: 0.6rem;
   height: 100%;
-  padding: 2px;
+  padding: 2.5px 5px;
   transition: all 0.2s ease-in-out;
 }
 
-// .student-card-log:hover {
-//   margin: 0px;
-//   width: 100%;
-//   transform: scale(1.2);
-//   font-size: 0.6rem;
-//   background-color: var(--v-background-base);
-//   // min-height: 300px;
-//   position: relative;
-//   z-index: 10;
+.student-card-log:hover {
+  margin: 0px;
+  width: 100%;
+  transform: scale(1.2);
+  font-size: 0.6rem;
+  background-color: var(--v-background-base);
+  // min-height: 300px;
+  position: relative;
+  z-index: 10;
 
-//   .student-card-statement {
-//     border: 1px solid var(--v-missionAccent-base);
-//     box-shadow: 0 0 30px var(--v-missionAccent-base);
-//     padding: 5px;
-//     background-color: var(--v-background-base);
-//     max-height: 200px;
-//     width: 320px;
-//     overflow: scroll;
-//     overflow-x: hidden;
-//     z-index: 1000;
-//   }
-//   /* width */
-//   ::-webkit-scrollbar {
-//     width: 2px;
-//   }
-// }
+  .student-card-statement {
+    border: 1px solid var(--v-missionAccent-base);
+    box-shadow: 0 0 30px var(--v-missionAccent-base);
+    padding: 5px;
+    background-color: var(--v-background-base);
+    max-height: 200px;
+    width: 320px;
+    overflow: scroll;
+    overflow-x: hidden;
+    z-index: 1000;
+  }
+  /* width */
+  ::-webkit-scrollbar {
+    width: 2px;
+  }
+}
 </style>

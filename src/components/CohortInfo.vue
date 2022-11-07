@@ -18,7 +18,7 @@
       />
     </div>
     <div v-if="teachers.length > 0">
-      <p class="overline ma-0" style="color: var(--v-missionAccent-base)">
+      <p class="overline ma-0" style="color: var(--v-cohortAccent-base)">
         Teachers
       </p>
       <v-row class="my-1 mx-1">
@@ -109,7 +109,7 @@ export default {
 <style lang="scss">
 #cohort-info {
   width: 100%;
-  border: 1px solid var(--v-missionAccent-base);
+  border: 1px solid var(--v-cohortAccent-base);
   margin-top: 30px;
   padding: 20px;
   position: relative;
@@ -122,7 +122,7 @@ export default {
     position: absolute;
     top: 0;
     left: -1px;
-    background-color: var(--v-missionAccent-base);
+    background-color: var(--v-cohortAccent-base);
     color: var(--v-background-base);
     padding: 0px 15px 0px 5px;
     clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%);
@@ -130,7 +130,7 @@ export default {
 
   .cohort-title {
     font-size: 1.2rem;
-    color: var(--v-missionAccent-base);
+    color: var(--v-cohortAccent-base);
     font-weight: 600;
     text-transform: uppercase;
     margin: 20px 0px 5px 0px;
@@ -138,7 +138,7 @@ export default {
 
   .cohort-description {
     margin-top: 10px;
-    color: var(--v-missionAccent-base);
+    color: var(--v-cohortAccent-base);
     font-size: 0.9rem;
   }
 }
