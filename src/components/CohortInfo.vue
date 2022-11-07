@@ -87,7 +87,10 @@ export default {
       else return {};
     },
     isTeacher() {
-      return this.currentCohort.teacher || this.user.data.admin;
+      return (
+        this.user.data.admin ||
+        this.currentCohort.teachers.includes(this.person.id)
+      );
     },
   },
   methods: {
