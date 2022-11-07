@@ -50,6 +50,9 @@
 </template>
 <script>
 import { mdiInformationVariant, mdiDelete, mdiClose } from "@mdi/js";
+import { db } from "@/store/firestoreConfig";
+import { mapState } from "vuex";
+import firebase from "firebase";
 
 export default {
   name: "ConfirmDeleteStudentDialog",
@@ -61,12 +64,19 @@ export default {
       mdiClose,
     };
   },
+  computed: {
+    ...mapState(["currentCohort", "currentCourseId"]),
+  },
   methods: {
     confirmDeleteStudent() {
+      const studentId = this.student.id;
       db.collection("cohorts")
         .doc(this.currentCohort.id)
         .update({
-          students: firebase.firestore.FieldValue.arrayRemove(this.student.id),
+          students: firebase.firestore.FieldValue.arrayRemove(studentId),
+        })
+        .then(() => {
+          this.deleteAssignedCourse(studentId);
         })
         .then(() => {
           this.$store.commit("setSnackbar", {
@@ -74,8 +84,18 @@ export default {
             text: "Student removed from Cohort",
             color: "baseAccent",
           });
+          this.$emit("cancel");
         });
-      this.$emit("cancel");
+    },
+    async deleteAssignedCourse(studentId) {
+      const student = await db.collection("people").doc(studentId);
+      console.log("student: ", student);
+      this.currentCohort.courses.forEach((course) => {
+        console.log("course", course);
+        student.update({
+          assignedCourses: firebase.firestore.FieldValue.arrayRemove(course),
+        });
+      });
     },
   },
 };

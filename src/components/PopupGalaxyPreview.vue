@@ -154,7 +154,7 @@
 <script>
 import { db } from "../store/firestoreConfig";
 import { dbMixins } from "../mixins/DbMixins";
-import { getCohortById } from "../lib/ff";
+import { getCohortById, assignTopicsAndTasksToStudent } from "../lib/ff";
 import { mapGetters, mapState } from "vuex";
 
 import { startGalaxyXAPIStatement } from "../lib/veracityLRS";
@@ -287,78 +287,25 @@ export default {
       this.$store.commit("setCurrentCourse", this.course);
       this.$store.commit("setCurrentCourseId", this.course.id);
 
-      // 1) get topics in this course
-      const querySnapshot = await db
-        .collection("courses")
-        .doc(this.course.id)
-        .collection("topics")
-        .orderBy("topicCreatedTimestamp")
-        .get();
-
-      // 2) add them to person (this will store their TOPIC progression data for this course )
-      for (const [index, doc] of querySnapshot.docs.entries()) {
-        await db
-          .collection("people")
-          .doc(this.person.id)
-          .collection(this.course.id)
-          .doc(doc.data().id)
-          .set({
-            ...doc.data(),
-            topicStatus:
-              doc.data().group == "introduction" ? "introduction" : "locked", // set the status of topics to locked unless they are introduction nodes
-          });
-
-        // 3) check if this topic has tasks
-        const subquerySnapshot = await db
-          .collection("courses")
-          .doc(this.course.id)
-          .collection("topics")
-          .doc(doc.data().id)
-          .collection("tasks")
-          // order by timestamp is important otherwise index == 0 (in the next step) wont necessarily be the first mission
-          .orderBy("taskCreatedTimestamp")
-          .get();
-
-        // 4) if tasks exist. add them to person
-        for (const [index, subDoc] of subquerySnapshot.docs.entries()) {
-          // cool lil status to show whats happening during loading
-          // this.startingGalaxyStatus = "...adding " + subDoc.data().title;
-          this.startingGalaxyStatus =
-            "...adding " + doc.data().label + " - " + subDoc.data().title;
-          if (subDoc.exists) {
-            await db
-              .collection("people")
-              .doc(this.person.id)
-              .collection(this.course.id)
-              .doc(doc.data().id)
-              .collection("tasks")
-              .doc(subDoc.id)
-              .set({
-                ...subDoc.data(),
-                // set the status of topics to locked unless they are the first mission (index == 0)
-                taskStatus: index == 0 ? "unlocked" : "locked",
-              });
-          }
-        }
-      }
-
       // 5) assign student to cohort and course
       let cohort = await getCohortById(this.course.cohort);
-      this.MXaddExistingUserToCohort(this.person, cohort).then(() => {
-        this.MXassignCourseToStudent(this.person, this.course);
-      });
-
-      // Send Galaxy Started statment to LRS
-      startGalaxyXAPIStatement(this.person, { galaxy: this.course });
-
-      this.loading = false;
-      this.$router.push({
-        name: "GalaxyView",
-        params: {
-          courseId: this.course.id,
-          role: "student",
-        },
-      });
+      this.MXaddExistingUserToCohort(this.person, cohort)
+        .then(() => {
+          this.MXassignCourseToStudent(this.person, this.course);
+        })
+        .then(() => {
+          assignTopicsAndTasksToStudent(this.person, this.course);
+        })
+        .then(() => {
+          this.loading = false;
+          this.$router.push({
+            name: "GalaxyView",
+            params: {
+              courseId: this.course.id,
+              role: "student",
+            },
+          });
+        });
     },
 
     async getPersonsImage(personId) {

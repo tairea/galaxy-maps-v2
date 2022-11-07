@@ -117,9 +117,8 @@
 <script>
 import { mapGetters } from "vuex";
 import { dbMixins } from "../mixins/DbMixins";
-import { getCourseById } from "../lib/ff";
+import { getCourseById, assignTopicsAndTasksToStudent } from "../lib/ff";
 import { db } from "../store/firestoreConfig";
-import { startGalaxyXAPIStatement } from "../lib/veracityLRS";
 
 export default {
   name: "CreateAccountForm",
@@ -208,28 +207,13 @@ export default {
           ...this.account,
           ...personExists,
         };
-        console.log("output profile: ", profile);
-        // this.account = profile
         this.MXsaveProfile(profile)
           .then(() => {
-            this.MXaddExistingUserToCohort(personExists);
+            this.MXaddExistingUserToCohort(profile);
           })
           .then(() => {
             if (this.currentCohort.courses.length) {
-              this.currentCohort.courses.forEach(async (courseId) => {
-                let course = await getCourseById(courseId);
-                this.MXassignCourseToStudent(personExists, course).then(() => {
-                  this.assignTopicsAndTasksToStudent(personExists, course).then(
-                    () => {
-                      this.$store.commit("setSnackbar", {
-                        show: true,
-                        text: "Student assigned to first mission",
-                        color: "baseAccent",
-                      });
-                    }
-                  );
-                });
-              });
+              this.assignStudentToCourses(profile);
             }
           })
           .then(() => {
@@ -253,39 +237,16 @@ export default {
               color: "baseAccent",
             });
             if (!this.teacher) {
-              this.MXaddStudentToCohort(person)
-                .then(() => {
-                  this.$store.commit("setSnackbar", {
-                    show: true,
-                    text: "Student added to Cohort",
-                    color: "baseAccent",
-                  });
-                  if (this.currentCohort.courses.length) {
-                    this.currentCohort.courses.forEach(async (courseId) => {
-                      let course = await getCourseById(courseId);
-                      this.MXassignCourseToStudent(person, course).then(() => {
-                        this.assignTopicsAndTasksToStudent(person, course).then(
-                          () => {
-                            this.$store.commit("setSnackbar", {
-                              show: true,
-                              text: "Student assigned to first mission",
-                              color: "baseAccent",
-                            });
-                          }
-                        );
-                      });
-                    });
-                  }
-                })
-                .then(() => {
-                  this.$store.commit("setSnackbar", {
-                    show: true,
-                    text: "Student assigned to first mission. Email sent",
-                    color: "baseAccent",
-                  });
-                  this.addingAccount = false;
-                  this.close();
+              this.MXaddStudentToCohort(person).then(() => {
+                this.$store.commit("setSnackbar", {
+                  show: true,
+                  text: "Student added to Cohort",
+                  color: "baseAccent",
                 });
+                if (this.currentCohort.courses.length) {
+                  this.assignStudentToCourses(person);
+                }
+              });
             } else {
               this.$store.commit("setSnackbar", {
                 show: true,
@@ -301,66 +262,13 @@ export default {
           });
       }
     },
-    // add this galaxy metadata (eg. topics) to this persons course database
-    async assignTopicsAndTasksToStudent(person, course) {
-      console.log("person: ", person);
-      console.log("course: ", course);
-
-      // 1) get topics in this course
-      const querySnapshot = await db
-        .collection("courses")
-        .doc(course.id)
-        .collection("topics")
-        .orderBy("topicCreatedTimestamp")
-        .get();
-
-      // 2) add them to person (this will store their TOPIC progression data for this course )
-      for (const [index, doc] of querySnapshot.docs.entries()) {
-        await db
-          .collection("people")
-          .doc(person.id)
-          .collection(course.id)
-          .doc(doc.data().id)
-          .set({
-            ...doc.data(),
-            topicStatus:
-              doc.data().group == "introduction" ? "introduction" : "locked", // set the status of topics to locked unless they are introduction nodes
-          });
-
-        // 3) check if this topic has tasks
-        const subquerySnapshot = await db
-          .collection("courses")
-          .doc(course.id)
-          .collection("topics")
-          .doc(doc.data().id)
-          .collection("tasks")
-          // order by timestamp is important otherwise index == 0 (in the next step) wont necessarily be the first mission
-          .orderBy("taskCreatedTimestamp")
-          .get();
-
-        // 4) if tasks exist. add them to person
-        for (const [index, subDoc] of subquerySnapshot.docs.entries()) {
-          // cool lil status to show whats happening during loading
-          // this.startingGalaxyStatus = "...adding " + subDoc.data().title;
-
-          if (subDoc.exists) {
-            await db
-              .collection("people")
-              .doc(person.id)
-              .collection(course.id)
-              .doc(doc.data().id)
-              .collection("tasks")
-              .doc(subDoc.id)
-              .set({
-                ...subDoc.data(),
-                // set the status of topics to locked unless they are the first mission (index == 0)
-                taskStatus: index == 0 ? "unlocked" : "locked",
-              });
-          }
-        }
-      }
-      // Send Galaxy Started statment to LRS
-      startGalaxyXAPIStatement(person, { galaxy: course });
+    assignStudentToCourses(person) {
+      this.currentCohort.courses.forEach(async (courseId) => {
+        let course = await getCourseById(courseId);
+        this.MXassignCourseToStudent(person, course).then(() => {
+          assignTopicsAndTasksToStudent(person, course);
+        });
+      });
     },
   },
 };
