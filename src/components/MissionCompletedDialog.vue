@@ -108,6 +108,8 @@
                   </div>
                   <vue-editor
                     v-model="submissionLink"
+                    useCustomImageHandler
+                    @imageAdded="handleImageAdded"
                     class="mb-8 quill"
                     :class="{ 'active-quill': quillFocused }"
                     :editor-toolbar="customToolbar"
@@ -287,7 +289,7 @@ export default {
       ["blockquote", "code-block"],
       [{ list: "ordered" }, { list: "bullet" }],
       [{ indent: "-1" }, { indent: "+1" }], // outdent/indent
-      ["link"],
+      ["link", "image"],
       // ["clean"] // remove formatting button
     ],
     quillFocused: false,
@@ -702,6 +704,44 @@ export default {
       };
       const sendTaskSubmission = functions.httpsCallable("sendTaskSubmission");
       return sendTaskSubmission(data);
+    },
+    handleImageAdded(file, Editor, cursorLocation) {
+      // ceate a storage ref
+      var storageRef = storage.ref(
+        "submission-images/student-" +
+          this.person.id +
+          "-task-" +
+          this.task.id +
+          "-" +
+          file.name
+      );
+
+      // upload a file
+      var uploadTask = storageRef.put(file);
+
+      // update progress bar
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          // show progress on uploader bar
+          console.log(
+            "image upload: ",
+            snapshot.bytesTransferred / snapshot.totalBytes
+          ) * 100;
+        },
+        // upload error
+        (err) => {
+          console.log(err);
+        },
+        // upload complete
+        () => {
+          // get image url
+          uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+            // add image url to course obj
+            Editor.insertEmbed(cursorLocation, "image", downloadURL);
+          });
+        }
+      );
     },
   },
 };
