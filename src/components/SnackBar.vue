@@ -1,15 +1,12 @@
 <template>
- <v-snackbar
-    v-model="snackbar.show"
-    timeout="8000"
-  >
+  <v-snackbar v-model="snackbar.show" timeout="5000">
     {{ snackbar.text }}
     <template v-slot:action="{ attrs }">
       <v-btn
         :color="snackbar.color"
         text
         v-bind="attrs"
-        @click="setSnackbar({show: false, text: ''})"
+        @click="setSnackbar({ show: false, text: '' })"
       >
         Close
       </v-btn>
@@ -18,15 +15,15 @@
 </template>
 
 <script lang="ts">
-import { mapState, mapMutations } from 'vuex'
+import { mapState, mapMutations } from "vuex";
 
-export default{
-  name: 'SnackBar',
+export default {
+  name: "SnackBar",
   computed: {
-    ...mapState(['snackbar'])
+    ...mapState(["snackbar"]),
   },
   methods: {
-    ...mapMutations(['setSnackbar'])
-  }
-}
+    ...mapMutations(["setSnackbar"]),
+  },
+};
 </script>

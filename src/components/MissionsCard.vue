@@ -316,6 +316,10 @@ pre {
 .task-description > p > a {
   color: var(--v-galaxyAccent-base) !important;
 }
+
+.task-description > p > img {
+  width: 100%;
+}
 </style>
 
 <style lang="scss" scoped>

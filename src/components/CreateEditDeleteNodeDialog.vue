@@ -116,7 +116,7 @@
               </v-tooltip>
             </p>
             <v-checkbox
-              v-model="prerequisites.length"
+              v-model="prerequisites"
               class="ma-0 pa-0"
               color="blue"
               :dark="dark"
@@ -327,7 +327,7 @@ export default {
       this.currentNode.color = "#69a1e2";
     }
     if (this.editing) {
-      this.prerequisites = this.currentNode.prerequisites;
+      this.prerequisites = this.currentNode.prerequisites?.length;
     }
   },
   data() {
@@ -358,7 +358,7 @@ export default {
       //     value: "project",
       //   },
       // ],
-      prerequisites: [],
+      prerequisites: this.currentNode.prerequisites.length ? true : false,
       darkSwatches: [
         ["#69A1E2"],
         ["#E269CF"],

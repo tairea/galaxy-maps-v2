@@ -2,7 +2,7 @@
   <v-container class="pa-0">
     <v-row class="text-center" align="center">
       <v-col cols="12">
-        <v-dialog v-model="dialog" width="50%" light>
+        <v-dialog v-model="dialog" width="50%" light persistent>
           <!-- CREATE BUTTON -->
           <template v-slot:activator="{ on, attrs }">
             <v-btn
@@ -78,9 +78,12 @@
               ></v-textarea> -->
               <div>
                 <vue-editor
+                  id="editor1"
                   v-model="task.description"
+                  useCustomImageHandler
+                  @image-added="handleDescriptionImageAdded"
                   class="mb-8 quill"
-                  :class="{ 'active-quill': this.quillFocused }"
+                  :class="{ 'active-quill': quillFocused }"
                   :editor-toolbar="customToolbar"
                   @focus="quillFocused = true"
                   @blur="quillFocused = false"
@@ -190,10 +193,13 @@
                   </v-tooltip>
                 </p>
                 <vue-editor
+                  id="editor2"
                   v-model="task.submissionInstructions"
+                  useCustomImageHandler
+                  @image-added="handleSubmissionImageAdded"
                   class="mt-2 quill"
                   :class="{
-                    'active-submission-quill': this.submissionQuillFocused,
+                    'active-submission-quill': submissionQuillFocused,
                   }"
                   :editor-toolbar="customToolbar"
                   @focus="submissionQuillFocused = true"
@@ -348,8 +354,8 @@
 <script>
 import firebase from "firebase/app";
 import { VueEditor } from "vue2-editor";
+import { db, storage } from "../store/firestoreConfig";
 
-import { db } from "../store/firestoreConfig";
 import { mapState } from "vuex";
 
 import {
@@ -359,6 +365,7 @@ import {
   mdiCheck,
   mdiDelete,
   mdiInformationVariant,
+  mdiConsoleNetworkOutline,
 } from "@mdi/js";
 
 export default {
@@ -404,7 +411,7 @@ export default {
       ["blockquote", "code-block"],
       [{ list: "ordered" }, { list: "bullet" }],
       [{ indent: "-1" }, { indent: "+1" }], // outdent/indent
-      ["link"],
+      ["link", "image"],
       // ["clean"] // remove formatting button
     ],
   }),
@@ -423,7 +430,7 @@ export default {
   //   }
   // },
   computed: {
-    ...mapState(["currentCourseId"]),
+    ...mapState(["currentCourseId", "person"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -481,6 +488,9 @@ export default {
       this.task = {};
     },
     updateTask(task, index) {
+      this.loading = true;
+      this.disabled = true;
+
       // format video & slides url with "http://"
       if (task.video) {
         if (!/^https?:\/\//i.test(task.video)) {
@@ -503,6 +513,8 @@ export default {
         .update(this.task)
         .then((res) => {
           console.log("Task successfully updated!");
+          this.loading = false;
+          this.disabled = false;
           this.dialog = false;
         })
         .catch((error) => {
@@ -644,6 +656,83 @@ export default {
           .doc(task)
           .delete();
       });
+    },
+    handleDescriptionImageAdded(file, Editor, cursorLocation) {
+      console.log("image file", file);
+      // ceate a storage ref
+      var storageRef = storage.ref(
+        "missionDescription-images/teacher-" +
+          this.person.id +
+          this.task.id +
+          "-" +
+          file.name
+      );
+
+      // upload a file
+      var uploadTask = storageRef.put(file);
+
+      // update progress bar
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          // show progress on uploader bar
+          console.log(
+            "image upload: ",
+            snapshot.bytesTransferred / snapshot.totalBytes
+          ) * 100;
+        },
+        // upload error
+        (err) => {
+          console.log(err);
+        },
+        // upload complete
+        () => {
+          // get image url
+          uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+            // add image url to course obj
+            Editor.insertEmbed(cursorLocation, "image", downloadURL);
+          });
+        }
+      );
+    },
+    handleSubmissionImageAdded(file, Editor, cursorLocation) {
+      console.log("image file", file);
+      // ceate a storage ref
+      var storageRef = storage.ref(
+        "missionSubmission-images/teacher-" +
+          this.person.id +
+          "-task-" +
+          this.task.id +
+          "-" +
+          file.name
+      );
+
+      // upload a file
+      var uploadTask = storageRef.put(file);
+
+      // update progress bar
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          // show progress on uploader bar
+          console.log(
+            "image upload: ",
+            snapshot.bytesTransferred / snapshot.totalBytes
+          ) * 100;
+        },
+        // upload error
+        (err) => {
+          console.log(err);
+        },
+        // upload complete
+        () => {
+          // get image url
+          uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+            // add image url to course obj
+            Editor.insertEmbed(cursorLocation, "image", downloadURL);
+          });
+        }
+      );
     },
   },
 };
