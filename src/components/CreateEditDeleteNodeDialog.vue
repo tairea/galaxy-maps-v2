@@ -260,6 +260,7 @@
 
 <script>
 import firebase from "firebase/app";
+
 import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
 import { getPersonsTopicById } from "@/lib/ff";
@@ -271,6 +272,7 @@ import {
   mdiDelete,
   mdiInformationVariant,
 } from "@mdi/js";
+
 export default {
   name: "CreateEditDeleteNodeDialog",
   props: [
@@ -358,7 +360,7 @@ export default {
       //     value: "project",
       //   },
       // ],
-      prerequisites: this.currentNode.prerequisites.length ? true : false,
+      prerequisites: this.currentNode.prerequisites?.length ? true : false,
       darkSwatches: [
         ["#69A1E2"],
         ["#E269CF"],
