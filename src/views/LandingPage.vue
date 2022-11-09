@@ -17,9 +17,19 @@
       <v-btn outlined color="baseAccent" class="mt-8" to="/login">
         SIGN IN TO GALAXY MAPS
       </v-btn>
-      <!-- Background maps video -->
+
+      <div class="alpha-release" style="color: #ed254e">
+        <p class="overline pa-0 mt-8 mb-0 text-center" style="font-size: 40px">
+          ALPHA RELEASE
+        </p>
+        <p style="font-size: 0.7rem" class="text-center">
+          We are still testing for bugs. Please leave us feedback if the
+          platform is doing something weird.
+        </p>
+      </div>
     </div>
 
+    <!-- Background maps video -->
     <video id="background-video" autoplay loop muted>
       <!-- <source src="../assets/gm-maps.mp4" type="video/mp4" /> -->
       <source src="../assets/gm-maps-2.mp4" type="video/mp4" />
@@ -114,6 +124,8 @@ export default {
 
   height: 100vh;
   width: 100vw;
+
+  overflow-y: hidden;
 
   .landing-content {
     display: flex;

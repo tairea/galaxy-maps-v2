@@ -313,7 +313,7 @@ pre {
   line-height: 20px !important;
 }
 
-.task-description > p > a {
+.task-description a {
   color: var(--v-galaxyAccent-base) !important;
 }
 

@@ -20,6 +20,7 @@
     "vue-class-component": "^7.2.6",
     "vue-property-decorator": "^9.1.2",
     "vue-router": "^3.5.3",
+    "vue-tour": "^2.0.0",
     "vue2-editor": "^2.10.3",
     "vue2vis": "0.0.18",
     "vuetify": "^2.6.1",

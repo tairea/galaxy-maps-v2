@@ -7,6 +7,12 @@ import firebase from "firebase";
 import './css/main.scss';
 import { startPresenceSystem } from './presence'
 
+import VueTour from 'vue-tour'
+
+require('vue-tour/dist/vue-tour.css')
+
+Vue.use(VueTour)
+
 Vue.config.productionTip = false;
 
 firebase.auth().onAuthStateChanged((user) => {

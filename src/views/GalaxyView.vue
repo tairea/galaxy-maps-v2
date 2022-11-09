@@ -1,7 +1,7 @@
 <template>
   <div id="container" class="bg">
     <!-- <div class="left-section" :class="{ hide: hideLeftPanelsFlag }"> -->
-    <div class="left-section">
+    <div class="left-section" data-v-step="1">
       <GalaxyInfo :course="currentCourse" :teacher="teacher" :draft="draft" />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <PublishGalaxy
@@ -126,6 +126,9 @@
         </v-card>
       </template>
     </v-dialog>
+
+    <!-- Vue Tour -->
+    <v-tour name="myTour" :steps="steps"></v-tour>
   </div>
 </template>
 
@@ -177,6 +180,15 @@ export default {
   props: ["courseId"],
   data() {
     return {
+      steps: [
+        {
+          target: '[data-v-step="1"]',
+          content: "Open this panel to view a list of Maps",
+          params: {
+            placement: "right",
+          },
+        },
+      ],
       addNodeMode: false,
       addEdgeMode: false,
       dragNodeMode: false,
@@ -258,6 +270,9 @@ export default {
         this.setPeopleInCourse(students);
       }
     }
+
+    // Start Vue Tour
+    // this.$tours["myTour"].start(); // Disabled for now
   },
   computed: {
     ...mapState([
