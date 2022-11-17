@@ -75,13 +75,9 @@
       <div
         class="d-flex justify-center align-center"
         style="padding: 50px"
-        v-if="cohort.students.length"
+        v-if="cohort.students.length == 0"
       >
-        <v-btn
-          :loading="cohort.students.length"
-          icon
-          color="missionAccent"
-        ></v-btn>
+        <v-btn :loading="true" icon color="missionAccent"></v-btn>
       </div>
       <div
         v-else-if="cohort.students.length > 0"

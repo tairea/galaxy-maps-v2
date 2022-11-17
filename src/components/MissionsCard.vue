@@ -320,6 +320,11 @@ pre {
 .task-description > p > img {
   width: 100%;
 }
+
+iframe.ql-video {
+  width: 100% !important;
+  height: 300px !important;
+}
 </style>
 
 <style lang="scss" scoped>
@@ -335,6 +340,7 @@ p {
   border: 1px dashed var(--v-missionAccent-base);
   margin: 20px 10px;
   display: flex;
+  height: auto;
 
   .mission-section {
     margin: 0px;
