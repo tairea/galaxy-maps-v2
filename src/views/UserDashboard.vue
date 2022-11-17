@@ -155,6 +155,8 @@ export default {
     }
     if (this.dashboardView === "" && this.person.assignedCourses?.length) {
       this.setDashboardView("student");
+    } else {
+      this.setDashboardView("student");
     }
   },
   computed: {

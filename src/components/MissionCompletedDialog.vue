@@ -657,12 +657,12 @@ export default {
                 // route back to map
                 .then(() => {
                   console.log("NEW TOPIC UNLOCKED: " + doc.data().label);
-                  this.$router.push({
-                    name: "GalaxyView",
-                    params: {
-                      topicId: this.currentCourse.id,
-                    },
-                  });
+                  // this.$router.push({
+                  //   name: "GalaxyView",
+                  //   params: {
+                  //     topicId: this.currentCourse.id,
+                  //   },
+                  // });
                 });
             }
           });

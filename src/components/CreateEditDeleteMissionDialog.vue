@@ -411,7 +411,7 @@ export default {
       ["blockquote", "code-block"],
       [{ list: "ordered" }, { list: "bullet" }],
       [{ indent: "-1" }, { indent: "+1" }], // outdent/indent
-      ["link", "image"],
+      ["link", "image", "video"],
       // ["clean"] // remove formatting button
     ],
   }),
@@ -739,7 +739,9 @@ export default {
 </script>
 
 <style scoped lang="scss">
-// new dialog ui
+::v-deep .ql-tooltip {
+  left: unset !important;
+}
 .create-dialog {
   background-color: var(--v-background-base);
   border: 1px solid var(--v-missionAccent-base);
