@@ -502,12 +502,12 @@ export default {
         this.relativeGalaxyBoundaries.push(relativeCenter);
 
         // increase offset for next galaxy column aka ** PADDING BETWEEN GALAXIES **
-        currentColWidth += courseCanvasBoundaries[i].width / 2 + 600; // width / 2 because dont want to pad the whole width over + pad just half the course width + pad
+        currentColWidth += courseCanvasBoundaries[i].width / 2 + 1600; // width / 2 because dont want to pad the whole width over + pad just half the course width + pad
 
         // keep track of largest height
         if (courseCanvasBoundaries[i].height > maxRowHeight) {
           // console.log("new max height:", courseCanvasBoundaries[i].height);
-          maxRowHeight = courseCanvasBoundaries[i]?.height + 600;
+          maxRowHeight = courseCanvasBoundaries[i]?.height + 1600;
           // if (courseCanvasBoundaries[i + 1]?.height > maxRowHeight) {
           //   maxRowHeight = courseCanvasBoundaries[i + 1].height + 300;
           // }
