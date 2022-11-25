@@ -507,7 +507,7 @@ export default {
         // keep track of largest height
         if (courseCanvasBoundaries[i].height > maxRowHeight) {
           // console.log("new max height:", courseCanvasBoundaries[i].height);
-          maxRowHeight = courseCanvasBoundaries[i]?.height + 1600;
+          maxRowHeight = courseCanvasBoundaries[i]?.height;
           // if (courseCanvasBoundaries[i + 1]?.height > maxRowHeight) {
           //   maxRowHeight = courseCanvasBoundaries[i + 1].height + 300;
           // }
