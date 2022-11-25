@@ -333,6 +333,7 @@ export default {
   },
   methods: {
     getHumanDate(ts) {
+      if (!ts) return;
       return moment(ts.seconds * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
     },
     markSubmissionAsCompleted() {
@@ -349,6 +350,7 @@ export default {
           taskSubmissionStatus: "completed",
           taskCompletedTimestamp: new Date(),
           responseMessage: this.responseMsg,
+          responseSubmittedTimestamp: new Date(),
         });
 
       // 2) update the task status to complete

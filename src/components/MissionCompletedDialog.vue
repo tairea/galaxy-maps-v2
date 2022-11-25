@@ -134,7 +134,7 @@
                   v-bind="attrs"
                   v-on="on"
                 >
-                  <v-icon left> {{ mdiCheckboxBlankOutline }} </v-icon>
+                  <v-icon left> {{ mdiCloudUploadOutline }} </v-icon>
                   SUBMIT WORK FOR REVIEW
                 </v-btn>
                 <v-btn
