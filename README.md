@@ -2,7 +2,7 @@
 
 Galaxy Maps is an online learning platform.
 
-This learning platform enables people to map learning paths into a "Galaxy Map". Learners can then navigate the curriculum in an individualised, self-paced, gamified way.
+This learning platform enables people to map learning paths into a "Galaxy Map". Learners can then navigate learning paths in an individualised, self-paced, gamified way.
 
 Like our ancestors that used the stars to navigate the seas, using these Galaxy Maps we can navigate our learning.
 
