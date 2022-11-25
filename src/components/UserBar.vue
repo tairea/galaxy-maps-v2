@@ -88,22 +88,55 @@
             <v-icon class="pr-2">{{mdiPencil}}</v-icon>
             edit account
           </v-btn> -->
+
+          <!-- Edit Account button -->
           <StudentEditDialog @close="close" />
+
+          <!-- Feedback button -->
           <v-btn
             href="https://docs.google.com/forms/d/e/1FAIpQLSfJgXGWOeosZfJY7H0tvFzANoX8p95fmgVKom97HMDiNywSnA/viewform?usp=sf_link"
             target="_blank"
             color="galaxyAccent"
-            class="ma-4"
+            class="ma-3"
             outlined
             :dark="dark"
             :light="!dark"
           >
             <v-icon class="pr-2">{{ mdiSend }}</v-icon>
-            Feedback
+            Give us Feedback
           </v-btn>
 
+          <!-- Discord button -->
           <v-btn
-            class="ma-4"
+            href="https://discord.gg/gus7a2cnmA"
+            target="_blank"
+            color="indigo lighten-1"
+            class="ma-3"
+            outlined
+            :dark="dark"
+            :light="!dark"
+          >
+            <v-icon class="pr-2">{{ mdiMessage }}</v-icon>
+            Chat on Discord
+          </v-btn>
+
+          <!-- Github button -->
+          <v-btn
+            href="https://github.com/tairea/galaxy-maps-v2"
+            target="_blank"
+            color="blue-grey lighten-3"
+            class="ma-3"
+            outlined
+            :dark="dark"
+            :light="!dark"
+          >
+            <v-icon class="pr-2">{{ mdiGithub }}</v-icon>
+            Help code this
+          </v-btn>
+
+          <!-- Logout button -->
+          <v-btn
+            class="ma-3"
             @click="logout"
             color="missionAccent"
             outlined
@@ -126,7 +159,14 @@ import { mapState, mapActions, mapMutations } from "vuex";
 import ThemeColourPicker from "@/components/ThemeColourPicker.vue";
 import { db, storage } from "../store/firestoreConfig";
 import StudentEditDialog from "../components/StudentEditDialog.vue";
-import { mdiAccount, mdiPencil, mdiSend, mdiDoorClosed } from "@mdi/js";
+import {
+  mdiAccount,
+  mdiPencil,
+  mdiSend,
+  mdiDoorClosed,
+  mdiMessage,
+  mdiGithub,
+} from "@mdi/js";
 
 export default {
   name: "UserBar",
@@ -140,6 +180,8 @@ export default {
       mdiPencil,
       mdiSend,
       mdiDoorClosed,
+      mdiMessage,
+      mdiGithub,
       darkSwitch: true,
       editProfile: false,
       selectedFile: {},
@@ -292,10 +334,10 @@ export default {
 .userMenu {
   background: var(--v-subBackground-base);
   width: 25%;
-  height: 400px;
+  height: 450px;
   position: absolute;
   // bottom: 0px;
-  bottom: -400px;
+  bottom: -450px;
   right: 0;
   transition: all 0.3s;
 
