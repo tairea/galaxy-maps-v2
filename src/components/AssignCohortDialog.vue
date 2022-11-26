@@ -400,17 +400,15 @@ export default {
 
     handleAssignment(person, course) {
       this.MXassignCourseToStudent(person, course)
-        .then(() => {
-          this.MXaddExistingUserToCohort(person, this.cohort);
-        })
-        .then(() => {
+        .then(() => this.MXaddExistingUserToCohort(person, this.cohort))
+        .then(async () => {
           if (this.cohort.courses.length) {
-            this.cohort.courses.forEach(async (courseId) => {
+            // Possible optimize to make this concurrent instead of sequential
+            for (const courseId of this.cohort.courses) {
               let course = await getCourseById(courseId);
-              this.MXassignCourseToStudent(person, course).then(() => {
-                assignTopicsAndTasksToStudent(person, course);
-              });
-            });
+              await this.MXassignCourseToStudent(person, course);
+              await assignTopicsAndTasksToStudent(person, course);
+            }
           }
         })
         .then(() => {

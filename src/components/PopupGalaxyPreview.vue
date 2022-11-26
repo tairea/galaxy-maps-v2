@@ -154,10 +154,8 @@
 <script>
 import { db } from "../store/firestoreConfig";
 import { dbMixins } from "../mixins/DbMixins";
-import { getCohortById, assignTopicsAndTasksToStudent } from "../lib/ff";
+import { getCohortById, assignTopicsAndTasksToMe } from "../lib/ff";
 import { mapGetters, mapState } from "vuex";
-
-import { startGalaxyXAPIStatement } from "../lib/veracityLRS";
 
 import { mdiClose } from "@mdi/js";
 
@@ -290,12 +288,8 @@ export default {
       // 5) assign student to cohort and course
       let cohort = await getCohortById(this.course.cohort);
       this.MXaddExistingUserToCohort(this.person, cohort)
-        .then(() => {
-          this.MXassignCourseToStudent(this.person, this.course);
-        })
-        .then(() => {
-          assignTopicsAndTasksToStudent(this.person, this.course);
-        })
+        .then(() => this.MXassignCourseToStudent(this.person, this.course))
+        .then(() => assignTopicsAndTasksToMe(this.course))
         .then(() => {
           this.loading = false;
           this.$router.push({

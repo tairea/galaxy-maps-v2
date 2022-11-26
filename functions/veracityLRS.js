@@ -91,7 +91,63 @@ const studentOfflineXAPIStatement = (actor) => {
   }).catch((error) => console.error(error.message));
 };
 
+// ========== Start Task (make task active)
+const startGalaxyXAPIStatement = (actor, context) => {
+  console.log("sending student xAPI statement... galaxy started...");
+  const statement = {
+    actor: {
+      name: actor.firstName + " " + actor.lastName,
+      mbox: "mailto:" + actor.email,
+    },
+    verb: {
+      id: "https://w3id.org/xapi/dod-isd/verbs/started",
+      display: { "en-nz": "started" },
+    },
+    object: {
+      id: "https://www.galaxymaps.io/course/" + context.galaxy.id,
+      definition: {
+        name: {
+          "en-nz": "Course: " + context.galaxy.title,
+        },
+        description: {
+          "en-nz": "Started Course: " + context.galaxy.title,
+        },
+        extensions: {
+          "https://www.galaxymaps.io/course/id/": context.galaxy.id,
+          "https://www.galaxymaps.io/person/id/": actor.id,
+        },
+      },
+    },
+    context: {
+      contextActivities: {
+        parent: [
+          {
+            id: "https://www.galaxymaps.io/course/" + context.galaxy.id,
+            objectType: "Activity",
+          },
+        ],
+        grouping: [
+          {
+            id: "https://www.galaxymaps.io/course/" + context.galaxy.id,
+            objectType: "Activity",
+          },
+        ],
+      },
+    },
+  };
+
+  fetch("https://galaxymaps.lrs.io/xapi/statements", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: auth,
+    },
+    body: JSON.stringify(statement),
+  }).catch((error) => console.error(error.message));
+};
+
 module.exports = {
   studentOnlineXAPIStatement,
   studentOfflineXAPIStatement,
+  startGalaxyXAPIStatement
 };
