@@ -827,15 +827,16 @@ async function assignTopicsAndTasksToStudent(personId, courseId) {
 
   // 2) add them to person (this will store their TOPIC progression data for this course )
   for (const [index, doc] of querySnapshot.docs.entries()) {
+    const topic = doc.data();
     await firestore
       .collection("people")
       .doc(person.id)
       .collection(course.id)
-      .doc(doc.data().id)
+      .doc(topic.id)
       .set({
-        ...doc.data(),
+        ...topic,
         topicStatus:
-          doc.data().group == "introduction" ? "introduction" : "locked", // set the status of topics to locked unless they are introduction nodes
+          topic.group == "introduction" ? "introduction" : "locked", // set the status of topics to locked unless they are introduction nodes
       });
 
     // 3) check if this topic has tasks
@@ -843,7 +844,7 @@ async function assignTopicsAndTasksToStudent(personId, courseId) {
       .collection("courses")
       .doc(course.id)
       .collection("topics")
-      .doc(doc.data().id)
+      .doc(topic.id)
       .collection("tasks")
       // order by timestamp is important otherwise index == 0 (in the next step) wont necessarily be the first mission
       .orderBy("taskCreatedTimestamp")
@@ -851,19 +852,18 @@ async function assignTopicsAndTasksToStudent(personId, courseId) {
 
     // 4) if tasks exist. add them to person
     for (const [index, subDoc] of subquerySnapshot.docs.entries()) {
-      // cool lil status to show whats happening during loading
-      // this.startingGalaxyStatus = "...adding " + subDoc.data().title;
+      const task = subDoc.data();
 
       if (subDoc.exists) {
         await firestore
           .collection("people")
           .doc(person.id)
           .collection(course.id)
-          .doc(doc.data().id)
+          .doc(topic.id)
           .collection("tasks")
-          .doc(subDoc.id)
+          .doc(task.id)
           .set({
-            ...subDoc.data(),
+            ...task,
             // set the status of topics to locked unless they are the first mission (index == 0)
             taskStatus: index == 0 ? "unlocked" : "locked",
           });
@@ -873,6 +873,6 @@ async function assignTopicsAndTasksToStudent(personId, courseId) {
   // Send Galaxy Started statment to LRS
   startGalaxyXAPIStatement(person, { galaxy: course });
 
-  return { message: 'Completed' };
+  return { message: "Completed" };
 }
 
