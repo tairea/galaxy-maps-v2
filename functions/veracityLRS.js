@@ -5,7 +5,7 @@ const btoa = (text) => {
   return Buffer.from(text, "binary").toString("base64");
 };
 
-const auth = "Basic " + btoa(process.env.VERACITY_LRS_SECRET);
+const auth = "Basic " + btoa(`${process.env.VERACITY_LRS_SECRET}`);
 
 // ========== Students goes online
 const studentOnlineXAPIStatement = (actor) => {
