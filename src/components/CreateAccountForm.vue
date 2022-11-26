@@ -263,11 +263,11 @@ export default {
       }
     },
     assignStudentToCourses(person) {
+      // FIXME: foreach does not await
       this.currentCohort.courses.forEach(async (courseId) => {
         let course = await getCourseById(courseId);
-        this.MXassignCourseToStudent(person, course).then(() => {
-          assignTopicsAndTasksToStudent(person, course);
-        });
+        await this.MXassignCourseToStudent(person, course);
+        await assignTopicsAndTasksToStudent(person, course);
       });
     },
   },

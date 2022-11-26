@@ -6,6 +6,7 @@ require("dotenv").config();
 const {
   studentOnlineXAPIStatement,
   studentOfflineXAPIStatement,
+  startGalaxyXAPIStatement,
 } = require("./veracityLRS");
 
 admin.initializeApp();
@@ -773,3 +774,105 @@ Galaxy Maps Team`;
   functions.logger.log("Galaxy deleted email sent to ", email);
   return null;
 }
+
+//====== ASSIGN TOPICS AND TASKS ==================
+exports.assignTopicsAndTasksToMe = functions.https.onCall((data, context) => {
+  if (context.auth == null) {
+    return { error: "Must be authenticated to access this endpoint" };
+  }
+  const { courseId } = data;
+  const personId = context.auth.uid;
+  return assignTopicsAndTasksToStudent(personId, courseId);
+});
+
+exports.assignTopicsAndTasksToStudent = functions.https.onCall((data, context) => {
+  if (context.auth == null) {
+    return { error: "Must be authenticated to access this endpoint" };
+  }
+  // TODO: add permissions checks to see if current authenticated user has permission to
+  // add topics and tasks to the specified personId
+  const { personId, courseId } = data;
+  return assignTopicsAndTasksToStudent(personId, courseId);
+});
+
+/**
+ * Add this galaxy metadata (eg. topics) to this persons course database
+ * @param personId {string}
+ * @param courseId {string}
+ */
+async function assignTopicsAndTasksToStudent(personId, courseId) {
+  // Load person and course from their IDs
+  const [personSnapshot, courseSnapshot] = await Promise.all([
+    firestore.collection("people").doc(personId).get(),
+    firestore.collection("courses").doc(courseId).get()
+  ]);
+  const person = personSnapshot.data();
+  const course = courseSnapshot.data();
+
+  if (person == null) {
+    return { error: `Person not found: ${personId}` };
+  }
+
+  if (course == null) {
+    return { error: `Course not found: ${courseId}` };
+  }
+
+  // 1) get topics in this course
+  const querySnapshot = await firestore
+    .collection("courses")
+    .doc(course.id)
+    .collection("topics")
+    .orderBy("topicCreatedTimestamp")
+    .get();
+
+  // 2) add them to person (this will store their TOPIC progression data for this course )
+  for (const [index, doc] of querySnapshot.docs.entries()) {
+    await firestore
+      .collection("people")
+      .doc(person.id)
+      .collection(course.id)
+      .doc(doc.data().id)
+      .set({
+        ...doc.data(),
+        topicStatus:
+          doc.data().group == "introduction" ? "introduction" : "locked", // set the status of topics to locked unless they are introduction nodes
+      });
+
+    // 3) check if this topic has tasks
+    const subquerySnapshot = await firestore
+      .collection("courses")
+      .doc(course.id)
+      .collection("topics")
+      .doc(doc.data().id)
+      .collection("tasks")
+      // order by timestamp is important otherwise index == 0 (in the next step) wont necessarily be the first mission
+      .orderBy("taskCreatedTimestamp")
+      .get();
+
+    // 4) if tasks exist. add them to person
+    for (const [index, subDoc] of subquerySnapshot.docs.entries()) {
+      // cool lil status to show whats happening during loading
+      // this.startingGalaxyStatus = "...adding " + subDoc.data().title;
+
+      if (subDoc.exists) {
+        await firestore
+          .collection("people")
+          .doc(person.id)
+          .collection(course.id)
+          .doc(doc.data().id)
+          .collection("tasks")
+          .doc(subDoc.id)
+          .set({
+            ...subDoc.data(),
+            // set the status of topics to locked unless they are the first mission (index == 0)
+            taskStatus: index == 0 ? "unlocked" : "locked",
+          });
+      }
+    }
+  }
+  // Send Galaxy Started statment to LRS
+  startGalaxyXAPIStatement(person, { galaxy: course });
+
+  return { message: 'Completed' };
+}
+

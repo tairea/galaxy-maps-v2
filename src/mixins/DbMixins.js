@@ -124,9 +124,8 @@ export const dbMixins = {
         .update({
           assignedCourses: firebase.firestore.FieldValue.arrayUnion(course.id),
         })
+        .then(() => this.sendNewCourseEmail(person, course))
         .then(() => {
-          this.sendNewCourseEmail(person, course);
-        }).then(() => {
           this.$store.commit("setSnackbar", {
             show: true,
             text: `Student assigned to ${course.title} galaxy`,
