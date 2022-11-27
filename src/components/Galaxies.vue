@@ -1,7 +1,7 @@
 <template>
   <div class="full-height justify-center align-center">
     <LoadingSpinner v-if="loading" text="loading learning universe" />
-    <div v-if="nodesToDisplay.length == 0">
+    <div v-if="allNodesForDisplay.length == 0">
       <p class="overline noGalaxies">NO GALAXIES TO DISPLAY</p>
       <div class="d-flex justify-center mb-4">
         <v-btn
@@ -24,8 +24,11 @@
       :nodes="allNodesForDisplay"
       :edges="allEdges"
       :options="network.options"
+      @hook:mounted="networkMounted"
+      @hook:updated="networkUpdated"
       @click="click"
       @before-drawing="beforeDrawing"
+      @after-drawing="afterDrawing"
     ></network>
   </div>
 </template>
@@ -56,9 +59,9 @@ export default {
     // gradients: [],
     active: false,
     loading: true,
+    needsCentering: false,
     popupPreview: false,
     allNodeIds: [],
-    nodesToDisplay: [],
     relativeGalaxyBoundaries: [],
     // allNodesLength: 0,
     courseCols: 1,
@@ -174,50 +177,66 @@ export default {
     },
     highlightCourse(newCourseId) {
       // get all topic nodes by the closest clicked
-      let coursesTopicNodes = this.nodesToDisplay.filter(
+      let coursesTopicNodes = this.allNodesForDisplay.filter(
         (node) => node.courseId == newCourseId
       );
       this.zoomToNodes(coursesTopicNodes);
     },
   },
   mounted() {
-    this.setAllNodesToDisplay();
+    this.refreshAllNodes();
+
+    if (this.allNodes.length > 0) {
+      this.setAllNodesToDisplay();
+    }
   },
   methods: {
-    async setAllNodesToDisplay() {
+    async refreshAllNodes() {
       /* ===========================
         Show ALL Galaxies in DATABASE!! (so I can see what maps users have created)
       =========================== */
       await this.$store.dispatch("getAllEdges"); // edge data for course
       await this.$store.dispatch("getAllNodes"); // node data for course
-      this.nodesToDisplay = this.allNodesForDisplay;
-      if (this.$refs.network?.nodes.length) {
-        // const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
-        const repositionedNodes = this.repositionCoursesBasedOnBoundariesV2();
-        if (repositionedNodes.length) {
-          this.$store.commit("updateAllNodesForDisplay", repositionedNodes);
-        }
-      } else {
-        // no nodes to load
-        this.loading = false;
-        return;
+      this.setAllNodesToDisplay();
+    },
+    setAllNodesToDisplay() {
+      console.log("setAllNodesToDisplay called");
+      const repositionedNodes = this.repositionCoursesBasedOnBoundariesV2();
+      if (repositionedNodes.length) {
+        this.$store.commit("updateAllNodesForDisplay", repositionedNodes);
       }
+      this.needsCentering = true;
+    },
+    networkMounted() {
+      console.log("networkMounted called");
       this.centerAfterReposition();
+    },
+    networkUpdated() {
+      console.log("networkUpdated called");
+      if (this.needsCentering === true) {
+        this.centerAfterReposition();
+      }
+    },
+    afterDrawing() {
+      console.log("afterDrawing called");
+      // stop loading spinner
+      if (this.loading === true) {
+        this.loading = false;
+      }
     },
     centerAfterReposition() {
       // short timer to give time to load all before zoom
-      if (this.nodesToDisplay.length > 0) {
-        setTimeout(() => {
-          this.zoomToNodes(this.nodesToDisplay);
-          // set label colours (important if in light mode)
-          this.makeGalaxyLabelsColour(
-            this.$vuetify.theme.isDark
-              ? "#fff"
-              : this.$vuetify.theme.themes.light.baseAccent
-          );
-        }, 250);
-        // setTimeout(() => this.fitToAllNodes(), 250);
-      }
+      //if (this.allNodesForDisplay.length > 0) {
+      this.zoomToNodes(this.allNodesForDisplay);
+      // set label colours (important if in light mode)
+      this.makeGalaxyLabelsColour(
+        this.$vuetify.theme.isDark
+          ? "#fff"
+          : this.$vuetify.theme.themes.light.baseAccent
+      );
+      // setTimeout(() => this.fitToAllNodes(), 250);
+      //}
+      this.needsCentering = false;
     },
     async click(data) {
       // get click location
@@ -262,7 +281,7 @@ export default {
       let courseCanvasBoundaries = [];
       // get all coords for nodes
       // const allNodes = this.$refs.network.nodes;
-      const allNodes = this.nodesToDisplay;
+      const allNodes = this.allNodes;
 
       // per course/galaxy, determine boundaries ie. highest y, highest x, lowest y, lowest x (this is a boundary we want to hover)
       for (let i = 0; i < courses.length; i++) {
@@ -367,9 +386,10 @@ export default {
     },
     repositionCoursesBasedOnBoundariesV2() {
       const courseCanvasBoundaries = this.calcCourseCanvasBoundaries();
-      const allNodes = this.$refs.network.nodes;
+      const allNodes = this.allNodes;
       // console.log("all nodes ================", allNodes);
       let newAllNodes = [];
+      let newRelativeGalaxyBoundaries = [];
 
       // canvas / 3
       let galaxyColsCount = 0;
@@ -499,7 +519,7 @@ export default {
           height: courseCanvasBoundaries[i].height,
           status: courseCanvasBoundaries[i].status,
         };
-        this.relativeGalaxyBoundaries.push(relativeCenter);
+        newRelativeGalaxyBoundaries.push(relativeCenter);
 
         // increase offset for next galaxy column aka ** PADDING BETWEEN GALAXIES **
         currentColWidth += courseCanvasBoundaries[i].width / 2 + 1600; // width / 2 because dont want to pad the whole width over + pad just half the course width + pad
@@ -550,6 +570,7 @@ export default {
         }
       }
       // console.log("relative centers", this.relativeGalaxyBoundaries);
+      this.relativeGalaxyBoundaries = newRelativeGalaxyBoundaries;
       // pad the end of row
       // this.largestRowWidth += this.largestRowWidth / this.numberOfGalaxiesPerRow / 2;
       // this.$refs.network.storePositions();
@@ -568,15 +589,13 @@ export default {
         minZoomLevel: 0.2, // <-- TODO: this doesnt work on this version of vis-network. needs to be at least v8.5.0. but vue2vis is v7.4.0
         animation: true,
       });
-      // stop loading spinner
-      this.loading = false;
     },
     zoomToAllNodes() {
-      this.zoomToNodes(this.nodesToDisplay);
+      this.zoomToNodes(this.allNodesForDisplay);
     },
     togglePopup() {
       this.popupPreview = !this.popupPreview;
-      this.zoomToNodes(this.nodesToDisplay);
+      this.zoomToNodes(this.allNodesForDisplay);
     },
     makeGalaxyLabelsColour(colour) {
       var options = { ...this.network.options };

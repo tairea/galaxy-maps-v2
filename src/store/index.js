@@ -251,6 +251,7 @@ export default new Vuex.Store({
     bindAllCourses: firestoreAction(({ bindFirestoreRef }) => {
       return bindFirestoreRef("courses", db.collection("courses"), {
         maxRefDepth: 2,
+        reset: false,
       });
     }),
     bindAllCohorts: firestoreAction(({ bindFirestoreRef }) => {
@@ -397,7 +398,7 @@ export default new Vuex.Store({
       }
       state.allNodes = allNodes; // source of truth
       // console.log("all nodes:",allNodes)
-      state.allNodesForDisplay = allNodes; // store all nodes
+      // state.allNodesForDisplay = allNodes; // store all nodes
     },
     async getAllEdges({ state }) {
       const allEdges = [];
