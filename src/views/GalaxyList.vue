@@ -12,7 +12,7 @@
     />
     <div class="flexContainer">
       <Galaxies
-        v-if="courses.length"
+        v-if="!loading"
         ref="galaxyMap"
         :highlightCourse="clickedCourseId"
         @courseClicked="courseClicked($event)"
@@ -56,19 +56,26 @@ export default {
       showDialog: false,
     };
   },
+  computed: {
+    ...mapState(["courses"]),
+    ...mapGetters(["user", "person"]),
+  },
   async mounted() {
-    // This binds all courses. Should prob only bind courses relevant to user TODO:
-    await this.$store.dispatch("bindAllCourses");
+    // We don't care about waiting for this to finish before completing mounted
+    // because when it's finished it will automatically update our list of courses
+    // TODO: This binds all courses. Should prob only bind courses relevant to user
+    this.$store.dispatch("bindAllCourses").then(() => {
+      this.loading = false;
+    });
+    if (this.courses.length > 0) {
+      this.loading = false;
+    }
 
     // 1) get assigned (EXPLORING)
 
     // 2) get created (CREATED) mappedBy
 
     // 3) get submitted (IN REVIEW) mappedby && status==submitted
-  },
-  computed: {
-    ...mapState(["courses"]),
-    ...mapGetters(["user", "person"]),
   },
   methods: {
     courseClicked(emittedPayload) {
