@@ -98,6 +98,7 @@
           :date="date"
           @updateStudentsWithHours="updateStudentsWithHours($event)"
           @updateStudentsWithTasks="updateStudentsWithTasks($event)"
+          @showStudent="showStudent($event)"
         />
       </template>
 
@@ -105,6 +106,21 @@
         <p class="ma-10 noStudents">No Students in this Cohort</p>
       </template>
     </v-data-iterator>
+    <!-- Student Dialog -->
+    <ViewStudentDetails
+      v-if="showStudentFlag && isTeacher"
+      :dialog="showStudentFlag"
+      :student="student"
+      @cancel="cancelShowStudent"
+      @edit="showEdit($event)"
+    />
+    <!-- <EditStudentDialog
+      v-if="editStudentFlag && isTeacher"
+      :dialog="editStudentFlag"
+      :student="student"
+      @updateStudentProfile="updateStudentProfile($event)"
+      @cancel="cancelShowEdit"
+    /> -->
   </v-container>
 </template>
 
@@ -112,8 +128,12 @@
 // import CreateAccountDialog from "../components/CreateAccountDialog";
 // import ImportCsvDialog from "../components/ImportCsvDialog";
 import StudentAccountsDialog from "../components/CohortView/StudentAccountsDialog";
+import ViewStudentDetails from "../components/ViewStudentDetails";
 import StudentCard from "../components/StudentCard/StudentCard";
 import TimeframeFilters from "../components/TimeframeFilters";
+
+import EditStudentDialog from "./Dialogs/EditStudentDialog";
+
 import { mapGetters } from "vuex";
 import { dbMixins } from "../mixins/DbMixins";
 import {
@@ -132,6 +152,8 @@ export default {
     // ImportCsvDialog,
     TimeframeFilters,
     StudentAccountsDialog,
+    ViewStudentDetails,
+    EditStudentDialog,
   },
   mixins: [dbMixins],
   data() {
@@ -155,6 +177,9 @@ export default {
       timeframe: {},
       date: "",
       prevVal: "",
+      showStudentFlag: false,
+      editStudentFlag: false,
+      student: [],
     };
   },
   created() {
@@ -200,6 +225,25 @@ export default {
     },
   },
   methods: {
+    // show/hide student details
+    showStudent(student) {
+      this.showStudentFlag = false;
+      this.student = student;
+      this.showStudentFlag = true;
+    },
+    cancelShowStudent() {
+      this.student = [];
+      this.showStudentFlag = false;
+    },
+    // showEdit(student) {
+    //   this.editStudentFlag = false;
+    //   this.student = student;
+    //   this.editStudentFlag = true;
+    // },
+    // cancelShowEdit(student) {
+    //   this.student = [];
+    //   this.editStudentFlag = false;
+    // },
     updateStudentProfile(obj) {
       const index = this.students.findIndex((student) => student.id === obj.id);
       this.students.splice(index, 1, obj);
