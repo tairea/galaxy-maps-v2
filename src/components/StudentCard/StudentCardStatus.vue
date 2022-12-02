@@ -1,11 +1,14 @@
 <template>
   <!-- Avatar Section -->
-  <div class="student-section student-image-section text-center">
+  <div
+    class="student-section text-center"
+    :class="size ? '' : 'student-image-section'"
+  >
     <v-avatar
       color="secondary"
       @mouseenter="onhover = true"
       @mouseleave="onhover = false"
-      size="60"
+      :size="size ? size + 'px' : '60px'"
       :style="borderColour"
     >
       <img
@@ -16,18 +19,19 @@
       />
       <v-icon v-else>{{ mdiAccount }}</v-icon>
     </v-avatar>
-    <v-tooltip bottom>
-      <template v-slot:activator="{ on }">
-        <p v-on="on" class="text-uppercase studentName text-truncate pt-2">
-          {{ student.firstName || student.email }}
-        </p>
-      </template>
-      <span v-if="student.firstName">{{
-        student.firstName + " " + student.lastName
-      }}</span>
-      <span v-else>{{ student.email }}</span>
-    </v-tooltip>
-    <p :class="online" class="status">{{ loggedIn }}</p>
+    <div
+      class="d-flex justify-center align-center flex-column"
+      style="width: 100%"
+    >
+      <p
+        class="text-uppercase studentName pt-2"
+        :class="size ? '' : 'text-truncate'"
+      >
+        {{ student.firstName || student.email }}
+      </p>
+
+      <p :class="online" class="status">{{ loggedIn }}</p>
+    </div>
   </div>
 </template>
 
@@ -36,7 +40,7 @@ import { mdiAccount } from "@mdi/js";
 
 export default {
   name: "StudentCardStatus",
-  props: ["student", "date", "status"],
+  props: ["student", "date", "status", "size"],
   computed: {
     online() {
       if (this.loggedIn === "online") return "online";
@@ -73,9 +77,9 @@ export default {
       var minutes = Math.floor(delta / 60);
 
       if (minutes < 1) return `just now`;
-      if (minutes < 60) return `${minutes}mins`;
-      if (hours < 24) return `${hours}hrs`;
-      return `${days}days`;
+      if (minutes < 60) return `${minutes} mins ago`;
+      if (hours < 24) return `${hours} hrs ago`;
+      return `${days} days ago`;
     },
   },
 };

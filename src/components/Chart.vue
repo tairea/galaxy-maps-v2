@@ -88,7 +88,7 @@ export default {
     },
     timeframe: {
       handler(newTimeframe) {
-        console.log('timeframe watcher in chart: ', newTimeframe)
+        console.log("timeframe watcher in chart: ", newTimeframe);
         if (this.chartType !== "bar") {
           this.chartOptions.scales.x.min = newTimeframe.min;
           this.chartOptions.scales.x.max = newTimeframe.max;
@@ -104,8 +104,8 @@ export default {
             this.chartOptions.scales.x.title = titleObj;
           }
         } else {
-          const data = this.chartData.datasets[0].data
-          this.chart.data.datasets[0].data = data
+          const data = this.chartData.datasets[0].data;
+          this.chart.data.datasets[0].data = data;
         }
 
         this.chart.update();
@@ -114,153 +114,154 @@ export default {
     chartData: {
       deep: true,
       handler(newVal) {
-        if (this.chartType === 'bar') {
-          console.log('chartData watcher: ', newVal)
+        if (this.chartType === "bar") {
+          console.log("chartData watcher: ", newVal);
         }
-      }
-    }
+      },
+    },
   },
   mounted() {
     let { chartType, chartData, chartOptions } = this;
     if (this.toolTipEnable) {
       chartOptions.plugins["tooltip"] = {
-        enabled: false,
+        enabled: true,
         position: "nearest",
-        external: (context) => {
-          // Tooltip Element
-          const { chart, tooltip } = context;
-          const tooltipEl = this.getOrCreateTooltip(chart);
+        // External HTML Tooltip disabled because top/left positioning not working properly.
+        // To test, change enabled to false and uncomment external function below
+        // external: (context) => {
+        //   // Tooltip Element
+        //   const { chart, tooltip } = context;
+        //   const tooltipEl = this.getOrCreateTooltip(chart);
 
-          // console.log("tooltipEl", tooltipEl);
-          // console.log("tooltip", tooltip);
+        //   // console.log("tooltipEl", tooltipEl);
+        //   // console.log("tooltip", tooltip);
 
-          // Hide if no tooltip
-          if (tooltip.opacity === 0) {
-            tooltipEl.style.opacity = 0;
-            return;
-          }
+        //   // Hide if no tooltip
+        //   if (tooltip.opacity === 0) {
+        //     tooltipEl.style.opacity = 0;
+        //     return;
+        //   }
 
-          // Set Text
-          if (tooltip.body) {
-            // Get data from tooltip
-            const dataPoints = tooltip.dataPoints || [];
+        //   // Set Text
+        //   if (tooltip.body) {
+        //     // Get data from tooltip
+        //     const dataPoints = tooltip.dataPoints || [];
 
-            // ===== Create row elements =====
-            const divTopRow = document.createElement("div");
-            const divMiddleRow = document.createElement("div");
-            const divBottomRow = document.createElement("div");
+        //     // ===== Create row elements =====
+        //     const divTopRow = document.createElement("div");
+        //     const divMiddleRow = document.createElement("div");
+        //     const divBottomRow = document.createElement("div");
 
-            dataPoints.forEach((dataPoint, i) => {
-              const colors = tooltip.labelColors[i];
+        //     dataPoints.forEach((dataPoint, i) => {
+        //       const colors = tooltip.labelColors[i];
 
-              // ===== Top Row (Task Context) =====
-              divTopRow.innerHTML = `
-              <table style="padding: 10px;">
-                <tr
-                  class="dialog-context-description"
-                  style="
-                    color: var(--v-missionAccent-base);
-                    text-transform: uppercase;
-                    font-size: 0.8rem;
-                    font-weight: 800;
-                    margin: 0;
-                    font-style: italic;
-                  "
-                >
-                  <td>${dataPoint.raw.type}:</td>
-                </tr>
-                <tr
-                  class="dialog-context-description"
-                  style="
-                    color: var(--v-baseAccent-base);
-                    text-transform: uppercase;
-                    font-size: 0.8rem;
-                    font-weight: 800;
-                    margin: 0;
-                    font-style: italic;
-                  "
-                >
-                   <td>${dataPoint.raw.title}</td>
-                </tr>
-              </table>
-            `;
-              divTopRow.style.borderBottom = `1px solid ${
-                this.dark
-                  ? this.$vuetify.theme.themes.dark.missionAccent
-                  : this.$vuetify.theme.themes.light.missionAccent
-              }`;
-              divTopRow.style.textAlign = "center";
+        //       // ===== Top Row (Task Context) =====
+        //       divTopRow.innerHTML = `
+        //       <table style="padding: 10px;">
+        //         <tr
+        //           class="dialog-context-description"
+        //           style="
+        //             color: var(--v-missionAccent-base);
+        //             text-transform: uppercase;
+        //             font-size: 0.8rem;
+        //             font-weight: 800;
+        //             margin: 0;
+        //             font-style: italic;
+        //           "
+        //         >
+        //           <td>${dataPoint.raw.type}:</td>
+        //         </tr>
+        //         <tr
+        //           class="dialog-context-description"
+        //           style="
+        //             color: var(--v-baseAccent-base);
+        //             text-transform: uppercase;
+        //             font-size: 0.8rem;
+        //             font-weight: 800;
+        //             margin: 0;
+        //             font-style: italic;
+        //           "
+        //         >
+        //            <td>${dataPoint.raw.title}</td>
+        //         </tr>
+        //       </table>
+        //     `;
+        //       divTopRow.style.borderBottom = `1px solid ${
+        //         this.dark
+        //           ? this.$vuetify.theme.themes.dark.missionAccent
+        //           : this.$vuetify.theme.themes.light.missionAccent
+        //       }`;
+        //       divTopRow.style.textAlign = "center";
 
-              // ===== Middle Row (Task Status) =====
-              divMiddleRow.style.textAlign = "center";
-              divMiddleRow.classList.add("text-overline");
-              divMiddleRow.innerHTML = dataPoint.raw.status.toUpperCase();
-              divMiddleRow.style.padding = "5px";
-              divMiddleRow.style.fontSize = "0.9rem";
-              divMiddleRow.style.fontWeight = "800";
-              switch (dataPoint.raw.taskStatus) {
-                case "inreview":
-                  divMiddleRow.style.color = this.dark
-                    ? this.$vuetify.theme.themes.dark.cohortAccent
-                    : this.$vuetify.theme.themes.light.cohortAccent;
-                  break;
-                case "completed":
-                  divMiddleRow.style.color = this.dark
-                    ? this.$vuetify.theme.themes.dark.baseAccent
-                    : this.$vuetify.theme.themes.light.baseAccent;
-                  break;
-                case "started":
-                  divMiddleRow.style.color = this.dark
-                    ? this.$vuetify.theme.themes.dark.missionAccent
-                    : this.$vuetify.theme.themes.light.missionAccent;
-                  break;
-                default:
-              }
-              divMiddleRow.style.borderBottom = `1px solid ${
-                this.dark
-                  ? this.$vuetify.theme.themes.dark.missionAccent
-                  : this.$vuetify.theme.themes.light.missionAccent
-              }`;
+        //       // ===== Middle Row (Task Status) =====
+        //       divMiddleRow.style.textAlign = "center";
+        //       divMiddleRow.classList.add("text-overline");
+        //       divMiddleRow.innerHTML = dataPoint.raw.status.toUpperCase();
+        //       divMiddleRow.style.padding = "5px";
+        //       divMiddleRow.style.fontSize = "0.9rem";
+        //       divMiddleRow.style.fontWeight = "800";
+        //       switch (dataPoint.raw.taskStatus) {
+        //         case "inreview":
+        //           divMiddleRow.style.color = this.dark
+        //             ? this.$vuetify.theme.themes.dark.cohortAccent
+        //             : this.$vuetify.theme.themes.light.cohortAccent;
+        //           break;
+        //         case "completed":
+        //           divMiddleRow.style.color = this.dark
+        //             ? this.$vuetify.theme.themes.dark.baseAccent
+        //             : this.$vuetify.theme.themes.light.baseAccent;
+        //           break;
+        //         case "started":
+        //           divMiddleRow.style.color = this.dark
+        //             ? this.$vuetify.theme.themes.dark.missionAccent
+        //             : this.$vuetify.theme.themes.light.missionAccent;
+        //           break;
+        //         default:
+        //       }
+        //       divMiddleRow.style.borderBottom = `1px solid ${
+        //         this.dark
+        //           ? this.$vuetify.theme.themes.dark.missionAccent
+        //           : this.$vuetify.theme.themes.light.missionAccent
+        //       }`;
 
-              // ===== Bottom Row (Date & Time) =====
-              divBottomRow.style.textAlign = "center";
-              // divBottomRow.classList.add("text-overline");
-              divBottomRow.innerHTML = `
-            <p
-            class="dialog-context-description"
-                      style="color: var(--v-missionAccent-base);
-                      text-transform: uppercase;
-                      font-size: 0.8rem;
-                      margin: 0;
-                      font-style: italic;
-                      padding: 10px;"
+        //       // ===== Bottom Row (Date & Time) =====
+        //       divBottomRow.style.textAlign = "center";
+        //       // divBottomRow.classList.add("text-overline");
+        //       divBottomRow.innerHTML = `
+        //     <p
+        //     class="dialog-context-description"
+        //               style="color: var(--v-missionAccent-base);
+        //               text-transform: uppercase;
+        //               font-size: 0.8rem;
+        //               margin: 0;
+        //               font-style: italic;
+        //               padding: 10px;"
 
-            >${dataPoint.label}</p>
-            `;
-            });
-            const subDiv = document.getElementById("subDiv");
+        //     >${dataPoint.label}</p>
+        //     `;
+        //     });
+        //     const subDiv = document.getElementById("subDiv");
 
-            // Remove old children
-            while (subDiv.firstChild) {
-              subDiv.firstChild.remove();
-            }
+        //     // Remove old children
+        //     while (subDiv.firstChild) {
+        //       subDiv.firstChild.remove();
+        //     }
 
-            // Add new children
-            subDiv.appendChild(divTopRow);
-            subDiv.appendChild(divMiddleRow);
-            subDiv.appendChild(divBottomRow);
-          }
-          const { offsetLeft: positionX, offsetTop: positionY } =
-            this.chart.canvas;
+        //     // Add new children
+        //     subDiv.appendChild(divTopRow);
+        //     subDiv.appendChild(divMiddleRow);
+        //     subDiv.appendChild(divBottomRow);
+        //   }
+        //   const { offsetLeft: positionX, offsetTop: positionY } = chart.canvas;
 
-          // Display, position, and set styles for font
-          tooltipEl.style.opacity = 1;
-          tooltipEl.style.left = positionX + tooltip.caretX + "px";
-          tooltipEl.style.top = positionY + tooltip.caretY + "px";
-          tooltipEl.style.font = tooltip.options.bodyFont.string;
-          // tooltipEl.style.padding =
-          //   tooltip.options.padding + "px " + tooltip.options.padding + "px";
-        },
+        //   // Display, position, and set styles for font
+        //   tooltipEl.style.opacity = 1;
+        //   tooltipEl.style.left = positionX + tooltip.caretX + "px";
+        //   tooltipEl.style.top = positionY + tooltip.caretY + "px";
+        //   tooltipEl.style.font = tooltip.options.bodyFont.string;
+        //   // tooltipEl.style.padding =
+        //   //   tooltip.options.padding + "px " + tooltip.options.padding + "px";
+        // },
       };
     }
 

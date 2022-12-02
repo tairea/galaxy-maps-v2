@@ -5,6 +5,7 @@
       :date="date"
       :status="status"
       class="pl-1"
+      @click.native="showStudentDetails(student)"
     />
     <template v-if="!status" class="second-block">
       <span class="overline not-active text-uppercase ma-auto"
@@ -94,6 +95,7 @@ export default {
       studetProfile: [],
       activities: [],
       studentTimeData: [],
+
       // studentTimeDataLoading: false
     };
   },
@@ -130,6 +132,9 @@ export default {
     },
   },
   methods: {
+    showStudentDetails(student) {
+      this.$emit("showStudent", student);
+    },
     async getAssignedCourse() {
       const courseId = this.student.assignedCourses?.find((course) =>
         this.currentCohort.courses.includes(course)

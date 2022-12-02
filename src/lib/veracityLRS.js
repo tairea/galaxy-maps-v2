@@ -468,7 +468,7 @@ export const studentWorkMarkedCompletedXAPIStatement = (
             context.mission.title,
         },
         description: {
-          "en-nz": "Work completed for Task: " + context.mission.title,
+          "en-nz": "Completed Task: " + context.mission.title,
         },
         extensions: {
           "https://www.galaxymaps.io/course/id/": context.galaxy.id,

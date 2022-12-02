@@ -7,11 +7,11 @@
         <div class="dialog-header">
           <p class="mb-0">Edit Student</p>
         </div>
-        <CreateAccountForm 
-          :student="student" 
+        <CreateAccountForm
+          :student="student"
           :edit="true"
           @updateStudentProfile="$emit('updateStudentProfile', $event)"
-          @close="$emit('cancel')" 
+          @close="$emit('cancel')"
         />
       </div>
     </v-dialog>
@@ -19,23 +19,23 @@
 </template>
 
 <script>
-import CreateAccountForm from "../CreateAccountForm"
+import CreateAccountForm from "../CreateAccountForm";
 
 export default {
   name: "EditStudentDialog",
   components: {
-    CreateAccountForm
+    CreateAccountForm,
   },
   props: {
     student: { type: Object },
-    dialog: { type: Boolean, default: false}
+    dialog: { type: Boolean, default: false },
   },
-   computed: {
+  computed: {
     dark() {
       return this.$vuetify.theme.isDark;
     },
   },
-}  
+};
 </script>
 
 <style lang="scss" scoped>
@@ -55,5 +55,4 @@ export default {
     border-bottom: 1px solid var(--v-missionAccent-base);
   }
 }
-
 </style>
