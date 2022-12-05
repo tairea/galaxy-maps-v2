@@ -434,7 +434,7 @@ export default {
       options.nodes.font.size = 5; // hide labels
       this.$refs.network.setOptions(options);
       // 4) minimise left panels & buttons
-      this.$emit("hideLeftPanels", true);
+      // this.$emit("hideLeftPanels", true);
       // 5) emit & save clicked topic node
       this.$store.commit("setCurrentTopicId", closestNode.id);
       this.$emit("topicClicked", { topicId: this.currentTopicId });

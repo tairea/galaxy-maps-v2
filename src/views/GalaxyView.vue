@@ -1,7 +1,7 @@
 <template>
   <div id="container" class="bg">
-    <!-- <div class="left-section" :class="{ hide: hideLeftPanelsFlag }"> -->
-    <div class="left-section" data-v-step="1">
+    <div class="left-section" :class="{ hide: hideLeftPanelsFlag }">
+      <!-- <div class="left-section" data-v-step="1"> -->
       <GalaxyInfo :course="currentCourse" :teacher="teacher" :draft="draft" />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <PublishGalaxy
@@ -19,14 +19,15 @@
 
       <BackButton />
     </div>
-    <div id="main-section">
+    <div id="main-section" :class="{ shrinkMenu: hideLeftPanelsFlag }">
       <!-- Map Buttons -->
       <GalaxyMapButtons
         class="mt-8"
-        :class="{ hideButtons: hideLeftPanelsFlag }"
         v-if="teacher"
+        :hideMainButtons="hideLeftPanelsFlag"
         :addNodeMode="addNodeMode"
         :addEdgeMode="addEdgeMode"
+        :listEditMode="listEditMode"
         :dragNodeMode="dragNodeMode"
         :uiMessage="uiMessage ? uiMessage : ''"
         :changeInPositions="changeInPositions"
@@ -36,6 +37,7 @@
         @toggleDragNodeMode="toggleDragNodeMode"
         @addNode="showAddDialog"
         @saveNodePositions="saveNodePositions"
+        @toggleListEditMode="toggleListEditMode"
       />
 
       <!-- ===== Galaxy Map ===== -->
@@ -97,10 +99,16 @@
       @closeInfoPanel="closeInfoPanel"
       @editNode="showEditDialog"
     />
-    <!-- POPUP OUT PANEL (for system preview)-->
+    <!-- DELETE EDGE PANEL -->
     <EdgeInfoPanel
       v-if="teacher"
       :selectedEdge="currentEdge"
+      @closeInfoPanel="closeInfoPanel"
+    />
+    <!-- LIST MODE PANEL (for system preview)-->
+    <ListModePanel
+      :show="listEditMode"
+      :tasks="topicTasks"
       @closeInfoPanel="closeInfoPanel"
     />
 
@@ -146,6 +154,7 @@ import CreateEditDeleteNodeDialog from "../components/CreateEditDeleteNodeDialog
 import PopupSystemPreview from "../components/PopupSystemPreview";
 import SolarSystemInfoPanel from "../components/SolarSystemInfoPanel";
 import EdgeInfoPanel from "../components/EdgeInfoPanel";
+import ListModePanel from "../components/ListModePanel";
 
 import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame";
 import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame";
@@ -176,6 +185,7 @@ export default {
     SubmissionTeacherFrame,
     SolarSystemInfoPanel,
     EdgeInfoPanel,
+    ListModePanel,
   },
   props: ["courseId"],
   data() {
@@ -221,6 +231,7 @@ export default {
       courseTasks: [],
       topicTasks: [],
       galaxyCompletedDialog: false,
+      listEditMode: false,
     };
   },
   watch: {
@@ -363,6 +374,22 @@ export default {
       if (this.addEdgeMode) this.addEdgeMode = false;
       if (this.addNodeMode) this.addNodeMode = false;
     },
+    toggleListEditMode() {
+      // this.$refs.vis.disableEditMode();
+      this.listEditMode = !this.listEditMode;
+      if (this.listEditMode == true) {
+        // do what?
+        //1. hide left panels
+        this.hideLeftPanels(true);
+        //2. pop out right list panel
+        this.showListModePanel = true;
+        //3. disable system preview panel?
+      } else if (this.listEditMode == false) {
+        this.hideLeftPanels(false);
+      }
+      if (this.addNodeMode) this.addNodeMode = false;
+      if (this.dragNodeMode) this.dragNodeMode = false;
+    },
     // async bindTasks(courseId, topicId) {
     //   if (!this.teacher) {
     //     await this.$store.dispatch("bindPersonsTasksByTopicId", {
@@ -396,8 +423,10 @@ export default {
       this.clickedTopicId = null;
       this.clickedTopic = null;
       this.currentEdge = null;
+      this.showListModePanel = null;
       this.topicTasks = [];
       this.hideLeftPanelsFlag = false;
+      this.listEditMode = false;
       this.$refs.vis.exitSolarSystemPreview();
       // this.$refs.listPanel.courseClicked();
     },
@@ -571,6 +600,7 @@ export default {
   flex-direction: column;
   z-index: 1;
   // border: 1px solid pink;
+  transition: all 0.3s;
 
   .ui-message-wrap {
     // border: 1px solid var(--v-missionAccent-base);
@@ -583,6 +613,10 @@ export default {
       margin-left: 10px;
     }
   }
+}
+
+.shrinkMenu {
+  width: calc(100vw - 550px) !important;
 }
 
 #right-section {

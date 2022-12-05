@@ -6,6 +6,7 @@
         class="mapButton"
         :class="{ active: addNodeMode }"
         @click="toggleAddNodeMode"
+        v-if="!listEditMode"
       >
         <div class="mapButton-icon" :class="{ activeIcon: addNodeMode }">
           <v-icon v-if="!addNodeMode" color="missionAccent">{{
@@ -26,6 +27,7 @@
         class="mapButton ml-4"
         :class="{ active: addEdgeMode }"
         @click="toggleAddEdgeMode"
+        v-if="!listEditMode"
       >
         <div class="mapButton-icon" :class="{ activeIcon: addEdgeMode }">
           <v-icon v-if="!addEdgeMode" color="missionAccent">{{
@@ -46,6 +48,7 @@
         class="mapButton ml-4"
         :class="{ active: dragNodeMode }"
         @click="toggleDragNodeMode"
+        v-if="!listEditMode"
       >
         <div class="mapButton-icon" :class="{ activeIcon: dragNodeMode }">
           <v-icon v-if="!dragNodeMode" color="missionAccent">{{
@@ -75,6 +78,30 @@
           <v-icon color="baseAccent">{{ mdiContentSaveCheck }}</v-icon>
         </div>
       </div>
+
+      <!-- LIST EDIT MODE -->
+      <div
+        class="mapButton listMode ml-4"
+        :class="{ activeListMode: listEditMode }"
+        @click="toggleListEditMode"
+      >
+        <div class="mapButton-icon listModeIcon">
+          <v-icon v-if="!listEditMode" color="galaxyAccent">{{
+            mdiFormatListText
+          }}</v-icon>
+          <v-icon v-else color="galaxyAccent">{{ mdiClose }}</v-icon>
+        </div>
+        <div class="mapButton-text listModeIcon">
+          <!-- state 1 -->
+          <p v-if="!listEditMode" class="overline ma-0">
+            Enable List Edit Mode
+          </p>
+          <!-- state 2 -->
+          <p v-else class="ma-0" style="font-size: 0.7rem">
+            Disable List Edit Mode
+          </p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -86,6 +113,7 @@ import {
   mdiChartTimelineVariant,
   mdiArrowExpandAll,
   mdiContentSaveCheck,
+  mdiFormatListText,
 } from "@mdi/js";
 export default {
   name: "GalaxyMapButtons",
@@ -94,6 +122,7 @@ export default {
     addNodeMode: { default: false },
     addEdgeMode: { default: false },
     dragNodeMode: { default: false },
+    listEditMode: { default: false },
     changeInPositions: { default: false },
     nodePositionsChangeLoading: { default: false },
   },
@@ -113,6 +142,7 @@ export default {
       mdiChartTimelineVariant,
       mdiArrowExpandAll,
       mdiContentSaveCheck,
+      mdiFormatListText,
     };
   },
   computed: {
@@ -133,6 +163,9 @@ export default {
     saveNodePositions() {
       this.$emit("saveNodePositions");
     },
+    toggleListEditMode() {
+      this.$emit("toggleListEditMode");
+    },
   },
 };
 </script>
@@ -147,6 +180,11 @@ export default {
   backdrop-filter: blur(2px);
 }
 
+.listMode {
+  color: var(--v-galaxyAccent-base);
+  border: 1px solid var(--v-galaxyAccent-base);
+}
+
 .active {
   color: var(--v-baseAccent-base);
   border: 1px solid var(--v-baseAccent-base);
@@ -159,6 +197,10 @@ export default {
   align-items: center;
   border-left: 1px solid var(--v-missionAccent-base);
   padding: 0px 10px;
+}
+
+.listModeIcon {
+  border-left: 1px solid var(--v-galaxyAccent-base);
 }
 
 .activeIcon {
