@@ -9,6 +9,7 @@
       :nodes="nodesToDisplay"
       :edges="teacher ? currentCourseEdges : currentCourseEdgesWithStatusStyles"
       :options="network.options"
+      @hook:updated="networkUpdated"
       @nodes-add="addNode"
       @edges-add="addEdge"
       @dragging="dragging"
@@ -58,6 +59,7 @@ export default {
   },
   data: () => ({
     loading: true,
+    needsCentering: false,
     active: false,
     addingNode: false,
     addingEdge: false,
@@ -170,49 +172,6 @@ export default {
     numberOfTasksForThisTopic: 0,
     tasks: [],
   }),
-  async mounted() {
-    await this.$store.dispatch("bindCourseNodes", this.currentCourseId);
-    await this.$store.dispatch("bindCourseEdges", this.currentCourseId);
-    // bind topics for course creator
-    if (this.teacher) {
-      await this.$store.dispatch("bindCourseTopics", this.currentCourseId);
-    } else {
-      // bind topics for student
-      await this.$store.dispatch("bindThisPersonsCourseTopics", {
-        personId: this.person.id,
-        courseId: this.currentCourseId,
-      });
-    }
-
-    // zoom fit on load
-    if (this.$refs.network.nodes.length > 0) {
-      setTimeout(() => this.zoomToNodes(this.$refs.network.nodes), 250);
-      // set label colours (important if in light mode)
-      this.makeGalaxyLabelsColour(
-        this.$vuetify.theme.isDark
-          ? "#fff"
-          : this.$vuetify.theme.themes.light.baseAccent
-      );
-    }
-
-    this.drawSolarSystems();
-
-    // ==== check if all topics completed. if so GALAXY MAP COMPLETE!!! ====
-    let isGalaxyMapComplete = this.personsTopics.every(
-      (topic) => topic.topicStatus === "completed"
-    );
-    if (this.personsTopics.length && isGalaxyMapComplete) {
-      // TODO: better complete congrats
-      console.log("Galaxy Map Complete. Well done!");
-      this.$emit("galaxyCompleted");
-    }
-  },
-  beforeDestroy() {
-    this.stopNodeAnimation();
-    if (this.$refs.network) {
-      this.$refs.network.destroy();
-    }
-  },
   watch: {
     darkMode(dark) {
       if (dark == false) {
@@ -268,43 +227,37 @@ export default {
       return inActiveNodes;
     },
     currentCourseNodesWithStatus() {
-      let nodesWithStatus = [];
+      const nodesWithStatus = [];
       // loop each node
       for (const node of this.currentCourseNodes) {
         // find the topic node with status
-        let matchingNode = this.personsTopics.find((x) => {
-          return x.id === node.id;
-        });
+        const matchingNode = this.personsTopics.find((x) => x.id === node.id);
+
         // push node with status
         nodesWithStatus.push({
           ...node,
           // color: this.stringToColour(matchingNode.label),  // Attempt to match node color to System color
-          group: matchingNode?.topicStatus ?? "default",
+          group: matchingNode?.topicStatus ?? "locked",
         });
       }
       // return nodes with status to network map
       return nodesWithStatus;
     },
     currentCourseEdgesWithStatusStyles() {
-      let edgesWithStatusStyles = [];
-      let hasDashes = false;
+      const edgesWithStatusStyles = [];
 
       for (const edge of this.currentCourseEdges) {
         // find the topic node with status
-        let matchingEdge = this.personsTopics.find((x) => {
-          // add dashes to the edge (if topic is locked)
-          if (x.topicStatus == "locked") {
-            hasDashes = true;
-            // hasDashes = [2,2]
-          } else {
-            hasDashes = false;
-          }
-          return x.id === edge.to;
-        });
+        const matchingEdge = this.personsTopics.find((x) => x.id === edge.to);
+
         // push node with status
         edgesWithStatusStyles.push({
           ...edge,
-          dashes: hasDashes,
+          // add dashes to the edge (if topic is locked)
+          dashes:
+            matchingEdge == null || matchingEdge.topicStatus === "locked"
+              ? true
+              : false,
         });
       }
       // return nodes with status to network map
@@ -314,7 +267,75 @@ export default {
       return this.$vuetify.theme.isDark;
     },
   },
+  async mounted() {
+    this.refreshData();
+
+    // zoom fit on load
+    if (this.$refs.network.nodes.length > 0) {
+      this.needsCentering = true;
+    }
+
+    this.drawSolarSystems();
+
+    // ==== check if all topics completed. if so GALAXY MAP COMPLETE!!! ====
+    let isGalaxyMapComplete = this.personsTopics.every(
+      (topic) => topic.topicStatus === "completed"
+    );
+    if (this.personsTopics.length && isGalaxyMapComplete) {
+      // TODO: better complete congrats
+      console.log("Galaxy Map Complete. Well done!");
+      this.$emit("galaxyCompleted");
+    }
+  },
+  beforeDestroy() {
+    this.stopNodeAnimation();
+    this.$refs.network?.destroy();
+  },
   methods: {
+    async refreshData() {
+      await this.$store.dispatch("bindCourseNodes", this.currentCourseId);
+      await this.$store.dispatch("bindCourseEdges", this.currentCourseId);
+
+      // bind topics for course creator
+      if (this.teacher) {
+        await this.$store.dispatch("bindCourseTopics", this.currentCourseId);
+        // bind. state.courseTasks
+        await this.$store.dispatch("getCourseTasks");
+      } else {
+        // bind topics for student
+        await this.$store.dispatch("bindThisPersonsCourseTopics", {
+          personId: this.person.id,
+          courseId: this.currentCourseId,
+        });
+        // bind state.personsCourseTasks
+        await this.$store.dispatch("getPersonsCourseTasks");
+      }
+
+      this.needsCentering = true;
+
+      this.drawSolarSystems();
+
+      // ==== check if all topics completed. if so GALAXY MAP COMPLETE!!! ====
+      let isGalaxyMapComplete = this.personsTopics.every(
+        (topic) => topic.topicStatus === "completed"
+      );
+      if (this.personsTopics.length && isGalaxyMapComplete) {
+        // TODO: better complete congrats
+        console.log("Galaxy Map Complete. Well done!");
+        this.$emit("galaxyCompleted");
+      }
+    },
+    networkUpdated() {
+      if (this.needsCentering === true) {
+        this.zoomToNodes(this.$refs.network.nodes);
+        // set label colours (important if in light mode)
+        this.makeGalaxyLabelsColour(
+          this.$vuetify.theme.isDark
+            ? "#fff"
+            : this.$vuetify.theme.themes.light.baseAccent
+        );
+      }
+    },
     drawSolarSystems() {
       // set up solar system planets
       this.setupSolarSystemPlanets();
@@ -677,14 +698,6 @@ export default {
       }
     },
     async setupSolarSystemPlanets() {
-      if (!this.teacher) {
-        // bind state.personsCourseTasks
-        await this.$store.dispatch("getPersonsCourseTasks");
-      } else if (this.teacher) {
-        // bind. state.courseTasks
-        await this.$store.dispatch("getCourseTasks");
-      }
-
       this.tasks = [];
       if (!this.teacher) {
         this.tasks = this.personsCourseTasks;
