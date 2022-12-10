@@ -456,7 +456,7 @@ export default {
         .catch((error) => {
           console.error("Error writing node: ", error);
         });
-      // increment topicTotals by 1
+      // increment course topicTotals by 1
       db.collection("courses")
         .doc(this.currentCourseId)
         .update("topicTotal", firebase.firestore.FieldValue.increment(1))
