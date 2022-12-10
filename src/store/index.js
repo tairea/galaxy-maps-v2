@@ -334,28 +334,23 @@ export default new Vuex.Store({
       );
     }),
     async getPersonsCourseTasks({ state }) {
-      const tasksArr = [];
-      for (const topic of state.personsTopics) {
-        if (topic.topicStatus !== "locked") {
-          const tasks = await db
-            .collection("people")
-            .doc(state.person.id)
-            .collection(state.currentCourseId)
-            .doc(topic.id)
-            .collection("tasks")
-            .get();
+      const tasksPerTopic = await Promise.all(state.personsTopics.filter((topic) => topic.topicStatus !== "locked").map(async (topic) => {
+        const tasks = await db
+          .collection("people")
+          .doc(state.person.id)
+          .collection(state.currentCourseId)
+          .doc(topic.id)
+          .collection("tasks")
+          .get();
+        return tasks.docs.map((task) => ({ topicId: topic.id, task: task.data() }));
+      }));
 
-          for (const task of tasks.docs) {
-            tasksArr.push({ topicId: topic.id, task: task.data() });
-          }
-        }
-      }
+      const tasksArr = tasksPerTopic.flat();
       // console.log("tasksArr", tasksArr)
       state.personsCourseTasks = tasksArr
     },
     async getCourseTasks({ state }) {
-      const tasksArr = [];
-      for (const topic of state.currentCourseNodes) {
+      const tasksPerTopic = await Promise.all(state.currentCourseNodes.map(async (topic) => {
         const tasks = await db
           .collection("courses")
           .doc(state.currentCourseId)
@@ -363,11 +358,10 @@ export default new Vuex.Store({
           .doc(topic.id)
           .collection("tasks")
           .get();
+        return tasks.docs.map((task) => ({ topicId: topic.id, task: task.data() }));
+      }));
 
-        for (const task of tasks.docs) {
-          tasksArr.push({ topicId: topic.id, task: task.data() });
-        }
-      }
+      const tasksArr = tasksPerTopic.flat();
       // console.log("tasksArr", tasksArr)
       state.courseTasks = tasksArr
     },
