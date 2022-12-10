@@ -473,13 +473,26 @@ export default {
           console.error("Error writing document: ", error);
         });
 
-      // increment taskTotals by 1
+      // increment course taskTotals by 1
       db.collection("courses")
         .doc(this.currentCourseId)
         .update("taskTotal", firebase.firestore.FieldValue.increment(1))
         .then(() => {
           console.log("Task total increased by 1");
           this.$store.dispatch("getCourseTasks");
+        })
+        .catch((error) => {
+          console.error("Error incrementing taskTotal: ", error);
+        });
+
+      // increment topic taskTotals by 1
+      db.collection("courses")
+        .doc(this.currentCourseId)
+        .collection("topics")
+        .doc(this.topicId)
+        .update("taskTotal", firebase.firestore.FieldValue.increment(1))
+        .then(() => {
+          console.log("Task total increased by 1");
         })
         .catch((error) => {
           console.error("Error incrementing taskTotal: ", error);

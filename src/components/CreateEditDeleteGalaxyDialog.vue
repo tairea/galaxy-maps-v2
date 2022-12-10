@@ -556,6 +556,8 @@ export default {
               topicCreatedTimestamp: new Date(),
               x: 0,
               y: 0,
+              topicTotal: 1,
+              taskTotal: 0,
             })
             .then(async (docRef) => {
               console.log("3");
@@ -584,6 +586,7 @@ export default {
               group: "introduction",
               color: "#00E676",
               topicCreatedTimestamp: new Date(),
+              taskTotal: 0,
             });
         })
         .then(() => {
