@@ -7,7 +7,7 @@
       ref="network"
       class="full-height"
       :nodes="nodesToDisplay"
-      :edges="teacher ? currentCourseEdges : currentCourseEdgesWithStatusStyles"
+      :edges="edgesToDisplay"
       :options="network.options"
       @hook:updated="networkUpdated"
       @nodes-add="addNode"
@@ -210,9 +210,16 @@ export default {
           return this.inActiveNodes;
         } else if (!this.teacher) {
           return this.currentCourseNodesWithStatus;
-        } else return this.currentCourseNodes;
+        } else {
+          return this.currentCourseNodes;
+        }
       }
       return false;
+    },
+    edgesToDisplay() {
+      return this.teacher
+        ? this.currentCourseEdges
+        : this.currentCourseEdgesWithStatusStyles;
     },
     inActiveNodes() {
       let inActiveNodes = [];
@@ -723,29 +730,30 @@ export default {
       // get node xy positions
       const nodePositionMap = this.$refs.network.getPositions(nodeIds);
 
-      // loop nodes/topics
-      Object.entries(nodePositionMap).forEach(
-        async ([topicId, topicPosition]) => {
-          const topicsTasks = this.tasks.filter(
-            (task) => task.topicId == topicId
-          );
+      // reset planets
+      this.planets = [];
 
-          for (let i = 1; i <= topicsTasks.length; i++) {
-            this.planets.push(
-              new Planet(
-                topicPosition.x,
-                topicPosition.y,
-                2, // planet size
-                this.dark
-                  ? "white"
-                  : this.$vuetify.theme.themes.light.missionAccent, // planet colour
-                6.28 / (10 * i), // planet speed (6.28 radians in a circle. so 6.28 is full circle in 1 second. divide by something to slow it down)
-                20 * i // planet orbit size
-              )
-            );
-          }
+      // loop nodes/topics
+      for (const [topicId, topicPosition] of Object.entries(nodePositionMap)) {
+        const topicsTasks = this.tasks.filter(
+          (task) => task.topicId == topicId
+        );
+
+        for (let i = 1; i <= topicsTasks.length; i++) {
+          this.planets.push(
+            new Planet(
+              topicPosition.x,
+              topicPosition.y,
+              2, // planet size
+              this.dark
+                ? "white"
+                : this.$vuetify.theme.themes.light.missionAccent, // planet colour
+              6.28 / (10 * i), // planet speed (6.28 radians in a circle. so 6.28 is full circle in 1 second. divide by something to slow it down)
+              20 * i // planet orbit size
+            )
+          );
         }
-      );
+      }
     },
     beforeDrawing(ctx) {
       // get delta
