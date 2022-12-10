@@ -266,13 +266,19 @@ export default new Vuex.Store({
     bindCourseNodes: firestoreAction(({ bindFirestoreRef }, id) => {
       return bindFirestoreRef(
         "currentCourseNodes",
-        db.collection("courses").doc(id).collection("map-nodes")
+        db.collection("courses").doc(id).collection("map-nodes"),
+        {
+          reset: false,
+        }
       );
     }),
     bindCourseEdges: firestoreAction(({ bindFirestoreRef }, id) => {
       return bindFirestoreRef(
         "currentCourseEdges",
-        db.collection("courses").doc(id).collection("map-edges")
+        db.collection("courses").doc(id).collection("map-edges"),
+        {
+          reset: false,
+        }
       );
     }),
     bindCourseTopics: firestoreAction(({ bindFirestoreRef }, id) => {
