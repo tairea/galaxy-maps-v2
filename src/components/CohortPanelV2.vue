@@ -208,7 +208,7 @@ export default {
     this.cohortsCoursesDataLoading = false;
 
     // ==== get cohort activity data from LRS
-    const getActivityData = await getStudentsTimeDataXAPIQuery({
+    let getActivityData = await getStudentsTimeDataXAPIQuery({
       studentsArr: this.cohort.students,
     });
     this.cohortActivityData = getActivityData;

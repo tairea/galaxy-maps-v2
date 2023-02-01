@@ -105,12 +105,12 @@ export default {
     },
   },
   mounted() {
-    this.formatStudentsChartData(this.activityData)
+    this.formatStudentsChartData(this.activityData);
   },
   watch: {
     timeframe() {
-      this.formatStudentsChartData(this.activityData)
-    }
+      this.formatStudentsChartData(this.activityData);
+    },
   },
   methods: {
     formatStudentsChartData(studentData) {
@@ -125,7 +125,7 @@ export default {
         const label = person.firstName + " " + person.lastName;
 
         // calc total depending on timeframe.type (eg. fortnight, calculate days totals for that timeframes fortnight)
-        const time = 0;
+        let time = 0;
         switch (this.timeframe.type) {
           case "day":
             const dayRes = student.activity.find((day) => {
@@ -206,7 +206,7 @@ export default {
           : this.$vuetify.theme.themes.light.baseAccent,
         categoryPercentage: 1.0,
         barPercentage: 0.7,
-        maxBarThickness: 50
+        maxBarThickness: 50,
       };
 
       datasets.push(dataset);
@@ -233,8 +233,8 @@ export default {
       return name.substring(0, 3).toUpperCase();
     },
     barWidth(labels) {
-      return 100 / labels.length
-    }
+      return 100 / labels.length;
+    },
   },
 };
 </script>
