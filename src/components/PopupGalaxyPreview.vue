@@ -23,8 +23,15 @@
           class="galaxy-image"
           :src="course.image.url"
         ></v-img>
-        <p class="mt-2 galaxy-description">
-          {{ course.description }}
+        <p ref="description" class="mt-2 galaxy-description">
+          <!-- {{ course.description }} -->
+          {{ maybeTruncate(course.description) }}
+          <a
+            style="border-bottom: 1px solid"
+            v-if="readmore"
+            @click="showFullDescription()"
+            >Read more</a
+          >
         </p>
       </div>
       <v-btn
@@ -212,6 +219,20 @@ export default {
     },
   },
   methods: {
+    maybeTruncate(value) {
+      if (!value) return "";
+      if (value.length <= 100) {
+        return value;
+      } else {
+        // show read more button
+        this.readmore = true;
+        // limit to 100 characters
+        return value.substring(0, 100) + "...";
+      }
+    },
+    showFullDescription() {
+      this.$refs.description.innerHTML = this.course.description;
+    },
     async setImages() {
       this.mappedAuthorImage = await this.getPersonsImage(
         this.course.mappedBy.personId

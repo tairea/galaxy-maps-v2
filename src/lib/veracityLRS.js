@@ -1159,7 +1159,7 @@ export const getCohortsCourseDataXAPIQuery = async (payload) => {
     });
 };
 
-export const getStudentsTimeDataXAPIQuery = async (payload) => {
+export let getStudentsTimeDataXAPIQuery = async (payload) => {
   // if no data, dont bother
   if (!payload.studentsArr) return;
 
@@ -1352,8 +1352,8 @@ async function sanitiseCohortsActivityDataFromLRS(res) {
     const person = await getStudentByEmail(email);
 
     const personDaysActivity = [];
-    const day = 0;
-    const newStatement = {
+    let day = 0;
+    let newStatement = {
       dayISOTimestamp: "",
       minutesActiveTotal: 0,
     };
@@ -1387,7 +1387,7 @@ async function sanitiseCohortsActivityDataFromLRS(res) {
         day = newDay;
       }
       // check if last activity for that day. if it is save time totals for the day.
-      const nextDay = 0;
+      let nextDay = 0;
       const nextStatement = student.activity[index + 1];
       if (!nextStatement) {
         nextDay = day + 1; // if there is no nextStatement... just increment to save last days statements
