@@ -48,9 +48,25 @@
 
     <!-- ASSIGNED COURSES INFO -->
     <div v-else-if="assignCourses">
-      <p class="overline assignedToLabel ma-0">Courses</p>
+      <p class="overline assignedToLabel ma-0">Galaxy Maps</p>
       <div v-if="courses.length > 0">
         <Course v-for="(course, i) in courses" :course="course" :key="i" />
+        <!-- Jump to galaxy button -->
+        <div
+          v-if="courses.length == 1"
+          class="d-flex justify-center align-center mb-2"
+        >
+          <v-btn
+            outlined
+            color="galaxyAccent"
+            small
+            :to="{
+              name: 'GalaxyView',
+              params: { courseId: courses[0].id },
+            }"
+            >Jump to Galaxy</v-btn
+          >
+        </div>
       </div>
       <p v-else class="assigned-status">No Galaxies assigned to this Cohort</p>
       <AssignCohortDialog

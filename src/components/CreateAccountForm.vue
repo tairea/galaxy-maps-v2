@@ -41,7 +41,7 @@
         :light="!dark"
         type="email"
         v-model="account.parentEmail"
-        label="Parent E-mail"
+        label="Parent E-mail (optional)"
         outlined
         color="missionAccent"
         :rules="account.parentEmail.length ? parentEmailRules : []"
@@ -52,8 +52,7 @@
         :light="!dark"
         type="text"
         v-model="account.nsn"
-        label="Student NSN"
-        required
+        label="Student ID Number (optional)"
         outlined
         color="missionAccent"
       ></v-text-field>

@@ -1,8 +1,6 @@
 <template>
   <div>
-    <p class="label">
-      tasks completed
-    </p>
+    <p class="label">Missions completed</p>
     <p class="label text-center label-value">{{ calcTaskCompleted }}</p>
   </div>
 </template>
