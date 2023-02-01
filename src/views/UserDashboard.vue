@@ -152,9 +152,8 @@ export default {
     if (this.user.data.admin) {
       this.bindAllCohorts();
       this.setDashboardView("admin");
-    }
-    if (this.dashboardView === "" && this.person.assignedCourses?.length) {
-      this.setDashboardView("student");
+    } else if (this.isTeacher) {
+      this.setDashboardView("teacher");
     } else {
       this.setDashboardView("student");
     }

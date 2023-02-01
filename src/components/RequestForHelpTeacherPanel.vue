@@ -1,18 +1,46 @@
 <template>
-  <div class="request-card" :class="responderPerson ? 'response-card':''">
+  <div class="request-card" :class="responderPerson ? 'response-card' : ''">
     <v-expansion-panels flat v-model="showCard">
-      <v-expansion-panel @change="panelChange()" v-for="(sub, i) in [request]" :key="i" class="panel">
+      <v-expansion-panel
+        @change="panelChange()"
+        v-for="(sub, i) in [request]"
+        :key="i"
+        class="panel"
+      >
         <v-expansion-panel-header class="pa-0" ref="panel">
           <!-- Course Image -->
           <div class="d-flex flex-row">
-            <Avatar v-if="isDashboardView" :profile="courseContextProfile" size="30" :colourBorder="true"/>
-            <Avatar v-if="requesterPerson" :profile="requesterPerson" size="30" :colourBorder="true"  :class="isDashboardView ? 'request-image':''"/>
-            <Avatar v-if="responderPerson && !active" :profile="responderPerson" size="30" :colourBorder="true"  :class="isDashboardView ? 'respond-image' : 'request-image'"/>
-            <div v-if="responderPerson" class="requester-time d-flex flex-column align-center ml-auto">
+            <Avatar
+              v-if="isDashboardView"
+              :profile="courseContextProfile"
+              size="30"
+              :colourBorder="true"
+            />
+            <Avatar
+              v-if="requesterPerson"
+              :profile="requesterPerson"
+              size="30"
+              :colourBorder="true"
+              :class="isDashboardView ? 'request-image' : ''"
+            />
+            <Avatar
+              v-if="responderPerson && !active"
+              :profile="responderPerson"
+              size="30"
+              :colourBorder="true"
+              :class="isDashboardView ? 'respond-image' : 'request-image'"
+            />
+            <div
+              v-if="responderPerson"
+              class="requester-time d-flex flex-column align-center ml-auto"
+            >
               <span class="ml-auto status-text">responded</span>
               {{ getHumanDate(request.responseSubmittedTimestamp) }}
             </div>
-            <div v-else class="requester-time d-flex flex-column align-center ml-auto">
+            <div
+              v-else
+              class="requester-time d-flex flex-column align-center ml-auto"
+            >
               <span class="ml-auto status-text">...waiting response</span>
               {{ getHumanDate(request.requestSubmittedTimestamp) }}
             </div>
@@ -46,7 +74,12 @@
             <div class="divider"></div>
             <div class="d-flex align-start justify-end">
               <span class="requester-msg">"{{ request.responseMessage }}"</span>
-              <Avatar :profile="responderPerson" size="30" :colourBorder="true" class="ml-2"/>
+              <Avatar
+                :profile="responderPerson"
+                size="30"
+                :colourBorder="true"
+                class="ml-2"
+              />
             </div>
           </template>
         </v-expansion-panel-content>
@@ -62,7 +95,7 @@ import moment from "moment";
 import RequestForHelpResponseDialog from "../components/RequestForHelpResponseDialog";
 import { dbMixins } from "../mixins/DbMixins";
 
-import Avatar from "../components/Avatar.vue"
+import Avatar from "../components/Avatar.vue";
 
 export default {
   name: "RequestForHelpTeacherPanel",
@@ -70,7 +103,7 @@ export default {
   props: ["request", "isTeacher", "isDashboardView"],
   components: {
     RequestForHelpResponseDialog,
-    Avatar
+    Avatar,
   },
   data() {
     return {
@@ -82,41 +115,49 @@ export default {
         topicId: this.request.topicId,
         taskId: this.request.taskId,
       },
-      active: false
+      active: false,
     };
   },
   async mounted() {
-    this.requesterPerson = await this.MXgetPersonByIdFromDB(this.request.personId);
-    if (this.request.responderPersonId) this.responderPerson = await this.MXgetPersonByIdFromDB(this.request.responderPersonId)
+    this.requesterPerson = await this.MXgetPersonByIdFromDB(
+      this.request.personId
+    );
+    if (this.request.responderPersonId)
+      this.responderPerson = await this.MXgetPersonByIdFromDB(
+        this.request.responderPersonId
+      );
   },
   watch: {
     async request() {
-      if (this.request.responderPersonId) this.responderPerson = await this.MXgetPersonByIdFromDB(this.request.responderPersonId)
-    }
+      if (this.request.responderPersonId)
+        this.responderPerson = await this.MXgetPersonByIdFromDB(
+          this.request.responderPersonId
+        );
+    },
   },
   computed: {
-    ...mapState([
-      "allTasks",
-      "people",
-      "showPanelCard"
-    ]),
+    ...mapState(["allTasks", "people", "showPanelCard"]),
     showCard: {
       get: function () {
-        if (this.showPanelCard?.type === "request" && this.showPanelCard?.data.id === this.request.id) return 0
-        return null
+        if (
+          this.showPanelCard?.type === "request" &&
+          this.showPanelCard?.data.id === this.request.id
+        )
+          return 0;
+        return null;
       },
       set: function (newValue) {
-        this.$store.commit('setPanelCard', {})
-      }
+        this.$store.commit("setPanelCard", {});
+      },
     },
-    courseContextProfile () {
-      const course = this.request.contextCourse
+    courseContextProfile() {
+      const course = this.request.contextCourse;
       return {
         image: course.image,
         firstName: course.title,
-        lastName: '',
-      }
-    }
+        lastName: "",
+      };
+    },
   },
   methods: {
     getTask(id) {
@@ -132,8 +173,8 @@ export default {
       return name.substring(0, 3).toUpperCase();
     },
     panelChange() {
-      this.active = !this.$refs.panel[0].isActive
-    }
+      this.active = !this.$refs.panel[0].isActive;
+    },
   },
 };
 </script>
@@ -183,7 +224,7 @@ export default {
     font-size: 0.8rem;
     color: var(--v-missionAccent-base);
   }
-  
+
   .waiting-response {
     margin: 0px;
     font-size: 0.8rem;
@@ -226,7 +267,7 @@ export default {
   color: var(--v-missionAccent-base);
   font-size: 0.6rem;
   text-transform: uppercase;
-} 
+}
 
 .request-image {
   position: relative;
@@ -243,9 +284,10 @@ export default {
 }
 
 .status-text {
-   color: var(--v-galaxyAccent-base);
-   font-size:0.6rem;
-   position: relative;
-   top: -8px
+  color: var(--v-galaxyAccent-base);
+  font-size: 0.6rem;
+  position: relative;
+  top: -8px;
+  text-transform: uppercase;
 }
 </style>
