@@ -51,11 +51,12 @@
           </div>
         </div>
 
+        <!-- LEFT SIDE -->
         <div
           class="left-side"
           :style="cohort.name ? 'width:50%' : 'width:100%'"
         >
-          <div class="create-dialog-content mt-4">
+          <div class="create-dialog-content mt-8">
             <!-- NAME -->
             <!-- TITLE -->
             <v-text-field
@@ -100,9 +101,10 @@
               label="Cohort image upload"
             ></v-file-input>
 
-            <div v-if="user.data.admin">
+            <!-- <div v-if="user.data.admin"> removed admin as im wanting to open up features for user testing -->
+            <div>
               <!-- ORGANISATION -->
-              <p class="input-description">Organisation:</p>
+              <!-- <p class="input-description">Organisation:</p>
               <v-select
                 class="input-field select-color"
                 outlined
@@ -114,7 +116,7 @@
                 item-text="name"
                 item-value="id"
               >
-              </v-select>
+              </v-select> -->
               <!-- Select teachers from list -->
               <p class="input-description">Cohort teachers:</p>
               <v-autocomplete
@@ -169,6 +171,11 @@
                     </v-list-item-content>
                   </template>
                 </template>
+                <template v-slot:append-item>
+                  <div class="d-flex justify-end">
+                    <CreateAccountDialog accountType="teacher" />
+                  </div>
+                </template>
                 <template v-slot:no-data>
                   <CreateAccountDialog accountType="teacher" />
                 </template>
@@ -186,19 +193,19 @@
             <h2 class="cohort-label">Cohort</h2>
             <h1 class="cohort-title">{{ cohort.name }}</h1>
             <v-img
-              v-if="cohort.image.url"
+              v-if="cohort.image"
               :src="cohort.image.url"
               width="100%"
             ></v-img>
             <p class="cohort-description">{{ cohort.description }}</p>
             <!-- Organisation -->
-            <div class="d-flex justify-center align-center">
+            <!-- <div class="d-flex justify-center align-center">
               <Organisation
                 v-if="cohort.organisation"
                 :organisation="getOrganisationById(cohort.organisation)"
                 :size="40"
               />
-            </div>
+            </div> -->
           </div>
         </div>
         <!-- End of right-side -->
@@ -421,6 +428,7 @@ export default {
     uploadedImage: null,
     percentage: 0,
     search: "",
+    teachers: [],
   }),
   mounted() {
     if (this.user.data.admin) this.bindAllPeople();
@@ -429,6 +437,7 @@ export default {
     } else {
       this.$vuetify.theme.themes.dark.primary = "#000000"; // black
     }
+    this.teachers.push(this.person);
   },
   watch: {
     dialog(newVal) {
@@ -438,16 +447,17 @@ export default {
     },
   },
   computed: {
+    ...mapState(["person"]),
     ...mapGetters(["getOrganisationById", "user", "people", "organisations"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
-    teachers() {
-      const teachers = this.people.filter(
-        (person) => person.accountType === "teacher"
-      );
-      return teachers;
-    },
+    // teachers() {
+    // const teachers = this.people.filter(
+    //   (person) => person.accountType === "teacher"     //  we dont have account type anymore. so defaulting to person creating cohort is the default teacher
+    // );
+    // return teachers;
+    // },
     cohortView() {
       return this.$route.name === "CohortView";
     },

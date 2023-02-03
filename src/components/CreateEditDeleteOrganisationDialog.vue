@@ -123,7 +123,7 @@
           <v-btn
             outlined
             color="baseAccent"
-            @click="saveOrganisation()"
+            @click="saveOrganisation(organisation)"
             class="mr-2"
             :loading="loading"
             :disabled="disabled"
@@ -225,10 +225,23 @@
 import { mapMutations } from "vuex";
 import { db, storage } from "../store/firestoreConfig";
 
+import {
+  mdiPlus,
+  mdiClose,
+  mdiCheck,
+  mdiDelete,
+  mdiInformationVariant,
+} from "@mdi/js";
+
 export default {
   name: "CreateEditDeleteOrganisationDialog",
   props: ["edit", "organisationToEdit", "hideText"],
   data: () => ({
+    mdiPlus,
+    mdiClose,
+    mdiCheck,
+    mdiDelete,
+    mdiInformationVariant,
     dialog: false,
     dialogConfirm: false,
     dialogTitle: "Create a new Organisation",

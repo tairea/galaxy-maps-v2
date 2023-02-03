@@ -250,6 +250,7 @@
                 <v-btn
                   v-if="edit"
                   outlined
+                  :disabled="disabled || loading"
                   color="error"
                   @click="deleteDialog()"
                   class="ml-2"

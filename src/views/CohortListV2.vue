@@ -105,8 +105,9 @@
             class="cohort-panel"
           />
         </div>
-        <v-row justify="center">
-          <v-tooltip top close-delay="2000" color="subBackground">
+        <v-row justify="center" class="mb-12">
+          <!-- PAY WALL VERSION Create Cohort Button -->
+          <!-- <v-tooltip top close-delay="2000" color="subBackground">
             <template v-slot:activator="{ on, attrs }">
               <v-btn
                 outlined
@@ -120,15 +121,40 @@
               </v-btn>
             </template>
             <span v-html="paidFeatureMessage"></span>
+          </v-tooltip> -->
+
+          <!-- OPEN VERSION -->
+          <v-tooltip top color="subBackground">
+            <template v-slot:activator="{ on, attrs }">
+              <div v-bind="attrs" v-on="on">
+                <CreateEditDeleteCohortDialog />
+              </div>
+            </template>
+            <div class="create-tooltip">CREATE COHORT</div>
           </v-tooltip>
+          <!-- <v-tooltip top color="subBackground">
+            <template v-slot:activator="{ on, attrs }">
+              <div v-bind="attrs" v-on="on" class="ml-4">
+                <CreateEditDeleteOrganisationDialog
+                  ref="organisationDialog"
+                  :edit="openOrganisationDialog"
+                  :organisationToEdit="editingOrgansation"
+                />
+              </div>
+            </template>
+            <div class="create-tooltip">CREATE ORGANISATION</div>
+          </v-tooltip>
+          <div v-if="person.accountType == 'admin'">
+            <CreateAdminDialog />
+          </div> -->
         </v-row>
       </div>
       <div v-else class="no-cohort">
         <p class="overline">create or start a galaxy to join a cohort</p>
         <p class="overline" style="text-align: center"><strong>OR</strong></p>
 
-        <!-- Create Cohort Button -->
-        <v-tooltip bottom close-delay="2000" color="subBackground">
+        <!-- PAY WALL VERSION Create Cohort Button -->
+        <!-- <v-tooltip bottom close-delay="2000" color="subBackground">
           <template v-slot:activator="{ on, attrs }">
             <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on">
               <v-icon class="mb-1 mr-2">{{ mdiPlus }}</v-icon>
@@ -136,7 +162,32 @@
             </v-btn>
           </template>
           <span v-html="paidFeatureMessage"></span>
+        </v-tooltip> -->
+        <!-- OPEN VERSION -->
+        <v-tooltip right color="subBackground">
+          <template v-slot:activator="{ on, attrs }">
+            <div v-bind="attrs" v-on="on">
+              <CreateEditDeleteCohortDialog />
+            </div>
+          </template>
+          <div class="create-tooltip">CREATE COHORT</div>
         </v-tooltip>
+        <!-- <v-tooltip right color="subBackground">
+          <template v-slot:activator="{ on, attrs }">
+            <div v-bind="attrs" v-on="on">
+              <CreateEditDeleteOrganisationDialog
+                ref="organisationDialog"
+                :edit="openOrganisationDialog"
+                :organisationToEdit="editingOrgansation"
+                :hideText="true"
+              />
+            </div>
+          </template>
+          <div class="create-tooltip">CREATE ORGANISATION</div>
+        </v-tooltip>
+        <div v-if="person.accountType == 'admin'">
+          <CreateAdminDialog />
+        </div> -->
       </div>
       <!-- <p>create or start a galaxy to join a cohort</p> -->
     </v-expand-transition>
