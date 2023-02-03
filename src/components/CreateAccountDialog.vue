@@ -23,7 +23,7 @@
         <div class="dialog-header">
           <p class="mb-0">Add {{ this.accountType }}</p>
         </div>
-        <CreateAccountForm :accountType="accountType" />
+        <CreateAccountForm :accountType="accountType" @close="dialog = false" />
       </div>
     </v-dialog>
   </div>
