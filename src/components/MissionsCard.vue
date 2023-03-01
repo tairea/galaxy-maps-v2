@@ -405,8 +405,8 @@ p {
     width: 40%;
     position: relative;
     display: flex;
-    justify-content: center;
-    align-items: left;
+    justify-content: flex-start;
+    align-items: flex-start;
     flex-direction: column;
 
     .mission-edit-button {

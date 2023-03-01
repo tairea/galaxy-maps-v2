@@ -100,7 +100,7 @@
                 color="missionAccent"
                 v-model="task.duration"
                 required
-                label="Estimated Duration of Mission (in minutes)"
+                label="Estimated time to complete this Mission (in minutes)"
               ></v-text-field>
 
               <!-- VIDEO -->
@@ -148,7 +148,9 @@
                     With this option checked, students are required to submit a
                     link to evidence of their work.<br /><br />Once the student
                     has submitted a link to their work, you will be notified to
-                    review their submission to check if it is completed.
+                    review their submission to check if it is completed.<br /><br />
+                    IMPORTANT: The student cannot progress onto the next System
+                    until you review and approve their submission.
                   </span>
                 </v-tooltip>
               </p>
