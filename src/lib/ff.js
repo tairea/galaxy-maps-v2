@@ -6,24 +6,20 @@ export const getCourseById = async (id) => {
   const course = await db
     .collection("courses")
     .doc(id)
-    .get()
-    .then((doc) => {
-      return {
-        id,
-        ...doc.data(),
-      };
-    });
-  return course;
+    .get();
+  return {
+    id,
+    ...course.data(),
+  };
 };
 export const getStudentByEmail = async (email) => {
   const people = await db
     .collection("people")
     .where("email", "==", email)
+    .limit(1)
     .get();
 
-  for (const person of people.docs) {
-    return person.data();
-  }
+  return people.docs[0]?.data();
 };
 
 export const getStudentTasksByTopicId = async (payload) => {
@@ -44,32 +40,29 @@ export const getStudentTasksByTopicId = async (payload) => {
 }
 
 export const getStudentCohortsById = async (studentId) => {
-  return await db
+  const querySnapShot = await db
     .collection("cohorts")
     .where("students", "array-contains", studentId)
-    .get()
-    .then((querySnapShot) => {
-      const cohorts = querySnapShot.docs.map((doc) => {
-        return {
-          id: doc.id,
-          ...doc.data(),
-        };
-      });
-      return cohorts;
-    });
+    .get();
+
+  const cohorts = querySnapShot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+  return cohorts;
 }
 
 export const getCohortById = async (cohortId) => {
-  return await db
+  const doc = await db
     .collection("cohorts")
     .doc(cohortId)
-    .get()
-    .then(doc => {
-      return {
-        id: doc.id,
-        ...doc.data()
-      }
-    })
+    .get();
+
+  return {
+    id: doc.id,
+    ...doc.data()
+  }
 }
 
 export const getAllPeopleInCourse = async (courseId) => {
