@@ -3,7 +3,10 @@ import "./_dotenv.js";
 import "./_shared.js";
 
 import { checkInactivitySchedule } from "./checkInactivity.js";
-import { assignTopicsAndTasksToMeHttpsEndpoint, assignTopicsAndTasksToStudentHttpsEndpoint } from "./courseManagement.js";
+import {
+  assignTopicsAndTasksToMeHttpsEndpoint,
+  assignTopicsAndTasksToStudentHttpsEndpoint,
+} from "./courseManagement.js";
 import {
   sendCourseDeletedHttpsEndpoint,
   sendCoursePublishedEmailHttpsEndpoint,
@@ -17,7 +20,11 @@ import {
   sendTaskSubmissionHttpsEndpoint,
 } from "./emails.js";
 import { onUserStatusChangedOnUpdateTrigger } from "./presence.js";
-import { addAdminRoleHttpsEndpoint, createUserHttpsEndpoint, generateEmailLinkHttpsEndpoint } from "./userManagement.js";
+import {
+  addAdminRoleHttpsEndpoint,
+  createUserHttpsEndpoint,
+  generateEmailLinkHttpsEndpoint,
+} from "./userManagement.js";
 
 export {
   checkInactivitySchedule as scheduledFunction,

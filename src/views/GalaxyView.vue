@@ -262,9 +262,9 @@ export default {
       if (this.cohortsInCourse.length) {
         this.setCurrentCohort(this.cohortsInCourse[0]);
         const students = await Promise.all(
-          this.cohortsInCourse[0].students?.map(async (student) => {
-            return await this.MXgetPersonByIdFromDB(student);
-          })
+          this.cohortsInCourse[0].students?.map((student) =>
+            this.MXgetPersonByIdFromDB(student)
+          )
         );
         this.peopleInCourse = students;
         this.setPeopleInCourse(students);
