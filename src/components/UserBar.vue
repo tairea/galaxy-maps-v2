@@ -244,7 +244,8 @@ export default {
             text: "Successfully signed out",
             color: "baseAccent",
           });
-          this.$router.push("/login");
+          // this.$router.push("/galaxies");
+          this.$router.go();
         })
         .catch((error) => {
           alert(error.message);
@@ -253,7 +254,9 @@ export default {
             text: error.message,
             color: "pink",
           });
-          this.$router.push("/");
+          // this.$router.push("/login");
+          // this.$router.go();
+          location.reload();
         });
     },
     onButtonClick() {

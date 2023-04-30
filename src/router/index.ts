@@ -22,11 +22,11 @@ import store from "../store";
 Vue.use(VueRouter);
 
 const routes = [
-  {
-    path: "/",
-    name: "Landing",
-    component: LandingPage,
-    children: [
+  // {
+  //   path: "/",
+  //   name: "Landing",
+  //   component: LandingPage,
+  //   children: [
       {
         path: "/login/",
         name: "Login",
@@ -47,19 +47,33 @@ const routes = [
         name: "Register",
         component: LandingPage,
       },
-    ]
-  },
+  //   ]
+  // },
   {
-    path: "/base",
+    path: "/",
     name: "Home",
     meta: {
-      authRequired: true,
+      authRequired: false,
     },
     component: Home,
+    redirect: {
+      name: 'GalaxyList'
+    },
     children: [
+      // {
+      //   path: "/login/",
+      //   name: "Login",
+      //   component: LandingPage,
+      // },
       {
         path: "galaxies", 
         name: "GalaxyList",
+        component: GalaxyList,
+        props: true,
+      },
+      {
+        path: ":createdBy", 
+        name: "creatorsGalaxies",
         component: GalaxyList,
         props: true,
       },

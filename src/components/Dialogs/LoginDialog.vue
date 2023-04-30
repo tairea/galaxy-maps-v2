@@ -1,79 +1,102 @@
 <template>
-  <div class="login">
-    <p class="gm-title">GALAXY MAPS</p>
-    <EmailSignIn v-if="showEmailSignin" />
-    <NewPassword
-      v-else-if="isResetPassword"
-      :actionCode="actionCode"
-      :email="accountEmail"
-      @close="isResetPassword = false"
-    />
-    <div v-else-if="isVerifyEmail" id="galaxy-info">
-      <h2 class="galaxy-label">EMAIL VERIFIED</h2>
-      <v-btn
-        color="baseAccent"
-        class="mr-4 my-4"
-        @click="redirect"
-        outlined
-        width="100%"
-      >
-        continue to login
-      </v-btn>
-    </div>
-    <div v-else id="galaxy-info">
-      <h2 class="galaxy-label">LOGIN</h2>
-      <!-- <h1 class="galaxy-title">Login</h1> -->
-      <!-- <div class="d-flex justify-center align-center"> -->
-      <!-- <v-img class="galaxy-image" :src=""></v-img> -->
-      <!-- </div> -->
-      <v-form
-        ref="form"
-        v-model="valid"
-        lazy-validation
-        class="my-6"
-        @keyup.native.enter="valid && login($event)"
-      >
-        <v-text-field
-          type="email"
-          v-model="email"
-          label="E-mail"
-          :rules="emailRules"
-          required
-          color="baseAccent"
-          outlined
-          class="custom-input"
-        ></v-text-field>
-        <v-text-field
-          type="password"
-          v-model="password"
-          label="Password"
-          required
-          color="baseAccent"
-          outlined
-          class="custom-input"
-        ></v-text-field>
+  <v-dialog v-model="dialog" width="300px">
+    <!-- CREATE BUTTON -->
+    <template v-if="!user.loggedIn" v-slot:activator="{ on, attrs }">
+      <p class="login-description text-center">
+        Please
         <v-btn
-          :disabled="!valid"
+          v-if="!user.loggedIn"
+          v-bind="attrs"
+          v-on="on"
+          color="galaxyAccent"
+          small
+          class="pa-0"
+          text
+        >
+          Sign in
+        </v-btn>
+        to <br />
+        view this Galaxy Map
+      </p>
+    </template>
+    <div class="login">
+      <EmailSignIn v-if="showEmailSignin" />
+      <NewPassword
+        v-else-if="isResetPassword"
+        :actionCode="actionCode"
+        :email="accountEmail"
+        @close="isResetPassword = false"
+      />
+      <div v-else-if="isVerifyEmail" id="galaxy-info">
+        <h2 class="galaxy-label">EMAIL VERIFIED</h2>
+        <v-btn
           color="baseAccent"
-          class="mr-4"
-          @click="login"
+          class="mr-4 my-4"
+          @click="redirect"
           outlined
           width="100%"
-          :loading="loading"
         >
-          Sign-in
+          continue to login
         </v-btn>
-      </v-form>
+      </div>
+      <div v-else id="galaxy-info">
+        <h2 class="galaxy-label">LOGIN</h2>
+        <!-- <h1 class="galaxy-title">Login</h1> -->
+        <!-- <div class="d-flex justify-center align-center"> -->
+        <!-- <v-img class="galaxy-image" :src=""></v-img> -->
+        <!-- </div> -->
+        <v-form
+          ref="form"
+          v-model="valid"
+          lazy-validation
+          class="my-6"
+          @keyup.native.enter="valid && login($event)"
+        >
+          <v-text-field
+            type="email"
+            v-model="email"
+            label="E-mail"
+            :rules="emailRules"
+            required
+            color="baseAccent"
+            outlined
+            class="custom-input"
+          ></v-text-field>
+          <v-text-field
+            type="password"
+            v-model="password"
+            label="Password"
+            required
+            color="baseAccent"
+            outlined
+            class="custom-input"
+          ></v-text-field>
+          <v-btn
+            :disabled="!valid"
+            color="baseAccent"
+            class="mr-4"
+            @click="login"
+            outlined
+            width="100%"
+            :loading="loading"
+          >
+            Sign-in
+          </v-btn>
+        </v-form>
 
-      <router-link to="/register" class="overline mt-4" color="baseAccent--text"
-        >Create an account</router-link
-      >
-      <br />
-      <router-link to="/reset" class="overline mt-4" color="baseAccent--text"
-        >Reset Password</router-link
-      >
+        <router-link
+          to="/register"
+          class="overline mt-4"
+          color="baseAccent--text"
+          >Create an account</router-link
+        >
+        <br />
+        <router-link to="/reset" class="overline mt-4" color="baseAccent--text"
+          >Reset Password</router-link
+        >
+      </div>
     </div>
-  </div>
+  </v-dialog>
 </template>
 
 <script>
@@ -86,9 +109,17 @@ import { queryXAPIStatement } from "@/lib/veracityLRS";
 
 export default {
   name: "Login",
+  props: ["showDialog"],
   components: {
     NewPassword,
     EmailSignIn,
+  },
+  watch: {
+    showDialog(newVal) {
+      console.log("show login");
+      if (newVal) this.dialog = true;
+      else this.dialog = false;
+    },
   },
   data: () => ({
     valid: true,
@@ -104,6 +135,7 @@ export default {
     actionCode: "",
     isVerifyEmail: false,
     showEmailSignin: false,
+    dialog: false,
   }),
   mounted() {
     // Get the email action to complete.
@@ -254,6 +286,7 @@ export default {
         });
     },
     proceed() {
+      console.log("proceeding");
       if (!this.user?.data?.id || !this.person?.id) {
         return setTimeout(() => {
           this.proceed();
@@ -269,7 +302,8 @@ export default {
         this.loading = false;
         throw new Error("Please check your emails to verify your account");
       } else {
-        this.$router.push("/galaxies");
+        // this.$router.push("/galaxies");
+        this.$router.go();
       }
     },
     validate() {
@@ -306,6 +340,18 @@ export default {
 <style lang="scss" scoped>
 @import url("https://fonts.googleapis.com/css2?family=Genos:wght@200&display=swap");
 
+.login-description {
+  color: var(--v-missionAccent-base);
+  font-size: 0.8rem;
+  font-style: italic;
+  margin-bottom: 0px;
+  width: 100%;
+  padding: 20px;
+  padding-top: 0px;
+}
+.galaxy-text {
+  color: var(--v-galaxyAccent-base);
+}
 .gm-title {
   font-family: "Genos", sans-serif;
   font-size: 5vw;
@@ -316,8 +362,7 @@ export default {
   // top: 100px;
 }
 .login {
-  width: 100vw;
-  height: 100vh;
+  width: 300px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -346,7 +391,6 @@ export default {
   width: 300px;
   // height: 400px;
   border: 1px solid var(--v-baseAccent-base);
-  margin-top: 30px;
   padding: 20px;
   // background: var(--v-baseAccent-base);
   position: relative;

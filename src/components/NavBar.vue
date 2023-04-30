@@ -11,7 +11,17 @@
           v-model="activeTab"
           height="30"
         >
-          <v-tab v-for="tab in tabs" :key="tab.id" :to="tab.route">
+          <v-tab
+            v-for="tab in tabs"
+            :key="tab.id"
+            :to="tab.route"
+            :disabled="tab.name != 'GALAXIES' && !user.loggedIn"
+            :style="
+              tab.name != 'GALAXIES' && !user.loggedIn
+                ? 'cursor: not-allowed'
+                : ''
+            "
+          >
             <div class="baseAccent--text tab">{{ tab.name }}</div>
           </v-tab>
         </v-tabs>
@@ -37,7 +47,9 @@
 </template>
 
 <script>
+import { mapGetters } from "vuex";
 import { mdiMenu, mdiClose } from "@mdi/js";
+
 export default {
   name: "NavBar",
   props: ["userType"],
@@ -67,6 +79,9 @@ export default {
     },
   },
   mounted() {},
+  computed: {
+    ...mapGetters(["user"]),
+  },
   methods: {
     toggleMenu() {
       this.showNavMenu = !this.showNavMenu;

@@ -195,7 +195,7 @@ export default {
     },
     // ADMIN NEEDS TO REVIEW
     getAllSubmittedCourses() {
-      if (this.user.data.admin) {
+      if (this.user.data?.admin) {
         const submitted = this.courses.filter(
           (course) => course.status == "submitted"
         );

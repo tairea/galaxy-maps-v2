@@ -379,7 +379,7 @@ export default new Vuex.Store({
           course.mappedBy.personId === state.person.id ||
           // user is assigned to course
           state.person.assignedCourses?.some(assignedCourse => assignedCourse === course.id) ||
-          state.user.data.admin) {
+          state.user?.data?.admin) {
           const subQuerySnapshot = await db
             .collection("courses")
             .doc(course.id)
@@ -412,7 +412,7 @@ export default new Vuex.Store({
           course.mappedBy.personId === state.person.id ||
           // user is assigned to course
           state.person.assignedCourses?.some(assignedCourse => assignedCourse === course.id) ||
-          state.user.data.admin) {
+          state.user?.data?.admin) {
           // doc.data() is never undefined for query doc snapshots
           const subQuerySnapshot = await db
             .collection("courses")

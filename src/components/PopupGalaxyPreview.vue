@@ -90,7 +90,27 @@
     </div>
 
     <div>
-      <div v-if="teacher" class="ss-actions py-4">
+      <!-- Not logged in -->
+      <div v-if="!user.loggedIn" class="ss-actions py-4">
+        <div class="not-allowed">
+          <v-btn
+            class="view-ss-button pa-5"
+            dark
+            small
+            color="galaxyAccent"
+            outlined
+            tile
+            title="View Galaxy"
+            @click="routeToGalaxyEdit"
+            :disabled="!user.loggedIn"
+          >
+            View Galaxy
+          </v-btn>
+        </div>
+        <!-- Signin Dialog -->
+        <LoginDialog />
+      </div>
+      <div v-else-if="teacher" class="ss-actions py-4">
         <v-btn
           class="view-ss-button pa-5"
           dark
@@ -119,6 +139,7 @@
           View Analytics
         </v-btn> -->
       </div>
+
       <!-- Student Galaxy Actions -->
       <div v-else class="ss-actions py-4">
         <v-btn
@@ -166,10 +187,12 @@ import { mapGetters, mapState } from "vuex";
 
 import { mdiClose } from "@mdi/js";
 
+import LoginDialog from "../components/Dialogs/LoginDialog";
+
 export default {
   name: "PopupGalaxyPreview",
   mixins: [dbMixins],
-  components: {},
+  components: { LoginDialog },
   props: {
     course: {
       type: Object,
@@ -191,6 +214,7 @@ export default {
       startingGalaxyStatus: "",
       contentAuthorImage: "",
       mappedAuthorImage: "",
+      readmore: false,
     };
   },
   watch: {
@@ -422,6 +446,12 @@ export default {
       font-style: italic;
       margin-bottom: 0px;
     }
+  }
+  .not-allowed {
+    cursor: not-allowed !important;
+    width: 100%;
+    display: flex;
+    justify-content: center;
   }
 }
 

@@ -61,9 +61,14 @@ export default {
     ...mapGetters(["user", "person"]),
   },
   async mounted() {
+    console.log("galaxylist is mounting...");
     // We don't care about waiting for this to finish before completing mounted
     // because when it's finished it will automatically update our list of courses
     // TODO: This binds all courses. Should prob only bind courses relevant to user
+
+    // if creator only bind creators courses
+    // else bind all courses
+
     this.$store.dispatch("bindAllCourses").then(() => {
       this.loading = false;
     });

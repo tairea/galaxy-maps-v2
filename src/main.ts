@@ -26,8 +26,9 @@ firebase.auth().onAuthStateChanged((user) => {
     if (user.emailVerified) {
       startPresenceSystem(user.uid)
     }
-  } else {
-    store.commit("RESET_STATE")
+  } 
+  else {
+    // store.commit("RESET_STATE")
   }
 });
 
