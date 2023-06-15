@@ -23,34 +23,15 @@
           <div class="fields my-4 py-4">
             <!-- Node Label -->
             <!-- <p class="dialog-description">Topic Title:</p> -->
-            <v-text-field
-              class="input-field mt-4"
-              outlined
-              :dark="dark"
-              :light="!dark"
-              color="missionAccent"
-              v-model="currentNode.label"
-              :autofocus="!editing"
-              label="Topic title"
-              placeholder="Enter name of this node/topic"
-            ></v-text-field>
+            <v-text-field class="input-field mt-4" outlined :dark="dark" :light="!dark" color="missionAccent"
+              v-model="currentNode.label" :autofocus="!editing" label="Topic title"
+              placeholder="Enter name of this node/topic"></v-text-field>
 
             <!-- Node Color -->
-
             <p class="dialog-description">
               Node color:
-              <v-color-picker
-                v-model="currentNode.color"
-                class="ma-2 color-picker"
-                show-swatches
-                hide-canvas
-                hide-inputs
-                hide-sliders
-                mode="hexa"
-                value="#69a1e2"
-                width="90%"
-                :swatches="darkSwatches"
-              >
+              <v-color-picker v-model="currentNode.color" class="ma-2 color-picker" show-swatches hide-canvas hide-inputs
+                hide-sliders mode="hexa" value="#69a1e2" width="90%" :swatches="darkSwatches">
               </v-color-picker>
 
               <!-- <v-tooltip right>
@@ -98,98 +79,46 @@
               Node Prerequisites:
               <v-tooltip right>
                 <template v-slot:activator="{ on, attrs }">
-                  <v-icon
-                    left
-                    color="missionAccent"
-                    small
-                    class="circle-outline ma-1"
-                    v-bind="attrs"
-                    v-on="on"
-                  >
-                    {{ mdiInformationVariant }}</v-icon
-                  >
+                  <v-icon left color="missionAccent" small class="circle-outline ma-1" v-bind="attrs" v-on="on">
+                    {{ mdiInformationVariant }}</v-icon>
                 </template>
                 <span>
-                  Prerequisites are topics that need to be completed for this
-                  one to be unlocked
+                  Prerequisites are topics that need to be completed before this
+                  one can be unlocked
                 </span>
               </v-tooltip>
             </p>
-            <v-checkbox
-              v-model="prerequisites"
-              class="ma-0 pa-0"
-              color="blue"
-              :dark="dark"
-              :light="!dark"
-            >
+            <v-checkbox v-model="prerequisites" class="ma-0 pa-0" color="blue" :dark="dark" :light="!dark">
               <template v-slot:label>
-                <span class="dialog-description"
-                  >Does another topic need to be completed before starting this
-                  one?</span
-                >
+                <span class="dialog-description">Does another topic need to be completed before starting this
+                  one?</span>
               </template>
             </v-checkbox>
-            <v-select
-              v-if="prerequisites"
-              v-model="currentNode.prerequisites"
-              :items="sortedObjArr"
-              item-text="label"
-              item-value="id"
-              outlined
-              :dark="dark"
-              :light="!dark"
-              class="input-field"
-              color="missionAccent"
-              multiple
-              chips
-              :menu-props="{
+            <v-select v-if="prerequisites" v-model="currentNode.prerequisites" :items="sortedObjArr" item-text="label"
+              item-value="id" outlined :dark="dark" :light="!dark" class="input-field" color="missionAccent" multiple
+              chips :menu-props="{
                 closeOnContentClick: true,
-              }"
-            ></v-select>
+              }"></v-select>
           </div>
 
           <!-- Action buttons -->
           <div class="action-buttons">
-            <v-btn
-              v-if="!editing"
-              outlined
-              color="baseAccent"
-              @click="saveNode(currentNode)"
-              class="mr-2"
-              :loading="loading"
-            >
+            <v-btn v-if="!editing" outlined color="baseAccent" @click="saveNode(currentNode)" class="mr-2"
+              :loading="loading">
               <v-icon left> {{ mdiCheck }} </v-icon>
               SAVE
             </v-btn>
-            <v-btn
-              v-else
-              outlined
-              color="baseAccent"
-              @click="saveNode(currentNode)"
-              class="mr-2"
-              :loading="loading"
-            >
+            <v-btn v-else outlined color="baseAccent" @click="saveNode(currentNode)" class="mr-2" :loading="loading">
               <v-icon left> {{ mdiCheck }} </v-icon>
               UPDATE
             </v-btn>
 
-            <v-btn
-              v-if="editing"
-              outlined
-              color="error"
-              @click="deleteDialog()"
-              class="mr-2"
-            >
+            <v-btn v-if="editing" outlined color="error" @click="deleteDialog()" class="mr-2">
               <v-icon left> {{ mdiDelete }} </v-icon>
               DELETE
             </v-btn>
 
-            <v-btn
-              outlined
-              :color="dark ? 'yellow' : '#577399'"
-              class="ml-2"
-              @click="close"
-            >
+            <v-btn outlined :color="dark ? 'yellow' : '#577399'" class="ml-2" @click="close">
               <v-icon left> {{ mdiClose }} </v-icon>
               Cancel
             </v-btn>
@@ -230,23 +159,12 @@
         <!-- ACTION BUTTONS -->
         <div class="action-buttons">
           <!-- DELETE -->
-          <v-btn
-            outlined
-            color="error"
-            @click="deleteNode()"
-            class="ml-2"
-            :loading="deleting"
-          >
+          <v-btn outlined color="error" @click="deleteNode()" class="ml-2" :loading="deleting">
             <v-icon left> {{ mdiDelete }} </v-icon>
             DELETE
           </v-btn>
 
-          <v-btn
-            outlined
-            :color="dark ? 'yellow' : '#577399'"
-            class="ml-2"
-            @click="cancelDeleteDialog()"
-          >
+          <v-btn outlined :color="dark ? 'yellow' : '#577399'" class="ml-2" @click="cancelDeleteDialog()">
             <v-icon left> {{ mdiClose }} </v-icon>
             Cancel
           </v-btn>

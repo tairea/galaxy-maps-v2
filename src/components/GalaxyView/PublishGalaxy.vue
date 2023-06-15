@@ -3,24 +3,17 @@
     <!-- CREATE BUTTON -->
     <template v-slot:activator="{ on, attrs }">
       <!-- ASSIGN COHORT -->
-      <v-btn
-        outlined
-        :color="
-          admin && course.status == 'submitted' && course.public == true
-            ? 'cohortAccent'
-            : 'galaxyAccent'
-        "
-        v-bind="attrs"
-        v-on="on"
-        class="publishButton d-inline-flex text-truncate"
-        @click="getTopicsWithoutTasks"
-      >
+      <v-btn outlined :color="
+        admin && course.status == 'submitted' && course.public == true
+          ? 'cohortAccent'
+          : 'galaxyAccent'
+      " v-bind="attrs" v-on="on" class="publishButton d-inline-flex text-truncate" @click="getTopicsWithoutTasks">
         publish galaxy
       </v-btn>
       <!-- ASSIGN GALAXY -->
     </template>
 
-    <!-- NOT!!!! OK TO PUBLISH DIALOG -->
+    <!-- NOT!!!! OK TO PUBLISH DIALOG (No missions) -->
     <div v-if="topicsWithoutTasks.length > 0" class="create-dialog">
       <div class="dialog-header">
         <div class="d-flex mb-4">
@@ -46,11 +39,7 @@
           </p>
 
           <ul>
-            <li
-              v-for="topic in topicsWithoutTasks"
-              :key="topic.id"
-              class="overline"
-            >
+            <li v-for="topic in topicsWithoutTasks" :key="topic.id" class="overline">
               {{ topic.label }}
             </li>
           </ul>
@@ -62,15 +51,60 @@
       </div>
       <!-- ACTION BUTTONS -->
       <div class="action-buttons">
-        <v-btn
-          outlined
-          :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
-          class="ml-2"
-          @click="close"
-          :disabled="loading"
-        >
+        <v-btn outlined :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'" class="ml-2" @click="close" :disabled="loading">
           <v-icon left> {{ mdiClose }} </v-icon>
           OK
+        </v-btn>
+      </div>
+    </div>
+
+    <!-- NOT!!!! OK TO PUBLISH DIALOG (No introduction node) -->
+    <div v-else-if="hasIntro == false" class="create-dialog">
+      <div class="dialog-header">
+        <div class="d-flex mb-4">
+          <p class="dialog-title ma-0">Important</p>
+          <v-icon color="missionAccent" class="ml-2">{{
+            mdiAlertOutline
+          }}</v-icon>
+        </div>
+        <div class="d-flex align-center">
+          <v-icon left color="missionAccent">{{
+            mdiInformationVariant
+          }}</v-icon>
+          <p class="dialog-description">
+            System's must have <strong>AT LEAST ONE INTRODUCTION NODE</strong>
+          </p>
+        </div>
+      </div>
+      <v-divider dark color="missionAccent"></v-divider>
+      <div class="create-dialog-content">
+        <div>
+          <p class="caption my-2 mb-6">
+            An Introduction node is a starting node that is unlocked when the map is started for the first time.
+          </p>
+
+          <p class="caption my-2">
+            Please select at least one starting node:
+          </p>
+
+          <v-select v-model="introNodes" :items="sortedObjArr" item-text="label" item-value="id" outlined :dark="dark"
+            :light="!dark" class="input-field" color="missionAccent" multiple chips :menu-props="{
+              closeOnContentClick: true,
+            }"></v-select>
+
+        </div>
+      </div>
+      <!-- ACTION BUTTONS -->
+      <div class="action-buttons">
+
+        <v-btn outlined color="baseAccent" @click="saveIntroNode()" :loading="loading" class="ml-2">
+          <v-icon left> {{ mdiCheck }} </v-icon>
+          SAVE
+        </v-btn>
+
+        <v-btn outlined :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'" class="ml-2" @click="close" :disabled="loading">
+          <v-icon left> {{ mdiClose }} </v-icon>
+          CANCEL
         </v-btn>
       </div>
     </div>
@@ -83,21 +117,15 @@
           <v-icon left color="missionAccent">{{
             mdiInformationVariant
           }}</v-icon>
-          <div
-            v-if="
-              admin && course.status == 'submitted' && course.public == true
-            "
-            class="dialog-description"
-          >
+          <div v-if="
+            admin && course.status == 'submitted' && course.public == true
+          " class="dialog-description">
             <p style="font-weight: 600; color: var(--v-cohortAccent-base)">
               I have reviewed this Galaxy Map
             </p>
             <p>
               Publish
-              <span
-                style="font-weight: 600; color: var(--v-galaxyAccent-base)"
-                >{{ course.title }}</span
-              >
+              <span style="font-weight: 600; color: var(--v-galaxyAccent-base)">{{ course.title }}</span>
               galaxy to make publically visible
             </p>
           </div>
@@ -116,30 +144,12 @@
           <p class="caption mb-2">
             Choose whether you would like this galaxy to be:
           </p>
-          <p class="caption ma-0"><strong>PRIVATE</strong> (invite only), or</p>
-          <p class="caption ma-0">
-            <strong>PUBLIC</strong> (discoverable by all Galaxy Maps users)
-          </p>
 
-          <v-radio-group
-            row
-            v-model="courseOptions.public"
-            color="missionAccent"
-            :light="!dark"
-            :dark="dark"
-          >
-            <v-radio
-              label="private"
-              :value="false"
-              color="missionAccent"
-              class="label-text"
-            ></v-radio>
-            <v-radio
-              label="public"
-              :value="true"
-              color="missionAccent"
-              class="label-text"
-            ></v-radio>
+          <v-radio-group row v-model="courseOptions.public" color="missionAccent" :light="!dark" :dark="dark">
+            <v-radio label="private (invite only)" :value="false" color="missionAccent" class="label-text mb-4"></v-radio>
+
+            <v-radio label="public (discoverable by all Galaxy Maps users)" :value="true" color="missionAccent"
+              class="label-text"></v-radio>
           </v-radio-group>
         </div>
         <!-- Is the course editable? -->
@@ -161,68 +171,37 @@
           </v-radio-group>
         </div> -->
         <p class="caption ma-0" v-if="courseOptions.public">
-          <i
-            >(Public courses need to be submitted for review by Galaxy Map
-            moderators)</i
-          >
+          <i>(Public courses need to be submitted for review by Galaxy Map
+            moderators)</i>
         </p>
       </div>
       <!-- ACTION BUTTONS -->
       <div v-if="admin" class="action-buttons">
-        <v-btn
-          outlined
-          :color="
-            admin && course.status == 'submitted' && course.public == true
-              ? 'cohortAccent'
-              : 'galaxyAccent'
-          "
-          @click="publishCourse()"
-          :loading="loading"
-        >
+        <v-btn outlined :color="
+          admin && course.status == 'submitted' && course.public == true
+            ? 'cohortAccent'
+            : 'galaxyAccent'
+        " @click="publishCourse()" :loading="loading">
           <v-icon left> {{ mdiCheck }} </v-icon>
           publish
         </v-btn>
 
-        <v-btn
-          outlined
-          :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
-          class="ml-2"
-          @click="close"
-          :disabled="loading"
-        >
+        <v-btn outlined :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'" class="ml-2" @click="close" :disabled="loading">
           <v-icon left> {{ mdiClose }} </v-icon>
           CANCEL
         </v-btn>
       </div>
       <div v-else class="action-buttons">
-        <v-btn
-          v-if="courseOptions.public"
-          outlined
-          color="baseAccent"
-          @click="submitCourse()"
-          :loading="loading"
-        >
+        <v-btn v-if="courseOptions.public" outlined color="baseAccent" @click="submitCourse()" :loading="loading">
           <v-icon left> {{ mdiSend }} </v-icon>
           SUBMIT
         </v-btn>
-        <v-btn
-          v-else
-          outlined
-          color="baseAccent"
-          @click="publishCourse()"
-          :loading="loading"
-        >
+        <v-btn v-else outlined color="baseAccent" @click="publishCourse()" :loading="loading">
           <v-icon left> {{ mdiCheck }} </v-icon>
           publish
         </v-btn>
 
-        <v-btn
-          outlined
-          :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
-          class="ml-2"
-          @click="close"
-          :disabled="loading"
-        >
+        <v-btn outlined :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'" class="ml-2" @click="close" :disabled="loading">
           <v-icon left> {{ mdiClose }} </v-icon>
           CANCEL
         </v-btn>
@@ -249,6 +228,9 @@ export default {
   name: "PublishGalaxy",
   mixins: [dbMixins],
   props: ["course", "courseTasks"],
+  async mounted() {
+
+  },
   data: () => ({
     mdiAlertOutline,
     mdiInformationVariant,
@@ -261,10 +243,13 @@ export default {
       public: false,
     },
     topicsWithoutTasks: 0,
+    hasIntro: false,
+    introNodes: [],
+    sortedObjArr: [],
   }),
   computed: {
     ...mapGetters(["user"]),
-    ...mapState(["currentCourseNodes"]),
+    ...mapState(["currentCourseId", "currentCourseNodes"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -287,6 +272,7 @@ export default {
     getTopicsWithoutTasks() {
       // copy nodes
       let splicedNodes = [...this.currentCourseNodes];
+
       // loop tasks
       for (const task of this.courseTasks) {
         // get index of nodes that have tasks
@@ -298,6 +284,13 @@ export default {
       }
       // assign splicedNodes (nodes/topics that DO NOT have tasks)
       this.topicsWithoutTasks = splicedNodes;
+
+      // Now check if there is at least one intro node.
+      this.hasIntro = this.currentCourseNodes.some(object => object.group == "introduction");
+      if (this.hasIntro == false) {
+        this.sortNodes()
+      }
+
     },
     close() {
       this.dialog = false;
@@ -378,6 +371,36 @@ export default {
       }
     },
 
+    async saveIntroNode() {
+      this.loading = true
+      // loop selected intro nodes
+      for (const nodeId of this.introNodes) {
+        // update node in topics db
+        db.collection("courses")
+          .doc(this.currentCourseId)
+          .collection("map-nodes")
+          .doc(nodeId)
+          .update({ group: "introduction" })
+          .catch((error) => {
+            console.error("Error writing node: ", error);
+          });
+
+        // update node in topics db
+        db.collection("courses")
+          .doc(this.currentCourseId)
+          .collection("topics")
+          .doc(nodeId)
+          .update({ group: "introduction" })
+          .catch((error) => {
+            console.error("Error writing node: ", error);
+          });
+
+        console.log("node id " + nodeId + " set as introduction node")
+
+        this.close();
+      }
+    },
+
     async updateCourse(course) {
       return await db
         .collection("courses")
@@ -443,6 +466,41 @@ export default {
       );
       return sendCoursePublishedEmail(data);
     },
+
+    sortNodes() {
+      // this mounted block orders currentCourseNodes by timestamp. this is for selecting easier selecting of an intro node
+      let timeCreatedArrs = [];
+
+      for (let index in this.currentCourseNodes) {
+        let timeCreatedNode =
+          this.currentCourseNodes[index].nodeCreatedTimestamp?.seconds;
+
+        timeCreatedArrs.push(timeCreatedNode);
+        // console.log("unsorted arr", timeCreatedArrs);
+      }
+
+      timeCreatedArrs.sort(function (a, b) {
+        return a - b;
+      });
+
+      // NOTE: the last int in the arr is the largest
+      // console.log("sorted arr", timeCreatedArrs);
+
+      for (let a in timeCreatedArrs) {
+        // loop over the ordered time array
+        let arrTime = timeCreatedArrs[a];
+        for (let b in timeCreatedArrs) {
+          let timeStamp =
+            this.currentCourseNodes[b].nodeCreatedTimestamp?.seconds;
+          if (arrTime == timeStamp) {
+            let node = this.currentCourseNodes[b];
+            this.sortedObjArr.push(node);
+          }
+        }
+      }
+
+      this.sortedObjArr = this.sortedObjArr.reverse();
+    }
   },
 };
 </script>

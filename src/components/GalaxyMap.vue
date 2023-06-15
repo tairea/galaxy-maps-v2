@@ -2,28 +2,11 @@
   <div class="full-height">
     <LoadingSpinner v-if="loading" text="loading galaxy" />
     <!-- loading = !planets.length && !draggingNodes -->
-    <network
-      v-if="nodesToDisplay"
-      ref="network"
-      class="full-height"
-      :nodes="nodesToDisplay"
-      :edges="edgesToDisplay"
-      :options="network.options"
-      @hook:updated="networkUpdated"
-      @nodes-add="addNode"
-      @edges-add="addEdge"
-      @dragging="dragging"
-      @drag-start="dragStart"
-      @drag-end="dragEnd"
-      @select-edge="selectEdge"
-      @deselect-node="deselectNode"
-      @deselect-edge="deselectEdge"
-      @animation-finished="animationFinished"
-      @before-drawing="beforeDrawing"
-      @after-drawing="afterDrawing"
-      @click="click2"
-      @double-click="doubleClick"
-    ></network>
+    <network v-if="nodesToDisplay" ref="network" class="full-height" :nodes="nodesToDisplay" :edges="edgesToDisplay"
+      :options="network.options" @hook:updated="networkUpdated" @nodes-add="addNode" @edges-add="addEdge"
+      @dragging="dragging" @drag-start="dragStart" @drag-end="dragEnd" @select-edge="selectEdge"
+      @deselect-node="deselectNode" @deselect-edge="deselectEdge" @animation-finished="animationFinished"
+      @before-drawing="beforeDrawing" @after-drawing="afterDrawing" @click="click2" @double-click="doubleClick"></network>
     <!-- @hover-node="hoverNode" 
           @select-node="selectNode"
                 @blur-node="blurNode"
@@ -207,11 +190,13 @@ export default {
     nodesToDisplay() {
       if (this.currentCourseNodes.length && this.currentCourseNodes[0]?.id) {
         if (this.addingNode || this.addingEdge) {
+          // grey out nodes for edit modes
           return this.inActiveNodes;
         } else if (!this.teacher) {
           return this.currentCourseNodesWithStatus;
         } else {
-          return this.currentCourseNodes;
+          // re-colour nodes after exiting edit modes
+          return this.makeActiveNodes;
         }
       }
       return false;
@@ -232,6 +217,18 @@ export default {
       }
       // return nodes with status to network map
       return inActiveNodes;
+    },
+    makeActiveNodes() {
+      let makeActiveNodes = [];
+      for (const node of this.currentCourseNodes) {
+        makeActiveNodes.push({
+          ...node,
+          // color: this.stringToColour(matchingNode.label),  // Attempt to match node color to System color
+          group: "default",
+        });
+      }
+      // return nodes with status to network map
+      return makeActiveNodes;
     },
     currentCourseNodesWithStatus() {
       const nodesWithStatus = [];

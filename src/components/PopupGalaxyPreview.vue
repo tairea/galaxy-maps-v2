@@ -1,46 +1,23 @@
 <template>
   <!-- POPUP -->
-  <div
-    ref="popup"
-    class="ss-info-panel"
-    :class="draft ? 'draft-border' : 'panel-border'"
-    :style="
-      galaxyListInfoPanel ? 'backdrop-filter:none;border:none;width:100%' : ''
-    "
-    v-if="course"
-  >
+  <div ref="popup" class="ss-info-panel" :class="draft ? 'draft-border' : 'panel-border'" :style="
+    galaxyListInfoPanel ? 'backdrop-filter:none;border:none;width:100%' : ''
+  " v-if="course">
     <div class="ss-details">
       <div>
         <p class="info-panel-label mb-2">
-          <span class="galaxyColour statusLabel"
-            ><span>{{ courseStatus }}</span> Galaxy</span
-          >
+          <span class="galaxyColour statusLabel"><span>{{ courseStatus }}</span> Galaxy</span>
           <br />
           <span>{{ course.title }}</span>
         </p>
-        <v-img
-          v-if="course.image"
-          class="galaxy-image"
-          :src="course.image.url"
-        ></v-img>
+        <v-img v-if="course.image" class="galaxy-image" :src="course.image.url"></v-img>
         <p ref="description" class="mt-2 galaxy-description">
           <!-- {{ course.description }} -->
           {{ maybeTruncate(course.description) }}
-          <a
-            style="border-bottom: 1px solid"
-            v-if="readmore"
-            @click="showFullDescription()"
-            >Read more</a
-          >
+          <a style="border-bottom: 1px solid" v-if="readmore" @click="showFullDescription()">Read more</a>
         </p>
       </div>
-      <v-btn
-        text
-        x-small
-        color="missionAccent"
-        class="close-button"
-        @click="close"
-      >
+      <v-btn text x-small color="missionAccent" class="close-button" @click="close">
         <v-icon>{{ mdiClose }}</v-icon>
       </v-btn>
     </div>
@@ -91,16 +68,8 @@
 
     <div>
       <div v-if="teacher" class="ss-actions py-4">
-        <v-btn
-          class="view-ss-button pa-5"
-          dark
-          small
-          color="galaxyAccent"
-          outlined
-          tile
-          title="View Galaxy"
-          @click="routeToGalaxyEdit"
-        >
+        <v-btn class="view-ss-button pa-5" dark small color="galaxyAccent" outlined tile title="View Galaxy"
+          @click="routeToGalaxyEdit">
           View Galaxy
         </v-btn>
 
@@ -121,33 +90,14 @@
       </div>
       <!-- Student Galaxy Actions -->
       <div v-else class="ss-actions py-4">
-        <v-btn
-          v-if="enrolled"
-          class="view-ss-button pa-5"
-          dark
-          small
-          color="galaxyAccent"
-          outlined
-          tile
-          title="View Galaxy"
-          @click="routeToGalaxyEdit"
-        >
+        <v-btn v-if="enrolled" class="view-ss-button pa-5" dark small color="galaxyAccent" outlined tile
+          title="View Galaxy" @click="routeToGalaxyEdit">
           Resume Galaxy
         </v-btn>
         <!-- starting galaxy status-->
 
-        <v-btn
-          v-else
-          class="view-ss-button pa-5"
-          dark
-          small
-          color="galaxyAccent"
-          outlined
-          tile
-          title="View Galaxy"
-          @click="startThisGalaxy"
-          :loading="loading"
-        >
+        <v-btn v-else class="view-ss-button pa-5" dark small color="galaxyAccent" outlined tile title="View Galaxy"
+          @click="startThisGalaxy" :loading="loading">
           Start Galaxy
         </v-btn>
         <div v-if="loading" style="width: 100%">
@@ -191,6 +141,7 @@ export default {
       startingGalaxyStatus: "",
       contentAuthorImage: "",
       mappedAuthorImage: "",
+      readmore: false,
     };
   },
   watch: {
