@@ -24,7 +24,7 @@
               v-for="(course, index) in getAllSubmittedCourses"
               :key="course.id"
               :course="course"
-              :admin="user.data.admin"
+              :admin="user.data && user.data.admin"
               :active="index === activeSubmitted"
               @click.native="courseClicked(course.id, index, 'submitted')"
             />
@@ -195,7 +195,7 @@ export default {
     },
     // ADMIN NEEDS TO REVIEW
     getAllSubmittedCourses() {
-      if (this.user.data.admin) {
+      if (this.user.data?.admin) {
         const submitted = this.courses.filter(
           (course) => course.status == "submitted"
         );
@@ -210,6 +210,7 @@ export default {
     getTeachingCourses() {
       return this.courses.filter(
         (course) =>
+          this.user.isLoggedIn &&
           course.mappedBy.personId == this.person.id &&
           course.status != "submitted"
       );
@@ -218,9 +219,10 @@ export default {
     getPublicCourses() {
       return this.courses.filter(
         (course) =>
+          // TODO: make firebase rule for this
           course.public == true &&
           course.status == "published" &&
-          !this.getLearningCourses.includes(course)
+          !(this.user.isLoggedIn && this.getLearningCourses.includes(course))
       );
     },
   },

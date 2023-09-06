@@ -275,7 +275,7 @@ export default {
       return diffX * diffX + diffY * diffY;
     },
     calcCourseCanvasBoundaries() {
-      const courses = this.user.data.admin
+      const courses = this.user.data?.admin
         ? this.courses
         : this.displayGalaxies;
       let courseCanvasBoundaries = [];
@@ -372,7 +372,7 @@ export default {
           status = "assigned";
         }
         // glow submitted for admin to easily see submitted galaxies for review
-        else if (this.user.data.admin && courses[i].status == "submitted") {
+        else if (this.user.data?.admin && courses[i].status == "submitted") {
           status = "submitted";
         }
         boundary.status = status;
