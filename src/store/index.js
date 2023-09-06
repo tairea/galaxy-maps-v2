@@ -250,8 +250,8 @@ export default new Vuex.Store({
     // ===== Firestore - BIND ALL
     bindAllCourses: firestoreAction(({ bindFirestoreRef }) => {
       return bindFirestoreRef("courses", db.collection("courses"), {
-        maxRefDepth: 2,
-        reset: false,
+        // maxRefDepth: 2,
+        // reset: false,
       });
     }),
     bindAllCohorts: firestoreAction(({ bindFirestoreRef }) => {
@@ -379,7 +379,7 @@ export default new Vuex.Store({
           course.mappedBy.personId === state.person.id ||
           // user is assigned to course
           state.person.assignedCourses?.some(assignedCourse => assignedCourse === course.id) ||
-          state.user.data.admin) {
+          state.user.data?.admin) {
           const subQuerySnapshot = await db
             .collection("courses")
             .doc(course.id)
@@ -412,7 +412,7 @@ export default new Vuex.Store({
           course.mappedBy.personId === state.person.id ||
           // user is assigned to course
           state.person.assignedCourses?.some(assignedCourse => assignedCourse === course.id) ||
-          state.user.data.admin) {
+          state.user.data?.admin) {
           // doc.data() is never undefined for query doc snapshots
           const subQuerySnapshot = await db
             .collection("courses")
@@ -504,11 +504,11 @@ export default new Vuex.Store({
       // onSnapshot wasnt working for me. so changed to .get()
       const studentQuerySnapShot = await db
         .collection("cohorts")
-        .where("students", "array-contains", person.id)
+        .where("students", "array-contains", person.id ?? '')
         .get();
       const teacherQuerySnapShot = await db
         .collection("cohorts")
-        .where("teachers", "array-contains", person.id)
+        .where("teachers", "array-contains", person.id ?? '')
         .get();
 
       for (const cohort of studentQuerySnapShot.docs) {

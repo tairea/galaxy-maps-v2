@@ -24,9 +24,15 @@ Vue.use(VueRouter);
 const routes = [
   {
     path: "/",
-    name: "Landing",
-    component: LandingPage,
+    name: "Home",
+    component: Home,
     children: [
+      {
+        path: "", 
+        name: "GalaxyList",
+        component: GalaxyList,
+        props: true,
+      },
       {
         path: "/login/",
         name: "Login",
@@ -47,53 +53,55 @@ const routes = [
         name: "Register",
         component: LandingPage,
       },
-    ]
-  },
-  {
-    path: "/base",
-    name: "Home",
-    meta: {
-      authRequired: true,
-    },
-    component: Home,
-    children: [
-      {
-        path: "galaxies", 
-        name: "GalaxyList",
-        component: GalaxyList,
-        props: true,
-      },
       {
         name: "CohortsList",
         path: "cohorts",
         // component: CohortList,
         component: CohortListV2,
+        meta: {
+          authRequired: true,
+        },
       },
       {
         path: "students",
         component: AllStudentsView,
+        meta: {
+          authRequired: true,
+        },
       },
       {
         path: "/cohort/:cohortId/:cohortName",
         name: "CohortView",
         component: CohortView,
+        meta: {
+          authRequired: true,
+        },
         props: true,
       },
       {
         name: "Dashboard",
         path: "dashboard",
         component: UserDashboard,
+        meta: {
+          authRequired: true,
+        },
       },
       {
         path: "/galaxy/:courseId",
         name: "GalaxyView",
         component: GalaxyView,
+        meta: {
+          authRequired: true,
+        },
         props: true,
       },
       {
         path: "/system/:topicId",
         name: "SolarSystemView",
         component: SolarSystemView,
+        meta: {
+          authRequired: true,
+        },
         props: true,
       },
     ],
@@ -121,10 +129,9 @@ const initialAuth = new Promise((resolve, reject) => {
 });
 
 router.beforeEach(async (to, from, next) => {
+  await initialAuth;
   if (from.path !== '/') store.commit('set_from', from.path);
   if (to.matched.some((record) => record.meta.authRequired)) {
-    await initialAuth;
-    
     if (store.getters.user.loggedIn) {
       next();
     } else {
