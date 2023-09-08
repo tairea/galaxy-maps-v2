@@ -65,6 +65,23 @@ export default {
     ...mapState(["courses"]),
     ...mapGetters(["user", "person"]),
   },
+  watch: {
+    async user(to, from) {
+      let owner;
+      if (this.slug != null) {
+        const docRef = await db.collection("slugs").doc(this.slug).get();
+        const data = docRef.data();
+        if (data != null) {
+          owner = data.owner;
+        } else {
+          this.validSlug = false;
+        }
+      }
+      this.$store.dispatch("bindCourses", { owner }).then(() => {
+        this.loading = false;
+      });
+    },
+  },
   async mounted() {
     // We don't care about waiting for this to finish before completing mounted
     // because when it's finished it will automatically update our list of courses
