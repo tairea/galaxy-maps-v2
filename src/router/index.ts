@@ -34,28 +34,28 @@ const routes = [
         props: true,
       },
       {
-        path: "/login/",
+        path: "login",
         name: "Login",
         component: LandingPage,
       },
       {
-        path: "/verify",
+        path: "verify",
         name: "Verify",
         component: LandingPage,
       },
       {
-        path: "/reset",
+        path: "reset",
         name: "Reset",
         component: LandingPage,
       },
       {
-        path: "/register",
+        path: "register",
         name: "Register",
         component: LandingPage,
       },
       {
-        name: "CohortsList",
         path: "cohorts",
+        name: "CohortsList",
         // component: CohortList,
         component: CohortListV2,
         meta: {
@@ -64,13 +64,14 @@ const routes = [
       },
       {
         path: "students",
+        name: "Students",
         component: AllStudentsView,
         meta: {
           authRequired: true,
         },
       },
       {
-        path: "/cohort/:cohortId/:cohortName",
+        path: "cohort/:cohortId/:cohortName",
         name: "CohortView",
         component: CohortView,
         meta: {
@@ -79,15 +80,15 @@ const routes = [
         props: true,
       },
       {
-        name: "Dashboard",
         path: "dashboard",
+        name: "Dashboard",
         component: UserDashboard,
         meta: {
           authRequired: true,
         },
       },
       {
-        path: "/galaxy/:courseId",
+        path: "galaxy/:courseId",
         name: "GalaxyView",
         component: GalaxyView,
         meta: {
@@ -96,7 +97,7 @@ const routes = [
         props: true,
       },
       {
-        path: "/system/:topicId",
+        path: "system/:topicId",
         name: "SolarSystemView",
         component: SolarSystemView,
         meta: {
@@ -104,9 +105,15 @@ const routes = [
         },
         props: true,
       },
+      {
+        path: ":slug", 
+        name: "GalaxyList",
+        component: GalaxyList,
+        props: true,
+      },
     ],
   },
-  
+
   // {
   //   path: "/email_signin",
   //   name: "EmailSignIn",

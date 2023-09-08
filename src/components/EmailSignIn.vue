@@ -44,8 +44,8 @@ import { mapGetters } from "vuex";
 
 import { mdiKeyboardBackspace } from "@mdi/js";
 
-import BackButton from "../components/BackButton";
-import CreateProfileDialog from "../components/CreateProfileDialog";
+import BackButton from "../components/BackButton.vue";
+import CreateProfileDialog from "../components/CreateProfileDialog.vue";
 
 export default {
   name: "EmailSignIn",

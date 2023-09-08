@@ -55,14 +55,14 @@ export const startGalaxyXAPIStatement = (actor, context) => {
     },
   };
 
-  fetch("https://galaxymaps.lrs.io/xapi/statements", {
+  return fetch("https://galaxymaps.lrs.io/xapi/statements", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: auth,
     },
     body: JSON.stringify(statement),
-  }).catch((error) => console.error(error.message));
+  });
 };
 
 // ========== Start Topic =========
@@ -115,14 +115,14 @@ export const startTopicXAPIStatement = (actor, context) => {
     },
   };
 
-  fetch("https://galaxymaps.lrs.io/xapi/statements", {
+  return fetch("https://galaxymaps.lrs.io/xapi/statements", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: auth,
     },
     body: JSON.stringify(statement),
-  }).catch((error) => console.error(error.message));
+  });
 };
 
 // ========== Start Task (make task active)
@@ -178,14 +178,14 @@ export const startTaskXAPIStatement = (actor, taskId, context) => {
     },
   };
 
-  fetch("https://galaxymaps.lrs.io/xapi/statements", {
+  return fetch("https://galaxymaps.lrs.io/xapi/statements", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: auth,
     },
     body: JSON.stringify(statement),
-  }).catch((error) => console.error(error.message));
+  });
 };
 
 // ========== Submit work for review (by student)
@@ -241,14 +241,14 @@ export const submitWorkForReviewXAPIStatement = (actor, taskId, context) => {
     },
   };
 
-  fetch("https://galaxymaps.lrs.io/xapi/statements", {
+  return fetch("https://galaxymaps.lrs.io/xapi/statements", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: auth,
     },
     body: JSON.stringify(statement),
-  }).catch((error) => console.error(error.message));
+  });
 };
 export const reSubmitWorkForReviewXAPIStatement = (actor, taskId, context) => {
   console.log(
@@ -304,14 +304,14 @@ export const reSubmitWorkForReviewXAPIStatement = (actor, taskId, context) => {
     },
   };
 
-  fetch("https://galaxymaps.lrs.io/xapi/statements", {
+  return fetch("https://galaxymaps.lrs.io/xapi/statements", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: auth,
     },
     body: JSON.stringify(statement),
-  }).catch((error) => console.error(error.message));
+  });
 };
 
 // ========== Task Marked as Completed (by student)
@@ -367,14 +367,14 @@ export const taskMarkedAsCompletedXAPIStatement = (actor, taskId, context) => {
     },
   };
 
-  fetch("https://galaxymaps.lrs.io/xapi/statements", {
+  return fetch("https://galaxymaps.lrs.io/xapi/statements", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: auth,
     },
     body: JSON.stringify(statement),
-  }).catch((error) => console.error(error.message));
+  });
 };
 
 // ========== Topic Completed (by student)
@@ -428,14 +428,14 @@ export const topicCompletedXAPIStatement = (actor, topicId, context) => {
     },
   };
 
-  fetch("https://galaxymaps.lrs.io/xapi/statements", {
+  return fetch("https://galaxymaps.lrs.io/xapi/statements", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: auth,
     },
     body: JSON.stringify(statement),
-  }).catch((error) => console.error(error.message));
+  });
 };
 
 // ========== Student work marked completed (by teacher)
@@ -496,14 +496,14 @@ export const studentWorkMarkedCompletedXAPIStatement = (
     },
   };
 
-  fetch("https://galaxymaps.lrs.io/xapi/statements", {
+  return fetch("https://galaxymaps.lrs.io/xapi/statements", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: auth,
     },
     body: JSON.stringify(statement),
-  }).catch((error) => console.error(error.message));
+  });
 };
 
 // ========== Teacher reviewed student work (by teacher)
@@ -563,14 +563,14 @@ export const teacherReviewedStudentWorkXAPIStatement = (
     },
   };
 
-  fetch("https://galaxymaps.lrs.io/xapi/statements", {
+  return fetch("https://galaxymaps.lrs.io/xapi/statements", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: auth,
     },
     body: JSON.stringify(statement),
-  }).catch((error) => console.error(error.message));
+  });
 };
 
 // ========== Teacher responed to request for help (by teacher)
@@ -633,14 +633,14 @@ export const teacherRespondedToRequestForHelpXAPIStatement = (
     },
   };
 
-  fetch("https://galaxymaps.lrs.io/xapi/statements", {
+  return fetch("https://galaxymaps.lrs.io/xapi/statements", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: auth,
     },
     body: JSON.stringify(statement),
-  }).catch((error) => console.error(error.message));
+  });
 };
 
 // ========== Request for help (by student)
@@ -696,14 +696,14 @@ export const studentRequestForHelpXAPIStatement = (actor, taskId, context) => {
     },
   };
 
-  fetch("https://galaxymaps.lrs.io/xapi/statements", {
+  return fetch("https://galaxymaps.lrs.io/xapi/statements", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: auth,
     },
     body: JSON.stringify(statement),
-  }).catch((error) => console.error(error.message));
+  });
 };
 export const teacherRespondedSubmissionDeclinedXAPIStatement = (
   actor,
@@ -763,14 +763,14 @@ export const teacherRespondedSubmissionDeclinedXAPIStatement = (
     },
   };
 
-  fetch("https://galaxymaps.lrs.io/xapi/statements", {
+  return fetch("https://galaxymaps.lrs.io/xapi/statements", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: auth,
     },
     body: JSON.stringify(statement),
-  }).catch((error) => console.error(error.message));
+  });
 };
 
 // ========== Students goes online
@@ -805,14 +805,14 @@ export const studentOnlineXAPIStatement = (actor) => {
     },
   };
 
-  fetch("https://galaxymaps.lrs.io/xapi/statements", {
+  return fetch("https://galaxymaps.lrs.io/xapi/statements", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: auth,
     },
     body: JSON.stringify(statement),
-  }).catch((error) => console.error(error.message));
+  });
 };
 
 // ========== Students goes offline
@@ -845,21 +845,21 @@ export const studentOfflineXAPIStatement = (actor) => {
     },
   };
 
-  fetch("https://galaxymaps.lrs.io/xapi/statements", {
+  return fetch("https://galaxymaps.lrs.io/xapi/statements", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: auth,
     },
     body: JSON.stringify(statement),
-  }).catch((error) => console.error(error.message));
+  });
 };
 
 /* ----------------------
   QUERY xAPI STATEMENTS
 ------------------------- */
 
-export const queryXAPIStatement = (payloadObj) => {
+export const queryXAPIStatement = async (payloadObj) => {
   console.log("sending search xAPI query...");
   const url = new URL("https://galaxymaps.lrs.io/xapi/statements/search");
   const parameters = url.searchParams;
@@ -868,28 +868,29 @@ export const queryXAPIStatement = (payloadObj) => {
   // add search params as json
   url.searchParams.set("query", JSON.stringify(payloadObj));
   // get query from LRS
-  return fetch(url, {
+  const res = await fetch(url, {
     method: "GET",
     headers: {
       Authorization: auth,
     },
-  }).then((result) => result.json());
+  });
+
+  return res.json();
 };
 
-export const advancedQueryXAPIStatement = (payloadObj) => {
+export const advancedQueryXAPIStatement = async (payloadObj) => {
   console.log("sending advanced xAPI query...");
   // post advanced query
-  fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
+  const res = await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: auth,
     },
     body: JSON.stringify(payloadObj),
-  })
-    .then((result) => result.json())
-    .catch((error) => console.error(error.message))
-    .then((res) => console.log("res:", res));
+  });
+  const resultBody = res.json();
+  console.log("res:", resultBody);
 };
 
 export const getStudentsCoursesXAPIQuery = async (person) => {
@@ -924,20 +925,17 @@ export const getStudentsCoursesXAPIQuery = async (person) => {
     },
   ];
 
-  return await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
+  const res = await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: auth,
     },
     body: JSON.stringify(aggregationQuery),
-  })
-    .then((res) => res.json())
-    .catch((error) => console.error(error.message))
-    .then((res) => {
-      const courses = sanitiseCourseDataFromLRS(res);
-      return courses;
-    });
+  });
+  const resultBody = await res.json();
+  const courses = await sanitiseCourseDataFromLRS(resultBody);
+  return courses;
 };
 
 export const getActiveTaskXAPIQuery = async (person) => {
@@ -1004,21 +1002,17 @@ export const getActiveTaskXAPIQuery = async (person) => {
     },
   ];
 
-  return await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
+  const res = await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: auth,
     },
     body: JSON.stringify(aggregationQuery),
-  })
-    .then((res) => res.json())
-    .catch((error) => console.error(error.message))
-    .then((res) => {
-      // console.log("getActiveTaskXAPIQuery: res => ", res);
-      return res;
-      // return sanitiseCourseDataFromLRS(res)
-    });
+  });
+  const resultBody = await res.json();
+  // console.log("getActiveTaskXAPIQuery: res => ", resultBody);
+  return resultBody;
 };
 
 export const getActivityLogXAPIQuery = async (person) => {
@@ -1060,20 +1054,18 @@ export const getActivityLogXAPIQuery = async (person) => {
     },
   ];
 
-  return await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
+  const res = await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: auth,
     },
     body: JSON.stringify(aggregationQuery),
-  })
-    .then((res) => res.json())
-    .catch((error) => console.error(error.message))
-    .then((res) => {
-      // console.log("getActivityLogXAPIQuery: res => ", res[0].statements);
-      return res[0].statements;
-    });
+  });
+  const resultBody = await res.json();
+
+  // console.log("getActivityLogXAPIQuery: res => ", resultBody[0].statements);
+  return resultBody[0].statements;
 };
 
 export const getCohortsCourseDataXAPIQuery = async (payload) => {
@@ -1144,7 +1136,7 @@ export const getCohortsCourseDataXAPIQuery = async (payload) => {
     },
   ];
 
-  return await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
+  const res = await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -1152,11 +1144,8 @@ export const getCohortsCourseDataXAPIQuery = async (payload) => {
     },
     body: JSON.stringify(aggregationQuery),
   })
-    .then((res) => res.json())
-    .catch((error) => console.error(error.message))
-    .then((res) => {
-      return sanitiseCohortsCourseDataFromLRS(res);
-    });
+  const resultBody = await res.json();
+  return sanitiseCohortsCourseDataFromLRS(resultBody);
 };
 
 export let getStudentsTimeDataXAPIQuery = async (payload) => {
@@ -1195,7 +1184,7 @@ export let getStudentsTimeDataXAPIQuery = async (payload) => {
     },
   ];
 
-  return await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
+  const res = await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -1203,12 +1192,8 @@ export let getStudentsTimeDataXAPIQuery = async (payload) => {
     },
     body: JSON.stringify(aggregationQuery),
   })
-    .then((res) => res.json())
-    .catch((error) => console.error(error.message))
-    .then((res) => {
-      // console.log("Activity status for Students in Cohort:", res);
-      return sanitiseCohortsActivityDataFromLRS(res);
-    });
+  const resultBody = await res.json();
+  // console.log("Activity status for Students in Cohort:", resultBody);
 };
 
 // export const VQLXAPIQuery = async () => {
@@ -1230,7 +1215,7 @@ export let getStudentsTimeDataXAPIQuery = async (payload) => {
 //     body: JSON.stringify(VQLQuery),
 //   })
 //     .then((res) => res.json())
-//     .catch((error) => console.error(error.message))
+//     
 //     .then((res) => {
 //       console.log("res:", res);
 //     });
