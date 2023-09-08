@@ -7,7 +7,7 @@
     />
     <GalaxyListInfoPanel
       :type="courseType"
-      :selectedCourse="clickedCourseId"
+      :selectedCourseId="clickedCourseId"
       @closeInfoPanel="closeInfoPanel"
     />
     <div class="flexContainer">
@@ -32,11 +32,11 @@
 </template>
 
 <script>
-import CreateEditDeleteGalaxyDialog from "../components/CreateEditDeleteGalaxyDialog";
+import CreateEditDeleteGalaxyDialog from "../components/CreateEditDeleteGalaxyDialog.vue";
 // import DiscoverGalaxyButton from "../components/DiscoverGalaxyButton";
-import GalaxyListPanel from "../components/GalaxyListPanel";
-import GalaxyListInfoPanel from "../components/GalaxyListInfoPanel";
-import Galaxies from "../components/Galaxies";
+import GalaxyListPanel from "../components/GalaxyListPanel.vue";
+import GalaxyListInfoPanel from "../components/GalaxyListInfoPanel.vue";
+import Galaxies from "../components/Galaxies.vue";
 import { db } from "../store/firestoreConfig";
 
 import { mapState, mapGetters } from "vuex";
@@ -66,7 +66,7 @@ export default {
     ...mapGetters(["user", "person"]),
   },
   watch: {
-    async user(to, from) {
+    async user() {
       let owner;
       if (this.slug != null) {
         const docRef = await db.collection("slugs").doc(this.slug).get();

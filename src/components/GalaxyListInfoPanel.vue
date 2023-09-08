@@ -4,7 +4,7 @@
       <div class="panelContentInner">
         <PopupGalaxyPreview
           v-if="selectedCourse"
-          :course="getCourseById(selectedCourse)"
+          :course="selectedCourse"
           class="popupPanel"
           :galaxyListInfoPanel="true"
           @closeInfoPanel="closeInfoPanel"
@@ -21,13 +21,14 @@ import PopupGalaxyPreview from "@/components/PopupGalaxyPreview.vue";
 
 export default {
   name: "GalaxyListInfoPanel",
-  props: ["selectedCourse"],
+  props: ["selectedCourseId"],
   components: {
     GalaxyListPanelCard,
     PopupGalaxyPreview,
   },
   data() {
     return {
+      selectedCourse: null,
       allCourses: [],
       selectedGalaxy: false,
       activeLearning: null,
@@ -39,6 +40,22 @@ export default {
   computed: {
     ...mapState(["person", "courses", "cohorts"]),
     ...mapGetters(["getCourseById"]),
+  },
+  watch: {
+    async selectedCourseId(newSelectedCourseId) {
+      if (newSelectedCourseId != null) {
+        this.selectedCourse = this.getCourseById(newSelectedCourseId);
+      } else {
+        this.selectedCourse = null;
+      }
+    },
+  },
+  async mounted() {
+    if (this.selectedCourseId != null) {
+      this.selectedCourse = this.getCourseById(this.selectedCourseId);
+    } else {
+      this.selectedCourse = null;
+    }
   },
   methods: {
     closeInfoPanel() {

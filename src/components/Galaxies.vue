@@ -41,8 +41,8 @@ import { mdiPlus } from "@mdi/js";
 
 import { mapState, mapGetters, mapMutations } from "vuex";
 
-import LoadingSpinner from "../components/LoadingSpinner";
-import PopupGalaxyPreview from "../components/PopupGalaxyPreview";
+import LoadingSpinner from "../components/LoadingSpinner.vue";
+import PopupGalaxyPreview from "../components/PopupGalaxyPreview.vue";
 
 export default {
   name: "Galaxies",
@@ -182,6 +182,10 @@ export default {
       );
       this.zoomToNodes(coursesTopicNodes);
     },
+    async user() {
+      this.loading = true;
+      await this.refreshAllNodes();
+    },
   },
   mounted() {
     this.refreshAllNodes();
@@ -221,6 +225,9 @@ export default {
     },
     afterDrawing() {
       console.log("afterDrawing called");
+      if (this.needsCentering === true) {
+        this.centerAfterReposition();
+      }
       // stop loading spinner
       if (this.loading === true) {
         this.loading = false;
@@ -298,8 +305,6 @@ export default {
           centerX: 0,
         };
         let courseNodes = [];
-        let allNodeXPositions = [];
-        let allNodeYPositions = [];
         // let DOMboundary = {
         //   top: 0,
         //   bottom: 0,
@@ -321,21 +326,31 @@ export default {
           }
         }
 
+        // If we don't have any nodes for this galaxy then don't include it in the final result
+        if (courseNodes.length === 0) {
+          console.warn("no nodes for course: ", courses[i].id);
+          continue;
+        }
+
         //find min x = left
-        boundary.left = courseNodes.reduce((prev, curr) =>
-          prev.x < curr.x ? prev : curr
+        boundary.left = courseNodes.reduce(
+          (prev, curr) => (prev.x < curr.x ? prev : curr),
+          0
         );
         //find max x = right
-        boundary.right = courseNodes.reduce((prev, curr) =>
-          prev.x > curr.x ? prev : curr
+        boundary.right = courseNodes.reduce(
+          (prev, curr) => (prev.x > curr.x ? prev : curr),
+          0
         );
         //find min y = top
-        boundary.top = courseNodes.reduce((prev, curr) =>
-          prev.y < curr.y ? prev : curr
+        boundary.top = courseNodes.reduce(
+          (prev, curr) => (prev.y < curr.y ? prev : curr),
+          0
         );
         //find max y = bottom
-        boundary.bottom = courseNodes.reduce((prev, curr) =>
-          prev.y > curr.y ? prev : curr
+        boundary.bottom = courseNodes.reduce(
+          (prev, curr) => (prev.y > curr.y ? prev : curr),
+          0
         );
 
         //boundary width & height
@@ -420,7 +435,10 @@ export default {
         // const widthOffset = courseCanvasBoundaries[i].maxWidthOffset;
         // const heightOffset = courseCanvasBoundaries[i].maxHeightOffset;
 
-        let relativeTop, relativeRight, relativeBottom, relativeLeft;
+        let relativeTop = { label: "", x: 0, y: 0 },
+          relativeRight,
+          relativeBottom,
+          relativeLeft;
 
         for (const node of allNodes) {
           if (node.courseId == courseCanvasBoundaries[i].id) {

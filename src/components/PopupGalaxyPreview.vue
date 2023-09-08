@@ -191,15 +191,7 @@ export default {
   name: "PopupGalaxyPreview",
   mixins: [dbMixins],
   components: { LoginDialog },
-  props: {
-    course: {
-      type: Object,
-      default() {
-        return {};
-      },
-    },
-    galaxyListInfoPanel: { type: Boolean, default: false },
-  },
+  props: ["course", "galaxyListInfoPanel"],
   data() {
     return {
       mdiClose,
@@ -227,15 +219,15 @@ export default {
     },
   },
   watch: {
-    course() {
+    async course() {
       console.log("course changed: ", this.course);
-      this.setAccountType();
-      this.setImages();
+      await this.setAccountType();
+      await this.setImages();
     },
   },
   async mounted() {
-    this.setAccountType();
-    this.setImages();
+    await this.setAccountType();
+    await this.setImages();
   },
   methods: {
     maybeTruncate(value) {
@@ -329,19 +321,18 @@ export default {
 
       // 5) assign student to cohort and course
       let cohort = await getCohortById(this.course.cohort);
-      this.MXaddExistingUserToCohort(this.person, cohort)
-        .then(() => this.MXassignCourseToStudent(this.person, this.course))
-        .then(() => assignTopicsAndTasksToMe(this.course))
-        .then(() => {
-          this.loading = false;
-          this.$router.push({
-            name: "GalaxyView",
-            params: {
-              courseId: this.course.id,
-              role: "student",
-            },
-          });
-        });
+      await this.MXaddExistingUserToCohort(this.person, cohort);
+      await this.MXassignCourseToStudent(this.person, this.course);
+      await assignTopicsAndTasksToMe(this.course);
+
+      this.loading = false;
+      this.$router.push({
+        name: "GalaxyView",
+        params: {
+          courseId: this.course.id,
+          role: "student",
+        },
+      });
     },
 
     async getPersonsImage(personId) {
