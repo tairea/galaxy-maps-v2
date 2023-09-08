@@ -54,10 +54,8 @@
 </template>
 
 <script>
-import MissionsCard from "../components/MissionsCard";
-
-import CreateEditDeleteMissionDialog from "../components/CreateEditDeleteMissionDialog";
-
+import MissionsCard from "@/components/MissionsCard.vue";
+import CreateEditDeleteMissionDialog from "@/components/CreateEditDeleteMissionDialog.vue";
 import { mapState, mapGetters } from "vuex";
 
 export default {

@@ -45,10 +45,9 @@
 </template>
 
 <script>
-import { db } from "../store/firestoreConfig";
-import { mapState } from "vuex";
-
+import { db } from "@/store/firestoreConfig";
 import { mdiAccount } from "@mdi/js";
+import { mapState } from "vuex";
 
 export default {
   name: "Avatar",

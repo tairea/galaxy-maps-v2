@@ -62,8 +62,8 @@
 </template>
 
 <script>
-import firebase from "firebase/app";
-import { db, storage } from "../store/firestoreConfig";
+import { db, storage } from "@/store/firestoreConfig.ts";
+import firebase from "firebase/compat/app";
 import isEmpty from "lodash";
 import { mapGetters } from "vuex";
 

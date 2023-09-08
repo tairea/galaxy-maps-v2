@@ -18,9 +18,10 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
 import { getActivityLogXAPIQuery } from "@/lib/veracityLRS";
 import { DateTime } from "luxon";
+import { mapGetters } from "vuex";
+
 export default {
   name: "StudentActivityTimeline",
   props: {

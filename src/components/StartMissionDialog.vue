@@ -82,14 +82,13 @@
 </template>
 
 <script>
-import firebase from "firebase/app";
-
-import { db } from "../store/firestoreConfig";
 import {
   startTaskXAPIStatement,
   startTopicXAPIStatement,
-} from "../lib/veracityLRS";
+} from "@/lib/veracityLRS.js";
+import { db } from "@/store/firestoreConfig.ts";
 import { mdiPlay, mdiInformationVariant, mdiCheck, mdiClose } from "@mdi/js";
+import firebase from "firebase/compat/app";
 import { mapState, mapGetters } from "vuex";
 
 export default {

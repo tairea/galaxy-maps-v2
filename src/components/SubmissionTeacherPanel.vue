@@ -1,23 +1,39 @@
 <template>
   <div class="submission-card" :class="reviewed ? 'reviewed-submission' : ''">
     <v-expansion-panels flat v-model="showCard">
-      <v-expansion-panel v-for="(sub, i) in [submission]" :key="i" class="panel" @change="panelChange()">
+      <v-expansion-panel
+        v-for="(sub, i) in [submission]"
+        :key="i"
+        class="panel"
+        @change="panelChange()"
+      >
         <v-expansion-panel-header ref="panel" class="pa-0">
           <div class="d-flex flex-row">
-            <Avatar v-if="isDashboardView" :profile="courseContextProfile" size="30" :colourBorder="true" />
-            <Avatar v-if="requesterPerson" :profile="requesterPerson" size="30" :colourBorder="true"
-              :class="isDashboardView ? 'request-image' : ''" />
-            <div class="
-                submission-time
-                d-flex
-                flex-column
-                align-center
-                ml-auto
-                pl-1
-              ">
-              <span v-if="reviewed" class="ml-auto mt-1 status-text baseAccent--text">
-                {{ submission.taskSubmissionStatus.toUpperCase() }}</span>
-              <span v-else class="ml-auto mt-1 status-text text-uppercase">...awaiting review</span>
+            <Avatar
+              v-if="isDashboardView"
+              :profile="courseContextProfile"
+              size="30"
+              :colourBorder="true"
+            />
+            <Avatar
+              v-if="requesterPerson"
+              :profile="requesterPerson"
+              size="30"
+              :colourBorder="true"
+              :class="isDashboardView ? 'request-image' : ''"
+            />
+            <div
+              class="submission-time d-flex flex-column align-center ml-auto pl-1"
+            >
+              <span
+                v-if="reviewed"
+                class="ml-auto mt-1 status-text baseAccent--text"
+              >
+                {{ submission.taskSubmissionStatus.toUpperCase() }}</span
+              >
+              <span v-else class="ml-auto mt-1 status-text text-uppercase"
+                >...awaiting review</span
+              >
               {{ getHumanDate(submission.taskSubmittedForReviewTimestamp) }}
             </div>
           </div>
@@ -51,8 +67,12 @@
           <template>
             <div class="divider"></div>
             <div class="text-center">
-              <SubmissionReviewDialog :submission="submission" :requesterPerson="requesterPerson" :isTeacher="isTeacher"
-                :reviewed="reviewed" />
+              <SubmissionReviewDialog
+                :submission="submission"
+                :requesterPerson="requesterPerson"
+                :isTeacher="isTeacher"
+                :reviewed="reviewed"
+              />
               <!-- <MarkSubmissionCompleted
                 :submission="submission"
                 :requesterPerson="requesterPerson"
@@ -70,14 +90,13 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import Avatar from "@/components/Avatar.vue";
+// import MarkSubmissionCompleted from "@/components/MarkSubmissionCompleted.vue";
+// import SubmissionResponseDialog from "@/components/SubmissionResponseDialog.vue";
+import SubmissionReviewDialog from "@/components/Dialogs/SubmissionReviewDialog.vue";
+import { dbMixins } from "@/mixins/DbMixins.js";
 import moment from "moment";
-import Avatar from "../components/Avatar.vue";
-
-// import MarkSubmissionCompleted from "../components/MarkSubmissionCompleted";
-// import SubmissionResponseDialog from "../components/SubmissionResponseDialog";
-import SubmissionReviewDialog from "../components/Dialogs/SubmissionReviewDialog";
-import { dbMixins } from "../mixins/DbMixins";
+import { mapState, mapActions } from "vuex";
 
 export default {
   name: "SubmissionTeacherPanel",

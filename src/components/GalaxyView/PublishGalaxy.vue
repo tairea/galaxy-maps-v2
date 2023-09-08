@@ -3,11 +3,18 @@
     <!-- CREATE BUTTON -->
     <template v-slot:activator="{ on, attrs }">
       <!-- ASSIGN COHORT -->
-      <v-btn outlined :color="
-        admin && course.status == 'submitted' && course.public == true
-          ? 'cohortAccent'
-          : 'galaxyAccent'
-      " v-bind="attrs" v-on="on" class="publishButton d-inline-flex text-truncate" @click="getTopicsWithoutTasks">
+      <v-btn
+        outlined
+        :color="
+          admin && course.status == 'submitted' && course.public == true
+            ? 'cohortAccent'
+            : 'galaxyAccent'
+        "
+        v-bind="attrs"
+        v-on="on"
+        class="publishButton d-inline-flex text-truncate"
+        @click="getTopicsWithoutTasks"
+      >
         publish galaxy
       </v-btn>
       <!-- ASSIGN GALAXY -->
@@ -39,7 +46,11 @@
           </p>
 
           <ul>
-            <li v-for="topic in topicsWithoutTasks" :key="topic.id" class="overline">
+            <li
+              v-for="topic in topicsWithoutTasks"
+              :key="topic.id"
+              class="overline"
+            >
               {{ topic.label }}
             </li>
           </ul>
@@ -51,7 +62,13 @@
       </div>
       <!-- ACTION BUTTONS -->
       <div class="action-buttons">
-        <v-btn outlined :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'" class="ml-2" @click="close" :disabled="loading">
+        <v-btn
+          outlined
+          :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
+          class="ml-2"
+          @click="close"
+          :disabled="loading"
+        >
           <v-icon left> {{ mdiClose }} </v-icon>
           OK
         </v-btn>
@@ -80,29 +97,50 @@
       <div class="create-dialog-content">
         <div>
           <p class="caption my-2 mb-6">
-            An Introduction node is a starting node that is unlocked when the map is started for the first time.
+            An Introduction node is a starting node that is unlocked when the
+            map is started for the first time.
           </p>
 
-          <p class="caption my-2">
-            Please select at least one starting node:
-          </p>
+          <p class="caption my-2">Please select at least one starting node:</p>
 
-          <v-select v-model="introNodes" :items="sortedObjArr" item-text="label" item-value="id" outlined :dark="dark"
-            :light="!dark" class="input-field" color="missionAccent" multiple chips :menu-props="{
+          <v-select
+            v-model="introNodes"
+            :items="sortedObjArr"
+            item-text="label"
+            item-value="id"
+            outlined
+            :dark="dark"
+            :light="!dark"
+            class="input-field"
+            color="missionAccent"
+            multiple
+            chips
+            :menu-props="{
               closeOnContentClick: true,
-            }"></v-select>
-
+            }"
+          ></v-select>
         </div>
       </div>
       <!-- ACTION BUTTONS -->
       <div class="action-buttons">
-
-        <v-btn outlined color="baseAccent" @click="saveIntroNode()" :loading="loading" class="ml-2">
+        <v-btn
+          outlined
+          color="baseAccent"
+          @click="saveIntroNode()"
+          :loading="loading"
+          class="ml-2"
+        >
           <v-icon left> {{ mdiCheck }} </v-icon>
           SAVE
         </v-btn>
 
-        <v-btn outlined :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'" class="ml-2" @click="close" :disabled="loading">
+        <v-btn
+          outlined
+          :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
+          class="ml-2"
+          @click="close"
+          :disabled="loading"
+        >
           <v-icon left> {{ mdiClose }} </v-icon>
           CANCEL
         </v-btn>
@@ -117,15 +155,21 @@
           <v-icon left color="missionAccent">{{
             mdiInformationVariant
           }}</v-icon>
-          <div v-if="
-            admin && course.status == 'submitted' && course.public == true
-          " class="dialog-description">
+          <div
+            v-if="
+              admin && course.status == 'submitted' && course.public == true
+            "
+            class="dialog-description"
+          >
             <p style="font-weight: 600; color: var(--v-cohortAccent-base)">
               I have reviewed this Galaxy Map
             </p>
             <p>
               Publish
-              <span style="font-weight: 600; color: var(--v-galaxyAccent-base)">{{ course.title }}</span>
+              <span
+                style="font-weight: 600; color: var(--v-galaxyAccent-base)"
+                >{{ course.title }}</span
+              >
               galaxy to make publically visible
             </p>
           </div>
@@ -145,11 +189,26 @@
             Choose whether you would like this galaxy to be:
           </p>
 
-          <v-radio-group row v-model="courseOptions.public" color="missionAccent" :light="!dark" :dark="dark">
-            <v-radio label="private (invite only)" :value="false" color="missionAccent" class="label-text mb-4"></v-radio>
+          <v-radio-group
+            row
+            v-model="courseOptions.public"
+            color="missionAccent"
+            :light="!dark"
+            :dark="dark"
+          >
+            <v-radio
+              label="private (invite only)"
+              :value="false"
+              color="missionAccent"
+              class="label-text mb-4"
+            ></v-radio>
 
-            <v-radio label="public (discoverable by all Galaxy Maps users)" :value="true" color="missionAccent"
-              class="label-text"></v-radio>
+            <v-radio
+              label="public (discoverable by all Galaxy Maps users)"
+              :value="true"
+              color="missionAccent"
+              class="label-text"
+            ></v-radio>
           </v-radio-group>
         </div>
         <!-- Is the course editable? -->
@@ -171,37 +230,68 @@
           </v-radio-group>
         </div> -->
         <p class="caption ma-0" v-if="courseOptions.public">
-          <i>(Public courses need to be submitted for review by Galaxy Map
-            moderators)</i>
+          <i
+            >(Public courses need to be submitted for review by Galaxy Map
+            moderators)</i
+          >
         </p>
       </div>
       <!-- ACTION BUTTONS -->
       <div v-if="admin" class="action-buttons">
-        <v-btn outlined :color="
-          admin && course.status == 'submitted' && course.public == true
-            ? 'cohortAccent'
-            : 'galaxyAccent'
-        " @click="publishCourse()" :loading="loading">
+        <v-btn
+          outlined
+          :color="
+            admin && course.status == 'submitted' && course.public == true
+              ? 'cohortAccent'
+              : 'galaxyAccent'
+          "
+          @click="publishCourse()"
+          :loading="loading"
+        >
           <v-icon left> {{ mdiCheck }} </v-icon>
           publish
         </v-btn>
 
-        <v-btn outlined :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'" class="ml-2" @click="close" :disabled="loading">
+        <v-btn
+          outlined
+          :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
+          class="ml-2"
+          @click="close"
+          :disabled="loading"
+        >
           <v-icon left> {{ mdiClose }} </v-icon>
           CANCEL
         </v-btn>
       </div>
       <div v-else class="action-buttons">
-        <v-btn v-if="courseOptions.public" outlined color="baseAccent" @click="submitCourse()" :loading="loading">
+        <v-btn
+          v-if="courseOptions.public"
+          outlined
+          color="baseAccent"
+          @click="submitCourse()"
+          :loading="loading"
+        >
           <v-icon left> {{ mdiSend }} </v-icon>
           SUBMIT
         </v-btn>
-        <v-btn v-else outlined color="baseAccent" @click="publishCourse()" :loading="loading">
+        <v-btn
+          v-else
+          outlined
+          color="baseAccent"
+          @click="publishCourse()"
+          :loading="loading"
+        >
           <v-icon left> {{ mdiCheck }} </v-icon>
           publish
         </v-btn>
 
-        <v-btn outlined :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'" class="ml-2" @click="close" :disabled="loading">
+        <v-btn
+          outlined
+          :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
+          class="ml-2"
+          @click="close"
+          :disabled="loading"
+        >
           <v-icon left> {{ mdiClose }} </v-icon>
           CANCEL
         </v-btn>
@@ -211,9 +301,8 @@
 </template>
 
 <script>
+import { dbMixins } from "@/mixins/DbMixins";
 import { db, functions } from "@/store/firestoreConfig";
-import { mapGetters, mapMutations, mapState } from "vuex";
-
 import {
   mdiAlertOutline,
   mdiInformationVariant,
@@ -221,16 +310,13 @@ import {
   mdiCheck,
   mdiSend,
 } from "@mdi/js";
-
-import { dbMixins } from "@/mixins/DbMixins";
+import { mapGetters, mapMutations, mapState } from "vuex";
 
 export default {
   name: "PublishGalaxy",
   mixins: [dbMixins],
   props: ["course", "courseTasks"],
-  async mounted() {
-
-  },
+  async mounted() {},
   data: () => ({
     mdiAlertOutline,
     mdiInformationVariant,
@@ -286,11 +372,12 @@ export default {
       this.topicsWithoutTasks = splicedNodes;
 
       // Now check if there is at least one intro node.
-      this.hasIntro = this.currentCourseNodes.some(object => object.group == "introduction");
+      this.hasIntro = this.currentCourseNodes.some(
+        (object) => object.group == "introduction"
+      );
       if (this.hasIntro == false) {
-        this.sortNodes()
+        this.sortNodes();
       }
-
     },
     close() {
       this.dialog = false;
@@ -372,7 +459,7 @@ export default {
     },
 
     async saveIntroNode() {
-      this.loading = true
+      this.loading = true;
       // loop selected intro nodes
       for (const nodeId of this.introNodes) {
         // update node in topics db
@@ -395,7 +482,7 @@ export default {
             console.error("Error writing node: ", error);
           });
 
-        console.log("node id " + nodeId + " set as introduction node")
+        console.log("node id " + nodeId + " set as introduction node");
 
         this.close();
       }
@@ -500,7 +587,7 @@ export default {
       }
 
       this.sortedObjArr = this.sortedObjArr.reverse();
-    }
+    },
   },
 };
 </script>

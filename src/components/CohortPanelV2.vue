@@ -143,17 +143,17 @@
 </template>
 
 <script>
-import { mapGetters, mapActions } from "vuex";
-import Avatar from "../components/Avatar";
-import ProgressionLineChart from "../components/ProgressionLineChart";
-import ActivityBarChart from "../components/ActivityBarChart";
-import Organisation from "../components/Organisation";
+import Avatar from "@/components/Avatar.vue";
+import ProgressionLineChart from "@/components/ProgressionLineChart.vue";
+import ActivityBarChart from "@/components/ActivityBarChart.vue";
+import Organisation from "@/components/Organisation.vue";
 import {
   getCohortsCourseDataXAPIQuery,
   getStudentsTimeDataXAPIQuery,
   VQLXAPIQuery,
-} from "../lib/veracityLRS";
+} from "@/lib/veracityLRS.js";
 import { mdiInformationVariant } from "@mdi/js";
+import { mapGetters, mapActions } from "vuex";
 
 export default {
   name: "CohortPanelV2",

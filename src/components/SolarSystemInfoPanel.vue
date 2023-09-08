@@ -98,8 +98,8 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from "vuex";
 import { mdiClose, mdiPencil, mdiLock } from "@mdi/js";
+import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "SolarSystemInfoPanel",

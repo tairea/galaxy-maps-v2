@@ -355,12 +355,7 @@
 </template>
 
 <script>
-import firebase from "firebase/app";
-import { VueEditor } from "vue2-editor";
-import { db, storage } from "../store/firestoreConfig";
-
-import { mapState } from "vuex";
-
+import { db, storage } from "@/store/firestoreConfig.ts";
 import {
   mdiPencil,
   mdiPlus,
@@ -370,6 +365,9 @@ import {
   mdiInformationVariant,
   mdiConsoleNetworkOutline,
 } from "@mdi/js";
+import firebase from "firebase/compat/app";
+import { VueEditor } from "vue2-editor";
+import { mapState } from "vuex";
 
 export default {
   name: "CreateEditDeleteMissionDialog",

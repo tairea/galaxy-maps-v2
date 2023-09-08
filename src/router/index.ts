@@ -1,23 +1,22 @@
+import Home from "@/views/Home.vue";
+import GalaxyList from "@/views/GalaxyList.vue";
+import GalaxyView from "@/views/GalaxyView.vue";
+import SolarSystemView from "@/views/SolarSystemView.vue";
+import CohortView from "@/views/CohortView.vue";
+import CohortList from "@/views/CohortList.vue";
+import CohortListV2 from "@/views/CohortListV2.vue";
+import AllStudentsView from "@/views/AllStudentsView.vue";
+import UserDashboard from "@/views/UserDashboard.vue";
+// import Login from "@/components/Login.vue";
+// import VerifyEmail from "@/views/VerifyEmail.vue";
+// import ResetPassword from "@/views/ResetPassword.vue";
+// import Register from "@/views/Register.vue";
+// import EmailSignIn from "@/components/EmailSignIn.vue";
+import LandingPage from "@/views/LandingPage.vue";
+import store from "@/store/index.js";
+import firebase from "firebase/compat/app";
 import Vue from "vue";
 import VueRouter from "vue-router";
-import Home from "../views/Home.vue";
-import GalaxyList from "../views/GalaxyList.vue";
-import GalaxyView from "../views/GalaxyView.vue";
-import SolarSystemView from "../views/SolarSystemView.vue";
-import CohortView from "../views/CohortView.vue";
-import CohortList from "../views/CohortList.vue";
-import CohortListV2 from "../views/CohortListV2.vue";
-import AllStudentsView from "../views/AllStudentsView.vue";
-import UserDashboard from "../views/UserDashboard.vue";
-// import Login from "../components/Login.vue";
-// import VerifyEmail from "../views/VerifyEmail.vue";
-// import ResetPassword from "../views/ResetPassword.vue";
-// import Register from "../views/Register.vue";
-// import EmailSignIn from "../components/EmailSignIn.vue";
-import LandingPage from "../views/LandingPage.vue";
-
-import firebase from "firebase";
-import store from "../store";
 
 Vue.use(VueRouter);
 
@@ -123,7 +122,7 @@ const routes = [
 
 const router = new VueRouter({
   mode: "history",
-  base: process.env.BASE_URL,
+  base: import.meta.env.BASE_URL,
   routes,
 });
 

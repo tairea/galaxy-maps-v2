@@ -58,11 +58,11 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from "vuex";
 import Chart from "@/components/Chart.vue";
+import { colours } from "@/lib/utils.js";
+import { dbMixins } from "@/mixins/DbMixins.js";
 import { DateTime } from "luxon";
-import { dbMixins } from "../mixins/DbMixins";
-import { colours } from "../lib/utils";
+import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "ProgressionLineChart",

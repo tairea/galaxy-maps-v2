@@ -6,9 +6,9 @@
 </template>
 
 <script>
+// import EditStudentButtonDialog from "@/components/EditStudentButtonDialog.vue";
+import LineChart from "@/component/LineChart.js";
 import { Graph2d } from "vue2vis";
-import LineChart from "./LineChart.js";
-// import EditStudentButtonDialog from "../components/EditStudentButtonDialog";
 
 export default {
   name: "StudentProgressionVueChartJs2",

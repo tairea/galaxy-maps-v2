@@ -15,9 +15,9 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from "vuex";
 import GalaxyListPanelCard from "@/components/GalaxyListPanelCard.vue";
 import PopupGalaxyPreview from "@/components/PopupGalaxyPreview.vue";
+import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "GalaxyListInfoPanel",

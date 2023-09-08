@@ -130,8 +130,7 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
-import firebase from "firebase";
+import { db } from "@/store/firestoreConfig.ts";
 import {
   mdiPencil,
   mdiInformationVariant,
@@ -140,7 +139,8 @@ import {
   mdiCheck,
   mdiClose,
 } from "@mdi/js";
-import { db } from "../store/firestoreConfig";
+import firebase from "firebase/compat/app";
+import { mapState } from "vuex";
 
 export default {
   name: "StudentEditDialog",

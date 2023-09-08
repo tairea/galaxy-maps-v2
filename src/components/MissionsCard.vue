@@ -222,13 +222,12 @@
 </template>
 
 <script>
-import CreateEditDeleteMissionDialog from "../components/CreateEditDeleteMissionDialog";
-import StartMissionDialog from "../components/StartMissionDialog";
-import ActiveMissionsCard from "../components/ActiveMissionsCard";
-import SelectedMissionsCard from "../components/SelectedMissionsCard";
+import CreateEditDeleteMissionDialog from "@/components/CreateEditDeleteMissionDialog.vue";
+import StartMissionDialog from "@/components/StartMissionDialog.vue";
+import ActiveMissionsCard from "@/components/ActiveMissionsCard.vue";
+import SelectedMissionsCard from "@/components/SelectedMissionsCard.vue";
+import { db } from "@/store/firestoreConfig.ts";
 import { mdiCheck, mdiLockOutline } from "@mdi/js";
-
-import { db } from "../store/firestoreConfig";
 import { mapState, mapGetters } from "vuex";
 
 export default {

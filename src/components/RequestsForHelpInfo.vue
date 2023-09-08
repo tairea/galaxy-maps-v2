@@ -12,7 +12,7 @@
 </template>
 
 <script>
-import RequestsForHelpStudentCard from "../components/RequestsForHelpStudentCard";
+import RequestsForHelpStudentCard from "@/components/RequestsForHelpStudentCard.vue";
 
 export default {
   name: "RequestsForHelpInfo",

@@ -408,9 +408,7 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from "vuex";
-import { db, storage, functions } from "../store/firestoreConfig";
-import firebase from "firebase";
+import { db, storage, functions } from "@/store/firestoreConfig.ts";
 import {
   mdiPencil,
   mdiPlus,
@@ -419,7 +417,9 @@ import {
   mdiDelete,
   mdiInformationVariant,
 } from "@mdi/js";
+import firebase from "firebase/compat/app";
 import clone from "lodash/clone";
+import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "CreateEditDeleteGalaxyDialog",

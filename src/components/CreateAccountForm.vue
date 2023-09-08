@@ -114,10 +114,10 @@
 </template>
 
 <script>
+import { getCourseById, assignTopicsAndTasksToStudent } from "@/lib/ff.js";
+import { dbMixins } from "@/mixins/DbMixins.js";
+import { db } from "@/store/firestoreConfig.ts";
 import { mapGetters } from "vuex";
-import { dbMixins } from "../mixins/DbMixins";
-import { getCourseById, assignTopicsAndTasksToStudent } from "../lib/ff";
-import { db } from "../store/firestoreConfig";
 
 export default {
   name: "CreateAccountForm",

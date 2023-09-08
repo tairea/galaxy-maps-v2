@@ -97,10 +97,10 @@
 </template>
 
 <script>
-import CreateAccountForm from "../../components/CreateAccountForm";
-import StudentImportCsv from "../../components/StudentImportCsv";
-import ConfirmDeleteStudentDialog from "../Dialogs/ConfirmDeleteStudentDialog";
-import EditStudentDialog from "../Dialogs/EditStudentDialog";
+import CreateAccountForm from "@/components/CreateAccountForm.vue";
+import StudentImportCsv from "@/components/StudentImportCsv.vue";
+import ConfirmDeleteStudentDialog from "@/components/Dialogs/ConfirmDeleteStudentDialog.vue";
+import EditStudentDialog from "@/components/Dialogs/EditStudentDialog.vue";
 
 import {
   mdiAccountGroup,

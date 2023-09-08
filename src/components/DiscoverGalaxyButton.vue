@@ -75,13 +75,13 @@
 </template>
 
 <script>
-import { mapMutations } from "vuex";
-import { db, storage } from "../store/firestoreConfig";
+import { db, storage } from "@/store/firestoreConfig.ts";
 import {
   mdiRocketLaunchOutline,
   mdiClose,
   mdiInformationVariant,
 } from "@mdi/js";
+import { mapMutations } from "vuex";
 
 export default {
   name: "DiscoverGalaxyButton",

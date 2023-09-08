@@ -3,7 +3,7 @@ import App from "./App.vue";
 import router from "./router";
 import vuetify from "./plugins/vuetify";
 import store from "./store";
-import firebase from "firebase";
+import firebase from "firebase/compat/app";
 import './css/main.scss';
 import { startPresenceSystem } from './presence'
 

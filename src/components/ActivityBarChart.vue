@@ -34,11 +34,9 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from "vuex";
 import Chart from "@/components/Chart.vue";
+import { dbMixins } from "@/mixins/DbMixins.js";
 import { DateTime } from "luxon";
-import { dbMixins } from "../mixins/DbMixins";
-import { colours, names } from "../lib/utils";
 
 export default {
   name: "ActivityBarChart",

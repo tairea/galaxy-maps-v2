@@ -144,9 +144,9 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
-import { db, storage } from "../store/firestoreConfig";
+import { db, storage } from "@/store/firestoreConfig.ts";
 import { mdiCheck, mdiDelete, mdiClose } from "@mdi/js";
+import { mapGetters } from "vuex";
 
 export default {
   name: "EditOrganisationButtonDialog",

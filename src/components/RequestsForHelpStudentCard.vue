@@ -76,10 +76,9 @@
 </template>
 
 <script>
-import SolarSystem from "../components/SolarSystem";
-
+import SolarSystem from "@/components/SolarSystem.vue";
+import { dbMixins } from "@/mixins/DbMixins.js";
 import { mapState, mapGetters } from "vuex";
-import { dbMixins } from "../mixins/DbMixins";
 
 export default {
   name: "RequestsForHelpStudentCard",

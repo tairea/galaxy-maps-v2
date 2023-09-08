@@ -199,18 +199,16 @@
 
 <script lang="js">
 // @ is an alias to /src
-import CreateEditDeleteCohortDialog from "../components/CreateEditDeleteCohortDialog.vue";
-import CreateEditDeleteOrganisationDialog from "../components/CreateEditDeleteOrganisationDialog.vue";
-import CreateAdminDialog from "../components/CreateAdminDialog.vue";
-import EditOrganisationButtonDialog from "../components/EditOrganisationButtonDialog.vue";
-import Cohort from "../components/Cohort.vue";
-import CohortPanelV2 from "../components/CohortPanelV2.vue";
-import TimeframeFilters from "../components/TimeframeFilters.vue";
-import Organisation from "../components/Organisation.vue";
-
-import { mapState, mapGetters, mapActions } from "vuex";
-
+import CreateEditDeleteCohortDialog from "@/components/CreateEditDeleteCohortDialog.vue";
+import CreateEditDeleteOrganisationDialog from "@/components/CreateEditDeleteOrganisationDialog.vue";
+import CreateAdminDialog from "@/components/CreateAdminDialog.vue";
+import EditOrganisationButtonDialog from "@/components/EditOrganisationButtonDialog.vue";
+import Cohort from "@/components/Cohort.vue";
+import CohortPanelV2 from "@/components/CohortPanelV2.vue";
+import TimeframeFilters from "@/components/TimeframeFilters.vue";
+import Organisation from "@/components/Organisation.vue";
 import { mdiPlus} from "@mdi/js";
+import { mapState, mapGetters, mapActions } from "vuex";
 
 export default {
   name: "CohortListV2",

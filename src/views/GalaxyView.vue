@@ -133,30 +133,30 @@
 </template>
 
 <script>
-import GalaxyInfo from "../components/GalaxyInfo";
-import PublishGalaxy from "../components/GalaxyView/PublishGalaxy";
-import AssignedInfo from "../components/AssignedInfo";
-import BackButton from "../components/BackButton";
+import GalaxyInfo from "@/components/GalaxyInfo.vue";
+import PublishGalaxy from "@/components/GalaxyView/PublishGalaxy.vue";
+import AssignedInfo from "@/components/AssignedInfo.vue";
+import BackButton from "@/components/BackButton.vue";
 
-import GalaxyMap from "../components/GalaxyMap";
-import GalaxyMapButtons from "../components/GalaxyView/GalaxyMapButtons";
+import GalaxyMap from "@/components/GalaxyMap.vue";
+import GalaxyMapButtons from "@/components/GalaxyView/GalaxyMapButtons.vue";
 
-import CreateEditDeleteNodeDialog from "../components/CreateEditDeleteNodeDialog";
+import CreateEditDeleteNodeDialog from "@/components/CreateEditDeleteNodeDialog.vue";
 
-import PopupSystemPreview from "../components/PopupSystemPreview";
-import SolarSystemInfoPanel from "../components/SolarSystemInfoPanel";
-import EdgeInfoPanel from "../components/EdgeInfoPanel";
+import PopupSystemPreview from "@/components/PopupSystemPreview.vue";
+import SolarSystemInfoPanel from "@/components/SolarSystemInfoPanel.vue";
+import EdgeInfoPanel from "@/components/EdgeInfoPanel.vue";
 
-import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame";
-import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame";
+import RequestForHelpTeacherFrame from "@/components/RequestForHelpTeacherFrame.vue";
+import SubmissionTeacherFrame from "@/components/SubmissionTeacherFrame.vue";
 
-import MissionsInfo from "../components/MissionsInfo";
-import MissionsList from "../components/MissionsList";
+import MissionsInfo from "@/components/MissionsInfo.vue";
+import MissionsList from "@/components/MissionsList.vue";
 
-import { db } from "../store/firestoreConfig";
+import { getAllPeopleInCourse, getAllCohortsInCourse } from "@/lib/ff.js";
+import { dbMixins } from "@/mixins/DbMixins.js";
+import { db } from "@/store/firestoreConfig.ts";
 import { mapState, mapGetters, mapActions, mapMutations } from "vuex";
-import { getAllPeopleInCourse, getAllCohortsInCourse } from "@/lib/ff";
-import { dbMixins } from "../mixins/DbMixins";
 
 export default {
   name: "GalaxyView",

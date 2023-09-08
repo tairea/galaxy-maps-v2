@@ -45,9 +45,8 @@
 </template>
 
 <script>
-import firebase from "firebase";
-
 import BackButton from "@/components/BackButton";
+import firebase from "firebase/compat/app";
 
 export default {
   name: "ResetPassword",

@@ -51,9 +51,8 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from "vuex";
-
 import { db } from "@/store/firestoreConfig";
+import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "EdgeInfoPanel",

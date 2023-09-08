@@ -7,8 +7,9 @@
 
 <script>
 import { Chart, registerables } from "chart.js";
-Chart.register(...registerables);
 import { DateTime } from "luxon";
+
+Chart.register(...registerables);
 
 // Chart.defaults.elements.point.radius = 0;
 

@@ -25,7 +25,7 @@
       </div>
       <!-- Edit button -->
       <div style="text-align: right">
-        <StudentEditDialog :isDashboardView="true"/>
+        <StudentEditDialog :isDashboardView="true" />
       </div>
       <!-- Cohorts -->
       <div style="margin-top: 50px">
@@ -45,14 +45,12 @@
 </template>
 
 <script>
-import StudentAvatar from "../components/StudentAvatar";
-import StudentEditDialog from "../components/StudentEditDialog";
-import Cohort from "../components/Cohort";
-
+import StudentAvatar from "@/components/StudentAvatar.vue";
+import StudentEditDialog from "@/components/StudentEditDialog.vue";
+import Cohort from "@/components/Cohort.vue";
+import { db, storage } from "@/store/firestoreConfig.ts";
+import firebase from "firebase/compat/app";
 import { mapState, mapActions } from "vuex";
-
-import firebase from "firebase";
-import { db, storage } from "../store/firestoreConfig";
 
 export default {
   name: "StudentInfo",
@@ -63,7 +61,8 @@ export default {
     Cohort,
   },
   async mounted() {
-    if (!this.user.data.admin) await this.$store.dispatch("getCohortsByPersonId", this.person);
+    if (!this.user.data.admin)
+      await this.$store.dispatch("getCohortsByPersonId", this.person);
   },
   computed: {
     ...mapState(["person", "cohorts", "user"]),

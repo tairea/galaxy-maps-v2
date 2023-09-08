@@ -76,9 +76,9 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
-import { dbMixins } from "../mixins/DbMixins";
+import { dbMixins } from "@/mixins/DbMixins.js";
 import { mdiDownload } from "@mdi/js";
+import { mapGetters } from "vuex";
 
 export default {
   name: "StudentImportCsv",

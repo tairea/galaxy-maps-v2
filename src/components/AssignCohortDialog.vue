@@ -295,7 +295,9 @@
 </template>
 
 <script>
-import firebase from "firebase/app";
+import { getCourseById, assignTopicsAndTasksToStudent } from "@/lib/ff.js";
+import { dbMixins } from "@/mixins/DbMixins.js";
+import { db, storage } from "@/store/firestoreConfig.ts";
 import {
   mdiClose,
   mdiCheck,
@@ -304,10 +306,8 @@ import {
   mdiAccountMultiplePlus,
   mdiChartTimelineVariantShimmer,
 } from "@mdi/js";
+import firebase from "firebase/compat/app";
 import { mapState, mapGetters } from "vuex";
-import { db, storage } from "../store/firestoreConfig";
-import { dbMixins } from "../mixins/DbMixins";
-import { getCourseById, assignTopicsAndTasksToStudent } from "../lib/ff";
 
 export default {
   name: "AssignCohortDialog",

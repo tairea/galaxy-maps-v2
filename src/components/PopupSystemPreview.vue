@@ -114,13 +114,10 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from "vuex";
-
-import { db } from "../store/firestoreConfig";
-
+import SolarSystem from "@/components/SolarSystem.vue";
+import { db } from "@/store/firestoreConfig.ts";
 import { mdiLockOutline, mdiClose, mdiPencil } from "@mdi/js";
-
-import SolarSystem from "../components/SolarSystem";
+import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "PopupSystemPreview",

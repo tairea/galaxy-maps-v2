@@ -78,15 +78,14 @@
 </template>
 
 <script>
+import AssignCohortDialog from "@/components/AssignCohortDialog.vue";
+import Course from "@/components/Course.vue";
+import Cohort from "@/components/Cohort.vue";
+import Organisation from "@/components/Organisation.vue";
+import Avatar from "@/components/Avatar.vue";
+import { dbMixins } from "@/mixins/DbMixins.js";
+import { getCourseById } from "@/lib/ff.js";
 import { mapState, mapGetters } from "vuex";
-
-import AssignCohortDialog from "../components/AssignCohortDialog";
-import Course from "../components/Course";
-import Cohort from "../components/Cohort";
-import Organisation from "../components/Organisation";
-import Avatar from "../components/Avatar";
-import { dbMixins } from "../mixins/DbMixins";
-import { getCourseById } from "../lib/ff";
 
 export default {
   name: "AssignedInfo",

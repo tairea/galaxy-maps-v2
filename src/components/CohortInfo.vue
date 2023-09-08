@@ -40,12 +40,11 @@
 </template>
 
 <script>
-import Organisation from "../components/Organisation";
-import CreateEditDeleteCohortDialog from "../components/CreateEditDeleteCohortDialog";
-import Avatar from "../components/Avatar";
-
+import Organisation from "@/components/Organisation.vue";
+import CreateEditDeleteCohortDialog from "@/components/CreateEditDeleteCohortDialog.vue";
+import Avatar from "@/components/Avatar.vue";
+import { dbMixins } from "@/mixins/DbMixins.js";
 import { mapGetters } from "vuex";
-import { dbMixins } from "../mixins/DbMixins";
 
 export default {
   name: "CohortInfo",

@@ -36,6 +36,7 @@
     </section>
   </div>
 </template>
+
 <script>
 import { mapState } from "vuex";
 
@@ -68,6 +69,7 @@ export default {
   },
 };
 </script>
+
 <style scoped lang="scss">
 .dot {
   height: 7px;

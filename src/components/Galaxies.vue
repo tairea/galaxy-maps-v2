@@ -34,15 +34,12 @@
 </template>
 
 <script>
+import LoadingSpinner from "@/components/LoadingSpinner.vue";
+import PopupGalaxyPreview from "@/components/PopupGalaxyPreview.vue";
+import { mdiPlus } from "@mdi/js";
 import { Network } from "vue2vis";
 import "vue2vis/dist/vue2vis.css";
-
-import { mdiPlus } from "@mdi/js";
-
 import { mapState, mapGetters, mapMutations } from "vuex";
-
-import LoadingSpinner from "../components/LoadingSpinner.vue";
-import PopupGalaxyPreview from "../components/PopupGalaxyPreview.vue";
 
 export default {
   name: "Galaxies",

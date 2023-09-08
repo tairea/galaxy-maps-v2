@@ -55,17 +55,16 @@
 </template>
 
 <script>
-import SolarSystemInfo from "../components/SolarSystemInfo";
-import AssignedInfo from "../components/AssignedInfo";
-import MissionsInfo from "../components/MissionsInfo";
-import MissionsList from "../components/MissionsList";
-import SolarSystem from "../components/SolarSystem";
-import BackButton from "../components/BackButton";
-import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame";
-import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame.vue";
-
+import SolarSystemInfo from "@/components/SolarSystemInfo.vue";
+import AssignedInfo from "@/components/AssignedInfo.vue";
+import MissionsInfo from "@/components/MissionsInfo.vue";
+import MissionsList from "@/components/MissionsList.vue";
+import SolarSystem from "@/components/SolarSystem.vue";
+import BackButton from "@/components/BackButton.vue";
+import SubmissionTeacherFrame from "@/components/SubmissionTeacherFrame.vue";
+import RequestForHelpTeacherFrame from "@/components/RequestForHelpTeacherFrame.vue";
+import { getPersonsTopicById } from "@/lib/ff.js";
 import { mapState, mapGetters } from "vuex";
-import { getPersonsTopicById } from "../lib/ff";
 
 export default {
   name: "SolarSystemView",
