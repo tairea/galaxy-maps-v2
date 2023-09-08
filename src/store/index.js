@@ -254,7 +254,6 @@ export default new Vuex.Store({
       const query = payload.owner != null ? db.collection("courses").where("owner", '==', payload.owner) : db.collection("courses");
       return bindFirestoreRef("courses", query, {
         maxRefDepth: 2,
-        reset: false,
       });
     }),
     bindAllCohorts: firestoreAction(({ bindFirestoreRef }) => {
