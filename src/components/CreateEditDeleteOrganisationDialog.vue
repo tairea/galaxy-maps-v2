@@ -222,9 +222,7 @@
 </template>
 
 <script>
-import { mapMutations } from "vuex";
-import { db, storage } from "../store/firestoreConfig";
-
+import { db, storage } from "@/store/firestoreConfig.ts";
 import {
   mdiPlus,
   mdiClose,

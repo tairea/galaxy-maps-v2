@@ -1,8 +1,10 @@
 <template>
   <div class="wrap">
-    <div class="mt-n12"> 
+    <div class="mt-n12">
       <v-row>
-        <p class="overline" style="color:var(--v-missionAccent-base)">{{ text }}</p>
+        <p class="overline" style="color: var(--v-missionAccent-base)">
+          {{ text }}
+        </p>
       </v-row>
       <v-row>
         <v-progress-linear
@@ -14,13 +16,14 @@
     </div>
   </div>
 </template>
+
 <script>
 export default {
   props: {
     size: {
       default: "40px",
     },
-    text: String
+    text: String,
   },
   computed: {
     styles() {
@@ -32,6 +35,7 @@ export default {
   },
 };
 </script>
+
 <style lang="scss" scoped>
 $offset: 187;
 $duration: 1.4s;

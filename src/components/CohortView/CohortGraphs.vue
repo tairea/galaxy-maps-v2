@@ -104,15 +104,14 @@
   </div>
 </template>
 <script>
-import ProgressionLineChart from "../../components/ProgressionLineChart";
-import ActivityBarChart from "../../components/ActivityBarChart";
-import TimeframeFilters from "../../components/TimeframeFilters";
-import Avatar from "../../components/Avatar";
-
+import ProgressionLineChart from "@/components/ProgressionLineChart.vue";
+import ActivityBarChart from "@/components/ActivityBarChart.vue";
+import TimeframeFilters from "@/components/TimeframeFilters.vue";
+import Avatar from "@/components/Avatar.vue";
 import {
   getCohortsCourseDataXAPIQuery,
   getStudentsTimeDataXAPIQuery,
-} from "../../lib/veracityLRS";
+} from "@/lib/veracityLRS.js";
 import { mapGetters } from "vuex";
 
 export default {

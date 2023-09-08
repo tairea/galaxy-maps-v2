@@ -149,14 +149,13 @@
 </template>
 
 <script>
-import firebase from "firebase/app";
-import moment from "moment";
-
-import { db, functions } from "../store/firestoreConfig";
-import { teacherRespondedToRequestForHelpXAPIStatement } from "../lib/veracityLRS";
-import { dbMixins } from "../mixins/DbMixins";
-import { mapState, mapGetters } from "vuex";
+import { db, functions } from "@/store/firestoreConfig.ts";
+import { teacherRespondedToRequestForHelpXAPIStatement } from "@/lib/veracityLRS.js";
+import { dbMixins } from "@/mixins/DbMixins.js";
 import { mdiAccount, mdiCheck, mdiClose } from "@mdi/js";
+import firebase from "firebase/compat/app";
+import moment from "moment";
+import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "RequestForHelpResponseDialog",

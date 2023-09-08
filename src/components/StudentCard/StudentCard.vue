@@ -7,7 +7,7 @@
       class="pl-1"
       @click.native="showStudentDetails(student)"
     />
-    <template v-if="!status" class="second-block">
+    <template v-if="!status">
       <span class="overline not-active text-uppercase ma-auto"
         >hasn't signed in yet</span
       >
@@ -52,22 +52,21 @@
 </template>
 
 <script>
-import StudentCardStatus from "./StudentCardStatus";
-import StudentCardProgress from "./StudentCardProgress.vue";
-import StudentCardActivities from "./StudentCardActivities";
-import StudentHours from "./StudentHours.vue";
-import StudentCompletedTasks from "./StudentCompletedTasks.vue";
-import StudentCohorts from "./StudentCohorts.vue";
-import StudentActions from "./StudentActions.vue";
-import StudentActivityTimeline from "../StudentActivityTimeline.vue";
-
+import StudentCardStatus from "@/components/StudentCard/StudentCardStatus.vue";
+import StudentCardProgress from "@/components/StudentCard/StudentCardProgress.vue";
+import StudentCardActivities from "@/components/StudentCard/StudentCardActivities.vue";
+import StudentHours from "@/components/StudentCard/StudentHours.vue";
+import StudentCompletedTasks from "@/components/StudentCard/StudentCompletedTasks.vue";
+import StudentCohorts from "@/components/StudentCard/StudentCohorts.vue";
+import StudentActions from "@/components/StudentCard/StudentActions.vue";
+import StudentActivityTimeline from "@/components/StudentActivityTimeline.vue";
 import {
   getStudentsCoursesXAPIQuery,
   getStudentsTimeDataXAPIQuery,
-} from "../../lib/veracityLRS";
+} from "@/lib/veracityLRS.js";
+import { getCourseById } from "@/lib/ff.js";
+import { dbMixins } from "@/mixins/DbMixins.js";
 import { mapState, mapGetters } from "vuex";
-import { dbMixins } from "../../mixins/DbMixins";
-import { getCourseById } from "../../lib/ff";
 
 export default {
   name: "StudentCard",

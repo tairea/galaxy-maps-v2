@@ -25,8 +25,7 @@
 </template>
 
 <script>
-import SolarSystem from "../components/SolarSystem";
-
+import SolarSystem from "@/components/SolarSystem.vue";
 import { mapState, mapGetters } from "vuex";
 
 export default {
@@ -57,7 +56,7 @@ export default {
   margin-top: 30px;
   padding: 20px;
   backdrop-filter: blur(2px);
-  width: 100%
+  width: 100%;
 }
 
 h1 {

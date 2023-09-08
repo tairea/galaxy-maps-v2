@@ -74,22 +74,20 @@
 </template>
 
 <script>
-import firebase from "firebase/app";
-
-import { db, functions } from "../store/firestoreConfig";
+import { dbMixins } from "@/mixins/DbMixins.js";
 import {
   studentWorkMarkedCompletedXAPIStatement,
   teacherReviewedStudentWorkXAPIStatement,
-} from "../lib/veracityLRS";
-
-import { mapState, mapGetters } from "vuex";
-import { dbMixins } from "../mixins/DbMixins";
+} from "@/lib/veracityLRS.js";
+import { db, functions } from "@/store/firestoreConfig.ts";
 import {
   mdiThumbUpOutline,
   mdiInformationVariant,
   mdiCheck,
   mdiClose,
 } from "@mdi/js";
+import firebase from "firebase/compat/app";
+import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "MarkSubmissionCompleted",

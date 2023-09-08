@@ -9,7 +9,6 @@
 <script>
 import UserBar from "@/components/UserBar.vue";
 import NavBar from "@/components/NavBar.vue";
-
 import { mapGetters } from "vuex";
 
 export default {
@@ -21,11 +20,10 @@ export default {
   computed: {
     ...mapGetters(["person"]),
     userType() {
-      return this.person.accountType
-    }
-  }
-
-}
+      return this.person.accountType;
+    },
+  },
+};
 </script>
 
 <style lang="scss" scoped>

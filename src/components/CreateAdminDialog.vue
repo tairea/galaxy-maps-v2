@@ -120,9 +120,9 @@
 </template>
 
 <script>
-import { mapState, mapGetters, mapActions } from "vuex";
-import { functions } from "../store/firestoreConfig";
+import { functions } from "@/store/firestoreConfig.ts";
 import { mdiPlus, mdiInformationVariant } from "@mdi/js";
+import { mapState, mapGetters, mapActions } from "vuex";
 
 export default {
   name: "CreateAdminDialog",

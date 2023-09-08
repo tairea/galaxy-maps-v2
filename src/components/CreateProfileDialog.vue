@@ -142,10 +142,10 @@
 </template>
 
 <script>
-import { db, storage } from "../store/firestoreConfig";
-import { mapGetters, mapActions } from "vuex";
-import firebase from "firebase";
+import { db, storage } from "@/store/firestoreConfig.ts";
 import { mdiPencil, mdiAccount } from "@mdi/js";
+import firebase from "firebase/compat/app";
+import { mapGetters, mapActions } from "vuex";
 
 export default {
   name: "CreateProfileDialog",

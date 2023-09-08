@@ -4,6 +4,7 @@
     <p class="label text-center label-value">{{ calcTaskCompleted }}</p>
   </div>
 </template>
+
 <script>
 import { DateTime } from "luxon";
 
@@ -37,6 +38,7 @@ export default {
   },
 };
 </script>
+
 <style lang="scss" scoped>
 .label {
   color: var(--v-missionAccent-base);

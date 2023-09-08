@@ -372,9 +372,9 @@
 </template>
 
 <script>
-import Organisation from "../components/Organisation";
-import CreateAccountDialog from "../components/CreateAccountDialog";
-import firebase from "firebase";
+import Organisation from "@/components/Organisation.vue";
+import CreateAccountDialog from "@/components/CreateAccountDialog.vue";
+import firebase from "firebase/compat/app";
 
 import {
   mdiPencil,
@@ -386,7 +386,7 @@ import {
 } from "@mdi/js";
 
 import { mapState, mapGetters, mapActions } from "vuex";
-import { db, storage, functions } from "../store/firestoreConfig";
+import { db, storage, functions } from "@/store/firestoreConfig.ts";
 
 export default {
   name: "CreateEditDeleteCohortDialog",

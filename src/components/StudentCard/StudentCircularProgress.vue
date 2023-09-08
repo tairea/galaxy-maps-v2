@@ -34,11 +34,10 @@
     </div>
   </v-hover>
 </template>
+
 <script>
-import PopupStudentProgress from "./PopupStudentProgress.vue";
-
+import PopupStudentProgress from "@/components/StudentCard/PopupStudentProgress.vue";
 import { getStudentTasksByTopicId } from "@/lib/ff";
-
 import { mdiAccount } from "@mdi/js";
 
 export default {
@@ -154,6 +153,7 @@ export default {
   },
 };
 </script>
+
 <style scoped lang="scss">
 .student-progress-section {
   width: 25%;

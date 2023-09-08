@@ -29,8 +29,7 @@
 
 <script>
 import GalaxyProgressionCard from "@/components/GalaxyProgressionCard.vue";
-
-import { getStudentsCoursesXAPIQuery } from "../lib/veracityLRS";
+import { getStudentsCoursesXAPIQuery } from "@/lib/veracityLRS.js";
 
 export default {
   name: "StudentCourseProgression",

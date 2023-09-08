@@ -39,13 +39,11 @@
 </template>
 
 <script>
-import firebase from "firebase";
-import { mapGetters } from "vuex";
-
+import BackButton from "@/components/BackButton.vue";
+import CreateProfileDialog from "@/components/CreateProfileDialog.vue";
 import { mdiKeyboardBackspace } from "@mdi/js";
-
-import BackButton from "../components/BackButton.vue";
-import CreateProfileDialog from "../components/CreateProfileDialog.vue";
+import firebase from "firebase/compat/app";
+import { mapGetters } from "vuex";
 
 export default {
   name: "EmailSignIn",

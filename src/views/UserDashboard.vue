@@ -117,18 +117,17 @@
 </template>
 
 <script>
-import { db } from "../store/firestoreConfig";
-import { mapState, mapGetters, mapActions, mapMutations } from "vuex";
+import UserInfo from "@/components/UserInfo.vue";
+import StudentActivityTimeline from "@/components/StudentActivityTimeline.vue";
+import StudentCourseProgression from "@/components/StudentCourseProgression.vue";
+import TimeframeFilters from "@/components/TimeframeFilters.vue";
+import CohortPanelV2 from "@/components/CohortPanelV2.vue";
+import SubmissionTeacherFrame from "@/components/SubmissionTeacherFrame.vue";
+import RequestForHelpTeacherFrame from "@/components/RequestForHelpTeacherFrame.vue";
+import CreateAdminDialog from "@/components/CreateAdminDialog.vue";
+import { db } from "@/store/firestoreConfig.ts";
 import { mdiInformationVariant } from "@mdi/js";
-
-import UserInfo from "../components/UserInfo";
-import StudentActivityTimeline from "../components/StudentActivityTimeline";
-import StudentCourseProgression from "../components/StudentCourseProgression";
-import TimeframeFilters from "../components/TimeframeFilters.vue";
-import CohortPanelV2 from "../components/CohortPanelV2.vue";
-import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame.vue";
-import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame.vue";
-import CreateAdminDialog from "../components/CreateAdminDialog";
+import { mapState, mapGetters, mapActions, mapMutations } from "vuex";
 
 export default {
   name: "UserDashboard",

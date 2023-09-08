@@ -226,15 +226,14 @@
 </template>
 
 <script>
-import { VueEditor } from "vue2-editor";
-import { db, functions } from "../store/firestoreConfig";
 import {
   submitWorkForReviewXAPIStatement,
   reSubmitWorkForReviewXAPIStatement,
   taskMarkedAsCompletedXAPIStatement,
   topicCompletedXAPIStatement,
-} from "../lib/veracityLRS";
-
+} from "@/lib/veracityLRS.js";
+import { dbMixins } from "@/mixins/DbMixins.js";
+import { db, functions } from "@/store/firestoreConfig.ts";
 import {
   mdiCloudUploadOutline,
   mdiInformationVariant,
@@ -242,9 +241,7 @@ import {
   mdiClose,
   mdiCheckboxBlankOutline,
 } from "@mdi/js";
-
-import { dbMixins } from "../mixins/DbMixins";
-
+import { VueEditor } from "vue2-editor";
 import { mapState, mapGetters } from "vuex";
 
 export default {

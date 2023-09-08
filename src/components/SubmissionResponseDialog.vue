@@ -165,18 +165,17 @@
 </template>
 
 <script>
-import moment from "moment";
-
-import { db } from "../store/firestoreConfig";
-import { teacherRespondedSubmissionDeclinedXAPIStatement } from "../lib/veracityLRS";
-import { dbMixins } from "../mixins/DbMixins";
-import { mapState, mapGetters } from "vuex";
+import { teacherRespondedSubmissionDeclinedXAPIStatement } from "@/lib/veracityLRS.js";
+import { dbMixins } from "@/mixins/DbMixins.js";
+import { db } from "@/store/firestoreConfig.ts";
 import {
   mdiThumbDownOutline,
   mdiTextBoxSearchOutline,
   mdiAlertOctagonOutline,
   mdiClose,
 } from "@mdi/js";
+import moment from "moment";
+import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "SubmissionResponseDialog",

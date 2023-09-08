@@ -30,12 +30,10 @@
 </template>
 
 <script>
-import CreateAccountForm from "./CreateAccountForm";
-
-import { mapGetters } from "vuex";
-import { dbMixins } from "../mixins/DbMixins";
-
+import CreateAccountForm from "@/components/CreateAccountForm.vue";
+import { dbMixins } from "@/mixins/DbMixins.js";
 import { mdiPlus } from "@mdi/js";
+import { mapGetters } from "vuex";
 
 export default {
   name: "CreateAccountDialog",

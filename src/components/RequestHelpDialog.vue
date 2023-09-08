@@ -90,18 +90,17 @@
 </template>
 
 <script>
-import firebase from "firebase/app";
-
-import { db, functions } from "../store/firestoreConfig";
-import { studentRequestForHelpXAPIStatement } from "../lib/veracityLRS";
-import { dbMixins } from "../mixins/DbMixins";
-import { mapState, mapGetters } from "vuex";
+import { studentRequestForHelpXAPIStatement } from "@/lib/veracityLRS.js";
+import { dbMixins } from "@/mixins/DbMixins.js";
+import { db, functions } from "@/store/firestoreConfig.ts";
 import {
   mdiHandFrontLeftOutline,
   mdiInformationVariant,
   mdiCheck,
   mdiClose,
 } from "@mdi/js";
+import firebase from "firebase/compat/app";
+import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "RequestHelpDialog",

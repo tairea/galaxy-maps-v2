@@ -46,16 +46,15 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from "vuex";
 import Chart from "@/components/Chart.vue";
 import ActiveMissions from "@/components/ActiveMissions.vue";
-import { DateTime } from "luxon";
-import { dbMixins } from "../mixins/DbMixins";
-
 import {
   getStudentsCoursesXAPIQuery,
   getActiveTaskXAPIQuery,
-} from "../lib/veracityLRS";
+} from "@/lib/veracityLRS.js";
+import { dbMixins } from "@/mixins/DbMixins.js";
+import { mapState, mapGetters } from "vuex";
+import { DateTime } from "luxon";
 
 export default {
   name: "GalaxyProgressionCard",

@@ -179,13 +179,12 @@
 </template>
 
 <script>
-import LoginDialog from "../components/Dialogs/LoginDialog";
-import { db } from "../store/firestoreConfig";
-import { dbMixins } from "../mixins/DbMixins";
-import { getCohortById, assignTopicsAndTasksToMe } from "../lib/ff";
-import { mapGetters, mapState } from "vuex";
-
+import LoginDialog from "@/components/Dialogs/LoginDialog.vue";
+import { db } from "@/store/firestoreConfig.ts";
+import { getCohortById, assignTopicsAndTasksToMe } from "@/lib/ff.js";
+import { dbMixins } from "@/mixins/DbMixins.js";
 import { mdiClose } from "@mdi/js";
+import { mapGetters, mapState } from "vuex";
 
 export default {
   name: "PopupGalaxyPreview",

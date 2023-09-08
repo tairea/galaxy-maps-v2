@@ -100,12 +100,10 @@
 </template>
 
 <script>
-import NewPassword from "../NewPassword.vue";
-import EmailSignIn from "@/components/EmailSignIn";
-
-import firebase from "firebase";
+import NewPassword from "@/components/NewPassword.vue";
+import EmailSignIn from "@/components/EmailSignIn.vue";
+import firebase from "firebase/compat/app";
 import { mapGetters } from "vuex";
-import { queryXAPIStatement } from "@/lib/veracityLRS";
 
 export default {
   name: "Login",

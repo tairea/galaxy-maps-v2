@@ -249,27 +249,22 @@
 </template>
 
 <script>
-import firebase from "firebase/app";
-import moment from "moment";
-
 import Avatar from "@/components/Avatar.vue";
-
-import { db, functions } from "@/store/firestoreConfig";
 import {
   studentWorkMarkedCompletedXAPIStatement,
   teacherReviewedStudentWorkXAPIStatement,
   teacherRespondedSubmissionDeclinedXAPIStatement,
-} from "@/lib/veracityLRS";
-
+} from "@/lib/veracityLRS.js";
+import { dbMixins } from "@/mixins/DbMixins.js";
+import { db, functions } from "@/store/firestoreConfig.ts";
 import {
   mdiTextBoxSearchOutline,
   mdiThumbUpOutline,
   mdiThumbDownOutline,
   mdiClose,
 } from "@mdi/js";
-
+import moment from "moment";
 import { mapState, mapGetters } from "vuex";
-import { dbMixins } from "@/mixins/DbMixins";
 
 export default {
   name: "SubmissionReviewDialog",

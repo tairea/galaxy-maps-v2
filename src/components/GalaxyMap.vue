@@ -2,11 +2,28 @@
   <div class="full-height">
     <LoadingSpinner v-if="loading" text="loading galaxy" />
     <!-- loading = !planets.length && !draggingNodes -->
-    <network v-if="nodesToDisplay" ref="network" class="full-height" :nodes="nodesToDisplay" :edges="edgesToDisplay"
-      :options="network.options" @hook:updated="networkUpdated" @nodes-add="addNode" @edges-add="addEdge"
-      @dragging="dragging" @drag-start="dragStart" @drag-end="dragEnd" @select-edge="selectEdge"
-      @deselect-node="deselectNode" @deselect-edge="deselectEdge" @animation-finished="animationFinished"
-      @before-drawing="beforeDrawing" @after-drawing="afterDrawing" @click="click2" @double-click="doubleClick"></network>
+    <network
+      v-if="nodesToDisplay"
+      ref="network"
+      class="full-height"
+      :nodes="nodesToDisplay"
+      :edges="edgesToDisplay"
+      :options="network.options"
+      @hook:updated="networkUpdated"
+      @nodes-add="addNode"
+      @edges-add="addEdge"
+      @dragging="dragging"
+      @drag-start="dragStart"
+      @drag-end="dragEnd"
+      @select-edge="selectEdge"
+      @deselect-node="deselectNode"
+      @deselect-edge="deselectEdge"
+      @animation-finished="animationFinished"
+      @before-drawing="beforeDrawing"
+      @after-drawing="afterDrawing"
+      @click="click2"
+      @double-click="doubleClick"
+    ></network>
     <!-- @hover-node="hoverNode" 
           @select-node="selectNode"
                 @blur-node="blurNode"
@@ -20,16 +37,12 @@
 </template>
 
 <script>
+import SolarSystem from "@/components/SolarSystem.vue";
+import LoadingSpinner from "@/components/LoadingSpinner.vue";
+import { Planet } from "@/lib/planet.js";
+import { db } from "@/store/firestoreConfig.ts";
 import { Network } from "vue2vis";
-import { Planet } from "../lib/planet";
-
-import SolarSystem from "../components/SolarSystem";
-import LoadingSpinner from "../components/LoadingSpinner";
-
-import { db } from "../store/firestoreConfig";
-
 import "vue2vis/dist/vue2vis.css";
-
 import { mapState, mapGetters } from "vuex";
 
 export default {

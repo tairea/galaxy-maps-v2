@@ -1,9 +1,9 @@
 // Use this file to store reusable functions that require data from the component
 
-import firebase from "firebase";
-import { db, functions } from "../store/firestoreConfig";
-import { getCourseById } from "../lib/ff"
-import { mapGetters } from 'vuex'
+import { db, functions } from "@/store/firestoreConfig.ts";
+import { getCourseById } from "@/lib/ff.js"
+import firebase from "firebase/compat/app";
+import { mapGetters } from "vuex"
 
 export const dbMixins = {
   computed: {

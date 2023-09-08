@@ -32,13 +32,12 @@
 </template>
 
 <script>
-import CreateEditDeleteGalaxyDialog from "../components/CreateEditDeleteGalaxyDialog.vue";
-// import DiscoverGalaxyButton from "../components/DiscoverGalaxyButton";
-import GalaxyListPanel from "../components/GalaxyListPanel.vue";
-import GalaxyListInfoPanel from "../components/GalaxyListInfoPanel.vue";
-import Galaxies from "../components/Galaxies.vue";
-import { db } from "../store/firestoreConfig";
-
+import CreateEditDeleteGalaxyDialog from "@/components/CreateEditDeleteGalaxyDialog.vue";
+// import DiscoverGalaxyButton from "@/components/DiscoverGalaxyButton.vue";
+import GalaxyListPanel from "@/components/GalaxyListPanel.vue";
+import GalaxyListInfoPanel from "@/components/GalaxyListInfoPanel.vue";
+import Galaxies from "@/components/Galaxies.vue";
+import { db } from "@/store/firestoreConfig.ts";
 import { mapState, mapGetters } from "vuex";
 
 export default {

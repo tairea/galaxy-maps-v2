@@ -45,18 +45,16 @@
 </template>
 
 <script>
-import CohortInfo from "../components/CohortInfo";
-import AssignedInfo from "../components/AssignedInfo";
-import StudentDataIterator from "../components/StudentDataIterator";
-import BackButton from "../components/BackButton";
-import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame";
-import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame";
-import CohortGraphs from "../components/CohortView/CohortGraphs";
-
-import { mapState } from "vuex";
-
+import CohortInfo from "@/components/CohortInfo.vue";
+import AssignedInfo from "@/components/AssignedInfo.vue";
+import StudentDataIterator from "@/components/StudentDataIterator.vue";
+import BackButton from "@/components/BackButton.vue";
+import RequestForHelpTeacherFrame from "@/components/RequestForHelpTeacherFrame.vue";
+import SubmissionTeacherFrame from "@/components/SubmissionTeacherFrame.vue";
+import CohortGraphs from "@/components/CohortView/CohortGraphs.vue";
+import { db } from "@/store/firestoreConfig.ts";
 import moment from "moment";
-import { db } from "../store/firestoreConfig";
+import { mapState } from "vuex";
 
 export default {
   name: "CohortView",

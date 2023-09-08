@@ -125,23 +125,21 @@
 </template>
 
 <script>
-// import CreateAccountDialog from "../components/CreateAccountDialog";
-// import ImportCsvDialog from "../components/ImportCsvDialog";
-import StudentAccountsDialog from "../components/CohortView/StudentAccountsDialog";
-import ViewStudentDetails from "../components/ViewStudentDetails";
-import StudentCard from "../components/StudentCard/StudentCard";
-import TimeframeFilters from "../components/TimeframeFilters";
-
-import EditStudentDialog from "./Dialogs/EditStudentDialog";
-
-import { mapGetters } from "vuex";
-import { dbMixins } from "../mixins/DbMixins";
+// import CreateAccountDialog from "@/components/CreateAccountDialog.vue";
+// import ImportCsvDialog from "@/components/ImportCsvDialog.vue";
+import StudentAccountsDialog from "@/components/CohortView/StudentAccountsDialog.vue";
+import ViewStudentDetails from "@/components/ViewStudentDetails.vue";
+import StudentCard from "@/components/StudentCard/StudentCard.vue";
+import TimeframeFilters from "@/components/TimeframeFilters.vue";
+import EditStudentDialog from "@/components/Dialogs/EditStudentDialog.vue";
+import { dbMixins } from "@/mixins/DbMixins.js";
 import {
   mdiArrowUp,
   mdiArrowDown,
   mdiMagnify,
   mdiSortAlphabeticalVariant,
 } from "@mdi/js";
+import { mapGetters } from "vuex";
 
 export default {
   name: "StudentsDataIterator",

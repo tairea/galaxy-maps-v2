@@ -1,9 +1,8 @@
+import { dbMixins } from "@/mixins/DbMixins.js";
+import { db } from "@/store/firestoreConfig.ts";
 import Vue from "vue";
 import Vuex from "vuex";
 import createPersistedState from "vuex-persistedstate";
-import { dbMixins } from "../mixins/DbMixins";
-
-import { db } from "./firestoreConfig";
 import { vuexfireMutations, firestoreAction } from "vuexfire";
 
 Vue.use(Vuex);

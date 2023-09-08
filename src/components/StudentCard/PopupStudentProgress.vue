@@ -16,6 +16,7 @@
     </div>
   </v-menu>
 </template>
+
 <script>
 export default {
   name: "PopupStudentProgress",

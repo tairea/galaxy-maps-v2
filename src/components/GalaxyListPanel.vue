@@ -129,9 +129,9 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
 import GalaxyListPanelCard from "@/components/GalaxyListPanelCard.vue";
 import { mdiPlus } from "@mdi/js";
+import { mapState, mapActions } from "vuex";
 
 export default {
   name: "GalaxyListPanel",

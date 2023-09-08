@@ -8,7 +8,7 @@
       x-small
       @click="previous"
     >
-      <
+      &lt;
     </v-chip>
     <v-chip
       class="my-2 mx-1 custom-chip"
@@ -57,7 +57,7 @@
       x-small
       @click="next"
     >
-      >
+      &gt;
     </v-chip>
     <span color="missionAccent" v-if="showDate" class="caption pa-2 date">{{
       date

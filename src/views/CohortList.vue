@@ -81,20 +81,24 @@
     </v-row>
 
     <!-- Edit Org Dialog -->
-    <EditOrganisationButtonDialog v-if="editingOrgansation" :open="openOrganisationDialog" :organisation="editingOrgansation" @closeOrganisationEditDialog="openOrganisationDialog = false"/>
+    <EditOrganisationButtonDialog
+      v-if="editingOrgansation"
+      :open="openOrganisationDialog"
+      :organisation="editingOrgansation"
+      @closeOrganisationEditDialog="openOrganisationDialog = false"
+    />
   </v-container>
 </template>
 
 <script lang="js">
 // @ is an alias to /src
-import CreateEditDeleteCohortDialog from "../components/CreateEditDeleteCohortDialog";
-import CreateEditDeleteOrganisationDialog from "../components/CreateEditDeleteOrganisationDialog";
-import CreateAdminDialog from "../components/CreateAdminDialog";
-import EditOrganisationButtonDialog from "../components/EditOrganisationButtonDialog";
-import Cohort from "../components/Cohort";
-import CohortPanel from "../components/CohortPanel";
-import Organisation from "../components/Organisation";
-
+import CreateEditDeleteCohortDialog from "@/components/CreateEditDeleteCohortDialog.vue";
+import CreateEditDeleteOrganisationDialog from "@/components/CreateEditDeleteOrganisationDialog.vue";
+import CreateAdminDialog from "@/components/CreateAdminDialog.vue";
+import EditOrganisationButtonDialog from "@/components/EditOrganisationButtonDialog.vue";
+import Cohort from "@/components/Cohort.vue";
+import CohortPanel from "@/components/CohortPanel.vue";
+import Organisation from "@/components/Organisation.vue";
 import { mapState, mapGetters, mapActions } from "vuex";
 
 export default {

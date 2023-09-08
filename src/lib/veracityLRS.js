@@ -1,10 +1,9 @@
-import store from "../store";
-import { getCourseById, getStudentByEmail } from "../lib/ff";
-import { db } from "../store/firestoreConfig";
+import { getCourseById, getStudentByEmail } from "@/lib/ff.js";
+import store from "@/store/index.js";
+import { db } from "@/store/firestoreConfig.ts";
 import { DateTime } from "luxon";
-import { _ } from "core-js";
 
-const auth = "Basic " + btoa(process.env.VUE_APP_VERACITY_LRS_SECRET);
+const auth = "Basic " + btoa(process.env.VITE_VERACITY_LRS_SECRET);
 
 /* ----------------------
   SEND xAPI STATEMENTS

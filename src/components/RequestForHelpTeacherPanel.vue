@@ -89,13 +89,11 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import Avatar from "@/components/Avatar.vue";
+import RequestForHelpResponseDialog from "@/components/RequestForHelpResponseDialog.vue";
+import { dbMixins } from "@/mixins/DbMixins.js";
 import moment from "moment";
-
-import RequestForHelpResponseDialog from "../components/RequestForHelpResponseDialog";
-import { dbMixins } from "../mixins/DbMixins";
-
-import Avatar from "../components/Avatar.vue";
+import { mapState, mapActions } from "vuex";
 
 export default {
   name: "RequestForHelpTeacherPanel",

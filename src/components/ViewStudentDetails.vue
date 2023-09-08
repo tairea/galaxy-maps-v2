@@ -83,8 +83,8 @@
 </template>
 
 <script>
+import StudentCardStatus from "@/components/StudentCard/StudentCardStatus.vue";
 import { mapState } from "vuex";
-import StudentCardStatus from "./StudentCard/StudentCardStatus";
 
 export default {
   name: "ViewStudentDetails",

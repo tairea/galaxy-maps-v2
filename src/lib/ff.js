@@ -1,6 +1,6 @@
 // Use this script for any firebase functions (ff) that are completely independant of components
-import { db, functions } from "../store/firestoreConfig";
 import { startGalaxyXAPIStatement } from "@/lib/veracityLRS";
+import { db, functions } from "@/store/firestoreConfig.ts";
 
 export const getCourseById = async (id) => {
   const course = await db

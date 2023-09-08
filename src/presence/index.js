@@ -1,6 +1,6 @@
 //=========== USER PRECENSE SYSTEM ===================
-import store from "@/store";
-import firebase from "firebase";
+import store from "@/store/index.js";
+import firebase from "firebase/compat/app";
 
 export const startPresenceSystem = (uid) => {
   if (!uid) return;

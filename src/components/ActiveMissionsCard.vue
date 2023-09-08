@@ -61,10 +61,8 @@
 </template>
 
 <script>
-import MissionCompletedDialog from "../components/MissionCompletedDialog.vue";
-import RequestHelpDialog from "../components/RequestHelpDialog.vue";
-
-import { db } from "../store/firestoreConfig";
+import MissionCompletedDialog from "@/components/MissionCompletedDialog.vue";
+import RequestHelpDialog from "@/components/RequestHelpDialog.vue";
 import { mapState, mapGetters } from "vuex";
 
 export default {

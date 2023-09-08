@@ -71,10 +71,9 @@
 </template>
 
 <script>
-import firebase from "firebase";
-import { db } from "@/store/firestoreConfig";
-
 import BackButton from "@/components/BackButton";
+import { db } from "@/store/firestoreConfig";
+import firebase from "firebase/compat/app";
 
 export default {
   name: "Register",

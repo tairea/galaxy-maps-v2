@@ -112,13 +112,12 @@
 </template>
 
 <script>
-import SolarSystem from "../components/SolarSystem";
-import MissionCompletedDialog from "../components/MissionCompletedDialog";
+import SolarSystem from "@/components/SolarSystem.vue";
+import MissionCompletedDialog from "@/components/MissionCompletedDialog.vue";
+import { dbMixins } from "@/mixins/DbMixins.js";
 import { mdiTextBoxSearchOutline } from "@mdi/js";
-
-import { mapState, mapGetters } from "vuex";
-import { dbMixins } from "../mixins/DbMixins";
 import { DateTime } from "luxon";
+import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "SubmissionStudentCard",

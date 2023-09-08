@@ -49,10 +49,10 @@
   </v-dialog>
 </template>
 <script>
-import { mdiInformationVariant, mdiDelete, mdiClose } from "@mdi/js";
 import { db } from "@/store/firestoreConfig";
+import { mdiInformationVariant, mdiDelete, mdiClose } from "@mdi/js";
 import { mapState } from "vuex";
-import firebase from "firebase";
+import firebase from "firebase/compat/app";
 
 export default {
   name: "ConfirmDeleteStudentDialog",

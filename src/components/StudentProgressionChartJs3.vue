@@ -73,11 +73,9 @@
 
 <script>
 import Chart from "@/components/Chart.vue";
-
+import "chartjs-adapter-luxon";
 import { DateTime } from "luxon";
 import { mapState, mapGetters } from "vuex";
-
-import "chartjs-adapter-luxon";
 
 export default {
   props: {

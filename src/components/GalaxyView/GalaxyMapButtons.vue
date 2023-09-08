@@ -87,6 +87,7 @@ import {
   mdiArrowExpandAll,
   mdiContentSaveCheck,
 } from "@mdi/js";
+
 export default {
   name: "GalaxyMapButtons",
   components: {},

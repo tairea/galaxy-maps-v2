@@ -32,13 +32,12 @@
 </template>
 
 <script>
-import { db } from "../store/firestoreConfig";
+import SubmissionTeacherFrame from "@/components/SubmissionTeacherFrame.vue";
+import RequestForHelpTeacherFrame from "@/components/RequestForHelpTeacherFrame.vue";
+import StudentProgressionChartJs3 from "@/components/StudentProgressionChartJs3.vue";
+import { dbMixins } from "@/mixins/DbMixins.js";
+import { db } from "@/store/firestoreConfig.ts";
 import { mapState, mapGetters } from "vuex";
-import { dbMixins } from "../mixins/DbMixins";
-
-import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame";
-import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame";
-import StudentProgressionChartJs3 from "../components/StudentProgressionChartJs3";
 
 export default {
   name: "AllStudentView",
