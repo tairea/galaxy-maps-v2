@@ -12,12 +12,15 @@
     />
     <div class="flexContainer">
       <Galaxies
-        v-if="!loading"
+        v-if="!loading && validSlug"
         ref="galaxyMap"
         :highlightCourse="clickedCourseId"
         @courseClicked="courseClicked($event)"
         @createGalaxy="showDialog = true"
       />
+      <div v-if="!loading && !validSlug">
+        <p>Sorry, destination not found</p>
+      </div>
     </div>
     <!-- <div class="buttons"> -->
     <CreateEditDeleteGalaxyDialog
@@ -34,12 +37,13 @@ import CreateEditDeleteGalaxyDialog from "../components/CreateEditDeleteGalaxyDi
 import GalaxyListPanel from "../components/GalaxyListPanel";
 import GalaxyListInfoPanel from "../components/GalaxyListInfoPanel";
 import Galaxies from "../components/Galaxies";
+import { db } from "../store/firestoreConfig";
 
 import { mapState, mapGetters } from "vuex";
 
 export default {
   name: "GalaxyList",
-  // props: ["display"],
+  props: ["slug"],
   components: {
     CreateEditDeleteGalaxyDialog,
     GalaxyListPanel,
@@ -54,6 +58,7 @@ export default {
       clickedCourseId: null,
       courseType: null,
       showDialog: false,
+      validSlug: true,
     };
   },
   computed: {
@@ -64,7 +69,17 @@ export default {
     // We don't care about waiting for this to finish before completing mounted
     // because when it's finished it will automatically update our list of courses
     // TODO: This binds all courses. Should prob only bind courses relevant to user
-    this.$store.dispatch("bindAllCourses").then(() => {
+    let owner;
+    if (this.slug != null) {
+      const docRef = await db.collection("slugs").doc(this.slug).get();
+      const data = docRef.data();
+      if (data != null) {
+        owner = data.owner;
+      } else {
+        this.validSlug = false;
+      }
+    }
+    this.$store.dispatch("bindCourses", { owner }).then(() => {
       this.loading = false;
     });
     if (this.courses.length > 0) {

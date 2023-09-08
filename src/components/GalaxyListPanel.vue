@@ -10,7 +10,7 @@
         <div
           class="subPanel"
           style="border-color: var(--v-cohortAccent-base)"
-          v-if="getAllSubmittedCourses"
+          v-if="user.loggedIn && getAllSubmittedCourses"
         >
           <p
             class="galaxyListPanelLabel overline mx-4 cohortAccent--text"
@@ -32,7 +32,7 @@
         </div>
 
         <!-- LEARNING -->
-        <div class="subPanel">
+        <div v-if="user.loggedIn" class="subPanel">
           <p class="galaxyListPanelLabel overline mx-4">EXPLORING</p>
           <div v-if="getLearningCourses.length">
             <!-- COURSE CARD -->
@@ -50,7 +50,7 @@
         </div>
 
         <!-- TEACHING -->
-        <div class="subPanel">
+        <div v-if="user.loggedIn" class="subPanel">
           <p class="galaxyListPanelLabel overline mx-4">MAPPED BY YOU</p>
           <!-- Create NEW GALAXY button -->
           <div class="d-flex justify-center mb-4">
@@ -79,7 +79,10 @@
         </div>
 
         <!-- SUBMITTED (CREATED & IN REVIEW) -->
-        <div class="subPanel" v-if="getSubmittedCourses.length > 0">
+        <div
+          class="subPanel"
+          v-if="user.loggedIn && getSubmittedCourses.length > 0"
+        >
           <p class="galaxyListPanelLabel overline mx-4">IN REVIEW</p>
           <div>
             <!-- COURSE CARD -->
@@ -210,7 +213,7 @@ export default {
     getTeachingCourses() {
       return this.courses.filter(
         (course) =>
-          this.user.isLoggedIn &&
+          this.user.loggedIn &&
           course.mappedBy.personId == this.person.id &&
           course.status != "submitted"
       );
@@ -222,7 +225,7 @@ export default {
           // TODO: make firebase rule for this
           course.public == true &&
           course.status == "published" &&
-          !(this.user.isLoggedIn && this.getLearningCourses.includes(course))
+          !(this.user.loggedIn && this.getLearningCourses.includes(course))
       );
     },
   },

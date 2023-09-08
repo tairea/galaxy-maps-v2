@@ -22,7 +22,7 @@
         :people="peopleInTopic"
       />
 
-      <BackButton :toPath="{ path: '/galaxy/' + currentCourseId }" />
+      <BackButton :toPath="'/galaxy/' + currentCourseId" />
     </div>
 
     <!--==== Main section ====-->

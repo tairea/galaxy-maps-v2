@@ -140,11 +140,8 @@ export default new Vuex.Store({
     RESET_STATE(state) {
       Object.assign(state, getDefaultState());
     },
-    SET_LOGGED_IN(state, value) {
-      state.user.loggedIn = value;
-    },
     SET_USER(state, data) {
-      state.user.data = data;
+      state.user = data;
     },
     SET_PERSON(state, data) {
       state.person = data;
@@ -234,24 +231,30 @@ export default new Vuex.Store({
   },
   actions: {
     setUser({ commit }, user) {
-      commit("SET_LOGGED_IN", user !== null);
       if (user) {
         commit("SET_USER", {
-          admin: user.admin,
-          displayName: user.displayName,
-          email: user.email,
-          verified: user.emailVerified,
-          id: user.uid,
+          loggedIn: true,
+          data: {
+            admin: user.admin,
+            displayName: user.displayName,
+            email: user.email,
+            verified: user.emailVerified,
+            id: user.uid,
+          }
         });
       } else {
-        commit("SET_USER", null);
+        commit("SET_USER", {
+          loggedIn: false,
+          data: null
+        });
       }
     },
     // ===== Firestore - BIND ALL
-    bindAllCourses: firestoreAction(({ bindFirestoreRef }) => {
-      return bindFirestoreRef("courses", db.collection("courses"), {
-        // maxRefDepth: 2,
-        // reset: false,
+    bindCourses: firestoreAction(({ bindFirestoreRef }, payload) => {
+      const query = payload.owner != null ? db.collection("courses").where("owner", '==', payload.owner) : db.collection("courses");
+      return bindFirestoreRef("courses", query, {
+        maxRefDepth: 2,
+        reset: false,
       });
     }),
     bindAllCohorts: firestoreAction(({ bindFirestoreRef }) => {

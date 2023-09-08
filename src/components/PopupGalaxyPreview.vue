@@ -1,23 +1,46 @@
 <template>
   <!-- POPUP -->
-  <div ref="popup" class="ss-info-panel" :class="draft ? 'draft-border' : 'panel-border'" :style="
-    galaxyListInfoPanel ? 'backdrop-filter:none;border:none;width:100%' : ''
-  " v-if="course">
+  <div
+    ref="popup"
+    class="ss-info-panel"
+    :class="draft ? 'draft-border' : 'panel-border'"
+    :style="
+      galaxyListInfoPanel ? 'backdrop-filter:none;border:none;width:100%' : ''
+    "
+    v-if="course"
+  >
     <div class="ss-details">
       <div>
         <p class="info-panel-label mb-2">
-          <span class="galaxyColour statusLabel"><span>{{ courseStatus }}</span> Galaxy</span>
+          <span class="galaxyColour statusLabel"
+            ><span>{{ courseStatus }}</span> Galaxy</span
+          >
           <br />
           <span>{{ course.title }}</span>
         </p>
-        <v-img v-if="course.image" class="galaxy-image" :src="course.image.url"></v-img>
+        <v-img
+          v-if="course.image"
+          class="galaxy-image"
+          :src="course.image.url"
+        ></v-img>
         <p ref="description" class="mt-2 galaxy-description">
           <!-- {{ course.description }} -->
           {{ maybeTruncate(course.description) }}
-          <a style="border-bottom: 1px solid" v-if="readmore" @click="showFullDescription()">Read more</a>
+          <a
+            style="border-bottom: 1px solid"
+            v-if="readmore"
+            @click="showFullDescription()"
+            >Read more</a
+          >
         </p>
       </div>
-      <v-btn text x-small color="missionAccent" class="close-button" @click="close">
+      <v-btn
+        text
+        x-small
+        color="missionAccent"
+        class="close-button"
+        @click="close"
+      >
         <v-icon>{{ mdiClose }}</v-icon>
       </v-btn>
     </div>
@@ -67,9 +90,37 @@
     </div>
 
     <div>
-      <div v-if="teacher" class="ss-actions py-4">
-        <v-btn class="view-ss-button pa-5" dark small color="galaxyAccent" outlined tile title="View Galaxy"
-          @click="routeToGalaxyEdit">
+      <!-- Not logged in -->
+      <div v-if="!user.loggedIn" class="ss-actions py-4">
+        <div class="not-allowed">
+          <v-btn
+            class="view-ss-button pa-5"
+            dark
+            small
+            color="galaxyAccent"
+            outlined
+            tile
+            title="View Galaxy"
+            @click="routeToGalaxyEdit"
+            :disabled="!user.loggedIn"
+          >
+            View Galaxy
+          </v-btn>
+        </div>
+        <!-- Signin Dialog -->
+        <LoginDialog />
+      </div>
+      <div v-else-if="teacher" class="ss-actions py-4">
+        <v-btn
+          class="view-ss-button pa-5"
+          dark
+          small
+          color="galaxyAccent"
+          outlined
+          tile
+          title="View Galaxy"
+          @click="routeToGalaxyEdit"
+        >
           View Galaxy
         </v-btn>
 
@@ -90,14 +141,33 @@
       </div>
       <!-- Student Galaxy Actions -->
       <div v-else class="ss-actions py-4">
-        <v-btn v-if="enrolled" class="view-ss-button pa-5" dark small color="galaxyAccent" outlined tile
-          title="View Galaxy" @click="routeToGalaxyEdit">
+        <v-btn
+          v-if="enrolled"
+          class="view-ss-button pa-5"
+          dark
+          small
+          color="galaxyAccent"
+          outlined
+          tile
+          title="View Galaxy"
+          @click="routeToGalaxyEdit"
+        >
           Resume Galaxy
         </v-btn>
         <!-- starting galaxy status-->
 
-        <v-btn v-else class="view-ss-button pa-5" dark small color="galaxyAccent" outlined tile title="View Galaxy"
-          @click="startThisGalaxy" :loading="loading">
+        <v-btn
+          v-else
+          class="view-ss-button pa-5"
+          dark
+          small
+          color="galaxyAccent"
+          outlined
+          tile
+          title="View Galaxy"
+          @click="startThisGalaxy"
+          :loading="loading"
+        >
           Start Galaxy
         </v-btn>
         <div v-if="loading" style="width: 100%">
@@ -109,6 +179,7 @@
 </template>
 
 <script>
+import LoginDialog from "../components/Dialogs/LoginDialog";
 import { db } from "../store/firestoreConfig";
 import { dbMixins } from "../mixins/DbMixins";
 import { getCohortById, assignTopicsAndTasksToMe } from "../lib/ff";
@@ -119,7 +190,7 @@ import { mdiClose } from "@mdi/js";
 export default {
   name: "PopupGalaxyPreview",
   mixins: [dbMixins],
-  components: {},
+  components: { LoginDialog },
   props: {
     course: {
       type: Object,
@@ -128,9 +199,6 @@ export default {
       },
     },
     galaxyListInfoPanel: { type: Boolean, default: false },
-  },
-  computed: {
-    ...mapGetters(["person"]),
   },
   data() {
     return {
@@ -143,17 +211,6 @@ export default {
       mappedAuthorImage: "",
       readmore: false,
     };
-  },
-  watch: {
-    course() {
-      console.log("course changed: ", this.course);
-      this.setAccountType();
-      this.setImages();
-    },
-  },
-  async mounted() {
-    this.setAccountType();
-    this.setImages();
   },
   computed: {
     ...mapState(["person", "user"]),
@@ -168,6 +225,17 @@ export default {
       else if (this.course.status == "submitted") return "Submitted";
       else if (!this.course.public) return "Private";
     },
+  },
+  watch: {
+    course() {
+      console.log("course changed: ", this.course);
+      this.setAccountType();
+      this.setImages();
+    },
+  },
+  async mounted() {
+    this.setAccountType();
+    this.setImages();
   },
   methods: {
     maybeTruncate(value) {
@@ -198,10 +266,10 @@ export default {
       this.teacher = false;
       if (
         this.course.mappedBy.personId === this.person.id ||
-        this.user.data.admin
+        this.user.data?.admin
       ) {
         this.teacher = true;
-      } else {
+      } else if (this.user.loggedIn) {
         const querySnapshot = await db
           .collection("people")
           .doc(this.person.id)
@@ -214,6 +282,8 @@ export default {
         } else {
           this.enrolled = true;
         }
+      } else {
+        this.enrolled = false;
       }
     },
     close() {
@@ -373,6 +443,13 @@ export default {
       font-style: italic;
       margin-bottom: 0px;
     }
+  }
+
+  .not-allowed {
+    cursor: not-allowed !important;
+    width: 100%;
+    display: flex;
+    justify-content: center;
   }
 }
 

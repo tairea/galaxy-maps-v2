@@ -3,7 +3,7 @@
     <div id="left-section">
       <CohortInfo />
       <AssignedInfo assignCourses="true" />
-      <BackButton :toPath="{ path: '/base/cohorts' }" />
+      <BackButton :toPath="'/cohorts'" />
     </div>
 
     <div id="main-section">

@@ -204,6 +204,8 @@ export default {
       const repositionedNodes = this.repositionCoursesBasedOnBoundariesV2();
       if (repositionedNodes.length) {
         this.$store.commit("updateAllNodesForDisplay", repositionedNodes);
+      } else {
+        this.loading = false;
       }
       this.needsCentering = true;
     },
