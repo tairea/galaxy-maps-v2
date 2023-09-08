@@ -199,14 +199,14 @@
 
 <script lang="js">
 // @ is an alias to /src
-import CreateEditDeleteCohortDialog from "../components/CreateEditDeleteCohortDialog";
-import CreateEditDeleteOrganisationDialog from "../components/CreateEditDeleteOrganisationDialog";
-import CreateAdminDialog from "../components/CreateAdminDialog";
-import EditOrganisationButtonDialog from "../components/EditOrganisationButtonDialog";
-import Cohort from "../components/Cohort";
-import CohortPanelV2 from "../components/CohortPanelV2";
-import TimeframeFilters from "../components/TimeframeFilters";
-import Organisation from "../components/Organisation";
+import CreateEditDeleteCohortDialog from "../components/CreateEditDeleteCohortDialog.vue";
+import CreateEditDeleteOrganisationDialog from "../components/CreateEditDeleteOrganisationDialog.vue";
+import CreateAdminDialog from "../components/CreateAdminDialog.vue";
+import EditOrganisationButtonDialog from "../components/EditOrganisationButtonDialog.vue";
+import Cohort from "../components/Cohort.vue";
+import CohortPanelV2 from "../components/CohortPanelV2.vue";
+import TimeframeFilters from "../components/TimeframeFilters.vue";
+import Organisation from "../components/Organisation.vue";
 
 import { mapState, mapGetters, mapActions } from "vuex";
 
@@ -240,10 +240,15 @@ export default {
     expand: false,
     paidFeatureMessage: `<div class="ma-2"><p class="text-center">Paid feature.</p><p class="text-center">Contact us to upgrade: <a href="mailto:base@galaxymaps.io">base@galaxymaps.io</a></p></div>`
   }),
-  mounted() {
+  watch: {
+    cohorts() {
+      this.orderCohorts();
+    }
+  },
+  async mounted() {
     // trigger VuexFire bindCohorts & bindOrganisations in Store
-    this.getCohortsAndOrganisations();
-    this.orderCohorts()
+    await this.getCohortsAndOrganisations();
+    this.orderCohorts();
     this.expand = true
   },
   computed: {
@@ -266,12 +271,12 @@ export default {
         return this.cohorts.filter((cohort) => cohort.organisation == "");
       }
     },
-    getCohortsAndOrganisations() {
+    async getCohortsAndOrganisations() {
       if (this.user.data.admin) {
-        this.bindAllCohorts()
-        this.bindAllOrganisations();
+        await this.bindAllCohorts()
+        await this.bindAllOrganisations();
       } else {
-        this.getCohortsByPersonId(this.person)
+        await this.getCohortsByPersonId(this.person);
       }
     },
     editOrgDialog(orgId) {
@@ -370,9 +375,7 @@ export default {
       });
     },
     orderCohorts() {
-      this.orderedCohorts = this.cohorts.sort((a, b) => {
-        return a.teacher ? -1 : 1
-      })
+      this.orderedCohorts = [...this.cohorts].sort((a, b) => a.teacher ? -1 : 1)
     }
   },
 };
