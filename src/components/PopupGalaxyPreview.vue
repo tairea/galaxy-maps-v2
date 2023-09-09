@@ -108,7 +108,7 @@
           </v-btn>
         </div>
         <!-- Signin Dialog -->
-        <LoginDialog />
+        <LoginDialog/>
       </div>
       <div v-else-if="teacher" class="ss-actions py-4">
         <v-btn
