@@ -29,7 +29,15 @@
       class="galaxy-image mt-2"
       :src="course.image.url"
     ></v-img>
-    <p class="galaxy-description">{{ course.description }}</p>
+    <p ref="description" class="galaxy-description">  
+      <!-- {{ course.description }} -->
+          {{ maybeTruncate(course.description) }}
+          <a
+            style="border-bottom: 1px solid"
+            v-if="readmore"
+            @click="showFullDescription()"
+            >Read more</a
+          ></p>
     <CreateEditDeleteGalaxyDialog
       v-if="teacher"
       :edit="true"
@@ -50,12 +58,34 @@ export default {
     CreateEditDeleteGalaxyDialog,
   },
   mounted() {},
+  data() {
+    return {
+      readmore: false,
+    }
+  },
   computed: {
     ...mapState(["person"]),
     visibility() {
       return this.course.public ? "Public" : "Private";
     },
   },
+  
+  methods: {
+    maybeTruncate(value) {
+      if (!value) return "";
+      if (value.length <= 100) {
+        return value;
+      } else {
+        // show read more button
+        this.readmore = true;
+        // limit to 100 characters
+        return value.substring(0, 100) + "...";
+      }
+    },
+    showFullDescription() {
+      this.$refs.description.innerHTML = this.course.description;
+    },
+  }
 };
 </script>
 
@@ -101,6 +131,7 @@ export default {
     margin-top: 10px;
     font-size: 0.8rem;
     color: var(--v-galaxyAccent-base);
+    font-style: italic;
   }
 }
 

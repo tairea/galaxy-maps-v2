@@ -2,7 +2,7 @@
   <div class="mission-container">
     <h2 class="missions-label">Missions</h2>
 
-    <div>
+    <div style="width: 100%">
       <!-- loading spinner -->
       <div
         class="d-flex justify-center align-center"

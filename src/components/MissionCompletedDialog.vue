@@ -6,15 +6,8 @@
           <!-- COMPLETED BUTTON (looks like checkbox) -->
           <template v-slot:activator="{ on, attrs }">
             <!-- IF ACTIVE -->
-            <v-btn
-              v-if="active || declined"
-              v-bind="attrs"
-              v-on="on"
-              class="mission-edit-button"
-              :color="active ? 'missionAccent' : 'cohortAccent'"
-              icon
-              x-large
-            >
+            <v-btn v-if="active || declined" v-bind="attrs" v-on="on" class="mission-edit-button"
+              :color="active ? 'missionAccent' : 'cohortAccent'" icon x-large>
               <v-icon v-if="task.submissionRequired">
                 {{ mdiCloudUploadOutline }}
               </v-icon>
@@ -28,9 +21,7 @@
             <div v-if="task.submissionRequired" class="dialog-header">
               <p class="dialog-title">
                 Submission requirements for:
-                <strong
-                  ><i>{{ task.title }}</i></strong
-                >
+                <strong><i>{{ task.title }}</i></strong>
               </p>
               <div class="d-flex align-center">
                 <v-icon left color="missionAccent">{{
@@ -47,9 +38,7 @@
             <div v-else class="dialog-header">
               <p class="dialog-title">
                 Have you completed Mission:
-                <strong
-                  ><i>{{ task.title }}</i></strong
-                >
+                <strong><i>{{ task.title }}</i></strong>
                 ?
               </p>
               <div class="d-flex align-center">
@@ -69,10 +58,7 @@
                   <!-- submission message speech bubble -->
                   <div class="d-inline-flex">
                     <div>
-                      <v-img
-                        class="instructor-image mb-5 ml-5 mr-2"
-                        :src="mappedByImageURL"
-                      ></v-img>
+                      <v-img class="instructor-image mb-5 ml-5 mr-2" :src="mappedByImageURL"></v-img>
                     </div>
                     <div class="d-flex flex-column instructor-details">
                       <p class="ma-0">
@@ -82,10 +68,7 @@
                     </div>
                   </div>
                   <v-row class="d-flex align-center speech-bubble">
-                    <p
-                      v-html="task.submissionInstructions"
-                      class="submission-dialog-description ma-0"
-                    ></p>
+                    <p v-html="task.submissionInstructions" class="submission-dialog-description ma-0"></p>
                     <!-- <p class="submission-dialog-description ma-0">
                         {{
                           task.submissionInstructions
@@ -106,16 +89,9 @@
                       work if required)
                     </p>
                   </div>
-                  <vue-editor
-                    v-model="submissionLink"
-                    useCustomImageHandler
-                    @imageAdded="handleImageAdded"
-                    class="mb-8 quill"
-                    :class="{ 'active-quill': quillFocused }"
-                    :editor-toolbar="customToolbar"
-                    @focus="quillFocused = true"
-                    @blur="quillFocused = false"
-                  />
+                  <vue-editor v-model="submissionLink" useCustomImageHandler @imageAdded="handleImageAdded"
+                    class="mb-8 quill" :class="{ 'active-quill': quillFocused }" :editor-toolbar="customToolbar"
+                    @focus="quillFocused = true" @blur="quillFocused = false" />
                 </div>
               </div>
               <!-- End of v-if="submission" -->
@@ -123,57 +99,26 @@
               <!-- ACTION BUTTONS -->
               <div class="action-buttons">
                 <!-- YES, I HAVE COMPLETED -->
-                <v-btn
-                  v-if="active && task.submissionRequired"
-                  outlined
-                  color="baseAccent"
-                  @click="submitWorkForReview()"
-                  class="mr-2"
-                  :loading="loading"
-                  :disabled="disabled"
-                  v-bind="attrs"
-                  v-on="on"
-                >
+                <v-btn v-if="active && task.submissionRequired" outlined color="baseAccent" @click="submitWorkForReview()"
+                  class="mr-2" :loading="loading" :disabled="disabled" v-bind="attrs" v-on="on">
                   <v-icon left> {{ mdiCloudUploadOutline }} </v-icon>
                   SUBMIT WORK FOR REVIEW
                 </v-btn>
-                <v-btn
-                  v-else-if="declined && task.submissionRequired"
-                  outlined
-                  color="baseAccent"
-                  @click="reSubmitWorkForReview()"
-                  class="mr-2"
-                  :loading="loading"
-                  :disabled="disabled"
-                  v-bind="attrs"
-                  v-on="on"
-                >
+                <v-btn v-else-if="declined && task.submissionRequired" outlined color="baseAccent"
+                  @click="reSubmitWorkForReview()" class="mr-2" :loading="loading" :disabled="disabled" v-bind="attrs"
+                  v-on="on">
                   <v-icon left> {{ mdiCheck }} </v-icon>
                   RE-SUBMIT WORK FOR REVIEW
                 </v-btn>
-                <v-btn
-                  v-else
-                  outlined
-                  color="baseAccent"
-                  @click="markAsCompleted()"
-                  class="mr-2"
-                  :loading="loading"
-                  :disabled="disabled"
-                  v-bind="attrs"
-                  v-on="on"
-                >
+                <v-btn v-else outlined color="baseAccent" @click="markAsCompleted()" class="mr-2" :loading="loading"
+                  :disabled="disabled" v-bind="attrs" v-on="on">
                   <v-icon left> {{ mdiCheck }} </v-icon>
                   YES, I HAVE COMPLETED THIS MISSION
                 </v-btn>
 
                 <!-- CANCEL -->
-                <v-btn
-                  outlined
-                  :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
-                  class="ml-2"
-                  @click="cancel"
-                  :disabled="disabled || loading"
-                >
+                <v-btn outlined :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'" class="ml-2" @click="cancel"
+                  :disabled="disabled || loading">
                   <v-icon left> {{ mdiClose }} </v-icon>
                   Cancel
                 </v-btn>
@@ -203,13 +148,8 @@
               <!-- ACTION BUTTONS -->
               <div class="action-buttons">
                 <!-- CANCEL -->
-                <v-btn
-                  outlined
-                  :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
-                  class="ml-2"
-                  @click="cancel"
-                  :disabled="disabled || loading"
-                >
+                <v-btn outlined :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'" class="ml-2" @click="cancel"
+                  :disabled="disabled || loading">
                   <v-icon left> {{ mdiClose }} </v-icon>
                   CLOSE
                 </v-btn>
@@ -612,6 +552,8 @@ export default {
       }
     },
     async unlockNextTopics() {
+      //TODO: guard against error (eg. untick "mission copmleted" if unlock fails)
+
       // ==== all tasks/missions completed. unlock next topics ====
       const querySnapshot = await db
         .collection("people")
@@ -686,7 +628,7 @@ export default {
     },
     async getMappedByPersonsImage(personId) {
       const person = await this.MXgetPersonByIdFromDB(personId);
-      this.mappedByImageURL = person.image.url;
+      this.mappedByImageURL = person.image?.url
     },
     async sendTaskSubmission(
       teacherId,
@@ -711,11 +653,11 @@ export default {
       // ceate a storage ref
       var storageRef = storage.ref(
         "submission-images/student-" +
-          this.person.id +
-          "-task-" +
-          this.task.id +
-          "-" +
-          file.name
+        this.person.id +
+        "-task-" +
+        this.task.id +
+        "-" +
+        file.name
       );
 
       // upload a file
@@ -750,7 +692,7 @@ export default {
 </script>
 
 <style>
-.submission-dialog-description > p {
+.submission-dialog-description>p {
   margin: 10px 0px !important;
 }
 </style>

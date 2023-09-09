@@ -312,7 +312,9 @@ pre {
 .task-description > ul > li {
   line-height: 20px !important;
 }
-
+.task-description {
+  width: 100%;
+}
 .task-description a {
   color: var(--v-galaxyAccent-base) !important;
 }
