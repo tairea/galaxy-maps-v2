@@ -13,7 +13,7 @@
       <!-- ASSIGN GALAXY -->
     </template>
 
-    <!-- NOT!!!! OK TO PUBLISH DIALOG (No missions) -->
+    <!-- NOT OK!!!! TO PUBLISH DIALOG (No missions) -->
     <div v-if="topicsWithoutTasks.length > 0" class="create-dialog">
       <div class="dialog-header">
         <div class="d-flex mb-4">
@@ -58,7 +58,7 @@
       </div>
     </div>
 
-    <!-- NOT!!!! OK TO PUBLISH DIALOG (No introduction node) -->
+    <!-- NOT OK!!!! TO PUBLISH DIALOG (No introduction node) -->
     <div v-else-if="hasIntro == false" class="create-dialog">
       <div class="dialog-header">
         <div class="d-flex mb-4">
@@ -126,7 +126,7 @@
             <p>
               Publish
               <span style="font-weight: 600; color: var(--v-galaxyAccent-base)">{{ course.title }}</span>
-              galaxy to make publically visible
+              galaxy to make publicly visible
             </p>
           </div>
           <p v-else class="dialog-description">
@@ -145,10 +145,10 @@
             Choose whether you would like this galaxy to be:
           </p>
 
-          <v-radio-group row v-model="courseOptions.public" color="missionAccent" :light="!dark" :dark="dark">
+          <v-radio-group v-model="courseOptions.public" color="missionAccent" :light="!dark" :dark="dark">
             <v-radio label="private (invite only)" :value="false" color="missionAccent" class="label-text mb-4"></v-radio>
 
-            <v-radio label="public (discoverable by all Galaxy Maps users)" :value="true" color="missionAccent"
+            <v-radio label="public (Available to all Galaxy Maps users)" :value="true" color="missionAccent"
               class="label-text"></v-radio>
           </v-radio-group>
         </div>
@@ -170,9 +170,9 @@
             ></v-radio>
           </v-radio-group>
         </div> -->
-        <p class="caption ma-0" v-if="courseOptions.public">
+        <p class="caption ma-0" v-if="courseOptions.public && !admin">
           <i>(Public courses need to be submitted for review by Galaxy Map
-            moderators)</i>
+            moderators. This should be completed within 48 hours.)</i>
         </p>
       </div>
       <!-- ACTION BUTTONS -->

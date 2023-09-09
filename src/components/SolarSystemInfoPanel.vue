@@ -47,6 +47,7 @@
               <strong>View system to create a mission.</strong>
             </p>
           </div>
+          <!-- list of Mission cards -->
           <div
             v-for="(task, index) in tasks"
             :key="task.id"
@@ -302,6 +303,10 @@ export default {
               color: var(--v-galaxyAccent-base);
             }
           }
+        }
+
+        .task-card:last-child {
+          margin-bottom: 50px;
         }
       }
 

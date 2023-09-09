@@ -10,31 +10,10 @@
       <p class="overline mt-3 baseAccent--text">
         Enter your email to reset your password
       </p>
-      <v-form
-        ref="form"
-        v-model="valid"
-        lazy-validation
-        class="my-6"
-        @keyup.native.enter="valid && login($event)"
-      >
-        <v-text-field
-          type="email"
-          v-model="email"
-          label="E-mail"
-          :rules="emailRules"
-          required
-          color="baseAccent"
-          outlined
-          class="custom-input"
-        ></v-text-field>
-        <v-btn
-          :disabled="!valid"
-          color="baseAccent"
-          class="mr-4"
-          @click="resetPassword"
-          outlined
-          width="100%"
-        >
+      <v-form ref="form" v-model="valid" lazy-validation class="my-6" @keyup.native.enter="valid && login($event)">
+        <v-text-field type="email" v-model="email" label="E-mail" :rules="emailRules" required color="baseAccent" outlined
+          class="custom-input"></v-text-field>
+        <v-btn :disabled="!valid" color="baseAccent" class="mr-4" @click="resetPassword" outlined width="100%">
           Reset Password
         </v-btn>
       </v-form>
@@ -63,7 +42,7 @@ export default {
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
     ],
   }),
-  mounted() {},
+  mounted() { },
   methods: {
     login() {
       firebase
@@ -77,7 +56,7 @@ export default {
         })
         .then(() => {
           console.log("Successfully logged in");
-          this.$router.push("/base/galaxies/my");
+          this.$router.push("/");
         })
         .catch((error) => {
           this.$store.commit("setSnackbar", {
