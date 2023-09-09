@@ -60,6 +60,12 @@
                   prepend-icon="" hide-details></v-file-input>
                 <v-progress-linear color="missionAccent" :value="percentageGalaxy" class=""></v-progress-linear>
 
+
+                <!-- ===== Owner field. This is who owns the course e.g. you might be creating the course for an organisation ==== -->
+                <!-- 1. dropdown menu of the organisations that the user is in. -->
+                
+
+
                 <!-- ===== Credit other learning content course ==== -->
                 <!-- <div class="author-checkbox-wrap d-flex flex-column my-4">
                   <v-checkbox

@@ -1,8 +1,13 @@
 <template>
-  <v-hover v-model="hover">
-    <div ref="userBar" class="userMenu" :class="{ showMenu: hover, miniMenu: miniNavMenu }">
-      <!-- USER MENU TOPBAR -->
-      <div class="blackBar">
+  <v-hover v-model="hover" v-if="showMenu" :disabled="!user.loggedIn">
+    <div ref="userBar" class="userMenu" :class="{ showMenu: hover, miniMenu: miniNavMenu, notSignedInMenu: !user.loggedIn }">
+      <!-- USER MENU TOP (BLACK) BAR -->
+      <div v-if="!user.loggedIn" class="blackBar">
+        <div class="d-flex justify-center align-center" style="width:80%">
+          <LoginDialog buttonMsg="SIGN IN or CREATE AN ACCOUNT" />
+        </div>
+      </div>
+      <div v-else class="blackBar">
         <div class="d-flex justify-center align-center">
           <v-progress-circular v-if="uploading" :rotate="360" :size="50" :width="2" :value="uploadPercentage"
             color="baseAccent">
@@ -99,6 +104,7 @@ import { mapState, mapActions, mapMutations } from "vuex";
 import ThemeColourPicker from "@/components/ThemeColourPicker.vue";
 import { db, storage } from "../store/firestoreConfig";
 import StudentEditDialog from "../components/StudentEditDialog.vue";
+import LoginDialog from "../components/Dialogs/LoginDialog";
 import {
   mdiAccount,
   mdiPencil,
@@ -113,6 +119,7 @@ export default {
   components: {
     ThemeColourPicker,
     StudentEditDialog,
+    LoginDialog
   },
   data() {
     return {
@@ -130,11 +137,20 @@ export default {
       image: {},
       onhover: false,
       hover: false,
+      showMenu: true,
       miniNavMenu: false,
+      notSignedInMenu: false,
     };
   },
   watch: {
     $route(to, from) {
+      // show/hide userbar completely
+      if (this.$route.name == "Login" || this.$route.name == "Verify" || this.$route.name == "Reset" || this.$route.name == "Register" ) {
+        this.showMenu = false;
+      } else {
+        this.showMenu = true;
+      }
+      // show/hide userbar mini version
       if (
         this.$route.name == "GalaxyView" ||
         this.$route.name == "SolarSystemView"
@@ -154,7 +170,7 @@ export default {
     }
   },
   computed: {
-    ...mapState(["person"]),
+    ...mapState(["person", "user"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -328,6 +344,10 @@ export default {
 .miniMenu {
   width: 90px;
   transition: width 0.3s ease-out 0.3s, bottom 0.3s ease-out;
+}
+
+.notSignedInMenu {
+  
 }
 
 .showMenu {

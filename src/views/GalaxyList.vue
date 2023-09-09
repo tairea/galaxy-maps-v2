@@ -22,22 +22,60 @@
         <p>Sorry, destination not found</p>
       </div>
     </div>
-    <!-- <div class="buttons"> -->
+
+    <div class="buttons">
+      <!-- Create button -->
+      <v-tooltip v-if="!user.loggedIn" top color="subBackground">
+        <template v-slot:activator="{ on, attrs }">
+          <v-row class="text-center" align="center" v-bind="attrs"
+            v-on="on">
+          <v-col cols="12">
+          <v-btn 
+            outlined 
+            color="baseAccent" 
+            @click="showDialog = true" 
+            :disabled="!user.loggedIn" 
+            class="createButton"
+            :style="clickedCourseId ? 'opacity:0' : 'opacity:1'"
+            >
+                  <v-icon left>
+                    {{ mdiPlus }}
+                  </v-icon>
+                  CREATE GALAXY
+                </v-btn>
+          </v-col>
+        </v-row>
+        </template>
+        <div>
+          <p
+            class="overline galaxyAccent--text ma-0"
+            style="font-size: 0.8rem;"
+          >
+          Sign in to Create a Galaxy
+          </p>
+        </div>
+      </v-tooltip>
+      
+      <!-- Discover button -->
+      <!-- <DiscoverGalaxyButton :hide="clickedCourseId"/> -->
+    </div>
+
+    <!-- Create Galaxy DIALOG -->
     <CreateEditDeleteGalaxyDialog
       :showDialog="showDialog"
       @close="showDialog = false"
     />
-    <!-- </div> -->
   </div>
 </template>
 
 <script>
 import CreateEditDeleteGalaxyDialog from "../components/CreateEditDeleteGalaxyDialog.vue";
-// import DiscoverGalaxyButton from "../components/DiscoverGalaxyButton";
+import DiscoverGalaxyButton from "../components/DiscoverGalaxyButton";
 import GalaxyListPanel from "../components/GalaxyListPanel.vue";
 import GalaxyListInfoPanel from "../components/GalaxyListInfoPanel.vue";
 import Galaxies from "../components/Galaxies.vue";
 import { db } from "../store/firestoreConfig";
+import { mdiPlus } from "@mdi/js";
 
 import { mapState, mapGetters } from "vuex";
 
@@ -48,11 +86,12 @@ export default {
     CreateEditDeleteGalaxyDialog,
     GalaxyListPanel,
     GalaxyListInfoPanel,
-    // DiscoverGalaxyButton,
+    DiscoverGalaxyButton,
     Galaxies,
   },
   data() {
     return {
+      mdiPlus,
       loading: true,
       // whichCoursesToDisplay: "all",
       clickedCourseId: null,
@@ -165,6 +204,10 @@ export default {
   left: 50%;
   transform: translate(-50%, 0%);
   display: flex;
+
+  .createButton {
+    transition: all 0.3s;
+  }
 }
 
 .button-row {

@@ -2,7 +2,20 @@
   <v-dialog v-model="dialog" width="300px">
     <!-- CREATE BUTTON -->
     <template v-if="!user.loggedIn" v-slot:activator="{ on, attrs }">
-      <p class="login-description text-center">
+        <v-btn
+          v-if="!user.loggedIn && buttonMsg"
+          v-bind="attrs"
+          v-on="on"
+          color="galaxyAccent"
+          small
+          class="pa-0"
+          text
+        >
+          {{buttonMsg}}
+        </v-btn>
+
+      <!-- Original sign in button -->
+      <p v-else class="login-description text-center">
         Please
         <v-btn
           v-if="!user.loggedIn"
@@ -109,7 +122,7 @@ import { queryXAPIStatement } from "@/lib/veracityLRS";
 
 export default {
   name: "Login",
-  props: ["showDialog"],
+  props: ["showDialog","buttonMsg"],
   components: {
     NewPassword,
     EmailSignIn,
