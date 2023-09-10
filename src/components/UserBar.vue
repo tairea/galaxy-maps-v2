@@ -157,7 +157,7 @@
 
 <script>
 import ThemeColourPicker from "@/components/ThemeColourPicker.vue";
-import LoginDialog from "@/components/Dialogs/LoginDialog";
+import LoginDialog from "@/components/Dialogs/LoginDialog.vue";
 import StudentEditDialog from "@/components/StudentEditDialog.vue";
 import { db, storage } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
