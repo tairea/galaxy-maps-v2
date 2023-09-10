@@ -1,9 +1,11 @@
 import firebase from "firebase/compat/app";
+import "firebase/compat/auth";
+import "firebase/compat/database";
 import "firebase/compat/firestore";
-import "firebase/compat/storage";
 import "firebase/compat/functions";
+import "firebase/compat/storage";
 
-var firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyBSOVegvIYfI49DykugprcD-yJFLf-WgNs",
   authDomain: "galaxy-maps-ac367.firebaseapp.com",
   databaseURL: "https://galaxy-maps-ac367-default-rtdb.firebaseio.com",
@@ -19,7 +21,7 @@ export const db = firebaseApp.firestore();
 // Initialize Firestore Storage
 export const storage = firebaseApp.storage();
 // Intialize Firebase Cloud Functions
-export const functions = firebaseApp.functions()
+export const functions = firebaseApp.functions();
 
 // Get a reference to the database service
 export const database = firebase.database();

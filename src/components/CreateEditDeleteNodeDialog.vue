@@ -8,13 +8,10 @@
           <div class="dialog-info">
             <p class="dialog-title">{{ dialogTitle }}</p>
             <div class="d-flex align-center">
-              <v-icon left color="missionAccent">{{
-                mdiInformationVariant
-              }}</v-icon>
+              <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
               <p class="dialog-description">
                 This Node is a <span class="mission-text">Topic</span> of the
-                <span class="galaxy-text">{{ this.course.title }}</span> Galaxy
-                map
+                <span class="galaxy-text">{{ this.course.title }}</span> Galaxy map
               </p>
             </div>
           </div>
@@ -109,8 +106,7 @@
                   >
                 </template>
                 <span>
-                  Prerequisites are topics that need to be completed before this
-                  one can be unlocked
+                  Prerequisites are topics that need to be completed before this one can be unlocked
                 </span>
               </v-tooltip>
             </p>
@@ -123,8 +119,7 @@
             >
               <template v-slot:label>
                 <span class="dialog-description"
-                  >Does another topic need to be completed before starting this
-                  one?</span
+                  >Does another topic need to be completed before starting this one?</span
                 >
               </template>
             </v-checkbox>
@@ -172,23 +167,12 @@
               UPDATE
             </v-btn>
 
-            <v-btn
-              v-if="editing"
-              outlined
-              color="error"
-              @click="deleteDialog()"
-              class="mr-2"
-            >
+            <v-btn v-if="editing" outlined color="error" @click="deleteDialog()" class="mr-2">
               <v-icon left> {{ mdiDelete }} </v-icon>
               DELETE
             </v-btn>
 
-            <v-btn
-              outlined
-              :color="dark ? 'yellow' : '#577399'"
-              class="ml-2"
-              @click="close"
-            >
+            <v-btn outlined :color="dark ? 'yellow' : '#577399'" class="ml-2" @click="close">
               <v-icon left> {{ mdiClose }} </v-icon>
               Cancel
             </v-btn>
@@ -209,9 +193,7 @@
             <strong>Warning!</strong> Delete {{ currentTopic.title }} System?
           </p>
           <div class="d-flex align-start">
-            <v-icon left color="missionAccent">{{
-              mdiInformationVariant
-            }}</v-icon>
+            <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
             <p class="dialog-description">
               Are you sure you want to <strong>DELETE</strong> this
               <span class="mission-text">{{ currentTopic.title }} System</span>?
@@ -229,13 +211,7 @@
         <!-- ACTION BUTTONS -->
         <div class="action-buttons">
           <!-- DELETE -->
-          <v-btn
-            outlined
-            color="error"
-            @click="deleteNode()"
-            class="ml-2"
-            :loading="deleting"
-          >
+          <v-btn outlined color="error" @click="deleteNode()" class="ml-2" :loading="deleting">
             <v-icon left> {{ mdiDelete }} </v-icon>
             DELETE
           </v-btn>
@@ -258,18 +234,12 @@
 </template>
 
 <script>
-import { db } from "@/store/firestoreConfig.ts";
-import { getPersonsTopicById } from "@/lib/ff.js";
-import {
-  mdiPencil,
-  mdiPlus,
-  mdiClose,
-  mdiCheck,
-  mdiDelete,
-  mdiInformationVariant,
-} from "@mdi/js";
+import { db } from "@/store/firestoreConfig";
+import { getPersonsTopicById } from "@/lib/ff";
+import useRootStore from "@/store/index";
+import { mdiPencil, mdiPlus, mdiClose, mdiCheck, mdiDelete, mdiInformationVariant } from "@mdi/js";
 import firebase from "firebase/compat/app";
-import { mapState, mapGetters } from "vuex";
+import { mapState } from "pinia";
 
 export default {
   name: "CreateEditDeleteNodeDialog",
@@ -286,8 +256,7 @@ export default {
     let timeCreatedArrs = [];
 
     for (let index in this.currentCourseNodes) {
-      let timeCreatedNode =
-        this.currentCourseNodes[index].nodeCreatedTimestamp?.seconds;
+      let timeCreatedNode = this.currentCourseNodes[index].nodeCreatedTimestamp?.seconds;
 
       timeCreatedArrs.push(timeCreatedNode);
       // console.log("unsorted arr", timeCreatedArrs);
@@ -304,8 +273,7 @@ export default {
       // loop over the ordered time array
       let arrTime = timeCreatedArrs[a];
       for (let b in timeCreatedArrs) {
-        let timeStamp =
-          this.currentCourseNodes[b].nodeCreatedTimestamp?.seconds;
+        let timeStamp = this.currentCourseNodes[b].nodeCreatedTimestamp?.seconds;
         if (arrTime == timeStamp) {
           let node = this.currentCourseNodes[b];
           this.sortedObjArr.push(node);
@@ -359,26 +327,18 @@ export default {
       //   },
       // ],
       prerequisites: this.currentNode.prerequisites?.length ? true : false,
-      darkSwatches: [
-        ["#69A1E2"],
-        ["#E269CF"],
-        ["#73FBD3"],
-        ["#F3C969"],
-        ["#54428E"],
-      ], //https://coolors.co/69a1e2-e269cf-73fbd3-f3c969-54428e
+      darkSwatches: [["#69A1E2"], ["#E269CF"], ["#73FBD3"], ["#F3C969"], ["#54428E"]], //https://coolors.co/69a1e2-e269cf-73fbd3-f3c969-54428e
       lightSwatches: [["#577399"], ["#fe5f55"]],
     };
   },
   computed: {
-    ...mapState([
+    ...mapState(useRootStore, [
       "person",
       "currentCourseNodes",
       "personsTopics",
       "currentCourseId",
       "currentTopic",
-      "currentTopicId",
-    ]),
-    ...mapGetters(["getTopicById", "getPersonsTopicById"]),
+      "currentTopicId", "getTopicById", "getPersonsTopicById"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -568,11 +528,9 @@ export default {
           .collection(this.currentCourseId);
 
         // check if the student has already started the course. If not they will be assigned this topic when they start the course
-        const studentHasStartedCourse = await courseRef
-          .get()
-          .then((subQuery) => {
-            return subQuery.docs.length;
-          });
+        const studentHasStartedCourse = await courseRef.get().then((subQuery) => {
+          return subQuery.docs.length;
+        });
 
         if (studentHasStartedCourse) {
           // if the new node has set prerequisites
@@ -581,7 +539,7 @@ export default {
             const topic = await getPersonsTopicById(
               student,
               this.currentCourseId,
-              node.prerequisites[0]
+              node.prerequisites[0],
             );
             console.log("topic: ", topic);
             if (topic.topicStatus) {
@@ -595,11 +553,7 @@ export default {
             // if there are no prerequisites than set is as unlocked
             node.topicStatus = "unlocked";
           }
-          console.log(
-            student,
-            " has started course. Setting new topic as ",
-            node.topicStatus
-          );
+          console.log(student, " has started course. Setting new topic as ", node.topicStatus);
           // assign the topic to each student
           await courseRef.doc(node.id).set(node);
         }

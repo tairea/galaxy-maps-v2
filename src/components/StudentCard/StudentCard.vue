@@ -8,9 +8,7 @@
       @click.native="showStudentDetails(student)"
     />
     <template v-if="!status">
-      <span class="overline not-active text-uppercase ma-auto"
-        >hasn't signed in yet</span
-      >
+      <span class="overline not-active text-uppercase ma-auto">hasn't signed in yet</span>
     </template>
     <template v-else>
       <StudentCardProgress :activities="activities" :student="student" />
@@ -21,10 +19,7 @@
         </div>
       </div>
       <div class="student-actions-overUnder">
-        <div
-          class="top-row d-flex flex-column"
-          v-if="studentTimeData.length > 0"
-        >
+        <div class="top-row d-flex flex-column" v-if="studentTimeData.length > 0">
           <StudentHours
             :timeData="studentTimeData"
             :timeframe="timeframe"
@@ -60,13 +55,11 @@ import StudentCompletedTasks from "@/components/StudentCard/StudentCompletedTask
 import StudentCohorts from "@/components/StudentCard/StudentCohorts.vue";
 import StudentActions from "@/components/StudentCard/StudentActions.vue";
 import StudentActivityTimeline from "@/components/StudentActivityTimeline.vue";
-import {
-  getStudentsCoursesXAPIQuery,
-  getStudentsTimeDataXAPIQuery,
-} from "@/lib/veracityLRS.js";
-import { getCourseById } from "@/lib/ff.js";
-import { dbMixins } from "@/mixins/DbMixins.js";
-import { mapState, mapGetters } from "vuex";
+import { getStudentsCoursesXAPIQuery, getStudentsTimeDataXAPIQuery } from "@/lib/veracityLRS";
+import { getCourseById } from "@/lib/ff";
+import { dbMixins } from "@/mixins/DbMixins";
+import useRootStore from "@/store/index";
+import { mapState } from "pinia";
 
 export default {
   name: "StudentCard",
@@ -101,15 +94,11 @@ export default {
   async mounted() {
     const studentCourses = await getStudentsCoursesXAPIQuery(this.student);
     const cohortActivities = studentCourses.filter((a) =>
-      this.currentCohort.courses.some((b) => b === a.course.id)
+      this.currentCohort.courses.some((b) => b === a.course.id),
     );
     this.activities = cohortActivities.map((course) => {
-      const currentTopic = course.activities.find(
-        (action) => action.type === "Topic"
-      );
-      const currentTask = course.activities.find(
-        (action) => action.type === "Task"
-      );
+      const currentTopic = course.activities.find((action) => action.type === "Topic");
+      const currentTask = course.activities.find((action) => action.type === "Task");
       return {
         ...course,
         currentTopic,
@@ -124,8 +113,7 @@ export default {
     this.studentTimeData = getActivityData;
   },
   computed: {
-    ...mapState(["currentCohort", "userStatus"]),
-    ...mapGetters(["getCourseById"]),
+    ...mapState(useRootStore, ["currentCohort", "userStatus","getCourseById"]),
     status() {
       return this.userStatus[this.student.id];
     },
@@ -136,7 +124,7 @@ export default {
     },
     async getAssignedCourse() {
       const courseId = this.student.assignedCourses?.find((course) =>
-        this.currentCohort.courses.includes(course)
+        this.currentCohort.courses.includes(course),
       );
       const course = await getCourseById(courseId);
       this.assignedCourse = course;

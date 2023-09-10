@@ -42,28 +42,11 @@
               ></v-select>
             </div>
             <!-- Arrow buttons -->
-            <v-btn-toggle
-              background-color="background"
-              v-model="sortDesc"
-              mandatory
-              dense
-            >
-              <v-btn
-                small
-                outlined
-                color="missionAccent"
-                :value="false"
-                style="padding: 18px"
-              >
+            <v-btn-toggle background-color="background" v-model="sortDesc" mandatory dense>
+              <v-btn small outlined color="missionAccent" :value="false" style="padding: 18px">
                 <v-icon small>{{ mdiArrowUp }}</v-icon>
               </v-btn>
-              <v-btn
-                small
-                outlined
-                color="missionAccent"
-                :value="true"
-                style="padding: 18px"
-              >
+              <v-btn small outlined color="missionAccent" :value="true" style="padding: 18px">
                 <v-icon small>{{ mdiArrowDown }}</v-icon>
               </v-btn>
             </v-btn-toggle>
@@ -85,10 +68,7 @@
       <!-- PROPS -->
       <template v-slot:default="props">
         <div class="d-flex justify-center align-center mt-3">
-          <TimeframeFilters
-            :showDate="true"
-            @timeframe="setTimeframe($event)"
-          />
+          <TimeframeFilters :showDate="true" @timeframe="setTimeframe($event)" />
         </div>
         <StudentCard
           v-for="student in props.items"
@@ -132,14 +112,10 @@ import ViewStudentDetails from "@/components/ViewStudentDetails.vue";
 import StudentCard from "@/components/StudentCard/StudentCard.vue";
 import TimeframeFilters from "@/components/TimeframeFilters.vue";
 import EditStudentDialog from "@/components/Dialogs/EditStudentDialog.vue";
-import { dbMixins } from "@/mixins/DbMixins.js";
-import {
-  mdiArrowUp,
-  mdiArrowDown,
-  mdiMagnify,
-  mdiSortAlphabeticalVariant,
-} from "@mdi/js";
-import { mapGetters } from "vuex";
+import { dbMixins } from "@/mixins/DbMixins";
+import useRootStore from "@/store/index";
+import { mdiArrowUp, mdiArrowDown, mdiMagnify, mdiSortAlphabeticalVariant } from "@mdi/js";
+import { mapState } from "pinia";
 
 export default {
   name: "StudentsDataIterator",
@@ -163,14 +139,7 @@ export default {
       search: "",
       sortDesc: false,
       sortBy: "firstName",
-      keys: [
-        "firstName",
-        "lastName",
-        "nsnNumber",
-        "studentEmail",
-        "hours",
-        "tasks",
-      ],
+      keys: ["firstName", "lastName", "nsnNumber", "studentEmail", "hours", "tasks"],
       students: [],
       timeframe: {},
       date: "",
@@ -185,7 +154,7 @@ export default {
       function () {
         this.setTime();
       }.bind(this),
-      10000
+      10000,
     );
     return this.setTime();
   },
@@ -203,8 +172,7 @@ export default {
       deep: true,
       handler(newVal, oldVal) {
         if (oldVal.students?.length !== newVal.students?.length) {
-          if (oldVal.students?.length > newVal.students?.length)
-            this.removeStudentProfile();
+          if (oldVal.students?.length > newVal.students?.length) this.removeStudentProfile();
           else this.getStudentProfiles();
         }
         if (oldVal.id !== newVal.id) {
@@ -214,7 +182,7 @@ export default {
     },
   },
   computed: {
-    ...mapGetters(["currentCohort"]),
+    ...mapState(useRootStore, ["currentCohort"]),
     filteredKeys() {
       return this.keys.filter((key) => key !== "Name");
     },
@@ -274,15 +242,11 @@ export default {
       this.timeframe = timeframeEmitted;
     },
     updateStudentsWithHours(payload) {
-      const foundIndex = this.students.findIndex(
-        (student) => student.id == payload.person.id
-      );
+      const foundIndex = this.students.findIndex((student) => student.id == payload.person.id);
       this.students[foundIndex].hours = payload.hours;
     },
     updateStudentsWithTasks(payload) {
-      const foundIndex = this.students.findIndex(
-        (student) => student.id == payload.person.id
-      );
+      const foundIndex = this.students.findIndex((student) => student.id == payload.person.id);
       this.students[foundIndex].tasks = payload.tasks;
     },
   },

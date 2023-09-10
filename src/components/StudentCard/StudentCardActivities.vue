@@ -2,11 +2,7 @@
   <div :class="activityClass">
     <p :class="activityLabel">ACTIVITY</p>
     <div class="px-3">
-      <p
-        v-for="activity in studentsActivityLog"
-        :key="activity.id"
-        class="ma-0"
-      >
+      <p v-for="activity in studentsActivityLog" :key="activity.id" class="ma-0">
         {{ formatTime(activity.timestamp) + ": " + activity.description }}
       </p>
     </div>
@@ -14,9 +10,10 @@
 </template>
 
 <script>
-import { getActivityLogXAPIQuery } from "@/lib/veracityLRS.js";
+import { getActivityLogXAPIQuery } from "@/lib/veracityLRS";
+import useRootStore from "@/store/index";
 import { DateTime } from "luxon";
-import { mapGetters } from "vuex";
+import { mapState } from "pinia";
 
 export default {
   name: "StudentActivityTimeline",
@@ -32,7 +29,7 @@ export default {
     this.studentsActivityLog = await getActivityLogXAPIQuery(this.person);
   },
   computed: {
-    ...mapGetters(["person"]),
+    ...mapState(useRootStore, ["person"]),
     activityClass() {
       if (this.studentCard) return "student-card-log";
       return "activity-log";

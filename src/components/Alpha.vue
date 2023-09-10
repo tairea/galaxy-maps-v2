@@ -8,14 +8,14 @@
 export default {
   name: "Alpha",
   data() {
-    return { }
+    return {};
   },
   methods: {},
 };
 </script>
 
 <style lang="scss" scoped>
-.alpha {  
+.alpha {
   position: fixed;
   bottom: 0px;
   left: 0px;
@@ -24,3 +24,4 @@ export default {
   background-color: red;
   color: white;
 }
+</style>

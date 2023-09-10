@@ -7,12 +7,8 @@
     class="ss-info-panel"
     :class="{ centeredFocus: centerFocusPosition }"
     :style="{
-      top: centerFocusPosition
-        ? infoPopupPosition.y
-        : infoPopupPosition.y - 100 + 'px',
-      left: centerFocusPosition
-        ? infoPopupPosition.x
-        : infoPopupPosition.x + 30 + 'px',
+      top: centerFocusPosition ? infoPopupPosition.y : infoPopupPosition.y - 100 + 'px',
+      left: centerFocusPosition ? infoPopupPosition.x : infoPopupPosition.x + 30 + 'px',
     }"
     @mouseover="$emit('focus')"
     @mouseleave="$emit('blur')"
@@ -21,18 +17,12 @@
       <!-- Preview: Solar System -->
       <SolarSystem
         :topic="
-          teacher
-            ? getTopicById(this.currentTopic.id)
-            : getPersonsTopicById(this.currentTopic.id)
+          teacher ? getTopicById(this.currentTopic.id) : getPersonsTopicById(this.currentTopic.id)
         "
         :tasks="tasks"
         :size="'0.25em'"
       />
-      <v-icon
-        v-if="checkIfTopicLocked()"
-        color="missionAccent"
-        class="ss-lock-button"
-      >
+      <v-icon v-if="checkIfTopicLocked()" color="missionAccent" class="ss-lock-button">
         {{ mdiLockOutline }}
       </v-icon>
       <v-btn
@@ -48,13 +38,7 @@
         View System
       </v-btn>
       <div class="ss-details-buttons mr-2">
-        <v-btn
-          icon
-          small
-          color="missionAccent"
-          class="close-button"
-          @click="close"
-        >
+        <v-btn icon small color="missionAccent" class="close-button" @click="close">
           <v-icon>{{ mdiClose }}</v-icon>
         </v-btn>
         <v-btn
@@ -80,44 +64,44 @@
       <div v-if="tasks.length == 0">
         <h5 class="mission-text" style="text-align: center">NO MISSIONS SET</h5>
       </div>
-      <div v-else v-for="(task, index) in tasks" :key="task.id">
-        <v-simple-table class="task-table">
-          <tr>
-            <!-- Table: Mission # -->
-            <td style="width: 100px">
-              <h5 class="mission-text text-left">MISSION {{ index + 1 }}:</h5>
-            </td>
-            <!-- Table: Title -->
-            <td style="width: 200px">
-              <h5 class="mission-text text-center">{{ task.title }}</h5>
-            </td>
-            <!-- Table: Duration -->
-            <!-- <td style="width: 90px">
-              <h5 class="mission-text">
-                {{ task.duration ? task.duration + " MINS" : "" }}
-              </h5>
-            </td> -->
-            <!-- Table: Status -->
-            <td v-if="!teacher" style="width: 100px">
-              <h5
-                class="mission-text text-right"
-                :class="getStatusColour(task.taskStatus)"
-              >
-                {{ task.taskStatus }}
-              </h5>
-            </td>
-          </tr>
-        </v-simple-table>
-      </div>
+      <template v-else>
+        <div v-for="(task, index) in tasks" :key="task.id">
+          <v-simple-table class="task-table">
+            <tr>
+              <!-- Table: Mission # -->
+              <td style="width: 100px">
+                <h5 class="mission-text text-left">MISSION {{ index + 1 }}:</h5>
+              </td>
+              <!-- Table: Title -->
+              <td style="width: 200px">
+                <h5 class="mission-text text-center">{{ task.title }}</h5>
+              </td>
+              <!-- Table: Duration -->
+              <!-- <td style="width: 90px">
+                <h5 class="mission-text">
+                  {{ task.duration ? task.duration + " MINS" : "" }}
+                </h5>
+              </td> -->
+              <!-- Table: Status -->
+              <td v-if="!teacher" style="width: 100px">
+                <h5 class="mission-text text-right" :class="getStatusColour(task.taskStatus)">
+                  {{ task.taskStatus }}
+                </h5>
+              </td>
+            </tr>
+          </v-simple-table>
+        </div>
+      </template>
     </div>
   </div>
 </template>
 
 <script>
 import SolarSystem from "@/components/SolarSystem.vue";
-import { db } from "@/store/firestoreConfig.ts";
+import { db } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
 import { mdiLockOutline, mdiClose, mdiPencil } from "@mdi/js";
-import { mapState, mapGetters } from "vuex";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "PopupSystemPreview",
@@ -135,19 +119,20 @@ export default {
   async mounted() {
     // set active mission
     this.activeMission = this.personsTopicsTasks.find(
-      (topicObj) => topicObj.taskStatus == "active"
+      (topicObj) => topicObj.taskStatus == "active",
     );
-    this.$store.commit("setCurrentTaskId", this.activeMission?.id);
+    this.setCurrentTaskId(this.activeMission?.id);
   },
   computed: {
-    ...mapState([
+    ...mapState(useRootStore, [
       "person",
       "personsTopics",
       "currentCourseId",
       "currentTopicId",
       "personsTopicsTasks",
+      "getTopicById",
+      "getPersonsTopicById",
     ]),
-    ...mapGetters(["getTopicById", "getPersonsTopicById"]),
   },
   data() {
     return {
@@ -158,6 +143,7 @@ export default {
     };
   },
   methods: {
+    ...mapActions(useRootStore, ["setCurrentTaskId", "setCurrentTopic", "setCurrentTopicId"]),
     getStatusColour(status) {
       if (status == "completed") {
         return "baseColour";
@@ -180,21 +166,21 @@ export default {
       }
     },
     showEditDialog() {
-      this.$store.commit("setCurrentTopicId", this.currentTopic.id);
-      this.$store.commit("setCurrentTopic", this.currentTopic);
+      this.setCurrentTopicId(this.currentTopic.id);
+      this.setCurrentTopic(this.currentTopic);
       this.$emit("showEditDialog", this.currentTopic);
     },
     routeToSolarSystem() {
       // console.log("route to ss", this.currentTopic.id);
       // save current topic to store
-      this.$store.commit("setCurrentTopicId", this.currentTopic.id);
-      this.$store.commit("setCurrentTopic", this.currentTopic);
+      this.setCurrentTopicId(this.currentTopic.id);
+      this.setCurrentTopic(this.currentTopic);
       // save active task to store if we know it
       const activeMission = this.personsTopicsTasks.find(
-        (topicObj) => topicObj.taskStatus == "active"
+        (topicObj) => topicObj.taskStatus == "active",
       );
       if (activeMission) {
-        this.$store.commit("setCurrentTaskId", activeMission.id);
+        this.setCurrentTaskId(activeMission.id);
       }
       // route to topic/solar system
       this.$router.push({

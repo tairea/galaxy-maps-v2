@@ -23,8 +23,7 @@
         </h1> -->
         <h1 class="galaxy-title pt-2 pl-2">
           student progress
-          <span
-            style="font-weight: 400; text-transform: none; font-style: italic"
+          <span style="font-weight: 400; text-transform: none; font-style: italic"
             >(Number of Missions Completed)</span
           >
         </h1>
@@ -59,10 +58,11 @@
 
 <script>
 import Chart from "@/components/Chart.vue";
-import { colours } from "@/lib/utils.js";
-import { dbMixins } from "@/mixins/DbMixins.js";
+import { colours } from "@/lib/utils";
+import { dbMixins } from "@/mixins/DbMixins";
+import useRootStore from "@/store/index";
 import { DateTime } from "luxon";
-import { mapState, mapGetters } from "vuex";
+import { mapState } from "pinia";
 
 export default {
   name: "ProgressionLineChart",
@@ -121,7 +121,7 @@ export default {
   },
   async mounted() {},
   computed: {
-    // ...mapGetters(["person", "getCourseById", "getTopicById"]),
+    // ...mapState(useRootStore, ["person", "getCourseById", "getTopicById"]),
   },
   methods: {
     formatStudentsChartData(courseData) {
@@ -145,7 +145,7 @@ export default {
       // more than one student per course
       for (const student of courseData.students) {
         const studentColour = this.stringToColour(
-          student.person.firstName + student.person.lastName
+          student.person.firstName + student.person.lastName,
         );
         const label = student.person.firstName + " " + student.person.lastName;
 

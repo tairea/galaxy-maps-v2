@@ -17,7 +17,8 @@
 <script>
 import GalaxyListPanelCard from "@/components/GalaxyListPanelCard.vue";
 import PopupGalaxyPreview from "@/components/PopupGalaxyPreview.vue";
-import { mapState, mapGetters } from "vuex";
+import useRootStore from "@/store/index";
+import { mapState } from "pinia";
 
 export default {
   name: "GalaxyListInfoPanel",
@@ -38,8 +39,7 @@ export default {
   },
   async mounted() {},
   computed: {
-    ...mapState(["person", "courses", "cohorts"]),
-    ...mapGetters(["getCourseById"]),
+    ...mapState(useRootStore, ["person", "courses", "cohorts","getCourseById"]),
   },
   watch: {
     async selectedCourseId(newSelectedCourseId) {

@@ -29,12 +29,7 @@
     </v-row>
 
     <div v-if="showTable">
-      <v-simple-table
-        :dark="dark"
-        :light="!dark"
-        v-if="parse_csv"
-        class="table"
-      >
+      <v-simple-table :dark="dark" :light="!dark" v-if="parse_csv" class="table">
         <thead>
           <tr>
             <th
@@ -44,8 +39,7 @@
               :key="key.id"
             >
               {{ key | capitalize }}
-              <span class="arrow" :class="sortOrders[key] > 0 ? 'asc' : 'dsc'">
-              </span>
+              <span class="arrow" :class="sortOrders[key] > 0 ? 'asc' : 'dsc'"> </span>
             </th>
           </tr>
         </thead>
@@ -68,17 +62,16 @@
         width="40%"
         >{{ buttonLabel }}
       </v-btn>
-      <v-btn @click="close" color="baseAccent" depressed width="40%"
-        >cancel
-      </v-btn>
+      <v-btn @click="close" color="baseAccent" depressed width="40%">cancel </v-btn>
     </v-row>
   </div>
 </template>
 
 <script>
-import { dbMixins } from "@/mixins/DbMixins.js";
+import { dbMixins } from "@/mixins/DbMixins";
+import useRootStore from "@/store/index";
 import { mdiDownload } from "@mdi/js";
-import { mapGetters } from "vuex";
+import { mapState } from "pinia";
 
 export default {
   name: "StudentImportCsv",
@@ -114,7 +107,7 @@ export default {
     },
   },
   computed: {
-    ...mapGetters(["currentCohort"]),
+    ...mapState(useRootStore, ["currentCohort"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },

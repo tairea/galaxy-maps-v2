@@ -5,16 +5,8 @@
         <v-dialog v-model="dialog" width="40%" light>
           <!-- HELP RESPONSE BUTTON -->
           <template v-slot:activator="{ on, attrs }">
-            <v-btn
-              color="missionAccent"
-              v-bind="attrs"
-              v-on="on"
-              outlined
-              small
-            >
-              <v-icon left small color="missionAccent">{{
-                mdiThumbDownOutline
-              }}</v-icon>
+            <v-btn color="missionAccent" v-bind="attrs" v-on="on" outlined small>
+              <v-icon left small color="missionAccent">{{ mdiThumbDownOutline }}</v-icon>
               DECLINE SUBMISSION
             </v-btn>
           </template>
@@ -40,21 +32,12 @@
                 <div class="request-details-person">
                   <p class="dialog-description">
                     <span style="font-size: 0.8rem; font-weight: 800"
-                      ><i>{{
-                        requesterPerson.firstName +
-                        " " +
-                        requesterPerson.lastName
-                      }}</i></span
+                      ><i>{{ requesterPerson.firstName + " " + requesterPerson.lastName }}</i></span
                     >
                     submitted the following work
                   </p>
                   <p class="dialog-description">
-                    <i
-                      >@
-                      {{
-                        getHumanDate(submission.taskSubmittedForReviewTimestamp)
-                      }}</i
-                    >
+                    <i>@ {{ getHumanDate(submission.taskSubmittedForReviewTimestamp) }}</i>
                   </p>
                 </div>
                 <!-- Context details -->
@@ -109,8 +92,7 @@
               <div class="divider"></div>
               <!-- RESPONSE -->
               <p class="dialog-description">
-                Please explain why the learner's submission did not meet the
-                Mission requirements:
+                Please explain why the learner's submission did not meet the Mission requirements:
               </p>
               <v-textarea
                 class="input-field"
@@ -134,9 +116,7 @@
                 v-bind="attrs"
                 v-on="on"
               >
-                <v-icon left color="missionAccent">{{
-                  mdiAlertOctagonOutline
-                }}</v-icon>
+                <v-icon left color="missionAccent">{{ mdiAlertOctagonOutline }}</v-icon>
                 DECLINE SUBMISSION
               </v-btn>
 
@@ -165,9 +145,10 @@
 </template>
 
 <script>
-import { teacherRespondedSubmissionDeclinedXAPIStatement } from "@/lib/veracityLRS.js";
-import { dbMixins } from "@/mixins/DbMixins.js";
-import { db } from "@/store/firestoreConfig.ts";
+import { teacherRespondedSubmissionDeclinedXAPIStatement } from "@/lib/veracityLRS";
+import { dbMixins } from "@/mixins/DbMixins";
+import { db } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
 import {
   mdiThumbDownOutline,
   mdiTextBoxSearchOutline,
@@ -175,7 +156,7 @@ import {
   mdiClose,
 } from "@mdi/js";
 import moment from "moment";
-import { mapState, mapGetters } from "vuex";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "SubmissionResponseDialog",
@@ -195,13 +176,13 @@ export default {
     console.log("submission from decline", this.submission);
   },
   computed: {
-    ...mapState(["currentCourse", "currentTopic", "currentTask"]),
-    ...mapGetters(["person"]),
+    ...mapState(useRootStore, ["currentCourse", "currentTopic", "currentTask", "person"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
   },
   methods: {
+    ...mapActions(useRootStore, ["setSnackbar"]),
     getHumanDate(ts) {
       return moment(ts.seconds * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
     },
@@ -234,9 +215,7 @@ export default {
           responderPersonId: this.person.id,
         })
         .then(() => {
-          console.log(
-            "Submitted work declined. It did not meet the mission requirements"
-          );
+          console.log("Submitted work declined. It did not meet the mission requirements");
 
           // teacher assissted student
           teacherRespondedSubmissionDeclinedXAPIStatement(
@@ -247,11 +226,11 @@ export default {
               galaxy: this.submission.contextCourse,
               system: this.submission.contextTopic,
               mission: this.submission.contextTask,
-            }
+            },
           );
           this.loading = false;
           this.dialog = false;
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Students submitted work declined.Feedback sent to student",
             color: "baseAccent",
@@ -262,7 +241,7 @@ export default {
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Error: " + error,
             color: "pink",

@@ -63,8 +63,9 @@ import SolarSystem from "@/components/SolarSystem.vue";
 import BackButton from "@/components/BackButton.vue";
 import SubmissionTeacherFrame from "@/components/SubmissionTeacherFrame.vue";
 import RequestForHelpTeacherFrame from "@/components/RequestForHelpTeacherFrame.vue";
-import { getPersonsTopicById } from "@/lib/ff.js";
-import { mapState, mapGetters } from "vuex";
+import { getPersonsTopicById } from "@/lib/ff";
+import useRootStore from "@/store/index";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "SolarSystemView",
@@ -91,13 +92,13 @@ export default {
     this.getPeopleInTopic();
     if (this.teacher) {
       //store bindTasksByTopicId
-      await this.$store.dispatch("bindTasksByTopicId", {
+      await this.bindTasksByTopicId({
         courseId: this.currentCourseId,
         topicId: this.currentTopicId,
       });
     } else {
       // store bindPersonsTasksByTopicId
-      await this.$store.dispatch("bindPersonsTasksByTopicId", {
+      await this.bindPersonsTasksByTopicId({
         personId: this.person.id,
         courseId: this.currentCourseId,
         topicId: this.currentTopicId,
@@ -120,7 +121,7 @@ export default {
     },
   },
   computed: {
-    ...mapState([
+    ...mapState(useRootStore, [
       "currentCourseId",
       "currentTopicId",
       "currentTaskId",
@@ -131,8 +132,6 @@ export default {
       "personsTopicsTasks",
       "personsTopics",
       "peopleInCourse",
-    ]),
-    ...mapGetters([
       "person",
       "getPersonsTopicById",
       "getTopicById",
@@ -143,32 +142,31 @@ export default {
       return this.currentCourse.status === "drafting";
     },
     teacher() {
-      return (
-        this.currentCourse?.mappedBy?.personId === this.person.id ||
-        this.user.data.admin
-      );
+      return this.currentCourse?.mappedBy?.personId === this.person.id || this.user.data.admin;
     },
     personsCurrentTopic() {
-      return this.personsTopics.find(
-        (topic) => topic.id == this.currentTopicId
-      );
+      return this.personsTopics.find((topic) => topic.id == this.currentTopicId);
     },
   },
   methods: {
+    ...mapActions(useRootStore, [
+      "bindPersonsTasksByTopicId",
+      "bindTasksByTopicId",
+      "setCurrentTask",
+      "setCurrentTaskId",
+    ]),
     taskForHelpInfo(task) {
       this.task = task;
     },
     getActiveMission() {
       const activeMissionObj = this.personsTopicsTasks.find((taskObj) => {
-        return (
-          taskObj.taskStatus == "active" || taskObj.taskStatus == "declined"
-        );
+        return taskObj.taskStatus == "active" || taskObj.taskStatus == "declined";
       });
       if (activeMissionObj) {
         this.activeMission = true;
         // set as current/active task (if not already?)
-        this.$store.commit("setCurrentTaskId", activeMissionObj.id);
-        this.$store.commit("setCurrentTask", activeMissionObj);
+        this.setCurrentTaskId(activeMissionObj.id);
+        this.setCurrentTask(activeMissionObj);
       } else {
         return;
       }
@@ -182,7 +180,7 @@ export default {
         let personsTopic = await getPersonsTopicById(
           person.id,
           this.currentCourse.id,
-          this.currentTopic.id
+          this.currentTopic.id,
         );
         if (personsTopic.topicStatus == "active") people.push(person);
       });

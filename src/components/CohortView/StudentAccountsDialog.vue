@@ -3,13 +3,7 @@
     <v-dialog v-model="dialog" width="45%" :light="dark" :dark="!dark">
       <!-- CREATE BUTTON -->
       <template v-slot:activator="{ on, attrs }">
-        <v-btn
-          class="cohort-btn"
-          color="missionAccent"
-          v-bind="attrs"
-          v-on="on"
-          outlined
-        >
+        <v-btn class="cohort-btn" color="missionAccent" v-bind="attrs" v-on="on" outlined>
           <v-icon left> {{ mdiAccountGroup }} </v-icon>
           manage students
         </v-btn>
@@ -102,13 +96,7 @@ import StudentImportCsv from "@/components/StudentImportCsv.vue";
 import ConfirmDeleteStudentDialog from "@/components/Dialogs/ConfirmDeleteStudentDialog.vue";
 import EditStudentDialog from "@/components/Dialogs/EditStudentDialog.vue";
 
-import {
-  mdiAccountGroup,
-  mdiAccountPlus,
-  mdiAccountEdit,
-  mdiPencil,
-  mdiDelete,
-} from "@mdi/js";
+import { mdiAccountGroup, mdiAccountPlus, mdiAccountEdit, mdiPencil, mdiDelete } from "@mdi/js";
 
 export default {
   name: "StudentAccountsDialog",

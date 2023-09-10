@@ -1,9 +1,8 @@
-import { getCourseById, getStudentByEmail } from "@/lib/ff.js";
-import store from "@/store/index.js";
-import { db } from "@/store/firestoreConfig.ts";
+import { getCourseById, getStudentByEmail } from "@/lib/ff";
+import { db } from "@/store/firestoreConfig";
 import { DateTime } from "luxon";
 
-const auth = "Basic " + btoa(process.env.VITE_VERACITY_LRS_SECRET);
+const auth = "Basic " + btoa(import.meta.env.VITE_VERACITY_LRS_SECRET);
 
 /* ----------------------
   SEND xAPI STATEMENTS
@@ -80,11 +79,7 @@ export const startTopicXAPIStatement = (actor, context) => {
       id: "https://www.galaxymaps.io/topic/" + context.system.id,
       definition: {
         name: {
-          "en-nz":
-            "Course: " +
-            context.galaxy.title +
-            " > Topic: " +
-            context.system.label,
+          "en-nz": "Course: " + context.galaxy.title + " > Topic: " + context.system.label,
         },
         description: {
           "en-nz": "Started Topic: " + context.system.label,
@@ -250,9 +245,7 @@ export const submitWorkForReviewXAPIStatement = (actor, taskId, context) => {
   });
 };
 export const reSubmitWorkForReviewXAPIStatement = (actor, taskId, context) => {
-  console.log(
-    "sending student xAPI statement... re-submitted work for review..."
-  );
+  console.log("sending student xAPI statement... re-submitted work for review...");
   const statement = {
     actor: {
       name: actor.firstName + " " + actor.lastName,
@@ -393,11 +386,7 @@ export const topicCompletedXAPIStatement = (actor, topicId, context) => {
       id: "https://www.galaxymaps.io/topic/" + topicId,
       definition: {
         name: {
-          "en-nz":
-            "Course: " +
-            context.galaxy.title +
-            " > Topic: " +
-            context.system.label,
+          "en-nz": "Course: " + context.galaxy.title + " > Topic: " + context.system.label,
         },
         description: {
           "en-nz": "Completed Topic: " + context.system.label,
@@ -438,11 +427,7 @@ export const topicCompletedXAPIStatement = (actor, topicId, context) => {
 };
 
 // ========== Student work marked completed (by teacher)
-export const studentWorkMarkedCompletedXAPIStatement = (
-  actor,
-  taskId,
-  context
-) => {
+export const studentWorkMarkedCompletedXAPIStatement = (actor, taskId, context) => {
   console.log("sending student xAPI statement... work marked as completed...");
   const statement = {
     actor: {
@@ -506,11 +491,7 @@ export const studentWorkMarkedCompletedXAPIStatement = (
 };
 
 // ========== Teacher reviewed student work (by teacher)
-export const teacherReviewedStudentWorkXAPIStatement = (
-  actor,
-  taskId,
-  context
-) => {
+export const teacherReviewedStudentWorkXAPIStatement = (actor, taskId, context) => {
   console.log("sending student xAPI statement... work marked as completed...");
   const statement = {
     actor: {
@@ -573,14 +554,8 @@ export const teacherReviewedStudentWorkXAPIStatement = (
 };
 
 // ========== Teacher responed to request for help (by teacher)
-export const teacherRespondedToRequestForHelpXAPIStatement = (
-  actor,
-  taskId,
-  context
-) => {
-  console.log(
-    "sending student xAPI statement... teacher responsed to request for help..."
-  );
+export const teacherRespondedToRequestForHelpXAPIStatement = (actor, taskId, context) => {
+  console.log("sending student xAPI statement... teacher responsed to request for help...");
   const statement = {
     actor: {
       name: actor.firstName + " " + actor.lastName,
@@ -603,8 +578,7 @@ export const teacherRespondedToRequestForHelpXAPIStatement = (
             context.mission.title,
         },
         description: {
-          "en-nz":
-            "Teacher responded to help for Task: " + context.mission.title,
+          "en-nz": "Teacher responded to help for Task: " + context.mission.title,
         },
         extensions: {
           "https://www.galaxymaps.io/course/id/": context.galaxy.id,
@@ -704,14 +678,8 @@ export const studentRequestForHelpXAPIStatement = (actor, taskId, context) => {
     body: JSON.stringify(statement),
   });
 };
-export const teacherRespondedSubmissionDeclinedXAPIStatement = (
-  actor,
-  taskId,
-  context
-) => {
-  console.log(
-    "sending student xAPI statement... teacher declined submission..."
-  );
+export const teacherRespondedSubmissionDeclinedXAPIStatement = (actor, taskId, context) => {
+  console.log("sending student xAPI statement... teacher declined submission...");
   const statement = {
     actor: {
       name: actor.firstName + " " + actor.lastName,
@@ -959,8 +927,7 @@ export const getActiveTaskXAPIQuery = async (person) => {
       $group: {
         _id: {
           actor: "$statement.actor.mbox",
-          course:
-            "$statement.object.definition.extensions.https://www.galaxymaps.io/course/id/",
+          course: "$statement.object.definition.extensions.https://www.galaxymaps.io/course/id/",
           task: "$statement.object.definition.extensions.https://www.galaxymaps.io/task/id/",
         },
         lastStatement: {
@@ -969,8 +936,7 @@ export const getActiveTaskXAPIQuery = async (person) => {
             timestamp: "$statement.timestamp",
             description: "$statement.object.definition.description.en-nz",
             task: "$statement.object.definition.extensions.https://www.galaxymaps.io/task/id/",
-            topic:
-              "$statement.object.definition.extensions.https://www.galaxymaps.io/topic/id/",
+            topic: "$statement.object.definition.extensions.https://www.galaxymaps.io/topic/id/",
           },
         },
       },
@@ -1043,10 +1009,8 @@ export const getActivityLogXAPIQuery = async (person) => {
             timestamp: "$statement.timestamp",
             description: "$statement.object.definition.description.en-nz",
             task: "$statement.object.definition.extensions.https://www.galaxymaps.io/task/id/",
-            topic:
-              "$statement.object.definition.extensions.https://www.galaxymaps.io/topic/id/",
-            course:
-              "$statement.object.definition.extensions.https://www.galaxymaps.io/course/id/",
+            topic: "$statement.object.definition.extensions.https://www.galaxymaps.io/topic/id/",
+            course: "$statement.object.definition.extensions.https://www.galaxymaps.io/course/id/",
           },
         },
       },
@@ -1088,8 +1052,9 @@ export const getCohortsCourseDataXAPIQuery = async (payload) => {
     // match with cohorts courses. and only started & completed statements
     {
       $match: {
-        "statement.object.definition.extensions.https://www.galaxymaps.io/course/id/":
-          { $in: courseIdsAsStrings },
+        "statement.object.definition.extensions.https://www.galaxymaps.io/course/id/": {
+          $in: courseIdsAsStrings,
+        },
         "statement.verb.display.en-nz": { $in: ["started", "completed"] },
       },
     },
@@ -1098,8 +1063,7 @@ export const getCohortsCourseDataXAPIQuery = async (payload) => {
       $group: {
         _id: {
           actor: "$statement.actor.mbox",
-          course:
-            "$statement.object.definition.extensions.https://www.galaxymaps.io/course/id/",
+          course: "$statement.object.definition.extensions.https://www.galaxymaps.io/course/id/",
         },
         statements: {
           $push: {
@@ -1107,8 +1071,7 @@ export const getCohortsCourseDataXAPIQuery = async (payload) => {
             timestamp: "$statement.timestamp",
             description: "$statement.object.definition.description.en-nz",
             task: "$statement.object.definition.extensions.https://www.galaxymaps.io/task/id/",
-            topic:
-              "$statement.object.definition.extensions.https://www.galaxymaps.io/topic/id/",
+            topic: "$statement.object.definition.extensions.https://www.galaxymaps.io/topic/id/",
           },
         },
       },
@@ -1142,12 +1105,12 @@ export const getCohortsCourseDataXAPIQuery = async (payload) => {
       Authorization: auth,
     },
     body: JSON.stringify(aggregationQuery),
-  })
+  });
   const resultBody = await res.json();
   return sanitiseCohortsCourseDataFromLRS(resultBody);
 };
 
-export let getStudentsTimeDataXAPIQuery = async (payload) => {
+export const getStudentsTimeDataXAPIQuery = async (payload) => {
   // if no data, dont bother
   if (!payload.studentsArr) return;
 
@@ -1190,9 +1153,10 @@ export let getStudentsTimeDataXAPIQuery = async (payload) => {
       Authorization: auth,
     },
     body: JSON.stringify(aggregationQuery),
-  })
+  });
   const resultBody = await res.json();
   // console.log("Activity status for Students in Cohort:", resultBody);
+  return sanitiseCohortsActivityDataFromLRS(resultBody);
 };
 
 // export const VQLXAPIQuery = async () => {
@@ -1214,7 +1178,7 @@ export let getStudentsTimeDataXAPIQuery = async (payload) => {
 //     body: JSON.stringify(VQLQuery),
 //   })
 //     .then((res) => res.json())
-//     
+//
 //     .then((res) => {
 //       console.log("res:", res);
 //     });
@@ -1233,14 +1197,12 @@ async function sanitiseCourseDataFromLRS(res) {
 
     // sanitise statements data
     const activities = group.statements.map((statement, index) => {
-      if (statement.description.includes("Completed Task:"))
-        taskCompletedCount++;
-      if (statement.description.includes("Completed Topic:"))
-        topicCompletedCount++;
+      if (statement.description.includes("Completed Task:")) taskCompletedCount++;
+      if (statement.description.includes("Completed Topic:")) topicCompletedCount++;
 
-      let [action, title] = statement.description.split(": ");
-      let [status, type] = action.split(" ");
-      let id = statement.task.split("/").pop();
+      const [action, title] = statement.description.split(": ");
+      const [status, type] = action.split(" ");
+      const id = statement.task.split("/").pop();
 
       const newStatement = {
         timeStamp: statement.timestamp,
@@ -1276,24 +1238,28 @@ async function sanitiseCohortsCourseDataFromLRS(res) {
 
     // array for many students course data
     const students = [];
+
+    // Get all the people first
+    const people = await Promise.all(
+      group.actors.map((x) => getStudentByEmail(x.actor.split(":")[1])),
+    );
+
     // (for getCohortsCourseDataXAPIQuery) statements are nested under actors
     for (const student of group.actors) {
       // get person from db
       const email = student.actor.split(":")[1];
-      const person = await getStudentByEmail(email);
+      const person = people.find((x) => x.email === email);
 
       let taskCompletedCount = 0;
       let topicCompletedCount = 0;
 
       const activities = student.statements.map((statement, index) => {
-        if (statement.description.includes("Completed Task:"))
-          taskCompletedCount++;
-        if (statement.description.includes("Completed Topic:"))
-          topicCompletedCount++;
+        if (statement.description.includes("Completed Task:")) taskCompletedCount++;
+        if (statement.description.includes("Completed Topic:")) topicCompletedCount++;
 
-        let [action, title] = statement.description.split(": ");
-        let [status, type] = action.split(" ");
-        let id = statement.task;
+        const [action, title] = statement.description.split(": ");
+        const [status, type] = action.split(" ");
+        const id = statement.task;
 
         const newStatement = {
           timeStamp: statement.timestamp,
@@ -1330,10 +1296,13 @@ async function sanitiseCohortsCourseDataFromLRS(res) {
 async function sanitiseCohortsActivityDataFromLRS(res) {
   const santisedActivity = [];
 
+  // Get all the people first
+  const people = await Promise.all(res.map((x) => getStudentByEmail(x._id.actor.split(":")[1])));
+
   for (const student of res) {
     // get person from db
     const email = student._id.actor.split(":")[1];
-    const person = await getStudentByEmail(email);
+    const person = people.find((x) => x.email === email);
 
     const personDaysActivity = [];
     let day = 0;
@@ -1354,10 +1323,7 @@ async function sanitiseCohortsActivityDataFromLRS(res) {
         // if (!prevStatement) continue
         // console.log("prevStatement", prevStatement);
         // console.log("statement", statement);
-        if (
-          statement.verb == "logged out" &&
-          prevStatement.verb == "logged in"
-        ) {
+        if (statement.verb == "logged out" && prevStatement.verb == "logged in") {
           // calc off - on
           const timeLoggedOff = DateTime.fromISO(statement.timestamp);
           const timeLoggedOn = DateTime.fromISO(prevStatement.timestamp);

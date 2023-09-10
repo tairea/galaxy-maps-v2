@@ -48,12 +48,10 @@
 <script>
 import Chart from "@/components/Chart.vue";
 import ActiveMissions from "@/components/ActiveMissions.vue";
-import {
-  getStudentsCoursesXAPIQuery,
-  getActiveTaskXAPIQuery,
-} from "@/lib/veracityLRS.js";
-import { dbMixins } from "@/mixins/DbMixins.js";
-import { mapState, mapGetters } from "vuex";
+import { getStudentsCoursesXAPIQuery, getActiveTaskXAPIQuery } from "@/lib/veracityLRS";
+import { dbMixins } from "@/mixins/DbMixins";
+import useRootStore from "@/store/index";
+import { mapState } from "pinia";
 import { DateTime } from "luxon";
 
 export default {
@@ -146,7 +144,7 @@ export default {
     this.loading = false;
   },
   computed: {
-    ...mapGetters(["person", "getCourseById", "getTopicById"]),
+    ...mapState(useRootStore, ["person", "getCourseById", "getTopicById"]),
   },
   methods: {
     formatStudentsChartData(data) {

@@ -69,7 +69,8 @@ $duration: 1.4s;
   stroke-dasharray: $offset;
   stroke-dashoffset: 0;
   transform-origin: center;
-  animation: circle-dash $duration ease-in-out infinite,
+  animation:
+    circle-dash $duration ease-in-out infinite,
     circle-colors ($duration * 4) ease-in-out infinite;
 }
 @keyframes circle-colors {

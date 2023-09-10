@@ -17,10 +17,7 @@
           <div class="createOrganisationDialog">
             <!-- TITLE -->
             <div class="tile">
-              <v-text-field
-                label="ORGANISATION TITLE"
-                :value="organisation.name"
-              ></v-text-field>
+              <v-text-field label="ORGANISATION TITLE" :value="organisation.name"></v-text-field>
             </div>
 
             <!-- DESCRIPTION -->
@@ -49,15 +46,8 @@
                     style="width: 100%"
                   ></v-file-input>
                 </v-row>
-                <v-row
-                  v-if="organisation.image.url"
-                  class="d-flex justify-center"
-                >
-                  <v-img
-                    :src="organisation.image.url"
-                    max-height="150px"
-                    max-width="150px"
-                  ></v-img>
+                <v-row v-if="organisation.image.url" class="d-flex justify-center">
+                  <v-img :src="organisation.image.url" max-height="150px" max-width="150px"></v-img>
                 </v-row>
               </v-col>
             </div>
@@ -76,12 +66,7 @@
                 UPDATE ORGANISATION
               </v-btn>
               <!-- DELETE -->
-              <v-btn
-                outlined
-                color="error"
-                @click="deleteDialog()"
-                class="ml-2"
-              >
+              <v-btn outlined color="error" @click="deleteDialog()" class="ml-2">
                 <v-icon left> {{ mdiDelete }} </v-icon>
                 DELETE ORGANISATION
               </v-btn>
@@ -92,15 +77,11 @@
         <!-- CONFIRM DELETE DIALOG -->
         <v-dialog v-model="dialogConfirm" width="500" light>
           <v-card>
-            <v-card-title class="text-h5 grey lighten-2">
-              Warning
-            </v-card-title>
+            <v-card-title class="text-h5 grey lighten-2"> Warning </v-card-title>
 
             <v-card-text class="py-8 px-6">
               Are you sure you want to <strong>DELETE</strong> the
-              <span class="organisation-text"
-                >{{ organisation.name }} ORGANISATION</span
-              >?
+              <span class="organisation-text">{{ organisation.name }} ORGANISATION</span>?
               <br />
               <br />
               Deleting is permanent!!!
@@ -115,12 +96,7 @@
 
             <v-card-actions class="pa-4">
               <v-spacer></v-spacer>
-              <v-btn
-                outlined
-                color="primary"
-                @click="cancelDeleteDialog()"
-                class="ml-2"
-              >
+              <v-btn outlined color="primary" @click="cancelDeleteDialog()" class="ml-2">
                 <v-icon left> {{ mdiClose }} </v-icon>
                 CANCEL
               </v-btn>
@@ -144,9 +120,9 @@
 </template>
 
 <script>
-import { db, storage } from "@/store/firestoreConfig.ts";
+import { db, storage } from "@/store/firestoreConfig";
 import { mdiCheck, mdiDelete, mdiClose } from "@mdi/js";
-import { mapGetters } from "vuex";
+import { mapState } from "pinia";
 
 export default {
   name: "EditOrganisationButtonDialog",
@@ -203,10 +179,7 @@ export default {
       his.disabled = true;
       // ceate a storage ref
       var storageRef = storage.ref(
-        "organisation-images/" +
-          this.organisation.name +
-          "-" +
-          this.uploadedImage.name
+        "organisation-images/" + this.organisation.name + "-" + this.uploadedImage.name,
       );
 
       // upload a file
@@ -217,8 +190,7 @@ export default {
         "state_changed",
         (snapshot) => {
           // show progress on uploader bar
-          this.percentage =
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          this.percentage = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         },
         // upload error
         (err) => {
@@ -234,7 +206,7 @@ export default {
             this.organisation.image.name = this.uploadedImage.name;
             this.disabled = false;
           });
-        }
+        },
       );
     },
     deleteDialog() {
@@ -286,9 +258,7 @@ export default {
       if (this.organisation.image.name == "") return;
       console.log("deleting image...");
       // Create a reference to the file to delete
-      var storageRef = storage.ref(
-        "organisation-images/" + this.organisation.image.name
-      );
+      var storageRef = storage.ref("organisation-images/" + this.organisation.image.name);
       // Delete the file
       storageRef
         .delete()

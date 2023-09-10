@@ -17,26 +17,18 @@
         </template>
         <div>
           <p class="ma-0 person-tooltip">Person:</p>
-          <p
-            class="ma-0 person-tooltip"
-            style="font-size: 0.8rem; font-weight: 800"
-          >
+          <p class="ma-0 person-tooltip" style="font-size: 0.8rem; font-weight: 800">
             {{ requester.firstName + " " + requester.lastName }}
           </p>
         </div>
       </v-tooltip>
-      <p class="request-text text-left">
-        "{{ request.requestForHelpMessage }}"
-      </p>
+      <p class="request-text text-left">"{{ request.requestForHelpMessage }}"</p>
     </div>
     <!-- divder line -->
     <div style="border-top: 1px solid var(--v-missionAccent-base)"></div>
     <!-- instructor response -->
     <div class="d-flex request-msg">
-      <p
-        class="response-text text-right"
-        style="color: var(--v-galaxyAccent-base)"
-      >
+      <p class="response-text text-right" style="color: var(--v-galaxyAccent-base)">
         {{
           request.responseMessage
             ? '"' + request.responseMessage + '"'
@@ -45,12 +37,7 @@
       </p>
       <v-tooltip v-if="responder" bottom color="subBackground">
         <template v-slot:activator="{ on, attrs }">
-          <div
-            v-if="request.responseMessage"
-            class="requester-image"
-            v-bind="attrs"
-            v-on="on"
-          >
+          <div v-if="request.responseMessage" class="requester-image" v-bind="attrs" v-on="on">
             <v-avatar size="30">
               <img
                 v-if="responder.image"
@@ -63,10 +50,7 @@
         </template>
         <div>
           <p class="ma-0 person-tooltip">Person:</p>
-          <p
-            class="ma-0 person-tooltip"
-            style="font-size: 0.8rem; font-weight: 800"
-          >
+          <p class="ma-0 person-tooltip" style="font-size: 0.8rem; font-weight: 800">
             {{ responder.firstName + " " + responder.lastName }}
           </p>
         </div>
@@ -77,8 +61,9 @@
 
 <script>
 import SolarSystem from "@/components/SolarSystem.vue";
-import { dbMixins } from "@/mixins/DbMixins.js";
-import { mapState, mapGetters } from "vuex";
+import { dbMixins } from "@/mixins/DbMixins";
+import useRootStore from "@/store/index";
+import { mapState } from "pinia";
 
 export default {
   name: "RequestsForHelpStudentCard",
@@ -94,13 +79,11 @@ export default {
     },
   },
   computed: {
-    ...mapState(["currentCourseId", "currentTopicId", "currentTaskId"]),
+    ...mapState(useRootStore, ["currentCourseId", "currentTopicId", "currentTaskId"]),
   },
   async mounted() {
     this.requester = await this.MXgetPersonByIdFromDB(this.request.personId);
-    this.responder = await this.MXgetPersonByIdFromDB(
-      this.request.responderPersonId
-    );
+    this.responder = await this.MXgetPersonByIdFromDB(this.request.responderPersonId);
     // console.log("requester person:", this.requester);
     // console.log("responder person:", this.responder);
   },
@@ -113,9 +96,7 @@ export default {
   methods: {
     async getResponder() {
       // get responsers image when request is updated
-      this.responder = await this.MXgetPersonByIdFromDB(
-        this.request.responderPersonId
-      );
+      this.responder = await this.MXgetPersonByIdFromDB(this.request.responderPersonId);
     },
   },
 };

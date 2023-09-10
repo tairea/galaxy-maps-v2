@@ -59,9 +59,7 @@
     >
       &gt;
     </v-chip>
-    <span color="missionAccent" v-if="showDate" class="caption pa-2 date">{{
-      date
-    }}</span>
+    <span color="missionAccent" v-if="showDate" class="caption pa-2 date">{{ date }}</span>
   </div>
 </template>
 

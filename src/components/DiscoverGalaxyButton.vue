@@ -18,9 +18,7 @@
             <div class="dialog-header">
               <p class="dialog-title">{{ dialogTitle }}</p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent">{{
-                  mdiInformationVariant
-                }}</v-icon>
+                <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <p class="dialog-description">{{ dialogDescription }}</p>
               </div>
             </div>
@@ -41,12 +39,7 @@
 
             <!-- ACTION BUTTONS -->
             <div class="action-buttons">
-              <v-btn
-                outlined
-                color="baseAccent"
-                @click="routeToGalaxy(courseId)"
-                class="mr-2"
-              >
+              <v-btn outlined color="baseAccent" @click="routeToGalaxy(courseId)" class="mr-2">
                 <v-icon left>
                   {{ mdiRocketLaunchOutline }}
                 </v-icon>
@@ -75,13 +68,9 @@
 </template>
 
 <script>
-import { db, storage } from "@/store/firestoreConfig.ts";
-import {
-  mdiRocketLaunchOutline,
-  mdiClose,
-  mdiInformationVariant,
-} from "@mdi/js";
-import { mapMutations } from "vuex";
+import { db, storage } from "@/store/firestoreConfig";
+import { mdiRocketLaunchOutline, mdiClose, mdiInformationVariant } from "@mdi/js";
+import { mapActions } from "pinia";
 
 export default {
   name: "DiscoverGalaxyButton",
@@ -92,12 +81,12 @@ export default {
     mdiInformationVariant,
     dialog: false,
     dialogTitle: "Discover a hidden Galaxy",
-    dialogDescription:
-      "Discover a private Galaxy that has been created by another user",
+    dialogDescription: "Discover a private Galaxy that has been created by another user",
     courseId: "",
   }),
   mounted() {},
   methods: {
+    ...mapActions(useRootStore, ["setCurrentCourseId"]),
     cancel() {
       console.log("cancel");
       this.dialog = false;
@@ -105,7 +94,7 @@ export default {
     },
     routeToGalaxy(courseId) {
       // route to galaxy
-      this.$store.commit("setCurrentCourseId", courseId);
+      this.setCurrentCourseId(courseId);
       this.$router.push({
         name: "GalaxyView",
         params: {

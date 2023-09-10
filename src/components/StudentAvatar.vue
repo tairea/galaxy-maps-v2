@@ -31,30 +31,25 @@
           <v-icon large @click="onButtonClick">{{ mdiPencil }}</v-icon>
         </v-overlay>
       </v-fade-transition>
-      <input
-        ref="uploader"
-        class="d-none"
-        type="file"
-        accept="image/*"
-        @change="onFileChanged"
-      />
+      <input ref="uploader" class="d-none" type="file" accept="image/*" @change="onFileChanged" />
     </v-avatar>
     <!-- </v-hover> -->
   </div>
 </template>
 
 <script>
-import { db, storage } from "@/store/firestoreConfig.ts";
+import { db, storage } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
 import { mdiPencil, mdiAccount } from "@mdi/js";
 import firebase from "firebase/compat/app";
-import { mapState, mapActions } from "vuex";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "StudentAvatar",
   props: ["size"],
   mounted() {},
   computed: {
-    ...mapState(["person"]),
+    ...mapState(useRootStore, ["person"]),
   },
   data() {
     return {
@@ -69,7 +64,7 @@ export default {
     };
   },
   methods: {
-    ...mapActions(["getPersonById"]),
+    ...mapActions(useRootStore, ["getPersonById"]),
     logout() {
       firebase
         .auth()
@@ -79,7 +74,6 @@ export default {
           this.snackbarColour = "baseAccent";
           this.snackbarMsg = "Successfully signed out";
           this.snackbar = true;
-          this.resetState();
           this.$router.push("/login");
         })
         .catch((error) => {
@@ -89,16 +83,6 @@ export default {
           this.snackbar = true;
           this.$router.push("/");
         });
-    },
-    resetState() {
-      let state = this.$store.state;
-      let newState = {};
-
-      Object.keys(state).forEach((key) => {
-        newState[key] = null; // or = initialState[key]
-      });
-      delete newstate.user;
-      this.$store.replaceState(newState);
     },
     onButtonClick() {
       this.$refs.uploader?.click();
@@ -117,7 +101,7 @@ export default {
           this.person.firstname +
           this.person.lastname +
           "-" +
-          this.selectedFile.name
+          this.selectedFile.name,
       );
 
       // upload a file
@@ -129,7 +113,7 @@ export default {
         (snapshot) => {
           // show progress on uploader bar
           this.uploadPercentage = Math.floor(
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100,
           );
         },
         // upload error
@@ -148,7 +132,7 @@ export default {
             console.log("image: ", this.image);
             this.updateProfile();
           });
-        }
+        },
       );
     },
     updateProfile() {

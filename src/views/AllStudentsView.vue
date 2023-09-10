@@ -35,9 +35,10 @@
 import SubmissionTeacherFrame from "@/components/SubmissionTeacherFrame.vue";
 import RequestForHelpTeacherFrame from "@/components/RequestForHelpTeacherFrame.vue";
 import StudentProgressionChartJs3 from "@/components/StudentProgressionChartJs3.vue";
-import { dbMixins } from "@/mixins/DbMixins.js";
-import { db } from "@/store/firestoreConfig.ts";
-import { mapState, mapGetters } from "vuex";
+import { dbMixins } from "@/mixins/DbMixins";
+import { db } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
+import { mapState } from "pinia";
 
 export default {
   name: "AllStudentView",
@@ -52,7 +53,7 @@ export default {
     this.progressLoading = true;
   },
   computed: {
-    ...mapState(["user", "person", "personsCourses"]),
+    ...mapState(useRootStore, ["user", "person", "personsCourses"]),
   },
   data() {
     return {
@@ -66,8 +67,7 @@ export default {
 
   methods: {
     // async bindStudentTaskProgress() {
-    //   await this.$store.dispatch(
-    //     "getEachStudentsProgressForTeacher",
+    //   await this.getEachStudentsProgressForTeacher(
     //     this.user.data.id
     //   );
     //   this.progressLoading = false;

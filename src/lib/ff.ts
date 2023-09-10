@@ -1,29 +1,25 @@
 // Use this script for any firebase functions (ff) that are completely independant of components
-import { startGalaxyXAPIStatement } from "@/lib/veracityLRS";
-import { db, functions } from "@/store/firestoreConfig.ts";
+import { db, functions } from "@/store/firestoreConfig";
 
-export const getCourseById = async (id) => {
-  const course = await db
-    .collection("courses")
-    .doc(id)
-    .get();
+export const getCourseById = async (id: string) => {
+  const course = await db.collection("courses").doc(id).get();
   return {
     id,
     ...course.data(),
   };
 };
-export const getStudentByEmail = async (email) => {
-  const people = await db
-    .collection("people")
-    .where("email", "==", email)
-    .limit(1)
-    .get();
+export const getStudentByEmail = async (email: string) => {
+  const people = await db.collection("people").where("email", "==", email).limit(1).get();
 
   return people.docs[0]?.data();
 };
 
-export const getStudentTasksByTopicId = async (payload) => {
-  const tasks = []
+export const getStudentTasksByTopicId = async (payload: {
+  studentId: string;
+  courseId: string;
+  topicId: string;
+}) => {
+  const tasks = [];
 
   const studentTasks = await db
     .collection("people")
@@ -31,41 +27,38 @@ export const getStudentTasksByTopicId = async (payload) => {
     .collection(payload.courseId)
     .doc(payload.topicId)
     .collection("tasks")
-    .get()
+    .get();
 
   for (const task of studentTasks.docs) {
-    tasks.push(task.data())
+    tasks.push(task.data());
   }
-  return tasks
-}
+  return tasks;
+};
 
-export const getStudentCohortsById = async (studentId) => {
+export const getStudentCohortsById = async (studentId: string) => {
   const querySnapShot = await db
     .collection("cohorts")
     .where("students", "array-contains", studentId)
     .get();
 
   const cohorts = querySnapShot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    id: doc.id,
+    ...doc.data(),
+  }));
 
   return cohorts;
-}
+};
 
-export const getCohortById = async (cohortId) => {
-  const doc = await db
-    .collection("cohorts")
-    .doc(cohortId)
-    .get();
+export const getCohortById = async (cohortId: string) => {
+  const doc = await db.collection("cohorts").doc(cohortId).get();
 
   return {
     id: doc.id,
-    ...doc.data()
-  }
-}
+    ...doc.data(),
+  };
+};
 
-export const getAllPeopleInCourse = async (courseId) => {
+export const getAllPeopleInCourse = async (courseId: string) => {
   return await db
     .collection("people")
     .where("assignedCourses", "array-contains", courseId)
@@ -78,30 +71,30 @@ export const getAllPeopleInCourse = async (courseId) => {
         };
       });
       return people;
-    })
-}
+    });
+};
 
-export const getAllCohortsInCourse = async (courseId, teacherId) => {
+export const getAllCohortsInCourse = async (courseId: string, teacherId: string) => {
   return await db
-    .collection('cohorts')
+    .collection("cohorts")
     .where("courses", "array-contains", courseId)
     .get()
     .then((querySnapShot) => {
       const cohort = querySnapShot.docs.map((doc) => {
-        let teacher = doc.data().teachers.some(teacher => teacher == teacherId)
+        const teacher = doc.data().teachers.some((teacher: string) => teacher == teacherId);
         return {
           id: doc.id,
           ...doc.data(),
-          teacher
-        }
-      })
-      return cohort
-    })
-}
+          teacher,
+        };
+      });
+      return cohort;
+    });
+};
 
-export const getPersonsTopicById = async (personId, courseId, topicId) => {
+export const getPersonsTopicById = async (personId: string, courseId: string, topicId: string) => {
   return await db
-    .collection('people')
+    .collection("people")
     .doc(personId)
     .collection(courseId)
     .doc(topicId)
@@ -109,30 +102,33 @@ export const getPersonsTopicById = async (personId, courseId, topicId) => {
     .then((doc) => {
       return {
         id: doc.id,
-        ...doc.data()
-      }
-    })
-}
+        ...doc.data(),
+      };
+    });
+};
 
 // add this galaxy metadata (eg. topics) to my course database
-export const assignTopicsAndTasksToMe = async (course) => {
+export const assignTopicsAndTasksToMe = async (course: { id: string }) => {
   const data = {
-    courseId: course.id
+    courseId: course.id,
   };
   const assignTopicsAndTasksToMe = functions.httpsCallable("assignTopicsAndTasksToMe");
   return assignTopicsAndTasksToMe(data).catch((error) => {
     console.error(error);
   });
-}
+};
 
 // add this galaxy metadata (eg. topics) to this persons course database
-export const assignTopicsAndTasksToStudent = async (person, course) => {
+export const assignTopicsAndTasksToStudent = async (
+  person: { id: string },
+  course: { id: string },
+) => {
   const data = {
     person: person.id,
-    courseId: course.id
+    courseId: course.id,
   };
   const assignTopicsAndTasksToStudent = functions.httpsCallable("assignTopicsAndTasksToStudent");
   return assignTopicsAndTasksToStudent(data).catch((error) => {
     console.error(error);
   });
-}
+};

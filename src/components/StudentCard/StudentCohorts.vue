@@ -17,7 +17,7 @@
 
 <script>
 import Cohort from "@/components/Cohort.vue";
-import { getStudentCohortsById } from "@/lib/ff.js";
+import { getStudentCohortsById } from "@/lib/ff";
 
 export default {
   name: "StudentCohorts",

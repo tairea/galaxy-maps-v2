@@ -122,14 +122,11 @@ export default {
       }, 100);
     },
     calcTopicsCompletedPercentage() {
-      let percentage =
-        (this.activity.topicCompletedCount / this.activity.course.topicTotal) *
-        100;
+      let percentage = (this.activity.topicCompletedCount / this.activity.course.topicTotal) * 100;
       this.topicsCompletedPercentage = Math.round(percentage) || 1;
     },
     async calcTasksCompletedPercentage() {
-      if (this.activity.currentTopic?.status === "completed")
-        this.tasksCompletedPercentage = 100;
+      if (this.activity.currentTopic?.status === "completed") this.tasksCompletedPercentage = 100;
       if (this.activity.currentTopic) {
         this.tasksInCurrentTopic = await getStudentTasksByTopicId({
           studentId: this.student.id,
@@ -140,13 +137,10 @@ export default {
         this.tasksInCurrentTopic.forEach((task) => {
           if (task.taskStatus === "completed") this.completedTasksInTopic++;
         });
-        let percentage =
-          (this.completedTasksInTopic / this.tasksInCurrentTopic.length) * 100;
+        let percentage = (this.completedTasksInTopic / this.tasksInCurrentTopic.length) * 100;
         this.tasksCompletedPercentage = Math.round(percentage) || 1;
       } else {
-        let percentage =
-          (this.activity.tasksCompletedCount / this.activity.course.taskTotal) *
-          100;
+        let percentage = (this.activity.tasksCompletedCount / this.activity.course.taskTotal) * 100;
         this.tasksCompletedPercentage = Math.round(percentage) || 1;
       }
     },

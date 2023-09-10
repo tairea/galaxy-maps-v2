@@ -33,12 +33,9 @@
                 >
               </p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent">{{
-                  mdiInformationVariant
-                }}</v-icon>
+                <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <p class="dialog-description">
-                  To complete this task you must submit a response to following
-                  instructions
+                  To complete this task you must submit a response to following instructions
                 </p>
               </div>
             </div>
@@ -53,9 +50,7 @@
                 ?
               </p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent">{{
-                  mdiInformationVariant
-                }}</v-icon>
+                <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <p class="dialog-description">
                   Did you complete all the requirements of the Mission?
                 </p>
@@ -98,12 +93,9 @@
 
                 <div class="submission-create-dialog-content">
                   <div class="d-flex align-center">
-                    <v-icon left color="missionAccent">{{
-                      mdiInformationVariant
-                    }}</v-icon>
+                    <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                     <p class="dialog-description pb-4">
-                      submit your response below<br />(include any links to your
-                      work if required)
+                      submit your response below<br />(include any links to your work if required)
                     </p>
                   </div>
                   <vue-editor
@@ -190,9 +182,7 @@
             <div class="dialog-header">
               <p class="dialog-title">SUBMISSION COMPLETED</p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent">{{
-                  mdiInformationVariant
-                }}</v-icon>
+                <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <p class="dialog-description">
                   You have already submitted your work for this mission
                 </p>
@@ -231,9 +221,10 @@ import {
   reSubmitWorkForReviewXAPIStatement,
   taskMarkedAsCompletedXAPIStatement,
   topicCompletedXAPIStatement,
-} from "@/lib/veracityLRS.js";
-import { dbMixins } from "@/mixins/DbMixins.js";
-import { db, functions } from "@/store/firestoreConfig.ts";
+} from "@/lib/veracityLRS";
+import { dbMixins } from "@/mixins/DbMixins";
+import { db, functions } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
 import {
   mdiCloudUploadOutline,
   mdiInformationVariant,
@@ -242,7 +233,7 @@ import {
   mdiCheckboxBlankOutline,
 } from "@mdi/js";
 import { VueEditor } from "vue2-editor";
-import { mapState, mapGetters } from "vuex";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "MissionCompletedDialog",
@@ -277,12 +268,7 @@ export default {
     customToolbar: [
       [{ header: [false, 3, 4, 5] }],
       ["bold", "italic", "underline", "strike"], // toggled buttons
-      [
-        { align: "" },
-        { align: "center" },
-        { align: "right" },
-        { align: "justify" },
-      ],
+      [{ align: "" }, { align: "center" }, { align: "right" }, { align: "justify" }],
       ["blockquote", "code-block"],
       [{ list: "ordered" }, { list: "bullet" }],
       [{ indent: "-1" }, { indent: "+1" }], // outdent/indent
@@ -296,13 +282,10 @@ export default {
     if (!this.currentCourse.mappedBy.image) {
       this.getMappedByPersonsImage(this.currentCourse.mappedBy.personId);
     }
-    console.log(
-      "persons topics from mission completed dialog",
-      this.personsTopics
-    );
+    console.log("persons topics from mission completed dialog", this.personsTopics);
   },
   computed: {
-    ...mapState([
+    ...mapState(useRootStore, [
       "currentCourse",
       "currentTopic",
       "currentTask",
@@ -310,18 +293,17 @@ export default {
       "currentCohort",
       "courseSubmissions",
       "personsTopics",
+      "person",
     ]),
-    ...mapGetters(["person"]),
     submission() {
       const submissions = this.courseSubmissions.filter(
-        (submission) => submission.studentId == this.person.id
+        (submission) => submission.studentId == this.person.id,
       );
-      return submissions.find(
-        (submission) => submission.contextTask.id == this.task.id
-      );
+      return submissions.find((submission) => submission.contextTask.id == this.task.id);
     },
   },
   methods: {
+    ...mapActions(useRootStore, ["setSnackbar"]),
     async reSubmitWorkForReview() {
       this.loading = true;
       this.disabled = true;
@@ -358,13 +340,13 @@ export default {
         this.loading = false;
         this.dialog = false;
 
-        this.$store.commit("setSnackbar", {
+        this.setSnackbar({
           show: true,
           text: "Submission sent. You will be notified when your instructor has reviewed your work.",
           color: "baseAccent",
         });
       } catch (error) {
-        this.$store.commit("setSnackbar", {
+        this.setSnackbar({
           show: true,
           text: "Error: " + error,
           color: "baseAccent",
@@ -393,7 +375,7 @@ export default {
           await this.sendTaskSubmission(
             teacherId,
             this.submissionLink,
-            this.task.submissionInstructions
+            this.task.submissionInstructions,
           );
         }
       }
@@ -436,7 +418,7 @@ export default {
             await this.sendTaskSubmission(
               teacherId,
               this.submissionLink,
-              this.task.submissionInstructions
+              this.task.submissionInstructions,
             );
           }
         }
@@ -444,27 +426,23 @@ export default {
         console.log("Submission successfully submitted for review!");
 
         // send xAPI statement to LRS
-        await submitWorkForReviewXAPIStatement(
-          this.person,
-          this.currentTask.id,
-          {
-            galaxy: this.currentCourse,
-            system: this.currentTopic,
-            mission: this.currentTask,
-          }
-        );
+        await submitWorkForReviewXAPIStatement(this.person, this.currentTask.id, {
+          galaxy: this.currentCourse,
+          system: this.currentTopic,
+          mission: this.currentTask,
+        });
 
         this.requestForHelp = "";
         this.loading = false;
         this.dialog = false;
 
-        this.$store.commit("setSnackbar", {
+        this.setSnackbar({
           show: true,
           text: "Submission sent. You will be notified when your instructor has reviewed your work.",
           color: "baseAccent",
         });
       } catch (error) {
-        this.$store.commit("setSnackbar", {
+        this.setSnackbar({
           show: true,
           text: "Error: " + error,
           color: "baseAccent",
@@ -522,15 +500,11 @@ export default {
       console.log("Task status successfully written as completed!");
 
       // send xAPI statement to LRS
-      await taskMarkedAsCompletedXAPIStatement(
-        this.person,
-        this.currentTask.id,
-        {
-          galaxy: this.currentCourse,
-          system: this.currentTopic,
-          mission: this.currentTask,
-        }
-      );
+      await taskMarkedAsCompletedXAPIStatement(this.person, this.currentTask.id, {
+        galaxy: this.currentCourse,
+        system: this.currentTopic,
+        mission: this.currentTask,
+      });
 
       // unlock next task
       await this.unlockNextTask();
@@ -559,9 +533,7 @@ export default {
       for (const [index, task] of currentTasks.docs.entries()) {
         if (task.data().taskStatus == "locked") {
           await task.ref.update({ taskStatus: "unlocked" });
-          console.log(
-            "NEW TASK UNLOCKED (" + index + ") : " + task.data().title
-          );
+          console.log("NEW TASK UNLOCKED (" + index + ") : " + task.data().title);
           return;
         }
       }
@@ -569,7 +541,7 @@ export default {
     async checkIfAllTasksCompleted() {
       // 1) check how many tasks in store are completed
       const numOfTasksCompleted = this.personsTopicsTasks.filter(
-        (obj) => obj.taskStatus === "completed"
+        (obj) => obj.taskStatus === "completed",
       ).length;
       // 2) check if that the same as total
       if (numOfTasksCompleted === this.personsTopicsTasks.length) {
@@ -587,24 +559,19 @@ export default {
         console.log("total tasks = ", this.personsTopicsTasks.length);
         console.log(
           "completed = ",
-          this.personsTopicsTasks.filter(
-            (obj) => obj.taskStatus === "completed"
-          ).length
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "completed").length,
         );
         console.log(
           "in review = ",
-          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "inreview")
-            .length
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "inreview").length,
         );
         console.log(
           "active = ",
-          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked")
-            .length
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked").length,
         );
         console.log(
           "locked = ",
-          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked")
-            .length
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked").length,
         );
       }
     },
@@ -622,9 +589,7 @@ export default {
       for (const doc of docs) {
         // if has more than one prereq
         if (doc.data().prerequisites.length > 1) {
-          console.log(
-            "next topic has more than one prerequisite... checking if completed..."
-          );
+          console.log("next topic has more than one prerequisite... checking if completed...");
           let prereqsArr = doc.data().prerequisites;
           // minus this completed topic
           prereqsArr = prereqsArr.filter((e) => e !== this.currentTopic.id);
@@ -634,9 +599,7 @@ export default {
           for (const preq of prereqsArr) {
             console.log("checking if prereq " + preq + " is completed...");
             // check if the other preqs are .status completed
-            const preqObj = this.personsTopics.filter(
-              (topic) => topic.id === preq
-            );
+            const preqObj = this.personsTopics.filter((topic) => topic.id === preq);
             if (preqObj[0].topicStatus == "completed") {
               console.log("another prereq completed");
               prereqsCompletedCount++;
@@ -647,9 +610,7 @@ export default {
             await doc.ref.update({ topicStatus: "unlocked" });
             console.log("NEW TOPIC UNLOCKED: " + doc.data().label);
           } else {
-            console.log(
-              "other prereqs of next topic not completed. next topic not unlocked."
-            );
+            console.log("other prereqs of next topic not completed. next topic not unlocked.");
           }
         } else {
           await doc.ref.update({
@@ -685,11 +646,7 @@ export default {
       const person = await this.MXgetPersonByIdFromDB(personId);
       this.mappedByImageURL = person.image.url;
     },
-    async sendTaskSubmission(
-      teacherId,
-      submissionResponse,
-      submissionInstructions
-    ) {
+    async sendTaskSubmission(teacherId, submissionResponse, submissionInstructions) {
       const teacher = await this.MXgetPersonByIdFromDB(teacherId);
       const data = {
         course: this.currentCourse.title,
@@ -707,12 +664,7 @@ export default {
     handleImageAdded(file, Editor, cursorLocation) {
       // ceate a storage ref
       var storageRef = storage.ref(
-        "submission-images/student-" +
-          this.person.id +
-          "-task-" +
-          this.task.id +
-          "-" +
-          file.name
+        "submission-images/student-" + this.person.id + "-task-" + this.task.id + "-" + file.name,
       );
 
       // upload a file
@@ -723,10 +675,7 @@ export default {
         "state_changed",
         (snapshot) => {
           // show progress on uploader bar
-          console.log(
-            "image upload: ",
-            snapshot.bytesTransferred / snapshot.totalBytes
-          ) * 100;
+          console.log("image upload: ", snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         },
         // upload error
         (err) => {
@@ -739,7 +688,7 @@ export default {
             // add image url to course obj
             Editor.insertEmbed(cursorLocation, "image", downloadURL);
           });
-        }
+        },
       );
     },
   },
