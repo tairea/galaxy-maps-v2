@@ -81,6 +81,7 @@
 
 <script>
 import { db, storage } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
 import { mdiRocketLaunchOutline, mdiClose, mdiInformationVariant } from "@mdi/js";
 import { mapActions } from "pinia";
 
