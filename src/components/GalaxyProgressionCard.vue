@@ -5,7 +5,7 @@
         <h1 class="galaxy-title">
           {{ data.course.title }}
         </h1>
-        <v-img class="galaxy-image" :src="data.course.image.url"></v-img>
+        <v-img class="galaxy-image" :src="data.course.image?.url"></v-img>
         <!-- <p class="galaxy-description">
             {{ course.courseContext.description }}
           </p> -->
