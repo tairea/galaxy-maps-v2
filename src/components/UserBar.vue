@@ -1,5 +1,5 @@
 <template>
-  <v-hover v-model="hover" v-if="showMenu" :disabled="!user.loggedIn">
+  <v-hover :disabled="!user.loggedIn" v-model="hover" v-if="showMenu" >
     <div ref="userBar" class="userMenu" :class="{ showMenu: hover, miniMenu: miniNavMenu, notSignedInMenu: !user.loggedIn }">
       <!-- USER MENU TOP (BLACK) BAR -->
       <div v-if="!user.loggedIn" class="blackBar">
@@ -182,6 +182,7 @@ export default {
       this.$store.commit("setDarkMode", this.$vuetify.theme.isDark);
     },
     logout() {
+      this.hover = false
       firebase
         .database()
         .ref("/status/" + this.person.id)
@@ -344,10 +345,6 @@ export default {
 .miniMenu {
   width: 90px;
   transition: width 0.3s ease-out 0.3s, bottom 0.3s ease-out;
-}
-
-.notSignedInMenu {
-  
 }
 
 .showMenu {

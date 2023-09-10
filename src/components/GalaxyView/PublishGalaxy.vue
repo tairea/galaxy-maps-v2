@@ -128,6 +128,9 @@
               <span style="font-weight: 600; color: var(--v-galaxyAccent-base)">{{ course.title }}</span>
               galaxy to make publicly visible
             </p>
+            <p>
+              All Galaxy Maps users will be able to see and start this map.
+            </p>
           </div>
           <p v-else class="dialog-description">
             Publish this Galaxy
@@ -172,7 +175,7 @@
         </div> -->
         <p class="caption ma-0" v-if="courseOptions.public && !admin">
           <i>(Public courses need to be submitted for review by Galaxy Map
-            moderators. This should be completed within 48 hours.)</i>
+            moderators.<br>This usually done within 48 hours.)</i>
         </p>
       </div>
       <!-- ACTION BUTTONS -->
