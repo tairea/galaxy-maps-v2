@@ -1,6 +1,11 @@
 <template>
   <div class="bg">
     <Login v-if="componentView == 'login'" />
+    <v-btn v-if="componentView == 'login'" :to="{path: '/'}">
+      <p  class="overline baseAccent--text landing-content">
+          Continue without signing in ->
+      </p>
+    </v-btn>
     <VerifyEmail v-else-if="componentView == 'verify'" />
     <ResetPassword v-else-if="componentView == 'reset'" />
     <Register v-else-if="componentView == 'register'" />
@@ -28,6 +33,8 @@
         </p>
       </div>
     </div>
+
+    
 
     <!-- Background maps video -->
     <video id="background-video" autoplay loop muted>

@@ -55,7 +55,23 @@
           </p>
         </div>
       </v-tooltip>
-      
+      <v-row v-else class="text-center" align="center">
+          <v-col cols="12">
+          <v-btn 
+            outlined 
+            color="baseAccent" 
+            @click="showDialog = true" 
+            :disabled="!user.loggedIn" 
+            class="createButton"
+            :style="clickedCourseId ? 'opacity:0' : 'opacity:1'"
+            >
+                  <v-icon left>
+                    {{ mdiPlus }}
+                  </v-icon>
+                  CREATE GALAXY
+                </v-btn>
+          </v-col>
+        </v-row>
       <!-- Discover button -->
       <!-- <DiscoverGalaxyButton :hide="clickedCourseId"/> -->
     </div>
