@@ -23,10 +23,7 @@
       </div>
     </div>
     <!-- <div class="buttons"> -->
-    <CreateEditDeleteGalaxyDialog
-      :showDialog="showDialog"
-      @close="showDialog = false"
-    />
+    <CreateEditDeleteGalaxyDialog :showDialog="showDialog" @close="showDialog = false" />
     <!-- </div> -->
   </div>
 </template>
@@ -37,8 +34,9 @@ import CreateEditDeleteGalaxyDialog from "@/components/CreateEditDeleteGalaxyDia
 import GalaxyListPanel from "@/components/GalaxyListPanel.vue";
 import GalaxyListInfoPanel from "@/components/GalaxyListInfoPanel.vue";
 import Galaxies from "@/components/Galaxies.vue";
-import { db } from "@/store/firestoreConfig.ts";
-import { mapState, mapGetters } from "vuex";
+import { db } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "GalaxyList",
@@ -61,8 +59,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(["courses"]),
-    ...mapGetters(["user", "person"]),
+    ...mapState(useRootStore, ["courses", "user", "person"]),
   },
   watch: {
     async user() {
@@ -76,7 +73,7 @@ export default {
           this.validSlug = false;
         }
       }
-      this.$store.dispatch("bindCourses", { owner }).then(() => {
+      this.bindCourses({ owner }).then(() => {
         this.loading = false;
       });
     },
@@ -95,7 +92,7 @@ export default {
         this.validSlug = false;
       }
     }
-    this.$store.dispatch("bindCourses", { owner }).then(() => {
+    this.bindCourses({ owner }).then(() => {
       this.loading = false;
     });
     if (this.courses.length > 0) {
@@ -109,6 +106,7 @@ export default {
     // 3) get submitted (IN REVIEW) mappedby && status==submitted
   },
   methods: {
+    ...mapActions(useRootStore, ["bindCourses"]),
     courseClicked(emittedPayload) {
       this.clickedCourseId = emittedPayload.courseId;
       if (emittedPayload.type) this.courseType = emittedPayload.type;

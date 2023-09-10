@@ -2,11 +2,7 @@
   <div>
     <v-tooltip v-if="profileData" bottom color="subBackground">
       <template v-slot:activator="{ on, attrs }">
-        <div
-          class="d-flex justify-center align-center"
-          v-bind="attrs"
-          v-on="on"
-        >
+        <div class="d-flex justify-center align-center" v-bind="attrs" v-on="on">
           <v-avatar :size="size">
             <img
               v-if="profileData.image"
@@ -15,11 +11,7 @@
               style="object-fit: cover"
               :style="border"
             />
-            <div
-              v-else-if="profileData.firstName"
-              class="imagePlaceholder"
-              :style="colouredBorder"
-            >
+            <div v-else-if="profileData.firstName" class="imagePlaceholder" :style="colouredBorder">
               {{ first3Letters(profileData.firstName) }}
             </div>
             <div v-else class="imagePlaceholder" :style="colouredBorder">
@@ -29,10 +21,7 @@
         </div>
       </template>
       <div>
-        <p
-          class="ma-0 person-tooltip"
-          style="font-size: 0.8rem; font-weight: 800"
-        >
+        <p class="ma-0 person-tooltip" style="font-size: 0.8rem; font-weight: 800">
           {{
             profileData.firstName
               ? profileData.firstName + " " + profileData.lastName
@@ -46,8 +35,9 @@
 
 <script>
 import { db } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
 import { mdiAccount } from "@mdi/js";
-import { mapState } from "vuex";
+import { mapState } from "pinia";
 
 export default {
   name: "Avatar",
@@ -72,15 +62,12 @@ export default {
     }
   },
   computed: {
-    ...mapState(["userStatus"]),
+    ...mapState(useRootStore, ["userStatus"]),
     online() {
-      if (this.profileData.id)
-        return this.userStatus[this.profileData.id]?.state === "online";
+      if (this.profileData.id) return this.userStatus[this.profileData.id]?.state === "online";
     },
     border() {
-      return this.colourBorder && this.online
-        ? "border: 1px solid var(--v-baseAccent-base)"
-        : "";
+      return this.colourBorder && this.online ? "border: 1px solid var(--v-baseAccent-base)" : "";
     },
     colouredBorder() {
       return this.colourBorder
@@ -88,7 +75,7 @@ export default {
             width: this.size + "px",
             height: this.size + "px",
             backgroundColor: this.stringToColour(
-              this.profileData.firstName + this.profileData.lastName
+              this.profileData.firstName + this.profileData.lastName,
             ),
             border: this.online ? "1px solid var(--v-baseAccent-base)" : "",
           }

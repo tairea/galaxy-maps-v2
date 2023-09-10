@@ -17,10 +17,7 @@
         </template>
         <div>
           <p class="ma-0 person-tooltip">Person:</p>
-          <p
-            class="ma-0 person-tooltip"
-            style="font-size: 0.8rem; font-weight: 800"
-          >
+          <p class="ma-0 person-tooltip" style="font-size: 0.8rem; font-weight: 800">
             {{ requester.firstName + " " + requester.lastName }}
           </p>
         </div>
@@ -33,11 +30,7 @@
     </div>
     <!-- View submission button -->
     <div class="pb-3 d-flex justify-center align-center">
-      <a
-        style="text-decoration: none"
-        :href="work.submissionLink"
-        target="_blank"
-      >
+      <a style="text-decoration: none" :href="work.submissionLink" target="_blank">
         <v-btn outlined color="cohortAccent" class="ma-2" small>
           <v-icon left> {{ mdiTextBoxSearchOutline }} </v-icon>
           VIEW SUBMISSION
@@ -49,22 +42,12 @@
     <!-- instructor response -->
     <div class="d-flex flex-column request-msg">
       <div class="d-flex">
-        <p
-          v-if="work.taskSubmissionStatus == 'declined'"
-          class="request-text text-right mr-4"
-        >
-          Submission Declined: <br />{{
-            humanDate(work.responseSubmittedTimestamp)
-          }}
+        <p v-if="work.taskSubmissionStatus == 'declined'" class="request-text text-right mr-4">
+          Submission Declined: <br />{{ humanDate(work.responseSubmittedTimestamp) }}
         </p>
         <v-tooltip v-if="responder" bottom color="subBackground">
           <template v-slot:activator="{ on, attrs }">
-            <div
-              v-if="work.responseMessage"
-              class="requester-image"
-              v-bind="attrs"
-              v-on="on"
-            >
+            <div v-if="work.responseMessage" class="requester-image" v-bind="attrs" v-on="on">
               <v-avatar size="30">
                 <img
                   v-if="responder.image"
@@ -77,20 +60,14 @@
           </template>
           <div>
             <p class="ma-0 person-tooltip">Person:</p>
-            <p
-              class="ma-0 person-tooltip"
-              style="font-size: 0.8rem; font-weight: 800"
-            >
+            <p class="ma-0 person-tooltip" style="font-size: 0.8rem; font-weight: 800">
               {{ responder.firstName + " " + responder.lastName }}
             </p>
           </div>
         </v-tooltip>
       </div>
       <div class="py-3 d-flex justify-center align-center">
-        <p
-          class="response-text text-right"
-          style="color: var(--v-galaxyAccent-base)"
-        >
+        <p class="response-text text-right" style="color: var(--v-galaxyAccent-base)">
           {{
             work.responseMessage
               ? '"' + work.responseMessage + '"'
@@ -114,10 +91,11 @@
 <script>
 import SolarSystem from "@/components/SolarSystem.vue";
 import MissionCompletedDialog from "@/components/MissionCompletedDialog.vue";
-import { dbMixins } from "@/mixins/DbMixins.js";
+import { dbMixins } from "@/mixins/DbMixins";
+import useRootStore from "@/store/index";
 import { mdiTextBoxSearchOutline } from "@mdi/js";
 import { DateTime } from "luxon";
-import { mapState, mapGetters } from "vuex";
+import { mapState } from "pinia";
 
 export default {
   name: "SubmissionStudentCard",
@@ -134,14 +112,12 @@ export default {
     },
   },
   computed: {
-    ...mapState(["currentCourseId", "currentTopicId", "currentTaskId"]),
+    ...mapState(useRootStore, ["currentCourseId", "currentTopicId", "currentTaskId"]),
   },
   async mounted() {
     console.log("work for work card:", this.work);
     this.requester = await this.MXgetPersonByIdFromDB(this.work.studentId);
-    this.responder = await this.MXgetPersonByIdFromDB(
-      this.work.responderPersonId
-    );
+    this.responder = await this.MXgetPersonByIdFromDB(this.work.responderPersonId);
     // console.log("requester person:", this.requester);
     // console.log("responder person:", this.responder);
   },
@@ -155,14 +131,10 @@ export default {
   methods: {
     async getResponder() {
       // get responsers image when request is updated
-      this.responder = await this.MXgetPersonByIdFromDB(
-        this.work.responderPersonId
-      );
+      this.responder = await this.MXgetPersonByIdFromDB(this.work.responderPersonId);
     },
     humanDate(timestamp) {
-      return new DateTime.fromSeconds(timestamp.seconds).toFormat(
-        "ccc dd LLL t"
-      );
+      return new DateTime.fromSeconds(timestamp.seconds).toFormat("ccc dd LLL t");
     },
   },
 };

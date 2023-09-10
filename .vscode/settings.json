@@ -1,8 +1,9 @@
 {
-    "editor.formatOnSave": true,
-    "editor.bracketPairColorization.enabled": true,
-    "editor.guides.bracketPairs": "active",
-    "eslint.workingDirectories": [
-      "./functions"
-    ]
+  "editor.formatOnSave": true,
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": "active",
+  "eslint.workingDirectories": ["./functions"],
+  "[vue]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }

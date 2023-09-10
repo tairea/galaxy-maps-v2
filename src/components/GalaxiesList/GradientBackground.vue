@@ -1,4 +1,4 @@
-   <!-- <svg style="position:absolute" width="100%" height="auto" version="1.1"  xmlns="http://www.w3.org/2000/svg">
+<!-- <svg style="position:absolute" width="100%" height="auto" version="1.1"  xmlns="http://www.w3.org/2000/svg">
       <defs>
           <radialGradient id="RadialGradient1">
             <stop offset="0%" stop-color="var(--v-missionAccent-base)" stop-opacity="0.5"/>

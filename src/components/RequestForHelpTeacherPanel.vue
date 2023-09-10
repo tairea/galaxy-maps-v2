@@ -37,10 +37,7 @@
               <span class="ml-auto status-text">responded</span>
               {{ getHumanDate(request.responseSubmittedTimestamp) }}
             </div>
-            <div
-              v-else
-              class="requester-time d-flex flex-column align-center ml-auto"
-            >
+            <div v-else class="requester-time d-flex flex-column align-center ml-auto">
               <span class="ml-auto status-text">...waiting response</span>
               {{ getHumanDate(request.requestSubmittedTimestamp) }}
             </div>
@@ -64,22 +61,14 @@
           <template v-if="!responderPerson">
             <div v-if="isTeacher">
               <div class="divider"></div>
-              <RequestForHelpResponseDialog
-                :request="request"
-                :requesterPerson="requesterPerson"
-              />
+              <RequestForHelpResponseDialog :request="request" :requesterPerson="requesterPerson" />
             </div>
           </template>
           <template v-else>
             <div class="divider"></div>
             <div class="d-flex align-start justify-end">
               <span class="requester-msg">"{{ request.responseMessage }}"</span>
-              <Avatar
-                :profile="responderPerson"
-                size="30"
-                :colourBorder="true"
-                class="ml-2"
-              />
+              <Avatar :profile="responderPerson" size="30" :colourBorder="true" class="ml-2" />
             </div>
           </template>
         </v-expansion-panel-content>
@@ -91,9 +80,10 @@
 <script>
 import Avatar from "@/components/Avatar.vue";
 import RequestForHelpResponseDialog from "@/components/RequestForHelpResponseDialog.vue";
-import { dbMixins } from "@/mixins/DbMixins.js";
+import { dbMixins } from "@/mixins/DbMixins";
+import useRootStore from "@/store/index";
 import moment from "moment";
-import { mapState, mapActions } from "vuex";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "RequestForHelpTeacherPanel",
@@ -117,24 +107,18 @@ export default {
     };
   },
   async mounted() {
-    this.requesterPerson = await this.MXgetPersonByIdFromDB(
-      this.request.personId
-    );
+    this.requesterPerson = await this.MXgetPersonByIdFromDB(this.request.personId);
     if (this.request.responderPersonId)
-      this.responderPerson = await this.MXgetPersonByIdFromDB(
-        this.request.responderPersonId
-      );
+      this.responderPerson = await this.MXgetPersonByIdFromDB(this.request.responderPersonId);
   },
   watch: {
     async request() {
       if (this.request.responderPersonId)
-        this.responderPerson = await this.MXgetPersonByIdFromDB(
-          this.request.responderPersonId
-        );
+        this.responderPerson = await this.MXgetPersonByIdFromDB(this.request.responderPersonId);
     },
   },
   computed: {
-    ...mapState(["allTasks", "people", "showPanelCard"]),
+    ...mapState(useRootStore, ["allTasks", "people", "showPanelCard"]),
     showCard: {
       get: function () {
         if (
@@ -145,7 +129,7 @@ export default {
         return null;
       },
       set: function (newValue) {
-        this.$store.commit("setPanelCard", {});
+        this.setPanelCard({});
       },
     },
     courseContextProfile() {
@@ -158,6 +142,7 @@ export default {
     },
   },
   methods: {
+    ...mapActions(useRootStore, ["setPanelCard"]),
     getTask(id) {
       return this.topicsTasks.find((task) => task.id == id);
     },

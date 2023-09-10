@@ -1,10 +1,7 @@
 <template>
   <div>
     <v-expansion-panel-header class="py-0">
-      <div
-        class="mission-card"
-        :class="{ lockedOpacity: task.taskStatus == 'locked' }"
-      >
+      <div class="mission-card" :class="{ lockedOpacity: task.taskStatus == 'locked' }">
         <div class="mission-section mission-number-section">
           <p class="text-overline text-uppercase">Mission</p>
           <p class="mission-number">{{ index + 1 }}</p>
@@ -23,11 +20,7 @@
           <!-- TITLE -->
           <h1 class="mission-title pa-4">{{ task.title }}</h1>
           <!-- DESCRIPTION -->
-          <div
-            v-if="teacher"
-            v-html="task.description"
-            class="task-description"
-          ></div>
+          <div v-if="teacher" v-html="task.description" class="task-description"></div>
         </div>
 
         <!-- <div class="mission-section mission-section-overUnder">
@@ -60,21 +53,14 @@
     </div> -->
 
         <div v-if="!teacher" class="mission-section mission-section-overUnder">
-          <div
-            v-if="task.duration"
-            class="section-overUnder d-flex justify-center flex-column"
-          >
-            <p class="text-overline text-uppercase text-center">
-              Estimated Duration:
-            </p>
+          <div v-if="task.duration" class="section-overUnder d-flex justify-center flex-column">
+            <p class="text-overline text-uppercase text-center">Estimated Duration:</p>
             <p class="text-center">
               {{ task.duration }}
             </p>
           </div>
           <div class="section-overUnder d-flex justify-center flex-column">
-            <p class="text-overline text-uppercase text-center">
-              SUBMISSION REQ:
-            </p>
+            <p class="text-overline text-uppercase text-center">SUBMISSION REQ:</p>
             <p :style="[task.submissionRequired ? { color: '#FAF200' } : '']">
               {{ task.submissionRequired ? "YES" : "NO" }}
             </p>
@@ -122,9 +108,7 @@
             class="d-flex justify-center"
           >
             <v-icon
-              :color="
-                active || completed || declined ? 'baseAccent' : 'cohortAccent'
-              "
+              :color="active || completed || declined ? 'baseAccent' : 'cohortAccent'"
               large
               >{{ mdiCheck }}</v-icon
             >
@@ -144,23 +128,14 @@
               v-if="task.duration"
               class="d-flex justify-center flex-column three-vertical pa-4 duration"
             >
-              <p class="text-overline text-uppercase text-center">
-                Est. Duration:
-              </p>
+              <p class="text-overline text-uppercase text-center">Est. Duration:</p>
               <p class="text-center">{{ task.duration }} MINUTES</p>
             </div>
             <!-- end duration -->
             <!-- submission req -->
-            <div
-              class="d-flex justify-center flex-column three-vertical pa-4 submission"
-            >
-              <p class="text-overline text-uppercase text-center">
-                SUBMISSION REQ:
-              </p>
-              <p
-                class="text-center"
-                :style="[task.submissionRequired ? { color: '#FAF200' } : '']"
-              >
+            <div class="d-flex justify-center flex-column three-vertical pa-4 submission">
+              <p class="text-overline text-uppercase text-center">SUBMISSION REQ:</p>
+              <p class="text-center" :style="[task.submissionRequired ? { color: '#FAF200' } : '']">
                 {{ task.submissionRequired ? "YES" : "NO" }}
               </p>
               <div
@@ -226,9 +201,10 @@ import CreateEditDeleteMissionDialog from "@/components/CreateEditDeleteMissionD
 import StartMissionDialog from "@/components/StartMissionDialog.vue";
 import ActiveMissionsCard from "@/components/ActiveMissionsCard.vue";
 import SelectedMissionsCard from "@/components/SelectedMissionsCard.vue";
-import { db } from "@/store/firestoreConfig.ts";
+import { db } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
 import { mdiCheck, mdiLockOutline } from "@mdi/js";
-import { mapState, mapGetters } from "vuex";
+import { mapState } from "pinia";
 
 export default {
   name: "MissionsCard",
@@ -261,13 +237,7 @@ export default {
     },
   },
   computed: {
-    ...mapState([
-      "currentCourseId",
-      "personsTopics",
-      "topicsTasks",
-      "personsTopicsTasks",
-    ]),
-    ...mapGetters(["person"]),
+    ...mapState(useRootStore, ["currentCourseId", "personsTopics", "topicsTasks", "personsTopicsTasks","person"]),
     active() {
       return this.task.taskStatus == "active";
     },

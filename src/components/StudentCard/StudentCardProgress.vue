@@ -1,15 +1,7 @@
 <template>
   <section class="student-progress-section in-row">
-    <div
-      v-for="(activity, i) in activities"
-      :key="activity.course.id + i"
-      :class="divClass"
-    >
-      <StudentCircularProgress
-        :activity="activity"
-        :student="student"
-        :length="length"
-      />
+    <div v-for="(activity, i) in activities" :key="activity.course.id + i" :class="divClass">
+      <StudentCircularProgress :activity="activity" :student="student" :length="length" />
     </div>
   </section>
 </template>

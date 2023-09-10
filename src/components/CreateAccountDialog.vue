@@ -31,9 +31,10 @@
 
 <script>
 import CreateAccountForm from "@/components/CreateAccountForm.vue";
-import { dbMixins } from "@/mixins/DbMixins.js";
+import { dbMixins } from "@/mixins/DbMixins";
+import useRootStore from "@/store/index";
 import { mdiPlus } from "@mdi/js";
-import { mapGetters } from "vuex";
+import { mapState } from "pinia";
 
 export default {
   name: "CreateAccountDialog",
@@ -56,7 +57,7 @@ export default {
     parentEmailRules: [(v) => /.+@.+\..+/.test(v) || "E-mail must be valid"],
   }),
   computed: {
-    ...mapGetters(["person", "currentCohort"]),
+    ...mapState(useRootStore, ["person", "currentCohort"]),
     teacher() {
       return this.accountType === "teacher";
     },

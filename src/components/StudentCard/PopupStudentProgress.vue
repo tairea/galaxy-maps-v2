@@ -2,16 +2,13 @@
   <v-menu v-model="show" :position-x="e.left" :position-y="e.top + 110">
     <div class="ss-info-panel">
       <p class="caption base-text">
-        {{ payload.completedTasks }} out of {{ payload.totalTasks }} MISSIONS
-        completed for SYSTEM:
+        {{ payload.completedTasks }} out of {{ payload.totalTasks }} MISSIONS completed for SYSTEM:
         <span class="font-weight-bold">{{ payload.topic }}</span>
       </p>
       <p class="caption mission-text">
-        {{ payload.completedTopics }} out of {{ payload.totalTopics }} SYSTEMS
-        completed for GALAXY MAP:
-        <span class="font-weight-bold galaxyAccent--text">{{
-          payload.course
-        }}</span>
+        {{ payload.completedTopics }} out of {{ payload.totalTopics }} SYSTEMS completed for GALAXY
+        MAP:
+        <span class="font-weight-bold galaxyAccent--text">{{ payload.course }}</span>
       </p>
     </div>
   </v-menu>

@@ -52,7 +52,8 @@
 
 <script>
 import { db } from "@/store/firestoreConfig";
-import { mapState, mapGetters } from "vuex";
+import useRootStore from "@/store/index";
+import { mapState } from "pinia";
 
 export default {
   name: "EdgeInfoPanel",
@@ -67,7 +68,7 @@ export default {
     // console.log("selected edge is:", this.inselectedEdge);
   },
   computed: {
-    ...mapState(["currentCourseId"]),
+    ...mapState(useRootStore, ["currentCourseId"]),
   },
   methods: {
     closeInfoPanel() {

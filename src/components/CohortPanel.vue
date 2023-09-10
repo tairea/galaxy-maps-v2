@@ -41,7 +41,7 @@
         x-small
         @click="previous"
       >
-        <
+        &lt;
       </v-chip>
       <v-chip
         class="my-2 mx-1 custom-chip"
@@ -79,14 +79,8 @@
       >
         Fortnight
       </v-chip>
-      <v-chip
-        class="my-2 mx-1 custom-chip"
-        color="missionAccent"
-        outlined
-        x-small
-        @click="next"
-      >
-        >
+      <v-chip class="my-2 mx-1 custom-chip" color="missionAccent" outlined x-small @click="next">
+        &gt;
       </v-chip>
     </div>
     <!-- Middle student avatars row -->
@@ -103,9 +97,7 @@
           @click.native="clickedPerson(person, index)"
         />
       </div>
-      <p v-else class="label text-center pa-4" style="font-weight: 800">
-        NO STUDENT DATA
-      </p>
+      <p v-else class="label text-center pa-4" style="font-weight: 800">NO STUDENT DATA</p>
     </div>
     <!-- Middle Bar chart row -->
     <div>
@@ -117,11 +109,7 @@
           :unselectedPersons="unselectedPersons"
         />
       </div>
-      <div
-        v-else
-        class="d-flex justify-center align-center"
-        style="padding: 50px 0px"
-      >
+      <div v-else class="d-flex justify-center align-center" style="padding: 50px 0px">
         <p class="label" style="font-weight: 800">NO COURSE DATA</p>
       </div>
     </div>
@@ -137,11 +125,7 @@
           :unselectedPersons="unselectedPersons"
         />
       </div>
-      <div
-        v-else
-        class="d-flex justify-center align-center"
-        style="padding: 50px 0px"
-      >
+      <div v-else class="d-flex justify-center align-center" style="padding: 50px 0px">
         <p class="label" style="font-weight: 800">NO COURSE DATA</p>
       </div>
     </div>
@@ -152,12 +136,9 @@
 import Avatar from "@/components/Avatar.vue";
 import ProgressionLineChart from "@/components/ProgressionLineChart.vue";
 import ActivityBarChart from "@/components/ActivityBarChart.vue";
-import {
-  getCohortsCourseDataXAPIQuery,
-  getStudentsTimeDataXAPIQuery,
-  VQLXAPIQuery,
-} from "@/lib/veracityLRS.js";
-import { mapActions, mapState } from "vuex";
+import { getCohortsCourseDataXAPIQuery, getStudentsTimeDataXAPIQuery } from "@/lib/veracityLRS";
+import useRootStore from "@/store/index";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "CohortPanel",
@@ -206,7 +187,7 @@ export default {
       }
       // this flattens any duplicates of students (eg. student 1 is in more than one course. but only want to show them once)
       this.studentsWithData = studentsArr.filter(
-        (v, i, a) => a.findIndex((t) => t.id === v.id) === i
+        (v, i, a) => a.findIndex((t) => t.id === v.id) === i,
       );
     }
 
@@ -221,15 +202,15 @@ export default {
     // const VQL = await VQLXAPIQuery();
   },
   computed: {
-    ...mapState(["currentCohort"]),
+    ...mapState(useRootStore, ["currentCohort"]),
   },
   methods: {
-    ...mapActions(["setCurrentCohort"]),
+    ...mapActions(useRootStore, ["setCurrentCohort"]),
     clickedPerson(person, index) {
       // get all avatar elements
       const avatarEls = this.$refs.avatar;
       // loop avatar els
-      for (var i = 0; i < avatarEls.length; i++) {
+      for (let i = 0; i < avatarEls.length; i++) {
         // add index to selected if not already. else remove
         if (i == index && !this.selectedIndexs.includes(index)) {
           this.selectedIndexs.push(index);
@@ -237,11 +218,9 @@ export default {
         }
         // remove
         else if (i == index && this.selectedIndexs.includes(index)) {
-          this.selectedIndexs = this.selectedIndexs.filter(
-            (item) => item !== index
-          );
+          this.selectedIndexs = this.selectedIndexs.filter((item) => item !== index);
           this.selectedPersons = this.selectedPersons.filter(
-            (selectedPerson) => selectedPerson.id !== person.id
+            (selectedPerson) => selectedPerson.id !== person.id,
           );
           this.unselectedPersons.push(person);
         }
@@ -249,15 +228,15 @@ export default {
         //anyone not in selectedPersons becomes unselected (this is used to hide data in chart)
         this.unselectedPersons = this.diffTwoArraysOfObjects(
           this.studentsWithData,
-          this.selectedPersons
+          this.selectedPersons,
         );
 
         // add dim to all avatar els
-        for (var y = 0; y < avatarEls.length; y++) {
+        for (let y = 0; y < avatarEls.length; y++) {
           avatarEls[y].$el.classList.add("dim");
         }
         //remove dim for selected avatar els
-        for (var x = 0; x < this.selectedIndexs.length; x++) {
+        for (let x = 0; x < this.selectedIndexs.length; x++) {
           avatarEls[this.selectedIndexs[x]].$el.classList.remove("dim");
         }
       }
@@ -392,20 +371,12 @@ export default {
       }
     },
     previousDays(num, start) {
-      if (!start) {
-        var d = new Date();
-      } else {
-        var d = new Date(start);
-      }
+      const d = start ? new Date(start) : new Date();
       d.setDate(d.getDate() - num);
       return d;
     },
     nextDays(num, start) {
-      if (!start) {
-        var d = new Date();
-      } else {
-        var d = new Date(start);
-      }
+      const d = start ? new Date(start) : new Date();
       d.setDate(d.getDate() + num);
       return d;
     },
@@ -414,7 +385,6 @@ export default {
     },
     async routeToCohort() {
       console.log("====== ROUTE TO COHORT =======");
-      // this.$store.commit("setCurrentCohort", {})
       await this.setCurrentCohort(this.cohort);
       // console.log('cohort set: ', cohort)
       // route to Galaxy View (passing params as props)

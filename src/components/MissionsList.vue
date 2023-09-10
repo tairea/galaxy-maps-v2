@@ -4,29 +4,17 @@
 
     <div>
       <!-- loading spinner -->
-      <div
-        class="d-flex justify-center align-center"
-        style="padding: 50px"
-        v-if="missionsLoading"
-      >
+      <div class="d-flex justify-center align-center" style="padding: 50px" v-if="missionsLoading">
         <v-btn :loading="missionsLoading" icon color="missionAccent"></v-btn>
       </div>
       <div v-else-if="tasks.length > 0" style="width: 100%">
-        <v-expansion-panels
-          :flat="true"
-          :multiple="false"
-          v-model="indexOfActiveTask"
-        >
+        <v-expansion-panels :flat="true" :multiple="false" v-model="indexOfActiveTask">
           <v-expansion-panel
             class="mission-expansions"
             v-for="(task, index) in tasks"
             :key="task.id"
             @click="missionClicked(task)"
-            :readonly="
-              task.taskStatus == 'locked' ||
-              task.taskStatus == 'unlocked' ||
-              teacher
-            "
+            :readonly="task.taskStatus == 'locked' || task.taskStatus == 'unlocked' || teacher"
             :value="task.taskStatus == 'active'"
           >
             <MissionsCard
@@ -56,7 +44,8 @@
 <script>
 import MissionsCard from "@/components/MissionsCard.vue";
 import CreateEditDeleteMissionDialog from "@/components/CreateEditDeleteMissionDialog.vue";
-import { mapState, mapGetters } from "vuex";
+import useRootStore from "@/store/index";
+import { mapState } from "pinia";
 
 export default {
   name: "MissionsList",
@@ -80,8 +69,7 @@ export default {
     this.missionsLoading = false;
   },
   computed: {
-    ...mapGetters(["person"]),
-    ...mapState(["currentTopic"]),
+    ...mapState(useRootStore, ["person", "currentTopic"]),
   },
   methods: {
     missionClicked(task) {

@@ -3,13 +3,7 @@
     <v-dialog v-model="dialog" width="40%" light>
       <!-- CREATE BUTTON -->
       <template v-slot:activator="{ on, attrs }">
-        <v-btn
-          outlined
-          color="baseAccent"
-          v-bind="attrs"
-          v-on="on"
-          class="ma-8"
-        >
+        <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on" class="ma-8">
           <v-icon left> {{ mdiPlus }} </v-icon>
           CREATE ADMIN
         </v-btn>
@@ -21,12 +15,9 @@
         <div class="dialog-header">
           <p class="dialog-title">Add Admin</p>
           <div class="d-flex align-center">
-            <v-icon left color="missionAccent">{{
-              mdiInformationVariant
-            }}</v-icon>
+            <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
             <p class="dialog-description">
-              An admin has unlimited access to records and publish submitted
-              galaxies
+              An admin has unlimited access to records and publish submitted galaxies
             </p>
           </div>
         </div>
@@ -48,12 +39,7 @@
             label="Add admin"
           >
             <template v-slot:selection="data">
-              <v-chip
-                v-bind="data.attrs"
-                :input-value="data.selected"
-                close
-                @click="data.select"
-              >
+              <v-chip v-bind="data.attrs" :input-value="data.selected" close @click="data.select">
                 <template>
                   <v-avatar v-if="data.item.image && data.item.image.url" left>
                     <v-img :src="data.item.image.url"></v-img>
@@ -64,27 +50,19 @@
             </template>
             <template v-slot:item="data">
               <template>
-                <v-list-item-avatar
-                  v-if="data.item.image && data.item.image.url"
-                >
+                <v-list-item-avatar v-if="data.item.image && data.item.image.url">
                   <img :src="data.item.image.url" />
                 </v-list-item-avatar>
                 <div
                   v-else
                   class="imagePlaceholder"
-                  :style="
-                    colouredBorder(data.item.firstName, data.item.lastName)
-                  "
+                  :style="colouredBorder(data.item.firstName, data.item.lastName)"
                 >
                   {{ first3Letters(data.item.firstName) }}
                 </div>
                 <v-list-item-content>
-                  <v-list-item-title
-                    v-html="data.item.firstName"
-                  ></v-list-item-title>
-                  <v-list-item-subtitle
-                    v-html="data.item.email"
-                  ></v-list-item-subtitle>
+                  <v-list-item-title v-html="data.item.firstName"></v-list-item-title>
+                  <v-list-item-subtitle v-html="data.item.email"></v-list-item-subtitle>
                 </v-list-item-content>
               </template>
             </template>
@@ -101,14 +79,7 @@
             >
               + Add Admin
             </v-btn>
-            <v-btn
-              :dark="dark"
-              :light="!dark"
-              class="ma-4"
-              @click="cancel()"
-              outlined
-              width="30%"
-            >
+            <v-btn :dark="dark" :light="!dark" class="ma-4" @click="cancel()" outlined width="30%">
               Cancel
             </v-btn>
           </v-row>
@@ -120,9 +91,10 @@
 </template>
 
 <script>
-import { functions } from "@/store/firestoreConfig.ts";
+import { functions } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
 import { mdiPlus, mdiInformationVariant } from "@mdi/js";
-import { mapState, mapGetters, mapActions } from "vuex";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "CreateAdminDialog",
@@ -137,8 +109,7 @@ export default {
     this.bindAllPeople();
   },
   computed: {
-    ...mapState(["people"]),
-    ...mapGetters(["user"]),
+    ...mapState(useRootStore, ["people", "user"]),
     cohortView() {
       return this.$route.name === "CohortView";
     },
@@ -147,7 +118,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(["bindAllPeople"]),
+    ...mapActions(useRootStore, ["bindAllPeople", "setSnackbar"]),
     cancel() {
       this.dialog = false;
     },
@@ -156,8 +127,8 @@ export default {
         this.addingAdmin = true;
         const addAdminRole = functions.httpsCallable("addAdminRole");
         addAdminRole(this.administrator)
-          .then((result) => {
-            this.$store.commit("setSnackbar", {
+          .then((_result) => {
+            this.setSnackbar({
               show: true,
               text: "Admin role successfully added for " + this.administrator,
               color: "baseAccent",
@@ -166,7 +137,7 @@ export default {
             this.administrator = "";
           })
           .catch((err) => {
-            this.$store.commit("setSnackbar", {
+            this.setSnackbar({
               show: true,
               text: "Something went wrong trying to add admin: " + err,
               color: "pink",
@@ -183,7 +154,7 @@ export default {
     },
     hashCode(str) {
       let hash = 0;
-      for (var i = 0; i < str.length; i++) {
+      for (let i = 0; i < str.length; i++) {
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
       }
       return hash;

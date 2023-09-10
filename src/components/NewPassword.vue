@@ -1,9 +1,7 @@
 <template>
   <div id="signin-info">
     <h2 class="signin-label">Create New Password</h2>
-    <p class="signin-description mt-4">
-      Reset your password for you Galaxy Maps account
-    </p>
+    <p class="signin-description mt-4">Reset your password for you Galaxy Maps account</p>
     <v-form ref="form" v-model="valid" lazy-validation class="my-4">
       <v-text-field
         :dark="dark"
@@ -39,13 +37,7 @@
       >
         Sign in
       </v-btn>
-      <v-btn
-        color="missionAccent"
-        class="mr-4 mt-4"
-        @click="$emit('close')"
-        outlined
-        width="100%"
-      >
+      <v-btn color="missionAccent" class="mr-4 mt-4" @click="$emit('close')" outlined width="100%">
         back to login
       </v-btn>
     </v-form>
@@ -53,8 +45,9 @@
 </template>
 
 <script>
+import useRootStore from "@/store/index";
 import firebase from "firebase/compat/app";
-import { mapGetters } from "vuex";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "NewPassword",
@@ -68,17 +61,15 @@ export default {
     confirmPassword: "",
     passwordRules: [
       (v) => !!v || "Password is required",
-      (v) =>
-        (v && v.length >= 8) || "Password must have a minimum of 8 characters",
+      (v) => (v && v.length >= 8) || "Password must have a minimum of 8 characters",
     ],
   }),
   computed: {
-    ...mapGetters(["user", "person"]),
+    ...mapState(useRootStore, ["user", "person"]),
     confirmPasswordRules() {
       return [
         (v) => !!v || "Please confirm password",
-        (v) =>
-          v === this.password || "The password confirmation does not match.",
+        (v) => v === this.password || "The password confirmation does not match.",
       ];
     },
     dark() {
@@ -86,6 +77,7 @@ export default {
     },
   },
   methods: {
+    ...mapActions(useRootStore, ["setSnackbar"]),
     resetPassword() {
       // Save the new password.
       firebase
@@ -93,7 +85,7 @@ export default {
         .confirmPasswordReset(this.actionCode, this.confirmPassword)
         .then((resp) => {
           // Password reset has been confirmed.
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Password reset",
             color: "baseAccent",
@@ -104,16 +96,14 @@ export default {
         })
         .then(() => {
           // Sign in user
-          return firebase
-            .auth()
-            .signInWithEmailAndPassword(this.email, this.confirmPassword);
+          return firebase.auth().signInWithEmailAndPassword(this.email, this.confirmPassword);
         })
         .then(() => {
           this.proceed();
         })
         .catch((error) => {
           // Error occurred during confirmation. The code might have expired or the
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Something went wrong please try to reset your password again",
             color: "pink",

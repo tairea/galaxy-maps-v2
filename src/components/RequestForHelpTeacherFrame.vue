@@ -12,29 +12,22 @@
       />
     </div>
     <div v-if="!loading && requests.length == 0">
-      <p
-        class="overline pt-4 text-center mb-0"
-        style="color: var(--v-galaxyAccent-base)"
-      >
+      <p class="overline pt-4 text-center mb-0" style="color: var(--v-galaxyAccent-base)">
         NO REQUESTS FOR HELP
       </p>
     </div>
     <!-- loading spinner -->
     <div class="d-flex justify-center align-center mt-4">
-      <v-btn
-        v-if="loading"
-        :loading="loading"
-        icon
-        color="galaxyAccent"
-      ></v-btn>
+      <v-btn v-if="loading" :loading="loading" icon color="galaxyAccent"></v-btn>
     </div>
   </div>
 </template>
 
 <script>
 import RequestForHelpTeacherPanel from "@/components/RequestForHelpTeacherPanel.vue";
-import { dbMixins } from "@/mixins/DbMixins.js";
-import { mapState, mapGetters } from "vuex";
+import { dbMixins } from "@/mixins/DbMixins";
+import useRootStore from "@/store/index";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "RequestForHelpTeacherFrame",
@@ -53,16 +46,13 @@ export default {
     this.loading = true;
     for (const course of this.courses) {
       console.log("getting requests for course: ", course);
-      const unsubscribe = await this.$store.dispatch(
-        "getRequestsForHelpByCourseId",
-        course.id
-      );
+      const unsubscribe = await this.getRequestsForHelpByCourseId(course.id);
       this.unsubscribes.push(unsubscribe);
     }
     this.loading = false;
   },
   computed: {
-    ...mapState([
+    ...mapState(useRootStore, [
       "teachersRequestsForHelp",
       "user",
       "currentCohort",
@@ -91,10 +81,8 @@ export default {
       // );
       const requests = this.teachersRequestsForHelp.filter((request) =>
         this.students?.some((student) => {
-          return student.id
-            ? student.id === request.personId
-            : student === request.personId;
-        })
+          return student.id ? student.id === request.personId : student === request.personId;
+        }),
       );
       if (this.isTeacher) {
         requests.sort((a, b) => {
@@ -108,18 +96,13 @@ export default {
 
       if (this.isCohortView || this.isDashboardView) return requests;
       else if (this.isGalaxyView) {
-        return requests.filter(
-          (request) => request.contextCourse.id == this.courses[0].id
-        );
+        return requests.filter((request) => request.contextCourse.id == this.courses[0].id);
       } else if (this.isSystemView) {
         const taskRequests = requests.filter(
-          (request) => request.contextTopic.id == this.currentTopic.id
+          (request) => request.contextTopic.id == this.currentTopic.id,
         );
         if (this.isTeacher) return taskRequests;
-        else
-          return taskRequests.filter(
-            (req) => req.contextTask.id == this.currentTask.id
-          );
+        else return taskRequests.filter((req) => req.contextTask.id == this.currentTask.id);
       }
       return requests;
     },
@@ -129,7 +112,9 @@ export default {
       unsubscribe();
     }
   },
-  methods: {},
+  methods: {
+    ...mapActions(useRootStore, ["getRequestsForHelpByCourseId"]),
+  },
 };
 </script>
 

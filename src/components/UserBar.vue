@@ -1,10 +1,6 @@
 <template>
   <v-hover v-model="hover">
-    <div
-      ref="userBar"
-      class="userMenu"
-      :class="{ showMenu: hover, miniMenu: miniNavMenu }"
-    >
+    <div ref="userBar" class="userMenu" :class="{ showMenu: hover, miniMenu: miniNavMenu }">
       <!-- USER MENU TOPBAR -->
       <div class="blackBar">
         <div class="d-flex justify-center align-center">
@@ -47,18 +43,13 @@
         </div>
         <div v-if="!miniNavMenu || hover" class="username mx-4" style="">
           <p class="ma-0">{{ person.firstName }} {{ person.lastName }}</p>
-          <span style="font-size: 0.8rem; color: #777"
-            >ID: {{ person.id }}</span
-          >
+          <span style="font-size: 0.8rem; color: #777">ID: {{ person.id }}</span>
         </div>
       </div>
       <!-- USER MENU HIDDEN-->
       <div class="userMenuHidden">
         <v-row>
-          <v-col
-            class="d-flex"
-            style="border-bottom: 1px solid var(--v-missionAccent-base)"
-          >
+          <v-col class="d-flex" style="border-bottom: 1px solid var(--v-missionAccent-base)">
             <p class="settings overline ma-0">Settings</p>
           </v-col>
         </v-row>
@@ -158,17 +149,11 @@
 <script>
 import ThemeColourPicker from "@/components/ThemeColourPicker.vue";
 import StudentEditDialog from "@/components/StudentEditDialog.vue";
-import { db, storage } from "@/store/firestoreConfig.ts";
-import {
-  mdiAccount,
-  mdiPencil,
-  mdiSend,
-  mdiDoorClosed,
-  mdiMessage,
-  mdiGithub,
-} from "@mdi/js";
+import { db, storage } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
+import { mdiAccount, mdiPencil, mdiSend, mdiDoorClosed, mdiMessage, mdiGithub } from "@mdi/js";
 import firebase from "firebase/compat/app";
-import { mapState, mapActions, mapMutations } from "vuex";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "UserBar",
@@ -197,10 +182,7 @@ export default {
   },
   watch: {
     $route(to, from) {
-      if (
-        this.$route.name == "GalaxyView" ||
-        this.$route.name == "SolarSystemView"
-      ) {
+      if (this.$route.name == "GalaxyView" || this.$route.name == "SolarSystemView") {
         this.miniNavMenu = true;
       } else {
         this.miniNavMenu = false;
@@ -212,20 +194,25 @@ export default {
 
     if (this.person.accountType == "teacher") {
       // get courses created by this person (populates state.personsCourses)
-      await this.$store.dispatch("bindCoursesByPersonId", this.person.id);
+      await this.bindCoursesByPersonId(this.person.id);
     }
   },
   computed: {
-    ...mapState(["person"]),
+    ...mapState(useRootStore, ["person"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
   },
   methods: {
-    ...mapActions(["getPersonById"]),
+    ...mapActions(useRootStore, [
+      "bindCoursesByPersonId",
+      "getPersonById",
+      "setDarkMode",
+      "setSnackbar",
+    ]),
     changeTheme() {
       this.$vuetify.theme.dark = this.darkSwitch;
-      this.$store.commit("setDarkMode", this.$vuetify.theme.isDark);
+      this.setDarkMode(this.$vuetify.theme.isDark);
     },
     logout() {
       firebase
@@ -241,7 +228,7 @@ export default {
         .signOut()
         .then(() => {
           // alert("Successfully signed out");
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Successfully signed out",
             color: "baseAccent",
@@ -250,7 +237,7 @@ export default {
         })
         .catch((error) => {
           alert(error.message);
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: error.message,
             color: "pink",
@@ -275,7 +262,7 @@ export default {
           this.person.firstname +
           this.person.lastname +
           "-" +
-          this.selectedFile.name
+          this.selectedFile.name,
       );
 
       // upload a file
@@ -287,7 +274,7 @@ export default {
         (snapshot) => {
           // show progress on uploader bar
           this.uploadPercentage = Math.floor(
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100,
           );
         },
         // upload error
@@ -306,7 +293,7 @@ export default {
             console.log("image: ", this.image);
             this.updateProfile();
           });
-        }
+        },
       );
     },
     updateProfile() {
@@ -389,12 +376,16 @@ export default {
 
 .miniMenu {
   width: 90px;
-  transition: width 0.3s ease-out 0.3s, bottom 0.3s ease-out;
+  transition:
+    width 0.3s ease-out 0.3s,
+    bottom 0.3s ease-out;
 }
 
 .showMenu {
   width: 25%;
   bottom: 0px;
-  transition: width 0.3s ease-out, bottom 0.3s ease-out 0.3s;
+  transition:
+    width 0.3s ease-out,
+    bottom 0.3s ease-out 0.3s;
 }
 </style>

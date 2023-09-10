@@ -27,41 +27,38 @@
       </div>
     </section>
     <section v-if="!submissions.length && !requests.length">
-      <p
-        class="label text-uppercase"
-        style="color: var(--v-missionAccent-base)"
-      >
-        student actions
-      </p>
+      <p class="label text-uppercase" style="color: var(--v-missionAccent-base)">student actions</p>
     </section>
   </div>
 </template>
 
 <script>
-import { mapState } from "vuex";
+import useRootStore from "@/store/index";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "StudentActions",
   props: ["student"],
   computed: {
-    ...mapState(["teachersRequestsForHelp", "courseSubmissions"]),
+    ...mapState(useRootStore, ["teachersRequestsForHelp", "courseSubmissions"]),
     requests() {
       return this.teachersRequestsForHelp?.filter(
-        (request) => request.personId === this.student.id
+        (request) => request.personId === this.student.id,
       );
     },
     submissions() {
       return this.courseSubmissions?.filter(
-        (submissions) => submissions.studentId === this.student.id
+        (submissions) => submissions.studentId === this.student.id,
       );
     },
   },
   methods: {
+    ...mapActions(useRootStore, ["setPanelCard"]),
     showRequestCard(request) {
-      this.$store.commit("setPanelCard", { type: "request", data: request });
+      this.setPanelCard({ type: "request", data: request });
     },
     showSubmissionCard(submission) {
-      this.$store.commit("setPanelCard", {
+      this.setPanelCard({
         type: "submission",
         data: submission,
       });

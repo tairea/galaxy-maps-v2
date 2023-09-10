@@ -15,15 +15,16 @@
 </template>
 
 <script lang="ts">
-import { mapState, mapMutations } from "vuex";
+import useRootStore from "@/store/index";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "SnackBar",
   computed: {
-    ...mapState(["snackbar"]),
+    ...mapState(useRootStore, ["snackbar"]),
   },
   methods: {
-    ...mapMutations(["setSnackbar"]),
+    ...mapActions(useRootStore, ["setSnackbar"]),
   },
 };
 </script>

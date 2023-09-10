@@ -1,30 +1,34 @@
 // Use this file to store reusable functions that require data from the component
 
-import { db, functions } from "@/store/firestoreConfig.ts";
-import { getCourseById } from "@/lib/ff.js"
+import { db, functions } from "@/store/firestoreConfig";
+import { getCourseById } from "@/lib/ff";
+import useRootStore from "@/store/index";
 import firebase from "firebase/compat/app";
-import { mapGetters } from "vuex"
+import { mapActions, mapState } from "pinia";
 
 export const dbMixins = {
   computed: {
-    ...mapGetters(['person'])
+    ...mapState(useRootStore, ["person"]),
   },
   methods: {
+    ...mapActions(useRootStore, ["setSnackbar"]),
     MXaddExistingUserToCohort(person, cohort) {
       return this.MXaddStudentToCohort(person, cohort)
         .then(() => {
-          if (person.inviter?.length == 0) person.inviter = this.person.firstName + ' ' + this.person.lastName;
+          if (person.inviter?.length == 0)
+            person.inviter = this.person.firstName + " " + this.person.lastName;
           this.MXsendNewCohortEmail(person, cohort);
-        }).then(() => {
-          this.$store.commit("setSnackbar", {
+        })
+        .then(() => {
+          this.setSnackbar({
             show: true,
             text: "Student added to Cohort",
             color: "baseAccent",
           });
-        })
+        });
     },
     MXaddStudentToCohort(student, currentCohort) {
-      let cohort = currentCohort ? currentCohort : this.currentCohort
+      let cohort = currentCohort ? currentCohort : this.currentCohort;
       return db
         .collection("cohorts")
         .doc(cohort.id)
@@ -37,7 +41,7 @@ export const dbMixins = {
     },
     async MXsendNewCohortEmail(profile, cohort) {
       if (!profile.email) {
-        profile = await this.MXgetPersonByIdFromDB(profile.id)
+        profile = await this.MXgetPersonByIdFromDB(profile.id);
       }
       const person = {
         ...profile,
@@ -47,10 +51,7 @@ export const dbMixins = {
       return sendNewCohortEmail(person);
     },
     async MXgetPersonByEmail(email) {
-      const query = await db
-        .collection("people")
-        .where("email", "==", email)
-        .get();
+      const query = await db.collection("people").where("email", "==", email).get();
       for (const doc of query.docs) {
         if (doc) {
           const person = {
@@ -126,16 +127,16 @@ export const dbMixins = {
         })
         .then(() => this.sendNewCourseEmail(person, course))
         .then(() => {
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: `Student assigned to ${course.title} galaxy`,
             color: "baseAccent",
           });
-        })
+        });
     },
     sendNewCourseEmail(person, course) {
       const data = {
-        name: person.firstName || '',
+        name: person.firstName || "",
         email: person.email,
         course: course.title,
       };
@@ -168,14 +169,12 @@ export const dbMixins = {
         });
     },
     // async MXbindRequestsForHelp() {
-    //   await this.$store.dispatch(
-    //     "getRequestsForHelpByTeachersId",
+    //   await this.getRequestsForHelpByTeachersId(
     //     this.user.data.id
     //   );
     // },
     // async MXbindSubmissions() {
-    //   await this.$store.dispatch(
-    //     "getAllSubmittedWorkForTeacher",
+    //   await this.getAllSubmittedWorkForTeacher(
     //     this.user.data.id
     //   );
     // },

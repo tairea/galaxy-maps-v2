@@ -84,7 +84,8 @@
 
 <script>
 import StudentCardStatus from "@/components/StudentCard/StudentCardStatus.vue";
-import { mapState } from "vuex";
+import useRootStore from "@/store/index";
+import { mapState } from "pinia";
 
 export default {
   name: "ViewStudentDetails",
@@ -100,7 +101,7 @@ export default {
       function () {
         this.setTime();
       }.bind(this),
-      10000
+      10000,
     );
     return this.setTime();
   },
@@ -112,7 +113,7 @@ export default {
     date: "",
   }),
   computed: {
-    ...mapState(["userStatus"]),
+    ...mapState(useRootStore, ["userStatus"]),
     teacher() {
       return this.accountType === "teacher";
     },

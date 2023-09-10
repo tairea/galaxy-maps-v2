@@ -4,13 +4,9 @@
     :cols="cols"
     @click="routeToCourse(course)"
   >
-   <v-tooltip v-if="course" bottom color="subBackground">
+    <v-tooltip v-if="course" bottom color="subBackground">
       <template v-slot:activator="{ on, attrs }">
-        <div
-          class="d-flex justify-center align-center"
-          v-bind="attrs"
-          v-on="on"
-        >
+        <div class="d-flex justify-center align-center" v-bind="attrs" v-on="on">
           <v-avatar size="40">
             <img
               v-if="course.image && course.image.url"
@@ -18,20 +14,14 @@
               :alt="course.title"
               style="object-fit: cover"
             />
-            <div
-              v-else
-              class="imagePlaceholder"
-            >
+            <div v-else class="imagePlaceholder">
               {{ first3Letters(course.title) }}
             </div>
           </v-avatar>
         </div>
       </template>
       <div>
-        <p
-          class="ma-0 person-tooltip"
-          style="font-size: 0.8rem; font-weight: 800"
-        >
+        <p class="ma-0 person-tooltip" style="font-size: 0.8rem; font-weight: 800">
           {{ course.title }}
         </p>
       </div>
@@ -49,6 +39,9 @@
 </template>
 
 <script>
+import useRootStore from "@/store/index";
+import { mapActions } from "pinia";
+
 export default {
   name: "Course",
   props: ["course", "cols"],
@@ -58,13 +51,14 @@ export default {
   mounted() {},
   computed: {},
   methods: {
+    ...mapActions(useRootStore, ["setCurrentCourse", "setCurrentCourseId"]),
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
     routeToCourse(course) {
       // on clicking course, set its courseID to Store state (so not relying on router params)
-      this.$store.commit("setCurrentCourseId", this.course.id);
-      this.$store.commit("setCurrentCourse", this.course);
+      this.setCurrentCourseId(this.course.id);
+      this.setCurrentCourse(this.course);
       // route to Galaxy View (passing params as props)
       this.$router.push({
         name: "GalaxyView",
@@ -72,7 +66,7 @@ export default {
           courseId: this.course.id,
         },
       });
-    }
+    },
   },
 };
 </script>

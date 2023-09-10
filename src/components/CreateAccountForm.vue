@@ -114,10 +114,11 @@
 </template>
 
 <script>
-import { getCourseById, assignTopicsAndTasksToStudent } from "@/lib/ff.js";
-import { dbMixins } from "@/mixins/DbMixins.js";
-import { db } from "@/store/firestoreConfig.ts";
-import { mapGetters } from "vuex";
+import { getCourseById, assignTopicsAndTasksToStudent } from "@/lib/ff";
+import { dbMixins } from "@/mixins/DbMixins";
+import { db } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "CreateAccountForm",
@@ -154,7 +155,7 @@ export default {
     parentEmailRules: [(v) => /.+@.+\..+/.test(v) || "E-mail must be valid"],
   }),
   computed: {
-    ...mapGetters(["person", "currentCohort"]),
+    ...mapState(useRootStore, ["person", "currentCohort"]),
     teacher() {
       return this.accountType === "teacher";
     },
@@ -163,6 +164,7 @@ export default {
     },
   },
   methods: {
+    ...mapActions(useRootStore, ["setSnackbar"]),
     close() {
       this.account = {
         firstName: "",
@@ -176,16 +178,14 @@ export default {
       this.$emit("close");
     },
     async update() {
-      let obj = Object.fromEntries(
-        Object.entries(this.account).filter(([_, v]) => v.length)
-      );
+      let obj = Object.fromEntries(Object.entries(this.account).filter(([_, v]) => v.length));
 
       db.collection("people")
         .doc(obj.id)
         .update(obj)
         .then(() => {
           this.$emit("updateStudentProfile", obj);
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Student successfully updated",
             color: "baseAccent",
@@ -230,14 +230,14 @@ export default {
         };
         this.MXcreateUser(person)
           .then(() => {
-            this.$store.commit("setSnackbar", {
+            this.setSnackbar({
               show: true,
               text: "Account created",
               color: "baseAccent",
             });
             if (!this.teacher) {
               this.MXaddStudentToCohort(person).then(() => {
-                this.$store.commit("setSnackbar", {
+                this.setSnackbar({
                   show: true,
                   text: "Student added to Cohort",
                   color: "baseAccent",
@@ -247,7 +247,7 @@ export default {
                 }
               });
             } else {
-              this.$store.commit("setSnackbar", {
+              this.setSnackbar({
                 show: true,
                 text: "Teacher added to Galaxy Map",
                 color: "baseAccent",

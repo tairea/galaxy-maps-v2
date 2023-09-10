@@ -16,9 +16,7 @@
             <div class="dialog-header">
               <p v-if="reviewed" class="dialog-title mb-0">
                 Submission
-                <span :style="status">{{
-                  submission.taskSubmissionStatus
-                }}</span>
+                <span :style="status">{{ submission.taskSubmissionStatus }}</span>
               </p>
               <p v-else class="dialog-title mb-0">Rewiew submission</p>
             </div>
@@ -31,10 +29,7 @@
                     <v-simple-table>
                       <tr
                         class="dialog-context-description"
-                        style="
-                          color: var(--v-missionAccent-base);
-                          font-weight: 800;
-                        "
+                        style="color: var(--v-missionAccent-base); font-weight: 800"
                       >
                         <td>MISSION:</td>
                         <td>{{ submission.contextTask.title }}</td>
@@ -61,25 +56,14 @@
               <!-- SUBMISSION INSTRUCTIONS -->
               <div class="instructions-info">
                 <v-row class="justify-end align-center mr-4">
-                  <p
-                    class="dialog-description px-4 pb-0"
-                    style="color: var(--v-cohortAccent-base)"
-                  >
+                  <p class="dialog-description px-4 pb-0" style="color: var(--v-cohortAccent-base)">
                     Submission Instructions
                   </p>
-                  <Avatar
-                    :colourBorder="true"
-                    :profile="instructor"
-                    :size="30"
-                    class="pb-2"
-                  />
+                  <Avatar :colourBorder="true" :profile="instructor" :size="30" class="pb-2" />
                 </v-row>
                 <div
                   class="mx-4 my-2"
-                  style="
-                    border: 1px solid var(--v-cohortAccent-base);
-                    border-radius: 5px;
-                  "
+                  style="border: 1px solid var(--v-cohortAccent-base); border-radius: 5px"
                 >
                   <p
                     class="ma-2 instructions"
@@ -92,38 +76,22 @@
               <div class="requester-info">
                 <v-row v-if="requesterPerson">
                   <div class="requester-image justify-center align-center">
-                    <Avatar
-                      :colourBorder="true"
-                      :profile="requesterPerson"
-                      :size="30"
-                    />
+                    <Avatar :colourBorder="true" :profile="requesterPerson" :size="30" />
                   </div>
                   <!-- Message -->
                   <div>
                     <p class="dialog-description pa-1">
                       <span style="font-size: 0.8rem; font-weight: 800"
                         ><i>{{
-                          requesterPerson.firstName +
-                          " " +
-                          requesterPerson.lastName
+                          requesterPerson.firstName + " " + requesterPerson.lastName
                         }}</i></span
                       >
-                      <i
-                        >@
-                        {{
-                          getHumanDate(
-                            submission.taskSubmittedForReviewTimestamp
-                          )
-                        }}</i
-                      >
+                      <i>@ {{ getHumanDate(submission.taskSubmittedForReviewTimestamp) }}</i>
                     </p>
                   </div>
                 </v-row>
               </div>
-              <p
-                class="dialog-help-message speech-bubble"
-                v-html="submission.submissionLink"
-              ></p>
+              <p class="dialog-help-message speech-bubble" v-html="submission.submissionLink"></p>
 
               <!-- INSTRUCTOR RESPONSE -->
               <div v-if="isTeacher && !reviewed">
@@ -145,18 +113,10 @@
               </div>
               <div v-if="response" class="ma-5 mt-0">
                 <v-row class="justify-end align-center mr-4">
-                  <p
-                    class="dialog-description px-4 pb-0"
-                    style="color: var(--v-cohortAccent-base)"
-                  >
+                  <p class="dialog-description px-4 pb-0" style="color: var(--v-cohortAccent-base)">
                     student feedback
                   </p>
-                  <Avatar
-                    :colourBorder="true"
-                    :profile="instructor"
-                    :size="30"
-                    class="pb-2"
-                  />
+                  <Avatar :colourBorder="true" :profile="instructor" :size="30" class="pb-2" />
                 </v-row>
                 <v-textarea
                   class="input-field"
@@ -174,19 +134,11 @@
                   <!-- Message -->
                   <div>
                     <p class="dialog-description pa-1">
-                      <i>
-                        {{
-                          getHumanDate(submission.responseSubmittedTimestamp)
-                        }}</i
-                      >
+                      <i> {{ getHumanDate(submission.responseSubmittedTimestamp) }}</i>
                     </p>
                   </div>
                   <div class="requester-image align-center mr-12">
-                    <Avatar
-                      :colourBorder="true"
-                      :profile="instructor"
-                      :size="30"
-                    />
+                    <Avatar :colourBorder="true" :profile="instructor" :size="30" />
                   </div>
                 </v-row>
               </div>
@@ -228,11 +180,7 @@
               </template>
 
               <!-- CANCEL -->
-              <v-btn
-                outlined
-                :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
-                @click="close"
-              >
+              <v-btn outlined :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'" @click="close">
                 <v-icon left> {{ mdiClose }} </v-icon>
                 Cancel
               </v-btn>
@@ -254,30 +202,18 @@ import {
   studentWorkMarkedCompletedXAPIStatement,
   teacherReviewedStudentWorkXAPIStatement,
   teacherRespondedSubmissionDeclinedXAPIStatement,
-} from "@/lib/veracityLRS.js";
-import { dbMixins } from "@/mixins/DbMixins.js";
-import { db, functions } from "@/store/firestoreConfig.ts";
-import {
-  mdiTextBoxSearchOutline,
-  mdiThumbUpOutline,
-  mdiThumbDownOutline,
-  mdiClose,
-} from "@mdi/js";
+} from "@/lib/veracityLRS";
+import { dbMixins } from "@/mixins/DbMixins";
+import { db, functions } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
+import { mdiTextBoxSearchOutline, mdiThumbUpOutline, mdiThumbDownOutline, mdiClose } from "@mdi/js";
 import moment from "moment";
-import { mapState, mapGetters } from "vuex";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "SubmissionReviewDialog",
   mixins: [dbMixins],
-  props: [
-    "submission",
-    "requesterPerson",
-    "on",
-    "attrs",
-    "reviewed",
-    "studentReview",
-    "isTeacher",
-  ],
+  props: ["submission", "requesterPerson", "on", "attrs", "reviewed", "studentReview", "isTeacher"],
   components: {
     Avatar,
   },
@@ -294,23 +230,23 @@ export default {
   }),
   async mounted() {
     this.instructor = await this.MXgetPersonByIdFromDB(
-      this.submission.contextCourse.mappedBy.personId
+      this.submission.contextCourse.mappedBy.personId,
     );
     // bind students tasks related to this submission (used for unlocking next topic)
-    await this.$store.dispatch("bindPersonsTasksByTopicId", {
+    await this.bindPersonsTasksByTopicId({
       personId: this.submission.studentId,
       courseId: this.submission.contextCourse.id,
       topicId: this.submission.contextTopic.id,
     });
   },
   computed: {
-    ...mapState([
+    ...mapState(useRootStore, [
       "currentCourse",
       "currentTopic",
       "currentTask",
       "personsTopicsTasks",
+      "person",
     ]),
-    ...mapGetters(["person"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -321,12 +257,11 @@ export default {
       return this.submission.taskSubmissionStatus == "completed";
     },
     status() {
-      return this.completed
-        ? "color:var(--v-baseAccent-base)"
-        : "color:var(--v-cohortAccent-base)";
+      return this.completed ? "color:var(--v-baseAccent-base)" : "color:var(--v-cohortAccent-base)";
     },
   },
   methods: {
+    ...mapActions(useRootStore, ["setSnackbar", "bindPersonsTasksByTopicId"]),
     getHumanDate(ts) {
       if (!ts) return;
       return moment(ts.seconds * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
@@ -376,23 +311,19 @@ export default {
               galaxy: this.submission.contextCourse,
               system: this.submission.contextTopic,
               mission: this.submission.contextTask,
-            }
+            },
           );
           // teacher reviewed work
-          teacherReviewedStudentWorkXAPIStatement(
-            this.person,
-            this.submission.contextTask.id,
-            {
-              student: this.requesterPerson,
-              galaxy: this.submission.contextCourse,
-              system: this.submission.contextTopic,
-              mission: this.submission.contextTask,
-            }
-          );
+          teacherReviewedStudentWorkXAPIStatement(this.person, this.submission.contextTask.id, {
+            student: this.requesterPerson,
+            galaxy: this.submission.contextCourse,
+            system: this.submission.contextTopic,
+            mission: this.submission.contextTask,
+          });
 
           this.close();
 
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Student's Mission now marked as completed",
             color: "baseAccent",
@@ -427,9 +358,7 @@ export default {
       for (const [index, task] of currentTasks.docs.entries()) {
         if (task.data().taskStatus == "locked") {
           task.ref.update({ taskStatus: "unlocked" });
-          console.log(
-            "NEW TASK UNLOCKED (" + index + ") : " + task.data().title
-          );
+          console.log("NEW TASK UNLOCKED (" + index + ") : " + task.data().title);
           return;
         }
       }
@@ -437,7 +366,7 @@ export default {
     async checkIfAllTasksCompleted() {
       // 1) check how many tasks in store are completed
       const numOfTasksCompleted = this.personsTopicsTasks.filter(
-        (obj) => obj.taskStatus === "completed"
+        (obj) => obj.taskStatus === "completed",
       ).length;
       // 2) check if that the same as total
       if (numOfTasksCompleted === this.personsTopicsTasks.length) {
@@ -445,7 +374,7 @@ export default {
         // all tasks are completed. unlock next topic
         // message telling teacher whats happend
 
-        this.$store.commit("setSnackbar", {
+        this.setSnackbar({
           show: true,
           text:
             this.requesterPerson.firstName +
@@ -462,24 +391,19 @@ export default {
         console.log("total tasks = ", this.personsTopicsTasks.length);
         console.log(
           "completed = ",
-          this.personsTopicsTasks.filter(
-            (obj) => obj.taskStatus === "completed"
-          ).length
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "completed").length,
         );
         console.log(
           "in review = ",
-          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "inreview")
-            .length
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "inreview").length,
         );
         console.log(
           "active = ",
-          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked")
-            .length
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked").length,
         );
         console.log(
           "locked = ",
-          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked")
-            .length
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked").length,
         );
       }
     },
@@ -488,11 +412,7 @@ export default {
       db.collection("people")
         .doc(this.submission.studentId)
         .collection(this.submission.contextCourse.id)
-        .where(
-          "prerequisites",
-          "array-contains",
-          this.submission.contextTopic.id
-        )
+        .where("prerequisites", "array-contains", this.submission.contextTopic.id)
         .get()
         .then((querySnapshot) => {
           querySnapshot.forEach((doc) => {
@@ -503,7 +423,7 @@ export default {
               // route back to map
               .then(() => {
                 // message telling teacher whats happend
-                this.$store.commit("setSnackbar", {
+                this.setSnackbar({
                   show: true,
                   text:
                     "NEW TOPIC: " +
@@ -523,8 +443,7 @@ export default {
         course: this.submission.contextCourse.title,
         topic: this.submission.contextTopic.label,
         task: this.submission.contextTask.title,
-        student:
-          this.requesterPerson.firstName + " " + this.requesterPerson.lastName,
+        student: this.requesterPerson.firstName + " " + this.requesterPerson.lastName,
         submission: this.submission.submissionLink,
         outcome: outcome,
         message: this.responseMsg,
@@ -532,9 +451,7 @@ export default {
         email: this.requesterPerson.email,
       };
       console.log("send reponse email: ", data);
-      const sendResponseToSubmission = functions.httpsCallable(
-        "sendResponseToSubmission"
-      );
+      const sendResponseToSubmission = functions.httpsCallable("sendResponseToSubmission");
       return sendResponseToSubmission(data);
     },
     declineSubmission() {
@@ -569,9 +486,7 @@ export default {
           this.sendResponseToSubmission("declined");
         })
         .then(() => {
-          console.log(
-            "Submitted work declined. It did not meet the mission requirements"
-          );
+          console.log("Submitted work declined. It did not meet the mission requirements");
 
           // teacher assissted student
           teacherRespondedSubmissionDeclinedXAPIStatement(
@@ -582,10 +497,10 @@ export default {
               galaxy: this.submission.contextCourse,
               system: this.submission.contextTopic,
               mission: this.submission.contextTask,
-            }
+            },
           );
           this.close();
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Students submitted work declined.Feedback sent to student",
             color: "baseAccent",
@@ -596,7 +511,7 @@ export default {
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Error: " + error,
             color: "pink",

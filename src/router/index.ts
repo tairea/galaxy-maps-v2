@@ -3,7 +3,7 @@ import GalaxyList from "@/views/GalaxyList.vue";
 import GalaxyView from "@/views/GalaxyView.vue";
 import SolarSystemView from "@/views/SolarSystemView.vue";
 import CohortView from "@/views/CohortView.vue";
-import CohortList from "@/views/CohortList.vue";
+// import CohortList from "@/views/CohortList.vue";
 import CohortListV2 from "@/views/CohortListV2.vue";
 import AllStudentsView from "@/views/AllStudentsView.vue";
 import UserDashboard from "@/views/UserDashboard.vue";
@@ -13,12 +13,10 @@ import UserDashboard from "@/views/UserDashboard.vue";
 // import Register from "@/views/Register.vue";
 // import EmailSignIn from "@/components/EmailSignIn.vue";
 import LandingPage from "@/views/LandingPage.vue";
-import store from "@/store/index.js";
+import useRootStore from "@/store/index";
 import firebase from "firebase/compat/app";
 import Vue from "vue";
 import VueRouter from "vue-router";
-
-Vue.use(VueRouter);
 
 const routes = [
   {
@@ -27,7 +25,7 @@ const routes = [
     component: Home,
     children: [
       {
-        path: "", 
+        path: "",
         name: "GalaxyList",
         component: GalaxyList,
         props: true,
@@ -105,7 +103,7 @@ const routes = [
         props: true,
       },
       {
-        path: ":slug", 
+        path: ":slug",
         name: "GalaxyList",
         component: GalaxyList,
         props: true,
@@ -126,7 +124,7 @@ const router = new VueRouter({
   routes,
 });
 
-// 
+//
 const initialAuth = new Promise((resolve, reject) => {
   const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
     unsubscribe();
@@ -135,10 +133,11 @@ const initialAuth = new Promise((resolve, reject) => {
 });
 
 router.beforeEach(async (to, from, next) => {
+  const rootStore = useRootStore();
   await initialAuth;
-  if (from.path !== '/') store.commit('set_from', from.path);
+  if (from.path !== "/") rootStore.set_from(from.path);
   if (to.matched.some((record) => record.meta.authRequired)) {
-    if (store.getters.user.loggedIn) {
+    if (rootStore.user.loggedIn) {
       next();
     } else {
       alert("You must be logged in to see this page");
