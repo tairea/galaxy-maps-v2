@@ -8,8 +8,8 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
 import { mdiArrowLeft } from "@mdi/js";
+
 export default {
   name: "BackButton",
   props: ["toPath"],

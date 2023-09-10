@@ -11,15 +11,12 @@ export default {
   name: "MissionsInfo",
   props: ["missions"],
   data() {
-    return {
-      
-    };
+    return {};
   },
 };
 </script>
 
 <style lang="scss">
-
 #missions-info {
   width: 90%;
   // height: 400px;

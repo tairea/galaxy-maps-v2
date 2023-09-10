@@ -18,13 +18,7 @@
               edit
             </v-btn>
 
-            <v-btn
-              v-else
-              outlined
-              color="missionAccent"
-              v-bind="attrs"
-              v-on="on"
-            >
+            <v-btn v-else outlined color="missionAccent" v-bind="attrs" v-on="on">
               <v-icon left> {{ mdiPlus }} </v-icon>
               CREATE MISSION
             </v-btn>
@@ -38,13 +32,10 @@
                 {{ edit ? "Edit Mission " + task.title : dialogTitle }}
               </p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent">{{
-                  mdiInformationVariant
-                }}</v-icon>
+                <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <p class="dialog-description">
-                  A Mission is a specific task. <br />Enter the mission details
-                  here or link to an external file eg. Youtube video or Google
-                  Slide.
+                  A Mission is a specific task. <br />Enter the mission details here or link to an
+                  external file eg. Youtube video or Google Slide.
                 </p>
               </div>
             </div>
@@ -129,8 +120,7 @@
 
               <!-- SUBMISSION REQUIRED? -->
               <p class="dialog-description submission-colour">
-                Does this Mission require the student to submit any evidence of
-                work?
+                Does this Mission require the student to submit any evidence of work?
                 <v-tooltip right max-width="300">
                   <template v-slot:activator="{ on, attrs }">
                     <v-icon
@@ -145,12 +135,11 @@
                     >
                   </template>
                   <span>
-                    With this option checked, students are required to submit a
-                    link to evidence of their work.<br /><br />Once the student
-                    has submitted a link to their work, you will be notified to
-                    review their submission to check if it is completed.<br /><br />
-                    IMPORTANT: The student cannot progress onto the next System
-                    until you review and approve their submission.
+                    With this option checked, students are required to submit a link to evidence of
+                    their work.<br /><br />Once the student has submitted a link to their work, you
+                    will be notified to review their submission to check if it is completed.<br /><br />
+                    IMPORTANT: The student cannot progress onto the next System until you review and
+                    approve their submission.
                   </span>
                 </v-tooltip>
               </p>
@@ -163,8 +152,7 @@
               >
                 <template v-slot:label>
                   <span class="dialog-description submission-colour"
-                    >Tick this box to request a submission of evidence for this
-                    Mission</span
+                    >Tick this box to request a submission of evidence for this Mission</span
                   >
                 </template>
                 <p v-if="task.submissionRequired" class="submission-colour">
@@ -189,8 +177,8 @@
                       >
                     </template>
                     <span>
-                      Please provide submission instructions. Eg. what type of
-                      evidence do you want the student to provide a link to?
+                      Please provide submission instructions. Eg. what type of evidence do you want
+                      the student to provide a link to?
                     </span>
                   </v-tooltip>
                 </p>
@@ -299,13 +287,9 @@
           <div class="create-dialog">
             <!-- HEADER -->
             <div class="dialog-header py-10">
-              <p class="dialog-title">
-                <strong>Warning!</strong> Delete Mission?
-              </p>
+              <p class="dialog-title"><strong>Warning!</strong> Delete Mission?</p>
               <div class="d-flex align-start">
-                <v-icon left color="missionAccent">{{
-                  mdiInformationVariant
-                }}</v-icon>
+                <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <p class="dialog-description">
                   Are you sure you want to <strong>DELETE</strong> this
                   <span class="mission-text">{{ task.title }} Mission</span>?
@@ -355,12 +339,8 @@
 </template>
 
 <script>
-import firebase from "firebase/app";
-import { VueEditor } from "vue2-editor";
-import { db, storage } from "../store/firestoreConfig";
-
-import { mapState } from "vuex";
-
+import { db, storage } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
 import {
   mdiPencil,
   mdiPlus,
@@ -370,6 +350,9 @@ import {
   mdiInformationVariant,
   mdiConsoleNetworkOutline,
 } from "@mdi/js";
+import firebase from "firebase/compat/app";
+import { VueEditor } from "vue2-editor";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "CreateEditDeleteMissionDialog",
@@ -405,12 +388,7 @@ export default {
     customToolbar: [
       [{ header: [false, 3, 4, 5] }],
       ["bold", "italic", "underline", "strike"], // toggled buttons
-      [
-        { align: "" },
-        { align: "center" },
-        { align: "right" },
-        { align: "justify" },
-      ],
+      [{ align: "" }, { align: "center" }, { align: "right" }, { align: "justify" }],
       ["blockquote", "code-block"],
       [{ list: "ordered" }, { list: "bullet" }],
       [{ indent: "-1" }, { indent: "+1" }], // outdent/indent
@@ -433,13 +411,14 @@ export default {
   //   }
   // },
   computed: {
-    ...mapState(["currentCourseId", "person"]),
+    ...mapState(useRootStore, ["currentCourseId", "person"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
   },
   methods: {
-    saveTask(task) {
+    ...mapActions(useRootStore, ["getCourseTasks"]),
+    async saveTask(task) {
       this.loading = true;
       this.disabled = true;
       // format video & slides url with "http://"
@@ -455,7 +434,8 @@ export default {
       }
 
       // Add a new document in collection "courses"
-      db.collection("courses")
+      await db
+        .collection("courses")
         .doc(this.currentCourseId)
         .collection("topics")
         .doc(this.topicId)
@@ -477,19 +457,21 @@ export default {
         });
 
       // increment course taskTotals by 1
-      db.collection("courses")
+      await db
+        .collection("courses")
         .doc(this.currentCourseId)
         .update("taskTotal", firebase.firestore.FieldValue.increment(1))
         .then(() => {
           console.log("Task total increased by 1");
-          this.$store.dispatch("getCourseTasks");
+          return this.getCourseTasks();
         })
         .catch((error) => {
           console.error("Error incrementing taskTotal: ", error);
         });
 
       // increment topic taskTotals by 1
-      db.collection("courses")
+      await db
+        .collection("courses")
         .doc(this.currentCourseId)
         .collection("topics")
         .doc(this.topicId)
@@ -503,7 +485,7 @@ export default {
 
       this.task = {};
     },
-    updateTask(task, index) {
+    async updateTask(task, index) {
       this.loading = true;
       this.disabled = true;
 
@@ -520,7 +502,8 @@ export default {
       }
 
       // Add a new document in collection "courses"
-      db.collection("courses")
+      await db
+        .collection("courses")
         .doc(this.currentCourseId)
         .collection("topics")
         .doc(this.topicId)
@@ -536,7 +519,7 @@ export default {
         .catch((error) => {
           console.error("Error writing document: ", error);
         });
-      this.saveTaskToStudents(task);
+      await this.saveTaskToStudents(task);
     },
     cancel() {
       this.dialog = false;
@@ -549,8 +532,9 @@ export default {
       this.dialogConfirm = false;
       this.dialog = true;
     },
-    confirmDeleteTask() {
-      db.collection("courses")
+    async confirmDeleteTask() {
+      await db
+        .collection("courses")
         .doc(this.currentCourseId)
         .collection("topics")
         .doc(this.topicId)
@@ -566,7 +550,8 @@ export default {
         });
 
       // decrement taskTotals by 1
-      db.collection("courses")
+      await db
+        .collection("courses")
         .doc(this.currentCourseId)
         .update("taskTotal", firebase.firestore.FieldValue.increment(-1))
         .then(() => {
@@ -577,7 +562,7 @@ export default {
         });
 
       // delete task from students
-      this.deleteTaskForStudents(this.taskId);
+      await this.deleteTaskForStudents(this.taskId);
 
       // close dialog
       this.dialogConfirm = false;
@@ -589,40 +574,25 @@ export default {
         .where("assignedCourses", "array-contains", this.currentCourseId)
         .get();
 
-      allStudents.forEach(async (doc) => {
+      for (const doc of allStudents.docs) {
         const student = doc.id;
 
         // set reference to this course
-        const courseRef = await db
-          .collection("people")
-          .doc(student)
-          .collection(this.currentCourseId);
+        const courseRef = db.collection("people").doc(student).collection(this.currentCourseId);
 
         // check if the student has already started the course. If not they will be assigned this task when they start the course
-        const studentHasStartedCourse = await courseRef
-          .get()
-          .then((subQuery) => {
-            return subQuery.docs.length;
-          });
+        const studentHasStartedCourse = await courseRef.get().then((subQuery) => {
+          return subQuery.docs.length;
+        });
 
         if (studentHasStartedCourse) {
           if (this.edit) {
-            console.log(
-              "only updating task, we dont need to change status: ",
-              task
-            );
+            console.log("only updating task, we dont need to change status: ", task);
             // assign task to student
-            await courseRef
-              .doc(this.topicId)
-              .collection("tasks")
-              .doc(task.id)
-              .update(task);
+            await courseRef.doc(this.topicId).collection("tasks").doc(task.id).update(task);
           } else {
             // if they have started the course, get the tasks for this topic
-            const query = await courseRef
-              .doc(this.topicId)
-              .collection("tasks")
-              .get();
+            const query = await courseRef.doc(this.topicId).collection("tasks").get();
 
             // get the data from the task
             const tasks = query.docs.map((doc) => {
@@ -633,9 +603,7 @@ export default {
             });
 
             // check if all the tasks are all completed
-            const uncompletedTasks = tasks.filter(
-              (task) => task.taskStatus !== "completed"
-            );
+            const uncompletedTasks = tasks.filter((task) => task.taskStatus !== "completed");
 
             if (uncompletedTasks.length) {
               // if they arent all completed this task will be locked. If they are completed then this task should be unlocked
@@ -643,14 +611,10 @@ export default {
             } else task.taskStatus = "unlocked";
 
             // assign task to student
-            await courseRef
-              .doc(this.topicId)
-              .collection("tasks")
-              .doc(task.id)
-              .set(task);
+            await courseRef.doc(this.topicId).collection("tasks").doc(task.id).set(task);
           }
         }
-      });
+      }
     },
     async deleteTaskForStudents(task) {
       // get all students currently assigned to course
@@ -659,9 +623,9 @@ export default {
         .where("assignedCourses", "array-contains", this.currentCourseId)
         .get();
 
-      allStudents.forEach(async (doc) => {
+      for (const doc of allStudents.docs) {
         const student = doc.id;
-        console.log("deleteing ", task, "for student: ", student);
+        console.log("deleting ", task, "for student: ", student);
         // delete for student
         await db
           .collection("people")
@@ -671,17 +635,13 @@ export default {
           .collection("tasks")
           .doc(task)
           .delete();
-      });
+      }
     },
     handleDescriptionImageAdded(file, Editor, cursorLocation) {
       console.log("image file", file);
       // ceate a storage ref
       var storageRef = storage.ref(
-        "missionDescription-images/teacher-" +
-          this.person.id +
-          this.task.id +
-          "-" +
-          file.name
+        "missionDescription-images/teacher-" + this.person.id + this.task.id + "-" + file.name,
       );
 
       // upload a file
@@ -692,10 +652,7 @@ export default {
         "state_changed",
         (snapshot) => {
           // show progress on uploader bar
-          console.log(
-            "image upload: ",
-            snapshot.bytesTransferred / snapshot.totalBytes
-          ) * 100;
+          console.log("image upload: ", snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         },
         // upload error
         (err) => {
@@ -708,7 +665,7 @@ export default {
             // add image url to course obj
             Editor.insertEmbed(cursorLocation, "image", downloadURL);
           });
-        }
+        },
       );
     },
     handleSubmissionImageAdded(file, Editor, cursorLocation) {
@@ -720,7 +677,7 @@ export default {
           "-task-" +
           this.task.id +
           "-" +
-          file.name
+          file.name,
       );
 
       // upload a file
@@ -731,10 +688,7 @@ export default {
         "state_changed",
         (snapshot) => {
           // show progress on uploader bar
-          console.log(
-            "image upload: ",
-            snapshot.bytesTransferred / snapshot.totalBytes
-          ) * 100;
+          console.log("image upload: ", snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         },
         // upload error
         (err) => {
@@ -747,7 +701,7 @@ export default {
             // add image url to course obj
             Editor.insertEmbed(cursorLocation, "image", downloadURL);
           });
-        }
+        },
       );
     },
   },

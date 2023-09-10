@@ -9,7 +9,6 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
 import SnackBar from "@/components/SnackBar.vue";
 import Alpha from "@/components/Alpha.vue";
 

@@ -10,13 +10,7 @@
     />
     <div v-else-if="isVerifyEmail" id="galaxy-info">
       <h2 class="galaxy-label">EMAIL VERIFIED</h2>
-      <v-btn
-        color="baseAccent"
-        class="mr-4 my-4"
-        @click="redirect"
-        outlined
-        width="100%"
-      >
+      <v-btn color="baseAccent" class="mr-4 my-4" @click="redirect" outlined width="100%">
         continue to login
       </v-btn>
     </div>
@@ -77,12 +71,11 @@
 </template>
 
 <script>
-import NewPassword from "../NewPassword.vue";
+import NewPassword from "@/components/NewPassword.vue";
 import EmailSignIn from "@/components/EmailSignIn.vue";
-
-import firebase from "firebase";
-import { mapGetters } from "vuex";
-import { queryXAPIStatement } from "@/lib/veracityLRS";
+import useRootStore from "@/store/index";
+import firebase from "firebase/compat/app";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "Login",
@@ -138,9 +131,10 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(["person", "user"]),
+    ...mapState(useRootStore, ["person", "user"]),
   },
   methods: {
+    ...mapActions(useRootStore, ["setSnackbar"]),
     redirect() {
       this.isVerifyEmail = false;
       firebase.auth().signOut();
@@ -157,7 +151,7 @@ export default {
         })
         .catch((error) => {
           // Invalid or expired action code. Ask user to try to reset the password
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Error verifying code: " + error.message,
             color: "pink",
@@ -182,7 +176,7 @@ export default {
           auth
             .sendPasswordResetEmail(restoredEmail)
             .then(() => {
-              this.$store.commit("setSnackbar", {
+              this.setSnackbar({
                 show: true,
                 text: "Email successfully reverted. Password reset email sent",
                 color: "baseAccent",
@@ -190,7 +184,7 @@ export default {
             })
             .catch((error) => {
               // Error encountered while sending password reset code.
-              this.$store.commit("setSnackbar", {
+              this.setSnackbar({
                 show: true,
                 text: "Error sending password reset email: " + error.message,
                 color: "pink",
@@ -198,7 +192,7 @@ export default {
             });
         })
         .catch((error) => {
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Invalid or expired code: " + error.message,
             color: "pink",
@@ -213,7 +207,7 @@ export default {
         .applyActionCode(actionCode)
         .then((resp) => {
           // Email address has been verified.
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Email successfully verified",
             color: "baseAccent",
@@ -221,7 +215,7 @@ export default {
         })
         .catch((error) => {
           // Code is invalid or expired. Ask the user to verify their email address
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Invalid or expired code: " + error.message,
             color: "pink",
@@ -236,9 +230,7 @@ export default {
         .setPersistence(firebase.auth.Auth.Persistence.LOCAL)
         .then(() => {
           // New sign-in will be persisted with session persistence.
-          return firebase
-            .auth()
-            .signInWithEmailAndPassword(this.email, this.password);
+          return firebase.auth().signInWithEmailAndPassword(this.email, this.password);
         })
         .then(() => {
           this.proceed();
@@ -246,7 +238,7 @@ export default {
         })
         .catch((error) => {
           console.log("error: ", error);
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: error.message,
             color: "pink",
@@ -285,14 +277,14 @@ export default {
         .auth()
         .sendPasswordResetEmail(this.email)
         .then(() => {
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Reset Password Email Sent",
             color: "baseAccent",
           });
         })
         .catch((error) => {
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: error.message,
             color: "pink",

@@ -4,6 +4,7 @@
     <p class="label text-center label-value">{{ calcHours }}</p>
   </div>
 </template>
+
 <script>
 import { DateTime } from "luxon";
 
@@ -31,10 +32,8 @@ export default {
           const result = this.timeData[0].activity
             .filter((day) => {
               return (
-                DateTime.fromISO(day.dayISOTimestamp) >
-                  DateTime.fromJSDate(this.timeframe.min) &&
-                DateTime.fromISO(day.dayISOTimestamp) <
-                  DateTime.fromJSDate(this.timeframe.max)
+                DateTime.fromISO(day.dayISOTimestamp) > DateTime.fromJSDate(this.timeframe.min) &&
+                DateTime.fromISO(day.dayISOTimestamp) < DateTime.fromJSDate(this.timeframe.max)
               );
             })
             .reduce((sum, activity) => sum + activity.minutesActiveTotal, 0);
@@ -50,6 +49,7 @@ export default {
   },
 };
 </script>
+
 <style lang="scss" scoped>
 .label {
   color: var(--v-missionAccent-base);

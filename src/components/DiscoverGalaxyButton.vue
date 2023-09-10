@@ -53,12 +53,7 @@
 
             <!-- ACTION BUTTONS -->
             <div class="action-buttons">
-              <v-btn
-                outlined
-                color="baseAccent"
-                @click="routeToGalaxy(courseId)"
-                class="mr-2"
-              >
+              <v-btn outlined color="baseAccent" @click="routeToGalaxy(courseId)" class="mr-2">
                 <v-icon left>
                   {{ mdiRocketLaunchOutline }}
                 </v-icon>
@@ -87,13 +82,9 @@
 </template>
 
 <script>
-import { mapMutations } from "vuex";
-import { db, storage } from "../store/firestoreConfig";
-import {
-  mdiRocketLaunchOutline,
-  mdiClose,
-  mdiInformationVariant,
-} from "@mdi/js";
+import { db, storage } from "@/store/firestoreConfig";
+import { mdiRocketLaunchOutline, mdiClose, mdiInformationVariant } from "@mdi/js";
+import { mapActions } from "pinia";
 
 export default {
   name: "DiscoverGalaxyButton",
@@ -115,6 +106,7 @@ export default {
     },
   },
   methods: {
+    ...mapActions(useRootStore, ["setCurrentCourseId"]),
     cancel() {
       console.log("cancel");
       this.dialog = false;
@@ -122,7 +114,7 @@ export default {
     },
     routeToGalaxy(courseId) {
       // route to galaxy
-      this.$store.commit("setCurrentCourseId", courseId);
+      this.setCurrentCourseId(courseId);
       this.$router.push({
         name: "GalaxyView",
         params: {

@@ -13,9 +13,7 @@
         <v-btn outlined class="mr-4" color="baseAccent" :to="{ path: 'login' }">
           Back to login
         </v-btn>
-        <v-btn outlined color="missionAccent" @click="sendVerificationEmail">
-          resend email
-        </v-btn>
+        <v-btn outlined color="missionAccent" @click="sendVerificationEmail"> resend email </v-btn>
       </v-row>
     </div>
   </div>
@@ -34,9 +32,7 @@ export default {
         url: window.location.origin + "/login",
         handleCodeInApp: true,
       };
-      return firebase
-        .auth()
-        .currentUser.sendEmailVerification(actionCodeSettings);
+      return firebase.auth().currentUser.sendEmailVerification(actionCodeSettings);
     },
   },
 };

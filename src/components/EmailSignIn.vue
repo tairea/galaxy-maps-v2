@@ -2,9 +2,7 @@
   <div class="signin">
     <div id="signin-info">
       <h2 class="signin-label">Confirm Email</h2>
-      <p class="signin-description mt-4">
-        Please confirm your email address to sign in
-      </p>
+      <p class="signin-description mt-4">Please confirm your email address to sign in</p>
       <v-form ref="form" v-model="valid" lazy-validation class="my-4">
         <v-text-field type="email" v-model="email" label="E-mail" :rules="emailRules" required color="missionAccent"
           outlined class="custom-input"></v-text-field>
@@ -24,13 +22,12 @@
 </template>
 
 <script>
-import firebase from "firebase";
-import { mapGetters } from "vuex";
-
+import BackButton from "@/components/BackButton.vue";
+import CreateProfileDialog from "@/components/CreateProfileDialog.vue";
+import useRootStore from "@/store/index";
 import { mdiKeyboardBackspace } from "@mdi/js";
-
-import BackButton from "../components/BackButton.vue";
-import CreateProfileDialog from "../components/CreateProfileDialog.vue";
+import firebase from "firebase/compat/app";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "EmailSignIn",
@@ -49,9 +46,10 @@ export default {
     ],
   }),
   computed: {
-    ...mapGetters(["user", "person"]),
+    ...mapState(useRootStore, ["user", "person"]),
   },
   methods: {
+    ...mapActions(useRootStore, ["setSnackbar"]),
     verifyEmail() {
       // Confirm the link is a sign-in with email link.
       if (firebase.auth().isSignInWithEmailLink(window.location.href)) {
@@ -65,7 +63,7 @@ export default {
             this.proceed();
           })
           .catch((error) => {
-            this.$store.commit("setSnackbar", {
+            this.setSnackbar({
               show: true,
               text: error.message,
               color: "pink",

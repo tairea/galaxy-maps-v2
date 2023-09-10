@@ -4,6 +4,7 @@
     <p class="label text-center label-value">{{ calcTaskCompleted }}</p>
   </div>
 </template>
+
 <script>
 import { DateTime } from "luxon";
 
@@ -19,10 +20,8 @@ export default {
         // filter each activity (within timeframe && type == "Task" && state == "Completed" )
         const filteredActivities = course.activities.filter((statement) => {
           return (
-            DateTime.fromISO(statement.timeStamp) >
-              DateTime.fromJSDate(this.timeframe.min) &&
-            DateTime.fromISO(statement.timeStamp) <
-              DateTime.fromJSDate(this.timeframe.max) &&
+            DateTime.fromISO(statement.timeStamp) > DateTime.fromJSDate(this.timeframe.min) &&
+            DateTime.fromISO(statement.timeStamp) < DateTime.fromJSDate(this.timeframe.max) &&
             statement.type == "Task" &&
             statement.status == "Completed"
           );
@@ -37,6 +36,7 @@ export default {
   },
 };
 </script>
+
 <style lang="scss" scoped>
 .label {
   color: var(--v-missionAccent-base);

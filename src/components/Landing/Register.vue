@@ -71,10 +71,11 @@
 </template>
 
 <script>
-import firebase from "firebase";
+import BackButton from "@/components/BackButton.vue";
 import { db } from "@/store/firestoreConfig";
-
-import BackButton from "@/components/BackButton";
+import useRootStore from "@/store/index";
+import firebase from "firebase/compat/app";
+import { mapActions } from "pinia";
 
 export default {
   name: "Register",
@@ -106,6 +107,7 @@ export default {
     }
   },
   methods: {
+    ...mapActions(useRootStore, ["setSnackbar"]),
     register() {
       this.loading = true;
       // add user the auth
@@ -141,7 +143,7 @@ export default {
           // this.$emit("verify");
         })
         .catch((error) => {
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: error.message,
             color: "pink",

@@ -1,127 +1,110 @@
-import Vue from "vue";
-import Vuex from "vuex";
-import createPersistedState from "vuex-persistedstate";
-import { dbMixins } from "../mixins/DbMixins";
-
-import { db } from "./firestoreConfig";
-import { vuexfireMutations, firestoreAction } from "vuexfire";
-
-Vue.use(Vuex);
+import { db } from "@/store/firestoreConfig";
+import { defineStore } from "pinia";
+import { piniafireMutations, firestoreAction } from "@/piniafire/index";
+import type firebase from "firebase/compat/app";
 
 const getDefaultState = () => {
   return {
-    from: {},
+    from: "",
     user: {
       loggedIn: false,
-      data: null,
+      data: null as Record<string, any> | null,
     },
-    person: {},
-    topics: [],
-    cohorts: [],
-    courses: [],
-    assignedCourses: [],
-    organisations: [],
-    people: [],
-    currentCourse: {},
+    person: {} as Record<string, any>,
+    topics: [] as Record<string, any>[],
+    cohorts: [] as Record<string, any>[],
+    courses: [] as Record<string, any>[],
+    assignedCourses: [] as Record<string, any>[],
+    organisations: [] as Record<string, any>[],
+    people: [] as Record<string, any>[],
+    currentCourse: {} as Record<string, any>,
     currentTopicId: "",
     currentTaskId: "",
     currentCourseId: "",
-    currentTopic: {},
-    currentTask: {},
-    currentCohort: {},
-    currentCourseNodes: [],
-    currentCourseEdges: [],
-    allNodes: [],
-    allEdges: [],
-    allNodesForDisplay: [],
-    allTasks: [],
-    personsCourses: [],
-    personsTopics: [],
-    topicsTasks: [],
-    personsTopicsTasks: [],
-    requestsForHelp: [],
-    courseSubmissions: [],
-    teachersRequestsForHelp: [],
-    teachersStudentsProgress: [],
+    currentTopic: {} as Record<string, any>,
+    currentTask: {} as Record<string, any>,
+    currentCohort: {} as Record<string, any>,
+    currentCourseNodes: [] as Record<string, any>[],
+    currentCourseEdges: [] as Record<string, any>[],
+    allNodes: [] as Record<string, any>[],
+    allEdges: [] as Record<string, any>[],
+    allNodesForDisplay: [] as Record<string, any>[],
+    allTasks: [] as Record<string, any>[],
+    personsCourses: [] as Record<string, any>[],
+    personsTopics: [] as Record<string, any>[],
+    topicsTasks: [] as Record<string, any>[],
+    personsTopicsTasks: [] as Record<string, any>[],
+    requestsForHelp: [] as Record<string, any>[],
+    courseSubmissions: [] as Record<string, any>[],
+    teachersRequestsForHelp: [] as Record<string, any>[],
+    teachersStudentsProgress: [] as Record<string, any>[],
     darkMode: true,
-    sortedArr: [],
-    studentCourseDataFromLRS: [],
-    snackbar: {},
-    userStatus: {},
-    studentsActiveTasks: [],
-    studentsActivityLog: [],
-    showPanelCard: {},
-    studentsSubmissions: [],
-    dashboardView: '',
-    peopleInCourse: [],
-    personsCourseTasks: [],
-    courseTasks: []
+    sortedArr: [] as Record<string, any>[],
+    studentCourseDataFromLRS: [] as Record<string, any>[],
+    snackbar: {} as Record<string, any>,
+    userStatus: {} as Record<string, any>,
+    studentsActiveTasks: [] as Record<string, any>[],
+    studentsActivityLog: [] as Record<string, any>[],
+    showPanelCard: {} as Record<string, any>,
+    studentsSubmissions: [] as Record<string, any>[],
+    dashboardView: "",
+    peopleInCourse: [] as Record<string, any>[],
+    personsCourseTasks: [] as Record<string, any>[],
+    courseTasks: [] as Record<string, any>[],
   };
 };
 
-export default new Vuex.Store({
-  state: getDefaultState(),
+export default defineStore({
+  id: "root",
+  state: getDefaultState,
   getters: {
-    people: (state) => state.people,
-    organisations: (state) => state.organisations,
-    user: (state) => state.user,
-    person: (state) => state.person,
-    assignedCourses: (state) => state.assignedCourses,
-    cohorts: (state) => state.cohorts,
-    organisations: (state) => state.organisations,
-    currentCohort: (state) => state.currentCohort,
-    getCourseById: (state) => (id) => {
+    getCourseById: (state) => (id: string) => {
       return state.courses.find((course) => course.id === id);
     },
-    getCoursesByWhoMadeThem: (state) => (personId) => {
-      return state.courses.filter(
-        (course) => course.mappedBy.personId == personId
-      );
+    getCoursesByWhoMadeThem: (state) => (personId: string) => {
+      return state.courses.filter((course) => course.mappedBy.personId == personId);
     },
-    getTopicById: (state) => (id) => {
+    getTopicById: (state) => (id: string) => {
       const topic = state.topics.find((topic) => topic.id === id);
       return topic;
     },
-    getPersonsTopicById: (state) => (id) => {
+    getPersonsTopicById: (state) => (id: string) => {
       const topic = state.personsTopics.find((topic) => topic.id === id);
       return topic;
     },
-    getCohortById: (state) => (id) => {
+    getCohortById: (state) => (id: string) => {
       return state.cohorts.find((cohort) => cohort.id === id);
     },
-    getOrganisationById: (state) => (id) => {
+    getOrganisationById: (state) => (id: string) => {
       return state.organisations.find((organisation) => organisation.id === id);
     },
-    getTasksByTopicId: (state) => (topicId) => {
+    getTasksByTopicId: (state) => (topicId: string) => {
       const topic = state.topics.find((topic) => topic.id === topicId);
-      return topic.tasks;
+      return topic?.tasks ?? [];
     },
-    getPersonsTasksByTopicId: (state) => (id) => {
-      if (state.personsTopics.length) {
-        var topic = state.personsTopics.find((topic) => topic.id === id);
-      } else
-        var topic = {
-          tasks: [],
-        };
-      return topic.tasks;
+    getPersonsTasksByTopicId: (state) => (id: string) => {
+      const topic = state.personsTopics.find((topic) => topic.id === id);
+      return topic?.tasks ?? [];
     },
-    getCoursesInThisCohort: (state) => (id) => {
+    getCoursesInThisCohort: (state) => (id: string) => {
       //go to cohorts, and check if they in courses with this id
       const cohort = state.cohorts.find((cohort) => cohort.id === id);
-      const cohortsCoursesArrOfObj = [];
-      cohort.courses.forEach((courseId) => {
+      const cohortsCoursesArrOfObj: Record<string, any>[] = [];
+      cohort?.courses.forEach((courseId: string) => {
         const courseObj = state.courses.find((course) => course.id == courseId);
-        cohortsCoursesArrOfObj.push(courseObj);
+        if (courseObj != null) {
+          cohortsCoursesArrOfObj.push(courseObj);
+        }
       });
       return cohortsCoursesArrOfObj;
     },
-    getStudentsByCohortId: (state) => (id) => {
+    getStudentsByCohortId: (state) => (id: string) => {
       //go to cohorts, and check if they in courses with this id
-      let peopleInCohort = [];
+      const peopleInCohort: Record<string, any>[] = [];
       state.people.forEach((person) => {
         if (person.assignedCohorts) {
           // if student is assigned in this cohort...
-          if (person.assignedCohorts.some((cohortId) => cohortId === id)) {
+          if (person.assignedCohorts.some((cohortId: string) => cohortId === id)) {
             // push them into array
             peopleInCohort.push(person);
           }
@@ -131,108 +114,97 @@ export default new Vuex.Store({
     },
     getUnansweredRequestsForHelp: (state) => {
       return state.teachersRequestsForHelp.filter(
-        (request) => request.requestForHelpStatus == "unanswered"
+        (request) => request.requestForHelpStatus == "unanswered",
       );
-    },
-  },
-  mutations: {
-    ...vuexfireMutations,
-    RESET_STATE(state) {
-      Object.assign(state, getDefaultState());
-    },
-    SET_USER(state, data) {
-      state.user = data;
-    },
-    SET_PERSON(state, data) {
-      state.person = data;
-    },
-    set_from(state, data) {
-      state.from = data
-    },
-    resetTeachersSubmissions(state) {
-      state.courseSubmissions = [];
-    },
-    setPanelCard(state, data) {
-      state.showPanelCard = data;
-    },
-    setCurrentCourseId(state, courseId) {
-      if (courseId === state.currentCourseId) return
-      // new course, so reset tasks
-      state.personsCourseTasks = []
-      state.courseTasks = []
-      state.currentCourseId = courseId;
-    },
-    setCurrentCourse(state, course) {
-      state.currentCourse = course;
-    },
-    setCurrentTopicId(state, topicId) {
-      state.currentTopicId = topicId;
-    },
-    setCurrentTopic(state, topic) {
-      state.currentTopic = topic;
-    },
-    setCurrentTaskId(state, taskId) {
-      state.currentTaskId = taskId;
-    },
-    setCurrentTask(state, task) {
-      state.currentTask = task;
-    },
-    setCurrentCohort(state, cohort) {
-      state.currentCohort = cohort;
-    },
-    updateAllNodes(state, newNodePositions) {
-      state.allNodes = newNodePositions;
-    },
-    updateAllNodesForDisplay(state, newNodePositions) {
-      state.allNodesForDisplay = newNodePositions;
-    },
-
-    setCohorts(state, cohorts) {
-      state.cohorts = cohorts;
-    },
-    setOrganisations(state, orgs) {
-      state.organisations = orgs;
-    },
-    setDarkMode(state, dark) {
-      state.darkMode = dark;
-    },
-    sortAsc(state, arr) {
-      const sortedArr = arr.sort((a, b) =>
-        a.topic.topicCreatedTimestamp.seconds >
-          b.topic.topicCreatedTimestamp.seconds
-          ? 1
-          : -1
-      );
-      console.log("sortedArr: ", sortedArr);
-      state.sortedArr = sortedArr;
-    },
-    setStudentCourseDataFromLRS(state, courseData) {
-      state.studentCourseDataFromLRS = courseData;
-    },
-    setStudentsActiveTasks(state, activeTasksArr) {
-      state.studentsActiveTasks = activeTasksArr;
-    },
-    setStudentsActivityLog(state, activityStatements) {
-      state.studentsActivityLog = activityStatements;
-    },
-    setSnackbar(state, snackbar) {
-      state.snackbar = snackbar;
-    },
-    setDashboardView(state, view) {
-      console.log('setView: ', view)
-      state.dashboardView = view
-    },
-    setPeopleInCourse(state, people) {
-      state.peopleInCourse = people
-    },
-    setUserStatus(state, userStatus) {
-      state.userStatus = userStatus
     },
   },
   actions: {
-    setUser({ commit }, user) {
+    ...piniafireMutations,
+    SET_USER(data: { loggedIn: boolean; data: Record<string, any> | null }) {
+      this.user = data;
+    },
+    SET_PERSON(data: Record<string, any>) {
+      this.person = data;
+    },
+    set_from(data: string) {
+      this.from = data;
+    },
+    resetTeachersSubmissions() {
+      this.courseSubmissions = [];
+    },
+    setPanelCard(data: Record<string, any>) {
+      this.showPanelCard = data;
+    },
+    setCurrentCourseId(courseId: string) {
+      if (courseId === this.currentCourseId) return;
+      // new course, so reset tasks
+      this.personsCourseTasks = [];
+      this.courseTasks = [];
+      this.currentCourseId = courseId;
+    },
+    setCurrentCourse(course: Record<string, any>) {
+      this.currentCourse = course;
+    },
+    setCurrentTopicId(topicId: string) {
+      this.currentTopicId = topicId;
+    },
+    setCurrentTopic(topic: Record<string, any>) {
+      this.currentTopic = topic;
+    },
+    setCurrentTaskId(taskId: string) {
+      this.currentTaskId = taskId;
+    },
+    setCurrentTask(task: Record<string, any>) {
+      this.currentTask = task;
+    },
+    updateAllNodes(newNodePositions: Record<string, any>[]) {
+      this.allNodes = newNodePositions;
+    },
+    updateAllNodesForDisplay(newNodePositions: Record<string, any>[]) {
+      this.allNodesForDisplay = newNodePositions;
+    },
+
+    setCohorts(cohorts: Record<string, any>[]) {
+      this.cohorts = cohorts;
+    },
+    setOrganisations(orgs: Record<string, any>[]) {
+      this.organisations = orgs;
+    },
+    setDarkMode(dark: boolean) {
+      this.darkMode = dark;
+    },
+    sortAsc(arr: Record<string, any>[]) {
+      const sortedArr = arr.sort((a, b) =>
+        a.topic.topicCreatedTimestamp.seconds > b.topic.topicCreatedTimestamp.seconds ? 1 : -1,
+      );
+      console.log("sortedArr: ", sortedArr);
+      this.sortedArr = sortedArr;
+    },
+    setStudentCourseDataFromLRS(courseData: Record<string, any>[]) {
+      this.studentCourseDataFromLRS = courseData;
+    },
+    setStudentsActiveTasks(activeTasksArr: Record<string, any>[]) {
+      this.studentsActiveTasks = activeTasksArr;
+    },
+    setStudentsActivityLog(activityStatements: Record<string, any>[]) {
+      this.studentsActivityLog = activityStatements;
+    },
+    setSnackbar(snackbar: { show: boolean; text: string; color?: string }) {
+      this.snackbar = snackbar;
+    },
+    setDashboardView(view: string) {
+      console.log("setView: ", view);
+      this.dashboardView = view;
+    },
+    setPeopleInCourse(people: Record<string, any>[]) {
+      this.peopleInCourse = people;
+    },
+    setUserStatus(userStatus: Record<string, any>) {
+      this.userStatus = userStatus;
+    },
+    setUser(user: Record<string, any>) {
       if (user) {
-        commit("SET_USER", {
+        this.SET_USER({
           loggedIn: true,
           data: {
             admin: user.admin,
@@ -240,22 +212,30 @@ export default new Vuex.Store({
             email: user.email,
             verified: user.emailVerified,
             id: user.uid,
-          }
+          },
         });
       } else {
-        commit("SET_USER", {
+        this.SET_USER({
           loggedIn: false,
-          data: null
+          data: null,
         });
       }
     },
     // ===== Firestore - BIND ALL
-    bindCourses: firestoreAction(({ bindFirestoreRef }, payload) => {
-      const query = payload.owner != null ? db.collection("courses").where("owner", '==', payload.owner) : db.collection("courses");
-      return bindFirestoreRef("courses", query, {
-        maxRefDepth: 2,
-      });
-    }),
+    bindCourses: firestoreAction(
+      (
+        { bindFirestoreRef },
+        payload: { owner: firebase.firestore.DocumentReference | string | null },
+      ) => {
+        const query =
+          payload.owner != null
+            ? db.collection("courses").where("owner", "==", payload.owner)
+            : db.collection("courses");
+        return bindFirestoreRef("courses", query, {
+          maxRefDepth: 2,
+        });
+      },
+    ),
     bindAllCohorts: firestoreAction(({ bindFirestoreRef }) => {
       return bindFirestoreRef("cohorts", db.collection("cohorts"));
     }),
@@ -265,51 +245,45 @@ export default new Vuex.Store({
     bindAllPeople: firestoreAction(({ bindFirestoreRef }) => {
       return bindFirestoreRef("people", db.collection("people"));
     }),
-    bindCourseNodes: firestoreAction(({ bindFirestoreRef }, id) => {
+    bindCourseNodes: firestoreAction(({ bindFirestoreRef }, id: string) => {
       return bindFirestoreRef(
         "currentCourseNodes",
         db.collection("courses").doc(id).collection("map-nodes"),
         {
           reset: false,
-        }
+        },
       );
     }),
-    bindCourseEdges: firestoreAction(({ bindFirestoreRef }, id) => {
+    bindCourseEdges: firestoreAction(({ bindFirestoreRef }, id: string) => {
       return bindFirestoreRef(
         "currentCourseEdges",
         db.collection("courses").doc(id).collection("map-edges"),
         {
           reset: false,
-        }
+        },
       );
     }),
-    bindCourseTopics: firestoreAction(({ bindFirestoreRef }, id) => {
-      return bindFirestoreRef(
-        "topics",
-        db.collection("courses").doc(id).collection("topics")
-      );
+    bindCourseTopics: firestoreAction(({ bindFirestoreRef }, id: string) => {
+      return bindFirestoreRef("topics", db.collection("courses").doc(id).collection("topics"));
     }),
-    bindCoursesByPersonId: firestoreAction(({ bindFirestoreRef }, personId) => {
+    bindCoursesByPersonId: firestoreAction(({ bindFirestoreRef }, personId: string) => {
       return bindFirestoreRef(
         "personsCourses",
-        db.collection("courses").where("mappedBy.personId", "==", personId)
+        db.collection("courses").where("mappedBy.personId", "==", personId),
       );
     }),
     bindThisPersonsCourseTopics: firestoreAction(
-      ({ bindFirestoreRef }, payload) => {
+      ({ bindFirestoreRef }, payload: { personId: string; courseId: string }) => {
         return bindFirestoreRef(
           "personsTopics",
-          db
-            .collection("people")
-            .doc(payload.personId)
-            .collection(payload.courseId)
+          db.collection("people").doc(payload.personId).collection(payload.courseId),
         );
-      }
+      },
     ),
     // bind persons tasks by topic id
     bindPersonsTasksByTopicId: firestoreAction(
-      ({ bindFirestoreRef }, payload) => {
-        console.log('getting persons tasks: ', payload)
+      ({ bindFirestoreRef }, payload: { personId: string; courseId: string; topicId: string }) => {
+        console.log("getting persons tasks: ", payload);
 
         return bindFirestoreRef(
           "personsTopicsTasks",
@@ -319,69 +293,85 @@ export default new Vuex.Store({
             .collection(payload.courseId)
             .doc(payload.topicId)
             .collection("tasks")
-            .orderBy("taskCreatedTimestamp")
+            .orderBy("taskCreatedTimestamp"),
         );
-      }
+      },
     ),
-    bindTasksByTopicId: firestoreAction(({ bindFirestoreRef }, payload) => {
-      return bindFirestoreRef(
-        "topicsTasks",
-        db
-          .collection("courses")
-          .doc(payload.courseId)
-          .collection("topics")
-          .doc(payload.topicId)
-          .collection("tasks")
-          .orderBy("taskCreatedTimestamp") // this is important to ordering the tasks in MissionList.vue
+    bindTasksByTopicId: firestoreAction(
+      ({ bindFirestoreRef }, payload: { courseId: string; topicId: string }) => {
+        return bindFirestoreRef(
+          "topicsTasks",
+          db
+            .collection("courses")
+            .doc(payload.courseId)
+            .collection("topics")
+            .doc(payload.topicId)
+            .collection("tasks")
+            .orderBy("taskCreatedTimestamp"), // this is important to ordering the tasks in MissionList.vue
+        );
+      },
+    ),
+    async getPersonsCourseTasks() {
+      const tasksPerTopic = await Promise.all(
+        this.personsTopics
+          .filter((topic: Record<string, any>) => topic.topicStatus !== "locked")
+          .map(async (topic: Record<string, any>) => {
+            const tasks = await db
+              .collection("people")
+              .doc(this.person.id)
+              .collection(this.currentCourseId)
+              .doc(topic.id)
+              .collection("tasks")
+              .get();
+            return tasks.docs.map((task) => ({
+              topicId: topic.id,
+              task: task.data(),
+            }));
+          }),
       );
-    }),
-    async getPersonsCourseTasks({ state }) {
-      const tasksPerTopic = await Promise.all(state.personsTopics.filter((topic) => topic.topicStatus !== "locked").map(async (topic) => {
-        const tasks = await db
-          .collection("people")
-          .doc(state.person.id)
-          .collection(state.currentCourseId)
-          .doc(topic.id)
-          .collection("tasks")
-          .get();
-        return tasks.docs.map((task) => ({ topicId: topic.id, task: task.data() }));
-      }));
 
       const tasksArr = tasksPerTopic.flat();
       // console.log("tasksArr", tasksArr)
-      state.personsCourseTasks = tasksArr
+      this.personsCourseTasks = tasksArr;
     },
-    async getCourseTasks({ state }) {
-      const tasksPerTopic = await Promise.all(state.currentCourseNodes.map(async (topic) => {
-        const tasks = await db
-          .collection("courses")
-          .doc(state.currentCourseId)
-          .collection("topics")
-          .doc(topic.id)
-          .collection("tasks")
-          .get();
-        return tasks.docs.map((task) => ({ topicId: topic.id, task: task.data() }));
-      }));
+    async getCourseTasks() {
+      const tasksPerTopic = await Promise.all(
+        this.currentCourseNodes.map(async (topic: Record<string, any>) => {
+          const tasks = await db
+            .collection("courses")
+            .doc(this.currentCourseId)
+            .collection("topics")
+            .doc(topic.id)
+            .collection("tasks")
+            .get();
+          return tasks.docs.map((task) => ({
+            topicId: topic.id,
+            task: task.data(),
+          }));
+        }),
+      );
 
       const tasksArr = tasksPerTopic.flat();
       // console.log("tasksArr", tasksArr)
-      state.courseTasks = tasksArr
+      this.courseTasks = tasksArr;
     },
-    async getAllNodes({ state }) {
+    async getAllNodes() {
       const allNodes = [];
 
       // get the topics (nodes) in that course
-      for (const course of state.courses) {
-
+      for (const course of this.courses) {
         // if public and not submitted || mapped by user || user is assigned to course
-        if ((
+        if (
           // if public and not submitted
-          course.public === true && course.status != 'submitted') ||
-          // mapped by user 
-          course.mappedBy.personId === state.person.id ||
+          (course.public === true && course.status != "submitted") ||
+          // mapped by user
+          course.mappedBy.personId === this.person.id ||
           // user is assigned to course
-          state.person.assignedCourses?.some(assignedCourse => assignedCourse === course.id) ||
-          state.user.data?.admin) {
+          this.person.assignedCourses?.some(
+            (assignedCourse: Record<string, any>) => assignedCourse === course.id,
+          ) ||
+          this.user.data?.admin
+        ) {
           const subQuerySnapshot = await db
             .collection("courses")
             .doc(course.id)
@@ -394,27 +384,29 @@ export default new Vuex.Store({
               node.courseId = course.id; // add course id to nodes list for some reason
               //node.group = count; // add group to nodes list for some reason
               return node;
-            })
+            }),
           );
         }
       }
-      state.allNodes = allNodes; // source of truth
+      this.allNodes = allNodes; // source of truth
       // console.log("all nodes:",allNodes)
-      // state.allNodesForDisplay = allNodes; // store all nodes
+      // this.allNodesForDisplay = allNodes; // store all nodes
     },
-    async getAllEdges({ state }) {
+    async getAllEdges() {
       const allEdges = [];
 
-      for (const course of state.courses) {
-
+      for (const course of this.courses) {
         if (
           // if public and not submitted
-          (course.public === true && course.status != 'submitted') ||
-          // mapped by user 
-          course.mappedBy.personId === state.person.id ||
+          (course.public === true && course.status != "submitted") ||
+          // mapped by user
+          course.mappedBy.personId === this.person.id ||
           // user is assigned to course
-          state.person.assignedCourses?.some(assignedCourse => assignedCourse === course.id) ||
-          state.user.data?.admin) {
+          this.person.assignedCourses?.some(
+            (assignedCourse: Record<string, any>) => assignedCourse === course.id,
+          ) ||
+          this.user.data?.admin
+        ) {
           // doc.data() is never undefined for query doc snapshots
           const subQuerySnapshot = await db
             .collection("courses")
@@ -422,16 +414,16 @@ export default new Vuex.Store({
             .collection("map-edges")
             .get();
 
-          allEdges.push(...subQuerySnapshot.docs.map((subDoc) => subDoc.data()))
+          allEdges.push(...subQuerySnapshot.docs.map((subDoc) => subDoc.data()));
         }
       }
 
-      state.allEdges = allEdges;
+      this.allEdges = allEdges;
       // console.log("all edges:",allEdges)
     },
 
     // ===== Firestore - BIND by USER
-    async getPersonById({ commit }, id) {
+    async getPersonById(id: string) {
       if (id) {
         await db
           .collection("people")
@@ -442,13 +434,13 @@ export default new Vuex.Store({
               id,
               ...doc.data(),
             };
-            commit("SET_PERSON", person);
+            this.SET_PERSON(person);
           });
       } else {
-        commit("SET_PERSON", {});
+        this.SET_PERSON({});
       }
     },
-    async getAllSubmittedWorkByCourseId({ state }, courseId) {
+    async getAllSubmittedWorkByCourseId(courseId: string) {
       // get all work for review
       const unsubscribe = db
         .collection("courses")
@@ -458,59 +450,50 @@ export default new Vuex.Store({
         .orderBy("taskSubmittedForReviewTimestamp")
         // .orderBy("requestSubmittedTimestamp")
         .onSnapshot((querySnapshot) => {
-          const allWorkForReview = [...state.courseSubmissions];
+          const allWorkForReview = [...this.courseSubmissions];
 
           for (const change of querySnapshot.docChanges()) {
             if (change.type === "added") {
-              if (
-                allWorkForReview.some(
-                  (submission) => submission.id === change.doc.id
-                )
-              )
-                return;
+              if (allWorkForReview.some((submission) => submission.id === change.doc.id)) return;
               allWorkForReview.push({
                 id: change.doc.id,
                 ...change.doc.data(),
               });
             } else if (change.type === "modified") {
               allWorkForReview.splice(
-                allWorkForReview.findIndex(
-                  (i) => i.id === change.doc.id
-                ),
+                allWorkForReview.findIndex((i) => i.id === change.doc.id),
                 1,
                 {
                   id: change.doc.id,
                   ...change.doc.data(),
-                }
+                },
               );
             } else if (change.type === "removed") {
               allWorkForReview.splice(
-                allWorkForReview.findIndex(
-                  (i) => i.id === change.doc.id
-                ),
-                1
+                allWorkForReview.findIndex((i) => i.id === change.doc.id),
+                1,
               );
             }
           }
-          state.courseSubmissions = allWorkForReview;
+          this.courseSubmissions = allWorkForReview;
         });
 
       return unsubscribe;
-      // state.courseSubmissions = allWorkForReview;
+      // this.courseSubmissions = allWorkForReview;
     },
 
-    async getCohortsByPersonId({ commit, dispatch }, person) {
-      let teacherCohorts = [];
-      let studentCohorts = [];
+    async getCohortsByPersonId(person: { id?: string }) {
+      const teacherCohorts = [];
+      const studentCohorts = [];
 
       // onSnapshot wasnt working for me. so changed to .get()
       const studentQuerySnapShot = await db
         .collection("cohorts")
-        .where("students", "array-contains", person.id ?? '')
+        .where("students", "array-contains", person.id ?? "")
         .get();
       const teacherQuerySnapShot = await db
         .collection("cohorts")
-        .where("teachers", "array-contains", person.id ?? '')
+        .where("teachers", "array-contains", person.id ?? "")
         .get();
 
       for (const cohort of studentQuerySnapShot.docs) {
@@ -529,12 +512,15 @@ export default new Vuex.Store({
       }
 
       const cohorts = [...studentCohorts, ...teacherCohorts];
-      commit("setCohorts", cohorts);
-      if (cohorts.length) dispatch("getOrganisationsByCohorts", cohorts);
+      this.setCohorts(cohorts);
+      if (cohorts.length) {
+        this.getOrganisationsByCohorts(cohorts);
+      }
     },
 
     // ===== Firestore - Cohorts & Orgs
-    async getOrganisationsByCohorts({ commit }, cohorts) {
+    // TODO: this feels like a string but it looks like objects get passed to it
+    async getOrganisationsByCohorts(cohorts: any) {
       const orgs = [];
       const querySnapShot = await db
         .collection("organisations")
@@ -547,10 +533,10 @@ export default new Vuex.Store({
           orgs.push(doc.data());
         }
       }
-      commit("setOrganisations", orgs);
+      this.setOrganisations(orgs);
     },
 
-    async getRequestsForHelpByCourseId({ state }, courseId) {
+    async getRequestsForHelpByCourseId(courseId: string) {
       // get all work for review
       const unsubscribe = db
         .collection("courses")
@@ -559,9 +545,9 @@ export default new Vuex.Store({
         // .where("requestForHelpStatus", "==", "unanswered")
         // .orderBy("requestSubmittedTimestamp")
         .onSnapshot((querySnapshot) => {
-          const allRequestsForHelp = [...state.teachersRequestsForHelp];
+          const allRequestsForHelp = [...this.teachersRequestsForHelp];
           // WTF!!!! Why does for each fix this?
-          querySnapshot.docChanges().forEach(change => {
+          querySnapshot.docChanges().forEach((change) => {
             // for (const change of querySnapshot.docChanges()) {
             if (change.type === "added") {
               if (allRequestsForHelp.some((request) => request.id === change.doc.data().id)) return;
@@ -571,60 +557,63 @@ export default new Vuex.Store({
               });
             } else if (change.type === "modified") {
               allRequestsForHelp.splice(
-                allRequestsForHelp.findIndex((i) => i.id === change.doc.data().id), 1, {
-                id: change.doc.data().id,
-                ...change.doc.data(),
-              }
+                allRequestsForHelp.findIndex((i) => i.id === change.doc.data().id),
+                1,
+                {
+                  id: change.doc.data().id,
+                  ...change.doc.data(),
+                },
               );
             } else if (change.type === "removed") {
               allRequestsForHelp.splice(
-                allRequestsForHelp.findIndex(
-                  (i) => i.id === change.doc.data().id
-                ),
-                1
+                allRequestsForHelp.findIndex((i) => i.id === change.doc.data().id),
+                1,
               );
             }
-          })
-          allRequestsForHelp.sort((a, b) => b.requestSubmittedTimestamp.seconds - a.requestSubmittedTimestamp.seconds)
-          state.teachersRequestsForHelp = allRequestsForHelp.filter(req => req.contextCourse.id === courseId);
+          });
+          allRequestsForHelp.sort(
+            (a, b) => b.requestSubmittedTimestamp.seconds - a.requestSubmittedTimestamp.seconds,
+          );
+          this.teachersRequestsForHelp = allRequestsForHelp.filter(
+            (req) => req.contextCourse.id === courseId,
+          );
         });
 
       return unsubscribe;
 
-      // state.teachersRequestsForHelp = allRequestsForHelp;
+      // this.teachersRequestsForHelp = allRequestsForHelp;
     },
 
-
-    async setCurrentCohort({ commit }, cohort) {
+    async setCurrentCohort(cohort: Record<string, any>) {
       await db
         .collection("cohorts")
         .doc(cohort.id)
         .onSnapshot(async (doc) => {
-          console.log('cohort DB watcher triggered');
-          const newCohort = {
+          console.log("cohort DB watcher triggered");
+          const newCohort: Record<string, any> = {
             id: doc.id,
             ...doc.data(),
           };
-          if (cohort.teacher) newCohort.teacher = true
-          else if (cohort.student) newCohort.student = true
-          commit("setCurrentCohort", newCohort);
+          if (cohort.teacher) newCohort.teacher = true;
+          else if (cohort.student) newCohort.student = true;
+          this.currentCohort = newCohort;
         });
     },
 
-    async getAllUsersStatus({ state }) {
+    async getAllUsersStatus() {
       const users = {};
       await db
         .collection("status")
         .get()
         .then((snapShot) => {
           snapShot.docs.forEach((doc) => {
-            var obj = {};
+            const obj = {} as Record<string, any>;
             obj[doc.id] = doc.data();
             Object.assign(users, obj);
           });
         })
         .then(() => {
-          state.userStatus = users;
+          this.userStatus = users;
         });
     },
     // async getEachStudentsProgressForTeacher({ state, commit }) {
@@ -914,22 +903,22 @@ export default new Vuex.Store({
     //   state.teachersStudentsProgress = allStudentProgress;
     // },
   },
-  plugins: [createPersistedState()],
+  persist: true,
 });
 
 // colour functions to colour nodes
-function hashCode(str) {
+function hashCode(str: string) {
   let hash = 0;
-  for (var i = 0; i < str.length; i++) {
+  for (let i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
   return hash;
 }
 
-function stringToColour(str) {
+function stringToColour(str: string) {
   return `hsl(${hashCode(str) % 360}, 100%, 70%)`;
 }
 
-function getUniqueListBy(arr, key) {
-  return [...new Map(arr.map((item) => [item[key], item])).values()];
+function getUniqueListBy<T extends object>(arr: T[], key: keyof T) {
+  return Array.from(new Map(arr.map((item) => [item[key], item])).values());
 }

@@ -17,15 +17,11 @@
             <div class="dialog-header">
               <p class="dialog-title">Is the submission completed?</p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent">{{
-                  mdiInformationVariant
-                }}</v-icon>
+                <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <p class="dialog-description">
                   Has
                   <strong
-                    ><i>{{
-                      requesterPerson.firstName + " " + requesterPerson.lastName
-                    }}</i></strong
+                    ><i>{{ requesterPerson.firstName + " " + requesterPerson.lastName }}</i></strong
                   >
                   completed the submission requirements for this mission?
                 </p>
@@ -74,22 +70,16 @@
 </template>
 
 <script>
-import firebase from "firebase/app";
-
-import { db, functions } from "../store/firestoreConfig";
+import { dbMixins } from "@/mixins/DbMixins";
 import {
   studentWorkMarkedCompletedXAPIStatement,
   teacherReviewedStudentWorkXAPIStatement,
-} from "../lib/veracityLRS";
-
-import { mapState, mapGetters } from "vuex";
-import { dbMixins } from "../mixins/DbMixins";
-import {
-  mdiThumbUpOutline,
-  mdiInformationVariant,
-  mdiCheck,
-  mdiClose,
-} from "@mdi/js";
+} from "@/lib/veracityLRS";
+import { db, functions } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
+import { mdiThumbUpOutline, mdiInformationVariant, mdiCheck, mdiClose } from "@mdi/js";
+import firebase from "firebase/compat/app";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "MarkSubmissionCompleted",
@@ -104,10 +94,10 @@ export default {
     loading: false,
   }),
   computed: {
-    ...mapState(["personsTopicsTasks"]),
-    ...mapGetters(["person"]),
+    ...mapState(useRootStore, ["personsTopicsTasks", "person"]),
   },
   methods: {
+    ...mapActions(useRootStore, ["setSnackbar"]),
     markSubmissionAsCompleted() {
       this.loading = true;
 
@@ -151,25 +141,21 @@ export default {
               galaxy: this.submission.contextCourse,
               system: this.submission.contextTopic,
               mission: this.submission.contextTask,
-            }
+            },
           );
           // teacher reviewed work
-          teacherReviewedStudentWorkXAPIStatement(
-            this.person,
-            this.submission.contextTask.id,
-            {
-              student: this.requesterPerson,
-              galaxy: this.submission.contextCourse,
-              system: this.submission.contextTopic,
-              mission: this.submission.contextTask,
-            }
-          );
+          teacherReviewedStudentWorkXAPIStatement(this.person, this.submission.contextTask.id, {
+            student: this.requesterPerson,
+            galaxy: this.submission.contextCourse,
+            system: this.submission.contextTopic,
+            mission: this.submission.contextTask,
+          });
 
           this.loading = false;
           this.disabled = false;
           this.dialog = false;
 
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Student's Mission now marked as completed",
             color: "baseAccent",
@@ -204,9 +190,7 @@ export default {
       for (const [index, task] of currentTasks.docs.entries()) {
         if (task.data().taskStatus == "locked") {
           task.ref.update({ taskStatus: "unlocked" });
-          console.log(
-            "NEW TASK UNLOCKED (" + index + ") : " + task.data().title
-          );
+          console.log("NEW TASK UNLOCKED (" + index + ") : " + task.data().title);
           return;
         }
       }
@@ -214,7 +198,7 @@ export default {
     async checkIfAllTasksCompleted() {
       // 1) check how many tasks in store are completed
       const numOfTasksCompleted = this.personsTopicsTasks.filter(
-        (obj) => obj.taskStatus === "completed"
+        (obj) => obj.taskStatus === "completed",
       ).length;
       // 2) check if that the same as total
       if (numOfTasksCompleted === this.personsTopicsTasks.length) {
@@ -222,7 +206,7 @@ export default {
         // all tasks are completed. unlock next topic
         // message telling teacher whats happend
 
-        this.$store.commit("setSnackbar", {
+        this.setSnackbar({
           show: true,
           text:
             this.requesterPerson.firstName +
@@ -239,24 +223,19 @@ export default {
         console.log("total tasks = ", this.personsTopicsTasks.length);
         console.log(
           "completed = ",
-          this.personsTopicsTasks.filter(
-            (obj) => obj.taskStatus === "completed"
-          ).length
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "completed").length,
         );
         console.log(
           "in review = ",
-          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "inreview")
-            .length
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "inreview").length,
         );
         console.log(
           "active = ",
-          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked")
-            .length
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked").length,
         );
         console.log(
           "locked = ",
-          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked")
-            .length
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked").length,
         );
       }
     },
@@ -265,11 +244,7 @@ export default {
       db.collection("people")
         .doc(this.submission.studentId)
         .collection(this.submission.contextCourse.id)
-        .where(
-          "prerequisites",
-          "array-contains",
-          this.submission.contextTopic.id
-        )
+        .where("prerequisites", "array-contains", this.submission.contextTopic.id)
         .get()
         .then((querySnapshot) => {
           querySnapshot.forEach((doc) => {
@@ -280,7 +255,7 @@ export default {
               // route back to map
               .then(() => {
                 // message telling teacher whats happend
-                this.$store.commit("setSnackbar", {
+                this.setSnackbar({
                   show: true,
                   text:
                     "NEW TOPIC: " +
@@ -300,17 +275,14 @@ export default {
         course: this.submission.contextCourse.title,
         topic: this.submission.contextTopic.label,
         task: this.submission.contextTask.title,
-        student:
-          this.requesterPerson.firstName + " " + this.requesterPerson.lastName,
+        student: this.requesterPerson.firstName + " " + this.requesterPerson.lastName,
         submission: this.submission.submissionLink,
         outcome: outcome,
         teacher: this.person.firstName + " " + this.person.lastName,
         email: this.person.email,
       };
       console.log("send reponse email: ", data);
-      const sendResponseToSubmission = functions.httpsCallable(
-        "sendResponseToSubmission"
-      );
+      const sendResponseToSubmission = functions.httpsCallable("sendResponseToSubmission");
       return sendResponseToSubmission(data);
     },
     cancel() {

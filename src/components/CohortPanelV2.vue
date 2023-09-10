@@ -20,7 +20,7 @@
         </p>
         <!-- Teacher -->
         <div
-          v-if="cohort.teachers.length > 0"
+          v-if="cohort.teachers && cohort.teachers.length > 0"
           class="d-flex justify-center align-center flex-wrap py-2"
         >
           <p class="label text-center mt-2 mb-2">Teachers:</p>
@@ -34,20 +34,16 @@
             />
           </div>
         </div>
-        <p v-else class="label text-center" style="font-weight: 800">
-          NO TEACHER DATA
-        </p>
+        <p v-else class="label text-center" style="font-weight: 800">NO TEACHER DATA</p>
         <!-- Students avatars row -->
         <div class="student-row">
           <div
-            v-if="cohort.students.length"
+            v-if="cohort.students && cohort.students.length"
             class="d-flex justify-center align-center flex-wrap py-2"
           >
             <v-tooltip top color="subBackground">
               <template v-slot:activator="{ on, attrs }">
-                <p class="label text-center mt-4 mb-2" v-bind="attrs" v-on="on">
-                  Students:
-                </p>
+                <p class="label text-center mt-4 mb-2" v-bind="attrs" v-on="on">Students:</p>
               </template>
               <span>Select students to show only their data</span>
             </v-tooltip>
@@ -63,9 +59,7 @@
               @click.native="clickedPerson($event, person, index)"
             />
           </div>
-          <p v-else class="label text-center pa-4" style="font-weight: 800">
-            NO STUDENT DATA
-          </p>
+          <p v-else class="label text-center pa-4" style="font-weight: 800">NO STUDENT DATA</p>
         </div>
       </div>
     </div>
@@ -79,11 +73,7 @@
           style="padding: 50px"
           v-if="cohortsCoursesDataLoading"
         >
-          <v-btn
-            :loading="cohortsCoursesDataLoading"
-            icon
-            color="missionAccent"
-          ></v-btn>
+          <v-btn :loading="cohortsCoursesDataLoading" icon color="missionAccent"></v-btn>
         </div>
         <div v-else-if="cohortsCoursesData.length > 0" style="padding: 20px">
           <ProgressionLineChart
@@ -96,23 +86,14 @@
             class="line-chart"
           />
         </div>
-        <div
-          v-else
-          class="d-flex justify-center align-center"
-          style="padding: 50px 0px"
-        >
-          <p class="label text-center" style="font-weight: 800">
-            NO COURSE DATA
-          </p>
+        <div v-else class="d-flex justify-center align-center" style="padding: 50px 0px">
+          <p class="label text-center" style="font-weight: 800">NO COURSE DATA</p>
         </div>
       </div>
       <!-- Activity Bar Chart -->
       <div>
         <!-- loading spinner -->
-        <div
-          class="d-flex justify-center align-center"
-          v-if="cohortActivityDataLoading && !(cohortActivityData.length > 0)"
-        >
+        <div class="d-flex justify-center align-center" v-if="cohortActivityDataLoading">
           <v-btn
             :loading="cohortActivityDataLoading"
             icon
@@ -128,14 +109,8 @@
             :unselectedPersons="unselectedPersons"
           />
         </div>
-        <div
-          v-else
-          class="d-flex justify-center align-center"
-          style="padding: 50px 0px"
-        >
-          <p class="label text-center" style="font-weight: 800">
-            NO ACTIVITY DATA
-          </p>
+        <div v-else class="d-flex justify-center align-center" style="padding: 50px 0px">
+          <p class="label text-center" style="font-weight: 800">NO ACTIVITY DATA</p>
         </div>
       </div>
     </div>
@@ -143,17 +118,14 @@
 </template>
 
 <script>
-import { mapGetters, mapActions } from "vuex";
-import Avatar from "../components/Avatar";
-import ProgressionLineChart from "../components/ProgressionLineChart";
-import ActivityBarChart from "../components/ActivityBarChart";
-import Organisation from "../components/Organisation";
-import {
-  getCohortsCourseDataXAPIQuery,
-  getStudentsTimeDataXAPIQuery,
-  VQLXAPIQuery,
-} from "../lib/veracityLRS";
+import Avatar from "@/components/Avatar.vue";
+import ProgressionLineChart from "@/components/ProgressionLineChart.vue";
+import ActivityBarChart from "@/components/ActivityBarChart.vue";
+import Organisation from "@/components/Organisation.vue";
+import { getCohortsCourseDataXAPIQuery, getStudentsTimeDataXAPIQuery } from "@/lib/veracityLRS";
+import useRootStore from "@/store/index";
 import { mdiInformationVariant } from "@mdi/js";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "CohortPanelV2",
@@ -201,7 +173,7 @@ export default {
       }
       // this flattens any duplicates of students (eg. student 1 is in more than one course. but only want to show them once)
       this.studentsWithData = studentsArr.filter(
-        (v, i, a) => a.findIndex((t) => t.id === v.id) === i
+        (v, i, a) => a.findIndex((t) => t.id === v.id) === i,
       );
     }
 
@@ -219,20 +191,19 @@ export default {
     // const VQL = await VQLXAPIQuery();
   },
   computed: {
-    ...mapGetters(["getOrganisationById", "currentCohort"]),
+    ...mapState(useRootStore, ["getOrganisationById", "currentCohort"]),
     isDashboardView() {
       return this.$route.name === "Dashboard";
     },
     borderColor() {
-      if (this.isDashboardView)
-        return "border: 1px solid var(--v-missionAccent-base)";
+      if (this.isDashboardView) return "border: 1px solid var(--v-missionAccent-base)";
       return this.cohort.teacher
         ? "border: 1px solid var(--v-baseAccent-base);"
         : "border: 1px solid var(--v-missionAccent-base)";
     },
   },
   methods: {
-    ...mapActions(["setCurrentCohort"]),
+    ...mapActions(useRootStore, ["setCurrentCohort"]),
     clickedPerson(e, person, index) {
       // prevent route to cohortView
       e.stopPropagation();
@@ -247,11 +218,9 @@ export default {
         }
         // remove
         else if (i == index && this.selectedIndexs.includes(index)) {
-          this.selectedIndexs = this.selectedIndexs.filter(
-            (item) => item !== index
-          );
+          this.selectedIndexs = this.selectedIndexs.filter((item) => item !== index);
           this.selectedPersons = this.selectedPersons.filter(
-            (selectedPerson) => selectedPerson.id !== person.id
+            (selectedPerson) => selectedPerson.id !== person.id,
           );
           this.unselectedPersons.push(person);
         }
@@ -259,7 +228,7 @@ export default {
         //anyone not in selectedPersons becomes unselected (this is used to hide data in chart)
         this.unselectedPersons = this.diffTwoArraysOfObjects(
           this.studentsWithData,
-          this.selectedPersons
+          this.selectedPersons,
         );
 
         // add dim to all avatar els

@@ -1,10 +1,19 @@
-const plantColours = ['#C1B4AC','#F2D299','#05f','#E67E5A','#C5AA96','#AF9D8E','#C2E8EA','#5C92F0']
+const plantColours = [
+  "#C1B4AC",
+  "#F2D299",
+  "#05f",
+  "#E67E5A",
+  "#C5AA96",
+  "#AF9D8E",
+  "#C2E8EA",
+  "#5C92F0",
+];
 export const mercury = [
   {
     name: "Mercury",
     // color: plantColours[0],
     planets: [
-      { name: "Io",  },
+      { name: "Io" },
       { name: "Europa", color: "" },
       { name: "Ganymede", color: "" },
       { name: "Callisto", color: "" },

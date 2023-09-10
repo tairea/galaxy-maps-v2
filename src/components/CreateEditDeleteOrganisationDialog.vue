@@ -3,13 +3,7 @@
     <v-dialog v-model="dialog" width="40%" light>
       <!-- CREATE BUTTON -->
       <template v-slot:activator="{ on, attrs }">
-        <v-btn
-          v-if="!hideText"
-          outlined
-          color="baseAccent"
-          v-bind="attrs"
-          v-on="on"
-        >
+        <v-btn v-if="!hideText" outlined color="baseAccent" v-bind="attrs" v-on="on">
           <v-icon left> {{ mdiPlus }} </v-icon>
           CREATE ORGANISATION
         </v-btn>
@@ -32,18 +26,13 @@
         <div class="dialog-header">
           <p class="dialog-title">{{ dialogTitle }}</p>
           <div class="d-flex align-center">
-            <v-icon left color="missionAccent">{{
-              mdiInformationVariant
-            }}</v-icon>
+            <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
             <p class="dialog-description">{{ dialogDescription }}</p>
           </div>
         </div>
 
         <!-- LEFT SIDE -->
-        <div
-          class="left-side"
-          :style="organisation.name ? 'width:50%' : 'width:100%'"
-        >
+        <div class="left-side" :style="organisation.name ? 'width:50%' : 'width:100%'">
           <!-- DIALOG FIELDS -->
           <div class="create-dialog-content mt-8">
             <!-- TITLE -->
@@ -72,10 +61,7 @@
             ></v-textarea>
 
             <!-- IMAGE UPLOAD -->
-            <v-progress-linear
-              color="missionAccent"
-              :value="percentage"
-            ></v-progress-linear>
+            <v-progress-linear color="missionAccent" :value="percentage"></v-progress-linear>
             <v-file-input
               class="input-field"
               outlined
@@ -94,10 +80,7 @@
         <!-- End of left-side -->
 
         <!-- RIGHT SIDE -->
-        <div
-          class="right-side"
-          :style="organisation.name ? 'width:50%' : 'width:0%'"
-        >
+        <div class="right-side" :style="organisation.name ? 'width:50%' : 'width:0%'">
           <div v-if="organisation.name">
             <div class="d-flex flex-column justify-center align-center cursor">
               <v-img
@@ -133,13 +116,7 @@
           </v-btn>
 
           <!-- DELETE -->
-          <v-btn
-            v-if="edit"
-            outlined
-            color="error"
-            @click="deleteDialog()"
-            class="ml-2"
-          >
+          <v-btn v-if="edit" outlined color="error" @click="deleteDialog()" class="ml-2">
             <v-icon left> {{ mdiDelete }} </v-icon>
             DELETE
           </v-btn>
@@ -165,18 +142,12 @@
       <div class="create-dialog">
         <!-- HEADER -->
         <div class="dialog-header py-10">
-          <p class="dialog-title">
-            <strong>Warning!</strong> Delete Organisation?
-          </p>
+          <p class="dialog-title"><strong>Warning!</strong> Delete Organisation?</p>
           <div class="d-flex align-start">
-            <v-icon left color="missionAccent">{{
-              mdiInformationVariant
-            }}</v-icon>
+            <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
             <p class="dialog-description">
               Are you sure you want to <strong>DELETE</strong> the
-              <span class="organisation-text"
-                >{{ organisation.name }} ORGANISATION</span
-              >?
+              <span class="organisation-text">{{ organisation.name }} ORGANISATION</span>?
               <br />
               <br />
               Deleting is permanent!!!
@@ -222,16 +193,8 @@
 </template>
 
 <script>
-import { mapMutations } from "vuex";
-import { db, storage } from "../store/firestoreConfig";
-
-import {
-  mdiPlus,
-  mdiClose,
-  mdiCheck,
-  mdiDelete,
-  mdiInformationVariant,
-} from "@mdi/js";
+import { db, storage } from "@/store/firestoreConfig";
+import { mdiPlus, mdiClose, mdiCheck, mdiDelete, mdiInformationVariant } from "@mdi/js";
 
 export default {
   name: "CreateEditDeleteOrganisationDialog",
@@ -245,8 +208,7 @@ export default {
     dialog: false,
     dialogConfirm: false,
     dialogTitle: "Create a new Organisation",
-    dialogDescription:
-      "An Organisation is typically a school, business or... an organisation",
+    dialogDescription: "An Organisation is typically a school, business or... an organisation",
     loading: false,
     disabled: false,
     deleting: false,
@@ -329,10 +291,7 @@ export default {
       this.disabled = true;
       // ceate a storage ref
       var storageRef = storage.ref(
-        "organisation-images/" +
-          this.organisation.name +
-          "-" +
-          this.uploadedImage.name
+        "organisation-images/" + this.organisation.name + "-" + this.uploadedImage.name,
       );
 
       // upload a file
@@ -343,8 +302,7 @@ export default {
         "state_changed",
         (snapshot) => {
           // show progress on uploader bar
-          this.percentage =
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          this.percentage = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         },
         // upload error
         (err) => {
@@ -357,12 +315,11 @@ export default {
             console.log("image url is: " + downloadURL);
             // add image url to organisation obj
             this.organisation.image.url = downloadURL;
-            this.organisation.image.name =
-              this.organisation.name + "-" + this.uploadedImage.name;
+            this.organisation.image.name = this.organisation.name + "-" + this.uploadedImage.name;
             this.disabled = false;
             this.percentage = 0;
           });
-        }
+        },
       );
     },
     first3Letters(name) {
@@ -418,9 +375,7 @@ export default {
       if (this.organisation.image.name == "") return;
       console.log("deleting image...");
       // Create a reference to the file to delete
-      var storageRef = storage.ref(
-        "organisation-images/" + this.organisation.image.name
-      );
+      var storageRef = storage.ref("organisation-images/" + this.organisation.image.name);
       // Delete the file
       storageRef
         .delete()
