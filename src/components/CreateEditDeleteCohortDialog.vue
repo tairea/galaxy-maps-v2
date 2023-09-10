@@ -406,7 +406,7 @@ export default {
     },
   },
   computed: {
-    ...mapState(useRootStore, ["person","getOrganisationById", "user", "people", "organisations"]),
+    ...mapState(useRootStore, ["person", "getOrganisationById", "user", "people", "organisations"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },

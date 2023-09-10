@@ -338,7 +338,10 @@ export default {
       "personsTopics",
       "currentCourseId",
       "currentTopic",
-      "currentTopicId", "getTopicById", "getPersonsTopicById"]),
+      "currentTopicId",
+      "getTopicById",
+      "getPersonsTopicById",
+    ]),
     dark() {
       return this.$vuetify.theme.isDark;
     },

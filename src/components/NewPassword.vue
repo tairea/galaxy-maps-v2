@@ -3,11 +3,38 @@
     <h2 class="signin-label">Create New Password</h2>
     <p class="signin-description mt-4">Reset your password for you Galaxy Maps account</p>
     <v-form ref="form" v-model="valid" lazy-validation class="my-4">
-      <v-text-field :dark="dark" :light="!dark" type="password" v-model="password" label="Password" :rules="passwordRules"
-        required color="missionAccent" outlined class="custom-input"></v-text-field>
-      <v-text-field :dark="dark" :light="!dark" type="password" v-model="confirmPassword" label="Confirm password"
-        :rules="confirmPasswordRules" required color="missionAccent" outlined class="custom-input"></v-text-field>
-      <v-btn :disabled="!valid" color="missionAccent" class="mr-4" @click="resetPassword()" outlined width="100%">
+      <v-text-field
+        :dark="dark"
+        :light="!dark"
+        type="password"
+        v-model="password"
+        label="Password"
+        :rules="passwordRules"
+        required
+        color="missionAccent"
+        outlined
+        class="custom-input"
+      ></v-text-field>
+      <v-text-field
+        :dark="dark"
+        :light="!dark"
+        type="password"
+        v-model="confirmPassword"
+        label="Confirm password"
+        :rules="confirmPasswordRules"
+        required
+        color="missionAccent"
+        outlined
+        class="custom-input"
+      ></v-text-field>
+      <v-btn
+        :disabled="!valid"
+        color="missionAccent"
+        class="mr-4"
+        @click="resetPassword()"
+        outlined
+        width="100%"
+      >
         Sign in
       </v-btn>
       <v-btn color="missionAccent" class="mr-4 mt-4" @click="$emit('close')" outlined width="100%">

@@ -115,7 +115,13 @@ export default {
     this.getCohortsAndOrganisations();
   },
   computed: {
-    ...mapState(useRootStore, ["organisations", "cohorts", "person", "user","getOrganisationById"]),
+    ...mapState(useRootStore, [
+      "organisations",
+      "cohorts",
+      "person",
+      "user",
+      "getOrganisationById",
+    ]),
     cohortView() {
       return this.$route.name === "CohortView";
     },

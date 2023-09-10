@@ -138,12 +138,12 @@
             </p>
             <p>
               Publish
-              <span style="font-weight: 600; color: var(--v-galaxyAccent-base)">{{ course.title }}</span>
+              <span style="font-weight: 600; color: var(--v-galaxyAccent-base)">{{
+                course.title
+              }}</span>
               galaxy to make publicly visible
             </p>
-            <p>
-              All Galaxy Maps users will be able to see and start this map.
-            </p>
+            <p>All Galaxy Maps users will be able to see and start this map.</p>
           </div>
           <p v-else class="dialog-description">
             Publish this Galaxy
@@ -159,11 +159,25 @@
         <div v-if="!admin">
           <p class="caption mb-2">Choose whether you would like this galaxy to be:</p>
 
-          <v-radio-group v-model="courseOptions.public" color="missionAccent" :light="!dark" :dark="dark">
-            <v-radio label="private (invite only)" :value="false" color="missionAccent" class="label-text mb-4"></v-radio>
+          <v-radio-group
+            v-model="courseOptions.public"
+            color="missionAccent"
+            :light="!dark"
+            :dark="dark"
+          >
+            <v-radio
+              label="private (invite only)"
+              :value="false"
+              color="missionAccent"
+              class="label-text mb-4"
+            ></v-radio>
 
-            <v-radio label="public (Available to all Galaxy Maps users)" :value="true" color="missionAccent"
-              class="label-text"></v-radio>
+            <v-radio
+              label="public (Available to all Galaxy Maps users)"
+              :value="true"
+              color="missionAccent"
+              class="label-text"
+            ></v-radio>
           </v-radio-group>
         </div>
         <!-- Is the course editable? -->
@@ -185,8 +199,10 @@
           </v-radio-group>
         </div> -->
         <p class="caption ma-0" v-if="courseOptions.public && !admin">
-          <i>(Public courses need to be submitted for review by Galaxy Map
-            moderators.<br>This usually done within 48 hours.)</i>
+          <i
+            >(Public courses need to be submitted for review by Galaxy Map moderators.<br />This
+            usually done within 48 hours.)</i
+          >
         </p>
       </div>
       <!-- ACTION BUTTONS -->

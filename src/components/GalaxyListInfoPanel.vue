@@ -39,7 +39,7 @@ export default {
   },
   async mounted() {},
   computed: {
-    ...mapState(useRootStore, ["person", "courses", "cohorts","getCourseById"]),
+    ...mapState(useRootStore, ["person", "courses", "cohorts", "getCourseById"]),
   },
   watch: {
     async selectedCourseId(newSelectedCourseId) {

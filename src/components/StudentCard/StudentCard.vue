@@ -113,7 +113,7 @@ export default {
     this.studentTimeData = getActivityData;
   },
   computed: {
-    ...mapState(useRootStore, ["currentCohort", "userStatus","getCourseById"]),
+    ...mapState(useRootStore, ["currentCohort", "userStatus", "getCourseById"]),
     status() {
       return this.userStatus[this.student.id];
     },

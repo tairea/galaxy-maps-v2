@@ -31,7 +31,14 @@ export default {
     SolarSystem,
   },
   computed: {
-    ...mapState(useRootStore, ["currentTopicId", "currentCourseId","person", "getPersonsTopicById", "getCourseById", "getTopicById"]),
+    ...mapState(useRootStore, [
+      "currentTopicId",
+      "currentCourseId",
+      "person",
+      "getPersonsTopicById",
+      "getCourseById",
+      "getTopicById",
+    ]),
   },
   mounted() {},
   data() {

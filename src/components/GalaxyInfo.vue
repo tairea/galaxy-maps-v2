@@ -17,25 +17,15 @@
       <span class="font-weight-black">{{ visibility }}</span>
     </p>
     <!-- Map Image -->
-    <v-img
-      v-if="course.image"
-      class="galaxy-image mt-2"
-      :src="course.image.url"
-    ></v-img>
-    <p ref="description" class="galaxy-description">  
+    <v-img v-if="course.image" class="galaxy-image mt-2" :src="course.image.url"></v-img>
+    <p ref="description" class="galaxy-description">
       <!-- {{ course.description }} -->
-          {{ maybeTruncate(course.description) }}
-          <a
-            style="border-bottom: 1px solid"
-            v-if="readmore"
-            @click="showFullDescription()"
-            >Read more</a
-          ></p>
-    <CreateEditDeleteGalaxyDialog
-      v-if="teacher"
-      :edit="true"
-      :courseToEdit="course"
-    />
+      {{ maybeTruncate(course.description) }}
+      <a style="border-bottom: 1px solid" v-if="readmore" @click="showFullDescription()"
+        >Read more</a
+      >
+    </p>
+    <CreateEditDeleteGalaxyDialog v-if="teacher" :edit="true" :courseToEdit="course" />
   </div>
 </template>
 
@@ -54,7 +44,7 @@ export default {
   data() {
     return {
       readmore: false,
-    }
+    };
   },
   computed: {
     ...mapState(useRootStore, ["person"]),
@@ -62,7 +52,7 @@ export default {
       return this.course.public ? "Public" : "Private";
     },
   },
-  
+
   methods: {
     maybeTruncate(value) {
       if (!value) return "";
@@ -78,7 +68,7 @@ export default {
     showFullDescription() {
       this.$refs.description.innerHTML = this.course.description;
     },
-  }
+  },
 };
 </script>
 

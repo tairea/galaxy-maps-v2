@@ -4,9 +4,24 @@
       <h2 class="signin-label">Confirm Email</h2>
       <p class="signin-description mt-4">Please confirm your email address to sign in</p>
       <v-form ref="form" v-model="valid" lazy-validation class="my-4">
-        <v-text-field type="email" v-model="email" label="E-mail" :rules="emailRules" required color="missionAccent"
-          outlined class="custom-input"></v-text-field>
-        <v-btn :disabled="!valid" color="missionAccent" class="mr-4" @click="verifyEmail()" outlined width="100%">
+        <v-text-field
+          type="email"
+          v-model="email"
+          label="E-mail"
+          :rules="emailRules"
+          required
+          color="missionAccent"
+          outlined
+          class="custom-input"
+        ></v-text-field>
+        <v-btn
+          :disabled="!valid"
+          color="missionAccent"
+          class="mr-4"
+          @click="verifyEmail()"
+          outlined
+          width="100%"
+        >
           Sign in
         </v-btn>
       </v-form>

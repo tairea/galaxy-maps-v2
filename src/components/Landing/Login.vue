@@ -234,7 +234,6 @@ export default {
         })
         .then(() => {
           this.proceed();
-
         })
         .catch((error) => {
           console.log("error: ", error);
@@ -248,13 +247,13 @@ export default {
     },
     proceed() {
       if (!this.user?.data?.id || !this.person?.id) {
-        console.log("Login: proceeding =============== timeout")
+        console.log("Login: proceeding =============== timeout");
         return setTimeout(() => {
           this.proceed();
         }, 500);
       }
       if (!this.user.data.verified) {
-        console.log("Login: proceeding =============== not verified")
+        console.log("Login: proceeding =============== not verified");
         var actionCodeSettings = {
           // TODO: Update to galaxymaps.io on deployment
           url: window.location.origin + "/login",
@@ -264,7 +263,7 @@ export default {
         this.loading = false;
         throw new Error("Please check your emails to verify your account");
       } else {
-        console.log("Login: proceeding =============== else push '/'")
+        console.log("Login: proceeding =============== else push '/'");
         this.$router.push("/");
       }
     },
