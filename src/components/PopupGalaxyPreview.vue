@@ -4,9 +4,7 @@
     ref="popup"
     class="ss-info-panel"
     :class="draft ? 'draft-border' : 'panel-border'"
-    :style="
-      galaxyListInfoPanel ? 'backdrop-filter:none;border:none;width:100%' : ''
-    "
+    :style="galaxyListInfoPanel ? 'backdrop-filter:none;border:none;width:100%' : ''"
     v-if="course"
   >
     <div class="ss-details">
@@ -18,29 +16,16 @@
           <br />
           <span>{{ course.title }}</span>
         </p>
-        <v-img
-          v-if="course.image"
-          class="galaxy-image"
-          :src="course.image.url"
-        ></v-img>
+        <v-img v-if="course.image" class="galaxy-image" :src="course.image.url"></v-img>
         <p ref="description" class="mt-2 galaxy-description">
           <!-- {{ course.description }} -->
           {{ maybeTruncate(course.description) }}
-          <a
-            style="border-bottom: 1px solid"
-            v-if="readmore"
-            @click="showFullDescription()"
+          <a style="border-bottom: 1px solid" v-if="readmore" @click="showFullDescription()"
             >Read more</a
           >
         </p>
       </div>
-      <v-btn
-        text
-        x-small
-        color="missionAccent"
-        class="close-button"
-        @click="close"
-      >
+      <v-btn text x-small color="missionAccent" class="close-button" @click="close">
         <v-icon>{{ mdiClose }}</v-icon>
       </v-btn>
     </div>
@@ -179,13 +164,13 @@
 </template>
 
 <script>
-import LoginDialog from "../components/Dialogs/LoginDialog";
-import { db } from "../store/firestoreConfig";
-import { dbMixins } from "../mixins/DbMixins";
-import { getCohortById, assignTopicsAndTasksToMe } from "../lib/ff";
-import { mapGetters, mapState } from "vuex";
-
+import LoginDialog from "@/components/Dialogs/LoginDialog.vue";
+import { db } from "@/store/firestoreConfig";
+import { getCohortById, assignTopicsAndTasksToMe } from "@/lib/ff";
+import { dbMixins } from "@/mixins/DbMixins";
+import useRootStore from "@/store/index";
 import { mdiClose } from "@mdi/js";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "PopupGalaxyPreview",
@@ -205,7 +190,7 @@ export default {
     };
   },
   computed: {
-    ...mapState(["person", "user"]),
+    ...mapState(useRootStore, ["person", "user"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -230,6 +215,7 @@ export default {
     await this.setImages();
   },
   methods: {
+    ...mapActions(useRootStore, ["setCurrentCourse", "setCurrentCourseId"]),
     maybeTruncate(value) {
       if (!value) return "";
       if (value.length <= 100) {
@@ -245,21 +231,14 @@ export default {
       this.$refs.description.innerHTML = this.course.description;
     },
     async setImages() {
-      this.mappedAuthorImage = await this.getPersonsImage(
-        this.course.mappedBy.personId
-      );
+      this.mappedAuthorImage = await this.getPersonsImage(this.course.mappedBy.personId);
       if (this.course.contentBy.personId) {
-        this.contentAuthorImage = await this.getPersonsImage(
-          this.course.contentBy.personId
-        );
+        this.contentAuthorImage = await this.getPersonsImage(this.course.contentBy.personId);
       }
     },
     async setAccountType() {
       this.teacher = false;
-      if (
-        this.course.mappedBy.personId === this.person.id ||
-        this.user.data?.admin
-      ) {
+      if (this.course.mappedBy.personId === this.person.id || this.user.data?.admin) {
         this.teacher = true;
       } else if (this.user.loggedIn) {
         const querySnapshot = await db
@@ -287,8 +266,8 @@ export default {
     routeToGalaxyEdit() {
       console.log("route to galaxy", this.course.id);
       // save current course to store
-      this.$store.commit("setCurrentCourseId", this.course.id);
-      this.$store.commit("setCurrentCourse", this.course);
+      this.setCurrentCourseId(this.course.id);
+      this.setCurrentCourse(this.course);
       // route to topic/solar system
       this.$router.push({
         name: "GalaxyView",
@@ -301,8 +280,8 @@ export default {
       console.log("route to galaxy analytics", this.currentCourseId);
 
       // save current course to store
-      this.$store.commit("setCurrentCourse", this.course);
-      this.$store.commit("setCurrentCourseId", this.course.id);
+      this.setCurrentCourse(this.course);
+      this.setCurrentCourseId(this.course.id);
 
       // this.$router.push({
       //   name: "GalaxyView",
@@ -316,8 +295,8 @@ export default {
       // add this galaxy metadata (eg. topics) to this persons course database
 
       // save current course to store
-      this.$store.commit("setCurrentCourse", this.course);
-      this.$store.commit("setCurrentCourseId", this.course.id);
+      this.setCurrentCourse(this.course);
+      this.setCurrentCourseId(this.course.id);
 
       // 5) assign student to cohort and course
       let cohort = await getCohortById(this.course.cohort);

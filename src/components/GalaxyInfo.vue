@@ -1,9 +1,5 @@
 <template>
-  <div
-    id="galaxy-info"
-    :class="draft ? 'draft-border' : 'galaxy-border'"
-    v-if="course"
-  >
+  <div id="galaxy-info" :class="draft ? 'draft-border' : 'galaxy-border'" v-if="course">
     <!-- Label -->
     <h2 class="galaxy-label"><span v-if="draft">Drafting</span> Galaxy</h2>
     <!-- Map Name  -->
@@ -13,10 +9,7 @@
       Status: <span class="font-weight-black">{{ course.status }}</span>
     </p>
     <!-- Visibility -->
-    <p
-      v-if="course.status === 'submitted'"
-      class="galaxy-status overline mb-0 in-review"
-    >
+    <p v-if="course.status === 'submitted'" class="galaxy-status overline mb-0 in-review">
       awaiting review
     </p>
     <p v-else class="galaxy-status overline mb-0">
@@ -47,9 +40,9 @@
 </template>
 
 <script>
-import CreateEditDeleteGalaxyDialog from "../components/CreateEditDeleteGalaxyDialog";
-
-import { mapState } from "vuex";
+import CreateEditDeleteGalaxyDialog from "@/components/CreateEditDeleteGalaxyDialog.vue";
+import useRootStore from "@/store/index";
+import { mapState } from "pinia";
 
 export default {
   name: "GalaxyInfo",
@@ -64,7 +57,7 @@ export default {
     }
   },
   computed: {
-    ...mapState(["person"]),
+    ...mapState(useRootStore, ["person"]),
     visibility() {
       return this.course.public ? "Public" : "Private";
     },

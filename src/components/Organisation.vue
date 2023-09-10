@@ -1,16 +1,10 @@
 <template>
   <v-container>
-    <span
-      v-if="cohortView"
-      class="caption"
-      style="color: var(--v-cohortAccent-base)"
+    <span v-if="cohortView" class="caption" style="color: var(--v-cohortAccent-base)"
       >Organisation</span
     >
     <v-row :class="cohortView ? 'my-1' : ''">
-      <v-col
-        class="d-flex justify-center align-center cursor"
-        @click="editOrg()"
-      >
+      <v-col class="d-flex justify-center align-center cursor" @click="editOrg()">
         <v-img
           v-if="organisation.image"
           :src="organisation.image.url"
@@ -21,9 +15,7 @@
         <div v-else-if="organisation.name" class="imagePlaceholder">
           {{ first3Letters(organisation.name) }}
         </div>
-        <span v-if="!hideName" class="ml-6 overline">{{
-          organisation.name
-        }}</span>
+        <span v-if="!hideName" class="ml-6 overline">{{ organisation.name }}</span>
       </v-col>
     </v-row>
   </v-container>

@@ -34,11 +34,10 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from "vuex";
 import Chart from "@/components/Chart.vue";
+import { dbMixins } from "@/mixins/DbMixins";
+import useRootStore from "@/store/index";
 import { DateTime } from "luxon";
-import { dbMixins } from "../mixins/DbMixins";
-import { colours, names } from "../lib/utils";
 
 export default {
   name: "ActivityBarChart",
@@ -99,7 +98,7 @@ export default {
     };
   },
   computed: {
-    // ...mapGetters(["person", "getCourseById", "getTopicById"]),
+    // ...mapState(useRootStore, ["person", "getCourseById", "getTopicById"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -129,12 +128,8 @@ export default {
         switch (this.timeframe.type) {
           case "day":
             const dayRes = student.activity.find((day) => {
-              const statement = DateTime.fromISO(
-                day.dayISOTimestamp
-              ).toMillis();
-              let timeframe = DateTime.fromJSDate(
-                this.timeframe.max
-              ).toISODate();
+              const statement = DateTime.fromISO(day.dayISOTimestamp).toMillis();
+              let timeframe = DateTime.fromJSDate(this.timeframe.max).toISODate();
               timeframe = DateTime.fromISO(timeframe).toMillis();
               return statement == timeframe;
             });
@@ -146,10 +141,8 @@ export default {
             const weekRes = student.activity
               .filter((day) => {
                 return (
-                  DateTime.fromISO(day.dayISOTimestamp) >
-                    DateTime.fromJSDate(this.timeframe.min) &&
-                  DateTime.fromISO(day.dayISOTimestamp) <
-                    DateTime.fromJSDate(this.timeframe.max)
+                  DateTime.fromISO(day.dayISOTimestamp) > DateTime.fromJSDate(this.timeframe.min) &&
+                  DateTime.fromISO(day.dayISOTimestamp) < DateTime.fromJSDate(this.timeframe.max)
                 );
               })
               .reduce((sum, activity) => sum + activity.minutesActiveTotal, 0);
@@ -160,10 +153,8 @@ export default {
             const monthRes = student.activity
               .filter((day) => {
                 return (
-                  DateTime.fromISO(day.dayISOTimestamp) >
-                    DateTime.fromJSDate(this.timeframe.min) &&
-                  DateTime.fromISO(day.dayISOTimestamp) <
-                    DateTime.fromJSDate(this.timeframe.max)
+                  DateTime.fromISO(day.dayISOTimestamp) > DateTime.fromJSDate(this.timeframe.min) &&
+                  DateTime.fromISO(day.dayISOTimestamp) < DateTime.fromJSDate(this.timeframe.max)
                 );
               })
               .reduce((sum, activity) => sum + activity.minutesActiveTotal, 0);

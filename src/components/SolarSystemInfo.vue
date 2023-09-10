@@ -2,12 +2,7 @@
   <div id="ss-info">
     <h2 class="ss-label">System</h2>
     <h1 class="ss-title">{{ topic.label }}</h1>
-    <SolarSystem
-      :topic="topic"
-      :size="'0.25em'"
-      :height="'200px'"
-      :tasks="tasks"
-    />
+    <SolarSystem :topic="topic" :size="'0.25em'" :height="'200px'" :tasks="tasks" />
     <!-- <SolarSystem
       :topic="
         teacher
@@ -25,9 +20,9 @@
 </template>
 
 <script>
-import SolarSystem from "../components/SolarSystem";
-
-import { mapState, mapGetters } from "vuex";
+import SolarSystem from "@/components/SolarSystem.vue";
+import useRootStore from "@/store/index";
+import { mapState } from "pinia";
 
 export default {
   name: "SolarSystemInfo",
@@ -36,13 +31,7 @@ export default {
     SolarSystem,
   },
   computed: {
-    ...mapState(["currentTopicId", "currentCourseId"]),
-    ...mapGetters([
-      "person",
-      "getPersonsTopicById",
-      "getCourseById",
-      "getTopicById",
-    ]),
+    ...mapState(useRootStore, ["currentTopicId", "currentCourseId","person", "getPersonsTopicById", "getCourseById", "getTopicById"]),
   },
   mounted() {},
   data() {
@@ -57,7 +46,7 @@ export default {
   margin-top: 30px;
   padding: 20px;
   backdrop-filter: blur(2px);
-  width: 100%
+  width: 100%;
 }
 
 h1 {

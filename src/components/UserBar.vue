@@ -9,24 +9,46 @@
       </div>
       <div v-else class="blackBar">
         <div class="d-flex justify-center align-center">
-          <v-progress-circular v-if="uploading" :rotate="360" :size="50" :width="2" :value="uploadPercentage"
-            color="baseAccent">
+          <v-progress-circular
+            v-if="uploading"
+            :rotate="360"
+            :size="50"
+            :width="2"
+            :value="uploadPercentage"
+            color="baseAccent"
+          >
             {{ uploadPercentage + "%" }}
           </v-progress-circular>
-          <v-avatar v-else color="secondary" @mouseenter="onhover = true" @mouseleave="onhover = false">
-            <img v-if="person.image" :src="person.image.url" :alt="person.firstName" style="object-fit: cover" />
+          <v-avatar
+            v-else
+            color="secondary"
+            @mouseenter="onhover = true"
+            @mouseleave="onhover = false"
+          >
+            <img
+              v-if="person.image"
+              :src="person.image.url"
+              :alt="person.firstName"
+              style="object-fit: cover"
+            />
             <v-icon v-else>{{ mdiAccount }}</v-icon>
             <v-fade-transition>
               <v-overlay v-if="onhover" absolute color="baseAccent">
                 <v-icon small @click="onButtonClick">{{ mdiPencil }}</v-icon>
               </v-overlay>
             </v-fade-transition>
-            <input ref="uploader" class="d-none" type="file" accept="image/*" @change="onFileChanged" />
+            <input
+              ref="uploader"
+              class="d-none"
+              type="file"
+              accept="image/*"
+              @change="onFileChanged"
+            />
           </v-avatar>
         </div>
         <div v-if="!miniNavMenu || hover" class="username mx-4" style="">
           <p class="ma-0">{{ person.firstName }} {{ person.lastName }}</p>
-          <span style="font-size:0.8rem;color:#777">ID: {{ person.id }}</span>
+          <span style="font-size: 0.8rem; color: #777">ID: {{ person.id }}</span>
         </div>
       </div>
       <!-- USER MENU HIDDEN-->
@@ -42,8 +64,13 @@
           </v-col>
           <!-- LIGHT/DARK MODE SWITCH -->
           <v-col class="pa-0 d-flex justify-center">
-            <v-switch v-model="darkSwitch" :label="`${darkSwitch ? 'Dark' : 'Light'}`" @change="changeTheme()"
-              color="missionAccent" class="ma-0"></v-switch>
+            <v-switch
+              v-model="darkSwitch"
+              :label="`${darkSwitch ? 'Dark' : 'Light'}`"
+              @change="changeTheme()"
+              color="missionAccent"
+              class="ma-0"
+            ></v-switch>
           </v-col>
         </v-row>
 
@@ -67,27 +94,54 @@
           <!-- Feedback button -->
           <v-btn
             href="https://docs.google.com/forms/d/e/1FAIpQLSfJgXGWOeosZfJY7H0tvFzANoX8p95fmgVKom97HMDiNywSnA/viewform?usp=sf_link"
-            target="_blank" color="galaxyAccent" class="ma-3" outlined :dark="dark" :light="!dark">
+            target="_blank"
+            color="galaxyAccent"
+            class="ma-3"
+            outlined
+            :dark="dark"
+            :light="!dark"
+          >
             <v-icon class="pr-2">{{ mdiSend }}</v-icon>
             Give us Feedback
           </v-btn>
 
           <!-- Discord button -->
-          <v-btn href="https://discord.gg/gus7a2cnmA" target="_blank" color="indigo lighten-1" class="ma-3" outlined
-            :dark="dark" :light="!dark">
+          <v-btn
+            href="https://discord.gg/gus7a2cnmA"
+            target="_blank"
+            color="indigo lighten-1"
+            class="ma-3"
+            outlined
+            :dark="dark"
+            :light="!dark"
+          >
             <v-icon class="pr-2">{{ mdiMessage }}</v-icon>
             Chat on Discord
           </v-btn>
 
           <!-- Github button -->
-          <v-btn href="https://github.com/tairea/galaxy-maps-v2" target="_blank" color="blue-grey lighten-3" class="ma-3"
-            outlined :dark="dark" :light="!dark">
+          <v-btn
+            href="https://github.com/tairea/galaxy-maps-v2"
+            target="_blank"
+            color="blue-grey lighten-3"
+            class="ma-3"
+            outlined
+            :dark="dark"
+            :light="!dark"
+          >
             <v-icon class="pr-2">{{ mdiGithub }}</v-icon>
             Help code this
           </v-btn>
 
           <!-- Logout button -->
-          <v-btn class="ma-3" @click="logout" color="missionAccent" outlined :dark="dark" :light="!dark">
+          <v-btn
+            class="ma-3"
+            @click="logout"
+            color="missionAccent"
+            outlined
+            :dark="dark"
+            :light="!dark"
+          >
             <v-icon class="pr-2">{{ mdiDoorClosed }}</v-icon>
             Logout
           </v-btn>
@@ -98,21 +152,14 @@
 </template>
 
 <script>
-// import { Component, Vue } from "vue-property-decorator";
-import firebase from "firebase";
-import { mapState, mapActions, mapMutations } from "vuex";
 import ThemeColourPicker from "@/components/ThemeColourPicker.vue";
-import { db, storage } from "../store/firestoreConfig";
-import StudentEditDialog from "../components/StudentEditDialog.vue";
-import LoginDialog from "../components/Dialogs/LoginDialog";
-import {
-  mdiAccount,
-  mdiPencil,
-  mdiSend,
-  mdiDoorClosed,
-  mdiMessage,
-  mdiGithub,
-} from "@mdi/js";
+import LoginDialog from "@/components/Dialogs/LoginDialog";
+import StudentEditDialog from "@/components/StudentEditDialog.vue";
+import { db, storage } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
+import { mdiAccount, mdiPencil, mdiSend, mdiDoorClosed, mdiMessage, mdiGithub } from "@mdi/js";
+import firebase from "firebase/compat/app";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "UserBar",
@@ -166,20 +213,25 @@ export default {
 
     if (this.person.accountType == "teacher") {
       // get courses created by this person (populates state.personsCourses)
-      await this.$store.dispatch("bindCoursesByPersonId", this.person.id);
+      await this.bindCoursesByPersonId(this.person.id);
     }
   },
   computed: {
-    ...mapState(["person", "user"]),
+    ...mapState(useRootStore, ["person", "user"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
   },
   methods: {
-    ...mapActions(["getPersonById"]),
+    ...mapActions(useRootStore, [
+      "bindCoursesByPersonId",
+      "getPersonById",
+      "setDarkMode",
+      "setSnackbar",
+    ]),
     changeTheme() {
       this.$vuetify.theme.dark = this.darkSwitch;
-      this.$store.commit("setDarkMode", this.$vuetify.theme.isDark);
+      this.setDarkMode(this.$vuetify.theme.isDark);
     },
     logout() {
       this.hover = false
@@ -196,7 +248,7 @@ export default {
         .signOut()
         .then(() => {
           // alert("Successfully signed out");
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Successfully signed out",
             color: "baseAccent",
@@ -205,7 +257,7 @@ export default {
         })
         .catch((error) => {
           alert(error.message);
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: error.message,
             color: "pink",
@@ -227,10 +279,10 @@ export default {
       // ceate a storage ref
       var storageRef = storage.ref(
         "avatar-images/" +
-        this.person.firstname +
-        this.person.lastname +
-        "-" +
-        this.selectedFile.name
+          this.person.firstname +
+          this.person.lastname +
+          "-" +
+          this.selectedFile.name,
       );
 
       // upload a file
@@ -242,7 +294,7 @@ export default {
         (snapshot) => {
           // show progress on uploader bar
           this.uploadPercentage = Math.floor(
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100,
           );
         },
         // upload error
@@ -261,7 +313,7 @@ export default {
             console.log("image: ", this.image);
             this.updateProfile();
           });
-        }
+        },
       );
     },
     updateProfile() {
@@ -344,12 +396,16 @@ export default {
 
 .miniMenu {
   width: 90px;
-  transition: width 0.3s ease-out 0.3s, bottom 0.3s ease-out;
+  transition:
+    width 0.3s ease-out 0.3s,
+    bottom 0.3s ease-out;
 }
 
 .showMenu {
   width: 25%;
   bottom: 0px;
-  transition: width 0.3s ease-out, bottom 0.3s ease-out 0.3s;
+  transition:
+    width 0.3s ease-out,
+    bottom 0.3s ease-out 0.3s;
 }
 </style>

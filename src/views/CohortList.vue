@@ -1,7 +1,4 @@
-// ==============
-// !IMPORTANT
-// OLD COMPONENT PLEASE SEE COHORTLIST V2
-// ===============
+// ============== // !IMPORTANT // OLD COMPONENT PLEASE SEE COHORTLIST V2 // ===============
 
 <template>
   <v-container class="d-flex flex-column fullHeight">
@@ -9,9 +6,7 @@
       <v-col>
         <!-- ORGANISATIONS -->
         <div v-if="organisations.length">
-          <h3 class="cohort-heading overline baseAccent--text">
-            Organisation cohorts
-          </h3>
+          <h3 class="cohort-heading overline baseAccent--text">Organisation cohorts</h3>
           <v-row class="d-flex flex-column">
             <v-col v-for="organisation in organisations" :key="organisation.id">
               <v-row class="organisation-banner">
@@ -58,9 +53,7 @@
           </v-row>
         </div>
         <div v-else>
-          <h3 class="cohort-heading overline baseAccent--text">
-            No Cohorts Found
-          </h3>
+          <h3 class="cohort-heading overline baseAccent--text">No Cohorts Found</h3>
         </div>
       </v-col>
     </v-row>
@@ -81,21 +74,26 @@
     </v-row>
 
     <!-- Edit Org Dialog -->
-    <EditOrganisationButtonDialog v-if="editingOrgansation" :open="openOrganisationDialog" :organisation="editingOrgansation" @closeOrganisationEditDialog="openOrganisationDialog = false"/>
+    <EditOrganisationButtonDialog
+      v-if="editingOrgansation"
+      :open="openOrganisationDialog"
+      :organisation="editingOrgansation"
+      @closeOrganisationEditDialog="openOrganisationDialog = false"
+    />
   </v-container>
 </template>
 
 <script lang="js">
 // @ is an alias to /src
-import CreateEditDeleteCohortDialog from "../components/CreateEditDeleteCohortDialog";
-import CreateEditDeleteOrganisationDialog from "../components/CreateEditDeleteOrganisationDialog";
-import CreateAdminDialog from "../components/CreateAdminDialog";
-import EditOrganisationButtonDialog from "../components/EditOrganisationButtonDialog";
-import Cohort from "../components/Cohort";
-import CohortPanel from "../components/CohortPanel";
-import Organisation from "../components/Organisation";
-
-import { mapState, mapGetters, mapActions } from "vuex";
+import CreateEditDeleteCohortDialog from "@/components/CreateEditDeleteCohortDialog.vue";
+import CreateEditDeleteOrganisationDialog from "@/components/CreateEditDeleteOrganisationDialog.vue";
+import CreateAdminDialog from "@/components/CreateAdminDialog.vue";
+import EditOrganisationButtonDialog from "@/components/EditOrganisationButtonDialog.vue";
+import Cohort from "@/components/Cohort.vue";
+import CohortPanel from "@/components/CohortPanel.vue";
+import Organisation from "@/components/Organisation.vue";
+import useRootStore from "@/store/index";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "CohortList",
@@ -106,25 +104,24 @@ export default {
     Organisation,
     EditOrganisationButtonDialog,
     CreateAdminDialog,
-    CohortPanel
+    CohortPanel,
   },
   data: () => ({
     openOrganisationDialog: false,
-    editingOrgansation: null
+    editingOrgansation: null,
   }),
   mounted() {
     // trigger VuexFire bindCohorts & bindOrganisations in Store
     this.getCohortsAndOrganisations();
   },
   computed: {
-    ...mapState(["organisations", "cohorts", "person", "user"]),
-    ...mapGetters(["getOrganisationById"]),
-    cohortView () {
-      return this.$route.name === "CohortView"
-    }
+    ...mapState(useRootStore, ["organisations", "cohorts", "person", "user","getOrganisationById"]),
+    cohortView() {
+      return this.$route.name === "CohortView";
+    },
   },
   methods: {
-    ...mapActions(["bindAllCohorts", "bindAllOrganisations", "getCohortsByPersonId"]),
+    ...mapActions(useRootStore, ["bindAllCohorts", "bindAllOrganisations", "getCohortsByPersonId"]),
     getCohortsByOrganisationId(id) {
       if (id) {
         return this.cohorts.filter((cohort) => cohort.organisation === id);
@@ -133,20 +130,20 @@ export default {
       }
     },
     getCohortsAndOrganisations() {
-      if (this.user.data.admin){
-        this.bindAllCohorts()
+      if (this.user.data.admin) {
+        this.bindAllCohorts();
         this.bindAllOrganisations();
       } else {
-        this.getCohortsByPersonId(this.person)
+        this.getCohortsByPersonId(this.person);
       }
     },
     editOrgDialog(orgId) {
-      this.openOrganisationDialog = true
-      console.log("getting org with id = ", orgId)
-      this.editingOrgansation = this.getOrganisationById(orgId)
-      console.log("got org = ", this.editingOrgansation)
-      this.$refs.organisationDialog.openDialog()
-    }
+      this.openOrganisationDialog = true;
+      console.log("getting org with id = ", orgId);
+      this.editingOrgansation = this.getOrganisationById(orgId);
+      console.log("got org = ", this.editingOrgansation);
+      this.$refs.organisationDialog.openDialog();
+    },
   },
 };
 </script>

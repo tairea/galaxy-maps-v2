@@ -20,7 +20,7 @@
 </template>
 
 <script>
-// import EditStudentButtonDialog from "../components/EditStudentButtonDialog";
+// import EditStudentButtonDialog from "@/components/EditStudentButtonDialog.vue";
 
 export default {
   name: "StudentsDataTable",
@@ -30,7 +30,7 @@ export default {
   props: ["students"],
   data() {
     return {
-       search: "",
+      search: "",
       headers: [
         {
           text: "First Name",

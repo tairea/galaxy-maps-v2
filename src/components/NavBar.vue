@@ -37,8 +37,9 @@
 </template>
 
 <script>
+import useRootStore from "@/store/index";
 import { mdiMenu, mdiClose } from "@mdi/js";
-import { mapGetters } from "vuex";
+import { mapState } from "pinia";
 
 const TAB_GALAXIES = { id: 1, name: "GALAXIES", route: `/` };
 const TAB_COHORTS = { id: 2, name: "COHORTS", route: `/cohorts` };
@@ -58,7 +59,7 @@ export default {
     };
   },
   computed: {
-    ...mapGetters(["user"]),
+    ...mapState(useRootStore, ["user"]),
   },
   watch: {
     $route(to, from) {

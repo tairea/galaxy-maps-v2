@@ -7,8 +7,9 @@
 
 <script>
 import { Chart, registerables } from "chart.js";
-Chart.register(...registerables);
 import { DateTime } from "luxon";
+
+Chart.register(...registerables);
 
 // Chart.defaults.elements.point.radius = 0;
 
@@ -35,8 +36,7 @@ export default {
         // hide data
         for (const person of newUnselectedPersons) {
           const personsName = person.firstName + " " + person.lastName;
-          const personsIndexForDataset =
-            this.chart.data.labels.indexOf(personsName);
+          const personsIndexForDataset = this.chart.data.labels.indexOf(personsName);
 
           if (!(personsIndexForDataset < 0)) {
             if (this.chartType == "line") {
@@ -48,7 +48,7 @@ export default {
                   " UNselected. index = " +
                   personsIndexForDataset +
                   " " +
-                  this.chartType
+                  this.chartType,
               );
               // bar chart
               this.chart.hide(0, personsIndexForDataset);
@@ -64,8 +64,7 @@ export default {
         // show data
         for (const person of newSelectedPersons) {
           const personsName = person.firstName + " " + person.lastName;
-          const personsIndexForDataset =
-            this.chart.data.labels.indexOf(personsName);
+          const personsIndexForDataset = this.chart.data.labels.indexOf(personsName);
 
           if (!(personsIndexForDataset < 0)) {
             if (this.chartType == "line") {
@@ -73,11 +72,7 @@ export default {
               this.chart.show(personsIndexForDataset);
             } else if (this.chartType == "bar") {
               console.log(
-                personsName +
-                  " Selected. index = " +
-                  personsIndexForDataset +
-                  " " +
-                  this.chartType
+                personsName + " Selected. index = " + personsIndexForDataset + " " + this.chartType,
               );
               // bar chart
               this.chart.show(0, personsIndexForDataset);
@@ -97,9 +92,7 @@ export default {
           if (newTimeframe.unit == "hour") {
             const titleObj = {
               display: true,
-              text: DateTime.fromJSDate(newTimeframe.max).toFormat(
-                "ccc dd LLL   "
-              ),
+              text: DateTime.fromJSDate(newTimeframe.max).toFormat("ccc dd LLL   "),
             };
             this.chartOptions.scales.x.title = titleObj;
           }

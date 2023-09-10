@@ -4,11 +4,7 @@
     <div class="left-section" data-v-step="1">
       <GalaxyInfo :course="currentCourse" :teacher="teacher" :draft="draft" />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
-      <PublishGalaxy
-        v-if="showPublish"
-        :course="currentCourse"
-        :courseTasks="courseTasks"
-      />
+      <PublishGalaxy v-if="showPublish" :course="currentCourse" :courseTasks="courseTasks" />
       <AssignedInfo
         v-if="!draft && cohortsInCourse.length"
         :assignCohorts="true"
@@ -98,23 +94,13 @@
       @editNode="showEditDialog"
     />
     <!-- POPUP OUT PANEL (for system preview)-->
-    <EdgeInfoPanel
-      v-if="teacher"
-      :selectedEdge="currentEdge"
-      @closeInfoPanel="closeInfoPanel"
-    />
+    <EdgeInfoPanel v-if="teacher" :selectedEdge="currentEdge" @closeInfoPanel="closeInfoPanel" />
 
     <!-- Galaxy Completed Popup -->
-    <v-dialog
-      transition="dialog-bottom-transition"
-      max-width="600"
-      :value="galaxyCompletedDialog"
-    >
+    <v-dialog transition="dialog-bottom-transition" max-width="600" :value="galaxyCompletedDialog">
       <template v-slot:default="dialog">
         <v-card style="border: 1px solid var(--v-baseAccent-base)">
-          <v-toolbar color="baseAccent overline" light
-            >congratulations</v-toolbar
-          >
+          <v-toolbar color="baseAccent overline" light>congratulations</v-toolbar>
           <v-card-text class="pa-0">
             <div class="overline text-center pa-12 baseAccent--text">
               You have completed this Galaxy Map
@@ -133,30 +119,31 @@
 </template>
 
 <script>
-import GalaxyInfo from "../components/GalaxyInfo";
-import PublishGalaxy from "../components/GalaxyView/PublishGalaxy";
-import AssignedInfo from "../components/AssignedInfo";
-import BackButton from "../components/BackButton";
+import GalaxyInfo from "@/components/GalaxyInfo.vue";
+import PublishGalaxy from "@/components/GalaxyView/PublishGalaxy.vue";
+import AssignedInfo from "@/components/AssignedInfo.vue";
+import BackButton from "@/components/BackButton.vue";
 
-import GalaxyMap from "../components/GalaxyMap";
-import GalaxyMapButtons from "../components/GalaxyView/GalaxyMapButtons";
+import GalaxyMap from "@/components/GalaxyMap.vue";
+import GalaxyMapButtons from "@/components/GalaxyView/GalaxyMapButtons.vue";
 
-import CreateEditDeleteNodeDialog from "../components/CreateEditDeleteNodeDialog";
+import CreateEditDeleteNodeDialog from "@/components/CreateEditDeleteNodeDialog.vue";
 
-import PopupSystemPreview from "../components/PopupSystemPreview";
-import SolarSystemInfoPanel from "../components/SolarSystemInfoPanel";
-import EdgeInfoPanel from "../components/EdgeInfoPanel";
+import PopupSystemPreview from "@/components/PopupSystemPreview.vue";
+import SolarSystemInfoPanel from "@/components/SolarSystemInfoPanel.vue";
+import EdgeInfoPanel from "@/components/EdgeInfoPanel.vue";
 
-import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame";
-import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame";
+import RequestForHelpTeacherFrame from "@/components/RequestForHelpTeacherFrame.vue";
+import SubmissionTeacherFrame from "@/components/SubmissionTeacherFrame.vue";
 
-import MissionsInfo from "../components/MissionsInfo";
-import MissionsList from "../components/MissionsList";
+import MissionsInfo from "@/components/MissionsInfo.vue";
+import MissionsList from "@/components/MissionsList.vue";
 
-import { db } from "../store/firestoreConfig";
-import { mapState, mapGetters, mapActions, mapMutations } from "vuex";
 import { getAllPeopleInCourse, getAllCohortsInCourse } from "@/lib/ff";
-import { dbMixins } from "../mixins/DbMixins";
+import { dbMixins } from "@/mixins/DbMixins";
+import { db } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "GalaxyView",
@@ -226,22 +213,16 @@ export default {
   watch: {
     async currentCourse(newVal, oldVal) {
       if (!oldVal.cohort && newVal.cohort)
-        this.cohortsInCourse = await getAllCohortsInCourse(
-          this.courseId,
-          this.person.id
-        );
+        this.cohortsInCourse = await getAllCohortsInCourse(this.courseId, this.person.id);
     },
   },
   async beforeMount() {
     // check galaxy params match state.currentCourse
     if (this.$route.params.courseId != this.currentCourse?.id) {
-      const course = await db
-        .collection("courses")
-        .doc(this.$route.params.courseId)
-        .get();
+      const course = await db.collection("courses").doc(this.$route.params.courseId).get();
       console.log("params dont match setting currentCourse: ", course.data());
       this.course = course.data();
-      this.$store.commit("setCurrentCourse", course.data());
+      this.setCurrentCourse(course.data());
     }
   },
   async mounted() {
@@ -249,22 +230,17 @@ export default {
     if (this.teacher) {
       this.peopleInCourse = await getAllPeopleInCourse(this.courseId);
       this.setPeopleInCourse(this.peopleInCourse);
-      this.cohortsInCourse = await getAllCohortsInCourse(
-        this.courseId,
-        this.person.id
-      );
+      this.cohortsInCourse = await getAllCohortsInCourse(this.courseId, this.person.id);
     } else {
       await this.getCohortsByPersonId(this.person);
       let cohort = await this.cohorts.find((cohort) =>
-        cohort.courses.some((courseId) => courseId === this.currentCourseId)
+        cohort.courses.some((courseId) => courseId === this.currentCourseId),
       );
       this.cohortsInCourse.push(cohort);
       if (this.cohortsInCourse.length) {
         this.setCurrentCohort(this.cohortsInCourse[0]);
         const students = await Promise.all(
-          this.cohortsInCourse[0].students?.map((student) =>
-            this.MXgetPersonByIdFromDB(student)
-          )
+          this.cohortsInCourse[0].students?.map((student) => this.MXgetPersonByIdFromDB(student)),
         );
         this.peopleInCourse = students;
         this.setPeopleInCourse(students);
@@ -275,7 +251,7 @@ export default {
     // this.$tours["myTour"].start(); // Disabled for now
   },
   computed: {
-    ...mapState([
+    ...mapState(useRootStore, [
       "currentCourseId",
       "currentCourseNodes",
       "person",
@@ -284,8 +260,9 @@ export default {
       "currentCourse",
       "cohorts",
       "user",
+      "person",
+      "user",
     ]),
-    ...mapGetters(["person", "user"]),
     draft() {
       return this.currentCourse?.status === "drafting";
     },
@@ -293,26 +270,22 @@ export default {
       return this.currentCourse?.status === "submitted";
     },
     teacher() {
-      return (
-        this.currentCourse?.mappedBy?.personId === this.person.id ||
-        this.user.data.admin
-      );
+      return this.currentCourse?.mappedBy?.personId === this.person.id || this.user.data.admin;
     },
     student() {
-      return this.person.assignedCourses?.some(
-        (courseId) => courseId === this.currentCourseId
-      );
+      return this.person.assignedCourses?.some((courseId) => courseId === this.currentCourseId);
     },
     showPublish() {
-      return (
-        (this.user.data.admin && this.currentCourse.status === "submitted") ||
-        this.draft
-      );
+      return (this.user.data.admin && this.currentCourse.status === "submitted") || this.draft;
     },
   },
   methods: {
-    ...mapActions(["getCohortsByPersonId", "setCurrentCohort"]),
-    ...mapMutations(["setPeopleInCourse"]),
+    ...mapActions(useRootStore, [
+      "getCohortsByPersonId",
+      "setCurrentCohort",
+      "setCurrentCourse",
+      "setPeopleInCourse",
+    ]),
     setUiMessage(message) {
       this.uiMessage = message;
     },
@@ -365,13 +338,13 @@ export default {
     },
     // async bindTasks(courseId, topicId) {
     //   if (!this.teacher) {
-    //     await this.$store.dispatch("bindPersonsTasksByTopicId", {
+    //     await this.bindPersonsTasksByTopicId({
     //       personId: this.person.id,
     //       courseId: courseId,
     //       topicId: topicId,
     //     });
     //   } else {
-    //     await this.$store.dispatch("bindTasksByTopicId", {
+    //     await this.bindTasksByTopicId({
     //       courseId: courseId,
     //       topicId: topicId,
     //     });
@@ -405,9 +378,7 @@ export default {
       // get topic id
       this.clickedTopicId = emittedPayload.topicId;
       // get topic
-      this.clickedTopic = this.currentCourseNodes.find(
-        (node) => node.id == this.clickedTopicId
-      );
+      this.clickedTopic = this.currentCourseNodes.find((node) => node.id == this.clickedTopicId);
       // reset topic tasks (to prevent duplicate)
       this.topicTasks = [];
       // loop courseTasks for this topic id (= this.topicTasks)
@@ -418,8 +389,7 @@ export default {
       }
       // order topic tasks by created
       this.topicTasks = this.topicTasks.sort(
-        (objA, objB) =>
-          Number(objA.taskCreatedTimestamp) - Number(objB.taskCreatedTimestamp)
+        (objA, objB) => Number(objA.taskCreatedTimestamp) - Number(objB.taskCreatedTimestamp),
       );
     },
     emittedCourseTasks(emittedPayload) {

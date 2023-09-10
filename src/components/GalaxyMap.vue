@@ -2,11 +2,28 @@
   <div class="full-height">
     <LoadingSpinner v-if="loading" text="loading galaxy" />
     <!-- loading = !planets.length && !draggingNodes -->
-    <network v-if="nodesToDisplay" ref="network" class="full-height" :nodes="nodesToDisplay" :edges="edgesToDisplay"
-      :options="network.options" @hook:updated="networkUpdated" @nodes-add="addNode" @edges-add="addEdge"
-      @dragging="dragging" @drag-start="dragStart" @drag-end="dragEnd" @select-edge="selectEdge"
-      @deselect-node="deselectNode" @deselect-edge="deselectEdge" @animation-finished="animationFinished"
-      @before-drawing="beforeDrawing" @after-drawing="afterDrawing" @click="click2" @double-click="doubleClick"></network>
+    <network
+      v-if="nodesToDisplay"
+      ref="network"
+      class="full-height"
+      :nodes="nodesToDisplay"
+      :edges="edgesToDisplay"
+      :options="network.options"
+      @hook:updated="networkUpdated"
+      @nodes-add="addNode"
+      @edges-add="addEdge"
+      @dragging="dragging"
+      @drag-start="dragStart"
+      @drag-end="dragEnd"
+      @select-edge="selectEdge"
+      @deselect-node="deselectNode"
+      @deselect-edge="deselectEdge"
+      @animation-finished="animationFinished"
+      @before-drawing="beforeDrawing"
+      @after-drawing="afterDrawing"
+      @click="click2"
+      @double-click="doubleClick"
+    ></network>
     <!-- @hover-node="hoverNode" 
           @select-node="selectNode"
                 @blur-node="blurNode"
@@ -20,17 +37,14 @@
 </template>
 
 <script>
-import { Network } from "vue2vis";
-import { Planet } from "../lib/planet";
-
-import SolarSystem from "../components/SolarSystem";
-import LoadingSpinner from "../components/LoadingSpinner";
-
-import { db } from "../store/firestoreConfig";
-
-import "vue2vis/dist/vue2vis.css";
-
-import { mapState, mapGetters } from "vuex";
+import SolarSystem from "@/components/SolarSystem.vue";
+import LoadingSpinner from "@/components/LoadingSpinner.vue";
+import { Planet } from "@/lib/planet";
+import { db } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
+import Network from "@/vue2vis/Network.vue";
+import "vis-network/styles/vis-network.css";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "GalaxyMap",
@@ -158,9 +172,7 @@ export default {
   watch: {
     darkMode(dark) {
       if (dark == false) {
-        this.makeGalaxyLabelsColour(
-          this.$vuetify.theme.themes.light.baseAccent
-        );
+        this.makeGalaxyLabelsColour(this.$vuetify.theme.themes.light.baseAccent);
         this.makePlanetsColour(this.$vuetify.theme.themes.light.missionAccent);
       } else {
         this.makeGalaxyLabelsColour("#ffffff");
@@ -169,13 +181,11 @@ export default {
     },
   },
   computed: {
-    ...mapGetters([
+    ...mapState(useRootStore, [
       "getTopicById",
       "person",
       "getCourseById",
       // "getTasksByTopicId",
-    ]),
-    ...mapState([
       "currentCourseId",
       "currentTopicId",
       "currentCourseNodes",
@@ -202,9 +212,7 @@ export default {
       return false;
     },
     edgesToDisplay() {
-      return this.teacher
-        ? this.currentCourseEdges
-        : this.currentCourseEdgesWithStatusStyles;
+      return this.teacher ? this.currentCourseEdges : this.currentCourseEdgesWithStatusStyles;
     },
     inActiveNodes() {
       let inActiveNodes = [];
@@ -258,10 +266,7 @@ export default {
         edgesWithStatusStyles.push({
           ...edge,
           // add dashes to the edge (if topic is locked)
-          dashes:
-            matchingEdge == null || matchingEdge.topicStatus === "locked"
-              ? true
-              : false,
+          dashes: matchingEdge == null || matchingEdge.topicStatus === "locked" ? true : false,
         });
       }
       // return nodes with status to network map
@@ -283,7 +288,7 @@ export default {
 
     // ==== check if all topics completed. if so GALAXY MAP COMPLETE!!! ====
     let isGalaxyMapComplete = this.personsTopics.every(
-      (topic) => topic.topicStatus === "completed"
+      (topic) => topic.topicStatus === "completed",
     );
     if (this.personsTopics.length && isGalaxyMapComplete) {
       // TODO: better complete congrats
@@ -296,23 +301,32 @@ export default {
     this.$refs.network?.destroy();
   },
   methods: {
+    ...mapActions(useRootStore, [
+      "bindCourseEdges",
+      "bindCourseNodes",
+      "bindCourseTopics",
+      "bindThisPersonsCourseTopics",
+      "getCourseTasks",
+      "getPersonsCourseTasks",
+      "setCurrentTopicId",
+    ]),
     async refreshData() {
-      await this.$store.dispatch("bindCourseNodes", this.currentCourseId);
-      await this.$store.dispatch("bindCourseEdges", this.currentCourseId);
+      await this.bindCourseNodes(this.currentCourseId);
+      await this.bindCourseEdges(this.currentCourseId);
 
       // bind topics for course creator
       if (this.teacher) {
-        await this.$store.dispatch("bindCourseTopics", this.currentCourseId);
+        await this.bindCourseTopics(this.currentCourseId);
         // bind. state.courseTasks
-        await this.$store.dispatch("getCourseTasks");
+        await this.getCourseTasks();
       } else {
         // bind topics for student
-        await this.$store.dispatch("bindThisPersonsCourseTopics", {
+        await this.bindThisPersonsCourseTopics({
           personId: this.person.id,
           courseId: this.currentCourseId,
         });
         // bind state.personsCourseTasks
-        await this.$store.dispatch("getPersonsCourseTasks");
+        await this.getPersonsCourseTasks();
       }
 
       this.needsCentering = true;
@@ -321,7 +335,7 @@ export default {
 
       // ==== check if all topics completed. if so GALAXY MAP COMPLETE!!! ====
       let isGalaxyMapComplete = this.personsTopics.every(
-        (topic) => topic.topicStatus === "completed"
+        (topic) => topic.topicStatus === "completed",
       );
       if (this.personsTopics.length && isGalaxyMapComplete) {
         // TODO: better complete congrats
@@ -334,9 +348,7 @@ export default {
         this.zoomToNodes(this.$refs.network.nodes);
         // set label colours (important if in light mode)
         this.makeGalaxyLabelsColour(
-          this.$vuetify.theme.isDark
-            ? "#fff"
-            : this.$vuetify.theme.themes.light.baseAccent
+          this.$vuetify.theme.isDark ? "#fff" : this.$vuetify.theme.themes.light.baseAccent,
         );
       }
     },
@@ -348,9 +360,7 @@ export default {
     },
     disableEditMode() {
       this.$refs.network.disableEditMode();
-      (this.addingNode = false),
-        (this.addingEdge = false),
-        (this.active = false);
+      (this.addingNode = false), (this.addingEdge = false), (this.active = false);
     },
     disableDragMode() {
       this.draggingNodes = false;
@@ -461,13 +471,11 @@ export default {
       // 4) minimise left panels & buttons
       this.$emit("hideLeftPanels", true);
       // 5) emit & save clicked topic node
-      this.$store.commit("setCurrentTopicId", closestNode.id);
+      this.setCurrentTopicId(closestNode.id);
       this.$emit("topicClicked", { topicId: this.currentTopicId });
       // 6) calc how many tasks for this topic
       let tasksForThisTopic = [];
-      tasksForThisTopic = this.tasks.filter(
-        (task) => task.topicId == this.currentTopicId
-      );
+      tasksForThisTopic = this.tasks.filter((task) => task.topicId == this.currentTopicId);
       // 7) get number of tasks (used to calc size of circle mask to block out map)
       this.numberOfTasksForThisTopic = tasksForThisTopic.length;
     },
@@ -518,10 +526,7 @@ export default {
       const nodes = this.$refs.network.nodes;
       const node = nodes.find((node) => node.id === nodeId);
       // check if coords changed
-      if (
-        newPosition[nodeId].x !== node.x ||
-        newPosition[nodeId].y !== node.y
-      ) {
+      if (newPosition[nodeId].x !== node.x || newPosition[nodeId].y !== node.y) {
         // flag save new positions button
         console.log("EMITTING: node positions changed");
         this.$emit("nodePositionsChanged");
@@ -591,8 +596,7 @@ export default {
         const edgeId = data.edges[0];
         const selectedEdge = this.$refs.network.getEdge(edgeId);
         selectedEdge.type = "edge";
-        (selectedEdge.DOMx = data.pointer.DOM.x),
-          (selectedEdge.DOMy = data.pointer.DOM.y);
+        (selectedEdge.DOMx = data.pointer.DOM.x), (selectedEdge.DOMy = data.pointer.DOM.y);
         this.$emit("selectedEdge", selectedEdge);
       }
     },
@@ -732,9 +736,7 @@ export default {
 
       // loop nodes/topics
       for (const [topicId, topicPosition] of Object.entries(nodePositionMap)) {
-        const topicsTasks = this.tasks.filter(
-          (task) => task.topicId == topicId
-        );
+        const topicsTasks = this.tasks.filter((task) => task.topicId == topicId);
 
         for (let i = 1; i <= topicsTasks.length; i++) {
           this.planets.push(
@@ -742,12 +744,10 @@ export default {
               topicPosition.x,
               topicPosition.y,
               2, // planet size
-              this.dark
-                ? "white"
-                : this.$vuetify.theme.themes.light.missionAccent, // planet colour
+              this.dark ? "white" : this.$vuetify.theme.themes.light.missionAccent, // planet colour
               6.28 / (10 * i), // planet speed (6.28 radians in a circle. so 6.28 is full circle in 1 second. divide by something to slow it down)
-              20 * i // planet orbit size
-            )
+              20 * i, // planet orbit size
+            ),
           );
         }
       }
@@ -765,9 +765,7 @@ export default {
       // update planets orbits
       for (const planet of this.planets) {
         //TODO: does this ternary slow things down
-        const strokeColor = this.dark
-          ? "rgba(255, 255, 255, 0.15)"
-          : "rgba(0, 0, 0, 0.15)";
+        const strokeColor = this.dark ? "rgba(255, 255, 255, 0.15)" : "rgba(0, 0, 0, 0.15)";
         planet.update(ctx, delta, strokeColor);
       }
     },
@@ -791,7 +789,7 @@ export default {
           0 - (ctx.canvas.width + cavasSizeBuffer / 2),
           0 - (ctx.canvas.height + cavasSizeBuffer / 2),
           ctx.canvas.width + cavasSizeBuffer,
-          ctx.canvas.height + cavasSizeBuffer
+          ctx.canvas.height + cavasSizeBuffer,
         );
         // Canvas - draw arc (circle) the of the numbers of tasks/planet orbits
         // Note: drawing a rectanlge then a circle in the same path makes the circle a whole
@@ -801,7 +799,7 @@ export default {
           20 * (this.numberOfTasksForThisTopic + 2), // masked circle is 2 rings out from furtherest ring
           0,
           2 * Math.PI,
-          true
+          true,
         );
         ctx.fill();
       }

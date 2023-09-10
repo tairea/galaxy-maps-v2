@@ -25,25 +25,15 @@
       <!-- REQUEST HELP -->
       <div class="mission-actions">
         <div class="action-button">
-          <p
-            class="text-overline text-uppercase text-center"
-            style="line-height: 1rem"
-          >
+          <p class="text-overline text-uppercase text-center" style="line-height: 1rem">
             REQUEST HELP
           </p>
-          <RequestHelpDialog
-            :task="task"
-            :taskId="task.id"
-            :topicId="topicId"
-          />
+          <RequestHelpDialog :task="task" :taskId="task.id" :topicId="topicId" />
         </div>
 
         <!-- MARK AS COMPLETED -->
         <div class="action-button">
-          <p
-            class="text-overline text-uppercase text-center"
-            style="line-height: 1rem"
-          >
+          <p class="text-overline text-uppercase text-center" style="line-height: 1rem">
             {{ getSubmitTitle }}
           </p>
           <MissionCompletedDialog
@@ -61,11 +51,10 @@
 </template>
 
 <script>
-import MissionCompletedDialog from "../components/MissionCompletedDialog.vue";
-import RequestHelpDialog from "../components/RequestHelpDialog.vue";
-
-import { db } from "../store/firestoreConfig";
-import { mapState, mapGetters } from "vuex";
+import MissionCompletedDialog from "@/components/MissionCompletedDialog.vue";
+import RequestHelpDialog from "@/components/RequestHelpDialog.vue";
+import useRootStore from "@/store/index";
+import { mapState } from "pinia";
 
 export default {
   name: "ActiveMissionsCard",
@@ -75,8 +64,7 @@ export default {
   },
   props: ["task", "topicId", "active", "declined", "inreview", "completed"],
   computed: {
-    ...mapState(["personsTopicsTasks", "courseSubmissions"]),
-    ...mapGetters(["person"]),
+    ...mapState(useRootStore, ["personsTopicsTasks", "courseSubmissions","person"]),
     getSubmitTitle() {
       if (this.active && this.task.submissionRequired == true) {
         return "SUBMIT WORK";

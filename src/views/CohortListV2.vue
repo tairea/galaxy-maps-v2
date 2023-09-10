@@ -96,9 +96,7 @@
         </div>
         <div class="d-flex flex-wrap">
           <CohortPanelV2
-            v-for="cohort in selectedCohorts.length > 0
-              ? selectedCohorts
-              : orderedCohorts"
+            v-for="cohort in selectedCohorts.length > 0 ? selectedCohorts : orderedCohorts"
             :cohort="cohort"
             :key="cohort.id"
             :timeframe="timeframe"
@@ -199,18 +197,17 @@
 
 <script lang="js">
 // @ is an alias to /src
-import CreateEditDeleteCohortDialog from "../components/CreateEditDeleteCohortDialog.vue";
-import CreateEditDeleteOrganisationDialog from "../components/CreateEditDeleteOrganisationDialog.vue";
-import CreateAdminDialog from "../components/CreateAdminDialog.vue";
-import EditOrganisationButtonDialog from "../components/EditOrganisationButtonDialog.vue";
-import Cohort from "../components/Cohort.vue";
-import CohortPanelV2 from "../components/CohortPanelV2.vue";
-import TimeframeFilters from "../components/TimeframeFilters.vue";
-import Organisation from "../components/Organisation.vue";
-
-import { mapState, mapGetters, mapActions } from "vuex";
-
-import { mdiPlus} from "@mdi/js";
+import CreateEditDeleteCohortDialog from "@/components/CreateEditDeleteCohortDialog.vue";
+import CreateEditDeleteOrganisationDialog from "@/components/CreateEditDeleteOrganisationDialog.vue";
+import CreateAdminDialog from "@/components/CreateAdminDialog.vue";
+import EditOrganisationButtonDialog from "@/components/EditOrganisationButtonDialog.vue";
+import Cohort from "@/components/Cohort.vue";
+import CohortPanelV2 from "@/components/CohortPanelV2.vue";
+import TimeframeFilters from "@/components/TimeframeFilters.vue";
+import Organisation from "@/components/Organisation.vue";
+import useRootStore from "@/store/index";
+import { mdiPlus } from "@mdi/js";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "CohortListV2",
@@ -222,7 +219,7 @@ export default {
     EditOrganisationButtonDialog,
     CreateAdminDialog,
     CohortPanelV2,
-    TimeframeFilters
+    TimeframeFilters,
   },
   props: ["on", "attrs"],
   data: () => ({
@@ -238,32 +235,31 @@ export default {
     unselectedCohorts: [],
     orderedCohorts: [],
     expand: false,
-    paidFeatureMessage: `<div class="ma-2"><p class="text-center">Paid feature.</p><p class="text-center">Contact us to upgrade: <a href="mailto:base@galaxymaps.io">base@galaxymaps.io</a></p></div>`
+    paidFeatureMessage: `<div class="ma-2"><p class="text-center">Paid feature.</p><p class="text-center">Contact us to upgrade: <a href="mailto:base@galaxymaps.io">base@galaxymaps.io</a></p></div>`,
   }),
   watch: {
     cohorts() {
       this.orderCohorts();
-    }
+    },
   },
   async mounted() {
     // trigger VuexFire bindCohorts & bindOrganisations in Store
     await this.getCohortsAndOrganisations();
     this.orderCohorts();
-    this.expand = true
+    this.expand = true;
   },
   computed: {
-    ...mapState(["organisations", "cohorts", "person", "user"]),
-    ...mapGetters(["getOrganisationById"]),
+    ...mapState(useRootStore, ["organisations", "cohorts", "person", "user","getOrganisationById"]),
     cohortView() {
-      return this.$route.name === "CohortView"
+      return this.$route.name === "CohortView";
     },
     getIndex() {
-      this.currentIndexCount = this.currentIndexCount + 1
-      return this.currentIndexCount
+      this.currentIndexCount = this.currentIndexCount + 1;
+      return this.currentIndexCount;
     },
   },
   methods: {
-    ...mapActions(["bindAllCohorts", "bindAllOrganisations", "getCohortsByPersonId"]),
+    ...mapActions(useRootStore, ["bindAllCohorts", "bindAllOrganisations", "getCohortsByPersonId"]),
     getCohortsByOrganisationId(id) {
       if (id) {
         return this.cohorts.filter((cohort) => cohort.organisation === id);
@@ -273,66 +269,66 @@ export default {
     },
     async getCohortsAndOrganisations() {
       if (this.user.data.admin) {
-        await this.bindAllCohorts()
+        await this.bindAllCohorts();
         await this.bindAllOrganisations();
       } else {
         await this.getCohortsByPersonId(this.person);
       }
     },
     editOrgDialog(orgId) {
-      this.openOrganisationDialog = true
-      console.log("getting org with id = ", orgId)
-      this.editingOrgansation = this.getOrganisationById(orgId)
-      console.log("got org = ", this.editingOrgansation)
-      this.$refs.organisationDialog.openDialog()
+      this.openOrganisationDialog = true;
+      console.log("getting org with id = ", orgId);
+      this.editingOrgansation = this.getOrganisationById(orgId);
+      console.log("got org = ", this.editingOrgansation);
+      this.$refs.organisationDialog.openDialog();
     },
     setTimeframe(timeframeEmitted) {
-      this.timeframe = timeframeEmitted
+      this.timeframe = timeframeEmitted;
     },
     clickedCohort(cohort, orgIndex, cohortIndex) {
       // remap cohort ids (eg. :id=org2cohort2) to indexs that match cohortEls indexs
       // org0cohort0 should be 0 - org2cohort2 should be org0.length + org1.length + 2
-      const numOrgs = this.organisations.length
+      const numOrgs = this.organisations.length;
       // save num of orgs and cohorts to this multi-dimensional array
-      const orgsCohortsArr = []
+      const orgsCohortsArr = [];
 
       // cohorts without orgs
       // this querys all id's with noOrg (eg. id="noOrg...")
       // important no orgs pushes first as no org cohorts render first
-      orgsCohortsArr.push(document.querySelectorAll('[id^=noOrg]').length)
+      orgsCohortsArr.push(document.querySelectorAll("[id^=noOrg]").length);
 
       // orgs with cohorts
       for (var i = 0; i < numOrgs; i++) {
         // this querys all id's with org and number (eg. id="org1...", id="org2...")
-        orgsCohortsArr.push(document.querySelectorAll('[id^=org' + i + ']').length)
+        orgsCohortsArr.push(document.querySelectorAll("[id^=org" + i + "]").length);
       }
 
       // log multi-dim arr of orgs and cohorts
       // console.log("orgsCohortsArr",orgsCohortsArr)
 
-      let mappedIndex = 0
+      let mappedIndex = 0;
       if (orgIndex == "noOrg") {
-        mappedIndex = cohortIndex
+        mappedIndex = cohortIndex;
       } else if (orgIndex == 0) {
         let sum = 0;
         sum += orgsCohortsArr[0];
-        mappedIndex = sum + cohortIndex
+        mappedIndex = sum + cohortIndex;
       } else {
         //test cases: org1cohort2 , org3cohort2
         let sum = 0;
         sum += orgsCohortsArr[0]; // sum noOrg cohorts first
         for (var x = 0; x < orgIndex; x++) {
-          sum += orgsCohortsArr[x + 1] // plus 1 because noOrgs is first index
+          sum += orgsCohortsArr[x + 1]; // plus 1 because noOrgs is first index
         }
-        mappedIndex = sum + cohortIndex
+        mappedIndex = sum + cohortIndex;
       }
 
-      const index = mappedIndex
+      const index = mappedIndex;
 
       // get all avatar elements
       const cohortEls = this.$refs.cohort;
       // console.log("cohortEls",cohortEls)
-      this.cohortLength = cohortEls.length
+      this.cohortLength = cohortEls.length;
       // loop cohort els
       for (var i = 0; i < cohortEls.length; i++) {
         // add index to selected if not already. else remove
@@ -342,20 +338,15 @@ export default {
         }
         // remove
         else if (i == index && this.selectedIndexs.includes(index)) {
-          this.selectedIndexs = this.selectedIndexs.filter(
-            (item) => item !== index
-          );
+          this.selectedIndexs = this.selectedIndexs.filter((item) => item !== index);
           this.selectedCohorts = this.selectedCohorts.filter(
-            (selectedCohort) => selectedCohort.id !== cohort.id
+            (selectedCohort) => selectedCohort.id !== cohort.id,
           );
           this.unselectedCohorts.push(cohort);
         }
 
         //anyone not in selectedCohorts becomes unselected (this is used to hide data in chart)
-        this.unselectedCohorts = this.diffTwoArraysOfObjects(
-          this.cohorts,
-          this.selectedCohorts
-        );
+        this.unselectedCohorts = this.diffTwoArraysOfObjects(this.cohorts, this.selectedCohorts);
 
         // add dim to all cohort els
         for (var y = 0; y < cohortEls.length; y++) {
@@ -375,8 +366,8 @@ export default {
       });
     },
     orderCohorts() {
-      this.orderedCohorts = [...this.cohorts].sort((a, b) => a.teacher ? -1 : 1)
-    }
+      this.orderedCohorts = [...this.cohorts].sort((a, b) => (a.teacher ? -1 : 1));
+    },
   },
 };
 </script>

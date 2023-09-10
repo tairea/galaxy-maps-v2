@@ -8,13 +8,10 @@
           <div class="dialog-info">
             <p class="dialog-title">{{ dialogTitle }}</p>
             <div class="d-flex align-center">
-              <v-icon left color="missionAccent">{{
-                mdiInformationVariant
-              }}</v-icon>
+              <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
               <p class="dialog-description">
                 This Node is a <span class="mission-text">Topic</span> of the
-                <span class="galaxy-text">{{ this.course.title }}</span> Galaxy
-                map
+                <span class="galaxy-text">{{ this.course.title }}</span> Galaxy map
               </p>
             </div>
           </div>
@@ -23,15 +20,33 @@
           <div class="fields my-4 py-4">
             <!-- Node Label -->
             <!-- <p class="dialog-description">Topic Title:</p> -->
-            <v-text-field class="input-field mt-4" outlined :dark="dark" :light="!dark" color="missionAccent"
-              v-model="currentNode.label" :autofocus="!editing" label="Topic title"
-              placeholder="Enter name of this node/topic"></v-text-field>
+            <v-text-field
+              class="input-field mt-4"
+              outlined
+              :dark="dark"
+              :light="!dark"
+              color="missionAccent"
+              v-model="currentNode.label"
+              :autofocus="!editing"
+              label="Topic title"
+              placeholder="Enter name of this node/topic"
+            ></v-text-field>
 
             <!-- Node Color -->
             <p class="dialog-description">
               Node color:
-              <v-color-picker v-model="currentNode.color" class="ma-2 color-picker" show-swatches hide-canvas hide-inputs
-                hide-sliders mode="hexa" value="#69a1e2" width="90%" :swatches="darkSwatches">
+              <v-color-picker
+                v-model="currentNode.color"
+                class="ma-2 color-picker"
+                show-swatches
+                hide-canvas
+                hide-inputs
+                hide-sliders
+                mode="hexa"
+                value="#69a1e2"
+                width="90%"
+                :swatches="darkSwatches"
+              >
               </v-color-picker>
 
               <!-- <v-tooltip right>
@@ -79,36 +94,75 @@
               Node Prerequisites:
               <v-tooltip right>
                 <template v-slot:activator="{ on, attrs }">
-                  <v-icon left color="missionAccent" small class="circle-outline ma-1" v-bind="attrs" v-on="on">
-                    {{ mdiInformationVariant }}</v-icon>
+                  <v-icon
+                    left
+                    color="missionAccent"
+                    small
+                    class="circle-outline ma-1"
+                    v-bind="attrs"
+                    v-on="on"
+                  >
+                    {{ mdiInformationVariant }}</v-icon
+                  >
                 </template>
                 <span>
-                  Prerequisites are topics that need to be completed before this
-                  one can be unlocked
+                  Prerequisites are topics that need to be completed before this one can be unlocked
                 </span>
               </v-tooltip>
             </p>
-            <v-checkbox v-model="prerequisites" class="ma-0 pa-0" color="blue" :dark="dark" :light="!dark">
+            <v-checkbox
+              v-model="prerequisites"
+              class="ma-0 pa-0"
+              color="blue"
+              :dark="dark"
+              :light="!dark"
+            >
               <template v-slot:label>
-                <span class="dialog-description">Does another topic need to be completed before starting this
-                  one?</span>
+                <span class="dialog-description"
+                  >Does another topic need to be completed before starting this one?</span
+                >
               </template>
             </v-checkbox>
-            <v-select v-if="prerequisites" v-model="currentNode.prerequisites" :items="sortedObjArr" item-text="label"
-              item-value="id" outlined :dark="dark" :light="!dark" class="input-field" color="missionAccent" multiple
-              chips :menu-props="{
+            <v-select
+              v-if="prerequisites"
+              v-model="currentNode.prerequisites"
+              :items="sortedObjArr"
+              item-text="label"
+              item-value="id"
+              outlined
+              :dark="dark"
+              :light="!dark"
+              class="input-field"
+              color="missionAccent"
+              multiple
+              chips
+              :menu-props="{
                 closeOnContentClick: true,
-              }"></v-select>
+              }"
+            ></v-select>
           </div>
 
           <!-- Action buttons -->
           <div class="action-buttons">
-            <v-btn v-if="!editing" outlined color="baseAccent" @click="saveNode(currentNode)" class="mr-2"
-              :loading="loading">
+            <v-btn
+              v-if="!editing"
+              outlined
+              color="baseAccent"
+              @click="saveNode(currentNode)"
+              class="mr-2"
+              :loading="loading"
+            >
               <v-icon left> {{ mdiCheck }} </v-icon>
               SAVE
             </v-btn>
-            <v-btn v-else outlined color="baseAccent" @click="saveNode(currentNode)" class="mr-2" :loading="loading">
+            <v-btn
+              v-else
+              outlined
+              color="baseAccent"
+              @click="saveNode(currentNode)"
+              class="mr-2"
+              :loading="loading"
+            >
               <v-icon left> {{ mdiCheck }} </v-icon>
               UPDATE
             </v-btn>
@@ -139,9 +193,7 @@
             <strong>Warning!</strong> Delete {{ currentTopic.title }} System?
           </p>
           <div class="d-flex align-start">
-            <v-icon left color="missionAccent">{{
-              mdiInformationVariant
-            }}</v-icon>
+            <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
             <p class="dialog-description">
               Are you sure you want to <strong>DELETE</strong> this
               <span class="mission-text">{{ currentTopic.title }} System</span>?
@@ -164,7 +216,12 @@
             DELETE
           </v-btn>
 
-          <v-btn outlined :color="dark ? 'yellow' : '#577399'" class="ml-2" @click="cancelDeleteDialog()">
+          <v-btn
+            outlined
+            :color="dark ? 'yellow' : '#577399'"
+            class="ml-2"
+            @click="cancelDeleteDialog()"
+          >
             <v-icon left> {{ mdiClose }} </v-icon>
             Cancel
           </v-btn>
@@ -177,19 +234,12 @@
 </template>
 
 <script>
-import firebase from "firebase/app";
-
-import { db } from "../store/firestoreConfig";
-import { mapState, mapGetters } from "vuex";
+import { db } from "@/store/firestoreConfig";
 import { getPersonsTopicById } from "@/lib/ff";
-import {
-  mdiPencil,
-  mdiPlus,
-  mdiClose,
-  mdiCheck,
-  mdiDelete,
-  mdiInformationVariant,
-} from "@mdi/js";
+import useRootStore from "@/store/index";
+import { mdiPencil, mdiPlus, mdiClose, mdiCheck, mdiDelete, mdiInformationVariant } from "@mdi/js";
+import firebase from "firebase/compat/app";
+import { mapState } from "pinia";
 
 export default {
   name: "CreateEditDeleteNodeDialog",
@@ -206,8 +256,7 @@ export default {
     let timeCreatedArrs = [];
 
     for (let index in this.currentCourseNodes) {
-      let timeCreatedNode =
-        this.currentCourseNodes[index].nodeCreatedTimestamp?.seconds;
+      let timeCreatedNode = this.currentCourseNodes[index].nodeCreatedTimestamp?.seconds;
 
       timeCreatedArrs.push(timeCreatedNode);
       // console.log("unsorted arr", timeCreatedArrs);
@@ -224,8 +273,7 @@ export default {
       // loop over the ordered time array
       let arrTime = timeCreatedArrs[a];
       for (let b in timeCreatedArrs) {
-        let timeStamp =
-          this.currentCourseNodes[b].nodeCreatedTimestamp?.seconds;
+        let timeStamp = this.currentCourseNodes[b].nodeCreatedTimestamp?.seconds;
         if (arrTime == timeStamp) {
           let node = this.currentCourseNodes[b];
           this.sortedObjArr.push(node);
@@ -279,26 +327,18 @@ export default {
       //   },
       // ],
       prerequisites: this.currentNode.prerequisites?.length ? true : false,
-      darkSwatches: [
-        ["#69A1E2"],
-        ["#E269CF"],
-        ["#73FBD3"],
-        ["#F3C969"],
-        ["#54428E"],
-      ], //https://coolors.co/69a1e2-e269cf-73fbd3-f3c969-54428e
+      darkSwatches: [["#69A1E2"], ["#E269CF"], ["#73FBD3"], ["#F3C969"], ["#54428E"]], //https://coolors.co/69a1e2-e269cf-73fbd3-f3c969-54428e
       lightSwatches: [["#577399"], ["#fe5f55"]],
     };
   },
   computed: {
-    ...mapState([
+    ...mapState(useRootStore, [
       "person",
       "currentCourseNodes",
       "personsTopics",
       "currentCourseId",
       "currentTopic",
-      "currentTopicId",
-    ]),
-    ...mapGetters(["getTopicById", "getPersonsTopicById"]),
+      "currentTopicId", "getTopicById", "getPersonsTopicById"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -488,11 +528,9 @@ export default {
           .collection(this.currentCourseId);
 
         // check if the student has already started the course. If not they will be assigned this topic when they start the course
-        const studentHasStartedCourse = await courseRef
-          .get()
-          .then((subQuery) => {
-            return subQuery.docs.length;
-          });
+        const studentHasStartedCourse = await courseRef.get().then((subQuery) => {
+          return subQuery.docs.length;
+        });
 
         if (studentHasStartedCourse) {
           // if the new node has set prerequisites
@@ -501,7 +539,7 @@ export default {
             const topic = await getPersonsTopicById(
               student,
               this.currentCourseId,
-              node.prerequisites[0]
+              node.prerequisites[0],
             );
             console.log("topic: ", topic);
             if (topic.topicStatus) {
@@ -515,11 +553,7 @@ export default {
             // if there are no prerequisites than set is as unlocked
             node.topicStatus = "unlocked";
           }
-          console.log(
-            student,
-            " has started course. Setting new topic as ",
-            node.topicStatus
-          );
+          console.log(student, " has started course. Setting new topic as ", node.topicStatus);
           // assign the topic to each student
           await courseRef.doc(node.id).set(node);
         }

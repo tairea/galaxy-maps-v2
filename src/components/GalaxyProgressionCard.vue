@@ -46,16 +46,13 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from "vuex";
 import Chart from "@/components/Chart.vue";
 import ActiveMissions from "@/components/ActiveMissions.vue";
+import { getStudentsCoursesXAPIQuery, getActiveTaskXAPIQuery } from "@/lib/veracityLRS";
+import { dbMixins } from "@/mixins/DbMixins";
+import useRootStore from "@/store/index";
+import { mapState } from "pinia";
 import { DateTime } from "luxon";
-import { dbMixins } from "../mixins/DbMixins";
-
-import {
-  getStudentsCoursesXAPIQuery,
-  getActiveTaskXAPIQuery,
-} from "../lib/veracityLRS";
 
 export default {
   name: "GalaxyProgressionCard",
@@ -147,7 +144,7 @@ export default {
     this.loading = false;
   },
   computed: {
-    ...mapGetters(["person", "getCourseById", "getTopicById"]),
+    ...mapState(useRootStore, ["person", "getCourseById", "getTopicById"]),
   },
   methods: {
     formatStudentsChartData(data) {
