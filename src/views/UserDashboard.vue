@@ -157,7 +157,10 @@ export default {
       "courses",
       "allTasks",
       "cohorts",
-      "dashboardView", "getCourseById", "getCoursesByWhoMadeThem"]),
+      "dashboardView",
+      "getCourseById",
+      "getCoursesByWhoMadeThem",
+    ]),
     isAdmin() {
       return this.user.data.admin;
     },
@@ -206,7 +209,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(useRootStore, ["getCohortsByPersonId", "bindAllCohorts","setDashboardView"]),
+    ...mapActions(useRootStore, ["getCohortsByPersonId", "bindAllCohorts", "setDashboardView"]),
     setView(val) {
       this.setDashboardView(val);
     },

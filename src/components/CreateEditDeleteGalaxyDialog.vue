@@ -5,8 +5,15 @@
         <v-dialog v-model="dialog" width="50%" light>
           <!-- CREATE BUTTON -->
           <template v-if="edit" v-slot:activator="{ on, attrs }">
-            <v-btn v-if="edit" v-bind="attrs" v-on="on" outlined :color="draft ? 'cohortAccent' : 'galaxyAccent'" small
-              class="pa-o">
+            <v-btn
+              v-if="edit"
+              v-bind="attrs"
+              v-on="on"
+              outlined
+              :color="draft ? 'cohortAccent' : 'galaxyAccent'"
+              small
+              class="pa-o"
+            >
               <v-icon class="pr-2" small> {{ mdiPencil }} </v-icon>
               edit galaxy
             </v-btn>
@@ -36,32 +43,64 @@
             </div>
 
             <!-- LEFT SIDE -->
-            <div class="left-side" :style="course.title ? 'width:50%' : 'width:100%'" style="margin-top: 10px">
+            <div
+              class="left-side"
+              :style="course.title ? 'width:50%' : 'width:100%'"
+              style="margin-top: 10px"
+            >
               <!-- DIALOG FIELDS -->
               <div class="create-dialog-content">
                 <!-- TITLE -->
                 <!-- <p class="dialog-description">Galaxy Name:</p> -->
-                <v-text-field :dark="dark" :light="!dark" class="input-field" outlined color="missionAccent"
-                  v-model="course.title" label="Galaxy name"></v-text-field>
+                <v-text-field
+                  :dark="dark"
+                  :light="!dark"
+                  class="input-field"
+                  outlined
+                  color="missionAccent"
+                  v-model="course.title"
+                  label="Galaxy name"
+                ></v-text-field>
 
                 <!-- DESCRIPTION -->
                 <!-- <p class="dialog-description">Galaxy Description:</p> -->
-                <v-textarea :dark="dark" :light="!dark" class="input-field" outlined color="missionAccent" auto-grow
-                  clearable rows="1" v-model="course.description" label="Galaxy description"></v-textarea>
+                <v-textarea
+                  :dark="dark"
+                  :light="!dark"
+                  class="input-field"
+                  outlined
+                  color="missionAccent"
+                  auto-grow
+                  clearable
+                  rows="1"
+                  v-model="course.description"
+                  label="Galaxy description"
+                ></v-textarea>
 
                 <!-- IMAGE UPLOAD -->
                 <!-- <p class="dialog-description">Galaxy Image:</p> -->
 
-                <v-file-input class="input-field" outlined :dark="dark" :light="!dark" color="missionAccent"
-                  accept="image/*" v-model="uploadedImage" label="Upload Galaxy Image" @change="storeImage()"
-                  prepend-icon="" hide-details></v-file-input>
-                <v-progress-linear color="missionAccent" :value="percentageGalaxy" class=""></v-progress-linear>
-
+                <v-file-input
+                  class="input-field"
+                  outlined
+                  :dark="dark"
+                  :light="!dark"
+                  color="missionAccent"
+                  accept="image/*"
+                  v-model="uploadedImage"
+                  label="Upload Galaxy Image"
+                  @change="storeImage()"
+                  prepend-icon=""
+                  hide-details
+                ></v-file-input>
+                <v-progress-linear
+                  color="missionAccent"
+                  :value="percentageGalaxy"
+                  class=""
+                ></v-progress-linear>
 
                 <!-- ===== Owner field. This is who owns the course e.g. you might be creating the course for an organisation ==== -->
                 <!-- 1. dropdown menu of the organisations that the user is in. -->
-                
-
 
                 <!-- ===== Credit other learning content course ==== -->
                 <!-- <div class="author-checkbox-wrap d-flex flex-column my-4">
@@ -131,7 +170,6 @@
 
             <!-- RIGHT SIDE -->
             <div class="right-side" :style="course.title ? 'width:50%' : 'width:0%'">
-            <div class="right-side" :style="course.title ? 'width:50%' : 'width:0%'">
               <div id="galaxy-info" v-if="course.title" class="mb-2">
                 <h2 class="galaxy-label">Galaxy</h2>
                 <h1 class="galaxy-title">{{ course.title }}</h1>
@@ -139,35 +177,77 @@
                 <v-img v-if="course.image.url" :src="course.image.url" width="100%"></v-img>
                 <p class="galaxy-description">{{ course.description }}</p>
               </div>
-              <v-select v-if="edit" class="input-field mt-4" outlined :dark="dark" :light="!dark" color="missionAccent"
-                v-model="course.public" :items="[
+              <v-select
+                v-if="edit"
+                class="input-field mt-4"
+                outlined
+                :dark="dark"
+                :light="!dark"
+                color="missionAccent"
+                v-model="course.public"
+                :items="[
                   { text: 'Public', value: true },
                   { text: 'Private', value: false },
-                ]" label="Galaxy Access">
+                ]"
+                label="Galaxy Access"
+              >
               </v-select>
             </div>
             <!-- End of right-side -->
             <!-- ACTION BUTTONS -->
             <div class="action-buttons">
-              <v-btn v-if="edit" outlined color="baseAccent" @click="updateCourse(course)" class="mx-2" :loading="loading"
-                :disabled="disabled" :dark="dark" :light="!dark">
+              <v-btn
+                v-if="edit"
+                outlined
+                color="baseAccent"
+                @click="updateCourse(course)"
+                class="mx-2"
+                :loading="loading"
+                :disabled="disabled"
+                :dark="dark"
+                :light="!dark"
+              >
                 <v-icon left> {{ mdiCheck }} </v-icon>
                 UPDATE
               </v-btn>
-              <v-btn v-else outlined color="baseAccent" @click="saveCourse(course)" class="mr-2" :loading="loading"
-                :disabled="disabled" :dark="dark" :light="!dark">
+              <v-btn
+                v-else
+                outlined
+                color="baseAccent"
+                @click="saveCourse(course)"
+                class="mr-2"
+                :loading="loading"
+                :disabled="disabled"
+                :dark="dark"
+                :light="!dark"
+              >
                 <v-icon left> {{ mdiCheck }} </v-icon>
                 CREATE GALAXY
               </v-btn>
 
               <!-- DELETE -->
-              <v-btn v-if="edit" outlined color="error" @click="deleteDialog()" class="ml-2" :dark="dark" :light="!dark">
+              <v-btn
+                v-if="edit"
+                outlined
+                color="error"
+                @click="deleteDialog()"
+                class="ml-2"
+                :dark="dark"
+                :light="!dark"
+              >
                 <v-icon left> {{ mdiDelete }} </v-icon>
                 DELETE
               </v-btn>
 
-              <v-btn outlined :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'" class="ml-4" @click="cancel"
-                :disabled="disabled || loading" :dark="dark" :light="!dark">
+              <v-btn
+                outlined
+                :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
+                class="ml-4"
+                @click="cancel"
+                :disabled="disabled || loading"
+                :dark="dark"
+                :light="!dark"
+              >
                 <v-icon left> {{ mdiClose }} </v-icon>
                 Cancel
               </v-btn>
@@ -203,18 +283,34 @@
             <!-- ACTION BUTTONS -->
             <div class="action-buttons">
               <!-- DELETE -->
-              <v-btn v-if="course.public" outlined color="missionAccent" @click="changeToPrivate(course)"
-                :loading="deleting">
+              <v-btn
+                v-if="course.public"
+                outlined
+                color="missionAccent"
+                @click="changeToPrivate(course)"
+                :loading="deleting"
+              >
                 <v-icon left> {{ mdiDelete }} </v-icon>
                 make private
               </v-btn>
-              <v-btn outlined color="error" @click="deleteDialog()" class="ml-4" :loading="deleting">
+              <v-btn
+                outlined
+                color="error"
+                @click="deleteDialog()"
+                class="ml-4"
+                :loading="deleting"
+              >
                 <v-icon left> {{ mdiDelete }} </v-icon>
                 confirm delete
               </v-btn>
 
-              <v-btn outlined :color="$vuetify.theme.dark ? 'yellow' : 'f7f7ff'" class="ml-4"
-                @click="privateDialog = false" :disabled="disabled || loading">
+              <v-btn
+                outlined
+                :color="$vuetify.theme.dark ? 'yellow' : 'f7f7ff'"
+                class="ml-4"
+                @click="privateDialog = false"
+                :disabled="disabled || loading"
+              >
                 <v-icon left> {{ mdiClose }} </v-icon>
                 Cancel
               </v-btn>
@@ -234,7 +330,8 @@
                 <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <p class="dialog-description">
                   Are you sure you want to <strong>DELETE</strong> this
-                  <span class="galaxy-text">Galaxy {{ course.title }}</span>?
+                  <span class="galaxy-text">Galaxy {{ course.title }}</span
+                  >?
                   <br />
                   <br />
                   Deleting is permanent!!!
@@ -248,21 +345,39 @@
                   To confirm type <span class="destroy">"DESTROY"</span> in the box below
                 </p>
               </div>
-              <v-text-field class="input-field ma-5" outlined color="missionAccent" v-model="destroy" :dark="dark"
-                :light="!dark" placeholder="DESTROY"></v-text-field>
+              <v-text-field
+                class="input-field ma-5"
+                outlined
+                color="missionAccent"
+                v-model="destroy"
+                :dark="dark"
+                :light="!dark"
+                placeholder="DESTROY"
+              ></v-text-field>
             </div>
 
             <!-- ACTION BUTTONS -->
             <div class="action-buttons">
               <!-- DELETE -->
-              <v-btn outlined color="error" @click="confirmDeleteCourse(course)" class="ml-2" :loading="deleting"
-                :disabled="destroy !== 'DESTROY'">
+              <v-btn
+                outlined
+                color="error"
+                @click="confirmDeleteCourse(course)"
+                class="ml-2"
+                :loading="deleting"
+                :disabled="destroy !== 'DESTROY'"
+              >
                 <v-icon left> {{ mdiDelete }} </v-icon>
                 DELETE
               </v-btn>
 
-              <v-btn outlined :color="$vuetify.theme.dark ? 'yellow' : 'f7f7ff'" class="ml-4" @click="cancelDeleteDialog"
-                :disabled="disabled || loading">
+              <v-btn
+                outlined
+                :color="$vuetify.theme.dark ? 'yellow' : 'f7f7ff'"
+                class="ml-4"
+                @click="cancelDeleteDialog"
+                :disabled="disabled || loading"
+              >
                 <v-icon left> {{ mdiClose }} </v-icon>
                 Cancel
               </v-btn>
@@ -334,7 +449,7 @@ export default {
     deleting: false,
   }),
   computed: {
-    ...mapState(useRootStore, ["person", "peopleInCourse","currentCourseId"]),
+    ...mapState(useRootStore, ["person", "peopleInCourse", "currentCourseId"]),
 
     dark() {
       return this.$vuetify.theme.isDark;
@@ -499,7 +614,7 @@ export default {
       this.disabled = true;
       // ceate a storage ref
       var storageRef = storage.ref(
-        "course-images/" + this.currentCourseId + "-" + this.uploadedImage.name
+        "course-images/" + this.currentCourseId + "-" + this.uploadedImage.name,
       );
 
       // upload a file
@@ -612,7 +727,7 @@ export default {
       if (this.course.image.name == "") return;
       // Create a reference to the file to delete
       var storageRef = storage.ref(
-        "course-images/" + this.currentCourseId + "-" + this.course.image.name
+        "course-images/" + this.currentCourseId + "-" + this.course.image.name,
       );
       // Delete the file
       storageRef
@@ -629,9 +744,7 @@ export default {
         const student = await db.collection("people").doc(person.id);
 
         student.update({
-          assignedCourses: firebase.firestore.FieldValue.arrayRemove(
-            this.currentCourseId
-          ),
+          assignedCourses: firebase.firestore.FieldValue.arrayRemove(this.currentCourseId),
         });
 
         const data = {
@@ -684,7 +797,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.author-checkbox>>>.v-input--selection-controls__input.v-icon {
+.author-checkbox >>> .v-input--selection-controls__input.v-icon {
   color: purple !important;
 }
 

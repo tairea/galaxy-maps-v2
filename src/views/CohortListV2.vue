@@ -249,7 +249,13 @@ export default {
     this.expand = true;
   },
   computed: {
-    ...mapState(useRootStore, ["organisations", "cohorts", "person", "user","getOrganisationById"]),
+    ...mapState(useRootStore, [
+      "organisations",
+      "cohorts",
+      "person",
+      "user",
+      "getOrganisationById",
+    ]),
     cohortView() {
       return this.$route.name === "CohortView";
     },

@@ -237,7 +237,13 @@ export default {
     },
   },
   computed: {
-    ...mapState(useRootStore, ["currentCourseId", "personsTopics", "topicsTasks", "personsTopicsTasks","person"]),
+    ...mapState(useRootStore, [
+      "currentCourseId",
+      "personsTopics",
+      "topicsTasks",
+      "personsTopicsTasks",
+      "person",
+    ]),
     active() {
       return this.task.taskStatus == "active";
     },

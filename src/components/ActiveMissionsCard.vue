@@ -64,7 +64,7 @@ export default {
   },
   props: ["task", "topicId", "active", "declined", "inreview", "completed"],
   computed: {
-    ...mapState(useRootStore, ["personsTopicsTasks", "courseSubmissions","person"]),
+    ...mapState(useRootStore, ["personsTopicsTasks", "courseSubmissions", "person"]),
     getSubmitTitle() {
       if (this.active && this.task.submissionRequired == true) {
         return "SUBMIT WORK";

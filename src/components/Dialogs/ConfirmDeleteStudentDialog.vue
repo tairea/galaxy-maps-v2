@@ -60,7 +60,7 @@ export default {
     ...mapState(useRootStore, ["currentCohort", "currentCourseId"]),
   },
   methods: {
-    ...mapActions(useRootStore, ['setSnackbar']),
+    ...mapActions(useRootStore, ["setSnackbar"]),
     confirmDeleteStudent() {
       const studentId = this.student.id;
       db.collection("cohorts")

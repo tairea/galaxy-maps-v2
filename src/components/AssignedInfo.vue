@@ -97,7 +97,7 @@ export default {
     },
   },
   computed: {
-    ...mapState(useRootStore, ["person", "currentCohort","getCoursesInThisCohort", "user"]),
+    ...mapState(useRootStore, ["person", "currentCohort", "getCoursesInThisCohort", "user"]),
     isTeacher() {
       return (
         this.user.data.admin ||

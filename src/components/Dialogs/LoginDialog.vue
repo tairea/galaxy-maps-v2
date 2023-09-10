@@ -2,17 +2,17 @@
   <v-dialog v-model="dialog" width="300px">
     <!-- CREATE BUTTON -->
     <template v-if="!user.loggedIn" v-slot:activator="{ on, attrs }">
-        <v-btn
-          v-if="!user.loggedIn && buttonMsg"
-          v-bind="attrs"
-          v-on="on"
-          color="galaxyAccent"
-          small
-          class="pa-0"
-          text
-        >
-          {{buttonMsg}}
-        </v-btn>
+      <v-btn
+        v-if="!user.loggedIn && buttonMsg"
+        v-bind="attrs"
+        v-on="on"
+        color="galaxyAccent"
+        small
+        class="pa-0"
+        text
+      >
+        {{ buttonMsg }}
+      </v-btn>
 
       <!-- Original sign in button -->
       <p v-else class="login-description text-center">
@@ -112,7 +112,7 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "Login",
-  props: ["showDialog","buttonMsg"],
+  props: ["showDialog", "buttonMsg"],
   components: {
     NewPassword,
     EmailSignIn,
@@ -176,7 +176,7 @@ export default {
     ...mapState(useRootStore, ["person", "user"]),
   },
   methods: {
-    ...mapActions(useRootStore, ['setSnackbar']),
+    ...mapActions(useRootStore, ["setSnackbar"]),
     redirect() {
       this.isVerifyEmail = false;
       firebase.auth().signOut();

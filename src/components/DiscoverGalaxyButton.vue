@@ -5,11 +5,11 @@
         <v-dialog v-model="dialog" width="500px" light>
           <!-- DISCOVER BUTTON -->
           <template v-slot:activator="{ on, attrs }">
-            <v-btn 
-              outlined 
-              color="baseAccent" 
-              v-bind="attrs" 
-              v-on="on" 
+            <v-btn
+              outlined
+              color="baseAccent"
+              v-bind="attrs"
+              v-on="on"
               :style="hide ? 'opacity:0' : 'opacity:1'"
               class="discoverButton"
             >
@@ -25,9 +25,7 @@
             <div class="dialog-header">
               <p class="dialog-title">{{ dialogTitle }}</p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent">{{
-                  mdiInformationVariant
-                }}</v-icon>
+                <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <p class="dialog-description">
                   <!-- Discover unlisted Galaxies
                   <br /> -->

@@ -1,9 +1,13 @@
 <template>
-  <v-hover :disabled="!user.loggedIn" v-model="hover" v-if="showMenu" >
-    <div ref="userBar" class="userMenu" :class="{ showMenu: hover, miniMenu: miniNavMenu, notSignedInMenu: !user.loggedIn }">
+  <v-hover :disabled="!user.loggedIn" v-model="hover" v-if="showMenu">
+    <div
+      ref="userBar"
+      class="userMenu"
+      :class="{ showMenu: hover, miniMenu: miniNavMenu, notSignedInMenu: !user.loggedIn }"
+    >
       <!-- USER MENU TOP (BLACK) BAR -->
       <div v-if="!user.loggedIn" class="blackBar">
-        <div class="d-flex justify-center align-center" style="width:80%">
+        <div class="d-flex justify-center align-center" style="width: 80%">
           <LoginDialog buttonMsg="SIGN IN or CREATE AN ACCOUNT" />
         </div>
       </div>
@@ -166,7 +170,7 @@ export default {
   components: {
     ThemeColourPicker,
     StudentEditDialog,
-    LoginDialog
+    LoginDialog,
   },
   data() {
     return {
@@ -192,16 +196,18 @@ export default {
   watch: {
     $route(to, from) {
       // show/hide userbar completely
-      if (this.$route.name == "Login" || this.$route.name == "Verify" || this.$route.name == "Reset" || this.$route.name == "Register" ) {
+      if (
+        this.$route.name == "Login" ||
+        this.$route.name == "Verify" ||
+        this.$route.name == "Reset" ||
+        this.$route.name == "Register"
+      ) {
         this.showMenu = false;
       } else {
         this.showMenu = true;
       }
       // show/hide userbar mini version
-      if (
-        this.$route.name == "GalaxyView" ||
-        this.$route.name == "SolarSystemView"
-      ) {
+      if (this.$route.name == "GalaxyView" || this.$route.name == "SolarSystemView") {
         this.miniNavMenu = true;
       } else {
         this.miniNavMenu = false;
@@ -234,7 +240,7 @@ export default {
       this.setDarkMode(this.$vuetify.theme.isDark);
     },
     logout() {
-      this.hover = false
+      this.hover = false;
       firebase
         .database()
         .ref("/status/" + this.person.id)

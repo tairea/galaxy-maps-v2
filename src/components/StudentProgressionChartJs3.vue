@@ -81,7 +81,7 @@ export default {
     Chart,
   },
   computed: {
-    ...mapState(useRootStore, ["teachersStudentsProgress","person", "getCourseById"]),
+    ...mapState(useRootStore, ["teachersStudentsProgress", "person", "getCourseById"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
