@@ -233,6 +233,7 @@ export default defineStore({
             : db.collection("courses");
         return bindFirestoreRef("courses", query, {
           maxRefDepth: 2,
+          reset: false,
         });
       },
     ),

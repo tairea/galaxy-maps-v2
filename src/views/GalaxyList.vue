@@ -124,6 +124,7 @@ export default {
           this.validSlug = false;
         }
       }
+      this.clickedCourseId = null;
       this.bindCourses({ owner }).then(() => {
         this.loading = false;
       });

@@ -37,7 +37,6 @@ export default {
       activePublic: null,
     };
   },
-  async mounted() {},
   computed: {
     ...mapState(useRootStore, ["person", "courses", "cohorts", "getCourseById"]),
   },
