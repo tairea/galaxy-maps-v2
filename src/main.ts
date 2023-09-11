@@ -26,6 +26,9 @@ pinia.use(piniaPluginPersistedstate);
 firebase.auth().onAuthStateChanged((user) => {
   const rootStore = useRootStore();
   console.log("auth state changed");
+  if (rootStore.user.loggedIn !== (user != null)) {
+    rootStore.$reset();
+  }
   if (user) {
     user?.getIdTokenResult().then((idTokenResult) => {
       Object.assign(user, { admin: idTokenResult.claims.admin });
@@ -35,8 +38,6 @@ firebase.auth().onAuthStateChanged((user) => {
     if (user.emailVerified) {
       startPresenceSystem(user.uid);
     }
-  } else {
-    rootStore.$reset();
   }
 });
 

@@ -187,7 +187,7 @@ export default {
         this.zoomToNodes(coursesTopicNodes);
       }
     },
-    async user() {
+    async courses() {
       this.loading = true;
       await this.refreshAllNodes();
     },
