@@ -687,7 +687,6 @@ export default {
       this.$refs.network.moveTo({
         position: { x: node.x, y: node.y },
         scale: 3,
-        offset: { x: -100 },
         animation: {
           duration: 2000,
           easingFunction: "easeInOutQuad",

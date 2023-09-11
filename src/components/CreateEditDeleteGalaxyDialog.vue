@@ -33,7 +33,7 @@
                 <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <div>
                   <p class="dialog-description">
-                    A Galaxy is a path of learning. Kind of like a course.
+                    A Galaxy Map is a path of learning... like a course.
                   </p>
                   <p class="dialog-description">
                     If you would like to map some learning, create a new Galaxy Map.
