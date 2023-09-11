@@ -29,6 +29,7 @@
       @click="click"
       @before-drawing="beforeDrawing"
       @after-drawing="afterDrawing"
+      @animation-finished="animationFinished"
     ></network>
   </div>
 </template>
@@ -58,6 +59,7 @@ export default {
     active: false,
     loading: true,
     needsCentering: false,
+    needsToZoomOut: false,
     popupPreview: false,
     allNodeIds: [],
     relativeGalaxyBoundaries: [],
@@ -175,7 +177,15 @@ export default {
       let coursesTopicNodes = this.allNodesForDisplay.filter(
         (node) => node.courseId == newCourseId,
       );
-      this.zoomToNodes(coursesTopicNodes);
+      console.log("highlightCourse: zoom to:", coursesTopicNodes);
+      if (coursesTopicNodes.length > 0) {
+        // zoom out to fit all nodes
+        this.zoomToNodes(coursesTopicNodes);
+        // this.needsToZoomOut = true;
+      } else {
+        // zoom to specific galaxy nodes
+        this.zoomToNodes(coursesTopicNodes);
+      }
     },
     async user() {
       this.loading = true;
@@ -224,14 +234,22 @@ export default {
         this.centerAfterReposition();
       }
     },
+
     afterDrawing() {
-      console.log("afterDrawing called");
       if (this.needsCentering === true) {
         this.centerAfterReposition();
       }
       // stop loading spinner
       if (this.loading === true) {
         this.loading = false;
+      }
+    },
+    animationFinished() {
+      console.log("animation finished");
+      if (this.needsToZoomOut === true) {
+        this.needsToZoomOut = false;
+        console.log("zooming out");
+        this.zoomOut();
       }
     },
     centerAfterReposition() {
@@ -575,8 +593,22 @@ export default {
       // // fit
       this.$refs.network.fit({
         nodes: nodeIds,
-        minZoomLevel: 0.2, // <-- TODO: this doesnt work on this version of vis-network. needs to be at least v8.5.0. but vue2vis is v7.4.0
+        // scale: 0.5,
+        // animation: true,
+        animation: {
+          duration: 2000,
+          easingFunction: "easeInOutQuad",
+        },
+      });
+    },
+    zoomOut(nodes) {
+      this.$refs.network.moveTo({
+        scale: 0.15,
         animation: true,
+        // animation: {
+        //   duration: 2000,
+        //   easingFunction: "easeInOutQuad",
+        // },
       });
     },
     zoomToAllNodes() {
