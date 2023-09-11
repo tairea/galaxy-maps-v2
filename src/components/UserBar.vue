@@ -111,7 +111,7 @@
 
           <!-- Discord button -->
           <v-btn
-            href="https://discord.gg/gus7a2cnmA"
+            href="https://discord.gg/vYSCTbtFK"
             target="_blank"
             color="indigo lighten-1"
             class="ma-3"
