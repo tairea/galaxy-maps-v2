@@ -210,18 +210,19 @@ export default {
       /* ===========================
         Show ALL Galaxies in DATABASE!! (so I can see what maps users have created)
       =========================== */
-      await this.getAllEdges(); // edge data for course
-      await this.getAllNodes(); // node data for course
+      await Promise.all([this.getAllEdges(), this.getAllNodes()]); // edge data for course // node data for course
+      console.log("finished loading nodes and edges");
       this.setAllNodesToDisplay();
     },
     setAllNodesToDisplay() {
       console.log("setAllNodesToDisplay called");
       const repositionedNodes = this.repositionCoursesBasedOnBoundariesV2();
-      if (repositionedNodes.length) {
-        this.updateAllNodesForDisplay(repositionedNodes);
-      } else {
+      this.updateAllNodesForDisplay(repositionedNodes);
+
+      if (!repositionedNodes.length) {
         this.loading = false;
       }
+
       this.needsCentering = true;
     },
     networkMounted() {

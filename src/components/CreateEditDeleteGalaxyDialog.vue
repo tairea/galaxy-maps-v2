@@ -500,6 +500,8 @@ export default {
         personId: this.person.id,
       };
 
+      this.course.owner = db.collection("people").doc(this.person.id);
+
       let nodeId;
       let courseId;
 

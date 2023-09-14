@@ -53,7 +53,7 @@
         >
       </div> -->
       <!-- MAPPED BY -->
-      <div class="mapped-details">
+      <div class="mapped-details left">
         <p class="info-panel-label mb-2">
           <span class="mappedByTitle">MAPPED BY</span>
         </p>
@@ -70,6 +70,19 @@
           </div>
           <!-- <p class="ma-0">Mapped By:</p> -->
           <span class="mt-2">{{ course.mappedBy.name }}</span>
+        </div>
+      </div>
+      <!-- OWNED BY -->
+      <div v-if="courseOwner" class="mapped-details right">
+        <p class="info-panel-label mb-2">
+          <span class="mappedByTitle">OWNED BY</span>
+        </p>
+        <div class="mappedByContainer">
+          <Avatar v-if="isCourseOwnerOrganisation" :organisationData="courseOwner" />
+          <Avatar v-else :profile="courseOwner" />
+          <!-- <p class="ma-0">Mapped By:</p> -->
+          <span v-if="isCourseOwnerOrganisation" class="mt-2">{{ courseOwner.name }}</span>
+          <span v-else class="mt-2">{{ courseOwner.firstName + " " + courseOwner.lastName }}</span>
         </div>
       </div>
     </div>
@@ -164,6 +177,7 @@
 </template>
 
 <script>
+import Avatar from "@/components/Avatar.vue";
 import LoginDialog from "@/components/Dialogs/LoginDialog.vue";
 import { db } from "@/store/firestoreConfig";
 import { getCohortById, assignTopicsAndTasksToMe } from "@/lib/ff";
@@ -175,7 +189,7 @@ import { mapActions, mapState } from "pinia";
 export default {
   name: "PopupGalaxyPreview",
   mixins: [dbMixins],
-  components: { LoginDialog },
+  components: { Avatar, LoginDialog },
   props: ["course", "galaxyListInfoPanel"],
   data() {
     return {
@@ -187,6 +201,8 @@ export default {
       contentAuthorImage: "",
       mappedAuthorImage: "",
       readmore: false,
+      courseOwner: null,
+      isCourseOwnerOrganisation: false,
     };
   },
   computed: {
@@ -208,11 +224,13 @@ export default {
       console.log("course changed: ", this.course);
       await this.setAccountType();
       await this.setImages();
+      await this.setCourseOwner();
     },
   },
   async mounted() {
     await this.setAccountType();
     await this.setImages();
+    await this.setCourseOwner();
   },
   methods: {
     ...mapActions(useRootStore, ["setCurrentCourse", "setCurrentCourseId"]),
@@ -229,6 +247,15 @@ export default {
     },
     showFullDescription() {
       this.$refs.description.innerHTML = this.course.description;
+    },
+    async setCourseOwner() {
+      if (this.course.owner == null || this.course.owner == "") {
+        return;
+      }
+
+      const doc = await db.doc(this.course.owner).get();
+      this.courseOwner = doc.data();
+      this.isCourseOwnerOrganisation = db.doc(this.course.owner).path.startsWith("organisations");
     },
     async setImages() {
       this.mappedAuthorImage = await this.getPersonsImage(this.course.mappedBy.personId);
