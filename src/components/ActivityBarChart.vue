@@ -71,7 +71,7 @@ export default {
           },
         },
         scales: {
-          xAxis: {
+          x: {
             type: "category",
             ticks: {
               display: true,
@@ -113,9 +113,8 @@ export default {
   },
   methods: {
     formatStudentsChartData(studentData) {
-      const datasets = [];
       const data = [];
-      let labels = [];
+      const labels = [];
 
       // more than one student in a cohort so loop
       for (const [index, student] of studentData.entries()) {
@@ -163,32 +162,20 @@ export default {
           default:
         }
 
-        const dataPointObj = {
-          x: label,
-          y: time / 60, // minutes to hours
-        };
-
+        data.push(time / 60);
         labels.push(label);
-        data.push(dataPointObj);
       }
 
       // // ==== test 30 students ===
       // for (var x = 0; x < 50; x++) {
       //   const label = names[x];
-
-      //   const dataPointObj = {
-      //     x: label,
-      //     // y: time / 60, // minutes to hours
-      //     y: Math.random() * 10,
-      //   };
-
+      //   data.push(Math.random() * 10);
       //   labels.push(label);
-      //   data.push(dataPointObj);
       // }
 
-      let dataset = {
+      const dataset = {
         label: "Hours Online",
-        data: data,
+        data,
         backgroundColor: this.dark
           ? this.$vuetify.theme.themes.dark.baseAccent
           : this.$vuetify.theme.themes.light.baseAccent,
@@ -200,14 +187,10 @@ export default {
         maxBarThickness: 50,
       };
 
-      datasets.push(dataset);
-      const datasetsObj = {
+      this.chartData = {
         labels,
-        datasets,
+        datasets: [dataset],
       };
-
-      // console.log("bar chart datasets: ", datasetsObj);
-      this.chartData = datasetsObj;
     },
     stringToColour(str) {
       return `hsl(${this.hashCode(str) % 360}, 100%, 70%)`;
