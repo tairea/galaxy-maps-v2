@@ -89,45 +89,49 @@
 import { defineComponent } from "vue";
 
 export default defineComponent({
-  data: {
-    darkSwitch: false,
-    themes: [
-      {
-        name: "minimal",
-        light: {
-          background: "#f8f9fa",
-          baseAccent: "#6c757d",
-          galaxyAccent: "#343a40",
-          missionAccent: "#495057",
+  props: [],
+  data() {
+    return {
+      darkSwitch: false,
+      themes: [
+        {
+          name: "minimal",
+          light: {
+            background: "#f8f9fa",
+            baseAccent: "#6c757d",
+            galaxyAccent: "#343a40",
+            missionAccent: "#495057",
+          },
+          dark: {
+            background: "#f8f9fa",
+            baseAccent: "#6c757d",
+            galaxyAccent: "#343a40",
+            missionAccent: "#495057",
+          },
         },
-        dark: {
-          background: "#f8f9fa",
-          baseAccent: "#6c757d",
-          galaxyAccent: "#343a40",
-          missionAccent: "#495057",
+        {
+          name: "minimal2",
+          light: {
+            background: "#f7f7ff",
+            baseAccent: "#495867",
+            galaxyAccent: "#fe5f55",
+            missionAccent: "#577399",
+          },
+          dark: {
+            background: "#f7f7ff",
+            baseAccent: "#495867",
+            galaxyAccent: "#fe5f55",
+            missionAccent: "#577399",
+          },
         },
-      },
-      {
-        name: "minimal2",
-        light: {
-          background: "#f7f7ff",
-          baseAccent: "#495867",
-          galaxyAccent: "#fe5f55",
-          missionAccent: "#577399",
-        },
-        dark: {
-          background: "#f7f7ff",
-          baseAccent: "#495867",
-          galaxyAccent: "#fe5f55",
-          missionAccent: "#577399",
-        },
-      },
-    ],
+      ],
+    };
   },
   methods: {
     changeTheme() {
-      this.$vuetify.theme.dark = this.darkSwitch;
+      // this.$vuetify.theme.dark = this.darkSwitch;
     },
+    changeColourTheme(theme: string) {},
   },
 });
 </script>
