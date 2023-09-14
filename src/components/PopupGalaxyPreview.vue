@@ -54,32 +54,28 @@
       </div> -->
       <!-- MAPPED BY -->
       <div class="mapped-details left">
-        <p class="info-panel-label mb-2">
+        <p class="info-panel-label mb-1">
           <span class="mappedByTitle">MAPPED BY</span>
         </p>
         <div class="mappedByContainer">
-          <div v-if="course.mappedBy.image">
-            <v-avatar size="40px">
-              <v-img :src="course.mappedBy.image.url"></v-img>
-            </v-avatar>
-          </div>
-          <div v-else-if="course.mappedBy.personId">
-            <v-avatar size="40px">
-              <v-img :src="mappedAuthorImage"></v-img>
-            </v-avatar>
-          </div>
+          <Avatar :personId="course.mappedBy.personId" :size="50" :colourBorder="true" />
           <!-- <p class="ma-0">Mapped By:</p> -->
           <span class="mt-2">{{ course.mappedBy.name }}</span>
         </div>
       </div>
       <!-- OWNED BY -->
       <div v-if="courseOwner" class="mapped-details right">
-        <p class="info-panel-label mb-2">
+        <p class="info-panel-label mb-1">
           <span class="mappedByTitle">OWNED BY</span>
         </p>
         <div class="mappedByContainer">
-          <Avatar v-if="isCourseOwnerOrganisation" :organisationData="courseOwner" />
-          <Avatar v-else :profile="courseOwner" />
+          <Avatar
+            v-if="isCourseOwnerOrganisation"
+            :organisationData="courseOwner"
+            :size="50"
+            :colourBorder="true"
+          />
+          <Avatar v-else :profile="courseOwner" :size="50" :colourBorder="true" />
           <!-- <p class="ma-0">Mapped By:</p> -->
           <span v-if="isCourseOwnerOrganisation" class="mt-2">{{ courseOwner.name }}</span>
           <span v-else class="mt-2">{{ courseOwner.firstName + " " + courseOwner.lastName }}</span>
