@@ -38,13 +38,15 @@
           class="custom-input"
         ></v-text-field>
         <v-text-field
-          type="password"
           v-model="password"
           label="Password"
           required
           color="baseAccent"
           outlined
           class="custom-input"
+          :append-icon="hide ? mdiEye : mdiEyeOff"
+          @click:append="() => (hide = !hide)"
+          :type="hide ? 'password' : 'text'"
         ></v-text-field>
         <v-btn
           :disabled="!valid"
@@ -76,6 +78,7 @@ import EmailSignIn from "@/components/EmailSignIn.vue";
 import useRootStore from "@/store/index";
 import firebase from "firebase/compat/app";
 import { mapActions, mapState } from "pinia";
+import { mdiEye, mdiEyeOff } from "@mdi/js";
 
 export default {
   name: "Login",
@@ -84,6 +87,8 @@ export default {
     EmailSignIn,
   },
   data: () => ({
+    mdiEye,
+    mdiEyeOff,
     valid: true,
     email: "",
     password: "",
@@ -97,6 +102,7 @@ export default {
     actionCode: "",
     isVerifyEmail: false,
     showEmailSignin: false,
+    hide: String,
   }),
   mounted() {
     // Get the email action to complete.

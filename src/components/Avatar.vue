@@ -104,9 +104,7 @@ export default {
         ? {
             width: this.size + "px",
             height: this.size + "px",
-            backgroundColor: this.stringToColour(
-              this.profileData.firstName + this.profileData.lastName,
-            ),
+            backgroundColor: this.stringToColour(),
             border: this.online ? "1px solid var(--v-baseAccent-base)" : "",
           }
         : { width: this.size + "px", height: this.size + "px" };
@@ -117,7 +115,11 @@ export default {
       if (!name) return;
       return name.substring(0, 3).toUpperCase();
     },
-    stringToColour(str) {
+    stringToColour() {
+      // profile or owner
+      let str = "";
+      if (this.profileData) str = this.profileData.firstName + this.profileData.lastName;
+      else if (this.organisationData) str = this.organisationData.name;
       return `hsl(${this.hashCode(str) % 360}, 100%, 35%)`;
     },
     hashCode(str) {

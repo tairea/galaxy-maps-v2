@@ -42,13 +42,15 @@
           class="custom-input"
         ></v-text-field>
         <v-text-field
-          type="password"
           v-model="person.password"
           label="Password"
           required
           color="missionAccent"
           outlined
           class="custom-input"
+          :append-icon="hide ? mdiEye : mdiEyeOff"
+          @click:append="() => (hide = !hide)"
+          :type="hide ? 'password' : 'text'"
         ></v-text-field>
         <v-btn
           :disabled="!valid"
@@ -76,6 +78,7 @@ import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import firebase from "firebase/compat/app";
 import { mapActions } from "pinia";
+import { mdiEye, mdiEyeOff } from "@mdi/js";
 
 export default {
   name: "Register",
@@ -83,6 +86,8 @@ export default {
     BackButton,
   },
   data: () => ({
+    mdiEye,
+    mdiEyeOff,
     closed: false,
     valid: true,
     person: {
@@ -97,6 +102,7 @@ export default {
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
     ],
     loading: false,
+    hide: String,
   }),
   mounted() {
     // hack to make active select white
