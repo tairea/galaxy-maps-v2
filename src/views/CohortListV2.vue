@@ -1,34 +1,29 @@
 <template>
   <div class="main-wrap">
-    <!-- <div class="side-col">
-      <div v-if="cohorts">
-        <v-row class="mb-5">
-          <v-col>
-            <v-row>
-              <Cohort
-                ref="cohort"
-                v-for="(cohort, cohortIndex) in getCohortsByOrganisationId()"
-                :id="'noOrgcohort' + cohortIndex"
-                :cohort="cohort"
-                :key="cohort.id"
-                :size="40"
-                :hideNames="true"
-                :tooltip="true"
-                :studentView="true"
-                @click.native="clickedCohort(cohort, 'noOrg', cohortIndex)"
-              />
-            </v-row>
-          </v-col>
-        </v-row>
+    <div class="side-col">
+      <!-- COHORTS -->
+      <div v-if="cohorts" class="cohorts">
+        <Cohort
+          ref="cohort"
+          v-for="(cohort, cohortIndex) in getCohortsByOrganisationId()"
+          :id="'noOrgcohort' + cohortIndex"
+          :cohort="cohort"
+          :key="cohort.id"
+          :size="40"
+          :hideNames="true"
+          :tooltip="true"
+          :studentView="true"
+          @click.native="clickedCohort(cohort, 'noOrg', cohortIndex)"
+          style="padding: 5px"
+        />
       </div>
+      <!-- ORGANISATIONS -->
       <div
         v-for="(organisation, orgIndex) in organisations"
         :key="organisation.id"
         class="mission-border"
       >
-        <div
-          class="organisation-banner d-flex flex-column justify-center align-center"
-        >
+        <div class="organisation-banner d-flex flex-column justify-center align-center">
           <Organisation
             @editOrg="editOrgDialog"
             :organisation="organisation"
@@ -38,9 +33,7 @@
         </div>
         <div class="mb-3 d-flex flex-column justify-center align-center">
           <Cohort
-            v-for="(cohort, cohortIndex) in getCohortsByOrganisationId(
-              organisation.id
-            )"
+            v-for="(cohort, cohortIndex) in getCohortsByOrganisationId(organisation.id)"
             ref="cohort"
             :id="'org' + orgIndex + 'cohort' + cohortIndex"
             :cohort="cohort"
@@ -55,16 +48,14 @@
         </div>
       </div>
       <div v-if="!cohorts">
-        <h3 class="cohort-heading overline baseAccent--text">
-          No Cohorts Found
-        </h3>
+        <h3 class="cohort-heading overline baseAccent--text">No Cohorts Found</h3>
       </div>
 
       <div v-if="user.data.admin">
         <v-tooltip right color="subBackground">
           <template v-slot:activator="{ on, attrs }">
             <div v-bind="attrs" v-on="on">
-              <CreateEditDeleteCohortDialog :hideText="true" />
+              <CreateEditDeleteCohortDialog :hideText="false" />
             </div>
           </template>
           <div class="create-tooltip">CREATE COHORT</div>
@@ -76,17 +67,17 @@
                 ref="organisationDialog"
                 :edit="openOrganisationDialog"
                 :organisationToEdit="editingOrgansation"
-                :hideText="true"
+                :hideText="false"
               />
             </div>
           </template>
           <div class="create-tooltip">CREATE ORGANISATION</div>
         </v-tooltip>
-        <div v-if="person.accountType == 'admin'">
+        <div v-if="user.data.admin">
           <CreateAdminDialog />
         </div>
       </div>
-    </div> -->
+    </div>
     <v-expand-transition>
       <div v-if="cohorts.length" class="main-col" v-show="expand">
         <!-- Middle chip row -->
@@ -392,14 +383,21 @@ hr {
 
   .side-col {
     width: 10%;
-    // border: 1px solid blue;
+    border: 1px solid blue;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: start;
     align-items: center;
-    overflow: scroll;
+    overflow-y: scroll;
     overflow-x: hidden;
+    // padding-top: 350px;
 
+    .cohorts {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      border: 1px solid yellow;
+    }
     .mission-border {
       border: 1px solid var(--v-subBackground-base);
       margin-bottom: 20px;
@@ -462,7 +460,8 @@ hr {
 }
 
 .cohort-panel {
-  width: calc(50% - 40px);
+  //width: calc(50% - 40px); // two panels per row
+  width: 100%; // two panels per row
 }
 
 .no-cohort {
