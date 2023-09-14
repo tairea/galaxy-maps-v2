@@ -146,6 +146,10 @@ export default {
     }
     this.bindCourses({ owner }).then(() => {
       this.loading = false;
+      // zoom to galaxy if that were user wants to land *STEFAN
+      if (this.$route.query.map) {
+        this.clickedCourseId = this.$route.query.map;
+      }
     });
     if (this.courses.length > 0) {
       this.loading = false;
