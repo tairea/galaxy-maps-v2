@@ -81,7 +81,7 @@ export default {
       } else {
         this.profileData = doc;
       }
-    } else {
+    } else if (this.personId) {
       await db
         .collection("people")
         .doc(this.personId)
@@ -94,7 +94,11 @@ export default {
   computed: {
     ...mapState(useRootStore, ["userStatus"]),
     online() {
-      if (this.profileData.id) return this.userStatus[this.profileData.id]?.state === "online";
+      if (this.profileData) {
+        return this.userStatus[this.profileData.id]?.state === "online";
+      } else {
+        return false;
+      }
     },
     border() {
       return this.colourBorder && this.online ? "border: 1px solid var(--v-baseAccent-base)" : "";
