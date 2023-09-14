@@ -232,7 +232,7 @@ export default defineStore({
             ? db.collection("courses").where("owner", "==", payload.owner)
             : db.collection("courses");
         return bindFirestoreRef("courses", query, {
-          maxRefDepth: 2,
+          maxRefDepth: 0,
           reset: false,
         });
       },

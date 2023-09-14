@@ -30,6 +30,29 @@
         </p>
       </div>
     </v-tooltip>
+    <v-tooltip v-if="organisationData" bottom color="subBackground">
+      <template v-slot:activator="{ on, attrs }">
+        <div class="d-flex justify-center align-center" v-bind="attrs" v-on="on">
+          <v-avatar :size="size">
+            <img
+              v-if="organisationData.image"
+              :src="organisationData.image.url"
+              :alt="organisationData.name"
+              style="object-fit: cover"
+              :style="border"
+            />
+            <div v-else class="imagePlaceholder" :style="colouredBorder">
+              {{ first3Letters(organisationData.name) }}
+            </div>
+          </v-avatar>
+        </div>
+      </template>
+      <div>
+        <p class="ma-0 person-tooltip" style="font-size: 0.8rem; font-weight: 800">
+          {{ organisationData.name }}
+        </p>
+      </div>
+    </v-tooltip>
   </div>
 </template>
 
@@ -41,16 +64,23 @@ import { mapState } from "pinia";
 
 export default {
   name: "Avatar",
-  props: ["personId", "size", "colourBorder", "profile"],
+  props: ["personId", "size", "colourBorder", "profile", "owner", "organisationData"],
   data() {
     return {
       mdiAccount,
-      profileData: {},
+      profileData: null,
     };
   },
   async mounted() {
     if (this.profile) {
       this.profileData = this.profile;
+    } else if (this.owner) {
+      const doc = await this.owner.get();
+      if (this.owner.path.startsWith("organisations")) {
+        this.organisationData = doc;
+      } else {
+        this.profileData = doc;
+      }
     } else {
       await db
         .collection("people")
