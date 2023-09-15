@@ -2,7 +2,7 @@
   <div class="main-wrap">
     <div class="side-col">
       <!-- COHORTS -->
-      <div v-if="cohorts" class="cohorts">
+      <!-- <div v-if="cohorts" class="cohorts">
         <Cohort
           ref="cohort"
           v-for="(cohort, cohortIndex) in getCohortsByOrganisationId()"
@@ -16,9 +16,9 @@
           @click.native="clickedCohort(cohort, 'noOrg', cohortIndex)"
           style="padding: 5px"
         />
-      </div>
+      </div> -->
       <!-- ORGANISATIONS -->
-      <div
+      <!-- <div
         v-for="(organisation, orgIndex) in organisations"
         :key="organisation.id"
         class="mission-border"
@@ -76,7 +76,7 @@
         <div v-if="user.data.admin">
           <CreateAdminDialog />
         </div>
-      </div>
+      </div> -->
     </div>
     <v-expand-transition>
       <div v-if="cohorts.length" class="main-col" v-show="expand">
@@ -411,7 +411,7 @@ hr {
 
   .main-col {
     margin-top: 70px;
-    width: 100%;
+    width: 80%;
     overflow: scroll;
     overflow-x: hidden;
   }
