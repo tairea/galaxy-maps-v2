@@ -21,7 +21,7 @@
       <div
         v-for="(organisation, orgIndex) in organisations"
         :key="organisation.id"
-        class="mission-border"
+        class="mission-border mt-6"
       >
         <div class="organisation-banner d-flex flex-column justify-center align-center">
           <Organisation
@@ -31,6 +31,7 @@
             :hideName="false"
           />
         </div>
+        <!-- COHORTS -->
         <div class="mb-3 d-flex flex-column justify-center align-center">
           <Cohort
             v-for="(cohort, cohortIndex) in getCohortsByOrganisationId(organisation.id)"
@@ -414,8 +415,8 @@ hr {
     }
     .mission-border {
       border: 1px solid var(--v-subBackground-base);
-      margin-bottom: 20px;
-      width: 100%;
+      // margin-bottom: 20px;
+      width: 90%;
     }
   }
 

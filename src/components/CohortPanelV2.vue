@@ -290,7 +290,7 @@ export default {
   cursor: pointer;
 
   .left-col {
-    width: 20%;
+    width: 15%;
     // height: 100%;
     // border-right: 1px solid var(--v-missionAccent-base);
 
@@ -320,7 +320,7 @@ export default {
   }
 
   .main-col {
-    width: 80%;
+    width: 85%;
 
     .line-chart:not(:last-child) {
       margin-bottom: 20px;
