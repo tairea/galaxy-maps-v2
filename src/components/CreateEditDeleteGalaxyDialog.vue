@@ -174,7 +174,6 @@
                 <h2 class="galaxy-label">Galaxy</h2>
                 <h1 class="galaxy-title">{{ course.title }}</h1>
                 <v-img v-if="course.image.url" :src="course.image.url" width="100%"></v-img>
-                <v-img v-if="course.image.url" :src="course.image.url" width="100%"></v-img>
                 <p class="galaxy-description">{{ course.description }}</p>
               </div>
               <v-select

@@ -4,14 +4,14 @@
       >Organisation</span
     >
     <v-row :class="cohortView ? 'my-1' : ''">
-      <v-col class="d-flex justify-center align-center cursor" @click="editOrg()">
-        <v-img
+      <v-col class="d-flex align-center cursor" @click="editOrg()">
+        <img
           v-if="organisation.image"
           :src="organisation.image.url"
-          :max-width="size ? size + 'px' : '30px'"
-          :max-height="size ? size + 'px' : '30px'"
+          :width="size ? size + 'px' : '30px'"
+          :height="size ? size + 'px' : '30px'"
           class="organisation-image"
-        ></v-img>
+        />
         <div v-else-if="organisation.name" class="imagePlaceholder">
           {{ first3Letters(organisation.name) }}
         </div>
@@ -58,13 +58,13 @@ export default {
   // width: 100px;
   // height: 100px;
   border-radius: 50%;
-  // object-fit: cover;
+  object-fit: cover;
 }
 
 .imagePlaceholder {
   width: 60px;
   height: 60px;
-  border-radius: 50%;
+  // border-radius: 50%;
   background-color: rgba(200, 200, 200, 0.3);
   display: flex;
   justify-content: center;
