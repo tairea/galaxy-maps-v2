@@ -139,42 +139,47 @@
         </v-row>
       </div>
       <div v-else class="no-cohort">
-        <p class="overline">create or start a galaxy to join a cohort</p>
-        <p class="overline" style="text-align: center"><strong>OR</strong></p>
+        <p class="overline">you are not in any cohorts yet</p>
+        <p class="overline">start a galaxy to join a cohort</p>
 
         <!-- PAY WALL VERSION Create Cohort Button -->
-        <!-- <v-tooltip bottom close-delay="2000" color="subBackground">
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on">
-              <v-icon class="mb-1 mr-2">{{ mdiPlus }}</v-icon>
-              create cohort
-            </v-btn>
-          </template>
-          <span v-html="paidFeatureMessage"></span>
-        </v-tooltip> -->
-        <!-- OPEN VERSION -->
-        <v-tooltip right color="subBackground">
+        <div class="button-container">
+          <v-tooltip bottom close-delay="2000" color="subBackground">
+            <template v-slot:activator="{ on, attrs }">
+              <div v-bind="attrs" v-on="on">
+                <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on" disabled>
+                  <v-icon class="mb-1 mr-2">{{ mdiPlus }}</v-icon>
+                  create cohort
+                </v-btn>
+              </div>
+            </template>
+            <span v-html="paidFeatureMessage"></span>
+          </v-tooltip>
+          <!-- OPEN VERSION -->
+          <!-- <v-tooltip right color="subBackground">
           <template v-slot:activator="{ on, attrs }">
             <div v-bind="attrs" v-on="on">
               <CreateEditDeleteCohortDialog />
             </div>
           </template>
           <div class="create-tooltip">CREATE COHORT</div>
-        </v-tooltip>
-        <!-- <v-tooltip right color="subBackground">
-          <template v-slot:activator="{ on, attrs }">
-            <div v-bind="attrs" v-on="on">
-              <CreateEditDeleteOrganisationDialog
-                ref="organisationDialog"
-                :edit="openOrganisationDialog"
-                :organisationToEdit="editingOrgansation"
-                :hideText="true"
-              />
-            </div>
-          </template>
-          <div class="create-tooltip">CREATE ORGANISATION</div>
-        </v-tooltip>
-        <div v-if="person.accountType == 'admin'">
+        </v-tooltip> -->
+          <v-tooltip right color="subBackground" v-if="this.user.data.admin">
+            <template v-slot:activator="{ on, attrs }">
+              <div v-bind="attrs" v-on="on" class="mt-3">
+                <CreateEditDeleteOrganisationDialog
+                  ref="organisationDialog"
+                  :edit="openOrganisationDialog"
+                  :organisationToEdit="editingOrgansation"
+                  :hideText="false"
+                />
+              </div>
+            </template>
+            <div class="create-tooltip">CREATE ORGANISATION</div>
+          </v-tooltip>
+        </div>
+        <!-- Create admin button -->
+        <!-- <div v-if="this.user.data.admin">
           <CreateAdminDialog />
         </div> -->
       </div>
@@ -383,20 +388,19 @@ hr {
 
   .side-col {
     width: 10%;
-    border: 1px solid blue;
     display: flex;
     flex-direction: column;
     justify-content: start;
     align-items: center;
     overflow-y: scroll;
     overflow-x: hidden;
-    // padding-top: 350px;
+    // border: 1px solid blue;
 
     .cohorts {
-      width: 100%;
+      width: 80%;
       display: flex;
       flex-wrap: wrap;
-      border: 1px solid yellow;
+      // border: 1px solid yellow;
     }
     .mission-border {
       border: 1px solid var(--v-subBackground-base);
@@ -410,7 +414,6 @@ hr {
     width: 100%;
     overflow: scroll;
     overflow-x: hidden;
-    // border: 1px solid red;
   }
 
   .cohort-heading {
@@ -470,9 +473,20 @@ hr {
   text-transform: uppercase;
   display: flex;
   justify-content: center;
+  align-items: center;
   flex-direction: column;
-  margin-left: auto;
-  margin-right: auto;
   color: var(--v-missionAccent-base);
+  // margin-left: auto;
+  // margin-right: auto;
+  width: 80%;
+
+  .button-container {
+    margin-top: 50px;
+    height: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
 }
 </style>
