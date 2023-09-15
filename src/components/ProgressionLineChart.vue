@@ -1,8 +1,8 @@
 <template>
   <div class="course-frame">
-    <v-row>
-      <v-col cols="12" class="d-flex pa-0">
-        <!-- <img
+    <div class="d-flex justify-space-between pa-0">
+      <div class="d-flex">
+        <img
           v-if="courseData.course.image.url"
           class="galaxy-image"
           :src="courseData.course.image.url"
@@ -20,15 +20,15 @@
         </div>
         <h1 class="galaxy-title pt-2 pl-2">
           {{ courseData.course.title }}
-        </h1> -->
-        <h1 class="galaxy-title pt-2 pl-2">
-          student progress
-          <span style="font-weight: 400; text-transform: none; font-style: italic"
-            >(Number of Missions Completed)</span
-          >
         </h1>
-      </v-col>
-    </v-row>
+      </div>
+      <h1 class="galaxy-title pt-2 pl-2">
+        student progress
+        <span style="font-weight: 400; text-transform: none; font-style: italic"
+          >(Number of Missions Completed)</span
+        >
+      </h1>
+    </div>
     <v-row>
       <v-col cols="12" class="center-col pa-0">
         <Chart

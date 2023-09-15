@@ -52,6 +52,16 @@
           v-model="profile.lastName"
           label="Last name"
         ></v-text-field>
+        <!-- LAST NAME -->
+        <v-text-field
+          class="input-field"
+          outlined
+          :dark="dark"
+          :light="!dark"
+          color="missionAccent"
+          v-model="profile.discord"
+          label="Discord handle"
+        ></v-text-field>
         <!-- EMAIL -->
         <v-row>
           <v-col cols="10">
@@ -199,7 +209,7 @@ export default {
           firebase.auth().currentUser.sendEmailVerification(actionCodeSettings);
           this.setSnackbar({
             show: true,
-            text: "Email successfully updated, check your email to veriify your new email account",
+            text: "Email successfully updated, check your email to verify your new email account",
             color: "baseAccent",
           });
         })
@@ -211,6 +221,7 @@ export default {
           });
           this.cancel;
         });
+      this.editEmail = false;
     },
     cancel() {
       this.dialog = false;

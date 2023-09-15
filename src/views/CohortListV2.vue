@@ -2,21 +2,21 @@
   <div class="main-wrap">
     <div class="side-col">
       <!-- COHORTS -->
-      <!-- <div v-if="cohorts" class="cohorts">
+      <div v-if="cohorts" class="cohorts mt-12">
         <Cohort
           ref="cohort"
           v-for="(cohort, cohortIndex) in getCohortsByOrganisationId()"
           :id="'noOrgcohort' + cohortIndex"
           :cohort="cohort"
           :key="cohort.id"
-          :size="40"
+          :size="60"
           :hideNames="true"
           :tooltip="true"
           :studentView="true"
           @click.native="clickedCohort(cohort, 'noOrg', cohortIndex)"
           style="padding: 5px"
         />
-      </div> -->
+      </div>
       <!-- ORGANISATIONS -->
       <div
         v-for="(organisation, orgIndex) in organisations"
@@ -98,8 +98,12 @@
         </div>
 
         <!-- OPEN VERSION -->
-        <div>
-          <v-tooltip top color="subBackground" v-if="this.user.data.admin">
+        <div class="mb-6">
+          <v-tooltip
+            top
+            color="subBackground"
+            v-if="this.user.data.admin || this.person.firstName == 'TaiCollective.nz'"
+          >
             <template v-slot:activator="{ on, attrs }">
               <div v-bind="attrs" v-on="on">
                 <CreateEditDeleteCohortDialog />
@@ -111,6 +115,7 @@
           <v-tooltip v-else bottom color="subBackground">
             <template v-slot:activator="{ on, attrs }">
               <div v-bind="attrs" v-on="on">
+                <!-- DISABLED -->
                 <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on" disabled>
                   <v-icon class="mb-1 mr-2">{{ mdiPlus }}</v-icon>
                   create cohort
@@ -142,6 +147,8 @@
           </div>
         </div>
       </div>
+
+      <!-- NO COHORTS YET -->
       <div v-else class="no-cohort">
         <p class="overline">you are not in any cohorts yet</p>
         <p class="overline">start a galaxy to join a cohort</p>
@@ -151,6 +158,7 @@
           <v-tooltip bottom close-delay="2000" color="subBackground">
             <template v-slot:activator="{ on, attrs }">
               <div v-bind="attrs" v-on="on">
+                <!-- DISABLED -->
                 <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on" disabled>
                   <v-icon class="mb-1 mr-2">{{ mdiPlus }}</v-icon>
                   create cohort
@@ -389,7 +397,7 @@ hr {
   overflow: hidden;
 
   .side-col {
-    width: 25%;
+    width: 15%;
     display: flex;
     flex-direction: column;
     justify-content: start;
@@ -399,7 +407,7 @@ hr {
     // border: 1px solid blue;
 
     .cohorts {
-      width: 80%;
+      width: 50%;
       display: flex;
       flex-wrap: wrap;
       // border: 1px solid yellow;
@@ -482,7 +490,6 @@ hr {
   // margin-left: auto;
   // margin-right: auto;
   width: 80%;
-
   .button-container {
     margin-top: 50px;
     height: auto;
