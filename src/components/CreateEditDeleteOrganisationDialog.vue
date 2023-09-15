@@ -387,66 +387,63 @@ export default {
     closeDialog() {
       this.$emit("closeOrganisationEditDialog");
     },
-    saveOrganisation(organisation) {
+    async saveOrganisation(organisation) {
       this.loading = true;
+
       // Add a new document in collection "cohorts"
-      db.collection("organisations")
-        .add(organisation)
-        .then((docRef) => {
-          console.log("Document successfully written!");
-          this.loading = false;
-          this.dialog = false;
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
-        });
+      try {
+        db.collection("organisations").add(organisation);
+
+        console.log("Document successfully written!");
+        this.loading = false;
+        this.dialog = false;
+      } catch (error) {
+        console.error("Error writing document: ", error);
+      }
+
       this.organisation = {};
       this.uploadedImage = null;
     },
-    updateOrganisation(organisation) {
+    async updateOrganisation(organisation) {
       this.loading = true;
       // Add a new document in collection "cohorts"
-      db.collection("organisations")
-        .doc(organisation.id)
-        .update(organisation)
-        .then((docRef) => {
-          console.log("Organisation successfully updated!");
-          this.loading = false;
-          this.dialog = false;
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
-        });
+      try {
+        await db.collection("organisations").doc(organisation.id).update(organisation);
+
+        console.log("Organisation successfully updated!");
+        this.loading = false;
+        this.dialog = false;
+      } catch (error) {
+        console.error("Error writing document: ", error);
+      }
+
       this.organisation = {};
     },
     async addPersonToOrganisation(email) {
       this.loading = true;
 
       // get ref of person with this email
-      const personRef = await db
-        .collection("people")
-        .where("email", "==", email)
-        .get()
-        .then((doc) => {
-          console.log("doc.Ref: ", doc.ref);
-          return doc.ref;
-        });
+      const people = await db.collection("people").where("email", "==", email).get();
+      const person = people.docs[0];
+      const personRef = person.ref;
       console.log("personRef: ", personRef);
 
       // save person ref to organisation
-      db.collection("organisations")
-        .doc(this.organisation.id)
-        .update({
-          people: firebase.firestore.FieldValue.arrayUnion(personRef),
-        })
-        .then((docRef) => {
-          console.log("Person successfully added to organisation!");
-          this.loading = false;
-          this.dialog = false;
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
-        });
+      try {
+        await db
+          .collection("organisations")
+          .doc(this.organisation.id)
+          .update({
+            people: firebase.firestore.FieldValue.arrayUnion(personRef),
+          });
+
+        console.log("Person successfully added to organisation!");
+        this.loading = false;
+        this.dialog = false;
+      } catch (error) {
+        console.error("Error writing document: ", error);
+      }
+
       this.organisation = {};
     },
     async removePersonFromOrganisation(email) {
