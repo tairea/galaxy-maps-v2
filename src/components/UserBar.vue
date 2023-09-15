@@ -156,7 +156,7 @@
 </template>
 
 <script>
-import ThemeColourPicker from "@/components/ThemeColourPicker.vue";
+// import ThemeColourPicker from "@/components/ThemeColourPicker.vue";
 import LoginDialog from "@/components/Dialogs/LoginDialog.vue";
 import StudentEditDialog from "@/components/StudentEditDialog.vue";
 import { db, storage } from "@/store/firestoreConfig";
@@ -168,7 +168,7 @@ import { mapActions, mapState } from "pinia";
 export default {
   name: "UserBar",
   components: {
-    ThemeColourPicker,
+    // ThemeColourPicker,
     StudentEditDialog,
     LoginDialog,
   },
