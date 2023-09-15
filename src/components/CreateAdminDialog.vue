@@ -3,7 +3,7 @@
     <v-dialog v-model="dialog" width="40%" light>
       <!-- CREATE BUTTON -->
       <template v-slot:activator="{ on, attrs }">
-        <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on" class="ma-8">
+        <v-btn outlined color="galaxyAccent" v-bind="attrs" v-on="on" class="ma-8">
           <v-icon left> {{ mdiPlus }} </v-icon>
           CREATE ADMIN
         </v-btn>

@@ -18,7 +18,7 @@
         />
       </div> -->
       <!-- ORGANISATIONS -->
-      <!-- <div
+      <div
         v-for="(organisation, orgIndex) in organisations"
         :key="organisation.id"
         class="mission-border"
@@ -27,8 +27,8 @@
           <Organisation
             @editOrg="editOrgDialog"
             :organisation="organisation"
-            :size="50"
-            :hideName="true"
+            :size="60"
+            :hideName="false"
           />
         </div>
         <div class="mb-3 d-flex flex-column justify-center align-center">
@@ -51,7 +51,8 @@
         <h3 class="cohort-heading overline baseAccent--text">No Cohorts Found</h3>
       </div>
 
-      <div v-if="user.data.admin">
+      <!-- SIDEBAR ADMIN BUTTONS -->
+      <!-- <div v-if="user.data.admin">
         <v-tooltip right color="subBackground">
           <template v-slot:activator="{ on, attrs }">
             <div v-bind="attrs" v-on="on">
@@ -81,10 +82,11 @@
     <v-expand-transition>
       <div v-if="cohorts.length" class="main-col" v-show="expand">
         <!-- Middle chip row -->
-
         <div class="timeframe-chips">
           <TimeframeFilters @timeframe="setTimeframe($event)" />
         </div>
+
+        <!-- Cohort Panels -->
         <div class="d-flex flex-wrap">
           <CohortPanelV2
             v-for="cohort in selectedCohorts.length > 0 ? selectedCohorts : orderedCohorts"
@@ -94,26 +96,10 @@
             class="cohort-panel"
           />
         </div>
-        <v-row justify="center" class="mb-12">
-          <!-- PAY WALL VERSION Create Cohort Button -->
-          <!-- <v-tooltip top close-delay="2000" color="subBackground">
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn
-                outlined
-                color="baseAccent"
-                v-bind="attrs"
-                v-on="on"
-                class="mb-8"
-              >
-                <v-icon class="mb-1 mr-2">{{ mdiPlus }}</v-icon>
-                create cohort
-              </v-btn>
-            </template>
-            <span v-html="paidFeatureMessage"></span>
-          </v-tooltip> -->
 
-          <!-- OPEN VERSION -->
-          <v-tooltip top color="subBackground">
+        <!-- OPEN VERSION -->
+        <div>
+          <v-tooltip top color="subBackground" v-if="this.user.data.admin">
             <template v-slot:activator="{ on, attrs }">
               <div v-bind="attrs" v-on="on">
                 <CreateEditDeleteCohortDialog />
@@ -121,7 +107,24 @@
             </template>
             <div class="create-tooltip">CREATE COHORT</div>
           </v-tooltip>
-          <!-- <v-tooltip top color="subBackground">
+          <!-- PAY WALL VERSION Create Cohort Button -->
+          <v-tooltip v-else bottom color="subBackground">
+            <template v-slot:activator="{ on, attrs }">
+              <div v-bind="attrs" v-on="on">
+                <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on" disabled>
+                  <v-icon class="mb-1 mr-2">{{ mdiPlus }}</v-icon>
+                  create cohort
+                </v-btn>
+              </div>
+            </template>
+            <span v-html="paidFeatureMessage"></span>
+          </v-tooltip>
+        </div>
+
+        <!-- ADMIN BUTTONS -->
+        <div v-if="this.user.data.admin" class="mt-3">
+          <!-- CREATE ORGANISATION -->
+          <v-tooltip top color="subBackground">
             <template v-slot:activator="{ on, attrs }">
               <div v-bind="attrs" v-on="on" class="ml-4">
                 <CreateEditDeleteOrganisationDialog
@@ -133,10 +136,11 @@
             </template>
             <div class="create-tooltip">CREATE ORGANISATION</div>
           </v-tooltip>
-          <div v-if="person.accountType == 'admin'">
+          <!-- CREATE ADMIN -->
+          <div>
             <CreateAdminDialog />
-          </div> -->
-        </v-row>
+          </div>
+        </div>
       </div>
       <div v-else class="no-cohort">
         <p class="overline">you are not in any cohorts yet</p>
@@ -156,14 +160,14 @@
             <span v-html="paidFeatureMessage"></span>
           </v-tooltip>
           <!-- OPEN VERSION -->
-          <!-- <v-tooltip right color="subBackground">
-          <template v-slot:activator="{ on, attrs }">
-            <div v-bind="attrs" v-on="on">
-              <CreateEditDeleteCohortDialog />
-            </div>
-          </template>
-          <div class="create-tooltip">CREATE COHORT</div>
-        </v-tooltip> -->
+          <v-tooltip right color="subBackground">
+            <template v-slot:activator="{ on, attrs }">
+              <div v-bind="attrs" v-on="on">
+                <CreateEditDeleteCohortDialog />
+              </div>
+            </template>
+            <div class="create-tooltip">CREATE COHORT</div>
+          </v-tooltip>
           <v-tooltip right color="subBackground" v-if="this.user.data.admin">
             <template v-slot:activator="{ on, attrs }">
               <div v-bind="attrs" v-on="on" class="mt-3">
@@ -279,9 +283,7 @@ export default {
     },
     editOrgDialog(orgId) {
       this.openOrganisationDialog = true;
-      console.log("getting org with id = ", orgId);
       this.editingOrgansation = this.getOrganisationById(orgId);
-      console.log("got org = ", this.editingOrgansation);
       this.$refs.organisationDialog.openDialog();
     },
     setTimeframe(timeframeEmitted) {
@@ -387,7 +389,7 @@ hr {
   overflow: hidden;
 
   .side-col {
-    width: 10%;
+    width: 25%;
     display: flex;
     flex-direction: column;
     justify-content: start;
@@ -405,7 +407,7 @@ hr {
     .mission-border {
       border: 1px solid var(--v-subBackground-base);
       margin-bottom: 20px;
-      width: 80px;
+      width: 100%;
     }
   }
 
@@ -423,6 +425,7 @@ hr {
   }
 
   .organisation-banner {
+    // border-bottom: 1px solid rgba(200, 200, 200, 0.5);
     border-bottom: 1px solid rgba(200, 200, 200, 0.5);
     margin: 0px 20px;
   }
