@@ -76,7 +76,7 @@
             ></v-textarea>
 
             <!-- IMAGE UPLOAD -->
-            <v-progress-linear color="missionAccent" :value="percentage"></v-progress-linear>
+
             <v-file-input
               class="input-field"
               outlined
@@ -88,7 +88,9 @@
               @change="storeImage()"
               prepend-icon=""
               label="Cohort image upload"
+              hide-details
             ></v-file-input>
+            <v-progress-linear color="missionAccent" :value="percentage"></v-progress-linear>
 
             <!-- <div v-if="user.data.admin"> removed admin as im wanting to open up features for user testing -->
             <div>
@@ -107,7 +109,7 @@
               >
               </v-select> -->
               <!-- Select teachers from list -->
-              <p class="input-description">Cohort teachers:</p>
+              <p class="input-description mt-6">Cohort teachers:</p>
               <v-autocomplete
                 v-model="cohort.teachers"
                 :search-input.sync="search"

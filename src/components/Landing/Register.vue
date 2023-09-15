@@ -14,7 +14,6 @@
       <v-form v-else ref="form" v-model="valid" lazy-validation class="my-4">
         <v-text-field
           dark
-          type="email"
           v-model="person.firstName"
           label="First Name"
           required
@@ -23,10 +22,16 @@
           class="custom-input mt-6"
         ></v-text-field>
         <v-text-field
-          type="email"
           v-model="person.lastName"
           label="Last Name"
           required
+          color="missionAccent"
+          outlined
+          class="custom-input"
+        ></v-text-field>
+        <v-text-field
+          v-model="person.discord"
+          label="Discord Handle (optional)"
           color="missionAccent"
           outlined
           class="custom-input"
@@ -93,6 +98,7 @@ export default {
     person: {
       firstName: "",
       lastName: "",
+      discord: "",
       email: "",
       password: "",
       id: "",
@@ -126,6 +132,8 @@ export default {
           this.person.id = userRef.user.uid;
           // remove password so its not saved to database
           delete this.person.password;
+          // add time registered
+          this.person["registered"] = new Date();
           // add user to people database
           db.collection("people")
             .doc(this.person.id)

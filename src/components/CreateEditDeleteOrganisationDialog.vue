@@ -115,73 +115,20 @@
           <p class="org-people-description">People in this Organisation</p>
 
           <!-- pills of the people in -->
-          <div class="people-in-org">
-            <v-menu
-              v-model="menu"
-              location="top start"
-              origin="top start"
-              transition="scale-transition"
+          <div class="people-in-org d-flex flex-wrap">
+            <v-chip
+              close
+              @click:close="removePersonFromOrganisation(person.email)"
               v-for="person in organisation.people"
               :key="person.id"
+              class="mr-2"
             >
-              <template v-slot:activator="{ props }">
-                <v-chip pill v-bind="props" link>
-                  <v-avatar start v-if="person.image?.url" class="mr-1">
-                    <v-img :src="person.image.url"></v-img>
-                  </v-avatar>
+              <v-avatar start v-if="person.image?.url" class="mr-1">
+                <v-img :src="person.image.url"></v-img>
+              </v-avatar>
 
-                  {{ person.firstName + " " + person.lastName }}
-                </v-chip>
-              </template>
-
-              <v-card width="300">
-                <v-list bg-color="black">
-                  <v-list-item>
-                    <template v-slot:prepend v-if="person.image?.url">
-                      <v-avatar :image="person.image.url"></v-avatar>
-                    </template>
-
-                    <v-list-item-title>{{
-                      person.firstName + " " + person.lastName
-                    }}</v-list-item-title>
-
-                    <v-list-item-subtitle>{{ person.email }}</v-list-item-subtitle>
-
-                    <template v-slot:append>
-                      <v-list-item-action>
-                        <v-btn icon variant="text" @click="menu = false">
-                          <v-icon>mdi-close-circle</v-icon>
-                        </v-btn>
-                      </v-list-item-action>
-                    </template>
-                  </v-list-item>
-                </v-list>
-
-                <v-list>
-                  <!-- DELETE -->
-                  <v-btn
-                    v-if="edit"
-                    outlined
-                    color="error"
-                    @click="removePersonFromOrganisation(person.email)"
-                    class="ml-2"
-                  >
-                    <v-icon left> {{ mdiDelete }} </v-icon>
-                    DELETE
-                  </v-btn>
-
-                  <v-btn
-                    outlined
-                    :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
-                    class="ml-2"
-                    @click="menu = false"
-                  >
-                    <v-icon left> {{ mdiClose }} </v-icon>
-                    Cancel
-                  </v-btn>
-                </v-list>
-              </v-card>
-            </v-menu>
+              {{ person.firstName + " " + person.lastName }}
+            </v-chip>
           </div>
 
           <!-- add a person -->
@@ -196,7 +143,6 @@
                 color="missionAccent"
                 v-model="personsEmail"
                 label="Person's email"
-                :rules="emailRules"
               ></v-text-field>
             </v-col>
             <v-col>
@@ -205,7 +151,7 @@
                 color="missionAccent"
                 @click="addPersonToOrganisation(personsEmail)"
                 class="mr-2"
-                :loading="loading"
+                :loading="addPersonLoading"
                 :disabled="!personsEmail"
               >
                 <v-icon left> {{ mdiPlus }} </v-icon>
@@ -338,6 +284,7 @@ export default {
     dialogTitle: "Create a new Organisation",
     dialogDescription: "An Organisation is typically a school, business or... an organisation",
     loading: false,
+    addPersonLoading: false,
     disabled: false,
     deleting: false,
     organisation: {
@@ -352,10 +299,6 @@ export default {
     uploadedImage: null,
     percentage: 0,
     personsEmail: null,
-    emailRules: [
-      (v) => !!v || "E-mail is required",
-      (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
-    ],
     menu: false,
   }),
   mounted() {
@@ -422,11 +365,16 @@ export default {
       this.organisation = {};
     },
     async addPersonToOrganisation(email) {
-      this.loading = true;
+      this.addPersonLoading = true;
 
       // get ref of person with this email
       const people = await db.collection("people").where("email", "==", email).get();
+      if (!people.docs[0]) {
+        this.addPersonLoading = false;
+        return;
+      }
       const person = people.docs[0];
+      console.log("added person:", person.data());
       const personRef = person.ref;
       console.log("personRef: ", personRef);
 
@@ -439,38 +387,41 @@ export default {
             people: firebase.firestore.FieldValue.arrayUnion(personRef),
           });
 
+        this.organisation.people.push(person.data());
         console.log("Person successfully added to organisation!");
-        this.loading = false;
-        this.dialog = false;
+        this.addPersonLoading = false;
       } catch (error) {
         console.error("Error writing document: ", error);
+        this.addPersonLoading = false;
       }
 
-      this.organisation = {};
+      this.personsEmail = null;
     },
     async removePersonFromOrganisation(email) {
       console.log("remove me");
-      // this.loading = true;
+      // get ref of person with this email
+      const people = await db.collection("people").where("email", "==", email).get();
+      const person = people.docs[0];
+      const personRef = person.ref;
 
-      // // get ref of person with this email
-      // const personRef = await db.collection("people").where("email", "==", email).get();
-      // console.log("personRef: ", personRef);
-
-      // // save person ref to organisation
-      // db.collection("organisations")
-      //   .doc(organisation.id)
-      //   .update({
-      //     people: firebase.firestore.FieldValue.arrayRemove(personRef),
-      //   })
-      //   .then((docRef) => {
-      //     console.log("Person successfully removed to organisation!");
-      //     this.loading = false;
-      //     this.dialog = false;
-      //   })
-      //   .catch((error) => {
-      //     console.error("Error writing document: ", error);
-      //   });
-      // this.personsEmail = {};
+      // save person ref to organisation
+      db.collection("organisations")
+        .doc(this.organisation.id)
+        .update({
+          people: firebase.firestore.FieldValue.arrayRemove(personRef),
+        })
+        .then((docRef) => {
+          // remove from this.organisation.people
+          const index = this.organisation.people.findIndex((person) => person.email === email);
+          this.organisation.people.splice(index, 1);
+          console.log("Person successfully removed to organisation!");
+          this.addPersonLoading = false;
+        })
+        .catch((error) => {
+          console.error("Error writing document: ", error);
+          this.addPersonLoading = false;
+        });
+      this.personsEmail = null;
     },
     storeImage() {
       this.disabled = true;

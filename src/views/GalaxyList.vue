@@ -19,7 +19,7 @@
         @createGalaxy="showDialog = true"
       />
       <div v-if="!loading && !validSlug">
-        <p>Sorry, destination not found</p>
+        <p class="overline missionAccent--text">Error. destination doesn't exist</p>
       </div>
     </div>
 

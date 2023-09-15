@@ -258,17 +258,22 @@ export default {
           this.proceed();
         }, 500);
       }
-      if (!this.user.data.verified) {
-        console.log("Login: proceeding =============== not verified");
-        var actionCodeSettings = {
-          // TODO: Update to galaxymaps.io on deployment
-          url: window.location.origin + "/login",
-          handleCodeInApp: true,
-        };
-        firebase.auth().currentUser.sendEmailVerification(actionCodeSettings);
-        this.loading = false;
-        throw new Error("Please check your emails to verify your account");
-      } else {
+      /* -----------------
+          VERIFICATION DISABLED for testing
+      -----------------------*/
+      // if (!this.user.data.verified) {
+      //   console.log("Login: proceeding =============== not verified");
+      //   var actionCodeSettings = {
+      //     // TODO: Update to galaxymaps.io on deployment
+      //     // url: "https://galaxymaps.io/login",
+      //     url: window.location.origin + "/login",
+      //     handleCodeInApp: true,
+      //   };
+      //   firebase.auth().currentUser.sendEmailVerification(actionCodeSettings);
+      //   this.loading = false;
+      //   throw new Error("Please check your emails to verify your account");
+      //}
+      else {
         console.log("Login: proceeding =============== else push '/'");
         this.$router.push("/");
       }

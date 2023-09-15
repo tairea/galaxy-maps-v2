@@ -590,7 +590,6 @@ export default defineStore({
         .collection("cohorts")
         .doc(cohort.id)
         .onSnapshot(async (doc) => {
-          console.log("cohort DB watcher triggered");
           const newCohort: Record<string, any> = {
             id: doc.id,
             ...doc.data(),
