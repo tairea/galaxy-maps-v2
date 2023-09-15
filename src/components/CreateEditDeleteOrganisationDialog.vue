@@ -115,72 +115,74 @@
           <p class="org-people-description">People in this Organisation</p>
 
           <!-- pills of the people in -->
-          <v-menu
-            v-model="menu"
-            location="top start"
-            origin="top start"
-            transition="scale-transition"
-            v-for="person in organisation.people"
-            :key="person.id"
-          >
-            <template v-slot:activator="{ props }">
-              <v-chip pill v-bind="props" link>
-                <v-avatar start v-if="person.image?.url">
-                  <v-img :src="person.image.url"></v-img>
-                </v-avatar>
+          <div class="people-in-org">
+            <v-menu
+              v-model="menu"
+              location="top start"
+              origin="top start"
+              transition="scale-transition"
+              v-for="person in organisation.people"
+              :key="person.id"
+            >
+              <template v-slot:activator="{ props }">
+                <v-chip pill v-bind="props" link>
+                  <v-avatar start v-if="person.image?.url" class="mr-1">
+                    <v-img :src="person.image.url"></v-img>
+                  </v-avatar>
 
-                {{ person.firstName + " " + person.lastName }}
-              </v-chip>
-            </template>
+                  {{ person.firstName + " " + person.lastName }}
+                </v-chip>
+              </template>
 
-            <v-card width="300">
-              <v-list bg-color="black">
-                <v-list-item>
-                  <template v-slot:prepend v-if="person.image?.url">
-                    <v-avatar :image="person.image.url"></v-avatar>
-                  </template>
+              <v-card width="300">
+                <v-list bg-color="black">
+                  <v-list-item>
+                    <template v-slot:prepend v-if="person.image?.url">
+                      <v-avatar :image="person.image.url"></v-avatar>
+                    </template>
 
-                  <v-list-item-title>{{
-                    person.firstName + " " + person.lastName
-                  }}</v-list-item-title>
+                    <v-list-item-title>{{
+                      person.firstName + " " + person.lastName
+                    }}</v-list-item-title>
 
-                  <v-list-item-subtitle>{{ person.email }}</v-list-item-subtitle>
+                    <v-list-item-subtitle>{{ person.email }}</v-list-item-subtitle>
 
-                  <template v-slot:append>
-                    <v-list-item-action>
-                      <v-btn icon variant="text" @click="menu = false">
-                        <v-icon>mdi-close-circle</v-icon>
-                      </v-btn>
-                    </v-list-item-action>
-                  </template>
-                </v-list-item>
-              </v-list>
+                    <template v-slot:append>
+                      <v-list-item-action>
+                        <v-btn icon variant="text" @click="menu = false">
+                          <v-icon>mdi-close-circle</v-icon>
+                        </v-btn>
+                      </v-list-item-action>
+                    </template>
+                  </v-list-item>
+                </v-list>
 
-              <v-list>
-                <!-- DELETE -->
-                <v-btn
-                  v-if="edit"
-                  outlined
-                  color="error"
-                  @click="removePersonFromOrganisation(person.email)"
-                  class="ml-2"
-                >
-                  <v-icon left> {{ mdiDelete }} </v-icon>
-                  DELETE
-                </v-btn>
+                <v-list>
+                  <!-- DELETE -->
+                  <v-btn
+                    v-if="edit"
+                    outlined
+                    color="error"
+                    @click="removePersonFromOrganisation(person.email)"
+                    class="ml-2"
+                  >
+                    <v-icon left> {{ mdiDelete }} </v-icon>
+                    DELETE
+                  </v-btn>
 
-                <v-btn
-                  outlined
-                  :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
-                  class="ml-2"
-                  @click="menu = false"
-                >
-                  <v-icon left> {{ mdiClose }} </v-icon>
-                  Cancel
-                </v-btn>
-              </v-list>
-            </v-card>
-          </v-menu>
+                  <v-btn
+                    outlined
+                    :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
+                    class="ml-2"
+                    @click="menu = false"
+                  >
+                    <v-icon left> {{ mdiClose }} </v-icon>
+                    Cancel
+                  </v-btn>
+                </v-list>
+              </v-card>
+            </v-menu>
+          </div>
 
           <!-- add a person -->
           <v-row>
@@ -648,13 +650,18 @@ export default {
     width: 100%;
     height: 300px;
     border-bottom: 1px solid var(--v-missionAccent-base);
+
     .org-people-description {
       color: var(--v-missionAccent-base);
       text-transform: uppercase;
       font-size: 0.7rem;
       margin: 0;
       font-style: italic;
-      padding: 20px;
+      padding: 20px 20px 10px 20px;
+    }
+    .people-in-org {
+      width: 100%;
+      padding: 0px 20px 20px 20px;
     }
   }
 
