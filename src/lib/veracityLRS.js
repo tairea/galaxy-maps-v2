@@ -1039,6 +1039,9 @@ export const getCohortsCourseDataXAPIQuery = async (payload) => {
   const personIdsArrToEmailsArr = [];
   for (const studentId of payload.studentsArr) {
     const studentSnapshot = await db.collection("people").doc(studentId).get();
+    if (!studentSnapshot.exists) {
+      continue;
+    }
     personIdsArrToEmailsArr.push("mailto:" + studentSnapshot.data().email);
   }
 
@@ -1118,6 +1121,9 @@ export const getStudentsTimeDataXAPIQuery = async (payload) => {
   const personIdsArrToEmailsArr = [];
   for (const studentId of payload.studentsArr) {
     const studentSnapshot = await db.collection("people").doc(studentId).get();
+    if (!studentSnapshot.exists) {
+      continue;
+    }
     personIdsArrToEmailsArr.push("mailto:" + studentSnapshot.data().email);
   }
 
