@@ -145,6 +145,7 @@ export default {
     isVerifyEmail: false,
     showEmailSignin: false,
     dialog: false,
+    hide: String,
   }),
   mounted() {
     // Get the email action to complete.
