@@ -148,6 +148,8 @@ export default {
             dataPoints.forEach((dataPoint, i) => {
               const colors = tooltip.labelColors[i];
 
+              console.log("dataPoint", dataPoint);
+
               // ===== Top Row (Task Context) =====
               divTopRow.innerHTML = `
               <table style="padding: 10px;">
@@ -162,21 +164,10 @@ export default {
                     font-style: italic;
                   "
                 >
-                  <td>${dataPoint.raw.type}:</td>
+                <td style="color:white;">${dataPoint.dataset.label}</td>
+
                 </tr>
-                <tr
-                  class="dialog-context-description"
-                  style="
-                    color: var(--v-baseAccent-base);
-                    text-transform: uppercase;
-                    font-size: 0.8rem;
-                    font-weight: 800;
-                    margin: 0;
-                    font-style: italic;
-                  "
-                >
-                   <td>${dataPoint.raw.title}</td>
-                </tr>
+               
               </table>
             `;
               divTopRow.style.borderBottom = `1px solid ${
@@ -188,11 +179,44 @@ export default {
 
               // ===== Middle Row (Task Status) =====
               divMiddleRow.style.textAlign = "center";
-              divMiddleRow.classList.add("text-overline");
-              divMiddleRow.innerHTML = dataPoint.raw.status.toUpperCase();
+              // divMiddleRow.classList.add("text-overline");
+              divMiddleRow.classList.add("missionAccent--text");
+              divMiddleRow.innerHTML = `
+              <tr
+                  style="
+                  class="dialog-context-description"
+                    color: var(--v-baseAccent-base);
+                    text-transform: uppercase;
+                    font-size: 0.6rem;
+                    font-weight: 600;
+                    margin: 0;
+                    font-style: italic;
+                  "
+                >
+                   <td  "> ${dataPoint.raw.status.toUpperCase()}:</td>
+               
+                </tr>
+              <tr
+                 
+                  style="
+                    color: var(--v-baseAccent-base);
+                    text-transform: uppercase;
+                    font-size: 0.6rem;
+                    font-weight: 600;
+                    margin: 0;
+                    font-style: italic;
+                  "
+                >
+                   <td><p style="font-style: italic;color:white;font-weight: 400;">${
+                     dataPoint.raw.title
+                   }</p></td>
+                </tr>
+             
+
+              `;
               divMiddleRow.style.padding = "5px";
-              divMiddleRow.style.fontSize = "0.9rem";
-              divMiddleRow.style.fontWeight = "800";
+              divMiddleRow.style.fontSize = "0.8rem";
+              divMiddleRow.style.fontWeight = "600";
               switch (dataPoint.raw.taskStatus) {
                 case "inreview":
                   divMiddleRow.style.color = this.dark
