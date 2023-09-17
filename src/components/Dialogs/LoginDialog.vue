@@ -77,6 +77,9 @@
             color="baseAccent"
             outlined
             class="custom-input"
+            :append-icon="hide ? mdiEye : mdiEyeOff"
+            @click:append="() => (hide = !hide)"
+            :type="hide ? 'password' : 'text'"
           ></v-text-field>
           <v-btn
             :disabled="!valid"
@@ -109,9 +112,10 @@ import EmailSignIn from "@/components/EmailSignIn.vue";
 import useRootStore from "@/store/index";
 import firebase from "firebase/compat/app";
 import { mapActions, mapState } from "pinia";
+import { mdiEye, mdiEyeOff } from "@mdi/js";
 
 export default {
-  name: "Login",
+  name: "LoginDialog",
   props: ["showDialog", "buttonMsg"],
   components: {
     NewPassword,
@@ -125,6 +129,8 @@ export default {
     },
   },
   data: () => ({
+    mdiEye,
+    mdiEyeOff,
     valid: true,
     email: "",
     password: "",

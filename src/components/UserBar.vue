@@ -52,7 +52,7 @@
         </div>
         <div v-if="!miniNavMenu || hover" class="username mx-4" style="">
           <p class="ma-0">{{ person.firstName }} {{ person.lastName }}</p>
-          <span style="font-size: 0.8rem; color: #777">ID: {{ person.id }}</span>
+          <!-- <span style="font-size: 0.8rem; color: #777">ID: {{ person.id }}</span> -->
         </div>
       </div>
       <!-- USER MENU HIDDEN-->
@@ -106,11 +106,11 @@
             :light="!dark"
           >
             <v-icon class="pr-2">{{ mdiSend }}</v-icon>
-            Give us Feedback
+            Feedback & Bugs
           </v-btn>
 
           <!-- Discord button -->
-          <v-btn
+          <!-- <v-btn
             href="https://discord.gg/vYSCTbtFK"
             target="_blank"
             color="indigo lighten-1"
@@ -121,10 +121,10 @@
           >
             <v-icon class="pr-2">{{ mdiMessage }}</v-icon>
             Chat on Discord
-          </v-btn>
+          </v-btn> -->
 
           <!-- Github button -->
-          <v-btn
+          <!-- <v-btn
             href="https://github.com/tairea/galaxy-maps-v2"
             target="_blank"
             color="blue-grey lighten-3"
@@ -135,7 +135,7 @@
           >
             <v-icon class="pr-2">{{ mdiGithub }}</v-icon>
             Help code this
-          </v-btn>
+          </v-btn> -->
 
           <!-- Logout button -->
           <v-btn
