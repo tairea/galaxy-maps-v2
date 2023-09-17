@@ -148,20 +148,18 @@ export default {
             dataPoints.forEach((dataPoint, i) => {
               const colors = tooltip.labelColors[i];
 
-              console.log("dataPoint", dataPoint);
-
               // ===== Top Row (Task Context) =====
               divTopRow.innerHTML = `
-              <table style="padding: 10px;">
+              <table style="padding: 10px;width: 100%;">
                 <tr
-                  class="dialog-context-description"
+             
                   style="
-                    color: var(--v-missionAccent-base);
+                    text-align: center;
                     text-transform: uppercase;
                     font-size: 0.8rem;
                     font-weight: 800;
                     margin: 0;
-                    font-style: italic;
+                   
                   "
                 >
                 <td style="color:white;">${dataPoint.dataset.label}</td>
@@ -176,59 +174,54 @@ export default {
                   : this.$vuetify.theme.themes.light.missionAccent
               }`;
               divTopRow.style.textAlign = "center";
+              divTopRow.style.paddingTop = "15px";
+              divTopRow.style.paddingBottom = "5px";
 
               // ===== Middle Row (Task Status) =====
               divMiddleRow.style.textAlign = "center";
               // divMiddleRow.classList.add("text-overline");
               divMiddleRow.classList.add("missionAccent--text");
-              divMiddleRow.innerHTML = `
-              <tr
-                  style="
-                  class="dialog-context-description"
-                    color: var(--v-baseAccent-base);
-                    text-transform: uppercase;
-                    font-size: 0.6rem;
-                    font-weight: 600;
-                    margin: 0;
-                    font-style: italic;
-                  "
-                >
-                   <td  "> ${dataPoint.raw.status.toUpperCase()}:</td>
-               
-                </tr>
-              <tr
-                 
-                  style="
-                    color: var(--v-baseAccent-base);
-                    text-transform: uppercase;
-                    font-size: 0.6rem;
-                    font-weight: 600;
-                    margin: 0;
-                    font-style: italic;
-                  "
-                >
-                   <td><p style="font-style: italic;color:white;font-weight: 400;">${
-                     dataPoint.raw.title
-                   }</p></td>
-                </tr>
-             
 
+              if (dataPoint.raw.status == "Completed") {
+                divMiddleRow.innerHTML = `
+              <tr>
+                <td><p style=" color: var(--v-baseAccent-base);margin:0;"> ${dataPoint.raw.status.toUpperCase()}:</p></td>
+              </tr>
+              <tr>
+                <td><p style="font-style: italic;color:white;font-weight: 400;">${
+                  dataPoint.raw.title
+                }</p></td>
+              </tr>
+                `;
+              } else {
+                divMiddleRow.innerHTML = `
+                <tr>
+                  <td  "> ${dataPoint.raw.status.toUpperCase()}:</td>
+                </tr>
+                <tr>
+                  <td><p style="font-style: italic;color:white;font-weight: 400;">${
+                    dataPoint.raw.title
+                  }</p>
+                  </td>
+                </tr>
               `;
+              }
               divMiddleRow.style.padding = "5px";
+              divMiddleRow.style.paddingTop = "10px";
               divMiddleRow.style.fontSize = "0.8rem";
               divMiddleRow.style.fontWeight = "600";
-              switch (dataPoint.raw.taskStatus) {
-                case "inreview":
+              switch (dataPoint.raw.status) {
+                case "Inreview":
                   divMiddleRow.style.color = this.dark
                     ? this.$vuetify.theme.themes.dark.cohortAccent
                     : this.$vuetify.theme.themes.light.cohortAccent;
                   break;
-                case "completed":
+                case "Completed":
                   divMiddleRow.style.color = this.dark
                     ? this.$vuetify.theme.themes.dark.baseAccent
                     : this.$vuetify.theme.themes.light.baseAccent;
                   break;
-                case "started":
+                case "Started":
                   divMiddleRow.style.color = this.dark
                     ? this.$vuetify.theme.themes.dark.missionAccent
                     : this.$vuetify.theme.themes.light.missionAccent;
