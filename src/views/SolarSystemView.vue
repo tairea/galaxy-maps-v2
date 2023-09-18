@@ -1,9 +1,9 @@
 <template>
-  <div id="container" class="bg">
+  <div v-if="!loading" id="container" class="bg">
     <!--==== Left section ====-->
     <div id="left-section">
       <SolarSystemInfo
-        :topic="currentTopic"
+        :topic="getTopicById(currentTopicId)"
         :tasks="teacher ? topicsTasks : personsTopicsTasks"
         :teacher="teacher"
       />
@@ -40,12 +40,12 @@
     <!--==== Right section ====-->
     <div id="right-section">
       <RequestForHelpTeacherFrame
-        :courses="[currentCourse]"
+        :courses="[getCourseById(currentCourseId)]"
         :isTeacher="teacher"
         :students="peopleInTopic"
       />
       <SubmissionTeacherFrame
-        :courses="[currentCourse]"
+        :courses="[getCourseById(currentCourseId)]"
         :isTeacher="teacher"
         :students="teacher ? peopleInTopic : [person]"
         class="mt-4"
@@ -79,16 +79,22 @@ export default {
     RequestForHelpTeacherFrame,
     SubmissionTeacherFrame,
   },
-  props: ["topicId"],
+  props: ["courseId", "topicId"],
   data() {
     return {
       activeMission: null,
       task: null,
       unsubscribes: [],
       peopleInTopic: [],
+      loading: true,
     };
   },
   async mounted() {
+    await this.bindCourses({ owner: null });
+    await this.bindCourseTopics(this.courseId);
+    this.setCurrentCourseId(this.courseId);
+    this.setCurrentTopicId(this.topicId);
+
     this.getPeopleInTopic();
     if (this.teacher) {
       //store bindTasksByTopicId
@@ -114,6 +120,8 @@ export default {
     // this.requests = this.requestsForHelp.filter(
     //   (request) => request.contextTask.id == this.currentTaskId
     // );
+
+    this.loading = false;
   },
   watch: {
     personsCurrentTopic() {
@@ -125,8 +133,6 @@ export default {
       "currentCourseId",
       "currentTopicId",
       "currentTaskId",
-      "currentCourse",
-      "currentTopic",
       "currentTask",
       "topicsTasks",
       "personsTopicsTasks",
@@ -134,15 +140,19 @@ export default {
       "peopleInCourse",
       "person",
       "getPersonsTopicById",
+      "getCourseById",
       "getTopicById",
       "getTasksByTopicId",
       "user",
     ]),
     draft() {
-      return this.currentCourse.status === "drafting";
+      return this.getCourseById(this.currentCourseId).status === "drafting";
     },
     teacher() {
-      return this.currentCourse?.mappedBy?.personId === this.person.id || this.user.data.admin;
+      return (
+        this.getCourseById(this.currentCourseId)?.mappedBy?.personId === this.person.id ||
+        this.user.data.admin
+      );
     },
     personsCurrentTopic() {
       return this.personsTopics.find((topic) => topic.id == this.currentTopicId);
@@ -150,8 +160,12 @@ export default {
   },
   methods: {
     ...mapActions(useRootStore, [
+      "bindCourses",
+      "bindCourseTopics",
       "bindPersonsTasksByTopicId",
       "bindTasksByTopicId",
+      "setCurrentCourseId",
+      "setCurrentTopicId",
       "setCurrentTask",
       "setCurrentTaskId",
     ]),
@@ -179,8 +193,8 @@ export default {
       this.peopleInCourse.forEach(async (person) => {
         let personsTopic = await getPersonsTopicById(
           person.id,
-          this.currentCourse.id,
-          this.currentTopic.id,
+          this.getCourseById(this.currentCourseId).id,
+          this.getTopicById(this.currentTopicId).id,
         );
         if (personsTopic.topicStatus == "active") people.push(person);
       });

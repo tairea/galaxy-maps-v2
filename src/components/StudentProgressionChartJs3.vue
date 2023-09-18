@@ -262,7 +262,7 @@ export default {
             if (!task.x) return;
             taskCount++;
             return {
-              x: new DateTime.fromSeconds(task.x.seconds),
+              x: DateTime.fromSeconds(task.x.seconds),
               y: task.y,
               topic: topic.topicTitle,
               taskStatus: task.taskStatus,

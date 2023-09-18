@@ -186,6 +186,7 @@ export default {
       this.$router.push({
         name: "SolarSystemView",
         params: {
+          courseId: this.currentCourseId,
           topicId: this.currentTopic.id,
           teacher: this.teacher,
         },

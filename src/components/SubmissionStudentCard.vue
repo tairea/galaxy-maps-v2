@@ -134,7 +134,7 @@ export default {
       this.responder = await this.MXgetPersonByIdFromDB(this.work.responderPersonId);
     },
     humanDate(timestamp) {
-      return new DateTime.fromSeconds(timestamp.seconds).toFormat("ccc dd LLL t");
+      return DateTime.fromSeconds(timestamp.seconds).toFormat("ccc dd LLL t");
     },
   },
 };

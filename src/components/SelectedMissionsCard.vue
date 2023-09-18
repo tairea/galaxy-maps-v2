@@ -66,7 +66,7 @@ export default {
   },
   methods: {
     humanDate(timestamp) {
-      return new DateTime.fromSeconds(timestamp.seconds).toFormat("ccc dd LLL t");
+      return DateTime.fromSeconds(timestamp.seconds).toFormat("ccc dd LLL t");
     },
   },
 };
