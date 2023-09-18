@@ -23,7 +23,7 @@
       <v-col cols="4" class="pa-0">
         <div class="top-row">
           <p class="label">ACTIVE MISSION:</p>
-          <ActiveMissions :data="data.activities" />
+          <ActiveMissions :courseId="data.course.id" :data="data.activities" />
         </div>
         <div class="bottom-row my-3">
           <p class="label">COURSE PROGRESSION:</p>

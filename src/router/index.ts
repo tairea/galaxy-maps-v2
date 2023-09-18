@@ -94,7 +94,7 @@ const routes = [
         props: true,
       },
       {
-        path: "system/:topicId",
+        path: "galaxy/:courseId/system/:topicId",
         name: "SolarSystemView",
         component: SolarSystemView,
         meta: {

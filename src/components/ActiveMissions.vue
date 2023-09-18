@@ -28,7 +28,7 @@ import { mapActions } from "pinia";
 
 export default {
   name: "ActiveMissions",
-  props: ["data"],
+  props: ["courseId", "data"],
   components: {},
   data() {
     return {};
@@ -64,6 +64,7 @@ export default {
       this.$router.push({
         name: "SolarSystemView",
         params: {
+          courseId: this.courseId,
           topicId: this.activeTopic.id,
         },
       });

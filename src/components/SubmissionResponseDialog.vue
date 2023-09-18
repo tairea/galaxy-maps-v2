@@ -186,11 +186,12 @@ export default {
     getHumanDate(ts) {
       return moment(ts.seconds * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
     },
-    declineSubmission() {
+    async declineSubmission() {
       console.log("declining submission: ", this.submission);
       this.loading = true;
       // Add response to request for help
-      db.collection("courses")
+      await db
+        .collection("courses")
         .doc(this.submission.contextCourse.id)
         .collection("submissionsForReview")
         .doc(this.submission.id)
@@ -202,51 +203,52 @@ export default {
         });
 
       // update students task status
-      db.collection("people")
-        .doc(this.submission.studentId)
-        .collection(this.submission.contextCourse.id)
-        .doc(this.submission.contextTopic.id)
-        .collection("tasks")
-        .doc(this.submission.contextTask.id)
-        .update({
-          responseMessage: this.response,
-          taskStatus: "declined",
-          submissionDeclinedTimestamp: new Date(),
-          responderPersonId: this.person.id,
-        })
-        .then(() => {
-          console.log("Submitted work declined. It did not meet the mission requirements");
-
-          // teacher assissted student
-          teacherRespondedSubmissionDeclinedXAPIStatement(
-            this.person,
-            this.submission.contextTask.id,
-            {
-              student: this.requesterPerson,
-              galaxy: this.submission.contextCourse,
-              system: this.submission.contextTopic,
-              mission: this.submission.contextTask,
-            },
-          );
-          this.loading = false;
-          this.dialog = false;
-          this.setSnackbar({
-            show: true,
-            text: "Students submitted work declined.Feedback sent to student",
-            color: "baseAccent",
+      try {
+        await db
+          .collection("people")
+          .doc(this.submission.studentId)
+          .collection(this.submission.contextCourse.id)
+          .doc(this.submission.contextTopic.id)
+          .collection("tasks")
+          .doc(this.submission.contextTask.id)
+          .update({
+            responseMessage: this.response,
+            taskStatus: "declined",
+            submissionDeclinedTimestamp: new Date(),
+            responderPersonId: this.person.id,
           });
-          // this.MXbindRequestsForHelp();
 
-          // TODO: update requests. (to remove answered requests)
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
-          this.setSnackbar({
-            show: true,
-            text: "Error: " + error,
-            color: "pink",
-          });
+        console.log("Submitted work declined. It did not meet the mission requirements");
+
+        // teacher assissted student
+        await teacherRespondedSubmissionDeclinedXAPIStatement(
+          this.person,
+          this.submission.contextTask.id,
+          {
+            student: this.requesterPerson,
+            galaxy: this.submission.contextCourse,
+            system: this.submission.contextTopic,
+            mission: this.submission.contextTask,
+          },
+        );
+        this.loading = false;
+        this.dialog = false;
+        this.setSnackbar({
+          show: true,
+          text: "Students submitted work declined.Feedback sent to student",
+          color: "baseAccent",
         });
+        // this.MXbindRequestsForHelp();
+
+        // TODO: update requests. (to remove answered requests)
+      } catch (error) {
+        console.error("Error writing document: ", error);
+        this.setSnackbar({
+          show: true,
+          text: "Error: " + error,
+          color: "pink",
+        });
+      }
     },
     cancel() {
       this.loading = false;

@@ -586,13 +586,12 @@ export default {
         .where("prerequisites", "array-contains", this.currentTopic.id)
         .get();
 
-      const docs = querySnapshot.docs();
-
-      for (const doc of docs) {
+      for (const doc of querySnapshot.docs) {
+        const data = doc.data();
         // if has more than one prereq
-        if (doc.data().prerequisites.length > 1) {
+        if (data.prerequisites.length > 1) {
           console.log("next topic has more than one prerequisite... checking if completed...");
-          let prereqsArr = doc.data().prerequisites;
+          let prereqsArr = data.prerequisites;
           // minus this completed topic
           prereqsArr = prereqsArr.filter((e) => e !== this.currentTopic.id);
           console.log("prereqs after current one removed:", prereqsArr);
@@ -610,7 +609,7 @@ export default {
           // check if preqCounts match. if so, unlock topic
           if (prereqsCompletedCount == prereqsToCompleteCount) {
             await doc.ref.update({ topicStatus: "unlocked" });
-            console.log("NEW TOPIC UNLOCKED: " + doc.data().label);
+            console.log("NEW TOPIC UNLOCKED: " + data.label);
           } else {
             console.log("other prereqs of next topic not completed. next topic not unlocked.");
           }
@@ -619,7 +618,7 @@ export default {
             topicStatus: "unlocked", // change status to unlocked
           });
           // route back to map
-          console.log("NEW TOPIC UNLOCKED: " + doc.data().label);
+          console.log("NEW TOPIC UNLOCKED: " + data.label);
           // this.$router.push({
           //   name: "GalaxyView",
           //   params: {

@@ -266,11 +266,12 @@ export default {
       if (!ts) return;
       return moment(ts.seconds * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
     },
-    markSubmissionAsCompleted() {
+    async markSubmissionAsCompleted() {
       this.loading = true;
 
       // 1) update submission to completed
-      db.collection("courses")
+      await db
+        .collection("courses")
         .doc(this.submission.contextCourse.id)
         .collection("submissionsForReview")
         .doc(this.submission.id)
@@ -284,7 +285,8 @@ export default {
         });
 
       // 2) update the task status to complete
-      db.collection("people")
+      await db
+        .collection("people")
         .doc(this.submission.studentId)
         .collection(this.submission.contextCourse.id)
         .doc(this.submission.contextTopic.id)
@@ -295,51 +297,46 @@ export default {
           teacherId: this.person.id,
           taskStatus: "completed",
           taskReviewedAndCompletedTimestamp: new Date(),
-        })
-        .then(() => {
-          this.sendResponseToSubmission("completed");
-        })
-        .then(() => {
-          console.log("Task successfully updated as completed!");
-
-          // send xAPI statement to LRS
-          // student completed work
-          studentWorkMarkedCompletedXAPIStatement(
-            this.requesterPerson,
-            this.submission.contextTask.id,
-            {
-              galaxy: this.submission.contextCourse,
-              system: this.submission.contextTopic,
-              mission: this.submission.contextTask,
-            },
-          );
-          // teacher reviewed work
-          teacherReviewedStudentWorkXAPIStatement(this.person, this.submission.contextTask.id, {
-            student: this.requesterPerson,
-            galaxy: this.submission.contextCourse,
-            system: this.submission.contextTopic,
-            mission: this.submission.contextTask,
-          });
-
-          this.close();
-
-          this.setSnackbar({
-            show: true,
-            text: "Student's Mission now marked as completed",
-            color: "baseAccent",
-          });
-
-          // unlock next task
-          this.unlockNextTask();
-
-          // check if all tasks/missions are completed
-          this.checkIfAllTasksCompleted();
-
-          // TODO: perhaps only unlock once teacher has reviewed and marked complete. SOLUTION: leave as is. can progress to next task, but cant progress to next topic until all work is reviewed.
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
         });
+
+      await this.sendResponseToSubmission("completed");
+
+      console.log("Task successfully updated as completed!");
+
+      // send xAPI statement to LRS
+      // student completed work
+      await studentWorkMarkedCompletedXAPIStatement(
+        this.requesterPerson,
+        this.submission.contextTask.id,
+        {
+          galaxy: this.submission.contextCourse,
+          system: this.submission.contextTopic,
+          mission: this.submission.contextTask,
+        },
+      );
+      // teacher reviewed work
+      await teacherReviewedStudentWorkXAPIStatement(this.person, this.submission.contextTask.id, {
+        student: this.requesterPerson,
+        galaxy: this.submission.contextCourse,
+        system: this.submission.contextTopic,
+        mission: this.submission.contextTask,
+      });
+
+      this.close();
+
+      this.setSnackbar({
+        show: true,
+        text: "Student's Mission now marked as completed",
+        color: "baseAccent",
+      });
+
+      // unlock next task
+      await this.unlockNextTask();
+
+      // check if all tasks/missions are completed
+      await this.checkIfAllTasksCompleted();
+
+      // TODO: perhaps only unlock once teacher has reviewed and marked complete. SOLUTION: leave as is. can progress to next task, but cant progress to next topic until all work is reviewed.
     },
     async unlockNextTask() {
       console.log("unlocking next task...");
@@ -357,7 +354,7 @@ export default {
       // 2) loops the tasks. the first task to have taskStatus locked, update to unlocked, then return to exit loop
       for (const [index, task] of currentTasks.docs.entries()) {
         if (task.data().taskStatus == "locked") {
-          task.ref.update({ taskStatus: "unlocked" });
+          await task.ref.update({ taskStatus: "unlocked" });
           console.log("NEW TASK UNLOCKED (" + index + ") : " + task.data().title);
           return;
         }
@@ -385,7 +382,7 @@ export default {
           color: "baseAccent",
         });
 
-        this.unlockNextTopics();
+        await this.unlockNextTopics();
       } else {
         console.log("topic not yet completed...");
         console.log("total tasks = ", this.personsTopicsTasks.length);
@@ -407,36 +404,35 @@ export default {
         );
       }
     },
-    unlockNextTopics() {
+    async unlockNextTopics() {
       // ==== all tasks/missions completed. unlock next topics ====
-      db.collection("people")
+      const querySnapshot = await db
+        .collection("people")
         .doc(this.submission.studentId)
         .collection(this.submission.contextCourse.id)
         .where("prerequisites", "array-contains", this.submission.contextTopic.id)
-        .get()
-        .then((querySnapshot) => {
-          querySnapshot.forEach((doc) => {
-            doc.ref
-              .update({
-                topicStatus: "unlocked", // change status to unlocked
-              })
-              // route back to map
-              .then(() => {
-                // message telling teacher whats happend
-                this.setSnackbar({
-                  show: true,
-                  text:
-                    "NEW TOPIC: " +
-                    doc.data().label +
-                    " UNLOCKED FOR: " +
-                    this.requesterPerson.firstName +
-                    " " +
-                    this.requesterPerson.lastName,
-                  color: "baseAccent",
-                });
-              });
-          });
+        .get();
+
+      const docs = querySnapshot.docs;
+
+      for (const doc of docs) {
+        await doc.ref.update({
+          topicStatus: "unlocked", // change status to unlocked
         });
+
+        // message telling teacher whats happend
+        this.setSnackbar({
+          show: true,
+          text:
+            "NEW TOPIC: " +
+            doc.data().label +
+            " UNLOCKED FOR: " +
+            this.requesterPerson.firstName +
+            " " +
+            this.requesterPerson.lastName,
+          color: "baseAccent",
+        });
+      }
     },
     sendResponseToSubmission(outcome) {
       const data = {
@@ -454,69 +450,71 @@ export default {
       const sendResponseToSubmission = functions.httpsCallable("sendResponseToSubmission");
       return sendResponseToSubmission(data);
     },
-    declineSubmission() {
+    async declineSubmission() {
       this.loading = true;
-      // Add response to request for help
-      db.collection("courses")
-        .doc(this.submission.contextCourse.id)
-        .collection("submissionsForReview")
-        .doc(this.submission.id)
-        .update({
-          responseMessage: this.responseMsg,
-          taskSubmissionStatus: "declined",
-          responseSubmittedTimestamp: new Date(),
-          responderPersonId: this.person.id,
-        })
-        .then(() => {
-          // update students task status
-          db.collection("people")
-            .doc(this.submission.studentId)
-            .collection(this.submission.contextCourse.id)
-            .doc(this.submission.contextTopic.id)
-            .collection("tasks")
-            .doc(this.submission.contextTask.id)
-            .update({
-              responseMessage: this.responseMsg,
-              taskStatus: "declined",
-              submissionDeclinedTimestamp: new Date(),
-              responderPersonId: this.person.id,
-            });
-        })
-        .then(() => {
-          this.sendResponseToSubmission("declined");
-        })
-        .then(() => {
-          console.log("Submitted work declined. It did not meet the mission requirements");
 
-          // teacher assissted student
-          teacherRespondedSubmissionDeclinedXAPIStatement(
-            this.person,
-            this.submission.contextTask.id,
-            {
-              student: this.requesterPerson,
-              galaxy: this.submission.contextCourse,
-              system: this.submission.contextTopic,
-              mission: this.submission.contextTask,
-            },
-          );
-          this.close();
-          this.setSnackbar({
-            show: true,
-            text: "Students submitted work declined.Feedback sent to student",
-            color: "baseAccent",
+      try {
+        // Add response to request for help
+        await db
+          .collection("courses")
+          .doc(this.submission.contextCourse.id)
+          .collection("submissionsForReview")
+          .doc(this.submission.id)
+          .update({
+            responseMessage: this.responseMsg,
+            taskSubmissionStatus: "declined",
+            responseSubmittedTimestamp: new Date(),
+            responderPersonId: this.person.id,
           });
-          // this.MXbindRequestsForHelp();
 
-          // TODO: update requests. (to remove answered requests)
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
-          this.setSnackbar({
-            show: true,
-            text: "Error: " + error,
-            color: "pink",
+        // update students task status
+        await db
+          .collection("people")
+          .doc(this.submission.studentId)
+          .collection(this.submission.contextCourse.id)
+          .doc(this.submission.contextTopic.id)
+          .collection("tasks")
+          .doc(this.submission.contextTask.id)
+          .update({
+            responseMessage: this.responseMsg,
+            taskStatus: "declined",
+            submissionDeclinedTimestamp: new Date(),
+            responderPersonId: this.person.id,
           });
+
+        await this.sendResponseToSubmission("declined");
+
+        console.log("Submitted work declined. It did not meet the mission requirements");
+
+        // teacher assissted student
+        await teacherRespondedSubmissionDeclinedXAPIStatement(
+          this.person,
+          this.submission.contextTask.id,
+          {
+            student: this.requesterPerson,
+            galaxy: this.submission.contextCourse,
+            system: this.submission.contextTopic,
+            mission: this.submission.contextTask,
+          },
+        );
+        this.close();
+        this.setSnackbar({
+          show: true,
+          text: "Students submitted work declined.Feedback sent to student",
+          color: "baseAccent",
         });
+        // this.MXbindRequestsForHelp();
+
+        // TODO: update requests. (to remove answered requests)
+      } catch (error) {
+        this.setSnackbar({
+          show: true,
+          text: "Error: " + error,
+          color: "pink",
+        });
+
+        throw error;
+      }
     },
     close() {
       this.loading = false;
