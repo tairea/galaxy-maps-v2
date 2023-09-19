@@ -76,11 +76,14 @@
                       <p class="ma-0" style="font-size: 0.6rem">Instructor</p>
                     </div>
                   </div>
-                  <v-row class="d-flex align-center speech-bubble">
+                  <v-row 
+                    class="d-flex align-center speech-bubble"
+                  >
                     <p
                       v-html="task.submissionInstructions"
                       class="submission-dialog-description ma-0"
-                    ></p>
+                      style="color: var(--v-cohortAccent-base)"
+                      ></p>
                     <!-- <p class="submission-dialog-description ma-0">
                         {{
                           task.submissionInstructions
@@ -107,6 +110,7 @@
                     :editor-toolbar="customToolbar"
                     @focus="quillFocused = true"
                     @blur="quillFocused = false"
+                    style="color: var(--v-cohortAccent-base)"
                   />
                 </div>
               </div>
@@ -293,8 +297,11 @@ export default {
       "currentCohort",
       "courseSubmissions",
       "personsTopics",
-      "person",
+      "person"
     ]),
+    dark() {
+      return this.$vuetify.theme.isDark;    
+    },
     submission() {
       const submissions = this.courseSubmissions.filter(
         (submission) => submission.studentId == this.person.id,
