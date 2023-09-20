@@ -78,6 +78,7 @@
                   :editor-toolbar="customToolbar"
                   @focus="quillFocused = true"
                   @blur="quillFocused = false"
+                  style="color: var(--v-cohortAccent-base)"
                 />
               </div>
 
@@ -194,6 +195,7 @@
                   :editor-toolbar="customToolbar"
                   @focus="submissionQuillFocused = true"
                   @blur="submissionQuillFocused = false"
+                  style="color: var(--v-cohortAccent-base)"
                 />
                 <!-- <v-textarea
                   v-model="task.submissionInstructions"
