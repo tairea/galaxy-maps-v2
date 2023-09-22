@@ -63,8 +63,8 @@
           <span class="mt-2">{{ course.mappedBy.name }}</span>
         </div>
       </div>
-      <!-- OWNED BY -->
-      <div v-if="courseOwner" class="mapped-details right">
+      <!-- OWNED BY (not sure how this should work yet) -->
+      <!-- <div v-if="courseOwner" class="mapped-details right">
         <p class="info-panel-label mb-1">
           <span class="mappedByTitle">OWNED BY</span>
         </p>
@@ -76,11 +76,10 @@
             :colourBorder="true"
           />
           <Avatar v-else :profile="courseOwner" :size="50" :colourBorder="true" />
-          <!-- <p class="ma-0">Mapped By:</p> -->
           <span v-if="isCourseOwnerOrganisation" class="mt-2">{{ courseOwner.name }}</span>
           <span v-else class="mt-2">{{ courseOwner.firstName + " " + courseOwner.lastName }}</span>
         </div>
-      </div>
+      </div> -->
     </div>
 
     <div>

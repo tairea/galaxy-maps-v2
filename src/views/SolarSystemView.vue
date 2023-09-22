@@ -22,18 +22,34 @@
         :people="peopleInTopic"
       />
 
+      <!-- Order change button -->
+      <div class="save-changes mt-4">
+        <v-btn
+          v-if="orderChanged"
+          outlined
+          color="baseAccent"
+          @click="saveNewMissionOrder"
+          :loading="savingNewMissionOrder"
+        >
+          <v-icon left> {{ mdiContentSave }} </v-icon>
+          SAVE CHANGES
+        </v-btn>
+      </div>
+
       <BackButton :toPath="'/galaxy/' + currentCourseId" />
     </div>
 
     <!--==== Main section ====-->
     <div id="main-section">
       <MissionsList
-        :tasks="teacher ? topicsTasks : personsTopicsTasks"
+        :tasks="teacher ? sortedTopicsTasks : sortedPersonsTopicsTasks"
         :topicId="currentTopicId"
         :teacher="teacher"
+        :disableCreateMission="orderChanged"
         @task="taskForHelpInfo($event)"
         @missionActivated="peopleInTopic.push(person)"
         @topicCompleted="getPeopleInTopic"
+        @orderChanged="missionOrderChanged"
       />
     </div>
 
@@ -66,6 +82,8 @@ import RequestForHelpTeacherFrame from "@/components/RequestForHelpTeacherFrame.
 import { getPersonsTopicById } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
+import { mdiContentSave } from "@mdi/js";
+import { db } from "@/store/firestoreConfig";
 
 export default {
   name: "SolarSystemView",
@@ -82,11 +100,16 @@ export default {
   props: ["courseId", "topicId"],
   data() {
     return {
+      mdiContentSave,
       activeMission: null,
       task: null,
       unsubscribes: [],
       peopleInTopic: [],
       loading: true,
+      orderChanged: false,
+      newMissionOrder: [],
+      savingNewMissionOrder: false,
+      updateViaKey: 0,
     };
   },
   async mounted() {
@@ -94,8 +117,8 @@ export default {
     await this.bindCourseTopics(this.courseId);
     this.setCurrentCourseId(this.courseId);
     this.setCurrentTopicId(this.topicId);
-
     this.getPeopleInTopic();
+
     if (this.teacher) {
       //store bindTasksByTopicId
       await this.bindTasksByTopicId({
@@ -157,6 +180,26 @@ export default {
     personsCurrentTopic() {
       return this.personsTopics.find((topic) => topic.id == this.currentTopicId);
     },
+    sortedTopicsTasks() {
+      if (this.topicsTasks.some((task) => task.orderIndex != null)) {
+        console.log("tasks have orderIndex, sorting by orderIndex");
+        return this.topicsTasks.sort((a, b) => a.orderIndex - b.orderIndex);
+      } else {
+        console.log("tasks do not have orderIndex, sorting by timestamp:");
+        return this.topicsTasks.sort((a, b) => a.taskCreatedTimestamp - b.taskCreatedTimestamp);
+      }
+    },
+    sortedPersonsTopicsTasks() {
+      if (this.personsTopicsTasks.some((task) => task.orderIndex != null)) {
+        console.log("tasks have orderIndex, sorting by orderIndex");
+        return this.personsTopicsTasks.sort((a, b) => a.orderIndex - b.orderIndex);
+      } else {
+        console.log("tasks do not have orderIndex, sorting by timestamp");
+        return this.personsTopicsTasks.sort(
+          (a, b) => a.taskCreatedTimestamp - b.taskCreatedTimestamp,
+        );
+      }
+    },
   },
   methods: {
     ...mapActions(useRootStore, [
@@ -168,6 +211,7 @@ export default {
       "setCurrentTopicId",
       "setCurrentTask",
       "setCurrentTaskId",
+      "updateTopicTasks",
     ]),
     taskForHelpInfo(task) {
       this.task = task;
@@ -188,7 +232,6 @@ export default {
       return activeMissionObj;
     },
     async getPeopleInTopic() {
-      console.log("4, getting people in topic");
       let people = [];
       this.peopleInCourse.forEach(async (person) => {
         let personsTopic = await getPersonsTopicById(
@@ -199,6 +242,55 @@ export default {
         if (personsTopic.topicStatus == "active") people.push(person);
       });
       this.peopleInTopic = people;
+    },
+    missionOrderChanged(event) {
+      this.orderChanged = true;
+      let value = event;
+      let orderChanges = [];
+
+      for (let i = 0; i < value.length; i++) {
+        console.log(
+          value[i].title +
+            " " +
+            value[i].orderIndex +
+            "===" +
+            this.topicsTasks[i].title +
+            " " +
+            this.topicsTasks[i].orderIndex,
+        );
+        if (value[i].orderIndex === this.topicsTasks[i].orderIndex) {
+          continue;
+        } else {
+          value[i].orderIndex = i;
+          orderChanges.push(value[i]);
+        }
+      }
+      console.log("orderchanges", orderChanges);
+      this.newMissionOrder = orderChanges;
+    },
+    async saveNewMissionOrder() {
+      this.savingNewMissionOrder = true;
+
+      for (let i = 0; i < this.newMissionOrder.length; i++) {
+        await db
+          .collection("courses")
+          .doc(this.currentCourseId)
+          .collection("topics")
+          .doc(this.currentTopicId)
+          .collection("tasks")
+          .doc(this.newMissionOrder[i].id)
+          .set(this.newMissionOrder[i]);
+        console.log("db update done for: ", this.newMissionOrder[i].title);
+      }
+
+      // bind again because i think i brake the binding with updateTopicTasks
+      // await this.bindTasksByTopicId({
+      //   courseId: this.currentCourseId,
+      //   topicId: this.currentTopicId,
+      // });
+
+      this.savingNewMissionOrder = false;
+      this.orderChanged = false;
     },
   },
 };

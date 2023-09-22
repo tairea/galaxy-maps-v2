@@ -18,7 +18,14 @@
               edit
             </v-btn>
 
-            <v-btn v-else outlined color="missionAccent" v-bind="attrs" v-on="on">
+            <v-btn
+              v-else
+              outlined
+              color="missionAccent"
+              v-bind="attrs"
+              v-on="on"
+              :disabled="disableCreateMission"
+            >
               <v-icon left> {{ mdiPlus }} </v-icon>
               CREATE MISSION
             </v-btn>
@@ -221,7 +228,7 @@
                 >
                   <!-- :disabled="disabled" -->
                   <v-icon left> {{ mdiCheck }} </v-icon>
-                  UPDATE
+                  SAVE
                 </v-btn>
                 <v-btn
                   v-else
@@ -325,7 +332,7 @@
                 :color="$vuetify.theme.dark ? 'yellow' : 'f7f7ff'"
                 class="ml-2"
                 @click="cancelDeleteDialog"
-                :disabled="disabled || loading"
+                :disabled="disabled || loading || deleting"
               >
                 <v-icon left> {{ mdiClose }} </v-icon>
                 Cancel
@@ -358,7 +365,17 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "CreateEditDeleteMissionDialog",
-  props: ["taskToEdit", "taskId", "index", "topicId", "on", "attrs", "edit"],
+  props: [
+    "taskToEdit",
+    "taskId",
+    "index",
+    "topicId",
+    "on",
+    "attrs",
+    "edit",
+    "tasks",
+    "disableCreateMission",
+  ],
   components: {
     VueEditor,
   },
@@ -397,6 +414,7 @@ export default {
       ["link", "image", "video"],
       // ["clean"] // remove formatting button
     ],
+    taskCount: null,
   }),
   watch: {
     dialog(newVal) {
@@ -404,14 +422,22 @@ export default {
         Object.assign(this.task, this.taskToEdit);
       }
     },
+    tasks(newVal) {
+      // this count helps keep track of the mission order
+      console.log("task count changed = ", newVal.length);
+      this.taskCount = newVal.length;
+    },
   },
-  // mounted() {
-  //   if (this.taskToEdit) {
-  //     console.log("editing task");
-  //     // this.task = this.taskToEdit;
-  //     Object.assign(this.taskToEdit, this.task)
-  //   }
-  // },
+  mounted() {
+    // if (this.taskToEdit) {
+    //   console.log("editing task");
+    //   // this.task = this.taskToEdit;
+    //   Object.assign(this.taskToEdit, this.task)
+    // }
+
+    this.taskCount = this.tasks?.length;
+  },
+
   computed: {
     ...mapState(useRootStore, ["currentCourseId", "person"]),
     dark() {
@@ -435,6 +461,9 @@ export default {
         }
       }
 
+      // calc the task order
+      let taskOrderIndex = this.taskCount;
+
       // Add a new document in collection "courses"
       await db
         .collection("courses")
@@ -442,7 +471,7 @@ export default {
         .collection("topics")
         .doc(this.topicId)
         .collection("tasks")
-        .add({ ...task, taskCreatedTimestamp: new Date() })
+        .add({ ...task, taskCreatedTimestamp: new Date(), orderIndex: taskOrderIndex })
         .then((docRef) => {
           task.id = docRef.id;
           task.taskCreatedTimestamp = new Date();
@@ -464,7 +493,7 @@ export default {
         .doc(this.currentCourseId)
         .update("taskTotal", firebase.firestore.FieldValue.increment(1))
         .then(() => {
-          console.log("Task total increased by 1");
+          console.log("Course taskTotal increased by 1");
           return this.getCourseTasks();
         })
         .catch((error) => {
@@ -479,7 +508,7 @@ export default {
         .doc(this.topicId)
         .update("taskTotal", firebase.firestore.FieldValue.increment(1))
         .then(() => {
-          console.log("Task total increased by 1");
+          console.log("Topic taskTotal increased by 1");
         })
         .catch((error) => {
           console.error("Error incrementing taskTotal: ", error);
@@ -535,6 +564,7 @@ export default {
       this.dialog = true;
     },
     async confirmDeleteTask() {
+      this.deleting = true;
       await db
         .collection("courses")
         .doc(this.currentCourseId)
@@ -567,6 +597,7 @@ export default {
       await this.deleteTaskForStudents(this.taskId);
 
       // close dialog
+      this.deleting = false;
       this.dialogConfirm = false;
     },
     async saveTaskToStudents(task) {

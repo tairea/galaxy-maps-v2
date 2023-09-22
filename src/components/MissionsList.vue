@@ -9,25 +9,30 @@
       </div>
       <div v-else-if="tasks.length > 0" style="width: 100%">
         <v-expansion-panels :flat="true" :multiple="false" v-model="indexOfActiveTask">
-          <v-expansion-panel
-            class="mission-expansions"
-            v-for="(task, index) in tasks"
-            :key="task.id"
-            @click="missionClicked(task)"
-            :readonly="task.taskStatus == 'locked' || task.taskStatus == 'unlocked' || teacher"
-            :value="task.taskStatus == 'active'"
-          >
-            <MissionsCard
-              :task="task"
-              :id="task.id"
-              :index="index"
-              :topicId="topicId"
-              :topicActive="topicActive"
-              :teacher="teacher"
-              @missionActivated="missionActivated"
-              @topicCompleted="topicCompleted"
-            />
-          </v-expansion-panel>
+          <draggable v-model="sortableMissionList" style="width: 100%" ghost-class="ghost">
+            <transition-group name="fade">
+              <v-expansion-panel
+                class="mission-expansions"
+                v-for="(task, index) in sortableMissionList"
+                :key="task.id"
+                @click="missionClicked(task)"
+                :readonly="task.taskStatus == 'locked' || task.taskStatus == 'unlocked' || teacher"
+                :value="task.taskStatus == 'active'"
+              >
+                <MissionsCard
+                  :task="task"
+                  :id="task.id"
+                  :index="index"
+                  :topicId="topicId"
+                  :topicActive="topicActive"
+                  :teacher="teacher"
+                  @missionActivated="missionActivated"
+                  @topicCompleted="topicCompleted"
+                  :tasks="tasks"
+                />
+              </v-expansion-panel>
+            </transition-group>
+          </draggable>
         </v-expansion-panels>
       </div>
       <div v-else style="width: 100%">
@@ -36,7 +41,11 @@
     </div>
 
     <div class="createButton mt-8" v-if="teacher">
-      <CreateEditDeleteMissionDialog :topicId="topicId" />
+      <CreateEditDeleteMissionDialog
+        :topicId="topicId"
+        :tasks="tasks"
+        :disableCreateMission="disableCreateMission"
+      />
     </div>
   </div>
 </template>
@@ -45,21 +54,25 @@
 import MissionsCard from "@/components/MissionsCard.vue";
 import CreateEditDeleteMissionDialog from "@/components/CreateEditDeleteMissionDialog.vue";
 import useRootStore from "@/store/index";
-import { mapState } from "pinia";
+import { mapState, mapActions } from "pinia";
+import draggable from "vuedraggable";
+import { db } from "@/store/firestoreConfig";
 
 export default {
   name: "MissionsList",
   components: {
     MissionsCard,
     CreateEditDeleteMissionDialog,
+    draggable,
   },
-  props: ["tasks", "topicId", "teacher"],
+  props: ["tasks", "topicId", "teacher", "disableCreateMission", "loading"],
   data() {
     return {
       activeMission: false,
       topicActive: false,
       indexOfActiveTask: [],
       missionsLoading: true,
+      lastDraggedContext: null,
     };
   },
   async mounted() {
@@ -68,10 +81,34 @@ export default {
     await new Promise((resolve) => setTimeout(resolve, 2000)); // show loading for 2 sec
     this.missionsLoading = false;
   },
+  watch: {
+    tasks: {
+      handler(newVal, oldVal) {
+        // console.log(oldVal)
+        // console.log(newVal)
+      },
+    },
+  },
   computed: {
-    ...mapState(useRootStore, ["person", "currentTopic"]),
+    ...mapState(useRootStore, ["person", "currentTopic", "currentCourseId", "topicsTasks"]),
+    sortableMissionList: {
+      get() {
+        return this.topicsTasks;
+      },
+      async set(value) {
+        for (let i = 0; i < value.length; i++) {
+          value[i].orderIndex = i;
+        }
+        // this works. value is the correct order with correct orderIndexes
+        console.log("draggable => set:", value);
+        // update topicTasks
+        // this.updateTopicTasks(value);
+        this.$emit("orderChanged", value);
+      },
+    },
   },
   methods: {
+    ...mapActions(useRootStore, ["updateTopicTasks"]),
     missionClicked(task) {
       this.$emit("task", task);
     },
@@ -168,5 +205,10 @@ a {
 /* Handle on hover */
 *::-webkit-scrollbar-thumb:hover {
   background: var(--v-missionAccent-base);
+}
+
+.ghost {
+  opacity: 0.5;
+  background: #c8ebfb;
 }
 </style>

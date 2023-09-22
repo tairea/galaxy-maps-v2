@@ -158,7 +158,7 @@ export default {
     displayGalaxies() {
       return this.courses.filter(
         (course) =>
-          (course.public === true && course.status != "submitted") ||
+          (course.public === true && course.status != "submitted" && course.status != "drafting") ||
           course.mappedBy.personId === this.person.id ||
           this.person.assignedCourses?.some((assignedCourse) => assignedCourse === course.id),
       );

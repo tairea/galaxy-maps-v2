@@ -163,7 +163,9 @@ export default defineStore({
     updateAllNodesForDisplay(newNodePositions: Record<string, any>[]) {
       this.allNodesForDisplay = newNodePositions;
     },
-
+    updateTopicTasks(newTopicTasks: Record<string, any>[]) {
+      this.topicsTasks = newTopicTasks;
+    },
     setCohorts(cohorts: Record<string, any>[]) {
       this.cohorts = cohorts;
     },
@@ -293,8 +295,8 @@ export default defineStore({
             .doc(payload.personId)
             .collection(payload.courseId)
             .doc(payload.topicId)
-            .collection("tasks")
-            .orderBy("taskCreatedTimestamp"),
+            .collection("tasks"),
+          //.orderBy("taskCreatedTimestamp"),
         );
       },
     ),
@@ -307,8 +309,8 @@ export default defineStore({
             .doc(payload.courseId)
             .collection("topics")
             .doc(payload.topicId)
-            .collection("tasks")
-            .orderBy("taskCreatedTimestamp"), // this is important to ordering the tasks in MissionList.vue
+            .collection("tasks"),
+          //.orderBy("taskCreatedTimestamp"), // this is important to ordering the tasks in MissionList.vue
         );
       },
     ),
@@ -361,10 +363,10 @@ export default defineStore({
 
       // get the topics (nodes) in that course
       for (const course of this.courses) {
-        // if public and not submitted || mapped by user || user is assigned to course
+        // if public and not submitted and not draft || mapped by user || user is assigned to course
         if (
           // if public and not submitted
-          (course.public === true && course.status != "submitted") ||
+          (course.public === true && course.status != "submitted" && course.status != "drafting") ||
           // mapped by user
           course.mappedBy.personId === this.person.id ||
           // user is assigned to course
@@ -398,8 +400,8 @@ export default defineStore({
 
       for (const course of this.courses) {
         if (
-          // if public and not submitted
-          (course.public === true && course.status != "submitted") ||
+          // if public and not submitted and not drafting
+          (course.public === true && course.status != "submitted" && course.status != "drafting") ||
           // mapped by user
           course.mappedBy.personId === this.person.id ||
           // user is assigned to course
