@@ -134,7 +134,7 @@ import EdgeInfoPanel from "@/components/GalaxyView/EdgeInfoPanel.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 
-import { getAllPeopleInCourse, getAllCohortsInCourse } from "@/lib/ff";
+import { fetchAllPeopleInCourse, fetchAllCohortsInCourse } from "@/lib/ff";
 import { dbMixins } from "@/mixins/DbMixins";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
@@ -206,7 +206,7 @@ export default {
   watch: {
     async currentCourse(newVal, oldVal) {
       if (!oldVal.cohort && newVal.cohort)
-        this.cohortsInCourse = await getAllCohortsInCourse(this.courseId, this.person.id);
+        this.cohortsInCourse = await fetchAllCohortsInCourse(this.courseId, this.person.id);
     },
   },
   async beforeMount() {
@@ -221,17 +221,17 @@ export default {
   async mounted() {
     // bind assigned people in this course
     if (this.teacher) {
-      this.peopleInCourse = await getAllPeopleInCourse(this.courseId);
+      this.peopleInCourse = await fetchAllPeopleInCourse(this.courseId);
       this.setPeopleInCourse(this.peopleInCourse);
-      this.cohortsInCourse = await getAllCohortsInCourse(this.courseId, this.person.id);
+      this.cohortsInCourse = await fetchAllCohortsInCourse(this.courseId, this.person.id);
     } else {
       await this.getCohortsByPersonId(this.person);
-      let cohort = await this.cohorts.find((cohort) =>
+      let cohort = this.cohorts.find((cohort) =>
         cohort.courses.some((courseId) => courseId === this.currentCourseId),
       );
       this.cohortsInCourse.push(cohort);
       if (this.cohortsInCourse.length) {
-        this.setCurrentCohort(this.cohortsInCourse[0]);
+        this.setCurrentCohort(this.cohortsInCourse[0].id);
         const students = await Promise.all(
           this.cohortsInCourse[0].students?.map((student) => this.MXgetPersonByIdFromDB(student)),
         );

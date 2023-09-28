@@ -76,14 +76,12 @@
                       <p class="ma-0" style="font-size: 0.6rem">Instructor</p>
                     </div>
                   </div>
-                  <v-row 
-                    class="d-flex align-center speech-bubble"
-                  >
+                  <v-row class="d-flex align-center speech-bubble">
                     <p
                       v-html="task.submissionInstructions"
                       class="submission-dialog-description ma-0"
                       style="color: var(--v-cohortAccent-base)"
-                      ></p>
+                    ></p>
                     <!-- <p class="submission-dialog-description ma-0">
                         {{
                           task.submissionInstructions
@@ -220,6 +218,7 @@
 </template>
 
 <script>
+import { fetchCohortById } from "@/lib/ff";
 import {
   submitWorkForReviewXAPIStatement,
   reSubmitWorkForReviewXAPIStatement,
@@ -280,12 +279,14 @@ export default {
       // ["clean"] // remove formatting button
     ],
     quillFocused: false,
+    cohort: null,
   }),
-  mounted() {
+  async mounted() {
     // get mappedBy image
     if (!this.currentCourse.mappedBy.image) {
       this.getMappedByPersonsImage(this.currentCourse.mappedBy.personId);
     }
+    this.cohort = await fetchCohortById(this.currentCohortId);
     console.log("persons topics from mission completed dialog", this.personsTopics);
   },
   computed: {
@@ -294,13 +295,13 @@ export default {
       "currentTopic",
       "currentTask",
       "personsTopicsTasks",
-      "currentCohort",
+      "currentCohortId",
       "courseSubmissions",
       "personsTopics",
-      "person"
+      "person",
     ]),
     dark() {
-      return this.$vuetify.theme.isDark;    
+      return this.$vuetify.theme.isDark;
     },
     submission() {
       const submissions = this.courseSubmissions.filter(
@@ -377,8 +378,8 @@ export default {
           taskSubmittedForReviewTimestamp: new Date(),
         });
 
-      if (this.currentCohort != null) {
-        for (const teacherId of this.currentCohort.teachers) {
+      if (this.cohort != null) {
+        for (const teacherId of this.cohort.teachers) {
           await this.sendTaskSubmission(
             teacherId,
             this.submissionLink,
@@ -420,8 +421,8 @@ export default {
             taskSubmissionStatus: "inreview",
             taskSubmittedForReviewTimestamp: new Date(),
           });
-        if (this.currentCohort != null) {
-          for (const teacherId of this.currentCohort.teachers) {
+        if (this.cohort != null) {
+          for (const teacherId of this.cohort.teachers) {
             await this.sendTaskSubmission(
               teacherId,
               this.submissionLink,

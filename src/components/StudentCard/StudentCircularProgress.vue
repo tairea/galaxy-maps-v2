@@ -37,7 +37,7 @@
 
 <script>
 import PopupStudentProgress from "@/components/StudentCard/PopupStudentProgress.vue";
-import { getStudentTasksByTopicId } from "@/lib/ff";
+import { fetchStudentTasksByTopicId } from "@/lib/ff";
 import { mdiAccount } from "@mdi/js";
 
 export default {
@@ -128,7 +128,7 @@ export default {
     async calcTasksCompletedPercentage() {
       if (this.activity.currentTopic?.status === "completed") this.tasksCompletedPercentage = 100;
       if (this.activity.currentTopic) {
-        this.tasksInCurrentTopic = await getStudentTasksByTopicId({
+        this.tasksInCurrentTopic = await fetchStudentTasksByTopicId({
           studentId: this.student.id,
           topicId: this.activity.currentTopic?.id,
           courseId: this.activity.course.id,

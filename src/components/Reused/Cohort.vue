@@ -75,8 +75,7 @@ export default {
       return name.substring(0, 3).toUpperCase();
     },
     routeToCohort() {
-      this.rootStore.currentCohort = this.cohort;
-      this.setCurrentCohort(this.cohort);
+      this.setCurrentCohort(this.cohort.id);
       this.$router.push({
         name: "CohortView",
         params: {

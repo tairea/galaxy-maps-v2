@@ -113,6 +113,7 @@ import StudentCard from "@/components/StudentCard/StudentCard.vue";
 import TimeframeFilters from "@/components/Reused/TimeframeFilters.vue";
 import EditStudentDialog from "@/components/Dialogs/EditStudentDialog.vue";
 import { dbMixins } from "@/mixins/DbMixins";
+import { fetchCohortById } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mdiArrowUp, mdiArrowDown, mdiMagnify, mdiSortAlphabeticalVariant } from "@mdi/js";
 import { mapState } from "pinia";
@@ -147,6 +148,7 @@ export default {
       showStudentFlag: false,
       editStudentFlag: false,
       student: [],
+      cohort: null,
     };
   },
   created() {
@@ -161,33 +163,37 @@ export default {
   destroyed() {
     clearInterval(this.counterInterval);
   },
-  mounted() {
+  async mounted() {
+    this.cohort = await fetchCohortById(this.currentCohortId);
     // this is needed incase there is no change in currentCohort to catch with the watch
-    if (this.$route.params.cohortId === this.currentCohort.id) {
-      this.getStudentProfiles();
+    if (this.$route.params.cohortId === this.currentCohortId) {
+      await this.getStudentProfiles();
     }
   },
   watch: {
-    currentCohort: {
+    currentCohortId: {
       deep: true,
-      handler(newVal, oldVal) {
-        if (oldVal.students?.length !== newVal.students?.length) {
-          if (oldVal.students?.length > newVal.students?.length) this.removeStudentProfile();
-          else this.getStudentProfiles();
+      async handler(newVal, oldVal) {
+        const oldCohort = this.cohort;
+        this.cohort = await fetchCohortById(newVal);
+        if (oldCohort.students?.length !== this.cohort.students?.length) {
+          if (oldCohort.students?.length > this.cohort.students?.length)
+            this.removeStudentProfile();
+          else await this.getStudentProfiles();
         }
         if (oldVal.id !== newVal.id) {
-          this.getStudentProfiles();
+          await this.getStudentProfiles();
         }
       },
     },
   },
   computed: {
-    ...mapState(useRootStore, ["currentCohort"]),
+    ...mapState(useRootStore, ["currentCohortId"]),
     filteredKeys() {
       return this.keys.filter((key) => key !== "Name");
     },
     isTeacher() {
-      return this.currentCohort.teachers.includes(this.person.id);
+      return this.cohort.teachers.includes(this.person.id);
     },
   },
   methods: {
@@ -217,22 +223,22 @@ export default {
     setTime() {
       this.date = Date.now();
     },
-    getStudentProfiles() {
-      if (this.currentCohort.students?.length) {
-        const studentsArr = this.currentCohort.students.filter((a) => {
+    async getStudentProfiles() {
+      if (this.cohort.students?.length) {
+        const studentsArr = this.cohort.students.filter((a) => {
           return !this.students.some((b) => a === b.id);
         });
-        studentsArr.forEach(async (id) => {
+        for (const id of studentsArr) {
           const student = await this.MXgetPersonByIdFromDB(id);
           if (!this.students.some((a) => a.id === student.id)) {
             this.students.push(student);
           }
-        });
+        }
       }
     },
     removeStudentProfile() {
       this.students = this.students.filter((a) => {
-        return this.currentCohort.students.some((b) => a.id === b);
+        return this.cohort.students.some((b) => a.id === b);
       });
     },
     first3Letters(name) {

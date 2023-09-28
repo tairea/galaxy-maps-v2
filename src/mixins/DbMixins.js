@@ -1,7 +1,7 @@
 // Use this file to store reusable functions that require data from the component
 
 import { db, functions } from "@/store/firestoreConfig";
-import { getCourseById } from "@/lib/ff";
+import { fetchCourseById } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import firebase from "firebase/compat/app";
 import { mapActions, mapState } from "pinia";
@@ -12,36 +12,32 @@ export const dbMixins = {
   },
   methods: {
     ...mapActions(useRootStore, ["setSnackbar"]),
-    MXaddExistingUserToCohort(person, cohort) {
-      console.log("adding existing user to cohort", person, cohort)
-      return this.MXaddStudentToCohort(person, cohort)
-        .then(() => {
-          if (person.inviter?.length == 0)
-            person.inviter = this.person.firstName + " " + this.person.lastName;
-          // this.MXsendNewCohortEmail(person, cohort);  // dunno if email is needed is a bit spammy
-        })
-        // .then(() => {
-        //   this.setSnackbar({
-        //     show: true,
-        //     text: "Student added to Cohort",
-        //     color: "baseAccent",
-        //   });
-        // });
+    async MXaddExistingUserToCohort(person, cohort) {
+      console.log("adding existing user to cohort", person, cohort);
+      await this.MXaddStudentToCohort(person.id, cohort.id);
+      if (person.inviter?.length == 0)
+        person.inviter = this.person.firstName + " " + this.person.lastName;
+      // this.MXsendNewCohortEmail(person, cohort);  // dunno if email is needed is a bit spammy
+      // this.setSnackbar({
+      //   show: true,
+      //   text: "Student added to Cohort",
+      //   color: "baseAccent",
+      // });
     },
-    MXaddStudentToCohort(student, currentCohort) {
-      let cohort = currentCohort ? currentCohort : this.currentCohort;
-      return db
-        .collection("cohorts")
-        .doc(cohort.id)
-        .update({
-          students: firebase.firestore.FieldValue.arrayUnion(student.id),
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
-        });
+    async MXaddStudentToCohort(studentId, cohortId) {
+      try {
+        return await db
+          .collection("cohorts")
+          .doc(cohortId)
+          .update({
+            students: firebase.firestore.FieldValue.arrayUnion(studentId),
+          });
+      } catch (error) {
+        console.error("Error writing document: ", error);
+      }
     },
     MXaddTeacherToCohort(teacher, currentCohort) {
-      console.log("adding teacher to cohort", teacher, currentCohort)
+      console.log("adding teacher to cohort", teacher, currentCohort);
       let cohort = currentCohort ? currentCohort : this.currentCohort;
       return db
         .collection("cohorts")
@@ -76,25 +72,19 @@ export const dbMixins = {
         }
       }
     },
-    MXcreateUser(person) {
+    async MXcreateUser(person) {
       // create user
       const createUser = functions.httpsCallable("createUser");
-      return createUser(person)
-        .then((result) => {
-          console.log("user created", result.data.uid); // undefined?!
-          person.id = result.data.uid;
-          return this.MXaddAccount(person);
-        })
-        .then(() => {
-          return this.MXgenerateLink(person);
-        })
-        .then((link) => {
-          person.link = link.data;
-          this.MXsendEmailInvite(person);
-          return person.id;
-        });
+      const result = await createUser(person);
+      console.log("user created", result.data.uid); // undefined?!
+      person.id = result.data.uid;
+      await this.MXaddAccount(person);
+      const link = await this.MXgenerateLink(person);
+      person.link = link.data;
+      this.MXsendEmailInvite(person);
+      return person.id;
     },
-    MXaddAccount(person) {
+    async MXaddAccount(person) {
       const profile = {
         ...person,
       };
@@ -103,15 +93,13 @@ export const dbMixins = {
         delete profile.parentEmail;
       }
       delete profile.inviter;
-      return db
-        .collection("people")
-        .doc(person.id)
-        .set(profile)
-        .catch((error) => {
-          console.error("Error writing document: ", error);
-        });
+      try {
+        return await db.collection("people").doc(person.id).set(profile);
+      } catch (error) {
+        console.error("Error writing document: ", error);
+      }
     },
-    MXgenerateLink(person) {
+    async MXgenerateLink(person) {
       // generate magic email link
       const data = {
         ...person,
@@ -119,63 +107,58 @@ export const dbMixins = {
       };
 
       const generateEmailLink = functions.httpsCallable("generateEmailLink");
-      return generateEmailLink(data)
-        .then((link) => {
-          return link;
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
-        });
+      try {
+        const link = await generateEmailLink(data);
+        return link;
+      } catch (error) {
+        console.error("Error writing document: ", error);
+      }
     },
-    MXsendEmailInvite(person) {
+    async MXsendEmailInvite(person) {
       const sendInviteEmail = functions.httpsCallable("sendInviteEmail");
-      sendInviteEmail(person).catch((error) => {
+      try {
+        return await sendInviteEmail(person);
+      } catch (error) {
         console.error(error);
-      });
+      }
     },
-    MXassignCourseToStudent(person, course) {
-      return db
+    async MXassignCourseToStudent(person, course) {
+      await db
         .collection("people")
         .doc(person.id)
         .update({
           assignedCourses: firebase.firestore.FieldValue.arrayUnion(course.id),
-        })
-        // .then(() => this.sendNewCourseEmail(person, course))  // dont know if this email is needed, a bit spammy
-        .then(() => {
-          this.setSnackbar({
-            show: true,
-            text: `${person.firstName} added to ${course.title} galaxy`,
-            color: "baseAccent",
-          });
         });
+      // await this.sendNewCourseEmail(person, course);  // dont know if this email is needed, a bit spammy
+      this.setSnackbar({
+        show: true,
+        text: `${person.firstName} added to ${course.title} galaxy`,
+        color: "baseAccent",
+      });
     },
-    sendNewCourseEmail(person, course) {
+    async sendNewCourseEmail(person, course) {
       const data = {
         name: person.firstName || "",
         email: person.email,
         course: course.title,
       };
       const sendNewCourseEmail = functions.httpsCallable("sendNewCourseEmail");
-      return sendNewCourseEmail(data).catch((error) => {
+      try {
+        return await sendNewCourseEmail(data);
+      } catch (error) {
         console.error(error);
-      });
-    },
-    async MXgetPersonByIdFromDB(personId) {
-      if (personId) {
-        let person = await db
-          .collection("people")
-          .doc(personId)
-          .get()
-          .catch((err) => console.err(err));
-        person = {
-          id: person.id,
-          ...person.data(),
-        };
-        return person;
       }
     },
+    async MXgetPersonByIdFromDB(personId) {
+      const personDoc = await db.collection("people").doc(personId).get();
+      const person = {
+        ...personDoc.data(),
+        id: personDoc.id,
+      };
+      return person;
+    },
     async MXsaveProfile(profile) {
-      console.log("updating profile", profile)
+      console.log("updating profile", profile);
       return await db
         .collection("people")
         .doc(profile.id)

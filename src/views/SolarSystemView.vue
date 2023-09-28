@@ -61,7 +61,7 @@ import MissionsList from "@/components/SolarSystemView/MissionsList.vue";
 import BackButton from "@/components/Reused/BackButton.vue";
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
-import { getPersonsTopicById } from "@/lib/ff";
+import { fetchPersonsTopicById } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
 
@@ -187,7 +187,7 @@ export default {
       console.log("4, getting people in topic");
       let people = [];
       this.peopleInCourse.forEach(async (person) => {
-        let personsTopic = await getPersonsTopicById(
+        let personsTopic = await fetchPersonsTopicById(
           person.id,
           this.getCourseById(this.currentCourseId).id,
           this.getTopicById(this.currentTopicId).id,

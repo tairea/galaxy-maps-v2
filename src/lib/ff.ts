@@ -1,26 +1,42 @@
 // Use this script for any firebase functions (ff) that are completely independant of components
 import { db, functions } from "@/store/firestoreConfig";
 
-export const getCourseById = async (id: string) => {
+export const fetchCourseById = async (id: string) => {
   const course = await db.collection("courses").doc(id).get();
+
+  if (!course.exists) {
+    return null;
+  }
+
   return {
-    id,
     ...course.data(),
+    id: course.id,
   };
 };
-export const getStudentByEmail = async (email: string) => {
-  const people = await db.collection("people").where("email", "==", email).limit(1).get();
 
-  return people.docs[0]?.data();
+export const fetchStudentByEmail = async (email: string) => {
+  const people = await db.collection("people").where("email", "==", email).limit(1).get();
+  const person = people.docs[0];
+
+  if (person == null) {
+    return null;
+  }
+
+  if (!person.exists) {
+    return null;
+  }
+
+  return {
+    ...person.data(),
+    id: person.id,
+  };
 };
 
-export const getStudentTasksByTopicId = async (payload: {
+export const fetchStudentTasksByTopicId = async (payload: {
   studentId: string;
   courseId: string;
   topicId: string;
 }) => {
-  const tasks = [];
-
   const studentTasks = await db
     .collection("people")
     .doc(payload.studentId)
@@ -29,27 +45,29 @@ export const getStudentTasksByTopicId = async (payload: {
     .collection("tasks")
     .get();
 
-  for (const task of studentTasks.docs) {
-    tasks.push(task.data());
-  }
+  const tasks = studentTasks.docs.map((doc) => ({
+    ...doc.data(),
+    id: doc.id,
+  }));
+
   return tasks;
 };
 
-export const getStudentCohortsById = async (studentId: string) => {
+export const fetchStudentCohortsById = async (studentId: string) => {
   const querySnapShot = await db
     .collection("cohorts")
     .where("students", "array-contains", studentId)
     .get();
 
   const cohorts = querySnapShot.docs.map((doc) => ({
-    id: doc.id,
     ...doc.data(),
+    id: doc.id,
   }));
 
   return cohorts;
 };
 
-export const getCohortById = async (cohortId: string) => {
+export const fetchCohortById = async (cohortId: string) => {
   const doc = await db.collection("cohorts").doc(cohortId).get();
 
   return {
@@ -58,7 +76,7 @@ export const getCohortById = async (cohortId: string) => {
   };
 };
 
-export const getAllPeopleInCourse = async (courseId: string) => {
+export const fetchAllPeopleInCourse = async (courseId: string) => {
   return await db
     .collection("people")
     .where("assignedCourses", "array-contains", courseId)
@@ -74,7 +92,7 @@ export const getAllPeopleInCourse = async (courseId: string) => {
     });
 };
 
-export const getAllCohortsInCourse = async (courseId: string, teacherId: string) => {
+export const fetchAllCohortsInCourse = async (courseId: string, teacherId: string) => {
   return await db
     .collection("cohorts")
     .where("courses", "array-contains", courseId)
@@ -92,7 +110,11 @@ export const getAllCohortsInCourse = async (courseId: string, teacherId: string)
     });
 };
 
-export const getPersonsTopicById = async (personId: string, courseId: string, topicId: string) => {
+export const fetchPersonsTopicById = async (
+  personId: string,
+  courseId: string,
+  topicId: string,
+) => {
   return await db
     .collection("people")
     .doc(personId)

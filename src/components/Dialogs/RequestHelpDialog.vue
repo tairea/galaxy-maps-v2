@@ -86,12 +86,12 @@
 </template>
 
 <script>
+import { fetchCohortById } from "@/lib/ff";
 import { studentRequestForHelpXAPIStatement } from "@/lib/veracityLRS";
 import { dbMixins } from "@/mixins/DbMixins";
 import { db, functions } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mdiHandFrontLeftOutline, mdiInformationVariant, mdiCheck, mdiClose } from "@mdi/js";
-import firebase from "firebase/compat/app";
 import { mapActions, mapState } from "pinia";
 
 export default {
@@ -109,14 +109,17 @@ export default {
     requestForHelp: "",
     loading: false,
     deleting: false,
+    cohort: null,
   }),
-  mounted() {},
+  async mounted() {
+    this.cohort = await fetchCohortById(this.currentCohortId);
+  },
   computed: {
     ...mapState(useRootStore, [
       "currentCourse",
       "currentTopic",
       "currentTask",
-      "currentCohort",
+      "currentCohortId",
       "person",
     ]),
     dark() {
@@ -125,66 +128,68 @@ export default {
   },
   methods: {
     ...mapActions(useRootStore, ["setSnackbar"]),
-    submitRequestForHelp(requestForHelp) {
+    async submitRequestForHelp(requestForHelp) {
       this.loading = true;
-      // Add a new request for help to the "courses" db
-      db.collection("courses")
-        .doc(this.currentCourse.id)
-        // .collection("topics")
-        // .doc(this.topicId)
-        // .collection("tasks")
-        // .doc(this.taskId)
-        .collection("requestsForHelp")
-        .add({
-          // add request for help to database
-          // TODO: currentCourse, currentTopic, currentTask in store
-          contextCourse: this.currentCourse,
-          contextTopic: this.currentTopic,
-          contextTask: this.currentTask,
-          personId: this.person.id,
-          requestForHelpMessage: this.requestForHelp,
-          requestForHelpStatus: "unanswered",
-          requestSubmittedTimestamp: new Date(),
-        })
-        .then((docRef) => {
-          docRef.update({ id: docRef.id });
-          console.log("Request for help successfully submitted to instructor!");
-          // send xAPI statement to LRS
-          studentRequestForHelpXAPIStatement(this.person, this.currentTask.id, {
-            galaxy: this.currentCourse,
-            system: this.currentTopic,
-            mission: this.currentTask,
+      try {
+        // Add a new request for help to the "courses" db
+        const docRef = await db
+          .collection("courses")
+          .doc(this.currentCourse.id)
+          // .collection("topics")
+          // .doc(this.topicId)
+          // .collection("tasks")
+          // .doc(this.taskId)
+          .collection("requestsForHelp")
+          .add({
+            // add request for help to database
+            // TODO: currentCourse, currentTopic, currentTask in store
+            contextCourse: this.currentCourse,
+            contextTopic: this.currentTopic,
+            contextTask: this.currentTask,
+            personId: this.person.id,
+            requestForHelpMessage: this.requestForHelp,
+            requestForHelpStatus: "unanswered",
+            requestSubmittedTimestamp: new Date(),
           });
-
-          this.setSnackbar({
-            show: true,
-            text: "Request submitted. You will be notified when your instructor has responded.",
-            color: "baseAccent",
-          });
-        })
-        .then(() => {
-          this.currentCohort?.teachers.forEach(async (teacherId) => {
-            await this.emailRequestToTeacher(teacherId, requestForHelp);
-          });
-        })
-        .then(async () => {
-          // await this.bindRequestsForHelp({
-          //   courseId: this.currentCourse.id,
-          //   topicId: this.currentTopic.id,
-          //   taskId: this.currentTask.id,
-          // });
-          this.requestForHelp = "";
-          this.loading = false;
-          this.dialog = false;
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
-          this.setSnackbar({
-            show: true,
-            text: "Error: " + error,
-            color: "pink",
-          });
+        await docRef.update({ id: docRef.id });
+        console.log("Request for help successfully submitted to instructor!");
+        // send xAPI statement to LRS
+        await studentRequestForHelpXAPIStatement(this.person, this.currentTask.id, {
+          galaxy: this.currentCourse,
+          system: this.currentTopic,
+          mission: this.currentTask,
         });
+
+        this.setSnackbar({
+          show: true,
+          text: "Request submitted. You will be notified when your instructor has responded.",
+          color: "baseAccent",
+        });
+
+        if (this.cohort != null) {
+          await Promise.all(
+            this.cohort.teachers.map((teacherId) =>
+              this.emailRequestToTeacher(teacherId, requestForHelp),
+            ),
+          );
+        }
+
+        // await this.bindRequestsForHelp({
+        //   courseId: this.currentCourse.id,
+        //   topicId: this.currentTopic.id,
+        //   taskId: this.currentTask.id,
+        // });
+        this.requestForHelp = "";
+        this.loading = false;
+        this.dialog = false;
+      } catch (error) {
+        console.error("Error writing document: ", error);
+        this.setSnackbar({
+          show: true,
+          text: "Error: " + error,
+          color: "pink",
+        });
+      }
     },
     cancel() {
       this.dialog = false;

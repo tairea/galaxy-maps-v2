@@ -114,7 +114,7 @@
 </template>
 
 <script>
-import { getCourseById, assignTopicsAndTasksToStudent } from "@/lib/ff";
+import { fetchCohortById, fetchCourseById, assignTopicsAndTasksToStudent } from "@/lib/ff";
 import { dbMixins } from "@/mixins/DbMixins";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
@@ -128,7 +128,8 @@ export default {
     student: { type: Object },
     edit: { type: Boolean, default: false },
   },
-  mounted() {
+  async mounted() {
+    this.cohort = await fetchCohortById(this.currentCohortId);
     if (this.edit)
       this.account = {
         ...this.account,
@@ -136,6 +137,7 @@ export default {
       };
   },
   data: () => ({
+    cohort: null,
     addingAccount: false,
     valid: true,
     account: {
@@ -155,7 +157,7 @@ export default {
     parentEmailRules: [(v) => /.+@.+\..+/.test(v) || "E-mail must be valid"],
   }),
   computed: {
-    ...mapState(useRootStore, ["person", "currentCohort"]),
+    ...mapState(useRootStore, ["person", "currentCohortId"]),
     teacher() {
       return this.accountType === "teacher";
     },
@@ -180,21 +182,15 @@ export default {
     async update() {
       let obj = Object.fromEntries(Object.entries(this.account).filter(([_, v]) => v.length));
 
-      db.collection("people")
-        .doc(obj.id)
-        .update(obj)
-        .then(() => {
-          this.$emit("updateStudentProfile", obj);
-          this.setSnackbar({
-            show: true,
-            text: "Student successfully updated",
-            color: "baseAccent",
-          });
-          this.close();
-        })
-        .catch((error) => {
-          console.error("Error updating document: ", error);
-        });
+      await db.collection("people").doc(obj.id).update(obj);
+
+      this.$emit("updateStudentProfile", obj);
+      this.setSnackbar({
+        show: true,
+        text: "Student successfully updated",
+        color: "baseAccent",
+      });
+      this.close();
     },
     async create() {
       this.$refs.form.validate();
@@ -213,23 +209,20 @@ export default {
           this.addingAccount = false;
           this.close();
         } else {
-          this.MXsaveProfile(profile) // updates /people/:id profile
-            .then(() => {
-              this.MXaddExistingUserToCohort(profile); // adds student to /cohorts/:id/students
-            })
-            .then(() => {
-              if (this.currentCohort?.courses?.length) {
-                this.assignStudentToCourses(profile); // adds course to /people/:id/assignedCourses
-              }
-            })
-            .then(() => {
-              this.addingAccount = false;
-              this.close();
-            })
-            .catch((err) => {
-              this.addingAccount = false;
-              console.error("something went wrong adding existing person: ", err);
-            });
+          try {
+            await this.MXsaveProfile(profile); // updates /people/:id profile
+            await this.MXaddExistingUserToCohort(profile); // adds student to /cohorts/:id/students
+
+            if (this.cohort.courses.length) {
+              await this.assignStudentToCourses(profile); // adds course to /people/:id/assignedCourses
+            }
+
+            this.addingAccount = false;
+            this.close();
+          } catch (error) {
+            this.addingAccount = false;
+            console.error("something went wrong adding existing person: ", err);
+          }
         }
       } else {
         const person = {
@@ -237,46 +230,44 @@ export default {
           displayName: this.account.firstName + " " + this.account.lastName,
         };
         console.log("person does not exist in db. creating them now...", person);
-        this.MXcreateUser(person)
-          .then(() => {
+        try {
+          await this.MXcreateUser(person);
+          this.setSnackbar({
+            show: true,
+            text: "Account created",
+            color: "baseAccent",
+          });
+          if (!this.teacher) {
+            await this.MXaddStudentToCohort(person.id, this.currentCohortId);
             this.setSnackbar({
               show: true,
-              text: "Account created",
+              text: "Student added to Cohort",
               color: "baseAccent",
             });
-            if (!this.teacher) {
-              this.MXaddStudentToCohort(person).then(() => {
-                this.setSnackbar({
-                  show: true,
-                  text: "Student added to Cohort",
-                  color: "baseAccent",
-                });
-                if (this.currentCohort.courses.length) {
-                  this.assignStudentToCourses(person);
-                }
-              });
-            } else {
-              this.setSnackbar({
-                show: true,
-                text: "Teacher added to Galaxy Map",
-                color: "baseAccent",
-              });
-              this.addingAccount = false;
-              this.close();
+            if (this.cohort.courses.length) {
+              await this.assignStudentToCourses(person);
             }
-          })
-          .catch((error) => {
-            console.error(error);
-          });
+          } else {
+            this.setSnackbar({
+              show: true,
+              text: "Teacher added to Galaxy Map",
+              color: "baseAccent",
+            });
+            this.addingAccount = false;
+            this.close();
+          }
+        } catch (error) {
+          console.error(error);
+        }
       }
     },
-    assignStudentToCourses(person) {
+    async assignStudentToCourses(person) {
       // FIXME: foreach does not await
-      this.currentCohort.courses.forEach(async (courseId) => {
-        let course = await getCourseById(courseId);
+      for (const courseId of this.cohort.courses) {
+        let course = await fetchCourseById(courseId);
         await this.MXassignCourseToStudent(person, course);
         await assignTopicsAndTasksToStudent(person, course);
-      });
+      }
     },
   },
 };

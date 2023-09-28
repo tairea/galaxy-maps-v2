@@ -235,7 +235,7 @@
 
 <script>
 import { db } from "@/store/firestoreConfig";
-import { getPersonsTopicById } from "@/lib/ff";
+import { fetchPersonsTopicById } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mdiPencil, mdiPlus, mdiClose, mdiCheck, mdiDelete, mdiInformationVariant } from "@mdi/js";
 import firebase from "firebase/compat/app";
@@ -539,7 +539,7 @@ export default {
           // if the new node has set prerequisites
           if (node.prerequisites?.length) {
             // get the prerequisite topic
-            const topic = await getPersonsTopicById(
+            const topic = await fetchPersonsTopicById(
               student,
               this.currentCourseId,
               node.prerequisites[0],

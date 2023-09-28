@@ -57,8 +57,8 @@ import StudentCompletedTasks from "@/components/StudentCard/StudentCompletedTask
 import StudentCohorts from "@/components/StudentCard/StudentCohorts.vue";
 import StudentActions from "@/components/StudentCard/StudentActions.vue";
 import StudentActivityTimeline from "@/components/StudentActivityTimeline.vue";
+import { fetchCohortById, fetchCourseById } from "@/lib/ff";
 import { getStudentsCoursesXAPIQuery, getStudentsTimeDataXAPIQuery } from "@/lib/veracityLRS";
-import { getCourseById } from "@/lib/ff";
 import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
@@ -79,8 +79,9 @@ export default {
   props: ["student", "timeframe", "date"],
   data() {
     return {
-      topic: "",
-      task: "",
+      cohort: null,
+      topic: null,
+      task: null,
       missions: [],
       hours: "",
       work: [],
@@ -95,8 +96,9 @@ export default {
   },
   async mounted() {
     const studentCourses = await getStudentsCoursesXAPIQuery(this.student);
+    this.cohort = await fetchCohortById(this.currentCohortId);
     const cohortActivities = studentCourses.filter((a) =>
-      this.currentCohort.courses.some((b) => b === a.course.id),
+      this.cohort.courses.some((b) => b === a.course.id),
     );
     this.activities = cohortActivities.map((course) => {
       const currentTopic = course.activities.find((action) => action.type === "Topic");
@@ -115,7 +117,7 @@ export default {
     this.studentTimeData = getActivityData;
   },
   computed: {
-    ...mapState(useRootStore, ["currentCohort", "userStatus", "getCourseById"]),
+    ...mapState(useRootStore, ["currentCohortId", "userStatus"]),
     status() {
       return this.userStatus[this.student.id];
     },
@@ -125,11 +127,10 @@ export default {
       this.$emit("showStudent", student);
     },
     async getAssignedCourse() {
-      const courseId = this.student.assignedCourses?.find((course) =>
-        this.currentCohort.courses.includes(course),
+      const courseId = this.student.assignedCourses.find((course) =>
+        this.cohort.courses.includes(course),
       );
-      const course = await getCourseById(courseId);
-      this.assignedCourse = course;
+      this.assignedCourse = await fetchCourseById(courseId);
     },
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();

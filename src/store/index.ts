@@ -20,6 +20,7 @@ const getDefaultState = () => {
     currentCourse: {} as Record<string, any>,
     currentTopicId: "",
     currentTaskId: "",
+    currentCohortId: "",
     currentCourseId: "",
     currentTopic: {} as Record<string, any>,
     currentTask: {} as Record<string, any>,
@@ -156,6 +157,9 @@ export default defineStore({
     },
     setCurrentTask(task: Record<string, any>) {
       this.currentTask = task;
+    },
+    setCurrentCohort(cohortId: string) {
+      this.currentCohortId = cohortId;
     },
     updateAllNodes(newNodePositions: Record<string, any>[]) {
       this.allNodes = newNodePositions;
@@ -583,21 +587,6 @@ export default defineStore({
       return unsubscribe;
 
       // this.teachersRequestsForHelp = allRequestsForHelp;
-    },
-
-    async setCurrentCohort(cohort: Record<string, any>) {
-      await db
-        .collection("cohorts")
-        .doc(cohort.id)
-        .onSnapshot(async (doc) => {
-          const newCohort: Record<string, any> = {
-            id: doc.id,
-            ...doc.data(),
-          };
-          if (cohort.teacher) newCohort.teacher = true;
-          else if (cohort.student) newCohort.student = true;
-          this.currentCohort = newCohort;
-        });
     },
 
     async getAllUsersStatus() {

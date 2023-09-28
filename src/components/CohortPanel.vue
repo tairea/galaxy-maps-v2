@@ -202,7 +202,7 @@ export default {
     // const VQL = await VQLXAPIQuery();
   },
   computed: {
-    ...mapState(useRootStore, ["currentCohort"]),
+    ...mapState(useRootStore, []),
   },
   methods: {
     ...mapActions(useRootStore, ["setCurrentCohort"]),
@@ -383,21 +383,18 @@ export default {
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
-    async routeToCohort() {
+    routeToCohort() {
       console.log("====== ROUTE TO COHORT =======");
-      await this.setCurrentCohort(this.cohort);
+      this.setCurrentCohort(this.cohort.id);
       // console.log('cohort set: ', cohort)
       // route to Galaxy View (passing params as props)
-      if (this.currentCohort.id) {
-        console.log("------currentCohort-----: ", this.currentCohort);
-        this.$router.push({
-          name: "CohortView",
-          params: {
-            cohortName: this.camelize(this.cohort.name),
-            cohortId: this.cohort.id,
-          },
-        });
-      }
+      this.$router.push({
+        name: "CohortView",
+        params: {
+          cohortName: this.camelize(this.cohort.name),
+          cohortId: this.cohort.id,
+        },
+      });
     },
     camelize(str) {
       return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {

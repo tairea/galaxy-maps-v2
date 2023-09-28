@@ -2,6 +2,202 @@ import * as functions from "firebase-functions";
 import { firestore } from "./_shared.js";
 import { startGalaxyXAPIStatement } from "./veracityLRS.js";
 
+// Get a course by id
+export const getCourseByIdHttpsEndpoint = functions.https.onCall(async (data, context) => {
+  const courseId = data.courseId as string | null;
+  if (courseId == null) {
+    throw new functions.https.HttpsError("invalid-argument", "missing courseId");
+  }
+
+  const courseDoc = await firestore.collection("courses").doc(data.courseId).get();
+  const courseData = courseDoc.data();
+
+  if (!courseDoc.exists || courseData == null) {
+    throw new functions.https.HttpsError("not-found", "course not found");
+  }
+
+  // if the context is unauthenticated, only return course that is public and
+  // has a published status
+  if (context.auth == null) {
+    if (courseData.public === true && courseData.status === "published") {
+      return {
+        course: {
+          id: courseDoc.id,
+          ...courseData,
+        },
+      };
+    } else {
+      throw new functions.https.HttpsError("not-found", "course not found");
+    }
+  }
+
+  // if the context is authenticated and they are admin, return course
+  if (context.auth.token.admin === true) {
+    return {
+      course: {
+        id: courseDoc.id,
+        ...courseData,
+      },
+    };
+  }
+
+  // if the context is authenticated and they are not admin, return all courses
+  // where they are the owner or where they belong to a cohort for the course as
+  // a teacher or as a student
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const teacherCohorts: Record<string, any>[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const studentCohorts: Record<string, any>[] = [];
+
+  const studentQuerySnapShot = await firestore
+    .collection("cohorts")
+    .where("students", "array-contains", context.auth.uid)
+    .get();
+  const teacherQuerySnapShot = await firestore
+    .collection("cohorts")
+    .where("teachers", "array-contains", context.auth.uid)
+    .get();
+
+  for (const cohort of studentQuerySnapShot.docs) {
+    studentCohorts.push({
+      id: cohort.id,
+      student: true,
+      ...cohort.data(),
+    });
+  }
+  for (const cohort of teacherQuerySnapShot.docs) {
+    teacherCohorts.push({
+      id: cohort.id,
+      teacher: true,
+      ...cohort.data(),
+    });
+  }
+
+  const courseIds = [
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...studentCohorts.flatMap((x: Record<string, any>): string[] => x.courses),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...teacherCohorts.flatMap((x: Record<string, any>): string[] => x.courses),
+  ];
+
+  if (!courseIds.includes(courseDoc.id)) {
+    throw new functions.https.HttpsError("not-found", "course not found");
+  }
+
+  return {
+    course: {
+      id: courseDoc.id,
+      ...courseData,
+    },
+  };
+});
+
+// Get a list of courses
+export const getCoursesHttpsEndpoint = functions.https.onCall(async (_data, context) => {
+  // if the context is unauthenticated, only return courses that are public and
+  // have a published status
+  if (context.auth == null) {
+    const querySnapshot = await firestore
+      .collection("courses")
+      .where("public", "==", true)
+      .where("status", "==", "published")
+      .get();
+
+    const courses = [];
+    for (const doc of querySnapshot.docs) {
+      const course = doc.data();
+      courses.push({
+        id: doc.id,
+        ...course,
+      });
+    }
+    return courses;
+  }
+
+  // if the context is authenticated and they are admin, return all courses
+  if (context.auth.token.admin === true) {
+    const querySnapshot = await firestore.collection("courses").get();
+
+    const courses = [];
+    for (const doc of querySnapshot.docs) {
+      const course = doc.data();
+      courses.push({
+        id: doc.id,
+        ...course,
+      });
+    }
+    return courses;
+  }
+
+  // if the context is authenticated and they are not admin, return all courses
+  // where they are the owner or where they belong to a cohort for the course as
+  // a teacher or as a student
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const teacherCohorts: Record<string, any>[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const studentCohorts: Record<string, any>[] = [];
+
+  const studentQuerySnapShot = await firestore
+    .collection("cohorts")
+    .where("students", "array-contains", context.auth.uid)
+    .get();
+  const teacherQuerySnapShot = await firestore
+    .collection("cohorts")
+    .where("teachers", "array-contains", context.auth.uid)
+    .get();
+
+  for (const cohort of studentQuerySnapShot.docs) {
+    studentCohorts.push({
+      id: cohort.id,
+      student: true,
+      ...cohort.data(),
+    });
+  }
+  for (const cohort of teacherQuerySnapShot.docs) {
+    teacherCohorts.push({
+      id: cohort.id,
+      teacher: true,
+      ...cohort.data(),
+    });
+  }
+
+  const courseIds = [
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...studentCohorts.flatMap((x: Record<string, any>): string[] => x.courses),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...teacherCohorts.flatMap((x: Record<string, any>): string[] => x.courses),
+  ];
+
+  const courseDocumentSnapshots = await Promise.all(
+    courseIds.map((x) => firestore.collection("courses").doc(x).get()),
+  );
+
+  const querySnapshot = await firestore
+    .collection("courses")
+    .where("owner", "==", firestore.collection("people").doc(context.auth.uid))
+    .get();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const courses: Record<string, any>[] = [];
+
+  for (const doc of courseDocumentSnapshots) {
+    const course = doc.data();
+    courses.push({
+      id: doc.id,
+      ...course,
+    });
+  }
+
+  for (const doc of querySnapshot.docs) {
+    const course = doc.data();
+    courses.push({
+      id: doc.id,
+      ...course,
+    });
+  }
+  return courses;
+});
+
 // ====== ASSIGN TOPICS AND TASKS ==================
 export const assignTopicsAndTasksToMeHttpsEndpoint = functions.https.onCall(
   (data: { courseId: string }, context) => {

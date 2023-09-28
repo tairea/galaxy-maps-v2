@@ -240,13 +240,7 @@ export default {
     });
   },
   computed: {
-    ...mapState(useRootStore, [
-      "currentCourse",
-      "currentTopic",
-      "currentTask",
-      "personsTopicsTasks",
-      "person",
-    ]),
+    ...mapState(useRootStore, ["currentTopic", "currentTask", "personsTopicsTasks", "person"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
