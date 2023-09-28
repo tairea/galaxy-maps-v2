@@ -66,7 +66,7 @@
       <!-- OWNED BY -->
       <div v-if="courseOwner" class="mapped-details right">
         <p class="info-panel-label mb-1">
-          <span class="mappedByTitle">OWNED BY</span>
+          <span class="mappedByTitle">UNIVERSE</span>
         </p>
         <div class="mappedByContainer">
           <Avatar

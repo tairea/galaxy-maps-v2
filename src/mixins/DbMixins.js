@@ -19,13 +19,13 @@ export const dbMixins = {
             person.inviter = this.person.firstName + " " + this.person.lastName;
           this.MXsendNewCohortEmail(person, cohort);
         })
-        .then(() => {
-          this.setSnackbar({
-            show: true,
-            text: "Student added to Cohort",
-            color: "baseAccent",
-          });
-        });
+        // .then(() => {
+        //   this.setSnackbar({
+        //     show: true,
+        //     text: "Student added to Cohort",
+        //     color: "baseAccent",
+        //   });
+        // });
     },
     MXaddStudentToCohort(student, currentCohort) {
       let cohort = currentCohort ? currentCohort : this.currentCohort;
@@ -129,7 +129,7 @@ export const dbMixins = {
         .then(() => {
           this.setSnackbar({
             show: true,
-            text: `Student assigned to ${course.title} galaxy`,
+            text: `${person.firstName} assigned to ${course.title} galaxy`,
             color: "baseAccent",
           });
         });
