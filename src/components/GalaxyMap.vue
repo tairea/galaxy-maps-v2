@@ -245,13 +245,19 @@ export default {
         // find the topic node with status
         const matchingNode = this.personsTopics.find((x) => x.id === node.id);
 
+        // if node is status completed or locked. remove color property
+        if (matchingNode.topicStatus == "locked" || matchingNode.topicStatus == "completed") {
+          delete node.color;
+        }
+
         // push node with status
         nodesWithStatus.push({
           ...node,
           // color: this.stringToColour(matchingNode.label),  // Attempt to match node color to System color
-          group: matchingNode?.topicStatus ?? "locked",
+          group: matchingNode?.topicStatus ?? "locked", // assign group property based on topicStatus from matchingNode (aka this.personsTopics)
         });
       }
+
       // return nodes with status to network map
       return nodesWithStatus;
     },

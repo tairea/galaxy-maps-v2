@@ -110,8 +110,8 @@
           </v-btn>
 
           <!-- Discord button -->
-          <!-- <v-btn
-            href="https://discord.gg/vYSCTbtFK"
+          <v-btn
+            href="https://discord.gg/XWZwmarXn"
             target="_blank"
             color="indigo lighten-1"
             class="ma-3"
@@ -121,7 +121,7 @@
           >
             <v-icon class="pr-2">{{ mdiMessage }}</v-icon>
             Chat on Discord
-          </v-btn> -->
+          </v-btn>
 
           <!-- Github button -->
           <!-- <v-btn
