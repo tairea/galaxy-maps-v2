@@ -245,8 +245,10 @@ export default {
         // find the topic node with status
         const matchingNode = this.personsTopics.find((x) => x.id === node.id);
 
+        console.log("matching node:", matchingNode);
+
         // if node is status completed or locked. remove color property
-        if (matchingNode.topicStatus == "locked" || matchingNode.topicStatus == "completed") {
+        if (matchingNode?.topicStatus == "locked" || matchingNode?.topicStatus == "completed") {
           delete node.color;
         }
 
