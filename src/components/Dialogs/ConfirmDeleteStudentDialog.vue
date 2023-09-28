@@ -10,11 +10,7 @@
         <p class="dialog-description">
           Are you sure you want to <strong>REMOVE</strong>
           <span>
-            {{
-              student.firstName
-                ? student.firstName + " " + student.lastName
-                : student.email
-            }}
+            {{ student.firstName ? student.firstName + " " + student.lastName : student.email }}
           </span>
           from this cohort
         </p>
@@ -23,12 +19,7 @@
       <!-- ACTION BUTTONS -->
       <div class="d-flex align-end my-4">
         <!-- DELETE -->
-        <v-btn
-          outlined
-          color="error"
-          @click="confirmDeleteStudent()"
-          class="ml-4"
-        >
+        <v-btn outlined color="error" @click="confirmDeleteStudent()" class="ml-4">
           <v-icon left> {{ mdiDelete }} </v-icon>
           DELETE
         </v-btn>
@@ -49,10 +40,11 @@
   </v-dialog>
 </template>
 <script>
-import { mdiInformationVariant, mdiDelete, mdiClose } from "@mdi/js";
 import { db } from "@/store/firestoreConfig";
-import { mapState } from "vuex";
-import firebase from "firebase";
+import useRootStore from "@/store/index";
+import { mdiInformationVariant, mdiDelete, mdiClose } from "@mdi/js";
+import { mapActions, mapState } from "pinia";
+import firebase from "firebase/compat/app";
 
 export default {
   name: "ConfirmDeleteStudentDialog",
@@ -65,9 +57,10 @@ export default {
     };
   },
   computed: {
-    ...mapState(["currentCohort", "currentCourseId"]),
+    ...mapState(useRootStore, ["currentCohort", "currentCourseId"]),
   },
   methods: {
+    ...mapActions(useRootStore, ["setSnackbar"]),
     confirmDeleteStudent() {
       const studentId = this.student.id;
       db.collection("cohorts")
@@ -79,7 +72,7 @@ export default {
           this.deleteAssignedCourse(studentId);
         })
         .then(() => {
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Student removed from Cohort",
             color: "baseAccent",

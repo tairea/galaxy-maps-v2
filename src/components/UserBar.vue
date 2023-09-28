@@ -1,12 +1,17 @@
 <template>
-  <v-hover v-model="hover">
+  <v-hover :disabled="!user.loggedIn" v-model="hover" v-if="showMenu">
     <div
       ref="userBar"
       class="userMenu"
-      :class="{ showMenu: hover, miniMenu: miniNavMenu }"
+      :class="{ showMenu: hover, miniMenu: miniNavMenu, notSignedInMenu: !user.loggedIn }"
     >
-      <!-- USER MENU TOPBAR -->
-      <div class="blackBar">
+      <!-- USER MENU TOP (BLACK) BAR -->
+      <div v-if="!user.loggedIn" class="blackBar">
+        <div class="d-flex justify-center align-center" style="width: 80%">
+          <LoginDialog buttonMsg="SIGN IN or CREATE AN ACCOUNT" />
+        </div>
+      </div>
+      <div v-else class="blackBar">
         <div class="d-flex justify-center align-center">
           <v-progress-circular
             v-if="uploading"
@@ -46,16 +51,14 @@
           </v-avatar>
         </div>
         <div v-if="!miniNavMenu || hover" class="username mx-4" style="">
-          {{ person.firstName }} {{ person.lastName }}
+          <p class="ma-0">{{ person.firstName }} {{ person.lastName }}</p>
+          <!-- <span style="font-size: 0.8rem; color: #777">ID: {{ person.id }}</span> -->
         </div>
       </div>
       <!-- USER MENU HIDDEN-->
       <div class="userMenuHidden">
         <v-row>
-          <v-col
-            class="d-flex"
-            style="border-bottom: 1px solid var(--v-missionAccent-base)"
-          >
+          <v-col class="d-flex" style="border-bottom: 1px solid var(--v-missionAccent-base)">
             <p class="settings overline ma-0">Settings</p>
           </v-col>
         </v-row>
@@ -103,12 +106,12 @@
             :light="!dark"
           >
             <v-icon class="pr-2">{{ mdiSend }}</v-icon>
-            Give us Feedback
+            Feedback & Bugs
           </v-btn>
 
           <!-- Discord button -->
           <v-btn
-            href="https://discord.gg/gus7a2cnmA"
+            href="https://discord.gg/XWZwmarXn"
             target="_blank"
             color="indigo lighten-1"
             class="ma-3"
@@ -121,7 +124,7 @@
           </v-btn>
 
           <!-- Github button -->
-          <v-btn
+          <!-- <v-btn
             href="https://github.com/tairea/galaxy-maps-v2"
             target="_blank"
             color="blue-grey lighten-3"
@@ -132,7 +135,7 @@
           >
             <v-icon class="pr-2">{{ mdiGithub }}</v-icon>
             Help code this
-          </v-btn>
+          </v-btn> -->
 
           <!-- Logout button -->
           <v-btn
@@ -153,26 +156,21 @@
 </template>
 
 <script>
-// import { Component, Vue } from "vue-property-decorator";
-import firebase from "firebase";
-import { mapState, mapActions, mapMutations } from "vuex";
-import ThemeColourPicker from "@/components/ThemeColourPicker.vue";
-import { db, storage } from "../store/firestoreConfig";
-import StudentEditDialog from "../components/StudentEditDialog.vue";
-import {
-  mdiAccount,
-  mdiPencil,
-  mdiSend,
-  mdiDoorClosed,
-  mdiMessage,
-  mdiGithub,
-} from "@mdi/js";
+// import ThemeColourPicker from "@/components/ThemeColourPicker.vue";
+import LoginDialog from "@/components/Dialogs/LoginDialog.vue";
+import StudentEditDialog from "@/components/StudentEditDialog.vue";
+import { db, storage } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
+import { mdiAccount, mdiPencil, mdiSend, mdiDoorClosed, mdiMessage, mdiGithub } from "@mdi/js";
+import firebase from "firebase/compat/app";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "UserBar",
   components: {
-    ThemeColourPicker,
+    // ThemeColourPicker,
     StudentEditDialog,
+    LoginDialog,
   },
   data() {
     return {
@@ -190,15 +188,26 @@ export default {
       image: {},
       onhover: false,
       hover: false,
+      showMenu: true,
       miniNavMenu: false,
+      notSignedInMenu: false,
     };
   },
   watch: {
     $route(to, from) {
+      // show/hide userbar completely
       if (
-        this.$route.name == "GalaxyView" ||
-        this.$route.name == "SolarSystemView"
+        this.$route.name == "Login" ||
+        this.$route.name == "Verify" ||
+        this.$route.name == "Reset" ||
+        this.$route.name == "Register"
       ) {
+        this.showMenu = false;
+      } else {
+        this.showMenu = true;
+      }
+      // show/hide userbar mini version
+      if (this.$route.name == "GalaxyView" || this.$route.name == "SolarSystemView") {
         this.miniNavMenu = true;
       } else {
         this.miniNavMenu = false;
@@ -210,22 +219,28 @@ export default {
 
     if (this.person.accountType == "teacher") {
       // get courses created by this person (populates state.personsCourses)
-      await this.$store.dispatch("bindCoursesByPersonId", this.person.id);
+      await this.bindCoursesByPersonId(this.person.id);
     }
   },
   computed: {
-    ...mapState(["person"]),
+    ...mapState(useRootStore, ["person", "user"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
   },
   methods: {
-    ...mapActions(["getPersonById"]),
+    ...mapActions(useRootStore, [
+      "bindCoursesByPersonId",
+      "getPersonById",
+      "setDarkMode",
+      "setSnackbar",
+    ]),
     changeTheme() {
       this.$vuetify.theme.dark = this.darkSwitch;
-      this.$store.commit("setDarkMode", this.$vuetify.theme.isDark);
+      this.setDarkMode(this.$vuetify.theme.isDark);
     },
     logout() {
+      this.hover = false;
       firebase
         .database()
         .ref("/status/" + this.person.id)
@@ -239,7 +254,7 @@ export default {
         .signOut()
         .then(() => {
           // alert("Successfully signed out");
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Successfully signed out",
             color: "baseAccent",
@@ -248,7 +263,7 @@ export default {
         })
         .catch((error) => {
           alert(error.message);
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: error.message,
             color: "pink",
@@ -273,7 +288,7 @@ export default {
           this.person.firstname +
           this.person.lastname +
           "-" +
-          this.selectedFile.name
+          this.selectedFile.name,
       );
 
       // upload a file
@@ -285,7 +300,7 @@ export default {
         (snapshot) => {
           // show progress on uploader bar
           this.uploadPercentage = Math.floor(
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100,
           );
         },
         // upload error
@@ -304,7 +319,7 @@ export default {
             console.log("image: ", this.image);
             this.updateProfile();
           });
-        }
+        },
       );
     },
     updateProfile() {
@@ -369,6 +384,8 @@ export default {
       justify-content: center;
       align-items: center;
       padding: 0 10px;
+      flex-direction: column;
+      // width: 200px;
     }
   }
 
@@ -385,12 +402,16 @@ export default {
 
 .miniMenu {
   width: 90px;
-  transition: width 0.3s ease-out 0.3s, bottom 0.3s ease-out;
+  transition:
+    width 0.3s ease-out 0.3s,
+    bottom 0.3s ease-out;
 }
 
 .showMenu {
   width: 25%;
   bottom: 0px;
-  transition: width 0.3s ease-out, bottom 0.3s ease-out 0.3s;
+  transition:
+    width 0.3s ease-out,
+    bottom 0.3s ease-out 0.3s;
 }
 </style>

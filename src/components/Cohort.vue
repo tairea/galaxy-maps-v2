@@ -6,10 +6,7 @@
     :style="!studentView ? 'cursor: pointer;' : ''"
     :class="studentCardView ? 'pa-0' : ''"
   >
-    <div
-      v-if="!tooltip"
-      class="d-flex flex-column justify-start align-center cohort"
-    >
+    <div v-if="!tooltip" class="d-flex flex-column justify-start align-center cohort">
       <v-img
         v-if="cohort.image.url"
         :src="cohort.image.url"
@@ -56,30 +53,25 @@
 </template>
 
 <script>
-import { mapActions } from "vuex";
+import useRootStore from "@/store/index";
+import { mapActions, mapStores } from "pinia";
 
 export default {
   name: "Cohort",
-  props: [
-    "cohort",
-    "cols",
-    "tooltip",
-    "studentView",
-    "studentCardView",
-    "size",
-  ],
+  props: ["cohort", "cols", "tooltip", "studentView", "studentCardView", "size"],
   computed: {
+    ...mapStores(useRootStore),
     avatarClass() {
       return this.studentCardView ? "avatar" : "galaxy-view";
     },
   },
   methods: {
-    ...mapActions(["setCurrentCohort"]),
+    ...mapActions(useRootStore, ["setCurrentCohort"]),
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
     routeToCohort() {
-      this.$store.commit("setCurrentCohort", this.cohort);
+      this.rootStore.currentCohort = this.cohort;
       this.setCurrentCohort(this.cohort);
       this.$router.push({
         name: "CohortView",
@@ -153,6 +145,6 @@ export default {
 }
 
 .galaxy-view {
-  background-color: var(--v-background-lighten2) ;
+  background-color: var(--v-background-lighten2);
 }
 </style>

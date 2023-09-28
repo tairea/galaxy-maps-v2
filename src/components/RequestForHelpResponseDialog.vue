@@ -24,10 +24,7 @@
                     <v-simple-table>
                       <tr
                         class="dialog-context-description"
-                        style="
-                          color: var(--v-missionAccent-base);
-                          font-weight: 800;
-                        "
+                        style="color: var(--v-missionAccent-base); font-weight: 800"
                       >
                         <td>MISSION:</td>
                         <td>{{ request.contextTask.title }}</td>
@@ -53,20 +50,14 @@
               <div class="requester-info">
                 <v-row>
                   <div class="requester-image justify-center align-center">
-                    <v-avatar
-                      v-if="requesterPerson"
-                      size="30"
-                      style="background-color: grey"
-                    >
+                    <v-avatar v-if="requesterPerson" size="30" style="background-color: grey">
                       <img
                         v-if="requesterPerson.image"
                         :src="requesterPerson.image.url"
                         :alt="requesterPerson.firstName"
                         style="object-fit: cover"
                       />
-                      <v-icon :dark="dark" :light="!dark" v-else>{{
-                        mdiAccount
-                      }}</v-icon>
+                      <v-icon :dark="dark" :light="!dark" v-else>{{ mdiAccount }}</v-icon>
                     </v-avatar>
                   </div>
                   <!-- Message -->
@@ -74,15 +65,10 @@
                     <p class="dialog-description pa-1">
                       <span style="font-size: 0.8rem; font-weight: 800"
                         ><i>{{
-                          requesterPerson.firstName +
-                          " " +
-                          requesterPerson.lastName
+                          requesterPerson.firstName + " " + requesterPerson.lastName
                         }}</i></span
                       >
-                      <i
-                        >@
-                        {{ getHumanDate(request.requestSubmittedTimestamp) }}</i
-                      >
+                      <i>@ {{ getHumanDate(request.requestSubmittedTimestamp) }}</i>
                     </p>
                   </div>
                 </v-row>
@@ -149,14 +135,14 @@
 </template>
 
 <script>
-import firebase from "firebase/app";
-import moment from "moment";
-
-import { db, functions } from "../store/firestoreConfig";
-import { teacherRespondedToRequestForHelpXAPIStatement } from "../lib/veracityLRS";
-import { dbMixins } from "../mixins/DbMixins";
-import { mapState, mapGetters } from "vuex";
+import { db, functions } from "@/store/firestoreConfig";
+import { teacherRespondedToRequestForHelpXAPIStatement } from "@/lib/veracityLRS";
+import { dbMixins } from "@/mixins/DbMixins";
+import useRootStore from "@/store/index";
 import { mdiAccount, mdiCheck, mdiClose } from "@mdi/js";
+import firebase from "firebase/compat/app";
+import moment from "moment";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "RequestForHelpResponseDialog",
@@ -176,18 +162,19 @@ export default {
   }),
   mounted() {},
   computed: {
-    ...mapState([
+    ...mapState(useRootStore, [
       "currentCourse",
       "currentTopic",
       "currentTask",
       "currentCohort",
+      "person",
     ]),
-    ...mapGetters(["person"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
   },
   methods: {
+    ...mapActions(useRootStore, ["setSnackbar"]),
     getHumanDate(ts) {
       return moment(ts.seconds * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
     },
@@ -212,21 +199,17 @@ export default {
           console.log("Response successfully submitted for review!");
 
           // teacher assissted student
-          teacherRespondedToRequestForHelpXAPIStatement(
-            this.person,
-            this.request.contextTask.id,
-            {
-              student: this.requesterPerson,
-              galaxy: this.request.contextCourse,
-              system: this.request.contextTopic,
-              mission: this.request.contextTask,
-            }
-          );
+          teacherRespondedToRequestForHelpXAPIStatement(this.person, this.request.contextTask.id, {
+            student: this.requesterPerson,
+            galaxy: this.request.contextCourse,
+            system: this.request.contextTopic,
+            mission: this.request.contextTask,
+          });
 
           this.requestForHelp = "";
           this.loading = false;
           this.dialog = false;
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Response sent to student",
             color: "baseAccent",
@@ -237,7 +220,7 @@ export default {
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Error: " + error,
             color: "pink",

@@ -2,11 +2,7 @@
   <div :class="activityClass">
     <p :class="activityLabel">ACTIVITY</p>
     <div class="px-3">
-      <p
-        v-for="activity in studentsActivityLog"
-        :key="activity.id"
-        class="ma-0"
-      >
+      <p v-for="activity in studentsActivityLog" :key="activity.id" class="ma-0">
         {{ formatTime(activity.timestamp) + ": " + activity.description }}
       </p>
     </div>
@@ -14,36 +10,38 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
 import { getActivityLogXAPIQuery } from "@/lib/veracityLRS";
+import useRootStore from "@/store/index";
 import { DateTime } from "luxon";
+import { mapState } from "pinia";
+
 export default {
   name: "StudentActivityTimeline",
   props: {
-    studentCard: {type: Boolean, default: false}
+    studentCard: { type: Boolean, default: false },
   },
   data() {
     return {
-      studentsActivityLog: ["hello"]
-    }
+      studentsActivityLog: ["hello"],
+    };
   },
   async mounted() {
     this.studentsActivityLog = await getActivityLogXAPIQuery(this.person);
   },
   computed: {
-    ...mapGetters(["person"]),
-    activityClass () {
-      if (this.studentCard) return "student-card-log"
-      return "activity-log"
+    ...mapState(useRootStore, ["person"]),
+    activityClass() {
+      if (this.studentCard) return "student-card-log";
+      return "activity-log";
     },
-    activityLabel () {
-      if (this.studentCard) return "student-card-label"
-      return "label"
+    activityLabel() {
+      if (this.studentCard) return "student-card-label";
+      return "label";
     },
     courseAcivities() {
-      console.log('studentsActivityLog: ', this.studentsActivityLog)
-      return this.studentsActivityLog.filter()
-    }
+      console.log("studentsActivityLog: ", this.studentsActivityLog);
+      return this.studentsActivityLog.filter();
+    },
   },
   data() {
     return {};
@@ -84,6 +82,6 @@ export default {
 .student-card-label {
   color: var(--v-missionAccent-base);
   font-size: 0.5rem;
-  margin: 0px
+  margin: 0px;
 }
 </style>

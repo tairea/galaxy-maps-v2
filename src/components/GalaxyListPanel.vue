@@ -10,7 +10,7 @@
         <div
           class="subPanel"
           style="border-color: var(--v-cohortAccent-base)"
-          v-if="getAllSubmittedCourses"
+          v-if="user.loggedIn && getAllSubmittedCourses"
         >
           <p
             class="galaxyListPanelLabel overline mx-4 cohortAccent--text"
@@ -24,7 +24,7 @@
               v-for="(course, index) in getAllSubmittedCourses"
               :key="course.id"
               :course="course"
-              :admin="user.data.admin"
+              :admin="user.data && user.data.admin"
               :active="index === activeSubmitted"
               @click.native="courseClicked(course.id, index, 'submitted')"
             />
@@ -32,7 +32,7 @@
         </div>
 
         <!-- LEARNING -->
-        <div class="subPanel">
+        <div v-if="user.loggedIn" class="subPanel">
           <p class="galaxyListPanelLabel overline mx-4">EXPLORING</p>
           <div v-if="getLearningCourses.length">
             <!-- COURSE CARD -->
@@ -50,7 +50,7 @@
         </div>
 
         <!-- TEACHING -->
-        <div class="subPanel">
+        <div v-if="user.loggedIn" class="subPanel">
           <p class="galaxyListPanelLabel overline mx-4">MAPPED BY YOU</p>
           <!-- Create NEW GALAXY button -->
           <div class="d-flex justify-center mb-4">
@@ -79,7 +79,7 @@
         </div>
 
         <!-- SUBMITTED (CREATED & IN REVIEW) -->
-        <div class="subPanel" v-if="getSubmittedCourses.length > 0">
+        <div class="subPanel" v-if="user.loggedIn && getSubmittedCourses.length > 0">
           <p class="galaxyListPanelLabel overline mx-4">IN REVIEW</p>
           <div>
             <!-- COURSE CARD -->
@@ -106,18 +106,13 @@
               @click.native="courseClicked(course.id, index, 'public')"
             />
           </div>
-          <p v-else class="galaxyListPanelContent text-center">
-            NO PUBLIC MAPS
-          </p>
+          <p v-else class="galaxyListPanelContent text-center">NO PUBLIC MAPS</p>
         </div>
       </div>
     </div>
     <div class="blackBar">
       <div class="d-flex justify-center align-center">
-        <div
-          class="panelTab overline"
-          style="color: var(--v-galaxyAccent-base)"
-        >
+        <div class="panelTab overline" style="color: var(--v-galaxyAccent-base)">
           LIST OF GALAXIES
         </div>
       </div>
@@ -126,11 +121,13 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
 import GalaxyListPanelCard from "@/components/GalaxyListPanelCard.vue";
+import useRootStore from "@/store/index";
 import { mdiPlus } from "@mdi/js";
+import { mapActions, mapState } from "pinia";
+import { defineComponent } from "vue";
 
-export default {
+export default defineComponent({
   name: "GalaxyListPanel",
   components: {
     GalaxyListPanelCard,
@@ -148,18 +145,16 @@ export default {
   },
   async mounted() {
     //bind cohorts to get learning maps
-    this.$store.dispatch("getCohortsByPersonId", this.person);
+    await this.getCohortsByPersonId(this.person);
   },
   computed: {
-    ...mapState(["person", "courses", "cohorts", "user"]),
+    ...mapState(useRootStore, ["person", "courses", "cohorts", "user"]),
 
     // LEARNING GALAXIES
     getLearningCourses() {
       let learningCourses = [];
 
-      const filteredCohorts = this.cohorts.filter(
-        (cohort) => cohort.student == true
-      );
+      const filteredCohorts = this.cohorts.filter((cohort) => cohort.student == true);
 
       for (const cohort of filteredCohorts) {
         for (const course of cohort.courses) {
@@ -168,11 +163,7 @@ export default {
       }
 
       // remove course duplicates
-      learningCourses = learningCourses.filter(function (
-        item,
-        index,
-        inputArray
-      ) {
+      learningCourses = learningCourses.filter(function (item, index, inputArray) {
         return inputArray.indexOf(item) == index;
       });
 
@@ -188,17 +179,13 @@ export default {
     // TEACHERING GALAXIES
     getSubmittedCourses() {
       return this.courses.filter(
-        (course) =>
-          course.mappedBy.personId == this.person.id &&
-          course.status == "submitted"
+        (course) => course.mappedBy.personId == this.person.id && course.status == "submitted",
       );
     },
     // ADMIN NEEDS TO REVIEW
     getAllSubmittedCourses() {
-      if (this.user.data.admin) {
-        const submitted = this.courses.filter(
-          (course) => course.status == "submitted"
-        );
+      if (this.user.data?.admin) {
+        const submitted = this.courses.filter((course) => course.status == "submitted");
         if (submitted.length > 0) {
           return submitted;
         } else {
@@ -210,22 +197,24 @@ export default {
     getTeachingCourses() {
       return this.courses.filter(
         (course) =>
+          this.user.loggedIn &&
           course.mappedBy.personId == this.person.id &&
-          course.status != "submitted"
+          course.status != "submitted",
       );
     },
     // ALL GALAXIES
     getPublicCourses() {
       return this.courses.filter(
         (course) =>
+          // TODO: make firebase rule for this
           course.public == true &&
           course.status == "published" &&
-          !this.getLearningCourses.includes(course)
+          !(this.user.loggedIn && this.getLearningCourses.includes(course)),
       );
     },
   },
   methods: {
-    ...mapActions(["getPersonById"]),
+    ...mapActions(useRootStore, ["getCohortsByPersonId", "getPersonById"]),
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
@@ -258,7 +247,7 @@ export default {
       this.activeSubmitted = null;
     },
   },
-};
+});
 </script>
 
 <style lang="scss" scoped>

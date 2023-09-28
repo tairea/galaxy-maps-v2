@@ -7,9 +7,7 @@
       <!-- <div class="d-flex justify-center align-center"> -->
       <!-- <v-img class="galaxy-image" :src=""></v-img> -->
       <!-- </div> -->
-      <p class="overline mt-3 baseAccent--text">
-        Enter your email to reset your password
-      </p>
+      <p class="overline mt-3 baseAccent--text">Enter your email to reset your password</p>
       <v-form
         ref="form"
         v-model="valid"
@@ -45,9 +43,10 @@
 </template>
 
 <script>
-import firebase from "firebase";
-
-import BackButton from "@/components/BackButton";
+import BackButton from "@/components/BackButton.vue";
+import useRootStore from "@/store/index";
+import firebase from "firebase/compat/app";
+import { mapActions } from "pinia";
 
 export default {
   name: "ResetPassword",
@@ -65,22 +64,21 @@ export default {
   }),
   mounted() {},
   methods: {
+    ...mapActions(useRootStore, ["setSnackbar"]),
     login() {
       firebase
         .auth()
         .setPersistence(firebase.auth.Auth.Persistence.LOCAL)
         .then(() => {
           // New sign-in will be persisted with session persistence.
-          return firebase
-            .auth()
-            .signInWithEmailAndPassword(this.email, this.password);
+          return firebase.auth().signInWithEmailAndPassword(this.email, this.password);
         })
         .then(() => {
           console.log("Successfully logged in");
-          this.$router.push("/base/galaxies/my");
+          this.$router.push("/");
         })
         .catch((error) => {
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: error.message,
             color: "pink",
@@ -97,14 +95,14 @@ export default {
         .auth()
         .sendPasswordResetEmail(this.email)
         .then(() => {
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Reset Password Email Sent",
             color: "baseAccent",
           });
         })
         .catch((error) => {
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: error.message,
             color: "pink",

@@ -1,9 +1,6 @@
 <template>
   <!-- Avatar Section -->
-  <div
-    class="student-section text-center"
-    :class="size ? '' : 'student-image-section'"
-  >
+  <div class="student-section text-center" :class="size ? '' : 'student-image-section'">
     <v-avatar
       color="secondary"
       @mouseenter="onhover = true"
@@ -19,14 +16,8 @@
       />
       <v-icon v-else>{{ mdiAccount }}</v-icon>
     </v-avatar>
-    <div
-      class="d-flex justify-center align-center flex-column"
-      style="width: 100%"
-    >
-      <p
-        class="text-uppercase studentName pt-2"
-        :class="size ? '' : 'text-truncate'"
-      >
+    <div class="d-flex justify-center align-center flex-column" style="width: 100%">
+      <p class="text-uppercase studentName pt-2" :class="size ? '' : 'text-truncate'">
         {{ student.firstName || student.email }}
       </p>
 

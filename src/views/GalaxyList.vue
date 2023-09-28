@@ -7,58 +7,153 @@
     />
     <GalaxyListInfoPanel
       :type="courseType"
-      :selectedCourse="clickedCourseId"
+      :selectedCourseId="clickedCourseId"
       @closeInfoPanel="closeInfoPanel"
     />
     <div class="flexContainer">
       <Galaxies
-        v-if="courses.length"
+        v-if="!loading && validSlug"
         ref="galaxyMap"
         :highlightCourse="clickedCourseId"
         @courseClicked="courseClicked($event)"
         @createGalaxy="showDialog = true"
       />
+      <div v-if="!loading && !validSlug">
+        <p class="overline missionAccent--text">Error. destination doesn't exist</p>
+      </div>
     </div>
-    <!-- <div class="buttons"> -->
-    <CreateEditDeleteGalaxyDialog
-      :showDialog="showDialog"
-      @close="showDialog = false"
-    />
-    <!-- </div> -->
+
+    <div class="buttons">
+      <!-- Create button -->
+      <v-tooltip v-if="!user.loggedIn" top color="subBackground">
+        <template v-slot:activator="{ on, attrs }">
+          <v-row class="text-center" align="center" v-bind="attrs" v-on="on">
+            <v-col cols="12">
+              <v-btn
+                outlined
+                color="baseAccent"
+                @click="showDialog = true"
+                :disabled="!user.loggedIn"
+                class="createButton"
+                :style="clickedCourseId ? 'opacity:0' : 'opacity:1'"
+              >
+                <v-icon left>
+                  {{ mdiPlus }}
+                </v-icon>
+                CREATE GALAXY
+              </v-btn>
+            </v-col>
+          </v-row>
+        </template>
+        <div>
+          <p class="overline galaxyAccent--text ma-0" style="font-size: 0.8rem">
+            Sign in to Create a Galaxy
+          </p>
+        </div>
+      </v-tooltip>
+      <v-row v-else class="text-center" align="center">
+        <v-col cols="12">
+          <v-btn
+            outlined
+            color="baseAccent"
+            @click="showDialog = true"
+            :disabled="!user.loggedIn"
+            class="createButton"
+            :style="clickedCourseId ? 'opacity:0' : 'opacity:1'"
+          >
+            <v-icon left>
+              {{ mdiPlus }}
+            </v-icon>
+            CREATE GALAXY
+          </v-btn>
+        </v-col>
+      </v-row>
+      <!-- Discover button -->
+      <!-- <DiscoverGalaxyButton :hide="clickedCourseId"/> -->
+    </div>
+
+    <!-- Create Galaxy DIALOG -->
+    <CreateEditDeleteGalaxyDialog :showDialog="showDialog" @close="showDialog = false" />
   </div>
 </template>
 
 <script>
-import CreateEditDeleteGalaxyDialog from "../components/CreateEditDeleteGalaxyDialog";
-// import DiscoverGalaxyButton from "../components/DiscoverGalaxyButton";
-import GalaxyListPanel from "../components/GalaxyListPanel";
-import GalaxyListInfoPanel from "../components/GalaxyListInfoPanel";
-import Galaxies from "../components/Galaxies";
-
-import { mapState, mapGetters } from "vuex";
+import CreateEditDeleteGalaxyDialog from "@/components/CreateEditDeleteGalaxyDialog.vue";
+import DiscoverGalaxyButton from "@/components/DiscoverGalaxyButton.vue";
+import GalaxyListPanel from "@/components/GalaxyListPanel.vue";
+import GalaxyListInfoPanel from "@/components/GalaxyListInfoPanel.vue";
+import Galaxies from "@/components/Galaxies.vue";
+import { db } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
+import { mdiPlus } from "@mdi/js";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "GalaxyList",
-  // props: ["display"],
+  props: ["slug"],
   components: {
     CreateEditDeleteGalaxyDialog,
     GalaxyListPanel,
     GalaxyListInfoPanel,
-    // DiscoverGalaxyButton,
+    DiscoverGalaxyButton,
     Galaxies,
   },
   data() {
     return {
+      mdiPlus,
       loading: true,
       // whichCoursesToDisplay: "all",
       clickedCourseId: null,
       courseType: null,
       showDialog: false,
+      validSlug: true,
     };
   },
+  computed: {
+    ...mapState(useRootStore, ["courses", "user", "person"]),
+  },
+  watch: {
+    async user() {
+      let owner;
+      if (this.slug != null) {
+        const docRef = await db.collection("slugs").doc(this.slug).get();
+        const data = docRef.data();
+        if (data != null) {
+          owner = data.owner;
+        } else {
+          this.validSlug = false;
+        }
+      }
+      this.clickedCourseId = null;
+      this.bindCourses({ owner }).then(() => {
+        this.loading = false;
+      });
+    },
+  },
   async mounted() {
-    // This binds all courses. Should prob only bind courses relevant to user TODO:
-    await this.$store.dispatch("bindAllCourses");
+    // We don't care about waiting for this to finish before completing mounted
+    // because when it's finished it will automatically update our list of courses
+    // TODO: This binds all courses. Should prob only bind courses relevant to user
+    let owner;
+    if (this.slug != null) {
+      const docRef = await db.collection("slugs").doc(this.slug).get();
+      const data = docRef.data();
+      if (data != null) {
+        owner = data.owner;
+      } else {
+        this.validSlug = false;
+      }
+    }
+    this.bindCourses({ owner }).then(() => {
+      this.loading = false;
+      // zoom to galaxy if that were user wants to land *STEFAN
+      if (this.$route.query.map) {
+        this.clickedCourseId = this.$route.query.map;
+      }
+    });
+    if (this.courses.length > 0) {
+      this.loading = false;
+    }
 
     // 1) get assigned (EXPLORING)
 
@@ -66,11 +161,8 @@ export default {
 
     // 3) get submitted (IN REVIEW) mappedby && status==submitted
   },
-  computed: {
-    ...mapState(["courses"]),
-    ...mapGetters(["user", "person"]),
-  },
   methods: {
+    ...mapActions(useRootStore, ["bindCourses"]),
     courseClicked(emittedPayload) {
       this.clickedCourseId = emittedPayload.courseId;
       if (emittedPayload.type) this.courseType = emittedPayload.type;
@@ -126,6 +218,10 @@ export default {
   left: 50%;
   transform: translate(-50%, 0%);
   display: flex;
+
+  .createButton {
+    transition: all 0.3s;
+  }
 }
 
 .button-row {

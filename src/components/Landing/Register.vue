@@ -14,7 +14,6 @@
       <v-form v-else ref="form" v-model="valid" lazy-validation class="my-4">
         <v-text-field
           dark
-          type="email"
           v-model="person.firstName"
           label="First Name"
           required
@@ -23,10 +22,16 @@
           class="custom-input mt-6"
         ></v-text-field>
         <v-text-field
-          type="email"
           v-model="person.lastName"
           label="Last Name"
           required
+          color="missionAccent"
+          outlined
+          class="custom-input"
+        ></v-text-field>
+        <v-text-field
+          v-model="person.discord"
+          label="Discord Handle (optional)"
           color="missionAccent"
           outlined
           class="custom-input"
@@ -42,13 +47,15 @@
           class="custom-input"
         ></v-text-field>
         <v-text-field
-          type="password"
           v-model="person.password"
           label="Password"
           required
           color="missionAccent"
           outlined
           class="custom-input"
+          :append-icon="hide ? mdiEye : mdiEyeOff"
+          @click:append="() => (hide = !hide)"
+          :type="hide ? 'password' : 'text'"
         ></v-text-field>
         <v-btn
           :disabled="!valid"
@@ -71,10 +78,12 @@
 </template>
 
 <script>
-import firebase from "firebase";
+import BackButton from "@/components/BackButton.vue";
 import { db } from "@/store/firestoreConfig";
-
-import BackButton from "@/components/BackButton";
+import useRootStore from "@/store/index";
+import firebase from "firebase/compat/app";
+import { mapActions } from "pinia";
+import { mdiEye, mdiEyeOff } from "@mdi/js";
 
 export default {
   name: "Register",
@@ -82,11 +91,14 @@ export default {
     BackButton,
   },
   data: () => ({
+    mdiEye,
+    mdiEyeOff,
     closed: false,
     valid: true,
     person: {
       firstName: "",
       lastName: "",
+      discord: "",
       email: "",
       password: "",
       id: "",
@@ -96,6 +108,7 @@ export default {
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
     ],
     loading: false,
+    hide: String,
   }),
   mounted() {
     // hack to make active select white
@@ -106,6 +119,7 @@ export default {
     }
   },
   methods: {
+    ...mapActions(useRootStore, ["setSnackbar"]),
     register() {
       this.loading = true;
       // add user the auth
@@ -118,6 +132,8 @@ export default {
           this.person.id = userRef.user.uid;
           // remove password so its not saved to database
           delete this.person.password;
+          // add time registered
+          this.person["registered"] = new Date();
           // add user to people database
           db.collection("people")
             .doc(this.person.id)
@@ -141,7 +157,7 @@ export default {
           // this.$emit("verify");
         })
         .catch((error) => {
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: error.message,
             color: "pink",

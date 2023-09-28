@@ -37,7 +37,14 @@
 </template>
 
 <script>
+import useRootStore from "@/store/index";
 import { mdiMenu, mdiClose } from "@mdi/js";
+import { mapState } from "pinia";
+
+const TAB_GALAXIES = { id: 1, name: "GALAXIES", route: `/` };
+const TAB_COHORTS = { id: 2, name: "COHORTS", route: `/cohorts` };
+const TAB_DASHBOARD = { id: 3, name: "DASHBOARD", route: `/dashboard` };
+
 export default {
   name: "NavBar",
   props: ["userType"],
@@ -46,27 +53,46 @@ export default {
       mdiMenu,
       mdiClose,
       activeTab: null,
-      tabs: [
-        { id: 1, name: "GALAXIES", route: `/base/galaxies` },
-        { id: 2, name: "COHORTS", route: `/base/cohorts` },
-        { id: 3, name: "DASHBOARD", route: `/base/dashboard` },
-      ],
+      tabs: [TAB_GALAXIES],
       showNavMenu: true,
       showHamburgerMenu: false,
     };
+  },
+  computed: {
+    ...mapState(useRootStore, ["user"]),
   },
   watch: {
     $route(to, from) {
       if (this.$route.name == "GalaxyView") {
         this.showNavMenu = false;
         this.showHamburgerMenu = true;
+      } else if (
+        this.$route.name == "Login" ||
+        this.$route.name == "Verify" ||
+        this.$route.name == "Reset" ||
+        this.$route.name == "Register"
+      ) {
+        this.showNavMenu = false;
       } else {
         this.showNavMenu = true;
         this.showHamburgerMenu = false;
       }
     },
+    user(to, from) {
+      if (to.loggedIn) {
+        this.tabs = [TAB_GALAXIES, TAB_COHORTS, TAB_DASHBOARD];
+      } else {
+        this.tabs = [TAB_GALAXIES];
+      }
+    },
   },
-  mounted() {},
+  mounted() {
+    if (this.user.loggedIn) {
+      this.tabs = [TAB_GALAXIES, TAB_COHORTS, TAB_DASHBOARD];
+    } else {
+      this.tabs = [TAB_GALAXIES];
+    }
+  },
   methods: {
     toggleMenu() {
       this.showNavMenu = !this.showNavMenu;

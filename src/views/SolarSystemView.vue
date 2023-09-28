@@ -1,9 +1,9 @@
 <template>
-  <div id="container" class="bg">
+  <div v-if="!loading" id="container" class="bg">
     <!--==== Left section ====-->
     <div id="left-section">
       <SolarSystemInfo
-        :topic="currentTopic"
+        :topic="getTopicById(currentTopicId)"
         :tasks="teacher ? topicsTasks : personsTopicsTasks"
         :teacher="teacher"
       />
@@ -22,7 +22,7 @@
         :people="peopleInTopic"
       />
 
-      <BackButton :toPath="{ path: '/galaxy/' + currentCourseId }" />
+      <BackButton :toPath="'/galaxy/' + currentCourseId" />
     </div>
 
     <!--==== Main section ====-->
@@ -40,12 +40,12 @@
     <!--==== Right section ====-->
     <div id="right-section">
       <RequestForHelpTeacherFrame
-        :courses="[currentCourse]"
+        :courses="[getCourseById(currentCourseId)]"
         :isTeacher="teacher"
         :students="peopleInTopic"
       />
       <SubmissionTeacherFrame
-        :courses="[currentCourse]"
+        :courses="[getCourseById(currentCourseId)]"
         :isTeacher="teacher"
         :students="teacher ? peopleInTopic : [person]"
         class="mt-4"
@@ -55,17 +55,17 @@
 </template>
 
 <script>
-import SolarSystemInfo from "../components/SolarSystemInfo";
-import AssignedInfo from "../components/AssignedInfo";
-import MissionsInfo from "../components/MissionsInfo";
-import MissionsList from "../components/MissionsList";
-import SolarSystem from "../components/SolarSystem";
-import BackButton from "../components/BackButton";
-import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame";
-import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame.vue";
-
-import { mapState, mapGetters } from "vuex";
-import { getPersonsTopicById } from "../lib/ff";
+import SolarSystemInfo from "@/components/SolarSystemInfo.vue";
+import AssignedInfo from "@/components/AssignedInfo.vue";
+import MissionsInfo from "@/components/MissionsInfo.vue";
+import MissionsList from "@/components/MissionsList.vue";
+import SolarSystem from "@/components/SolarSystem.vue";
+import BackButton from "@/components/BackButton.vue";
+import SubmissionTeacherFrame from "@/components/SubmissionTeacherFrame.vue";
+import RequestForHelpTeacherFrame from "@/components/RequestForHelpTeacherFrame.vue";
+import { getPersonsTopicById } from "@/lib/ff";
+import useRootStore from "@/store/index";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "SolarSystemView",
@@ -79,26 +79,32 @@ export default {
     RequestForHelpTeacherFrame,
     SubmissionTeacherFrame,
   },
-  props: ["topicId"],
+  props: ["courseId", "topicId"],
   data() {
     return {
       activeMission: null,
       task: null,
       unsubscribes: [],
       peopleInTopic: [],
+      loading: true,
     };
   },
   async mounted() {
+    await this.bindCourses({ owner: null });
+    await this.bindCourseTopics(this.courseId);
+    this.setCurrentCourseId(this.courseId);
+    this.setCurrentTopicId(this.topicId);
+
     this.getPeopleInTopic();
     if (this.teacher) {
       //store bindTasksByTopicId
-      await this.$store.dispatch("bindTasksByTopicId", {
+      await this.bindTasksByTopicId({
         courseId: this.currentCourseId,
         topicId: this.currentTopicId,
       });
     } else {
       // store bindPersonsTasksByTopicId
-      await this.$store.dispatch("bindPersonsTasksByTopicId", {
+      await this.bindPersonsTasksByTopicId({
         personId: this.person.id,
         courseId: this.currentCourseId,
         topicId: this.currentTopicId,
@@ -114,6 +120,8 @@ export default {
     // this.requests = this.requestsForHelp.filter(
     //   (request) => request.contextTask.id == this.currentTaskId
     // );
+
+    this.loading = false;
   },
   watch: {
     personsCurrentTopic() {
@@ -121,55 +129,58 @@ export default {
     },
   },
   computed: {
-    ...mapState([
+    ...mapState(useRootStore, [
       "currentCourseId",
       "currentTopicId",
       "currentTaskId",
-      "currentCourse",
-      "currentTopic",
       "currentTask",
       "topicsTasks",
       "personsTopicsTasks",
       "personsTopics",
       "peopleInCourse",
-    ]),
-    ...mapGetters([
       "person",
       "getPersonsTopicById",
+      "getCourseById",
       "getTopicById",
       "getTasksByTopicId",
       "user",
     ]),
     draft() {
-      return this.currentCourse.status === "drafting";
+      return this.getCourseById(this.currentCourseId).status === "drafting";
     },
     teacher() {
       return (
-        this.currentCourse?.mappedBy?.personId === this.person.id ||
+        this.getCourseById(this.currentCourseId)?.mappedBy?.personId === this.person.id ||
         this.user.data.admin
       );
     },
     personsCurrentTopic() {
-      return this.personsTopics.find(
-        (topic) => topic.id == this.currentTopicId
-      );
+      return this.personsTopics.find((topic) => topic.id == this.currentTopicId);
     },
   },
   methods: {
+    ...mapActions(useRootStore, [
+      "bindCourses",
+      "bindCourseTopics",
+      "bindPersonsTasksByTopicId",
+      "bindTasksByTopicId",
+      "setCurrentCourseId",
+      "setCurrentTopicId",
+      "setCurrentTask",
+      "setCurrentTaskId",
+    ]),
     taskForHelpInfo(task) {
       this.task = task;
     },
     getActiveMission() {
       const activeMissionObj = this.personsTopicsTasks.find((taskObj) => {
-        return (
-          taskObj.taskStatus == "active" || taskObj.taskStatus == "declined"
-        );
+        return taskObj.taskStatus == "active" || taskObj.taskStatus == "declined";
       });
       if (activeMissionObj) {
         this.activeMission = true;
         // set as current/active task (if not already?)
-        this.$store.commit("setCurrentTaskId", activeMissionObj.id);
-        this.$store.commit("setCurrentTask", activeMissionObj);
+        this.setCurrentTaskId(activeMissionObj.id);
+        this.setCurrentTask(activeMissionObj);
       } else {
         return;
       }
@@ -182,8 +193,8 @@ export default {
       this.peopleInCourse.forEach(async (person) => {
         let personsTopic = await getPersonsTopicById(
           person.id,
-          this.currentCourse.id,
-          this.currentTopic.id
+          this.getCourseById(this.currentCourseId).id,
+          this.getTopicById(this.currentTopicId).id,
         );
         if (personsTopic.topicStatus == "active") people.push(person);
       });

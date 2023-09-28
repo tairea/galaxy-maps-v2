@@ -14,14 +14,7 @@
       >
         <v-icon small> {{ mdiPencil }} </v-icon>
       </v-btn>
-      <v-btn
-        v-else
-        v-bind="attrs"
-        v-on="on"
-        color="baseAccent"
-        class="ma-4"
-        outlined
-      >
+      <v-btn v-else v-bind="attrs" v-on="on" color="baseAccent" class="ma-4" outlined>
         <v-icon class="pr-2">{{ mdiPencil }}</v-icon>
         edit account
       </v-btn>
@@ -33,9 +26,7 @@
       <div class="dialog-header">
         <p class="dialog-title">Edit your profile details</p>
         <div class="d-flex align-center">
-          <v-icon left color="missionAccent">{{
-            mdiInformationVariant
-          }}</v-icon>
+          <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
           <p class="dialog-description">Update your profile information</p>
         </div>
       </div>
@@ -61,6 +52,16 @@
           v-model="profile.lastName"
           label="Last name"
         ></v-text-field>
+        <!-- LAST NAME -->
+        <v-text-field
+          class="input-field"
+          outlined
+          :dark="dark"
+          :light="!dark"
+          color="missionAccent"
+          v-model="profile.discord"
+          label="Discord handle"
+        ></v-text-field>
         <!-- EMAIL -->
         <v-row>
           <v-col cols="10">
@@ -85,14 +86,9 @@
             >
               {{ mdiPencilBox }}
             </v-icon>
-            <v-icon
-              class="mt-2"
-              large
-              color="missionAccent"
-              v-else
-              @click="saveEmail"
-              >{{ mdiContentSave }}</v-icon
-            >
+            <v-icon class="mt-2" large color="missionAccent" v-else @click="saveEmail">{{
+              mdiContentSave
+            }}</v-icon>
           </v-col>
         </v-row>
 
@@ -130,8 +126,8 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
-import firebase from "firebase";
+import { db } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
 import {
   mdiPencil,
   mdiInformationVariant,
@@ -140,7 +136,8 @@ import {
   mdiCheck,
   mdiClose,
 } from "@mdi/js";
-import { db } from "../store/firestoreConfig";
+import firebase from "firebase/compat/app";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "StudentEditDialog",
@@ -148,7 +145,7 @@ export default {
   components: {},
   mounted() {},
   computed: {
-    ...mapState(["person"]),
+    ...mapState(useRootStore, ["person"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -176,12 +173,13 @@ export default {
     },
   },
   methods: {
+    ...mapActions(useRootStore, ["setSnackbar"]),
     updatePerson(profile) {
       db.collection("people")
         .doc(profile.id)
         .update(profile)
         .then((res) => {
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Profile successfully updated",
             color: "baseAccent",
@@ -190,7 +188,7 @@ export default {
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: error.message,
             color: "pink",
@@ -209,20 +207,21 @@ export default {
             handleCodeInApp: true,
           };
           firebase.auth().currentUser.sendEmailVerification(actionCodeSettings);
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
-            text: "Email successfully updated, check your email to veriify your new email account",
+            text: "Email successfully updated, check your email to verify your new email account",
             color: "baseAccent",
           });
         })
         .catch((error) => {
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: error.message,
             color: "pink",
           });
           this.cancel;
         });
+      this.editEmail = false;
     },
     cancel() {
       this.dialog = false;

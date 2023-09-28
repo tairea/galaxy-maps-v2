@@ -1,9 +1,5 @@
 <template>
-  <div
-    id="galaxy-info"
-    :class="draft ? 'draft-border' : 'galaxy-border'"
-    v-if="course"
-  >
+  <div id="galaxy-info" :class="draft ? 'draft-border' : 'galaxy-border'" v-if="course">
     <!-- Label -->
     <h2 class="galaxy-label"><span v-if="draft">Drafting</span> Galaxy</h2>
     <!-- Map Name  -->
@@ -13,10 +9,7 @@
       Status: <span class="font-weight-black">{{ course.status }}</span>
     </p>
     <!-- Visibility -->
-    <p
-      v-if="course.status === 'submitted'"
-      class="galaxy-status overline mb-0 in-review"
-    >
+    <p v-if="course.status === 'submitted'" class="galaxy-status overline mb-0 in-review">
       awaiting review
     </p>
     <p v-else class="galaxy-status overline mb-0">
@@ -24,24 +17,22 @@
       <span class="font-weight-black">{{ visibility }}</span>
     </p>
     <!-- Map Image -->
-    <v-img
-      v-if="course.image"
-      class="galaxy-image mt-2"
-      :src="course.image.url"
-    ></v-img>
-    <p class="galaxy-description">{{ course.description }}</p>
-    <CreateEditDeleteGalaxyDialog
-      v-if="teacher"
-      :edit="true"
-      :courseToEdit="course"
-    />
+    <v-img v-if="course.image" class="galaxy-image mt-2" :src="course.image.url"></v-img>
+    <p ref="description" class="galaxy-description">
+      <!-- {{ course.description }} -->
+      {{ maybeTruncate(course.description) }}
+      <a style="border-bottom: 1px solid" v-if="readmore" @click="showFullDescription()"
+        >Read more</a
+      >
+    </p>
+    <CreateEditDeleteGalaxyDialog v-if="teacher" :edit="true" :courseToEdit="course" />
   </div>
 </template>
 
 <script>
-import CreateEditDeleteGalaxyDialog from "../components/CreateEditDeleteGalaxyDialog";
-
-import { mapState } from "vuex";
+import CreateEditDeleteGalaxyDialog from "@/components/CreateEditDeleteGalaxyDialog.vue";
+import useRootStore from "@/store/index";
+import { mapState } from "pinia";
 
 export default {
   name: "GalaxyInfo",
@@ -50,10 +41,32 @@ export default {
     CreateEditDeleteGalaxyDialog,
   },
   mounted() {},
+  data() {
+    return {
+      readmore: false,
+    };
+  },
   computed: {
-    ...mapState(["person"]),
+    ...mapState(useRootStore, ["person"]),
     visibility() {
       return this.course.public ? "Public" : "Private";
+    },
+  },
+
+  methods: {
+    maybeTruncate(value) {
+      if (!value) return "";
+      if (value.length <= 100) {
+        return value;
+      } else {
+        // show read more button
+        this.readmore = true;
+        // limit to 100 characters
+        return value.substring(0, 100) + "...";
+      }
+    },
+    showFullDescription() {
+      this.$refs.description.innerHTML = this.course.description;
     },
   },
 };
@@ -101,6 +114,7 @@ export default {
     margin-top: 10px;
     font-size: 0.8rem;
     color: var(--v-galaxyAccent-base);
+    font-style: italic;
   }
 }
 

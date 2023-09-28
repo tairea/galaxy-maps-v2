@@ -1,46 +1,40 @@
 <template>
   <div class="main-wrap">
-    <!-- <div class="side-col">
-      <div v-if="cohorts">
-        <v-row class="mb-5">
-          <v-col>
-            <v-row>
-              <Cohort
-                ref="cohort"
-                v-for="(cohort, cohortIndex) in getCohortsByOrganisationId()"
-                :id="'noOrgcohort' + cohortIndex"
-                :cohort="cohort"
-                :key="cohort.id"
-                :size="40"
-                :hideNames="true"
-                :tooltip="true"
-                :studentView="true"
-                @click.native="clickedCohort(cohort, 'noOrg', cohortIndex)"
-              />
-            </v-row>
-          </v-col>
-        </v-row>
+    <div class="side-col">
+      <!-- COHORTS -->
+      <div v-if="cohorts" class="cohorts mt-12">
+        <Cohort
+          ref="cohort"
+          v-for="(cohort, cohortIndex) in getCohortsByOrganisationId()"
+          :id="'noOrgcohort' + cohortIndex"
+          :cohort="cohort"
+          :key="cohort.id"
+          :size="60"
+          :hideNames="true"
+          :tooltip="true"
+          :studentView="true"
+          @click.native="clickedCohort(cohort, 'noOrg', cohortIndex)"
+          style="padding: 5px"
+        />
       </div>
+      <!-- ORGANISATIONS -->
       <div
         v-for="(organisation, orgIndex) in organisations"
         :key="organisation.id"
-        class="mission-border"
+        class="mission-border mt-6"
       >
-        <div
-          class="organisation-banner d-flex flex-column justify-center align-center"
-        >
+        <div class="organisation-banner d-flex flex-column justify-center align-center">
           <Organisation
             @editOrg="editOrgDialog"
             :organisation="organisation"
-            :size="50"
-            :hideName="true"
+            :size="60"
+            :hideName="false"
           />
         </div>
+        <!-- COHORTS -->
         <div class="mb-3 d-flex flex-column justify-center align-center">
           <Cohort
-            v-for="(cohort, cohortIndex) in getCohortsByOrganisationId(
-              organisation.id
-            )"
+            v-for="(cohort, cohortIndex) in getCohortsByOrganisationId(organisation.id)"
             ref="cohort"
             :id="'org' + orgIndex + 'cohort' + cohortIndex"
             :cohort="cohort"
@@ -55,16 +49,15 @@
         </div>
       </div>
       <div v-if="!cohorts">
-        <h3 class="cohort-heading overline baseAccent--text">
-          No Cohorts Found
-        </h3>
+        <h3 class="cohort-heading overline baseAccent--text">No Cohorts Found</h3>
       </div>
 
-      <div v-if="user.data.admin">
+      <!-- SIDEBAR ADMIN BUTTONS -->
+      <!-- <div v-if="user.data.admin">
         <v-tooltip right color="subBackground">
           <template v-slot:activator="{ on, attrs }">
             <div v-bind="attrs" v-on="on">
-              <CreateEditDeleteCohortDialog :hideText="true" />
+              <CreateEditDeleteCohortDialog :hideText="false" />
             </div>
           </template>
           <div class="create-tooltip">CREATE COHORT</div>
@@ -76,67 +69,132 @@
                 ref="organisationDialog"
                 :edit="openOrganisationDialog"
                 :organisationToEdit="editingOrgansation"
-                :hideText="true"
+                :hideText="false"
               />
             </div>
           </template>
           <div class="create-tooltip">CREATE ORGANISATION</div>
         </v-tooltip>
-        <div v-if="person.accountType == 'admin'">
+        <div v-if="user.data.admin">
           <CreateAdminDialog />
         </div>
-      </div>
-    </div> -->
+      </div> -->
+    </div>
     <v-expand-transition>
       <div v-if="cohorts.length" class="main-col" v-show="expand">
         <!-- Middle chip row -->
-
         <div class="timeframe-chips">
           <TimeframeFilters @timeframe="setTimeframe($event)" />
         </div>
+
+        <!-- Cohort Panels -->
         <div class="d-flex flex-wrap">
           <CohortPanelV2
-            v-for="cohort in selectedCohorts.length > 0
-              ? selectedCohorts
-              : orderedCohorts"
+            v-for="cohort in selectedCohorts.length > 0 ? selectedCohorts : orderedCohorts"
             :cohort="cohort"
             :key="cohort.id"
             :timeframe="timeframe"
             class="cohort-panel"
           />
         </div>
-        <v-row justify="center">
-          <v-tooltip top close-delay="2000" color="subBackground">
+
+        <!-- OPEN VERSION -->
+        <div class="mb-6">
+          <v-tooltip
+            top
+            color="subBackground"
+            v-if="this.user.data.admin || this.person.firstName == 'TaiCollective.nz'"
+          >
             <template v-slot:activator="{ on, attrs }">
-              <v-btn
-                outlined
-                color="baseAccent"
-                v-bind="attrs"
-                v-on="on"
-                class="mb-8"
-              >
-                <v-icon class="mb-1 mr-2">{{ mdiPlus }}</v-icon>
-                create cohort
-              </v-btn>
+              <div v-bind="attrs" v-on="on">
+                <CreateEditDeleteCohortDialog />
+              </div>
+            </template>
+            <div class="create-tooltip">CREATE COHORT</div>
+          </v-tooltip>
+          <!-- PAY WALL VERSION Create Cohort Button -->
+          <v-tooltip v-else bottom color="subBackground">
+            <template v-slot:activator="{ on, attrs }">
+              <div v-bind="attrs" v-on="on">
+                <!-- DISABLED -->
+                <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on" disabled>
+                  <v-icon class="mb-1 mr-2">{{ mdiPlus }}</v-icon>
+                  create cohort
+                </v-btn>
+              </div>
             </template>
             <span v-html="paidFeatureMessage"></span>
           </v-tooltip>
-        </v-row>
-      </div>
-      <div v-else class="no-cohort">
-        <p class="overline">create or start a galaxy to join a cohort</p>
-        <p class="overline" style="text-align: center"><strong>OR</strong></p>
+        </div>
 
-        <!-- Create Cohort Button -->
-        <v-tooltip bottom close-delay="2000" color="subBackground">
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on">
-              <v-icon class="mb-1 mr-2">{{ mdiPlus }}</v-icon>
-              create cohort
-            </v-btn>
-          </template>
-          <span v-html="paidFeatureMessage"></span>
-        </v-tooltip>
+        <!-- ADMIN BUTTONS -->
+        <div v-if="this.user.data.admin" class="mt-3">
+          <!-- CREATE ORGANISATION -->
+          <v-tooltip top color="subBackground">
+            <template v-slot:activator="{ on, attrs }">
+              <div v-bind="attrs" v-on="on" class="ml-4">
+                <CreateEditDeleteOrganisationDialog
+                  ref="organisationDialog"
+                  :edit="openOrganisationDialog"
+                  :organisationToEdit="editingOrgansation"
+                />
+              </div>
+            </template>
+            <div class="create-tooltip">CREATE ORGANISATION</div>
+          </v-tooltip>
+          <!-- CREATE ADMIN -->
+          <div>
+            <CreateAdminDialog />
+          </div>
+        </div>
+      </div>
+
+      <!-- NO COHORTS YET -->
+      <div v-else class="no-cohort">
+        <p class="overline">you are not in any cohorts yet</p>
+        <p class="overline">start a galaxy to join a cohort</p>
+
+        <!-- PAY WALL VERSION Create Cohort Button -->
+        <div class="button-container">
+          <v-tooltip bottom close-delay="2000" color="subBackground">
+            <template v-slot:activator="{ on, attrs }">
+              <div v-bind="attrs" v-on="on">
+                <!-- DISABLED -->
+                <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on" disabled>
+                  <v-icon class="mb-1 mr-2">{{ mdiPlus }}</v-icon>
+                  create cohort
+                </v-btn>
+              </div>
+            </template>
+            <span v-html="paidFeatureMessage"></span>
+          </v-tooltip>
+          <!-- OPEN VERSION -->
+          <v-tooltip right color="subBackground">
+            <template v-slot:activator="{ on, attrs }">
+              <div v-bind="attrs" v-on="on">
+                <CreateEditDeleteCohortDialog />
+              </div>
+            </template>
+            <div class="create-tooltip">CREATE COHORT</div>
+          </v-tooltip>
+          <v-tooltip right color="subBackground" v-if="this.user.data.admin">
+            <template v-slot:activator="{ on, attrs }">
+              <div v-bind="attrs" v-on="on" class="mt-3">
+                <CreateEditDeleteOrganisationDialog
+                  ref="organisationDialog"
+                  :edit="openOrganisationDialog"
+                  :organisationToEdit="editingOrgansation"
+                  :hideText="false"
+                />
+              </div>
+            </template>
+            <div class="create-tooltip">CREATE ORGANISATION</div>
+          </v-tooltip>
+        </div>
+        <!-- Create admin button -->
+        <!-- <div v-if="this.user.data.admin">
+          <CreateAdminDialog />
+        </div> -->
       </div>
       <!-- <p>create or start a galaxy to join a cohort</p> -->
     </v-expand-transition>
@@ -148,18 +206,17 @@
 
 <script lang="js">
 // @ is an alias to /src
-import CreateEditDeleteCohortDialog from "../components/CreateEditDeleteCohortDialog";
-import CreateEditDeleteOrganisationDialog from "../components/CreateEditDeleteOrganisationDialog";
-import CreateAdminDialog from "../components/CreateAdminDialog";
-import EditOrganisationButtonDialog from "../components/EditOrganisationButtonDialog";
-import Cohort from "../components/Cohort";
-import CohortPanelV2 from "../components/CohortPanelV2";
-import TimeframeFilters from "../components/TimeframeFilters";
-import Organisation from "../components/Organisation";
-
-import { mapState, mapGetters, mapActions } from "vuex";
-
-import { mdiPlus} from "@mdi/js";
+import CreateEditDeleteCohortDialog from "@/components/CreateEditDeleteCohortDialog.vue";
+import CreateEditDeleteOrganisationDialog from "@/components/CreateEditDeleteOrganisationDialog.vue";
+import CreateAdminDialog from "@/components/CreateAdminDialog.vue";
+import EditOrganisationButtonDialog from "@/components/EditOrganisationButtonDialog.vue";
+import Cohort from "@/components/Cohort.vue";
+import CohortPanelV2 from "@/components/CohortPanelV2.vue";
+import TimeframeFilters from "@/components/TimeframeFilters.vue";
+import Organisation from "@/components/Organisation.vue";
+import useRootStore from "@/store/index";
+import { mdiPlus } from "@mdi/js";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "CohortListV2",
@@ -171,7 +228,7 @@ export default {
     EditOrganisationButtonDialog,
     CreateAdminDialog,
     CohortPanelV2,
-    TimeframeFilters
+    TimeframeFilters,
   },
   props: ["on", "attrs"],
   data: () => ({
@@ -187,27 +244,37 @@ export default {
     unselectedCohorts: [],
     orderedCohorts: [],
     expand: false,
-    paidFeatureMessage: `<div class="ma-2"><p class="text-center">Paid feature.</p><p class="text-center">Contact us to upgrade: <a href="mailto:base@galaxymaps.io">base@galaxymaps.io</a></p></div>`
+    paidFeatureMessage: `<div class="ma-2"><p class="text-center">Paid feature.</p><p class="text-center">Contact us to upgrade: <a href="mailto:base@galaxymaps.io">base@galaxymaps.io</a></p></div>`,
   }),
-  mounted() {
+  watch: {
+    cohorts() {
+      this.orderCohorts();
+    },
+  },
+  async mounted() {
     // trigger VuexFire bindCohorts & bindOrganisations in Store
-    this.getCohortsAndOrganisations();
-    this.orderCohorts()
-    this.expand = true
+    await this.getCohortsAndOrganisations();
+    this.orderCohorts();
+    this.expand = true;
   },
   computed: {
-    ...mapState(["organisations", "cohorts", "person", "user"]),
-    ...mapGetters(["getOrganisationById"]),
+    ...mapState(useRootStore, [
+      "organisations",
+      "cohorts",
+      "person",
+      "user",
+      "getOrganisationById",
+    ]),
     cohortView() {
-      return this.$route.name === "CohortView"
+      return this.$route.name === "CohortView";
     },
     getIndex() {
-      this.currentIndexCount = this.currentIndexCount + 1
-      return this.currentIndexCount
+      this.currentIndexCount = this.currentIndexCount + 1;
+      return this.currentIndexCount;
     },
   },
   methods: {
-    ...mapActions(["bindAllCohorts", "bindAllOrganisations", "getCohortsByPersonId"]),
+    ...mapActions(useRootStore, ["bindAllCohorts", "bindAllOrganisations", "getCohortsByPersonId"]),
     getCohortsByOrganisationId(id) {
       if (id) {
         return this.cohorts.filter((cohort) => cohort.organisation === id);
@@ -215,68 +282,66 @@ export default {
         return this.cohorts.filter((cohort) => cohort.organisation == "");
       }
     },
-    getCohortsAndOrganisations() {
+    async getCohortsAndOrganisations() {
       if (this.user.data.admin) {
-        this.bindAllCohorts()
-        this.bindAllOrganisations();
+        await this.bindAllCohorts();
+        await this.bindAllOrganisations();
       } else {
-        this.getCohortsByPersonId(this.person)
+        await this.getCohortsByPersonId(this.person);
       }
     },
     editOrgDialog(orgId) {
-      this.openOrganisationDialog = true
-      console.log("getting org with id = ", orgId)
-      this.editingOrgansation = this.getOrganisationById(orgId)
-      console.log("got org = ", this.editingOrgansation)
-      this.$refs.organisationDialog.openDialog()
+      this.openOrganisationDialog = true;
+      this.editingOrgansation = this.getOrganisationById(orgId);
+      this.$refs.organisationDialog.openDialog();
     },
     setTimeframe(timeframeEmitted) {
-      this.timeframe = timeframeEmitted
+      this.timeframe = timeframeEmitted;
     },
     clickedCohort(cohort, orgIndex, cohortIndex) {
       // remap cohort ids (eg. :id=org2cohort2) to indexs that match cohortEls indexs
       // org0cohort0 should be 0 - org2cohort2 should be org0.length + org1.length + 2
-      const numOrgs = this.organisations.length
+      const numOrgs = this.organisations.length;
       // save num of orgs and cohorts to this multi-dimensional array
-      const orgsCohortsArr = []
+      const orgsCohortsArr = [];
 
       // cohorts without orgs
       // this querys all id's with noOrg (eg. id="noOrg...")
       // important no orgs pushes first as no org cohorts render first
-      orgsCohortsArr.push(document.querySelectorAll('[id^=noOrg]').length)
+      orgsCohortsArr.push(document.querySelectorAll("[id^=noOrg]").length);
 
       // orgs with cohorts
       for (var i = 0; i < numOrgs; i++) {
         // this querys all id's with org and number (eg. id="org1...", id="org2...")
-        orgsCohortsArr.push(document.querySelectorAll('[id^=org' + i + ']').length)
+        orgsCohortsArr.push(document.querySelectorAll("[id^=org" + i + "]").length);
       }
 
       // log multi-dim arr of orgs and cohorts
       // console.log("orgsCohortsArr",orgsCohortsArr)
 
-      let mappedIndex = 0
+      let mappedIndex = 0;
       if (orgIndex == "noOrg") {
-        mappedIndex = cohortIndex
+        mappedIndex = cohortIndex;
       } else if (orgIndex == 0) {
         let sum = 0;
         sum += orgsCohortsArr[0];
-        mappedIndex = sum + cohortIndex
+        mappedIndex = sum + cohortIndex;
       } else {
         //test cases: org1cohort2 , org3cohort2
         let sum = 0;
         sum += orgsCohortsArr[0]; // sum noOrg cohorts first
         for (var x = 0; x < orgIndex; x++) {
-          sum += orgsCohortsArr[x + 1] // plus 1 because noOrgs is first index
+          sum += orgsCohortsArr[x + 1]; // plus 1 because noOrgs is first index
         }
-        mappedIndex = sum + cohortIndex
+        mappedIndex = sum + cohortIndex;
       }
 
-      const index = mappedIndex
+      const index = mappedIndex;
 
       // get all avatar elements
       const cohortEls = this.$refs.cohort;
       // console.log("cohortEls",cohortEls)
-      this.cohortLength = cohortEls.length
+      this.cohortLength = cohortEls.length;
       // loop cohort els
       for (var i = 0; i < cohortEls.length; i++) {
         // add index to selected if not already. else remove
@@ -286,20 +351,15 @@ export default {
         }
         // remove
         else if (i == index && this.selectedIndexs.includes(index)) {
-          this.selectedIndexs = this.selectedIndexs.filter(
-            (item) => item !== index
-          );
+          this.selectedIndexs = this.selectedIndexs.filter((item) => item !== index);
           this.selectedCohorts = this.selectedCohorts.filter(
-            (selectedCohort) => selectedCohort.id !== cohort.id
+            (selectedCohort) => selectedCohort.id !== cohort.id,
           );
           this.unselectedCohorts.push(cohort);
         }
 
         //anyone not in selectedCohorts becomes unselected (this is used to hide data in chart)
-        this.unselectedCohorts = this.diffTwoArraysOfObjects(
-          this.cohorts,
-          this.selectedCohorts
-        );
+        this.unselectedCohorts = this.diffTwoArraysOfObjects(this.cohorts, this.selectedCohorts);
 
         // add dim to all cohort els
         for (var y = 0; y < cohortEls.length; y++) {
@@ -319,10 +379,8 @@ export default {
       });
     },
     orderCohorts() {
-      this.orderedCohorts = this.cohorts.sort((a, b) => {
-        return a.teacher ? -1 : 1
-      })
-    }
+      this.orderedCohorts = [...this.cohorts].sort((a, b) => (a.teacher ? -1 : 1));
+    },
   },
 };
 </script>
@@ -340,28 +398,33 @@ hr {
   overflow: hidden;
 
   .side-col {
-    width: 10%;
-    // border: 1px solid blue;
+    width: 15%;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: start;
     align-items: center;
-    overflow: scroll;
+    overflow-y: scroll;
     overflow-x: hidden;
+    // border: 1px solid blue;
 
+    .cohorts {
+      width: 50%;
+      display: flex;
+      flex-wrap: wrap;
+      // border: 1px solid yellow;
+    }
     .mission-border {
       border: 1px solid var(--v-subBackground-base);
-      margin-bottom: 20px;
-      width: 80px;
+      // margin-bottom: 20px;
+      width: 90%;
     }
   }
 
   .main-col {
     margin-top: 70px;
-    width: 100%;
+    width: 80%;
     overflow: scroll;
     overflow-x: hidden;
-    // border: 1px solid red;
   }
 
   .cohort-heading {
@@ -371,6 +434,7 @@ hr {
   }
 
   .organisation-banner {
+    // border-bottom: 1px solid rgba(200, 200, 200, 0.5);
     border-bottom: 1px solid rgba(200, 200, 200, 0.5);
     margin: 0px 20px;
   }
@@ -411,7 +475,8 @@ hr {
 }
 
 .cohort-panel {
-  width: calc(50% - 40px);
+  //width: calc(50% - 40px); // two panels per row
+  width: 100%; // two panels per row
 }
 
 .no-cohort {
@@ -420,9 +485,19 @@ hr {
   text-transform: uppercase;
   display: flex;
   justify-content: center;
+  align-items: center;
   flex-direction: column;
-  margin-left: auto;
-  margin-right: auto;
   color: var(--v-missionAccent-base);
+  // margin-left: auto;
+  // margin-right: auto;
+  width: 80%;
+  .button-container {
+    margin-top: 50px;
+    height: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
 }
 </style>

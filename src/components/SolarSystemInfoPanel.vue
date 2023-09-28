@@ -2,13 +2,7 @@
   <div class="galaxyInfoPanel" :style="selectedTopic ? 'right: 0px' : ''">
     <div class="panelContent">
       <div class="panelContentInner" v-if="selectedTopic">
-        <v-btn
-          icon
-          small
-          color="missionAccent"
-          class="close-button mt-2"
-          @click="closeInfoPanel"
-        >
+        <v-btn icon small color="missionAccent" class="close-button mt-2" @click="closeInfoPanel">
           <v-icon>{{ mdiClose }}</v-icon>
         </v-btn>
         <div class="topOfPanel">
@@ -40,20 +34,17 @@
         <div class="card-container">
           <div v-if="tasks.length == 0" class="noMissionWarningContainer">
             <p class="noMissionWarning">This system has no missions.</p>
-            <p class="noMissionWarning">
-              (Systems must have at least one mission)
-            </p>
+            <p class="noMissionWarning">(Systems must have at least one mission)</p>
             <p class="noMissionWarning mt-6">
               <strong>View system to create a mission.</strong>
             </p>
           </div>
+          <!-- list of Mission cards -->
           <div
             v-for="(task, index) in tasks"
             :key="task.id"
             class="task-card"
-            :style="[
-              task.taskStatus == 'locked' ? { opacity: 0.4 } : { opacity: 1 },
-            ]"
+            :style="[task.taskStatus == 'locked' ? { opacity: 0.4 } : { opacity: 1 }]"
             @click="routeToSolarSystem"
           >
             <div class="number-title-container">
@@ -73,9 +64,7 @@
               >
                 {{ task.taskStatus }}
               </p>
-              <v-icon v-else color="missionAccent" class="lock-icon">{{
-                mdiLock
-              }}</v-icon>
+              <v-icon v-else color="missionAccent" class="lock-icon">{{ mdiLock }}</v-icon>
             </div>
           </div>
         </div>
@@ -98,8 +87,9 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from "vuex";
+import useRootStore from "@/store/index";
 import { mdiClose, mdiPencil, mdiLock } from "@mdi/js";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "SolarSystemInfoPanel",
@@ -121,26 +111,26 @@ export default {
     // console.log("selected topic is:", this.selectedTopic);
   },
   computed: {
-    ...mapState([
+    ...mapState(useRootStore, [
       "person",
       "courses",
       "cohorts",
       "topicsTasks",
       "personsTopicsTasks",
       "currentCourse",
+      "getCourseById",
+      "person",
+      "user",
     ]),
-    ...mapGetters(["getCourseById", "person", "user"]),
     // filteredTasks() {
     //   return this.tasks.filter((task) => task.topicId == this.selectedTopic);
     // },
     teacher() {
-      return (
-        this.currentCourse?.mappedBy?.personId === this.person.id ||
-        this.user.data.admin
-      );
+      return this.currentCourse?.mappedBy?.personId === this.person.id || this.user.data.admin;
     },
   },
   methods: {
+    ...mapActions(useRootStore, ["setCurrentTaskId", "setCurrentTopic", "setCurrentTopicId"]),
     closeInfoPanel() {
       this.$emit("closeInfoPanel");
     },
@@ -150,19 +140,18 @@ export default {
     routeToSolarSystem() {
       // console.log("route to ss", this.currentTopic.id);
       // save current topic to store
-      this.$store.commit("setCurrentTopicId", this.selectedTopic.id);
-      this.$store.commit("setCurrentTopic", this.selectedTopic);
+      this.setCurrentTopicId(this.selectedTopic.id);
+      this.setCurrentTopic(this.selectedTopic);
       // save active task to store if we know it
-      const activeMission = this.tasks.find(
-        (topicObj) => topicObj.taskStatus == "active"
-      );
+      const activeMission = this.tasks.find((topicObj) => topicObj.taskStatus == "active");
       if (activeMission) {
-        this.$store.commit("setCurrentTaskId", activeMission.id);
+        this.setCurrentTaskId(activeMission.id);
       }
       // route to topic/solar system
       this.$router.push({
         name: "SolarSystemView",
         params: {
+          courseId: this.currentCourse.id,
           topicId: this.selectedTopic.id,
           teacher: this.teacher,
         },
@@ -302,6 +291,10 @@ export default {
               color: var(--v-galaxyAccent-base);
             }
           }
+        }
+
+        .task-card:last-child {
+          margin-bottom: 50px;
         }
       }
 

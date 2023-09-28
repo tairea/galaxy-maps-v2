@@ -2,10 +2,17 @@
   <v-container>
     <v-row class="text-center" align="center">
       <v-col cols="12">
-        <v-dialog v-model="dialog" width="50%" light>
+        <v-dialog v-model="dialog" width="500px" light>
           <!-- DISCOVER BUTTON -->
           <template v-slot:activator="{ on, attrs }">
-            <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on">
+            <v-btn
+              outlined
+              color="baseAccent"
+              v-bind="attrs"
+              v-on="on"
+              :style="hide ? 'opacity:0' : 'opacity:1'"
+              class="discoverButton"
+            >
               <v-icon left>
                 {{ mdiRocketLaunchOutline }}
               </v-icon>
@@ -18,22 +25,25 @@
             <div class="dialog-header">
               <p class="dialog-title">{{ dialogTitle }}</p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent">{{
-                  mdiInformationVariant
-                }}</v-icon>
-                <p class="dialog-description">{{ dialogDescription }}</p>
+                <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
+                <p class="dialog-description">
+                  <!-- Discover unlisted Galaxies
+                  <br /> -->
+                  Enter an <strong>Organisation's name</strong> or <strong>Galaxy Map ID</strong>
+                </p>
               </div>
             </div>
 
             <div class="create-dialog-content">
               <!-- TITLE -->
-              <p class="dialog-description">Galaxy ID#:</p>
+              <p class="dialog-description">Enter destination:</p>
               <v-text-field
-                class="input-field"
-                solo
-                color="missionAccent"
                 v-model="courseId"
-                background-color="white"
+                class="input-field"
+                color="missionAccent"
+                outlined
+                :dark="dark"
+                :light="!dark"
               >
               </v-text-field>
             </div>
@@ -41,12 +51,7 @@
 
             <!-- ACTION BUTTONS -->
             <div class="action-buttons">
-              <v-btn
-                outlined
-                color="baseAccent"
-                @click="routeToGalaxy(courseId)"
-                class="mr-2"
-              >
+              <v-btn outlined color="baseAccent" @click="routeToGalaxy(courseId)" class="mr-2">
                 <v-icon left>
                   {{ mdiRocketLaunchOutline }}
                 </v-icon>
@@ -75,29 +80,32 @@
 </template>
 
 <script>
-import { mapMutations } from "vuex";
-import { db, storage } from "../store/firestoreConfig";
-import {
-  mdiRocketLaunchOutline,
-  mdiClose,
-  mdiInformationVariant,
-} from "@mdi/js";
+import { db, storage } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
+import { mdiRocketLaunchOutline, mdiClose, mdiInformationVariant } from "@mdi/js";
+import { mapActions } from "pinia";
 
 export default {
   name: "DiscoverGalaxyButton",
-  props: [],
+  props: ["hide"],
   data: () => ({
     mdiRocketLaunchOutline,
     mdiClose,
     mdiInformationVariant,
     dialog: false,
-    dialogTitle: "Discover a hidden Galaxy",
+    dialogTitle: "Discover hidden Galaxies",
     dialogDescription:
-      "Discover a private Galaxy that has been created by another user",
+      "Discover an unlisted Galaxy. Enter an <strong>Organisations name</strong> or a Galaxy Map ID",
     courseId: "",
   }),
   mounted() {},
+  computed: {
+    dark() {
+      return this.$vuetify.theme.isDark;
+    },
+  },
   methods: {
+    ...mapActions(useRootStore, ["setCurrentCourseId"]),
     cancel() {
       console.log("cancel");
       this.dialog = false;
@@ -105,7 +113,7 @@ export default {
     },
     routeToGalaxy(courseId) {
       // route to galaxy
-      this.$store.commit("setCurrentCourseId", courseId);
+      this.setCurrentCourseId(courseId);
       this.$router.push({
         name: "GalaxyView",
         params: {
@@ -120,6 +128,11 @@ export default {
 
 <style lang="scss" scoped>
 // new dialog ui
+
+.discoverButton {
+  transition: all 0.3s;
+}
+
 .create-dialog {
   color: var(--v-missionAccent-base);
   background-color: var(--v-background-base);
@@ -135,64 +148,6 @@ export default {
     padding: 20px;
     text-transform: uppercase;
     border-bottom: 1px solid var(--v-missionAccent-base);
-  }
-
-  .left-side {
-    width: 50%;
-    display: flex;
-    flex-direction: column;
-    flex-wrap: wrap;
-    transition: all 0.3s;
-  }
-
-  .right-side {
-    width: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    transition: all 0.3s;
-    // flex-direction: column;
-    // border-left: 1px solid var(--v-missionAccent-base);
-
-    // galaxy info
-    #galaxy-info {
-      width: calc(100% - 40px);
-      // min-height: 100%;
-      border: 1px solid var(--v-galaxyAccent-base);
-      margin-top: 30px;
-      padding: 20px;
-      // background: var(--v-baseAccent-base);
-      position: relative;
-      z-index: 3;
-
-      .galaxy-label {
-        font-size: 0.8rem;
-        font-weight: 400;
-        text-transform: uppercase;
-        // ribbon label
-        position: absolute;
-        top: -1px;
-        left: -1px;
-        background-color: var(--v-galaxyAccent-base);
-        color: var(--v-background-base);
-        padding: 0px 15px 0px 5px;
-        clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%);
-      }
-
-      .galaxy-title {
-        font-size: 1.2rem;
-        color: var(--v-galaxyAccent-base);
-        font-weight: 600;
-        text-transform: uppercase;
-        margin: 20px 0px 5px 0px;
-      }
-
-      .galaxy-description {
-        margin-top: 10px;
-        color: var(--v-galaxyAccent-base);
-        // font-size: 0.9rem;
-      }
-    }
   }
 
   .action-buttons {
@@ -223,7 +178,9 @@ export default {
     width: 100%;
     text-align: center;
     flex: none;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
+    color: var(--v-missionAccent-base);
+    text-transform: none;
   }
 }
 

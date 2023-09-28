@@ -34,13 +34,7 @@
               'mission-completed': completed,
             }"
           >
-            {{
-              completed
-                ? "MISSION COMPLETED"
-                : inreview
-                ? "SUBMISSION IN REVIEW"
-                : "LOCKED"
-            }}
+            {{ completed ? "MISSION COMPLETED" : inreview ? "SUBMISSION IN REVIEW" : "LOCKED" }}
           </p>
           <p class="text-overline text-uppercase">
             {{ getStatusAndTimestamp }}
@@ -60,17 +54,11 @@ export default {
   computed: {
     getStatusAndTimestamp() {
       if (this.completed && this.task.submissionRequired) {
-        return (
-          "MARKED COMPLETED: " +
-          this.humanDate(this.task.taskReviewedAndCompletedTimestamp)
-        );
+        return "MARKED COMPLETED: " + this.humanDate(this.task.taskReviewedAndCompletedTimestamp);
       } else if (this.completed && !this.task.submissionRequired) {
         return "COMPLETED: " + this.humanDate(this.task.taskCompletedTimestamp);
       } else if (this.inreview) {
-        return (
-          "SUBMITTED: " +
-          this.humanDate(this.task.taskSubmittedForReviewTimestamp)
-        );
+        return "SUBMITTED: " + this.humanDate(this.task.taskSubmittedForReviewTimestamp);
       } else {
         return "LOCKED";
       }
@@ -78,9 +66,7 @@ export default {
   },
   methods: {
     humanDate(timestamp) {
-      return new DateTime.fromSeconds(timestamp.seconds).toFormat(
-        "ccc dd LLL t"
-      );
+      return DateTime.fromSeconds(timestamp.seconds).toFormat("ccc dd LLL t");
     },
   },
 };

@@ -6,9 +6,7 @@
           <!-- REQUEST HELP BUTTON -->
           <template v-slot:activator="{ on, attrs }">
             <v-btn color="missionAccent" v-bind="attrs" v-on="on" icon x-large>
-              <v-icon color="missionAccent">{{
-                mdiHandFrontLeftOutline
-              }}</v-icon>
+              <v-icon color="missionAccent">{{ mdiHandFrontLeftOutline }}</v-icon>
             </v-btn>
           </template>
 
@@ -23,9 +21,7 @@
                 ?
               </p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent">{{
-                  mdiInformationVariant
-                }}</v-icon>
+                <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <p class="dialog-description">{{ dialogDescription }}</p>
               </div>
             </div>
@@ -90,18 +86,13 @@
 </template>
 
 <script>
-import firebase from "firebase/app";
-
-import { db, functions } from "../store/firestoreConfig";
-import { studentRequestForHelpXAPIStatement } from "../lib/veracityLRS";
-import { dbMixins } from "../mixins/DbMixins";
-import { mapState, mapGetters } from "vuex";
-import {
-  mdiHandFrontLeftOutline,
-  mdiInformationVariant,
-  mdiCheck,
-  mdiClose,
-} from "@mdi/js";
+import { studentRequestForHelpXAPIStatement } from "@/lib/veracityLRS";
+import { dbMixins } from "@/mixins/DbMixins";
+import { db, functions } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
+import { mdiHandFrontLeftOutline, mdiInformationVariant, mdiCheck, mdiClose } from "@mdi/js";
+import firebase from "firebase/compat/app";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "RequestHelpDialog",
@@ -121,18 +112,19 @@ export default {
   }),
   mounted() {},
   computed: {
-    ...mapState([
+    ...mapState(useRootStore, [
       "currentCourse",
       "currentTopic",
       "currentTask",
       "currentCohort",
+      "person",
     ]),
-    ...mapGetters(["person"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
   },
   methods: {
+    ...mapActions(useRootStore, ["setSnackbar"]),
     submitRequestForHelp(requestForHelp) {
       this.loading = true;
       // Add a new request for help to the "courses" db
@@ -164,7 +156,7 @@ export default {
             mission: this.currentTask,
           });
 
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Request submitted. You will be notified when your instructor has responded.",
             color: "baseAccent",
@@ -176,7 +168,7 @@ export default {
           });
         })
         .then(async () => {
-          // await this.$store.dispatch("bindRequestsForHelp", {
+          // await this.bindRequestsForHelp({
           //   courseId: this.currentCourse.id,
           //   topicId: this.currentTopic.id,
           //   taskId: this.currentTask.id,
@@ -187,7 +179,7 @@ export default {
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Error: " + error,
             color: "pink",

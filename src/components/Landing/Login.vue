@@ -10,13 +10,7 @@
     />
     <div v-else-if="isVerifyEmail" id="galaxy-info">
       <h2 class="galaxy-label">EMAIL VERIFIED</h2>
-      <v-btn
-        color="baseAccent"
-        class="mr-4 my-4"
-        @click="redirect"
-        outlined
-        width="100%"
-      >
+      <v-btn color="baseAccent" class="mr-4 my-4" @click="redirect" outlined width="100%">
         continue to login
       </v-btn>
     </div>
@@ -44,13 +38,15 @@
           class="custom-input"
         ></v-text-field>
         <v-text-field
-          type="password"
           v-model="password"
           label="Password"
           required
           color="baseAccent"
           outlined
           class="custom-input"
+          :append-icon="hide ? mdiEye : mdiEyeOff"
+          @click:append="() => (hide = !hide)"
+          :type="hide ? 'password' : 'text'"
         ></v-text-field>
         <v-btn
           :disabled="!valid"
@@ -66,7 +62,7 @@
       </v-form>
 
       <router-link to="/register" class="overline mt-4" color="baseAccent--text"
-        >Register</router-link
+        >Create an Account</router-link
       >
       <br />
       <router-link to="/reset" class="overline mt-4" color="baseAccent--text"
@@ -77,12 +73,12 @@
 </template>
 
 <script>
-import NewPassword from "../NewPassword.vue";
-import EmailSignIn from "@/components/EmailSignIn";
-
-import firebase from "firebase";
-import { mapGetters } from "vuex";
-import { queryXAPIStatement } from "@/lib/veracityLRS";
+import NewPassword from "@/components/NewPassword.vue";
+import EmailSignIn from "@/components/EmailSignIn.vue";
+import useRootStore from "@/store/index";
+import firebase from "firebase/compat/app";
+import { mapActions, mapState } from "pinia";
+import { mdiEye, mdiEyeOff } from "@mdi/js";
 
 export default {
   name: "Login",
@@ -91,6 +87,8 @@ export default {
     EmailSignIn,
   },
   data: () => ({
+    mdiEye,
+    mdiEyeOff,
     valid: true,
     email: "",
     password: "",
@@ -104,6 +102,7 @@ export default {
     actionCode: "",
     isVerifyEmail: false,
     showEmailSignin: false,
+    hide: String,
   }),
   mounted() {
     // Get the email action to complete.
@@ -138,9 +137,10 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(["person", "user"]),
+    ...mapState(useRootStore, ["person", "user"]),
   },
   methods: {
+    ...mapActions(useRootStore, ["setSnackbar"]),
     redirect() {
       this.isVerifyEmail = false;
       firebase.auth().signOut();
@@ -157,7 +157,7 @@ export default {
         })
         .catch((error) => {
           // Invalid or expired action code. Ask user to try to reset the password
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Error verifying code: " + error.message,
             color: "pink",
@@ -182,7 +182,7 @@ export default {
           auth
             .sendPasswordResetEmail(restoredEmail)
             .then(() => {
-              this.$store.commit("setSnackbar", {
+              this.setSnackbar({
                 show: true,
                 text: "Email successfully reverted. Password reset email sent",
                 color: "baseAccent",
@@ -190,7 +190,7 @@ export default {
             })
             .catch((error) => {
               // Error encountered while sending password reset code.
-              this.$store.commit("setSnackbar", {
+              this.setSnackbar({
                 show: true,
                 text: "Error sending password reset email: " + error.message,
                 color: "pink",
@@ -198,7 +198,7 @@ export default {
             });
         })
         .catch((error) => {
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Invalid or expired code: " + error.message,
             color: "pink",
@@ -213,7 +213,7 @@ export default {
         .applyActionCode(actionCode)
         .then((resp) => {
           // Email address has been verified.
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Email successfully verified",
             color: "baseAccent",
@@ -221,7 +221,7 @@ export default {
         })
         .catch((error) => {
           // Code is invalid or expired. Ask the user to verify their email address
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Invalid or expired code: " + error.message,
             color: "pink",
@@ -236,16 +236,14 @@ export default {
         .setPersistence(firebase.auth.Auth.Persistence.LOCAL)
         .then(() => {
           // New sign-in will be persisted with session persistence.
-          return firebase
-            .auth()
-            .signInWithEmailAndPassword(this.email, this.password);
+          return firebase.auth().signInWithEmailAndPassword(this.email, this.password);
         })
         .then(() => {
           this.proceed();
         })
         .catch((error) => {
           console.log("error: ", error);
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: error.message,
             color: "pink",
@@ -255,13 +253,19 @@ export default {
     },
     proceed() {
       if (!this.user?.data?.id || !this.person?.id) {
+        console.log("Login: proceeding =============== timeout");
         return setTimeout(() => {
           this.proceed();
         }, 500);
       }
+      /* -----------------
+          VERIFICATION DISABLED for testing
+      -----------------------*/
       if (!this.user.data.verified) {
+        console.log("Login: proceeding =============== not verified");
         var actionCodeSettings = {
           // TODO: Update to galaxymaps.io on deployment
+          // url: "https://galaxymaps.io/login",
           url: window.location.origin + "/login",
           handleCodeInApp: true,
         };
@@ -269,7 +273,8 @@ export default {
         this.loading = false;
         throw new Error("Please check your emails to verify your account");
       } else {
-        this.$router.push("/base/galaxies");
+        console.log("Login: proceeding =============== else push '/'");
+        this.$router.push("/");
       }
     },
     validate() {
@@ -281,14 +286,14 @@ export default {
         .auth()
         .sendPasswordResetEmail(this.email)
         .then(() => {
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Reset Password Email Sent",
             color: "baseAccent",
           });
         })
         .catch((error) => {
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: error.message,
             color: "pink",
@@ -326,6 +331,7 @@ export default {
   // background-image: url("../assets/hudf_big.jpeg");
   background-size: cover;
   box-shadow: inset 0 0 0 2000px rgba(20, 30, 48, 0.9);
+  // z-index: 202;
 
   .title {
     color: var(--v-baseAccent-base);

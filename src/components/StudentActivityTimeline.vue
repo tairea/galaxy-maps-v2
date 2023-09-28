@@ -18,9 +18,11 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
 import { getActivityLogXAPIQuery } from "@/lib/veracityLRS";
+import useRootStore from "@/store/index";
 import { DateTime } from "luxon";
+import { mapState } from "pinia";
+
 export default {
   name: "StudentActivityTimeline",
   props: {
@@ -36,7 +38,7 @@ export default {
     this.studentsActivityLog = await getActivityLogXAPIQuery(this.student);
   },
   computed: {
-    ...mapGetters(["person"]),
+    ...mapState(useRootStore, ["person"]),
     activityClass() {
       return this.studentCard ? "student-card-log" : "activity-log";
     },
@@ -47,10 +49,8 @@ export default {
       return this.studentCard ? "student-card-statement" : "statements";
     },
     courseAcivities() {
-      const filtered = this.studentsActivityLog.filter(
-        (activity) => activity.course
-      );
-      console.log("filtered", filtered);
+      const filtered = this.studentsActivityLog.filter((activity) => activity.course);
+      // console.log("filtered", filtered);
       const sanitised = filtered.map((statement, index) => {
         let [action, title] = statement.description.split(": ");
         let [status, type] = action.split(" ");

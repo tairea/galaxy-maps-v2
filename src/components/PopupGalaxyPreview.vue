@@ -4,9 +4,7 @@
     ref="popup"
     class="ss-info-panel"
     :class="draft ? 'draft-border' : 'panel-border'"
-    :style="
-      galaxyListInfoPanel ? 'backdrop-filter:none;border:none;width:100%' : ''
-    "
+    :style="galaxyListInfoPanel ? 'backdrop-filter:none;border:none;width:100%' : ''"
     v-if="course"
   >
     <div class="ss-details">
@@ -18,22 +16,16 @@
           <br />
           <span>{{ course.title }}</span>
         </p>
-        <v-img
-          v-if="course.image"
-          class="galaxy-image"
-          :src="course.image.url"
-        ></v-img>
-        <p class="mt-2 galaxy-description">
-          {{ course.description }}
+        <v-img v-if="course.image" class="galaxy-image" :src="course.image.url"></v-img>
+        <p ref="description" class="mt-2 galaxy-description">
+          <!-- {{ course.description }} -->
+          {{ maybeTruncate(course.description) }}
+          <a style="border-bottom: 1px solid" v-if="readmore" @click="showFullDescription()"
+            >Read more</a
+          >
         </p>
       </div>
-      <v-btn
-        text
-        x-small
-        color="missionAccent"
-        class="close-button"
-        @click="close"
-      >
+      <v-btn text x-small color="missionAccent" class="close-button" @click="close">
         <v-icon>{{ mdiClose }}</v-icon>
       </v-btn>
     </div>
@@ -61,29 +53,58 @@
         >
       </div> -->
       <!-- MAPPED BY -->
-      <div class="mapped-details">
-        <p class="info-panel-label mb-2">
+      <div class="mapped-details left">
+        <p class="info-panel-label mb-1">
           <span class="mappedByTitle">MAPPED BY</span>
         </p>
         <div class="mappedByContainer">
-          <div v-if="course.mappedBy.image">
-            <v-avatar size="40px">
-              <v-img :src="course.mappedBy.image.url"></v-img>
-            </v-avatar>
-          </div>
-          <div v-else-if="course.mappedBy.personId">
-            <v-avatar size="40px">
-              <v-img :src="mappedAuthorImage"></v-img>
-            </v-avatar>
-          </div>
+          <Avatar :personId="course.mappedBy.personId" :size="50" :colourBorder="true" />
           <!-- <p class="ma-0">Mapped By:</p> -->
           <span class="mt-2">{{ course.mappedBy.name }}</span>
+        </div>
+      </div>
+      <!-- OWNED BY -->
+      <div v-if="courseOwner" class="mapped-details right">
+        <p class="info-panel-label mb-1">
+          <span class="mappedByTitle">UNIVERSE</span>
+        </p>
+        <div class="mappedByContainer">
+          <Avatar
+            v-if="isCourseOwnerOrganisation"
+            :organisationData="courseOwner"
+            :size="50"
+            :colourBorder="true"
+          />
+          <Avatar v-else :profile="courseOwner" :size="50" :colourBorder="true" />
+          <!-- <p class="ma-0">Mapped By:</p> -->
+          <span v-if="isCourseOwnerOrganisation" class="mt-2">{{ courseOwner.name }}</span>
+          <span v-else class="mt-2">{{ courseOwner.firstName + " " + courseOwner.lastName }}</span>
         </div>
       </div>
     </div>
 
     <div>
-      <div v-if="teacher" class="ss-actions py-4">
+      <!-- Not logged in -->
+      <div v-if="!user.loggedIn" class="ss-actions py-4">
+        <div class="not-allowed">
+          <v-btn
+            class="view-ss-button pa-5"
+            dark
+            small
+            color="galaxyAccent"
+            outlined
+            tile
+            title="View Galaxy"
+            @click="routeToGalaxyEdit"
+            :disabled="!user.loggedIn"
+          >
+            View Galaxy
+          </v-btn>
+        </div>
+        <!-- Signin Dialog -->
+        <LoginDialog />
+      </div>
+      <div v-else-if="teacher" class="ss-actions py-4">
         <v-btn
           class="view-ss-button pa-5"
           dark
@@ -152,31 +173,20 @@
 </template>
 
 <script>
-import { db } from "../store/firestoreConfig";
-import { dbMixins } from "../mixins/DbMixins";
-import { getCohortById, assignTopicsAndTasksToStudent } from "../lib/ff";
-import { mapGetters, mapState } from "vuex";
-
-import { startGalaxyXAPIStatement } from "../lib/veracityLRS";
-
+import Avatar from "@/components/Avatar.vue";
+import LoginDialog from "@/components/Dialogs/LoginDialog.vue";
+import { db } from "@/store/firestoreConfig";
+import { getCohortById, assignTopicsAndTasksToMe } from "@/lib/ff";
+import { dbMixins } from "@/mixins/DbMixins";
+import useRootStore from "@/store/index";
 import { mdiClose } from "@mdi/js";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "PopupGalaxyPreview",
   mixins: [dbMixins],
-  components: {},
-  props: {
-    course: {
-      type: Object,
-      default() {
-        return {};
-      },
-    },
-    galaxyListInfoPanel: { type: Boolean, default: false },
-  },
-  computed: {
-    ...mapGetters(["person"]),
-  },
+  components: { Avatar, LoginDialog },
+  props: ["course", "galaxyListInfoPanel"],
   data() {
     return {
       mdiClose,
@@ -186,21 +196,13 @@ export default {
       startingGalaxyStatus: "",
       contentAuthorImage: "",
       mappedAuthorImage: "",
+      readmore: false,
+      courseOwner: null,
+      isCourseOwnerOrganisation: false,
     };
   },
-  watch: {
-    course() {
-      console.log("course changed: ", this.course);
-      this.setAccountType();
-      this.setImages();
-    },
-  },
-  async mounted() {
-    this.setAccountType();
-    this.setImages();
-  },
   computed: {
-    ...mapState(["person", "user"]),
+    ...mapState(useRootStore, ["person", "user"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -213,25 +215,55 @@ export default {
       else if (!this.course.public) return "Private";
     },
   },
+  watch: {
+    async course() {
+      console.log("course changed: ", this.course);
+      await this.setAccountType();
+      await this.setImages();
+      await this.setCourseOwner();
+    },
+  },
+  async mounted() {
+    await this.setAccountType();
+    await this.setImages();
+    await this.setCourseOwner();
+  },
   methods: {
+    ...mapActions(useRootStore, ["setCurrentCourse", "setCurrentCourseId"]),
+    maybeTruncate(value) {
+      if (!value) return "";
+      if (value.length <= 100) {
+        return value;
+      } else {
+        // show read more button
+        this.readmore = true;
+        // limit to 100 characters
+        return value.substring(0, 100) + "...";
+      }
+    },
+    showFullDescription() {
+      this.$refs.description.innerHTML = this.course.description;
+    },
+    async setCourseOwner() {
+      if (this.course.owner == null || this.course.owner == "") {
+        return;
+      }
+
+      const doc = await db.doc(this.course.owner).get();
+      this.courseOwner = doc.data();
+      this.isCourseOwnerOrganisation = db.doc(this.course.owner).path.startsWith("organisations");
+    },
     async setImages() {
-      this.mappedAuthorImage = await this.getPersonsImage(
-        this.course.mappedBy.personId
-      );
+      this.mappedAuthorImage = await this.getPersonsImage(this.course.mappedBy.personId);
       if (this.course.contentBy.personId) {
-        this.contentAuthorImage = await this.getPersonsImage(
-          this.course.contentBy.personId
-        );
+        this.contentAuthorImage = await this.getPersonsImage(this.course.contentBy.personId);
       }
     },
     async setAccountType() {
       this.teacher = false;
-      if (
-        this.course.mappedBy.personId === this.person.id ||
-        this.user.data.admin
-      ) {
+      if (this.course.mappedBy.personId === this.person.id || this.user.data?.admin) {
         this.teacher = true;
-      } else {
+      } else if (this.user.loggedIn) {
         const querySnapshot = await db
           .collection("people")
           .doc(this.person.id)
@@ -244,6 +276,8 @@ export default {
         } else {
           this.enrolled = true;
         }
+      } else {
+        this.enrolled = false;
       }
     },
     close() {
@@ -255,8 +289,8 @@ export default {
     routeToGalaxyEdit() {
       console.log("route to galaxy", this.course.id);
       // save current course to store
-      this.$store.commit("setCurrentCourseId", this.course.id);
-      this.$store.commit("setCurrentCourse", this.course);
+      this.setCurrentCourseId(this.course.id);
+      this.setCurrentCourse(this.course);
       // route to topic/solar system
       this.$router.push({
         name: "GalaxyView",
@@ -269,8 +303,8 @@ export default {
       console.log("route to galaxy analytics", this.currentCourseId);
 
       // save current course to store
-      this.$store.commit("setCurrentCourse", this.course);
-      this.$store.commit("setCurrentCourseId", this.course.id);
+      this.setCurrentCourse(this.course);
+      this.setCurrentCourseId(this.course.id);
 
       // this.$router.push({
       //   name: "GalaxyView",
@@ -284,28 +318,23 @@ export default {
       // add this galaxy metadata (eg. topics) to this persons course database
 
       // save current course to store
-      this.$store.commit("setCurrentCourse", this.course);
-      this.$store.commit("setCurrentCourseId", this.course.id);
+      this.setCurrentCourse(this.course);
+      this.setCurrentCourseId(this.course.id);
 
       // 5) assign student to cohort and course
       let cohort = await getCohortById(this.course.cohort);
-      this.MXaddExistingUserToCohort(this.person, cohort)
-        .then(() => {
-          this.MXassignCourseToStudent(this.person, this.course);
-        })
-        .then(() => {
-          assignTopicsAndTasksToStudent(this.person, this.course);
-        })
-        .then(() => {
-          this.loading = false;
-          this.$router.push({
-            name: "GalaxyView",
-            params: {
-              courseId: this.course.id,
-              role: "student",
-            },
-          });
-        });
+      await this.MXaddExistingUserToCohort(this.person, cohort);
+      await this.MXassignCourseToStudent(this.person, this.course);
+      await assignTopicsAndTasksToMe(this.course);
+
+      this.loading = false;
+      this.$router.push({
+        name: "GalaxyView",
+        params: {
+          courseId: this.course.id,
+          role: "student",
+        },
+      });
     },
 
     async getPersonsImage(personId) {
@@ -407,6 +436,13 @@ export default {
       font-style: italic;
       margin-bottom: 0px;
     }
+  }
+
+  .not-allowed {
+    cursor: not-allowed !important;
+    width: 100%;
+    display: flex;
+    justify-content: center;
   }
 }
 

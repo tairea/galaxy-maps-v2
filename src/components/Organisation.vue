@@ -1,32 +1,28 @@
 <template>
-  <v-container>
-    <span
-      v-if="cohortView"
-      class="caption"
-      style="color: var(--v-cohortAccent-base)"
+  <div>
+    <span v-if="cohortView" class="caption" style="color: var(--v-cohortAccent-base)"
       >Organisation</span
     >
-    <v-row :class="cohortView ? 'my-1' : ''">
-      <v-col
-        class="d-flex justify-center align-center cursor"
-        @click="editOrg()"
-      >
-        <v-img
-          v-if="organisation.image"
-          :src="organisation.image.url"
-          :max-width="size ? size + 'px' : '30px'"
-          :max-height="size ? size + 'px' : '30px'"
-          class="organisation-image"
-        ></v-img>
-        <div v-else-if="organisation.name" class="imagePlaceholder">
-          {{ first3Letters(organisation.name) }}
-        </div>
-        <span v-if="!hideName" class="ml-6 overline">{{
-          organisation.name
-        }}</span>
-      </v-col>
-    </v-row>
-  </v-container>
+    <div
+      :class="cohortView ? 'my-1' : ''"
+      class="d-flex align-center cursor mt-3"
+      @click="editOrg()"
+    >
+      <img
+        v-if="organisation.image"
+        :src="organisation.image.url"
+        :width="size ? size + 'px' : '30px'"
+        :height="size ? size + 'px' : '30px'"
+        class="organisation-image"
+      />
+      <div v-else-if="organisation.name" class="imagePlaceholder">
+        {{ first3Letters(organisation.name) }}
+      </div>
+      <div class="ml-6">
+        <span v-if="!hideName" class="overline">{{ organisation.name }}</span>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -66,13 +62,13 @@ export default {
   // width: 100px;
   // height: 100px;
   border-radius: 50%;
-  // object-fit: cover;
+  object-fit: cover;
 }
 
 .imagePlaceholder {
   width: 60px;
   height: 60px;
-  border-radius: 50%;
+  // border-radius: 50%;
   background-color: rgba(200, 200, 200, 0.3);
   display: flex;
   justify-content: center;

@@ -86,48 +86,54 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { defineComponent } from "vue";
 
-@Component({})
-export default class UserBar extends Vue {
-  darkSwitch = false;
-  themes = [
-    {
-      name: "minimal",
-      light: {
-        background: "#f8f9fa",
-        baseAccent: "#6c757d",
-        galaxyAccent: "#343a40",
-        missionAccent: "#495057",
-      },
-      dark: {
-        background: "#f8f9fa",
-        baseAccent: "#6c757d",
-        galaxyAccent: "#343a40",
-        missionAccent: "#495057",
-      },
+export default defineComponent({
+  props: [],
+  data() {
+    return {
+      darkSwitch: false,
+      themes: [
+        {
+          name: "minimal",
+          light: {
+            background: "#f8f9fa",
+            baseAccent: "#6c757d",
+            galaxyAccent: "#343a40",
+            missionAccent: "#495057",
+          },
+          dark: {
+            background: "#f8f9fa",
+            baseAccent: "#6c757d",
+            galaxyAccent: "#343a40",
+            missionAccent: "#495057",
+          },
+        },
+        {
+          name: "minimal2",
+          light: {
+            background: "#f7f7ff",
+            baseAccent: "#495867",
+            galaxyAccent: "#fe5f55",
+            missionAccent: "#577399",
+          },
+          dark: {
+            background: "#f7f7ff",
+            baseAccent: "#495867",
+            galaxyAccent: "#fe5f55",
+            missionAccent: "#577399",
+          },
+        },
+      ],
+    };
+  },
+  methods: {
+    changeTheme() {
+      // this.$vuetify.theme.dark = this.darkSwitch;
     },
-    {
-      name: "minimal2",
-      light: {
-        background: "#f7f7ff",
-        baseAccent: "#495867",
-        galaxyAccent: "#fe5f55",
-        missionAccent: "#577399",
-      },
-      dark: {
-        background: "#f7f7ff",
-        baseAccent: "#495867",
-        galaxyAccent: "#fe5f55",
-        missionAccent: "#577399",
-      },
-    },
-  ];
-
-  changeTheme() {
-    this.$vuetify.theme.dark = this.darkSwitch;
-  }
-}
+    changeColourTheme(theme: string) {},
+  },
+});
 </script>
 
 <style lang="scss" scoped>

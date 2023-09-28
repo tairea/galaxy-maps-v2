@@ -1,6 +1,9 @@
 <template>
   <div class="bg">
     <Login v-if="componentView == 'login'" />
+    <v-btn v-if="componentView == 'login'" :to="{ path: '/' }">
+      <p class="overline baseAccent--text landing-content">Continue without signing in -></p>
+    </v-btn>
     <VerifyEmail v-else-if="componentView == 'verify'" />
     <ResetPassword v-else-if="componentView == 'reset'" />
     <Register v-else-if="componentView == 'register'" />
@@ -8,23 +11,17 @@
     <div v-else class="landing-content">
       <p class="gm-title">GALAXY MAPS</p>
       <p class="overline">Galaxy Maps is a new digital learning experience</p>
-      <p class="overline">
-        Galaxy Maps are learning paths created by the community
-      </p>
+      <p class="overline">Galaxy Maps are learning paths created by the community</p>
       <p class="overline">Discover new Galaxies and navigate your learning</p>
 
       <!-- <v-btn outlined color="baseAccent" class="mt-8" :to="{ path: 'login' }"> -->
-      <v-btn outlined color="baseAccent" class="mt-8" to="/login">
-        SIGN IN TO GALAXY MAPS
-      </v-btn>
+      <v-btn outlined color="baseAccent" class="mt-8" to="/login"> SIGN IN TO GALAXY MAPS </v-btn>
 
       <div class="alpha-release" style="color: #ed254e">
-        <p class="overline pa-0 mt-8 mb-0 text-center" style="font-size: 40px">
-          ALPHA RELEASE
-        </p>
+        <p class="overline pa-0 mt-8 mb-0 text-center" style="font-size: 40px">ALPHA RELEASE</p>
         <p style="font-size: 0.7rem" class="text-center">
-          We are still testing for bugs. Please leave us feedback if the
-          platform is doing something weird.
+          We are still testing for bugs. Please leave us feedback if the platform is doing something
+          weird.
         </p>
       </div>
     </div>
