@@ -1,6 +1,6 @@
 <template>
   <div class="active-mission-card">
-    <div v-html="task.description" class="task-description pa-2"></div>
+    <div v-html="task.description" class="task-description"></div>
     <v-row class="pb-8">
       <div v-if="task.video || task.slides" class="supporting-materials">
         <p class="text-overline missionAccent--text">Supporting Materials</p>
@@ -109,7 +109,7 @@ a {
 
   .task-description {
     color: var(--v-missionAccent-base);
-    margin: 20px;
+    padding: 20px;
   }
 
   .supporting-materials {
