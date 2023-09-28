@@ -118,6 +118,8 @@ a {
   // min-height: 300px;
   z-index: 200;
   background-color: var(--v-background-base);
+  padding-right: 50px !important; /* for videos that shift out of place */
+  text-align: justify; /* the text on non-video lessons was unaligned */
 
   .task-description {
     color: var(--v-missionAccent-base);
