@@ -1,22 +1,31 @@
 <template>
   <div class="submission-card" :class="reviewed ? 'reviewed-submission' : ''">
     <v-expansion-panels flat v-model="showCard">
-      <v-expansion-panel v-for="(sub, i) in [submission]" :key="i" class="panel" @change="panelChange()">
+      <v-expansion-panel
+        v-for="(sub, i) in [submission]"
+        :key="i"
+        class="panel"
+        @change="panelChange()"
+      >
         <v-expansion-panel-header ref="panel" class="pa-0">
           <div class="d-flex flex-row">
-            <Avatar v-if="isDashboardView" :profile="courseContextProfile" size="30" :colourBorder="true" />
-            <Avatar v-if="requesterPerson" :profile="requesterPerson" size="30" :colourBorder="true"
-              :class="isDashboardView ? 'request-image' : ''" />
-            <div class="
-                submission-time
-                d-flex
-                flex-column
-                align-center
-                ml-auto
-                pl-1
-              ">
+            <Avatar
+              v-if="isDashboardView"
+              :profile="courseContextProfile"
+              size="30"
+              :colourBorder="true"
+            />
+            <Avatar
+              v-if="requesterPerson"
+              :profile="requesterPerson"
+              size="30"
+              :colourBorder="true"
+              :class="isDashboardView ? 'request-image' : ''"
+            />
+            <div class="submission-time d-flex flex-column align-center ml-auto pl-1">
               <span v-if="reviewed" class="ml-auto mt-1 status-text baseAccent--text">
-                {{ submission.taskSubmissionStatus.toUpperCase() }}</span>
+                {{ submission.taskSubmissionStatus.toUpperCase() }}</span
+              >
               <span v-else class="ml-auto mt-1 status-text text-uppercase">...awaiting review</span>
               {{ getHumanDate(submission.taskSubmittedForReviewTimestamp) }}
             </div>
@@ -51,8 +60,12 @@
           <template>
             <div class="divider"></div>
             <div class="text-center">
-              <SubmissionReviewDialog :submission="submission" :requesterPerson="requesterPerson" :isTeacher="isTeacher"
-                :reviewed="reviewed" />
+              <SubmissionReviewDialog
+                :submission="submission"
+                :requesterPerson="requesterPerson"
+                :isTeacher="isTeacher"
+                :reviewed="reviewed"
+              />
               <!-- <MarkSubmissionCompleted
                 :submission="submission"
                 :requesterPerson="requesterPerson"
@@ -70,14 +83,14 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import Avatar from "@/components/Avatar.vue";
+// import MarkSubmissionCompleted from "@/components/MarkSubmissionCompleted.vue";
+// import SubmissionResponseDialog from "@/components/SubmissionResponseDialog.vue";
+import SubmissionReviewDialog from "@/components/Dialogs/SubmissionReviewDialog.vue";
+import { dbMixins } from "@/mixins/DbMixins";
+import useRootStore from "@/store/index";
 import moment from "moment";
-import Avatar from "../components/Avatar.vue";
-
-// import MarkSubmissionCompleted from "../components/MarkSubmissionCompleted";
-// import SubmissionResponseDialog from "../components/SubmissionResponseDialog";
-import SubmissionReviewDialog from "../components/Dialogs/SubmissionReviewDialog";
-import { dbMixins } from "../mixins/DbMixins";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "SubmissionTeacherPanel",
@@ -97,12 +110,10 @@ export default {
   },
   async mounted() {
     // bind student profile
-    this.requesterPerson = await this.MXgetPersonByIdFromDB(
-      this.submission.studentId
-    );
+    this.requesterPerson = await this.MXgetPersonByIdFromDB(this.submission.studentId);
   },
   computed: {
-    ...mapState(["personsTopicsTasks", "showPanelCard"]),
+    ...mapState(useRootStore, ["personsTopicsTasks", "showPanelCard"]),
     showCard: {
       get: function () {
         if (
@@ -114,7 +125,7 @@ export default {
       },
       // setter
       set: function (newValue) {
-        this.$store.commit("setPanelCard", {});
+        this.setPanelCard({});
       },
     },
     reviewed() {
@@ -132,6 +143,7 @@ export default {
     },
   },
   methods: {
+    ...mapActions(useRootStore, ["setPanelCard"]),
     getHumanDate(ts) {
       return moment(ts.seconds * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
     },

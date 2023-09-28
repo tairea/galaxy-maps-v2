@@ -1,8 +1,5 @@
 <template>
-  <div
-    :class="cohortView ? 'text-end' : 'text-center'"
-    :align="cohortView ? 'end' : 'center'"
-  >
+  <div :class="cohortView ? 'text-end' : 'text-center'" :align="cohortView ? 'end' : 'center'">
     <v-dialog v-model="dialog" width="40%" light content-class="dialog-border">
       <!-- CREATE BUTTON -->
       <template v-slot:activator="{ on, attrs }">
@@ -44,18 +41,14 @@
             {{ edit ? "Edit Cohort " + cohort.name : dialogTitle }}
           </p>
           <div class="d-flex align-center">
-            <v-icon left color="missionAccent">{{
-              mdiInformationVariant
-            }}</v-icon>
+            <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
             <p class="dialog-description">{{ dialogDescription }}</p>
           </div>
         </div>
 
-        <div
-          class="left-side"
-          :style="cohort.name ? 'width:50%' : 'width:100%'"
-        >
-          <div class="create-dialog-content mt-4">
+        <!-- LEFT SIDE -->
+        <div class="left-side" :style="cohort.name ? 'width:50%' : 'width:100%'">
+          <div class="create-dialog-content mt-8">
             <!-- NAME -->
             <!-- TITLE -->
             <v-text-field
@@ -83,10 +76,7 @@
             ></v-textarea>
 
             <!-- IMAGE UPLOAD -->
-            <v-progress-linear
-              color="missionAccent"
-              :value="percentage"
-            ></v-progress-linear>
+
             <v-file-input
               class="input-field"
               outlined
@@ -98,11 +88,14 @@
               @change="storeImage()"
               prepend-icon=""
               label="Cohort image upload"
+              hide-details
             ></v-file-input>
+            <v-progress-linear color="missionAccent" :value="percentage"></v-progress-linear>
 
-            <div v-if="user.data.admin">
+            <!-- <div v-if="user.data.admin"> removed admin as im wanting to open up features for user testing -->
+            <div>
               <!-- ORGANISATION -->
-              <p class="input-description">Organisation:</p>
+              <!-- <p class="input-description">Organisation:</p>
               <v-select
                 class="input-field select-color"
                 outlined
@@ -114,9 +107,9 @@
                 item-text="name"
                 item-value="id"
               >
-              </v-select>
+              </v-select> -->
               <!-- Select teachers from list -->
-              <p class="input-description">Cohort teachers:</p>
+              <p class="input-description mt-6">Cohort teachers:</p>
               <v-autocomplete
                 v-model="cohort.teachers"
                 :search-input.sync="search"
@@ -142,10 +135,7 @@
                     @click:close="remove(data.item)"
                   >
                     <template>
-                      <v-avatar
-                        v-if="data.item.image && data.item.image.url"
-                        left
-                      >
+                      <v-avatar v-if="data.item.image && data.item.image.url" left>
                         <v-img :src="data.item.image.url"></v-img>
                       </v-avatar>
                       {{ data.item.email }}
@@ -154,20 +144,19 @@
                 </template>
                 <template v-slot:item="data">
                   <template>
-                    <v-list-item-avatar
-                      v-if="data.item.image && data.item.image.url"
-                    >
+                    <v-list-item-avatar v-if="data.item.image && data.item.image.url">
                       <img :src="data.item.image.url" />
                     </v-list-item-avatar>
                     <v-list-item-content>
-                      <v-list-item-title
-                        v-html="data.item.firstName"
-                      ></v-list-item-title>
-                      <v-list-item-subtitle
-                        v-html="data.item.email"
-                      ></v-list-item-subtitle>
+                      <v-list-item-title v-html="data.item.firstName"></v-list-item-title>
+                      <v-list-item-subtitle v-html="data.item.email"></v-list-item-subtitle>
                     </v-list-item-content>
                   </template>
+                </template>
+                <template v-slot:append-item>
+                  <div class="d-flex justify-end">
+                    <CreateAccountDialog accountType="teacher" />
+                  </div>
                 </template>
                 <template v-slot:no-data>
                   <CreateAccountDialog accountType="teacher" />
@@ -185,20 +174,16 @@
           <div id="cohort-info" v-if="cohort.name">
             <h2 class="cohort-label">Cohort</h2>
             <h1 class="cohort-title">{{ cohort.name }}</h1>
-            <v-img
-              v-if="cohort.image.url"
-              :src="cohort.image.url"
-              width="100%"
-            ></v-img>
+            <v-img v-if="cohort.image" :src="cohort.image.url" width="100%"></v-img>
             <p class="cohort-description">{{ cohort.description }}</p>
             <!-- Organisation -->
-            <div class="d-flex justify-center align-center">
+            <!-- <div class="d-flex justify-center align-center">
               <Organisation
                 v-if="cohort.organisation"
                 :organisation="getOrganisationById(cohort.organisation)"
                 :size="40"
               />
-            </div>
+            </div> -->
           </div>
         </div>
         <!-- End of right-side -->
@@ -271,25 +256,18 @@
 
     <!-- CONFIRM DELETE DIALOG -->
     <v-dialog v-model="dialogConfirm" width="40%" light>
-      <div
-        v-if="edit && cohortToEdit && cohortToEdit.courseCohort"
-        class="create-dialog"
-      >
+      <div v-if="edit && cohortToEdit && cohortToEdit.courseCohort" class="create-dialog">
         <!-- HEADER -->
         <div class="dialog-header">
           <p class="dialog-title"><strong>Warning!</strong> Delete Cohort?</p>
           <div class="d-flex align-start">
-            <v-icon left color="missionAccent">{{
-              mdiInformationVariant
-            }}</v-icon>
+            <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
             <p class="dialog-description">
               This cohort is linked to the
-              <span style="color: var(--v-galaxyAccent-base)">{{
-                cohort.name
-              }}</span>
+              <span style="color: var(--v-galaxyAccent-base)">{{ cohort.name }}</span>
               Galaxy Map. <br /><br />
-              To delete this cohort, please navigate to the galaxy map and
-              delete the course. <br /><br />
+              To delete this cohort, please navigate to the galaxy map and delete the course.
+              <br /><br />
               If you have any questions or require help please contact
               <a href="mailto:base@galaxymaps.io">base@galaxymaps.io</a>
             </p>
@@ -314,9 +292,7 @@
         <div class="dialog-header py-10">
           <p class="dialog-title"><strong>Warning!</strong> Delete Cohort?</p>
           <div class="d-flex align-start">
-            <v-icon left color="missionAccent">{{
-              mdiInformationVariant
-            }}</v-icon>
+            <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
             <p class="dialog-description">
               Are you sure you want to <strong>DELETE</strong> this
               <span class="cohort-text">{{ cohort.name }} Cohort</span>?
@@ -325,9 +301,8 @@
               Deleting is permanent!!!
               <br />
               <br />
-              <span class="mission-text">PEOPLE</span> in this
-              <strong>COHORT</strong> will no longer be able to access the
-              assigned <span class="galaxy-text">GALAXY MAPS</span>
+              <span class="mission-text">PEOPLE</span> in this <strong>COHORT</strong> will no
+              longer be able to access the assigned <span class="galaxy-text">GALAXY MAPS</span>
             </p>
           </div>
         </div>
@@ -365,21 +340,15 @@
 </template>
 
 <script>
-import Organisation from "../components/Organisation";
-import CreateAccountDialog from "../components/CreateAccountDialog";
-import firebase from "firebase";
+import Organisation from "@/components/Organisation.vue";
+import CreateAccountDialog from "@/components/CreateAccountDialog.vue";
+import { db, storage, functions } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
+import firebase from "firebase/compat/app";
 
-import {
-  mdiPencil,
-  mdiPlus,
-  mdiClose,
-  mdiCheck,
-  mdiDelete,
-  mdiInformationVariant,
-} from "@mdi/js";
+import { mdiPencil, mdiPlus, mdiClose, mdiCheck, mdiDelete, mdiInformationVariant } from "@mdi/js";
 
-import { mapState, mapGetters, mapActions } from "vuex";
-import { db, storage, functions } from "../store/firestoreConfig";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "CreateEditDeleteCohortDialog",
@@ -401,8 +370,7 @@ export default {
     dialog: false,
     dialogConfirm: false,
     dialogTitle: "Create A New Cohort",
-    dialogDescription:
-      "A Cohort is a group of learners. This is typically a class of students.",
+    dialogDescription: "A Cohort is a group of learners. This is typically a class of students.",
     loading: false,
     disabled: false,
     deleting: false,
@@ -421,6 +389,7 @@ export default {
     uploadedImage: null,
     percentage: 0,
     search: "",
+    teachers: [],
   }),
   mounted() {
     if (this.user.data.admin) this.bindAllPeople();
@@ -429,6 +398,7 @@ export default {
     } else {
       this.$vuetify.theme.themes.dark.primary = "#000000"; // black
     }
+    this.teachers.push(this.person);
   },
   watch: {
     dialog(newVal) {
@@ -438,16 +408,16 @@ export default {
     },
   },
   computed: {
-    ...mapGetters(["getOrganisationById", "user", "people", "organisations"]),
+    ...mapState(useRootStore, ["person", "getOrganisationById", "user", "people", "organisations"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
-    teachers() {
-      const teachers = this.people.filter(
-        (person) => person.accountType === "teacher"
-      );
-      return teachers;
-    },
+    // teachers() {
+    // const teachers = this.people.filter(
+    //   (person) => person.accountType === "teacher"     //  we dont have account type anymore. so defaulting to person creating cohort is the default teacher
+    // );
+    // return teachers;
+    // },
     cohortView() {
       return this.$route.name === "CohortView";
     },
@@ -465,7 +435,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(["bindAllPeople"]),
+    ...mapActions(useRootStore, ["bindAllPeople"]),
     toggleTeacherDialog() {
       this.teacherDialog = !this.teacherDialog;
     },
@@ -535,7 +505,7 @@ export default {
       this.disabled = true;
       // ceate a storage ref
       var storageRef = storage.ref(
-        "cohort-images/" + this.cohort.name + "-" + this.uploadedImage.name
+        "cohort-images/" + this.cohort.name + "-" + this.uploadedImage.name,
       );
 
       // upload a file
@@ -546,8 +516,7 @@ export default {
         "state_changed",
         (snapshot) => {
           // show progress on uploader bar
-          this.percentage =
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          this.percentage = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         },
         // upload error
         (err) => {
@@ -560,13 +529,12 @@ export default {
             console.log("image url is: " + downloadURL);
             // add image url to cohort obj
             this.cohort.image.url = downloadURL;
-            this.cohort.image.name =
-              this.cohort.name + "-" + this.uploadedImage.name;
+            this.cohort.image.name = this.cohort.name + "-" + this.uploadedImage.name;
             console.log("upload percentage is: " + this.percentage);
             this.disabled = false;
             this.percentage = 0;
           });
-        }
+        },
       );
     },
     // delete
@@ -630,8 +598,7 @@ export default {
 
       if (this.cohort.teachers.length > this.cohortToEdit.teachers) {
         const newTeachers = this.cohort.teachers.filter(
-          ({ id: id1 }) =>
-            !this.cohortToEdit.teachers.some(({ id: id2 }) => id2 === id1)
+          ({ id: id1 }) => !this.cohortToEdit.teachers.some(({ id: id2 }) => id2 === id1),
         );
         if (newTeachers.length) {
           for (const teacher of newTeachers) {

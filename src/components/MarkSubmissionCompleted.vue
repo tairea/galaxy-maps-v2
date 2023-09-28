@@ -17,15 +17,11 @@
             <div class="dialog-header">
               <p class="dialog-title">Is the submission completed?</p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent">{{
-                  mdiInformationVariant
-                }}</v-icon>
+                <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <p class="dialog-description">
                   Has
                   <strong
-                    ><i>{{
-                      requesterPerson.firstName + " " + requesterPerson.lastName
-                    }}</i></strong
+                    ><i>{{ requesterPerson.firstName + " " + requesterPerson.lastName }}</i></strong
                   >
                   completed the submission requirements for this mission?
                 </p>
@@ -74,22 +70,16 @@
 </template>
 
 <script>
-import firebase from "firebase/app";
-
-import { db, functions } from "../store/firestoreConfig";
+import { dbMixins } from "@/mixins/DbMixins";
 import {
   studentWorkMarkedCompletedXAPIStatement,
   teacherReviewedStudentWorkXAPIStatement,
-} from "../lib/veracityLRS";
-
-import { mapState, mapGetters } from "vuex";
-import { dbMixins } from "../mixins/DbMixins";
-import {
-  mdiThumbUpOutline,
-  mdiInformationVariant,
-  mdiCheck,
-  mdiClose,
-} from "@mdi/js";
+} from "@/lib/veracityLRS";
+import { db, functions } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
+import { mdiThumbUpOutline, mdiInformationVariant, mdiCheck, mdiClose } from "@mdi/js";
+import firebase from "firebase/compat/app";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "MarkSubmissionCompleted",
@@ -104,15 +94,16 @@ export default {
     loading: false,
   }),
   computed: {
-    ...mapState(["personsTopicsTasks"]),
-    ...mapGetters(["person"]),
+    ...mapState(useRootStore, ["personsTopicsTasks", "person"]),
   },
   methods: {
-    markSubmissionAsCompleted() {
+    ...mapActions(useRootStore, ["setSnackbar"]),
+    async markSubmissionAsCompleted() {
       this.loading = true;
 
       // 1) update submission to completed
-      db.collection("courses")
+      await db
+        .collection("courses")
         .doc(this.submission.contextCourse.id)
         .collection("submissionsForReview")
         .doc(this.submission.id)
@@ -124,7 +115,8 @@ export default {
         });
 
       // 2) update the task status to complete
-      db.collection("people")
+      await db
+        .collection("people")
         .doc(this.submission.studentId)
         .collection(this.submission.contextCourse.id)
         .doc(this.submission.contextTopic.id)
@@ -135,57 +127,48 @@ export default {
           teacherId: this.person.id,
           taskStatus: "completed",
           taskReviewedAndCompletedTimestamp: new Date(),
-        })
-        .then(() => {
-          this.sendResponseToSubmission("completed");
-        })
-        .then(() => {
-          console.log("Task successfully updated as completed!");
-
-          // send xAPI statement to LRS
-          // student completed work
-          studentWorkMarkedCompletedXAPIStatement(
-            this.requesterPerson,
-            this.submission.contextTask.id,
-            {
-              galaxy: this.submission.contextCourse,
-              system: this.submission.contextTopic,
-              mission: this.submission.contextTask,
-            }
-          );
-          // teacher reviewed work
-          teacherReviewedStudentWorkXAPIStatement(
-            this.person,
-            this.submission.contextTask.id,
-            {
-              student: this.requesterPerson,
-              galaxy: this.submission.contextCourse,
-              system: this.submission.contextTopic,
-              mission: this.submission.contextTask,
-            }
-          );
-
-          this.loading = false;
-          this.disabled = false;
-          this.dialog = false;
-
-          this.$store.commit("setSnackbar", {
-            show: true,
-            text: "Student's Mission now marked as completed",
-            color: "baseAccent",
-          });
-
-          // unlock next task
-          this.unlockNextTask();
-
-          // check if all tasks/missions are completed
-          this.checkIfAllTasksCompleted();
-
-          // TODO: perhaps only unlock once teacher has reviewed and marked complete. SOLUTION: leave as is. can progress to next task, but cant progress to next topic until all work is reviewed.
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
         });
+
+      await this.sendResponseToSubmission("completed");
+
+      console.log("Task successfully updated as completed!");
+
+      // send xAPI statement to LRS
+      // student completed work
+      await studentWorkMarkedCompletedXAPIStatement(
+        this.requesterPerson,
+        this.submission.contextTask.id,
+        {
+          galaxy: this.submission.contextCourse,
+          system: this.submission.contextTopic,
+          mission: this.submission.contextTask,
+        },
+      );
+      // teacher reviewed work
+      await teacherReviewedStudentWorkXAPIStatement(this.person, this.submission.contextTask.id, {
+        student: this.requesterPerson,
+        galaxy: this.submission.contextCourse,
+        system: this.submission.contextTopic,
+        mission: this.submission.contextTask,
+      });
+
+      this.loading = false;
+      this.disabled = false;
+      this.dialog = false;
+
+      this.setSnackbar({
+        show: true,
+        text: "Student's Mission now marked as completed",
+        color: "baseAccent",
+      });
+
+      // unlock next task
+      await this.unlockNextTask();
+
+      // check if all tasks/missions are completed
+      await this.checkIfAllTasksCompleted();
+
+      // TODO: perhaps only unlock once teacher has reviewed and marked complete. SOLUTION: leave as is. can progress to next task, but cant progress to next topic until all work is reviewed.
     },
     async unlockNextTask() {
       console.log("unlocking next task...");
@@ -203,10 +186,8 @@ export default {
       // 2) loops the tasks. the first task to have taskStatus locked, update to unlocked, then return to exit loop
       for (const [index, task] of currentTasks.docs.entries()) {
         if (task.data().taskStatus == "locked") {
-          task.ref.update({ taskStatus: "unlocked" });
-          console.log(
-            "NEW TASK UNLOCKED (" + index + ") : " + task.data().title
-          );
+          await task.ref.update({ taskStatus: "unlocked" });
+          console.log("NEW TASK UNLOCKED (" + index + ") : " + task.data().title);
           return;
         }
       }
@@ -214,7 +195,7 @@ export default {
     async checkIfAllTasksCompleted() {
       // 1) check how many tasks in store are completed
       const numOfTasksCompleted = this.personsTopicsTasks.filter(
-        (obj) => obj.taskStatus === "completed"
+        (obj) => obj.taskStatus === "completed",
       ).length;
       // 2) check if that the same as total
       if (numOfTasksCompleted === this.personsTopicsTasks.length) {
@@ -222,7 +203,7 @@ export default {
         // all tasks are completed. unlock next topic
         // message telling teacher whats happend
 
-        this.$store.commit("setSnackbar", {
+        this.setSnackbar({
           show: true,
           text:
             this.requesterPerson.firstName +
@@ -233,84 +214,71 @@ export default {
           color: "baseAccent",
         });
 
-        this.unlockNextTopics();
+        await this.unlockNextTopics();
       } else {
         console.log("topic not yet completed...");
         console.log("total tasks = ", this.personsTopicsTasks.length);
         console.log(
           "completed = ",
-          this.personsTopicsTasks.filter(
-            (obj) => obj.taskStatus === "completed"
-          ).length
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "completed").length,
         );
         console.log(
           "in review = ",
-          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "inreview")
-            .length
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "inreview").length,
         );
         console.log(
           "active = ",
-          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked")
-            .length
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked").length,
         );
         console.log(
           "locked = ",
-          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked")
-            .length
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked").length,
         );
       }
     },
-    unlockNextTopics() {
+    async unlockNextTopics() {
       // ==== all tasks/missions completed. unlock next topics ====
-      db.collection("people")
+      const querySnapshot = await db
+        .collection("people")
         .doc(this.submission.studentId)
         .collection(this.submission.contextCourse.id)
-        .where(
-          "prerequisites",
-          "array-contains",
-          this.submission.contextTopic.id
-        )
-        .get()
-        .then((querySnapshot) => {
-          querySnapshot.forEach((doc) => {
-            doc.ref
-              .update({
-                topicStatus: "unlocked", // change status to unlocked
-              })
-              // route back to map
-              .then(() => {
-                // message telling teacher whats happend
-                this.$store.commit("setSnackbar", {
-                  show: true,
-                  text:
-                    "NEW TOPIC: " +
-                    doc.data().label +
-                    " UNLOCKED FOR: " +
-                    this.requesterPerson.firstName +
-                    " " +
-                    this.requesterPerson.lastName,
-                  color: "baseAccent",
-                });
-              });
-          });
+        .where("prerequisites", "array-contains", this.submission.contextTopic.id)
+        .get();
+
+      const docs = querySnapshot.docs;
+
+      for (const doc of docs) {
+        await doc.ref.update({
+          topicStatus: "unlocked", // change status to unlocked
         });
+
+        // message telling teacher whats happend
+        this.setSnackbar({
+          show: true,
+          text:
+            "NEW TOPIC: " +
+            doc.data().label +
+            " UNLOCKED FOR: " +
+            this.requesterPerson.firstName +
+            " " +
+            this.requesterPerson.lastName,
+          color: "baseAccent",
+        });
+      }
     },
     sendResponseToSubmission(outcome) {
       const data = {
         course: this.submission.contextCourse.title,
         topic: this.submission.contextTopic.label,
         task: this.submission.contextTask.title,
-        student:
-          this.requesterPerson.firstName + " " + this.requesterPerson.lastName,
+        student: this.requesterPerson.firstName + " " + this.requesterPerson.lastName,
         submission: this.submission.submissionLink,
         outcome: outcome,
         teacher: this.person.firstName + " " + this.person.lastName,
         email: this.person.email,
       };
       console.log("send reponse email: ", data);
-      const sendResponseToSubmission = functions.httpsCallable(
-        "sendResponseToSubmission"
-      );
+      const sendResponseToSubmission = functions.httpsCallable("sendResponseToSubmission");
       return sendResponseToSubmission(data);
     },
     cancel() {

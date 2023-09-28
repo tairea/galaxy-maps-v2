@@ -19,7 +19,7 @@
 </template>
 
 <script>
-import CreateAccountForm from "../CreateAccountForm";
+import CreateAccountForm from "@/components/CreateAccountForm.vue";
 
 export default {
   name: "EditStudentDialog",

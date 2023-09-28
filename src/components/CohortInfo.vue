@@ -3,24 +3,14 @@
     <h2 class="cohort-label">Cohort</h2>
     <h1 class="cohort-title">{{ currentCohort.name }}</h1>
     <div v-if="cohortImage">
-      <v-img
-        class="cohort-image"
-        width="auto"
-        :src="currentCohort.image.url"
-      ></v-img>
+      <v-img class="cohort-image" width="auto" :src="currentCohort.image.url"></v-img>
     </div>
     <p class="cohort-description">{{ currentCohort.description }}</p>
     <div class="d-flex justify-center align-center">
-      <Organisation
-        v-if="currentCohort.organisation"
-        :organisation="org"
-        :size="40"
-      />
+      <Organisation v-if="currentCohort.organisation" :organisation="org" :size="40" />
     </div>
     <div v-if="teachers.length > 0">
-      <p class="overline ma-0" style="color: var(--v-cohortAccent-base)">
-        Teachers
-      </p>
+      <p class="overline ma-0" style="color: var(--v-cohortAccent-base)">Teachers</p>
       <v-row class="my-1 mx-1">
         <Avatar
           v-for="person in teachers"
@@ -31,21 +21,17 @@
         />
       </v-row>
     </div>
-    <CreateEditDeleteCohortDialog
-      v-if="isTeacher"
-      :edit="true"
-      :cohortToEdit="currentCohort"
-    />
+    <CreateEditDeleteCohortDialog v-if="isTeacher" :edit="true" :cohortToEdit="currentCohort" />
   </div>
 </template>
 
 <script>
-import Organisation from "../components/Organisation";
-import CreateEditDeleteCohortDialog from "../components/CreateEditDeleteCohortDialog";
-import Avatar from "../components/Avatar";
-
-import { mapGetters } from "vuex";
-import { dbMixins } from "../mixins/DbMixins";
+import Organisation from "@/components/Organisation.vue";
+import CreateEditDeleteCohortDialog from "@/components/CreateEditDeleteCohortDialog.vue";
+import Avatar from "@/components/Avatar.vue";
+import { dbMixins } from "@/mixins/DbMixins";
+import useRootStore from "@/store/index";
+import { mapState } from "pinia";
 
 export default {
   name: "CohortInfo",
@@ -77,7 +63,7 @@ export default {
     },
   },
   computed: {
-    ...mapGetters(["getOrganisationById", "currentCohort", "person", "user"]),
+    ...mapState(useRootStore, ["getOrganisationById", "currentCohort", "person", "user"]),
     cohortImage() {
       return this.currentCohort?.image?.url;
     },
@@ -87,10 +73,7 @@ export default {
       else return {};
     },
     isTeacher() {
-      return (
-        this.user.data.admin ||
-        this.currentCohort.teachers.includes(this.person.id)
-      );
+      return this.user.data.admin || this.currentCohort.teachers.includes(this.person.id);
     },
   },
   methods: {

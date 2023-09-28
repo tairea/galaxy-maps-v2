@@ -23,9 +23,12 @@
 </template>
 
 <script>
+import useRootStore from "@/store/index";
+import { mapActions } from "pinia";
+
 export default {
   name: "ActiveMissions",
-  props: ["data"],
+  props: ["courseId", "data"],
   components: {},
   data() {
     return {};
@@ -43,18 +46,25 @@ export default {
     },
   },
   methods: {
+    ...mapActions(useRootStore, [
+      "setCurrentTopic",
+      "setCurrentTopicId",
+      "setCurrentTask",
+      "setCurrentTaskId",
+    ]),
     routeToTasksSystem() {
       // save current topic & task to store
-      this.$store.commit("setCurrentTopicId", this.activeTopic.id);
-      this.$store.commit("setCurrentTopic", this.activeTopic);
-      this.$store.commit("setCurrentTaskId", this.activeTask.id);
-      this.$store.commit("setCurrentTask", this.activeTask);
+      this.setCurrentTopicId(this.activeTopic.id);
+      this.setCurrentTopic(this.activeTopic);
+      this.setCurrentTaskId(this.activeTask.id);
+      this.setCurrentTask(this.activeTask);
 
       // route to topic/solar system
       // TODO: bug where system route does work (prob to do with vuex-persisted)
       this.$router.push({
         name: "SolarSystemView",
         params: {
+          courseId: this.courseId,
           topicId: this.activeTopic.id,
         },
       });

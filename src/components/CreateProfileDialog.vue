@@ -96,9 +96,7 @@
                 style="object-fit: cover"
               />
               <!-- <v-icon v-if="hover">{{mdiPencil}}</v-icon> -->
-              <v-icon :dark="dark" :light="!dark" v-else>{{
-                mdiAccount
-              }}</v-icon>
+              <v-icon :dark="dark" :light="!dark" v-else>{{ mdiAccount }}</v-icon>
               <v-fade-transition>
                 <v-overlay v-if="onhover" absolute color="baseAccent">
                   <v-icon small @click="onButtonClick">{{ mdiPencil }}</v-icon>
@@ -142,10 +140,11 @@
 </template>
 
 <script>
-import { db, storage } from "../store/firestoreConfig";
-import { mapGetters, mapActions } from "vuex";
-import firebase from "firebase";
+import { db, storage } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
 import { mdiPencil, mdiAccount } from "@mdi/js";
+import firebase from "firebase/compat/app";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "CreateProfileDialog",
@@ -174,8 +173,7 @@ export default {
     ],
     passwordRules: [
       (v) => !!v || "Password is required",
-      (v) =>
-        (v && v.length >= 8) || "Password must have a minimum of 8 characters",
+      (v) => (v && v.length >= 8) || "Password must have a minimum of 8 characters",
     ],
   }),
   watch: {
@@ -184,12 +182,11 @@ export default {
     },
   },
   computed: {
-    ...mapGetters(["user", "person"]),
+    ...mapState(useRootStore, ["user", "person"]),
     confirmPasswordRules() {
       return [
         (v) => !!v || "Please confirm password",
-        (v) =>
-          v === this.password || "The password confirmation does not match.",
+        (v) => v === this.password || "The password confirmation does not match.",
       ];
     },
     dark() {
@@ -197,7 +194,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(["getPersonById"]),
+    ...mapActions(useRootStore, ["getPersonById"]),
     cancel() {
       this.dialog = false;
       this.$refs.form.reset();
@@ -247,7 +244,7 @@ export default {
           this.profile.firstname +
           this.person.lastname +
           "-" +
-          this.selectedFile.name
+          this.selectedFile.name,
       );
 
       // upload a file
@@ -259,7 +256,7 @@ export default {
         (snapshot) => {
           // show progress on uploader bar
           this.uploadPercentage = Math.floor(
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100,
           );
         },
         // upload error
@@ -276,7 +273,7 @@ export default {
             this.profile.image.name = this.selectedFile.name;
             this.updateProfile(this.profile);
           });
-        }
+        },
       );
     },
     updateProfile(data) {

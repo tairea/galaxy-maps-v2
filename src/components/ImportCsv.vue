@@ -35,8 +35,7 @@
               :key="key.id"
             >
               {{ key | capitalize }}
-              <span class="arrow" :class="sortOrders[key] > 0 ? 'asc' : 'dsc'">
-              </span>
+              <span class="arrow" :class="sortOrders[key] > 0 ? 'asc' : 'dsc'"> </span>
             </th>
           </tr>
         </thead>
@@ -62,10 +61,11 @@
 </template>
 
 <script>
-import firebase from "firebase/app";
-import { db, storage } from "../store/firestoreConfig";
+import { db, storage } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
+import firebase from "firebase/compat/app";
 import isEmpty from "lodash";
-import { mapGetters } from "vuex";
+import { mapState } from "pinia";
 
 // csv import: https://codepen.io/edward1995/pen/QmXdwz?editors=1010
 export default {
@@ -93,7 +93,7 @@ export default {
     },
   },
   computed: {
-    ...mapGetters(["currentCohort"]),
+    ...mapState(useRootStore, ["currentCohort"]),
   },
   methods: {
     saveStudents() {
@@ -110,9 +110,7 @@ export default {
           if (docSnapshot.exists) {
             usersRef
               .update({
-                assignedCohorts: firebase.firestore.FieldValue.arrayUnion(
-                  this.currentCohort.id
-                ),
+                assignedCohorts: firebase.firestore.FieldValue.arrayUnion(this.currentCohort.id),
               })
               .then(() => {
                 counter++;

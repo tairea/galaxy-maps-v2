@@ -33,12 +33,9 @@
                 >
               </p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent">{{
-                  mdiInformationVariant
-                }}</v-icon>
+                <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <p class="dialog-description">
-                  To complete this task you must submit a response to following
-                  instructions
+                  To complete this task you must submit a response to following instructions
                 </p>
               </div>
             </div>
@@ -53,9 +50,7 @@
                 ?
               </p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent">{{
-                  mdiInformationVariant
-                }}</v-icon>
+                <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <p class="dialog-description">
                   Did you complete all the requirements of the Mission?
                 </p>
@@ -81,11 +76,14 @@
                       <p class="ma-0" style="font-size: 0.6rem">Instructor</p>
                     </div>
                   </div>
-                  <v-row class="d-flex align-center speech-bubble">
+                  <v-row 
+                    class="d-flex align-center speech-bubble"
+                  >
                     <p
                       v-html="task.submissionInstructions"
                       class="submission-dialog-description ma-0"
-                    ></p>
+                      style="color: var(--v-cohortAccent-base)"
+                      ></p>
                     <!-- <p class="submission-dialog-description ma-0">
                         {{
                           task.submissionInstructions
@@ -98,12 +96,9 @@
 
                 <div class="submission-create-dialog-content">
                   <div class="d-flex align-center">
-                    <v-icon left color="missionAccent">{{
-                      mdiInformationVariant
-                    }}</v-icon>
+                    <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                     <p class="dialog-description pb-4">
-                      submit your response below<br />(include any links to your
-                      work if required)
+                      submit your response below<br />(include any links to your work if required)
                     </p>
                   </div>
                   <vue-editor
@@ -115,6 +110,7 @@
                     :editor-toolbar="customToolbar"
                     @focus="quillFocused = true"
                     @blur="quillFocused = false"
+                    style="color: var(--v-cohortAccent-base)"
                   />
                 </div>
               </div>
@@ -190,9 +186,7 @@
             <div class="dialog-header">
               <p class="dialog-title">SUBMISSION COMPLETED</p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent">{{
-                  mdiInformationVariant
-                }}</v-icon>
+                <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <p class="dialog-description">
                   You have already submitted your work for this mission
                 </p>
@@ -226,15 +220,15 @@
 </template>
 
 <script>
-import { VueEditor } from "vue2-editor";
-import { db, functions } from "../store/firestoreConfig";
 import {
   submitWorkForReviewXAPIStatement,
   reSubmitWorkForReviewXAPIStatement,
   taskMarkedAsCompletedXAPIStatement,
   topicCompletedXAPIStatement,
-} from "../lib/veracityLRS";
-
+} from "@/lib/veracityLRS";
+import { dbMixins } from "@/mixins/DbMixins";
+import { db, functions } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
 import {
   mdiCloudUploadOutline,
   mdiInformationVariant,
@@ -242,10 +236,8 @@ import {
   mdiClose,
   mdiCheckboxBlankOutline,
 } from "@mdi/js";
-
-import { dbMixins } from "../mixins/DbMixins";
-
-import { mapState, mapGetters } from "vuex";
+import { VueEditor } from "vue2-editor";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "MissionCompletedDialog",
@@ -280,12 +272,7 @@ export default {
     customToolbar: [
       [{ header: [false, 3, 4, 5] }],
       ["bold", "italic", "underline", "strike"], // toggled buttons
-      [
-        { align: "" },
-        { align: "center" },
-        { align: "right" },
-        { align: "justify" },
-      ],
+      [{ align: "" }, { align: "center" }, { align: "right" }, { align: "justify" }],
       ["blockquote", "code-block"],
       [{ list: "ordered" }, { list: "bullet" }],
       [{ indent: "-1" }, { indent: "+1" }], // outdent/indent
@@ -299,13 +286,10 @@ export default {
     if (!this.currentCourse.mappedBy.image) {
       this.getMappedByPersonsImage(this.currentCourse.mappedBy.personId);
     }
-    console.log(
-      "persons topics from mission completed dialog",
-      this.personsTopics
-    );
+    console.log("persons topics from mission completed dialog", this.personsTopics);
   },
   computed: {
-    ...mapState([
+    ...mapState(useRootStore, [
       "currentCourse",
       "currentTopic",
       "currentTask",
@@ -313,69 +297,74 @@ export default {
       "currentCohort",
       "courseSubmissions",
       "personsTopics",
+      "person"
     ]),
-    ...mapGetters(["person"]),
+    dark() {
+      return this.$vuetify.theme.isDark;    
+    },
     submission() {
       const submissions = this.courseSubmissions.filter(
-        (submission) => submission.studentId == this.person.id
+        (submission) => submission.studentId == this.person.id,
       );
-      return submissions.find(
-        (submission) => submission.contextTask.id == this.task.id
-      );
+      return submissions.find((submission) => submission.contextTask.id == this.task.id);
     },
   },
   methods: {
-    reSubmitWorkForReview() {
+    ...mapActions(useRootStore, ["setSnackbar"]),
+    async reSubmitWorkForReview() {
       this.loading = true;
       this.disabled = true;
 
       // 1) add submission to course (for teacher to review)
-      db.collection("courses")
-        .doc(this.currentCourse.id)
-        .collection("submissionsForReview")
-        .doc(this.submission.id)
-        .update({
-          // update "courses" database with task submission
-          studentId: this.person.id,
-          contextCourse: this.currentCourse,
-          contextTopic: this.currentTopic,
-          contextTask: this.task,
-          submissionLink: this.submissionLink,
-          taskSubmissionStatus: "inreview",
-          taskSubmittedForReviewTimestamp: new Date(),
-          responderPersonId: "",
-          responseMessage: "",
-        })
-        .then(() => {
-          console.log("Re-submission successfully submitted for review!");
-
-          // send xAPI statement to LRS
-          reSubmitWorkForReviewXAPIStatement(this.person, this.task.id, {
-            galaxy: this.currentCourse,
-            system: this.currentTopic,
-            mission: this.task,
+      try {
+        await db
+          .collection("courses")
+          .doc(this.currentCourse.id)
+          .collection("submissionsForReview")
+          .doc(this.submission.id)
+          .update({
+            // update "courses" database with task submission
+            studentId: this.person.id,
+            contextCourse: this.currentCourse,
+            contextTopic: this.currentTopic,
+            contextTask: this.task,
+            submissionLink: this.submissionLink,
+            taskSubmissionStatus: "inreview",
+            taskSubmittedForReviewTimestamp: new Date(),
+            responderPersonId: "",
+            responseMessage: "",
           });
 
-          this.loading = false;
-          this.dialog = false;
+        console.log("Re-submission successfully submitted for review!");
 
-          this.$store.commit("setSnackbar", {
-            show: true,
-            text: "Submission sent. You will be notified when your instructor has reviewed your work.",
-            color: "baseAccent",
-          });
-        })
-        .catch((error) => {
-          this.$store.commit("setSnackbar", {
-            show: true,
-            text: "Error: " + error,
-            color: "baseAccent",
-          });
-          console.error("Error writing document: ", error);
+        // send xAPI statement to LRS
+        await reSubmitWorkForReviewXAPIStatement(this.person, this.task.id, {
+          galaxy: this.currentCourse,
+          system: this.currentTopic,
+          mission: this.task,
         });
 
+        this.loading = false;
+        this.dialog = false;
+
+        this.setSnackbar({
+          show: true,
+          text: "Submission sent. You will be notified when your instructor has reviewed your work.",
+          color: "baseAccent",
+        });
+      } catch (error) {
+        this.setSnackbar({
+          show: true,
+          text: "Error: " + error,
+          color: "baseAccent",
+        });
+
+        throw error;
+      }
+
       // 2) Add submission to students task (for students progression)
-      db.collection("people")
+      await db
+        .collection("people")
         .doc(this.person.id)
         .collection(this.currentCourse.id)
         .doc(this.currentTopic.id)
@@ -386,92 +375,92 @@ export default {
           submissionLink: this.submissionLink,
           taskStatus: "inreview",
           taskSubmittedForReviewTimestamp: new Date(),
-        })
-        .then(() => {
-          this.currentCohort?.teachers.forEach(async (teacherId) => {
-            await this.sendTaskSubmission(
-              teacherId,
-              this.submissionLink,
-              this.task.submissionInstructions
-            );
-          });
-        })
-        .then(() => {
-          console.log("Task work successfully re-submitted for review!");
-          this.loading = false;
-          this.disabled = false;
-          this.dialog = false;
-
-          // unlock next task
-          this.unlockNextTask();
-
-          // check if all tasks/missions are completed
-          this.checkIfAllTasksCompleted();
-
-          // TODO: perhaps only unlock once teacher has reviewed and marked complete. SOLUTION: leave as is. can progress to next task, but cant progress to next topic until all work is reviewed.
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
         });
+
+      if (this.currentCohort != null) {
+        for (const teacherId of this.currentCohort.teachers) {
+          await this.sendTaskSubmission(
+            teacherId,
+            this.submissionLink,
+            this.task.submissionInstructions,
+          );
+        }
+      }
+
+      console.log("Task work successfully re-submitted for review!");
+      this.loading = false;
+      this.disabled = false;
+      this.dialog = false;
+
+      // unlock next task
+      await this.unlockNextTask();
+
+      // check if all tasks/missions are completed
+      await this.checkIfAllTasksCompleted();
+
+      // TODO: perhaps only unlock once teacher has reviewed and marked complete. SOLUTION: leave as is. can progress to next task, but cant progress to next topic until all work is reviewed.
     },
-    submitWorkForReview() {
+    async submitWorkForReview() {
       this.loading = true;
       this.disabled = true;
 
       // 1) add submission to course (for teacher to review)
-      db.collection("courses")
-        .doc(this.currentCourse.id)
-        .collection("submissionsForReview")
-        .add({
-          // update "courses" database with task submission
-          studentId: this.person.id,
-          contextCourse: this.currentCourse,
-          contextTopic: this.currentTopic,
-          contextTask: this.currentTask,
-          submissionLink: this.submissionLink,
-          taskSubmissionStatus: "inreview",
-          taskSubmittedForReviewTimestamp: new Date(),
-        })
-        .then(() => {
-          this.currentCohort?.teachers.forEach(async (teacherId) => {
+      try {
+        await db
+          .collection("courses")
+          .doc(this.currentCourse.id)
+          .collection("submissionsForReview")
+          .add({
+            // update "courses" database with task submission
+            studentId: this.person.id,
+            contextCourse: this.currentCourse,
+            contextTopic: this.currentTopic,
+            contextTask: this.currentTask,
+            submissionLink: this.submissionLink,
+            taskSubmissionStatus: "inreview",
+            taskSubmittedForReviewTimestamp: new Date(),
+          });
+        if (this.currentCohort != null) {
+          for (const teacherId of this.currentCohort.teachers) {
             await this.sendTaskSubmission(
               teacherId,
               this.submissionLink,
-              this.task.submissionInstructions
+              this.task.submissionInstructions,
             );
-          });
-        })
-        .then(() => {
-          console.log("Submission successfully submitted for review!");
+          }
+        }
 
-          // send xAPI statement to LRS
-          submitWorkForReviewXAPIStatement(this.person, this.currentTask.id, {
-            galaxy: this.currentCourse,
-            system: this.currentTopic,
-            mission: this.currentTask,
-          });
+        console.log("Submission successfully submitted for review!");
 
-          this.requestForHelp = "";
-          this.loading = false;
-          this.dialog = false;
-
-          this.$store.commit("setSnackbar", {
-            show: true,
-            text: "Submission sent. You will be notified when your instructor has reviewed your work.",
-            color: "baseAccent",
-          });
-        })
-        .catch((error) => {
-          this.$store.commit("setSnackbar", {
-            show: true,
-            text: "Error: " + error,
-            color: "baseAccent",
-          });
-          console.error("Error writing document: ", error);
+        // send xAPI statement to LRS
+        await submitWorkForReviewXAPIStatement(this.person, this.currentTask.id, {
+          galaxy: this.currentCourse,
+          system: this.currentTopic,
+          mission: this.currentTask,
         });
 
+        this.requestForHelp = "";
+        this.loading = false;
+        this.dialog = false;
+
+        this.setSnackbar({
+          show: true,
+          text: "Submission sent. You will be notified when your instructor has reviewed your work.",
+          color: "baseAccent",
+        });
+      } catch (error) {
+        this.setSnackbar({
+          show: true,
+          text: "Error: " + error,
+          color: "baseAccent",
+        });
+
+        throw error;
+      }
+
       // 2) Add submission to students task (for students progression)
-      db.collection("people")
+      await db
+        .collection("people")
         .doc(this.person.id)
         .collection(this.currentCourse.id)
         .doc(this.currentTopic.id)
@@ -482,31 +471,28 @@ export default {
           submissionLink: this.submissionLink,
           taskStatus: "inreview",
           taskSubmittedForReviewTimestamp: new Date(),
-        })
-        .then(() => {
-          console.log("Task work successfully submitted for review!");
-          this.loading = false;
-          this.disabled = false;
-          this.dialog = false;
-
-          // unlock next task
-          this.unlockNextTask();
-
-          // check if all tasks/missions are completed
-          this.checkIfAllTasksCompleted();
-
-          // TODO: perhaps only unlock once teacher has reviewed and marked complete. SOLUTION: leave as is. can progress to next task, but cant progress to next topic until all work is reviewed.
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
         });
+
+      console.log("Task work successfully submitted for review!");
+      this.loading = false;
+      this.disabled = false;
+      this.dialog = false;
+
+      // unlock next task
+      await this.unlockNextTask();
+
+      // check if all tasks/missions are completed
+      await this.checkIfAllTasksCompleted();
+
+      // TODO: perhaps only unlock once teacher has reviewed and marked complete. SOLUTION: leave as is. can progress to next task, but cant progress to next topic until all work is reviewed.
     },
-    markAsCompleted() {
+    async markAsCompleted() {
       this.loading = true;
       this.disabled = true;
 
       // Add a new document in collection "courses"
-      db.collection("people")
+      await db
+        .collection("people")
         .doc(this.person.id)
         .collection(this.currentCourse.id)
         .doc(this.currentTopic.id)
@@ -516,32 +502,26 @@ export default {
           // update tasks array with new task
           taskStatus: "completed",
           taskCompletedTimestamp: new Date(),
-        })
-        .then(() => {
-          console.log("Task status successfully written as completed!");
-          // send xAPI statement to LRS
-          taskMarkedAsCompletedXAPIStatement(this.person, this.currentTask.id, {
-            galaxy: this.currentCourse,
-            system: this.currentTopic,
-            mission: this.currentTask,
-          });
-        })
-        .then(() => {
-          // unlock next task
-          this.unlockNextTask();
-        })
-        .then(() => {
-          // check if all tasks/missions are completed
-          this.checkIfAllTasksCompleted();
-        })
-        .then(() => {
-          this.loading = false;
-          this.disabled = false;
-          this.dialog = false;
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
         });
+
+      console.log("Task status successfully written as completed!");
+
+      // send xAPI statement to LRS
+      await taskMarkedAsCompletedXAPIStatement(this.person, this.currentTask.id, {
+        galaxy: this.currentCourse,
+        system: this.currentTopic,
+        mission: this.currentTask,
+      });
+
+      // unlock next task
+      await this.unlockNextTask();
+
+      // check if all tasks/missions are completed
+      await this.checkIfAllTasksCompleted();
+
+      this.loading = false;
+      this.disabled = false;
+      this.dialog = false;
     },
     async unlockNextTask() {
       console.log("unlocking next task...");
@@ -559,117 +539,105 @@ export default {
       // 2) loops the tasks. the first task to have taskStatus locked, update to unlocked, then return to exit loop
       for (const [index, task] of currentTasks.docs.entries()) {
         if (task.data().taskStatus == "locked") {
-          task.ref.update({ taskStatus: "unlocked" });
-          console.log(
-            "NEW TASK UNLOCKED (" + index + ") : " + task.data().title
-          );
+          await task.ref.update({ taskStatus: "unlocked" });
+          console.log("NEW TASK UNLOCKED (" + index + ") : " + task.data().title);
           return;
         }
       }
     },
-    checkIfAllTasksCompleted() {
+    async checkIfAllTasksCompleted() {
       // 1) check how many tasks in store are completed
       const numOfTasksCompleted = this.personsTopicsTasks.filter(
-        (obj) => obj.taskStatus === "completed"
+        (obj) => obj.taskStatus === "completed",
       ).length;
       // 2) check if that the same as total
       if (numOfTasksCompleted === this.personsTopicsTasks.length) {
         console.log("Topic Completed! (all tasks in this topic completed)");
         // TODO: some kind of notification to UI signal that Topic has been completed
-        topicCompletedXAPIStatement(this.person, this.currentTopic.id, {
+        await topicCompletedXAPIStatement(this.person, this.currentTopic.id, {
           galaxy: this.currentCourse,
           system: this.currentTopic,
         });
-        this.completeTopic();
+        await this.completeTopic();
         // all tasks are completed. unlock next topic
-        this.unlockNextTopics();
+        await this.unlockNextTopics();
       } else {
         console.log("topic not yet completed...");
         console.log("total tasks = ", this.personsTopicsTasks.length);
         console.log(
           "completed = ",
-          this.personsTopicsTasks.filter(
-            (obj) => obj.taskStatus === "completed"
-          ).length
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "completed").length,
         );
         console.log(
           "in review = ",
-          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "inreview")
-            .length
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "inreview").length,
         );
         console.log(
           "active = ",
-          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked")
-            .length
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked").length,
         );
         console.log(
           "locked = ",
-          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked")
-            .length
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked").length,
         );
       }
     },
-    unlockNextTopics() {
+    async unlockNextTopics() {
+      //TODO: guard against error (eg. untick "mission copmleted" if unlock fails)
+
       // ==== all tasks/missions completed. unlock next topics ====
-      db.collection("people")
+      const querySnapshot = await db
+        .collection("people")
         .doc(this.person.id)
         .collection(this.currentCourse.id)
         .where("prerequisites", "array-contains", this.currentTopic.id)
-        .get()
-        .then((querySnapshot) => {
-          querySnapshot.forEach((doc) => {
-            // if has more than one prereq
-            if (doc.data().prerequisites.length > 1) {
-              console.log(
-                "next topic has more than one prerequisite... checking if completed..."
-              );
-              let prereqsArr = doc.data().prerequisites;
-              // minus this completed topic
-              prereqsArr = prereqsArr.filter((e) => e !== this.currentTopic.id);
-              console.log("prereqs after current one removed:", prereqsArr);
-              const prereqsToCompleteCount = prereqsArr.length;
-              let prereqsCompletedCount = 0;
-              for (const preq of prereqsArr) {
-                console.log("checking if prereq " + preq + " is completed...");
-                // check if the other preqs are .status completed
-                const preqObj = this.personsTopics.filter(
-                  (topic) => topic.id === preq
-                );
-                if (preqObj[0].topicStatus == "completed") {
-                  console.log("another prereq completed");
-                  prereqsCompletedCount++;
-                }
-              }
-              // check if preqCounts match. if so, unlock topic
-              if (prereqsCompletedCount == prereqsToCompleteCount) {
-                doc.ref.update({ topicStatus: "unlocked" });
-                console.log("NEW TOPIC UNLOCKED: " + doc.data().label);
-              } else {
-                console.log(
-                  "other prereqs of next topic not completed. next topic not unlocked."
-                );
-              }
-            } else {
-              doc.ref
-                .update({
-                  topicStatus: "unlocked", // change status to unlocked
-                })
-                // route back to map
-                .then(() => {
-                  console.log("NEW TOPIC UNLOCKED: " + doc.data().label);
-                  // this.$router.push({
-                  //   name: "GalaxyView",
-                  //   params: {
-                  //     topicId: this.currentCourse.id,
-                  //   },
-                  // });
-                });
+        .get();
+
+      for (const doc of querySnapshot.docs) {
+        const data = doc.data();
+        // if has more than one prereq
+        if (data.prerequisites.length > 1) {
+          console.log("next topic has more than one prerequisite... checking if completed...");
+          let prereqsArr = data.prerequisites;
+          // minus this completed topic
+          prereqsArr = prereqsArr.filter((e) => e !== this.currentTopic.id);
+          console.log("prereqs after current one removed:", prereqsArr);
+          const prereqsToCompleteCount = prereqsArr.length;
+          let prereqsCompletedCount = 0;
+          for (const preq of prereqsArr) {
+            console.log("checking if prereq " + preq + " is completed...");
+            // check if the other preqs are .status completed
+            const preqObj = this.personsTopics.filter((topic) => topic.id === preq);
+            if (preqObj[0].topicStatus == "completed") {
+              console.log("another prereq completed");
+              prereqsCompletedCount++;
             }
+          }
+          // check if preqCounts match. if so, unlock topic
+          if (prereqsCompletedCount == prereqsToCompleteCount) {
+            await doc.ref.update({ topicStatus: "unlocked" });
+            console.log("NEW TOPIC UNLOCKED: " + data.label);
+          } else {
+            console.log("other prereqs of next topic not completed. next topic not unlocked.");
+          }
+        } else {
+          await doc.ref.update({
+            topicStatus: "unlocked", // change status to unlocked
           });
-        });
+          // route back to map
+          console.log("NEW TOPIC UNLOCKED: " + data.label);
+          // this.$router.push({
+          //   name: "GalaxyView",
+          //   params: {
+          //     topicId: this.currentCourse.id,
+          //   },
+          // });
+        }
+      }
     },
-    completeTopic() {
-      db.collection("people")
+    async completeTopic() {
+      await db
+        .collection("people")
         .doc(this.person.id)
         .collection(this.currentCourse.id)
         .doc(this.currentTopic.id)
@@ -684,13 +652,9 @@ export default {
     },
     async getMappedByPersonsImage(personId) {
       const person = await this.MXgetPersonByIdFromDB(personId);
-      this.mappedByImageURL = person.image.url;
+      this.mappedByImageURL = person.image?.url;
     },
-    async sendTaskSubmission(
-      teacherId,
-      submissionResponse,
-      submissionInstructions
-    ) {
+    async sendTaskSubmission(teacherId, submissionResponse, submissionInstructions) {
       const teacher = await this.MXgetPersonByIdFromDB(teacherId);
       const data = {
         course: this.currentCourse.title,
@@ -708,12 +672,7 @@ export default {
     handleImageAdded(file, Editor, cursorLocation) {
       // ceate a storage ref
       var storageRef = storage.ref(
-        "submission-images/student-" +
-          this.person.id +
-          "-task-" +
-          this.task.id +
-          "-" +
-          file.name
+        "submission-images/student-" + this.person.id + "-task-" + this.task.id + "-" + file.name,
       );
 
       // upload a file
@@ -724,10 +683,7 @@ export default {
         "state_changed",
         (snapshot) => {
           // show progress on uploader bar
-          console.log(
-            "image upload: ",
-            snapshot.bytesTransferred / snapshot.totalBytes
-          ) * 100;
+          console.log("image upload: ", snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         },
         // upload error
         (err) => {
@@ -740,7 +696,7 @@ export default {
             // add image url to course obj
             Editor.insertEmbed(cursorLocation, "image", downloadURL);
           });
-        }
+        },
       );
     },
   },

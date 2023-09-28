@@ -2,11 +2,7 @@
   <div>
     <v-tooltip v-if="profileData" bottom color="subBackground">
       <template v-slot:activator="{ on, attrs }">
-        <div
-          class="d-flex justify-center align-center"
-          v-bind="attrs"
-          v-on="on"
-        >
+        <div class="d-flex justify-center align-center" v-bind="attrs" v-on="on">
           <v-avatar :size="size">
             <img
               v-if="profileData.image"
@@ -15,11 +11,7 @@
               style="object-fit: cover"
               :style="border"
             />
-            <div
-              v-else-if="profileData.firstName"
-              class="imagePlaceholder"
-              :style="colouredBorder"
-            >
+            <div v-else-if="profileData.firstName" class="imagePlaceholder" :style="colouredBorder">
               {{ first3Letters(profileData.firstName) }}
             </div>
             <div v-else class="imagePlaceholder" :style="colouredBorder">
@@ -29,10 +21,7 @@
         </div>
       </template>
       <div>
-        <p
-          class="ma-0 person-tooltip"
-          style="font-size: 0.8rem; font-weight: 800"
-        >
+        <p class="ma-0 person-tooltip" style="font-size: 0.8rem; font-weight: 800">
           {{
             profileData.firstName
               ? profileData.firstName + " " + profileData.lastName
@@ -41,28 +30,58 @@
         </p>
       </div>
     </v-tooltip>
+    <v-tooltip v-if="organisationData" bottom color="subBackground">
+      <template v-slot:activator="{ on, attrs }">
+        <div class="d-flex justify-center align-center" v-bind="attrs" v-on="on">
+          <v-avatar :size="size">
+            <img
+              v-if="organisationData.image"
+              :src="organisationData.image.url"
+              :alt="organisationData.name"
+              style="object-fit: cover"
+              :style="border"
+            />
+            <div v-else class="imagePlaceholder" :style="colouredBorder">
+              {{ first3Letters(organisationData.name) }}
+            </div>
+          </v-avatar>
+        </div>
+      </template>
+      <div>
+        <p class="ma-0 person-tooltip" style="font-size: 0.8rem; font-weight: 800">
+          {{ organisationData.name }}
+        </p>
+      </div>
+    </v-tooltip>
   </div>
 </template>
 
 <script>
-import { db } from "../store/firestoreConfig";
-import { mapState } from "vuex";
-
+import { db } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
 import { mdiAccount } from "@mdi/js";
+import { mapState } from "pinia";
 
 export default {
   name: "Avatar",
-  props: ["personId", "size", "colourBorder", "profile"],
+  props: ["personId", "size", "colourBorder", "profile", "owner", "organisationData"],
   data() {
     return {
       mdiAccount,
-      profileData: {},
+      profileData: null,
     };
   },
   async mounted() {
     if (this.profile) {
       this.profileData = this.profile;
-    } else {
+    } else if (this.owner) {
+      const doc = await this.owner.get();
+      if (this.owner.path.startsWith("organisations")) {
+        this.organisationData = doc;
+      } else {
+        this.profileData = doc;
+      }
+    } else if (this.personId) {
       await db
         .collection("people")
         .doc(this.personId)
@@ -73,24 +92,23 @@ export default {
     }
   },
   computed: {
-    ...mapState(["userStatus"]),
+    ...mapState(useRootStore, ["userStatus"]),
     online() {
-      if (this.profileData.id)
+      if (this.profileData) {
         return this.userStatus[this.profileData.id]?.state === "online";
+      } else {
+        return false;
+      }
     },
     border() {
-      return this.colourBorder && this.online
-        ? "border: 1px solid var(--v-baseAccent-base)"
-        : "";
+      return this.colourBorder && this.online ? "border: 1px solid var(--v-baseAccent-base)" : "";
     },
     colouredBorder() {
       return this.colourBorder
         ? {
             width: this.size + "px",
             height: this.size + "px",
-            backgroundColor: this.stringToColour(
-              this.profileData.firstName + this.profileData.lastName
-            ),
+            backgroundColor: this.stringToColour(),
             border: this.online ? "1px solid var(--v-baseAccent-base)" : "",
           }
         : { width: this.size + "px", height: this.size + "px" };
@@ -101,7 +119,11 @@ export default {
       if (!name) return;
       return name.substring(0, 3).toUpperCase();
     },
-    stringToColour(str) {
+    stringToColour() {
+      // profile or owner
+      let str = "";
+      if (this.profileData) str = this.profileData.firstName + this.profileData.lastName;
+      else if (this.organisationData) str = this.organisationData.name;
       return `hsl(${this.hashCode(str) % 360}, 100%, 35%)`;
     },
     hashCode(str) {

@@ -12,28 +12,22 @@
       />
     </div>
     <div v-if="!loading && requests.length == 0">
-      <p
-        class="overline pt-4 text-center mb-0"
-        style="color: var(--v-galaxyAccent-base)"
-      >
+      <p class="overline pt-4 text-center mb-0" style="color: var(--v-galaxyAccent-base)">
         NO REQUESTS FOR HELP
       </p>
     </div>
     <!-- loading spinner -->
     <div class="d-flex justify-center align-center mt-4">
-      <v-btn
-        v-if="loading"
-        :loading="loading"
-        icon
-        color="galaxyAccent"
-      ></v-btn>
+      <v-btn v-if="loading" :loading="loading" icon color="galaxyAccent"></v-btn>
     </div>
   </div>
 </template>
+
 <script>
-import RequestForHelpTeacherPanel from "../components/RequestForHelpTeacherPanel";
-import { mapState, mapGetters } from "vuex";
-import { dbMixins } from "../mixins/DbMixins";
+import RequestForHelpTeacherPanel from "@/components/RequestForHelpTeacherPanel.vue";
+import { dbMixins } from "@/mixins/DbMixins";
+import useRootStore from "@/store/index";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "RequestForHelpTeacherFrame",
@@ -47,56 +41,70 @@ export default {
       loading: false,
       unsubscribes: [],
     };
-  }, 
+  },
   async mounted() {
     this.loading = true;
     for (const course of this.courses) {
-      console.log('getting requests for course: ', course)
-      const unsubscribe = await this.$store.dispatch(
-        "getRequestsForHelpByCourseId",
-        course.id
-      );
+      console.log("getting requests for course: ", course);
+      const unsubscribe = await this.getRequestsForHelpByCourseId(course.id);
       this.unsubscribes.push(unsubscribe);
     }
     this.loading = false;
   },
   computed: {
-    ...mapState(["teachersRequestsForHelp", "user", "currentCohort", "showPanelCard", "currentTopic", "currentTask"]),
+    ...mapState(useRootStore, [
+      "teachersRequestsForHelp",
+      "user",
+      "currentCohort",
+      "showPanelCard",
+      "currentTopic",
+      "currentTask",
+    ]),
     isGalaxyView() {
-      return this.$route.name == "GalaxyView"
+      return this.$route.name == "GalaxyView";
     },
     isCohortView() {
-      return this.$route.name == "CohortView"
+      return this.$route.name == "CohortView";
     },
     isDashboardView() {
-      return this.$route.name == "Dashboard"
+      return this.$route.name == "Dashboard";
     },
     isSystemView() {
-      return this.$route.name == "SolarSystemView"
+      return this.$route.name == "SolarSystemView";
     },
     cohortId() {
-       return this.noSubmissions ? "student-help-panel" : "help-panel"
+      return this.noSubmissions ? "student-help-panel" : "help-panel";
     },
     requests() {
       // const requests = this.teachersRequestsForHelp.filter(
       //   (request) => request.requestForHelpStatus == "unanswered"
       // );
-      const requests = this.teachersRequestsForHelp.filter(request => this.students?.some((student) => {return student.id ? student.id === request.personId : student === request.personId}))
+      const requests = this.teachersRequestsForHelp.filter((request) =>
+        this.students?.some((student) => {
+          return student.id ? student.id === request.personId : student === request.personId;
+        }),
+      );
       if (this.isTeacher) {
-        requests.sort((a, b) => { return a.requestForHelpStatus == 'unanswered' ? -1 : 1 });
+        requests.sort((a, b) => {
+          return a.requestForHelpStatus == "unanswered" ? -1 : 1;
+        });
       } else {
-        requests.sort((a, b) => { return a.requestForHelpStatus == 'unanswered' ? 1 : -1 });
+        requests.sort((a, b) => {
+          return a.requestForHelpStatus == "unanswered" ? 1 : -1;
+        });
       }
-      
-      if (this.isCohortView || this.isDashboardView) return requests
+
+      if (this.isCohortView || this.isDashboardView) return requests;
       else if (this.isGalaxyView) {
-        return requests.filter((request) => request.contextCourse.id == this.courses[0].id)
+        return requests.filter((request) => request.contextCourse.id == this.courses[0].id);
       } else if (this.isSystemView) {
-        const taskRequests = requests.filter(request => request.contextTopic.id == this.currentTopic.id)
-        if (this.isTeacher) return taskRequests
-        else return taskRequests.filter(req => req.contextTask.id == this.currentTask.id)
+        const taskRequests = requests.filter(
+          (request) => request.contextTopic.id == this.currentTopic.id,
+        );
+        if (this.isTeacher) return taskRequests;
+        else return taskRequests.filter((req) => req.contextTask.id == this.currentTask.id);
       }
-      return requests
+      return requests;
     },
   },
   destroyed() {
@@ -104,9 +112,12 @@ export default {
       unsubscribe();
     }
   },
-  methods: {},
+  methods: {
+    ...mapActions(useRootStore, ["getRequestsForHelpByCourseId"]),
+  },
 };
 </script>
+
 <style scoped lang="scss">
 #help-panel {
   width: 100%;
@@ -117,11 +128,11 @@ export default {
   backdrop-filter: blur(2px);
   overflow-y: scroll;
   max-height: 40%;
-  transition: all .2s ease-in-out
+  transition: all 0.2s ease-in-out;
 }
 
 #help-panel:hover {
-  max-height: 70vh
+  max-height: 70vh;
 }
 
 #student-help-panel {
@@ -134,7 +145,7 @@ export default {
   max-height: 100%;
   overflow: scroll;
   overflow-x: hidden;
-  transition: all .2s ease-in-out
+  transition: all 0.2s ease-in-out;
 }
 
 .help-label {
@@ -168,5 +179,4 @@ export default {
 *::-webkit-scrollbar-thumb:hover {
   background: var(--v-galaxyAccent-base) !important;
 }
-
 </style>

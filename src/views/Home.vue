@@ -9,8 +9,8 @@
 <script>
 import UserBar from "@/components/UserBar.vue";
 import NavBar from "@/components/NavBar.vue";
-
-import { mapGetters } from "vuex";
+import useRootStore from "@/store/index";
+import { mapState } from "pinia";
 
 export default {
   name: "Home",
@@ -19,13 +19,12 @@ export default {
     NavBar,
   },
   computed: {
-    ...mapGetters(["person"]),
+    ...mapState(useRootStore, ["person"]),
     userType() {
-      return this.person.accountType
-    }
-  }
-
-}
+      return this.person.accountType;
+    },
+  },
+};
 </script>
 
 <style lang="scss" scoped>

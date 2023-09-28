@@ -1,7 +1,7 @@
 <template>
   <div class="full-height justify-center align-center">
     <LoadingSpinner v-if="loading" text="loading learning universe" />
-    <div v-if="nodesToDisplay.length == 0">
+    <div v-if="allNodesForDisplay.length == 0">
       <p class="overline noGalaxies">NO GALAXIES TO DISPLAY</p>
       <div class="d-flex justify-center mb-4">
         <v-btn
@@ -24,22 +24,24 @@
       :nodes="allNodesForDisplay"
       :edges="allEdges"
       :options="network.options"
+      @hook:mounted="networkMounted"
+      @hook:updated="networkUpdated"
       @click="click"
       @before-drawing="beforeDrawing"
+      @after-drawing="afterDrawing"
+      @animation-finished="animationFinished"
     ></network>
   </div>
 </template>
 
 <script>
-import { Network } from "vue2vis";
-import "vue2vis/dist/vue2vis.css";
-
+import LoadingSpinner from "@/components/LoadingSpinner.vue";
+import PopupGalaxyPreview from "@/components/PopupGalaxyPreview.vue";
+import useRootStore from "@/store/index";
+import Network from "@/vue2vis/Network.vue";
 import { mdiPlus } from "@mdi/js";
-
-import { mapState, mapGetters, mapMutations } from "vuex";
-
-import LoadingSpinner from "../components/LoadingSpinner";
-import PopupGalaxyPreview from "../components/PopupGalaxyPreview";
+import "vis-network/styles/vis-network.css";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "Galaxies",
@@ -56,9 +58,10 @@ export default {
     // gradients: [],
     active: false,
     loading: true,
+    needsCentering: false,
+    needsToZoomOut: false,
     popupPreview: false,
     allNodeIds: [],
-    nodesToDisplay: [],
     relativeGalaxyBoundaries: [],
     // allNodesLength: 0,
     courseCols: 1,
@@ -138,7 +141,7 @@ export default {
     },
   }),
   computed: {
-    ...mapState([
+    ...mapState(useRootStore, [
       "allNodes",
       "allNodesForDisplay",
       "allEdges",
@@ -146,8 +149,9 @@ export default {
       "courses",
       "darkMode",
       "person",
+      "getCourseById",
+      "user",
     ]),
-    ...mapGetters(["getCourseById", "user"]),
     isDark() {
       return this.$vuetify.theme.isDark;
     },
@@ -156,68 +160,110 @@ export default {
         (course) =>
           (course.public === true && course.status != "submitted") ||
           course.mappedBy.personId === this.person.id ||
-          this.person.assignedCourses?.some(
-            (assignedCourse) => assignedCourse === course.id
-          )
+          this.person.assignedCourses?.some((assignedCourse) => assignedCourse === course.id),
       );
     },
   },
   watch: {
     darkMode(dark) {
       if (dark == false) {
-        this.makeGalaxyLabelsColour(
-          this.$vuetify.theme.themes.light.baseAccent
-        );
+        this.makeGalaxyLabelsColour(this.$vuetify.theme.themes.light.baseAccent);
       } else {
         this.makeGalaxyLabelsColour("#ffffff");
       }
     },
     highlightCourse(newCourseId) {
       // get all topic nodes by the closest clicked
-      let coursesTopicNodes = this.nodesToDisplay.filter(
-        (node) => node.courseId == newCourseId
+      let coursesTopicNodes = this.allNodesForDisplay.filter(
+        (node) => node.courseId == newCourseId,
       );
-      this.zoomToNodes(coursesTopicNodes);
+      console.log("highlightCourse: zoom to:", coursesTopicNodes);
+      if (coursesTopicNodes.length > 0) {
+        // zoom out to fit all nodes
+        this.zoomToNodes(coursesTopicNodes);
+        // this.needsToZoomOut = true;
+      } else {
+        // zoom to specific galaxy nodes
+        this.zoomToNodes(coursesTopicNodes);
+      }
+    },
+    async courses() {
+      this.loading = true;
+      await this.refreshAllNodes();
     },
   },
   mounted() {
-    this.setAllNodesToDisplay();
+    this.refreshAllNodes();
+
+    if (this.allNodes.length > 0) {
+      this.setAllNodesToDisplay();
+    }
   },
   methods: {
-    async setAllNodesToDisplay() {
+    ...mapActions(useRootStore, [
+      "getAllEdges",
+      "getAllNodes",
+      "updateAllNodesForDisplay",
+      "setCurrentCourseId",
+    ]),
+    async refreshAllNodes() {
       /* ===========================
         Show ALL Galaxies in DATABASE!! (so I can see what maps users have created)
       =========================== */
-      await this.$store.dispatch("getAllEdges"); // edge data for course
-      await this.$store.dispatch("getAllNodes"); // node data for course
-      this.nodesToDisplay = this.allNodesForDisplay;
-      if (this.$refs.network?.nodes.length) {
-        // const repositionedNodes = this.repositionCoursesBasedOnBoundaries();
-        const repositionedNodes = this.repositionCoursesBasedOnBoundariesV2();
-        if (repositionedNodes.length) {
-          this.$store.commit("updateAllNodesForDisplay", repositionedNodes);
-        }
-      } else {
-        // no nodes to load
+      await Promise.all([this.getAllEdges(), this.getAllNodes()]); // edge data for course // node data for course
+      console.log("finished loading nodes and edges");
+      this.setAllNodesToDisplay();
+    },
+    setAllNodesToDisplay() {
+      console.log("setAllNodesToDisplay called");
+      const repositionedNodes = this.repositionCoursesBasedOnBoundariesV2();
+      this.updateAllNodesForDisplay(repositionedNodes);
+
+      if (!repositionedNodes.length) {
         this.loading = false;
-        return;
       }
+
+      this.needsCentering = true;
+    },
+    networkMounted() {
+      console.log("networkMounted called");
       this.centerAfterReposition();
+    },
+    networkUpdated() {
+      console.log("networkUpdated called");
+      if (this.needsCentering === true) {
+        this.centerAfterReposition();
+      }
+    },
+
+    afterDrawing() {
+      if (this.needsCentering === true) {
+        this.centerAfterReposition();
+      }
+      // stop loading spinner
+      if (this.loading === true) {
+        this.loading = false;
+      }
+    },
+    animationFinished() {
+      console.log("animation finished");
+      if (this.needsToZoomOut === true) {
+        this.needsToZoomOut = false;
+        console.log("zooming out");
+        this.zoomOut();
+      }
     },
     centerAfterReposition() {
       // short timer to give time to load all before zoom
-      if (this.nodesToDisplay.length > 0) {
-        setTimeout(() => {
-          this.zoomToNodes(this.nodesToDisplay);
-          // set label colours (important if in light mode)
-          this.makeGalaxyLabelsColour(
-            this.$vuetify.theme.isDark
-              ? "#fff"
-              : this.$vuetify.theme.themes.light.baseAccent
-          );
-        }, 250);
-        // setTimeout(() => this.fitToAllNodes(), 250);
-      }
+      //if (this.allNodesForDisplay.length > 0) {
+      this.zoomToNodes(this.allNodesForDisplay);
+      // set label colours (important if in light mode)
+      this.makeGalaxyLabelsColour(
+        this.$vuetify.theme.isDark ? "#fff" : this.$vuetify.theme.themes.light.baseAccent,
+      );
+      // setTimeout(() => this.fitToAllNodes(), 250);
+      //}
+      this.needsCentering = false;
     },
     async click(data) {
       // get click location
@@ -246,7 +292,7 @@ export default {
       const closestNode = this.$refs.network.getNode(closest.id);
 
       // set save current course clicked in store
-      this.$store.commit("setCurrentCourseId", closestNode.courseId);
+      this.setCurrentCourseId(closestNode.courseId);
 
       this.$emit("courseClicked", { courseId: this.currentCourseId });
     },
@@ -256,13 +302,11 @@ export default {
       return diffX * diffX + diffY * diffY;
     },
     calcCourseCanvasBoundaries() {
-      const courses = this.user.data.admin
-        ? this.courses
-        : this.displayGalaxies;
+      const courses = this.user.data?.admin ? this.courses : this.displayGalaxies;
       let courseCanvasBoundaries = [];
       // get all coords for nodes
       // const allNodes = this.$refs.network.nodes;
-      const allNodes = this.nodesToDisplay;
+      const allNodes = this.allNodes;
 
       // per course/galaxy, determine boundaries ie. highest y, highest x, lowest y, lowest x (this is a boundary we want to hover)
       for (let i = 0; i < courses.length; i++) {
@@ -277,8 +321,6 @@ export default {
           centerX: 0,
         };
         let courseNodes = [];
-        let allNodeXPositions = [];
-        let allNodeYPositions = [];
         // let DOMboundary = {
         //   top: 0,
         //   bottom: 0,
@@ -300,22 +342,20 @@ export default {
           }
         }
 
+        // If we don't have any nodes for this galaxy then don't include it in the final result
+        if (courseNodes.length === 0) {
+          console.warn("no nodes for course: ", courses[i].id);
+          continue;
+        }
+
         //find min x = left
-        boundary.left = courseNodes.reduce((prev, curr) =>
-          prev.x < curr.x ? prev : curr
-        );
+        boundary.left = courseNodes.reduce((prev, curr) => (prev.x < curr.x ? prev : curr), 0);
         //find max x = right
-        boundary.right = courseNodes.reduce((prev, curr) =>
-          prev.x > curr.x ? prev : curr
-        );
+        boundary.right = courseNodes.reduce((prev, curr) => (prev.x > curr.x ? prev : curr), 0);
         //find min y = top
-        boundary.top = courseNodes.reduce((prev, curr) =>
-          prev.y < curr.y ? prev : curr
-        );
+        boundary.top = courseNodes.reduce((prev, curr) => (prev.y < curr.y ? prev : curr), 0);
         //find max y = bottom
-        boundary.bottom = courseNodes.reduce((prev, curr) =>
-          prev.y > curr.y ? prev : curr
-        );
+        boundary.bottom = courseNodes.reduce((prev, curr) => (prev.y > curr.y ? prev : curr), 0);
 
         //boundary width & height
         boundary.width = boundary.right.x - boundary.left.x;
@@ -334,26 +374,15 @@ export default {
         let status;
         if (courses[i].mappedBy.personId == this.person.id) {
           if (courses[i].status == "drafting") status = "draft";
-          else if (
-            courses[i].status == "published" &&
-            courses[i].public == true
-          )
-            status = "public";
-          else if (
-            courses[i].status == "published" &&
-            courses[i].public == false
-          )
+          else if (courses[i].status == "published" && courses[i].public == true) status = "public";
+          else if (courses[i].status == "published" && courses[i].public == false)
             status = "private";
           else if (courses[i].status == "submitted") status = "submitted";
-        } else if (
-          this.person.assignedCourses?.some(
-            (course) => course === courses[i].id
-          )
-        ) {
+        } else if (this.person.assignedCourses?.some((course) => course === courses[i].id)) {
           status = "assigned";
         }
         // glow submitted for admin to easily see submitted galaxies for review
-        else if (this.user.data.admin && courses[i].status == "submitted") {
+        else if (this.user.data?.admin && courses[i].status == "submitted") {
           status = "submitted";
         }
         boundary.status = status;
@@ -367,9 +396,10 @@ export default {
     },
     repositionCoursesBasedOnBoundariesV2() {
       const courseCanvasBoundaries = this.calcCourseCanvasBoundaries();
-      const allNodes = this.$refs.network.nodes;
+      const allNodes = this.allNodes;
       // console.log("all nodes ================", allNodes);
       let newAllNodes = [];
+      let newRelativeGalaxyBoundaries = [];
 
       // canvas / 3
       let galaxyColsCount = 0;
@@ -398,7 +428,10 @@ export default {
         // const widthOffset = courseCanvasBoundaries[i].maxWidthOffset;
         // const heightOffset = courseCanvasBoundaries[i].maxHeightOffset;
 
-        let relativeTop, relativeRight, relativeBottom, relativeLeft;
+        let relativeTop = { label: "", x: 0, y: 0 },
+          relativeRight,
+          relativeBottom,
+          relativeLeft;
 
         for (const node of allNodes) {
           if (node.courseId == courseCanvasBoundaries[i].id) {
@@ -469,16 +502,12 @@ export default {
         // get center point of galaxy
         // thanks to: https://www.quora.com/Geometry-How-do-I-calculate-the-center-of-four-X-Y-coordinates
         // 1) calc centroid triangle 1
-        let centroidTri1X =
-          (relativeTop.x + relativeRight.x + relativeBottom.x) / 3;
-        let centroidTri1Y =
-          (relativeTop.y + relativeRight.y + relativeBottom.y) / 3;
+        let centroidTri1X = (relativeTop.x + relativeRight.x + relativeBottom.x) / 3;
+        let centroidTri1Y = (relativeTop.y + relativeRight.y + relativeBottom.y) / 3;
 
         // 2) calc centroid triangle 2
-        let centroidTri2X =
-          (relativeBottom.x + relativeLeft.x + relativeTop.x) / 3;
-        let centroidTri2Y =
-          (relativeBottom.y + relativeLeft.y + relativeTop.y) / 3;
+        let centroidTri2X = (relativeBottom.x + relativeLeft.x + relativeTop.x) / 3;
+        let centroidTri2Y = (relativeBottom.y + relativeLeft.y + relativeTop.y) / 3;
 
         // 3) mid point of line between centroids
         let centroidX = (centroidTri1X + centroidTri2X) / 2;
@@ -499,7 +528,7 @@ export default {
           height: courseCanvasBoundaries[i].height,
           status: courseCanvasBoundaries[i].status,
         };
-        this.relativeGalaxyBoundaries.push(relativeCenter);
+        newRelativeGalaxyBoundaries.push(relativeCenter);
 
         // increase offset for next galaxy column aka ** PADDING BETWEEN GALAXIES **
         currentColWidth += courseCanvasBoundaries[i].width / 2 + 1600; // width / 2 because dont want to pad the whole width over + pad just half the course width + pad
@@ -538,8 +567,7 @@ export default {
               //   "current row has greater height:",
               //   courseCanvasBoundaries[i - x - 1]?.height
               // );
-              maxRowHeight =
-                courseCanvasBoundaries[i - x - 1]?.height / 2 + 600;
+              maxRowHeight = courseCanvasBoundaries[i - x - 1]?.height / 2 + 600;
             }
           }
           // }
@@ -550,6 +578,7 @@ export default {
         }
       }
       // console.log("relative centers", this.relativeGalaxyBoundaries);
+      this.relativeGalaxyBoundaries = newRelativeGalaxyBoundaries;
       // pad the end of row
       // this.largestRowWidth += this.largestRowWidth / this.numberOfGalaxiesPerRow / 2;
       // this.$refs.network.storePositions();
@@ -565,18 +594,30 @@ export default {
       // // fit
       this.$refs.network.fit({
         nodes: nodeIds,
-        minZoomLevel: 0.2, // <-- TODO: this doesnt work on this version of vis-network. needs to be at least v8.5.0. but vue2vis is v7.4.0
-        animation: true,
+        // scale: 0.5,
+        // animation: true,
+        animation: {
+          duration: 2000,
+          easingFunction: "easeInOutQuad",
+        },
       });
-      // stop loading spinner
-      this.loading = false;
+    },
+    zoomOut(nodes) {
+      this.$refs.network.moveTo({
+        scale: 0.15,
+        animation: true,
+        // animation: {
+        //   duration: 2000,
+        //   easingFunction: "easeInOutQuad",
+        // },
+      });
     },
     zoomToAllNodes() {
-      this.zoomToNodes(this.nodesToDisplay);
+      this.zoomToNodes(this.allNodesForDisplay);
     },
     togglePopup() {
       this.popupPreview = !this.popupPreview;
-      this.zoomToNodes(this.nodesToDisplay);
+      this.zoomToNodes(this.allNodesForDisplay);
     },
     makeGalaxyLabelsColour(colour) {
       var options = { ...this.network.options };
@@ -593,7 +634,7 @@ export default {
           relative.centroidX,
           relative.centroidY,
           relative.width > relative.height ? relative.width : relative.height,
-          relative.status
+          relative.status,
         );
         // draw the galaxy maps bounds (for debugging boundaries)
         // this.drawBounds(

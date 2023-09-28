@@ -1,20 +1,13 @@
 <template>
   <div id="assigned-info">
-    <h2 class="assigned-label">
-      {{ isMissionView ? "Currently active" : "Assigned to" }}:
-    </h2>
+    <h2 class="assigned-label">{{ isMissionView ? "Currently active" : "Assigned to" }}:</h2>
     <!-- ASSIGNED COHORTS INFO -->
     <div v-if="assignCohorts">
       <!-- Cohorts -->
       <div v-if="cohorts && cohorts.length > 0">
         <p class="overline assignedToLabel ma-0">Cohorts</p>
         <v-row class="my-1">
-          <Cohort
-            v-for="cohort in cohorts"
-            :cohort="cohort"
-            :key="cohort.id"
-            :tooltip="true"
-          />
+          <Cohort v-for="cohort in cohorts" :cohort="cohort" :key="cohort.id" :tooltip="true" />
         </v-row>
       </div>
 
@@ -32,10 +25,7 @@
         </v-row>
       </div>
 
-      <p
-        v-if="cohorts && cohorts.length == 0 && people.length == 0"
-        class="assigned-status"
-      >
+      <p v-if="cohorts && cohorts.length == 0 && people.length == 0" class="assigned-status">
         Nobody is assigned to this Galaxy
       </p>
       <AssignCohortDialog
@@ -52,10 +42,7 @@
       <div v-if="courses.length > 0">
         <Course v-for="(course, i) in courses" :course="course" :key="i" />
         <!-- Jump to galaxy button -->
-        <div
-          v-if="courses.length == 1"
-          class="d-flex justify-center align-center mb-2"
-        >
+        <div v-if="courses.length == 1" class="d-flex justify-center align-center mb-2">
           <v-btn
             outlined
             color="galaxyAccent"
@@ -69,24 +56,21 @@
         </div>
       </div>
       <p v-else class="assigned-status">No Galaxies assigned to this Cohort</p>
-      <AssignCohortDialog
-        v-if="isTeacher && !courseCohort"
-        :assignCourses="true"
-      />
+      <AssignCohortDialog v-if="isTeacher && !courseCohort" :assignCourses="true" />
     </div>
   </div>
 </template>
 
 <script>
-import { mapState, mapGetters } from "vuex";
-
-import AssignCohortDialog from "../components/AssignCohortDialog";
-import Course from "../components/Course";
-import Cohort from "../components/Cohort";
-import Organisation from "../components/Organisation";
-import Avatar from "../components/Avatar";
-import { dbMixins } from "../mixins/DbMixins";
-import { getCourseById } from "../lib/ff";
+import AssignCohortDialog from "@/components/AssignCohortDialog.vue";
+import Course from "@/components/Course.vue";
+import Cohort from "@/components/Cohort.vue";
+import Organisation from "@/components/Organisation.vue";
+import Avatar from "@/components/Avatar.vue";
+import { dbMixins } from "@/mixins/DbMixins";
+import { getCourseById } from "@/lib/ff";
+import useRootStore from "@/store/index";
+import { mapState } from "pinia";
 
 export default {
   name: "AssignedInfo",
@@ -98,14 +82,7 @@ export default {
     Course,
     AssignCohortDialog,
   },
-  props: [
-    "assignCohorts",
-    "assignCourses",
-    "cohorts",
-    "organisations",
-    "people",
-    "teacher",
-  ],
+  props: ["assignCohorts", "assignCourses", "cohorts", "organisations", "people", "teacher"],
   data() {
     return {
       courses: [],
@@ -120,8 +97,7 @@ export default {
     },
   },
   computed: {
-    ...mapState(["person", "currentCohort"]),
-    ...mapGetters(["getCoursesInThisCohort", "user"]),
+    ...mapState(useRootStore, ["person", "currentCohort", "getCoursesInThisCohort", "user"]),
     isTeacher() {
       return (
         this.user.data.admin ||
@@ -142,7 +118,7 @@ export default {
         let courses = await Promise.all(
           this.currentCohort?.courses.map((courseId) => {
             return getCourseById(courseId);
-          })
+          }),
         );
         if (courses.length) {
           this.courses = courses;

@@ -2,61 +2,37 @@
   <div class="d-flex map-buttons-bottom">
     <div class="d-inline-flex">
       <!-- ADD NODE -->
-      <div
-        class="mapButton"
-        :class="{ active: addNodeMode }"
-        @click="toggleAddNodeMode"
-      >
+      <div class="mapButton" :class="{ active: addNodeMode }" @click="toggleAddNodeMode">
         <div class="mapButton-icon" :class="{ activeIcon: addNodeMode }">
-          <v-icon v-if="!addNodeMode" color="missionAccent">{{
-            mdiDotsHexagon
-          }}</v-icon>
+          <v-icon v-if="!addNodeMode" color="missionAccent">{{ mdiDotsHexagon }}</v-icon>
           <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
         </div>
         <div class="mapButton-text">
           <p v-if="!addNodeMode" class="overline ma-0">Add a new node</p>
-          <p v-else class="ma-0" style="font-size: 0.7rem">
-            Click on the map to place a new node
-          </p>
+          <p v-else class="ma-0" style="font-size: 0.7rem">Click on the map to place a new node</p>
         </div>
       </div>
 
       <!-- ADD EDGE -->
-      <div
-        class="mapButton ml-4"
-        :class="{ active: addEdgeMode }"
-        @click="toggleAddEdgeMode"
-      >
+      <div class="mapButton ml-4" :class="{ active: addEdgeMode }" @click="toggleAddEdgeMode">
         <div class="mapButton-icon" :class="{ activeIcon: addEdgeMode }">
-          <v-icon v-if="!addEdgeMode" color="missionAccent">{{
-            mdiChartTimelineVariant
-          }}</v-icon>
+          <v-icon v-if="!addEdgeMode" color="missionAccent">{{ mdiChartTimelineVariant }}</v-icon>
           <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
         </div>
         <div class="mapButton-text">
           <p v-if="!addEdgeMode" class="overline ma-0">Connect Nodes</p>
-          <p v-else class="ma-0" style="font-size: 0.7rem">
-            Click and drag to connect two nodes
-          </p>
+          <p v-else class="ma-0" style="font-size: 0.7rem">Click and drag to connect two nodes</p>
         </div>
       </div>
 
       <!-- EDIT NODE POSITIONS -->
-      <div
-        class="mapButton ml-4"
-        :class="{ active: dragNodeMode }"
-        @click="toggleDragNodeMode"
-      >
+      <div class="mapButton ml-4" :class="{ active: dragNodeMode }" @click="toggleDragNodeMode">
         <div class="mapButton-icon" :class="{ activeIcon: dragNodeMode }">
-          <v-icon v-if="!dragNodeMode" color="missionAccent">{{
-            mdiArrowExpandAll
-          }}</v-icon>
+          <v-icon v-if="!dragNodeMode" color="missionAccent">{{ mdiArrowExpandAll }}</v-icon>
           <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
         </div>
         <div class="mapButton-text">
-          <p v-if="!dragNodeMode" class="overline ma-0">
-            Change node positions
-          </p>
+          <p v-if="!dragNodeMode" class="overline ma-0">Change node positions</p>
           <p v-else class="ma-0" style="font-size: 0.7rem">
             {{
               changeInPositions
@@ -87,6 +63,7 @@ import {
   mdiArrowExpandAll,
   mdiContentSaveCheck,
 } from "@mdi/js";
+
 export default {
   name: "GalaxyMapButtons",
   components: {},

@@ -1,52 +1,25 @@
 <template>
-  <div class="backButtonDiv" v-if="from">
-    <v-btn :to="route" class="backButton" color="baseAccent" text>
+  <div class="backButtonDiv">
+    <v-btn :to="toPath" class="backButton" color="baseAccent" text>
       <v-icon left> {{ mdiArrowLeft }} </v-icon>
-      Back to
-      {{ backToWhat(from) }}
+      Back
     </v-btn>
   </div>
 </template>
 
 <script>
-import { mapState } from "vuex";
-import { mdiArrowLeft } from '@mdi/js';
+import { mdiArrowLeft } from "@mdi/js";
+
 export default {
   name: "BackButton",
   props: ["toPath"],
-  computed: {
-    ...mapState(["from"]),
-    route() {
-      if (this.from.includes("system")) return "/base/galaxies";
-      return this.from;
-    },
-  },
+  computed: {},
   data() {
     return {
-      mdiArrowLeft
-    }
+      mdiArrowLeft,
+    };
   },
-  methods: {
-    backToWhat(path) {
-      if (path.includes("galaxies")) {
-        return "Galaxies";
-      } else if (path.includes("galaxy")) {
-        return "Galaxy";
-      } else if (path.includes("cohorts")) {
-        return "Cohorts";
-      } else if (path.includes("cohort")) {
-        return "Cohort";
-      } else if (path.includes("login")) {
-        return "Login";
-      } else if (path.includes("dashboard")) {
-        return "Dashboard";
-      } else if (path.includes("system")) {
-        return "Galaxies";
-      } else {
-        return "?";
-      }
-    },
-  },
+  methods: {},
 };
 </script>
 

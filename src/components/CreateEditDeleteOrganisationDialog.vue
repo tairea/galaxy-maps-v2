@@ -3,13 +3,7 @@
     <v-dialog v-model="dialog" width="40%" light>
       <!-- CREATE BUTTON -->
       <template v-slot:activator="{ on, attrs }">
-        <v-btn
-          v-if="!hideText"
-          outlined
-          color="baseAccent"
-          v-bind="attrs"
-          v-on="on"
-        >
+        <v-btn v-if="!hideText" outlined color="baseAccent" v-bind="attrs" v-on="on">
           <v-icon left> {{ mdiPlus }} </v-icon>
           CREATE ORGANISATION
         </v-btn>
@@ -32,98 +26,148 @@
         <div class="dialog-header">
           <p class="dialog-title">{{ dialogTitle }}</p>
           <div class="d-flex align-center">
-            <v-icon left color="missionAccent">{{
-              mdiInformationVariant
-            }}</v-icon>
+            <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
             <p class="dialog-description">{{ dialogDescription }}</p>
           </div>
         </div>
 
-        <!-- LEFT SIDE -->
-        <div
-          class="left-side"
-          :style="organisation.name ? 'width:50%' : 'width:100%'"
-        >
-          <!-- DIALOG FIELDS -->
-          <div class="create-dialog-content mt-8">
-            <!-- TITLE -->
-            <v-text-field
-              class="input-field"
-              outlined
-              :dark="dark"
-              :light="!dark"
-              color="missionAccent"
-              v-model="organisation.name"
-              label="Organisation name"
-            ></v-text-field>
+        <!-- ORG DETAILS -->
+        <div class="organisation-details">
+          <!-- LEFT SIDE -->
+          <div class="left-side" :style="organisation.name ? 'width:50%' : 'width:100%'">
+            <!-- DIALOG FIELDS -->
+            <div class="create-dialog-content mt-8">
+              <!-- TITLE -->
+              <v-text-field
+                class="input-field"
+                outlined
+                :dark="dark"
+                :light="!dark"
+                color="missionAccent"
+                v-model="organisation.name"
+                label="Organisation name"
+              ></v-text-field>
 
-            <!-- DESCRIPTION -->
-            <v-textarea
-              class="input-field"
-              outlined
-              :dark="dark"
-              :light="!dark"
-              color="missionAccent"
-              auto-grow
-              clearable
-              rows="1"
-              v-model="organisation.description"
-              label="Organisation description"
-            ></v-textarea>
+              <!-- DESCRIPTION -->
+              <v-textarea
+                class="input-field"
+                outlined
+                :dark="dark"
+                :light="!dark"
+                color="missionAccent"
+                auto-grow
+                clearable
+                rows="1"
+                v-model="organisation.description"
+                label="Organisation description"
+              ></v-textarea>
 
-            <!-- IMAGE UPLOAD -->
-            <v-progress-linear
-              color="missionAccent"
-              :value="percentage"
-            ></v-progress-linear>
-            <v-file-input
-              class="input-field"
-              outlined
-              :dark="dark"
-              :light="!dark"
-              color="missionAccent"
-              accept="image/*"
-              v-model="uploadedImage"
-              label="Organisation image upload"
-              @change="storeImage()"
-              prepend-icon=""
-            ></v-file-input>
+              <!-- IMAGE UPLOAD -->
+              <v-file-input
+                class="input-field"
+                outlined
+                :dark="dark"
+                :light="!dark"
+                color="missionAccent"
+                accept="image/*"
+                v-model="uploadedImage"
+                label="Organisation image upload"
+                @change="storeImage()"
+                prepend-icon=""
+                hide-details
+              ></v-file-input>
+              <v-progress-linear
+                color="missionAccent"
+                :value="percentage"
+                class=""
+              ></v-progress-linear>
+            </div>
+            <!-- End create-dialog-content -->
           </div>
-          <!-- End create-dialog-content -->
-        </div>
-        <!-- End of left-side -->
+          <!-- End of left-side -->
 
-        <!-- RIGHT SIDE -->
-        <div
-          class="right-side"
-          :style="organisation.name ? 'width:50%' : 'width:0%'"
-        >
-          <div v-if="organisation.name">
-            <div class="d-flex flex-column justify-center align-center cursor">
-              <v-img
-                v-if="organisation.image.url"
-                :src="organisation.image.url"
-                max-width="60px"
-                max-height="60px"
-                class="organisation-image"
-              ></v-img>
-              <div v-else class="imagePlaceholder">
-                {{ first3Letters(organisation.name) }}
+          <!-- RIGHT SIDE -->
+          <div class="right-side" :style="organisation.name ? 'width:50%' : 'width:0%'">
+            <div v-if="organisation.name">
+              <div class="d-flex flex-column justify-center align-center cursor">
+                <v-img
+                  v-if="organisation.image?.url"
+                  :src="organisation.image?.url"
+                  max-width="60px"
+                  max-height="60px"
+                  class="organisation-image"
+                ></v-img>
+                <div v-else class="imagePlaceholder">
+                  {{ first3Letters(organisation.name) }}
+                </div>
+                <h3 class="overline mt-4">{{ organisation.name }}</h3>
+                <p class="organisation-description mt-4">
+                  {{ organisation.description }}
+                </p>
               </div>
-              <h3 class="overline mt-4">{{ organisation.name }}</h3>
-              <p class="organisation-description mt-4">
-                {{ organisation.description }}
-              </p>
             </div>
           </div>
+          <!-- End of right-side -->
         </div>
-        <!-- End of right-side -->
+
+        <!-- ORGANISATIONS PEOPLE -->
+        <div class="organisation-people">
+          <p class="org-people-description">People in this Organisation</p>
+
+          <!-- pills of the people in -->
+          <div class="people-in-org d-flex flex-wrap">
+            <v-chip
+              close
+              @click:close="removePersonFromOrganisation(person.email)"
+              v-for="person in organisation.people"
+              :key="person.id"
+              class="mr-2"
+            >
+              <v-avatar start v-if="person.image?.url" class="mr-1">
+                <v-img :src="person.image.url"></v-img>
+              </v-avatar>
+
+              {{ person.firstName + " " + person.lastName }}
+            </v-chip>
+          </div>
+
+          <!-- add a person -->
+          <v-row>
+            <v-col>
+              <v-text-field
+                type="email"
+                class="input-field pl-5"
+                outlined
+                :dark="dark"
+                :light="!dark"
+                color="missionAccent"
+                v-model="personsEmail"
+                label="Person's email"
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-btn
+                outlined
+                color="missionAccent"
+                @click="addPersonToOrganisation(personsEmail)"
+                class="mr-2"
+                :loading="addPersonLoading"
+                :disabled="!personsEmail"
+              >
+                <v-icon left> {{ mdiPlus }} </v-icon>
+                ADD PERSON TO ORG
+              </v-btn>
+            </v-col>
+          </v-row>
+        </div>
+
         <!-- ACTION BUTTONS -->
         <div class="action-buttons">
           <v-btn
+            v-if="!edit"
             outlined
             color="baseAccent"
-            @click="saveOrganisation()"
+            @click="saveOrganisation(organisation)"
             class="mr-2"
             :loading="loading"
             :disabled="disabled"
@@ -131,15 +175,21 @@
             <v-icon left> {{ mdiCheck }} </v-icon>
             SAVE
           </v-btn>
+          <v-btn
+            v-else
+            outlined
+            color="baseAccent"
+            @click="updateOrganisation(organisation)"
+            class="mr-2"
+            :loading="loading"
+            :disabled="disabled"
+          >
+            <v-icon left> {{ mdiCheck }} </v-icon>
+            UPDATE
+          </v-btn>
 
           <!-- DELETE -->
-          <v-btn
-            v-if="edit"
-            outlined
-            color="error"
-            @click="deleteDialog()"
-            class="ml-2"
-          >
+          <v-btn v-if="edit" outlined color="error" @click="deleteDialog()" class="ml-2">
             <v-icon left> {{ mdiDelete }} </v-icon>
             DELETE
           </v-btn>
@@ -165,18 +215,12 @@
       <div class="create-dialog">
         <!-- HEADER -->
         <div class="dialog-header py-10">
-          <p class="dialog-title">
-            <strong>Warning!</strong> Delete Organisation?
-          </p>
+          <p class="dialog-title"><strong>Warning!</strong> Delete Organisation?</p>
           <div class="d-flex align-start">
-            <v-icon left color="missionAccent">{{
-              mdiInformationVariant
-            }}</v-icon>
+            <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
             <p class="dialog-description">
               Are you sure you want to <strong>DELETE</strong> the
-              <span class="organisation-text"
-                >{{ organisation.name }} ORGANISATION</span
-              >?
+              <span class="organisation-text">{{ organisation.name }} ORGANISATION</span>?
               <br />
               <br />
               Deleting is permanent!!!
@@ -222,19 +266,25 @@
 </template>
 
 <script>
-import { mapMutations } from "vuex";
-import { db, storage } from "../store/firestoreConfig";
+import { db, storage } from "@/store/firestoreConfig";
+import firebase from "firebase/compat/app";
+import { mdiPlus, mdiClose, mdiCheck, mdiDelete, mdiInformationVariant } from "@mdi/js";
 
 export default {
   name: "CreateEditDeleteOrganisationDialog",
   props: ["edit", "organisationToEdit", "hideText"],
   data: () => ({
+    mdiPlus,
+    mdiClose,
+    mdiCheck,
+    mdiDelete,
+    mdiInformationVariant,
     dialog: false,
     dialogConfirm: false,
     dialogTitle: "Create a new Organisation",
-    dialogDescription:
-      "An Organisation is typically a school, business or... an organisation",
+    dialogDescription: "An Organisation is typically a school, business or... an organisation",
     loading: false,
+    addPersonLoading: false,
     disabled: false,
     deleting: false,
     organisation: {
@@ -248,6 +298,8 @@ export default {
     },
     uploadedImage: null,
     percentage: 0,
+    personsEmail: null,
+    menu: false,
   }),
   mounted() {
     if (this.organisationToEdit) {
@@ -280,46 +332,102 @@ export default {
     closeDialog() {
       this.$emit("closeOrganisationEditDialog");
     },
-    saveOrganisation(organisation) {
+    async saveOrganisation(organisation) {
       this.loading = true;
+
       // Add a new document in collection "cohorts"
-      db.collection("organisations")
-        .add(organisation)
-        .then((docRef) => {
-          console.log("Document successfully written!");
-          this.loading = false;
-          this.dialog = false;
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
-        });
+      try {
+        db.collection("organisations").add(organisation);
+
+        console.log("Document successfully written!");
+        this.loading = false;
+        this.dialog = false;
+      } catch (error) {
+        console.error("Error writing document: ", error);
+      }
+
       this.organisation = {};
       this.uploadedImage = null;
     },
-    updateOrganisation(organisation) {
+    async updateOrganisation(organisation) {
       this.loading = true;
       // Add a new document in collection "cohorts"
+      try {
+        await db.collection("organisations").doc(organisation.id).update(organisation);
+
+        console.log("Organisation successfully updated!");
+        this.loading = false;
+        this.dialog = false;
+      } catch (error) {
+        console.error("Error writing document: ", error);
+      }
+
+      this.organisation = {};
+    },
+    async addPersonToOrganisation(email) {
+      this.addPersonLoading = true;
+
+      // get ref of person with this email
+      const people = await db.collection("people").where("email", "==", email).get();
+      if (!people.docs[0]) {
+        this.addPersonLoading = false;
+        return;
+      }
+      const person = people.docs[0];
+      console.log("added person:", person.data());
+      const personRef = person.ref;
+      console.log("personRef: ", personRef);
+
+      // save person ref to organisation
+      try {
+        await db
+          .collection("organisations")
+          .doc(this.organisation.id)
+          .update({
+            people: firebase.firestore.FieldValue.arrayUnion(personRef),
+          });
+
+        this.organisation.people.push(person.data());
+        console.log("Person successfully added to organisation!");
+        this.addPersonLoading = false;
+      } catch (error) {
+        console.error("Error writing document: ", error);
+        this.addPersonLoading = false;
+      }
+
+      this.personsEmail = null;
+    },
+    async removePersonFromOrganisation(email) {
+      console.log("remove me");
+      // get ref of person with this email
+      const people = await db.collection("people").where("email", "==", email).get();
+      const person = people.docs[0];
+      const personRef = person.ref;
+
+      // save person ref to organisation
       db.collection("organisations")
-        .doc(organisation.id)
-        .update(organisation)
+        .doc(this.organisation.id)
+        .update({
+          people: firebase.firestore.FieldValue.arrayRemove(personRef),
+        })
         .then((docRef) => {
-          console.log("Organisation successfully updated!");
-          this.loading = false;
-          this.closeDialog();
+          // remove from this.organisation.people
+          const index = this.organisation.people.findIndex((person) => person.email === email);
+          this.organisation.people.splice(index, 1);
+          console.log("Person successfully removed to organisation!");
+          this.addPersonLoading = false;
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
+          this.addPersonLoading = false;
         });
-      this.organisation = {};
+      this.personsEmail = null;
     },
     storeImage() {
       this.disabled = true;
       // ceate a storage ref
       var storageRef = storage.ref(
-        "organisation-images/" +
-          this.organisation.name +
-          "-" +
-          this.uploadedImage.name
+        "organisation-images/" + this.organisation.name + "-" + this.uploadedImage.name,
       );
 
       // upload a file
@@ -330,8 +438,7 @@ export default {
         "state_changed",
         (snapshot) => {
           // show progress on uploader bar
-          this.percentage =
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          this.percentage = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         },
         // upload error
         (err) => {
@@ -342,14 +449,17 @@ export default {
           // get image url
           uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
             console.log("image url is: " + downloadURL);
+            console.log("this.organisation: " + this.organisation);
             // add image url to organisation obj
-            this.organisation.image.url = downloadURL;
-            this.organisation.image.name =
-              this.organisation.name + "-" + this.uploadedImage.name;
+            const image = {
+              url: downloadURL,
+              name: this.organisation.name + "-" + this.uploadedImage.name,
+            };
+            this.organisation["image"] = image;
             this.disabled = false;
             this.percentage = 0;
           });
-        }
+        },
       );
     },
     first3Letters(name) {
@@ -405,9 +515,7 @@ export default {
       if (this.organisation.image.name == "") return;
       console.log("deleting image...");
       // Create a reference to the file to delete
-      var storageRef = storage.ref(
-        "organisation-images/" + this.organisation.image.name
-      );
+      var storageRef = storage.ref("organisation-images/" + this.organisation.image.name);
       // Delete the file
       storageRef
         .delete()
@@ -441,43 +549,67 @@ export default {
     border-bottom: 1px solid var(--v-missionAccent-base);
   }
 
-  .left-side {
-    width: 50%;
+  .organisation-details {
     display: flex;
-    flex-direction: column;
-    flex-wrap: wrap;
-    transition: all 0.3s;
-  }
+    width: 100%;
+    border-bottom: 1px solid var(--v-missionAccent-base);
+    .left-side {
+      width: 50%;
+      display: flex;
+      flex-direction: column;
+      flex-wrap: wrap;
+      transition: all 0.3s;
+    }
 
-  .right-side {
-    width: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: all 0.3s;
-    // flex-direction: column;
-    // border-left: 1px solid var(--v-missionAccent-base);
-
-    .imagePlaceholder {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      background-color: rgba(200, 200, 200, 0.3);
+    .right-side {
+      width: 50%;
       display: flex;
       justify-content: center;
       align-items: center;
-    }
+      transition: all 0.3s;
+      // flex-direction: column;
+      // border-left: 1px solid var(--v-missionAccent-base);
 
-    .organisation-image {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
+      .imagePlaceholder {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-color: rgba(200, 200, 200, 0.3);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
 
-    .organisation-description {
+      .organisation-image {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
+      .organisation-description {
+        color: var(--v-missionAccent-base);
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .organisation-people {
+    width: 100%;
+    height: 300px;
+    border-bottom: 1px solid var(--v-missionAccent-base);
+
+    .org-people-description {
       color: var(--v-missionAccent-base);
-      font-size: 0.9rem;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      margin: 0;
+      font-style: italic;
+      padding: 20px 20px 10px 20px;
+    }
+    .people-in-org {
+      width: 100%;
+      padding: 0px 20px 20px 20px;
     }
   }
 

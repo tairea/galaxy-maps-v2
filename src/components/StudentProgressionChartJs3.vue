@@ -19,9 +19,7 @@
           {{ first3Letters(studentData.student.firstName) }}
         </div>
         <p class="ml-2 mt-6">
-          {{
-            studentData.student.firstName + " " + studentData.student.lastName
-          }}
+          {{ studentData.student.firstName + " " + studentData.student.lastName }}
         </p>
       </div>
       <Chart
@@ -36,11 +34,7 @@
     </div>
 
     <!-- Legend -->
-    <div
-      id="chartLegend"
-      class="overline pa-2"
-      style="color: var(--v-missionAccent-base)"
-    >
+    <div id="chartLegend" class="overline pa-2" style="color: var(--v-missionAccent-base)">
       <!-- LEGEND: -->
       <v-row>
         <v-col cols="2"> START:</v-col>
@@ -73,11 +67,10 @@
 
 <script>
 import Chart from "@/components/Chart.vue";
-
-import { DateTime } from "luxon";
-import { mapState, mapGetters } from "vuex";
-
+import useRootStore from "@/store/index";
 import "chartjs-adapter-luxon";
+import { DateTime } from "luxon";
+import { mapState } from "pinia";
 
 export default {
   props: {
@@ -88,8 +81,7 @@ export default {
     Chart,
   },
   computed: {
-    ...mapState(["teachersStudentsProgress"]),
-    ...mapGetters(["person", "getCourseById"]),
+    ...mapState(useRootStore, ["teachersStudentsProgress", "person", "getCourseById"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -190,8 +182,7 @@ export default {
             }
 
             // Reuse the built-in legendItems generator
-            const items =
-              chart.options.plugins.legend.labels.generateLabels(chart);
+            const items = chart.options.plugins.legend.labels.generateLabels(chart);
 
             items.forEach((item) => {
               const li = document.createElement("li");
@@ -213,7 +204,7 @@ export default {
                   charts.forEach((chartItem) => {
                     chartItem.setDatasetVisibility(
                       item.datasetIndex,
-                      !chartItem.isDatasetVisible(item.datasetIndex)
+                      !chartItem.isDatasetVisible(item.datasetIndex),
                     );
                     chartItem.update();
                   });
@@ -235,9 +226,7 @@ export default {
               textContainer.style.color = item.fontColor;
               textContainer.style.margin = 0;
               textContainer.style.padding = 0;
-              textContainer.style.textDecoration = item.hidden
-                ? "line-through"
-                : "";
+              textContainer.style.textDecoration = item.hidden ? "line-through" : "";
 
               const text = document.createTextNode(item.text);
               textContainer.appendChild(text);
@@ -273,7 +262,7 @@ export default {
             if (!task.x) return;
             taskCount++;
             return {
-              x: new DateTime.fromSeconds(task.x.seconds),
+              x: DateTime.fromSeconds(task.x.seconds),
               y: task.y,
               topic: topic.topicTitle,
               taskStatus: task.taskStatus,
@@ -318,38 +307,32 @@ export default {
         course.courseTopicData[ctx.p0DataIndex].topicTaskData &&
         course.courseTopicData[ctx.p0DataIndex].topicTaskData.length > 0
       ) {
-        course.courseTopicData[ctx.p0DataIndex].topicTaskData.forEach(
-          (taskPoint) => {
-            switch (taskPoint.taskStatus) {
-              case "inreview":
-                // console.log(
-                //   taskPoint.taskTitle + " taskPoint is: ",
-                //   taskPoint.taskStatus
-                // );
-                // console.log(
-                //   "returning colour:",
-                //   this.hexToRgb(this.$vuetify.theme.themes.dark.cohortAccent)
-                // );
-                return this.hexToRgb(
-                  this.$vuetify.theme.themes.dark.cohortAccent
-                );
-              case "completed":
-                // console.log(
-                //   taskPoint.taskTitle + " taskPoint is: ",
-                //   taskPoint.taskStatus
-                // );
-                // console.log(
-                //   "returning colour:",
-                //   this.hexToRgb(this.$vuetify.theme.themes.dark.baseAccent)
-                // );
-                return this.hexToRgb(
-                  this.$vuetify.theme.themes.dark.baseAccent
-                );
-              default:
-                return;
-            }
+        course.courseTopicData[ctx.p0DataIndex].topicTaskData.forEach((taskPoint) => {
+          switch (taskPoint.taskStatus) {
+            case "inreview":
+              // console.log(
+              //   taskPoint.taskTitle + " taskPoint is: ",
+              //   taskPoint.taskStatus
+              // );
+              // console.log(
+              //   "returning colour:",
+              //   this.hexToRgb(this.$vuetify.theme.themes.dark.cohortAccent)
+              // );
+              return this.hexToRgb(this.$vuetify.theme.themes.dark.cohortAccent);
+            case "completed":
+              // console.log(
+              //   taskPoint.taskTitle + " taskPoint is: ",
+              //   taskPoint.taskStatus
+              // );
+              // console.log(
+              //   "returning colour:",
+              //   this.hexToRgb(this.$vuetify.theme.themes.dark.baseAccent)
+              // );
+              return this.hexToRgb(this.$vuetify.theme.themes.dark.baseAccent);
+            default:
+              return;
           }
-        );
+        });
       } else {
         return;
       }
@@ -362,9 +345,7 @@ export default {
           c = [c[0], c[0], c[1], c[1], c[2], c[2]];
         }
         c = "0x" + c.join("");
-        return (
-          "rgb  (" + [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(",") + ")"
-        );
+        return "rgb  (" + [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(",") + ")";
       }
       throw new Error("Bad Hex");
     },

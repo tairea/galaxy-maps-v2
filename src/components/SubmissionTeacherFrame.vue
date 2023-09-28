@@ -11,28 +11,21 @@
       />
     </div>
     <div v-if="!loading && submissions.length == 0">
-      <p
-        class="overline pt-4 text-center"
-        style="color: var(--v-cohortAccent-base)"
-      >
+      <p class="overline pt-4 text-center" style="color: var(--v-cohortAccent-base)">
         NO WORK TO REVIEW
       </p>
     </div>
     <!-- loading spinner -->
     <div class="d-flex justify-center align-center mt-4">
-      <v-btn
-        v-if="loading"
-        :loading="loading"
-        icon
-        color="cohortAccent"
-      ></v-btn>
+      <v-btn v-if="loading" :loading="loading" icon color="cohortAccent"></v-btn>
     </div>
   </div>
 </template>
 <script>
-import SubmissionTeacherPanel from "../components/SubmissionTeacherPanel";
-import { mapState } from "vuex";
-import { dbMixins, dmMixins } from "../mixins/DbMixins";
+import SubmissionTeacherPanel from "@/components/SubmissionTeacherPanel.vue";
+import { dbMixins } from "@/mixins/DbMixins";
+import useRootStore from "@/store/index";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "SubmissionTeacherFrame",
@@ -45,58 +38,77 @@ export default {
     return {
       loading: false,
       allSubmissions: [],
-      unsubscribes: []
+      unsubscribes: [],
     };
   },
   async mounted() {
     this.loading = true;
     for (const course of this.courses) {
-      const unsubscribe = await this.$store.dispatch(
-        "getAllSubmittedWorkByCourseId",
-        course.id || course
-      );
+      const unsubscribe = await this.getAllSubmittedWorkByCourseId(course.id || course);
       this.unsubscribes.push(unsubscribe);
     }
     this.loading = false;
   },
   destroyed() {
-    this.$store.commit("resetTeachersSubmissions")
+    this.resetTeachersSubmissions();
     for (const unsubscribe of this.unsubscribes) {
       unsubscribe();
     }
   },
   computed: {
-    ...mapState(["courseSubmissions", "person", "currentCohort", "currentTopic", "currentTask"]),
+    ...mapState(useRootStore, [
+      "courseSubmissions",
+      "person",
+      "currentCohort",
+      "currentTopic",
+      "currentTask",
+    ]),
     isCohortView() {
-      return this.$route.name == "CohortView"
+      return this.$route.name == "CohortView";
     },
     isDashboardView() {
-      return this.$route.name == "Dashboard"
+      return this.$route.name == "Dashboard";
     },
     isGalaxyView() {
-      return this.$route.name == "GalaxyView"
+      return this.$route.name == "GalaxyView";
     },
     isSystemView() {
-      return this.$route.name == "SolarSystemView"
+      return this.$route.name == "SolarSystemView";
     },
-    submissions () {
-      const submissions = this.courseSubmissions.filter(submission => this.students?.some((student) => {return student.id ? student.id === submission.studentId : student === submission.studentId}))
+    submissions() {
+      const submissions = this.courseSubmissions.filter((submission) =>
+        this.students?.some((student) => {
+          return student.id
+            ? student.id === submission.studentId
+            : student === submission.studentId;
+        }),
+      );
       if (this.isTeacher) {
-        submissions.sort((a, b) => { return a.taskSubmissionStatus == 'inreview' ? -1 : 1 });
+        submissions.sort((a, b) => {
+          return a.taskSubmissionStatus == "inreview" ? -1 : 1;
+        });
       } else {
-        submissions.sort((a, b) => { return a.taskSubmissionStatus == 'completed' ? -1 : 1 });
+        submissions.sort((a, b) => {
+          return a.taskSubmissionStatus == "completed" ? -1 : 1;
+        });
       }
 
-      if (this.isCohortView || this.isDashboardView) return submissions
+      if (this.isCohortView || this.isDashboardView) return submissions;
       else if (this.isGalaxyView) {
-        return submissions.filter((submission) => submission.contextCourse.id == this.courses[0].id)
+        return submissions.filter(
+          (submission) => submission.contextCourse.id == this.courses[0].id,
+        );
       } else if (this.isSystemView) {
-        return submissions.filter((submission) => submission.contextTopic.id == this.currentTopic.id)
+        return submissions.filter(
+          (submission) => submission.contextTopic.id == this.currentTopic.id,
+        );
       }
-      return submissions
-    }
+      return submissions;
+    },
   },
-  methods: {},
+  methods: {
+    ...mapActions(useRootStore, ["getAllSubmittedWorkByCourseId", "resetTeachersSubmissions"]),
+  },
 };
 </script>
 <style lang="scss" scoped>
@@ -109,11 +121,11 @@ export default {
   z-index: 3;
   overflow-y: scroll;
   max-height: 40%;
-  transition: all .2s ease-in-out
+  transition: all 0.2s ease-in-out;
 }
 
-#submission-panel:hover{
-  max-height: 50%
+#submission-panel:hover {
+  max-height: 50%;
 }
 
 .submission-label {

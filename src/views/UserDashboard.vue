@@ -5,28 +5,19 @@
       <UserInfo :person="person" />
     </div>
     <div v-if="courses.length === 0" class="top-section">
-      <p class="overline noData">
-        No data to show. Try creating or exploring a galaxy.
-      </p>
+      <p class="overline noData">No data to show. Try creating or exploring a galaxy.</p>
     </div>
     <div v-else class="top-section">
       <div v-if="isAdmin" class="student-border">
         <div :class="adminLabel" @click="setView('admin')">Create Admin</div>
       </div>
       <div class="student-border">
-        <div :class="studentLabel" @click="setView('student')">
-          exploring dashboard
-        </div>
+        <div :class="studentLabel" @click="setView('student')">exploring dashboard</div>
       </div>
       <div v-if="isTeacher" class="teacher-border">
-        <div :class="teacherLabel" @click="setView('teacher')">
-          cohort analytics
-        </div>
+        <div :class="teacherLabel" @click="setView('teacher')">cohort analytics</div>
       </div>
-      <v-divider
-        class="line"
-        style="border-color: var(--v-missionAccent-base)"
-      ></v-divider>
+      <v-divider class="line" style="border-color: var(--v-missionAccent-base)"></v-divider>
     </div>
 
     <!-- STUDENT MAIN -->
@@ -59,12 +50,11 @@
             mdiInformationVariant
           }}</v-icon>
           <p v-if="isAdmin" class="info-description">
-            Because you are an Admin. These are ALL Galaxy Maps and ALL Cohorts
-            on the Galaxy Maps platform.
+            Because you are an Admin. These are ALL Galaxy Maps and ALL Cohorts on the Galaxy Maps
+            platform.
           </p>
           <p v-else class="info-description">
-            These are Galaxy Maps you have created and the Cohorts working
-            through them.
+            These are Galaxy Maps you have created and the Cohorts working through them.
           </p>
         </div>
         <div class="timeframe-chips">
@@ -106,8 +96,8 @@
             mdiInformationVariant
           }}</v-icon>
           <p class="info-description">
-            Because you are a Galaxy Maps super admin, you can create other
-            admins (for Developers only).
+            Because you are a Galaxy Maps super admin, you can create other admins (for Developers
+            only).
           </p>
         </div>
         <CreateAdminDialog />
@@ -117,18 +107,18 @@
 </template>
 
 <script>
-import { db } from "../store/firestoreConfig";
-import { mapState, mapGetters, mapActions, mapMutations } from "vuex";
+import UserInfo from "@/components/UserInfo.vue";
+import StudentActivityTimeline from "@/components/StudentActivityTimeline.vue";
+import StudentCourseProgression from "@/components/StudentCourseProgression.vue";
+import TimeframeFilters from "@/components/TimeframeFilters.vue";
+import CohortPanelV2 from "@/components/CohortPanelV2.vue";
+import SubmissionTeacherFrame from "@/components/SubmissionTeacherFrame.vue";
+import RequestForHelpTeacherFrame from "@/components/RequestForHelpTeacherFrame.vue";
+import CreateAdminDialog from "@/components/CreateAdminDialog.vue";
+import { db } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
 import { mdiInformationVariant } from "@mdi/js";
-
-import UserInfo from "../components/UserInfo";
-import StudentActivityTimeline from "../components/StudentActivityTimeline";
-import StudentCourseProgression from "../components/StudentCourseProgression";
-import TimeframeFilters from "../components/TimeframeFilters.vue";
-import CohortPanelV2 from "../components/CohortPanelV2.vue";
-import SubmissionTeacherFrame from "../components/SubmissionTeacherFrame.vue";
-import RequestForHelpTeacherFrame from "../components/RequestForHelpTeacherFrame.vue";
-import CreateAdminDialog from "../components/CreateAdminDialog";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "UserDashboard",
@@ -159,7 +149,7 @@ export default {
     }
   },
   computed: {
-    ...mapState([
+    ...mapState(useRootStore, [
       "user",
       "currentCourseId",
       "currentCourseNodes",
@@ -168,8 +158,9 @@ export default {
       "allTasks",
       "cohorts",
       "dashboardView",
+      "getCourseById",
+      "getCoursesByWhoMadeThem",
     ]),
-    ...mapGetters(["getCourseById", "getCoursesByWhoMadeThem"]),
     isAdmin() {
       return this.user.data.admin;
     },
@@ -199,10 +190,7 @@ export default {
     },
     teacherCohorts() {
       if (this.isAdmin) return this.cohorts;
-      else
-        return this.cohorts.filter((cohort) =>
-          cohort.teachers?.includes(this.person.id)
-        );
+      else return this.cohorts.filter((cohort) => cohort.teachers?.includes(this.person.id));
     },
     cohortCourses() {
       let courses = [];
@@ -221,8 +209,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(["getCohortsByPersonId", "bindAllCohorts"]),
-    ...mapMutations(["setDashboardView"]),
+    ...mapActions(useRootStore, ["getCohortsByPersonId", "bindAllCohorts", "setDashboardView"]),
     setView(val) {
       this.setDashboardView(val);
     },

@@ -2,22 +2,37 @@
   <div class="mission-container">
     <h2 class="missions-label">Missions</h2>
 
-    <div v-if="tasks.length > 0" style="width: 100%">
-      <v-expansion-panels :flat="true" :multiple="false" v-model="indexOfActiveTask">
-        <v-expansion-panel class="mission-expansions" v-for="(task, index) in tasks" :key="task.id"
-          @click="missionClicked(task)" :readonly="
-            task.taskStatus == 'locked' ||
-            task.taskStatus == 'unlocked' ||
-            teacher
-          " :value="task.taskStatus == 'active'">
-          <MissionsCard :task="task" :id="task.id" :index="index" :topicId="topicId" :topicActive="topicActive"
-            :teacher="teacher" @missionActivated="missionActivated" @topicCompleted="topicCompleted" />
-        </v-expansion-panel>
-      </v-expansion-panels>
-    </div>
-
-    <div v-else style="width: 100%">
-      <p class="no-missions-label">No Missions in this system</p>
+    <div style="width: 100%">
+      <!-- loading spinner -->
+      <div class="d-flex justify-center align-center" style="padding: 50px" v-if="missionsLoading">
+        <v-btn :loading="missionsLoading" icon color="missionAccent"></v-btn>
+      </div>
+      <div v-else-if="tasks.length > 0" style="width: 100%">
+        <v-expansion-panels :flat="true" :multiple="false" v-model="indexOfActiveTask">
+          <v-expansion-panel
+            class="mission-expansions"
+            v-for="(task, index) in tasks"
+            :key="task.id"
+            @click="missionClicked(task)"
+            :readonly="task.taskStatus == 'locked' || task.taskStatus == 'unlocked' || teacher"
+            :value="task.taskStatus == 'active'"
+          >
+            <MissionsCard
+              :task="task"
+              :id="task.id"
+              :index="index"
+              :topicId="topicId"
+              :topicActive="topicActive"
+              :teacher="teacher"
+              @missionActivated="missionActivated"
+              @topicCompleted="topicCompleted"
+            />
+          </v-expansion-panel>
+        </v-expansion-panels>
+      </div>
+      <div v-else style="width: 100%">
+        <p class="no-missions-label">No Missions in this system</p>
+      </div>
     </div>
 
     <div class="createButton mt-8" v-if="teacher">
@@ -27,11 +42,10 @@
 </template>
 
 <script>
-import MissionsCard from "../components/MissionsCard";
-
-import CreateEditDeleteMissionDialog from "../components/CreateEditDeleteMissionDialog";
-
-import { mapState, mapGetters } from "vuex";
+import MissionsCard from "@/components/MissionsCard.vue";
+import CreateEditDeleteMissionDialog from "@/components/CreateEditDeleteMissionDialog.vue";
+import useRootStore from "@/store/index";
+import { mapState } from "pinia";
 
 export default {
   name: "MissionsList",
@@ -45,15 +59,17 @@ export default {
       activeMission: false,
       topicActive: false,
       indexOfActiveTask: [],
+      missionsLoading: true,
     };
   },
-  mounted() {
+  async mounted() {
     // get active task index for expansion panel vmodel (to expand 'active' task on load)
     this.checkActiveTask();
+    await new Promise((resolve) => setTimeout(resolve, 2000)); // show loading for 2 sec
+    this.missionsLoading = false;
   },
   computed: {
-    ...mapGetters(["person"]),
-    ...mapState(["currentTopic"]),
+    ...mapState(useRootStore, ["person", "currentTopic"]),
   },
   methods: {
     missionClicked(task) {

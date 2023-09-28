@@ -56,12 +56,9 @@
                 <div class="dialog-header">
                   <p class="dialog-title">Assign to a Person</p>
                   <div class="d-flex align-center">
-                    <v-icon left color="missionAccent">{{
-                      mdiInformationVariant
-                    }}</v-icon>
+                    <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                     <p class="dialog-description">
-                      Assign this Galaxy Map to a Person using their e-mail
-                      address
+                      Assign this Galaxy Map to a Person using their e-mail address
                     </p>
                   </div>
                 </div>
@@ -78,9 +75,7 @@
                     light
                   ></v-text-field>
                   <div>
-                    <p class="dialog-description">
-                      Assign the student to a cohort
-                    </p>
+                    <p class="dialog-description">Assign the student to a cohort</p>
                     <v-select
                       v-model="cohort"
                       :items="cohortOptions"
@@ -91,28 +86,18 @@
                     >
                       <template v-slot:selection="{ item }">
                         <v-list-item-avatar tile>
-                          <img
-                            v-if="item.image && item.image.url"
-                            :src="item.image.url"
-                          />
+                          <img v-if="item.image && item.image.url" :src="item.image.url" />
                           <v-icon v-else>{{ mdiStarThreePoints }}</v-icon>
                         </v-list-item-avatar>
-                        <v-list-item-content
-                          >{{ item.name }}
-                        </v-list-item-content>
+                        <v-list-item-content>{{ item.name }} </v-list-item-content>
                       </template>
                       <template v-slot:item="{ item }">
                         <v-list-item-avatar tile>
-                          <img
-                            v-if="item.image && item.image.url"
-                            :src="item.image.url"
-                          />
+                          <img v-if="item.image && item.image.url" :src="item.image.url" />
                           <v-icon v-else>{{ mdiStarThreePoints }}</v-icon>
                         </v-list-item-avatar>
                         <v-list-item-content>
-                          <v-list-item-title
-                            v-html="item.name"
-                          ></v-list-item-title>
+                          <v-list-item-title v-html="item.name"></v-list-item-title>
                         </v-list-item-content>
                       </template>
                     </v-select>
@@ -152,9 +137,7 @@
                 <div class="dialog-header">
                   <p class="dialog-title">Assign to a Cohort</p>
                   <div class="d-flex align-center">
-                    <v-icon left color="missionAccent">{{
-                      mdiInformationVariant
-                    }}</v-icon>
+                    <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                     <p class="dialog-description">
                       Assign this Galaxy Map to an entire Cohort of learners
                     </p>
@@ -163,11 +146,7 @@
                 <div class="create-dialog-content">
                   <!-- TITLE -->
                   <p class="dialog-description">Cohorts:</p>
-                  <v-select
-                    v-if="assignCohorts"
-                    v-model="cohort"
-                    :items="cohorts"
-                  >
+                  <v-select v-if="assignCohorts" v-model="cohort" :items="cohorts">
                     <template v-slot:selection="{ item }">
                       <v-img
                         v-if="item.image.url"
@@ -235,12 +214,7 @@
 
             <div class="create-dialog-content">
               <p class="dialog-description">Galaxy Maps:</p>
-              <v-select
-                v-if="assignCourses"
-                v-model="course"
-                :items="courses"
-                dark
-              >
+              <v-select v-if="assignCourses" v-model="course" :items="courses" dark>
                 <template v-slot:selection="{ item }">
                   <v-list-item-avatar tile>
                     <img v-if="item.image.url" :src="item.image.url" />
@@ -295,7 +269,10 @@
 </template>
 
 <script>
-import firebase from "firebase/app";
+import { getCourseById, assignTopicsAndTasksToStudent } from "@/lib/ff";
+import { dbMixins } from "@/mixins/DbMixins";
+import { db } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
 import {
   mdiClose,
   mdiCheck,
@@ -304,10 +281,8 @@ import {
   mdiAccountMultiplePlus,
   mdiChartTimelineVariantShimmer,
 } from "@mdi/js";
-import { mapState, mapGetters } from "vuex";
-import { db, storage } from "../store/firestoreConfig";
-import { dbMixins } from "../mixins/DbMixins";
-import { getCourseById, assignTopicsAndTasksToStudent } from "../lib/ff";
+import firebase from "firebase/compat/app";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "AssignCohortDialog",
@@ -336,41 +311,36 @@ export default {
   async mounted() {
     if (this.assignCourses) {
       // TODO: we need to think about what courses are available to assign for a teacher
-      await this.$store.dispatch("bindAllCourses");
+      await this.bindCourses({ owner: null });
     } else if (this.assignCohorts) {
-      this.teacherCohorts = this.cohorts.filter(
-        (cohort) => cohort.teacher && !cohort.courseCohort
-      );
+      this.teacherCohorts = this.cohorts.filter((cohort) => cohort.teacher && !cohort.courseCohort);
     }
   },
   watch: {
     dialog(newVal) {
       if (newVal && !this.cohort)
-        this.cohort = this.cohorts.find(
-          (cohort) => cohort.id == this.currentCohort.id
-        );
+        this.cohort = this.cohorts.find((cohort) => cohort.id == this.currentCohort.id);
     },
   },
   computed: {
-    ...mapState([
+    ...mapState(useRootStore, [
       "courses",
       "organisations",
       "currentCourseId",
       "currentCourse",
       "currentCohort",
       "personsCourses",
+      "person",
     ]),
-    ...mapGetters(["person"]),
     cohortOptions() {
       // teacherCohorts && the courseCohort
-      let courseCohort = this.cohorts.filter(
-        (cohort) => cohort.id === this.currentCourse.cohort
-      );
+      const courseCohort = this.cohorts.filter((cohort) => cohort.id === this.currentCourse.cohort);
       this.cohort = courseCohort[0];
       return [...courseCohort, ...this.teacherCohorts];
     },
   },
   methods: {
+    ...mapActions(useRootStore, ["bindCourses", "setSnackbar"]),
     close() {
       this.dialog = false;
       this.loading = false;
@@ -400,21 +370,19 @@ export default {
 
     handleAssignment(person, course) {
       this.MXassignCourseToStudent(person, course)
-        .then(() => {
-          this.MXaddExistingUserToCohort(person, this.cohort);
-        })
-        .then(() => {
+        .then(() => this.MXaddExistingUserToCohort(person, this.cohort))
+        .then(async () => {
           if (this.cohort.courses.length) {
-            this.cohort.courses.forEach(async (courseId) => {
-              let course = await getCourseById(courseId);
-              this.MXassignCourseToStudent(person, course).then(() => {
-                assignTopicsAndTasksToStudent(person, course);
-              });
-            });
+            // Possible optimize to make this concurrent instead of sequential
+            for (const courseId of this.cohort.courses) {
+              const course = await getCourseById(courseId);
+              await this.MXassignCourseToStudent(person, course);
+              await assignTopicsAndTasksToStudent(person, course);
+            }
           }
         })
         .then(() => {
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Individual added to cohort and assigned to course",
             color: "baseAccent",
@@ -425,7 +393,7 @@ export default {
         .catch((error) => {
           console.error("Error writing document: ", error);
           // snackbar message
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: error,
             color: "pink",
@@ -447,14 +415,14 @@ export default {
           // add courses as assignedCourse to each student in the cohort
           if (cohort.students?.length) {
             cohort.students.forEach(async (student) => {
-              let person = await this.MXgetPersonByIdFromDB(student);
+              const person = await this.MXgetPersonByIdFromDB(student);
               return this.MXassignCourseToStudent(person, course);
             });
           }
         })
         .then(() => {
           console.log("courses added to all students!");
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Cohort assigned to Course",
             color: "baseAccent",
@@ -463,7 +431,7 @@ export default {
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: error,
             color: "pink",

@@ -1,9 +1,5 @@
 <template>
-  <div
-    v-if="topic"
-    class="solarsystem"
-    :style="{ height: height ? height : 'auto' }"
-  >
+  <div v-if="topic" class="solarsystem" :style="{ height: height ? height : 'auto' }">
     <!-- @click="routeToTopic(topic)" -->
     <!-- <div class="solarsystem" :style="{height: height ? height : 'auto', top: coords.x + 'px', left: coords.y + 'px'}" @click="routeToTopic(topic)"> -->
     <div class="scene">
@@ -36,7 +32,8 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+import useRootStore from "@/store/index";
+import { mapActions, mapState } from "pinia";
 
 /* ==============
  Solar System inspired by Mustafa Enes (https://codepen.io/pavlovsk/pen/owNqXW)
@@ -75,9 +72,10 @@ export default {
   },
   mounted() {},
   computed: {
-    ...mapState(["currentCourseId"]),
+    ...mapState(useRootStore, ["currentCourseId"]),
   },
   methods: {
+    ...mapActions(useRootStore, ["setCurrentTopicId"]),
     // string to colour, thanks to: https://stackoverflow.com/questions/3426404/create-a-hexadecimal-colour-based-on-a-string-with-javascript
     hashCode(str) {
       let hash = 0;
@@ -95,11 +93,12 @@ export default {
         return;
       }
       // on clicking galaxy, set its courseID to Store state (so not relying on router params)
-      this.$store.commit("setCurrentTopicId", this.topic.id);
+      this.setCurrentTopicId(this.topic.id);
       // route to Galaxy View (passing params as props)
       this.$router.push({
         name: "SolarSystemView",
         params: {
+          courseId: this.currentCourseId,
           topicId: this.topic.id,
         },
       });

@@ -30,16 +30,13 @@
                 {{ edit ? "Edit Galaxy " + course.title : dialogTitle }}
               </p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent">{{
-                  mdiInformationVariant
-                }}</v-icon>
+                <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <div>
                   <p class="dialog-description">
-                    A Galaxy is a path of learning. Kind of like a course.
+                    A Galaxy Map is a path of learning... like a course.
                   </p>
                   <p class="dialog-description">
-                    If you would like to map some learning, create a new Galaxy
-                    Map.
+                    If you would like to map some learning, create a new Galaxy Map.
                   </p>
                 </div>
               </div>
@@ -101,6 +98,9 @@
                   :value="percentageGalaxy"
                   class=""
                 ></v-progress-linear>
+
+                <!-- ===== Owner field. This is who owns the course e.g. you might be creating the course for an organisation ==== -->
+                <!-- 1. dropdown menu of the organisations that the user is in. -->
 
                 <!-- ===== Credit other learning content course ==== -->
                 <!-- <div class="author-checkbox-wrap d-flex flex-column my-4">
@@ -169,18 +169,11 @@
             <!-- End of left-side -->
 
             <!-- RIGHT SIDE -->
-            <div
-              class="right-side"
-              :style="course.title ? 'width:50%' : 'width:0%'"
-            >
+            <div class="right-side" :style="course.title ? 'width:50%' : 'width:0%'">
               <div id="galaxy-info" v-if="course.title" class="mb-2">
                 <h2 class="galaxy-label">Galaxy</h2>
                 <h1 class="galaxy-title">{{ course.title }}</h1>
-                <v-img
-                  v-if="course.image.url"
-                  :src="course.image.url"
-                  width="100%"
-                ></v-img>
+                <v-img v-if="course.image.url" :src="course.image.url" width="100%"></v-img>
                 <p class="galaxy-description">{{ course.description }}</p>
               </div>
               <v-select
@@ -269,24 +262,19 @@
             <div class="dialog-header py-10">
               <p class="dialog-title">Delete Galaxy Map?</p>
               <div class="d-flex align-start">
-                <v-icon left color="missionAccent">{{
-                  mdiInformationVariant
-                }}</v-icon>
+                <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <p class="dialog-description">
-                  <strong>Warning!</strong> You have at least one person
-                  currently active in this galaxy.
+                  <strong>Warning!</strong> You have at least one person currently active in this
+                  galaxy.
                   <br />
                   <br />
 
                   <span v-if="course.public">
-                    If you like you can choose to make this course private
-                    instead of deleteing which will allow active learners to
-                    continue and finish the galaxy, while preventing new
-                    learners from being able to start.
+                    If you like you can choose to make this course private instead of deleteing
+                    which will allow active learners to continue and finish the galaxy, while
+                    preventing new learners from being able to start.
                   </span>
-                  <span v-else>
-                    Are you sure want to continue to Delete this Galaxy
-                  </span>
+                  <span v-else> Are you sure want to continue to Delete this Galaxy </span>
                 </p>
               </div>
             </div>
@@ -336,13 +324,9 @@
           <div class="create-dialog">
             <!-- HEADER -->
             <div class="dialog-header py-10">
-              <p class="dialog-title">
-                <strong>Warning!</strong> Delete Galaxy Map?
-              </p>
+              <p class="dialog-title"><strong>Warning!</strong> Delete Galaxy Map?</p>
               <div class="d-flex align-start">
-                <v-icon left color="missionAccent">{{
-                  mdiInformationVariant
-                }}</v-icon>
+                <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <p class="dialog-description">
                   Are you sure you want to <strong>DELETE</strong> this
                   <span class="galaxy-text">Galaxy {{ course.title }}</span
@@ -357,8 +341,7 @@
                   <span class="mission-text">Mission</span> data.
                   <br />
                   <br />
-                  To confirm type <span class="destroy">"DESTROY"</span> in the
-                  box below
+                  To confirm type <span class="destroy">"DESTROY"</span> in the box below
                 </p>
               </div>
               <v-text-field
@@ -408,18 +391,12 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from "vuex";
-import { db, storage, functions } from "../store/firestoreConfig";
-import firebase from "firebase";
-import {
-  mdiPencil,
-  mdiPlus,
-  mdiClose,
-  mdiCheck,
-  mdiDelete,
-  mdiInformationVariant,
-} from "@mdi/js";
+import { db, storage, functions } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
+import { mdiPencil, mdiPlus, mdiClose, mdiCheck, mdiDelete, mdiInformationVariant } from "@mdi/js";
+import firebase from "firebase/compat/app";
 import clone from "lodash/clone";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "CreateEditDeleteGalaxyDialog",
@@ -471,8 +448,8 @@ export default {
     deleting: false,
   }),
   computed: {
-    ...mapGetters(["person"]),
-    ...mapState(["peopleInCourse"]),
+    ...mapState(useRootStore, ["person", "peopleInCourse", "currentCourseId"]),
+
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -480,7 +457,7 @@ export default {
   watch: {
     courseToEdit(newVal) {
       console.log("new course");
-      if (this.course.id !== newVal.id) {
+      if (this.currentCourseId !== newVal.id) {
         Object.assign(this.course, this.courseToEdit);
       }
     },
@@ -498,6 +475,7 @@ export default {
     },
   },
   methods: {
+    ...mapActions(useRootStore, ["setCurrentCourse", "setCurrentCourseId", "setSnackbar"]),
     cancel() {
       this.dialog = false;
       this.$emit("close");
@@ -521,6 +499,8 @@ export default {
         personId: this.person.id,
       };
 
+      this.course.owner = db.collection("people").doc(this.person.id);
+
       let nodeId;
       let courseId;
 
@@ -535,8 +515,8 @@ export default {
           //get doc id from firestore (aka course id)
           courseId = docRef.id;
           //set courseID to Store state 'state.currentCourseId' (so not relying on router params)
-          this.$store.commit("setCurrentCourseId", courseId);
-          this.$store.commit("setSnackbar", {
+          this.setCurrentCourseId(courseId);
+          this.setSnackbar({
             show: true,
             text: "Galaxy created",
             color: "baseAccent",
@@ -556,6 +536,8 @@ export default {
               topicCreatedTimestamp: new Date(),
               x: 0,
               y: 0,
+              topicTotal: 1,
+              taskTotal: 0,
             })
             .then(async (docRef) => {
               console.log("3");
@@ -584,6 +566,7 @@ export default {
               group: "introduction",
               color: "#00E676",
               topicCreatedTimestamp: new Date(),
+              taskTotal: 0,
             });
         })
         .then(() => {
@@ -612,7 +595,7 @@ export default {
         .doc(course.id)
         .update(course)
         .then(() => {
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Galaxy updated",
             color: "baseAccent",
@@ -621,8 +604,8 @@ export default {
           this.loading = false;
           //get doc id from firestore (aka course id)
           //set courseID to Store state 'state.currentCourseId' (so not relying on router params)
-          this.$store.commit("setCurrentCourseId", course.id);
-          this.$store.commit("setCurrentCourse", course);
+          this.setCurrentCourseId(course.id);
+          this.setCurrentCourse(course);
         })
         .catch((error) => {
           console.error("Error updating document: ", error);
@@ -632,7 +615,7 @@ export default {
       this.disabled = true;
       // ceate a storage ref
       var storageRef = storage.ref(
-        "course-images/" + this.course.id + "-" + this.uploadedImage.name
+        "course-images/" + this.currentCourseId + "-" + this.uploadedImage.name,
       );
 
       // upload a file
@@ -643,8 +626,7 @@ export default {
         "state_changed",
         (snapshot) => {
           // show progress on uploader bar
-          this.percentageGalaxy =
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          this.percentageGalaxy = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         },
         // upload error
         (err) => {
@@ -659,14 +641,14 @@ export default {
             this.course.image.name = this.uploadedImage.name;
             this.disabled = false;
           });
-        }
+        },
       );
     },
     storeAuthorImage() {
       this.disabled = true;
       // ceate a storage ref
       var storageRef = storage.ref(
-        "author-images/" + this.course.author + "-" + this.authorImage.name
+        "author-images/" + this.course.author + "-" + this.authorImage.name,
       );
 
       // upload a file
@@ -677,8 +659,7 @@ export default {
         "state_changed",
         (snapshot) => {
           // show progress on uploader bar
-          this.percentageAuthor =
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          this.percentageAuthor = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         },
         // upload error
         (err) => {
@@ -694,7 +675,7 @@ export default {
             this.course.contentBy.image.name = this.uploadedImage.name;
             this.disabled = false;
           });
-        }
+        },
       );
     },
     // delete
@@ -702,9 +683,7 @@ export default {
       if (this.privateDialog == false && this.peopleInCourse.length) {
         this.privateDialog = true;
       } else {
-        (this.privateDialog = false),
-          (this.dialog = false),
-          (this.dialogConfirm = true);
+        (this.privateDialog = false), (this.dialog = false), (this.dialogConfirm = true);
       }
     },
     cancelDeleteDialog() {
@@ -731,8 +710,8 @@ export default {
           this.deleting = false;
           this.dialog = false;
           // after delete... route back to home
-          this.$router.push({ path: "/base/galaxies" });
-          this.$store.commit("setSnackbar", {
+          this.$router.push({ path: "/" });
+          this.setSnackbar({
             show: true,
             text: this.destroyedText(),
             color: "baseAccent",
@@ -749,7 +728,7 @@ export default {
       if (this.course.image.name == "") return;
       // Create a reference to the file to delete
       var storageRef = storage.ref(
-        "course-images/" + this.course.id + "-" + this.course.image.name
+        "course-images/" + this.currentCourseId + "-" + this.course.image.name,
       );
       // Delete the file
       storageRef
@@ -766,18 +745,14 @@ export default {
         const student = await db.collection("people").doc(person.id);
 
         student.update({
-          assignedCourses: firebase.firestore.FieldValue.arrayRemove(
-            this.course.id
-          ),
+          assignedCourses: firebase.firestore.FieldValue.arrayRemove(this.currentCourseId),
         });
 
         const data = {
           email: person.email,
           teacher: this.person.firstName + " " + this.person.lastName,
           course: this.course.title,
-          student: person.firstName
-            ? person.firstName + " " + person.lastName
-            : "",
+          student: person.firstName ? person.firstName + " " + person.lastName : "",
           teacherEmail: this.person.email,
         };
         console.log("sending delete galaxy email: ", data);
@@ -791,7 +766,7 @@ export default {
         .doc(course.id)
         .update({ public: false })
         .then(() => {
-          this.$store.commit("setSnackbar", {
+          this.setSnackbar({
             show: true,
             text: "Course updated",
             color: "baseAccent",
@@ -802,8 +777,8 @@ export default {
           course.public = false;
           //get doc id from firestore (aka course id)
           //set courseID to Store state 'state.currentCourseId' (so not relying on router params)
-          this.$store.commit("setCurrentCourseId", course.id);
-          this.$store.commit("setCurrentCourse", course);
+          this.setCurrentCourseId(course.id);
+          this.setCurrentCourse(course);
         });
     },
     destroyedText() {

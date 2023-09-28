@@ -1,8 +1,8 @@
 <template>
   <div class="course-frame">
-    <v-row>
-      <v-col cols="12" class="d-flex pa-0">
-        <!-- <img
+    <div class="d-flex justify-space-between pa-0">
+      <div class="d-flex">
+        <img
           v-if="courseData.course.image.url"
           class="galaxy-image"
           :src="courseData.course.image.url"
@@ -20,16 +20,15 @@
         </div>
         <h1 class="galaxy-title pt-2 pl-2">
           {{ courseData.course.title }}
-        </h1> -->
-        <h1 class="galaxy-title pt-2 pl-2">
-          student progress
-          <span
-            style="font-weight: 400; text-transform: none; font-style: italic"
-            >(Number of Missions Completed)</span
-          >
         </h1>
-      </v-col>
-    </v-row>
+      </div>
+      <h1 class="galaxy-title pt-2 pl-2">
+        student progress
+        <span style="font-weight: 400; text-transform: none; font-style: italic"
+          >(Number of Missions Completed)</span
+        >
+      </h1>
+    </div>
     <v-row>
       <v-col cols="12" class="center-col pa-0">
         <Chart
@@ -38,7 +37,7 @@
           :chartType="chartType"
           :chartData="formatStudentsChartData(courseData)"
           :chartOptions="chartOptions"
-          :style="{ width: '100%', height: '150px', padding: '0px 20px' }"
+          :style="{ width: '100%', height: '350px', padding: '0px 20px' }"
           :toolTipEnable="true"
           :timeframe="timeframe"
           :selectedPersons="selectedPersons"
@@ -58,11 +57,12 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from "vuex";
 import Chart from "@/components/Chart.vue";
+import { colours } from "@/lib/utils";
+import { dbMixins } from "@/mixins/DbMixins";
+import useRootStore from "@/store/index";
 import { DateTime } from "luxon";
-import { dbMixins } from "../mixins/DbMixins";
-import { colours } from "../lib/utils";
+import { mapState } from "pinia";
 
 export default {
   name: "ProgressionLineChart",
@@ -121,7 +121,7 @@ export default {
   },
   async mounted() {},
   computed: {
-    // ...mapGetters(["person", "getCourseById", "getTopicById"]),
+    // ...mapState(useRootStore, ["person", "getCourseById", "getTopicById"]),
   },
   methods: {
     formatStudentsChartData(courseData) {
@@ -145,7 +145,7 @@ export default {
       // more than one student per course
       for (const student of courseData.students) {
         const studentColour = this.stringToColour(
-          student.person.firstName + student.person.lastName
+          student.person.firstName + student.person.lastName,
         );
         const label = student.person.firstName + " " + student.person.lastName;
 

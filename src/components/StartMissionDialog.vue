@@ -22,22 +22,16 @@
           <div class="create-dialog">
             <!-- HEADER -->
             <div class="dialog-header">
-              <p class="dialog-title">
-                ARE YOU SURE YOU WANT TO START MISSION?
-              </p>
+              <p class="dialog-title">ARE YOU SURE YOU WANT TO START MISSION?</p>
               <div v-if="task.duration" class="d-flex align-center">
-                <v-icon left color="missionAccent">{{
-                  mdiInformationVariant
-                }}</v-icon>
+                <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <p class="dialog-description">
                   This mission is estmated to take
                   <strong
-                    ><i
-                      >{{ task.duration ? task.duration : "UKNOWN" }} minutes</i
-                    ></strong
+                    ><i>{{ task.duration ? task.duration : "UKNOWN" }} minutes</i></strong
                   >
-                  to complete. <br />Your time to complete this mission will
-                  begin once you click 'start mission'
+                  to complete. <br />Your time to complete this mission will begin once you click
+                  'start mission'
                 </p>
               </div>
             </div>
@@ -82,15 +76,12 @@
 </template>
 
 <script>
-import firebase from "firebase/app";
-
-import { db } from "../store/firestoreConfig";
-import {
-  startTaskXAPIStatement,
-  startTopicXAPIStatement,
-} from "../lib/veracityLRS";
+import { startTaskXAPIStatement, startTopicXAPIStatement } from "@/lib/veracityLRS";
+import { db } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
 import { mdiPlay, mdiInformationVariant, mdiCheck, mdiClose } from "@mdi/js";
-import { mapState, mapGetters } from "vuex";
+import firebase from "firebase/compat/app";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "StartMissionDialog",
@@ -104,16 +95,16 @@ export default {
     loading: false,
   }),
   computed: {
-    ...mapState(["currentCourse", "currentTopic", "currentTask"]),
-    ...mapGetters(["person"]),
+    ...mapState(useRootStore, ["currentCourse", "currentTopic", "currentTask", "person"]),
   },
   methods: {
+    ...mapActions(useRootStore, ["setCurrentTask", "setCurrentTaskId"]),
     startMission() {
       this.loading = true;
 
       // set as current/active task
-      this.$store.commit("setCurrentTaskId", this.task.id);
-      this.$store.commit("setCurrentTask", this.task);
+      this.setCurrentTaskId(this.task.id);
+      this.setCurrentTask(this.task);
 
       const topic = db
         .collection("people")
