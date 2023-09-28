@@ -8,6 +8,12 @@ Like our ancestors that used the stars to navigate the seas, using these Galaxy 
 
 Read more at: https://tairea.io/2021/09/03/galaxy-maps/
 
+## Stack
+
+- Vuejs (v2)
+- Vuetify
+- Firestore
+
 ## Screenshots
 
 ![Screenshot1](./screenshots/screen1.png)
