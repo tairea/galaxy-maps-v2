@@ -2,10 +2,11 @@
   <div class="main-wrap">
     <div class="side-col">
       <!-- COHORTS -->
+      <!-- only if you made them (eg. are the teacher AKA in cohort.teachers[]) -->
       <div v-if="cohorts" class="cohorts mt-12">
         <Cohort
           ref="cohort"
-          v-for="(cohort, cohortIndex) in getCohortsByOrganisationId()"
+          v-for="(cohort, cohortIndex) in getCohortsThatPersonIsTeacherIn()"
           :id="'noOrgcohort' + cohortIndex"
           :cohort="cohort"
           :key="cohort.id"
@@ -14,12 +15,11 @@
           :tooltip="true"
           :studentView="true"
           @click.native="clickedCohort(cohort, 'noOrg', cohortIndex)"
-          style="padding: 5px"
         />
       </div>
       <!-- ORGANISATIONS -->
       <div
-        v-for="(organisation, orgIndex) in organisations"
+        v-for="(organisation, orgIndex) in getOrganisationsThatPersonIsTeacherIn"
         :key="organisation.id"
         class="mission-border mt-6"
       >
@@ -31,8 +31,10 @@
             :hideName="false"
           />
         </div>
-        <!-- COHORTS -->
-        <div class="mb-3 d-flex flex-column justify-center align-center">
+        <!-- COHORTS BY GROUPED BY ORGANISATION -->
+        <!-- i dont think this UI is need yet, especially when we are showing all cohort person is teacher of above -->
+        <!-- will become useful when a teacher is selling their maps to multiple organisations and cohorts -->
+        <!-- <div class="mb-3 d-flex flex-column justify-center align-center">
           <Cohort
             v-for="(cohort, cohortIndex) in getCohortsByOrganisationId(organisation.id)"
             ref="cohort"
@@ -46,7 +48,7 @@
             style="cursor: pointer"
             @click.native="clickedCohort(cohort, orgIndex, cohortIndex)"
           />
-        </div>
+        </div> -->
       </div>
       <div v-if="!cohorts">
         <h3 class="cohort-heading overline baseAccent--text">No Cohorts Found</h3>
@@ -81,7 +83,7 @@
       </div> -->
     </div>
     <v-expand-transition>
-      <div v-if="cohorts.length" class="main-col" v-show="expand">
+      <div v-if="orderedCohorts.length" class="main-col" v-show="expand">
         <!-- Middle chip row -->
         <div class="timeframe-chips">
           <TimeframeFilters @timeframe="setTimeframe($event)" />
@@ -152,7 +154,7 @@
       <!-- NO COHORTS YET -->
       <div v-else class="no-cohort">
         <p class="overline">you are not in any cohorts yet</p>
-        <p class="overline">start a galaxy to join a cohort</p>
+        <!-- <p class="overline">start a galaxy to create a cohort</p> -->
 
         <!-- PAY WALL VERSION Create Cohort Button -->
         <div class="button-container">
@@ -168,15 +170,18 @@
             </template>
             <span v-html="paidFeatureMessage"></span>
           </v-tooltip>
-          <!-- OPEN VERSION -->
-          <v-tooltip right color="subBackground">
+
+          <!-- FREELY CREATE COHORTS VERSION -->
+          <!-- <v-tooltip right color="subBackground">
             <template v-slot:activator="{ on, attrs }">
               <div v-bind="attrs" v-on="on">
                 <CreateEditDeleteCohortDialog />
               </div>
             </template>
             <div class="create-tooltip">CREATE COHORT</div>
-          </v-tooltip>
+          </v-tooltip> -->
+
+          <!-- ADIMN: CREATE ORG -->
           <v-tooltip right color="subBackground" v-if="this.user.data.admin">
             <template v-slot:activator="{ on, attrs }">
               <div v-bind="attrs" v-on="on" class="mt-3">
@@ -275,6 +280,12 @@ export default {
   },
   methods: {
     ...mapActions(useRootStore, ["bindAllCohorts", "bindAllOrganisations", "getCohortsByPersonId"]),
+    getCohortsThatPersonIsTeacherIn() {
+      return this.cohorts.filter((cohort) => cohort.teachers.includes(this.person.id));
+    },
+    getOrganisationsThatPersonIsTeacherIn() {
+      return this.cohorts.filter((cohort) => organisations.people.includes(this.person.id));
+    },
     getCohortsByOrganisationId(id) {
       if (id) {
         return this.cohorts.filter((cohort) => cohort.organisation === id);
@@ -379,7 +390,9 @@ export default {
       });
     },
     orderCohorts() {
-      this.orderedCohorts = [...this.cohorts].sort((a, b) => (a.teacher ? -1 : 1));
+      this.orderedCohorts = [...this.getCohortsThatPersonIsTeacherIn()].sort((a, b) =>
+        a.teacher ? -1 : 1,
+      );
     },
   },
 };
@@ -398,7 +411,7 @@ hr {
   overflow: hidden;
 
   .side-col {
-    width: 15%;
+    width: 10%;
     display: flex;
     flex-direction: column;
     justify-content: start;
@@ -425,6 +438,7 @@ hr {
     width: 80%;
     overflow: scroll;
     overflow-x: hidden;
+    // border: 1px solid yellow;
   }
 
   .cohort-heading {
@@ -490,7 +504,7 @@ hr {
   color: var(--v-missionAccent-base);
   // margin-left: auto;
   // margin-right: auto;
-  width: 80%;
+  width: 70%;
   .button-container {
     margin-top: 50px;
     height: auto;

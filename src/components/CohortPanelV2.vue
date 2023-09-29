@@ -198,8 +198,8 @@ export default {
     borderColor() {
       if (this.isDashboardView) return "border: 1px solid var(--v-missionAccent-base)";
       return this.cohort.teacher
-        ? "border: 1px solid var(--v-baseAccent-base);"
-        : "border: 1px solid var(--v-missionAccent-base)";
+        ? "border: 1px solid var(--v-missionAccent-base);"
+        : "border: 1px solid var(--v-cohortAccent-base)";
     },
   },
   methods: {

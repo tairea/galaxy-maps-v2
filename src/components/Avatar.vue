@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-tooltip v-if="profileData" bottom color="subBackground">
-      <template v-slot:activator="{ on, attrs }">
+      <template v-slot:activator="{ on: isTeacher, attrs }">
         <div class="d-flex justify-center align-center" v-bind="attrs" v-on="on">
           <v-avatar :size="size">
             <img
@@ -64,7 +64,7 @@ import { mapState } from "pinia";
 
 export default {
   name: "Avatar",
-  props: ["personId", "size", "colourBorder", "profile", "owner", "organisationData"],
+  props: ["personId", "size", "colourBorder", "profile", "owner", "organisationData", "isTeacher"],
   data() {
     return {
       mdiAccount,

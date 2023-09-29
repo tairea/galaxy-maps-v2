@@ -3,14 +3,20 @@
     <h2 class="assigned-label">{{ isMissionView ? "Currently active" : "Assigned to" }}:</h2>
     <!-- ASSIGNED COHORTS INFO -->
     <div v-if="assignCohorts">
-      <!-- Cohorts -->
+      <!-- Assigned COHORTS -->
       <div v-if="cohorts && cohorts.length > 0">
         <p class="overline assignedToLabel ma-0">Cohorts</p>
         <v-row class="my-1">
-          <Cohort v-for="cohort in cohorts" :cohort="cohort" :key="cohort.id" :tooltip="true" />
+          <Cohort
+            v-for="cohort in cohorts"
+            :cohort="cohort"
+            :key="cohort.id"
+            :tooltip="isTeacher"
+          />
         </v-row>
       </div>
 
+      <!-- Assigned PEOPLE -->
       <div v-if="people.length > 0">
         <p class="overline assignedToLabel ma-0">Individuals</p>
         <v-row class="my-4">
@@ -20,6 +26,7 @@
             :key="person.id"
             :size="40"
             :colourBorder="true"
+            :isTeacher="isTeacher"
             class="ma-1"
           />
         </v-row>
@@ -137,7 +144,7 @@ export default {
   width: 100%;
   // height: 400px;
   border: 1px solid var(--v-baseAccent-base);
-  margin-top: 30px;
+  margin-top: 20px;
   padding: 20px;
   // background: var(--v-baseAccent-base);
   position: relative;

@@ -5,7 +5,12 @@
     <div v-if="cohortImage">
       <v-img class="cohort-image" width="auto" :src="currentCohort.image.url"></v-img>
     </div>
-    <p class="cohort-description">{{ currentCohort.description }}</p>
+    <p ref="description" class="cohort-description">
+      {{ maybeTruncate(currentCohort.description) }}
+      <a style="border-bottom: 1px solid" v-if="readmore" @click="showFullDescription()"
+        >Read more</a
+      >
+    </p>
     <div class="d-flex justify-center align-center">
       <Organisation v-if="currentCohort.organisation" :organisation="org" :size="40" />
     </div>
@@ -44,6 +49,7 @@ export default {
   data() {
     return {
       teachers: [],
+      readmore: false,
     };
   },
   mounted() {
@@ -88,6 +94,20 @@ export default {
         });
       }
     },
+    maybeTruncate(value) {
+      if (!value) return "";
+      if (value.length <= 100) {
+        return value;
+      } else {
+        // show read more button
+        this.readmore = true;
+        // limit to 100 characters
+        return value.substring(0, 100) + "...";
+      }
+    },
+    showFullDescription() {
+      this.$refs.description.innerHTML = this.currentCohort.description;
+    },
   },
 };
 </script>
@@ -125,7 +145,7 @@ export default {
   .cohort-description {
     margin-top: 10px;
     color: var(--v-cohortAccent-base);
-    font-size: 0.9rem;
+    font-size: 0.8rem;
   }
 }
 
