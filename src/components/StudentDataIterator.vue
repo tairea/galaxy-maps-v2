@@ -247,7 +247,17 @@ export default {
     },
     updateStudentsWithTasks(payload) {
       const foundIndex = this.students.findIndex((student) => student.id == payload.person.id);
+      console.log("this.students BEFORE PAYLOAD", this.students);
+      console.log(
+        "payload.tasks",
+        this.students[foundIndex].firstName +
+          " " +
+          this.students[foundIndex].lastName +
+          " = " +
+          payload.tasks,
+      );
       this.students[foundIndex].tasks = payload.tasks;
+      console.log("this.students AFTER PAYLOAD", this.students);
     },
   },
 };

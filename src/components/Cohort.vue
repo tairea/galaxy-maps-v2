@@ -3,14 +3,13 @@
     :cols="cols"
     @click="isTeacher ? routeToCohort(cohort) : null"
     class="d-flex flex-column justify-start align-center cohort"
-    :style="!studentView ? 'cursor: pointer;' : ''"
+    :style="isTeacher ? 'cursor: pointer;' : 'cursor: default'"
     :class="studentCardView ? 'pa-0' : ''"
-    style="cursor: default"
   >
     <div
       v-if="!tooltip"
       class="d-flex flex-column justify-start align-center cohort"
-      style="cursor: default"
+      :style="isTeacher ? 'cursor: pointer;' : 'cursor: default'"
     >
       <v-img
         v-if="cohort.image.url"

@@ -8,7 +8,7 @@
         :key="cohort.id"
         :tooltip="true"
         :studentCardView="true"
-        cols="4"
+        cols="2"
         :size="20"
       />
     </v-row>

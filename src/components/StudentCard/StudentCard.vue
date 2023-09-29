@@ -18,6 +18,7 @@
           <!-- <StudentCardActivities :student="student" :activities="activities"/> -->
         </div>
       </div>
+      <!-- Active Hours & Completed Tasks -->
       <div class="student-actions-overUnder">
         <div class="top-row d-flex flex-column" v-if="studentTimeData.length > 0">
           <StudentHours
@@ -34,6 +35,7 @@
           />
         </div>
       </div>
+      <!-- Cohorts & Actions -->
       <div class="student-actions-overUnder">
         <div class="top-row">
           <StudentCohorts :size="20" :student="student" />
