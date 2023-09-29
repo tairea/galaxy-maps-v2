@@ -28,13 +28,12 @@
         :isTeacher="teacher"
         :courses="courses"
         :students="currentCohort.students"
-        class="ml-4"
       />
       <SubmissionTeacherFrame
         :isTeacher="teacher"
         :courses="courses"
         :students="teacher ? currentCohort.students : [person]"
-        class="mt-4 ml-4"
+        class="mt-4"
       />
     </div>
   </div>
@@ -111,24 +110,26 @@ export default {
 }
 
 #left-section {
-  width: 20%;
+  width: 15%;
   height: 100%;
   display: flex;
   justify-content: flex-start;
   align-items: center;
   flex-direction: column;
   overflow-y: scroll;
-  padding: 50px 20px;
+  padding: 50px 0px;
+  margin-left: 5%;
 }
 
 #main-section {
-  width: 55%;
+  width: 50%;
   height: 100%;
   display: flex;
   justify-content: flex-start;
   align-items: center;
   flex-direction: column;
   padding-top: 50px;
+  margin: 0px 5%;
   transition: all 0.2s ease-in-out;
 
   .people-frame {
@@ -236,10 +237,11 @@ export default {
 }
 
 #right-section {
-  width: 25%;
+  width: 15%;
   height: 84%;
   padding-top: 50px;
-  margin-right: 35px;
+  // margin-right: 35px;
+  margin-right: 5%;
 }
 
 /* width */

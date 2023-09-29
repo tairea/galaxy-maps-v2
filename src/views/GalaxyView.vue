@@ -5,6 +5,7 @@
       <GalaxyInfo :course="currentCourse" :teacher="teacher" :draft="draft" />
       <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <PublishGalaxy v-if="showPublish" :course="currentCourse" :courseTasks="courseTasks" />
+      <BackButton :toPath="'/'" />
       <AssignedInfo
         v-if="!draft && cohortsInCourse.length"
         :assignCohorts="true"
@@ -12,8 +13,6 @@
         :cohorts="cohortsInCourse"
         :teacher="teacher"
       />
-
-      <BackButton :toPath="'/'" />
     </div>
     <div id="main-section">
       <!-- Map Buttons -->

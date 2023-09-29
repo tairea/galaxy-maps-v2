@@ -25,7 +25,7 @@ export default {
 
 <style lang="scss" scoped>
 .backButtonDiv {
-  margin-top: 15px;
+  margin-top: 20px;
   width: calc(100% - 30px);
   z-index: 999;
 }
