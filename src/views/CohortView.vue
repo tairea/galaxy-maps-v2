@@ -2,8 +2,8 @@
   <div v-if="currentCohort.id" id="container" class="bg">
     <div id="left-section">
       <CohortInfo />
-      <AssignedInfo assignCourses="true" />
       <BackButton :toPath="'/cohorts'" />
+      <AssignedInfo assignCourses="true" />
     </div>
 
     <div id="main-section">
