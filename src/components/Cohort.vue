@@ -9,7 +9,7 @@
     <div
       v-if="!tooltip"
       class="d-flex flex-column justify-start align-center cohort"
-      :style="isTeacher ? 'cursor: pointer;' : 'cursor: default'"
+      style="cursor: default"
     >
       <v-img
         v-if="cohort.image.url"

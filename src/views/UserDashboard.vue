@@ -89,6 +89,8 @@
         />
       </div>
     </template>
+
+    <!-- ADMIN -->
     <template v-else-if="dashboardView === 'admin'">
       <div id="main-section">
         <div class="d-flex align-center mb-4">
@@ -229,10 +231,11 @@ export default {
 
   .top-section {
     position: absolute;
-    width: 80%;
-    left: 15%;
+    width: 55%;
+    left: 19%;
     top: 100px;
     margin-left: 50px;
+    // border: 1px solid yellow;
 
     .noData {
       display: flex;
@@ -244,15 +247,20 @@ export default {
   }
 
   #left-section {
-    width: 15%;
-    padding: 100px 50px 100px 20px;
+    width: 10%;
+    margin-left: 5%;
+    padding: 100px 0px;
+    // border: 1px solid green;
   }
 
   #main-section {
-    width: 60%;
+    width: 55%;
     height: calc(100vh - 100px);
     margin-top: 135px;
-    padding: 0px 20px 50px 50px;
+    margin-left: 7%;
+    margin-right: 5%;
+    padding-bottom: 50px;
+    padding-bottom: 50px;
     // border: 1px solid red;
 
     .circle-border {
@@ -276,10 +284,11 @@ export default {
   }
 
   #right-section {
-    width: 25%;
+    width: 20%;
     margin-top: 140px;
     height: calc(100vh - 200px);
-    margin-right: 30px;
+    margin-right: 2.5%;
+    // border: 1px solid blue;
   }
 }
 

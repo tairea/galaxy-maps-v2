@@ -85,11 +85,26 @@ export default {
       );
       if (this.isTeacher) {
         submissions.sort((a, b) => {
-          return a.taskSubmissionStatus == "inreview" ? -1 : 1;
+          if (a.taskSubmissionStatus === b.taskSubmissionStatus) {
+            // If the tasks are both in review sort by taskSubmittedForReviewTimestamp
+            return (
+              b.taskSubmittedForReviewTimestamp.seconds - a.taskSubmittedForReviewTimestamp.seconds
+            );
+          } else {
+            // Otherwise, compare by age
+            return a.taskSubmissionStatus == "inreview" ? -1 : 1;
+          }
         });
       } else {
         submissions.sort((a, b) => {
-          return a.taskSubmissionStatus == "completed" ? -1 : 1;
+          if (a.taskSubmissionStatus === b.taskSubmissionStatus) {
+            return (
+              b.taskReviewedAndCompletedTimestamp.seconds -
+              a.taskReviewedAndCompletedTimestamp.seconds
+            );
+          } else {
+            return a.taskSubmissionStatus == "completed" ? -1 : 1;
+          }
         });
       }
 
