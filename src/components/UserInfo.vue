@@ -36,7 +36,8 @@
             :cohort="cohort"
             :key="cohort.id"
             :size="60"
-            :cols="5"
+            :cols="4"
+            :tooltip="true"
           />
         </div>
       </div>

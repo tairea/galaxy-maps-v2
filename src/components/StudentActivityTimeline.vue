@@ -119,9 +119,9 @@ export default {
   font-size: 0.6rem;
   // max-height: 500px;
   max-height: 100%;
-  width: 90%;
-  margin-left: 5%;
-  margin-right: auto;
+  // width: 90%;
+  // margin-left: 5%;
+  // margin-right: auto;
   margin-bottom: 30px;
   overflow-y: scroll;
   overflow-x: hidden;

@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-tooltip v-if="profileData" bottom color="subBackground">
-      <template v-slot:activator="{ on: isTeacher, attrs }">
+      <template v-slot:activator="{ on, attrs }">
         <div class="d-flex justify-center align-center" v-bind="attrs" v-on="on">
           <v-avatar :size="size">
             <img
