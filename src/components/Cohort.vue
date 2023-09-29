@@ -5,8 +5,13 @@
     class="d-flex flex-column justify-start align-center cohort"
     :style="!studentView ? 'cursor: pointer;' : ''"
     :class="studentCardView ? 'pa-0' : ''"
+    style="cursor: default"
   >
-    <div v-if="!tooltip" class="d-flex flex-column justify-start align-center cohort">
+    <div
+      v-if="!tooltip"
+      class="d-flex flex-column justify-start align-center cohort"
+      style="cursor: default"
+    >
       <v-img
         v-if="cohort.image.url"
         :src="cohort.image.url"
