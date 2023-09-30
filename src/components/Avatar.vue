@@ -1,6 +1,7 @@
 <template>
   <div>
-    <v-tooltip v-if="profileData" bottom color="subBackground">
+    <!-- with tooltip -->
+    <v-tooltip v-if="profileData && !hideTooltips" bottom color="subBackground">
       <template v-slot:activator="{ on, attrs }">
         <div class="d-flex justify-center align-center" v-bind="attrs" v-on="on">
           <v-avatar :size="size">
@@ -30,6 +31,25 @@
         </p>
       </div>
     </v-tooltip>
+    <!-- without tooltip -->
+    <div v-else-if="profileData" class="d-flex justify-center align-center">
+      <v-avatar :size="size">
+        <img
+          v-if="profileData.image"
+          :src="profileData.image.url"
+          :alt="profileData.firstName"
+          style="object-fit: cover"
+          :style="border"
+        />
+        <div v-else-if="profileData.firstName" class="imagePlaceholder" :style="colouredBorder">
+          {{ first3Letters(profileData.firstName) }}
+        </div>
+        <div v-else class="imagePlaceholder" :style="colouredBorder">
+          <v-icon>{{ mdiAccount }}</v-icon>
+        </div>
+      </v-avatar>
+    </div>
+
     <v-tooltip v-if="organisationData" bottom color="subBackground">
       <template v-slot:activator="{ on, attrs }">
         <div class="d-flex justify-center align-center" v-bind="attrs" v-on="on">
@@ -64,7 +84,15 @@ import { mapState } from "pinia";
 
 export default {
   name: "Avatar",
-  props: ["personId", "size", "colourBorder", "profile", "owner", "organisationData", "isTeacher"],
+  props: [
+    "personId",
+    "size",
+    "colourBorder",
+    "profile",
+    "owner",
+    "organisationData",
+    "hideTooltips",
+  ],
   data() {
     return {
       mdiAccount,
