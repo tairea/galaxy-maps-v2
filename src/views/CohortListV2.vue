@@ -390,9 +390,16 @@ export default {
       });
     },
     orderCohorts() {
+      // teacher of these cohorts
       this.orderedCohorts = [...this.getCohortsThatPersonIsTeacherIn()].sort((a, b) =>
         a.teacher ? -1 : 1,
       );
+
+      // student of these cohorts
+      this.orderedCohorts = [
+        ...this.orderedCohorts,
+        ...this.cohorts.filter((cohort) => cohort.students.includes(this.person.id)),
+      ];
     },
   },
 };

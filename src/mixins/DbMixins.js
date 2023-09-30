@@ -129,7 +129,7 @@ export const dbMixins = {
         .then(() => {
           this.setSnackbar({
             show: true,
-            text: `${person.firstName} assigned to ${course.title} galaxy`,
+            text: `${person.firstName} added to ${course.title} galaxy`,
             color: "baseAccent",
           });
         });

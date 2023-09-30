@@ -41,7 +41,7 @@ import { DateTime } from "luxon";
 
 export default {
   name: "ActivityBarChart",
-  props: ["activityData", "timeframe", "selectedPersons", "unselectedPersons"],
+  props: ["activityData", "timeframe", "selectedPersons", "unselectedPersons", "shortenNames"],
   components: {
     Chart,
   },
@@ -81,6 +81,12 @@ export default {
               font: {
                 size: 10,
               },
+              // callback: function (value, index, ticks) {
+              //   console.log("shortening name...");
+              //   if (this.shortenNames) {
+              //     return this.first3Letters(value);
+              //   }
+              // },
             },
           },
           // y: {
@@ -173,9 +179,20 @@ export default {
       //   labels.push(label);
       // }
 
+      // merge data and labels into one array for sorting
+      const chartData = data.map((value, index) => {
+        return {
+          data: value,
+          label: labels[index],
+        };
+      });
+
+      // sort dataset by data
+      chartData?.sort((a, b) => a.data - b.data);
+
       const dataset = {
         label: "Hours Online",
-        data,
+        data: chartData.map((item) => item.data),
         backgroundColor: this.dark
           ? this.$vuetify.theme.themes.dark.baseAccent
           : this.$vuetify.theme.themes.light.baseAccent,
@@ -188,7 +205,7 @@ export default {
       };
 
       this.chartData = {
-        labels,
+        labels: chartData.map((item) => item.label),
         datasets: [dataset],
       };
     },

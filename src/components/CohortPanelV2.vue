@@ -1,7 +1,7 @@
 <template>
   <div
     class="d-flex cohort-panel"
-    @click="!studentView ? routeToCohort(cohort) : null"
+    @click="isCohortTeacher ? routeToCohort(cohort) : null"
     :style="borderColor"
   >
     <!-- top row -->
@@ -41,12 +41,14 @@
             v-if="cohort.students && cohort.students.length"
             class="d-flex justify-center align-center flex-wrap py-2"
           >
-            <v-tooltip top color="subBackground">
+            <!-- v-show not working to hide tooltip, so using v-if v-else  -->
+            <v-tooltip v-if="isCohortTeacher" v-show="isCohortTeacher" top color="subBackground">
               <template v-slot:activator="{ on, attrs }">
                 <p class="label text-center mt-4 mb-2" v-bind="attrs" v-on="on">Students:</p>
               </template>
               <span>Select students to show only their data</span>
             </v-tooltip>
+            <p v-else class="label text-center mt-4 mb-2">Students:</p>
 
             <Avatar
               v-for="(person, index) in studentsWithData"
@@ -57,6 +59,7 @@
               class="my-2 mx-1 avatar"
               :colourBorder="true"
               @click.native="clickedPerson($event, person, index)"
+              :hideTooltips="!isCohortTeacher"
             />
           </div>
           <p v-else class="label text-center pa-4" style="font-weight: 800">NO STUDENT DATA</p>
@@ -107,6 +110,7 @@
             :timeframe="timeframe"
             :selectedPersons="selectedPersons"
             :unselectedPersons="unselectedPersons"
+            :shortenNames="!isCohortTeacher"
           />
         </div>
         <div v-else class="d-flex justify-center align-center" style="padding: 50px 0px">
@@ -148,6 +152,7 @@ export default {
       unselectedPersons: [],
       cohortsCoursesDataLoading: false,
       cohortActivityDataLoading: false,
+      isCohortTeacher: false,
     };
   },
 
@@ -189,22 +194,30 @@ export default {
 
     // ==== VQL Test
     // const VQL = await VQLXAPIQuery();
+
+    // checkIfCohortTeacher
+    this.checkIfCohortTeacher();
   },
   computed: {
-    ...mapState(useRootStore, ["getOrganisationById", "currentCohort"]),
+    ...mapState(useRootStore, ["getOrganisationById", "currentCohort", "person"]),
     isDashboardView() {
       return this.$route.name === "Dashboard";
     },
     borderColor() {
       if (this.isDashboardView) return "border: 1px solid var(--v-missionAccent-base)";
-      return this.cohort.teacher
-        ? "border: 1px solid var(--v-missionAccent-base);"
-        : "border: 1px solid var(--v-cohortAccent-base)";
+      if (this.cohort.teacher) {
+        return "border: 1px solid var(--v-galaxyAccent-base);cursor: pointer";
+      } else {
+        return "border: 1px solid var(--v-missionAccent-base);cursor:default";
+      }
     },
   },
   methods: {
     ...mapActions(useRootStore, ["setCurrentCohort"]),
     clickedPerson(e, person, index) {
+      if (!isCohortTeacher) {
+        return;
+      }
       // prevent route to cohortView
       e.stopPropagation();
       // get all avatar elements
@@ -275,6 +288,17 @@ export default {
         if (+match === 0) return ""; // or if (/\s+/.test(match)) for white spaces
         return index === 0 ? match.toLowerCase() : match.toUpperCase();
       });
+    },
+    checkIfCohortTeacher() {
+      // see if person id is included in cohort.teachers
+      if (this.cohort.teachers && this.cohort.teachers.length > 0) {
+        const isTeacher = this.cohort.teachers.some((teacher) => {
+          return teacher.id === this.person.id;
+        });
+        this.isCohortTeacher = isTeacher;
+      } else {
+        this.isCohortTeacher = false;
+      }
     },
   },
 };
