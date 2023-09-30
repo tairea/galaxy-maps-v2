@@ -86,9 +86,14 @@
 </template>
 
 <script>
-import { fetchCohortById } from "@/lib/ff";
+import {
+  fetchCohortByCohortId,
+  fetchCourseByCourseId,
+  fetchTopicByCourseIdTopicId,
+  fetchTaskByCourseIdTopicIdTaskId,
+  fetchPersonByPersonId,
+} from "@/lib/ff";
 import { studentRequestForHelpXAPIStatement } from "@/lib/veracityLRS";
-import { dbMixins } from "@/mixins/DbMixins";
 import { db, functions } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mdiHandFrontLeftOutline, mdiInformationVariant, mdiCheck, mdiClose } from "@mdi/js";
@@ -96,7 +101,6 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "RequestHelpDialog",
-  mixins: [dbMixins],
   props: ["topicId", "taskId", "task", "on", "attrs"],
   data: () => ({
     mdiHandFrontLeftOutline,
@@ -109,16 +113,29 @@ export default {
     requestForHelp: "",
     loading: false,
     deleting: false,
+    currentCourse: null,
+    currentTopic: null,
+    currentTask: null,
     cohort: null,
   }),
   async mounted() {
-    this.cohort = await fetchCohortById(this.currentCohortId);
+    this.currentCourse = await fetchCourseByCourseId(this.currentCourseId);
+    this.currentTopic = await fetchTopicByCourseIdTopicId(
+      this.currentCourseId,
+      this.currentTopicId,
+    );
+    this.currentTask = await fetchTaskByCourseIdTopicIdTaskId(
+      this.currentCourseId,
+      this.currentTopicId,
+      this.currentTaskId,
+    );
+    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
   },
   computed: {
     ...mapState(useRootStore, [
-      "currentCourse",
-      "currentTopic",
-      "currentTask",
+      "currentCourseId",
+      "currentTopicId",
+      "currentTaskId",
       "currentCohortId",
       "person",
     ]),
@@ -195,7 +212,7 @@ export default {
       this.dialog = false;
     },
     async emailRequestToTeacher(teacherId, request) {
-      const teacher = await this.MXgetPersonByIdFromDB(teacherId);
+      const teacher = await fetchPersonByPersonId(teacherId);
       const data = {
         course: this.currentCourse.title,
         topic: this.currentTopic.label,

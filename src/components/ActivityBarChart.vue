@@ -104,7 +104,7 @@ export default {
     };
   },
   computed: {
-    // ...mapState(useRootStore, ["person", "getCourseById", "getTopicById"]),
+    // ...mapState(useRootStore, ["person", "getTopicById"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },

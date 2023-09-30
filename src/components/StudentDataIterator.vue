@@ -112,8 +112,7 @@ import ViewStudentDetails from "@/components/ViewStudentDetails.vue";
 import StudentCard from "@/components/StudentCard/StudentCard.vue";
 import TimeframeFilters from "@/components/Reused/TimeframeFilters.vue";
 import EditStudentDialog from "@/components/Dialogs/EditStudentDialog.vue";
-import { dbMixins } from "@/mixins/DbMixins";
-import { fetchCohortById } from "@/lib/ff";
+import { fetchCohortByCohortId, fetchPersonByPersonId } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mdiArrowUp, mdiArrowDown, mdiMagnify, mdiSortAlphabeticalVariant } from "@mdi/js";
 import { mapState } from "pinia";
@@ -164,8 +163,8 @@ export default {
     clearInterval(this.counterInterval);
   },
   async mounted() {
-    this.cohort = await fetchCohortById(this.currentCohortId);
-    // this is needed incase there is no change in currentCohort to catch with the watch
+    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
+    // this is needed incase there is no change in currentCohortId to catch with the watch
     if (this.$route.params.cohortId === this.currentCohortId) {
       await this.getStudentProfiles();
     }
@@ -175,7 +174,7 @@ export default {
       deep: true,
       async handler(newVal, oldVal) {
         const oldCohort = this.cohort;
-        this.cohort = await fetchCohortById(newVal);
+        this.cohort = await fetchCohortByCohortId(newVal);
         if (oldCohort.students?.length !== this.cohort.students?.length) {
           if (oldCohort.students?.length > this.cohort.students?.length)
             this.removeStudentProfile();
@@ -229,7 +228,7 @@ export default {
           return !this.students.some((b) => a === b.id);
         });
         for (const id of studentsArr) {
-          const student = await this.MXgetPersonByIdFromDB(id);
+          const student = await fetchPersonByPersonId(id);
           if (!this.students.some((a) => a.id === student.id)) {
             this.students.push(student);
           }

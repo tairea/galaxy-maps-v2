@@ -57,7 +57,7 @@ import StudentCompletedTasks from "@/components/StudentCard/StudentCompletedTask
 import StudentCohorts from "@/components/StudentCard/StudentCohorts.vue";
 import StudentActions from "@/components/StudentCard/StudentActions.vue";
 import StudentActivityTimeline from "@/components/StudentActivityTimeline.vue";
-import { fetchCohortById, fetchCourseById } from "@/lib/ff";
+import { fetchCohortByCohortId, fetchCourseByCourseId } from "@/lib/ff";
 import { getStudentsCoursesXAPIQuery, getStudentsTimeDataXAPIQuery } from "@/lib/veracityLRS";
 import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";
@@ -96,7 +96,7 @@ export default {
   },
   async mounted() {
     const studentCourses = await getStudentsCoursesXAPIQuery(this.student);
-    this.cohort = await fetchCohortById(this.currentCohortId);
+    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
     const cohortActivities = studentCourses.filter((a) =>
       this.cohort.courses.some((b) => b === a.course.id),
     );
@@ -130,7 +130,7 @@ export default {
       const courseId = this.student.assignedCourses.find((course) =>
         this.cohort.courses.includes(course),
       );
-      this.assignedCourse = await fetchCourseById(courseId);
+      this.assignedCourse = await fetchCourseByCourseId(courseId);
     },
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();

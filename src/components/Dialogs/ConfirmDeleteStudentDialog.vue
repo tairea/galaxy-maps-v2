@@ -40,7 +40,7 @@
   </v-dialog>
 </template>
 <script>
-import { fetchCohortById } from "@/lib/ff";
+import { fetchCohortByCohortId } from "@/lib/ff";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mdiInformationVariant, mdiDelete, mdiClose } from "@mdi/js";
@@ -82,7 +82,7 @@ export default {
       const studentRef = doc(db, "people", studentId);
       console.log("student: ", studentRef);
 
-      const currentCohort = await fetchCohortById(this.currentCohortId);
+      const currentCohort = await fetchCohortByCohortId(this.currentCohortId);
 
       const courseIds = currentCohort.courses;
       await updateDoc(studentRef, {

@@ -47,7 +47,7 @@ import BackButton from "@/components/Reused/BackButton.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 import CohortGraphs from "@/components/CohortView/CohortGraphs.vue";
-import { fetchCohortById } from "@/lib/ff";
+import { fetchCohortByCohortId } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
 
@@ -90,7 +90,7 @@ export default {
     },
   },
   async mounted() {
-    this.cohort = await fetchCohortById(this.currentCohortId);
+    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
   },
 };
 </script>

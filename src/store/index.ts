@@ -24,7 +24,6 @@ const getDefaultState = () => {
     currentCourseId: "",
     currentTopic: {} as Record<string, any>,
     currentTask: {} as Record<string, any>,
-    currentCohort: {} as Record<string, any>,
     currentCourseNodes: [] as Record<string, any>[],
     currentCourseEdges: [] as Record<string, any>[],
     allNodes: [] as Record<string, any>[],
@@ -59,9 +58,6 @@ export default defineStore({
   id: "root",
   state: getDefaultState,
   getters: {
-    getCourseById: (state) => (id: string) => {
-      return state.courses.find((course) => course.id === id);
-    },
     getCoursesByWhoMadeThem: (state) => (personId: string) => {
       return state.courses.filter((course) => course.mappedBy.personId == personId);
     },

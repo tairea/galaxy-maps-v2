@@ -114,7 +114,12 @@
 </template>
 
 <script>
-import { fetchCohortById, fetchCourseById, assignTopicsAndTasksToStudent } from "@/lib/ff";
+import {
+  fetchCohortByCohortId,
+  fetchPersonByEmail,
+  updatePersonByPersonId,
+  assignTopicsAndTasksToPerson,
+} from "@/lib/ff";
 import { dbMixins } from "@/mixins/DbMixins";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
@@ -129,7 +134,7 @@ export default {
     edit: { type: Boolean, default: false },
   },
   async mounted() {
-    this.cohort = await fetchCohortById(this.currentCohortId);
+    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
     if (this.edit)
       this.account = {
         ...this.account,
@@ -196,7 +201,7 @@ export default {
       this.$refs.form.validate();
       if (!this.account.email) return;
       this.addingAccount = true;
-      const personExists = await this.MXgetPersonByEmail(this.account.email);
+      const personExists = await fetchPersonByEmail(this.account.email);
       console.log("person exists:", personExists);
       if (personExists) {
         const profile = {
@@ -210,7 +215,7 @@ export default {
           this.close();
         } else {
           try {
-            await this.MXsaveProfile(profile); // updates /people/:id profile
+            await updatePersonByPersonId(profile.id, profile); // updates /people/:id profile
             await this.MXaddExistingUserToCohort(profile); // adds student to /cohorts/:id/students
 
             if (this.cohort.courses.length) {
@@ -262,11 +267,9 @@ export default {
       }
     },
     async assignStudentToCourses(person) {
-      // FIXME: foreach does not await
       for (const courseId of this.cohort.courses) {
-        let course = await fetchCourseById(courseId);
-        await this.MXassignCourseToStudent(person, course);
-        await assignTopicsAndTasksToStudent(person, course);
+        await this.MXassignCourseToStudent(person.id, courseId);
+        await assignTopicsAndTasksToPerson(person.id, courseId);
       }
     },
   },

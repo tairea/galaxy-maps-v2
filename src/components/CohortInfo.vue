@@ -34,14 +34,12 @@
 import Organisation from "@/components/Organisation.vue";
 import CreateEditDeleteCohortDialog from "@/components/Dialogs/CreateEditDeleteCohortDialog.vue";
 import Avatar from "@/components/Reused/Avatar.vue";
-import { fetchCohortById } from "@/lib/ff";
-import { dbMixins } from "@/mixins/DbMixins";
+import { fetchCohortByCohortId, fetchPersonByPersonId } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
 
 export default {
   name: "CohortInfo",
-  mixins: [dbMixins],
   components: {
     Avatar,
     Organisation,
@@ -55,7 +53,7 @@ export default {
     };
   },
   async mounted() {
-    this.cohort = await fetchCohortById(this.currentCohortId);
+    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
     // this is needed incase there is no change in currentCohortId to catch with the watch
     if (this.$route.params.cohortId === this.currentCohortId) {
       this.getTeacherProfiles();
@@ -66,7 +64,7 @@ export default {
       deep: true,
       async handler(newVal, oldVal) {
         const oldCohort = this.cohort;
-        this.cohort = await fetchCohortById(newVal);
+        this.cohort = await fetchCohortByCohortId(newVal);
         if (oldCohort.teachers?.length !== this.cohort.teachers?.length) {
           this.getTeacherProfiles();
         }
@@ -93,7 +91,7 @@ export default {
         const teachersArr = this.cohort.teachers.filter((a) => {
           return !this.teachers.some((b) => a === b.id);
         });
-        this.teachers = await Promise.all(teachersArr.map((id) => this.MXgetPersonByIdFromDB(id)));
+        this.teachers = await Promise.all(teachersArr.map((id) => fetchPersonByPersonId(id)));
       }
     },
     maybeTruncate(value) {

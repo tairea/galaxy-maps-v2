@@ -160,8 +160,6 @@ export default {
       "allTasks",
       "cohorts",
       "dashboardView",
-      "getCourseById",
-      "getCoursesByWhoMadeThem",
     ]),
     isAdmin() {
       return this.user.data.admin;

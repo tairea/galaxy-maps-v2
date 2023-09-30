@@ -134,15 +134,17 @@ import EdgeInfoPanel from "@/components/GalaxyView/EdgeInfoPanel.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 
-import { fetchAllPeopleInCourse, fetchAllCohortsInCourse } from "@/lib/ff";
-import { dbMixins } from "@/mixins/DbMixins";
+import {
+  fetchAllPeopleInCourseByCourseId,
+  fetchAllCohortsInCourseByCourseId,
+  fetchPersonByPersonId,
+} from "@/lib/ff";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
 
 export default {
   name: "GalaxyView",
-  mixins: [dbMixins],
   components: {
     GalaxyInfo,
     AssignedInfo,
@@ -191,7 +193,6 @@ export default {
       dialogDescription: "",
       editing: false,
       moveNodes: false,
-      course: {},
       peopleInCourse: [],
       cohortsInCourse: [],
       selectedNode: {},
@@ -201,29 +202,27 @@ export default {
       courseTasks: [],
       topicTasks: [],
       galaxyCompletedDialog: false,
+      currentCourse: null,
     };
   },
   watch: {
+    async currentCourseId(newCurrentCourseId) {
+      this.currentCourse = await fetchCourseByCourseId(newCurrentCourseId);
+    },
     async currentCourse(newVal, oldVal) {
       if (!oldVal.cohort && newVal.cohort)
-        this.cohortsInCourse = await fetchAllCohortsInCourse(this.courseId, this.person.id);
+        this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
     },
   },
   async beforeMount() {
-    // check galaxy params match state.currentCourse
-    if (this.$route.params.courseId != this.currentCourse?.id) {
-      const course = await db.collection("courses").doc(this.$route.params.courseId).get();
-      console.log("params dont match setting currentCourse: ", course.data());
-      this.course = course.data();
-      this.setCurrentCourse(course.data());
-    }
+    this.currentCourse = await fetchCourseByCourseId(this.currentCourseId);
   },
   async mounted() {
     // bind assigned people in this course
     if (this.teacher) {
-      this.peopleInCourse = await fetchAllPeopleInCourse(this.courseId);
+      this.peopleInCourse = await fetchAllPeopleInCourseByCourseId(this.courseId);
       this.setPeopleInCourse(this.peopleInCourse);
-      this.cohortsInCourse = await fetchAllCohortsInCourse(this.courseId, this.person.id);
+      this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
     } else {
       await this.getCohortsByPersonId(this.person);
       let cohort = this.cohorts.find((cohort) =>
@@ -233,7 +232,7 @@ export default {
       if (this.cohortsInCourse.length) {
         this.setCurrentCohort(this.cohortsInCourse[0].id);
         const students = await Promise.all(
-          this.cohortsInCourse[0].students?.map((student) => this.MXgetPersonByIdFromDB(student)),
+          this.cohortsInCourse[0].students?.map((student) => fetchPersonByPersonId(student)),
         );
         this.peopleInCourse = students;
         this.setPeopleInCourse(students);
@@ -250,7 +249,6 @@ export default {
       "person",
       "topicsTasks",
       "personsTopicsTasks",
-      "currentCourse",
       "cohorts",
       "user",
       "person",

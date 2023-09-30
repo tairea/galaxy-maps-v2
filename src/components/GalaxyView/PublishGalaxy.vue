@@ -264,7 +264,7 @@
 </template>
 
 <script>
-import { dbMixins } from "@/mixins/DbMixins";
+import { fetchPersonByPersonId } from "@/lib/ff";
 import { db, functions } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mdiAlertOutline, mdiInformationVariant, mdiClose, mdiCheck, mdiSend } from "@mdi/js";
@@ -272,7 +272,6 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "PublishGalaxy",
-  mixins: [dbMixins],
   props: ["course", "courseTasks"],
   async mounted() {},
   data: () => ({
@@ -466,7 +465,7 @@ export default {
         .add(cohort)
         .then(async (docRef) => {
           if (this.admin) {
-            const person = await this.MXgetPersonByIdFromDB(cohort.teachers[0]);
+            const person = await fetchPersonByPersonId(cohort.teachers[0]);
             person.inviter = "Galaxy Maps Admin";
             this.sendCoursePublishedEmail(person, this.course);
           } else {

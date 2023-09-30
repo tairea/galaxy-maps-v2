@@ -147,7 +147,6 @@ export default {
       "courses",
       "darkMode",
       "person",
-      "getCourseById",
       "user",
     ]),
     isDark() {

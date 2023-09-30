@@ -269,7 +269,11 @@
 </template>
 
 <script>
-import { fetchCohortById, fetchCourseById, assignTopicsAndTasksToStudent } from "@/lib/ff";
+import {
+  fetchCohortByCohortId,
+  fetchCourseByCourseId,
+  assignTopicsAndTasksToPerson,
+} from "@/lib/ff";
 import { dbMixins } from "@/mixins/DbMixins";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
@@ -314,9 +318,11 @@ export default {
       // TODO: we need to think about what courses are available to assign for a teacher
       await this.bindCourses({ owner: null });
     } else if (this.assignCohorts) {
-      this.teacherCohorts = this.cohorts.filter((cohort) => cohort.teacher && !cohort.courseCohort);
+      this.teacherCohorts = this.cohorts.filter(
+        (cohort) => cohort.teachers.includes(this.person.id) && !cohort.courseCohort,
+      );
     }
-    this.currentCourse = await fetchCourseById(this.currentCourseId);
+    this.currentCourse = await fetchCourseByCourseId(this.currentCourseId);
   },
   watch: {
     dialog(newVal) {
@@ -327,7 +333,6 @@ export default {
   computed: {
     ...mapState(useRootStore, [
       "courses",
-      "getCourseById",
       "organisations",
       "currentCourseId",
       "currentCohortId",
@@ -371,20 +376,19 @@ export default {
 
     async handleAssignment(person, course) {
       try {
-        await this.MXassignCourseToStudent(person, course);
+        await this.MXassignCourseToStudent(person.id, course.id);
         await this.MXaddExistingUserToCohort(person, this.cohort);
         if (this.cohort.courses.length) {
           // Possible optimize to make this concurrent instead of sequential
           for (const courseId of this.cohort.courses) {
-            const course = await fetchCourseById(courseId);
-            await this.MXassignCourseToStudent(person, course);
-            await assignTopicsAndTasksToStudent(person, course);
+            await this.MXassignCourseToStudent(person.id, courseId);
+            await assignTopicsAndTasksToPerson(person.id, courseId);
           }
         }
 
         this.setSnackbar({
           show: true,
-          text: "Individual added to cohort and assigned to course",
+          text: `${person.firstName} assigned to ${course.title} galaxy`,
           color: "baseAccent",
         });
         this.$emit("newAssignment", person);
@@ -402,7 +406,7 @@ export default {
     },
     async assignCourseToCohort(cohort, course) {
       if (!cohort) {
-        cohort = await fetchCohortById(this.currentCohortId);
+        cohort = await fetchCohortByCohortId(this.currentCohortId);
       }
       if (!course) course = this.currentCourse;
       this.loading = true;
@@ -416,7 +420,7 @@ export default {
         if (cohort.students?.length) {
           for (const student of cohort.students) {
             const person = await this.MXgetPersonByIdFromDB(student);
-            await this.MXassignCourseToStudent(person, course);
+            await this.MXassignCourseToStudent(person.id, course.id);
           }
         }
 

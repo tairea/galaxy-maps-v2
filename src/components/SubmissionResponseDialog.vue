@@ -176,7 +176,7 @@ export default {
     console.log("submission from decline", this.submission);
   },
   computed: {
-    ...mapState(useRootStore, ["currentCourse", "currentTopic", "currentTask", "person"]),
+    ...mapState(useRootStore, ["person"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },

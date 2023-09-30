@@ -92,7 +92,7 @@ import ProgressionLineChart from "@/components/ProgressionLineChart.vue";
 import ActivityBarChart from "@/components/ActivityBarChart.vue";
 import TimeframeFilters from "@/components/Reused/TimeframeFilters.vue";
 import Avatar from "@/components/Reused/Avatar.vue";
-import { fetchCohortById, fetchCourseById } from "@/lib/ff";
+import { fetchCohortByCohortId, fetchCourseByCourseId } from "@/lib/ff";
 import { getCohortsCourseDataXAPIQuery, getStudentsTimeDataXAPIQuery } from "@/lib/veracityLRS";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
@@ -125,7 +125,7 @@ export default {
     this.cohortsCoursesDataLoading = true;
     this.cohortActivityDataLoading = true;
 
-    const currentCohort = await fetchCohortById(this.currentCohortId);
+    const currentCohort = await fetchCohortByCohortId(this.currentCohortId);
 
     // ==== get cohort course data from LRS
     const getCourseData = await getCohortsCourseDataXAPIQuery({

@@ -156,7 +156,7 @@ export default {
     // functions to animate:
     currentRadius: 0,
     animateRadius: true, // can disable or enable animation
-    updateFrameVar: function () {
+    updateFrameVar() {
       this.intervalid1 = setInterval(() => {
         this.updateFrameTimer();
       }, 33);
@@ -184,7 +184,6 @@ export default {
     ...mapState(useRootStore, [
       "getTopicById",
       "person",
-      "getCourseById",
       // "getTasksByTopicId",
       "currentCourseId",
       "currentTopicId",

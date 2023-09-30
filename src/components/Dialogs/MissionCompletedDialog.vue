@@ -218,14 +218,19 @@
 </template>
 
 <script>
-import { fetchCohortById } from "@/lib/ff";
+import {
+  fetchCohortByCohortId,
+  fetchCourseByCourseId,
+  fetchPersonByPersonId,
+  fetchTaskByCourseIdTopicIdTaskId,
+  fetchTopicByCourseIdTopicId,
+} from "@/lib/ff";
 import {
   submitWorkForReviewXAPIStatement,
   reSubmitWorkForReviewXAPIStatement,
   taskMarkedAsCompletedXAPIStatement,
   topicCompletedXAPIStatement,
 } from "@/lib/veracityLRS";
-import { dbMixins } from "@/mixins/DbMixins";
 import { db, functions } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import {
@@ -240,7 +245,6 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "MissionCompletedDialog",
-  mixins: [dbMixins],
   components: {
     VueEditor,
   },
@@ -279,23 +283,37 @@ export default {
       // ["clean"] // remove formatting button
     ],
     quillFocused: false,
+    currentCourse: null,
+    currentTopic: null,
+    currentTask: null,
     cohort: null,
   }),
   async mounted() {
+    this.currentCourse = await fetchCourseByCourseId(this.currentCourseId);
+    this.currentTopic = await fetchTopicByCourseIdTopicId(
+      this.currentCourseId,
+      this.currentTopicId,
+    );
+    this.currentTask = await fetchTaskByCourseIdTopicIdTaskId(
+      this.currentCourseId,
+      this.currentTopicId,
+      this.currentTaskId,
+    );
+
     // get mappedBy image
     if (!this.currentCourse.mappedBy.image) {
       this.getMappedByPersonsImage(this.currentCourse.mappedBy.personId);
     }
-    this.cohort = await fetchCohortById(this.currentCohortId);
+    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
     console.log("persons topics from mission completed dialog", this.personsTopics);
   },
   computed: {
     ...mapState(useRootStore, [
-      "currentCourse",
-      "currentTopic",
-      "currentTask",
-      "personsTopicsTasks",
+      "currentCourseId",
+      "currentTopicId",
+      "currentTaskId",
       "currentCohortId",
+      "personsTopicsTasks",
       "courseSubmissions",
       "personsTopics",
       "person",
@@ -652,11 +670,11 @@ export default {
       this.dialog = false;
     },
     async getMappedByPersonsImage(personId) {
-      const person = await this.MXgetPersonByIdFromDB(personId);
+      const person = await fetchPersonByPersonId(personId);
       this.mappedByImageURL = person.image?.url;
     },
     async sendTaskSubmission(teacherId, submissionResponse, submissionInstructions) {
-      const teacher = await this.MXgetPersonByIdFromDB(teacherId);
+      const teacher = await fetchPersonByPersonId(teacherId);
       const data = {
         course: this.currentCourse.title,
         topic: this.currentTopic.label,

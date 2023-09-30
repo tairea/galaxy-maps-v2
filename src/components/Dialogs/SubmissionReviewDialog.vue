@@ -198,12 +198,12 @@
 
 <script>
 import Avatar from "@/components/Reused/Avatar.vue";
+import { fetchPersonByPersonId } from "@/lib/ff";
 import {
   studentWorkMarkedCompletedXAPIStatement,
   teacherReviewedStudentWorkXAPIStatement,
   teacherRespondedSubmissionDeclinedXAPIStatement,
 } from "@/lib/veracityLRS";
-import { dbMixins } from "@/mixins/DbMixins";
 import { db, functions } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mdiTextBoxSearchOutline, mdiThumbUpOutline, mdiThumbDownOutline, mdiClose } from "@mdi/js";
@@ -212,7 +212,6 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "SubmissionReviewDialog",
-  mixins: [dbMixins],
   props: ["submission", "requesterPerson", "on", "attrs", "reviewed", "studentReview", "isTeacher"],
   components: {
     Avatar,
@@ -229,9 +228,7 @@ export default {
     instructor: {},
   }),
   async mounted() {
-    this.instructor = await this.MXgetPersonByIdFromDB(
-      this.submission.contextCourse.mappedBy.personId,
-    );
+    this.instructor = await fetchPersonByPersonId(this.submission.contextCourse.mappedBy.personId);
     // bind students tasks related to this submission (used for unlocking next topic)
     await this.bindPersonsTasksByTopicId({
       personId: this.submission.studentId,
@@ -240,7 +237,7 @@ export default {
     });
   },
   computed: {
-    ...mapState(useRootStore, ["currentTopic", "currentTask", "personsTopicsTasks", "person"]),
+    ...mapState(useRootStore, ["personsTopicsTasks", "person"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -497,7 +494,6 @@ export default {
           text: "Students submitted work declined.Feedback sent to student",
           color: "baseAccent",
         });
-        // this.MXbindRequestsForHelp();
 
         // TODO: update requests. (to remove answered requests)
       } catch (error) {

@@ -61,7 +61,7 @@
 </template>
 
 <script>
-import { fetchCohortById, fetchCourseById } from "@/lib/ff";
+import { fetchCohortByCohortId, fetchCourseByCourseId } from "@/lib/ff";
 import { db, storage } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import firebase from "firebase/compat/app";

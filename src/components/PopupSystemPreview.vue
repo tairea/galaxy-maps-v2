@@ -2,7 +2,7 @@
   <!-- POPUP -->
   <!-- follow drag -> :style="{ top: getCoords.y - 100 + 'px', left: getCoords.x + 30 + 'px' }" -->
   <div
-    v-if="infoPopupShow && this.currentTopic"
+    v-if="infoPopupShow && topic"
     ref="popup"
     class="ss-info-panel"
     :class="{ centeredFocus: centerFocusPosition }"
@@ -16,9 +16,7 @@
     <div class="ss-preview">
       <!-- Preview: Solar System -->
       <SolarSystem
-        :topic="
-          teacher ? getTopicById(this.currentTopic.id) : getPersonsTopicById(this.currentTopic.id)
-        "
+        :topic="teacher ? getTopicById(topic.id) : getPersonsTopicById(topic.id)"
         :tasks="tasks"
         :size="'0.25em'"
       />
@@ -57,7 +55,7 @@
     </div>
     <!-- Preview: Topic Label -->
     <div class="ss-details overline">
-      {{ currentTopic.label }}
+      {{ topic.label }}
     </div>
     <!-- Preview: Table of Topic's Tasks -->
     <div v-if="!checkIfTopicLocked()" class="ss-missions">
@@ -98,7 +96,7 @@
 
 <script>
 import SolarSystem from "@/components/Reused/SolarSystem.vue";
-import { db } from "@/store/firestoreConfig";
+import { fetchTopicByCourseIdTopicId } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mdiLockOutline, mdiClose, mdiPencil } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
@@ -108,14 +106,7 @@ export default {
   components: {
     SolarSystem,
   },
-  props: [
-    "infoPopupShow",
-    "infoPopupPosition",
-    "centerFocusPosition",
-    "currentTopic",
-    "tasks",
-    "teacher",
-  ],
+  props: ["infoPopupShow", "infoPopupPosition", "centerFocusPosition", "topic", "tasks", "teacher"],
   async mounted() {
     // set active mission
     this.activeMission = this.personsTopicsTasks.find(
@@ -143,7 +134,7 @@ export default {
     };
   },
   methods: {
-    ...mapActions(useRootStore, ["setCurrentTaskId", "setCurrentTopic", "setCurrentTopicId"]),
+    ...mapActions(useRootStore, ["setCurrentTaskId", "setCurrentTopicId"]),
     getStatusColour(status) {
       if (status == "completed") {
         return "baseColour";
@@ -158,7 +149,7 @@ export default {
     checkIfTopicLocked() {
       for (const topic of this.personsTopics) {
         // find the topic node with status
-        if (topic.id === this.currentTopic.id) {
+        if (topic.id === this.topic.id) {
           if (topic.topicStatus == "locked") {
             return true;
           }
@@ -166,15 +157,13 @@ export default {
       }
     },
     showEditDialog() {
-      this.setCurrentTopicId(this.currentTopic.id);
-      this.setCurrentTopic(this.currentTopic);
-      this.$emit("showEditDialog", this.currentTopic);
+      this.setCurrentTopicId(this.topic.id);
+      this.$emit("showEditDialog", this.topic);
     },
     routeToSolarSystem() {
-      // console.log("route to ss", this.currentTopic.id);
+      // console.log("route to ss", this.topic.id);
       // save current topic to store
-      this.setCurrentTopicId(this.currentTopic.id);
-      this.setCurrentTopic(this.currentTopic);
+      this.setCurrentTopicId(this.topic.id);
       // save active task to store if we know it
       const activeMission = this.personsTopicsTasks.find(
         (topicObj) => topicObj.taskStatus == "active",
@@ -187,7 +176,7 @@ export default {
         name: "SolarSystemView",
         params: {
           courseId: this.currentCourseId,
-          topicId: this.currentTopic.id,
+          topicId: this.topic.id,
           teacher: this.teacher,
         },
       });

@@ -176,7 +176,7 @@
 import Avatar from "@/components/Reused/Avatar.vue";
 import LoginDialog from "@/components/Dialogs/LoginDialog.vue";
 import { db } from "@/store/firestoreConfig";
-import { fetchCohortById, assignTopicsAndTasksToMe } from "@/lib/ff";
+import { fetchCohortByCohortId, fetchPersonByPersonId, assignTopicsAndTasksToMe } from "@/lib/ff";
 import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";
 import { mdiClose } from "@mdi/js";
@@ -322,10 +322,10 @@ export default {
       this.setCurrentCourseId(this.course.id);
 
       // 5) assign student to cohort and course
-      let cohort = await fetchCohortById(this.course.cohort);
+      const cohort = await fetchCohortByCohortId(this.course.cohort);
       await this.MXaddExistingUserToCohort(this.person, cohort);
-      await this.MXassignCourseToStudent(this.person, this.course);
-      await assignTopicsAndTasksToMe(this.course);
+      await this.MXassignCourseToStudent(this.person.id, this.course.id);
+      await assignTopicsAndTasksToMe(this.course.id);
 
       this.loading = false;
       this.$router.push({
@@ -338,7 +338,7 @@ export default {
     },
 
     async getPersonsImage(personId) {
-      const person = await this.MXgetPersonByIdFromDB(personId);
+      const person = await fetchPersonByPersonId(personId);
       return person.image?.url;
     },
   },

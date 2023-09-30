@@ -68,7 +68,7 @@
 </template>
 
 <script>
-import { fetchCohortById } from "@/lib/ff";
+import { fetchCohortByCohortId, fetchPersonByEmail } from "@/lib/ff";
 import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";
 import { mdiDownload } from "@mdi/js";
@@ -115,7 +115,7 @@ export default {
     },
   },
   async mounted() {
-    this.cohort = await fetchCohortById(this.currentCohortId);
+    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
   },
   methods: {
     close() {
@@ -150,7 +150,7 @@ export default {
           console.log("person: ", person);
 
           // check if student exisits
-          const personExists = await this.MXgetPersonByEmail(person.email);
+          const personExists = await fetchPersonByEmail(person.email);
 
           if (personExists) {
             console.log("personExisits: ", personExists);
@@ -159,8 +159,7 @@ export default {
 
             if (this.cohort.courses.length) {
               for (const courseId of this.cohort.courses) {
-                const course = await getCourseById(courseId);
-                await this.MXassignCourseToStudent(personExists, course);
+                await this.MXassignCourseToStudent(personExists.id, courseId);
               }
             }
 
