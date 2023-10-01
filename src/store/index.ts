@@ -17,13 +17,10 @@ const getDefaultState = () => {
     assignedCourses: [] as Record<string, any>[],
     organisations: [] as Record<string, any>[],
     people: [] as Record<string, any>[],
-    currentCourse: {} as Record<string, any>,
     currentTopicId: "",
     currentTaskId: "",
     currentCohortId: "",
     currentCourseId: "",
-    currentTopic: {} as Record<string, any>,
-    currentTask: {} as Record<string, any>,
     currentCourseNodes: [] as Record<string, any>[],
     currentCourseEdges: [] as Record<string, any>[],
     allNodes: [] as Record<string, any>[],
@@ -139,22 +136,13 @@ export default defineStore({
       this.courseTasks = [];
       this.currentCourseId = courseId;
     },
-    setCurrentCourse(course: Record<string, any>) {
-      this.currentCourse = course;
-    },
     setCurrentTopicId(topicId: string) {
       this.currentTopicId = topicId;
-    },
-    setCurrentTopic(topic: Record<string, any>) {
-      this.currentTopic = topic;
     },
     setCurrentTaskId(taskId: string) {
       this.currentTaskId = taskId;
     },
-    setCurrentTask(task: Record<string, any>) {
-      this.currentTask = task;
-    },
-    setCurrentCohort(cohortId: string) {
+    setCurrentCohortId(cohortId: string) {
       this.currentCohortId = cohortId;
     },
     updateAllNodes(newNodePositions: Record<string, any>[]) {

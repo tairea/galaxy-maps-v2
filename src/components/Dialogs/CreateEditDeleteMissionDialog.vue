@@ -423,6 +423,7 @@ export default {
     async saveTask(task) {
       this.loading = true;
       this.disabled = true;
+
       // format video & slides url with "http://"
       if (task.video) {
         if (!/^https?:\/\//i.test(task.video)) {
@@ -436,40 +437,27 @@ export default {
       }
 
       // Add a new document in collection "courses"
-      await db
+      const taskDocRef = await db
         .collection("courses")
         .doc(this.currentCourseId)
         .collection("topics")
         .doc(this.topicId)
         .collection("tasks")
-        .add({ ...task, taskCreatedTimestamp: new Date() })
-        .then((docRef) => {
-          task.id = docRef.id;
-          task.taskCreatedTimestamp = new Date();
-          this.saveTaskToStudents(task);
+        .add({ ...task, taskCreatedTimestamp: new Date() });
 
-          docRef.update({ id: docRef.id }); // add task id to task
-          console.log("Task successfully written!");
-          this.loading = false;
-          this.disabled = false;
-          this.dialog = false;
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
-        });
+      task.id = taskDocRef.id;
+      task.taskCreatedTimestamp = new Date();
+      this.saveTaskToStudents(task);
+
+      taskDocRef.update({ id: taskDocRef.id }); // add task id to task
+      console.log("Task successfully written!");
 
       // increment course taskTotals by 1
       await db
         .collection("courses")
         .doc(this.currentCourseId)
-        .update("taskTotal", firebase.firestore.FieldValue.increment(1))
-        .then(() => {
-          console.log("Task total increased by 1");
-          return this.getCourseTasks();
-        })
-        .catch((error) => {
-          console.error("Error incrementing taskTotal: ", error);
-        });
+        .update("taskTotal", firebase.firestore.FieldValue.increment(1));
+      console.log("Course task total increased by 1");
 
       // increment topic taskTotals by 1
       await db
@@ -477,13 +465,14 @@ export default {
         .doc(this.currentCourseId)
         .collection("topics")
         .doc(this.topicId)
-        .update("taskTotal", firebase.firestore.FieldValue.increment(1))
-        .then(() => {
-          console.log("Task total increased by 1");
-        })
-        .catch((error) => {
-          console.error("Error incrementing taskTotal: ", error);
-        });
+        .update("taskTotal", firebase.firestore.FieldValue.increment(1));
+      console.log("Topic task total increased by 1");
+
+      await this.getCourseTasks();
+
+      this.loading = false;
+      this.disabled = false;
+      this.dialog = false;
 
       this.task = {};
     },
@@ -511,17 +500,14 @@ export default {
         .doc(this.topicId)
         .collection("tasks")
         .doc(this.taskId)
-        .update(this.task)
-        .then((res) => {
-          console.log("Task successfully updated!");
-          this.loading = false;
-          this.disabled = false;
-          this.dialog = false;
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
-        });
+        .update(this.task);
+      console.log("Task successfully updated!");
+
       await this.saveTaskToStudents(task);
+
+      this.loading = false;
+      this.disabled = false;
+      this.dialog = false;
     },
     cancel() {
       this.dialog = false;

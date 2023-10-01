@@ -205,7 +205,7 @@ export default {
     ...mapState(useRootStore, []),
   },
   methods: {
-    ...mapActions(useRootStore, ["setCurrentCohort"]),
+    ...mapActions(useRootStore, ["setCurrentCohortId"]),
     clickedPerson(person, index) {
       // get all avatar elements
       const avatarEls = this.$refs.avatar;
@@ -385,7 +385,7 @@ export default {
     },
     routeToCohort() {
       console.log("====== ROUTE TO COHORT =======");
-      this.setCurrentCohort(this.cohort.id);
+      this.setCurrentCohortId(this.cohort.id);
       // console.log('cohort set: ', cohort)
       // route to Galaxy View (passing params as props)
       this.$router.push({

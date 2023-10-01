@@ -475,7 +475,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["setCurrentCourse", "setCurrentCourseId", "setSnackbar"]),
+    ...mapActions(useRootStore, ["setCurrentCourseId", "setSnackbar"]),
     cancel() {
       this.dialog = false;
       this.$emit("close");
@@ -504,112 +504,99 @@ export default {
       let nodeId;
       let courseId;
 
-      // Add a new document in collection "courses"
-      db.collection("courses")
-        .add(course)
-        .then((docRef) => {
-          console.log("1");
-          docRef.update({ id: docRef.id }); // add course id to course
-          this.dialog = false;
-          this.loading = false;
-          //get doc id from firestore (aka course id)
-          courseId = docRef.id;
-          //set courseID to Store state 'state.currentCourseId' (so not relying on router params)
-          this.setCurrentCourseId(courseId);
-          this.setSnackbar({
-            show: true,
-            text: "Galaxy created",
-            color: "baseAccent",
-          });
-        })
-        .then(async () => {
-          console.log("2");
-          await db
-            .collection("courses")
-            .doc(courseId)
-            .collection("map-nodes")
-            .add({
-              // hardcoded first node
-              label: course.title ? course.title + " Intro" : "Map intro",
-              group: "introduction",
-              color: "#00E676",
-              topicCreatedTimestamp: new Date(),
-              x: 0,
-              y: 0,
-              topicTotal: 1,
-              taskTotal: 0,
-            })
-            .then(async (docRef) => {
-              console.log("3");
-              nodeId = docRef.id;
-              // update node obj with docRef.id aka nodeId
-              await db
-                .collection("courses")
-                .doc(courseId)
-                .collection("map-nodes")
-                .doc(docRef.id)
-                .update({ id: docRef.id });
-            });
-        })
-        .then(async () => {
-          console.log("4");
-          // create topic with node id
-          await db
-            .collection("courses")
-            .doc(courseId)
-            .collection("topics")
-            .doc(nodeId)
-            .set({
-              // hardcoded first node topic
-              id: nodeId,
-              label: course.title + " Intro",
-              group: "introduction",
-              color: "#00E676",
-              topicCreatedTimestamp: new Date(),
-              taskTotal: 0,
-            });
-        })
-        .then(() => {
-          console.log("5");
-          // route to newly created galaxy
-          this.$router.push({
-            name: "GalaxyView",
-            params: {
-              courseId: courseId,
-            },
-          });
-        })
-        .catch((error) => {
-          this.cancel();
-          console.error("Error writing document: ", error);
+      try {
+        // Add a new document in collection "courses"
+        const courseDocRef = await db.collection("courses").add(course);
+        console.log("1");
+        courseDocRef.update({ id: courseDocRef.id }); // add course id to course
+
+        //set courseID to Store state 'state.currentCourseId' (so not relying on router params)
+        this.setCurrentCourseId(courseDocRef.id);
+        this.setSnackbar({
+          show: true,
+          text: "Galaxy created",
+          color: "baseAccent",
         });
+
+        console.log("2");
+        const mapNodeDocRef = await db
+          .collection("courses")
+          .doc(courseDocRef.id)
+          .collection("map-nodes")
+          .add({
+            // hardcoded first node
+            label: course.title ? course.title + " Intro" : "Map intro",
+            group: "introduction",
+            color: "#00E676",
+            topicCreatedTimestamp: new Date(),
+            x: 0,
+            y: 0,
+            topicTotal: 1,
+            taskTotal: 0,
+          });
+
+        console.log("3");
+
+        // update node obj with docRef.id aka nodeId
+        await db
+          .collection("courses")
+          .doc(courseDocRef.id)
+          .collection("map-nodes")
+          .doc(mapNodeDocRef.id)
+          .update({ id: mapNodeDocRef.id });
+
+        console.log("4");
+        // create topic with node id
+        await db
+          .collection("courses")
+          .doc(courseDocRef.id)
+          .collection("topics")
+          .doc(mapNodeDocRef.id)
+          .set({
+            // hardcoded first node topic
+            id: mapNodeDocRef.id,
+            label: course.title + " Intro",
+            group: "introduction",
+            color: "#00E676",
+            topicCreatedTimestamp: new Date(),
+            taskTotal: 0,
+          });
+
+        console.log("5");
+        // route to newly created galaxy
+        this.$router.push({
+          name: "GalaxyView",
+          params: {
+            courseId: courseDocRef.id,
+          },
+        });
+
+        this.dialog = false;
+        this.loading = false;
+      } catch (error) {
+        this.cancel();
+        console.error("Error writing document: ", error);
+      }
       this.course = {};
     },
-    updateCourse(course) {
+    async updateCourse(course) {
       this.loading = true;
       if (course.public !== this.courseToEdit.public) {
         course.status = "drafting";
       }
       console.log("course.status", course.status);
-      db.collection("courses")
-        .doc(course.id)
-        .update(course)
-        .then(() => {
-          this.setSnackbar({
-            show: true,
-            text: "Galaxy updated",
-            color: "baseAccent",
-          });
-          this.dialog = false;
-          this.loading = false;
-          //get doc id from firestore (aka course id)
-          //set courseID to Store state 'state.currentCourseId' (so not relying on router params)
-          this.setCurrentCourseId(course.id);
-          this.setCurrentCourse(course);
-        })
-        .catch((error) => {
-          console.error("Error updating document: ", error);
-        });
+      await db.collection("courses").doc(course.id).update(course);
+
+      this.setSnackbar({
+        show: true,
+        text: "Galaxy updated",
+        color: "baseAccent",
+      });
+      this.dialog = false;
+      this.loading = false;
+      //get doc id from firestore (aka course id)
+      //set courseID to Store state 'state.currentCourseId' (so not relying on router params)
+      this.setCurrentCourseId(course.id);
     },
     storeImage() {
       this.disabled = true;
@@ -690,40 +677,33 @@ export default {
       this.dialogConfirm = false;
       this.dialog = true;
     },
-    confirmDeleteCourse(course) {
+    async confirmDeleteCourse(course) {
       this.deleting = true;
       console.log("course: ", course);
-      const documentRef = db.collection("courses").doc(course.id);
 
-      // // delete document in collection "courses"
-      documentRef
-        .delete()
-        .then(() => {
-          // delete courseCohort
-          db.collection("cohorts").doc(this.course.cohort).delete();
-        })
-        .then(() => {
-          // delete for any students in course
-          this.deleteCourseForStudents();
-        })
-        .then(() => {
-          this.deleting = false;
-          this.dialog = false;
-          // after delete... route back to home
-          this.$router.push({ path: "/" });
-          this.setSnackbar({
-            show: true,
-            text: this.destroyedText(),
-            color: "baseAccent",
-          });
-        })
-        .catch((error) => {
-          console.error("Error deleting document: ", error);
-        });
+      // delete courseCohort
+      await db.collection("cohorts").doc(this.course.cohort).delete();
 
-      this.deleteImage();
+      // delete for any students in course
+      await this.deleteCourseForStudents();
+
+      // delete image
+      await this.deleteImage();
+
+      // delete document in collection "courses"
+      await db.collection("courses").doc(course.id).delete();
+
+      this.deleting = false;
+      this.dialog = false;
+      // after delete... route back to home
+      this.$router.push({ path: "/" });
+      this.setSnackbar({
+        show: true,
+        text: this.destroyedText(),
+        color: "baseAccent",
+      });
     },
-    deleteImage() {
+    async deleteImage() {
       // if no image, dont worry bout it cuz
       if (this.course.image.name == "") return;
       // Create a reference to the file to delete
@@ -731,55 +711,45 @@ export default {
         "course-images/" + this.currentCourseId + "-" + this.course.image.name,
       );
       // Delete the file
-      storageRef
-        .delete()
-        .then(() => {
-          console.log("Image successfully deleted!");
-        })
-        .catch((error) => {
-          console.log("Uh-oh, an error occurred!", error);
-        });
+      await storageRef.delete();
     },
-    deleteCourseForStudents() {
-      this.peopleInCourse.forEach(async (person) => {
-        const student = await db.collection("people").doc(person.id);
+    async deleteCourseForStudents() {
+      await Promise.all(
+        this.peopleInCourse.map(async (person) => {
+          const student = db.collection("people").doc(person.id);
 
-        student.update({
-          assignedCourses: firebase.firestore.FieldValue.arrayRemove(this.currentCourseId),
-        });
+          await student.update({
+            assignedCourses: firebase.firestore.FieldValue.arrayRemove(this.currentCourseId),
+          });
 
-        const data = {
-          email: person.email,
-          teacher: this.person.firstName + " " + this.person.lastName,
-          course: this.course.title,
-          student: person.firstName ? person.firstName + " " + person.lastName : "",
-          teacherEmail: this.person.email,
-        };
-        console.log("sending delete galaxy email: ", data);
-        const sendCourseDeleted = functions.httpsCallable("sendCourseDeleted");
-        return sendCourseDeleted(data);
-      });
+          const data = {
+            email: person.email,
+            teacher: this.person.firstName + " " + this.person.lastName,
+            course: this.course.title,
+            student: person.firstName ? person.firstName + " " + person.lastName : "",
+            teacherEmail: this.person.email,
+          };
+          console.log("sending delete galaxy email: ", data);
+          const sendCourseDeleted = functions.httpsCallable("sendCourseDeleted");
+          await sendCourseDeleted(data);
+        }),
+      );
     },
     async changeToPrivate(course) {
-      return await db
-        .collection("courses")
-        .doc(course.id)
-        .update({ public: false })
-        .then(() => {
-          this.setSnackbar({
-            show: true,
-            text: "Course updated",
-            color: "baseAccent",
-          });
-          this.privateDialog = false;
-          this.dialog = false;
-          this.loading = false;
-          course.public = false;
-          //get doc id from firestore (aka course id)
-          //set courseID to Store state 'state.currentCourseId' (so not relying on router params)
-          this.setCurrentCourseId(course.id);
-          this.setCurrentCourse(course);
-        });
+      await db.collection("courses").doc(course.id).update({ public: false });
+
+      this.setSnackbar({
+        show: true,
+        text: "Course updated",
+        color: "baseAccent",
+      });
+      this.privateDialog = false;
+      this.dialog = false;
+      this.loading = false;
+      course.public = false;
+      //get doc id from firestore (aka course id)
+      //set courseID to Store state 'state.currentCourseId' (so not relying on router params)
+      this.setCurrentCourseId(course.id);
     },
     destroyedText() {
       const options = [

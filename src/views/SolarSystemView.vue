@@ -84,6 +84,7 @@ export default {
       unsubscribes: [],
       peopleInTopic: [],
       loading: true,
+      currentTask: null,
     };
   },
   async mounted() {
@@ -131,7 +132,6 @@ export default {
       "currentCourseId",
       "currentTopicId",
       "currentTaskId",
-      "currentTask",
       "topicsTasks",
       "personsTopicsTasks",
       "personsTopics",
@@ -159,7 +159,6 @@ export default {
       "bindTasksByTopicId",
       "setCurrentCourseId",
       "setCurrentTopicId",
-      "setCurrentTask",
       "setCurrentTaskId",
     ]),
     taskForHelpInfo(task) {
@@ -173,7 +172,7 @@ export default {
         this.activeMission = true;
         // set as current/active task (if not already?)
         this.setCurrentTaskId(activeMissionObj.id);
-        this.setCurrentTask(activeMissionObj);
+        this.currentTask = activeMissionObj;
       } else {
         return;
       }

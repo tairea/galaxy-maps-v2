@@ -57,7 +57,7 @@ import { mapState } from "pinia";
 
 export default {
   name: "EdgeInfoPanel",
-  props: ["selectedEdge"],
+  props: ["courseId", "selectedEdge"],
   components: {},
   data() {
     return {
@@ -68,27 +68,23 @@ export default {
     // console.log("selected edge is:", this.inselectedEdge);
   },
   computed: {
-    ...mapState(useRootStore, ["currentCourseId"]),
+    ...mapState(useRootStore, []),
   },
   methods: {
     closeInfoPanel() {
       this.$emit("closeInfoPanel");
     },
-    deleteEdge() {
+    async deleteEdge() {
       this.deleting = true;
-      db.collection("courses")
-        .doc(this.currentCourseId)
+      await db
+        .collection("courses")
+        .doc(this.courseId)
         .collection("map-edges")
         .doc(this.selectedEdge.id)
-        .delete()
-        .then(() => {
-          console.log("Edge successfully deleted!");
-          this.deleting = false;
-          this.closeInfoPanel();
-        })
-        .catch((error) => {
-          console.error("Error deleting edge: ", error);
-        });
+        .delete();
+      console.log("Edge successfully deleted!");
+      this.deleting = false;
+      this.closeInfoPanel();
     },
   },
 };

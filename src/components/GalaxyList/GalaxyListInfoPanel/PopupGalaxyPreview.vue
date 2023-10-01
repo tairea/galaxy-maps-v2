@@ -229,7 +229,7 @@ export default {
     await this.setCourseOwner();
   },
   methods: {
-    ...mapActions(useRootStore, ["setCurrentCourse", "setCurrentCourseId"]),
+    ...mapActions(useRootStore, ["setCurrentCourseId"]),
     maybeTruncate(value) {
       if (!value) return "";
       if (value.length <= 100) {
@@ -290,7 +290,6 @@ export default {
       console.log("route to galaxy", this.course.id);
       // save current course to store
       this.setCurrentCourseId(this.course.id);
-      this.setCurrentCourse(this.course);
       // route to topic/solar system
       this.$router.push({
         name: "GalaxyView",
@@ -303,7 +302,6 @@ export default {
       console.log("route to galaxy analytics", this.currentCourseId);
 
       // save current course to store
-      this.setCurrentCourse(this.course);
       this.setCurrentCourseId(this.course.id);
 
       // this.$router.push({
@@ -318,7 +316,6 @@ export default {
       // add this galaxy metadata (eg. topics) to this persons course database
 
       // save current course to store
-      this.setCurrentCourse(this.course);
       this.setCurrentCourseId(this.course.id);
 
       // 5) assign student to cohort and course

@@ -2,8 +2,8 @@
   <div id="container" class="bg">
     <!-- <div class="left-section" :class="{ hide: hideLeftPanelsFlag }"> -->
     <div class="left-section" data-v-step="1">
-      <GalaxyInfo :course="currentCourse" :teacher="teacher" :draft="draft" />
-      <PublishGalaxy v-if="showPublish" :course="currentCourse" :courseTasks="courseTasks" />
+      <GalaxyInfo :course="course" :teacher="teacher" :draft="draft" />
+      <PublishGalaxy v-if="showPublish" :course="course" :courseTasks="courseTasks" />
       <BackButton :toPath="'/'" />
       <AssignedInfo
         v-if="!draft && cohortsInCourse.length"
@@ -59,13 +59,13 @@
     <!--==== Right section ====-->
     <div v-if="!cohortsInCourse" id="right-section">
       <RequestForHelpTeacherFrame
-        :courses="[currentCourse]"
+        :courses="[course]"
         :isTeacher="teacher"
         :students="peopleInCourse"
       />
       <SubmissionTeacherFrame
         :isTeacher="teacher"
-        :courses="[currentCourse]"
+        :courses="[course]"
         :students="teacher ? peopleInCourse : [person]"
         class="mt-4"
       />
@@ -78,7 +78,7 @@
       :dialogTitle="dialogTitle"
       :dialogDescription="dialogDescription"
       :editing="editing"
-      :course="currentCourse"
+      :course="course"
       :currentNode="currentNode"
       @closeDialog="closeDialog"
       @openDialog="openDialog"
@@ -92,7 +92,12 @@
       @editNode="showEditDialog"
     />
     <!-- POPUP OUT PANEL (for system preview)-->
-    <EdgeInfoPanel v-if="teacher" :selectedEdge="currentEdge" @closeInfoPanel="closeInfoPanel" />
+    <EdgeInfoPanel
+      v-if="teacher"
+      :courseId="courseId"
+      :selectedEdge="currentEdge"
+      @closeInfoPanel="closeInfoPanel"
+    />
 
     <!-- Galaxy Completed Popup -->
     <v-dialog transition="dialog-bottom-transition" max-width="600" :value="galaxyCompletedDialog">
@@ -184,7 +189,7 @@ export default {
       infoPopupPosition: {},
       centerFocusPosition: false,
       type: "",
-      currentNode: {},
+      currentNode: null,
       currentEdge: null,
       hoverPopup: false,
       hoverNode: false,
@@ -202,20 +207,22 @@ export default {
       courseTasks: [],
       topicTasks: [],
       galaxyCompletedDialog: false,
-      currentCourse: null,
+      course: null,
     };
   },
   watch: {
-    async currentCourseId(newCurrentCourseId) {
-      this.currentCourse = await fetchCourseByCourseId(newCurrentCourseId);
+    async courseId(newCourseId) {
+      this.course = await fetchCourseByCourseId(newCourseId);
+      this.setCurrentCourseId(newCourseId);
     },
-    async currentCourse(newVal, oldVal) {
+    async course(newVal, oldVal) {
       if (!oldVal.cohort && newVal.cohort)
         this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
     },
   },
   async beforeMount() {
-    this.currentCourse = await fetchCourseByCourseId(this.currentCourseId);
+    this.course = await fetchCourseByCourseId(this.courseId);
+    this.setCurrentCourseId(this.courseId);
   },
   async mounted() {
     // bind assigned people in this course
@@ -226,11 +233,11 @@ export default {
     } else {
       await this.getCohortsByPersonId(this.person);
       let cohort = this.cohorts.find((cohort) =>
-        cohort.courses.some((courseId) => courseId === this.currentCourseId),
+        cohort.courses.some((courseId) => courseId === this.courseId),
       );
       this.cohortsInCourse.push(cohort);
       if (this.cohortsInCourse.length) {
-        this.setCurrentCohort(this.cohortsInCourse[0].id);
+        this.setCurrentCohortId(this.cohortsInCourse[0].id);
         const students = await Promise.all(
           this.cohortsInCourse[0].students?.map((student) => fetchPersonByPersonId(student)),
         );
@@ -244,7 +251,6 @@ export default {
   },
   computed: {
     ...mapState(useRootStore, [
-      "currentCourseId",
       "currentCourseNodes",
       "person",
       "topicsTasks",
@@ -255,26 +261,25 @@ export default {
       "user",
     ]),
     draft() {
-      return this.currentCourse?.status === "drafting";
+      return this.course?.status === "drafting";
     },
     submitted() {
-      return this.currentCourse?.status === "submitted";
+      return this.course?.status === "submitted";
     },
     teacher() {
-      return this.currentCourse?.mappedBy?.personId === this.person.id || this.user.data.admin;
+      return this.course?.mappedBy?.personId === this.person.id || this.user.data.admin;
     },
     student() {
-      return this.person.assignedCourses?.some((courseId) => courseId === this.currentCourseId);
+      return this.person.assignedCourses?.some((courseId) => courseId === this.courseId);
     },
     showPublish() {
-      return (this.user.data.admin && this.currentCourse.status === "submitted") || this.draft;
+      return (this.user.data.admin && this.course.status === "submitted") || this.draft;
     },
   },
   methods: {
     ...mapActions(useRootStore, [
       "getCohortsByPersonId",
-      "setCurrentCohort",
-      "setCurrentCourse",
+      "setCurrentCohortId",
       "setPeopleInCourse",
     ]),
     setUiMessage(message) {
@@ -350,7 +355,7 @@ export default {
     //   this.infoPopupPosition.y = hoveredNode.DOMy;
     //   this.currentNode = hoveredNode;
     //   //bind tasks for popup preview
-    //   await this.bindTasks(this.currentCourseId, hoveredNode.id);
+    //   await this.bindTasks(this.courseId, hoveredNode.id);
     //   this.infoPopupShow = true;
     // },
     hideLeftPanels(hideFlag) {
@@ -437,7 +442,7 @@ export default {
       this.editing = false;
       this.dialogTitle = "";
       this.dialogDescription = "";
-      this.currentNode = {};
+      this.currentNode = null;
       this.currentEdge = null;
       // close panel
       this.closeInfoPanel();
