@@ -13,11 +13,12 @@ export const dbMixins = {
   methods: {
     ...mapActions(useRootStore, ["setSnackbar"]),
     MXaddExistingUserToCohort(person, cohort) {
+      console.log("adding existing user to cohort", person, cohort)
       return this.MXaddStudentToCohort(person, cohort)
         .then(() => {
           if (person.inviter?.length == 0)
             person.inviter = this.person.firstName + " " + this.person.lastName;
-          this.MXsendNewCohortEmail(person, cohort);
+          // this.MXsendNewCohortEmail(person, cohort);  // dunno if email is needed is a bit spammy
         })
         // .then(() => {
         //   this.setSnackbar({
@@ -34,6 +35,19 @@ export const dbMixins = {
         .doc(cohort.id)
         .update({
           students: firebase.firestore.FieldValue.arrayUnion(student.id),
+        })
+        .catch((error) => {
+          console.error("Error writing document: ", error);
+        });
+    },
+    MXaddTeacherToCohort(teacher, currentCohort) {
+      console.log("adding teacher to cohort", teacher, currentCohort)
+      let cohort = currentCohort ? currentCohort : this.currentCohort;
+      return db
+        .collection("cohorts")
+        .doc(cohort.id)
+        .update({
+          teachers: firebase.firestore.FieldValue.arrayUnion(teacher.id),
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
@@ -125,7 +139,7 @@ export const dbMixins = {
         .update({
           assignedCourses: firebase.firestore.FieldValue.arrayUnion(course.id),
         })
-        .then(() => this.sendNewCourseEmail(person, course))
+        // .then(() => this.sendNewCourseEmail(person, course))  // dont know if this email is needed, a bit spammy
         .then(() => {
           this.setSnackbar({
             show: true,
@@ -160,6 +174,7 @@ export const dbMixins = {
       }
     },
     async MXsaveProfile(profile) {
+      console.log("updating profile", profile)
       return await db
         .collection("people")
         .doc(profile.id)

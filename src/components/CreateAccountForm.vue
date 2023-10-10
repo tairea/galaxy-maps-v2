@@ -201,28 +201,36 @@ export default {
       if (!this.account.email) return;
       this.addingAccount = true;
       const personExists = await this.MXgetPersonByEmail(this.account.email);
+      console.log("person exists:", personExists);
       if (personExists) {
         const profile = {
           ...this.account,
           ...personExists,
         };
-        this.MXsaveProfile(profile)
-          .then(() => {
-            this.MXaddExistingUserToCohort(profile);
-          })
-          .then(() => {
-            if (this.currentCohort.courses.length) {
-              this.assignStudentToCourses(profile);
-            }
-          })
-          .then(() => {
-            this.addingAccount = false;
-            this.close();
-          })
-          .catch((err) => {
-            this.addingAccount = false;
-            console.error("something went wrong adding existing person: ", err);
-          });
+        // if teacher, emit teacher?
+        if (this.teacher) {
+          this.$emit("addTeacher", profile);
+          this.addingAccount = false;
+          this.close();
+        } else {
+          this.MXsaveProfile(profile) // updates /people/:id profile
+            .then(() => {
+              this.MXaddExistingUserToCohort(profile); // adds student to /cohorts/:id/students
+            })
+            .then(() => {
+              if (this.currentCohort?.courses?.length) {
+                this.assignStudentToCourses(profile); // adds course to /people/:id/assignedCourses
+              }
+            })
+            .then(() => {
+              this.addingAccount = false;
+              this.close();
+            })
+            .catch((err) => {
+              this.addingAccount = false;
+              console.error("something went wrong adding existing person: ", err);
+            });
+        }
       } else {
         const person = {
           ...this.account,

@@ -155,11 +155,11 @@
                 </template>
                 <template v-slot:append-item>
                   <div class="d-flex justify-end">
-                    <CreateAccountDialog accountType="teacher" />
+                    <CreateAccountDialog accountType="teacher" @addTeacher="addTeacher" />
                   </div>
                 </template>
                 <template v-slot:no-data>
-                  <CreateAccountDialog accountType="teacher" />
+                  <CreateAccountDialog accountType="teacher" @addTeacher="addTeacher" />
                 </template>
               </v-autocomplete>
             </div>
@@ -398,7 +398,9 @@ export default {
     } else {
       this.$vuetify.theme.themes.dark.primary = "#000000"; // black
     }
+    // add default teacher to cohort
     this.teachers.push(this.person);
+    this.cohort.teachers.push(this.person);
   },
   watch: {
     dialog(newVal) {
@@ -478,10 +480,10 @@ export default {
 
       // notify teachers of new cohort assignment
       if (this.cohort.teachers.length) {
-        for (const teacher of this.cohort.teachers.length) {
+        for (const teacher of this.cohort.teachers) {
           const profile = this.people.find((person) => teacher === person.id);
-          console.log(profile);
           this.sendNewCohortEmail(profile);
+          console.log("email send to:", profile.email, " about new cohort");
         }
       }
     },
@@ -608,6 +610,11 @@ export default {
           }
         }
       }
+    },
+    addTeacher(teacher) {
+      console.log("adding teacher", teacher);
+      this.cohort.teachers.push(teacher.id);
+      this.teachers.push(teacher);
     },
   },
 };
