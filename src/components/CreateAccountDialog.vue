@@ -23,7 +23,11 @@
         <div class="dialog-header">
           <p class="mb-0">Add {{ this.accountType }}</p>
         </div>
-        <CreateAccountForm :accountType="accountType" @close="dialog = false" />
+        <CreateAccountForm
+          :accountType="accountType"
+          @addTeacher="newTeacher"
+          @close="dialog = false"
+        />
       </div>
     </v-dialog>
   </div>
@@ -63,6 +67,11 @@ export default {
     },
     dark() {
       return this.$vuetify.theme.isDark;
+    },
+  },
+  methods: {
+    newTeacher(teacher) {
+      this.$emit("addTeacher", teacher);
     },
   },
 };
