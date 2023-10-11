@@ -61,7 +61,12 @@ import MissionsList from "@/components/SolarSystemView/MissionsList.vue";
 import BackButton from "@/components/Reused/BackButton.vue";
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
-import { fetchCourseByCourseId, fetchPersonsTopicByPersonIdCourseIdTopicId } from "@/lib/ff";
+import {
+  fetchAllPeopleInCourseByCourseId,
+  fetchCourseByCourseId,
+  fetchPersonsTopicByPersonIdCourseIdTopicId,
+  fetchTopicByCourseIdTopicId,
+} from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
 
@@ -79,6 +84,7 @@ export default {
   data() {
     return {
       course: null,
+      topic: null,
       activeMission: null,
       task: null,
       unsubscribes: [],
@@ -92,7 +98,8 @@ export default {
     this.setCurrentCourseId(this.courseId);
     this.setCurrentTopicId(this.topicId);
 
-    this.course = await fetchCourseByCourseId(this.courseId);
+    this.course = await fetchCourseByCourseId(this.currentCourseId);
+    this.topic = await fetchTopicByCourseIdTopicId(this.currentCourseId, this.currentTopicId);
 
     this.getPeopleInTopic();
     if (this.teacher) {
@@ -135,7 +142,6 @@ export default {
       "topicsTasks",
       "personsTopicsTasks",
       "personsTopics",
-      "peopleInCourse",
       "person",
       "getPersonsTopicById",
       "getTopicById",
@@ -182,8 +188,9 @@ export default {
     async getPeopleInTopic() {
       console.log("4, getting people in topic");
       const people = [];
+      const peopleInCourse = await fetchAllPeopleInCourseByCourseId(this.courseId);
       await Promise.all(
-        this.peopleInCourse.map(async (person) => {
+        peopleInCourse.map(async (person) => {
           const personsTopic = await fetchPersonsTopicByPersonIdCourseIdTopicId(
             person.id,
             this.currentCourseId,

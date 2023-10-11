@@ -77,6 +77,7 @@
                   <div>
                     <p class="dialog-description">Assign the student to a cohort</p>
                     <v-select
+                      v-if="currentCourse != null"
                       v-model="cohort"
                       :items="cohortOptions"
                       outlined
@@ -272,6 +273,7 @@
 import {
   fetchCohortByCohortId,
   fetchCourseByCourseId,
+  fetchPersonByEmail,
   assignTopicsAndTasksToPerson,
 } from "@/lib/ff";
 import { dbMixins } from "@/mixins/DbMixins";
@@ -341,9 +343,8 @@ export default {
     ]),
     cohortOptions() {
       // teacherCohorts && the courseCohort
-      const courseCohort = this.cohorts.filter((cohort) => cohort.id === this.currentCourse.cohort);
-      this.cohort = courseCohort[0];
-      return [...courseCohort, ...this.teacherCohorts];
+      this.cohort = this.cohorts.find((cohort) => cohort.id === this.currentCourse.cohort);
+      return [this.cohort, ...this.teacherCohorts];
     },
   },
   methods: {
@@ -361,7 +362,7 @@ export default {
       this.loading = true;
 
       // If we dont already have the students Id, check if they already have an account using their email
-      const personExists = await this.MXgetPersonByEmail(profile.email);
+      const personExists = await fetchPersonByEmail(profile.email);
       if (personExists) {
         await this.handleAssignment(personExists, this.currentCourse);
       } else {

@@ -1,4 +1,4 @@
-import * as admin from "firebase-admin";
+import admin from "firebase-admin";
 import * as functions from "firebase-functions";
 
 // upgrade someones account to admin
@@ -34,6 +34,7 @@ export const createUserHttpsEndpoint = functions.https.onCall(async (data, _cont
     const createdUser = await admin.auth().createUser(data);
     return createdUser;
   } catch (err) {
+    functions.logger.error(err);
     return err;
   }
 });

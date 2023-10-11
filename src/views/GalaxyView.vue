@@ -142,7 +142,9 @@ import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.v
 import {
   fetchAllPeopleInCourseByCourseId,
   fetchAllCohortsInCourseByCourseId,
+  fetchCourseByCourseId,
   fetchPersonByPersonId,
+  fetchTopicByCourseIdTopicId,
 } from "@/lib/ff";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
@@ -216,8 +218,7 @@ export default {
       this.setCurrentCourseId(newCourseId);
     },
     async course(newVal, oldVal) {
-      if (!oldVal.cohort && newVal.cohort)
-        this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
+      this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
     },
   },
   async beforeMount() {
@@ -280,6 +281,7 @@ export default {
     ...mapActions(useRootStore, [
       "getCohortsByPersonId",
       "setCurrentCohortId",
+      "setCurrentCourseId",
       "setPeopleInCourse",
     ]),
     setUiMessage(message) {
@@ -374,7 +376,7 @@ export default {
       // get topic id
       this.clickedTopicId = emittedPayload.topicId;
       // get topic
-      this.clickedTopic = this.currentCourseNodes.find((node) => node.id == this.clickedTopicId);
+      this.clickedTopic = await fetchTopicByCourseIdTopicId(this.courseId, this.clickedTopicId);
       // reset topic tasks (to prevent duplicate)
       this.topicTasks = [];
       // loop courseTasks for this topic id (= this.topicTasks)

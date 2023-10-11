@@ -129,7 +129,6 @@ export default {
     ViewStudentDetails,
     EditStudentDialog,
   },
-  mixins: [dbMixins],
   data() {
     return {
       mdiArrowUp,

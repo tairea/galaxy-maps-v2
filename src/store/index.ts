@@ -36,7 +36,6 @@ const getDefaultState = () => {
     teachersRequestsForHelp: [] as Record<string, any>[],
     teachersStudentsProgress: [] as Record<string, any>[],
     darkMode: true,
-    sortedArr: [] as Record<string, any>[],
     studentCourseDataFromLRS: [] as Record<string, any>[],
     snackbar: {} as Record<string, any>,
     userStatus: {} as Record<string, any>,
@@ -160,13 +159,6 @@ export default defineStore({
     },
     setDarkMode(dark: boolean) {
       this.darkMode = dark;
-    },
-    sortAsc(arr: Record<string, any>[]) {
-      const sortedArr = arr.sort((a, b) =>
-        a.topic.topicCreatedTimestamp.seconds > b.topic.topicCreatedTimestamp.seconds ? 1 : -1,
-      );
-      console.log("sortedArr: ", sortedArr);
-      this.sortedArr = sortedArr;
     },
     setStudentCourseDataFromLRS(courseData: Record<string, any>[]) {
       this.studentCourseDataFromLRS = courseData;

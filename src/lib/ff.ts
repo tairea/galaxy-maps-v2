@@ -153,7 +153,7 @@ export const assignTopicsAndTasksToMe = async (courseId: string) => {
 // add this galaxy metadata (eg. topics) to this persons course database
 export const assignTopicsAndTasksToPerson = async (personId: string, courseId: string) => {
   const data = {
-    person: personId,
+    personId,
     courseId,
   };
   const assignTopicsAndTasksToStudent = functions.httpsCallable("assignTopicsAndTasksToStudent");

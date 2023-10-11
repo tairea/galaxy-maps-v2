@@ -258,35 +258,9 @@ export default {
       this.currentTopicId,
     );
 
-    let timeCreatedArrs = [];
-
-    for (let index in this.currentCourseNodes) {
-      let timeCreatedNode = this.currentCourseNodes[index].nodeCreatedTimestamp?.seconds;
-
-      timeCreatedArrs.push(timeCreatedNode);
-      // console.log("unsorted arr", timeCreatedArrs);
-    }
-
-    timeCreatedArrs.sort(function (a, b) {
-      return a - b;
-    });
-
-    // NOTE: the last int in the arr is the largest
-    // console.log("sorted arr", timeCreatedArrs);
-
-    for (let a in timeCreatedArrs) {
-      // loop over the ordered time array
-      let arrTime = timeCreatedArrs[a];
-      for (let b in timeCreatedArrs) {
-        let timeStamp = this.currentCourseNodes[b].nodeCreatedTimestamp?.seconds;
-        if (arrTime == timeStamp) {
-          let node = this.currentCourseNodes[b];
-          this.sortedObjArr.push(node);
-        }
-      }
-    }
-
-    this.sortedObjArr = this.sortedObjArr.reverse();
+    this.sortedObjArr = arr.sort((a, b) =>
+      a.topic.topicCreatedTimestamp.seconds > b.topic.topicCreatedTimestamp.seconds ? 1 : -1,
+    );
 
     this.infoPopupShow = false;
     // hack to make active select white
