@@ -60,7 +60,6 @@
 </template>
 
 <script>
-import SolarSystem from "@/components/SolarSystem.vue";
 import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
@@ -69,9 +68,7 @@ export default {
   name: "RequestsForHelpStudentCard",
   props: ["request"],
   mixins: [dbMixins],
-  components: {
-    SolarSystem,
-  },
+  components: {},
   watch: {
     request: {
       handler: "getResponder",

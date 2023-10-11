@@ -37,7 +37,7 @@
 </template>
 
 <script>
-import SolarSystem from "@/components/SolarSystem.vue";
+import SolarSystem from "@/components/Reused/SolarSystem.vue";
 import LoadingSpinner from "@/components/LoadingSpinner.vue";
 import { Planet } from "@/lib/planet";
 import { db } from "@/store/firestoreConfig";

@@ -105,12 +105,12 @@
 </template>
 
 <script>
-// import CreateAccountDialog from "@/components/CreateAccountDialog.vue";
+// import CreateAccountDialog from "@/components/Dialogs/CreateAccountDialog.vue";
 // import ImportCsvDialog from "@/components/ImportCsvDialog.vue";
 import StudentAccountsDialog from "@/components/CohortView/StudentAccountsDialog.vue";
 import ViewStudentDetails from "@/components/ViewStudentDetails.vue";
 import StudentCard from "@/components/StudentCard/StudentCard.vue";
-import TimeframeFilters from "@/components/TimeframeFilters.vue";
+import TimeframeFilters from "@/components/Reused/TimeframeFilters.vue";
 import EditStudentDialog from "@/components/Dialogs/EditStudentDialog.vue";
 import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";

@@ -42,8 +42,8 @@
 </template>
 
 <script>
-import MissionsCard from "@/components/MissionsCard.vue";
-import CreateEditDeleteMissionDialog from "@/components/CreateEditDeleteMissionDialog.vue";
+import MissionsCard from "@/components/SolarSystemView/MissionsList/MissionsCard.vue";
+import CreateEditDeleteMissionDialog from "@/components/Dialogs/CreateEditDeleteMissionDialog.vue";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
 

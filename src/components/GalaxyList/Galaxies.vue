@@ -36,7 +36,6 @@
 
 <script>
 import LoadingSpinner from "@/components/LoadingSpinner.vue";
-import PopupGalaxyPreview from "@/components/PopupGalaxyPreview.vue";
 import useRootStore from "@/store/index";
 import Network from "@/vue2vis/Network.vue";
 import { mdiPlus } from "@mdi/js";
@@ -51,7 +50,6 @@ export default {
   components: {
     Network,
     LoadingSpinner,
-    PopupGalaxyPreview,
   },
   data: () => ({
     mdiPlus,

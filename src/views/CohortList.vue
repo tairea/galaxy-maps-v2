@@ -85,11 +85,11 @@
 
 <script lang="js">
 // @ is an alias to /src
-import CreateEditDeleteCohortDialog from "@/components/CreateEditDeleteCohortDialog.vue";
-import CreateEditDeleteOrganisationDialog from "@/components/CreateEditDeleteOrganisationDialog.vue";
-import CreateAdminDialog from "@/components/CreateAdminDialog.vue";
-import EditOrganisationButtonDialog from "@/components/EditOrganisationButtonDialog.vue";
-import Cohort from "@/components/Cohort.vue";
+import CreateEditDeleteCohortDialog from "@/components/Dialogs/CreateEditDeleteCohortDialog.vue";
+import CreateEditDeleteOrganisationDialog from "@/components/Dialogs/CreateEditDeleteOrganisationDialog.vue";
+import CreateAdminDialog from "@/components/Dialogs/CreateAdminDialog.vue";
+import EditOrganisationButtonDialog from "@/components/Dialogs/EditOrganisationButtonDialog.vue";
+import Cohort from "@/components/Reused/Cohort.vue";
 import CohortPanel from "@/components/CohortPanel.vue";
 import Organisation from "@/components/Organisation.vue";
 import useRootStore from "@/store/index";

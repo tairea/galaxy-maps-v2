@@ -37,7 +37,7 @@
 </template>
 
 <script>
-import BackButton from "@/components/BackButton.vue";
+import BackButton from "@/components/Reused/BackButton.vue";
 import CreateProfileDialog from "@/components/CreateProfileDialog.vue";
 import useRootStore from "@/store/index";
 import { mdiKeyboardBackspace } from "@mdi/js";

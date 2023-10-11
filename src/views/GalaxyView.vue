@@ -3,7 +3,6 @@
     <!-- <div class="left-section" :class="{ hide: hideLeftPanelsFlag }"> -->
     <div class="left-section" data-v-step="1">
       <GalaxyInfo :course="currentCourse" :teacher="teacher" :draft="draft" />
-      <!-- <MissionsInfo :missions="galaxy.planets"/> -->
       <PublishGalaxy v-if="showPublish" :course="currentCourse" :courseTasks="courseTasks" />
       <BackButton :toPath="'/'" />
       <AssignedInfo
@@ -118,25 +117,22 @@
 </template>
 
 <script>
-import GalaxyInfo from "@/components/GalaxyInfo.vue";
+import GalaxyInfo from "@/components/GalaxyView/GalaxyInfo.vue";
 import PublishGalaxy from "@/components/GalaxyView/PublishGalaxy.vue";
-import AssignedInfo from "@/components/AssignedInfo.vue";
-import BackButton from "@/components/BackButton.vue";
+import AssignedInfo from "@/components/Reused/AssignedInfo.vue";
+import BackButton from "@/components/Reused/BackButton.vue";
 
-import GalaxyMap from "@/components/GalaxyMap.vue";
+import GalaxyMap from "@/components/GalaxyView/GalaxyMap.vue";
 import GalaxyMapButtons from "@/components/GalaxyView/GalaxyMapButtons.vue";
 
-import CreateEditDeleteNodeDialog from "@/components/CreateEditDeleteNodeDialog.vue";
+import CreateEditDeleteNodeDialog from "@/components/Dialogs/CreateEditDeleteNodeDialog.vue";
 
 import PopupSystemPreview from "@/components/PopupSystemPreview.vue";
-import SolarSystemInfoPanel from "@/components/SolarSystemInfoPanel.vue";
-import EdgeInfoPanel from "@/components/EdgeInfoPanel.vue";
+import SolarSystemInfoPanel from "@/components/GalaxyView/SolarSystemInfoPanel.vue";
+import EdgeInfoPanel from "@/components/GalaxyView/EdgeInfoPanel.vue";
 
-import RequestForHelpTeacherFrame from "@/components/RequestForHelpTeacherFrame.vue";
-import SubmissionTeacherFrame from "@/components/SubmissionTeacherFrame.vue";
-
-import MissionsInfo from "@/components/MissionsInfo.vue";
-import MissionsList from "@/components/MissionsList.vue";
+import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
+import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 
 import { getAllPeopleInCourse, getAllCohortsInCourse } from "@/lib/ff";
 import { dbMixins } from "@/mixins/DbMixins";
@@ -150,8 +146,6 @@ export default {
   components: {
     GalaxyInfo,
     AssignedInfo,
-    MissionsInfo,
-    MissionsList,
     GalaxyMap,
     BackButton,
     CreateEditDeleteNodeDialog,

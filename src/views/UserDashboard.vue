@@ -112,11 +112,11 @@
 import UserInfo from "@/components/UserInfo.vue";
 import StudentActivityTimeline from "@/components/StudentActivityTimeline.vue";
 import StudentCourseProgression from "@/components/StudentCourseProgression.vue";
-import TimeframeFilters from "@/components/TimeframeFilters.vue";
-import CohortPanelV2 from "@/components/CohortPanelV2.vue";
-import SubmissionTeacherFrame from "@/components/SubmissionTeacherFrame.vue";
-import RequestForHelpTeacherFrame from "@/components/RequestForHelpTeacherFrame.vue";
-import CreateAdminDialog from "@/components/CreateAdminDialog.vue";
+import TimeframeFilters from "@/components/Reused/TimeframeFilters.vue";
+import CohortPanelV2 from "@/components/CohortList/CohortPanelV2.vue";
+import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
+import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
+import CreateAdminDialog from "@/components/Dialogs/CreateAdminDialog.vue";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mdiInformationVariant } from "@mdi/js";

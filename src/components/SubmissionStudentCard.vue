@@ -89,8 +89,7 @@
 </template>
 
 <script>
-import SolarSystem from "@/components/SolarSystem.vue";
-import MissionCompletedDialog from "@/components/MissionCompletedDialog.vue";
+import MissionCompletedDialog from "@/components/Dialogs/MissionCompletedDialog.vue";
 import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";
 import { mdiTextBoxSearchOutline } from "@mdi/js";
@@ -102,7 +101,6 @@ export default {
   props: ["work"],
   mixins: [dbMixins],
   components: {
-    SolarSystem,
     MissionCompletedDialog,
   },
   watch: {

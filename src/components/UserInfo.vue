@@ -48,7 +48,7 @@
 <script>
 import StudentAvatar from "@/components/StudentAvatar.vue";
 import StudentEditDialog from "@/components/StudentEditDialog.vue";
-import Cohort from "@/components/Cohort.vue";
+import Cohort from "@/components/Reused/Cohort.vue";
 import { db, storage } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import firebase from "firebase/compat/app";
