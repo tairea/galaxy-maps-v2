@@ -41,11 +41,11 @@
 
 <script>
 import CohortInfo from "@/components/CohortInfo.vue";
-import AssignedInfo from "@/components/AssignedInfo.vue";
+import AssignedInfo from "@/components/Reused/AssignedInfo.vue";
 import StudentDataIterator from "@/components/StudentDataIterator.vue";
-import BackButton from "@/components/BackButton.vue";
-import RequestForHelpTeacherFrame from "@/components/RequestForHelpTeacherFrame.vue";
-import SubmissionTeacherFrame from "@/components/SubmissionTeacherFrame.vue";
+import BackButton from "@/components/Reused/BackButton.vue";
+import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
+import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 import CohortGraphs from "@/components/CohortView/CohortGraphs.vue";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";

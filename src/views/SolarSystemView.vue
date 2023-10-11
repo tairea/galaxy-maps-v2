@@ -55,14 +55,12 @@
 </template>
 
 <script>
-import SolarSystemInfo from "@/components/SolarSystemInfo.vue";
-import AssignedInfo from "@/components/AssignedInfo.vue";
-import MissionsInfo from "@/components/MissionsInfo.vue";
-import MissionsList from "@/components/MissionsList.vue";
-import SolarSystem from "@/components/SolarSystem.vue";
-import BackButton from "@/components/BackButton.vue";
-import SubmissionTeacherFrame from "@/components/SubmissionTeacherFrame.vue";
-import RequestForHelpTeacherFrame from "@/components/RequestForHelpTeacherFrame.vue";
+import SolarSystemInfo from "@/components/SolarSystemView/SolarSystemInfo.vue";
+import AssignedInfo from "@/components/Reused/AssignedInfo.vue";
+import MissionsList from "@/components/SolarSystemView/MissionsList.vue";
+import BackButton from "@/components/Reused/BackButton.vue";
+import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
+import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import { getPersonsTopicById } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
@@ -72,9 +70,7 @@ export default {
   components: {
     SolarSystemInfo,
     AssignedInfo,
-    MissionsInfo,
     MissionsList,
-    SolarSystem,
     BackButton,
     RequestForHelpTeacherFrame,
     SubmissionTeacherFrame,

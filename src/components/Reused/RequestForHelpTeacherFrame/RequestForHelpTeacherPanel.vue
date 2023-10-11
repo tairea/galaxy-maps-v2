@@ -78,8 +78,8 @@
 </template>
 
 <script>
-import Avatar from "@/components/Avatar.vue";
-import RequestForHelpResponseDialog from "@/components/RequestForHelpResponseDialog.vue";
+import Avatar from "@/components/Reused/Avatar.vue";
+import RequestForHelpResponseDialog from "@/components/Dialogs/RequestForHelpResponseDialog.vue";
 import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";
 import moment from "moment";

@@ -78,7 +78,7 @@
 </template>
 
 <script>
-import BackButton from "@/components/BackButton.vue";
+import BackButton from "@/components/Reused/BackButton.vue";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import firebase from "firebase/compat/app";

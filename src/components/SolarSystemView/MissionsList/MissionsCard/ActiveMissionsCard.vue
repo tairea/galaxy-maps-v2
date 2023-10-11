@@ -51,8 +51,8 @@
 </template>
 
 <script>
-import MissionCompletedDialog from "@/components/MissionCompletedDialog.vue";
-import RequestHelpDialog from "@/components/RequestHelpDialog.vue";
+import MissionCompletedDialog from "@/components/Dialogs/MissionCompletedDialog.vue";
+import RequestHelpDialog from "@/components/Dialogs/RequestHelpDialog.vue";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
 

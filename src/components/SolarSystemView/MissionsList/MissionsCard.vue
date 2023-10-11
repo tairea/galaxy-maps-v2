@@ -197,10 +197,10 @@
 </template>
 
 <script>
-import CreateEditDeleteMissionDialog from "@/components/CreateEditDeleteMissionDialog.vue";
-import StartMissionDialog from "@/components/StartMissionDialog.vue";
-import ActiveMissionsCard from "@/components/ActiveMissionsCard.vue";
-import SelectedMissionsCard from "@/components/SelectedMissionsCard.vue";
+import CreateEditDeleteMissionDialog from "@/components/Dialogs/CreateEditDeleteMissionDialog.vue";
+import StartMissionDialog from "@/components/Dialogs/StartMissionDialog.vue";
+import ActiveMissionsCard from "@/components/SolarSystemView/MissionsList/MissionsCard/ActiveMissionsCard.vue";
+import SelectedMissionsCard from "@/components/SolarSystemView/MissionsList/MissionsCard/SelectedMissionsCard.vue";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mdiCheck, mdiLockOutline } from "@mdi/js";

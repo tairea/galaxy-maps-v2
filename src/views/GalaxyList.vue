@@ -78,11 +78,11 @@
 </template>
 
 <script>
-import CreateEditDeleteGalaxyDialog from "@/components/CreateEditDeleteGalaxyDialog.vue";
+import CreateEditDeleteGalaxyDialog from "@/components/Dialogs/CreateEditDeleteGalaxyDialog.vue";
 import DiscoverGalaxyButton from "@/components/DiscoverGalaxyButton.vue";
-import GalaxyListPanel from "@/components/GalaxyListPanel.vue";
-import GalaxyListInfoPanel from "@/components/GalaxyListInfoPanel.vue";
-import Galaxies from "@/components/Galaxies.vue";
+import GalaxyListPanel from "@/components/GalaxyList/GalaxyListPanel.vue";
+import GalaxyListInfoPanel from "@/components/GalaxyList/GalaxyListInfoPanel.vue";
+import Galaxies from "@/components/GalaxyList/Galaxies.vue";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mdiPlus } from "@mdi/js";

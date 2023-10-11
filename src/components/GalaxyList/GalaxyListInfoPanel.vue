@@ -15,8 +15,7 @@
 </template>
 
 <script>
-import GalaxyListPanelCard from "@/components/GalaxyListPanelCard.vue";
-import PopupGalaxyPreview from "@/components/PopupGalaxyPreview.vue";
+import PopupGalaxyPreview from "@/components/GalaxyList/GalaxyListInfoPanel/PopupGalaxyPreview.vue";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
 
@@ -24,7 +23,6 @@ export default {
   name: "GalaxyListInfoPanel",
   props: ["selectedCourseId"],
   components: {
-    GalaxyListPanelCard,
     PopupGalaxyPreview,
   },
   data() {

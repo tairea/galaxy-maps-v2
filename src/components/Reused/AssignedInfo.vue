@@ -69,15 +69,15 @@
 </template>
 
 <script>
-import AssignCohortDialog from "@/components/AssignCohortDialog.vue";
-import Course from "@/components/Course.vue";
-import Cohort from "@/components/Cohort.vue";
 import Organisation from "@/components/Organisation.vue";
-import Avatar from "@/components/Avatar.vue";
+import AssignCohortDialog from "@/components/Dialogs/AssignCohortDialog.vue";
+import Course from "@/components/Reused/Course.vue";
+import Cohort from "@/components/Reused/Cohort.vue";
+import Avatar from "@/components/Reused/Avatar.vue";
 import { dbMixins } from "@/mixins/DbMixins";
 import { getCourseById } from "@/lib/ff";
-import useRootStore from "@/store/index";
 import { mapState } from "pinia";
+import useRootStore from "@/store/index";
 
 export default {
   name: "AssignedInfo",

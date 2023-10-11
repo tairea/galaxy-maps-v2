@@ -32,8 +32,8 @@
 </template>
 
 <script>
-import SubmissionTeacherFrame from "@/components/SubmissionTeacherFrame.vue";
-import RequestForHelpTeacherFrame from "@/components/RequestForHelpTeacherFrame.vue";
+import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
+import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import StudentProgressionChartJs3 from "@/components/StudentProgressionChartJs3.vue";
 import { dbMixins } from "@/mixins/DbMixins";
 import { db } from "@/store/firestoreConfig";

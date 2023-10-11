@@ -83,7 +83,7 @@
 </template>
 
 <script>
-import Avatar from "@/components/Avatar.vue";
+import Avatar from "@/components/Reused/Avatar.vue";
 // import MarkSubmissionCompleted from "@/components/MarkSubmissionCompleted.vue";
 // import SubmissionResponseDialog from "@/components/SubmissionResponseDialog.vue";
 import SubmissionReviewDialog from "@/components/Dialogs/SubmissionReviewDialog.vue";

@@ -22,7 +22,7 @@
   </div>
 </template>
 <script>
-import SubmissionTeacherPanel from "@/components/SubmissionTeacherPanel.vue";
+import SubmissionTeacherPanel from "@/components/Reused/SubmissionTeacherFrame/SubmissionTeacherPanel.vue";
 import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";

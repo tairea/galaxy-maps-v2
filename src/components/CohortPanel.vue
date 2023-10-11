@@ -133,7 +133,7 @@
 </template>
 
 <script>
-import Avatar from "@/components/Avatar.vue";
+import Avatar from "@/components/Reused/Avatar.vue";
 import ProgressionLineChart from "@/components/ProgressionLineChart.vue";
 import ActivityBarChart from "@/components/ActivityBarChart.vue";
 import { getCohortsCourseDataXAPIQuery, getStudentsTimeDataXAPIQuery } from "@/lib/veracityLRS";

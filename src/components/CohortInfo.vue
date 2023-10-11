@@ -32,8 +32,8 @@
 
 <script>
 import Organisation from "@/components/Organisation.vue";
-import CreateEditDeleteCohortDialog from "@/components/CreateEditDeleteCohortDialog.vue";
-import Avatar from "@/components/Avatar.vue";
+import CreateEditDeleteCohortDialog from "@/components/Dialogs/CreateEditDeleteCohortDialog.vue";
+import Avatar from "@/components/Reused/Avatar.vue";
 import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";

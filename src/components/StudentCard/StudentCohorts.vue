@@ -16,7 +16,7 @@
 </template>
 
 <script>
-import Cohort from "@/components/Cohort.vue";
+import Cohort from "@/components/Reused/Cohort.vue";
 import { getStudentCohortsById } from "@/lib/ff";
 
 export default {

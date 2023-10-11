@@ -30,7 +30,7 @@
 </template>
 
 <script>
-import CreateEditDeleteGalaxyDialog from "@/components/CreateEditDeleteGalaxyDialog.vue";
+import CreateEditDeleteGalaxyDialog from "@/components/Dialogs/CreateEditDeleteGalaxyDialog.vue";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
 

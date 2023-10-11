@@ -121,7 +121,7 @@
 </template>
 
 <script>
-import GalaxyListPanelCard from "@/components/GalaxyListPanelCard.vue";
+import GalaxyListPanelCard from "@/components/GalaxyList/GalaxyListPanel/GalaxyListPanelCard.vue";
 import useRootStore from "@/store/index";
 import { mdiPlus } from "@mdi/js";
 import { mapActions, mapState } from "pinia";

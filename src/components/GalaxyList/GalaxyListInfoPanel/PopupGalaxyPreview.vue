@@ -173,7 +173,7 @@
 </template>
 
 <script>
-import Avatar from "@/components/Avatar.vue";
+import Avatar from "@/components/Reused/Avatar.vue";
 import LoginDialog from "@/components/Dialogs/LoginDialog.vue";
 import { db } from "@/store/firestoreConfig";
 import { getCohortById, assignTopicsAndTasksToMe } from "@/lib/ff";

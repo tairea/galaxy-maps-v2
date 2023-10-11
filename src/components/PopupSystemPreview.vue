@@ -97,7 +97,7 @@
 </template>
 
 <script>
-import SolarSystem from "@/components/SolarSystem.vue";
+import SolarSystem from "@/components/Reused/SolarSystem.vue";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mdiLockOutline, mdiClose, mdiPencil } from "@mdi/js";

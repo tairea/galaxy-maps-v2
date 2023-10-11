@@ -24,7 +24,7 @@
 
 <script>
 export default {
-  name: "GalaxyListPanel",
+  name: "GalaxyListPanelCard",
   props: ["course", "active", "admin"],
   components: {},
   data() {

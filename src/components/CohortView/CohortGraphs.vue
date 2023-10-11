@@ -90,8 +90,8 @@
 <script>
 import ProgressionLineChart from "@/components/ProgressionLineChart.vue";
 import ActivityBarChart from "@/components/ActivityBarChart.vue";
-import TimeframeFilters from "@/components/TimeframeFilters.vue";
-import Avatar from "@/components/Avatar.vue";
+import TimeframeFilters from "@/components/Reused/TimeframeFilters.vue";
+import Avatar from "@/components/Reused/Avatar.vue";
 import { getCohortsCourseDataXAPIQuery, getStudentsTimeDataXAPIQuery } from "@/lib/veracityLRS";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";

@@ -24,7 +24,7 @@
 </template>
 
 <script>
-import RequestForHelpTeacherPanel from "@/components/RequestForHelpTeacherPanel.vue";
+import RequestForHelpTeacherPanel from "@/components/Reused/RequestForHelpTeacherFrame/RequestForHelpTeacherPanel.vue";
 import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";

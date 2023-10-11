@@ -341,7 +341,7 @@
 
 <script>
 import Organisation from "@/components/Organisation.vue";
-import CreateAccountDialog from "@/components/CreateAccountDialog.vue";
+import CreateAccountDialog from "@/components/Dialogs/CreateAccountDialog.vue";
 import { db, storage, functions } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import firebase from "firebase/compat/app";
