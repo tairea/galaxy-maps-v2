@@ -205,7 +205,7 @@ export default {
     },
     borderColor() {
       if (this.isDashboardView) return "border: 1px solid var(--v-missionAccent-base)";
-      if (this.cohort.teacher) {
+      if (this.isCohortTeacher) {
         return "border: 1px solid var(--v-galaxyAccent-base);cursor: pointer";
       } else {
         return "border: 1px solid var(--v-missionAccent-base);cursor:default";
@@ -292,13 +292,15 @@ export default {
     checkIfCohortTeacher() {
       // see if person id is included in cohort.teachers
       if (this.cohort.teachers && this.cohort.teachers.length > 0) {
-        const isTeacher = this.cohort.teachers.some((teacher) => {
-          return teacher.id === this.person.id;
-        });
+        const isTeacher = this.cohort.teachers.includes(this.person.id);
         this.isCohortTeacher = isTeacher;
       } else {
         this.isCohortTeacher = false;
       }
+      // console.log(
+      //   this.person.firstName + " isCohortTeacher of " + this.cohort.name + ": ",
+      //   this.isCohortTeacher,
+      // );
     },
   },
 };

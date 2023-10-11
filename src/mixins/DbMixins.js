@@ -81,6 +81,7 @@ export const dbMixins = {
       const createUser = functions.httpsCallable("createUser");
       return createUser(person)
         .then((result) => {
+          console.log("user created", result.data.uid); // result.data.uid is coming back: undefined
           person.id = result.data.uid;
           return this.MXaddAccount(person);
         })

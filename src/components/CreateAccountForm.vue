@@ -236,6 +236,7 @@ export default {
           ...this.account,
           displayName: this.account.firstName + " " + this.account.lastName,
         };
+        console.log("person does not exist in db. creating them now...", person);
         this.MXcreateUser(person)
           .then(() => {
             this.setSnackbar({
