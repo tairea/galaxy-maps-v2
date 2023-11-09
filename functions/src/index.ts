@@ -26,9 +26,7 @@ import {
   generateEmailLinkHttpsEndpoint,
 } from "./userManagement.js";
 
-export {
-  checkInactivitySchedule as scheduledFunction,
-};
+export { checkInactivitySchedule as scheduledFunction };
 
 export {
   assignTopicsAndTasksToMeHttpsEndpoint as assignTopicsAndTasksToMe,
@@ -48,13 +46,10 @@ export {
   sendTaskSubmissionHttpsEndpoint as sendTaskSubmission,
 };
 
-export {
-  onUserStatusChangedOnUpdateTrigger as onUserStatusChanged,
-};
+export { onUserStatusChangedOnUpdateTrigger as onUserStatusChanged };
 
 export {
   addAdminRoleHttpsEndpoint as addAdminRole,
   createUserHttpsEndpoint as createUser,
   generateEmailLinkHttpsEndpoint as generateEmailLink,
 };
-
