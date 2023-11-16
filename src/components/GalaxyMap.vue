@@ -256,7 +256,8 @@ export default {
         nodesWithStatus.push({
           ...node,
           // color: this.stringToColour(matchingNode.label),  // Attempt to match node color to System color
-          group: matchingNode?.topicStatus ?? "locked", // assign group property based on topicStatus from matchingNode (aka this.personsTopics)
+          //group: matchingNode?.topicStatus ?? "locked", // assign group property based on topicStatus from matchingNode (aka this.personsTopics)
+          group: this.setTopicStatus(matchingNode), // assign group property based on topicStatus from matchingNode (aka this.personsTopics)
         });
       }
 
@@ -822,6 +823,25 @@ export default {
     },
     stopNodeAnimation() {
       clearInterval(this.intervalid1);
+    },
+    setTopicStatus(node) {
+      let status = null;
+      // log
+      console.log("node status check", node);
+      // if has a status, set that status
+      if (node?.topicStatus) {
+        status = node.topicStatus;
+      }
+      // does this node have prereqs? if so make locked
+      else if (node?.prerequisites?.length > 0) {
+        status = "locked";
+      }
+      // else unlock
+      else {
+        status = "unlocked";
+      }
+      // return
+      return status;
     },
   },
 };

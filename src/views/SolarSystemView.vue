@@ -45,6 +45,7 @@
         :students="peopleInTopic"
       />
       <SubmissionTeacherFrame
+        v-if="teacher"
         :courses="[getCourseById(currentCourseId)]"
         :isTeacher="teacher"
         :students="teacher ? peopleInTopic : [person]"
