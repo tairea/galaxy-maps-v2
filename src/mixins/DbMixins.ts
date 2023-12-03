@@ -34,7 +34,7 @@ export const dbMixins = {
         const rootStore = useRootStore();
         person.inviter = rootStore.person.firstName + " " + rootStore.person.lastName;
       }
-      await this.MXsendNewCohortEmail(person, cohort);
+      // await this.MXsendNewCohortEmail(person, cohort); // dunno if email is needed is a bit spammy
     },
     async MXaddStudentToCohort(studentId: string, cohortId: string) {
       return await updateDoc(doc(db, "cohorts", cohortId), {
@@ -92,7 +92,7 @@ export const dbMixins = {
       await updateDoc(doc(db, "people", personId), {
         assignedCourses: firebase.firestore.FieldValue.arrayUnion(courseId),
       });
-      await this.MXsendNewCourseEmail(personId, courseId);
+      // await this.MXsendNewCourseEmail(personId, courseId); // dont know if this email is needed, a bit spammy
     },
     async MXsendNewCourseEmail(personId: string, courseId: string) {
       const person = await fetchPersonByPersonId(personId);

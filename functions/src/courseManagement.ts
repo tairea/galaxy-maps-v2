@@ -253,6 +253,20 @@ async function assignTopicsAndTasksToStudent(personId: string, courseId: string)
   // 2) add them to person (this will store their TOPIC progression data for this course )
   for (const [_, doc] of querySnapshot.docs.entries()) {
     const topic = doc.data();
+
+    // calculate topic status
+    let topicStatus: string;
+    if (topic.group === "introduction") {
+      // is the topic part of the introduction group? if so make it unlocked
+      topicStatus = "unlocked";
+    } else if ((topic.prerequisites?.length ?? 0) === 0) {
+      // does this topic have prereqs? if not make it unlocked
+      topicStatus = "unlocked";
+    } else {
+      // default to locked
+      topicStatus = "locked";
+    }
+
     await firestore
       .collection("people")
       .doc(person.id)
@@ -260,8 +274,7 @@ async function assignTopicsAndTasksToStudent(personId: string, courseId: string)
       .doc(topic.id)
       .set({
         ...topic,
-        // set the status of topics to locked unless they are introduction nodes
-        topicStatus: topic.group == "introduction" ? "introduction" : "locked",
+        topicStatus,
       });
 
     // 3) check if this topic has tasks

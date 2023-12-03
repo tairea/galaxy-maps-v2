@@ -64,9 +64,9 @@
         :students="peopleInCourse"
       />
       <SubmissionTeacherFrame
-        :isTeacher="teacher"
+        v-if="teacher"
         :courses="[course]"
-        :students="teacher ? peopleInCourse : [person]"
+        :students="peopleInCourse"
         class="mt-4"
       />
     </div>

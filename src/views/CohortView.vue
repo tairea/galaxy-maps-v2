@@ -30,9 +30,9 @@
         :students="cohort.students"
       />
       <SubmissionTeacherFrame
-        :isTeacher="teacher"
+        v-if="teacher"
         :courses="courses"
-        :students="teacher ? cohort.students : [person]"
+        :students="cohort.students"
         class="mt-4"
       />
     </div>

@@ -82,7 +82,6 @@
           class="mt-9"
         />
         <SubmissionTeacherFrame
-          :isTeacher="true"
           :courses="cohortCourses"
           :students="teachersStudents"
           class="mt-5"

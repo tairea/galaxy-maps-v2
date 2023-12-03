@@ -247,14 +247,15 @@ export default {
         console.log("matching node:", matchingNode);
 
         // if node is status completed or locked. remove color property
-        if (matchingNode?.topicStatus == "locked" || matchingNode?.topicStatus == "completed") {
-          delete node.color;
+        let color = node.color;
+        if (matchingNode?.topicStatus === "locked" || matchingNode?.topicStatus === "completed") {
+          color = undefined;
         }
 
         // push node with status
         nodesWithStatus.push({
           ...node,
-          // color: this.stringToColour(matchingNode.label),  // Attempt to match node color to System color
+          color,
           group: matchingNode?.topicStatus ?? "locked", // assign group property based on topicStatus from matchingNode (aka this.personsTopics)
         });
       }
