@@ -42,7 +42,7 @@ export const studentOnlineXAPIStatement = (actor: { [field: string]: any }) => {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": auth,
+      Authorization: auth,
     },
     body: JSON.stringify(statement),
   }).catch((error) => console.error(error.message));
@@ -84,14 +84,17 @@ export const studentOfflineXAPIStatement = (actor: { [field: string]: any }) => 
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": auth,
+      Authorization: auth,
     },
     body: JSON.stringify(statement),
   }).catch((error) => console.error(error.message));
 };
 
 // ========== Start Task (make task active)
-export const startGalaxyXAPIStatement = (actor: { [field: string]: any }, context: { galaxy: { [field: string]: any } }) => {
+export const startGalaxyXAPIStatement = (
+  actor: { [field: string]: any },
+  context: { galaxy: { [field: string]: any } },
+) => {
   console.log("sending student xAPI statement... galaxy started...");
   const statement = {
     actor: {
@@ -139,7 +142,7 @@ export const startGalaxyXAPIStatement = (actor: { [field: string]: any }, contex
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": auth,
+      Authorization: auth,
     },
     body: JSON.stringify(statement),
   }).catch((error) => console.error(error.message));
