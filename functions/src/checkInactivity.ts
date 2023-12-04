@@ -5,29 +5,25 @@ import { sendStudentInActive, sendTeacherStudentInActive } from "./emails.js";
 
 // ====== SCHEDULE CHECK FOR INACTIVITY  ==================
 export const checkInactivitySchedule = functions.pubsub
-    .schedule("0 8 * * *")
-    .timeZone("Pacific/Auckland")
-    .onRun(() => {
-      return checkInactivity();
-    });
+  .schedule("0 8 * * *")
+  .timeZone("Pacific/Auckland")
+  .onRun(() => {
+    return checkInactivity();
+  });
 
 /**
  * Get date `preDays` ago
  */
 function getPreviousDate(preDays: number) {
   const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate() - preDays)
-      .toDateString();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate() - preDays).toDateString();
 }
 
 /**
  * Get person doc
  */
 async function getPersonByIdFromDB(personId: string) {
-  const personSnapshot = await firestore
-      .collection("people")
-      .doc(personId)
-      .get();
+  const personSnapshot = await firestore.collection("people").doc(personId).get();
 
   const person: admin.firestore.DocumentData = {
     id: personSnapshot.id,
@@ -42,9 +38,9 @@ async function getPersonByIdFromDB(personId: string) {
  */
 async function getPersonsTeachersById(personId: string) {
   const cohortsSnapshot = await firestore
-      .collection("cohorts")
-      .where("students", "array-contains", personId)
-      .get();
+    .collection("cohorts")
+    .where("students", "array-contains", personId)
+    .get();
 
   const teachers: admin.firestore.DocumentData[] = [];
 
@@ -74,9 +70,7 @@ async function checkInactivity() {
   functions.logger.log("1 week ago: ", oneWeek);
   functions.logger.log("2 weeks ago: ", twoWeeks);
 
-  const statusSnapshot = await firestore
-      .collection("status")
-      .get();
+  const statusSnapshot = await firestore.collection("status").get();
 
   const userStatuses: { [id: string]: admin.firestore.DocumentData } = {};
   for (const doc of statusSnapshot.docs) {
@@ -111,35 +105,23 @@ async function checkInactivity() {
       const studentEmail = person.email;
       const duration = "one week";
 
-      functions.logger.log(
-          "send one week in active email to student :",
-          person.email
-      );
+      functions.logger.log("send one week in active email to student :", person.email);
       sendStudentInActive(student, studentEmail, duration);
 
       const teacherProfiles = await Promise.all(
-          teachers.map(
-              async (teacher): Promise<admin.firestore.DocumentData> => {
-                const fullProfile = await getPersonByIdFromDB(teacher.id);
-                return {
-                  ...fullProfile,
-                  cohort: teacher.cohort,
-                };
-              }
-          )
+        teachers.map(async (teacher): Promise<admin.firestore.DocumentData> => {
+          const fullProfile = await getPersonByIdFromDB(teacher.id);
+          return {
+            ...fullProfile,
+            cohort: teacher.cohort,
+          };
+        }),
       );
 
       for (const profile of teacherProfiles) {
         const { email, cohort } = profile;
         const teacher = profile.firstName + " " + profile.lastName;
-        sendTeacherStudentInActive(
-            student,
-            studentEmail,
-            duration,
-            email,
-            cohort,
-            teacher
-        );
+        sendTeacherStudentInActive(student, studentEmail, duration, email, cohort, teacher);
       }
     }
   }
@@ -153,35 +135,23 @@ async function checkInactivity() {
       const studentEmail = person.email;
       const duration = "two weeks";
 
-      functions.logger.log(
-          "send two weeks in active email to student :",
-          person.email
-      );
+      functions.logger.log("send two weeks in active email to student :", person.email);
       sendStudentInActive(student, studentEmail, duration);
 
       const teacherProfiles = await Promise.all(
-          teachers.map(
-              async (teacher): Promise<admin.firestore.DocumentData> => {
-                const fullProfile = await getPersonByIdFromDB(teacher.id);
-                return {
-                  ...fullProfile,
-                  cohort: teacher.cohort,
-                };
-              }
-          )
+        teachers.map(async (teacher): Promise<admin.firestore.DocumentData> => {
+          const fullProfile = await getPersonByIdFromDB(teacher.id);
+          return {
+            ...fullProfile,
+            cohort: teacher.cohort,
+          };
+        }),
       );
 
       for (const profile of teacherProfiles) {
         const { email, cohort } = profile;
         const teacher = profile.firstName + " " + profile.lastName;
-        sendTeacherStudentInActive(
-            student,
-            studentEmail,
-            duration,
-            email,
-            cohort,
-            teacher
-        );
+        sendTeacherStudentInActive(student, studentEmail, duration, email, cohort, teacher);
       }
     }
   }
