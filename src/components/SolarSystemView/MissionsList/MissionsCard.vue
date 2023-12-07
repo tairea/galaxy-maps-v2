@@ -459,7 +459,6 @@ p {
       }
 
       .submission {
-        height: 70%;
       }
 
       .three-vertical:not(:first-child) {

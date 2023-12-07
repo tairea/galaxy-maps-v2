@@ -221,6 +221,12 @@ export default {
       // get courses created by this person (populates state.personsCourses)
       await this.bindCoursesByPersonId(this.person.id);
     }
+
+    if (this.$route.name == "GalaxyView" || this.$route.name == "SolarSystemView") {
+      this.miniNavMenu = true;
+    } else {
+      this.miniNavMenu = false;
+    }
   },
   computed: {
     ...mapState(useRootStore, ["person", "user"]),
