@@ -75,7 +75,7 @@ import Course from "@/components/Reused/Course.vue";
 import Cohort from "@/components/Reused/Cohort.vue";
 import Avatar from "@/components/Reused/Avatar.vue";
 import { dbMixins } from "@/mixins/DbMixins";
-import { getCourseById } from "@/lib/ff";
+import { fetchCourseByCourseId } from "@/lib/ff";
 import { mapState } from "pinia";
 import useRootStore from "@/store/index";
 
@@ -124,7 +124,7 @@ export default {
       if (this.assignCourses) {
         let courses = await Promise.all(
           this.currentCohort?.courses.map((courseId) => {
-            return getCourseById(courseId);
+            return fetchCourseByCourseId(courseId);
           }),
         );
         if (courses.length) {
