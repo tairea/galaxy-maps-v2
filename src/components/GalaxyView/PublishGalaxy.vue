@@ -264,7 +264,7 @@
 </template>
 
 <script>
-import { dbMixins } from "@/mixins/DbMixins";
+import { fetchPersonByPersonId } from "@/lib/ff";
 import { db, functions } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mdiAlertOutline, mdiInformationVariant, mdiClose, mdiCheck, mdiSend } from "@mdi/js";
@@ -272,7 +272,6 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "PublishGalaxy",
-  mixins: [dbMixins],
   props: ["course", "courseTasks"],
   async mounted() {},
   data: () => ({
@@ -311,7 +310,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["setCurrentCourse", "setCurrentCourseId"]),
+    ...mapActions(useRootStore, ["setCurrentCourseId"]),
     getTopicsWithoutTasks() {
       // copy nodes
       let splicedNodes = [...this.currentCourseNodes];
@@ -349,18 +348,10 @@ export default {
         ...this.courseOptions,
       };
       course.status = "submitted";
-      await this.updateCourse(course)
-        .then(() => {
-          this.sendNewSubmissionEmail(course);
-        })
-        .then(() => {
-          this.setCurrentCourseId(course.id);
-          this.setCurrentCourse(course);
-          this.close();
-        })
-        .catch((error) => {
-          console.error("Error updating document: ", error);
-        });
+      await this.updateCourse(course);
+      await this.sendNewSubmissionEmail(course);
+      this.setCurrentCourseId(course.id);
+      this.close();
     },
 
     async publishCourse() {
@@ -389,27 +380,15 @@ export default {
 
       course.status = "published";
       if (!course.cohort) {
-        await this.saveCohort(cohort)
-          .then((cohortId) => {
-            course.cohort = cohortId;
-            this.updateCourse(course);
-          })
-          .then(() => {
-            this.setCurrentCourse(course);
-            this.close();
-          })
-          .catch((error) => {
-            console.error("Error updating document: ", error);
-          });
+        const cohortId = await this.saveCohort(cohort);
+        course.cohort = cohortId;
+        await this.updateCourse(course);
+        this.setCurrentCourseId(course.id);
+        this.close();
       } else {
-        this.updateCourse(course)
-          .then(() => {
-            this.setCurrentCourse(course);
-            this.close();
-          })
-          .catch((error) => {
-            console.error("Error updating document: ", error);
-          });
+        await this.updateCourse(course);
+        this.setCurrentCourseId(course.id);
+        this.close();
       }
     },
 
@@ -418,63 +397,49 @@ export default {
       // loop selected intro nodes
       for (const nodeId of this.introNodes) {
         // update node in topics db
-        db.collection("courses")
+        await db
+          .collection("courses")
           .doc(this.currentCourseId)
           .collection("map-nodes")
           .doc(nodeId)
-          .update({ group: "introduction" })
-          .catch((error) => {
-            console.error("Error writing node: ", error);
-          });
+          .update({ group: "introduction" });
 
         // update node in topics db
-        db.collection("courses")
+        await db
+          .collection("courses")
           .doc(this.currentCourseId)
           .collection("topics")
           .doc(nodeId)
-          .update({ group: "introduction" })
-          .catch((error) => {
-            console.error("Error writing node: ", error);
-          });
+          .update({ group: "introduction" });
 
         console.log("node id " + nodeId + " set as introduction node");
-
-        this.close();
       }
+      this.close();
     },
 
     async updateCourse(course) {
-      return await db
-        .collection("courses")
-        .doc(course.id)
-        .update(course)
-        .then(() => {
-          console.log("Document successfully updated!");
-          this.setCurrentCourseId(course.id);
-          this.setSnackbar({
-            show: true,
-            text: "Galaxy successfully updated",
-            color: "baseAccent",
-          });
-        });
+      await db.collection("courses").doc(course.id).update(course);
+      console.log("Document successfully updated!");
+      this.setCurrentCourseId(course.id);
+      this.setSnackbar({
+        show: true,
+        text: "Galaxy successfully updated",
+        color: "baseAccent",
+      });
     },
 
     async saveCohort(cohort) {
       // Add a new document in collection "cohorts"
-      const cohortId = await db
-        .collection("cohorts")
-        .add(cohort)
-        .then(async (docRef) => {
-          if (this.admin) {
-            const person = await this.MXgetPersonByIdFromDB(cohort.teachers[0]);
-            person.inviter = "Galaxy Maps Admin";
-            this.sendCoursePublishedEmail(person, this.course);
-          } else {
-            this.sendCoursePublishedEmail(this.person, cohort);
-          }
-          return docRef.id;
-        });
-      return cohortId;
+      const cohortDocRef = await db.collection("cohorts").add(cohort);
+
+      if (this.admin) {
+        const person = await fetchPersonByPersonId(cohort.teachers[0]);
+        person.inviter = "Galaxy Maps Admin";
+        await this.sendCoursePublishedEmail(person, this.course);
+      } else {
+        await this.sendCoursePublishedEmail(this.person, cohort);
+      }
+      return cohortDocRef.id;
     },
 
     newCohortCreated(profile, cohort) {

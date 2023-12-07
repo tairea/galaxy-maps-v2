@@ -1,4 +1,4 @@
-import { getCourseById, getStudentByEmail } from "@/lib/ff";
+import { fetchCourseByCourseId, fetchPersonByEmail } from "@/lib/ff";
 import { db } from "@/store/firestoreConfig";
 import { DateTime } from "luxon";
 
@@ -1240,14 +1240,14 @@ async function sanitiseCohortsCourseDataFromLRS(res) {
   for (const group of res) {
     // get course
     const courseId = group._id.course;
-    const course = await getCourseById(courseId);
+    const course = await fetchCourseByCourseId(courseId);
 
     // array for many students course data
     const students = [];
 
     // Get all the people first
     const people = await Promise.all(
-      group.actors.map((x) => getStudentByEmail(x.actor.split(":")[1])),
+      group.actors.map((x) => fetchPersonByEmail(x.actor.split(":")[1])),
     );
 
     // (for getCohortsCourseDataXAPIQuery) statements are nested under actors
@@ -1303,7 +1303,7 @@ async function sanitiseCohortsActivityDataFromLRS(res) {
   const santisedActivity = [];
 
   // Get all the people first
-  const people = await Promise.all(res.map((x) => getStudentByEmail(x._id.actor.split(":")[1])));
+  const people = await Promise.all(res.map((x) => fetchPersonByEmail(x._id.actor.split(":")[1])));
 
   for (const student of res) {
     // get person from db
@@ -1375,6 +1375,6 @@ async function courseIRIToCourseId(course) {
   const courseIRI = course._id.course[0];
   const courseId = courseIRI.split("/course/")[1];
   // get course name
-  const courseContext = await getCourseById(courseId);
+  const courseContext = await fetchCourseByCourseId(courseId);
   return courseContext;
 }

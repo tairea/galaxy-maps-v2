@@ -60,14 +60,13 @@
 </template>
 
 <script>
-import { dbMixins } from "@/mixins/DbMixins";
+import { fetchPersonByPersonId } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
 
 export default {
   name: "RequestsForHelpStudentCard",
   props: ["request"],
-  mixins: [dbMixins],
   components: {},
   watch: {
     request: {
@@ -79,8 +78,8 @@ export default {
     ...mapState(useRootStore, ["currentCourseId", "currentTopicId", "currentTaskId"]),
   },
   async mounted() {
-    this.requester = await this.MXgetPersonByIdFromDB(this.request.personId);
-    this.responder = await this.MXgetPersonByIdFromDB(this.request.responderPersonId);
+    this.requester = await fetchPersonByPersonId(this.request.personId);
+    this.responder = await fetchPersonByPersonId(this.request.responderPersonId);
     // console.log("requester person:", this.requester);
     // console.log("responder person:", this.responder);
   },
@@ -93,7 +92,7 @@ export default {
   methods: {
     async getResponder() {
       // get responsers image when request is updated
-      this.responder = await this.MXgetPersonByIdFromDB(this.request.responderPersonId);
+      this.responder = await fetchPersonByPersonId(this.request.responderPersonId);
     },
   },
 };

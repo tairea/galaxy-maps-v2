@@ -27,7 +27,7 @@ const mailTransport = nodemailer.createTransport({
 });
 
 // ====== GM APP INVITE EMAIL ==================
-export const sendInviteEmailHttpsEndpoint = functions.https.onCall((data, context) => {
+export const sendInviteEmailHttpsEndpoint = functions.https.onCall((data, _context) => {
   const { email, displayName, link, inviter, accountType } = data;
 
   if (accountType == "teacher") {
@@ -137,7 +137,7 @@ export const sendNewCourseEmailHttpsEndpoint = functions.https.onCall((data, _co
 /**
  * Sends a new course registration notification email.
  */
-export async function sendNewCourseEmail(email: string, name: string, course: string) {
+export async function sendNewCourseEmail(email: string, _name: string, course: string) {
   const mailOptions: Record<string, string> = {
     from: `${APP_NAME} <noreply@${DOMAIN}>`,
     to: email,
@@ -329,7 +329,8 @@ Galaxy Maps Team`;
 </br> 
 <p>Instructors response: <strong>${response}</strong></p>
 </br> 
-<p>Login to <a href="https://${DOMAIN}" target="_blank">https://${DOMAIN}/login</a> to continue your course.</p>
+<p>Login to <a href="https://${DOMAIN}" target="_blank"
+  >https://${DOMAIN}/login</a> to continue your course.</p>
 </br> 
 <p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
   /* eslint-enable max-len */
@@ -385,7 +386,8 @@ Your Submission Instructions: ${submissionInstructions}
 
 Student's Submission Response: ${submission}
 
-To respond to ${student}'s submission and unlock the next task from them, please login to https://${DOMAIN} to view your course
+To respond to ${student}'s submission and unlock the next task from them,
+please login to https://${DOMAIN} to view your course
   
 Galaxy Maps Team`;
 
@@ -401,7 +403,8 @@ Galaxy Maps Team`;
 </br> 
 <p>Submission: <strong>${submission}</strong> </p>
 </br> 
-<p>To respond to ${student}, please login to <a href="https://${DOMAIN}" target="_blank">https://${DOMAIN}/login</a> to view your course</p>
+<p>To respond to ${student}, please login to <a href="https://${DOMAIN}" target="_blank"
+  >https://${DOMAIN}/login</a> to view your course</p>
 </br> 
 <p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
   /* eslint-enable max-len */
@@ -480,7 +483,8 @@ Galaxy Maps Team`;
 </br> 
 <p>Instructors message: ${message} </p>
 </br> 
-<p>Login to <a href="https://${DOMAIN}" target="_blank">https://${DOMAIN}/login</a> to continue your course.</p>
+<p>Login to <a href="https://${DOMAIN}" target="_blank"
+  >https://${DOMAIN}/login</a> to continue your course.</p>
 </br> 
 <p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
   /* eslint-enable max-len */
@@ -513,7 +517,8 @@ Galaxy Maps Team`;
   mailOptions.html = `<p><strong>Hi ${student},</strong></p>
 <p>It has been <strong>${duration}</strong> since you last signed into Galaxy Maps.</p>
 </br> 
-<p>Sign in to <a href="https://${DOMAIN}" target="_blank">https://${DOMAIN}/login</a> now to continue your learning journey.</p>
+<p>Sign in to <a href="https://${DOMAIN}" target="_blank"
+  >https://${DOMAIN}/login</a> now to continue your learning journey.</p>
 </br> 
 <p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
   /* eslint-enable max-len */
@@ -543,11 +548,11 @@ export async function sendTeacherStudentInActive(
   mailOptions.subject = "Student Activity Alert";
   mailOptions.text = `Hi ${teacher}, 
   
-  It has been ${duration} since your student: ${student} in cohort: ${cohort} last signed into Galaxy Maps. 
+It has been ${duration} since your student: ${student} in cohort: ${cohort} last signed into Galaxy Maps. 
+
+We recommend checking in on them via email ${studentEmail} to encourage and support them on their learning journey.
   
-  We recommend checking in on them via email ${studentEmail} to encourage and support them on their learning journey.
-    
-  Galaxy Maps Team`;
+Galaxy Maps Team`;
 
   mailOptions.html = `<p><strong>Hi ${teacher},</strong></p>
   <p>It has been <strong>${duration}</strong> since your student: <strong>${student}</strong> in cohort: <strong>${cohort}</strong> last signed into Galaxy Maps.</p>
@@ -591,7 +596,7 @@ export async function sendCourseDeleted(
 Your instructor ${teacher} has deleted the Galaxy ${course}.
 
 If you have any questions or concerns about this please contact your instructor by email at ${teacherEmail}
-  
+
 Galaxy Maps Team`;
 
   mailOptions.html = `<p><strong>Hi ${student},</strong></p>

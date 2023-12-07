@@ -1,5 +1,5 @@
 <template>
-  <div v-if="currentCohort.id" id="container" class="bg">
+  <div v-if="cohort" id="container" class="bg">
     <div id="left-section">
       <CohortInfo />
       <BackButton :toPath="'/cohorts'" />
@@ -19,7 +19,7 @@
           </div>
         </div>
         <StudentDataIterator v-if="studentsView" class="mt-4" />
-        <CohortGraphs v-else :cohort="currentCohort" />
+        <CohortGraphs v-else :cohort="cohort" />
       </div>
     </div>
 
@@ -27,12 +27,12 @@
       <RequestForHelpTeacherFrame
         :isTeacher="teacher"
         :courses="courses"
-        :students="currentCohort.students"
+        :students="cohort.students"
       />
       <SubmissionTeacherFrame
-        :isTeacher="teacher"
+        v-if="teacher"
         :courses="courses"
-        :students="teacher ? currentCohort.students : [person]"
+        :students="cohort.students"
         class="mt-4"
       />
     </div>
@@ -47,9 +47,8 @@ import BackButton from "@/components/Reused/BackButton.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 import CohortGraphs from "@/components/CohortView/CohortGraphs.vue";
-import { db } from "@/store/firestoreConfig";
+import { fetchCohortByCohortId } from "@/lib/ff";
 import useRootStore from "@/store/index";
-import moment from "moment";
 import { mapState } from "pinia";
 
 export default {
@@ -67,20 +66,21 @@ export default {
   data() {
     return {
       studentsView: true,
+      cohort: null,
     };
   },
   computed: {
-    ...mapState(useRootStore, ["currentCohort", "person", "userStatus"]),
+    ...mapState(useRootStore, ["currentCohortId", "person", "userStatus"]),
     ready() {
-      return this.cohortId === this.currentCohort.id;
+      return this.cohortId === this.currentCohortId && this.cohort != null;
     },
     courses() {
-      return this.currentCohort?.courses?.map((course) => {
+      return this.cohort?.courses?.map((course) => {
         return { id: course };
       });
     },
     teacher() {
-      return this.currentCohort.teachers.includes(this.person.id);
+      return this.cohort.teachers.includes(this.person.id);
     },
     peopleLabel() {
       return this.studentsView ? "people-label" : "inactive-people-label";
@@ -88,6 +88,9 @@ export default {
     graphLabel() {
       return this.studentsView ? "inactive-graph-label" : "graph-label";
     },
+  },
+  async mounted() {
+    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
   },
 };
 </script>

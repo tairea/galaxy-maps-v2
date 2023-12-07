@@ -51,14 +51,13 @@ export default {
   mounted() {},
   computed: {},
   methods: {
-    ...mapActions(useRootStore, ["setCurrentCourse", "setCurrentCourseId"]),
+    ...mapActions(useRootStore, ["setCurrentCourseId"]),
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
     routeToCourse(course) {
       // on clicking course, set its courseID to Store state (so not relying on router params)
       this.setCurrentCourseId(this.course.id);
-      this.setCurrentCourse(this.course);
       // route to Galaxy View (passing params as props)
       this.$router.push({
         name: "GalaxyView",

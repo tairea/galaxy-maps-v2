@@ -121,7 +121,7 @@ export default {
   },
   async mounted() {},
   computed: {
-    // ...mapState(useRootStore, ["person", "getCourseById", "getTopicById"]),
+    // ...mapState(useRootStore, ["person", "getTopicById"]),
   },
   methods: {
     formatStudentsChartData(courseData) {

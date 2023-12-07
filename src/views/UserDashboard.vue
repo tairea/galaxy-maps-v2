@@ -82,7 +82,6 @@
           class="mt-9"
         />
         <SubmissionTeacherFrame
-          :isTeacher="true"
           :courses="cohortCourses"
           :students="teachersStudents"
           class="mt-5"
@@ -160,8 +159,6 @@ export default {
       "allTasks",
       "cohorts",
       "dashboardView",
-      "getCourseById",
-      "getCoursesByWhoMadeThem",
     ]),
     isAdmin() {
       return this.user.data.admin;

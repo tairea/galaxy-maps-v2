@@ -70,13 +70,12 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["setCurrentCohort"]),
+    ...mapActions(useRootStore, ["setCurrentCohortId"]),
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
     routeToCohort() {
-      this.rootStore.currentCohort = this.cohort;
-      this.setCurrentCohort(this.cohort);
+      this.setCurrentCohortId(this.cohort.id);
       this.$router.push({
         name: "CohortView",
         params: {

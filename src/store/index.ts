@@ -17,13 +17,10 @@ const getDefaultState = () => {
     assignedCourses: [] as Record<string, any>[],
     organisations: [] as Record<string, any>[],
     people: [] as Record<string, any>[],
-    currentCourse: {} as Record<string, any>,
     currentTopicId: "",
     currentTaskId: "",
+    currentCohortId: "",
     currentCourseId: "",
-    currentTopic: {} as Record<string, any>,
-    currentTask: {} as Record<string, any>,
-    currentCohort: {} as Record<string, any>,
     currentCourseNodes: [] as Record<string, any>[],
     currentCourseEdges: [] as Record<string, any>[],
     allNodes: [] as Record<string, any>[],
@@ -39,7 +36,6 @@ const getDefaultState = () => {
     teachersRequestsForHelp: [] as Record<string, any>[],
     teachersStudentsProgress: [] as Record<string, any>[],
     darkMode: true,
-    sortedArr: [] as Record<string, any>[],
     studentCourseDataFromLRS: [] as Record<string, any>[],
     snackbar: {} as Record<string, any>,
     userStatus: {} as Record<string, any>,
@@ -58,9 +54,6 @@ export default defineStore({
   id: "root",
   state: getDefaultState,
   getters: {
-    getCourseById: (state) => (id: string) => {
-      return state.courses.find((course) => course.id === id);
-    },
     getCoursesByWhoMadeThem: (state) => (personId: string) => {
       return state.courses.filter((course) => course.mappedBy.personId == personId);
     },
@@ -142,20 +135,14 @@ export default defineStore({
       this.courseTasks = [];
       this.currentCourseId = courseId;
     },
-    setCurrentCourse(course: Record<string, any>) {
-      this.currentCourse = course;
-    },
     setCurrentTopicId(topicId: string) {
       this.currentTopicId = topicId;
-    },
-    setCurrentTopic(topic: Record<string, any>) {
-      this.currentTopic = topic;
     },
     setCurrentTaskId(taskId: string) {
       this.currentTaskId = taskId;
     },
-    setCurrentTask(task: Record<string, any>) {
-      this.currentTask = task;
+    setCurrentCohortId(cohortId: string) {
+      this.currentCohortId = cohortId;
     },
     updateAllNodes(newNodePositions: Record<string, any>[]) {
       this.allNodes = newNodePositions;
@@ -172,13 +159,6 @@ export default defineStore({
     },
     setDarkMode(dark: boolean) {
       this.darkMode = dark;
-    },
-    sortAsc(arr: Record<string, any>[]) {
-      const sortedArr = arr.sort((a, b) =>
-        a.topic.topicCreatedTimestamp.seconds > b.topic.topicCreatedTimestamp.seconds ? 1 : -1,
-      );
-      console.log("sortedArr: ", sortedArr);
-      this.sortedArr = sortedArr;
     },
     setStudentCourseDataFromLRS(courseData: Record<string, any>[]) {
       this.studentCourseDataFromLRS = courseData;
@@ -583,21 +563,6 @@ export default defineStore({
       return unsubscribe;
 
       // this.teachersRequestsForHelp = allRequestsForHelp;
-    },
-
-    async setCurrentCohort(cohort: Record<string, any>) {
-      await db
-        .collection("cohorts")
-        .doc(cohort.id)
-        .onSnapshot(async (doc) => {
-          const newCohort: Record<string, any> = {
-            id: doc.id,
-            ...doc.data(),
-          };
-          if (cohort.teacher) newCohort.teacher = true;
-          else if (cohort.student) newCohort.student = true;
-          this.currentCohort = newCohort;
-        });
     },
 
     async getAllUsersStatus() {

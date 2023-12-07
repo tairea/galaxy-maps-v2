@@ -1,18 +1,18 @@
 <template>
   <div id="cohort-info">
     <h2 class="cohort-label">Cohort</h2>
-    <h1 class="cohort-title">{{ currentCohort.name }}</h1>
+    <h1 class="cohort-title">{{ cohort.name }}</h1>
     <div v-if="cohortImage">
-      <v-img class="cohort-image" width="auto" :src="currentCohort.image.url"></v-img>
+      <v-img class="cohort-image" width="auto" :src="cohort.image.url"></v-img>
     </div>
     <p ref="description" class="cohort-description">
-      {{ maybeTruncate(currentCohort.description) }}
+      {{ maybeTruncate(cohort.description) }}
       <a style="border-bottom: 1px solid" v-if="readmore" @click="showFullDescription()"
         >Read more</a
       >
     </p>
     <div class="d-flex justify-center align-center">
-      <Organisation v-if="currentCohort.organisation" :organisation="org" :size="40" />
+      <Organisation v-if="cohort.organisation" :organisation="org" :size="40" />
     </div>
     <div v-if="teachers.length > 0">
       <p class="overline ma-0" style="color: var(--v-cohortAccent-base)">Teachers</p>
@@ -26,7 +26,7 @@
         />
       </v-row>
     </div>
-    <CreateEditDeleteCohortDialog v-if="isTeacher" :edit="true" :cohortToEdit="currentCohort" />
+    <CreateEditDeleteCohortDialog v-if="isTeacher" :edit="true" :cohortToEdit="cohort" />
   </div>
 </template>
 
@@ -34,13 +34,12 @@
 import Organisation from "@/components/Organisation.vue";
 import CreateEditDeleteCohortDialog from "@/components/Dialogs/CreateEditDeleteCohortDialog.vue";
 import Avatar from "@/components/Reused/Avatar.vue";
-import { dbMixins } from "@/mixins/DbMixins";
+import { fetchCohortByCohortId, fetchPersonByPersonId } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
 
 export default {
   name: "CohortInfo",
-  mixins: [dbMixins],
   components: {
     Avatar,
     Organisation,
@@ -48,50 +47,51 @@ export default {
   },
   data() {
     return {
+      cohort: null,
       teachers: [],
       readmore: false,
     };
   },
-  mounted() {
-    // this is needed incase there is no change in currentCohort to catch with the watch
-    if (this.$route.params.cohortId === this.currentCohort.id) {
+  async mounted() {
+    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
+    // this is needed incase there is no change in currentCohortId to catch with the watch
+    if (this.$route.params.cohortId === this.currentCohortId) {
       this.getTeacherProfiles();
     }
   },
   watch: {
-    currentCohort: {
+    currentCohortId: {
       deep: true,
-      handler(newVal, oldVal) {
-        if (oldVal.teachers?.length !== newVal.teachers?.length) {
+      async handler(newVal, oldVal) {
+        const oldCohort = this.cohort;
+        this.cohort = await fetchCohortByCohortId(newVal);
+        if (oldCohort.teachers?.length !== this.cohort.teachers?.length) {
           this.getTeacherProfiles();
         }
       },
     },
   },
   computed: {
-    ...mapState(useRootStore, ["getOrganisationById", "currentCohort", "person", "user"]),
+    ...mapState(useRootStore, ["getOrganisationById", "currentCohortId", "person", "user"]),
     cohortImage() {
-      return this.currentCohort?.image?.url;
+      return this.cohort?.image?.url;
     },
     org() {
-      let org = this.getOrganisationById(this.currentCohort.organisation);
+      let org = this.getOrganisationById(this.cohort.organisation);
       if (org) return org;
       else return {};
     },
     isTeacher() {
-      return this.user.data.admin || this.currentCohort.teachers.includes(this.person.id);
+      return this.user.data.admin || this.cohort.teachers.includes(this.person.id);
     },
   },
   methods: {
-    getTeacherProfiles() {
-      if (this.currentCohort.teachers?.length) {
-        const teachersArr = this.currentCohort.teachers.filter((a) => {
+    async getTeacherProfiles() {
+      if (this.cohort.teachers?.length) {
+        const teachersArr = this.cohort.teachers.filter((a) => {
           return !this.teachers.some((b) => a === b.id);
         });
-        teachersArr.forEach(async (id) => {
-          const teacher = await this.MXgetPersonByIdFromDB(id);
-          this.teachers.push(teacher);
-        });
+        this.teachers = await Promise.all(teachersArr.map((id) => fetchPersonByPersonId(id)));
       }
     },
     maybeTruncate(value) {
@@ -106,7 +106,7 @@ export default {
       }
     },
     showFullDescription() {
-      this.$refs.description.innerHTML = this.currentCohort.description;
+      this.$refs.description.innerHTML = this.cohort.description;
     },
   },
 };

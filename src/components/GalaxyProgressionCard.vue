@@ -144,7 +144,7 @@ export default {
     this.loading = false;
   },
   computed: {
-    ...mapState(useRootStore, ["person", "getCourseById", "getTopicById"]),
+    ...mapState(useRootStore, ["person", "getTopicById"]),
   },
   methods: {
     formatStudentsChartData(data) {
