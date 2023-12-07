@@ -6,6 +6,8 @@ import { checkInactivitySchedule } from "./checkInactivity.js";
 import {
   assignTopicsAndTasksToMeHttpsEndpoint,
   assignTopicsAndTasksToStudentHttpsEndpoint,
+  getCourseByIdHttpsEndpoint,
+  getCoursesHttpsEndpoint,
 } from "./courseManagement.js";
 import {
   sendCourseDeletedHttpsEndpoint,
@@ -31,6 +33,8 @@ export { checkInactivitySchedule as scheduledFunction };
 export {
   assignTopicsAndTasksToMeHttpsEndpoint as assignTopicsAndTasksToMe,
   assignTopicsAndTasksToStudentHttpsEndpoint as assignTopicsAndTasksToStudent,
+  getCourseByIdHttpsEndpoint as getCourseById,
+  getCoursesHttpsEndpoint as getCourses,
 };
 
 export {

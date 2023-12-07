@@ -400,7 +400,7 @@ export default {
     }
     // add default teacher to cohort
     this.teachers.push(this.person);
-    this.cohort.teachers.push(this.person);
+    this.cohort.teachers.push(this.person.id);
   },
   watch: {
     dialog(newVal) {

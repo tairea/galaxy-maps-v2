@@ -67,6 +67,7 @@
 
 <script>
 import Chart from "@/components/Chart.vue";
+import { fetchCourseByCourseId } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import "chartjs-adapter-luxon";
 import { DateTime } from "luxon";
@@ -81,7 +82,7 @@ export default {
     Chart,
   },
   computed: {
-    ...mapState(useRootStore, ["teachersStudentsProgress", "person", "getCourseById"]),
+    ...mapState(useRootStore, ["teachersStudentsProgress", "person"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -241,7 +242,7 @@ export default {
     };
   },
   methods: {
-    formatStudentsChartData(studentObj) {
+    async formatStudentsChartData(studentObj) {
       let datasets = [];
 
       // loops the students courses
@@ -249,7 +250,7 @@ export default {
         const courseId = course.courseId;
 
         // get course name
-        const courseContext = this.getCourseById(courseId);
+        const courseContext = await fetchCourseByCourseId(courseId);
 
         const courseColour = this.stringToColour(courseContext.title);
 
@@ -299,6 +300,7 @@ export default {
     },
     getColourBasedOnStatus(ctx, course) {
       // TODO: dunno why this doesnt work (supposed to change border colour depending on status)
+      // Because of the foreach on line 312. foreach does not return anything
 
       if (ctx.p0DataIndex >= course.courseTopicData.length) {
         return;

@@ -176,7 +176,7 @@
 import Avatar from "@/components/Reused/Avatar.vue";
 import LoginDialog from "@/components/Dialogs/LoginDialog.vue";
 import { db } from "@/store/firestoreConfig";
-import { getCohortById, assignTopicsAndTasksToMe } from "@/lib/ff";
+import { fetchCohortByCohortId, fetchPersonByPersonId, assignTopicsAndTasksToMe } from "@/lib/ff";
 import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";
 import { mdiClose } from "@mdi/js";
@@ -229,7 +229,7 @@ export default {
     await this.setCourseOwner();
   },
   methods: {
-    ...mapActions(useRootStore, ["setCurrentCourse", "setCurrentCourseId"]),
+    ...mapActions(useRootStore, ["setCurrentCourseId"]),
     maybeTruncate(value) {
       if (!value) return "";
       if (value.length <= 100) {
@@ -290,7 +290,6 @@ export default {
       console.log("route to galaxy", this.course.id);
       // save current course to store
       this.setCurrentCourseId(this.course.id);
-      this.setCurrentCourse(this.course);
       // route to topic/solar system
       this.$router.push({
         name: "GalaxyView",
@@ -303,7 +302,6 @@ export default {
       console.log("route to galaxy analytics", this.currentCourseId);
 
       // save current course to store
-      this.setCurrentCourse(this.course);
       this.setCurrentCourseId(this.course.id);
 
       // this.$router.push({
@@ -318,14 +316,13 @@ export default {
       // add this galaxy metadata (eg. topics) to this persons course database
 
       // save current course to store
-      this.setCurrentCourse(this.course);
       this.setCurrentCourseId(this.course.id);
 
       // 5) assign student to cohort and course
-      let cohort = await getCohortById(this.course.cohort);
+      const cohort = await fetchCohortByCohortId(this.course.cohort);
       await this.MXaddExistingUserToCohort(this.person, cohort);
-      await this.MXassignCourseToStudent(this.person, this.course);
-      await assignTopicsAndTasksToMe(this.course);
+      await this.MXassignCourseToStudent(this.person.id, this.course.id);
+      await assignTopicsAndTasksToMe(this.course.id);
 
       this.loading = false;
       this.$router.push({
@@ -338,7 +335,7 @@ export default {
     },
 
     async getPersonsImage(personId) {
-      const person = await this.MXgetPersonByIdFromDB(personId);
+      const person = await fetchPersonByPersonId(personId);
       return person.image?.url;
     },
   },

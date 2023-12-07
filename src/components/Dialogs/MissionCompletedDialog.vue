@@ -76,14 +76,12 @@
                       <p class="ma-0" style="font-size: 0.6rem">Instructor</p>
                     </div>
                   </div>
-                  <v-row 
-                    class="d-flex align-center speech-bubble"
-                  >
+                  <v-row class="d-flex align-center speech-bubble">
                     <p
                       v-html="task.submissionInstructions"
                       class="submission-dialog-description ma-0"
                       style="color: var(--v-cohortAccent-base)"
-                      ></p>
+                    ></p>
                     <!-- <p class="submission-dialog-description ma-0">
                         {{
                           task.submissionInstructions
@@ -221,12 +219,18 @@
 
 <script>
 import {
+  fetchCohortByCohortId,
+  fetchCourseByCourseId,
+  fetchPersonByPersonId,
+  fetchTaskByCourseIdTopicIdTaskId,
+  fetchTopicByCourseIdTopicId,
+} from "@/lib/ff";
+import {
   submitWorkForReviewXAPIStatement,
   reSubmitWorkForReviewXAPIStatement,
   taskMarkedAsCompletedXAPIStatement,
   topicCompletedXAPIStatement,
 } from "@/lib/veracityLRS";
-import { dbMixins } from "@/mixins/DbMixins";
 import { db, functions } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import {
@@ -241,7 +245,6 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "MissionCompletedDialog",
-  mixins: [dbMixins],
   components: {
     VueEditor,
   },
@@ -280,27 +283,43 @@ export default {
       // ["clean"] // remove formatting button
     ],
     quillFocused: false,
+    currentCourse: null,
+    currentTopic: null,
+    currentTask: null,
+    cohort: null,
   }),
-  mounted() {
+  async mounted() {
+    this.currentCourse = await fetchCourseByCourseId(this.currentCourseId);
+    this.currentTopic = await fetchTopicByCourseIdTopicId(
+      this.currentCourseId,
+      this.currentTopicId,
+    );
+    this.currentTask = await fetchTaskByCourseIdTopicIdTaskId(
+      this.currentCourseId,
+      this.currentTopicId,
+      this.currentTaskId,
+    );
+
     // get mappedBy image
     if (!this.currentCourse.mappedBy.image) {
       this.getMappedByPersonsImage(this.currentCourse.mappedBy.personId);
     }
+    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
     console.log("persons topics from mission completed dialog", this.personsTopics);
   },
   computed: {
     ...mapState(useRootStore, [
-      "currentCourse",
-      "currentTopic",
-      "currentTask",
+      "currentCourseId",
+      "currentTopicId",
+      "currentTaskId",
+      "currentCohortId",
       "personsTopicsTasks",
-      "currentCohort",
       "courseSubmissions",
       "personsTopics",
-      "person"
+      "person",
     ]),
     dark() {
-      return this.$vuetify.theme.isDark;    
+      return this.$vuetify.theme.isDark;
     },
     submission() {
       const submissions = this.courseSubmissions.filter(
@@ -377,8 +396,8 @@ export default {
           taskSubmittedForReviewTimestamp: new Date(),
         });
 
-      if (this.currentCohort != null) {
-        for (const teacherId of this.currentCohort.teachers) {
+      if (this.cohort != null) {
+        for (const teacherId of this.cohort.teachers) {
           await this.sendTaskSubmission(
             teacherId,
             this.submissionLink,
@@ -420,8 +439,8 @@ export default {
             taskSubmissionStatus: "inreview",
             taskSubmittedForReviewTimestamp: new Date(),
           });
-        if (this.currentCohort != null) {
-          for (const teacherId of this.currentCohort.teachers) {
+        if (this.cohort != null) {
+          for (const teacherId of this.cohort.teachers) {
             await this.sendTaskSubmission(
               teacherId,
               this.submissionLink,
@@ -651,11 +670,11 @@ export default {
       this.dialog = false;
     },
     async getMappedByPersonsImage(personId) {
-      const person = await this.MXgetPersonByIdFromDB(personId);
+      const person = await fetchPersonByPersonId(personId);
       this.mappedByImageURL = person.image?.url;
     },
     async sendTaskSubmission(teacherId, submissionResponse, submissionInstructions) {
-      const teacher = await this.MXgetPersonByIdFromDB(teacherId);
+      const teacher = await fetchPersonByPersonId(teacherId);
       const data = {
         course: this.currentCourse.title,
         topic: this.currentTopic.label,

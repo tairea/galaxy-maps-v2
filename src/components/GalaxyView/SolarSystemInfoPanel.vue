@@ -87,6 +87,7 @@
 </template>
 
 <script>
+import { fetchCourseByCourseId } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mdiClose, mdiPencil, mdiLock } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
@@ -105,23 +106,15 @@ export default {
       activeLearning: null,
       activeTeaching: null,
       activePublic: null,
+      currentCourse: null,
     };
   },
   async mounted() {
+    this.currentCourse = await fetchCourseByCourseId(this.currentCourseId);
     // console.log("selected topic is:", this.selectedTopic);
   },
   computed: {
-    ...mapState(useRootStore, [
-      "person",
-      "courses",
-      "cohorts",
-      "topicsTasks",
-      "personsTopicsTasks",
-      "currentCourse",
-      "getCourseById",
-      "person",
-      "user",
-    ]),
+    ...mapState(useRootStore, ["currentCourseId", "person", "user"]),
     // filteredTasks() {
     //   return this.tasks.filter((task) => task.topicId == this.selectedTopic);
     // },
@@ -130,7 +123,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["setCurrentTaskId", "setCurrentTopic", "setCurrentTopicId"]),
+    ...mapActions(useRootStore, ["setCurrentTaskId", "setCurrentTopicId"]),
     closeInfoPanel() {
       this.$emit("closeInfoPanel");
     },
@@ -141,7 +134,6 @@ export default {
       // console.log("route to ss", this.currentTopic.id);
       // save current topic to store
       this.setCurrentTopicId(this.selectedTopic.id);
-      this.setCurrentTopic(this.selectedTopic);
       // save active task to store if we know it
       const activeMission = this.tasks.find((topicObj) => topicObj.taskStatus == "active");
       if (activeMission) {

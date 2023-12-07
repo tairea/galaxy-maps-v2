@@ -16,9 +16,9 @@
 
   <!-- v-btn above OR custom div button. which is better? -->
   <div class="active-mission-card" @click="routeToTasksSystem()">
-    <p class="ma-0">{{ activeTopic.title }}</p>
+    <p class="ma-0">{{ activeTopic?.title }}</p>
     <p class="ma-0" style="font-weight: 900; padding: 0px 5px">></p>
-    <p class="ma-0" style="font-weight: 900">{{ activeTask.title }}</p>
+    <p class="ma-0" style="font-weight: 900">{{ activeTask?.title }}</p>
   </div>
 </template>
 
@@ -35,29 +35,24 @@ export default {
   },
   computed: {
     activeTopic() {
-      const topic = this.data.find((topic) => topic.type === "Topic");
-      if (topic?.status === "Started") return topic;
-      else return "no active topic";
+      const startedTopic = this.data.find(
+        (topic) => topic.type === "Topic" && topic.status === "Started",
+      );
+      return startedTopic ?? null;
     },
     activeTask() {
-      const task = this.data.find((task) => task.type === "Task");
-      if (task?.status === "Started") return task;
-      else return "no active task";
+      const startedTask = this.data.find(
+        (task) => task.type === "Task" && task.status === "Started",
+      );
+      return startedTask ?? null;
     },
   },
   methods: {
-    ...mapActions(useRootStore, [
-      "setCurrentTopic",
-      "setCurrentTopicId",
-      "setCurrentTask",
-      "setCurrentTaskId",
-    ]),
+    ...mapActions(useRootStore, ["setCurrentTopicId", "setCurrentTaskId"]),
     routeToTasksSystem() {
       // save current topic & task to store
       this.setCurrentTopicId(this.activeTopic.id);
-      this.setCurrentTopic(this.activeTopic);
       this.setCurrentTaskId(this.activeTask.id);
-      this.setCurrentTask(this.activeTask);
 
       // route to topic/solar system
       // TODO: bug where system route does work (prob to do with vuex-persisted)

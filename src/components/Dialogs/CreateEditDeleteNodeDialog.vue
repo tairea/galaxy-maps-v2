@@ -235,7 +235,7 @@
 
 <script>
 import { db } from "@/store/firestoreConfig";
-import { getPersonsTopicById } from "@/lib/ff";
+import { fetchPersonsTopicByPersonIdCourseIdTopicId, fetchTopicByCourseIdTopicId } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mdiPencil, mdiPlus, mdiClose, mdiCheck, mdiDelete, mdiInformationVariant } from "@mdi/js";
 import firebase from "firebase/compat/app";
@@ -253,35 +253,14 @@ export default {
     "currentEdge",
   ],
   async mounted() {
-    let timeCreatedArrs = [];
+    this.currentTopic = await fetchTopicByCourseIdTopicId(
+      this.currentCourseId,
+      this.currentTopicId,
+    );
 
-    for (let index in this.currentCourseNodes) {
-      let timeCreatedNode = this.currentCourseNodes[index].nodeCreatedTimestamp?.seconds;
-
-      timeCreatedArrs.push(timeCreatedNode);
-      // console.log("unsorted arr", timeCreatedArrs);
-    }
-
-    timeCreatedArrs.sort(function (a, b) {
-      return a - b;
-    });
-
-    // NOTE: the last int in the arr is the largest
-    // console.log("sorted arr", timeCreatedArrs);
-
-    for (let a in timeCreatedArrs) {
-      // loop over the ordered time array
-      let arrTime = timeCreatedArrs[a];
-      for (let b in timeCreatedArrs) {
-        let timeStamp = this.currentCourseNodes[b].nodeCreatedTimestamp?.seconds;
-        if (arrTime == timeStamp) {
-          let node = this.currentCourseNodes[b];
-          this.sortedObjArr.push(node);
-        }
-      }
-    }
-
-    this.sortedObjArr = this.sortedObjArr.reverse();
+    this.sortedObjArr = arr.sort((a, b) =>
+      a.topic.topicCreatedTimestamp.seconds > b.topic.topicCreatedTimestamp.seconds ? 1 : -1,
+    );
 
     this.infoPopupShow = false;
     // hack to make active select white
@@ -329,6 +308,7 @@ export default {
       prerequisites: this.currentNode.prerequisites?.length ? true : false,
       darkSwatches: [["#69A1E2"], ["#E269CF"], ["#73FBD3"], ["#F3C969"], ["#54428E"]], //https://coolors.co/69a1e2-e269cf-73fbd3-f3c969-54428e
       lightSwatches: [["#577399"], ["#fe5f55"]],
+      currentTopic: null,
     };
   },
   computed: {
@@ -337,7 +317,6 @@ export default {
       "currentCourseNodes",
       "personsTopics",
       "currentCourseId",
-      "currentTopic",
       "currentTopicId",
       "getTopicById",
       "getPersonsTopicById",
@@ -365,68 +344,58 @@ export default {
       // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
     },
 
-    saveNode(node) {
+    async saveNode(node) {
       this.loading = true;
       node.connectedEdge = node.connectedEdge ? node.connectedEdge : "";
+
       // save topic node info to map-nodes
       console.log("save", node);
-      db.collection("courses")
+      await db
+        .collection("courses")
         .doc(this.currentCourseId)
         .collection("map-nodes")
         .doc(node.id)
-        .set({ ...node, nodeCreatedTimestamp: new Date() })
-        .then((docRef) => {
-          console.log("Node successfully written!");
-          // check if prerequisite
-          if (this.currentNode.prerequisites) {
-            for (const prereq of this.currentNode.prerequisites) {
-              const from = prereq;
-              const to = this.currentNode.id;
-              db.collection("courses")
-                .doc(this.currentCourseId)
-                .collection("map-edges")
-                .add({
-                  id: 1234,
-                  from: from,
-                  to: to,
-                  dashes: false,
-                })
-                .then((docRef) => {
-                  docRef.update({ id: docRef.id });
-                });
-            }
-          }
-          // get to and from and save to map edges
-          this.loading = false;
-          this.close();
-        })
-        .catch((error) => {
-          console.error("Error writing node: ", error);
-        });
+        .set({ ...node, nodeCreatedTimestamp: new Date() });
+      console.log("Node successfully written!");
+
+      // check if prerequisite
+      if (this.currentNode.prerequisites) {
+        for (const prereq of this.currentNode.prerequisites) {
+          const from = prereq;
+          const to = this.currentNode.id;
+          const edgeDocRef = await db
+            .collection("courses")
+            .doc(this.currentCourseId)
+            .collection("map-edges")
+            .add({
+              from: from,
+              to: to,
+              dashes: false,
+            });
+
+          await edgeDocRef.update({ id: docRef.id });
+        }
+      }
+
       // save topic info to topics
-      db.collection("courses")
+      await db
+        .collection("courses")
         .doc(this.currentCourseId)
         .collection("topics")
         .doc(node.id)
-        .set({ ...node, topicCreatedTimestamp: new Date() })
-        .then((docRef) => {
-          this.saveTopicToStudents(node);
-          this.loading = false;
-          this.close();
-        })
-        .catch((error) => {
-          console.error("Error writing node: ", error);
-        });
+        .set({ ...node, topicCreatedTimestamp: new Date() });
+      await this.saveTopicToStudents(node);
+
       // increment course topicTotals by 1
-      db.collection("courses")
+      await db
+        .collection("courses")
         .doc(this.currentCourseId)
-        .update("topicTotal", firebase.firestore.FieldValue.increment(1))
-        .then(() => {
-          console.log("Topic total increased by 1");
-        })
-        .catch((error) => {
-          console.error("Error incrementing topicTotal: ", error);
-        });
+        .update("topicTotal", firebase.firestore.FieldValue.increment(1));
+      console.log("Topic total increased by 1");
+
+      // get to and from and save to map edges
+      this.loading = false;
+      this.close();
     },
     deleteDialog() {
       this.dialogConfirm = true;
@@ -435,83 +404,64 @@ export default {
       this.dialogConfirm = false;
       this.$emit("openDialog");
     },
-    deleteNode() {
+    async deleteNode() {
       console.log("deleting node");
       this.deleting = true;
+
       // delete node from firestore > map-nodes
-      db.collection("courses")
+      await db
+        .collection("courses")
         .doc(this.currentCourseId)
         .collection("map-nodes")
         .doc(this.currentNode.id)
-        .delete()
-        .then(() => {
-          console.log("Node successfully deleted from map-nodes!");
-          this.deleting = false;
-          this.infoPopupShow = false;
-        })
-        .catch((error) => {
-          console.error("Error deleting node: ", error);
-        });
+        .delete();
+      console.log("Node successfully deleted from map-nodes!");
+
       // delete node from firestore > topics
-      db.collection("courses")
+      await db
+        .collection("courses")
         .doc(this.currentCourseId)
         .collection("topics")
         .doc(this.currentNode.id)
-        .delete()
-        .then(() => {
-          console.log("Node successfully deleted from topics!");
-          this.deleting = false;
-          this.infoPopupShow = false;
-        })
-        .catch((error) => {
-          console.error("Error deleting node: ", error);
-        });
+        .delete();
+      console.log("Node successfully deleted from topics!");
+
       // delete conneceted edge (if there is one)
       if (this.currentNode.connectedEdge) {
-        db.collection("courses")
+        await db
+          .collection("courses")
           .doc(this.currentCourseId)
           .collection("map-edges")
           .doc(this.currentNode.connectedEdge)
-          .delete()
-          .then(() => {
-            console.log("Edge successfully deleted!");
-            this.deleting = false;
-            this.infoPopupShow = false;
-          })
-          .catch((error) => {
-            console.error("Error deleting edge: ", error);
-          });
+          .delete();
+        console.log("Edge successfully deleted!");
       }
       // decrement topicTotals by 1
-      db.collection("courses")
+      await db
+        .collection("courses")
         .doc(this.currentCourseId)
-        .update("topicTotal", firebase.firestore.FieldValue.increment(-1))
-        .then(() => {
-          console.log("Topic total decreased by 1");
-        })
-        .catch((error) => {
-          console.error("Error decrementing topicTotal: ", error);
-        });
+        .update("topicTotal", firebase.firestore.FieldValue.increment(-1));
+      console.log("Topic total decreased by 1");
+
+      this.deleting = false;
+      this.infoPopupShow = false;
 
       this.deleteTopicForStudents(this.currentNode);
       // close
       this.close();
     },
-    deleteEdge() {
+    async deleteEdge() {
       this.deleting = true;
-      db.collection("courses")
+      await db
+        .collection("courses")
         .doc(this.currentCourseId)
         .collection("map-edges")
         .doc(this.currentEdge.id)
-        .delete()
-        .then(() => {
-          console.log("Edge successfully deleted!");
-          this.deleting = false;
-          this.infoPopupShow = false;
-        })
-        .catch((error) => {
-          console.error("Error deleting edge: ", error);
-        });
+        .delete();
+
+      console.log("Edge successfully deleted!");
+      this.deleting = false;
+      this.infoPopupShow = false;
     },
     async saveTopicToStudents(node) {
       // get all students currently assigned to course
@@ -521,26 +471,23 @@ export default {
         .get();
 
       // for each student
-      allStudents.forEach(async (doc) => {
-        const student = doc.id;
+      for (const doc of allStudents) {
+        const personId = doc.id;
 
         // set reference to this course
-        const courseRef = await db
-          .collection("people")
-          .doc(student)
-          .collection(this.currentCourseId);
+        const courseRef = db.collection("people").doc(personId).collection(this.currentCourseId);
 
         // check if the student has already started the course. If not they will be assigned this topic when they start the course
-        const studentHasStartedCourse = await courseRef.get().then((subQuery) => {
-          return subQuery.docs.length;
-        });
+        const studentHasStartedCourse = await courseRef
+          .get()
+          .then((subQuery) => subQuery.docs.length > 0);
 
         if (studentHasStartedCourse) {
           // if the new node has set prerequisites
           if (node.prerequisites?.length) {
             // get the prerequisite topic
-            const topic = await getPersonsTopicById(
-              student,
+            const topic = await fetchPersonsTopicByPersonIdCourseIdTopicId(
+              personId,
               this.currentCourseId,
               node.prerequisites[0],
             );
@@ -556,11 +503,11 @@ export default {
             // if there are no prerequisites than set is as unlocked
             node.topicStatus = "unlocked";
           }
-          console.log(student, " has started course. Setting new topic as ", node.topicStatus);
+          console.log(personId, " has started course. Setting new topic as ", node.topicStatus);
           // assign the topic to each student
           await courseRef.doc(node.id).set(node);
         }
-      });
+      }
     },
     async deleteTopicForStudents(node) {
       console.log("node: ", node);
@@ -570,17 +517,19 @@ export default {
         .where("assignedCourses", "array-contains", this.currentCourseId)
         .get();
 
-      allStudents.forEach(async (doc) => {
-        const student = doc.id;
-        console.log("deleteing ", node.label, "for student: ", student);
-        // delete for student
-        await db
-          .collection("people")
-          .doc(student)
-          .collection(this.currentCourseId)
-          .doc(node.id)
-          .delete();
-      });
+      await Promise.all(
+        allStudents.map(async (doc) => {
+          const personId = doc.id;
+          console.log("deleting ", node.label, "for student: ", personId);
+          // delete for student
+          return db
+            .collection("people")
+            .doc(personId)
+            .collection(this.currentCourseId)
+            .doc(node.id)
+            .delete();
+        }),
+      );
     },
   },
 };

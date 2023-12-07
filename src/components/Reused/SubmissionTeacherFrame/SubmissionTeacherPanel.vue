@@ -87,7 +87,7 @@ import Avatar from "@/components/Reused/Avatar.vue";
 // import MarkSubmissionCompleted from "@/components/MarkSubmissionCompleted.vue";
 // import SubmissionResponseDialog from "@/components/SubmissionResponseDialog.vue";
 import SubmissionReviewDialog from "@/components/Dialogs/SubmissionReviewDialog.vue";
-import { dbMixins } from "@/mixins/DbMixins";
+import { fetchPersonByPersonId } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import moment from "moment";
 import { mapActions, mapState } from "pinia";
@@ -95,7 +95,6 @@ import { mapActions, mapState } from "pinia";
 export default {
   name: "SubmissionTeacherPanel",
   props: ["submission", "on", "attrs", "isDashboardView", "isTeacher"],
-  mixins: [dbMixins],
   components: {
     // MarkSubmissionCompleted,
     // SubmissionResponseDialog,
@@ -110,7 +109,7 @@ export default {
   },
   async mounted() {
     // bind student profile
-    this.requesterPerson = await this.MXgetPersonByIdFromDB(this.submission.studentId);
+    this.requesterPerson = await fetchPersonByPersonId(this.submission.studentId);
   },
   computed: {
     ...mapState(useRootStore, ["personsTopicsTasks", "showPanelCard"]),

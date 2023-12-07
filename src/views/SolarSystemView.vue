@@ -40,14 +40,14 @@
     <!--==== Right section ====-->
     <div id="right-section">
       <RequestForHelpTeacherFrame
-        :courses="[getCourseById(currentCourseId)]"
+        :courses="[course]"
         :isTeacher="teacher"
         :students="peopleInTopic"
       />
       <SubmissionTeacherFrame
-        :courses="[getCourseById(currentCourseId)]"
-        :isTeacher="teacher"
-        :students="teacher ? peopleInTopic : [person]"
+        v-if="teacher"
+        :courses="[course]"
+        :students="peopleInTopic"
         class="mt-4"
       />
     </div>
@@ -61,7 +61,12 @@ import MissionsList from "@/components/SolarSystemView/MissionsList.vue";
 import BackButton from "@/components/Reused/BackButton.vue";
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
-import { getPersonsTopicById } from "@/lib/ff";
+import {
+  fetchAllPeopleInCourseByCourseId,
+  fetchCourseByCourseId,
+  fetchPersonsTopicByPersonIdCourseIdTopicId,
+  fetchTopicByCourseIdTopicId,
+} from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
 
@@ -78,18 +83,23 @@ export default {
   props: ["courseId", "topicId"],
   data() {
     return {
+      course: null,
+      topic: null,
       activeMission: null,
       task: null,
       unsubscribes: [],
       peopleInTopic: [],
       loading: true,
+      currentTask: null,
     };
   },
   async mounted() {
-    await this.bindCourses({ owner: null });
     await this.bindCourseTopics(this.courseId);
     this.setCurrentCourseId(this.courseId);
     this.setCurrentTopicId(this.topicId);
+
+    this.course = await fetchCourseByCourseId(this.currentCourseId);
+    this.topic = await fetchTopicByCourseIdTopicId(this.currentCourseId, this.currentTopicId);
 
     this.getPeopleInTopic();
     if (this.teacher) {
@@ -129,26 +139,20 @@ export default {
       "currentCourseId",
       "currentTopicId",
       "currentTaskId",
-      "currentTask",
       "topicsTasks",
       "personsTopicsTasks",
       "personsTopics",
-      "peopleInCourse",
       "person",
       "getPersonsTopicById",
-      "getCourseById",
       "getTopicById",
       "getTasksByTopicId",
       "user",
     ]),
     draft() {
-      return this.getCourseById(this.currentCourseId).status === "drafting";
+      return this.course.status === "drafting";
     },
     teacher() {
-      return (
-        this.getCourseById(this.currentCourseId)?.mappedBy?.personId === this.person.id ||
-        this.user.data.admin
-      );
+      return this.course.mappedBy?.personId === this.person.id || this.user.data.admin;
     },
     personsCurrentTopic() {
       return this.personsTopics.find((topic) => topic.id == this.currentTopicId);
@@ -156,13 +160,11 @@ export default {
   },
   methods: {
     ...mapActions(useRootStore, [
-      "bindCourses",
       "bindCourseTopics",
       "bindPersonsTasksByTopicId",
       "bindTasksByTopicId",
       "setCurrentCourseId",
       "setCurrentTopicId",
-      "setCurrentTask",
       "setCurrentTaskId",
     ]),
     taskForHelpInfo(task) {
@@ -176,7 +178,7 @@ export default {
         this.activeMission = true;
         // set as current/active task (if not already?)
         this.setCurrentTaskId(activeMissionObj.id);
-        this.setCurrentTask(activeMissionObj);
+        this.currentTask = activeMissionObj;
       } else {
         return;
       }
@@ -185,15 +187,20 @@ export default {
     },
     async getPeopleInTopic() {
       console.log("4, getting people in topic");
-      let people = [];
-      this.peopleInCourse.forEach(async (person) => {
-        let personsTopic = await getPersonsTopicById(
-          person.id,
-          this.getCourseById(this.currentCourseId).id,
-          this.getTopicById(this.currentTopicId).id,
-        );
-        if (personsTopic.topicStatus == "active") people.push(person);
-      });
+      const people = [];
+      const peopleInCourse = await fetchAllPeopleInCourseByCourseId(this.courseId);
+      await Promise.all(
+        peopleInCourse.map(async (person) => {
+          const personsTopic = await fetchPersonsTopicByPersonIdCourseIdTopicId(
+            person.id,
+            this.currentCourseId,
+            this.currentTopicId,
+          );
+          if (personsTopic.topicStatus == "active") {
+            people.push(person);
+          }
+        }),
+      );
       this.peopleInTopic = people;
     },
   },

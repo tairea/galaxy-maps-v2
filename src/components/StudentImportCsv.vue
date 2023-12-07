@@ -68,6 +68,7 @@
 </template>
 
 <script>
+import { fetchCohortByCohortId, fetchPersonByEmail } from "@/lib/ff";
 import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";
 import { mdiDownload } from "@mdi/js";
@@ -99,6 +100,7 @@ export default {
         "Student Email",
         // "Parent Email",
       ],
+      cohort: null,
     };
   },
   filters: {
@@ -107,10 +109,13 @@ export default {
     },
   },
   computed: {
-    ...mapState(useRootStore, ["currentCohort"]),
+    ...mapState(useRootStore, ["currentCohortId"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
+  },
+  async mounted() {
+    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
   },
   methods: {
     close() {
@@ -124,68 +129,51 @@ export default {
       this.sortKey = "";
       this.showTable = false;
     },
-    saveStudents() {
+    async saveStudents() {
       this.loading = true;
       console.log("saving students");
-      let counter = 0;
+
       // Add a new document in collection "people"
-      this.parse_csv.forEach(async (student, index, array) => {
-        console.log("saving student: ", index, ":", student);
+      await Promise.all(
+        this.parse_csv.map(async (student, index) => {
+          console.log("saving student: ", index, ":", student);
 
-        // resctructure data to match db fields
-        const person = {
-          ...student,
-          email: student.studentEmail,
-          nsn: student.nsnNumber,
-        };
-        delete person.nsnNumber;
-        delete person.studentEmail;
+          // resctructure data to match db fields
+          const person = {
+            ...student,
+            email: student.studentEmail,
+            nsn: student.nsnNumber,
+          };
+          delete person.nsnNumber;
+          delete person.studentEmail;
 
-        console.log("person: ", person);
+          console.log("person: ", person);
 
-        // check if student exisits
-        const personExists = await this.MXgetPersonByEmail(person.email);
+          // check if student exisits
+          const personExists = await fetchPersonByEmail(person.email);
 
-        if (personExists) {
-          console.log("personExisits: ", personExists);
-          // add existing person to cohort
-          this.MXaddExistingUserToCohort(personExists)
-            .then(() => {
-              if (this.currentCohort.courses.length) {
-                this.currentCohort.courses.forEach(async (courseId) => {
-                  let course = await getCourseById(courseId);
-                  this.MXassignCourseToStudent(personExists, course);
-                });
+          if (personExists) {
+            console.log("personExisits: ", personExists);
+            // add existing person to cohort
+            await this.MXaddExistingUserToCohort(personExists);
+
+            if (this.cohort.courses.length) {
+              for (const courseId of this.cohort.courses) {
+                await this.MXassignCourseToStudent(personExists.id, courseId);
               }
-            })
-            .then(() => {
-              console.log("exisitng person successfully added");
-              counter++;
-              // check all students are saved to DB
-              if (counter === array.length) {
-                this.saveStudentsCompleted();
-              }
-            });
-        } else {
-          console.log("creating new student: ", index, ":", person);
-          // create user and then add them to cohort
-          this.MXcreateUser(person)
-            .then(() => this.MXaddStudentToCohort(person))
-            .then((docRef) => {
-              console.log("new student successfully added");
-              counter++;
-              // check all students are saved to DB
-              if (counter === array.length) {
-                this.saveStudentsCompleted();
-              }
-            })
-            .catch((error) => {
-              console.error("Error writing document: ", error);
-            });
-        }
-      });
-    },
-    saveStudentsCompleted() {
+            }
+
+            console.log("exisitng person successfully added");
+          } else {
+            console.log("creating new student: ", index, ":", person);
+            // create user and then add them to cohort
+            await this.MXcreateUser(person);
+            await this.MXaddStudentToCohort(person.id, this.currentCohortId);
+            console.log("new student successfully added");
+          }
+        }),
+      );
+
       console.log("All students written to database");
       // this.$refs.csvFile.value = null;
       this.loading = false;
@@ -193,7 +181,7 @@ export default {
       this.disabled = true;
       this.dialog = false;
     },
-    sortBy: function (key) {
+    sortBy(key) {
       var vm = this;
       vm.sortKey = key;
       vm.sortOrders[key] = vm.sortOrders[key] * -1;

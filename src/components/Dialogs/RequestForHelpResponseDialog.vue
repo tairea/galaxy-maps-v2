@@ -136,17 +136,19 @@
 
 <script>
 import { db, functions } from "@/store/firestoreConfig";
+import {
+  fetchCourseByCourseId,
+  fetchTaskByCourseIdTopicIdTaskId,
+  fetchTopicByCourseIdTopicId,
+} from "@/lib/ff";
 import { teacherRespondedToRequestForHelpXAPIStatement } from "@/lib/veracityLRS";
-import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";
 import { mdiAccount, mdiCheck, mdiClose } from "@mdi/js";
-import firebase from "firebase/compat/app";
 import moment from "moment";
 import { mapActions, mapState } from "pinia";
 
 export default {
   name: "RequestForHelpResponseDialog",
-  mixins: [dbMixins],
   props: ["request", "requesterPerson", "on", "attrs"],
   data: () => ({
     mdiAccount,
@@ -159,16 +161,24 @@ export default {
     loading: false,
     deleting: false,
     response: "",
+    currentCourse: null,
+    currentTopic: null,
+    currentTask: null,
   }),
-  mounted() {},
+  async mounted() {
+    this.currentCourse = await fetchCourseByCourseId(this.currentCourseId);
+    this.currentTopic = await fetchTopicByCourseIdTopicId(
+      this.currentCourseId,
+      this.currentTopicId,
+    );
+    this.currentTask = await fetchTaskByCourseIdTopicIdTaskId(
+      this.currentCourseId,
+      this.currentTopicId,
+      this.currentTaskId,
+    );
+  },
   computed: {
-    ...mapState(useRootStore, [
-      "currentCourse",
-      "currentTopic",
-      "currentTask",
-      "currentCohort",
-      "person",
-    ]),
+    ...mapState(useRootStore, ["currentCourseId", "currentTopicId", "currentTaskId", "person"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -178,54 +188,57 @@ export default {
     getHumanDate(ts) {
       return moment(ts.seconds * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
     },
-    submitHelpResponse() {
+    async submitHelpResponse() {
       console.log("updating request: ", this.request);
       this.loading = true;
       // Add response to request for help
-      db.collection("courses")
-        .doc(this.request.contextCourse.id)
-        .collection("requestsForHelp")
-        .doc(this.request.id)
-        .update({
-          responseMessage: this.response,
-          requestForHelpStatus: "answered",
-          responseSubmittedTimestamp: new Date(),
-          responderPersonId: this.person.id,
-        })
-        .then(() => {
-          this.emailResponseToStudent(this.requesterPerson, this.response);
-        })
-        .then(() => {
-          console.log("Response successfully submitted for review!");
+      try {
+        await db
+          .collection("courses")
+          .doc(this.request.contextCourse.id)
+          .collection("requestsForHelp")
+          .doc(this.request.id)
+          .update({
+            responseMessage: this.response,
+            requestForHelpStatus: "answered",
+            responseSubmittedTimestamp: new Date(),
+            responderPersonId: this.person.id,
+          });
 
-          // teacher assissted student
-          teacherRespondedToRequestForHelpXAPIStatement(this.person, this.request.contextTask.id, {
+        await this.emailResponseToStudent(this.requesterPerson, this.response);
+
+        console.log("Response successfully submitted for review!");
+
+        // teacher assisted student
+        await teacherRespondedToRequestForHelpXAPIStatement(
+          this.person,
+          this.request.contextTask.id,
+          {
             student: this.requesterPerson,
             galaxy: this.request.contextCourse,
             system: this.request.contextTopic,
             mission: this.request.contextTask,
-          });
+          },
+        );
 
-          this.requestForHelp = "";
-          this.loading = false;
-          this.dialog = false;
-          this.setSnackbar({
-            show: true,
-            text: "Response sent to student",
-            color: "baseAccent",
-          });
-          // this.MXbindRequestsForHelp();
-
-          // TODO: update requests. (to remove answered requests)
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
-          this.setSnackbar({
-            show: true,
-            text: "Error: " + error,
-            color: "pink",
-          });
+        this.requestForHelp = "";
+        this.loading = false;
+        this.dialog = false;
+        this.setSnackbar({
+          show: true,
+          text: "Response sent to student",
+          color: "baseAccent",
         });
+
+        // TODO: update requests. (to remove answered requests)
+      } catch (error) {
+        console.error("Error writing document: ", error);
+        this.setSnackbar({
+          show: true,
+          text: "Error: " + error,
+          color: "pink",
+        });
+      }
     },
     cancel() {
       this.loading = false;

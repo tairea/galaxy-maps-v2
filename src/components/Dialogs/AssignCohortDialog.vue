@@ -77,6 +77,7 @@
                   <div>
                     <p class="dialog-description">Assign the student to a cohort</p>
                     <v-select
+                      v-if="currentCourse != null"
                       v-model="cohort"
                       :items="cohortOptions"
                       outlined
@@ -269,7 +270,12 @@
 </template>
 
 <script>
-import { getCourseById, assignTopicsAndTasksToStudent } from "@/lib/ff";
+import {
+  fetchCohortByCohortId,
+  fetchCourseByCourseId,
+  fetchPersonByEmail,
+  assignTopicsAndTasksToPerson,
+} from "@/lib/ff";
 import { dbMixins } from "@/mixins/DbMixins";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
@@ -281,7 +287,7 @@ import {
   mdiAccountMultiplePlus,
   mdiChartTimelineVariantShimmer,
 } from "@mdi/js";
-import firebase from "firebase/compat/app";
+import { doc, updateDoc, FieldValue } from "firebase/firestore";
 import { mapActions, mapState } from "pinia";
 
 export default {
@@ -304,22 +310,26 @@ export default {
       id: "",
       email: "",
     },
-    cohort: "",
-    course: "",
+    cohort: null,
+    course: null,
     teacherCohorts: [],
+    currentCourse: null,
   }),
   async mounted() {
     if (this.assignCourses) {
       // TODO: we need to think about what courses are available to assign for a teacher
       await this.bindCourses({ owner: null });
     } else if (this.assignCohorts) {
-      this.teacherCohorts = this.cohorts.filter((cohort) => cohort.teacher && !cohort.courseCohort);
+      this.teacherCohorts = this.cohorts.filter(
+        (cohort) => cohort.teachers.includes(this.person.id) && !cohort.courseCohort,
+      );
     }
+    this.currentCourse = await fetchCourseByCourseId(this.currentCourseId);
   },
   watch: {
     dialog(newVal) {
       if (newVal && !this.cohort)
-        this.cohort = this.cohorts.find((cohort) => cohort.id == this.currentCohort.id);
+        this.cohort = this.cohorts.find((cohort) => cohort.id == this.currentCohortId);
     },
   },
   computed: {
@@ -327,16 +337,14 @@ export default {
       "courses",
       "organisations",
       "currentCourseId",
-      "currentCourse",
-      "currentCohort",
+      "currentCohortId",
       "personsCourses",
       "person",
     ]),
     cohortOptions() {
       // teacherCohorts && the courseCohort
-      const courseCohort = this.cohorts.filter((cohort) => cohort.id === this.currentCourse.cohort);
-      this.cohort = courseCohort[0];
-      return [...courseCohort, ...this.teacherCohorts];
+      this.cohort = this.cohorts.find((cohort) => cohort.id === this.currentCourse.cohort);
+      return [this.cohort, ...this.teacherCohorts];
     },
   },
   methods: {
@@ -354,89 +362,84 @@ export default {
       this.loading = true;
 
       // If we dont already have the students Id, check if they already have an account using their email
-      const personExists = await this.MXgetPersonByEmail(profile.email);
+      const personExists = await fetchPersonByEmail(profile.email);
       if (personExists) {
-        this.handleAssignment(personExists, this.currentCourse);
+        await this.handleAssignment(personExists, this.currentCourse);
       } else {
         //create the persons account
         profile.inviter = this.person.firstName + " " + this.person.lastName;
 
-        this.MXcreateUser(profile).then((id) => {
-          console.log("1. person created: ", profile);
-          this.handleAssignment({ id: id }, this.currentCourse);
-        });
+        const id = await this.MXcreateUser(profile);
+        console.log("1. person created: ", profile);
+        await this.handleAssignment({ id: id }, this.currentCourse);
       }
     },
 
-    handleAssignment(person, course) {
-      this.MXassignCourseToStudent(person, course)
-        .then(() => this.MXaddExistingUserToCohort(person, this.cohort))
-        .then(async () => {
-          if (this.cohort.courses.length) {
-            // Possible optimize to make this concurrent instead of sequential
-            for (const courseId of this.cohort.courses) {
-              const course = await getCourseById(courseId);
-              await this.MXassignCourseToStudent(person, course);
-              await assignTopicsAndTasksToStudent(person, course);
-            }
+    async handleAssignment(person, course) {
+      try {
+        await this.MXassignCourseToStudent(person.id, course.id);
+        await this.MXaddExistingUserToCohort(person, this.cohort);
+        if (this.cohort.courses.length) {
+          // Possible optimize to make this concurrent instead of sequential
+          for (const courseId of this.cohort.courses) {
+            await this.MXassignCourseToStudent(person.id, courseId);
+            await assignTopicsAndTasksToPerson(person.id, courseId);
           }
-        })
-        .then(() => {
-          this.setSnackbar({
-            show: true,
-            text: "Individual added to cohort and assigned to course",
-            color: "baseAccent",
-          });
-          this.$emit("newAssignment", person);
-          this.close();
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
-          // snackbar message
-          this.setSnackbar({
-            show: true,
-            text: error,
-            color: "pink",
-          });
-          this.close();
+        }
+
+        this.setSnackbar({
+          show: true,
+          text: `${person.firstName} assigned to ${course.title} galaxy`,
+          color: "baseAccent",
         });
+        this.$emit("newAssignment", person);
+        this.close();
+      } catch (error) {
+        console.error("Error writing document: ", error);
+        // snackbar message
+        this.setSnackbar({
+          show: true,
+          text: error,
+          color: "pink",
+        });
+        this.close();
+      }
     },
-    assignCourseToCohort(cohort, course) {
-      if (!cohort) cohort = this.currentCohort;
+    async assignCourseToCohort(cohort, course) {
+      if (!cohort) {
+        cohort = await fetchCohortByCohortId(this.currentCohortId);
+      }
       if (!course) course = this.currentCourse;
       this.loading = true;
-      // Add a course to a cohort
-      db.collection("cohorts")
-        .doc(cohort.id)
-        .update({
-          courses: firebase.firestore.FieldValue.arrayUnion(course.id),
-        })
-        .then(() => {
-          // add courses as assignedCourse to each student in the cohort
-          if (cohort.students?.length) {
-            cohort.students.forEach(async (student) => {
-              const person = await this.MXgetPersonByIdFromDB(student);
-              return this.MXassignCourseToStudent(person, course);
-            });
-          }
-        })
-        .then(() => {
-          console.log("courses added to all students!");
-          this.setSnackbar({
-            show: true,
-            text: "Cohort assigned to Course",
-            color: "baseAccent",
-          });
-          this.close();
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
-          this.setSnackbar({
-            show: true,
-            text: error,
-            color: "pink",
-          });
+
+      try {
+        // Add a course to a cohort
+        await updateDoc(doc(db, "cohorts", cohort.id), {
+          courses: FieldValue.arrayUnion(course.id),
         });
+        // add courses as assignedCourse to each student in the cohort
+        if (cohort.students?.length) {
+          for (const student of cohort.students) {
+            const person = await this.MXgetPersonByIdFromDB(student);
+            await this.MXassignCourseToStudent(person.id, course.id);
+          }
+        }
+
+        console.log("courses added to all students!");
+        this.setSnackbar({
+          show: true,
+          text: "Cohort assigned to Course",
+          color: "baseAccent",
+        });
+        this.close();
+      } catch (error) {
+        console.error("Error writing document: ", error);
+        this.setSnackbar({
+          show: true,
+          text: error,
+          color: "pink",
+        });
+      }
     },
   },
 };

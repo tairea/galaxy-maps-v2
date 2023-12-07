@@ -61,9 +61,11 @@
 </template>
 
 <script>
+import { fetchCohortByCohortId, fetchCourseByCourseId } from "@/lib/ff";
 import { db, storage } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import firebase from "firebase/compat/app";
+import { doc, updateDoc, FieldValue } from "firebase/firestore";
 import isEmpty from "lodash";
 import { mapState } from "pinia";
 
@@ -93,50 +95,32 @@ export default {
     },
   },
   computed: {
-    ...mapState(useRootStore, ["currentCohort"]),
+    ...mapState(useRootStore, ["currentCohortId"]),
   },
   methods: {
-    saveStudents() {
+    async saveStudents() {
       this.loading = true;
-      let counter = 0;
       // Add a new document in collection "people"
-      this.parse_csv.forEach((student, index, array) => {
-        student.assignedCohorts = [this.currentCohort.id];
+      await Promise.all(
+        this.parse_csv.map(async (student) => {
+          student.assignedCohorts = [this.currentCohortId];
 
-        const usersRef = db.collection("people").doc(student.nsnNumber);
+          // FIXME: why is this using nsnNumber?
+          const usersRef = doc(db, "people", student.nsnNumber);
 
-        usersRef.get().then((docSnapshot) => {
+          const userDoc = await usersRef.get();
+
           // if student exists, update assignedCohorts
-          if (docSnapshot.exists) {
-            usersRef
-              .update({
-                assignedCohorts: firebase.firestore.FieldValue.arrayUnion(this.currentCohort.id),
-              })
-              .then(() => {
-                counter++;
-                // check all students are saved to DB
-                if (counter === array.length) {
-                  this.saveStudentsCompleted();
-                }
-              });
+          if (userDoc.exists) {
+            await updateDoc(usersRef, {
+              assignedCohorts: FieldValue.arrayUnion(this.currentCohortId),
+            });
           } else {
-            usersRef
-              .set(student)
-              .then((docRef) => {
-                counter++;
-                // check all students are saved to DB
-                if (counter === array.length) {
-                  this.saveStudentsCompleted();
-                }
-              })
-              .catch((error) => {
-                console.error("Error writing document: ", error);
-              });
+            await usersRef.set(student);
           }
-        });
-      });
-    },
-    saveStudentsCompleted() {
+        }),
+      );
+
       console.log("All students written to database");
       // this.$refs.csvFile.value = null;
       this.buttonLabel = "Students Successfully Added to Database";
@@ -144,7 +128,7 @@ export default {
       this.showTable = false;
       this.disabled = true;
     },
-    sortBy: function (key) {
+    sortBy(key) {
       var vm = this;
       vm.sortKey = key;
       vm.sortOrders[key] = vm.sortOrders[key] * -1;

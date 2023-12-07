@@ -90,7 +90,7 @@
 
 <script>
 import MissionCompletedDialog from "@/components/Dialogs/MissionCompletedDialog.vue";
-import { dbMixins } from "@/mixins/DbMixins";
+import { fetchPersonByPersonId } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mdiTextBoxSearchOutline } from "@mdi/js";
 import { DateTime } from "luxon";
@@ -99,7 +99,6 @@ import { mapState } from "pinia";
 export default {
   name: "SubmissionStudentCard",
   props: ["work"],
-  mixins: [dbMixins],
   components: {
     MissionCompletedDialog,
   },
@@ -114,8 +113,8 @@ export default {
   },
   async mounted() {
     console.log("work for work card:", this.work);
-    this.requester = await this.MXgetPersonByIdFromDB(this.work.studentId);
-    this.responder = await this.MXgetPersonByIdFromDB(this.work.responderPersonId);
+    this.requester = await fetchPersonByPersonId(this.work.studentId);
+    this.responder = await fetchPersonByPersonId(this.work.responderPersonId);
     // console.log("requester person:", this.requester);
     // console.log("responder person:", this.responder);
   },
@@ -129,7 +128,7 @@ export default {
   methods: {
     async getResponder() {
       // get responsers image when request is updated
-      this.responder = await this.MXgetPersonByIdFromDB(this.work.responderPersonId);
+      this.responder = await fetchPersonByPersonId(this.work.responderPersonId);
     },
     humanDate(timestamp) {
       return DateTime.fromSeconds(timestamp.seconds).toFormat("ccc dd LLL t");

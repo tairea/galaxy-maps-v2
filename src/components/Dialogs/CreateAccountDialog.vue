@@ -61,7 +61,7 @@ export default {
     parentEmailRules: [(v) => /.+@.+\..+/.test(v) || "E-mail must be valid"],
   }),
   computed: {
-    ...mapState(useRootStore, ["person", "currentCohort"]),
+    ...mapState(useRootStore, ["person"]),
     teacher() {
       return this.accountType === "teacher";
     },

@@ -76,11 +76,11 @@
 </template>
 
 <script>
+import { fetchCourseByCourseId, fetchTopicByCourseIdTopicId } from "@/lib/ff";
 import { startTaskXAPIStatement, startTopicXAPIStatement } from "@/lib/veracityLRS";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mdiPlay, mdiInformationVariant, mdiCheck, mdiClose } from "@mdi/js";
-import firebase from "firebase/compat/app";
 import { mapActions, mapState } from "pinia";
 
 export default {
@@ -93,18 +93,26 @@ export default {
     mdiClose,
     dialog: false,
     loading: false,
+    currentCourse: null,
+    currentTopic: null,
   }),
   computed: {
-    ...mapState(useRootStore, ["currentCourse", "currentTopic", "currentTask", "person"]),
+    ...mapState(useRootStore, ["currentCourseId", "currentTopicId", "person"]),
+  },
+  async mounted() {
+    this.currentCourse = await fetchCourseByCourseId(this.currentCourseId);
+    this.currentTopic = await fetchTopicByCourseIdTopicId(
+      this.currentCourseId,
+      this.currentTopicId,
+    );
   },
   methods: {
-    ...mapActions(useRootStore, ["setCurrentTask", "setCurrentTaskId"]),
-    startMission() {
+    ...mapActions(useRootStore, ["setCurrentTaskId"]),
+    async startMission() {
       this.loading = true;
 
       // set as current/active task
       this.setCurrentTaskId(this.task.id);
-      this.setCurrentTask(this.task);
 
       const topic = db
         .collection("people")
@@ -113,43 +121,35 @@ export default {
         .doc(this.topicId);
 
       // update taskStatus to active
-      topic
-        .collection("tasks")
-        .doc(this.task.id)
-        .update({
-          taskStatus: "active",
-          taskStartedTimestamp: new Date(),
-        })
-        .then(() => {
-          if (!this.topicActive) {
-            topic.update({
-              topicStatus: "active",
-              topicStartedTimeStamp: new Date(),
-            });
-          }
-        })
-        .then(() => {
-          console.log("Topic status successfully written as Active!");
-          if (!this.topicActive) {
-            startTopicXAPIStatement(this.person, {
-              galaxy: this.currentCourse,
-              system: this.currentTopic,
-            });
-          }
-        })
-        .then(() => {
-          console.log("Task status successfully written as Active!");
-          startTaskXAPIStatement(this.person, this.currentTask.id, {
-            galaxy: this.currentCourse,
-            system: this.currentTopic,
-            mission: this.currentTask,
-          });
-          this.loading = false;
-          this.dialog = false;
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
+      await topic.collection("tasks").doc(this.task.id).update({
+        taskStatus: "active",
+        taskStartedTimestamp: new Date(),
+      });
+
+      if (!this.topicActive) {
+        await topic.update({
+          topicStatus: "active",
+          topicStartedTimeStamp: new Date(),
         });
+      }
+
+      console.log("Topic status successfully written as Active!");
+      if (!this.topicActive) {
+        await startTopicXAPIStatement(this.person, {
+          galaxy: this.currentCourse,
+          system: this.currentTopic,
+        });
+      }
+
+      console.log("Task status successfully written as Active!");
+      await startTaskXAPIStatement(this.person, this.task.id, {
+        galaxy: this.currentCourse,
+        system: this.currentTopic,
+        mission: this.task,
+      });
+
+      this.loading = false;
+      this.dialog = false;
     },
     cancel() {
       this.dialog = false;
