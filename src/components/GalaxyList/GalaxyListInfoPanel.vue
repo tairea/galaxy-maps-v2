@@ -17,6 +17,7 @@
 <script>
 import PopupGalaxyPreview from "@/components/GalaxyList/GalaxyListInfoPanel/PopupGalaxyPreview.vue";
 import useRootStore from "@/store/index";
+import { fetchCourseByCourseId } from "@/lib/ff";
 import { mapState } from "pinia";
 
 export default {
@@ -36,12 +37,12 @@ export default {
     };
   },
   computed: {
-    ...mapState(useRootStore, ["person", "courses", "cohorts", "getCourseById"]),
+    ...mapState(useRootStore, ["person", "courses", "cohorts"]),
   },
   watch: {
     async selectedCourseId(newSelectedCourseId) {
       if (newSelectedCourseId != null) {
-        this.selectedCourse = this.getCourseById(newSelectedCourseId);
+        this.selectedCourse = await fetchCourseByCourseId(newSelectedCourseId);
       } else {
         this.selectedCourse = null;
       }
@@ -49,7 +50,7 @@ export default {
   },
   async mounted() {
     if (this.selectedCourseId != null) {
-      this.selectedCourse = this.getCourseById(this.selectedCourseId);
+      this.selectedCourse = await fetchCourseByCourseId(this.selectedCourseId);
     } else {
       this.selectedCourse = null;
     }

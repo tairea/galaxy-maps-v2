@@ -1,5 +1,5 @@
 <template>
-  <div id="cohort-info">
+  <div id="cohort-info" v-if="cohort">
     <h2 class="cohort-label">Cohort</h2>
     <h1 class="cohort-title">{{ cohort.name }}</h1>
     <div v-if="cohortImage">

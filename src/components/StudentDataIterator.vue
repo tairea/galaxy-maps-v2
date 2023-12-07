@@ -1,6 +1,7 @@
 <template>
   <v-container fluid>
     <v-data-iterator
+      v-if="cohort"
       :items="students"
       :items-per-page="-1"
       :search="search"
@@ -119,6 +120,7 @@ import { mapState } from "pinia";
 
 export default {
   name: "StudentsDataIterator",
+  props: ["cohort"],
   components: {
     // EditStudentButtonDialog,
     StudentCard,
@@ -146,7 +148,6 @@ export default {
       showStudentFlag: false,
       editStudentFlag: false,
       student: [],
-      cohort: null,
     };
   },
   created() {
@@ -186,12 +187,12 @@ export default {
     },
   },
   computed: {
-    ...mapState(useRootStore, ["currentCohortId"]),
+    ...mapState(useRootStore, ["currentCohortId", "person"]),
     filteredKeys() {
       return this.keys.filter((key) => key !== "Name");
     },
     isTeacher() {
-      return this.cohort.teachers.includes(this.person.id);
+      return this.cohort.teachers?.includes(this.person.id);
     },
   },
   methods: {
@@ -251,17 +252,17 @@ export default {
     },
     updateStudentsWithTasks(payload) {
       const foundIndex = this.students.findIndex((student) => student.id == payload.person.id);
-      console.log("this.students BEFORE PAYLOAD", this.students);
-      console.log(
-        "payload.tasks",
-        this.students[foundIndex].firstName +
-          " " +
-          this.students[foundIndex].lastName +
-          " = " +
-          payload.tasks,
-      );
-      this.students[foundIndex].tasks = payload.tasks;
-      console.log("this.students AFTER PAYLOAD", this.students);
+      // console.log("this.students BEFORE PAYLOAD", this.students);
+      // console.log(
+      //   "payload.tasks",
+      //   this.students[foundIndex].firstName +
+      //     " " +
+      //     this.students[foundIndex].lastName +
+      //     " = " +
+      //     payload.tasks,
+      // );
+      // this.students[foundIndex].tasks = payload.tasks;
+      // console.log("this.students AFTER PAYLOAD", this.students);
     },
   },
 };

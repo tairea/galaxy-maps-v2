@@ -76,6 +76,7 @@ export default {
       return this.$route.name == "SolarSystemView";
     },
     submissions() {
+      // get all student submissions
       const submissions = this.courseSubmissions.filter((submission) =>
         this.students?.some((student) => {
           return student.id
@@ -83,42 +84,28 @@ export default {
             : student === submission.studentId;
         }),
       );
-      if (this.isTeacher) {
-        submissions.sort((a, b) => {
-          if (a.taskSubmissionStatus === b.taskSubmissionStatus) {
-            // If the tasks are both in review sort by taskSubmittedForReviewTimestamp
-            return (
-              b.taskSubmittedForReviewTimestamp.seconds - a.taskSubmittedForReviewTimestamp.seconds
-            );
-          } else {
-            // Otherwise, compare by age
-            return a.taskSubmissionStatus == "inreview" ? -1 : 1;
-          }
-        });
-      } else {
-        submissions.sort((a, b) => {
-          if (a.taskSubmissionStatus === b.taskSubmissionStatus) {
-            return (
-              b.taskReviewedAndCompletedTimestamp.seconds -
-              a.taskReviewedAndCompletedTimestamp.seconds
-            );
-          } else {
-            return a.taskSubmissionStatus == "completed" ? -1 : 1;
-          }
-        });
-      }
 
-      if (this.isCohortView || this.isDashboardView) return submissions;
+      // Filter for "inreview" only
+      let filteredSubmissions = submissions.filter(
+        (submission) => submission.taskSubmissionStatus === "inreview",
+      );
+
+      filteredSubmissions.sort(
+        (a, b) =>
+          b.taskSubmittedForReviewTimestamp.seconds - a.taskSubmittedForReviewTimestamp.seconds,
+      );
+
+      if (this.isCohortView || this.isDashboardView) return filteredSubmissions;
       else if (this.isGalaxyView) {
-        return submissions.filter(
+        return filteredSubmissions.filter(
           (submission) => submission.contextCourse.id == this.courses[0].id,
         );
       } else if (this.isSystemView) {
-        return submissions.filter(
+        return filteredSubmissions.filter(
           (submission) => submission.contextTopic.id == this.currentTopic.id,
         );
       }
-      return submissions;
+      return filteredSubmissions;
     },
   },
   methods: {

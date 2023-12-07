@@ -53,7 +53,7 @@ export default {
     MissionsCard,
     CreateEditDeleteMissionDialog,
   },
-  props: ["tasks", "topicId", "teacher"],
+  props: ["tasks", "topicId", "topic", "teacher"],
   data() {
     return {
       activeMission: false,
@@ -69,7 +69,7 @@ export default {
     this.missionsLoading = false;
   },
   computed: {
-    ...mapState(useRootStore, ["person", "currentTopic"]),
+    ...mapState(useRootStore, ["person"]),
   },
   methods: {
     missionClicked(task) {
@@ -83,7 +83,7 @@ export default {
       this.indexOfActiveTask = this.tasks.findIndex((object) => {
         return object.taskStatus == "active" || object.taskStatus == "declined";
       });
-      if (this.currentTopic.topicStatus === "active") this.topicActive = true;
+      if (this.topic.topicStatus === "active") this.topicActive = true;
     },
     topicCompleted() {
       console.log("3");

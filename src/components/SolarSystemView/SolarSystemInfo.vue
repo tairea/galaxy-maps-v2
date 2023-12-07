@@ -1,5 +1,5 @@
 <template>
-  <div id="ss-info">
+  <div id="ss-info" v-if="course">
     <h2 class="ss-label">System</h2>
     <h1 class="ss-title">{{ topic.label }}</h1>
     <SolarSystem :topic="topic" :size="'0.25em'" :height="'200px'" :tasks="tasks" />
@@ -14,7 +14,7 @@
       :tasks="tasks"
     /> -->
     <p class="galaxy-description">Part of the</p>
-    <h1 class="galaxy-title">{{ getCourseById(currentCourseId).title }}</h1>
+    <h1 class="galaxy-title">{{ course.title }}</h1>
     <p class="galaxy-description">Galaxy</p>
   </div>
 </template>
@@ -26,7 +26,7 @@ import { mapState } from "pinia";
 
 export default {
   name: "SolarSystemInfo",
-  props: ["topic", "tasks", "teacher"],
+  props: ["topic", "tasks", "teacher", "course"],
   components: {
     SolarSystem,
   },
