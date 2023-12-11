@@ -171,15 +171,12 @@ export default {
   watch: {
     cohort: {
       deep: true,
-      async handler(newVal, oldVal) {
-        const oldCohort = this.cohort;
-        this.cohort = await fetchCohortByCohortId(newVal);
-        if (oldCohort.students?.length !== this.cohort.students?.length) {
-          if (oldCohort.students?.length > this.cohort.students?.length)
-            this.removeStudentProfile();
+      async handler(newCohort, oldCohort) {
+        if (oldCohort.students?.length !== newCohort.students?.length) {
+          if (oldCohort.students?.length > newCohort.students?.length) this.removeStudentProfile();
           else await this.getStudentProfiles();
         }
-        if (oldVal.id !== newVal.id) {
+        if (oldCohort.id !== newCohort.id) {
           await this.getStudentProfiles();
         }
       },
@@ -260,7 +257,7 @@ export default {
       //     " = " +
       //     payload.tasks,
       // );
-      // this.students[foundIndex].tasks = payload.tasks;
+      this.students[foundIndex].tasks = payload.tasks;
       // console.log("this.students AFTER PAYLOAD", this.students);
     },
   },
