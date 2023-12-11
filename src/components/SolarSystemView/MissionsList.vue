@@ -21,7 +21,7 @@
               :task="task"
               :id="task.id"
               :index="index"
-              :topicId="topicId"
+              :topicId="topic.id"
               :topicActive="topicActive"
               :teacher="teacher"
               @missionActivated="missionActivated"
@@ -36,7 +36,7 @@
     </div>
 
     <div class="createButton mt-8" v-if="teacher">
-      <CreateEditDeleteMissionDialog :topicId="topicId" />
+      <CreateEditDeleteMissionDialog :topicId="topic.id" />
     </div>
   </div>
 </template>
@@ -53,7 +53,7 @@ export default {
     MissionsCard,
     CreateEditDeleteMissionDialog,
   },
-  props: ["tasks", "topicId", "topic", "teacher"],
+  props: ["tasks", "topic", "teacher"],
   data() {
     return {
       activeMission: false,

@@ -16,9 +16,7 @@
 
 <script>
 import PopupGalaxyPreview from "@/components/GalaxyList/GalaxyListInfoPanel/PopupGalaxyPreview.vue";
-import useRootStore from "@/store/index";
 import { fetchCourseByCourseId } from "@/lib/ff";
-import { mapState } from "pinia";
 
 export default {
   name: "GalaxyListInfoPanel",
@@ -36,9 +34,7 @@ export default {
       activePublic: null,
     };
   },
-  computed: {
-    ...mapState(useRootStore, ["person", "courses", "cohorts"]),
-  },
+  computed: {},
   watch: {
     async selectedCourseId(newSelectedCourseId) {
       if (newSelectedCourseId != null) {

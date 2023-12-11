@@ -163,14 +163,13 @@ export default {
     clearInterval(this.counterInterval);
   },
   async mounted() {
-    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
-    // this is needed incase there is no change in currentCohortId to catch with the watch
-    if (this.$route.params.cohortId === this.currentCohortId) {
+    // this is needed incase there is no change in cohort.id to catch with the watch
+    if (this.$route.params.cohortId === this.cohort.id) {
       await this.getStudentProfiles();
     }
   },
   watch: {
-    currentCohortId: {
+    cohort: {
       deep: true,
       async handler(newVal, oldVal) {
         const oldCohort = this.cohort;
@@ -187,7 +186,7 @@ export default {
     },
   },
   computed: {
-    ...mapState(useRootStore, ["currentCohortId", "person"]),
+    ...mapState(useRootStore, ["person"]),
     filteredKeys() {
       return this.keys.filter((key) => key !== "Name");
     },
