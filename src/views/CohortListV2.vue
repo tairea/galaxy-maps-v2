@@ -218,7 +218,7 @@ import EditOrganisationButtonDialog from "@/components/Dialogs/EditOrganisationB
 import Cohort from "@/components/Reused/Cohort.vue";
 import CohortPanelV2 from "@/components/CohortList/CohortPanelV2.vue";
 import TimeframeFilters from "@/components/Reused/TimeframeFilters.vue";
-import Organisation from "@/components/Organisation.vue";
+import Organisation from "@/components/Reused/Organisation.vue";
 import useRootStore from "@/store/index";
 import { mdiPlus } from "@mdi/js";
 import { mapActions, mapState } from "pinia";

@@ -40,9 +40,9 @@
 </template>
 
 <script>
-import CohortInfo from "@/components/CohortInfo.vue";
+import CohortInfo from "@/components/CohortView/CohortInfo.vue";
 import AssignedInfo from "@/components/Reused/AssignedInfo.vue";
-import StudentDataIterator from "@/components/StudentDataIterator.vue";
+import StudentDataIterator from "@/components/CohortView/StudentDataIterator.vue";
 import BackButton from "@/components/Reused/BackButton.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";

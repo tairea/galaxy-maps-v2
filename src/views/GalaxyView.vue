@@ -132,7 +132,7 @@ import GalaxyMapButtons from "@/components/GalaxyView/GalaxyMapButtons.vue";
 
 import CreateEditDeleteNodeDialog from "@/components/Dialogs/CreateEditDeleteNodeDialog.vue";
 
-import PopupSystemPreview from "@/components/PopupSystemPreview.vue";
+import PopupSystemPreview from "@/components/GalaxyView/PopupSystemPreview.vue";
 import SolarSystemInfoPanel from "@/components/GalaxyView/SolarSystemInfoPanel.vue";
 import EdgeInfoPanel from "@/components/GalaxyView/EdgeInfoPanel.vue";
 

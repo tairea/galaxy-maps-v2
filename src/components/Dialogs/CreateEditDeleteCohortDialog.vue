@@ -340,7 +340,7 @@
 </template>
 
 <script>
-import Organisation from "@/components/Organisation.vue";
+import Organisation from "@/components/Reused/Organisation.vue";
 import CreateAccountDialog from "@/components/Dialogs/CreateAccountDialog.vue";
 import { db, storage, functions } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";

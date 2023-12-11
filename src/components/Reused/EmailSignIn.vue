@@ -38,7 +38,7 @@
 
 <script>
 import BackButton from "@/components/Reused/BackButton.vue";
-import CreateProfileDialog from "@/components/CreateProfileDialog.vue";
+import CreateProfileDialog from "@/components/Dialogs/CreateProfileDialog.vue";
 import useRootStore from "@/store/index";
 import { mdiKeyboardBackspace } from "@mdi/js";
 import firebase from "firebase/compat/app";

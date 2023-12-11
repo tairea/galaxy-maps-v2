@@ -38,7 +38,7 @@
 
 <script>
 import SolarSystem from "@/components/Reused/SolarSystem.vue";
-import LoadingSpinner from "@/components/LoadingSpinner.vue";
+import LoadingSpinner from "@/components/Reused/LoadingSpinner.vue";
 import { Planet } from "@/lib/planet";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";

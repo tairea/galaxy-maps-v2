@@ -7,8 +7,8 @@
 </template>
 
 <script>
-import PopupStudentProgress from "@/components/StudentCard/PopupStudentProgress.vue";
-import StudentCircularProgress from "@/components/StudentCard/StudentCircularProgress.vue";
+import PopupStudentProgress from "@/components/CohortView/StudentDataIterator/StudentCard/PopupStudentProgress.vue";
+import StudentCircularProgress from "@/components/CohortView/StudentDataIterator/StudentCard/StudentCircularProgress.vue";
 
 export default {
   name: "StudentCardProgress",

@@ -83,7 +83,7 @@
 </template>
 
 <script>
-import StudentCardStatus from "@/components/StudentCard/StudentCardStatus.vue";
+import StudentCardStatus from "@/components/CohortView/StudentDataIterator/StudentCard/StudentCardStatus.vue";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
 

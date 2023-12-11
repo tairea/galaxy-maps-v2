@@ -69,7 +69,7 @@
 </template>
 
 <script>
-import Organisation from "@/components/Organisation.vue";
+import Organisation from "@/components/Reused/Organisation.vue";
 import AssignCohortDialog from "@/components/Dialogs/AssignCohortDialog.vue";
 import Course from "@/components/Reused/Course.vue";
 import Cohort from "@/components/Reused/Cohort.vue";

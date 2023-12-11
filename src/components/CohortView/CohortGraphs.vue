@@ -88,7 +88,7 @@
   </div>
 </template>
 <script>
-import ProgressionLineChart from "@/components/ProgressionLineChart.vue";
+import ProgressionLineChart from "@/components/Reused/ProgressionLineChart.vue";
 import ActivityBarChart from "@/components/Reused/ActivityBarChart.vue";
 import TimeframeFilters from "@/components/Reused/TimeframeFilters.vue";
 import Avatar from "@/components/Reused/Avatar.vue";
