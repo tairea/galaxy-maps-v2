@@ -261,7 +261,7 @@ export default {
     },
     async setAccountType() {
       this.teacher = false;
-      if (this.course.mappedBy.personId === this.person.id || this.user.data?.admin) {
+      if (this.course.mappedBy?.personId === this.person.id || this.user.data?.admin) {
         this.teacher = true;
       } else if (this.user.loggedIn) {
         const querySnapshot = await db

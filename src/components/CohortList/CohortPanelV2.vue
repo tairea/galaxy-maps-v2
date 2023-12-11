@@ -157,6 +157,9 @@ export default {
   },
 
   async mounted() {
+    // checkIfCohortTeacher
+    this.checkIfCohortTeacher();
+
     this.cohortsCoursesDataLoading = true;
     this.cohortActivityDataLoading = true;
     // ==== get cohort course data from LRS
@@ -194,9 +197,6 @@ export default {
 
     // ==== VQL Test
     // const VQL = await VQLXAPIQuery();
-
-    // checkIfCohortTeacher
-    this.checkIfCohortTeacher();
   },
   computed: {
     ...mapState(useRootStore, ["getOrganisationById", "currentCohort", "person"]),
@@ -213,7 +213,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["setCurrentCohort"]),
+    ...mapActions(useRootStore, ["setCurrentCohortId"]),
     clickedPerson(e, person, index) {
       if (!isCohortTeacher) {
         return;
@@ -274,7 +274,7 @@ export default {
       return name.substring(0, 3).toUpperCase();
     },
     async routeToCohort() {
-      await this.setCurrentCohort(this.cohort);
+      await this.setCurrentCohortId(this.cohort.id);
       this.$router.push({
         name: "CohortView",
         params: {

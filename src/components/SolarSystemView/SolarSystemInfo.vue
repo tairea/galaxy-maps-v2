@@ -1,45 +1,24 @@
 <template>
-  <div id="ss-info">
+  <div id="ss-info" v-if="course">
     <h2 class="ss-label">System</h2>
     <h1 class="ss-title">{{ topic.label }}</h1>
     <SolarSystem :topic="topic" :size="'0.25em'" :height="'200px'" :tasks="tasks" />
-    <!-- <SolarSystem
-      :topic="
-        teacher
-          ? getTopicById(currentTopicId)
-          : getPersonsTopicById(currentTopicId)
-      "
-      :size="'0.25em'"
-      :height="'200px'"
-      :tasks="tasks"
-    /> -->
     <p class="galaxy-description">Part of the</p>
-    <h1 class="galaxy-title">{{ getCourseById(currentCourseId).title }}</h1>
+    <h1 class="galaxy-title">{{ course.title }}</h1>
     <p class="galaxy-description">Galaxy</p>
   </div>
 </template>
 
 <script>
 import SolarSystem from "@/components/Reused/SolarSystem.vue";
-import useRootStore from "@/store/index";
-import { mapState } from "pinia";
 
 export default {
   name: "SolarSystemInfo",
-  props: ["topic", "tasks", "teacher"],
+  props: ["topic", "tasks", "teacher", "course"],
   components: {
     SolarSystem,
   },
-  computed: {
-    ...mapState(useRootStore, [
-      "currentTopicId",
-      "currentCourseId",
-      "person",
-      "getPersonsTopicById",
-      "getCourseById",
-      "getTopicById",
-    ]),
-  },
+  computed: {},
   mounted() {},
   data() {
     return {};

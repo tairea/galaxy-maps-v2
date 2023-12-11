@@ -80,6 +80,7 @@
 <script>
 import Avatar from "@/components/Reused/Avatar.vue";
 import RequestForHelpResponseDialog from "@/components/Dialogs/RequestForHelpResponseDialog.vue";
+import { fetchPersonByPersonId } from "@/lib/ff";
 import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";
 import moment from "moment";
@@ -107,14 +108,14 @@ export default {
     };
   },
   async mounted() {
-    this.requesterPerson = await this.MXgetPersonByIdFromDB(this.request.personId);
+    this.requesterPerson = await fetchPersonByPersonId(this.request.personId);
     if (this.request.responderPersonId)
-      this.responderPerson = await this.MXgetPersonByIdFromDB(this.request.responderPersonId);
+      this.responderPerson = await fetchPersonByPersonId(this.request.responderPersonId);
   },
   watch: {
     async request() {
       if (this.request.responderPersonId)
-        this.responderPerson = await this.MXgetPersonByIdFromDB(this.request.responderPersonId);
+        this.responderPerson = await fetchPersonByPersonId(this.request.responderPersonId);
     },
   },
   computed: {

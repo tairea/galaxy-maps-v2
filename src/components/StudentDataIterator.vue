@@ -1,6 +1,7 @@
 <template>
   <v-container fluid>
     <v-data-iterator
+      v-if="cohort"
       :items="students"
       :items-per-page="-1"
       :search="search"
@@ -119,6 +120,7 @@ import { mapState } from "pinia";
 
 export default {
   name: "StudentsDataIterator",
+  props: ["cohort"],
   components: {
     // EditStudentButtonDialog,
     StudentCard,
@@ -146,7 +148,6 @@ export default {
       showStudentFlag: false,
       editStudentFlag: false,
       student: [],
-      cohort: null,
     };
   },
   created() {
@@ -162,36 +163,32 @@ export default {
     clearInterval(this.counterInterval);
   },
   async mounted() {
-    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
-    // this is needed incase there is no change in currentCohortId to catch with the watch
-    if (this.$route.params.cohortId === this.currentCohortId) {
+    // this is needed incase there is no change in cohort.id to catch with the watch
+    if (this.$route.params.cohortId === this.cohort.id) {
       await this.getStudentProfiles();
     }
   },
   watch: {
-    currentCohortId: {
+    cohort: {
       deep: true,
-      async handler(newVal, oldVal) {
-        const oldCohort = this.cohort;
-        this.cohort = await fetchCohortByCohortId(newVal);
-        if (oldCohort.students?.length !== this.cohort.students?.length) {
-          if (oldCohort.students?.length > this.cohort.students?.length)
-            this.removeStudentProfile();
+      async handler(newCohort, oldCohort) {
+        if (oldCohort.students?.length !== newCohort.students?.length) {
+          if (oldCohort.students?.length > newCohort.students?.length) this.removeStudentProfile();
           else await this.getStudentProfiles();
         }
-        if (oldVal.id !== newVal.id) {
+        if (oldCohort.id !== newCohort.id) {
           await this.getStudentProfiles();
         }
       },
     },
   },
   computed: {
-    ...mapState(useRootStore, ["currentCohortId"]),
+    ...mapState(useRootStore, ["person"]),
     filteredKeys() {
       return this.keys.filter((key) => key !== "Name");
     },
     isTeacher() {
-      return this.cohort.teachers.includes(this.person.id);
+      return this.cohort.teachers?.includes(this.person.id);
     },
   },
   methods: {
@@ -251,17 +248,17 @@ export default {
     },
     updateStudentsWithTasks(payload) {
       const foundIndex = this.students.findIndex((student) => student.id == payload.person.id);
-      console.log("this.students BEFORE PAYLOAD", this.students);
-      console.log(
-        "payload.tasks",
-        this.students[foundIndex].firstName +
-          " " +
-          this.students[foundIndex].lastName +
-          " = " +
-          payload.tasks,
-      );
+      // console.log("this.students BEFORE PAYLOAD", this.students);
+      // console.log(
+      //   "payload.tasks",
+      //   this.students[foundIndex].firstName +
+      //     " " +
+      //     this.students[foundIndex].lastName +
+      //     " = " +
+      //     payload.tasks,
+      // );
       this.students[foundIndex].tasks = payload.tasks;
-      console.log("this.students AFTER PAYLOAD", this.students);
+      // console.log("this.students AFTER PAYLOAD", this.students);
     },
   },
 };
