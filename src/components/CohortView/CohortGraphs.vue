@@ -89,7 +89,7 @@
 </template>
 <script>
 import ProgressionLineChart from "@/components/ProgressionLineChart.vue";
-import ActivityBarChart from "@/components/ActivityBarChart.vue";
+import ActivityBarChart from "@/components/Reused/ActivityBarChart.vue";
 import TimeframeFilters from "@/components/Reused/TimeframeFilters.vue";
 import Avatar from "@/components/Reused/Avatar.vue";
 import { fetchCohortByCohortId, fetchCourseByCourseId } from "@/lib/ff";

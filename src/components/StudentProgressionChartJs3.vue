@@ -66,7 +66,7 @@
 </template>
 
 <script>
-import Chart from "@/components/Chart.vue";
+import Chart from "@/components/Reused/Chart.vue";
 import { fetchCourseByCourseId } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import "chartjs-adapter-luxon";

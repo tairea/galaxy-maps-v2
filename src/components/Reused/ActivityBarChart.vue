@@ -34,7 +34,7 @@
 </template>
 
 <script>
-import Chart from "@/components/Chart.vue";
+import Chart from "@/components/Reused/Chart.vue";
 import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";
 import { DateTime } from "luxon";

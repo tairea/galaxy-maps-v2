@@ -46,8 +46,8 @@
 </template>
 
 <script>
-import Chart from "@/components/Chart.vue";
-import ActiveMissions from "@/components/ActiveMissions.vue";
+import Chart from "@/components/Reused/Chart.vue";
+import ActiveMissions from "@/components/UserDashboard/StudentCourseProgression/GalaxyProgressionCard/ActiveMissions.vue";
 import { getStudentsCoursesXAPIQuery, getActiveTaskXAPIQuery } from "@/lib/veracityLRS";
 import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";

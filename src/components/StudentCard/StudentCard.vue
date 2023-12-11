@@ -56,7 +56,7 @@ import StudentHours from "@/components/StudentCard/StudentHours.vue";
 import StudentCompletedTasks from "@/components/StudentCard/StudentCompletedTasks.vue";
 import StudentCohorts from "@/components/StudentCard/StudentCohorts.vue";
 import StudentActions from "@/components/StudentCard/StudentActions.vue";
-import StudentActivityTimeline from "@/components/StudentActivityTimeline.vue";
+import StudentActivityTimeline from "@/components/Reused/StudentActivityTimeline.vue";
 import { fetchCohortByCohortId, fetchCourseByCourseId } from "@/lib/ff";
 import { getStudentsCoursesXAPIQuery, getStudentsTimeDataXAPIQuery } from "@/lib/veracityLRS";
 import { dbMixins } from "@/mixins/DbMixins";
