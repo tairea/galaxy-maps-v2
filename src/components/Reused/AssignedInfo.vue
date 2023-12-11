@@ -75,7 +75,7 @@ import Course from "@/components/Reused/Course.vue";
 import Cohort from "@/components/Reused/Cohort.vue";
 import Avatar from "@/components/Reused/Avatar.vue";
 import { dbMixins } from "@/mixins/DbMixins";
-import { getCourseById } from "@/lib/ff";
+import { fetchCourseByCourseId, fetchCohortByCohortId } from "@/lib/ff";
 import { mapState } from "pinia";
 import useRootStore from "@/store/index";
 
@@ -89,17 +89,25 @@ export default {
     Course,
     AssignCohortDialog,
   },
-  props: ["assignCohorts", "assignCourses", "cohorts", "organisations", "people", "teacher"],
+  props: [
+    "assignCohorts",
+    "assignCourses",
+    "cohorts",
+    "organisations",
+    "people",
+    "teacher",
+    "cohort",
+  ],
   data() {
     return {
       courses: [],
     };
   },
-  beforeMount() {
+  async beforeMount() {
     this.getCohortCourses();
   },
   watch: {
-    currentCohort() {
+    cohort() {
       this.getCohortCourses();
     },
   },
@@ -107,13 +115,11 @@ export default {
     ...mapState(useRootStore, ["person", "currentCohort", "getCoursesInThisCohort", "user"]),
     isTeacher() {
       return (
-        this.user.data.admin ||
-        this.teacher ||
-        this.currentCohort.teachers?.includes(this.person.id)
+        this.user?.data?.admin || this.teacher || this.cohort?.teachers?.includes(this.person.id)
       );
     },
     courseCohort() {
-      return this.currentCohort.courseCohort;
+      return this.cohort.courseCohort;
     },
     isMissionView() {
       return this.$route.name == "SolarSystemView";
@@ -123,8 +129,8 @@ export default {
     async getCohortCourses() {
       if (this.assignCourses) {
         let courses = await Promise.all(
-          this.currentCohort?.courses.map((courseId) => {
-            return getCourseById(courseId);
+          this.cohort?.courses.map((courseId) => {
+            return fetchCourseByCourseId(courseId);
           }),
         );
         if (courses.length) {

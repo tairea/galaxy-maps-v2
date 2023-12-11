@@ -3,7 +3,7 @@
     <div id="left-section">
       <CohortInfo />
       <BackButton :toPath="'/cohorts'" />
-      <AssignedInfo assignCourses="true" />
+      <AssignedInfo :cohort="cohort" assignCourses="true" />
     </div>
 
     <div id="main-section">
@@ -18,7 +18,7 @@
             <span class="pl-3">OVERVIEW</span>
           </div>
         </div>
-        <StudentDataIterator v-if="studentsView" class="mt-4" />
+        <StudentDataIterator v-if="studentsView" class="mt-4" :cohort="cohort" />
         <CohortGraphs v-else :cohort="cohort" />
       </div>
     </div>

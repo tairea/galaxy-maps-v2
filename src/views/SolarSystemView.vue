@@ -6,6 +6,7 @@
         :topic="getTopicById(currentTopicId)"
         :tasks="teacher ? topicsTasks : personsTopicsTasks"
         :teacher="teacher"
+        :course="course"
       />
       <!-- <SolarSystemInfo
         :topic="
@@ -30,6 +31,7 @@
       <MissionsList
         :tasks="teacher ? topicsTasks : personsTopicsTasks"
         :topicId="currentTopicId"
+        :topic="topic"
         :teacher="teacher"
         @task="taskForHelpInfo($event)"
         @missionActivated="peopleInTopic.push(person)"

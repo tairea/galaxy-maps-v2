@@ -21,7 +21,7 @@
               :task="task"
               :id="task.id"
               :index="index"
-              :topicId="topicId"
+              :topicId="topic.id"
               :topicActive="topicActive"
               :teacher="teacher"
               @missionActivated="missionActivated"
@@ -36,7 +36,7 @@
     </div>
 
     <div class="createButton mt-8" v-if="teacher">
-      <CreateEditDeleteMissionDialog :topicId="topicId" />
+      <CreateEditDeleteMissionDialog :topicId="topic.id" />
     </div>
   </div>
 </template>
@@ -53,7 +53,7 @@ export default {
     MissionsCard,
     CreateEditDeleteMissionDialog,
   },
-  props: ["tasks", "topicId", "teacher"],
+  props: ["tasks", "topic", "teacher"],
   data() {
     return {
       activeMission: false,
@@ -69,7 +69,7 @@ export default {
     this.missionsLoading = false;
   },
   computed: {
-    ...mapState(useRootStore, ["person", "currentTopic"]),
+    ...mapState(useRootStore, ["person"]),
   },
   methods: {
     missionClicked(task) {
@@ -83,7 +83,7 @@ export default {
       this.indexOfActiveTask = this.tasks.findIndex((object) => {
         return object.taskStatus == "active" || object.taskStatus == "declined";
       });
-      if (this.currentTopic.topicStatus === "active") this.topicActive = true;
+      if (this.topic.topicStatus === "active") this.topicActive = true;
     },
     topicCompleted() {
       console.log("3");
