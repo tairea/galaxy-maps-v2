@@ -8,7 +8,7 @@
         This is an early Alpha preview release. <br /><span
           class="overline ma-0"
           style="font-size: 0.7rem !important"
-          >Version: 0.1.2312</span
+          >Version: {{ versionNumber }}</span
         >
       </p>
     </v-tooltip>
@@ -19,7 +19,9 @@
 export default {
   name: "VersionStatus",
   data() {
-    return {};
+    return {
+      versionNumber: "0.2312.1", // [version.yearMonth.patch]
+    };
   },
   methods: {},
 };
