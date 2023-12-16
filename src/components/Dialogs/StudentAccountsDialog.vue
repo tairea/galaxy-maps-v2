@@ -91,8 +91,8 @@
 </template>
 
 <script>
-import CreateAccountForm from "@/components/CreateAccountForm.vue";
-import StudentImportCsv from "@/components/StudentImportCsv.vue";
+import CreateAccountForm from "@/components/Dialogs/CreateAccountForm.vue";
+import StudentImportCsv from "@/components/Reused/StudentImportCsv.vue";
 import ConfirmDeleteStudentDialog from "@/components/Dialogs/ConfirmDeleteStudentDialog.vue";
 import EditStudentDialog from "@/components/Dialogs/EditStudentDialog.vue";
 

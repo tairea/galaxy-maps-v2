@@ -36,7 +36,7 @@
 </template>
 
 <script>
-import PopupStudentProgress from "@/components/StudentCard/PopupStudentProgress.vue";
+import PopupStudentProgress from "@/components/CohortView/StudentDataIterator/StudentCard/PopupStudentProgress.vue";
 import { fetchPersonsTasksByPersonIdCourseIdTopicId } from "@/lib/ff";
 import { mdiAccount } from "@mdi/js";
 

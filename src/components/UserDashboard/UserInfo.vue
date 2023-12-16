@@ -46,8 +46,8 @@
 </template>
 
 <script>
-import StudentAvatar from "@/components/StudentAvatar.vue";
-import StudentEditDialog from "@/components/StudentEditDialog.vue";
+import StudentAvatar from "@/components/UserDashboard/UserInfo/StudentAvatar.vue";
+import StudentEditDialog from "@/components/Dialogs/StudentEditDialog.vue";
 import Cohort from "@/components/Reused/Cohort.vue";
 import { db, storage } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";

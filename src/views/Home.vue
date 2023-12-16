@@ -7,8 +7,8 @@
 </template>
 
 <script>
-import UserBar from "@/components/UserBar.vue";
-import NavBar from "@/components/NavBar.vue";
+import UserBar from "@/components/Home/UserBar.vue";
+import NavBar from "@/components/Home/NavBar.vue";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
 

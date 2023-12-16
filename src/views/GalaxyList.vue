@@ -79,7 +79,7 @@
 
 <script>
 import CreateEditDeleteGalaxyDialog from "@/components/Dialogs/CreateEditDeleteGalaxyDialog.vue";
-import DiscoverGalaxyButton from "@/components/DiscoverGalaxyButton.vue";
+import DiscoverGalaxyButton from "@/components/Dialogs/DiscoverGalaxyButton.vue";
 import GalaxyListPanel from "@/components/GalaxyList/GalaxyListPanel.vue";
 import GalaxyListInfoPanel from "@/components/GalaxyList/GalaxyListInfoPanel.vue";
 import Galaxies from "@/components/GalaxyList/Galaxies.vue";

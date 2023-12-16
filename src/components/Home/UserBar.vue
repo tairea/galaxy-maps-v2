@@ -156,9 +156,9 @@
 </template>
 
 <script>
-// import ThemeColourPicker from "@/components/ThemeColourPicker.vue";
+// import ThemeColourPicker from "@/components/Home/UserBar/ThemeColourPicker.vue";
 import LoginDialog from "@/components/Dialogs/LoginDialog.vue";
-import StudentEditDialog from "@/components/StudentEditDialog.vue";
+import StudentEditDialog from "@/components/Dialogs/StudentEditDialog.vue";
 import { db, storage } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mdiAccount, mdiPencil, mdiSend, mdiDoorClosed, mdiMessage, mdiGithub } from "@mdi/js";

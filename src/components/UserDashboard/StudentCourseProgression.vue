@@ -19,7 +19,7 @@
 </template>
 
 <script>
-import GalaxyProgressionCard from "@/components/GalaxyProgressionCard.vue";
+import GalaxyProgressionCard from "@/components/UserDashboard/StudentCourseProgression/GalaxyProgressionCard.vue";
 import { getStudentsCoursesXAPIQuery } from "@/lib/veracityLRS";
 
 export default {

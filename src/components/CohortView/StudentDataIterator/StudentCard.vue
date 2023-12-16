@@ -49,14 +49,14 @@
 </template>
 
 <script>
-import StudentCardStatus from "@/components/StudentCard/StudentCardStatus.vue";
-import StudentCardProgress from "@/components/StudentCard/StudentCardProgress.vue";
-import StudentCardActivities from "@/components/StudentCard/StudentCardActivities.vue";
-import StudentHours from "@/components/StudentCard/StudentHours.vue";
-import StudentCompletedTasks from "@/components/StudentCard/StudentCompletedTasks.vue";
-import StudentCohorts from "@/components/StudentCard/StudentCohorts.vue";
-import StudentActions from "@/components/StudentCard/StudentActions.vue";
-import StudentActivityTimeline from "@/components/StudentActivityTimeline.vue";
+import StudentCardStatus from "@/components/CohortView/StudentDataIterator/StudentCard/StudentCardStatus.vue";
+import StudentCardProgress from "@/components/CohortView/StudentDataIterator/StudentCard/StudentCardProgress.vue";
+import StudentCardActivities from "@/components/CohortView/StudentDataIterator/StudentCard/StudentCardActivities.vue";
+import StudentHours from "@/components/CohortView/StudentDataIterator/StudentCard/StudentHours.vue";
+import StudentCompletedTasks from "@/components/CohortView/StudentDataIterator/StudentCard/StudentCompletedTasks.vue";
+import StudentCohorts from "@/components/CohortView/StudentDataIterator/StudentCard/StudentCohorts.vue";
+import StudentActions from "@/components/CohortView/StudentDataIterator/StudentCard/StudentActions.vue";
+import StudentActivityTimeline from "@/components/Reused/StudentActivityTimeline.vue";
 import { fetchCohortByCohortId, fetchCourseByCourseId } from "@/lib/ff";
 import { getStudentsCoursesXAPIQuery, getStudentsTimeDataXAPIQuery } from "@/lib/veracityLRS";
 import { dbMixins } from "@/mixins/DbMixins";

@@ -101,7 +101,7 @@
         </div>
 
         <!-- OPEN VERSION -->
-        <div class="mb-6">
+        <div class="mb-6 d-flex justify-center align-center">
           <v-tooltip
             top
             color="subBackground"
@@ -218,7 +218,7 @@ import EditOrganisationButtonDialog from "@/components/Dialogs/EditOrganisationB
 import Cohort from "@/components/Reused/Cohort.vue";
 import CohortPanelV2 from "@/components/CohortList/CohortPanelV2.vue";
 import TimeframeFilters from "@/components/Reused/TimeframeFilters.vue";
-import Organisation from "@/components/Organisation.vue";
+import Organisation from "@/components/Reused/Organisation.vue";
 import useRootStore from "@/store/index";
 import { mdiPlus } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
@@ -249,7 +249,7 @@ export default {
     unselectedCohorts: [],
     orderedCohorts: [],
     expand: false,
-    paidFeatureMessage: `<div class="ma-2"><p class="text-center">Paid feature.</p><p class="text-center">Contact us to upgrade: <a href="mailto:base@galaxymaps.io">base@galaxymaps.io</a></p></div>`,
+    paidFeatureMessage: `<div class="ma-2"><p class="text-center overline">Paid feature.</p><p class="text-center">Contact us to upgrade: <a href="mailto:base@galaxymaps.io">base@galaxymaps.io</a></p></div>`,
   }),
   watch: {
     cohorts() {
