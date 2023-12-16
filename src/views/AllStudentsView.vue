@@ -34,9 +34,8 @@
 <script>
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
-import StudentProgressionChartJs3 from "@/components/StudentProgressionChartJs3.vue";
+import StudentProgressionChartJs3 from "@/components/AllStudentsView/StudentProgressionChartJs3.vue";
 import { dbMixins } from "@/mixins/DbMixins";
-import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
 

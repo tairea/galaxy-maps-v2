@@ -90,8 +90,8 @@ import CreateEditDeleteOrganisationDialog from "@/components/Dialogs/CreateEditD
 import CreateAdminDialog from "@/components/Dialogs/CreateAdminDialog.vue";
 import EditOrganisationButtonDialog from "@/components/Dialogs/EditOrganisationButtonDialog.vue";
 import Cohort from "@/components/Reused/Cohort.vue";
-import CohortPanel from "@/components/CohortPanel.vue";
-import Organisation from "@/components/Organisation.vue";
+import CohortPanel from "@/components/CohortList/CohortPanel.vue";
+import Organisation from "@/components/Reused/Organisation.vue";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
 

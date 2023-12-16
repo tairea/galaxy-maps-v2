@@ -11,7 +11,7 @@ import UserDashboard from "@/views/UserDashboard.vue";
 // import VerifyEmail from "@/views/VerifyEmail.vue";
 // import ResetPassword from "@/views/ResetPassword.vue";
 // import Register from "@/views/Register.vue";
-// import EmailSignIn from "@/components/EmailSignIn.vue";
+// import EmailSignIn from "@/components/Reused/EmailSignIn.vue";
 import LandingPage from "@/views/LandingPage.vue";
 import useRootStore from "@/store/index";
 import firebase from "firebase/compat/app";

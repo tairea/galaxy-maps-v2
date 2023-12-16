@@ -134,8 +134,8 @@
 
 <script>
 import Avatar from "@/components/Reused/Avatar.vue";
-import ProgressionLineChart from "@/components/ProgressionLineChart.vue";
-import ActivityBarChart from "@/components/ActivityBarChart.vue";
+import ProgressionLineChart from "@/components/Reused/ProgressionLineChart.vue";
+import ActivityBarChart from "@/components/Reused/ActivityBarChart.vue";
 import { getCohortsCourseDataXAPIQuery, getStudentsTimeDataXAPIQuery } from "@/lib/veracityLRS";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";

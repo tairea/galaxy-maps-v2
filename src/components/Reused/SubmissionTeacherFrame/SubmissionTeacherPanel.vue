@@ -66,14 +66,6 @@
                 :isTeacher="isTeacher"
                 :reviewed="reviewed"
               />
-              <!-- <MarkSubmissionCompleted
-                :submission="submission"
-                :requesterPerson="requesterPerson"
-              />
-              <SubmissionResponseDialog
-                :submission="submission"
-                :requesterPerson="requesterPerson"
-              /> -->
             </div>
           </template>
         </v-expansion-panel-content>
@@ -84,8 +76,6 @@
 
 <script>
 import Avatar from "@/components/Reused/Avatar.vue";
-// import MarkSubmissionCompleted from "@/components/MarkSubmissionCompleted.vue";
-// import SubmissionResponseDialog from "@/components/SubmissionResponseDialog.vue";
 import SubmissionReviewDialog from "@/components/Dialogs/SubmissionReviewDialog.vue";
 import { fetchPersonByPersonId } from "@/lib/ff";
 import useRootStore from "@/store/index";
@@ -96,8 +86,6 @@ export default {
   name: "SubmissionTeacherPanel",
   props: ["submission", "on", "attrs", "isDashboardView", "isTeacher"],
   components: {
-    // MarkSubmissionCompleted,
-    // SubmissionResponseDialog,
     SubmissionReviewDialog,
     Avatar,
   },

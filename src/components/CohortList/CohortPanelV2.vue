@@ -123,9 +123,9 @@
 
 <script>
 import Avatar from "@/components/Reused/Avatar.vue";
-import ProgressionLineChart from "@/components/ProgressionLineChart.vue";
-import ActivityBarChart from "@/components/ActivityBarChart.vue";
-import Organisation from "@/components/Organisation.vue";
+import ProgressionLineChart from "@/components/Reused/ProgressionLineChart.vue";
+import ActivityBarChart from "@/components/Reused/ActivityBarChart.vue";
+import Organisation from "@/components/Reused/Organisation.vue";
 import { getCohortsCourseDataXAPIQuery, getStudentsTimeDataXAPIQuery } from "@/lib/veracityLRS";
 import useRootStore from "@/store/index";
 import { mdiInformationVariant } from "@mdi/js";

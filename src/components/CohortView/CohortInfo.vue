@@ -31,7 +31,7 @@
 </template>
 
 <script>
-import Organisation from "@/components/Organisation.vue";
+import Organisation from "@/components/Reused/Organisation.vue";
 import CreateEditDeleteCohortDialog from "@/components/Dialogs/CreateEditDeleteCohortDialog.vue";
 import Avatar from "@/components/Reused/Avatar.vue";
 import { fetchCohortByCohortId, fetchPersonByPersonId } from "@/lib/ff";

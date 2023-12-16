@@ -108,15 +108,14 @@
 </template>
 
 <script>
-import UserInfo from "@/components/UserInfo.vue";
-import StudentActivityTimeline from "@/components/StudentActivityTimeline.vue";
-import StudentCourseProgression from "@/components/StudentCourseProgression.vue";
+import UserInfo from "@/components/UserDashboard/UserInfo.vue";
+import StudentActivityTimeline from "@/components/Reused/StudentActivityTimeline.vue";
+import StudentCourseProgression from "@/components/UserDashboard/StudentCourseProgression.vue";
 import TimeframeFilters from "@/components/Reused/TimeframeFilters.vue";
 import CohortPanelV2 from "@/components/CohortList/CohortPanelV2.vue";
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import CreateAdminDialog from "@/components/Dialogs/CreateAdminDialog.vue";
-import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mdiInformationVariant } from "@mdi/js";
 import { mapActions, mapState } from "pinia";

@@ -35,7 +35,7 @@
 </template>
 
 <script>
-import LoadingSpinner from "@/components/LoadingSpinner.vue";
+import LoadingSpinner from "@/components/Reused/LoadingSpinner.vue";
 import useRootStore from "@/store/index";
 import Network from "@/vue2vis/Network.vue";
 import { mdiPlus } from "@mdi/js";

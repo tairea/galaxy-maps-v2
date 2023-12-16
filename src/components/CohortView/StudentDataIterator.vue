@@ -108,9 +108,9 @@
 <script>
 // import CreateAccountDialog from "@/components/Dialogs/CreateAccountDialog.vue";
 // import ImportCsvDialog from "@/components/ImportCsvDialog.vue";
-import StudentAccountsDialog from "@/components/CohortView/StudentAccountsDialog.vue";
-import ViewStudentDetails from "@/components/ViewStudentDetails.vue";
-import StudentCard from "@/components/StudentCard/StudentCard.vue";
+import StudentAccountsDialog from "@/components/Dialogs/StudentAccountsDialog.vue";
+import ViewStudentDetails from "@/components/CohortView/StudentDataIterator/ViewStudentDetails.vue";
+import StudentCard from "@/components/CohortView/StudentDataIterator/StudentCard.vue";
 import TimeframeFilters from "@/components/Reused/TimeframeFilters.vue";
 import EditStudentDialog from "@/components/Dialogs/EditStudentDialog.vue";
 import { fetchCohortByCohortId, fetchPersonByPersonId } from "@/lib/ff";

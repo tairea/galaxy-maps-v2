@@ -73,8 +73,8 @@
 </template>
 
 <script>
-import NewPassword from "@/components/NewPassword.vue";
-import EmailSignIn from "@/components/EmailSignIn.vue";
+import NewPassword from "@/components/Reused/NewPassword.vue";
+import EmailSignIn from "@/components/Reused/EmailSignIn.vue";
 import useRootStore from "@/store/index";
 import firebase from "firebase/compat/app";
 import { mapActions, mapState } from "pinia";
