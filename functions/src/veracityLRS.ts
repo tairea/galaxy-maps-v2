@@ -7,7 +7,12 @@ const btoa = (text: string) => {
 const auth = "Basic " + btoa(`${process.env.VERACITY_LRS_SECRET}`);
 
 // ========== Students goes online
-export const studentOnlineXAPIStatement = (actor: { [field: string]: any }) => {
+export const studentOnlineXAPIStatement = (actor: {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}) => {
   // console.log("sending student xAPI statement... student is online");
   const statement = {
     actor: {
@@ -49,7 +54,12 @@ export const studentOnlineXAPIStatement = (actor: { [field: string]: any }) => {
 };
 
 // ========== Students goes offline
-export const studentOfflineXAPIStatement = (actor: { [field: string]: any }) => {
+export const studentOfflineXAPIStatement = (actor: {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}) => {
   // console.log("sending student xAPI statement... student is offline");
   const statement = {
     actor: {
@@ -92,8 +102,8 @@ export const studentOfflineXAPIStatement = (actor: { [field: string]: any }) => 
 
 // ========== Start Task (make task active)
 export const startGalaxyXAPIStatement = (
-  actor: { [field: string]: any },
-  context: { galaxy: { [field: string]: any } },
+  actor: { id: string; firstName: string; lastName: string; email: string },
+  context: { galaxy: { id: string; title: string } },
 ) => {
   console.log("sending student xAPI statement... galaxy started...");
   const statement = {

@@ -1,6 +1,6 @@
 import admin from "firebase-admin";
 import * as functions from "firebase-functions";
-import { firestore } from "./_shared.js";
+import { db } from "./_shared.js";
 import { sendStudentInActive, sendTeacherStudentInActive } from "./emails.js";
 
 // ====== SCHEDULE CHECK FOR INACTIVITY  ==================
@@ -23,7 +23,7 @@ function getPreviousDate(preDays: number) {
  * Get person doc
  */
 async function getPersonByIdFromDB(personId: string) {
-  const personSnapshot = await firestore.collection("people").doc(personId).get();
+  const personSnapshot = await db.collection("people").doc(personId).get();
 
   const person: admin.firestore.DocumentData = {
     id: personSnapshot.id,
@@ -37,7 +37,7 @@ async function getPersonByIdFromDB(personId: string) {
  * Get list of cohort names and teacher id
  */
 async function getPersonsTeachersById(personId: string) {
-  const cohortsSnapshot = await firestore
+  const cohortsSnapshot = await db
     .collection("cohorts")
     .where("students", "array-contains", personId)
     .get();
@@ -70,7 +70,7 @@ async function checkInactivity() {
   functions.logger.log("1 week ago: ", oneWeek);
   functions.logger.log("2 weeks ago: ", twoWeeks);
 
-  const statusSnapshot = await firestore.collection("status").get();
+  const statusSnapshot = await db.collection("status").get();
 
   const userStatuses: { [id: string]: admin.firestore.DocumentData } = {};
   for (const doc of statusSnapshot.docs) {

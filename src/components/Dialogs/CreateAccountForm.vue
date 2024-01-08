@@ -117,17 +117,17 @@
 import {
   fetchCohortByCohortId,
   fetchPersonByEmail,
+  createPerson,
   updatePersonByPersonId,
-  assignTopicsAndTasksToPerson,
+  addPersonToCohort,
+  assignCourseToPerson,
 } from "@/lib/ff";
-import { dbMixins } from "@/mixins/DbMixins";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
 
 export default {
   name: "CreateAccountForm",
-  mixins: [dbMixins],
   props: {
     accountType: { type: String },
     student: { type: Object },
@@ -216,7 +216,7 @@ export default {
         } else {
           try {
             await updatePersonByPersonId(profile.id, profile); // updates /people/:id profile
-            await this.MXaddExistingUserToCohort(profile); // adds student to /cohorts/:id/students
+            await addPersonToCohort(profile.id, this.cohort.id); // adds student to /cohorts/:id/students
 
             if (this.cohort.courses.length) {
               await this.assignStudentToCourses(profile); // adds course to /people/:id/assignedCourses
@@ -230,20 +230,20 @@ export default {
           }
         }
       } else {
-        const person = {
+        const profile = {
           ...this.account,
           displayName: this.account.firstName + " " + this.account.lastName,
         };
-        console.log("person does not exist in db. creating them now...", person);
+        console.log("person does not exist in db. creating them now...", profile);
         try {
-          await this.MXcreateUser(person);
+          const person = await createPerson(profile);
           this.setSnackbar({
             show: true,
             text: "Account created",
             color: "baseAccent",
           });
           if (!this.teacher) {
-            await this.MXaddStudentToCohort(person.id, this.currentCohortId);
+            await addPersonToCohort(person.id, this.currentCohortId);
             this.setSnackbar({
               show: true,
               text: "Student added to Cohort",
@@ -268,8 +268,7 @@ export default {
     },
     async assignStudentToCourses(person) {
       for (const courseId of this.cohort.courses) {
-        await this.MXassignCourseToStudent(person.id, courseId);
-        await assignTopicsAndTasksToPerson(person.id, courseId);
+        await assignCourseToPerson(person.id, courseId);
       }
     },
   },

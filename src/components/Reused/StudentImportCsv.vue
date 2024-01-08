@@ -68,15 +68,19 @@
 </template>
 
 <script>
-import { fetchCohortByCohortId, fetchPersonByEmail } from "@/lib/ff";
-import { dbMixins } from "@/mixins/DbMixins";
+import {
+  fetchCohortByCohortId,
+  fetchPersonByEmail,
+  createPerson,
+  addPersonToCohort,
+  assignCourseToPerson,
+} from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mdiDownload } from "@mdi/js";
 import { mapState } from "pinia";
 
 export default {
   name: "StudentImportCsv",
-  mixins: [dbMixins],
   components: {},
   data() {
     return {
@@ -139,36 +143,36 @@ export default {
           console.log("saving student: ", index, ":", student);
 
           // resctructure data to match db fields
-          const person = {
+          const profile = {
             ...student,
             email: student.studentEmail,
             nsn: student.nsnNumber,
           };
-          delete person.nsnNumber;
-          delete person.studentEmail;
+          delete profile.nsnNumber;
+          delete profile.studentEmail;
 
-          console.log("person: ", person);
+          console.log("person: ", profile);
 
           // check if student exisits
-          const personExists = await fetchPersonByEmail(person.email);
+          const personExists = await fetchPersonByEmail(profile.email);
 
           if (personExists) {
             console.log("personExisits: ", personExists);
             // add existing person to cohort
-            await this.MXaddExistingUserToCohort(personExists);
+            await addPersonToCohort(personExists.id, this.cohort.id);
 
             if (this.cohort.courses.length) {
               for (const courseId of this.cohort.courses) {
-                await this.MXassignCourseToStudent(personExists.id, courseId);
+                await assignCourseToPerson(personExists.id, courseId);
               }
             }
 
             console.log("exisitng person successfully added");
           } else {
-            console.log("creating new student: ", index, ":", person);
+            console.log("creating new student: ", index, ":", profile);
             // create user and then add them to cohort
-            await this.MXcreateUser(person);
-            await this.MXaddStudentToCohort(person.id, this.currentCohortId);
+            const person = await createPerson(profile);
+            await addPersonToCohort(person.id, this.currentCohortId);
             console.log("new student successfully added");
           }
         }),

@@ -1,11 +1,20 @@
 import admin from "firebase-admin";
 import * as functions from "firebase-functions";
+import { DOMAIN } from "./_constants.js";
+import { db } from "./_shared.js";
+import { sendStudentInviteEmail, sendTeacherInviteEmail } from "./emails.js";
 
 // upgrade someones account to admin
 export const addAdminRoleHttpsEndpoint = functions.https.onCall(async (uid: string, context) => {
   // check request is made by an admin
-  if (context.auth == null || context.auth.token.admin !== true) {
-    return { error: "Only admins can add other admins" };
+  if (context.auth == null) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "Must be authenticated to access this endpoint",
+    );
+  }
+  if (context.auth.token.admin !== true) {
+    throw new functions.https.HttpsError("permission-denied", "Only admins can add other admins");
   }
 
   // get user and add admin custom claim
@@ -20,39 +29,69 @@ export const addAdminRoleHttpsEndpoint = functions.https.onCall(async (uid: stri
       message: `Success! ${user.uid} has been made an admin.`,
     };
   } catch (err) {
-    return {
-      error: `something went wrong ${err}`,
-    };
+    functions.logger.error(err);
+    throw new functions.https.HttpsError("internal", `something went wrong ${err}`);
   }
 });
 
-// Create new user
-export const createUserHttpsEndpoint = functions.https.onCall(async (data, _context) => {
-  // check request is made by an admin
+export const createNewUserHttpsEndpoint = functions.https.onCall(async (data, context) => {
+  // TODO: this should be split and permissions checks ensured but that requires a major refactor
+  // of how adding students to cohorts works
+  if (context.auth == null) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "Must be authenticated to access this endpoint",
+    );
+  }
+
+  const profile = data.profile as Record<string, unknown> | null;
+  if (profile == null) {
+    throw new functions.https.HttpsError("invalid-argument", "missing profile");
+  }
 
   try {
-    const createdUser = await admin.auth().createUser(data);
-    return createdUser;
+    const createdUser = await admin.auth().createUser(profile);
+
+    const person: { id: string } & Record<string, unknown> = {
+      ...profile,
+      id: createdUser.uid,
+    };
+    if (person.accountType === "teacher") {
+      delete person.nsn;
+      delete person.parentEmail;
+    }
+    delete person.inviter;
+    await db.collection("people").doc(person.id).set(person);
+
+    // Generate a magic email link
+    // set magic link parameters
+    const actionCodeSettings = {
+      url: `https://${DOMAIN}/email_signin`,
+      handleCodeInApp: true,
+    };
+    const link = await admin.auth().generateSignInWithEmailLink(data.email, actionCodeSettings);
+
+    if (person.accountType == "teacher") {
+      await sendTeacherInviteEmail(person.email as string, person.displayName as string, link);
+    } else {
+      await sendStudentInviteEmail(
+        person.email as string,
+        person.displayName as string,
+        link,
+        person.inviter as string,
+      );
+    }
+
+    const personDoc = await db.collection("people").doc(person.id).get();
+
+    return {
+      person: {
+        ...personDoc.data(),
+        id: personDoc.id,
+      },
+    };
   } catch (err) {
     functions.logger.error(err);
-    return err;
-  }
-});
-
-// Generate a magic email link
-export const generateEmailLinkHttpsEndpoint = functions.https.onCall(async (data, _context) => {
-  // set magic link parameters
-  const actionCodeSettings = {
-    url: data.host + "/email_signin",
-    handleCodeInApp: true,
-  };
-
-  try {
-    const link = await admin.auth().generateSignInWithEmailLink(data.email, actionCodeSettings);
-    functions.logger.log("link successfully created:", link);
-    return link;
-  } catch (error) {
-    functions.logger.log("error creating link:", error);
-    return error;
+    throw new functions.https.HttpsError("internal", `something went wrong ${err}`);
   }
 });

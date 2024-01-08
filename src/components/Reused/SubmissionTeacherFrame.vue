@@ -23,13 +23,11 @@
 </template>
 <script>
 import SubmissionTeacherPanel from "@/components/Reused/SubmissionTeacherFrame/SubmissionTeacherPanel.vue";
-import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
 
 export default {
   name: "SubmissionTeacherFrame",
-  mixins: [dbMixins],
   props: ["courses", "students", "isTeacher"],
   components: {
     SubmissionTeacherPanel,

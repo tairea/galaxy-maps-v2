@@ -59,13 +59,11 @@ import StudentActions from "@/components/CohortView/StudentDataIterator/StudentC
 import StudentActivityTimeline from "@/components/Reused/StudentActivityTimeline.vue";
 import { fetchCohortByCohortId, fetchCourseByCourseId } from "@/lib/ff";
 import { getStudentsCoursesXAPIQuery, getStudentsTimeDataXAPIQuery } from "@/lib/veracityLRS";
-import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
 
 export default {
   name: "StudentCard",
-  mixins: [dbMixins],
   components: {
     StudentCardStatus,
     StudentCardActivities,

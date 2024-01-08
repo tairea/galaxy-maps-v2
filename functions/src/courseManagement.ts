@@ -1,5 +1,6 @@
+import adminFirestore from "firebase-admin/firestore";
 import * as functions from "firebase-functions";
-import { firestore } from "./_shared.js";
+import { db } from "./_shared.js";
 import { startGalaxyXAPIStatement } from "./veracityLRS.js";
 
 // Get a course by id
@@ -9,7 +10,7 @@ export const getCourseByIdHttpsEndpoint = functions.https.onCall(async (data, co
     throw new functions.https.HttpsError("invalid-argument", "missing courseId");
   }
 
-  const courseDoc = await firestore.collection("courses").doc(data.courseId).get();
+  const courseDoc = await db.collection("courses").doc(courseId).get();
   const courseData = courseDoc.data();
 
   if (!courseDoc.exists || courseData == null) {
@@ -49,11 +50,11 @@ export const getCourseByIdHttpsEndpoint = functions.https.onCall(async (data, co
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const studentCohorts: Record<string, any>[] = [];
 
-  const studentQuerySnapShot = await firestore
+  const studentQuerySnapShot = await db
     .collection("cohorts")
     .where("students", "array-contains", context.auth.uid)
     .get();
-  const teacherQuerySnapShot = await firestore
+  const teacherQuerySnapShot = await db
     .collection("cohorts")
     .where("teachers", "array-contains", context.auth.uid)
     .get();
@@ -97,7 +98,7 @@ export const getCoursesHttpsEndpoint = functions.https.onCall(async (_data, cont
   // if the context is unauthenticated, only return courses that are public and
   // have a published status
   if (context.auth == null) {
-    const querySnapshot = await firestore
+    const querySnapshot = await db
       .collection("courses")
       .where("public", "==", true)
       .where("status", "==", "published")
@@ -111,12 +112,12 @@ export const getCoursesHttpsEndpoint = functions.https.onCall(async (_data, cont
         ...course,
       });
     }
-    return courses;
+    return { courses };
   }
 
   // if the context is authenticated and they are admin, return all courses
   if (context.auth.token.admin === true) {
-    const querySnapshot = await firestore.collection("courses").get();
+    const querySnapshot = await db.collection("courses").get();
 
     const courses = [];
     for (const doc of querySnapshot.docs) {
@@ -126,7 +127,7 @@ export const getCoursesHttpsEndpoint = functions.https.onCall(async (_data, cont
         ...course,
       });
     }
-    return courses;
+    return { courses };
   }
 
   // if the context is authenticated and they are not admin, return all courses
@@ -137,11 +138,11 @@ export const getCoursesHttpsEndpoint = functions.https.onCall(async (_data, cont
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const studentCohorts: Record<string, any>[] = [];
 
-  const studentQuerySnapShot = await firestore
+  const studentQuerySnapShot = await db
     .collection("cohorts")
     .where("students", "array-contains", context.auth.uid)
     .get();
-  const teacherQuerySnapShot = await firestore
+  const teacherQuerySnapShot = await db
     .collection("cohorts")
     .where("teachers", "array-contains", context.auth.uid)
     .get();
@@ -169,12 +170,12 @@ export const getCoursesHttpsEndpoint = functions.https.onCall(async (_data, cont
   ];
 
   const courseDocumentSnapshots = await Promise.all(
-    courseIds.map((x) => firestore.collection("courses").doc(x).get()),
+    courseIds.map((x) => db.collection("courses").doc(x).get()),
   );
 
-  const querySnapshot = await firestore
+  const querySnapshot = await db
     .collection("courses")
-    .where("owner", "==", firestore.collection("people").doc(context.auth.uid))
+    .where("owner", "==", db.collection("people").doc(context.auth.uid))
     .get();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -195,55 +196,159 @@ export const getCoursesHttpsEndpoint = functions.https.onCall(async (_data, cont
       ...course,
     });
   }
-  return courses;
+  return { courses };
 });
 
-// ====== ASSIGN TOPICS AND TASKS ==================
-export const assignTopicsAndTasksToMeHttpsEndpoint = functions.https.onCall(
-  (data: { courseId: string }, context) => {
-    if (context.auth == null) {
-      return { error: "Must be authenticated to access this endpoint" };
+// ====== ASSIGN PERSON TO COHORT ==================
+export const addMeToCohortHttpsEndpoint = functions.https.onCall(
+  async (data: { cohortId: string }, context) => {
+    const cohortId = data.cohortId as string | null;
+    if (cohortId == null) {
+      throw new functions.https.HttpsError("invalid-argument", "missing cohortId");
     }
-    const { courseId } = data;
+
+    if (context.auth == null) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "Must be authenticated to access this endpoint",
+      );
+    }
+
     const personId = context.auth.uid;
-    return assignTopicsAndTasksToStudent(personId, courseId);
+
+    const result = await addStudentToCohort(cohortId, personId);
+
+    return result;
   },
 );
 
-export const assignTopicsAndTasksToStudentHttpsEndpoint = functions.https.onCall(
-  (data: { personId: string; courseId: string }, context) => {
-    if (context.auth == null) {
-      return { error: "Must be authenticated to access this endpoint" };
-    }
-    // TODO: add permissions checks to see if current authenticated user has permission to
-    // add topics and tasks to the specified personId
-    const { personId, courseId } = data;
-    return assignTopicsAndTasksToStudent(personId, courseId);
-  },
-);
+export const addStudentToCohortHttpsEndpoint = functions.https.onCall(async (data, context) => {
+  const personId = data.personId as string | null;
+  const cohortId = data.cohortId as string | null;
+  if (personId == null) {
+    throw new functions.https.HttpsError("invalid-argument", "missing personId");
+  }
+  if (cohortId == null) {
+    throw new functions.https.HttpsError("invalid-argument", "missing cohortId");
+  }
+
+  if (context.auth == null) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "Must be authenticated to access this endpoint",
+    );
+  }
+  // TODO: add permissions checks to see if current authenticated user has permission to
+  // add the specified personId to the specified cohortId
+
+  const result = await addStudentToCohort(cohortId, personId);
+
+  return result;
+});
 
 /**
- * Add this galaxy metadata (eg. topics) to this persons course database
+ * Add person to cohort
  */
-async function assignTopicsAndTasksToStudent(personId: string, courseId: string) {
+async function addStudentToCohort(cohortId: string, personId: string) {
   // Load person and course from their IDs
-  const [personSnapshot, courseSnapshot] = await Promise.all([
-    firestore.collection("people").doc(personId).get(),
-    firestore.collection("courses").doc(courseId).get(),
+  const [cohortDoc, personDoc] = await Promise.all([
+    db.collection("cohorts").doc(cohortId).get(),
+    db.collection("people").doc(personId).get(),
   ]);
-  const person = personSnapshot.data();
-  const course = courseSnapshot.data();
+  const cohort = cohortDoc.data();
+  const person = personDoc.data();
+
+  if (cohort == null) {
+    throw new functions.https.HttpsError("not-found", `Cohort not found: ${cohortId}`);
+  }
+  if (person == null) {
+    throw new functions.https.HttpsError("not-found", `Person not found: ${personId}`);
+  }
+
+  await cohortDoc.ref.update({
+    students: adminFirestore.FieldValue.arrayUnion(personId),
+  });
+
+  const updatedCohortDoc = await cohortDoc.ref.get();
+
+  return {
+    cohort: {
+      id: updatedCohortDoc.id,
+      ...updatedCohortDoc.data(),
+    },
+  };
+}
+
+// ====== ASSIGN PERSON TO COURSE ==================
+export const assignCourseToMeHttpsEndpoint = functions.https.onCall(
+  async (data: { courseId: string }, context) => {
+    const courseId = data.courseId as string | null;
+    if (courseId == null) {
+      throw new functions.https.HttpsError("invalid-argument", "missing courseId");
+    }
+
+    if (context.auth == null) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "Must be authenticated to access this endpoint",
+      );
+    }
+
+    const personId = context.auth.uid;
+
+    const result = await assignCourseToStudent(courseId, personId);
+
+    return result;
+  },
+);
+
+export const assignCourseToStudentHttpsEndpoint = functions.https.onCall(async (data, context) => {
+  const personId = data.personId as string | null;
+  const courseId = data.courseId as string | null;
+  if (personId == null) {
+    throw new functions.https.HttpsError("invalid-argument", "missing personId");
+  }
+  if (courseId == null) {
+    throw new functions.https.HttpsError("invalid-argument", "missing courseId");
+  }
+
+  if (context.auth == null) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "Must be authenticated to access this endpoint",
+    );
+  }
+  // TODO: add permissions checks to see if current authenticated user has permission to
+  // add the specified personId to the specified courseId
+
+  const result = await assignCourseToStudent(courseId, personId);
+
+  return result;
+});
+
+/**
+ * Add person to course
+ */
+async function assignCourseToStudent(courseId: string, personId: string) {
+  // Load person and course from their IDs
+  const [personDoc, courseDoc] = await Promise.all([
+    db.collection("people").doc(personId).get(),
+    db.collection("courses").doc(courseId).get(),
+  ]);
+  const person = personDoc.data();
+  const course = courseDoc.data();
 
   if (person == null) {
-    return { error: `Person not found: ${personId}` };
+    throw new functions.https.HttpsError("not-found", `Person not found: ${personId}`);
+  }
+  if (course == null) {
+    throw new functions.https.HttpsError("not-found", `Course not found: ${courseId}`);
   }
 
-  if (course == null) {
-    return { error: `Course not found: ${courseId}` };
-  }
+  // Add the topics and tasks to the student
 
   // 1) get topics in this course
-  const querySnapshot = await firestore
+  const querySnapshot = await db
     .collection("courses")
     .doc(course.id)
     .collection("topics")
@@ -267,7 +372,7 @@ async function assignTopicsAndTasksToStudent(personId: string, courseId: string)
       topicStatus = "locked";
     }
 
-    await firestore
+    await db
       .collection("people")
       .doc(person.id)
       .collection(course.id)
@@ -278,7 +383,7 @@ async function assignTopicsAndTasksToStudent(personId: string, courseId: string)
       });
 
     // 3) check if this topic has tasks
-    const subquerySnapshot = await firestore
+    const subquerySnapshot = await db
       .collection("courses")
       .doc(course.id)
       .collection("topics")
@@ -294,7 +399,7 @@ async function assignTopicsAndTasksToStudent(personId: string, courseId: string)
       const task = subDoc.data();
 
       if (subDoc.exists) {
-        await firestore
+        await db
           .collection("people")
           .doc(person.id)
           .collection(course.id)
@@ -309,8 +414,33 @@ async function assignTopicsAndTasksToStudent(personId: string, courseId: string)
       }
     }
   }
-  // Send Galaxy Started statment to LRS
-  startGalaxyXAPIStatement(person, { galaxy: course });
 
-  return { message: "Completed" };
+  await personDoc.ref.update({
+    assignedCourses: adminFirestore.FieldValue.arrayUnion(courseId),
+  });
+
+  // Send Galaxy Started statment to LRS
+  startGalaxyXAPIStatement(
+    {
+      id: personDoc.id,
+      firstName: person.firstName,
+      lastName: person.lastName,
+      email: person.email,
+    },
+    {
+      galaxy: {
+        id: courseDoc.id,
+        title: course.title,
+      },
+    },
+  );
+
+  const updatedPersonDoc = await personDoc.ref.get();
+
+  return {
+    cohort: {
+      id: updatedPersonDoc.id,
+      ...updatedPersonDoc.data(),
+    },
+  };
 }

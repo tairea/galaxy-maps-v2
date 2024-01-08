@@ -58,11 +58,6 @@
 
 <script>
 import Chart from "@/components/Reused/Chart.vue";
-import { colours } from "@/lib/utils";
-import { dbMixins } from "@/mixins/DbMixins";
-import useRootStore from "@/store/index";
-import { DateTime } from "luxon";
-import { mapState } from "pinia";
 
 export default {
   name: "ProgressionLineChart",
@@ -70,7 +65,6 @@ export default {
   components: {
     Chart,
   },
-  mixins: [dbMixins],
 
   data() {
     return {
@@ -121,7 +115,7 @@ export default {
   },
   async mounted() {},
   computed: {
-    // ...mapState(useRootStore, ["person", "getTopicById"]),
+    // ...mapState(useRootStore, ["person"]),
   },
   methods: {
     formatStudentsChartData(courseData) {

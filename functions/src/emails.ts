@@ -26,17 +26,6 @@ const mailTransport = nodemailer.createTransport({
   },
 });
 
-// ====== GM APP INVITE EMAIL ==================
-export const sendInviteEmailHttpsEndpoint = functions.https.onCall((data, _context) => {
-  const { email, displayName, link, inviter, accountType } = data;
-
-  if (accountType == "teacher") {
-    return sendTeacherInviteEmail(email, displayName, link);
-  } else {
-    return sendStudentInviteEmail(email, displayName, link, inviter);
-  }
-});
-
 /**
  * Sends an invite email to a new teacher.
  */
@@ -129,10 +118,6 @@ Galaxy Maps Team`;
 }
 
 // ======COURSE REGISTRATION NOTIFICATION==================
-export const sendNewCourseEmailHttpsEndpoint = functions.https.onCall((data, _context) => {
-  const { email, name, course } = data;
-  sendNewCourseEmail(email, name, course);
-});
 
 /**
  * Sends a new course registration notification email.

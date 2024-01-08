@@ -82,6 +82,15 @@ export const fetchPersonByEmail = async (
   };
 };
 
+export const createPerson = async (
+  profile: Record<string, any>,
+): Promise<{ id: string } & Record<string, any>> => {
+  // create user
+  const createNewUser = functions.httpsCallable("createNewUser");
+  const result = await createNewUser({ profile });
+  return result.data.person;
+};
+
 export const updatePersonByPersonId = async (personId: string, person: object): Promise<void> => {
   await updateDoc(doc(db, "people", personId), person);
 };
@@ -141,21 +150,38 @@ export const fetchPersonsTopicByPersonIdCourseIdTopicId = async (
   return _getDocumentHelper("people", personId, courseId, topicId);
 };
 
-// add this galaxy metadata (eg. topics) to my course database
-export const assignTopicsAndTasksToMe = async (courseId: string) => {
+// add person to cohort
+export const addMeToCohort = async (cohortId: string) => {
+  const data = {
+    cohortId,
+  };
+  const addMeToCohort = functions.httpsCallable("addMeToCohort");
+  return addMeToCohort(data);
+};
+
+export const addPersonToCohort = async (personId: string, cohortId: string) => {
+  const data = {
+    personId,
+    cohortId,
+  };
+  const addStudentToCohort = functions.httpsCallable("addStudentToCohort");
+  return addStudentToCohort(data);
+};
+
+// add course to person
+export const assignCourseToMe = async (courseId: string) => {
   const data = {
     courseId,
   };
-  const assignTopicsAndTasksToMe = functions.httpsCallable("assignTopicsAndTasksToMe");
-  return assignTopicsAndTasksToMe(data);
+  const assignCourseToMe = functions.httpsCallable("assignCourseToMe");
+  return assignCourseToMe(data);
 };
 
-// add this galaxy metadata (eg. topics) to this persons course database
-export const assignTopicsAndTasksToPerson = async (personId: string, courseId: string) => {
+export const assignCourseToPerson = async (personId: string, courseId: string) => {
   const data = {
     personId,
     courseId,
   };
-  const assignTopicsAndTasksToStudent = functions.httpsCallable("assignTopicsAndTasksToStudent");
-  return assignTopicsAndTasksToStudent(data);
+  const assignCourseToStudent = functions.httpsCallable("assignCourseToStudent");
+  return assignCourseToStudent(data);
 };

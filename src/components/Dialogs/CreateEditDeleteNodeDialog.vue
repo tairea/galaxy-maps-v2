@@ -318,7 +318,6 @@ export default {
       "personsTopics",
       "currentCourseId",
       "currentTopicId",
-      "getTopicById",
       "getPersonsTopicById",
     ]),
     dark() {
