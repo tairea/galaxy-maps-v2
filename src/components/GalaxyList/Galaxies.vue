@@ -174,7 +174,7 @@ export default {
       let coursesTopicNodes = this.allNodesForDisplay.filter(
         (node) => node.courseId == newCourseId,
       );
-      console.log("highlightCourse: zoom to:", coursesTopicNodes);
+
       if (coursesTopicNodes.length > 0) {
         // zoom out to fit all nodes
         this.zoomToNodes(coursesTopicNodes);

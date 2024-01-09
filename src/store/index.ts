@@ -47,6 +47,7 @@ const getDefaultState = () => {
     peopleInCourse: [] as Record<string, any>[],
     personsCourseTasks: [] as Record<string, any>[],
     courseTasks: [] as Record<string, any>[],
+    topicCompleted: {} as Record<string, any>,
   };
 };
 
@@ -200,6 +201,9 @@ export default defineStore({
           data: null,
         });
       }
+    },
+    setTopicCompleted(topic: { completed: boolean; topicId: Record<string, any> | null }) {
+      this.topicCompleted = topic;
     },
     // ===== Firestore - BIND ALL
     bindCourses: firestoreAction(

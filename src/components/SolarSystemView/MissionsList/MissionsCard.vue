@@ -183,7 +183,7 @@
         :topicId="topicId"
         :active="active"
         :declined="declined"
-        @topicCompleted="topicCompleted()"
+        @topicCompleted="topicCompleted"
       />
       <SelectedMissionsCard
         v-else
@@ -262,7 +262,7 @@ export default {
   },
   methods: {
     topicCompleted() {
-      console.log("2");
+      console.log("topic completed (emit 3)");
       this.$emit("topicCompleted");
     },
   },

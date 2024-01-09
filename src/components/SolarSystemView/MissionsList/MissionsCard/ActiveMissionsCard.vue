@@ -42,7 +42,7 @@
             :topicId="topicId"
             :active="active"
             :declined="declined"
-            @hello="topicCompleted($event)"
+            @topicCompleted="topicCompleted2"
           />
         </div>
       </div>
@@ -81,8 +81,8 @@ export default {
     },
   },
   methods: {
-    topicCompleted(e) {
-      console.log("1", e);
+    topicCompleted2(e) {
+      console.log("topic completed (emit 2)", e);
       this.$emit("topicCompleted");
     },
   },

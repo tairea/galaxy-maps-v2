@@ -11,7 +11,9 @@ import { DateTime } from "luxon";
 export default {
   name: "StudentHours",
   props: ["timeData", "timeframe"],
-  mounted() {},
+  mounted() {
+    console.log("timeData", this.timeData);
+  },
   computed: {
     calcHours() {
       let time = 0;
@@ -45,6 +47,38 @@ export default {
       // emit hours
       this.$emit("emitUpHours", timeAsHoursRounded);
       return timeAsHoursRounded;
+    },
+  },
+  methods: {
+    async calculateCourseTimes(userId) {
+      let statements = await getStatementsForUser(userId);
+
+      let courseTimes = new Map();
+      let currentCourseId = null;
+      let loginTimestamp = null;
+
+      for (let statement of statements) {
+        let courseId = statement.object.id;
+        let timestamp = new Date(statement.timestamp);
+
+        if (statement.verb.id === "loggedIntoGalaxyXAPIStatement") {
+          if (currentCourseId !== null) {
+            let timeSpent = timestamp - loginTimestamp;
+            courseTimes.set(currentCourseId, (courseTimes.get(currentCourseId) || 0) + timeSpent);
+          }
+          currentCourseId = courseId;
+          loginTimestamp = timestamp;
+        } else if (
+          statement.verb.id === "studentOfflineXAPIStatement" &&
+          currentCourseId !== null
+        ) {
+          let timeSpent = timestamp - loginTimestamp;
+          courseTimes.set(currentCourseId, (courseTimes.get(currentCourseId) || 0) + timeSpent);
+          currentCourseId = null;
+        }
+      }
+
+      return courseTimes;
     },
   },
 };

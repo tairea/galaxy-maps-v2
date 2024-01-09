@@ -86,8 +86,8 @@ export default {
       if (this.topic.topicStatus === "active") this.topicActive = true;
     },
     topicCompleted() {
-      console.log("3");
-      this.$emit("topicCompleted");
+      console.log("topic completed (emit 4)");
+      this.$emit("emitTopicCompleted");
     },
   },
 };

@@ -242,6 +242,7 @@ import {
 } from "@mdi/js";
 import { VueEditor } from "vue2-editor";
 import { mapActions, mapState } from "pinia";
+import confetti from "canvas-confetti";
 
 export default {
   name: "MissionCompletedDialog",
@@ -305,7 +306,7 @@ export default {
       this.getMappedByPersonsImage(this.currentCourse.mappedBy.personId);
     }
     this.cohort = await fetchCohortByCohortId(this.currentCohortId);
-    console.log("persons topics from mission completed dialog", this.personsTopics);
+    // console.log("persons topics from mission completed dialog", this.personsTopics);
   },
   computed: {
     ...mapState(useRootStore, [
@@ -329,7 +330,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["setSnackbar"]),
+    ...mapActions(useRootStore, ["setSnackbar", "setTopicCompleted"]),
     async reSubmitWorkForReview() {
       this.loading = true;
       this.disabled = true;
@@ -573,11 +574,23 @@ export default {
       if (numOfTasksCompleted === this.personsTopicsTasks.length) {
         console.log("Topic Completed! (all tasks in this topic completed)");
         // TODO: some kind of notification to UI signal that Topic has been completed
+        // now display "congrats" dialog
+        console.log("topic completed (emit 1)");
+        //wip
+        // set topic to completed in store
+        this.setTopicCompleted({ completed: true, topicId: this.currentTopic.id });
+        // === Basic Cannon
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+        });
+
         await topicCompletedXAPIStatement(this.person, this.currentTopic.id, {
           galaxy: this.currentCourse,
           system: this.currentTopic,
         });
-        await this.completeTopic();
+        await this.setTopicToCompletedInDB();
         // all tasks are completed. unlock next topic
         await this.unlockNextTopics();
       } else {
@@ -654,7 +667,7 @@ export default {
         }
       }
     },
-    async completeTopic() {
+    async setTopicToCompletedInDB() {
       await db
         .collection("people")
         .doc(this.person.id)

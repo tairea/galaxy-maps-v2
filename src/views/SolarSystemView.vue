@@ -35,7 +35,7 @@
         :teacher="teacher"
         @task="taskForHelpInfo($event)"
         @missionActivated="peopleInTopic.push(person)"
-        @topicCompleted="getPeopleInTopic"
+        @emitTopicCompleted="setTopicCompleted"
       />
     </div>
 
@@ -53,6 +53,24 @@
         class="mt-4"
       />
     </div>
+
+    <!-- Topic completed dialog -->
+    <v-dialog v-model="topicCompletedDialog" transition="dialog-bottom-transition" max-width="600">
+      <template v-slot:default="topicCompletedDialog">
+        <v-card style="border: 1px solid var(--v-baseAccent-base)">
+          <v-toolbar color="baseAccent overline" light>nice job!</v-toolbar>
+          <v-card-text class="pa-0">
+            <div class="overline text-center pa-12 baseAccent--text">
+              You have completed this System
+            </div>
+          </v-card-text>
+          <v-card-actions class="justify-end">
+            <v-btn small text :to="'/galaxy/' + currentCourseId"><- back to galaxy</v-btn>
+            <v-btn small text @click="topicCompletedDialog.value = false">next system -></v-btn>
+          </v-card-actions>
+        </v-card>
+      </template>
+    </v-dialog>
   </div>
 </template>
 
@@ -71,6 +89,7 @@ import {
 } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
+import confetti from "canvas-confetti";
 
 export default {
   name: "SolarSystemView",
@@ -93,6 +112,7 @@ export default {
       peopleInTopic: [],
       loading: true,
       currentTask: null,
+      topicCompletedDialog: false,
     };
   },
   async mounted() {
@@ -104,6 +124,7 @@ export default {
     this.topic = await fetchTopicByCourseIdTopicId(this.currentCourseId, this.currentTopicId);
 
     this.getPeopleInTopic();
+
     if (this.teacher) {
       //store bindTasksByTopicId
       await this.bindTasksByTopicId({
@@ -135,6 +156,13 @@ export default {
     personsCurrentTopic() {
       this.getPeopleInTopic();
     },
+    topicCompleted(topic) {
+      console.log("topic completed (from watch)", topic);
+      if (topic.topicId == this.currentTopicId && topic.completed == true) {
+        // yooo topic is completed
+        this.setTopicCompleted();
+      }
+    },
   },
   computed: {
     ...mapState(useRootStore, [
@@ -149,6 +177,7 @@ export default {
       "getTopicById",
       "getTasksByTopicId",
       "user",
+      "topicCompleted",
     ]),
     draft() {
       return this.course.status === "drafting";
@@ -188,7 +217,7 @@ export default {
       return activeMissionObj;
     },
     async getPeopleInTopic() {
-      console.log("4, getting people in topic");
+      console.log("5, getting people in topic");
       const people = [];
       const peopleInCourse = await fetchAllPeopleInCourseByCourseId(this.courseId);
       await Promise.all(
@@ -205,6 +234,47 @@ export default {
       );
       this.peopleInTopic = people;
     },
+
+    setTopicCompleted() {
+      console.log("topic completed");
+      this.getPeopleInTopic();
+      this.topicCompletedDialog = true;
+      // === Basic Cannon
+      // confetti({
+      //   particleCount: 100,
+      //   spread: 70,
+      //   origin: { y: 0.6 },
+      // });
+      // === Fireworks
+      var duration = 15 * 1000;
+      var animationEnd = Date.now() + duration;
+      var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+      var interval = setInterval(() => {
+        var timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+
+        var particleCount = 50 * (timeLeft / duration);
+        // since particles fall down, start a bit higher than random
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: this.randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+        });
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: this.randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+        });
+      }, 250);
+    },
+    randomInRange(min, max) {
+      return Math.random() * (max - min) + min;
+    },
+    nextTopic() {},
+    backToSystem() {},
   },
 };
 </script>

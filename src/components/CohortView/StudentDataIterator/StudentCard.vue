@@ -58,7 +58,11 @@ import StudentCohorts from "@/components/CohortView/StudentDataIterator/StudentC
 import StudentActions from "@/components/CohortView/StudentDataIterator/StudentCard/StudentActions.vue";
 import StudentActivityTimeline from "@/components/Reused/StudentActivityTimeline.vue";
 import { fetchCohortByCohortId, fetchCourseByCourseId } from "@/lib/ff";
-import { getStudentsCoursesXAPIQuery, getStudentsTimeDataXAPIQuery } from "@/lib/veracityLRS";
+import {
+  getStudentsCoursesXAPIQuery,
+  getStudentsTimeDataXAPIQuery,
+  getStudentsCourseTimeDataXAPIQuery,
+} from "@/lib/veracityLRS";
 import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
@@ -111,7 +115,12 @@ export default {
     });
 
     // ==== get student activity data from LRS
-    let getActivityData = await getStudentsTimeDataXAPIQuery({
+
+    // this is the old way of getting the data. it didnt work because it showed total active on galaxy maps as a whole. not active hours on individual galaxies/courses
+    // let getActivityData = await getStudentsTimeDataXAPIQuery({
+    //   studentsArr: [this.student.id],
+    // });
+    let getActivityData = await getStudentsCourseTimeDataXAPIQuery({
       studentsArr: [this.student.id],
     });
     this.studentTimeData = getActivityData;

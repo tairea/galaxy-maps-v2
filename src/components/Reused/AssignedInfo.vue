@@ -1,6 +1,6 @@
 <template>
   <div id="assigned-info">
-    <h2 class="assigned-label">{{ isMissionView ? "Currently active" : "Assigned to" }}:</h2>
+    <h2 class="assigned-label">{{ isMissionView ? "active on this system" : "Assigned to" }}:</h2>
     <!-- ASSIGNED COHORTS INFO -->
     <div v-if="assignCohorts">
       <!-- Assigned COHORTS -->
@@ -28,6 +28,7 @@
             :colourBorder="true"
             :isTeacher="isTeacher"
             class="ma-1"
+            :hideTooltips="!isTeacher"
           />
         </v-row>
       </div>
