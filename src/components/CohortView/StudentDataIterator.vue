@@ -77,6 +77,7 @@
           :student="student"
           :timeframe="timeframe"
           :date="date"
+          :cohortCourses="cohort.courses"
           @updateStudentsWithHours="updateStudentsWithHours($event)"
           @updateStudentsWithTasks="updateStudentsWithTasks($event)"
           @showStudent="showStudent($event)"
@@ -219,7 +220,7 @@ export default {
       this.date = Date.now();
     },
     async getStudentProfiles() {
-      if (this.cohort.students?.length) {
+      if (this.cohort?.students?.length) {
         const studentsArr = this.cohort.students.filter((a) => {
           return !this.students.some((b) => a === b.id);
         });

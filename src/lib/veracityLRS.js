@@ -1218,25 +1218,29 @@ export const getStudentsTimeDataXAPIQuery = async (payload) => {
 // Get students course time data from LRS
 export const getStudentsCourseTimeDataXAPIQuery = async (payload) => {
   // if no data, dont bother
-  if (!payload.studentsArr) return;
+  // console.log("payload.student", payload.student);
+  if (!payload.student.id) return;
 
   // convert studentIds to mailto:email string
-  const personIdsArrToEmailsArr = [];
-  for (const studentId of payload.studentsArr) {
-    const studentSnapshot = await db.collection("people").doc(studentId).get();
-    if (!studentSnapshot.exists) {
-      continue;
-    }
-    personIdsArrToEmailsArr.push("mailto:" + studentSnapshot.data().email);
+  let personIdToEmail = null;
+
+  const studentSnapshot = await db.collection("people").doc(payload.student.id).get();
+  if (!studentSnapshot.exists) {
+    return;
   }
+  personIdToEmail = "mailto:" + studentSnapshot.data().email;
 
   const aggregationQuery = [
     // match with cohorts courses. and only started & completed statements
     {
       $match: {
-        "statement.actor.mbox": { $in: personIdsArrToEmailsArr },
+        "statement.actor.mbox": personIdToEmail,
         // match a persons statements with verbs "logged in to Galaxy" or "logged out"
         "statement.verb.display.en-nz": { $in: ["logged in to Galaxy", "logged out"] },
+        $and: [
+          { "statement.timestamp": { $gt: { $parseDate: { date: payload.min } } } },
+          { "statement.timestamp": { $lt: { $parseDate: { date: payload.max } } } },
+        ],
       },
     },
     // group by actor & course
@@ -1268,8 +1272,15 @@ export const getStudentsCourseTimeDataXAPIQuery = async (payload) => {
     body: JSON.stringify(aggregationQuery),
   });
   const resultBody = await res.json();
-  console.log("Students logged in Galaxies and Logged Out statements:", resultBody);
+  // console.log(
+  //   payload.student.firstName +
+  //     " " +
+  //     payload.student.lastName +
+  //     "'s logged in Galaxies and Logged Out statements IN A TIMEFRAME:",
+  //   resultBody,
+  // );
   // return sanitiseCourseActivityDataFromLRS(resultBody);
+  return resultBody;
 };
 
 // export const VQLXAPIQuery = async () => {
@@ -1477,38 +1488,44 @@ async function sanitiseCohortsActivityDataFromLRS(res) {
   return santisedActivity;
 }
 
-async function sanitiseCourseActivityDataFromLRS(res) {
-  // WIP: Ian
-  // below from Copilot
+// async function sanitiseCourseActivityDataFromLRS(res) {
+//   // WIP: Ian
+//   // below from Copilot. this looks good but it doesnt account for timeframe filtering. eg. if user wants to see hours for the week only
+//   let statements = res[0].activity;
+//   console.log("Statements: ", statements);
 
-  let statements = res[0].activity;
-  console.log("Statements: ", statements);
+//   let courseTimes = new Map();
+//   let currentCourseId = null;
+//   let loginTimestamp = null;
 
-  let courseTimes = new Map();
-  let currentCourseId = null;
-  let loginTimestamp = null;
+//   for (let statement of statements) {
+//     let timestamp = new Date(statement.timestamp);
 
-  for (let statement of statements) {
-    let timestamp = new Date(statement.timestamp);
+//     if (statement.verb === "logged in to Galaxy") {
+//       let courseId = statement.courseId;
 
-    if (statement.verb === "logged in to Galaxy") {
-      let courseId = statement.courseId;
+//       if (currentCourseId !== null) {
+//         let timeSpent = timestamp - loginTimestamp;
+//         courseTimes.set(currentCourseId, (courseTimes.get(currentCourseId) || 0) + timeSpent);
+//       }
+//       currentCourseId = courseId;
+//       loginTimestamp = timestamp;
+//     } else if (statement.verb === "logged out" && currentCourseId !== null) {
+//       let timeSpent = timestamp - loginTimestamp;
+//       courseTimes.set(currentCourseId, (courseTimes.get(currentCourseId) || 0) + timeSpent);
+//       currentCourseId = null;
+//     }
+//   }
 
-      if (currentCourseId !== null) {
-        let timeSpent = timestamp - loginTimestamp;
-        courseTimes.set(currentCourseId, (courseTimes.get(currentCourseId) || 0) + timeSpent);
-      }
-      currentCourseId = courseId;
-      loginTimestamp = timestamp;
-    } else if (statement.verb === "logged out" && currentCourseId !== null) {
-      let timeSpent = timestamp - loginTimestamp;
-      courseTimes.set(currentCourseId, (courseTimes.get(currentCourseId) || 0) + timeSpent);
-      currentCourseId = null;
-    }
-  }
-  console.log("courseTimes", courseTimes);
-  // return courseTimes;
-}
+//   // Convert the time spent to hours
+//   let courseTimesInHours = new Map();
+//   for (let [courseId, timeSpent] of courseTimes) {
+//     let timeSpentInHours = (timeSpent / (1000 * 60 * 60)).toFixed(1);
+//     courseTimesInHours.set(courseId, timeSpentInHours);
+//   }
+
+//   return courseTimesInHours;
+// }
 
 async function courseIRIToCourseId(course) {
   // get course id from iri
