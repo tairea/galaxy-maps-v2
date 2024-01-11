@@ -42,7 +42,6 @@
             :topicId="topicId"
             :active="active"
             :declined="declined"
-            @topicCompleted="topicCompleted2"
           />
         </div>
       </div>
@@ -80,12 +79,7 @@ export default {
       }
     },
   },
-  methods: {
-    topicCompleted2(e) {
-      console.log("topic completed (emit 2)", e);
-      this.$emit("topicCompleted");
-    },
-  },
+  methods: {},
 };
 </script>
 

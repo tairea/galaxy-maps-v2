@@ -14,8 +14,8 @@
 </template>
 
 <script>
-import { DateTime } from "luxon";
 import { fetchCourseByCourseId } from "@/lib/ff";
+import { DateTime } from "luxon";
 
 export default {
   name: "StudentHours",

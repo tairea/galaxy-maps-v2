@@ -35,7 +35,6 @@
         :teacher="teacher"
         @task="taskForHelpInfo($event)"
         @missionActivated="peopleInTopic.push(person)"
-        @emitTopicCompleted="setTopicCompleted"
       />
     </div>
 
@@ -66,7 +65,12 @@
           </v-card-text>
           <v-card-actions class="justify-end">
             <v-btn small text :to="'/galaxy/' + currentCourseId"><- back to galaxy</v-btn>
-            <v-btn small text :loading="unlockingNextTopic" @click="nextTopic"
+            <v-btn
+              v-if="showNextSystemButton"
+              small
+              text
+              :loading="unlockingNextTopic"
+              @click="nextTopic"
               >next system -></v-btn
             >
           </v-card-actions>
@@ -116,6 +120,7 @@ export default {
       currentTask: null,
       topicCompletedDialog: false,
       unlockingNextTopic: true, // default to loading
+      showNextSystemButton: true,
     };
   },
   async mounted() {

@@ -183,7 +183,6 @@
         :topicId="topicId"
         :active="active"
         :declined="declined"
-        @topicCompleted="topicCompleted"
       />
       <SelectedMissionsCard
         v-else
@@ -260,12 +259,7 @@ export default {
       return this.task.taskStatus == "unlocked";
     },
   },
-  methods: {
-    topicCompleted() {
-      console.log("topic completed (emit 3)");
-      this.$emit("topicCompleted");
-    },
-  },
+  methods: {},
 };
 </script>
 

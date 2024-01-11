@@ -218,6 +218,11 @@
 </template>
 
 <script>
+import confetti from "canvas-confetti";
+import { db, functions } from "@/store/firestoreConfig";
+import useRootStore from "@/store/index";
+import { mapActions, mapState } from "pinia";
+import { VueEditor } from "vue2-editor";
 import {
   fetchCohortByCohortId,
   fetchCourseByCourseId,
@@ -231,8 +236,6 @@ import {
   taskMarkedAsCompletedXAPIStatement,
   topicCompletedXAPIStatement,
 } from "@/lib/veracityLRS";
-import { db, functions } from "@/store/firestoreConfig";
-import useRootStore from "@/store/index";
 import {
   mdiCloudUploadOutline,
   mdiInformationVariant,
@@ -240,9 +243,6 @@ import {
   mdiClose,
   mdiCheckboxBlankOutline,
 } from "@mdi/js";
-import { VueEditor } from "vue2-editor";
-import { mapActions, mapState } from "pinia";
-import confetti from "canvas-confetti";
 
 export default {
   name: "MissionCompletedDialog",
@@ -573,9 +573,6 @@ export default {
       // 2) check if that the same as total
       if (numOfTasksCompleted === this.personsTopicsTasks.length) {
         console.log("Topic Completed! (all tasks in this topic completed)");
-        // now display "congrats" dialog
-        console.log("topic completed (emit 1)");
-        //wip
         // set topic to completed in store
         this.setTopicCompleted({ completed: true, topicId: this.currentTopic.id });
         // === Basic Cannon
