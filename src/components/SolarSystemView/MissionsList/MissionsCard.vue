@@ -96,7 +96,7 @@
 
           <div v-if="unlocked" class="d-flex justify-center">
             <!-- Start Mission button -->
-            <StartMissionDialog
+            <StartMissionDialogV2
               :topicId="topicId"
               :taskId="id"
               :task="task"
@@ -199,6 +199,7 @@
 <script>
 import CreateEditDeleteMissionDialog from "@/components/Dialogs/CreateEditDeleteMissionDialog.vue";
 import StartMissionDialog from "@/components/Dialogs/StartMissionDialog.vue";
+import StartMissionDialogV2 from "@/components/Dialogs/StartMissionDialogV2.vue";
 import ActiveMissionsCard from "@/components/SolarSystemView/MissionsList/MissionsCard/ActiveMissionsCard.vue";
 import SelectedMissionsCard from "@/components/SolarSystemView/MissionsList/MissionsCard/SelectedMissionsCard.vue";
 import { db } from "@/store/firestoreConfig";
@@ -211,6 +212,7 @@ export default {
   components: {
     CreateEditDeleteMissionDialog,
     StartMissionDialog,
+    StartMissionDialogV2,
     ActiveMissionsCard,
     SelectedMissionsCard,
   },
