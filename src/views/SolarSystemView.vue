@@ -66,7 +66,9 @@
           </v-card-text>
           <v-card-actions class="justify-end">
             <v-btn small text :to="'/galaxy/' + currentCourseId"><- back to galaxy</v-btn>
-            <v-btn small text @click="topicCompletedDialog.value = false">next system -></v-btn>
+            <v-btn small text :loading="unlockingNextTopic" @click="nextTopic"
+              >next system -></v-btn
+            >
           </v-card-actions>
         </v-card>
       </template>
@@ -113,6 +115,7 @@ export default {
       loading: true,
       currentTask: null,
       topicCompletedDialog: false,
+      unlockingNextTopic: true, // default to loading
     };
   },
   async mounted() {
@@ -163,6 +166,13 @@ export default {
         this.setTopicCompleted();
       }
     },
+    nextTopicUnlockedFlag(flag) {
+      console.log("a/next topic was unclocked (from watch)", flag);
+      if (flag == true) {
+        this.unlockingNextTopic = false; // template flag false will stop the loading spinner on next button
+      }
+      this.setNextTopicUnlocked(false); // reset store flag back to false
+    },
   },
   computed: {
     ...mapState(useRootStore, [
@@ -178,6 +188,7 @@ export default {
       "getTasksByTopicId",
       "user",
       "topicCompleted",
+      "nextTopicUnlockedFlag",
     ]),
     draft() {
       return this.course.status === "drafting";
@@ -197,6 +208,7 @@ export default {
       "setCurrentCourseId",
       "setCurrentTopicId",
       "setCurrentTaskId",
+      "setNextTopicUnlocked",
     ]),
     taskForHelpInfo(task) {
       this.task = task;
@@ -262,19 +274,59 @@ export default {
           ...defaults,
           particleCount,
           origin: { x: this.randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+          colors: this.getGMColours(),
         });
         confetti({
           ...defaults,
           particleCount,
           origin: { x: this.randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+          colors: this.getGMColours(),
         });
       }, 250);
     },
     randomInRange(min, max) {
       return Math.random() * (max - min) + min;
     },
-    nextTopic() {},
-    backToSystem() {},
+    getGMColours() {
+      let colours = [];
+      if (this.$vuetify.theme.isDark) {
+        colours = [
+          this.$vuetify.theme.themes.dark.missionAccent,
+          this.$vuetify.theme.themes.dark.baseAccent,
+          // this.$vuetify.theme.themes.dark.galaxyAccent,
+        ];
+      } else {
+        colours = [
+          this.$vuetify.theme.themes.light.missionAccent,
+          this.$vuetify.theme.themes.light.baseAccent,
+          // this.$vuetify.theme.themes.light.galaxyAccent,
+        ];
+      }
+      return colours;
+    },
+    nextTopic() {
+      // get next topic
+      const unlockedTopics = this.personsTopics.filter((topic) => {
+        return topic.topicStatus == "unlocked";
+      });
+
+      // this ensures we arn't going to try navigate to the current unlocked topic
+      const nextTopic = unlockedTopics.find((topic) => topic.id !== this.currentTopicId);
+
+      // set next topic as current topic
+      this.setCurrentTopicId(nextTopic.id);
+
+      console.log("router pushing to: /galaxy/" + this.currentCourseId + "/system/" + nextTopic.id);
+
+      // route to page with topicId
+      this.$router.push({
+        name: "SolarSystemView",
+        params: {
+          courseId: this.currentCourseId,
+          topicId: nextTopic.id,
+        },
+      });
+    },
   },
 };
 </script>

@@ -48,6 +48,7 @@ const getDefaultState = () => {
     personsCourseTasks: [] as Record<string, any>[],
     courseTasks: [] as Record<string, any>[],
     topicCompleted: {} as Record<string, any>,
+    nextTopicUnlockedFlag: false,
   };
 };
 
@@ -204,6 +205,10 @@ export default defineStore({
     },
     setTopicCompleted(topic: { completed: boolean; topicId: Record<string, any> | null }) {
       this.topicCompleted = topic;
+    },
+    setNextTopicUnlocked(flag: boolean) {
+      console.log("next topic unlocked - flag triggered: ", flag);
+      this.nextTopicUnlockedFlag = flag;
     },
     // ===== Firestore - BIND ALL
     bindCourses: firestoreAction(

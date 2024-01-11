@@ -330,7 +330,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["setSnackbar", "setTopicCompleted"]),
+    ...mapActions(useRootStore, ["setSnackbar", "setTopicCompleted", "setNextTopicUnlocked"]),
     async reSubmitWorkForReview() {
       this.loading = true;
       this.disabled = true;
@@ -573,7 +573,6 @@ export default {
       // 2) check if that the same as total
       if (numOfTasksCompleted === this.personsTopicsTasks.length) {
         console.log("Topic Completed! (all tasks in this topic completed)");
-        // TODO: some kind of notification to UI signal that Topic has been completed
         // now display "congrats" dialog
         console.log("topic completed (emit 1)");
         //wip
@@ -593,6 +592,8 @@ export default {
         await this.setTopicToCompletedInDB();
         // all tasks are completed. unlock next topic
         await this.unlockNextTopics();
+        // topic unlocked. trigger store flag (this is for "next system" button (loading attribute) in galaxy view)
+        this.setNextTopicUnlocked(true);
       } else {
         console.log("topic not yet completed...");
         console.log("total tasks = ", this.personsTopicsTasks.length);
