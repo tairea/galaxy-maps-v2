@@ -220,9 +220,6 @@
 <script>
 import confetti from "canvas-confetti";
 import { db, functions } from "@/store/firestoreConfig";
-import useRootStore from "@/store/index";
-import { mapActions, mapState } from "pinia";
-import { VueEditor } from "vue2-editor";
 import {
   fetchCohortByCohortId,
   fetchCourseByCourseId,
@@ -231,18 +228,21 @@ import {
   fetchTopicByCourseIdTopicId,
 } from "@/lib/ff";
 import {
-  submitWorkForReviewXAPIStatement,
-  reSubmitWorkForReviewXAPIStatement,
-  taskMarkedAsCompletedXAPIStatement,
-  topicCompletedXAPIStatement,
-} from "@/lib/veracityLRS";
-import {
   mdiCloudUploadOutline,
   mdiInformationVariant,
   mdiCheck,
   mdiClose,
   mdiCheckboxBlankOutline,
 } from "@mdi/js";
+import { mapActions, mapState } from "pinia";
+import useRootStore from "@/store/index";
+import {
+  submitWorkForReviewXAPIStatement,
+  reSubmitWorkForReviewXAPIStatement,
+  taskMarkedAsCompletedXAPIStatement,
+  topicCompletedXAPIStatement,
+} from "@/lib/veracityLRS";
+import { VueEditor } from "vue2-editor";
 
 export default {
   name: "MissionCompletedDialog",
