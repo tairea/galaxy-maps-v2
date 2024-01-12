@@ -82,6 +82,24 @@
                 />
               </div>
 
+              <p class="dialog-description">
+                Mission color:
+                <v-color-picker
+                  v-model="task.color"
+                  class="ma-2 color-picker"
+                  show-swatches
+                  hide-canvas
+                  hide-inputs
+                  hide-sliders
+                  mode="hexa"
+                  value="#69a1e2"
+                  width="90%"
+                  :swatches="darkSwatches"
+                  style="background-color: rgba(0, 0, 0, 0, 0)"
+                >
+                </v-color-picker>
+              </p>
+
               <!-- DURATION -->
               <!-- <p class="dialog-description">Duration:</p> -->
               <v-text-field
@@ -397,6 +415,7 @@ export default {
       ["link", "image", "video"],
       // ["clean"] // remove formatting button
     ],
+    darkSwatches: [["#69A1E2"], ["#E269CF"], ["#73FBD3"], ["#F3C969"], ["#54428E"]], //https://coolors.co/69a1e2-e269cf-73fbd3-f3c969-54428e
   }),
   watch: {
     dialog(newVal) {
@@ -715,6 +734,14 @@ export default {
     padding: 20px;
     text-transform: uppercase;
     border-bottom: 1px solid var(--v-missionAccent-base);
+  }
+
+  .dialog-description {
+    color: var(--v-missionAccent-base);
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    margin: 0;
+    font-style: italic;
   }
 
   .left-side {
