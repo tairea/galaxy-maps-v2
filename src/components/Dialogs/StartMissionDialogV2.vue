@@ -41,14 +41,11 @@ export default {
     currentTopic: null,
   }),
   computed: {
-    ...mapState(useRootStore, ["currentCourseId", "currentTopicId", "person"]),
+    ...mapState(useRootStore, ["currentCourseId", "person"]),
   },
   async mounted() {
     this.currentCourse = await fetchCourseByCourseId(this.currentCourseId);
-    this.currentTopic = await fetchTopicByCourseIdTopicId(
-      this.currentCourseId,
-      this.currentTopicId,
-    );
+    this.currentTopic = await fetchTopicByCourseIdTopicId(this.currentCourseId, this.topicId);
   },
   methods: {
     ...mapActions(useRootStore, ["setCurrentTaskId"]),

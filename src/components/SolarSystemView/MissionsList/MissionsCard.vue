@@ -97,6 +97,7 @@
           <div v-if="unlocked" class="d-flex justify-center">
             <!-- Start Mission button -->
             <StartMissionDialogV2
+              :courseId="courseId"
               :topicId="topicId"
               :taskId="id"
               :task="task"
@@ -239,13 +240,7 @@ export default {
     },
   },
   computed: {
-    ...mapState(useRootStore, [
-      "currentCourseId",
-      "personsTopics",
-      "topicsTasks",
-      "personsTopicsTasks",
-      "person",
-    ]),
+    ...mapState(useRootStore, ["currentCourseId", "personsTopics", "topicsTasks", "person"]),
     active() {
       return this.task.taskStatus == "active";
     },
@@ -458,9 +453,6 @@ p {
 
       .duration {
         height: 30%;
-      }
-
-      .submission {
       }
 
       .three-vertical:not(:first-child) {

@@ -304,7 +304,6 @@ export default {
       immediate: true,
       deep: true,
       handler(newVal) {
-        console.log("newVal", newVal);
         this.courseOptions.public = newVal.public;
       },
     },
