@@ -29,9 +29,8 @@
     <!--==== Main section ====-->
     <div id="main-section">
       <MissionsList
-        :tasks="teacher ? topicsTasks : personsTopicsTasks"
-        :topicId="currentTopicId"
         :topic="topic"
+        :tasks="teacher ? topicsTasks : personsTopicsTasks"
         :teacher="teacher"
         @task="taskForHelpInfo($event)"
         @missionActivated="peopleInTopic.push(person)"

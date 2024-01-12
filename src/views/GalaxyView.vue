@@ -290,7 +290,7 @@ export default {
       return this.person.assignedCourses?.some((courseId) => courseId === this.courseId);
     },
     showPublish() {
-      return (this.user.data.admin && this.course.status === "submitted") || this.draft;
+      return (this.user.data.admin && this.course?.status === "submitted") || this.draft;
     },
   },
   methods: {
@@ -393,6 +393,7 @@ export default {
       this.clickedTopicId = emittedPayload.topicId;
       // get topic
       this.clickedTopic = await fetchTopicByCourseIdTopicId(this.courseId, this.clickedTopicId);
+      console.log("clicked topic:", this.clickedTopic);
       // reset topic tasks (to prevent duplicate)
       this.topicTasks = [];
       // loop courseTasks for this topic id (= this.topicTasks)
