@@ -8,8 +8,16 @@ import {
   addStudentToCohortHttpsEndpoint,
   assignCourseToMeHttpsEndpoint,
   assignCourseToStudentHttpsEndpoint,
-  getCourseByIdHttpsEndpoint,
+  getCourseByCourseIdHttpsEndpoint,
   getCoursesHttpsEndpoint,
+  getCohortByCohortIdHttpsEndpoint,
+  getCohortsByCourseIdHttpsEndpoint,
+  getCohortsByPersonIdHttpsEndpoint,
+  getPeopleByCourseIdHttpsEndpoint,
+  getPersonTasksByPersonIdCourseIdTopicIdHttpsEndpoint,
+  getPersonTopicByPersonIdCourseIdTopicIdHttpsEndpoint,
+  getTaskByCourseIdTopicIdTaskIdHttpsEndpoint,
+  getTopicByCourseIdTopicIdHttpsEndpoint,
 } from "./courseManagement.js";
 import {
   sendCourseDeletedHttpsEndpoint,
@@ -22,7 +30,13 @@ import {
   sendTaskSubmissionHttpsEndpoint,
 } from "./emails.js";
 import { onUserStatusChangedOnUpdateTrigger } from "./presence.js";
-import { addAdminRoleHttpsEndpoint, createNewUserHttpsEndpoint } from "./userManagement.js";
+import {
+  addAdminRoleHttpsEndpoint,
+  createNewUserHttpsEndpoint,
+  getPersonByEmailHttpsEndpoint,
+  getPersonByPersonIdHttpsEndpoint,
+  updatePersonByPersonIdHttpsEndpoint,
+} from "./userManagement.js";
 
 export { checkInactivitySchedule as scheduledFunction };
 
@@ -31,8 +45,16 @@ export {
   addStudentToCohortHttpsEndpoint as addStudentToCohort,
   assignCourseToMeHttpsEndpoint as assignCourseToMe,
   assignCourseToStudentHttpsEndpoint as assignCourseToStudent,
-  getCourseByIdHttpsEndpoint as getCourseById,
+  getCourseByCourseIdHttpsEndpoint as getCourseByCourseId,
   getCoursesHttpsEndpoint as getCourses,
+  getCohortByCohortIdHttpsEndpoint as getCohortByCohortId,
+  getCohortsByCourseIdHttpsEndpoint as getCohortsByCourseId,
+  getCohortsByPersonIdHttpsEndpoint as getCohortsByPersonId,
+  getPeopleByCourseIdHttpsEndpoint as getPeopleByCourseId,
+  getPersonTasksByPersonIdCourseIdTopicIdHttpsEndpoint as getPersonTasksByPersonIdCourseIdTopicId,
+  getPersonTopicByPersonIdCourseIdTopicIdHttpsEndpoint as getPersonTopicByPersonIdCourseIdTopicId,
+  getTaskByCourseIdTopicIdTaskIdHttpsEndpoint as getTaskByCourseIdTopicIdTaskId,
+  getTopicByCourseIdTopicIdHttpsEndpoint as getTopicByCourseIdTopicId,
 };
 
 export {
@@ -48,4 +70,10 @@ export {
 
 export { onUserStatusChangedOnUpdateTrigger as onUserStatusChanged };
 
-export { addAdminRoleHttpsEndpoint as addAdminRole, createNewUserHttpsEndpoint as createNewUser };
+export {
+  addAdminRoleHttpsEndpoint as addAdminRole,
+  createNewUserHttpsEndpoint as createNewUser,
+  getPersonByEmailHttpsEndpoint as getPersonByEmail,
+  getPersonByPersonIdHttpsEndpoint as getPersonByPersonId,
+  updatePersonByPersonIdHttpsEndpoint as updatePersonByPersonId,
+};

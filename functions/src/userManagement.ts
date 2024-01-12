@@ -1,27 +1,80 @@
-import admin from "firebase-admin";
 import * as functions from "firebase-functions";
 import { DOMAIN } from "./_constants.js";
-import { db } from "./_shared.js";
+import { auth, db, requireAuthenticated } from "./_shared.js";
 import { sendStudentInviteEmail, sendTeacherInviteEmail } from "./emails.js";
+
+// Get a person by personId
+export const getPersonByPersonIdHttpsEndpoint = functions.https.onCall(async (data, context) => {
+  requireAuthenticated(context);
+
+  const personId = data.personId as string | null;
+  if (personId == null) {
+    throw new functions.https.HttpsError("invalid-argument", "missing personId");
+  }
+
+  const personDoc = await db.collection("people").doc(personId).get();
+  const personData = personDoc.data();
+
+  if (personData == null) {
+    throw new functions.https.HttpsError("not-found", `Person not found: ${personId}`);
+  }
+
+  // TODO: permissions checks
+
+  return {
+    person: {
+      id: personDoc.id,
+      ...personData,
+    },
+  };
+});
+
+// Get a person by email
+export const getPersonByEmailHttpsEndpoint = functions.https.onCall(async (data, context) => {
+  requireAuthenticated(context);
+
+  const email = data.email as string | null;
+  if (email == null) {
+    throw new functions.https.HttpsError("invalid-argument", "missing email");
+  }
+
+  const queryResult = await db.collection("people").where("email", "==", email).limit(1).get();
+  const personDoc = queryResult.docs[0];
+
+  if (personDoc == null) {
+    throw new functions.https.HttpsError("not-found", `Person not found: ${email}`);
+  }
+
+  const personData = personDoc.data();
+
+  if (personData == null) {
+    throw new functions.https.HttpsError("not-found", `Person not found: ${email}`);
+  }
+
+  // TODO: permissions checks
+
+  return {
+    person: {
+      id: personDoc.id,
+      ...personData,
+    },
+  };
+});
 
 // upgrade someones account to admin
 export const addAdminRoleHttpsEndpoint = functions.https.onCall(async (uid: string, context) => {
+  requireAuthenticated(context);
+
   // check request is made by an admin
-  if (context.auth == null) {
-    throw new functions.https.HttpsError(
-      "unauthenticated",
-      "Must be authenticated to access this endpoint",
-    );
-  }
   if (context.auth.token.admin !== true) {
     throw new functions.https.HttpsError("permission-denied", "Only admins can add other admins");
   }
 
   // get user and add admin custom claim
   try {
-    const user = await admin.auth().getUser(uid);
+    const user = await auth.getUser(uid);
 
-    await admin.auth().setCustomUserClaims(user.uid, {
+    await auth.setCustomUserClaims(user.uid, {
       admin: true,
     });
 
@@ -35,14 +88,10 @@ export const addAdminRoleHttpsEndpoint = functions.https.onCall(async (uid: stri
 });
 
 export const createNewUserHttpsEndpoint = functions.https.onCall(async (data, context) => {
+  requireAuthenticated(context);
+
   // TODO: this should be split and permissions checks ensured but that requires a major refactor
   // of how adding students to cohorts works
-  if (context.auth == null) {
-    throw new functions.https.HttpsError(
-      "unauthenticated",
-      "Must be authenticated to access this endpoint",
-    );
-  }
 
   const profile = data.profile as Record<string, unknown> | null;
   if (profile == null) {
@@ -50,7 +99,7 @@ export const createNewUserHttpsEndpoint = functions.https.onCall(async (data, co
   }
 
   try {
-    const createdUser = await admin.auth().createUser(profile);
+    const createdUser = await auth.createUser(profile);
 
     const person: { id: string } & Record<string, unknown> = {
       ...profile,
@@ -69,7 +118,7 @@ export const createNewUserHttpsEndpoint = functions.https.onCall(async (data, co
       url: `https://${DOMAIN}/email_signin`,
       handleCodeInApp: true,
     };
-    const link = await admin.auth().generateSignInWithEmailLink(data.email, actionCodeSettings);
+    const link = await auth.generateSignInWithEmailLink(data.email, actionCodeSettings);
 
     if (person.accountType == "teacher") {
       await sendTeacherInviteEmail(person.email as string, person.displayName as string, link);
@@ -94,4 +143,39 @@ export const createNewUserHttpsEndpoint = functions.https.onCall(async (data, co
     functions.logger.error(err);
     throw new functions.https.HttpsError("internal", `something went wrong ${err}`);
   }
+});
+
+// Update a person by personId
+export const updatePersonByPersonIdHttpsEndpoint = functions.https.onCall(async (data, context) => {
+  requireAuthenticated(context);
+
+  const personId = data.personId as string | null;
+  const person = data.person as Record<string, unknown> | null;
+  if (personId == null) {
+    throw new functions.https.HttpsError("invalid-argument", "missing personId");
+  }
+  if (person == null) {
+    throw new functions.https.HttpsError("invalid-argument", "missing person");
+  }
+
+  const personDoc = await db.collection("people").doc(personId).get();
+  const personData = personDoc.data();
+
+  if (personData == null) {
+    throw new functions.https.HttpsError("not-found", `Person not found: ${personId}`);
+  }
+
+  // TODO: permissions checks
+
+  await personDoc.ref.update(personData);
+
+  const updatedPersonDoc = await personDoc.ref.get();
+  const updatedPersonData = personDoc.data();
+
+  return {
+    person: {
+      id: updatedPersonDoc.id,
+      ...updatedPersonData,
+    },
+  };
 });

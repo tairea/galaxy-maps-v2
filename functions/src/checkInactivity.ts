@@ -1,4 +1,4 @@
-import admin from "firebase-admin";
+import * as adminFirestore from "firebase-admin/firestore";
 import * as functions from "firebase-functions";
 import { db } from "./_shared.js";
 import { sendStudentInActive, sendTeacherStudentInActive } from "./emails.js";
@@ -25,7 +25,7 @@ function getPreviousDate(preDays: number) {
 async function getPersonByIdFromDB(personId: string) {
   const personSnapshot = await db.collection("people").doc(personId).get();
 
-  const person: admin.firestore.DocumentData = {
+  const person: adminFirestore.DocumentData = {
     id: personSnapshot.id,
     ...personSnapshot.data(),
   };
@@ -42,7 +42,7 @@ async function getPersonsTeachersById(personId: string) {
     .where("students", "array-contains", personId)
     .get();
 
-  const teachers: admin.firestore.DocumentData[] = [];
+  const teachers: adminFirestore.DocumentData[] = [];
 
   for (const doc of cohortsSnapshot.docs) {
     const cohort = doc.data();
@@ -72,7 +72,7 @@ async function checkInactivity() {
 
   const statusSnapshot = await db.collection("status").get();
 
-  const userStatuses: { [id: string]: admin.firestore.DocumentData } = {};
+  const userStatuses: { [id: string]: adminFirestore.DocumentData } = {};
   for (const doc of statusSnapshot.docs) {
     userStatuses[doc.id] = {
       id: doc.id,
@@ -80,15 +80,15 @@ async function checkInactivity() {
     };
   }
 
-  const userOfflineStatuses: admin.firestore.DocumentData[] = [];
+  const userOfflineStatuses: adminFirestore.DocumentData[] = [];
   for (const user in userStatuses) {
     if (userStatuses[user].state === "offline") {
       userOfflineStatuses.push(userStatuses[user]);
     }
   }
 
-  const inActiveOneWeek: admin.firestore.DocumentData[] = [];
-  const inActiveTwoWeeks: admin.firestore.DocumentData[] = [];
+  const inActiveOneWeek: adminFirestore.DocumentData[] = [];
+  const inActiveTwoWeeks: adminFirestore.DocumentData[] = [];
 
   for (const userStatus of userOfflineStatuses) {
     const date = userStatus.last_changed.toDate().toDateString();
@@ -109,7 +109,7 @@ async function checkInactivity() {
       sendStudentInActive(student, studentEmail, duration);
 
       const teacherProfiles = await Promise.all(
-        teachers.map(async (teacher): Promise<admin.firestore.DocumentData> => {
+        teachers.map(async (teacher): Promise<adminFirestore.DocumentData> => {
           const fullProfile = await getPersonByIdFromDB(teacher.id);
           return {
             ...fullProfile,
@@ -139,7 +139,7 @@ async function checkInactivity() {
       sendStudentInActive(student, studentEmail, duration);
 
       const teacherProfiles = await Promise.all(
-        teachers.map(async (teacher): Promise<admin.firestore.DocumentData> => {
+        teachers.map(async (teacher): Promise<adminFirestore.DocumentData> => {
           const fullProfile = await getPersonByIdFromDB(teacher.id);
           return {
             ...fullProfile,

@@ -118,7 +118,7 @@ import {
   fetchCohortByCohortId,
   fetchPersonByEmail,
   createPerson,
-  updatePersonByPersonId,
+  updatePerson,
   addPersonToCohort,
   assignCourseToPerson,
 } from "@/lib/ff";
@@ -215,7 +215,7 @@ export default {
           this.close();
         } else {
           try {
-            await updatePersonByPersonId(profile.id, profile); // updates /people/:id profile
+            await updatePerson(profile.id, profile); // updates /people/:id profile
             await addPersonToCohort(profile.id, this.cohort.id); // adds student to /cohorts/:id/students
 
             if (this.cohort.courses.length) {

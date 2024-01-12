@@ -1,55 +1,40 @@
 // Use this script for any firebase functions (ff) that are completely independant of components
-import { db, functions } from "@/store/firestoreConfig";
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  limit,
-  query,
-  setDoc,
-  updateDoc,
-  where,
-} from "firebase/firestore";
-
-export const _getDocumentHelper = async (
-  path: string,
-  ...pathSegments: string[]
-): Promise<{ id: string } & Record<string, any>> => {
-  const document = await getDoc(doc(db, path, ...pathSegments));
-
-  if (!document.exists) {
-    throw new Error(`document ${document.ref.path} not found`);
-  }
-
-  return {
-    ...document.data(),
-    id: document.id,
-  };
-};
-
-export const _getDocumentsHelper = async (
-  path: string,
-  ...pathSegments: string[]
-): Promise<Array<{ id: string } & Record<string, any>>> => {
-  const querySnapshot = await getDocs(collection(db, path, ...pathSegments));
-
-  return querySnapshot.docs.map((x) => ({
-    ...x.data(),
-    id: x.id,
-  }));
-};
+import { functions } from "@/store/firestoreConfig";
+import { FirebaseError } from "firebase/app";
 
 export const fetchCohortByCohortId = async (cohortId: string) => {
-  return _getDocumentHelper("cohorts", cohortId);
+  const data = {
+    cohortId,
+  };
+  const getCohortByCohortId = functions.httpsCallable("getCohortByCohortId");
+  const result = await getCohortByCohortId(data);
+  return result.data.cohort;
+};
+
+export const fetchCourses = async () => {
+  const data = {};
+  const getCourses = functions.httpsCallable("getCourses");
+  const result = await getCourses(data);
+  return result.data.courses;
 };
 
 export const fetchCourseByCourseId = async (courseId: string) => {
-  return _getDocumentHelper("courses", courseId);
+  const data = {
+    courseId,
+  };
+  const getCourseByCourseId = functions.httpsCallable("getCourseByCourseId");
+  const result = await getCourseByCourseId(data);
+  return result.data.course;
 };
 
 export const fetchTopicByCourseIdTopicId = async (courseId: string, topicId: string) => {
-  return _getDocumentHelper("courses", courseId, "topics", topicId);
+  const data = {
+    courseId,
+    topicId,
+  };
+  const getTopicByCourseIdTopicId = functions.httpsCallable("getTopicByCourseIdTopicId");
+  const result = await getTopicByCourseIdTopicId(data);
+  return result.data.topic;
 };
 
 export const fetchTaskByCourseIdTopicIdTaskId = async (
@@ -57,42 +42,62 @@ export const fetchTaskByCourseIdTopicIdTaskId = async (
   topicId: string,
   taskId: string,
 ) => {
-  return _getDocumentHelper("courses", courseId, "topics", topicId, "tasks", taskId);
+  const data = {
+    courseId,
+    topicId,
+    taskId,
+  };
+  const getTaskByCourseIdTopicIdTaskId = functions.httpsCallable("getTaskByCourseIdTopicIdTaskId");
+  const result = await getTaskByCourseIdTopicIdTaskId(data);
+  return result.data.task;
 };
 
 export const fetchPersonByPersonId = async (id: string) => {
-  return _getDocumentHelper("people", id);
+  const data = {
+    personId: id,
+  };
+  const getPersonByPersonId = functions.httpsCallable("getPersonByPersonId");
+  const result = await getPersonByPersonId(data);
+  return result.data.person;
 };
 
 export const fetchPersonByEmail = async (
   email: string,
 ): Promise<({ id: string } & Record<string, any>) | null> => {
-  const querySnapshot = await getDocs(
-    query(collection(db, "people"), where("email", "==", email), limit(1)),
-  );
-  const document = querySnapshot.docs[0];
-
-  if (document == null) {
-    return null;
-  }
-
-  return {
-    id: document.id,
-    ...document.data(),
+  const data = {
+    email,
   };
+  const getPersonByEmail = functions.httpsCallable("getPersonByEmail");
+  try {
+    const result = await getPersonByEmail(data);
+    return result.data.person;
+  } catch (e) {
+    if (e instanceof FirebaseError && e.code === "not-found") {
+      return null;
+    }
+    throw e;
+  }
 };
 
 export const createPerson = async (
   profile: Record<string, any>,
 ): Promise<{ id: string } & Record<string, any>> => {
-  // create user
+  const data = {
+    profile,
+  };
   const createNewUser = functions.httpsCallable("createNewUser");
-  const result = await createNewUser({ profile });
+  const result = await createNewUser(data);
   return result.data.person;
 };
 
-export const updatePersonByPersonId = async (personId: string, person: object): Promise<void> => {
-  await updateDoc(doc(db, "people", personId), person);
+export const updatePerson = async (personId: string, person: object): Promise<void> => {
+  const data = {
+    personId,
+    person,
+  };
+  const updatePersonByPersonId = functions.httpsCallable("updatePersonByPersonId");
+  const result = await updatePersonByPersonId(data);
+  return result.data.person;
 };
 
 export const fetchPersonsTasksByPersonIdCourseIdTopicId = async (
@@ -100,46 +105,49 @@ export const fetchPersonsTasksByPersonIdCourseIdTopicId = async (
   courseId: string,
   topicId: string,
 ) => {
-  return _getDocumentsHelper("people", personId, courseId, topicId, "tasks");
+  const data = {
+    personId,
+    courseId,
+    topicId,
+  };
+  const getPersonTasksByPersonIdCourseIdTopicId = functions.httpsCallable(
+    "getPersonTasksByPersonIdCourseIdTopicId",
+  );
+  const result = await getPersonTasksByPersonIdCourseIdTopicId(data);
+  return result.data.tasks;
 };
 
 export const fetchPersonsCohortsByPersonId = async (
   personId: string,
 ): Promise<Array<{ id: string } & Record<string, any>>> => {
-  const querySnapshot = await getDocs(
-    query(collection(db, "cohorts"), where("students", "array-contains", personId)),
-  );
-
-  return querySnapshot.docs.map((x) => ({
-    ...x.data(),
-    id: x.id,
-  }));
+  const data = {
+    personId,
+  };
+  const getCohortsByPersonId = functions.httpsCallable("getCohortsByPersonId");
+  const result = await getCohortsByPersonId(data);
+  return result.data.cohorts;
 };
 
 export const fetchAllPeopleInCourseByCourseId = async (
   courseId: string,
 ): Promise<Array<{ id: string } & Record<string, any>>> => {
-  const querySnapshot = await getDocs(
-    query(collection(db, "people"), where("assignedCourses", "array-contains", courseId)),
-  );
-
-  return querySnapshot.docs.map((x) => ({
-    ...x.data(),
-    id: x.id,
-  }));
+  const data = {
+    courseId,
+  };
+  const getPeopleByCourseId = functions.httpsCallable("getPeopleByCourseId");
+  const result = await getPeopleByCourseId(data);
+  return result.data.people;
 };
 
 export const fetchAllCohortsInCourseByCourseId = async (
   courseId: string,
 ): Promise<Array<{ id: string } & Record<string, any>>> => {
-  const querySnapshot = await getDocs(
-    query(collection(db, "cohorts"), where("courses", "array-contains", courseId)),
-  );
-
-  return querySnapshot.docs.map((x) => ({
-    ...x.data(),
-    id: x.id,
-  }));
+  const data = {
+    courseId,
+  };
+  const getCohortsByCourseId = functions.httpsCallable("getCohortsByCourseId");
+  const result = await getCohortsByCourseId(data);
+  return result.data.cohorts;
 };
 
 export const fetchPersonsTopicByPersonIdCourseIdTopicId = async (
@@ -147,7 +155,16 @@ export const fetchPersonsTopicByPersonIdCourseIdTopicId = async (
   courseId: string,
   topicId: string,
 ) => {
-  return _getDocumentHelper("people", personId, courseId, topicId);
+  const data = {
+    personId,
+    courseId,
+    topicId,
+  };
+  const getPersonTopicByPersonIdCourseIdTopicId = functions.httpsCallable(
+    "getPersonTopicByPersonIdCourseIdTopicId",
+  );
+  const result = await getPersonTopicByPersonIdCourseIdTopicId(data);
+  return result.data.personTopic;
 };
 
 // add person to cohort
@@ -156,7 +173,8 @@ export const addMeToCohort = async (cohortId: string) => {
     cohortId,
   };
   const addMeToCohort = functions.httpsCallable("addMeToCohort");
-  return addMeToCohort(data);
+  const result = await addMeToCohort(data);
+  return result.data.cohort;
 };
 
 export const addPersonToCohort = async (personId: string, cohortId: string) => {
@@ -165,7 +183,8 @@ export const addPersonToCohort = async (personId: string, cohortId: string) => {
     cohortId,
   };
   const addStudentToCohort = functions.httpsCallable("addStudentToCohort");
-  return addStudentToCohort(data);
+  const result = await addStudentToCohort(data);
+  return result.data.cohort;
 };
 
 // add course to person
@@ -174,7 +193,8 @@ export const assignCourseToMe = async (courseId: string) => {
     courseId,
   };
   const assignCourseToMe = functions.httpsCallable("assignCourseToMe");
-  return assignCourseToMe(data);
+  const result = await assignCourseToMe(data);
+  return result.data.person;
 };
 
 export const assignCourseToPerson = async (personId: string, courseId: string) => {
@@ -183,5 +203,6 @@ export const assignCourseToPerson = async (personId: string, courseId: string) =
     courseId,
   };
   const assignCourseToStudent = functions.httpsCallable("assignCourseToStudent");
-  return assignCourseToStudent(data);
+  const result = await assignCourseToStudent(data);
+  return result.data.person;
 };
