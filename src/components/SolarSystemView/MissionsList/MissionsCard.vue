@@ -97,7 +97,6 @@
           <div v-if="unlocked" class="d-flex justify-center">
             <!-- Start Mission button -->
             <StartMissionDialogV2
-              :courseId="courseId"
               :topicId="topicId"
               :taskId="id"
               :task="task"

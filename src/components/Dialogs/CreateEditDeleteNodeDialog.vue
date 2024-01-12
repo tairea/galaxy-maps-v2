@@ -126,7 +126,7 @@
             <v-select
               v-if="prerequisites"
               v-model="currentNode.prerequisites"
-              :items="sortTopics"
+              :items="sortedTopics"
               item-text="label"
               item-value="id"
               outlined
@@ -324,7 +324,7 @@ export default {
     dark() {
       return this.$vuetify.theme.isDark;
     },
-    sortTopics() {
+    sortedTopics() {
       let sortedTopics = this.currentCourseNodes.sort((a, b) => {
         // bruh! sometimes courseNodes have property topicCreatedTimestamp and sometimes they have nodeCreatedTimestamp
         // code as been fixed to no only save as topicCreatedTimestamp
