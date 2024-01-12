@@ -20,10 +20,21 @@
       </div>
       <!-- Active Hours & Completed Tasks -->
       <div class="student-actions-overUnder">
-        <div class="top-row d-flex flex-column" v-if="studentTimeData.length > 0">
+        <div class="top-row d-flex flex-column">
+          <!-- loading spinner -->
+          <div class="d-flex justify-center align-center" v-if="studentTimeDataLoading">
+            <v-btn
+              :loading="studentTimeDataLoading"
+              icon
+              color="missionAccent"
+              class="d-flex justify-center align-center"
+            ></v-btn>
+          </div>
           <StudentHours
+            v-else
             :timeData="studentTimeData"
             :timeframe="timeframe"
+            :courses="cohortCourses"
             @emitUpHours="emitUpHours($event)"
           />
         </div>
@@ -58,7 +69,11 @@ import StudentCohorts from "@/components/CohortView/StudentDataIterator/StudentC
 import StudentActions from "@/components/CohortView/StudentDataIterator/StudentCard/StudentActions.vue";
 import StudentActivityTimeline from "@/components/Reused/StudentActivityTimeline.vue";
 import { fetchCohortByCohortId, fetchCourseByCourseId } from "@/lib/ff";
-import { getStudentsCoursesXAPIQuery, getStudentsTimeDataXAPIQuery } from "@/lib/veracityLRS";
+import {
+  getStudentsCoursesXAPIQuery,
+  getStudentsTimeDataXAPIQuery,
+  getStudentsCourseTimeDataXAPIQuery,
+} from "@/lib/veracityLRS";
 import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
@@ -76,7 +91,7 @@ export default {
     StudentActions,
     StudentActivityTimeline,
   },
-  props: ["student", "timeframe", "date"],
+  props: ["student", "timeframe", "date", "cohortCourses"],
   data() {
     return {
       cohort: null,
@@ -90,8 +105,7 @@ export default {
       studetProfile: [],
       activities: [],
       studentTimeData: [],
-
-      // studentTimeDataLoading: false
+      studentTimeDataLoading: false,
     };
   },
   async mounted() {
@@ -111,10 +125,21 @@ export default {
     });
 
     // ==== get student activity data from LRS
-    let getActivityData = await getStudentsTimeDataXAPIQuery({
-      studentsArr: [this.student.id],
-    });
-    this.studentTimeData = getActivityData;
+
+    // this is the old way of getting the data. it didnt work because it showed total active on galaxy maps as a whole. not active hours on individual galaxies/courses
+    // let getActivityData = await getStudentsTimeDataXAPIQuery({
+    //   studentsArr: [this.student.id],
+    // });
+
+    // this new way gets all course log ins and log offs and calcs times
+    this.studentTimeData = await this.getStudentTimeData();
+  },
+  watch: {
+    async timeframe(newVal) {
+      // console.log("timeframe new val", newVal);
+      // this.studentTimeData = await this.getStudentTimeData();
+      this.studentTimeData = await this.getStudentTimeData();
+    },
   },
   computed: {
     ...mapState(useRootStore, ["currentCohortId", "userStatus"]),
@@ -146,6 +171,23 @@ export default {
         person: this.student,
         tasks,
       });
+    },
+    async getStudentTimeData() {
+      this.studentTimeDataLoading = true;
+      // todo: save this data into a variable
+      // todo: pull out the hours spent on the course
+      let getActivityData = await getStudentsCourseTimeDataXAPIQuery({
+        student: {
+          id: this.student.id,
+          firstName: this.student.firstName,
+          lastName: this.student.lastName,
+        },
+        min: this.timeframe.min,
+        max: this.timeframe.max,
+      });
+      // console.log("getActivityData NEW LRS QUERY", getActivityData);
+      this.studentTimeDataLoading = false;
+      return getActivityData;
     },
   },
 };

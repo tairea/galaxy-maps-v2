@@ -822,6 +822,56 @@ export const studentOfflineXAPIStatement = (actor) => {
   });
 };
 
+// loggedIntoGalaxyXAPIStatement
+// ========== Students opens galaxy
+export const loggedIntoGalaxyXAPIStatement = (payload) => {
+  // if no data, dont bother
+  if (!payload.galaxyId || !payload.actor) return;
+
+  console.log("sending student xAPI statement... student signed into galaxy: " + payload.galaxyId);
+  const statement = {
+    actor: {
+      name: payload.actor.firstName + " " + payload.actor.lastName,
+      mbox: "mailto:" + payload.actor.email,
+    },
+    verb: {
+      id: "https://brindlewaye.com/xAPITerms/verbs/loggedin/",
+      display: { "en-nz": "logged in to Galaxy" },
+    },
+    object: {
+      id: "https://www.galaxymaps.io/isonGalaxy/" + payload.galaxyId + "/" + new Date(),
+      definition: {
+        description: {
+          "en-nz": "Logged in",
+        },
+        extensions: {
+          "https://www.galaxymaps.io/course/id/": payload.galaxyId,
+          "https://www.galaxymaps.io/person/id/": payload.actor.id,
+        },
+      },
+    },
+    context: {
+      contextActivities: {
+        grouping: [
+          {
+            id: "https://www.galaxymaps.io/userStatus/",
+            objectType: "Activity",
+          },
+        ],
+      },
+    },
+  };
+
+  return fetch("https://galaxymaps.lrs.io/xapi/statements", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: auth,
+    },
+    body: JSON.stringify(statement),
+  });
+};
+
 /* ----------------------
   QUERY xAPI STATEMENTS
 ------------------------- */
@@ -1165,6 +1215,74 @@ export const getStudentsTimeDataXAPIQuery = async (payload) => {
   return sanitiseCohortsActivityDataFromLRS(resultBody);
 };
 
+// Get students course time data from LRS
+export const getStudentsCourseTimeDataXAPIQuery = async (payload) => {
+  // if no data, dont bother
+  // console.log("payload.student", payload.student);
+  if (!payload.student.id) return;
+
+  // convert studentIds to mailto:email string
+  let personIdToEmail = null;
+
+  const studentSnapshot = await db.collection("people").doc(payload.student.id).get();
+  if (!studentSnapshot.exists) {
+    return;
+  }
+  personIdToEmail = "mailto:" + studentSnapshot.data().email;
+
+  const aggregationQuery = [
+    // match with cohorts courses. and only started & completed statements
+    {
+      $match: {
+        "statement.actor.mbox": personIdToEmail,
+        // match a persons statements with verbs "logged in to Galaxy" or "logged out"
+        "statement.verb.display.en-nz": { $in: ["logged in to Galaxy", "logged out"] },
+        $and: [
+          { "statement.timestamp": { $gt: { $parseDate: { date: payload.min } } } },
+          { "statement.timestamp": { $lt: { $parseDate: { date: payload.max } } } },
+        ],
+      },
+    },
+    // group by actor & course
+    {
+      $group: {
+        _id: {
+          actor: "$statement.actor.mbox",
+        },
+        activity: {
+          $push: {
+            verb: "$statement.verb.display.en-nz",
+            timestamp: "$statement.timestamp",
+            courseId:
+              "$statement.object.definition.extensions.https://www.galaxymaps.io/course/id/",
+            personId:
+              "$statement.object.definition.extensions.https://www.galaxymaps.io/person/id/",
+          },
+        },
+      },
+    },
+  ];
+
+  const res = await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: auth,
+    },
+    body: JSON.stringify(aggregationQuery),
+  });
+  const resultBody = await res.json();
+  // console.log(
+  //   payload.student.firstName +
+  //     " " +
+  //     payload.student.lastName +
+  //     "'s logged in Galaxies and Logged Out statements IN A TIMEFRAME:",
+  //   resultBody,
+  // );
+  // return sanitiseCourseActivityDataFromLRS(resultBody);
+  return resultBody;
+};
+
 // export const VQLXAPIQuery = async () => {
 //   const VQLQuery = [
 //     {
@@ -1369,6 +1487,45 @@ async function sanitiseCohortsActivityDataFromLRS(res) {
   } // end person
   return santisedActivity;
 }
+
+// async function sanitiseCourseActivityDataFromLRS(res) {
+//   // WIP: Ian
+//   // below from Copilot. this looks good but it doesnt account for timeframe filtering. eg. if user wants to see hours for the week only
+//   let statements = res[0].activity;
+//   console.log("Statements: ", statements);
+
+//   let courseTimes = new Map();
+//   let currentCourseId = null;
+//   let loginTimestamp = null;
+
+//   for (let statement of statements) {
+//     let timestamp = new Date(statement.timestamp);
+
+//     if (statement.verb === "logged in to Galaxy") {
+//       let courseId = statement.courseId;
+
+//       if (currentCourseId !== null) {
+//         let timeSpent = timestamp - loginTimestamp;
+//         courseTimes.set(currentCourseId, (courseTimes.get(currentCourseId) || 0) + timeSpent);
+//       }
+//       currentCourseId = courseId;
+//       loginTimestamp = timestamp;
+//     } else if (statement.verb === "logged out" && currentCourseId !== null) {
+//       let timeSpent = timestamp - loginTimestamp;
+//       courseTimes.set(currentCourseId, (courseTimes.get(currentCourseId) || 0) + timeSpent);
+//       currentCourseId = null;
+//     }
+//   }
+
+//   // Convert the time spent to hours
+//   let courseTimesInHours = new Map();
+//   for (let [courseId, timeSpent] of courseTimes) {
+//     let timeSpentInHours = (timeSpent / (1000 * 60 * 60)).toFixed(1);
+//     courseTimesInHours.set(courseId, timeSpentInHours);
+//   }
+
+//   return courseTimesInHours;
+// }
 
 async function courseIRIToCourseId(course) {
   // get course id from iri
