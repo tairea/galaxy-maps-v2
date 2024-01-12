@@ -78,12 +78,30 @@
                   :editor-toolbar="customToolbar"
                   @focus="quillFocused = true"
                   @blur="quillFocused = false"
-                  style="color: var(--v-cohortAccent-base)"
+                  style="color: white"
                 />
               </div>
 
+              <!-- COLOUR PICKER -->
               <p class="dialog-description">
                 Mission colour:
+                <v-tooltip right>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    left
+                    color="missionAccent"
+                    small
+                    class="circle-outline ma-1"
+                    v-bind="attrs"
+                    v-on="on"
+                  >
+                    {{ mdiInformationVariant }}</v-icon
+                  >
+                </template>
+                <span>
+                  Feature requested by @scott_southwood
+                </span>
+              </v-tooltip>
                 <div>
                   <v-color-picker
                     v-model="task.color"
@@ -180,6 +198,7 @@
                   SUBMISSION REQUIRED FOR THIS MISSION
                 </p>
               </v-checkbox>
+
               <!-- SUBMISSION INSTRUCTIONS -->
               <div v-if="task.submissionRequired">
                 <p class="dialog-description submission-colour">
@@ -858,7 +877,7 @@ export default {
 }
 
 .circle-outline {
-  border: 1px solid var(--v-cohortAccent-base);
+  // border: 1px solid var(--v-cohortAccent-base);
   border-radius: 50%;
 }
 
