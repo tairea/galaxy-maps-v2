@@ -11,7 +11,7 @@
               v-on="on"
               class="mission-edit-button mt-4"
               outlined
-              color="missionAccent"
+              :color="taskColor ? taskColor : 'missionAccent'"
               x-small
             >
               <v-icon class="mr-2" x-small> {{ mdiPencil }}</v-icon>
@@ -78,26 +78,46 @@
                   :editor-toolbar="customToolbar"
                   @focus="quillFocused = true"
                   @blur="quillFocused = false"
-                  style="color: var(--v-cohortAccent-base)"
+                  style="color: white"
                 />
               </div>
 
+              <!-- COLOUR PICKER -->
               <p class="dialog-description">
-                Mission color:
-                <v-color-picker
-                  v-model="task.color"
-                  class="ma-2 color-picker"
-                  show-swatches
-                  hide-canvas
-                  hide-inputs
-                  hide-sliders
-                  mode="hexa"
-                  value="#69a1e2"
-                  width="90%"
-                  :swatches="darkSwatches"
-                  style="background-color: rgba(0, 0, 0, 0, 0)"
-                >
-                </v-color-picker>
+                Mission colour:
+                <v-tooltip right>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon
+                    left
+                    color="missionAccent"
+                    small
+                    class="circle-outline ma-1"
+                    v-bind="attrs"
+                    v-on="on"
+                  >
+                    {{ mdiInformationVariant }}</v-icon
+                  >
+                </template>
+                <span>
+                  Feature requested by @scott_southwood
+                </span>
+              </v-tooltip>
+                <div>
+                  <v-color-picker
+                    v-model="task.color"
+                    class="ma-2 color-picker"
+                    show-swatches
+                    hide-canvas
+                    hide-inputs
+                    hide-sliders
+                    mode="hexa"
+                    value="#69a1e2"
+                    width="90%"
+                    :swatches="darkSwatches"
+                    style="background-color:rgba(0,0,0,0)"
+                  >
+                  </v-color-picker>
+                </div>
               </p>
 
               <!-- DURATION -->
@@ -178,6 +198,7 @@
                   SUBMISSION REQUIRED FOR THIS MISSION
                 </p>
               </v-checkbox>
+
               <!-- SUBMISSION INSTRUCTIONS -->
               <div v-if="task.submissionRequired">
                 <p class="dialog-description submission-colour">
@@ -376,7 +397,7 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "CreateEditDeleteMissionDialog",
-  props: ["taskToEdit", "taskId", "index", "topicId", "on", "attrs", "edit"],
+  props: ["taskToEdit", "taskId", "index", "topicId", "on", "attrs", "edit","taskColor"],
   components: {
     VueEditor,
   },
@@ -399,6 +420,7 @@ export default {
       slides: "",
       submissionRequired: "",
       submissionInstructions: "",
+      color: ""
     },
     loading: false,
     disabled: false,
@@ -415,7 +437,7 @@ export default {
       ["link", "image", "video"],
       // ["clean"] // remove formatting button
     ],
-    darkSwatches: [["#69A1E2"], ["#E269CF"], ["#73FBD3"], ["#F3C969"], ["#54428E"]], //https://coolors.co/69a1e2-e269cf-73fbd3-f3c969-54428e
+    darkSwatches: [["#69A1E2"], ["#E269CF"], ["#00E676"], ["#FAF200"]], //https://coolors.co/69a1e2-e269cf-73fbd3-f3c969-54428e
   }),
   watch: {
     dialog(newVal) {
@@ -855,7 +877,7 @@ export default {
 }
 
 .circle-outline {
-  border: 1px solid var(--v-cohortAccent-base);
+  // border: 1px solid var(--v-cohortAccent-base);
   border-radius: 50%;
 }
 
