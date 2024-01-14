@@ -218,6 +218,8 @@
 </template>
 
 <script>
+import confetti from "canvas-confetti";
+import { db, functions } from "@/store/firestoreConfig";
 import {
   fetchCohortByCohortId,
   fetchCourseByCourseId,
@@ -226,22 +228,21 @@ import {
   fetchTopicByCourseIdTopicId,
 } from "@/lib/ff";
 import {
-  submitWorkForReviewXAPIStatement,
-  reSubmitWorkForReviewXAPIStatement,
-  taskMarkedAsCompletedXAPIStatement,
-  topicCompletedXAPIStatement,
-} from "@/lib/veracityLRS";
-import { db, functions } from "@/store/firestoreConfig";
-import useRootStore from "@/store/index";
-import {
   mdiCloudUploadOutline,
   mdiInformationVariant,
   mdiCheck,
   mdiClose,
   mdiCheckboxBlankOutline,
 } from "@mdi/js";
-import { VueEditor } from "vue2-editor";
 import { mapActions, mapState } from "pinia";
+import useRootStore from "@/store/index";
+import {
+  submitWorkForReviewXAPIStatement,
+  reSubmitWorkForReviewXAPIStatement,
+  taskMarkedAsCompletedXAPIStatement,
+  topicCompletedXAPIStatement,
+} from "@/lib/veracityLRS";
+import { VueEditor } from "vue2-editor";
 
 export default {
   name: "MissionCompletedDialog",
@@ -305,7 +306,7 @@ export default {
       this.getMappedByPersonsImage(this.currentCourse.mappedBy.personId);
     }
     this.cohort = await fetchCohortByCohortId(this.currentCohortId);
-    console.log("persons topics from mission completed dialog", this.personsTopics);
+    // console.log("persons topics from mission completed dialog", this.personsTopics);
   },
   computed: {
     ...mapState(useRootStore, [
@@ -329,7 +330,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["setSnackbar"]),
+    ...mapActions(useRootStore, ["setSnackbar", "setTopicCompleted", "setNextTopicUnlocked"]),
     async reSubmitWorkForReview() {
       this.loading = true;
       this.disabled = true;
@@ -572,14 +573,24 @@ export default {
       // 2) check if that the same as total
       if (numOfTasksCompleted === this.personsTopicsTasks.length) {
         console.log("Topic Completed! (all tasks in this topic completed)");
-        // TODO: some kind of notification to UI signal that Topic has been completed
+        // set topic to completed in store
+        this.setTopicCompleted({ completed: true, topicId: this.currentTopic.id });
+        // === Basic Cannon
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+        });
+
         await topicCompletedXAPIStatement(this.person, this.currentTopic.id, {
           galaxy: this.currentCourse,
           system: this.currentTopic,
         });
-        await this.completeTopic();
+        await this.setTopicToCompletedInDB();
         // all tasks are completed. unlock next topic
         await this.unlockNextTopics();
+        // topic unlocked. trigger store flag (this is for "next system" button (loading attribute) in galaxy view)
+        this.setNextTopicUnlocked(true);
       } else {
         console.log("topic not yet completed...");
         console.log("total tasks = ", this.personsTopicsTasks.length);
@@ -654,7 +665,7 @@ export default {
         }
       }
     },
-    async completeTopic() {
+    async setTopicToCompletedInDB() {
       await db
         .collection("people")
         .doc(this.person.id)

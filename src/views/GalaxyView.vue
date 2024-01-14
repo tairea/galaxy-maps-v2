@@ -6,7 +6,7 @@
       <PublishGalaxy v-if="showPublish" :course="course" :courseTasks="courseTasks" />
       <BackButton :toPath="'/'" />
       <AssignedInfo
-        v-if="!draft && cohortsInCourse.length"
+        v-if="!draft && cohortsInCourse.length && teacher"
         :assignCohorts="true"
         :people="peopleInCourse"
         :cohorts="cohortsInCourse"
@@ -149,6 +149,7 @@ import {
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
+import { loggedIntoGalaxyXAPIStatement } from "@/lib/veracityLRS";
 
 export default {
   name: "GalaxyView",
@@ -224,6 +225,8 @@ export default {
   async beforeMount() {
     this.course = await fetchCourseByCourseId(this.courseId);
     this.setCurrentCourseId(this.courseId);
+    console.log("is course? : ", this.course);
+    console.log("is teacher? : ", this.teacher);
   },
   async mounted() {
     // bind assigned people in this course
@@ -249,6 +252,19 @@ export default {
 
     // Start Vue Tour
     // this.$tours["myTour"].start(); // Disabled for now
+
+    // LRS statement recording a student has logged in to this course
+    if (this.course && !this.teacher) {
+      await loggedIntoGalaxyXAPIStatement({
+        actor: {
+          email: this.person.email,
+          firstName: this.person.firstName,
+          lastName: this.person.lastName,
+          id: this.person.id,
+        },
+        galaxyId: this.courseId,
+      });
+    }
   },
   computed: {
     ...mapState(useRootStore, [
@@ -268,13 +284,13 @@ export default {
       return this.course?.status === "submitted";
     },
     teacher() {
-      return this.course?.mappedBy?.personId === this.person.id || this.user.data.admin;
+      return this.course?.mappedBy.personId === this.person.id || this.user.data.admin;
     },
     student() {
       return this.person.assignedCourses?.some((courseId) => courseId === this.courseId);
     },
     showPublish() {
-      return (this.user.data.admin && this.course.status === "submitted") || this.draft;
+      return (this.user.data.admin && this.course?.status === "submitted") || this.draft;
     },
   },
   methods: {
@@ -377,6 +393,7 @@ export default {
       this.clickedTopicId = emittedPayload.topicId;
       // get topic
       this.clickedTopic = await fetchTopicByCourseIdTopicId(this.courseId, this.clickedTopicId);
+      console.log("clicked topic:", this.clickedTopic);
       // reset topic tasks (to prevent duplicate)
       this.topicTasks = [];
       // loop courseTasks for this topic id (= this.topicTasks)

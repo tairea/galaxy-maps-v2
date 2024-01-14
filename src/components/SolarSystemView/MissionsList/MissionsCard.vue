@@ -1,10 +1,24 @@
 <template>
   <div>
     <v-expansion-panel-header class="py-0">
-      <div class="mission-card" :class="{ lockedOpacity: task.taskStatus == 'locked' }">
+      <div
+        class="mission-card"
+        :class="{ lockedOpacity: task.taskStatus == 'locked' }"
+        :style="task.color ? 'border: 1px dashed ' + task.color + ' !important' : ''"
+      >
         <div class="mission-section mission-number-section">
-          <p class="text-overline text-uppercase">Mission</p>
-          <p class="mission-number">{{ index + 1 }}</p>
+          <p
+            class="text-overline text-uppercase"
+            :style="task.color ? 'color:' + task.color + ' !important' : ''"
+          >
+            Mission
+          </p>
+          <p
+            class="mission-number"
+            :style="task.color ? 'color:' + task.color + ' !important' : ''"
+          >
+            {{ index + 1 }}
+          </p>
           <!-- EDIT BUTTON -->
           <div v-if="teacher">
             <CreateEditDeleteMissionDialog
@@ -13,14 +27,28 @@
               :taskId="id"
               :index="index"
               :topicId="topicId"
+              :taskColor="task.color"
             />
           </div>
         </div>
-        <div class="mission-middle-section mission-main-section">
+        <div
+          class="mission-middle-section mission-main-section"
+          :style="task.color ? 'border-left: 1px dashed ' + task.color + ' !important' : ''"
+        >
           <!-- TITLE -->
-          <h1 class="mission-title pa-4">{{ task.title }}</h1>
+          <h1
+            class="mission-title pa-4"
+            :style="task.color ? 'color:' + task.color + ' !important' : ''"
+          >
+            {{ task.title }}
+          </h1>
           <!-- DESCRIPTION -->
-          <div v-if="teacher" v-html="task.description" class="task-description"></div>
+          <div
+            v-if="teacher"
+            v-html="task.description"
+            class="task-description"
+            :style="task.color ? 'color:' + task.color + ' !important' : ''"
+          ></div>
         </div>
 
         <!-- <div class="mission-section mission-section-overUnder">
@@ -54,13 +82,23 @@
 
         <div v-if="!teacher" class="mission-section mission-section-overUnder">
           <div v-if="task.duration" class="section-overUnder d-flex justify-center flex-column">
-            <p class="text-overline text-uppercase text-center">Estimated Duration:</p>
-            <p class="text-center">
+            <p
+              class="text-overline text-uppercase text-center"
+              :style="task.color ? 'color:' + task.color + ' !important' : ''"
+            >
+              Estimated Duration:
+            </p>
+            <p class="text-center" :style="task.color ? 'color:' + task.color + ' !important' : ''">
               {{ task.duration }}
             </p>
           </div>
           <div class="section-overUnder d-flex justify-center flex-column">
-            <p class="text-overline text-uppercase text-center">SUBMISSION REQ:</p>
+            <p
+              class="text-overline text-uppercase text-center"
+              :style="task.color ? 'color:' + task.color + ' !important' : ''"
+            >
+              SUBMISSION REQ:
+            </p>
             <p :style="[task.submissionRequired ? { color: '#FAF200' } : '']">
               {{ task.submissionRequired ? "YES" : "NO" }}
             </p>
@@ -96,7 +134,7 @@
 
           <div v-if="unlocked" class="d-flex justify-center">
             <!-- Start Mission button -->
-            <StartMissionDialog
+            <StartMissionDialogV2
               :topicId="topicId"
               :taskId="id"
               :task="task"
@@ -121,20 +159,43 @@
         </div>
 
         <!-- TEACHER VIEW (for type teacher) -->
-        <div v-else class="three-vertical-section">
+        <div
+          v-else
+          class="three-vertical-section"
+          :style="task.color ? 'border-left: 1px dashed ' + task.color + ' !important' : ''"
+        >
           <div class="three-vertical-section-overUnder">
             <!-- duration -->
             <div
               v-if="task.duration"
               class="d-flex justify-center flex-column three-vertical pa-4 duration"
+              :class="taskColorClass"
             >
-              <p class="text-overline text-uppercase text-center">Est. Duration:</p>
-              <p class="text-center">{{ task.duration }} MINUTES</p>
+              <p
+                class="text-overline text-uppercase text-center"
+                :style="task.color ? 'color:' + task.color + ' !important' : ''"
+              >
+                Est. Duration:
+              </p>
+              <p
+                class="text-center"
+                :style="task.color ? 'color:' + task.color + ' !important' : ''"
+              >
+                {{ task.duration }} MINUTES
+              </p>
             </div>
             <!-- end duration -->
             <!-- submission req -->
-            <div class="d-flex justify-center flex-column three-vertical pa-4 submission">
-              <p class="text-overline text-uppercase text-center">SUBMISSION REQ:</p>
+            <div
+              class="d-flex justify-center flex-column three-vertical pa-4 submission"
+              :class="taskColorClass"
+            >
+              <p
+                class="text-overline text-uppercase text-center"
+                :style="task.color ? 'color:' + task.color + ' !important' : ''"
+              >
+                SUBMISSION REQ:
+              </p>
               <p class="text-center" :style="[task.submissionRequired ? { color: '#FAF200' } : '']">
                 {{ task.submissionRequired ? "YES" : "NO" }}
               </p>
@@ -183,7 +244,6 @@
         :topicId="topicId"
         :active="active"
         :declined="declined"
-        @topicCompleted="topicCompleted()"
       />
       <SelectedMissionsCard
         v-else
@@ -199,6 +259,7 @@
 <script>
 import CreateEditDeleteMissionDialog from "@/components/Dialogs/CreateEditDeleteMissionDialog.vue";
 import StartMissionDialog from "@/components/Dialogs/StartMissionDialog.vue";
+import StartMissionDialogV2 from "@/components/Dialogs/StartMissionDialogV2.vue";
 import ActiveMissionsCard from "@/components/SolarSystemView/MissionsList/MissionsCard/ActiveMissionsCard.vue";
 import SelectedMissionsCard from "@/components/SolarSystemView/MissionsList/MissionsCard/SelectedMissionsCard.vue";
 import { db } from "@/store/firestoreConfig";
@@ -211,6 +272,7 @@ export default {
   components: {
     CreateEditDeleteMissionDialog,
     StartMissionDialog,
+    StartMissionDialogV2,
     ActiveMissionsCard,
     SelectedMissionsCard,
   },
@@ -237,13 +299,7 @@ export default {
     },
   },
   computed: {
-    ...mapState(useRootStore, [
-      "currentCourseId",
-      "personsTopics",
-      "topicsTasks",
-      "personsTopicsTasks",
-      "person",
-    ]),
+    ...mapState(useRootStore, ["currentCourseId", "personsTopics", "topicsTasks", "person"]),
     active() {
       return this.task.taskStatus == "active";
     },
@@ -259,13 +315,22 @@ export default {
     unlocked() {
       return this.task.taskStatus == "unlocked";
     },
-  },
-  methods: {
-    topicCompleted() {
-      console.log("2");
-      this.$emit("topicCompleted");
+    taskColorClass() {
+      switch (this.task.color) {
+        case "#69A1E2FF":
+          return "border-top-missionAccent";
+        case "#E269CFFF":
+          return "border-top-galaxyAccent";
+        case "#00E676FF":
+          return "border-top-baseAccent";
+        case "#FAF200FF":
+          return "border-top-cohortAccent";
+        default:
+          return "";
+      }
     },
   },
+  methods: {},
 };
 </script>
 
@@ -458,11 +523,22 @@ p {
         height: 30%;
       }
 
-      .submission {
-      }
-
       .three-vertical:not(:first-child) {
         border-top: 1px dashed var(--v-missionAccent-base);
+      }
+
+      .border-top-missionAccent {
+        border-top: 1px dashed var(--v-missionAccent-base) !important;
+      }
+      .border-top-galaxyAccent {
+        border-top: 1px dashed var(--v-galaxytAccent-base) !important;
+      }
+      .border-top-baseAccent {
+        border-top: 1px dashed var(--v-baseAccent-base) !important;
+      }
+
+      .border-top-cohortAccent {
+        border-top: 1px dashed var(--v-cohortAccent-base) !important;
       }
     }
   }

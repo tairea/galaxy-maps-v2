@@ -11,7 +11,7 @@
               <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
               <p class="dialog-description">
                 This Node is a <span class="mission-text">Topic</span> of the
-                <span class="galaxy-text">{{ this.course.title }}</span> Galaxy map
+                <span class="galaxy-text">{{ this.course?.title }}</span> Galaxy map
               </p>
             </div>
           </div>
@@ -126,7 +126,7 @@
             <v-select
               v-if="prerequisites"
               v-model="currentNode.prerequisites"
-              :items="sortedObjArr"
+              :items="sortedTopics"
               item-text="label"
               item-value="id"
               outlined
@@ -190,13 +190,13 @@
         <!-- HEADER -->
         <div class="dialog-header py-10">
           <p class="dialog-title">
-            <strong>Warning!</strong> Delete {{ currentTopic.title }} System?
+            <strong>Warning!</strong> Delete {{ currentTopic?.title }} System?
           </p>
           <div class="d-flex align-start">
             <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
             <p class="dialog-description">
               Are you sure you want to <strong>DELETE</strong> this
-              <span class="mission-text">{{ currentTopic.title }} System</span>?
+              <span class="mission-text">{{ currentTopic?.title }} System</span>?
               <br />
               <br />
               Deleting is permanent!!!
@@ -258,9 +258,9 @@ export default {
       this.currentTopicId,
     );
 
-    this.sortedObjArr = arr.sort((a, b) =>
-      a.topic.topicCreatedTimestamp.seconds > b.topic.topicCreatedTimestamp.seconds ? 1 : -1,
-    );
+    // this.sortedObjArr = arr.sort((a, b) =>
+    //   a.topic.topicCreatedTimestamp.seconds > b.topic.topicCreatedTimestamp.seconds ? 1 : -1,
+    // );
 
     this.infoPopupShow = false;
     // hack to make active select white
@@ -323,6 +323,22 @@ export default {
     dark() {
       return this.$vuetify.theme.isDark;
     },
+    sortedTopics() {
+      let sortedTopics = this.currentCourseNodes.sort((a, b) => {
+        // bruh! sometimes courseNodes have property topicCreatedTimestamp and sometimes they have nodeCreatedTimestamp
+        // code as been fixed to no only save as topicCreatedTimestamp
+        // but this ternary handles old nodeCreatedTimestamp's
+        let aTimestamp = a.hasOwnProperty("topicCreatedTimestamp")
+          ? a.topicCreatedTimestamp.seconds
+          : a.nodeCreatedTimestamp.seconds;
+        let bTimestamp = b.hasOwnProperty("topicCreatedTimestamp")
+          ? b.topicCreatedTimestamp.seconds
+          : b.nodeCreatedTimestamp.seconds;
+
+        return new Date(bTimestamp) - new Date(aTimestamp);
+      });
+      return sortedTopics;
+    },
   },
   methods: {
     // getTopicTasks() {
@@ -372,7 +388,7 @@ export default {
               dashes: false,
             });
 
-          await edgeDocRef.update({ id: docRef.id });
+          await edgeDocRef.update({ id: edgeDocRef.id });
         }
       }
 
@@ -469,6 +485,11 @@ export default {
         .where("assignedCourses", "array-contains", this.currentCourseId)
         .get();
 
+      // if no students, return
+      if (allStudents.empty) {
+        return;
+      }
+
       // for each student
       for (const doc of allStudents) {
         const personId = doc.id;
@@ -515,6 +536,11 @@ export default {
         .collection("people")
         .where("assignedCourses", "array-contains", this.currentCourseId)
         .get();
+
+      // if no students, return
+      if (allStudents.empty) {
+        return;
+      }
 
       await Promise.all(
         allStudents.map(async (doc) => {

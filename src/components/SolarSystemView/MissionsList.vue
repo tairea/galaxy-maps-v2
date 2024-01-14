@@ -24,7 +24,6 @@
               :topicActive="topicActive"
               :teacher="teacher"
               @missionActivated="missionActivated"
-              @topicCompleted="topicCompleted"
             />
           </v-expansion-panel>
         </v-expansion-panels>
@@ -83,10 +82,6 @@ export default {
         return object.taskStatus == "active" || object.taskStatus == "declined";
       });
       if (this.topic.topicStatus === "active") this.topicActive = true;
-    },
-    topicCompleted() {
-      console.log("3");
-      this.$emit("topicCompleted");
     },
   },
 };

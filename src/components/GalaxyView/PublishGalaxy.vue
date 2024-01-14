@@ -304,7 +304,6 @@ export default {
       immediate: true,
       deep: true,
       handler(newVal) {
-        console.log("newVal", newVal);
         this.courseOptions.public = newVal.public;
       },
     },
@@ -475,7 +474,9 @@ export default {
       let timeCreatedArrs = [];
 
       for (let index in this.currentCourseNodes) {
-        let timeCreatedNode = this.currentCourseNodes[index].nodeCreatedTimestamp?.seconds;
+        let timeCreatedNode = this.currentCourseNodes[index].hasOwnProperty("topicCreatedTimestamp")
+          ? this.currentCourseNodes[index].topicCreatedTimestamp.seconds
+          : this.currentCourseNodes[index].nodeCreatedTimestamp.seconds;
 
         timeCreatedArrs.push(timeCreatedNode);
         // console.log("unsorted arr", timeCreatedArrs);
@@ -492,7 +493,9 @@ export default {
         // loop over the ordered time array
         let arrTime = timeCreatedArrs[a];
         for (let b in timeCreatedArrs) {
-          let timeStamp = this.currentCourseNodes[b].nodeCreatedTimestamp?.seconds;
+          let timeStamp = this.currentCourseNodes[b].hasOwnProperty("topicCreatedTimestamp")
+            ? this.currentCourseNodes[b].topicCreatedTimestamp.seconds
+            : this.currentCourseNodes[b].nodeCreatedTimestamp.seconds;
           if (arrTime == timeStamp) {
             let node = this.currentCourseNodes[b];
             this.sortedObjArr.push(node);
