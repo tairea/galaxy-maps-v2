@@ -1,6 +1,5 @@
 import { log } from "firebase-functions/logger";
-import { config } from "firebase-functions/v1";
-import { onCall } from "firebase-functions/v1/https";
+import { config, runWith } from "firebase-functions/v1";
 import { createTransport } from "nodemailer";
 import { APP_NAME, DOMAIN } from "./_constants.js";
 
@@ -83,7 +82,7 @@ Galaxy Maps Team`;
 }
 
 // ======COHORT REGISTRATION NOTIFICATION==================
-export const sendNewCohortEmailHttpsEndpoint = onCall((data, _context) => {
+export const sendNewCohortEmailHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
   const { email, displayName, firstName, inviter, cohort } = data;
   return sendNewCohortEmail(email, displayName, firstName, inviter, cohort);
 });
@@ -147,7 +146,7 @@ Galaxy Maps Team`;
 }
 
 // ======COURSE SUBMISSION NOTIFICATION==================
-export const sendNewSubmissionEmailHttpsEndpoint = onCall((data, _context) => {
+export const sendNewSubmissionEmailHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
   const { author, title } = data;
   sendNewSubmissionEmail(author, title);
 });
@@ -174,7 +173,7 @@ Galaxy Maps Team`;
 }
 
 // ======COURSE PUBLISHED NOTIFICATION==================
-export const sendCoursePublishedEmailHttpsEndpoint = onCall((data, _context) => {
+export const sendCoursePublishedEmailHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
   const { email, name, course } = data;
   sendCoursePublishedEmail(email, name, course);
 });
@@ -201,7 +200,7 @@ Galaxy Maps Team`;
 }
 
 // ======REQUEST FOR HELP SENT ==================
-export const sendRequestForHelpHttpsEndpoint = onCall((data, _context) => {
+export const sendRequestForHelpHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
   const { email, teacher, course, task, student, request, topic } = data;
   sendRequestForHelp(email, teacher, course, task, student, request, topic);
 });
@@ -261,7 +260,7 @@ Galaxy Maps Team`;
 }
 
 // ====== RESPONSE TO REQUEST ==================
-export const sendResponseToHelpHttpsEndpoint = onCall((data, _context) => {
+export const sendResponseToHelpHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
   const { email, teacher, course, task, student, response, topic, request } = data;
   sendResponseToHelp(email, teacher, course, task, student, response, topic, request);
 });
@@ -327,7 +326,7 @@ Galaxy Maps Team`;
 }
 
 // ======SUBMISSION FOR TASK SENT ==================
-export const sendTaskSubmissionHttpsEndpoint = onCall((data, _context) => {
+export const sendTaskSubmissionHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
   const { email, teacher, course, task, student, submission, topic, submissionInstructions } = data;
   sendTaskSubmission(
     email,
@@ -401,7 +400,7 @@ Galaxy Maps Team`;
 }
 
 // ====== RESPONSE TO REQUEST ==================
-export const sendResponseToSubmissionHttpsEndpoint = onCall((data, _context) => {
+export const sendResponseToSubmissionHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
   const { email, teacher, course, task, student, outcome, topic, message, submission } = data;
   sendResponseToSubmission(
     email,
@@ -554,7 +553,7 @@ Galaxy Maps Team`;
 }
 
 // ====== ACTIVE COURSE DELETED ==================
-export const sendCourseDeletedHttpsEndpoint = onCall((data, _context) => {
+export const sendCourseDeletedHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
   const { email, teacher, course, student, teacherEmail } = data;
   sendCourseDeleted(email, teacher, course, student, teacherEmail);
 });

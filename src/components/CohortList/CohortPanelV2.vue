@@ -56,6 +56,7 @@
               :key="person.id"
               :size="30"
               :personId="person.id"
+              :profile="person"
               class="my-2 mx-1 avatar"
               :colourBorder="true"
               @click.native="clickedPerson($event, person, index)"
@@ -126,7 +127,8 @@ import Avatar from "@/components/Reused/Avatar.vue";
 import ProgressionLineChart from "@/components/Reused/ProgressionLineChart.vue";
 import ActivityBarChart from "@/components/Reused/ActivityBarChart.vue";
 import Organisation from "@/components/Reused/Organisation.vue";
-import { getCohortsCourseDataXAPIQuery, getStudentsTimeDataXAPIQuery } from "@/lib/veracityLRS";
+import { fetchCohortCoursesActivityByCohortId } from "@/lib/ff";
+import { getStudentsTimeDataXAPIQuery } from "@/lib/veracityLRS";
 import useRootStore from "@/store/index";
 import { mdiInformationVariant } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
@@ -163,12 +165,7 @@ export default {
     this.cohortsCoursesDataLoading = true;
     this.cohortActivityDataLoading = true;
     // ==== get cohort course data from LRS
-    const getCourseData = await getCohortsCourseDataXAPIQuery({
-      studentsArr: this.cohort.students,
-      coursesArr: this.cohort.courses,
-      cohortName: this.cohort.name,
-    });
-    this.cohortsCoursesData = getCourseData;
+    this.cohortsCoursesData = await fetchCohortCoursesActivityByCohortId(this.cohort.id);
     // console.log("this.cohortsCoursesData", this.cohortsCoursesData);
 
     // add students with data

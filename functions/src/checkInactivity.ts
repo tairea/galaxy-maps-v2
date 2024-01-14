@@ -1,11 +1,12 @@
 import { type DocumentData } from "firebase-admin/firestore";
 import { log } from "firebase-functions/logger";
-import { schedule } from "firebase-functions/v1/pubsub";
+import { runWith } from "firebase-functions/v1";
 import { db } from "./_shared.js";
 import { sendStudentInActive, sendTeacherStudentInActive } from "./emails.js";
 
 // ====== SCHEDULE CHECK FOR INACTIVITY  ==================
-export const checkInactivitySchedule = schedule("0 8 * * *")
+export const checkInactivitySchedule = runWith({})
+  .pubsub.schedule("0 8 * * *")
   .timeZone("Pacific/Auckland")
   .onRun(() => {
     return checkInactivity();

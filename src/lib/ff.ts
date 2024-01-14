@@ -40,6 +40,19 @@ export const fetchAllCohortsInCourseByCourseId = async (
   return result.data.cohorts;
 };
 
+export const fetchCohortCoursesActivityByCohortId = async (
+  cohortId: string,
+): Promise<Record<string, any>[]> => {
+  const data = {
+    cohortId,
+  };
+  const getCohortCoursesActivityByCohortId = functions.httpsCallable(
+    "getCohortCoursesActivityByCohortId",
+  );
+  const result = await getCohortCoursesActivityByCohortId(data);
+  return result.data.activityData;
+};
+
 export const fetchCourses = async () => {
   const data = {};
   const getCourses = functions.httpsCallable("getCourses");

@@ -1,11 +1,12 @@
 import { error } from "firebase-functions/logger";
-import { onCall, HttpsError } from "firebase-functions/v1/https";
+import { runWith } from "firebase-functions/v1";
+import { HttpsError } from "firebase-functions/v1/https";
 import { DOMAIN } from "./_constants.js";
 import { auth, db, requireAuthenticated } from "./_shared.js";
 import { sendStudentInviteEmail, sendTeacherInviteEmail } from "./emails.js";
 
 // Get a person by personId
-export const getPersonByPersonIdHttpsEndpoint = onCall(async (data, context) => {
+export const getPersonByPersonIdHttpsEndpoint = runWith({}).https.onCall(async (data, context) => {
   requireAuthenticated(context);
 
   const personId = data.personId as string | null;
@@ -31,7 +32,7 @@ export const getPersonByPersonIdHttpsEndpoint = onCall(async (data, context) => 
 });
 
 // Get a person by email
-export const getPersonByEmailHttpsEndpoint = onCall(async (data, context) => {
+export const getPersonByEmailHttpsEndpoint = runWith({}).https.onCall(async (data, context) => {
   requireAuthenticated(context);
 
   const email = data.email as string | null;
@@ -63,7 +64,7 @@ export const getPersonByEmailHttpsEndpoint = onCall(async (data, context) => {
 });
 
 // upgrade someones account to admin
-export const addAdminRoleHttpsEndpoint = onCall(async (uid: string, context) => {
+export const addAdminRoleHttpsEndpoint = runWith({}).https.onCall(async (uid: string, context) => {
   requireAuthenticated(context);
 
   // check request is made by an admin
@@ -88,7 +89,7 @@ export const addAdminRoleHttpsEndpoint = onCall(async (uid: string, context) => 
   }
 });
 
-export const createNewUserHttpsEndpoint = onCall(async (data, context) => {
+export const createNewUserHttpsEndpoint = runWith({}).https.onCall(async (data, context) => {
   requireAuthenticated(context);
 
   // TODO: this should be split and permissions checks ensured but that requires a major refactor
@@ -147,36 +148,38 @@ export const createNewUserHttpsEndpoint = onCall(async (data, context) => {
 });
 
 // Update a person by personId
-export const updatePersonByPersonIdHttpsEndpoint = onCall(async (data, context) => {
-  requireAuthenticated(context);
+export const updatePersonByPersonIdHttpsEndpoint = runWith({}).https.onCall(
+  async (data, context) => {
+    requireAuthenticated(context);
 
-  const personId = data.personId as string | null;
-  const person = data.person as Record<string, unknown> | null;
-  if (personId == null) {
-    throw new HttpsError("invalid-argument", "missing personId");
-  }
-  if (person == null) {
-    throw new HttpsError("invalid-argument", "missing person");
-  }
+    const personId = data.personId as string | null;
+    const person = data.person as Record<string, unknown> | null;
+    if (personId == null) {
+      throw new HttpsError("invalid-argument", "missing personId");
+    }
+    if (person == null) {
+      throw new HttpsError("invalid-argument", "missing person");
+    }
 
-  const personDoc = await db.collection("people").doc(personId).get();
-  const personData = personDoc.data();
+    const personDoc = await db.collection("people").doc(personId).get();
+    const personData = personDoc.data();
 
-  if (personData == null) {
-    throw new HttpsError("not-found", `Person not found: ${personId}`);
-  }
+    if (personData == null) {
+      throw new HttpsError("not-found", `Person not found: ${personId}`);
+    }
 
-  // TODO: permissions checks
+    // TODO: permissions checks
 
-  await personDoc.ref.update(personData);
+    await personDoc.ref.update(personData);
 
-  const updatedPersonDoc = await personDoc.ref.get();
-  const updatedPersonData = personDoc.data();
+    const updatedPersonDoc = await personDoc.ref.get();
+    const updatedPersonData = personDoc.data();
 
-  return {
-    person: {
-      ...updatedPersonData,
-      id: updatedPersonDoc.id,
-    },
-  };
-});
+    return {
+      person: {
+        ...updatedPersonData,
+        id: updatedPersonDoc.id,
+      },
+    };
+  },
+);

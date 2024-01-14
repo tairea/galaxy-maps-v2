@@ -284,7 +284,9 @@ export default {
       return this.cohorts.filter((cohort) => cohort.teachers.includes(this.person.id));
     },
     getOrganisationsThatPersonIsTeacherIn() {
-      return this.cohorts.filter((cohort) => organisations.people.includes(this.person.id));
+      return this.organisations.filter((organisation) =>
+        organisation.people.includes(this.person.id),
+      );
     },
     getCohortsByOrganisationId(id) {
       if (id) {
