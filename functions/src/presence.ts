@@ -1,15 +1,15 @@
-import * as functions from "firebase-functions";
+import { log } from "firebase-functions/logger";
+import { ref } from "firebase-functions/v1/database";
 import { db } from "./_shared.js";
 import { studentOnlineXAPIStatement, studentOfflineXAPIStatement } from "./veracityLRS.js";
 
 //  ============ PRESENCE SYSTEM SYNC ============
 // Watch realtime DB for changes and trigger function on change
-export const onUserStatusChangedOnUpdateTrigger = functions.database
-  .ref("/status/{uid}")
-  .onUpdate(async (change, context) => {
+export const onUserStatusChangedOnUpdateTrigger = ref("/status/{uid}").onUpdate(
+  async (change, context) => {
     // Get the data written to Realtime Database
     const eventStatus = change.after.val();
-    functions.logger.log("=====eventStatus=====: ", eventStatus);
+    log("=====eventStatus=====: ", eventStatus);
 
     // get the doc from the firestore DB
     const userStatusFirestoreRef = db.doc(`status/${context.params.uid}`);
@@ -54,4 +54,5 @@ export const onUserStatusChangedOnUpdateTrigger = functions.database
     // push XAPI statement here
     // ... and write it to Firestore.
     return userStatusFirestoreRef.set(eventStatus);
-  });
+  },
+);

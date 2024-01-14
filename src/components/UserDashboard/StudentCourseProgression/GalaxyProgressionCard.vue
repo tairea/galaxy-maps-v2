@@ -48,10 +48,9 @@
 <script>
 import Chart from "@/components/Reused/Chart.vue";
 import ActiveMissions from "@/components/UserDashboard/StudentCourseProgression/GalaxyProgressionCard/ActiveMissions.vue";
-import { getStudentsCoursesXAPIQuery, getActiveTaskXAPIQuery } from "@/lib/veracityLRS";
+import { getActiveTaskXAPIQuery } from "@/lib/veracityLRS";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
-import { DateTime } from "luxon";
 
 export default {
   name: "GalaxyProgressionCard",

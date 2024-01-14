@@ -826,40 +826,6 @@ export const studentOfflineXAPIStatement = (actor) => {
   QUERY xAPI STATEMENTS
 ------------------------- */
 
-export const queryXAPIStatement = async (payloadObj) => {
-  console.log("sending search xAPI query...");
-  const url = new URL("https://galaxymaps.lrs.io/xapi/statements/search");
-  const parameters = url.searchParams;
-  // use veracist LRS v2 mode
-  parameters.set("mode", "v2");
-  // add search params as json
-  url.searchParams.set("query", JSON.stringify(payloadObj));
-  // get query from LRS
-  const res = await fetch(url, {
-    method: "GET",
-    headers: {
-      Authorization: auth,
-    },
-  });
-
-  return res.json();
-};
-
-export const advancedQueryXAPIStatement = async (payloadObj) => {
-  console.log("sending advanced xAPI query...");
-  // post advanced query
-  const res = await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: auth,
-    },
-    body: JSON.stringify(payloadObj),
-  });
-  const resultBody = res.json();
-  console.log("res:", resultBody);
-};
-
 export const getStudentsCoursesXAPIQuery = async (person) => {
   const aggregationQuery = [
     {
@@ -1199,8 +1165,6 @@ async function sanitiseCourseDataFromLRS(res) {
   let topicCompletedCount = 0;
 
   for (const group of res) {
-    const course = await courseIRIToCourseId(group);
-
     // sanitise statements data
     const activities = group.statements.map((statement, index) => {
       if (statement.description.includes("Completed Task:")) taskCompletedCount++;
@@ -1221,6 +1185,20 @@ async function sanitiseCourseDataFromLRS(res) {
       };
       return newStatement;
     });
+
+    let course;
+    try {
+      course = await courseIRIToCourseId(group);
+    } catch (err) {
+      console.log("courseIRIToCourseId error:", err);
+      course = {
+        id: group,
+        title: "NOT FOUND",
+        taskTotal: taskCompletedCount,
+        topicTotal: topicCompletedCount,
+        image: null,
+      };
+    }
 
     const courseObj = {
       course,

@@ -1,26 +1,23 @@
-import * as adminApp from "firebase-admin/app";
-import * as adminAuth from "firebase-admin/auth";
-import * as adminFirestore from "firebase-admin/firestore";
-import * as functions from "firebase-functions";
+import { initializeApp } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
+import { getFirestore } from "firebase-admin/firestore";
+import { type CallableContext, HttpsError } from "firebase-functions/v1/https";
 
-export const app = adminApp.initializeApp();
-export const auth = adminAuth.getAuth(app);
-export const db = adminFirestore.getFirestore(app);
+export const app = initializeApp();
+export const auth = getAuth(app);
+export const db = getFirestore(app);
 
 /**
  * Requires the context to be authenticated.
- * @param {functions.https.CallableContext} context - The context object.
- * @throws {functions.https.HttpsError} - Throws an error if not authenticated.
+ * @param {CallableContext} context - The context object.
+ * @throws {HttpsError} - Throws an error if not authenticated.
  */
 export function requireAuthenticated(
-  context: functions.https.CallableContext,
-): asserts context is functions.https.CallableContext & {
-  auth: Required<functions.https.CallableContext>["auth"];
+  context: CallableContext,
+): asserts context is CallableContext & {
+  auth: Required<CallableContext>["auth"];
 } {
   if (context.auth == null) {
-    throw new functions.https.HttpsError(
-      "unauthenticated",
-      "Must be authenticated to access this endpoint",
-    );
+    throw new HttpsError("unauthenticated", "Must be authenticated to access this endpoint");
   }
 }

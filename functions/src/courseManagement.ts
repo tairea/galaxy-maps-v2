@@ -1,20 +1,20 @@
-import * as adminFirestore from "firebase-admin/firestore";
-import * as functions from "firebase-functions";
+import { DocumentReference, FieldValue } from "firebase-admin/firestore";
+import { onCall, HttpsError } from "firebase-functions/v1/https";
 import { db, requireAuthenticated } from "./_shared.js";
 import { startGalaxyXAPIStatement } from "./veracityLRS.js";
 
 // Get a course by courseId
-export const getCourseByCourseIdHttpsEndpoint = functions.https.onCall(async (data, context) => {
+export const getCourseByCourseIdHttpsEndpoint = onCall(async (data, context) => {
   const courseId = data.courseId as string | null;
   if (courseId == null) {
-    throw new functions.https.HttpsError("invalid-argument", "missing courseId");
+    throw new HttpsError("invalid-argument", "missing courseId");
   }
 
   const courseDoc = await db.collection("courses").doc(courseId).get();
   const courseData = courseDoc.data();
 
   if (courseData == null) {
-    throw new functions.https.HttpsError("not-found", `Course not found: ${courseId}`);
+    throw new HttpsError("not-found", `Course not found: ${courseId}`);
   }
 
   // if the context is unauthenticated, only return course that is public and
@@ -23,12 +23,16 @@ export const getCourseByCourseIdHttpsEndpoint = functions.https.onCall(async (da
     if (courseData.public === true && courseData.status === "published") {
       return {
         course: {
-          id: courseDoc.id,
           ...courseData,
+          owner:
+            courseData.owner instanceof DocumentReference
+              ? courseData.owner.path
+              : courseData.owner,
+          id: courseDoc.id,
         },
       };
     } else {
-      throw new functions.https.HttpsError("not-found", `Course not found: ${courseId}`);
+      throw new HttpsError("not-found", `Course not found: ${courseId}`);
     }
   }
 
@@ -36,8 +40,10 @@ export const getCourseByCourseIdHttpsEndpoint = functions.https.onCall(async (da
   if (context.auth.token.admin === true) {
     return {
       course: {
-        id: courseDoc.id,
         ...courseData,
+        owner:
+          courseData.owner instanceof DocumentReference ? courseData.owner.path : courseData.owner,
+        id: courseDoc.id,
       },
     };
   }
@@ -61,73 +67,77 @@ export const getCourseByCourseIdHttpsEndpoint = functions.https.onCall(async (da
 
   for (const cohort of studentQuerySnapShot.docs) {
     studentCohorts.push({
-      id: cohort.id,
-      student: true,
       ...cohort.data(),
+      id: cohort.id,
     });
   }
   for (const cohort of teacherQuerySnapShot.docs) {
     teacherCohorts.push({
-      id: cohort.id,
-      teacher: true,
       ...cohort.data(),
+      id: cohort.id,
     });
   }
 
-  const courseIds = [
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...studentCohorts.flatMap((x: Record<string, any>): string[] => x.courses),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...teacherCohorts.flatMap((x: Record<string, any>): string[] => x.courses),
-  ];
+  const courseIds = Array.from(
+    new Set([
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...studentCohorts.flatMap((x: Record<string, any>): string[] => x.courses),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...teacherCohorts.flatMap((x: Record<string, any>): string[] => x.courses),
+    ]),
+  );
 
   if (!courseIds.includes(courseDoc.id)) {
-    throw new functions.https.HttpsError("not-found", `Course not found: ${courseId}`);
+    throw new HttpsError("not-found", `Course not found: ${courseId}`);
   }
 
   return {
     course: {
-      id: courseDoc.id,
       ...courseData,
+      owner:
+        courseData.owner instanceof DocumentReference ? courseData.owner.path : courseData.owner,
+      id: courseDoc.id,
     },
   };
 });
 
 // Get a list of courses
-export const getCoursesHttpsEndpoint = functions.https.onCall(async (_data, context) => {
+export const getCoursesHttpsEndpoint = onCall(async (_data, context) => {
   // if the context is unauthenticated, only return courses that are public and
   // have a published status
   if (context.auth == null) {
-    const querySnapshot = await db
+    const courseCollection = await db
       .collection("courses")
       .where("public", "==", true)
       .where("status", "==", "published")
       .get();
 
-    const courses = [];
-    for (const doc of querySnapshot.docs) {
+    const courseMap = new Map();
+    for (const doc of courseCollection.docs) {
       const course = doc.data();
-      courses.push({
-        id: doc.id,
+      courseMap.set(doc.id, {
         ...course,
+        owner: course.owner instanceof DocumentReference ? course.owner.path : course.owner,
+        id: doc.id,
       });
     }
-    return { courses };
+    return { courses: Array.from(courseMap.values()) };
   }
 
   // if the context is authenticated and they are admin, return all courses
   if (context.auth.token.admin === true) {
-    const querySnapshot = await db.collection("courses").get();
+    const courseCollection = await db.collection("courses").get();
 
-    const courses = [];
-    for (const doc of querySnapshot.docs) {
+    const courseMap = new Map();
+    for (const doc of courseCollection.docs) {
       const course = doc.data();
-      courses.push({
-        id: doc.id,
+      courseMap.set(doc.id, {
         ...course,
+        owner: course.owner instanceof DocumentReference ? course.owner.path : course.owner,
+        id: doc.id,
       });
     }
-    return { courses };
+    return { courses: Array.from(courseMap.values()) };
   }
 
   // if the context is authenticated and they are not admin, return all courses
@@ -138,100 +148,160 @@ export const getCoursesHttpsEndpoint = functions.https.onCall(async (_data, cont
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const studentCohorts: Record<string, any>[] = [];
 
-  const studentQuerySnapShot = await db
+  const studentCohortCollection = await db
     .collection("cohorts")
     .where("students", "array-contains", context.auth.uid)
     .get();
-  const teacherQuerySnapShot = await db
+  const teacherCohortCollection = await db
     .collection("cohorts")
     .where("teachers", "array-contains", context.auth.uid)
     .get();
 
-  for (const cohort of studentQuerySnapShot.docs) {
+  for (const cohort of studentCohortCollection.docs) {
     studentCohorts.push({
-      id: cohort.id,
-      student: true,
       ...cohort.data(),
+      id: cohort.id,
     });
   }
-  for (const cohort of teacherQuerySnapShot.docs) {
+  for (const cohort of teacherCohortCollection.docs) {
     teacherCohorts.push({
-      id: cohort.id,
-      teacher: true,
       ...cohort.data(),
+      id: cohort.id,
     });
   }
 
-  const courseIds = [
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...studentCohorts.flatMap((x: Record<string, any>): string[] => x.courses),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...teacherCohorts.flatMap((x: Record<string, any>): string[] => x.courses),
-  ];
+  console.log("loaded cohorts");
 
-  const courseDocumentSnapshots = await Promise.all(
-    courseIds.map((x) => db.collection("courses").doc(x).get()),
+  const courseIds = Array.from(
+    new Set([
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...studentCohorts.flatMap((x: Record<string, any>): string[] => x.courses),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...teacherCohorts.flatMap((x: Record<string, any>): string[] => x.courses),
+    ]),
   );
 
-  const querySnapshot = await db
+  const courseDocs = await Promise.all(courseIds.map((x) => db.collection("courses").doc(x).get()));
+
+  console.log("loaded courses");
+
+  const ownedCourseCollection = await db
     .collection("courses")
     .where("owner", "==", db.collection("people").doc(context.auth.uid))
     .get();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const courses: Record<string, any>[] = [];
+  const courseMap = new Map();
 
-  for (const doc of courseDocumentSnapshots) {
+  for (const doc of courseDocs) {
     const course = doc.data();
-    courses.push({
-      id: doc.id,
+    if (course == null) {
+      continue;
+    }
+    courseMap.set(doc.id, {
       ...course,
+      owner: course.owner instanceof DocumentReference ? course.owner.path : course.owner,
+      id: doc.id,
     });
   }
 
-  for (const doc of querySnapshot.docs) {
+  for (const doc of ownedCourseCollection.docs) {
     const course = doc.data();
-    courses.push({
-      id: doc.id,
+    courseMap.set(doc.id, {
       ...course,
+      owner: course.owner instanceof DocumentReference ? course.owner.path : course.owner,
+      id: doc.id,
     });
   }
-  return { courses };
+
+  const arr = Array.from(courseMap.values());
+  console.log("returning result");
+  const slice = arr.slice(0, 3);
+  console.log(slice);
+
+  return { courses: Array.from(courseMap.values()) };
 });
 
 // Get cohort by cohortId
-export const getCohortByCohortIdHttpsEndpoint = functions.https.onCall(async (data, context) => {
+export const getCohortByCohortIdHttpsEndpoint = onCall(async (data, context) => {
   requireAuthenticated(context);
 
   const cohortId = data.cohortId as string | null;
   if (cohortId == null) {
-    throw new functions.https.HttpsError("invalid-argument", "missing cohortId");
+    throw new HttpsError("invalid-argument", "missing cohortId");
   }
 
   const cohortDoc = await db.collection("cohorts").doc(cohortId).get();
   const cohortData = cohortDoc.data();
 
   if (cohortData == null) {
-    throw new functions.https.HttpsError("not-found", `Cohort not found: ${cohortId}`);
+    throw new HttpsError("not-found", `Cohort not found: ${cohortId}`);
   }
 
   // TODO: permissions checks
 
   return {
     cohort: {
-      id: cohortDoc.id,
       ...cohortData,
+      id: cohortDoc.id,
     },
   };
 });
 
-// Get cohorts by personId
-export const getCohortsByPersonIdHttpsEndpoint = functions.https.onCall(async (data, context) => {
+// Get cohorts
+export const getCohortsHttpsEndpoint = onCall(async (_data, context) => {
+  requireAuthenticated(context);
+
+  // if they are admin, return all cohorts
+  if (context.auth.token.admin === true) {
+    const cohortCollection = await db.collection("cohorts").get();
+
+    const cohortMap = new Map();
+    for (const doc of cohortCollection.docs) {
+      const cohort = doc.data();
+      cohortMap.set(doc.id, {
+        ...cohort,
+        id: doc.id,
+      });
+    }
+    return { cohorts: Array.from(cohortMap.values()) };
+  }
+
+  // if they are not admin, return all cohorts where they are a student or teacher
+  const cohortMap = new Map();
+
+  const studentCohortCollection = await db
+    .collection("cohorts")
+    .where("students", "array-contains", context.auth.uid)
+    .get();
+  const teacherCohortCollection = await db
+    .collection("cohorts")
+    .where("teachers", "array-contains", context.auth.uid)
+    .get();
+
+  for (const cohort of studentCohortCollection.docs) {
+    cohortMap.set(cohort.id, {
+      ...cohort.data(),
+      id: cohort.id,
+    });
+  }
+  for (const cohort of teacherCohortCollection.docs) {
+    cohortMap.set(cohort.id, {
+      ...cohort.data(),
+      id: cohort.id,
+    });
+  }
+
+  return { cohorts: Array.from(cohortMap.values()) };
+});
+
+// Get student cohorts by personId
+export const getStudentCohortsByPersonIdHttpsEndpoint = onCall(async (data, context) => {
   requireAuthenticated(context);
 
   const personId = data.personId as string | null;
   if (personId == null) {
-    throw new functions.https.HttpsError("invalid-argument", "missing personId");
+    throw new HttpsError("invalid-argument", "missing personId");
   }
 
   // TODO: permissions checks
@@ -245,8 +315,8 @@ export const getCohortsByPersonIdHttpsEndpoint = functions.https.onCall(async (d
   for (const doc of cohortCollection.docs) {
     const cohort = doc.data();
     cohorts.push({
-      id: doc.id,
       ...cohort,
+      id: doc.id,
     });
   }
 
@@ -254,12 +324,12 @@ export const getCohortsByPersonIdHttpsEndpoint = functions.https.onCall(async (d
 });
 
 // Get all cohorts in course by courseId
-export const getCohortsByCourseIdHttpsEndpoint = functions.https.onCall(async (data, context) => {
+export const getCohortsByCourseIdHttpsEndpoint = onCall(async (data, context) => {
   requireAuthenticated(context);
 
   const courseId = data.courseId as string | null;
   if (courseId == null) {
-    throw new functions.https.HttpsError("invalid-argument", "missing courseId");
+    throw new HttpsError("invalid-argument", "missing courseId");
   }
 
   // TODO: permissions checks
@@ -273,8 +343,8 @@ export const getCohortsByCourseIdHttpsEndpoint = functions.https.onCall(async (d
   for (const doc of cohortCollection.docs) {
     const cohort = doc.data();
     cohorts.push({
-      id: doc.id,
       ...cohort,
+      id: doc.id,
     });
   }
 
@@ -282,87 +352,83 @@ export const getCohortsByCourseIdHttpsEndpoint = functions.https.onCall(async (d
 });
 
 // Get topic by courseId and topicId
-export const getTopicByCourseIdTopicIdHttpsEndpoint = functions.https.onCall(
-  async (data, context) => {
-    requireAuthenticated(context);
+export const getTopicByCourseIdTopicIdHttpsEndpoint = onCall(async (data, context) => {
+  requireAuthenticated(context);
 
-    const courseId = data.courseId as string | null;
-    const topicId = data.topicId as string | null;
-    if (courseId == null) {
-      throw new functions.https.HttpsError("invalid-argument", "missing courseId");
-    }
-    if (topicId == null) {
-      throw new functions.https.HttpsError("invalid-argument", "missing topicId");
-    }
+  const courseId = data.courseId as string | null;
+  const topicId = data.topicId as string | null;
+  if (courseId == null) {
+    throw new HttpsError("invalid-argument", "missing courseId");
+  }
+  if (topicId == null) {
+    throw new HttpsError("invalid-argument", "missing topicId");
+  }
 
-    const topicDoc = await db
-      .collection("courses")
-      .doc(courseId)
-      .collection("topics")
-      .doc(topicId)
-      .get();
-    const topicData = topicDoc.data();
+  const topicDoc = await db
+    .collection("courses")
+    .doc(courseId)
+    .collection("topics")
+    .doc(topicId)
+    .get();
+  const topicData = topicDoc.data();
 
-    if (topicData == null) {
-      throw new functions.https.HttpsError("not-found", `Topic not found: ${topicId}`);
-    }
+  if (topicData == null) {
+    throw new HttpsError("not-found", `Topic not found: ${topicId}`);
+  }
 
-    // TODO: permissions checks
+  // TODO: permissions checks
 
-    return {
-      topic: {
-        id: topicDoc.id,
-        ...topicData,
-      },
-    };
-  },
-);
+  return {
+    topic: {
+      ...topicData,
+      id: topicDoc.id,
+    },
+  };
+});
 
 // Get task by courseId and topicId and taskId
-export const getTaskByCourseIdTopicIdTaskIdHttpsEndpoint = functions.https.onCall(
-  async (data, context) => {
-    requireAuthenticated(context);
+export const getTaskByCourseIdTopicIdTaskIdHttpsEndpoint = onCall(async (data, context) => {
+  requireAuthenticated(context);
 
-    const courseId = data.courseId as string | null;
-    const topicId = data.topicId as string | null;
-    const taskId = data.taskId as string | null;
-    if (courseId == null) {
-      throw new functions.https.HttpsError("invalid-argument", "missing courseId");
-    }
-    if (topicId == null) {
-      throw new functions.https.HttpsError("invalid-argument", "missing topicId");
-    }
-    if (taskId == null) {
-      throw new functions.https.HttpsError("invalid-argument", "missing taskId");
-    }
+  const courseId = data.courseId as string | null;
+  const topicId = data.topicId as string | null;
+  const taskId = data.taskId as string | null;
+  if (courseId == null) {
+    throw new HttpsError("invalid-argument", "missing courseId");
+  }
+  if (topicId == null) {
+    throw new HttpsError("invalid-argument", "missing topicId");
+  }
+  if (taskId == null) {
+    throw new HttpsError("invalid-argument", "missing taskId");
+  }
 
-    const taskDoc = await db
-      .collection("courses")
-      .doc(courseId)
-      .collection("topics")
-      .doc(topicId)
-      .collection("tasks")
-      .doc(taskId)
-      .get();
-    const taskData = taskDoc.data();
+  const taskDoc = await db
+    .collection("courses")
+    .doc(courseId)
+    .collection("topics")
+    .doc(topicId)
+    .collection("tasks")
+    .doc(taskId)
+    .get();
+  const taskData = taskDoc.data();
 
-    if (taskData == null) {
-      throw new functions.https.HttpsError("not-found", `Task not found: ${taskId}`);
-    }
+  if (taskData == null) {
+    throw new HttpsError("not-found", `Task not found: ${taskId}`);
+  }
 
-    // TODO: permissions checks
+  // TODO: permissions checks
 
-    return {
-      task: {
-        id: taskDoc.id,
-        ...taskData,
-      },
-    };
-  },
-);
+  return {
+    task: {
+      ...taskData,
+      id: taskDoc.id,
+    },
+  };
+});
 
 // Get person topic by personId and courseId and topicId
-export const getPersonTopicByPersonIdCourseIdTopicIdHttpsEndpoint = functions.https.onCall(
+export const getPersonTopicByPersonIdCourseIdTopicIdHttpsEndpoint = onCall(
   async (data, context) => {
     requireAuthenticated(context);
 
@@ -370,13 +436,13 @@ export const getPersonTopicByPersonIdCourseIdTopicIdHttpsEndpoint = functions.ht
     const courseId = data.courseId as string | null;
     const topicId = data.topicId as string | null;
     if (personId == null) {
-      throw new functions.https.HttpsError("invalid-argument", "missing personId");
+      throw new HttpsError("invalid-argument", "missing personId");
     }
     if (courseId == null) {
-      throw new functions.https.HttpsError("invalid-argument", "missing courseId");
+      throw new HttpsError("invalid-argument", "missing courseId");
     }
     if (topicId == null) {
-      throw new functions.https.HttpsError("invalid-argument", "missing topicId");
+      throw new HttpsError("invalid-argument", "missing topicId");
     }
 
     // TODO: permissions checks
@@ -392,15 +458,15 @@ export const getPersonTopicByPersonIdCourseIdTopicIdHttpsEndpoint = functions.ht
 
     return {
       personTopic: {
-        id: personTopicDoc.id,
         ...personTopic,
+        id: personTopicDoc.id,
       },
     };
   },
 );
 
 // Get person tasks by personId and courseId and topicId
-export const getPersonTasksByPersonIdCourseIdTopicIdHttpsEndpoint = functions.https.onCall(
+export const getPersonTasksByPersonIdCourseIdTopicIdHttpsEndpoint = onCall(
   async (data, context) => {
     requireAuthenticated(context);
 
@@ -408,13 +474,13 @@ export const getPersonTasksByPersonIdCourseIdTopicIdHttpsEndpoint = functions.ht
     const courseId = data.courseId as string | null;
     const topicId = data.topicId as string | null;
     if (personId == null) {
-      throw new functions.https.HttpsError("invalid-argument", "missing personId");
+      throw new HttpsError("invalid-argument", "missing personId");
     }
     if (courseId == null) {
-      throw new functions.https.HttpsError("invalid-argument", "missing courseId");
+      throw new HttpsError("invalid-argument", "missing courseId");
     }
     if (topicId == null) {
-      throw new functions.https.HttpsError("invalid-argument", "missing topicId");
+      throw new HttpsError("invalid-argument", "missing topicId");
     }
 
     // TODO: permissions checks
@@ -431,8 +497,8 @@ export const getPersonTasksByPersonIdCourseIdTopicIdHttpsEndpoint = functions.ht
     for (const doc of personTaskCollection.docs) {
       const personTask = doc.data();
       personTasks.push({
-        id: doc.id,
         ...personTask,
+        id: doc.id,
       });
     }
 
@@ -441,12 +507,12 @@ export const getPersonTasksByPersonIdCourseIdTopicIdHttpsEndpoint = functions.ht
 );
 
 // Get all people in course by courseId
-export const getPeopleByCourseIdHttpsEndpoint = functions.https.onCall(async (data, context) => {
+export const getPeopleByCourseIdHttpsEndpoint = onCall(async (data, context) => {
   requireAuthenticated(context);
 
   const courseId = data.courseId as string | null;
   if (courseId == null) {
-    throw new functions.https.HttpsError("invalid-argument", "missing courseId");
+    throw new HttpsError("invalid-argument", "missing courseId");
   }
 
   // TODO: permissions checks
@@ -460,8 +526,8 @@ export const getPeopleByCourseIdHttpsEndpoint = functions.https.onCall(async (da
   for (const doc of querySnapshot.docs) {
     const person = doc.data();
     people.push({
-      id: doc.id,
       ...person,
+      id: doc.id,
     });
   }
 
@@ -469,33 +535,31 @@ export const getPeopleByCourseIdHttpsEndpoint = functions.https.onCall(async (da
 });
 
 // ====== ASSIGN PERSON TO COHORT ==================
-export const addMeToCohortHttpsEndpoint = functions.https.onCall(
-  async (data: { cohortId: string }, context) => {
-    requireAuthenticated(context);
+export const addMeToCohortHttpsEndpoint = onCall(async (data: { cohortId: string }, context) => {
+  requireAuthenticated(context);
 
-    const cohortId = data.cohortId as string | null;
-    if (cohortId == null) {
-      throw new functions.https.HttpsError("invalid-argument", "missing cohortId");
-    }
+  const cohortId = data.cohortId as string | null;
+  if (cohortId == null) {
+    throw new HttpsError("invalid-argument", "missing cohortId");
+  }
 
-    const personId = context.auth.uid;
+  const personId = context.auth.uid;
 
-    const result = await addStudentToCohort(cohortId, personId);
+  const result = await addStudentToCohort(cohortId, personId);
 
-    return result;
-  },
-);
+  return result;
+});
 
-export const addStudentToCohortHttpsEndpoint = functions.https.onCall(async (data, context) => {
+export const addStudentToCohortHttpsEndpoint = onCall(async (data, context) => {
   requireAuthenticated(context);
 
   const personId = data.personId as string | null;
   const cohortId = data.cohortId as string | null;
   if (personId == null) {
-    throw new functions.https.HttpsError("invalid-argument", "missing personId");
+    throw new HttpsError("invalid-argument", "missing personId");
   }
   if (cohortId == null) {
-    throw new functions.https.HttpsError("invalid-argument", "missing cohortId");
+    throw new HttpsError("invalid-argument", "missing cohortId");
   }
 
   // TODO: add permissions checks to see if current authenticated user has permission to
@@ -519,54 +583,52 @@ async function addStudentToCohort(cohortId: string, personId: string) {
   const person = personDoc.data();
 
   if (cohort == null) {
-    throw new functions.https.HttpsError("not-found", `Cohort not found: ${cohortId}`);
+    throw new HttpsError("not-found", `Cohort not found: ${cohortId}`);
   }
   if (person == null) {
-    throw new functions.https.HttpsError("not-found", `Person not found: ${personId}`);
+    throw new HttpsError("not-found", `Person not found: ${personId}`);
   }
 
   await cohortDoc.ref.update({
-    students: adminFirestore.FieldValue.arrayUnion(personId),
+    students: FieldValue.arrayUnion(personId),
   });
 
   const updatedCohortDoc = await cohortDoc.ref.get();
 
   return {
     cohort: {
-      id: updatedCohortDoc.id,
       ...updatedCohortDoc.data(),
+      id: updatedCohortDoc.id,
     },
   };
 }
 
 // ====== ASSIGN PERSON TO COURSE ==================
-export const assignCourseToMeHttpsEndpoint = functions.https.onCall(
-  async (data: { courseId: string }, context) => {
-    requireAuthenticated(context);
+export const assignCourseToMeHttpsEndpoint = onCall(async (data: { courseId: string }, context) => {
+  requireAuthenticated(context);
 
-    const courseId = data.courseId as string | null;
-    if (courseId == null) {
-      throw new functions.https.HttpsError("invalid-argument", "missing courseId");
-    }
+  const courseId = data.courseId as string | null;
+  if (courseId == null) {
+    throw new HttpsError("invalid-argument", "missing courseId");
+  }
 
-    const personId = context.auth.uid;
+  const personId = context.auth.uid;
 
-    const result = await assignCourseToStudent(courseId, personId);
+  const result = await assignCourseToStudent(courseId, personId);
 
-    return result;
-  },
-);
+  return result;
+});
 
-export const assignCourseToStudentHttpsEndpoint = functions.https.onCall(async (data, context) => {
+export const assignCourseToStudentHttpsEndpoint = onCall(async (data, context) => {
   requireAuthenticated(context);
 
   const personId = data.personId as string | null;
   const courseId = data.courseId as string | null;
   if (personId == null) {
-    throw new functions.https.HttpsError("invalid-argument", "missing personId");
+    throw new HttpsError("invalid-argument", "missing personId");
   }
   if (courseId == null) {
-    throw new functions.https.HttpsError("invalid-argument", "missing courseId");
+    throw new HttpsError("invalid-argument", "missing courseId");
   }
 
   // TODO: add permissions checks to see if current authenticated user has permission to
@@ -590,10 +652,10 @@ async function assignCourseToStudent(courseId: string, personId: string) {
   const course = courseDoc.data();
 
   if (person == null) {
-    throw new functions.https.HttpsError("not-found", `Person not found: ${personId}`);
+    throw new HttpsError("not-found", `Person not found: ${personId}`);
   }
   if (course == null) {
-    throw new functions.https.HttpsError("not-found", `Course not found: ${courseId}`);
+    throw new HttpsError("not-found", `Course not found: ${courseId}`);
   }
 
   // Add the topics and tasks to the student
@@ -667,7 +729,7 @@ async function assignCourseToStudent(courseId: string, personId: string) {
   }
 
   await personDoc.ref.update({
-    assignedCourses: adminFirestore.FieldValue.arrayUnion(courseId),
+    assignedCourses: FieldValue.arrayUnion(courseId),
   });
 
   // Send Galaxy Started statment to LRS
@@ -690,8 +752,8 @@ async function assignCourseToStudent(courseId: string, personId: string) {
 
   return {
     person: {
-      id: updatedPersonDoc.id,
       ...updatedPersonDoc.data(),
+      id: updatedPersonDoc.id,
     },
   };
 }

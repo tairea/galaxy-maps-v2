@@ -13,7 +13,7 @@
           <img
             v-if="activity.course.image"
             :src="activity.course.image.url"
-            :alt="activity.course.firstName"
+            :alt="activity.course.title"
             style="object-fit: cover"
           />
           <v-icon v-else>{{ mdiAccount }}</v-icon>

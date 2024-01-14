@@ -2,6 +2,13 @@
 import { functions } from "@/store/firestoreConfig";
 import { FirebaseError } from "firebase/app";
 
+export const fetchCohorts = async () => {
+  const data = {};
+  const getCohorts = functions.httpsCallable("getCohorts");
+  const result = await getCohorts(data);
+  return result.data.cohorts;
+};
+
 export const fetchCohortByCohortId = async (cohortId: string) => {
   const data = {
     cohortId,
@@ -9,6 +16,28 @@ export const fetchCohortByCohortId = async (cohortId: string) => {
   const getCohortByCohortId = functions.httpsCallable("getCohortByCohortId");
   const result = await getCohortByCohortId(data);
   return result.data.cohort;
+};
+
+export const fetchStudentCohortsByPersonId = async (
+  personId: string,
+): Promise<Array<{ id: string } & Record<string, any>>> => {
+  const data = {
+    personId,
+  };
+  const getStudentCohortsByPersonId = functions.httpsCallable("getStudentCohortsByPersonId");
+  const result = await getStudentCohortsByPersonId(data);
+  return result.data.cohorts;
+};
+
+export const fetchAllCohortsInCourseByCourseId = async (
+  courseId: string,
+): Promise<Array<{ id: string } & Record<string, any>>> => {
+  const data = {
+    courseId,
+  };
+  const getCohortsByCourseId = functions.httpsCallable("getCohortsByCourseId");
+  const result = await getCohortsByCourseId(data);
+  return result.data.cohorts;
 };
 
 export const fetchCourses = async () => {
@@ -117,17 +146,6 @@ export const fetchPersonsTasksByPersonIdCourseIdTopicId = async (
   return result.data.tasks;
 };
 
-export const fetchPersonsCohortsByPersonId = async (
-  personId: string,
-): Promise<Array<{ id: string } & Record<string, any>>> => {
-  const data = {
-    personId,
-  };
-  const getCohortsByPersonId = functions.httpsCallable("getCohortsByPersonId");
-  const result = await getCohortsByPersonId(data);
-  return result.data.cohorts;
-};
-
 export const fetchAllPeopleInCourseByCourseId = async (
   courseId: string,
 ): Promise<Array<{ id: string } & Record<string, any>>> => {
@@ -137,17 +155,6 @@ export const fetchAllPeopleInCourseByCourseId = async (
   const getPeopleByCourseId = functions.httpsCallable("getPeopleByCourseId");
   const result = await getPeopleByCourseId(data);
   return result.data.people;
-};
-
-export const fetchAllCohortsInCourseByCourseId = async (
-  courseId: string,
-): Promise<Array<{ id: string } & Record<string, any>>> => {
-  const data = {
-    courseId,
-  };
-  const getCohortsByCourseId = functions.httpsCallable("getCohortsByCourseId");
-  const result = await getCohortsByCourseId(data);
-  return result.data.cohorts;
 };
 
 export const fetchPersonsTopicByPersonIdCourseIdTopicId = async (

@@ -34,5 +34,6 @@ module.exports = {
       "warn",
       { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
     ],
+    "operator-linebreak": ["error", "before"],
   },
 };

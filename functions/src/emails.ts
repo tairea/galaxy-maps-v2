@@ -1,5 +1,7 @@
-import * as functions from "firebase-functions";
-import * as nodemailer from "nodemailer";
+import { log } from "firebase-functions/logger";
+import { config } from "firebase-functions/v1";
+import { onCall } from "firebase-functions/v1/https";
+import { createTransport } from "nodemailer";
 import { APP_NAME, DOMAIN } from "./_constants.js";
 
 // CUSTOM INVITE EMAIL
@@ -16,9 +18,9 @@ import { APP_NAME, DOMAIN } from "./_constants.js";
 // For this use:
 // firebase functions:config:set gmail.email="myusername@gmail.com" gmail.password="secretpassword"
 
-const gmailEmail = functions.config().gmail.email;
-const gmailPassword = functions.config().gmail.password;
-const mailTransport = nodemailer.createTransport({
+const gmailEmail = config().gmail.email;
+const gmailPassword = config().gmail.password;
+const mailTransport = createTransport({
   service: "gmail",
   auth: {
     user: gmailEmail,
@@ -47,7 +49,7 @@ If you have any issues please contact base@${DOMAIN}
 
 Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("New teacher invite email sent to: ", email);
+  log("New teacher invite email sent to: ", email);
 }
 
 /**
@@ -77,11 +79,11 @@ If you have any issues please contact base@${DOMAIN}
 
 Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("New student invite email sent to: ", email);
+  log("New student invite email sent to: ", email);
 }
 
 // ======COHORT REGISTRATION NOTIFICATION==================
-export const sendNewCohortEmailHttpsEndpoint = functions.https.onCall((data, _context) => {
+export const sendNewCohortEmailHttpsEndpoint = onCall((data, _context) => {
   const { email, displayName, firstName, inviter, cohort } = data;
   return sendNewCohortEmail(email, displayName, firstName, inviter, cohort);
 });
@@ -114,7 +116,7 @@ If you have any issues please contact base@${DOMAIN}
   
 Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("New cohort invite email sent to: ", email);
+  log("New cohort invite email sent to: ", email);
 }
 
 // ======COURSE REGISTRATION NOTIFICATION==================
@@ -141,11 +143,11 @@ If you have any issues please contact base@${DOMAIN}
   
 Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("New assignment email sent to: ", email);
+  log("New assignment email sent to: ", email);
 }
 
 // ======COURSE SUBMISSION NOTIFICATION==================
-export const sendNewSubmissionEmailHttpsEndpoint = functions.https.onCall((data, _context) => {
+export const sendNewSubmissionEmailHttpsEndpoint = onCall((data, _context) => {
   const { author, title } = data;
   sendNewSubmissionEmail(author, title);
 });
@@ -168,11 +170,11 @@ Navigate to https://${DOMAIN} to approve the submission
   
 Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("New course submission email sent to admin");
+  log("New course submission email sent to admin");
 }
 
 // ======COURSE PUBLISHED NOTIFICATION==================
-export const sendCoursePublishedEmailHttpsEndpoint = functions.https.onCall((data, _context) => {
+export const sendCoursePublishedEmailHttpsEndpoint = onCall((data, _context) => {
   const { email, name, course } = data;
   sendCoursePublishedEmail(email, name, course);
 });
@@ -195,11 +197,11 @@ Navigate to https://${DOMAIN} to manage your course content and student cohort.
   
 Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("Course published email sent to ", email);
+  log("Course published email sent to ", email);
 }
 
 // ======REQUEST FOR HELP SENT ==================
-export const sendRequestForHelpHttpsEndpoint = functions.https.onCall((data, _context) => {
+export const sendRequestForHelpHttpsEndpoint = onCall((data, _context) => {
   const { email, teacher, course, task, student, request, topic } = data;
   sendRequestForHelp(email, teacher, course, task, student, request, topic);
 });
@@ -255,11 +257,11 @@ Galaxy Maps Team`;
   /* eslint-enable max-len */
 
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("Request notification email sent to ", email);
+  log("Request notification email sent to ", email);
 }
 
 // ====== RESPONSE TO REQUEST ==================
-export const sendResponseToHelpHttpsEndpoint = functions.https.onCall((data, _context) => {
+export const sendResponseToHelpHttpsEndpoint = onCall((data, _context) => {
   const { email, teacher, course, task, student, response, topic, request } = data;
   sendResponseToHelp(email, teacher, course, task, student, response, topic, request);
 });
@@ -321,11 +323,11 @@ Galaxy Maps Team`;
   /* eslint-enable max-len */
 
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("Instructor response sent to ", email);
+  log("Instructor response sent to ", email);
 }
 
 // ======SUBMISSION FOR TASK SENT ==================
-export const sendTaskSubmissionHttpsEndpoint = functions.https.onCall((data, _context) => {
+export const sendTaskSubmissionHttpsEndpoint = onCall((data, _context) => {
   const { email, teacher, course, task, student, submission, topic, submissionInstructions } = data;
   sendTaskSubmission(
     email,
@@ -395,11 +397,11 @@ Galaxy Maps Team`;
   /* eslint-enable max-len */
 
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("Task submission notification email sent to ", email);
+  log("Task submission notification email sent to ", email);
 }
 
 // ====== RESPONSE TO REQUEST ==================
-export const sendResponseToSubmissionHttpsEndpoint = functions.https.onCall((data, _context) => {
+export const sendResponseToSubmissionHttpsEndpoint = onCall((data, _context) => {
   const { email, teacher, course, task, student, outcome, topic, message, submission } = data;
   sendResponseToSubmission(
     email,
@@ -475,7 +477,7 @@ Galaxy Maps Team`;
   /* eslint-enable max-len */
 
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("Submission outcome sent to ", email);
+  log("Submission outcome sent to ", email);
 }
 
 /**
@@ -509,7 +511,7 @@ Galaxy Maps Team`;
   /* eslint-enable max-len */
 
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("student low activity alert sent", studentEmail);
+  log("student low activity alert sent", studentEmail);
 }
 
 /**
@@ -548,11 +550,11 @@ Galaxy Maps Team`;
   /* eslint-enable max-len */
 
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("student low activity alert sent to teacher", email);
+  log("student low activity alert sent to teacher", email);
 }
 
 // ====== ACTIVE COURSE DELETED ==================
-export const sendCourseDeletedHttpsEndpoint = functions.https.onCall((data, _context) => {
+export const sendCourseDeletedHttpsEndpoint = onCall((data, _context) => {
   const { email, teacher, course, student, teacherEmail } = data;
   sendCourseDeleted(email, teacher, course, student, teacherEmail);
 });
@@ -593,5 +595,5 @@ Galaxy Maps Team`;
   /* eslint-enable max-len */
 
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("Galaxy deleted email sent to ", email);
+  log("Galaxy deleted email sent to ", email);
 }
