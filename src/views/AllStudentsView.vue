@@ -35,13 +35,11 @@
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import StudentProgressionChartJs3 from "@/components/AllStudentsView/StudentProgressionChartJs3.vue";
-import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
 
 export default {
   name: "AllStudentView",
-  mixins: [dbMixins],
   components: {
     SubmissionTeacherFrame,
     RequestForHelpTeacherFrame,

@@ -77,9 +77,7 @@
           :student="student"
           :timeframe="timeframe"
           :date="date"
-          :cohortCourses="cohort.courses"
-          @updateStudentsWithHours="updateStudentsWithHours($event)"
-          @updateStudentsWithTasks="updateStudentsWithTasks($event)"
+          :cohortCourseIds="cohort.courses"
           @showStudent="showStudent($event)"
         />
       </template>
@@ -114,7 +112,7 @@ import ViewStudentDetails from "@/components/CohortView/StudentDataIterator/View
 import StudentCard from "@/components/CohortView/StudentDataIterator/StudentCard.vue";
 import TimeframeFilters from "@/components/Reused/TimeframeFilters.vue";
 import EditStudentDialog from "@/components/Dialogs/EditStudentDialog.vue";
-import { fetchCohortByCohortId, fetchPersonByPersonId } from "@/lib/ff";
+import { fetchPersonByPersonId } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mdiArrowUp, mdiArrowDown, mdiMagnify, mdiSortAlphabeticalVariant } from "@mdi/js";
 import { mapState } from "pinia";
@@ -174,7 +172,7 @@ export default {
       deep: true,
       async handler(newCohort, oldCohort) {
         if (oldCohort.students?.length !== newCohort.students?.length) {
-          if (oldCohort.students?.length > newCohort.students?.length) this.removeStudentProfile();
+          if (oldCohort.students?.length > newCohort.students?.length) this.removeStudentProfiles();
           else await this.getStudentProfiles();
         }
         if (oldCohort.id !== newCohort.id) {
@@ -221,45 +219,24 @@ export default {
     },
     async getStudentProfiles() {
       if (this.cohort?.students?.length) {
-        const studentsArr = this.cohort.students.filter((a) => {
-          return !this.students.some((b) => a === b.id);
-        });
-        for (const id of studentsArr) {
-          const student = await fetchPersonByPersonId(id);
-          if (!this.students.some((a) => a.id === student.id)) {
-            this.students.push(student);
-          }
-        }
+        const studentsArr = this.cohort.students.filter(
+          (a) => !this.students.some((b) => a === b.id),
+        );
+
+        const students = await Promise.all(
+          studentsArr.map((studentId) => fetchPersonByPersonId(studentId)),
+        );
+        this.students = [...this.students, ...students];
       }
     },
-    removeStudentProfile() {
-      this.students = this.students.filter((a) => {
-        return this.cohort.students.some((b) => a.id === b);
-      });
+    removeStudentProfiles() {
+      this.students = this.students.filter((a) => !this.cohort.students.some((b) => a.id === b));
     },
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
     setTimeframe(timeframeEmitted) {
       this.timeframe = timeframeEmitted;
-    },
-    updateStudentsWithHours(payload) {
-      const foundIndex = this.students.findIndex((student) => student.id == payload.person.id);
-      this.students[foundIndex].hours = payload.hours;
-    },
-    updateStudentsWithTasks(payload) {
-      const foundIndex = this.students.findIndex((student) => student.id == payload.person.id);
-      // console.log("this.students BEFORE PAYLOAD", this.students);
-      // console.log(
-      //   "payload.tasks",
-      //   this.students[foundIndex].firstName +
-      //     " " +
-      //     this.students[foundIndex].lastName +
-      //     " = " +
-      //     payload.tasks,
-      // );
-      this.students[foundIndex].tasks = payload.tasks;
-      // console.log("this.students AFTER PAYLOAD", this.students);
     },
   },
 };

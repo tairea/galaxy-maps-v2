@@ -2,19 +2,35 @@
 import "./_dotenv.js";
 import "./_shared.js";
 
+import {
+  getCohortCoursesActivityByCohortIdHttpsEndpoint,
+  getCohortStudentsActivityTimeByCohortIdHttpsEndpoint,
+  getStudentActivityLogByPersonIdHttpsEndpoint,
+  getStudentCoursesActivityByPersonIdHttpsEndpoint,
+  getStudentCoursesTimeDataByPersonIdStartAtEndAtHttpsEndpoint,
+} from "./activity.js";
 import { checkInactivitySchedule } from "./checkInactivity.js";
 import {
-  assignTopicsAndTasksToMeHttpsEndpoint,
-  assignTopicsAndTasksToStudentHttpsEndpoint,
-  getCourseByIdHttpsEndpoint,
+  addMeToCohortHttpsEndpoint,
+  addStudentToCohortHttpsEndpoint,
+  assignCourseToMeHttpsEndpoint,
+  assignCourseToStudentHttpsEndpoint,
+  getCourseByCourseIdHttpsEndpoint,
   getCoursesHttpsEndpoint,
+  getCohortByCohortIdHttpsEndpoint,
+  getCohortsHttpsEndpoint,
+  getCohortsByCourseIdHttpsEndpoint,
+  getStudentCohortsByPersonIdHttpsEndpoint,
+  getPeopleByCourseIdHttpsEndpoint,
+  getPersonTasksByPersonIdCourseIdTopicIdHttpsEndpoint,
+  getPersonTopicByPersonIdCourseIdTopicIdHttpsEndpoint,
+  getTaskByCourseIdTopicIdTaskIdHttpsEndpoint,
+  getTopicByCourseIdTopicIdHttpsEndpoint,
 } from "./courseManagement.js";
 import {
   sendCourseDeletedHttpsEndpoint,
   sendCoursePublishedEmailHttpsEndpoint,
-  sendInviteEmailHttpsEndpoint,
   sendNewCohortEmailHttpsEndpoint,
-  sendNewCourseEmailHttpsEndpoint,
   sendNewSubmissionEmailHttpsEndpoint,
   sendRequestForHelpHttpsEndpoint,
   sendResponseToHelpHttpsEndpoint,
@@ -24,25 +40,45 @@ import {
 import { onUserStatusChangedOnUpdateTrigger } from "./presence.js";
 import {
   addAdminRoleHttpsEndpoint,
-  createUserHttpsEndpoint,
-  generateEmailLinkHttpsEndpoint,
+  createNewUserHttpsEndpoint,
+  getPersonByEmailHttpsEndpoint,
+  getPersonByPersonIdHttpsEndpoint,
+  updatePersonByPersonIdHttpsEndpoint,
 } from "./userManagement.js";
+
+export {
+  getCohortCoursesActivityByCohortIdHttpsEndpoint as getCohortCoursesActivityByCohortId,
+  getCohortStudentsActivityTimeByCohortIdHttpsEndpoint as getCohortStudentsActivityTimeByCohortId,
+  getStudentActivityLogByPersonIdHttpsEndpoint as getStudentActivityLogByPersonId,
+  getStudentCoursesActivityByPersonIdHttpsEndpoint as getStudentCoursesActivityByPersonId,
+  // eslint-disable-next-line max-len
+  getStudentCoursesTimeDataByPersonIdStartAtEndAtHttpsEndpoint as getStudentCoursesTimeDataByPersonIdStartAtEndAt,
+};
 
 export { checkInactivitySchedule as scheduledFunction };
 
 export {
-  assignTopicsAndTasksToMeHttpsEndpoint as assignTopicsAndTasksToMe,
-  assignTopicsAndTasksToStudentHttpsEndpoint as assignTopicsAndTasksToStudent,
-  getCourseByIdHttpsEndpoint as getCourseById,
+  addMeToCohortHttpsEndpoint as addMeToCohort,
+  addStudentToCohortHttpsEndpoint as addStudentToCohort,
+  assignCourseToMeHttpsEndpoint as assignCourseToMe,
+  assignCourseToStudentHttpsEndpoint as assignCourseToStudent,
+  getCourseByCourseIdHttpsEndpoint as getCourseByCourseId,
   getCoursesHttpsEndpoint as getCourses,
+  getCohortByCohortIdHttpsEndpoint as getCohortByCohortId,
+  getCohortsHttpsEndpoint as getCohorts,
+  getCohortsByCourseIdHttpsEndpoint as getCohortsByCourseId,
+  getStudentCohortsByPersonIdHttpsEndpoint as getStudentCohortsByPersonId,
+  getPeopleByCourseIdHttpsEndpoint as getPeopleByCourseId,
+  getPersonTasksByPersonIdCourseIdTopicIdHttpsEndpoint as getPersonTasksByPersonIdCourseIdTopicId,
+  getPersonTopicByPersonIdCourseIdTopicIdHttpsEndpoint as getPersonTopicByPersonIdCourseIdTopicId,
+  getTaskByCourseIdTopicIdTaskIdHttpsEndpoint as getTaskByCourseIdTopicIdTaskId,
+  getTopicByCourseIdTopicIdHttpsEndpoint as getTopicByCourseIdTopicId,
 };
 
 export {
   sendCourseDeletedHttpsEndpoint as sendCourseDeleted,
   sendCoursePublishedEmailHttpsEndpoint as sendCoursePublishedEmail,
-  sendInviteEmailHttpsEndpoint as sendInviteEmail,
   sendNewCohortEmailHttpsEndpoint as sendNewCohortEmail,
-  sendNewCourseEmailHttpsEndpoint as sendNewCourseEmail,
   sendNewSubmissionEmailHttpsEndpoint as sendNewSubmissionEmail,
   sendRequestForHelpHttpsEndpoint as sendRequestForHelp,
   sendResponseToHelpHttpsEndpoint as sendResponseToHelp,
@@ -54,6 +90,8 @@ export { onUserStatusChangedOnUpdateTrigger as onUserStatusChanged };
 
 export {
   addAdminRoleHttpsEndpoint as addAdminRole,
-  createUserHttpsEndpoint as createUser,
-  generateEmailLinkHttpsEndpoint as generateEmailLink,
+  createNewUserHttpsEndpoint as createNewUser,
+  getPersonByEmailHttpsEndpoint as getPersonByEmail,
+  getPersonByPersonIdHttpsEndpoint as getPersonByPersonId,
+  updatePersonByPersonIdHttpsEndpoint as updatePersonByPersonId,
 };

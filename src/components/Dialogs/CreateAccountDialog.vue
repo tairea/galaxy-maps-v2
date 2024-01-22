@@ -35,14 +35,12 @@
 
 <script>
 import CreateAccountForm from "@/components/Dialogs/CreateAccountForm.vue";
-import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";
 import { mdiPlus } from "@mdi/js";
 import { mapState } from "pinia";
 
 export default {
   name: "CreateAccountDialog",
-  mixins: [dbMixins],
   components: {
     CreateAccountForm,
   },

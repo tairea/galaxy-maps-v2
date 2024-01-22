@@ -176,15 +176,18 @@
 import Avatar from "@/components/Reused/Avatar.vue";
 import LoginDialog from "@/components/Dialogs/LoginDialog.vue";
 import { db } from "@/store/firestoreConfig";
-import { fetchCohortByCohortId, fetchPersonByPersonId, assignTopicsAndTasksToMe } from "@/lib/ff";
-import { dbMixins } from "@/mixins/DbMixins";
+import {
+  fetchCohortByCohortId,
+  fetchPersonByPersonId,
+  addMeToCohort,
+  assignCourseToMe,
+} from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mdiClose } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
 
 export default {
   name: "PopupGalaxyPreview",
-  mixins: [dbMixins],
   components: { Avatar, LoginDialog },
   props: ["course", "galaxyListInfoPanel"],
   data() {
@@ -320,9 +323,8 @@ export default {
 
       // 5) assign student to cohort and course
       const cohort = await fetchCohortByCohortId(this.course.cohort);
-      await this.MXaddExistingUserToCohort(this.person, cohort);
-      await this.MXassignCourseToStudent(this.person.id, this.course.id);
-      await assignTopicsAndTasksToMe(this.course.id);
+      await addMeToCohort(cohort.id);
+      await assignCourseToMe(this.course.id);
 
       this.loading = false;
       this.$router.push({

@@ -81,14 +81,12 @@
 import Avatar from "@/components/Reused/Avatar.vue";
 import RequestForHelpResponseDialog from "@/components/Dialogs/RequestForHelpResponseDialog.vue";
 import { fetchPersonByPersonId } from "@/lib/ff";
-import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";
 import moment from "moment";
 import { mapActions, mapState } from "pinia";
 
 export default {
   name: "RequestForHelpTeacherPanel",
-  mixins: [dbMixins],
   props: ["request", "isTeacher", "isDashboardView"],
   components: {
     RequestForHelpResponseDialog,

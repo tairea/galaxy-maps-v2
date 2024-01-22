@@ -43,7 +43,6 @@ const getDefaultState = () => {
     studentsActivityLog: [] as Record<string, any>[],
     showPanelCard: {} as Record<string, any>,
     studentsSubmissions: [] as Record<string, any>[],
-    dashboardView: "",
     peopleInCourse: [] as Record<string, any>[],
     personsCourseTasks: [] as Record<string, any>[],
     courseTasks: [] as Record<string, any>[],
@@ -173,10 +172,6 @@ export default defineStore({
     },
     setSnackbar(snackbar: { show: boolean; text: string; color?: string }) {
       this.snackbar = snackbar;
-    },
-    setDashboardView(view: string) {
-      console.log("setView: ", view);
-      this.dashboardView = view;
     },
     setPeopleInCourse(people: Record<string, any>[]) {
       this.peopleInCourse = people;
@@ -504,18 +499,21 @@ export default defineStore({
       const cohorts = [...studentCohorts, ...teacherCohorts];
       this.setCohorts(cohorts);
       if (cohorts.length) {
-        this.getOrganisationsByCohorts(cohorts);
+        await this.getOrganisationsByCohorts(cohorts);
       }
     },
 
     // ===== Firestore - Cohorts & Orgs
-    // TODO: this feels like a string but it looks like objects get passed to it
     async getOrganisationsByCohorts(cohorts: any) {
       const orgs = [];
       const querySnapShot = await db
         .collection("organisations")
         // .doc(cohort)
-        .where("cohorts", "array-contains-any", cohorts)
+        .where(
+          "cohorts",
+          "array-contains-any",
+          cohorts.map((cohort: any) => cohort.id),
+        )
         .get();
 
       if (querySnapShot.docs.length) {

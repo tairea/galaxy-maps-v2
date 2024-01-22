@@ -11,7 +11,7 @@
           v-model="activeTab"
           height="30"
         >
-          <v-tab v-for="tab in tabs" :key="tab.id" :to="tab.route">
+          <v-tab v-for="tab in tabs" :key="tab.id" :to="tab.route" :exact-path="tab.exactPath">
             <div class="baseAccent--text tab">{{ tab.name }}</div>
           </v-tab>
         </v-tabs>
@@ -41,9 +41,9 @@ import useRootStore from "@/store/index";
 import { mdiMenu, mdiClose } from "@mdi/js";
 import { mapState } from "pinia";
 
-const TAB_GALAXIES = { id: 1, name: "GALAXIES", route: `/` };
-const TAB_COHORTS = { id: 2, name: "COHORTS", route: `/cohorts` };
-const TAB_DASHBOARD = { id: 3, name: "DASHBOARD", route: `/dashboard` };
+const TAB_GALAXIES = { id: 1, name: "GALAXIES", route: `/`, exactPath: true };
+const TAB_COHORTS = { id: 2, name: "COHORTS", route: `/cohorts`, exactPath: false };
+const TAB_DASHBOARD = { id: 3, name: "DASHBOARD", route: `/dashboard`, exactPath: false };
 
 export default {
   name: "NavBar",

@@ -10,7 +10,7 @@
 </template>
 
 <script>
-import { getActivityLogXAPIQuery } from "@/lib/veracityLRS";
+import { fetchStudentActivityLogByPersonId } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { DateTime } from "luxon";
 import { mapState } from "pinia";
@@ -26,7 +26,7 @@ export default {
     };
   },
   async mounted() {
-    this.studentsActivityLog = await getActivityLogXAPIQuery(this.person);
+    this.studentsActivityLog = await fetchStudentActivityLogByPersonId(this.person.id);
   },
   computed: {
     ...mapState(useRootStore, ["person"]),

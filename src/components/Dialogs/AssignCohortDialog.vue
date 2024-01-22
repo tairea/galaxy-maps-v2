@@ -274,9 +274,10 @@ import {
   fetchCohortByCohortId,
   fetchCourseByCourseId,
   fetchPersonByEmail,
-  assignTopicsAndTasksToPerson,
+  createPerson,
+  addPersonToCohort,
+  assignCourseToPerson,
 } from "@/lib/ff";
-import { dbMixins } from "@/mixins/DbMixins";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import {
@@ -292,7 +293,6 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "AssignCohortDialog",
-  mixins: [dbMixins],
   props: ["assignCohorts", "assignCourses", "cohorts"],
   data: () => ({
     //icons
@@ -369,21 +369,20 @@ export default {
         //create the persons account
         profile.inviter = this.person.firstName + " " + this.person.lastName;
 
-        const id = await this.MXcreateUser(profile);
-        console.log("1. person created: ", profile);
-        await this.handleAssignment({ id: id }, this.currentCourse);
+        const person = await createPerson(profile);
+        console.log("1. person created: ", person);
+        await this.handleAssignment(person, this.currentCourse);
       }
     },
 
     async handleAssignment(person, course) {
       try {
-        await this.MXassignCourseToStudent(person.id, course.id);
-        await this.MXaddExistingUserToCohort(person, this.cohort);
+        await assignCourseToPerson(person.id, course.id);
+        await addPersonToCohort(person.id, this.cohort.id);
         if (this.cohort.courses.length) {
           // Possible optimize to make this concurrent instead of sequential
           for (const courseId of this.cohort.courses) {
-            await this.MXassignCourseToStudent(person.id, courseId);
-            await assignTopicsAndTasksToPerson(person.id, courseId);
+            await assignCourseToPerson(person.id, courseId);
           }
         }
 
@@ -421,7 +420,7 @@ export default {
         if (cohort.students?.length) {
           for (const student of cohort.students) {
             const person = await this.MXgetPersonByIdFromDB(student);
-            await this.MXassignCourseToStudent(person.id, course.id);
+            await assignCourseToPerson(person.id, course.id);
           }
         }
 

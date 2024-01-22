@@ -34,16 +34,11 @@
             v-else
             :timeData="studentTimeData"
             :timeframe="timeframe"
-            :courses="cohortCourses"
-            @emitUpHours="emitUpHours($event)"
+            :courseIds="cohortCourseIds"
           />
         </div>
         <div v-if="activities.length > 0" class="bottom-row">
-          <StudentCompletedTasks
-            :taskData="activities"
-            :timeframe="timeframe"
-            @emitUpTasks="emitUpTasks($event)"
-          />
+          <StudentCompletedTasks :taskData="activities" :timeframe="timeframe" />
         </div>
       </div>
       <!-- Cohorts & Actions -->
@@ -68,19 +63,17 @@ import StudentCompletedTasks from "@/components/CohortView/StudentDataIterator/S
 import StudentCohorts from "@/components/CohortView/StudentDataIterator/StudentCard/StudentCohorts.vue";
 import StudentActions from "@/components/CohortView/StudentDataIterator/StudentCard/StudentActions.vue";
 import StudentActivityTimeline from "@/components/Reused/StudentActivityTimeline.vue";
-import { fetchCohortByCohortId, fetchCourseByCourseId } from "@/lib/ff";
 import {
-  getStudentsCoursesXAPIQuery,
-  getStudentsTimeDataXAPIQuery,
-  getStudentsCourseTimeDataXAPIQuery,
-} from "@/lib/veracityLRS";
-import { dbMixins } from "@/mixins/DbMixins";
+  fetchCohortByCohortId,
+  fetchCourseByCourseId,
+  fetchStudentCoursesActivityByPersonId,
+  fetchStudentCoursesTimeDataByPersonIdStartAtEndAt,
+} from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
 
 export default {
   name: "StudentCard",
-  mixins: [dbMixins],
   components: {
     StudentCardStatus,
     StudentCardActivities,
@@ -91,7 +84,7 @@ export default {
     StudentActions,
     StudentActivityTimeline,
   },
-  props: ["student", "timeframe", "date", "cohortCourses"],
+  props: ["student", "timeframe", "date", "cohortCourseIds"],
   data() {
     return {
       cohort: null,
@@ -109,7 +102,7 @@ export default {
     };
   },
   async mounted() {
-    const studentCourses = await getStudentsCoursesXAPIQuery(this.student);
+    const studentCourses = await fetchStudentCoursesActivityByPersonId(this.student.id);
     this.cohort = await fetchCohortByCohortId(this.currentCohortId);
     const cohortActivities = studentCourses.filter((a) =>
       this.cohort.courses.some((b) => b === a.course.id),
@@ -125,19 +118,11 @@ export default {
     });
 
     // ==== get student activity data from LRS
-
-    // this is the old way of getting the data. it didnt work because it showed total active on galaxy maps as a whole. not active hours on individual galaxies/courses
-    // let getActivityData = await getStudentsTimeDataXAPIQuery({
-    //   studentsArr: [this.student.id],
-    // });
-
     // this new way gets all course log ins and log offs and calcs times
     this.studentTimeData = await this.getStudentTimeData();
   },
   watch: {
     async timeframe(newVal) {
-      // console.log("timeframe new val", newVal);
-      // this.studentTimeData = await this.getStudentTimeData();
       this.studentTimeData = await this.getStudentTimeData();
     },
   },
@@ -152,42 +137,23 @@ export default {
       this.$emit("showStudent", student);
     },
     async getAssignedCourse() {
-      const courseId = this.student.assignedCourses.find((course) =>
-        this.cohort.courses.includes(course),
+      const courseId = this.student.assignedCourses.find((courseId) =>
+        this.cohort.courses.includes(courseId),
       );
       this.assignedCourse = await fetchCourseByCourseId(courseId);
     },
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
-    emitUpHours(hours) {
-      this.$emit("updateStudentsWithHours", {
-        person: this.student,
-        hours,
-      });
-    },
-    emitUpTasks(tasks) {
-      this.$emit("updateStudentsWithTasks", {
-        person: this.student,
-        tasks,
-      });
-    },
     async getStudentTimeData() {
       this.studentTimeDataLoading = true;
-      // todo: save this data into a variable
-      // todo: pull out the hours spent on the course
-      let getActivityData = await getStudentsCourseTimeDataXAPIQuery({
-        student: {
-          id: this.student.id,
-          firstName: this.student.firstName,
-          lastName: this.student.lastName,
-        },
-        min: this.timeframe.min,
-        max: this.timeframe.max,
-      });
-      // console.log("getActivityData NEW LRS QUERY", getActivityData);
+      const courseHours = await fetchStudentCoursesTimeDataByPersonIdStartAtEndAt(
+        this.student.id,
+        this.timeframe.min.toISOString(),
+        this.timeframe.max.toISOString(),
+      );
       this.studentTimeDataLoading = false;
-      return getActivityData;
+      return courseHours;
     },
   },
 };

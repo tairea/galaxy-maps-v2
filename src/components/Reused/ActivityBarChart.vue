@@ -35,7 +35,6 @@
 
 <script>
 import Chart from "@/components/Reused/Chart.vue";
-import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";
 import { DateTime } from "luxon";
 
@@ -45,7 +44,6 @@ export default {
   components: {
     Chart,
   },
-  mixins: [dbMixins],
 
   data() {
     return {
@@ -104,7 +102,7 @@ export default {
     };
   },
   computed: {
-    // ...mapState(useRootStore, ["person", "getTopicById"]),
+    // ...mapState(useRootStore, ["person"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
