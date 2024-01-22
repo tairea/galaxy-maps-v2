@@ -219,6 +219,7 @@
 
 <script>
 import confetti from "canvas-confetti";
+import firebase from "firebase/compat/app";
 import { db, functions } from "@/store/firestoreConfig";
 import {
   fetchCohortByCohortId,
@@ -288,6 +289,8 @@ export default {
     currentTopic: null,
     currentTask: null,
     cohort: null,
+    xpPointsForThisTask: 100, // task is worth 100xp by default
+    xpPointsForThisTopic: 500, // topic is worth 500xp by default
   }),
   async mounted() {
     this.currentCourse = await fetchCourseByCourseId(this.currentCourseId);
@@ -533,6 +536,22 @@ export default {
         mission: this.currentTask,
       });
 
+      // update XP points total with TASK points. WIP
+      console.log(
+        "updating XP points: " +
+          this.person.xpPointsTotal +
+          " + " +
+          this.xpPointsForThisTask +
+          " = " +
+          (this.person.xpPointsTotal + this.xpPointsForThisTask),
+      );
+      await db
+        .collection("people")
+        .doc(this.person.id)
+        .update({
+          xpPointsTotal: firebase.firestore.FieldValue.increment(this.xpPointsForThisTask),
+        });
+
       // unlock next task
       await this.unlockNextTask();
 
@@ -675,6 +694,14 @@ export default {
           // update tasks array with new task
           topicStatus: "completed",
           topicCompletedTimestamp: new Date(),
+        });
+
+      // update XP points total with TOPIC points. WIP
+      await db
+        .collection("people")
+        .doc(this.person.id)
+        .update({
+          xpPointsTotal: firebase.firestore.FieldValue.increment(this.xpPointsForThisTopic),
         });
     },
     cancel() {
