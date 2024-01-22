@@ -15,7 +15,6 @@
             :key="task.id"
             @click="missionClicked(task)"
             :readonly="task.taskStatus == 'locked' || task.taskStatus == 'unlocked' || teacher"
-            :value="task.taskStatus == 'active'"
           >
             <MissionsCard
               :task="task"
@@ -57,7 +56,7 @@ export default {
     return {
       activeMission: false,
       topicActive: false,
-      indexOfActiveTask: [],
+      indexOfActiveTask: -1,
       missionsLoading: true,
     };
   },

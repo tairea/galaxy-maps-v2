@@ -63,7 +63,7 @@
             </div>
           </v-card-text>
           <v-card-actions class="justify-end">
-            <v-btn small text :to="'/galaxy/' + currentCourseId"><- back to galaxy</v-btn>
+            <v-btn small text :to="'/galaxy/' + currentCourseId">&lt;- back to galaxy</v-btn>
             <v-btn
               v-if="showNextSystemButton"
               small

@@ -17,7 +17,7 @@
 
 <script>
 import Cohort from "@/components/Reused/Cohort.vue";
-import { fetchPersonsCohortsByPersonId } from "@/lib/ff";
+import { fetchStudentCohortsByPersonId } from "@/lib/ff";
 
 export default {
   name: "StudentCohorts",
@@ -31,7 +31,7 @@ export default {
     };
   },
   async mounted() {
-    this.cohorts = await fetchPersonsCohortsByPersonId(this.student.id);
+    this.cohorts = await fetchStudentCohortsByPersonId(this.student.id);
   },
 };
 </script>

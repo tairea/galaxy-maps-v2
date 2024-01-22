@@ -9,13 +9,13 @@
     </div>
     <div v-else class="top-section">
       <div v-if="isAdmin" class="student-border">
-        <div :class="adminLabel" @click="setView('admin')">Create Admin</div>
+        <div :class="adminLabel" @click="setDashboardView('admin')">Create Admin</div>
       </div>
       <div class="student-border">
-        <div :class="studentLabel" @click="setView('student')">exploring dashboard</div>
+        <div :class="studentLabel" @click="setDashboardView('student')">exploring dashboard</div>
       </div>
       <div v-if="isTeacher" class="teacher-border">
-        <div :class="teacherLabel" @click="setView('teacher')">cohort analytics</div>
+        <div :class="teacherLabel" @click="setDashboardView('teacher')">cohort analytics</div>
       </div>
       <v-divider class="line" style="border-color: var(--v-missionAccent-base)"></v-divider>
     </div>
@@ -116,9 +116,23 @@ import CohortPanelV2 from "@/components/CohortList/CohortPanelV2.vue";
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import CreateAdminDialog from "@/components/Dialogs/CreateAdminDialog.vue";
+import { fetchCohorts, fetchCourses } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mdiInformationVariant } from "@mdi/js";
-import { mapActions, mapState } from "pinia";
+import { defineStore, mapActions, mapState } from "pinia";
+
+const useUserDashboardStore = defineStore({
+  id: "userDashboard",
+  state: () => ({
+    dashboardView: "student",
+  }),
+  actions: {
+    setDashboardView(val) {
+      this.dashboardView = val;
+    },
+  },
+  persist: true,
+});
 
 export default {
   name: "UserDashboard",
@@ -136,29 +150,17 @@ export default {
     return {
       mdiInformationVariant,
       timeframe: "",
+      courses: [],
+      cohorts: [],
     };
   },
   async mounted() {
-    if (this.user.data.admin) {
-      this.bindAllCohorts();
-      this.setDashboardView("admin");
-    } else if (this.isTeacher) {
-      this.setDashboardView("teacher");
-    } else {
-      this.setDashboardView("student");
-    }
+    this.courses = await fetchCourses();
+    this.cohorts = await fetchCohorts();
   },
   computed: {
-    ...mapState(useRootStore, [
-      "user",
-      "currentCourseId",
-      "currentCourseNodes",
-      "person",
-      "courses",
-      "allTasks",
-      "cohorts",
-      "dashboardView",
-    ]),
+    ...mapState(useUserDashboardStore, ["dashboardView"]),
+    ...mapState(useRootStore, ["user", "person"]),
     isAdmin() {
       return this.user.data.admin;
     },
@@ -188,29 +190,22 @@ export default {
     },
     teacherCohorts() {
       if (this.isAdmin) return this.cohorts;
-      else return this.cohorts.filter((cohort) => cohort.teachers?.includes(this.person.id));
+      else
+        return this.cohorts.filter((cohort) => cohort.teachers?.includes(this.person.id) ?? false);
     },
     cohortCourses() {
-      let courses = [];
-      this.teacherCohorts.forEach((cohort) => {
-        cohort.courses.forEach((course) => courses.push({ id: course }));
-      });
+      const courses = this.teacherCohorts.flatMap((cohort) =>
+        cohort.courses.map((course) => ({ id: course })),
+      );
       return courses;
     },
     teachersStudents() {
-      let students = [];
-      this.teacherCohorts.forEach((cohort) => {
-        cohort.students.forEach((course) => students.push(course));
-      });
+      const students = this.teacherCohorts.flatMap((cohort) => cohort.students ?? []);
       return students;
     },
   },
-
   methods: {
-    ...mapActions(useRootStore, ["getCohortsByPersonId", "bindAllCohorts", "setDashboardView"]),
-    setView(val) {
-      this.setDashboardView(val);
-    },
+    ...mapActions(useUserDashboardStore, ["setDashboardView"]),
   },
 };
 </script>

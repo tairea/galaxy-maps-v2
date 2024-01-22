@@ -48,11 +48,8 @@
 <script>
 import Chart from "@/components/Reused/Chart.vue";
 import ActiveMissions from "@/components/UserDashboard/StudentCourseProgression/GalaxyProgressionCard/ActiveMissions.vue";
-import { getStudentsCoursesXAPIQuery, getActiveTaskXAPIQuery } from "@/lib/veracityLRS";
-import { dbMixins } from "@/mixins/DbMixins";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
-import { DateTime } from "luxon";
 
 export default {
   name: "GalaxyProgressionCard",
@@ -61,12 +58,10 @@ export default {
     Chart,
     ActiveMissions,
   },
-  mixins: [dbMixins],
   data() {
     return {
-      loading: false,
+      loading: true,
       value: 80,
-      studentsActiveTasks: [],
       previousTickTitle: "",
       chartType: "line",
       chartOptions: {
@@ -139,12 +134,10 @@ export default {
     };
   },
   async mounted() {
-    this.loading = true;
-    this.studentsActiveTasks = await getActiveTaskXAPIQuery(this.person);
     this.loading = false;
   },
   computed: {
-    ...mapState(useRootStore, ["person", "getTopicById"]),
+    ...mapState(useRootStore, ["person"]),
   },
   methods: {
     formatStudentsChartData(data) {

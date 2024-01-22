@@ -75,14 +75,12 @@ import AssignCohortDialog from "@/components/Dialogs/AssignCohortDialog.vue";
 import Course from "@/components/Reused/Course.vue";
 import Cohort from "@/components/Reused/Cohort.vue";
 import Avatar from "@/components/Reused/Avatar.vue";
-import { dbMixins } from "@/mixins/DbMixins";
 import { fetchCourseByCourseId, fetchCohortByCohortId } from "@/lib/ff";
 import { mapState } from "pinia";
 import useRootStore from "@/store/index";
 
 export default {
   name: "AssignedInfo",
-  mixins: [dbMixins],
   components: {
     Cohort,
     Organisation,
