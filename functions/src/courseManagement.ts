@@ -2,11 +2,7 @@ import { DocumentReference, FieldValue } from "firebase-admin/firestore";
 import { runWith } from "firebase-functions/v1";
 import { HttpsError } from "firebase-functions/v1/https";
 import { db, requireAuthenticated } from "./_shared.js";
-import {
-  VERACITY_LRS_SECRET,
-  getCohortsCourseDataXAPIQuery,
-  startGalaxyXAPIStatement,
-} from "./veracityLRS.js";
+import { VERACITY_LRS_SECRET, startGalaxyXAPIStatement } from "./veracityLRS.js";
 
 // Get a course by courseId
 export const getCourseByCourseIdHttpsEndpoint = runWith({}).https.onCall(async (data, context) => {
@@ -356,24 +352,6 @@ export const getCohortsByCourseIdHttpsEndpoint = runWith({}).https.onCall(async 
   }
 
   return { cohorts };
-});
-
-// Get cohort courses activity by cohortId
-export const getCohortCoursesActivityByCohortIdHttpsEndpoint = runWith({
-  secrets: [VERACITY_LRS_SECRET],
-}).https.onCall(async (data, context) => {
-  requireAuthenticated(context);
-
-  const cohortId = data.cohortId as string | null;
-  if (cohortId == null) {
-    throw new HttpsError("invalid-argument", "missing cohortId");
-  }
-
-  // TODO: permissions checks
-
-  const activityData = await getCohortsCourseDataXAPIQuery(cohortId);
-
-  return { activityData };
 });
 
 // Get topic by courseId and topicId

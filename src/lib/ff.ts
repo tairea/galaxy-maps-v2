@@ -53,6 +53,19 @@ export const fetchCohortCoursesActivityByCohortId = async (
   return result.data.activityData;
 };
 
+export const fetchCohortStudentsActivityTimeByCohortId = async (
+  cohortId: string,
+): Promise<Record<string, any>[]> => {
+  const data = {
+    cohortId,
+  };
+  const getCohortStudentsActivityTimeByCohortId = functions.httpsCallable(
+    "getCohortStudentsActivityTimeByCohortId",
+  );
+  const result = await getCohortStudentsActivityTimeByCohortId(data);
+  return result.data.activityData;
+};
+
 export const fetchCourses = async () => {
   const data = {};
   const getCourses = functions.httpsCallable("getCourses");
@@ -185,6 +198,49 @@ export const fetchPersonsTopicByPersonIdCourseIdTopicId = async (
   );
   const result = await getPersonTopicByPersonIdCourseIdTopicId(data);
   return result.data.personTopic;
+};
+
+export const fetchStudentActivityLogByPersonId = async (
+  personId: string,
+): Promise<Record<string, any>[]> => {
+  const data = {
+    personId,
+  };
+  const getStudentActivityLogByPersonId = functions.httpsCallable(
+    "getStudentActivityLogByPersonId",
+  );
+  const result = await getStudentActivityLogByPersonId(data);
+  return result.data.activityData;
+};
+
+export const fetchStudentCoursesActivityByPersonId = async (
+  personId: string,
+): Promise<Record<string, any>[]> => {
+  const data = {
+    personId,
+  };
+  const getStudentCoursesActivityByPersonId = functions.httpsCallable(
+    "getStudentCoursesActivityByPersonId",
+  );
+  const result = await getStudentCoursesActivityByPersonId(data);
+  return result.data.activityData;
+};
+
+export const fetchStudentCoursesTimeDataByPersonIdStartAtEndAt = async (
+  personId: string,
+  startAt: string,
+  endAt: string,
+): Promise<Record<string, any>[]> => {
+  const data = {
+    personId,
+    startAt,
+    endAt,
+  };
+  const getStudentCoursesTimeDataByPersonIdStartAtEndAt = functions.httpsCallable(
+    "getStudentCoursesTimeDataByPersonIdStartAtEndAt",
+  );
+  const result = await getStudentCoursesTimeDataByPersonIdStartAtEndAt(data);
+  return result.data.activityData;
 };
 
 // add person to cohort

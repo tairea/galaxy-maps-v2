@@ -20,7 +20,7 @@
 
 <script>
 import GalaxyProgressionCard from "@/components/UserDashboard/StudentCourseProgression/GalaxyProgressionCard.vue";
-import { getStudentsCoursesXAPIQuery } from "@/lib/veracityLRS";
+import { fetchStudentCoursesActivityByPersonId } from "@/lib/ff";
 
 export default {
   name: "StudentCourseProgression",
@@ -38,7 +38,7 @@ export default {
   computed: {},
   async mounted() {
     this.loading = true;
-    const sanitisedCourses = await getStudentsCoursesXAPIQuery(this.student);
+    const sanitisedCourses = await fetchStudentCoursesActivityByPersonId(this.student.id);
     console.log("sanitisedCourses: ", this.studentCourses);
     this.studentCourses = sanitisedCourses.filter((a) =>
       this.student.assignedCourses?.some((b) => a.course.id == b),

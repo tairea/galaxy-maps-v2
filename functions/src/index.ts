@@ -2,6 +2,13 @@
 import "./_dotenv.js";
 import "./_shared.js";
 
+import {
+  getCohortCoursesActivityByCohortIdHttpsEndpoint,
+  getCohortStudentsActivityTimeByCohortIdHttpsEndpoint,
+  getStudentActivityLogByPersonIdHttpsEndpoint,
+  getStudentCoursesActivityByPersonIdHttpsEndpoint,
+  getStudentCoursesTimeDataByPersonIdStartAtEndAtHttpsEndpoint,
+} from "./activity.js";
 import { checkInactivitySchedule } from "./checkInactivity.js";
 import {
   addMeToCohortHttpsEndpoint,
@@ -11,7 +18,6 @@ import {
   getCourseByCourseIdHttpsEndpoint,
   getCoursesHttpsEndpoint,
   getCohortByCohortIdHttpsEndpoint,
-  getCohortCoursesActivityByCohortIdHttpsEndpoint,
   getCohortsHttpsEndpoint,
   getCohortsByCourseIdHttpsEndpoint,
   getStudentCohortsByPersonIdHttpsEndpoint,
@@ -40,6 +46,15 @@ import {
   updatePersonByPersonIdHttpsEndpoint,
 } from "./userManagement.js";
 
+export {
+  getCohortCoursesActivityByCohortIdHttpsEndpoint as getCohortCoursesActivityByCohortId,
+  getCohortStudentsActivityTimeByCohortIdHttpsEndpoint as getCohortStudentsActivityTimeByCohortId,
+  getStudentActivityLogByPersonIdHttpsEndpoint as getStudentActivityLogByPersonId,
+  getStudentCoursesActivityByPersonIdHttpsEndpoint as getStudentCoursesActivityByPersonId,
+  // eslint-disable-next-line max-len
+  getStudentCoursesTimeDataByPersonIdStartAtEndAtHttpsEndpoint as getStudentCoursesTimeDataByPersonIdStartAtEndAt,
+};
+
 export { checkInactivitySchedule as scheduledFunction };
 
 export {
@@ -50,7 +65,6 @@ export {
   getCourseByCourseIdHttpsEndpoint as getCourseByCourseId,
   getCoursesHttpsEndpoint as getCourses,
   getCohortByCohortIdHttpsEndpoint as getCohortByCohortId,
-  getCohortCoursesActivityByCohortIdHttpsEndpoint as getCohortCoursesActivityByCohortId,
   getCohortsHttpsEndpoint as getCohorts,
   getCohortsByCourseIdHttpsEndpoint as getCohortsByCourseId,
   getStudentCohortsByPersonIdHttpsEndpoint as getStudentCohortsByPersonId,

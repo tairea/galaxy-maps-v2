@@ -127,8 +127,10 @@ import Avatar from "@/components/Reused/Avatar.vue";
 import ProgressionLineChart from "@/components/Reused/ProgressionLineChart.vue";
 import ActivityBarChart from "@/components/Reused/ActivityBarChart.vue";
 import Organisation from "@/components/Reused/Organisation.vue";
-import { fetchCohortCoursesActivityByCohortId } from "@/lib/ff";
-import { getStudentsTimeDataXAPIQuery } from "@/lib/veracityLRS";
+import {
+  fetchCohortCoursesActivityByCohortId,
+  fetchCohortStudentsActivityTimeByCohortId,
+} from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mdiInformationVariant } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
@@ -185,10 +187,7 @@ export default {
     this.cohortsCoursesDataLoading = false;
 
     // ==== get cohort activity data from LRS
-    let getActivityData = await getStudentsTimeDataXAPIQuery({
-      studentsArr: this.cohort.students,
-    });
-    this.cohortActivityData = getActivityData;
+    this.cohortActivityData = await fetchCohortStudentsActivityTimeByCohortId(this.cohort.id);
     // console.log("this.cohortActivityData", this.cohortActivityData);
     this.cohortActivityDataLoading = false;
 

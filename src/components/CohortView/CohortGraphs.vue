@@ -92,8 +92,11 @@ import ProgressionLineChart from "@/components/Reused/ProgressionLineChart.vue";
 import ActivityBarChart from "@/components/Reused/ActivityBarChart.vue";
 import TimeframeFilters from "@/components/Reused/TimeframeFilters.vue";
 import Avatar from "@/components/Reused/Avatar.vue";
-import { fetchCohortByCohortId, fetchCourseByCourseId } from "@/lib/ff";
-import { getCohortsCourseDataXAPIQuery, getStudentsTimeDataXAPIQuery } from "@/lib/veracityLRS";
+import {
+  fetchCohortByCohortId,
+  fetchCohortCoursesActivityByCohortId,
+  fetchCohortStudentsActivityTimeByCohortId,
+} from "@/lib/ff";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
@@ -128,12 +131,7 @@ export default {
     const currentCohort = await fetchCohortByCohortId(this.currentCohortId);
 
     // ==== get cohort course data from LRS
-    const getCourseData = await getCohortsCourseDataXAPIQuery({
-      studentsArr: currentCohort.students,
-      coursesArr: currentCohort.courses,
-      cohortName: currentCohort.name,
-    });
-    this.cohortsCoursesData = getCourseData;
+    this.cohortsCoursesData = await fetchCohortCoursesActivityByCohortId(this.cohort.id);
 
     // add students with data
     const studentsArr = [];
@@ -152,10 +150,7 @@ export default {
     this.cohortsCoursesDataLoading = false;
 
     // ==== get cohort activity data from LRS
-    const getActivityData = await getStudentsTimeDataXAPIQuery({
-      studentsArr: currentCohort.students,
-    });
-    this.cohortActivityData = getActivityData;
+    this.cohortActivityData = await fetchCohortStudentsActivityTimeByCohortId(currentCohort.id);
     this.cohortActivityDataLoading = false;
   },
   computed: {

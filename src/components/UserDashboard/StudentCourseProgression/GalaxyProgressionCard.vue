@@ -48,7 +48,6 @@
 <script>
 import Chart from "@/components/Reused/Chart.vue";
 import ActiveMissions from "@/components/UserDashboard/StudentCourseProgression/GalaxyProgressionCard/ActiveMissions.vue";
-import { getActiveTaskXAPIQuery } from "@/lib/veracityLRS";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
 
@@ -61,9 +60,8 @@ export default {
   },
   data() {
     return {
-      loading: false,
+      loading: true,
       value: 80,
-      studentsActiveTasks: [],
       previousTickTitle: "",
       chartType: "line",
       chartOptions: {
@@ -136,8 +134,6 @@ export default {
     };
   },
   async mounted() {
-    this.loading = true;
-    this.studentsActiveTasks = await getActiveTaskXAPIQuery(this.person);
     this.loading = false;
   },
   computed: {

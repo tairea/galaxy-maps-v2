@@ -1,8 +1,16 @@
 <template>
   <div :class="activityClass">
     <p :class="activityLabel">ACTIVITY</p>
-    <div v-if="courseAcivities.length > 0" :class="statementClass">
-      <p v-for="(activity, i) in courseAcivities" :key="i" class="ma-0">
+    <div class="d-flex justify-center align-center" v-if="loading">
+      <v-btn
+        :loading="loading"
+        icon
+        color="missionAccent"
+        class="d-flex justify-center align-center"
+      ></v-btn>
+    </div>
+    <div v-else-if="courseActivities.length > 0" :class="statementClass">
+      <p v-for="(activity, i) in courseActivities" :key="i" class="ma-0">
         <span v-if="!studentCard">{{ activity.timeStamp.time }} </span>
         <span>{{ activity.timeStamp.date }} </span>
         <span :style="statusClass(activity)"
@@ -18,7 +26,7 @@
 </template>
 
 <script>
-import { getActivityLogXAPIQuery } from "@/lib/veracityLRS";
+import { fetchStudentActivityLogByPersonId } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { DateTime } from "luxon";
 import { mapState } from "pinia";
@@ -31,11 +39,13 @@ export default {
   },
   data() {
     return {
+      loading: true,
       studentsActivityLog: [],
     };
   },
   async mounted() {
-    this.studentsActivityLog = await getActivityLogXAPIQuery(this.student);
+    this.studentsActivityLog = await fetchStudentActivityLogByPersonId(this.student.id);
+    this.loading = false;
   },
   computed: {
     ...mapState(useRootStore, ["person"]),
@@ -48,7 +58,7 @@ export default {
     statementClass() {
       return this.studentCard ? "student-card-statement" : "statements";
     },
-    courseAcivities() {
+    courseActivities() {
       const filtered = this.studentsActivityLog.filter((activity) => activity.course);
       // console.log("filtered", filtered);
       const sanitised = filtered.map((statement, index) => {
