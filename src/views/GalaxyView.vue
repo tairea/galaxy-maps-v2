@@ -500,7 +500,7 @@ export default {
       console.log("selected edge emitted:", selected);
       this.currentEdge = selected;
     },
-    galaxyCompleted() {
+    async galaxyCompleted() {
       this.galaxyCompletedDialog = true;
       // confetti fireworks
       var duration = 30 * 1000;

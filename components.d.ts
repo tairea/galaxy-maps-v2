@@ -20,6 +20,7 @@ declare module 'vue' {
     CohortInfo: typeof import('./src/components/CohortView/CohortInfo.vue')['default']
     CohortPanelV2: typeof import('./src/components/CohortList/CohortPanelV2.vue')['default']
     ConfirmDeleteStudentDialog: typeof import('./src/components/Dialogs/ConfirmDeleteStudentDialog.vue')['default']
+    copy: typeof import('./src/components/Dialogs/EditStudentDialog copy.vue')['default']
     Course: typeof import('./src/components/Reused/Course.vue')['default']
     CreateAccountDialog: typeof import('./src/components/Dialogs/CreateAccountDialog.vue')['default']
     CreateAccountForm: typeof import('./src/components/Dialogs/CreateAccountForm.vue')['default']
@@ -155,5 +156,6 @@ declare module 'vue' {
     VToolbar: typeof import('vuetify/lib')['VToolbar']
     VTooltip: typeof import('vuetify/lib')['VTooltip']
     VTour: typeof import('vue-tour')['VTour']
+    XpPointsDialog: typeof import('./src/components/Dialogs/XpPointsDialog.vue')['default']
   }
 }
