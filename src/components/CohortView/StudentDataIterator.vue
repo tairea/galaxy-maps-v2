@@ -79,6 +79,8 @@
           :date="date"
           :cohortCourseIds="cohort.courses"
           @showStudent="showStudent($event)"
+          @updateStudentsWithHours="updateStudentsWithHours($event)"
+          @updateStudentsWithTasks="updateStudentsWithTasks($event)"
         />
       </template>
 
@@ -139,7 +141,15 @@ export default {
       search: "",
       sortDesc: false,
       sortBy: "firstName",
-      keys: ["firstName", "lastName", "nsnNumber", "studentEmail", "hours", "tasks"],
+      keys: [
+        "firstName",
+        "lastName",
+        "nsnNumber",
+        "studentEmail",
+        "hours",
+        "tasks",
+        "xpPointsTotal",
+      ],
       students: [],
       timeframe: {},
       date: "",
@@ -237,6 +247,14 @@ export default {
     },
     setTimeframe(timeframeEmitted) {
       this.timeframe = timeframeEmitted;
+    },
+    updateStudentsWithHours(payload) {
+      const foundIndex = this.students.findIndex((student) => student.id == payload.person.id);
+      this.students[foundIndex].hours = payload.hours;
+    },
+    updateStudentsWithTasks(payload) {
+      const foundIndex = this.students.findIndex((student) => student.id == payload.person.id);
+      this.students[foundIndex].tasks = payload.tasks;
     },
   },
 };

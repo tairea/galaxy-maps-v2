@@ -11,6 +11,7 @@
       <span class="overline not-active text-uppercase ma-auto">hasn't signed in yet</span>
     </template>
     <template v-else>
+      <StudentXpPoints :student="student" />
       <StudentCardProgress :activities="activities" :student="student" />
       <div class="student-activities-overUnder">
         <div style="height: 100%">
@@ -35,10 +36,15 @@
             :timeData="studentTimeData"
             :timeframe="timeframe"
             :courseIds="cohortCourseIds"
+            @emitUpHours="emitUpHours($event)"
           />
         </div>
         <div v-if="activities.length > 0" class="bottom-row">
-          <StudentCompletedTasks :taskData="activities" :timeframe="timeframe" />
+          <StudentCompletedTasks
+            :taskData="activities"
+            :timeframe="timeframe"
+            @emitUpTasks="emitUpTasks($event)"
+          />
         </div>
       </div>
       <!-- Cohorts & Actions -->
@@ -63,6 +69,8 @@ import StudentCompletedTasks from "@/components/CohortView/StudentDataIterator/S
 import StudentCohorts from "@/components/CohortView/StudentDataIterator/StudentCard/StudentCohorts.vue";
 import StudentActions from "@/components/CohortView/StudentDataIterator/StudentCard/StudentActions.vue";
 import StudentActivityTimeline from "@/components/Reused/StudentActivityTimeline.vue";
+import StudentXpPoints from "@/components/CohortView/StudentDataIterator/StudentCard/StudentXpPoints.vue";
+
 import {
   fetchCohortByCohortId,
   fetchCourseByCourseId,
@@ -83,6 +91,7 @@ export default {
     StudentCohorts,
     StudentActions,
     StudentActivityTimeline,
+    StudentXpPoints,
   },
   props: ["student", "timeframe", "date", "cohortCourseIds"],
   data() {
@@ -155,6 +164,18 @@ export default {
       this.studentTimeDataLoading = false;
       return courseHours;
     },
+    emitUpHours(hours) {
+      this.$emit("updateStudentsWithHours", {
+        person: this.student,
+        hours,
+      });
+    },
+    emitUpTasks(tasks) {
+      this.$emit("updateStudentsWithTasks", {
+        person: this.student,
+        tasks,
+      });
+    },
   },
 };
 </script>
@@ -184,8 +205,8 @@ a {
   .student-actions-overUnder {
     display: flex;
     flex-direction: column;
-    max-width: 20%;
-    min-width: 20%;
+    max-width: 15%;
+    min-width: 15%;
     border-left: 1px dashed var(--v-missionAccent-base);
   }
 

@@ -1,22 +1,24 @@
 <template>
-  <div style="margin-bottom: -20px">
+  <div :style="!plain ? 'margin-bottom: -20px' : ''">
     <v-dialog v-model="dialog" width="35%" :light="dark" :dark="!dark">
       <!-- CREATE BUTTON -->
       <template v-slot:activator="{ on, attrs }">
         <v-btn
-          class="xpPoints"
-          :class="{ 'disable-click': !canManageXpPoints }"
+          :class="{
+            'disable-click': !canManageXpPoints,
+            xpPointsPlain: plain,
+            xpPointsDashboard: !plain,
+          }"
           :light="dark"
           :dark="!dark"
           color="baseAccent"
           v-bind="attrs"
           v-on="on"
+          :text="plain"
         >
           <div>
-            XP:
-            <span
-              ><i>{{ xpPoints }}</i></span
-            >
+            <span v-if="!plain">XP:</span>
+            <span class="plain-label-value">{{ xpPoints }}</span>
           </div>
         </v-btn>
       </template>
@@ -139,7 +141,7 @@ import useRootStore from "@/store/index";
 export default {
   name: "XpPointsDialog",
   components: {},
-  props: ["person", "xpPoints", "canManageXpPoints"],
+  props: ["person", "xpPoints", "canManageXpPoints", "plain"],
   computed: {
     dark() {
       return this.$vuetify.theme.isDark;
@@ -205,7 +207,25 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.xpPoints {
+.xpPointsPlain {
+  margin: 0px;
+  text-transform: uppercase;
+  // background-color: var(--v-baseAccent-base);
+  color: var(--v-baseAccent-base);
+  font-size: 1rem;
+  text-align: center;
+  // border-radius: 50px;
+  // position: relative;
+  // top: -70px;
+  // left: 40%;
+  // margin-bottom: -50px;
+  .plain-label-value {
+    font-size: 1.3rem;
+    margin: 0px;
+    color: var(--v-baseAccent-base);
+  }
+}
+.xpPointsDashboard {
   margin: 0px;
   text-transform: uppercase;
   background-color: var(--v-baseAccent-base);
@@ -217,6 +237,7 @@ export default {
   top: -70px;
   left: 40%;
   margin-bottom: -50px;
+  font-style: italic;
 }
 .disable-click {
   pointer-events: none;

@@ -41,9 +41,10 @@ export default {
   computed: {},
   methods: {
     calcHours(courseId) {
-      return (
-        this.timeData.find((courseHourData) => courseHourData.course.id === courseId)?.hours ?? 0
-      );
+      const courseHours =
+        this.timeData.find((courseHourData) => courseHourData.course.id === courseId)?.hours ?? 0;
+      this.$emit("emitUpHours", courseHours);
+      return courseHours;
     },
   },
 };
