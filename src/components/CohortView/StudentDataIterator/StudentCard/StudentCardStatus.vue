@@ -58,6 +58,8 @@ export default {
       var date = Math.round(now / 1000);
       var delta = date - this.status?.last_changed?.seconds;
 
+      this.$emit("emitUpLastActive", delta ? delta : 0);
+
       // calculate (and subtract) whole days
       var days = Math.floor(delta / 86400);
 

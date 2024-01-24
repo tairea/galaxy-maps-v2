@@ -1,7 +1,7 @@
 import { db } from "@/store/firestoreConfig";
 import { defineStore } from "pinia";
 import { piniafireMutations, firestoreAction } from "@/piniafire/index";
-import type firebase from "firebase/compat/app";
+import firebase from "firebase/compat/app";
 
 const getDefaultState = () => {
   return {
@@ -405,6 +405,14 @@ export default defineStore({
 
       this.allEdges = allEdges;
       // console.log("all edges:",allEdges)
+    },
+
+    async deleteCourseFromPerson(personId: string, courseId: string) {
+      // delete course from persons assignedCourses
+      const person = db.collection("people").doc(personId);
+      await person.update({
+        assignedCourses: firebase.firestore.FieldValue.arrayRemove(courseId),
+      });
     },
 
     // ===== Firestore - BIND by USER

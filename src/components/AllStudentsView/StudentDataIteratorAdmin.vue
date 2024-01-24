@@ -1,7 +1,6 @@
 <template>
-  <v-container fluid>
+  <v-container class="student-data-iterator" fluid>
     <v-data-iterator
-      v-if="cohort"
       :items="students"
       :items-per-page="-1"
       :search="search"
@@ -11,76 +10,76 @@
     >
       <!-- HEADER -->
       <template v-slot:header>
-        <div class="d-flex justify-end">
-          <div v-if="students.length" class="mx-1 d-flex" style="width: 66%">
+        <div class="d-flex justify-start">
+          <div v-if="students.length" class="mx-1" style="width: 100%">
             <!-- Search -->
-            <v-text-field
-              v-model="search"
-              clearable
-              flat
-              width="50%"
-              hide-details
-              :prepend-inner-icon="mdiMagnify"
-              label="Search"
-              dense
-              outlined
-              color="missionAccent"
-              class="search"
-            ></v-text-field>
-            <!-- Items Select -->
-            <div class="mx-2" style="width: 50%">
-              <v-select
-                v-model="sortBy"
+            <div style="width: 100%">
+              <v-text-field
+                v-model="search"
+                clearable
+                flat
+                width="50%"
+                hide-details
+                :prepend-inner-icon="mdiMagnify"
+                label="Search"
+                dense
                 outlined
                 color="missionAccent"
-                hide-details
-                :items="keys"
-                :prepend-inner-icon="mdiSortAlphabeticalVariant"
-                label="Sort by"
-                dense
-                class="mb-1 sort"
-                @click:prepend-inner="sortDesc = !sortDesc"
-              ></v-select>
+                class="search"
+              ></v-text-field>
             </div>
-            <!-- Arrow buttons -->
-            <v-btn-toggle background-color="background" v-model="sortDesc" mandatory dense>
-              <v-btn small outlined color="missionAccent" :value="false" style="padding: 18px">
-                <v-icon small>{{ mdiArrowUp }}</v-icon>
-              </v-btn>
-              <v-btn small outlined color="missionAccent" :value="true" style="padding: 18px">
-                <v-icon small>{{ mdiArrowDown }}</v-icon>
-              </v-btn>
-            </v-btn-toggle>
+            <div style="width: 100%" class="d-flex mt-2">
+              <!-- Items Select -->
+              <div class="mx-2" style="width: 50%">
+                <v-select
+                  v-model="sortBy"
+                  outlined
+                  color="missionAccent"
+                  hide-details
+                  :items="keys"
+                  :prepend-inner-icon="mdiSortAlphabeticalVariant"
+                  label="Sort by"
+                  dense
+                  class="mb-1 sort"
+                  @click:prepend-inner="sortDesc = !sortDesc"
+                ></v-select>
+              </div>
+              <!-- Arrow buttons -->
+              <v-btn-toggle background-color="background" v-model="sortDesc" mandatory dense>
+                <v-btn x-small outlined color="missionAccent" :value="false" style="padding: 18px">
+                  <v-icon small>{{ mdiArrowUp }}</v-icon>
+                </v-btn>
+                <v-btn x-small outlined color="missionAccent" :value="true" style="padding: 18px">
+                  <v-icon small>{{ mdiArrowDown }}</v-icon>
+                </v-btn>
+              </v-btn-toggle>
+            </div>
           </div>
-          <div class="mx-1">
-            <StudentAccountsDialog
-              v-if="isTeacher"
-              :students="students"
-              @updateStudentProfile="updateStudentProfile($event)"
-            />
-            <!-- <CreateAccountDialog accountType="student" />
-          </div>
-          <div class="mx-1">
-            <ImportCsvDialog /> -->
-          </div>
+          <!-- <div class="mx-1">
+              <StudentAccountsDialog
+                v-if="isTeacher"
+                :students="students"
+                @updateStudentProfile="updateStudentProfile($event)"
+              /> -->
+          <!-- <CreateAccountDialog accountType="student" />
+            </div>
+            <div class="mx-1">
+              <ImportCsvDialog /> -->
+          <!-- </div> -->
         </div>
       </template>
 
       <!-- PROPS -->
       <template v-slot:default="props">
-        <div class="d-flex justify-center align-center mt-3">
-          <TimeframeFilters :showDate="true" @timeframe="setTimeframe($event)" />
-        </div>
-        <StudentCard
+        <StudentCardAdmin
           v-for="student in props.items"
           :key="student.id"
           :student="student"
           :timeframe="timeframe"
           :date="date"
-          :cohortCourseIds="cohort.courses"
-          @showStudent="showStudent($event)"
           @updateStudentsWithHours="updateStudentsWithHours($event)"
           @updateStudentsWithTasks="updateStudentsWithTasks($event)"
+          @showStudent="showStudent($event)"
           @updateStudentsWithLastActive="updateStudentsWithLastActive($event)"
         />
       </template>
@@ -98,34 +97,37 @@
       @edit="showEdit($event)"
     />
     <!-- <EditStudentDialog
-      v-if="editStudentFlag && isTeacher"
-      :dialog="editStudentFlag"
-      :student="student"
-      @updateStudentProfile="updateStudentProfile($event)"
-      @cancel="cancelShowEdit"
-    /> -->
+        v-if="editStudentFlag && isTeacher"
+        :dialog="editStudentFlag"
+        :student="student"
+        @updateStudentProfile="updateStudentProfile($event)"
+        @cancel="cancelShowEdit"
+      /> -->
   </v-container>
 </template>
 
 <script>
-// import CreateAccountDialog from "@/components/Dialogs/CreateAccountDialog.vue";
+// import CreateAccountDialog from "@/components/CreateAccountDialog.vue";
 // import ImportCsvDialog from "@/components/ImportCsvDialog.vue";
 import StudentAccountsDialog from "@/components/Dialogs/StudentAccountsDialog.vue";
 import ViewStudentDetails from "@/components/CohortView/StudentDataIterator/ViewStudentDetails.vue";
-import StudentCard from "@/components/CohortView/StudentDataIterator/StudentCard.vue";
+
+import StudentCardAdmin from "@/components/AllStudentsView/StudentCardAdmin.vue";
+
 import TimeframeFilters from "@/components/Reused/TimeframeFilters.vue";
 import EditStudentDialog from "@/components/Dialogs/EditStudentDialog.vue";
 import { fetchPersonByPersonId } from "@/lib/ff";
+
 import useRootStore from "@/store/index";
 import { mdiArrowUp, mdiArrowDown, mdiMagnify, mdiSortAlphabeticalVariant } from "@mdi/js";
 import { mapState } from "pinia";
 
 export default {
-  name: "StudentsDataIterator",
-  props: ["cohort"],
+  name: "StudentDataIteratorAdmin",
+  props: [],
   components: {
     // EditStudentButtonDialog,
-    StudentCard,
+    StudentCardAdmin,
     // CreateAccountDialog,
     // ImportCsvDialog,
     TimeframeFilters,
@@ -142,22 +144,13 @@ export default {
       search: "",
       sortDesc: false,
       sortBy: "firstName",
-      keys: [
-        "firstName",
-        "lastName",
-        "nsnNumber",
-        "studentEmail",
-        "lastActive",
-        "hours",
-        "tasks",
-        "xpPointsTotal",
-      ],
-      students: [],
+      keys: ["firstName", "lastName", "nsnNumber", "studentEmail", "lastActive"],
       timeframe: {},
       date: "",
       prevVal: "",
       showStudentFlag: false,
       editStudentFlag: false,
+      students: [],
       student: [],
     };
   },
@@ -173,33 +166,21 @@ export default {
   destroyed() {
     clearInterval(this.counterInterval);
   },
-  async mounted() {
-    // this is needed incase there is no change in cohort.id to catch with the watch
-    if (this.$route.params.cohortId === this.cohort.id) {
-      await this.getStudentProfiles();
-    }
+  mounted() {
+    this.students = this.people;
   },
-  watch: {
-    cohort: {
-      deep: true,
-      async handler(newCohort, oldCohort) {
-        if (oldCohort.students?.length !== newCohort.students?.length) {
-          if (oldCohort.students?.length > newCohort.students?.length) this.removeStudentProfiles();
-          else await this.getStudentProfiles();
-        }
-        if (oldCohort.id !== newCohort.id) {
-          await this.getStudentProfiles();
-        }
-      },
-    },
-  },
+  watch: {},
   computed: {
-    ...mapState(useRootStore, ["person"]),
+    ...mapState(useRootStore, ["currentCohort", "user", "people"]),
     filteredKeys() {
       return this.keys.filter((key) => key !== "Name");
     },
     isTeacher() {
-      return this.cohort.teachers?.includes(this.person.id);
+      if (this.user.data.admin) {
+        return true;
+      } else {
+        return this.currentCohort.teachers.includes(this.person.id);
+      }
     },
   },
   methods: {
@@ -230,10 +211,8 @@ export default {
       this.date = Date.now();
     },
     async getStudentProfiles() {
-      if (this.cohort?.students?.length) {
-        const studentsArr = this.cohort.students.filter(
-          (a) => !this.students.some((b) => a === b.id),
-        );
+      if (this.students?.length) {
+        const studentsArr = this.students.filter((a) => !this.students.some((b) => a === b.id));
 
         const students = await Promise.all(
           studentsArr.map((studentId) => fetchPersonByPersonId(studentId)),
@@ -241,8 +220,10 @@ export default {
         this.students = [...this.students, ...students];
       }
     },
-    removeStudentProfiles() {
-      this.students = this.students.filter((a) => !this.cohort.students.some((b) => a.id === b));
+    removeStudentProfile() {
+      this.students = this.students.filter((a) => {
+        return this.students.some((b) => a.id === b);
+      });
     },
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
@@ -261,6 +242,9 @@ export default {
     updateStudentsWithLastActive(payload) {
       const foundIndex = this.students.findIndex((student) => student.id == payload.person.id);
       this.students[foundIndex].lastActive = payload.lastActive;
+    },
+    customFilter(items, searchQuery) {
+      return items.filter((item) => item.lastActive !== undefined); // this removes INACTIVE people from the lastAtive sort.
     },
   },
 };
@@ -375,5 +359,9 @@ a {
 .timeframe-chips {
   border-top: 1px solid var(--v-missionAccent-base);
   border-bottom: 1px solid var(--v-missionAccent-base);
+}
+
+.student-data-iterator {
+  overflow-x: hidden;
 }
 </style>

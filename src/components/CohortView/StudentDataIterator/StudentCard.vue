@@ -6,6 +6,7 @@
       :status="status"
       class="pl-1"
       @click.native="showStudentDetails(student)"
+      @emitUpLastActive="emitUpLastActive($event)"
     />
     <template v-if="!status">
       <span class="overline not-active text-uppercase ma-auto">hasn't signed in yet</span>
@@ -174,6 +175,12 @@ export default {
       this.$emit("updateStudentsWithTasks", {
         person: this.student,
         tasks,
+      });
+    },
+    emitUpLastActive(lastActive) {
+      this.$emit("updateStudentsWithLastActive", {
+        person: this.student,
+        lastActive,
       });
     },
   },
