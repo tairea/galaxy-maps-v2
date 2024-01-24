@@ -181,7 +181,6 @@ export default {
   align-items: center;
   flex-direction: column;
   background-color: #393e46;
-  // background-image: url("../assets/hudf_big.jpeg");
   background-size: cover;
   box-shadow: inset 0 0 0 2000px rgba(20, 30, 48, 0.9);
 
