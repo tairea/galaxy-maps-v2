@@ -79,7 +79,7 @@ export default {
   computed: {
     ...mapState(useRootStore, ["person", "cohorts", "user"]),
     isAdmin() {
-      return this.user.data.admin;
+      return this.user?.data?.admin;
     },
   },
   data() {

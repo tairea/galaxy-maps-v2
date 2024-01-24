@@ -55,8 +55,8 @@ export default {
       "user",
       "currentCohort",
       "showPanelCard",
-      "currentTopic",
-      "currentTask",
+      "currentTopicId",
+      "currentTaskId",
     ]),
     isGalaxyView() {
       return this.$route.name == "GalaxyView";
@@ -97,10 +97,10 @@ export default {
         return requests.filter((request) => request.contextCourse.id == this.courses[0].id);
       } else if (this.isSystemView) {
         const taskRequests = requests.filter(
-          (request) => request.contextTopic.id == this.currentTopic.id,
+          (request) => request.contextTopic.id == this.currentTopicId,
         );
         if (this.isTeacher) return taskRequests;
-        else return taskRequests.filter((req) => req.contextTask.id == this.currentTask.id);
+        else return taskRequests.filter((req) => req.contextTask.id == this.currentTaskId);
       }
       return requests;
     },

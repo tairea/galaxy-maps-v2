@@ -1,9 +1,13 @@
 <template>
-  <v-dialog v-model="dialog" width="500">
+  <v-dialog v-model="dialog" fullscreen hide-overlay>
+    <!-- <v-dialog v-model="dialog" width="90%"> -->
     <div class="create-dialog">
       <!-- HEADER -->
       <div class="dialog-header">
-        <p class="mb-0">Student Details</p>
+        <p class="mb-0 d-flex justify-center align-center">Student Overview</p>
+        <v-btn icon @click="dialog = false">
+          <v-icon color="missionAccent">{{ mdiClose }}</v-icon>
+        </v-btn>
       </div>
       <div class="create-dialog-content">
         <div class="d-flex justify-center align-center">
@@ -86,6 +90,7 @@
 import StudentCardStatus from "@/components/CohortView/StudentDataIterator/StudentCard/StudentCardStatus.vue";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
+import { mdiClose } from "@mdi/js";
 
 export default {
   name: "ViewStudentDetails",
@@ -110,6 +115,7 @@ export default {
   },
   mounted() {},
   data: () => ({
+    mdiClose,
     date: "",
   }),
   computed: {
@@ -161,12 +167,16 @@ export default {
   display: flex;
   flex-wrap: wrap;
   overflow-x: hidden;
+  height: 100%;
 
   .dialog-header {
     width: 100%;
     padding: 20px;
     text-transform: uppercase;
     border-bottom: 1px solid var(--v-missionAccent-base);
+    display: flex;
+    justify-content: space-between;
+    height: 80px;
   }
 }
 
