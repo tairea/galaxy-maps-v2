@@ -4,7 +4,7 @@
     <div v-for="course in courses" :key="course.id" class="d-flex justify-center align-center">
       <div class="active-hours-box">
         <p class="label">{{ course.title }}</p>
-        <p class="label text-center label-value">{{ calcHours(course.id) }}</p>
+        <p class="label text-center label-value">{{ calcHours(course.id).toFixed(1) }}</p>
       </div>
     </div>
     <div v-if="courses.length === 0" class="d-flex justify-center align-center">
@@ -41,9 +41,10 @@ export default {
   computed: {},
   methods: {
     calcHours(courseId) {
-      return (
-        this.timeData.find((courseHourData) => courseHourData.course.id === courseId)?.hours ?? 0
-      );
+      const courseHours =
+        this.timeData.find((courseHourData) => courseHourData.course.id === courseId)?.hours ?? 0;
+      this.$emit("emitUpHours", courseHours);
+      return courseHours;
     },
   },
 };

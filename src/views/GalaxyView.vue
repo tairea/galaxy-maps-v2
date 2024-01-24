@@ -139,6 +139,7 @@ import EdgeInfoPanel from "@/components/GalaxyView/EdgeInfoPanel.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 
+import confetti from "canvas-confetti";
 import {
   fetchAllPeopleInCourseByCourseId,
   fetchAllCohortsInCourseByCourseId,
@@ -146,6 +147,7 @@ import {
   fetchPersonByPersonId,
   fetchTopicByCourseIdTopicId,
 } from "@/lib/ff";
+import firebase from "firebase/compat/app";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
@@ -211,6 +213,7 @@ export default {
       topicTasks: [],
       galaxyCompletedDialog: false,
       course: null,
+      xpPointsForThisGalaxy: 2000,
     };
   },
   watch: {
@@ -497,8 +500,69 @@ export default {
       console.log("selected edge emitted:", selected);
       this.currentEdge = selected;
     },
-    galaxyCompleted() {
+    async galaxyCompleted() {
       this.galaxyCompletedDialog = true;
+      // confetti fireworks
+      var duration = 30 * 1000;
+      var animationEnd = Date.now() + duration;
+      var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+      var interval = setInterval(() => {
+        var timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+
+        var particleCount = 50 * (timeLeft / duration);
+        // since particles fall down, start a bit higher than random
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: this.randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+          colors: this.getGMColours(),
+        });
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: this.randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+          colors: this.getGMColours(),
+        });
+      }, 250);
+      // xp points
+      console.log(
+        "updating XP points: " +
+          this.person.xpPointsTotal +
+          " + " +
+          this.xpPointsForThisGalaxy +
+          " = " +
+          (this.person.xpPointsTotal + this.xpPointsForThisGalaxy),
+      );
+      await db
+        .collection("people")
+        .doc(this.person.id)
+        .update({
+          xpPointsTotal: firebase.firestore.FieldValue.increment(this.xpPointsForThisGalaxy),
+        });
+    },
+    randomInRange(min, max) {
+      return Math.random() * (max - min) + min;
+    },
+    getGMColours() {
+      let colours = [];
+      if (this.$vuetify.theme.isDark) {
+        colours = [
+          this.$vuetify.theme.themes.dark.missionAccent,
+          this.$vuetify.theme.themes.dark.baseAccent,
+          // this.$vuetify.theme.themes.dark.galaxyAccent,
+        ];
+      } else {
+        colours = [
+          this.$vuetify.theme.themes.light.missionAccent,
+          this.$vuetify.theme.themes.light.baseAccent,
+          // this.$vuetify.theme.themes.light.galaxyAccent,
+        ];
+      }
+      return colours;
     },
   },
 };
