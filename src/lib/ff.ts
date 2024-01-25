@@ -29,6 +29,20 @@ export const fetchStudentCohortsByPersonId = async (
   return result.data.cohorts;
 };
 
+// WIP@ian: fetch students submissions (across all courses) by student id
+export const fetchStudentSubmissionsByPersonId = async (
+  personId: string,
+): Promise<Array<{ id: string } & Record<string, any>>> => {
+  const data = {
+    personId,
+  };
+  const getStudentSubmissionsByPersonId = functions.httpsCallable(
+    "getStudentSubmissionsByPersonId",
+  );
+  const result = await getStudentSubmissionsByPersonId(data);
+  return result.data.submissions;
+};
+
 export const fetchAllCohortsInCourseByCourseId = async (
   courseId: string,
 ): Promise<Array<{ id: string } & Record<string, any>>> => {

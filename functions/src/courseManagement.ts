@@ -326,6 +326,33 @@ export const getStudentCohortsByPersonIdHttpsEndpoint = runWith({}).https.onCall
   },
 );
 
+// get student submissions by personId
+export const getStudentSubmissionsByPersonIdHttpsEndpoint = runWith({}).https.onCall(
+  async (data, context) => {
+    requireAuthenticated(context);
+
+    const personId = data.personId as string | null;
+    if (personId == null) {
+      throw new HttpsError("invalid-argument", "missing personId");
+    }
+
+    // get all course submissions (thanks copilot)
+    const coursesSnapshot = await db.collection("courses").get();
+    const submissionsPromises = coursesSnapshot.docs.map(async (courseDoc) => {
+      const submissionsSnapshot = await courseDoc.ref.collection("submissions").get();
+      return submissionsSnapshot.docs.map((submissionDoc) => ({
+        courseId: courseDoc.id,
+        submissionId: submissionDoc.id,
+        ...submissionDoc.data(),
+      }));
+    });
+    const submissions = await Promise.all(submissionsPromises);
+
+    console.log("submissions:", submissions.flat());
+    return submissions.flat();
+  },
+);
+
 // Get all cohorts in course by courseId
 export const getCohortsByCourseIdHttpsEndpoint = runWith({}).https.onCall(async (data, context) => {
   requireAuthenticated(context);

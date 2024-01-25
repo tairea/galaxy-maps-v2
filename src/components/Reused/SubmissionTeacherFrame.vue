@@ -1,6 +1,6 @@
 <template>
-  <div id="submission-panel">
-    <h2 class="submission-label">Work submitted for review</h2>
+  <div :id="studentOverview ? 'studentOverview' : 'submission-panel'">
+    <h2 v-if="!studentOverview" class="submission-label">Work submitted for review</h2>
     <div v-if="submissions.length > 0">
       <SubmissionTeacherPanel
         v-for="submission in submissions"
@@ -28,7 +28,14 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "SubmissionTeacherFrame",
-  props: ["courses", "students", "isTeacher"],
+  props: [
+    "courses",
+    "students",
+    "isTeacher",
+    "studentOverview",
+    "allStudentsSubmissions",
+    "completedSubmissionsOnly",
+  ],
   components: {
     SubmissionTeacherPanel,
   },
@@ -41,9 +48,11 @@ export default {
   },
   async mounted() {
     this.loading = true;
-    for (const course of this.courses) {
-      const unsubscribe = await this.getAllSubmittedWorkByCourseId(course.id || course);
-      this.unsubscribes.push(unsubscribe);
+    if (this.courses) {
+      for (const course of this.courses) {
+        const unsubscribe = await this.getAllSubmittedWorkByCourseId(course.id || course);
+        this.unsubscribes.push(unsubscribe);
+      }
     }
     this.loading = false;
   },
@@ -74,19 +83,40 @@ export default {
       return this.$route.name == "SolarSystemView";
     },
     submissions() {
+      let submissions = [];
+      // get all student submissions for this course
+      if (this.courses) {
+        submissions = this.courseSubmissions.filter((submission) =>
+          this.students?.some((student) => {
+            return student.id
+              ? student.id === submission.studentId
+              : student === submission.studentId;
+          }),
+        );
+      }
       // get all student submissions
-      const submissions = this.courseSubmissions.filter((submission) =>
-        this.students?.some((student) => {
-          return student.id
-            ? student.id === submission.studentId
-            : student === submission.studentId;
-        }),
-      );
+      else if (this.allStudentsSubmissions) {
+        submissions = this.allStudentsSubmissions.filter((submission) =>
+          this.students?.some((student) => {
+            return student.id
+              ? student.id === submission.studentId
+              : student === submission.studentId;
+          }),
+        );
+      }
+
+      let filteredSubmissions = [];
 
       // Filter for "inreview" only
-      let filteredSubmissions = submissions.filter(
-        (submission) => submission.taskSubmissionStatus === "inreview",
-      );
+      if (this.completedSubmissionsOnly) {
+        filteredSubmissions = submissions.filter(
+          (submission) => submission.taskSubmissionStatus === "completed",
+        );
+      } else {
+        filteredSubmissions = submissions.filter(
+          (submission) => submission.taskSubmissionStatus === "inreview",
+        );
+      }
 
       filteredSubmissions.sort(
         (a, b) =>
@@ -122,6 +152,10 @@ export default {
   overflow-y: scroll;
   max-height: 40%;
   transition: all 0.2s ease-in-out;
+}
+
+.studentOverview {
+  height: 100% !important;
 }
 
 #submission-panel:hover {

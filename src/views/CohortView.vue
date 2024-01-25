@@ -69,6 +69,9 @@ export default {
       cohort: null,
     };
   },
+  async mounted() {
+    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
+  },
   computed: {
     ...mapState(useRootStore, ["currentCohortId", "person", "userStatus"]),
     ready() {
@@ -88,9 +91,6 @@ export default {
     graphLabel() {
       return this.studentsView ? "inactive-graph-label" : "graph-label";
     },
-  },
-  async mounted() {
-    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
   },
 };
 </script>

@@ -14,6 +14,17 @@
       >
         <v-icon small> {{ mdiPencil }} </v-icon>
       </v-btn>
+      <v-btn
+        v-if="isStudentPopupView"
+        v-bind="attrs"
+        v-on="on"
+        class="mission-edit-button"
+        outlined
+        color="primary"
+        x-small
+      >
+        <v-icon small> {{ mdiPencil }} </v-icon>
+      </v-btn>
       <v-btn v-else v-bind="attrs" v-on="on" color="baseAccent" class="ma-4" outlined>
         <v-icon class="pr-2">{{ mdiPencil }}</v-icon>
         edit account
@@ -141,7 +152,7 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "StudentEditDialog",
-  props: ["on", "attrs", "isDashboardView"],
+  props: ["on", "attrs", "isDashboardView", "isStudentPopupView"],
   components: {},
   mounted() {},
   computed: {

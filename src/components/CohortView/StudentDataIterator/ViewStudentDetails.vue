@@ -9,85 +9,127 @@
           <v-icon color="missionAccent">{{ mdiClose }}</v-icon>
         </v-btn>
       </div>
+      <!-- CONTENT SECTION -->
       <div class="create-dialog-content">
-        <div class="d-flex justify-center align-center">
-          <StudentCardStatus
-            :student="student"
-            :date="date"
-            :status="status"
-            :size="100"
-            class="pl-1"
+        <!-- STUDENT NAME & EMAIL -->
+        <div class="student-details">
+          <div class="d-flex justify-center align-center">
+            <StudentCardStatus
+              :student="student"
+              :date="date"
+              :status="status"
+              :size="100"
+              class="pl-1"
+            />
+          </div>
+
+          <div
+            class="student-name-email-id d-flex flex-column justify-center"
+            style="width: 50%; padding-left: 50px"
+          >
+            <div class="d-flex justify-start ml-6 align-center" style="width: 100%">
+              <div class="field">
+                <p class="label">First Name:</p>
+                <p class="value">{{ student.firstName }}</p>
+              </div>
+              <div class="field ml-8">
+                <p class="label">Last Name:</p>
+                <p class="value">{{ student.lastName }}</p>
+              </div>
+              <div class="field ml-8">
+                <p class="label">E-mail:</p>
+                <p class="value">{{ student.email }}</p>
+              </div>
+              <div v-if="student.parentEmail" class="field ml-8">
+                <p class="label">Parent E-mail:</p>
+                <p class="value">{{ student.parentEmail }}</p>
+              </div>
+            </div>
+            <div class="student-id d-flex justify-start ml-6 align-center" style="width: 100%">
+              <div v-if="student.nsn" class="field">
+                <p class="label">Student NSN:</p>
+                <p class="value">{{ student.nsn }}</p>
+              </div>
+              <div v-if="student.id" class="field">
+                <p class="label">Student ID:</p>
+                <p class="value text-caption" style="color: gray">{{ student.id }}</p>
+              </div>
+              <!-- edit button -->
+            </div>
+            <div class="edit-button ml-6">
+              <StudentEditDialog @close="" :isStudentPopupView="true" />
+            </div>
+          </div>
+
+          <div class="d-flex flex-column justify-center align-center" style="width: 50%">
+            <!-- EMAIL -->
+            <v-btn
+              @click="sendMail()"
+              width="50%"
+              class="ma-3 disabledButton"
+              color="baseAccent"
+              outlined
+              :dark="dark"
+              :light="!dark"
+            >
+              Send Email
+            </v-btn>
+            <!-- DASHBOARD -->
+            <v-btn
+              @click="routeToStudentDashboard()"
+              width="50%"
+              class="ma-3 disabledButton"
+              color="missionAccent"
+              outlined
+              disabled
+              :dark="dark"
+              :light="!dark"
+            >
+              View Users Dashboard
+            </v-btn>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTENT SECTION = SUBMISSIONS -->
+      <div class="create-dialog-content submissions-container">
+        <div class="submissions-awaiting-review">
+          <p class="cohortAccent--text">SUBMISSIONS AWAITING REVIEW</p>
+          <SubmissionTeacherFrame
+            :students="students"
+            :allStudentsSubmissions="submissions"
+            class="mt-4"
+            :studentOverview="true"
           />
         </div>
-        <div>
-          <div class="field">
-            <p class="label">First Name:</p>
-            <p class="value">{{ student.firstName }}</p>
-          </div>
-          <div class="field">
-            <p class="label">Last Name:</p>
-            <p class="value">{{ student.lastName }}</p>
-          </div>
-          <div class="field">
-            <p class="label">E-mail:</p>
-            <p class="value">{{ student.email }}</p>
-          </div>
-          <div v-if="student.parentEmail" class="field">
-            <p class="label">Parent E-mail:</p>
-            <p class="value">{{ student.parentEmail }}</p>
-          </div>
-          <div v-if="student.nsn" class="field">
-            <p class="label">Student ID:</p>
-            <p class="value">{{ student.nsn }}</p>
-          </div>
+        <div class="submissions-completed">
+          <p class="cohortAccent--text">SUBMISSIONS COMPLETED</p>
         </div>
-        <v-row class="mt-3 flex-column justify-center align-center">
-          <!-- EDIT -->
-
-          <!-- <v-btn
-            @click="openEditDialog()"
-            outlined
-            :dark="dark"
-            :light="!dark"
-            class="ma-4"
-            width="50%"
-          >
-            Edit
-          </v-btn> -->
-
-          <!-- EMAIL -->
-          <v-btn
-            @click="sendMail()"
-            width="50%"
-            class="ma-3 disabledButton"
-            color="baseAccent"
-            outlined
-            :dark="dark"
-            :light="!dark"
-          >
-            Send Email
-          </v-btn>
-          <!-- DASHBOARD -->
-          <v-btn
-            @click="routeToStudentDashboard()"
-            width="50%"
-            class="ma-3 disabledButton"
-            color="missionAccent"
-            outlined
-            disabled
-            :dark="dark"
-            :light="!dark"
-          >
-            View Users Dashboard
-          </v-btn>
-        </v-row>
       </div>
+
+      <!-- CONTENT SECTION = REQUESTS FOR HELP -->
+      <div class="create-dialog-content help-container">
+        <div class="help-awaiting-reply">
+          <p class="galaxyAccent--text">REQUESTS FOR HELP AWAITING REPLY</p>
+          <RequestForHelpTeacherFrame :students="students" />
+        </div>
+        <div class="help-completed">
+          <p class="galaxyAccent--text">REQUESTS FOR HELP COMPLETED</p>
+        </div>
+      </div>
+
+      <!-- CONTENT SECTION -->
+      <div class="create-dialog-content">yoza</div>
     </div>
   </v-dialog>
 </template>
 
 <script>
+import { fetchStudentSubmissionsByPersonId } from "@/lib/ff";
+import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import StudentCardStatus from "@/components/CohortView/StudentDataIterator/StudentCard/StudentCardStatus.vue";
+import StudentEditDialog from "@/components/Dialogs/StudentEditDialog.vue";
+import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
 import { mdiClose } from "@mdi/js";
@@ -100,24 +142,21 @@ export default {
   },
   components: {
     StudentCardStatus,
+    StudentEditDialog,
+    RequestForHelpTeacherFrame,
+    SubmissionTeacherFrame,
   },
-  created() {
-    this.counterInterval = setInterval(
-      function () {
-        this.setTime();
-      }.bind(this),
-      10000,
-    );
-    return this.setTime();
-  },
-  destroyed() {
-    clearInterval(this.counterInterval);
-  },
-  mounted() {},
   data: () => ({
     mdiClose,
     date: "",
+    students: [],
+    submissions: [],
   }),
+  async mounted() {
+    this.students.push(this.student);
+    this.submissions = await fetchStudentSubmissionsByPersonId(this.student.id);
+    console.log("submissions from ff", this.submissions);
+  },
   computed: {
     ...mapState(useRootStore, ["userStatus"]),
     teacher() {
@@ -145,14 +184,12 @@ export default {
         encodeURIComponent(yourMessage);
     },
     openEditDialog() {
-      this.$emit("cancel");
-      this.$emit("edit", student);
+      // this.$emit("cancel");
+      // this.$emit("edit", student);
+      console.log("todo: edit person dialog");
     },
     routeToStudentDashboard() {
       alert("to do: routeToStudentDashboard()");
-    },
-    setTime() {
-      this.date = Date.now();
     },
   },
 };
@@ -165,8 +202,9 @@ export default {
   background-color: var(--v-background-base);
   border: 1px solid var(--v-missionAccent-base);
   display: flex;
-  flex-wrap: wrap;
+  // flex-wrap: wrap;
   overflow-x: hidden;
+  flex-direction: column;
   height: 100%;
 
   .dialog-header {
@@ -182,6 +220,8 @@ export default {
 
 .create-dialog-content {
   display: flex;
+  // justify-content: space-around;
+  // align-items: space-around;
   justify-content: space-around;
   align-items: space-around;
   flex-direction: column;
@@ -189,6 +229,11 @@ export default {
   padding: 20px;
   width: 100%;
   background-color: var(--v-background-base);
+  border-bottom: 1px solid var(--v-missionAccent-base);
+  // border: 1px solid yellow;
+  .student-details {
+    display: flex;
+  }
 
   .label {
     font-size: 0.7rem;
@@ -201,6 +246,27 @@ export default {
 
   .custom-input {
     color: var(--v-missionAccent-base);
+  }
+}
+
+.submissions-container,
+.help-container {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  padding: 0px;
+  justify-content: flex-start;
+
+  .submissions-awaiting-review,
+  .help-awaiting-reply {
+    width: 60%;
+    border-right: 1px solid var(--v-missionAccent-base);
+    padding: 20px;
+  }
+  .submissions-completed,
+  .help-completed {
+    width: 40%;
+    padding: 20px;
   }
 }
 

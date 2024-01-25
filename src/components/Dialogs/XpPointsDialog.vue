@@ -27,7 +27,10 @@
       <div class="create-dialog">
         <!-- HEADER -->
         <div class="dialog-header">
-          <p class="mb-0">XP Points</p>
+          <p class="mb-0 d-flex justify-center align-center">XP Points</p>
+          <v-btn icon @click="dialog = false">
+            <v-icon color="missionAccent">{{ mdiClose }}</v-icon>
+          </v-btn>
         </div>
         <!-- CONTENT -->
         <div class="create-dialog-content">
@@ -256,6 +259,9 @@ export default {
     padding: 20px;
     text-transform: uppercase;
     border-bottom: 1px solid var(--v-missionAccent-base);
+    display: flex;
+    justify-content: space-between;
+    height: 80px;
   }
 }
 

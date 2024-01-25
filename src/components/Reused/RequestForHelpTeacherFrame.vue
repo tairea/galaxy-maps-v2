@@ -42,10 +42,12 @@ export default {
   },
   async mounted() {
     this.loading = true;
-    for (const course of this.courses) {
-      // console.log("getting requests for course: ", course);
-      const unsubscribe = await this.getRequestsForHelpByCourseId(course.id);
-      this.unsubscribes.push(unsubscribe);
+    if (this.courses) {
+      for (const course of this.courses) {
+        // console.log("getting requests for course: ", course);
+        const unsubscribe = await this.getRequestsForHelpByCourseId(course.id);
+        this.unsubscribes.push(unsubscribe);
+      }
     }
     this.loading = false;
   },
