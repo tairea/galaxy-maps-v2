@@ -336,10 +336,13 @@ export const getStudentSubmissionsByPersonIdHttpsEndpoint = runWith({}).https.on
       throw new HttpsError("invalid-argument", "missing personId");
     }
 
-    // get all course submissions (thanks copilot)
+    // get all course submissions (thanks copilot & stefan)
     const coursesSnapshot = await db.collection("courses").get();
     const submissionsPromises = coursesSnapshot.docs.map(async (courseDoc) => {
-      const submissionsSnapshot = await courseDoc.ref.collection("submissions").get();
+      const submissionsSnapshot = await courseDoc.ref
+        .collection("submissionsForReview")
+        .where("studentId", "==", personId)
+        .get();
       return submissionsSnapshot.docs.map((submissionDoc) => ({
         courseId: courseDoc.id,
         submissionId: submissionDoc.id,
@@ -349,7 +352,7 @@ export const getStudentSubmissionsByPersonIdHttpsEndpoint = runWith({}).https.on
     const submissions = await Promise.all(submissionsPromises);
 
     console.log("submissions:", submissions.flat());
-    return submissions.flat();
+    return { submissions: submissions.flat() };
   },
 );
 

@@ -113,6 +113,7 @@ export default {
   },
   async mounted() {
     const studentCourses = await fetchStudentCoursesActivityByPersonId(this.student.id);
+    console.log("studentCourses", studentCourses);
     this.cohort = await fetchCohortByCohortId(this.currentCohortId);
     const cohortActivities = studentCourses.filter((a) =>
       this.cohort.courses.some((b) => b === a.course.id),
@@ -120,6 +121,7 @@ export default {
     this.activities = cohortActivities.map((course) => {
       const currentTopic = course.activities.find((action) => action.type === "Topic");
       const currentTask = course.activities.find((action) => action.type === "Task");
+      console.log("currentTopic", currentTopic);
       return {
         ...course,
         currentTopic,

@@ -40,6 +40,7 @@ export const fetchStudentSubmissionsByPersonId = async (
     "getStudentSubmissionsByPersonId",
   );
   const result = await getStudentSubmissionsByPersonId(data);
+  console.log("result.data from ff.ts: ", result.data);
   return result.data.submissions;
 };
 
@@ -171,13 +172,13 @@ export const updatePerson = async (personId: string, person: object): Promise<vo
 
 export const fetchPersonsTasksByPersonIdCourseIdTopicId = async (
   personId: string,
-  courseId: string,
   topicId: string,
+  courseId: string,
 ) => {
   const data = {
     personId,
-    courseId,
     topicId,
+    courseId,
   };
   const getPersonTasksByPersonIdCourseIdTopicId = functions.httpsCallable(
     "getPersonTasksByPersonIdCourseIdTopicId",

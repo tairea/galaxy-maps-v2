@@ -119,13 +119,23 @@
       </div>
 
       <!-- CONTENT SECTION -->
-      <div class="create-dialog-content">yoza</div>
+      <div class="create-dialog-content">
+        <!-- <ProgressionLineChart
+          :key="courseData.id"
+          :courseData="courseData"
+          :timeframe="timeframe"
+          :selectedPersons="selectedPersons"
+          :unselectedPersons="unselectedPersons"
+          class="line-chart"
+        /> -->
+      </div>
     </div>
   </v-dialog>
 </template>
 
 <script>
 import { fetchStudentSubmissionsByPersonId } from "@/lib/ff";
+import ProgressionLineChart from "@/components/Reused/ProgressionLineChart.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import StudentCardStatus from "@/components/CohortView/StudentDataIterator/StudentCard/StudentCardStatus.vue";
 import StudentEditDialog from "@/components/Dialogs/StudentEditDialog.vue";
@@ -141,19 +151,22 @@ export default {
     student: { type: Object },
   },
   components: {
+    ProgressionLineChart,
+    RequestForHelpTeacherFrame,
     StudentCardStatus,
     StudentEditDialog,
-    RequestForHelpTeacherFrame,
     SubmissionTeacherFrame,
   },
   data: () => ({
     mdiClose,
     date: "",
     students: [],
-    submissions: [],
+    submissions: null,
   }),
   async mounted() {
     this.students.push(this.student);
+
+    // ==== get submission data
     this.submissions = await fetchStudentSubmissionsByPersonId(this.student.id);
     console.log("submissions from ff", this.submissions);
   },

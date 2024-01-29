@@ -423,6 +423,7 @@ export const getStudentCoursesDataXAPIQuery = async (personId: string) => {
       description: string;
       topic: string;
       task: string;
+      id: string;
     }[];
   }[];
 
@@ -451,13 +452,6 @@ export const getStudentCoursesDataXAPIQuery = async (personId: string) => {
 
     // sanitise statements data
     const activities = group.statements.map((statement, index) => {
-      if (statement.description.includes("Completed Task:")) {
-        taskCompletedCount++;
-      }
-      if (statement.description.includes("Completed Topic:")) {
-        topicCompletedCount++;
-      }
-
       const [action, title] = statement.description.split(": ");
       const [status, type] = action.split(" ");
 
@@ -467,9 +461,20 @@ export const getStudentCoursesDataXAPIQuery = async (personId: string) => {
         status,
         type,
         title,
-        id: statement.task,
+        id: "",
+        // id: statement.task,
+        // id: statement.topic,
         context: statement.context,
       };
+
+      if (statement.description.includes("Completed Task:")) {
+        taskCompletedCount++;
+        newStatement.id = statement.task;
+      }
+      if (statement.description.includes("Completed Topic:")) {
+        topicCompletedCount++;
+        newStatement.id = statement.topic;
+      }
 
       return newStatement;
     });
@@ -639,6 +644,8 @@ export const getCohortCoursesDataXAPIQuery = async (cohortId: string) => {
         if (statement.description.includes("Completed Topic:")) topicCompletedCount++;
 
         const [action, title] = statement.description.split(": ");
+        // Todo: this split works for "Started Topic" but NOT "Work declined"
+        // maybe only query topic and task statements ?
         const [status, type] = action.split(" ");
         const id = statement.task;
 

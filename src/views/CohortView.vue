@@ -19,7 +19,7 @@
           </div>
         </div>
         <StudentDataIterator v-if="studentsView" class="mt-4" :cohort="cohort" />
-        <CohortGraphs v-else :cohort="cohort" />
+        <CohortGraphs v-else :cohort="cohort" :cohortsCoursesData="cohortsCoursesData" />
       </div>
     </div>
 
@@ -47,7 +47,7 @@ import BackButton from "@/components/Reused/BackButton.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 import CohortGraphs from "@/components/CohortView/CohortGraphs.vue";
-import { fetchCohortByCohortId } from "@/lib/ff";
+import { fetchCohortByCohortId, fetchCohortCoursesActivityByCohortId } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
 
@@ -67,10 +67,14 @@ export default {
     return {
       studentsView: true,
       cohort: null,
+      cohortsCoursesData: [],
     };
   },
   async mounted() {
     this.cohort = await fetchCohortByCohortId(this.currentCohortId);
+
+    // ==== get cohort course data from LRS
+    this.cohortsCoursesData = await fetchCohortCoursesActivityByCohortId(this.cohort.id);
   },
   computed: {
     ...mapState(useRootStore, ["currentCohortId", "person", "userStatus"]),

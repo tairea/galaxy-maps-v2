@@ -104,7 +104,7 @@ import { doc, getDoc } from "firebase/firestore";
 
 export default {
   name: "CohortGraphs",
-  props: ["cohort"],
+  props: ["cohort", "cohortsCoursesData"],
   components: {
     ProgressionLineChart,
     ActivityBarChart,
@@ -113,7 +113,6 @@ export default {
   },
   data() {
     return {
-      cohortsCoursesData: [],
       cohortActivityData: [],
       timeframe: {},
       studentsWithData: [],
@@ -131,7 +130,7 @@ export default {
     const currentCohort = await fetchCohortByCohortId(this.currentCohortId);
 
     // ==== get cohort course data from LRS
-    this.cohortsCoursesData = await fetchCohortCoursesActivityByCohortId(this.cohort.id);
+    // this.cohortsCoursesData = await fetchCohortCoursesActivityByCohortId(this.cohort.id);
 
     // add students with data
     const studentsArr = [];
