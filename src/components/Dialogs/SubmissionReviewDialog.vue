@@ -29,24 +29,31 @@
                     <v-simple-table>
                       <tr
                         class="dialog-context-description"
-                        style="color: var(--v-missionAccent-base); font-weight: 800"
+                        style="color: var(--v-galaxyAccent-base)"
                       >
-                        <td>MISSION:</td>
-                        <td>{{ submission.contextTask.title }}</td>
+                        <td class="pr-2">Galaxy:</td>
+                        <td>{{ submission.contextCourse.title }}</td>
                       </tr>
+
                       <tr
                         class="dialog-context-description"
                         style="color: var(--v-missionAccent-base)"
                       >
-                        <td>System:</td>
+                        <td></td>
+                        <td class="text-center">></td>
+                        <td class="pr-2">System:</td>
                         <td>{{ submission.contextTopic.label }}</td>
                       </tr>
                       <tr
                         class="dialog-context-description"
-                        style="color: var(--v-galaxyAccent-base)"
+                        style="color: var(--v-missionAccent-base); font-weight: 800"
                       >
-                        <td>Galaxy:</td>
-                        <td>{{ submission.contextCourse.title }}</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td class="text-center">></td>
+                        <td class="pr-2">MISSION:</td>
+                        <td>{{ submission.contextTask.title }}</td>
                       </tr>
                     </v-simple-table>
                   </div>
@@ -265,7 +272,7 @@ export default {
         .collection("courses")
         .doc(this.submission.contextCourse.id)
         .collection("submissionsForReview")
-        .doc(this.submission.id)
+        .doc(this.submission.submissionId)
         .update({
           // update submission to completed
           teacherId: this.person.id,

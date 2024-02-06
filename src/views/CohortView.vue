@@ -31,6 +31,7 @@
       />
       <SubmissionTeacherFrame
         v-if="teacher"
+        :isTeacher="teacher"
         :courses="courses"
         :students="cohort.students"
         class="mt-4"

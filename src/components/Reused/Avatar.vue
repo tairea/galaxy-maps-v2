@@ -100,24 +100,26 @@ export default {
     };
   },
   async mounted() {
-    if (this.profile) {
-      this.profileData = this.profile;
-    } else if (this.owner) {
-      const doc = await this.owner.get();
-      if (this.owner.path.startsWith("organisations")) {
-        this.organisationData = doc;
-      } else {
-        this.profileData = doc;
+    this.$nextTick(async () => {
+      if (this.profile) {
+        this.profileData = this.profile;
+      } else if (this.owner) {
+        const doc = await this.owner.get();
+        if (this.owner.path.startsWith("organisations")) {
+          this.organisationData = doc;
+        } else {
+          this.profileData = doc;
+        }
+      } else if (this.personId) {
+        await db
+          .collection("people")
+          .doc(this.personId)
+          .get()
+          .then((doc) => {
+            this.profileData = doc.data();
+          });
       }
-    } else if (this.personId) {
-      await db
-        .collection("people")
-        .doc(this.personId)
-        .get()
-        .then((doc) => {
-          this.profileData = doc.data();
-        });
-    }
+    });
   },
   computed: {
     ...mapState(useRootStore, ["userStatus"]),

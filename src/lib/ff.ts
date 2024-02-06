@@ -40,7 +40,21 @@ export const fetchStudentSubmissionsByPersonId = async (
     "getStudentSubmissionsByPersonId",
   );
   const result = await getStudentSubmissionsByPersonId(data);
-  console.log("result.data from ff.ts: ", result.data);
+  return result.data.submissions;
+};
+
+export const fetchStudentSubmissionsByPersonIdForATeacher = async (
+  personId: string,
+  teacherId: string,
+) => {
+  const data = {
+    personId,
+    teacherId,
+  };
+  const getStudentSubmissionsByPersonIdForATeacher = functions.httpsCallable(
+    "getStudentSubmissionsByPersonIdForATeacher",
+  );
+  const result = await getStudentSubmissionsByPersonIdForATeacher(data);
   return result.data.submissions;
 };
 

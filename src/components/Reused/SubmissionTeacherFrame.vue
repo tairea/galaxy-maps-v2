@@ -8,6 +8,7 @@
         :submission="submission"
         :isDashboardView="isDashboardView"
         :isTeacher="isTeacher"
+        :showCourseImage="showCourseImage"
       />
     </div>
     <div v-if="!loading && submissions.length == 0">
@@ -35,26 +36,33 @@ export default {
     "studentOverview",
     "allStudentsSubmissions",
     "completedSubmissionsOnly",
+    "loading",
+    "showCourseImage",
   ],
   components: {
     SubmissionTeacherPanel,
   },
+  watch: {
+    courseSubmissions(newVal, oldVal) {
+      console.log("=== course submissions changed");
+      console.log("old val:", oldVal);
+      console.log("new val:", newVal);
+      this.$emit("submissionsChanged");
+    },
+  },
   data() {
     return {
-      loading: false,
       allSubmissions: [],
       unsubscribes: [],
     };
   },
   async mounted() {
-    this.loading = true;
     if (this.courses) {
       for (const course of this.courses) {
         const unsubscribe = await this.getAllSubmittedWorkByCourseId(course.id || course);
         this.unsubscribes.push(unsubscribe);
       }
     }
-    this.loading = false;
   },
   destroyed() {
     this.resetTeachersSubmissions();
@@ -84,9 +92,10 @@ export default {
     },
     submissions() {
       let submissions = [];
-      // get all student submissions for this course
-      if (this.courses) {
-        submissions = this.courseSubmissions.filter((submission) =>
+
+      // get all student submissions
+      if (this.allStudentsSubmissions) {
+        submissions = this.allStudentsSubmissions.filter((submission) =>
           this.students?.some((student) => {
             return student.id
               ? student.id === submission.studentId
@@ -94,9 +103,10 @@ export default {
           }),
         );
       }
-      // get all student submissions
-      else if (this.allStudentsSubmissions) {
-        submissions = this.allStudentsSubmissions.filter((submission) =>
+
+      // get all student submissions for this course
+      else if (this.courses) {
+        submissions = this.courseSubmissions.filter((submission) =>
           this.students?.some((student) => {
             return student.id
               ? student.id === submission.studentId
@@ -110,13 +120,19 @@ export default {
       // Filter for "inreview" only
       if (this.completedSubmissionsOnly) {
         filteredSubmissions = submissions.filter(
-          (submission) => submission.taskSubmissionStatus === "completed",
+          (submission) => submission.taskSubmissionStatus != "inreview",
         );
       } else {
         filteredSubmissions = submissions.filter(
           (submission) => submission.taskSubmissionStatus === "inreview",
         );
       }
+
+      console.log(
+        "filtered submissions: completed only ? ",
+        this.completedSubmissionsOnly,
+        filteredSubmissions,
+      );
 
       filteredSubmissions.sort(
         (a, b) =>

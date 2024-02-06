@@ -1,5 +1,5 @@
 <template>
-  <div class="submission-card" :class="reviewed ? 'reviewed-submission' : ''">
+  <div class="submission-card" :class="styleByStatus">
     <v-expansion-panels flat v-model="showCard">
       <v-expansion-panel
         v-for="(sub, i) in [submission]"
@@ -9,19 +9,24 @@
       >
         <v-expansion-panel-header ref="panel" class="pa-0">
           <div class="d-flex flex-row">
-            <Avatar
-              v-if="isDashboardView"
-              :profile="courseContextProfile"
-              size="30"
-              :colourBorder="true"
-            />
-            <Avatar
-              v-if="requesterPerson"
-              :profile="requesterPerson"
-              size="30"
-              :colourBorder="true"
-              :class="isDashboardView ? 'request-image' : ''"
-            />
+            <div v-if="showCourseImage">
+              <Course :course="submission.contextCourse" class="pa-0" />
+            </div>
+            <div v-else>
+              <Avatar
+                v-if="isDashboardView"
+                :profile="courseContextProfile"
+                size="30"
+                :colourBorder="true"
+              />
+              <Avatar
+                v-if="requesterPerson"
+                :profile="requesterPerson"
+                size="30"
+                :colourBorder="true"
+                :class="isDashboardView ? 'request-image' : ''"
+              />
+            </div>
             <div class="submission-time d-flex flex-column align-center ml-auto pl-1">
               <span v-if="reviewed" class="ml-auto mt-1 status-text baseAccent--text">
                 {{ submission.taskSubmissionStatus.toUpperCase() }}</span
@@ -76,6 +81,7 @@
 
 <script>
 import Avatar from "@/components/Reused/Avatar.vue";
+import Course from "@/components/Reused/Course.vue";
 import SubmissionReviewDialog from "@/components/Dialogs/SubmissionReviewDialog.vue";
 import { fetchPersonByPersonId } from "@/lib/ff";
 import useRootStore from "@/store/index";
@@ -84,10 +90,11 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "SubmissionTeacherPanel",
-  props: ["submission", "on", "attrs", "isDashboardView", "isTeacher"],
+  props: ["submission", "on", "attrs", "isDashboardView", "isTeacher", "showCourseImage"],
   components: {
     SubmissionReviewDialog,
     Avatar,
+    Course,
   },
   data() {
     return {
@@ -128,11 +135,24 @@ export default {
         lastName: "",
       };
     },
+    styleByStatus() {
+      // use a switch statement to return the class name based on some condition
+      switch (this.submission.taskSubmissionStatus) {
+        case "completed":
+          return "completed-submission";
+        case "inreview":
+          return "inreview-submission";
+        case "declined":
+          return "declined-submission";
+        default:
+          return "default-submission";
+      }
+    },
   },
   methods: {
     ...mapActions(useRootStore, ["setPanelCard"]),
     getHumanDate(ts) {
-      return moment(ts.seconds * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
+      return moment((ts.seconds ? ts.seconds : ts._seconds) * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
     },
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
@@ -242,6 +262,19 @@ export default {
 
 .reviewed-submission {
   border: 1px solid var(--v-cohortAccent-base);
+}
+
+.completed-submission {
+  border: 1px solid var(--v-baseAccent-base);
+}
+.inreview-submission {
+  border: 1px solid var(--v-cohortAccent-base);
+}
+.declined-submission {
+  border: 1px solid orange;
+}
+.default-submission {
+  border: 1px solid var(--v-missionAccent-base);
 }
 
 .instructions-label {

@@ -35,7 +35,12 @@
     <div class="create-dialog">
       <!-- HEADER -->
       <div class="dialog-header">
-        <p class="dialog-title">Edit your profile details</p>
+        <div class="d-flex justify-space-between mb-4">
+          <p class="dialog-title ma-0">Edit your profile details</p>
+          <v-btn icon @click="dialog = false">
+            <v-icon color="missionAccent">{{ mdiClose }}</v-icon>
+          </v-btn>
+        </div>
         <div class="d-flex align-center">
           <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
           <p class="dialog-description">Update your profile information</p>
@@ -266,6 +271,9 @@ export default {
   .dialog-title {
     color: var(--v-missionAccent-base);
     text-transform: uppercase;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
   .dialog-description {

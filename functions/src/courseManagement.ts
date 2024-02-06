@@ -356,6 +356,43 @@ export const getStudentSubmissionsByPersonIdHttpsEndpoint = runWith({}).https.on
   },
 );
 
+// get student submissions by personId for a specific teacher
+// this will only work if teacher is the map creator.
+// TODO: add a teachers array to courses so can check if teacher is on that course
+export const getStudentSubmissionsByPersonIdForATeacherHttpsEndpoint = runWith({}).https.onCall(
+  async (data, context) => {
+    requireAuthenticated(context);
+
+    const personId = data.personId as string | null;
+    const teacherId = data.teacherId as string | null;
+    if (personId == null) {
+      throw new HttpsError("invalid-argument", "missing personId");
+    }
+    if (teacherId == null) {
+      throw new HttpsError("invalid-argument", "missing teacherId");
+    }
+
+    // get all course submissions (thanks copilot & stefan)
+    const coursesSnapshot = await db.collection("courses").get();
+    const submissionsPromises = coursesSnapshot.docs.map(async (courseDoc) => {
+      const submissionsSnapshot = await courseDoc.ref
+        .collection("submissionsForReview")
+        .where("studentId", "==", personId)
+        .where("contextCourse.contentBy.personId", "==", teacherId)
+        .get();
+      return submissionsSnapshot.docs.map((submissionDoc) => ({
+        courseId: courseDoc.id,
+        submissionId: submissionDoc.id,
+        ...submissionDoc.data(),
+      }));
+    });
+    const submissions = await Promise.all(submissionsPromises);
+
+    console.log("submissions for teacher:", submissions.flat());
+    return { submissions: submissions.flat() };
+  },
+);
+
 // Get all cohorts in course by courseId
 export const getCohortsByCourseIdHttpsEndpoint = runWith({}).https.onCall(async (data, context) => {
   requireAuthenticated(context);

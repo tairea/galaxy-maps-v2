@@ -5,7 +5,7 @@
       <!-- HEADER -->
       <div class="dialog-header">
         <p class="mb-0 d-flex justify-center align-center">Student Overview</p>
-        <v-btn icon @click="dialog = false">
+        <v-btn icon @click="close">
           <v-icon color="missionAccent">{{ mdiClose }}</v-icon>
         </v-btn>
       </div>
@@ -57,7 +57,7 @@
               <!-- edit button -->
             </div>
             <div class="edit-button ml-6">
-              <StudentEditDialog @close="" :isStudentPopupView="true" />
+              <StudentEditDialog :isStudentPopupView="true" />
             </div>
           </div>
 
@@ -97,13 +97,28 @@
           <p class="cohortAccent--text">SUBMISSIONS AWAITING REVIEW</p>
           <SubmissionTeacherFrame
             :students="students"
+            :isTeacher="true"
             :allStudentsSubmissions="submissions"
             class="mt-4"
             :studentOverview="true"
+            @submissionsChanged="submissionsChanged"
+            :loading="loading"
+            :showCourseImage="true"
           />
         </div>
         <div class="submissions-completed">
           <p class="cohortAccent--text">SUBMISSIONS COMPLETED</p>
+          <SubmissionTeacherFrame
+            :students="students"
+            :isTeacher="true"
+            :allStudentsSubmissions="submissions"
+            class="mt-4"
+            :studentOverview="true"
+            :completedSubmissionsOnly="true"
+            @submissionsChanged="submissionsChanged"
+            :loading="loading"
+            :showCourseImage="true"
+          />
         </div>
       </div>
 
@@ -134,7 +149,7 @@
 </template>
 
 <script>
-import { fetchStudentSubmissionsByPersonId } from "@/lib/ff";
+import { fetchStudentSubmissionsByPersonIdForATeacher } from "@/lib/ff";
 import ProgressionLineChart from "@/components/Reused/ProgressionLineChart.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import StudentCardStatus from "@/components/CohortView/StudentDataIterator/StudentCard/StudentCardStatus.vue";
@@ -162,16 +177,22 @@ export default {
     date: "",
     students: [],
     submissions: null,
+    loading: true,
   }),
   async mounted() {
     this.students.push(this.student);
 
     // ==== get submission data
-    this.submissions = await fetchStudentSubmissionsByPersonId(this.student.id);
+    //this.submissions = await fetchStudentSubmissionsByPersonId(this.student.id); // this should be an admin call as it will show all submissions. even submissions that are for other teachers.
+    this.submissions = await fetchStudentSubmissionsByPersonIdForATeacher(
+      this.student.id,
+      this.person.id,
+    ); // this should be an admin call as it will show all submissions. even submissions that are for other teachers.
+    this.loading = false;
     console.log("submissions from ff", this.submissions);
   },
   computed: {
-    ...mapState(useRootStore, ["userStatus"]),
+    ...mapState(useRootStore, ["userStatus", "person"]),
     teacher() {
       return this.accountType === "teacher";
     },
@@ -203,6 +224,19 @@ export default {
     },
     routeToStudentDashboard() {
       alert("to do: routeToStudentDashboard()");
+    },
+    close() {
+      this.$emit("cancel");
+    },
+    async submissionsChanged() {
+      console.log("submissions changed flag triggered");
+      this.loading = true;
+      // ==== get submission data
+      this.submissions = await fetchStudentSubmissionsByPersonIdForATeacher(
+        this.student.id,
+        this.person.id,
+      );
+      this.loading = false;
     },
   },
 };

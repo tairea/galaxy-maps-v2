@@ -461,18 +461,16 @@ export default {
         Object.assign(this.course, this.courseToEdit);
       }
     },
+    showDialog(newVal) {
+      if (newVal) this.dialog = true;
+      else this.dialog = false;
+    },
   },
   mounted() {
     if (this.courseToEdit) {
       console.log("cloning");
       this.course = clone(this.courseToEdit);
     }
-  },
-  watch: {
-    showDialog(newVal) {
-      if (newVal) this.dialog = true;
-      else this.dialog = false;
-    },
   },
   methods: {
     ...mapActions(useRootStore, ["setCurrentCourseId", "setSnackbar"]),

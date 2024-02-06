@@ -134,6 +134,8 @@ export default {
           this.activity.course.id,
         );
 
+        console.log("circular yoza - this.tasksInCurrentTopic:", this.tasksInCurrentTopic);
+
         this.tasksInCurrentTopic.forEach((task) => {
           if (task.taskStatus === "completed") this.completedTasksInTopic++;
         });
