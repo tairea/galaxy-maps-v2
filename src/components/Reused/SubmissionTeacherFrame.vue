@@ -2,18 +2,30 @@
   <div :id="studentOverview ? 'studentOverview' : 'submission-panel'">
     <h2 v-if="!studentOverview" class="submission-label">Work submitted for review</h2>
     <div v-if="submissions.length > 0">
-      <SubmissionTeacherPanel
-        v-for="submission in submissions"
-        :key="submission.id"
-        :submission="submission"
-        :isDashboardView="isDashboardView"
-        :isTeacher="isTeacher"
-        :showCourseImage="showCourseImage"
-      />
+      <div v-if="dense">
+        <SubmissionTeacherPanelDense
+          v-for="submission in submissions"
+          :key="submission.id"
+          :submission="submission"
+          :isDashboardView="isDashboardView"
+          :isTeacher="isTeacher"
+          :showCourseImage="showCourseImage"
+        />
+      </div>
+      <div v-else>
+        <SubmissionTeacherPanel
+          v-for="submission in submissions"
+          :key="submission.id"
+          :submission="submission"
+          :isDashboardView="isDashboardView"
+          :isTeacher="isTeacher"
+          :showCourseImage="showCourseImage"
+        />
+      </div>
     </div>
     <div v-if="!loading && submissions.length == 0">
       <p class="overline pt-4 text-center" style="color: var(--v-cohortAccent-base)">
-        NO WORK TO REVIEW
+        NO {{ completedSubmissionsOnly ? "COMPLETED" : "" }} WORK TO REVIEW
       </p>
     </div>
     <!-- loading spinner -->
@@ -24,6 +36,7 @@
 </template>
 <script>
 import SubmissionTeacherPanel from "@/components/Reused/SubmissionTeacherFrame/SubmissionTeacherPanel.vue";
+import SubmissionTeacherPanelDense from "@/components/Reused/SubmissionTeacherFrame/SubmissionTeacherPanelDense.vue";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
 
@@ -38,9 +51,11 @@ export default {
     "completedSubmissionsOnly",
     "loading",
     "showCourseImage",
+    "dense",
   ],
   components: {
     SubmissionTeacherPanel,
+    SubmissionTeacherPanelDense,
   },
   watch: {
     courseSubmissions(newVal, oldVal) {
@@ -127,12 +142,6 @@ export default {
           (submission) => submission.taskSubmissionStatus === "inreview",
         );
       }
-
-      console.log(
-        "filtered submissions: completed only ? ",
-        this.completedSubmissionsOnly,
-        filteredSubmissions,
-      );
 
       filteredSubmissions.sort(
         (a, b) =>

@@ -149,7 +149,7 @@ export default {
       // return this.people.find((person) => person.id === id);
     },
     getHumanDate(ts) {
-      return moment(ts.seconds * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
+      return moment((ts.seconds ? ts.seconds : ts._seconds) * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
     },
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();

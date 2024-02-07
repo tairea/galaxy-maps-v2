@@ -28,6 +28,7 @@ import {
   getTopicByCourseIdTopicIdHttpsEndpoint,
   getStudentSubmissionsByPersonIdHttpsEndpoint,
   getStudentSubmissionsByPersonIdForATeacherHttpsEndpoint,
+  getStudentRequestsByPersonIdForATeacherHttpsEndpoint,
 } from "./courseManagement.js";
 import {
   sendCourseDeletedHttpsEndpoint,
@@ -72,6 +73,7 @@ export {
   getStudentCohortsByPersonIdHttpsEndpoint as getStudentCohortsByPersonId,
   getStudentSubmissionsByPersonIdHttpsEndpoint as getStudentSubmissionsByPersonId,
   getStudentSubmissionsByPersonIdForATeacherHttpsEndpoint as getStudentSubmissionsByPersonIdForATeacher,
+  getStudentRequestsByPersonIdForATeacherHttpsEndpoint as getStudentRequestsByPersonIdForATeacher,
   getPeopleByCourseIdHttpsEndpoint as getPeopleByCourseId,
   getPersonTasksByPersonIdCourseIdTopicIdHttpsEndpoint as getPersonTasksByPersonIdCourseIdTopicId,
   getPersonTopicByPersonIdCourseIdTopicIdHttpsEndpoint as getPersonTopicByPersonIdCourseIdTopicId,

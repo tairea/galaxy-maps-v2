@@ -393,6 +393,42 @@ export const getStudentSubmissionsByPersonIdForATeacherHttpsEndpoint = runWith({
   },
 );
 
+// this will only work if teacher is the map creator.
+// TODO: add a teachers array to courses so can check if teacher is on that course
+export const getStudentRequestsByPersonIdForATeacherHttpsEndpoint = runWith({}).https.onCall(
+  async (data, context) => {
+    requireAuthenticated(context);
+
+    const personId = data.personId as string | null;
+    const teacherId = data.teacherId as string | null;
+    if (personId == null) {
+      throw new HttpsError("invalid-argument", "missing personId");
+    }
+    if (teacherId == null) {
+      throw new HttpsError("invalid-argument", "missing teacherId");
+    }
+
+    // get all course submissions (thanks copilot & stefan)
+    const coursesSnapshot = await db.collection("courses").get();
+    const requestsPromises = coursesSnapshot.docs.map(async (courseDoc) => {
+      const requestsSnapshot = await courseDoc.ref
+        .collection("requestsForHelp")
+        .where("personId", "==", personId)
+        .where("contextCourse.contentBy.personId", "==", teacherId)
+        .get();
+      return requestsSnapshot.docs.map((requestDoc) => ({
+        courseId: courseDoc.id,
+        requestId: requestDoc.id,
+        ...requestDoc.data(),
+      }));
+    });
+    const requests = await Promise.all(requestsPromises);
+
+    console.log("submissions for teacher:", requests.flat());
+    return { requests: requests.flat() };
+  },
+);
+
 // Get all cohorts in course by courseId
 export const getCohortsByCourseIdHttpsEndpoint = runWith({}).https.onCall(async (data, context) => {
   requireAuthenticated(context);

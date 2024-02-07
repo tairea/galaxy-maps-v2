@@ -1,6 +1,6 @@
 <template>
-  <div :id="cohortId">
-    <h2 class="help-label">Requests for help</h2>
+  <div :id="studentOverview ? 'studentOverview' : cohortId">
+    <h2 v-if="!studentOverview" class="help-label">Requests for help</h2>
 
     <div v-if="requests.length > 0">
       <RequestForHelpTeacherPanel
@@ -9,11 +9,12 @@
         :request="request"
         :isTeacher="isTeacher"
         :isDashboardView="isDashboardView"
+        :showCourseImage="showCourseImage"
       />
     </div>
     <div v-if="!loading && requests.length == 0">
       <p class="overline pt-4 text-center mb-0" style="color: var(--v-galaxyAccent-base)">
-        NO REQUESTS FOR HELP
+        NO {{ completedRequestsOnly ? "COMPLETED" : "" }} REQUESTS FOR HELP
       </p>
     </div>
     <!-- loading spinner -->
@@ -33,23 +34,31 @@ export default {
   components: {
     RequestForHelpTeacherPanel,
   },
-  props: ["courses", "isTeacher", "students", "noSubmissions"],
+  props: [
+    "courses",
+    "isTeacher",
+    "students",
+    "noSubmissions",
+    "studentOverview",
+    "showCourseImage",
+    "loading",
+    "completedRequestsOnly",
+    "allStudentsRequests",
+  ],
   data() {
     return {
-      loading: false,
       unsubscribes: [],
     };
   },
   async mounted() {
-    this.loading = true;
     if (this.courses) {
       for (const course of this.courses) {
         // console.log("getting requests for course: ", course);
         const unsubscribe = await this.getRequestsForHelpByCourseId(course.id);
+        console.log("help unsubscribe:", unsubscribe);
         this.unsubscribes.push(unsubscribe);
       }
     }
-    this.loading = false;
   },
   computed: {
     ...mapState(useRootStore, [
@@ -79,32 +88,58 @@ export default {
       // const requests = this.teachersRequestsForHelp.filter(
       //   (request) => request.requestForHelpStatus == "unanswered"
       // );
-      const requests = this.teachersRequestsForHelp.filter((request) =>
+
+      console.log("this.teachersRequestsForHelp", this.teachersRequestsForHelp);
+      console.log("this.allStudentsRequests", this.allStudentsRequests);
+
+      // forgot why using this filter - students.some logic.
+      // im thinking reuqests are relevant to everyone so why need to filter by specific students
+      const requests = (
+        this.allStudentsRequests ? this.allStudentsRequests : this.teachersRequestsForHelp
+      ).filter((request) =>
         this.students?.some((student) => {
           return student.id ? student.id === request.personId : student === request.personId;
         }),
       );
+
+      let filteredRequests = [];
+
+      // Filter for "completed/answered" only
+      if (this.completedRequestsOnly) {
+        filteredRequests = requests.filter(
+          (request) => request.requestForHelpStatus != "unanswered",
+        );
+      } else {
+        filteredRequests = requests.filter(
+          (request) => request.requestForHelpStatus === "unanswered",
+        );
+      }
+
       if (this.isTeacher) {
-        requests.sort((a, b) => {
+        filteredRequests.sort((a, b) => {
           return a.requestForHelpStatus == "unanswered" ? -1 : 1;
         });
       } else {
-        requests.sort((a, b) => {
+        filteredRequests.sort((a, b) => {
           return a.requestForHelpStatus == "unanswered" ? 1 : -1;
         });
       }
 
-      if (this.isCohortView || this.isDashboardView) return requests;
+      console.log("requests:", requests);
+      console.log("filtered requests:", filteredRequests);
+
+      if (this.isCohortView || this.isDashboardView) return filteredRequests;
       else if (this.isGalaxyView) {
-        return requests.filter((request) => request.contextCourse.id == this.courses[0].id);
+        return filteredRequests.filter((request) => request.contextCourse.id == this.courses[0].id);
       } else if (this.isSystemView) {
-        const taskRequests = requests.filter(
+        const taskRequests = filteredRequests.filter(
           (request) => request.contextTopic.id == this.currentTopicId,
         );
         if (this.isTeacher) return taskRequests;
         else return taskRequests.filter((req) => req.contextTask.id == this.currentTaskId);
       }
-      return requests;
+
+      return filteredRequests;
     },
   },
   destroyed() {

@@ -102,7 +102,7 @@
             class="mt-4"
             :studentOverview="true"
             @submissionsChanged="submissionsChanged"
-            :loading="loading"
+            :loading="loadingSubmissions"
             :showCourseImage="true"
           />
         </div>
@@ -116,8 +116,9 @@
             :studentOverview="true"
             :completedSubmissionsOnly="true"
             @submissionsChanged="submissionsChanged"
-            :loading="loading"
+            :loading="loadingSubmissions"
             :showCourseImage="true"
+            :dense="true"
           />
         </div>
       </div>
@@ -126,10 +127,26 @@
       <div class="create-dialog-content help-container">
         <div class="help-awaiting-reply">
           <p class="galaxyAccent--text">REQUESTS FOR HELP AWAITING REPLY</p>
-          <RequestForHelpTeacherFrame :students="students" />
+          <RequestForHelpTeacherFrame
+            :students="students"
+            :studentOverview="true"
+            :loading="loadingRequests"
+            :showCourseImage="true"
+            @requestsChanged="requestsChanged"
+            :allStudentsRequests="requests"
+          />
         </div>
         <div class="help-completed">
           <p class="galaxyAccent--text">REQUESTS FOR HELP COMPLETED</p>
+          <RequestForHelpTeacherFrame
+            :students="students"
+            :studentOverview="true"
+            :loading="loadingRequests"
+            :showCourseImage="true"
+            :completedRequestsOnly="true"
+            @requestsChanged="requestsChanged"
+            :allStudentsRequests="requests"
+          />
         </div>
       </div>
 
@@ -149,7 +166,10 @@
 </template>
 
 <script>
-import { fetchStudentSubmissionsByPersonIdForATeacher } from "@/lib/ff";
+import {
+  fetchStudentSubmissionsByPersonIdForATeacher,
+  fetchStudentRequestsByPersonIdForATeacher,
+} from "@/lib/ff";
 import ProgressionLineChart from "@/components/Reused/ProgressionLineChart.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import StudentCardStatus from "@/components/CohortView/StudentDataIterator/StudentCard/StudentCardStatus.vue";
@@ -177,7 +197,9 @@ export default {
     date: "",
     students: [],
     submissions: null,
-    loading: true,
+    requests: null,
+    loadingSubmissions: true,
+    loadingRequests: true,
   }),
   async mounted() {
     this.students.push(this.student);
@@ -187,9 +209,15 @@ export default {
     this.submissions = await fetchStudentSubmissionsByPersonIdForATeacher(
       this.student.id,
       this.person.id,
-    ); // this should be an admin call as it will show all submissions. even submissions that are for other teachers.
-    this.loading = false;
-    console.log("submissions from ff", this.submissions);
+    );
+    this.loadingSubmissions = false;
+
+    // ==== get request data
+    this.requests = await fetchStudentRequestsByPersonIdForATeacher(
+      this.student.id,
+      this.person.id,
+    );
+    this.loadingRequests = false;
   },
   computed: {
     ...mapState(useRootStore, ["userStatus", "person"]),
@@ -230,13 +258,23 @@ export default {
     },
     async submissionsChanged() {
       console.log("submissions changed flag triggered");
-      this.loading = true;
+      this.loadingSubmissions = true;
       // ==== get submission data
       this.submissions = await fetchStudentSubmissionsByPersonIdForATeacher(
         this.student.id,
         this.person.id,
       );
-      this.loading = false;
+      this.loadingSubmissions = false;
+    },
+    async requestsChanged() {
+      console.log("requests changed flag triggered");
+      this.loadingRequests = true;
+      // ==== get submission data
+      this.requests = await fetchStudentRequestsByPersonIdForATeacher(
+        this.student.id,
+        this.person.id,
+      );
+      this.loadingRequests = false;
     },
   },
 };
