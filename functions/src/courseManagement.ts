@@ -17,6 +17,8 @@ export const getCourseByCourseIdHttpsEndpoint = runWith({}).https.onCall(async (
   if (courseData == null) {
     throw new HttpsError("not-found", `Course not found: ${courseId}`);
   }
+  const courseOwner
+    = courseData.owner instanceof DocumentReference ? courseData.owner.path : courseData.owner;
 
   // if the course is public and published then always return it
   // if not and the context is unauthenticated then throw not found
@@ -24,8 +26,7 @@ export const getCourseByCourseIdHttpsEndpoint = runWith({}).https.onCall(async (
     return {
       course: {
         ...courseData,
-        owner:
-          courseData.owner instanceof DocumentReference ? courseData.owner.path : courseData.owner,
+        owner: courseOwner,
         id: courseDoc.id,
       },
     };
@@ -38,16 +39,27 @@ export const getCourseByCourseIdHttpsEndpoint = runWith({}).https.onCall(async (
     return {
       course: {
         ...courseData,
-        owner:
-          courseData.owner instanceof DocumentReference ? courseData.owner.path : courseData.owner,
+        owner: courseOwner,
+        id: courseDoc.id,
+      },
+    };
+  }
+
+  // if the context is authenticated, they are not admin, and they are
+  // the course owner, return course
+  if (courseOwner === db.collection("people").doc(context.auth.uid).path) {
+    return {
+      course: {
+        ...courseData,
+        owner: courseOwner,
         id: courseDoc.id,
       },
     };
   }
 
   // if the context is authenticated and they are not admin, return all courses
-  // where they are the owner or where they belong to a cohort for the course as
-  // a teacher or as a student
+  // where they belong to a cohort for the course as a teacher or student
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const teacherCohorts: Record<string, any>[] = [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -91,8 +103,7 @@ export const getCourseByCourseIdHttpsEndpoint = runWith({}).https.onCall(async (
   return {
     course: {
       ...courseData,
-      owner:
-        courseData.owner instanceof DocumentReference ? courseData.owner.path : courseData.owner,
+      owner: courseOwner,
       id: courseDoc.id,
     },
   };
