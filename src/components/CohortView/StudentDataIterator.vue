@@ -78,7 +78,7 @@
           :timeframe="timeframe"
           :date="date"
           :cohortCourseIds="cohort.courses"
-          @showStudent="showStudent($event)"
+          @showStudent="showStudent"
           @updateStudentsWithHours="updateStudentsWithHours($event)"
           @updateStudentsWithTasks="updateStudentsWithTasks($event)"
           @updateStudentsWithLastActive="updateStudentsWithLastActive($event)"
@@ -94,6 +94,8 @@
       v-if="showStudentFlag && isTeacher"
       :dialog="showStudentFlag"
       :student="student"
+      :studentCoursesActivity="studentCoursesActivity"
+      :studentTimeData="studentTimeData"
       @cancel="cancelShowStudent"
       @edit="showEdit($event)"
     />
@@ -159,6 +161,7 @@ export default {
       showStudentFlag: false,
       editStudentFlag: false,
       student: [],
+      studentCoursesActivity: [],
     };
   },
   created() {
@@ -204,9 +207,11 @@ export default {
   },
   methods: {
     // show/hide student details
-    showStudent(student) {
+    showStudent(payload) {
       this.showStudentFlag = false;
-      this.student = student;
+      this.student = payload.student;
+      this.studentCoursesActivity = payload.coursesActivity;
+      this.studentTimeData = payload.timeData;
       this.showStudentFlag = true;
     },
     cancelShowStudent() {

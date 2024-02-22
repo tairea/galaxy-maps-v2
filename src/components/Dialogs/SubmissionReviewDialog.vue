@@ -29,31 +29,23 @@
                     <v-simple-table>
                       <tr
                         class="dialog-context-description"
-                        style="color: var(--v-galaxyAccent-base)"
-                      >
-                        <td class="pr-2">Galaxy:</td>
-                        <td>{{ submission.contextCourse.title }}</td>
-                      </tr>
-
-                      <tr
-                        class="dialog-context-description"
                         style="color: var(--v-missionAccent-base)"
                       >
-                        <td></td>
-                        <td class="text-center">></td>
-                        <td class="pr-2">System:</td>
+                        <td
+                          class="d-flex flex-start"
+                          style="color: var(--v-galaxyAccent-base); font-weight: 800"
+                        >
+                          Galaxy:
+                        </td>
+                        <td style="color: var(--v-galaxyAccent-base)">
+                          {{ submission.contextCourse.title }}
+                        </td>
+                        <td width="50px" class="text-center">></td>
+                        <td class="d-flex flex-start" style="font-weight: 800">System:</td>
                         <td>{{ submission.contextTopic.label }}</td>
-                      </tr>
-                      <tr
-                        class="dialog-context-description"
-                        style="color: var(--v-missionAccent-base); font-weight: 800"
-                      >
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td class="text-center">></td>
-                        <td class="pr-2">MISSION:</td>
-                        <td>{{ submission.contextTask.title }}</td>
+                        <td width="50px" class="text-center">></td>
+                        <td class="d-flex flex-start" style="font-weight: 800">MISSION:</td>
+                        <td class="pl-2">{{ submission.contextTask.title }}</td>
                       </tr>
                     </v-simple-table>
                   </div>
@@ -262,7 +254,7 @@ export default {
     ...mapActions(useRootStore, ["setSnackbar", "bindPersonsTasksByTopicId"]),
     getHumanDate(ts) {
       if (!ts) return;
-      return moment(ts.seconds * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
+      return moment((ts.seconds ? ts.seconds : ts._seconds) * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
     },
     async markSubmissionAsCompleted() {
       this.loading = true;

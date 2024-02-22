@@ -3,14 +3,26 @@
     <h2 v-if="!studentOverview" class="help-label">Requests for help</h2>
 
     <div v-if="requests.length > 0">
-      <RequestForHelpTeacherPanel
-        v-for="request in requests"
-        :key="request.id"
-        :request="request"
-        :isTeacher="isTeacher"
-        :isDashboardView="isDashboardView"
-        :showCourseImage="showCourseImage"
-      />
+      <div v-if="dense">
+        <RequestForHelpTeacherPanelDense
+          v-for="request in requests"
+          :key="request.id"
+          :request="request"
+          :isTeacher="isTeacher"
+          :isDashboardView="isDashboardView"
+          :showCourseImage="showCourseImage"
+        />
+      </div>
+      <div v-else>
+        <RequestForHelpTeacherPanel
+          v-for="request in requests"
+          :key="request.id"
+          :request="request"
+          :isTeacher="isTeacher"
+          :isDashboardView="isDashboardView"
+          :showCourseImage="showCourseImage"
+        />
+      </div>
     </div>
     <div v-if="!loading && requests.length == 0">
       <p class="overline pt-4 text-center mb-0" style="color: var(--v-galaxyAccent-base)">
@@ -26,6 +38,7 @@
 
 <script>
 import RequestForHelpTeacherPanel from "@/components/Reused/RequestForHelpTeacherFrame/RequestForHelpTeacherPanel.vue";
+import RequestForHelpTeacherPanelDense from "@/components/Reused/RequestForHelpTeacherFrame/RequestForHelpTeacherPanelDense.vue";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
 
@@ -33,6 +46,7 @@ export default {
   name: "RequestForHelpTeacherFrame",
   components: {
     RequestForHelpTeacherPanel,
+    RequestForHelpTeacherPanelDense,
   },
   props: [
     "courses",
@@ -44,6 +58,7 @@ export default {
     "loading",
     "completedRequestsOnly",
     "allStudentsRequests",
+    "dense",
   ],
   data() {
     return {

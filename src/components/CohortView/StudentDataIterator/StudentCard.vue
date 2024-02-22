@@ -109,12 +109,13 @@ export default {
       activities: [],
       studentTimeData: [],
       studentTimeDataLoading: false,
+      studentCoursesActivity: [],
     };
   },
   async mounted() {
-    const studentCourses = await fetchStudentCoursesActivityByPersonId(this.student.id);
+    this.studentCoursesActivity = await fetchStudentCoursesActivityByPersonId(this.student.id);
     this.cohort = await fetchCohortByCohortId(this.currentCohortId);
-    const cohortActivities = studentCourses.filter((a) =>
+    const cohortActivities = this.studentCoursesActivity.filter((a) =>
       this.cohort.courses.some((b) => b === a.course.id),
     );
     this.activities = cohortActivities.map((course) => {
@@ -144,7 +145,11 @@ export default {
   },
   methods: {
     showStudentDetails(student) {
-      this.$emit("showStudent", student);
+      this.$emit("showStudent", {
+        student: student,
+        coursesActivity: this.studentCoursesActivity,
+        timeData: this.studentTimeData,
+      });
     },
     async getAssignedCourse() {
       const courseId = this.student.assignedCourses.find((courseId) =>
@@ -163,6 +168,7 @@ export default {
         this.timeframe.max.toISOString(),
       );
       this.studentTimeDataLoading = false;
+      console.log("course HOURS for " + this.student.firstName + ": ", courseHours);
       return courseHours;
     },
     emitUpHours(hours) {

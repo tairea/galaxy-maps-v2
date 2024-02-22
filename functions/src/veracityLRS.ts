@@ -249,7 +249,6 @@ export const getStudentCoursesTimeDataXAPIQuery = async (
   }
 
   const aggregationQuery = [
-    // match with cohorts courses. and only started & completed statements
     {
       $match: {
         "statement.actor.mbox": `mailto:${personData.email}`,

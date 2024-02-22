@@ -4,7 +4,8 @@
     <div v-for="course in courses" :key="course.id" class="d-flex justify-center align-center">
       <div class="active-hours-box">
         <p class="label">{{ course.title }}</p>
-        <p class="label text-center label-value">{{ calcHours(course.id).toFixed(1) }}</p>
+        <!-- calcHours is rounded. Maybe add a tooltip with full hours with decimal places -->
+        <p class="label text-center label-value">{{ calcHours(course.id).toFixed(0) }}</p>
       </div>
     </div>
     <div v-if="courses.length === 0" class="d-flex justify-center align-center">

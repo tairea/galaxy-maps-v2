@@ -134,6 +134,7 @@
             :showCourseImage="true"
             @requestsChanged="requestsChanged"
             :allStudentsRequests="requests"
+            :isTeacher="true"
           />
         </div>
         <div class="help-completed">
@@ -146,20 +147,35 @@
             :completedRequestsOnly="true"
             @requestsChanged="requestsChanged"
             :allStudentsRequests="requests"
+            :dense="true"
+            :isTeacher="true"
           />
         </div>
       </div>
 
       <!-- CONTENT SECTION -->
       <div class="create-dialog-content">
-        <!-- <ProgressionLineChart
-          :key="courseData.id"
-          :courseData="courseData"
-          :timeframe="timeframe"
-          :selectedPersons="selectedPersons"
-          :unselectedPersons="unselectedPersons"
-          class="line-chart"
-        /> -->
+        <TimeframeFilters
+          @timeframe="timeframe = $event"
+          :earliestDate="lowestActivityTimestamp"
+          class="d-flex justify-center"
+        />
+        <div class="d-flex">
+          <div class="student-courses-linechart">
+            <ProgressionLineChartStudentCourses
+              :student="student"
+              :courseData="studentCoursesActivity"
+              :timeframe="timeframe"
+              class="line-chart"
+            />
+          </div>
+          <div class="student-courses-barchart">
+            <ActivityBarChartStudentCourses
+              :activityData="studentTimeData"
+              :timeframe="timeframe"
+            />
+          </div>
+        </div>
       </div>
     </div>
   </v-dialog>
@@ -170,7 +186,7 @@ import {
   fetchStudentSubmissionsByPersonIdForATeacher,
   fetchStudentRequestsByPersonIdForATeacher,
 } from "@/lib/ff";
-import ProgressionLineChart from "@/components/Reused/ProgressionLineChart.vue";
+import ProgressionLineChartStudentCourses from "@/components/Reused/ProgressionLineChartStudentCourses.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import StudentCardStatus from "@/components/CohortView/StudentDataIterator/StudentCard/StudentCardStatus.vue";
 import StudentEditDialog from "@/components/Dialogs/StudentEditDialog.vue";
@@ -178,19 +194,24 @@ import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.v
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
 import { mdiClose } from "@mdi/js";
+import TimeframeFilters from "@/components/Reused/TimeframeFilters.vue";
+import ActivityBarChartStudentCourses from "@/components/Reused/ActivityBarChartStudentCourses.vue";
 
 export default {
   name: "ViewStudentDetails",
   props: {
     dialog: { type: Boolean },
     student: { type: Object },
+    studentCoursesActivity: { type: Array },
+    studentTimeData: { type: Array }, // TODO: get locally too as timeframe changes here too
   },
   components: {
-    ProgressionLineChart,
+    ProgressionLineChartStudentCourses,
     RequestForHelpTeacherFrame,
     StudentCardStatus,
     StudentEditDialog,
     SubmissionTeacherFrame,
+    ActivityBarChartStudentCourses,
   },
   data: () => ({
     mdiClose,
@@ -200,8 +221,20 @@ export default {
     requests: null,
     loadingSubmissions: true,
     loadingRequests: true,
+    timeframe: {},
+    lowestActivityTimestamp: null,
   }),
   async mounted() {
+    console.log("STUDENT COURSES ACTIVITY: ", this.studentCoursesActivity);
+    console.log("STUDENT TIME DATA: ", this.studentTimeData);
+
+    this.lowestActivityTimestamp = this.studentCoursesActivity.reduce((lowest, course) => {
+      const courseLowestTimestamp = course.activities.reduce((lowest, activity) => {
+        return new Date(activity.timeStamp) < lowest ? new Date(activity.timeStamp) : lowest;
+      }, Infinity);
+      return courseLowestTimestamp < lowest ? courseLowestTimestamp : lowest;
+    }, Infinity);
+
     this.students.push(this.student);
 
     // ==== get submission data
@@ -275,6 +308,17 @@ export default {
         this.person.id,
       );
       this.loadingRequests = false;
+    },
+    async getStudentTimeData() {
+      this.studentTimeDataLoading = true;
+      const courseHours = await fetchStudentCoursesTimeDataByPersonIdStartAtEndAt(
+        this.student.id,
+        this.timeframe.min.toISOString(),
+        this.timeframe.max.toISOString(),
+      );
+      this.studentTimeDataLoading = false;
+      console.log("course HOURS for " + this.student.firstName + ": ", courseHours);
+      return courseHours;
     },
   },
 };
@@ -353,6 +397,19 @@ export default {
     width: 40%;
     padding: 20px;
   }
+}
+
+.chart {
+  padding: 0px 20px 20px 20px;
+}
+
+.student-courses-linechart {
+  width: 60%;
+  padding: 10px;
+}
+.student-courses-barchart {
+  width: 40%;
+  padding: 10px;
 }
 
 .cohort-btn {

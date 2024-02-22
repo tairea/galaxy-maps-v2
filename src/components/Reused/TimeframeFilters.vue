@@ -7,8 +7,22 @@
       outlined
       x-small
       @click="previous"
+      :disabled="chipAllTimeActive"
     >
       &lt;
+    </v-chip>
+    <v-chip
+      class="my-2 mx-1 custom-chip"
+      color="missionAccent"
+      :input-value="chipAllTimeActive"
+      outlined
+      x-small
+      @click="timeframeAllTime"
+    >
+      <v-icon v-if="chipAllTimeActive" left>
+        {{ mdiCircleSmall }}
+      </v-icon>
+      all time
     </v-chip>
     <v-chip
       class="my-2 mx-1 custom-chip"
@@ -56,6 +70,7 @@
       outlined
       x-small
       @click="next"
+      :disabled="chipAllTimeActive"
     >
       &gt;
     </v-chip>
@@ -68,7 +83,7 @@ import { mdiCircleSmall } from "@mdi/js";
 
 export default {
   name: "Timeframefilters",
-  props: ["noArrows", "showDate"],
+  props: ["noArrows", "showDate", "earliestDate"],
   components: {},
   data() {
     return {
@@ -84,6 +99,7 @@ export default {
       chipWeekActive: false,
       chipFortnightActive: false,
       chipMonthActive: true,
+      chipAllTimeActive: false,
     };
   },
 
@@ -107,12 +123,28 @@ export default {
     },
   },
   methods: {
+    timeframeAllTime() {
+      this.chipActiveType = "allTime";
+      this.chipDayActive = false;
+      this.chipWeekActive = false;
+      this.chipFortnightActive = false;
+      this.chipMonthActive = false;
+      this.chipAllTimeActive = true;
+      this.timeframe = {
+        min: this.earliestDate, // 8640000000000000 is the smallest date in js
+        max: new Date(),
+        unit: "month",
+        type: "allTime",
+      };
+      this.$emit("timeframe", this.timeframe);
+    },
     timeframeMonth() {
       this.chipActiveType = "month";
       this.chipDayActive = false;
       this.chipWeekActive = false;
       this.chipFortnightActive = false;
       this.chipMonthActive = true;
+      this.chipAllTimeActive = false;
       this.timeframe = {
         min: this.previousDays(30),
         max: new Date(),
@@ -127,6 +159,7 @@ export default {
       this.chipWeekActive = true;
       this.chipFortnightActive = false;
       this.chipMonthActive = false;
+      this.chipAllTimeActive = false;
       this.timeframe = {
         min: this.previousDays(7),
         max: new Date(),
@@ -141,6 +174,7 @@ export default {
       this.chipWeekActive = false;
       this.chipFortnightActive = false;
       this.chipMonthActive = false;
+      this.chipAllTimeActive = false;
       this.timeframe = {
         min: this.getStartDay(),
         max: this.getEndDay(),
