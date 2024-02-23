@@ -2,43 +2,44 @@
   <div class="course-frame">
     <v-row>
       <v-col cols="12" class="d-flex pa-0">
-        <h1 class="galaxy-title pt-2 pl-2">HOURS ACTIVE</h1>
+        <h1 class="galaxy-title pt-2 pl-2">{{ student.firstName }}'s HOURS ACTIVE</h1>
+        <h1 class="galaxy-title pt-2 pl-2">
+          <span style="font-weight: 400; text-transform: none; font-style: italic">
+            (Each bar represents a Galaxy Map)</span
+          >
+        </h1>
       </v-col>
     </v-row>
     <v-row>
       <v-col cols="12" class="center-col pa-0">
         <Chart
-          v-if="chartData"
+          v-if="chartData.datasets.data.length > 0"
           ref="chart"
           class="chart"
           :chartType="chartType"
           :chartData="chartData"
           :chartOptions="chartOptions"
-          :style="{ width: '100%', height: '200px' }"
-          :toolTipEnable="false"
+          :style="{ width: '100%', height: '350px' }"
+          :toolTipEnable="true"
           :timeframe="timeframe"
         />
+        <div v-else>
+          <p class="overline d-flex justify-center align-center ma-6 galaxyAccent--text">
+            NO TIME DATA
+          </p>
+        </div>
       </v-col>
-      <!-- <v-col cols="4" class="pa-0">
-        <div class="top-row">
-          <p class="label">MOST ACTIVE:</p>
-        </div>
-        <div class="bottom-row my-3">
-          <p class="label">LEAST ACTIVE:</p>
-        </div>
-      </v-col> -->
     </v-row>
   </div>
 </template>
 
 <script>
 import Chart from "@/components/Reused/Chart.vue";
-import useRootStore from "@/store/index";
 import { DateTime } from "luxon";
 
 export default {
   name: "ActivityBarChartStudentCourses",
-  props: ["activityData", "timeframe"],
+  props: ["activityData", "timeframe", "student"],
   components: {
     Chart,
   },
@@ -100,7 +101,6 @@ export default {
     };
   },
   computed: {
-    // ...mapState(useRootStore, ["person"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -118,7 +118,7 @@ export default {
       const data = [];
       const labels = [];
 
-      console.log("BAR CHART data:", studentData);
+      // console.log("BAR CHART data:", studentData);
 
       // more than one student in a cohort so loop
       for (const courseAndHoursObj of studentData) {

@@ -449,7 +449,7 @@ export default {
           .collection("courses")
           .doc(this.submission.contextCourse.id)
           .collection("submissionsForReview")
-          .doc(this.submission.id)
+          .doc(this.submission.submissionId)
           .update({
             responseMessage: this.responseMsg,
             taskSubmissionStatus: "declined",
@@ -490,7 +490,7 @@ export default {
         this.close();
         this.setSnackbar({
           show: true,
-          text: "Students submitted work declined.Feedback sent to student",
+          text: "Students submitted work declined. Feedback sent to student",
           color: "baseAccent",
         });
 

@@ -10,7 +10,7 @@
         </v-btn>
       </div>
       <!-- CONTENT SECTION -->
-      <div class="create-dialog-content">
+      <div id="sticky" class="create-dialog-content">
         <!-- STUDENT NAME & EMAIL -->
         <div class="student-details">
           <div class="d-flex justify-center align-center">
@@ -91,7 +91,7 @@
         </div>
       </div>
 
-      <!-- CONTENT SECTION = SUBMISSIONS -->
+      <!-- SUBMISSIONS -->
       <div class="create-dialog-content submissions-container">
         <div class="submissions-awaiting-review">
           <p class="cohortAccent--text">SUBMISSIONS AWAITING REVIEW</p>
@@ -123,7 +123,7 @@
         </div>
       </div>
 
-      <!-- CONTENT SECTION = REQUESTS FOR HELP -->
+      <!-- REQUESTS FOR HELP -->
       <div class="create-dialog-content help-container">
         <div class="help-awaiting-reply">
           <p class="galaxyAccent--text">REQUESTS FOR HELP AWAITING REPLY</p>
@@ -153,12 +153,13 @@
         </div>
       </div>
 
-      <!-- CONTENT SECTION -->
+      <!-- STUDENT GRAPHS -->
       <div class="create-dialog-content">
         <TimeframeFilters
           @timeframe="timeframe = $event"
           :earliestDate="lowestActivityTimestamp"
           class="d-flex justify-center"
+          style="width: 60%"
         />
         <div class="d-flex">
           <div class="student-courses-linechart">
@@ -167,12 +168,15 @@
               :courseData="studentCoursesActivity"
               :timeframe="timeframe"
               class="line-chart"
+              :loading="!studentCoursesActivity"
             />
           </div>
           <div class="student-courses-barchart">
             <ActivityBarChartStudentCourses
+              :student="student"
               :activityData="studentTimeData"
               :timeframe="timeframe"
+              :loading="!studentTimeData"
             />
           </div>
         </div>
@@ -182,20 +186,20 @@
 </template>
 
 <script>
+import ActivityBarChartStudentCourses from "@/components/Reused/ActivityBarChartStudentCourses.vue";
 import {
   fetchStudentSubmissionsByPersonIdForATeacher,
   fetchStudentRequestsByPersonIdForATeacher,
 } from "@/lib/ff";
+import { mapState } from "pinia";
+import { mdiClose } from "@mdi/js";
 import ProgressionLineChartStudentCourses from "@/components/Reused/ProgressionLineChartStudentCourses.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import StudentCardStatus from "@/components/CohortView/StudentDataIterator/StudentCard/StudentCardStatus.vue";
 import StudentEditDialog from "@/components/Dialogs/StudentEditDialog.vue";
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
-import useRootStore from "@/store/index";
-import { mapState } from "pinia";
-import { mdiClose } from "@mdi/js";
 import TimeframeFilters from "@/components/Reused/TimeframeFilters.vue";
-import ActivityBarChartStudentCourses from "@/components/Reused/ActivityBarChartStudentCourses.vue";
+import useRootStore from "@/store/index";
 
 export default {
   name: "ViewStudentDetails",
@@ -225,9 +229,10 @@ export default {
     lowestActivityTimestamp: null,
   }),
   async mounted() {
-    console.log("STUDENT COURSES ACTIVITY: ", this.studentCoursesActivity);
-    console.log("STUDENT TIME DATA: ", this.studentTimeData);
+    // console.log("STUDENT COURSES ACTIVITY: ", this.studentCoursesActivity);
+    // console.log("STUDENT TIME DATA: ", this.studentTimeData);
 
+    //  ==== get lowest activity timestamp
     this.lowestActivityTimestamp = this.studentCoursesActivity.reduce((lowest, course) => {
       const courseLowestTimestamp = course.activities.reduce((lowest, activity) => {
         return new Date(activity.timeStamp) < lowest ? new Date(activity.timeStamp) : lowest;
@@ -277,11 +282,6 @@ export default {
         encodeURIComponent(subject) +
         "&body=" +
         encodeURIComponent(yourMessage);
-    },
-    openEditDialog() {
-      // this.$emit("cancel");
-      // this.$emit("edit", student);
-      console.log("todo: edit person dialog");
     },
     routeToStudentDashboard() {
       alert("to do: routeToStudentDashboard()");
@@ -414,5 +414,12 @@ export default {
 
 .cohort-btn {
   font-weight: 400;
+}
+
+#sticky {
+  position: -webkit-sticky; /* Safari */
+  position: sticky;
+  top: 0;
+  z-index: 5;
 }
 </style>

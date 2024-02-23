@@ -1,8 +1,8 @@
 <template>
-  <div class="course-frame">
+  <div v-if="!loading" class="course-frame">
     <div class="d-flex justify-space-between pa-0">
       <div class="d-flex">
-        <img v-if="student.image.url" class="galaxy-image" :src="student.image.url" />
+        <img v-if="student.image?.url" class="galaxy-image" :src="student.image.url" />
         <div
           v-else
           class="imagePlaceholder"
@@ -45,6 +45,9 @@
       </v-col> -->
     </v-row>
   </div>
+  <div v-else-if="loading" class="d-flex justify-center align-center mt-4">
+    <v-btn :loading="loading" icon color="galaxyAccent"></v-btn>
+  </div>
 </template>
 
 <script>
@@ -52,7 +55,7 @@ import Chart from "@/components/Reused/Chart.vue";
 
 export default {
   name: "ProgressionLineChartStudentCourses",
-  props: ["courseData", "timeframe", "student"],
+  props: ["courseData", "timeframe", "student", "loading"],
   components: {
     Chart,
   },
@@ -132,7 +135,7 @@ export default {
         const label = course.course.title;
 
         const activities = course.activities
-          .filter((activity) => activity.status === "Completed")
+          // .filter((activity) => activity.status === "Completed")       // filter only completed event
           .sort((a, b) => new Date(a.timeStamp) - new Date(b.timeStamp)) // sort by lowest timestamp so the line is going the right way
           .map((activity, index) => {
             const sanitisedActivity = {

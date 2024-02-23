@@ -104,8 +104,8 @@ export default {
       //   (request) => request.requestForHelpStatus == "unanswered"
       // );
 
-      console.log("this.teachersRequestsForHelp", this.teachersRequestsForHelp);
-      console.log("this.allStudentsRequests", this.allStudentsRequests);
+      // console.log("this.teachersRequestsForHelp", this.teachersRequestsForHelp);
+      // console.log("this.allStudentsRequests", this.allStudentsRequests);
 
       // forgot why using this filter - students.some logic.
       // im thinking reuqests are relevant to everyone so why need to filter by specific students
@@ -140,8 +140,8 @@ export default {
         });
       }
 
-      console.log("requests:", requests);
-      console.log("filtered requests:", filteredRequests);
+      // console.log("requests:", requests);
+      // console.log("filtered requests:", filteredRequests);
 
       if (this.isCohortView || this.isDashboardView) return filteredRequests;
       else if (this.isGalaxyView) {
