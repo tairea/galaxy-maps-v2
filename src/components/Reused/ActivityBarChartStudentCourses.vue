@@ -12,8 +12,13 @@
     </v-row>
     <v-row>
       <v-col cols="12" class="center-col pa-0">
+        <!-- loading -->
+        <div v-if="loading" class="d-flex justify-center align-center mt-4">
+          <v-btn :loading="loading" icon color="galaxyAccent"></v-btn>
+        </div>
+        <!-- Chart -->
         <Chart
-          v-if="chartData.datasets.data.length > 0"
+          v-else-if="!loading && activityData.length > 0"
           ref="chart"
           class="chart"
           :chartType="chartType"
@@ -39,7 +44,7 @@ import { DateTime } from "luxon";
 
 export default {
   name: "ActivityBarChartStudentCourses",
-  props: ["activityData", "timeframe", "student"],
+  props: ["activityData", "timeframe", "student", "loading"],
   components: {
     Chart,
   },
@@ -106,12 +111,13 @@ export default {
     },
   },
   mounted() {
+    console.log("FROM LINE CHART. this.activityData", this.activityData);
     this.formatStudentsChartData(this.activityData);
   },
   watch: {
-    timeframe() {
-      this.formatStudentsChartData(this.activityData);
-    },
+    // timeframe() {
+    //   this.formatStudentsChartData(this.activityData);
+    // },
   },
   methods: {
     formatStudentsChartData(studentData) {
@@ -206,6 +212,8 @@ export default {
         labels: chartData.map((item) => item.label),
         datasets: [dataset],
       };
+
+      console.log("FROM LINE CHART. this.chartData", this.chartData);
     },
     stringToColour(str) {
       return `hsl(${this.hashCode(str) % 360}, 100%, 70%)`;

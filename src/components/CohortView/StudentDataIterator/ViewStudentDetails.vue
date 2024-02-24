@@ -172,12 +172,12 @@
             />
           </div>
           <div class="student-courses-barchart">
-            <ActivityBarChartStudentCourses
+            <!-- <ActivityBarChartStudentCourses
               :student="student"
               :activityData="studentTimeData"
               :timeframe="timeframe"
               :loading="!studentTimeData"
-            />
+            /> -->
           </div>
         </div>
       </div>

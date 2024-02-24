@@ -168,7 +168,7 @@ export default {
         this.timeframe.max.toISOString(),
       );
       this.studentTimeDataLoading = false;
-      console.log("course HOURS for " + this.student.firstName + ": ", courseHours);
+      // console.log("course HOURS for " + this.student.firstName + ": ", courseHours);
       return courseHours;
     },
     emitUpHours(hours) {

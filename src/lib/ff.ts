@@ -69,7 +69,6 @@ export const fetchStudentRequestsByPersonIdForATeacher = async (
     "getStudentRequestsByPersonIdForATeacher",
   );
   const result = await getStudentRequestsByPersonIdForATeacher(data);
-  console.log("RESULT from HTTPCALLABLE", result);
   return result.data.requests;
 };
 

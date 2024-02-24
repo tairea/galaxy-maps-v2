@@ -24,7 +24,13 @@
     </div>
     <v-row>
       <v-col cols="12" class="center-col pa-0">
+        <!-- loading -->
+        <div v-if="loading" class="d-flex justify-center align-center mt-4">
+          <v-btn :loading="loading" icon color="galaxyAccent"></v-btn>
+        </div>
+        <!-- Chart -->
         <Chart
+          v-else-if="!loading"
           ref="chart"
           class="chart"
           :chartType="chartType"
@@ -34,6 +40,12 @@
           :toolTipEnable="true"
           :timeframe="timeframe"
         />
+        <!-- no data -->
+        <div v-else>
+          <p class="overline d-flex justify-center align-center ma-6 galaxyAccent--text">
+            NO PROGRESS DATA
+          </p>
+        </div>
       </v-col>
       <!-- <v-col cols="4" class="pa-0">
         <div class="top-row">
@@ -44,9 +56,6 @@
         </div>
       </v-col> -->
     </v-row>
-  </div>
-  <div v-else-if="loading" class="d-flex justify-center align-center mt-4">
-    <v-btn :loading="loading" icon color="galaxyAccent"></v-btn>
   </div>
 </template>
 
@@ -107,9 +116,18 @@ export default {
       },
     };
   },
-  async mounted() {},
-  computed: {
-    // ...mapState(useRootStore, ["person"]),
+  async mounted() {
+    console.log("courseData", this.courseData);
+  },
+  computed: {},
+  // watch timeframe
+  watch: {
+    // timeframe: {
+    //   handler: function (newVal, oldVal) {
+    //     this.$refs.chart.updateChart();
+    //   },
+    //   deep: true,
+    // },
   },
   methods: {
     formatStudentsChartData(courseData) {
@@ -140,13 +158,13 @@ export default {
           .map((activity, index) => {
             const sanitisedActivity = {
               ...activity,
-              x: activity.timeStamp,
+              x: new Date(activity.timeStamp),
               y: index, // this is the new index based on the filtered array
             };
             return sanitisedActivity;
           });
 
-        let courseData = {
+        let newCourseData = {
           type: "line",
           backgroundColor: courseColour,
           borderColor: courseColour,
@@ -157,7 +175,7 @@ export default {
           label: label,
         };
         labels.push(label);
-        datasets.push(courseData);
+        datasets.push(newCourseData);
       }
 
       const datasetsObj = {
