@@ -287,6 +287,19 @@ export const fetchStudentCoursesTimeDataByPersonIdStartAtEndAt = async (
   return result.data.activityData;
 };
 
+export const fetchStudentCoursesTimeDataByPersonId = async (
+  personId: string,
+): Promise<Record<string, any>[]> => {
+  const data = {
+    personId,
+  };
+  const getStudentCoursesTimeDataByPersonId = functions.httpsCallable(
+    "getStudentCoursesTimeDataByPersonId",
+  );
+  const result = await getStudentCoursesTimeDataByPersonId(data);
+  return result.data.activityData;
+};
+
 // add person to cohort
 export const addMeToCohort = async (cohortId: string) => {
   const data = {

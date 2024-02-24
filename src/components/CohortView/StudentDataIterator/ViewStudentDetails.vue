@@ -311,17 +311,6 @@ export default {
       );
       this.loadingRequests = false;
     },
-    async getStudentTimeData() {
-      this.studentTimeDataLoading = true;
-      const courseHours = await fetchStudentCoursesTimeDataByPersonIdStartAtEndAt(
-        this.student.id,
-        this.timeframe.min.toISOString(),
-        this.timeframe.max.toISOString(),
-      );
-      this.studentTimeDataLoading = false;
-      console.log("course HOURS for " + this.student.firstName + ": ", courseHours);
-      return courseHours;
-    },
   },
 };
 </script>

@@ -2,7 +2,7 @@
   <div class="course-frame">
     <div class="d-flex justify-space-between pa-0">
       <div class="d-flex">
-        <img v-if="student.image.url" class="galaxy-image" :src="student.image.url" />
+        <img v-if="student.image?.url" class="galaxy-image" :src="student.image.url" />
         <div
           v-else
           class="imagePlaceholder"

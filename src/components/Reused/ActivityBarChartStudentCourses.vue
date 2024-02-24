@@ -29,6 +29,7 @@
 </template>
 
 <script>
+import { fetchStudentCoursesTimeDataByPersonIdStartAtEndAt } from "@/lib/ff";
 import Chart from "@/components/Reused/Chart.vue";
 import useRootStore from "@/store/index";
 import { DateTime } from "luxon";
@@ -75,10 +76,30 @@ export default {
                 size: 10,
               },
               // callback: function (value, index, ticks) {
-              //   console.log("shortening name...");
-              //   if (this.shortenNames) {
-              //     return this.first3Letters(value);
-              //   }
+              //   // console.log("gettinng course name... to colour and shorten");
+              //   console.log("value: ", value, "index: ", index, "ticks: ", ticks);
+              //   console.log("getlabelvalue", this.getLabelForValue(value));
+              //   // if (this.shortenNames) {
+              //   //   return this.first3Letters(value);
+              //   // }
+              // },
+              // afterTickToLabelConversion: function (data) {
+              //   var xLabels = data.ticks;
+
+              //   xLabels.forEach(function (labels, i) {
+              //     console.log("after tick LABELLLLLLSSSSS: ", labels);
+              //     console.log("after tick labels.label: ", labels.label);
+              //     var ctx = data.chart.ctx;
+              //     var value = labels.label;
+              //     var x = labels.pixelForTick;
+              //     var y = data.chart.height;
+
+              //     // Style your tick as you want
+              //     ctx.fillStyle = this.stringToColour(value);
+
+              //     // Rotation should be around (0,0) now perform rotation
+              //     ctx.fillText(value, x, y);
+              //   });
               // },
             },
           },
@@ -107,15 +128,28 @@ export default {
   },
   watch: {
     timeframe() {
-      this.formatStudentsChartData(this.activityData);
+      this.getStudentTimeData();
     },
   },
   methods: {
+    async getStudentTimeData() {
+      this.studentTimeDataLoading = true;
+      const courseHours = await fetchStudentCoursesTimeDataByPersonIdStartAtEndAt(
+        this.student.id,
+        this.timeframe.min.toISOString(),
+        this.timeframe.max.toISOString(),
+      );
+      this.timeData = courseHours;
+      this.studentTimeDataLoading = false;
+      // console.log("course HOURS for ", this.student.firstName + ": ", this.timeData);
+
+      this.formatStudentsChartData(courseHours);
+    },
     formatStudentsChartData(studentData) {
       const data = [];
       const labels = [];
 
-      console.log("BAR CHART data:", studentData);
+      // console.log("BAR CHART data:", studentData);
 
       // more than one student in a cohort so loop
       for (const courseAndHoursObj of studentData) {

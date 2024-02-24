@@ -83,7 +83,7 @@ export default {
     },
     timeframe: {
       handler(newTimeframe) {
-        console.log("timeframe watcher in chart: ", newTimeframe);
+        // console.log("timeframe watcher in chart: ", newTimeframe);
         if (this.chartType !== "bar") {
           this.chartOptions.scales.x.min = newTimeframe.min;
           this.chartOptions.scales.x.max = newTimeframe.max;
@@ -97,8 +97,8 @@ export default {
             this.chartOptions.scales.x.title = titleObj;
           }
         } else {
-          const data = this.chartData.datasets[0].data;
-          this.chart.data.datasets[0].data = data;
+          // console.log("bar chart chartData", this.chartData);
+          // console.log("bar chart datasets", this.chartData);
         }
 
         this.chart.update();
@@ -108,7 +108,12 @@ export default {
       deep: true,
       handler(newVal) {
         if (this.chartType === "bar") {
-          console.log("chartData watcher: ", newVal);
+          // console.log("chartData watcher for ", this.chartType, ": ", newVal);
+          const data = this.chartData.datasets[0].data;
+          const labels = this.chartData.labels;
+          this.chart.data.datasets[0].data = data;
+          this.chart.data.labels = labels;
+          this.chart.update();
         }
       },
     },
