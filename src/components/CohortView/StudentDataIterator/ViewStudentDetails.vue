@@ -159,6 +159,7 @@
           @timeframe="timeframe = $event"
           :earliestDate="lowestActivityTimestamp"
           class="d-flex justify-center"
+          style="width: 60%"
         />
         <div class="d-flex">
           <div class="student-courses-linechart">
@@ -171,6 +172,7 @@
           </div>
           <div class="student-courses-barchart">
             <ActivityBarChartStudentCourses
+              :student="student"
               :activityData="studentTimeData"
               :timeframe="timeframe"
             />

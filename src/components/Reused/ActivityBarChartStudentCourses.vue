@@ -2,7 +2,12 @@
   <div class="course-frame">
     <v-row>
       <v-col cols="12" class="d-flex pa-0">
-        <h1 class="galaxy-title pt-2 pl-2">HOURS ACTIVE</h1>
+        <h1 class="galaxy-title pt-2 pl-2">{{ student.firstName }}'s HOURS ACTIVE</h1>
+        <h1 class="galaxy-title pt-2 pl-2">
+          <span style="font-weight: 400; text-transform: none; font-style: italic">
+            (Each bar represents a Galaxy Map)</span
+          >
+        </h1>
       </v-col>
     </v-row>
     <v-row>
@@ -14,19 +19,11 @@
           :chartType="chartType"
           :chartData="chartData"
           :chartOptions="chartOptions"
-          :style="{ width: '100%', height: '200px' }"
-          :toolTipEnable="false"
+          :style="{ width: '100%', height: '350px' }"
+          :toolTipEnable="true"
           :timeframe="timeframe"
         />
       </v-col>
-      <!-- <v-col cols="4" class="pa-0">
-        <div class="top-row">
-          <p class="label">MOST ACTIVE:</p>
-        </div>
-        <div class="bottom-row my-3">
-          <p class="label">LEAST ACTIVE:</p>
-        </div>
-      </v-col> -->
     </v-row>
   </div>
 </template>
@@ -38,7 +35,7 @@ import { DateTime } from "luxon";
 
 export default {
   name: "ActivityBarChartStudentCourses",
-  props: ["activityData", "timeframe"],
+  props: ["activityData", "timeframe", "student"],
   components: {
     Chart,
   },
