@@ -12,6 +12,7 @@
       &lt;
     </v-chip>
     <v-chip
+      v-if="earliestDate"
       class="my-2 mx-1 custom-chip"
       color="missionAccent"
       :input-value="chipAllTimeActive"

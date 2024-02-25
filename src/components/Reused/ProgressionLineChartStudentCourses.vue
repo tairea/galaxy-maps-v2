@@ -132,6 +132,7 @@ export default {
         const label = course.course.title;
 
         const activities = course.activities
+          // .filter((activity) => activity.status === "Completed" || activity.status === "Started")  // "Started" data points look wrong
           .filter((activity) => activity.status === "Completed")
           .sort((a, b) => new Date(a.timeStamp) - new Date(b.timeStamp)) // sort by lowest timestamp so the line is going the right way
           .map((activity, index) => {

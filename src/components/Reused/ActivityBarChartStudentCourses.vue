@@ -13,7 +13,7 @@
     <v-row>
       <v-col cols="12" class="center-col pa-0">
         <Chart
-          v-if="chartData"
+          v-if="chartData?.labels?.length > 0"
           ref="chart"
           class="chart"
           :chartType="chartType"
@@ -23,6 +23,11 @@
           :toolTipEnable="true"
           :timeframe="timeframe"
         />
+        <div v-else>
+          <p class="overline d-flex justify-center align-center ma-6 galaxyAccent--text">
+            NO TIME DATA
+          </p>
+        </div>
       </v-col>
     </v-row>
   </div>
@@ -75,32 +80,6 @@ export default {
               font: {
                 size: 10,
               },
-              // callback: function (value, index, ticks) {
-              //   // console.log("gettinng course name... to colour and shorten");
-              //   console.log("value: ", value, "index: ", index, "ticks: ", ticks);
-              //   console.log("getlabelvalue", this.getLabelForValue(value));
-              //   // if (this.shortenNames) {
-              //   //   return this.first3Letters(value);
-              //   // }
-              // },
-              // afterTickToLabelConversion: function (data) {
-              //   var xLabels = data.ticks;
-
-              //   xLabels.forEach(function (labels, i) {
-              //     console.log("after tick LABELLLLLLSSSSS: ", labels);
-              //     console.log("after tick labels.label: ", labels.label);
-              //     var ctx = data.chart.ctx;
-              //     var value = labels.label;
-              //     var x = labels.pixelForTick;
-              //     var y = data.chart.height;
-
-              //     // Style your tick as you want
-              //     ctx.fillStyle = this.stringToColour(value);
-
-              //     // Rotation should be around (0,0) now perform rotation
-              //     ctx.fillText(value, x, y);
-              //   });
-              // },
             },
           },
           // y: {
@@ -147,59 +126,18 @@ export default {
     },
     formatStudentsChartData(studentData) {
       const data = [];
-      const labels = [];
-
-      // console.log("BAR CHART data:", studentData);
+      let labels = [];
 
       // more than one student in a cohort so loop
       for (const courseAndHoursObj of studentData) {
         const course = courseAndHoursObj.course;
-
         const label = course.title;
-
-        // calc total depending on timeframe.type (eg. fortnight, calculate days totals for that timeframes fortnight)
-        // let time = 0;
-        // switch (this.timeframe.type) {
-        //   case "day":
-        //     const dayRes = student.activity.find((day) => {
-        //       const statement = DateTime.fromISO(day.dayISOTimestamp).toMillis();
-        //       let timeframe = DateTime.fromJSDate(this.timeframe.max).toISODate();
-        //       timeframe = DateTime.fromISO(timeframe).toMillis();
-        //       return statement == timeframe;
-        //     });
-        //     if (dayRes) {
-        //       time = dayRes.minutesActiveTotal;
-        //     }
-        //     break;
-        //   case "week":
-        //     const weekRes = student.activity
-        //       .filter((day) => {
-        //         return (
-        //           DateTime.fromISO(day.dayISOTimestamp) > DateTime.fromJSDate(this.timeframe.min) &&
-        //           DateTime.fromISO(day.dayISOTimestamp) < DateTime.fromJSDate(this.timeframe.max)
-        //         );
-        //       })
-        //       .reduce((sum, activity) => sum + activity.minutesActiveTotal, 0);
-        //     time = weekRes;
-        //     break;
-
-        //   case "month":
-        //     const monthRes = student.activity
-        //       .filter((day) => {
-        //         return (
-        //           DateTime.fromISO(day.dayISOTimestamp) > DateTime.fromJSDate(this.timeframe.min) &&
-        //           DateTime.fromISO(day.dayISOTimestamp) < DateTime.fromJSDate(this.timeframe.max)
-        //         );
-        //       })
-        //       .reduce((sum, activity) => sum + activity.minutesActiveTotal, 0);
-        //     time = monthRes;
-        //     break;
-        //   default:
-        // }
 
         data.push(courseAndHoursObj.hours);
         labels.push(label);
       }
+
+      console.log("LABELS: ", labels);
 
       // // ==== test 30 students ===
       // for (var x = 0; x < 50; x++) {

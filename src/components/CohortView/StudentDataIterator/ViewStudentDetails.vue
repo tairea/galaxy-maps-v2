@@ -10,7 +10,7 @@
         </v-btn>
       </div>
       <!-- CONTENT SECTION -->
-      <div class="create-dialog-content">
+      <div id="sticky" class="create-dialog-content">
         <!-- STUDENT NAME & EMAIL -->
         <div class="student-details">
           <div class="d-flex justify-center align-center">
@@ -280,11 +280,6 @@ export default {
         "&body=" +
         encodeURIComponent(yourMessage);
     },
-    openEditDialog() {
-      // this.$emit("cancel");
-      // this.$emit("edit", student);
-      console.log("todo: edit person dialog");
-    },
     routeToStudentDashboard() {
       alert("to do: routeToStudentDashboard()");
     },
@@ -405,5 +400,12 @@ export default {
 
 .cohort-btn {
   font-weight: 400;
+}
+
+#sticky {
+  position: -webkit-sticky; /* Safari */
+  position: sticky;
+  top: 0;
+  z-index: 5;
 }
 </style>
