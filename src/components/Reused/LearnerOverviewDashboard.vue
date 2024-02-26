@@ -4,13 +4,13 @@
     <div class="create-dialog">
       <!-- HEADER -->
       <div class="dialog-header">
-        <p class="mb-0 d-flex justify-center align-center">Student Overview</p>
+        <p class="mb-0 d-flex justify-center align-center">Learner's Overview</p>
         <v-btn icon @click="close">
           <v-icon color="missionAccent">{{ mdiClose }}</v-icon>
         </v-btn>
       </div>
       <!-- CONTENT SECTION -->
-      <div id="sticky" class="create-dialog-content">
+      <div id="sticky" class="create-dialog-content mission-border-bottom">
         <!-- STUDENT NAME & EMAIL -->
         <div class="student-details">
           <div class="d-flex justify-center align-center">
@@ -25,7 +25,7 @@
 
           <div
             class="student-name-email-id d-flex flex-column justify-center"
-            style="width: 50%; padding-left: 50px"
+            style="width: 40%; padding-left: 50px"
           >
             <div class="d-flex justify-start ml-6 align-center" style="width: 100%">
               <div class="field">
@@ -51,7 +51,7 @@
                 <p class="value">{{ student.nsn }}</p>
               </div>
               <div v-if="student.id" class="field">
-                <p class="label">Student ID:</p>
+                <p class="label">Learner ID:</p>
                 <p class="value text-caption" style="color: gray">{{ student.id }}</p>
               </div>
               <!-- edit button -->
@@ -61,7 +61,10 @@
             </div>
           </div>
 
-          <div class="d-flex flex-column justify-center align-center" style="width: 50%">
+          <!-- XP Points -->
+          <StudentXpPoints :student="student" :studentOverview="true" style="width: 20%" />
+
+          <div class="d-flex flex-column justify-center align-center" style="width: 40%">
             <!-- EMAIL -->
             <v-btn
               @click="sendMail()"
@@ -91,77 +94,50 @@
         </div>
       </div>
 
-      <!-- CONTENT SECTION = SUBMISSIONS -->
-      <div class="create-dialog-content submissions-container">
-        <div class="submissions-awaiting-review">
-          <p class="cohortAccent--text">SUBMISSIONS AWAITING REVIEW</p>
-          <SubmissionTeacherFrame
-            :students="students"
-            :isTeacher="true"
-            :allStudentsSubmissions="submissions"
-            class="mt-4"
-            :studentOverview="true"
-            @submissionsChanged="submissionsChanged"
-            :loading="loadingSubmissions"
-            :showCourseImage="true"
-          />
+      <!-- STUDENT DATA CONTAINER -->
+      <div class="d-flex mission-border-bottom student-data-container">
+        <!-- CONTENT SECTION = SUBMISSIONS -->
+        <div class="create-dialog-content submissions-container">
+          <p class="cohortAccent--text text-center mission-border-bottom py-3 ma-0">SUBMISSIONS</p>
+          <div class="submissions-awaiting-review mission-border-bottom">
+            <p class="overline text-center">AWAITING REVIEW</p>
+            <SubmissionTeacherFrame
+              :students="students"
+              :isTeacher="true"
+              :allStudentsSubmissions="submissions"
+              class="ma-4"
+              :studentOverview="true"
+              @submissionsChanged="submissionsChanged"
+              :loading="loadingSubmissions"
+              :showCourseImage="true"
+              :dense="true"
+            />
+          </div>
+          <div class="submissions-completed mission-border-bottom">
+            <p class="overline text-center">COMPLETED</p>
+            <SubmissionTeacherFrame
+              :students="students"
+              :isTeacher="true"
+              :allStudentsSubmissions="submissions"
+              class="ma-4"
+              :studentOverview="true"
+              :completedSubmissionsOnly="true"
+              @submissionsChanged="submissionsChanged"
+              :loading="loadingSubmissions"
+              :showCourseImage="true"
+              :dense="true"
+            />
+          </div>
         </div>
-        <div class="submissions-completed">
-          <p class="cohortAccent--text">SUBMISSIONS COMPLETED</p>
-          <SubmissionTeacherFrame
-            :students="students"
-            :isTeacher="true"
-            :allStudentsSubmissions="submissions"
-            class="mt-4"
-            :studentOverview="true"
-            :completedSubmissionsOnly="true"
-            @submissionsChanged="submissionsChanged"
-            :loading="loadingSubmissions"
-            :showCourseImage="true"
-            :dense="true"
-          />
-        </div>
-      </div>
 
-      <!-- CONTENT SECTION = REQUESTS FOR HELP -->
-      <div class="create-dialog-content help-container">
-        <div class="help-awaiting-reply">
-          <p class="galaxyAccent--text">REQUESTS FOR HELP AWAITING REPLY</p>
-          <RequestForHelpTeacherFrame
-            :students="students"
-            :studentOverview="true"
-            :loading="loadingRequests"
-            :showCourseImage="true"
-            @requestsChanged="requestsChanged"
-            :allStudentsRequests="requests"
-            :isTeacher="true"
+        <!-- CONTENT SECTION -->
+        <div class="create-dialog-conten student-charts">
+          <TimeframeFilters
+            @timeframe="timeframe = $event"
+            :earliestDate="lowestActivityTimestamp"
+            class="d-flex justify-center mt-1"
           />
-        </div>
-        <div class="help-completed">
-          <p class="galaxyAccent--text">REQUESTS FOR HELP COMPLETED</p>
-          <RequestForHelpTeacherFrame
-            :students="students"
-            :studentOverview="true"
-            :loading="loadingRequests"
-            :showCourseImage="true"
-            :completedRequestsOnly="true"
-            @requestsChanged="requestsChanged"
-            :allStudentsRequests="requests"
-            :dense="true"
-            :isTeacher="true"
-          />
-        </div>
-      </div>
 
-      <!-- CONTENT SECTION -->
-      <div class="create-dialog-content">
-        <TimeframeFilters
-          @timeframe="timeframe = $event"
-          :earliestDate="lowestActivityTimestamp"
-          class="d-flex justify-center"
-          style="width: 60%"
-        />
-        <div class="d-flex">
           <div class="student-courses-linechart">
             <ProgressionLineChartStudentCourses
               :student="student"
@@ -178,7 +154,44 @@
             />
           </div>
         </div>
+
+        <!-- CONTENT SECTION = REQUESTS FOR HELP -->
+        <div class="create-dialog-content help-container">
+          <p class="galaxyAccent--text text-center mission-border-bottom py-3 ma-0">
+            REQUESTS FOR HELP
+          </p>
+          <div class="help-awaiting-reply mission-border-bottom">
+            <p class="overline text-center">AWAITING REPLY</p>
+            <RequestForHelpTeacherFrame
+              :students="students"
+              :studentOverview="true"
+              :loading="loadingRequests"
+              :showCourseImage="true"
+              @requestsChanged="requestsChanged"
+              :allStudentsRequests="requests"
+              :isTeacher="true"
+              class="ma-4"
+              :dense="true"
+            />
+          </div>
+          <div class="help-completed mission-border-bottom">
+            <p class="overline text-center">COMPLETED</p>
+            <RequestForHelpTeacherFrame
+              :students="students"
+              :studentOverview="true"
+              :loading="loadingRequests"
+              :showCourseImage="true"
+              :completedRequestsOnly="true"
+              @requestsChanged="requestsChanged"
+              :allStudentsRequests="requests"
+              :dense="true"
+              :isTeacher="true"
+              class="ma-4"
+            />
+          </div>
+        </div>
       </div>
+      <!-- END of STUDENT DATA CONTAINER -->
     </div>
   </v-dialog>
 </template>
@@ -200,7 +213,7 @@ import TimeframeFilters from "@/components/Reused/TimeframeFilters.vue";
 import ActivityBarChartStudentCourses from "@/components/Reused/ActivityBarChartStudentCourses.vue";
 
 export default {
-  name: "ViewStudentDetails",
+  name: "LearnerOverviewDashboard",
   props: {
     dialog: { type: Boolean },
     student: { type: Object },
@@ -344,7 +357,7 @@ export default {
   padding: 20px;
   width: 100%;
   background-color: var(--v-background-base);
-  border-bottom: 1px solid var(--v-missionAccent-base);
+  // border-bottom: 1px solid var(--v-missionAccent-base);
   // border: 1px solid yellow;
   .student-details {
     display: flex;
@@ -366,22 +379,22 @@ export default {
 
 .submissions-container,
 .help-container {
-  width: 100%;
+  width: 20%;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   padding: 0px;
   justify-content: flex-start;
 
   .submissions-awaiting-review,
   .help-awaiting-reply {
-    width: 60%;
-    border-right: 1px solid var(--v-missionAccent-base);
-    padding: 20px;
+    // width: 60%;
+    // border-right: 1px solid var(--v-missionAccent-base);
+    padding: 20px 0px;
   }
   .submissions-completed,
   .help-completed {
-    width: 40%;
-    padding: 20px;
+    // width: 40%;
+    padding: 20px 0px;
   }
 }
 
@@ -389,13 +402,26 @@ export default {
   padding: 0px 20px 20px 20px;
 }
 
-.student-courses-linechart {
+// .student-data-container {
+//   border-top: 1px solid var(--v-missionAccent-base);
+//   border-bottom: 1px solid var(--v-missionAccent-base);
+// }
+
+.student-charts {
   width: 60%;
-  padding: 10px;
-}
-.student-courses-barchart {
-  width: 40%;
-  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--v-missionAccent-base);
+  border-right: 1px solid var(--v-missionAccent-base);
+
+  .student-courses-linechart {
+    // width: 60%;
+    padding: 0px 20px 10px 20px;
+  }
+  .student-courses-barchart {
+    // width: 40%;
+    padding: 10px 20px;
+  }
 }
 
 .cohort-btn {
@@ -407,5 +433,12 @@ export default {
   position: sticky;
   top: 0;
   z-index: 5;
+}
+
+.mission-border-bottom {
+  border-bottom: 1px solid var(--v-missionAccent-base);
+}
+.mission-left-bottom {
+  border-left: 1px solid var(--v-missionAccent-base);
 }
 </style>

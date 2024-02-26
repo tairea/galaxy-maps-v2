@@ -89,7 +89,7 @@
       </template>
     </v-data-iterator>
     <!-- Student Dialog -->
-    <ViewStudentDetails
+    <LearnerOverviewDashboard
       v-if="showStudentFlag && isTeacher"
       :dialog="showStudentFlag"
       :student="student"
@@ -109,18 +109,16 @@
 <script>
 // import CreateAccountDialog from "@/components/CreateAccountDialog.vue";
 // import ImportCsvDialog from "@/components/ImportCsvDialog.vue";
-import StudentAccountsDialog from "@/components/Dialogs/StudentAccountsDialog.vue";
-import ViewStudentDetails from "@/components/CohortView/StudentDataIterator/ViewStudentDetails.vue";
-
-import StudentCardAdmin from "@/components/AllStudentsView/StudentCardAdmin.vue";
-
-import TimeframeFilters from "@/components/Reused/TimeframeFilters.vue";
 import EditStudentDialog from "@/components/Dialogs/EditStudentDialog.vue";
-import { fetchPersonByPersonId } from "@/lib/ff";
+import LearnerOverviewDashboard from "@/components/Reused/LearnerOverviewDashboard.vue";
+import StudentAccountsDialog from "@/components/Dialogs/StudentAccountsDialog.vue";
+import StudentCardAdmin from "@/components/AllStudentsView/StudentCardAdmin.vue";
+import TimeframeFilters from "@/components/Reused/TimeframeFilters.vue";
 
-import useRootStore from "@/store/index";
-import { mdiArrowUp, mdiArrowDown, mdiMagnify, mdiSortAlphabeticalVariant } from "@mdi/js";
+import { fetchPersonByPersonId } from "@/lib/ff";
 import { mapState } from "pinia";
+import { mdiArrowUp, mdiArrowDown, mdiMagnify, mdiSortAlphabeticalVariant } from "@mdi/js";
+import useRootStore from "@/store/index";
 
 export default {
   name: "StudentDataIteratorAdmin",
@@ -132,8 +130,8 @@ export default {
     // ImportCsvDialog,
     TimeframeFilters,
     StudentAccountsDialog,
-    ViewStudentDetails,
     EditStudentDialog,
+    LearnerOverviewDashboard,
   },
   data() {
     return {

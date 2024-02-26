@@ -25,7 +25,7 @@
     </div>
     <div v-if="!loading && submissions.length == 0">
       <p class="overline pt-4 text-center" style="color: var(--v-cohortAccent-base)">
-        NO {{ completedSubmissionsOnly ? "COMPLETED" : "" }} WORK TO REVIEW
+        NO {{ completedSubmissionsOnly ? "COMPLETED SUBMISSIONS" : "SUBMISSIONS TO REVIEW" }}
       </p>
     </div>
     <!-- loading spinner -->

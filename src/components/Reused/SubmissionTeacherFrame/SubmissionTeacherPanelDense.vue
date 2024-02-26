@@ -43,11 +43,11 @@
             </div>
 
             <!-- Status & Date -->
-            <div class="submission-time d-flex flex-column align-center ml-auto pl-1">
+            <div class="submission-time d-flex flex-column align-center ml-auto pl-1 text-right">
               <span v-if="reviewed" class="ml-auto mt-3 status-text baseAccent--text">
                 {{ submission.taskSubmissionStatus.toUpperCase() }}</span
               >
-              <span v-else class="ml-auto mt-1 status-text text-uppercase">...awaiting review</span>
+              <span v-else class="ml-auto mt-3 status-text text-uppercase">...awaiting review</span>
               {{ getHumanDate(submission.taskSubmittedForReviewTimestamp) }}
             </div>
           </div>

@@ -16,7 +16,7 @@
           v-on="on"
           :text="plain"
         >
-          <div>
+          <div :class="studentOverview ? '' : 'points-circle'">
             <span v-if="!plain">XP:</span>
             <span class="plain-label-value">{{ xpPoints }}</span>
           </div>
@@ -144,7 +144,7 @@ import useRootStore from "@/store/index";
 export default {
   name: "XpPointsDialog",
   components: {},
-  props: ["person", "xpPoints", "canManageXpPoints", "plain"],
+  props: ["person", "xpPoints", "canManageXpPoints", "plain", "studentOverview"],
   computed: {
     dark() {
       return this.$vuetify.theme.isDark;
@@ -295,5 +295,15 @@ export default {
     text-transform: none;
     font-size: 2rem;
   }
+}
+
+.points-circle {
+  border: 1px solid var(--v-baseAccent-base);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 </style>

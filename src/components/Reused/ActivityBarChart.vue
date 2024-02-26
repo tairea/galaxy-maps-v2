@@ -15,7 +15,7 @@
           :chartData="chartData"
           :chartOptions="chartOptions"
           :style="{ width: '100%', height: '200px' }"
-          :toolTipEnable="false"
+          :toolTipEnable="true"
           :timeframe="timeframe"
           :selectedPersons="selectedPersons"
           :unselectedPersons="unselectedPersons"

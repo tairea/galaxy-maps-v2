@@ -1,18 +1,24 @@
 <template>
   <div class="student-card" :class="status ? '' : 'not-active'">
+    <v-btn
+      color="baseAccent"
+      class="ma-2 pa-1 view-button"
+      outlined
+      @click="showStudentDetails(student)"
+      >V<br />I<br />E<br />W<br
+    /></v-btn>
     <StudentCardStatus
       :student="student"
       :date="date"
       :status="status"
       class="pl-1"
-      @click.native="showStudentDetails(student)"
       @emitUpLastActive="emitUpLastActive($event)"
     />
     <template v-if="!status">
       <span class="overline not-active text-uppercase ma-auto">hasn't signed in yet</span>
     </template>
     <template v-else>
-      <StudentXpPoints :student="student" />
+      <StudentXpPoints :student="student" class="mission-border-left" />
       <StudentCardProgress :activities="activities" :student="student" />
       <div class="student-activities-overUnder">
         <div style="height: 100%">
@@ -208,6 +214,11 @@ a {
   display: flex;
   height: 120px;
 
+  .view-button {
+    height: auto !important;
+    min-width: 0 !important;
+  }
+
   .student-activities-overUnder {
     display: flex;
     flex-direction: column;
@@ -243,5 +254,9 @@ a {
 .not-active {
   color: grey;
   // border-color: grey !important;
+}
+
+.mission-border-left {
+  border-left: 1px dashed var(--v-missionAccent-base);
 }
 </style>
