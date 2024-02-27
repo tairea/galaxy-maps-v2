@@ -93,6 +93,8 @@
       v-if="showStudentFlag && isTeacher"
       :dialog="showStudentFlag"
       :student="student"
+      :studentCoursesActivity="studentCoursesActivity"
+      :studentTimeData="studentTimeData"
       @cancel="cancelShowStudent"
       @edit="showEdit($event)"
     />
@@ -143,13 +145,18 @@ export default {
       sortDesc: false,
       sortBy: "firstName",
       keys: ["firstName", "lastName", "nsnNumber", "studentEmail", "lastActive"],
-      timeframe: {},
+      timeframe: {
+        min: new Date(-8640000000000000),
+        max: new Date(),
+      },
       date: "",
       prevVal: "",
       showStudentFlag: false,
       editStudentFlag: false,
       students: [],
       student: [],
+      studentCoursesActivity: [],
+      studentTimeData: [],
     };
   },
   created() {
@@ -183,9 +190,11 @@ export default {
   },
   methods: {
     // show/hide student details
-    showStudent(student) {
+    showStudent(payload) {
       this.showStudentFlag = false;
-      this.student = student;
+      this.student = payload.student;
+      this.studentCoursesActivity = payload.coursesActivity;
+      this.studentTimeData = payload.timeData;
       this.showStudentFlag = true;
     },
     cancelShowStudent() {

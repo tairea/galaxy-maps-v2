@@ -163,6 +163,7 @@ export default {
       editStudentFlag: false,
       student: [],
       studentCoursesActivity: [],
+      studentTimeData: [],
     };
   },
   created() {

@@ -1,5 +1,12 @@
 <template>
   <div class="student-card" :class="status ? '' : 'not-active'">
+    <v-btn
+      color="baseAccent"
+      class="ma-2 pa-1 view-button"
+      outlined
+      @click="showStudentDetails(student)"
+      >V<br />I<br />E<br />W<br
+    /></v-btn>
     <!-- Image & Name -->
     <div class="avatar-section text-center mt-2">
       <Avatar :size="50" :personId="student.id" :colourBorder="true" />
@@ -122,8 +129,9 @@ import StudentActivityTimeline from "@/components/Reused/StudentActivityTimeline
 import StudentXpPoints from "@/components/CohortView/StudentDataIterator/StudentCard/StudentXpPoints.vue";
 
 import {
-  //   fetchCohortByCohortId,
   fetchCourseByCourseId,
+  fetchStudentCoursesActivityByPersonId,
+  fetchStudentCoursesTimeDataByPersonIdStartAtEndAt,
 } from "@/lib/ff";
 
 import useRootStore from "@/store/index";
@@ -164,13 +172,14 @@ export default {
       deleting: false,
       disabled: false,
       courseForDialog: null,
-
-      // studentTimeDataLoading: false
+      studentCoursesActivity: [],
+      studentTimeData: [],
+      studentTimeDataLoading: false,
     };
   },
   async mounted() {
     // get course data (from LRS.io)
-    //this.studentsAssignedCourses = await getStudentsCoursesXAPIQuery(this.student); // this is getting the data from LRS.io. limit is 10,000 calls. might need to change this to get data to get from firestore
+    this.studentCoursesActivity = await fetchStudentCoursesActivityByPersonId(this.student.id);
 
     // get course data (from firestore)
     // this.student.assignedCourses is an array of course ids
@@ -179,6 +188,10 @@ export default {
       const course = await fetchCourseByCourseId(courseId);
       this.studentsAssignedCourses.push(course);
     });
+
+    // ==== get student activity data from LRS
+    // this new way gets all course log ins and log offs and calcs times
+    this.studentTimeData = await this.getStudentTimeData();
 
     // console.log("this.studentsAssignedCourses", this.studentsAssignedCourses);
   },
@@ -212,7 +225,13 @@ export default {
   },
   methods: {
     ...mapActions(useRootStore, ["deleteCourseFromPerson"]),
-
+    showStudentDetails(student) {
+      this.$emit("showStudent", {
+        student: student,
+        coursesActivity: this.studentCoursesActivity,
+        timeData: this.studentTimeData,
+      });
+    },
     removeCourseFromPerson(course) {
       this.courseForDialog = course;
       console.log("get course and remove it", course.id);
@@ -251,6 +270,17 @@ export default {
       if (minutes < 60) return `${minutes} mins ago`;
       if (hours < 24) return `${hours} hrs ago`;
       return `${days} days ago`;
+    },
+    async getStudentTimeData() {
+      this.studentTimeDataLoading = true;
+      const courseHours = await fetchStudentCoursesTimeDataByPersonIdStartAtEndAt(
+        this.student.id,
+        this.timeframe.min.toISOString(),
+        this.timeframe.max.toISOString(),
+      );
+      this.studentTimeDataLoading = false;
+      // console.log("course HOURS for " + this.student.firstName + ": ", courseHours);
+      return courseHours;
     },
   },
 };
@@ -434,5 +464,9 @@ a {
     width: 100%;
     padding: 20px;
   }
+}
+.view-button {
+  height: auto !important;
+  min-width: 0 !important;
 }
 </style>

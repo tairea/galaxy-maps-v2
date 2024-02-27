@@ -20,7 +20,7 @@
         v-on="on"
         class="mission-edit-button"
         outlined
-        color="primary"
+        color="white"
         x-small
       >
         <v-icon small> {{ mdiPencil }} </v-icon>
