@@ -774,74 +774,86 @@ async function assignCourseToStudent(courseId: string, personId: string) {
     throw new HttpsError("not-found", `Course not found: ${courseId}`);
   }
 
-  // Add the topics and tasks to the student
+  // check if student already has course.
+  const courseCollection = await db.collection("people").doc(person.id).collection(course.id).get();
 
-  // 1) get topics in this course
-  const querySnapshot = await db
-    .collection("courses")
-    .doc(course.id)
-    .collection("topics")
-    .orderBy("topicCreatedTimestamp")
-    .get();
+  console.log(courseCollection);
 
-  // 2) add them to person (this will store their TOPIC progression data for this course )
-  for (const [_, doc] of querySnapshot.docs.entries()) {
-    const topic = doc.data();
+  // check if the collection exists
+  if (courseCollection.empty) {
+    console.log("course DOES NOT exist for student", person.firstName + " " + person.lastName);
 
-    // calculate topic status
-    let topicStatus: string;
-    if (topic.group === "introduction") {
-      // is the topic part of the introduction group? if so make it unlocked
-      topicStatus = "unlocked";
-    } else if ((topic.prerequisites?.length ?? 0) === 0) {
-      // does this topic have prereqs? if not make it unlocked
-      topicStatus = "unlocked";
-    } else {
-      // default to locked
-      topicStatus = "locked";
-    }
+    // Add the topics and tasks to the student
 
-    await db
-      .collection("people")
-      .doc(person.id)
-      .collection(course.id)
-      .doc(topic.id)
-      .set({
-        ...topic,
-        topicStatus,
-      });
-
-    // 3) check if this topic has tasks
-    const subquerySnapshot = await db
+    // 1) get topics in this course
+    const querySnapshot = await db
       .collection("courses")
       .doc(course.id)
       .collection("topics")
-      .doc(topic.id)
-      .collection("tasks")
-      // order by timestamp is important otherwise index == 0 (in the next step)
-      // wont necessarily be the first mission
-      .orderBy("taskCreatedTimestamp")
+      .orderBy("topicCreatedTimestamp")
       .get();
 
-    // 4) if tasks exist. add them to person
-    for (const [index, subDoc] of subquerySnapshot.docs.entries()) {
-      const task = subDoc.data();
+    // 2) add them to person (this will store their TOPIC progression data for this course )
+    for (const [_, doc] of querySnapshot.docs.entries()) {
+      const topic = doc.data();
 
-      if (subDoc.exists) {
-        await db
-          .collection("people")
-          .doc(person.id)
-          .collection(course.id)
-          .doc(topic.id)
-          .collection("tasks")
-          .doc(task.id)
-          .set({
-            ...task,
-            // set the status of topics to locked unless they are the first mission (index == 0)
-            taskStatus: index == 0 ? "unlocked" : "locked",
-          });
+      // calculate topic status
+      let topicStatus: string;
+      if (topic.group === "introduction") {
+        // is the topic part of the introduction group? if so make it unlocked
+        topicStatus = "unlocked";
+      } else if ((topic.prerequisites?.length ?? 0) === 0) {
+        // does this topic have prereqs? if not make it unlocked
+        topicStatus = "unlocked";
+      } else {
+        // default to locked
+        topicStatus = "locked";
+      }
+
+      await db
+        .collection("people")
+        .doc(person.id)
+        .collection(course.id)
+        .doc(topic.id)
+        .set({
+          ...topic,
+          topicStatus,
+        });
+
+      // 3) check if this topic has tasks
+      const subquerySnapshot = await db
+        .collection("courses")
+        .doc(course.id)
+        .collection("topics")
+        .doc(topic.id)
+        .collection("tasks")
+        // order by timestamp is important otherwise index == 0 (in the next step)
+        // wont necessarily be the first mission
+        .orderBy("taskCreatedTimestamp")
+        .get();
+
+      // 4) if tasks exist. add them to person
+      for (const [index, subDoc] of subquerySnapshot.docs.entries()) {
+        const task = subDoc.data();
+
+        if (subDoc.exists) {
+          await db
+            .collection("people")
+            .doc(person.id)
+            .collection(course.id)
+            .doc(topic.id)
+            .collection("tasks")
+            .doc(task.id)
+            .set({
+              ...task,
+              // set the status of topics to locked unless they are the first mission (index == 0)
+              taskStatus: index == 0 ? "unlocked" : "locked",
+            });
+        }
       }
     }
+  } else {
+    console.log("course already exists for student ", person.firstName + " " + person.lastName);
   }
 
   await personDoc.ref.update({

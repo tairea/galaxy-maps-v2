@@ -14,6 +14,9 @@
         color="missionAccent"
         outlined
         class="custom-input"
+        :append-icon="hide ? mdiEye : mdiEyeOff"
+        @click:append="() => (hide = !hide)"
+        :type="hide ? 'password' : 'text'"
       ></v-text-field>
       <v-text-field
         :dark="dark"
@@ -26,6 +29,9 @@
         color="missionAccent"
         outlined
         class="custom-input"
+        :append-icon="hide ? mdiEye : mdiEyeOff"
+        @click:append="() => (hide = !hide)"
+        :type="hide ? 'password' : 'text'"
       ></v-text-field>
       <v-btn
         :disabled="!valid"
@@ -35,7 +41,7 @@
         outlined
         width="100%"
       >
-        Sign in
+        Save new password
       </v-btn>
       <v-btn color="missionAccent" class="mr-4 mt-4" @click="$emit('close')" outlined width="100%">
         back to login
@@ -45,9 +51,11 @@
 </template>
 
 <script>
-import useRootStore from "@/store/index";
 import firebase from "firebase/compat/app";
+import useRootStore from "@/store/index";
+
 import { mapActions, mapState } from "pinia";
+import { mdiEye, mdiEyeOff } from "@mdi/js";
 
 export default {
   name: "NewPassword",
@@ -56,6 +64,8 @@ export default {
     email: { type: String },
   },
   data: () => ({
+    mdiEye,
+    mdiEyeOff,
     valid: true,
     password: "",
     confirmPassword: "",
@@ -63,6 +73,7 @@ export default {
       (v) => !!v || "Password is required",
       (v) => (v && v.length >= 8) || "Password must have a minimum of 8 characters",
     ],
+    hide: String,
   }),
   computed: {
     ...mapState(useRootStore, ["user", "person"]),

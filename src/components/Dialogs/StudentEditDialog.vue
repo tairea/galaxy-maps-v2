@@ -157,9 +157,15 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "StudentEditDialog",
-  props: ["on", "attrs", "isDashboardView", "isStudentPopupView"],
+  props: ["on", "attrs", "isDashboardView", "isStudentPopupView", "student"],
   components: {},
-  mounted() {},
+  mounted() {
+    if (this.student) {
+      Object.assign(this.profile, this.student);
+    } else {
+      Object.assign(this.profile, this.person);
+    }
+  },
   computed: {
     ...mapState(useRootStore, ["person"]),
     dark() {
@@ -184,7 +190,11 @@ export default {
     dialog(newVal) {
       if (newVal) {
         console.log("dialog is true");
-        Object.assign(this.profile, this.person);
+        if (student) {
+          Object.assign(this.profile, this.student);
+        } else {
+          Object.assign(this.profile, this.person);
+        }
       }
     },
   },

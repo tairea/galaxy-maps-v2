@@ -288,7 +288,8 @@ import {
   mdiAccountMultiplePlus,
   mdiChartTimelineVariantShimmer,
 } from "@mdi/js";
-import { doc, updateDoc, FieldValue } from "firebase/firestore";
+import firebase from "firebase/compat/app";
+import { doc, updateDoc } from "firebase/firestore";
 import { mapActions, mapState } from "pinia";
 
 export default {
@@ -318,7 +319,7 @@ export default {
   async mounted() {
     if (this.assignCourses) {
       // TODO: we need to think about what courses are available to assign for a teacher
-      await this.bindCourses({ owner: null });
+      await this.bindCourses({ owner: this.person.id });
     } else if (this.assignCohorts) {
       this.teacherCohorts = this.cohorts.filter(
         (cohort) => cohort.teachers.includes(this.person.id) && !cohort.courseCohort,
@@ -329,7 +330,7 @@ export default {
   watch: {
     dialog(newVal) {
       if (newVal && !this.cohort)
-        this.cohort = this.cohorts.find((cohort) => cohort.id == this.currentCohortId);
+        this.cohort = this.cohorts?.find((cohort) => cohort.id == this.currentCohortId);
     },
   },
   computed: {
@@ -348,7 +349,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["bindCourses", "setSnackbar"]),
+    ...mapActions(useRootStore, ["bindCourses", "setSnackbar", "getPersonById"]),
     close() {
       this.dialog = false;
       this.loading = false;
@@ -414,13 +415,20 @@ export default {
       try {
         // Add a course to a cohort
         await updateDoc(doc(db, "cohorts", cohort.id), {
-          courses: FieldValue.arrayUnion(course.id),
+          courses: firebase.firestore.FieldValue.arrayUnion(course.id),
         });
         // add courses as assignedCourse to each student in the cohort
         if (cohort.students?.length) {
-          for (const student of cohort.students) {
-            const person = await this.MXgetPersonByIdFromDB(student);
-            await assignCourseToPerson(person.id, course.id);
+          for (const studentId of cohort.students) {
+            // const person = await this.getPersonById(studentId);
+            // console.log(
+            //   "adding course to person: ",
+            //   person.firstName,
+            //   person.id,
+            //   "course",
+            //   course.id,
+            // );
+            await assignCourseToPerson(studentId, course.id);
           }
         }
 

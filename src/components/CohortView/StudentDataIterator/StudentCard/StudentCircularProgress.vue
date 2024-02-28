@@ -126,6 +126,12 @@ export default {
       this.topicsCompletedPercentage = Math.round(percentage) || 1;
     },
     async calcTasksCompletedPercentage() {
+      console.log(
+        " data for fetch:",
+        this.student.id,
+        this.activity.currentTopic.id,
+        this.activity.course.id,
+      );
       if (this.activity.currentTopic?.status === "completed") this.tasksCompletedPercentage = 100;
       if (this.activity.currentTopic) {
         this.tasksInCurrentTopic = await fetchPersonsTasksByPersonIdCourseIdTopicId(

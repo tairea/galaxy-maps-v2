@@ -422,6 +422,7 @@ export const getStudentCoursesDataXAPIQuery = async (personId: string) => {
       description: string;
       topic: string;
       task: string;
+      course: string;
       id: string;
     }[];
   }[];
@@ -454,6 +455,8 @@ export const getStudentCoursesDataXAPIQuery = async (personId: string) => {
       const [action, title] = statement.description.split(": ");
       const [status, type] = action.split(" ");
 
+      console.log("Statement:", statement);
+
       const newStatement = {
         timeStamp: statement.timestamp,
         index,
@@ -473,6 +476,14 @@ export const getStudentCoursesDataXAPIQuery = async (personId: string) => {
       if (statement.description.includes("Completed Topic:")) {
         topicCompletedCount++;
         newStatement.id = statement.topic;
+      }
+      // check if description includes "task", "topic" or "course" then assign id accordingly
+      if (statement.description.includes("Task")) {
+        newStatement.id = statement.task;
+      } else if (statement.description.includes("Topic")) {
+        newStatement.id = statement.topic;
+      } else if (statement.description.includes("Course")) {
+        newStatement.id = statement.course;
       }
 
       return newStatement;

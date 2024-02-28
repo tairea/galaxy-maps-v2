@@ -120,6 +120,11 @@ export default {
   },
   async mounted() {
     this.studentCoursesActivity = await fetchStudentCoursesActivityByPersonId(this.student.id);
+    console.log(
+      "studentCoursesActivity for ",
+      this.student.firstName + " " + this.student.lastName,
+      this.studentCoursesActivity,
+    );
     this.cohort = await fetchCohortByCohortId(this.currentCohortId);
     const cohortActivities = this.studentCoursesActivity.filter((a) =>
       this.cohort.courses.some((b) => b === a.course.id),

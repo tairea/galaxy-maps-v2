@@ -45,7 +45,8 @@ import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mdiInformationVariant, mdiDelete, mdiClose } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
-import { doc, updateDoc, FieldValue } from "firebase/firestore";
+import firebase from "firebase/compat/app";
+import { doc, updateDoc } from "firebase/firestore";
 
 export default {
   name: "ConfirmDeleteStudentDialog",
@@ -66,7 +67,7 @@ export default {
       const studentId = this.student.id;
 
       await updateDoc(doc(db, "cohorts", this.currentCohortId), {
-        students: FieldValue.arrayRemove(studentId),
+        students: firebase.firestore.FieldValue.arrayRemove(studentId),
       });
 
       await this.deleteAssignedCourse(studentId);
@@ -86,7 +87,7 @@ export default {
 
       const courseIds = currentCohort.courses;
       await updateDoc(studentRef, {
-        assignedCourses: FieldValue.arrayRemove(...courseIds),
+        assignedCourses: firebase.firestore.FieldValue.arrayRemove(...courseIds),
       });
     },
   },

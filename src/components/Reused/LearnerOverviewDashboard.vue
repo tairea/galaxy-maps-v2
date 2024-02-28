@@ -57,7 +57,7 @@
               <!-- edit button -->
             </div>
             <div class="edit-button ml-6">
-              <StudentEditDialog :isStudentPopupView="true" />
+              <StudentEditDialog :isStudentPopupView="true" :student="student" />
             </div>
           </div>
 
