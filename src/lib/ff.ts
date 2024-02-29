@@ -107,6 +107,25 @@ export const fetchTaskByCourseIdTopicIdTaskId = async (
   return result.data.task;
 };
 
+// organisation
+export const fetchOrganisations = async () => {
+  const data = {};
+  const getOrganisations = functions.httpsCallable("getOrganisations");
+  const result = await getOrganisations(data);
+  return result.data.organisations;
+};
+
+export const fetchOrganisationByOrganisationId = async (organisationId: string) => {
+  const data = {
+    organisationId,
+  };
+  const getOrganisationByOrganisationId = functions.httpsCallable(
+    "getOrganisationByOrganisationId",
+  );
+  const result = await getOrganisationByOrganisationId(data);
+  return result.data.organisation;
+};
+
 export const fetchPersonByPersonId = async (id: string) => {
   const data = {
     personId: id,

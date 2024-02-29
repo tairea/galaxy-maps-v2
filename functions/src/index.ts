@@ -37,6 +37,10 @@ import {
   sendResponseToSubmissionHttpsEndpoint,
   sendTaskSubmissionHttpsEndpoint,
 } from "./emails.js";
+import {
+  getOrganisationByOrganisationIdHttpsEndpoint,
+  getOrganisationsHttpsEndpoint,
+} from "./organisationManagement.js";
 import { onUserStatusChangedOnUpdateTrigger } from "./presence.js";
 import {
   addAdminRoleHttpsEndpoint,
@@ -84,6 +88,11 @@ export {
   sendResponseToHelpHttpsEndpoint as sendResponseToHelp,
   sendResponseToSubmissionHttpsEndpoint as sendResponseToSubmission,
   sendTaskSubmissionHttpsEndpoint as sendTaskSubmission,
+};
+
+export {
+  getOrganisationByOrganisationIdHttpsEndpoint as getOrganisationByOrganisationId,
+  getOrganisationsHttpsEndpoint as getOrganisations,
 };
 
 export { onUserStatusChangedOnUpdateTrigger as onUserStatusChanged };

@@ -219,9 +219,10 @@ import Cohort from "@/components/Reused/Cohort.vue";
 import CohortPanelV2 from "@/components/CohortList/CohortPanelV2.vue";
 import TimeframeFilters from "@/components/Reused/TimeframeFilters.vue";
 import Organisation from "@/components/Reused/Organisation.vue";
+import { fetchCohorts, fetchOrganisationByOrganisationId } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mdiPlus } from "@mdi/js";
-import { mapActions, mapState } from "pinia";
+import { mapState } from "pinia";
 
 export default {
   name: "CohortListV2",
@@ -245,6 +246,8 @@ export default {
     currentIndex: 0,
     currentIndexCount: 0,
     selectedIndexs: [],
+    organisations: [],
+    cohorts: [],
     selectedCohorts: [],
     unselectedCohorts: [],
     orderedCohorts: [],
@@ -263,23 +266,13 @@ export default {
     this.expand = true;
   },
   computed: {
-    ...mapState(useRootStore, [
-      "organisations",
-      "cohorts",
-      "person",
-      "user",
-      "getOrganisationById",
-    ]),
-    cohortView() {
-      return this.$route.name === "CohortView";
-    },
+    ...mapState(useRootStore, ["person", "user"]),
     getIndex() {
       this.currentIndexCount = this.currentIndexCount + 1;
       return this.currentIndexCount;
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["bindAllCohorts", "bindAllOrganisations", "getCohortsByPersonId"]),
     getCohortsThatPersonIsTeacherIn() {
       return this.cohorts.filter((cohort) => cohort.teachers.includes(this.person.id));
     },
@@ -292,20 +285,23 @@ export default {
       if (id) {
         return this.cohorts.filter((cohort) => cohort.organisation === id);
       } else {
-        return this.cohorts.filter((cohort) => cohort.organisation == "");
+        return this.cohorts.filter((cohort) => cohort.organisation === "");
       }
     },
     async getCohortsAndOrganisations() {
-      if (this.user.data.admin) {
-        await this.bindAllCohorts();
-        await this.bindAllOrganisations();
-      } else {
-        await this.getCohortsByPersonId(this.person);
-      }
+      this.cohorts = await fetchCohorts();
+      const organisationIdsSet = new Set(
+        this.cohorts
+          .filter((cohort) => cohort.organisation != null && cohort.organisation !== "")
+          .map((cohort) => cohort.organisation),
+      );
+      this.organisations = await Promise.all(
+        Array.from(organisationIdsSet).map((id) => fetchOrganisationByOrganisationId(id)),
+      );
     },
     editOrgDialog(orgId) {
       this.openOrganisationDialog = true;
-      this.editingOrgansation = this.getOrganisationById(orgId);
+      this.editingOrgansation = this.organisations.find((org) => org.id === orgId);
       this.$refs.organisationDialog.openDialog();
     },
     setTimeframe(timeframeEmitted) {

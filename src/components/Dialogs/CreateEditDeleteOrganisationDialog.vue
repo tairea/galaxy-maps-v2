@@ -290,10 +290,7 @@ export default {
     organisation: {
       name: "",
       description: "",
-      image: {
-        name: "",
-        url: "",
-      },
+      image: null,
       cohorts: [],
     },
     uploadedImage: null,
@@ -337,7 +334,7 @@ export default {
 
       // Add a new document in collection "cohorts"
       try {
-        db.collection("organisations").add(organisation);
+        await db.collection("organisations").add(organisation);
 
         console.log("Document successfully written!");
         this.loading = false;
@@ -405,126 +402,112 @@ export default {
       const personRef = person.ref;
 
       // save person ref to organisation
-      db.collection("organisations")
-        .doc(this.organisation.id)
-        .update({
-          people: firebase.firestore.FieldValue.arrayRemove(personRef),
-        })
-        .then((docRef) => {
-          // remove from this.organisation.people
-          const index = this.organisation.people.findIndex((person) => person.email === email);
-          this.organisation.people.splice(index, 1);
-          console.log("Person successfully removed to organisation!");
-          this.addPersonLoading = false;
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
-          this.addPersonLoading = false;
-        });
+      try {
+        await db
+          .collection("organisations")
+          .doc(this.organisation.id)
+          .update({
+            people: firebase.firestore.FieldValue.arrayRemove(personRef),
+          });
+
+        // remove from this.organisation.people
+        const index = this.organisation.people.findIndex((person) => person.email === email);
+        this.organisation.people.splice(index, 1);
+        console.log("Person successfully removed to organisation!");
+        this.addPersonLoading = false;
+      } catch (error) {
+        console.error("Error writing document: ", error);
+        this.addPersonLoading = false;
+      }
       this.personsEmail = null;
     },
-    storeImage() {
+    async storeImage() {
       this.disabled = true;
       // ceate a storage ref
-      var storageRef = storage.ref(
+      const storageRef = storage.ref(
         "organisation-images/" + this.organisation.name + "-" + this.uploadedImage.name,
       );
 
       // upload a file
-      var uploadTask = storageRef.put(this.uploadedImage);
+      const uploadTask = storageRef.put(this.uploadedImage);
 
       // update progress bar
-      uploadTask.on(
-        "state_changed",
-        (snapshot) => {
-          // show progress on uploader bar
-          this.percentage = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        },
-        // upload error
-        (err) => {
-          console.log(err);
-        },
-        // upload complete
-        () => {
-          // get image url
-          uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
-            console.log("image url is: " + downloadURL);
-            console.log("this.organisation: " + this.organisation);
-            // add image url to organisation obj
-            const image = {
-              url: downloadURL,
-              name: this.organisation.name + "-" + this.uploadedImage.name,
-            };
-            this.organisation["image"] = image;
-            this.disabled = false;
-            this.percentage = 0;
-          });
-        },
-      );
+      uploadTask.on("state_changed", (snapshot) => {
+        // show progress on uploader bar
+        this.percentage = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+      });
+
+      try {
+        const uploadResult = await uploadTask;
+        const downloadURL = await uploadResult.ref.getDownloadURL();
+        console.log("image url is: " + downloadURL);
+        console.log("this.organisation: " + this.organisation);
+
+        // add image url to organisation obj
+        const image = {
+          url: downloadURL,
+          name: this.organisation.name + "-" + this.uploadedImage.name,
+        };
+        this.organisation.image = image;
+        this.disabled = false;
+        this.percentage = 0;
+      } catch (err) {
+        console.log(err);
+      }
     },
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },
     // === DELETE
     deleteDialog() {
-      (this.dialog = false), (this.dialogConfirm = true);
+      this.dialog = false;
+      this.dialogConfirm = true;
     },
     cancelDeleteDialog() {
-      this.dialogConfirm = false;
       this.dialog = true;
+      this.dialogConfirm = false;
     },
-    confirmDeleteOrganisation(organisation) {
+    async confirmDeleteOrganisation(organisation) {
       this.loadingDelete = true;
-      // delete document in collection "organisations"
-      db.collection("organisations")
-        .doc(organisation.id)
-        .delete()
-        .then(() => {
-          console.log("Organisation successfully deleted!");
-          this.loadingDelete = false;
-          this.dialogConfirm = false;
-          this.closeDialog();
-        })
-        .catch((error) => {
-          console.error("Error deleting document: ", error);
-        });
 
-      // TODO:  search cohorts.organisations for "organisation.id" and delete/or set as empty
-      db.collection("cohorts")
-        .where("organisation", "==", organisation.id)
-        .get()
-        .then((querySnapshot) => {
-          querySnapshot.forEach((doc) => {
-            // where id matches organisations in cohort, set emmpty org (removing org from cohort)
-            db.collection("cohorts")
-              .doc(doc.id)
-              .update({ organisation: "" })
-              .then(() => {
-                console.log("Organisation removed from Cohort.");
-              });
-          });
-        })
-        .catch((error) => {
-          console.log("Error getting documents: ", error);
-        });
+      try {
+        // delete document in collection "organisations"
+        await db.collection("organisations").doc(organisation.id).delete();
+        console.log("Organisation successfully deleted!");
 
-      this.deleteImage();
+        const querySnapshot = await db
+          .collection("cohorts")
+          .where("organisation", "==", organisation.id)
+          .get();
+
+        for (const doc of querySnapshot.docs) {
+          // where id matches organisations in cohort, set emmpty org (removing org from cohort)
+          await db.collection("cohorts").doc(doc.id).update({ organisation: "" });
+          console.log("Organisation removed from Cohort.");
+        }
+
+        await this.deleteImage();
+
+        this.loadingDelete = false;
+        this.dialogConfirm = false;
+        this.closeDialog();
+      } catch (error) {
+        console.log("Error getting documents: ", error);
+      }
     },
-    deleteImage() {
+    async deleteImage() {
       // if no image, dont worry bout it cuz
       if (this.organisation.image.name == "") return;
       console.log("deleting image...");
       // Create a reference to the file to delete
-      var storageRef = storage.ref("organisation-images/" + this.organisation.image.name);
+      const storageRef = storage.ref("organisation-images/" + this.organisation.image.name);
       // Delete the file
-      storageRef
-        .delete()
-        .then(() => {
-          console.log("Image successfully deleted!");
-        })
-        .catch((error) => {
-          console.log("Uh-oh, an error occurred!", error);
-        });
+      try {
+        await storageRef.delete();
+        console.log("Image successfully deleted!");
+      } catch (error) {
+        console.log("Uh-oh, an error occurred!", error);
+      }
     },
   },
 };

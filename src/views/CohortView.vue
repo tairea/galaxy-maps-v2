@@ -1,20 +1,29 @@
 <template>
-  <div v-if="cohort" id="container" class="bg">
+  <div id="container" class="bg">
     <div id="left-section">
-      <CohortInfo />
+      <CohortInfo v-if="!isLoadingCohort" :cohort="cohort" />
       <BackButton :toPath="'/cohorts'" />
-      <AssignedInfo :cohort="cohort" assignCourses="true" />
+      <AssignedInfo v-if="!isLoadingCohort" :cohort="cohort" assignCourses="true" />
     </div>
 
     <div id="main-section">
-      <div class="people-frame">
+      <!-- loading spinner -->
+      <div class="d-flex justify-center align-center" v-if="isLoadingCohort">
+        <v-btn
+          :loading="isLoadingCohort"
+          icon
+          color="missionAccent"
+          class="d-flex justify-center align-center"
+        ></v-btn>
+      </div>
+      <div v-if="cohort" class="people-frame">
         <div class="people-border">
-          <div :class="peopleLabel" @click="studentsView = true">
+          <div :class="peopleLabel" @click="setStudentsView(true)">
             <span class="pl-3">STUDENTS</span>
           </div>
         </div>
         <div class="graph-border">
-          <div :class="graphLabel" class="text-center" @click="studentsView = false">
+          <div :class="graphLabel" class="text-center" @click="setStudentsView(false)">
             <span class="pl-3">OVERVIEW</span>
           </div>
         </div>
@@ -23,14 +32,15 @@
       </div>
     </div>
 
-    <div v-if="ready" id="right-section">
+    <div id="right-section">
       <RequestForHelpTeacherFrame
+        v-if="cohort"
         :isTeacher="teacher"
         :courses="courses"
         :students="cohort.students"
       />
       <SubmissionTeacherFrame
-        v-if="teacher"
+        v-if="cohort && teacher"
         :courses="courses"
         :students="cohort.students"
         class="mt-4"
@@ -47,9 +57,9 @@ import BackButton from "@/components/Reused/BackButton.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 import CohortGraphs from "@/components/CohortView/CohortGraphs.vue";
-import { fetchCohortByCohortId } from "@/lib/ff";
 import useRootStore from "@/store/index";
-import { mapState } from "pinia";
+import useCohortViewStore from "@/store/cohortView";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "CohortView",
@@ -64,13 +74,11 @@ export default {
     CohortGraphs,
   },
   data() {
-    return {
-      studentsView: true,
-      cohort: null,
-    };
+    return {};
   },
   computed: {
     ...mapState(useRootStore, ["currentCohortId", "person", "userStatus"]),
+    ...mapState(useCohortViewStore, ["studentsView", "isLoadingCohort", "cohort"]),
     ready() {
       return this.cohortId === this.currentCohortId && this.cohort != null;
     },
@@ -90,7 +98,10 @@ export default {
     },
   },
   async mounted() {
-    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
+    await this.loadCohort(this.cohortId);
+  },
+  methods: {
+    ...mapActions(useCohortViewStore, ["loadCohort", "setStudentsView"]),
   },
 };
 </script>

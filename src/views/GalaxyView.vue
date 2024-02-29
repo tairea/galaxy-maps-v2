@@ -143,6 +143,7 @@ import confetti from "canvas-confetti";
 import {
   fetchAllPeopleInCourseByCourseId,
   fetchAllCohortsInCourseByCourseId,
+  fetchCohorts,
   fetchCourseByCourseId,
   fetchPersonByPersonId,
   fetchTopicByCourseIdTopicId,
@@ -238,8 +239,8 @@ export default {
       this.setPeopleInCourse(this.peopleInCourse);
       this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
     } else {
-      await this.getCohortsByPersonId(this.person);
-      let cohort = this.cohorts.find((cohort) =>
+      const cohorts = await fetchCohorts();
+      let cohort = cohorts.find((cohort) =>
         cohort.courses.some((courseId) => courseId === this.courseId),
       );
       this.cohortsInCourse.push(cohort);
@@ -270,16 +271,7 @@ export default {
     }
   },
   computed: {
-    ...mapState(useRootStore, [
-      "currentCourseNodes",
-      "person",
-      "topicsTasks",
-      "personsTopicsTasks",
-      "cohorts",
-      "user",
-      "person",
-      "user",
-    ]),
+    ...mapState(useRootStore, ["person", "user"]),
     draft() {
       return this.course?.status === "drafting";
     },
@@ -297,12 +289,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, [
-      "getCohortsByPersonId",
-      "setCurrentCohortId",
-      "setCurrentCourseId",
-      "setPeopleInCourse",
-    ]),
+    ...mapActions(useRootStore, ["setCurrentCohortId", "setCurrentCourseId", "setPeopleInCourse"]),
     setUiMessage(message) {
       this.uiMessage = message;
     },

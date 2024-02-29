@@ -74,10 +74,10 @@
         <StudentCard
           v-for="student in props.items"
           :key="student.id"
+          :cohort="cohort"
           :student="student"
           :timeframe="timeframe"
           :date="date"
-          :cohortCourseIds="cohort.courses"
           @showStudent="showStudent($event)"
           @updateStudentsWithHours="updateStudentsWithHours($event)"
           @updateStudentsWithTasks="updateStudentsWithTasks($event)"

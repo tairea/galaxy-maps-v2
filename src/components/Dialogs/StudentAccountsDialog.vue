@@ -95,8 +95,10 @@ import CreateAccountForm from "@/components/Dialogs/CreateAccountForm.vue";
 import StudentImportCsv from "@/components/Reused/StudentImportCsv.vue";
 import ConfirmDeleteStudentDialog from "@/components/Dialogs/ConfirmDeleteStudentDialog.vue";
 import EditStudentDialog from "@/components/Dialogs/EditStudentDialog.vue";
+import useCohortViewStore from "@/store/cohortView";
 
 import { mdiAccountGroup, mdiAccountPlus, mdiAccountEdit, mdiPencil, mdiDelete } from "@mdi/js";
+import { mapActions } from "pinia";
 
 export default {
   name: "StudentAccountsDialog",
@@ -127,7 +129,9 @@ export default {
     },
   },
   methods: {
+    ...mapActions(useCohortViewStore, ["refreshCohort"]),
     close() {
+      this.refreshCohort();
       this.dialog = false;
     },
     removeStudent(student) {

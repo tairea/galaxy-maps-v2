@@ -335,7 +335,6 @@ export default {
   computed: {
     ...mapState(useRootStore, [
       "courses",
-      "organisations",
       "currentCourseId",
       "currentCohortId",
       "personsCourses",

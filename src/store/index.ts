@@ -66,9 +66,6 @@ export default defineStore({
       const topic = state.personsTopics.find((topic) => topic.id === id);
       return topic;
     },
-    getCohortById: (state) => (id: string) => {
-      return state.cohorts.find((cohort) => cohort.id === id);
-    },
     getOrganisationById: (state) => (id: string) => {
       return state.organisations.find((organisation) => organisation.id === id);
     },
@@ -79,18 +76,6 @@ export default defineStore({
     getPersonsTasksByTopicId: (state) => (id: string) => {
       const topic = state.personsTopics.find((topic) => topic.id === id);
       return topic?.tasks ?? [];
-    },
-    getCoursesInThisCohort: (state) => (id: string) => {
-      //go to cohorts, and check if they in courses with this id
-      const cohort = state.cohorts.find((cohort) => cohort.id === id);
-      const cohortsCoursesArrOfObj: Record<string, any>[] = [];
-      cohort?.courses.forEach((courseId: string) => {
-        const courseObj = state.courses.find((course) => course.id == courseId);
-        if (courseObj != null) {
-          cohortsCoursesArrOfObj.push(courseObj);
-        }
-      });
-      return cohortsCoursesArrOfObj;
     },
     getStudentsByCohortId: (state) => (id: string) => {
       //go to cohorts, and check if they in courses with this id
@@ -221,12 +206,6 @@ export default defineStore({
         });
       },
     ),
-    bindAllCohorts: firestoreAction(({ bindFirestoreRef }) => {
-      return bindFirestoreRef("cohorts", db.collection("cohorts"));
-    }),
-    bindAllOrganisations: firestoreAction(({ bindFirestoreRef }) => {
-      return bindFirestoreRef("organisations", db.collection("organisations"));
-    }),
     bindAllPeople: firestoreAction(({ bindFirestoreRef }) => {
       return bindFirestoreRef("people", db.collection("people"));
     }),

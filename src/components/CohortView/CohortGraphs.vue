@@ -93,14 +93,9 @@ import ActivityBarChart from "@/components/Reused/ActivityBarChart.vue";
 import TimeframeFilters from "@/components/Reused/TimeframeFilters.vue";
 import Avatar from "@/components/Reused/Avatar.vue";
 import {
-  fetchCohortByCohortId,
   fetchCohortCoursesActivityByCohortId,
   fetchCohortStudentsActivityTimeByCohortId,
 } from "@/lib/ff";
-import { db } from "@/store/firestoreConfig";
-import useRootStore from "@/store/index";
-import { mapState } from "pinia";
-import { doc, getDoc } from "firebase/firestore";
 
 export default {
   name: "CohortGraphs",
@@ -128,8 +123,6 @@ export default {
     this.cohortsCoursesDataLoading = true;
     this.cohortActivityDataLoading = true;
 
-    const currentCohort = await fetchCohortByCohortId(this.currentCohortId);
-
     // ==== get cohort course data from LRS
     this.cohortsCoursesData = await fetchCohortCoursesActivityByCohortId(this.cohort.id);
 
@@ -150,11 +143,8 @@ export default {
     this.cohortsCoursesDataLoading = false;
 
     // ==== get cohort activity data from LRS
-    this.cohortActivityData = await fetchCohortStudentsActivityTimeByCohortId(currentCohort.id);
+    this.cohortActivityData = await fetchCohortStudentsActivityTimeByCohortId(this.cohort.id);
     this.cohortActivityDataLoading = false;
-  },
-  computed: {
-    ...mapState(useRootStore, ["currentCohortId"]),
   },
   methods: {
     clickedPerson(person, index) {
