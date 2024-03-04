@@ -39,6 +39,7 @@
 import PopupStudentProgress from "@/components/CohortView/StudentDataIterator/StudentCard/PopupStudentProgress.vue";
 import { fetchPersonsTasksByPersonIdCourseIdTopicId } from "@/lib/ff";
 import { mdiAccount } from "@mdi/js";
+import { mapState } from "pinia";
 
 export default {
   name: "StudentCircularProgress",
@@ -59,6 +60,7 @@ export default {
     };
   },
   mounted() {
+    console.log("Activity from circle progress:", this.activity);
     this.calcTopicsCompletedPercentage();
     this.calcTasksCompletedPercentage();
     this.e = {
@@ -140,7 +142,10 @@ export default {
           this.activity.course.id,
         );
 
-        console.log("circular yoza - this.tasksInCurrentTopic:", this.tasksInCurrentTopic);
+        console.log(
+          "bug: why is this.tasksInCurrentTopic sometimes undefined:",
+          this.tasksInCurrentTopic,
+        );
 
         this.tasksInCurrentTopic.forEach((task) => {
           if (task.taskStatus === "completed") this.completedTasksInTopic++;

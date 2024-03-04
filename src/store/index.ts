@@ -584,13 +584,13 @@ export default defineStore({
             (a, b) => b.requestSubmittedTimestamp.seconds - a.requestSubmittedTimestamp.seconds,
           );
 
-          console.log("ALL REQUESTS FOR HELP:", allRequestsForHelp);
+          // console.log("ALL REQUESTS FOR HELP:", allRequestsForHelp);
 
           this.teachersRequestsForHelp = allRequestsForHelp.filter(
             (req) => req.contextCourse.id === courseId,
           );
 
-          console.log("this.teachersRequestsForHelp:", this.teachersRequestsForHelp);
+          // console.log("this.teachersRequestsForHelp:", this.teachersRequestsForHelp);
         });
 
       return unsubscribe;

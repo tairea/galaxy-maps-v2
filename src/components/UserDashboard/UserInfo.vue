@@ -7,6 +7,7 @@
       :person="person"
       :xpPoints="person.xpPointsTotal ? person.xpPointsTotal : 0"
       :canManageXpPoints="isAdmin"
+      :studentOverview="true"
     />
     <div class="student-info">
       <!-- Student name -->
@@ -63,7 +64,7 @@ import firebase from "firebase/compat/app";
 import { mapActions, mapState } from "pinia";
 
 export default {
-  name: "StudentInfo",
+  name: "UserInfo",
   props: [],
   components: {
     StudentAvatar,

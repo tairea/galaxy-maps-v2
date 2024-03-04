@@ -59,9 +59,9 @@ export default {
   },
   watch: {
     courseSubmissions(newVal, oldVal) {
-      console.log("=== course submissions changed");
-      console.log("old val:", oldVal);
-      console.log("new val:", newVal);
+      // console.log("=== course submissions changed");
+      // console.log("old val:", oldVal);
+      // console.log("new val:", newVal);
       this.$emit("submissionsChanged");
     },
   },
