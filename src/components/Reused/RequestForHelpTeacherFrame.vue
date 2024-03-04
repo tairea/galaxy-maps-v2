@@ -1,6 +1,8 @@
 <template>
   <div :id="studentOverview ? 'studentOverview' : cohortId">
-    <h2 v-if="!studentOverview" class="help-label">Requests for help</h2>
+    <h2 v-if="!studentOverview" class="help-label">
+      {{ completedRequestsOnly ? "COMPLETED Requests" : "Requests for help" }}
+    </h2>
 
     <div v-if="requests.length > 0">
       <div v-if="dense">

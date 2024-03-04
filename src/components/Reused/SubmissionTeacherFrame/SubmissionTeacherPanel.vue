@@ -271,7 +271,7 @@ export default {
   border: 1px solid var(--v-cohortAccent-base);
 }
 .declined-submission {
-  border: 1px solid orange;
+  border: 1px solid red;
 }
 .default-submission {
   border: 1px solid var(--v-missionAccent-base);

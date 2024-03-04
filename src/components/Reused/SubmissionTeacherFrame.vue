@@ -1,6 +1,8 @@
 <template>
   <div :id="studentOverview ? 'studentOverview' : 'submission-panel'">
-    <h2 v-if="!studentOverview" class="submission-label">Work submitted for review</h2>
+    <h2 v-if="!studentOverview" class="submission-label">
+      {{ completedSubmissionsOnly ? "COMPLETED SUBMISSIONS" : "Work submitted for review" }}
+    </h2>
     <div v-if="submissions.length > 0">
       <div v-if="dense">
         <SubmissionTeacherPanelDense

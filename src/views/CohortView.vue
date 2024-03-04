@@ -36,6 +36,23 @@
         :students="cohort.students"
         class="mt-4"
       />
+      <!-- Completed Separate -->
+      <p class="baseAccent--text completed-label ma-0 py-6">COMPLETED</p>
+      <RequestForHelpTeacherFrame
+        :isTeacher="teacher"
+        :courses="courses"
+        :students="cohort.students"
+        :completedRequestsOnly="true"
+        class="mt-0"
+      />
+      <SubmissionTeacherFrame
+        v-if="teacher"
+        :isTeacher="teacher"
+        :courses="courses"
+        :students="cohort.students"
+        class="mt-4"
+        :completedSubmissionsOnly="true"
+      />
     </div>
   </div>
 </template>
@@ -250,6 +267,13 @@ export default {
   padding-top: 50px;
   // margin-right: 35px;
   margin-right: 5%;
+
+  .completed-label {
+    font-weight: 500;
+    letter-spacing: 0.05rem;
+    font-size: 0.8rem;
+    text-align: center;
+  }
 }
 
 /* width */
