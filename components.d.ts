@@ -96,6 +96,7 @@ declare module 'vue' {
     SubmissionTeacherPanel: typeof import('./src/components/Reused/SubmissionTeacherFrame/SubmissionTeacherPanel.vue')['default']
     ThemeColourPicker: typeof import('./src/components/Home/UserBar/ThemeColourPicker.vue')['default']
     TimeframeFilters: typeof import('./src/components/Reused/TimeframeFilters.vue')['default']
+    TopicButton: typeof import('./src/components/SolarSystemView/TopicButton.vue')['default']
     UserBar: typeof import('./src/components/Home/UserBar.vue')['default']
     UserInfo: typeof import('./src/components/UserDashboard/UserInfo.vue')['default']
     VApp: typeof import('vuetify/lib')['VApp']
