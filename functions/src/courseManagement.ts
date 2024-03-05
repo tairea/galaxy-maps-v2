@@ -17,24 +17,21 @@ export const getCourseByCourseIdHttpsEndpoint = runWith({}).https.onCall(async (
   if (courseData == null) {
     throw new HttpsError("not-found", `Course not found: ${courseId}`);
   }
+  const courseOwner
+    = courseData.owner instanceof DocumentReference ? courseData.owner.path : courseData.owner;
 
-  // if the context is unauthenticated, only return course that is public and
-  // has a published status
-  if (context.auth == null) {
-    if (courseData.public === true && courseData.status === "published") {
-      return {
-        course: {
-          ...courseData,
-          owner:
-            courseData.owner instanceof DocumentReference
-              ? courseData.owner.path
-              : courseData.owner,
-          id: courseDoc.id,
-        },
-      };
-    } else {
-      throw new HttpsError("not-found", `Course not found: ${courseId}`);
-    }
+  // if the course is public and published then always return it
+  // if not and the context is unauthenticated then throw not found
+  if (courseData.public === true && courseData.status === "published") {
+    return {
+      course: {
+        ...courseData,
+        owner: courseOwner,
+        id: courseDoc.id,
+      },
+    };
+  } else if (context.auth == null) {
+    throw new HttpsError("not-found", `Course not found: ${courseId}`);
   }
 
   // if the context is authenticated and they are admin, return course
@@ -42,16 +39,27 @@ export const getCourseByCourseIdHttpsEndpoint = runWith({}).https.onCall(async (
     return {
       course: {
         ...courseData,
-        owner:
-          courseData.owner instanceof DocumentReference ? courseData.owner.path : courseData.owner,
+        owner: courseOwner,
+        id: courseDoc.id,
+      },
+    };
+  }
+
+  // if the context is authenticated, they are not admin, and they are
+  // the course owner, return course
+  if (courseOwner === db.collection("people").doc(context.auth.uid).path) {
+    return {
+      course: {
+        ...courseData,
+        owner: courseOwner,
         id: courseDoc.id,
       },
     };
   }
 
   // if the context is authenticated and they are not admin, return all courses
-  // where they are the owner or where they belong to a cohort for the course as
-  // a teacher or as a student
+  // where they belong to a cohort for the course as a teacher or student
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const teacherCohorts: Record<string, any>[] = [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -95,8 +103,7 @@ export const getCourseByCourseIdHttpsEndpoint = runWith({}).https.onCall(async (
   return {
     course: {
       ...courseData,
-      owner:
-        courseData.owner instanceof DocumentReference ? courseData.owner.path : courseData.owner,
+      owner: courseOwner,
       id: courseDoc.id,
     },
   };
@@ -104,24 +111,28 @@ export const getCourseByCourseIdHttpsEndpoint = runWith({}).https.onCall(async (
 
 // Get a list of courses
 export const getCoursesHttpsEndpoint = runWith({}).https.onCall(async (_data, context) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const courseMap = new Map();
+
+  // always fetch the public courses that are published
+  const courseCollection = await db
+    .collection("courses")
+    .where("public", "==", true)
+    .where("status", "==", "published")
+    .get();
+
+  for (const doc of courseCollection.docs) {
+    const course = doc.data();
+    courseMap.set(doc.id, {
+      ...course,
+      owner: course.owner instanceof DocumentReference ? course.owner.path : course.owner,
+      id: doc.id,
+    });
+  }
+
   // if the context is unauthenticated, only return courses that are public and
   // have a published status
   if (context.auth == null) {
-    const courseCollection = await db
-      .collection("courses")
-      .where("public", "==", true)
-      .where("status", "==", "published")
-      .get();
-
-    const courseMap = new Map();
-    for (const doc of courseCollection.docs) {
-      const course = doc.data();
-      courseMap.set(doc.id, {
-        ...course,
-        owner: course.owner instanceof DocumentReference ? course.owner.path : course.owner,
-        id: doc.id,
-      });
-    }
     return { courses: Array.from(courseMap.values()) };
   }
 
@@ -129,7 +140,6 @@ export const getCoursesHttpsEndpoint = runWith({}).https.onCall(async (_data, co
   if (context.auth.token.admin === true) {
     const courseCollection = await db.collection("courses").get();
 
-    const courseMap = new Map();
     for (const doc of courseCollection.docs) {
       const course = doc.data();
       courseMap.set(doc.id, {
@@ -190,9 +200,6 @@ export const getCoursesHttpsEndpoint = runWith({}).https.onCall(async (_data, co
     .collection("courses")
     .where("owner", "==", db.collection("people").doc(context.auth.uid))
     .get();
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const courseMap = new Map();
 
   for (const doc of courseDocs) {
     const course = doc.data();
