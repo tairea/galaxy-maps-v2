@@ -3,9 +3,17 @@
     <p class="label">active hours</p>
     <div v-for="course in courses" :key="course.id" class="d-flex justify-center align-center">
       <div class="active-hours-box">
-        <p class="label">{{ course.title }}</p>
-        <!-- calcHours is rounded. Maybe add a tooltip with full hours with decimal places -->
-        <p class="label text-center label-value">{{ calcHours(course.id).toFixed(0) }}</p>
+        <v-tooltip top>
+          <template v-slot:activator="{ on, attrs }">
+            <!-- calcHours is rounded. Maybe add a tooltip with full hours with decimal places -->
+            <p class="label text-center label-value" v-bind="attrs" v-on="on">
+              {{ calcHours(course.id).toFixed(0) }}
+            </p>
+          </template>
+          <p class="label">{{ course.title }}</p>
+          <p class="label text-center label-value">{{ calcHours(course.id).toFixed(2) }}</p>
+          <p class="label">Hours active</p>
+        </v-tooltip>
       </div>
     </div>
     <div v-if="courses.length === 0" class="d-flex justify-center align-center">
