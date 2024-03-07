@@ -136,8 +136,8 @@ export default {
       if (this.activity.currentTopic) {
         this.tasksInCurrentTopic = await fetchPersonsTasksByPersonIdCourseIdTopicId(
           this.student.id,
-          this.activity.currentTopic.id,
           this.activity.course.id,
+          this.activity.currentTopic.id,
         );
 
         console.log(

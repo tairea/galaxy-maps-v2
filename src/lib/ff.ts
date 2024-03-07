@@ -207,8 +207,8 @@ export const updatePerson = async (personId: string, person: object): Promise<vo
 
 export const fetchPersonsTasksByPersonIdCourseIdTopicId = async (
   personId: string,
-  topicId: string,
   courseId: string,
+  topicId: string,
 ) => {
   const data = {
     personId,
