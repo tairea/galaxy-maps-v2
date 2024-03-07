@@ -31,8 +31,6 @@ export default {
   watch: {
     unselectedPersons: {
       handler(newUnselectedPersons) {
-        // console.log(this.chartType + " this.chart", this.chart.data);
-        // console.log("newUnselectedPersons", newUnselectedPersons);
         // hide data
         for (const person of newUnselectedPersons) {
           const personsName = person.firstName + " " + person.lastName;
@@ -43,13 +41,6 @@ export default {
               // line chart
               this.chart.hide(personsIndexForDataset);
             } else if (this.chartType == "bar") {
-              console.log(
-                personsName +
-                  " UNselected. index = " +
-                  personsIndexForDataset +
-                  " " +
-                  this.chartType,
-              );
               // bar chart
               this.chart.hide(0, personsIndexForDataset);
             }
@@ -59,8 +50,6 @@ export default {
     },
     selectedPersons: {
       handler(newSelectedPersons) {
-        // console.log(this.chartType + " this.chart", this.chart.data);
-        // console.log("newSelectedPersons", newSelectedPersons);
         // show data
         for (const person of newSelectedPersons) {
           const personsName = person.firstName + " " + person.lastName;
@@ -71,9 +60,6 @@ export default {
               // line chart
               this.chart.show(personsIndexForDataset);
             } else if (this.chartType == "bar") {
-              console.log(
-                personsName + " Selected. index = " + personsIndexForDataset + " " + this.chartType,
-              );
               // bar chart
               this.chart.show(0, personsIndexForDataset);
             }
@@ -83,7 +69,6 @@ export default {
     },
     timeframe: {
       handler(newTimeframe) {
-        // console.log("timeframe watcher in chart: ", newTimeframe);
         if (this.chartType !== "bar") {
           this.chartOptions.scales.x.min = newTimeframe.min;
           this.chartOptions.scales.x.max = newTimeframe.max;
@@ -97,8 +82,6 @@ export default {
             this.chartOptions.scales.x.title = titleObj;
           }
         } else {
-          // console.log("bar chart chartData", this.chartData);
-          // console.log("bar chart datasets", this.chartData);
         }
 
         this.chart.update();
@@ -108,7 +91,6 @@ export default {
       deep: true,
       handler(newVal) {
         if (this.chartType === "bar") {
-          // console.log("chartData watcher for ", this.chartType, ": ", newVal);
           const data = this.chartData.datasets[0].data;
           const labels = this.chartData.labels;
           this.chart.data.datasets[0].data = data;
@@ -130,9 +112,6 @@ export default {
           // Tooltip Element
           const { chart, tooltip } = context;
           const tooltipEl = this.getOrCreateTooltip(chart);
-
-          // console.log("tooltipEl", tooltipEl);
-          // console.log("tooltip", tooltip);
 
           // Hide if no tooltip
           if (tooltip.opacity === 0) {

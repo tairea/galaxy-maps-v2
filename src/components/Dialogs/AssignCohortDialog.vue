@@ -349,7 +349,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["bindCourses", "setSnackbar", "getPersonById"]),
+    ...mapActions(useRootStore, ["bindCourses", "setSnackbar"]),
     close() {
       this.dialog = false;
       this.loading = false;
@@ -420,14 +420,6 @@ export default {
         // add courses as assignedCourse to each student in the cohort
         if (cohort.students?.length) {
           for (const studentId of cohort.students) {
-            // const person = await this.getPersonById(studentId);
-            // console.log(
-            //   "adding course to person: ",
-            //   person.firstName,
-            //   person.id,
-            //   "course",
-            //   course.id,
-            // );
             await assignCourseToPerson(studentId, course.id);
           }
         }

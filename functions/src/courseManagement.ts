@@ -17,8 +17,8 @@ export const getCourseByCourseIdHttpsEndpoint = runWith({}).https.onCall(async (
   if (courseData == null) {
     throw new HttpsError("not-found", `Course not found: ${courseId}`);
   }
-  const courseOwner
-    = courseData.owner instanceof DocumentReference ? courseData.owner.path : courseData.owner;
+  const courseOwner =
+    courseData.owner instanceof DocumentReference ? courseData.owner.path : courseData.owner;
 
   // if the course is public and published then always return it
   // if not and the context is unauthenticated then throw not found
@@ -338,9 +338,6 @@ export const getStudentSubmissionsByPersonIdHttpsEndpoint = runWith({}).https.on
   async (data, context) => {
     requireAuthenticated(context);
 
-    console.log("context", context);
-    console.log("context.auth.uid", context.auth.uid);
-
     const personId = data.personId as string | null;
     if (personId == null) {
       throw new HttpsError("invalid-argument", "missing personId");
@@ -350,7 +347,7 @@ export const getStudentSubmissionsByPersonIdHttpsEndpoint = runWith({}).https.on
     const coursesCollection = await db.collection("courses").get();
 
     // get course submissions for review
-    const submissions = [];
+    let submissions = [];
 
     for (const courseDoc of coursesCollection.docs) {
       const submissionsForReviewCollection = await courseDoc.ref
@@ -367,6 +364,13 @@ export const getStudentSubmissionsByPersonIdHttpsEndpoint = runWith({}).https.on
         });
       }
     }
+
+    // only return submissions for authenticated teacher
+    // submissions = submissions.filter(
+    //   (submission) =>
+    //     submission.contextCourse.contentBy.personId === context.auth.uid
+    //     || submission.contextCourse.mappedBy.personId === context.auth.uid,
+    // );
 
     return { submissions: submissions.flat() };
   },

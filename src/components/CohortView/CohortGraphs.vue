@@ -128,9 +128,6 @@ export default {
 
     const currentCohort = await fetchCohortByCohortId(this.currentCohortId);
 
-    // ==== get cohort course data from LRS
-    // this.cohortsCoursesData = await fetchCohortCoursesActivityByCohortId(this.cohort.id);
-
     // add students with data
     const studentsArr = [];
     if (this.cohortsCoursesData) {

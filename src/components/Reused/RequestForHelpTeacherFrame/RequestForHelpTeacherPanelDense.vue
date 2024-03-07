@@ -1,12 +1,7 @@
 <template>
   <div class="request-card" :class="styleByStatus">
     <v-expansion-panels flat v-model="showCard">
-      <v-expansion-panel
-        @change="panelChange()"
-        v-for="(sub, i) in [request]"
-        :key="i"
-        class="panel"
-      >
+      <v-expansion-panel @change="panelChange()" class="panel">
         <v-expansion-panel-header class="pa-0" ref="panel">
           <!-- Course Image -->
           <div class="d-flex flex-row">

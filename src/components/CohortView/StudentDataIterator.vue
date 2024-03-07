@@ -183,8 +183,6 @@ export default {
     if (this.$route.params.cohortId === this.cohort.id) {
       await this.getStudentProfiles();
     }
-
-    console.log("ALL the PEOPLE:", this.people);
   },
   watch: {
     cohort: {
@@ -201,7 +199,7 @@ export default {
     },
   },
   computed: {
-    ...mapState(useRootStore, ["person", "people"]),
+    ...mapState(useRootStore, ["person"]),
     filteredKeys() {
       return this.keys.filter((key) => key !== "Name");
     },

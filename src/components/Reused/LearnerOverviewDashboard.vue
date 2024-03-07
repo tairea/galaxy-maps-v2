@@ -253,11 +253,11 @@ export default {
     this.submissions = await fetchStudentSubmissionsByPersonId(this.student.id); // this should be an admin call as it will show all submissions. even submissions that are for other teachers.
 
     // filter submissions by teacher (TODO: contentBy/mappedBy VS cohort teacher)
-    this.submissions = this.submissions.filter(
-      (submission) =>
-        submission.contextCourse.contentBy.personId === this.person.id ||
-        submission.contextCourse.mappedBy.personId === this.person.id,
-    );
+    // this.submissions = this.submissions.filter(
+    //   (submission) =>
+    //     submission.contextCourse.contentBy.personId === this.person.id ||
+    //     submission.contextCourse.mappedBy.personId === this.person.id,
+    // );
 
     this.loadingSubmissions = false;
 
@@ -274,9 +274,6 @@ export default {
   },
   computed: {
     ...mapState(useRootStore, ["userStatus", "person"]),
-    teacher() {
-      return this.accountType === "teacher";
-    },
     dark() {
       return this.$vuetify.theme.isDark;
     },

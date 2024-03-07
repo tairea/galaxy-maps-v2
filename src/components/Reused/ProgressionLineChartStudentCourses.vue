@@ -105,9 +105,7 @@ export default {
     };
   },
   async mounted() {},
-  computed: {
-    // ...mapState(useRootStore, ["person"]),
-  },
+  computed: {},
   methods: {
     formatStudentsChartData(courseData) {
       const datasets = [];

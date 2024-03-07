@@ -77,10 +77,10 @@
 </template>
 
 <script>
-import { db } from "@/store/firestoreConfig";
-import useRootStore from "@/store/index";
+import { fetchPersonByPersonId } from "@/lib/ff";
 import { mdiAccount } from "@mdi/js";
 import { mapState } from "pinia";
+import useRootStore from "@/store/index";
 
 export default {
   name: "Avatar",
@@ -110,14 +110,8 @@ export default {
         } else {
           this.profileData = doc;
         }
-      } else if (this.personId) {
-        await db
-          .collection("people")
-          .doc(this.personId)
-          .get()
-          .then((doc) => {
-            this.profileData = doc.data();
-          });
+      } else if (this.personId || this.profile.id) {
+        await fetchPersonByPersonId(this.personId ? this.personId : this.profile.id);
       }
     });
   },

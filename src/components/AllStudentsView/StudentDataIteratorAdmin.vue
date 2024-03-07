@@ -176,7 +176,7 @@ export default {
   },
   watch: {},
   computed: {
-    ...mapState(useRootStore, ["currentCohort", "user", "people"]),
+    ...mapState(useRootStore, ["user", "people"]),
     filteredKeys() {
       return this.keys.filter((key) => key !== "Name");
     },
@@ -184,7 +184,8 @@ export default {
       if (this.user.data.admin) {
         return true;
       } else {
-        return this.currentCohort.teachers.includes(this.person.id);
+        // currently only admin user can use.
+        // need to figure out how we provide teacher admin access to only students in their school (TODO: maybe revisit organinsations ie: teacher as admin of organisation)
       }
     },
   },

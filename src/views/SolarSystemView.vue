@@ -198,7 +198,7 @@ export default {
       return this.course.status === "drafting";
     },
     teacher() {
-      return this.course.mappedBy?.personId == this.person.id || this.user.data.admin;
+      return this.course.mappedBy?.personId === this.person.id || this.user.data.admin;
     },
     personsCurrentTopic() {
       return this.personsTopics.find((topic) => topic.id == this.currentTopicId);

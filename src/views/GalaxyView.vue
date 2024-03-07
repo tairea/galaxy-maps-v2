@@ -258,7 +258,7 @@ export default {
 
     // LRS statement recording a student has logged in to this course
     if (this.course && !this.teacher) {
-      loggedIntoGalaxyXAPIStatement({
+      await loggedIntoGalaxyXAPIStatement({
         actor: {
           email: this.person.email,
           firstName: this.person.firstName,

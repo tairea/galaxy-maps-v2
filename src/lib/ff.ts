@@ -42,7 +42,9 @@ export const fetchStudentSubmissionsByPersonId = async (
   return result.data.submissions;
 };
 
-export const fetchStudentRequestsByPersonId = async (personId: string) => {
+export const fetchStudentRequestsByPersonId = async (
+  personId: string,
+): Promise<Array<{ id: string } & Record<string, any>>> => {
   const data = {
     personId,
   };
@@ -51,7 +53,9 @@ export const fetchStudentRequestsByPersonId = async (personId: string) => {
   return result.data.requests;
 };
 
-export const fetchRequestsForTeacherByTeacherId = async (teacherId: string) => {
+export const fetchRequestsForTeacherByTeacherId = async (
+  teacherId: string,
+): Promise<Array<{ id: string } & Record<string, any>>> => {
   const data = {
     teacherId,
   };
@@ -62,7 +66,9 @@ export const fetchRequestsForTeacherByTeacherId = async (teacherId: string) => {
   return result.data.requests;
 };
 
-export const fetchSubmissionsForTeacherByTeacherId = async (teacherId: string) => {
+export const fetchSubmissionsForTeacherByTeacherId = async (
+  teacherId: string,
+): Promise<Array<{ id: string } & Record<string, any>>> => {
   const data = {
     teacherId,
   };
