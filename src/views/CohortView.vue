@@ -37,7 +37,7 @@
         class="mt-4"
       />
       <!-- Completed Separate -->
-      <p class="baseAccent--text completed-label ma-0 py-6">COMPLETED</p>
+      <!-- <p class="baseAccent--text completed-label ma-0 py-6">COMPLETED</p>
       <RequestForHelpTeacherFrame
         :isTeacher="teacher"
         :courses="courses"
@@ -52,7 +52,7 @@
         :students="cohort.students"
         class="mt-4"
         :completedSubmissionsOnly="true"
-      />
+      /> -->
     </div>
   </div>
 </template>
@@ -65,7 +65,12 @@ import BackButton from "@/components/Reused/BackButton.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 import CohortGraphs from "@/components/CohortView/CohortGraphs.vue";
-import { fetchCohortByCohortId, fetchCohortCoursesActivityByCohortId } from "@/lib/ff";
+import {
+  fetchCohortByCohortId,
+  fetchCohortCoursesActivityByCohortId,
+  fetchSubmissionsForTeacherByTeacherId,
+  fetchRequestsForTeacherByTeacherId,
+} from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
 
@@ -86,6 +91,8 @@ export default {
       studentsView: true,
       cohort: null,
       cohortsCoursesData: [],
+      submissionsForTeacher: [],
+      requestsForTeacher: [],
     };
   },
   async mounted() {
@@ -93,6 +100,11 @@ export default {
 
     // ==== get cohort course data from LRS
     this.cohortsCoursesData = await fetchCohortCoursesActivityByCohortId(this.cohort.id);
+
+    // ==== get submissions for teacher data
+    this.submissionsForTeacher = await fetchSubmissionsForTeacherByTeacherId(this.person.id);
+    // ==== get requests for help for teacher data
+    this.requestsForTeacher = await fetchRequestsForTeacherByTeacherId(this.person.id);
   },
   computed: {
     ...mapState(useRootStore, ["currentCohortId", "person", "userStatus"]),
@@ -267,6 +279,7 @@ export default {
   padding-top: 50px;
   // margin-right: 35px;
   margin-right: 5%;
+  overflow-y: scroll;
 
   .completed-label {
     font-weight: 500;

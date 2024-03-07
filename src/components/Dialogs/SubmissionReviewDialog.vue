@@ -160,6 +160,7 @@
                   :loading="loading"
                   v-bind="attrs"
                   v-on="on"
+                  :disabled="loading"
                 >
                   <v-icon left> {{ mdiThumbUpOutline }} </v-icon>
                   approve
@@ -172,6 +173,7 @@
                   :loading="loading"
                   v-bind="attrs"
                   v-on="on"
+                  :disabled="loading"
                 >
                   <v-icon left> {{ mdiThumbDownOutline }} </v-icon>
                   decline
@@ -179,7 +181,13 @@
               </template>
 
               <!-- CANCEL -->
-              <v-btn outlined :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'" @click="close">
+              <v-btn
+                outlined
+                :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
+                @click="close"
+                :disabled="loading"
+                :loading="loading"
+              >
                 <v-icon left> {{ mdiClose }} </v-icon>
                 Cancel
               </v-btn>
@@ -197,17 +205,20 @@
 
 <script>
 import Avatar from "@/components/Reused/Avatar.vue";
+import { db, functions } from "@/store/firestoreConfig";
 import { fetchPersonByPersonId } from "@/lib/ff";
+import firebase from "firebase/compat/app";
+import { mapActions, mapState } from "pinia";
+import { mdiTextBoxSearchOutline, mdiThumbUpOutline, mdiThumbDownOutline, mdiClose } from "@mdi/js";
+import moment from "moment";
 import {
   studentWorkMarkedCompletedXAPIStatement,
   teacherReviewedStudentWorkXAPIStatement,
   teacherRespondedSubmissionDeclinedXAPIStatement,
+  topicCompletedXAPIStatement,
 } from "@/lib/veracityLRS";
-import { db, functions } from "@/store/firestoreConfig";
+
 import useRootStore from "@/store/index";
-import { mdiTextBoxSearchOutline, mdiThumbUpOutline, mdiThumbDownOutline, mdiClose } from "@mdi/js";
-import moment from "moment";
-import { mapActions, mapState } from "pinia";
 
 export default {
   name: "SubmissionReviewDialog",
@@ -225,6 +236,7 @@ export default {
     dialog: false,
     loading: false,
     instructor: {},
+    xpPointsForCompletedSubmission: 250,
   }),
   async mounted() {
     this.instructor = await fetchPersonByPersonId(this.submission.contextCourse.mappedBy.personId);
@@ -264,7 +276,7 @@ export default {
         .collection("courses")
         .doc(this.submission.contextCourse.id)
         .collection("submissionsForReview")
-        .doc(this.submission.submissionId)
+        .doc(this.submission.id)
         .update({
           // update submission to completed
           teacherId: this.person.id,
@@ -312,13 +324,23 @@ export default {
         mission: this.submission.contextTask,
       });
 
-      this.close();
+      // give XP points
+      await db
+        .collection("people")
+        .doc(this.submission.studentId)
+        .update({
+          xpPointsTotal: firebase.firestore.FieldValue.increment(
+            this.xpPointsForCompletedSubmission,
+          ),
+        });
 
       this.setSnackbar({
         show: true,
         text: "Student's Mission now marked as completed",
         color: "baseAccent",
       });
+
+      this.close();
 
       // unlock next task
       await this.unlockNextTask();
@@ -371,6 +393,8 @@ export default {
             this.submission.contextTopic.label,
           color: "baseAccent",
         });
+
+        await this.setTopicToCompletedInDB();
 
         await this.unlockNextTopics();
       } else {
@@ -449,7 +473,7 @@ export default {
           .collection("courses")
           .doc(this.submission.contextCourse.id)
           .collection("submissionsForReview")
-          .doc(this.submissionId)
+          .doc(this.submission.id)
           .update({
             responseMessage: this.responseMsg,
             taskSubmissionStatus: "declined",
@@ -504,6 +528,23 @@ export default {
 
         throw error;
       }
+    },
+    async setTopicToCompletedInDB() {
+      await db
+        .collection("people")
+        .doc(this.submission.studentId)
+        .collection(this.submission.contextCourse.id)
+        .doc(this.submission.contextTopic.id)
+        .update({
+          // update tasks array with new task
+          topicStatus: "completed",
+          topicCompletedTimestamp: new Date(),
+        });
+
+      await topicCompletedXAPIStatement(this.requesterPerson, this.submission.contextTopic.id, {
+        galaxy: this.submission.contextCourse,
+        system: this.submission.contextTopic,
+      });
     },
     close() {
       this.loading = false;

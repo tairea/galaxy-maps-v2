@@ -396,6 +396,7 @@ export const getStudentCoursesDataXAPIQuery = async (personId: string) => {
             description: "$statement.object.definition.description.en-nz",
             topic: "$statement.object.definition.extensions.https://www.galaxymaps.io/topic/id/",
             task: "$statement.object.definition.extensions.https://www.galaxymaps.io/task/id/",
+            course: "$statement.object.definition.extensions.https://www.galaxymaps.io/course/id/",
           },
         },
       },
@@ -423,7 +424,6 @@ export const getStudentCoursesDataXAPIQuery = async (personId: string) => {
       topic: string;
       task: string;
       course: string;
-      id: string;
     }[];
   }[];
 

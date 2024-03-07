@@ -197,10 +197,7 @@
 </template>
 
 <script>
-import {
-  fetchStudentSubmissionsByPersonIdForATeacher,
-  fetchStudentRequestsByPersonIdForATeacher,
-} from "@/lib/ff";
+import { fetchStudentSubmissionsByPersonId, fetchStudentRequestsByPersonId } from "@/lib/ff";
 import ProgressionLineChartStudentCourses from "@/components/Reused/ProgressionLineChartStudentCourses.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import StudentCardStatus from "@/components/CohortView/StudentDataIterator/StudentCard/StudentCardStatus.vue";
@@ -253,18 +250,26 @@ export default {
     this.students.push(this.student);
 
     // ==== get submission data
-    //this.submissions = await fetchStudentSubmissionsByPersonId(this.student.id); // this should be an admin call as it will show all submissions. even submissions that are for other teachers.
-    this.submissions = await fetchStudentSubmissionsByPersonIdForATeacher(
-      this.student.id,
-      this.person.id,
+    this.submissions = await fetchStudentSubmissionsByPersonId(this.student.id); // this should be an admin call as it will show all submissions. even submissions that are for other teachers.
+
+    // filter submissions by teacher (TODO: contentBy/mappedBy VS cohort teacher)
+    this.submissions = this.submissions.filter(
+      (submission) =>
+        submission.contextCourse.contentBy.personId === this.person.id ||
+        submission.contextCourse.mappedBy.personId === this.person.id,
     );
+
     this.loadingSubmissions = false;
 
     // ==== get request data
-    this.requests = await fetchStudentRequestsByPersonIdForATeacher(
-      this.student.id,
-      this.person.id,
+    this.requests = await fetchStudentRequestsByPersonId(this.student.id);
+    // filter requests by teacher (TODO: contentBy/mappedBy VS cohort teacher)
+    this.requests = this.requests.filter(
+      (request) =>
+        request.contextCourse.contentBy.personId === this.person.id ||
+        request.contextCourse.mappedBy.personId === this.person.id,
     );
+
     this.loadingRequests = false;
   },
   computed: {
@@ -303,20 +308,14 @@ export default {
       console.log("submissions changed flag triggered");
       this.loadingSubmissions = true;
       // ==== get submission data
-      this.submissions = await fetchStudentSubmissionsByPersonIdForATeacher(
-        this.student.id,
-        this.person.id,
-      );
+      this.submissions = await fetchStudentSubmissionsByPersonId(this.student.id);
       this.loadingSubmissions = false;
     },
     async requestsChanged() {
       console.log("requests changed flag triggered");
       this.loadingRequests = true;
       // ==== get submission data
-      this.requests = await fetchStudentRequestsByPersonIdForATeacher(
-        this.student.id,
-        this.person.id,
-      );
+      this.requests = await fetchStudentRequestsByPersonId(this.student.id);
       this.loadingRequests = false;
     },
   },

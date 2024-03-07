@@ -331,101 +331,172 @@ export const getStudentSubmissionsByPersonIdHttpsEndpoint = runWith({}).https.on
   async (data, context) => {
     requireAuthenticated(context);
 
+    console.log("context", context);
+    console.log("context.auth.uid", context.auth.uid);
+
     const personId = data.personId as string | null;
     if (personId == null) {
       throw new HttpsError("invalid-argument", "missing personId");
     }
 
     // get all course submissions (thanks copilot & stefan)
-    const coursesSnapshot = await db.collection("courses").get();
-    const submissionsPromises = coursesSnapshot.docs.map(async (courseDoc) => {
-      const submissionsSnapshot = await courseDoc.ref
+    const coursesCollection = await db.collection("courses").get();
+
+    // get course submissions for review
+    const submissions = [];
+
+    for (const courseDoc of coursesCollection.docs) {
+      const submissionsForReviewCollection = await courseDoc.ref
         .collection("submissionsForReview")
         .where("studentId", "==", personId)
         .get();
-      return submissionsSnapshot.docs.map((submissionDoc) => ({
-        courseId: courseDoc.id,
-        submissionId: submissionDoc.id,
-        ...submissionDoc.data(),
-      }));
-    });
-    const submissions = await Promise.all(submissionsPromises);
 
-    console.log("submissions:", submissions.flat());
-    return { submissions: submissions.flat() };
-  },
-);
-
-// get student submissions by personId for a specific teacher
-// this will only work if teacher is the map creator.
-// TODO: add a teachers array to courses so can check if teacher is on that course
-export const getStudentSubmissionsByPersonIdForATeacherHttpsEndpoint = runWith({}).https.onCall(
-  async (data, context) => {
-    requireAuthenticated(context);
-
-    const personId = data.personId as string | null;
-    const teacherId = data.teacherId as string | null;
-    if (personId == null) {
-      throw new HttpsError("invalid-argument", "missing personId");
-    }
-    if (teacherId == null) {
-      throw new HttpsError("invalid-argument", "missing teacherId");
+      for (const submissionForReviewDoc of submissionsForReviewCollection.docs) {
+        const submissionForReview = submissionForReviewDoc.data();
+        submissions.push({
+          courseId: courseDoc.id,
+          id: submissionForReviewDoc.id,
+          ...submissionForReview,
+        });
+      }
     }
 
-    // get all course submissions (thanks copilot & stefan)
-    const coursesSnapshot = await db.collection("courses").get();
-    const submissionsPromises = coursesSnapshot.docs.map(async (courseDoc) => {
-      const submissionsSnapshot = await courseDoc.ref
-        .collection("submissionsForReview")
-        .where("studentId", "==", personId)
-        .where("contextCourse.contentBy.personId", "==", teacherId)
-        .get();
-      return submissionsSnapshot.docs.map((submissionDoc) => ({
-        courseId: courseDoc.id,
-        submissionId: submissionDoc.id,
-        ...submissionDoc.data(),
-      }));
-    });
-    const submissions = await Promise.all(submissionsPromises);
-
-    console.log("submissions for teacher:", submissions.flat());
     return { submissions: submissions.flat() };
   },
 );
 
 // this will only work if teacher is the map creator.
 // TODO: add a teachers array to courses so can check if teacher is on that course
-export const getStudentRequestsByPersonIdForATeacherHttpsEndpoint = runWith({}).https.onCall(
+export const getStudentRequestsByPersonIdHttpsEndpoint = runWith({}).https.onCall(
   async (data, context) => {
     requireAuthenticated(context);
 
     const personId = data.personId as string | null;
-    const teacherId = data.teacherId as string | null;
     if (personId == null) {
       throw new HttpsError("invalid-argument", "missing personId");
     }
-    if (teacherId == null) {
-      throw new HttpsError("invalid-argument", "missing teacherId");
-    }
 
     // get all course submissions (thanks copilot & stefan)
-    const coursesSnapshot = await db.collection("courses").get();
-    const requestsPromises = coursesSnapshot.docs.map(async (courseDoc) => {
-      const requestsSnapshot = await courseDoc.ref
+    const coursesCollection = await db.collection("courses").get();
+
+    // get course submissions for review
+    const requests = [];
+
+    for (const courseDoc of coursesCollection.docs) {
+      const requestsForHelpCollection = await courseDoc.ref
         .collection("requestsForHelp")
         .where("personId", "==", personId)
-        .where("contextCourse.contentBy.personId", "==", teacherId)
         .get();
-      return requestsSnapshot.docs.map((requestDoc) => ({
-        courseId: courseDoc.id,
-        requestId: requestDoc.id,
-        ...requestDoc.data(),
-      }));
-    });
-    const requests = await Promise.all(requestsPromises);
 
-    console.log("submissions for teacher:", requests.flat());
+      for (const requestForHelpDoc of requestsForHelpCollection.docs) {
+        const requestForHelp = requestForHelpDoc.data();
+        requests.push({
+          courseId: courseDoc.id,
+          id: requestForHelpDoc.id,
+          ...requestForHelp,
+        });
+      }
+    }
+
     return { requests: requests.flat() };
+  },
+);
+
+// get submissions for the teacher by teacherId
+export const getSubmissionsForTeacherByTeacherIdHttpsEndpoint = runWith({}).https.onCall(
+  async (data, context) => {
+    requireAuthenticated(context);
+
+    const teacherId = data.teacherId as string | null;
+    if (teacherId == null) {
+      throw new HttpsError("invalid-argument", "missing teacherId");
+    }
+
+    const submissionsForTeacher = [];
+
+    // Get a list of cohorts for the teacher,
+    const teachersCohortsCollection = await db
+      .collection("cohorts")
+      .where("teachers", "array-contains", teacherId)
+      .get();
+
+    // then get courses for the cohorts,
+    for (const cohortDoc of teachersCohortsCollection.docs) {
+      const cohortCourses = [];
+      const cohort = cohortDoc.data();
+      for (const course of cohort.courses) {
+        cohortCourses.push(course);
+      }
+
+      // then get submissions / requests for help for those courses.
+      for (const courseId of cohortCourses) {
+        const courseSubmissionsCollection = await db
+          .collection("courses")
+          .doc(courseId)
+          .collection("submissionsForReview")
+          .get();
+        for (const submissionForReviewDoc of courseSubmissionsCollection.docs) {
+          const submissionForReview = submissionForReviewDoc.data();
+          submissionsForTeacher.push({
+            courseId: courseId,
+            id: submissionForReviewDoc.id,
+            ...submissionForReview,
+          });
+        }
+      }
+    }
+
+    console.log("submissionsForTeacher.flat", submissionsForTeacher.flat());
+
+    return { submissions: submissionsForTeacher.flat() };
+  },
+);
+
+// get requests for help for the teacher by teacherId
+export const getRequestsForTeacherByTeacherIdHttpsEndpoint = runWith({}).https.onCall(
+  async (data, context) => {
+    requireAuthenticated(context);
+
+    const teacherId = data.teacherId as string | null;
+    if (teacherId == null) {
+      throw new HttpsError("invalid-argument", "missing teacherId");
+    }
+
+    const requestsForTeacher = [];
+
+    // Get a list of cohorts for the teacher,
+    const teachersCohortsCollection = await db
+      .collection("cohorts")
+      .where("teachers", "array-contains", teacherId)
+      .get();
+
+    // then get courses for the cohorts,
+    for (const cohortDoc of teachersCohortsCollection.docs) {
+      const cohortCourses = [];
+      const cohort = cohortDoc.data();
+      for (const course of cohort.courses) {
+        cohortCourses.push(course);
+      }
+
+      // then get submissions / requests for help for those courses.
+      for (const courseId of cohortCourses) {
+        const courseRequestsCollection = await db
+          .collection("courses")
+          .doc(courseId)
+          .collection("requestsForHelp")
+          .get();
+        for (const requestsForHelpDoc of courseRequestsCollection.docs) {
+          const requestForHelp = requestsForHelpDoc.data();
+          requestsForTeacher.push({
+            courseId: courseId,
+            id: requestsForHelpDoc.id,
+            ...requestForHelp,
+          });
+        }
+      }
+    }
+
+    return { requests: requestsForTeacher.flat() };
   },
 );
 
@@ -774,13 +845,8 @@ async function assignCourseToStudent(courseId: string, personId: string) {
     throw new HttpsError("not-found", `Course not found: ${courseId}`);
   }
 
-  // check if student already has course.
-  const courseCollection = await db.collection("people").doc(person.id).collection(course.id).get();
-
-  console.log(courseCollection);
-
-  // check if the collection exists
-  if (courseCollection.empty) {
+  // check if student is assigned to course
+  if (!person.assignedCourses.includes(courseId)) {
     console.log("course DOES NOT exist for student", person.firstName + " " + person.lastName);
 
     // Add the topics and tasks to the student
@@ -853,7 +919,7 @@ async function assignCourseToStudent(courseId: string, personId: string) {
       }
     }
   } else {
-    console.log("course already exists for student ", person.firstName + " " + person.lastName);
+    throw new HttpsError("already-exists", person.firstName + " is already in " + course.title);
   }
 
   await personDoc.ref.update({

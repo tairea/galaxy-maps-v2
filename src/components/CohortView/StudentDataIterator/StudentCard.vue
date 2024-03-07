@@ -19,7 +19,7 @@
     </template>
     <template v-else>
       <StudentXpPoints :student="student" class="mission-border-left" />
-      <StudentCardProgress :activities="activities" :student="student" />
+      <!-- <StudentCardProgress :activities="activities" :student="student" /> -->
       <div class="student-activities-overUnder">
         <div style="height: 100%">
           <StudentActivityTimeline :student="student" studentCard />
@@ -120,11 +120,11 @@ export default {
   },
   async mounted() {
     this.studentCoursesActivity = await fetchStudentCoursesActivityByPersonId(this.student.id);
-    console.log(
-      "studentCoursesActivity for ",
-      this.student.firstName + " " + this.student.lastName,
-      this.studentCoursesActivity,
-    );
+    // console.log(
+    //   "studentCoursesActivity for ",
+    //   this.student.firstName + " " + this.student.lastName,
+    //   this.studentCoursesActivity,
+    // );
     this.cohort = await fetchCohortByCohortId(this.currentCohortId);
     const cohortActivities = this.studentCoursesActivity.filter((a) =>
       this.cohort.courses.some((b) => b === a.course.id),

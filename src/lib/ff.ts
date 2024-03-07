@@ -42,35 +42,35 @@ export const fetchStudentSubmissionsByPersonId = async (
   return result.data.submissions;
 };
 
-export const fetchStudentSubmissionsByPersonIdForATeacher = async (
-  personId: string,
-  teacherId: string,
-) => {
+export const fetchStudentRequestsByPersonId = async (personId: string) => {
   const data = {
     personId,
-    teacherId,
   };
-  const getStudentSubmissionsByPersonIdForATeacher = functions.httpsCallable(
-    "getStudentSubmissionsByPersonIdForATeacher",
-  );
-  const result = await getStudentSubmissionsByPersonIdForATeacher(data);
-  return result.data.submissions;
+  const getStudentRequestsByPersonId = functions.httpsCallable("getStudentRequestsByPersonId");
+  const result = await getStudentRequestsByPersonId(data);
+  return result.data.requests;
 };
 
-export const fetchStudentRequestsByPersonIdForATeacher = async (
-  personId: string,
-  teacherId: string,
-) => {
+export const fetchRequestsForTeacherByTeacherId = async (teacherId: string) => {
   const data = {
-    personId,
     teacherId,
   };
-  const getStudentRequestsByPersonIdForATeacher = functions.httpsCallable(
-    "getStudentRequestsByPersonIdForATeacher",
+  const getRequestsForTeacherByTeacherId = functions.httpsCallable(
+    "getRequestsForTeacherByTeacherId",
   );
-  const result = await getStudentRequestsByPersonIdForATeacher(data);
-  console.log("RESULT from HTTPCALLABLE", result);
+  const result = await getRequestsForTeacherByTeacherId(data);
   return result.data.requests;
+};
+
+export const fetchSubmissionsForTeacherByTeacherId = async (teacherId: string) => {
+  const data = {
+    teacherId,
+  };
+  const getSubmissionsForTeacherByTeacherId = functions.httpsCallable(
+    "getSubmissionsForTeacherByTeacherId",
+  );
+  const result = await getSubmissionsForTeacherByTeacherId(data);
+  return result.data.submissions;
 };
 
 export const fetchAllCohortsInCourseByCourseId = async (
