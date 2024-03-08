@@ -219,6 +219,7 @@ export default {
     cancelShowStudent() {
       this.student = [];
       this.showStudentFlag = false;
+      this.$emit("learnerOverviewDialogClosed");
     },
     // showEdit(student) {
     //   this.editStudentFlag = false;

@@ -18,18 +18,25 @@
             <span class="pl-3">OVERVIEW</span>
           </div>
         </div>
-        <StudentDataIterator v-if="studentsView" class="mt-4" :cohort="cohort" />
+        <StudentDataIterator
+          v-if="studentsView"
+          class="mt-4"
+          :cohort="cohort"
+          @learnerOverviewDialogClosed="refreshComponents"
+        />
         <CohortGraphs v-else :cohort="cohort" :cohortsCoursesData="cohortsCoursesData" />
       </div>
     </div>
 
     <div v-if="ready" id="right-section">
       <RequestForHelpTeacherFrame
+        :key="refreshRequests"
         :isTeacher="teacher"
         :courses="courses"
         :students="cohort.students"
       />
       <SubmissionTeacherFrame
+        :key="refreshSubmissions"
         v-if="teacher"
         :isTeacher="teacher"
         :courses="courses"
@@ -93,6 +100,8 @@ export default {
       cohortsCoursesData: [],
       submissionsForTeacher: [],
       requestsForTeacher: [],
+      refreshSubmissions: 0,
+      refreshRequests: 0,
     };
   },
   async mounted() {
@@ -124,6 +133,13 @@ export default {
     },
     graphLabel() {
       return this.studentsView ? "inactive-graph-label" : "graph-label";
+    },
+  },
+  methods: {
+    // hack to update TeacherFrames. (this is because LearnerOveriewDashboard uses the same components and when you close the dialog, the cohortview teacher frames are empty. issue#121)
+    refreshComponents() {
+      this.refreshSubmissions++;
+      this.refreshRequests++;
     },
   },
 };
