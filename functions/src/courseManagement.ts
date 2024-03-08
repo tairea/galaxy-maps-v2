@@ -457,8 +457,6 @@ export const getSubmissionsForTeacherByTeacherIdHttpsEndpoint = runWith({}).http
       }
     }
 
-    console.log("submissionsForTeacher.flat", submissionsForTeacher.flat());
-
     return { submissions: submissionsForTeacher.flat() };
   },
 );

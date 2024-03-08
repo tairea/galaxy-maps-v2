@@ -219,7 +219,7 @@ export const fetchPersonsTasksByPersonIdCourseIdTopicId = async (
     "getPersonTasksByPersonIdCourseIdTopicId",
   );
   const result = await getPersonTasksByPersonIdCourseIdTopicId(data);
-  return result.data.tasks;
+  return result.data.personTasks;
 };
 
 export const fetchAllPeopleInCourseByCourseId = async (

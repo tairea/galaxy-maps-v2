@@ -110,8 +110,10 @@ export default {
         } else {
           this.profileData = doc;
         }
-      } else if (this.personId || this.profile.id) {
-        await fetchPersonByPersonId(this.personId ? this.personId : this.profile.id);
+      } else if (this.personId) {
+        this.profileData = await fetchPersonByPersonId(
+          this.personId ? this.personId : this.profile.id,
+        );
       }
     });
   },

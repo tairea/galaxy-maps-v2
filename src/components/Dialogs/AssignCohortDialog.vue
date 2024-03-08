@@ -319,7 +319,7 @@ export default {
   async mounted() {
     if (this.assignCourses) {
       // TODO: we need to think about what courses are available to assign for a teacher
-      await this.bindCourses({ owner: this.person.id });
+      await this.bindCourses({ owner: null });
     } else if (this.assignCohorts) {
       this.teacherCohorts = this.cohorts.filter(
         (cohort) => cohort.teachers.includes(this.person.id) && !cohort.courseCohort,

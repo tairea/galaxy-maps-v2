@@ -19,7 +19,7 @@
     </template>
     <template v-else>
       <StudentXpPoints :student="student" class="mission-border-left" />
-      <!-- <StudentCardProgress :activities="activities" :student="student" /> -->
+      <StudentCardProgress :activities="activities" :student="student" />
       <div class="student-activities-overUnder">
         <div style="height: 100%">
           <StudentActivityTimeline :student="student" studentCard />
