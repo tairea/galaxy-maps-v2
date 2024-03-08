@@ -45,6 +45,7 @@ import {
   getPersonByPersonIdHttpsEndpoint,
   updatePersonByPersonIdHttpsEndpoint,
 } from "./userManagement.js";
+import { updateStudentVerified, createConnectionInvitation } from "./presentations.js";
 
 export {
   getCohortCoursesActivityByCohortIdHttpsEndpoint as getCohortCoursesActivityByCohortId,
@@ -95,3 +96,5 @@ export {
   getPersonByPersonIdHttpsEndpoint as getPersonByPersonId,
   updatePersonByPersonIdHttpsEndpoint as updatePersonByPersonId,
 };
+
+export { updateStudentVerified, createConnectionInvitation };

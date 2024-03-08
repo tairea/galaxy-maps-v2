@@ -31,9 +31,10 @@
         </p>
       </div>
       <!-- Edit button -->
-      <div style="text-align: right">
+      <v-row class="ml-1 mt-2">
         <StudentEditDialog :isDashboardView="true" />
-      </div>
+        <VerifyStudentDialog class="ml-4"/>
+      </v-row>
       <!-- Cohorts -->
       <div style="margin-top: 50px">
         <p class="student-info-label">cohorts:</p>
@@ -56,6 +57,7 @@
 import StudentAvatar from "@/components/UserDashboard/UserInfo/StudentAvatar.vue";
 import XpPointsDialog from "@/components/Dialogs/XpPointsDialog.vue";
 import StudentEditDialog from "@/components/Dialogs/StudentEditDialog.vue";
+import VerifyStudentDialog from "@/components/Dialogs/VerifyStudentDialog.vue";
 import Cohort from "@/components/Reused/Cohort.vue";
 import { db, storage } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
@@ -70,6 +72,7 @@ export default {
     StudentEditDialog,
     Cohort,
     XpPointsDialog,
+    VerifyStudentDialog
   },
   async mounted() {
     if (!this.user.data.admin) {
