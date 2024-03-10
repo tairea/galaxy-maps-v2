@@ -84,9 +84,13 @@ export const useGalaxyListViewStore = defineStore({
   },
   persist: {
     afterRestore: (ctx) => {
-      // Maps are serialized to plain objects so we need to convert them back to Maps
-      ctx.store.$state.courseNodesMap = new Map(Object.entries(ctx.store.$state.courseNodesMap));
-      ctx.store.$state.courseEdgesMap = new Map(Object.entries(ctx.store.$state.courseEdgesMap));
+      // Serializable Maps are serialized to plain objects so we need to convert them back to Maps
+      ctx.store.$state.courseNodesMap = new SerializableMap(
+        Object.entries(ctx.store.$state.courseNodesMap),
+      );
+      ctx.store.$state.courseEdgesMap = new SerializableMap(
+        Object.entries(ctx.store.$state.courseEdgesMap),
+      );
     },
   },
 });

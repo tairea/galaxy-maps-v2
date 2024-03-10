@@ -1,5 +1,5 @@
 export class SerializableMap<K, V> extends Map<K, V> {
   toJSON() {
-    return Object.fromEntries(this);
+    return Object.fromEntries(this).toJSON();
   }
 }
