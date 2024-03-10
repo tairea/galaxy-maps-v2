@@ -16,6 +16,7 @@ import {
   assignCourseToMeHttpsEndpoint,
   assignCourseToStudentHttpsEndpoint,
   getCourseByCourseIdHttpsEndpoint,
+  getCourseMapEdgesAndNodesByCourseIdHttpsEndpoint,
   getCoursesHttpsEndpoint,
   getCohortByCohortIdHttpsEndpoint,
   getCohortsHttpsEndpoint,
@@ -39,7 +40,11 @@ import {
 } from "./emails.js";
 import {
   getOrganisationByOrganisationIdHttpsEndpoint,
+  getPeopleByOrganisationIdHttpsEndpoint,
   getOrganisationsHttpsEndpoint,
+  createOrganisationHttpsEndpoint,
+  updateOrganisationByOrganisationIdHttpsEndpoint,
+  deleteOrganisationByOrganisationIdHttpsEndpoint,
 } from "./organisationManagement.js";
 import { onUserStatusChangedOnUpdateTrigger } from "./presence.js";
 import {
@@ -67,6 +72,7 @@ export {
   assignCourseToMeHttpsEndpoint as assignCourseToMe,
   assignCourseToStudentHttpsEndpoint as assignCourseToStudent,
   getCourseByCourseIdHttpsEndpoint as getCourseByCourseId,
+  getCourseMapEdgesAndNodesByCourseIdHttpsEndpoint as getCourseMapEdgesAndNodesByCourseId,
   getCoursesHttpsEndpoint as getCourses,
   getCohortByCohortIdHttpsEndpoint as getCohortByCohortId,
   getCohortsHttpsEndpoint as getCohorts,
@@ -92,7 +98,11 @@ export {
 
 export {
   getOrganisationByOrganisationIdHttpsEndpoint as getOrganisationByOrganisationId,
+  getPeopleByOrganisationIdHttpsEndpoint as getPeopleByOrganisationId,
   getOrganisationsHttpsEndpoint as getOrganisations,
+  createOrganisationHttpsEndpoint as createOrganisation,
+  updateOrganisationByOrganisationIdHttpsEndpoint as updateOrganisationByOrganisationId,
+  deleteOrganisationByOrganisationIdHttpsEndpoint as deleteOrganisationByOrganisationId,
 };
 
 export { onUserStatusChangedOnUpdateTrigger as onUserStatusChanged };

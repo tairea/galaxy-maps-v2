@@ -118,8 +118,8 @@
           <div class="people-in-org d-flex flex-wrap">
             <v-chip
               close
-              @click:close="removePersonFromOrganisation(person.email)"
-              v-for="person in organisation.people"
+              @click:close="removePersonFromOrganisation(person.id)"
+              v-for="person in people"
               :key="person.id"
               class="mr-2"
             >
@@ -227,7 +227,7 @@
               <br />
               <br />
               <!-- <strong>YOU WILL LOSE ALL </strong> -->
-              <strong>COHORTS</strong> will no longer be associated with this
+              <strong>PEOPLE</strong> will no longer be associated with this
               <strong>ORGANISATION</strong>
             </p>
           </div>
@@ -266,8 +266,16 @@
 </template>
 
 <script>
-import { db, storage } from "@/store/firestoreConfig";
-import firebase from "firebase/compat/app";
+import { storage } from "@/store/firestoreConfig";
+import {
+  fetchPersonByEmail,
+  createOrganisation,
+  updateOrganisationByOrganisationId,
+  addPersonToOrganisationByOrganisationIdAndPersonId,
+  removePersonFromOrganisationByOrganisationIdAndPersonId,
+  deleteOrganisationByOrganisationId,
+  fetchPeopleByOrganisationId,
+} from "@/lib/ff";
 import { mdiPlus, mdiClose, mdiCheck, mdiDelete, mdiInformationVariant } from "@mdi/js";
 
 export default {
@@ -291,27 +299,31 @@ export default {
       name: "",
       description: "",
       image: null,
-      cohorts: [],
+      people: [],
     },
+    people: [],
     uploadedImage: null,
     percentage: 0,
     personsEmail: null,
     menu: false,
   }),
-  mounted() {
+  async mounted() {
     if (this.organisationToEdit) {
-      this.organisation = this.organisationToEdit;
+      this.organisation = { ...this.organisationToEdit };
+      this.people = await fetchPeopleByOrganisationId(this.organisation.id);
     }
   },
   watch: {
-    organisationToEdit: function (n, o) {
-      this.organisation = n;
+    async organisationToEdit(n, o) {
+      this.organisation = { ...n };
+      this.people = await fetchPeopleByOrganisationId(this.organisation.id);
     },
   },
   computed: {
     // easy image preview thanks to: https://stackoverflow.com/questions/60678840/vuetify-image-upload-preview
     imgUrl() {
       if (!this.uploadedImage) return;
+      // FIXME: creating object urls without disposing them causes memory leaks
       return URL.createObjectURL(this.uploadedImage);
     },
     dark() {
@@ -332,15 +344,15 @@ export default {
     async saveOrganisation(organisation) {
       this.loading = true;
 
-      // Add a new document in collection "cohorts"
       try {
-        await db.collection("organisations").add(organisation);
+        const _createdOrg = await createOrganisation(organisation);
 
         console.log("Document successfully written!");
         this.loading = false;
         this.dialog = false;
       } catch (error) {
         console.error("Error writing document: ", error);
+        this.loading = false;
       }
 
       this.organisation = {};
@@ -348,15 +360,16 @@ export default {
     },
     async updateOrganisation(organisation) {
       this.loading = true;
-      // Add a new document in collection "cohorts"
+
       try {
-        await db.collection("organisations").doc(organisation.id).update(organisation);
+        const _updatedOrg = await updateOrganisationByOrganisationId(organisation.id, organisation);
 
         console.log("Organisation successfully updated!");
         this.loading = false;
         this.dialog = false;
       } catch (error) {
         console.error("Error writing document: ", error);
+        this.loading = false;
       }
 
       this.organisation = {};
@@ -364,27 +377,21 @@ export default {
     async addPersonToOrganisation(email) {
       this.addPersonLoading = true;
 
-      // get ref of person with this email
-      const people = await db.collection("people").where("email", "==", email).get();
-      if (!people.docs[0]) {
+      const person = await fetchPersonByEmail(email);
+      if (person == null) {
         this.addPersonLoading = false;
         return;
       }
-      const person = people.docs[0];
-      console.log("added person:", person.data());
-      const personRef = person.ref;
-      console.log("personRef: ", personRef);
 
-      // save person ref to organisation
       try {
-        await db
-          .collection("organisations")
-          .doc(this.organisation.id)
-          .update({
-            people: firebase.firestore.FieldValue.arrayUnion(personRef),
-          });
+        const updatedOrg = await addPersonToOrganisationByOrganisationIdAndPersonId(
+          this.organisation.id,
+          person.id,
+        );
+        const updatedPeople = await fetchPeopleByOrganisationId(this.organisation.id);
 
-        this.organisation.people.push(person.data());
+        this.organisation = updatedOrg;
+        this.people = updatedPeople;
         console.log("Person successfully added to organisation!");
         this.addPersonLoading = false;
       } catch (error) {
@@ -394,32 +401,22 @@ export default {
 
       this.personsEmail = null;
     },
-    async removePersonFromOrganisation(email) {
-      console.log("remove me");
-      // get ref of person with this email
-      const people = await db.collection("people").where("email", "==", email).get();
-      const person = people.docs[0];
-      const personRef = person.ref;
-
-      // save person ref to organisation
+    async removePersonFromOrganisation(personId) {
       try {
-        await db
-          .collection("organisations")
-          .doc(this.organisation.id)
-          .update({
-            people: firebase.firestore.FieldValue.arrayRemove(personRef),
-          });
+        const updatedOrg = await removePersonFromOrganisationByOrganisationIdAndPersonId(
+          this.organisation.id,
+          personId,
+        );
+        const updatedPeople = await fetchPeopleByOrganisationId(this.organisation.id);
 
-        // remove from this.organisation.people
-        const index = this.organisation.people.findIndex((person) => person.email === email);
-        this.organisation.people.splice(index, 1);
+        this.organisation = updatedOrg;
+        this.people = updatedPeople;
         console.log("Person successfully removed to organisation!");
         this.addPersonLoading = false;
       } catch (error) {
         console.error("Error writing document: ", error);
         this.addPersonLoading = false;
       }
-      this.personsEmail = null;
     },
     async storeImage() {
       this.disabled = true;
@@ -471,42 +468,15 @@ export default {
       this.loadingDelete = true;
 
       try {
-        // delete document in collection "organisations"
-        await db.collection("organisations").doc(organisation.id).delete();
+        const _deletedOrg = await deleteOrganisationByOrganisationId(organisation.id);
+
         console.log("Organisation successfully deleted!");
-
-        const querySnapshot = await db
-          .collection("cohorts")
-          .where("organisation", "==", organisation.id)
-          .get();
-
-        for (const doc of querySnapshot.docs) {
-          // where id matches organisations in cohort, set emmpty org (removing org from cohort)
-          await db.collection("cohorts").doc(doc.id).update({ organisation: "" });
-          console.log("Organisation removed from Cohort.");
-        }
-
-        await this.deleteImage();
-
         this.loadingDelete = false;
         this.dialogConfirm = false;
         this.closeDialog();
       } catch (error) {
         console.log("Error getting documents: ", error);
-      }
-    },
-    async deleteImage() {
-      // if no image, dont worry bout it cuz
-      if (this.organisation.image.name == "") return;
-      console.log("deleting image...");
-      // Create a reference to the file to delete
-      const storageRef = storage.ref("organisation-images/" + this.organisation.image.name);
-      // Delete the file
-      try {
-        await storageRef.delete();
-        console.log("Image successfully deleted!");
-      } catch (error) {
-        console.log("Uh-oh, an error occurred!", error);
+        this.loadingDelete = false;
       }
     },
   },

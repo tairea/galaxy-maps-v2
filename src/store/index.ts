@@ -23,9 +23,6 @@ const getDefaultState = () => {
     currentCourseId: "",
     currentCourseNodes: [] as Record<string, any>[],
     currentCourseEdges: [] as Record<string, any>[],
-    allNodes: [] as Record<string, any>[],
-    allEdges: [] as Record<string, any>[],
-    allNodesForDisplay: [] as Record<string, any>[],
     allTasks: [] as Record<string, any>[],
     personsCourses: [] as Record<string, any>[],
     personsTopics: [] as Record<string, any>[],
@@ -129,12 +126,6 @@ export default defineStore({
     },
     setCurrentCohortId(cohortId: string) {
       this.currentCohortId = cohortId;
-    },
-    updateAllNodes(newNodePositions: Record<string, any>[]) {
-      this.allNodes = newNodePositions;
-    },
-    updateAllNodesForDisplay(newNodePositions: Record<string, any>[]) {
-      this.allNodesForDisplay = newNodePositions;
     },
 
     setCohorts(cohorts: Record<string, any>[]) {
@@ -318,72 +309,6 @@ export default defineStore({
       const tasksArr = tasksPerTopic.flat();
       // console.log("tasksArr", tasksArr)
       this.courseTasks = tasksArr;
-    },
-    async getAllNodes() {
-      const allNodes = [];
-
-      // get the topics (nodes) in that course
-      for (const course of this.courses) {
-        // if public and not submitted || mapped by user || user is assigned to course
-        if (
-          // if public and not submitted
-          (course.public === true && course.status != "submitted") ||
-          // mapped by user
-          course.mappedBy.personId === this.person.id ||
-          // user is assigned to course
-          this.person.assignedCourses?.some(
-            (assignedCourse: Record<string, any>) => assignedCourse === course.id,
-          ) ||
-          this.user.data?.admin
-        ) {
-          const subQuerySnapshot = await db
-            .collection("courses")
-            .doc(course.id)
-            .collection("map-nodes")
-            .get();
-
-          allNodes.push(
-            ...subQuerySnapshot.docs.map((subDoc) => {
-              const node = subDoc.data();
-              node.courseId = course.id; // add course id to nodes list for some reason
-              //node.group = count; // add group to nodes list for some reason
-              return node;
-            }),
-          );
-        }
-      }
-      this.allNodes = allNodes; // source of truth
-      // console.log("all nodes:",allNodes)
-      // this.allNodesForDisplay = allNodes; // store all nodes
-    },
-    async getAllEdges() {
-      const allEdges = [];
-
-      for (const course of this.courses) {
-        if (
-          // if public and not submitted
-          (course.public === true && course.status != "submitted") ||
-          // mapped by user
-          course.mappedBy.personId === this.person.id ||
-          // user is assigned to course
-          this.person.assignedCourses?.some(
-            (assignedCourse: Record<string, any>) => assignedCourse === course.id,
-          ) ||
-          this.user.data?.admin
-        ) {
-          // doc.data() is never undefined for query doc snapshots
-          const subQuerySnapshot = await db
-            .collection("courses")
-            .doc(course.id)
-            .collection("map-edges")
-            .get();
-
-          allEdges.push(...subQuerySnapshot.docs.map((subDoc) => subDoc.data()));
-        }
-      }
-
-      this.allEdges = allEdges;
-      // console.log("all edges:",allEdges)
     },
 
     // ===== Firestore - BIND by USER

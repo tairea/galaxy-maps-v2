@@ -1,13 +1,13 @@
 import { fetchCohortByCohortId } from "@/lib/ff";
 import { defineStore } from "pinia";
-import type { Cohort } from "./_shared";
+import type { ICohort } from "./_types";
 
 export const useCohortViewStore = defineStore({
   id: "cohortView",
   state: () => ({
     studentsView: true,
     isLoadingCohort: false,
-    cohort: null as Cohort | null,
+    cohort: null as ICohort | null,
   }),
   actions: {
     setStudentsView(view: boolean) {

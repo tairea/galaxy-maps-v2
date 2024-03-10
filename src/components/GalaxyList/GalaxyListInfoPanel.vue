@@ -16,17 +16,15 @@
 
 <script>
 import PopupGalaxyPreview from "@/components/GalaxyList/GalaxyListInfoPanel/PopupGalaxyPreview.vue";
-import { fetchCourseByCourseId } from "@/lib/ff";
 
 export default {
   name: "GalaxyListInfoPanel",
-  props: ["selectedCourseId"],
+  props: ["selectedCourse"],
   components: {
     PopupGalaxyPreview,
   },
   data() {
     return {
-      selectedCourse: null,
       allCourses: [],
       selectedGalaxy: false,
       activeLearning: null,
@@ -35,22 +33,6 @@ export default {
     };
   },
   computed: {},
-  watch: {
-    async selectedCourseId(newSelectedCourseId) {
-      if (newSelectedCourseId != null) {
-        this.selectedCourse = await fetchCourseByCourseId(newSelectedCourseId);
-      } else {
-        this.selectedCourse = null;
-      }
-    },
-  },
-  async mounted() {
-    if (this.selectedCourseId != null) {
-      this.selectedCourse = await fetchCourseByCourseId(this.selectedCourseId);
-    } else {
-      this.selectedCourse = null;
-    }
-  },
   methods: {
     closeInfoPanel() {
       this.$emit("closeInfoPanel");
