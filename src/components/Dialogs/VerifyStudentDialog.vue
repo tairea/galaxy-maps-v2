@@ -11,7 +11,7 @@
         color="baseAccent"
         x-small
       >
-        <v-icon small> {{ mdiShieldAlert }} </v-icon>
+        <v-icon small> {{ mdiAccountCheck }} </v-icon>
       </v-btn>
     </template>
 
@@ -88,7 +88,7 @@ import { db, functions } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import {
   mdiInformationVariant,
-  mdiShieldAlert,
+  mdiAccountCheck,
   mdiClose,
   mdiShare,
   mdiContentCopy,
@@ -109,7 +109,7 @@ export default {
   },
   data() {
     return {
-      mdiShieldAlert,
+      mdiAccountCheck,
       mdiInformationVariant,
       mdiClose,
       mdiShare,
@@ -142,7 +142,7 @@ export default {
             goal: res.data.goal, 
             person: this.person.id,
           }
-          this.createNewCollection(data)
+          this.createNewConnection(data)
         })
         .catch(error => {
           this.loading = false
@@ -154,9 +154,9 @@ export default {
           });
         });
     },
-    async createNewCollection (conn) {
+    async createNewConnection (conn) {
       await db.collection("connection")
-        .doc(conn.connectionId)
+        .doc(conn.id)
         .set(conn)
         .then((res) => {
           this.setSnackbar({

@@ -2,7 +2,7 @@ import functions, { runWith } from "firebase-functions/v1";
 // import admin from "firebase-admin";
 import { log } from "firebase-functions/logger";
 import { v4 as makeUUID } from "uuid";
-import { requireAuthenticated } from "./_shared.js";
+import { db, requireAuthenticated } from "./_shared.js";
 // import fetch, { Headers } from 'node-fetch';
 import dotenv from "dotenv";
 dotenv.config();
@@ -10,8 +10,6 @@ dotenv.config();
 
 const VERIFIER_URL = process.env.API_URL;
 const VERIFIER_APIKEY = process.env.API_KEY;
-const PRESENTATION_URL = process.env.PRES_URL;
-let newPresentationId: string;
 
 export const createConnectionInvitation = runWith({}).https.onCall(
   async (_data, context) => {
@@ -40,15 +38,16 @@ export const createConnectionInvitation = runWith({}).https.onCall(
       .catch(console.error);
   });
 
-export const updateStudentVerified = functions.https.onRequest((req, res) => {
+export const updateStudentVerified = functions.https.onRequest(async (req, res) => {
   log("webhooks hit");
-  log(req.body.data);
+  log(req.body);
 
   const { state, goalCode, connectionId, status, presentationId } = req?.body?.data || {};
   const { type } = req.body;
 
-  log({ newPresentationId });
-  log(req.body);
+  const connRef = db.collection("connection").doc(connectionId);
+  const connection = (await connRef.get()).data();
+  log({ connection });
 
   const headers: HeadersInit = {
     accept: "application/json",
@@ -57,7 +56,7 @@ export const updateStudentVerified = functions.https.onRequest((req, res) => {
   };
 
   if (
-    connectionId
+    connection
     && type === "ConnectionUpdated"
     && state === "ConnectionResponseSent"
     && goalCode === "beta-galaxy-maps-vc"
@@ -82,16 +81,21 @@ export const updateStudentVerified = functions.https.onRequest((req, res) => {
       }),
     })
       .then((response) => response.json())
-      .then((result) => {
-        console.log("Presentation req sent", result);
-        newPresentationId = result.presentationId;
+      .then(async (result) => {
+        log("Presentation req sent", result);
+        // add presentationId to connection record
+        await connRef.update({
+          presentationId: result.presentationId,
+          state: result.status,
+        });
+        console.log("updated connection with presId");
         res.sendStatus(200);
       })
       .catch(console.error);
   }
 
   if (
-    presentationId === newPresentationId
+    connection
     && type === "PresentationUpdated"
     && status === "PresentationVerified"
   ) {
@@ -105,7 +109,7 @@ export const updateStudentVerified = functions.https.onRequest((req, res) => {
     })
       .then((response) => response.json())
       .then((result) => {
-        console.log("Presentation accepted", result);
+        log("Presentation accepted", result);
         res.sendStatus(200);
       })
       .catch(console.error);
@@ -113,22 +117,15 @@ export const updateStudentVerified = functions.https.onRequest((req, res) => {
 
 
   if (
-    newPresentationId === presentationId
+    connection
     && type === "PresentationUpdated"
     && status === "PresentationAccepted"
   ) {
-    log("===Presentation Accepted send something to GM===");
-    fetch(`${PRESENTATION_URL}`, {
-      method: "GET",
-      headers: {
-        accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        data: {
-          studentId: presentationId,
-        },
-      }),
-    });
+    log("=== Presentation Accepted update person.verified ===");
+    // add verified to person record
+    const personRef = await db.collection("people").doc(connection.person);
+    const res = await personRef.update({ verified: true });
+    log("!!!!person now verified!!!!");
+    log(res);
   }
 });

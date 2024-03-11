@@ -17,6 +17,7 @@
           :text="plain"
         >
           <div>
+            <v-icon v-if="person.verified" class="pr-2">{{ mdiCheckDecagram }} </v-icon>
             <span v-if="!plain">XP:</span>
             <span class="plain-label-value">{{ xpPoints }}</span>
           </div>
@@ -135,7 +136,7 @@
 import { db, functions } from "@/store/firestoreConfig";
 import firebase from "firebase/compat/app";
 import { mapActions } from "pinia";
-import { mdiClose, mdiCheck, mdiPlusCircle, mdiMinusCircle } from "@mdi/js";
+import { mdiCheckDecagram, mdiClose, mdiCheck, mdiPlusCircle, mdiMinusCircle } from "@mdi/js";
 import useRootStore from "@/store/index";
 
 export default {
@@ -149,6 +150,7 @@ export default {
   },
   data: () => ({
     mdiClose,
+    mdiCheckDecagram,
     mdiCheck,
     mdiPlusCircle,
     mdiMinusCircle,

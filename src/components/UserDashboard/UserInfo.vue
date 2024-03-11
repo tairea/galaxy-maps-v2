@@ -33,7 +33,7 @@
       <!-- Edit button -->
       <v-row class="ml-1 mt-2">
         <StudentEditDialog :isDashboardView="true" />
-        <VerifyStudentDialog class="ml-4"/>
+        <VerifyStudentDialog v-if="!person.verified" class="ml-4"/>
       </v-row>
       <!-- Cohorts -->
       <div style="margin-top: 50px">
