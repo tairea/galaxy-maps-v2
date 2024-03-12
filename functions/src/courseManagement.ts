@@ -125,6 +125,8 @@ export const getCourseMapEdgesAndNodesByCourseIdHttpsEndpoint = runWith({}).http
     if (courseData == null) {
       throw new HttpsError("not-found", `Course not found: ${courseId}`);
     }
+    const courseOwner =
+      courseData.owner instanceof DocumentReference ? courseData.owner.path : courseData.owner;
 
     // if the course is not public and published and the context is unauthenticated
     // then throw not found
@@ -140,7 +142,7 @@ export const getCourseMapEdgesAndNodesByCourseIdHttpsEndpoint = runWith({}).http
     if (
       (courseData.public === true && courseData.status === "published") ||
       context.auth.token.admin === true ||
-      courseData.owner === db.collection("people").doc(context.auth.uid).path
+      courseOwner === db.collection("people").doc(context.auth.uid).path
     ) {
       const mapEdgesCollection = await db
         .collection("courses")
