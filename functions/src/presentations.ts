@@ -39,7 +39,7 @@ export const createConnectionInvitation = runWith({}).https.onCall(
   });
 
 export const updateStudentVerified = functions.https.onRequest(async (req, res) => {
-  log("webhooks hit");
+  log("1. webhooks hit");
   log(req.body);
 
   const { state, goalCode, connectionId, status, presentationId } = req?.body?.data || {};
@@ -47,7 +47,6 @@ export const updateStudentVerified = functions.https.onRequest(async (req, res) 
 
   const connRef = db.collection("connection").doc(connectionId);
   const connection = (await connRef.get()).data();
-  log({ connection });
 
   const headers: HeadersInit = {
     accept: "application/json",
@@ -61,7 +60,7 @@ export const updateStudentVerified = functions.https.onRequest(async (req, res) 
     && state === "ConnectionResponseSent"
     && goalCode === "beta-galaxy-maps-vc"
   ) {
-    log("===Connection successful!!!===!");
+    log("2. Connection successful");
 
     fetch(`${VERIFIER_URL}/present-proof/presentations`, {
       method: "POST",
@@ -82,13 +81,13 @@ export const updateStudentVerified = functions.https.onRequest(async (req, res) 
     })
       .then((response) => response.json())
       .then(async (result) => {
-        log("Presentation req sent", result);
+        log("3. Presentation req sent", result);
         // add presentationId to connection record
         await connRef.update({
           presentationId: result.presentationId,
           state: result.status,
         });
-        console.log("updated connection with presId");
+        console.log("4. Updated connection with presId");
         res.sendStatus(200);
       })
       .catch(console.error);
@@ -99,7 +98,7 @@ export const updateStudentVerified = functions.https.onRequest(async (req, res) 
     && type === "PresentationUpdated"
     && status === "PresentationVerified"
   ) {
-    log("===Presentation verified===");
+    log("5. Presentation verified");
     fetch(`${VERIFIER_URL}/present-proof/presentations/${presentationId}`, {
       method: "PATCH",
       headers,
@@ -108,24 +107,15 @@ export const updateStudentVerified = functions.https.onRequest(async (req, res) 
       }),
     })
       .then((response) => response.json())
-      .then((result) => {
-        log("Presentation accepted", result);
+      .then(async (result) => {
+        log("6. Presentation accepted", result);
+        if (result.status === "PresentationAccepted") {
+          const personRef = await db.collection("people").doc(connection.person);
+          await personRef.update({ verified: true });
+          log("7. Student profile updated");
+        }
         res.sendStatus(200);
       })
       .catch(console.error);
-  }
-
-
-  if (
-    connection
-    && type === "PresentationUpdated"
-    && status === "PresentationAccepted"
-  ) {
-    log("=== Presentation Accepted update person.verified ===");
-    // add verified to person record
-    const personRef = await db.collection("people").doc(connection.person);
-    const res = await personRef.update({ verified: true });
-    log("!!!!person now verified!!!!");
-    log(res);
   }
 });

@@ -134,7 +134,6 @@ export default {
       await getConnectionInvitation()
         .then(res => {
           this.loading = false
-          console.log(res)
           this.link = res.data.invitation.invitationUrl
           const data = {
             id: res.data.connectionId,
