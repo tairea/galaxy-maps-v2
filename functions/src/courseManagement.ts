@@ -112,8 +112,6 @@ export const getCourseByCourseIdHttpsEndpoint = runWith({}).https.onCall(async (
 // Get course map-edges and map-nodes by courseId
 export const getCourseMapEdgesAndNodesByCourseIdHttpsEndpoint = runWith({}).https.onCall(
   async (data, context) => {
-    requireAuthenticated(context);
-
     const courseId = data.courseId as string | null;
     if (courseId == null) {
       throw new HttpsError("invalid-argument", "missing courseId");
@@ -128,19 +126,48 @@ export const getCourseMapEdgesAndNodesByCourseIdHttpsEndpoint = runWith({}).http
     const courseOwner =
       courseData.owner instanceof DocumentReference ? courseData.owner.path : courseData.owner;
 
-    // if the course is not public and published and the context is unauthenticated
-    // then throw not found
-    if (
-      !(courseData.public === true && courseData.status === "published") &&
-      context.auth == null
-    ) {
+    // if the course is public and published then return the map-edges and map-nodes
+    // if not and the context is unauthenticated then throw not found
+    if (courseData.public === true && courseData.status === "published") {
+      const mapEdgesCollection = await db
+        .collection("courses")
+        .doc(courseId)
+        .collection("map-edges")
+        .get();
+
+      const mapNodesCollection = await db
+        .collection("courses")
+        .doc(courseId)
+        .collection("map-nodes")
+        .get();
+
+      const mapEdges = [];
+      for (const doc of mapEdgesCollection.docs) {
+        mapEdges.push({
+          ...doc.data(),
+          id: doc.id,
+        });
+      }
+
+      const mapNodes = [];
+      for (const doc of mapNodesCollection.docs) {
+        mapNodes.push({
+          ...doc.data(),
+          id: doc.id,
+        });
+      }
+
+      return {
+        mapEdges,
+        mapNodes,
+      };
+    } else if (context.auth == null) {
       throw new HttpsError("not-found", `Course not found: ${courseId}`);
     }
 
-    // if the course is public and published or if the context is authenticated
-    // and they are admin or if they are the owner then return the map-edges and map-nodes
+    // if the context is authenticated, and they are admin or they are
+    // the course owner, return the map-edges and map-nodes
     if (
-      (courseData.public === true && courseData.status === "published") ||
       context.auth.token.admin === true ||
       courseOwner === db.collection("people").doc(context.auth.uid).path
     ) {
