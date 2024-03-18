@@ -1,20 +1,29 @@
 <template>
-  <div v-if="cohort" id="container" class="bg">
+  <div id="container" class="bg">
     <div id="left-section">
-      <CohortInfo />
+      <CohortInfo v-if="!isLoadingCohort && cohort" :cohort="cohort" />
       <BackButton :toPath="'/cohorts'" />
-      <AssignedInfo :cohort="cohort" assignCourses="true" />
+      <AssignedInfo v-if="!isLoadingCohort && cohort" :cohort="cohort" assignCourses="true" />
     </div>
 
     <div id="main-section">
-      <div class="people-frame">
+      <!-- loading spinner -->
+      <div class="d-flex justify-center align-center" v-if="isLoadingCohort">
+        <v-btn
+          :loading="isLoadingCohort"
+          icon
+          color="missionAccent"
+          class="d-flex justify-center align-center"
+        ></v-btn>
+      </div>
+      <div v-if="cohort" class="people-frame">
         <div class="people-border">
-          <div :class="peopleLabel" @click="studentsView = true">
+          <div :class="peopleLabel" @click="setStudentsView(true)">
             <span class="pl-3">STUDENTS</span>
           </div>
         </div>
         <div class="graph-border">
-          <div :class="graphLabel" class="text-center" @click="studentsView = false">
+          <div :class="graphLabel" class="text-center" @click="setStudentsView(false)">
             <span class="pl-3">OVERVIEW</span>
           </div>
         </div>
@@ -28,16 +37,17 @@
       </div>
     </div>
 
-    <div v-if="ready" id="right-section">
+    <div id="right-section">
       <RequestForHelpTeacherFrame
+        v-if="cohort"
         :key="refreshRequests"
         :isTeacher="teacher"
         :courses="courses"
         :students="cohort.students"
       />
       <SubmissionTeacherFrame
+        v-if="cohort && teacher"
         :key="refreshSubmissions"
-        v-if="teacher"
         :isTeacher="teacher"
         :courses="courses"
         :students="cohort.students"
@@ -73,13 +83,13 @@ import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeache
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 import CohortGraphs from "@/components/CohortView/CohortGraphs.vue";
 import {
-  fetchCohortByCohortId,
   fetchCohortCoursesActivityByCohortId,
   fetchSubmissionsForTeacherByTeacherId,
   fetchRequestsForTeacherByTeacherId,
 } from "@/lib/ff";
 import useRootStore from "@/store/index";
-import { mapState } from "pinia";
+import useCohortViewStore from "@/store/cohortView";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "CohortView",
@@ -95,8 +105,6 @@ export default {
   },
   data() {
     return {
-      studentsView: true,
-      cohort: null,
       cohortsCoursesData: [],
       submissionsForTeacher: [],
       requestsForTeacher: [],
@@ -105,7 +113,7 @@ export default {
     };
   },
   async mounted() {
-    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
+    await this.loadCohort(this.cohortId);
 
     // ==== get cohort course data from LRS
     this.cohortsCoursesData = await fetchCohortCoursesActivityByCohortId(this.cohort.id);
@@ -117,6 +125,7 @@ export default {
   },
   computed: {
     ...mapState(useRootStore, ["currentCohortId", "person", "userStatus"]),
+    ...mapState(useCohortViewStore, ["studentsView", "isLoadingCohort", "cohort"]),
     ready() {
       return this.cohortId === this.currentCohortId && this.cohort != null;
     },
@@ -136,6 +145,7 @@ export default {
     },
   },
   methods: {
+    ...mapActions(useCohortViewStore, ["loadCohort", "setStudentsView"]),
     // hack to update TeacherFrames. (this is because LearnerOveriewDashboard uses the same components and when you close the dialog, the cohortview teacher frames are empty. issue#121)
     refreshComponents() {
       this.refreshSubmissions++;

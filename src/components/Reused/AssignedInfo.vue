@@ -111,7 +111,7 @@ export default {
     },
   },
   computed: {
-    ...mapState(useRootStore, ["person", "currentCohort", "getCoursesInThisCohort", "user"]),
+    ...mapState(useRootStore, ["person", "currentCohort", "user"]),
     isTeacher() {
       return (
         this.user?.data?.admin || this.teacher || this.cohort?.teachers?.includes(this.person.id)
