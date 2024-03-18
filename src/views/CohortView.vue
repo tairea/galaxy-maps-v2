@@ -1,9 +1,9 @@
 <template>
   <div id="container" class="bg">
     <div id="left-section">
-      <CohortInfo v-if="!isLoadingCohort" :cohort="cohort" />
+      <CohortInfo v-if="!isLoadingCohort && cohort" :cohort="cohort" />
       <BackButton :toPath="'/cohorts'" />
-      <AssignedInfo v-if="!isLoadingCohort" :cohort="cohort" assignCourses="true" />
+      <AssignedInfo v-if="!isLoadingCohort && cohort" :cohort="cohort" assignCourses="true" />
     </div>
 
     <div id="main-section">
