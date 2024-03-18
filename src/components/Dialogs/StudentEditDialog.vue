@@ -14,6 +14,17 @@
       >
         <v-icon small> {{ mdiPencil }} </v-icon>
       </v-btn>
+      <v-btn
+        v-if="isStudentPopupView"
+        v-bind="attrs"
+        v-on="on"
+        class="mission-edit-button"
+        outlined
+        color="white"
+        x-small
+      >
+        <v-icon small> {{ mdiPencil }} </v-icon>
+      </v-btn>
       <v-btn v-else v-bind="attrs" v-on="on" color="baseAccent" class="ma-4" outlined>
         <v-icon class="pr-2">{{ mdiPencil }}</v-icon>
         edit account
@@ -24,7 +35,12 @@
     <div class="create-dialog">
       <!-- HEADER -->
       <div class="dialog-header">
-        <p class="dialog-title">Edit your profile details</p>
+        <div class="d-flex justify-space-between mb-4">
+          <p class="dialog-title ma-0">Edit your profile details</p>
+          <v-btn icon @click="dialog = false">
+            <v-icon color="missionAccent">{{ mdiClose }}</v-icon>
+          </v-btn>
+        </div>
         <div class="d-flex align-center">
           <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
           <p class="dialog-description">Update your profile information</p>
@@ -141,9 +157,15 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "StudentEditDialog",
-  props: ["on", "attrs", "isDashboardView"],
+  props: ["on", "attrs", "isDashboardView", "isStudentPopupView", "student"],
   components: {},
-  mounted() {},
+  mounted() {
+    if (this.student) {
+      Object.assign(this.profile, this.student);
+    } else {
+      Object.assign(this.profile, this.person);
+    }
+  },
   computed: {
     ...mapState(useRootStore, ["person"]),
     dark() {
@@ -168,7 +190,11 @@ export default {
     dialog(newVal) {
       if (newVal) {
         console.log("dialog is true");
-        Object.assign(this.profile, this.person);
+        if (student) {
+          Object.assign(this.profile, this.student);
+        } else {
+          Object.assign(this.profile, this.person);
+        }
       }
     },
   },
@@ -255,6 +281,9 @@ export default {
   .dialog-title {
     color: var(--v-missionAccent-base);
     text-transform: uppercase;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
   .dialog-description {

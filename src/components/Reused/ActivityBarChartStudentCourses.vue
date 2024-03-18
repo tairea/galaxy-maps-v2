@@ -2,45 +2,46 @@
   <div class="course-frame">
     <v-row>
       <v-col cols="12" class="d-flex pa-0">
-        <h1 class="galaxy-title pt-2 pl-2">HOURS ACTIVE</h1>
+        <h1 class="galaxy-title pt-2 pl-2">{{ student.firstName }}'s HOURS ACTIVE</h1>
+        <h1 class="galaxy-title pt-2 pl-2">
+          <span style="font-weight: 400; text-transform: none; font-style: italic">
+            (Each bar represents a Galaxy Map)</span
+          >
+        </h1>
       </v-col>
     </v-row>
     <v-row>
       <v-col cols="12" class="center-col pa-0">
         <Chart
-          v-if="chartData"
+          v-if="chartData?.labels?.length > 0"
           ref="chart"
           class="chart"
           :chartType="chartType"
           :chartData="chartData"
           :chartOptions="chartOptions"
-          :style="{ width: '100%', height: '200px' }"
+          :style="{ width: '100%', height: '350px' }"
           :toolTipEnable="true"
           :timeframe="timeframe"
-          :selectedPersons="selectedPersons"
-          :unselectedPersons="unselectedPersons"
         />
+        <div v-else>
+          <p class="overline d-flex justify-center align-center ma-6 galaxyAccent--text">
+            NO TIME DATA
+          </p>
+        </div>
       </v-col>
-      <!-- <v-col cols="4" class="pa-0">
-        <div class="top-row">
-          <p class="label">MOST ACTIVE:</p>
-        </div>
-        <div class="bottom-row my-3">
-          <p class="label">LEAST ACTIVE:</p>
-        </div>
-      </v-col> -->
     </v-row>
   </div>
 </template>
 
 <script>
+import { fetchStudentCoursesTimeDataByPersonIdStartAtEndAt } from "@/lib/ff";
 import Chart from "@/components/Reused/Chart.vue";
 import useRootStore from "@/store/index";
 import { DateTime } from "luxon";
 
 export default {
-  name: "ActivityBarChart",
-  props: ["activityData", "timeframe", "selectedPersons", "unselectedPersons", "shortenNames"],
+  name: "ActivityBarChartStudentCourses",
+  props: ["activityData", "timeframe", "student"],
   components: {
     Chart,
   },
@@ -79,12 +80,6 @@ export default {
               font: {
                 size: 10,
               },
-              // callback: function (value, index, ticks) {
-              //   console.log("shortening name...");
-              //   if (this.shortenNames) {
-              //     return this.first3Letters(value);
-              //   }
-              // },
             },
           },
           // y: {
@@ -112,63 +107,37 @@ export default {
   },
   watch: {
     timeframe() {
-      this.formatStudentsChartData(this.activityData);
+      this.getStudentTimeData();
     },
   },
   methods: {
+    async getStudentTimeData() {
+      this.studentTimeDataLoading = true;
+      const courseHours = await fetchStudentCoursesTimeDataByPersonIdStartAtEndAt(
+        this.student.id,
+        this.timeframe.min.toISOString(),
+        this.timeframe.max.toISOString(),
+      );
+      this.timeData = courseHours;
+      this.studentTimeDataLoading = false;
+      // console.log("course HOURS for ", this.student.firstName + ": ", this.timeData);
+
+      this.formatStudentsChartData(courseHours);
+    },
     formatStudentsChartData(studentData) {
       const data = [];
-      const labels = [];
+      let labels = [];
 
       // more than one student in a cohort so loop
-      for (const [index, student] of studentData.entries()) {
-        const person = student.person;
+      for (const courseAndHoursObj of studentData) {
+        const course = courseAndHoursObj.course;
+        const label = course.title;
 
-        const label = person.firstName + " " + person.lastName;
-
-        // calc total depending on timeframe.type (eg. fortnight, calculate days totals for that timeframes fortnight)
-        let time = 0;
-        switch (this.timeframe.type) {
-          case "day":
-            const dayRes = student.activity.find((day) => {
-              const statement = DateTime.fromISO(day.dayISOTimestamp).toMillis();
-              let timeframe = DateTime.fromJSDate(this.timeframe.max).toISODate();
-              timeframe = DateTime.fromISO(timeframe).toMillis();
-              return statement == timeframe;
-            });
-            if (dayRes) {
-              time = dayRes.minutesActiveTotal;
-            }
-            break;
-          case "week":
-            const weekRes = student.activity
-              .filter((day) => {
-                return (
-                  DateTime.fromISO(day.dayISOTimestamp) > DateTime.fromJSDate(this.timeframe.min) &&
-                  DateTime.fromISO(day.dayISOTimestamp) < DateTime.fromJSDate(this.timeframe.max)
-                );
-              })
-              .reduce((sum, activity) => sum + activity.minutesActiveTotal, 0);
-            time = weekRes;
-            break;
-
-          case "month":
-            const monthRes = student.activity
-              .filter((day) => {
-                return (
-                  DateTime.fromISO(day.dayISOTimestamp) > DateTime.fromJSDate(this.timeframe.min) &&
-                  DateTime.fromISO(day.dayISOTimestamp) < DateTime.fromJSDate(this.timeframe.max)
-                );
-              })
-              .reduce((sum, activity) => sum + activity.minutesActiveTotal, 0);
-            time = monthRes;
-            break;
-          default:
-        }
-
-        data.push(time / 60);
+        data.push(courseAndHoursObj.hours);
         labels.push(label);
       }
+
+      console.log("LABELS: ", labels);
 
       // // ==== test 30 students ===
       // for (var x = 0; x < 50; x++) {

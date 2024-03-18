@@ -16,7 +16,7 @@
           v-on="on"
           :text="plain"
         >
-          <div>
+          <div :class="studentOverview ? '' : 'points-circle'">
             <span v-if="!plain">XP:</span>
             <span class="plain-label-value">{{ xpPoints }}</span>
           </div>
@@ -27,7 +27,10 @@
       <div class="create-dialog">
         <!-- HEADER -->
         <div class="dialog-header">
-          <p class="mb-0">XP Points</p>
+          <p class="mb-0 d-flex justify-center align-center">XP Points</p>
+          <v-btn icon @click="dialog = false">
+            <v-icon color="missionAccent">{{ mdiClose }}</v-icon>
+          </v-btn>
         </div>
         <!-- CONTENT -->
         <div class="create-dialog-content">
@@ -141,7 +144,7 @@ import useRootStore from "@/store/index";
 export default {
   name: "XpPointsDialog",
   components: {},
-  props: ["person", "xpPoints", "canManageXpPoints", "plain"],
+  props: ["person", "xpPoints", "canManageXpPoints", "plain", "studentOverview"],
   computed: {
     dark() {
       return this.$vuetify.theme.isDark;
@@ -256,6 +259,9 @@ export default {
     padding: 20px;
     text-transform: uppercase;
     border-bottom: 1px solid var(--v-missionAccent-base);
+    display: flex;
+    justify-content: space-between;
+    height: 80px;
   }
 }
 
@@ -289,5 +295,15 @@ export default {
     text-transform: none;
     font-size: 2rem;
   }
+}
+
+.points-circle {
+  border: 1px solid var(--v-baseAccent-base);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 </style>
