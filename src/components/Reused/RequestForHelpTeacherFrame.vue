@@ -1,19 +1,34 @@
 <template>
-  <div :id="cohortId">
-    <h2 class="help-label">Requests for help</h2>
+  <div :id="studentOverview ? 'studentOverview' : cohortId">
+    <h2 v-if="!studentOverview" class="help-label">
+      {{ completedRequestsOnly ? "COMPLETED Requests" : "Requests for help" }}
+    </h2>
 
     <div v-if="requests.length > 0">
-      <RequestForHelpTeacherPanel
-        v-for="request in requests"
-        :key="request.id"
-        :request="request"
-        :isTeacher="isTeacher"
-        :isDashboardView="isDashboardView"
-      />
+      <div v-if="dense">
+        <RequestForHelpTeacherPanelDense
+          v-for="request in requests"
+          :key="request.id"
+          :request="request"
+          :isTeacher="isTeacher"
+          :isDashboardView="isDashboardView"
+          :showCourseImage="showCourseImage"
+        />
+      </div>
+      <div v-else>
+        <RequestForHelpTeacherPanel
+          v-for="request in requests"
+          :key="request.id"
+          :request="request"
+          :isTeacher="isTeacher"
+          :isDashboardView="isDashboardView"
+          :showCourseImage="showCourseImage"
+        />
+      </div>
     </div>
     <div v-if="!loading && requests.length == 0">
       <p class="overline pt-4 text-center mb-0" style="color: var(--v-galaxyAccent-base)">
-        NO REQUESTS FOR HELP
+        NO {{ completedRequestsOnly ? "COMPLETED" : "" }} REQUESTS FOR HELP
       </p>
     </div>
     <!-- loading spinner -->
@@ -25,6 +40,7 @@
 
 <script>
 import RequestForHelpTeacherPanel from "@/components/Reused/RequestForHelpTeacherFrame/RequestForHelpTeacherPanel.vue";
+import RequestForHelpTeacherPanelDense from "@/components/Reused/RequestForHelpTeacherFrame/RequestForHelpTeacherPanelDense.vue";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
 
@@ -32,22 +48,34 @@ export default {
   name: "RequestForHelpTeacherFrame",
   components: {
     RequestForHelpTeacherPanel,
+    RequestForHelpTeacherPanelDense,
   },
-  props: ["courses", "isTeacher", "students", "noSubmissions"],
+  props: [
+    "courses",
+    "isTeacher",
+    "students",
+    "noSubmissions",
+    "studentOverview",
+    "showCourseImage",
+    "loading",
+    "completedRequestsOnly",
+    "allStudentsRequests",
+    "dense",
+  ],
   data() {
     return {
-      loading: false,
       unsubscribes: [],
     };
   },
   async mounted() {
-    this.loading = true;
-    for (const course of this.courses) {
-      // console.log("getting requests for course: ", course);
-      const unsubscribe = await this.getRequestsForHelpByCourseId(course.id);
-      this.unsubscribes.push(unsubscribe);
+    if (this.courses) {
+      for (const course of this.courses) {
+        // console.log("getting requests for course: ", course);
+        const unsubscribe = await this.getRequestsForHelpByCourseId(course.id);
+        console.log("help unsubscribe:", unsubscribe);
+        this.unsubscribes.push(unsubscribe);
+      }
     }
-    this.loading = false;
   },
   computed: {
     ...mapState(useRootStore, [
@@ -55,8 +83,8 @@ export default {
       "user",
       "currentCohort",
       "showPanelCard",
-      "currentTopic",
-      "currentTask",
+      "currentTopicId",
+      "currentTaskId",
     ]),
     isGalaxyView() {
       return this.$route.name == "GalaxyView";
@@ -77,32 +105,58 @@ export default {
       // const requests = this.teachersRequestsForHelp.filter(
       //   (request) => request.requestForHelpStatus == "unanswered"
       // );
-      const requests = this.teachersRequestsForHelp.filter((request) =>
+
+      // console.log("this.teachersRequestsForHelp", this.teachersRequestsForHelp);
+      // console.log("this.allStudentsRequests", this.allStudentsRequests);
+
+      // forgot why using this filter - students.some logic.
+      // im thinking reuqests are relevant to everyone so why need to filter by specific students
+      const requests = (
+        this.allStudentsRequests ? this.allStudentsRequests : this.teachersRequestsForHelp
+      ).filter((request) =>
         this.students?.some((student) => {
           return student.id ? student.id === request.personId : student === request.personId;
         }),
       );
+
+      let filteredRequests = [];
+
+      // Filter for "completed/answered" only
+      if (this.completedRequestsOnly) {
+        filteredRequests = requests.filter(
+          (request) => request.requestForHelpStatus != "unanswered",
+        );
+      } else {
+        filteredRequests = requests.filter(
+          (request) => request.requestForHelpStatus === "unanswered",
+        );
+      }
+
       if (this.isTeacher) {
-        requests.sort((a, b) => {
+        filteredRequests.sort((a, b) => {
           return a.requestForHelpStatus == "unanswered" ? -1 : 1;
         });
       } else {
-        requests.sort((a, b) => {
+        filteredRequests.sort((a, b) => {
           return a.requestForHelpStatus == "unanswered" ? 1 : -1;
         });
       }
 
-      if (this.isCohortView || this.isDashboardView) return requests;
+      // console.log("requests:", requests);
+      // console.log("filtered requests:", filteredRequests);
+
+      if (this.isCohortView || this.isDashboardView) return filteredRequests;
       else if (this.isGalaxyView) {
-        return requests.filter((request) => request.contextCourse.id == this.courses[0].id);
+        return filteredRequests.filter((request) => request.contextCourse.id == this.courses[0].id);
       } else if (this.isSystemView) {
-        const taskRequests = requests.filter(
-          (request) => request.contextTopic.id == this.currentTopic.id,
+        const taskRequests = filteredRequests.filter(
+          (request) => request.contextTopic.id == this.currentTopicId,
         );
         if (this.isTeacher) return taskRequests;
-        else return taskRequests.filter((req) => req.contextTask.id == this.currentTask.id);
+        else return taskRequests.filter((req) => req.contextTask.id == this.currentTaskId);
       }
-      return requests;
+
+      return filteredRequests;
     },
   },
   destroyed() {

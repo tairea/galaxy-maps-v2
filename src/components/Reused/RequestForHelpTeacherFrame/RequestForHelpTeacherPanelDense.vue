@@ -1,57 +1,63 @@
 <template>
-  <div class="request-card" :class="responderPerson ? 'response-card' : ''">
+  <div class="request-card" :class="styleByStatus">
     <v-expansion-panels flat v-model="showCard">
-      <v-expansion-panel
-        @change="panelChange()"
-        v-for="(sub, i) in [request]"
-        :key="i"
-        class="panel"
-      >
+      <v-expansion-panel @change="panelChange()" class="panel">
         <v-expansion-panel-header class="pa-0" ref="panel">
           <!-- Course Image -->
           <div class="d-flex flex-row">
-            <Avatar
-              v-if="isDashboardView"
-              :profile="courseContextProfile"
-              size="30"
-              :colourBorder="true"
-            />
-            <Avatar
-              v-if="requesterPerson"
-              :profile="requesterPerson"
-              size="30"
-              :colourBorder="true"
-              :class="isDashboardView ? 'request-image' : ''"
-            />
-            <Avatar
-              v-if="responderPerson && !active"
-              :profile="responderPerson"
-              size="30"
-              :colourBorder="true"
-              :class="isDashboardView ? 'respond-image' : 'request-image'"
-            />
+            <!-- Image -->
+            <div v-if="showCourseImage">
+              <Course :course="request.contextCourse" class="pa-0" />
+            </div>
+            <div v-else>
+              <Avatar
+                v-if="isDashboardView"
+                :profile="courseContextProfile"
+                size="30"
+                :colourBorder="true"
+              />
+              <Avatar
+                v-if="requesterPerson"
+                :profile="requesterPerson"
+                size="30"
+                :colourBorder="true"
+                :class="isDashboardView ? 'request-image' : ''"
+              />
+              <Avatar
+                v-if="responderPerson && !active"
+                :profile="responderPerson"
+                size="30"
+                :colourBorder="true"
+                :class="isDashboardView ? 'respond-image' : 'request-image'"
+              />
+            </div>
+
+            <div v-if="!active" class="requester-context">
+              <p class="requester-context-task">
+                {{ request.contextTask.title }}
+              </p>
+              <p class="requester-context-topic">
+                {{ request.contextTopic.label }}
+              </p>
+              <p class="requester-context-course">
+                {{ request.contextCourse.title }}
+              </p>
+            </div>
+
             <div
-              v-if="responderPerson"
-              class="requester-time d-flex flex-column align-center ml-auto"
+              v-if="responderPerson && !isDashboardView"
+              class="requester-time d-flex flex-column align-center ml-auto text-right"
             >
-              <span class="ml-auto status-text">responded</span>
+              <span class="ml-auto mt-3 status-text baseAccent--text">responded</span>
               {{ getHumanDate(request.responseSubmittedTimestamp) }}
             </div>
-            <div v-else class="requester-time d-flex flex-column align-center ml-auto">
+            <div
+              v-else
+              class="requester-time d-flex flex-column align-center ml-auto mt-3 text-right"
+            >
               <span class="ml-auto status-text">...waiting response</span>
               {{ getHumanDate(request.requestSubmittedTimestamp) }}
             </div>
-          </div>
-          <div v-if="!active" class="requester-context">
-            <p class="requester-context-task">
-              {{ request.contextTask.title }}
-            </p>
-            <p class="requester-context-topic">
-              {{ request.contextTopic.label }}
-            </p>
-            <p class="requester-context-course">
-              {{ request.contextCourse.title }}
-            </p>
           </div>
         </v-expansion-panel-header>
         <v-expansion-panel-content class="panel-content">
@@ -86,8 +92,8 @@ import moment from "moment";
 import { mapActions, mapState } from "pinia";
 
 export default {
-  name: "RequestForHelpTeacherPanel",
-  props: ["request", "isTeacher", "isDashboardView"],
+  name: "RequestForHelpTeacherPanelDense",
+  props: ["request", "isTeacher", "isDashboardView", "showCourseImage"],
   components: {
     RequestForHelpResponseDialog,
     Avatar,
@@ -139,6 +145,17 @@ export default {
         lastName: "",
       };
     },
+    styleByStatus() {
+      // use a switch statement to return the class name based on some condition
+      switch (this.request.requestForHelpStatus) {
+        case "unanswered":
+          return "unanswered-request";
+        case "answered":
+          return "answered-request";
+        default:
+          return "default-request";
+      }
+    },
   },
   methods: {
     ...mapActions(useRootStore, ["setPanelCard"]),
@@ -168,11 +185,10 @@ export default {
 
 .request-card {
   width: 100%;
-  margin: 20px 0px;
-  padding: 10px;
+  margin: 10px 0px;
+  padding: 0px 5px;
   border: 1px solid var(--v-missionAccent-base);
   border-radius: 5px;
-  height: auto;
 
   .panel {
     background-color: transparent !important;
@@ -180,6 +196,7 @@ export default {
 
   .requester-context {
     margin-top: 5px;
+    margin-left: 5px;
 
     .requester-context-task {
       margin: 0px;
@@ -262,8 +279,15 @@ export default {
   left: -20px;
 }
 
-.response-card {
+.unanswered-request {
   border: 1px solid var(--v-galaxyAccent-base);
+}
+
+.answered-request {
+  border: 1px solid var(--v-baseAccent-base);
+}
+.default-request {
+  border: 1px solid var(--v-missionAccent-base);
 }
 
 .status-text {

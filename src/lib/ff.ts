@@ -39,6 +39,56 @@ export const fetchStudentCohortsByPersonId = async (personId: string): Promise<I
   return result.data.cohorts;
 };
 
+export const fetchStudentSubmissionsByPersonId = async (
+  personId: string,
+): Promise<Array<{ id: string } & Record<string, any>>> => {
+  const data = {
+    personId,
+  };
+  const getStudentSubmissionsByPersonId = functions.httpsCallable(
+    "getStudentSubmissionsByPersonId",
+  );
+  const result = await getStudentSubmissionsByPersonId(data);
+  return result.data.submissions;
+};
+
+export const fetchStudentRequestsByPersonId = async (
+  personId: string,
+): Promise<Array<{ id: string } & Record<string, any>>> => {
+  const data = {
+    personId,
+  };
+  const getStudentRequestsByPersonId = functions.httpsCallable("getStudentRequestsByPersonId");
+  const result = await getStudentRequestsByPersonId(data);
+  return result.data.requests;
+};
+
+export const fetchRequestsForTeacherByTeacherId = async (
+  teacherId: string,
+): Promise<Array<{ id: string } & Record<string, any>>> => {
+  const data = {
+    teacherId,
+  };
+  const getRequestsForTeacherByTeacherId = functions.httpsCallable(
+    "getRequestsForTeacherByTeacherId",
+  );
+  const result = await getRequestsForTeacherByTeacherId(data);
+  return result.data.requests;
+};
+
+export const fetchSubmissionsForTeacherByTeacherId = async (
+  teacherId: string,
+): Promise<Array<{ id: string } & Record<string, any>>> => {
+  const data = {
+    teacherId,
+  };
+  const getSubmissionsForTeacherByTeacherId = functions.httpsCallable(
+    "getSubmissionsForTeacherByTeacherId",
+  );
+  const result = await getSubmissionsForTeacherByTeacherId(data);
+  return result.data.submissions;
+};
+
 export const fetchAllCohortsInCourseByCourseId = async (courseId: string): Promise<ICohort[]> => {
   const data = {
     courseId,
@@ -357,6 +407,19 @@ export const fetchStudentCoursesTimeDataByPersonIdStartAtEndAt = async (
     "getStudentCoursesTimeDataByPersonIdStartAtEndAt",
   );
   const result = await getStudentCoursesTimeDataByPersonIdStartAtEndAt(data);
+  return result.data.activityData;
+};
+
+export const fetchStudentCoursesTimeDataByPersonId = async (
+  personId: string,
+): Promise<Record<string, any>[]> => {
+  const data = {
+    personId,
+  };
+  const getStudentCoursesTimeDataByPersonId = functions.httpsCallable(
+    "getStudentCoursesTimeDataByPersonId",
+  );
+  const result = await getStudentCoursesTimeDataByPersonId(data);
   return result.data.activityData;
 };
 

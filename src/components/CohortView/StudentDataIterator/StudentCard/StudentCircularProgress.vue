@@ -98,7 +98,7 @@ export default {
     popupPayload() {
       return {
         completedTasks: this.completedTasksInTopic,
-        totalTasks: this.tasksInCurrentTopic.length,
+        totalTasks: this.tasksInCurrentTopic?.length,
         completedTopics: this.activity.topicCompletedCount,
         totalTopics: this.activity.course.topicTotal,
         course: this.activity.course.title,
@@ -130,15 +130,16 @@ export default {
       if (this.activity.currentTopic) {
         this.tasksInCurrentTopic = await fetchPersonsTasksByPersonIdCourseIdTopicId(
           this.student.id,
-          this.activity.currentTopic.id,
           this.activity.course.id,
+          this.activity.currentTopic.id,
         );
-
-        this.tasksInCurrentTopic.forEach((task) => {
+        this.tasksInCurrentTopic?.forEach((task) => {
           if (task.taskStatus === "completed") this.completedTasksInTopic++;
         });
-        let percentage = (this.completedTasksInTopic / this.tasksInCurrentTopic.length) * 100;
-        this.tasksCompletedPercentage = Math.round(percentage) || 1;
+        if (this.tasksInCurrentTopic) {
+          let percentage = (this.completedTasksInTopic / this.tasksInCurrentTopic.length) * 100;
+          this.tasksCompletedPercentage = Math.round(percentage) || 1;
+        }
       } else {
         let percentage = (this.activity.tasksCompletedCount / this.activity.course.taskTotal) * 100;
         this.tasksCompletedPercentage = Math.round(percentage) || 1;

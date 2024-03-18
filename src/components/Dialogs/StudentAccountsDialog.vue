@@ -42,6 +42,7 @@
                   <thead>
                     <tr>
                       <th>student</th>
+                      <th>email</th>
                       <th>edit</th>
                       <th>remove</th>
                     </tr>
@@ -55,13 +56,16 @@
                             : student.email
                         }}
                       </td>
+                      <td class="pl-4">
+                        {{ student.email ? student.email : "no email provided" }}
+                      </td>
                       <td>
                         <v-btn text @click="updateStudent(student)">
                           <v-icon small>{{ mdiPencil }}</v-icon>
                         </v-btn>
                       </td>
                       <td>
-                        <v-btn text @click="removeStudent(student)">
+                        <v-btn text color="red" @click="removeStudent(student)">
                           <v-icon small>{{ mdiDelete }}</v-icon>
                         </v-btn>
                       </td>

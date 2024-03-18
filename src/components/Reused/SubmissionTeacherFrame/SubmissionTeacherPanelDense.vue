@@ -1,14 +1,10 @@
 <template>
   <div class="submission-card" :class="styleByStatus">
     <v-expansion-panels flat v-model="showCard">
-      <v-expansion-panel
-        v-for="(sub, i) in [submission]"
-        :key="i"
-        class="panel"
-        @change="panelChange()"
-      >
+      <v-expansion-panel class="panel" @change="panelChange()">
         <v-expansion-panel-header ref="panel" class="pa-0">
           <div class="d-flex flex-row">
+            <!-- Image -->
             <div v-if="showCourseImage">
               <Course :course="submission.contextCourse" class="pa-0" />
             </div>
@@ -27,27 +23,30 @@
                 :class="isDashboardView ? 'request-image' : ''"
               />
             </div>
-            <div class="submission-time d-flex flex-column align-center ml-auto pl-1">
-              <span v-if="reviewed" class="ml-auto mt-1 status-text baseAccent--text">
+
+            <!-- Course/Topic/Task -->
+            <div class="submission-context">
+              <p class="submission-context-task">
+                {{ submission.contextTask.title }}
+              </p>
+              <p class="submission-context-topic">
+                {{ submission.contextTopic.label }}
+              </p>
+              <p class="submission-context-course">
+                {{ submission.contextCourse.title }}
+              </p>
+            </div>
+
+            <!-- Status & Date -->
+            <div class="submission-time d-flex flex-column align-center ml-auto pl-1 text-right">
+              <span v-if="reviewed" class="ml-auto mt-3 status-text baseAccent--text">
                 {{ submission.taskSubmissionStatus.toUpperCase() }}</span
               >
-              <span v-else class="ml-auto mt-1 status-text text-uppercase">...awaiting review</span>
+              <span v-else class="ml-auto mt-3 status-text text-uppercase">...awaiting review</span>
               {{ getHumanDate(submission.taskSubmittedForReviewTimestamp) }}
             </div>
           </div>
 
-          <!-- Course/Topic/Task -->
-          <div class="submission-context">
-            <p class="submission-context-task">
-              {{ submission.contextTask.title }}
-            </p>
-            <p class="submission-context-topic">
-              {{ submission.contextTopic.label }}
-            </p>
-            <p class="submission-context-course">
-              {{ submission.contextCourse.title }}
-            </p>
-          </div>
           <template v-slot:actions>
             <v-icon color="missionAccent"> </v-icon>
           </template>
@@ -89,7 +88,7 @@ import moment from "moment";
 import { mapActions, mapState } from "pinia";
 
 export default {
-  name: "SubmissionTeacherPanel",
+  name: "SubmissionTeacherPanelDense",
   props: ["submission", "on", "attrs", "isDashboardView", "isTeacher", "showCourseImage"],
   components: {
     SubmissionReviewDialog,
@@ -171,8 +170,8 @@ export default {
 
 .submission-card {
   width: 100%;
-  margin: 20px 0px;
-  padding: 10px;
+  margin: 10px 0px;
+  padding: 0px 5px;
   border: 1px solid var(--v-missionAccent-base);
   border-radius: 5px;
 
@@ -182,6 +181,7 @@ export default {
 
   .submission-context {
     margin-top: 5px;
+    margin-left: 5px;
 
     .submission-context-task {
       margin: 0px;
@@ -271,7 +271,7 @@ export default {
   border: 1px solid var(--v-cohortAccent-base);
 }
 .declined-submission {
-  border: 1px solid red;
+  border: 1px solid orange;
 }
 .default-submission {
   border: 1px solid var(--v-missionAccent-base);

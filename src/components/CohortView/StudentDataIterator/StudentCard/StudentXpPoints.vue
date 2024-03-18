@@ -1,7 +1,7 @@
 <template>
   <section class="student-xp-section">
-    <div class="pointsContainer" v-if="student.xpPointsTotal">
-      <div class="top">
+    <div class="pointsContainer">
+      <div class="top" :class="studentOverview ? 'text-center' : ''">
         <p class="label">XP Points</p>
       </div>
       <div class="points">
@@ -12,13 +12,14 @@
           :person="student"
           :xpPoints="student.xpPointsTotal ? student.xpPointsTotal : 0"
           :canManageXpPoints="true"
-          :plain="true"
+          :plain="!studentOverview"
+          :studentOverview="studentOverview"
         />
       </div>
     </div>
-    <div v-else class="noPointsContainer">
+    <!-- <div class="noPointsContainer">
       <p class="overline missionAccent--text text-center ma-0">no xp points</p>
-    </div>
+    </div> -->
   </section>
 </template>
 
@@ -28,7 +29,7 @@ import XpPointsDialog from "@/components/Dialogs/XpPointsDialog.vue";
 export default {
   name: "StudentXpPoints",
   components: { XpPointsDialog },
-  props: ["student"],
+  props: ["student", "studentOverview"],
   computed: {},
 };
 </script>
@@ -37,7 +38,6 @@ export default {
 .student-xp-section {
   max-width: 10%;
   min-width: 10%;
-  border-left: 1px dashed var(--v-missionAccent-base);
   padding: 2.5px;
   display: flex;
   height: 100%;

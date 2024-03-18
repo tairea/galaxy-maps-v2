@@ -71,7 +71,7 @@
                     </div>
                     <div class="d-flex flex-column instructor-details">
                       <p class="ma-0">
-                        {{ currentCourse.mappedBy.name }}
+                        {{ currentCourse.mappedBy?.name }}
                       </p>
                       <p class="ma-0" style="font-size: 0.6rem">Instructor</p>
                     </div>
@@ -479,6 +479,9 @@ export default {
         });
 
         throw error;
+
+        this.loading = false;
+        this.dialog = false;
       }
 
       // 2) Add submission to students task (for students progression)

@@ -1,7 +1,8 @@
 import { db } from "@/store/firestoreConfig";
 import { defineStore } from "pinia";
 import { piniafireMutations, firestoreAction } from "@/piniafire/index";
-import type firebase from "firebase/compat/app";
+import firebase from "firebase/compat/app";
+import { collection, query, where } from "firebase/firestore";
 
 const getDefaultState = () => {
   return {
@@ -187,11 +188,23 @@ export default defineStore({
         { bindFirestoreRef },
         payload: { owner: firebase.firestore.DocumentReference | string | null },
       ) => {
-        const query =
+        const firebaseQuery =
           payload.owner != null
-            ? db.collection("courses").where("owner", "==", payload.owner)
-            : db.collection("courses");
-        return bindFirestoreRef("courses", query, {
+            ? db.collection("courses").where("mappedBy.personId", "==", payload.owner)
+            : db.collection("courses").where("status", "==", "published");
+
+        // web modular api query test: (where(status==published) OR (where(owner==person) AND where(status==private)))
+        // firebase docs says can use 'and' and 'or' but it seems to not work
+        // const coursesRef = collection(db, "courses");
+        // const q = query(
+        //   coursesRef,
+        //   and(
+        //     where("status", "==", "published"),
+        //     or(where("mappedBy.personId", "==", payload.owner), where("status", "==", "private")),
+        //   ),
+        // );
+
+        return bindFirestoreRef("courses", firebaseQuery, {
           maxRefDepth: 0,
           reset: false,
         });
@@ -309,6 +322,14 @@ export default defineStore({
       const tasksArr = tasksPerTopic.flat();
       // console.log("tasksArr", tasksArr)
       this.courseTasks = tasksArr;
+    },
+
+    async deleteCourseFromPerson(personId: string, courseId: string) {
+      // delete course from persons assignedCourses
+      const person = db.collection("people").doc(personId);
+      await person.update({
+        assignedCourses: firebase.firestore.FieldValue.arrayRemove(courseId),
+      });
     },
 
     // ===== Firestore - BIND by USER
@@ -466,9 +487,14 @@ export default defineStore({
           allRequestsForHelp.sort(
             (a, b) => b.requestSubmittedTimestamp.seconds - a.requestSubmittedTimestamp.seconds,
           );
+
+          // console.log("ALL REQUESTS FOR HELP:", allRequestsForHelp);
+
           this.teachersRequestsForHelp = allRequestsForHelp.filter(
             (req) => req.contextCourse.id === courseId,
           );
+
+          // console.log("this.teachersRequestsForHelp:", this.teachersRequestsForHelp);
         });
 
       return unsubscribe;
