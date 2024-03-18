@@ -1,17 +1,24 @@
 <template>
   <div class="student-card" :class="status ? '' : 'not-active'">
+    <v-btn
+      color="baseAccent"
+      class="ma-2 pa-1 view-button"
+      outlined
+      @click="showStudentDetails(student)"
+      >V<br />I<br />E<br />W<br
+    /></v-btn>
     <StudentCardStatus
       :student="student"
       :date="date"
       :status="status"
       class="pl-1"
-      @click.native="showStudentDetails(student)"
+      @emitUpLastActive="emitUpLastActive($event)"
     />
     <template v-if="!status">
       <span class="overline not-active text-uppercase ma-auto">hasn't signed in yet</span>
     </template>
     <template v-else>
-      <StudentXpPoints :student="student" />
+      <StudentXpPoints :student="student" class="mission-border-left" />
       <StudentCardProgress :activities="activities" :student="student" />
       <div class="student-activities-overUnder">
         <div style="height: 100%">
@@ -108,12 +115,13 @@ export default {
       activities: [],
       studentTimeData: [],
       studentTimeDataLoading: false,
+      studentCoursesActivity: [],
     };
   },
   async mounted() {
-    const studentCourses = await fetchStudentCoursesActivityByPersonId(this.student.id);
+    this.studentCoursesActivity = await fetchStudentCoursesActivityByPersonId(this.student.id);
     this.cohort = await fetchCohortByCohortId(this.currentCohortId);
-    const cohortActivities = studentCourses.filter((a) =>
+    const cohortActivities = this.studentCoursesActivity.filter((a) =>
       this.cohort.courses.some((b) => b === a.course.id),
     );
     this.activities = cohortActivities.map((course) => {
@@ -143,7 +151,11 @@ export default {
   },
   methods: {
     showStudentDetails(student) {
-      this.$emit("showStudent", student);
+      this.$emit("showStudent", {
+        student: student,
+        coursesActivity: this.studentCoursesActivity,
+        timeData: this.studentTimeData,
+      });
     },
     async getAssignedCourse() {
       const courseId = this.student.assignedCourses.find((courseId) =>
@@ -176,6 +188,12 @@ export default {
         tasks,
       });
     },
+    emitUpLastActive(lastActive) {
+      this.$emit("updateStudentsWithLastActive", {
+        person: this.student,
+        lastActive,
+      });
+    },
   },
 };
 </script>
@@ -194,6 +212,11 @@ a {
   margin: 20px 10px;
   display: flex;
   height: 120px;
+
+  .view-button {
+    height: auto !important;
+    min-width: 0 !important;
+  }
 
   .student-activities-overUnder {
     display: flex;
@@ -230,5 +253,9 @@ a {
 .not-active {
   color: grey;
   // border-color: grey !important;
+}
+
+.mission-border-left {
+  border-left: 1px dashed var(--v-missionAccent-base);
 }
 </style>

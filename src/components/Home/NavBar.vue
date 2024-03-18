@@ -44,6 +44,7 @@ import { mapState } from "pinia";
 const TAB_GALAXIES = { id: 1, name: "GALAXIES", route: `/`, exactPath: true };
 const TAB_COHORTS = { id: 2, name: "COHORTS", route: `/cohorts`, exactPath: false };
 const TAB_DASHBOARD = { id: 3, name: "DASHBOARD", route: `/dashboard`, exactPath: false };
+const TAB_ADMIN = { id: 4, name: "ADMIN", route: `/students` };
 
 export default {
   name: "NavBar",
@@ -79,7 +80,9 @@ export default {
       }
     },
     user(to, from) {
-      if (to.loggedIn) {
+      if (this.user?.data?.admin) {
+        this.tabs = [TAB_GALAXIES, TAB_COHORTS, TAB_DASHBOARD, TAB_ADMIN];
+      } else if (to.loggedIn) {
         this.tabs = [TAB_GALAXIES, TAB_COHORTS, TAB_DASHBOARD];
       } else {
         this.tabs = [TAB_GALAXIES];
@@ -87,7 +90,9 @@ export default {
     },
   },
   mounted() {
-    if (this.user.loggedIn) {
+    if (this.user?.data?.admin) {
+      this.tabs = [TAB_GALAXIES, TAB_COHORTS, TAB_DASHBOARD, TAB_ADMIN];
+    } else if (this.user.loggedIn) {
       this.tabs = [TAB_GALAXIES, TAB_COHORTS, TAB_DASHBOARD];
     } else {
       this.tabs = [TAB_GALAXIES];

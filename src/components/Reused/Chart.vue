@@ -31,8 +31,6 @@ export default {
   watch: {
     unselectedPersons: {
       handler(newUnselectedPersons) {
-        // console.log(this.chartType + " this.chart", this.chart.data);
-        // console.log("newUnselectedPersons", newUnselectedPersons);
         // hide data
         for (const person of newUnselectedPersons) {
           const personsName = person.firstName + " " + person.lastName;
@@ -43,13 +41,6 @@ export default {
               // line chart
               this.chart.hide(personsIndexForDataset);
             } else if (this.chartType == "bar") {
-              console.log(
-                personsName +
-                  " UNselected. index = " +
-                  personsIndexForDataset +
-                  " " +
-                  this.chartType,
-              );
               // bar chart
               this.chart.hide(0, personsIndexForDataset);
             }
@@ -59,8 +50,6 @@ export default {
     },
     selectedPersons: {
       handler(newSelectedPersons) {
-        // console.log(this.chartType + " this.chart", this.chart.data);
-        // console.log("newSelectedPersons", newSelectedPersons);
         // show data
         for (const person of newSelectedPersons) {
           const personsName = person.firstName + " " + person.lastName;
@@ -71,9 +60,6 @@ export default {
               // line chart
               this.chart.show(personsIndexForDataset);
             } else if (this.chartType == "bar") {
-              console.log(
-                personsName + " Selected. index = " + personsIndexForDataset + " " + this.chartType,
-              );
               // bar chart
               this.chart.show(0, personsIndexForDataset);
             }
@@ -83,7 +69,6 @@ export default {
     },
     timeframe: {
       handler(newTimeframe) {
-        console.log("timeframe watcher in chart: ", newTimeframe);
         if (this.chartType !== "bar") {
           this.chartOptions.scales.x.min = newTimeframe.min;
           this.chartOptions.scales.x.max = newTimeframe.max;
@@ -97,8 +82,6 @@ export default {
             this.chartOptions.scales.x.title = titleObj;
           }
         } else {
-          const data = this.chartData.datasets[0].data;
-          this.chart.data.datasets[0].data = data;
         }
 
         this.chart.update();
@@ -108,7 +91,11 @@ export default {
       deep: true,
       handler(newVal) {
         if (this.chartType === "bar") {
-          console.log("chartData watcher: ", newVal);
+          const data = this.chartData.datasets[0].data;
+          const labels = this.chartData.labels;
+          this.chart.data.datasets[0].data = data;
+          this.chart.data.labels = labels;
+          this.chart.update();
         }
       },
     },
@@ -125,9 +112,6 @@ export default {
           // Tooltip Element
           const { chart, tooltip } = context;
           const tooltipEl = this.getOrCreateTooltip(chart);
-
-          // console.log("tooltipEl", tooltipEl);
-          // console.log("tooltip", tooltip);
 
           // Hide if no tooltip
           if (tooltip.opacity === 0) {
@@ -149,62 +133,79 @@ export default {
               const colors = tooltip.labelColors[i];
 
               // ===== Top Row (Task Context) =====
-              divTopRow.innerHTML = `
+              if (dataPoint.raw.status) {
+                divTopRow.innerHTML = `
               <table style="padding: 10px;width: 100%;">
                 <tr
-             
+
                   style="
                     text-align: center;
                     text-transform: uppercase;
                     font-size: 0.8rem;
                     font-weight: 800;
                     margin: 0;
-                   
+
                   "
                 >
-                <td style="color:white;">${dataPoint.dataset.label}</td>
+                <td style="color:white;">${
+                  dataPoint.raw.status ? dataPoint.dataset.label : dataPoint.label
+                }</td>
 
                 </tr>
-               
+
               </table>
             `;
-              divTopRow.style.borderBottom = `1px solid ${
-                this.dark
-                  ? this.$vuetify.theme.themes.dark.missionAccent
-                  : this.$vuetify.theme.themes.light.missionAccent
-              }`;
-              divTopRow.style.textAlign = "center";
-              divTopRow.style.paddingTop = "15px";
-              divTopRow.style.paddingBottom = "5px";
+                divTopRow.style.borderBottom = `1px solid ${
+                  this.dark
+                    ? this.$vuetify.theme.themes.dark.missionAccent
+                    : this.$vuetify.theme.themes.light.missionAccent
+                }`;
+                divTopRow.style.textAlign = "center";
+                divTopRow.style.paddingTop = "15px";
+                divTopRow.style.paddingBottom = "5px";
+              }
 
               // ===== Middle Row (Task Status) =====
               divMiddleRow.style.textAlign = "center";
               // divMiddleRow.classList.add("text-overline");
-              divMiddleRow.classList.add("missionAccent--text");
+              // divMiddleRow.classList.add("missionAccent--text");
 
-              if (dataPoint.raw.status == "Completed") {
-                divMiddleRow.innerHTML = `
-              <tr>
-                <td><p style=" color: var(--v-baseAccent-base);margin:0;"> ${dataPoint.raw.status.toUpperCase()}:</p></td>
-              </tr>
-              <tr>
-                <td><p style="font-style: italic;color:white;font-weight: 400;">${
-                  dataPoint.raw.title
-                }</p></td>
-              </tr>
-                `;
+              // has a status means is data related to a TASK
+              if (dataPoint.raw.status) {
+                if (dataPoint.raw.status == "Completed") {
+                  divMiddleRow.innerHTML = `
+                  <tr>
+                    <td><p style="color: var(--v-baseAccent-base);margin:0;"> ${dataPoint.raw.status.toUpperCase()}:</p></td>
+                  </tr>
+                  <tr>
+                    <td><p style="font-style: italic;color:white;font-weight: 400;">${
+                      dataPoint.raw.title
+                    }</p></td>
+                  </tr>
+                    `;
+                } else {
+                  divMiddleRow.innerHTML = `
+                    <tr>
+                      <td  "> ${dataPoint.raw.status.toUpperCase()}:</td>
+                    </tr>
+                    <tr>
+                      <td><p style="font-style: italic;color:white;font-weight: 400;">${
+                        dataPoint.raw.title
+                      }</p>
+                      </td>
+                    </tr>
+                  `;
+                }
               } else {
                 divMiddleRow.innerHTML = `
                 <tr>
-                  <td  "> ${dataPoint.raw.status.toUpperCase()}:</td>
-                </tr>
-                <tr>
-                  <td><p style="font-style: italic;color:white;font-weight: 400;">${
-                    dataPoint.raw.title
-                  }</p>
-                  </td>
-                </tr>
-              `;
+                      <td><p style="color:var(--v-baseAccent-base);margin:0; font-size: 3rem; font-weight:800 "> ${dataPoint.formattedValue}</p></td>
+                    </tr>
+                    <tr>
+                      <td><p style="font-style: italic;color:white;font-weight: 400;">HOURS</p>
+                      </td>
+                    </tr>
+                  `;
               }
               divMiddleRow.style.padding = "5px";
               divMiddleRow.style.paddingTop = "10px";
@@ -257,7 +258,9 @@ export default {
             }
 
             // Add new children
-            tooltipEl.appendChild(divTopRow);
+            if (divTopRow) {
+              tooltipEl.appendChild(divTopRow);
+            }
             tooltipEl.appendChild(divMiddleRow);
             tooltipEl.appendChild(divBottomRow);
           }

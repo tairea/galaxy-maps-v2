@@ -249,7 +249,6 @@ export const getStudentCoursesTimeDataXAPIQuery = async (
   }
 
   const aggregationQuery = [
-    // match with cohorts courses. and only started & completed statements
     {
       $match: {
         "statement.actor.mbox": `mailto:${personData.email}`,
@@ -397,6 +396,7 @@ export const getStudentCoursesDataXAPIQuery = async (personId: string) => {
             description: "$statement.object.definition.description.en-nz",
             topic: "$statement.object.definition.extensions.https://www.galaxymaps.io/topic/id/",
             task: "$statement.object.definition.extensions.https://www.galaxymaps.io/task/id/",
+            course: "$statement.object.definition.extensions.https://www.galaxymaps.io/course/id/",
           },
         },
       },
@@ -423,6 +423,7 @@ export const getStudentCoursesDataXAPIQuery = async (personId: string) => {
       description: string;
       topic: string;
       task: string;
+      course: string;
     }[];
   }[];
 
@@ -451,15 +452,10 @@ export const getStudentCoursesDataXAPIQuery = async (personId: string) => {
 
     // sanitise statements data
     const activities = group.statements.map((statement, index) => {
-      if (statement.description.includes("Completed Task:")) {
-        taskCompletedCount++;
-      }
-      if (statement.description.includes("Completed Topic:")) {
-        topicCompletedCount++;
-      }
-
       const [action, title] = statement.description.split(": ");
       const [status, type] = action.split(" ");
+
+      console.log("Statement:", statement);
 
       const newStatement = {
         timeStamp: statement.timestamp,
@@ -467,9 +463,28 @@ export const getStudentCoursesDataXAPIQuery = async (personId: string) => {
         status,
         type,
         title,
-        id: statement.task,
+        id: "",
+        // id: statement.task,
+        // id: statement.topic,
         context: statement.context,
       };
+
+      if (statement.description.includes("Completed Task:")) {
+        taskCompletedCount++;
+        newStatement.id = statement.task;
+      }
+      if (statement.description.includes("Completed Topic:")) {
+        topicCompletedCount++;
+        newStatement.id = statement.topic;
+      }
+      // check if description includes "task", "topic" or "course" then assign id accordingly
+      if (statement.description.includes("Task")) {
+        newStatement.id = statement.task;
+      } else if (statement.description.includes("Topic")) {
+        newStatement.id = statement.topic;
+      } else if (statement.description.includes("Course")) {
+        newStatement.id = statement.course;
+      }
 
       return newStatement;
     });
@@ -639,6 +654,8 @@ export const getCohortCoursesDataXAPIQuery = async (cohortId: string) => {
         if (statement.description.includes("Completed Topic:")) topicCompletedCount++;
 
         const [action, title] = statement.description.split(": ");
+        // Todo: this split works for "Started Topic" but NOT "Work declined"
+        // maybe only query topic and task statements ?
         const [status, type] = action.split(" ");
         const id = statement.task;
 

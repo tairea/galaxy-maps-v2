@@ -18,23 +18,48 @@
             <span class="pl-3">OVERVIEW</span>
           </div>
         </div>
-        <StudentDataIterator v-if="studentsView" class="mt-4" :cohort="cohort" />
-        <CohortGraphs v-else :cohort="cohort" />
+        <StudentDataIterator
+          v-if="studentsView"
+          class="mt-4"
+          :cohort="cohort"
+          @learnerOverviewDialogClosed="refreshComponents"
+        />
+        <CohortGraphs v-else :cohort="cohort" :cohortsCoursesData="cohortsCoursesData" />
       </div>
     </div>
 
     <div v-if="ready" id="right-section">
       <RequestForHelpTeacherFrame
+        :key="refreshRequests"
         :isTeacher="teacher"
         :courses="courses"
         :students="cohort.students"
       />
       <SubmissionTeacherFrame
+        :key="refreshSubmissions"
         v-if="teacher"
+        :isTeacher="teacher"
         :courses="courses"
         :students="cohort.students"
         class="mt-4"
       />
+      <!-- Completed Separate -->
+      <!-- <p class="baseAccent--text completed-label ma-0 py-6">COMPLETED</p>
+      <RequestForHelpTeacherFrame
+        :isTeacher="teacher"
+        :courses="courses"
+        :students="cohort.students"
+        :completedRequestsOnly="true"
+        class="mt-0"
+      />
+      <SubmissionTeacherFrame
+        v-if="teacher"
+        :isTeacher="teacher"
+        :courses="courses"
+        :students="cohort.students"
+        class="mt-4"
+        :completedSubmissionsOnly="true"
+      /> -->
     </div>
   </div>
 </template>
@@ -47,7 +72,12 @@ import BackButton from "@/components/Reused/BackButton.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 import CohortGraphs from "@/components/CohortView/CohortGraphs.vue";
-import { fetchCohortByCohortId } from "@/lib/ff";
+import {
+  fetchCohortByCohortId,
+  fetchCohortCoursesActivityByCohortId,
+  fetchSubmissionsForTeacherByTeacherId,
+  fetchRequestsForTeacherByTeacherId,
+} from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
 
@@ -67,7 +97,23 @@ export default {
     return {
       studentsView: true,
       cohort: null,
+      cohortsCoursesData: [],
+      submissionsForTeacher: [],
+      requestsForTeacher: [],
+      refreshSubmissions: 0,
+      refreshRequests: 0,
     };
+  },
+  async mounted() {
+    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
+
+    // ==== get cohort course data from LRS
+    this.cohortsCoursesData = await fetchCohortCoursesActivityByCohortId(this.cohort.id);
+
+    // ==== get submissions for teacher data
+    this.submissionsForTeacher = await fetchSubmissionsForTeacherByTeacherId(this.person.id);
+    // ==== get requests for help for teacher data
+    this.requestsForTeacher = await fetchRequestsForTeacherByTeacherId(this.person.id);
   },
   computed: {
     ...mapState(useRootStore, ["currentCohortId", "person", "userStatus"]),
@@ -89,8 +135,12 @@ export default {
       return this.studentsView ? "inactive-graph-label" : "graph-label";
     },
   },
-  async mounted() {
-    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
+  methods: {
+    // hack to update TeacherFrames. (this is because LearnerOveriewDashboard uses the same components and when you close the dialog, the cohortview teacher frames are empty. issue#121)
+    refreshComponents() {
+      this.refreshSubmissions++;
+      this.refreshRequests++;
+    },
   },
 };
 </script>
@@ -245,6 +295,14 @@ export default {
   padding-top: 50px;
   // margin-right: 35px;
   margin-right: 5%;
+  overflow-y: scroll;
+
+  .completed-label {
+    font-weight: 500;
+    letter-spacing: 0.05rem;
+    font-size: 0.8rem;
+    text-align: center;
+  }
 }
 
 /* width */

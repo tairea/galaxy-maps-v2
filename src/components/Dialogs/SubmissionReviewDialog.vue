@@ -29,24 +29,23 @@
                     <v-simple-table>
                       <tr
                         class="dialog-context-description"
-                        style="color: var(--v-missionAccent-base); font-weight: 800"
-                      >
-                        <td>MISSION:</td>
-                        <td>{{ submission.contextTask.title }}</td>
-                      </tr>
-                      <tr
-                        class="dialog-context-description"
                         style="color: var(--v-missionAccent-base)"
                       >
-                        <td>System:</td>
+                        <td
+                          class="d-flex flex-start"
+                          style="color: var(--v-galaxyAccent-base); font-weight: 800"
+                        >
+                          Galaxy:
+                        </td>
+                        <td style="color: var(--v-galaxyAccent-base)">
+                          {{ submission.contextCourse.title }}
+                        </td>
+                        <td width="50px" class="text-center">></td>
+                        <td class="d-flex flex-start" style="font-weight: 800">System:</td>
                         <td>{{ submission.contextTopic.label }}</td>
-                      </tr>
-                      <tr
-                        class="dialog-context-description"
-                        style="color: var(--v-galaxyAccent-base)"
-                      >
-                        <td>Galaxy:</td>
-                        <td>{{ submission.contextCourse.title }}</td>
+                        <td width="50px" class="text-center">></td>
+                        <td class="d-flex flex-start" style="font-weight: 800">MISSION:</td>
+                        <td class="pl-2">{{ submission.contextTask.title }}</td>
                       </tr>
                     </v-simple-table>
                   </div>
@@ -161,6 +160,7 @@
                   :loading="loading"
                   v-bind="attrs"
                   v-on="on"
+                  :disabled="loading"
                 >
                   <v-icon left> {{ mdiThumbUpOutline }} </v-icon>
                   approve
@@ -173,6 +173,7 @@
                   :loading="loading"
                   v-bind="attrs"
                   v-on="on"
+                  :disabled="loading"
                 >
                   <v-icon left> {{ mdiThumbDownOutline }} </v-icon>
                   decline
@@ -180,7 +181,13 @@
               </template>
 
               <!-- CANCEL -->
-              <v-btn outlined :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'" @click="close">
+              <v-btn
+                outlined
+                :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
+                @click="close"
+                :disabled="loading"
+                :loading="loading"
+              >
                 <v-icon left> {{ mdiClose }} </v-icon>
                 Cancel
               </v-btn>
@@ -198,17 +205,20 @@
 
 <script>
 import Avatar from "@/components/Reused/Avatar.vue";
+import { db, functions } from "@/store/firestoreConfig";
 import { fetchPersonByPersonId } from "@/lib/ff";
+import firebase from "firebase/compat/app";
+import { mapActions, mapState } from "pinia";
+import { mdiTextBoxSearchOutline, mdiThumbUpOutline, mdiThumbDownOutline, mdiClose } from "@mdi/js";
+import moment from "moment";
 import {
   studentWorkMarkedCompletedXAPIStatement,
   teacherReviewedStudentWorkXAPIStatement,
   teacherRespondedSubmissionDeclinedXAPIStatement,
+  topicCompletedXAPIStatement,
 } from "@/lib/veracityLRS";
-import { db, functions } from "@/store/firestoreConfig";
+
 import useRootStore from "@/store/index";
-import { mdiTextBoxSearchOutline, mdiThumbUpOutline, mdiThumbDownOutline, mdiClose } from "@mdi/js";
-import moment from "moment";
-import { mapActions, mapState } from "pinia";
 
 export default {
   name: "SubmissionReviewDialog",
@@ -226,6 +236,7 @@ export default {
     dialog: false,
     loading: false,
     instructor: {},
+    xpPointsForCompletedSubmission: 250,
   }),
   async mounted() {
     this.instructor = await fetchPersonByPersonId(this.submission.contextCourse.mappedBy.personId);
@@ -255,7 +266,7 @@ export default {
     ...mapActions(useRootStore, ["setSnackbar", "bindPersonsTasksByTopicId"]),
     getHumanDate(ts) {
       if (!ts) return;
-      return moment(ts.seconds * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
+      return moment((ts.seconds ? ts.seconds : ts._seconds) * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
     },
     async markSubmissionAsCompleted() {
       this.loading = true;
@@ -313,13 +324,23 @@ export default {
         mission: this.submission.contextTask,
       });
 
-      this.close();
+      // give XP points
+      await db
+        .collection("people")
+        .doc(this.submission.studentId)
+        .update({
+          xpPointsTotal: firebase.firestore.FieldValue.increment(
+            this.xpPointsForCompletedSubmission,
+          ),
+        });
 
       this.setSnackbar({
         show: true,
         text: "Student's Mission now marked as completed",
         color: "baseAccent",
       });
+
+      this.close();
 
       // unlock next task
       await this.unlockNextTask();
@@ -372,6 +393,8 @@ export default {
             this.submission.contextTopic.label,
           color: "baseAccent",
         });
+
+        await this.setTopicToCompletedInDB();
 
         await this.unlockNextTopics();
       } else {
@@ -491,7 +514,7 @@ export default {
         this.close();
         this.setSnackbar({
           show: true,
-          text: "Students submitted work declined.Feedback sent to student",
+          text: "Students submitted work declined. Feedback sent to student",
           color: "baseAccent",
         });
 
@@ -505,6 +528,23 @@ export default {
 
         throw error;
       }
+    },
+    async setTopicToCompletedInDB() {
+      await db
+        .collection("people")
+        .doc(this.submission.studentId)
+        .collection(this.submission.contextCourse.id)
+        .doc(this.submission.contextTopic.id)
+        .update({
+          // update tasks array with new task
+          topicStatus: "completed",
+          topicCompletedTimestamp: new Date(),
+        });
+
+      await topicCompletedXAPIStatement(this.requesterPerson, this.submission.contextTopic.id, {
+        galaxy: this.submission.contextCourse,
+        system: this.submission.contextTopic,
+      });
     },
     close() {
       this.loading = false;

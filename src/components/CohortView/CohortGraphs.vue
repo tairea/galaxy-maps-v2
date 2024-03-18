@@ -21,7 +21,6 @@
           :timeframe="timeframe"
           :selectedPersons="selectedPersons"
           :unselectedPersons="unselectedPersons"
-          class="line-chart"
         />
       </div>
       <div v-else class="d-flex justify-center align-center" style="padding: 50px 0px">
@@ -104,7 +103,7 @@ import { doc, getDoc } from "firebase/firestore";
 
 export default {
   name: "CohortGraphs",
-  props: ["cohort"],
+  props: ["cohort", "cohortsCoursesData"],
   components: {
     ProgressionLineChart,
     ActivityBarChart,
@@ -113,7 +112,6 @@ export default {
   },
   data() {
     return {
-      cohortsCoursesData: [],
       cohortActivityData: [],
       timeframe: {},
       studentsWithData: [],
@@ -129,9 +127,6 @@ export default {
     this.cohortActivityDataLoading = true;
 
     const currentCohort = await fetchCohortByCohortId(this.currentCohortId);
-
-    // ==== get cohort course data from LRS
-    this.cohortsCoursesData = await fetchCohortCoursesActivityByCohortId(this.cohort.id);
 
     // add students with data
     const studentsArr = [];

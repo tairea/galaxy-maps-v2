@@ -27,7 +27,7 @@ export default {
 .backButtonDiv {
   margin-top: 20px;
   width: calc(100% - 30px);
-  z-index: 999;
+  z-index: 200;
 }
 
 .backButton {
