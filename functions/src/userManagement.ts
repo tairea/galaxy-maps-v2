@@ -170,7 +170,7 @@ export const updatePersonByPersonIdHttpsEndpoint = runWith({}).https.onCall(
 
     // TODO: permissions checks
 
-    await personDoc.ref.update(personData);
+    await personDoc.ref.update(person);
 
     const updatedPersonDoc = await personDoc.ref.get();
     const updatedPersonData = personDoc.data();

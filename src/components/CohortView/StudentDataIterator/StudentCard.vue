@@ -42,7 +42,7 @@
             v-else
             :timeData="studentTimeData"
             :timeframe="timeframe"
-            :courseIds="cohortCourseIds"
+            :courseIds="cohort.courses"
             @emitUpHours="emitUpHours($event)"
           />
         </div>
@@ -100,10 +100,9 @@ export default {
     StudentActivityTimeline,
     StudentXpPoints,
   },
-  props: ["student", "timeframe", "date", "cohortCourseIds"],
+  props: ["cohort", "student", "timeframe", "date"],
   data() {
     return {
-      cohort: null,
       topic: null,
       task: null,
       missions: [],
@@ -120,7 +119,6 @@ export default {
   },
   async mounted() {
     this.studentCoursesActivity = await fetchStudentCoursesActivityByPersonId(this.student.id);
-    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
     const cohortActivities = this.studentCoursesActivity.filter((a) =>
       this.cohort.courses.some((b) => b === a.course.id),
     );
@@ -144,7 +142,7 @@ export default {
     },
   },
   computed: {
-    ...mapState(useRootStore, ["currentCohortId", "userStatus"]),
+    ...mapState(useRootStore, ["userStatus"]),
     status() {
       return this.userStatus[this.student.id];
     },

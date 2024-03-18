@@ -12,7 +12,7 @@
       >
     </p>
     <div class="d-flex justify-center align-center">
-      <Organisation v-if="cohort.organisation" :organisation="org" :size="40" />
+      <Organisation v-if="organisation" :organisation="organisation" :size="40" />
     </div>
     <div v-if="teachers.length > 0">
       <p class="overline ma-0" style="color: var(--v-cohortAccent-base)">Teachers</p>
@@ -34,12 +34,13 @@
 import Organisation from "@/components/Reused/Organisation.vue";
 import CreateEditDeleteCohortDialog from "@/components/Dialogs/CreateEditDeleteCohortDialog.vue";
 import Avatar from "@/components/Reused/Avatar.vue";
-import { fetchCohortByCohortId, fetchPersonByPersonId } from "@/lib/ff";
+import { fetchOrganisationByOrganisationId, fetchPersonByPersonId } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
 
 export default {
   name: "CohortInfo",
+  props: ["cohort"],
   components: {
     Avatar,
     Organisation,
@@ -47,39 +48,33 @@ export default {
   },
   data() {
     return {
-      cohort: null,
       teachers: [],
       readmore: false,
+      organisation: null,
     };
   },
   async mounted() {
-    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
-    // this is needed incase there is no change in currentCohortId to catch with the watch
-    if (this.$route.params.cohortId === this.currentCohortId) {
-      this.getTeacherProfiles();
-    }
+    await this.getTeacherProfiles();
+    await this.getOrganisation();
   },
   watch: {
-    currentCohortId: {
+    cohort: {
       deep: true,
-      async handler(newVal, oldVal) {
-        const oldCohort = this.cohort;
-        this.cohort = await fetchCohortByCohortId(newVal);
-        if (oldCohort.teachers?.length !== this.cohort.teachers?.length) {
-          this.getTeacherProfiles();
+      async handler(newCohort, oldCohort) {
+        if (oldCohort.teachers?.length !== newCohort.teachers?.length) {
+          await this.getTeacherProfiles();
+        }
+
+        if (oldCohort.organisation !== newCohort.organisation) {
+          await this.getOrganisation();
         }
       },
     },
   },
   computed: {
-    ...mapState(useRootStore, ["getOrganisationById", "currentCohortId", "person", "user"]),
+    ...mapState(useRootStore, ["getOrganisationById", "person", "user"]),
     cohortImage() {
       return this.cohort?.image?.url;
-    },
-    org() {
-      let org = this.getOrganisationById(this.cohort.organisation);
-      if (org) return org;
-      else return {};
     },
     isTeacher() {
       return this.user.data.admin || this.cohort.teachers.includes(this.person.id);
@@ -92,6 +87,15 @@ export default {
           return !this.teachers.some((b) => a === b.id);
         });
         this.teachers = await Promise.all(teachersArr.map((id) => fetchPersonByPersonId(id)));
+      } else {
+        this.teachers = [];
+      }
+    },
+    async getOrganisation() {
+      if (this.cohort.organisation != null && this.cohort.organisation !== "") {
+        this.organisation = await fetchOrganisationByOrganisationId(this.cohort.organisation);
+      } else {
+        this.organisation = null;
       }
     },
     maybeTruncate(value) {
