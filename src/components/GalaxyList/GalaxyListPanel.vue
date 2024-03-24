@@ -123,6 +123,7 @@
 <script>
 import GalaxyListPanelCard from "@/components/GalaxyList/GalaxyListPanel/GalaxyListPanelCard.vue";
 import useRootStore from "@/store/index";
+import useGalaxyListViewStore from "@/store/galaxyListView";
 import { mdiPlus } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
 import { defineComponent } from "vue";
@@ -148,7 +149,8 @@ export default defineComponent({
     await this.getCohortsByPersonId(this.person);
   },
   computed: {
-    ...mapState(useRootStore, ["person", "courses", "cohorts", "user"]),
+    ...mapState(useRootStore, ["person", "cohorts", "user"]),
+    ...mapState(useGalaxyListViewStore, ["courses"]),
 
     // LEARNING GALAXIES
     getLearningCourses() {
@@ -214,7 +216,7 @@ export default defineComponent({
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["getCohortsByPersonId", "getPersonById"]),
+    ...mapActions(useRootStore, ["getCohortsByPersonId"]),
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
     },

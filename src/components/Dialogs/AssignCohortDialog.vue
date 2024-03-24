@@ -271,6 +271,7 @@
 
 <script>
 import {
+  fetchCourses,
   fetchCohortByCohortId,
   fetchCourseByCourseId,
   fetchPersonByEmail,
@@ -313,13 +314,13 @@ export default {
     },
     cohort: null,
     course: null,
+    courses: [],
     teacherCohorts: [],
     currentCourse: null,
   }),
   async mounted() {
     if (this.assignCourses) {
-      // TODO: we need to think about what courses are available to assign for a teacher
-      await this.bindCourses({ owner: null });
+      this.courses = await fetchCourses();
     } else if (this.assignCohorts) {
       this.teacherCohorts = this.cohorts.filter(
         (cohort) => cohort.teachers.includes(this.person.id) && !cohort.courseCohort,
@@ -334,13 +335,7 @@ export default {
     },
   },
   computed: {
-    ...mapState(useRootStore, [
-      "courses",
-      "currentCourseId",
-      "currentCohortId",
-      "personsCourses",
-      "person",
-    ]),
+    ...mapState(useRootStore, ["currentCourseId", "currentCohortId", "person"]),
     cohortOptions() {
       // teacherCohorts && the courseCohort
       this.cohort = this.cohorts.find((cohort) => cohort.id === this.currentCourse.cohort);
@@ -348,7 +343,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["bindCourses", "setSnackbar"]),
+    ...mapActions(useRootStore, ["setSnackbar"]),
     close() {
       this.dialog = false;
       this.loading = false;
@@ -356,7 +351,8 @@ export default {
         id: "",
         email: "",
       };
-      (this.cohort = ""), (this.course = "");
+      this.cohort = null;
+      this.course = null;
     },
     async assignCourseToPerson(profile) {
       this.loading = true;

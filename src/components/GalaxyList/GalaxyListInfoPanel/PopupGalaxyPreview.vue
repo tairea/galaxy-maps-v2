@@ -267,18 +267,8 @@ export default {
       if (this.course.mappedBy?.personId === this.person.id || this.user.data?.admin) {
         this.teacher = true;
       } else if (this.user.loggedIn) {
-        const querySnapshot = await db
-          .collection("people")
-          .doc(this.person.id)
-          .collection(this.course.id)
-          .limit(1)
-          .get();
-
-        if (querySnapshot.empty) {
-          this.enrolled = false;
-        } else {
-          this.enrolled = true;
-        }
+        // We can used the assignedCourses array to quickly check if the user is enrolled in this course
+        this.enrolled = this.person.assignedCourses?.includes(this.course.id) ?? false;
       } else {
         this.enrolled = false;
       }

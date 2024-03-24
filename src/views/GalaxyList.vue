@@ -120,17 +120,41 @@ export default {
   },
   watch: {
     async user() {
-      this.setSelectedCourseId(null);
       await this.loadCourses(this.slug);
     },
+    "$route.query.map": {
+      handler(courseId) {
+        // If we already have courses and our desired course exists then select it
+        if (
+          courseId != null &&
+          this.courses.length > 0 &&
+          this.courses.find((x) => x.id === courseId)
+        ) {
+          this.setCurrentCourseId(courseId);
+          this.setSelectedCourseId(courseId);
+        } else {
+          this.setCurrentCourseId(null);
+          this.setSelectedCourseId(null);
+        }
+      },
+      deep: true,
+      immediate: true,
+    },
   },
-  beforeMount() {
+  created() {
+    console.log("created");
     // We don't care about waiting for this to finish before completing mounted
     // because when it's finished it will automatically update our list of courses
     this.loadCourses(this.slug).then(() => {
-      // zoom to galaxy if that were user wants to land *STEFAN
-      if (this.$route.query.map) {
-        this.setSelectedCourseId(this.$route.query.map);
+      // zoom to galaxy if that were user wants to land
+      const courseId = this.$route.query.map;
+      if (
+        courseId != null &&
+        this.courses.length > 0 &&
+        this.courses.find((x) => x.id === courseId)
+      ) {
+        this.setCurrentCourseId(courseId);
+        this.setSelectedCourseId(courseId);
       }
     });
   },
@@ -138,12 +162,20 @@ export default {
     ...mapActions(useRootStore, ["setCurrentCourseId"]),
     ...mapActions(useGalaxyListViewStore, ["loadCourses", "setSelectedCourseId"]),
     courseClicked(emittedPayload) {
-      this.setCurrentCourseId(emittedPayload.courseId);
-      this.setSelectedCourseId(emittedPayload.courseId);
+      this.$router.replace({
+        query: {
+          map: emittedPayload.courseId,
+        },
+      });
     },
     closeInfoPanel() {
-      this.setSelectedCourseId(null);
-      this.$refs.listPanel.courseClicked();
+      this.$router.replace({
+        query: {
+          map: undefined,
+        },
+      });
+      // this.setSelectedCourseId(null);
+      // this.$refs.listPanel.courseClicked();
     },
   },
 };

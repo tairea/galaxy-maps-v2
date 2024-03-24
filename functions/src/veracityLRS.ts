@@ -164,6 +164,64 @@ export const startGalaxyXAPIStatement = (
   }).catch((error) => console.error(error.message));
 };
 
+// ========== Stop Galaxy
+export const stopGalaxyXAPIStatement = (
+  actor: { id: string; firstName: string; lastName: string; email: string },
+  context: { galaxy: { id: string; title: string } },
+) => {
+  console.log("sending student xAPI statement... galaxy stopped...");
+  const statement = {
+    actor: {
+      name: actor.firstName + " " + actor.lastName,
+      mbox: "mailto:" + actor.email,
+    },
+    verb: {
+      id: "https://w3id.org/xapi/dod-isd/verbs/stopped",
+      display: { "en-nz": "stopped" },
+    },
+    object: {
+      id: "https://www.galaxymaps.io/course/" + context.galaxy.id,
+      definition: {
+        name: {
+          "en-nz": "Course: " + context.galaxy.title,
+        },
+        description: {
+          "en-nz": "Stopped Course: " + context.galaxy.title,
+        },
+        extensions: {
+          "https://www.galaxymaps.io/course/id/": context.galaxy.id,
+          "https://www.galaxymaps.io/person/id/": actor.id,
+        },
+      },
+    },
+    context: {
+      contextActivities: {
+        parent: [
+          {
+            id: "https://www.galaxymaps.io/course/" + context.galaxy.id,
+            objectType: "Activity",
+          },
+        ],
+        grouping: [
+          {
+            id: "https://www.galaxymaps.io/course/" + context.galaxy.id,
+            objectType: "Activity",
+          },
+        ],
+      },
+    },
+  };
+
+  fetch("https://galaxymaps.lrs.io/xapi/statements", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: generateAuthHeader(),
+    },
+    body: JSON.stringify(statement),
+  }).catch((error) => console.error(error.message));
+};
+
 /* ----------------------
   QUERY xAPI STATEMENTS
 ------------------------- */
