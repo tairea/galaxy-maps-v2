@@ -24,13 +24,7 @@ export default {
     PopupGalaxyPreview,
   },
   data() {
-    return {
-      allCourses: [],
-      selectedGalaxy: false,
-      activeLearning: null,
-      activeTeaching: null,
-      activePublic: null,
-    };
+    return {};
   },
   computed: {},
   methods: {
