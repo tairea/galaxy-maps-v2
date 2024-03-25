@@ -63,32 +63,6 @@ export const fetchStudentRequestsByPersonId = async (
   return result.data.requests;
 };
 
-export const fetchRequestsForTeacherByTeacherId = async (
-  teacherId: string,
-): Promise<Array<{ id: string } & Record<string, any>>> => {
-  const data = {
-    teacherId,
-  };
-  const getRequestsForTeacherByTeacherId = functions.httpsCallable(
-    "getRequestsForTeacherByTeacherId",
-  );
-  const result = await getRequestsForTeacherByTeacherId(data);
-  return result.data.requests;
-};
-
-export const fetchSubmissionsForTeacherByTeacherId = async (
-  teacherId: string,
-): Promise<Array<{ id: string } & Record<string, any>>> => {
-  const data = {
-    teacherId,
-  };
-  const getSubmissionsForTeacherByTeacherId = functions.httpsCallable(
-    "getSubmissionsForTeacherByTeacherId",
-  );
-  const result = await getSubmissionsForTeacherByTeacherId(data);
-  return result.data.submissions;
-};
-
 export const fetchAllCohortsInCourseByCourseId = async (courseId: string): Promise<ICohort[]> => {
   const data = {
     courseId,
@@ -463,5 +437,28 @@ export const assignCourseToPerson = async (
   };
   const assignCourseToStudent = functions.httpsCallable("assignCourseToStudent");
   const result = await assignCourseToStudent(data);
+  return result.data.person;
+};
+
+// remove course from person
+export const removeMeFromCourse = async (courseId: string): Promise<IPerson> => {
+  const data = {
+    courseId,
+  };
+  const removeMeFromCourse = functions.httpsCallable("removeMeFromCourse");
+  const result = await removeMeFromCourse(data);
+  return result.data.person;
+};
+
+export const removePersonFromCourse = async (
+  personId: string,
+  courseId: string,
+): Promise<IPerson> => {
+  const data = {
+    personId,
+    courseId,
+  };
+  const removeStudentFromCourse = functions.httpsCallable("removeStudentFromCourse");
+  const result = await removeStudentFromCourse(data);
   return result.data.person;
 };

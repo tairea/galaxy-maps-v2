@@ -160,29 +160,40 @@ export default {
     highlightCourse(newCourseId) {
       // get all topic nodes by the closest clicked
       const coursesTopicNodes = this.allNodesForDisplay.filter(
-        (node) => node.courseId == newCourseId,
+        (node) => node.courseId === newCourseId,
       );
 
       if (coursesTopicNodes.length > 0) {
-        // zoom out to fit all nodes
-        this.zoomToNodes(coursesTopicNodes);
-        // this.needsToZoomOut = true;
-      } else {
         // zoom to specific galaxy nodes
         this.zoomToNodes(coursesTopicNodes);
+      } else {
+        // zoom out to fit all nodes
+        this.zoomToNodes(this.allNodesForDisplay, true);
       }
     },
-    async courses() {
+    async courses(newCourses, oldCourses) {
       this.loading = true;
-      this.refreshAllNodesAndEdgesToDisplay();
+      let needsCentering = true;
+      if (newCourses?.length === oldCourses?.length) {
+        needsCentering = false;
+        // Do a quick check to see if the courses have changed even though the number of courses is the same
+        for (let i = 0; i < newCourses.length; i++) {
+          if (newCourses[i].id === oldCourses[i].id) {
+            continue;
+          }
+          needsCentering = true;
+          break;
+        }
+      }
+      this.refreshAllNodesAndEdgesToDisplay(needsCentering);
     },
   },
   mounted() {
-    this.refreshAllNodesAndEdgesToDisplay();
+    this.refreshAllNodesAndEdgesToDisplay(true);
   },
   methods: {
     ...mapActions(useRootStore, []),
-    refreshAllNodesAndEdgesToDisplay() {
+    refreshAllNodesAndEdgesToDisplay(needsCentering) {
       const repositionedNodes = this.repositionCoursesBasedOnBoundariesV2();
       this.allNodesForDisplay = repositionedNodes;
       this.allEdgesForDisplay = Array.from(this.courseEdgesMap.values()).flatMap((x) => x);
@@ -191,7 +202,7 @@ export default {
         this.loading = false;
       }
 
-      this.needsCentering = true;
+      this.needsCentering = needsCentering;
     },
     networkMounted() {
       console.log("networkMounted called");
@@ -222,16 +233,25 @@ export default {
       }
     },
     centerAfterReposition() {
-      // short timer to give time to load all before zoom
-      //if (this.allNodesForDisplay.length > 0) {
-      this.zoomToNodes(this.allNodesForDisplay);
+      this.needsCentering = false;
+
       // set label colours (important if in light mode)
       this.makeGalaxyLabelsColour(
         this.$vuetify.theme.isDark ? "#fff" : this.$vuetify.theme.themes.light.baseAccent,
       );
-      // setTimeout(() => this.fitToAllNodes(), 250);
-      //}
-      this.needsCentering = false;
+
+      // get all topic nodes for the highlighted course
+      const coursesTopicNodes = this.allNodesForDisplay.filter(
+        (node) => node.courseId === this.highlightCourse,
+      );
+
+      if (coursesTopicNodes.length > 0) {
+        // zoom to specific galaxy nodes
+        this.zoomToNodes(coursesTopicNodes);
+      } else {
+        // zoom out to fit all nodes
+        this.zoomToNodes(this.allNodesForDisplay, true);
+      }
     },
     click(data) {
       // get click location
@@ -553,7 +573,7 @@ export default {
       return newAllNodes;
     },
     // this controls the fit zoom animation
-    zoomToNodes(nodes) {
+    zoomToNodes(nodes, fast = false) {
       console.log("zoom to nodes called");
       // get node ids
       const nodeIds = nodes.map((x) => x.id);
@@ -564,12 +584,12 @@ export default {
         // scale: 0.5,
         // animation: true,
         animation: {
-          duration: 2000,
+          duration: fast ? 800 : 2000,
           easingFunction: "easeInOutQuad",
         },
       });
     },
-    zoomOut(nodes) {
+    zoomOut() {
       this.$refs.network.moveTo({
         scale: 0.15,
         animation: true,
@@ -591,7 +611,6 @@ export default {
       options.nodes.font.color = colour;
       options.nodes.fixed = true;
       this.$refs.network.setOptions(options);
-      this.$refs.network.fit();
     },
     beforeDrawing(ctx) {
       for (const relative of this.relativeGalaxyBoundaries) {

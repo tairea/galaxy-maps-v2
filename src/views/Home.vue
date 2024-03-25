@@ -1,7 +1,7 @@
 <template>
   <v-app class="bg">
     <NavBar :userType="userType" />
-    <router-view :key="$route.fullPath"></router-view>
+    <router-view></router-view>
     <UserBar />
   </v-app>
 </template>

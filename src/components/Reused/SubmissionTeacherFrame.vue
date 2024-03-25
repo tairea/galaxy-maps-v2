@@ -85,24 +85,18 @@ export default {
     }
   },
   computed: {
-    ...mapState(useRootStore, [
-      "courseSubmissions",
-      "person",
-      "currentCohort",
-      "currentTopic",
-      "currentTask",
-    ]),
+    ...mapState(useRootStore, ["courseSubmissions", "person", "currentTopicId"]),
     isCohortView() {
-      return this.$route.name == "CohortView";
+      return this.$route.name === "CohortView";
     },
     isDashboardView() {
-      return this.$route.name == "Dashboard";
+      return this.$route.name === "Dashboard";
     },
     isGalaxyView() {
-      return this.$route.name == "GalaxyView";
+      return this.$route.name === "GalaxyView";
     },
     isSystemView() {
-      return this.$route.name == "SolarSystemView";
+      return this.$route.name === "SolarSystemView";
     },
     submissions() {
       let submissions = [];
@@ -134,7 +128,7 @@ export default {
       // Filter for "inreview" only
       if (this.completedSubmissionsOnly) {
         filteredSubmissions = submissions.filter(
-          (submission) => submission.taskSubmissionStatus != "inreview",
+          (submission) => submission.taskSubmissionStatus !== "inreview",
         );
       } else {
         filteredSubmissions = submissions.filter(
@@ -150,11 +144,11 @@ export default {
       if (this.isCohortView || this.isDashboardView) return filteredSubmissions;
       else if (this.isGalaxyView) {
         return filteredSubmissions.filter(
-          (submission) => submission.contextCourse.id == this.courses[0].id,
+          (submission) => submission.contextCourse.id === this.courses[0].id,
         );
       } else if (this.isSystemView) {
         return filteredSubmissions.filter(
-          (submission) => submission.contextTopic.id == this.currentTopic.id,
+          (submission) => submission.contextTopic.id === this.currentTopicId,
         );
       }
       return filteredSubmissions;

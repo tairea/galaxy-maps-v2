@@ -132,6 +132,7 @@ import {
   fetchCourseByCourseId,
   fetchStudentCoursesActivityByPersonId,
   fetchStudentCoursesTimeDataByPersonIdStartAtEndAt,
+  removePersonFromCourse,
 } from "@/lib/ff";
 
 import useRootStore from "@/store/index";
@@ -224,7 +225,6 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["deleteCourseFromPerson"]),
     showStudentDetails(student) {
       this.$emit("showStudent", {
         student: student,
@@ -243,7 +243,7 @@ export default {
       this.deleting = true;
       console.log("deleting course from person", this.courseForDialog);
 
-      await this.deleteCourseFromPerson(this.student.id, this.courseForDialog.id);
+      await removePersonFromCourse(this.student.id, this.courseForDialog.id);
       this.dialogConfirm = false;
       this.disabled = false;
       this.deleting = false;

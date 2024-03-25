@@ -169,9 +169,9 @@
               :showCourseImage="true"
               @requestsChanged="requestsChanged"
               :allStudentsRequests="requests"
+              :dense="true"
               :isTeacher="true"
               class="ma-4"
-              :dense="true"
             />
           </div>
           <div class="help-completed mission-border-bottom">
@@ -250,25 +250,12 @@ export default {
     this.students.push(this.student);
 
     // ==== get submission data
-    this.submissions = await fetchStudentSubmissionsByPersonId(this.student.id); // this should be an admin call as it will show all submissions. even submissions that are for other teachers.
-
-    // filter submissions by teacher (TODO: contentBy/mappedBy VS cohort teacher)
-    // this.submissions = this.submissions.filter(
-    //   (submission) =>
-    //     submission.contextCourse.contentBy.personId === this.person.id ||
-    //     submission.contextCourse.mappedBy.personId === this.person.id,
-    // );
+    this.submissions = await fetchStudentSubmissionsByPersonId(this.student.id);
 
     this.loadingSubmissions = false;
 
     // ==== get request data
     this.requests = await fetchStudentRequestsByPersonId(this.student.id);
-    // filter requests by teacher (TODO: contentBy/mappedBy VS cohort teacher)
-    this.requests = this.requests.filter(
-      (request) =>
-        request.contextCourse.contentBy.personId === this.person.id ||
-        request.contextCourse.mappedBy.personId === this.person.id,
-    );
 
     this.loadingRequests = false;
   },

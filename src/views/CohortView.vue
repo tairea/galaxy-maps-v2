@@ -67,8 +67,8 @@
         :isTeacher="teacher"
         :courses="courses"
         :students="cohort.students"
-        class="mt-4"
         :completedSubmissionsOnly="true"
+        class="mt-4"
       /> -->
     </div>
   </div>
@@ -82,11 +82,7 @@ import BackButton from "@/components/Reused/BackButton.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 import CohortGraphs from "@/components/CohortView/CohortGraphs.vue";
-import {
-  fetchCohortCoursesActivityByCohortId,
-  fetchSubmissionsForTeacherByTeacherId,
-  fetchRequestsForTeacherByTeacherId,
-} from "@/lib/ff";
+import { fetchCohortCoursesActivityByCohortId } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import useCohortViewStore from "@/store/cohortView";
 import { mapActions, mapState } from "pinia";
@@ -106,8 +102,6 @@ export default {
   data() {
     return {
       cohortsCoursesData: [],
-      submissionsForTeacher: [],
-      requestsForTeacher: [],
       refreshSubmissions: 0,
       refreshRequests: 0,
     };
@@ -117,11 +111,6 @@ export default {
 
     // ==== get cohort course data from LRS
     this.cohortsCoursesData = await fetchCohortCoursesActivityByCohortId(this.cohort.id);
-
-    // ==== get submissions for teacher data
-    this.submissionsForTeacher = await fetchSubmissionsForTeacherByTeacherId(this.person.id);
-    // ==== get requests for help for teacher data
-    this.requestsForTeacher = await fetchRequestsForTeacherByTeacherId(this.person.id);
   },
   computed: {
     ...mapState(useRootStore, ["currentCohortId", "person", "userStatus"]),
@@ -146,7 +135,8 @@ export default {
   },
   methods: {
     ...mapActions(useCohortViewStore, ["loadCohort", "setStudentsView"]),
-    // hack to update TeacherFrames. (this is because LearnerOveriewDashboard uses the same components and when you close the dialog, the cohortview teacher frames are empty. issue#121)
+    // hack to update TeacherFrames. (this is because LearnerOveriewDashboard uses the same
+    // components and when you close the dialog, the cohortview teacher frames are empty. issue#121)
     refreshComponents() {
       this.refreshSubmissions++;
       this.refreshRequests++;

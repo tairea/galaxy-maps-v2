@@ -36,6 +36,11 @@ export const useGalaxyListViewStore = defineStore({
         this.courses = courses;
         this.courseEdgesMap = courseEdgesMap;
         this.courseNodesMap = courseNodesMap;
+
+        const course = this.courses.find((c) => c.id === this.selectedCourseId) ?? null;
+        if (course == null) {
+          this.selectedCourseId = null;
+        }
       } finally {
         this.isLoadingCourses = false;
       }
@@ -61,6 +66,11 @@ export const useGalaxyListViewStore = defineStore({
         this.courses = courses;
         this.courseEdgesMap = courseEdgesMap;
         this.courseNodesMap = courseNodesMap;
+
+        const course = this.courses.find((c) => c.id === this.selectedCourseId) ?? null;
+        if (course == null) {
+          this.selectedCourseId = null;
+        }
       } finally {
         this.isLoadingCourses = false;
       }
