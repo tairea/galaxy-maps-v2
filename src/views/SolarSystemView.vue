@@ -23,7 +23,13 @@
         :people="peopleInTopic"
       /> -->
       <BackButton :toPath="'/galaxy/' + currentCourseId" />
-      <TopicButton v-for="(obj, index) in this.buttonList" :type="obj['type']" :toPath="'/galaxy/' + currentCourseId + '/system/' + obj['topicValue']" :topicId="obj['topicValue']" :key="index"/>
+      <TopicButton
+        v-for="(obj, index) in this.buttonList"
+        :type="obj.type"
+        :toPath="'/galaxy/' + currentCourseId + '/system/' + obj.topicValue"
+        :topicId="obj.topicValue"
+        :key="index"
+      />
     </div>
 
     <!--==== Main section ====-->
@@ -80,26 +86,24 @@
 </template>
 
 <script>
-import SolarSystemInfo from "@/components/SolarSystemView/SolarSystemInfo.vue";
 import AssignedInfo from "@/components/Reused/AssignedInfo.vue";
-import MissionsList from "@/components/SolarSystemView/MissionsList.vue";
 import BackButton from "@/components/Reused/BackButton.vue";
-import TopicButton from "@/components/SolarSystemView/TopicButton.vue";
-import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
+import MissionsList from "@/components/SolarSystemView/MissionsList.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
+import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
+import SolarSystemInfo from "@/components/SolarSystemView/SolarSystemInfo.vue";
+import TopicButton from "@/components/SolarSystemView/TopicButton.vue";
 
+import confetti from "canvas-confetti";
+import { db } from "@/store/firestoreConfig";
 import {
   fetchAllPeopleInCourseByCourseId,
   fetchCourseByCourseId,
   fetchPersonsTopicByPersonIdCourseIdTopicId,
   fetchTopicByCourseIdTopicId,
 } from "@/lib/ff";
-
-import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
-import confetti from "canvas-confetti";
-
-import { db } from "@/store/firestoreConfig"
+import useRootStore from "@/store/index";
 
 export default {
   name: "SolarSystemView",
@@ -126,7 +130,7 @@ export default {
       topicCompletedDialog: false,
       unlockingNextTopic: true, // default to loading
       showNextSystemButton: true,
-      buttonList: []
+      buttonList: [],
     };
   },
   async mounted() {
@@ -154,34 +158,35 @@ export default {
       });
     }
 
-    console.log("GETTING PREVIOUS AND NEXT TOPICS:")
-
     db.collection("courses")
-    .doc(this.currentCourseId)
-    .collection("map-edges")
-    .get()
-    .then(querySnapshot => {
-      const docSnapshots = querySnapshot.docs
+      .doc(this.currentCourseId)
+      .collection("map-edges")
+      .get()
+      .then((querySnapshot) => {
+        const docSnapshots = querySnapshot.docs;
 
-      for (var i in docSnapshots) {
-        const docData = docSnapshots[i].data()
-        if (docData.from == this.currentTopicId || docData.to == this.currentTopicId) {
-          for (const [key, value] of Object.entries(docData)) {
-            if (key == "from" || key == "to") {
-              if (value != this.currentTopicId && !this.checkInList(value, this.buttonList)) {
-                const obj = {
-                  "topicValue": value,
-                  "type": key
+        for (var i in docSnapshots) {
+          const docData = docSnapshots[i].data();
+          if (docData.from == this.currentTopicId || docData.to == this.currentTopicId) {
+            for (const [key, value] of Object.entries(docData)) {
+              if (key == "from" || key == "to") {
+                if (value != this.currentTopicId && !this.checkInList(value, this.buttonList)) {
+                  const obj = {
+                    topicValue: value,
+                    type: key,
+                  };
+                  this.buttonList = this.sortButtonList(this.buttonList);
+                  this.buttonList.push(obj);
                 }
-                this.buttonList = this.sortButtonList(this.buttonList)
-                this.buttonList.push(obj)
               }
             }
           }
         }
-      }
-    })
-    // console.log("BUTTONLIST: ", this.buttonList)
+        // remove duplicates from buttonList
+        this.buttonList = this.buttonList.filter(
+          (v, i, a) => a.findIndex((t) => t.topicValue === v.topicValue) === i,
+        );
+      });
 
     // check if requests are binded
     // console.log("from store requestsForHelp: ", this.requestsForHelp);
@@ -367,29 +372,26 @@ export default {
       });
     },
     checkInList(toCheck, list) {
-      // console.log(`Checking if ${this.getTopicById(toCheck)["label"]} is in list...`)
-      // console.log(this.getTopicById(toCheck)["label"])
       for (var i = 0; i < list.length; i++) {
-        var listItem = list[i]
+        var listItem = list[i];
         if (toCheck == listItem) {
-          return true
+          return true;
         }
       }
-      return false
+      return false;
     },
     sortButtonList(buttonList) {
-      console.log(buttonList)
-      var fromObj = ""
+      // put 'from' button first in the array
+      var fromObj = "";
       for (var i = 0; i < buttonList.length; i++) {
-        var buttonObj = buttonList[i]
+        var buttonObj = buttonList[i];
         if (buttonObj["type"] == "from") {
-          fromObj = buttonList.splice(i, 1)[0]
-          buttonList.unshift(fromObj)
+          fromObj = buttonList.splice(i, 1)[0];
+          buttonList.unshift(fromObj);
         }
       }
-      console.log(buttonList)
-      return buttonList
-    }
+      return buttonList;
+    },
   },
 };
 </script>
