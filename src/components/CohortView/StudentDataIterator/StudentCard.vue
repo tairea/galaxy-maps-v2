@@ -114,6 +114,14 @@ export default {
       activities: [],
       studentTimeData: [],
       studentTimeDataLoading: false,
+      /**
+       * @type { {
+       *  course: import('../../../store/_types').ICourse;
+       *  activities: Record<string, any>;
+       *  taskCompletedCount: number;
+       *  topicCompletedCount: number;
+       * }[] }
+       */
       studentCoursesActivity: [],
     };
   },
@@ -122,11 +130,11 @@ export default {
     const cohortActivities = this.studentCoursesActivity.filter((a) =>
       this.cohort.courses.some((b) => b === a.course.id),
     );
-    this.activities = cohortActivities.map((course) => {
-      const currentTopic = course.activities.find((action) => action.type === "Topic");
-      const currentTask = course.activities.find((action) => action.type === "Task");
+    this.activities = cohortActivities.map((courseActivity) => {
+      const currentTopic = courseActivity.activities.find((action) => action.type === "Topic");
+      const currentTask = courseActivity.activities.find((action) => action.type === "Task");
       return {
-        ...course,
+        ...courseActivity,
         currentTopic,
         currentTask,
       };

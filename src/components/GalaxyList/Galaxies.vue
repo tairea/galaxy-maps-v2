@@ -39,6 +39,7 @@ import LoadingSpinner from "@/components/Reused/LoadingSpinner.vue";
 import useGalaxyListViewStore from "@/store/galaxyListView";
 import useRootStore from "@/store/index";
 import Network from "@/vue2vis/Network.vue";
+import { layoutBlock, drawBlock, Placement2D } from "@cprecioso/canvas-text-layout";
 import { mdiPlus } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
 import "vis-network/styles/vis-network.css";
@@ -49,6 +50,7 @@ export default {
     courses: { type: Array, default: () => [] },
     courseEdgesMap: { type: Map, default: () => new Map() },
     courseNodesMap: { type: Map, default: () => new Map() },
+    coursesActivity: { type: Array, default: () => [] },
     highlightCourse: { type: String, default: null },
     isLoadingCourses: { type: Boolean, default: true },
   },
@@ -214,8 +216,151 @@ export default {
         this.centerAfterReposition();
       }
     },
+    beforeDrawing(ctx) {
+      for (const relative of this.relativeGalaxyBoundaries) {
+        // console.log("relative boundary:", relative);
+        this.drawGlow(
+          ctx,
+          relative.centroidX,
+          relative.centroidY,
+          relative.width > relative.height ? relative.width : relative.height,
+          relative.status,
+        );
+        // draw the galaxy maps bounds (for debugging boundaries)
+        // this.drawBounds(
+        //   ctx,
+        //   relative.top,
+        //   relative.right,
+        //   relative.bottom,
+        //   relative.left
+        // );
+      }
+    },
+    drawBounds(ctx, top, right, bottom, left) {
+      ctx.strokeStyle = "rgba(255, 255, 255, 1)";
+      ctx.lineWidth = 10;
+      ctx.beginPath();
+      ctx.moveTo(top.x, top.y);
+      ctx.lineTo(right.x, right.y);
+      ctx.lineTo(bottom.x, bottom.y);
+      ctx.lineTo(left.x, left.y);
+      ctx.lineTo(top.x, top.y);
+      // ctx.fill();
+      ctx.stroke();
+      ctx.closePath();
+    },
+    drawGlow(ctx, x, y, radius, status) {
+      radius = radius ? radius : 100;
+      // create arc (circle)
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2, false);
 
-    afterDrawing() {
+      // colour
+      let colour;
+
+      switch (status) {
+        case "draft":
+          //colour = "rgba(250,242,0,0.3)"; // cohortAccent as rgba
+          colour = "rgba(255,255,255,0.3)"; // cohortAccent as rgba
+          break;
+        case "public":
+          colour = "rgba(105,161,226,0.3)"; // missionAccent as rgba
+          break;
+        case "private":
+          colour = "rgba(226,105,207,0.3)"; // galaxyAccent as rgba
+          break;
+        case "submitted":
+          //colour = "rgba(0,230,118,0.3)"; // baseAccent as rgba
+          colour = "rgba(250,242,0,0.2)"; // cohortAccent as rgba
+          //colour = "rgba(233,196,106,0.3)"; // cohortAccent as rgba
+          break;
+        case "assigned":
+          colour = "rgba(105,161,226,0.3)"; // missionAccent as rgba
+          break;
+        default:
+          colour = "rgba(20, 30, 48, 0)"; // background as rgba
+          break;
+      }
+
+      // gradient
+      var grd = ctx.createRadialGradient(x, y, 1, x, y, radius);
+      grd.addColorStop(0, colour);
+      grd.addColorStop(1, "rgba(20, 30, 48, 0)");
+
+      // Fill with gradient
+      ctx.fillStyle = grd;
+      ctx.fill();
+      ctx.closePath();
+    },
+
+    /**
+     * Called after the network has been drawn
+     * @param {CanvasRenderingContext2D} canvasContext
+     */
+    afterDrawing(canvasContext) {
+      // Always draw title regardless of scale (zoom)
+      for (const course of this.courses) {
+        this.drawCourseTitle(canvasContext, course);
+      }
+
+      const currentScale = this.$refs.network.getScale();
+
+      // Draw extra components when scale is over 0.3
+      if (currentScale > 0.3) {
+        // Draw dialog if course highlighted
+        // if (this.highlightCourse != null) {
+        //   const course = this.courses.find((x) => x.id === this.highlightCourse);
+        //   const courseBoundary = this.relativeGalaxyBoundaries.find(
+        //     (x) => x.id === this.highlightCourse,
+        //   );
+        //   const courseActivity = this.coursesActivity.find(
+        //     (x) => x.course.id === this.highlightCourse,
+        //   );
+        //   const percentage =
+        //     courseActivity != null
+        //       ? Math.round(
+        //           (courseActivity.topicCompletedCount / courseActivity.course.topicTotal) * 100,
+        //         )
+        //       : 0;
+        //   const courseTitleBlockInfo = layoutBlock(canvasContext, course.title, { maxWidth: 180 });
+        //   canvasContext.strokeStyle = "rgba(255, 255, 255, 1)";
+        //   canvasContext.lineWidth = 1;
+        //   canvasContext.beginPath();
+        //   canvasContext.roundRect(
+        //     courseBoundary.top.x,
+        //     courseBoundary.top.y,
+        //     courseTitleBlockInfo.width + 20,
+        //     courseTitleBlockInfo.height + 20,
+        //     20,
+        //   );
+        //   canvasContext.stroke();
+        //   canvasContext.closePath();
+        //   drawBlock(canvasContext, courseTitleBlockInfo, {
+        //     x: courseBoundary.top.x + 10,
+        //     y: courseBoundary.top.y + 10,
+        //   });
+        //   const progressionBlockInfo = layoutBlock(canvasContext, `${percentage}%`, {
+        //     maxWidth: 180,
+        //   });
+        //   canvasContext.strokeStyle = "rgba(255, 255, 255, 1)";
+        //   canvasContext.lineWidth = 1;
+        //   canvasContext.beginPath();
+        //   canvasContext.roundRect(
+        //     courseBoundary.top.x + courseTitleBlockInfo.width + 20 + 5,
+        //     courseBoundary.top.y,
+        //     progressionBlockInfo.width + 20,
+        //     courseTitleBlockInfo.height + 20,
+        //     20,
+        //   );
+        //   canvasContext.stroke();
+        //   canvasContext.closePath();
+        //   drawBlock(canvasContext, progressionBlockInfo, {
+        //     x: courseBoundary.top.x + courseTitleBlockInfo.width + 20 + 5 + 10,
+        //     y: courseBoundary.top.y + 10,
+        //   });
+        // }
+      }
+
       if (this.needsCentering === true) {
         this.centerAfterReposition();
       }
@@ -223,6 +368,86 @@ export default {
       if (this.loading === true) {
         this.loading = false;
       }
+    },
+    /**
+     * Called to draw the title for the course
+     * @param {CanvasRenderingContext2D} canvasContext
+     */
+    drawCourseTitle(canvasContext, course) {
+      const courseBoundary = this.relativeGalaxyBoundaries.find((x) => x.id === course.id);
+      const courseActivity = this.coursesActivity.find((x) => x.course.id === course.id);
+      const progressFraction =
+        courseActivity != null
+          ? courseActivity.topicCompletedCount / courseActivity.course.topicTotal
+          : 0;
+      const displayPercentage = Math.round(progressFraction * 100);
+
+      canvasContext.fillStyle = "rgba(255, 255, 255, 1)";
+      canvasContext.textAlign = "left";
+      canvasContext.textBaseline = "top";
+
+      // Give at least 500px width for the title
+      const maxWidth = Math.max(courseBoundary.width, 500);
+
+      canvasContext.font = 'bold 30px "Arial"';
+      const courseTitleBlockInfo = layoutBlock(canvasContext, course.title, {
+        maxWidth: maxWidth,
+      });
+
+      canvasContext.font = 'bold 14px "Arial"';
+      const progressTitleBlockInfo = layoutBlock(canvasContext, `${displayPercentage}%`, {
+        maxWidth: 40,
+      });
+
+      const courseBoundaryXCenter = courseBoundary.left.x + courseBoundary.width / 2;
+
+      const contentWidth = courseTitleBlockInfo.width + 20 + 50; // 20 for spacing and 50 for progress circle
+
+      const courseTitleX = courseBoundaryXCenter - contentWidth / 2;
+      const courseTitleY = courseBoundary.top.y - 40 - courseTitleBlockInfo.height; // 40 for spacing away from nodes
+
+      const progressCircleX = courseTitleX + courseTitleBlockInfo.width + 20 + 25;
+      const progressCircleY = courseBoundary.top.y - 40 - courseTitleBlockInfo.height / 2;
+
+      const progressTitleX = progressCircleX - progressTitleBlockInfo.width / 2;
+      const progressTitleY = progressCircleY - progressTitleBlockInfo.height / 2;
+
+      canvasContext.font = 'bold 30px "Arial"';
+      drawBlock(canvasContext, courseTitleBlockInfo, {
+        x: courseTitleX,
+        y: courseTitleY,
+      });
+
+      canvasContext.font = 'bold 14px "Arial"';
+      drawBlock(canvasContext, progressTitleBlockInfo, {
+        x: progressTitleX,
+        y: progressTitleY,
+      });
+
+      // Circles start from the right so we need to calculate an offset to use
+      const arcCircleOffset = -(90 * (Math.PI / 180));
+
+      // Draw the background cirlce
+      canvasContext.beginPath();
+      canvasContext.strokeStyle = "rgba(255, 255, 255, 0.31)";
+      canvasContext.lineWidth = 4;
+      canvasContext.arc(progressCircleX, progressCircleY, 25, 0, Math.PI * 2);
+      canvasContext.stroke();
+      canvasContext.closePath();
+
+      // Now the foreground progression segment
+      canvasContext.beginPath();
+      canvasContext.strokeStyle = "#69A1E2";
+      canvasContext.lineWidth = 4;
+      canvasContext.arc(
+        progressCircleX,
+        progressCircleY,
+        25,
+        0 + arcCircleOffset,
+        Math.PI * 2 * progressFraction + arcCircleOffset,
+      );
+      canvasContext.stroke();
+      canvasContext.closePath();
     },
     animationFinished() {
       console.log("animation finished");
@@ -611,82 +836,6 @@ export default {
       options.nodes.font.color = colour;
       options.nodes.fixed = true;
       this.$refs.network.setOptions(options);
-    },
-    beforeDrawing(ctx) {
-      for (const relative of this.relativeGalaxyBoundaries) {
-        // console.log("relative boundary:", relative);
-        this.drawGlow(
-          ctx,
-          relative.centroidX,
-          relative.centroidY,
-          relative.width > relative.height ? relative.width : relative.height,
-          relative.status,
-        );
-        // draw the galaxy maps bounds (for debugging boundaries)
-        // this.drawBounds(
-        //   ctx,
-        //   relative.top,
-        //   relative.right,
-        //   relative.bottom,
-        //   relative.left
-        // );
-      }
-    },
-    drawBounds(ctx, top, right, bottom, left) {
-      ctx.strokeStyle = "rgba(255, 255, 255, 1)";
-      ctx.lineWidth = 10;
-      ctx.beginPath();
-      ctx.moveTo(top.x, top.y);
-      ctx.lineTo(right.x, right.y);
-      ctx.lineTo(bottom.x, bottom.y);
-      ctx.lineTo(left.x, left.y);
-      ctx.lineTo(top.x, top.y);
-      // ctx.fill();
-      ctx.stroke();
-      ctx.closePath();
-    },
-    drawGlow(ctx, x, y, radius, status) {
-      radius = radius ? radius : 100;
-      // create arc (circle)
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2, false);
-
-      // colour
-      let colour;
-
-      switch (status) {
-        case "draft":
-          //colour = "rgba(250,242,0,0.3)"; // cohortAccent as rgba
-          colour = "rgba(255,255,255,0.3)"; // cohortAccent as rgba
-          break;
-        case "public":
-          colour = "rgba(105,161,226,0.3)"; // missionAccent as rgba
-          break;
-        case "private":
-          colour = "rgba(226,105,207,0.3)"; // galaxyAccent as rgba
-          break;
-        case "submitted":
-          //colour = "rgba(0,230,118,0.3)"; // baseAccent as rgba
-          colour = "rgba(250,242,0,0.2)"; // cohortAccent as rgba
-          //colour = "rgba(233,196,106,0.3)"; // cohortAccent as rgba
-          break;
-        case "assigned":
-          colour = "rgba(105,161,226,0.3)"; // missionAccent as rgba
-          break;
-        default:
-          colour = "rgba(20, 30, 48, 0)"; // background as rgba
-          break;
-      }
-
-      // gradient
-      var grd = ctx.createRadialGradient(x, y, 1, x, y, radius);
-      grd.addColorStop(0, colour);
-      grd.addColorStop(1, "rgba(20, 30, 48, 0)");
-
-      // Fill with gradient
-      ctx.fillStyle = grd;
-      ctx.fill();
-      ctx.closePath();
     },
   },
 };
