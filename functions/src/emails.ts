@@ -1,5 +1,6 @@
-import * as functions from "firebase-functions";
-import * as nodemailer from "nodemailer";
+import { log } from "firebase-functions/logger";
+import { config, runWith } from "firebase-functions/v1";
+import { createTransport } from "nodemailer";
 import { APP_NAME, DOMAIN } from "./_constants.js";
 
 // CUSTOM INVITE EMAIL
@@ -10,28 +11,20 @@ import { APP_NAME, DOMAIN } from "./_constants.js";
 // For other types of transports such as Sendgrid see https://nodemailer.com/transports/
 
 // TODO: Configure the `gmail.email` and `gmail.password` Google Cloud environment variables.
-// Set the gmail.email and gmail.password Google Cloud environment variables to match the email and password of the Gmail account used to send emails (or the app password if your account has 2-step verification enabled).
-// For this use: `firebase functions:config:set gmail.email="myusername@gmail.com" gmail.password="secretpassword"`
+// Set the gmail.email and gmail.password Google Cloud environment variables to match the email and
+// password of the Gmail account used to send emails (or the app password if your account has
+// 2-step verification enabled).
+// For this use:
+// firebase functions:config:set gmail.email="myusername@gmail.com" gmail.password="secretpassword"
 
-const gmailEmail = functions.config().gmail.email;
-const gmailPassword = functions.config().gmail.password;
-const mailTransport = nodemailer.createTransport({
+const gmailEmail = config().gmail.email;
+const gmailPassword = config().gmail.password;
+const mailTransport = createTransport({
   service: "gmail",
   auth: {
     user: gmailEmail,
     pass: gmailPassword,
   },
-});
-
-// ====== GM APP INVITE EMAIL ==================
-export const sendInviteEmailHttpsEndpoint = functions.https.onCall((data, context) => {
-  const { email, displayName, link, inviter, accountType } = data;
-
-  if (accountType == "teacher") {
-    return sendTeacherInviteEmail(email, displayName, link);
-  } else {
-    return sendStudentInviteEmail(email, displayName, link, inviter);
-  }
 });
 
 /**
@@ -55,13 +48,18 @@ If you have any issues please contact base@${DOMAIN}
 
 Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("New teacher invite email sent to: ", email);
+  log("New teacher invite email sent to: ", email);
 }
 
 /**
  * Sends an invite email to a new student.
  */
-export async function sendStudentInviteEmail(email: string, displayName: string, link: string, inviter: string) {
+export async function sendStudentInviteEmail(
+  email: string,
+  displayName: string,
+  link: string,
+  inviter: string,
+) {
   const mailOptions: Record<string, string> = {
     from: `${APP_NAME} <noreply@${DOMAIN}>`,
     to: email,
@@ -80,30 +78,24 @@ If you have any issues please contact base@${DOMAIN}
 
 Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("New student invite email sent to: ", email);
+  log("New student invite email sent to: ", email);
 }
 
 // ======COHORT REGISTRATION NOTIFICATION==================
-export const sendNewCohortEmailHttpsEndpoint = functions.https.onCall((data, context) => {
+export const sendNewCohortEmailHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
   const { email, displayName, firstName, inviter, cohort } = data;
-  return sendNewCohortEmail(
-      email,
-      displayName,
-      firstName,
-      inviter,
-      cohort
-  );
+  return sendNewCohortEmail(email, displayName, firstName, inviter, cohort);
 });
 
 /**
  * Sends a new cohort registration notification.
  */
 export async function sendNewCohortEmail(
-    email: string,
-    displayName: string,
-    firstName: string,
-    inviter: string,
-    cohort: string
+  email: string,
+  displayName: string,
+  firstName: string,
+  inviter: string,
+  cohort: string,
 ) {
   const mailOptions: Record<string, string> = {
     from: `${APP_NAME} <noreply@${DOMAIN}>`,
@@ -123,19 +115,15 @@ If you have any issues please contact base@${DOMAIN}
   
 Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("New cohort invite email sent to: ", email);
+  log("New cohort invite email sent to: ", email);
 }
 
 // ======COURSE REGISTRATION NOTIFICATION==================
-export const sendNewCourseEmailHttpsEndpoint = functions.https.onCall((data, context) => {
-  const { email, name, course } = data;
-  sendNewCourseEmail(email, name, course);
-});
 
 /**
  * Sends a new course registration notification email.
  */
-export async function sendNewCourseEmail(email: string, name: string, course: string) {
+export async function sendNewCourseEmail(email: string, _name: string, course: string) {
   const mailOptions: Record<string, string> = {
     from: `${APP_NAME} <noreply@${DOMAIN}>`,
     to: email,
@@ -154,11 +142,11 @@ If you have any issues please contact base@${DOMAIN}
   
 Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("New assignment email sent to: ", email);
+  log("New assignment email sent to: ", email);
 }
 
 // ======COURSE SUBMISSION NOTIFICATION==================
-export const sendNewSubmissionEmailHttpsEndpoint = functions.https.onCall((data, context) => {
+export const sendNewSubmissionEmailHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
   const { author, title } = data;
   sendNewSubmissionEmail(author, title);
 });
@@ -181,11 +169,11 @@ Navigate to https://${DOMAIN} to approve the submission
   
 Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("New course submission email sent to admin");
+  log("New course submission email sent to admin");
 }
 
 // ======COURSE PUBLISHED NOTIFICATION==================
-export const sendCoursePublishedEmailHttpsEndpoint = functions.https.onCall((data, context) => {
+export const sendCoursePublishedEmailHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
   const { email, name, course } = data;
   sendCoursePublishedEmail(email, name, course);
 });
@@ -208,11 +196,11 @@ Navigate to https://${DOMAIN} to manage your course content and student cohort.
   
 Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("Course published email sent to ", email);
+  log("Course published email sent to ", email);
 }
 
 // ======REQUEST FOR HELP SENT ==================
-export const sendRequestForHelpHttpsEndpoint = functions.https.onCall((data, context) => {
+export const sendRequestForHelpHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
   const { email, teacher, course, task, student, request, topic } = data;
   sendRequestForHelp(email, teacher, course, task, student, request, topic);
 });
@@ -220,12 +208,21 @@ export const sendRequestForHelpHttpsEndpoint = functions.https.onCall((data, con
 /**
  * Sends a request for help.
  */
-export async function sendRequestForHelp(email: string, teacher: string, course: string, task: string, student: string, request: string, topic: string) {
+export async function sendRequestForHelp(
+  email: string,
+  teacher: string,
+  course: string,
+  task: string,
+  student: string,
+  request: string,
+  topic: string,
+) {
   const mailOptions: Record<string, string> = {
     from: `${APP_NAME} <noreply@${DOMAIN}>`,
     to: email,
   };
 
+  /* eslint-disable max-len */
   mailOptions.subject = `${course} Request for help`;
   mailOptions.text = `Hi ${teacher}, 
 
@@ -252,16 +249,18 @@ Galaxy Maps Team`;
 </ul>
 </br> 
 <p>Request: <strong>${request}</strong> </p>
-</br> 
+</br>
 <p>To respond to ${student}, please login to <a href="https://${DOMAIN}" target="_blank">https://${DOMAIN}/login</a> to view your course</p>
 </br> 
 <p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
+  /* eslint-enable max-len */
+
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("Request notification email sent to ", email);
+  log("Request notification email sent to ", email);
 }
 
 // ====== RESPONSE TO REQUEST ==================
-export const sendResponseToHelpHttpsEndpoint = functions.https.onCall((data, context) => {
+export const sendResponseToHelpHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
   const { email, teacher, course, task, student, response, topic, request } = data;
   sendResponseToHelp(email, teacher, course, task, student, response, topic, request);
 });
@@ -269,12 +268,22 @@ export const sendResponseToHelpHttpsEndpoint = functions.https.onCall((data, con
 /**
  * Sends a response for help.
  */
-export async function sendResponseToHelp(email: string, teacher: string, course: string, task: string, student: string, response: string, topic: string, request: string) {
+export async function sendResponseToHelp(
+  email: string,
+  teacher: string,
+  course: string,
+  task: string,
+  student: string,
+  response: string,
+  topic: string,
+  request: string,
+) {
   const mailOptions: Record<string, string> = {
     from: `${APP_NAME} <noreply@${DOMAIN}>`,
     to: email,
   };
 
+  /* eslint-disable max-len */
   mailOptions.subject = `${course} Response to your request`;
   mailOptions.text = `Hi ${student}, 
 
@@ -306,28 +315,50 @@ Galaxy Maps Team`;
 </br> 
 <p>Instructors response: <strong>${response}</strong></p>
 </br> 
-<p>Login to <a href="https://${DOMAIN}" target="_blank">https://${DOMAIN}/login</a> to continue your course.</p>
+<p>Login to <a href="https://${DOMAIN}" target="_blank"
+  >https://${DOMAIN}/login</a> to continue your course.</p>
 </br> 
 <p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
+  /* eslint-enable max-len */
+
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("Instructor response sent to ", email);
+  log("Instructor response sent to ", email);
 }
 
 // ======SUBMISSION FOR TASK SENT ==================
-export const sendTaskSubmissionHttpsEndpoint = functions.https.onCall((data, context) => {
+export const sendTaskSubmissionHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
   const { email, teacher, course, task, student, submission, topic, submissionInstructions } = data;
-  sendTaskSubmission(email, teacher, course, task, student, submission, topic, submissionInstructions);
+  sendTaskSubmission(
+    email,
+    teacher,
+    course,
+    task,
+    student,
+    submission,
+    topic,
+    submissionInstructions,
+  );
 });
 
 /**
  * Sends a work submission notification.
  */
-export async function sendTaskSubmission(email: string, teacher: string, course: string, task: string, student: string, submission: string, topic: string, submissionInstructions: string) {
+export async function sendTaskSubmission(
+  email: string,
+  teacher: string,
+  course: string,
+  task: string,
+  student: string,
+  submission: string,
+  topic: string,
+  submissionInstructions: string,
+) {
   const mailOptions: Record<string, string> = {
     from: `${APP_NAME} <noreply@${DOMAIN}>`,
     to: email,
   };
 
+  /* eslint-disable max-len */
   mailOptions.subject = `${task} work submission`;
   mailOptions.text = `Hi ${teacher}, 
 
@@ -341,7 +372,8 @@ Your Submission Instructions: ${submissionInstructions}
 
 Student's Submission Response: ${submission}
 
-To respond to ${student}'s submission and unlock the next task from them, please login to https://${DOMAIN} to view your course
+To respond to ${student}'s submission and unlock the next task from them,
+please login to https://${DOMAIN} to view your course
   
 Galaxy Maps Team`;
 
@@ -357,28 +389,52 @@ Galaxy Maps Team`;
 </br> 
 <p>Submission: <strong>${submission}</strong> </p>
 </br> 
-<p>To respond to ${student}, please login to <a href="https://${DOMAIN}" target="_blank">https://${DOMAIN}/login</a> to view your course</p>
+<p>To respond to ${student}, please login to <a href="https://${DOMAIN}" target="_blank"
+  >https://${DOMAIN}/login</a> to view your course</p>
 </br> 
 <p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
+  /* eslint-enable max-len */
+
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("Task submission notification email sent to ", email);
+  log("Task submission notification email sent to ", email);
 }
 
 // ====== RESPONSE TO REQUEST ==================
-export const sendResponseToSubmissionHttpsEndpoint = functions.https.onCall((data, context) => {
+export const sendResponseToSubmissionHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
   const { email, teacher, course, task, student, outcome, topic, message, submission } = data;
-  sendResponseToSubmission(email, teacher, course, task, student, outcome, topic, message, submission);
+  sendResponseToSubmission(
+    email,
+    teacher,
+    course,
+    task,
+    student,
+    outcome,
+    topic,
+    message,
+    submission,
+  );
 });
 
 /**
  * Sends a submission response notification.
  */
-export async function sendResponseToSubmission(email: string, teacher: string, course: string, task: string, student: string, outcome: string, topic: string, message: string, submission: string) {
+export async function sendResponseToSubmission(
+  email: string,
+  teacher: string,
+  course: string,
+  task: string,
+  student: string,
+  outcome: string,
+  topic: string,
+  message: string,
+  submission: string,
+) {
   const mailOptions: Record<string, string> = {
     from: `${APP_NAME} <noreply@${DOMAIN}>`,
     to: email,
   };
 
+  /* eslint-disable max-len */
   mailOptions.subject = `Task submission ${outcome}`;
   mailOptions.text = `Hi ${student}, 
 
@@ -413,11 +469,14 @@ Galaxy Maps Team`;
 </br> 
 <p>Instructors message: ${message} </p>
 </br> 
-<p>Login to <a href="https://${DOMAIN}" target="_blank">https://${DOMAIN}/login</a> to continue your course.</p>
+<p>Login to <a href="https://${DOMAIN}" target="_blank"
+  >https://${DOMAIN}/login</a> to continue your course.</p>
 </br> 
 <p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
+  /* eslint-enable max-len */
+
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("Submission outcome sent to ", email);
+  log("Submission outcome sent to ", email);
 }
 
 /**
@@ -431,6 +490,7 @@ export async function sendStudentInActive(student: string, studentEmail: string,
   };
 
   // The user subscribed to the newsletter.
+  /* eslint-disable max-len */
   mailOptions.subject = "Student Activity Alert";
   mailOptions.text = `Hi ${student}, 
 
@@ -443,31 +503,42 @@ Galaxy Maps Team`;
   mailOptions.html = `<p><strong>Hi ${student},</strong></p>
 <p>It has been <strong>${duration}</strong> since you last signed into Galaxy Maps.</p>
 </br> 
-<p>Sign in to <a href="https://${DOMAIN}" target="_blank">https://${DOMAIN}/login</a> now to continue your learning journey.</p>
+<p>Sign in to <a href="https://${DOMAIN}" target="_blank"
+  >https://${DOMAIN}/login</a> now to continue your learning journey.</p>
 </br> 
 <p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
+  /* eslint-enable max-len */
+
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("student low activity alert sent", studentEmail);
+  log("student low activity alert sent", studentEmail);
 }
 
 /**
  * Sends a student inactivity notification to teacher.
  */
-export async function sendTeacherStudentInActive(student: string, studentEmail: string, duration: string, email: string, cohort: string, teacher: string) {
+export async function sendTeacherStudentInActive(
+  student: string,
+  studentEmail: string,
+  duration: string,
+  email: string,
+  cohort: string,
+  teacher: string,
+) {
   // send email to student
   const mailOptions: Record<string, string> = {
     from: `${APP_NAME} <noreply@${DOMAIN}>`,
     to: email,
   };
 
+  /* eslint-disable max-len */
   mailOptions.subject = "Student Activity Alert";
   mailOptions.text = `Hi ${teacher}, 
   
-  It has been ${duration} since your student: ${student} in cohort: ${cohort} last signed into Galaxy Maps. 
+It has been ${duration} since your student: ${student} in cohort: ${cohort} last signed into Galaxy Maps. 
+
+We recommend checking in on them via email ${studentEmail} to encourage and support them on their learning journey.
   
-  We recommend checking in on them via email ${studentEmail} to encourage and support them on their learning journey.
-    
-  Galaxy Maps Team`;
+Galaxy Maps Team`;
 
   mailOptions.html = `<p><strong>Hi ${teacher},</strong></p>
   <p>It has been <strong>${duration}</strong> since your student: <strong>${student}</strong> in cohort: <strong>${cohort}</strong> last signed into Galaxy Maps.</p>
@@ -475,12 +546,14 @@ export async function sendTeacherStudentInActive(student: string, studentEmail: 
   <p>  We recommend checking in on them via email <a href="mailto:${studentEmail}">${studentEmail}</a> to encourage and support them on their learning journey.</p>
   </br> 
   <p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
+  /* eslint-enable max-len */
+
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("student low activity alert sent to teacher", email);
+  log("student low activity alert sent to teacher", email);
 }
 
 // ====== ACTIVE COURSE DELETED ==================
-export const sendCourseDeletedHttpsEndpoint = functions.https.onCall((data, context) => {
+export const sendCourseDeletedHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
   const { email, teacher, course, student, teacherEmail } = data;
   sendCourseDeleted(email, teacher, course, student, teacherEmail);
 });
@@ -488,20 +561,28 @@ export const sendCourseDeletedHttpsEndpoint = functions.https.onCall((data, cont
 /**
  * Sends a course deleted notification.
  */
-export async function sendCourseDeleted(email: string, teacher: string, course: string, student: string, teacherEmail: string) {
+export async function sendCourseDeleted(
+  email: string,
+  teacher: string,
+  course: string,
+  student: string,
+  teacherEmail: string,
+) {
   const mailOptions: Record<string, string> = {
     from: `${APP_NAME} <noreply@${DOMAIN}>`,
     to: email,
   };
 
   // The user subscribed to the newsletter.
+
+  /* eslint-disable max-len */
   mailOptions.subject = "Galaxy Deleted";
   mailOptions.text = `Hi ${student || ""}, 
 
 Your instructor ${teacher} has deleted the Galaxy ${course}.
 
 If you have any questions or concerns about this please contact your instructor by email at ${teacherEmail}
-  
+
 Galaxy Maps Team`;
 
   mailOptions.html = `<p><strong>Hi ${student},</strong></p>
@@ -510,6 +591,8 @@ Galaxy Maps Team`;
 <p>If you have any questions or concerns about this please contact your instructor by email at <a href="mailto:${teacherEmail}">${teacherEmail}</a></p>
 </br> 
 <p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
+  /* eslint-enable max-len */
+
   await mailTransport.sendMail(mailOptions);
-  functions.logger.log("Galaxy deleted email sent to ", email);
+  log("Galaxy deleted email sent to ", email);
 }

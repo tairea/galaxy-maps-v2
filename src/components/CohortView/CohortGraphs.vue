@@ -21,7 +21,6 @@
           :timeframe="timeframe"
           :selectedPersons="selectedPersons"
           :unselectedPersons="unselectedPersons"
-          class="line-chart"
         />
       </div>
       <div v-else class="d-flex justify-center align-center" style="padding: 50px 0px">
@@ -88,17 +87,18 @@
   </div>
 </template>
 <script>
-import ProgressionLineChart from "@/components/ProgressionLineChart.vue";
-import ActivityBarChart from "@/components/ActivityBarChart.vue";
-import TimeframeFilters from "@/components/TimeframeFilters.vue";
-import Avatar from "@/components/Avatar.vue";
-import { getCohortsCourseDataXAPIQuery, getStudentsTimeDataXAPIQuery } from "@/lib/veracityLRS";
-import useRootStore from "@/store/index";
-import { mapState } from "pinia";
+import ProgressionLineChart from "@/components/Reused/ProgressionLineChart.vue";
+import ActivityBarChart from "@/components/Reused/ActivityBarChart.vue";
+import TimeframeFilters from "@/components/Reused/TimeframeFilters.vue";
+import Avatar from "@/components/Reused/Avatar.vue";
+import {
+  fetchCohortCoursesActivityByCohortId,
+  fetchCohortStudentsActivityTimeByCohortId,
+} from "@/lib/ff";
 
 export default {
   name: "CohortGraphs",
-  props: ["cohort"],
+  props: ["cohort", "cohortsCoursesData"],
   components: {
     ProgressionLineChart,
     ActivityBarChart,
@@ -107,7 +107,6 @@ export default {
   },
   data() {
     return {
-      cohortsCoursesData: [],
       cohortActivityData: [],
       timeframe: {},
       studentsWithData: [],
@@ -121,13 +120,6 @@ export default {
   async mounted() {
     this.cohortsCoursesDataLoading = true;
     this.cohortActivityDataLoading = true;
-    // ==== get cohort course data from LRS
-    const getCourseData = await getCohortsCourseDataXAPIQuery({
-      studentsArr: this.currentCohort.students,
-      coursesArr: this.currentCohort.courses,
-      cohortName: this.currentCohort.name,
-    });
-    this.cohortsCoursesData = getCourseData;
 
     // add students with data
     const studentsArr = [];
@@ -146,14 +138,8 @@ export default {
     this.cohortsCoursesDataLoading = false;
 
     // ==== get cohort activity data from LRS
-    const getActivityData = await getStudentsTimeDataXAPIQuery({
-      studentsArr: this.currentCohort.students,
-    });
-    this.cohortActivityData = getActivityData;
+    this.cohortActivityData = await fetchCohortStudentsActivityTimeByCohortId(this.cohort.id);
     this.cohortActivityDataLoading = false;
-  },
-  computed: {
-    ...mapState(useRootStore, ["currentCohort"]),
   },
   methods: {
     clickedPerson(person, index) {

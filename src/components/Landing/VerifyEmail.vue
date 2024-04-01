@@ -20,6 +20,8 @@
 </template>
 
 <script>
+import firebase from "firebase/compat/app";
+
 export default {
   name: "VerifyEmail",
   components: {},

@@ -1,59 +1,56 @@
 <template>
   <div id="container" class="bg">
     <!-- REVIEW WORK PANEL -->
-    <div id="left-section">
-      <SubmissionTeacherFrame :courses="personsCourses" />
-    </div>
+    <div id="left-section"></div>
 
     <!-- STUDENT PROGRESSION PANEL -->
     <div id="main-section">
-      <div id="progression-panel">
-        <h2 class="progression-label">Cohort progression</h2>
-        <div class="progression-charts">
-          <!-- <StudentProgressionChartJs3 /> -->
-        </div>
-        <!-- loading spinner -->
-        <div class="d-flex justify-center align-center mt-4">
-          <!-- <v-btn
-            v-if="progressLoading"
-            :loading="progressLoading"
+      <div id="student-panel">
+        <h2 class="student-label">All Users</h2>
+        <div>
+          <v-btn
+            v-if="loadingStudents"
+            :loading="loadingStudents"
             icon
             color="missionAccent"
-          ></v-btn> -->
+          ></v-btn>
+          <StudentDataIteratorAdmin v-else class="mt-4" />
         </div>
       </div>
     </div>
 
     <!-- REQUESTS FOR HELP PANEL -->
-    <div id="right-section">
-      <RequestForHelpTeacherFrame :courses="personsCourses" />
-    </div>
+    <div class="d-flex flex-column" id="right-section"></div>
   </div>
 </template>
 
 <script>
-import SubmissionTeacherFrame from "@/components/SubmissionTeacherFrame.vue";
-import RequestForHelpTeacherFrame from "@/components/RequestForHelpTeacherFrame.vue";
-import StudentProgressionChartJs3 from "@/components/StudentProgressionChartJs3.vue";
-import { dbMixins } from "@/mixins/DbMixins";
-import { db } from "@/store/firestoreConfig";
+import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
+import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
+import StudentProgressionChartJs3 from "@/components/AllStudentsView/StudentProgressionChartJs3.vue";
+import StudentDataIteratorAdmin from "@/components/AllStudentsView/StudentDataIteratorAdmin.vue";
 import useRootStore from "@/store/index";
-import { mapState } from "pinia";
+import { mapState, mapActions } from "pinia";
 
 export default {
   name: "AllStudentView",
-  mixins: [dbMixins],
   components: {
     SubmissionTeacherFrame,
     RequestForHelpTeacherFrame,
     StudentProgressionChartJs3,
+    StudentDataIteratorAdmin,
   },
   props: [],
   async mounted() {
     this.progressLoading = true;
   },
+  async mounted() {
+    this.loadingStudents = true;
+    await this.bindAllPeople();
+    this.loadingStudents = false;
+  },
   computed: {
-    ...mapState(useRootStore, ["user", "person", "personsCourses"]),
+    ...mapState(useRootStore, ["user", "people", "person", "personsCourses"]),
   },
   data() {
     return {
@@ -62,10 +59,12 @@ export default {
       progressLoading: false,
       allSubmissions: [],
       allRequestsForHelp: [],
+      loadingStudents: false,
     };
   },
 
   methods: {
+    ...mapActions(useRootStore, ["bindAllPeople"]),
     // async bindStudentTaskProgress() {
     //   await this.getEachStudentsProgressForTeacher(
     //     this.user.data.id
@@ -91,7 +90,7 @@ export default {
 }
 
 #left-section {
-  width: 30%;
+  width: 20%;
   height: 100%;
   display: flex;
   justify-content: center;
@@ -106,8 +105,35 @@ export default {
   }
 }
 
+#student-panel {
+  width: calc(100% - 30px);
+  height: 80%;
+  border: 1px solid var(--v-missionAccent-base);
+  margin-top: 30px;
+
+  // background: var(--v-baseAccent-base);
+  position: relative;
+  backdrop-filter: blur(2px);
+  z-index: 3;
+  overflow-y: scroll;
+
+  .student-label {
+    font-size: 0.8rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    // ribbon label
+    position: absolute;
+    top: 0;
+    left: -1px;
+    background-color: var(--v-missionAccent-base);
+    color: var(--v-background-base);
+    padding: 0px 20px 0px 5px;
+    clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
+  }
+}
+
 #main-section {
-  width: 40%;
+  width: 60%;
   // margin: 0px;
   height: 100%;
   display: flex;
@@ -122,41 +148,10 @@ export default {
   #main-section ::-webkit-scrollbar {
     display: none;
   }
-
-  #progression-panel {
-    width: calc(100% - 30px);
-    height: 80%;
-    border: 1px solid var(--v-missionAccent-base);
-    margin-top: 30px;
-
-    // background: var(--v-baseAccent-base);
-    position: relative;
-    backdrop-filter: blur(2px);
-    z-index: 3;
-    overflow-y: scroll;
-
-    .progression-label {
-      font-size: 0.8rem;
-      font-weight: 400;
-      text-transform: uppercase;
-      // ribbon label
-      position: absolute;
-      top: 0;
-      left: -1px;
-      background-color: var(--v-missionAccent-base);
-      color: var(--v-background-base);
-      padding: 0px 20px 0px 5px;
-      clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
-    }
-
-    .progression-charts {
-      // padding: 20px;
-    }
-  }
 }
 
 #right-section {
-  width: 30%;
+  width: 20%;
   height: 100%;
   display: flex;
   justify-content: center;

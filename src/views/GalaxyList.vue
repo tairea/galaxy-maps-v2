@@ -5,20 +5,20 @@
       @courseClicked="courseClicked($event)"
       @createGalaxy="showDialog = true"
     />
-    <GalaxyListInfoPanel
-      :type="courseType"
-      :selectedCourseId="clickedCourseId"
-      @closeInfoPanel="closeInfoPanel"
-    />
+    <GalaxyListInfoPanel :selectedCourse="selectedCourse" @closeInfoPanel="closeInfoPanel" />
     <div class="flexContainer">
       <Galaxies
-        v-if="!loading && validSlug"
+        v-if="validSlug"
         ref="galaxyMap"
-        :highlightCourse="clickedCourseId"
+        :courses="courses"
+        :courseEdgesMap="courseEdgesMap"
+        :courseNodesMap="courseNodesMap"
+        :highlightCourse="selectedCourseId"
+        :isLoadingCourses="isLoadingCourses"
         @courseClicked="courseClicked($event)"
         @createGalaxy="showDialog = true"
       />
-      <div v-if="!loading && !validSlug">
+      <div v-if="!validSlug">
         <p class="overline missionAccent--text">Error. destination doesn't exist</p>
       </div>
     </div>
@@ -35,7 +35,7 @@
                 @click="showDialog = true"
                 :disabled="!user.loggedIn"
                 class="createButton"
-                :style="clickedCourseId ? 'opacity:0' : 'opacity:1'"
+                :style="selectedCourseId ? 'opacity:0' : 'opacity:1'"
               >
                 <v-icon left>
                   {{ mdiPlus }}
@@ -59,7 +59,7 @@
             @click="showDialog = true"
             :disabled="!user.loggedIn"
             class="createButton"
-            :style="clickedCourseId ? 'opacity:0' : 'opacity:1'"
+            :style="selectedCourseId ? 'opacity:0' : 'opacity:1'"
           >
             <v-icon left>
               {{ mdiPlus }}
@@ -69,7 +69,7 @@
         </v-col>
       </v-row>
       <!-- Discover button -->
-      <!-- <DiscoverGalaxyButton :hide="clickedCourseId"/> -->
+      <!-- <DiscoverGalaxyButton :hide="selectedCourseId"/> -->
     </div>
 
     <!-- Create Galaxy DIALOG -->
@@ -78,12 +78,12 @@
 </template>
 
 <script>
-import CreateEditDeleteGalaxyDialog from "@/components/CreateEditDeleteGalaxyDialog.vue";
-import DiscoverGalaxyButton from "@/components/DiscoverGalaxyButton.vue";
-import GalaxyListPanel from "@/components/GalaxyListPanel.vue";
-import GalaxyListInfoPanel from "@/components/GalaxyListInfoPanel.vue";
-import Galaxies from "@/components/Galaxies.vue";
-import { db } from "@/store/firestoreConfig";
+import CreateEditDeleteGalaxyDialog from "@/components/Dialogs/CreateEditDeleteGalaxyDialog.vue";
+import DiscoverGalaxyButton from "@/components/Dialogs/DiscoverGalaxyButton.vue";
+import GalaxyListPanel from "@/components/GalaxyList/GalaxyListPanel.vue";
+import GalaxyListInfoPanel from "@/components/GalaxyList/GalaxyListInfoPanel.vue";
+import Galaxies from "@/components/GalaxyList/Galaxies.vue";
+import useGalaxyListViewStore from "@/store/galaxyListView";
 import useRootStore from "@/store/index";
 import { mdiPlus } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
@@ -101,75 +101,81 @@ export default {
   data() {
     return {
       mdiPlus,
-      loading: true,
-      // whichCoursesToDisplay: "all",
-      clickedCourseId: null,
-      courseType: null,
       showDialog: false,
       validSlug: true,
     };
   },
   computed: {
-    ...mapState(useRootStore, ["courses", "user", "person"]),
+    ...mapState(useRootStore, ["user", "person"]),
+    ...mapState(useGalaxyListViewStore, [
+      "courses",
+      "courseEdgesMap",
+      "courseNodesMap",
+      "isLoadingCourses",
+      "selectedCourseId",
+    ]),
+    selectedCourse() {
+      return this.courses.find((course) => course.id === this.selectedCourseId);
+    },
   },
   watch: {
     async user() {
-      let owner;
-      if (this.slug != null) {
-        const docRef = await db.collection("slugs").doc(this.slug).get();
-        const data = docRef.data();
-        if (data != null) {
-          owner = data.owner;
+      await this.loadCourses(this.slug);
+    },
+    "$route.query.map": {
+      handler(courseId) {
+        // If we already have courses and our desired course exists then select it
+        if (
+          courseId != null &&
+          this.courses.length > 0 &&
+          this.courses.find((x) => x.id === courseId)
+        ) {
+          this.setCurrentCourseId(courseId);
+          this.setSelectedCourseId(courseId);
         } else {
-          this.validSlug = false;
+          this.setCurrentCourseId(null);
+          this.setSelectedCourseId(null);
         }
-      }
-      this.clickedCourseId = null;
-      this.bindCourses({ owner }).then(() => {
-        this.loading = false;
-      });
+      },
+      deep: true,
+      immediate: true,
     },
   },
-  async mounted() {
+  created() {
+    console.log("created");
     // We don't care about waiting for this to finish before completing mounted
     // because when it's finished it will automatically update our list of courses
-    // TODO: This binds all courses. Should prob only bind courses relevant to user
-    let owner;
-    if (this.slug != null) {
-      const docRef = await db.collection("slugs").doc(this.slug).get();
-      const data = docRef.data();
-      if (data != null) {
-        owner = data.owner;
-      } else {
-        this.validSlug = false;
-      }
-    }
-    this.bindCourses({ owner }).then(() => {
-      this.loading = false;
-      // zoom to galaxy if that were user wants to land *STEFAN
-      if (this.$route.query.map) {
-        this.clickedCourseId = this.$route.query.map;
+    this.loadCourses(this.slug).then(() => {
+      // zoom to galaxy if that were user wants to land
+      const courseId = this.$route.query.map;
+      if (
+        courseId != null &&
+        this.courses.length > 0 &&
+        this.courses.find((x) => x.id === courseId)
+      ) {
+        this.setCurrentCourseId(courseId);
+        this.setSelectedCourseId(courseId);
       }
     });
-    if (this.courses.length > 0) {
-      this.loading = false;
-    }
-
-    // 1) get assigned (EXPLORING)
-
-    // 2) get created (CREATED) mappedBy
-
-    // 3) get submitted (IN REVIEW) mappedby && status==submitted
   },
   methods: {
-    ...mapActions(useRootStore, ["bindCourses"]),
+    ...mapActions(useRootStore, ["setCurrentCourseId"]),
+    ...mapActions(useGalaxyListViewStore, ["loadCourses", "setSelectedCourseId"]),
     courseClicked(emittedPayload) {
-      this.clickedCourseId = emittedPayload.courseId;
-      if (emittedPayload.type) this.courseType = emittedPayload.type;
+      this.$router.replace({
+        query: {
+          map: emittedPayload.courseId,
+        },
+      });
     },
     closeInfoPanel() {
-      this.clickedCourseId = null;
-      this.$refs.listPanel.courseClicked();
+      this.$router.replace({
+        query: {
+          map: undefined,
+        },
+      });
+      // this.setSelectedCourseId(null);
+      // this.$refs.listPanel.courseClicked();
     },
   },
 };

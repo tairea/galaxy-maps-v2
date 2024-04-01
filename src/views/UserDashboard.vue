@@ -9,13 +9,13 @@
     </div>
     <div v-else class="top-section">
       <div v-if="isAdmin" class="student-border">
-        <div :class="adminLabel" @click="setView('admin')">Create Admin</div>
+        <div :class="adminLabel" @click="setDashboardView('admin')">Create Admin</div>
       </div>
       <div class="student-border">
-        <div :class="studentLabel" @click="setView('student')">exploring dashboard</div>
+        <div :class="studentLabel" @click="setDashboardView('student')">exploring dashboard</div>
       </div>
       <div v-if="isTeacher" class="teacher-border">
-        <div :class="teacherLabel" @click="setView('teacher')">cohort analytics</div>
+        <div :class="teacherLabel" @click="setDashboardView('teacher')">cohort analytics</div>
       </div>
       <v-divider class="line" style="border-color: var(--v-missionAccent-base)"></v-divider>
     </div>
@@ -82,13 +82,15 @@
           class="mt-9"
         />
         <SubmissionTeacherFrame
-          :isTeacher="true"
+          :isTeacher="isTeacher"
           :courses="cohortCourses"
           :students="teachersStudents"
           class="mt-5"
         />
       </div>
     </template>
+
+    <!-- ADMIN -->
     <template v-else-if="dashboardView === 'admin'">
       <div id="main-section">
         <div class="d-flex align-center mb-4">
@@ -107,18 +109,31 @@
 </template>
 
 <script>
-import UserInfo from "@/components/UserInfo.vue";
-import StudentActivityTimeline from "@/components/StudentActivityTimeline.vue";
-import StudentCourseProgression from "@/components/StudentCourseProgression.vue";
-import TimeframeFilters from "@/components/TimeframeFilters.vue";
-import CohortPanelV2 from "@/components/CohortPanelV2.vue";
-import SubmissionTeacherFrame from "@/components/SubmissionTeacherFrame.vue";
-import RequestForHelpTeacherFrame from "@/components/RequestForHelpTeacherFrame.vue";
-import CreateAdminDialog from "@/components/CreateAdminDialog.vue";
-import { db } from "@/store/firestoreConfig";
+import UserInfo from "@/components/UserDashboard/UserInfo.vue";
+import StudentActivityTimeline from "@/components/Reused/StudentActivityTimeline.vue";
+import StudentCourseProgression from "@/components/UserDashboard/StudentCourseProgression.vue";
+import TimeframeFilters from "@/components/Reused/TimeframeFilters.vue";
+import CohortPanelV2 from "@/components/CohortList/CohortPanelV2.vue";
+import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
+import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
+import CreateAdminDialog from "@/components/Dialogs/CreateAdminDialog.vue";
+import { fetchCohorts, fetchCourses } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mdiInformationVariant } from "@mdi/js";
-import { mapActions, mapState } from "pinia";
+import { defineStore, mapActions, mapState } from "pinia";
+
+const useUserDashboardStore = defineStore({
+  id: "userDashboard",
+  state: () => ({
+    dashboardView: "student",
+  }),
+  actions: {
+    setDashboardView(val) {
+      this.dashboardView = val;
+    },
+  },
+  persist: true,
+});
 
 export default {
   name: "UserDashboard",
@@ -136,31 +151,17 @@ export default {
     return {
       mdiInformationVariant,
       timeframe: "",
+      courses: [],
+      cohorts: [],
     };
   },
   async mounted() {
-    if (this.user.data.admin) {
-      this.bindAllCohorts();
-      this.setDashboardView("admin");
-    } else if (this.isTeacher) {
-      this.setDashboardView("teacher");
-    } else {
-      this.setDashboardView("student");
-    }
+    this.courses = await fetchCourses();
+    this.cohorts = await fetchCohorts();
   },
   computed: {
-    ...mapState(useRootStore, [
-      "user",
-      "currentCourseId",
-      "currentCourseNodes",
-      "person",
-      "courses",
-      "allTasks",
-      "cohorts",
-      "dashboardView",
-      "getCourseById",
-      "getCoursesByWhoMadeThem",
-    ]),
+    ...mapState(useUserDashboardStore, ["dashboardView"]),
+    ...mapState(useRootStore, ["user", "person"]),
     isAdmin() {
       return this.user.data.admin;
     },
@@ -190,29 +191,22 @@ export default {
     },
     teacherCohorts() {
       if (this.isAdmin) return this.cohorts;
-      else return this.cohorts.filter((cohort) => cohort.teachers?.includes(this.person.id));
+      else
+        return this.cohorts.filter((cohort) => cohort.teachers?.includes(this.person.id) ?? false);
     },
     cohortCourses() {
-      let courses = [];
-      this.teacherCohorts.forEach((cohort) => {
-        cohort.courses.forEach((course) => courses.push({ id: course }));
-      });
+      const courses = this.teacherCohorts.flatMap((cohort) =>
+        cohort.courses.map((course) => ({ id: course })),
+      );
       return courses;
     },
     teachersStudents() {
-      let students = [];
-      this.teacherCohorts.forEach((cohort) => {
-        cohort.students.forEach((course) => students.push(course));
-      });
+      const students = this.teacherCohorts.flatMap((cohort) => cohort.students ?? []);
       return students;
     },
   },
-
   methods: {
-    ...mapActions(useRootStore, ["getCohortsByPersonId", "bindAllCohorts", "setDashboardView"]),
-    setView(val) {
-      this.setDashboardView(val);
-    },
+    ...mapActions(useUserDashboardStore, ["setDashboardView"]),
   },
 };
 </script>
@@ -229,10 +223,11 @@ export default {
 
   .top-section {
     position: absolute;
-    width: 80%;
-    left: 15%;
+    width: 55%;
+    left: 19%;
     top: 100px;
     margin-left: 50px;
+    // border: 1px solid yellow;
 
     .noData {
       display: flex;
@@ -244,15 +239,20 @@ export default {
   }
 
   #left-section {
-    width: 15%;
-    padding: 100px 50px 100px 20px;
+    width: 10%;
+    margin-left: 5%;
+    padding: 100px 0px;
+    // border: 1px solid green;
   }
 
   #main-section {
-    width: 60%;
+    width: 55%;
     height: calc(100vh - 100px);
     margin-top: 135px;
-    padding: 0px 20px 50px 50px;
+    margin-left: 7%;
+    margin-right: 5%;
+    padding-bottom: 50px;
+    padding-bottom: 50px;
     // border: 1px solid red;
 
     .circle-border {
@@ -276,10 +276,11 @@ export default {
   }
 
   #right-section {
-    width: 25%;
+    width: 20%;
     margin-top: 140px;
     height: calc(100vh - 200px);
-    margin-right: 30px;
+    margin-right: 2.5%;
+    // border: 1px solid blue;
   }
 }
 

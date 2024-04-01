@@ -40,11 +40,13 @@
   </v-dialog>
 </template>
 <script>
+import { fetchCohortByCohortId } from "@/lib/ff";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mdiInformationVariant, mdiDelete, mdiClose } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
 import firebase from "firebase/compat/app";
+import { doc, updateDoc } from "firebase/firestore";
 
 export default {
   name: "ConfirmDeleteStudentDialog",
@@ -57,37 +59,35 @@ export default {
     };
   },
   computed: {
-    ...mapState(useRootStore, ["currentCohort", "currentCourseId"]),
+    ...mapState(useRootStore, ["currentCohortId", "currentCourseId"]),
   },
   methods: {
     ...mapActions(useRootStore, ["setSnackbar"]),
-    confirmDeleteStudent() {
+    async confirmDeleteStudent() {
       const studentId = this.student.id;
-      db.collection("cohorts")
-        .doc(this.currentCohort.id)
-        .update({
-          students: firebase.firestore.FieldValue.arrayRemove(studentId),
-        })
-        .then(() => {
-          this.deleteAssignedCourse(studentId);
-        })
-        .then(() => {
-          this.setSnackbar({
-            show: true,
-            text: "Student removed from Cohort",
-            color: "baseAccent",
-          });
-          this.$emit("cancel");
-        });
+
+      await updateDoc(doc(db, "cohorts", this.currentCohortId), {
+        students: firebase.firestore.FieldValue.arrayRemove(studentId),
+      });
+
+      await this.deleteAssignedCourse(studentId);
+
+      this.setSnackbar({
+        show: true,
+        text: "Student removed from Cohort",
+        color: "baseAccent",
+      });
+      this.$emit("cancel");
     },
     async deleteAssignedCourse(studentId) {
-      const student = await db.collection("people").doc(studentId);
-      console.log("student: ", student);
-      this.currentCohort.courses.forEach((course) => {
-        console.log("course", course);
-        student.update({
-          assignedCourses: firebase.firestore.FieldValue.arrayRemove(course),
-        });
+      const studentRef = doc(db, "people", studentId);
+      console.log("student: ", studentRef);
+
+      const currentCohort = await fetchCohortByCohortId(this.currentCohortId);
+
+      const courseIds = currentCohort.courses;
+      await updateDoc(studentRef, {
+        assignedCourses: firebase.firestore.FieldValue.arrayRemove(...courseIds),
       });
     },
   },

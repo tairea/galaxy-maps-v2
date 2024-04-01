@@ -1,7 +1,8 @@
 import { db } from "@/store/firestoreConfig";
 import { defineStore } from "pinia";
 import { piniafireMutations, firestoreAction } from "@/piniafire/index";
-import type firebase from "firebase/compat/app";
+import firebase from "firebase/compat/app";
+import { collection, query, where } from "firebase/firestore";
 
 const getDefaultState = () => {
   return {
@@ -13,22 +14,15 @@ const getDefaultState = () => {
     person: {} as Record<string, any>,
     topics: [] as Record<string, any>[],
     cohorts: [] as Record<string, any>[],
-    courses: [] as Record<string, any>[],
     assignedCourses: [] as Record<string, any>[],
     organisations: [] as Record<string, any>[],
     people: [] as Record<string, any>[],
-    currentCourse: {} as Record<string, any>,
     currentTopicId: "",
     currentTaskId: "",
+    currentCohortId: "",
     currentCourseId: "",
-    currentTopic: {} as Record<string, any>,
-    currentTask: {} as Record<string, any>,
-    currentCohort: {} as Record<string, any>,
     currentCourseNodes: [] as Record<string, any>[],
     currentCourseEdges: [] as Record<string, any>[],
-    allNodes: [] as Record<string, any>[],
-    allEdges: [] as Record<string, any>[],
-    allNodesForDisplay: [] as Record<string, any>[],
     allTasks: [] as Record<string, any>[],
     personsCourses: [] as Record<string, any>[],
     personsTopics: [] as Record<string, any>[],
@@ -39,7 +33,6 @@ const getDefaultState = () => {
     teachersRequestsForHelp: [] as Record<string, any>[],
     teachersStudentsProgress: [] as Record<string, any>[],
     darkMode: true,
-    sortedArr: [] as Record<string, any>[],
     studentCourseDataFromLRS: [] as Record<string, any>[],
     snackbar: {} as Record<string, any>,
     userStatus: {} as Record<string, any>,
@@ -47,10 +40,11 @@ const getDefaultState = () => {
     studentsActivityLog: [] as Record<string, any>[],
     showPanelCard: {} as Record<string, any>,
     studentsSubmissions: [] as Record<string, any>[],
-    dashboardView: "",
     peopleInCourse: [] as Record<string, any>[],
     personsCourseTasks: [] as Record<string, any>[],
     courseTasks: [] as Record<string, any>[],
+    topicCompleted: {} as Record<string, any>,
+    nextTopicUnlockedFlag: false,
   };
 };
 
@@ -58,12 +52,6 @@ export default defineStore({
   id: "root",
   state: getDefaultState,
   getters: {
-    getCourseById: (state) => (id: string) => {
-      return state.courses.find((course) => course.id === id);
-    },
-    getCoursesByWhoMadeThem: (state) => (personId: string) => {
-      return state.courses.filter((course) => course.mappedBy.personId == personId);
-    },
     getTopicById: (state) => (id: string) => {
       const topic = state.topics.find((topic) => topic.id === id);
       return topic;
@@ -71,9 +59,6 @@ export default defineStore({
     getPersonsTopicById: (state) => (id: string) => {
       const topic = state.personsTopics.find((topic) => topic.id === id);
       return topic;
-    },
-    getCohortById: (state) => (id: string) => {
-      return state.cohorts.find((cohort) => cohort.id === id);
     },
     getOrganisationById: (state) => (id: string) => {
       return state.organisations.find((organisation) => organisation.id === id);
@@ -85,18 +70,6 @@ export default defineStore({
     getPersonsTasksByTopicId: (state) => (id: string) => {
       const topic = state.personsTopics.find((topic) => topic.id === id);
       return topic?.tasks ?? [];
-    },
-    getCoursesInThisCohort: (state) => (id: string) => {
-      //go to cohorts, and check if they in courses with this id
-      const cohort = state.cohorts.find((cohort) => cohort.id === id);
-      const cohortsCoursesArrOfObj: Record<string, any>[] = [];
-      cohort?.courses.forEach((courseId: string) => {
-        const courseObj = state.courses.find((course) => course.id == courseId);
-        if (courseObj != null) {
-          cohortsCoursesArrOfObj.push(courseObj);
-        }
-      });
-      return cohortsCoursesArrOfObj;
     },
     getStudentsByCohortId: (state) => (id: string) => {
       //go to cohorts, and check if they in courses with this id
@@ -142,26 +115,14 @@ export default defineStore({
       this.courseTasks = [];
       this.currentCourseId = courseId;
     },
-    setCurrentCourse(course: Record<string, any>) {
-      this.currentCourse = course;
-    },
     setCurrentTopicId(topicId: string) {
       this.currentTopicId = topicId;
-    },
-    setCurrentTopic(topic: Record<string, any>) {
-      this.currentTopic = topic;
     },
     setCurrentTaskId(taskId: string) {
       this.currentTaskId = taskId;
     },
-    setCurrentTask(task: Record<string, any>) {
-      this.currentTask = task;
-    },
-    updateAllNodes(newNodePositions: Record<string, any>[]) {
-      this.allNodes = newNodePositions;
-    },
-    updateAllNodesForDisplay(newNodePositions: Record<string, any>[]) {
-      this.allNodesForDisplay = newNodePositions;
+    setCurrentCohortId(cohortId: string) {
+      this.currentCohortId = cohortId;
     },
     updateTopicTasks(newTopicTasks: Record<string, any>[]) {
       this.topicsTasks = newTopicTasks;
@@ -175,13 +136,6 @@ export default defineStore({
     setDarkMode(dark: boolean) {
       this.darkMode = dark;
     },
-    sortAsc(arr: Record<string, any>[]) {
-      const sortedArr = arr.sort((a, b) =>
-        a.topic.topicCreatedTimestamp.seconds > b.topic.topicCreatedTimestamp.seconds ? 1 : -1,
-      );
-      console.log("sortedArr: ", sortedArr);
-      this.sortedArr = sortedArr;
-    },
     setStudentCourseDataFromLRS(courseData: Record<string, any>[]) {
       this.studentCourseDataFromLRS = courseData;
     },
@@ -193,10 +147,6 @@ export default defineStore({
     },
     setSnackbar(snackbar: { show: boolean; text: string; color?: string }) {
       this.snackbar = snackbar;
-    },
-    setDashboardView(view: string) {
-      console.log("setView: ", view);
-      this.dashboardView = view;
     },
     setPeopleInCourse(people: Record<string, any>[]) {
       this.peopleInCourse = people;
@@ -223,28 +173,14 @@ export default defineStore({
         });
       }
     },
+    setTopicCompleted(topic: { completed: boolean; topicId: Record<string, any> | null }) {
+      this.topicCompleted = topic;
+    },
+    setNextTopicUnlocked(flag: boolean) {
+      console.log("next topic unlocked - flag triggered: ", flag);
+      this.nextTopicUnlockedFlag = flag;
+    },
     // ===== Firestore - BIND ALL
-    bindCourses: firestoreAction(
-      (
-        { bindFirestoreRef },
-        payload: { owner: firebase.firestore.DocumentReference | string | null },
-      ) => {
-        const query =
-          payload.owner != null
-            ? db.collection("courses").where("owner", "==", payload.owner)
-            : db.collection("courses");
-        return bindFirestoreRef("courses", query, {
-          maxRefDepth: 0,
-          reset: false,
-        });
-      },
-    ),
-    bindAllCohorts: firestoreAction(({ bindFirestoreRef }) => {
-      return bindFirestoreRef("cohorts", db.collection("cohorts"));
-    }),
-    bindAllOrganisations: firestoreAction(({ bindFirestoreRef }) => {
-      return bindFirestoreRef("organisations", db.collection("organisations"));
-    }),
     bindAllPeople: firestoreAction(({ bindFirestoreRef }) => {
       return bindFirestoreRef("people", db.collection("people"));
     }),
@@ -358,72 +294,6 @@ export default defineStore({
       // console.log("tasksArr", tasksArr)
       this.courseTasks = tasksArr;
     },
-    async getAllNodes() {
-      const allNodes = [];
-
-      // get the topics (nodes) in that course
-      for (const course of this.courses) {
-        // if public and not submitted and not draft || mapped by user || user is assigned to course
-        if (
-          // if public and not submitted
-          (course.public === true && course.status != "submitted" && course.status != "drafting") ||
-          // mapped by user
-          course.mappedBy.personId === this.person.id ||
-          // user is assigned to course
-          this.person.assignedCourses?.some(
-            (assignedCourse: Record<string, any>) => assignedCourse === course.id,
-          ) ||
-          this.user.data?.admin
-        ) {
-          const subQuerySnapshot = await db
-            .collection("courses")
-            .doc(course.id)
-            .collection("map-nodes")
-            .get();
-
-          allNodes.push(
-            ...subQuerySnapshot.docs.map((subDoc) => {
-              const node = subDoc.data();
-              node.courseId = course.id; // add course id to nodes list for some reason
-              //node.group = count; // add group to nodes list for some reason
-              return node;
-            }),
-          );
-        }
-      }
-      this.allNodes = allNodes; // source of truth
-      // console.log("all nodes:",allNodes)
-      // this.allNodesForDisplay = allNodes; // store all nodes
-    },
-    async getAllEdges() {
-      const allEdges = [];
-
-      for (const course of this.courses) {
-        if (
-          // if public and not submitted and not drafting
-          (course.public === true && course.status != "submitted" && course.status != "drafting") ||
-          // mapped by user
-          course.mappedBy.personId === this.person.id ||
-          // user is assigned to course
-          this.person.assignedCourses?.some(
-            (assignedCourse: Record<string, any>) => assignedCourse === course.id,
-          ) ||
-          this.user.data?.admin
-        ) {
-          // doc.data() is never undefined for query doc snapshots
-          const subQuerySnapshot = await db
-            .collection("courses")
-            .doc(course.id)
-            .collection("map-edges")
-            .get();
-
-          allEdges.push(...subQuerySnapshot.docs.map((subDoc) => subDoc.data()));
-        }
-      }
-
-      this.allEdges = allEdges;
-      // console.log("all edges:",allEdges)
-    },
 
     // ===== Firestore - BIND by USER
     async getPersonById(id: string) {
@@ -434,8 +304,8 @@ export default defineStore({
           .onSnapshot((doc) => {
             // console.log("person updated");
             const person = {
-              id,
               ...doc.data(),
+              id,
             };
             this.SET_PERSON(person);
           });
@@ -517,18 +387,21 @@ export default defineStore({
       const cohorts = [...studentCohorts, ...teacherCohorts];
       this.setCohorts(cohorts);
       if (cohorts.length) {
-        this.getOrganisationsByCohorts(cohorts);
+        await this.getOrganisationsByCohorts(cohorts);
       }
     },
 
     // ===== Firestore - Cohorts & Orgs
-    // TODO: this feels like a string but it looks like objects get passed to it
     async getOrganisationsByCohorts(cohorts: any) {
       const orgs = [];
       const querySnapShot = await db
         .collection("organisations")
         // .doc(cohort)
-        .where("cohorts", "array-contains-any", cohorts)
+        .where(
+          "cohorts",
+          "array-contains-any",
+          cohorts.map((cohort: any) => cohort.id),
+        )
         .get();
 
       if (querySnapShot.docs.length) {
@@ -577,29 +450,19 @@ export default defineStore({
           allRequestsForHelp.sort(
             (a, b) => b.requestSubmittedTimestamp.seconds - a.requestSubmittedTimestamp.seconds,
           );
+
+          // console.log("ALL REQUESTS FOR HELP:", allRequestsForHelp);
+
           this.teachersRequestsForHelp = allRequestsForHelp.filter(
             (req) => req.contextCourse.id === courseId,
           );
+
+          // console.log("this.teachersRequestsForHelp:", this.teachersRequestsForHelp);
         });
 
       return unsubscribe;
 
       // this.teachersRequestsForHelp = allRequestsForHelp;
-    },
-
-    async setCurrentCohort(cohort: Record<string, any>) {
-      await db
-        .collection("cohorts")
-        .doc(cohort.id)
-        .onSnapshot(async (doc) => {
-          const newCohort: Record<string, any> = {
-            id: doc.id,
-            ...doc.data(),
-          };
-          if (cohort.teacher) newCohort.teacher = true;
-          else if (cohort.student) newCohort.student = true;
-          this.currentCohort = newCohort;
-        });
     },
 
     async getAllUsersStatus() {
@@ -618,309 +481,6 @@ export default defineStore({
           this.userStatus = users;
         });
     },
-    // async getEachStudentsProgressForTeacher({ state, commit }) {
-    //   // this method does...
-    //   // 1 - get teachers courses
-    //   // 2 - make an array of teachers course ids
-    //   // 3 - go to database and get students assigned to any of those teachers courseIds
-    //   // 4 - loop each student and for each student assigned courses that match a teachers course get all the topic and task data
-
-    //   // get teachers courses. (returns array of course objects eg. id, title, description, image, mappedBy, contentBy)
-    //   const myCourses = this.getters.getCoursesByWhoMadeThem(state.person.id);
-    //   // make an array of course.id's
-    //   let teachersCourseIds = myCourses.map((course) => course.id);
-    //   // console.log("teachersCourseIds : ", teachersCourseIds);
-
-    //   // search people database where assignedCourses arrayContains
-    //   const studentsInTeachersCourses = [];
-    //   for (const course of myCourses) {
-    //     // get all work for review
-    //     const querySnapshot = await db
-    //       .collection("people")
-    //       .where("assignedCourses", "array-contains-any", teachersCourseIds)
-    //       .get();
-
-    //     for (const doc of querySnapshot.docs) {
-    //       studentsInTeachersCourses.push(doc.data());
-    //     }
-    //   }
-    //   console.log("studentsInTeachersCourses : ", studentsInTeachersCourses);
-
-    //   //TODO: there are duplicates of students in studentsInTeachersCourses, even though array-contains-any is supposed to be de-duped (https://firebase.google.com/docs/firestore/query-data/queries#array-contains-any)
-    //   // flatten array to remove duplicate students
-    //   // const flatStudents = getUniqueListBy(studentsInTeachersCourses, "email");
-    //   const ids = studentsInTeachersCourses.map((o) => o.id);
-    //   const flatStudents = studentsInTeachersCourses.filter(
-    //     ({ id }, index) => !ids.includes(id, index + 1)
-    //   );
-    //   console.log("flat students", flatStudents);
-
-    //   // allStudentProgress
-    //   let allStudentProgress = [];
-
-    //   // for each of the students, check if their assignedCourses matches teachers courses
-    //   for (const student of flatStudents) {
-    //     // new student. reset array
-    //     let currentStudentProgress = [];
-
-    //     for (var x = 0; x < student.assignedCourses.length; x++) {
-    //       // check which assignedCourse matches with teacher
-    //       for (var y = 0; y < teachersCourseIds.length; y++) {
-    //         const teachersCourseId = teachersCourseIds[y];
-    //         if (student.assignedCourses[x] == teachersCourseId) {
-    //           // there is a match! get these tasks from db
-
-    //           // new course. reset array
-    //           let currentCourseProgress = [];
-    //           // reset task count (task count is Y axes of chart. ie. line increments as you complete tasks)
-    //           let taskCount = 0;
-
-    //           const studentTaskQuerySnapshot = await db
-    //             .collection("people")
-    //             .doc(student.id)
-    //             .collection(teachersCourseId)
-    //             .get();
-
-    //           // sort topics by topic.topicCreatedTimestamp (so that y axes: taskCount is close to being in order)
-    //           let sortedTopics = studentTaskQuerySnapshot.docs.sort((a, b) =>
-    //             a.data().topicCreatedTimestamp > b.data().topicCreatedTimestamp
-    //               ? 1
-    //               : -1
-    //           );
-    //           // console.log("sortedTopics: ", sortedTopics.data());
-
-    //           for (const topic of sortedTopics) {
-    //             // console.log("sorted topic: ", topic.data());
-    //             // new topic. reset array
-    //             let currentTopicProgress = [];
-
-    //             // get task data for each topic
-    //             const topicQuerySnapshot = await db
-    //               .collection("people")
-    //               .doc(student.id)
-    //               .collection(teachersCourseId)
-    //               .doc(topic.id)
-    //               .collection("tasks")
-    //               // only get tasks with completed OR inreview status
-    //               .where("taskStatus", "in", [
-    //                 "completed",
-    //                 "inreview",
-    //                 "active",
-    //               ])
-    //               .orderBy("taskStartedTimestamp")
-    //               .get();
-
-    //             for (const task of topicQuerySnapshot.docs) {
-    //               taskCount++;
-    //               // topicData.push(task.data());
-    //               currentTopicProgress.push({
-    //                 x: task.data().taskStartedTimestamp,
-    //                 y: taskCount,
-    //                 courseId: teachersCourseId,
-    //                 topicId: topic.id,
-    //                 taskTitle: task.data().title,
-    //                 taskStatus: "started",
-    //                 task: task.data(),
-    //               });
-    //               currentTopicProgress.push({
-    //                 x: task.data().taskCompletedTimestamp
-    //                   ? task.data().taskCompletedTimestamp
-    //                   : task.data().taskSubmittedForReviewTimestamp,
-    //                 y: taskCount,
-    //                 courseId: teachersCourseId,
-    //                 topicId: topic.id,
-    //                 taskTitle: task.data().title,
-    //                 taskStatus: task.data().taskStatus,
-    //                 task: task.data(),
-    //               });
-    //             }
-    //             currentCourseProgress.push({
-    //               topicId: topic.id,
-    //               topic: topic.data(),
-    //               topicTitle: topic.data().label,
-    //               topicTaskData: currentTopicProgress,
-    //             });
-    //           }
-
-    //           currentStudentProgress.push({
-    //             courseId: teachersCourseId,
-    //             courseTopicData: currentCourseProgress,
-    //           });
-    //         }
-    //       }
-    //     }
-    //     allStudentProgress.push({
-    //       studentId: student.id,
-    //       student: student,
-    //       studentCoursesData: currentStudentProgress,
-    //     });
-    //   }
-
-    //   //test did it work?
-    //   console.log("FINISHED allStudentProgress ===> ", allStudentProgress);
-
-    //   state.teachersStudentsProgress = allStudentProgress;
-    // },
-    // async getCourseProgressionDataForTeacher({ state, commit }) {
-    //   // this method does...
-    //   // 1 - get teachers courses
-    //   // 2 - make an array of teachers course ids
-    //   // 3 - go to database and get students that have course id as a collection
-    //   // 4 - loop each student and for each student assigned courses that match a teachers course get all the topic and task data
-
-    //   // get teachers courses. (returns array of course objects eg. id, title, description, image, mappedBy, contentBy)
-    //   const myCourses = this.getters.getCoursesByWhoMadeThem(state.person.id);
-    //   // make an array of course.id's
-    //   let teachersCourseIds = myCourses.map((course) => course.id);
-    //   // console.log("teachersCourseIds : ", teachersCourseIds);
-
-    //   // search people database where assignedCourses arrayContains
-    //   const studentsInTeachersCourses = [];
-    //   for (const course of myCourses) {
-    //     // get all work for review
-    //     const querySnapshot = await db
-    //       .collection("people")
-    //       .where("assignedCourses", "array-contains-any", teachersCourseIds)
-    //       .get();
-
-    //     for (const doc of querySnapshot.docs) {
-    //       studentsInTeachersCourses.push(doc.data());
-    //     }
-    //   }
-    //   console.log("studentsInTeachersCourses : ", studentsInTeachersCourses);
-
-    //   //TODO: there are duplicates of students in studentsInTeachersCourses, even though array-contains-any is supposed to be de-duped (https://firebase.google.com/docs/firestore/query-data/queries#array-contains-any)
-    //   // flatten array to remove duplicate students
-    //   // const flatStudents = getUniqueListBy(studentsInTeachersCourses, "email");
-    //   const ids = studentsInTeachersCourses.map((o) => o.id);
-    //   const flatStudents = studentsInTeachersCourses.filter(
-    //     ({ id }, index) => !ids.includes(id, index + 1)
-    //   );
-    //   console.log("flat students", flatStudents);
-
-    //   // allStudentProgress
-    //   let allStudentProgress = [];
-
-    //   // for each of the students, check if their assignedCourses matches teachers courses
-    //   for (const student of flatStudents) {
-    //     // new student. reset array
-    //     let currentStudentProgress = [];
-
-    //     for (var x = 0; x < student.assignedCourses.length; x++) {
-    //       // check which assignedCourse matches with teacher
-    //       for (var y = 0; y < teachersCourseIds.length; y++) {
-    //         const teachersCourseId = teachersCourseIds[y];
-    //         if (student.assignedCourses[x] == teachersCourseId) {
-    //           // there is a match! get these tasks from db
-
-    //           // new course. reset array
-    //           let currentCourseProgress = [];
-    //           // reset task count (task count is Y axes of chart. ie. line increments as you complete tasks)
-    //           let taskCount = 0;
-
-    //           const studentTaskQuerySnapshot = await db
-    //             .collection("people")
-    //             .doc(student.id)
-    //             .collection(teachersCourseId)
-    //             .get();
-
-    //           // sort topics by topic.topicCreatedTimestamp (so that y axes: taskCount is close to being in order)
-    //           let sortedTopics = studentTaskQuerySnapshot.docs.sort((a, b) =>
-    //             a.data().topicCreatedTimestamp > b.data().topicCreatedTimestamp
-    //               ? 1
-    //               : -1
-    //           );
-    //           // console.log("sortedTopics: ", sortedTopics.data());
-
-    //           for (const topic of sortedTopics) {
-    //             // console.log("sorted topic: ", topic.data());
-    //             // new topic. reset array
-    //             let currentTopicProgress = [];
-
-    //             // get task data for each topic
-    //             const topicQuerySnapshot = await db
-    //               .collection("people")
-    //               .doc(student.id)
-    //               .collection(teachersCourseId)
-    //               .doc(topic.id)
-    //               .collection("tasks")
-    //               // only get tasks with completed OR inreview status
-    //               .where("taskStatus", "in", [
-    //                 "completed",
-    //                 "inreview",
-    //                 "active",
-    //               ])
-    //               .orderBy("taskStartedTimestamp")
-    //               .get();
-
-    //             for (const task of topicQuerySnapshot.docs) {
-    //               taskCount++;
-    //               // topicData.push(task.data());
-    //               currentTopicProgress.push({
-    //                 x: task.data().taskStartedTimestamp,
-    //                 y: taskCount,
-    //                 courseId: teachersCourseId,
-    //                 topicId: topic.id,
-    //                 taskTitle: task.data().title,
-    //                 taskStatus: "started",
-    //                 task: task.data(),
-    //               });
-    //               currentTopicProgress.push({
-    //                 x: task.data().taskCompletedTimestamp
-    //                   ? task.data().taskCompletedTimestamp
-    //                   : task.data().taskSubmittedForReviewTimestamp,
-    //                 y: taskCount,
-    //                 courseId: teachersCourseId,
-    //                 topicId: topic.id,
-    //                 taskTitle: task.data().title,
-    //                 taskStatus: task.data().taskStatus,
-    //                 task: task.data(),
-    //               });
-    //             }
-    //             currentCourseProgress.push({
-    //               topicId: topic.id,
-    //               topic: topic.data(),
-    //               topicTitle: topic.data().label,
-    //               topicTaskData: currentTopicProgress,
-    //             });
-    //           }
-
-    //           currentStudentProgress.push({
-    //             courseId: teachersCourseId,
-    //             courseTopicData: currentCourseProgress,
-    //           });
-    //         }
-    //       }
-    //     }
-    //     allStudentProgress.push({
-    //       studentId: student.id,
-    //       student: student,
-    //       studentCoursesData: currentStudentProgress,
-    //     });
-    //   }
-
-    //   //test did it work?
-    //   console.log("FINISHED allStudentProgress ===> ", allStudentProgress);
-
-    //   state.teachersStudentsProgress = allStudentProgress;
-    // },
   },
   persist: true,
 });
-
-// colour functions to colour nodes
-function hashCode(str: string) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return hash;
-}
-
-function stringToColour(str: string) {
-  return `hsl(${hashCode(str) % 360}, 100%, 70%)`;
-}
-
-function getUniqueListBy<T extends object>(arr: T[], key: keyof T) {
-  return Array.from(new Map(arr.map((item) => [item[key], item])).values());
-}

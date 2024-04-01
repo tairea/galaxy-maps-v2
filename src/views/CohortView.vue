@@ -1,57 +1,91 @@
 <template>
-  <div v-if="currentCohort.id" id="container" class="bg">
+  <div id="container" class="bg">
     <div id="left-section">
-      <CohortInfo />
-      <AssignedInfo assignCourses="true" />
+      <CohortInfo v-if="!isLoadingCohort && cohort" :cohort="cohort" />
       <BackButton :toPath="'/cohorts'" />
+      <AssignedInfo v-if="!isLoadingCohort && cohort" :cohort="cohort" assignCourses="true" />
     </div>
 
     <div id="main-section">
-      <div class="people-frame">
+      <!-- loading spinner -->
+      <div class="d-flex justify-center align-center" v-if="isLoadingCohort">
+        <v-btn
+          :loading="isLoadingCohort"
+          icon
+          color="missionAccent"
+          class="d-flex justify-center align-center"
+        ></v-btn>
+      </div>
+      <div v-if="cohort" class="people-frame">
         <div class="people-border">
-          <div :class="peopleLabel" @click="studentsView = true">
+          <div :class="peopleLabel" @click="setStudentsView(true)">
             <span class="pl-3">STUDENTS</span>
           </div>
         </div>
         <div class="graph-border">
-          <div :class="graphLabel" class="text-center" @click="studentsView = false">
+          <div :class="graphLabel" class="text-center" @click="setStudentsView(false)">
             <span class="pl-3">OVERVIEW</span>
           </div>
         </div>
-        <StudentDataIterator v-if="studentsView" class="mt-4" />
-        <CohortGraphs v-else :cohort="currentCohort" />
+        <StudentDataIterator
+          v-if="studentsView"
+          class="mt-4"
+          :cohort="cohort"
+          @learnerOverviewDialogClosed="refreshComponents"
+        />
+        <CohortGraphs v-else :cohort="cohort" :cohortsCoursesData="cohortsCoursesData" />
       </div>
     </div>
 
-    <div v-if="ready" id="right-section">
+    <div id="right-section">
+      <RequestForHelpTeacherFrame
+        v-if="cohort"
+        :key="refreshRequests"
+        :isTeacher="teacher"
+        :courses="courses"
+        :students="cohort.students"
+      />
+      <SubmissionTeacherFrame
+        v-if="cohort && teacher"
+        :key="refreshSubmissions"
+        :isTeacher="teacher"
+        :courses="courses"
+        :students="cohort.students"
+        class="mt-4"
+      />
+      <!-- Completed Separate -->
+      <!-- <p class="baseAccent--text completed-label ma-0 py-6">COMPLETED</p>
       <RequestForHelpTeacherFrame
         :isTeacher="teacher"
         :courses="courses"
-        :students="currentCohort.students"
-        class="ml-4"
+        :students="cohort.students"
+        :completedRequestsOnly="true"
+        class="mt-0"
       />
       <SubmissionTeacherFrame
+        v-if="teacher"
         :isTeacher="teacher"
         :courses="courses"
-        :students="teacher ? currentCohort.students : [person]"
-        class="mt-4 ml-4"
-      />
+        :students="cohort.students"
+        :completedSubmissionsOnly="true"
+        class="mt-4"
+      /> -->
     </div>
   </div>
 </template>
 
 <script>
-import CohortInfo from "@/components/CohortInfo.vue";
-import AssignedInfo from "@/components/AssignedInfo.vue";
-import StudentDataIterator from "@/components/StudentDataIterator.vue";
-import BackButton from "@/components/BackButton.vue";
-import RequestForHelpTeacherFrame from "@/components/RequestForHelpTeacherFrame.vue";
-import SubmissionTeacherFrame from "@/components/SubmissionTeacherFrame.vue";
+import CohortInfo from "@/components/CohortView/CohortInfo.vue";
+import AssignedInfo from "@/components/Reused/AssignedInfo.vue";
+import StudentDataIterator from "@/components/CohortView/StudentDataIterator.vue";
+import BackButton from "@/components/Reused/BackButton.vue";
+import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
+import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 import CohortGraphs from "@/components/CohortView/CohortGraphs.vue";
-import { db } from "@/store/firestoreConfig";
+import { fetchCohortCoursesActivityByCohortId } from "@/lib/ff";
 import useRootStore from "@/store/index";
-import moment from "moment";
-import { mapState } from "pinia";
+import useCohortViewStore from "@/store/cohortView";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "CohortView",
@@ -67,27 +101,45 @@ export default {
   },
   data() {
     return {
-      studentsView: true,
+      cohortsCoursesData: [],
+      refreshSubmissions: 0,
+      refreshRequests: 0,
     };
   },
+  async mounted() {
+    await this.loadCohort(this.cohortId);
+
+    // ==== get cohort course data from LRS
+    this.cohortsCoursesData = await fetchCohortCoursesActivityByCohortId(this.cohort.id);
+  },
   computed: {
-    ...mapState(useRootStore, ["currentCohort", "person", "userStatus"]),
+    ...mapState(useRootStore, ["currentCohortId", "person", "userStatus"]),
+    ...mapState(useCohortViewStore, ["studentsView", "isLoadingCohort", "cohort"]),
     ready() {
-      return this.cohortId === this.currentCohort.id;
+      return this.cohortId === this.currentCohortId && this.cohort != null;
     },
     courses() {
-      return this.currentCohort?.courses?.map((course) => {
+      return this.cohort?.courses?.map((course) => {
         return { id: course };
       });
     },
     teacher() {
-      return this.currentCohort.teachers.includes(this.person.id);
+      return this.cohort.teachers.includes(this.person.id);
     },
     peopleLabel() {
       return this.studentsView ? "people-label" : "inactive-people-label";
     },
     graphLabel() {
       return this.studentsView ? "inactive-graph-label" : "graph-label";
+    },
+  },
+  methods: {
+    ...mapActions(useCohortViewStore, ["loadCohort", "setStudentsView"]),
+    // hack to update TeacherFrames. (this is because LearnerOveriewDashboard uses the same
+    // components and when you close the dialog, the cohortview teacher frames are empty. issue#121)
+    refreshComponents() {
+      this.refreshSubmissions++;
+      this.refreshRequests++;
     },
   },
 };
@@ -111,24 +163,26 @@ export default {
 }
 
 #left-section {
-  width: 20%;
+  width: 15%;
   height: 100%;
   display: flex;
   justify-content: flex-start;
   align-items: center;
   flex-direction: column;
   overflow-y: scroll;
-  padding: 50px 20px;
+  padding: 50px 0px;
+  margin-left: 5%;
 }
 
 #main-section {
-  width: 55%;
+  width: 50%;
   height: 100%;
   display: flex;
   justify-content: flex-start;
   align-items: center;
   flex-direction: column;
   padding-top: 50px;
+  margin: 0px 5%;
   transition: all 0.2s ease-in-out;
 
   .people-frame {
@@ -236,10 +290,19 @@ export default {
 }
 
 #right-section {
-  width: 25%;
+  width: 15%;
   height: 84%;
   padding-top: 50px;
-  margin-right: 35px;
+  // margin-right: 35px;
+  margin-right: 5%;
+  overflow-y: scroll;
+
+  .completed-label {
+    font-weight: 500;
+    letter-spacing: 0.05rem;
+    font-size: 0.8rem;
+    text-align: center;
+  }
 }
 
 /* width */

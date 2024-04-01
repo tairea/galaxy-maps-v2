@@ -3,14 +3,14 @@
     <v-main>
       <router-view />
       <SnackBar />
-      <!-- <Alpha /> -->
+      <VersionStatus />
     </v-main>
   </v-app>
 </template>
 
 <script lang="ts">
-import SnackBar from "@/components/SnackBar.vue";
-import Alpha from "@/components/Alpha.vue";
+import SnackBar from "@/components/Reused/SnackBar.vue";
+import Alpha from "@/components/GalaxyList/VersionStatus.vue";
 
 export default {
   name: "App",

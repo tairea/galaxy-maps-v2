@@ -1,14 +1,14 @@
 <template>
   <v-app class="bg">
     <NavBar :userType="userType" />
-    <router-view :key="$route.fullPath"></router-view>
+    <router-view></router-view>
     <UserBar />
   </v-app>
 </template>
 
 <script>
-import UserBar from "@/components/UserBar.vue";
-import NavBar from "@/components/NavBar.vue";
+import UserBar from "@/components/Home/UserBar.vue";
+import NavBar from "@/components/Home/NavBar.vue";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
 

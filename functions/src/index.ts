@@ -2,45 +2,101 @@
 import "./_dotenv.js";
 import "./_shared.js";
 
+import {
+  getCohortCoursesActivityByCohortIdHttpsEndpoint,
+  getCohortStudentsActivityTimeByCohortIdHttpsEndpoint,
+  getStudentActivityLogByPersonIdHttpsEndpoint,
+  getStudentCoursesActivityByPersonIdHttpsEndpoint,
+  getStudentCoursesTimeDataByPersonIdStartAtEndAtHttpsEndpoint,
+} from "./activity.js";
 import { checkInactivitySchedule } from "./checkInactivity.js";
 import {
-  assignTopicsAndTasksToMeHttpsEndpoint,
-  assignTopicsAndTasksToStudentHttpsEndpoint,
+  addMeToCohortHttpsEndpoint,
+  addStudentToCohortHttpsEndpoint,
+  assignCourseToMeHttpsEndpoint,
+  assignCourseToStudentHttpsEndpoint,
+  getCourseByCourseIdHttpsEndpoint,
+  getCourseMapEdgesAndNodesByCourseIdHttpsEndpoint,
+  getCoursesHttpsEndpoint,
+  getCohortByCohortIdHttpsEndpoint,
+  getCohortsHttpsEndpoint,
+  getCohortsByCourseIdHttpsEndpoint,
+  getStudentCohortsByPersonIdHttpsEndpoint,
+  getPeopleByCourseIdHttpsEndpoint,
+  getPersonTasksByPersonIdCourseIdTopicIdHttpsEndpoint,
+  getPersonTopicByPersonIdCourseIdTopicIdHttpsEndpoint,
+  getTaskByCourseIdTopicIdTaskIdHttpsEndpoint,
+  getTopicByCourseIdTopicIdHttpsEndpoint,
+  getStudentSubmissionsByPersonIdHttpsEndpoint,
+  getStudentRequestsByPersonIdHttpsEndpoint,
+  removeMeFromCourseHttpsEndpoint,
+  removeStudentFromCourseHttpsEndpoint,
 } from "./courseManagement.js";
 import {
   sendCourseDeletedHttpsEndpoint,
   sendCoursePublishedEmailHttpsEndpoint,
-  sendInviteEmailHttpsEndpoint,
   sendNewCohortEmailHttpsEndpoint,
-  sendNewCourseEmailHttpsEndpoint,
   sendNewSubmissionEmailHttpsEndpoint,
   sendRequestForHelpHttpsEndpoint,
   sendResponseToHelpHttpsEndpoint,
   sendResponseToSubmissionHttpsEndpoint,
   sendTaskSubmissionHttpsEndpoint,
 } from "./emails.js";
+import {
+  getOrganisationByOrganisationIdHttpsEndpoint,
+  getPeopleByOrganisationIdHttpsEndpoint,
+  getOrganisationsHttpsEndpoint,
+  createOrganisationHttpsEndpoint,
+  updateOrganisationByOrganisationIdHttpsEndpoint,
+  deleteOrganisationByOrganisationIdHttpsEndpoint,
+} from "./organisationManagement.js";
 import { onUserStatusChangedOnUpdateTrigger } from "./presence.js";
 import {
   addAdminRoleHttpsEndpoint,
-  createUserHttpsEndpoint,
-  generateEmailLinkHttpsEndpoint,
+  createNewUserHttpsEndpoint,
+  getPersonByEmailHttpsEndpoint,
+  getPersonByPersonIdHttpsEndpoint,
+  updatePersonByPersonIdHttpsEndpoint,
 } from "./userManagement.js";
 
 export {
-  checkInactivitySchedule as scheduledFunction,
+  getCohortCoursesActivityByCohortIdHttpsEndpoint as getCohortCoursesActivityByCohortId,
+  getCohortStudentsActivityTimeByCohortIdHttpsEndpoint as getCohortStudentsActivityTimeByCohortId,
+  getStudentActivityLogByPersonIdHttpsEndpoint as getStudentActivityLogByPersonId,
+  getStudentCoursesActivityByPersonIdHttpsEndpoint as getStudentCoursesActivityByPersonId,
+  // eslint-disable-next-line max-len
+  getStudentCoursesTimeDataByPersonIdStartAtEndAtHttpsEndpoint as getStudentCoursesTimeDataByPersonIdStartAtEndAt,
 };
 
+export { checkInactivitySchedule as scheduledFunction };
+
 export {
-  assignTopicsAndTasksToMeHttpsEndpoint as assignTopicsAndTasksToMe,
-  assignTopicsAndTasksToStudentHttpsEndpoint as assignTopicsAndTasksToStudent,
+  addMeToCohortHttpsEndpoint as addMeToCohort,
+  addStudentToCohortHttpsEndpoint as addStudentToCohort,
+  assignCourseToMeHttpsEndpoint as assignCourseToMe,
+  assignCourseToStudentHttpsEndpoint as assignCourseToStudent,
+  getCourseByCourseIdHttpsEndpoint as getCourseByCourseId,
+  getCourseMapEdgesAndNodesByCourseIdHttpsEndpoint as getCourseMapEdgesAndNodesByCourseId,
+  getCoursesHttpsEndpoint as getCourses,
+  getCohortByCohortIdHttpsEndpoint as getCohortByCohortId,
+  getCohortsHttpsEndpoint as getCohorts,
+  getCohortsByCourseIdHttpsEndpoint as getCohortsByCourseId,
+  getStudentCohortsByPersonIdHttpsEndpoint as getStudentCohortsByPersonId,
+  getStudentSubmissionsByPersonIdHttpsEndpoint as getStudentSubmissionsByPersonId,
+  getStudentRequestsByPersonIdHttpsEndpoint as getStudentRequestsByPersonId,
+  getPeopleByCourseIdHttpsEndpoint as getPeopleByCourseId,
+  getPersonTasksByPersonIdCourseIdTopicIdHttpsEndpoint as getPersonTasksByPersonIdCourseIdTopicId,
+  getPersonTopicByPersonIdCourseIdTopicIdHttpsEndpoint as getPersonTopicByPersonIdCourseIdTopicId,
+  getTaskByCourseIdTopicIdTaskIdHttpsEndpoint as getTaskByCourseIdTopicIdTaskId,
+  getTopicByCourseIdTopicIdHttpsEndpoint as getTopicByCourseIdTopicId,
+  removeMeFromCourseHttpsEndpoint as removeMeFromCourse,
+  removeStudentFromCourseHttpsEndpoint as removeStudentFromCourse,
 };
 
 export {
   sendCourseDeletedHttpsEndpoint as sendCourseDeleted,
   sendCoursePublishedEmailHttpsEndpoint as sendCoursePublishedEmail,
-  sendInviteEmailHttpsEndpoint as sendInviteEmail,
   sendNewCohortEmailHttpsEndpoint as sendNewCohortEmail,
-  sendNewCourseEmailHttpsEndpoint as sendNewCourseEmail,
   sendNewSubmissionEmailHttpsEndpoint as sendNewSubmissionEmail,
   sendRequestForHelpHttpsEndpoint as sendRequestForHelp,
   sendResponseToHelpHttpsEndpoint as sendResponseToHelp,
@@ -49,12 +105,20 @@ export {
 };
 
 export {
-  onUserStatusChangedOnUpdateTrigger as onUserStatusChanged,
+  getOrganisationByOrganisationIdHttpsEndpoint as getOrganisationByOrganisationId,
+  getPeopleByOrganisationIdHttpsEndpoint as getPeopleByOrganisationId,
+  getOrganisationsHttpsEndpoint as getOrganisations,
+  createOrganisationHttpsEndpoint as createOrganisation,
+  updateOrganisationByOrganisationIdHttpsEndpoint as updateOrganisationByOrganisationId,
+  deleteOrganisationByOrganisationIdHttpsEndpoint as deleteOrganisationByOrganisationId,
 };
+
+export { onUserStatusChangedOnUpdateTrigger as onUserStatusChanged };
 
 export {
   addAdminRoleHttpsEndpoint as addAdminRole,
-  createUserHttpsEndpoint as createUser,
-  generateEmailLinkHttpsEndpoint as generateEmailLink,
+  createNewUserHttpsEndpoint as createNewUser,
+  getPersonByEmailHttpsEndpoint as getPersonByEmail,
+  getPersonByPersonIdHttpsEndpoint as getPersonByPersonId,
+  updatePersonByPersonIdHttpsEndpoint as updatePersonByPersonId,
 };
-

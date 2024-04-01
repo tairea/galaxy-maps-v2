@@ -13,6 +13,7 @@ import VueTour from "vue-tour";
 
 import "@/css/main.scss";
 import "vue-tour/dist/vue-tour.css";
+import useGalaxyListViewStore from "./store/galaxyListView";
 
 Vue.use(PiniaVuePlugin);
 Vue.use(VueRouter);
@@ -25,9 +26,11 @@ pinia.use(piniaPluginPersistedstate);
 
 firebase.auth().onAuthStateChanged((user) => {
   const rootStore = useRootStore();
+  const galaxyListViewStore = useGalaxyListViewStore();
   console.log("auth state changed");
   if (rootStore.user.loggedIn !== (user != null)) {
     rootStore.$reset();
+    galaxyListViewStore.$reset();
   }
   if (user) {
     user?.getIdTokenResult().then((idTokenResult) => {

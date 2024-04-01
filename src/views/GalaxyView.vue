@@ -2,18 +2,16 @@
   <div id="container" class="bg">
     <!-- <div class="left-section" :class="{ hide: hideLeftPanelsFlag }"> -->
     <div class="left-section" data-v-step="1">
-      <GalaxyInfo :course="currentCourse" :teacher="teacher" :draft="draft" />
-      <!-- <MissionsInfo :missions="galaxy.planets"/> -->
-      <PublishGalaxy v-if="showPublish" :course="currentCourse" :courseTasks="courseTasks" />
+      <GalaxyInfo :course="course" :teacher="teacher" :draft="draft" />
+      <PublishGalaxy v-if="showPublish" :course="course" :courseTasks="courseTasks" />
+      <BackButton :toPath="'/'" />
       <AssignedInfo
-        v-if="!draft && cohortsInCourse.length"
+        v-if="!draft && cohortsInCourse.length && teacher"
         :assignCohorts="true"
         :people="peopleInCourse"
         :cohorts="cohortsInCourse"
         :teacher="teacher"
       />
-
-      <BackButton :toPath="'/'" />
     </div>
     <div id="main-section">
       <!-- Map Buttons -->
@@ -61,14 +59,14 @@
     <!--==== Right section ====-->
     <div v-if="!cohortsInCourse" id="right-section">
       <RequestForHelpTeacherFrame
-        :courses="[currentCourse]"
+        :courses="[course]"
         :isTeacher="teacher"
         :students="peopleInCourse"
       />
       <SubmissionTeacherFrame
-        :isTeacher="teacher"
-        :courses="[currentCourse]"
-        :students="teacher ? peopleInCourse : [person]"
+        v-if="teacher"
+        :courses="[course]"
+        :students="peopleInCourse"
         class="mt-4"
       />
     </div>
@@ -80,7 +78,7 @@
       :dialogTitle="dialogTitle"
       :dialogDescription="dialogDescription"
       :editing="editing"
-      :course="currentCourse"
+      :course="course"
       :currentNode="currentNode"
       @closeDialog="closeDialog"
       @openDialog="openDialog"
@@ -94,7 +92,12 @@
       @editNode="showEditDialog"
     />
     <!-- POPUP OUT PANEL (for system preview)-->
-    <EdgeInfoPanel v-if="teacher" :selectedEdge="currentEdge" @closeInfoPanel="closeInfoPanel" />
+    <EdgeInfoPanel
+      v-if="teacher"
+      :courseId="courseId"
+      :selectedEdge="currentEdge"
+      @closeInfoPanel="closeInfoPanel"
+    />
 
     <!-- Galaxy Completed Popup -->
     <v-dialog transition="dialog-bottom-transition" max-width="600" :value="galaxyCompletedDialog">
@@ -119,40 +122,43 @@
 </template>
 
 <script>
-import GalaxyInfo from "@/components/GalaxyInfo.vue";
+import GalaxyInfo from "@/components/GalaxyView/GalaxyInfo.vue";
 import PublishGalaxy from "@/components/GalaxyView/PublishGalaxy.vue";
-import AssignedInfo from "@/components/AssignedInfo.vue";
-import BackButton from "@/components/BackButton.vue";
+import AssignedInfo from "@/components/Reused/AssignedInfo.vue";
+import BackButton from "@/components/Reused/BackButton.vue";
 
-import GalaxyMap from "@/components/GalaxyMap.vue";
+import GalaxyMap from "@/components/GalaxyView/GalaxyMap.vue";
 import GalaxyMapButtons from "@/components/GalaxyView/GalaxyMapButtons.vue";
 
-import CreateEditDeleteNodeDialog from "@/components/CreateEditDeleteNodeDialog.vue";
+import CreateEditDeleteNodeDialog from "@/components/Dialogs/CreateEditDeleteNodeDialog.vue";
 
-import PopupSystemPreview from "@/components/PopupSystemPreview.vue";
-import SolarSystemInfoPanel from "@/components/SolarSystemInfoPanel.vue";
-import EdgeInfoPanel from "@/components/EdgeInfoPanel.vue";
+import PopupSystemPreview from "@/components/GalaxyView/PopupSystemPreview.vue";
+import SolarSystemInfoPanel from "@/components/GalaxyView/SolarSystemInfoPanel.vue";
+import EdgeInfoPanel from "@/components/GalaxyView/EdgeInfoPanel.vue";
 
-import RequestForHelpTeacherFrame from "@/components/RequestForHelpTeacherFrame.vue";
-import SubmissionTeacherFrame from "@/components/SubmissionTeacherFrame.vue";
+import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
+import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 
-import MissionsInfo from "@/components/MissionsInfo.vue";
-import MissionsList from "@/components/MissionsList.vue";
-
-import { getAllPeopleInCourse, getAllCohortsInCourse } from "@/lib/ff";
-import { dbMixins } from "@/mixins/DbMixins";
+import confetti from "canvas-confetti";
+import {
+  fetchAllPeopleInCourseByCourseId,
+  fetchAllCohortsInCourseByCourseId,
+  fetchCohorts,
+  fetchCourseByCourseId,
+  fetchPersonByPersonId,
+  fetchTopicByCourseIdTopicId,
+} from "@/lib/ff";
+import firebase from "firebase/compat/app";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
+import { loggedIntoGalaxyXAPIStatement } from "@/lib/veracityLRS";
 
 export default {
   name: "GalaxyView",
-  mixins: [dbMixins],
   components: {
     GalaxyInfo,
     AssignedInfo,
-    MissionsInfo,
-    MissionsList,
     GalaxyMap,
     BackButton,
     CreateEditDeleteNodeDialog,
@@ -189,7 +195,7 @@ export default {
       infoPopupPosition: {},
       centerFocusPosition: false,
       type: "",
-      currentNode: {},
+      currentNode: null,
       currentEdge: null,
       hoverPopup: false,
       hoverNode: false,
@@ -198,7 +204,6 @@ export default {
       dialogDescription: "",
       editing: false,
       moveNodes: false,
-      course: {},
       peopleInCourse: [],
       cohortsInCourse: [],
       selectedNode: {},
@@ -208,39 +213,41 @@ export default {
       courseTasks: [],
       topicTasks: [],
       galaxyCompletedDialog: false,
+      course: null,
+      xpPointsForThisGalaxy: 2000,
     };
   },
   watch: {
-    async currentCourse(newVal, oldVal) {
-      if (!oldVal.cohort && newVal.cohort)
-        this.cohortsInCourse = await getAllCohortsInCourse(this.courseId, this.person.id);
+    async courseId(newCourseId) {
+      this.course = await fetchCourseByCourseId(newCourseId);
+      this.setCurrentCourseId(newCourseId);
+    },
+    async course(newVal, oldVal) {
+      this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
     },
   },
   async beforeMount() {
-    // check galaxy params match state.currentCourse
-    if (this.$route.params.courseId != this.currentCourse?.id) {
-      const course = await db.collection("courses").doc(this.$route.params.courseId).get();
-      console.log("params dont match setting currentCourse: ", course.data());
-      this.course = course.data();
-      this.setCurrentCourse(course.data());
-    }
+    this.course = await fetchCourseByCourseId(this.courseId);
+    this.setCurrentCourseId(this.courseId);
+    console.log("is course? : ", this.course);
+    console.log("is teacher? : ", this.teacher);
   },
   async mounted() {
     // bind assigned people in this course
     if (this.teacher) {
-      this.peopleInCourse = await getAllPeopleInCourse(this.courseId);
+      this.peopleInCourse = await fetchAllPeopleInCourseByCourseId(this.courseId);
       this.setPeopleInCourse(this.peopleInCourse);
-      this.cohortsInCourse = await getAllCohortsInCourse(this.courseId, this.person.id);
+      this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
     } else {
-      await this.getCohortsByPersonId(this.person);
-      let cohort = await this.cohorts.find((cohort) =>
-        cohort.courses.some((courseId) => courseId === this.currentCourseId),
+      const cohorts = await fetchCohorts();
+      let cohort = cohorts.find((cohort) =>
+        cohort.courses.some((courseId) => courseId === this.courseId),
       );
       this.cohortsInCourse.push(cohort);
       if (this.cohortsInCourse.length) {
-        this.setCurrentCohort(this.cohortsInCourse[0]);
+        this.setCurrentCohortId(this.cohortsInCourse[0].id);
         const students = await Promise.all(
-          this.cohortsInCourse[0].students?.map((student) => this.MXgetPersonByIdFromDB(student)),
+          this.cohortsInCourse[0].students?.map((student) => fetchPersonByPersonId(student)),
         );
         this.peopleInCourse = students;
         this.setPeopleInCourse(students);
@@ -249,43 +256,40 @@ export default {
 
     // Start Vue Tour
     // this.$tours["myTour"].start(); // Disabled for now
+
+    // LRS statement recording a student has logged in to this course
+    if (this.course && !this.teacher) {
+      await loggedIntoGalaxyXAPIStatement({
+        actor: {
+          email: this.person.email,
+          firstName: this.person.firstName,
+          lastName: this.person.lastName,
+          id: this.person.id,
+        },
+        galaxyId: this.courseId,
+      });
+    }
   },
   computed: {
-    ...mapState(useRootStore, [
-      "currentCourseId",
-      "currentCourseNodes",
-      "person",
-      "topicsTasks",
-      "personsTopicsTasks",
-      "currentCourse",
-      "cohorts",
-      "user",
-      "person",
-      "user",
-    ]),
+    ...mapState(useRootStore, ["person", "user"]),
     draft() {
-      return this.currentCourse?.status === "drafting";
+      return this.course?.status === "drafting";
     },
     submitted() {
-      return this.currentCourse?.status === "submitted";
+      return this.course?.status === "submitted";
     },
     teacher() {
-      return this.currentCourse?.mappedBy?.personId === this.person.id || this.user.data.admin;
+      return this.course?.mappedBy.personId === this.person.id || this.user.data.admin;
     },
     student() {
-      return this.person.assignedCourses?.some((courseId) => courseId === this.currentCourseId);
+      return this.person.assignedCourses?.some((courseId) => courseId === this.courseId);
     },
     showPublish() {
-      return (this.user.data.admin && this.currentCourse.status === "submitted") || this.draft;
+      return (this.user.data.admin && this.course?.status === "submitted") || this.draft;
     },
   },
   methods: {
-    ...mapActions(useRootStore, [
-      "getCohortsByPersonId",
-      "setCurrentCohort",
-      "setCurrentCourse",
-      "setPeopleInCourse",
-    ]),
+    ...mapActions(useRootStore, ["setCurrentCohortId", "setCurrentCourseId", "setPeopleInCourse"]),
     setUiMessage(message) {
       this.uiMessage = message;
     },
@@ -359,7 +363,7 @@ export default {
     //   this.infoPopupPosition.y = hoveredNode.DOMy;
     //   this.currentNode = hoveredNode;
     //   //bind tasks for popup preview
-    //   await this.bindTasks(this.currentCourseId, hoveredNode.id);
+    //   await this.bindTasks(this.courseId, hoveredNode.id);
     //   this.infoPopupShow = true;
     // },
     hideLeftPanels(hideFlag) {
@@ -378,7 +382,8 @@ export default {
       // get topic id
       this.clickedTopicId = emittedPayload.topicId;
       // get topic
-      this.clickedTopic = this.currentCourseNodes.find((node) => node.id == this.clickedTopicId);
+      this.clickedTopic = await fetchTopicByCourseIdTopicId(this.courseId, this.clickedTopicId);
+      console.log("clicked topic:", this.clickedTopic);
       // reset topic tasks (to prevent duplicate)
       this.topicTasks = [];
       // loop courseTasks for this topic id (= this.topicTasks)
@@ -446,7 +451,7 @@ export default {
       this.editing = false;
       this.dialogTitle = "";
       this.dialogDescription = "";
-      this.currentNode = {};
+      this.currentNode = null;
       this.currentEdge = null;
       // close panel
       this.closeInfoPanel();
@@ -482,8 +487,69 @@ export default {
       console.log("selected edge emitted:", selected);
       this.currentEdge = selected;
     },
-    galaxyCompleted() {
+    async galaxyCompleted() {
       this.galaxyCompletedDialog = true;
+      // confetti fireworks
+      var duration = 30 * 1000;
+      var animationEnd = Date.now() + duration;
+      var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+      var interval = setInterval(() => {
+        var timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+
+        var particleCount = 50 * (timeLeft / duration);
+        // since particles fall down, start a bit higher than random
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: this.randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+          colors: this.getGMColours(),
+        });
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: this.randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+          colors: this.getGMColours(),
+        });
+      }, 250);
+      // xp points
+      console.log(
+        "updating XP points: " +
+          this.person.xpPointsTotal +
+          " + " +
+          this.xpPointsForThisGalaxy +
+          " = " +
+          (this.person.xpPointsTotal + this.xpPointsForThisGalaxy),
+      );
+      await db
+        .collection("people")
+        .doc(this.person.id)
+        .update({
+          xpPointsTotal: firebase.firestore.FieldValue.increment(this.xpPointsForThisGalaxy),
+        });
+    },
+    randomInRange(min, max) {
+      return Math.random() * (max - min) + min;
+    },
+    getGMColours() {
+      let colours = [];
+      if (this.$vuetify.theme.isDark) {
+        colours = [
+          this.$vuetify.theme.themes.dark.missionAccent,
+          this.$vuetify.theme.themes.dark.baseAccent,
+          // this.$vuetify.theme.themes.dark.galaxyAccent,
+        ];
+      } else {
+        colours = [
+          this.$vuetify.theme.themes.light.missionAccent,
+          this.$vuetify.theme.themes.light.baseAccent,
+          // this.$vuetify.theme.themes.light.galaxyAccent,
+        ];
+      }
+      return colours;
     },
   },
 };

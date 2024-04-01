@@ -1,14 +1,10 @@
-import { getCourseById, getStudentByEmail } from "@/lib/ff";
-import { db } from "@/store/firestoreConfig";
-import { DateTime } from "luxon";
-
 const auth = "Basic " + btoa(import.meta.env.VITE_VERACITY_LRS_SECRET);
 
 /* ----------------------
   SEND xAPI STATEMENTS
 ------------------------- */
 
-// ========== Start Task (make task active)
+// ========== Start Galaxy
 export const startGalaxyXAPIStatement = (actor, context) => {
   console.log("sending student xAPI statement... galaxy started...");
   const statement = {
@@ -822,559 +818,52 @@ export const studentOfflineXAPIStatement = (actor) => {
   });
 };
 
-/* ----------------------
-  QUERY xAPI STATEMENTS
-------------------------- */
-
-export const queryXAPIStatement = async (payloadObj) => {
-  console.log("sending search xAPI query...");
-  const url = new URL("https://galaxymaps.lrs.io/xapi/statements/search");
-  const parameters = url.searchParams;
-  // use veracist LRS v2 mode
-  parameters.set("mode", "v2");
-  // add search params as json
-  url.searchParams.set("query", JSON.stringify(payloadObj));
-  // get query from LRS
-  const res = await fetch(url, {
-    method: "GET",
-    headers: {
-      Authorization: auth,
-    },
-  });
-
-  return res.json();
-};
-
-export const advancedQueryXAPIStatement = async (payloadObj) => {
-  console.log("sending advanced xAPI query...");
-  // post advanced query
-  const res = await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: auth,
-    },
-    body: JSON.stringify(payloadObj),
-  });
-  const resultBody = res.json();
-  console.log("res:", resultBody);
-};
-
-export const getStudentsCoursesXAPIQuery = async (person) => {
-  const aggregationQuery = [
-    {
-      $match: {
-        "statement.context.contextActivities.grouping.id": {
-          $parseRegex: { regex: "course" },
-        },
-        "statement.actor.mbox": {
-          $parseRegex: { regex: person.email },
-        },
-      },
-    },
-    {
-      $group: {
-        _id: {
-          course: "$statement.context.contextActivities.grouping.id",
-          actor: "$statement.actor.mbox",
-        },
-        statements: {
-          $push: {
-            verb: "$statement.verb",
-            timestamp: "$statement.timestamp",
-            context: "$statement.object.definition.name.en-nz",
-            description: "$statement.object.definition.description.en-nz",
-            topic: "$statement.context.contextActivities.parent.id",
-            task: "$statement.object.id",
-          },
-        },
-      },
-    },
-  ];
-
-  const res = await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: auth,
-    },
-    body: JSON.stringify(aggregationQuery),
-  });
-  const resultBody = await res.json();
-  const courses = await sanitiseCourseDataFromLRS(resultBody);
-  return courses;
-};
-
-export const getActiveTaskXAPIQuery = async (person) => {
-  // console.log("querying LRS for students active tasks...");
-  const aggregationQuery = [
-    // only for this person
-    {
-      $match: {
-        "statement.actor.mbox": {
-          $parseRegex: { regex: person.email },
-        },
-      },
-    },
-    // sort by ascending
-    {
-      $sort: {
-        "statement.timestamp": 1,
-      },
-    },
-    // group by actor, course and task. pushing statements
-    {
-      $group: {
-        _id: {
-          actor: "$statement.actor.mbox",
-          course: "$statement.object.definition.extensions.https://www.galaxymaps.io/course/id/",
-          task: "$statement.object.definition.extensions.https://www.galaxymaps.io/task/id/",
-        },
-        lastStatement: {
-          $last: {
-            verb: "$statement.verb.display.en-nz",
-            timestamp: "$statement.timestamp",
-            description: "$statement.object.definition.description.en-nz",
-            task: "$statement.object.definition.extensions.https://www.galaxymaps.io/task/id/",
-            topic: "$statement.object.definition.extensions.https://www.galaxymaps.io/topic/id/",
-          },
-        },
-      },
-    },
-    //filter started
-    {
-      $match: {
-        "lastStatement.verb": "started",
-      },
-    },
-    // group just by course
-    {
-      $group: {
-        _id: {
-          actor: "$_id.actor",
-          course: "$_id.course",
-        },
-        lastStatement: {
-          $last: {
-            verb: "$lastStatement.verb",
-            timestamp: "$lastStatement.timestamp",
-            description: "$lastStatement.description",
-            task: "$lastStatement.task",
-            topic: "$lastStatement.topic",
-          },
-        },
-      },
-    },
-  ];
-
-  const res = await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: auth,
-    },
-    body: JSON.stringify(aggregationQuery),
-  });
-  const resultBody = await res.json();
-  // console.log("getActiveTaskXAPIQuery: res => ", resultBody);
-  return resultBody;
-};
-
-export const getActivityLogXAPIQuery = async (person) => {
-  // console.log("querying LRS for students active tasks...");
-  const aggregationQuery = [
-    // only for this person
-    {
-      $match: {
-        "statement.actor.mbox": {
-          $parseRegex: { regex: person.email },
-        },
-      },
-    },
-    // sort by ascending
-    {
-      $sort: {
-        "statement.timestamp": -1,
-      },
-    },
-    // group by actor, course and task. pushing statements
-    {
-      $group: {
-        _id: {
-          actor: "$statement.actor.mbox",
-        },
-        statements: {
-          $push: {
-            verb: "$statement.verb.display.en-nz",
-            timestamp: "$statement.timestamp",
-            description: "$statement.object.definition.description.en-nz",
-            task: "$statement.object.definition.extensions.https://www.galaxymaps.io/task/id/",
-            topic: "$statement.object.definition.extensions.https://www.galaxymaps.io/topic/id/",
-            course: "$statement.object.definition.extensions.https://www.galaxymaps.io/course/id/",
-          },
-        },
-      },
-    },
-  ];
-
-  const res = await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: auth,
-    },
-    body: JSON.stringify(aggregationQuery),
-  });
-  const resultBody = await res.json();
-
-  // console.log("getActivityLogXAPIQuery: res => ", resultBody[0].statements);
-  return resultBody[0].statements;
-};
-
-export const getCohortsCourseDataXAPIQuery = async (payload) => {
+// loggedIntoGalaxyXAPIStatement
+// ========== Students opens galaxy
+export const loggedIntoGalaxyXAPIStatement = (payload) => {
   // if no data, dont bother
-  if (!payload.studentsArr || !payload.coursesArr) return;
+  if (!payload.galaxyId || !payload.actor) return;
 
-  // convert studentIds to mailto:email string
-  const personIdsArrToEmailsArr = [];
-  for (const studentId of payload.studentsArr) {
-    const studentSnapshot = await db.collection("people").doc(studentId).get();
-    if (!studentSnapshot.exists) {
-      continue;
-    }
-    personIdsArrToEmailsArr.push("mailto:" + studentSnapshot.data().email);
-  }
-
-  // convert courseIds to courseId strings
-  const courseIdsAsStrings = [];
-  for (const courseId of payload.coursesArr) {
-    courseIdsAsStrings.push(String(courseId));
-  }
-
-  const aggregationQuery = [
-    // match with cohorts courses. and only started & completed statements
-    {
-      $match: {
-        "statement.object.definition.extensions.https://www.galaxymaps.io/course/id/": {
-          $in: courseIdsAsStrings,
+  console.log("sending student xAPI statement... student signed into galaxy: " + payload.galaxyId);
+  const statement = {
+    actor: {
+      name: payload.actor.firstName + " " + payload.actor.lastName,
+      mbox: "mailto:" + payload.actor.email,
+    },
+    verb: {
+      id: "https://brindlewaye.com/xAPITerms/verbs/loggedin/",
+      display: { "en-nz": "logged in to Galaxy" },
+    },
+    object: {
+      id: "https://www.galaxymaps.io/isonGalaxy/" + payload.galaxyId + "/" + new Date(),
+      definition: {
+        description: {
+          "en-nz": "Logged in",
         },
-        "statement.verb.display.en-nz": { $in: ["started", "completed"] },
+        extensions: {
+          "https://www.galaxymaps.io/course/id/": payload.galaxyId,
+          "https://www.galaxymaps.io/person/id/": payload.actor.id,
+        },
       },
     },
-    // group by actor & course
-    {
-      $group: {
-        _id: {
-          actor: "$statement.actor.mbox",
-          course: "$statement.object.definition.extensions.https://www.galaxymaps.io/course/id/",
-        },
-        statements: {
-          $push: {
-            verb: "$statement.verb.display.en-nz",
-            timestamp: "$statement.timestamp",
-            description: "$statement.object.definition.description.en-nz",
-            task: "$statement.object.definition.extensions.https://www.galaxymaps.io/task/id/",
-            topic: "$statement.object.definition.extensions.https://www.galaxymaps.io/topic/id/",
+    context: {
+      contextActivities: {
+        grouping: [
+          {
+            id: "https://www.galaxymaps.io/userStatus/",
+            objectType: "Activity",
           },
-        },
+        ],
       },
     },
-    // filter these by cohorts students
-    {
-      $match: {
-        "_id.actor": { $in: personIdsArrToEmailsArr },
-      },
-    },
-    // group by course. nesting actor and their statements
-    {
-      $group: {
-        _id: {
-          course: "$_id.course",
-        },
-        actors: {
-          $push: {
-            actor: "$_id.actor",
-            statements: "$statements",
-          },
-        },
-      },
-    },
-  ];
+  };
 
-  const res = await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
+  return fetch("https://galaxymaps.lrs.io/xapi/statements", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: auth,
     },
-    body: JSON.stringify(aggregationQuery),
+    body: JSON.stringify(statement),
   });
-  const resultBody = await res.json();
-  return sanitiseCohortsCourseDataFromLRS(resultBody);
 };
-
-export const getStudentsTimeDataXAPIQuery = async (payload) => {
-  // if no data, dont bother
-  if (!payload.studentsArr) return;
-
-  // convert studentIds to mailto:email string
-  const personIdsArrToEmailsArr = [];
-  for (const studentId of payload.studentsArr) {
-    const studentSnapshot = await db.collection("people").doc(studentId).get();
-    if (!studentSnapshot.exists) {
-      continue;
-    }
-    personIdsArrToEmailsArr.push("mailto:" + studentSnapshot.data().email);
-  }
-
-  const aggregationQuery = [
-    // match with cohorts courses. and only started & completed statements
-    {
-      $match: {
-        "statement.actor.mbox": { $in: personIdsArrToEmailsArr },
-        // "statement.verb.display.en-nz": "logged in" ,
-        "statement.verb.display.en-nz": { $in: ["logged in", "logged out"] },
-      },
-    },
-    // group by actor & course
-    {
-      $group: {
-        _id: {
-          actor: "$statement.actor.mbox",
-        },
-        activity: {
-          $push: {
-            verb: "$statement.verb.display.en-nz",
-            timestamp: "$statement.timestamp",
-          },
-        },
-      },
-    },
-  ];
-
-  const res = await fetch("https://galaxymaps.lrs.io/xapi/statements/aggregate", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: auth,
-    },
-    body: JSON.stringify(aggregationQuery),
-  });
-  const resultBody = await res.json();
-  // console.log("Activity status for Students in Cohort:", resultBody);
-  return sanitiseCohortsActivityDataFromLRS(resultBody);
-};
-
-// export const VQLXAPIQuery = async () => {
-//   const VQLQuery = [
-//     {
-//       filter: {
-//         "actor.id": "mailto:waipuna@gmail.com",
-//       },
-//       process: [{}],
-//     },
-//   ];
-
-//   return await fetch("https://galaxymaps.lrs.io/xapi/statements/analyze", {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/json",
-//       Authorization: auth,
-//     },
-//     body: JSON.stringify(VQLQuery),
-//   })
-//     .then((res) => res.json())
-//
-//     .then((res) => {
-//       console.log("res:", res);
-//     });
-// };
-
-//============ SANITISE FUNCTIONS
-
-async function sanitiseCourseDataFromLRS(res) {
-  const sanitisedCourses = [];
-
-  let taskCompletedCount = 0;
-  let topicCompletedCount = 0;
-
-  for (const group of res) {
-    const course = await courseIRIToCourseId(group);
-
-    // sanitise statements data
-    const activities = group.statements.map((statement, index) => {
-      if (statement.description.includes("Completed Task:")) taskCompletedCount++;
-      if (statement.description.includes("Completed Topic:")) topicCompletedCount++;
-
-      const [action, title] = statement.description.split(": ");
-      const [status, type] = action.split(" ");
-      const id = statement.task.split("/").pop();
-
-      const newStatement = {
-        timeStamp: statement.timestamp,
-        index,
-        status,
-        type,
-        title,
-        id,
-        context: statement.context,
-      };
-      return newStatement;
-    });
-
-    const courseObj = {
-      course,
-      activities: activities.reverse(),
-      taskCompletedCount,
-      topicCompletedCount,
-    };
-
-    sanitisedCourses.push(courseObj);
-  }
-  return sanitisedCourses;
-}
-async function sanitiseCohortsCourseDataFromLRS(res) {
-  const sanitisedCourses = [];
-
-  // group = course
-  for (const group of res) {
-    // get course
-    const courseId = group._id.course;
-    const course = await getCourseById(courseId);
-
-    // array for many students course data
-    const students = [];
-
-    // Get all the people first
-    const people = await Promise.all(
-      group.actors.map((x) => getStudentByEmail(x.actor.split(":")[1])),
-    );
-
-    // (for getCohortsCourseDataXAPIQuery) statements are nested under actors
-    for (const student of group.actors) {
-      // get person from db
-      const email = student.actor.split(":")[1];
-      const person = people.find((x) => x.email === email);
-
-      let taskCompletedCount = 0;
-      let topicCompletedCount = 0;
-
-      const activities = student.statements.map((statement, index) => {
-        if (statement.description.includes("Completed Task:")) taskCompletedCount++;
-        if (statement.description.includes("Completed Topic:")) topicCompletedCount++;
-
-        const [action, title] = statement.description.split(": ");
-        const [status, type] = action.split(" ");
-        const id = statement.task;
-
-        const newStatement = {
-          timeStamp: statement.timestamp,
-          index,
-          status,
-          type,
-          title,
-          id,
-        };
-        return newStatement;
-      });
-
-      // individual student course data (in loop)
-      const studentObj = {
-        activities: activities.reverse(),
-        taskCompletedCount,
-
-        person: person,
-      };
-      // push individual student data to students array
-      students.push(studentObj);
-    }
-    // courses have many students data (of the cohort)
-    const courseObj = {
-      course,
-      students: students,
-    };
-    sanitisedCourses.push(courseObj);
-  }
-
-  return sanitisedCourses;
-}
-
-async function sanitiseCohortsActivityDataFromLRS(res) {
-  const santisedActivity = [];
-
-  // Get all the people first
-  const people = await Promise.all(res.map((x) => getStudentByEmail(x._id.actor.split(":")[1])));
-
-  for (const student of res) {
-    // get person from db
-    const email = student._id.actor.split(":")[1];
-    const person = people.find((x) => x.email === email);
-
-    const personDaysActivity = [];
-    let day = 0;
-    let newStatement = {
-      dayISOTimestamp: "",
-      minutesActiveTotal: 0,
-    };
-    // loop activities
-    for (const [index, statement] of student.activity.entries()) {
-      if (!statement.timestamp || !statement.verb) continue;
-      // get date to compare
-      const dayISOTimestamp = statement.timestamp.split("T")[0];
-      const newTimestamp = DateTime.fromISO(statement.timestamp);
-      const newDay = newTimestamp.get("day");
-      //same day
-      if (day == newDay) {
-        const prevStatement = student.activity[index - 1];
-        // if (!prevStatement) continue
-        // console.log("prevStatement", prevStatement);
-        // console.log("statement", statement);
-        if (statement.verb == "logged out" && prevStatement.verb == "logged in") {
-          // calc off - on
-          const timeLoggedOff = DateTime.fromISO(statement.timestamp);
-          const timeLoggedOn = DateTime.fromISO(prevStatement.timestamp);
-          const diff = timeLoggedOff.diff(timeLoggedOn).as("minutes");
-          // add to days totals
-          newStatement.minutesActiveTotal += diff;
-        }
-      }
-      // set new day
-      if (day !== newDay) {
-        day = newDay;
-      }
-      // check if last activity for that day. if it is save time totals for the day.
-      let nextDay = 0;
-      const nextStatement = student.activity[index + 1];
-      if (!nextStatement) {
-        nextDay = day + 1; // if there is no nextStatement... just increment to save last days statements
-      } else {
-        nextDay = DateTime.fromISO(nextStatement.timestamp).get("day");
-      }
-      if (nextDay > day) {
-        // save previous day totals
-        newStatement.dayISOTimestamp = dayISOTimestamp;
-        personDaysActivity.push(newStatement);
-        // reset newStatement object
-        newStatement = {
-          dayISOTimestamp: "",
-          minutesActiveTotal: 0,
-        };
-      }
-    } // end persons statments
-    const studentActivity = {
-      person: person,
-      activity: personDaysActivity,
-    };
-    santisedActivity.push(studentActivity);
-  } // end person
-  return santisedActivity;
-}
-
-async function courseIRIToCourseId(course) {
-  // get course id from iri
-  const courseIRI = course._id.course[0];
-  const courseId = courseIRI.split("/course/")[1];
-  // get course name
-  const courseContext = await getCourseById(courseId);
-  return courseContext;
-}
