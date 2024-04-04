@@ -299,14 +299,20 @@ export default {
      */
     afterDrawing(canvasContext) {
       // Always draw title regardless of scale (zoom)
-      for (const course of this.courses) {
-        this.drawCourseTitle(canvasContext, course);
-      }
 
       const currentScale = this.$refs.network.getScale();
+      console.log("current scale:", currentScale);
+
+      // for (const course of this.courses) {
+
+      // }
 
       // Draw extra components when scale is over 0.3
-      if (currentScale > 0.3) {
+      if (currentScale < 0.7) {
+        for (const course of this.courses) {
+          this.drawCourseTitle(canvasContext, course);
+          this.drawCourseProgressionCircle(canvasContext, course, "50");
+        }
         // Draw dialog if course highlighted
         // if (this.highlightCourse != null) {
         //   const course = this.courses.find((x) => x.id === this.highlightCourse);
@@ -359,6 +365,11 @@ export default {
         //     y: courseBoundary.top.y + 10,
         //   });
         // }
+      } else if (currentScale > 0.7) {
+        // Draw extra components when scale is over 0.7
+        for (const course of this.courses) {
+          this.drawCourseProgressionCircle(canvasContext, course, "20");
+        }
       }
 
       if (this.needsCentering === true) {
@@ -376,11 +387,6 @@ export default {
     drawCourseTitle(canvasContext, course) {
       const courseBoundary = this.relativeGalaxyBoundaries.find((x) => x.id === course.id);
       const courseActivity = this.coursesActivity.find((x) => x.course.id === course.id);
-      const progressFraction =
-        courseActivity != null
-          ? courseActivity.topicCompletedCount / courseActivity.course.topicTotal
-          : 0;
-      const displayPercentage = Math.round(progressFraction * 100);
 
       canvasContext.fillStyle = "rgba(255, 255, 255, 1)";
       canvasContext.textAlign = "left";
@@ -389,10 +395,73 @@ export default {
       // Give at least 500px width for the title
       const maxWidth = Math.max(courseBoundary.width, 500);
 
-      canvasContext.font = 'bold 30px "Arial"';
-      const courseTitleBlockInfo = layoutBlock(canvasContext, course.title, {
+      canvasContext.font = 'bold 50px "Arial"';
+      canvasContext.fillStyle = this.$vuetify.theme.isDark
+        ? this.$vuetify.theme.themes.dark.galaxyAccent
+        : this.$vuetify.theme.themes.light.galaxyAccent;
+
+      const courseTitleBlockInfo = layoutBlock(canvasContext, course.title.toUpperCase(), {
         maxWidth: maxWidth,
       });
+
+      const courseBoundaryXCenter = courseBoundary.left.x + courseBoundary.width / 2;
+      const courseBoundaryYCenter = courseBoundary.top.y + courseBoundary.height / 2;
+
+      const contentWidth = courseTitleBlockInfo.width + 20 + 50; // 20 for spacing and 50 for progress circle
+      const contentHeight = courseTitleBlockInfo.height; // 20 for spacing and 50 for progress circle
+
+      // const courseTitleX = courseBoundaryXCenter - contentWidth / 2; // middle
+      // const courseTitleY = courseBoundary.top.y - 40 - courseTitleBlockInfo.height; // 40 for spacing away from nodes
+      const courseTitleX = courseBoundary.left.x - contentWidth;
+      const courseTitleY = courseBoundaryYCenter - contentHeight / 2; // 40 for spacing away from nodes
+
+      // === Box border around title
+      // canvasContext.beginPath();
+      // --- Box border stroke
+      // const padding = 50;
+      // canvasContext.strokeStyle = this.$vuetify.theme.isDark
+      //   ? this.$vuetify.theme.themes.dark.galaxyAccent
+      //   : this.$vuetify.theme.themes.light.galaxyAccent;
+      // canvasContext.lineWidth = 3;
+      // canvasContext.rect(
+      //   courseTitleX - padding,
+      //   courseTitleY - padding,
+      //   courseTitleBlockInfo.width + padding * 2,
+      //   courseTitleBlockInfo.height + padding * 2,
+      // );
+      // --- Box background fill
+      // canvasContext.fillStyle = this.$vuetify.theme.isDark
+      //   ? this.$vuetify.theme.themes.dark.background
+      //   : this.$vuetify.theme.themes.light.background;
+      // canvasContext.fill();
+      // canvasContext.stroke();
+      // canvasContext.closePath();
+
+      canvasContext.font = 'bold 50px "Arial"';
+
+      drawBlock(canvasContext, courseTitleBlockInfo, {
+        x: courseTitleX,
+        y: courseTitleY,
+      });
+    },
+    drawCourseProgressionCircle(canvasContext, course, fontSize) {
+      const courseBoundary = this.relativeGalaxyBoundaries.find((x) => x.id === course.id);
+      const courseActivity = this.coursesActivity.find((x) => x.course.id === course.id);
+
+      const progressFraction =
+        courseActivity != null
+          ? courseActivity.topicCompletedCount / courseActivity.course.topicTotal
+          : 0;
+      const displayPercentage = Math.round(progressFraction * 100);
+
+      // canvasContext.fillStyle = "rgba(255, 255, 255, 1)";
+      canvasContext.textAlign = "left";
+      canvasContext.textBaseline = "top";
+
+      canvasContext.font = 'bold 50px "Arial"';
+      canvasContext.fillStyle = this.$vuetify.theme.isDark
+        ? this.$vuetify.theme.themes.dark.galaxyAccent
+        : this.$vuetify.theme.themes.light.galaxyAccent;
 
       canvasContext.font = 'bold 14px "Arial"';
       const progressTitleBlockInfo = layoutBlock(canvasContext, `${displayPercentage}%`, {
@@ -400,54 +469,75 @@ export default {
       });
 
       const courseBoundaryXCenter = courseBoundary.left.x + courseBoundary.width / 2;
-
-      const contentWidth = courseTitleBlockInfo.width + 20 + 50; // 20 for spacing and 50 for progress circle
-
-      const courseTitleX = courseBoundaryXCenter - contentWidth / 2;
-      const courseTitleY = courseBoundary.top.y - 40 - courseTitleBlockInfo.height; // 40 for spacing away from nodes
-
-      const progressCircleX = courseTitleX + courseTitleBlockInfo.width + 20 + 25;
-      const progressCircleY = courseBoundary.top.y - 40 - courseTitleBlockInfo.height / 2;
-
-      const progressTitleX = progressCircleX - progressTitleBlockInfo.width / 2;
-      const progressTitleY = progressCircleY - progressTitleBlockInfo.height / 2;
-
-      canvasContext.font = 'bold 30px "Arial"';
-      drawBlock(canvasContext, courseTitleBlockInfo, {
-        x: courseTitleX,
-        y: courseTitleY,
-      });
-
-      canvasContext.font = 'bold 14px "Arial"';
-      drawBlock(canvasContext, progressTitleBlockInfo, {
-        x: progressTitleX,
-        y: progressTitleY,
-      });
+      const courseBoundaryYCenter = courseBoundary.top.y + courseBoundary.height / 2;
 
       // Circles start from the right so we need to calculate an offset to use
       const arcCircleOffset = -(90 * (Math.PI / 180));
+      const radius = 400;
+
+      // compute x and y coordinates of the end angle relative to canvas
+      // as want to show progress title at this point
+      // position: end angle of arc
+      const padding = 20;
+      const progressTitleX =
+        courseBoundaryXCenter +
+        Math.cos(Math.PI * 2 * progressFraction + arcCircleOffset) * radius -
+        progressTitleBlockInfo.width / 2 -
+        padding;
+      const progressTitleY =
+        courseBoundaryYCenter +
+        Math.sin(Math.PI * 2 * progressFraction + arcCircleOffset) * radius +
+        padding;
+
+      canvasContext.font = "bold " + fontSize + 'px "Arial"';
+
+      // add progress if not 0%
+      if (progressFraction != 0) {
+        drawBlock(canvasContext, progressTitleBlockInfo, {
+          x: progressTitleX,
+          y: progressTitleY,
+        });
+      }
 
       // Draw the background cirlce
       canvasContext.beginPath();
-      canvasContext.strokeStyle = "rgba(255, 255, 255, 0.31)";
+      canvasContext.strokeStyle = "rgba(255, 255, 255, 0.1)";
       canvasContext.lineWidth = 4;
-      canvasContext.arc(progressCircleX, progressCircleY, 25, 0, Math.PI * 2);
+      canvasContext.arc(courseBoundaryXCenter, courseBoundaryYCenter, radius, 0, Math.PI * 2);
       canvasContext.stroke();
       canvasContext.closePath();
 
-      // Now the foreground progression segment
-      canvasContext.beginPath();
-      canvasContext.strokeStyle = "#69A1E2";
-      canvasContext.lineWidth = 4;
-      canvasContext.arc(
-        progressCircleX,
-        progressCircleY,
-        25,
-        0 + arcCircleOffset,
-        Math.PI * 2 * progressFraction + arcCircleOffset,
-      );
-      canvasContext.stroke();
-      canvasContext.closePath();
+      // Now the foreground progression segment (if not 0%)
+      if (progressFraction != 0) {
+        canvasContext.beginPath();
+        canvasContext.strokeStyle = this.hexToRGBA(
+          this.$vuetify.theme.isDark
+            ? this.$vuetify.theme.themes.dark.galaxyAccent
+            : this.$vuetify.theme.themes.light.galaxyAccent,
+          0.5, // 50% opacity
+        );
+        canvasContext.lineWidth = 8;
+        canvasContext.arc(
+          courseBoundaryXCenter,
+          courseBoundaryYCenter,
+          radius,
+          0 + arcCircleOffset,
+          Math.PI * 2 * progressFraction + arcCircleOffset,
+        );
+        canvasContext.stroke();
+        canvasContext.closePath();
+      }
+    },
+    hexToRGBA(hex, opacity) {
+      let r = parseInt(hex.slice(1, 3), 16),
+        g = parseInt(hex.slice(3, 5), 16),
+        b = parseInt(hex.slice(5, 7), 16);
+
+      if (opacity !== undefined) {
+        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+      } else {
+        return `rgb(${r}, ${g}, ${b})`;
+      }
     },
     animationFinished() {
       console.log("animation finished");
@@ -509,6 +599,8 @@ export default {
       const closestNode = this.$refs.network.getNode(closest.id);
 
       this.$emit("courseClicked", { courseId: closestNode.courseId });
+
+      // hide canvas title
     },
     pointDistance(pt1, pt2) {
       var diffX = pt1.x - pt2.x;

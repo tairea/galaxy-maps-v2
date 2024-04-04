@@ -14,7 +14,7 @@
             ><span>{{ courseStatus }}</span> Galaxy</span
           >
           <br />
-          <span>{{ course.title }}</span>
+          <span class="course-title">{{ course.title }}</span>
         </p>
         <v-img v-if="course.image" class="galaxy-image" :src="course.image.url"></v-img>
         <p ref="description" class="mt-2 galaxy-description">
@@ -418,6 +418,11 @@ export default {
 
   .ss-details {
     padding: 20px;
+
+    .course-title {
+      color: var(--v-galaxyAccent-base);
+      font-weight: 800;
+    }
 
     .galaxy-description {
       color: var(--v-missionAccent-base);
