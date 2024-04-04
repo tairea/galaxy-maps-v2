@@ -298,16 +298,10 @@ export default {
      * @param {CanvasRenderingContext2D} canvasContext
      */
     afterDrawing(canvasContext) {
-      // Always draw title regardless of scale (zoom)
-
+      // get current scale of canvas (zoom level)
       const currentScale = this.$refs.network.getScale();
-      console.log("current scale:", currentScale);
 
-      // for (const course of this.courses) {
-
-      // }
-
-      // Draw extra components when scale is over 0.3
+      // Draw extra components when scale is under 0.7 aka zoomed out
       if (currentScale < 0.7) {
         for (const course of this.courses) {
           this.drawCourseTitle(canvasContext, course);
@@ -366,7 +360,7 @@ export default {
         //   });
         // }
       } else if (currentScale > 0.7) {
-        // Draw extra components when scale is over 0.7
+        // Draw extra components when scale is over 0.7 aka zoomed in
         for (const course of this.courses) {
           this.drawCourseProgressionCircle(canvasContext, course, "20");
         }
@@ -454,7 +448,6 @@ export default {
           : 0;
       const displayPercentage = Math.round(progressFraction * 100);
 
-      // canvasContext.fillStyle = "rgba(255, 255, 255, 1)";
       canvasContext.textAlign = "left";
       canvasContext.textBaseline = "top";
 
@@ -475,10 +468,10 @@ export default {
       const arcCircleOffset = -(90 * (Math.PI / 180));
       const radius = 400;
 
-      // compute x and y coordinates of the end angle relative to canvas
-      // as want to show progress title at this point
-      // position: end angle of arc
+      // padding for the progress title
       const padding = 20;
+
+      // compute x and y coordinates of the end angle relative to course centers
       const progressTitleX =
         courseBoundaryXCenter +
         Math.cos(Math.PI * 2 * progressFraction + arcCircleOffset) * radius -
@@ -510,6 +503,7 @@ export default {
       // Now the foreground progression segment (if not 0%)
       if (progressFraction != 0) {
         canvasContext.beginPath();
+        // convert vuetify theme colour to rgba
         canvasContext.strokeStyle = this.hexToRGBA(
           this.$vuetify.theme.isDark
             ? this.$vuetify.theme.themes.dark.galaxyAccent
