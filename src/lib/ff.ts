@@ -356,7 +356,14 @@ export const fetchStudentActivityLogByPersonId = async (
 
 export const fetchStudentCoursesActivityByPersonId = async (
   personId: string,
-): Promise<Record<string, any>[]> => {
+): Promise<
+  {
+    course: ICourse;
+    activities: Record<string, any>;
+    taskCompletedCount: number;
+    topicCompletedCount: number;
+  }[]
+> => {
   const data = {
     personId,
   };
