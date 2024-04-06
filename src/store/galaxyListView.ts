@@ -1,4 +1,8 @@
-import { fetchCourses, fetchCourseMapEdgesAndNodesByCourseId } from "@/lib/ff";
+import {
+  fetchCourses,
+  fetchCourseMapEdgesAndNodesByCourseId,
+  fetchStudentCoursesActivityByPersonId,
+} from "@/lib/ff";
 import { defineStore } from "pinia";
 import { SerializableMap } from "./_helpers";
 import type { ICourse, IMapEdge, IMapNode } from "./_types";
@@ -7,9 +11,16 @@ export const useGalaxyListViewStore = defineStore({
   id: "galaxyListView",
   state: () => ({
     isLoadingCourses: false,
+    isLoadingActivity: false,
     courses: [] as ICourse[],
     courseNodesMap: new SerializableMap<string, IMapNode[]>(),
     courseEdgesMap: new SerializableMap<string, IMapEdge[]>(),
+    coursesActivity: [] as {
+      course: ICourse;
+      activities: Record<string, any>;
+      taskCompletedCount: number;
+      topicCompletedCount: number;
+    }[],
     slug: null as string | null,
     selectedCourseId: null as string | null,
   }),
@@ -74,6 +85,18 @@ export const useGalaxyListViewStore = defineStore({
       } finally {
         this.isLoadingCourses = false;
       }
+    },
+    async loadCoursesActivity(personId: string) {
+      this.isLoadingActivity = true;
+      try {
+        const coursesActivity = await fetchStudentCoursesActivityByPersonId(personId);
+        this.coursesActivity = coursesActivity;
+      } finally {
+        this.isLoadingActivity = false;
+      }
+    },
+    async resetCoursesActivity() {
+      this.coursesActivity = [];
     },
     async setSelectedCourseId(courseId: string | null) {
       if (this.selectedCourseId === courseId) {
