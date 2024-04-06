@@ -13,6 +13,7 @@
         :courses="courses"
         :courseEdgesMap="courseEdgesMap"
         :courseNodesMap="courseNodesMap"
+        :coursesActivity="coursesActivity"
         :highlightCourse="selectedCourseId"
         :isLoadingCourses="isLoadingCourses"
         @courseClicked="courseClicked($event)"
@@ -111,7 +112,9 @@ export default {
       "courses",
       "courseEdgesMap",
       "courseNodesMap",
+      "coursesActivity",
       "isLoadingCourses",
+      "isLoadingActivity",
       "selectedCourseId",
     ]),
     selectedCourse() {
@@ -119,8 +122,13 @@ export default {
     },
   },
   watch: {
-    async user() {
-      await this.loadCourses(this.slug);
+    async user(newUser) {
+      await Promise.all([
+        this.loadCourses(this.slug),
+        newUser.data != null
+          ? this.loadCoursesActivity(newUser.data.id)
+          : this.resetCoursesActivity(),
+      ]);
     },
     "$route.query.map": {
       handler(courseId) {
@@ -142,7 +150,6 @@ export default {
     },
   },
   created() {
-    console.log("created");
     // We don't care about waiting for this to finish before completing mounted
     // because when it's finished it will automatically update our list of courses
     this.loadCourses(this.slug).then(() => {
@@ -157,10 +164,18 @@ export default {
         this.setSelectedCourseId(courseId);
       }
     });
+    if (this.user.data != null) {
+      this.loadCoursesActivity(this.user.data.id);
+    }
   },
   methods: {
     ...mapActions(useRootStore, ["setCurrentCourseId"]),
-    ...mapActions(useGalaxyListViewStore, ["loadCourses", "setSelectedCourseId"]),
+    ...mapActions(useGalaxyListViewStore, [
+      "loadCourses",
+      "loadCoursesActivity",
+      "resetCoursesActivity",
+      "setSelectedCourseId",
+    ]),
     courseClicked(emittedPayload) {
       this.$router.replace({
         query: {
@@ -174,8 +189,6 @@ export default {
           map: undefined,
         },
       });
-      // this.setSelectedCourseId(null);
-      // this.$refs.listPanel.courseClicked();
     },
   },
 };

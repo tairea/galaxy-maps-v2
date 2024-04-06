@@ -7,13 +7,11 @@
 </template>
 
 <script>
-import PopupStudentProgress from "@/components/CohortView/StudentDataIterator/StudentCard/PopupStudentProgress.vue";
 import StudentCircularProgress from "@/components/CohortView/StudentDataIterator/StudentCard/StudentCircularProgress.vue";
 
 export default {
   name: "StudentCardProgress",
   components: {
-    PopupStudentProgress,
     StudentCircularProgress,
   },
   props: ["student", "activities"],
