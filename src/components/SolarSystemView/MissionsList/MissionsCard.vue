@@ -23,10 +23,10 @@
           <div v-if="teacher">
             <CreateEditDeleteMissionDialog
               :edit="true"
+              :topicId="topic.id"
+              :taskId="task.id"
               :taskToEdit="task"
-              :taskId="id"
               :index="index"
-              :topicId="topicId"
               :taskColor="task.color"
             />
           </div>
@@ -135,8 +135,8 @@
           <div v-if="unlocked" class="d-flex justify-center">
             <!-- Start Mission button -->
             <StartMissionDialogV2
-              :topicId="topicId"
-              :taskId="id"
+              :topicId="topic.id"
+              :taskId="task.id"
               :task="task"
               :topicActive="topicActive"
             />
@@ -240,15 +240,16 @@
       <!-- expansion content -->
       <ActiveMissionsCard
         v-if="active || declined"
+        :course="course"
+        :topic="topic"
         :task="task"
-        :topicId="topicId"
         :active="active"
         :declined="declined"
       />
       <SelectedMissionsCard
         v-else
+        :topicId="topic.id"
         :task="task"
-        :topicId="topicId"
         :completed="completed"
         :inreview="inreview"
       />
@@ -262,7 +263,6 @@ import StartMissionDialog from "@/components/Dialogs/StartMissionDialog.vue";
 import StartMissionDialogV2 from "@/components/Dialogs/StartMissionDialogV2.vue";
 import ActiveMissionsCard from "@/components/SolarSystemView/MissionsList/MissionsCard/ActiveMissionsCard.vue";
 import SelectedMissionsCard from "@/components/SolarSystemView/MissionsList/MissionsCard/SelectedMissionsCard.vue";
-import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mdiCheck, mdiLockOutline } from "@mdi/js";
 import { mapState } from "pinia";
@@ -276,7 +276,7 @@ export default {
     ActiveMissionsCard,
     SelectedMissionsCard,
   },
-  props: ["task", "id", "index", "topicId", "teacher", "topicActive"],
+  props: ["course", "topic", "task", "index", "teacher", "topicActive"],
   data() {
     return {
       mdiCheck,
@@ -299,7 +299,7 @@ export default {
     },
   },
   computed: {
-    ...mapState(useRootStore, ["currentCourseId", "personsTopics", "topicsTasks", "person"]),
+    ...mapState(useRootStore, ["personsTopics", "person"]),
     active() {
       return this.task.taskStatus == "active";
     },

@@ -31,7 +31,7 @@
 
     <!-- Attempt to put systems on top of nodes. need to explore drawing solar systems in canvas -->
     <!-- <div v-for="system in currentCourseNodes" :key="system.id">
-      <SolarSystem :topic="getTopicById(system.id)" :coords="getDomCoords(system)" :size="'0.25em'" />
+      <SolarSystem :courseId="currentCourseId" :topic="getTopicById(system.id)" :coords="getDomCoords(system)" :size="'0.25em'" />
     </div> -->
   </div>
 </template>
@@ -184,14 +184,11 @@ export default {
     ...mapState(useRootStore, [
       "getTopicById",
       "person",
-      // "getTasksByTopicId",
       "currentCourseId",
       "currentTopicId",
       "currentCourseNodes",
       "currentCourseEdges",
       "personsTopics",
-      "personsTopicsTasks",
-      "topicsTasks",
       "darkMode",
       "personsCourseTasks",
       "courseTasks",

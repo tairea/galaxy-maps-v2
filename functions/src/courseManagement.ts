@@ -766,6 +766,43 @@ export const getTaskByCourseIdTopicIdTaskIdHttpsEndpoint = runWith({}).https.onC
   },
 );
 
+// Get tasks by courseId and topicId
+export const getTasksByCourseIdTopicIdHttpsEndpoint = runWith({}).https.onCall(
+  async (data, context) => {
+    requireAuthenticated(context);
+
+    const courseId = data.courseId as string | null;
+    const topicId = data.topicId as string | null;
+    if (courseId == null) {
+      throw new HttpsError("invalid-argument", "missing courseId");
+    }
+    if (topicId == null) {
+      throw new HttpsError("invalid-argument", "missing topicId");
+    }
+
+    // TODO: permissions checks
+
+    const taskCollection = await db
+      .collection("courses")
+      .doc(courseId)
+      .collection("topics")
+      .doc(topicId)
+      .collection("tasks")
+      .get();
+
+    const tasks = [];
+    for (const doc of taskCollection.docs) {
+      const task = doc.data();
+      tasks.push({
+        ...task,
+        id: doc.id,
+      });
+    }
+
+    return { tasks };
+  },
+);
+
 // Get person topic by personId and courseId and topicId
 export const getPersonTopicByPersonIdCourseIdTopicIdHttpsEndpoint = runWith({}).https.onCall(
   async (data, context) => {

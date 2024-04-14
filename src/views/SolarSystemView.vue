@@ -3,19 +3,20 @@
     <!--==== Left section ====-->
     <div id="left-section">
       <SolarSystemInfo
-        :topic="getTopicById(currentTopicId)"
-        :tasks="teacher ? topicsTasks : personsTopicsTasks"
+        :topic="getTopicById(topicId)"
+        :tasks="teacher ? topicTasks : personsTopicsTasks"
         :teacher="teacher"
         :course="course"
       />
       <!-- <SolarSystemInfo
         :topic="
           teacher ? 
-            getTopicById(currentTopicId) :
-            getPersonsTopicById(currentTopicId)
+            getTopicById(topicId) :
+            getPersonsTopicById(topicId)
         "
-        :tasks="teacher ? topicsTasks : personsTopicsTasks"
+        :tasks="teacher ? topicTasks : personsTopicsTasks"
         :teacher="teacher"
+        :course="course"
       /> -->
       <AssignedInfo
         v-if="!draft && peopleInTopic.length"
@@ -37,14 +38,15 @@
         </v-btn>
       </div>
 
-      <BackButton :toPath="'/galaxy/' + currentCourseId" />
+      <BackButton :toPath="'/galaxy/' + courseId" />
     </div>
 
     <!--==== Main section ====-->
     <div id="main-section">
       <MissionsList
+        :course="course"
         :topic="topic"
-        :tasks="teacher ? sortedTopicsTasks : sortedPersonsTopicsTasks"
+        :tasks="teacher ? sortedTopicTasks : sortedPersonsTopicsTasks"
         :teacher="teacher"
         :disableCreateMission="orderChanged"
         @task="taskForHelpInfo($event)"
@@ -79,7 +81,7 @@
             </div>
           </v-card-text>
           <v-card-actions class="justify-end">
-            <v-btn small text :to="'/galaxy/' + currentCourseId">&lt;- back to galaxy</v-btn>
+            <v-btn small text :to="'/galaxy/' + courseId">&lt;- back to galaxy</v-btn>
             <v-btn
               v-if="showNextSystemButton"
               small
@@ -105,13 +107,15 @@ import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeache
 import {
   fetchAllPeopleInCourseByCourseId,
   fetchCourseByCourseId,
+  fetchPersonsTasksByPersonIdCourseIdTopicId,
   fetchPersonsTopicByPersonIdCourseIdTopicId,
   fetchTopicByCourseIdTopicId,
+  fetchTasksByCourseIdTopicId,
 } from "@/lib/ff";
+import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
 import { mdiContentSave } from "@mdi/js";
-import { db } from "@/store/firestoreConfig";
 import confetti from "canvas-confetti";
 
 export default {
@@ -130,6 +134,7 @@ export default {
       mdiContentSave,
       course: null,
       topic: null,
+      topicTasks: [],
       activeMission: null,
       task: null,
       unsubscribes: [],
@@ -150,34 +155,28 @@ export default {
     this.setCurrentCourseId(this.courseId);
     this.setCurrentTopicId(this.topicId);
 
-    this.course = await fetchCourseByCourseId(this.currentCourseId);
-    this.topic = await fetchTopicByCourseIdTopicId(this.currentCourseId, this.currentTopicId);
-    this.getPeopleInTopic();
+    const [course, topic] = await Promise.all([
+      fetchCourseByCourseId(this.courseId),
+      fetchTopicByCourseIdTopicId(this.courseId, this.topicId),
+      this.getPeopleInTopic(),
+    ]);
+
+    this.course = course;
+    this.topic = topic;
 
     if (this.teacher) {
-      //store bindTasksByTopicId
-      await this.bindTasksByTopicId({
-        courseId: this.currentCourseId,
-        topicId: this.currentTopicId,
-      });
+      this.topicTasks = fetchTasksByCourseIdTopicId(this.courseId, this.topicId);
     } else {
       // store bindPersonsTasksByTopicId
       await this.bindPersonsTasksByTopicId({
         personId: this.person.id,
-        courseId: this.currentCourseId,
-        topicId: this.currentTopicId,
+        courseId: this.courseId,
+        topicId: this.topicId,
       });
     }
 
-    // check if requests are binded
-    // console.log("from store requestsForHelp: ", this.requestsForHelp);
-
     // set active task
     this.task = this.getActiveMission();
-    // filter help for active task
-    // this.requests = this.requestsForHelp.filter(
-    //   (request) => request.contextTask.id == this.currentTaskId
-    // );
 
     this.loading = false;
   },
@@ -187,7 +186,7 @@ export default {
     },
     topicCompleted(topic) {
       console.log("topic completed (from watch)", topic);
-      if (topic.topicId == this.currentTopicId && topic.completed == true) {
+      if (topic.topicId == this.topicId && topic.completed == true) {
         // yooo topic is completed
         this.setTopicCompleted();
       }
@@ -202,10 +201,6 @@ export default {
   },
   computed: {
     ...mapState(useRootStore, [
-      "currentCourseId",
-      "currentTopicId",
-      "currentTaskId",
-      "topicsTasks",
       "personsTopicsTasks",
       "personsTopics",
       "person",
@@ -223,15 +218,15 @@ export default {
       return this.course.mappedBy?.personId === this.person.id || this.user.data.admin;
     },
     personsCurrentTopic() {
-      return this.personsTopics.find((topic) => topic.id == this.currentTopicId);
+      return this.personsTopics.find((topic) => topic.id == this.topicId);
     },
-    sortedTopicsTasks() {
-      if (this.topicsTasks.some((task) => task.orderIndex != null)) {
+    sortedTopicTasks() {
+      if (this.topicTasks.some((task) => task.orderIndex != null)) {
         console.log("tasks have orderIndex, sorting by orderIndex");
-        return this.topicsTasks.sort((a, b) => a.orderIndex - b.orderIndex);
+        return this.topicTasks.sort((a, b) => a.orderIndex - b.orderIndex);
       } else {
         console.log("tasks do not have orderIndex, sorting by timestamp:");
-        return this.topicsTasks.sort((a, b) => a.taskCreatedTimestamp - b.taskCreatedTimestamp);
+        return this.topicTasks.sort((a, b) => a.taskCreatedTimestamp - b.taskCreatedTimestamp);
       }
     },
     sortedPersonsTopicsTasks() {
@@ -250,12 +245,10 @@ export default {
     ...mapActions(useRootStore, [
       "bindCourseTopics",
       "bindPersonsTasksByTopicId",
-      "bindTasksByTopicId",
       "setCurrentCourseId",
       "setCurrentTopicId",
       "setCurrentTaskId",
       "setNextTopicUnlocked",
-      "updateTopicTasks",
     ]),
     taskForHelpInfo(task) {
       this.task = task;
@@ -283,8 +276,8 @@ export default {
         peopleInCourse.map(async (person) => {
           const personsTopic = await fetchPersonsTopicByPersonIdCourseIdTopicId(
             person.id,
-            this.currentCourseId,
-            this.currentTopicId,
+            this.courseId,
+            this.topicId,
           );
           if (personsTopic.topicStatus == "active") {
             people.push(person);
@@ -295,8 +288,8 @@ export default {
     },
     missionOrderChanged(event) {
       this.orderChanged = true;
-      let value = event;
-      let orderChanges = [];
+      const value = event;
+      const orderChanges = [];
 
       for (let i = 0; i < value.length; i++) {
         console.log(
@@ -304,11 +297,11 @@ export default {
             " " +
             value[i].orderIndex +
             "===" +
-            this.topicsTasks[i].title +
+            this.topicTasks[i].title +
             " " +
-            this.topicsTasks[i].orderIndex,
+            this.topicTasks[i].orderIndex,
         );
-        if (value[i].orderIndex === this.topicsTasks[i].orderIndex) {
+        if (value[i].orderIndex === this.topicTasks[i].orderIndex) {
           continue;
         } else {
           value[i].orderIndex = i;
@@ -324,20 +317,16 @@ export default {
       for (let i = 0; i < this.newMissionOrder.length; i++) {
         await db
           .collection("courses")
-          .doc(this.currentCourseId)
+          .doc(this.courseId)
           .collection("topics")
-          .doc(this.currentTopicId)
+          .doc(this.topicId)
           .collection("tasks")
           .doc(this.newMissionOrder[i].id)
-          .set(this.newMissionOrder[i]);
+          .update({
+            orderIndex: this.newMissionOrder[i].orderIndex,
+          });
         console.log("db update done for: ", this.newMissionOrder[i].title);
       }
-
-      // bind again because i think i brake the binding with updateTopicTasks
-      // await this.bindTasksByTopicId({
-      //   courseId: this.currentCourseId,
-      //   topicId: this.currentTopicId,
-      // });
 
       this.savingNewMissionOrder = false;
       this.orderChanged = false;
@@ -407,18 +396,18 @@ export default {
       });
 
       // this ensures we arn't going to try navigate to the current unlocked topic
-      const nextTopic = unlockedTopics.find((topic) => topic.id !== this.currentTopicId);
+      const nextTopic = unlockedTopics.find((topic) => topic.id !== this.topicId);
 
       // set next topic as current topic
       this.setCurrentTopicId(nextTopic.id);
 
-      console.log("router pushing to: /galaxy/" + this.currentCourseId + "/system/" + nextTopic.id);
+      console.log("router pushing to: /galaxy/" + this.courseId + "/system/" + nextTopic.id);
 
       // route to page with topicId
       this.$router.push({
         name: "SolarSystemView",
         params: {
-          courseId: this.currentCourseId,
+          courseId: this.courseId,
           topicId: nextTopic.id,
         },
       });

@@ -71,7 +71,7 @@
                     </div>
                     <div class="d-flex flex-column instructor-details">
                       <p class="ma-0">
-                        {{ currentCourse.mappedBy?.name }}
+                        {{ course.mappedBy?.name }}
                       </p>
                       <p class="ma-0" style="font-size: 0.6rem">Instructor</p>
                     </div>
@@ -221,13 +221,7 @@
 import confetti from "canvas-confetti";
 import firebase from "firebase/compat/app";
 import { db, functions } from "@/store/firestoreConfig";
-import {
-  fetchCohortByCohortId,
-  fetchCourseByCourseId,
-  fetchPersonByPersonId,
-  fetchTaskByCourseIdTopicIdTaskId,
-  fetchTopicByCourseIdTopicId,
-} from "@/lib/ff";
+import { fetchCohortByCohortId, fetchPersonByPersonId } from "@/lib/ff";
 import {
   mdiCloudUploadOutline,
   mdiInformationVariant,
@@ -251,8 +245,8 @@ export default {
     VueEditor,
   },
   props: [
-    "topicId",
-    "taskId",
+    "course",
+    "topic",
     "task",
     "missionStatus",
     "on",
@@ -285,37 +279,20 @@ export default {
       // ["clean"] // remove formatting button
     ],
     quillFocused: false,
-    currentCourse: null,
-    currentTopic: null,
-    currentTask: null,
     cohort: null,
     xpPointsForThisTask: 100, // task is worth 100xp by default
     xpPointsForThisTopic: 500, // topic is worth 500xp by default
   }),
   async mounted() {
-    this.currentCourse = await fetchCourseByCourseId(this.currentCourseId);
-    this.currentTopic = await fetchTopicByCourseIdTopicId(
-      this.currentCourseId,
-      this.currentTopicId,
-    );
-    this.currentTask = await fetchTaskByCourseIdTopicIdTaskId(
-      this.currentCourseId,
-      this.currentTopicId,
-      this.currentTaskId,
-    );
-
     // get mappedBy image
-    if (!this.currentCourse.mappedBy.image) {
-      this.getMappedByPersonsImage(this.currentCourse.mappedBy.personId);
+    if (!this.course.mappedBy.image) {
+      this.getMappedByPersonsImage(this.course.mappedBy.personId);
     }
     this.cohort = await fetchCohortByCohortId(this.currentCohortId);
     // console.log("persons topics from mission completed dialog", this.personsTopics);
   },
   computed: {
     ...mapState(useRootStore, [
-      "currentCourseId",
-      "currentTopicId",
-      "currentTaskId",
       "currentCohortId",
       "personsTopicsTasks",
       "courseSubmissions",
@@ -342,14 +319,14 @@ export default {
       try {
         await db
           .collection("courses")
-          .doc(this.currentCourse.id)
+          .doc(this.course.id)
           .collection("submissionsForReview")
           .doc(this.submission.id)
           .update({
             // update "courses" database with task submission
             studentId: this.person.id,
-            contextCourse: this.currentCourse,
-            contextTopic: this.currentTopic,
+            contextCourse: this.course,
+            contextTopic: this.topic,
             contextTask: this.task,
             submissionLink: this.submissionLink,
             taskSubmissionStatus: "inreview",
@@ -362,8 +339,8 @@ export default {
 
         // send xAPI statement to LRS
         await reSubmitWorkForReviewXAPIStatement(this.person, this.task.id, {
-          galaxy: this.currentCourse,
-          system: this.currentTopic,
+          galaxy: this.course,
+          system: this.topic,
           mission: this.task,
         });
 
@@ -389,8 +366,8 @@ export default {
       await db
         .collection("people")
         .doc(this.person.id)
-        .collection(this.currentCourse.id)
-        .doc(this.currentTopic.id)
+        .collection(this.course.id)
+        .doc(this.topic.id)
         .collection("tasks")
         .doc(this.task.id)
         .update({
@@ -429,20 +406,16 @@ export default {
 
       // 1) add submission to course (for teacher to review)
       try {
-        await db
-          .collection("courses")
-          .doc(this.currentCourse.id)
-          .collection("submissionsForReview")
-          .add({
-            // update "courses" database with task submission
-            studentId: this.person.id,
-            contextCourse: this.currentCourse,
-            contextTopic: this.currentTopic,
-            contextTask: this.currentTask,
-            submissionLink: this.submissionLink,
-            taskSubmissionStatus: "inreview",
-            taskSubmittedForReviewTimestamp: new Date(),
-          });
+        await db.collection("courses").doc(this.course.id).collection("submissionsForReview").add({
+          // update "courses" database with task submission
+          studentId: this.person.id,
+          contextCourse: this.course,
+          contextTopic: this.topic,
+          contextTask: this.task,
+          submissionLink: this.submissionLink,
+          taskSubmissionStatus: "inreview",
+          taskSubmittedForReviewTimestamp: new Date(),
+        });
         if (this.cohort != null) {
           for (const teacherId of this.cohort.teachers) {
             await this.sendTaskSubmission(
@@ -456,10 +429,10 @@ export default {
         console.log("Submission successfully submitted for review!");
 
         // send xAPI statement to LRS
-        await submitWorkForReviewXAPIStatement(this.person, this.currentTask.id, {
-          galaxy: this.currentCourse,
-          system: this.currentTopic,
-          mission: this.currentTask,
+        await submitWorkForReviewXAPIStatement(this.person, this.task.id, {
+          galaxy: this.course,
+          system: this.topic,
+          mission: this.task,
         });
 
         this.requestForHelp = "";
@@ -488,10 +461,10 @@ export default {
       await db
         .collection("people")
         .doc(this.person.id)
-        .collection(this.currentCourse.id)
-        .doc(this.currentTopic.id)
+        .collection(this.course.id)
+        .doc(this.topic.id)
         .collection("tasks")
-        .doc(this.currentTask.id)
+        .doc(this.task.id)
         .update({
           // update "people" database with task submission
           submissionLink: this.submissionLink,
@@ -520,10 +493,10 @@ export default {
       await db
         .collection("people")
         .doc(this.person.id)
-        .collection(this.currentCourse.id)
-        .doc(this.currentTopic.id)
+        .collection(this.course.id)
+        .doc(this.topic.id)
         .collection("tasks")
-        .doc(this.currentTask.id)
+        .doc(this.task.id)
         .update({
           // update tasks array with new task
           taskStatus: "completed",
@@ -533,10 +506,10 @@ export default {
       console.log("Task status successfully written as completed!");
 
       // send xAPI statement to LRS
-      await taskMarkedAsCompletedXAPIStatement(this.person, this.currentTask.id, {
-        galaxy: this.currentCourse,
-        system: this.currentTopic,
-        mission: this.currentTask,
+      await taskMarkedAsCompletedXAPIStatement(this.person, this.task.id, {
+        galaxy: this.course,
+        system: this.topic,
+        mission: this.task,
       });
 
       // update XP points total with TASK points. WIP
@@ -568,18 +541,18 @@ export default {
     async unlockNextTask() {
       console.log("unlocking next task...");
       // 1) get all tasks in this topic
-      const currentTasks = await db
+      const tasks = await db
         .collection("people")
         .doc(this.person.id)
-        .collection(this.currentCourse.id)
-        .doc(this.currentTopic.id)
+        .collection(this.course.id)
+        .doc(this.topic.id)
         .collection("tasks")
         // order by timestamp is important otherwise index == 0 (in the next step) wont necessarily be the first mission
         .orderBy("taskCreatedTimestamp")
         .get();
 
       // 2) loops the tasks. the first task to have taskStatus locked, update to unlocked, then return to exit loop
-      for (const [index, task] of currentTasks.docs.entries()) {
+      for (const [index, task] of tasks.docs.entries()) {
         if (task.data().taskStatus == "locked") {
           await task.ref.update({ taskStatus: "unlocked" });
           console.log("NEW TASK UNLOCKED (" + index + ") : " + task.data().title);
@@ -596,7 +569,7 @@ export default {
       if (numOfTasksCompleted === this.personsTopicsTasks.length) {
         console.log("Topic Completed! (all tasks in this topic completed)");
         // set topic to completed in store
-        this.setTopicCompleted({ completed: true, topicId: this.currentTopic.id });
+        this.setTopicCompleted({ completed: true, topicId: this.topic.id });
         // === Basic Cannon
         confetti({
           particleCount: 100,
@@ -604,9 +577,9 @@ export default {
           origin: { y: 0.6 },
         });
 
-        await topicCompletedXAPIStatement(this.person, this.currentTopic.id, {
-          galaxy: this.currentCourse,
-          system: this.currentTopic,
+        await topicCompletedXAPIStatement(this.person, this.topic.id, {
+          galaxy: this.course,
+          system: this.topic,
         });
         await this.setTopicToCompletedInDB();
         // all tasks are completed. unlock next topic
@@ -641,8 +614,8 @@ export default {
       const querySnapshot = await db
         .collection("people")
         .doc(this.person.id)
-        .collection(this.currentCourse.id)
-        .where("prerequisites", "array-contains", this.currentTopic.id)
+        .collection(this.course.id)
+        .where("prerequisites", "array-contains", this.topic.id)
         .get();
 
       for (const doc of querySnapshot.docs) {
@@ -652,7 +625,7 @@ export default {
           console.log("next topic has more than one prerequisite... checking if completed...");
           let prereqsArr = data.prerequisites;
           // minus this completed topic
-          prereqsArr = prereqsArr.filter((e) => e !== this.currentTopic.id);
+          prereqsArr = prereqsArr.filter((e) => e !== this.topic.id);
           console.log("prereqs after current one removed:", prereqsArr);
           const prereqsToCompleteCount = prereqsArr.length;
           let prereqsCompletedCount = 0;
@@ -681,7 +654,7 @@ export default {
           // this.$router.push({
           //   name: "GalaxyView",
           //   params: {
-          //     topicId: this.currentCourse.id,
+          //     topicId: this.course.id,
           //   },
           // });
         }
@@ -691,8 +664,8 @@ export default {
       await db
         .collection("people")
         .doc(this.person.id)
-        .collection(this.currentCourse.id)
-        .doc(this.currentTopic.id)
+        .collection(this.course.id)
+        .doc(this.topic.id)
         .update({
           // update tasks array with new task
           topicStatus: "completed",
@@ -717,9 +690,9 @@ export default {
     async sendTaskSubmission(teacherId, submissionResponse, submissionInstructions) {
       const teacher = await fetchPersonByPersonId(teacherId);
       const data = {
-        course: this.currentCourse.title,
-        topic: this.currentTopic.label,
-        task: this.currentTask.title,
+        course: this.course.title,
+        topic: this.topic.label,
+        task: this.task.title,
         student: this.person.firstName + " " + this.person.lastName,
         submission: submissionResponse,
         submissionInstructions: submissionInstructions,

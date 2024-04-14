@@ -28,7 +28,7 @@
           <p class="text-overline text-uppercase text-center" style="line-height: 1rem">
             REQUEST HELP
           </p>
-          <RequestHelpDialog :task="task" :taskId="task.id" :topicId="topicId" />
+          <RequestHelpDialog :topicId="topicId" :task="task" :taskId="task.id" />
         </div>
 
         <!-- MARK AS COMPLETED -->
@@ -37,9 +37,9 @@
             {{ getSubmitTitle }}
           </p>
           <MissionCompletedDialog
+            :course="course"
+            :topic="topic"
             :task="task"
-            :taskId="task.id"
-            :topicId="topicId"
             :active="active"
             :declined="declined"
           />
@@ -61,9 +61,9 @@ export default {
     MissionCompletedDialog,
     RequestHelpDialog,
   },
-  props: ["task", "topicId", "active", "declined", "inreview", "completed"],
+  props: ["course", "topic", "task", "active", "declined", "inreview", "completed"],
   computed: {
-    ...mapState(useRootStore, ["personsTopicsTasks", "courseSubmissions", "person"]),
+    ...mapState(useRootStore, ["courseSubmissions", "person"]),
     getSubmitTitle() {
       if (this.active && this.task.submissionRequired == true) {
         return "SUBMIT WORK";

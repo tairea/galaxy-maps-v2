@@ -26,7 +26,6 @@ const getDefaultState = () => {
     allTasks: [] as Record<string, any>[],
     personsCourses: [] as Record<string, any>[],
     personsTopics: [] as Record<string, any>[],
-    topicsTasks: [] as Record<string, any>[],
     personsTopicsTasks: [] as Record<string, any>[],
     requestsForHelp: [] as Record<string, any>[],
     courseSubmissions: [] as Record<string, any>[],
@@ -123,9 +122,6 @@ export default defineStore({
     },
     setCurrentCohortId(cohortId: string) {
       this.currentCohortId = cohortId;
-    },
-    updateTopicTasks(newTopicTasks: Record<string, any>[]) {
-      this.topicsTasks = newTopicTasks;
     },
     setCohorts(cohorts: Record<string, any>[]) {
       this.cohorts = cohorts;
@@ -233,20 +229,6 @@ export default defineStore({
             .doc(payload.topicId)
             .collection("tasks"),
           //.orderBy("taskCreatedTimestamp"),
-        );
-      },
-    ),
-    bindTasksByTopicId: firestoreAction(
-      ({ bindFirestoreRef }, payload: { courseId: string; topicId: string }) => {
-        return bindFirestoreRef(
-          "topicsTasks",
-          db
-            .collection("courses")
-            .doc(payload.courseId)
-            .collection("topics")
-            .doc(payload.topicId)
-            .collection("tasks"),
-          //.orderBy("taskCreatedTimestamp"), // this is important to ordering the tasks in MissionList.vue
         );
       },
     ),

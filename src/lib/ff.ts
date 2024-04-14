@@ -142,6 +142,19 @@ export const fetchTopicByCourseIdTopicId = async (
   return result.data.topic;
 };
 
+export const fetchTasksByCourseIdTopicId = async (
+  courseId: string,
+  topicId: string,
+): Promise<ITask[]> => {
+  const data = {
+    courseId,
+    topicId,
+  };
+  const getTasksByCourseIdTopicId = functions.httpsCallable("getTasksByCourseIdTopicId");
+  const result = await getTasksByCourseIdTopicId(data);
+  return result.data.tasks;
+};
+
 export const fetchTaskByCourseIdTopicIdTaskId = async (
   courseId: string,
   topicId: string,
