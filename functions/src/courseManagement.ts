@@ -841,6 +841,41 @@ export const getPersonTopicByPersonIdCourseIdTopicIdHttpsEndpoint = runWith({}).
   },
 );
 
+// Get person topics by personId and courseId
+export const getPersonTopicsByPersonIdCourseIdHttpsEndpoint = runWith({}).https.onCall(
+  async (data, context) => {
+    requireAuthenticated(context);
+
+    const personId = data.personId as string | null;
+    const courseId = data.courseId as string | null;
+    if (personId == null) {
+      throw new HttpsError("invalid-argument", "missing personId");
+    }
+    if (courseId == null) {
+      throw new HttpsError("invalid-argument", "missing courseId");
+    }
+
+    // TODO: permissions checks
+
+    const personTopicCollection = await db
+      .collection("people")
+      .doc(personId)
+      .collection(courseId)
+      .get();
+
+    const personTopics = [];
+    for (const doc of personTopicCollection.docs) {
+      const personTopic = doc.data();
+      personTopics.push({
+        ...personTopic,
+        id: doc.id,
+      });
+    }
+
+    return { personTopics };
+  },
+);
+
 // Get person tasks by personId and courseId and topicId
 export const getPersonTasksByPersonIdCourseIdTopicIdHttpsEndpoint = runWith({}).https.onCall(
   async (data, context) => {
@@ -909,6 +944,289 @@ export const getPeopleByCourseIdHttpsEndpoint = runWith({}).https.onCall(async (
 
   return { people };
 });
+
+// Create task with courseId and topicId
+export const createTaskWithCourseIdTopicIdHttpsEndpoint = runWith({}).https.onCall(
+  async (data, context) => {
+    requireAuthenticated(context);
+
+    const courseId = data.courseId as string | null;
+    const topicId = data.topicId as string | null;
+    const task = data.task as Record<string, unknown> | null;
+    if (courseId == null) {
+      throw new HttpsError("invalid-argument", "missing courseId");
+    }
+    if (topicId == null) {
+      throw new HttpsError("invalid-argument", "missing topicId");
+    }
+    if (task == null) {
+      throw new HttpsError("invalid-argument", "missing task");
+    }
+
+    // TODO: permissions checks
+
+    const result = await createTask(courseId, topicId, task);
+
+    return result;
+  },
+);
+
+/**
+ * Create a task
+ */
+async function createTask(courseId: string, topicId: string, task: Record<string, unknown>) {
+  const taskRef = await db
+    .collection("courses")
+    .doc(courseId)
+    .collection("topics")
+    .doc(topicId)
+    .collection("tasks")
+    .add({ ...task, taskCreatedTimestamp: new Date() });
+
+  // increment course taskTotals by 1
+  await db.collection("courses").doc(courseId).update("taskTotal", FieldValue.increment(1));
+
+  // increment topic taskTotals by 1
+  await db
+    .collection("courses")
+    .doc(courseId)
+    .collection("topics")
+    .doc(topicId)
+    .update("taskTotal", FieldValue.increment(1));
+
+  const taskDoc = await taskRef.get();
+
+  // update students with task
+
+  // get all students in the course
+  const studentCollection = await db
+    .collection("people")
+    .where("assignedCourses", "array-contains", courseId)
+    .get();
+
+  for (const doc of studentCollection.docs) {
+    const studentId = doc.id;
+
+    // set reference to this course
+    const courseRef = db.collection("people").doc(studentId).collection(courseId);
+
+    // check if the student has already started the course
+    // if not they will be assigned this task when they start the course
+    const studentHasStartedCourse = await courseRef.get().then((subQuery) => {
+      return subQuery.docs.length;
+    });
+
+    if (studentHasStartedCourse) {
+      // if they have started the course, get the tasks for this topic
+      const query = await courseRef.doc(topicId).collection("tasks").get();
+
+      // get the data from the task
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const tasks: Record<string, any>[] = query.docs.map((doc) => {
+        return {
+          ...doc.data(),
+          id: doc.id,
+        };
+      });
+
+      // check if all the tasks are all completed
+      const uncompletedTasks = tasks.filter((task) => task.taskStatus !== "completed");
+
+      // assign task to student
+      await courseRef
+        .doc(topicId)
+        .collection("tasks")
+        .doc(taskDoc.id)
+        .set({
+          ...taskDoc.data(),
+          // if they arent all completed this task will be locked.
+          // if they are completed then this task should be unlocked
+          taskStatus: uncompletedTasks.length ? "locked" : "unlocked",
+        });
+    }
+  }
+
+  return {
+    task: {
+      ...taskDoc.data(),
+      id: taskDoc.id,
+    },
+  };
+}
+
+// Update task by courseId and topicId and taskId
+export const updateTaskByCourseIdTopicIdTaskIdHttpsEndpoint = runWith({}).https.onCall(
+  async (data, context) => {
+    requireAuthenticated(context);
+
+    const courseId = data.courseId as string | null;
+    const topicId = data.topicId as string | null;
+    const taskId = data.taskId as string | null;
+    const task = data.task as Record<string, unknown> | null;
+    if (courseId == null) {
+      throw new HttpsError("invalid-argument", "missing courseId");
+    }
+    if (topicId == null) {
+      throw new HttpsError("invalid-argument", "missing topicId");
+    }
+    if (taskId == null) {
+      throw new HttpsError("invalid-argument", "missing taskId");
+    }
+    if (task == null) {
+      throw new HttpsError("invalid-argument", "missing task");
+    }
+
+    // TODO: permissions checks
+
+    const result = await updateTask(courseId, topicId, taskId, task);
+
+    return result;
+  },
+);
+
+/**
+ * Update a task
+ */
+async function updateTask(
+  courseId: string,
+  topicId: string,
+  taskId: string,
+  task: Record<string, unknown>,
+) {
+  const taskRef = db
+    .collection("courses")
+    .doc(courseId)
+    .collection("topics")
+    .doc(topicId)
+    .collection("tasks")
+    .doc(taskId);
+
+  await taskRef.update(task);
+
+  const taskDoc = await taskRef.get();
+
+  // update students with task
+
+  // get all students in the course
+  const studentCollection = await db
+    .collection("people")
+    .where("assignedCourses", "array-contains", courseId)
+    .get();
+
+  for (const doc of studentCollection.docs) {
+    const studentId = doc.id;
+
+    // set reference to this course
+    const courseRef = db.collection("people").doc(studentId).collection(courseId);
+
+    // check if the student has already started the course
+    // if not they will be assigned this task when they start the course
+    const studentHasStartedCourse = await courseRef.get().then((subQuery) => {
+      return subQuery.docs.length;
+    });
+
+    if (studentHasStartedCourse) {
+      // assign task to student
+      await courseRef
+        .doc(topicId)
+        .collection("tasks")
+        .doc(taskDoc.id)
+        .set({
+          ...taskDoc.data(),
+        });
+    }
+  }
+
+  return {
+    task: {
+      ...taskDoc.data(),
+      id: taskDoc.id,
+    },
+  };
+}
+
+// Delete task by courseId and topicId and taskId
+export const deleteTaskByCourseIdTopicIdTaskIdHttpsEndpoint = runWith({}).https.onCall(
+  async (data, context) => {
+    requireAuthenticated(context);
+
+    const courseId = data.courseId as string | null;
+    const topicId = data.topicId as string | null;
+    const taskId = data.taskId as string | null;
+    if (courseId == null) {
+      throw new HttpsError("invalid-argument", "missing courseId");
+    }
+    if (topicId == null) {
+      throw new HttpsError("invalid-argument", "missing topicId");
+    }
+    if (taskId == null) {
+      throw new HttpsError("invalid-argument", "missing taskId");
+    }
+
+    // TODO: permissions checks
+
+    const result = await deleteTask(courseId, topicId, taskId);
+
+    return result;
+  },
+);
+
+/**
+ * Delete a task
+ */
+async function deleteTask(courseId: string, topicId: string, taskId: string) {
+  const taskRef = db
+    .collection("courses")
+    .doc(courseId)
+    .collection("topics")
+    .doc(topicId)
+    .collection("tasks")
+    .doc(taskId);
+
+  const taskDoc = await taskRef.get();
+
+  // update students with task
+
+  // get all students in the course
+  const studentCollection = await db
+    .collection("people")
+    .where("assignedCourses", "array-contains", courseId)
+    .get();
+
+  for (const doc of studentCollection.docs) {
+    const studentId = doc.id;
+
+    // delete for student
+    await db
+      .collection("people")
+      .doc(studentId)
+      .collection(courseId)
+      .doc(topicId)
+      .collection("tasks")
+      .doc(taskDoc.id)
+      .delete();
+  }
+
+  // increment course taskTotals by -1
+  await db.collection("courses").doc(courseId).update("taskTotal", FieldValue.increment(-1));
+
+  // increment topic taskTotals by -1
+  await db
+    .collection("courses")
+    .doc(courseId)
+    .collection("topics")
+    .doc(topicId)
+    .update("taskTotal", FieldValue.increment(-1));
+
+  await taskRef.delete();
+
+  return {
+    task: {
+      ...taskDoc.data(),
+      id: taskDoc.id,
+    },
+  };
+}
 
 // ====== ASSIGN PERSON TO COHORT ==================
 export const addMeToCohortHttpsEndpoint = runWith({}).https.onCall(

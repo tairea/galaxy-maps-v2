@@ -62,14 +62,6 @@ export default defineStore({
     getOrganisationById: (state) => (id: string) => {
       return state.organisations.find((organisation) => organisation.id === id);
     },
-    getTasksByTopicId: (state) => (topicId: string) => {
-      const topic = state.topics.find((topic) => topic.id === topicId);
-      return topic?.tasks ?? [];
-    },
-    getPersonsTasksByTopicId: (state) => (id: string) => {
-      const topic = state.personsTopics.find((topic) => topic.id === id);
-      return topic?.tasks ?? [];
-    },
     getStudentsByCohortId: (state) => (id: string) => {
       //go to cohorts, and check if they in courses with this id
       const peopleInCohort: Record<string, any>[] = [];

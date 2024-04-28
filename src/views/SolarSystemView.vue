@@ -3,21 +3,11 @@
     <!--==== Left section ====-->
     <div id="left-section">
       <SolarSystemInfo
-        :topic="getTopicById(topicId)"
+        :topic="topic"
         :tasks="teacher ? topicTasks : personsTopicsTasks"
         :teacher="teacher"
         :course="course"
       />
-      <!-- <SolarSystemInfo
-        :topic="
-          teacher ? 
-            getTopicById(topicId) :
-            getPersonsTopicById(topicId)
-        "
-        :tasks="teacher ? topicTasks : personsTopicsTasks"
-        :teacher="teacher"
-        :course="course"
-      /> -->
       <AssignedInfo
         v-if="!draft && peopleInTopic.length"
         :assignCohorts="true"
@@ -52,6 +42,7 @@
         @task="taskForHelpInfo($event)"
         @missionActivated="peopleInTopic.push(person)"
         @orderChanged="missionOrderChanged"
+        @taskUpdated="taskUpdated"
       />
     </div>
 
@@ -109,6 +100,7 @@ import {
   fetchCourseByCourseId,
   fetchPersonsTasksByPersonIdCourseIdTopicId,
   fetchPersonsTopicByPersonIdCourseIdTopicId,
+  fetchPersonsTopicsByPersonIdCourseId,
   fetchTopicByCourseIdTopicId,
   fetchTasksByCourseIdTopicId,
 } from "@/lib/ff";
@@ -135,6 +127,8 @@ export default {
       course: null,
       topic: null,
       topicTasks: [],
+      personsTopics: [],
+      personsTopicsTasks: [],
       activeMission: null,
       task: null,
       unsubscribes: [],
@@ -158,21 +152,22 @@ export default {
     const [course, topic] = await Promise.all([
       fetchCourseByCourseId(this.courseId),
       fetchTopicByCourseIdTopicId(this.courseId, this.topicId),
-      this.getPeopleInTopic(),
     ]);
 
     this.course = course;
     this.topic = topic;
 
     if (this.teacher) {
-      this.topicTasks = fetchTasksByCourseIdTopicId(this.courseId, this.topicId);
+      this.topicTasks = await fetchTasksByCourseIdTopicId(this.courseId, this.topicId);
     } else {
-      // store bindPersonsTasksByTopicId
-      await this.bindPersonsTasksByTopicId({
-        personId: this.person.id,
-        courseId: this.courseId,
-        topicId: this.topicId,
-      });
+      const [personsTopics, personsTopicsTasks] = await Promise.all([
+        fetchPersonsTopicsByPersonIdCourseId(this.person.id, this.courseId),
+        fetchPersonsTasksByPersonIdCourseIdTopicId(this.person.id, this.courseId, this.topicId),
+        this.getPeopleInTopic(),
+      ]);
+
+      this.personsTopics = personsTopics;
+      this.personsTopicsTasks = personsTopicsTasks;
     }
 
     // set active task
@@ -181,9 +176,6 @@ export default {
     this.loading = false;
   },
   watch: {
-    personsCurrentTopic() {
-      this.getPeopleInTopic();
-    },
     topicCompleted(topic) {
       console.log("topic completed (from watch)", topic);
       if (topic.topicId == this.topicId && topic.completed == true) {
@@ -200,25 +192,12 @@ export default {
     },
   },
   computed: {
-    ...mapState(useRootStore, [
-      "personsTopicsTasks",
-      "personsTopics",
-      "person",
-      "getPersonsTopicById",
-      "getTopicById",
-      "getTasksByTopicId",
-      "user",
-      "topicCompleted",
-      "nextTopicUnlockedFlag",
-    ]),
+    ...mapState(useRootStore, ["person", "user", "topicCompleted", "nextTopicUnlockedFlag"]),
     draft() {
       return this.course.status === "drafting";
     },
     teacher() {
       return this.course.mappedBy?.personId === this.person.id || this.user.data.admin;
-    },
-    personsCurrentTopic() {
-      return this.personsTopics.find((topic) => topic.id == this.topicId);
     },
     sortedTopicTasks() {
       if (this.topicTasks.some((task) => task.orderIndex != null)) {
