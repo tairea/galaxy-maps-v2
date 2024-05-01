@@ -490,36 +490,36 @@ export default {
           x: progressTitleX,
           y: progressTitleY,
         });
-      }
 
-      // Draw the background cirlce
-      canvasContext.beginPath();
-      canvasContext.strokeStyle = "rgba(255, 255, 255, 0.1)";
-      canvasContext.lineWidth = 4;
-      canvasContext.arc(courseBoundaryXCenter, courseBoundaryYCenter, radius, 0, Math.PI * 2);
-      canvasContext.stroke();
-      canvasContext.closePath();
-
-      // Now the foreground progression segment (if not 0%)
-      if (progressFraction != 0) {
+        // Draw the background cirlce
         canvasContext.beginPath();
-        // convert vuetify theme colour to rgba
-        canvasContext.strokeStyle = this.hexToRGBA(
-          this.$vuetify.theme.isDark
-            ? this.$vuetify.theme.themes.dark.galaxyAccent
-            : this.$vuetify.theme.themes.light.galaxyAccent,
-          0.5, // 50% opacity
-        );
-        canvasContext.lineWidth = 8;
-        canvasContext.arc(
-          courseBoundaryXCenter,
-          courseBoundaryYCenter,
-          radius,
-          0 + arcCircleOffset,
-          Math.PI * 2 * progressFraction + arcCircleOffset,
-        );
+        canvasContext.strokeStyle = "rgba(255, 255, 255, 0.1)";
+        canvasContext.lineWidth = 4;
+        canvasContext.arc(courseBoundaryXCenter, courseBoundaryYCenter, radius, 0, Math.PI * 2);
         canvasContext.stroke();
         canvasContext.closePath();
+
+        // Now the foreground progression segment (if not 0%)
+        if (progressFraction != 0) {
+          canvasContext.beginPath();
+          // convert vuetify theme colour to rgba
+          canvasContext.strokeStyle = this.hexToRGBA(
+            this.$vuetify.theme.isDark
+              ? this.$vuetify.theme.themes.dark.galaxyAccent
+              : this.$vuetify.theme.themes.light.galaxyAccent,
+            0.5, // 50% opacity
+          );
+          canvasContext.lineWidth = 8;
+          canvasContext.arc(
+            courseBoundaryXCenter,
+            courseBoundaryYCenter,
+            radius,
+            0 + arcCircleOffset,
+            Math.PI * 2 * progressFraction + arcCircleOffset,
+          );
+          canvasContext.stroke();
+          canvasContext.closePath();
+        }
       }
     },
     hexToRGBA(hex, opacity) {
