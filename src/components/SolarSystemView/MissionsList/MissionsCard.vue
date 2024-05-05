@@ -23,7 +23,8 @@
           <div v-if="teacher">
             <CreateEditDeleteMissionDialog
               :edit="true"
-              :topicId="topic.id"
+              :course="course"
+              :topic="topic"
               :taskId="task.id"
               :taskToEdit="task"
               :index="index"
@@ -135,8 +136,8 @@
           <div v-if="unlocked" class="d-flex justify-center">
             <!-- Start Mission button -->
             <StartMissionDialogV2
-              :topicId="topic.id"
-              :taskId="task.id"
+              :course="course"
+              :topic="topic"
               :task="task"
               :topicActive="topicActive"
             />
@@ -246,20 +247,13 @@
         :active="active"
         :declined="declined"
       />
-      <SelectedMissionsCard
-        v-else
-        :topicId="topic.id"
-        :task="task"
-        :completed="completed"
-        :inreview="inreview"
-      />
+      <SelectedMissionsCard v-else :task="task" :completed="completed" :inreview="inreview" />
     </v-expansion-panel-content>
   </div>
 </template>
 
 <script>
 import CreateEditDeleteMissionDialog from "@/components/Dialogs/CreateEditDeleteMissionDialog.vue";
-import StartMissionDialog from "@/components/Dialogs/StartMissionDialog.vue";
 import StartMissionDialogV2 from "@/components/Dialogs/StartMissionDialogV2.vue";
 import ActiveMissionsCard from "@/components/SolarSystemView/MissionsList/MissionsCard/ActiveMissionsCard.vue";
 import SelectedMissionsCard from "@/components/SolarSystemView/MissionsList/MissionsCard/SelectedMissionsCard.vue";
@@ -271,7 +265,6 @@ export default {
   name: "MissionsCard",
   components: {
     CreateEditDeleteMissionDialog,
-    StartMissionDialog,
     StartMissionDialogV2,
     ActiveMissionsCard,
     SelectedMissionsCard,

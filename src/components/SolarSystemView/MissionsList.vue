@@ -40,11 +40,7 @@
     </div>
 
     <div class="createButton mt-8" v-if="teacher">
-      <CreateEditDeleteMissionDialog
-        :topicId="topic.id"
-        :tasks="tasks"
-        :disableCreateMission="disableCreateMission"
-      />
+      <CreateEditDeleteMissionDialog :course="course" :topic="topic" />
     </div>
   </div>
 </template>

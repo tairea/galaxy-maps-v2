@@ -12,7 +12,6 @@ const getDefaultState = () => {
       data: null as Record<string, any> | null,
     },
     person: {} as Record<string, any>,
-    topics: [] as Record<string, any>[],
     cohorts: [] as Record<string, any>[],
     assignedCourses: [] as Record<string, any>[],
     organisations: [] as Record<string, any>[],
@@ -23,7 +22,6 @@ const getDefaultState = () => {
     currentCourseId: "",
     currentCourseNodes: [] as Record<string, any>[],
     currentCourseEdges: [] as Record<string, any>[],
-    allTasks: [] as Record<string, any>[],
     personsCourses: [] as Record<string, any>[],
     personsTopics: [] as Record<string, any>[],
     personsTopicsTasks: [] as Record<string, any>[],
@@ -51,10 +49,6 @@ export default defineStore({
   id: "root",
   state: getDefaultState,
   getters: {
-    getTopicById: (state) => (id: string) => {
-      const topic = state.topics.find((topic) => topic.id === id);
-      return topic;
-    },
     getPersonsTopicById: (state) => (id: string) => {
       const topic = state.personsTopics.find((topic) => topic.id === id);
       return topic;
@@ -189,9 +183,6 @@ export default defineStore({
           reset: false,
         },
       );
-    }),
-    bindCourseTopics: firestoreAction(({ bindFirestoreRef }, id: string) => {
-      return bindFirestoreRef("topics", db.collection("courses").doc(id).collection("topics"));
     }),
     bindCoursesByPersonId: firestoreAction(({ bindFirestoreRef }, personId: string) => {
       return bindFirestoreRef(

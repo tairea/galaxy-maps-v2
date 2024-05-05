@@ -145,7 +145,6 @@ export default {
     };
   },
   async mounted() {
-    await this.bindCourseTopics(this.courseId);
     this.setCurrentCourseId(this.courseId);
     this.setCurrentTopicId(this.topicId);
 
@@ -222,7 +221,6 @@ export default {
   },
   methods: {
     ...mapActions(useRootStore, [
-      "bindCourseTopics",
       "bindPersonsTasksByTopicId",
       "setCurrentCourseId",
       "setCurrentTopicId",

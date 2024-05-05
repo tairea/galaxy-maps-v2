@@ -83,25 +83,23 @@
               </div>
 
               <!-- COLOUR PICKER -->
-              <p class="dialog-description">
+              <div class="dialog-description">
                 Mission colour:
                 <v-tooltip right>
-                <template v-slot:activator="{ on, attrs }">
-                  <v-icon
-                    left
-                    color="missionAccent"
-                    small
-                    class="circle-outline ma-1"
-                    v-bind="attrs"
-                    v-on="on"
-                  >
-                    {{ mdiInformationVariant }}</v-icon
-                  >
-                </template>
-                <span>
-                  Feature requested by @scott_southwood
-                </span>
-              </v-tooltip>
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-icon
+                      left
+                      color="missionAccent"
+                      small
+                      class="circle-outline ma-1"
+                      v-bind="attrs"
+                      v-on="on"
+                    >
+                      {{ mdiInformationVariant }}</v-icon
+                    >
+                  </template>
+                  <span> Feature requested by @scott_southwood </span>
+                </v-tooltip>
                 <div>
                   <v-color-picker
                     v-model="task.color"
@@ -114,11 +112,11 @@
                     value="#69a1e2"
                     width="90%"
                     :swatches="darkSwatches"
-                    style="background-color:rgba(0,0,0,0)"
+                    style="background-color: rgba(0, 0, 0, 0)"
                   >
                   </v-color-picker>
                 </div>
-              </p>
+              </div>
 
               <!-- DURATION -->
               <!-- <p class="dialog-description">Duration:</p> -->
@@ -383,7 +381,6 @@
 import {
   createTaskWithCourseIdTopicId,
   deleteTaskByCourseIdTopicIdTaskId,
-  updateOrganisationByOrganisationId,
   updateTaskByCourseIdTopicIdTaskId,
 } from "@/lib/ff";
 import { db, storage } from "@/store/firestoreConfig";
@@ -397,13 +394,12 @@ import {
   mdiInformationVariant,
   mdiConsoleNetworkOutline,
 } from "@mdi/js";
-import firebase from "firebase/compat/app";
 import { VueEditor } from "vue2-editor";
 import { mapActions, mapState } from "pinia";
 
 export default {
   name: "CreateEditDeleteMissionDialog",
-  props: ["taskToEdit", "taskId", "index", "topicId", "on", "attrs", "edit","taskColor"],
+  props: ["course", "topic", "taskId", "taskToEdit", "index", "on", "attrs", "edit", "taskColor"],
   components: {
     VueEditor,
   },
@@ -426,7 +422,7 @@ export default {
       slides: "",
       submissionRequired: "",
       submissionInstructions: "",
-      color: ""
+      color: "",
     },
     loading: false,
     disabled: false,
@@ -460,7 +456,7 @@ export default {
   //   }
   // },
   computed: {
-    ...mapState(useRootStore, ["currentCourseId", "person"]),
+    ...mapState(useRootStore, ["person"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -483,7 +479,7 @@ export default {
         }
       }
 
-      const _createdTask = await createTaskWithCourseIdTopicId(this.currentCourseId, this.topicId, task);
+      const _createdTask = await createTaskWithCourseIdTopicId(this.course.id, this.topic.id, task);
 
       // TODO: refresh topic tasks
       // await this.getCourseTasks();
@@ -510,7 +506,12 @@ export default {
         }
       }
 
-      const _updatedTask = await updateTaskByCourseIdTopicIdTaskId(this.currentCourseId, this.topicId, this.taskId, task);
+      const _updatedTask = await updateTaskByCourseIdTopicIdTaskId(
+        this.course.id,
+        this.topic.id,
+        this.taskId,
+        task,
+      );
 
       this.loading = false;
       this.disabled = false;
@@ -528,7 +529,11 @@ export default {
       this.dialog = true;
     },
     async confirmDeleteTask() {
-      const _deletedTask = await deleteTaskByCourseIdTopicIdTaskId(this.currentCourseId, this.topicId, this.taskId);
+      const _deletedTask = await deleteTaskByCourseIdTopicIdTaskId(
+        this.course.id,
+        this.topic.id,
+        this.taskId,
+      );
 
       // close dialog
       this.dialogConfirm = false;
