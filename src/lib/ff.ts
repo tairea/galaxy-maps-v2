@@ -221,6 +221,23 @@ export const deleteTaskByCourseIdTopicIdTaskId = async (
   return result.data.task;
 };
 
+export const updateTaskOrderIndexesByCourseIdTopicId = async (
+  courseId: string,
+  topicId: string,
+  orderIndexes: { taskId: string; orderIndex: number }[],
+): Promise<ITask[]> => {
+  const data = {
+    courseId,
+    topicId,
+    orderIndexes,
+  };
+  const updateTaskOrderIndexesByCourseIdTopicId = functions.httpsCallable(
+    "updateTaskOrderIndexesByCourseIdTopicId",
+  );
+  const result = await updateTaskOrderIndexesByCourseIdTopicId(data);
+  return result.data.tasks;
+};
+
 // organisation
 export const fetchOrganisations = async (): Promise<IOrganisation[]> => {
   const data = {};

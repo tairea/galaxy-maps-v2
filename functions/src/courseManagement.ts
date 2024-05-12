@@ -1228,6 +1228,116 @@ async function deleteTask(courseId: string, topicId: string, taskId: string) {
   };
 }
 
+// Update task order indexes by courseId and topicId
+export const updateTaskOrderIndexesByCourseIdTopicIdHttpsEndpoint = runWith({}).https.onCall(
+  async (data, context) => {
+    requireAuthenticated(context);
+
+    const courseId = data.courseId as string | null;
+    const topicId = data.topicId as string | null;
+    const orderIndexes = data.orderIndexes as { taskId: string; orderIndex: number }[] | null;
+    if (courseId == null) {
+      throw new HttpsError("invalid-argument", "missing courseId");
+    }
+    if (topicId == null) {
+      throw new HttpsError("invalid-argument", "missing topicId");
+    }
+    if (orderIndexes == null) {
+      throw new HttpsError("invalid-argument", "missing orderIndexes");
+    }
+
+    // TODO: permissions checks
+
+    const result = await updateTaskOrderIndexes(courseId, topicId, orderIndexes);
+
+    return result;
+  },
+);
+
+/**
+ * Update a task
+ */
+async function updateTaskOrderIndexes(
+  courseId: string,
+  topicId: string,
+  orderIndexes: { taskId: string; orderIndex: number }[],
+) {
+  const updatedTaskCollection = await Promise.all(
+    orderIndexes.map(async (taskOrderIndex) => {
+      const taskRef = db
+        .collection("courses")
+        .doc(courseId)
+        .collection("topics")
+        .doc(topicId)
+        .collection("tasks")
+        .doc(taskOrderIndex.taskId);
+
+      await taskRef.update({
+        orderIndex: taskOrderIndex.orderIndex,
+      });
+
+      const taskDoc = await taskRef.get();
+
+      return taskDoc;
+    }),
+  );
+
+  // update students with tasks
+
+  // get all students in the course
+  const studentCollection = await db
+    .collection("people")
+    .where("assignedCourses", "array-contains", courseId)
+    .get();
+
+  for (const doc of studentCollection.docs) {
+    const studentId = doc.id;
+
+    // set reference to this course
+    const courseRef = db.collection("people").doc(studentId).collection(courseId);
+
+    // check if the student has already started the course
+    // if not they will be assigned this task when they start the course
+    const studentHasStartedCourse = await courseRef.get().then((subQuery) => {
+      return subQuery.docs.length;
+    });
+
+    if (studentHasStartedCourse) {
+      // assign tasks to student
+      await Promise.all(
+        updatedTaskCollection.map((taskDoc) =>
+          courseRef
+            .doc(topicId)
+            .collection("tasks")
+            .doc(taskDoc.id)
+            .set({ ...taskDoc.data() }),
+        ),
+      );
+    }
+  }
+
+  const taskCollection = await db
+    .collection("courses")
+    .doc(courseId)
+    .collection("topics")
+    .doc(topicId)
+    .collection("tasks")
+    .get();
+
+  const tasks = [];
+  for (const doc of taskCollection.docs) {
+    const task = doc.data();
+    tasks.push({
+      ...task,
+      id: doc.id,
+    });
+  }
+
+  return {
+    tasks,
+  };
+}
+
 // ====== ASSIGN PERSON TO COHORT ==================
 export const addMeToCohortHttpsEndpoint = runWith({}).https.onCall(
   async (data: { cohortId: string }, context) => {

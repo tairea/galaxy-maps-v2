@@ -24,7 +24,6 @@ const getDefaultState = () => {
     currentCourseEdges: [] as Record<string, any>[],
     personsCourses: [] as Record<string, any>[],
     personsTopics: [] as Record<string, any>[],
-    personsTopicsTasks: [] as Record<string, any>[],
     requestsForHelp: [] as Record<string, any>[],
     courseSubmissions: [] as Record<string, any>[],
     teachersRequestsForHelp: [] as Record<string, any>[],
@@ -195,23 +194,6 @@ export default defineStore({
         return bindFirestoreRef(
           "personsTopics",
           db.collection("people").doc(payload.personId).collection(payload.courseId),
-        );
-      },
-    ),
-    // bind persons tasks by topic id
-    bindPersonsTasksByTopicId: firestoreAction(
-      ({ bindFirestoreRef }, payload: { personId: string; courseId: string; topicId: string }) => {
-        console.log("getting persons tasks: ", payload);
-
-        return bindFirestoreRef(
-          "personsTopicsTasks",
-          db
-            .collection("people")
-            .doc(payload.personId)
-            .collection(payload.courseId)
-            .doc(payload.topicId)
-            .collection("tasks"),
-          //.orderBy("taskCreatedTimestamp"),
         );
       },
     ),

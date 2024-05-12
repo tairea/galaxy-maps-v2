@@ -1,21 +1,22 @@
 <template>
-  <div v-if="!loading" id="container" class="bg">
+  <div id="container" class="bg">
     <!--==== Left section ====-->
     <div id="left-section">
       <SolarSystemInfo
+        v-if="!loading"
         :topic="topic"
-        :tasks="teacher ? topicTasks : personsTopicsTasks"
+        :tasks="teacher ? topicTasks : personTasks"
         :teacher="teacher"
         :course="course"
       />
       <AssignedInfo
-        v-if="!draft && peopleInTopic.length"
+        v-if="!loading && !draft && peopleInTopic.length"
         :assignCohorts="true"
         :people="peopleInTopic"
       />
 
       <!-- Order change button -->
-      <div class="save-changes mt-4">
+      <div v-if="!loading" class="save-changes mt-4">
         <v-btn
           v-if="orderChanged"
           outlined
@@ -33,28 +34,44 @@
 
     <!--==== Main section ====-->
     <div id="main-section">
+      <!-- loading spinner -->
+      <div class="d-flex justify-center align-center" v-if="loading">
+        <v-btn
+          :loading="loading"
+          icon
+          color="missionAccent"
+          class="d-flex justify-center align-center"
+        ></v-btn>
+      </div>
       <MissionsList
+        v-if="!loading"
         :course="course"
         :topic="topic"
-        :tasks="teacher ? sortedTopicTasks : sortedPersonsTopicsTasks"
+        :tasks="teacher ? sortedTopicTasks : sortedPersonTasks"
         :teacher="teacher"
         :disableCreateMission="orderChanged"
         @task="taskForHelpInfo($event)"
         @missionActivated="peopleInTopic.push(person)"
-        @orderChanged="missionOrderChanged"
+        @missionStarted="missionStarted"
+        @missionSubmittedForReview="missionSubmittedForReview"
+        @missionCompleted="missionCompleted"
+        @taskCreated="taskCreated"
         @taskUpdated="taskUpdated"
+        @taskDeleted="taskDeleted"
+        @taskOrderChanged="taskOrderChanged"
       />
     </div>
 
     <!--==== Right section ====-->
     <div id="right-section">
       <RequestForHelpTeacherFrame
+        v-if="!loading"
         :courses="[course]"
         :isTeacher="teacher"
         :students="peopleInTopic"
       />
       <SubmissionTeacherFrame
-        v-if="teacher"
+        v-if="!loading && teacher"
         :courses="[course]"
         :students="peopleInTopic"
         class="mt-4"
@@ -97,15 +114,11 @@ import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.v
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import {
   fetchAllPeopleInCourseByCourseId,
-  fetchCourseByCourseId,
-  fetchPersonsTasksByPersonIdCourseIdTopicId,
   fetchPersonsTopicByPersonIdCourseIdTopicId,
-  fetchPersonsTopicsByPersonIdCourseId,
-  fetchTopicByCourseIdTopicId,
-  fetchTasksByCourseIdTopicId,
 } from "@/lib/ff";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
+import useSolarSystemViewStore from "@/store/solarSystemView";
 import { mapActions, mapState } from "pinia";
 import { mdiContentSave } from "@mdi/js";
 import confetti from "canvas-confetti";
@@ -124,11 +137,6 @@ export default {
   data() {
     return {
       mdiContentSave,
-      course: null,
-      topic: null,
-      topicTasks: [],
-      personsTopics: [],
-      personsTopicsTasks: [],
       activeMission: null,
       task: null,
       unsubscribes: [],
@@ -148,26 +156,15 @@ export default {
     this.setCurrentCourseId(this.courseId);
     this.setCurrentTopicId(this.topicId);
 
-    const [course, topic] = await Promise.all([
-      fetchCourseByCourseId(this.courseId),
-      fetchTopicByCourseIdTopicId(this.courseId, this.topicId),
-    ]);
-
-    this.course = course;
-    this.topic = topic;
+    await this.loadTopic(this.courseId, this.topicId);
 
     if (this.teacher) {
-      this.topicTasks = await fetchTasksByCourseIdTopicId(this.courseId, this.topicId);
+      await this.refreshTasks();
     } else {
-      const [personsTopics, personsTopicsTasks] = await Promise.all([
-        fetchPersonsTopicsByPersonIdCourseId(this.person.id, this.courseId),
-        fetchPersonsTasksByPersonIdCourseIdTopicId(this.person.id, this.courseId, this.topicId),
-        this.getPeopleInTopic(),
-      ]);
-
-      this.personsTopics = personsTopics;
-      this.personsTopicsTasks = personsTopicsTasks;
+      await this.refreshPersonTopicsAndTasks(this.person.id);
     }
+
+    await this.getPeopleInTopic();
 
     // set active task
     this.task = this.getActiveMission();
@@ -192,6 +189,13 @@ export default {
   },
   computed: {
     ...mapState(useRootStore, ["person", "user", "topicCompleted", "nextTopicUnlockedFlag"]),
+    ...mapState(useSolarSystemViewStore, [
+      "course",
+      "topic",
+      "topicTasks",
+      "personTopics",
+      "personTasks",
+    ]),
     draft() {
       return this.course.status === "drafting";
     },
@@ -207,31 +211,35 @@ export default {
         return this.topicTasks.sort((a, b) => a.taskCreatedTimestamp - b.taskCreatedTimestamp);
       }
     },
-    sortedPersonsTopicsTasks() {
-      if (this.personsTopicsTasks.some((task) => task.orderIndex != null)) {
+    sortedPersonTasks() {
+      if (this.personTasks.some((task) => task.orderIndex != null)) {
         console.log("tasks have orderIndex, sorting by orderIndex");
-        return this.personsTopicsTasks.sort((a, b) => a.orderIndex - b.orderIndex);
+        return this.personTasks.sort((a, b) => a.orderIndex - b.orderIndex);
       } else {
         console.log("tasks do not have orderIndex, sorting by timestamp");
-        return this.personsTopicsTasks.sort(
-          (a, b) => a.taskCreatedTimestamp - b.taskCreatedTimestamp,
-        );
+        return this.personTasks.sort((a, b) => a.taskCreatedTimestamp - b.taskCreatedTimestamp);
       }
     },
   },
   methods: {
     ...mapActions(useRootStore, [
-      "bindPersonsTasksByTopicId",
       "setCurrentCourseId",
       "setCurrentTopicId",
       "setCurrentTaskId",
       "setNextTopicUnlocked",
     ]),
+    ...mapActions(useSolarSystemViewStore, [
+      "loadTopic",
+      "refreshTopic",
+      "refreshTasks",
+      "updateTaskOrderIndexes",
+      "refreshPersonTopicsAndTasks",
+    ]),
     taskForHelpInfo(task) {
       this.task = task;
     },
     getActiveMission() {
-      const activeMissionObj = this.personsTopicsTasks.find((taskObj) => {
+      const activeMissionObj = this.personTasks.find((taskObj) => {
         return taskObj.taskStatus == "active" || taskObj.taskStatus == "declined";
       });
       if (activeMissionObj) {
@@ -263,7 +271,33 @@ export default {
       );
       this.peopleInTopic = people;
     },
-    missionOrderChanged(event) {
+    async missionStarted(taskId) {
+      console.log("mission started", taskId);
+      await this.refreshTopic();
+      await this.refreshPersonTopicsAndTasks(this.person.id);
+    },
+    async missionSubmittedForReview(taskId) {
+      console.log("mission submitted for review", taskId);
+      await this.refreshPersonTopicsAndTasks(this.person.id);
+    },
+    async missionCompleted(taskId) {
+      console.log("mission completed", taskId);
+      await this.refreshTopic();
+      await this.refreshPersonTopicsAndTasks(this.person.id);
+    },
+    async taskCreated(task) {
+      console.log("task created", task);
+      await this.refreshTasks();
+    },
+    async taskUpdated(task) {
+      console.log("task updated", task);
+      await this.refreshTasks();
+    },
+    async taskDeleted(task) {
+      console.log("task deleted", task);
+      await this.refreshTasks();
+    },
+    taskOrderChanged(event) {
       this.orderChanged = true;
       const value = event;
       const orderChanges = [];
@@ -291,19 +325,9 @@ export default {
     async saveNewMissionOrder() {
       this.savingNewMissionOrder = true;
 
-      for (let i = 0; i < this.newMissionOrder.length; i++) {
-        await db
-          .collection("courses")
-          .doc(this.courseId)
-          .collection("topics")
-          .doc(this.topicId)
-          .collection("tasks")
-          .doc(this.newMissionOrder[i].id)
-          .update({
-            orderIndex: this.newMissionOrder[i].orderIndex,
-          });
-        console.log("db update done for: ", this.newMissionOrder[i].title);
-      }
+      await this.updateTaskOrderIndexes(
+        this.newMissionOrder.map((task) => ({ taskId: task.id, orderIndex: task.orderIndex })),
+      );
 
       this.savingNewMissionOrder = false;
       this.orderChanged = false;

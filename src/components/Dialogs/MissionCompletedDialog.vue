@@ -231,6 +231,7 @@ import {
 } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
 import useRootStore from "@/store/index";
+import useSolarSystemViewStore from "@/store/solarSystemView";
 import {
   submitWorkForReviewXAPIStatement,
   reSubmitWorkForReviewXAPIStatement,
@@ -288,17 +289,14 @@ export default {
     if (!this.course.mappedBy.image) {
       this.getMappedByPersonsImage(this.course.mappedBy.personId);
     }
+    // FIXME: this won't work if they load the solar system view directly without going
+    // through the galaxy view, the currentCohortId could be incorrect or even null
     this.cohort = await fetchCohortByCohortId(this.currentCohortId);
     // console.log("persons topics from mission completed dialog", this.personsTopics);
   },
   computed: {
-    ...mapState(useRootStore, [
-      "currentCohortId",
-      "personsTopicsTasks",
-      "courseSubmissions",
-      "personsTopics",
-      "person",
-    ]),
+    ...mapState(useRootStore, ["currentCohortId", "courseSubmissions", "personsTopics", "person"]),
+    ...mapState(useSolarSystemViewStore, ["personTasks"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -388,15 +386,18 @@ export default {
       }
 
       console.log("Task work successfully re-submitted for review!");
-      this.loading = false;
-      this.disabled = false;
-      this.dialog = false;
 
       // unlock next task
       await this.unlockNextTask();
 
       // check if all tasks/missions are completed
       await this.checkIfAllTasksCompleted();
+
+      this.$emit("missionSubmittedForReview");
+
+      this.loading = false;
+      this.disabled = false;
+      this.dialog = false;
 
       // TODO: perhaps only unlock once teacher has reviewed and marked complete. SOLUTION: leave as is. can progress to next task, but cant progress to next topic until all work is reviewed.
     },
@@ -473,15 +474,18 @@ export default {
         });
 
       console.log("Task work successfully submitted for review!");
-      this.loading = false;
-      this.disabled = false;
-      this.dialog = false;
 
       // unlock next task
       await this.unlockNextTask();
 
       // check if all tasks/missions are completed
       await this.checkIfAllTasksCompleted();
+
+      this.$emit("missionSubmittedForReview");
+
+      this.loading = false;
+      this.disabled = false;
+      this.dialog = false;
 
       // TODO: perhaps only unlock once teacher has reviewed and marked complete. SOLUTION: leave as is. can progress to next task, but cant progress to next topic until all work is reviewed.
     },
@@ -534,6 +538,8 @@ export default {
       // check if all tasks/missions are completed
       await this.checkIfAllTasksCompleted();
 
+      this.$emit("missionCompleted");
+
       this.loading = false;
       this.disabled = false;
       this.dialog = false;
@@ -562,11 +568,11 @@ export default {
     },
     async checkIfAllTasksCompleted() {
       // 1) check how many tasks in store are completed
-      const numOfTasksCompleted = this.personsTopicsTasks.filter(
+      const numOfTasksCompleted = this.personTasks.filter(
         (obj) => obj.taskStatus === "completed",
       ).length;
       // 2) check if that the same as total
-      if (numOfTasksCompleted === this.personsTopicsTasks.length) {
+      if (numOfTasksCompleted === this.personTasks.length) {
         console.log("Topic Completed! (all tasks in this topic completed)");
         // set topic to completed in store
         this.setTopicCompleted({ completed: true, topicId: this.topic.id });
@@ -588,22 +594,22 @@ export default {
         this.setNextTopicUnlocked(true);
       } else {
         console.log("topic not yet completed...");
-        console.log("total tasks = ", this.personsTopicsTasks.length);
+        console.log("total tasks = ", this.personTasks.length);
         console.log(
           "completed = ",
-          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "completed").length,
+          this.personTasks.filter((obj) => obj.taskStatus === "completed").length,
         );
         console.log(
           "in review = ",
-          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "inreview").length,
+          this.personTasks.filter((obj) => obj.taskStatus === "inreview").length,
         );
         console.log(
           "active = ",
-          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked").length,
+          this.personTasks.filter((obj) => obj.taskStatus === "locked").length,
         );
         console.log(
           "locked = ",
-          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked").length,
+          this.personTasks.filter((obj) => obj.taskStatus === "locked").length,
         );
       }
     },

@@ -28,7 +28,7 @@
           <p class="text-overline text-uppercase text-center" style="line-height: 1rem">
             REQUEST HELP
           </p>
-          <RequestHelpDialog :topicId="topicId" :task="task" :taskId="task.id" />
+          <RequestHelpDialog :course="course" :topic="topic" :task="task" :taskId="task.id" />
         </div>
 
         <!-- MARK AS COMPLETED -->
@@ -42,6 +42,8 @@
             :task="task"
             :active="active"
             :declined="declined"
+            @missionSubmittedForReview="$emit('missionSubmittedForReview')"
+            @missionCompleted="$emit('missionCompleted')"
           />
         </div>
       </div>

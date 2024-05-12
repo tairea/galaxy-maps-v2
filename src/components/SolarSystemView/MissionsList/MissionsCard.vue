@@ -29,6 +29,8 @@
               :taskToEdit="task"
               :index="index"
               :taskColor="task.color"
+              @taskUpdated="$emit('taskUpdated', $event)"
+              @taskDeleted="$emit('taskDeleted', $event)"
             />
           </div>
         </div>
@@ -140,6 +142,7 @@
               :topic="topic"
               :task="task"
               :topicActive="topicActive"
+              @missionStarted="$emit('missionStarted', task.id)"
             />
           </div>
           <div
@@ -246,6 +249,8 @@
         :task="task"
         :active="active"
         :declined="declined"
+        @missionSubmittedForReview="$emit('missionSubmittedForReview', task.id)"
+        @missionCompleted="$emit('missionCompleted', task.id)"
       />
       <SelectedMissionsCard v-else :task="task" :completed="completed" :inreview="inreview" />
     </v-expansion-panel-content>
@@ -286,7 +291,7 @@ export default {
       deep: true,
       handler(newVal, oldVal) {
         if (oldVal.taskStatus == "unlocked" && newVal.taskStatus == "active") {
-          this.$emit("missionActivated");
+          this.$emit("missionActivated", newVal.id);
         }
       },
     },

@@ -479,10 +479,9 @@ export default {
         }
       }
 
-      const _createdTask = await createTaskWithCourseIdTopicId(this.course.id, this.topic.id, task);
+      const createdTask = await createTaskWithCourseIdTopicId(this.course.id, this.topic.id, task);
 
-      // TODO: refresh topic tasks
-      // await this.getCourseTasks();
+      this.$emit("taskCreated", createdTask);
 
       this.loading = false;
       this.disabled = false;
@@ -506,12 +505,14 @@ export default {
         }
       }
 
-      const _updatedTask = await updateTaskByCourseIdTopicIdTaskId(
+      const updatedTask = await updateTaskByCourseIdTopicIdTaskId(
         this.course.id,
         this.topic.id,
         this.taskId,
         task,
       );
+
+      this.$emit("taskUpdated", updatedTask);
 
       this.loading = false;
       this.disabled = false;
@@ -529,11 +530,13 @@ export default {
       this.dialog = true;
     },
     async confirmDeleteTask() {
-      const _deletedTask = await deleteTaskByCourseIdTopicIdTaskId(
+      const deletedTask = await deleteTaskByCourseIdTopicIdTaskId(
         this.course.id,
         this.topic.id,
         this.taskId,
       );
+
+      this.$emit("taskDeleted", deletedTask);
 
       // close dialog
       this.dialogConfirm = false;

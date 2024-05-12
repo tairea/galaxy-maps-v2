@@ -34,6 +34,7 @@ import {
   getStudentSubmissionsByPersonIdHttpsEndpoint,
   getStudentRequestsByPersonIdHttpsEndpoint,
   updateTaskByCourseIdTopicIdTaskIdHttpsEndpoint,
+  updateTaskOrderIndexesByCourseIdTopicIdHttpsEndpoint,
   removeMeFromCourseHttpsEndpoint,
   removeStudentFromCourseHttpsEndpoint,
 } from "./courseManagement.js";
@@ -99,6 +100,7 @@ export {
   getTasksByCourseIdTopicIdHttpsEndpoint as getTasksByCourseIdTopicId,
   getTopicByCourseIdTopicIdHttpsEndpoint as getTopicByCourseIdTopicId,
   updateTaskByCourseIdTopicIdTaskIdHttpsEndpoint as updateTaskByCourseIdTopicIdTaskId,
+  updateTaskOrderIndexesByCourseIdTopicIdHttpsEndpoint as updateTaskOrderIndexesByCourseIdTopicId,
   removeMeFromCourseHttpsEndpoint as removeMeFromCourse,
   removeStudentFromCourseHttpsEndpoint as removeStudentFromCourse,
 };

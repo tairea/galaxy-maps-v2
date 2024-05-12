@@ -84,6 +84,8 @@ export default {
         mission: this.task,
       });
 
+      this.$emit("missionStarted");
+
       this.loading = false;
       this.dialog = false;
     },

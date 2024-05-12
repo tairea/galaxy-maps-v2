@@ -26,8 +26,13 @@
                   :index="index"
                   :topicActive="topicActive"
                   :teacher="teacher"
-                  @missionActivated="missionActivated"
                   :tasks="tasks"
+                  @missionActivated="missionActivated"
+                  @missionStarted="missionStarted"
+                  @missionSubmittedForReview="missionSubmittedForReview"
+                  @missionCompleted="missionCompleted"
+                  @taskUpdated="taskUpdated"
+                  @taskDeleted="taskDeleted"
                 />
               </v-expansion-panel>
             </transition-group>
@@ -40,7 +45,7 @@
     </div>
 
     <div class="createButton mt-8" v-if="teacher">
-      <CreateEditDeleteMissionDialog :course="course" :topic="topic" />
+      <CreateEditDeleteMissionDialog :course="course" :topic="topic" @taskCreated="taskCreated" />
     </div>
   </div>
 </template>
@@ -97,7 +102,7 @@ export default {
         console.log("draggable => set:", value);
         // update topicTasks
         this.topicsTasks = value;
-        this.$emit("orderChanged", value);
+        this.$emit("taskOrderChanged", value);
       },
     },
   },
@@ -105,9 +110,18 @@ export default {
     missionClicked(task) {
       this.$emit("task", task);
     },
-    missionActivated() {
+    missionActivated(taskId) {
       this.checkActiveTask();
-      this.$emit("missionActivated");
+      this.$emit("missionActivated", taskId);
+    },
+    missionStarted(taskId) {
+      this.$emit("missionStarted", taskId);
+    },
+    missionSubmittedForReview(taskId) {
+      this.$emit("missionSubmittedForReview", taskId);
+    },
+    missionCompleted(taskId) {
+      this.$emit("missionCompleted", taskId);
     },
     checkActiveTask() {
       this.indexOfActiveTask = this.tasks.findIndex((object) => {
@@ -116,6 +130,16 @@ export default {
       if (this.topic.topicStatus === "active") {
         this.topicActive = true;
       }
+    },
+    taskCreated(task) {
+      this.$emit("taskCreated", task);
+    },
+    taskUpdated(task) {
+      console.log("task updated inner", task);
+      this.$emit("taskUpdated", task);
+    },
+    taskDeleted(task) {
+      this.$emit("taskDeleted", task);
     },
   },
 };
