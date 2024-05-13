@@ -107,7 +107,7 @@ export default {
     this.requesterPerson = await fetchPersonByPersonId(this.submission.studentId);
   },
   computed: {
-    ...mapState(useRootStore, ["personsTopicsTasks", "showPanelCard"]),
+    ...mapState(useRootStore, ["showPanelCard"]),
     showCard: {
       get: function () {
         if (

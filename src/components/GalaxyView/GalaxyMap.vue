@@ -28,11 +28,6 @@
           @select-node="selectNode"
                 @blur-node="blurNode"
     -->
-
-    <!-- Attempt to put systems on top of nodes. need to explore drawing solar systems in canvas -->
-    <!-- <div v-for="system in currentCourseNodes" :key="system.id">
-      <SolarSystem :topic="getTopicById(system.id)" :coords="getDomCoords(system)" :size="'0.25em'" />
-    </div> -->
   </div>
 </template>
 
@@ -182,16 +177,12 @@ export default {
   },
   computed: {
     ...mapState(useRootStore, [
-      "getTopicById",
       "person",
-      // "getTasksByTopicId",
       "currentCourseId",
       "currentTopicId",
       "currentCourseNodes",
       "currentCourseEdges",
       "personsTopics",
-      "personsTopicsTasks",
-      "topicsTasks",
       "darkMode",
       "personsCourseTasks",
       "courseTasks",
@@ -312,7 +303,6 @@ export default {
     ...mapActions(useRootStore, [
       "bindCourseEdges",
       "bindCourseNodes",
-      "bindCourseTopics",
       "bindThisPersonsCourseTopics",
       "getCourseTasks",
       "getPersonsCourseTasks",
@@ -324,7 +314,6 @@ export default {
 
       // bind topics for course creator
       if (this.teacher) {
-        await this.bindCourseTopics(this.currentCourseId);
         // bind. state.courseTasks
         await this.getCourseTasks();
       } else {

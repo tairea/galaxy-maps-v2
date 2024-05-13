@@ -190,13 +190,13 @@
         <!-- HEADER -->
         <div class="dialog-header py-10">
           <p class="dialog-title">
-            <strong>Warning!</strong> Delete {{ currentTopic?.title }} System?
+            <strong>Warning!</strong> Delete {{ currentNode?.label }} System?
           </p>
           <div class="d-flex align-start">
             <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
             <p class="dialog-description">
               Are you sure you want to <strong>DELETE</strong> this
-              <span class="mission-text">{{ currentTopic?.title }} System</span>?
+              <span class="mission-text">{{ currentNode?.label }} System</span>?
               <br />
               <br />
               Deleting is permanent!!!
@@ -235,7 +235,7 @@
 
 <script>
 import { db } from "@/store/firestoreConfig";
-import { fetchPersonsTopicByPersonIdCourseIdTopicId, fetchTopicByCourseIdTopicId } from "@/lib/ff";
+import { fetchPersonsTopicByPersonIdCourseIdTopicId } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mdiPencil, mdiPlus, mdiClose, mdiCheck, mdiDelete, mdiInformationVariant } from "@mdi/js";
 import firebase from "firebase/compat/app";
@@ -253,11 +253,6 @@ export default {
     "currentEdge",
   ],
   async mounted() {
-    this.currentTopic = await fetchTopicByCourseIdTopicId(
-      this.currentCourseId,
-      this.currentTopicId,
-    );
-
     // this.sortedObjArr = arr.sort((a, b) =>
     //   a.topic.topicCreatedTimestamp.seconds > b.topic.topicCreatedTimestamp.seconds ? 1 : -1,
     // );
@@ -308,7 +303,6 @@ export default {
       prerequisites: this.currentNode.prerequisites?.length ? true : false,
       darkSwatches: [["#69A1E2"], ["#E269CF"], ["#73FBD3"], ["#F3C969"], ["#54428E"]], //https://coolors.co/69a1e2-e269cf-73fbd3-f3c969-54428e
       lightSwatches: [["#577399"], ["#fe5f55"]],
-      currentTopic: null,
     };
   },
   computed: {
@@ -316,8 +310,6 @@ export default {
       "person",
       "currentCourseNodes",
       "personsTopics",
-      "currentCourseId",
-      "currentTopicId",
       "getPersonsTopicById",
     ]),
     dark() {
@@ -367,7 +359,7 @@ export default {
       console.log("save", node);
       await db
         .collection("courses")
-        .doc(this.currentCourseId)
+        .doc(this.course.id)
         .collection("map-nodes")
         .doc(node.id)
         .set({ ...node, nodeCreatedTimestamp: new Date() });
@@ -380,7 +372,7 @@ export default {
           const to = this.currentNode.id;
           const edgeDocRef = await db
             .collection("courses")
-            .doc(this.currentCourseId)
+            .doc(this.course.id)
             .collection("map-edges")
             .add({
               from: from,
@@ -395,7 +387,7 @@ export default {
       // save topic info to topics
       await db
         .collection("courses")
-        .doc(this.currentCourseId)
+        .doc(this.course.id)
         .collection("topics")
         .doc(node.id)
         .set({ ...node, topicCreatedTimestamp: new Date() });
@@ -404,7 +396,7 @@ export default {
       // increment course topicTotals by 1
       await db
         .collection("courses")
-        .doc(this.currentCourseId)
+        .doc(this.course.id)
         .update("topicTotal", firebase.firestore.FieldValue.increment(1));
       console.log("Topic total increased by 1");
 
@@ -426,7 +418,7 @@ export default {
       // delete node from firestore > map-nodes
       await db
         .collection("courses")
-        .doc(this.currentCourseId)
+        .doc(this.course.id)
         .collection("map-nodes")
         .doc(this.currentNode.id)
         .delete();
@@ -435,7 +427,7 @@ export default {
       // delete node from firestore > topics
       await db
         .collection("courses")
-        .doc(this.currentCourseId)
+        .doc(this.course.id)
         .collection("topics")
         .doc(this.currentNode.id)
         .delete();
@@ -445,7 +437,7 @@ export default {
       if (this.currentNode.connectedEdge) {
         await db
           .collection("courses")
-          .doc(this.currentCourseId)
+          .doc(this.course.id)
           .collection("map-edges")
           .doc(this.currentNode.connectedEdge)
           .delete();
@@ -454,7 +446,7 @@ export default {
       // decrement topicTotals by 1
       await db
         .collection("courses")
-        .doc(this.currentCourseId)
+        .doc(this.course.id)
         .update("topicTotal", firebase.firestore.FieldValue.increment(-1));
       console.log("Topic total decreased by 1");
 
@@ -469,7 +461,7 @@ export default {
       this.deleting = true;
       await db
         .collection("courses")
-        .doc(this.currentCourseId)
+        .doc(this.course.id)
         .collection("map-edges")
         .doc(this.currentEdge.id)
         .delete();
@@ -482,7 +474,7 @@ export default {
       // get all students currently assigned to course
       const allStudents = await db
         .collection("people")
-        .where("assignedCourses", "array-contains", this.currentCourseId)
+        .where("assignedCourses", "array-contains", this.course.id)
         .get();
 
       // if no students, return
@@ -495,7 +487,7 @@ export default {
         const personId = doc.id;
 
         // set reference to this course
-        const courseRef = db.collection("people").doc(personId).collection(this.currentCourseId);
+        const courseRef = db.collection("people").doc(personId).collection(this.course.id);
 
         // check if the student has already started the course. If not they will be assigned this topic when they start the course
         const studentHasStartedCourse = await courseRef
@@ -508,7 +500,7 @@ export default {
             // get the prerequisite topic
             const topic = await fetchPersonsTopicByPersonIdCourseIdTopicId(
               personId,
-              this.currentCourseId,
+              this.course.id,
               node.prerequisites[0],
             );
             console.log("topic: ", topic);
@@ -534,7 +526,7 @@ export default {
       // get all students currently assigned to course
       const allStudents = await db
         .collection("people")
-        .where("assignedCourses", "array-contains", this.currentCourseId)
+        .where("assignedCourses", "array-contains", this.course.id)
         .get();
 
       // if no students, return
@@ -550,7 +542,7 @@ export default {
           return db
             .collection("people")
             .doc(personId)
-            .collection(this.currentCourseId)
+            .collection(this.course.id)
             .doc(node.id)
             .delete();
         }),

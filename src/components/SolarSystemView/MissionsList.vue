@@ -9,23 +9,34 @@
       </div>
       <div v-else-if="tasks.length > 0" style="width: 100%">
         <v-expansion-panels :flat="true" :multiple="false" v-model="indexOfActiveTask">
-          <v-expansion-panel
-            class="mission-expansions"
-            v-for="(task, index) in tasks"
-            :key="task.id"
-            @click="missionClicked(task)"
-            :readonly="task.taskStatus == 'locked' || task.taskStatus == 'unlocked' || teacher"
-          >
-            <MissionsCard
-              :task="task"
-              :id="task.id"
-              :index="index"
-              :topicId="topic.id"
-              :topicActive="topicActive"
-              :teacher="teacher"
-              @missionActivated="missionActivated"
-            />
-          </v-expansion-panel>
+          <draggable v-model="sortableMissionList" style="width: 100%" ghost-class="ghost">
+            <transition-group name="fade">
+              <v-expansion-panel
+                class="mission-expansions"
+                v-for="(task, index) in sortableMissionList"
+                :key="task.id"
+                @click="missionClicked(task)"
+                :readonly="task.taskStatus == 'locked' || task.taskStatus == 'unlocked' || teacher"
+                :value="task.taskStatus == 'active'"
+              >
+                <MissionsCard
+                  :course="course"
+                  :topic="topic"
+                  :task="task"
+                  :index="index"
+                  :topicActive="topicActive"
+                  :teacher="teacher"
+                  :tasks="tasks"
+                  @missionActivated="missionActivated"
+                  @missionStarted="missionStarted"
+                  @missionSubmittedForReview="missionSubmittedForReview"
+                  @missionCompleted="missionCompleted"
+                  @taskUpdated="taskUpdated"
+                  @taskDeleted="taskDeleted"
+                />
+              </v-expansion-panel>
+            </transition-group>
+          </draggable>
         </v-expansion-panels>
       </div>
       <div v-else style="width: 100%">
@@ -34,7 +45,7 @@
     </div>
 
     <div class="createButton mt-8" v-if="teacher">
-      <CreateEditDeleteMissionDialog :topicId="topic.id" />
+      <CreateEditDeleteMissionDialog :course="course" :topic="topic" @taskCreated="taskCreated" />
     </div>
   </div>
 </template>
@@ -43,45 +54,92 @@
 import MissionsCard from "@/components/SolarSystemView/MissionsList/MissionsCard.vue";
 import CreateEditDeleteMissionDialog from "@/components/Dialogs/CreateEditDeleteMissionDialog.vue";
 import useRootStore from "@/store/index";
-import { mapState } from "pinia";
+import { mapState, mapActions } from "pinia";
+import draggable from "vuedraggable";
 
 export default {
   name: "MissionsList",
   components: {
     MissionsCard,
     CreateEditDeleteMissionDialog,
+    draggable,
   },
-  props: ["tasks", "topic", "teacher"],
+  props: ["course", "topic", "tasks", "teacher", "disableCreateMission", "loading"],
   data() {
     return {
       activeMission: false,
       topicActive: false,
       indexOfActiveTask: -1,
       missionsLoading: true,
+      topicsTasks: [],
+      lastDraggedContext: null,
     };
   },
   async mounted() {
     // get active task index for expansion panel vmodel (to expand 'active' task on load)
     this.checkActiveTask();
-    await new Promise((resolve) => setTimeout(resolve, 2000)); // show loading for 2 sec
     this.missionsLoading = false;
+    this.topicsTasks = [...this.tasks];
+  },
+  watch: {
+    tasks: {
+      handler(newVal, oldVal) {
+        this.topicsTasks = [...newVal];
+      },
+    },
   },
   computed: {
     ...mapState(useRootStore, ["person"]),
+    sortableMissionList: {
+      get() {
+        return this.topicsTasks;
+      },
+      set(value) {
+        for (let i = 0; i < value.length; i++) {
+          value[i].orderIndex = i;
+        }
+        // this works. value is the correct order with correct orderIndexes
+        console.log("draggable => set:", value);
+        // update topicTasks
+        this.topicsTasks = value;
+        this.$emit("taskOrderChanged", value);
+      },
+    },
   },
   methods: {
     missionClicked(task) {
       this.$emit("task", task);
     },
-    missionActivated() {
+    missionActivated(taskId) {
       this.checkActiveTask();
-      this.$emit("missionActivated");
+      this.$emit("missionActivated", taskId);
+    },
+    missionStarted(taskId) {
+      this.$emit("missionStarted", taskId);
+    },
+    missionSubmittedForReview(taskId) {
+      this.$emit("missionSubmittedForReview", taskId);
+    },
+    missionCompleted(taskId) {
+      this.$emit("missionCompleted", taskId);
     },
     checkActiveTask() {
       this.indexOfActiveTask = this.tasks.findIndex((object) => {
         return object.taskStatus == "active" || object.taskStatus == "declined";
       });
-      if (this.topic.topicStatus === "active") this.topicActive = true;
+      if (this.topic.topicStatus === "active") {
+        this.topicActive = true;
+      }
+    },
+    taskCreated(task) {
+      this.$emit("taskCreated", task);
+    },
+    taskUpdated(task) {
+      console.log("task updated inner", task);
+      this.$emit("taskUpdated", task);
+    },
+    taskDeleted(task) {
+      this.$emit("taskDeleted", task);
     },
   },
 };
@@ -162,5 +220,10 @@ a {
 /* Handle on hover */
 *::-webkit-scrollbar-thumb:hover {
   background: var(--v-missionAccent-base);
+}
+
+.ghost {
+  opacity: 0.5;
+  background: #c8ebfb;
 }
 </style>

@@ -2,7 +2,13 @@
   <div id="ss-info" v-if="course">
     <h2 class="ss-label">System</h2>
     <h1 class="ss-title">{{ topic.label }}</h1>
-    <SolarSystem :topic="topic" :size="'0.25em'" :height="'200px'" :tasks="tasks" />
+    <SolarSystem
+      :courseId="course.id"
+      :topic="topic"
+      :size="'0.25em'"
+      :height="'200px'"
+      :tasks="tasks"
+    />
     <p class="galaxy-description">Part of the</p>
     <h1 class="galaxy-title">{{ course.title }}</h1>
     <p class="galaxy-description">Galaxy</p>
