@@ -1,7 +1,6 @@
 <template>
   <div class="bg">
     <div class="verify">
-      <p class="overline gm-title">Account successfully created</p>
       <p class="overline gm-title">Please verify your email</p>
       <p class="overline" style="font-size: 0.65rem !important">
         An email has been sent to the email address that you entered

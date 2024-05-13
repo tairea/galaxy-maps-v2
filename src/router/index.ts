@@ -123,7 +123,14 @@ const router = new VueRouter({
 });
 
 //
-const initialAuth = new Promise((resolve, reject) => {
+// const initialAuth = new Promise((resolve, reject) => {
+//   const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
+//     unsubscribe();
+//     resolve(user);
+//   }, reject);
+// });
+
+const initialAuth = new Promise<firebase.User | null>((resolve, reject) => {
   const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
     unsubscribe();
     resolve(user);
@@ -132,11 +139,16 @@ const initialAuth = new Promise((resolve, reject) => {
 
 router.beforeEach(async (to, from, next) => {
   const rootStore = useRootStore();
-  await initialAuth;
+  const user = await initialAuth;
   if (from.path !== "/") rootStore.set_from(from.path);
   if (to.matched.some((record) => record.meta.authRequired)) {
-    if (rootStore.user.loggedIn) {
+    if (user && user.emailVerified) {
       next();
+    } else if (user && !user.emailVerified) {
+      alert("You must verify your email to see this page");
+      next({
+        path: "/verify",
+      });
     } else {
       alert("You must be logged in to see this page");
       next({

@@ -97,6 +97,21 @@ export default {
     } else {
       this.tabs = [TAB_GALAXIES];
     }
+
+    if (this.$route.name == "GalaxyView") {
+      this.showNavMenu = false;
+      this.showHamburgerMenu = true;
+    } else if (
+      this.$route.name == "Login" ||
+      this.$route.name == "Verify" ||
+      this.$route.name == "Reset" ||
+      this.$route.name == "Register"
+    ) {
+      this.showNavMenu = false;
+    } else {
+      this.showNavMenu = true;
+      this.showHamburgerMenu = false;
+    }
   },
   methods: {
     toggleMenu() {

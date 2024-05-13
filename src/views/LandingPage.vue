@@ -2,7 +2,10 @@
   <div class="bg">
     <Login v-if="componentView == 'login'" />
     <v-btn v-if="componentView == 'login'" :to="{ path: '/' }">
-      <p class="overline baseAccent--text landing-content">Continue without signing in -></p>
+      <p
+        class="overline baseAccent--text landing-content"
+        v-text="Object.keys($route.query).length === 0 ? 'Continue without signing in ->' : ''"
+      ></p>
     </v-btn>
     <VerifyEmail v-else-if="componentView == 'verify'" />
     <ResetPassword v-else-if="componentView == 'reset'" />
