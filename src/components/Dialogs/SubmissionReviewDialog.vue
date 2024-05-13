@@ -206,7 +206,7 @@
 <script>
 import Avatar from "@/components/Reused/Avatar.vue";
 import { db, functions } from "@/store/firestoreConfig";
-import { fetchPersonByPersonId } from "@/lib/ff";
+import { fetchPersonByPersonId, fetchPersonsTasksByPersonIdCourseIdTopicId } from "@/lib/ff";
 import firebase from "firebase/compat/app";
 import { mapActions, mapState } from "pinia";
 import { mdiTextBoxSearchOutline, mdiThumbUpOutline, mdiThumbDownOutline, mdiClose } from "@mdi/js";
@@ -237,18 +237,19 @@ export default {
     loading: false,
     instructor: {},
     xpPointsForCompletedSubmission: 250,
+    personsTopicsTasks: [],
   }),
   async mounted() {
     this.instructor = await fetchPersonByPersonId(this.submission.contextCourse.mappedBy.personId);
-    // bind students tasks related to this submission (used for unlocking next topic)
-    await this.bindPersonsTasksByTopicId({
-      personId: this.submission.studentId,
-      courseId: this.submission.contextCourse.id,
-      topicId: this.submission.contextTopic.id,
-    });
+    // get students tasks related to this submission (used for unlocking next topic)
+    this.personsTopicsTasks = await fetchPersonsTasksByPersonIdCourseIdTopicId(
+      this.submission.studentId,
+      this.submission.contextCourse.id,
+      this.submission.contextTopic.id,
+    );
   },
   computed: {
-    ...mapState(useRootStore, ["personsTopicsTasks", "person"]),
+    ...mapState(useRootStore, ["person"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -263,7 +264,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["setSnackbar", "bindPersonsTasksByTopicId"]),
+    ...mapActions(useRootStore, ["setSnackbar"]),
     getHumanDate(ts) {
       if (!ts) return;
       return moment((ts.seconds ? ts.seconds : ts._seconds) * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM

@@ -83,25 +83,23 @@
               </div>
 
               <!-- COLOUR PICKER -->
-              <p class="dialog-description">
+              <div class="dialog-description">
                 Mission colour:
                 <v-tooltip right>
-                <template v-slot:activator="{ on, attrs }">
-                  <v-icon
-                    left
-                    color="missionAccent"
-                    small
-                    class="circle-outline ma-1"
-                    v-bind="attrs"
-                    v-on="on"
-                  >
-                    {{ mdiInformationVariant }}</v-icon
-                  >
-                </template>
-                <span>
-                  Feature requested by @scott_southwood
-                </span>
-              </v-tooltip>
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-icon
+                      left
+                      color="missionAccent"
+                      small
+                      class="circle-outline ma-1"
+                      v-bind="attrs"
+                      v-on="on"
+                    >
+                      {{ mdiInformationVariant }}</v-icon
+                    >
+                  </template>
+                  <span> Feature requested by @scott_southwood </span>
+                </v-tooltip>
                 <div>
                   <v-color-picker
                     v-model="task.color"
@@ -114,11 +112,11 @@
                     value="#69a1e2"
                     width="90%"
                     :swatches="darkSwatches"
-                    style="background-color:rgba(0,0,0,0)"
+                    style="background-color: rgba(0, 0, 0, 0)"
                   >
                   </v-color-picker>
                 </div>
-              </p>
+              </div>
 
               <!-- DURATION -->
               <!-- <p class="dialog-description">Duration:</p> -->
@@ -380,6 +378,11 @@
 </template>
 
 <script>
+import {
+  createTaskWithCourseIdTopicId,
+  deleteTaskByCourseIdTopicIdTaskId,
+  updateTaskByCourseIdTopicIdTaskId,
+} from "@/lib/ff";
 import { db, storage } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import {
@@ -391,13 +394,12 @@ import {
   mdiInformationVariant,
   mdiConsoleNetworkOutline,
 } from "@mdi/js";
-import firebase from "firebase/compat/app";
 import { VueEditor } from "vue2-editor";
 import { mapActions, mapState } from "pinia";
 
 export default {
   name: "CreateEditDeleteMissionDialog",
-  props: ["taskToEdit", "taskId", "index", "topicId", "on", "attrs", "edit","taskColor"],
+  props: ["course", "topic", "taskId", "taskToEdit", "index", "on", "attrs", "edit", "taskColor"],
   components: {
     VueEditor,
   },
@@ -420,7 +422,7 @@ export default {
       slides: "",
       submissionRequired: "",
       submissionInstructions: "",
-      color: ""
+      color: "",
     },
     loading: false,
     disabled: false,
@@ -454,7 +456,7 @@ export default {
   //   }
   // },
   computed: {
-    ...mapState(useRootStore, ["currentCourseId", "person"]),
+    ...mapState(useRootStore, ["person"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -477,39 +479,9 @@ export default {
         }
       }
 
-      // Add a new document in collection "courses"
-      const taskDocRef = await db
-        .collection("courses")
-        .doc(this.currentCourseId)
-        .collection("topics")
-        .doc(this.topicId)
-        .collection("tasks")
-        .add({ ...task, taskCreatedTimestamp: new Date() });
+      const createdTask = await createTaskWithCourseIdTopicId(this.course.id, this.topic.id, task);
 
-      task.id = taskDocRef.id;
-      task.taskCreatedTimestamp = new Date();
-      this.saveTaskToStudents(task);
-
-      taskDocRef.update({ id: taskDocRef.id }); // add task id to task
-      console.log("Task successfully written!");
-
-      // increment course taskTotals by 1
-      await db
-        .collection("courses")
-        .doc(this.currentCourseId)
-        .update("taskTotal", firebase.firestore.FieldValue.increment(1));
-      console.log("Course task total increased by 1");
-
-      // increment topic taskTotals by 1
-      await db
-        .collection("courses")
-        .doc(this.currentCourseId)
-        .collection("topics")
-        .doc(this.topicId)
-        .update("taskTotal", firebase.firestore.FieldValue.increment(1));
-      console.log("Topic task total increased by 1");
-
-      await this.getCourseTasks();
+      this.$emit("taskCreated", createdTask);
 
       this.loading = false;
       this.disabled = false;
@@ -533,18 +505,14 @@ export default {
         }
       }
 
-      // Add a new document in collection "courses"
-      await db
-        .collection("courses")
-        .doc(this.currentCourseId)
-        .collection("topics")
-        .doc(this.topicId)
-        .collection("tasks")
-        .doc(this.taskId)
-        .update(this.task);
-      console.log("Task successfully updated!");
+      const updatedTask = await updateTaskByCourseIdTopicIdTaskId(
+        this.course.id,
+        this.topic.id,
+        this.taskId,
+        task,
+      );
 
-      await this.saveTaskToStudents(task);
+      this.$emit("taskUpdated", updatedTask);
 
       this.loading = false;
       this.disabled = false;
@@ -562,109 +530,16 @@ export default {
       this.dialog = true;
     },
     async confirmDeleteTask() {
-      await db
-        .collection("courses")
-        .doc(this.currentCourseId)
-        .collection("topics")
-        .doc(this.topicId)
-        .collection("tasks")
-        .doc(this.taskId)
-        .delete()
-        .then(() => {
-          console.log("Task successfully deleted!");
-          this.dialog = false;
-        })
-        .catch((error) => {
-          console.error("Error writing document: ", error);
-        });
+      const deletedTask = await deleteTaskByCourseIdTopicIdTaskId(
+        this.course.id,
+        this.topic.id,
+        this.taskId,
+      );
 
-      // decrement taskTotals by 1
-      await db
-        .collection("courses")
-        .doc(this.currentCourseId)
-        .update("taskTotal", firebase.firestore.FieldValue.increment(-1))
-        .then(() => {
-          console.log("Task total decreased by 1");
-        })
-        .catch((error) => {
-          console.error("Error decrementing taskTotal: ", error);
-        });
-
-      // delete task from students
-      await this.deleteTaskForStudents(this.taskId);
+      this.$emit("taskDeleted", deletedTask);
 
       // close dialog
       this.dialogConfirm = false;
-    },
-    async saveTaskToStudents(task) {
-      // get all students currently assigned to course
-      const allStudents = await db
-        .collection("people")
-        .where("assignedCourses", "array-contains", this.currentCourseId)
-        .get();
-
-      for (const doc of allStudents.docs) {
-        const student = doc.id;
-
-        // set reference to this course
-        const courseRef = db.collection("people").doc(student).collection(this.currentCourseId);
-
-        // check if the student has already started the course. If not they will be assigned this task when they start the course
-        const studentHasStartedCourse = await courseRef.get().then((subQuery) => {
-          return subQuery.docs.length;
-        });
-
-        if (studentHasStartedCourse) {
-          if (this.edit) {
-            console.log("only updating task, we dont need to change status: ", task);
-            // assign task to student
-            await courseRef.doc(this.topicId).collection("tasks").doc(task.id).update(task);
-          } else {
-            // if they have started the course, get the tasks for this topic
-            const query = await courseRef.doc(this.topicId).collection("tasks").get();
-
-            // get the data from the task
-            const tasks = query.docs.map((doc) => {
-              return {
-                id: doc.id,
-                ...doc.data(),
-              };
-            });
-
-            // check if all the tasks are all completed
-            const uncompletedTasks = tasks.filter((task) => task.taskStatus !== "completed");
-
-            if (uncompletedTasks.length) {
-              // if they arent all completed this task will be locked. If they are completed then this task should be unlocked
-              task.taskStatus = "locked";
-            } else task.taskStatus = "unlocked";
-
-            // assign task to student
-            await courseRef.doc(this.topicId).collection("tasks").doc(task.id).set(task);
-          }
-        }
-      }
-    },
-    async deleteTaskForStudents(task) {
-      // get all students currently assigned to course
-      const allStudents = await db
-        .collection("people")
-        .where("assignedCourses", "array-contains", this.currentCourseId)
-        .get();
-
-      for (const doc of allStudents.docs) {
-        const student = doc.id;
-        console.log("deleting ", task, "for student: ", student);
-        // delete for student
-        await db
-          .collection("people")
-          .doc(student)
-          .collection(this.currentCourseId)
-          .doc(this.topicId)
-          .collection("tasks")
-          .doc(task)
-          .delete();
-      }
     },
     handleDescriptionImageAdded(file, Editor, cursorLocation) {
       console.log("image file", file);

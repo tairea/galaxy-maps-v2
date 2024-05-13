@@ -1,51 +1,77 @@
 <template>
-  <div v-if="!loading" id="container" class="bg">
+  <div id="container" class="bg">
     <!--==== Left section ====-->
     <div id="left-section">
       <SolarSystemInfo
-        :topic="getTopicById(currentTopicId)"
-        :tasks="teacher ? topicsTasks : personsTopicsTasks"
+        v-if="!loading"
+        :topic="topic"
+        :tasks="teacher ? topicTasks : personTasks"
         :teacher="teacher"
         :course="course"
       />
-      <!-- <SolarSystemInfo
-        :topic="
-          teacher ? 
-            getTopicById(currentTopicId) :
-            getPersonsTopicById(currentTopicId)
-        "
-        :tasks="teacher ? topicsTasks : personsTopicsTasks"
-        :teacher="teacher"
-      /> -->
       <AssignedInfo
-        v-if="!draft && peopleInTopic.length"
+        v-if="!loading && !draft && peopleInTopic.length"
         :assignCohorts="true"
         :people="peopleInTopic"
       />
 
-      <BackButton :toPath="'/galaxy/' + currentCourseId" />
+      <!-- Order change button -->
+      <div v-if="!loading" class="save-changes mt-4">
+        <v-btn
+          v-if="orderChanged"
+          outlined
+          color="baseAccent"
+          @click="saveNewMissionOrder"
+          :loading="savingNewMissionOrder"
+        >
+          <v-icon left> {{ mdiContentSave }} </v-icon>
+          SAVE CHANGES
+        </v-btn>
+      </div>
+
+      <BackButton :toPath="'/galaxy/' + courseId" />
     </div>
 
     <!--==== Main section ====-->
     <div id="main-section">
+      <!-- loading spinner -->
+      <div class="d-flex justify-center align-center" v-if="loading">
+        <v-btn
+          :loading="loading"
+          icon
+          color="missionAccent"
+          class="d-flex justify-center align-center"
+        ></v-btn>
+      </div>
       <MissionsList
+        v-if="!loading"
+        :course="course"
         :topic="topic"
-        :tasks="teacher ? topicsTasks : personsTopicsTasks"
+        :tasks="teacher ? sortedTopicTasks : sortedPersonTasks"
         :teacher="teacher"
+        :disableCreateMission="orderChanged"
         @task="taskForHelpInfo($event)"
         @missionActivated="peopleInTopic.push(person)"
+        @missionStarted="missionStarted"
+        @missionSubmittedForReview="missionSubmittedForReview"
+        @missionCompleted="missionCompleted"
+        @taskCreated="taskCreated"
+        @taskUpdated="taskUpdated"
+        @taskDeleted="taskDeleted"
+        @taskOrderChanged="taskOrderChanged"
       />
     </div>
 
     <!--==== Right section ====-->
     <div id="right-section">
       <RequestForHelpTeacherFrame
+        v-if="!loading"
         :courses="[course]"
         :isTeacher="teacher"
         :students="peopleInTopic"
       />
       <SubmissionTeacherFrame
-        v-if="teacher"
+        v-if="!loading && teacher"
         :courses="[course]"
         :students="peopleInTopic"
         class="mt-4"
@@ -63,7 +89,7 @@
             </div>
           </v-card-text>
           <v-card-actions class="justify-end">
-            <v-btn small text :to="'/galaxy/' + currentCourseId">&lt;- back to galaxy</v-btn>
+            <v-btn small text :to="'/galaxy/' + courseId">&lt;- back to galaxy</v-btn>
             <v-btn
               v-if="showNextSystemButton"
               small
@@ -88,12 +114,13 @@ import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.v
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import {
   fetchAllPeopleInCourseByCourseId,
-  fetchCourseByCourseId,
   fetchPersonsTopicByPersonIdCourseIdTopicId,
-  fetchTopicByCourseIdTopicId,
 } from "@/lib/ff";
+import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
+import useSolarSystemViewStore from "@/store/solarSystemView";
 import { mapActions, mapState } from "pinia";
+import { mdiContentSave } from "@mdi/js";
 import confetti from "canvas-confetti";
 
 export default {
@@ -109,13 +136,16 @@ export default {
   props: ["courseId", "topicId"],
   data() {
     return {
-      course: null,
-      topic: null,
+      mdiContentSave,
       activeMission: null,
       task: null,
       unsubscribes: [],
       peopleInTopic: [],
       loading: true,
+      orderChanged: false,
+      newMissionOrder: [],
+      savingNewMissionOrder: false,
+      updateViaKey: 0,
       currentTask: null,
       topicCompletedDialog: false,
       unlockingNextTopic: true, // default to loading
@@ -123,49 +153,28 @@ export default {
     };
   },
   async mounted() {
-    await this.bindCourseTopics(this.courseId);
     this.setCurrentCourseId(this.courseId);
     this.setCurrentTopicId(this.topicId);
 
-    this.course = await fetchCourseByCourseId(this.currentCourseId);
-    this.topic = await fetchTopicByCourseIdTopicId(this.currentCourseId, this.currentTopicId);
-
-    this.getPeopleInTopic();
+    await this.loadTopic(this.courseId, this.topicId);
 
     if (this.teacher) {
-      //store bindTasksByTopicId
-      await this.bindTasksByTopicId({
-        courseId: this.currentCourseId,
-        topicId: this.currentTopicId,
-      });
+      await this.refreshTasks();
     } else {
-      // store bindPersonsTasksByTopicId
-      await this.bindPersonsTasksByTopicId({
-        personId: this.person.id,
-        courseId: this.currentCourseId,
-        topicId: this.currentTopicId,
-      });
+      await this.refreshPersonTopicsAndTasks(this.person.id);
     }
 
-    // check if requests are binded
-    // console.log("from store requestsForHelp: ", this.requestsForHelp);
+    await this.getPeopleInTopic();
 
     // set active task
     this.task = this.getActiveMission();
-    // filter help for active task
-    // this.requests = this.requestsForHelp.filter(
-    //   (request) => request.contextTask.id == this.currentTaskId
-    // );
 
     this.loading = false;
   },
   watch: {
-    personsCurrentTopic() {
-      this.getPeopleInTopic();
-    },
     topicCompleted(topic) {
       console.log("topic completed (from watch)", topic);
-      if (topic.topicId == this.currentTopicId && topic.completed == true) {
+      if (topic.topicId == this.topicId && topic.completed == true) {
         // yooo topic is completed
         this.setTopicCompleted();
       }
@@ -179,20 +188,13 @@ export default {
     },
   },
   computed: {
-    ...mapState(useRootStore, [
-      "currentCourseId",
-      "currentTopicId",
-      "currentTaskId",
-      "topicsTasks",
-      "personsTopicsTasks",
-      "personsTopics",
-      "person",
-      "getPersonsTopicById",
-      "getTopicById",
-      "getTasksByTopicId",
-      "user",
-      "topicCompleted",
-      "nextTopicUnlockedFlag",
+    ...mapState(useRootStore, ["person", "user", "topicCompleted", "nextTopicUnlockedFlag"]),
+    ...mapState(useSolarSystemViewStore, [
+      "course",
+      "topic",
+      "topicTasks",
+      "personTopics",
+      "personTasks",
     ]),
     draft() {
       return this.course.status === "drafting";
@@ -200,25 +202,44 @@ export default {
     teacher() {
       return this.course.mappedBy?.personId === this.person.id || this.user.data.admin;
     },
-    personsCurrentTopic() {
-      return this.personsTopics.find((topic) => topic.id == this.currentTopicId);
+    sortedTopicTasks() {
+      if (this.topicTasks.some((task) => task.orderIndex != null)) {
+        console.log("tasks have orderIndex, sorting by orderIndex");
+        return this.topicTasks.sort((a, b) => a.orderIndex - b.orderIndex);
+      } else {
+        console.log("tasks do not have orderIndex, sorting by timestamp:");
+        return this.topicTasks.sort((a, b) => a.taskCreatedTimestamp - b.taskCreatedTimestamp);
+      }
+    },
+    sortedPersonTasks() {
+      if (this.personTasks.some((task) => task.orderIndex != null)) {
+        console.log("tasks have orderIndex, sorting by orderIndex");
+        return this.personTasks.sort((a, b) => a.orderIndex - b.orderIndex);
+      } else {
+        console.log("tasks do not have orderIndex, sorting by timestamp");
+        return this.personTasks.sort((a, b) => a.taskCreatedTimestamp - b.taskCreatedTimestamp);
+      }
     },
   },
   methods: {
     ...mapActions(useRootStore, [
-      "bindCourseTopics",
-      "bindPersonsTasksByTopicId",
-      "bindTasksByTopicId",
       "setCurrentCourseId",
       "setCurrentTopicId",
       "setCurrentTaskId",
       "setNextTopicUnlocked",
     ]),
+    ...mapActions(useSolarSystemViewStore, [
+      "loadTopic",
+      "refreshTopic",
+      "refreshTasks",
+      "updateTaskOrderIndexes",
+      "refreshPersonTopicsAndTasks",
+    ]),
     taskForHelpInfo(task) {
       this.task = task;
     },
     getActiveMission() {
-      const activeMissionObj = this.personsTopicsTasks.find((taskObj) => {
+      const activeMissionObj = this.personTasks.find((taskObj) => {
         return taskObj.taskStatus == "active" || taskObj.taskStatus == "declined";
       });
       if (activeMissionObj) {
@@ -240,8 +261,8 @@ export default {
         peopleInCourse.map(async (person) => {
           const personsTopic = await fetchPersonsTopicByPersonIdCourseIdTopicId(
             person.id,
-            this.currentCourseId,
-            this.currentTopicId,
+            this.courseId,
+            this.topicId,
           );
           if (personsTopic.topicStatus == "active") {
             people.push(person);
@@ -249,6 +270,67 @@ export default {
         }),
       );
       this.peopleInTopic = people;
+    },
+    async missionStarted(taskId) {
+      console.log("mission started", taskId);
+      await this.refreshTopic();
+      await this.refreshPersonTopicsAndTasks(this.person.id);
+    },
+    async missionSubmittedForReview(taskId) {
+      console.log("mission submitted for review", taskId);
+      await this.refreshPersonTopicsAndTasks(this.person.id);
+    },
+    async missionCompleted(taskId) {
+      console.log("mission completed", taskId);
+      await this.refreshTopic();
+      await this.refreshPersonTopicsAndTasks(this.person.id);
+    },
+    async taskCreated(task) {
+      console.log("task created", task);
+      await this.refreshTasks();
+    },
+    async taskUpdated(task) {
+      console.log("task updated", task);
+      await this.refreshTasks();
+    },
+    async taskDeleted(task) {
+      console.log("task deleted", task);
+      await this.refreshTasks();
+    },
+    taskOrderChanged(event) {
+      this.orderChanged = true;
+      const value = event;
+      const orderChanges = [];
+
+      for (let i = 0; i < value.length; i++) {
+        console.log(
+          value[i].title +
+            " " +
+            value[i].orderIndex +
+            "===" +
+            this.topicTasks[i].title +
+            " " +
+            this.topicTasks[i].orderIndex,
+        );
+        if (value[i].orderIndex === this.topicTasks[i].orderIndex) {
+          continue;
+        } else {
+          value[i].orderIndex = i;
+          orderChanges.push(value[i]);
+        }
+      }
+      console.log("orderchanges", orderChanges);
+      this.newMissionOrder = orderChanges;
+    },
+    async saveNewMissionOrder() {
+      this.savingNewMissionOrder = true;
+
+      await this.updateTaskOrderIndexes(
+        this.newMissionOrder.map((task) => ({ taskId: task.id, orderIndex: task.orderIndex })),
+      );
+
+      this.savingNewMissionOrder = false;
+      this.orderChanged = false;
     },
 
     setTopicCompleted() {
@@ -315,18 +397,18 @@ export default {
       });
 
       // this ensures we arn't going to try navigate to the current unlocked topic
-      const nextTopic = unlockedTopics.find((topic) => topic.id !== this.currentTopicId);
+      const nextTopic = unlockedTopics.find((topic) => topic.id !== this.topicId);
 
       // set next topic as current topic
       this.setCurrentTopicId(nextTopic.id);
 
-      console.log("router pushing to: /galaxy/" + this.currentCourseId + "/system/" + nextTopic.id);
+      console.log("router pushing to: /galaxy/" + this.courseId + "/system/" + nextTopic.id);
 
       // route to page with topicId
       this.$router.push({
         name: "SolarSystemView",
         params: {
-          courseId: this.currentCourseId,
+          courseId: this.courseId,
           topicId: nextTopic.id,
         },
       });

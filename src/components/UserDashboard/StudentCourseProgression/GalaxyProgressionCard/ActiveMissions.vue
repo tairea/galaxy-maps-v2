@@ -16,6 +16,7 @@
 
   <!-- v-btn above OR custom div button. which is better? -->
   <div class="active-mission-card" @click="routeToTasksSystem()">
+    <!-- activity uses title field even for topics -->
     <p class="ma-0">{{ activeTopic?.title }}</p>
     <p class="ma-0" style="font-weight: 900; padding: 0px 5px">></p>
     <p class="ma-0" style="font-weight: 900">{{ activeTask?.title }}</p>

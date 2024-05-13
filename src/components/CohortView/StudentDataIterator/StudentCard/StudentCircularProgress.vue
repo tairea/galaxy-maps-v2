@@ -102,7 +102,7 @@ export default {
         completedTopics: this.activity.topicCompletedCount,
         totalTopics: this.activity.course.topicTotal,
         course: this.activity.course.title,
-        topic: this.activity.currentTopic?.title,
+        topic: this.activity.currentTopic?.title, // activity uses title field even for topics
       };
     },
   },

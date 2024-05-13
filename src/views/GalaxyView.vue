@@ -132,7 +132,6 @@ import GalaxyMapButtons from "@/components/GalaxyView/GalaxyMapButtons.vue";
 
 import CreateEditDeleteNodeDialog from "@/components/Dialogs/CreateEditDeleteNodeDialog.vue";
 
-import PopupSystemPreview from "@/components/GalaxyView/PopupSystemPreview.vue";
 import SolarSystemInfoPanel from "@/components/GalaxyView/SolarSystemInfoPanel.vue";
 import EdgeInfoPanel from "@/components/GalaxyView/EdgeInfoPanel.vue";
 
@@ -163,7 +162,6 @@ export default {
     BackButton,
     CreateEditDeleteNodeDialog,
     GalaxyMapButtons,
-    PopupSystemPreview,
     PublishGalaxy,
     RequestForHelpTeacherFrame,
     SubmissionTeacherFrame,
@@ -340,32 +338,6 @@ export default {
       if (this.addEdgeMode) this.addEdgeMode = false;
       if (this.addNodeMode) this.addNodeMode = false;
     },
-    // async bindTasks(courseId, topicId) {
-    //   if (!this.teacher) {
-    //     await this.bindPersonsTasksByTopicId({
-    //       personId: this.person.id,
-    //       courseId: courseId,
-    //       topicId: topicId,
-    //     });
-    //   } else {
-    //     await this.bindTasksByTopicId({
-    //       courseId: courseId,
-    //       topicId: topicId,
-    //     });
-    //   }
-    // },
-    // async hovered(hoveredNode) {
-    //   this.hoverNode = true;
-    //   // this.infoPopupShow = false;
-    //   this.centerFocusPosition = false;
-    //   this.type = hoveredNode.type;
-    //   this.infoPopupPosition.x = hoveredNode.DOMx;
-    //   this.infoPopupPosition.y = hoveredNode.DOMy;
-    //   this.currentNode = hoveredNode;
-    //   //bind tasks for popup preview
-    //   await this.bindTasks(this.courseId, hoveredNode.id);
-    //   this.infoPopupShow = true;
-    // },
     hideLeftPanels(hideFlag) {
       this.hideLeftPanelsFlag = hideFlag;
     },

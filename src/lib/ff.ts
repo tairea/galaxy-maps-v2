@@ -142,6 +142,19 @@ export const fetchTopicByCourseIdTopicId = async (
   return result.data.topic;
 };
 
+export const fetchTasksByCourseIdTopicId = async (
+  courseId: string,
+  topicId: string,
+): Promise<ITask[]> => {
+  const data = {
+    courseId,
+    topicId,
+  };
+  const getTasksByCourseIdTopicId = functions.httpsCallable("getTasksByCourseIdTopicId");
+  const result = await getTasksByCourseIdTopicId(data);
+  return result.data.tasks;
+};
+
 export const fetchTaskByCourseIdTopicIdTaskId = async (
   courseId: string,
   topicId: string,
@@ -155,6 +168,74 @@ export const fetchTaskByCourseIdTopicIdTaskId = async (
   const getTaskByCourseIdTopicIdTaskId = functions.httpsCallable("getTaskByCourseIdTopicIdTaskId");
   const result = await getTaskByCourseIdTopicIdTaskId(data);
   return result.data.task;
+};
+
+export const createTaskWithCourseIdTopicId = async (
+  courseId: string,
+  topicId: string,
+  task: object,
+): Promise<ITask> => {
+  const data = {
+    courseId,
+    topicId,
+    task,
+  };
+  const createTaskWithCourseIdTopicId = functions.httpsCallable("createTaskWithCourseIdTopicId");
+  const result = await createTaskWithCourseIdTopicId(data);
+  return result.data.task;
+};
+
+export const updateTaskByCourseIdTopicIdTaskId = async (
+  courseId: string,
+  topicId: string,
+  taskId: string,
+  task: object,
+): Promise<ITask> => {
+  const data = {
+    courseId,
+    topicId,
+    taskId,
+    task,
+  };
+  const updateTaskByCourseIdTopicIdTaskId = functions.httpsCallable(
+    "updateTaskByCourseIdTopicIdTaskId",
+  );
+  const result = await updateTaskByCourseIdTopicIdTaskId(data);
+  return result.data.task;
+};
+
+export const deleteTaskByCourseIdTopicIdTaskId = async (
+  courseId: string,
+  topicId: string,
+  taskId: string,
+): Promise<ITask> => {
+  const data = {
+    courseId,
+    topicId,
+    taskId,
+  };
+  const deleteTaskByCourseIdTopicIdTaskId = functions.httpsCallable(
+    "deleteTaskByCourseIdTopicIdTaskId",
+  );
+  const result = await deleteTaskByCourseIdTopicIdTaskId(data);
+  return result.data.task;
+};
+
+export const updateTaskOrderIndexesByCourseIdTopicId = async (
+  courseId: string,
+  topicId: string,
+  orderIndexes: { taskId: string; orderIndex: number }[],
+): Promise<ITask[]> => {
+  const data = {
+    courseId,
+    topicId,
+    orderIndexes,
+  };
+  const updateTaskOrderIndexesByCourseIdTopicId = functions.httpsCallable(
+    "updateTaskOrderIndexesByCourseIdTopicId",
+  );
+  const result = await updateTaskOrderIndexesByCourseIdTopicId(data);
+  return result.data.tasks;
 };
 
 // organisation
@@ -298,23 +379,6 @@ export const updatePerson = async (personId: string, person: object): Promise<IP
   return result.data.person;
 };
 
-export const fetchPersonsTasksByPersonIdCourseIdTopicId = async (
-  personId: string,
-  courseId: string,
-  topicId: string,
-): Promise<IPersonTask[]> => {
-  const data = {
-    personId,
-    courseId,
-    topicId,
-  };
-  const getPersonTasksByPersonIdCourseIdTopicId = functions.httpsCallable(
-    "getPersonTasksByPersonIdCourseIdTopicId",
-  );
-  const result = await getPersonTasksByPersonIdCourseIdTopicId(data);
-  return result.data.personTasks;
-};
-
 export const fetchAllPeopleInCourseByCourseId = async (courseId: string): Promise<IPerson[]> => {
   const data = {
     courseId,
@@ -322,6 +386,21 @@ export const fetchAllPeopleInCourseByCourseId = async (courseId: string): Promis
   const getPeopleByCourseId = functions.httpsCallable("getPeopleByCourseId");
   const result = await getPeopleByCourseId(data);
   return result.data.people;
+};
+
+export const fetchPersonsTopicsByPersonIdCourseId = async (
+  personId: string,
+  courseId: string,
+): Promise<IPersonTopic[]> => {
+  const data = {
+    personId,
+    courseId,
+  };
+  const getPersonTopicsByPersonIdCourseId = functions.httpsCallable(
+    "getPersonTopicsByPersonIdCourseId",
+  );
+  const result = await getPersonTopicsByPersonIdCourseId(data);
+  return result.data.personTopics;
 };
 
 export const fetchPersonsTopicByPersonIdCourseIdTopicId = async (
@@ -339,6 +418,23 @@ export const fetchPersonsTopicByPersonIdCourseIdTopicId = async (
   );
   const result = await getPersonTopicByPersonIdCourseIdTopicId(data);
   return result.data.personTopic;
+};
+
+export const fetchPersonsTasksByPersonIdCourseIdTopicId = async (
+  personId: string,
+  courseId: string,
+  topicId: string,
+): Promise<IPersonTask[]> => {
+  const data = {
+    personId,
+    courseId,
+    topicId,
+  };
+  const getPersonTasksByPersonIdCourseIdTopicId = functions.httpsCallable(
+    "getPersonTasksByPersonIdCourseIdTopicId",
+  );
+  const result = await getPersonTasksByPersonIdCourseIdTopicId(data);
+  return result.data.personTasks;
 };
 
 export const fetchStudentActivityLogByPersonId = async (

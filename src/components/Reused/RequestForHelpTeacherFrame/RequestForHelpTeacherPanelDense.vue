@@ -123,7 +123,7 @@ export default {
     },
   },
   computed: {
-    ...mapState(useRootStore, ["allTasks", "people", "showPanelCard"]),
+    ...mapState(useRootStore, ["people", "showPanelCard"]),
     showCard: {
       get: function () {
         if (

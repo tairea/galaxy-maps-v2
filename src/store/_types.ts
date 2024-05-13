@@ -46,14 +46,6 @@ export interface IPerson {
   [key: string]: any;
 }
 
-export interface IPersonTask {
-  id: string;
+export interface IPersonTask extends ITask {}
 
-  [key: string]: any;
-}
-
-export interface IPersonTopic {
-  id: string;
-
-  [key: string]: any;
-}
+export interface IPersonTopic extends ITopic {}

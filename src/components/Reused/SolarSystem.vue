@@ -41,7 +41,7 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "SolarSystem",
-  props: ["topic", "tasks", "size", "height", "coords"],
+  props: ["courseId", "topic", "tasks", "size", "height", "coords"],
   data() {
     let durationRanges = [
       [0, 0],
@@ -71,9 +71,7 @@ export default {
     };
   },
   mounted() {},
-  computed: {
-    ...mapState(useRootStore, ["currentCourseId"]),
-  },
+  computed: {},
   methods: {
     ...mapActions(useRootStore, ["setCurrentTopicId"]),
     // string to colour, thanks to: https://stackoverflow.com/questions/3426404/create-a-hexadecimal-colour-based-on-a-string-with-javascript
@@ -98,7 +96,7 @@ export default {
       this.$router.push({
         name: "SolarSystemView",
         params: {
-          courseId: this.currentCourseId,
+          courseId: this.courseId,
           topicId: this.topic.id,
         },
       });

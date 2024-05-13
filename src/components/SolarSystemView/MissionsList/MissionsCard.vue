@@ -23,11 +23,14 @@
           <div v-if="teacher">
             <CreateEditDeleteMissionDialog
               :edit="true"
+              :course="course"
+              :topic="topic"
+              :taskId="task.id"
               :taskToEdit="task"
-              :taskId="id"
               :index="index"
-              :topicId="topicId"
               :taskColor="task.color"
+              @taskUpdated="$emit('taskUpdated', $event)"
+              @taskDeleted="$emit('taskDeleted', $event)"
             />
           </div>
         </div>
@@ -135,10 +138,11 @@
           <div v-if="unlocked" class="d-flex justify-center">
             <!-- Start Mission button -->
             <StartMissionDialogV2
-              :topicId="topicId"
-              :taskId="id"
+              :course="course"
+              :topic="topic"
               :task="task"
               :topicActive="topicActive"
+              @missionStarted="$emit('missionStarted', task.id)"
             />
           </div>
           <div
@@ -240,29 +244,24 @@
       <!-- expansion content -->
       <ActiveMissionsCard
         v-if="active || declined"
+        :course="course"
+        :topic="topic"
         :task="task"
-        :topicId="topicId"
         :active="active"
         :declined="declined"
+        @missionSubmittedForReview="$emit('missionSubmittedForReview', task.id)"
+        @missionCompleted="$emit('missionCompleted', task.id)"
       />
-      <SelectedMissionsCard
-        v-else
-        :task="task"
-        :topicId="topicId"
-        :completed="completed"
-        :inreview="inreview"
-      />
+      <SelectedMissionsCard v-else :task="task" :completed="completed" :inreview="inreview" />
     </v-expansion-panel-content>
   </div>
 </template>
 
 <script>
 import CreateEditDeleteMissionDialog from "@/components/Dialogs/CreateEditDeleteMissionDialog.vue";
-import StartMissionDialog from "@/components/Dialogs/StartMissionDialog.vue";
 import StartMissionDialogV2 from "@/components/Dialogs/StartMissionDialogV2.vue";
 import ActiveMissionsCard from "@/components/SolarSystemView/MissionsList/MissionsCard/ActiveMissionsCard.vue";
 import SelectedMissionsCard from "@/components/SolarSystemView/MissionsList/MissionsCard/SelectedMissionsCard.vue";
-import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mdiCheck, mdiLockOutline } from "@mdi/js";
 import { mapState } from "pinia";
@@ -271,12 +270,11 @@ export default {
   name: "MissionsCard",
   components: {
     CreateEditDeleteMissionDialog,
-    StartMissionDialog,
     StartMissionDialogV2,
     ActiveMissionsCard,
     SelectedMissionsCard,
   },
-  props: ["task", "id", "index", "topicId", "teacher", "topicActive"],
+  props: ["course", "topic", "task", "index", "teacher", "topicActive"],
   data() {
     return {
       mdiCheck,
@@ -293,13 +291,13 @@ export default {
       deep: true,
       handler(newVal, oldVal) {
         if (oldVal.taskStatus == "unlocked" && newVal.taskStatus == "active") {
-          this.$emit("missionActivated");
+          this.$emit("missionActivated", newVal.id);
         }
       },
     },
   },
   computed: {
-    ...mapState(useRootStore, ["currentCourseId", "personsTopics", "topicsTasks", "person"]),
+    ...mapState(useRootStore, ["personsTopics", "person"]),
     active() {
       return this.task.taskStatus == "active";
     },

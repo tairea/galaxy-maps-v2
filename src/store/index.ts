@@ -12,7 +12,6 @@ const getDefaultState = () => {
       data: null as Record<string, any> | null,
     },
     person: {} as Record<string, any>,
-    topics: [] as Record<string, any>[],
     cohorts: [] as Record<string, any>[],
     assignedCourses: [] as Record<string, any>[],
     organisations: [] as Record<string, any>[],
@@ -23,11 +22,8 @@ const getDefaultState = () => {
     currentCourseId: "",
     currentCourseNodes: [] as Record<string, any>[],
     currentCourseEdges: [] as Record<string, any>[],
-    allTasks: [] as Record<string, any>[],
     personsCourses: [] as Record<string, any>[],
     personsTopics: [] as Record<string, any>[],
-    topicsTasks: [] as Record<string, any>[],
-    personsTopicsTasks: [] as Record<string, any>[],
     requestsForHelp: [] as Record<string, any>[],
     courseSubmissions: [] as Record<string, any>[],
     teachersRequestsForHelp: [] as Record<string, any>[],
@@ -52,24 +48,12 @@ export default defineStore({
   id: "root",
   state: getDefaultState,
   getters: {
-    getTopicById: (state) => (id: string) => {
-      const topic = state.topics.find((topic) => topic.id === id);
-      return topic;
-    },
     getPersonsTopicById: (state) => (id: string) => {
       const topic = state.personsTopics.find((topic) => topic.id === id);
       return topic;
     },
     getOrganisationById: (state) => (id: string) => {
       return state.organisations.find((organisation) => organisation.id === id);
-    },
-    getTasksByTopicId: (state) => (topicId: string) => {
-      const topic = state.topics.find((topic) => topic.id === topicId);
-      return topic?.tasks ?? [];
-    },
-    getPersonsTasksByTopicId: (state) => (id: string) => {
-      const topic = state.personsTopics.find((topic) => topic.id === id);
-      return topic?.tasks ?? [];
     },
     getStudentsByCohortId: (state) => (id: string) => {
       //go to cohorts, and check if they in courses with this id
@@ -124,7 +108,6 @@ export default defineStore({
     setCurrentCohortId(cohortId: string) {
       this.currentCohortId = cohortId;
     },
-
     setCohorts(cohorts: Record<string, any>[]) {
       this.cohorts = cohorts;
     },
@@ -200,9 +183,6 @@ export default defineStore({
         },
       );
     }),
-    bindCourseTopics: firestoreAction(({ bindFirestoreRef }, id: string) => {
-      return bindFirestoreRef("topics", db.collection("courses").doc(id).collection("topics"));
-    }),
     bindCoursesByPersonId: firestoreAction(({ bindFirestoreRef }, personId: string) => {
       return bindFirestoreRef(
         "personsCourses",
@@ -214,37 +194,6 @@ export default defineStore({
         return bindFirestoreRef(
           "personsTopics",
           db.collection("people").doc(payload.personId).collection(payload.courseId),
-        );
-      },
-    ),
-    // bind persons tasks by topic id
-    bindPersonsTasksByTopicId: firestoreAction(
-      ({ bindFirestoreRef }, payload: { personId: string; courseId: string; topicId: string }) => {
-        console.log("getting persons tasks: ", payload);
-
-        return bindFirestoreRef(
-          "personsTopicsTasks",
-          db
-            .collection("people")
-            .doc(payload.personId)
-            .collection(payload.courseId)
-            .doc(payload.topicId)
-            .collection("tasks")
-            .orderBy("taskCreatedTimestamp"),
-        );
-      },
-    ),
-    bindTasksByTopicId: firestoreAction(
-      ({ bindFirestoreRef }, payload: { courseId: string; topicId: string }) => {
-        return bindFirestoreRef(
-          "topicsTasks",
-          db
-            .collection("courses")
-            .doc(payload.courseId)
-            .collection("topics")
-            .doc(payload.topicId)
-            .collection("tasks")
-            .orderBy("taskCreatedTimestamp"), // this is important to ordering the tasks in MissionList.vue
         );
       },
     ),

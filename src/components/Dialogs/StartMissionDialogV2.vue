@@ -29,7 +29,7 @@ import { mapActions, mapState } from "pinia";
 export default {
   // V2 of the start mission button bypasses the start popup dialog and just starts the mission
   name: "StartMissionDialogV2",
-  props: ["task", "topicId", "on", "attrs", "topicActive"],
+  props: ["course", "topic", "task", "on", "attrs", "topicActive"],
   data: () => ({
     mdiPlay,
     mdiInformationVariant,
@@ -37,16 +37,11 @@ export default {
     mdiClose,
     dialog: false,
     loading: false,
-    currentCourse: null,
-    currentTopic: null,
   }),
   computed: {
-    ...mapState(useRootStore, ["currentCourseId", "person"]),
+    ...mapState(useRootStore, ["person"]),
   },
-  async mounted() {
-    this.currentCourse = await fetchCourseByCourseId(this.currentCourseId);
-    this.currentTopic = await fetchTopicByCourseIdTopicId(this.currentCourseId, this.topicId);
-  },
+  async mounted() {},
   methods: {
     ...mapActions(useRootStore, ["setCurrentTaskId"]),
     async startMission() {
@@ -58,8 +53,8 @@ export default {
       const topic = db
         .collection("people")
         .doc(this.person.id)
-        .collection(this.currentCourse.id)
-        .doc(this.topicId);
+        .collection(this.course.id)
+        .doc(this.topic.id);
 
       // update taskStatus to active
       await topic.collection("tasks").doc(this.task.id).update({
@@ -77,17 +72,19 @@ export default {
       console.log("Topic status successfully written as Active!");
       if (!this.topicActive) {
         await startTopicXAPIStatement(this.person, {
-          galaxy: this.currentCourse,
-          system: this.currentTopic,
+          galaxy: this.course,
+          system: this.topic,
         });
       }
 
       console.log("Task status successfully written as Active!");
       await startTaskXAPIStatement(this.person, this.task.id, {
-        galaxy: this.currentCourse,
-        system: this.currentTopic,
+        galaxy: this.course,
+        system: this.topic,
         mission: this.task,
       });
+
+      this.$emit("missionStarted");
 
       this.loading = false;
       this.dialog = false;
