@@ -217,14 +217,19 @@ export default {
       }
     },
     beforeDrawing(ctx) {
+      if (this.relativeGalaxyBoundaries.length === 0) {
+        return;
+      }
       for (const relative of this.relativeGalaxyBoundaries) {
-        // console.log("relative boundary:", relative);
+        console.log("relative boundary:", relative);
         this.drawGlow(
           ctx,
           relative.centroidX,
           relative.centroidY,
           relative.width > relative.height ? relative.width : relative.height,
           relative.status,
+          relative.course,
+          relative.id,
         );
         // draw the galaxy maps bounds (for debugging boundaries)
         // this.drawBounds(
@@ -249,7 +254,7 @@ export default {
       ctx.stroke();
       ctx.closePath();
     },
-    drawGlow(ctx, x, y, radius, status) {
+    drawGlow(ctx, x, y, radius, status, course, courseId) {
       radius = radius ? radius : 100;
       // create arc (circle)
       ctx.beginPath();
@@ -283,7 +288,16 @@ export default {
       }
 
       // gradient
-      var grd = ctx.createRadialGradient(x, y, 1, x, y, radius);
+      // var grd = ctx.createRadialGradient(x, y, 1, x, y, radius);
+      if (isFinite(x) && isFinite(y) && isFinite(radius)) {
+        var grd = ctx.createRadialGradient(x, y, 1, x, y, radius);
+      } else {
+        console.error("Invalid values for galaxy [" + course + "] id [" + courseId + "]: ", {
+          x,
+          y,
+          radius,
+        });
+      }
       grd.addColorStop(0, colour);
       grd.addColorStop(1, "rgba(20, 30, 48, 0)");
 

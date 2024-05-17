@@ -200,7 +200,7 @@ export default {
         .catch((error) => {
           this.setSnackbar({
             show: true,
-            text: "Invalid or expired code: " + error.message,
+            text: "Invalid or expired code. (Error code: " + error.code + ")",
             color: "pink",
           });
         });
@@ -223,9 +223,10 @@ export default {
           // Code is invalid or expired. Ask the user to verify their email address
           this.setSnackbar({
             show: true,
-            text: "Invalid or expired code: " + error.message,
+            text: "Invalid or expired code. (Error code: " + error.code + ")",
             color: "pink",
           });
+          this.$router.push("/verify");
         });
     },
     login() {
@@ -275,7 +276,8 @@ export default {
               userFriendlyError = error.message;
               break;
             default:
-              userFriendlyError = "An unknown error occurred. Please try again.";
+              userFriendlyError =
+                "An error occurred. (Error code: " + error.code + "). Please try again.";
           }
 
           this.setSnackbar({

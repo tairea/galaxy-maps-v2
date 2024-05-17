@@ -140,11 +140,14 @@ const initialAuth = new Promise<firebase.User | null>((resolve, reject) => {
 router.beforeEach(async (to, from, next) => {
   const rootStore = useRootStore();
   const user = await initialAuth;
+  console.log("user from router", user);
   if (from.path !== "/") rootStore.set_from(from.path);
   if (to.matched.some((record) => record.meta.authRequired)) {
     if (user && user.emailVerified) {
       next();
-    } else if (user && !user.emailVerified) {
+    }
+    // @Stefan - i can still see home page, when test account user.emailVerfied = false. why is this not working?
+    else if (user && !user.emailVerified) {
       alert("You must verify your email to see this page");
       next({
         path: "/verify",
