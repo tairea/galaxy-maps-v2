@@ -267,8 +267,11 @@ export default {
       }
     },
     async assignStudentToCourses(person) {
+      const assignedCourses = person.assignedCourses ?? [];
       for (const courseId of this.cohort.courses) {
-        await assignCourseToPerson(person.id, courseId);
+        if (!assignedCourses.includes(courseId)) {
+          await assignCourseToPerson(person.id, courseId);
+        }
       }
     },
   },
