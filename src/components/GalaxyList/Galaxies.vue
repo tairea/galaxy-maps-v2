@@ -221,7 +221,7 @@ export default {
         return;
       }
       for (const relative of this.relativeGalaxyBoundaries) {
-        console.log("relative boundary:", relative);
+        // console.log("relative boundary:", relative);
         this.drawGlow(
           ctx,
           relative.centroidX,

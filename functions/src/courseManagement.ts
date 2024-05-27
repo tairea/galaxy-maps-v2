@@ -1468,8 +1468,10 @@ async function assignCourseToStudent(courseId: string, personId: string) {
     throw new HttpsError("not-found", `Course not found: ${courseId}`);
   }
 
+  console.log("person:", person);
+
   // check if student is assigned to course
-  if (!person.assignedCourses.includes(courseId)) {
+  if (!person.assignedCourses || !person.assignedCourses.includes(courseId)) {
     console.log("course DOES NOT exist for student", person.firstName + " " + person.lastName);
 
     // Add the topics and tasks to the student
