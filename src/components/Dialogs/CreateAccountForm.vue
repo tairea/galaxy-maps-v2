@@ -96,7 +96,7 @@
         :dark="dark"
         :light="!dark"
       >
-        Create
+        ADD STUDENT
       </v-btn>
       <v-btn
         :disabled="addingAccount"
@@ -201,24 +201,28 @@ export default {
       this.$refs.form.validate();
       if (!this.account.email) return;
       this.addingAccount = true;
-      const personExists = await fetchPersonByEmail(this.account.email);
-      console.log("person exists:", personExists);
+      // 1) see if person exists in db
+      const personExists = await fetchPersonByEmail(this.account.email); // error is getting thrown and doesnt continue
+      // 2) if person exists, add existing person to cohort and it's courses
       if (personExists) {
+        console.log("person exists:", personExists);
         const profile = {
           ...this.account,
           ...personExists,
         };
-        // if teacher, emit teacher?
+        // not sure if this accountType === "teacher" logic is still used
         if (this.teacher) {
           this.$emit("addTeacher", profile);
           this.addingAccount = false;
           this.close();
         } else {
+          // adding existing person to cohort
           try {
             await updatePerson(profile.id, profile); // updates /people/:id profile
             await addPersonToCohort(profile.id, this.cohort.id); // adds student to /cohorts/:id/students
 
             if (this.cohort.courses.length) {
+              // adding existing person to cohort's courses
               await this.assignStudentToCourses(profile); // adds course to /people/:id/assignedCourses
             }
 
@@ -230,12 +234,14 @@ export default {
           }
         }
       } else {
+        // 3) if person does NOT exist, create new person & add them to cohort & assign new person to cohorts courses
         const profile = {
           ...this.account,
           displayName: this.account.firstName + " " + this.account.lastName,
         };
         console.log("person does not exist in db. creating them now...", profile);
         try {
+          // creating person
           const person = await createPerson(profile);
           this.setSnackbar({
             show: true,
@@ -243,6 +249,7 @@ export default {
             color: "baseAccent",
           });
           if (!this.teacher) {
+            // adding new person to cohort
             await addPersonToCohort(person.id, this.currentCohortId);
             this.setSnackbar({
               show: true,
@@ -250,6 +257,7 @@ export default {
               color: "baseAccent",
             });
             if (this.cohort.courses.length) {
+              // adding new person to cohort's courses
               await this.assignStudentToCourses(person);
             }
           } else {
