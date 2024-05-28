@@ -68,16 +68,6 @@
           v-model="profile.lastName"
           label="Last name"
         ></v-text-field>
-        <!-- LAST NAME -->
-        <v-text-field
-          class="input-field"
-          outlined
-          :dark="dark"
-          :light="!dark"
-          color="missionAccent"
-          v-model="profile.discord"
-          label="Discord handle"
-        ></v-text-field>
         <!-- EMAIL -->
         <v-row>
           <v-col cols="10">
@@ -107,6 +97,16 @@
             }}</v-icon>
           </v-col>
         </v-row>
+        <!-- Discord handle -->
+        <v-text-field
+          class="input-field"
+          outlined
+          :dark="dark"
+          :light="!dark"
+          color="missionAccent"
+          v-model="profile.discord"
+          label="Discord handle (optional)"
+        ></v-text-field>
 
         <!-- ACTION BUTTONS -->
         <div class="action-buttons">

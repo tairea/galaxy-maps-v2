@@ -558,7 +558,12 @@ export default {
             color: "#00E676",
             topicCreatedTimestamp: new Date(),
             taskTotal: 0,
+            x: 0,
+            y: 0,
           });
+
+        // send admins an email notification of a new course
+        await this.sendCourseCreatedEmail(this.person, course);
 
         console.log("5");
         // route to newly created galaxy
@@ -760,6 +765,16 @@ export default {
         "Galaxy has mysteriously disappeared",
       ];
       return options[Math.floor(Math.random() * options.length)];
+    },
+    sendCourseCreatedEmail(person, course) {
+      let data = {
+        email: person.email,
+        name: person.firstName + " " + person.lastName,
+        course: course.title,
+        courseId: course.id,
+      };
+      const sendCourseCreatedEmail = functions.httpsCallable("sendCourseCreatedEmail");
+      return sendCourseCreatedEmail(data);
     },
   },
 };

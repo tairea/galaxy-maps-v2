@@ -41,6 +41,7 @@ import {
 import {
   sendCourseDeletedHttpsEndpoint,
   sendCoursePublishedEmailHttpsEndpoint,
+  sendCourseCreatedEmailHttpsEndpoint,
   sendNewCohortEmailHttpsEndpoint,
   sendNewSubmissionEmailHttpsEndpoint,
   sendRequestForHelpHttpsEndpoint,
@@ -108,6 +109,7 @@ export {
 export {
   sendCourseDeletedHttpsEndpoint as sendCourseDeleted,
   sendCoursePublishedEmailHttpsEndpoint as sendCoursePublishedEmail,
+  sendCourseCreatedEmailHttpsEndpoint as sendCourseCreatedEmail,
   sendNewCohortEmailHttpsEndpoint as sendNewCohortEmail,
   sendNewSubmissionEmailHttpsEndpoint as sendNewSubmissionEmail,
   sendRequestForHelpHttpsEndpoint as sendRequestForHelp,

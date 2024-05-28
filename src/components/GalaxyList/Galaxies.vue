@@ -221,14 +221,13 @@ export default {
         return;
       }
       for (const relative of this.relativeGalaxyBoundaries) {
-        // console.log("relative boundary:", relative);
         this.drawGlow(
           ctx,
           relative.centroidX,
           relative.centroidY,
           relative.width > relative.height ? relative.width : relative.height,
           relative.status,
-          relative.course,
+          relative,
           relative.id,
         );
         // draw the galaxy maps bounds (for debugging boundaries)
@@ -262,9 +261,8 @@ export default {
 
       // colour
       let colour;
-
       switch (status) {
-        case "draft":
+        case "drafting":
           //colour = "rgba(250,242,0,0.3)"; // cohortAccent as rgba
           colour = "rgba(255,255,255,0.3)"; // cohortAccent as rgba
           break;
@@ -281,6 +279,9 @@ export default {
           break;
         case "assigned":
           colour = "rgba(105,161,226,0.3)"; // missionAccent as rgba
+          break;
+        case "no glow":
+          colour = "rgba(20, 30, 48, 0)"; // background as rgba
           break;
         default:
           colour = "rgba(20, 30, 48, 0)"; // background as rgba
@@ -642,6 +643,10 @@ export default {
         // get nodes in course
         const nodes = this.courseNodesMap.get(courses[i].id);
 
+        if (courses[i].id == "S1NkzgahYdG8IUoptXNF") {
+          console.log("nodes for course S1NkzgahYdG8IUoptXNF: ", nodes);
+        }
+
         // If we don't have any nodes for this galaxy then don't include it in the final result
         if (nodes.length === 0) {
           console.warn("no nodes for course: ", courses[i].id);
@@ -684,7 +689,7 @@ export default {
         // get the course status for glow colour
         let status;
         if (courses[i].mappedBy.personId == this.person.id) {
-          if (courses[i].status == "drafting") status = "draft";
+          if (courses[i].status == "drafting") status = "drafting";
           else if (courses[i].status == "published" && courses[i].public == true) status = "public";
           else if (courses[i].status == "published" && courses[i].public == false)
             status = "private";
@@ -695,7 +700,10 @@ export default {
         // glow submitted for admin to easily see submitted galaxies for review
         else if (this.user.data?.admin && courses[i].status == "submitted") {
           status = "submitted";
+        } else {
+          status = "no glow";
         }
+
         boundary.status = status;
 
         // add nodes to boundary for debugging
@@ -824,6 +832,23 @@ export default {
         // 3) mid point of line between centroids
         let centroidX = (centroidTri1X + centroidTri2X) / 2;
         let centroidY = (centroidTri1Y + centroidTri2Y) / 2;
+
+        // debugging NaN on x y for problematic course id
+        if (courseCanvasBoundaries[i].id == "S1NkzgahYdG8IUoptXNF") {
+          console.log("relativeTop:", relativeTop);
+          console.log("relativeRight:", relativeRight);
+          console.log("relativeBottom:", relativeBottom);
+          console.log("relativeLeft:", relativeLeft);
+
+          console.log("centroidTri1X:", centroidTri1X);
+          console.log("centroidTri1Y:", centroidTri1Y);
+
+          console.log("centroidTri2X:", centroidTri2X);
+          console.log("centroidTri2Y:", centroidTri2Y);
+
+          console.log("centroidX:", centroidX);
+          console.log("centroidY:", centroidY);
+        }
 
         // relative galaxy centers
         let relativeCenter = {
