@@ -207,11 +207,11 @@ export default {
       this.needsCentering = needsCentering;
     },
     networkMounted() {
-      console.log("networkMounted called");
+      // console.log("networkMounted called");
       this.centerAfterReposition();
     },
     networkUpdated() {
-      console.log("networkUpdated called");
+      // console.log("networkUpdated called");
       if (this.needsCentering === true) {
         this.centerAfterReposition();
       }
@@ -549,10 +549,10 @@ export default {
       }
     },
     animationFinished() {
-      console.log("animation finished");
+      // console.log("animation finished");
       if (this.needsToZoomOut === true) {
         this.needsToZoomOut = false;
-        console.log("zooming out");
+        // console.log("zooming out");
         this.zoomOut();
       }
     },
@@ -643,9 +643,10 @@ export default {
         // get nodes in course
         const nodes = this.courseNodesMap.get(courses[i].id);
 
-        if (courses[i].id == "S1NkzgahYdG8IUoptXNF") {
-          console.log("nodes for course S1NkzgahYdG8IUoptXNF: ", nodes);
-        }
+        // debugging NaN x y for problematic course id
+        // if (courses[i].id == "S1NkzgahYdG8IUoptXNF") {
+        //   console.log("nodes for course S1NkzgahYdG8IUoptXNF: ", nodes);
+        // }
 
         // If we don't have any nodes for this galaxy then don't include it in the final result
         if (nodes.length === 0) {
@@ -834,21 +835,21 @@ export default {
         let centroidY = (centroidTri1Y + centroidTri2Y) / 2;
 
         // debugging NaN on x y for problematic course id
-        if (courseCanvasBoundaries[i].id == "S1NkzgahYdG8IUoptXNF") {
-          console.log("relativeTop:", relativeTop);
-          console.log("relativeRight:", relativeRight);
-          console.log("relativeBottom:", relativeBottom);
-          console.log("relativeLeft:", relativeLeft);
+        // if (courseCanvasBoundaries[i].id == "S1NkzgahYdG8IUoptXNF") {
+        //   console.log("relativeTop:", relativeTop);
+        //   console.log("relativeRight:", relativeRight);
+        //   console.log("relativeBottom:", relativeBottom);
+        //   console.log("relativeLeft:", relativeLeft);
 
-          console.log("centroidTri1X:", centroidTri1X);
-          console.log("centroidTri1Y:", centroidTri1Y);
+        //   console.log("centroidTri1X:", centroidTri1X);
+        //   console.log("centroidTri1Y:", centroidTri1Y);
 
-          console.log("centroidTri2X:", centroidTri2X);
-          console.log("centroidTri2Y:", centroidTri2Y);
+        //   console.log("centroidTri2X:", centroidTri2X);
+        //   console.log("centroidTri2Y:", centroidTri2Y);
 
-          console.log("centroidX:", centroidX);
-          console.log("centroidY:", centroidY);
-        }
+        //   console.log("centroidX:", centroidX);
+        //   console.log("centroidY:", centroidY);
+        // }
 
         // relative galaxy centers
         let relativeCenter = {
@@ -924,7 +925,7 @@ export default {
     },
     // this controls the fit zoom animation
     zoomToNodes(nodes, fast = false) {
-      console.log("zoom to nodes called");
+      // console.log("zoom to nodes called");
       // get node ids
       const nodeIds = nodes.map((x) => x.id);
 
