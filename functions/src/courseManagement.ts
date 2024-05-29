@@ -543,16 +543,22 @@ export const getStudentSubmissionsByPersonIdHttpsEndpoint = runWith({}).https.on
       throw new HttpsError("invalid-argument", "missing personId");
     }
 
+    console.log("debug: data", data);
+    console.log("debug: context", context);
+
     const courseIdsSet = new Set<string>();
 
     if (context.auth.uid === personId) {
-      // get assigned courses
+      // get person
       const personDoc = await db.collection("people").doc(personId).get();
       const person = personDoc.data();
       if (person == null) {
         throw new HttpsError("not-found", `Person not found: ${personId}`);
       }
 
+      console.log("debug: person", person);
+
+      // get assigned courses
       for (const courseId of person.assignedCourses) {
         courseIdsSet.add(courseId);
       }
@@ -571,6 +577,8 @@ export const getStudentSubmissionsByPersonIdHttpsEndpoint = runWith({}).https.on
       }
     }
 
+    console.log("debug: courseIdsSet", courseIdsSet);
+
     // get course submissions for review
     const submissions = [];
 
@@ -584,6 +592,7 @@ export const getStudentSubmissionsByPersonIdHttpsEndpoint = runWith({}).https.on
 
       for (const submissionForReviewDoc of submissionsForReviewCollection.docs) {
         const submissionForReview = submissionForReviewDoc.data();
+        console.log("debug: submissionForReview", submissionForReview);
         submissions.push({
           ...submissionForReview,
           courseId,

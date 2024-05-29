@@ -18,7 +18,12 @@
                 Submission
                 <span :style="status">{{ submission.taskSubmissionStatus }}</span>
               </p>
-              <p v-else class="dialog-title mb-0">Rewiew submission</p>
+              <p v-else class="dialog-title mb-0">
+                Review submission from
+                <strong>{{
+                  this.requesterPerson.firstName + " " + this.requesterPerson.lastName
+                }}</strong>
+              </p>
             </div>
             <div class="create-dialog-content">
               <!-- Request for help details -->
@@ -341,13 +346,14 @@ export default {
         color: "baseAccent",
       });
 
-      this.close();
-
       // unlock next task
       await this.unlockNextTask();
 
       // check if all tasks/missions are completed
       await this.checkIfAllTasksCompleted();
+
+      // wait till unlock checks are completed before closing dialog
+      this.close();
 
       // TODO: perhaps only unlock once teacher has reviewed and marked complete. SOLUTION: leave as is. can progress to next task, but cant progress to next topic until all work is reviewed.
     },
