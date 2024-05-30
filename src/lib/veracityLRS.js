@@ -6,7 +6,7 @@ const auth = "Basic " + btoa(import.meta.env.VITE_VERACITY_LRS_SECRET);
 
 // ========== Start Galaxy
 export const startGalaxyXAPIStatement = (actor, context) => {
-  console.log("sending student xAPI statement... galaxy started...");
+  // console.log("sending student xAPI statement... galaxy started...");
   const statement = {
     actor: {
       name: actor.firstName + " " + actor.lastName,
@@ -61,7 +61,7 @@ export const startGalaxyXAPIStatement = (actor, context) => {
 
 // ========== Start Topic =========
 export const startTopicXAPIStatement = (actor, context) => {
-  console.log("sending student xAPI statement... topic started...");
+  // console.log("sending student xAPI statement... topic started...");
   const statement = {
     actor: {
       name: actor.firstName + " " + actor.lastName,
@@ -117,7 +117,7 @@ export const startTopicXAPIStatement = (actor, context) => {
 
 // ========== Start Task (make task active)
 export const startTaskXAPIStatement = (actor, taskId, context) => {
-  console.log("sending student xAPI statement... task started...");
+  // console.log("sending student xAPI statement... task started...");
   const statement = {
     actor: {
       name: actor.firstName + " " + actor.lastName,
@@ -180,7 +180,7 @@ export const startTaskXAPIStatement = (actor, taskId, context) => {
 
 // ========== Submit work for review (by student)
 export const submitWorkForReviewXAPIStatement = (actor, taskId, context) => {
-  console.log("sending student xAPI statement... submitted work for review...");
+  // console.log("sending student xAPI statement... submitted work for review...");
   const statement = {
     actor: {
       name: actor.firstName + " " + actor.lastName,
@@ -241,7 +241,7 @@ export const submitWorkForReviewXAPIStatement = (actor, taskId, context) => {
   });
 };
 export const reSubmitWorkForReviewXAPIStatement = (actor, taskId, context) => {
-  console.log("sending student xAPI statement... re-submitted work for review...");
+  // console.log("sending student xAPI statement... re-submitted work for review...");
   const statement = {
     actor: {
       name: actor.firstName + " " + actor.lastName,
@@ -304,7 +304,7 @@ export const reSubmitWorkForReviewXAPIStatement = (actor, taskId, context) => {
 
 // ========== Task Marked as Completed (by student)
 export const taskMarkedAsCompletedXAPIStatement = (actor, taskId, context) => {
-  console.log("sending student xAPI statement... task marked as completed...");
+  // console.log("sending student xAPI statement... task marked as completed...");
   const statement = {
     actor: {
       name: actor.firstName + " " + actor.lastName,
@@ -367,7 +367,7 @@ export const taskMarkedAsCompletedXAPIStatement = (actor, taskId, context) => {
 
 // ========== Topic Completed (by student)
 export const topicCompletedXAPIStatement = (actor, topicId, context) => {
-  console.log("sending student xAPI statement... topic completed...");
+  // console.log("sending student xAPI statement... topic completed...");
   const statement = {
     actor: {
       name: actor.firstName + " " + actor.lastName,
@@ -424,7 +424,7 @@ export const topicCompletedXAPIStatement = (actor, topicId, context) => {
 
 // ========== Student work marked completed (by teacher)
 export const studentWorkMarkedCompletedXAPIStatement = (actor, taskId, context) => {
-  console.log("sending student xAPI statement... work marked as completed...");
+  // console.log("sending student xAPI statement... work marked as completed...");
   const statement = {
     actor: {
       name: actor.firstName + " " + actor.lastName,
@@ -488,7 +488,7 @@ export const studentWorkMarkedCompletedXAPIStatement = (actor, taskId, context) 
 
 // ========== Teacher reviewed student work (by teacher)
 export const teacherReviewedStudentWorkXAPIStatement = (actor, taskId, context) => {
-  console.log("sending student xAPI statement... work marked as completed...");
+  // console.log("sending student xAPI statement... work marked as completed...");
   const statement = {
     actor: {
       name: actor.firstName + " " + actor.lastName,
@@ -551,7 +551,7 @@ export const teacherReviewedStudentWorkXAPIStatement = (actor, taskId, context) 
 
 // ========== Teacher responed to request for help (by teacher)
 export const teacherRespondedToRequestForHelpXAPIStatement = (actor, taskId, context) => {
-  console.log("sending student xAPI statement... teacher responsed to request for help...");
+  // console.log("sending student xAPI statement... teacher responsed to request for help...");
   const statement = {
     actor: {
       name: actor.firstName + " " + actor.lastName,
@@ -614,7 +614,7 @@ export const teacherRespondedToRequestForHelpXAPIStatement = (actor, taskId, con
 
 // ========== Request for help (by student)
 export const studentRequestForHelpXAPIStatement = (actor, taskId, context) => {
-  console.log("sending student xAPI statement... student requesting help...");
+  // console.log("sending student xAPI statement... student requesting help...");
   const statement = {
     actor: {
       name: actor.firstName + " " + actor.lastName,
@@ -675,7 +675,7 @@ export const studentRequestForHelpXAPIStatement = (actor, taskId, context) => {
   });
 };
 export const teacherRespondedSubmissionDeclinedXAPIStatement = (actor, taskId, context) => {
-  console.log("sending student xAPI statement... teacher declined submission...");
+  // console.log("sending student xAPI statement... teacher declined submission...");
   const statement = {
     actor: {
       name: actor.firstName + " " + actor.lastName,
@@ -738,7 +738,7 @@ export const teacherRespondedSubmissionDeclinedXAPIStatement = (actor, taskId, c
 
 // ========== Students goes online
 export const studentOnlineXAPIStatement = (actor) => {
-  console.log("sending student xAPI statement... student is online");
+  // console.log("sending student xAPI statement... student is online");
   const statement = {
     actor: {
       name: actor.firstName + " " + actor.lastName,
@@ -780,7 +780,7 @@ export const studentOnlineXAPIStatement = (actor) => {
 
 // ========== Students goes offline
 export const studentOfflineXAPIStatement = (actor) => {
-  console.log("sending student xAPI statement... student is offline");
+  // console.log("sending student xAPI statement... student is offline");
   const statement = {
     actor: {
       name: actor.firstName + " " + actor.lastName,
@@ -824,7 +824,7 @@ export const loggedIntoGalaxyXAPIStatement = (payload) => {
   // if no data, dont bother
   if (!payload.galaxyId || !payload.actor) return;
 
-  console.log("sending student xAPI statement... student signed into galaxy: " + payload.galaxyId);
+  // console.log("sending student xAPI statement... student signed into galaxy: " + payload.galaxyId);
   const statement = {
     actor: {
       name: payload.actor.firstName + " " + payload.actor.lastName,

@@ -111,6 +111,7 @@
               :loading="loadingSubmissions"
               :showCourseImage="true"
               :dense="true"
+              :courses="courses"
             />
           </div>
           <div class="submissions-completed mission-border-bottom">
@@ -126,6 +127,7 @@
               :loading="loadingSubmissions"
               :showCourseImage="true"
               :dense="true"
+              :courses="courses"
             />
           </div>
         </div>
@@ -250,12 +252,14 @@ export default {
     this.students.push(this.student);
 
     // ==== get submission data
-    this.submissions = await fetchStudentSubmissionsByPersonId(this.student.id);
+    // this.submissions = await fetchStudentSubmissionsByPersonId(this.student.id);
+    // console.log("SUBMISSIONS from learner overview dash: ", this.submissions);
 
     this.loadingSubmissions = false;
 
     // ==== get request data
-    this.requests = await fetchStudentRequestsByPersonId(this.student.id);
+    // this.requests = await fetchStudentRequestsByPersonId(this.student.id);
+    // console.log("REQUESTS from learner overview dash: ", this.requests);
 
     this.loadingRequests = false;
   },
@@ -266,6 +270,11 @@ export default {
     },
     status() {
       return this.userStatus[this.student.id];
+    },
+    courses() {
+      return this.student?.assignedCourses?.map((course) => {
+        return { id: course };
+      });
     },
   },
   methods: {

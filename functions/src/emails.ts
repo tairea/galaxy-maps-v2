@@ -465,7 +465,7 @@ export async function sendResponseToSubmission(
   };
 
   /* eslint-disable max-len */
-  mailOptions.subject = `Task submission ${outcome}`;
+  mailOptions.subject = `Mission ${task} ${outcome}`;
   mailOptions.text = `Hi ${student}, 
 
 Your instructor ${teacher} has reviewed your submission to ${task}.

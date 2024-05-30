@@ -2,7 +2,7 @@
   <v-container class="pa-2">
     <v-row class="text-center" align="center">
       <v-col cols="12">
-        <v-dialog v-model="dialog" width="40%" light>
+        <v-dialog v-model="dialog" width="40%" light persistent>
           <!-- MARK AS COMPLETED BUTTON (with dialog) -->
           <template v-slot:activator="{ on, attrs }">
             <!-- uncheck icon if not inreview or completed -->
@@ -162,10 +162,8 @@
                   color="missionAccent"
                   @click="markSubmissionAsCompleted()"
                   class="mr-2"
-                  :loading="loading"
-                  v-bind="attrs"
-                  v-on="on"
-                  :disabled="loading"
+                  :loading="markingSubmission"
+                  :disabled="markingSubmission"
                 >
                   <v-icon left> {{ mdiThumbUpOutline }} </v-icon>
                   approve
@@ -175,10 +173,10 @@
                   color="galaxyAccent"
                   @click="declineSubmission()"
                   class="mr-2"
-                  :loading="loading"
+                  :loading="markingSubmission"
                   v-bind="attrs"
                   v-on="on"
-                  :disabled="loading"
+                  :disabled="markingSubmission"
                 >
                   <v-icon left> {{ mdiThumbDownOutline }} </v-icon>
                   decline
@@ -190,8 +188,8 @@
                 outlined
                 :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
                 @click="close"
-                :disabled="loading"
-                :loading="loading"
+                :disabled="markingSubmission"
+                :loading="markingSubmission"
               >
                 <v-icon left> {{ mdiClose }} </v-icon>
                 Cancel
@@ -243,6 +241,7 @@ export default {
     instructor: {},
     xpPointsForCompletedSubmission: 250,
     personsTopicsTasks: [],
+    markingSubmission: false,
   }),
   async mounted() {
     this.instructor = await fetchPersonByPersonId(this.submission.contextCourse.mappedBy.personId);
@@ -275,9 +274,10 @@ export default {
       return moment((ts.seconds ? ts.seconds : ts._seconds) * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
     },
     async markSubmissionAsCompleted() {
-      this.loading = true;
+      this.markingSubmission = true;
 
       // 1) update submission to completed
+      console.log("1) updating submission status to: completed");
       await db
         .collection("courses")
         .doc(this.submission.contextCourse.id)
@@ -293,6 +293,7 @@ export default {
         });
 
       // 2) update the task status to complete
+      console.log("2) updating mission status to: completed");
       await db
         .collection("people")
         .doc(this.submission.studentId)
@@ -307,12 +308,12 @@ export default {
           taskReviewedAndCompletedTimestamp: new Date(),
         });
 
+      console.log("3) sending email to learner with outcome: completed");
       await this.sendResponseToSubmission("completed");
-
-      console.log("Task successfully updated as completed!");
 
       // send xAPI statement to LRS
       // student completed work
+      console.log("4) XP log updated...");
       await studentWorkMarkedCompletedXAPIStatement(
         this.requesterPerson,
         this.submission.contextTask.id,
@@ -323,6 +324,7 @@ export default {
         },
       );
       // teacher reviewed work
+      console.log("5) XP log updated...");
       await teacherReviewedStudentWorkXAPIStatement(this.person, this.submission.contextTask.id, {
         student: this.requesterPerson,
         galaxy: this.submission.contextCourse,
@@ -331,6 +333,7 @@ export default {
       });
 
       // give XP points
+      console.log("6) XP points given... ");
       await db
         .collection("people")
         .doc(this.submission.studentId)
@@ -342,17 +345,20 @@ export default {
 
       this.setSnackbar({
         show: true,
-        text: "Student's Mission now marked as completed",
+        text: "Student's Mission status changed to: Completed",
         color: "baseAccent",
       });
 
       // unlock next task
+      console.log("7) Unlocking next mission...");
       await this.unlockNextTask();
 
       // check if all tasks/missions are completed
+      console.log("8) Checking if all system's missions are completed...");
       await this.checkIfAllTasksCompleted();
 
       // wait till unlock checks are completed before closing dialog
+      console.log("9) mission updates finished");
       this.close();
 
       // TODO: perhaps only unlock once teacher has reviewed and marked complete. SOLUTION: leave as is. can progress to next task, but cant progress to next topic until all work is reviewed.
@@ -370,12 +376,21 @@ export default {
         .orderBy("taskCreatedTimestamp")
         .get();
 
+      console.log("7a) Mission data collected...");
+
       // 2) loops the tasks. the first task to have taskStatus locked, update to unlocked, then return to exit loop
       for (const [index, task] of currentTasks.docs.entries()) {
         if (task.data().taskStatus == "locked") {
           await task.ref.update({ taskStatus: "unlocked" });
-          console.log("NEW TASK UNLOCKED (" + index + ") : " + task.data().title);
+          console.log("7b) New mission unlocked: (" + index + ") : " + task.data().title);
+          this.setSnackbar({
+            show: true,
+            text: "Student's Next Mission Unlocked",
+            color: "baseAccent",
+          });
           return;
+        } else {
+          console.log("7b) No more missions in this system to unlock...");
         }
       }
     },
@@ -384,8 +399,18 @@ export default {
       const numOfTasksCompleted = this.personsTopicsTasks.filter(
         (obj) => obj.taskStatus === "completed",
       ).length;
+
+      console.log(
+        "8a) Navigator has completed ",
+        numOfTasksCompleted,
+        " out of ",
+        this.personsTopicsTasks.length,
+        " missions",
+      );
+
       // 2) check if that the same as total
       if (numOfTasksCompleted === this.personsTopicsTasks.length) {
+        console.log("8b) System completed");
         // TODO: some kind of notification to signal that Topic has been completed
         // all tasks are completed. unlock next topic
         // message telling teacher whats happend
@@ -396,31 +421,33 @@ export default {
             this.requesterPerson.firstName +
             " " +
             this.requesterPerson.lastName +
-            " completed all tasks for topic " +
+            " completed all Missions in System: " +
             this.submission.contextTopic.label,
           color: "baseAccent",
         });
 
+        console.log("8c) Updating system status...");
         await this.setTopicToCompletedInDB();
 
+        console.log("8d) Unlocking next System...");
         await this.unlockNextTopics();
       } else {
-        console.log("topic not yet completed...");
-        console.log("total tasks = ", this.personsTopicsTasks.length);
+        console.log("8b) System not yet complete...");
+        console.log("Total System Missions = ", this.personsTopicsTasks.length);
         console.log(
-          "completed = ",
-          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "completed").length,
-        );
-        console.log(
-          "in review = ",
+          "Missions in review = ",
           this.personsTopicsTasks.filter((obj) => obj.taskStatus === "inreview").length,
         );
         console.log(
-          "active = ",
-          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked").length,
+          "Missions active = ",
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "active").length,
         );
         console.log(
-          "locked = ",
+          "Missions unlocked = ",
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "unlocked").length,
+        );
+        console.log(
+          "Missions locked = ",
           this.personsTopicsTasks.filter((obj) => obj.taskStatus === "locked").length,
         );
       }
@@ -434,6 +461,8 @@ export default {
         .where("prerequisites", "array-contains", this.submission.contextTopic.id)
         .get();
 
+      console.log("8d-i) Targeting next System...");
+
       const docs = querySnapshot.docs;
 
       for (const doc of docs) {
@@ -441,13 +470,15 @@ export default {
           topicStatus: "unlocked", // change status to unlocked
         });
 
+        console.log("8d-ii) Next System found. System Unlocked");
+
         // message telling teacher whats happend
         this.setSnackbar({
           show: true,
           text:
-            "NEW TOPIC: " +
+            "System: " +
             doc.data().label +
-            " UNLOCKED FOR: " +
+            " Unlocked for: " +
             this.requesterPerson.firstName +
             " " +
             this.requesterPerson.lastName,
@@ -467,8 +498,8 @@ export default {
         teacher: this.person.firstName + " " + this.person.lastName,
         email: this.requesterPerson.email,
       };
-      console.log("send reponse email: ", data);
       const sendResponseToSubmission = functions.httpsCallable("sendResponseToSubmission");
+      console.log("3a) Email sent: ", data);
       return sendResponseToSubmission(data);
     },
     async declineSubmission() {
@@ -547,13 +578,17 @@ export default {
           topicStatus: "completed",
           topicCompletedTimestamp: new Date(),
         });
+      console.log("8c-i) System status updated to: completed");
 
       await topicCompletedXAPIStatement(this.requesterPerson, this.submission.contextTopic.id, {
         galaxy: this.submission.contextCourse,
         system: this.submission.contextTopic,
       });
+      console.log("8c-ii) XP log updated...");
     },
     close() {
+      console.log("closing dialog");
+      this.markingSubmission = false;
       this.loading = false;
       this.disabled = false;
       this.dialog = false;

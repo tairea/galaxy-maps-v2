@@ -72,7 +72,6 @@ export default {
       for (const course of this.courses) {
         // console.log("getting requests for course: ", course);
         const unsubscribe = await this.getRequestsForHelpByCourseId(course.id);
-        console.log("help unsubscribe:", unsubscribe);
         this.unsubscribes.push(unsubscribe);
       }
     }

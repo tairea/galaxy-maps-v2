@@ -287,7 +287,7 @@ export const getCourseMapEdgesAndNodesByCourseIdHttpsEndpoint = runWith({}).http
   },
 );
 
-// Get a list of courses
+// Get a list of courses by SLUG
 export const getCoursesHttpsEndpoint = runWith({}).https.onCall(async (data, context) => {
   const slug = data.slug as string | null;
   let ownerRef: DocumentReference | null = null;
