@@ -232,7 +232,7 @@ export default {
   },
   data: () => ({
     mdiClose,
-    date: "",
+    date: new Date(),
     students: [],
     submissions: null,
     requests: null,
