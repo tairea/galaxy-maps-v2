@@ -345,7 +345,11 @@ export default {
 
       this.setSnackbar({
         show: true,
-        text: "Student's Mission status changed to: Completed",
+        text:
+          this.requesterPerson.firstName +
+          " " +
+          this.requesterPerson.lastName +
+          "'s Mission status changed to: Completed",
         color: "baseAccent",
       });
 
@@ -385,7 +389,11 @@ export default {
           console.log("7b) New mission unlocked: (" + index + ") : " + task.data().title);
           this.setSnackbar({
             show: true,
-            text: "Student's Next Mission Unlocked",
+            text:
+              this.requesterPerson.firstName +
+              " " +
+              this.requesterPerson.lastName +
+              "'s Next Mission Unlocked",
             color: "baseAccent",
           });
           return;
@@ -552,7 +560,11 @@ export default {
         this.close();
         this.setSnackbar({
           show: true,
-          text: "Students submitted work declined. Feedback sent to student",
+          text:
+            this.requesterPerson.firstName +
+            " " +
+            this.requesterPerson.lastName +
+            "'s submitted work declined. Feedback sent to learner.",
           color: "baseAccent",
         });
 

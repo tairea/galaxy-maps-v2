@@ -58,6 +58,7 @@ export const fetchStudentRequestsByPersonId = async (
   const data = {
     personId,
   };
+  console.log("fetchStudentRequestsByPersonId -> data:", data);
   const getStudentRequestsByPersonId = functions.httpsCallable("getStudentRequestsByPersonId");
   const result = await getStudentRequestsByPersonId(data);
   return result.data.requests;

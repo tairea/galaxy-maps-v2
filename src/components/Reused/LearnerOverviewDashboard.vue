@@ -111,7 +111,6 @@
               :loading="loadingSubmissions"
               :showCourseImage="true"
               :dense="true"
-              :courses="courses"
             />
           </div>
           <div class="submissions-completed mission-border-bottom">
@@ -127,7 +126,6 @@
               :loading="loadingSubmissions"
               :showCourseImage="true"
               :dense="true"
-              :courses="courses"
             />
           </div>
         </div>
@@ -154,6 +152,9 @@
               :activityData="studentTimeData"
               :timeframe="timeframe"
             />
+          </div>
+          <div class="student-activity-log">
+            <StudentActivityTimeline :student="student" />
           </div>
         </div>
 
@@ -202,6 +203,7 @@
 import { fetchStudentSubmissionsByPersonId, fetchStudentRequestsByPersonId } from "@/lib/ff";
 import ProgressionLineChartStudentCourses from "@/components/Reused/ProgressionLineChartStudentCourses.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
+import StudentActivityTimeline from "@/components/Reused/StudentActivityTimeline.vue";
 import StudentCardStatus from "@/components/CohortView/StudentDataIterator/StudentCard/StudentCardStatus.vue";
 import StudentEditDialog from "@/components/Dialogs/StudentEditDialog.vue";
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
@@ -222,6 +224,7 @@ export default {
   components: {
     ProgressionLineChartStudentCourses,
     RequestForHelpTeacherFrame,
+    StudentActivityTimeline,
     StudentCardStatus,
     StudentEditDialog,
     SubmissionTeacherFrame,
@@ -252,14 +255,14 @@ export default {
     this.students.push(this.student);
 
     // ==== get submission data
-    // this.submissions = await fetchStudentSubmissionsByPersonId(this.student.id);
-    // console.log("SUBMISSIONS from learner overview dash: ", this.submissions);
+    this.submissions = await fetchStudentSubmissionsByPersonId(this.student.id);
+    console.log("SUBMISSIONS from learner overview dash: ", this.submissions);
 
     this.loadingSubmissions = false;
 
     // ==== get request data
-    // this.requests = await fetchStudentRequestsByPersonId(this.student.id);
-    // console.log("REQUESTS from learner overview dash: ", this.requests);
+    this.requests = await fetchStudentRequestsByPersonId(this.student.id);
+    console.log("REQUESTS from learner overview dash: ", this.requests);
 
     this.loadingRequests = false;
   },
@@ -301,14 +304,14 @@ export default {
       console.log("submissions changed flag triggered");
       this.loadingSubmissions = true;
       // ==== get submission data
-      this.submissions = await fetchStudentSubmissionsByPersonId(this.student.id);
+      // this.submissions = await fetchStudentSubmissionsByPersonId(this.student.id);
       this.loadingSubmissions = false;
     },
     async requestsChanged() {
       console.log("requests changed flag triggered");
       this.loadingRequests = true;
       // ==== get submission data
-      this.requests = await fetchStudentRequestsByPersonId(this.student.id);
+      // this.requests = await fetchStudentRequestsByPersonId(this.student.id);
       this.loadingRequests = false;
     },
   },
@@ -411,6 +414,10 @@ export default {
     padding: 0px 20px 10px 20px;
   }
   .student-courses-barchart {
+    // width: 40%;
+    padding: 10px 20px;
+  }
+  .student-activity-log {
     // width: 40%;
     padding: 10px 20px;
   }

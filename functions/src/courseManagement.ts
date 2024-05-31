@@ -543,9 +543,6 @@ export const getStudentSubmissionsByPersonIdHttpsEndpoint = runWith({}).https.on
       throw new HttpsError("invalid-argument", "missing personId");
     }
 
-    console.log("debug: data", data);
-    console.log("debug: context", context);
-
     const courseIdsSet = new Set<string>();
 
     if (context.auth.uid === personId) {
@@ -556,8 +553,6 @@ export const getStudentSubmissionsByPersonIdHttpsEndpoint = runWith({}).https.on
         throw new HttpsError("not-found", `Person not found: ${personId}`);
       }
 
-      console.log("debug: person", person);
-
       // get assigned courses
       for (const courseId of person.assignedCourses) {
         courseIdsSet.add(courseId);
@@ -566,7 +561,7 @@ export const getStudentSubmissionsByPersonIdHttpsEndpoint = runWith({}).https.on
       // get courses for teacher
       const teacherCohortCollection = await db
         .collection("cohorts")
-        .where("teachers", "array-contains", personId)
+        .where("teachers", "array-contains", context.auth.uid)
         .get();
 
       for (const cohortDoc of teacherCohortCollection.docs) {
@@ -576,8 +571,6 @@ export const getStudentSubmissionsByPersonIdHttpsEndpoint = runWith({}).https.on
         }
       }
     }
-
-    console.log("debug: courseIdsSet", courseIdsSet);
 
     // get course submissions for review
     const submissions = [];
@@ -631,7 +624,7 @@ export const getStudentRequestsByPersonIdHttpsEndpoint = runWith({}).https.onCal
       // get courses for teacher
       const teacherCohortCollection = await db
         .collection("cohorts")
-        .where("teachers", "array-contains", personId)
+        .where("teachers", "array-contains", context.auth.uid)
         .get();
 
       for (const cohortDoc of teacherCohortCollection.docs) {
