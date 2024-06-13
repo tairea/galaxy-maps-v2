@@ -247,8 +247,10 @@ export default {
 
     this.lowestActivityTimestamp = this.studentCoursesActivity.reduce((lowest, course) => {
       const courseLowestTimestamp = course.activities.reduce((lowest, activity) => {
+        // return lowest activity timestamp
         return new Date(activity.timeStamp) < lowest ? new Date(activity.timeStamp) : lowest;
       }, Infinity);
+      // return lowest course timestamp
       return courseLowestTimestamp < lowest ? courseLowestTimestamp : lowest;
     }, Infinity);
 

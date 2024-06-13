@@ -222,6 +222,21 @@ export const deleteTaskByCourseIdTopicIdTaskId = async (
   return result.data.task;
 };
 
+export const deleteRequestByCourseIdRequestId = async (
+  courseId: string,
+  requestId: string,
+): Promise<ITask> => {
+  const data = {
+    courseId,
+    requestId,
+  };
+  const deleteRequestByCourseIdRequestId = functions.httpsCallable(
+    "deleteRequestByCourseIdRequestId",
+  );
+  const result = await deleteRequestByCourseIdRequestId(data);
+  return result.data.task;
+};
+
 export const updateTaskOrderIndexesByCourseIdTopicId = async (
   courseId: string,
   topicId: string,

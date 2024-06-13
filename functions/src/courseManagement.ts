@@ -1173,6 +1173,28 @@ export const deleteTaskByCourseIdTopicIdTaskIdHttpsEndpoint = runWith({}).https.
   },
 );
 
+// Delete request for help by courseId and requestId
+export const deleteRequestByCourseIdRequestIdHttpsEndpoint = runWith({}).https.onCall(
+  async (data, context) => {
+    requireAuthenticated(context);
+
+    const courseId = data.courseId as string | null;
+    const requestId = data.requestId as string | null;
+    if (courseId == null) {
+      throw new HttpsError("invalid-argument", "missing courseId");
+    }
+    if (requestId == null) {
+      throw new HttpsError("invalid-argument", "missing requestId");
+    }
+
+    // TODO: permissions checks
+
+    const result = await deleteRequest(courseId, requestId);
+
+    return result;
+  },
+);
+
 /**
  * Delete a task
  */
@@ -1228,6 +1250,18 @@ async function deleteTask(courseId: string, topicId: string, taskId: string) {
       id: taskDoc.id,
     },
   };
+}
+
+/**
+ * Delete a request for help
+ */
+async function deleteRequest(courseId: string, requestId: string) {
+  await db
+    .collection("courses")
+    .doc(courseId)
+    .collection("requestsForHelp")
+    .doc(requestId)
+    .delete();
 }
 
 // Update task order indexes by courseId and topicId
