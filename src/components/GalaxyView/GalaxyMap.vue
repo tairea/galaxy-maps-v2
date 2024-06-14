@@ -34,6 +34,7 @@
 <script>
 import SolarSystem from "@/components/Reused/SolarSystem.vue";
 import LoadingSpinner from "@/components/Reused/LoadingSpinner.vue";
+import { fetchCourseByCourseId } from "@/lib/ff";
 import { Planet } from "@/lib/planet";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
@@ -43,7 +44,7 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "GalaxyMap",
-  props: ["teacher"],
+  props: [],
   components: {
     Network,
     SolarSystem,
@@ -163,6 +164,7 @@ export default {
     previewedNode: null,
     numberOfTasksForThisTopic: 0,
     tasks: [],
+    course: null,
   }),
   watch: {
     darkMode(dark) {
@@ -178,6 +180,7 @@ export default {
   computed: {
     ...mapState(useRootStore, [
       "person",
+      "user",
       "currentCourseId",
       "currentTopicId",
       "currentCourseNodes",
@@ -187,6 +190,9 @@ export default {
       "personsCourseTasks",
       "courseTasks",
     ]),
+    teacher() {
+      return this.course?.mappedBy.personId === this.person.id || this.user.data.admin;
+    },
     nodesToDisplay() {
       if (this.currentCourseNodes.length && this.currentCourseNodes[0]?.id) {
         if (this.addingNode || this.addingEdge) {
@@ -279,7 +285,7 @@ export default {
     this.refreshData();
 
     // zoom fit on load
-    if (this.$refs.network.nodes.length > 0) {
+    if (this.nodesToDisplay && this.$refs.network.nodes.length > 0) {
       this.needsCentering = true;
     }
 
@@ -309,6 +315,7 @@ export default {
       "setCurrentTopicId",
     ]),
     async refreshData() {
+      this.course = await fetchCourseByCourseId(this.currentCourseId);
       await this.bindCourseNodes(this.currentCourseId);
       await this.bindCourseEdges(this.currentCourseId);
 
