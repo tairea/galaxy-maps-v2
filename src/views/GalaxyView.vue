@@ -35,7 +35,6 @@
       <!-- ===== Galaxy Map ===== -->
       <GalaxyMap
         ref="vis"
-        :teacher="teacher"
         @add-node="showAddDialog"
         @edit-node="showEditDialog"
         @setUiMessage="setUiMessage"
@@ -224,13 +223,12 @@ export default {
       this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
     },
   },
-  async beforeMount() {
+  async mounted() {
     this.course = await fetchCourseByCourseId(this.courseId);
     this.setCurrentCourseId(this.courseId);
     console.log("is course? : ", this.course);
     console.log("is teacher? : ", this.teacher);
-  },
-  async mounted() {
+
     // bind assigned people in this course
     if (this.teacher) {
       this.peopleInCourse = await fetchAllPeopleInCourseByCourseId(this.courseId);
