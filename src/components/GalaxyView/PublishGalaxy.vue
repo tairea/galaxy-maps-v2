@@ -309,7 +309,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["setCurrentCourseId"]),
+    ...mapActions(useRootStore, ["setCurrentCourseId", "setSnackbar"]),
     getTopicsWithoutTasks() {
       // copy nodes
       let splicedNodes = [...this.currentCourseNodes];

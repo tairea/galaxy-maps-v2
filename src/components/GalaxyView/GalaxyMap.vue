@@ -360,13 +360,11 @@ export default {
     },
     disableEditMode() {
       this.$refs.network.disableEditMode();
-      (this.addingNode = false), (this.addingEdge = false), (this.active = false);
+      this.addingNode = false;
+      this.addingEdge = false;
+      this.active = false;
     },
-    disableDragMode() {
-      this.draggingNodes = false;
-      this.network.options.interaction.dragNodes = false;
-      this.planets = [];
-    },
+
     getDomCoords(node) {
       let domCoords = this.$refs.network.canvasToDom({ x: node.x, y: node.y });
       return domCoords;
@@ -402,8 +400,13 @@ export default {
       this.network.options.interaction.dragNodes = true;
       //
     },
+    disableDragMode() {
+      this.draggingNodes = false;
+      this.network.options.interaction.dragNodes = false;
+      this.planets = [];
+    },
     addNode(data) {
-      if (!this.active) return;
+      // if (!this.active) return;
       const newNodeId = data.properties.items[0];
       const selected = this.$refs.network.getSelection();
       if (selected.nodes.length || selected.edges.length) {
@@ -414,6 +417,7 @@ export default {
       }
       const newNode = this.$refs.network.getNode(newNodeId);
       this.$emit("add-node", newNode);
+
       this.addingNode = false;
     },
     addEdge(data) {
