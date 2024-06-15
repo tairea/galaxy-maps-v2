@@ -1,6 +1,6 @@
 <!-- Chart.vue -->
 <template>
-  <div>
+  <div style="position: relative">
     <canvas v-once ref="canvas" style="height: 100%; width: 100%"></canvas>
   </div>
 </template>
@@ -266,10 +266,10 @@ export default {
           }
 
           // Display, position, and set styles for font
-          const chartClientRect = chart.canvas.getBoundingClientRect();
+          const { offsetTop, offsetLeft } = chart.canvas;
           tooltipEl.style.opacity = 1;
-          tooltipEl.style.left = chartClientRect.left + tooltip.caretX + "px";
-          tooltipEl.style.top = chartClientRect.top + tooltip.caretY + "px";
+          tooltipEl.style.left = offsetLeft + tooltip.caretX + "px";
+          tooltipEl.style.top = offsetTop + tooltip.caretY + "px";
           tooltipEl.style.font = tooltip.options.bodyFont.string;
           // tooltipEl.style.padding =
           //   tooltip.options.padding + "px " + tooltip.options.padding + "px";
@@ -290,6 +290,7 @@ export default {
         options: chartOptions,
       });
     },
+    /** @returns {HTMLDivElement} */
     getOrCreateTooltip(chart) {
       let tooltipEl = chart.canvas.parentNode.querySelector("div");
 

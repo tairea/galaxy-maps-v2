@@ -245,18 +245,7 @@ export default {
   components: {
     VueEditor,
   },
-  props: [
-    "course",
-    "topic",
-    "task",
-    "missionStatus",
-    "on",
-    "attrs",
-    "active",
-    "inreview",
-    "declined",
-    "completed",
-  ],
+  props: ["course", "topic", "task", "on", "attrs", "active", "declined"],
   data: () => ({
     mdiCloudUploadOutline,
     mdiInformationVariant,
