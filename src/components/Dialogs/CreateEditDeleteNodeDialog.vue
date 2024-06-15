@@ -10,7 +10,7 @@
             <div class="d-flex align-center">
               <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
               <p class="dialog-description">
-                This Node is a <span class="mission-text">Topic</span> of the
+                This Node is a <span class="mission-text">System</span> of the
                 <span class="galaxy-text">{{ this.course?.title }}</span> Galaxy map
               </p>
             </div>
@@ -28,8 +28,8 @@
               color="missionAccent"
               v-model="currentNode.label"
               :autofocus="!editing"
-              label="Topic title"
-              placeholder="Enter name of this node/topic"
+              label="Node title"
+              placeholder="Enter name of this node"
             ></v-text-field>
 
             <!-- Node Color -->
@@ -106,7 +106,7 @@
                   >
                 </template>
                 <span>
-                  Prerequisites are topics that need to be completed before this one can be unlocked
+                  Prerequisites are nodes that need to be completed before this one can be unlocked
                 </span>
               </v-tooltip>
             </p>
@@ -119,7 +119,7 @@
             >
               <template v-slot:label>
                 <span class="dialog-description"
-                  >Does another topic need to be completed before starting this one?</span
+                  >Does another Node need to be completed before starting this one?</span
                 >
               </template>
             </v-checkbox>
