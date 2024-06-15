@@ -220,12 +220,12 @@ export default defineStore({
       // console.log("tasksArr", tasksArr)
       this.personsCourseTasks = tasksArr;
     },
-    async getCourseTasks() {
+    async getCourseTasks(courseId: string) {
       const tasksPerTopic = await Promise.all(
         this.currentCourseNodes.map(async (topic: Record<string, any>) => {
           const tasks = await db
             .collection("courses")
-            .doc(this.currentCourseId)
+            .doc(courseId)
             .collection("topics")
             .doc(topic.id)
             .collection("tasks")

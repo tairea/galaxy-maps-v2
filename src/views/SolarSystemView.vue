@@ -35,7 +35,7 @@
     <!--==== Main section ====-->
     <div id="main-section">
       <!-- loading spinner -->
-      <div class="d-flex justify-center align-center" v-if="loading">
+      <div class="d-flex justify-center align-center" v-if="loading" style="margin-top: 100px">
         <v-btn
           :loading="loading"
           icon

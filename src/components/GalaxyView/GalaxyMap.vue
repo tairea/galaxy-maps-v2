@@ -276,6 +276,7 @@ export default {
     },
   },
   async mounted() {
+    console.log("mounted");
     this.refreshData();
 
     // zoom fit on load
@@ -309,13 +310,14 @@ export default {
       "setCurrentTopicId",
     ]),
     async refreshData() {
+      console.log("refresh data");
       await this.bindCourseNodes(this.currentCourseId);
       await this.bindCourseEdges(this.currentCourseId);
 
       // bind topics for course creator
       if (this.teacher) {
         // bind. state.courseTasks
-        await this.getCourseTasks();
+        await this.getCourseTasks(this.currentCourseId);
       } else {
         // bind topics for student
         await this.bindThisPersonsCourseTopics({
@@ -350,6 +352,7 @@ export default {
       }
     },
     drawSolarSystems() {
+      console.log("drawing planets");
       // set up solar system planets
       this.setupSolarSystemPlanets();
       // start animation
@@ -710,10 +713,10 @@ export default {
       }
 
       // no tasks means no planets
-      if (this.tasks.length == 0) {
-        this.loading = false;
-        return;
-      }
+      // if (this.tasks.length == 0) {
+      //   this.loading = false;
+      //   return;
+      // }
 
       console.log("got tasks in GalaxyMap", this.tasks);
       this.$emit("courseTasks", this.tasks);
