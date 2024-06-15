@@ -138,18 +138,18 @@
               <v-tab-item>
                 <!-- HEADER -->
                 <div class="dialog-header">
-                  <p class="dialog-title">Assign to a Cohort</p>
+                  <p class="dialog-title">Assign to a Squad</p>
                   <div class="d-flex align-center">
                     <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                     <p class="dialog-description">
                       Assign this Galaxy Map to an entire
-                      <span class="cohortAccent--text">Cohort</span> of learners
+                      <span class="cohortAccent--text">Squad</span> of Navigators
                     </p>
                   </div>
                 </div>
                 <div class="create-dialog-content">
                   <!-- TITLE -->
-                  <p class="dialog-description">Cohorts:</p>
+                  <p class="dialog-description">Squads:</p>
                   <v-select v-if="assignCohorts" v-model="cohort" :items="cohorts">
                     <template v-slot:selection="{ item }">
                       <v-list-item-avatar tile>

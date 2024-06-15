@@ -35,7 +35,12 @@
             <!-- side by side div 50/50 -->
             <div class="d-flex mt-4">
               <!-- Node image (as requested by Dion) -->
-              <div class="left" style="width: 70%">
+              <img
+                v-if="currentNode.image"
+                :src="currentNode.image"
+                style="width: 30%; object-fit: contain; height: 50px"
+              />
+              <div class="left" :style="{ width: currentNode.image ? '40%' : '70%' }">
                 <v-file-input
                   v-model="uploadedImage"
                   class="input-field"
@@ -69,6 +74,7 @@
                   label="Size"
                   placeholder="20"
                   type="number"
+                  hide-details
                 ></v-text-field>
               </div>
             </div>
@@ -621,6 +627,7 @@ export default {
             this.currentNode.image = downloadURL;
             this.currentNode.borderWidth = 0;
             this.currentNode.color = "rgba(0,0,0,0)";
+            this.currentNode.size = 15;
             this.currentNode.imageName = this.uploadedImage.name;
             // this.currentNode.size = 30;    <--- hardcoded node/image size
             this.disabled = false;
