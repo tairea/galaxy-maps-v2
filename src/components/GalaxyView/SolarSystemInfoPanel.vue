@@ -7,7 +7,16 @@
         </v-btn>
         <div class="topOfPanel">
           <div class="topicTitleContainer">
+            <!-- Node image (as requested by Dion) -->
+            <div
+              v-if="selectedTopic.image"
+              class="d-flex justify-center align-center ml-2"
+              style="height: 40px"
+            >
+              <img :src="selectedTopic.image" style="height: 80%; object-fit: contain" />
+            </div>
             <p
+              v-else
               class="topicTitle overline"
               :style="
                 selectedTopic.color
@@ -34,9 +43,8 @@
         <div class="card-container">
           <div v-if="tasks.length == 0" class="noMissionWarningContainer">
             <p class="noMissionWarning">This system has no missions.</p>
-            <p class="noMissionWarning">(Systems must have at least one mission)</p>
             <p class="noMissionWarning mt-6">
-              <strong>View system to create a mission.</strong>
+              <strong>Systems must have at least one mission</strong>
             </p>
           </div>
           <!-- list of Mission cards -->

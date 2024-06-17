@@ -79,7 +79,7 @@
           :date="date"
           @updateStudentsWithHours="updateStudentsWithHours($event)"
           @updateStudentsWithTasks="updateStudentsWithTasks($event)"
-          @showStudent="showStudent($event)"
+          @showStudent="showStudent"
           @updateStudentsWithLastActive="updateStudentsWithLastActive($event)"
         />
       </template>

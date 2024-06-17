@@ -1,7 +1,6 @@
 <template>
   <div class="bg">
     <div class="verify">
-      <p class="overline gm-title">Account successfully created</p>
       <p class="overline gm-title">Please verify your email</p>
       <p class="overline" style="font-size: 0.65rem !important">
         An email has been sent to the email address that you entered
@@ -13,7 +12,9 @@
         <v-btn outlined class="mr-4" color="baseAccent" :to="{ path: 'login' }">
           Back to login
         </v-btn>
-        <v-btn outlined color="missionAccent" @click="sendVerificationEmail"> resend email </v-btn>
+        <v-btn :loading="loading" outlined color="missionAccent" @click="sendVerificationEmail">
+          resend email
+        </v-btn>
       </v-row>
     </div>
   </div>
@@ -26,15 +27,28 @@ export default {
   name: "VerifyEmail",
   components: {},
   data() {
-    return {};
+    return {
+      loading: false,
+    };
   },
   methods: {
     sendVerificationEmail() {
+      this.loading = true;
       var actionCodeSettings = {
         url: window.location.origin + "/login",
         handleCodeInApp: true,
       };
-      return firebase.auth().currentUser.sendEmailVerification(actionCodeSettings);
+      return firebase
+        .auth()
+        .currentUser.sendEmailVerification(actionCodeSettings)
+        .then(() => {
+          console.log("Email verification sent!");
+          this.loading = false;
+        })
+        .catch((error) => {
+          console.error(error);
+          this.loading = false;
+        });
     },
   },
 };

@@ -50,11 +50,11 @@
             mdiInformationVariant
           }}</v-icon>
           <p v-if="isAdmin" class="info-description">
-            Because you are an Admin. These are ALL Galaxy Maps and ALL Cohorts on the Galaxy Maps
+            Because you are an Admin. These are ALL Galaxy Maps and ALL Squads on the Galaxy Maps
             platform.
           </p>
           <p v-else class="info-description">
-            These are Galaxy Maps you have created and the Cohorts working through them.
+            These are Galaxy Maps you have created and the Squads working through them.
           </p>
         </div>
         <div class="timeframe-chips">

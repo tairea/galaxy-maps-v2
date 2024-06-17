@@ -64,6 +64,34 @@
       </v-icon>
       Day
     </v-chip>
+
+    <!-- custom date -->
+    <v-menu
+      ref="menu"
+      v-model="menu"
+      :close-on-content-click="false"
+      transition="scale-transition"
+      offset-y
+      max-width="290px"
+      min-width="auto"
+    >
+      <template v-slot:activator="{ on, attrs }">
+        <v-chip
+          class="my-2 mx-1 custom-chip"
+          color="missionAccent"
+          outlined
+          x-small
+          :input-value="chipCustomActive"
+          @click="timeframeCustom"
+        >
+          <v-icon v-if="chipCustomActive" left>
+            {{ mdiCircleSmall }}
+          </v-icon>
+          Custom
+        </v-chip>
+      </template>
+      <v-date-picker v-model="datePickerRange" no-title range @input="rangeChosen"></v-date-picker>
+    </v-menu>
     <v-chip
       v-if="!noArrows"
       class="my-2 mx-1 custom-chip"
@@ -101,6 +129,12 @@ export default {
       chipFortnightActive: false,
       chipMonthActive: true,
       chipAllTimeActive: false,
+      chipCustomActive: false,
+      menu: false,
+      datePickerRange: [
+        new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().substr(0, 10),
+        new Date().toISOString().substr(0, 10),
+      ],
     };
   },
 
@@ -122,6 +156,9 @@ export default {
         default:
       }
     },
+    computedDateFormatted() {
+      return this.formatDate(this.datePickerRange);
+    },
   },
   methods: {
     timeframeAllTime() {
@@ -131,6 +168,7 @@ export default {
       this.chipFortnightActive = false;
       this.chipMonthActive = false;
       this.chipAllTimeActive = true;
+      this.chipCustomActive = false;
       this.timeframe = {
         min: this.earliestDate, // 8640000000000000 is the smallest date in js
         max: new Date(),
@@ -146,6 +184,7 @@ export default {
       this.chipFortnightActive = false;
       this.chipMonthActive = true;
       this.chipAllTimeActive = false;
+      this.chipCustomActive = false;
       this.timeframe = {
         min: this.previousDays(30),
         max: new Date(),
@@ -161,6 +200,7 @@ export default {
       this.chipFortnightActive = false;
       this.chipMonthActive = false;
       this.chipAllTimeActive = false;
+      this.chipCustomActive = false;
       this.timeframe = {
         min: this.previousDays(7),
         max: new Date(),
@@ -176,6 +216,7 @@ export default {
       this.chipFortnightActive = false;
       this.chipMonthActive = false;
       this.chipAllTimeActive = false;
+      this.chipCustomActive = false;
       this.timeframe = {
         min: this.getStartDay(),
         max: this.getEndDay(),
@@ -183,6 +224,29 @@ export default {
         type: "day",
       };
       this.$emit("timeframe", this.timeframe);
+    },
+    timeframeCustom() {
+      this.menu = true;
+      this.chipActiveType = "custom";
+      this.chipDayActive = false;
+      this.chipWeekActive = false;
+      this.chipFortnightActive = false;
+      this.chipMonthActive = false;
+      this.chipAllTimeActive = false;
+      this.chipCustomActive = true;
+    },
+    rangeChosen(range) {
+      console.log("rage chosen", range);
+      if (this.datePickerRange.length === 2) {
+        this.timeframe = {
+          min: new Date(range[0]),
+          max: new Date(range[1]),
+          unit: "day",
+          type: "month",
+        };
+        this.$emit("timeframe", this.timeframe);
+        this.menu = false;
+      }
     },
     getStartDay() {
       let startDay = new Date().setHours(0);
@@ -293,6 +357,19 @@ export default {
       }
       d.setDate(d.getDate() + num);
       return d;
+    },
+    formatDate(date) {
+      if (!date) return null;
+
+      const [year, month, day] = date.split("-");
+      return `${day}/${month}/${year}`;
+    },
+    parseDate(date) {
+      if (!date) return null;
+      console.log("parsing date:", date);
+
+      const [month, day, year] = date.split("/");
+      return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
     },
   },
 };

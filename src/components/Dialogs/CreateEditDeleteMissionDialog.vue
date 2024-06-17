@@ -422,7 +422,7 @@ export default {
       slides: "",
       submissionRequired: "",
       submissionInstructions: "",
-      color: "",
+      color: "#69a1e2",
     },
     loading: false,
     disabled: false,
@@ -482,12 +482,22 @@ export default {
       const createdTask = await createTaskWithCourseIdTopicId(this.course.id, this.topic.id, task);
 
       this.$emit("taskCreated", createdTask);
+      console.log("createdTask", createdTask);
 
       this.loading = false;
       this.disabled = false;
       this.dialog = false;
 
-      this.task = {};
+      this.task = {
+        title: "",
+        description: "",
+        duration: "",
+        video: "",
+        slides: "",
+        submissionRequired: "",
+        submissionInstructions: "",
+        color: "#69a1e2",
+      };
     },
     async updateTask(task, index) {
       this.loading = true;

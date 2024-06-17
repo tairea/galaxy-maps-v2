@@ -27,7 +27,7 @@
       </div>
     </section>
     <section v-if="!submissions.length && !requests.length">
-      <p class="label text-uppercase" style="color: var(--v-missionAccent-base)">student actions</p>
+      <p class="label text-uppercase" style="color: var(--v-missionAccent-base)">Action Required</p>
     </section>
   </div>
 </template>
@@ -43,12 +43,15 @@ export default {
     ...mapState(useRootStore, ["teachersRequestsForHelp", "courseSubmissions"]),
     requests() {
       return this.teachersRequestsForHelp?.filter(
-        (request) => request.personId === this.student.id,
+        (request) =>
+          request.personId === this.student.id && request.requestForHelpStatus === "unanswered",
       );
     },
     submissions() {
       return this.courseSubmissions?.filter(
-        (submissions) => submissions.studentId === this.student.id,
+        (submissions) =>
+          submissions.studentId === this.student.id &&
+          submissions.taskSubmissionStatus === "inreview", // only show submissions that need reviewing
       );
     },
   },

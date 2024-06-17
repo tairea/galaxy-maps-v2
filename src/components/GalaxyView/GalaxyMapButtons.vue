@@ -74,14 +74,6 @@ export default {
     changeInPositions: { default: false },
     nodePositionsChangeLoading: { default: false },
   },
-  // [
-  //   "addNodeMode",
-  //   "addEdgeMode",
-  //   "dragNodeMode",
-  //   "changeInPositions",
-  //   "nodePositionsChangeLoading",
-  //   "uiMessage",
-  // ],
   async mounted() {},
   data() {
     return {

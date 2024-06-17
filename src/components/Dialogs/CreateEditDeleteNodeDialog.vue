@@ -10,7 +10,7 @@
             <div class="d-flex align-center">
               <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
               <p class="dialog-description">
-                This Node is a <span class="mission-text">Topic</span> of the
+                This Node is a <span class="mission-text">System</span> of the
                 <span class="galaxy-text">{{ this.course?.title }}</span> Galaxy map
               </p>
             </div>
@@ -28,9 +28,56 @@
               color="missionAccent"
               v-model="currentNode.label"
               :autofocus="!editing"
-              label="Topic title"
-              placeholder="Enter name of this node/topic"
+              label="Node title"
+              placeholder="Enter name of this node"
             ></v-text-field>
+
+            <!-- side by side div 50/50 -->
+            <div class="d-flex mt-4">
+              <!-- Node image (as requested by Dion) -->
+              <img
+                v-if="currentNode.image"
+                :src="currentNode.image"
+                style="width: 30%; object-fit: contain; height: 50px"
+              />
+              <div class="left" :style="{ width: currentNode.image ? '40%' : '70%' }">
+                <v-file-input
+                  v-model="uploadedImage"
+                  class="input-field"
+                  color="missionAccent"
+                  outlined
+                  :dark="dark"
+                  :light="!dark"
+                  label="Node image"
+                  placeholder="Upload an image for this node"
+                  @change="storeImage()"
+                  prepend-icon=""
+                  hide-details
+                  accept="image/*"
+                ></v-file-input>
+                <v-progress-linear
+                  color="missionAccent"
+                  :value="percentageImage"
+                  class="mb-4"
+                ></v-progress-linear>
+              </div>
+
+              <!-- Node Size -->
+              <div class="right pl-2" style="width: 30%">
+                <v-text-field
+                  class="input-field"
+                  outlined
+                  :dark="dark"
+                  :light="!dark"
+                  color="missionAccent"
+                  v-model.number="currentNode.size"
+                  label="Size"
+                  placeholder="20"
+                  type="number"
+                  hide-details
+                ></v-text-field>
+              </div>
+            </div>
 
             <!-- Node Color -->
             <p class="dialog-description">
@@ -106,7 +153,7 @@
                   >
                 </template>
                 <span>
-                  Prerequisites are topics that need to be completed before this one can be unlocked
+                  Prerequisites are nodes that need to be completed before this one can be unlocked
                 </span>
               </v-tooltip>
             </p>
@@ -119,7 +166,7 @@
             >
               <template v-slot:label>
                 <span class="dialog-description"
-                  >Does another topic need to be completed before starting this one?</span
+                  >Does another Node need to be completed before starting this one?</span
                 >
               </template>
             </v-checkbox>
@@ -234,7 +281,7 @@
 </template>
 
 <script>
-import { db } from "@/store/firestoreConfig";
+import { db, storage } from "@/store/firestoreConfig";
 import { fetchPersonsTopicByPersonIdCourseIdTopicId } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mdiPencil, mdiPlus, mdiClose, mdiCheck, mdiDelete, mdiInformationVariant } from "@mdi/js";
@@ -303,6 +350,8 @@ export default {
       prerequisites: this.currentNode.prerequisites?.length ? true : false,
       darkSwatches: [["#69A1E2"], ["#E269CF"], ["#73FBD3"], ["#F3C969"], ["#54428E"]], //https://coolors.co/69a1e2-e269cf-73fbd3-f3c969-54428e
       lightSwatches: [["#577399"], ["#fe5f55"]],
+      uploadedImage: {},
+      percentageImage: 0,
     };
   },
   computed: {
@@ -546,6 +595,44 @@ export default {
             .doc(node.id)
             .delete();
         }),
+      );
+    },
+    storeImage() {
+      this.disabled = true;
+      // ceate a storage ref
+      var storageRef = storage.ref(
+        "node-images/course-" + this.course.id + "-node-" + this.currentNode.id,
+      );
+
+      // upload a file
+      var uploadTask = storageRef.put(this.uploadedImage);
+
+      // update progress bar
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          // show progress on uploader bar
+          this.percentageImage = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        },
+        // upload error
+        (err) => {
+          console.log(err);
+        },
+        // upload complete
+        () => {
+          // get image url
+          uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+            // add image url to course obj
+            this.currentNode.shape = "image";
+            this.currentNode.image = downloadURL;
+            this.currentNode.borderWidth = 0;
+            this.currentNode.color = "rgba(0,0,0,0)";
+            this.currentNode.size = 15;
+            this.currentNode.imageName = this.uploadedImage.name;
+            // this.currentNode.size = 30;    <--- hardcoded node/image size
+            this.disabled = false;
+          });
+        },
       );
     },
   },

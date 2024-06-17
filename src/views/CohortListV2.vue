@@ -51,7 +51,7 @@
         </div> -->
       </div>
       <div v-if="!cohorts">
-        <h3 class="cohort-heading overline baseAccent--text">No Cohorts Found</h3>
+        <h3 class="cohort-heading overline baseAccent--text">No Squads Found</h3>
       </div>
 
       <!-- SIDEBAR ADMIN BUTTONS -->
@@ -153,7 +153,7 @@
 
       <!-- NO COHORTS YET -->
       <div v-else class="no-cohort">
-        <p class="overline">you are not in any cohorts yet</p>
+        <p class="overline">you are not in any Squads yet</p>
         <!-- <p class="overline">start a galaxy to create a cohort</p> -->
 
         <!-- PAY WALL VERSION Create Cohort Button -->

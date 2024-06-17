@@ -27,7 +27,6 @@ pinia.use(piniaPluginPersistedstate);
 firebase.auth().onAuthStateChanged((user) => {
   const rootStore = useRootStore();
   const galaxyListViewStore = useGalaxyListViewStore();
-  console.log("auth state changed");
   if (rootStore.user.loggedIn !== (user != null)) {
     rootStore.$reset();
     galaxyListViewStore.$reset();
