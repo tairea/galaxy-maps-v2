@@ -144,7 +144,7 @@
               <div class="d-flex align-start">
                 <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <p class="dialog-description">
-                  Are you sure you want to <strong>DELETE</strong> this leaner's
+                  Are you sure you want to <strong>DELETE</strong> this Navigator's
                   <span class="galaxyAccent--text">Request for Help?</span>
                   <br />
                   <br />
@@ -155,7 +155,7 @@
             </div>
 
             <!-- ACTION BUTTONS -->
-            <div class="action-buttons">
+            <div class="action-buttons mt-4">
               <!-- DELETE -->
               <v-btn
                 outlined
@@ -332,9 +332,9 @@ export default {
         this.request.id,
       );
 
-      console.log("deletedRequest", deletedRequest);
+      console.log("deletedRequest");
 
-      this.$emit("requestDeleted", deletedRequest);
+      this.$emit("requestDeleted");
 
       // close dialog
       this.dialogConfirm = false;

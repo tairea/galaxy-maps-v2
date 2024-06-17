@@ -233,8 +233,10 @@ export const deleteRequestByCourseIdRequestId = async (
   const deleteRequestByCourseIdRequestId = functions.httpsCallable(
     "deleteRequestByCourseIdRequestId",
   );
-  const result = await deleteRequestByCourseIdRequestId(data);
-  return result.data.task;
+
+  await deleteRequestByCourseIdRequestId(data);
+  // const result = await deleteRequestByCourseIdRequestId(data);
+  // return result.data.task;
 };
 
 export const updateTaskOrderIndexesByCourseIdTopicId = async (

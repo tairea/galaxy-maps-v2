@@ -28,6 +28,9 @@ const routes = [
         name: "GalaxyList",
         component: GalaxyList,
         props: true,
+        // meta: {
+        //   authRequired: true,
+        // },
       },
       {
         path: "login",
@@ -132,6 +135,7 @@ const router = new VueRouter({
 
 const initialAuth = new Promise<firebase.User | null>((resolve, reject) => {
   const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
+    console.log("initialAuth user:", user);
     unsubscribe();
     resolve(user);
   }, reject);

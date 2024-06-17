@@ -1189,9 +1189,10 @@ export const deleteRequestByCourseIdRequestIdHttpsEndpoint = runWith({}).https.o
 
     // TODO: permissions checks
 
-    const result = await deleteRequest(courseId, requestId);
+    await deleteRequest(courseId, requestId);
 
-    return result;
+    // const result = await deleteRequest(courseId, requestId);
+    // return result;
   },
 );
 
