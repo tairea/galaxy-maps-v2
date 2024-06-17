@@ -1,6 +1,6 @@
 <template>
   <div>
-    <p class="label text-uppercase">cohorts</p>
+    <p class="label text-uppercase">squads</p>
     <v-row class="ma-0">
       <Cohort
         v-for="cohort in cohorts"

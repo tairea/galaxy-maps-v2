@@ -240,14 +240,14 @@ export default {
         cohort.courses.some((courseId) => courseId === this.courseId),
       );
       this.cohortsInCourse.push(cohort);
-      if (this.cohortsInCourse.length) {
-        this.setCurrentCohortId(this.cohortsInCourse[0].id);
-        const students = await Promise.all(
-          this.cohortsInCourse[0].students?.map((student) => fetchPersonByPersonId(student)),
-        );
-        this.peopleInCourse = students;
-        this.setPeopleInCourse(students);
-      }
+      // if (this.cohortsInCourse.length) {
+      //   this.setCurrentCohortId(this.cohortsInCourse[0]?.id);
+      //   const students = await Promise.all(
+      //     this.cohortsInCourse[0].students?.map((student) => fetchPersonByPersonId(student)),
+      //   );
+      //   this.peopleInCourse = students;
+      //   this.setPeopleInCourse(students);
+      // }
     }
 
     // Start Vue Tour
@@ -368,6 +368,7 @@ export default {
       );
     },
     emittedCourseTasks(emittedPayload) {
+      console.log("course tasks emitted from GalaxyMap.vue", emittedPayload);
       this.courseTasks = emittedPayload;
     },
     selected(selected) {

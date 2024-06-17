@@ -207,24 +207,28 @@ export default {
       this.needsCentering = needsCentering;
     },
     networkMounted() {
-      console.log("networkMounted called");
+      // console.log("networkMounted called");
       this.centerAfterReposition();
     },
     networkUpdated() {
-      console.log("networkUpdated called");
+      // console.log("networkUpdated called");
       if (this.needsCentering === true) {
         this.centerAfterReposition();
       }
     },
     beforeDrawing(ctx) {
+      if (this.relativeGalaxyBoundaries.length === 0) {
+        return;
+      }
       for (const relative of this.relativeGalaxyBoundaries) {
-        // console.log("relative boundary:", relative);
         this.drawGlow(
           ctx,
           relative.centroidX,
           relative.centroidY,
           relative.width > relative.height ? relative.width : relative.height,
           relative.status,
+          relative,
+          relative.id,
         );
         // draw the galaxy maps bounds (for debugging boundaries)
         // this.drawBounds(
@@ -249,7 +253,7 @@ export default {
       ctx.stroke();
       ctx.closePath();
     },
-    drawGlow(ctx, x, y, radius, status) {
+    drawGlow(ctx, x, y, radius, status, course, courseId) {
       radius = radius ? radius : 100;
       // create arc (circle)
       ctx.beginPath();
@@ -257,9 +261,8 @@ export default {
 
       // colour
       let colour;
-
       switch (status) {
-        case "draft":
+        case "drafting":
           //colour = "rgba(250,242,0,0.3)"; // cohortAccent as rgba
           colour = "rgba(255,255,255,0.3)"; // cohortAccent as rgba
           break;
@@ -277,13 +280,25 @@ export default {
         case "assigned":
           colour = "rgba(105,161,226,0.3)"; // missionAccent as rgba
           break;
+        case "no glow":
+          colour = "rgba(20, 30, 48, 0)"; // background as rgba
+          break;
         default:
           colour = "rgba(20, 30, 48, 0)"; // background as rgba
           break;
       }
 
       // gradient
-      var grd = ctx.createRadialGradient(x, y, 1, x, y, radius);
+      // var grd = ctx.createRadialGradient(x, y, 1, x, y, radius);
+      if (isFinite(x) && isFinite(y) && isFinite(radius)) {
+        var grd = ctx.createRadialGradient(x, y, 1, x, y, radius);
+      } else {
+        console.error("Invalid values for galaxy [" + course + "] id [" + courseId + "]: ", {
+          x,
+          y,
+          radius,
+        });
+      }
       grd.addColorStop(0, colour);
       grd.addColorStop(1, "rgba(20, 30, 48, 0)");
 
@@ -534,10 +549,10 @@ export default {
       }
     },
     animationFinished() {
-      console.log("animation finished");
+      // console.log("animation finished");
       if (this.needsToZoomOut === true) {
         this.needsToZoomOut = false;
-        console.log("zooming out");
+        // console.log("zooming out");
         this.zoomOut();
       }
     },
@@ -628,6 +643,11 @@ export default {
         // get nodes in course
         const nodes = this.courseNodesMap.get(courses[i].id);
 
+        // debugging NaN x y for problematic course id
+        // if (courses[i].id == "S1NkzgahYdG8IUoptXNF") {
+        //   console.log("nodes for course S1NkzgahYdG8IUoptXNF: ", nodes);
+        // }
+
         // If we don't have any nodes for this galaxy then don't include it in the final result
         if (nodes.length === 0) {
           console.warn("no nodes for course: ", courses[i].id);
@@ -670,7 +690,7 @@ export default {
         // get the course status for glow colour
         let status;
         if (courses[i].mappedBy.personId == this.person.id) {
-          if (courses[i].status == "drafting") status = "draft";
+          if (courses[i].status == "drafting") status = "drafting";
           else if (courses[i].status == "published" && courses[i].public == true) status = "public";
           else if (courses[i].status == "published" && courses[i].public == false)
             status = "private";
@@ -681,7 +701,10 @@ export default {
         // glow submitted for admin to easily see submitted galaxies for review
         else if (this.user.data?.admin && courses[i].status == "submitted") {
           status = "submitted";
+        } else {
+          status = "no glow";
         }
+
         boundary.status = status;
 
         // add nodes to boundary for debugging
@@ -811,6 +834,23 @@ export default {
         let centroidX = (centroidTri1X + centroidTri2X) / 2;
         let centroidY = (centroidTri1Y + centroidTri2Y) / 2;
 
+        // debugging NaN on x y for problematic course id
+        // if (courseCanvasBoundaries[i].id == "S1NkzgahYdG8IUoptXNF") {
+        //   console.log("relativeTop:", relativeTop);
+        //   console.log("relativeRight:", relativeRight);
+        //   console.log("relativeBottom:", relativeBottom);
+        //   console.log("relativeLeft:", relativeLeft);
+
+        //   console.log("centroidTri1X:", centroidTri1X);
+        //   console.log("centroidTri1Y:", centroidTri1Y);
+
+        //   console.log("centroidTri2X:", centroidTri2X);
+        //   console.log("centroidTri2Y:", centroidTri2Y);
+
+        //   console.log("centroidX:", centroidX);
+        //   console.log("centroidY:", centroidY);
+        // }
+
         // relative galaxy centers
         let relativeCenter = {
           course: courseCanvasBoundaries[i].title,
@@ -885,7 +925,7 @@ export default {
     },
     // this controls the fit zoom animation
     zoomToNodes(nodes, fast = false) {
-      console.log("zoom to nodes called");
+      // console.log("zoom to nodes called");
       // get node ids
       const nodeIds = nodes.map((x) => x.id);
 

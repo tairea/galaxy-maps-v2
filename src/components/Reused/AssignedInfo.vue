@@ -12,6 +12,7 @@
             :cohort="cohort"
             :key="cohort.id"
             :tooltip="isTeacher"
+            :isTeacher="isTeacher"
           />
         </v-row>
       </div>
@@ -50,7 +51,7 @@
       <div v-if="courses.length > 0">
         <Course v-for="(course, i) in courses" :course="course" :key="i" />
         <!-- Jump to galaxy button -->
-        <div v-if="courses.length == 1" class="d-flex justify-center align-center mb-2">
+        <!-- <div v-if="courses.length == 1" class="d-flex justify-center align-center mb-2">
           <v-btn
             outlined
             color="galaxyAccent"
@@ -61,10 +62,14 @@
             }"
             >Jump to Galaxy</v-btn
           >
-        </div>
+        </div> -->
       </div>
       <p v-else class="assigned-status">No Galaxies assigned to this Cohort</p>
-      <AssignCohortDialog v-if="isTeacher && !courseCohort" :assignCourses="true" />
+      <AssignCohortDialog
+        v-if="isTeacher && !courseCohort"
+        :assignCourses="true"
+        :inThisCohort="cohort"
+      />
     </div>
   </div>
 </template>

@@ -287,7 +287,7 @@ export const getCourseMapEdgesAndNodesByCourseIdHttpsEndpoint = runWith({}).http
   },
 );
 
-// Get a list of courses
+// Get a list of courses by SLUG
 export const getCoursesHttpsEndpoint = runWith({}).https.onCall(async (data, context) => {
   const slug = data.slug as string | null;
   let ownerRef: DocumentReference | null = null;
@@ -546,13 +546,14 @@ export const getStudentSubmissionsByPersonIdHttpsEndpoint = runWith({}).https.on
     const courseIdsSet = new Set<string>();
 
     if (context.auth.uid === personId) {
-      // get assigned courses
+      // get person
       const personDoc = await db.collection("people").doc(personId).get();
       const person = personDoc.data();
       if (person == null) {
         throw new HttpsError("not-found", `Person not found: ${personId}`);
       }
 
+      // get assigned courses
       for (const courseId of person.assignedCourses) {
         courseIdsSet.add(courseId);
       }
@@ -560,7 +561,7 @@ export const getStudentSubmissionsByPersonIdHttpsEndpoint = runWith({}).https.on
       // get courses for teacher
       const teacherCohortCollection = await db
         .collection("cohorts")
-        .where("teachers", "array-contains", personId)
+        .where("teachers", "array-contains", context.auth.uid)
         .get();
 
       for (const cohortDoc of teacherCohortCollection.docs) {
@@ -584,6 +585,7 @@ export const getStudentSubmissionsByPersonIdHttpsEndpoint = runWith({}).https.on
 
       for (const submissionForReviewDoc of submissionsForReviewCollection.docs) {
         const submissionForReview = submissionForReviewDoc.data();
+        console.log("debug: submissionForReview", submissionForReview);
         submissions.push({
           ...submissionForReview,
           courseId,
@@ -622,7 +624,7 @@ export const getStudentRequestsByPersonIdHttpsEndpoint = runWith({}).https.onCal
       // get courses for teacher
       const teacherCohortCollection = await db
         .collection("cohorts")
-        .where("teachers", "array-contains", personId)
+        .where("teachers", "array-contains", context.auth.uid)
         .get();
 
       for (const cohortDoc of teacherCohortCollection.docs) {
@@ -1171,6 +1173,29 @@ export const deleteTaskByCourseIdTopicIdTaskIdHttpsEndpoint = runWith({}).https.
   },
 );
 
+// Delete request for help by courseId and requestId
+export const deleteRequestByCourseIdRequestIdHttpsEndpoint = runWith({}).https.onCall(
+  async (data, context) => {
+    requireAuthenticated(context);
+
+    const courseId = data.courseId as string | null;
+    const requestId = data.requestId as string | null;
+    if (courseId == null) {
+      throw new HttpsError("invalid-argument", "missing courseId");
+    }
+    if (requestId == null) {
+      throw new HttpsError("invalid-argument", "missing requestId");
+    }
+
+    // TODO: permissions checks
+
+    await deleteRequest(courseId, requestId);
+
+    // const result = await deleteRequest(courseId, requestId);
+    // return result;
+  },
+);
+
 /**
  * Delete a task
  */
@@ -1226,6 +1251,18 @@ async function deleteTask(courseId: string, topicId: string, taskId: string) {
       id: taskDoc.id,
     },
   };
+}
+
+/**
+ * Delete a request for help
+ */
+async function deleteRequest(courseId: string, requestId: string) {
+  await db
+    .collection("courses")
+    .doc(courseId)
+    .collection("requestsForHelp")
+    .doc(requestId)
+    .delete();
 }
 
 // Update task order indexes by courseId and topicId
@@ -1468,8 +1505,10 @@ async function assignCourseToStudent(courseId: string, personId: string) {
     throw new HttpsError("not-found", `Course not found: ${courseId}`);
   }
 
+  console.log("person:", person);
+
   // check if student is assigned to course
-  if (!person.assignedCourses.includes(courseId)) {
+  if (!person.assignedCourses || !person.assignedCourses.includes(courseId)) {
     console.log("course DOES NOT exist for student", person.firstName + " " + person.lastName);
 
     // Add the topics and tasks to the student

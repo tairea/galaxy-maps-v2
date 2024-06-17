@@ -17,6 +17,7 @@ import {
   assignCourseToStudentHttpsEndpoint,
   createTaskWithCourseIdTopicIdHttpsEndpoint,
   deleteTaskByCourseIdTopicIdTaskIdHttpsEndpoint,
+  deleteRequestByCourseIdRequestIdHttpsEndpoint,
   getCourseByCourseIdHttpsEndpoint,
   getCourseMapEdgesAndNodesByCourseIdHttpsEndpoint,
   getCoursesHttpsEndpoint,
@@ -41,6 +42,7 @@ import {
 import {
   sendCourseDeletedHttpsEndpoint,
   sendCoursePublishedEmailHttpsEndpoint,
+  sendCourseCreatedEmailHttpsEndpoint,
   sendNewCohortEmailHttpsEndpoint,
   sendNewSubmissionEmailHttpsEndpoint,
   sendRequestForHelpHttpsEndpoint,
@@ -83,6 +85,7 @@ export {
   assignCourseToStudentHttpsEndpoint as assignCourseToStudent,
   createTaskWithCourseIdTopicIdHttpsEndpoint as createTaskWithCourseIdTopicId,
   deleteTaskByCourseIdTopicIdTaskIdHttpsEndpoint as deleteTaskByCourseIdTopicIdTaskId,
+  deleteRequestByCourseIdRequestIdHttpsEndpoint as deleteRequestByCourseIdRequestId,
   getCourseByCourseIdHttpsEndpoint as getCourseByCourseId,
   getCourseMapEdgesAndNodesByCourseIdHttpsEndpoint as getCourseMapEdgesAndNodesByCourseId,
   getCoursesHttpsEndpoint as getCourses,
@@ -108,6 +111,7 @@ export {
 export {
   sendCourseDeletedHttpsEndpoint as sendCourseDeleted,
   sendCoursePublishedEmailHttpsEndpoint as sendCoursePublishedEmail,
+  sendCourseCreatedEmailHttpsEndpoint as sendCourseCreatedEmail,
   sendNewCohortEmailHttpsEndpoint as sendNewCohortEmail,
   sendNewSubmissionEmailHttpsEndpoint as sendNewSubmissionEmail,
   sendRequestForHelpHttpsEndpoint as sendRequestForHelp,

@@ -4,18 +4,18 @@
       <div
         class="mission-card"
         :class="{ lockedOpacity: task.taskStatus == 'locked' }"
-        :style="task.color ? 'border: 1px dashed ' + task.color + ' !important' : ''"
+        :style="task.color ? 'border: 1px dashed ' + task.color + ' !important' : '#69a1e2'"
       >
         <div class="mission-section mission-number-section">
           <p
             class="text-overline text-uppercase"
-            :style="task.color ? 'color:' + task.color + ' !important' : ''"
+            :style="task.color ? 'color:' + task.color + ' !important' : '#69a1e2'"
           >
             Mission
           </p>
           <p
             class="mission-number"
-            :style="task.color ? 'color:' + task.color + ' !important' : ''"
+            :style="task.color ? 'color:' + task.color + ' !important' : '#69a1e2'"
           >
             {{ index + 1 }}
           </p>
@@ -102,7 +102,15 @@
             >
               SUBMISSION REQ:
             </p>
-            <p :style="[task.submissionRequired ? { color: '#FAF200' } : '']">
+            <p
+              :style="[
+                task.submissionRequired
+                  ? { color: '#FAF200' }
+                  : task.color
+                  ? { color: task.color + ' !important' }
+                  : '',
+              ]"
+            >
               {{ task.submissionRequired ? "YES" : "NO" }}
             </p>
           </div>

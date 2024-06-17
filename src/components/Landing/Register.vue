@@ -29,13 +29,13 @@
           outlined
           class="custom-input"
         ></v-text-field>
-        <v-text-field
+        <!-- <v-text-field
           v-model="person.discord"
           label="Discord Handle (optional)"
           color="missionAccent"
           outlined
           class="custom-input"
-        ></v-text-field>
+        ></v-text-field> -->
         <v-text-field
           type="email"
           v-model="person.email"
@@ -130,6 +130,7 @@ export default {
           console.log(userRef.user.uid);
           // get new user id
           this.person.id = userRef.user.uid;
+          console.log("user created with id: ", this.person.id);
           // remove password so its not saved to database
           delete this.person.password;
           // add time registered

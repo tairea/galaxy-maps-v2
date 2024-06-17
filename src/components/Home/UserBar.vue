@@ -222,6 +222,17 @@ export default {
       await this.bindCoursesByPersonId(this.person.id);
     }
 
+    if (
+      this.$route.name == "Login" ||
+      this.$route.name == "Verify" ||
+      this.$route.name == "Reset" ||
+      this.$route.name == "Register"
+    ) {
+      this.showMenu = false;
+    } else {
+      this.showMenu = true;
+    }
+
     if (this.$route.name == "GalaxyView" || this.$route.name == "SolarSystemView") {
       this.miniNavMenu = true;
     } else {

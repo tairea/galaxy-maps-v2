@@ -81,15 +81,15 @@
 
             <v-card-text class="py-8 px-6">
               Are you sure you want to <strong>DELETE</strong> the
-              <span class="organisation-text">{{ organisation.name }} ORGANISATION</span>?
+              <span class="organisation-text">{{ organisation.name }} FLEET</span>?
               <br />
               <br />
               Deleting is permanent!!!
               <br />
               <br />
               <!-- <strong>YOU WILL LOSE ALL </strong> -->
-              <strong>COHORTS</strong> will no longer be associated with this
-              <strong>ORGANISATION</strong>
+              <strong>SQUADS</strong> will no longer be associated with this
+              <strong>FLEET</strong>
             </v-card-text>
 
             <v-divider></v-divider>

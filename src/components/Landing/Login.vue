@@ -200,7 +200,7 @@ export default {
         .catch((error) => {
           this.setSnackbar({
             show: true,
-            text: "Invalid or expired code: " + error.message,
+            text: "Invalid or expired code. (Error code: " + error.code + ")",
             color: "pink",
           });
         });
@@ -223,9 +223,10 @@ export default {
           // Code is invalid or expired. Ask the user to verify their email address
           this.setSnackbar({
             show: true,
-            text: "Invalid or expired code: " + error.message,
+            text: "Invalid or expired code. (Error code: " + error.code + ")",
             color: "pink",
           });
+          this.$router.push("/verify");
         });
     },
     login() {
@@ -243,9 +244,45 @@ export default {
         })
         .catch((error) => {
           console.log("error: ", error);
+          console.log("error message: ", error.message);
+          console.log("error code: ", error.code);
+
+          // improved user friendly error handling (thanks chatgpt)
+          let userFriendlyError = "";
+          switch (error.code) {
+            case "auth/invalid-email":
+              userFriendlyError =
+                "The email address is invalid. Please enter a valid email address.";
+              break;
+            case "auth/wrong-password":
+              userFriendlyError =
+                "The password you entered is incorrect. Please check your password and try again.";
+              break;
+            case "auth/user-not-found":
+              userFriendlyError =
+                "No user found with this email. Please check the email entered or create an account.";
+              break;
+            case "auth/invalid-password":
+              userFriendlyError = "The password entered is incorrect. Please try again.";
+              break;
+            case "auth/too-many-requests":
+              userFriendlyError = "Too many login attempts. Please try again later.";
+              break;
+            case "auth/internal-error":
+              userFriendlyError =
+                "An internal error occurred during sign-in. Please try again later.";
+              break;
+            case undefined:
+              userFriendlyError = error.message;
+              break;
+            default:
+              userFriendlyError =
+                "An error occurred. (Error code: " + error.code + "). Please try again.";
+          }
+
           this.setSnackbar({
             show: true,
-            text: error.message,
+            text: userFriendlyError,
             color: "pink",
           });
           this.loading = false;
@@ -258,9 +295,7 @@ export default {
           this.proceed();
         }, 500);
       }
-      /* -----------------
-          VERIFICATION DISABLED for testing
-      -----------------------*/
+
       if (!this.user.data.verified) {
         console.log("Login: proceeding =============== not verified");
         var actionCodeSettings = {
@@ -269,8 +304,15 @@ export default {
           url: window.location.origin + "/login",
           handleCodeInApp: true,
         };
+
+        // send email verification link
         firebase.auth().currentUser.sendEmailVerification(actionCodeSettings);
         this.loading = false;
+        this.setSnackbar({
+          show: true,
+          text: "Your account is not verified. We've just emailed you a link to verify your account. Please check your email.",
+          color: "baseAccent",
+        });
         throw new Error("Please check your emails to verify your account");
       } else {
         console.log("Login: proceeding =============== else push '/'");

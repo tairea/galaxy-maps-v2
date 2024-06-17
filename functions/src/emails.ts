@@ -173,6 +173,36 @@ Galaxy Maps Team`;
 }
 
 // ======COURSE PUBLISHED NOTIFICATION==================
+export const sendCourseCreatedEmailHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
+  const { email, name, course, courseId } = data;
+  sendCourseCreatedEmail(email, name, course, courseId);
+});
+/**
+ * Sends a course published notification.
+ */
+export async function sendCourseCreatedEmail(
+  email: string,
+  name: string,
+  course: string,
+  courseId: string,
+) {
+  const mailOptions: Record<string, string> = {
+    from: `${APP_NAME} <noreply@${DOMAIN}>`,
+    to: "[jamin.tairea@gmail.com, ian@tairea.io]",
+  };
+
+  mailOptions.subject = "Galaxy Created";
+  mailOptions.text = `Greetings admin, 
+
+  ${name} from ${email} has created a new galaxy called ${course}.
+
+  Navigate to https://${DOMAIN}/galaxy/${courseId} to take a look.
+  
+Galaxy Maps Bot`;
+  await mailTransport.sendMail(mailOptions);
+  log("Course created email sent to admin");
+}
+// ======COURSE PUBLISHED NOTIFICATION==================
 export const sendCoursePublishedEmailHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
   const { email, name, course } = data;
   sendCoursePublishedEmail(email, name, course);
@@ -435,7 +465,7 @@ export async function sendResponseToSubmission(
   };
 
   /* eslint-disable max-len */
-  mailOptions.subject = `Task submission ${outcome}`;
+  mailOptions.subject = `Mission ${task} ${outcome}`;
   mailOptions.text = `Hi ${student}, 
 
 Your instructor ${teacher} has reviewed your submission to ${task}.

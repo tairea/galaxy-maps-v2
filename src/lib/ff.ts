@@ -58,6 +58,7 @@ export const fetchStudentRequestsByPersonId = async (
   const data = {
     personId,
   };
+  console.log("fetchStudentRequestsByPersonId -> data:", data);
   const getStudentRequestsByPersonId = functions.httpsCallable("getStudentRequestsByPersonId");
   const result = await getStudentRequestsByPersonId(data);
   return result.data.requests;
@@ -219,6 +220,23 @@ export const deleteTaskByCourseIdTopicIdTaskId = async (
   );
   const result = await deleteTaskByCourseIdTopicIdTaskId(data);
   return result.data.task;
+};
+
+export const deleteRequestByCourseIdRequestId = async (
+  courseId: string,
+  requestId: string,
+): Promise<ITask> => {
+  const data = {
+    courseId,
+    requestId,
+  };
+  const deleteRequestByCourseIdRequestId = functions.httpsCallable(
+    "deleteRequestByCourseIdRequestId",
+  );
+
+  await deleteRequestByCourseIdRequestId(data);
+  // const result = await deleteRequestByCourseIdRequestId(data);
+  // return result.data.task;
 };
 
 export const updateTaskOrderIndexesByCourseIdTopicId = async (

@@ -30,7 +30,7 @@
             </v-btn>
           </template>
 
-          <!-- NEW DIALOG -->
+          <!-- ===== ASSIGN COHORT TO COURSE (EG. FROM COURSE VIEW) ===== -->
           <div v-if="assignCohorts" class="create-dialog">
             <v-tabs
               v-model="tab"
@@ -90,7 +90,9 @@
                           <img v-if="item.image && item.image.url" :src="item.image.url" />
                           <v-icon v-else>{{ mdiStarThreePoints }}</v-icon>
                         </v-list-item-avatar>
-                        <v-list-item-content>{{ item.name }} </v-list-item-content>
+                        <v-list-item-content
+                          ><p class="cohortAccent--text">{{ item.name }}</p>
+                        </v-list-item-content>
                       </template>
                       <template v-slot:item="{ item }">
                         <v-list-item-avatar tile>
@@ -98,7 +100,7 @@
                           <v-icon v-else>{{ mdiStarThreePoints }}</v-icon>
                         </v-list-item-avatar>
                         <v-list-item-content>
-                          <v-list-item-title v-html="item.name"></v-list-item-title>
+                          <p class="cohortAccent--text">{{ item.name }}</p>
                         </v-list-item-content>
                       </template>
                     </v-select>
@@ -136,37 +138,36 @@
               <v-tab-item>
                 <!-- HEADER -->
                 <div class="dialog-header">
-                  <p class="dialog-title">Assign to a Cohort</p>
+                  <p class="dialog-title">Assign to a Squad</p>
                   <div class="d-flex align-center">
                     <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                     <p class="dialog-description">
-                      Assign this Galaxy Map to an entire Cohort of learners
+                      Assign this Galaxy Map to an entire
+                      <span class="cohortAccent--text">Squad</span> of Navigators
                     </p>
                   </div>
                 </div>
                 <div class="create-dialog-content">
                   <!-- TITLE -->
-                  <p class="dialog-description">Cohorts:</p>
+                  <p class="dialog-description">Squads:</p>
                   <v-select v-if="assignCohorts" v-model="cohort" :items="cohorts">
                     <template v-slot:selection="{ item }">
-                      <v-img
-                        v-if="item.image.url"
-                        :src="item.image.url"
-                        style="object-fit: cover"
-                        width="40"
-                      />
-                      <v-icon v-else>{{ mdiStarThreePoints }}</v-icon>
-                      <p class="ml-4">{{ item.title }}</p>
+                      <v-list-item-avatar tile>
+                        <img v-if="item.image && item.image.url" :src="item.image.url" />
+                        <v-icon v-else>{{ mdiStarThreePoints }}</v-icon>
+                      </v-list-item-avatar>
+                      <v-list-item-content
+                        ><p class="cohortAccent--text">{{ item.name }}</p>
+                      </v-list-item-content>
                     </template>
                     <template v-slot:item="{ item }">
-                      <v-img
-                        v-if="item.image.url"
-                        :src="item.image.url"
-                        style="object-fit: cover"
-                        width="40"
-                      />
-                      <v-icon v-else>{{ mdiStarThreePoints }}</v-icon>
-                      <p class="ml-4 mt-4">{{ item.title }}</p>
+                      <v-list-item-avatar tile>
+                        <img v-if="item.image && item.image.url" :src="item.image.url" />
+                        <v-icon v-else>{{ mdiStarThreePoints }}</v-icon>
+                      </v-list-item-avatar>
+                      <v-list-item-content>
+                        <p class="cohortAccent--text">{{ item.name }}</p>
+                      </v-list-item-content>
                     </template>
                   </v-select>
                 </div>
@@ -197,19 +198,18 @@
                 <!-- End action-buttons -->
               </v-tab-item>
             </v-tabs-items>
-
-            <!-- </div> -->
           </div>
-          <!-- End create-dialog -->
 
+          <!-- ===== ASSIGN COURSE TO COHORT (EG. FROM COHORT VIEW) ===== -->
           <div v-else-if="assignCourses" class="create-dialog">
             <!-- HEADER -->
             <div class="dialog-header">
-              <p class="dialog-title">Assign this Cohort to a Course</p>
+              <p class="dialog-title">
+                Add another Galaxy Map to Cohort:
+                <span class="cohortAccent--text">{{ inThisCohort.name }}</span>
+              </p>
               <div class="d-flex align-center">
-                <p class="dialog-description">
-                  Assign all students in this Cohort to an exisiting galaxy map
-                </p>
+                <p class="dialog-description">Track this Cohort through another Galaxy Map</p>
               </div>
             </div>
 
@@ -295,7 +295,7 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "AssignCohortDialog",
-  props: ["assignCohorts", "assignCourses", "cohorts"],
+  props: ["assignCohorts", "assignCourses", "cohorts", "inThisCohort"],
   data: () => ({
     //icons
     mdiClose,
@@ -351,7 +351,7 @@ export default {
         id: "",
         email: "",
       };
-      this.cohort = null;
+      // this.cohort = null;
       this.course = null;
     },
     async assignCourseToPerson(profile) {
@@ -378,6 +378,7 @@ export default {
         if (this.cohort.courses.length) {
           // Possible optimize to make this concurrent instead of sequential
           for (const courseId of this.cohort.courses) {
+            console.log("courseId", courseId);
             await assignCourseToPerson(person.id, courseId);
           }
         }

@@ -42,7 +42,7 @@ import { mdiMenu, mdiClose } from "@mdi/js";
 import { mapState } from "pinia";
 
 const TAB_GALAXIES = { id: 1, name: "GALAXIES", route: `/`, exactPath: true };
-const TAB_COHORTS = { id: 2, name: "COHORTS", route: `/cohorts`, exactPath: false };
+const TAB_COHORTS = { id: 2, name: "SQUADS", route: `/cohorts`, exactPath: false };
 const TAB_DASHBOARD = { id: 3, name: "DASHBOARD", route: `/dashboard`, exactPath: false };
 const TAB_ADMIN = { id: 4, name: "ADMIN", route: `/students` };
 
@@ -96,6 +96,21 @@ export default {
       this.tabs = [TAB_GALAXIES, TAB_COHORTS, TAB_DASHBOARD];
     } else {
       this.tabs = [TAB_GALAXIES];
+    }
+
+    if (this.$route.name == "GalaxyView") {
+      this.showNavMenu = false;
+      this.showHamburgerMenu = true;
+    } else if (
+      this.$route.name == "Login" ||
+      this.$route.name == "Verify" ||
+      this.$route.name == "Reset" ||
+      this.$route.name == "Register"
+    ) {
+      this.showNavMenu = false;
+    } else {
+      this.showNavMenu = true;
+      this.showHamburgerMenu = false;
     }
   },
   methods: {

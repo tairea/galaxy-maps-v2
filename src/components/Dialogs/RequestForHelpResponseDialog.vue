@@ -119,6 +119,12 @@
                 <v-icon left> {{ mdiClose }} </v-icon>
                 Cancel
               </v-btn>
+
+              <!-- DELETE REQUEST -->
+              <v-btn outlined color="error" class="ml-4" @click="deleteDialog()">
+                <v-icon left> {{ mdiDelete }} </v-icon>
+                Delete
+              </v-btn>
               <!-- End action-buttons -->
             </div>
             <!-- End submission-create-dialog-content -->
@@ -127,6 +133,55 @@
           </div>
 
           <!-- End create-dialog -->
+        </v-dialog>
+
+        <!-- CONFIRM DELETE DIALOG -->
+        <v-dialog v-model="dialogConfirm" width="40%" light>
+          <div class="create-dialog">
+            <!-- HEADER -->
+            <div class="dialog-header py-10">
+              <p class="dialog-title"><strong>Warning!</strong></p>
+              <div class="d-flex align-start">
+                <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
+                <p class="dialog-description">
+                  Are you sure you want to <strong>DELETE</strong> this Navigator's
+                  <span class="galaxyAccent--text">Request for Help?</span>
+                  <br />
+                  <br />
+                  Deleting is permanent!!!
+                  <br />
+                </p>
+              </div>
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div class="action-buttons mt-4">
+              <!-- DELETE -->
+              <v-btn
+                outlined
+                color="error"
+                @click="confirmDeleteRequest()"
+                class="ml-2"
+                :loading="deleting"
+              >
+                <v-icon left> {{ mdiDelete }} </v-icon>
+                DELETE
+              </v-btn>
+
+              <v-btn
+                outlined
+                :color="$vuetify.theme.dark ? 'yellow' : 'f7f7ff'"
+                class="ml-2"
+                @click="cancelDeleteDialog"
+                :disabled="deleting || loading"
+              >
+                <v-icon left> {{ mdiClose }} </v-icon>
+                Cancel
+              </v-btn>
+            </div>
+            <!-- End action-buttons -->
+          </div>
+          <!-- End create-dialog-content -->
         </v-dialog>
       </v-col>
     </v-row>
@@ -139,10 +194,11 @@ import {
   fetchCourseByCourseId,
   fetchTaskByCourseIdTopicIdTaskId,
   fetchTopicByCourseIdTopicId,
+  deleteRequestByCourseIdRequestId,
 } from "@/lib/ff";
 import { teacherRespondedToRequestForHelpXAPIStatement } from "@/lib/veracityLRS";
 import useRootStore from "@/store/index";
-import { mdiAccount, mdiCheck, mdiClose } from "@mdi/js";
+import { mdiAccount, mdiCheck, mdiClose, mdiDelete, mdiInformationVariant } from "@mdi/js";
 import moment from "moment";
 import { mapActions, mapState } from "pinia";
 
@@ -153,7 +209,10 @@ export default {
     mdiAccount,
     mdiCheck,
     mdiClose,
+    mdiDelete,
+    mdiInformationVariant,
     dialog: false,
+    dialogConfirm: false,
     dialogDescription:
       "Write what you need help with, then submit, and your instructor will be notified to leave you a response.",
     requestForHelp: "",
@@ -257,6 +316,28 @@ export default {
       console.log("email data: ", data);
       const sendResponseToHelp = functions.httpsCallable("sendResponseToHelp");
       return sendResponseToHelp(data);
+    },
+    // delete request for help
+    deleteDialog() {
+      (this.dialog = false), (this.dialogConfirm = true);
+    },
+    cancelDeleteDialog() {
+      this.dialogConfirm = false;
+      this.dialog = true;
+    },
+    async confirmDeleteRequest() {
+      this.deleting = true;
+      const deletedRequest = await deleteRequestByCourseIdRequestId(
+        this.request.contextCourse.id,
+        this.request.id,
+      );
+
+      console.log("deletedRequest");
+
+      this.$emit("requestDeleted");
+
+      // close dialog
+      this.dialogConfirm = false;
     },
   },
 };
