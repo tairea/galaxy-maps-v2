@@ -5,7 +5,7 @@
       <div class="create-dialog">
         <!-- HEADER -->
         <div class="dialog-header">
-          <p class="mb-0">Edit Student</p>
+          <p class="mb-0">Edit Navigator</p>
         </div>
         <CreateAccountForm
           :student="student"

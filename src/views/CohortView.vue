@@ -19,7 +19,7 @@
       <div v-if="cohort" class="people-frame">
         <div class="people-border">
           <div :class="peopleLabel" @click="setStudentsView(true)">
-            <span class="pl-3">STUDENTS</span>
+            <span class="pl-3">NAVIGATORS</span>
           </div>
         </div>
         <div class="graph-border">

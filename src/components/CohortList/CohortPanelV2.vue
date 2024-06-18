@@ -6,7 +6,7 @@
   >
     <!-- top row -->
     <div class="left-col">
-      <p class="label text-center mt-4 mb-0">Cohort:</p>
+      <p class="label text-center mt-4 mb-0">Squad:</p>
       <div class="d-flex flex-column justify-start align-center pa-2">
         <v-avatar v-if="cohort.image.url" size="80">
           <v-img :src="cohort.image.url"></v-img>
@@ -23,7 +23,7 @@
           v-if="cohort.teachers && cohort.teachers.length > 0"
           class="d-flex justify-center align-center flex-wrap py-2"
         >
-          <p class="label text-center mt-2 mb-2">Teachers:</p>
+          <p class="label text-center mt-2 mb-2">Captain:</p>
           <div>
             <Avatar
               v-for="teacherId in cohort.teachers"
@@ -34,7 +34,7 @@
             />
           </div>
         </div>
-        <p v-else class="label text-center" style="font-weight: 800">NO TEACHER DATA</p>
+        <p v-else class="label text-center" style="font-weight: 800">NO CAPTAIN DATA</p>
         <!-- Students avatars row -->
         <div class="student-row">
           <div
@@ -44,11 +44,11 @@
             <!-- v-show not working to hide tooltip, so using v-if v-else  -->
             <v-tooltip v-if="isCohortTeacher" v-show="isCohortTeacher" top color="subBackground">
               <template v-slot:activator="{ on, attrs }">
-                <p class="label text-center mt-4 mb-2" v-bind="attrs" v-on="on">Students:</p>
+                <p class="label text-center mt-4 mb-2" v-bind="attrs" v-on="on">Navigators:</p>
               </template>
               <span>Select students to show only their data</span>
             </v-tooltip>
-            <p v-else class="label text-center mt-4 mb-2">Students:</p>
+            <p v-else class="label text-center mt-4 mb-2">Navigators:</p>
 
             <Avatar
               v-for="(person, index) in studentsWithData"
@@ -63,7 +63,7 @@
               :hideTooltips="!isCohortTeacher"
             />
           </div>
-          <p v-else class="label text-center pa-4" style="font-weight: 800">NO STUDENT DATA</p>
+          <p v-else class="label text-center pa-4" style="font-weight: 800">NO NAVIGATOR DATA</p>
         </div>
       </div>
     </div>

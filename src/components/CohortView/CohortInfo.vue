@@ -1,6 +1,6 @@
 <template>
   <div id="cohort-info" v-if="cohort">
-    <h2 class="cohort-label">Cohort</h2>
+    <h2 class="cohort-label">Squad</h2>
     <h1 class="cohort-title">{{ cohort.name }}</h1>
     <div v-if="cohortImage">
       <v-img class="cohort-image" width="auto" :src="cohort.image.url"></v-img>
