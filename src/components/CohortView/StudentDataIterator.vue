@@ -86,7 +86,7 @@
       </template>
 
       <template v-slot:no-data>
-        <p class="ma-10 noStudents">No Students in this Cohort</p>
+        <p class="ma-10 noStudents">No Navigators in this Squad</p>
       </template>
     </v-data-iterator>
     <!-- Student Dialog -->

@@ -5,7 +5,7 @@
     <div v-if="assignCohorts">
       <!-- Assigned COHORTS -->
       <div v-if="cohorts && cohorts.length > 0">
-        <p class="overline assignedToLabel ma-0">Cohorts</p>
+        <p class="overline assignedToLabel ma-0">Squads</p>
         <v-row class="my-1">
           <Cohort
             v-for="cohort in cohorts"
@@ -19,7 +19,7 @@
 
       <!-- Assigned PEOPLE -->
       <div v-if="people.length > 0">
-        <p class="overline assignedToLabel ma-0">Individuals</p>
+        <p class="overline assignedToLabel ma-0">Navigators</p>
         <v-row class="my-4">
           <Avatar
             v-for="person in people"

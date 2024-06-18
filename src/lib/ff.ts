@@ -225,7 +225,7 @@ export const deleteTaskByCourseIdTopicIdTaskId = async (
 export const deleteRequestByCourseIdRequestId = async (
   courseId: string,
   requestId: string,
-): Promise<ITask> => {
+): Promise<void> => {
   const data = {
     courseId,
     requestId,

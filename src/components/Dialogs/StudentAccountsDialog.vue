@@ -13,13 +13,13 @@
       <div class="create-dialog">
         <!-- HEADER -->
         <div class="dialog-header">
-          <p class="mb-0">Manage Students</p>
+          <p class="mb-0">Manage Navigators</p>
         </div>
         <div class="create-dialog-content">
           <v-tabs background-color="var(--v-background-base)" dark fixed-tabs>
             <v-tab class="justify-start">
               <v-icon small class="mr-2">{{ mdiAccountPlus }}</v-icon>
-              <div>add student</div>
+              <div>add navigator</div>
             </v-tab>
             <v-tab class="justify-start">
               <v-icon small class="mr-2">{{ mdiAccountGroup }}</v-icon>
@@ -27,7 +27,7 @@
             </v-tab>
             <v-tab class="justify-start">
               <v-icon small class="mr-2">{{ mdiAccountEdit }}</v-icon>
-              <div>edit student</div>
+              <div>edit navigator</div>
             </v-tab>
 
             <v-tab-item>
