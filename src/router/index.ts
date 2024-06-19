@@ -28,9 +28,6 @@ const routes = [
         name: "GalaxyList",
         component: GalaxyList,
         props: true,
-        // meta: {
-        //   authRequired: true,
-        // },
       },
       {
         path: "login",
@@ -125,17 +122,8 @@ const router = new VueRouter({
   routes,
 });
 
-//
-// const initialAuth = new Promise((resolve, reject) => {
-//   const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
-//     unsubscribe();
-//     resolve(user);
-//   }, reject);
-// });
-
 const initialAuth = new Promise<firebase.User | null>((resolve, reject) => {
   const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
-    console.log("initialAuth user:", user);
     unsubscribe();
     resolve(user);
   }, reject);
@@ -143,19 +131,23 @@ const initialAuth = new Promise<firebase.User | null>((resolve, reject) => {
 
 router.beforeEach(async (to, from, next) => {
   const rootStore = useRootStore();
-  const user = await initialAuth;
-  console.log("user from router", user);
+  await initialAuth;
   if (from.path !== "/") rootStore.set_from(from.path);
+
+  if (
+    !["/verify", "/login", "/reset", "/register"].includes(to.path) &&
+    rootStore.user.loggedIn &&
+    rootStore.user.data?.verified !== true
+  ) {
+    alert("You must verify your email to see this page");
+    next({
+      path: "/verify",
+    });
+  }
+
   if (to.matched.some((record) => record.meta.authRequired)) {
-    if (user && user.emailVerified) {
+    if (rootStore.user.loggedIn && rootStore.user.data?.verified === true) {
       next();
-    }
-    // @Stefan - i can still see home page, when test account user.emailVerfied = false. why is this not working?
-    else if (user && !user.emailVerified) {
-      alert("You must verify your email to see this page");
-      next({
-        path: "/verify",
-      });
     } else {
       alert("You must be logged in to see this page");
       next({
