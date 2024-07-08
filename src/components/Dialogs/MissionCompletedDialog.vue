@@ -482,6 +482,9 @@ export default {
       this.loading = true;
       this.disabled = true;
 
+      // emit missionCompleted all the way up to SolarSystemView to run refreshTopic() & refreshPersonTopicsAndTasks()
+      this.$emit("missionCompleted");
+
       // Add a new document in collection "courses"
       await db
         .collection("people")
@@ -526,8 +529,6 @@ export default {
 
       // check if all tasks/missions are completed
       await this.checkIfAllTasksCompleted();
-
-      this.$emit("missionCompleted");
 
       this.loading = false;
       this.disabled = false;
