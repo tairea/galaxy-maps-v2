@@ -3,10 +3,14 @@
     <!-- CREATE BUTTON -->
     <template v-slot:activator="{ on, attrs }">
       <!-- ASSIGN COHORT -->
+
+      <!-- publish button colour -->
       <v-btn
         outlined
         :color="
-          admin && course.status == 'submitted' && course.public == true
+          admin &&
+          course.status == 'submitted' &&
+          (course.public == true || course.visibility == 'public')
             ? 'cohortAccent'
             : 'galaxyAccent'
         "
@@ -21,7 +25,7 @@
     </template>
 
     <!-- NOT OK!!!! TO PUBLISH DIALOG (No missions) -->
-    <div v-if="topicsWithoutTasks.length > 0" class="create-dialog">
+    <div v-if="topicsWithoutTasks.length > 0 && !presentationOnly" class="create-dialog">
       <div class="dialog-header">
         <div class="d-flex mb-4">
           <p class="dialog-title ma-0">Important</p>
@@ -29,7 +33,10 @@
         </div>
         <div class="d-flex align-center">
           <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
-          <p class="dialog-description">System's must have <strong>AT LEAST ONE MISSION</strong></p>
+          <p class="dialog-description">
+            For Navigators to progress through Galaxy Maps, <strong>ALL SYSTEMS</strong> must have
+            <strong>AT LEAST ONE MISSION</strong>
+          </p>
         </div>
       </div>
       <v-divider dark color="missionAccent"></v-divider>
@@ -57,6 +64,10 @@
         >
           <v-icon left> {{ mdiClose }} </v-icon>
           OK
+        </v-btn>
+        <v-btn outlined color="baseAccent" class="ml-2" @click="presentation" :disabled="loading">
+          <v-icon left> {{ mdiPresentation }} </v-icon>
+          PRESENTATION ONLY
         </v-btn>
       </div>
     </div>
@@ -126,7 +137,9 @@
     <!-- OK TO PUBLISH DIALOG -->
     <div v-else class="create-dialog">
       <div class="dialog-header">
-        <p class="dialog-title">publish galaxy</p>
+        <p class="dialog-title">
+          publish galaxy <span v-if="presentationOnly">for presentation only</span>
+        </p>
         <div class="d-flex align-center">
           <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
           <div
@@ -145,6 +158,12 @@
             </p>
             <p>All Galaxy Maps users will be able to see and start this map.</p>
           </div>
+          <p v-else-if="presentationOnly" class="dialog-description">
+            Publishing a Galaxy Map for
+            <span class="baseAccent--text"><strong>Presentation Only</strong></span
+            >, means Navigators <span class="red--text"><strong>WILL NOT</strong></span> be able to
+            progress through this map.
+          </p>
           <p v-else class="dialog-description">
             Publish this Galaxy
             <span style="font-weight: 600; color: var(--v-galaxyAccent-base)">{{
@@ -159,22 +178,24 @@
         <div v-if="!admin">
           <p class="caption mb-2">Choose whether you would like this galaxy to be:</p>
 
-          <v-radio-group
-            v-model="courseOptions.public"
-            color="missionAccent"
-            :light="!dark"
-            :dark="dark"
-          >
+          <v-radio-group v-model="visibility" color="missionAccent" :light="!dark" :dark="dark">
             <v-radio
               label="private (invite only)"
-              :value="false"
+              value="private"
               color="missionAccent"
               class="label-text mb-4"
             ></v-radio>
 
             <v-radio
-              label="public (Available to all Galaxy Maps users)"
-              :value="true"
+              label="unlisted (public, but unlisted)"
+              value="unlisted"
+              color="missionAccent"
+              class="label-text mb-4"
+            ></v-radio>
+
+            <v-radio
+              label="public (visible by all Galaxy Maps users)"
+              value="true"
               color="missionAccent"
               class="label-text"
             ></v-radio>
@@ -198,10 +219,10 @@
             ></v-radio>
           </v-radio-group>
         </div> -->
-        <p class="caption ma-0" v-if="courseOptions.public && !admin">
+        <p class="caption ma-0" v-if="visibility == 'public' && !admin">
           <i
             >(Public courses need to be submitted for review by Galaxy Map moderators.<br />This
-            usually done within 48 hours.)</i
+            will usually done within 48 hours.)</i
           >
         </p>
       </div>
@@ -210,7 +231,9 @@
         <v-btn
           outlined
           :color="
-            admin && course.status == 'submitted' && course.public == true
+            admin &&
+            course.status == 'submitted' &&
+            (course.public == true || course.visibility == 'public')
               ? 'cohortAccent'
               : 'galaxyAccent'
           "
@@ -234,7 +257,7 @@
       </div>
       <div v-else class="action-buttons">
         <v-btn
-          v-if="courseOptions.public"
+          v-if="visibility == 'public'"
           outlined
           color="baseAccent"
           @click="submitCourse()"
@@ -267,7 +290,14 @@
 import { fetchPersonByPersonId } from "@/lib/ff";
 import { db, functions } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
-import { mdiAlertOutline, mdiInformationVariant, mdiClose, mdiCheck, mdiSend } from "@mdi/js";
+import {
+  mdiAlertOutline,
+  mdiInformationVariant,
+  mdiClose,
+  mdiCheck,
+  mdiSend,
+  mdiPresentation,
+} from "@mdi/js";
 import { mapActions, mapState } from "pinia";
 
 export default {
@@ -280,18 +310,18 @@ export default {
     mdiClose,
     mdiCheck,
     mdiSend,
+    mdiPresentation,
     dialog: false,
     loading: false,
-    courseOptions: {
-      public: false,
-    },
+    visibility: null,
     topicsWithoutTasks: 0,
     hasIntro: false,
     introNodes: [],
     sortedObjArr: [],
+    presentationOnly: false,
   }),
   computed: {
-    ...mapState(useRootStore, ["user", "currentCourseId", "currentCourseNodes"]),
+    ...mapState(useRootStore, ["user", "person", "currentCourseId", "currentCourseNodes"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -304,7 +334,7 @@ export default {
       immediate: true,
       deep: true,
       handler(newVal) {
-        this.courseOptions.public = newVal.public;
+        this.visibility = newVal.visibility;
       },
     },
   },
@@ -335,9 +365,8 @@ export default {
     close() {
       this.dialog = false;
       this.loading = false;
-      this.courseOptions = {
-        public: this.course.public,
-      };
+      this.visibility = null;
+      this.presentationOnly = false;
     },
 
     async submitCourse() {
@@ -359,7 +388,7 @@ export default {
       if (!this.admin) {
         course = {
           ...course,
-          ...this.courseOptions,
+          ...this.visibility,
         };
       }
 
@@ -460,6 +489,7 @@ export default {
     },
 
     sendCoursePublishedEmail(person, course) {
+      console.log("sendCoursePublishedEmail person: ", person, " course: ", course);
       let data = {
         email: person.email,
         name: person.firstName + " " + person.lastName,
@@ -470,7 +500,7 @@ export default {
     },
 
     sortNodes() {
-      // this mounted block orders currentCourseNodes by timestamp. this is for selecting easier selecting of an intro node
+      // this mounted block orders currentCourseNodes by timestamp. this is for easier selecting of an intro node
       let timeCreatedArrs = [];
 
       for (let index in this.currentCourseNodes) {
@@ -504,6 +534,10 @@ export default {
       }
 
       this.sortedObjArr = this.sortedObjArr.reverse();
+    },
+
+    presentation() {
+      this.presentationOnly = true;
     },
   },
 };
