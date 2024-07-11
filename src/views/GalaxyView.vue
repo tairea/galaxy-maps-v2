@@ -224,6 +224,7 @@ export default {
     },
   },
   async mounted() {
+    console.log("galaxy view mounted... courseId = ",this.courseId);
     this.course = await fetchCourseByCourseId(this.courseId);
     this.setCurrentCourseId(this.courseId);
     console.log("is course? : ", this.course);

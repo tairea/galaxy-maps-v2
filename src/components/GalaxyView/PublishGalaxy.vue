@@ -143,7 +143,11 @@
         <div class="d-flex align-center">
           <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
           <div
-            v-if="admin && course.status == 'submitted' && course.public == true"
+            v-if="
+              admin &&
+              course.status == 'submitted' &&
+              (course.public == true || course.visibility == 'public')
+            "
             class="dialog-description"
           >
             <p style="font-weight: 600; color: var(--v-cohortAccent-base)">
@@ -255,6 +259,7 @@
           CANCEL
         </v-btn>
       </div>
+
       <div v-else class="action-buttons">
         <v-btn
           v-if="visibility == 'public'"
@@ -287,6 +292,9 @@
 </template>
 
 <script>
+import { DocumentReference } from "firebase/firestore";
+// import firebase from "firebase/compat/app";
+
 import { fetchPersonByPersonId } from "@/lib/ff";
 import { db, functions } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
@@ -373,7 +381,7 @@ export default {
       this.loading = true;
       let course = {
         ...this.course,
-        ...this.courseOptions,
+        visibility: this.visibility,
       };
       course.status = "submitted";
       await this.updateCourse(course);
@@ -385,16 +393,17 @@ export default {
     async publishCourse() {
       this.loading = true;
       let course = this.course;
+
       if (!this.admin) {
         course = {
           ...course,
-          ...this.visibility,
+          visibility: this.visibility,
         };
       }
 
       let cohort = {
-        name: course.title,
-        description: course.description,
+        name: course.title + " Squad",
+        description: "This is the default Squad for " + course.title,
         organisation: "",
         students: [],
         courses: [course.id],
@@ -407,6 +416,7 @@ export default {
       };
 
       course.status = "published";
+
       if (!course.cohort) {
         const cohortId = await this.saveCohort(cohort);
         course.cohort = cohortId;
@@ -446,7 +456,12 @@ export default {
     },
 
     async updateCourse(course) {
-      await db.collection("courses").doc(course.id).update(course);
+      const courseData = {
+        ...course,
+        owner: course.owner instanceof DocumentReference ? course.owner : db.doc(course.owner),
+        // owner: course.owner instanceof firebase.firestore.DocumentReference ? course.owner : db.doc(course.owner),
+      };
+      await db.collection("courses").doc(course.id).update(courseData);
       console.log("Document successfully updated!");
       this.setCurrentCourseId(course.id);
       this.setSnackbar({
@@ -459,6 +474,12 @@ export default {
     async saveCohort(cohort) {
       // Add a new document in collection "cohorts"
       const cohortDocRef = await db.collection("cohorts").add(cohort);
+      console.log(
+        "new default cohort created for - ",
+        cohort.name,
+        " cohort id - ",
+        cohortDocRef.id,
+      );
 
       if (this.admin) {
         const person = await fetchPersonByPersonId(cohort.teachers[0]);
@@ -493,7 +514,7 @@ export default {
       let data = {
         email: person.email,
         name: person.firstName + " " + person.lastName,
-        course: course.title,
+        course: course.title ? course.title : course.name, //  course.title is used in the case of a course & course.name is used in the case of a cohort
       };
       const sendCoursePublishedEmail = functions.httpsCallable("sendCoursePublishedEmail");
       return sendCoursePublishedEmail(data);

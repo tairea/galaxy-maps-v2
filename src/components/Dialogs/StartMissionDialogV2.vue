@@ -10,6 +10,7 @@
           outlined
           large
           @click="startMission()"
+          :loading="loading"
         >
           <v-icon x-large>{{ mdiPlay }}</v-icon>
         </v-btn>

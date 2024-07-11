@@ -49,7 +49,7 @@
           </div>
           <!-- list of Mission cards -->
           <div
-            v-for="(task, index) in tasks"
+            v-for="(task, index) in sortTasks"
             :key="task.id"
             class="task-card"
             :style="[task.taskStatus == 'locked' ? { opacity: 0.4 } : { opacity: 1 }]"
@@ -128,6 +128,9 @@ export default {
     // },
     teacher() {
       return this.currentCourse?.mappedBy?.personId === this.person.id || this.user.data.admin;
+    },
+    sortTasks() {
+      return this.tasks.sort((a, b) => a.orderIndex - b.orderIndex);
     },
   },
   methods: {
