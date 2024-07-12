@@ -20,6 +20,7 @@ const getDefaultState = () => {
     currentTaskId: "",
     currentCohortId: "",
     currentCourseId: "",
+    boundCourse: {} as Record<string, any>,
     currentCourseNodes: [] as Record<string, any>[],
     currentCourseEdges: [] as Record<string, any>[],
     personsCourses: [] as Record<string, any>[],
@@ -187,6 +188,12 @@ export default defineStore({
       return bindFirestoreRef(
         "personsCourses",
         db.collection("courses").where("mappedBy.personId", "==", personId),
+      );
+    }),
+    bindCourseByCourseId: firestoreAction(({ bindFirestoreRef }, courseId: string) => {
+      return bindFirestoreRef(
+        "boundCourse",
+        db.collection("courses").doc(courseId),
       );
     }),
     bindThisPersonsCourseTopics: firestoreAction(

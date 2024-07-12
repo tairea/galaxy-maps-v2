@@ -1,7 +1,11 @@
 <template>
-  <div class="galaxyInfoPanel" :style="selectedTopic ? 'right: 0px' : ''">
+  <div class="galaxyInfoPanel" :style="show ? 'right: 0px' : ''">
     <div class="panelContent">
-      <div class="panelContentInner" v-if="selectedTopic">
+      <div v-if="!selectedTopic" class="panelContentInner d-flex flex-column justify-center align-center" style="padding: 50px">
+        <v-btn :loading="!selectedTopic" icon color="missionAccent"></v-btn>'
+        <p class="overline missionAccent--text">Loading system</p>
+      </div>
+      <div class="panelContentInner" v-else-if="selectedTopic">
         <v-btn icon small color="missionAccent" class="close-button mt-2" @click="closeInfoPanel">
           <v-icon>{{ mdiClose }}</v-icon>
         </v-btn>
@@ -102,7 +106,7 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "SolarSystemInfoPanel",
-  props: ["selectedTopic", "tasks"],
+  props: ["show","selectedTopic", "tasks"],
   components: {},
   data() {
     return {
