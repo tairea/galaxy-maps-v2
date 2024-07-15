@@ -95,7 +95,7 @@ a {
 }
 
 .active-mission-card {
-  border: 1px solid var(--v-baseAccent-base);
+  border: 1px solid var(--v-galaxyAccent-base);
   margin: -21px 10px 0px 10px;
   display: flex;
   flex-direction: column;

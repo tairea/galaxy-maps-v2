@@ -42,6 +42,7 @@ const getDefaultState = () => {
     courseTasks: [] as Record<string, any>[],
     topicCompleted: {} as Record<string, any>,
     nextTopicUnlockedFlag: false,
+    startMissionLoading: false,
   };
 };
 
@@ -83,6 +84,9 @@ export default defineStore({
     },
     SET_PERSON(data: Record<string, any>) {
       this.person = data;
+    },
+    setStartMissionLoading(loading: boolean) {
+      this.startMissionLoading = loading;
     },
     set_from(data: string) {
       this.from = data;
@@ -191,10 +195,7 @@ export default defineStore({
       );
     }),
     bindCourseByCourseId: firestoreAction(({ bindFirestoreRef }, courseId: string) => {
-      return bindFirestoreRef(
-        "boundCourse",
-        db.collection("courses").doc(courseId),
-      );
+      return bindFirestoreRef("boundCourse", db.collection("courses").doc(courseId));
     }),
     bindThisPersonsCourseTopics: firestoreAction(
       ({ bindFirestoreRef }, payload: { personId: string; courseId: string }) => {
