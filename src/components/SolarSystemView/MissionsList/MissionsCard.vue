@@ -373,6 +373,10 @@ iframe.ql-video {
   width: 100% !important;
   height: 300px !important;
 }
+
+.submissions-instructions > p > img {
+  width: 100%;
+}
 </style>
 
 <style lang="scss" scoped>
@@ -562,9 +566,10 @@ p {
   // justify-content: center;
   // align-items: center;
   // flex-direction: column;
-  img {
-    width: 100%;
-  }
+}
+
+.submissions-instructions > p > img {
+  width: 100%;
 }
 
 .v-application p {
