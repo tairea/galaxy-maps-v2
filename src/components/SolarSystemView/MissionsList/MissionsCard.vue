@@ -95,12 +95,13 @@
               {{ task.duration }}
             </p>
           </div>
-          <div class="section-overUnder d-flex justify-center flex-column">
+          <div class="section-overUnder d-flex justify-center flex-column" style="line-height: 2">
             <p
               class="text-overline text-uppercase text-center"
               :style="task.color ? 'color:' + task.color + ' !important' : ''"
+              style="line-height: 2"
             >
-              SUBMISSION REQ:
+              SUBMISSION REQUIRED:
             </p>
             <p
               :style="[
@@ -153,15 +154,13 @@
               @missionStarted="$emit('missionStarted', task.id)"
             />
           </div>
-          <div
-            v-else-if="active || declined || completed || inreview"
-            class="d-flex justify-center"
-          >
-            <v-icon
-              :color="active || completed || declined ? 'baseAccent' : 'cohortAccent'"
-              large
-              >{{ mdiCheck }}</v-icon
-            >
+          <div v-else-if="active" class="d-flex justify-center">
+            <v-icon color="galaxyAccent" large>{{ mdiTarget }}</v-icon>
+          </div>
+          <div v-else-if="declined || completed || inreview" class="d-flex justify-center">
+            <v-icon :color="completed || declined ? 'baseAccent' : 'cohortAccent'" large>{{
+              mdiCheck
+            }}</v-icon>
           </div>
           <div v-else class="d-flex justify-center align-center">
             <v-btn color="missionAccent" icon large>
@@ -271,7 +270,7 @@ import StartMissionDialogV2 from "@/components/Dialogs/StartMissionDialogV2.vue"
 import ActiveMissionsCard from "@/components/SolarSystemView/MissionsList/MissionsCard/ActiveMissionsCard.vue";
 import SelectedMissionsCard from "@/components/SolarSystemView/MissionsList/MissionsCard/SelectedMissionsCard.vue";
 import useRootStore from "@/store/index";
-import { mdiCheck, mdiLockOutline } from "@mdi/js";
+import { mdiCheck, mdiLockOutline, mdiTarget } from "@mdi/js";
 import { mapState } from "pinia";
 
 export default {
@@ -287,6 +286,7 @@ export default {
     return {
       mdiCheck,
       mdiLockOutline,
+      mdiTarget,
       editing: false,
       activeTask: false,
       panel: [],
@@ -433,20 +433,19 @@ p {
     color: var(--v-cohortAccent-base);
   }
 
-  .topic-completed,
-  .topic-active {
+  .topic-completed {
     border: 1px solid var(--v-baseAccent-base);
     color: var(--v-baseAccent-base);
   }
 
-  // .topic-active {
-  //   border-top: 1px solid var(--v-baseAccent-base);
-  //   border-right: 1px solid var(--v-baseAccent-base);
-  //   border-left: 1px solid var(--v-baseAccent-base);
-  //   border-bottom: 3px solid var(--v-background-base);
-  //   color: var(--v-baseAccent-base);
-  //   z-index: 101;
-  // }
+  .topic-active {
+    border-top: 1px solid var(--v-galaxyAccent-base);
+    border-right: 1px solid var(--v-galaxyAccent-base);
+    border-left: 1px solid var(--v-galaxyAccent-base);
+    border-bottom: 3px solid var(--v-background-base);
+    color: var(--v-galaxyAccent-base);
+    // z-index: 101;
+  }
 
   .mission-main-section {
     // flex-grow: 4 !important;
@@ -496,7 +495,7 @@ p {
     }
 
     .section-overUnder:first-child {
-      border-bottom: 1px dashed var(--v-missionAccent-base);
+      // border-bottom: 1px dashed var(--v-missionAccent-base);
     }
   }
 

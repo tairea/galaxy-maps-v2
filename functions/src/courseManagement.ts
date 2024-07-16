@@ -1133,9 +1133,12 @@ async function updateTask(
         .doc(topicId)
         .collection("tasks")
         .doc(taskDoc.id)
-        .set({
-          ...taskDoc.data(),
-        });
+        .set(
+          {
+            ...taskDoc.data(),
+          },
+          { merge: true },
+        );
     }
   }
 
