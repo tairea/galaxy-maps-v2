@@ -80,6 +80,8 @@
               color="missionAccent"
               v-model="profile.email"
               label="Email"
+              ref="emailField"
+              clear-icon="mdi-close-circle"
             ></v-text-field>
           </v-col>
           <v-col>
@@ -92,13 +94,13 @@
             >
               {{ mdiPencilBox }}
             </v-icon>
-            <v-icon class="mt-2" large color="missionAccent" v-else @click="saveEmail">{{
-              mdiContentSave
+            <v-icon class="mt-2" large color="missionAccent" v-else @click="cancelEmail">{{
+              mdiClose
             }}</v-icon>
           </v-col>
         </v-row>
         <!-- Discord handle -->
-        <v-text-field
+        <!-- <v-text-field
           class="input-field"
           outlined
           :dark="dark"
@@ -106,7 +108,7 @@
           color="missionAccent"
           v-model="profile.discord"
           label="Discord handle (optional)"
-        ></v-text-field>
+        ></v-text-field> -->
 
         <!-- ACTION BUTTONS -->
         <div class="action-buttons">
@@ -171,6 +173,9 @@ export default {
     dark() {
       return this.$vuetify.theme.isDark;
     },
+    originalProfile () {
+      return this.student || this.person
+    }
   },
   data() {
     return {
@@ -183,24 +188,30 @@ export default {
       dialog: false,
       loading: false,
       editEmail: false,
-      profile: {},
+      profile: {
+        firstName: '',
+        lastName: '',
+        email: ''
+      },
     };
   },
   watch: {
     dialog(newVal) {
       if (newVal) {
-        console.log("dialog is true");
-        if (student) {
-          Object.assign(this.profile, this.student);
-        } else {
-          Object.assign(this.profile, this.person);
-        }
+        Object.assign(this.profile, this.originalProfile)
       }
     },
   },
   methods: {
     ...mapActions(useRootStore, ["setSnackbar"]),
+    cancelEmail() {
+      this.profile.email = this.person.email
+      this.editEmail = false
+    },
     updatePerson(profile) {
+      if (profile.email != this.originalProfile.email) {
+        this.saveEmail()
+      }
       db.collection("people")
         .doc(profile.id)
         .update(profile)
@@ -223,11 +234,11 @@ export default {
         });
     },
     saveEmail() {
+      console.log('saving emails')
       firebase
         .auth()
         .currentUser.updateEmail(this.profile.email)
         .then(() => {
-          // TODO: Possibly add logic to send new email to previous email to confirm email change
           var actionCodeSettings = {
             url: window.location.origin + "/login",
             handleCodeInApp: true,
