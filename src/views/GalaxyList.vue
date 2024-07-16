@@ -150,6 +150,7 @@ export default {
     },
   },
   created() {
+    console.log("slug is:", this.slug);
     // We don't care about waiting for this to finish before completing mounted
     // because when it's finished it will automatically update our list of courses
     this.loadCourses(this.slug).then(() => {

@@ -10,15 +10,14 @@
               v-if="active || declined"
               v-bind="attrs"
               v-on="on"
-              class="mission-edit-button"
+              class="mission-edit-button ma-2"
               :color="active ? 'missionAccent' : 'cohortAccent'"
-              icon
               x-large
             >
-              <v-icon v-if="task.submissionRequired">
+              <v-icon v-if="task.submissionRequired" color="background">
                 {{ mdiCloudUploadOutline }}
               </v-icon>
-              <v-icon v-else> {{ mdiCheckboxBlankOutline }} </v-icon>
+              <v-icon v-else color="background"> {{ mdiCheck }} </v-icon>
             </v-btn>
           </template>
 
@@ -50,8 +49,8 @@
                 ?
               </p>
               <div class="d-flex align-center">
-                <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
-                <p class="dialog-description">
+                <v-icon left color="cohortAccent">{{ mdiInformationVariant }}</v-icon>
+                <p class="dialog-description cohortAccent--text">
                   Did you complete all the requirements of the Mission?
                 </p>
               </div>
@@ -115,7 +114,7 @@
               <!-- End of v-if="submission" -->
 
               <!-- ACTION BUTTONS -->
-              <div class="action-buttons">
+              <div :class="isScreenSmall ? 'action-buttons-over-under' : 'action-buttons'">
                 <!-- YES, I HAVE COMPLETED -->
                 <v-btn
                   v-if="active && task.submissionRequired"
@@ -155,6 +154,7 @@
                   :disabled="disabled"
                   v-bind="attrs"
                   v-on="on"
+                  :dark="dark"
                 >
                   <v-icon left> {{ mdiCheck }} </v-icon>
                   YES, I HAVE COMPLETED THIS MISSION
@@ -295,9 +295,13 @@ export default {
       );
       return submissions.find((submission) => submission.contextTask.id == this.task.id);
     },
+    isScreenSmall() {
+      return window.innerWidth < 1300;
+    },
   },
   methods: {
     ...mapActions(useRootStore, ["setSnackbar", "setTopicCompleted", "setNextTopicUnlocked"]),
+    ...mapActions(useSolarSystemViewStore, ["refreshTopic", "refreshPersonTopicsAndTasks"]),
     async reSubmitWorkForReview() {
       this.loading = true;
       this.disabled = true;
@@ -482,10 +486,7 @@ export default {
       this.loading = true;
       this.disabled = true;
 
-      // emit missionCompleted all the way up to SolarSystemView to run refreshTopic() & refreshPersonTopicsAndTasks()
-      this.$emit("missionCompleted");
-
-      // Add a new document in collection "courses"
+      // update persons tasks status to "completed" with timestamp
       await db
         .collection("people")
         .doc(this.person.id)
@@ -527,6 +528,11 @@ export default {
       // unlock next task
       await this.unlockNextTask();
 
+      // emit missionCompleted all the way up to SolarSystemView to run refreshTopic() & refreshPersonTopicsAndTasks()
+      // this.$emit("missionCompleted");
+      await this.refreshTopic();
+      await this.refreshPersonTopicsAndTasks(this.person.id);
+
       // check if all tasks/missions are completed
       await this.checkIfAllTasksCompleted();
 
@@ -535,6 +541,15 @@ export default {
       this.dialog = false;
     },
     async unlockNextTask() {
+      // check if this.task.id is the only task in this.personTasks that isnt task.taskStatus=="completed"
+      // if this is true, then no need to unlock next task
+      const notCompletedTasks = this.personTasks.filter((task) => task.taskStatus !== "completed");
+      const isOnlyTaskNotCompleted =
+        notCompletedTasks.length === 1 && notCompletedTasks[0].id === this.task.id;
+      if (isOnlyTaskNotCompleted) {
+        return;
+      }
+
       console.log("unlocking next task...");
       // 1) get all tasks in this topic
       const tasks = await db
@@ -558,14 +573,15 @@ export default {
     },
     async checkIfAllTasksCompleted() {
       // 1) check how many tasks in store are completed
+
+      // need to see when personTasks is updated because its not counting current task as completed
       const numOfTasksCompleted = this.personTasks.filter(
         (obj) => obj.taskStatus === "completed",
       ).length;
       // 2) check if that the same as total
       if (numOfTasksCompleted === this.personTasks.length) {
         console.log("Topic Completed! (all tasks in this topic completed)");
-        // set topic to completed in store
-        this.setTopicCompleted({ completed: true, topicId: this.topic.id });
+
         // === Basic Cannon
         confetti({
           particleCount: 100,
@@ -582,6 +598,12 @@ export default {
         await this.unlockNextTopics();
         // topic unlocked. trigger store flag (this is for "next system" button (loading attribute) in galaxy view)
         this.setNextTopicUnlocked(true);
+
+        // update personTopics (especially that topicStatus = completed)
+        await this.refreshPersonTopicsAndTasks(this.person.id);
+
+        // set topic to completed in store. (this triggers confetti and 'system completed' dialog in SolarSystemView)
+        this.setTopicCompleted({ completed: true, topicId: this.topic.id });
       } else {
         console.log("topic not yet completed...");
         console.log("total tasks = ", this.personTasks.length);
@@ -849,6 +871,15 @@ export default {
 .action-buttons {
   width: 100%;
   padding: 20px;
+}
+.action-buttons-over-under {
+  width: 100%;
+  height: 150px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
 }
 
 .instructor-image {
