@@ -5,14 +5,14 @@
     <!-- Map Name  -->
     <h1 class="galaxy-title">{{ course.title }}</h1>
     <!-- Status -->
-    <p class="galaxy-status overline mb-0">
+    <p v-if="teacher" class="galaxy-status overline mb-0">
       Status: <span class="font-weight-black">{{ course.status }}</span>
     </p>
     <!-- Visibility -->
     <p v-if="course.status === 'submitted'" class="galaxy-status overline mb-0 in-review">
       awaiting review
     </p>
-    <p v-else class="galaxy-status overline mb-0">
+    <p v-if="teacher" class="galaxy-status overline mb-0">
       Visibility:
       <span class="font-weight-black">{{ visibility }}</span>
     </p>
@@ -49,7 +49,9 @@ export default {
   computed: {
     ...mapState(useRootStore, ["person"]),
     visibility() {
-      return this.course.public ? "Public" : "Private";
+      if (this.course.public) return "public";
+      else if (this.course.visbility) return this.course.visibility;
+      else return "private";
     },
   },
 

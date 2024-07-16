@@ -120,7 +120,7 @@
 
               <!-- DURATION -->
               <!-- <p class="dialog-description">Duration:</p> -->
-              <v-text-field
+              <!-- <v-text-field
                 class="input-field"
                 outlined
                 :dark="dark"
@@ -129,7 +129,7 @@
                 v-model="task.duration"
                 required
                 label="Estimated time to complete this Mission (in minutes)"
-              ></v-text-field>
+              ></v-text-field> -->
 
               <!-- VIDEO -->
               <!-- <p class="dialog-description">Video:</p> -->
@@ -514,6 +514,9 @@ export default {
           task.slides = "http://" + task.slides;
         }
       }
+
+      // remove taskCreatedTimestamp so it does not update original (there was a change in format when this was happening)
+      delete task.taskCreatedTimestamp;
 
       const updatedTask = await updateTaskByCourseIdTopicIdTaskId(
         this.course.id,

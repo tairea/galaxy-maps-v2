@@ -29,7 +29,7 @@
         </v-btn>
       </div>
 
-      <BackButton :toPath="'/galaxy/' + courseId" />
+      <BackButton v-if="!loading" :toPath="'/galaxy/' + courseId" />
     </div>
 
     <!--==== Main section ====-->
@@ -186,6 +186,13 @@ export default {
       }
       this.setNextTopicUnlocked(false); // reset store flag back to false
     },
+    $route(to, from) {
+      // Called whenever the route changes
+      // Check if the route change is relevant to this component
+      if (to.name === "SolarSystemView" && to.params.topicId !== from.params.topicId) {
+        this.reloadData(to.params.topicId);
+      }
+    },
   },
   computed: {
     ...mapState(useRootStore, ["person", "user", "topicCompleted", "nextTopicUnlockedFlag"]),
@@ -227,6 +234,7 @@ export default {
       "setCurrentTopicId",
       "setCurrentTaskId",
       "setNextTopicUnlocked",
+      "setStartMissionLoading",
     ]),
     ...mapActions(useSolarSystemViewStore, [
       "loadTopic",
@@ -275,6 +283,8 @@ export default {
       console.log("mission started", taskId);
       await this.refreshTopic();
       await this.refreshPersonTopicsAndTasks(this.person.id);
+      // change startMissionLoading to false (for use in StartMissionDialogV.vue)
+      this.setStartMissionLoading(false);
     },
     async missionSubmittedForReview(taskId) {
       console.log("mission submitted for review", taskId);
@@ -390,14 +400,18 @@ export default {
       }
       return colours;
     },
+
+    // TODO: next topic button (from 'system complete' dialog) NOT working
     nextTopic() {
       // get next topic
-      const unlockedTopics = this.personsTopics.filter((topic) => {
+      const unlockedTopics = this.personTopics.filter((topic) => {
         return topic.topicStatus == "unlocked";
       });
 
       // this ensures we arn't going to try navigate to the current unlocked topic
       const nextTopic = unlockedTopics.find((topic) => topic.id !== this.topicId);
+
+      console.log("next topic", nextTopic);
 
       // set next topic as current topic
       this.setCurrentTopicId(nextTopic.id);

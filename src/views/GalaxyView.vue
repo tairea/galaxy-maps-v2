@@ -2,7 +2,7 @@
   <div id="container" class="bg">
     <!-- <div class="left-section" :class="{ hide: hideLeftPanelsFlag }"> -->
     <div class="left-section" data-v-step="1">
-      <GalaxyInfo :course="course" :teacher="teacher" :draft="draft" />
+      <GalaxyInfo :course="boundCourse" :teacher="teacher" :draft="draft" />
       <PublishGalaxy v-if="showPublish" :course="course" :courseTasks="courseTasks" />
       <BackButton :toPath="'/'" />
       <AssignedInfo
@@ -35,6 +35,7 @@
       <!-- ===== Galaxy Map ===== -->
       <GalaxyMap
         ref="vis"
+        :course="boundCourse"
         @add-node="showAddDialog"
         @edit-node="showEditDialog"
         @setUiMessage="setUiMessage"
@@ -85,7 +86,8 @@
 
     <!-- POPUP OUT PANEL (for system preview)-->
     <SolarSystemInfoPanel
-      :selectedTopic="clickedTopic"
+      :show="infoPopupShow"
+      :selectedTopic="fetchedTopic"
       :tasks="topicTasks"
       @closeInfoPanel="closeInfoPanel"
       @editNode="showEditDialog"
@@ -206,7 +208,8 @@ export default {
       selectedNode: {},
       hideLeftPanelsFlag: false,
       clickedTopicId: null,
-      clickedTopic: null,
+      triggerTopicClicked: false,
+      fetchedTopic: null,
       courseTasks: [],
       topicTasks: [],
       galaxyCompletedDialog: false,
@@ -216,7 +219,7 @@ export default {
   },
   watch: {
     async courseId(newCourseId) {
-      this.course = await fetchCourseByCourseId(newCourseId);
+      await this.bindCourseByCourseId(newCourseId);
       this.setCurrentCourseId(newCourseId);
     },
     async course(newVal, oldVal) {
@@ -224,9 +227,15 @@ export default {
     },
   },
   async mounted() {
-    this.course = await fetchCourseByCourseId(this.courseId);
+    console.log("galaxy view mounted... courseId = ",this.courseId);
     this.setCurrentCourseId(this.courseId);
-    console.log("is course? : ", this.course);
+    
+    // this.course = await fetchCourseByCourseId(this.courseId);
+    // bind course instead of fetch (above) so to make course reactive (eg in GalaxyInfo.vue)
+    await this.bindCourseByCourseId(this.courseId);
+    console.log("course: ", this.boundCourse)
+
+    console.log("is course? : ", this.boundCourse);
     console.log("is teacher? : ", this.teacher);
 
     // bind assigned people in this course
@@ -254,7 +263,7 @@ export default {
     // this.$tours["myTour"].start(); // Disabled for now
 
     // LRS statement recording a student has logged in to this course
-    if (this.course && !this.teacher) {
+    if (this.boundCourse && !this.teacher) {
       await loggedIntoGalaxyXAPIStatement({
         actor: {
           email: this.person.email,
@@ -267,25 +276,25 @@ export default {
     }
   },
   computed: {
-    ...mapState(useRootStore, ["person", "user"]),
+    ...mapState(useRootStore, ["person", "user", "boundCourse"]),
     draft() {
-      return this.course?.status === "drafting";
+      return this.boundCourse?.status === "drafting";
     },
     submitted() {
-      return this.course?.status === "submitted";
+      return this.boundCourse?.status === "submitted";
     },
     teacher() {
-      return this.course?.mappedBy.personId === this.person.id || this.user.data.admin;
+      return this.boundCourse?.mappedBy.personId === this.person.id || this.user.data.admin;
     },
     student() {
       return this.person.assignedCourses?.some((courseId) => courseId === this.courseId);
     },
     showPublish() {
-      return (this.user.data.admin && this.course?.status === "submitted") || this.draft;
+      return (this.user.data.admin && this.boundCourse?.status === "submitted") || this.draft;
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["setCurrentCohortId", "setCurrentCourseId", "setPeopleInCourse"]),
+    ...mapActions(useRootStore, ["setCurrentCohortId", "setCurrentCourseId", "setPeopleInCourse","bindCourseByCourseId"]),
     setUiMessage(message) {
       this.uiMessage = message;
     },
@@ -340,8 +349,9 @@ export default {
       this.hideLeftPanelsFlag = hideFlag;
     },
     closeInfoPanel() {
+      this.infoPopupShow = false;
       this.clickedTopicId = null;
-      this.clickedTopic = null;
+      this.fetchedTopic = null;
       this.currentEdge = null;
       this.topicTasks = [];
       this.hideLeftPanelsFlag = false;
@@ -349,11 +359,12 @@ export default {
       // this.$refs.listPanel.courseClicked();
     },
     async topicClicked(emittedPayload) {
+      this.infoPopupShow = true
       // get topic id
       this.clickedTopicId = emittedPayload.topicId;
       // get topic
-      this.clickedTopic = await fetchTopicByCourseIdTopicId(this.courseId, this.clickedTopicId);
-      console.log("clicked topic:", this.clickedTopic);
+      this.fetchedTopic = await fetchTopicByCourseIdTopicId(this.courseId, this.clickedTopicId);
+      console.log("clicked topic:", this.fetchedTopic);
       // reset topic tasks (to prevent duplicate)
       this.topicTasks = [];
       // loop courseTasks for this topic id (= this.topicTasks)
@@ -370,26 +381,6 @@ export default {
     emittedCourseTasks(emittedPayload) {
       console.log("course tasks emitted from GalaxyMap.vue", emittedPayload);
       this.courseTasks = emittedPayload;
-    },
-    selected(selected) {
-      this.type = selected.type;
-      this.infoPopupPosition.x = selected.DOMx;
-      this.infoPopupPosition.y = selected.DOMy;
-      if (selected.type == "node") {
-        this.currentNode = selected;
-        this.selectedNode = selected;
-      } else if (selected.type == "edge") {
-        // this.currentEdge = selected;
-      }
-      this.infoPopupShow = true;
-    },
-    centerFocus(centerFocusNode) {
-      if (centerFocusNode.length > 1) return; // this avoids pop up when no specific node selected
-      this.centerFocusPosition = true;
-      this.type = centerFocusNode.type;
-      this.infoPopupPosition.x = "50%"; // 50%
-      this.infoPopupPosition.y = "50%"; // 50%
-      // this.currentNode = centerFocusNode;
     },
     showAddDialog(node) {
       this.addNodeMode = false;
@@ -434,6 +425,26 @@ export default {
     },
     blurNode() {
       this.hoverNode = false;
+    },
+    selected(selected) {
+      this.type = selected.type;
+      this.infoPopupPosition.x = selected.DOMx;
+      this.infoPopupPosition.y = selected.DOMy;
+      if (selected.type == "node") {
+        this.currentNode = selected;
+        this.selectedNode = selected;
+      } else if (selected.type == "edge") {
+        // this.currentEdge = selected;
+      }
+      this.infoPopupShow = true;
+    },
+    centerFocus(centerFocusNode) {
+      if (centerFocusNode.length > 1) return; // this avoids pop up when no specific node selected
+      this.centerFocusPosition = true;
+      this.type = centerFocusNode.type;
+      this.infoPopupPosition.x = "50%"; // 50%
+      this.infoPopupPosition.y = "50%"; // 50%
+      // this.currentNode = centerFocusNode;
     },
     focusPopup() {
       this.hoverPopup = true;

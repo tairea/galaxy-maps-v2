@@ -54,11 +54,11 @@
               <v-tab-item>
                 <!-- HEADER -->
                 <div class="dialog-header">
-                  <p class="dialog-title">Assign to a Person</p>
+                  <p class="dialog-title">Assign to a Navigator</p>
                   <div class="d-flex align-center">
                     <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                     <p class="dialog-description">
-                      Assign this Galaxy Map to a Person using their e-mail address
+                      Assign this Galaxy Map to a Navigator using their e-mail address
                     </p>
                   </div>
                 </div>
@@ -75,7 +75,13 @@
                     light
                   ></v-text-field>
                   <div>
-                    <p class="dialog-description">Assign the student to a cohort</p>
+                    <p class="dialog-description">Assign the Navigator to squad</p>
+                    <div class="d-flex align-center">
+                      <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
+                      <p class="dialog-description py-2">
+                        Navigator progression is tracked at the Squad level
+                      </p>
+                    </div>
                     <v-select
                       v-if="currentCourse != null"
                       v-model="cohort"
@@ -378,14 +384,16 @@ export default {
         if (this.cohort.courses.length) {
           // Possible optimize to make this concurrent instead of sequential
           for (const courseId of this.cohort.courses) {
-            console.log("courseId", courseId);
+            // dont need to assign current course again
+            if (courseId === course.id) continue;
+            console.log("assigning cohort's course with id", courseId);
             await assignCourseToPerson(person.id, courseId);
           }
         }
 
         this.setSnackbar({
           show: true,
-          text: `${person.firstName} assigned to ${course.title} galaxy`,
+          text: `${person.firstName} assigned to ${course.title} Galaxy`,
           color: "baseAccent",
         });
         this.$emit("newAssignment", person);
