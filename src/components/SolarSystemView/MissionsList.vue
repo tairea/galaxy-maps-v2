@@ -8,7 +8,7 @@
         <v-btn :loading="missionsLoading" icon color="missionAccent"></v-btn>
       </div>
       <div v-else-if="tasks.length > 0" style="width: 100%">
-        <v-expansion-panels :flat="true" :multiple="false" v-model="indexOfActiveTask">
+        <v-expansion-panels flat :multiple="false" v-model="indexOfActiveTask">
           <draggable v-model="sortableMissionList" style="width: 100%" ghost-class="ghost">
             <transition-group name="fade">
               <v-expansion-panel

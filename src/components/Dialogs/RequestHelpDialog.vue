@@ -5,8 +5,8 @@
         <v-dialog v-model="dialog" width="40%" light>
           <!-- REQUEST HELP BUTTON -->
           <template v-slot:activator="{ on, attrs }">
-            <v-btn color="missionAccent" v-bind="attrs" v-on="on" icon x-large>
-              <v-icon color="missionAccent">{{ mdiHandFrontLeftOutline }}</v-icon>
+            <v-btn color="missionAccent ma-2" v-bind="attrs" v-on="on" x-large>
+              <v-icon color="background">{{ mdiHandFrontLeftOutline }}</v-icon>
             </v-btn>
           </template>
 

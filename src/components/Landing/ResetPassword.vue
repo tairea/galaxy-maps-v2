@@ -27,6 +27,7 @@
         ></v-text-field>
         <v-btn
           :disabled="!valid"
+          :loading="loading"
           color="baseAccent"
           class="mr-4"
           @click="resetPassword"
@@ -61,6 +62,7 @@ export default {
       (v) => !!v || "E-mail is required",
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
     ],
+    loading: false
   }),
   mounted() {},
   methods: {
@@ -90,6 +92,7 @@ export default {
       this.$refs.form.validate();
     },
     resetPassword() {
+      this.loading = true;
       console.log("sending reset email password");
       firebase
         .auth()
@@ -100,6 +103,10 @@ export default {
             text: "Reset Password Email Sent",
             color: "baseAccent",
           });
+          // Delay routing back to login to allow snackbar to be visible
+          setTimeout(() => {
+            this.$router.push("/login");
+          }, 2000); // 2000 milliseconds delay
         })
         .catch((error) => {
           this.setSnackbar({
