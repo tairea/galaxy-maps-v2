@@ -562,6 +562,9 @@ p {
   // justify-content: center;
   // align-items: center;
   // flex-direction: column;
+  img {
+    width: 100%;
+  }
 }
 
 .v-application p {
