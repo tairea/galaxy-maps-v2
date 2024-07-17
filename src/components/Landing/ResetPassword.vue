@@ -92,7 +92,7 @@ export default {
       this.$refs.form.validate();
     },
     resetPassword() {
-      this.loading = true;
+      this.loading=true
       console.log("sending reset email password");
       firebase
         .auth()
