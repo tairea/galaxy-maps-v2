@@ -215,7 +215,15 @@ export default {
         return this.topicTasks.sort((a, b) => a.orderIndex - b.orderIndex);
       } else {
         console.log("tasks do not have orderIndex, sorting by timestamp:");
-        return this.topicTasks.sort((a, b) => a.taskCreatedTimestamp - b.taskCreatedTimestamp);
+        return this.topicTasks.sort((a, b) => {
+          if (a.taskCreatedTimestamp._seconds) {
+            return a.taskCreatedTimestamp._seconds - b.taskCreatedTimestamp._seconds;
+          } else if (a.taskCreatedTimestamp.seconds) {
+            return a.taskCreatedTimestamp.seconds - b.taskCreatedTimestamp.seconds;
+          } else {  
+            return a.taskCreatedTimestamp - b.taskCreatedTimestamp;
+          }
+        });
       }
     },
     sortedPersonTasks() {
@@ -224,7 +232,15 @@ export default {
         return this.personTasks.sort((a, b) => a.orderIndex - b.orderIndex);
       } else {
         console.log("tasks do not have orderIndex, sorting by timestamp");
-        return this.personTasks.sort((a, b) => a.taskCreatedTimestamp - b.taskCreatedTimestamp);
+        return this.personTasks.sort((a, b) => {
+          if (a.taskCreatedTimestamp._seconds) {
+            return a.taskCreatedTimestamp._seconds - b.taskCreatedTimestamp._seconds;
+          } else if (a.taskCreatedTimestamp.seconds) {
+            return a.taskCreatedTimestamp.seconds - b.taskCreatedTimestamp.seconds;
+          } else {  
+            return a.taskCreatedTimestamp - b.taskCreatedTimestamp;
+          }
+        });
       }
     },
   },

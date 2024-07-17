@@ -3,7 +3,7 @@
     <!-- <div class="left-section" :class="{ hide: hideLeftPanelsFlag }"> -->
     <div class="left-section" data-v-step="1">
       <GalaxyInfo :course="boundCourse" :teacher="teacher" :draft="draft" />
-      <PublishGalaxy v-if="showPublish" :course="course" :courseTasks="courseTasks" />
+      <PublishGalaxy v-if="showPublish" :course="boundCourse" :courseTasks="courseTasks" />
       <BackButton :toPath="'/'" />
       <AssignedInfo
         v-if="!draft && cohortsInCourse.length && teacher"
@@ -59,13 +59,13 @@
     <!--==== Right section ====-->
     <div v-if="!cohortsInCourse" id="right-section">
       <RequestForHelpTeacherFrame
-        :courses="[course]"
+        :courses="[boundCourse]"
         :isTeacher="teacher"
         :students="peopleInCourse"
       />
       <SubmissionTeacherFrame
         v-if="teacher"
-        :courses="[course]"
+        :courses="[boundCourse]"
         :students="peopleInCourse"
         class="mt-4"
       />
@@ -78,7 +78,7 @@
       :dialogTitle="dialogTitle"
       :dialogDescription="dialogDescription"
       :editing="editing"
-      :course="course"
+      :course="boundCourse"
       :currentNode="currentNode"
       @closeDialog="closeDialog"
       @openDialog="openDialog"
@@ -213,7 +213,6 @@ export default {
       courseTasks: [],
       topicTasks: [],
       galaxyCompletedDialog: false,
-      course: null,
       xpPointsForThisGalaxy: 2000,
     };
   },
