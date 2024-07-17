@@ -358,6 +358,7 @@
               </v-btn>
 
               <v-btn
+                v-if="!deleting"
                 outlined
                 :color="$vuetify.theme.dark ? 'yellow' : 'f7f7ff'"
                 class="ml-2"
@@ -543,6 +544,7 @@ export default {
       this.dialog = true;
     },
     async confirmDeleteTask() {
+      this.deleting = true
       const deletedTask = await deleteTaskByCourseIdTopicIdTaskId(
         this.course.id,
         this.topic.id,
@@ -552,7 +554,9 @@ export default {
       this.$emit("taskDeleted", deletedTask);
 
       // close dialog
+      this.deleting = false;
       this.dialogConfirm = false;
+
     },
     handleDescriptionImageAdded(file, Editor, cursorLocation) {
       console.log("image file", file);

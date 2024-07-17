@@ -734,6 +734,8 @@ export default {
       this.loading = false;
 
       // get node ids
+      // TODO: This is triggering an error when first creating a galaxy
+        // Cannot read properties of undefined (reading 'nodes'
       const nodeIds = this.$refs.network.nodes.map(({ id }) => id);
       // get node xy positions
       const nodePositionMap = this.$refs.network.getPositions(nodeIds);
