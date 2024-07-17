@@ -10,7 +10,7 @@
           outlined
           large
           @click="startMission()"
-          :loading="loading"
+          :loading="startMissionLoading"
         >
           <v-icon x-large>{{ mdiPlay }}</v-icon>
         </v-btn>
@@ -40,13 +40,13 @@ export default {
     loading: false,
   }),
   computed: {
-    ...mapState(useRootStore, ["person"]),
+    ...mapState(useRootStore, ["person", "startMissionLoading"]),
   },
   async mounted() {},
   methods: {
-    ...mapActions(useRootStore, ["setCurrentTaskId"]),
+    ...mapActions(useRootStore, ["setCurrentTaskId", "setStartMissionLoading"]),
     async startMission() {
-      this.loading = true;
+      this.setStartMissionLoading(true);
 
       // set as current/active task
       this.setCurrentTaskId(this.task.id);
@@ -85,7 +85,7 @@ export default {
         mission: this.task,
       });
 
-      this.$emit("missionStarted");
+      this.$emit("missionStarted"); // this emits all the way up to SolarSystemView.vue to refreshTopic() & refreshPersonTopicsAndTasks(person.id)
 
       this.loading = false;
       this.dialog = false;

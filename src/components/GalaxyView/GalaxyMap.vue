@@ -44,7 +44,7 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "GalaxyMap",
-  props: [],
+  props: ["course"],
   components: {
     Network,
     SolarSystem,
@@ -164,7 +164,6 @@ export default {
     previewedNode: null,
     numberOfTasksForThisTopic: 0,
     tasks: [],
-    course: null,
   }),
   watch: {
     darkMode(dark) {
@@ -316,7 +315,6 @@ export default {
       "setCurrentTopicId",
     ]),
     async refreshData() {
-      this.course = await fetchCourseByCourseId(this.currentCourseId);
       await this.bindCourseNodes(this.currentCourseId);
       await this.bindCourseEdges(this.currentCourseId);
 
@@ -736,6 +734,8 @@ export default {
       this.loading = false;
 
       // get node ids
+      // TODO: This is triggering an error when first creating a galaxy
+        // Cannot read properties of undefined (reading 'nodes'
       const nodeIds = this.$refs.network.nodes.map(({ id }) => id);
       // get node xy positions
       const nodePositionMap = this.$refs.network.getPositions(nodeIds);

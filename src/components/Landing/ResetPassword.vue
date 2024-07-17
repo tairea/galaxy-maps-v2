@@ -103,8 +103,10 @@ export default {
             text: "Reset Password Email Sent",
             color: "baseAccent",
           });
-          // route back to login
-          this.$router.push("/login");
+          // Delay routing back to login to allow snackbar to be visible
+          setTimeout(() => {
+            this.$router.push("/login");
+          }, 2000); // 2000 milliseconds delay
         })
         .catch((error) => {
           this.setSnackbar({

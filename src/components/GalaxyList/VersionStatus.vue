@@ -20,7 +20,7 @@ export default {
   name: "VersionStatus",
   data() {
     return {
-      versionNumber: "0.2406.01", // [version.yearMonth.patch]
+      versionNumber: "0.2407.01", // [version.yearMonth.patch]
     };
   },
   methods: {},
@@ -36,6 +36,7 @@ export default {
   // height: 50px;
   // background-color: blue;
   color: gray;
+  z-index: 300;
 
   .version-text {
     margin: 0px;
