@@ -212,7 +212,7 @@ export default {
     sortedTopicTasks() {
       if (this.topicTasks.some((task) => task.orderIndex != null)) {
         console.log("tasks have orderIndex, sorting by orderIndex");
-        return this.topicTasks.sort((a, b) => a.orderIndex < b.orderIndex);
+        return this.topicTasks.sort((a, b) => a.orderIndex - b.orderIndex);
       } else {
         console.log("tasks do not have orderIndex, sorting by timestamp:");
         return this.topicTasks.sort((a, b) => {
