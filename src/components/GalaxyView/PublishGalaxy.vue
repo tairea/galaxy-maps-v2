@@ -162,6 +162,7 @@
             </p>
             <p>All Galaxy Maps users will be able to see and start this map.</p>
           </div>
+          <!-- PRESENTATION ONLY -->
           <p v-else-if="presentationOnly" class="dialog-description">
             Publishing a Galaxy Map for
             <span class="baseAccent--text"><strong>Presentation Only</strong></span
@@ -178,7 +179,7 @@
       </div>
       <v-divider dark color="missionAccent"></v-divider>
       <div class="create-dialog-content">
-        <!-- LISTED -->
+        <!-- PUBLISH OPTIONS -->
         <div v-if="!admin">
           <p class="caption mb-2">Choose whether you would like this galaxy to be:</p>
 
@@ -198,6 +199,7 @@
             ></v-radio>
 
             <v-radio
+              v-if="!presentationOnly"
               label="public (visible by all Galaxy Maps users)"
               value="public"
               color="missionAccent"
@@ -230,6 +232,7 @@
           >
         </p>
       </div>
+
       <!-- ACTION BUTTONS -->
       <div v-if="admin" class="action-buttons">
         <v-btn
@@ -274,9 +277,10 @@
           <v-icon left> {{ mdiSend }} </v-icon>
           SUBMIT
         </v-btn>
+
         <v-btn v-else outlined color="baseAccent" @click="publishCourse()" :loading="loading">
           <v-icon left> {{ mdiCheck }} </v-icon>
-          publish
+          PUBLISH
         </v-btn>
 
         <v-btn
@@ -418,7 +422,13 @@ export default {
 
       course.status = "published";
 
-      if (!course.cohort) {
+      // if presentationOnly is true, set course.presentationOnly to true
+      if (this.presentationOnly) {
+        course.presentationOnly = true;
+      }
+
+      // if no cohort, create a default cohort (and "presentation" maps should not have cohorts)
+      if (!course.cohort && !this.presentationOnly) {
         // this creates a default cohort and sends an email to publisher
         const cohortId = await this.saveCohort(cohort);
         course.cohort = cohortId;
