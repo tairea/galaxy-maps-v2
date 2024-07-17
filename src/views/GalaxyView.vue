@@ -219,6 +219,7 @@ export default {
   watch: {
     async courseId(newCourseId) {
       await this.bindCourseByCourseId(newCourseId);
+      // this.course = await fetchCourseByCourseId(this.courseId);
       this.setCurrentCourseId(newCourseId);
     },
     async course(newVal, oldVal) {
@@ -226,14 +227,13 @@ export default {
     },
   },
   async mounted() {
-    console.log("galaxy view mounted... courseId = ",this.courseId);
+    console.log("galaxy view mounted... courseId = ", this.courseId);
     this.setCurrentCourseId(this.courseId);
-    
+
     // this.course = await fetchCourseByCourseId(this.courseId);
+
     // bind course instead of fetch (above) so to make course reactive (eg in GalaxyInfo.vue)
     await this.bindCourseByCourseId(this.courseId);
-    console.log("course: ", this.boundCourse)
-
     console.log("is course? : ", this.boundCourse);
     console.log("is teacher? : ", this.teacher);
 
@@ -293,7 +293,12 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["setCurrentCohortId", "setCurrentCourseId", "setPeopleInCourse","bindCourseByCourseId"]),
+    ...mapActions(useRootStore, [
+      "setCurrentCohortId",
+      "setCurrentCourseId",
+      "setPeopleInCourse",
+      "bindCourseByCourseId",
+    ]),
     setUiMessage(message) {
       this.uiMessage = message;
     },
@@ -358,7 +363,7 @@ export default {
       // this.$refs.listPanel.courseClicked();
     },
     async topicClicked(emittedPayload) {
-      this.infoPopupShow = true
+      this.infoPopupShow = true;
       // get topic id
       this.clickedTopicId = emittedPayload.topicId;
       // get topic

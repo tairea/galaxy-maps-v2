@@ -199,7 +199,7 @@
 
             <v-radio
               label="public (visible by all Galaxy Maps users)"
-              value="true"
+              value="public"
               color="missionAccent"
               class="label-text"
             ></v-radio>
@@ -225,8 +225,8 @@
         </div> -->
         <p class="caption ma-0" v-if="visibility == 'public' && !admin">
           <i
-            >(Public courses need to be submitted for review by Galaxy Map moderators.<br />This
-            will usually done within 48 hours.)</i
+            >(Public Galaxy Maps are visible by all users, so need to be submitted for review by
+            Galaxy Map moderators. This will usually be done within 48 hours.)</i
           >
         </p>
       </div>
@@ -260,6 +260,9 @@
         </v-btn>
       </div>
 
+      <!--===== Normal user Action Buttons =====-->
+      <!-- Public courses get 'submitted' for review with submitCourse() -->
+      <!-- Private and Unlisted courses get 'published' with publishCourse() -->
       <div v-else class="action-buttons">
         <v-btn
           v-if="visibility == 'public'"
@@ -292,9 +295,6 @@
 </template>
 
 <script>
-import { DocumentReference } from "firebase/firestore";
-// import firebase from "firebase/compat/app";
-
 import { fetchPersonByPersonId } from "@/lib/ff";
 import { db, functions } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
@@ -377,6 +377,7 @@ export default {
       this.presentationOnly = false;
     },
 
+    // Public course getting submitted for review (by moderators)
     async submitCourse() {
       this.loading = true;
       let course = {
@@ -418,6 +419,7 @@ export default {
       course.status = "published";
 
       if (!course.cohort) {
+        // this creates a default cohort and sends an email to publisher
         const cohortId = await this.saveCohort(cohort);
         course.cohort = cohortId;
         await this.updateCourse(course);
@@ -430,36 +432,19 @@ export default {
       }
     },
 
-    async saveIntroNode() {
-      this.loading = true;
-      // loop selected intro nodes
-      for (const nodeId of this.introNodes) {
-        // update node in topics db
-        await db
-          .collection("courses")
-          .doc(this.currentCourseId)
-          .collection("map-nodes")
-          .doc(nodeId)
-          .update({ group: "introduction" });
-
-        // update node in topics db
-        await db
-          .collection("courses")
-          .doc(this.currentCourseId)
-          .collection("topics")
-          .doc(nodeId)
-          .update({ group: "introduction" });
-
-        console.log("node id " + nodeId + " set as introduction node");
-      }
-      this.close();
-    },
-
     async updateCourse(course) {
+      // need to get course.owner again (because boundCourse doesnt have the owner as a DocumentReference)
+      const courseDoc = await db.collection("courses").doc(course.id).get();
+      const courseDocData = courseDoc.data();
+
+      // console.log("Argument to Firestore.doc:", courseDocData.owner);
+      // console.log("Type of argument:", typeof courseDocData.owner);
+      // console.log("Is it course a reference:", courseDocData.owner instanceof DocumentReference);
+
       const courseData = {
         ...course,
-        owner: course.owner instanceof DocumentReference ? course.owner : db.doc(course.owner),
-        // owner: course.owner instanceof firebase.firestore.DocumentReference ? course.owner : db.doc(course.owner),
+        owner: courseDocData.owner,
+        // owner: course.owner instanceof DocumentReference ? course.owner : db.doc(course.owner),   // doesnt work anymore because boundCourse.owner is an object
       };
       await db.collection("courses").doc(course.id).update(courseData);
       console.log("Document successfully updated!");
@@ -555,6 +540,31 @@ export default {
       }
 
       this.sortedObjArr = this.sortedObjArr.reverse();
+    },
+
+    async saveIntroNode() {
+      this.loading = true;
+      // loop selected intro nodes
+      for (const nodeId of this.introNodes) {
+        // update node in topics db
+        await db
+          .collection("courses")
+          .doc(this.currentCourseId)
+          .collection("map-nodes")
+          .doc(nodeId)
+          .update({ group: "introduction" });
+
+        // update node in topics db
+        await db
+          .collection("courses")
+          .doc(this.currentCourseId)
+          .collection("topics")
+          .doc(nodeId)
+          .update({ group: "introduction" });
+
+        console.log("node id " + nodeId + " set as introduction node");
+      }
+      this.close();
     },
 
     presentation() {
