@@ -16,6 +16,9 @@
       Visibility:
       <span class="font-weight-black">{{ visibility }}</span>
     </p>
+    <p v-if="course.presentationOnly" class="galaxy-status overline mb-0">
+      <span class="font-weight-black baseAccent--text">Presentation Map</span>
+    </p>
     <!-- Map Image -->
     <v-img v-if="course.image" class="galaxy-image mt-2" :src="course.image.url"></v-img>
     <p ref="description" class="galaxy-description">
