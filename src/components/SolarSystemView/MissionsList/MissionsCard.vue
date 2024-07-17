@@ -568,10 +568,6 @@ p {
   // flex-direction: column;
 }
 
-.submissions-instructions > p > img {
-  width: 100%;
-}
-
 .v-application p {
   margin-bottom: 0px !important;
 }
