@@ -373,6 +373,10 @@ iframe.ql-video {
   width: 100% !important;
   height: 300px !important;
 }
+
+.submissions-instructions > p > img {
+  width: 100%;
+}
 </style>
 
 <style lang="scss" scoped>
