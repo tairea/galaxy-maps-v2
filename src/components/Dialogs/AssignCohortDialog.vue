@@ -117,7 +117,7 @@
                 <!-- ACTION BUTTONS -->
                 <div class="action-buttons">
                   <v-btn
-                    v-if="assignCohorts"
+                    v-if="assignCohorts && profile.email"
                     outlined
                     color="baseAccent"
                     @click="assignCourseToPerson(profile)"
@@ -285,7 +285,7 @@ import {
   addPersonToCohort,
   assignCourseToPerson,
 } from "@/lib/ff";
-import { db } from "@/store/firestoreConfig";
+import { db, functions } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import {
   mdiClose,
@@ -362,14 +362,17 @@ export default {
     },
     async assignCourseToPerson(profile) {
       this.loading = true;
+      console.log('assigning course to person')
 
       // If we dont already have the students Id, check if they already have an account using their email
       const personExists = await fetchPersonByEmail(profile.email);
+      console.log({personExists})
       if (personExists) {
         await this.handleAssignment(personExists, this.currentCourse);
       } else {
         //create the persons account
         profile.inviter = this.person.firstName + " " + this.person.lastName;
+        console.log({profile})
 
         const person = await createPerson(profile);
         console.log("1. person created: ", person);
@@ -396,6 +399,7 @@ export default {
           text: `${person.firstName} assigned to ${course.title} Galaxy`,
           color: "baseAccent",
         });
+        this.sendNewCohortEmail(person)
         this.$emit("newAssignment", person);
         this.close();
       } catch (error) {
@@ -408,6 +412,16 @@ export default {
         });
         this.close();
       }
+    },
+    sendNewCohortEmail(profile) {
+      console.log('sending email to: ', profile)
+      const person = {
+        ...profile,
+        cohort: this.cohort.name,
+        inviter: profile.inviter || "Galaxy Maps Admin",
+      };
+      const sendNewCohortEmail = functions.httpsCallable("sendNewCohortEmail");
+      return sendNewCohortEmail(person);
     },
     async assignCourseToCohort(cohort, course) {
       if (!cohort) {
