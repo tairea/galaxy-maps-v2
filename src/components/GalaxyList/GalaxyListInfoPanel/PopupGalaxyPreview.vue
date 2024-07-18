@@ -84,7 +84,7 @@
 
     <div>
       <!-- Not logged in -->
-      <div v-if="!user.loggedIn" class="ss-actions py-4">
+      <!-- <div v-if="!user.loggedIn" class="ss-actions py-4">
         <div class="not-allowed">
           <v-btn
             class="view-ss-button pa-5"
@@ -95,15 +95,16 @@
             tile
             title="View Galaxy"
             @click="routeToGalaxyEdit"
-            :disabled="!user.loggedIn"
           >
             View Galaxy
           </v-btn>
-        </div>
+        </div> -->
         <!-- Signin Dialog -->
-        <LoginDialog />
-      </div>
-      <div v-else-if="teacher" class="ss-actions py-4">
+        <!-- <LoginDialog /> -->
+      <!-- </div> -->
+
+      <!-- ==== NOTE: Other buttons commented out as we test taking non-signed user guard down one level -->
+      <div class="ss-actions py-4">
         <v-btn
           class="view-ss-button pa-5"
           dark
@@ -133,7 +134,7 @@
         </v-btn> -->
       </div>
       <!-- Student Galaxy Actions -->
-      <div v-else class="ss-actions py-4">
+      <!-- <div v-else class="ss-actions py-4">
         <v-btn
           v-if="enrolled"
           class="view-ss-button pa-5"
@@ -146,10 +147,10 @@
           @click="routeToGalaxyEdit"
         >
           Resume Galaxy
-        </v-btn>
+        </v-btn> -->
         <!-- starting galaxy status-->
 
-        <v-btn
+        <!-- <v-btn
           v-else
           class="view-ss-button pa-5"
           dark
@@ -165,7 +166,7 @@
         </v-btn>
         <div v-if="loading" style="width: 100%">
           <p class="starting-status ma-0">{{ startingGalaxyStatus }}</p>
-        </div>
+        </div> -->
       </div>
     </div>
   </div>
@@ -176,10 +177,10 @@ import Avatar from "@/components/Reused/Avatar.vue";
 import LoginDialog from "@/components/Dialogs/LoginDialog.vue";
 import { db } from "@/store/firestoreConfig";
 import {
-  fetchCohortByCohortId,
+  // fetchCohortByCohortId,
   fetchPersonByPersonId,
-  addMeToCohort,
-  assignCourseToMe,
+  // addMeToCohort,
+  // assignCourseToMe,
 } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mdiClose } from "@mdi/js";
@@ -291,6 +292,8 @@ export default {
       });
     },
     routeToGalaxyAnalytics() {
+      // TODO: this could go to a dashbaord that shows all cohorts with this galaxy
+      
       console.log("route to galaxy analytics", this.currentCourseId);
 
       // save current course to store
@@ -303,27 +306,27 @@ export default {
       //   },
       // });
     },
-    async startThisGalaxy() {
-      this.loading = true;
-      // add this galaxy metadata (eg. topics) to this persons course database
+    // async startThisGalaxy() {
+    //   this.loading = true;
+    //   // add this galaxy metadata (eg. topics) to this persons course database
 
-      // save current course to store
-      this.setCurrentCourseId(this.course.id);
+    //   // save current course to store
+    //   this.setCurrentCourseId(this.course.id);
 
-      // 5) assign student to cohort and course
-      const cohort = await fetchCohortByCohortId(this.course.cohort);
-      await addMeToCohort(cohort.id);
-      await assignCourseToMe(this.course.id);
+    //   // 5) assign student to cohort and course
+    //   const cohort = await fetchCohortByCohortId(this.course.cohort);
+    //   await addMeToCohort(cohort.id);
+    //   await assignCourseToMe(this.course.id);
 
-      this.loading = false;
-      this.$router.push({
-        name: "GalaxyView",
-        params: {
-          courseId: this.course.id,
-          role: "student",
-        },
-      });
-    },
+    //   this.loading = false;
+    //   this.$router.push({
+    //     name: "GalaxyView",
+    //     params: {
+    //       courseId: this.course.id,
+    //       role: "student",
+    //     },
+    //   });
+    // },
 
     async getPersonsImage(personId) {
       const person = await fetchPersonByPersonId(personId);

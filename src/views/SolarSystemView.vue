@@ -35,14 +35,7 @@
     <!--==== Main section ====-->
     <div id="main-section">
       <!-- loading spinner -->
-      <div class="d-flex justify-center align-center" v-if="loading" style="margin-top: 100px">
-        <v-btn
-          :loading="loading"
-          icon
-          color="missionAccent"
-          class="d-flex justify-center align-center"
-        ></v-btn>
-      </div>
+      <LoadingSpinner v-if="loading" text="loading solar system" />
       <MissionsList
         v-if="!loading"
         :course="course"
@@ -106,6 +99,7 @@
 </template>
 
 <script>
+import LoadingSpinner from "@/components/Reused/LoadingSpinner.vue";
 import SolarSystemInfo from "@/components/SolarSystemView/SolarSystemInfo.vue";
 import AssignedInfo from "@/components/Reused/AssignedInfo.vue";
 import MissionsList from "@/components/SolarSystemView/MissionsList.vue";
@@ -126,6 +120,7 @@ import confetti from "canvas-confetti";
 export default {
   name: "SolarSystemView",
   components: {
+    LoadingSpinner,
     SolarSystemInfo,
     AssignedInfo,
     MissionsList,
@@ -156,6 +151,7 @@ export default {
     this.setCurrentCourseId(this.courseId);
     this.setCurrentTopicId(this.topicId);
 
+    // load Topic & course data
     await this.loadTopic(this.courseId, this.topicId);
 
     if (this.teacher) {
@@ -220,7 +216,7 @@ export default {
             return a.taskCreatedTimestamp._seconds - b.taskCreatedTimestamp._seconds;
           } else if (a.taskCreatedTimestamp.seconds) {
             return a.taskCreatedTimestamp.seconds - b.taskCreatedTimestamp.seconds;
-          } else {  
+          } else {
             return a.taskCreatedTimestamp - b.taskCreatedTimestamp;
           }
         });
@@ -237,7 +233,7 @@ export default {
             return a.taskCreatedTimestamp._seconds - b.taskCreatedTimestamp._seconds;
           } else if (a.taskCreatedTimestamp.seconds) {
             return a.taskCreatedTimestamp.seconds - b.taskCreatedTimestamp.seconds;
-          } else {  
+          } else {
             return a.taskCreatedTimestamp - b.taskCreatedTimestamp;
           }
         });
@@ -253,6 +249,7 @@ export default {
       "setStartMissionLoading",
     ]),
     ...mapActions(useSolarSystemViewStore, [
+      "setTopic",
       "loadTopic",
       "refreshTopic",
       "refreshTasks",

@@ -64,7 +64,7 @@ export default {
   },
   watch: {
     $route(to, from) {
-      if (this.$route.name == "GalaxyView") {
+      if (this.$route.name == "GalaxyView" || this.$route.name == "SolarSystemView") {
         this.showNavMenu = false;
         this.showHamburgerMenu = true;
       } else if (
@@ -98,7 +98,7 @@ export default {
       this.tabs = [TAB_GALAXIES];
     }
 
-    if (this.$route.name == "GalaxyView") {
+    if (this.$route.name == "GalaxyView" || this.$route.name == "SolarSystemView") {
       this.showNavMenu = false;
       this.showHamburgerMenu = true;
     } else if (

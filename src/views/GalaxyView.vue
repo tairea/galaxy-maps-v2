@@ -87,10 +87,12 @@
     <!-- POPUP OUT PANEL (for system preview)-->
     <SolarSystemInfoPanel
       :show="infoPopupShow"
+      :course="boundCourse"
       :selectedTopic="fetchedTopic"
       :tasks="topicTasks"
       @closeInfoPanel="closeInfoPanel"
       @editNode="showEditDialog"
+      @enrolledInCourse="enrolledInCourse"
     />
     <!-- POPUP OUT PANEL (for system preview)-->
     <EdgeInfoPanel
@@ -214,6 +216,7 @@ export default {
       topicTasks: [],
       galaxyCompletedDialog: false,
       xpPointsForThisGalaxy: 2000,
+      galaxyMapForceUpdateKey: 0,
     };
   },
   watch: {
@@ -242,7 +245,8 @@ export default {
       this.peopleInCourse = await fetchAllPeopleInCourseByCourseId(this.courseId);
       this.setPeopleInCourse(this.peopleInCourse);
       this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
-    } else {
+    } else if (this.student) {
+      // show navigator other squads on this map
       const cohorts = await fetchCohorts();
       let cohort = cohorts.find((cohort) =>
         cohort.courses.some((courseId) => courseId === this.courseId),
@@ -283,13 +287,13 @@ export default {
       return this.boundCourse?.status === "submitted";
     },
     teacher() {
-      return this.boundCourse?.mappedBy.personId === this.person.id || this.user.data.admin;
+      return this.boundCourse?.mappedBy.personId === this.person?.id || this.user.data?.admin;
     },
     student() {
-      return this.person.assignedCourses?.some((courseId) => courseId === this.courseId);
+      return this.person?.assignedCourses?.some((courseId) => courseId === this.courseId);
     },
     showPublish() {
-      return (this.user.data.admin && this.boundCourse?.status === "submitted") || this.draft;
+      return (this.user.data?.admin && this.boundCourse?.status === "submitted") || this.draft;
     },
   },
   methods: {
@@ -362,13 +366,22 @@ export default {
       this.$refs.vis.exitSolarSystemPreview();
       // this.$refs.listPanel.courseClicked();
     },
-    async topicClicked(emittedPayload) {
+    async topicClicked(emittedTopic) {
       this.infoPopupShow = true;
+      // console.log("topic clicked emitted from GalaxyMap.vue", emittedTopic);
+
       // get topic id
-      this.clickedTopicId = emittedPayload.topicId;
-      // get topic
-      this.fetchedTopic = await fetchTopicByCourseIdTopicId(this.courseId, this.clickedTopicId);
-      console.log("clicked topic:", this.fetchedTopic);
+      this.clickedTopicId = emittedTopic.id;
+
+      // check if authenticated
+      if (this.teacher || this.student) {
+        // get topic
+        this.fetchedTopic = await fetchTopicByCourseIdTopicId(this.courseId, this.clickedTopicId);
+        console.log("clicked topic:", this.fetchedTopic);
+      } else {
+        this.fetchedTopic = emittedTopic;
+      }
+
       // reset topic tasks (to prevent duplicate)
       this.topicTasks = [];
       // loop courseTasks for this topic id (= this.topicTasks)
@@ -536,6 +549,10 @@ export default {
         ];
       }
       return colours;
+    },
+    enrolledInCourse() {
+      // force reload GalaxpMap component
+      this.$router.go();
     },
   },
 };
