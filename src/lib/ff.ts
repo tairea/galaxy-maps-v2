@@ -371,7 +371,7 @@ export const fetchPersonByEmail = async (email: string): Promise<IPerson | null>
     const result = await getPersonByEmail(data);
     return result.data.person;
   } catch (e) {
-    if (e instanceof FirebaseError && e.code === "not-found") {
+    if (e instanceof FirebaseError && e.code === "functions/not-found") {
       return null;
     }
     throw e;
