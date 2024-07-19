@@ -773,6 +773,7 @@ export default {
         course: course.title,
         courseId: course.id,
       };
+      console.log("sending new map created email");
       const sendCourseCreatedEmail = functions.httpsCallable("sendCourseCreatedEmail");
       return sendCourseCreatedEmail(data);
     },
