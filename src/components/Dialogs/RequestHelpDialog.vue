@@ -118,7 +118,9 @@ export default {
   async mounted() {
     // FIXME: this won't work if they load the solar system view directly without going
     // through the galaxy view, the currentCohortId could be incorrect or even null
-    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
+    if (this.currentCohortId) {
+      this.cohort = await fetchCohortByCohortId(this.currentCohortId);
+    }
   },
   computed: {
     ...mapState(useRootStore, ["currentCohortId", "person"]),

@@ -13,6 +13,7 @@
         v-if="!loading && !draft && peopleInTopic.length"
         :assignCohorts="true"
         :people="peopleInTopic"
+        :teacher="teacher"
       />
 
       <!-- Order change button -->
@@ -44,7 +45,7 @@
         :teacher="teacher"
         :disableCreateMission="orderChanged"
         @task="taskForHelpInfo($event)"
-        @missionActivated="peopleInTopic.push(person)"
+        @missionActivated="missionActivated"
         @missionStarted="missionStarted"
         @missionSubmittedForReview="missionSubmittedForReview"
         @missionCompleted="missionCompleted"
@@ -186,7 +187,8 @@ export default {
       // Called whenever the route changes
       // Check if the route change is relevant to this component
       if (to.name === "SolarSystemView" && to.params.topicId !== from.params.topicId) {
-        this.reloadData(to.params.topicId);
+        // reload the page
+        this.$router.go();
       }
     },
   },
@@ -439,6 +441,12 @@ export default {
           topicId: nextTopic.id,
         },
       });
+    },
+    missionActivated() {
+      // push person if they dont already exist in peopleInTopic
+      if (!this.peopleInTopic.find((person) => person.id === this.person.id)) {
+        this.peopleInTopic.push(this.person);
+      }
     },
   },
 };
