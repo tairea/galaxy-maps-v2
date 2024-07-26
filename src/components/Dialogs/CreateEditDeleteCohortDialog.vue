@@ -29,7 +29,7 @@
 
         <v-btn v-else outlined color="baseAccent" v-bind="attrs" v-on="on">
           <v-icon left> {{ mdiPlus }} </v-icon>
-          CREATE COHORT
+          CREATE SQUAD
         </v-btn>
       </template>
 

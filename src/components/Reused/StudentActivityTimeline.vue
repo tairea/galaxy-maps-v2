@@ -9,15 +9,22 @@
         class="d-flex justify-center align-center"
       ></v-btn>
     </div>
-    <div v-else-if="courseActivities.length > 0" :class="statementClass">
-      <p v-for="(activity, i) in courseActivities" :key="i" class="ma-0">
-        <span v-if="!studentCard">{{ activity.timeStamp.time }} </span>
-        <span>{{ activity.timeStamp.date }} </span>
-        <span :style="statusClass(activity)"
-          >{{ activity.status }} {{ activityReword(activity.type) }}:
-        </span>
-        <span>{{ activity.title }}</span>
-      </p>
+    <div v-else-if="sortedCourseActivitiesByDates.length > 0" :class="statementClass">
+      <div v-for="(year, i) in sortedCourseActivitiesByDates" :key="i" class="ma-0">
+        <div v-for="(date, j) in year.dates" :key="j" class="ma-0">
+          <!-- DAY, DATE, YEAR -->
+          <p class="mt-3 mb-1 border-bottom-missionAccent">{{ formatDate(date.date) }}</p>
+          <div v-for="(activity, k) in date.activities" :key="k" class="ma-0">
+            <!-- TIME -->
+            <span>{{ activity.timeStamp.time }} - </span>
+            <!-- ACTIVITY -->
+            <span :style="statusClass(activity)"
+              >{{ activity.status }} {{ activityReword(activity.type) }}:
+            </span>
+            <span>{{ activity.title }}</span>
+          </div>
+        </div>
+      </div>
     </div>
     <div v-else>
       <p class="missionAccent--text text-center overline">NO ACTIVITY DATA</p>
@@ -41,10 +48,12 @@ export default {
     return {
       loading: true,
       studentsActivityLog: [],
+      courseActivities: [],
     };
   },
   async mounted() {
     this.studentsActivityLog = await fetchStudentActivityLogByPersonId(this.student.id);
+    this.courseActivities = this.sanitiseStudentsActivityLog();
     this.loading = false;
   },
   computed: {
@@ -58,35 +67,63 @@ export default {
     statementClass() {
       return this.studentCard ? "student-card-statement" : "statements";
     },
-    courseActivities() {
-      const filtered = this.studentsActivityLog.filter((activity) => activity.course);
-      // console.log("filtered", filtered);
-      const sanitised = filtered.map((statement, index) => {
-        let [action, title] = statement.description.split(": ");
-        let [status, type] = action.split(" ");
-        let id = statement.task;
 
-        let isoTime = this.formatTime(statement.timestamp);
-        let [time, date] = isoTime.split(/(?<=^\S+)\s/);
+    sortedCourseActivitiesByDates() {
+      let groupedByYear = {};
 
-        const newStatement = {
-          timeStamp: { time, date },
-          index,
-          status,
-          type,
-          title,
-          id,
-          context: statement.context,
-        };
+      // Step 1: Group activities by year
+      this.courseActivities.forEach((activity) => {
+        const { year, date, time } = activity.timeStamp;
+        const dateTime = new Date(`${date} ${year} ${time}`);
+        const dateYear = dateTime.toISOString().split("T")[0]; // Format: YYYY-MM-DD
 
-        return newStatement;
+        if (!groupedByYear[year]) {
+          groupedByYear[year] = [];
+        }
+
+        groupedByYear[year].push({ ...activity, dateTime, dateYear });
       });
-      return sanitised;
+
+      // Step 2: Sort each year's activities by dateTime in descending order
+      Object.keys(groupedByYear).forEach((year) => {
+        groupedByYear[year].sort((a, b) => b.dateTime - a.dateTime);
+      });
+
+      // Step 3: Group by date within each year, already in descending order
+      let finalGrouping = {};
+      Object.keys(groupedByYear).forEach((year) => {
+        finalGrouping[year] = groupedByYear[year].reduce((acc, curr) => {
+          const dateKey = curr.dateYear; // Use YYYY-MM-DD format for consistent sorting
+          if (!acc[dateKey]) {
+            acc[dateKey] = [];
+          }
+          acc[dateKey].push(curr);
+          return acc;
+        }, {});
+      });
+
+      // Step 4: Convert finalGrouping object into the desired array structure with years and dates in descending order
+      let finalArray = Object.keys(finalGrouping)
+        .sort((a, b) => b.localeCompare(a))
+        .map((year) => ({
+          year,
+          dates: Object.keys(finalGrouping[year])
+            .sort((a, b) => b.localeCompare(a))
+            .map((date) => ({
+              date,
+              activities: finalGrouping[year][date],
+            })),
+        }));
+
+      return finalArray;
     },
   },
   methods: {
     formatTime(time) {
-      return DateTime.fromISO(time).toFormat("ccc dd LLL t ");
+      return DateTime.fromISO(time).toFormat("ccc dd LLL yyyy t ");
+    },
+    formatDate(date) {
+      return DateTime.fromISO(date).toFormat("cccc, LLLL d, yyyy");
     },
     statusClass(activity) {
       switch (activity.status) {
@@ -104,6 +141,10 @@ export default {
           } else if (activity.type === "completed") {
             return "color:var(--v-baseAccent-base)";
           }
+        case "Teacher":
+          if (activity.type === "marked") {
+            return "color:var(--v-baseAccent-base)";
+          }
       }
     },
     activityReword(type) {
@@ -117,6 +158,36 @@ export default {
         default:
           return type;
       }
+    },
+    sanitiseStudentsActivityLog() {
+      const filtered = this.studentsActivityLog.filter((activity) => activity.course);
+      // console.log("filtered", filtered);
+      const sanitised = filtered.map((statement, index) => {
+        let [action, title] = statement.description.split(": ");
+        let [status, type] = action.split(" ");
+        let id = statement.task;
+
+        let isoTime = this.formatTime(statement.timestamp);
+
+        let parts = isoTime.split(" "); // Assuming format is now ["Fri", "04", "Nov", "2023", "12:12"]
+        let day = parts[0]; // "Fri"
+        let date = parts.slice(1, 3).join(" "); // "04 Nov"
+        let year = parts[3]; // "2023"
+        let time = parts[4]; // "12:12"
+
+        const newStatement = {
+          timeStamp: { year, day, date, time },
+          index,
+          status,
+          type,
+          title,
+          id,
+          context: statement,
+        };
+
+        return newStatement;
+      });
+      return sanitised;
     },
   },
 };
@@ -147,7 +218,7 @@ export default {
 
 .statements {
   padding: 10px 20px;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
 }
 
 .student-card-label {
@@ -196,5 +267,9 @@ export default {
   ::-webkit-scrollbar {
     width: 2px;
   }
+}
+
+.border-bottom-missionAccent {
+  border-bottom: 1px solid var(--v-missionAccent-base);
 }
 </style>

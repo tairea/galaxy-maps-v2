@@ -53,7 +53,7 @@ export default {
     ...mapState(useRootStore, ["person"]),
     visibility() {
       if (this.course.public) return "public";
-      else if (this.course.visbility) return this.course.visibility;
+      else if (this.course.visibility) return this.course.visibility;
       else return "private";
     },
   },

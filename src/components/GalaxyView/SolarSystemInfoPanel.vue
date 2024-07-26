@@ -1,14 +1,24 @@
 <template>
   <div class="galaxyInfoPanel" :style="show ? 'right: 0px' : ''">
     <div class="panelContent">
-      <div v-if="!selectedTopic" class="panelContentInner d-flex flex-column justify-center align-center" style="padding: 50px">
-        <v-btn :loading="!selectedTopic" icon color="missionAccent"></v-btn>'
+      <!-- Loading spinner -->
+      <div
+        v-if="!selectedTopic"
+        class="panelContentInner d-flex flex-column justify-center align-center"
+        style="padding: 50px"
+      >
+        <v-btn :loading="!selectedTopic" icon color="missionAccent"></v-btn>
         <p class="overline missionAccent--text">Loading system</p>
       </div>
+
+      <!-- Loaded Panel -->
       <div class="panelContentInner" v-else-if="selectedTopic">
+        <!-- X (close) button -->
         <v-btn icon small color="missionAccent" class="close-button mt-2" @click="closeInfoPanel">
           <v-icon>{{ mdiClose }}</v-icon>
         </v-btn>
+
+        <!-- Panel header -->
         <div class="topOfPanel">
           <div class="topicTitleContainer">
             <!-- Node image (as requested by Dion) -->
@@ -44,6 +54,7 @@
           </div>
         </div>
 
+        <!-- Panel Content (mission cards) -->
         <div class="card-container">
           <div v-if="tasks.length == 0" class="noMissionWarningContainer">
             <p class="noMissionWarning">This system has no missions.</p>
@@ -80,8 +91,12 @@
             </div>
           </div>
         </div>
+
+        <!-- Panel Actions (buttons) -->
         <div class="bottom">
+          <!-- TEACHER OR STUDENT -->
           <v-btn
+            v-if="teacher || student"
             class="view-ss-button pa-5"
             dark
             small
@@ -92,6 +107,35 @@
           >
             View System
           </v-btn>
+
+          <!-- NOT-SIGNED-IN-USER -->
+          <div v-else-if="!user.loggedIn" class="mt-8">
+            <!-- Signin Dialog -->
+            <LoginDialog />
+          </div>
+
+          <!-- SIGNED IN STUDENT, BUT NOT YET ENROLLED -->
+          <v-btn
+            v-else
+            class="view-ss-button-start"
+            dark
+            small
+            elevation="10"
+            color="galaxyAccent"
+            title="View Galaxy"
+            @click="startThisGalaxy"
+            :loading="loading"
+          >
+            <p class="ma-3 background--text">
+              Start <br />
+              {{ course.title }} <br />
+              Galaxy
+            </p>
+          </v-btn>
+
+          <!-- <div v-if="loading" style="width: 100%">
+            <p class="starting-status ma-0">{{ startingGalaxyStatus }}</p>
+          </div> -->
         </div>
       </div>
     </div>
@@ -99,15 +143,21 @@
 </template>
 
 <script>
-import { fetchCourseByCourseId } from "@/lib/ff";
+import {
+  // fetchCourseByCourseId,
+  fetchCohortByCohortId,
+  addMeToCohort,
+  assignCourseToMe,
+} from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mdiClose, mdiPencil, mdiLock } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
+import LoginDialog from "@/components/Dialogs/LoginDialog.vue";
 
 export default {
   name: "SolarSystemInfoPanel",
-  props: ["show","selectedTopic", "tasks"],
-  components: {},
+  props: ["show", "course", "selectedTopic", "tasks"],
+  components: { LoginDialog },
   data() {
     return {
       mdiClose,
@@ -119,26 +169,30 @@ export default {
       activeTeaching: null,
       activePublic: null,
       currentCourse: null,
+      loading: false,
     };
   },
   async mounted() {
-    this.currentCourse = await fetchCourseByCourseId(this.currentCourseId);
+    // this.currentCourse = await fetchCourseByCourseId(this.currentCourseId);
     // console.log("selected topic is:", this.selectedTopic);
   },
   computed: {
-    ...mapState(useRootStore, ["currentCourseId", "person", "user"]),
+    ...mapState(useRootStore, ["person", "user"]),
     // filteredTasks() {
     //   return this.tasks.filter((task) => task.topicId == this.selectedTopic);
     // },
     teacher() {
-      return this.currentCourse?.mappedBy?.personId === this.person.id || this.user.data.admin;
+      return this.course?.mappedBy?.personId === this.person?.id || this.user.data?.admin;
+    },
+    student() {
+      return this.person?.assignedCourses?.some((courseId) => courseId === this.course.id);
     },
     sortTasks() {
       return this.tasks.sort((a, b) => a.orderIndex - b.orderIndex);
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["setCurrentTaskId", "setCurrentTopicId"]),
+    ...mapActions(useRootStore, ["setCurrentTaskId", "setCurrentTopicId", "setCurrentCourseId"]),
     closeInfoPanel() {
       this.$emit("closeInfoPanel");
     },
@@ -158,11 +212,36 @@ export default {
       this.$router.push({
         name: "SolarSystemView",
         params: {
-          courseId: this.currentCourse.id,
+          courseId: this.course.id,
           topicId: this.selectedTopic.id,
           teacher: this.teacher,
         },
       });
+    },
+    async startThisGalaxy() {
+      this.loading = true;
+      // add this galaxy metadata (eg. topics) to this persons course database
+
+      // save current course to store
+      this.setCurrentCourseId(this.course.id);
+
+      // 5) assign student to cohort and course
+      const cohort = await fetchCohortByCohortId(this.course.cohort);
+      await addMeToCohort(cohort.id);
+      await assignCourseToMe(this.course.id);
+
+      this.loading = false;
+
+      // this.$router.push({
+      //   name: "GalaxyView",
+      //   params: {
+      //     courseId: this.course.id,
+      //     role: "student",
+      //   },
+      // });
+
+      // emit enroled in course. reload GalaxyMap
+      this.$emit("enrolledInCourse");
     },
   },
 };
@@ -323,6 +402,14 @@ export default {
           width: 70%;
           margin-top: 20px;
           background-color: var(--v-background-base);
+        }
+
+        .view-ss-button-start {
+          width: 70%;
+          margin-top: 20px;
+          background-color: var(--v-background-base);
+          height: auto;
+          padding: 5px 10px;
         }
       }
     }

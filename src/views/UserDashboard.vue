@@ -1,5 +1,6 @@
 <template>
   <div id="container" class="bg">
+    <LoadingSpinner v-if="loading" text="loading dashboard" />
     <!-- PERSON INFO FRAME -->
     <div id="left-section">
       <UserInfo :person="person" />
@@ -12,10 +13,10 @@
         <div :class="adminLabel" @click="setDashboardView('admin')">Create Admin</div>
       </div>
       <div class="student-border">
-        <div :class="studentLabel" @click="setDashboardView('student')">exploring dashboard</div>
+        <div :class="studentLabel" @click="setDashboardView('student')">GALAXY DATA</div>
       </div>
       <div v-if="isTeacher" class="teacher-border">
-        <div :class="teacherLabel" @click="setDashboardView('teacher')">cohort analytics</div>
+        <div :class="teacherLabel" @click="setDashboardView('teacher')">SQUAD DATA</div>
       </div>
       <v-divider class="line" style="border-color: var(--v-missionAccent-base)"></v-divider>
     </div>
@@ -109,6 +110,7 @@
 </template>
 
 <script>
+import LoadingSpinner from "@/components/Reused/LoadingSpinner.vue";
 import UserInfo from "@/components/UserDashboard/UserInfo.vue";
 import StudentActivityTimeline from "@/components/Reused/StudentActivityTimeline.vue";
 import StudentCourseProgression from "@/components/UserDashboard/StudentCourseProgression.vue";
@@ -138,6 +140,7 @@ const useUserDashboardStore = defineStore({
 export default {
   name: "UserDashboard",
   components: {
+    LoadingSpinner,
     UserInfo,
     StudentActivityTimeline,
     StudentCourseProgression,
@@ -153,11 +156,14 @@ export default {
       timeframe: "",
       courses: [],
       cohorts: [],
+      loading: true,
     };
   },
   async mounted() {
     this.courses = await fetchCourses();
     this.cohorts = await fetchCohorts();
+    this.loading = false;
+    if (this.cohorts.length) this.setDashboardView("teacher");
   },
   computed: {
     ...mapState(useUserDashboardStore, ["dashboardView"]),
