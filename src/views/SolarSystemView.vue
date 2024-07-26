@@ -251,7 +251,6 @@ export default {
       "setStartMissionLoading",
     ]),
     ...mapActions(useSolarSystemViewStore, [
-      "setTopic",
       "loadTopic",
       "refreshTopic",
       "refreshTasks",

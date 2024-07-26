@@ -24,9 +24,6 @@ export const useSolarSystemViewStore = defineStore({
     setStudentsView(view: boolean) {
       this.studentsView = view;
     },
-    setTopic(topic: ITopic) {
-      this.topic = topic;
-    },
     async loadTopic(courseId: string, topicId: string) {
       this.isLoadingTopic = true;
       try {
