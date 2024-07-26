@@ -86,9 +86,9 @@ const routes = [
         path: "galaxy/:courseId",
         name: "GalaxyView",
         component: GalaxyView,
-        meta: {
-          authRequired: true,
-        },
+        // meta: {
+        //   authRequired: true,
+        // },
         props: true,
       },
       {

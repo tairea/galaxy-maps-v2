@@ -1312,9 +1312,12 @@ async function updateTaskOrderIndexes(
         .collection("tasks")
         .doc(taskOrderIndex.taskId);
 
-      await taskRef.update({
-        orderIndex: taskOrderIndex.orderIndex,
-      });
+      await taskRef.set(
+        {
+          orderIndex: taskOrderIndex.orderIndex,
+        },
+        { merge: true },
+      );
 
       const taskDoc = await taskRef.get();
 
