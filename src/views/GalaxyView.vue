@@ -316,12 +316,32 @@ export default {
       return (this.user.data?.admin && this.boundCourse?.status === "submitted") || this.draft;
     },
     isRestriced() {
+      // teacher or student is allowed
       if (this.teacher || this.student) {
         return false;
-      } else if (this.boundCourse.status != "published") {
+      }
+      // public and published is allowed
+      else if (
+        (this.boundCourse.visibility == "public" || this.boundCourse.public == true) &&
+        this.boundCourse.status == "published"
+      ) {
+        console.log("allowed because public and published");
+        return false;
+      }
+      // not published so restricted
+      else if (this.boundCourse.status != "published") {
         console.log("Restriced because status:", this.boundCourse.status);
         return true;
+      }
+      // published and unlisted is allowed
+      else if (
+        this.boundCourse.status == "published" &&
+        this.boundCourse.visibility == "unlisted"
+      ) {
+        console.log("allowed because published and unlisted");
+        return false;
       } else {
+        console.log("else restricted");
         return true;
       }
     },
