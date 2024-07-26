@@ -33,7 +33,11 @@
 
         <!-- MARK AS COMPLETED -->
         <div class="action-button">
-          <p class="text-overline text-uppercase text-center" style="line-height: 1rem">
+          <p
+            class="text-overline text-uppercase text-center"
+            :class="getSubmitClass"
+            style="line-height: 1rem"
+          >
             {{ getSubmitTitle }}
           </p>
           <MissionCompletedDialog
@@ -76,6 +80,20 @@ export default {
         (this.task.submissionRequired == false || !this.task.submissionRequired)
       ) {
         return "MARK AS COMPLETED";
+      } else {
+        return;
+      }
+    },
+    getSubmitClass() {
+      if (this.active && this.task.submissionRequired == true) {
+        return "cohortAccent--text";
+      } else if (this.declined && this.task.submissionRequired == true) {
+        return "cohortAccent--text";
+      } else if (
+        this.active &&
+        (this.task.submissionRequired == false || !this.task.submissionRequired)
+      ) {
+        return "missionAccent--text";
       } else {
         return;
       }

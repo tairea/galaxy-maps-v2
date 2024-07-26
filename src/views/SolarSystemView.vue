@@ -13,6 +13,7 @@
         v-if="!loading && !draft && peopleInTopic.length"
         :assignCohorts="true"
         :people="peopleInTopic"
+        :teacher="teacher"
       />
 
       <!-- Order change button -->
@@ -35,14 +36,7 @@
     <!--==== Main section ====-->
     <div id="main-section">
       <!-- loading spinner -->
-      <div class="d-flex justify-center align-center" v-if="loading" style="margin-top: 100px">
-        <v-btn
-          :loading="loading"
-          icon
-          color="missionAccent"
-          class="d-flex justify-center align-center"
-        ></v-btn>
-      </div>
+      <LoadingSpinner v-if="loading" text="loading solar system" />
       <MissionsList
         v-if="!loading"
         :course="course"
@@ -51,7 +45,7 @@
         :teacher="teacher"
         :disableCreateMission="orderChanged"
         @task="taskForHelpInfo($event)"
-        @missionActivated="peopleInTopic.push(person)"
+        @missionActivated="missionActivated"
         @missionStarted="missionStarted"
         @missionSubmittedForReview="missionSubmittedForReview"
         @missionCompleted="missionCompleted"
@@ -106,6 +100,7 @@
 </template>
 
 <script>
+import LoadingSpinner from "@/components/Reused/LoadingSpinner.vue";
 import SolarSystemInfo from "@/components/SolarSystemView/SolarSystemInfo.vue";
 import AssignedInfo from "@/components/Reused/AssignedInfo.vue";
 import MissionsList from "@/components/SolarSystemView/MissionsList.vue";
@@ -126,6 +121,7 @@ import confetti from "canvas-confetti";
 export default {
   name: "SolarSystemView",
   components: {
+    LoadingSpinner,
     SolarSystemInfo,
     AssignedInfo,
     MissionsList,
@@ -156,6 +152,7 @@ export default {
     this.setCurrentCourseId(this.courseId);
     this.setCurrentTopicId(this.topicId);
 
+    // load Topic & course data
     await this.loadTopic(this.courseId, this.topicId);
 
     if (this.teacher) {
@@ -190,7 +187,8 @@ export default {
       // Called whenever the route changes
       // Check if the route change is relevant to this component
       if (to.name === "SolarSystemView" && to.params.topicId !== from.params.topicId) {
-        this.reloadData(to.params.topicId);
+        // reload the page
+        this.$router.go();
       }
     },
   },
@@ -220,7 +218,7 @@ export default {
             return a.taskCreatedTimestamp._seconds - b.taskCreatedTimestamp._seconds;
           } else if (a.taskCreatedTimestamp.seconds) {
             return a.taskCreatedTimestamp.seconds - b.taskCreatedTimestamp.seconds;
-          } else {  
+          } else {
             return a.taskCreatedTimestamp - b.taskCreatedTimestamp;
           }
         });
@@ -237,7 +235,7 @@ export default {
             return a.taskCreatedTimestamp._seconds - b.taskCreatedTimestamp._seconds;
           } else if (a.taskCreatedTimestamp.seconds) {
             return a.taskCreatedTimestamp.seconds - b.taskCreatedTimestamp.seconds;
-          } else {  
+          } else {
             return a.taskCreatedTimestamp - b.taskCreatedTimestamp;
           }
         });
@@ -442,6 +440,12 @@ export default {
           topicId: nextTopic.id,
         },
       });
+    },
+    missionActivated() {
+      // push person if they dont already exist in peopleInTopic
+      if (!this.peopleInTopic.find((person) => person.id === this.person.id)) {
+        this.peopleInTopic.push(this.person);
+      }
     },
   },
 };

@@ -207,7 +207,10 @@ export default {
         this.showMenu = true;
       }
       // show/hide userbar mini version
-      if (this.$route.name == "GalaxyView" || this.$route.name == "SolarSystemView") {
+      if (
+        (this.$route.name == "GalaxyView" && this.user.loggedIn) ||
+        this.$route.name == "SolarSystemView"
+      ) {
         this.miniNavMenu = true;
       } else {
         this.miniNavMenu = false;
@@ -233,7 +236,10 @@ export default {
       this.showMenu = true;
     }
 
-    if (this.$route.name == "GalaxyView" || this.$route.name == "SolarSystemView") {
+    if (
+      (this.$route.name == "GalaxyView" && this.user.loggedIn) ||
+      this.$route.name == "SolarSystemView"
+    ) {
       this.miniNavMenu = true;
     } else {
       this.miniNavMenu = false;

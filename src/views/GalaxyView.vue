@@ -1,74 +1,90 @@
 <template>
   <div id="container" class="bg">
-    <!-- <div class="left-section" :class="{ hide: hideLeftPanelsFlag }"> -->
-    <div class="left-section" data-v-step="1">
-      <GalaxyInfo :course="boundCourse" :teacher="teacher" :draft="draft" />
-      <PublishGalaxy v-if="showPublish" :course="boundCourse" :courseTasks="courseTasks" />
-      <BackButton :toPath="'/'" />
-      <AssignedInfo
-        v-if="!draft && cohortsInCourse.length && teacher"
-        :assignCohorts="true"
-        :people="peopleInCourse"
-        :cohorts="cohortsInCourse"
-        :teacher="teacher"
-      />
-    </div>
-    <div id="main-section">
-      <!-- Map Buttons -->
-      <GalaxyMapButtons
-        class="mt-8"
-        :class="{ hideButtons: hideLeftPanelsFlag }"
-        v-if="teacher"
-        :addNodeMode="addNodeMode"
-        :addEdgeMode="addEdgeMode"
-        :dragNodeMode="dragNodeMode"
-        :uiMessage="uiMessage ? uiMessage : ''"
-        :changeInPositions="changeInPositions"
-        :nodePositionsChangeLoading="nodePositionsChangeLoading"
-        @toggleAddNodeMode="toggleAddNodeMode"
-        @toggleAddEdgeMode="toggleAddEdgeMode"
-        @toggleDragNodeMode="toggleDragNodeMode"
-        @addNode="showAddDialog"
-        @saveNodePositions="saveNodePositions"
-      />
+    <!-- Loading -->
+    <LoadingSpinner v-if="!boundCourse.status" text="loading galaxy map" />
 
-      <!-- ===== Galaxy Map ===== -->
-      <GalaxyMap
-        ref="vis"
-        :course="boundCourse"
-        @add-node="showAddDialog"
-        @edit-node="showEditDialog"
-        @setUiMessage="setUiMessage"
-        @drag-coords="updateDragCoords"
-        @selected="selected"
-        @selectedEdge="selectedEdge"
-        @deselected="deselect"
-        @blurNode="blurNode"
-        @centerFocus="centerFocus"
-        @nodePositionsChanged="nodePositionsChanged"
-        @nodePositionsChangeLoading="nodePositionsChangeLoading = true"
-        @nodePositionsChangeSaved="nodePositionsChangeSaved"
-        @toggleAddEdgeMode="toggleAddEdgeMode"
-        @hideLeftPanels="hideLeftPanels"
-        @topicClicked="topicClicked($event)"
-        @courseTasks="emittedCourseTasks($event)"
-        @galaxyCompleted="galaxyCompleted"
-      />
-      <!--  @hoverNode="hovered" -->
+    <!-- dont show galaxy if...
+    
+    NSIU - and not published
+    
+    -->
+    <div class="no-galaxy" v-if="isRestriced">
+      <v-icon large color="missionAccent">{{ mdiAlertOutline }}</v-icon>
+      <p class="overline missionAccent--text">INVALID OR RESTRICTED GALAXY</p>
+      <BackButton :toPath="'/'" />
     </div>
-    <!--==== Right section ====-->
-    <div v-if="!cohortsInCourse" id="right-section">
-      <RequestForHelpTeacherFrame
-        :courses="[boundCourse]"
-        :isTeacher="teacher"
-        :students="peopleInCourse"
-      />
-      <SubmissionTeacherFrame
-        v-if="teacher"
-        :courses="[boundCourse]"
-        :students="peopleInCourse"
-        class="mt-4"
-      />
+
+    <div v-else class="d-flex">
+      <!-- <div class="left-section" :class="{ hide: hideLeftPanelsFlag }"> -->
+      <div class="left-section" data-v-step="1">
+        <GalaxyInfo :course="boundCourse" :teacher="teacher" :draft="draft" />
+        <PublishGalaxy v-if="showPublish" :course="boundCourse" :courseTasks="courseTasks" />
+        <BackButton :toPath="'/'" />
+        <AssignedInfo
+          v-if="!draft && cohortsInCourse.length && teacher"
+          :assignCohorts="true"
+          :people="peopleInCourse"
+          :cohorts="cohortsInCourse"
+          :teacher="teacher"
+        />
+      </div>
+      <div id="main-section">
+        <!-- Map Buttons -->
+        <GalaxyMapButtons
+          class="mt-8"
+          :class="{ hideButtons: hideLeftPanelsFlag }"
+          v-if="teacher"
+          :addNodeMode="addNodeMode"
+          :addEdgeMode="addEdgeMode"
+          :dragNodeMode="dragNodeMode"
+          :uiMessage="uiMessage ? uiMessage : ''"
+          :changeInPositions="changeInPositions"
+          :nodePositionsChangeLoading="nodePositionsChangeLoading"
+          @toggleAddNodeMode="toggleAddNodeMode"
+          @toggleAddEdgeMode="toggleAddEdgeMode"
+          @toggleDragNodeMode="toggleDragNodeMode"
+          @addNode="showAddDialog"
+          @saveNodePositions="saveNodePositions"
+        />
+
+        <!-- ===== Galaxy Map ===== -->
+        <GalaxyMap
+          ref="vis"
+          :course="boundCourse"
+          @add-node="showAddDialog"
+          @edit-node="showEditDialog"
+          @setUiMessage="setUiMessage"
+          @drag-coords="updateDragCoords"
+          @selected="selected"
+          @selectedEdge="selectedEdge"
+          @deselected="deselect"
+          @blurNode="blurNode"
+          @centerFocus="centerFocus"
+          @nodePositionsChanged="nodePositionsChanged"
+          @nodePositionsChangeLoading="nodePositionsChangeLoading = true"
+          @nodePositionsChangeSaved="nodePositionsChangeSaved"
+          @toggleAddEdgeMode="toggleAddEdgeMode"
+          @hideLeftPanels="hideLeftPanels"
+          @topicClicked="topicClicked($event)"
+          @courseTasks="emittedCourseTasks($event)"
+          @galaxyCompleted="galaxyCompleted"
+        />
+        <!--  @hoverNode="hovered" -->
+      </div>
+      <!--==== Right section ====-->
+      <div v-if="!cohortsInCourse" id="right-section">
+        <RequestForHelpTeacherFrame
+          :courses="[boundCourse]"
+          :isTeacher="teacher"
+          :students="peopleInCourse"
+        />
+        <SubmissionTeacherFrame
+          v-if="teacher"
+          :courses="[boundCourse]"
+          :students="peopleInCourse"
+          class="mt-4"
+        />
+      </div>
     </div>
     <!-- Edit -->
     <CreateEditDeleteNodeDialog
@@ -87,10 +103,12 @@
     <!-- POPUP OUT PANEL (for system preview)-->
     <SolarSystemInfoPanel
       :show="infoPopupShow"
+      :course="boundCourse"
       :selectedTopic="fetchedTopic"
       :tasks="topicTasks"
       @closeInfoPanel="closeInfoPanel"
       @editNode="showEditDialog"
+      @enrolledInCourse="enrolledInCourse"
     />
     <!-- POPUP OUT PANEL (for system preview)-->
     <EdgeInfoPanel
@@ -123,6 +141,7 @@
 </template>
 
 <script>
+import LoadingSpinner from "@/components/Reused/LoadingSpinner.vue";
 import GalaxyInfo from "@/components/GalaxyView/GalaxyInfo.vue";
 import PublishGalaxy from "@/components/GalaxyView/PublishGalaxy.vue";
 import AssignedInfo from "@/components/Reused/AssignedInfo.vue";
@@ -153,10 +172,12 @@ import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
 import { loggedIntoGalaxyXAPIStatement } from "@/lib/veracityLRS";
+import { mdiAlertOutline } from "@mdi/js";
 
 export default {
   name: "GalaxyView",
   components: {
+    LoadingSpinner,
     GalaxyInfo,
     AssignedInfo,
     GalaxyMap,
@@ -172,6 +193,7 @@ export default {
   props: ["courseId"],
   data() {
     return {
+      mdiAlertOutline,
       steps: [
         {
           target: '[data-v-step="1"]',
@@ -214,6 +236,7 @@ export default {
       topicTasks: [],
       galaxyCompletedDialog: false,
       xpPointsForThisGalaxy: 2000,
+      galaxyMapForceUpdateKey: 0,
     };
   },
   watch: {
@@ -242,7 +265,8 @@ export default {
       this.peopleInCourse = await fetchAllPeopleInCourseByCourseId(this.courseId);
       this.setPeopleInCourse(this.peopleInCourse);
       this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
-    } else {
+    } else if (this.student) {
+      // show navigator other squads on this map
       const cohorts = await fetchCohorts();
       let cohort = cohorts.find((cohort) =>
         cohort.courses.some((courseId) => courseId === this.courseId),
@@ -283,13 +307,23 @@ export default {
       return this.boundCourse?.status === "submitted";
     },
     teacher() {
-      return this.boundCourse?.mappedBy.personId === this.person.id || this.user.data.admin;
+      return this.boundCourse?.mappedBy.personId === this.person?.id || this.user.data?.admin;
     },
     student() {
-      return this.person.assignedCourses?.some((courseId) => courseId === this.courseId);
+      return this.person?.assignedCourses?.some((courseId) => courseId === this.courseId);
     },
     showPublish() {
-      return (this.user.data.admin && this.boundCourse?.status === "submitted") || this.draft;
+      return (this.user.data?.admin && this.boundCourse?.status === "submitted") || this.draft;
+    },
+    isRestriced() {
+      if (this.teacher || this.student) {
+        return false;
+      } else if (this.boundCourse.status != "published") {
+        console.log("Restriced because status:", this.boundCourse.status);
+        return true;
+      } else {
+        return true;
+      }
     },
   },
   methods: {
@@ -362,13 +396,22 @@ export default {
       this.$refs.vis.exitSolarSystemPreview();
       // this.$refs.listPanel.courseClicked();
     },
-    async topicClicked(emittedPayload) {
+    async topicClicked(emittedTopic) {
       this.infoPopupShow = true;
+      // console.log("topic clicked emitted from GalaxyMap.vue", emittedTopic);
+
       // get topic id
-      this.clickedTopicId = emittedPayload.topicId;
-      // get topic
-      this.fetchedTopic = await fetchTopicByCourseIdTopicId(this.courseId, this.clickedTopicId);
-      console.log("clicked topic:", this.fetchedTopic);
+      this.clickedTopicId = emittedTopic.id;
+
+      // check if authenticated
+      if (this.teacher || this.student) {
+        // get topic
+        this.fetchedTopic = await fetchTopicByCourseIdTopicId(this.courseId, this.clickedTopicId);
+        console.log("clicked topic:", this.fetchedTopic);
+      } else {
+        this.fetchedTopic = emittedTopic;
+      }
+
       // reset topic tasks (to prevent duplicate)
       this.topicTasks = [];
       // loop courseTasks for this topic id (= this.topicTasks)
@@ -537,6 +580,10 @@ export default {
       }
       return colours;
     },
+    enrolledInCourse() {
+      // force reload GalaxpMap component
+      this.$router.go();
+    },
   },
 };
 </script>
@@ -553,6 +600,16 @@ export default {
   overflow: hidden;
   margin: 0 !important;
   // border: 1px solid red;
+
+  .no-galaxy {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    // border: 1px solid red;
+  }
 }
 
 .left-section {

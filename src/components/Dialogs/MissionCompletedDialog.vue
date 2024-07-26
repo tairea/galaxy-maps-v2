@@ -280,7 +280,9 @@ export default {
     }
     // FIXME: this won't work if they load the solar system view directly without going
     // through the galaxy view, the currentCohortId could be incorrect or even null
-    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
+    if (this.currentCohortId) {
+      this.cohort = await fetchCohortByCohortId(this.currentCohortId);
+    }
     // console.log("persons topics from mission completed dialog", this.personsTopics);
   },
   computed: {
