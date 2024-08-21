@@ -1,4 +1,4 @@
-import { error } from "firebase-functions/logger";
+import { error, log } from "firebase-functions/logger";
 import { runWith } from "firebase-functions/v1";
 import { HttpsError } from "firebase-functions/v1/https";
 import { DOMAIN } from "./_constants.js";
@@ -91,7 +91,7 @@ export const addAdminRoleHttpsEndpoint = runWith({}).https.onCall(async (uid: st
 
 export const createNewUserHttpsEndpoint = runWith({}).https.onCall(async (data, context) => {
   requireAuthenticated(context);
-  console.log("1. createNewUserHttpsEndpoint");
+  log("1. createNewUserHttpsEndpoint");
   // TODO: this should be split and permissions checks ensured but that requires a major refactor
   // of how adding students to cohorts works
 
@@ -101,7 +101,7 @@ export const createNewUserHttpsEndpoint = runWith({}).https.onCall(async (data, 
   }
 
   try {
-    console.log("2. create user: ", profile);
+    log("2. create user: ", profile);
     const createdUser = await auth.createUser(profile);
 
     const person: { id: string } & Record<string, unknown> = {
@@ -122,10 +122,10 @@ export const createNewUserHttpsEndpoint = runWith({}).https.onCall(async (data, 
     const link = await auth.generateSignInWithEmailLink(person.email as string, actionCodeSettings);
 
     if (person.accountType == "teacher") {
-      console.log("3. send email to teacher: ", person.email);
+      log("3. send email to teacher: ", person.email);
       await sendTeacherInviteEmail(person.email as string, person.displayName as string, link);
     } else {
-      console.log("3. send email to student: ", person.email);
+      log("3. send email to student: ", person.email);
       await sendStudentInviteEmail(
         person.email as string,
         person.displayName as string,
@@ -134,7 +134,7 @@ export const createNewUserHttpsEndpoint = runWith({}).https.onCall(async (data, 
       );
     }
 
-    console.log("4. add person to people collection: ", person);
+    log("4. add person to people collection: ", person);
     delete person.inviter;
     await db.collection("people").doc(person.id).set(person);
 
