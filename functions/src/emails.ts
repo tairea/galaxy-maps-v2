@@ -119,11 +119,14 @@ Galaxy Maps Team`;
 }
 
 // ======COURSE REGISTRATION NOTIFICATION==================
-
+export const sendNewGalaxyEmailHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
+  const { email, inviter, course } = data;
+  return sendNewGalaxyEmail(email, inviter, course);
+});
 /**
  * Sends a new course registration notification email.
  */
-export async function sendNewCourseEmail(email: string, _name: string, course: string) {
+export async function sendNewGalaxyEmail(email: string, inviter: string, course: string) {
   const mailOptions: Record<string, string> = {
     from: `${APP_NAME} <noreply@${DOMAIN}>`,
     to: email,
@@ -132,7 +135,7 @@ export async function sendNewCourseEmail(email: string, _name: string, course: s
   mailOptions.subject = "New Galaxy Assignment";
   mailOptions.text = `Greetings Navigator
 
-You have been assigned to ${course} Galaxy Map. 
+You have been assigned to the ${course} Galaxy Map${inviter ? " by " + inviter + "." : "."} 
 
 Sign into your Galaxy Maps account to start exploring this new galaxy.
 
