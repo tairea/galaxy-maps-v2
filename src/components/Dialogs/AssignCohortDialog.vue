@@ -394,7 +394,7 @@ export default {
           text: `${person.firstName || $person.email} assigned to ${course.title} Galaxy`,
           color: "baseAccent",
         });
-        // this.sendNewCohortEmail(person) // Not needed for now
+        this.sendNewGalaxyEmail(person)
         this.$emit("newAssignment", person);
         this.close();
       } catch (error) {
@@ -408,14 +408,14 @@ export default {
         this.close();
       }
     },
-    sendNewCohortEmail(profile) {
+    sendNewGalaxyEmail(profile) {
       const person = {
         ...profile,
         cohort: this.cohort.name,
         inviter: profile.inviter || "Galaxy Maps Admin",
       };
-      const sendNewCohortEmail = functions.httpsCallable("sendNewCohortEmail");
-      return sendNewCohortEmail(person);
+      const sendNewGalaxyEmail = functions.httpsCallable("sendNewGalaxyEmail");
+      return sendNewGalaxyEmail(person);
     },
     async assignCourseToCohort(cohort, course) {
       if (!cohort) {
