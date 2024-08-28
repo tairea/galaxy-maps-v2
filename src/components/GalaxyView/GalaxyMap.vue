@@ -190,14 +190,18 @@ export default {
       "courseTasks",
     ]),
     teacher() {
-      return this.course?.mappedBy.personId === this.person.id || this.user.data.admin;
+      return this.course?.mappedBy.personId === this.person?.id || this.user.data?.admin;
+    },
+    // student aka navigator
+    student() {
+      return this.person?.assignedCourses?.some((courseId) => courseId === this.currentCourseId);
     },
     nodesToDisplay() {
       if (this.currentCourseNodes.length && this.currentCourseNodes[0]?.id) {
         if (this.addingNode || this.addingEdge) {
           // grey out nodes for edit modes
           return this.inActiveNodes;
-        } else if (!this.teacher) {
+        } else if (this.student) {
           return this.currentCourseNodesWithStatus;
         } else {
           // re-colour nodes after exiting edit modes
@@ -207,7 +211,7 @@ export default {
       return false;
     },
     edgesToDisplay() {
-      return this.teacher ? this.currentCourseEdges : this.currentCourseEdgesWithStatusStyles;
+      return this.student ? this.currentCourseEdgesWithStatusStyles : this.currentCourseEdges;
     },
     inActiveNodes() {
       let inActiveNodes = [];
@@ -319,10 +323,21 @@ export default {
       await this.bindCourseEdges(this.currentCourseId);
 
       // bind topics for course creator
-      if (this.teacher) {
-        // bind. state.courseTasks
-        await this.getCourseTasks(this.currentCourseId);
-      } else {
+      // if (this.teacher) {
+      //   // bind. state.courseTasks
+      //   await this.getCourseTasks(this.currentCourseId);
+      // } else {
+      // bind topics for student
+      // await this.bindThisPersonsCourseTopics({
+      //   personId: this.person.id,
+      //   courseId: this.currentCourseId,
+      // });
+      // bind state.personsCourseTasks
+      //   await this.getPersonsCourseTasks();
+      // }
+
+      // ===== NOTE: Updated logic to bind topics for course creator && "non-signed-in-user" (improving new user experience)
+      if (this.student) {
         // bind topics for student
         await this.bindThisPersonsCourseTopics({
           personId: this.person.id,
@@ -330,6 +345,9 @@ export default {
         });
         // bind state.personsCourseTasks
         await this.getPersonsCourseTasks();
+      } else {
+        // bind. state.courseTasks
+        await this.getCourseTasks(this.currentCourseId);
       }
 
       this.needsCentering = true;
@@ -478,14 +496,22 @@ export default {
       this.$refs.network.setOptions(options);
       // 4) minimise left panels & buttons
       this.$emit("hideLeftPanels", true);
-      // 5) emit & save clicked topic node
+      // 5) set clicked topic node id in store
       this.setCurrentTopicId(closestNode.id);
-      this.$emit("topicClicked", { topicId: this.currentTopicId });
       // 6) calc how many tasks for this topic
       let tasksForThisTopic = [];
       tasksForThisTopic = this.tasks.filter((task) => task.topicId == this.currentTopicId);
       // 7) get number of tasks (used to calc size of circle mask to block out map)
       this.numberOfTasksForThisTopic = tasksForThisTopic.length;
+      // 8) emit topic clicked
+      // this.$emit("topicClicked", { topicId: this.currentTopicId });
+
+      // 8b) emit topic clicked with tasks
+      // console.log("tasksForThisTopic", tasksForThisTopic);
+      this.$emit("topicClicked", {
+        ...this.nodesToDisplay.find((node) => node.id == this.currentTopicId),
+        tasks: tasksForThisTopic,
+      });
     },
     getClosestNodeToClick(clickData) {
       // get click location
@@ -714,7 +740,7 @@ export default {
     },
     async setupSolarSystemPlanets() {
       this.tasks = [];
-      if (!this.teacher) {
+      if (this.student) {
         this.tasks = this.personsCourseTasks;
       } else {
         this.tasks = this.courseTasks;
@@ -726,7 +752,7 @@ export default {
       //   return;
       // }
 
-      console.log("got tasks in GalaxyMap", this.tasks);
+      // give tasks to GalaxyView (courseTasks)
       this.$emit("courseTasks", this.tasks);
 
       // if our solar systems are loading, disable spinner
@@ -735,7 +761,7 @@ export default {
 
       // get node ids
       // TODO: This is triggering an error when first creating a galaxy
-        // Cannot read properties of undefined (reading 'nodes'
+      // Cannot read properties of undefined (reading 'nodes'
       const nodeIds = this.$refs.network.nodes.map(({ id }) => id);
       // get node xy positions
       const nodePositionMap = this.$refs.network.getPositions(nodeIds);

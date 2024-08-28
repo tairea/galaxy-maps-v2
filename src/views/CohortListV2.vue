@@ -1,5 +1,11 @@
 <template>
   <div class="main-wrap">
+    <LoadingSpinner
+      v-if="orderedCohorts.length == 0"
+      text="loading squads"
+      style="margin-left: -10%"
+    />
+
     <div class="side-col">
       <!-- COHORTS -->
       <!-- only if you made them (eg. are the teacher AKA in cohort.teachers[]) -->
@@ -112,7 +118,10 @@
                 <CreateEditDeleteCohortDialog />
               </div>
             </template>
-            <div class="create-tooltip">CREATE COHORT</div>
+            <div class="create-tooltip">
+              A Squad is a group of Navigators exploring Galaxy Maps.<br />Create a Squad to monitor
+              Navigator progress.
+            </div>
           </v-tooltip>
           <!-- PAY WALL VERSION Create Cohort Button -->
           <v-tooltip v-else bottom color="subBackground">
@@ -121,7 +130,7 @@
                 <!-- DISABLED -->
                 <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on" disabled>
                   <v-icon class="mb-1 mr-2">{{ mdiPlus }}</v-icon>
-                  create cohort
+                  CREATE SQUAD
                 </v-btn>
               </div>
             </template>
@@ -153,7 +162,7 @@
 
       <!-- NO COHORTS YET -->
       <div v-else class="no-cohort">
-        <p class="overline">you are not in any Squads yet</p>
+        <p class="overline">You haven't created any Squads yet</p>
         <!-- <p class="overline">start a galaxy to create a cohort</p> -->
 
         <!-- PAY WALL VERSION Create Cohort Button -->
@@ -211,6 +220,7 @@
 
 <script lang="js">
 // @ is an alias to /src
+import LoadingSpinner from "@/components/Reused/LoadingSpinner.vue";
 import CreateEditDeleteCohortDialog from "@/components/Dialogs/CreateEditDeleteCohortDialog.vue";
 import CreateEditDeleteOrganisationDialog from "@/components/Dialogs/CreateEditDeleteOrganisationDialog.vue";
 import CreateAdminDialog from "@/components/Dialogs/CreateAdminDialog.vue";
@@ -227,6 +237,7 @@ import { mapState } from "pinia";
 export default {
   name: "CohortListV2",
   components: {
+    LoadingSpinner,
     CreateEditDeleteCohortDialog,
     CreateEditDeleteOrganisationDialog,
     Cohort,
@@ -464,7 +475,8 @@ hr {
 }
 
 .create-tooltip {
-  color: var(--v-baseAccent-base);
+  color: var(--v-missionAccent-base);
+  text-align: center;
 }
 
 // ---- SCROLLBAR STYLES ----

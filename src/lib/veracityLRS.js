@@ -511,7 +511,13 @@ export const teacherReviewedStudentWorkXAPIStatement = (actor, taskId, context) 
             context.mission.title,
         },
         description: {
-          "en-nz": "Teacher marked work for Task: " + context.mission.title,
+          "en-nz":
+            "Teacher marked: " +
+            context.mission.title +
+            "for " +
+            context.student.firstName +
+            " " +
+            context.student.lastName,
         },
         extensions: {
           "https://www.galaxymaps.io/course/id/": context.galaxy.id,
@@ -698,7 +704,13 @@ export const teacherRespondedSubmissionDeclinedXAPIStatement = (actor, taskId, c
             context.mission.title,
         },
         description: {
-          "en-nz": "Work declined for Task: " + context.mission.title,
+          "en-nz":
+            "Work declined for: " +
+            context.mission.title +
+            "for: " +
+            context.student.firstName +
+            " " +
+            context.student.lastName,
         },
         extensions: {
           "https://www.galaxymaps.io/course/id/": context.galaxy.id,

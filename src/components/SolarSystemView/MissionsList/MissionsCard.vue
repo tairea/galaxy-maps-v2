@@ -92,7 +92,7 @@
               Estimated Duration:
             </p>
             <p class="text-center" :style="task.color ? 'color:' + task.color + ' !important' : ''">
-              {{ task.duration }}
+              {{ task.duration }} MINS
             </p>
           </div>
           <div class="section-overUnder d-flex justify-center flex-column" style="line-height: 2">
@@ -125,7 +125,9 @@
           :class="{
             'topic-in-review': inreview,
             'topic-completed': completed,
-            'topic-active': active || declined,
+            'topic-active declined': declined,
+            'topic-active': active,
+            'topic-unlocked': unlocked,
           }"
         >
           <p class="text-overline text-uppercase text-center">
@@ -157,7 +159,10 @@
           <div v-else-if="active" class="d-flex justify-center">
             <v-icon color="galaxyAccent" large>{{ mdiTarget }}</v-icon>
           </div>
-          <div v-else-if="declined || completed || inreview" class="d-flex justify-center">
+          <div v-else-if="declined" class="d-flex justify-center">
+            <v-icon color="cohortAccent" large>{{ mdiAlertOutline }}</v-icon>
+          </div>
+          <div v-else-if="completed || inreview" class="d-flex justify-center">
             <v-icon :color="completed || declined ? 'baseAccent' : 'cohortAccent'" large>{{
               mdiCheck
             }}</v-icon>
@@ -270,7 +275,7 @@ import StartMissionDialogV2 from "@/components/Dialogs/StartMissionDialogV2.vue"
 import ActiveMissionsCard from "@/components/SolarSystemView/MissionsList/MissionsCard/ActiveMissionsCard.vue";
 import SelectedMissionsCard from "@/components/SolarSystemView/MissionsList/MissionsCard/SelectedMissionsCard.vue";
 import useRootStore from "@/store/index";
-import { mdiCheck, mdiLockOutline, mdiTarget } from "@mdi/js";
+import { mdiCheck, mdiLockOutline, mdiTarget, mdiAlertOutline } from "@mdi/js";
 import { mapState } from "pinia";
 
 export default {
@@ -287,6 +292,7 @@ export default {
       mdiCheck,
       mdiLockOutline,
       mdiTarget,
+      mdiAlertOutline,
       editing: false,
       activeTask: false,
       panel: [],
@@ -427,6 +433,27 @@ p {
     }
   }
 
+  @keyframes borderAnimation {
+    0% {
+      // border-width: 1px;
+      opacity: 0.5;
+    }
+    50% {
+      // border-width: 5px;
+      opacity: 1;
+    }
+    100% {
+      // border-width: 1px;
+      opacity: 0.5;
+    }
+  }
+
+  .topic-unlocked {
+    border: 1px solid var(--v-galaxyAccent-base);
+    animation: borderAnimation 2s infinite;
+    color: var(--v-galaxyAccent-base);
+  }
+
   .topic-in-review {
     border: 1px solid var(--v-cohortAccent-base);
     color: var(--v-cohortAccent-base);
@@ -449,6 +476,10 @@ p {
     border-bottom: 3px solid var(--v-background-base);
     color: var(--v-galaxyAccent-base);
     // z-index: 101;
+  }
+
+  .declined {
+    color: var(--v-cohortAccent-base);
   }
 
   .mission-main-section {

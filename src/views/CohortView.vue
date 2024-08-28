@@ -1,8 +1,9 @@
 <template>
   <div id="container" class="bg">
+    <LoadingSpinner v-if="isLoadingCohort" text="loading squad" />
     <div id="left-section">
       <CohortInfo v-if="!isLoadingCohort && cohort" :cohort="cohort" />
-      <BackButton :toPath="'/cohorts'" />
+      <BackButton v-if="!isLoadingCohort" :toPath="'/cohorts'" />
       <AssignedInfo v-if="!isLoadingCohort && cohort" :cohort="cohort" assignCourses="true" />
     </div>
 
@@ -75,6 +76,7 @@
 </template>
 
 <script>
+import LoadingSpinner from "@/components/Reused/LoadingSpinner.vue";
 import CohortInfo from "@/components/CohortView/CohortInfo.vue";
 import AssignedInfo from "@/components/Reused/AssignedInfo.vue";
 import StudentDataIterator from "@/components/CohortView/StudentDataIterator.vue";
@@ -91,6 +93,7 @@ export default {
   name: "CohortView",
   props: ["cohortId"],
   components: {
+    LoadingSpinner,
     CohortInfo,
     AssignedInfo,
     BackButton,

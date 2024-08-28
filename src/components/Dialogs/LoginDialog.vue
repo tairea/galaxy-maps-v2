@@ -29,9 +29,10 @@
           Sign in
         </v-btn>
         to <br />
-        view this Galaxy Map
+        view this Solar System
       </p>
     </template>
+
     <div class="login">
       <EmailSignIn v-if="showEmailSignin" />
       <NewPassword
@@ -46,6 +47,7 @@
           continue to login
         </v-btn>
       </div>
+      <!-- SIGN IN FORM -->
       <div v-else id="galaxy-info">
         <h2 class="galaxy-label">LOGIN</h2>
         <!-- <h1 class="galaxy-title">Login</h1> -->

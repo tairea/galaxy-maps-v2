@@ -187,7 +187,7 @@
                     :loading="loading"
                   >
                     <v-icon left> {{ mdiCheck }} </v-icon>
-                    ASSIGN COHORT
+                    ASSIGN SQUAD
                   </v-btn>
 
                   <v-btn
@@ -211,11 +211,11 @@
             <!-- HEADER -->
             <div class="dialog-header">
               <p class="dialog-title">
-                Add another Galaxy Map to Cohort:
+                Add another Galaxy Map to Squad:
                 <span class="cohortAccent--text">{{ inThisCohort.name }}</span>
               </p>
               <div class="d-flex align-center">
-                <p class="dialog-description">Track this Cohort through another Galaxy Map</p>
+                <p class="dialog-description">Track this Squad through another Galaxy Map</p>
               </div>
             </div>
 
