@@ -11,6 +11,9 @@
     <div class="no-galaxy" v-if="isRestriced">
       <v-icon large color="missionAccent">{{ mdiAlertOutline }}</v-icon>
       <p class="overline missionAccent--text">INVALID OR RESTRICTED GALAXY</p>
+      <p class="caption missionAccent--text" style="opacity: 0.5">
+        Check you have the correct ID,<br />or you may need to be signed-in
+      </p>
       <BackButton :toPath="'/'" />
     </div>
 
@@ -18,7 +21,9 @@
       <!-- <div class="left-section" :class="{ hide: hideLeftPanelsFlag }"> -->
       <div class="left-section" data-v-step="1">
         <GalaxyInfo :course="boundCourse" :teacher="teacher" :draft="draft" />
-        <PublishGalaxy v-if="showPublish" :course="boundCourse" :courseTasks="courseTasks" />
+        <div class="mt-6">
+          <PublishGalaxy v-if="showPublish" :course="boundCourse" :courseTasks="courseTasks" />
+        </div>
         <BackButton :toPath="'/'" />
         <AssignedInfo
           v-if="!draft && cohortsInCourse.length && teacher"
