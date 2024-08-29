@@ -150,25 +150,25 @@ Galaxy Maps Team`;
 
 // ======COURSE SUBMISSION NOTIFICATION==================
 export const sendNewSubmissionEmailHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
-  const { author, title } = data;
-  sendNewSubmissionEmail(author, title);
+  const { author, title, id } = data;
+  sendNewSubmissionEmail(author, title, id);
 });
 
 /**
  * Sends a new submission notification email.
  */
-export async function sendNewSubmissionEmail(author: string, title: string) {
+export async function sendNewSubmissionEmail(author: string, title: string, id: string) {
   const mailOptions: Record<string, string> = {
     from: `${APP_NAME} <noreply@${DOMAIN}>`,
-    to: "[jamin.tairea@gmail.com, ian@tairea.io]", // TODO: this should be dynamic
+    to: "ian@tairea.io", // TODO: this should be dynamic
   };
 
   mailOptions.subject = "New Galaxy Submission";
-  mailOptions.text = `Hi Team, 
+  mailOptions.text = `Hi Admin, 
 
-${author} has submitted an new Galaxy Map called ${title}
+${author} has submitted a new Galaxy Map called ${title} to be reviewed for PUBLIC / all users to access
 
-Navigate to https://${DOMAIN} to approve this map submission
+Navigate to https://${DOMAIN}/galaxy/${id} from your ADMIN account to approve this map to be made public.
   
 Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);
@@ -191,7 +191,7 @@ export async function sendCourseCreatedEmail(
 ) {
   const mailOptions: Record<string, string> = {
     from: `${APP_NAME} <noreply@${DOMAIN}>`,
-    to: "[jamin.tairea@gmail.com, ian@tairea.io]",
+    to: "ian@tairea.io",
   };
 
   mailOptions.subject = "Galaxy Created";
@@ -223,7 +223,7 @@ export async function sendCoursePublishedEmail(email: string, name: string, cour
   mailOptions.subject = "Galaxy Published";
   mailOptions.text = `Greetings ${name}, 
 
-Your galaxy map ${course} has now been successfully published and default Squad has been created so you can monitor the progress of Navigators that explore this Galaxy.
+Your galaxy map ${course} has been successfully published and a default Squad has been created so you can monitor the progress of Navigators that explore this Galaxy.
 
 Go to https://${DOMAIN} to manage your Galaxy and the ${course} Squad.
   

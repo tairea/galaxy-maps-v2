@@ -214,8 +214,10 @@ export default {
     },
     courseStatus() {
       if (this.draft) return "Draft";
-      else if (this.course.status == "submitted") return "Submitted";
-      else if (!this.course.public) return "Private";
+      else if (this.course.status == "submitted") return "Submitted For Review";
+      else if (this.course.visibility == "private") return "Private";
+      else if (this.course.visibility == "unlisted") return "Unlisted";
+      else if (this.course.public == true) return "Public";
     },
   },
   watch: {
