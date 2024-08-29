@@ -28,6 +28,18 @@
         >Read more</a
       >
     </p>
+    <v-btn
+      v-if="teacher && course.visibility == 'unlisted'"
+      @click="copyLink"
+      color="baseAccent"
+      outlined
+      small
+      style="width: 100%"
+      class="mb-2"
+    >
+      <v-icon left> {{ mdiLink }} </v-icon>
+      Copy link
+    </v-btn>
     <CreateEditDeleteGalaxyDialog v-if="teacher" :edit="true" :courseToEdit="course" />
   </div>
 </template>
@@ -35,7 +47,8 @@
 <script>
 import CreateEditDeleteGalaxyDialog from "@/components/Dialogs/CreateEditDeleteGalaxyDialog.vue";
 import useRootStore from "@/store/index";
-import { mapState } from "pinia";
+import { mapActions, mapState } from "pinia";
+import { mdiLink } from "@mdi/js";
 
 export default {
   name: "GalaxyInfo",
@@ -46,6 +59,7 @@ export default {
   mounted() {},
   data() {
     return {
+      mdiLink,
       readmore: false,
     };
   },
@@ -59,6 +73,7 @@ export default {
   },
 
   methods: {
+    ...mapActions(useRootStore, ["setSnackbar"]),
     maybeTruncate(value) {
       if (!value) return "";
       if (value.length <= 100) {
@@ -72,6 +87,26 @@ export default {
     },
     showFullDescription() {
       this.$refs.description.innerHTML = this.course.description;
+    },
+    copyLink() {
+      const currentUrl = this.$router.currentRoute.fullPath;
+      navigator.clipboard
+        // .writeText(window.location.origin + currentUrl)
+        .writeText("https://galaxymaps.io" + currentUrl)
+        .then(() => {
+          this.setSnackbar({
+            show: true,
+            text: "Map link copied to clipboard",
+            color: "baseAccent",
+          });
+        })
+        .catch((err) => {
+          this.setSnackbar({
+            show: true,
+            text: err.message,
+            color: "pink",
+          });
+        });
     },
   },
 };

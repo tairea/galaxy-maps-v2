@@ -797,6 +797,7 @@ export default {
       } else {
         delta = (this.time.getTime() - oldTime.getTime()) / 1000;
       }
+
       // update planets orbits
       for (const planet of this.planets) {
         //TODO: does this ternary slow things down

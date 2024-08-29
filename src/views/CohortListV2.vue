@@ -507,7 +507,7 @@ hr {
 
 .cohort-panel {
   //width: calc(50% - 40px); // two panels per row
-  width: 100%; // two panels per row
+  width: 100%; // one panel per row
 }
 
 .no-cohort {
