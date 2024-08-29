@@ -170,12 +170,32 @@
 
             <!-- RIGHT SIDE -->
             <div class="right-side" :style="course.title ? 'width:50%' : 'width:0%'">
+              <!-- Galaxy info panel -->
               <div id="galaxy-info" v-if="course.title" class="mb-2">
                 <h2 class="galaxy-label">Galaxy</h2>
                 <h1 class="galaxy-title">{{ course.title }}</h1>
+                <!-- Status -->
+                <p class="galaxy-status overline mb-0">
+                  Status: <span class="font-weight-black">{{ course.status }}</span>
+                </p>
+                <!-- Visibility -->
+                <p
+                  v-if="course.status === 'submitted'"
+                  class="galaxy-status overline mb-0 in-review"
+                >
+                  awaiting review
+                </p>
+                <p class="galaxy-status overline mb-0">
+                  Visibility:
+                  <span class="font-weight-black">{{ courseToEdit.visibility }}</span>
+                </p>
+                <p v-if="course.presentationOnly" class="galaxy-status overline mb-0">
+                  <span class="font-weight-black baseAccent--text">Presentation Map</span>
+                </p>
                 <v-img v-if="course.image.url" :src="course.image.url" width="100%"></v-img>
                 <p class="galaxy-description">{{ course.description }}</p>
               </div>
+
               <v-select
                 v-if="edit"
                 class="input-field mt-4"
@@ -183,20 +203,40 @@
                 :dark="dark"
                 :light="!dark"
                 color="missionAccent"
-                v-model="course.public"
+                v-model="course.visibility"
                 :items="[
-                  { text: 'Public', value: true },
-                  { text: 'Private', value: false },
+                  { text: 'Private (only people added can see)', value: 'private' },
+                  { text: 'Unlisted (publicly available, but hidden)', value: 'unlisted' },
+                  // presentations can only be private or unlisted. not public as they are not proper maps navigators can progress through
+                  ...(course.presentationOnly == false || course.presentationOnly == null
+                    ? [{ text: 'Public (all users can see)', value: 'public' }]
+                    : []),
                 ]"
-                label="Galaxy Access"
+                label="Galaxy Visibility"
+                style="width: calc(100% - 25px)"
               >
               </v-select>
             </div>
+
             <!-- End of right-side -->
             <!-- ACTION BUTTONS -->
             <div class="action-buttons">
+              <!-- PUBLISH -->
+              <!-- <div
+                style="width: 200px"
+                v-if="edit && courseToEdit.visibility != 'public' && course.visibility == 'public'"
+              > -->
+              <PublishGalaxy
+                v-if="edit && courseToEdit.visibility != 'public' && course.visibility == 'public'"
+                :course="course"
+                :courseTasks="courseTasks"
+                :publicOnly="true"
+              />
+              <!-- </div> -->
+
+              <!-- UPDATE -->
               <v-btn
-                v-if="edit"
+                v-else-if="edit"
                 outlined
                 color="baseAccent"
                 @click="updateCourse(course)"
@@ -209,6 +249,8 @@
                 <v-icon left> {{ mdiCheck }} </v-icon>
                 UPDATE
               </v-btn>
+
+              <!-- CREATE -->
               <v-btn
                 v-else
                 outlined
@@ -397,9 +439,12 @@ import { mdiPencil, mdiPlus, mdiClose, mdiCheck, mdiDelete, mdiInformationVarian
 import firebase from "firebase/compat/app";
 import clone from "lodash/clone";
 import { mapActions, mapState } from "pinia";
+import { DocumentReference } from "firebase/firestore";
+import PublishGalaxy from "@/components/GalaxyView/PublishGalaxy.vue";
 
 export default {
   name: "CreateEditDeleteGalaxyDialog",
+  components: { PublishGalaxy },
   props: ["showDialog", "edit", "draft", "courseToEdit"],
   data: () => ({
     mdiPencil,
@@ -448,28 +493,28 @@ export default {
     deleting: false,
   }),
   computed: {
-    ...mapState(useRootStore, ["person", "peopleInCourse", "currentCourseId"]),
+    ...mapState(useRootStore, ["person", "peopleInCourse", "currentCourseId", "courseTasks"]),
 
     dark() {
       return this.$vuetify.theme.isDark;
     },
   },
   watch: {
-    courseToEdit(newVal) {
-      console.log("new course");
-      if (this.currentCourseId !== newVal.id) {
-        Object.assign(this.course, this.courseToEdit);
-      }
+    courseToEdit: {
+      immediate: true,
+      handler(newVal) {
+        if (newVal) {
+          this.course = { ...newVal };
+        }
+      },
     },
     showDialog(newVal) {
-      if (newVal) this.dialog = true;
-      else this.dialog = false;
+      this.dialog = newVal;
     },
   },
   mounted() {
     if (this.courseToEdit) {
-      console.log("cloning");
-      this.course = clone(this.courseToEdit);
+      this.course = { ...this.courseToEdit };
     }
   },
   methods: {
@@ -587,8 +632,32 @@ export default {
       if (course.public !== this.courseToEdit.public) {
         course.status = "drafting";
       }
+
+      // changing from public to private/unlisted (no longer visible to all)
+      if (this.courseToEdit.public == true && course.visibility != "public") {
+        course.public = false;
+      }
+
       console.log("course.status", course.status);
-      await db.collection("courses").doc(course.id).update(course);
+
+      // make ower a reference to the person (because owner is bound it is an object when it needs to be a Firestore DocumentReference)
+      // Retrieve the course document
+      const courseDoc = await db.collection("courses").doc(course.id).get();
+      const courseDocData = courseDoc.data();
+      const ownerRefString = courseDocData.owner.path;
+
+      // Ensure the owner field is a DocumentReference
+      const ownerRef =
+        courseDocData.owner instanceof DocumentReference
+          ? courseDocData.owner
+          : db.doc(ownerRefString);
+
+      const courseData = {
+        ...course,
+        owner: ownerRef,
+      };
+
+      await db.collection("courses").doc(course.id).update(courseData);
 
       this.setSnackbar({
         show: true,
@@ -924,5 +993,14 @@ export default {
 
 .v-btn:not(.v-btn--round).v-size--default {
   background-color: var(--v-background-base) !important;
+}
+
+.galaxy-status {
+  font-size: 0.6rem !important;
+  line-height: 1rem !important;
+  color: var(--v-galaxyAccent-base);
+}
+.in-review {
+  color: var(--v-cohortAccent-base);
 }
 </style>

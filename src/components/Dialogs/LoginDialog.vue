@@ -314,6 +314,8 @@ export default {
         throw new Error("Please check your emails to verify your account");
       } else {
         this.dialog = false;
+        console.log("logged in... now reload page");
+        window.location.reload(); // Reload the page
       }
     },
     validate() {
