@@ -308,7 +308,7 @@ export const getCoursesHttpsEndpoint = runWith({}).https.onCall(async (data, con
     .collection("courses")
     .where(
       Filter.and(
-        Filter.where("public", "==", true),
+        Filter.or(Filter.where("public", "==", true), Filter.where("visibility", "==", "public")),
         Filter.where("status", "==", "published"),
         ...(ownerRef != null ? [Filter.where("owner", "==", ownerRef)] : []),
       ),
