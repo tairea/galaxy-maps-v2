@@ -365,14 +365,15 @@ export default {
 
       // If we dont already have the students Id, check if they already have an account using their email
       const personExists = await fetchPersonByEmail(profile.email);
+      const inviter = this.person.firstName + " " + this.person.lastName;
       if (personExists) {
+        personExists.inviter = inviter
         await this.handleAssignment(personExists, this.currentCourse);
       } else {
         //create the persons account
-        profile.inviter = this.person.firstName + " " + this.person.lastName;
+        profile.inviter = inviter
 
         const person = await createPerson(profile);
-        person.inviter = profile.inviter
         await this.handleAssignment(person, this.currentCourse);
       }
     },
