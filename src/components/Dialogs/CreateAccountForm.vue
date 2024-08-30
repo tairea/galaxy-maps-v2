@@ -201,12 +201,13 @@ export default {
       this.$refs.form.validate();
       if (!this.account.email) return;
       this.addingAccount = true;
-      const personExists = await fetchPersonByEmail(this.account.email);
-      console.log("person exists:", personExists);
-      if (personExists) {
+      const studentExists = await fetchPersonByEmail(this.account.email);
+      console.log("person exists:", studentExists);
+      if (studentExists) {
         const profile = {
           ...this.account,
-          ...personExists,
+          ...studentExists,
+          inviter: this.person.firstName + " " + this.person.lastName
         };
         // if teacher, emit teacher?
         if (this.teacher) {
@@ -221,7 +222,12 @@ export default {
             if (this.cohort.courses.length) {
               await this.assignStudentToCourses(profile); // adds course to /people/:id/assignedCourses
             }
-
+            this.setSnackbar({
+              show: true,
+              text: "Student successfully added to Squad",
+              color: "baseAccent",
+            });
+            this.sendNewCohortEmail(profile)
             this.addingAccount = false;
             this.close();
           } catch (error) {
@@ -250,7 +256,7 @@ export default {
               color: "baseAccent",
             });
             if (this.cohort.courses.length) {
-              await this.assignStudentToCourses(person);
+              await this.assignStudentToCourses(person); // adds course to /people/:id/assignedCourses
             }
           } else {
             this.setSnackbar({
@@ -258,9 +264,9 @@ export default {
               text: "Teacher added to Galaxy Map",
               color: "baseAccent",
             });
-            this.addingAccount = false;
-            this.close();
           }
+          this.addingAccount = false;
+          this.close();
         } catch (error) {
           console.error(error);
         }
@@ -270,6 +276,14 @@ export default {
       for (const courseId of this.cohort.courses) {
         await assignCourseToPerson(person.id, courseId);
       }
+    },
+    sendNewCohortEmail(profile) {
+      const person = {
+        ...profile,
+        cohort: this.cohort.name
+      };
+      const sendNewCohortEmail = functions.httpsCallable("sendNewCohortEmail");
+      return sendNewCohortEmail(person);
     },
   },
 };

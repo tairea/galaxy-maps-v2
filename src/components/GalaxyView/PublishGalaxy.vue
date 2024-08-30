@@ -226,9 +226,9 @@
             ></v-radio>
           </v-radio-group>
         </div> -->
-        <p class="caption ma-0 cohortAccent--text overline" v-if="visibility == 'public' && !admin">
+        <p class="caption ma-0 cohortAccent--text" v-if="visibility == 'public' && !admin">
           <i
-            >(Public Galaxy Maps are visible by all users, so need to be submitted for review by
+            >(Public Galaxy Maps are visible by all users, so they need to be submitted for review by
             Galaxy Map moderators. This is usually done within 48 hours.)</i
           >
         </p>
