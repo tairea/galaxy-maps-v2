@@ -37,7 +37,7 @@ export async function sendTeacherInviteEmail(email: string, displayName: string,
   };
 
   mailOptions.subject = `Account created for ${APP_NAME}!`;
-  mailOptions.text = `Hi ${displayName || ""}
+  mailOptions.text = `Greetings ${displayName || ""}
 
 Your Captain account has been created for ${APP_NAME}. 
 Please click this link to sign into your account and setup your profile
@@ -66,7 +66,7 @@ export async function sendStudentInviteEmail(
   };
 
   mailOptions.subject = `Account created for ${APP_NAME}!`;
-  mailOptions.text = `Hi ${displayName || ""}
+  mailOptions.text = `Greetings ${displayName || ""}
 
 Captain ${inviter}, has created you an account for ${APP_NAME}. 
 
@@ -103,9 +103,9 @@ export async function sendNewCohortEmail(
   };
 
   mailOptions.subject = "New cohort registration";
-  mailOptions.text = `Hi ${displayName || firstName || ""}
+  mailOptions.text = `Greetings Navigator ${displayName || firstName || ""}
 
-You have been added to squad: ${cohort} ${inviter ? "by " + inviter : ""} 
+Captain ${inviter || ""} has assigned you to squad: ${cohort}.
 
 Sign into your Galaxy Maps account to view your new squad.
 
@@ -135,7 +135,7 @@ export async function sendNewGalaxyEmail(email: string, inviter: string, course:
   mailOptions.subject = "New Galaxy Assignment";
   mailOptions.text = `Greetings Navigator
 
-You have been assigned to the ${course} Galaxy Map${inviter ? " by " + inviter + "." : "."} 
+Captain ${inviter || ""} has assigned you to Galaxy Map: ${course}.
 
 Sign into your Galaxy Maps account to start exploring this new galaxy.
 
@@ -164,7 +164,7 @@ export async function sendNewSubmissionEmail(author: string, title: string, id: 
   };
 
   mailOptions.subject = "New Galaxy Submission";
-  mailOptions.text = `Hi Admin, 
+  mailOptions.text = `Greetings Admin, 
 
 ${author} has submitted a new Galaxy Map called ${title} to be reviewed for PUBLIC / all users to access
 
@@ -221,7 +221,7 @@ export async function sendCoursePublishedEmail(email: string, name: string, cour
   };
 
   mailOptions.subject = "Galaxy Published";
-  mailOptions.text = `Greetings ${name}, 
+  mailOptions.text = `Greetings Captain ${name}, 
 
 Your galaxy map ${course} has been successfully published and a default Squad has been created so you can monitor the progress of Navigators that explore this Galaxy.
 
@@ -271,7 +271,7 @@ To respond to ${student}, please login to https://${DOMAIN}/dasboard to view you
   
 Galaxy Maps Team`;
 
-  mailOptions.html = `<p>Hi ${teacher},</p>
+  mailOptions.html = `<p>Greetings ${teacher},</p>
   </br> 
 <p>Your student ${student} has sent a request for help.</p>
 </br> 
@@ -318,7 +318,7 @@ export async function sendResponseToHelp(
 
   /* eslint-disable max-len */
   mailOptions.subject = `${course} Response to your request`;
-  mailOptions.text = `Greetings, ${student}, 
+  mailOptions.text = `Greetings Navigator ${student}, 
 
 Captain ${teacher} has replied to your request for help.
 
@@ -334,7 +334,7 @@ Login to https://${DOMAIN} to continue your missions.
   
 Galaxy Maps Team`;
 
-  mailOptions.html = `<p>Greetings, ${student},</p>
+  mailOptions.html = `<p>Greetings Navigator ${student},</p>
   </br> 
 <p>Captain ${teacher} has replied to your request for help.</p>
 </br> 
@@ -393,7 +393,7 @@ export async function sendTaskSubmission(
 
   /* eslint-disable max-len */
   mailOptions.subject = `${task} work submission`;
-  mailOptions.text = `Greetings, ${teacher}, 
+  mailOptions.text = `Greetings Captain ${teacher}, 
 
 Navigator, ${student} has submitted work for your review.
 
@@ -410,7 +410,7 @@ please login to https://${DOMAIN}/dashboard to respond to their submission
   
 Galaxy Maps Team`;
 
-  mailOptions.html = `<p>Greetings, ${teacher},</p>
+  mailOptions.html = `<p>Greetings Captain ${teacher},</p>
   </br> 
 <p>Navigator ${student} has submitted work for your review.</p>
 </br> 
@@ -472,7 +472,7 @@ export async function sendResponseToSubmission(
 
   /* eslint-disable max-len */
   mailOptions.subject = `Mission ${task} ${outcome}`;
-  mailOptions.text = `Greetings ${student}, 
+  mailOptions.text = `Greetings Navigator ${student}, 
 
 Captain ${teacher} has reviewed your submission to ${task}.
 
@@ -490,7 +490,7 @@ Login to https://${DOMAIN} to continue your mission.
   
 Galaxy Maps Team`;
 
-  mailOptions.html = `<p><strong>Hi ${student},</strong></p>
+  mailOptions.html = `<p><strong>Greetings Navigator ${student},</strong></p>
 <p>Captain ${teacher} has reviewed your submission to ${task}.</p>
 </br> 
 <ul>
@@ -528,7 +528,7 @@ export async function sendStudentInActive(student: string, studentEmail: string,
   // The user subscribed to the newsletter.
   /* eslint-disable max-len */
   mailOptions.subject = "Student Activity Alert";
-  mailOptions.text = `Greetings, ${student}, 
+  mailOptions.text = `Greetings Navigator ${student}, 
 
 It has been ${duration} since you last signed into Galaxy Maps. 
 
@@ -536,7 +536,7 @@ Sign in to https://${DOMAIN} now to continue your learning journey.
   
 Galaxy Maps Team`;
 
-  mailOptions.html = `<p><strong>Greetings, ${student},</strong></p>
+  mailOptions.html = `<p><strong>Greetings Navigator ${student},</strong></p>
 </br>
 <p>It has been <strong>${duration}</strong> since you last signed into Galaxy Maps.</p>
 </br> 
@@ -569,7 +569,7 @@ export async function sendTeacherStudentInActive(
 
   /* eslint-disable max-len */
   mailOptions.subject = "Student Activity Alert";
-  mailOptions.text = `Greetings, ${teacher}, 
+  mailOptions.text = `Greetings Captain ${teacher}, 
   
 It has been ${duration} since Navigator: ${student} from Squad: ${cohort} last signed into Galaxy Maps. 
 
@@ -577,7 +577,7 @@ We recommend checking in on them via email ${studentEmail} to encourage and supp
   
 Galaxy Maps Team`;
 
-  mailOptions.html = `<p><strong>Greetings, ${teacher},</strong></p>
+  mailOptions.html = `<p><strong>Greetings Captain ${teacher},</strong></p>
   </br>
   <p>It has been <strong>${duration}</strong> since Navigator: <strong>${student}</strong> from Squad: <strong>${cohort}</strong> last signed into Galaxy Maps.</p>
   </br> 
@@ -615,7 +615,7 @@ export async function sendCourseDeleted(
 
   /* eslint-disable max-len */
   mailOptions.subject = "Galaxy Deleted";
-  mailOptions.text = `Greetings, ${student || ""}, 
+  mailOptions.text = `Greetings Navigator ${student || ""}, 
 
 Captain ${teacher} has deleted the Galaxy ${course}.
 
@@ -623,7 +623,7 @@ If you have any questions or concerns about this please contact the Captain by e
 
 Galaxy Maps Team`;
 
-  mailOptions.html = `<p><strong>Greetings, ${student},</strong></p>
+  mailOptions.html = `<p><strong>Greetings ${student},</strong></p>
   </br>
 <p>Captain ${teacher} has deleted the Galaxy ${course}.</p>
 </br> 
