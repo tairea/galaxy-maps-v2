@@ -90,8 +90,7 @@
       <div class="create-dialog-content">
         <div>
           <p class="caption my-2 mb-6">
-            An Introduction node is a starting node that is unlocked when the map is started for the
-            first time.
+            An Introduction node is the starting node of the map. It is where Navigators will begin.
           </p>
 
           <p class="caption my-2">Please select at least one starting node:</p>
@@ -185,6 +184,7 @@
 
           <v-radio-group v-model="visibility" color="missionAccent" :light="!dark" :dark="dark">
             <v-radio
+              v-if="!publicOnly"
               label="private (invite only)"
               value="private"
               color="missionAccent"
@@ -192,6 +192,7 @@
             ></v-radio>
 
             <v-radio
+              v-if="!publicOnly"
               label="unlisted (public, but unlisted)"
               value="unlisted"
               color="missionAccent"
@@ -225,10 +226,10 @@
             ></v-radio>
           </v-radio-group>
         </div> -->
-        <p class="caption ma-0" v-if="visibility == 'public' && !admin">
+        <p class="caption ma-0 cohortAccent--text overline" v-if="visibility == 'public' && !admin">
           <i
             >(Public Galaxy Maps are visible by all users, so need to be submitted for review by
-            Galaxy Map moderators. This will usually be done within 48 hours.)</i
+            Galaxy Map moderators. This is usually done within 48 hours.)</i
           >
         </p>
       </div>
@@ -275,7 +276,7 @@
           :loading="loading"
         >
           <v-icon left> {{ mdiSend }} </v-icon>
-          SUBMIT
+          SUBMIT FOR REVIEW
         </v-btn>
 
         <v-btn v-else outlined color="baseAccent" @click="publishCourse()" :loading="loading">
@@ -301,6 +302,7 @@
 <script>
 import { fetchPersonByPersonId } from "@/lib/ff";
 import { db, functions } from "@/store/firestoreConfig";
+import { DocumentReference } from "firebase/firestore"; // Adjust the import according to your project structure
 import useRootStore from "@/store/index";
 import {
   mdiAlertOutline,
@@ -314,7 +316,7 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "PublishGalaxy",
-  props: ["course", "courseTasks"],
+  props: ["course", "courseTasks", "publicOnly"],
   async mounted() {},
   data: () => ({
     mdiAlertOutline,
@@ -373,6 +375,11 @@ export default {
       if (this.hasIntro == false) {
         this.sortNodes();
       }
+
+      // if publicOnly, select public by default
+      if (this.publicOnly) {
+        this.visibility = "public";
+      }
     },
     close() {
       this.dialog = false;
@@ -406,21 +413,12 @@ export default {
         };
       }
 
-      let cohort = {
-        name: course.title + " Squad",
-        description: "This is the default Squad for " + course.title,
-        organisation: "",
-        students: [],
-        courses: [course.id],
-        image: {
-          name: course.image?.name,
-          url: course.image?.url,
-        },
-        teachers: [course.mappedBy.personId],
-        courseCohort: true,
-      };
-
       course.status = "published";
+
+      // if admin is publishing, set course.public to true (this make the course public to all users)
+      if (this.admin && course.visibility == "public") {
+        course.public = true;
+      }
 
       // if presentationOnly is true, set course.presentationOnly to true
       if (this.presentationOnly) {
@@ -430,38 +428,55 @@ export default {
       // if no cohort, create a default cohort (and "presentation" maps should not have cohorts)
       if (!course.cohort && !this.presentationOnly) {
         // this creates a default cohort and sends an email to publisher
+        let cohort = {
+          name: course.title + " Squad",
+          description: "This is the default Squad for " + course.title,
+          organisation: "",
+          students: [],
+          courses: [course.id],
+          image: {
+            name: course.image?.name,
+            url: course.image?.url,
+          },
+          teachers: [course.mappedBy.personId],
+          courseCohort: true,
+        };
         const cohortId = await this.saveCohort(cohort);
         course.cohort = cohortId;
-        await this.updateCourse(course);
+        await this.updateCourse(course, "published");
         this.setCurrentCourseId(course.id);
         this.close();
       } else {
-        await this.updateCourse(course);
+        await this.updateCourse(course, "published");
         this.setCurrentCourseId(course.id);
         this.close();
       }
     },
 
-    async updateCourse(course) {
-      // need to get course.owner again (because boundCourse doesnt have the owner as a DocumentReference)
+    async updateCourse(course, context) {
+      // Retrieve the course document
       const courseDoc = await db.collection("courses").doc(course.id).get();
       const courseDocData = courseDoc.data();
 
-      // console.log("Argument to Firestore.doc:", courseDocData.owner);
-      // console.log("Type of argument:", typeof courseDocData.owner);
-      // console.log("Is it course a reference:", courseDocData.owner instanceof DocumentReference);
+      const ownerRefString = courseDocData.owner.path;
+
+      // Ensure the owner field is a DocumentReference
+      const ownerRef =
+        courseDocData.owner instanceof DocumentReference
+          ? courseDocData.owner
+          : db.doc(ownerRefString);
 
       const courseData = {
         ...course,
-        owner: courseDocData.owner,
-        // owner: course.owner instanceof DocumentReference ? course.owner : db.doc(course.owner),   // doesnt work anymore because boundCourse.owner is an object
+        owner: ownerRef,
       };
+
       await db.collection("courses").doc(course.id).update(courseData);
       console.log("Document successfully updated!");
       this.setCurrentCourseId(course.id);
       this.setSnackbar({
         show: true,
-        text: "Galaxy successfully updated",
+        text: "Galaxy successfully " + (context ? context : "updated"),
         color: "baseAccent",
       });
     },
@@ -481,7 +496,7 @@ export default {
         person.inviter = "Galaxy Maps Admin";
         await this.sendCoursePublishedEmail(person, this.course);
       } else {
-        await this.sendCoursePublishedEmail(this.person, cohort);
+        await this.sendCoursePublishedEmail(this.person, this.course);
       }
       return cohortDocRef.id;
     },
@@ -499,6 +514,7 @@ export default {
       let data = {
         author: course.mappedBy.name,
         title: course.title,
+        id: course.id,
       };
       const sendNewSubmissionEmail = functions.httpsCallable("sendNewSubmissionEmail");
       return sendNewSubmissionEmail(data);
@@ -677,9 +693,9 @@ export default {
 }
 
 .publishButton {
-  width: 100%;
+  // width: 100%;
   z-index: 3;
-  margin-top: 20px;
+  // margin-top: 20px;
 }
 
 .label-text::v-deep label {
