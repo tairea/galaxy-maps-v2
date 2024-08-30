@@ -372,11 +372,13 @@ export default {
         profile.inviter = this.person.firstName + " " + this.person.lastName;
 
         const person = await createPerson(profile);
+        person.inviter = profile.inviter
         await this.handleAssignment(person, this.currentCourse);
       }
     },
 
     async handleAssignment(person, course) {
+      console.log({ person })
       try {
         await assignCourseToPerson(person.id, course.id);
         await addPersonToCohort(person.id, this.cohort.id);
@@ -391,10 +393,10 @@ export default {
 
         this.setSnackbar({
           show: true,
-          text: `${person.firstName || $person.email} assigned to ${course.title} Galaxy`,
+          text: `${person.firstName || person.email} assigned to ${course.title} Galaxy`,
           color: "baseAccent",
         });
-        this.sendNewGalaxyEmail(person)
+        this.sendNewGalaxyEmail(person, course)
         this.$emit("newAssignment", person);
         this.close();
       } catch (error) {
@@ -402,16 +404,16 @@ export default {
         // snackbar message
         this.setSnackbar({
           show: true,
-          text: error,
+          text: error.split('FirebaseError: ')[1],
           color: "pink",
         });
         this.close();
       }
     },
-    sendNewGalaxyEmail(profile) {
+    sendNewGalaxyEmail(profile, course) {
       const person = {
         ...profile,
-        cohort: this.cohort.name,
+        course: course.title,
         inviter: profile.inviter || "Galaxy Maps Admin",
       };
       const sendNewGalaxyEmail = functions.httpsCallable("sendNewGalaxyEmail");
