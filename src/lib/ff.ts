@@ -384,7 +384,9 @@ export const createPerson = async (profile: Record<string, any>): Promise<IPerso
   };
   const createNewUser = functions.httpsCallable("createNewUser");
   const result = await createNewUser(data);
-  return result.data.person;
+  const person = result.data.person
+  if (profile.inviter) person.inviter = profile.inviter
+  return person
 };
 
 export const updatePerson = async (personId: string, person: object): Promise<IPerson> => {
