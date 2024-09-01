@@ -83,6 +83,7 @@
       :dialog="confirmDialog"
       :student="exStudent"
       @cancel="cancelDeleteDialog"
+      @close="closeDeleteDialog"
     />
     <EditStudentDialog
       v-if="editDialog"
@@ -137,6 +138,11 @@ export default {
     close() {
       this.refreshCohort();
       this.dialog = false;
+    },
+    closeDeleteDialog() {
+      this.confirmDialog = false;
+      this.exStudent = {};
+      this.refreshCohort();
     },
     removeStudent(student) {
       this.confirmDialog = true;

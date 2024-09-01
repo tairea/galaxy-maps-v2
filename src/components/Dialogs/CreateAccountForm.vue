@@ -96,7 +96,7 @@
         :dark="dark"
         :light="!dark"
       >
-        Create
+        add
       </v-btn>
       <v-btn
         :disabled="addingAccount"
@@ -122,7 +122,7 @@ import {
   addPersonToCohort,
   assignCourseToPerson,
 } from "@/lib/ff";
-import { db } from "@/store/firestoreConfig";
+import { db, functions } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
 
@@ -173,6 +173,10 @@ export default {
   methods: {
     ...mapActions(useRootStore, ["setSnackbar"]),
     close() {
+      this.clearForm()
+      this.$emit("close");
+    },
+    clearForm () {
       this.account = {
         firstName: "",
         lastName: "",
@@ -182,7 +186,6 @@ export default {
         inviter: "",
         parentEmail: "",
       };
-      this.$emit("close");
     },
     async update() {
       let obj = Object.fromEntries(Object.entries(this.account).filter(([_, v]) => v.length));
@@ -232,7 +235,7 @@ export default {
             this.close();
           } catch (error) {
             this.addingAccount = false;
-            console.error("something went wrong adding existing person: ", err);
+            console.error("something went wrong adding existing person: ", error);
           }
         }
       } else {

@@ -1,7 +1,7 @@
 <template>
   <div id="container" class="bg">
     <!-- Loading -->
-    <LoadingSpinner v-if="!boundCourse.status" text="loading galaxy map" />
+    <LoadingSpinner v-if="!boundCourse?.status" text="loading galaxy map" />
 
     <!-- dont show galaxy if...
     
@@ -101,6 +101,7 @@
       :editing="editing"
       :course="boundCourse"
       :currentNode="currentNode"
+      :students="peopleInCourse"
       @closeDialog="closeDialog"
       @openDialog="openDialog"
     />
@@ -215,8 +216,8 @@ export default {
       coords: {},
       changeInPositions: false,
       nodePositionsChangeLoading: false,
-      fromCreate: this.$route.params.fromCreate,
-      courseTitle: this.$route.params.courseTitle,
+      // fromCreate: this.$route.params.fromCreate,
+      // courseTitle: this.$route.params.courseTitle,
       infoPopupShow: false,
       infoPopupPosition: {},
       centerFocusPosition: false,
@@ -250,7 +251,7 @@ export default {
       // this.course = await fetchCourseByCourseId(this.courseId);
       this.setCurrentCourseId(newCourseId);
     },
-    async course(newVal, oldVal) {
+    async boundCourse(newVal, oldVal) {
       this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
     },
   },
@@ -325,6 +326,7 @@ export default {
       if (this.teacher || this.student) {
         return false;
       }
+      if (!this.boundCourse) return false
       // public and published is allowed
       else if (
         (this.boundCourse.visibility == "public" || this.boundCourse.public == true) &&

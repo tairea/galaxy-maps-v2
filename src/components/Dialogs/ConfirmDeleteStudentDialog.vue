@@ -77,7 +77,7 @@ export default {
         text: "Student removed from Cohort",
         color: "baseAccent",
       });
-      this.$emit("cancel");
+      this.$emit("close");
     },
     async deleteAssignedCourse(studentId) {
       const studentRef = doc(db, "people", studentId);

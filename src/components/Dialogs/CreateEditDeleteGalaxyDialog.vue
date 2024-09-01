@@ -185,7 +185,7 @@
                 >
                   awaiting review
                 </p>
-                <p class="galaxy-status overline mb-0">
+                <p v-if="courseToEdit" class="galaxy-status overline mb-0">
                   Visibility:
                   <span class="font-weight-black">{{ courseToEdit.visibility }}</span>
                 </p>

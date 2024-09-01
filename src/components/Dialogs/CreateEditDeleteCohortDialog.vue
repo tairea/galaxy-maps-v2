@@ -344,7 +344,7 @@ import Organisation from "@/components/Reused/Organisation.vue";
 import CreateAccountDialog from "@/components/Dialogs/CreateAccountDialog.vue";
 import { db, storage, functions } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
-import firebase from "firebase/compat/app";
+import useCohortViewStore from "@/store/cohortView";
 
 import { mdiPencil, mdiPlus, mdiClose, mdiCheck, mdiDelete, mdiInformationVariant } from "@mdi/js";
 
@@ -438,6 +438,7 @@ export default {
 
   methods: {
     ...mapActions(useRootStore, ["bindAllPeople"]),
+    ...mapActions(useCohortViewStore, ["loadCohort"]),
     toggleTeacherDialog() {
       this.teacherDialog = !this.teacherDialog;
     },
@@ -487,7 +488,6 @@ export default {
         }
       }
     },
-
     sendNewCohortEmail(profile) {
       const person = {
         ...profile,
@@ -583,7 +583,7 @@ export default {
         });
     },
     updateCohort(cohort) {
-      console.log("update cohort");
+      console.log("update cohort: ", cohort);
       this.loading = true;
 
       // update document in collection "courses"
@@ -592,6 +592,7 @@ export default {
         .update(cohort)
         .then(() => {
           console.log("Document successfully updated!");
+          this.loadCohort(cohort.id)
           this.close();
         })
         .catch((error) => {
