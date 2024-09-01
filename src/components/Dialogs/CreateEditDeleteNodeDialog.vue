@@ -298,6 +298,7 @@ export default {
     "editing",
     "currentNode",
     "currentEdge",
+    "students"
   ],
   async mounted() {
     // this.sortedObjArr = arr.sort((a, b) =>
@@ -520,20 +521,15 @@ export default {
       this.infoPopupShow = false;
     },
     async saveTopicToStudents(node) {
-      // get all students currently assigned to course
-      const allStudents = await db
-        .collection("people")
-        .where("assignedCourses", "array-contains", this.course.id)
-        .get();
-
       // if no students, return
-      if (allStudents.empty) {
+      if (this.students.empty) {
+        console.log('no students in this galaxy')
         return;
       }
 
       // for each student
-      for (const doc of allStudents) {
-        const personId = doc.id;
+      for (const student of this.students) {
+        const personId = student.id;
 
         // set reference to this course
         const courseRef = db.collection("people").doc(personId).collection(this.course.id);
@@ -572,20 +568,15 @@ export default {
     },
     async deleteTopicForStudents(node) {
       console.log("node: ", node);
-      // get all students currently assigned to course
-      const allStudents = await db
-        .collection("people")
-        .where("assignedCourses", "array-contains", this.course.id)
-        .get();
-
+  
       // if no students, return
-      if (allStudents.empty) {
+      if (this.students.empty) {
         return;
       }
 
       await Promise.all(
-        allStudents.map(async (doc) => {
-          const personId = doc.id;
+        this.students.map(async (std) => {
+          const personId = std.id;
           console.log("deleting ", node.label, "for student: ", personId);
           // delete for student
           return db
