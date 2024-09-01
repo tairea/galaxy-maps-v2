@@ -86,14 +86,15 @@
       </template>
 
       <template v-slot:no-data>
-        <div v-if="searchingStudents">
-          <p class="ma-10 noStudents">Searching for Navigators ...</p>
+       <div v-if="searchingStudents" class="d-flex align-center flex-column">
+          <p class="noStudents mt-10 mb-5">Searching for Navigators</p>
           <v-progress-linear
-            color="yellow-darken-2"
+            color="missionAccent"
             indeterminate
+            style="width: 50%;"
           ></v-progress-linear>
         </div>
-        <p v-else class="ma-10 noStudents">No Navigators in this Squad</p>
+         <p v-else class="ma-10 noStudents">No Navigators in this Squad</p>
       </template>
     </v-data-iterator>
     <!-- Student Dialog -->
