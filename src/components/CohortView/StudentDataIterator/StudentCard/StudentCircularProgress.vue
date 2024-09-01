@@ -11,7 +11,7 @@
       >
         <v-avatar color="secondary" :size="avatarSize" class="glow">
           <img
-            v-if="activity.course.image"
+            v-if="activity.course.image.url"
             :src="activity.course.image.url"
             :alt="activity.course.title"
             style="object-fit: cover"

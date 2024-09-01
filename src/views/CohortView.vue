@@ -105,7 +105,7 @@ export default {
   data() {
     return {
       cohortsCoursesData: [],
-      refreshSubmissions: 0,
+      refreshSubmissions: 0, // TODO: Is this needed? is causing duplicate error
       refreshRequests: 0,
     };
   },
