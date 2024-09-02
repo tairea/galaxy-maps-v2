@@ -336,12 +336,8 @@ export default {
             " " +
             this.topicTasks[i].orderIndex,
         );
-        if (value[i].orderIndex === this.topicTasks[i].orderIndex) {
-          continue;
-        } else {
-          value[i].orderIndex = i;
-          orderChanges.push(value[i]);
-        }
+        value[i].orderIndex = i;
+        orderChanges.push(value[i]);
       }
       console.log("orderchanges", orderChanges);
       this.newMissionOrder = orderChanges;

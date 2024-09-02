@@ -366,7 +366,7 @@ export default {
       return this.$vuetify.theme.isDark;
     },
     sortedTopics() {
-      let sortedTopics = this.currentCourseNodes.sort((a, b) => {
+      let sortedTopics = this.currentCourseNodes.filter(node => node.id !== this.currentNode.id).sort((a, b) => {
         // bruh! sometimes courseNodes have property topicCreatedTimestamp and sometimes they have nodeCreatedTimestamp
         // code as been fixed to no only save as topicCreatedTimestamp
         // but this ternary handles old nodeCreatedTimestamp's

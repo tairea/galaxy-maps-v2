@@ -1246,6 +1246,8 @@ async function deleteTask(courseId: string, topicId: string, taskId: string) {
     .doc(topicId)
     .update("taskTotal", FieldValue.increment(-1));
 
+  // TODO: check if the next task in the topic needs to be unlocked
+
   await taskRef.delete();
 
   return {
