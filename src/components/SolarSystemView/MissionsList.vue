@@ -45,7 +45,7 @@
     </div>
 
     <div class="createButton mt-8" v-if="teacher">
-      <CreateEditDeleteMissionDialog :course="course" :topic="topic" @taskCreated="taskCreated" />
+      <CreateEditDeleteMissionDialog :course="course" :topic="topic" @taskCreated="taskCreated" :tasks="tasks" />
     </div>
   </div>
 </template>
