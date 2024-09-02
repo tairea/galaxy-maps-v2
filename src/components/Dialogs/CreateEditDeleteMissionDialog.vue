@@ -400,7 +400,7 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "CreateEditDeleteMissionDialog",
-  props: ["course", "topic", "taskId", "taskToEdit", "index", "on", "attrs", "edit", "taskColor"],
+  props: ["course", "topic", "taskId", "taskToEdit", "index", "on", "attrs", "edit", "taskColor", "tasks"],
   components: {
     VueEditor,
   },
@@ -479,7 +479,7 @@ export default {
           task.slides = "http://" + task.slides;
         }
       }
-
+      task.orderIndex = this.tasks.length ? this.tasks.length++ : 0
       const createdTask = await createTaskWithCourseIdTopicId(this.course.id, this.topic.id, task);
 
       this.$emit("taskCreated", createdTask);
