@@ -1,6 +1,6 @@
 <template>
   <div class="create-dialog-content">
-    <p v-if="!teacher" class="caption mb-0">
+    <p v-if="!teacher && !edit" class="caption mb-0">
       Adding this student will send a registration link to their email
     </p>
     <!-- TODO: info description for adding a teacher? -->
@@ -72,8 +72,8 @@
     <v-row>
       <v-btn
         v-if="edit"
-        :disabled="!valid || addingAccount"
-        :loading="addingAccount"
+        :disabled="!valid || addingAccount || updatingAccount"
+        :loading="addingAccount || updatingAccount"
         @click="update()"
         width="30%"
         class="ma-4 disabledButton"
@@ -86,8 +86,8 @@
       </v-btn>
       <v-btn
         v-else
-        :disabled="!valid || addingAccount"
-        :loading="addingAccount"
+        :disabled="!valid || addingAccount || updatingAccount"
+        :loading="addingAccount || updatingAccount"
         @click="create()"
         width="30%"
         class="ma-4 disabledButton"
@@ -99,7 +99,7 @@
         add
       </v-btn>
       <v-btn
-        :disabled="addingAccount"
+        :disabled="addingAccount || updatingAccount"
         @click="close()"
         outlined
         :dark="dark"
@@ -134,14 +134,18 @@ export default {
     edit: { type: Boolean, default: false },
   },
   async mounted() {
-    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
-    if (this.edit)
+    if (this.edit) {
       this.account = {
         ...this.account,
         ...this.student,
       };
+      console.log("edit student: ", this.account);
+    } else {
+      this.cohort = await fetchCohortByCohortId(this.currentCohortId);
+    }
   },
   data: () => ({
+    updatingAccount: false,
     cohort: null,
     addingAccount: false,
     valid: true,
@@ -173,10 +177,10 @@ export default {
   methods: {
     ...mapActions(useRootStore, ["setSnackbar"]),
     close() {
-      this.clearForm()
+      this.clearForm();
       this.$emit("close");
     },
-    clearForm () {
+    clearForm() {
       this.account = {
         firstName: "",
         lastName: "",
@@ -188,6 +192,8 @@ export default {
       };
     },
     async update() {
+      this.updatingAccount = true;
+      // remove empty fields
       let obj = Object.fromEntries(Object.entries(this.account).filter(([_, v]) => v.length));
 
       await db.collection("people").doc(obj.id).update(obj);
@@ -198,6 +204,7 @@ export default {
         text: "Student successfully updated",
         color: "baseAccent",
       });
+      this.updatingAccount = false;
       this.close();
     },
     async create() {
@@ -210,7 +217,7 @@ export default {
         const profile = {
           ...this.account,
           ...studentExists,
-          inviter: this.person.firstName + " " + this.person.lastName
+          inviter: this.person.firstName + " " + this.person.lastName,
         };
         // if teacher, emit teacher?
         if (this.teacher) {
@@ -230,7 +237,7 @@ export default {
               text: "Student successfully added to Squad",
               color: "baseAccent",
             });
-            this.sendNewCohortEmail(profile)
+            this.sendNewCohortEmail(profile);
             this.addingAccount = false;
             this.close();
           } catch (error) {
@@ -283,7 +290,7 @@ export default {
     sendNewCohortEmail(profile) {
       const person = {
         ...profile,
-        cohort: this.cohort.name
+        cohort: this.cohort.name,
       };
       const sendNewCohortEmail = functions.httpsCallable("sendNewCohortEmail");
       return sendNewCohortEmail(person);
