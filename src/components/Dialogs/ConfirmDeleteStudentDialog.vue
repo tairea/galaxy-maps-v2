@@ -3,23 +3,37 @@
     <div class="create-dialog">
       <!-- HEADER -->
       <div class="dialog-header">
-        <span class="dialog-title">Remove Student from Cohort?</span>
+        <span class="dialog-title">Remove Student from Squad?</span>
       </div>
       <div class="d-flex align-start pa-4">
         <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
-        <p class="dialog-description">
-          Are you sure you want to <strong>REMOVE</strong>
-          <span>
-            {{ student.firstName ? student.firstName + " " + student.lastName : student.email }}
-          </span>
-          from this cohort
-        </p>
+        <div>
+          <p class="dialog-description">
+            Are you sure you want to <strong>REMOVE</strong><br />
+            <span class="baseAccent--text overline">
+              {{
+                student.firstName ? student.firstName + " " + student.lastName : student.email
+              }} </span
+            ><br />
+            from this Squad?
+          </p>
+          <p class="dialog-description">
+            This will also remove them from any Galaxy Maps assigned to this Squad.
+          </p>
+        </div>
       </div>
 
       <!-- ACTION BUTTONS -->
       <div class="d-flex align-end my-4">
         <!-- DELETE -->
-        <v-btn outlined color="error" @click="confirmDeleteStudent()" class="ml-4">
+        <v-btn
+          :loading="loading"
+          :disabled="loading"
+          outlined
+          color="error"
+          @click="confirmDeleteStudent()"
+          class="ml-4"
+        >
           <v-icon left> {{ mdiDelete }} </v-icon>
           DELETE
         </v-btn>
@@ -29,6 +43,8 @@
           :color="$vuetify.theme.dark ? 'yellow' : 'f7f7ff'"
           class="ml-4"
           @click="$emit('cancel')"
+          :loading="loading"
+          :disabled="loading"
         >
           <v-icon left> {{ mdiClose }} </v-icon>
           Cancel
@@ -56,27 +72,38 @@ export default {
       mdiInformationVariant,
       mdiDelete,
       mdiClose,
+      loading: false,
     };
   },
   computed: {
-    ...mapState(useRootStore, ["currentCohortId", "currentCourseId"]),
+    ...mapState(useRootStore, ["currentCohortId"]),
   },
   methods: {
-    ...mapActions(useRootStore, ["setSnackbar"]),
+    ...mapActions(useRootStore, ["setSnackbar", "setCurrentCohortId"]),
     async confirmDeleteStudent() {
+      this.loading = true;
       const studentId = this.student.id;
 
+      // if currentCohortId is null, get it from the route
+      if (!this.currentCohortId) {
+        const cohortId = this.$route.params.cohortId;
+        await this.setCurrentCohortId(cohortId);
+      }
+
+      // Remove student id from cohort
       await updateDoc(doc(db, "cohorts", this.currentCohortId), {
         students: firebase.firestore.FieldValue.arrayRemove(studentId),
       });
 
+      // Remove assigned courses from student
       await this.deleteAssignedCourse(studentId);
 
       this.setSnackbar({
         show: true,
-        text: "Student removed from Cohort",
+        text: "Student removed from Squad",
         color: "baseAccent",
       });
+      this.loading = false;
       this.$emit("close");
     },
     async deleteAssignedCourse(studentId) {

@@ -27,7 +27,7 @@
             </v-tab>
             <v-tab class="justify-start">
               <v-icon small class="mr-2">{{ mdiAccountEdit }}</v-icon>
-              <div>edit navigator</div>
+              <div>edit/remove navigators</div>
             </v-tab>
 
             <v-tab-item>
@@ -49,6 +49,7 @@
                   </thead>
                   <tbody>
                     <tr v-for="student in students" :key="student.id">
+                      <!-- name cell -->
                       <td class="pl-4">
                         {{
                           student.firstName
@@ -56,14 +57,17 @@
                             : student.email
                         }}
                       </td>
+                      <!-- email cell -->
                       <td class="pl-4">
                         {{ student.email ? student.email : "no email provided" }}
                       </td>
+                      <!-- edit cell -->
                       <td>
                         <v-btn text @click="updateStudent(student)">
                           <v-icon small>{{ mdiPencil }}</v-icon>
                         </v-btn>
                       </td>
+                      <!-- delete cell -->
                       <td>
                         <v-btn text color="red" @click="removeStudent(student)">
                           <v-icon small>{{ mdiDelete }}</v-icon>

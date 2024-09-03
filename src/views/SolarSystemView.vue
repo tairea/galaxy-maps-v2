@@ -9,13 +9,6 @@
         :teacher="teacher"
         :course="course"
       />
-      <AssignedInfo
-        v-if="!loading && !draft && peopleInTopic.length"
-        :assignCohorts="true"
-        :people="peopleInTopic"
-        :teacher="teacher"
-      />
-
       <!-- Order change button -->
       <div v-if="!loading" class="save-changes mt-4">
         <v-btn
@@ -31,6 +24,13 @@
       </div>
 
       <BackButton v-if="!loading" :toPath="'/galaxy/' + courseId" />
+
+      <AssignedInfo
+        v-if="!loading && !draft && peopleInTopic.length"
+        :assignCohorts="true"
+        :people="peopleInTopic"
+        :teacher="teacher"
+      />
     </div>
 
     <!--==== Main section ====-->
