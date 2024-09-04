@@ -75,7 +75,7 @@
                     light
                   ></v-text-field>
                   <div>
-                    <p class="dialog-description">Assign the Navigator to squad</p>
+                    <p class="dialog-description">Assign this Navigator to a squad</p>
                     <div class="d-flex align-center">
                       <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                       <p class="dialog-description py-2">
@@ -367,11 +367,11 @@ export default {
       const personExists = await fetchPersonByEmail(profile.email);
       const inviter = this.person.firstName + " " + this.person.lastName;
       if (personExists) {
-        personExists.inviter = inviter
+        personExists.inviter = inviter;
         await this.handleAssignment(personExists, this.currentCourse);
       } else {
         //create the persons account
-        profile.inviter = inviter
+        profile.inviter = inviter;
 
         const person = await createPerson(profile);
         await this.handleAssignment(person, this.currentCourse);
@@ -379,7 +379,7 @@ export default {
     },
 
     async handleAssignment(person, course) {
-      console.log({ person })
+      console.log({ person });
       try {
         await assignCourseToPerson(person.id, course.id);
         await addPersonToCohort(person.id, this.cohort.id);
@@ -397,7 +397,7 @@ export default {
           text: `${person.firstName || person.email} assigned to ${course.title} Galaxy`,
           color: "baseAccent",
         });
-        this.sendNewGalaxyEmail(person, course)
+        this.sendNewGalaxyEmail(person, course);
         this.$emit("newAssignment", person);
         this.close();
       } catch (error) {
@@ -405,7 +405,7 @@ export default {
         // snackbar message
         this.setSnackbar({
           show: true,
-          text: error.split('FirebaseError: ')[1],
+          text: error.split("FirebaseError: ")[1],
           color: "pink",
         });
         this.close();

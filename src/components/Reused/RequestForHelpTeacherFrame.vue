@@ -110,13 +110,14 @@ export default {
 
       // forgot why using this filter - students.some logic.
       // im thinking reuqests are relevant to everyone so why need to filter by specific students
-      const requests = (
-        this.allStudentsRequests ? this.allStudentsRequests : this.teachersRequestsForHelp
-      ).filter((request) =>
-        this.students?.some((student) => {
-          return student.id ? student.id === request.personId : student === request.personId;
-        }),
-      );
+      const requests = this.allStudentsRequests
+        ? this.allStudentsRequests
+        : this.teachersRequestsForHelp;
+      // .filter((request) =>
+      //   this.students?.some((student) => {
+      //     return student.id ? student.id === request.personId : student === request.personId;
+      //   }),
+      // );
 
       let filteredRequests = [];
 
@@ -126,9 +127,12 @@ export default {
           (request) => request.requestForHelpStatus != "unanswered",
         );
       } else {
-        filteredRequests = requests.filter(
-          (request) => request.requestForHelpStatus === "unanswered",
-        );
+        // filteredRequests = requests.filter(
+        //   (request) => request.requestForHelpStatus === "unanswered",
+        // );
+
+        // show all requests (answered and unanswered)
+        filteredRequests = requests;
       }
 
       if (this.isTeacher) {

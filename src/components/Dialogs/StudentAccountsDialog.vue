@@ -4,8 +4,8 @@
       <!-- CREATE BUTTON -->
       <template v-slot:activator="{ on, attrs }">
         <v-btn class="cohort-btn" color="missionAccent" v-bind="attrs" v-on="on" outlined>
-          <v-icon left> {{ mdiAccountGroup }} </v-icon>
-          manage students
+          <v-icon left> {{ mdiAccountPlus }} </v-icon>
+          Add/remove Navigators
         </v-btn>
       </template>
 
@@ -106,7 +106,7 @@ import ConfirmDeleteStudentDialog from "@/components/Dialogs/ConfirmDeleteStuden
 import EditStudentDialog from "@/components/Dialogs/EditStudentDialog.vue";
 import useCohortViewStore from "@/store/cohortView";
 
-import { mdiAccountGroup, mdiAccountPlus, mdiAccountEdit, mdiPencil, mdiDelete } from "@mdi/js";
+import { mdiAccountGroup, mdiAccountEdit, mdiPencil, mdiDelete, mdiAccountPlus } from "@mdi/js";
 import { mapActions } from "pinia";
 
 export default {

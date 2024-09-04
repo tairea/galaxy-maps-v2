@@ -201,7 +201,7 @@ export default {
       this.$emit("updateStudentProfile", obj);
       this.setSnackbar({
         show: true,
-        text: "Student successfully updated",
+        text: "Navigator successfully updated",
         color: "baseAccent",
       });
       this.updatingAccount = false;
@@ -234,7 +234,7 @@ export default {
             }
             this.setSnackbar({
               show: true,
-              text: "Student successfully added to Squad",
+              text: "Navigator successfully added to Squad",
               color: "baseAccent",
             });
             this.sendNewCohortEmail(profile);
