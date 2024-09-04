@@ -11,7 +11,7 @@
               v-bind="attrs"
               v-on="on"
               class="mission-edit-button ma-2"
-              :color="active ? 'missionAccent' : 'cohortAccent'"
+              :color="task.submissionRequired ? 'cohortAccent' : 'missionAccent'"
               x-large
             >
               <v-icon v-if="task.submissionRequired" color="background">
@@ -34,7 +34,7 @@
               <div class="d-flex align-center">
                 <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <p class="dialog-description">
-                  To complete this task you must submit a response to following instructions
+                  To complete this task you must submit a response to the following instructions
                 </p>
               </div>
             </div>
@@ -72,7 +72,7 @@
                       <p class="ma-0">
                         {{ course.mappedBy?.name }}
                       </p>
-                      <p class="ma-0" style="font-size: 0.6rem">Instructor</p>
+                      <p class="ma-0" style="font-size: 0.6rem">Captain</p>
                     </div>
                   </div>
                   <v-row class="d-flex align-center speech-bubble">
@@ -342,7 +342,7 @@ export default {
 
         this.setSnackbar({
           show: true,
-          text: "Submission sent. You will be notified when your instructor has reviewed your work.",
+          text: "Submission sent. You will be notified when your Captain has reviewed your work.",
           color: "baseAccent",
         });
       } catch (error) {
@@ -437,7 +437,7 @@ export default {
 
         this.setSnackbar({
           show: true,
-          text: "Submission sent. You will be notified when your instructor has reviewed your work.",
+          text: "Submission sent. You will be notified when your Captain has reviewed your work.",
           color: "baseAccent",
         });
       } catch (error) {

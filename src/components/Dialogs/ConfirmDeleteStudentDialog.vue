@@ -73,10 +73,14 @@ export default {
       mdiDelete,
       mdiClose,
       loading: false,
+      currentCohort: null,
     };
   },
   computed: {
     ...mapState(useRootStore, ["currentCohortId"]),
+  },
+  async mounted() {
+    this.currentCohort = await fetchCohortByCohortId(this.currentCohortId);
   },
   methods: {
     ...mapActions(useRootStore, ["setSnackbar", "setCurrentCohortId"]),
@@ -98,9 +102,15 @@ export default {
       // Remove assigned courses from student
       await this.deleteAssignedCourse(studentId);
 
+      // remove students requests for help
+      await this.deleteRequestsForHelp(studentId);
+
+      // remove students submissions
+      await this.deleteSubmissions(studentId);
+
       this.setSnackbar({
         show: true,
-        text: "Student removed from Squad",
+        text: "Navigator " + this.student.lastName + " removed from Squad",
         color: "baseAccent",
       });
       this.loading = false;
@@ -110,12 +120,46 @@ export default {
       const studentRef = doc(db, "people", studentId);
       console.log("student: ", studentRef);
 
-      const currentCohort = await fetchCohortByCohortId(this.currentCohortId);
-
-      const courseIds = currentCohort.courses;
+      const courseIds = this.currentCohort.courses;
       await updateDoc(studentRef, {
         assignedCourses: firebase.firestore.FieldValue.arrayRemove(...courseIds),
       });
+    },
+    async deleteRequestsForHelp(studentId) {
+      // loop this.currentCohort.courses and delete requests for help
+      for (const courseId of this.currentCohort.courses) {
+        const requestsForHelpRef = db
+          .collection("courses")
+          .doc(courseId)
+          .collection("requestsForHelp");
+        const snapshot = await requestsForHelpRef.where("personId", "==", studentId).get();
+        if (snapshot.empty) {
+          console.log("No matching documents.");
+          return;
+        }
+        snapshot.forEach(async (doc) => {
+          await doc.ref.delete();
+        });
+      }
+      console.log("students requests for help deleted");
+    },
+    async deleteSubmissions(studentId) {
+      // loop this.currentCohort.courses and delete submissions
+      for (const courseId of this.currentCohort.courses) {
+        const submissionsRef = db
+          .collection("courses")
+          .doc(courseId)
+          .collection("submissionsForReview");
+        const snapshot = await submissionsRef.where("studentId", "==", studentId).get();
+        if (snapshot.empty) {
+          console.log("No matching documents.");
+          return;
+        }
+        snapshot.forEach(async (doc) => {
+          await doc.ref.delete();
+        });
+      }
+      console.log("students submissions deleted");
     },
   },
 };

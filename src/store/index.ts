@@ -409,7 +409,7 @@ export default defineStore({
           // console.log("ALL REQUESTS FOR HELP:", allRequestsForHelp);
 
           this.teachersRequestsForHelp = allRequestsForHelp.filter(
-            (req) => req.contextCourse.id === courseId,
+            (req) => req.contextCourse.id === courseId && req.id, // because there is a bug that dupliactes requests (these duplicates dont have id's)
           );
 
           // console.log("this.teachersRequestsForHelp:", this.teachersRequestsForHelp);

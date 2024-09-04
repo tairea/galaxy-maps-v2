@@ -3,12 +3,12 @@
     <div class="ss-info-panel">
       <p class="caption base-text">
         {{ payload.completedTasks }} out of {{ payload.totalTasks }} MISSIONS completed for SYSTEM:
-        <span class="font-weight-bold">{{ payload.topic }}</span>
+        <span class="font-weight-bold text-uppercase">{{ payload.topic }}</span>
       </p>
       <p class="caption mission-text">
         {{ payload.completedTopics }} out of {{ payload.totalTopics }} SYSTEMS completed for GALAXY
         MAP:
-        <span class="font-weight-bold galaxyAccent--text">{{ payload.course }}</span>
+        <span class="font-weight-bold galaxyAccent--text text-uppercase">{{ payload.course }}</span>
       </p>
     </div>
   </v-menu>
