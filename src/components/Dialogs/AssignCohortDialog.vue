@@ -394,7 +394,9 @@ export default {
 
         this.setSnackbar({
           show: true,
-          text: `${person.firstName || person.email} assigned to ${course.title} Galaxy`,
+          text: `${
+            person.firstName || person.email
+          } assigned to ${course.title.toUpperCase()} Galaxy`,
           color: "baseAccent",
         });
         this.sendNewGalaxyEmail(person, course);
