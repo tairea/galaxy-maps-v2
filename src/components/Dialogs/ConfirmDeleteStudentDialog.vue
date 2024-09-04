@@ -28,7 +28,6 @@
         <!-- DELETE -->
         <v-btn
           :loading="loading"
-          :disabled="loading"
           outlined
           color="error"
           @click="confirmDeleteStudent()"
@@ -43,7 +42,6 @@
           :color="$vuetify.theme.dark ? 'yellow' : 'f7f7ff'"
           class="ml-4"
           @click="$emit('cancel')"
-          :loading="loading"
           :disabled="loading"
         >
           <v-icon left> {{ mdiClose }} </v-icon>
@@ -110,7 +108,7 @@ export default {
 
       this.setSnackbar({
         show: true,
-        text: "Navigator " + this.student.lastName + " removed from Squad",
+        text: "Navigator " + this.student.lastName.charAt(0).toUpperCase() + " removed from Squad",
         color: "baseAccent",
       });
       this.loading = false;

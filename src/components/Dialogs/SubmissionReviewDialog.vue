@@ -163,7 +163,7 @@
                   @click="markSubmissionAsCompleted"
                   class="mr-2"
                   :loading="markingSubmission"
-                  :disabled="markingSubmission"
+                  :disabled="decliningSubmission"
                 >
                   <v-icon left> {{ mdiThumbUpOutline }} </v-icon>
                   approve
@@ -173,9 +173,7 @@
                   color="galaxyAccent"
                   @click="declineSubmission"
                   class="mr-2"
-                  :loading="markingSubmission"
-                  v-bind="attrs"
-                  v-on="on"
+                  :loading="decliningSubmission"
                   :disabled="markingSubmission"
                 >
                   <v-icon left> {{ mdiThumbDownOutline }} </v-icon>
@@ -188,8 +186,7 @@
                 outlined
                 :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
                 @click="close"
-                :disabled="markingSubmission"
-                :loading="markingSubmission"
+                :disabled="markingSubmission || decliningSubmission"
               >
                 <v-icon left> {{ mdiClose }} </v-icon>
                 Cancel
@@ -242,6 +239,7 @@ export default {
     xpPointsForCompletedSubmission: 250,
     personsTopicsTasks: [],
     markingSubmission: false,
+    decliningSubmission: false,
   }),
   async mounted() {
     this.instructor = await fetchPersonByPersonId(this.submission.contextCourse.mappedBy.personId);
@@ -610,7 +608,7 @@ export default {
       return sendResponseToSubmission(data);
     },
     async declineSubmission() {
-      this.loading = true;
+      this.decliningSubmission = true;
 
       try {
         // Add response to request for help
@@ -656,12 +654,7 @@ export default {
             mission: this.submission.contextTask,
           },
         );
-        // close logic
-        this.loading = false;
-        this.disabled = false;
-        this.dialog = false;
-        this.response = false;
-        this.responseMsg = "";
+
         this.setSnackbar({
           show: true,
           text:
@@ -681,6 +674,13 @@ export default {
         });
 
         throw error;
+      } finally {
+        // close logic
+        this.disabled = false;
+        this.dialog = false;
+        this.response = false;
+        this.responseMsg = "";
+        this.decliningSubmission = false;
       }
     },
     async setTopicToCompletedInDB() {
