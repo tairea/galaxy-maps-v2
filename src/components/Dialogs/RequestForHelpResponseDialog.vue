@@ -22,26 +22,33 @@
                 <v-row>
                   <div class="request-details-context">
                     <v-simple-table>
-                      <tr
-                        class="dialog-context-description"
-                        style="color: var(--v-missionAccent-base)"
+                      <!-- jump to mission (in new tab) -->
+                      <a
+                        class="jump-to-mission-button"
+                        :href="generateUrl(request)"
+                        target="_blank"
                       >
-                        <td
-                          class="d-flex flex-start"
-                          style="color: var(--v-galaxyAccent-base); font-weight: 800"
+                        <tr
+                          class="dialog-context-description"
+                          style="color: var(--v-missionAccent-base)"
                         >
-                          Galaxy:
-                        </td>
-                        <td style="color: var(--v-galaxyAccent-base)">
-                          {{ request.contextCourse.title }}
-                        </td>
-                        <td width="50px" class="text-center">></td>
-                        <td class="d-flex flex-start" style="font-weight: 800">System:</td>
-                        <td>{{ request.contextTopic.label }}</td>
-                        <td width="50px" class="text-center">></td>
-                        <td class="d-flex flex-start" style="font-weight: 800">MISSION:</td>
-                        <td class="pl-2">{{ request.contextTask.title }}</td>
-                      </tr>
+                          <td
+                            class="d-flex flex-start"
+                            style="color: var(--v-galaxyAccent-base); font-weight: 800"
+                          >
+                            Galaxy:
+                          </td>
+                          <td style="color: var(--v-galaxyAccent-base)">
+                            {{ request.contextCourse.title }}
+                          </td>
+                          <td width="50px" class="text-center">></td>
+                          <td class="d-flex flex-start" style="font-weight: 800">System:</td>
+                          <td>{{ request.contextTopic.label }}</td>
+                          <td width="50px" class="text-center">></td>
+                          <td class="d-flex flex-start" style="font-weight: 800">MISSION:</td>
+                          <td class="pl-2">{{ request.contextTask.title }}</td>
+                        </tr>
+                      </a>
                     </v-simple-table>
                   </div>
                 </v-row>
@@ -102,8 +109,7 @@
                 @click="submitHelpResponse()"
                 class="mr-2"
                 :loading="loading"
-                v-bind="attrs"
-                v-on="on"
+                :disabled="loading"
               >
                 <v-icon left> {{ mdiCheck }} </v-icon>
                 SUBMIT RESPONSE
@@ -115,6 +121,8 @@
                 :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
                 class="ml-2"
                 @click="cancel"
+                :disabled="loading"
+                :loading="loading"
               >
                 <v-icon left> {{ mdiClose }} </v-icon>
                 Cancel
@@ -214,7 +222,7 @@ export default {
     dialog: false,
     dialogConfirm: false,
     dialogDescription:
-      "Write what you need help with, then submit, and your instructor will be notified to leave you a response.",
+      "Write what you need help with, then submit, and your Captain will be notified to leave you a response.",
     requestForHelp: "",
     loading: false,
     deleting: false,
@@ -232,7 +240,8 @@ export default {
     this.currentTask = await fetchTaskByCourseIdTopicIdTaskId(
       this.currentCourseId,
       this.currentTopicId,
-      this.currentTaskId,
+      // this.currentTaskId, null
+      this.request.contextTask.id,
     );
   },
   computed: {
@@ -263,7 +272,7 @@ export default {
             responderPersonId: this.person.id,
           });
 
-        await this.emailResponseToStudent(this.requesterPerson, this.response);
+        await this.emailResponseToStudent(this.requesterPerson, this.response, this.request);
 
         console.log("Response successfully submitted for review!");
 
@@ -302,11 +311,14 @@ export default {
       this.loading = false;
       this.dialog = false;
     },
-    async emailResponseToStudent(student, response) {
+    async emailResponseToStudent(student, response, request) {
       const data = {
         course: this.currentCourse.title,
         topic: this.currentTopic.label,
-        task: this.currentTask.title,
+        task: this.currentTask.title, // returning null (changing to use request)
+        // course: request.contextCourse.title,
+        // topic: request.contextTopic.label,
+        // task: request.contextTask.title,
         student: student.firstName + " " + student.lastName,
         response: response,
         request: this.request.requestForHelpMessage,
@@ -338,6 +350,9 @@ export default {
 
       // close dialog
       this.dialogConfirm = false;
+    },
+    generateUrl(request) {
+      return `/galaxy/${request.contextCourse.id}/system/${request.contextTopic.id}`;
     },
   },
 };
@@ -417,6 +432,11 @@ export default {
     margin: 0;
     font-style: italic;
   }
+}
+
+.jump-to-mission-button {
+  // no achor tag underline
+  text-decoration: none;
 }
 
 .action-buttons {

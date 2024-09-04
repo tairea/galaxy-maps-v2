@@ -34,8 +34,9 @@
               <div class="d-flex align-center">
                 <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <p class="dialog-description">
-                  A Mission is a specific task. <br />Enter the mission details here or link to an
-                  external file eg. Youtube video or Google Slide.
+                  A Mission is a specific task you want the Navigator to complete. <br />Enter the
+                  mission details here or link to an external file eg. Youtube video or Google
+                  Slide.
                 </p>
               </div>
             </div>
@@ -157,13 +158,12 @@
 
               <!-- SUBMISSION REQUIRED? -->
               <p class="dialog-description submission-colour">
-                Does this Mission require the student to submit any evidence of work?
+                Does this Mission require the Navigator to submit any evidence of work?
                 <v-tooltip right max-width="300">
                   <template v-slot:activator="{ on, attrs }">
                     <v-icon
                       left
                       color="cohortAccent"
-                      small
                       class="circle-outline ma-1"
                       v-bind="attrs"
                       v-on="on"
@@ -172,11 +172,11 @@
                     >
                   </template>
                   <span>
-                    With this option checked, students are required to submit a link to evidence of
-                    their work.<br /><br />Once the student has submitted a link to their work, you
-                    will be notified to review their submission to check if it is completed.<br /><br />
-                    IMPORTANT: The student cannot progress onto the next System until you review and
-                    approve their submission.
+                    With this option checked, Navigators are required to submit some evidence of
+                    their work.<br /><br />Once the navigator has submitted evidence, you will be
+                    notified to review their submission to check if it is completed.<br /><br />
+                    IMPORTANT: The navigator cannot progress onto the next System until you review
+                    and approve their submission.
                   </span>
                 </v-tooltip>
               </p>
@@ -400,7 +400,18 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "CreateEditDeleteMissionDialog",
-  props: ["course", "topic", "taskId", "taskToEdit", "index", "on", "attrs", "edit", "taskColor", "tasks"],
+  props: [
+    "course",
+    "topic",
+    "taskId",
+    "taskToEdit",
+    "index",
+    "on",
+    "attrs",
+    "edit",
+    "taskColor",
+    "tasks",
+  ],
   components: {
     VueEditor,
   },
@@ -479,7 +490,7 @@ export default {
           task.slides = "http://" + task.slides;
         }
       }
-      task.orderIndex = this.tasks.length ? this.tasks.length++ : 0
+      task.orderIndex = this.tasks.length ? this.tasks.length++ : 0;
       const createdTask = await createTaskWithCourseIdTopicId(this.course.id, this.topic.id, task);
 
       this.$emit("taskCreated", createdTask);
@@ -544,7 +555,7 @@ export default {
       this.dialog = true;
     },
     async confirmDeleteTask() {
-      this.deleting = true
+      this.deleting = true;
       const deletedTask = await deleteTaskByCourseIdTopicIdTaskId(
         this.course.id,
         this.topic.id,
@@ -556,7 +567,6 @@ export default {
       // close dialog
       this.deleting = false;
       this.dialogConfirm = false;
-
     },
     handleDescriptionImageAdded(file, Editor, cursorLocation) {
       console.log("image file", file);
@@ -774,7 +784,7 @@ export default {
 }
 
 .submission-colour {
-  color: var(--v-cohortAccent-base);
+  color: var(--v-cohortAccent-base) !important;
 }
 
 .quill ::v-deep .ql-toolbar {

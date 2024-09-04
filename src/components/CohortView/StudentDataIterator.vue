@@ -261,6 +261,8 @@ export default {
         );
         this.students = [...this.students, ...students];
         this.searchingStudents = false;
+      } else {
+        this.searchingStudents = false;
       }
     },
     removeStudentProfiles() {

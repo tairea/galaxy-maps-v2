@@ -109,7 +109,7 @@ export default {
     mdiClose,
     dialog: false,
     dialogDescription:
-      "Write what you need help with, then submit, and your instructor will be notified to leave you a response.",
+      "Write what you need help with, then submit, and your Captain will be notified to leave you a response.",
     requestForHelp: "",
     loading: false,
     deleting: false,
@@ -163,7 +163,7 @@ export default {
 
         this.setSnackbar({
           show: true,
-          text: "Request submitted. You will be notified when your instructor has responded.",
+          text: "Request submitted. You will be notified when your Captain has responded.",
           color: "baseAccent",
         });
 
