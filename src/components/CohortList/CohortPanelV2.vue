@@ -111,7 +111,7 @@
             :timeframe="timeframe"
             :selectedPersons="selectedPersons"
             :unselectedPersons="unselectedPersons"
-            :shortenNames="!isCohortTeacher"
+            :showFirstNameOnly="!isCohortTeacher"
           />
         </div>
         <div v-else class="d-flex justify-center align-center" style="padding: 50px 0px">
