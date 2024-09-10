@@ -83,8 +83,8 @@ Galaxy Maps Team`;
 
 // ======COHORT REGISTRATION NOTIFICATION==================
 export const sendNewCohortEmailHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
-  const { email, displayName, firstName, inviter, cohort } = data;
-  return sendNewCohortEmail(email, displayName, firstName, inviter, cohort);
+  const { email, displayName, firstName, lastName, inviter, cohort } = data;
+  return sendNewCohortEmail(email, displayName, firstName, lastName, inviter, cohort);
 });
 
 /**
@@ -94,6 +94,7 @@ export async function sendNewCohortEmail(
   email: string,
   displayName: string,
   firstName: string,
+  lastName: string,
   inviter: string,
   cohort: string,
 ) {
@@ -102,14 +103,14 @@ export async function sendNewCohortEmail(
     to: email,
   };
 
-  mailOptions.subject = "New cohort registration";
-  mailOptions.text = `Greetings Navigator ${displayName || firstName || ""}
+  mailOptions.subject = "You've been add to a Squad";
+  mailOptions.text = `Greetings, Navigator ${displayName || lastName || ""}
 
-Captain ${inviter || ""} has assigned you to squad: ${cohort}.
+Captain ${inviter || ""} has assigned you to Squad: ${cohort}.
 
-Sign into your Galaxy Maps account to view your new squad.
+Sign into your Galaxy Maps account to view your missions.
 
-https://${DOMAIN}
+https://${DOMAIN}/login
   
 If you have any issues please contact base@${DOMAIN}
   
@@ -191,10 +192,10 @@ export async function sendCourseCreatedEmail(
 ) {
   const mailOptions: Record<string, string> = {
     from: `${APP_NAME} <noreply@${DOMAIN}>`,
-    to: "ian@tairea.io",
+    to: "base@galaxymaps.io",
   };
 
-  mailOptions.subject = "Galaxy Created";
+  mailOptions.subject = "New Galaxy Created";
   mailOptions.text = `Greetings admin, 
 
   ${name} from ${email} has created a new galaxy called ${course}.
@@ -437,7 +438,8 @@ please login to <a href="https://${DOMAIN}/dashboard" target="_blank"
 
 // ====== RESPONSE TO REQUEST ==================
 export const sendResponseToSubmissionHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
-  const { email, teacher, course, task, student, outcome, topic, message, submission } = data;
+  const { email, teacher, course, task, firstName, lastName, outcome, topic, message, submission } =
+    data;
   sendResponseToSubmission(
     email,
     teacher,
@@ -459,7 +461,8 @@ export async function sendResponseToSubmission(
   teacher: string,
   course: string,
   task: string,
-  student: string,
+  firstName: string,
+  lastName: string,
   outcome: string,
   topic: string,
   message: string,
@@ -472,9 +475,15 @@ export async function sendResponseToSubmission(
 
   /* eslint-disable max-len */
   mailOptions.subject = `Mission ${task} ${outcome}`;
-  mailOptions.text = `Greetings Navigator ${student}, 
+  mailOptions.text = `Greetings, Navigator ${
+    lastName
+      ? lastName.charAt(0).toUpperCase() + lastName.slice(1)
+      : firstName
+      ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
+      : ""
+  },
 
-Captain ${teacher} has reviewed your submission to ${task}.
+Captain ${teacher} has reviewed your submission for ${task}.
 
 Galaxy: ${course}
 System: ${topic}
@@ -482,7 +491,7 @@ Mission: ${task}
 
 Your submission: ${submission} 
 
-Submission outcome: ${outcome} 
+Submission outcome: ${outcome.toUpperCase()} 
 
 Captain's message: ${message}
 
@@ -490,7 +499,13 @@ Login to https://${DOMAIN} to continue your mission.
   
 Galaxy Maps Team`;
 
-  mailOptions.html = `<p><strong>Greetings Navigator ${student},</strong></p>
+  mailOptions.html = `<p><strong>Greetings, Navigator ${
+    lastName
+      ? lastName.charAt(0).toUpperCase() + lastName.slice(1)
+      : firstName
+      ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
+      : ""
+  },</strong></p>
 <p>Captain ${teacher} has reviewed your submission to ${task}.</p>
 </br> 
 <ul>

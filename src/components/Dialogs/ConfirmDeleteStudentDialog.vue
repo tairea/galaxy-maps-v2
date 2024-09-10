@@ -3,18 +3,16 @@
     <div class="create-dialog">
       <!-- HEADER -->
       <div class="dialog-header">
-        <span class="dialog-title">Remove Student from Squad?</span>
+        <span class="dialog-title">Remove Navigator from Squad?</span>
       </div>
       <div class="d-flex align-start pa-4">
         <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
         <div>
           <p class="dialog-description">
-            Are you sure you want to <strong>REMOVE</strong><br />
+            Are you sure you want to <span class="red--text">REMOVE</span>
             <span class="baseAccent--text overline">
-              {{
-                student.firstName ? student.firstName + " " + student.lastName : student.email
-              }} </span
-            ><br />
+              {{ student.firstName ? student.firstName + " " + student.lastName : student.email }}
+            </span>
             from this Squad?
           </p>
           <p class="dialog-description">
@@ -55,6 +53,7 @@
 </template>
 <script>
 import { fetchCohortByCohortId } from "@/lib/ff";
+import { deleteStudentsCourseXAPIStatements } from "@/lib/veracityLRS";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mdiInformationVariant, mdiDelete, mdiClose } from "@mdi/js";
@@ -106,9 +105,16 @@ export default {
       // remove students submissions
       await this.deleteSubmissions(studentId);
 
+      // remove students xAPI statements related to cohort courses
+      await this.deleteXAPIStatements(studentId);
+
       this.setSnackbar({
         show: true,
-        text: "Navigator " + this.student.lastName.charAt(0).toUpperCase() + " removed from Squad",
+        text:
+          "Navigator " +
+          this.student.lastName.charAt(0).toUpperCase() +
+          this.student.lastName.slice(1) +
+          " removed from Squad",
         color: "baseAccent",
       });
       this.loading = false;
@@ -158,6 +164,13 @@ export default {
         });
       }
       console.log("students submissions deleted");
+    },
+    async deleteXAPIStatements(studentId) {
+      // loop this.currentCohort.courses and delete xpi data
+      for (const courseId of this.currentCohort.courses) {
+        await deleteStudentsCourseXAPIStatements(studentId, courseId); //  (<--- NOT TESTED. NOT SURE IF THIS WORKS)
+        console.log("students xapi data deleted for course: ", courseId);
+      }
     },
   },
 };

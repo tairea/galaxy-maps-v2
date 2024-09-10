@@ -54,7 +54,7 @@
             Because you are an Admin. These are ALL Galaxy Maps and ALL Squads on the Galaxy Maps
             platform.
           </p>
-          <p v-else class="info-description">
+          <p v-else-if="isTeacher" class="info-description">
             These are Galaxy Maps you have created and the Squads working through them.
           </p>
         </div>
@@ -163,7 +163,11 @@ export default {
     this.courses = await fetchCourses();
     this.cohorts = await fetchCohorts();
     this.loading = false;
-    if (this.cohorts.length) this.setDashboardView("teacher");
+    if (this.isTeacher) {
+      this.setDashboardView("teacher");
+    } else {
+      this.setDashboardView("student");
+    }
   },
   computed: {
     ...mapState(useUserDashboardStore, ["dashboardView"]),
