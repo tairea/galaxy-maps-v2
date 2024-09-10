@@ -879,3 +879,27 @@ export const loggedIntoGalaxyXAPIStatement = (payload) => {
     body: JSON.stringify(statement),
   });
 };
+
+// ========== Delete student's statements from LRS by email and courseId
+export const deleteStudentsCourseXAPIStatements = (email, courseId) => {
+  const query = `
+  DELETE FROM statements
+  WHERE actor.id = 'mailto:${email}'
+  AND object.definition.extensions['https://www.galaxymaps.io/course/id/'] LIKE '${courseId}'
+`;
+
+  // const query2 = `
+  //   DELETE FROM statements
+  //   WHERE actor.id = "mailto:${email}"
+  //   AND object.definition.extensions[https://www.galaxymaps.io/course/id/] LIKE "https://www.galaxymaps.io/course/${courseId}"
+  // `;
+
+  fetch("https://galaxymaps.lrs.io/analyze", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: auth, // The auth token you've set up
+    },
+    body: JSON.stringify({ query }),
+  });
+};
