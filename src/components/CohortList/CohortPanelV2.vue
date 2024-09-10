@@ -23,7 +23,7 @@
           v-if="cohort.teachers && cohort.teachers.length > 0"
           class="d-flex justify-center align-center flex-wrap py-2"
         >
-          <p class="label text-center mt-2 mb-2">Captain:</p>
+          <p class="label text-center mt-2 mb-2">{{ captainLabel }}</p>
           <div>
             <Avatar
               v-for="teacherId in cohort.teachers"
@@ -207,6 +207,9 @@ export default {
         return "border: 1px solid var(--v-missionAccent-base);cursor:default";
       }
     },
+    captainLabel() {
+      return this.cohort.teachers.length > 1 ? "Captains:" : "Captain:";
+    },
   },
   methods: {
     ...mapActions(useRootStore, ["setCurrentCohortId"]),
@@ -307,7 +310,7 @@ export default {
   // width: calc(50% - 40px);
   // min-height: 60%;
   margin: 20px;
-  margin-bottom: 50px;
+  margin-bottom: 25px;
   flex-wrap: wrap;
   cursor: pointer;
 

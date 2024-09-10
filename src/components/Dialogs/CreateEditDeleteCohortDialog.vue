@@ -58,7 +58,7 @@
               :light="!dark"
               color="missionAccent"
               v-model="cohort.name"
-              label="Cohort name"
+              label="Squad name"
             ></v-text-field>
 
             <!-- DESCRIPTION -->
@@ -72,7 +72,7 @@
               clearable
               rows="1"
               v-model="cohort.description"
-              label="Cohort description"
+              label="Squad description"
             ></v-textarea>
 
             <!-- IMAGE UPLOAD -->
@@ -87,7 +87,7 @@
               v-model="uploadedImage"
               @change="storeImage()"
               prepend-icon=""
-              label="Cohort image upload"
+              label="Squad image upload"
               hide-details
             ></v-file-input>
             <v-progress-linear color="missionAccent" :value="percentage"></v-progress-linear>
@@ -109,7 +109,7 @@
               >
               </v-select> -->
               <!-- Select teachers from list -->
-              <p class="input-description mt-6">Cohort teachers:</p>
+              <p class="input-description mt-6">Squad Captains:</p>
               <v-autocomplete
                 v-model="cohort.teachers"
                 :search-input.sync="search"
@@ -172,7 +172,7 @@
         <div class="right-side" :style="cohort.name ? 'width:50%' : 'width:0%'">
           <!-- Cohort Preview -->
           <div id="cohort-info" v-if="cohort.name">
-            <h2 class="cohort-label">Cohort</h2>
+            <h2 class="cohort-label">Squad</h2>
             <h1 class="cohort-title">{{ cohort.name }}</h1>
             <v-img v-if="cohort.image" :src="cohort.image.url" width="100%"></v-img>
             <p class="cohort-description">{{ cohort.description }}</p>
@@ -369,8 +369,8 @@ export default {
     teacherDialog: false,
     dialog: false,
     dialogConfirm: false,
-    dialogTitle: "Create A New Cohort",
-    dialogDescription: "A Cohort is a group of learners. This is typically a class of students.",
+    dialogTitle: "Create A New Squad",
+    dialogDescription: "A Squad is a group of Navigators. (This is typically a cohort of students)",
     loading: false,
     disabled: false,
     deleting: false,
@@ -464,6 +464,7 @@ export default {
             teachers: [],
           },
         };
+        this.uploadedImage = null;
       }
     },
     saveCohort(cohort) {
@@ -592,7 +593,7 @@ export default {
         .update(cohort)
         .then(() => {
           console.log("Document successfully updated!");
-          this.loadCohort(cohort.id)
+          this.loadCohort(cohort.id);
           this.close();
         })
         .catch((error) => {

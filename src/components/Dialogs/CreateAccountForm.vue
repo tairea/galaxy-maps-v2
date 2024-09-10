@@ -262,7 +262,7 @@ export default {
             await addPersonToCohort(person.id, this.currentCohortId);
             this.setSnackbar({
               show: true,
-              text: "Student added to Cohort",
+              text: "Navigator added to Squad",
               color: "baseAccent",
             });
             if (this.cohort.courses.length) {
@@ -271,7 +271,7 @@ export default {
           } else {
             this.setSnackbar({
               show: true,
-              text: "Teacher added to Galaxy Map",
+              text: "Captain added to Galaxy Map",
               color: "baseAccent",
             });
           }

@@ -66,7 +66,7 @@ export async function sendStudentInviteEmail(
   };
 
   mailOptions.subject = `Account created for ${APP_NAME}!`;
-  mailOptions.text = `Greetings ${displayName || ""}
+  mailOptions.text = `Greetings, ${displayName || ""}.
 
 Captain ${inviter}, has created you an account for ${APP_NAME}. 
 
