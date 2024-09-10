@@ -3,7 +3,7 @@
     <LoadingSpinner v-if="isLoadingCohort" text="loading squad" />
     <div id="left-section">
       <CohortInfo v-if="!isLoadingCohort && cohort" :cohort="cohort" />
-      <BackButton v-if="!isLoadingCohort" :toPath="'/cohorts'" />
+      <BackButton v-if="!isLoadingCohort" :toPath="'/squads'" />
       <AssignedInfo v-if="!isLoadingCohort && cohort" :cohort="cohort" assignCourses="true" />
     </div>
 

@@ -40,7 +40,7 @@ import { DateTime } from "luxon";
 
 export default {
   name: "ActivityBarChart",
-  props: ["activityData", "timeframe", "selectedPersons", "unselectedPersons", "shortenNames"],
+  props: ["activityData", "timeframe", "selectedPersons", "unselectedPersons", "showFirstNameOnly"],
   components: {
     Chart,
   },
@@ -79,12 +79,15 @@ export default {
               font: {
                 size: 10,
               },
-              // callback: function (value, index, ticks) {
-              //   console.log("shortening name...");
-              //   if (this.shortenNames) {
-              //     return this.first3Letters(value);
-              //   }
-              // },
+              callback: (value, index, ticks) => {
+                // Access the label using the index
+                const label = this.chartData.labels[index];
+                if (this.showFirstNameOnly) {
+                  return this.getFirstName(label);
+                } else {
+                  return label;
+                }
+              },
             },
           },
           // y: {
@@ -217,9 +220,9 @@ export default {
       }
       return hash;
     },
-    first3Letters(name) {
+    getFirstName(name) {
       if (!name) return;
-      return name.substring(0, 3).toUpperCase();
+      return name.split(" ")[0];
     },
     barWidth(labels) {
       return 100 / labels.length;
