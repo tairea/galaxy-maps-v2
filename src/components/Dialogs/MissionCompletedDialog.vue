@@ -91,6 +91,59 @@
                   </v-row>
                 </div>
 
+                <!-- If Declined and Resubmitting -->
+
+                <!-- STUDENT SUBMISSION -->
+                <div class="requester-info">
+                  <v-row v-if="declined">
+                    <div class="requester-image justify-center align-center">
+                      <Avatar :colourBorder="true" :profile="person" :size="30" />
+                    </div>
+                    <!-- Message -->
+                    <div>
+                      <p class="dialog-description pa-1">
+                        <span style="font-size: 0.8rem; font-weight: 800"
+                          ><i>{{ person.firstName + " " + person.lastName }}</i></span
+                        >
+                        <i>@ {{ getHumanDate(submission.taskSubmittedForReviewTimestamp) }}</i>
+                      </p>
+                    </div>
+                  </v-row>
+                </div>
+                <p
+                  class="dialog-help-message declined-speech-bubble"
+                  v-html="submission.submissionLink"
+                ></p>
+
+                <!-- INSTRUCTOR RESPONSE -->
+                <div v-if="submission.responseMessage" class="instructor-info">
+                  <v-row class="justify-end">
+                    <!-- Message -->
+                    <div>
+                      <p class="dialog-description pa-1">
+                        <span
+                          class="baseAccent--text mr-1"
+                          style="font-size: 0.8rem; font-weight: 800"
+                          >DECLINED BY</span
+                        >
+                        <span style="font-size: 0.8rem; font-weight: 800"
+                          ><i>{{ instructor.firstName + " " + instructor.lastName }}</i></span
+                        >
+                        <i> {{ getHumanDate(submission.responseSubmittedTimestamp) }}</i>
+                      </p>
+                    </div>
+                    <div class="requester-image align-center mr-12">
+                      <Avatar :colourBorder="true" :profile="instructor" :size="30" />
+                    </div>
+                  </v-row>
+                </div>
+                <p
+                  v-if="submission.responseMessage"
+                  class="dialog-help-message declined-teacher-bubble text-end"
+                  v-html="submission.responseMessage"
+                ></p>
+                <!-- Divider -->
+
                 <div class="submission-create-dialog-content">
                   <div class="d-flex align-center">
                     <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
@@ -123,7 +176,6 @@
                   @click="submitWorkForReview()"
                   class="mr-2"
                   :loading="loading"
-                  :disabled="disabled"
                   v-bind="attrs"
                   v-on="on"
                 >
@@ -137,7 +189,6 @@
                   @click="reSubmitWorkForReview()"
                   class="mr-2"
                   :loading="loading"
-                  :disabled="disabled"
                   v-bind="attrs"
                   v-on="on"
                 >
@@ -151,7 +202,6 @@
                   @click="markAsCompleted()"
                   class="mr-2"
                   :loading="loading"
-                  :disabled="disabled"
                   v-bind="attrs"
                   v-on="on"
                   :dark="dark"
@@ -230,6 +280,7 @@ import {
   mdiCheckboxBlankOutline,
 } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
+import moment from "moment";
 import useRootStore from "@/store/index";
 import useSolarSystemViewStore from "@/store/solarSystemView";
 import {
@@ -272,6 +323,7 @@ export default {
     cohort: null,
     xpPointsForThisTask: 100, // task is worth 100xp by default
     xpPointsForThisTopic: 500, // topic is worth 500xp by default
+    instructor: {},
   }),
   async mounted() {
     // get mappedBy image
@@ -284,6 +336,12 @@ export default {
       this.cohort = await fetchCohortByCohortId(this.currentCohortId);
     }
     // console.log("persons topics from mission completed dialog", this.personsTopics);
+
+    // get all submissions
+    await this.getAllSubmittedWorkByCourseId(this.course.id);
+
+    // get captain
+    this.instructor = await fetchPersonByPersonId(this.submission.contextCourse.mappedBy.personId);
   },
   computed: {
     ...mapState(useRootStore, ["currentCohortId", "courseSubmissions", "personsTopics", "person"]),
@@ -302,11 +360,18 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["setSnackbar", "setTopicCompleted", "setNextTopicUnlocked"]),
+    ...mapActions(useRootStore, [
+      "setSnackbar",
+      "setTopicCompleted",
+      "setNextTopicUnlocked",
+      "getAllSubmittedWorkByCourseId",
+    ]),
     ...mapActions(useSolarSystemViewStore, ["refreshTopic", "refreshPersonTopicsAndTasks"]),
     async reSubmitWorkForReview() {
       this.loading = true;
       this.disabled = true;
+
+      console.log("got submission: ", this.submission);
 
       // 1) add submission to course (for teacher to review)
       try {
@@ -752,6 +817,10 @@ export default {
         },
       );
     },
+    getHumanDate(ts) {
+      if (!ts) return;
+      return moment((ts.seconds ? ts.seconds : ts._seconds) * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
+    },
   },
 };
 </script>
@@ -821,7 +890,8 @@ export default {
     padding: 20px;
     width: 100%;
     // font-size: 0.6rem;
-    // border: 1px solid var(--v-missionAccent-base);
+    border-top: 1px solid var(--v-missionAccent-base);
+    margin-top: 40px;
   }
 
   .submission-dialog-description {
@@ -871,6 +941,94 @@ export default {
     z-index: 1;
     border-bottom-color: rgba(0, 0, 0, 0.095);
   }
+}
+
+.declined-speech-bubble {
+  position: relative;
+  width: auto;
+  padding: 10px;
+  margin: 50px 15px 20px;
+  // background-color: #fff;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  border: 2px solid var(--v-missionAccent-base);
+  font-size: 0.8rem;
+}
+
+.declined-speech-bubble:before,
+.declined-speech-bubble:after {
+  content: "\0020";
+  display: block;
+  position: absolute;
+  top: -10px;
+  left: 15px;
+  z-index: 2;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  border: solid 10px transparent;
+  border-top: 0;
+  border-bottom-color: var(--v-missionAccent-base);
+}
+
+.declined-speech-bubble:before {
+  top: -30px;
+  z-index: 1;
+  border-bottom-color: rgba(0, 0, 0, 0.095);
+}
+
+.declined-teacher-bubble {
+  position: relative;
+  width: auto;
+  padding: 10px;
+  margin: 50px 15px 20px;
+  // background-color: #fff;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  border: 2px solid var(--v-cohortAccent-base);
+  font-size: 0.8rem;
+}
+
+.declined-teacher-bubble:before,
+.declined-teacher-bubble:after {
+  content: "\0020";
+  display: block;
+  position: absolute;
+  top: -10px;
+  right: 0px;
+  z-index: 2;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  border: solid 10px transparent;
+  border-top: 0;
+  border-bottom-color: var(--v-cohortAccent-base);
+}
+
+.declined-teacher-bubble:before {
+  top: -30px;
+  z-index: 1;
+  border-bottom-color: rgba(0, 0, 0, 0.095);
+}
+
+.requester-info {
+  position: relative;
+  top: 25px;
+  left: 30px;
+  margin-top: 20px;
+}
+
+.requester-image {
+  width: 10%;
+}
+
+.instructor-info {
+  position: relative;
+  top: 25px;
+  left: 30px;
+  margin-top: 20px;
 }
 
 .action-buttons {

@@ -111,7 +111,7 @@
                     class="dialog-context-description mt-6"
                     style="color: var(--v-cohortAccent-base)"
                   >
-                    provide the student with feedback
+                    provide the Navigator with feedback
                   </p>
                 </v-row>
               </div>
@@ -596,7 +596,8 @@ export default {
         course: this.submission.contextCourse.title,
         topic: this.submission.contextTopic.label,
         task: this.submission.contextTask.title,
-        student: this.requesterPerson.firstName + " " + this.requesterPerson.lastName,
+        firstName: this.requesterPerson.firstName,
+        lastName: this.requesterPerson.lastName,
         submission: this.submission.submissionLink,
         outcome: outcome,
         message: this.responseMsg,

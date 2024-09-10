@@ -552,6 +552,7 @@ export default {
         const courseDocRef = await db.collection("courses").add(course);
         console.log("1");
         courseDocRef.update({ id: courseDocRef.id }); // add course id to course
+        courseId = courseDocRef.id;
 
         //set courseID to Store state 'state.currentCourseId' (so not relying on router params)
         this.setCurrentCourseId(courseDocRef.id);
@@ -608,7 +609,7 @@ export default {
           });
 
         // send admins an email notification of a new course
-        await this.sendCourseCreatedEmail(this.person, course);
+        await this.sendCourseCreatedEmail(this.person, course, courseId);
 
         console.log("5");
         // route to newly created galaxy

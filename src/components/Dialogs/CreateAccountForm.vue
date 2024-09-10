@@ -72,7 +72,7 @@
     <v-row>
       <v-btn
         v-if="edit"
-        :disabled="!valid || addingAccount || updatingAccount"
+        :disabled="!valid"
         :loading="addingAccount || updatingAccount"
         @click="update()"
         width="30%"
@@ -86,7 +86,7 @@
       </v-btn>
       <v-btn
         v-else
-        :disabled="!valid || addingAccount || updatingAccount"
+        :disabled="!valid"
         :loading="addingAccount || updatingAccount"
         @click="create()"
         width="30%"

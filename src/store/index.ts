@@ -436,6 +436,28 @@ export default defineStore({
           this.userStatus = users;
         });
     },
+
+    // get submission by courseId and personId and taskId
+    async getSubmissionByCourseIdPersonIdTaskId({
+      courseId,
+      personId,
+      taskId,
+    }: {
+      courseId: string;
+      personId: string;
+      taskId: string;
+    }) {
+      const submission = await db
+        .collection("courses")
+        .doc(courseId)
+        .collection("submissionsForReview")
+        .where("studentId", "==", personId)
+        .where("contextTask.id", "==", taskId)
+        .get();
+
+      // will only return one doc
+      return submission.docs[0].data();
+    },
   },
   persist: true,
 });
