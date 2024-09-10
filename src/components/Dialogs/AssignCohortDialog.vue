@@ -443,7 +443,7 @@ export default {
 
         this.setSnackbar({
           show: true,
-          text: "Cohort assigned to Course",
+          text: "Squad assigned to Galaxy Map: " + course.title,
           color: "baseAccent",
         });
         this.close();
