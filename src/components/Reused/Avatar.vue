@@ -6,7 +6,7 @@
         <div class="d-flex justify-center align-center" v-bind="attrs" v-on="on">
           <v-avatar :size="size">
             <img
-              v-if="profileData.image"
+              v-if="profileData.image?.url"
               :src="profileData.image.url"
               :alt="profileData.firstName"
               style="object-fit: cover"
@@ -35,7 +35,7 @@
     <div v-else-if="profileData" class="d-flex justify-center align-center">
       <v-avatar :size="size">
         <img
-          v-if="profileData.image"
+          v-if="profileData.image?.url"
           :src="profileData.image.url"
           :alt="profileData.firstName"
           style="object-fit: cover"
@@ -55,7 +55,7 @@
         <div class="d-flex justify-center align-center" v-bind="attrs" v-on="on">
           <v-avatar :size="size">
             <img
-              v-if="organisationData.image"
+              v-if="organisationData.image?.url"
               :src="organisationData.image.url"
               :alt="organisationData.name"
               style="object-fit: cover"

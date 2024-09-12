@@ -108,16 +108,18 @@ export default {
       // console.log("this.teachersRequestsForHelp", this.teachersRequestsForHelp);
       // console.log("this.allStudentsRequests", this.allStudentsRequests);
 
-      // forgot why using this filter - students.some logic.
-      // im thinking reuqests are relevant to everyone so why need to filter by specific students
-      const requests = this.allStudentsRequests
+      let requests = this.allStudentsRequests
         ? this.allStudentsRequests
         : this.teachersRequestsForHelp;
-      // .filter((request) =>
-      //   this.students?.some((student) => {
-      //     return student.id ? student.id === request.personId : student === request.personId;
-      //   }),
-      // );
+
+      // filter requests to only show students requests (eg. students in a cohort)
+      if (this.students) {
+        requests = requests.filter((request) =>
+          this.students?.some((student) => {
+            return student.id ? student.id === request.personId : student === request.personId;
+          }),
+        );
+      }
 
       let filteredRequests = [];
 

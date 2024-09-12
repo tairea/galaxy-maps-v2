@@ -48,7 +48,7 @@
     <!-- ASSIGNED COURSES INFO -->
     <div v-else-if="assignCourses">
       <p class="overline assignedToLabel ma-0">Galaxy Maps</p>
-      <div v-if="courses.length > 0">
+      <div v-if="courses.length > 0" class="d-flex justify-space-around">
         <Course v-for="(course, i) in courses" :course="course" :key="i" />
         <!-- Jump to galaxy button -->
         <!-- <div v-if="courses.length == 1" class="d-flex justify-center align-center mb-2">

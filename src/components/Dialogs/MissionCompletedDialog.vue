@@ -337,11 +337,15 @@ export default {
     }
     // console.log("persons topics from mission completed dialog", this.personsTopics);
 
-    // get all submissions
-    await this.getAllSubmittedWorkByCourseId(this.course.id);
+    if (this.task.submissionRequired) {
+      // get all submissions
+      await this.getAllSubmittedWorkByCourseId(this.course.id);
 
-    // get captain
-    this.instructor = await fetchPersonByPersonId(this.submission.contextCourse.mappedBy.personId);
+      // get captain
+      this.instructor = await fetchPersonByPersonId(
+        this.submission.contextCourse.mappedBy.personId,
+      );
+    }
   },
   computed: {
     ...mapState(useRootStore, ["currentCohortId", "courseSubmissions", "personsTopics", "person"]),
