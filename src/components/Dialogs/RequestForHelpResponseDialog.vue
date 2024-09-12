@@ -58,7 +58,7 @@
                   <div class="requester-image justify-center align-center">
                     <v-avatar v-if="requesterPerson" size="30" style="background-color: grey">
                       <img
-                        v-if="requesterPerson.image"
+                        v-if="requesterPerson.image?.url"
                         :src="requesterPerson.image.url"
                         :alt="requesterPerson.firstName"
                         style="object-fit: cover"
@@ -109,7 +109,6 @@
                 @click="submitHelpResponse()"
                 class="mr-2"
                 :loading="loading"
-                :disabled="loading"
               >
                 <v-icon left> {{ mdiCheck }} </v-icon>
                 SUBMIT RESPONSE
@@ -122,14 +121,19 @@
                 class="ml-2"
                 @click="cancel"
                 :disabled="loading"
-                :loading="loading"
               >
                 <v-icon left> {{ mdiClose }} </v-icon>
                 Cancel
               </v-btn>
 
               <!-- DELETE REQUEST -->
-              <v-btn outlined color="error" class="ml-4" @click="deleteDialog()">
+              <v-btn
+                outlined
+                color="error"
+                class="ml-4"
+                @click="deleteDialog()"
+                :disabled="loading"
+              >
                 <v-icon left> {{ mdiDelete }} </v-icon>
                 Delete
               </v-btn>
@@ -232,15 +236,15 @@ export default {
     currentTask: null,
   }),
   async mounted() {
-    this.currentCourse = await fetchCourseByCourseId(this.currentCourseId);
+    // this.currentCourse = await fetchCourseByCourseId(this.currentCourseId);
+    this.currentCourse = await fetchCourseByCourseId(this.request.contextCourse.id);
     this.currentTopic = await fetchTopicByCourseIdTopicId(
-      this.currentCourseId,
-      this.currentTopicId,
+      this.request.contextCourse.id,
+      this.request.contextTopic.id,
     );
     this.currentTask = await fetchTaskByCourseIdTopicIdTaskId(
-      this.currentCourseId,
-      this.currentTopicId,
-      // this.currentTaskId, null
+      this.request.contextCourse.id,
+      this.request.contextTopic.id,
       this.request.contextTask.id,
     );
   },
@@ -274,7 +278,7 @@ export default {
 
         await this.emailResponseToStudent(this.requesterPerson, this.response, this.request);
 
-        console.log("Response successfully submitted for review!");
+        console.log("Response successfully sent to navigator");
 
         // teacher assisted student
         await teacherRespondedToRequestForHelpXAPIStatement(
@@ -313,12 +317,12 @@ export default {
     },
     async emailResponseToStudent(student, response, request) {
       const data = {
-        course: this.currentCourse.title,
-        topic: this.currentTopic.label,
-        task: this.currentTask.title, // returning null (changing to use request)
-        // course: request.contextCourse.title,
-        // topic: request.contextTopic.label,
-        // task: request.contextTask.title,
+        //course: this.currentCourse.title,
+        //topic: this.currentTopic.label,
+        //task: this.currentTask.title, // returning null (changing to use request)
+        course: request.contextCourse.title,
+        topic: request.contextTopic.label,
+        task: request.contextTask.title,
         student: student.firstName + " " + student.lastName,
         response: response,
         request: this.request.requestForHelpMessage,

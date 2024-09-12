@@ -408,11 +408,11 @@ export default defineStore({
 
           // console.log("ALL REQUESTS FOR HELP:", allRequestsForHelp);
 
-          this.teachersRequestsForHelp = allRequestsForHelp.filter(
-            (req) => req.contextCourse.id === courseId && req.id, // because there is a bug that dupliactes requests (these duplicates dont have id's)
-          );
+          this.teachersRequestsForHelp = allRequestsForHelp
+            // there is a bug that dupliactes requests (these duplicates dont have id's)
+            .filter((req) => req.id);
 
-          // console.log("this.teachersRequestsForHelp:", this.teachersRequestsForHelp);
+          console.log("this.teachersRequestsForHelp:", this.teachersRequestsForHelp);
         });
 
       return unsubscribe;

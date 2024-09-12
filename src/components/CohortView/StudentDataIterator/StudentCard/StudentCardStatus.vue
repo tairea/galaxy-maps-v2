@@ -9,7 +9,7 @@
       :style="borderColour"
     >
       <img
-        v-if="student.image.url"
+        v-if="student.image?.url"
         :src="student.image.url"
         :alt="student.firstName"
         style="object-fit: cover"
