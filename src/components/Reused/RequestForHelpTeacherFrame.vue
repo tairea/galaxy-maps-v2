@@ -70,10 +70,11 @@ export default {
   async mounted() {
     if (this.courses) {
       for (const course of this.courses) {
-        // console.log("getting requests for course: ", course);
+        console.log("getting requests for course: ", course);
         const unsubscribe = await this.getRequestsForHelpByCourseId(course.id);
         this.unsubscribes.push(unsubscribe);
       }
+      console.log("requests unsubscribes", this.unsubscribes);
     }
   },
   computed: {
@@ -129,12 +130,12 @@ export default {
           (request) => request.requestForHelpStatus != "unanswered",
         );
       } else {
-        // filteredRequests = requests.filter(
-        //   (request) => request.requestForHelpStatus === "unanswered",
-        // );
+        filteredRequests = requests.filter(
+          (request) => request.requestForHelpStatus === "unanswered",
+        );
 
         // show all requests (answered and unanswered)
-        filteredRequests = requests;
+        // filteredRequests = requests;
       }
 
       if (this.isTeacher) {
