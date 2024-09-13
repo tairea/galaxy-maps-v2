@@ -79,6 +79,7 @@ export default {
         const unsubscribe = await this.getAllSubmittedWorkByCourseId(course.id || course);
         this.unsubscribes.push(unsubscribe);
       }
+      console.log("submissions unsubscribes", this.unsubscribes);
     }
   },
   // destroyed() {
@@ -115,7 +116,7 @@ export default {
         );
       }
 
-      // get all student submissions for this course
+      // get all teacher's students submissions for this course
       else if (this.courses) {
         submissions = this.courseSubmissions.filter((submission) =>
           this.students?.some((student) => {
