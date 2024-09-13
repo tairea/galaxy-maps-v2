@@ -30,11 +30,16 @@ export default {
 .student-progress-section {
   width: 25%;
   border-left: 1px dashed var(--v-missionAccent-base);
+  /* display: flex; */
   justify-content: center;
+
+  flex-wrap: wrap;
 }
 .flex-div {
-  width: 100%;
+  width: 50%;
   padding-top: 5px;
+
+  /* border: 1px solid pink; */
 }
 
 .in-div {

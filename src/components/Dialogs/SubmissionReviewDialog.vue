@@ -118,7 +118,7 @@
               <div v-if="response" class="ma-5 mt-0">
                 <v-row class="justify-end align-center mr-4">
                   <p class="dialog-description px-4 pb-0" style="color: var(--v-cohortAccent-base)">
-                    student feedback
+                    your feedback
                   </p>
                   <Avatar :colourBorder="true" :profile="instructor" :size="30" class="pb-2" />
                 </v-row>
@@ -157,6 +157,7 @@
             <div class="action-buttons">
               <div class="divider"></div>
               <template v-if="isTeacher && !reviewed">
+                <!-- APPROVE -->
                 <v-btn
                   outlined
                   color="missionAccent"
@@ -168,6 +169,8 @@
                   <v-icon left> {{ mdiThumbUpOutline }} </v-icon>
                   approve
                 </v-btn>
+
+                <!-- DECLINE -->
                 <v-btn
                   outlined
                   color="galaxyAccent"
@@ -704,7 +707,7 @@ export default {
       console.log("8c-ii) XP log updated...");
     },
     close() {
-      console.log("closing dialog");
+      this.dialog = false;
     },
   },
 };

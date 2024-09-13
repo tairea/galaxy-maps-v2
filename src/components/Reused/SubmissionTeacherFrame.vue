@@ -11,6 +11,7 @@
           :submission="submission"
           :isDashboardView="isDashboardView"
           :isTeacher="isTeacher"
+          :isStudent="isStudent"
           :showCourseImage="showCourseImage"
         />
       </div>
@@ -21,6 +22,7 @@
           :submission="submission"
           :isDashboardView="isDashboardView"
           :isTeacher="isTeacher"
+          :isStudent="isStudent"
           :showCourseImage="showCourseImage"
         />
       </div>
@@ -48,6 +50,7 @@ export default {
     "courses",
     "students",
     "isTeacher",
+    "isStudent",
     "studentOverview",
     "allStudentsSubmissions",
     "completedSubmissionsOnly",
@@ -78,12 +81,12 @@ export default {
       }
     }
   },
-  destroyed() {
-    this.resetTeachersSubmissions();
-    for (const unsubscribe of this.unsubscribes) {
-      unsubscribe();
-    }
-  },
+  // destroyed() {
+  //   this.resetTeachersSubmissions();
+  //   for (const unsubscribe of this.unsubscribes) {
+  //     unsubscribe();
+  //   }
+  // },
   computed: {
     ...mapState(useRootStore, ["courseSubmissions", "person", "currentTopicId"]),
     isCohortView() {

@@ -214,7 +214,7 @@ export default {
   methods: {
     ...mapActions(useRootStore, ["setCurrentCohortId"]),
     clickedPerson(e, person, index) {
-      if (!isCohortTeacher) {
+      if (!this.isCohortTeacher) {
         return;
       }
       // prevent route to cohortView

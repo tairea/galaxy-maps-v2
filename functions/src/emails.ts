@@ -402,7 +402,8 @@ Galaxy: ${course}
 System: ${topic}
 Mission: ${task}
 
-Your Instructions: ${submissionInstructions}
+Your Instructions:</span>
+${submissionInstructions}
 
 Navigator's Submission Response: ${submission}
 
@@ -411,25 +412,39 @@ please login to https://${DOMAIN}/dashboard to respond to their submission
   
 Galaxy Maps Team`;
 
-  mailOptions.html = `<p>Greetings Captain ${teacher},</p>
+  mailOptions.html = `<p>Greetings, Captain ${teacher}</p>
   </br> 
-<p>Navigator ${student} has submitted work for your review.</p>
+<p>Navigator ${student}, has submitted work for you to review.</p>
 </br> 
+<p>Please note: Navigators <strong>cannot</strong> progress until submissions are approved!!</p>
+</br>
+<p>------------------------------------------</p>
+</br>
+<p style="text-decoration: underline;">Context:</p>
 <ul>
   <li>Galaxy: ${course}</li>
   <li>System: ${topic}</li>
   <li>Mission: ${task}</li>
 </ul>
 </br> 
-<p>Your Instructions: ${submissionInstructions}</p>
+</br> 
+<p style="text-decoration: underline;">Your Instructions:</p> 
+<div style="border: 1px solid #69A1E2; border-radius: 10px; padding:10px;">
+<p>${submissionInstructions}</p>
+</div>
 </br>
-<p>Navigator's Submission: <strong>${submission}</strong> </p>
+</br>
+<p style="text-decoration: underline;">Their Submission:</p> 
+<div style="border: 1px solid #FAF200; border-radius: 10px; padding:10px;">
+<p>${submission}</p>
+</div>
 </br> 
-<p>To respond to ${student}'s submission and UNLOCK the next mission from them,
+</br>
+<p>To respond to ${student}'s Submission and unlock their next mission,
 please login to <a href="https://${DOMAIN}/dashboard" target="_blank"
-  >https://${DOMAIN}/dashboard</a> to respond to their submission</p>
+  >https://${DOMAIN}/dashboard</a> to approve or decline their submission</p>
 </br> 
-<p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
+<p style="font-size: 0.75rem !important;font-weight: 500;letter-spacing: 0.1666666667em !important;line-height: 2rem;text-transform: uppercase;font-family: "Roboto", sans-serif !important;">Galaxy Maps Team</p>`;
   /* eslint-enable max-len */
 
   await mailTransport.sendMail(mailOptions);
@@ -445,7 +460,8 @@ export const sendResponseToSubmissionHttpsEndpoint = runWith({}).https.onCall((d
     teacher,
     course,
     task,
-    student,
+    firstName,
+    lastName,
     outcome,
     topic,
     message,
@@ -479,8 +495,8 @@ export async function sendResponseToSubmission(
     lastName
       ? lastName.charAt(0).toUpperCase() + lastName.slice(1)
       : firstName
-      ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
-      : ""
+        ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
+        : ""
   },
 
 Captain ${teacher} has reviewed your submission for ${task}.
@@ -503,8 +519,8 @@ Galaxy Maps Team`;
     lastName
       ? lastName.charAt(0).toUpperCase() + lastName.slice(1)
       : firstName
-      ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
-      : ""
+        ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
+        : ""
   },</strong></p>
 <p>Captain ${teacher} has reviewed your submission to ${task}.</p>
 </br> 
