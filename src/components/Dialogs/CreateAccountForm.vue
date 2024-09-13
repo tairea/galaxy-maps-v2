@@ -1,7 +1,7 @@
 <template>
   <div class="create-dialog-content">
     <p v-if="!teacher && !edit" class="caption mb-0">
-      Adding this student will send a registration link to their email
+      Adding this Navigator will send a registration link to their email
     </p>
     <!-- TODO: info description for adding a teacher? -->
     <v-form ref="form" v-model="valid" lazy-validation>
@@ -229,15 +229,20 @@ export default {
             await updatePerson(profile.id, profile); // updates /people/:id profile
             await addPersonToCohort(profile.id, this.cohort.id); // adds student to /cohorts/:id/students
 
+            console.log("existing person added to cohort");
+
             if (this.cohort.courses.length) {
               await this.assignStudentToCourses(profile); // adds course to /people/:id/assignedCourses
             }
+
             this.setSnackbar({
               show: true,
               text: "Navigator successfully added to Squad",
               color: "baseAccent",
             });
+
             this.sendNewCohortEmail(profile);
+
             this.addingAccount = false;
             this.close();
           } catch (error) {
@@ -255,7 +260,7 @@ export default {
           const person = await createPerson(profile);
           this.setSnackbar({
             show: true,
-            text: "Account created",
+            text: "New Account Created",
             color: "baseAccent",
           });
           if (!this.teacher) {
@@ -271,7 +276,7 @@ export default {
           } else {
             this.setSnackbar({
               show: true,
-              text: "Captain added to Galaxy Map",
+              text: "New Captain added to Galaxy Map",
               color: "baseAccent",
             });
           }

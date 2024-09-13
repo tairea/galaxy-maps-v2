@@ -6,7 +6,7 @@
       <!-- Assigned COHORTS -->
       <div v-if="cohorts && cohorts.length > 0">
         <p class="overline assignedToLabel ma-0">Squads</p>
-        <v-row class="my-1">
+        <v-row class="my-1 flex-wrap">
           <Cohort
             v-for="cohort in cohorts"
             :cohort="cohort"
@@ -20,7 +20,7 @@
       <!-- Assigned PEOPLE -->
       <div v-if="people.length > 0">
         <p class="overline assignedToLabel ma-0">Navigators</p>
-        <v-row class="my-4">
+        <v-row class="my-4 flex-wrap">
           <Avatar
             v-for="person in people"
             :profile="person"
@@ -48,7 +48,7 @@
     <!-- ASSIGNED COURSES INFO -->
     <div v-else-if="assignCourses">
       <p class="overline assignedToLabel ma-0">Galaxy Maps</p>
-      <div v-if="courses.length > 0" class="d-flex justify-space-around">
+      <div v-if="courses.length > 0" class="d-flex justify-space-around flex-wrap">
         <Course v-for="(course, i) in courses" :course="course" :key="i" />
         <!-- Jump to galaxy button -->
         <!-- <div v-if="courses.length == 1" class="d-flex justify-center align-center mb-2">
