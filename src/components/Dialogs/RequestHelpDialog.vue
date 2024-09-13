@@ -67,6 +67,7 @@
                 @click="cancel"
                 :dark="dark"
                 :light="!dark"
+                :disabled="loading"
               >
                 <v-icon left> {{ mdiClose }} </v-icon>
                 Cancel

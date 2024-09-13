@@ -38,7 +38,22 @@
       </div>
 
       <div id="right-section">
-        <StudentActivityTimeline :student="person" />
+        <!-- all requests and submissions -->
+        <RequestForHelpTeacherFrame
+          :courses="studentsCourses"
+          :students="[this.person.id]"
+          :dense="true"
+          :showCourseImage="true"
+          class="mt-7 pb-2"
+        />
+        <SubmissionTeacherFrame
+          :courses="studentsCourses"
+          :students="[this.person.id]"
+          :dense="true"
+          :showCourseImage="true"
+          class="mt-5 pb-2"
+        />
+        <StudentActivityTimeline :student="person" class="mt-5" />
       </div>
     </template>
 
@@ -208,6 +223,10 @@ export default {
       const courses = this.teacherCohorts.flatMap((cohort) =>
         cohort.courses.map((course) => ({ id: course })),
       );
+      return courses;
+    },
+    studentsCourses() {
+      const courses = this.person.assignedCourses.map((course) => ({ id: course }));
       return courses;
     },
     teachersStudents() {

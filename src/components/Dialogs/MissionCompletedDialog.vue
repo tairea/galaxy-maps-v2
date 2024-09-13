@@ -23,7 +23,7 @@
 
           <!-- DIALOG (TODO: make as a component)-->
           <div v-if="active || declined" class="create-dialog">
-            <!-- HEADER -->
+            <!-- HEADER (Submission) -->
             <div v-if="task.submissionRequired" class="dialog-header">
               <p class="dialog-title">
                 Submission requirements for:
@@ -38,8 +38,7 @@
                 </p>
               </div>
             </div>
-
-            <!-- HEADER -->
+            <!-- HEADER (Mission completed) -->
             <div v-else class="dialog-header">
               <p class="dialog-title">
                 Have you completed Mission:
@@ -57,7 +56,7 @@
             </div>
 
             <div class="submission-create-dialog">
-              <!-- SUBMISSION FIELDS -->
+              <!-- INSTRUCTOR SPEECH BUBBLE (Submission) -->
               <div v-if="task.submissionRequired">
                 <div class="submission-dialog-header">
                   <!-- submission message speech bubble -->
@@ -94,8 +93,8 @@
                 <!-- If Declined and Resubmitting -->
 
                 <!-- STUDENT SUBMISSION -->
-                <div class="requester-info">
-                  <v-row v-if="declined">
+                <div v-if="declined" class="requester-info">
+                  <v-row>
                     <div class="requester-image justify-center align-center">
                       <Avatar :colourBorder="true" :profile="person" :size="30" />
                     </div>
@@ -111,12 +110,13 @@
                   </v-row>
                 </div>
                 <p
+                  v-if="submission?.submissionLink"
                   class="dialog-help-message declined-speech-bubble"
                   v-html="submission.submissionLink"
                 ></p>
 
                 <!-- INSTRUCTOR RESPONSE -->
-                <div v-if="submission.responseMessage" class="instructor-info">
+                <div v-if="submission?.responseMessage" class="instructor-info">
                   <v-row class="justify-end">
                     <!-- Message -->
                     <div>
@@ -138,7 +138,7 @@
                   </v-row>
                 </div>
                 <p
-                  v-if="submission.responseMessage"
+                  v-if="submission?.responseMessage"
                   class="dialog-help-message declined-teacher-bubble text-end"
                   v-html="submission.responseMessage"
                 ></p>
@@ -164,11 +164,10 @@
                   />
                 </div>
               </div>
-              <!-- End of v-if="submission" -->
 
               <!-- ACTION BUTTONS -->
               <div :class="isScreenSmall ? 'action-buttons-over-under' : 'action-buttons'">
-                <!-- YES, I HAVE COMPLETED -->
+                <!-- SUBMIT WORK FOR REVIEW -->
                 <v-btn
                   v-if="active && task.submissionRequired"
                   outlined
@@ -182,6 +181,8 @@
                   <v-icon left> {{ mdiCloudUploadOutline }} </v-icon>
                   SUBMIT WORK FOR REVIEW
                 </v-btn>
+
+                <!-- RE-SUBMIT WORK FOR REVIEW -->
                 <v-btn
                   v-else-if="declined && task.submissionRequired"
                   outlined
@@ -195,6 +196,8 @@
                   <v-icon left> {{ mdiCheck }} </v-icon>
                   RE-SUBMIT WORK FOR REVIEW
                 </v-btn>
+
+                <!-- YES, I HAVE COMPLETED MISSION -->
                 <v-btn
                   v-else
                   outlined
@@ -221,11 +224,8 @@
                   <v-icon left> {{ mdiClose }} </v-icon>
                   Cancel
                 </v-btn>
-                <!-- End action-buttons -->
               </div>
-              <!-- End submission-create-dialog-content -->
             </div>
-            <!-- End submission-create-dialog -->
           </div>
 
           <!-- DIALOG CONTENT IF ALREADY SUBMITTED -->
@@ -260,7 +260,6 @@
             </div>
             <!-- End submission-create-dialog -->
           </div>
-          <!-- End create-dialog -->
         </v-dialog>
       </v-col>
     </v-row>
@@ -342,9 +341,11 @@ export default {
       await this.getAllSubmittedWorkByCourseId(this.course.id);
 
       // get captain
-      this.instructor = await fetchPersonByPersonId(
-        this.submission.contextCourse.mappedBy.personId,
-      );
+      if (this.submission) {
+        this.instructor = await fetchPersonByPersonId(
+          this.submission.contextCourse.mappedBy.personId,
+        );
+      }
     }
   },
   computed: {
@@ -396,8 +397,11 @@ export default {
             responderPersonId: "",
             responseMessage: "",
           });
-
         console.log("Re-submission successfully submitted for review!");
+
+        //email the teachers about the submission
+        await this.emailTeachersAboutSubmission();
+        console.log("Task work successfully re-submitted for review!");
 
         // send xAPI statement to LRS
         await reSubmitWorkForReviewXAPIStatement(this.person, this.task.id, {
@@ -439,18 +443,6 @@ export default {
           taskSubmittedForReviewTimestamp: new Date(),
         });
 
-      if (this.cohort != null) {
-        for (const teacherId of this.cohort.teachers) {
-          await this.sendTaskSubmission(
-            teacherId,
-            this.submissionLink,
-            this.task.submissionInstructions,
-          );
-        }
-      }
-
-      console.log("Task work successfully re-submitted for review!");
-
       // unlock next task
       await this.unlockNextTask();
 
@@ -481,16 +473,9 @@ export default {
           taskSubmissionStatus: "inreview",
           taskSubmittedForReviewTimestamp: new Date(),
         });
-        if (this.cohort != null) {
-          for (const teacherId of this.cohort.teachers) {
-            await this.sendTaskSubmission(
-              teacherId,
-              this.submissionLink,
-              this.task.submissionInstructions,
-            );
-          }
-        }
 
+        //email the teachers about the submission
+        await this.emailTeachersAboutSubmission();
         console.log("Submission successfully submitted for review!");
 
         // send xAPI statement to LRS
@@ -517,9 +502,6 @@ export default {
         });
 
         throw error;
-
-        this.loading = false;
-        this.dialog = false;
       }
 
       // 2) Add submission to students task (for students progression)
@@ -536,8 +518,7 @@ export default {
           taskStatus: "inreview",
           taskSubmittedForReviewTimestamp: new Date(),
         });
-
-      console.log("Task work successfully submitted for review!");
+      console.log("Students task updated to in-review");
 
       // unlock next task
       await this.unlockNextTask();
@@ -777,7 +758,12 @@ export default {
       this.mappedByImageURL = person.image?.url;
     },
     async sendTaskSubmission(teacherId, submissionResponse, submissionInstructions) {
-      const teacher = await fetchPersonByPersonId(teacherId);
+      let teacher = null;
+      if (teacherId !== this.instructor.id) {
+        teacher = await fetchPersonByPersonId(teacherId);
+      } else {
+        teacher = this.instructor;
+      }
       const data = {
         course: this.course.title,
         topic: this.topic.label,
@@ -790,6 +776,59 @@ export default {
       };
       const sendTaskSubmission = functions.httpsCallable("sendTaskSubmission");
       return sendTaskSubmission(data);
+    },
+    async emailTeachersAboutSubmission() {
+      // get the cohort, so we can get all the teachers
+
+      // --  below code doesnt work: "FirebaseError: [code=invalid-argument]: A maximum of 1 'ARRAY_CONTAINS' filter is allowed per disjunction."
+      // const cohortsSnapshot = await db
+      //   .collection("cohorts")
+      //   .where("students", "array-contains", this.person.id)
+      //   .where("courses", "array-contains", this.course.id)
+      //   .where("teachers", "array-contains", this.instructor.id)
+      //   .get();
+
+      // -- so instead get students cohorts then filter client side
+      const studentsSnapshot = await db
+        .collection("cohorts")
+        .where("students", "array-contains", this.person.id)
+        .get();
+
+      // filter client-side where data.courses.includes(this.course.id) && data.teachers.includes(this.instructor.id)
+      const studentsCohorts = studentsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      console.log("studentsCohorts", studentsCohorts);
+
+      const cohortsWithCourseAndTeacher = studentsCohorts.filter((cohort) => {
+        return (
+          cohort.courses.includes(this.course.id) && cohort.teachers.includes(this.instructor.id)
+        );
+      });
+      console.log("cohortsWithCourseAndTeacher", cohortsWithCourseAndTeacher);
+
+      // Possible issue: What if the student is in multiple cohorts with the same course and teacher?
+      // At the moment cohortsWithCourseAndTeacher[0] assumes there will only be one cohort that meets the criteria.
+      // could map cohortsWithCourseAndTeacher but need to think through the implications of a student doing the same course in multiple cohorts.
+      const cohort = cohortsWithCourseAndTeacher[0];
+
+      if (cohort) {
+        for (const teacherId of cohort.teachers) {
+          await this.sendTaskSubmission(
+            teacherId,
+            this.submissionLink,
+            this.task.submissionInstructions,
+          );
+        }
+      } else {
+        await this.sendTaskSubmission(
+          this.instructor.id,
+          this.submissionLink,
+          this.task.submissionInstructions,
+        );
+      }
     },
     handleImageAdded(file, Editor, cursorLocation) {
       // ceate a storage ref
@@ -895,7 +934,7 @@ export default {
     width: 100%;
     // font-size: 0.6rem;
     border-top: 1px solid var(--v-missionAccent-base);
-    margin-top: 40px;
+    padding-top: 40px;
   }
 
   .submission-dialog-description {
