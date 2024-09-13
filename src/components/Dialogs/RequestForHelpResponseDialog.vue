@@ -292,15 +292,6 @@ export default {
           },
         );
 
-        this.requestForHelp = "";
-        this.loading = false;
-        this.dialog = false;
-        this.setSnackbar({
-          show: true,
-          text: "Response sent to student",
-          color: "baseAccent",
-        });
-
         // TODO: update requests. (to remove answered requests)
       } catch (error) {
         console.error("Error writing document: ", error);
@@ -308,6 +299,15 @@ export default {
           show: true,
           text: "Error: " + error,
           color: "pink",
+        });
+      } finally {
+        this.requestForHelp = "";
+        this.loading = false;
+        this.dialog = false;
+        this.setSnackbar({
+          show: true,
+          text: "Response sent to Navigator",
+          color: "baseAccent",
         });
       }
     },

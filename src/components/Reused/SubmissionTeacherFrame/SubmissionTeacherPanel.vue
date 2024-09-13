@@ -12,7 +12,7 @@
             <div v-if="showCourseImage">
               <Course :course="submission.contextCourse" class="pa-0" />
             </div>
-            <div v-else>
+            <div class="d-flex" v-else>
               <Avatar
                 v-if="isDashboardView"
                 :profile="courseContextProfile"
