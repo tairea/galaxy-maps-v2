@@ -416,9 +416,9 @@ Galaxy Maps Team`;
   </br> 
 <p>Navigator ${student}, has submitted work for you to review.</p>
 </br> 
-<p>Please note: Navigators <strong>cannot</strong> progress until submissions are approved!!</p>
+<p><span style="text-decoration: underline;">Please note:</span> Navigators <strong>cannot</strong> progress until submissions are approved!!</p>
 </br>
-<p>------------------------------------------</p>
+<hr>
 </br>
 <p style="text-decoration: underline;">Context:</p>
 <ul>
@@ -429,13 +429,13 @@ Galaxy Maps Team`;
 </br> 
 </br> 
 <p style="text-decoration: underline;">Your Instructions:</p> 
-<div style="border: 1px solid #69A1E2; border-radius: 10px; padding:10px;">
+<div style="border: 3px solid #E269CF; border-radius: 10px; padding:10px;">
 <p>${submissionInstructions}</p>
 </div>
 </br>
 </br>
 <p style="text-decoration: underline;">Their Submission:</p> 
-<div style="border: 1px solid #FAF200; border-radius: 10px; padding:10px;">
+<div style="border: 3px solid #69A1E2; border-radius: 10px; padding:10px;">
 <p>${submission}</p>
 </div>
 </br> 
