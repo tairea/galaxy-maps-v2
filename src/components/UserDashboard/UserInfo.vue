@@ -41,6 +41,7 @@
         <div class="d-flex flex-wrap">
           <Cohort
             v-for="cohort in cohorts"
+            :isTeacher="isTeacher(cohort)"
             :cohort="cohort"
             :key="cohort.id"
             :size="60"
@@ -88,6 +89,10 @@ export default {
   },
   methods: {
     ...mapActions(useRootStore, ["getCohortsByPersonId"]),
+    isTeacher(cohort) {
+      // return true if this.person.id is in the list of teachers
+      return cohort.teachers?.includes(this.person.id);
+    },
   },
 };
 </script>
