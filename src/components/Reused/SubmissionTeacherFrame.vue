@@ -1,7 +1,7 @@
 <template>
   <div :id="studentOverview ? 'studentOverview' : 'submission-panel'">
     <h2 v-if="!studentOverview" class="submission-label">
-      {{ completedSubmissionsOnly ? "COMPLETED SUBMISSIONS" : "Work submitted for review" }}
+      {{ formatLabel }}
     </h2>
     <div v-if="submissions.length > 0">
       <div v-if="dense">
@@ -57,6 +57,7 @@ export default {
     "loading",
     "showCourseImage",
     "dense",
+    "yours",
   ],
   components: {
     SubmissionTeacherPanel,
@@ -76,6 +77,7 @@ export default {
   async mounted() {
     if (this.courses) {
       for (const course of this.courses) {
+        // console.log("getting submissions for course ", course);
         const unsubscribe = await this.getAllSubmittedWorkByCourseId(course.id || course);
         this.unsubscribes.push(unsubscribe);
       }
@@ -101,6 +103,15 @@ export default {
     },
     isSystemView() {
       return this.$route.name === "SolarSystemView";
+    },
+    formatLabel() {
+      if (this.completedSubmissionsOnly) {
+        return "COMPLETED SUBMISSIONS";
+      } else if (this.yours) {
+        return "YOUR WORK SUBMITTED FOR REVIEW";
+      } else {
+        return "WORK SUBMITTED FOR REVIEW";
+      }
     },
     submissions() {
       let submissions = [];
