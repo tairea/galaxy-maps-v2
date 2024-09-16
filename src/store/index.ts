@@ -412,7 +412,7 @@ export default defineStore({
             // there is a bug that dupliactes requests (these duplicates dont have id's)
             .filter((req) => req.id);
 
-          console.log("this.teachersRequestsForHelp:", this.teachersRequestsForHelp);
+          // console.log("this.teachersRequestsForHelp:", this.teachersRequestsForHelp);
         });
 
       return unsubscribe;

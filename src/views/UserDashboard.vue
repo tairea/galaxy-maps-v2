@@ -40,18 +40,23 @@
       <div id="right-section">
         <!-- all requests and submissions -->
         <RequestForHelpTeacherFrame
+          v-if="studentsCourses"
           :courses="studentsCourses"
           :students="[this.person.id]"
           :dense="true"
           :showCourseImage="true"
           class="mt-7 pb-2"
+          :yours="true"
         />
+
         <SubmissionTeacherFrame
+          v-if="studentsCourses"
           :courses="studentsCourses"
           :students="[this.person.id]"
           :dense="true"
           :showCourseImage="true"
           class="mt-5 pb-2"
+          :yours="true"
         />
         <StudentActivityTimeline :student="person" class="mt-5" />
       </div>
@@ -92,12 +97,14 @@
       <div id="right-section">
         <!-- all requests and submissions -->
         <RequestForHelpTeacherFrame
+          v-if="!loading && cohortCourses"
           :isTeacher="true"
           :courses="cohortCourses"
           :students="teachersStudents"
           class="mt-9"
         />
         <SubmissionTeacherFrame
+          v-if="!loading && cohortCourses"
           :isTeacher="isTeacher"
           :courses="cohortCourses"
           :students="teachersStudents"
@@ -183,6 +190,8 @@ export default {
     } else {
       this.setDashboardView("student");
     }
+
+    // get all submissions
   },
   computed: {
     ...mapState(useUserDashboardStore, ["dashboardView"]),

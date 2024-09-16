@@ -1,7 +1,7 @@
 <template>
   <div :id="studentOverview ? 'studentOverview' : cohortId">
     <h2 v-if="!studentOverview" class="help-label">
-      {{ completedRequestsOnly ? "COMPLETED Requests" : "Requests for help" }}
+      {{ formatLabel }}
     </h2>
 
     <div v-if="requests.length > 0">
@@ -61,6 +61,7 @@ export default {
     "completedRequestsOnly",
     "allStudentsRequests",
     "dense",
+    "yours",
   ],
   data() {
     return {
@@ -70,7 +71,7 @@ export default {
   async mounted() {
     if (this.courses) {
       for (const course of this.courses) {
-        console.log("getting requests for course: ", course);
+        // console.log("getting requests for course: ", course);
         const unsubscribe = await this.getRequestsForHelpByCourseId(course.id);
         this.unsubscribes.push(unsubscribe);
       }
@@ -100,6 +101,15 @@ export default {
     },
     cohortId() {
       return this.noSubmissions ? "student-help-panel" : "help-panel";
+    },
+    formatLabel() {
+      if (this.completedSubmissionsOnly) {
+        return "COMPLETED Requests";
+      } else if (this.yours) {
+        return "Your Requests for Help";
+      } else {
+        return "Requests for help";
+      }
     },
     requests() {
       // const requests = this.teachersRequestsForHelp.filter(
