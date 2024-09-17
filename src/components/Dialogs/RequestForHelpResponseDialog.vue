@@ -2,7 +2,7 @@
   <v-container>
     <v-row class="text-center" align="center">
       <v-col cols="12">
-        <v-dialog v-model="dialog" width="40%" light>
+        <v-dialog v-model="dialog" width="40%" light persistent>
           <!-- HELP RESPONSE BUTTON -->
           <template v-slot:activator="{ on, attrs }">
             <v-btn color="baseAccent" v-bind="attrs" v-on="on" outlined small>
@@ -109,6 +109,8 @@
                 @click="submitHelpResponse()"
                 class="mr-2"
                 :loading="loading"
+                v-bind="attrs"
+                v-on="on"
               >
                 <v-icon left> {{ mdiCheck }} </v-icon>
                 SUBMIT RESPONSE
