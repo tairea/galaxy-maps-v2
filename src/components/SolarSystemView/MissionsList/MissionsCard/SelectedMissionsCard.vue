@@ -39,6 +39,12 @@
           <p class="text-overline text-uppercase">
             {{ getStatusAndTimestamp }}
           </p>
+          <p v-if="task.taskReviewedFeedback" class="text-overline text-uppercase">
+            With Feedback from Captain:
+            <br />
+            <span class="galaxyAccent--text">"{{ task.taskReviewedFeedback }}"</span>
+          </p>
+          <p v-else class="text-overline text-uppercase">With No feedback</p>
         </div>
       </div>
     </v-row>
@@ -66,7 +72,9 @@ export default {
   },
   methods: {
     humanDate(timestamp) {
-      return DateTime.fromSeconds(timestamp.seconds?timestamp.seconds:timestamp._seconds).toFormat("ccc dd LLL t");
+      return DateTime.fromSeconds(
+        timestamp.seconds ? timestamp.seconds : timestamp._seconds,
+      ).toFormat("HH:mm ccc dd LLL yyyy");
     },
   },
 };

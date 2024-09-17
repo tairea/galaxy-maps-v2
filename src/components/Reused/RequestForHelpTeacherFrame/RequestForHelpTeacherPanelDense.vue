@@ -45,7 +45,7 @@
             </div>
 
             <div
-              v-if="responderPerson && !isDashboardView"
+              v-if="responderPerson"
               class="requester-time d-flex flex-column align-center ml-auto text-right"
             >
               <span class="ml-auto mt-3 status-text baseAccent--text">responded</span>
@@ -55,7 +55,7 @@
               v-else
               class="requester-time d-flex flex-column align-center ml-auto mt-3 text-right"
             >
-              <span class="ml-auto status-text">...waiting response</span>
+              <span class="ml-auto status-text">...awaiting response</span>
               {{ getHumanDate(request.requestSubmittedTimestamp) }}
             </div>
           </div>

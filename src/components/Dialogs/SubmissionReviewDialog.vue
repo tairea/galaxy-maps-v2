@@ -308,6 +308,7 @@ export default {
             teacherId: this.person.id,
             taskStatus: "completed",
             taskReviewedAndCompletedTimestamp: new Date(),
+            taskReviewedFeedback: this.responseMsg,
           });
 
         // update this.personsTopicsTasks with newly completed tasks status

@@ -84,12 +84,12 @@ export default {
       console.log("submissions unsubscribes", this.unsubscribes);
     }
   },
-  // destroyed() {
-  //   this.resetTeachersSubmissions();
-  //   for (const unsubscribe of this.unsubscribes) {
-  //     unsubscribe();
-  //   }
-  // },
+  destroyed() {
+    this.resetTeachersSubmissions();
+    for (const unsubscribe of this.unsubscribes) {
+      unsubscribe();
+    }
+  },
   computed: {
     ...mapState(useRootStore, ["courseSubmissions", "person", "currentTopicId"]),
     isCohortView() {
@@ -140,21 +140,37 @@ export default {
 
       let filteredSubmissions = [];
 
-      // Filter for "inreview" only
+      // ================== Filter Submissions ==================
       if (this.completedSubmissionsOnly) {
         filteredSubmissions = submissions.filter(
           (submission) => submission.taskSubmissionStatus !== "inreview",
         );
-      } else {
+      } else if (this.isTeacher) {
         filteredSubmissions = submissions.filter(
           (submission) => submission.taskSubmissionStatus === "inreview",
         );
+      } else {
+        filteredSubmissions = submissions;
       }
 
-      filteredSubmissions.sort(
-        (a, b) =>
-          b.taskSubmittedForReviewTimestamp.seconds - a.taskSubmittedForReviewTimestamp.seconds,
-      );
+      // ================== Sort Submissions ==================
+      filteredSubmissions = filteredSubmissions.slice().sort((a, b) => {
+        // Define the order of taskSubmissionStatus
+        const statusOrder = {
+          inreview: 1,
+          declined: 2,
+          completed: 3,
+        };
+
+        // First, compare by taskSubmissionStatus using the defined order
+        if (statusOrder[a.taskSubmissionStatus] < statusOrder[b.taskSubmissionStatus]) return -1;
+        if (statusOrder[a.taskSubmissionStatus] > statusOrder[b.taskSubmissionStatus]) return 1;
+
+        // If taskSubmissionStatus is the same, compare by taskSubmittedForReviewTimestamp.seconds
+        return (
+          a.taskSubmittedForReviewTimestamp.seconds - b.taskSubmittedForReviewTimestamp.seconds
+        );
+      });
 
       if (this.isCohortView || this.isDashboardView) return filteredSubmissions;
       else if (this.isGalaxyView) {
