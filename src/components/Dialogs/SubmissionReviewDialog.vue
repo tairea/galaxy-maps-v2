@@ -183,6 +183,21 @@
                   decline
                 </v-btn>
               </template>
+              <template v-else>
+                <v-btn
+                  outlined
+                  color="baseAccent"
+                  :to="
+                    '/galaxy/' +
+                    submission.contextCourse.id +
+                    '/system/' +
+                    submission.contextTopic.id
+                  "
+                  class="mr-4"
+                >
+                  Go to mission to re-submit
+                </v-btn>
+              </template>
 
               <!-- CANCEL -->
               <v-btn

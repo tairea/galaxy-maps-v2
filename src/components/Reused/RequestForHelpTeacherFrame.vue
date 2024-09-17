@@ -143,15 +143,10 @@ export default {
       }
 
       // ================== Sort requests ==================
-      if (this.isTeacher) {
-        filteredRequests.sort((a, b) => {
-          return a.requestForHelpStatus == "unanswered" ? -1 : 1;
-        });
-      } else {
-        filteredRequests.sort((a, b) => {
-          return a.requestForHelpStatus == "unanswered" ? 1 : -1;
-        });
-      }
+
+      filteredRequests.sort((a, b) => {
+        return a.requestForHelpStatus == "unanswered" ? -1 : 1;
+      });
 
       // ================== Filter requests based on view ==================
       if (this.isCohortView || this.isDashboardView) return filteredRequests;
