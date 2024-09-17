@@ -131,7 +131,7 @@ export default {
     courseContextProfile() {
       return {
         image: this.submission.contextCourse.image,
-        firstName: this.submission.contextCourse.firstName,
+        firstName: this.submission.contextCourse.title,
         lastName: "",
       };
     },

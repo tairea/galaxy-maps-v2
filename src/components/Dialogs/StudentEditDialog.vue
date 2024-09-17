@@ -195,7 +195,7 @@ export default {
       return this.$vuetify.theme.isDark;
     },
     originalProfile() {
-      return this.student || this.person;
+      return Object.keys(this.student).length > 0 ? this.student : this.person;
     },
   },
   data() {
@@ -230,6 +230,7 @@ export default {
       this.editEmail = false;
     },
     updatePerson(profile) {
+      this.loading = true;
       if (profile.email != this.originalProfile.email) {
         this.saveEmail();
       }
@@ -237,6 +238,7 @@ export default {
         .doc(profile.id)
         .update(profile)
         .then((res) => {
+          console.log("Profile successfully updated");
           this.setSnackbar({
             show: true,
             text: "Profile successfully updated",
@@ -277,7 +279,7 @@ export default {
             text: error.message,
             color: "pink",
           });
-          this.cancel;
+          this.cancel();
         });
       this.editEmail = false;
     },

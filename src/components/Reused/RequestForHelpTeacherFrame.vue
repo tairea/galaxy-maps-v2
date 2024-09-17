@@ -71,7 +71,7 @@ export default {
   async mounted() {
     if (this.courses) {
       for (const course of this.courses) {
-        // console.log("getting requests for course: ", course);
+        // getRequestsForHelpByCourseId populates this.teachersRequestsForHelp via useRootStore
         const unsubscribe = await this.getRequestsForHelpByCourseId(course.id);
         this.unsubscribes.push(unsubscribe);
       }
@@ -112,13 +112,6 @@ export default {
       }
     },
     requests() {
-      // const requests = this.teachersRequestsForHelp.filter(
-      //   (request) => request.requestForHelpStatus == "unanswered"
-      // );
-
-      // console.log("this.teachersRequestsForHelp", this.teachersRequestsForHelp);
-      // console.log("this.allStudentsRequests", this.allStudentsRequests);
-
       let requests = this.allStudentsRequests
         ? this.allStudentsRequests
         : this.teachersRequestsForHelp;
@@ -132,22 +125,24 @@ export default {
         );
       }
 
+      // ================== Filter requests ==================
       let filteredRequests = [];
-
       // Filter for "completed/answered" only
       if (this.completedRequestsOnly) {
         filteredRequests = requests.filter(
           (request) => request.requestForHelpStatus != "unanswered",
         );
-      } else {
+      } else if (this.isTeacher) {
+        // filter only unanswered requests (teachers only have time for unanswered. and would get very cluttered if showing responsed requests)
         filteredRequests = requests.filter(
           (request) => request.requestForHelpStatus === "unanswered",
         );
-
-        // show all requests (answered and unanswered)
-        // filteredRequests = requests;
+      } else {
+        // show all requests for students (answered and unanswered)
+        filteredRequests = requests;
       }
 
+      // ================== Sort requests ==================
       if (this.isTeacher) {
         filteredRequests.sort((a, b) => {
           return a.requestForHelpStatus == "unanswered" ? -1 : 1;
@@ -158,9 +153,7 @@ export default {
         });
       }
 
-      // console.log("requests:", requests);
-      // console.log("filtered requests:", filteredRequests);
-
+      // ================== Filter requests based on view ==================
       if (this.isCohortView || this.isDashboardView) return filteredRequests;
       else if (this.isGalaxyView) {
         return filteredRequests.filter((request) => request.contextCourse.id == this.courses[0].id);
