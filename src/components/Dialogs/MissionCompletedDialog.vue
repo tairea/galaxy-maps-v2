@@ -802,6 +802,12 @@ export default {
 
       console.log("studentsCohorts", studentsCohorts);
 
+      console.log(
+        "checking if students cohorts have course: ",
+        this.course.id,
+        " and teacher: ",
+        this.instructor.id,
+      );
       const cohortsWithCourseAndTeacher = studentsCohorts.filter((cohort) => {
         return (
           cohort.courses.includes(this.course.id) && cohort.teachers.includes(this.instructor.id)
@@ -815,6 +821,7 @@ export default {
       const cohort = cohortsWithCourseAndTeacher[0];
 
       if (cohort) {
+        console.log("emailing submission notification to cohort teachers");
         for (const teacherId of cohort.teachers) {
           await this.sendTaskSubmission(
             teacherId,
@@ -823,6 +830,7 @@ export default {
           );
         }
       } else {
+        console.log("emailing submission notification to instructor");
         await this.sendTaskSubmission(
           this.instructor.id,
           this.submissionLink,
