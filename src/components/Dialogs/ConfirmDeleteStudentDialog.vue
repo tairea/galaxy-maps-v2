@@ -130,40 +130,62 @@ export default {
       });
     },
     async deleteRequestsForHelp(studentId) {
-      // loop this.currentCohort.courses and delete requests for help
-      for (const courseId of this.currentCohort.courses) {
-        const requestsForHelpRef = db
-          .collection("courses")
-          .doc(courseId)
-          .collection("requestsForHelp");
-        const snapshot = await requestsForHelpRef.where("personId", "==", studentId).get();
-        if (snapshot.empty) {
-          console.log("No matching documents.");
-          return;
+      try {
+        for (const courseId of this.currentCohort.courses) {
+          const requestsForHelpRef = db
+            .collection("courses")
+            .doc(courseId)
+            .collection("requestsForHelp");
+          const snapshot = await requestsForHelpRef.where("personId", "==", studentId).get();
+
+          if (snapshot.empty) {
+            console.log(`No requests for help found for student in course: ${courseId}`);
+            continue;
+          }
+
+          const batch = db.batch();
+          snapshot.forEach((doc) => {
+            batch.delete(doc.ref);
+          });
+          await batch.commit();
+
+          console.log(`Deleted requests for help for student in course: ${courseId}`);
         }
-        snapshot.forEach(async (doc) => {
-          await doc.ref.delete();
-        });
+        console.log("All student requests for help deleted successfully");
+        return true;
+      } catch (error) {
+        console.error("Error deleting student requests for help:", error);
+        return false;
       }
-      console.log("students requests for help deleted");
     },
     async deleteSubmissions(studentId) {
-      // loop this.currentCohort.courses and delete submissions
-      for (const courseId of this.currentCohort.courses) {
-        const submissionsRef = db
-          .collection("courses")
-          .doc(courseId)
-          .collection("submissionsForReview");
-        const snapshot = await submissionsRef.where("studentId", "==", studentId).get();
-        if (snapshot.empty) {
-          console.log("No matching documents.");
-          return;
+      try {
+        for (const courseId of this.currentCohort.courses) {
+          const submissionsRef = db
+            .collection("courses")
+            .doc(courseId)
+            .collection("submissionsForReview");
+          const snapshot = await submissionsRef.where("studentId", "==", studentId).get();
+
+          if (snapshot.empty) {
+            console.log(`No submissions found for student in course: ${courseId}`);
+            continue;
+          }
+
+          const batch = db.batch();
+          snapshot.forEach((doc) => {
+            batch.delete(doc.ref);
+          });
+          await batch.commit();
+
+          console.log(`Deleted submissions for student in course: ${courseId}`);
         }
-        snapshot.forEach(async (doc) => {
-          await doc.ref.delete();
-        });
+        console.log("All student submissions deleted successfully");
+        return true;
+      } catch (error) {
+        console.error("Error deleting student submissions:", error);
+        return false;
       }
-      console.log("students submissions deleted");
     },
     async deleteXAPIStatements(studentId) {
       // loop this.currentCohort.courses and delete xpi data

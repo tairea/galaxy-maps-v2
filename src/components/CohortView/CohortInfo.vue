@@ -15,7 +15,7 @@
       <Organisation v-if="organisation" :organisation="organisation" :size="40" />
     </div>
     <div v-if="teachers.length > 0">
-      <p class="overline ma-0" style="color: var(--v-cohortAccent-base)">Teachers</p>
+      <p class="overline ma-0" style="color: var(--v-cohortAccent-base)">Squad Captains:</p>
       <v-row class="my-1 mx-1">
         <Avatar
           v-for="person in teachers"
