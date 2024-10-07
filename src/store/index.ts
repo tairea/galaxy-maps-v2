@@ -344,6 +344,7 @@ export default defineStore({
       if (cohorts.length) {
         await this.getOrganisationsByCohorts(cohorts);
       }
+      return cohorts; // Return the cohorts in case we need them immediately
     },
 
     // ===== Firestore - Cohorts & Orgs
