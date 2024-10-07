@@ -476,7 +476,6 @@ export default {
 
         //email the teachers about the submission
         await this.emailTeachersAboutSubmission();
-        console.log("Submission successfully submitted for review!");
 
         // send xAPI statement to LRS
         await submitWorkForReviewXAPIStatement(this.person, this.task.id, {
@@ -758,12 +757,8 @@ export default {
       this.mappedByImageURL = person.image?.url;
     },
     async sendTaskSubmission(teacherId, submissionResponse, submissionInstructions) {
-      let teacher = null;
-      if (teacherId !== this.instructor.id) {
-        teacher = await fetchPersonByPersonId(teacherId);
-      } else {
-        teacher = this.instructor;
-      }
+      console.log("sending task submission to teacher", teacherId);
+      const teacher = await fetchPersonByPersonId(teacherId);
       const data = {
         course: this.course.title,
         topic: this.topic.label,
@@ -778,64 +773,54 @@ export default {
       return sendTaskSubmission(data);
     },
     async emailTeachersAboutSubmission() {
-      // get the cohort, so we can get all the teachers
+      try {
+        // First, get the cohort that contains this student
+        const studentCohortSnapshot = await db
+          .collection("cohorts")
+          .where("students", "array-contains", this.person.id)
+          .get();
 
-      // --  below code doesnt work: "FirebaseError: [code=invalid-argument]: A maximum of 1 'ARRAY_CONTAINS' filter is allowed per disjunction."
-      // const cohortsSnapshot = await db
-      //   .collection("cohorts")
-      //   .where("students", "array-contains", this.person.id)
-      //   .where("courses", "array-contains", this.course.id)
-      //   .where("teachers", "array-contains", this.instructor.id)
-      //   .get();
+        let cohortFound = false;
 
-      // -- so instead get students cohorts then filter client side
-      const studentsSnapshot = await db
-        .collection("cohorts")
-        .where("students", "array-contains", this.person.id)
-        .get();
+        if (!studentCohortSnapshot.empty) {
+          for (const cohortDoc of studentCohortSnapshot.docs) {
+            const cohort = cohortDoc.data();
+            // Check if this cohort contains the current course
+            if (cohort.courses && cohort.courses.includes(this.course.id)) {
+              console.log("Found cohort:", cohort.id);
+              cohortFound = true;
 
-      // filter client-side where data.courses.includes(this.course.id) && data.teachers.includes(this.instructor.id)
-      const studentsCohorts = studentsSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+              // Send email to all teachers in the cohort
+              for (const teacherId of cohort.teachers) {
+                await this.sendTaskSubmission(
+                  teacherId,
+                  this.submissionLink,
+                  this.task.submissionInstructions,
+                );
+              }
+              console.log("Submission successfully emailed for review!");
+              // Exit the loop after finding the correct cohort
+              break;
+            }
+          }
+        }
 
-      console.log("studentsCohorts", studentsCohorts);
-
-      console.log(
-        "checking if students cohorts have course: ",
-        this.course.id,
-        " and teacher: ",
-        this.instructor.id,
-      );
-      const cohortsWithCourseAndTeacher = studentsCohorts.filter((cohort) => {
-        return (
-          cohort.courses.includes(this.course.id) && cohort.teachers.includes(this.instructor.id)
-        );
-      });
-      console.log("cohortsWithCourseAndTeacher", cohortsWithCourseAndTeacher);
-
-      // Possible issue: What if the student is in multiple cohorts with the same course and teacher?
-      // At the moment cohortsWithCourseAndTeacher[0] assumes there will only be one cohort that meets the criteria.
-      // could map cohortsWithCourseAndTeacher but need to think through the implications of a student doing the same course in multiple cohorts.
-      const cohort = cohortsWithCourseAndTeacher[0];
-
-      if (cohort) {
-        console.log("emailing submission notification to cohort teachers");
-        for (const teacherId of cohort.teachers) {
+        // If no matching cohort found, fall back to sending email to the course instructor
+        if (!cohortFound) {
+          console.log("No matching cohort found, emailing course instructor");
+          if (!this.course.mappedBy?.personId) {
+            throw new Error("Course instructor not found");
+          }
           await this.sendTaskSubmission(
-            teacherId,
+            this.course.mappedBy.personId,
             this.submissionLink,
             this.task.submissionInstructions,
           );
+          console.log("Submission successfully emailed for review!");
         }
-      } else {
-        console.log("emailing submission notification to instructor");
-        await this.sendTaskSubmission(
-          this.instructor.id,
-          this.submissionLink,
-          this.task.submissionInstructions,
-        );
+      } catch (error) {
+        console.error("Error in emailTeachersAboutSubmission:", error);
+        // You might want to show an error message to the user here
       }
     },
     handleImageAdded(file, Editor, cursorLocation) {

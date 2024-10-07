@@ -1587,9 +1587,10 @@ async function assignCourseToStudent(courseId: string, personId: string) {
       }
     }
   } else {
-    throw new HttpsError("already-exists", person.firstName + " is already in " + course.title);
+    console.log(person.firstName + " is already in " + course.title + ". Continuing...");
   }
 
+  // Ensure the course is added to the person's assignedCourses
   await personDoc.ref.update({
     assignedCourses: FieldValue.arrayUnion(courseId),
   });
