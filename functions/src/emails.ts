@@ -459,13 +459,13 @@ export const sendResponseToSubmissionHttpsEndpoint = runWith({}).https.onCall((d
     email,
     teacher,
     course,
+    topic,
     task,
     firstName,
     lastName,
-    outcome,
-    topic,
-    message,
     submission,
+    outcome,
+    message,
   );
 });
 
@@ -476,13 +476,13 @@ export async function sendResponseToSubmission(
   email: string,
   teacher: string,
   course: string,
+  topic: string,
   task: string,
   firstName: string,
   lastName: string,
-  outcome: string,
-  topic: string,
-  message: string,
   submission: string,
+  outcome: string,
+  message: string,
 ) {
   const mailOptions: Record<string, string> = {
     from: `${APP_NAME} <noreply@${DOMAIN}>`,
@@ -491,13 +491,16 @@ export async function sendResponseToSubmission(
 
   /* eslint-disable max-len */
   mailOptions.subject = `Mission ${task} ${outcome}`;
+
+  // annoying auto format on save that indents to 6 when expected 8
+  // indent then save without formatting
   mailOptions.text = `Greetings, Navigator ${
     lastName
       ? lastName.charAt(0).toUpperCase() + lastName.slice(1)
       : firstName
         ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
         : ""
-  },
+  }
 
 Captain ${teacher} has reviewed your submission for ${task}.
 
@@ -515,31 +518,50 @@ Login to https://${DOMAIN} to continue your mission.
   
 Galaxy Maps Team`;
 
-  mailOptions.html = `<p><strong>Greetings, Navigator ${
+  mailOptions.html = `<p>Greetings, Navigator ${
     lastName
       ? lastName.charAt(0).toUpperCase() + lastName.slice(1)
       : firstName
         ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
         : ""
-  },</strong></p>
-<p>Captain ${teacher} has reviewed your submission to ${task}.</p>
+  }</p>
+  </br> 
+<p>Captain ${teacher} has reviewed your submission for ${task}.</p>
 </br> 
+<p><span style="text-decoration: underline;">Please note:</span> This is the outcome of your submission.</p>
+</br>
+<hr>
+</br>
+<p style="text-decoration: underline;">Context:</p>
 <ul>
   <li>Galaxy: ${course}</li>
   <li>System: ${topic}</li>
   <li>Mission: ${task}</li>
 </ul>
 </br> 
-<p><strong>Submission outcome: ${outcome} </strong></p>
 </br> 
-<p>Your Submission: ${submission} </p>
+<p style="text-decoration: underline;">Your Submission:</p> 
+<div style="border: 3px solid #69A1E2; border-radius: 10px; padding:10px;">
+<p>${submission}</p>
+</div>
+</br>
+</br>
+<p style="text-decoration: underline;">Submission Outcome:</p> 
+<div style="border: 3px solid #E269CF; border-radius: 10px; padding:10px;">
+<p><strong>${outcome.toUpperCase()}</strong></p>
+</div>
+</br>
+</br>
+<p style="text-decoration: underline;">Captain's Message:</p> 
+<div style="border: 3px solid #69A1E2; border-radius: 10px; padding:10px;">
+<p>${message}</p>
+</div>
 </br> 
-<p>Captain's message: ${message} </p>
-</br> 
-<p>Login to <a href="https://${DOMAIN}" target="_blank"
+</br>
+<p>Login to <a href="https://${DOMAIN}/dashboard" target="_blank"
   >https://${DOMAIN}/dashboard</a> to continue your mission.</p>
 </br> 
-<p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
+<p style="font-size: 0.75rem !important;font-weight: 500;letter-spacing: 0.1666666667em !important;line-height: 2rem;text-transform: uppercase;font-family: "Roboto", sans-serif !important;">Galaxy Maps Team</p>`;
   /* eslint-enable max-len */
 
   await mailTransport.sendMail(mailOptions);

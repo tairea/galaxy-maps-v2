@@ -171,11 +171,33 @@
                 </v-btn>
 
                 <!-- DECLINE -->
+                <v-tooltip top v-if="!response">
+                  <template v-slot:activator="{ on, attrs }">
+                    <span v-on="on" v-bind="attrs">
+                      <v-btn
+                        outlined
+                        color="galaxyAccent"
+                        @click="declineSubmission"
+                        class="mr-2 decline-btn"
+                        :class="{ 'decline-btn-disabled': markingSubmission || !response }"
+                        :loading="decliningSubmission"
+                        :disabled="markingSubmission"
+                      >
+                        <v-icon left> {{ mdiThumbDownOutline }} </v-icon>
+                        decline
+                      </v-btn>
+                    </span>
+                  </template>
+                  <span class="missionAccent--text"
+                    >Please provide the Navigator feedback before declining their submission</span
+                  >
+                </v-tooltip>
                 <v-btn
+                  v-else
                   outlined
                   color="galaxyAccent"
                   @click="declineSubmission"
-                  class="mr-2"
+                  class="mr-2 decline-btn"
                   :loading="decliningSubmission"
                   :disabled="markingSubmission"
                 >
@@ -612,6 +634,8 @@ export default {
     },
     sendResponseToSubmission(outcome) {
       const data = {
+        email: this.requesterPerson.email,
+        teacher: this.person.firstName + " " + this.person.lastName,
         course: this.submission.contextCourse.title,
         topic: this.submission.contextTopic.label,
         task: this.submission.contextTask.title,
@@ -620,11 +644,9 @@ export default {
         submission: this.submission.submissionLink,
         outcome: outcome,
         message: this.responseMsg,
-        teacher: this.person.firstName + " " + this.person.lastName,
-        email: this.requesterPerson.email,
       };
       const sendResponseToSubmission = functions.httpsCallable("sendResponseToSubmission");
-      console.log("3a) Email sent: ", data);
+      console.log("3a) Email sent to: " + this.requesterPerson.email + " with data: " + data);
       return sendResponseToSubmission(data);
     },
     async declineSubmission() {
@@ -928,5 +950,19 @@ export default {
   top: -30px;
   z-index: 1;
   border-bottom-color: rgba(0, 0, 0, 0.095);
+}
+
+.decline-btn {
+  transition: opacity 0.3s ease;
+  border: 1px solid var(--v-galaxyAccent-base);
+  color: var(--v-galaxyAccent-base);
+}
+
+.decline-btn-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+  border: 1px solid var(--v-galaxyAccent-base);
+  color: var(--v-galaxyAccent-base);
+  cursor: not-allowed;
 }
 </style>

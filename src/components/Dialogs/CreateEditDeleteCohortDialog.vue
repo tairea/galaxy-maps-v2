@@ -398,9 +398,9 @@ export default {
     } else {
       this.$vuetify.theme.themes.dark.primary = "#000000"; // black
     }
-    // add default teacher to cohort
-    this.teachers.push(this.person);
-    this.cohort.teachers.push(this.person.id);
+
+    // Fetch teacher details or add default teacher
+    this.initializeTeachers();
   },
   watch: {
     dialog(newVal) {
@@ -616,7 +616,33 @@ export default {
     addTeacher(teacher) {
       console.log("adding teacher", teacher);
       this.cohort.teachers.push(teacher.id);
-      this.teachers.push(teacher);
+      // this.teachers.push(teacher);
+    },
+    async initializeTeachers() {
+      if (this.cohortToEdit.teachers && this.cohortToEdit.teachers.length > 0) {
+        console.log(
+          "cohort has teachers, fetching teacher details from db to populate squad captain dropdown",
+        );
+        // Fetch teacher details from Firebase
+        const teacherPromises = this.cohortToEdit.teachers.map((teacherId) =>
+          db.collection("people").doc(teacherId).get(),
+        );
+
+        const teacherSnapshots = await Promise.all(teacherPromises);
+
+        this.teachers = teacherSnapshots.map((snapshot) => {
+          const data = snapshot.data();
+          return {
+            id: snapshot.id,
+            ...data,
+          };
+        });
+      } else {
+        console.log("cohort has no teachers, adding current user as default teacher");
+        // Add current user as default teacher
+        this.teachers = [this.person];
+        //this.cohort.teachers = [this.person.id];
+      }
     },
   },
 };
