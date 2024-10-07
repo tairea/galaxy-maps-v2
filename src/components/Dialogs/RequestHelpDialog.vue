@@ -124,13 +124,16 @@ export default {
     }
   },
   computed: {
-    ...mapState(useRootStore, ["currentCohortId", "person"]),
+    ...mapState(useRootStore, ["currentCohortId", "person", "cohorts"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
+    currentCohort() {
+      return this.cohorts.find((cohort) => cohort.id === this.currentCohortId);
+    },
   },
   methods: {
-    ...mapActions(useRootStore, ["setSnackbar"]),
+    ...mapActions(useRootStore, ["setSnackbar", "getCohortsByPersonId"]),
     async submitRequestForHelp(requestForHelp) {
       this.loading = true;
       try {
@@ -154,7 +157,7 @@ export default {
             requestSubmittedTimestamp: new Date(),
           });
         await docRef.update({ id: docRef.id });
-        console.log("Request for help successfully submitted to instructor!");
+        console.log("Request for help add to the database!");
         // send xAPI statement to LRS
         await studentRequestForHelpXAPIStatement(this.person, this.task.id, {
           galaxy: this.course,
@@ -168,30 +171,58 @@ export default {
           color: "baseAccent",
         });
 
-        if (this.cohort != null) {
+        if (this.currentCohort) {
           await Promise.all(
-            this.cohort.teachers.map((teacherId) =>
+            this.currentCohort.teachers.map((teacherId) =>
               this.emailRequestToTeacher(teacherId, requestForHelp),
             ),
           );
+        } else {
+          // Filter cohorts that have this.person.id and this.course.id
+          const relevantCohorts = this.cohorts.filter(
+            (cohort) =>
+              cohort.students?.includes(this.person.id) && cohort.courses?.includes(this.course.id),
+          );
+
+          if (relevantCohorts.length > 0) {
+            const teacherIds = new Set();
+            relevantCohorts.forEach((cohort) => {
+              cohort.teachers?.forEach((teacherId) => teacherIds.add(teacherId));
+            });
+
+            await Promise.all(
+              Array.from(teacherIds).map((teacherId) =>
+                this.emailRequestToTeacher(teacherId, requestForHelp),
+              ),
+            );
+          } else {
+            console.warn("No relevant cohorts found for this student and course");
+            this.setSnackbar({
+              show: true,
+              text: "Unable to notify teachers. Your request has been saved.",
+              color: "warning",
+            });
+          }
         }
 
         this.requestForHelp = "";
-        this.loading = false;
         this.dialog = false;
       } catch (error) {
-        console.error("Error writing document: ", error);
+        console.error("Error submitting request for help: ", error);
         this.setSnackbar({
           show: true,
           text: "Error: " + error,
-          color: "pink",
+          color: "error",
         });
+      } finally {
+        this.loading = false;
       }
     },
     cancel() {
       this.dialog = false;
     },
     async emailRequestToTeacher(teacherId, request) {
+      console.log("emailing request: ", request, " to teacher", teacherId);
       const teacher = await fetchPersonByPersonId(teacherId);
       const data = {
         course: this.course.title,
@@ -203,7 +234,13 @@ export default {
         email: teacher.email,
       };
       const sendRequestForHelp = functions.httpsCallable("sendRequestForHelp");
-      return sendRequestForHelp(data);
+      try {
+        const result = await sendRequestForHelp(data);
+        console.log("Email sent successfully:", result);
+      } catch (error) {
+        console.error("Error sending email:", error);
+        throw error; // Rethrow the error to be caught in the calling function
+      }
     },
   },
 };
