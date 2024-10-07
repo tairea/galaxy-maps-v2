@@ -257,7 +257,7 @@ export async function sendRequestForHelp(
   };
 
   /* eslint-disable max-len */
-  mailOptions.subject = `${course} Request for help`;
+  mailOptions.subject = `[${course}] - Request for help`;
   mailOptions.text = `Greetings Captain ${teacher}, 
 
 Navigator ${student} has sent a REQUEST FOR HELP.
@@ -268,25 +268,37 @@ Mission: ${task}
 
 Their request for help: "${request}"
 
-To respond to ${student}, please login to https://${DOMAIN}/dasboard to view your Requests for Help.
+To respond to ${student}, please login to https://${DOMAIN}/dashboard to view your Requests for Help.
   
 Galaxy Maps Team`;
 
-  mailOptions.html = `<p>Greetings ${teacher},</p>
+  mailOptions.html = `<p>Greetings, Captain ${teacher}</p>
   </br> 
-<p>Your student ${student} has sent a request for help.</p>
+<p>Navigator ${student} has sent a request for help.</p>
 </br> 
+<p><span style="text-decoration: underline;">Please note:</span> Navigators may be unable to progress until they receive assistance.</p>
+</br>
+<hr>
+</br>
+<p style="text-decoration: underline;">Context:</p>
 <ul>
-  <li>Course: ${course}</li>
-  <li>Topic: ${topic}</li>
-  <li>Task: ${task}</li>
+  <li>Galaxy: ${course}</li>
+  <li>System: ${topic}</li>
+  <li>Mission: ${task}</li>
 </ul>
 </br> 
-<p>Request: <strong>${request}</strong> </p>
-</br>
-<p>To respond to ${student}, please login to <a href="https://${DOMAIN}" target="_blank">https://${DOMAIN}/login</a> to view your course</p>
 </br> 
-<p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
+<p style="text-decoration: underline;">Request for Help:</p> 
+<div style="border: 3px solid #E269CF; border-radius: 10px; padding:10px;">
+<p>${request}</p>
+</div>
+</br>
+</br>
+<p>To respond to ${student}'s request and provide assistance,
+please login to <a href="https://${DOMAIN}/dashboard" target="_blank"
+  >https://${DOMAIN}/dashboard</a> to view your Requests for Help.</p>
+</br> 
+<p style="font-size: 0.75rem !important;font-weight: 500;letter-spacing: 0.1666666667em !important;line-height: 2rem;text-transform: uppercase;font-family: "Roboto", sans-serif !important;">Galaxy Maps Team</p>`;
   /* eslint-enable max-len */
 
   await mailTransport.sendMail(mailOptions);
@@ -318,7 +330,7 @@ export async function sendResponseToHelp(
   };
 
   /* eslint-disable max-len */
-  mailOptions.subject = `${course} Response to your request`;
+  mailOptions.subject = `[${course}] - Response from Captain`;
   mailOptions.text = `Greetings Navigator ${student}, 
 
 Captain ${teacher} has replied to your request for help.
@@ -335,24 +347,36 @@ Login to https://${DOMAIN} to continue your missions.
   
 Galaxy Maps Team`;
 
-  mailOptions.html = `<p>Greetings Navigator ${student},</p>
+  mailOptions.html = `<p>Greetings, Navigator ${student}</p>
   </br> 
 <p>Captain ${teacher} has replied to your request for help.</p>
 </br> 
+<hr>
+</br>
+<p style="text-decoration: underline;">Context:</p>
 <ul>
   <li>Galaxy: ${course}</li>
   <li>System: ${topic}</li>
   <li>Mission: ${task}</li>
 </ul>
 </br> 
-<p>Your request: "${request}" </p>
 </br> 
-<p>Captain's response: <strong>"${response}"</strong></p>
-</br> 
+<p style="text-decoration: underline;">Your Request:</p> 
+<div style="border: 3px solid #E269CF; border-radius: 10px; padding:10px;">
+<p>${request}</p>
+</div>
+</br>
+</br>
+<p style="text-decoration: underline;">Captain's Response:</p> 
+<div style="border: 3px solid #69A1E2; border-radius: 10px; padding:10px;">
+<p>${response}</p>
+</div>
+</br>
+</br>
 <p>Login to <a href="https://${DOMAIN}" target="_blank"
-  >https://${DOMAIN}/login</a> to continue your missions.</p>
+  >https://${DOMAIN}</a> to continue your missions.</p>
 </br> 
-<p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
+<p style="font-size: 0.75rem !important;font-weight: 500;letter-spacing: 0.1666666667em !important;line-height: 2rem;text-transform: uppercase;font-family: "Roboto", sans-serif !important;">Galaxy Maps Team</p>`;
   /* eslint-enable max-len */
 
   await mailTransport.sendMail(mailOptions);
