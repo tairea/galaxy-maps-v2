@@ -802,9 +802,10 @@ export default {
             student: person.firstName ? person.firstName + " " + person.lastName : "",
             teacherEmail: this.person.email,
           };
-          console.log("sending delete galaxy email: ", data);
-          const sendCourseDeleted = functions.httpsCallable("sendCourseDeleted");
-          await sendCourseDeleted(data);
+          // Not sure we need an email to students when a course is deleted (but its here anyway if we change our mind)
+          // console.log("sending delete galaxy email: ", data);
+          // const sendCourseDeleted = functions.httpsCallable("sendCourseDeleted");
+          // await sendCourseDeleted(data);
         }),
       );
     },

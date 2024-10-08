@@ -3,12 +3,22 @@
     <div class="panelContent">
       <!-- Loading spinner -->
       <div
-        v-if="!selectedTopic"
+        v-if="!selectedTopic && !topicError"
         class="panelContentInner d-flex flex-column justify-center align-center"
         style="padding: 50px"
       >
         <v-btn :loading="!selectedTopic" icon color="missionAccent"></v-btn>
         <p class="overline missionAccent--text">Loading system</p>
+      </div>
+
+      <!-- Error message -->
+      <div
+        v-else-if="topicError"
+        class="panelContentInner d-flex flex-column justify-center align-center"
+        style="padding: 50px"
+      >
+        <v-icon large color="missionAccent">{{ mdiAlert }}</v-icon>
+        <p class="overline missionAccent--text mt-4">{{ topicError }}</p>
       </div>
 
       <!-- Loaded Panel -->
@@ -150,19 +160,20 @@ import {
   assignCourseToMe,
 } from "@/lib/ff";
 import useRootStore from "@/store/index";
-import { mdiClose, mdiPencil, mdiLock } from "@mdi/js";
+import { mdiClose, mdiPencil, mdiLock, mdiAlert } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
 import LoginDialog from "@/components/Dialogs/LoginDialog.vue";
 
 export default {
   name: "SolarSystemInfoPanel",
-  props: ["show", "course", "selectedTopic", "tasks"],
+  props: ["show", "course", "selectedTopic", "tasks", "topicError"],
   components: { LoginDialog },
   data() {
     return {
       mdiClose,
       mdiPencil,
       mdiLock,
+      mdiAlert,
       allCourses: [],
       selectedGalaxy: false,
       activeLearning: null,
