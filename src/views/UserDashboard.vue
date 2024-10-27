@@ -187,6 +187,8 @@ export default {
     this.loading = false;
     if (this.isTeacher) {
       this.setDashboardView("teacher");
+    } else if (this.isAdmin) {
+      this.setDashboardView("admin");
     } else {
       this.setDashboardView("student");
     }
@@ -197,7 +199,8 @@ export default {
     ...mapState(useUserDashboardStore, ["dashboardView"]),
     ...mapState(useRootStore, ["user", "person"]),
     isAdmin() {
-      return this.user.data.admin;
+      console.log("isAdmin:", this.user?.data?.admin);
+      return this.user?.data?.admin;
     },
     isStudent() {
       return this.person.assignedCourses?.length;
@@ -235,8 +238,15 @@ export default {
       return courses;
     },
     studentsCourses() {
-      const courses = this.person.assignedCourses.map((course) => ({ id: course }));
-      return courses;
+      if (this.person.assignedCourses) {
+        const courses = this.person.assignedCourses.map((course) => ({ id: course }));
+        return courses;
+      } else if (this.isAdmin) {
+        console.log("is a admin showing all courses");
+        return this.courses;
+      } else {
+        return [];
+      }
     },
     teachersStudents() {
       const students = this.teacherCohorts.flatMap((cohort) => cohort.students ?? []);
