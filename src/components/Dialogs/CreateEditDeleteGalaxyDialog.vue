@@ -207,7 +207,7 @@
                 :items="[
                   { text: 'Private (only people added can see)', value: 'private' },
                   { text: 'Unlisted (publicly available, but hidden)', value: 'unlisted' },
-                  // presentations can only be private or unlisted. not public as they are not proper maps navigators can progress through
+                  // Presentations cannot be public as they are not proper maps navigators can progress through
                   ...(course.presentationOnly == false || course.presentationOnly == null
                     ? [{ text: 'Public (all users can see)', value: 'public' }]
                     : []),

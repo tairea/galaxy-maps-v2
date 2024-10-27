@@ -92,6 +92,7 @@ export default {
     "owner",
     "organisationData",
     "hideTooltips",
+    "cohort", // for context
   ],
   data() {
     return {
@@ -111,9 +112,26 @@ export default {
           this.profileData = doc;
         }
       } else if (this.personId) {
-        this.profileData = await fetchPersonByPersonId(
-          this.personId ? this.personId : this.profile.id,
-        );
+        try {
+          this.profileData = await fetchPersonByPersonId(
+            this.personId ? this.personId : this.profile.id,
+            this.cohort.id,
+          );
+        } catch (error) {
+          console.log(
+            `Error fetching person with ID ${
+              this.personId ? this.personId : this.profile.id
+            }: from cohort ${this.cohort.id}`,
+            error,
+          );
+          // Optionally, set a default or placeholder value for profileData
+          this.profileData = {
+            firstName: "Unknown",
+            lastName: "User",
+            id: this.personId ? this.personId : this.profile.id,
+          };
+          // TODO: if person does not exist in db. we need to delete the user from the db
+        }
       }
     });
   },
