@@ -64,14 +64,11 @@ export default {
       nodes: [],
       edges: [],
     },
-    processedNodes: [], // Add this line
-    processedEdges: [], // Add this line
   }),
   watch: {
     options: {
       deep: true,
       handler(o) {
-        console.log("New options:", JSON.stringify(o, null, 2));
         this.network.setOptions(o);
       },
     },
@@ -82,38 +79,15 @@ export default {
     this.network = null;
   },
   mounted() {
-    // Remove duplicates before mounting
-    // Process nodes and edges without mutating props
-    this.processedNodes = this.removeDuplicates(this.nodes, "nodes");
-    this.processedEdges = this.removeDuplicates(this.edges, "edges");
+    this.visData.nodes = mountVisData(this, "nodes");
+    this.visData.edges = mountVisData(this, "edges");
 
-    // debugging: check if they have an invalid x or y value. if so, set to 0
-    this.processedNodes.forEach((node) => {
-      if (
-        !("x" in node) ||
-        !("y" in node) ||
-        node.x == null ||
-        node.y == null ||
-        isNaN(node.x) ||
-        isNaN(node.y)
-      ) {
-        console.log(
-          "Breaking nodes. Possibly no X,Y values go here to fix: /courses/" +
-            node.courseId +
-            "/map-nodes/" +
-            node.id,
-        );
-        // Update the node with default x and y values
-        return { ...node, x: 0, y: 0 };
+    // loop through nodes and og any that dont have propert x or y
+    this.visData.nodes.forEach((node) => {
+      if (!node.x || !node.y) {
+        console.log("node", node);
       }
-      return node;
     });
-
-    const nodes = mountVisData(this, "processedNodes");
-    const edges = mountVisData(this, "processedEdges");
-
-    this.visData.nodes = nodes;
-    this.visData.edges = edges;
 
     this.network = new Network(this.$refs.visualization, this.visData, this.options);
 
@@ -125,28 +99,10 @@ export default {
     this.network.destroy();
   },
   methods: {
-    removeDuplicates(items, type) {
-      const seenIds = new Set();
-      const duplicates = [];
-      const result = items.filter((item) => {
-        if (seenIds.has(item.id)) {
-          duplicates.push(item);
-          return false; // Remove duplicate
-        }
-        seenIds.add(item.id);
-        return true;
-      });
-
-      if (duplicates.length > 0) {
-        console.warn(`Found ${duplicates.length} duplicate ${type}:`);
-        duplicates.forEach((item) => {
-          console.warn(
-            `Duplicate ${type.slice(0, -1)} ID: ${item.id}, Course ID: ${item.courseId}`,
-          );
-        });
-      }
-
-      return result;
+    setData(n, e) {
+      this.visData.nodes = Array.isArray(n) ? new DataSet(n) : n;
+      this.visData.edges = Array.isArray(e) ? new DataSet(e) : e;
+      this.network.setData(this.visData);
     },
     destroy() {
       this.network.destroy();

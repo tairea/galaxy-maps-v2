@@ -228,8 +228,8 @@
         </div> -->
         <p class="caption ma-0 cohortAccent--text" v-if="visibility == 'public' && !admin">
           <i
-            >(Public Galaxy Maps are visible by all users, so they need to be submitted for review by
-            Galaxy Map moderators. This is usually done within 48 hours.)</i
+            >(Public Galaxy Maps are visible by all users, so they need to be submitted for review
+            by Galaxy Map moderators. This is usually done within 48 hours.)</i
           >
         </p>
       </div>
@@ -423,6 +423,7 @@ export default {
       // if presentationOnly is true, set course.presentationOnly to true
       if (this.presentationOnly) {
         course.presentationOnly = true;
+        course.public = false;
       }
 
       // if no cohort, create a default cohort (and "presentation" maps should not have cohorts)

@@ -61,6 +61,7 @@
               :colourBorder="true"
               @click.native="clickedPerson($event, person, index)"
               :hideTooltips="!isCohortTeacher"
+              :cohort="cohort"
             />
           </div>
           <p v-else class="label text-center pa-4" style="font-weight: 800">NO NAVIGATOR DATA</p>
