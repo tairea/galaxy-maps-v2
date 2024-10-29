@@ -730,10 +730,6 @@ export default {
         // add nodes to boundary for debugging
         boundary.nodes = courseNodes;
 
-        if (courses[i].id === "1enCH72zF5s64v048new") {
-          console.log("nodes with course id: 1enCH72zF5s64v048new", boundary.nodes);
-        }
-
         courseCanvasBoundaries.push(boundary);
       }
       return courseCanvasBoundaries;
