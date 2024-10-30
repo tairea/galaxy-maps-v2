@@ -778,13 +778,22 @@ export default {
     },
     async deleteImage() {
       // if no image, dont worry bout it cuz
-      if (this.course.image.name == "") return;
-      // Create a reference to the file to delete
-      var storageRef = storage.ref(
-        "course-images/" + this.currentCourseId + "-" + this.course.image.name,
-      );
-      // Delete the file
-      await storageRef.delete();
+      if (!this.course.image.url) return;
+      
+      try {
+        // Extract the full path from the URL
+        const imageUrl = new URL(this.course.image.url);
+        const pathFromUrl = decodeURIComponent(imageUrl.pathname.split('/o/')[1].split('?')[0]);
+        
+        // Create a reference using the full path
+        var storageRef = storage.ref(pathFromUrl);
+        
+        // Delete the file
+        await storageRef.delete();
+      } catch (error) {
+        console.error("Error deleting image:", error);
+        // Continue with course deletion even if image deletion fails
+      }
     },
     async deleteCourseForStudents() {
       await Promise.all(
