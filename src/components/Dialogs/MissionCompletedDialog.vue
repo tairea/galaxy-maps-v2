@@ -152,9 +152,10 @@
                     </p>
                   </div>
                   <vue-editor
+                    id="editor"
                     v-model="submissionLink"
                     useCustomImageHandler
-                    @imageAdded="handleImageAdded"
+                    @image-added="handleImageAdded"
                     class="mb-8 quill"
                     :class="{ 'active-quill': quillFocused }"
                     :editor-toolbar="customToolbar"
@@ -269,7 +270,7 @@
 <script>
 import confetti from "canvas-confetti";
 import firebase from "firebase/compat/app";
-import { db, functions } from "@/store/firestoreConfig";
+import { db, functions, storage } from "@/store/firestoreConfig";
 import { fetchCohortByCohortId, fetchPersonByPersonId } from "@/lib/ff";
 import {
   mdiCloudUploadOutline,
@@ -315,7 +316,7 @@ export default {
       ["blockquote", "code-block"],
       [{ list: "ordered" }, { list: "bullet" }],
       [{ indent: "-1" }, { indent: "+1" }], // outdent/indent
-      ["link", "image"],
+      ["link", "image", "video"],
       // ["clean"] // remove formatting button
     ],
     quillFocused: false,
@@ -825,6 +826,8 @@ export default {
     },
     handleImageAdded(file, Editor, cursorLocation) {
       // ceate a storage ref
+      console.log("image added", file);
+
       var storageRef = storage.ref(
         "submission-images/student-" + this.person.id + "-task-" + this.task.id + "-" + file.name,
       );

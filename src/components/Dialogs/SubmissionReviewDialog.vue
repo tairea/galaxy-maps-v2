@@ -751,6 +751,12 @@ export default {
 };
 </script>
 
+<style>
+.dialog-help-message > p > img {
+  width: 100%;
+}
+</style>
+
 <style scoped lang="scss">
 .input-field {
   padding-top: 10px;
