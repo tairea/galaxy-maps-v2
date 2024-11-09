@@ -760,8 +760,11 @@ export default {
 .submission-dialog-description > p {
   margin: 10px 0px !important;
 }
-</style>
 
+.submission-dialog-description > p > img {
+  width: 100%;
+}
+</style>
 <style scoped lang="scss">
 // new dialog ui
 .create-dialog {
