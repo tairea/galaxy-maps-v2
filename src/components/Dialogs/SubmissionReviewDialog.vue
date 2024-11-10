@@ -596,7 +596,7 @@ export default {
         } else if (prerequisites.length === 1) {
           console.log("8d-i) Only one prereq...");
           // get prereq topic from db
-          console.log("8d-ii) Checking if prerequisite " + prerequisite + " is completed...");
+          console.log("8d-ii) Checking if prerequisite " + prerequisites[0] + " is completed...");
           const topicDoc = await db
             .collection("people")
             .doc(this.submission.studentId)
