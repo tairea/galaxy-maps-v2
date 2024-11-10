@@ -66,6 +66,7 @@
       />
       <SubmissionTeacherFrame
         v-if="!loading && teacher"
+        :isTeacher="teacher"
         :courses="[course]"
         :students="peopleInTopic"
         class="mt-4"
