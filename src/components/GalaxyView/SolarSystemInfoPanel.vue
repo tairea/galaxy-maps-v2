@@ -78,7 +78,8 @@
             :key="task.id"
             class="task-card"
             :style="[task.taskStatus == 'locked' ? { opacity: 0.4 } : { opacity: 1 }]"
-            @click="routeToSolarSystem"
+            v-on="enableClick ? { click: routeToSolarSystem } : {}"
+            :class="enableClick ? '' : 'no-click'"
           >
             <div class="number-title-container">
               <p class="task-number overline">MISSION {{ index + 1 }}</p>
@@ -103,7 +104,7 @@
         </div>
 
         <!-- Panel Actions (buttons) -->
-        <div class="bottom">
+        <div v-if="enableClick" class="bottom">
           <!-- TEACHER OR STUDENT -->
           <v-btn
             v-if="teacher || student"
@@ -192,6 +193,11 @@ export default {
     // filteredTasks() {
     //   return this.tasks.filter((task) => task.topicId == this.selectedTopic);
     // },
+    enableClick() {
+      console.log('click')
+      if (this.course.presentationOnly && !this.teacher) return false;
+      return true;
+    },
     teacher() {
       return this.course?.mappedBy?.personId === this.person?.id || this.user.data?.admin;
     },
@@ -343,7 +349,11 @@ export default {
           position: relative;
           align-self: start;
           display: flex;
-          cursor: pointer;
+          cursor: default;
+
+          &:not(.no-click) {
+            cursor: pointer;
+          }
 
           .number-title-container {
             width: 70%;
