@@ -206,7 +206,7 @@
               v-else
               outlined
               color="baseAccent"
-              @click="saveNode(currentNode)"
+              @click="saveNode(currentNode, true)"
               class="mr-2"
               :loading="loading"
             >
@@ -401,7 +401,8 @@ export default {
       // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
     },
 
-    async saveNode(node) {
+    async saveNode(node, isUpdate = false) {
+      console.log("isUpdate: ", isUpdate);
       this.loading = true;
       node.connectedEdge = node.connectedEdge ? node.connectedEdge : "";
 
@@ -442,13 +443,15 @@ export default {
         .doc(node.id)
         .set({ ...node, topicCreatedTimestamp: new Date() });
       await this.saveTopicToStudents(node);
-
-      // increment course topicTotals by 1
-      await db
-        .collection("courses")
-        .doc(this.course.id)
-        .update("topicTotal", firebase.firestore.FieldValue.increment(1));
-      console.log("Topic total increased by 1");
+      
+      if (!isUpdate) {
+        // increment course topicTotals by 1
+        await db
+          .collection("courses")
+          .doc(this.course.id)
+          .update("topicTotal", firebase.firestore.FieldValue.increment(1));
+        console.log("Topic total increased by 1");
+      }
 
       // get to and from and save to map edges
       this.loading = false;
