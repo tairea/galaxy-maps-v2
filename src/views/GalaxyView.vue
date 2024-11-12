@@ -554,6 +554,8 @@ export default {
       this.currentEdge = selected;
     },
     async galaxyCompleted() {
+      if (this.galaxyCompletedDialog) return; // prevent multiple calls
+
       this.galaxyCompletedDialog = true;
       // confetti fireworks
       var duration = 30 * 1000;
@@ -595,6 +597,7 @@ export default {
         .doc(this.person.id)
         .update({
           xpPointsTotal: firebase.firestore.FieldValue.increment(this.xpPointsForThisGalaxy),
+          completedCourses: firebase.firestore.FieldValue.arrayUnion(this.courseId), // track completed courses so points arent re-awarded
         });
     },
     randomInRange(min, max) {

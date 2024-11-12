@@ -189,6 +189,9 @@ export default {
       "personsCourseTasks",
       "courseTasks",
     ]),
+    galaxyCompleted() {
+      return this.person.completedCourses.includes(this.currentCourseId);
+    },
     teacher() {
       return this.course?.mappedBy.personId === this.person?.id || this.user.data?.admin;
     },
@@ -299,7 +302,7 @@ export default {
     let isGalaxyMapComplete = this.personsTopics.every(
       (topic) => topic.topicStatus === "completed",
     );
-    if (this.personsTopics.length && isGalaxyMapComplete) {
+    if (!this.galaxyCompleted && this.personsTopics.length && isGalaxyMapComplete) {
       // TODO: better complete congrats
       console.log("Galaxy Map Complete. Well done!");
       this.$emit("galaxyCompleted");
@@ -358,7 +361,7 @@ export default {
       let isGalaxyMapComplete = this.personsTopics.every(
         (topic) => topic.topicStatus === "completed",
       );
-      if (this.personsTopics.length && isGalaxyMapComplete) {
+      if (!this.galaxyCompleted && this.personsTopics.length && isGalaxyMapComplete) {
         // TODO: better complete congrats
         console.log("Galaxy Map Complete. Well done!");
         this.$emit("galaxyCompleted");
