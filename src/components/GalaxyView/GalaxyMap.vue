@@ -189,6 +189,9 @@ export default {
       "personsCourseTasks",
       "courseTasks",
     ]),
+    galaxyCompleted() {
+      return this.person.completedCourses.includes(this.currentCourseId);
+    },
     teacher() {
       return this.course?.mappedBy.personId === this.person?.id || this.user.data?.admin;
     },
@@ -299,7 +302,7 @@ export default {
     let isGalaxyMapComplete = this.personsTopics.every(
       (topic) => topic.topicStatus === "completed",
     );
-    if (this.personsTopics.length && isGalaxyMapComplete) {
+    if (!this.galaxyCompleted && this.personsTopics.length && isGalaxyMapComplete) {
       // TODO: better complete congrats
       console.log("Galaxy Map Complete. Well done!");
       this.$emit("galaxyCompleted");
@@ -358,7 +361,7 @@ export default {
       let isGalaxyMapComplete = this.personsTopics.every(
         (topic) => topic.topicStatus === "completed",
       );
-      if (this.personsTopics.length && isGalaxyMapComplete) {
+      if (!this.galaxyCompleted && this.personsTopics.length && isGalaxyMapComplete) {
         // TODO: better complete congrats
         console.log("Galaxy Map Complete. Well done!");
         this.$emit("galaxyCompleted");
@@ -781,7 +784,8 @@ export default {
               2, // planet size
               this.dark ? "white" : this.$vuetify.theme.themes.light.missionAccent, // planet colour
               6.28 / (10 * i), // planet speed (6.28 radians in a circle. so 6.28 is full circle in 1 second. divide by something to slow it down)
-              20 * i, // planet orbit size
+              20 * i, // planet orbit size,
+              topicId, // for debugging
             ),
           );
         }

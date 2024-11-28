@@ -23,7 +23,7 @@
           v-if="cohort.teachers && cohort.teachers.length > 0"
           class="d-flex justify-center align-center flex-wrap py-2"
         >
-          <p class="label text-center mt-2 mb-2">Captain:</p>
+          <p class="label text-center mt-2 mb-2">{{ captainLabel }}</p>
           <div>
             <Avatar
               v-for="teacherId in cohort.teachers"
@@ -61,6 +61,7 @@
               :colourBorder="true"
               @click.native="clickedPerson($event, person, index)"
               :hideTooltips="!isCohortTeacher"
+              :cohort="cohort"
             />
           </div>
           <p v-else class="label text-center pa-4" style="font-weight: 800">NO NAVIGATOR DATA</p>
@@ -111,7 +112,7 @@
             :timeframe="timeframe"
             :selectedPersons="selectedPersons"
             :unselectedPersons="unselectedPersons"
-            :shortenNames="!isCohortTeacher"
+            :showFirstNameOnly="!isCohortTeacher"
           />
         </div>
         <div v-else class="d-flex justify-center align-center" style="padding: 50px 0px">
@@ -207,11 +208,14 @@ export default {
         return "border: 1px solid var(--v-missionAccent-base);cursor:default";
       }
     },
+    captainLabel() {
+      return this.cohort.teachers.length > 1 ? "Captains:" : "Captain:";
+    },
   },
   methods: {
     ...mapActions(useRootStore, ["setCurrentCohortId"]),
     clickedPerson(e, person, index) {
-      if (!isCohortTeacher) {
+      if (!this.isCohortTeacher) {
         return;
       }
       // prevent route to cohortView
@@ -307,7 +311,7 @@ export default {
   // width: calc(50% - 40px);
   // min-height: 60%;
   margin: 20px;
-  margin-bottom: 50px;
+  margin-bottom: 25px;
   flex-wrap: wrap;
   cursor: pointer;
 

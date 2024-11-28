@@ -38,7 +38,7 @@
               {{ getHumanDate(request.responseSubmittedTimestamp) }}
             </div>
             <div v-else class="requester-time d-flex flex-column align-center ml-auto">
-              <span class="ml-auto status-text">...waiting response</span>
+              <span class="ml-auto status-text cohortAccent--text">...awaiting response</span>
               {{ getHumanDate(request.requestSubmittedTimestamp) }}
             </div>
           </div>

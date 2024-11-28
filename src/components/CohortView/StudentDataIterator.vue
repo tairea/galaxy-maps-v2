@@ -86,7 +86,15 @@
       </template>
 
       <template v-slot:no-data>
-        <p class="ma-10 noStudents">No Navigators in this Squad</p>
+        <div v-if="searchingStudents" class="d-flex align-center flex-column">
+          <p class="noStudents mt-10 mb-5">Searching for Navigators</p>
+          <v-progress-linear
+            color="missionAccent"
+            indeterminate
+            style="width: 50%"
+          ></v-progress-linear>
+        </div>
+        <p v-else class="ma-10 noStudents">No Navigators in this Squad</p>
       </template>
     </v-data-iterator>
     <!-- Student Dialog -->
@@ -164,6 +172,7 @@ export default {
       student: [],
       studentCoursesActivity: [],
       studentTimeData: [],
+      searchingStudents: false,
     };
   },
   created() {
@@ -189,6 +198,7 @@ export default {
       deep: true,
       async handler(newCohort, oldCohort) {
         if (oldCohort.students?.length !== newCohort.students?.length) {
+          console.log("watch cohort. student lenght changed");
           if (oldCohort.students?.length > newCohort.students?.length) this.removeStudentProfiles();
           else await this.getStudentProfiles();
         }
@@ -231,13 +241,16 @@ export default {
     //   this.editStudentFlag = false;
     // },
     updateStudentProfile(obj) {
+      // update student in students array
       const index = this.students.findIndex((student) => student.id === obj.id);
+      // replace the student with the updated one/obj
       this.students.splice(index, 1, obj);
     },
     setTime() {
       this.date = Date.now();
     },
     async getStudentProfiles() {
+      this.searchingStudents = true;
       if (this.cohort?.students?.length) {
         const studentsArr = this.cohort.students.filter(
           (a) => !this.students.some((b) => a === b.id),
@@ -247,10 +260,13 @@ export default {
           studentsArr.map((studentId) => fetchPersonByPersonId(studentId)),
         );
         this.students = [...this.students, ...students];
+        this.searchingStudents = false;
+      } else {
+        this.searchingStudents = false;
       }
     },
     removeStudentProfiles() {
-      this.students = this.students.filter((a) => !this.cohort.students.some((b) => a.id === b));
+      this.students = this.students.filter((a) => this.cohort.students.some((b) => a.id === b));
     },
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();

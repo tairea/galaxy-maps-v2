@@ -353,13 +353,22 @@ export const deleteOrganisationByOrganisationId = async (
   return result.data.organisation;
 };
 
-export const fetchPersonByPersonId = async (id: string): Promise<IPerson> => {
+export const fetchPersonByPersonId = async (
+  id: string,
+  cohortId: string,
+): Promise<IPerson | null> => {
   const data = {
     personId: id,
+    cohortId,
   };
-  const getPersonByPersonId = functions.httpsCallable("getPersonByPersonId");
-  const result = await getPersonByPersonId(data);
-  return result.data.person;
+  try {
+    const getPersonByPersonId = functions.httpsCallable("getPersonByPersonId");
+    const result = await getPersonByPersonId(data);
+    return result.data.person;
+  } catch (error) {
+    console.error(`Error fetching person with ID ${id} from COHORT ${cohortId}:`, error);
+    return null;
+  }
 };
 
 export const fetchPersonByEmail = async (email: string): Promise<IPerson | null> => {
@@ -371,7 +380,7 @@ export const fetchPersonByEmail = async (email: string): Promise<IPerson | null>
     const result = await getPersonByEmail(data);
     return result.data.person;
   } catch (e) {
-    if (e instanceof FirebaseError && e.code === "not-found") {
+    if (e instanceof FirebaseError && e.code === "functions/not-found") {
       return null;
     }
     throw e;
@@ -384,7 +393,9 @@ export const createPerson = async (profile: Record<string, any>): Promise<IPerso
   };
   const createNewUser = functions.httpsCallable("createNewUser");
   const result = await createNewUser(data);
-  return result.data.person;
+  const person = result.data.person;
+  if (profile.inviter) person.inviter = profile.inviter;
+  return person;
 };
 
 export const updatePerson = async (personId: string, person: object): Promise<IPerson> => {

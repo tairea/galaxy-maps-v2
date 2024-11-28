@@ -9,7 +9,7 @@
       :style="borderColour"
     >
       <img
-        v-if="student.image"
+        v-if="student.image?.url"
         :src="student.image.url"
         :alt="student.firstName"
         style="object-fit: cover"
@@ -17,7 +17,10 @@
       <v-icon v-else>{{ mdiAccount }}</v-icon>
     </v-avatar>
     <div class="d-flex justify-center align-center flex-column" style="width: 100%">
-      <p class="text-uppercase studentName pt-2" :class="size ? '' : 'text-truncate'">
+      <p
+        class="text-uppercase studentName pt-2"
+        :class="size ? '' : 'd-inline-block text-truncate'"
+      >
         {{ student.firstName || student.email }}
       </p>
 
@@ -107,6 +110,7 @@ export default {
     letter-spacing: 2px;
     text-align: center;
     margin-bottom: 1px;
+    max-width: 100%;
   }
 }
 

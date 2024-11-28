@@ -89,7 +89,15 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "SubmissionTeacherPanelDense",
-  props: ["submission", "on", "attrs", "isDashboardView", "isTeacher", "showCourseImage"],
+  props: [
+    "submission",
+    "on",
+    "attrs",
+    "isDashboardView",
+    "isTeacher",
+    "isStudent",
+    "showCourseImage",
+  ],
   components: {
     SubmissionReviewDialog,
     Avatar,

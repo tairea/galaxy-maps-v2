@@ -11,7 +11,7 @@
               v-bind="attrs"
               v-on="on"
               class="mission-edit-button ma-2"
-              :color="active ? 'missionAccent' : 'cohortAccent'"
+              :color="task.submissionRequired ? 'cohortAccent' : 'missionAccent'"
               x-large
             >
               <v-icon v-if="task.submissionRequired" color="background">
@@ -23,7 +23,7 @@
 
           <!-- DIALOG (TODO: make as a component)-->
           <div v-if="active || declined" class="create-dialog">
-            <!-- HEADER -->
+            <!-- HEADER (Submission) -->
             <div v-if="task.submissionRequired" class="dialog-header">
               <p class="dialog-title">
                 Submission requirements for:
@@ -34,12 +34,11 @@
               <div class="d-flex align-center">
                 <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <p class="dialog-description">
-                  To complete this task you must submit a response to following instructions
+                  To complete this task you must submit a response to the following instructions
                 </p>
               </div>
             </div>
-
-            <!-- HEADER -->
+            <!-- HEADER (Mission completed) -->
             <div v-else class="dialog-header">
               <p class="dialog-title">
                 Have you completed Mission:
@@ -57,7 +56,7 @@
             </div>
 
             <div class="submission-create-dialog">
-              <!-- SUBMISSION FIELDS -->
+              <!-- INSTRUCTOR SPEECH BUBBLE (Submission) -->
               <div v-if="task.submissionRequired">
                 <div class="submission-dialog-header">
                   <!-- submission message speech bubble -->
@@ -72,7 +71,7 @@
                       <p class="ma-0">
                         {{ course.mappedBy?.name }}
                       </p>
-                      <p class="ma-0" style="font-size: 0.6rem">Instructor</p>
+                      <p class="ma-0" style="font-size: 0.6rem">Captain</p>
                     </div>
                   </div>
                   <v-row class="d-flex align-center speech-bubble">
@@ -91,6 +90,60 @@
                   </v-row>
                 </div>
 
+                <!-- If Declined and Resubmitting -->
+
+                <!-- STUDENT SUBMISSION -->
+                <div v-if="declined" class="requester-info">
+                  <v-row>
+                    <div class="requester-image justify-center align-center">
+                      <Avatar :colourBorder="true" :profile="person" :size="30" />
+                    </div>
+                    <!-- Message -->
+                    <div>
+                      <p class="dialog-description pa-1">
+                        <span style="font-size: 0.8rem; font-weight: 800"
+                          ><i>{{ person.firstName + " " + person.lastName }}</i></span
+                        >
+                        <i>@ {{ getHumanDate(submission.taskSubmittedForReviewTimestamp) }}</i>
+                      </p>
+                    </div>
+                  </v-row>
+                </div>
+                <p
+                  v-if="submission?.submissionLink"
+                  class="dialog-help-message declined-speech-bubble"
+                  v-html="submission.submissionLink"
+                ></p>
+
+                <!-- INSTRUCTOR RESPONSE -->
+                <div v-if="submission?.responseMessage" class="instructor-info">
+                  <v-row class="justify-end">
+                    <!-- Message -->
+                    <div>
+                      <p class="dialog-description pa-1">
+                        <span
+                          class="baseAccent--text mr-1"
+                          style="font-size: 0.8rem; font-weight: 800"
+                          >DECLINED BY</span
+                        >
+                        <span style="font-size: 0.8rem; font-weight: 800"
+                          ><i>{{ instructor.firstName + " " + instructor.lastName }}</i></span
+                        >
+                        <i> {{ getHumanDate(submission.responseSubmittedTimestamp) }}</i>
+                      </p>
+                    </div>
+                    <div class="requester-image align-center mr-12">
+                      <Avatar :colourBorder="true" :profile="instructor" :size="30" />
+                    </div>
+                  </v-row>
+                </div>
+                <p
+                  v-if="submission?.responseMessage"
+                  class="dialog-help-message declined-teacher-bubble text-end"
+                  v-html="submission.responseMessage"
+                ></p>
+                <!-- Divider -->
+
                 <div class="submission-create-dialog-content">
                   <div class="d-flex align-center">
                     <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
@@ -99,9 +152,10 @@
                     </p>
                   </div>
                   <vue-editor
+                    id="editor"
                     v-model="submissionLink"
                     useCustomImageHandler
-                    @imageAdded="handleImageAdded"
+                    @image-added="handleImageAdded"
                     class="mb-8 quill"
                     :class="{ 'active-quill': quillFocused }"
                     :editor-toolbar="customToolbar"
@@ -111,11 +165,10 @@
                   />
                 </div>
               </div>
-              <!-- End of v-if="submission" -->
 
               <!-- ACTION BUTTONS -->
               <div :class="isScreenSmall ? 'action-buttons-over-under' : 'action-buttons'">
-                <!-- YES, I HAVE COMPLETED -->
+                <!-- SUBMIT WORK FOR REVIEW -->
                 <v-btn
                   v-if="active && task.submissionRequired"
                   outlined
@@ -123,13 +176,14 @@
                   @click="submitWorkForReview()"
                   class="mr-2"
                   :loading="loading"
-                  :disabled="disabled"
                   v-bind="attrs"
                   v-on="on"
                 >
                   <v-icon left> {{ mdiCloudUploadOutline }} </v-icon>
                   SUBMIT WORK FOR REVIEW
                 </v-btn>
+
+                <!-- RE-SUBMIT WORK FOR REVIEW -->
                 <v-btn
                   v-else-if="declined && task.submissionRequired"
                   outlined
@@ -137,13 +191,14 @@
                   @click="reSubmitWorkForReview()"
                   class="mr-2"
                   :loading="loading"
-                  :disabled="disabled"
                   v-bind="attrs"
                   v-on="on"
                 >
                   <v-icon left> {{ mdiCheck }} </v-icon>
                   RE-SUBMIT WORK FOR REVIEW
                 </v-btn>
+
+                <!-- YES, I HAVE COMPLETED MISSION -->
                 <v-btn
                   v-else
                   outlined
@@ -151,7 +206,6 @@
                   @click="markAsCompleted()"
                   class="mr-2"
                   :loading="loading"
-                  :disabled="disabled"
                   v-bind="attrs"
                   v-on="on"
                   :dark="dark"
@@ -171,11 +225,8 @@
                   <v-icon left> {{ mdiClose }} </v-icon>
                   Cancel
                 </v-btn>
-                <!-- End action-buttons -->
               </div>
-              <!-- End submission-create-dialog-content -->
             </div>
-            <!-- End submission-create-dialog -->
           </div>
 
           <!-- DIALOG CONTENT IF ALREADY SUBMITTED -->
@@ -210,7 +261,6 @@
             </div>
             <!-- End submission-create-dialog -->
           </div>
-          <!-- End create-dialog -->
         </v-dialog>
       </v-col>
     </v-row>
@@ -220,7 +270,7 @@
 <script>
 import confetti from "canvas-confetti";
 import firebase from "firebase/compat/app";
-import { db, functions } from "@/store/firestoreConfig";
+import { db, functions, storage } from "@/store/firestoreConfig";
 import { fetchCohortByCohortId, fetchPersonByPersonId } from "@/lib/ff";
 import {
   mdiCloudUploadOutline,
@@ -230,6 +280,7 @@ import {
   mdiCheckboxBlankOutline,
 } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
+import moment from "moment";
 import useRootStore from "@/store/index";
 import useSolarSystemViewStore from "@/store/solarSystemView";
 import {
@@ -265,13 +316,14 @@ export default {
       ["blockquote", "code-block"],
       [{ list: "ordered" }, { list: "bullet" }],
       [{ indent: "-1" }, { indent: "+1" }], // outdent/indent
-      ["link", "image"],
+      ["link", "image", "video"],
       // ["clean"] // remove formatting button
     ],
     quillFocused: false,
     cohort: null,
     xpPointsForThisTask: 100, // task is worth 100xp by default
     xpPointsForThisTopic: 500, // topic is worth 500xp by default
+    instructor: {},
   }),
   async mounted() {
     // get mappedBy image
@@ -284,6 +336,18 @@ export default {
       this.cohort = await fetchCohortByCohortId(this.currentCohortId);
     }
     // console.log("persons topics from mission completed dialog", this.personsTopics);
+
+    if (this.task.submissionRequired) {
+      // get all submissions
+      await this.getAllSubmittedWorkByCourseId(this.course.id);
+
+      // get captain
+      if (this.submission) {
+        this.instructor = await fetchPersonByPersonId(
+          this.submission.contextCourse.mappedBy.personId,
+        );
+      }
+    }
   },
   computed: {
     ...mapState(useRootStore, ["currentCohortId", "courseSubmissions", "personsTopics", "person"]),
@@ -302,11 +366,18 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["setSnackbar", "setTopicCompleted", "setNextTopicUnlocked"]),
+    ...mapActions(useRootStore, [
+      "setSnackbar",
+      "setTopicCompleted",
+      "setNextTopicUnlocked",
+      "getAllSubmittedWorkByCourseId",
+    ]),
     ...mapActions(useSolarSystemViewStore, ["refreshTopic", "refreshPersonTopicsAndTasks"]),
     async reSubmitWorkForReview() {
       this.loading = true;
       this.disabled = true;
+
+      console.log("got submission: ", this.submission);
 
       // 1) add submission to course (for teacher to review)
       try {
@@ -327,8 +398,11 @@ export default {
             responderPersonId: "",
             responseMessage: "",
           });
-
         console.log("Re-submission successfully submitted for review!");
+
+        //email the teachers about the submission
+        await this.emailTeachersAboutSubmission();
+        console.log("Task work successfully re-submitted for review!");
 
         // send xAPI statement to LRS
         await reSubmitWorkForReviewXAPIStatement(this.person, this.task.id, {
@@ -342,7 +416,7 @@ export default {
 
         this.setSnackbar({
           show: true,
-          text: "Submission sent. You will be notified when your instructor has reviewed your work.",
+          text: "Submission sent. You will be notified when your Captain has reviewed your work.",
           color: "baseAccent",
         });
       } catch (error) {
@@ -369,18 +443,6 @@ export default {
           taskStatus: "inreview",
           taskSubmittedForReviewTimestamp: new Date(),
         });
-
-      if (this.cohort != null) {
-        for (const teacherId of this.cohort.teachers) {
-          await this.sendTaskSubmission(
-            teacherId,
-            this.submissionLink,
-            this.task.submissionInstructions,
-          );
-        }
-      }
-
-      console.log("Task work successfully re-submitted for review!");
 
       // unlock next task
       await this.unlockNextTask();
@@ -412,17 +474,9 @@ export default {
           taskSubmissionStatus: "inreview",
           taskSubmittedForReviewTimestamp: new Date(),
         });
-        if (this.cohort != null) {
-          for (const teacherId of this.cohort.teachers) {
-            await this.sendTaskSubmission(
-              teacherId,
-              this.submissionLink,
-              this.task.submissionInstructions,
-            );
-          }
-        }
 
-        console.log("Submission successfully submitted for review!");
+        //email the teachers about the submission
+        await this.emailTeachersAboutSubmission();
 
         // send xAPI statement to LRS
         await submitWorkForReviewXAPIStatement(this.person, this.task.id, {
@@ -437,7 +491,7 @@ export default {
 
         this.setSnackbar({
           show: true,
-          text: "Submission sent. You will be notified when your instructor has reviewed your work.",
+          text: "Submission sent. You will be notified when your Captain has reviewed your work.",
           color: "baseAccent",
         });
       } catch (error) {
@@ -448,9 +502,6 @@ export default {
         });
 
         throw error;
-
-        this.loading = false;
-        this.dialog = false;
       }
 
       // 2) Add submission to students task (for students progression)
@@ -467,8 +518,7 @@ export default {
           taskStatus: "inreview",
           taskSubmittedForReviewTimestamp: new Date(),
         });
-
-      console.log("Task work successfully submitted for review!");
+      console.log("Students task updated to in-review");
 
       // unlock next task
       await this.unlockNextTask();
@@ -708,6 +758,7 @@ export default {
       this.mappedByImageURL = person.image?.url;
     },
     async sendTaskSubmission(teacherId, submissionResponse, submissionInstructions) {
+      console.log("sending task submission to teacher", teacherId);
       const teacher = await fetchPersonByPersonId(teacherId);
       const data = {
         course: this.course.title,
@@ -722,8 +773,61 @@ export default {
       const sendTaskSubmission = functions.httpsCallable("sendTaskSubmission");
       return sendTaskSubmission(data);
     },
+    async emailTeachersAboutSubmission() {
+      try {
+        // First, get the cohort that contains this student
+        const studentCohortSnapshot = await db
+          .collection("cohorts")
+          .where("students", "array-contains", this.person.id)
+          .get();
+
+        let cohortFound = false;
+
+        if (!studentCohortSnapshot.empty) {
+          for (const cohortDoc of studentCohortSnapshot.docs) {
+            const cohort = cohortDoc.data();
+            // Check if this cohort contains the current course
+            if (cohort.courses && cohort.courses.includes(this.course.id)) {
+              console.log("Found cohort:", cohort.id);
+              cohortFound = true;
+
+              // Send email to all teachers in the cohort
+              for (const teacherId of cohort.teachers) {
+                await this.sendTaskSubmission(
+                  teacherId,
+                  this.submissionLink,
+                  this.task.submissionInstructions,
+                );
+              }
+              console.log("Submission successfully emailed for review!");
+              // Exit the loop after finding the correct cohort
+              break;
+            }
+          }
+        }
+
+        // If no matching cohort found, fall back to sending email to the course instructor
+        if (!cohortFound) {
+          console.log("No matching cohort found, emailing course instructor");
+          if (!this.course.mappedBy?.personId) {
+            throw new Error("Course instructor not found");
+          }
+          await this.sendTaskSubmission(
+            this.course.mappedBy.personId,
+            this.submissionLink,
+            this.task.submissionInstructions,
+          );
+          console.log("Submission successfully emailed for review!");
+        }
+      } catch (error) {
+        console.error("Error in emailTeachersAboutSubmission:", error);
+        // You might want to show an error message to the user here
+      }
+    },
     handleImageAdded(file, Editor, cursorLocation) {
       // ceate a storage ref
+      console.log("image added", file);
+
       var storageRef = storage.ref(
         "submission-images/student-" + this.person.id + "-task-" + this.task.id + "-" + file.name,
       );
@@ -752,6 +856,10 @@ export default {
         },
       );
     },
+    getHumanDate(ts) {
+      if (!ts) return;
+      return moment((ts.seconds ? ts.seconds : ts._seconds) * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
+    },
   },
 };
 </script>
@@ -760,8 +868,11 @@ export default {
 .submission-dialog-description > p {
   margin: 10px 0px !important;
 }
-</style>
 
+.submission-dialog-description > p > img {
+  width: 100%;
+}
+</style>
 <style scoped lang="scss">
 // new dialog ui
 .create-dialog {
@@ -818,7 +929,8 @@ export default {
     padding: 20px;
     width: 100%;
     // font-size: 0.6rem;
-    // border: 1px solid var(--v-missionAccent-base);
+    border-top: 1px solid var(--v-missionAccent-base);
+    padding-top: 40px;
   }
 
   .submission-dialog-description {
@@ -868,6 +980,94 @@ export default {
     z-index: 1;
     border-bottom-color: rgba(0, 0, 0, 0.095);
   }
+}
+
+.declined-speech-bubble {
+  position: relative;
+  width: auto;
+  padding: 10px;
+  margin: 50px 15px 20px;
+  // background-color: #fff;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  border: 2px solid var(--v-missionAccent-base);
+  font-size: 0.8rem;
+}
+
+.declined-speech-bubble:before,
+.declined-speech-bubble:after {
+  content: "\0020";
+  display: block;
+  position: absolute;
+  top: -10px;
+  left: 15px;
+  z-index: 2;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  border: solid 10px transparent;
+  border-top: 0;
+  border-bottom-color: var(--v-missionAccent-base);
+}
+
+.declined-speech-bubble:before {
+  top: -30px;
+  z-index: 1;
+  border-bottom-color: rgba(0, 0, 0, 0.095);
+}
+
+.declined-teacher-bubble {
+  position: relative;
+  width: auto;
+  padding: 10px;
+  margin: 50px 15px 20px;
+  // background-color: #fff;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  border: 2px solid var(--v-cohortAccent-base);
+  font-size: 0.8rem;
+}
+
+.declined-teacher-bubble:before,
+.declined-teacher-bubble:after {
+  content: "\0020";
+  display: block;
+  position: absolute;
+  top: -10px;
+  right: 0px;
+  z-index: 2;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  border: solid 10px transparent;
+  border-top: 0;
+  border-bottom-color: var(--v-cohortAccent-base);
+}
+
+.declined-teacher-bubble:before {
+  top: -30px;
+  z-index: 1;
+  border-bottom-color: rgba(0, 0, 0, 0.095);
+}
+
+.requester-info {
+  position: relative;
+  top: 25px;
+  left: 30px;
+  margin-top: 20px;
+}
+
+.requester-image {
+  width: 10%;
+}
+
+.instructor-info {
+  position: relative;
+  top: 25px;
+  left: 30px;
+  margin-top: 20px;
 }
 
 .action-buttons {

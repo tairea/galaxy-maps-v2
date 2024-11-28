@@ -40,6 +40,12 @@
           >
             {{ getSubmitTitle }}
           </p>
+          <!-- <SubmissionReviewDialog
+            v-if="declined"
+            :submission="declinedSubmission"
+            :requesterPerson="requesterPerson"
+            :reviewed="true"
+          /> -->
           <MissionCompletedDialog
             :course="course"
             :topic="topic"
@@ -58,14 +64,28 @@
 <script>
 import MissionCompletedDialog from "@/components/Dialogs/MissionCompletedDialog.vue";
 import RequestHelpDialog from "@/components/Dialogs/RequestHelpDialog.vue";
+import SubmissionReviewDialog from "@/components/Dialogs/SubmissionReviewDialog.vue";
 import useRootStore from "@/store/index";
-import { mapState } from "pinia";
+import { mapState, mapActions } from "pinia";
 
 export default {
   name: "ActiveMissionsCard",
   components: {
     MissionCompletedDialog,
     RequestHelpDialog,
+    SubmissionReviewDialog,
+  },
+  data: () => ({
+    declinedSubmission: null,
+  }),
+  async mounted() {
+    if (this.declined) {
+      this.declinedSubmission = await this.getSubmissionByCourseIdPersonIdTaskId({
+        courseId: this.course.id,
+        personId: this.person.id,
+        taskId: this.task.id,
+      });
+    }
   },
   props: ["course", "topic", "task", "active", "declined", "inreview", "completed"],
   computed: {
@@ -99,7 +119,9 @@ export default {
       }
     },
   },
-  methods: {},
+  methods: {
+    ...mapActions(useRootStore, ["getSubmissionByCourseIdPersonIdTaskId"]),
+  },
 };
 </script>
 

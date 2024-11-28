@@ -38,7 +38,27 @@
       </div>
 
       <div id="right-section">
-        <StudentActivityTimeline :student="person" />
+        <!-- all requests and submissions -->
+        <RequestForHelpTeacherFrame
+          v-if="studentsCourses"
+          :courses="studentsCourses"
+          :students="[this.person.id]"
+          :dense="true"
+          :showCourseImage="true"
+          class="mt-7 pb-2"
+          :yours="true"
+        />
+
+        <SubmissionTeacherFrame
+          v-if="studentsCourses"
+          :courses="studentsCourses"
+          :students="[this.person.id]"
+          :dense="true"
+          :showCourseImage="true"
+          class="mt-5 pb-2"
+          :yours="true"
+        />
+        <StudentActivityTimeline :student="person" class="mt-5" />
       </div>
     </template>
 
@@ -54,7 +74,7 @@
             Because you are an Admin. These are ALL Galaxy Maps and ALL Squads on the Galaxy Maps
             platform.
           </p>
-          <p v-else class="info-description">
+          <p v-else-if="isTeacher" class="info-description">
             These are Galaxy Maps you have created and the Squads working through them.
           </p>
         </div>
@@ -77,12 +97,14 @@
       <div id="right-section">
         <!-- all requests and submissions -->
         <RequestForHelpTeacherFrame
+          v-if="!loading && cohortCourses"
           :isTeacher="true"
           :courses="cohortCourses"
           :students="teachersStudents"
           class="mt-9"
         />
         <SubmissionTeacherFrame
+          v-if="!loading && cohortCourses"
           :isTeacher="isTeacher"
           :courses="cohortCourses"
           :students="teachersStudents"
@@ -163,13 +185,22 @@ export default {
     this.courses = await fetchCourses();
     this.cohorts = await fetchCohorts();
     this.loading = false;
-    if (this.cohorts.length) this.setDashboardView("teacher");
+    if (this.isTeacher) {
+      this.setDashboardView("teacher");
+    } else if (this.isAdmin) {
+      this.setDashboardView("admin");
+    } else {
+      this.setDashboardView("student");
+    }
+
+    // get all submissions
   },
   computed: {
     ...mapState(useUserDashboardStore, ["dashboardView"]),
     ...mapState(useRootStore, ["user", "person"]),
     isAdmin() {
-      return this.user.data.admin;
+      console.log("isAdmin:", this.user?.data?.admin);
+      return this.user?.data?.admin;
     },
     isStudent() {
       return this.person.assignedCourses?.length;
@@ -205,6 +236,17 @@ export default {
         cohort.courses.map((course) => ({ id: course })),
       );
       return courses;
+    },
+    studentsCourses() {
+      if (this.person.assignedCourses) {
+        const courses = this.person.assignedCourses.map((course) => ({ id: course }));
+        return courses;
+      } else if (this.isAdmin) {
+        console.log("is a admin showing all courses");
+        return this.courses;
+      } else {
+        return [];
+      }
     },
     teachersStudents() {
       const students = this.teacherCohorts.flatMap((cohort) => cohort.students ?? []);

@@ -21,6 +21,7 @@
           @click="verifyEmail()"
           outlined
           width="100%"
+          :loading="loading"
         >
           Sign in
         </v-btn>
@@ -59,6 +60,7 @@ export default {
       (v) => !!v || "E-mail is required",
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
     ],
+    loading: false,
   }),
   computed: {
     ...mapState(useRootStore, ["user", "person"]),
@@ -66,6 +68,7 @@ export default {
   methods: {
     ...mapActions(useRootStore, ["setSnackbar"]),
     verifyEmail() {
+      this.loading = true;
       // Confirm the link is a sign-in with email link.
       if (firebase.auth().isSignInWithEmailLink(window.location.href)) {
         if (!this.email) return;

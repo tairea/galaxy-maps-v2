@@ -37,7 +37,7 @@ export async function sendTeacherInviteEmail(email: string, displayName: string,
   };
 
   mailOptions.subject = `Account created for ${APP_NAME}!`;
-  mailOptions.text = `Hi ${displayName || ""}
+  mailOptions.text = `Greetings ${displayName || ""}
 
 Your Captain account has been created for ${APP_NAME}. 
 Please click this link to sign into your account and setup your profile
@@ -66,7 +66,7 @@ export async function sendStudentInviteEmail(
   };
 
   mailOptions.subject = `Account created for ${APP_NAME}!`;
-  mailOptions.text = `Hi ${displayName || ""}
+  mailOptions.text = `Greetings, ${displayName || ""}.
 
 Captain ${inviter}, has created you an account for ${APP_NAME}. 
 
@@ -83,8 +83,8 @@ Galaxy Maps Team`;
 
 // ======COHORT REGISTRATION NOTIFICATION==================
 export const sendNewCohortEmailHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
-  const { email, displayName, firstName, inviter, cohort } = data;
-  return sendNewCohortEmail(email, displayName, firstName, inviter, cohort);
+  const { email, displayName, firstName, lastName, inviter, cohort } = data;
+  return sendNewCohortEmail(email, displayName, firstName, lastName, inviter, cohort);
 });
 
 /**
@@ -94,6 +94,7 @@ export async function sendNewCohortEmail(
   email: string,
   displayName: string,
   firstName: string,
+  lastName: string,
   inviter: string,
   cohort: string,
 ) {
@@ -102,14 +103,14 @@ export async function sendNewCohortEmail(
     to: email,
   };
 
-  mailOptions.subject = "New cohort registration";
-  mailOptions.text = `Hi ${displayName || firstName || ""}
+  mailOptions.subject = "You've been add to a Squad";
+  mailOptions.text = `Greetings, Navigator ${displayName || lastName || ""}
 
-You have been added to squad: ${cohort} ${inviter ? "by " + inviter : ""} 
+Captain ${inviter || ""} has assigned you to Squad: ${cohort}.
 
-Sign into your Galaxy Maps account to view your new squad.
+Sign into your Galaxy Maps account to view your missions.
 
-https://${DOMAIN}
+https://${DOMAIN}/login
   
 If you have any issues please contact base@${DOMAIN}
   
@@ -119,11 +120,14 @@ Galaxy Maps Team`;
 }
 
 // ======COURSE REGISTRATION NOTIFICATION==================
-
+export const sendNewGalaxyEmailHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
+  const { email, inviter, course } = data;
+  return sendNewGalaxyEmail(email, inviter, course);
+});
 /**
  * Sends a new course registration notification email.
  */
-export async function sendNewCourseEmail(email: string, _name: string, course: string) {
+export async function sendNewGalaxyEmail(email: string, inviter: string, course: string) {
   const mailOptions: Record<string, string> = {
     from: `${APP_NAME} <noreply@${DOMAIN}>`,
     to: email,
@@ -132,7 +136,7 @@ export async function sendNewCourseEmail(email: string, _name: string, course: s
   mailOptions.subject = "New Galaxy Assignment";
   mailOptions.text = `Greetings Navigator
 
-You have been assigned to ${course} Galaxy Map. 
+Captain ${inviter || ""} has assigned you to Galaxy Map: ${course}.
 
 Sign into your Galaxy Maps account to start exploring this new galaxy.
 
@@ -161,7 +165,7 @@ export async function sendNewSubmissionEmail(author: string, title: string, id: 
   };
 
   mailOptions.subject = "New Galaxy Submission";
-  mailOptions.text = `Hi Admin, 
+  mailOptions.text = `Greetings Admin, 
 
 ${author} has submitted a new Galaxy Map called ${title} to be reviewed for PUBLIC / all users to access
 
@@ -188,10 +192,10 @@ export async function sendCourseCreatedEmail(
 ) {
   const mailOptions: Record<string, string> = {
     from: `${APP_NAME} <noreply@${DOMAIN}>`,
-    to: "ian@tairea.io",
+    to: "base@galaxymaps.io",
   };
 
-  mailOptions.subject = "Galaxy Created";
+  mailOptions.subject = "New Galaxy Created";
   mailOptions.text = `Greetings admin, 
 
   ${name} from ${email} has created a new galaxy called ${course}.
@@ -218,7 +222,7 @@ export async function sendCoursePublishedEmail(email: string, name: string, cour
   };
 
   mailOptions.subject = "Galaxy Published";
-  mailOptions.text = `Greetings ${name}, 
+  mailOptions.text = `Greetings Captain ${name}, 
 
 Your galaxy map ${course} has been successfully published and a default Squad has been created so you can monitor the progress of Navigators that explore this Galaxy.
 
@@ -253,7 +257,7 @@ export async function sendRequestForHelp(
   };
 
   /* eslint-disable max-len */
-  mailOptions.subject = `${course} Request for help`;
+  mailOptions.subject = `[${course}] - Request for help`;
   mailOptions.text = `Greetings Captain ${teacher}, 
 
 Navigator ${student} has sent a REQUEST FOR HELP.
@@ -264,25 +268,37 @@ Mission: ${task}
 
 Their request for help: "${request}"
 
-To respond to ${student}, please login to https://${DOMAIN}/dasboard to view your Requests for Help.
+To respond to ${student}, please login to https://${DOMAIN}/dashboard to view your Requests for Help.
   
 Galaxy Maps Team`;
 
-  mailOptions.html = `<p>Hi ${teacher},</p>
+  mailOptions.html = `<p>Greetings, Captain ${teacher}</p>
   </br> 
-<p>Your student ${student} has sent a request for help.</p>
+<p>Navigator ${student} has sent a request for help.</p>
 </br> 
+<p><span style="text-decoration: underline;">Please note:</span> Navigators may be unable to progress until they receive assistance.</p>
+</br>
+<hr>
+</br>
+<p style="text-decoration: underline;">Context:</p>
 <ul>
-  <li>Course: ${course}</li>
-  <li>Topic: ${topic}</li>
-  <li>Task: ${task}</li>
+  <li>Galaxy: ${course}</li>
+  <li>System: ${topic}</li>
+  <li>Mission: ${task}</li>
 </ul>
 </br> 
-<p>Request: <strong>${request}</strong> </p>
-</br>
-<p>To respond to ${student}, please login to <a href="https://${DOMAIN}" target="_blank">https://${DOMAIN}/login</a> to view your course</p>
 </br> 
-<p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
+<p style="text-decoration: underline;">Request for Help:</p> 
+<div style="border: 3px solid #E269CF; border-radius: 10px; padding:10px;">
+<p>${request}</p>
+</div>
+</br>
+</br>
+<p>To respond to ${student}'s request and provide assistance,
+please login to <a href="https://${DOMAIN}/dashboard" target="_blank"
+  >https://${DOMAIN}/dashboard</a> to view your Requests for Help.</p>
+</br> 
+<p style="font-size: 0.75rem !important;font-weight: 500;letter-spacing: 0.1666666667em !important;line-height: 2rem;text-transform: uppercase;font-family: "Roboto", sans-serif !important;">Galaxy Maps Team</p>`;
   /* eslint-enable max-len */
 
   await mailTransport.sendMail(mailOptions);
@@ -314,8 +330,8 @@ export async function sendResponseToHelp(
   };
 
   /* eslint-disable max-len */
-  mailOptions.subject = `${course} Response to your request`;
-  mailOptions.text = `Greetings, ${student}, 
+  mailOptions.subject = `[${course}] - Response from Captain`;
+  mailOptions.text = `Greetings Navigator ${student}, 
 
 Captain ${teacher} has replied to your request for help.
 
@@ -331,24 +347,36 @@ Login to https://${DOMAIN} to continue your missions.
   
 Galaxy Maps Team`;
 
-  mailOptions.html = `<p>Greetings, ${student},</p>
+  mailOptions.html = `<p>Greetings, Navigator ${student}</p>
   </br> 
 <p>Captain ${teacher} has replied to your request for help.</p>
 </br> 
+<hr>
+</br>
+<p style="text-decoration: underline;">Context:</p>
 <ul>
   <li>Galaxy: ${course}</li>
   <li>System: ${topic}</li>
   <li>Mission: ${task}</li>
 </ul>
 </br> 
-<p>Your request: "${request}" </p>
 </br> 
-<p>Captain's response: <strong>"${response}"</strong></p>
-</br> 
+<p style="text-decoration: underline;">Your Request:</p> 
+<div style="border: 3px solid #E269CF; border-radius: 10px; padding:10px;">
+<p>${request}</p>
+</div>
+</br>
+</br>
+<p style="text-decoration: underline;">Captain's Response:</p> 
+<div style="border: 3px solid #69A1E2; border-radius: 10px; padding:10px;">
+<p>${response}</p>
+</div>
+</br>
+</br>
 <p>Login to <a href="https://${DOMAIN}" target="_blank"
-  >https://${DOMAIN}/login</a> to continue your missions.</p>
+  >https://${DOMAIN}</a> to continue your missions.</p>
 </br> 
-<p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
+<p style="font-size: 0.75rem !important;font-weight: 500;letter-spacing: 0.1666666667em !important;line-height: 2rem;text-transform: uppercase;font-family: "Roboto", sans-serif !important;">Galaxy Maps Team</p>`;
   /* eslint-enable max-len */
 
   await mailTransport.sendMail(mailOptions);
@@ -390,7 +418,7 @@ export async function sendTaskSubmission(
 
   /* eslint-disable max-len */
   mailOptions.subject = `${task} work submission`;
-  mailOptions.text = `Greetings, ${teacher}, 
+  mailOptions.text = `Greetings Captain ${teacher}, 
 
 Navigator, ${student} has submitted work for your review.
 
@@ -398,7 +426,8 @@ Galaxy: ${course}
 System: ${topic}
 Mission: ${task}
 
-Your Instructions: ${submissionInstructions}
+Your Instructions:</span>
+${submissionInstructions}
 
 Navigator's Submission Response: ${submission}
 
@@ -407,25 +436,39 @@ please login to https://${DOMAIN}/dashboard to respond to their submission
   
 Galaxy Maps Team`;
 
-  mailOptions.html = `<p>Greetings, ${teacher},</p>
+  mailOptions.html = `<p>Greetings, Captain ${teacher}</p>
   </br> 
-<p>Navigator ${student} has submitted work for your review.</p>
+<p>Navigator ${student}, has submitted work for you to review.</p>
 </br> 
+<p><span style="text-decoration: underline;">Please note:</span> Navigators <strong>cannot</strong> progress until submissions are approved!!</p>
+</br>
+<hr>
+</br>
+<p style="text-decoration: underline;">Context:</p>
 <ul>
   <li>Galaxy: ${course}</li>
   <li>System: ${topic}</li>
   <li>Mission: ${task}</li>
 </ul>
 </br> 
-<p>Your Instructions: ${submissionInstructions}</p>
+</br> 
+<p style="text-decoration: underline;">Your Instructions:</p> 
+<div style="border: 3px solid #E269CF; border-radius: 10px; padding:10px;">
+<p>${submissionInstructions}</p>
+</div>
 </br>
-<p>Navigator's Submission: <strong>${submission}</strong> </p>
+</br>
+<p style="text-decoration: underline;">Their Submission:</p> 
+<div style="border: 3px solid #69A1E2; border-radius: 10px; padding:10px;">
+<p>${submission}</p>
+</div>
 </br> 
-<p>To respond to ${student}'s submission and UNLOCK the next mission from them,
+</br>
+<p>To respond to ${student}'s Submission and unlock their next mission,
 please login to <a href="https://${DOMAIN}/dashboard" target="_blank"
-  >https://${DOMAIN}/dashboard</a> to respond to their submission</p>
+  >https://${DOMAIN}/dashboard</a> to approve or decline their submission</p>
 </br> 
-<p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
+<p style="font-size: 0.75rem !important;font-weight: 500;letter-spacing: 0.1666666667em !important;line-height: 2rem;text-transform: uppercase;font-family: "Roboto", sans-serif !important;">Galaxy Maps Team</p>`;
   /* eslint-enable max-len */
 
   await mailTransport.sendMail(mailOptions);
@@ -434,17 +477,19 @@ please login to <a href="https://${DOMAIN}/dashboard" target="_blank"
 
 // ====== RESPONSE TO REQUEST ==================
 export const sendResponseToSubmissionHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
-  const { email, teacher, course, task, student, outcome, topic, message, submission } = data;
+  const { email, teacher, course, task, firstName, lastName, outcome, topic, message, submission } =
+    data;
   sendResponseToSubmission(
     email,
     teacher,
     course,
-    task,
-    student,
-    outcome,
     topic,
-    message,
+    task,
+    firstName,
+    lastName,
     submission,
+    outcome,
+    message,
   );
 });
 
@@ -455,12 +500,13 @@ export async function sendResponseToSubmission(
   email: string,
   teacher: string,
   course: string,
-  task: string,
-  student: string,
-  outcome: string,
   topic: string,
-  message: string,
+  task: string,
+  firstName: string,
+  lastName: string,
   submission: string,
+  outcome: string,
+  message: string,
 ) {
   const mailOptions: Record<string, string> = {
     from: `${APP_NAME} <noreply@${DOMAIN}>`,
@@ -469,9 +515,18 @@ export async function sendResponseToSubmission(
 
   /* eslint-disable max-len */
   mailOptions.subject = `Mission ${task} ${outcome}`;
-  mailOptions.text = `Greetings ${student}, 
 
-Captain ${teacher} has reviewed your submission to ${task}.
+  // annoying auto format on save that indents to 6 when expected 8
+  // indent then save without formatting
+  mailOptions.text = `Greetings, Navigator ${
+    lastName
+      ? lastName.charAt(0).toUpperCase() + lastName.slice(1)
+      : firstName
+      ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
+      : ""
+  }
+
+Captain ${teacher} has reviewed your submission for ${task}.
 
 Galaxy: ${course}
 System: ${topic}
@@ -479,7 +534,7 @@ Mission: ${task}
 
 Your submission: ${submission} 
 
-Submission outcome: ${outcome} 
+Submission outcome: ${outcome.toUpperCase()} 
 
 Captain's message: ${message}
 
@@ -487,25 +542,50 @@ Login to https://${DOMAIN} to continue your mission.
   
 Galaxy Maps Team`;
 
-  mailOptions.html = `<p><strong>Hi ${student},</strong></p>
-<p>Captain ${teacher} has reviewed your submission to ${task}.</p>
+  mailOptions.html = `<p>Greetings, Navigator ${
+    lastName
+      ? lastName.charAt(0).toUpperCase() + lastName.slice(1)
+      : firstName
+      ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
+      : ""
+  }</p>
+  </br> 
+<p>Captain ${teacher} has reviewed your submission for ${task}.</p>
 </br> 
+<p><span style="text-decoration: underline;">Please note:</span> This is the outcome of your submission.</p>
+</br>
+<hr>
+</br>
+<p style="text-decoration: underline;">Context:</p>
 <ul>
   <li>Galaxy: ${course}</li>
   <li>System: ${topic}</li>
   <li>Mission: ${task}</li>
 </ul>
 </br> 
-<p><strong>Submission outcome: ${outcome} </strong></p>
 </br> 
-<p>Your Submission: ${submission} </p>
+<p style="text-decoration: underline;">Your Submission:</p> 
+<div style="border: 3px solid #69A1E2; border-radius: 10px; padding:10px;">
+<p>${submission}</p>
+</div>
+</br>
+</br>
+<p style="text-decoration: underline;">Submission Outcome:</p> 
+<div style="border: 3px solid #E269CF; border-radius: 10px; padding:10px;">
+<p><strong>${outcome.toUpperCase()}</strong></p>
+</div>
+</br>
+</br>
+<p style="text-decoration: underline;">Captain's Message:</p> 
+<div style="border: 3px solid #69A1E2; border-radius: 10px; padding:10px;">
+<p>${message}</p>
+</div>
 </br> 
-<p>Captain's message: ${message} </p>
-</br> 
-<p>Login to <a href="https://${DOMAIN}" target="_blank"
+</br>
+<p>Login to <a href="https://${DOMAIN}/dashboard" target="_blank"
   >https://${DOMAIN}/dashboard</a> to continue your mission.</p>
 </br> 
-<p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
+<p style="font-size: 0.75rem !important;font-weight: 500;letter-spacing: 0.1666666667em !important;line-height: 2rem;text-transform: uppercase;font-family: "Roboto", sans-serif !important;">Galaxy Maps Team</p>`;
   /* eslint-enable max-len */
 
   await mailTransport.sendMail(mailOptions);
@@ -525,7 +605,7 @@ export async function sendStudentInActive(student: string, studentEmail: string,
   // The user subscribed to the newsletter.
   /* eslint-disable max-len */
   mailOptions.subject = "Student Activity Alert";
-  mailOptions.text = `Greetings, ${student}, 
+  mailOptions.text = `Greetings Navigator ${student}, 
 
 It has been ${duration} since you last signed into Galaxy Maps. 
 
@@ -533,7 +613,7 @@ Sign in to https://${DOMAIN} now to continue your learning journey.
   
 Galaxy Maps Team`;
 
-  mailOptions.html = `<p><strong>Greetings, ${student},</strong></p>
+  mailOptions.html = `<p><strong>Greetings Navigator ${student},</strong></p>
 </br>
 <p>It has been <strong>${duration}</strong> since you last signed into Galaxy Maps.</p>
 </br> 
@@ -566,7 +646,7 @@ export async function sendTeacherStudentInActive(
 
   /* eslint-disable max-len */
   mailOptions.subject = "Student Activity Alert";
-  mailOptions.text = `Greetings, ${teacher}, 
+  mailOptions.text = `Greetings Captain ${teacher}, 
   
 It has been ${duration} since Navigator: ${student} from Squad: ${cohort} last signed into Galaxy Maps. 
 
@@ -574,7 +654,7 @@ We recommend checking in on them via email ${studentEmail} to encourage and supp
   
 Galaxy Maps Team`;
 
-  mailOptions.html = `<p><strong>Greetings, ${teacher},</strong></p>
+  mailOptions.html = `<p><strong>Greetings Captain ${teacher},</strong></p>
   </br>
   <p>It has been <strong>${duration}</strong> since Navigator: <strong>${student}</strong> from Squad: <strong>${cohort}</strong> last signed into Galaxy Maps.</p>
   </br> 
@@ -612,7 +692,7 @@ export async function sendCourseDeleted(
 
   /* eslint-disable max-len */
   mailOptions.subject = "Galaxy Deleted";
-  mailOptions.text = `Greetings, ${student || ""}, 
+  mailOptions.text = `Greetings Navigator ${student || ""}, 
 
 Captain ${teacher} has deleted the Galaxy ${course}.
 
@@ -620,7 +700,7 @@ If you have any questions or concerns about this please contact the Captain by e
 
 Galaxy Maps Team`;
 
-  mailOptions.html = `<p><strong>Greetings, ${student},</strong></p>
+  mailOptions.html = `<p><strong>Greetings ${student},</strong></p>
   </br>
 <p>Captain ${teacher} has deleted the Galaxy ${course}.</p>
 </br> 

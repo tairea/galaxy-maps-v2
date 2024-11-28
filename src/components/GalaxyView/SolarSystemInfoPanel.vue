@@ -3,12 +3,22 @@
     <div class="panelContent">
       <!-- Loading spinner -->
       <div
-        v-if="!selectedTopic"
+        v-if="!selectedTopic && !topicError"
         class="panelContentInner d-flex flex-column justify-center align-center"
         style="padding: 50px"
       >
         <v-btn :loading="!selectedTopic" icon color="missionAccent"></v-btn>
         <p class="overline missionAccent--text">Loading system</p>
+      </div>
+
+      <!-- Error message -->
+      <div
+        v-else-if="topicError"
+        class="panelContentInner d-flex flex-column justify-center align-center"
+        style="padding: 50px"
+      >
+        <v-icon large color="missionAccent">{{ mdiAlert }}</v-icon>
+        <p class="overline missionAccent--text mt-4">{{ topicError }}</p>
       </div>
 
       <!-- Loaded Panel -->
@@ -68,7 +78,8 @@
             :key="task.id"
             class="task-card"
             :style="[task.taskStatus == 'locked' ? { opacity: 0.4 } : { opacity: 1 }]"
-            @click="routeToSolarSystem"
+            v-on="enableClick ? { click: routeToSolarSystem } : {}"
+            :class="enableClick ? '' : 'no-click'"
           >
             <div class="number-title-container">
               <p class="task-number overline">MISSION {{ index + 1 }}</p>
@@ -93,7 +104,7 @@
         </div>
 
         <!-- Panel Actions (buttons) -->
-        <div class="bottom">
+        <div v-if="enableClick" class="bottom">
           <!-- TEACHER OR STUDENT -->
           <v-btn
             v-if="teacher || student"
@@ -150,19 +161,20 @@ import {
   assignCourseToMe,
 } from "@/lib/ff";
 import useRootStore from "@/store/index";
-import { mdiClose, mdiPencil, mdiLock } from "@mdi/js";
+import { mdiClose, mdiPencil, mdiLock, mdiAlert } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
 import LoginDialog from "@/components/Dialogs/LoginDialog.vue";
 
 export default {
   name: "SolarSystemInfoPanel",
-  props: ["show", "course", "selectedTopic", "tasks"],
+  props: ["show", "course", "selectedTopic", "tasks", "topicError"],
   components: { LoginDialog },
   data() {
     return {
       mdiClose,
       mdiPencil,
       mdiLock,
+      mdiAlert,
       allCourses: [],
       selectedGalaxy: false,
       activeLearning: null,
@@ -181,6 +193,11 @@ export default {
     // filteredTasks() {
     //   return this.tasks.filter((task) => task.topicId == this.selectedTopic);
     // },
+    enableClick() {
+      console.log('click')
+      if (this.course.presentationOnly && !this.teacher) return false;
+      return true;
+    },
     teacher() {
       return this.course?.mappedBy?.personId === this.person?.id || this.user.data?.admin;
     },
@@ -332,7 +349,11 @@ export default {
           position: relative;
           align-self: start;
           display: flex;
-          cursor: pointer;
+          cursor: default;
+
+          &:not(.no-click) {
+            cursor: pointer;
+          }
 
           .number-title-container {
             width: 70%;

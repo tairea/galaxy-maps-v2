@@ -58,7 +58,7 @@
               :light="!dark"
               color="missionAccent"
               v-model="cohort.name"
-              label="Cohort name"
+              label="Squad name"
             ></v-text-field>
 
             <!-- DESCRIPTION -->
@@ -72,7 +72,7 @@
               clearable
               rows="1"
               v-model="cohort.description"
-              label="Cohort description"
+              label="Squad description"
             ></v-textarea>
 
             <!-- IMAGE UPLOAD -->
@@ -87,7 +87,7 @@
               v-model="uploadedImage"
               @change="storeImage()"
               prepend-icon=""
-              label="Cohort image upload"
+              label="Squad image upload"
               hide-details
             ></v-file-input>
             <v-progress-linear color="missionAccent" :value="percentage"></v-progress-linear>
@@ -109,7 +109,7 @@
               >
               </v-select> -->
               <!-- Select teachers from list -->
-              <p class="input-description mt-6">Cohort teachers:</p>
+              <p class="input-description mt-6">Squad Captains:</p>
               <v-autocomplete
                 v-model="cohort.teachers"
                 :search-input.sync="search"
@@ -172,7 +172,7 @@
         <div class="right-side" :style="cohort.name ? 'width:50%' : 'width:0%'">
           <!-- Cohort Preview -->
           <div id="cohort-info" v-if="cohort.name">
-            <h2 class="cohort-label">Cohort</h2>
+            <h2 class="cohort-label">Squad</h2>
             <h1 class="cohort-title">{{ cohort.name }}</h1>
             <v-img v-if="cohort.image" :src="cohort.image.url" width="100%"></v-img>
             <p class="cohort-description">{{ cohort.description }}</p>
@@ -344,7 +344,7 @@ import Organisation from "@/components/Reused/Organisation.vue";
 import CreateAccountDialog from "@/components/Dialogs/CreateAccountDialog.vue";
 import { db, storage, functions } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
-import firebase from "firebase/compat/app";
+import useCohortViewStore from "@/store/cohortView";
 
 import { mdiPencil, mdiPlus, mdiClose, mdiCheck, mdiDelete, mdiInformationVariant } from "@mdi/js";
 
@@ -369,8 +369,8 @@ export default {
     teacherDialog: false,
     dialog: false,
     dialogConfirm: false,
-    dialogTitle: "Create A New Cohort",
-    dialogDescription: "A Cohort is a group of learners. This is typically a class of students.",
+    dialogTitle: "Create A New Squad",
+    dialogDescription: "A Squad is a group of Navigators. (This is typically a cohort of students)",
     loading: false,
     disabled: false,
     deleting: false,
@@ -398,9 +398,9 @@ export default {
     } else {
       this.$vuetify.theme.themes.dark.primary = "#000000"; // black
     }
-    // add default teacher to cohort
-    this.teachers.push(this.person);
-    this.cohort.teachers.push(this.person.id);
+
+    // Fetch teacher details or add default teacher
+    this.initializeTeachers();
   },
   watch: {
     dialog(newVal) {
@@ -438,6 +438,7 @@ export default {
 
   methods: {
     ...mapActions(useRootStore, ["bindAllPeople"]),
+    ...mapActions(useCohortViewStore, ["loadCohort"]),
     toggleTeacherDialog() {
       this.teacherDialog = !this.teacherDialog;
     },
@@ -463,6 +464,7 @@ export default {
             teachers: [],
           },
         };
+        this.uploadedImage = null;
       }
     },
     saveCohort(cohort) {
@@ -487,7 +489,6 @@ export default {
         }
       }
     },
-
     sendNewCohortEmail(profile) {
       const person = {
         ...profile,
@@ -583,7 +584,7 @@ export default {
         });
     },
     updateCohort(cohort) {
-      console.log("update cohort");
+      console.log("update cohort: ", cohort);
       this.loading = true;
 
       // update document in collection "courses"
@@ -592,6 +593,7 @@ export default {
         .update(cohort)
         .then(() => {
           console.log("Document successfully updated!");
+          this.loadCohort(cohort.id);
           this.close();
         })
         .catch((error) => {
@@ -614,7 +616,33 @@ export default {
     addTeacher(teacher) {
       console.log("adding teacher", teacher);
       this.cohort.teachers.push(teacher.id);
-      this.teachers.push(teacher);
+      // this.teachers.push(teacher);
+    },
+    async initializeTeachers() {
+      if (this.cohortToEdit.teachers && this.cohortToEdit.teachers.length > 0) {
+        console.log(
+          "cohort has teachers, fetching teacher details from db to populate squad captain dropdown",
+        );
+        // Fetch teacher details from Firebase
+        const teacherPromises = this.cohortToEdit.teachers.map((teacherId) =>
+          db.collection("people").doc(teacherId).get(),
+        );
+
+        const teacherSnapshots = await Promise.all(teacherPromises);
+
+        this.teachers = teacherSnapshots.map((snapshot) => {
+          const data = snapshot.data();
+          return {
+            id: snapshot.id,
+            ...data,
+          };
+        });
+      } else {
+        console.log("cohort has no teachers, adding current user as default teacher");
+        // Add current user as default teacher
+        this.teachers = [this.person];
+        //this.cohort.teachers = [this.person.id];
+      }
     },
   },
 };

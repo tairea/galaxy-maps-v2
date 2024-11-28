@@ -1,4 +1,4 @@
-import { error } from "firebase-functions/logger";
+import { error, log } from "firebase-functions/logger";
 import { runWith } from "firebase-functions/v1";
 import { HttpsError } from "firebase-functions/v1/https";
 import { DOMAIN } from "./_constants.js";
@@ -91,7 +91,7 @@ export const addAdminRoleHttpsEndpoint = runWith({}).https.onCall(async (uid: st
 
 export const createNewUserHttpsEndpoint = runWith({}).https.onCall(async (data, context) => {
   requireAuthenticated(context);
-
+  log("1. createNewUserHttpsEndpoint");
   // TODO: this should be split and permissions checks ensured but that requires a major refactor
   // of how adding students to cohorts works
 
@@ -101,6 +101,7 @@ export const createNewUserHttpsEndpoint = runWith({}).https.onCall(async (data, 
   }
 
   try {
+    log("2. create user: ", profile);
     const createdUser = await auth.createUser(profile);
 
     const person: { id: string } & Record<string, unknown> = {
@@ -111,8 +112,6 @@ export const createNewUserHttpsEndpoint = runWith({}).https.onCall(async (data, 
       delete person.nsn;
       delete person.parentEmail;
     }
-    delete person.inviter;
-    await db.collection("people").doc(person.id).set(person);
 
     // Generate a magic email link
     // set magic link parameters
@@ -120,11 +119,13 @@ export const createNewUserHttpsEndpoint = runWith({}).https.onCall(async (data, 
       url: `https://${DOMAIN}/email_signin`,
       handleCodeInApp: true,
     };
-    const link = await auth.generateSignInWithEmailLink(data.email, actionCodeSettings);
+    const link = await auth.generateSignInWithEmailLink(person.email as string, actionCodeSettings);
 
     if (person.accountType == "teacher") {
+      log("3. send email to teacher: ", person.email);
       await sendTeacherInviteEmail(person.email as string, person.displayName as string, link);
     } else {
+      log("3. send email to student: ", person.email);
       await sendStudentInviteEmail(
         person.email as string,
         person.displayName as string,
@@ -132,6 +133,10 @@ export const createNewUserHttpsEndpoint = runWith({}).https.onCall(async (data, 
         person.inviter as string,
       );
     }
+
+    log("4. add person to people collection: ", person);
+    delete person.inviter;
+    await db.collection("people").doc(person.id).set(person);
 
     const personDoc = await db.collection("people").doc(person.id).get();
 

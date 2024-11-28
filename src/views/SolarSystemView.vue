@@ -9,13 +9,6 @@
         :teacher="teacher"
         :course="course"
       />
-      <AssignedInfo
-        v-if="!loading && !draft && peopleInTopic.length"
-        :assignCohorts="true"
-        :people="peopleInTopic"
-        :teacher="teacher"
-      />
-
       <!-- Order change button -->
       <div v-if="!loading" class="save-changes mt-4">
         <v-btn
@@ -31,6 +24,13 @@
       </div>
 
       <BackButton v-if="!loading" :toPath="'/galaxy/' + courseId" />
+
+      <AssignedInfo
+        v-if="!loading && !draft && peopleInTopic.length"
+        :assignCohorts="true"
+        :people="peopleInTopic"
+        :teacher="teacher"
+      />
     </div>
 
     <!--==== Main section ====-->
@@ -66,6 +66,7 @@
       />
       <SubmissionTeacherFrame
         v-if="!loading && teacher"
+        :isTeacher="teacher"
         :courses="[course]"
         :students="peopleInTopic"
         class="mt-4"
@@ -76,7 +77,7 @@
     <v-dialog v-model="topicCompletedDialog" transition="dialog-bottom-transition" max-width="600">
       <template v-slot:default="topicCompletedDialog">
         <v-card style="border: 1px solid var(--v-baseAccent-base)">
-          <v-toolbar color="baseAccent overline" light>nice job!</v-toolbar>
+          <v-toolbar color="baseAccent overline" light>Great work, Navigator!</v-toolbar>
           <v-card-text class="pa-0">
             <div class="overline text-center pa-12 baseAccent--text">
               You have completed this System
@@ -92,6 +93,7 @@
               @click="nextTopic"
               >next system -></v-btn
             >
+            <v-btn v-else small text :to="'/galaxy/' + courseId">No other unlocked Systems</v-btn>
           </v-card-actions>
         </v-card>
       </template>
@@ -336,12 +338,8 @@ export default {
             " " +
             this.topicTasks[i].orderIndex,
         );
-        if (value[i].orderIndex === this.topicTasks[i].orderIndex) {
-          continue;
-        } else {
-          value[i].orderIndex = i;
-          orderChanges.push(value[i]);
-        }
+        value[i].orderIndex = i;
+        orderChanges.push(value[i]);
       }
       console.log("orderchanges", orderChanges);
       this.newMissionOrder = orderChanges;
@@ -427,19 +425,25 @@ export default {
 
       console.log("next topic", nextTopic);
 
-      // set next topic as current topic
-      this.setCurrentTopicId(nextTopic.id);
+      if (!nextTopic) {
+        console.log("no next topic");
+        this.showNextSystemButton = false;
+        return;
+      } else {
+        // set next topic as current topic
+        this.setCurrentTopicId(nextTopic.id);
 
-      console.log("router pushing to: /galaxy/" + this.courseId + "/system/" + nextTopic.id);
+        console.log("router pushing to: /galaxy/" + this.courseId + "/system/" + nextTopic.id);
 
-      // route to page with topicId
-      this.$router.push({
-        name: "SolarSystemView",
-        params: {
-          courseId: this.courseId,
-          topicId: nextTopic.id,
-        },
-      });
+        // route to page with topicId
+        this.$router.push({
+          name: "SolarSystemView",
+          params: {
+            courseId: this.courseId,
+            topicId: nextTopic.id,
+          },
+        });
+      }
     },
     missionActivated() {
       // push person if they dont already exist in peopleInTopic

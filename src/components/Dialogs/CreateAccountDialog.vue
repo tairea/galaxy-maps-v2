@@ -13,7 +13,7 @@
           v-on="on"
         >
           <v-icon left> {{ mdiPlus }} </v-icon>
-          {{ teacher ? "New Teacher" : "add student" }}
+          {{ teacher ? "Add Captain" : "Add Navigator" }}
         </v-btn>
       </template>
 
@@ -21,7 +21,7 @@
       <div class="create-dialog">
         <!-- HEADER -->
         <div class="dialog-header">
-          <p class="mb-0">Add {{ this.accountType }}</p>
+          <p class="mb-0">Add {{ renameAccountType }}</p>
         </div>
         <CreateAccountForm
           :accountType="accountType"
@@ -65,6 +65,9 @@ export default {
     },
     dark() {
       return this.$vuetify.theme.isDark;
+    },
+    renameAccountType() {
+      return this.teacher ? "Captain" : "Navigator";
     },
   },
   methods: {

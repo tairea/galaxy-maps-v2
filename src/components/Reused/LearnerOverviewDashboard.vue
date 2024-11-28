@@ -51,7 +51,7 @@
                 <p class="value">{{ student.nsn }}</p>
               </div>
               <div v-if="student.id" class="field">
-                <p class="label">Learner ID:</p>
+                <p class="label">Navigator ID:</p>
                 <p class="value text-caption" style="color: gray">{{ student.id }}</p>
               </div>
               <!-- edit button -->
