@@ -7,7 +7,7 @@ export class Planet {
   color: string;
   velocity: number;
   orbitRadius: number;
-
+  topicId: string;
   constructor(
     x: number,
     y: number,
@@ -15,6 +15,7 @@ export class Planet {
     color: string,
     velocity: number,
     orbitRadius: number,
+    topicId: string,
   ) {
     // this.ctx = ctx;
     this.x = x;
@@ -28,6 +29,7 @@ export class Planet {
     this.color = color;
     this.velocity = velocity;
     this.orbitRadius = orbitRadius;
+    this.topicId = topicId;
 
     this.x = this.startingPos.x + Math.cos(this.radian) * this.orbitRadius;
     // Get the new y based on our new angle and radius
@@ -38,6 +40,7 @@ export class Planet {
     // Planet Path
     ctx.beginPath();
     ctx.lineWidth = 1;
+
     ctx.arc(this.startingPos.x, this.startingPos.y, this.orbitRadius, 0, Math.PI * 2, false);
     // ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
     ctx.strokeStyle = strokeColor;
@@ -46,6 +49,7 @@ export class Planet {
 
     // Planet
     ctx.beginPath();
+
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
     ctx.fillStyle = this.color;
     ctx.fill();

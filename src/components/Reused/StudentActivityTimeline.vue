@@ -19,7 +19,7 @@
             <span>{{ activity.timeStamp.time }} - </span>
             <!-- ACTIVITY -->
             <span :style="statusClass(activity)"
-              >{{ activity.status }} {{ activityReword(activity.type) }}:
+              >{{ activityStatusReword(activity.status) }} {{ activityTypeReword(activity.type) }}:
             </span>
             <span>{{ activity.title }}</span>
           </div>
@@ -135,6 +135,10 @@ export default {
           }
         case "Completed":
           return "color:var(--v-baseAccent-base)";
+        case "Student":
+          if (activity.type === "requested") {
+            return "color:var(--v-galaxyAccent-base)";
+          }
         case "Work":
           if (activity.type === "submitted" || activity.type === "declined") {
             return "color:var(--v-cohortAccent-base)";
@@ -147,7 +151,15 @@ export default {
           }
       }
     },
-    activityReword(type) {
+    activityStatusReword(status) {
+      switch (status) {
+        case "Student":
+          return "Navigator";
+        default:
+          return status;
+      }
+    },
+    activityTypeReword(type) {
       switch (type) {
         case "Task":
           return "Mission";
@@ -155,6 +167,8 @@ export default {
           return "System";
         case "Course":
           return "Galaxy Map";
+        case "requested":
+          return "Requested Help";
         default:
           return type;
       }

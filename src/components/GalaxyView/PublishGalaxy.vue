@@ -423,6 +423,7 @@ export default {
       // if presentationOnly is true, set course.presentationOnly to true
       if (this.presentationOnly) {
         course.presentationOnly = true;
+        course.public = false;
       }
 
       // if no cohort, create a default cohort (and "presentation" maps should not have cohorts)

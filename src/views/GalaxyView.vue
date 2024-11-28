@@ -1,7 +1,7 @@
 <template>
   <div id="container" class="bg">
     <!-- Loading -->
-    <LoadingSpinner v-if="!boundCourse.status" text="loading galaxy map" />
+    <LoadingSpinner v-if="!boundCourse?.status" text="loading galaxy map" />
 
     <!-- dont show galaxy if...
     
@@ -101,6 +101,7 @@
       :editing="editing"
       :course="boundCourse"
       :currentNode="currentNode"
+      :students="peopleInCourse"
       @closeDialog="closeDialog"
       @openDialog="openDialog"
     />
@@ -111,6 +112,7 @@
       :course="boundCourse"
       :selectedTopic="fetchedTopic"
       :tasks="topicTasks"
+      :topicError="topicError"
       @closeInfoPanel="closeInfoPanel"
       @editNode="showEditDialog"
       @enrolledInCourse="enrolledInCourse"
@@ -215,8 +217,8 @@ export default {
       coords: {},
       changeInPositions: false,
       nodePositionsChangeLoading: false,
-      fromCreate: this.$route.params.fromCreate,
-      courseTitle: this.$route.params.courseTitle,
+      // fromCreate: this.$route.params.fromCreate,
+      // courseTitle: this.$route.params.courseTitle,
       infoPopupShow: false,
       infoPopupPosition: {},
       centerFocusPosition: false,
@@ -242,6 +244,7 @@ export default {
       galaxyCompletedDialog: false,
       xpPointsForThisGalaxy: 2000,
       galaxyMapForceUpdateKey: 0,
+      topicError: null,
     };
   },
   watch: {
@@ -250,7 +253,7 @@ export default {
       // this.course = await fetchCourseByCourseId(this.courseId);
       this.setCurrentCourseId(newCourseId);
     },
-    async course(newVal, oldVal) {
+    async boundCourse(newVal, oldVal) {
       this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
     },
   },
@@ -325,6 +328,7 @@ export default {
       if (this.teacher || this.student) {
         return false;
       }
+      if (!this.boundCourse) return false;
       // public and published is allowed
       else if (
         (this.boundCourse.visibility == "public" || this.boundCourse.public == true) &&
@@ -428,27 +432,35 @@ export default {
       // get topic id
       this.clickedTopicId = emittedTopic.id;
 
-      // check if authenticated
-      if (this.teacher || this.student) {
-        // get topic
-        this.fetchedTopic = await fetchTopicByCourseIdTopicId(this.courseId, this.clickedTopicId);
-        console.log("clicked topic:", this.fetchedTopic);
-      } else {
-        this.fetchedTopic = emittedTopic;
-      }
-
-      // reset topic tasks (to prevent duplicate)
+      // Reset topic tasks and error state
       this.topicTasks = [];
-      // loop courseTasks for this topic id (= this.topicTasks)
-      for (const task of this.courseTasks) {
-        if (task.topicId == this.clickedTopicId) {
-          this.topicTasks.push(task.task);
+      this.topicError = null;
+
+      try {
+        // check if authenticated
+        if (this.teacher || this.student) {
+          // get topic
+          this.fetchedTopic = await fetchTopicByCourseIdTopicId(this.courseId, this.clickedTopicId);
+          console.log("clicked topic:", this.fetchedTopic);
+        } else {
+          this.fetchedTopic = emittedTopic;
         }
+
+        // loop courseTasks for this topic id (= this.topicTasks)
+        for (const task of this.courseTasks) {
+          if (task.topicId == this.clickedTopicId) {
+            this.topicTasks.push(task.task);
+          }
+        }
+        // order topic tasks by created
+        this.topicTasks = this.topicTasks.sort(
+          (objA, objB) => Number(objA.taskCreatedTimestamp) - Number(objB.taskCreatedTimestamp),
+        );
+      } catch (error) {
+        console.error("Error fetching topic:", error);
+        this.topicError = "This System cannot be located";
+        this.fetchedTopic = null;
       }
-      // order topic tasks by created
-      this.topicTasks = this.topicTasks.sort(
-        (objA, objB) => Number(objA.taskCreatedTimestamp) - Number(objB.taskCreatedTimestamp),
-      );
     },
     emittedCourseTasks(emittedPayload) {
       console.log("course tasks emitted from GalaxyMap.vue", emittedPayload);
@@ -542,6 +554,8 @@ export default {
       this.currentEdge = selected;
     },
     async galaxyCompleted() {
+      if (this.galaxyCompletedDialog) return; // prevent multiple calls
+
       this.galaxyCompletedDialog = true;
       // confetti fireworks
       var duration = 30 * 1000;
@@ -583,6 +597,7 @@ export default {
         .doc(this.person.id)
         .update({
           xpPointsTotal: firebase.firestore.FieldValue.increment(this.xpPointsForThisGalaxy),
+          completedCourses: firebase.firestore.FieldValue.arrayUnion(this.courseId), // track completed courses so points arent re-awarded
         });
     },
     randomInRange(min, max) {

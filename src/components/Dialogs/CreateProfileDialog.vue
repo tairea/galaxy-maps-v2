@@ -114,7 +114,7 @@
           </div>
           <v-row>
             <v-btn
-              :disabled="!valid || updatingAccount"
+              :loading="!valid || updatingAccount"
               color="missionAccent"
               class="ma-4"
               @click="update()"
@@ -129,6 +129,7 @@
               @click="cancel()"
               outlined
               width="30%"
+              :disabled="!valid || updatingAccount"
             >
               cancel
             </v-btn>

@@ -9,15 +9,31 @@
         :width="width"
         :rotate="-90"
       >
-        <v-avatar color="secondary" :size="avatarSize" class="glow">
+        <v-avatar
+          v-if="activity.course.image.url"
+          color="secondary"
+          :size="avatarSize"
+          class="glow"
+        >
           <img
-            v-if="activity.course.image"
             :src="activity.course.image.url"
             :alt="activity.course.title"
             style="object-fit: cover"
           />
-          <v-icon v-else>{{ mdiAccount }}</v-icon>
+          <!-- <v-icon v-else>{{ mdiAccount }}</v-icon> -->
         </v-avatar>
+
+        <div
+          v-else
+          class="imagePlaceholder"
+          :style="
+            avatarSize
+              ? 'max-width:' + avatarSize + 'px; max-height:' + avatarSize + 'px'
+              : 'max-width: 60px;max-height:60px'
+          "
+        >
+          {{ first3Letters(activity.course.title) }}
+        </div>
       </v-progress-circular>
       <v-progress-circular
         :value="topicsCompletedPercentage"
@@ -145,6 +161,9 @@ export default {
         this.tasksCompletedPercentage = Math.round(percentage) || 1;
       }
     },
+    first3Letters(name) {
+      return name.substring(0, 3).toUpperCase();
+    },
   },
 };
 </script>
@@ -203,6 +222,17 @@ export default {
   .glow {
     box-shadow: 0 0 30px var(--v-missionAccent-base);
   }
+}
+
+.imagePlaceholder {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: rgba(200, 200, 200, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
 }
 
 .grow-sm {

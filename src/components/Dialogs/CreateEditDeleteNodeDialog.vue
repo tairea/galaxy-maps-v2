@@ -206,7 +206,7 @@
               v-else
               outlined
               color="baseAccent"
-              @click="saveNode(currentNode)"
+              @click="saveNode(currentNode, true)"
               class="mr-2"
               :loading="loading"
             >
@@ -298,6 +298,7 @@ export default {
     "editing",
     "currentNode",
     "currentEdge",
+    "students"
   ],
   async mounted() {
     // this.sortedObjArr = arr.sort((a, b) =>
@@ -365,7 +366,7 @@ export default {
       return this.$vuetify.theme.isDark;
     },
     sortedTopics() {
-      let sortedTopics = this.currentCourseNodes.sort((a, b) => {
+      let sortedTopics = this.currentCourseNodes.filter(node => node.id !== this.currentNode.id).sort((a, b) => {
         // bruh! sometimes courseNodes have property topicCreatedTimestamp and sometimes they have nodeCreatedTimestamp
         // code as been fixed to no only save as topicCreatedTimestamp
         // but this ternary handles old nodeCreatedTimestamp's
@@ -400,7 +401,8 @@ export default {
       // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
     },
 
-    async saveNode(node) {
+    async saveNode(node, isUpdate = false) {
+      console.log("isUpdate: ", isUpdate);
       this.loading = true;
       node.connectedEdge = node.connectedEdge ? node.connectedEdge : "";
 
@@ -441,13 +443,15 @@ export default {
         .doc(node.id)
         .set({ ...node, topicCreatedTimestamp: new Date() });
       await this.saveTopicToStudents(node);
-
-      // increment course topicTotals by 1
-      await db
-        .collection("courses")
-        .doc(this.course.id)
-        .update("topicTotal", firebase.firestore.FieldValue.increment(1));
-      console.log("Topic total increased by 1");
+      
+      if (!isUpdate) {
+        // increment course topicTotals by 1
+        await db
+          .collection("courses")
+          .doc(this.course.id)
+          .update("topicTotal", firebase.firestore.FieldValue.increment(1));
+        console.log("Topic total increased by 1");
+      }
 
       // get to and from and save to map edges
       this.loading = false;
@@ -520,20 +524,15 @@ export default {
       this.infoPopupShow = false;
     },
     async saveTopicToStudents(node) {
-      // get all students currently assigned to course
-      const allStudents = await db
-        .collection("people")
-        .where("assignedCourses", "array-contains", this.course.id)
-        .get();
-
       // if no students, return
-      if (allStudents.empty) {
+      if (this.students.empty) {
+        console.log('no students in this galaxy')
         return;
       }
 
       // for each student
-      for (const doc of allStudents) {
-        const personId = doc.id;
+      for (const student of this.students) {
+        const personId = student.id;
 
         // set reference to this course
         const courseRef = db.collection("people").doc(personId).collection(this.course.id);
@@ -572,20 +571,15 @@ export default {
     },
     async deleteTopicForStudents(node) {
       console.log("node: ", node);
-      // get all students currently assigned to course
-      const allStudents = await db
-        .collection("people")
-        .where("assignedCourses", "array-contains", this.course.id)
-        .get();
-
+  
       // if no students, return
-      if (allStudents.empty) {
+      if (this.students.empty) {
         return;
       }
 
       await Promise.all(
-        allStudents.map(async (doc) => {
-          const personId = doc.id;
+        this.students.map(async (std) => {
+          const personId = std.id;
           console.log("deleting ", node.label, "for student: ", personId);
           // delete for student
           return db

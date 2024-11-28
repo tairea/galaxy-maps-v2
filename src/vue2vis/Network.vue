@@ -73,6 +73,31 @@ export default {
       },
     },
   },
+  created() {
+    // This should be a Vue data property, but Vue reactivity kinda bugs Vis.
+    // See here for more: https://github.com/almende/vis/issues/2524
+    this.network = null;
+  },
+  mounted() {
+    this.visData.nodes = mountVisData(this, "nodes");
+    this.visData.edges = mountVisData(this, "edges");
+
+    // loop through nodes and og any that dont have propert x or y
+    this.visData.nodes.forEach((node) => {
+      if (!node.x || !node.y) {
+        console.log("node", node);
+      }
+    });
+
+    this.network = new Network(this.$refs.visualization, this.visData, this.options);
+
+    this.events.forEach((eventName) =>
+      this.network.on(eventName, (props) => this.$emit(translateEvent(eventName), props)),
+    );
+  },
+  beforeDestroy() {
+    this.network.destroy();
+  },
   methods: {
     setData(n, e) {
       this.visData.nodes = Array.isArray(n) ? new DataSet(n) : n;
@@ -250,23 +275,6 @@ export default {
     getOptionsFromConfigurator() {
       return this.network.getOptionsFromConfigurator();
     },
-  },
-  created() {
-    // This should be a Vue data property, but Vue reactivity kinda bugs Vis.
-    // See here for more: https://github.com/almende/vis/issues/2524
-    this.network = null;
-  },
-  mounted() {
-    this.visData.nodes = mountVisData(this, "nodes");
-    this.visData.edges = mountVisData(this, "edges");
-    this.network = new Network(this.$refs.visualization, this.visData, this.options);
-
-    this.events.forEach((eventName) =>
-      this.network.on(eventName, (props) => this.$emit(translateEvent(eventName), props)),
-    );
-  },
-  beforeDestroy() {
-    this.network.destroy();
   },
 };
 </script>

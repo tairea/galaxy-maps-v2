@@ -3,7 +3,7 @@
   <v-dialog v-model="dialog" width="40%" light>
     <!-- CREATE BUTTON -->
     <template v-slot:activator="{ on, attrs }">
-      <v-btn
+      <!-- <v-btn
         v-if="isDashboardView"
         v-bind="attrs"
         v-on="on"
@@ -13,7 +13,7 @@
         x-small
       >
         <v-icon small> {{ mdiPencil }} </v-icon>
-      </v-btn>
+      </v-btn> -->
       <v-btn
         v-if="isStudentPopupView"
         v-bind="attrs"
@@ -25,7 +25,7 @@
       >
         <v-icon small> {{ mdiPencil }} </v-icon>
       </v-btn>
-      <v-btn v-else v-bind="attrs" v-on="on" color="baseAccent" class="ma-4" outlined>
+      <v-btn v-else v-bind="attrs" v-on="on" color="baseAccent" class="ma-3" outlined>
         <v-icon class="pr-2">{{ mdiPencil }}</v-icon>
         edit account
       </v-btn>
@@ -159,7 +159,28 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "StudentEditDialog",
-  props: ["on", "attrs", "isDashboardView", "isStudentPopupView", "student"],
+  props: {
+    on: {
+      type: Boolean,
+      default: false,
+    },
+    attrs: {
+      type: Object,
+      default: () => ({}),
+    },
+    isDashboardView: {
+      type: Boolean,
+      default: false,
+    },
+    isStudentPopupView: {
+      type: Boolean,
+      default: false,
+    },
+    student: {
+      type: Object,
+      default: () => ({}),
+    },
+  },
   components: {},
   mounted() {
     if (this.student) {
@@ -173,9 +194,9 @@ export default {
     dark() {
       return this.$vuetify.theme.isDark;
     },
-    originalProfile () {
-      return this.student || this.person
-    }
+    originalProfile() {
+      return Object.keys(this.student).length > 0 ? this.student : this.person;
+    },
   },
   data() {
     return {
@@ -189,33 +210,35 @@ export default {
       loading: false,
       editEmail: false,
       profile: {
-        firstName: '',
-        lastName: '',
-        email: ''
+        firstName: "",
+        lastName: "",
+        email: "",
       },
     };
   },
   watch: {
     dialog(newVal) {
       if (newVal) {
-        Object.assign(this.profile, this.originalProfile)
+        Object.assign(this.profile, this.originalProfile);
       }
     },
   },
   methods: {
     ...mapActions(useRootStore, ["setSnackbar"]),
     cancelEmail() {
-      this.profile.email = this.person.email
-      this.editEmail = false
+      this.profile.email = this.person.email;
+      this.editEmail = false;
     },
     updatePerson(profile) {
+      this.loading = true;
       if (profile.email != this.originalProfile.email) {
-        this.saveEmail()
+        this.saveEmail();
       }
       db.collection("people")
         .doc(profile.id)
         .update(profile)
         .then((res) => {
+          console.log("Profile successfully updated");
           this.setSnackbar({
             show: true,
             text: "Profile successfully updated",
@@ -234,7 +257,7 @@ export default {
         });
     },
     saveEmail() {
-      console.log('saving emails')
+      console.log("saving emails");
       firebase
         .auth()
         .currentUser.updateEmail(this.profile.email)
@@ -256,7 +279,7 @@ export default {
             text: error.message,
             color: "pink",
           });
-          this.cancel;
+          this.cancel();
         });
       this.editEmail = false;
     },

@@ -50,7 +50,7 @@ const routes = [
         component: LandingPage,
       },
       {
-        path: "cohorts",
+        path: "squads",
         name: "CohortsList",
         component: CohortListV2,
         meta: {

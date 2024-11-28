@@ -30,7 +30,7 @@
             @mouseleave="onhover = false"
           >
             <img
-              v-if="person.image"
+              v-if="person.image?.url"
               :src="person.image.url"
               :alt="person.firstName"
               style="object-fit: cover"

@@ -185,7 +185,7 @@
                 >
                   awaiting review
                 </p>
-                <p class="galaxy-status overline mb-0">
+                <p v-if="courseToEdit" class="galaxy-status overline mb-0">
                   Visibility:
                   <span class="font-weight-black">{{ courseToEdit.visibility }}</span>
                 </p>
@@ -207,7 +207,7 @@
                 :items="[
                   { text: 'Private (only people added can see)', value: 'private' },
                   { text: 'Unlisted (publicly available, but hidden)', value: 'unlisted' },
-                  // presentations can only be private or unlisted. not public as they are not proper maps navigators can progress through
+                  // Presentations cannot be public as they are not proper maps navigators can progress through
                   ...(course.presentationOnly == false || course.presentationOnly == null
                     ? [{ text: 'Public (all users can see)', value: 'public' }]
                     : []),
@@ -552,6 +552,7 @@ export default {
         const courseDocRef = await db.collection("courses").add(course);
         console.log("1");
         courseDocRef.update({ id: courseDocRef.id }); // add course id to course
+        courseId = courseDocRef.id;
 
         //set courseID to Store state 'state.currentCourseId' (so not relying on router params)
         this.setCurrentCourseId(courseDocRef.id);
@@ -608,7 +609,7 @@ export default {
           });
 
         // send admins an email notification of a new course
-        await this.sendCourseCreatedEmail(this.person, course);
+        await this.sendCourseCreatedEmail(this.person, course, courseId);
 
         console.log("5");
         // route to newly created galaxy
@@ -777,13 +778,22 @@ export default {
     },
     async deleteImage() {
       // if no image, dont worry bout it cuz
-      if (this.course.image.name == "") return;
-      // Create a reference to the file to delete
-      var storageRef = storage.ref(
-        "course-images/" + this.currentCourseId + "-" + this.course.image.name,
-      );
-      // Delete the file
-      await storageRef.delete();
+      if (!this.course.image.url) return;
+
+      try {
+        // Extract the full path from the URL
+        const imageUrl = new URL(this.course.image.url);
+        const pathFromUrl = decodeURIComponent(imageUrl.pathname.split("/o/")[1].split("?")[0]);
+
+        // Create a reference using the full path
+        var storageRef = storage.ref(pathFromUrl);
+
+        // Delete the file
+        await storageRef.delete();
+      } catch (error) {
+        console.error("Error deleting image:", error);
+        // Continue with course deletion even if image deletion fails
+      }
     },
     async deleteCourseForStudents() {
       await Promise.all(
@@ -801,9 +811,10 @@ export default {
             student: person.firstName ? person.firstName + " " + person.lastName : "",
             teacherEmail: this.person.email,
           };
-          console.log("sending delete galaxy email: ", data);
-          const sendCourseDeleted = functions.httpsCallable("sendCourseDeleted");
-          await sendCourseDeleted(data);
+          // Not sure we need an email to students when a course is deleted (but its here anyway if we change our mind)
+          // console.log("sending delete galaxy email: ", data);
+          // const sendCourseDeleted = functions.httpsCallable("sendCourseDeleted");
+          // await sendCourseDeleted(data);
         }),
       );
     },

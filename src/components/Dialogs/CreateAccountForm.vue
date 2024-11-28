@@ -1,7 +1,7 @@
 <template>
   <div class="create-dialog-content">
-    <p v-if="!teacher" class="caption mb-0">
-      Adding this student will send a registration link to their email
+    <p v-if="!teacher && !edit" class="caption mb-0">
+      Adding this Navigator will send a registration link to their email
     </p>
     <!-- TODO: info description for adding a teacher? -->
     <v-form ref="form" v-model="valid" lazy-validation>
@@ -72,8 +72,8 @@
     <v-row>
       <v-btn
         v-if="edit"
-        :disabled="!valid || addingAccount"
-        :loading="addingAccount"
+        :disabled="!valid"
+        :loading="addingAccount || updatingAccount"
         @click="update()"
         width="30%"
         class="ma-4 disabledButton"
@@ -86,8 +86,8 @@
       </v-btn>
       <v-btn
         v-else
-        :disabled="!valid || addingAccount"
-        :loading="addingAccount"
+        :disabled="!valid"
+        :loading="addingAccount || updatingAccount"
         @click="create()"
         width="30%"
         class="ma-4 disabledButton"
@@ -96,10 +96,10 @@
         :dark="dark"
         :light="!dark"
       >
-        Create
+        add
       </v-btn>
       <v-btn
-        :disabled="addingAccount"
+        :disabled="addingAccount || updatingAccount"
         @click="close()"
         outlined
         :dark="dark"
@@ -122,7 +122,7 @@ import {
   addPersonToCohort,
   assignCourseToPerson,
 } from "@/lib/ff";
-import { db } from "@/store/firestoreConfig";
+import { db, functions } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
 
@@ -134,14 +134,18 @@ export default {
     edit: { type: Boolean, default: false },
   },
   async mounted() {
-    this.cohort = await fetchCohortByCohortId(this.currentCohortId);
-    if (this.edit)
+    if (this.edit) {
       this.account = {
         ...this.account,
         ...this.student,
       };
+      console.log("edit student: ", this.account);
+    } else {
+      this.cohort = await fetchCohortByCohortId(this.currentCohortId);
+    }
   },
   data: () => ({
+    updatingAccount: false,
     cohort: null,
     addingAccount: false,
     valid: true,
@@ -173,6 +177,10 @@ export default {
   methods: {
     ...mapActions(useRootStore, ["setSnackbar"]),
     close() {
+      this.clearForm();
+      this.$emit("close");
+    },
+    clearForm() {
       this.account = {
         firstName: "",
         lastName: "",
@@ -182,9 +190,10 @@ export default {
         inviter: "",
         parentEmail: "",
       };
-      this.$emit("close");
     },
     async update() {
+      this.updatingAccount = true;
+      // remove empty fields
       let obj = Object.fromEntries(Object.entries(this.account).filter(([_, v]) => v.length));
 
       await db.collection("people").doc(obj.id).update(obj);
@@ -192,21 +201,23 @@ export default {
       this.$emit("updateStudentProfile", obj);
       this.setSnackbar({
         show: true,
-        text: "Student successfully updated",
+        text: "Navigator successfully updated",
         color: "baseAccent",
       });
+      this.updatingAccount = false;
       this.close();
     },
     async create() {
       this.$refs.form.validate();
       if (!this.account.email) return;
       this.addingAccount = true;
-      const personExists = await fetchPersonByEmail(this.account.email);
-      console.log("person exists:", personExists);
-      if (personExists) {
+      const studentExists = await fetchPersonByEmail(this.account.email);
+      console.log("person exists:", studentExists);
+      if (studentExists) {
         const profile = {
           ...this.account,
-          ...personExists,
+          ...studentExists,
+          inviter: this.person.firstName + " " + this.person.lastName,
         };
         // if teacher, emit teacher?
         if (this.teacher) {
@@ -218,15 +229,25 @@ export default {
             await updatePerson(profile.id, profile); // updates /people/:id profile
             await addPersonToCohort(profile.id, this.cohort.id); // adds student to /cohorts/:id/students
 
+            console.log("existing person added to cohort");
+
             if (this.cohort.courses.length) {
               await this.assignStudentToCourses(profile); // adds course to /people/:id/assignedCourses
             }
+
+            this.setSnackbar({
+              show: true,
+              text: "Navigator successfully added to Squad",
+              color: "baseAccent",
+            });
+
+            this.sendNewCohortEmail(profile);
 
             this.addingAccount = false;
             this.close();
           } catch (error) {
             this.addingAccount = false;
-            console.error("something went wrong adding existing person: ", err);
+            console.error("something went wrong adding existing person: ", error);
           }
         }
       } else {
@@ -239,28 +260,28 @@ export default {
           const person = await createPerson(profile);
           this.setSnackbar({
             show: true,
-            text: "Account created",
+            text: "New Account Created",
             color: "baseAccent",
           });
           if (!this.teacher) {
             await addPersonToCohort(person.id, this.currentCohortId);
             this.setSnackbar({
               show: true,
-              text: "Student added to Cohort",
+              text: "Navigator added to Squad",
               color: "baseAccent",
             });
             if (this.cohort.courses.length) {
-              await this.assignStudentToCourses(person);
+              await this.assignStudentToCourses(person); // adds course to /people/:id/assignedCourses
             }
           } else {
             this.setSnackbar({
               show: true,
-              text: "Teacher added to Galaxy Map",
+              text: "New Captain added to Galaxy Map",
               color: "baseAccent",
             });
-            this.addingAccount = false;
-            this.close();
           }
+          this.addingAccount = false;
+          this.close();
         } catch (error) {
           console.error(error);
         }
@@ -270,6 +291,14 @@ export default {
       for (const courseId of this.cohort.courses) {
         await assignCourseToPerson(person.id, courseId);
       }
+    },
+    sendNewCohortEmail(profile) {
+      const person = {
+        ...profile,
+        cohort: this.cohort.name,
+      };
+      const sendNewCohortEmail = functions.httpsCallable("sendNewCohortEmail");
+      return sendNewCohortEmail(person);
     },
   },
 };

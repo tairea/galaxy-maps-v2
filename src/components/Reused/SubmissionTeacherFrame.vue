@@ -1,7 +1,7 @@
 <template>
   <div :id="studentOverview ? 'studentOverview' : 'submission-panel'">
     <h2 v-if="!studentOverview" class="submission-label">
-      {{ completedSubmissionsOnly ? "COMPLETED SUBMISSIONS" : "Work submitted for review" }}
+      {{ formatLabel }}
     </h2>
     <div v-if="submissions.length > 0">
       <div v-if="dense">
@@ -11,6 +11,7 @@
           :submission="submission"
           :isDashboardView="isDashboardView"
           :isTeacher="isTeacher"
+          :isStudent="isStudent"
           :showCourseImage="showCourseImage"
         />
       </div>
@@ -21,6 +22,7 @@
           :submission="submission"
           :isDashboardView="isDashboardView"
           :isTeacher="isTeacher"
+          :isStudent="isStudent"
           :showCourseImage="showCourseImage"
         />
       </div>
@@ -48,12 +50,14 @@ export default {
     "courses",
     "students",
     "isTeacher",
+    "isStudent",
     "studentOverview",
     "allStudentsSubmissions",
     "completedSubmissionsOnly",
     "loading",
     "showCourseImage",
     "dense",
+    "yours",
   ],
   components: {
     SubmissionTeacherPanel,
@@ -73,9 +77,11 @@ export default {
   async mounted() {
     if (this.courses) {
       for (const course of this.courses) {
+        // console.log("getting submissions for course ", course);
         const unsubscribe = await this.getAllSubmittedWorkByCourseId(course.id || course);
         this.unsubscribes.push(unsubscribe);
       }
+      console.log("submissions unsubscribes", this.unsubscribes);
     }
   },
   destroyed() {
@@ -98,6 +104,15 @@ export default {
     isSystemView() {
       return this.$route.name === "SolarSystemView";
     },
+    formatLabel() {
+      if (this.completedSubmissionsOnly) {
+        return "COMPLETED SUBMISSIONS";
+      } else if (this.yours) {
+        return "YOUR WORK SUBMITTED FOR REVIEW";
+      } else {
+        return "WORK SUBMITTED FOR REVIEW";
+      }
+    },
     submissions() {
       let submissions = [];
 
@@ -112,7 +127,7 @@ export default {
         );
       }
 
-      // get all student submissions for this course
+      // get all teacher's students submissions for this course
       else if (this.courses) {
         submissions = this.courseSubmissions.filter((submission) =>
           this.students?.some((student) => {
@@ -125,21 +140,37 @@ export default {
 
       let filteredSubmissions = [];
 
-      // Filter for "inreview" only
+      // ================== Filter Submissions ==================
       if (this.completedSubmissionsOnly) {
         filteredSubmissions = submissions.filter(
           (submission) => submission.taskSubmissionStatus !== "inreview",
         );
-      } else {
+      } else if (this.isTeacher) {
         filteredSubmissions = submissions.filter(
           (submission) => submission.taskSubmissionStatus === "inreview",
         );
+      } else {
+        filteredSubmissions = submissions;
       }
 
-      filteredSubmissions.sort(
-        (a, b) =>
-          b.taskSubmittedForReviewTimestamp.seconds - a.taskSubmittedForReviewTimestamp.seconds,
-      );
+      // ================== Sort Submissions ==================
+      filteredSubmissions = filteredSubmissions.slice().sort((a, b) => {
+        // Define the order of taskSubmissionStatus
+        const statusOrder = {
+          inreview: 1,
+          declined: 2,
+          completed: 3,
+        };
+
+        // First, compare by taskSubmissionStatus using the defined order
+        if (statusOrder[a.taskSubmissionStatus] < statusOrder[b.taskSubmissionStatus]) return -1;
+        if (statusOrder[a.taskSubmissionStatus] > statusOrder[b.taskSubmissionStatus]) return 1;
+
+        // If taskSubmissionStatus is the same, compare by taskSubmittedForReviewTimestamp.seconds
+        return (
+          a.taskSubmittedForReviewTimestamp.seconds - b.taskSubmittedForReviewTimestamp.seconds
+        );
+      });
 
       if (this.isCohortView || this.isDashboardView) return filteredSubmissions;
       else if (this.isGalaxyView) {

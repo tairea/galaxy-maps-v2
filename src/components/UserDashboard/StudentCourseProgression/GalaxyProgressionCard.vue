@@ -18,6 +18,7 @@
           :chartData="formatStudentsChartData(data)"
           :chartOptions="chartOptions"
           :style="{ width: '100%', height: '200px', padding: '20px' }"
+          :toolTipEnable="true"
         />
       </v-col>
       <v-col cols="4" class="pa-0">
@@ -178,8 +179,8 @@ export default {
       return hash;
     },
     calcTaskCompletedPercentage(data) {
-      console.log("data.taskCompletedCount:", data.taskCompletedCount);
-      console.log("data.course.taskTotal:", data.course.taskTotal);
+      // console.log("data.taskCompletedCount:", data.taskCompletedCount);
+      // console.log("data.course.taskTotal:", data.course.taskTotal);
       let percentage = (data.taskCompletedCount / data.course.taskTotal) * 100;
       return Math.round(percentage) + "%";
     },

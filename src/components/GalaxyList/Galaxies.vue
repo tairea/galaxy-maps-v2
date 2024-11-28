@@ -197,6 +197,13 @@ export default {
     ...mapActions(useRootStore, []),
     refreshAllNodesAndEdgesToDisplay(needsCentering) {
       const repositionedNodes = this.repositionCoursesBasedOnBoundariesV2();
+
+      // log a node with this course.id
+      // const nodeWithCourseId = repositionedNodes.find(
+      //   (node) => node.courseId === "1enCH72zF5s64v048new",
+      // );
+      // console.log("nodeWithCourseId", nodeWithCourseId);
+
       this.allNodesForDisplay = repositionedNodes;
       this.allEdgesForDisplay = Array.from(this.courseEdgesMap.values()).flatMap((x) => x);
 
@@ -257,6 +264,7 @@ export default {
       radius = radius ? radius : 100;
       // create arc (circle)
       ctx.beginPath();
+
       ctx.arc(x, y, radius, 0, Math.PI * 2, false);
 
       // colour
@@ -456,12 +464,15 @@ export default {
     drawCourseProgressionCircle(canvasContext, course, fontSize) {
       const courseBoundary = this.relativeGalaxyBoundaries.find((x) => x.id === course.id);
       const courseActivity = this.coursesActivity.find((x) => x.course.id === course.id);
+      console.log("courseActivity: ", courseActivity);
 
       const progressFraction =
         courseActivity != null
           ? courseActivity.topicCompletedCount / courseActivity.course.topicTotal
           : 0;
+      console.log("progressFraction: ", progressFraction);
       const displayPercentage = Math.round(progressFraction * 100);
+      console.log("displayPercentage: ", displayPercentage);
 
       canvasContext.textAlign = "left";
       canvasContext.textBaseline = "top";
@@ -510,6 +521,7 @@ export default {
         canvasContext.beginPath();
         canvasContext.strokeStyle = "rgba(255, 255, 255, 0.1)";
         canvasContext.lineWidth = 4;
+
         canvasContext.arc(courseBoundaryXCenter, courseBoundaryYCenter, radius, 0, Math.PI * 2);
         canvasContext.stroke();
         canvasContext.closePath();
@@ -525,6 +537,7 @@ export default {
             0.5, // 50% opacity
           );
           canvasContext.lineWidth = 8;
+
           canvasContext.arc(
             courseBoundaryXCenter,
             courseBoundaryYCenter,
@@ -619,7 +632,6 @@ export default {
     calcCourseCanvasBoundaries() {
       const courses = this.courses;
       let courseCanvasBoundaries = [];
-
       // per course/galaxy, determine boundaries ie. highest y, highest x, lowest y, lowest x (this is a boundary we want to hover)
       for (let i = 0; i < courses.length; i++) {
         let boundary = {
@@ -643,19 +655,30 @@ export default {
         // get nodes in course
         const nodes = this.courseNodesMap.get(courses[i].id);
 
-        // debugging NaN x y for problematic course id
-        // if (courses[i].id == "S1NkzgahYdG8IUoptXNF") {
-        //   console.log("nodes for course S1NkzgahYdG8IUoptXNF: ", nodes);
-        // }
-
         // If we don't have any nodes for this galaxy then don't include it in the final result
         if (nodes.length === 0) {
           console.warn("no nodes for course: ", courses[i].id);
           continue;
         }
 
+        // console.log("nodes:", nodes);
         // loop nodes in that course
         for (const node of nodes) {
+          // debugging: if node has no x or y value, its breaks
+          if (
+            !("x" in node) ||
+            !("y" in node) ||
+            node.x == null ||
+            node.y == null ||
+            isNaN(node.x) ||
+            isNaN(node.y)
+          ) {
+            console.log("Invalid node: /courses/" + courses[i].id + "/map-nodes/" + node.id);
+            // Update the node with default x and y values
+            // return { ...node, x: 0, y: 0 };
+          }
+          // return node;
+
           // push node to course
           courseNodes.push({
             nodeLabel: node.label,

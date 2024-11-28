@@ -12,7 +12,7 @@
             <div v-if="showCourseImage">
               <Course :course="submission.contextCourse" class="pa-0" />
             </div>
-            <div v-else>
+            <div class="d-flex" v-else>
               <Avatar
                 v-if="isDashboardView"
                 :profile="courseContextProfile"
@@ -131,7 +131,7 @@ export default {
     courseContextProfile() {
       return {
         image: this.submission.contextCourse.image,
-        firstName: this.submission.contextCourse.firstName,
+        firstName: this.submission.contextCourse.title,
         lastName: "",
       };
     },

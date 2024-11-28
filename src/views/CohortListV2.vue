@@ -111,7 +111,12 @@
           <v-tooltip
             top
             color="subBackground"
-            v-if="this.user.data.admin || this.person.firstName == 'TaiCollective.nz'"
+            v-if="
+              this.user.data.admin ||
+              // hardcoded paid feature user
+              this.person.firstName == 'TaiCollective.nz' ||
+              (this.person.firstName == 'Ian' && this.person.lastName == 'Tairea')
+            "
           >
             <template v-slot:activator="{ on, attrs }">
               <div v-bind="attrs" v-on="on">

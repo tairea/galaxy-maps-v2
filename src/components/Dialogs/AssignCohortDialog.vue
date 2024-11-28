@@ -75,7 +75,7 @@
                     light
                   ></v-text-field>
                   <div>
-                    <p class="dialog-description">Assign the Navigator to squad</p>
+                    <p class="dialog-description">Assign this Navigator to a squad</p>
                     <div class="d-flex align-center">
                       <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                       <p class="dialog-description py-2">
@@ -117,7 +117,7 @@
                 <!-- ACTION BUTTONS -->
                 <div class="action-buttons">
                   <v-btn
-                    v-if="assignCohorts"
+                    v-if="assignCohorts && profile.email"
                     outlined
                     color="baseAccent"
                     @click="assignCourseToPerson(profile)"
@@ -285,7 +285,7 @@ import {
   addPersonToCohort,
   assignCourseToPerson,
 } from "@/lib/ff";
-import { db } from "@/store/firestoreConfig";
+import { db, functions } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import {
   mdiClose,
@@ -365,19 +365,21 @@ export default {
 
       // If we dont already have the students Id, check if they already have an account using their email
       const personExists = await fetchPersonByEmail(profile.email);
+      const inviter = this.person.firstName + " " + this.person.lastName;
       if (personExists) {
+        personExists.inviter = inviter;
         await this.handleAssignment(personExists, this.currentCourse);
       } else {
         //create the persons account
-        profile.inviter = this.person.firstName + " " + this.person.lastName;
+        profile.inviter = inviter;
 
         const person = await createPerson(profile);
-        console.log("1. person created: ", person);
         await this.handleAssignment(person, this.currentCourse);
       }
     },
 
     async handleAssignment(person, course) {
+      console.log({ person });
       try {
         await assignCourseToPerson(person.id, course.id);
         await addPersonToCohort(person.id, this.cohort.id);
@@ -386,16 +388,18 @@ export default {
           for (const courseId of this.cohort.courses) {
             // dont need to assign current course again
             if (courseId === course.id) continue;
-            console.log("assigning cohort's course with id", courseId);
             await assignCourseToPerson(person.id, courseId);
           }
         }
 
         this.setSnackbar({
           show: true,
-          text: `${person.firstName} assigned to ${course.title} Galaxy`,
+          text: `${
+            person.firstName || person.email
+          } assigned to ${course.title.toUpperCase()} Galaxy`,
           color: "baseAccent",
         });
+        this.sendNewGalaxyEmail(person, course);
         this.$emit("newAssignment", person);
         this.close();
       } catch (error) {
@@ -403,11 +407,20 @@ export default {
         // snackbar message
         this.setSnackbar({
           show: true,
-          text: error,
+          text: error.split("FirebaseError: ")[1],
           color: "pink",
         });
         this.close();
       }
+    },
+    sendNewGalaxyEmail(profile, course) {
+      const person = {
+        ...profile,
+        course: course.title,
+        inviter: profile.inviter || "Galaxy Maps Admin",
+      };
+      const sendNewGalaxyEmail = functions.httpsCallable("sendNewGalaxyEmail");
+      return sendNewGalaxyEmail(person);
     },
     async assignCourseToCohort(cohort, course) {
       if (!cohort) {
@@ -428,10 +441,9 @@ export default {
           }
         }
 
-        console.log("courses added to all students!");
         this.setSnackbar({
           show: true,
-          text: "Cohort assigned to Course",
+          text: "Squad assigned to Galaxy Map: " + course.title,
           color: "baseAccent",
         });
         this.close();

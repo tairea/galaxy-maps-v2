@@ -43,6 +43,20 @@ export default {
     this.studentCourses = sanitisedCourses.filter((a) =>
       this.student.assignedCourses?.some((b) => a.course.id == b),
     );
+
+    // Precompute the most recent activity timestamp for each course
+    let coursesWithMaxTimestamp = this.studentCourses.map((course) => ({
+      ...course,
+      mostRecentTimestamp: Math.max(
+        ...course.activities.map((activity) => new Date(activity.timeStamp).getTime()),
+      ),
+    }));
+
+    // Sort based on the precomputed most recent activity timestamp
+    coursesWithMaxTimestamp.sort((a, b) => b.mostRecentTimestamp - a.mostRecentTimestamp);
+
+    this.studentCourses = coursesWithMaxTimestamp;
+
     console.log("personsCourses: ", this.studentCourses);
     this.loading = false;
   },

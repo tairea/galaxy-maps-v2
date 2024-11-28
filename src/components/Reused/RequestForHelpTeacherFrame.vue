@@ -1,7 +1,7 @@
 <template>
   <div :id="studentOverview ? 'studentOverview' : cohortId">
     <h2 v-if="!studentOverview" class="help-label">
-      {{ completedRequestsOnly ? "COMPLETED Requests" : "Requests for help" }}
+      {{ formatLabel }}
     </h2>
 
     <div v-if="requests.length > 0">
@@ -61,6 +61,7 @@ export default {
     "completedRequestsOnly",
     "allStudentsRequests",
     "dense",
+    "yours",
   ],
   data() {
     return {
@@ -70,10 +71,11 @@ export default {
   async mounted() {
     if (this.courses) {
       for (const course of this.courses) {
-        // console.log("getting requests for course: ", course);
+        // getRequestsForHelpByCourseId populates this.teachersRequestsForHelp via useRootStore
         const unsubscribe = await this.getRequestsForHelpByCourseId(course.id);
         this.unsubscribes.push(unsubscribe);
       }
+      console.log("requests unsubscribes", this.unsubscribes);
     }
   },
   computed: {
@@ -100,50 +102,53 @@ export default {
     cohortId() {
       return this.noSubmissions ? "student-help-panel" : "help-panel";
     },
+    formatLabel() {
+      if (this.completedSubmissionsOnly) {
+        return "COMPLETED Requests";
+      } else if (this.yours) {
+        return "Your Requests for Help";
+      } else {
+        return "Requests for help";
+      }
+    },
     requests() {
-      // const requests = this.teachersRequestsForHelp.filter(
-      //   (request) => request.requestForHelpStatus == "unanswered"
-      // );
+      let requests = this.allStudentsRequests
+        ? this.allStudentsRequests
+        : this.teachersRequestsForHelp;
 
-      // console.log("this.teachersRequestsForHelp", this.teachersRequestsForHelp);
-      // console.log("this.allStudentsRequests", this.allStudentsRequests);
+      // filter requests to only show students requests (eg. students in a cohort)
+      if (this.students) {
+        requests = requests.filter((request) =>
+          this.students?.some((student) => {
+            return student.id ? student.id === request.personId : student === request.personId;
+          }),
+        );
+      }
 
-      // forgot why using this filter - students.some logic.
-      // im thinking reuqests are relevant to everyone so why need to filter by specific students
-      const requests = (
-        this.allStudentsRequests ? this.allStudentsRequests : this.teachersRequestsForHelp
-      ).filter((request) =>
-        this.students?.some((student) => {
-          return student.id ? student.id === request.personId : student === request.personId;
-        }),
-      );
-
+      // ================== Filter requests ==================
       let filteredRequests = [];
-
       // Filter for "completed/answered" only
       if (this.completedRequestsOnly) {
         filteredRequests = requests.filter(
           (request) => request.requestForHelpStatus != "unanswered",
         );
-      } else {
+      } else if (this.isTeacher) {
+        // filter only unanswered requests (teachers only have time for unanswered. and would get very cluttered if showing responsed requests)
         filteredRequests = requests.filter(
           (request) => request.requestForHelpStatus === "unanswered",
         );
-      }
-
-      if (this.isTeacher) {
-        filteredRequests.sort((a, b) => {
-          return a.requestForHelpStatus == "unanswered" ? -1 : 1;
-        });
       } else {
-        filteredRequests.sort((a, b) => {
-          return a.requestForHelpStatus == "unanswered" ? 1 : -1;
-        });
+        // show all requests for students (answered and unanswered)
+        filteredRequests = requests;
       }
 
-      // console.log("requests:", requests);
-      // console.log("filtered requests:", filteredRequests);
+      // ================== Sort requests ==================
 
+      filteredRequests.sort((a, b) => {
+        return a.requestForHelpStatus == "unanswered" ? -1 : 1;
+      });
+
+      // ================== Filter requests based on view ==================
       if (this.isCohortView || this.isDashboardView) return filteredRequests;
       else if (this.isGalaxyView) {
         return filteredRequests.filter((request) => request.contextCourse.id == this.courses[0].id);

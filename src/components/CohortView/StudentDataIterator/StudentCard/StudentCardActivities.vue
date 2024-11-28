@@ -48,7 +48,7 @@ export default {
   },
   methods: {
     formatTime(time) {
-      return DateTime.fromISO(time).toFormat("tt ccc dd LLL   ");
+      return DateTime.fromISO(time).toFormat("tt ccc dd LLL");
     },
   },
 };

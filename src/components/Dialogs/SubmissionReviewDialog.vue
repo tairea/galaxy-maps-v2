@@ -111,14 +111,14 @@
                     class="dialog-context-description mt-6"
                     style="color: var(--v-cohortAccent-base)"
                   >
-                    provide the student with feedback
+                    provide the Navigator with feedback
                   </p>
                 </v-row>
               </div>
               <div v-if="response" class="ma-5 mt-0">
                 <v-row class="justify-end align-center mr-4">
                   <p class="dialog-description px-4 pb-0" style="color: var(--v-cohortAccent-base)">
-                    student feedback
+                    your feedback
                   </p>
                   <Avatar :colourBorder="true" :profile="instructor" :size="30" class="pb-2" />
                 </v-row>
@@ -157,29 +157,67 @@
             <div class="action-buttons">
               <div class="divider"></div>
               <template v-if="isTeacher && !reviewed">
+                <!-- APPROVE -->
                 <v-btn
                   outlined
                   color="missionAccent"
-                  @click="markSubmissionAsCompleted()"
+                  @click="markSubmissionAsCompleted"
                   class="mr-2"
                   :loading="markingSubmission"
-                  :disabled="markingSubmission"
+                  :disabled="decliningSubmission"
                 >
                   <v-icon left> {{ mdiThumbUpOutline }} </v-icon>
                   approve
                 </v-btn>
+
+                <!-- DECLINE -->
+                <v-tooltip top v-if="!response">
+                  <template v-slot:activator="{ on, attrs }">
+                    <span v-on="on" v-bind="attrs">
+                      <v-btn
+                        outlined
+                        color="galaxyAccent"
+                        @click="declineSubmission"
+                        class="mr-2 decline-btn"
+                        :class="{ 'decline-btn-disabled': markingSubmission || !response }"
+                        :loading="decliningSubmission"
+                        :disabled="markingSubmission"
+                      >
+                        <v-icon left> {{ mdiThumbDownOutline }} </v-icon>
+                        decline
+                      </v-btn>
+                    </span>
+                  </template>
+                  <span class="missionAccent--text"
+                    >Please provide the Navigator feedback before declining their submission</span
+                  >
+                </v-tooltip>
                 <v-btn
+                  v-else
                   outlined
                   color="galaxyAccent"
-                  @click="declineSubmission()"
-                  class="mr-2"
-                  :loading="markingSubmission"
-                  v-bind="attrs"
-                  v-on="on"
+                  @click="declineSubmission"
+                  class="mr-2 decline-btn"
+                  :loading="decliningSubmission"
                   :disabled="markingSubmission"
                 >
                   <v-icon left> {{ mdiThumbDownOutline }} </v-icon>
                   decline
+                </v-btn>
+              </template>
+              <template v-else>
+                <v-btn
+                  outlined
+                  color="baseAccent"
+                  :to="
+                    '/galaxy/' +
+                    submission.contextCourse.id +
+                    '/system/' +
+                    submission.contextTopic.id
+                  "
+                  class="mr-4"
+                >
+                  Go to mission to re-submit
                 </v-btn>
               </template>
 
@@ -188,8 +226,7 @@
                 outlined
                 :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
                 @click="close"
-                :disabled="markingSubmission"
-                :loading="markingSubmission"
+                :disabled="markingSubmission || decliningSubmission"
               >
                 <v-icon left> {{ mdiClose }} </v-icon>
                 Cancel
@@ -242,6 +279,7 @@ export default {
     xpPointsForCompletedSubmission: 250,
     personsTopicsTasks: [],
     markingSubmission: false,
+    decliningSubmission: false,
   }),
   async mounted() {
     this.instructor = await fetchPersonByPersonId(this.submission.contextCourse.mappedBy.personId);
@@ -276,94 +314,118 @@ export default {
     async markSubmissionAsCompleted() {
       this.markingSubmission = true;
 
-      // 1) update submission to completed
-      console.log("1) updating submission status to: completed");
-      await db
-        .collection("courses")
-        .doc(this.submission.contextCourse.id)
-        .collection("submissionsForReview")
-        .doc(this.submission.id)
-        .update({
-          // update submission to completed
-          teacherId: this.person.id,
-          taskSubmissionStatus: "completed",
-          taskCompletedTimestamp: new Date(),
-          responseMessage: this.responseMsg,
-          responseSubmittedTimestamp: new Date(),
-        });
+      try {
+        // 1) update submission to completed
+        console.log("1) updating submission status to: completed");
+        await db
+          .collection("courses")
+          .doc(this.submission.contextCourse.id)
+          .collection("submissionsForReview")
+          .doc(this.submission.id)
+          .update({
+            // update submission to completed
+            teacherId: this.person.id,
+            taskSubmissionStatus: "completed",
+            taskCompletedTimestamp: new Date(),
+            responseMessage: this.responseMsg,
+            responseSubmittedTimestamp: new Date(),
+          });
 
-      // 2) update the task status to complete
-      console.log("2) updating mission status to: completed");
-      await db
-        .collection("people")
-        .doc(this.submission.studentId)
-        .collection(this.submission.contextCourse.id)
-        .doc(this.submission.contextTopic.id)
-        .collection("tasks")
-        .doc(this.submission.contextTask.id)
-        .update({
-          // update "people" database with task submission
-          teacherId: this.person.id,
-          taskStatus: "completed",
-          taskReviewedAndCompletedTimestamp: new Date(),
-        });
+        // 2) update the task status to complete
+        console.log("2) updating mission status to: completed");
+        await db
+          .collection("people")
+          .doc(this.submission.studentId)
+          .collection(this.submission.contextCourse.id)
+          .doc(this.submission.contextTopic.id)
+          .collection("tasks")
+          .doc(this.submission.contextTask.id)
+          .update({
+            // update "people" database with task submission
+            teacherId: this.person.id,
+            taskStatus: "completed",
+            taskReviewedAndCompletedTimestamp: new Date(),
+            taskReviewedFeedback: this.responseMsg,
+          });
 
-      console.log("3) sending email to learner with outcome: completed");
-      await this.sendResponseToSubmission("completed");
+        // update this.personsTopicsTasks with newly completed tasks status
+        this.personsTopicsTasks = await fetchPersonsTasksByPersonIdCourseIdTopicId(
+          this.submission.studentId,
+          this.submission.contextCourse.id,
+          this.submission.contextTopic.id,
+        );
 
-      // send xAPI statement to LRS
-      // student completed work
-      console.log("4) XP log updated...");
-      await studentWorkMarkedCompletedXAPIStatement(
-        this.requesterPerson,
-        this.submission.contextTask.id,
-        {
+        console.log("3) sending email to learner with outcome: completed");
+        await this.sendResponseToSubmission("completed");
+
+        // send xAPI statement to LRS
+        // student completed work
+        console.log("4) XP log updated...");
+        await studentWorkMarkedCompletedXAPIStatement(
+          this.requesterPerson,
+          this.submission.contextTask.id,
+          {
+            galaxy: this.submission.contextCourse,
+            system: this.submission.contextTopic,
+            mission: this.submission.contextTask,
+          },
+        );
+        // teacher reviewed work
+        console.log("5) XP log updated...");
+        await teacherReviewedStudentWorkXAPIStatement(this.person, this.submission.contextTask.id, {
+          student: this.requesterPerson,
           galaxy: this.submission.contextCourse,
           system: this.submission.contextTopic,
           mission: this.submission.contextTask,
-        },
-      );
-      // teacher reviewed work
-      console.log("5) XP log updated...");
-      await teacherReviewedStudentWorkXAPIStatement(this.person, this.submission.contextTask.id, {
-        student: this.requesterPerson,
-        galaxy: this.submission.contextCourse,
-        system: this.submission.contextTopic,
-        mission: this.submission.contextTask,
-      });
-
-      // give XP points
-      console.log("6) XP points given... ");
-      await db
-        .collection("people")
-        .doc(this.submission.studentId)
-        .update({
-          xpPointsTotal: firebase.firestore.FieldValue.increment(
-            this.xpPointsForCompletedSubmission,
-          ),
         });
 
-      this.setSnackbar({
-        show: true,
-        text:
-          this.requesterPerson.firstName +
-          " " +
-          this.requesterPerson.lastName +
-          "'s Mission status changed to: Completed",
-        color: "baseAccent",
-      });
+        // give XP points
+        console.log("6) XP points given... ");
+        await db
+          .collection("people")
+          .doc(this.submission.studentId)
+          .update({
+            xpPointsTotal: firebase.firestore.FieldValue.increment(
+              this.xpPointsForCompletedSubmission,
+            ),
+          });
 
-      // unlock next task
-      console.log("7) Unlocking next mission...");
-      await this.unlockNextTask();
+        this.setSnackbar({
+          show: true,
+          text:
+            this.requesterPerson.firstName +
+            " " +
+            this.requesterPerson.lastName +
+            "'s Mission status changed to: Completed",
+          color: "baseAccent",
+        });
 
-      // check if all tasks/missions are completed
-      console.log("8) Checking if all system's missions are completed...");
-      await this.checkIfAllTasksCompleted();
+        // unlock next task
+        console.log("7) Unlocking next mission...");
+        await this.unlockNextTask();
 
-      // wait till unlock checks are completed before closing dialog
-      console.log("9) mission updates finished");
-      this.close();
+        // check if all tasks/missions are completed
+        console.log("8) Checking if all system's missions are completed...");
+        await this.checkIfAllTasksCompleted();
+
+        // wait till unlock checks are completed before closing dialog
+        console.log("9) mission updates finished");
+      } catch (error) {
+        // end of try
+        console.error("Error updating submission:", error);
+        this.setSnackbar({
+          show: true,
+          text: "Error updating submission: " + error,
+          color: "pink",
+        });
+      } finally {
+        this.markingSubmission = false;
+        this.loading = false;
+        this.disabled = false;
+        this.dialog = false;
+        this.response = false;
+        this.responseMsg = "";
+      }
 
       // TODO: perhaps only unlock once teacher has reviewed and marked complete. SOLUTION: leave as is. can progress to next task, but cant progress to next topic until all work is reviewed.
     },
@@ -443,6 +505,10 @@ export default {
         console.log("8b) System not yet complete...");
         console.log("Total System Missions = ", this.personsTopicsTasks.length);
         console.log(
+          "Missions completed = ",
+          this.personsTopicsTasks.filter((obj) => obj.taskStatus === "completed").length,
+        );
+        console.log(
           "Missions in review = ",
           this.personsTopicsTasks.filter((obj) => obj.taskStatus === "inreview").length,
         );
@@ -462,6 +528,8 @@ export default {
     },
     async unlockNextTopics() {
       // ==== all tasks/missions completed. unlock next topics ====
+
+      // check if prerequisites are met
       const querySnapshot = await db
         .collection("people")
         .doc(this.submission.studentId)
@@ -469,49 +537,120 @@ export default {
         .where("prerequisites", "array-contains", this.submission.contextTopic.id)
         .get();
 
-      console.log("8d-i) Targeting next System...");
+      for (const doc of querySnapshot.docs) {
+        const prerequisites = doc.data().prerequisites;
 
-      const docs = querySnapshot.docs;
+        if (prerequisites.length > 1) {
+          console.log(
+            "8d-i) Multiple prerequisites found. Checking if all prerequisites are completed...",
+          );
 
-      for (const doc of docs) {
-        await doc.ref.update({
-          topicStatus: "unlocked", // change status to unlocked
-        });
+          //loop prerequisites, and get topic from db.collection("people").doc(this.submission.studentId).collection(this.submission.contextCourse.id) and check if it is completed
+          let completedPrerequisitesCount = 0;
+          for (const prerequisite of prerequisites) {
+            // get prereq topic from db
+            console.log("8d-ii) Checking if prerequisite " + prerequisite + " is completed...");
+            const topicDoc = await db
+              .collection("people")
+              .doc(this.submission.studentId)
+              .collection(this.submission.contextCourse.id)
+              .doc(prerequisite)
+              .get();
 
-        console.log("8d-ii) Next System found. System Unlocked");
+            if (topicDoc.exists) {
+              const topicData = topicDoc.data();
+              if (topicData.topicStatus === "completed") {
+                console.log("topic status is completed.");
+                completedPrerequisitesCount++;
+              } else {
+                console.log("topic status is not completed. It is: ", topicData.topicStatus);
+              }
+            } else {
+              console.log("Prerequisite Topic does not exist.");
+            }
+          }
 
-        // message telling teacher whats happend
-        this.setSnackbar({
-          show: true,
-          text:
-            "System: " +
-            doc.data().label +
-            " Unlocked for: " +
-            this.requesterPerson.firstName +
-            " " +
-            this.requesterPerson.lastName,
-          color: "baseAccent",
-        });
+          if (completedPrerequisitesCount === prerequisites.length) {
+            console.log("8d-iii) All prerequisites completed. Unlocking next System...");
+            await doc.ref.update({
+              topicStatus: "unlocked", // change status to unlocked
+            });
+
+            console.log("8d-iv) Next System found. System Unlocked");
+
+            // message telling teacher whats happend
+            this.setSnackbar({
+              show: true,
+              text:
+                "System: " +
+                doc.data().label +
+                " Unlocked for: " +
+                this.requesterPerson.firstName +
+                " " +
+                this.requesterPerson.lastName,
+              color: "baseAccent",
+            });
+          } else {
+            console.log("8d-iii) Not all prerequisites completed. System remains locked");
+          }
+        } else if (prerequisites.length === 1) {
+          console.log("8d-i) Only one prereq...");
+          // get prereq topic from db
+          console.log("8d-ii) Checking if prerequisite " + prerequisites[0] + " is completed...");
+          const topicDoc = await db
+            .collection("people")
+            .doc(this.submission.studentId)
+            .collection(this.submission.contextCourse.id)
+            .doc(prerequisites[0])
+            .get();
+
+          if (topicDoc.exists) {
+            const topicData = topicDoc.data();
+            if (topicData.topicStatus === "completed") {
+              console.log("topic status is completed.");
+              await doc.ref.update({
+                topicStatus: "unlocked", // change status to unlocked
+              });
+              // message telling teacher whats happend
+              this.setSnackbar({
+                show: true,
+                text:
+                  "System: " +
+                  doc.data().label +
+                  " Unlocked for: " +
+                  this.requesterPerson.firstName +
+                  " " +
+                  this.requesterPerson.lastName,
+                color: "baseAccent",
+              });
+            } else {
+              console.log("topic status is not completed. It is: ", topicData.topicStatus);
+            }
+          } else {
+            console.log("Prerequisite Topic " + prerequisites[0] + "does not exist.");
+          }
+        }
       }
     },
     sendResponseToSubmission(outcome) {
       const data = {
+        email: this.requesterPerson.email,
+        teacher: this.person.firstName + " " + this.person.lastName,
         course: this.submission.contextCourse.title,
         topic: this.submission.contextTopic.label,
         task: this.submission.contextTask.title,
-        student: this.requesterPerson.firstName + " " + this.requesterPerson.lastName,
+        firstName: this.requesterPerson.firstName,
+        lastName: this.requesterPerson.lastName,
         submission: this.submission.submissionLink,
         outcome: outcome,
         message: this.responseMsg,
-        teacher: this.person.firstName + " " + this.person.lastName,
-        email: this.requesterPerson.email,
       };
       const sendResponseToSubmission = functions.httpsCallable("sendResponseToSubmission");
-      console.log("3a) Email sent: ", data);
+      console.log("3a) Email sent to: " + this.requesterPerson.email + " with data: " + data);
       return sendResponseToSubmission(data);
     },
     async declineSubmission() {
-      this.loading = true;
+      this.decliningSubmission = true;
 
       try {
         // Add response to request for help
@@ -557,14 +696,14 @@ export default {
             mission: this.submission.contextTask,
           },
         );
-        this.close();
+
         this.setSnackbar({
           show: true,
           text:
             this.requesterPerson.firstName +
             " " +
             this.requesterPerson.lastName +
-            "'s submitted work declined. Feedback sent to learner.",
+            "'s submitted work declined. Feedback sent to Navigator.",
           color: "baseAccent",
         });
 
@@ -577,6 +716,13 @@ export default {
         });
 
         throw error;
+      } finally {
+        // close logic
+        this.disabled = false;
+        this.dialog = false;
+        this.response = false;
+        this.responseMsg = "";
+        this.decliningSubmission = false;
       }
     },
     async setTopicToCompletedInDB() {
@@ -599,17 +745,17 @@ export default {
       console.log("8c-ii) XP log updated...");
     },
     close() {
-      console.log("closing dialog");
-      this.markingSubmission = false;
-      this.loading = false;
-      this.disabled = false;
       this.dialog = false;
-      this.response = false;
-      this.responseMsg = "";
     },
   },
 };
 </script>
+
+<style>
+.dialog-help-message > p > img {
+  width: 100%;
+}
+</style>
 
 <style scoped lang="scss">
 .input-field {
@@ -810,5 +956,19 @@ export default {
   top: -30px;
   z-index: 1;
   border-bottom-color: rgba(0, 0, 0, 0.095);
+}
+
+.decline-btn {
+  transition: opacity 0.3s ease;
+  border: 1px solid var(--v-galaxyAccent-base);
+  color: var(--v-galaxyAccent-base);
+}
+
+.decline-btn-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+  border: 1px solid var(--v-galaxyAccent-base);
+  color: var(--v-galaxyAccent-base);
+  cursor: not-allowed;
 }
 </style>
