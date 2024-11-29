@@ -16,6 +16,7 @@ import useRootStore from "@/store/index";
 import firebase from "firebase/compat/app";
 import Vue from "vue";
 import VueRouter from "vue-router";
+import GalaxyMapsHome from "@/views/GalaxyMapsHome.vue";
 
 const routes = [
   {
@@ -25,10 +26,16 @@ const routes = [
     children: [
       {
         path: "",
-        name: "GalaxyList",
-        component: GalaxyList,
+        name: "GalaxyMapsHome",
+        component: GalaxyMapsHome,
         props: true,
       },
+      // {
+      //   path: "",
+      //   name: "GalaxyList",
+      //   component: GalaxyList,
+      //   props: true,
+      // },
       {
         path: "login",
         name: "Login",

@@ -1,5 +1,5 @@
 <template>
-  <div class="wrap">
+  <div class="wrap" :class="{ 'wrap-contained': contained }">
     <div class="mt-n12">
       <v-row>
         <p class="overline" style="color: var(--v-missionAccent-base)">
@@ -24,6 +24,10 @@ export default {
       default: "40px",
     },
     text: String,
+    contained: {
+      type: Boolean,
+      default: false,
+    },
   },
   computed: {
     styles() {
@@ -49,6 +53,13 @@ $duration: 1.4s;
   z-index: 199;
   background-color: var(--v-background-base);
 }
+
+.wrap-contained {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
 .spinner {
   animation: circle-rotator $duration linear infinite;
 

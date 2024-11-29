@@ -1,5 +1,10 @@
 <template>
-  <div id="galaxy-info" :class="draft ? 'draft-border' : 'galaxy-border'" v-if="course">
+  <div
+    id="galaxy-info"
+    :class="draft ? 'draft-border' : 'galaxy-border'"
+    v-if="course"
+    :style="{ height: height + '%', overflow: descriptionOverflow ? 'scroll' : '' }"
+  >
     <!-- Label -->
     <h2 class="galaxy-label"><span v-if="draft">Drafting</span> Galaxy</h2>
     <!-- Map Name  -->
@@ -52,7 +57,7 @@ import { mdiLink } from "@mdi/js";
 
 export default {
   name: "GalaxyInfo",
-  props: ["course", "teacher", "draft"],
+  props: ["course", "teacher", "draft", "height", "descriptionOverflow"],
   components: {
     CreateEditDeleteGalaxyDialog,
   },
@@ -123,6 +128,21 @@ export default {
   backdrop-filter: blur(2px);
   z-index: 3;
   color: var(--v-galaxyAccent-base);
+  overflow-y: auto;
+
+  // Add custom scrollbar styles
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--v-galaxyAccent-base);
+    // border-radius: 4px;
+  }
 
   .galaxy-label {
     font-size: 0.8rem;

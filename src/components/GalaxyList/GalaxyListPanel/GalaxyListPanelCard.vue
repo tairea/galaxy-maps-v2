@@ -63,6 +63,7 @@ export default {
   border: 1px solid var(--v-galaxyAccent-base);
   display: flex;
   cursor: pointer;
+  align-items: center;
 
   .galaxyCardImage {
     width: 30px;

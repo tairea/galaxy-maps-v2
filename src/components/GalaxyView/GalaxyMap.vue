@@ -1,6 +1,6 @@
 <template>
   <div class="full-height">
-    <LoadingSpinner v-if="loading" text="loading galaxy" />
+    <LoadingSpinner v-if="loading" text="loading galaxy" :contained="contained" />
     <!-- loading = !planets.length && !draggingNodes -->
     <network
       v-if="nodesToDisplay"
@@ -44,7 +44,13 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "GalaxyMap",
-  props: ["course"],
+  props: {
+    course: Object,
+    contained: {
+      type: Boolean,
+      default: false,
+    },
+  },
   components: {
     Network,
     SolarSystem,
@@ -166,6 +172,21 @@ export default {
     tasks: [],
   }),
   watch: {
+    course: {
+      handler(newCourse) {
+        if (newCourse) {
+          this.loading = true;
+          this.refreshData().then(() => {
+            // Reset view and redraw map
+            this.needsCentering = true;
+            if (this.$refs.network) {
+              this.$refs.network.redraw();
+            }
+          });
+        }
+      },
+      immediate: true,
+    },
     darkMode(dark) {
       if (dark == false) {
         this.makeGalaxyLabelsColour(this.$vuetify.theme.themes.light.baseAccent);
@@ -190,7 +211,7 @@ export default {
       "courseTasks",
     ]),
     galaxyCompleted() {
-      return this.person.completedCourses.includes(this.currentCourseId);
+      return this.person?.completedCourses?.includes(this.currentCourseId) || false;
     },
     teacher() {
       return this.course?.mappedBy.personId === this.person?.id || this.user.data?.admin;
