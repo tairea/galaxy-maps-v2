@@ -44,6 +44,7 @@ declare module 'vue' {
     GalaxyListPanelCard: typeof import('./src/components/GalaxyList/GalaxyListPanel/GalaxyListPanelCard.vue')['default']
     GalaxyMap: typeof import('./src/components/GalaxyView/GalaxyMap.vue')['default']
     GalaxyMapButtons: typeof import('./src/components/GalaxyView/GalaxyMapButtons.vue')['default']
+    GalaxyMapPreviewCard: typeof import('./src/components/GalaxyList/GalaxyMapPreviewCard.vue')['default']
     GalaxyProgressionCard: typeof import('./src/components/UserDashboard/StudentCourseProgression/GalaxyProgressionCard.vue')['default']
     GradientBackground: typeof import('./src/components/GalaxyList/GradientBackground.vue')['default']
     LearnerOverviewDashboard: typeof import('./src/components/Reused/LearnerOverviewDashboard.vue')['default']

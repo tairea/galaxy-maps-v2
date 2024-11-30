@@ -2,87 +2,107 @@
   <div class="fullHeight">
     <div class="flexContainer">
       <div class="databasePanel">
-        <div class="flexRow">
-          <p class="overline baseAccent--text pl-3 mb-2">Galaxy Database</p>
-          <div class="toggle-buttons mb-2">
-            <div class="toggle-button" :class="{ active: showAll }" @click="toggleView('all')">
-              <p class="button-text ma-0">Show All</p>
-            </div>
-            <div
-              class="toggle-button"
-              :class="{ active: sortByCaptain }"
-              @click="toggleView('captain')"
-            >
-              <p class="button-text ma-0">Sort by Captain</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="innerPanels" v-if="sortByCaptain">
-          <!-- panel one - teachers -->
-          <div>
-            <div class="firstPanel">
-              <TeacherListPanelCard
-                v-for="teacher in getTeachers"
-                :key="teacher.teacherId"
-                :teacher="teacher"
-                :active="selectedTeacherId === teacher.teacherId"
-                @teacherSelected="handleTeacherSelect"
-              />
-            </div>
-            <p
-              class="overline baseAccent--text text-right pr-5"
-              style="text-transform: uppercase; font-size: 9px !important"
-            >
-              {{ getTeachers.length }} Captains
-            </p>
-          </div>
-
-          <!-- panel two - courses -->
-          <div class="secondPanel">
-            <GalaxyListPanelCard
-              v-for="course in selectedTeacherCourses"
-              :key="course.id"
-              :course="course"
-              :active="selectedCourseId === course.id"
-              @click.native="courseClicked({ courseId: course.id })"
-            />
-            <div
-              v-if="selectedTeacherId === null"
-              class="d-flex justify-center align-center"
-              style="height: 100%"
-            >
-              <p class="overline baseAccent--text text-center">No captain selected</p>
-            </div>
-          </div>
-
-          <div class="thirdPanel" v-if="selectedCourseId">
-            <GalaxyInfo
-              ref="galaxyInfo"
-              :course="selectedCourse"
-              :height="100"
-              :descriptionOverflow="true"
-            />
-          </div>
-
-          <!-- panel three - galaxy map -->
-          <div class="fourthPanel">
-            <GalaxyMap v-if="selectedCourse" :course="selectedCourse" :contained="true" />
-            <div v-else class="d-flex justify-center align-center" style="height: 100%">
-              <p class="overline galaxyAccent--text text-center">No map selected</p>
-            </div>
-            <!-- Updated button positioning -->
-            <div class="galaxy-button-container" v-if="selectedCourse">
-              <div class="galaxy-button" @click="goToGalaxyView">
-                <p class="overline ma-0">Go to Galaxy</p>
+        <template>
+          <!-- Database header -->
+          <div class="flexRow">
+            <p class="overline baseAccent--text pl-3 mb-2">Galaxy Database</p>
+            <div class="toggle-buttons mb-2">
+              <div class="toggle-button" :class="{ active: showAll }" @click="toggleView('all')">
+                <p class="button-text ma-0">Show All</p>
+              </div>
+              <div
+                class="toggle-button"
+                :class="{ active: sortByCaptain }"
+                @click="toggleView('captain')"
+              >
+                <p class="button-text ma-0">Sort by Captain</p>
               </div>
             </div>
           </div>
-        </div>
 
-        <div class="showAllPanels" v-if="showAll">
-          <div class="galaxyMapContainer" v-for="course in limitedCourses" :key="course.id"></div>
-        </div>
+          <!-- loading spinner -->
+          <div
+            class="d-flex justify-center align-center"
+            style="height: 80%; padding: 50px"
+            v-if="isLoadingCourses"
+          >
+            <v-btn :loading="isLoadingCourses" icon color="baseAccent"></v-btn>
+          </div>
+
+          <div class="innerPanels" v-if="sortByCaptain && !isLoadingCourses">
+            <!-- panel one - teachers -->
+            <div>
+              <div class="firstPanel">
+                <TeacherListPanelCard
+                  v-for="teacher in getTeachers"
+                  :key="teacher.teacherId"
+                  :teacher="teacher"
+                  :active="selectedTeacherId === teacher.teacherId"
+                  @teacherSelected="handleTeacherSelect"
+                />
+              </div>
+              <p
+                class="overline baseAccent--text text-right pr-5"
+                style="text-transform: uppercase; font-size: 9px !important"
+              >
+                {{ getTeachers.length }} Captains
+              </p>
+            </div>
+
+            <!-- panel two - courses -->
+            <div class="secondPanel">
+              <GalaxyListPanelCard
+                v-for="course in selectedTeacherCourses"
+                :key="course.id"
+                :course="course"
+                :active="selectedCourseId === course.id"
+                @click.native="courseClicked({ courseId: course.id })"
+              />
+              <div
+                v-if="selectedTeacherId === null"
+                class="d-flex justify-center align-center"
+                style="height: 100%"
+              >
+                <p class="overline baseAccent--text text-center">No captain selected</p>
+              </div>
+            </div>
+
+            <div class="thirdPanel" v-if="selectedCourseId">
+              <GalaxyInfo
+                ref="galaxyInfo"
+                :course="selectedCourse"
+                :height="100"
+                :descriptionOverflow="true"
+              />
+            </div>
+
+            <!-- panel three - galaxy map -->
+            <div class="fourthPanel">
+              <GalaxyMap v-if="selectedCourse" :course="selectedCourse" :contained="true" />
+              <div v-else class="d-flex justify-center align-center" style="height: 100%">
+                <p class="overline galaxyAccent--text text-center">No map selected</p>
+              </div>
+              <!-- Updated button positioning -->
+              <div class="galaxy-button-container" v-if="selectedCourse">
+                <div class="galaxy-button" @click="goToGalaxyView">
+                  <p class="overline ma-0">Go to Galaxy</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="showAllPanels" v-if="showAll && !isLoadingCourses">
+            <div class="galaxyMapContainer mb-5" v-for="course in courses" :key="course.id">
+              <GalaxyMapPreviewCard :course="course" />
+              <div class="course-label-container">
+                <p class="baseAccent--text course-label pa-1 ma-0">
+                  {{ course.title }}
+                  <!-- by Capt. {{ course.mappedBy.name }} -->
+                </p>
+              </div>
+            </div>
+          </div>
+        </template>
       </div>
     </div>
 
@@ -107,6 +127,8 @@ import GalaxyListPanelCard from "@/components/GalaxyList/GalaxyListPanel/GalaxyL
 import GalaxyView from "@/views/GalaxyView.vue";
 import GalaxyInfo from "@/components/GalaxyView/GalaxyInfo.vue";
 import GalaxyMap from "@/components/GalaxyView/GalaxyMap.vue";
+import GalaxyMapPreviewCard from "@/components/GalaxyList/GalaxyMapPreviewCard.vue";
+import LoadingSpinner from "@/components/Reused/LoadingSpinner.vue";
 
 export default {
   name: "GalaxyMapsHome",
@@ -120,6 +142,8 @@ export default {
     GalaxyView,
     GalaxyInfo,
     GalaxyMap,
+    GalaxyMapPreviewCard,
+    LoadingSpinner,
   },
   data() {
     return {
@@ -181,7 +205,7 @@ export default {
     },
 
     limitedCourses() {
-      return this.courses.slice(0, 6); // Only return first 6 courses
+      return this.courses.slice(0, 60); // Only return first 6 courses
     },
   },
   watch: {
@@ -323,6 +347,22 @@ export default {
     width: 70%;
     height: 50%;
     border: solid var(--v-baseAccent-base) 1px;
+    overflow: hidden;
+    overflow-y: auto;
+
+    // Add custom scrollbar styles
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: var(--v-baseAccent-base);
+      // border-radius: 4px;
+    }
 
     .innerPanels {
       display: flex;
@@ -378,14 +418,25 @@ export default {
     .showAllPanels {
       display: flex;
       flex-wrap: wrap;
-      justify-content: space-around;
+      // justify-content: space-around;
       padding: 10px;
+      gap: 10px;
 
       // frame for each galaxy map (in Show All view)
       .galaxyMapContainer {
-        width: 150px;
+        box-sizing: border-box;
+        width: calc(20% - 10px);
         height: 150px;
-        border: solid var(--v-galaxyAccent-base) 1px;
+        border: solid var(--v-baseAccent-base) 1px;
+
+        .course-label-container {
+          // border: solid var(--v-baseAccent-base) 1px;
+        }
+
+        .course-label {
+          font-size: 9px;
+          text-transform: uppercase;
+        }
       }
     }
   }
@@ -485,5 +536,13 @@ export default {
   &:hover {
     opacity: 0.8;
   }
+}
+
+.loading-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 </style>

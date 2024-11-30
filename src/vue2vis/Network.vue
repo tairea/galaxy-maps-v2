@@ -82,14 +82,21 @@ export default {
     this.visData.nodes = mountVisData(this, "nodes");
     this.visData.edges = mountVisData(this, "edges");
 
-    // loop through nodes and og any that dont have propert x or y
+    // Validate nodes before creating network
     this.visData.nodes.forEach((node) => {
-      if (!node.x || !node.y) {
-        console.log("node", node);
+      if (node.x === undefined || node.y === undefined || isNaN(node.x) || isNaN(node.y)) {
+        console.warn(`Invalid node position detected in network:`, node);
       }
     });
 
-    this.network = new Network(this.$refs.visualization, this.visData, this.options);
+    // Create network with validated data
+    this.network = new Network(this.$refs.visualization, this.visData, {
+      ...this.options,
+      nodes: {
+        ...this.options.nodes,
+        size: Math.max(4, this.options.nodes?.size || 4), // Ensure minimum size
+      },
+    });
 
     this.events.forEach((eventName) =>
       this.network.on(eventName, (props) => this.$emit(translateEvent(eventName), props)),
