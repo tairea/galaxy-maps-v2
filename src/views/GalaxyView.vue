@@ -662,11 +662,16 @@ export default {
   // border: 1px solid yellow;
   overflow-y: scroll;
   padding: 0px 0px 50px 20px;
-  z-index: 3;
+  // z-index: 3;
   transition: all 0.3s;
   position: absolute;
   left: 0px;
   top: 0px;
+  pointer-events: none;
+
+  > * {
+    pointer-events: auto;
+  }
 }
 
 .hide {

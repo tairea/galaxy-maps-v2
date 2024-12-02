@@ -235,8 +235,8 @@ Galaxy Maps Team`;
 
 // ======REQUEST FOR HELP SENT ==================
 export const sendRequestForHelpHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
-  const { email, teacher, course, task, student, request, topic } = data;
-  sendRequestForHelp(email, teacher, course, task, student, request, topic);
+  const { email, teacher, course, task, student, request, topic, studentEmail } = data;
+  sendRequestForHelp(email, teacher, course, task, student, request, topic, studentEmail);
 });
 
 /**
@@ -250,9 +250,10 @@ export async function sendRequestForHelp(
   student: string,
   request: string,
   topic: string,
+  studentEmail: string,
 ) {
   const mailOptions: Record<string, string> = {
-    from: `${APP_NAME} <noreply@${DOMAIN}>`,
+    from: `${student} <${studentEmail}>`,
     to: email,
   };
 
@@ -268,7 +269,7 @@ Mission: ${task}
 
 Their request for help: "${request}"
 
-To respond to ${student}, please login to https://${DOMAIN}/dashboard to view your Requests for Help.
+To respond to ${student}, reply to this email or login to https://${DOMAIN}/dashboard to view all Requests for Help.
   
 Galaxy Maps Team`;
 
@@ -522,8 +523,8 @@ export async function sendResponseToSubmission(
     lastName
       ? lastName.charAt(0).toUpperCase() + lastName.slice(1)
       : firstName
-      ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
-      : ""
+        ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
+        : ""
   }
 
 Captain ${teacher} has reviewed your submission for ${task}.
@@ -546,8 +547,8 @@ Galaxy Maps Team`;
     lastName
       ? lastName.charAt(0).toUpperCase() + lastName.slice(1)
       : firstName
-      ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
-      : ""
+        ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
+        : ""
   }</p>
   </br> 
 <p>Captain ${teacher} has reviewed your submission for ${task}.</p>
