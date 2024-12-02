@@ -45,6 +45,7 @@ const TAB_GALAXIES = { id: 1, name: "GALAXIES", route: `/`, exactPath: true };
 const TAB_COHORTS = { id: 2, name: "SQUADS", route: `/squads`, exactPath: false };
 const TAB_DASHBOARD = { id: 3, name: "DASHBOARD", route: `/dashboard`, exactPath: false };
 const TAB_ADMIN = { id: 4, name: "ADMIN", route: `/students` };
+const TAB_DATABASE = { id: 5, name: "DATABASE", route: `/database` };
 
 export default {
   name: "NavBar",
@@ -91,7 +92,7 @@ export default {
   },
   mounted() {
     if (this.user?.data?.admin) {
-      this.tabs = [TAB_GALAXIES, TAB_COHORTS, TAB_DASHBOARD, TAB_ADMIN];
+      this.tabs = [TAB_GALAXIES, TAB_DATABASE, TAB_COHORTS, TAB_DASHBOARD, TAB_ADMIN];
     } else if (this.user.loggedIn) {
       this.tabs = [TAB_GALAXIES, TAB_COHORTS, TAB_DASHBOARD];
     } else {

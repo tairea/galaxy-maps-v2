@@ -8,7 +8,7 @@
         <br /><br />
         If you would like early access, please email your request to
         <br /><br />
-        <a href="mailto:ian@tairea.io">ian@tairea.io</a>
+        <a href="mailto:base@galaxymaps.io">base@galaxymaps.io</a>
       </p>
 
       <v-form v-else ref="form" v-model="valid" lazy-validation class="my-4">

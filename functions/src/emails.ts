@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import { log } from "firebase-functions/logger";
 import { config, runWith } from "firebase-functions/v1";
 import { createTransport } from "nodemailer";
@@ -202,7 +203,17 @@ export async function sendCourseCreatedEmail(
 
   Navigate to https://${DOMAIN}/galaxy/${courseId} to take a look.
   
-Galaxy Maps Bot`;
+<div style="display: flex;">
+<img src="https://${DOMAIN}/favicon.png" alt="Galaxy Maps" style="height: 30px;" />
+<p style="
+    color:#69a1e2;
+    font-size: 0.75rem !important;
+    font-weight: 500;
+    letter-spacing: 0.1666666667em !important;
+    text-transform: uppercase;
+    font-family: sans-serif !important;
+">ALAXY MAPS TEAM</p>
+</div>`;
   await mailTransport.sendMail(mailOptions);
   log("Course created email sent to admin");
 }
@@ -522,8 +533,8 @@ export async function sendResponseToSubmission(
     lastName
       ? lastName.charAt(0).toUpperCase() + lastName.slice(1)
       : firstName
-      ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
-      : ""
+        ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
+        : ""
   }
 
 Captain ${teacher} has reviewed your submission for ${task}.
@@ -546,8 +557,8 @@ Galaxy Maps Team`;
     lastName
       ? lastName.charAt(0).toUpperCase() + lastName.slice(1)
       : firstName
-      ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
-      : ""
+        ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
+        : ""
   }</p>
   </br> 
 <p>Captain ${teacher} has reviewed your submission for ${task}.</p>
@@ -604,12 +615,12 @@ export async function sendStudentInActive(student: string, studentEmail: string,
 
   // The user subscribed to the newsletter.
   /* eslint-disable max-len */
-  mailOptions.subject = "Student Activity Alert";
+  mailOptions.subject = "Navigator Activity Alert";
   mailOptions.text = `Greetings Navigator ${student}, 
 
 It has been ${duration} since you last signed into Galaxy Maps. 
 
-Sign in to https://${DOMAIN} now to continue your learning journey.
+Sign in to https://${DOMAIN} now to continue your mission.
   
 Galaxy Maps Team`;
 
@@ -645,12 +656,12 @@ export async function sendTeacherStudentInActive(
   };
 
   /* eslint-disable max-len */
-  mailOptions.subject = "Student Activity Alert";
+  mailOptions.subject = "Navigator Activity Alert";
   mailOptions.text = `Greetings Captain ${teacher}, 
   
 It has been ${duration} since Navigator: ${student} from Squad: ${cohort} last signed into Galaxy Maps. 
 
-We recommend checking in on them via email ${studentEmail} to encourage and support them on their learning journey.
+We recommend checking in on them via email ${studentEmail} to encourage and support them on their mission.
   
 Galaxy Maps Team`;
 

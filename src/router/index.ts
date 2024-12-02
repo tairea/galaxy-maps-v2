@@ -25,17 +25,17 @@ const routes = [
     component: Home,
     children: [
       {
-        path: "",
+        path: "database",
         name: "GalaxyMapsHome",
         component: GalaxyMapsHome,
         props: true,
       },
-      // {
-      //   path: "",
-      //   name: "GalaxyList",
-      //   component: GalaxyList,
-      //   props: true,
-      // },
+      {
+        path: "",
+        name: "GalaxyList",
+        component: GalaxyList,
+        props: true,
+      },
       {
         path: "login",
         name: "Login",
