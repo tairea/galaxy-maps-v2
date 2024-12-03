@@ -1,6 +1,6 @@
 <template>
   <v-app class="bg">
-    <NavBar :userType="userType" />
+    <NavBar />
     <router-view></router-view>
     <UserBar />
   </v-app>
@@ -20,9 +20,6 @@ export default {
   },
   computed: {
     ...mapState(useRootStore, ["person"]),
-    userType() {
-      return this.person.accountType;
-    },
   },
 };
 </script>

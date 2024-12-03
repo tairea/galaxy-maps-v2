@@ -234,10 +234,11 @@ export default {
         email: teacher.email,
         studentEmail: this.person.email,
       };
+      console.log("sending email to teacher: ", data);
       const sendRequestForHelp = functions.httpsCallable("sendRequestForHelp");
       try {
         const result = await sendRequestForHelp(data);
-        console.log("Email sent successfully:", result);
+        console.log("Email sent successfully:", data);
       } catch (error) {
         console.error("Error sending email:", error);
         throw error; // Rethrow the error to be caught in the calling function

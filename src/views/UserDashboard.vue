@@ -96,20 +96,23 @@
 
       <div id="right-section">
         <!-- all requests and submissions -->
-        <RequestForHelpTeacherFrame
+        <!-- <RequestForHelpTeacherFrame
           v-if="!loading && cohortCourses"
           :isTeacher="true"
           :courses="cohortCourses"
           :students="teachersStudents"
           class="mt-9"
-        />
-        <SubmissionTeacherFrame
+        /> -->
+        <RequestForHelpTeacherFrame v-if="!loading" :isTeacher="true" class="mt-9" />
+
+        <!-- <SubmissionTeacherFrame
           v-if="!loading && cohortCourses"
           :isTeacher="isTeacher"
           :courses="cohortCourses"
           :students="teachersStudents"
           class="mt-5"
-        />
+        /> -->
+        <SubmissionTeacherFrame v-if="!loading" :isTeacher="isTeacher" class="mt-5" />
       </div>
     </template>
 

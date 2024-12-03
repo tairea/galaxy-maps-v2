@@ -12,7 +12,20 @@
           height="30"
         >
           <v-tab v-for="tab in tabs" :key="tab.id" :to="tab.route" :exact-path="tab.exactPath">
-            <div class="baseAccent--text tab">{{ tab.name }}</div>
+            <div class="baseAccent--text tab">
+              {{ tab.name }}
+              <template v-if="tab.name === 'DASHBOARD'">
+                <span
+                  v-if="unansweredRequestsForHelp.length"
+                  class="notification-badge galaxyAccent"
+                >
+                  {{ unansweredRequestsForHelp.length }}
+                </span>
+                <span v-if="inReviewSubmissionsCount" class="notification-badge cohortAccent">
+                  {{ inReviewSubmissionsCount }}
+                </span>
+              </template>
+            </div>
           </v-tab>
         </v-tabs>
       </div>
@@ -39,7 +52,8 @@
 <script>
 import useRootStore from "@/store/index";
 import { mdiMenu, mdiClose } from "@mdi/js";
-import { mapState } from "pinia";
+import { mapState, storeToRefs } from "pinia";
+import useGalaxyListViewStore from "@/store/galaxyListView";
 
 const TAB_GALAXIES = { id: 1, name: "GALAXIES", route: `/`, exactPath: true };
 const TAB_COHORTS = { id: 2, name: "SQUADS", route: `/squads`, exactPath: false };
@@ -48,7 +62,7 @@ const TAB_ADMIN = { id: 4, name: "ADMIN", route: `/students` };
 
 export default {
   name: "NavBar",
-  props: ["userType"],
+  props: [""],
   data() {
     return {
       mdiMenu,
@@ -61,6 +75,19 @@ export default {
   },
   computed: {
     ...mapState(useRootStore, ["user"]),
+    ...mapState(useGalaxyListViewStore, ["courses"]),
+    unansweredRequestsForHelp() {
+      const store = useRootStore();
+      const unansweredRequests = store.getUnansweredRequestsForHelp;
+      // console.log("unansweredRequests: ", unansweredRequests);
+      return unansweredRequests;
+    },
+    inReviewSubmissionsCount() {
+      const store = useRootStore();
+      const inReviewSubmissions = store.getInReviewSubmissions;
+      // console.log("inReviewSubmissions: ", inReviewSubmissions);
+      return inReviewSubmissions.length;
+    },
   },
   watch: {
     $route(to, from) {
@@ -88,8 +115,23 @@ export default {
         this.tabs = [TAB_GALAXIES];
       }
     },
+    courses: {
+      immediate: true,
+      async handler(newCourses) {
+        if (newCourses && newCourses.length > 0) {
+          const store = useRootStore();
+          // Loop through all courses and fetch their requests and submissions
+          await Promise.all(
+            newCourses.map(async (course) => {
+              await store.getRequestsForHelpByCourseId(course.id);
+              await store.getAllSubmittedWorkByCourseId(course.id);
+            }),
+          );
+        }
+      },
+    },
   },
-  mounted() {
+  async mounted() {
     if (this.user?.data?.admin) {
       this.tabs = [TAB_GALAXIES, TAB_COHORTS, TAB_DASHBOARD, TAB_ADMIN];
     } else if (this.user.loggedIn) {
@@ -194,6 +236,36 @@ export default {
 }
 
 .tab {
-  // font-size: 0.8rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.notification-badge {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  line-height: 1;
+  top: -7px;
+
+  &.galaxyAccent {
+    background-color: var(--v-galaxyAccent-base);
+    color: var(--v-background-base);
+    right: -15px;
+  }
+
+  &.cohortAccent {
+    background-color: var(--v-cohortAccent-base);
+    color: var(--v-background-base);
+    right: -30px;
+  }
 }
 </style>

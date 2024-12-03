@@ -410,6 +410,11 @@ export default {
 
         // wait till unlock checks are completed before closing dialog
         console.log("9) mission updates finished");
+
+        // Close dialog only after all operations complete successfully
+        this.dialog = false;
+        this.response = false;
+        this.responseMsg = "";
       } catch (error) {
         // end of try
         console.error("Error updating submission:", error);
@@ -422,9 +427,6 @@ export default {
         this.markingSubmission = false;
         this.loading = false;
         this.disabled = false;
-        this.dialog = false;
-        this.response = false;
-        this.responseMsg = "";
       }
 
       // TODO: perhaps only unlock once teacher has reviewed and marked complete. SOLUTION: leave as is. can progress to next task, but cant progress to next topic until all work is reviewed.
@@ -644,6 +646,7 @@ export default {
         submission: this.submission.submissionLink,
         outcome: outcome,
         message: this.responseMsg,
+        teacherEmail: this.person.email,
       };
       const sendResponseToSubmission = functions.httpsCallable("sendResponseToSubmission");
       console.log("3a) Email sent to: " + this.requesterPerson.email + " with data: " + data);
@@ -708,20 +711,20 @@ export default {
         });
 
         // TODO: update requests. (to remove answered requests)
+
+        // Close dialog only after all operations complete successfully
+        this.dialog = false;
+        this.response = false;
+        this.responseMsg = "";
       } catch (error) {
         this.setSnackbar({
           show: true,
           text: "Error: " + error,
           color: "pink",
         });
-
         throw error;
       } finally {
-        // close logic
         this.disabled = false;
-        this.dialog = false;
-        this.response = false;
-        this.responseMsg = "";
         this.decliningSubmission = false;
       }
     },

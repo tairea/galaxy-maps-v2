@@ -65,6 +65,7 @@ export default {
   },
   watch: {
     courseSubmissions(newVal, oldVal) {
+      console.log("courseSubmissions changed", newVal);
       this.$emit("submissionsChanged");
     },
   },
@@ -116,8 +117,12 @@ export default {
     submissions() {
       let submissions = [];
 
-      // get all student submissions
-      if (this.allStudentsSubmissions) {
+      // For teacher view without course/student filters, show all submissions
+      if (this.isTeacher && !this.courses && !this.students) {
+        submissions = this.courseSubmissions;
+      }
+      // For specific student/course views
+      else if (this.allStudentsSubmissions) {
         submissions = this.allStudentsSubmissions.filter((submission) =>
           this.students?.some((student) => {
             return student.id
@@ -126,8 +131,7 @@ export default {
           }),
         );
       }
-
-      // get all teacher's students submissions for this course
+      // For filtered course views
       else if (this.courses) {
         submissions = this.courseSubmissions.filter((submission) =>
           this.students?.some((student) => {

@@ -116,13 +116,16 @@ export default {
         ? this.allStudentsRequests
         : this.teachersRequestsForHelp;
 
-      // filter requests to only show students requests (eg. students in a cohort)
+      // console.log("Initial requests:", requests);
+
+      // filter requests to only show students requests
       if (this.students) {
         requests = requests.filter((request) =>
           this.students?.some((student) => {
             return student.id ? student.id === request.personId : student === request.personId;
           }),
         );
+        // console.log("After student filter:", requests);
       }
 
       // ================== Filter requests ==================
@@ -141,18 +144,41 @@ export default {
         // show all requests for students (answered and unanswered)
         filteredRequests = requests;
       }
+      // console.log("After status filter:", filteredRequests);
 
       // ================== Sort requests ==================
-
       filteredRequests.sort((a, b) => {
         return a.requestForHelpStatus == "unanswered" ? -1 : 1;
       });
 
+      if (this.isDashboardView) {
+        // console.log("Returning dashboard view requests:", filteredRequests);
+        return filteredRequests;
+      }
       // ================== Filter requests based on view ==================
-      if (this.isCohortView || this.isDashboardView) return filteredRequests;
-      else if (this.isGalaxyView) {
+      if (this.isCohortView) {
+        // Add debug logs
+        // console.log("Courses passed to component:", this.courses);
+        // console.log("Filtered requests before course filter:", filteredRequests);
+
+        const filtered = filteredRequests.filter((request) => {
+          // console.log("Request course id:", request.contextCourse.id);
+          // console.log(
+          //   "Matching with courses:",
+          //   this.courses?.map((c) => c.id),
+          // );
+          return this.courses?.some((course) => course.id === request.contextCourse.id);
+        });
+
+        // console.log("Requests after course filter:", filtered);
+        return filtered;
+      }
+
+      if (this.isGalaxyView) {
         return filteredRequests.filter((request) => request.contextCourse.id == this.courses[0].id);
-      } else if (this.isSystemView) {
+      }
+
+      if (this.isSystemView) {
         const taskRequests = filteredRequests.filter(
           (request) => request.contextTopic.id == this.currentTopicId,
         );

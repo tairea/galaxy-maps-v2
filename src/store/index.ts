@@ -1,8 +1,6 @@
 import { db } from "@/store/firestoreConfig";
 import { defineStore } from "pinia";
 import { piniafireMutations, firestoreAction } from "@/piniafire/index";
-import firebase from "firebase/compat/app";
-import { collection, query, where } from "firebase/firestore";
 
 const getDefaultState = () => {
   return {
@@ -43,6 +41,8 @@ const getDefaultState = () => {
     topicCompleted: {} as Record<string, any>,
     nextTopicUnlockedFlag: false,
     startMissionLoading: false,
+    unansweredRequests: [] as Record<string, any>[],
+    inReviewSubmissions: [] as Record<string, any>[],
   };
 };
 
@@ -74,6 +74,11 @@ export default defineStore({
     getUnansweredRequestsForHelp: (state) => {
       return state.teachersRequestsForHelp.filter(
         (request) => request.requestForHelpStatus == "unanswered",
+      );
+    },
+    getInReviewSubmissions: (state) => {
+      return state.courseSubmissions.filter(
+        (submission) => submission.taskSubmissionStatus === "inreview",
       );
     },
   },
@@ -269,6 +274,11 @@ export default defineStore({
       }
     },
     async getAllSubmittedWorkByCourseId(courseId: string) {
+      if (!courseId) {
+        console.warn("getAllSubmittedWorkByCourseId called without courseId");
+        return;
+      }
+
       // get all work for review
       const unsubscribe = db
         .collection("courses")
@@ -369,6 +379,11 @@ export default defineStore({
     },
 
     async getRequestsForHelpByCourseId(courseId: string) {
+      if (!courseId) {
+        console.warn("getRequestsForHelpByCourseId called without courseId");
+        return;
+      }
+
       // get all work for review
       const unsubscribe = db
         .collection("courses")
@@ -378,9 +393,7 @@ export default defineStore({
         // .orderBy("requestSubmittedTimestamp")
         .onSnapshot((querySnapshot) => {
           const allRequestsForHelp = [...this.teachersRequestsForHelp];
-          // WTF!!!! Why does for each fix this?
           querySnapshot.docChanges().forEach((change) => {
-            // for (const change of querySnapshot.docChanges()) {
             if (change.type === "added") {
               if (allRequestsForHelp.some((request) => request.id === change.doc.data().id)) return;
               allRequestsForHelp.push({
@@ -458,6 +471,10 @@ export default defineStore({
 
       // will only return one doc
       return submission.docs[0].data();
+    },
+
+    setInReviewSubmissions(submissions: Record<string, any>[]) {
+      this.inReviewSubmissions = submissions;
     },
   },
   persist: true,
