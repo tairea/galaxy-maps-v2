@@ -769,6 +769,7 @@ export default {
         submissionInstructions: submissionInstructions,
         teacher: teacher.firstName + " " + teacher.lastName,
         email: teacher.email,
+        studentEmail: this.person.email,
       };
       const sendTaskSubmission = functions.httpsCallable("sendTaskSubmission");
       return sendTaskSubmission(data);

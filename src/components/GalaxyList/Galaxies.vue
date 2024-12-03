@@ -464,15 +464,19 @@ export default {
     drawCourseProgressionCircle(canvasContext, course, fontSize) {
       const courseBoundary = this.relativeGalaxyBoundaries.find((x) => x.id === course.id);
       const courseActivity = this.coursesActivity.find((x) => x.course.id === course.id);
-      console.log("courseActivity: ", courseActivity);
+
+      // console.log("courseActivity: ", courseActivity);
 
       const progressFraction =
         courseActivity != null
           ? courseActivity.topicCompletedCount / courseActivity.course.topicTotal
           : 0;
-      console.log("progressFraction: ", progressFraction);
+
+      // console.log("progressFraction: ", progressFraction);
+
       const displayPercentage = Math.round(progressFraction * 100);
-      console.log("displayPercentage: ", displayPercentage);
+
+      // console.log("displayPercentage: ", displayPercentage);
 
       canvasContext.textAlign = "left";
       canvasContext.textBaseline = "top";

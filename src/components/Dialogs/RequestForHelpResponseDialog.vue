@@ -60,7 +60,7 @@
                       <img
                         v-if="requesterPerson.image?.url"
                         :src="requesterPerson.image.url"
-                        :alt="requesterPerson.firstName"
+                        :alt="requesterPerson?.firstName || 'User'"
                         style="object-fit: cover"
                       />
                       <v-icon :dark="dark" :light="!dark" v-else>{{ mdiAccount }}</v-icon>
@@ -71,7 +71,9 @@
                     <p class="dialog-description pa-1">
                       <span style="font-size: 0.8rem; font-weight: 800"
                         ><i>{{
-                          requesterPerson.firstName + " " + requesterPerson.lastName
+                          requesterPerson
+                            ? `${requesterPerson.firstName} ${requesterPerson.lastName}`
+                            : "Unknown User"
                         }}</i></span
                       >
                       <i>@ {{ getHumanDate(request.requestSubmittedTimestamp) }}</i>
@@ -318,19 +320,29 @@ export default {
       this.dialog = false;
     },
     async emailResponseToStudent(student, response, request) {
+      if (!student) {
+        console.error("Student data is missing");
+        return;
+      }
+
       const data = {
-        //course: this.currentCourse.title,
-        //topic: this.currentTopic.label,
-        //task: this.currentTask.title, // returning null (changing to use request)
         course: request.contextCourse.title,
         topic: request.contextTopic.label,
         task: request.contextTask.title,
-        student: student.firstName + " " + student.lastName,
+        student:
+          student.firstName && student.lastName
+            ? `${student.firstName} ${student.lastName}`
+            : "Unknown Navigator",
         response: response,
         request: this.request.requestForHelpMessage,
-        teacher: this.person.firstName + " " + this.person.lastName,
+        teacher:
+          this.person.firstName && this.person.lastName
+            ? `${this.person.firstName} ${this.person.lastName}`
+            : "Unknown Captain",
         email: student.email,
+        teacherEmail: this.person.email,
       };
+
       console.log("email data: ", data);
       const sendResponseToHelp = functions.httpsCallable("sendResponseToHelp");
       return sendResponseToHelp(data);

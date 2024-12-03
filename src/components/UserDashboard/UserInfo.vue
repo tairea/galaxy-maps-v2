@@ -36,9 +36,9 @@
         <StudentEditDialog :isDashboardView="true" />
       </div>
       <!-- Cohorts -->
-      <div style="margin-top: 50px">
+      <div style="margin: 50px -20px 0px -20px; margin-top: 50px">
         <p class="student-info-label">cohorts:</p>
-        <div class="d-flex flex-wrap">
+        <div class="d-flex flex-wrap overflow-y-auto" style="padding-right: 10px; height: 350px">
           <Cohort
             v-for="cohort in cohorts"
             :isTeacher="isTeacher(cohort)"

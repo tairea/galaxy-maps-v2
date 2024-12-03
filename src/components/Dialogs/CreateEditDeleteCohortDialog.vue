@@ -259,14 +259,14 @@
       <div v-if="edit && cohortToEdit && cohortToEdit.courseCohort" class="create-dialog">
         <!-- HEADER -->
         <div class="dialog-header">
-          <p class="dialog-title"><strong>Warning!</strong> Delete Cohort?</p>
+          <p class="dialog-title"><strong>Warning!</strong> Delete Squad?</p>
           <div class="d-flex align-start">
             <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
             <p class="dialog-description">
-              This cohort is linked to the
+              This Squad is linked to the
               <span style="color: var(--v-galaxyAccent-base)">{{ cohort.name }}</span>
               Galaxy Map. <br /><br />
-              To delete this cohort, please navigate to the galaxy map and delete the course.
+              To delete this squad, please navigate to the galaxy map and delete it.
               <br /><br />
               If you have any questions or require help please contact
               <a href="mailto:base@galaxymaps.io">base@galaxymaps.io</a>
@@ -290,18 +290,18 @@
       <div v-else class="create-dialog">
         <!-- HEADER -->
         <div class="dialog-header py-10">
-          <p class="dialog-title"><strong>Warning!</strong> Delete Cohort?</p>
+          <p class="dialog-title"><strong>Warning!</strong> Delete Squad?</p>
           <div class="d-flex align-start">
             <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
             <p class="dialog-description">
               Are you sure you want to <strong>DELETE</strong> this
-              <span class="cohort-text">{{ cohort.name }} Cohort</span>?
+              <span class="cohort-text">{{ cohort.name }} Squad</span>?
               <br />
               <br />
               Deleting is permanent!!!
               <br />
               <br />
-              <span class="mission-text">PEOPLE</span> in this <strong>COHORT</strong> will no
+              <span class="mission-text">NAVIGATORS</span> in this <strong>SQUAD</strong> will no
               longer be able to access the assigned <span class="galaxy-text">GALAXY MAPS</span>
             </p>
           </div>

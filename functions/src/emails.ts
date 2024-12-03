@@ -161,10 +161,10 @@ export const sendNewSubmissionEmailHttpsEndpoint = runWith({}).https.onCall((dat
 export async function sendNewSubmissionEmail(author: string, title: string, id: string) {
   const mailOptions: Record<string, string> = {
     from: `${APP_NAME} <noreply@${DOMAIN}>`,
-    to: "ian@tairea.io", // TODO: this should be dynamic
+    to: "base@galaxymaps.io", // TODO: this should be dynamic
   };
 
-  mailOptions.subject = "New Galaxy Submission";
+  mailOptions.subject = "New Galaxy Submission for PUBLIC VIEW";
   mailOptions.text = `Greetings Admin, 
 
 ${author} has submitted a new Galaxy Map called ${title} to be reviewed for PUBLIC / all users to access
@@ -221,7 +221,7 @@ export async function sendCoursePublishedEmail(email: string, name: string, cour
     to: email,
   };
 
-  mailOptions.subject = "Galaxy Published";
+  mailOptions.subject = "Your Galaxy has been Published";
   mailOptions.text = `Greetings Captain ${name}, 
 
 Your galaxy map ${course} has been successfully published and a default Squad has been created so you can monitor the progress of Navigators that explore this Galaxy.
@@ -252,9 +252,10 @@ export async function sendRequestForHelp(
   topic: string,
   studentEmail: string,
 ) {
-  const mailOptions: Record<string, string> = {
-    from: `${student} <${studentEmail}>`,
+  const mailOptions: Record<string, string | undefined> = {
+    from: `${APP_NAME} <noreply@${DOMAIN}>`,
     to: email,
+    replyTo: `${student} <${studentEmail}>`,
   };
 
   /* eslint-disable max-len */
@@ -308,8 +309,8 @@ please login to <a href="https://${DOMAIN}/dashboard" target="_blank"
 
 // ====== RESPONSE TO REQUEST ==================
 export const sendResponseToHelpHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
-  const { email, teacher, course, task, student, response, topic, request } = data;
-  sendResponseToHelp(email, teacher, course, task, student, response, topic, request);
+  const { email, teacher, course, task, student, response, topic, request, teacherEmail } = data;
+  sendResponseToHelp(email, teacher, course, task, student, response, topic, request, teacherEmail);
 });
 
 /**
@@ -324,10 +325,12 @@ export async function sendResponseToHelp(
   response: string,
   topic: string,
   request: string,
+  teacherEmail: string,
 ) {
   const mailOptions: Record<string, string> = {
     from: `${APP_NAME} <noreply@${DOMAIN}>`,
     to: email,
+    replyTo: `${teacher} <${teacherEmail}>`,
   };
 
   /* eslint-disable max-len */
@@ -386,7 +389,17 @@ Galaxy Maps Team`;
 
 // ======SUBMISSION FOR TASK SENT ==================
 export const sendTaskSubmissionHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
-  const { email, teacher, course, task, student, submission, topic, submissionInstructions } = data;
+  const {
+    email,
+    teacher,
+    course,
+    task,
+    student,
+    submission,
+    topic,
+    submissionInstructions,
+    studentEmail,
+  } = data;
   sendTaskSubmission(
     email,
     teacher,
@@ -396,6 +409,7 @@ export const sendTaskSubmissionHttpsEndpoint = runWith({}).https.onCall((data, _
     submission,
     topic,
     submissionInstructions,
+    studentEmail,
   );
 });
 
@@ -411,10 +425,12 @@ export async function sendTaskSubmission(
   submission: string,
   topic: string,
   submissionInstructions: string,
+  studentEmail: string,
 ) {
   const mailOptions: Record<string, string> = {
     from: `${APP_NAME} <noreply@${DOMAIN}>`,
     to: email,
+    replyTo: `${student} <${studentEmail}>`,
   };
 
   /* eslint-disable max-len */
@@ -478,8 +494,19 @@ please login to <a href="https://${DOMAIN}/dashboard" target="_blank"
 
 // ====== RESPONSE TO REQUEST ==================
 export const sendResponseToSubmissionHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
-  const { email, teacher, course, task, firstName, lastName, outcome, topic, message, submission } =
-    data;
+  const {
+    email,
+    teacher,
+    course,
+    task,
+    firstName,
+    lastName,
+    outcome,
+    topic,
+    message,
+    submission,
+    teacherEmail,
+  } = data;
   sendResponseToSubmission(
     email,
     teacher,
@@ -491,6 +518,7 @@ export const sendResponseToSubmissionHttpsEndpoint = runWith({}).https.onCall((d
     submission,
     outcome,
     message,
+    teacherEmail,
   );
 });
 
@@ -508,10 +536,12 @@ export async function sendResponseToSubmission(
   submission: string,
   outcome: string,
   message: string,
+  teacherEmail: string,
 ) {
   const mailOptions: Record<string, string> = {
     from: `${APP_NAME} <noreply@${DOMAIN}>`,
     to: email,
+    replyTo: `${teacher} <${teacherEmail}>`,
   };
 
   /* eslint-disable max-len */
@@ -643,6 +673,7 @@ export async function sendTeacherStudentInActive(
   const mailOptions: Record<string, string> = {
     from: `${APP_NAME} <noreply@${DOMAIN}>`,
     to: email,
+    replyTo: `${student} <${studentEmail}>`,
   };
 
   /* eslint-disable max-len */
@@ -659,7 +690,7 @@ Galaxy Maps Team`;
   </br>
   <p>It has been <strong>${duration}</strong> since Navigator: <strong>${student}</strong> from Squad: <strong>${cohort}</strong> last signed into Galaxy Maps.</p>
   </br> 
-  <p>  We recommend checking in on them via email <a href="mailto:${studentEmail}">${studentEmail}</a> to encourage and support them on their learning journey.</p>
+  <p>  We recommend checking in on them. By replying to this email you can email them directly to encourage and support them on their missions.</p>
   </br> 
   <p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
   /* eslint-enable max-len */
