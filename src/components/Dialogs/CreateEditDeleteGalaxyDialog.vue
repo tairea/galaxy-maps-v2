@@ -608,8 +608,13 @@ export default {
             y: 0,
           });
 
-        // send admins an email notification of a new course
-        await this.sendCourseCreatedEmail(this.person, course, courseId);
+        // send admins an email notification of a new course (email, name, course, courseId)
+        await this.sendCourseCreatedEmail(
+          this.person.email,
+          this.person.firstName + " " + this.person.lastName,
+          course.title,
+          courseId,
+        );
 
         console.log("5");
         // route to newly created galaxy
