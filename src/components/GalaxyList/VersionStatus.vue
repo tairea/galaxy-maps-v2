@@ -20,7 +20,7 @@ export default {
   name: "VersionStatus",
   data() {
     return {
-      versionNumber: "0.2410.02", // [version.yearMonth.patch]
+      versionNumber: "0.2410.03", // [version.yearMonth.patch]
     };
   },
   methods: {},

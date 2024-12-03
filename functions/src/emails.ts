@@ -692,8 +692,12 @@ Galaxy Maps Team`;
   </br> 
   <p>  We recommend checking in on them. By replying to this email you can email them directly to encourage and support them on their missions.</p>
   </br> 
-  <p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
-  /* eslint-enable max-len */
+  <div style="display: flex;align-items:center">
+    <img src="https://${DOMAIN}/favicon.png" alt="Galaxy Maps" style="height: 20px;" /><p style="color:#69a1e2;font-size: 0.7rem !important;
+    font-weight: 500;
+    letter-spacing: 0.1666666667em !important;
+    text-transform: uppercase;
+    font-family:  sans-serif !important;margin-left:2px">ALAXY MAPS</p></div>`;
 
   await mailTransport.sendMail(mailOptions);
   log("student low activity alert sent to teacher", email);
