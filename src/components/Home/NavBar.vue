@@ -79,14 +79,22 @@ export default {
     unansweredRequestsForHelp() {
       const store = useRootStore();
       const unansweredRequests = store.getUnansweredRequestsForHelp;
-      // console.log("unansweredRequests: ", unansweredRequests);
-      return unansweredRequests;
+      // filter unaswered requests that are from courses mapped by me
+      const unansweredRequestsFromMyCourses = unansweredRequests.filter(
+        (request) => request.contextCourse.mappedBy.personId === this.user.data.id,
+      );
+      console.log("unansweredRequestsFromMyCourses: ", unansweredRequestsFromMyCourses);
+      return unansweredRequestsFromMyCourses;
     },
     inReviewSubmissionsCount() {
       const store = useRootStore();
       const inReviewSubmissions = store.getInReviewSubmissions;
-      // console.log("inReviewSubmissions: ", inReviewSubmissions);
-      return inReviewSubmissions.length;
+      // filter inreview submissions that are from courses mapped by me
+      const inReviewSubmissionsFromMyCourses = inReviewSubmissions.filter(
+        (submission) => submission.contextCourse.mappedBy.personId === this.user.data.id,
+      );
+      console.log("inReviewSubmissionsFromMyCourses: ", inReviewSubmissionsFromMyCourses);
+      return inReviewSubmissionsFromMyCourses.length;
     },
   },
   watch: {
