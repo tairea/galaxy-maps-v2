@@ -851,12 +851,12 @@ export default {
       ];
       return options[Math.floor(Math.random() * options.length)];
     },
-    sendCourseCreatedEmail(person, course) {
+    sendCourseCreatedEmail(email, name, courseTitle, courseId) {
       let data = {
-        email: person.email,
-        name: person.firstName + " " + person.lastName,
-        course: course.title,
-        courseId: course.id,
+        email: email,
+        name: name,
+        course: courseTitle,
+        courseId: courseId,
       };
       console.log("sending new map created email");
       const sendCourseCreatedEmail = functions.httpsCallable("sendCourseCreatedEmail");
