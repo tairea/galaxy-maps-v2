@@ -37,6 +37,7 @@ declare module 'vue' {
     EditStudentDialog: typeof import('./src/components/Dialogs/EditStudentDialog.vue')['default']
     EmailSignIn: typeof import('./src/components/Reused/EmailSignIn.vue')['default']
     Galaxies: typeof import('./src/components/GalaxyList/Galaxies.vue')['default']
+    GalaxyCompletedDialog: typeof import('./src/components/GalaxyView/GalaxyCompletedDialog.vue')['default']
     GalaxyInfo: typeof import('./src/components/GalaxyView/GalaxyInfo.vue')['default']
     GalaxyListInfoPanel: typeof import('./src/components/GalaxyList/GalaxyListInfoPanel.vue')['default']
     GalaxyListPanel: typeof import('./src/components/GalaxyList/GalaxyListPanel.vue')['default']

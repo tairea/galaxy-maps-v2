@@ -47,6 +47,7 @@
           :showCourseImage="true"
           class="mt-7 pb-2"
           :yours="true"
+          style="height: 20%"
         />
 
         <SubmissionTeacherFrame
@@ -57,6 +58,7 @@
           :showCourseImage="true"
           class="mt-5 pb-2"
           :yours="true"
+          style="height: 20%"
         />
         <StudentActivityTimeline :student="person" class="mt-5" />
       </div>

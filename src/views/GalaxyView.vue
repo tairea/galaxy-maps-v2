@@ -126,21 +126,7 @@
     />
 
     <!-- Galaxy Completed Popup -->
-    <v-dialog transition="dialog-bottom-transition" max-width="600" :value="galaxyCompletedDialog">
-      <template v-slot:default="dialog">
-        <v-card style="border: 1px solid var(--v-baseAccent-base)">
-          <v-toolbar color="baseAccent overline" light>congratulations</v-toolbar>
-          <v-card-text class="pa-0">
-            <div class="overline text-center pa-12 baseAccent--text">
-              You have completed this Galaxy Map
-            </div>
-          </v-card-text>
-          <v-card-actions class="justify-end">
-            <v-btn text @click="dialog.value = false">Close</v-btn>
-          </v-card-actions>
-        </v-card>
-      </template>
-    </v-dialog>
+    <GalaxyCompletedDialog :value="galaxyCompletedDialog" @close="galaxyCompletedDialog = false" />
 
     <!-- Vue Tour -->
     <v-tour name="myTour" :steps="steps"></v-tour>
@@ -180,6 +166,7 @@ import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
 import { loggedIntoGalaxyXAPIStatement } from "@/lib/veracityLRS";
 import { mdiAlertOutline } from "@mdi/js";
+import GalaxyCompletedDialog from "@/components/GalaxyView/GalaxyCompletedDialog.vue";
 
 export default {
   name: "GalaxyView",
@@ -196,6 +183,7 @@ export default {
     SubmissionTeacherFrame,
     SolarSystemInfoPanel,
     EdgeInfoPanel,
+    GalaxyCompletedDialog,
   },
   props: ["courseId"],
   data() {
