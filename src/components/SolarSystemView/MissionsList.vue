@@ -9,7 +9,12 @@
       </div>
       <div v-else-if="tasks.length > 0" style="width: 100%">
         <v-expansion-panels flat :multiple="false" v-model="indexOfActiveTask">
-          <draggable v-model="sortableMissionList" style="width: 100%" ghost-class="ghost">
+          <draggable
+            v-model="sortableMissionList"
+            style="width: 100%"
+            ghost-class="ghost"
+            :disabled="!teacher"
+          >
             <transition-group name="fade">
               <v-expansion-panel
                 class="mission-expansions"
@@ -45,7 +50,12 @@
     </div>
 
     <div class="createButton mt-8" v-if="teacher">
-      <CreateEditDeleteMissionDialog :course="course" :topic="topic" @taskCreated="taskCreated" :tasks="tasks" />
+      <CreateEditDeleteMissionDialog
+        :course="course"
+        :topic="topic"
+        @taskCreated="taskCreated"
+        :tasks="tasks"
+      />
     </div>
   </div>
 </template>
