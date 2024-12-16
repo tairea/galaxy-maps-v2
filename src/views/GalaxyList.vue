@@ -99,28 +99,6 @@ export default {
     DiscoverGalaxyButton,
     Galaxies,
   },
-  data() {
-    return {
-      mdiPlus,
-      showDialog: false,
-      validSlug: true,
-    };
-  },
-  computed: {
-    ...mapState(useRootStore, ["user", "person"]),
-    ...mapState(useGalaxyListViewStore, [
-      "courses",
-      "courseEdgesMap",
-      "courseNodesMap",
-      "coursesActivity",
-      "isLoadingCourses",
-      "isLoadingActivity",
-      "selectedCourseId",
-    ]),
-    selectedCourse() {
-      return this.courses.find((course) => course.id === this.selectedCourseId);
-    },
-  },
   watch: {
     async user(newUser) {
       await Promise.all([
@@ -168,6 +146,28 @@ export default {
     if (this.user.data != null) {
       this.loadCoursesActivity(this.user.data.id);
     }
+  },
+  data() {
+    return {
+      mdiPlus,
+      showDialog: false,
+      validSlug: true,
+    };
+  },
+  computed: {
+    ...mapState(useRootStore, ["user", "person"]),
+    ...mapState(useGalaxyListViewStore, [
+      "courses",
+      "courseEdgesMap",
+      "courseNodesMap",
+      "coursesActivity",
+      "isLoadingCourses",
+      "isLoadingActivity",
+      "selectedCourseId",
+    ]),
+    selectedCourse() {
+      return this.courses.find((course) => course.id === this.selectedCourseId);
+    },
   },
   methods: {
     ...mapActions(useRootStore, ["setCurrentCourseId"]),
