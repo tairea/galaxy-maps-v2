@@ -1,10 +1,10 @@
 <template>
   <v-container class="student-data-iterator" fluid>
     <v-data-iterator
-      :items="students"
+      :items="sortedStudents"
       :items-per-page="-1"
       :search="search"
-      :sort-by="sortBy"
+      :sort-by="sortBy !== 'lastActive' ? sortBy : null"
       :sort-desc="sortDesc"
       hide-default-footer
     >
@@ -143,7 +143,7 @@ export default {
       mdiSortAlphabeticalVariant,
       search: "",
       sortDesc: false,
-      sortBy: "firstName",
+      sortBy: "lastActive",
       keys: ["firstName", "lastName", "nsnNumber", "studentEmail", "lastActive"],
       timeframe: {
         min: new Date(-8640000000000000),
@@ -188,6 +188,22 @@ export default {
         // need to figure out how we provide teacher admin access to only students in their school (TODO: maybe revisit organinsations ie: teacher as admin of organisation)
       }
     },
+    sortedStudents() {
+      if (this.sortBy !== 'lastActive') {
+        return this.students;
+      }
+
+      return [...this.students].sort((a, b) => {
+        // Always put undefined values at the bottom regardless of sort direction
+        if (a.lastActive === undefined) return 1;
+        if (b.lastActive === undefined) return -1;
+        
+        // For defined values, sort normally
+        return this.sortDesc 
+          ? a.lastActive - b.lastActive  // Descending: oldest first
+          : b.lastActive - a.lastActive; // Ascending: most recent first
+      });
+    }
   },
   methods: {
     // show/hide student details
