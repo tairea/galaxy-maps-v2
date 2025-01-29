@@ -1,0 +1,213 @@
+people (collection)
+  └── personId (document ID)
+         ├── assignedCourses: array
+         ├── completedCourses: array
+         ├── discord: string
+         ├── displayName: string
+         ├── email: string
+         ├── firstName: string
+         ├── id: string
+         ├── image: map
+               ├── name: string
+               ├── url: string
+         ├── inviter: string
+         ├── lastName: string
+         ├── nsn: string
+         ├── parentEmail: string (not used)
+         └── registered: map
+               ├── _nanoseconds: number
+               ├── _seconds: number
+         └── xpPointsTotal: number
+         └── courseId (subcollection)
+               └── topicId (document ID)
+                      ├── color: string
+                      ├── group: string
+                      ├── id: string
+                      ├── label: string
+                      ├── taskTotal: number
+                      ├── topicCreatedTimestamp: timestamp
+                      ├── topicStartedTimestamp: timestamp
+                      ├── topicStatus: string
+                      ├── x: number
+                      ├── y: number
+                      └── tasks (subcollection)
+                            └── taskId (document ID)
+                                   ├── color: string
+                                   ├── description: string
+                                   ├── duration: string
+                                   ├── orderIndex: number
+                                   ├── slides: string (not used)
+                                   ├── submissionInstructions: string
+                                   ├── submissionRequired: boolean
+                                   ├── taskCreatedTimestamp: timestamp
+                                   ├── taskStartedTimestamp: timestamp
+                                   ├── taskStatus: string
+                                   ├── title: string
+                                   └── video: string (not used)
+courses (collection)
+  └── courseId (document ID)
+         ├── contentBy: map
+               ├── name: string
+               └── personId: string
+         ├── description: string
+         ├── id: string
+         ├── image: map
+               ├── name: string
+               ├── url: string
+         ├── mappedBy: map
+               ├── name: string
+               └── personId: string
+         ├── owner: reference (/people/personId)
+         ├── status: string
+         ├── title: string
+         ├── topicTotal: number
+         └── map-edges (subcollection)
+               └── edgeId (document ID)
+                      ├── dashes: boolean
+                      ├── from: string
+                      ├── id: string
+                      └── to: string
+         ├── map-nodes (subcollection)
+               └── nodeId (document ID)
+                      ├── color: string
+                      ├── connectedEdge: string (not used)
+                      ├── id: string
+                      ├── label: string
+                      ├── nodeCreatedTimestamp: timestamp
+                      ├── prerequisites: array
+                      ├── x: number
+                      └── y: number
+         ├── topics (subcollection)
+               └── topicId (document ID)
+                      ├── color: string
+                      ├── connectedEdge: string (not used)
+                      ├── id: string
+                      ├── label: string
+                      ├── prerequisites: array
+                      ├── taskTotal: number
+                      ├── topicCreatedTimestamp: timestamp
+                      ├── x: number
+                      └── y: number
+         ├── requestsForHelp (subcollection)
+               └── requestId (document ID)
+                      ├── contextCourse: map
+                            ├── cohort: string
+                            ├── contentBy: map
+                                   ├── name: string
+                                   └── personId: string
+                            ├── description: string
+                            ├── id: string
+                            ├── image: map
+                                   ├── name: string
+                                   └── url: string
+                            ├── mappedBy: map
+                                   ├── name: string
+                                   └── personId: string
+                            ├── owner: string
+                            ├── public: boolean
+                            ├── status: string
+                            ├── taskTotal: number
+                            ├── title: string
+                            └── topicTotal: number
+                      ├── contextTask: map
+                            ├── description: string
+                            ├── duration: string
+                            ├── id: string
+                            ├── taskCreatedTimestamp: map   
+                                   ├── _nanoseconds: number
+                                   ├── _seconds: number
+                            ├── taskStartedTimestamp: map
+                                   ├── _nanoseconds: number
+                                   ├── _seconds: number
+                            ├── taskStatus: string
+                            └── title: string
+                      ├── contextTopic: map
+                            ├── color: string
+                            ├── connectedEdge: string (not used)
+                            ├── id: string
+                            ├── label: string
+                            ├── prerequisites: array
+                            ├── taskTotal: number
+                            ├── topicCreatedTimestamp: map
+                                   ├── _nanoseconds: number
+                                   ├── _seconds: number
+                            ├── x: number
+                            └── y: number
+                      ├── id: string
+                      ├── personId: string
+                      ├── requestForHelpMessage: string
+                      ├── requestForHelpStatus: string
+                      ├── requestSubmittedTimestamp: timestamp
+                      ├── responderPersonId: string
+                      ├── responseMessage: string
+                      └── responseSubmittedTimestamp: timestamp
+         ├── submissionsForReview (subcollection)
+               └── submissionId (document ID)
+                      ├── contextCourse: map
+                            ├── cohort: string
+                            ├── contentBy: map
+                                   ├── name: string
+                                   └── personId: string
+                            ├── description: string
+                            ├── id: string
+                            ├── image: map
+                                   ├── name: string
+                                   └── url: string
+                            ├── mappedBy: map
+                                   ├── name: string
+                                   └── personId: string
+                            ├── owner: string
+                            ├── public: boolean
+                            ├── status: string
+                            ├── taskTotal: number
+                            ├── title: string
+                            └── topicTotal: number
+                      ├── contextTask: map
+                            ├── description: string
+                            ├── duration: string
+                            ├── id: string
+                            ├── taskCreatedTimestamp: map   
+                                   ├── _nanoseconds: number
+                                   ├── _seconds: number
+                            ├── taskStartedTimestamp: map
+                                   ├── _nanoseconds: number
+                                   ├── _seconds: number
+                            ├── taskStatus: string
+                            └── title: string
+                      ├── contextTopic: map
+                            ├── color: string
+                            ├── connectedEdge: string (not used)
+                            ├── id: string
+                            ├── label: string
+                            ├── prerequisites: array
+                            ├── taskTotal: number
+                            ├── topicCreatedTimestamp: map
+                                   ├── _nanoseconds: number
+                                   ├── _seconds: number
+                            ├── x: number
+                            └── y: number
+                      ├── responseMessage: string
+                      ├── responseSubmittedTimestamp: timestamp
+                      ├── studentId: string
+                      ├── submissionLink: string
+                      ├── taskSubmissionStatus: string
+                      ├── taskSubmittedForReviewTimestamp: timestamp
+                      └── teacherId: string
+cohorts (collection)
+  └── cohortId (document ID)
+         ├── courseCohort: boolean
+         ├── courses: array
+         ├── description: string
+         ├── image: map
+               ├── name: string
+               └── url: string
+         ├── name: string
+         ├── organisation: string
+         ├── students: array
+         └── teachers: array
+status (collection)
+  └── personId (document ID)
+         ├── last_changed: timestamp
+         └── state: string
+
+

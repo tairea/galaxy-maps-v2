@@ -1,0 +1,57 @@
+new user account
+new course
+new cohort
+new topic
+new task
+
+student online
+student offline
+student started task
+student marked task as completed
+student started topic
+student completed topic
+
+new submission
+submission declined
+resubmission
+submission accepted
+submission marked as completed
+
+new request for help
+response to request for help
+
+
+
+
+
+users (index)
+  └── personId (namespace)
+         ├── assignedCourses: array
+         ├── completedCourses: array
+         ├── discord: string
+         ├── displayName: string
+         ├── email: string
+         ├── firstName: string
+         ├── id: string
+         ├── image: map
+courses (index)
+  └── courseId (namespace)
+         ├── cohort: string
+         ├── description: string
+         ├── id: string
+         ├── image: map
+         ├── name: string
+         ├── topicTotal: number
+         └── topics (subcollection)
+               └── topicId (document ID)
+                      ├── color: string
+                      ├── group: string
+                      ├── id: string
+                      ├── label: string
+                      ├── taskTotal: number
+                      ├── topicCreatedTimestamp: timestamp
+                      ├── topicStartedTimestamp: timestamp
+                      ├── topicStatus: string
+                      ├── x: number
+                      ├── y: number
+                      └── tasks (subcollection)
