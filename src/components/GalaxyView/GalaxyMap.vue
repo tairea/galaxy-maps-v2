@@ -146,6 +146,8 @@ export default {
           hover: true,
           hoverConnectedEdges: false,
           dragNodes: false,
+          multiselect: true
+
         },
       },
     },
@@ -164,6 +166,8 @@ export default {
     previewedNode: null,
     numberOfTasksForThisTopic: 0,
     tasks: [],
+    drag: false,
+    DOMRect: {},
   }),
   watch: {
     darkMode(dark) {
@@ -311,6 +315,7 @@ export default {
   beforeDestroy() {
     this.stopNodeAnimation();
     this.$refs.network?.destroy();
+    this.disableDragMode(); // Clean up event listeners
   },
   methods: {
     ...mapActions(useRootStore, [
@@ -414,7 +419,6 @@ export default {
       this.addingEdge = true;
     },
     dragNodeMode() {
-      // TODO:
       this.draggingNodes = true;
       // stop animations
       this.stopNodeAnimation();
@@ -423,12 +427,34 @@ export default {
       this.$refs.network.redraw();
       // enable node dragging
       this.network.options.interaction.dragNodes = true;
-      //
+      // enable multiselect
+      this.network.options.interaction.multiselect = true;
+      // Disable default right-click dropdown menu
+      this.$el.oncontextmenu = () => false;
+      // Add both mouse and touch event listeners
+      document.addEventListener("mousedown", this.rectangleMousedown);
+      document.addEventListener("mousemove", this.rectangleMousedrag);
+      document.addEventListener("mouseup", this.rectangleMouseup);
+      // Add touch events
+      document.addEventListener("touchstart", this.rectangleTouchstart);
+      document.addEventListener("touchmove", this.rectangleTouchmove);
+      document.addEventListener("touchend", this.rectangleTouchend);
     },
     disableDragMode() {
       this.draggingNodes = false;
       this.network.options.interaction.dragNodes = false;
       this.planets = [];
+      // Remove both mouse and touch event listeners
+      document.removeEventListener("mousedown", this.rectangleMousedown);
+      document.removeEventListener("mousemove", this.rectangleMousedrag);
+      document.removeEventListener("mouseup", this.rectangleMouseup);
+      // Remove touch events
+      document.removeEventListener("touchstart", this.rectangleTouchstart);
+      document.removeEventListener("touchmove", this.rectangleTouchmove);
+      document.removeEventListener("touchend", this.rectangleTouchend);
+      // Re-enable right-click menu
+      this.$el.oncontextmenu = null;
+      this.drag = false;
     },
     addNode(data) {
       // if (!this.active) return;
@@ -558,22 +584,38 @@ export default {
       if (data.nodes.length < 1) {
         return;
       }
-      const nodeId = data.nodes[0];
-      const newPosition = this.$refs.network.getPositions(data.nodes[0]);
+
+      // Get all selected nodes
+      const selectedNodes = this.$refs.network.network.getSelectedNodes();
+      if (!selectedNodes.length) return;
+
+      // Get new positions for all selected nodes
+      const newPositions = this.$refs.network.network.getPositions(selectedNodes);
       const nodes = this.$refs.network.nodes;
-      const node = nodes.find((node) => node.id === nodeId);
-      // check if coords changed
-      if (newPosition[nodeId].x !== node.x || newPosition[nodeId].y !== node.y) {
-        // flag save new positions button
+
+      // Check if any node positions changed
+      let positionsChanged = false;
+
+      // Update positions for all selected nodes
+      selectedNodes.forEach(nodeId => {
+        const node = nodes.find(n => n.id === nodeId);
+        // check if coords changed
+        if (newPositions[nodeId].x !== node.x || newPositions[nodeId].y !== node.y) {
+          positionsChanged = true;
+          // commit new positions to newNodePositions
+          const newPositionObj = {
+            id: nodeId,
+            x: newPositions[nodeId].x,
+            y: newPositions[nodeId].y,
+          };
+          this.newNodePositions[nodeId] = newPositionObj;
+        }
+      });
+
+      // Only emit if positions actually changed
+      if (positionsChanged) {
         console.log("EMITTING: node positions changed");
         this.$emit("nodePositionsChanged");
-        //   // commit new positions to newNodePositions
-        const newPositionObj = {
-          id: nodeId,
-          x: newPosition[nodeId].x,
-          y: newPosition[nodeId].y,
-        };
-        this.newNodePositions[nodeId] = newPositionObj;
       }
     },
     async saveNodePositions() {
@@ -843,6 +885,19 @@ export default {
         );
         ctx.fill();
       }
+
+      // Add rectangle selection drawing
+      if (this.drag) {
+        const [startX, startY] = this.canvasify(this.DOMRect.startX, this.DOMRect.startY);
+        const [endX, endY] = this.canvasify(this.DOMRect.endX, this.DOMRect.endY);
+
+        ctx.setLineDash([5]);
+        ctx.strokeStyle = 'rgba(78, 146, 237, 0.75)';
+        ctx.strokeRect(startX, startY, endX - startX, endY - startY);
+        ctx.setLineDash([]);
+        ctx.fillStyle = 'rgba(151, 194, 252, 0.45)';
+        ctx.fillRect(startX, startY, endX - startX, endY - startY);
+      }
     },
     updateFrameTimer() {
       if (this.$refs.network) {
@@ -855,6 +910,123 @@ export default {
     },
     stopNodeAnimation() {
       clearInterval(this.intervalid1);
+    },
+    // Rectangle selection methods
+    canvasify(DOMx, DOMy) {
+      // Fix: Access network instance directly from $refs.network
+      const network = this.$refs.network.network;
+      const pos = network.DOMtoCanvas({ x: DOMx, y: DOMy });
+      return [pos.x, pos.y];
+    },
+
+    correctRange(start, end) {
+      return start < end ? [start, end] : [end, start];
+    },
+
+    selectFromDOMRect() {
+      const [sX, sY] = this.canvasify(this.DOMRect.startX, this.DOMRect.startY);
+      const [eX, eY] = this.canvasify(this.DOMRect.endX, this.DOMRect.endY);
+      const [startX, endX] = this.correctRange(sX, eX);
+      const [startY, endY] = this.correctRange(sY, eY);
+
+      // Fix: Access network instance directly from $refs.network
+      const network = this.$refs.network.network;
+      const selectedNodes = this.$refs.network.nodes.reduce((selected, node) => {
+        const pos = network.getPositions(node.id)[node.id];
+        return (startX <= pos.x && pos.x <= endX && startY <= pos.y && pos.y <= endY) 
+          ? selected.concat(node.id) 
+          : selected;
+      }, []);
+
+      network.selectNodes(selectedNodes);
+    },
+
+    rectangleMousedown(event) {
+      if (!this.draggingNodes) return;
+      
+      // Accept both right click and ctrl+click for selection
+      if (event.which === 3 || (event.which === 1 && event.ctrlKey)) {
+        event.preventDefault(); // Prevent default context menu
+        const container = this.$el;
+        Object.assign(this.DOMRect, {
+          startX: event.pageX - container.offsetLeft,
+          startY: event.pageY - container.offsetTop,
+          endX: event.pageX - container.offsetLeft,
+          endY: event.pageY - container.offsetTop
+        });
+        this.drag = true;
+      }
+    },
+
+    rectangleMousedrag(event) {
+      if (!this.draggingNodes) return;
+
+      if (event.which === 0 && this.drag) {
+        this.drag = false;
+        this.$refs.network.redraw();
+      } else if (this.drag) {
+        const container = this.$el;
+        Object.assign(this.DOMRect, {
+          endX: event.pageX - container.offsetLeft,
+          endY: event.pageY - container.offsetTop
+        });
+        this.$refs.network.redraw();
+      }
+    },
+
+    rectangleMouseup(event) {
+      if (!this.draggingNodes) return;
+
+      // Accept both right click and ctrl+click for selection
+      if (event.which === 3 || (event.which === 1 && event.ctrlKey)) {
+        this.drag = false;
+        this.$refs.network.redraw();
+        this.selectFromDOMRect();
+      }
+    },
+
+    // New touch event handlers
+    rectangleTouchstart(event) {
+      if (!this.draggingNodes) return;
+      
+      // Only respond to two-finger touch
+      if (event.touches.length === 2) {
+        event.preventDefault(); // Prevent scrolling
+        const container = this.$el;
+        const touch = event.touches[0]; // Use first touch point
+        Object.assign(this.DOMRect, {
+          startX: touch.pageX - container.offsetLeft,
+          startY: touch.pageY - container.offsetTop,
+          endX: touch.pageX - container.offsetLeft,
+          endY: touch.pageY - container.offsetTop
+        });
+        this.drag = true;
+      }
+    },
+
+    rectangleTouchmove(event) {
+      if (!this.draggingNodes || !this.drag) return;
+      
+      if (event.touches.length === 2) {
+        event.preventDefault();
+        const container = this.$el;
+        const touch = event.touches[0];
+        Object.assign(this.DOMRect, {
+          endX: touch.pageX - container.offsetLeft,
+          endY: touch.pageY - container.offsetTop
+        });
+        this.$refs.network.redraw();
+      }
+    },
+
+    rectangleTouchend(event) {
+      if (!this.draggingNodes) return;
+      
+      if (this.drag) {
+        this.drag = false;
+        this.$refs.network.redraw();
+        this.selectFromDOMRect();
+      }
     },
   },
 };
