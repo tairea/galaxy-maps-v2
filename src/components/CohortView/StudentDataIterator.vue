@@ -2,10 +2,10 @@
   <v-container fluid>
     <v-data-iterator
       v-if="cohort"
-      :items="students"
+      :items="sortedStudents"
       :items-per-page="-1"
       :search="search"
-      :sort-by="sortBy"
+      :sort-by="sortBy !== 'lastActive' ? sortBy : null"
       :sort-desc="sortDesc"
       hide-default-footer
     >
@@ -216,6 +216,22 @@ export default {
     isTeacher() {
       return this.cohort.teachers?.includes(this.person.id);
     },
+    sortedStudents() {
+      if (this.sortBy !== 'lastActive') {
+        return this.students;
+      }
+
+      return [...this.students].sort((a, b) => {
+        // Always put undefined values at the bottom regardless of sort direction
+        if (a.lastActive === undefined) return 1;
+        if (b.lastActive === undefined) return -1;
+        
+        // For defined values, sort normally
+        return this.sortDesc 
+          ? a.lastActive - b.lastActive  // Descending: oldest first
+          : b.lastActive - a.lastActive; // Ascending: most recent first
+      });
+    }
   },
   methods: {
     // show/hide student details
