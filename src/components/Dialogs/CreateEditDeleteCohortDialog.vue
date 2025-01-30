@@ -256,7 +256,7 @@
 
     <!-- CONFIRM DELETE DIALOG -->
     <v-dialog v-model="dialogConfirm" width="40%" light>
-      <div v-if="edit && cohortToEdit && cohortToEdit.courseCohort" class="create-dialog">
+      <div v-if="cohortToEdit.courseCohort && courseExists" class="create-dialog">
         <!-- HEADER -->
         <div class="dialog-header">
           <p class="dialog-title"><strong>Warning!</strong> Delete Squad?</p>
@@ -390,6 +390,7 @@ export default {
     percentage: 0,
     search: "",
     teachers: [],
+    courseExists: null,
   }),
   mounted() {
     if (this.user.data.admin) this.bindAllPeople();
@@ -401,6 +402,9 @@ export default {
 
     // Fetch teacher details or add default teacher
     this.initializeTeachers();
+
+    // Initialize courseExists
+    this.initializeCourseExists();
   },
   watch: {
     dialog(newVal) {
@@ -644,6 +648,24 @@ export default {
         //this.cohort.teachers = [this.person.id];
       }
     },
+    async initializeCourseExists() {
+      this.courseExists = await this.cohortCourseStillExists();
+    },
+    async cohortCourseStillExists() {
+    // Check if course exists when delete dialog opens
+      if (this.cohortToEdit?.courses?.[0]) {
+        try {
+          const docRef = db.collection("courses").doc(this.cohortToEdit.courses[0]);
+          const doc = await docRef.get();
+          const courseExists = doc.exists;
+          console.log("course exists: ", courseExists);
+          return courseExists;
+        } catch (error) {
+          console.error("Error checking if course exists:", error);
+        }
+      } 
+      return false;
+    }
   },
 };
 </script>
