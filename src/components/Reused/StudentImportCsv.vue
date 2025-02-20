@@ -123,6 +123,10 @@ export default {
   },
   methods: {
     close() {
+      // Emit close event to parent
+      this.$emit('close');
+      
+      // Reset local state
       this.dialog = false;
       this.channel_name = "";
       this.channel_fields = [];
@@ -179,38 +183,87 @@ export default {
       );
 
       console.log("All students written to database");
-      // this.$refs.csvFile.value = null;
+      this.$refs.csvFile.value = null;
       this.loading = false;
       this.showTable = false;
       this.disabled = true;
-      this.dialog = false;
+      
+      // Emit close event after saving
+      this.$emit('close');
     },
     sortBy(key) {
       var vm = this;
       vm.sortKey = key;
       vm.sortOrders[key] = vm.sortOrders[key] * -1;
     },
+    loadCSV(e) {
+      this.resetButton();
+      this.showTable = true;
+      console.log("File input event:", e);
+      console.log("File type:", e?.type);
+      console.log("File size:", e?.size, "bytes");
+      
+      var vm = this;
+      
+      if (!e) {
+        console.warn("No file selected");
+        return;
+      }
+
+      if (window.FileReader) {
+        var reader = new FileReader();
+        console.log("Created FileReader, attempting to read file...");
+        
+        reader.readAsText(e);
+        
+        reader.onload = function (event) {
+          console.log("File successfully loaded");
+          var csv = event.target.result;
+          console.log("CSV raw content:", csv.substring(0, 200) + "..."); // Show first 200 chars
+          vm.parse_csv = vm.csvJSON(csv);
+          console.log("Final parsed CSV data:", vm.parse_csv);
+        };
+        
+        reader.onerror = function (evt) {
+          console.error("FileReader error:", evt.target.error);
+          if (evt.target.error.name == "NotReadableError") {
+            alert("Cannot read file!");
+          }
+        };
+      } else {
+        console.error("FileReader not supported in this browser");
+        alert("FileReader are not supported in this browser.");
+      }
+    },
     csvJSON(csv) {
       var vm = this;
+      console.log("Starting CSV to JSON conversion");
+      
+      // First clean up any \r\n or \n line endings to just \n
+      csv = csv.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+      
       var lines = csv.split("\n");
-      var result = [];
-      var headers = lines[0].split(",");
-      console.log("headers", headers);
-      vm.parse_header = lines[0].split(",");
-      // camelize headers
-      vm.parse_header = vm.parse_header.map((header) => {
+      console.log("Number of lines in CSV:", lines.length);
+      
+      var headers = lines[0].split(",").map(h => h.trim());
+      console.log("Raw headers:", headers);
+      
+      vm.parse_header = headers.map((header) => {
         return vm.camelize(header);
       });
+      console.log("Camelized headers:", vm.parse_header);
+
       lines[0].split(",").forEach(function (key) {
         vm.sortOrders[key] = 1;
       });
 
+      var result = [];
       lines.map((line, indexLine) => {
         if (indexLine < 1) return; // Jump header line
 
         var obj = {};
-        var currentline = line.split(",");
-        // currentline[currentline.length - 1] = currentline[currentline.length - 1].trim()
+        var currentline = line.split(",").map(val => val.trim()); // Clean each value
+        console.log(`Processing line ${indexLine}:`, currentline);
 
         headers.map((header, indexHeader) => {
           // camelize headers
@@ -220,34 +273,12 @@ export default {
         result.push(obj);
       });
 
-      var students = result.filter((student) => student.firstName);
+      console.log("result", result);
 
-      return students; // JavaScript object
-    },
-    loadCSV(e) {
-      this.resetButton();
-      this.showTable = true;
-      console.log("loaded", e);
-      var vm = this;
-      if (window.FileReader) {
-        var reader = new FileReader();
-        reader.readAsText(e);
-        // Handle errors load
-        reader.onload = function (event) {
-          event.target.result;
-          var csv = event.target.result;
-          vm.parse_csv = vm.csvJSON(csv);
-          console.log("csv = ", vm.parse_csv);
-        };
-        reader.onerror = function (evt) {
-          if (evt.target.error.name == "NotReadableError") {
-            alert("Cannot read file !");
-          }
-        };
-      } else {
-        alert("FileReader are not supported in this browser.");
-      }
-      console.log("this.parse_csv", this.parse_csv);
+      var students = result.filter((student) => student.studentEmail);
+      console.log("Final number of valid students:", students.length);
+
+      return students;
     },
     camelize(str) {
       return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {
@@ -257,7 +288,7 @@ export default {
     },
     resetButton() {
       this.disabled = false;
-      this.buttonLabel = "Add Students";
+      this.buttonLabel = "Add Navigators";
     },
     downloadCsv() {
       var csv = this.csvColumns.join(",") + "\n";

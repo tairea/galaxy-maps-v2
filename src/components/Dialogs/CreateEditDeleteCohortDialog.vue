@@ -256,7 +256,7 @@
 
     <!-- CONFIRM DELETE DIALOG -->
     <v-dialog v-model="dialogConfirm" width="40%" light>
-      <div v-if="cohortToEdit.courseCohort && courseExists" class="create-dialog">
+      <div v-if="cohortToEdit?.courseCohort && courseExists" class="create-dialog">
         <!-- HEADER -->
         <div class="dialog-header">
           <p class="dialog-title"><strong>Warning!</strong> Delete Squad?</p>
@@ -472,6 +472,7 @@ export default {
       }
     },
     saveCohort(cohort) {
+      console.log("saving cohort: ", cohort);
       this.loading = true;
       if (cohort.teacher) delete cohort.teacher;
       // Add a new document in collection "cohorts"
@@ -623,7 +624,7 @@ export default {
       // this.teachers.push(teacher);
     },
     async initializeTeachers() {
-      if (this.cohortToEdit.teachers && this.cohortToEdit.teachers.length > 0) {
+      if (this.cohortToEdit?.teachers && this.cohortToEdit?.teachers.length > 0) {
         console.log(
           "cohort has teachers, fetching teacher details from db to populate squad captain dropdown",
         );
