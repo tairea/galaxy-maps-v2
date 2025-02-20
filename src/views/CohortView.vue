@@ -110,10 +110,16 @@ export default {
     };
   },
   async mounted() {
-    await this.loadCohort(this.cohortId);
+    try {
+      await this.loadCohort(this.cohortId);
+      console.log("Loaded cohort:", this.cohort);
 
-    // ==== get cohort course data from LRS
-    this.cohortsCoursesData = await fetchCohortCoursesActivityByCohortId(this.cohort.id);
+      // ==== get cohort course data from LRS
+      this.cohortsCoursesData = await fetchCohortCoursesActivityByCohortId(this.cohort.id);
+      console.log("Cohort courses data:", this.cohortsCoursesData);
+    } catch (error) {
+      console.error("Error loading cohort data:", error);
+    }
   },
   computed: {
     ...mapState(useRootStore, ["currentCohortId", "person", "userStatus"]),

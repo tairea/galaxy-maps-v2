@@ -227,9 +227,21 @@ export default {
         } else {
           try {
             await updatePerson(profile.id, profile); // updates /people/:id profile
-            await addPersonToCohort(profile.id, this.cohort.id); // adds student to /cohorts/:id/students
-
-            console.log("existing person added to cohort");
+            
+            // Add more detailed logging
+            console.log("Adding exisiting person to cohort:", {
+              personId: profile.id,
+              cohortId: this.cohort.id
+            });
+            
+            // Make sure cohort.id exists
+            if (!this.cohort?.id) {
+              throw new Error('Cohort ID is missing');
+            }
+            
+            // Add to cohort and wait for completion
+            const result = await addPersonToCohort(profile.id, this.cohort.id);
+            console.log("Add to cohort result:", result);
 
             if (this.cohort.courses.length) {
               await this.assignStudentToCourses(profile); // adds course to /people/:id/assignedCourses
@@ -241,13 +253,18 @@ export default {
               color: "baseAccent",
             });
 
-            this.sendNewCohortEmail(profile);
+            await this.sendNewCohortEmail(profile);
 
             this.addingAccount = false;
             this.close();
           } catch (error) {
             this.addingAccount = false;
-            console.error("something went wrong adding existing person: ", error);
+            console.error("Error adding existingperson to cohort:", error);
+            this.setSnackbar({
+              show: true,
+              text: "Error adding Navigator to Squad: " + error.message,
+              color: "error",
+            });
           }
         }
       } else {

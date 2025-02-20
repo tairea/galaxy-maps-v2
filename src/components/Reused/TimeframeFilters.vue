@@ -90,7 +90,44 @@
           Custom
         </v-chip>
       </template>
-      <v-date-picker v-model="datePickerRange" no-title range @input="rangeChosen"></v-date-picker>
+      <v-date-picker 
+        v-model="datePickerRange" 
+        no-title 
+        range 
+        @input="rangeChosen"
+      >
+        <v-spacer></v-spacer>
+        <div v-if="datePickerRange.length === 2" class="pa-2">
+          <div 
+            v-if="isSameDay"
+            class="d-flex mb-2"
+          >
+            <v-text-field
+              v-model="timeRange[0]"
+              label="Start time"
+              type="time"
+              class="mr-2"
+              dense
+              outlined
+            ></v-text-field>
+            <v-text-field
+              v-model="timeRange[1]"
+              label="End time"
+              type="time"
+              dense
+              outlined
+            ></v-text-field>
+          </div>
+          <v-btn
+            color="primary"
+            text
+            block
+            @click="rangeWithTimeChosen"
+          >
+            Apply {{ isSameDay ? 'with time' : 'range' }}
+          </v-btn>
+        </div>
+      </v-date-picker>
     </v-menu>
     <v-chip
       v-if="!noArrows"
@@ -135,6 +172,7 @@ export default {
         new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().substr(0, 10),
         new Date().toISOString().substr(0, 10),
       ],
+      timeRange: ['00:00', '23:59'],
     };
   },
 
@@ -158,6 +196,11 @@ export default {
     },
     computedDateFormatted() {
       return this.formatDate(this.datePickerRange);
+    },
+    isSameDay() {
+      if (this.datePickerRange.length !== 2) return false;
+      const [start, end] = this.datePickerRange;
+      return start === end;
     },
   },
   methods: {
@@ -235,17 +278,53 @@ export default {
       this.chipAllTimeActive = false;
       this.chipCustomActive = true;
     },
-    rangeChosen(range) {
-      console.log("rage chosen", range);
+    rangeWithTimeChosen() {
       if (this.datePickerRange.length === 2) {
-        this.timeframe = {
-          min: new Date(range[0]),
-          max: new Date(range[1]),
-          unit: "day",
-          type: "month",
-        };
-        this.$emit("timeframe", this.timeframe);
+        const [startDate, endDate] = this.datePickerRange;
+        
+        if (this.isSameDay) {
+          // If same day, use the time range
+          const [startTime, endTime] = this.timeRange;
+          const [startHour, startMinute] = startTime.split(':');
+          const [endHour, endMinute] = endTime.split(':');
+          
+          // Create date with local timezone
+          const startDateTime = new Date(startDate + 'T00:00:00');
+          startDateTime.setHours(parseInt(startHour), parseInt(startMinute));
+          
+          const endDateTime = new Date(endDate + 'T00:00:00');
+          endDateTime.setHours(parseInt(endHour), parseInt(endMinute));
+          
+          this.timeframe = {
+            min: startDateTime,
+            max: endDateTime,
+            unit: 'hour',
+            type: 'custom',
+          };
+        } else {
+          // If different days, use start of first day to end of last day
+          const startDateTime = new Date(startDate + 'T00:00:00');
+          startDateTime.setHours(0, 0, 0);
+          
+          const endDateTime = new Date(endDate + 'T23:59:59');
+          
+          this.timeframe = {
+            min: startDateTime,
+            max: endDateTime,
+            unit: 'day',
+            type: 'custom',
+          };
+        }
+        
+        this.$emit('timeframe', this.timeframe);
         this.menu = false;
+      }
+    },
+    rangeChosen(range) {
+      console.log("range chosen", range);
+      if (this.datePickerRange.length === 2) {
+        // Don't close menu - wait for time selection
+        // this.menu = false;
       }
     },
     getStartDay() {

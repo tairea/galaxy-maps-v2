@@ -62,6 +62,8 @@ export const getCohortCoursesActivityByCohortIdHttpsEndpoint = runWith({
 
   const activityData = await getCohortCoursesDataXAPIQuery(cohortId);
 
+  console.log("Cohort courses activity data:", activityData);
+
   return { activityData };
 });
 

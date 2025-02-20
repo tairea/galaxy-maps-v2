@@ -596,6 +596,8 @@ export const getCohortCoursesDataXAPIQuery = async (cohortId: string) => {
     ),
   );
 
+  console.log("Course docs found:", courseDocs.length);
+
   const courses = courseDocs
     .filter((courseDoc) => courseDoc.exists)
     .map((courseDoc) => {
