@@ -46,49 +46,54 @@ export default {
   methods: {
     ...mapActions(useRootStore, ["setCurrentTaskId", "setStartMissionLoading"]),
     async startMission() {
-      this.setStartMissionLoading(true);
+      try {
+        this.setStartMissionLoading(true);
 
-      // set as current/active task
-      this.setCurrentTaskId(this.task.id);
+        // set as current/active task
+        this.setCurrentTaskId(this.task.id);
 
-      const topic = db
-        .collection("people")
-        .doc(this.person.id)
-        .collection(this.course.id)
-        .doc(this.topic.id);
+        const topic = db
+          .collection("people")
+          .doc(this.person.id)
+          .collection(this.course.id)
+          .doc(this.topic.id);
 
-      // update taskStatus to active
-      await topic.collection("tasks").doc(this.task.id).update({
-        taskStatus: "active",
-        taskStartedTimestamp: new Date(),
-      });
-
-      if (!this.topicActive) {
-        await topic.update({
-          topicStatus: "active",
-          topicStartedTimeStamp: new Date(),
+        // update taskStatus to active
+        await topic.collection("tasks").doc(this.task.id).update({
+          taskStatus: "active",
+          taskStartedTimestamp: new Date(),
         });
-      }
 
-      console.log("Topic status successfully written as Active!");
-      if (!this.topicActive) {
-        await startTopicXAPIStatement(this.person, {
+        if (!this.topicActive) {
+          await topic.update({
+            topicStatus: "active",
+            topicStartedTimeStamp: new Date(),
+          });
+        }
+
+        console.log("Topic status successfully written as Active!");
+        if (!this.topicActive) {
+          await startTopicXAPIStatement(this.person, {
+            galaxy: this.course,
+            system: this.topic,
+          });
+        }
+
+        console.log("Task status successfully written as Active!");
+        await startTaskXAPIStatement(this.person, this.task.id, {
           galaxy: this.course,
           system: this.topic,
+          mission: this.task,
         });
+
+        this.$emit("missionStarted");
+      } catch (error) {
+        console.error("Error starting mission:", error);
+      } finally {
+        this.loading = false;
+        this.setStartMissionLoading(false);
+        this.dialog = false;
       }
-
-      console.log("Task status successfully written as Active!");
-      await startTaskXAPIStatement(this.person, this.task.id, {
-        galaxy: this.course,
-        system: this.topic,
-        mission: this.task,
-      });
-
-      this.$emit("missionStarted"); // this emits all the way up to SolarSystemView.vue to refreshTopic() & refreshPersonTopicsAndTasks(person.id)
-
-      this.loading = false;
-      this.dialog = false;
     },
     cancel() {
       this.dialog = false;
