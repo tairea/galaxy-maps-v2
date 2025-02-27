@@ -50,6 +50,7 @@
           @toggleDragNodeMode="toggleDragNodeMode"
           @addNode="showAddDialog"
           @saveNodePositions="saveNodePositions"
+          @toggleMarkdownMode="toggleMarkdownMode"
         />
 
         <!-- ===== Galaxy Map ===== -->
@@ -128,6 +129,9 @@
     <!-- Galaxy Completed Popup -->
     <GalaxyCompletedDialog :value="galaxyCompletedDialog" @close="galaxyCompletedDialog = false" />
 
+    <!-- MARKDOWN EDITOR DIALOG -->
+    <MarkdownEditorDialog :value="markdownDialog" :courseId="courseId" @close="markdownDialog = false" />
+
     <!-- Vue Tour -->
     <v-tour name="myTour" :steps="steps"></v-tour>
   </div>
@@ -150,6 +154,8 @@ import EdgeInfoPanel from "@/components/GalaxyView/EdgeInfoPanel.vue";
 
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
+
+import MarkdownEditorDialog from "@/components/Dialogs/MarkdownEditorDialog.vue";
 
 import confetti from "canvas-confetti";
 import {
@@ -184,6 +190,7 @@ export default {
     SolarSystemInfoPanel,
     EdgeInfoPanel,
     GalaxyCompletedDialog,
+    MarkdownEditorDialog,
   },
   props: ["courseId"],
   data() {
@@ -233,6 +240,7 @@ export default {
       xpPointsForThisGalaxy: 2000,
       galaxyMapForceUpdateKey: 0,
       topicError: null,
+      markdownDialog: false,
     };
   },
   watch: {
@@ -399,6 +407,10 @@ export default {
       }
       if (this.addEdgeMode) this.addEdgeMode = false;
       if (this.addNodeMode) this.addNodeMode = false;
+    },
+    toggleMarkdownMode() {
+      console.log("toggling markdown mode");
+      this.markdownDialog = !this.markdownDialog;
     },
     hideLeftPanels(hideFlag) {
       this.hideLeftPanelsFlag = hideFlag;

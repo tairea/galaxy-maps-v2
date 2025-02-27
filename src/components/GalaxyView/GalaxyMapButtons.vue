@@ -51,6 +51,20 @@
           <v-icon color="baseAccent">{{ mdiContentSaveCheck }}</v-icon>
         </div>
       </div>
+
+        <!-- MARKDOWN EDIT MODE -->
+        <div class="mapButton galaxyButton ml-4" :class="{ active: markdownMode }" @click="toggleMarkdownMode">
+        <div class="mapButton-icon galaxyButton-icon" :class="{ galaxyActiveIcon: markdownMode }">
+          <v-icon v-if="!markdownMode" color="galaxyAccent">{{ mdiLanguageMarkdown }}</v-icon>
+          <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
+        </div>
+        <div class="mapButton-text">
+          <p v-if="!addNodeMode" class="overline ma-0">Markdown Editor</p>
+          <p v-else class="ma-0" style="font-size: 0.7rem">Click on the map to place a new node</p>
+        </div>
+      </div>
+
+
     </div>
   </div>
 </template>
@@ -62,6 +76,7 @@ import {
   mdiChartTimelineVariant,
   mdiArrowExpandAll,
   mdiContentSaveCheck,
+  mdiLanguageMarkdown,
 } from "@mdi/js";
 
 export default {
@@ -73,6 +88,7 @@ export default {
     dragNodeMode: { default: false },
     changeInPositions: { default: false },
     nodePositionsChangeLoading: { default: false },
+    markdownMode: { default: false },
   },
   async mounted() {},
   data() {
@@ -82,6 +98,7 @@ export default {
       mdiChartTimelineVariant,
       mdiArrowExpandAll,
       mdiContentSaveCheck,
+      mdiLanguageMarkdown,
     };
   },
   computed: {
@@ -102,6 +119,9 @@ export default {
     saveNodePositions() {
       this.$emit("saveNodePositions");
     },
+    toggleMarkdownMode() {
+      this.$emit("toggleMarkdownMode");
+    },
   },
 };
 </script>
@@ -114,6 +134,11 @@ export default {
   height: 45px;
   cursor: pointer;
   backdrop-filter: blur(2px);
+}
+
+.galaxyButton {
+  border: 1px solid var(--v-galaxyAccent-base);
+  color: var(--v-galaxyAccent-base);
 }
 
 .active {
@@ -130,9 +155,18 @@ export default {
   padding: 0px 10px;
 }
 
+.galaxyButton-icon,
+.galaxyButton-text {
+  border-left: 1px solid var(--v-galaxyAccent-base);
+}
 .activeIcon {
   border-left: 1px solid var(--v-baseAccent-base);
   border-right: 1px solid var(--v-baseAccent-base);
+}
+
+.galaxyActiveIcon {
+  border-left: 1px solid var(--v-galaxyAccent-base);
+  border-right: 1px solid var(--v-galaxyAccent-base);
 }
 
 .mapButton-text {
