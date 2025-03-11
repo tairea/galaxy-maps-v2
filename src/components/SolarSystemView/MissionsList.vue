@@ -171,13 +171,28 @@ a {
   padding: 20px;
   border: 1px solid var(--v-missionAccent-base);
   position: relative;
-  overflow: scroll;
+  overflow-y: scroll;
   overflow-x: hidden;
-  /* Hide horizontal scrollbar */
-}
-
-.mission-container ::-webkit-scrollbar {
-  display: none;
+  -webkit-overflow-scrolling: touch;
+  &:hover::-webkit-scrollbar {
+    display: block;
+  }
+  &::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 8px !important;
+  }
+  &::-webkit-scrollbar-track {
+    background: var(--v-background-base);
+    margin-top: 1px;
+    margin-bottom: 25px;
+  }
+  &::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background-color: var(--v-missionAccent-base);
+    -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+  }
+  -webkit-overlay-scrollbars: touch;
+  overlay: auto;
 }
 
 .missions-label {
@@ -211,8 +226,10 @@ a {
   display: none;
 }
 
+/* Webkit (Chrome, Safari, newer versions of Opera) */
 *::-webkit-scrollbar {
-  width: 5px;
+  width: 8px;
+  display: block;
 }
 
 /* Track */
@@ -225,11 +242,18 @@ a {
 /* Handle */
 *::-webkit-scrollbar-thumb {
   background: var(--v-missionAccent-base);
+  border-radius: 4px;
 }
 
 /* Handle on hover */
 *::-webkit-scrollbar-thumb:hover {
   background: var(--v-missionAccent-base);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--v-missionAccent-base) var(--v-background-base);
 }
 
 .ghost {
