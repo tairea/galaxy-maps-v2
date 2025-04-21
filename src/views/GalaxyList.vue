@@ -74,7 +74,8 @@
     </div>
 
     <!-- Create Galaxy DIALOG -->
-    <CreateEditDeleteGalaxyDialog :showDialog="showDialog" @close="showDialog = false" />
+    <CreateEditDeleteGalaxyDialog :showDialog="showDialog" @close="showDialog = false" @openAiDialog="showAiDialog = true" />
+    <AICreateGalaxyDialog :showDialog.sync="showAiDialog" @close="showAiDialog = false" />
   </div>
 </template>
 
@@ -152,6 +153,7 @@ export default {
       mdiPlus,
       showDialog: false,
       validSlug: true,
+      showAiDialog: false,
     };
   },
   computed: {

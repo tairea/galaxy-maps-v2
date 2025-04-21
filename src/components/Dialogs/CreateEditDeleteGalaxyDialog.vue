@@ -48,6 +48,24 @@
               :style="course.title ? 'width:50%' : 'width:100%'"
               style="margin-top: 10px"
             >
+                          
+              <!-- AdAI Creation Button -->
+              <v-tooltip bottom>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn
+                    v-bind="attrs"
+                    v-on="on"
+                    outlined
+                    color="baseAccent"
+                    class="mt-4 mx-5"
+                    @click="openAIDialog"
+                  >
+                    <v-icon left>{{ mdiRobotExcited }}</v-icon>
+                    Create with AI
+                  </v-btn>
+                </template>
+                <span>Try this new beta feature</span>
+              </v-tooltip>
               <!-- DIALOG FIELDS -->
               <div class="create-dialog-content">
                 <!-- TITLE -->
@@ -435,7 +453,7 @@
 <script>
 import { db, storage, functions } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
-import { mdiPencil, mdiPlus, mdiClose, mdiCheck, mdiDelete, mdiInformationVariant } from "@mdi/js";
+import { mdiPencil, mdiPlus, mdiClose, mdiCheck, mdiDelete, mdiInformationVariant, mdiRobotExcited } from "@mdi/js";
 import firebase from "firebase/compat/app";
 import clone from "lodash/clone";
 import { mapActions, mapState } from "pinia";
@@ -453,6 +471,7 @@ export default {
     mdiDelete,
     mdiCheck,
     mdiInformationVariant,
+    mdiRobotExcited,
     notAuthor: false,
     dialog: false,
     dialogConfirm: false,
@@ -861,6 +880,12 @@ export default {
       console.log("sending new map created email");
       const sendCourseCreatedEmail = functions.httpsCallable("sendCourseCreatedEmail");
       return sendCourseCreatedEmail(data);
+    },
+    openAIDialog() {
+      this.cancel(); // Close current dialog
+      this.$nextTick(() => {
+        this.$emit('openAiDialog'); // Emit event to open AI dialog
+      });
     },
   },
 };
