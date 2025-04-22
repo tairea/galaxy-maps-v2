@@ -89,6 +89,7 @@ import useGalaxyListViewStore from "@/store/galaxyListView";
 import useRootStore from "@/store/index";
 import { mdiPlus } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
+import AICreateGalaxyDialogVue from '@/components/Dialogs/AICreateGalaxyDialog.vue';
 
 export default {
   name: "GalaxyList",
@@ -99,6 +100,7 @@ export default {
     GalaxyListInfoPanel,
     DiscoverGalaxyButton,
     Galaxies,
+    AICreateGalaxyDialogVue
   },
   watch: {
     async user(newUser) {

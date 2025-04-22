@@ -15,9 +15,12 @@ import "@/css/main.scss";
 import "vue-tour/dist/vue-tour.css";
 import useGalaxyListViewStore from "./store/galaxyListView";
 
+import { createOpenAIPlugin } from "./plugins/openai";
+
 Vue.use(PiniaVuePlugin);
 Vue.use(VueRouter);
 Vue.use(VueTour);
+
 
 Vue.config.productionTip = false;
 
@@ -42,6 +45,8 @@ firebase.auth().onAuthStateChanged((user) => {
     }
   }
 });
+
+Vue.use(createOpenAIPlugin());
 
 new Vue({
   router,

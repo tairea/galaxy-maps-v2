@@ -85,9 +85,9 @@ import {
   mdiInformationVariant 
 } from "@mdi/js";
 import { mapState, mapActions } from "pinia";
-import useRootStore from "@/store/root";
+import useRootStore from "@/store/index";
 export default {
-  name: "CreateGalaxyWithAIDialog",
+  name: "AICreateGalaxyDialog",
   props: {
     showDialog: {
       type: Boolean,
@@ -123,7 +123,7 @@ export default {
       this.$emit('update:showDialog', false);
     },
     async handleSubmit() {
-      if (!this.loading && this.valid) {
+      if (!this.loading) {
         try {
           this.loading = true;
 
@@ -132,19 +132,23 @@ export default {
           {
             "title": "A clear, concise title for the learning path",
             "description": "A detailed description of what will be learned",
-            "objectives": ["5-10 specific learning objectives"]
+            "objectives": ["5-10 specific learning objectives, with the first objective being covering onboarding and ensuring the user has the necessary tools and setup to complete the course"]
           }`;
 
-          const response = await this.$openai.createChatCompletion({
+          const response = await this.$openai.chat.completions.create({
             model: "gpt-3.5-turbo",
             messages: [{ role: 'user', content: prompt }],
             temperature: 0.7,
             max_tokens: 500
           });
 
-          const courseData = JSON.parse(response.data.choices[0].message.content);
+          // The response structure is different in v4
+          const courseData = JSON.parse(response.choices[0].message.content);
           
-          // Format the data for saveCourse
+          // Log for debugging
+          console.log('AI Response:', response);
+          console.log('Parsed Course Data:', courseData);
+          
           const formattedCourse = {
             title: courseData.title,
             description: courseData.description,
@@ -159,6 +163,7 @@ export default {
             },
             status: "drafting",
           };
+          console.log('formattedCourse', formattedCourse);
 
           formattedCourse.contentBy = {
             name: this.person.firstName + " " + this.person.lastName,
@@ -174,79 +179,79 @@ export default {
 
           let courseId;
 
-          try {
-            // Add a new document in collection "courses"
-            const courseDocRef = await db.collection("courses").add(formattedCourse);
-            console.log("1");
-            courseDocRef.update({ id: courseDocRef.id }); // add course id to course
-            courseId = courseDocRef.id;
+          // try {
+          //   // Add a new document in collection "courses"
+          //   const courseDocRef = await db.collection("courses").add(formattedCourse);
+          //   console.log("1");
+          //   courseDocRef.update({ id: courseDocRef.id }); // add course id to course
+          //   courseId = courseDocRef.id;
 
-            //set courseID to Store state 'state.currentCourseId' (so not relying on router params)
-            this.setCurrentCourseId(courseDocRef.id);
+          //   //set courseID to Store state 'state.currentCourseId' (so not relying on router params)
+          //   this.setCurrentCourseId(courseDocRef.id);
 
-            console.log("2");
-            const mapNodeDocRef = await db
-              .collection("courses")
-              .doc(courseDocRef.id)
-              .collection("map-nodes")
-              .add({
-                // hardcoded first node
-                label: course.title ? course.title + " Intro" : "Map intro",
-                group: "introduction",
-                color: "#00E676",
-                topicCreatedTimestamp: new Date(),
-                x: 0,
-                y: 0,
-                topicTotal: 1,
-                taskTotal: 0,
-              });
+          //   console.log("2");
+          //   const mapNodeDocRef = await db
+          //     .collection("courses")
+          //     .doc(courseDocRef.id)
+          //     .collection("map-nodes")
+          //     .add({
+          //       // hardcoded first node
+          //       label: course.title ? course.title + " Intro" : "Map intro",
+          //       group: "introduction",
+          //       color: "#00E676",
+          //       topicCreatedTimestamp: new Date(),
+          //       x: 0,
+          //       y: 0,
+          //       topicTotal: 1,
+          //       taskTotal: 0,
+          //     });
 
-            console.log("3");
+          //   console.log("3");
 
-            // update node obj with docRef.id aka nodeId
-            await db
-              .collection("courses")
-              .doc(courseDocRef.id)
-              .collection("map-nodes")
-              .doc(mapNodeDocRef.id)
-              .update({ id: mapNodeDocRef.id });
+          //   // update node obj with docRef.id aka nodeId
+          //   await db
+          //     .collection("courses")
+          //     .doc(courseDocRef.id)
+          //     .collection("map-nodes")
+          //     .doc(mapNodeDocRef.id)
+          //     .update({ id: mapNodeDocRef.id });
 
-            console.log("4");
-            // create topic with node id
-            await db
-              .collection("courses")
-              .doc(courseDocRef.id)
-              .collection("topics")
-              .doc(mapNodeDocRef.id)
-              .set({
-                // hardcoded first node topic
-                id: mapNodeDocRef.id,
-                label: course.title + " Intro",
-                group: "introduction",
-                color: "#00E676",
-                topicCreatedTimestamp: new Date(),
-                taskTotal: 0,
-                x: 0,
-                y: 0,
-              });
+          //   console.log("4");
+          //   // create topic with node id
+          //   await db
+          //     .collection("courses")
+          //     .doc(courseDocRef.id)
+          //     .collection("topics")
+          //     .doc(mapNodeDocRef.id)
+          //     .set({
+          //       // hardcoded first node topic
+          //       id: mapNodeDocRef.id,
+          //       label: course.title + " Intro",
+          //       group: "introduction",
+          //       color: "#00E676",
+          //       topicCreatedTimestamp: new Date(),
+          //       taskTotal: 0,
+          //       x: 0,
+          //       y: 0,
+          //     });
 
-            // send admins an email notification of a new course (email, name, course, courseId)
-            await this.sendCourseCreatedEmail(
-              this.person.email,
-              this.person.firstName + " " + this.person.lastName,
-              course.title,
-              courseId,
-            );
+          //   // send admins an email notification of a new course (email, name, course, courseId)
+          //   await this.sendCourseCreatedEmail(
+          //     this.person.email,
+          //     this.person.firstName + " " + this.person.lastName,
+          //     course.title,
+          //     courseId,
+          //   );
 
-            } catch (error) {
-              this.cancel();
-              console.error("Error creating galaxy: ", error);
-              this.setSnackbar({
-                show: true,
-                text: "Error creating galaxy: " + error.message,
-                color: "pink",
-              });
-            }
+          //   } catch (error) {
+          //     this.cancel();
+          //     console.error("Error creating galaxy: ", error);
+          //     this.setSnackbar({
+          //       show: true,
+          //       text: "Error creating galaxy: " + error.message,
+          //       color: "pink",
+          //     });
+          //   }
           } catch (error) {
             console.error('AI Generation Error:', error);
             this.setSnackbar({
@@ -254,9 +259,15 @@ export default {
               text: "Error generating galaxy: " + error.message,
               color: "pink",
             });
+            this.loading = false;
         } finally {
-          // console.log("5");
-          // // route to newly created galaxy
+          console.log("5");
+          // route to newly created galaxy
+          this.setSnackbar({
+            show: true,
+            text: "Galaxy created",
+            color: "baseAccent",
+          });
           // this.$router.push({
           //   name: "GalaxyView",
           //   params: {
@@ -265,7 +276,7 @@ export default {
           // });
           console.log("formatedCourse", formattedCourse);
 
-          this.closeDialog();
+          // this.closeDialog();
           this.loading = false;
         }
       }
