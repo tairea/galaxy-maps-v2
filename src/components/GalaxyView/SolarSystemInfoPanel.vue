@@ -39,23 +39,36 @@
             >
               <img :src="selectedTopic.image" style="height: 80%; object-fit: contain" />
             </div>
-            <p
-              v-else
-              class="topicTitle overline"
-              :style="
-                selectedTopic.color
-                  ? 'color:' + selectedTopic.color
-                  : 'color:var(--v-missionAccent-base)'
-              "
-            >
-              {{ selectedTopic.label }}
+            <div v-else>
+              <p
+                class="topicTitle overline"
+                :style="
+                  selectedTopic.color
+                    ? 'color:' + selectedTopic.color
+                    : 'color:var(--v-missionAccent-base)'
+                "
+              >
+                {{ selectedTopic.label }}
+              </p>
+              <p
+                v-if="selectedTopic.description"
+                class="topicTitle caption pt-0"
+                :style="
+                  selectedTopic.color
+                    ? 'color:' + selectedTopic.color
+                    : 'color:var(--v-missionAccent-base)'
+                "
+                style="font-weight: 400"
+              >
+                {{ selectedTopic.description }}
             </p>
+            </div>
             <v-btn
               v-if="teacher"
               icon
               x-small
               color="missionAccent"
-              class="ml-2 mt-4"
+              class="ml-2 mt-3"
               alt="Edit Topic"
               @click="editNode"
             >

@@ -194,7 +194,7 @@ export default {
       "courseTasks",
     ]),
     galaxyCompleted() {
-      return this.person.completedCourses.includes(this.currentCourseId);
+      return this.person.completedCourses?.includes(this.currentCourseId);
     },
     teacher() {
       return this.course?.mappedBy.personId === this.person?.id || this.user.data?.admin;

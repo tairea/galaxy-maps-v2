@@ -77,6 +77,7 @@ declare module 'vue' {
     SolarSystem: typeof import('./src/components/Reused/SolarSystem.vue')['default']
     SolarSystemInfo: typeof import('./src/components/SolarSystemView/SolarSystemInfo.vue')['default']
     SolarSystemInfoPanel: typeof import('./src/components/GalaxyView/SolarSystemInfoPanel.vue')['default']
+    SolarSystemListPanel: typeof import('./src/components/GalaxyView/SolarSystemListPanel.vue')['default']
     StartMissionDialogV2: typeof import('./src/components/Dialogs/StartMissionDialogV2.vue')['default']
     StudentAccountsDialog: typeof import('./src/components/Dialogs/StudentAccountsDialog.vue')['default']
     StudentActions: typeof import('./src/components/CohortView/StudentDataIterator/StudentCard/StudentActions.vue')['default']
