@@ -50,7 +50,7 @@
             >
                           
               <!-- AdAI Creation Button -->
-              <v-tooltip bottom>
+              <v-tooltip v-if="!edit" bottom>
                 <template v-slot:activator="{ on, attrs }">
                   <v-btn
                     v-bind="attrs"

@@ -124,6 +124,12 @@
       :selectedEdge="currentEdge"
       @closeInfoPanel="closeInfoPanel"
     />
+    <SolarSystemListPanel
+      v-if="teacher"
+      :course="boundCourse"
+      :topics="topics"
+      @topicOrderChanged="topicOrderChanged"
+    />
 
     <!-- Galaxy Completed Popup -->
     <GalaxyCompletedDialog :value="galaxyCompletedDialog" @close="galaxyCompletedDialog = false" />
@@ -146,7 +152,8 @@ import GalaxyMapButtons from "@/components/GalaxyView/GalaxyMapButtons.vue";
 import CreateEditDeleteNodeDialog from "@/components/Dialogs/CreateEditDeleteNodeDialog.vue";
 
 import SolarSystemInfoPanel from "@/components/GalaxyView/SolarSystemInfoPanel.vue";
-import EdgeInfoPanel from "@/components/GalaxyView/EdgeInfoPanel.vue";
+import EdgeInfoPanel from "@/components/GalaxyView/EdgeInfoPanel.vue";  
+import SolarSystemListPanel from "@/components/GalaxyView/SolarSystemListPanel.vue";
 
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
@@ -184,6 +191,7 @@ export default {
     SolarSystemInfoPanel,
     EdgeInfoPanel,
     GalaxyCompletedDialog,
+    SolarSystemListPanel,
   },
   props: ["courseId"],
   data() {
@@ -433,7 +441,7 @@ export default {
         } else {
           this.fetchedTopic = emittedTopic;
         }
-
+      
         // loop courseTasks for this topic id (= this.topicTasks)
         for (const task of this.courseTasks) {
           if (task.topicId == this.clickedTopicId) {
