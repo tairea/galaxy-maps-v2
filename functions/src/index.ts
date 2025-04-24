@@ -67,6 +67,7 @@ import {
   getPersonByPersonIdHttpsEndpoint,
   updatePersonByPersonIdHttpsEndpoint,
 } from "./userManagement.js";
+import { downloadAndUploadImageHttpsEndpoint } from "./openAIActions.js";
 
 export {
   getCohortCoursesActivityByCohortIdHttpsEndpoint as getCohortCoursesActivityByCohortId,
@@ -140,3 +141,5 @@ export {
   getPersonByPersonIdHttpsEndpoint as getPersonByPersonId,
   updatePersonByPersonIdHttpsEndpoint as updatePersonByPersonId,
 };
+
+export { downloadAndUploadImageHttpsEndpoint as downloadAndUploadImage };
