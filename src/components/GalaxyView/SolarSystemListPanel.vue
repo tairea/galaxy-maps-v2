@@ -6,10 +6,10 @@
 
     <div class="panelContent">
       <div class="panelContentInner">
-        <div v-for="(topic, topicIndex) in topics" :key="topic.id">
-          <p class="subPanel systemListPanelLabel overline mx-2 pl-2">{{ topicIndex + 1 }}: {{ topic.name }}</p>
+        <div v-for="(topic, topicIndex) in topics" :key="topic.id" class="subPanel" @click="handleTopicClick(topic)">
+          <p class="systemListPanelLabel overline pl-2 cursor-pointer">{{ topicIndex + 1 }}: {{ topic.name }}</p>
           <div v-for="task in topic.tasks" :key="task.id" class="px-2">
-            <p class="subPanel systemListTaskLabel overline pl-2">{{ topicIndex + 1 }}.{{ task.orderIndex + 1 }}: {{ task.title }}</p>
+            <p class="systemListTaskLabel overline pl-2">{{ topicIndex + 1 }}.{{ task.orderIndex + 1 }}: {{ task.title }}</p>
           </div>
         </div>
       </div>
@@ -95,6 +95,11 @@ export default defineComponent({
         });
     }
   },
+  methods: {
+    handleTopicClick(topic) {
+      this.$emit('panelTopicClicked', topic);
+    }
+  },
 });
 </script>
 
@@ -106,7 +111,7 @@ export default defineComponent({
   position: fixed;
   // bottom: 0px;
   top: calc(50% - 300px);
-  right: -320px;
+  right: 0px;
   transition: all 0.3s ease-out;
   z-index: 100;
 
@@ -157,6 +162,7 @@ export default defineComponent({
     .systemListPanelLabel {
       color: var(--v-missionAccent-base);
       position: relative;
+      border-bottom: 1px solid;
     }
 
     .systemListTaskLabel {

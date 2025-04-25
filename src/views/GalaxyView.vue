@@ -56,6 +56,7 @@
         <GalaxyMap
           ref="vis"
           :course="boundCourse"
+          :panelTopicClicked="panelTopicClicked"
           @add-node="showAddDialog"
           @edit-node="showEditDialog"
           @setUiMessage="setUiMessage"
@@ -127,6 +128,7 @@
     <SolarSystemListPanel
       v-if="teacher"
       :course="boundCourse"
+      @panelTopicClicked="panelTopicClicked = $event"
     />
 
     <!-- Galaxy Completed Popup -->
@@ -230,7 +232,7 @@ export default {
       cohortsInCourse: [],
       selectedNode: {},
       hideLeftPanelsFlag: false,
-      clickedTopicId: null,
+      clickedTopic: {},
       triggerTopicClicked: false,
       fetchedTopic: null,
       courseTasks: [],
@@ -239,6 +241,7 @@ export default {
       xpPointsForThisGalaxy: 2000,
       galaxyMapForceUpdateKey: 0,
       topicError: null,
+      panelTopicClicked: {},
     };
   },
   watch: {
@@ -410,8 +413,9 @@ export default {
       this.hideLeftPanelsFlag = hideFlag;
     },
     closeInfoPanel() {
+      this.panelTopicClicked = {};
       this.infoPopupShow = false;
-      this.clickedTopicId = null;
+      this.clickedTopic = {};
       this.fetchedTopic = null;
       this.currentEdge = null;
       this.topicTasks = [];
@@ -420,11 +424,12 @@ export default {
       // this.$refs.listPanel.courseClicked();
     },
     async topicClicked(emittedTopic) {
+      console.log(emittedTopic)
       this.infoPopupShow = true;
       // console.log("topic clicked emitted from GalaxyMap.vue", emittedTopic);
 
       // get topic id
-      this.clickedTopicId = emittedTopic.id;
+      this.clickedTopic = emittedTopic;
 
       // Reset topic tasks and error state
       this.topicTasks = [];
@@ -434,7 +439,7 @@ export default {
         // check if authenticated
         if (this.teacher || this.student) {
           // get topic
-          this.fetchedTopic = await fetchTopicByCourseIdTopicId(this.courseId, this.clickedTopicId);
+          this.fetchedTopic = await fetchTopicByCourseIdTopicId(this.courseId, this.clickedTopic.id);
           console.log("clicked topic:", this.fetchedTopic);
         } else {
           this.fetchedTopic = emittedTopic;
@@ -442,7 +447,7 @@ export default {
       
         // loop courseTasks for this topic id (= this.topicTasks)
         for (const task of this.courseTasks) {
-          if (task.topicId == this.clickedTopicId) {
+          if (task.topicId == this.clickedTopic.id) {
             this.topicTasks.push(task.task);
           }
         }
@@ -505,6 +510,7 @@ export default {
       this.hoverNode = false;
     },
     selected(selected) {
+      console.log("selected: ", selected)
       this.type = selected.type;
       this.infoPopupPosition.x = selected.DOMx;
       this.infoPopupPosition.y = selected.DOMy;
@@ -517,6 +523,7 @@ export default {
       this.infoPopupShow = true;
     },
     centerFocus(centerFocusNode) {
+      console.log("center focus: ", centerFocusNode)
       if (centerFocusNode.length > 1) return; // this avoids pop up when no specific node selected
       this.centerFocusPosition = true;
       this.type = centerFocusNode.type;
