@@ -1,5 +1,18 @@
 <template>
  <v-container>
+    <!-- Loading Overlay -->
+    <div v-if="loading" class="loading-overlay">
+      <div class="loading-content">
+        <v-progress-circular
+          indeterminate
+          size="64"
+          color="galaxyAccent"
+          class="mb-4"
+        ></v-progress-circular>
+        <p class="loading-message text-h6">{{ currentLoadingMessage }}</p>
+      </div>
+    </div>
+
     <v-row class="text-center" align="center">
       <v-col cols="12" class="pa-0">
         <v-dialog v-model="showDialog" width="50%" light>
@@ -36,6 +49,7 @@
                 clearable
                 v-model="description"
                 label="Galaxy description"
+                :disabled="loading"
               ></v-textarea>
             </div>
             <!-- ACTION BUTTONS -->
@@ -107,6 +121,20 @@ export default {
       required: (v) => !!v || "This field is required",
     },
     loading: false,
+    loadingMessages: [
+      "Exploring the cosmos for knowledge...",
+      "Charting new learning pathways...",
+      "Mapping distant galaxies of consciousness...",
+      "Calculating interstellar alignments...",
+      "Assembling galactic sources of creation...",
+      "Searching the starsfor enlightenment...",
+      "Gathering cosmic learning resources...",
+      "Preparing your journey through the stars...",
+      "Creating your learning universe...",
+      "Calibrating educational coordinates..."
+    ],
+    currentLoadingMessage: "",
+    loadingMessageInterval: null
   }),
   computed: {
     ...mapState(useRootStore, ["person"]),
@@ -117,6 +145,15 @@ export default {
       return this.loading || this.description.length === 0;
     },  
   },
+  watch: {
+    loading(newValue) {
+      if (newValue) {
+        this.startLoadingMessages();
+      } else {
+        this.stopLoadingMessages();
+      }
+    }
+  },
   methods: {
     ...mapActions(useRootStore, ["setCurrentCourseId", "setSnackbar"]),
     closeDialog() {
@@ -126,7 +163,7 @@ export default {
     // Add this helper function to calculate spiral coordinates
     getSpiral(index, centerX = 0, centerY = 0, radius = 100) {
       const angle = index * 0.8;
-      const spiralGrowth = 30;
+      const spiralGrowth = 50;
       const currentRadius = radius + (index * spiralGrowth);
       const x = centerX + (currentRadius * Math.cos(angle));
       const y = centerY + (currentRadius * Math.sin(angle));
@@ -140,37 +177,129 @@ export default {
         try {
           this.loading = true;
 
-          const prompt = `Create a structured learning path based on this description: "${this.description}"
+          const prompt = `Create a detailed, structured learning path based on this description: "${this.description}"
           Return only a JSON object with the following structure:
           {
             "title": "A clear, concise title for the learning path",
-            "description": "A detailed description of what will be learned in the course",
-            "objectives": ["5-10 specific learning objectives, with the first objective covering onboarding and ensuring the user has the necessary tools and setup to complete the course. 
+            "description": "A comprehensive description of what will be learned, including prerequisites and expected outcomes",
+            "objectives": [
               {
                 "title": "A concise title for the objective with a maximum of 30 characters",
-                "description": "The objective description should be concise with a maximum of 200 characters."
+                "description": "A detailed description of this learning objective, including what skills or knowledge will be gained",
+                "complexity": "basic|intermediate|advanced",
+                "missions": [
+                  {
+                    "title": "Clear, action-oriented title for the task",
+                    "description": "Instructions must be structured in the following format with complete sentences:
+
+                      PREREQUISITES:
+                      - List all required knowledge, tools, or setup needed before starting
+                      - Each prerequisite must be clearly explained
+
+                      CONCEPTS:
+                      - Define and explain all key terms and concepts
+                      - Provide relevant examples for each concept
+                      - Link concepts to practical applications
+
+                      STEP-BY-STEP INSTRUCTIONS:
+                      1. Each step must be a complete sentence with a clear action
+                      2. Complex steps must be broken down into sub-steps
+                      3. Provide validation checks to ensure step completion
+                      4. Include example outputs or results where applicable
+
+                      TROUBLESHOOTING:
+                      - List common errors or issues that might occur
+                      - Provide specific solutions for each problem
+                      - Include verification steps to confirm proper resolution
+
+                      ADDITIONAL RESOURCES:
+                      - List relevant documentation, tutorials, or references
+                      - Specify which parts of the resources are most relevant",
+                    "submissionRequired": false,
+                    "submissionInstructions": "If submissions is false, this fields should be empty quotes. If submission is required, provide detailed instructions for a submission must include:
+                      1. Specific deliverables required
+                      2. Format or template to follow
+                      3. Success criteria for evaluation
+                      4. Common mistakes to avoid
+                      5. Examples of successful submissions",
+                    "color": "#69a1e2"
+                  }
+                ]
               }
             ]
-          }`;
+          }
+
+          Important formatting guidelines in mission descriptions only:
+          1. Use HTML tags for all text formatting
+          2. Use <h3> for section headers
+          3. Use <ul> and <li> for unordered lists
+          4. Use <ol> and <li> for ordered lists/steps
+          5. Use <br> for line breaks between sections
+          6. Use <p> for paragraphs of text
+          7. Use <code> for code examples
+          8. Use <strong> for emphasis
+          9. Maintain consistent formatting throughout all descriptions
+          10. Ensure proper nesting of HTML tags
+
+          Content guidelines before:
+          1. Every sentence must be complete and grammatically correct
+          2. All instructions must be specific and actionable
+          3. Use consistent terminology throughout
+          4. Include concrete examples for complex concepts
+          5. Break down complex tasks into smaller, manageable steps
+          6. The first objective must cover setup and prerequisites
+          7. Scale missions per objective based on complexity:
+             - Basic: 2-3 missions
+             - Intermediate: 3-4 missions
+             - Advanced: 4-5 missions
+          8. The final mission of each objective must have submissionRequired: true
+          9. Technical topics must include:
+             - Specific code examples with comments
+             - Expected outputs
+             - Error messages and solutions
+             - Testing/validation steps
+          10. Environment-specific instructions must specify:
+              - Operating system requirements
+              - Version numbers
+              - Configuration settings
+              - Alternative options where applicable
+
+          Review criteria:
+          - Text in the missions descriptions must be properly formatted with HTML tags
+          - No raw newlines (\n) or markdown
+          - Proper nesting of HTML elements
+          - Clear visual hierarchy in the content
+          - No incomplete sentences or fragments
+          - No undefined terminology
+          - No ambiguous instructions
+          - No missing steps between concepts
+          - Clear progression of complexity
+          - Explicit success criteria for each step
+          - Comprehensive error handling
+          - Concrete examples for validation
+          - Provide clear code examlpes for instructions that require it
+
+          Adapt the detail level and technical depth based on the complexity of the subject matter while maintaining completeness, accuracy, and consistent HTML formatting.`;
 
           const response = await this.$openai.chat.completions.create({
-            model: "gpt-4o-mini",
+            model: "gpt-4-turbo-preview",
             messages: [
               { 
                 role: 'system', 
-                content: 'You are a helpful assistant that returns only valid JSON without any markdown formatting or code blocks.'
+                content: 'You are an expert instructional designer that returns only valid JSON without any markdown formatting or code blocks. Create a detailed course, that breaks down the entire learning journey into objectives, missions and step-by-step instructions for each mission. The number of objectives and missions should be appropriate for the complexity of the course. The step by step instructions should be highly detailed and include all necessary information for someone that is not familiar with the subject.'
               },
               { role: 'user', content: prompt }
             ],
             temperature: 0.7,
-            max_tokens: 500
+            max_tokens: 4096
           });
 
           let jsonString = response.choices[0].message.content;
           // Remove any potential markdown code block syntax
           jsonString = jsonString.replace(/```json\s?|\s?```/g, '');
+          console.log('jsonString', jsonString);
           const courseData = JSON.parse(jsonString);
-          
+          console.log('courseData', courseData);
           // 2. Generate image with DALL-E
           const imagePrompt = `Create a symbolic representation for a learning course about: ${courseData.title}. The image should be minimalist, professional, and educational.`;
           const generatedImage = await this.$openai.images.generate({
@@ -208,7 +337,6 @@ export default {
             },
             status: "drafting",
           };
-          console.log('formattedCourse', formattedCourse);
           
           const objectives = courseData.objectives;
 
@@ -255,7 +383,7 @@ export default {
                 topicCreatedTimestamp: new Date(),
                 x: x,
                 y: y,
-                taskTotal: 0,
+                taskTotal: objective.missions.length,
                 prerequisites: previousNodeId ? [previousNodeId] : []
               };
 
@@ -270,7 +398,7 @@ export default {
                 .collection("map-nodes")
                 .add(nodeData);
                 
-              console.log('adding node '+ i + ': ',  mapNodeDocRef.id);
+              console.log('adding node '+ i + ': ',  nodeData.label);
 
               // Update node with its ID
               await mapNodeDocRef.update({ id: mapNodeDocRef.id });
@@ -285,7 +413,30 @@ export default {
                   ...nodeData,
                   id: mapNodeDocRef.id
                 });
-              console.log('- adding topic')
+              console.log('- added topic: ', nodeData.label)
+
+              // Create missions for this topic
+              for (let j = 0; j < objective.missions.length; j++) {
+                const mission = objective.missions[j];
+                const missionData = {
+                  title: mission.title,
+                  description: mission.description,
+                  submissionRequired: mission.submissionRequired,
+                  submissionInstructions: mission.submissionInstructions,
+                  color: mission.color,
+                  orderIndex: j,
+                  taskCreatedTimestamp: new Date()
+                };
+
+                await db
+                  .collection("courses")
+                  .doc(courseDocRef.id)
+                  .collection("topics")
+                  .doc(mapNodeDocRef.id)
+                  .collection("tasks")
+                  .add(missionData);
+                console.log('- added mission '+ j + ': ', mission.title)
+              }
 
               // Create edge if there's a previous node
               if (previousNodeId) {
@@ -335,7 +486,7 @@ export default {
         } finally {
           console.log("5: Galaxy map successfully created");
           this.loading = false;
-          this.closeDialog();
+          // this.closeDialog();
           // route to newly created galaxy
           this.setSnackbar({
             show: true,
@@ -364,6 +515,28 @@ export default {
       const sendCourseCreatedEmail = functions.httpsCallable("sendCourseCreatedEmail");
       return sendCourseCreatedEmail(data);
     },
+    startLoadingMessages() {
+      // Set initial message
+      this.currentLoadingMessage = this.loadingMessages[0];
+      
+      // Change message every 3 seconds
+      this.loadingMessageInterval = setInterval(() => {
+        const currentIndex = this.loadingMessages.indexOf(this.currentLoadingMessage);
+        const nextIndex = (currentIndex + 1) % this.loadingMessages.length;
+        this.currentLoadingMessage = this.loadingMessages[nextIndex];
+      }, 3000);
+    },
+    stopLoadingMessages() {
+      if (this.loadingMessageInterval) {
+        clearInterval(this.loadingMessageInterval);
+        this.loadingMessageInterval = null;
+      }
+      this.currentLoadingMessage = "";
+    },
+    // Make sure to clear interval when component is destroyed
+    beforeDestroy() {
+      this.stopLoadingMessages();
+    }
   }
 }
 </script>
@@ -439,4 +612,48 @@ export default {
   background-color: var(--v-background-base) !important;
 }
 
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--v-background-base);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0.95;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem;
+}
+
+.loading-message {
+  color: var(--v-missionAccent-base);
+  margin-top: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  animation: fadeInOut 3s ease-in-out infinite;
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
 </style> 

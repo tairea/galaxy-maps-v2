@@ -106,7 +106,7 @@ export default defineComponent({
   position: fixed;
   // bottom: 0px;
   top: calc(50% - 300px);
-  right: 0px;
+  right: -320px;
   transition: all 0.3s ease-out;
   z-index: 100;
 

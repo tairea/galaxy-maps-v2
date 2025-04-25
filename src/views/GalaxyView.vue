@@ -127,8 +127,6 @@
     <SolarSystemListPanel
       v-if="teacher"
       :course="boundCourse"
-      :topics="topics"
-      @topicOrderChanged="topicOrderChanged"
     />
 
     <!-- Galaxy Completed Popup -->
