@@ -44,7 +44,7 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "GalaxyMap",
-  props: ["course"],
+  props: ["course", "panelTopicClicked"],
   components: {
     Network,
     SolarSystem,
@@ -179,6 +179,22 @@ export default {
         this.makePlanetsColour("white");
       }
     },
+    // This is a watch for the topic clicked event from the systemListPanel
+    // this is needed because trigging topicClicked from GalaxyView it stuck in a loop
+    panelTopicClicked(newTopic) {
+      if (!newTopic || !this.$refs.network) return;
+      
+      // Find the node in the network that matches the clicked topic
+      const node = this.$refs.network.nodes.find(n => n.id === newTopic.id);
+      if (node) {
+        this.zoomToNode(node);
+        var options = { ...this.network.options };
+        options.edges.hidden = true; // hide edges
+        options.nodes.font.size = 5; // hide labels
+        this.$refs.network.setOptions(options);
+        this.$emit("topicClicked", newTopic);
+      }
+    }
   },
   computed: {
     ...mapState(useRootStore, [
@@ -502,6 +518,7 @@ export default {
       }
     },
     async click2(data) {
+      console.log("click2: ", data)
       if (
         this.addingNode ||
         this.addingEdge ||
@@ -513,6 +530,8 @@ export default {
       // 0) get closest node
       const closestNode = this.getClosestNodeToClick(data);
       if (closestNode.group == "locked") return;
+
+      
       // 1) flag we in preview mode
       this.inSystemPreviewView = true;
       this.previewedNode = closestNode;
@@ -762,7 +781,7 @@ export default {
       });
     },
     zoomToNode(node) {
-      // console.log("zooming to node", node);
+      console.log("zooming to node", node);
       this.$refs.network.moveTo({
         position: { x: node.x, y: node.y },
         scale: 3,

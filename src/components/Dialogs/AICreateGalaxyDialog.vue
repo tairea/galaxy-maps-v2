@@ -186,7 +186,6 @@ export default {
               {
                 "title": "A concise title for the objective with a maximum of 30 characters",
                 "description": "A detailed description of this learning objective, including what skills or knowledge will be gained",
-                "complexity": "basic|intermediate|advanced",
                 "missions": [
                   {
                     "title": "Clear, action-oriented title for the task",
@@ -229,42 +228,10 @@ export default {
             ]
           }
 
-          Important formatting guidelines in mission descriptions only:
-          1. Use HTML tags for all text formatting
-          2. Use <h3> for section headers
-          3. Use <ul> and <li> for unordered lists
-          4. Use <ol> and <li> for ordered lists/steps
-          5. Use <br> for line breaks between sections
-          6. Use <p> for paragraphs of text
-          7. Use <code> for code examples
-          8. Use <strong> for emphasis
-          9. Maintain consistent formatting throughout all descriptions
-          10. Ensure proper nesting of HTML tags
-
-          Content guidelines before:
-          1. Every sentence must be complete and grammatically correct
-          2. All instructions must be specific and actionable
-          3. Use consistent terminology throughout
-          4. Include concrete examples for complex concepts
-          5. Break down complex tasks into smaller, manageable steps
-          6. The first objective must cover setup and prerequisites
-          7. Scale missions per objective based on complexity:
-             - Basic: 2-3 missions
-             - Intermediate: 3-4 missions
-             - Advanced: 4-5 missions
-          8. The final mission of each objective must have submissionRequired: true
-          9. Technical topics must include:
-             - Specific code examples with comments
-             - Expected outputs
-             - Error messages and solutions
-             - Testing/validation steps
-          10. Environment-specific instructions must specify:
-              - Operating system requirements
-              - Version numbers
-              - Configuration settings
-              - Alternative options where applicable
+  
 
           Review criteria:
+          - each objective has at least 2 or 3 missions
           - Text in the missions descriptions must be properly formatted with HTML tags
           - No raw newlines (\n) or markdown
           - Proper nesting of HTML elements
