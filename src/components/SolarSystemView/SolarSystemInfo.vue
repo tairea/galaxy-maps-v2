@@ -39,6 +39,7 @@ export default {
   padding: 20px;
   backdrop-filter: blur(2px);
   width: 100%;
+  overflow: hidden;
 }
 
 h1 {

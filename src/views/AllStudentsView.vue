@@ -97,7 +97,7 @@ export default {
   align-items: center;
   flex-direction: column;
   // border: 1px solid yellow;
-  overflow: scroll;
+  overflow: auto;
   overflow-x: hidden; /* Hide horizontal scrollbar */
 
   #left-section ::-webkit-scrollbar {
@@ -115,7 +115,7 @@ export default {
   position: relative;
   backdrop-filter: blur(2px);
   z-index: 3;
-  overflow-y: scroll;
+  overflow: auto;
 
   .student-label {
     font-size: 0.8rem;
@@ -142,7 +142,7 @@ export default {
   flex-direction: column;
   z-index: 1;
   // border: 1px solid pink;
-  overflow: scroll;
+  overflow: auto;
   overflow-x: hidden; /* Hide horizontal scrollbar */
 
   #main-section ::-webkit-scrollbar {
@@ -157,7 +157,7 @@ export default {
   justify-content: center;
   align-items: center;
   // border: 1px solid red;
-  overflow: scroll;
+  overflow: auto;
   overflow-x: hidden; /* Hide horizontal scrollbar */
 
   #right-section ::-webkit-scrollbar {

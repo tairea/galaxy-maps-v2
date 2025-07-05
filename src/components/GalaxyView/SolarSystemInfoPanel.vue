@@ -39,17 +39,30 @@
             >
               <img :src="selectedTopic.image" style="height: 80%; object-fit: contain" />
             </div>
-            <p
-              v-else
-              class="topicTitle overline"
-              :style="
-                selectedTopic.color
-                  ? 'color:' + selectedTopic.color
-                  : 'color:var(--v-missionAccent-base)'
-              "
-            >
-              {{ selectedTopic.label }}
-            </p>
+            <div v-else>
+              <p
+                class="topicTitle overline"
+                :style="
+                  selectedTopic.color
+                    ? 'color:' + selectedTopic.color
+                    : 'color:var(--v-missionAccent-base)'
+                "
+              >
+                {{ selectedTopic.label }}
+              </p>
+              <!-- <p
+                v-if="selectedTopic.description"
+                class="topicTitle caption pt-0"
+                :style="
+                  selectedTopic.color
+                    ? 'color:' + selectedTopic.color
+                    : 'color:var(--v-missionAccent-base)'
+                "
+                style="font-weight: 400"
+              >
+                {{ selectedTopic.description }}
+              </p> -->
+            </div>
             <v-btn
               v-if="teacher"
               icon
@@ -194,7 +207,7 @@ export default {
     //   return this.tasks.filter((task) => task.topicId == this.selectedTopic);
     // },
     enableClick() {
-      console.log('click')
+      console.log("click");
       if (this.course.presentationOnly && !this.teacher) return false;
       return true;
     },
@@ -288,7 +301,7 @@ export default {
       position: relative;
       height: 99%;
       width: 99.5%;
-      overflow-y: hidden;
+      overflow-y: auto;
       overflow-x: hidden;
 
       .topOfPanel {
@@ -318,7 +331,7 @@ export default {
         flex-direction: column;
         width: 100%;
         height: calc(73% + 25px);
-        overflow-y: scroll;
+        overflow-y: auto;
         justify-content: flex-start;
 
         .noMissionWarningContainer {

@@ -651,7 +651,7 @@ export default {
   // flex-direction: column;
   flex-wrap: wrap;
   overflow-x: hidden;
-  overflow-y: scroll;
+  overflow-y: auto;
 
   .dialog-header {
     width: 100%;

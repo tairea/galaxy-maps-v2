@@ -202,7 +202,7 @@ export default {
   position: relative;
   backdrop-filter: blur(2px);
   z-index: 3;
-  overflow-y: scroll;
+  overflow-y: auto;
   max-height: 40%;
   transition: all 0.2s ease-in-out;
 }

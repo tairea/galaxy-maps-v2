@@ -475,7 +475,7 @@ export default {
   justify-content: flex-start;
   align-items: center;
   flex-direction: column;
-  overflow-y: scroll;
+  overflow-y: auto;
   padding-bottom: 50px;
 }
 #main-section {
