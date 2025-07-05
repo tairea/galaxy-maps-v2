@@ -31,7 +31,7 @@
     <div class="blackBar">
       <div class="d-flex justify-center align-center">
         <div class="panelTab overline" style="color: var(--v-missionAccent-base)">
-          LIST OF STAR SYSTEMS
+          LIST OF STARS
         </div>
       </div>
     </div>
