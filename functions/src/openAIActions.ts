@@ -5,7 +5,10 @@ import { STORAGE_BUCKET } from "./_constants.js";
 import fetch from "node-fetch";
 
 // Download and upload image
-export const downloadAndUploadImageHttpsEndpoint = runWith({}).https.onCall(async (data) => {
+export const downloadAndUploadImageHttpsEndpoint = runWith({
+  timeoutSeconds: 540, // 9 minutes timeout
+  memory: "1GB"
+}).https.onCall(async (data) => {
   try {
     logger.info("Starting downloadAndUploadImage function", {
       imageUrl: data.imageUrl?.substring(0, 50) + "...",

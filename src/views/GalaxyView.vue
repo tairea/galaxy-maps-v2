@@ -38,16 +38,19 @@
         <GalaxyMapButtons
           class="mt-8"
           :class="{ hideButtons: hideLeftPanelsFlag }"
-          v-if="teacher"
+          v-if="!isRestriced"
           :addNodeMode="addNodeMode"
           :addEdgeMode="addEdgeMode"
           :dragNodeMode="dragNodeMode"
           :uiMessage="uiMessage ? uiMessage : ''"
           :changeInPositions="changeInPositions"
           :nodePositionsChangeLoading="nodePositionsChangeLoading"
+          :showMissions="showMissions"
+          :isTeacher="teacher"
           @toggleAddNodeMode="toggleAddNodeMode"
           @toggleAddEdgeMode="toggleAddEdgeMode"
           @toggleDragNodeMode="toggleDragNodeMode"
+          @toggleShowMissions="toggleShowMissions"
           @addNode="showAddDialog"
           @saveNodePositions="saveNodePositions"
         />
@@ -56,6 +59,7 @@
         <GalaxyMap
           ref="vis"
           :course="boundCourse"
+          :showMissions="showMissions"
           @add-node="showAddDialog"
           @edit-node="showEditDialog"
           @setUiMessage="setUiMessage"
@@ -73,6 +77,7 @@
           @topicClicked="topicClicked($event)"
           @courseTasks="emittedCourseTasks($event)"
           @galaxyCompleted="galaxyCompleted"
+          @toggleShowMissions="toggleShowMissions"
         />
         <!--  @hoverNode="hovered" -->
       </div>
@@ -124,10 +129,7 @@
       :selectedEdge="currentEdge"
       @closeInfoPanel="closeInfoPanel"
     />
-    <SolarSystemListPanel
-      v-if="teacher"
-      :course="boundCourse"
-    />
+    <SolarSystemListPanel v-if="teacher" :course="boundCourse" @focusOnTopic="handleFocusOnTopic" />
 
     <!-- Galaxy Completed Popup -->
     <GalaxyCompletedDialog :value="galaxyCompletedDialog" @close="galaxyCompletedDialog = false" />
@@ -150,7 +152,7 @@ import GalaxyMapButtons from "@/components/GalaxyView/GalaxyMapButtons.vue";
 import CreateEditDeleteNodeDialog from "@/components/Dialogs/CreateEditDeleteNodeDialog.vue";
 
 import SolarSystemInfoPanel from "@/components/GalaxyView/SolarSystemInfoPanel.vue";
-import EdgeInfoPanel from "@/components/GalaxyView/EdgeInfoPanel.vue";  
+import EdgeInfoPanel from "@/components/GalaxyView/EdgeInfoPanel.vue";
 import SolarSystemListPanel from "@/components/GalaxyView/SolarSystemListPanel.vue";
 
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
@@ -239,6 +241,7 @@ export default {
       xpPointsForThisGalaxy: 2000,
       galaxyMapForceUpdateKey: 0,
       topicError: null,
+      showMissions: false, // Add missions toggle state
     };
   },
   watch: {
@@ -439,7 +442,7 @@ export default {
         } else {
           this.fetchedTopic = emittedTopic;
         }
-      
+
         // loop courseTasks for this topic id (= this.topicTasks)
         for (const task of this.courseTasks) {
           if (task.topicId == this.clickedTopicId) {
@@ -618,6 +621,12 @@ export default {
       // force reload GalaxpMap component
       this.$router.go();
     },
+    handleFocusOnTopic(node) {
+      this.$refs.vis.focusOnNodeById(node.id);
+    },
+    toggleShowMissions() {
+      this.showMissions = !this.showMissions;
+    },
   },
 };
 </script>
@@ -654,7 +663,7 @@ export default {
   align-items: center;
   flex-direction: column;
   // border: 1px solid yellow;
-  overflow-y: scroll;
+  overflow-y: auto;
   padding: 0px 0px 50px 20px;
   // z-index: 3;
   transition: all 0.3s;

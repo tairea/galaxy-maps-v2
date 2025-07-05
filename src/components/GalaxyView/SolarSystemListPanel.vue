@@ -7,9 +7,23 @@
     <div class="panelContent">
       <div class="panelContentInner">
         <div v-for="(topic, topicIndex) in topics" :key="topic.id">
-          <p class="subPanel systemListPanelLabel overline mx-2 pl-2">{{ topicIndex + 1 }}: {{ topic.name }}</p>
-          <div v-for="task in topic.tasks" :key="task.id" class="px-2">
-            <p class="subPanel systemListTaskLabel overline pl-2">{{ topicIndex + 1 }}.{{ task.orderIndex + 1 }}: {{ task.title }}</p>
+          <p
+            class="subPanel systemListPanelLabel mx-2 pl-2 clickable-topic"
+            @click="focusOnTopic(topic)"
+          >
+            {{ topicIndex + 1 }}: {{ topic.name }}
+          </p>
+          <div v-for="(task, taskIndex) in topic.tasks" :key="task.id" class="px-2">
+            <p
+              class="subPanel systemListTaskLabel pl-2 clickable-task"
+              @click="focusOnTopic(topic)"
+            >
+              {{ topicIndex + 1 }}.{{
+                task.orderIndex !== undefined && task.orderIndex !== null
+                  ? task.orderIndex + 1
+                  : taskIndex + 1
+              }}: {{ task.title }}
+            </p>
           </div>
         </div>
       </div>
@@ -17,7 +31,7 @@
     <div class="blackBar">
       <div class="d-flex justify-center align-center">
         <div class="panelTab overline" style="color: var(--v-missionAccent-base)">
-          LIST OF SYSTEMS
+          LIST OF STAR SYSTEMS
         </div>
       </div>
     </div>
@@ -30,15 +44,12 @@ import { mapActions, mapState } from "pinia";
 import useRootStore from "@/store/index";
 
 export default defineComponent({
-  name: "SystemListPanel",
-  components: {
-  },
+  name: "SolarSystemListPanel",
+  components: {},
   data() {
-    return {
-    };
+    return {};
   },
-  async mounted() {
-  },
+  async mounted() {},
   computed: {
     ...mapState(useRootStore, [
       "person",
@@ -47,15 +58,15 @@ export default defineComponent({
       "currentCourseNodes",
       "personsTopics",
       "personsCourseTasks",
-      "courseTasks"
+      "courseTasks",
     ]),
     topics() {
       return this.currentCourseNodes
-        .map(node => {
+        .map((node) => {
           // Get tasks for this topic and sort them
           const topicTasks = this.courseTasks
-            .filter(task => task.topicId === node.id)
-            .map(task => task.task)
+            .filter((task) => task.topicId === node.id)
+            .map((task) => task.task)
             .sort((a, b) => {
               // Sort tasks by orderIndex if available
               if (a.orderIndex !== undefined && b.orderIndex !== undefined) {
@@ -65,7 +76,10 @@ export default defineComponent({
               const aTime = a.taskCreatedTimestamp?.seconds || 0;
               const bTime = b.taskCreatedTimestamp?.seconds || 0;
               if (aTime === bTime) {
-                return (a.taskCreatedTimestamp?.nanoseconds || 0) - (b.taskCreatedTimestamp?.nanoseconds || 0);
+                return (
+                  (a.taskCreatedTimestamp?.nanoseconds || 0) -
+                  (b.taskCreatedTimestamp?.nanoseconds || 0)
+                );
               }
               return aTime - bTime;
             });
@@ -75,7 +89,7 @@ export default defineComponent({
             name: node.label,
             orderIndex: node.orderIndex,
             topicCreatedTimestamp: node.topicCreatedTimestamp,
-            tasks: topicTasks
+            tasks: topicTasks,
           };
         })
         .sort((a, b) => {
@@ -89,11 +103,23 @@ export default defineComponent({
           const bTime = b.topicCreatedTimestamp?.seconds || 0;
           if (aTime === bTime) {
             // If seconds are equal, compare nanoseconds
-            return (a.topicCreatedTimestamp?.nanoseconds || 0) - (b.topicCreatedTimestamp?.nanoseconds || 0);
+            return (
+              (a.topicCreatedTimestamp?.nanoseconds || 0) -
+              (b.topicCreatedTimestamp?.nanoseconds || 0)
+            );
           }
           return aTime - bTime;
         });
-    }
+    },
+  },
+  methods: {
+    focusOnTopic(topic) {
+      // Find the corresponding node from currentCourseNodes
+      const node = this.currentCourseNodes.find((node) => node.id === topic.id);
+      if (node) {
+        this.$emit("focusOnTopic", node);
+      }
+    },
   },
 });
 </script>
@@ -144,7 +170,7 @@ export default defineComponent({
       position: relative;
       height: 99%;
       width: 99.5%;
-      overflow-y: scroll;
+      overflow-y: auto;
       overflow-x: hidden;
 
       .subPanel {
@@ -152,16 +178,38 @@ export default defineComponent({
         margin: 10px;
         margin-top: 20px;
       }
+
+      .clickable-topic {
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.1);
+          transform: translateX(5px);
+        }
+      }
+
+      .clickable-task {
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.05);
+          transform: translateX(3px);
+        }
+      }
     }
 
     .systemListPanelLabel {
       color: var(--v-missionAccent-base);
       position: relative;
+      font-weight: 600;
     }
 
     .systemListTaskLabel {
-      color: var(--v-galaxyAccent-base);
+      color: var(--v-primary-base);
       position: relative;
+      font-size: 0.9rem;
     }
   }
 

@@ -8,6 +8,18 @@ export class Planet {
   velocity: number;
   orbitRadius: number;
   topicId: string;
+  orbitStopped: boolean;
+  taskName: string;
+  taskIndex: number;
+
+  // Animation properties
+  savedRadian: number; // Save the radian position when stopping
+  targetRadian: number; // Target radian for animation
+  animating: boolean; // Whether currently animating
+  animationProgress: number; // Animation progress (0 to 1)
+  animationDuration: number; // Animation duration in seconds
+  animationStartTime: number; // When animation started
+
   constructor(
     x: number,
     y: number,
@@ -16,6 +28,8 @@ export class Planet {
     velocity: number,
     orbitRadius: number,
     topicId: string,
+    taskName?: string,
+    taskIndex?: number,
   ) {
     // this.ctx = ctx;
     this.x = x;
@@ -30,10 +44,87 @@ export class Planet {
     this.velocity = velocity;
     this.orbitRadius = orbitRadius;
     this.topicId = topicId;
+    this.orbitStopped = false;
+    this.taskName = taskName || "";
+    this.taskIndex = taskIndex || 0;
+
+    // Animation properties
+    this.savedRadian = this.radian;
+    this.targetRadian = this.radian;
+    this.animating = false;
+    this.animationProgress = 0;
+    this.animationDuration = 0.5; // 0.5 seconds for smooth animation
+    this.animationStartTime = 0;
 
     this.x = this.startingPos.x + Math.cos(this.radian) * this.orbitRadius;
     // Get the new y based on our new angle and radius
     this.y = this.startingPos.y + Math.sin(this.radian) * this.orbitRadius;
+  }
+
+  // Method to stop orbit and animate to bottom (south) of orbit
+  stopOrbit() {
+    if (this.animating) return; // Don't start new animation if already animating
+
+    this.savedRadian = this.radian; // Save current position
+    this.targetRadian = Math.PI / 2; // Target: bottom of orbit (π/2 radians = 90 degrees = south)
+    this.animating = true;
+    this.animationProgress = 0;
+    this.animationStartTime = Date.now();
+    this.orbitStopped = true;
+  }
+
+  // Method to resume orbit from saved position
+  resumeOrbit() {
+    if (this.animating) return; // Don't start new animation if already animating
+
+    this.targetRadian = this.savedRadian; // Animate back to saved position
+    this.animating = true;
+    this.animationProgress = 0;
+    this.animationStartTime = Date.now();
+    this.orbitStopped = false;
+  }
+
+  // Smooth interpolation between two angles
+  interpolateAngle(startAngle: number, endAngle: number, progress: number): number {
+    // Handle angle wrapping for smooth interpolation
+    let diff = endAngle - startAngle;
+
+    // Ensure we take the shortest path
+    if (diff > Math.PI) diff -= 2 * Math.PI;
+    if (diff < -Math.PI) diff += 2 * Math.PI;
+
+    return startAngle + diff * progress;
+  }
+
+  // Update animation
+  updateAnimation(delta: number) {
+    if (!this.animating) return;
+
+    const currentTime = Date.now();
+    const elapsed = (currentTime - this.animationStartTime) / 1000; // Convert to seconds
+    this.animationProgress = Math.min(elapsed / this.animationDuration, 1);
+
+    // Use easeInOutQuad for smooth animation
+    const easedProgress =
+      this.animationProgress < 0.5
+        ? 2 * this.animationProgress * this.animationProgress
+        : 1 - Math.pow(-2 * this.animationProgress + 2, 2) / 2;
+
+    // Interpolate between current and target radian
+    const startRadian = this.orbitStopped ? this.savedRadian : Math.PI / 2;
+    this.radian = this.interpolateAngle(startRadian, this.targetRadian, easedProgress);
+
+    // Update position
+    this.x = this.startingPos.x + Math.cos(this.radian) * this.orbitRadius;
+    this.y = this.startingPos.y + Math.sin(this.radian) * this.orbitRadius;
+
+    // Check if animation is complete
+    if (this.animationProgress >= 1) {
+      this.animating = false;
+      this.radian = this.targetRadian;
+      this.x = this.startingPos.x + Math.cos(this.radian) * this.orbitRadius;
+      this.y = this.startingPos.y + Math.sin(this.radian) * this.orbitRadius;
+    }
   }
 
   draw(ctx: CanvasRenderingContext2D, strokeColor: string) {
@@ -56,13 +147,39 @@ export class Planet {
     ctx.closePath();
   }
 
+  drawLabel(ctx: CanvasRenderingContext2D, labelColor: string, visibleTopicId?: string) {
+    if (!this.taskName) return;
+
+    // If a specific topicId is provided, only show labels for planets in that topic
+    if (visibleTopicId && this.topicId !== visibleTopicId) return;
+
+    // Set text properties
+    ctx.font = "12px Arial";
+    ctx.fillStyle = labelColor;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+
+    // Position label to the right of the planet
+    const labelX = this.x + 15; // 15px offset from planet
+    const labelY = this.y;
+
+    // Draw the task name
+    ctx.fillText(this.taskName, labelX, labelY);
+  }
+
   update(ctx: CanvasRenderingContext2D, delta: number, strokeColor: string) {
     this.draw(ctx, strokeColor);
 
-    this.radian += this.velocity * delta; // increase our angle every animation frame
-    // Get the new x based on our new angle and radius
-    this.x = this.startingPos.x + Math.cos(this.radian) * this.orbitRadius;
-    // Get the new y based on our new angle and radius
-    this.y = this.startingPos.y + Math.sin(this.radian) * this.orbitRadius;
+    // Update animation if animating
+    if (this.animating) {
+      this.updateAnimation(delta);
+    } else if (!this.orbitStopped) {
+      // Only update position if orbit is not stopped and not animating
+      this.radian += this.velocity * delta; // increase our angle every animation frame
+      // Get the new x based on our new angle and radius
+      this.x = this.startingPos.x + Math.cos(this.radian) * this.orbitRadius;
+      // Get the new y based on our new angle and radius
+      this.y = this.startingPos.y + Math.sin(this.radian) * this.orbitRadius;
+    }
   }
 }
