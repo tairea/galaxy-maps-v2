@@ -1,54 +1,92 @@
 <template>
   <div class="d-flex map-buttons-bottom">
     <div class="d-inline-flex">
-      <!-- ADD NODE -->
-      <div class="mapButton" :class="{ active: addNodeMode }" @click="toggleAddNodeMode">
-        <div class="mapButton-icon" :class="{ activeIcon: addNodeMode }">
-          <v-icon v-if="!addNodeMode" color="missionAccent">{{ mdiDotsHexagon }}</v-icon>
-          <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
+      <!-- SHOW MISSIONS (All Users) -->
+      <div
+        class="mapButton"
+        :class="{ active: showMissions, 'mr-4': isTeacher }"
+        @click="toggleShowMissions"
+      >
+        <div class="mapButton-icon" :class="{ activeIcon: showMissions }">
+          <v-icon v-if="!showMissions" color="missionAccent">{{ mdiEarth }}</v-icon>
+          <v-icon v-else color="baseAccent">{{ mdiEarthOff }}</v-icon>
         </div>
         <div class="mapButton-text">
-          <p v-if="!addNodeMode" class="overline ma-0">Add a new node</p>
-          <p v-else class="ma-0" style="font-size: 0.7rem">Click on the map to place a new node</p>
+          <p v-if="!showMissions" class="overline ma-0">Show Missions</p>
+          <p v-else class="overline ma-0" style="font-size: 0.7rem">Hide missions</p>
         </div>
       </div>
 
-      <!-- ADD EDGE -->
-      <div class="mapButton ml-4" :class="{ active: addEdgeMode }" @click="toggleAddEdgeMode">
-        <div class="mapButton-icon" :class="{ activeIcon: addEdgeMode }">
-          <v-icon v-if="!addEdgeMode" color="missionAccent">{{ mdiChartTimelineVariant }}</v-icon>
+      <!-- ADD/EDIT STARS TOGGLE (Teacher Only) -->
+      <div
+        v-if="isTeacher"
+        class="mapButton"
+        :class="{ active: editModeActive }"
+        @click="toggleEditMode"
+      >
+        <div class="mapButton-icon" :class="{ activeIcon: editModeActive }">
+          <v-icon v-if="!editModeActive" color="missionAccent">{{ mdiStarPlus }}</v-icon>
           <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
         </div>
         <div class="mapButton-text">
-          <p v-if="!addEdgeMode" class="overline ma-0">Connect Nodes</p>
-          <p v-else class="ma-0" style="font-size: 0.7rem">Click and drag to connect two nodes</p>
+          <p v-if="!editModeActive" class="overline ma-0">Add/Edit Stars</p>
+          <p v-else class="ma-0" style="font-size: 0.7rem">Click to hide edit options</p>
         </div>
       </div>
 
-      <!-- EDIT NODE POSITIONS -->
-      <div class="mapButton ml-4" :class="{ active: dragNodeMode }" @click="toggleDragNodeMode">
-        <div class="mapButton-icon" :class="{ activeIcon: dragNodeMode }">
-          <v-icon v-if="!dragNodeMode" color="missionAccent">{{ mdiArrowExpandAll }}</v-icon>
-          <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
+      <!-- EDIT BUTTONS CONTAINER (Teacher Only) -->
+      <div v-if="isTeacher && editModeActive" class="d-inline-flex ml-4">
+        <!-- ADD NODE -->
+        <div class="mapButton" :class="{ active: addNodeMode }" @click="toggleAddNodeMode">
+          <div class="mapButton-icon" :class="{ activeIcon: addNodeMode }">
+            <v-icon v-if="!addNodeMode" color="missionAccent">{{ mdiDotsHexagon }}</v-icon>
+            <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
+          </div>
+          <div class="mapButton-text">
+            <p v-if="!addNodeMode" class="overline ma-0">Add a new Star</p>
+            <p v-else class="ma-0" style="font-size: 0.7rem">
+              Click on the map to place a new Star
+            </p>
+          </div>
         </div>
-        <div class="mapButton-text">
-          <p v-if="!dragNodeMode" class="overline ma-0">Change node positions</p>
-          <p v-else class="ma-0" style="font-size: 0.7rem">
-            {{
-              changeInPositions
-                ? "CANCEL or SAVE new positions"
-                : "Click and drag to reposition node"
-            }}
-          </p>
+
+        <!-- ADD EDGE -->
+        <div class="mapButton ml-4" :class="{ active: addEdgeMode }" @click="toggleAddEdgeMode">
+          <div class="mapButton-icon" :class="{ activeIcon: addEdgeMode }">
+            <v-icon v-if="!addEdgeMode" color="missionAccent">{{ mdiChartTimelineVariant }}</v-icon>
+            <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
+          </div>
+          <div class="mapButton-text">
+            <p v-if="!addEdgeMode" class="overline ma-0">Connect Stars</p>
+            <p v-else class="ma-0" style="font-size: 0.7rem">Click and drag to connect two Stars</p>
+          </div>
         </div>
-        <!-- SAVE NODE POSITIONS -->
-        <div
-          class="mapButton-icon"
-          v-if="changeInPositions"
-          :class="{ activeIcon: dragNodeMode }"
-          @click="saveNodePositions"
-        >
-          <v-icon color="baseAccent">{{ mdiContentSaveCheck }}</v-icon>
+
+        <!-- EDIT NODE POSITIONS -->
+        <div class="mapButton ml-4" :class="{ active: dragNodeMode }" @click="toggleDragNodeMode">
+          <div class="mapButton-icon" :class="{ activeIcon: dragNodeMode }">
+            <v-icon v-if="!dragNodeMode" color="missionAccent">{{ mdiArrowExpandAll }}</v-icon>
+            <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
+          </div>
+          <div class="mapButton-text">
+            <p v-if="!dragNodeMode" class="overline ma-0">Change Star positions</p>
+            <p v-else class="ma-0" style="font-size: 0.7rem">
+              {{
+                changeInPositions
+                  ? "CANCEL or SAVE new positions"
+                  : "Click and drag to reposition Star"
+              }}
+            </p>
+          </div>
+          <!-- SAVE NODE POSITIONS -->
+          <div
+            class="mapButton-icon"
+            v-if="changeInPositions"
+            :class="{ activeIcon: dragNodeMode }"
+            @click="saveNodePositions"
+          >
+            <v-icon color="baseAccent">{{ mdiContentSaveCheck }}</v-icon>
+          </div>
         </div>
       </div>
     </div>
@@ -62,6 +100,9 @@ import {
   mdiChartTimelineVariant,
   mdiArrowExpandAll,
   mdiContentSaveCheck,
+  mdiEarth,
+  mdiEarthOff,
+  mdiStarPlus,
 } from "@mdi/js";
 
 export default {
@@ -73,6 +114,8 @@ export default {
     dragNodeMode: { default: false },
     changeInPositions: { default: false },
     nodePositionsChangeLoading: { default: false },
+    showMissions: { default: false },
+    isTeacher: { default: false },
   },
   async mounted() {},
   data() {
@@ -82,6 +125,10 @@ export default {
       mdiChartTimelineVariant,
       mdiArrowExpandAll,
       mdiContentSaveCheck,
+      mdiEarth,
+      mdiEarthOff,
+      mdiStarPlus,
+      editModeActive: false,
     };
   },
   computed: {
@@ -90,6 +137,15 @@ export default {
     },
   },
   methods: {
+    toggleEditMode() {
+      this.editModeActive = !this.editModeActive;
+      // If turning off edit mode, also turn off all edit modes
+      if (!this.editModeActive) {
+        if (this.addNodeMode) this.$emit("toggleAddNodeMode");
+        if (this.addEdgeMode) this.$emit("toggleAddEdgeMode");
+        if (this.dragNodeMode) this.$emit("toggleDragNodeMode");
+      }
+    },
     toggleAddNodeMode() {
       this.$emit("toggleAddNodeMode");
     },
@@ -101,6 +157,9 @@ export default {
     },
     saveNodePositions() {
       this.$emit("saveNodePositions");
+    },
+    toggleShowMissions() {
+      this.$emit("toggleShowMissions");
     },
   },
 };

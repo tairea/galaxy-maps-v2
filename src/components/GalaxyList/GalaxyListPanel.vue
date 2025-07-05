@@ -297,7 +297,7 @@ export default defineComponent({
       position: relative;
       height: 99%;
       width: 99.5%;
-      overflow-y: scroll;
+      overflow-y: auto;
       overflow-x: hidden;
 
       .subPanel {

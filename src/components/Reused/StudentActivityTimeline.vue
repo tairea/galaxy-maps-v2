@@ -218,7 +218,7 @@ export default {
   // margin-left: 5%;
   // margin-right: auto;
   margin-bottom: 30px;
-  overflow-y: scroll;
+  overflow-y: auto;
   overflow-x: hidden;
 }
 
@@ -246,7 +246,7 @@ export default {
   color: var(--v-missionAccent-base);
   max-height: calc(100% - 14px); // overflow of statements
   width: 100%;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .student-card-log {
@@ -273,7 +273,7 @@ export default {
     background-color: var(--v-background-base);
     max-height: 200px;
     width: 320px;
-    overflow: scroll;
+    overflow: auto;
     overflow-x: hidden;
     z-index: 1000;
   }

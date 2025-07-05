@@ -208,7 +208,7 @@ export default {
   padding: 20px 15px 20px 20px;
   position: relative;
   backdrop-filter: blur(2px);
-  overflow-y: scroll;
+  overflow-y: auto;
   max-height: 40%;
   transition: all 0.2s ease-in-out;
 }
@@ -225,7 +225,7 @@ export default {
   position: relative;
   backdrop-filter: blur(2px);
   max-height: 100%;
-  overflow: scroll;
+  overflow: auto;
   overflow-x: hidden;
   transition: all 0.2s ease-in-out;
 }
