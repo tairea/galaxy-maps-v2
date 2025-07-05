@@ -14,7 +14,7 @@
     <div v-else class="landing-content">
       <p class="gm-title">GALAXY MAPS</p>
       <p class="overline">Galaxy Maps is a new digital learning experience</p>
-      <p class="overline">Galaxy Maps are learning paths created by the community</p>
+      <p class="overline">Galaxy Maps are learning paths created by the community using A.I.</p>
       <p class="overline">Discover new Galaxies and navigate your learning</p>
 
       <!-- <v-btn outlined color="baseAccent" class="mt-8" :to="{ path: 'login' }"> -->
@@ -114,9 +114,6 @@ export default {
 
 .bg {
   background: var(--v-background-base);
-  // overflow: hidden;
-  // overflow-y: hidden; // hide vertical
-  // overflow-x: hidden; // hide horizontal
   display: flex;
   align-items: center;
   justify-content: center;
@@ -124,8 +121,7 @@ export default {
 
   height: 100vh;
   width: 100vw;
-
-  overflow-y: hidden;
+  overflow: hidden;
 
   .landing-content {
     display: flex;

@@ -2,7 +2,14 @@
   <v-container class="pa-2">
     <v-row class="text-center" align="center">
       <v-col cols="12">
-        <v-dialog v-model="dialog" width="40%" light persistent>
+        <v-dialog 
+          v-model="dialog" 
+          width="40%" 
+          light 
+          persistent
+          :retain-focus="markingSubmission || decliningSubmission"
+          @click:outside="close"
+        >
           <!-- MARK AS COMPLETED BUTTON (with dialog) -->
           <template v-slot:activator="{ on, attrs }">
             <!-- uncheck icon if not inreview or completed -->
@@ -12,6 +19,18 @@
             </v-btn>
           </template>
           <div class="create-dialog">
+            <!-- Loading overlay -->
+            <div v-if="markingSubmission || decliningSubmission" class="loading-overlay">
+              <v-progress-circular
+                indeterminate
+                color="cohortAccent"
+                size="64"
+              ></v-progress-circular>
+              <p class="loading-text">
+                {{ markingSubmission ? 'Processing submission...' : 'Declining submission...' }}
+              </p>
+            </div>
+            
             <!-- DIALOG HEADER -->
             <div class="dialog-header">
               <p v-if="reviewed" class="dialog-title mb-0">
@@ -748,7 +767,12 @@ export default {
       console.log("8c-ii) XP log updated...");
     },
     close() {
-      this.dialog = false;
+      // Only allow closing if not in the middle of an operation
+      if (!this.markingSubmission && !this.decliningSubmission) {
+        this.dialog = false;
+        this.response = false;
+        this.responseMsg = "";
+      }
     },
   },
 };
@@ -785,8 +809,9 @@ export default {
   display: flex;
   flex-wrap: wrap;
   overflow-x: hidden;
-  overflow-y: scroll;
+  overflow-y: auto;
   width: 100%;
+  position: relative;
 
   .create-dialog-content {
     width: 100%;
@@ -973,5 +998,27 @@ export default {
   border: 1px solid var(--v-galaxyAccent-base);
   color: var(--v-galaxyAccent-base);
   cursor: not-allowed;
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  border-radius: 5px;
+}
+
+.loading-text {
+  color: white;
+  margin-top: 16px;
+  font-size: 1.1rem;
+  text-align: center;
 }
 </style>

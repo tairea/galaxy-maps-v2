@@ -36,6 +36,7 @@ import SolarSystem from "@/components/Reused/SolarSystem.vue";
 import LoadingSpinner from "@/components/Reused/LoadingSpinner.vue";
 import { fetchCourseByCourseId } from "@/lib/ff";
 import { Planet } from "@/lib/planet";
+import { Star } from "@/lib/star";
 import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import Network from "@/vue2vis/Network.vue";
@@ -44,7 +45,7 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "GalaxyMap",
-  props: ["course"],
+  props: ["course", "showMissions"],
   components: {
     Network,
     SolarSystem,
@@ -91,7 +92,14 @@ export default {
               background: "grey",
             },
           },
-          font: { color: "white" },
+          font: {
+            color: "white",
+            align: "left",
+            face: "Arial",
+            size: 12,
+          },
+          // Disable vis-network labels since we'll draw them manually
+          label: "",
         },
         groups: {
           default: {
@@ -146,8 +154,7 @@ export default {
           hover: true,
           hoverConnectedEdges: false,
           dragNodes: false,
-          multiselect: true
-
+          multiselect: true,
         },
       },
     },
@@ -161,6 +168,7 @@ export default {
     },
     newNodePositions: {},
     planets: [],
+    stars: [],
     time: null,
     inSystemPreviewView: false,
     previewedNode: null,
@@ -168,15 +176,19 @@ export default {
     tasks: [],
     drag: false,
     DOMRect: {},
+    nodeLabelColor: "#ffffff", // Default label color
+    previousShowMissionsState: false, // Track previous showMissions state for preview mode
   }),
   watch: {
     darkMode(dark) {
       if (dark == false) {
-        this.makeGalaxyLabelsColour(this.$vuetify.theme.themes.light.baseAccent);
+        this.nodeLabelColor = this.$vuetify.theme.themes.light.missionAccent;
         this.makePlanetsColour(this.$vuetify.theme.themes.light.missionAccent);
+        this.makeStarsColour("#FFA500"); // Orange for light mode
       } else {
-        this.makeGalaxyLabelsColour("#ffffff");
+        this.nodeLabelColor = this.$vuetify.theme.themes.dark.missionAccent;
         this.makePlanetsColour("white");
+        this.makeStarsColour("#FFD700"); // Gold for dark mode
       }
     },
   },
@@ -227,6 +239,7 @@ export default {
           ...node,
           // color: this.stringToColour(matchingNode.label),  // Attempt to match node color to System color
           group: "inactive",
+          label: "", // Remove vis-network labels since we draw them manually
         });
       }
       // return nodes with status to network map
@@ -239,6 +252,7 @@ export default {
           ...node,
           // color: this.stringToColour(matchingNode.label),  // Attempt to match node color to System color
           group: "default",
+          label: "", // Remove vis-network labels since we draw them manually
         });
       }
       // return nodes with status to network map
@@ -264,6 +278,7 @@ export default {
           ...node,
           color,
           group: matchingNode?.topicStatus ?? "locked", // assign group property based on topicStatus from matchingNode (aka this.personsTopics)
+          label: "", // Remove vis-network labels since we draw them manually
         });
       }
 
@@ -293,6 +308,12 @@ export default {
   },
   async mounted() {
     console.log("mounted");
+
+    // Set initial label color
+    this.nodeLabelColor = this.$vuetify.theme.isDark
+      ? this.$vuetify.theme.themes.dark.missionAccent
+      : this.$vuetify.theme.themes.light.missionAccent;
+
     this.refreshData();
 
     // zoom fit on load
@@ -300,7 +321,7 @@ export default {
       this.needsCentering = true;
     }
 
-    this.drawSolarSystems();
+    await this.drawSolarSystems();
 
     // ==== check if all topics completed. if so GALAXY MAP COMPLETE!!! ====
     let isGalaxyMapComplete = this.personsTopics.every(
@@ -360,7 +381,7 @@ export default {
 
       this.needsCentering = true;
 
-      this.drawSolarSystems();
+      await this.drawSolarSystems();
 
       // ==== check if all topics completed. if so GALAXY MAP COMPLETE!!! ====
       let isGalaxyMapComplete = this.personsTopics.every(
@@ -375,16 +396,17 @@ export default {
     networkUpdated() {
       if (this.needsCentering === true) {
         this.zoomToNodes(this.$refs.network.nodes);
-        // set label colours (important if in light mode)
-        this.makeGalaxyLabelsColour(
-          this.$vuetify.theme.isDark ? "#fff" : this.$vuetify.theme.themes.light.baseAccent,
-        );
+        // set label colours to missionAccent
+        this.nodeLabelColor = this.$vuetify.theme.isDark
+          ? this.$vuetify.theme.themes.dark.missionAccent
+          : this.$vuetify.theme.themes.light.missionAccent;
       }
     },
-    drawSolarSystems() {
+    async drawSolarSystems() {
       console.log("drawing planets");
       // set up solar system planets
-      this.setupSolarSystemPlanets();
+      await this.setupSolarSystemPlanets();
+      // this.setupStars();             // <--- experimenting with drawing a Sun on nodes
       // start animation
       this.startNodeAnimation();
     },
@@ -424,6 +446,7 @@ export default {
       this.stopNodeAnimation();
       // clear solar systems
       this.planets = [];
+      this.stars = [];
       this.$refs.network.redraw();
       // enable node dragging
       this.network.options.interaction.dragNodes = true;
@@ -444,6 +467,7 @@ export default {
       this.draggingNodes = false;
       this.network.options.interaction.dragNodes = false;
       this.planets = [];
+      this.stars = [];
       // Remove both mouse and touch event listeners
       document.removeEventListener("mousedown", this.rectangleMousedown);
       document.removeEventListener("mousemove", this.rectangleMousedrag);
@@ -513,33 +537,53 @@ export default {
       // 0) get closest node
       const closestNode = this.getClosestNodeToClick(data);
       if (closestNode.group == "locked") return;
+
+      // Save current showMissions state and enable it for preview
+      this.previousShowMissionsState = this.showMissions;
+      if (!this.showMissions) {
+        this.toggleShowMissions();
+      }
+
       // 1) flag we in preview mode
       this.inSystemPreviewView = true;
       this.previewedNode = closestNode;
-      // 2) zoom to node
-      this.zoomToNode(closestNode);
-      // 3) hide edges and labels
+
+      // 2) calculate offsets
+      let tasksForThisTopic = this.tasks.filter((taskObj) => taskObj.topicId == closestNode.id);
+      let xOffset = 150; // Hardcoded value for experimentation
+      let yOffset = (tasksForThisTopic.length - 1) * 10; // 20px per mission, center if only one
+
+      // 3) zoom to node with offsets
+      this.zoomToNodeWithOffset(closestNode, xOffset, yOffset);
+
+      // 4) hide edges
       var options = { ...this.network.options };
       options.edges.hidden = true; // hide edges
-      options.nodes.font.size = 5; // hide labels
       this.$refs.network.setOptions(options);
-      // 4) minimise left panels & buttons
+      // 5) minimise left panels & buttons
       this.$emit("hideLeftPanels", true);
-      // 5) set clicked topic node id in store
+      // 6) set clicked topic node id in store
       this.setCurrentTopicId(closestNode.id);
-      // 6) calc how many tasks for this topic
-      let tasksForThisTopic = [];
-      tasksForThisTopic = this.tasks.filter((task) => task.topicId == this.currentTopicId);
       // 7) get number of tasks (used to calc size of circle mask to block out map)
       this.numberOfTasksForThisTopic = tasksForThisTopic.length;
-      // 8) emit topic clicked
-      // this.$emit("topicClicked", { topicId: this.currentTopicId });
-
-      // 8b) emit topic clicked with tasks
-      // console.log("tasksForThisTopic", tasksForThisTopic);
+      // 8) hide planets not related to current topic
+      this.hidePlanetsForOtherTopics(closestNode.id);
+      // 9) hide other topic nodes
+      this.hideOtherTopicNodes(closestNode.id);
+      // 10) emit topic clicked
       this.$emit("topicClicked", {
         ...this.nodesToDisplay.find((node) => node.id == this.currentTopicId),
         tasks: tasksForThisTopic,
+      });
+    },
+    zoomToNodeWithOffset(node, xOffset, yOffset) {
+      this.$refs.network.moveTo({
+        position: { x: node.x + xOffset, y: node.y + yOffset },
+        scale: 2.5, // or your preferred zoom
+        animation: {
+          duration: 2000,
+          easingFunction: "easeInOutQuad",
+        },
       });
     },
     getClosestNodeToClick(clickData) {
@@ -597,8 +641,8 @@ export default {
       let positionsChanged = false;
 
       // Update positions for all selected nodes
-      selectedNodes.forEach(nodeId => {
-        const node = nodes.find(n => n.id === nodeId);
+      selectedNodes.forEach((nodeId) => {
+        const node = nodes.find((n) => n.id === nodeId);
         // check if coords changed
         if (newPositions[nodeId].x !== node.x || newPositions[nodeId].y !== node.y) {
           positionsChanged = true;
@@ -743,11 +787,22 @@ export default {
       // bring edges back
       var options = { ...this.network.options };
       options.edges.hidden = false;
-      options.nodes.font.size = 14; // show labels
       this.$refs.network.setOptions(options);
       this.previewedNode = null;
       this.inSystemPreviewView = false;
       this.numberOfTasksForThisTopic = 0;
+      // Show all planets again
+      this.showAllPlanets();
+      // Show all topic nodes again
+      this.showAllTopicNodes();
+      // Clear current topic ID to show all planet labels again
+      this.setCurrentTopicId(null);
+
+      // Restore previous showMissions state if it was different
+      if (this.showMissions !== this.previousShowMissionsState) {
+        this.toggleShowMissions();
+      }
+
       // this.$refs.network.fit();
       this.zoomToNodes(this.$refs.network.nodes);
     },
@@ -758,7 +813,10 @@ export default {
       var nodeIds = nodes.map((x) => x.id);
       this.$refs.network.fit({
         nodes: nodeIds,
-        animation: true,
+        animation: {
+          duration: 2000,
+          easingFunction: "easeInOutQuad",
+        },
       });
     },
     zoomToNode(node) {
@@ -773,9 +831,10 @@ export default {
       });
     },
     makeGalaxyLabelsColour(colour) {
-      var options = { ...this.network.options };
-      options.nodes.font.color = colour;
-      this.$refs.network.setOptions(options);
+      // Store the label color for manual drawing
+      this.nodeLabelColor = colour;
+      // Trigger a redraw to update the manually drawn labels
+      this.$refs.network.redraw();
       this.$refs.network.fit();
     },
     makePlanetsColour(colour) {
@@ -783,7 +842,49 @@ export default {
         planet.color = colour;
       }
     },
+    makeStarsColour(colour) {
+      for (const star of this.stars) {
+        star.color = colour;
+      }
+    },
+    drawNodeLabels(ctx) {
+      // Set text properties
+      ctx.font = "12px Arial";
+      ctx.fillStyle = this.nodeLabelColor;
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+
+      // Get all node positions
+      const nodeIds = this.$refs.network.nodes.map(({ id }) => id);
+      const nodePositionMap = this.$refs.network.getPositions(nodeIds);
+
+      // Draw labels for each node
+      for (const [nodeId, position] of Object.entries(nodePositionMap)) {
+        // Get the original node data from currentCourseNodes since we cleared the label in display nodes
+        const originalNode = this.currentCourseNodes.find((n) => n.id === nodeId);
+        if (originalNode && originalNode.label) {
+          // If in system preview view, only show label for the current topic
+          if (this.inSystemPreviewView && nodeId !== this.currentTopicId) {
+            continue;
+          }
+
+          // Position label to the right of the node
+          const labelX = position.x + 15; // 15px offset from node
+          const labelY = position.y;
+
+          // Draw the node label
+          ctx.fillText(originalNode.label, labelX, labelY);
+        }
+      }
+    },
     async setupSolarSystemPlanets() {
+      // Wait for tasks to be loaded if they're not already
+      if (this.student && this.personsCourseTasks.length === 0) {
+        await this.getPersonsCourseTasks();
+      } else if (!this.student && this.courseTasks.length === 0) {
+        await this.getCourseTasks(this.currentCourseId);
+      }
+
       this.tasks = [];
       if (this.student) {
         this.tasks = this.personsCourseTasks;
@@ -816,21 +917,59 @@ export default {
 
       // loop nodes/topics
       for (const [topicId, topicPosition] of Object.entries(nodePositionMap)) {
-        const topicsTasks = this.tasks.filter((task) => task.topicId == topicId);
+        const topicsTasks = this.tasks.filter((taskObj) => taskObj.topicId == topicId);
 
-        for (let i = 1; i <= topicsTasks.length; i++) {
+        // Sort tasks by orderIndex first, falling back to timestamp if no orderIndex
+        topicsTasks.sort((a, b) => {
+          if (a.task.orderIndex !== undefined && b.task.orderIndex !== undefined) {
+            return a.task.orderIndex - b.task.orderIndex;
+          }
+          return (
+            (a.task.taskCreatedTimestamp?.seconds || 0) -
+            (b.task.taskCreatedTimestamp?.seconds || 0)
+          );
+        });
+
+        for (let i = 0; i < topicsTasks.length; i++) {
+          const taskObj = topicsTasks[i];
+          const task = taskObj.task; // Access the nested task data
+
           this.planets.push(
             new Planet(
               topicPosition.x,
               topicPosition.y,
               2, // planet size
               this.dark ? "white" : this.$vuetify.theme.themes.light.missionAccent, // planet colour
-              6.28 / (10 * i), // planet speed (6.28 radians in a circle. so 6.28 is full circle in 1 second. divide by something to slow it down)
-              20 * i, // planet orbit size,
+              6.28 / (10 * (i + 1)), // planet speed (6.28 radians in a circle. so 6.28 is full circle in 1 second. divide by something to slow it down)
+              20 * (i + 1), // planet orbit size,
               topicId, // for debugging
+              task.name || task.title || `Task ${i + 1}`, // task name
+              i, // task index
             ),
           );
         }
+      }
+    },
+    setupStars() {
+      // get node ids
+      const nodeIds = this.$refs.network.nodes.map(({ id }) => id);
+      // get node xy positions
+      const nodePositionMap = this.$refs.network.getPositions(nodeIds);
+
+      // reset stars
+      this.stars = [];
+
+      // loop nodes/topics and create a star for each
+      for (const [topicId, topicPosition] of Object.entries(nodePositionMap)) {
+        this.stars.push(
+          new Star(
+            topicPosition.x,
+            topicPosition.y,
+            7, // same size as network nodes
+            this.dark ? "#FFD700" : "#FFA500", // golden color for stars
+            14, // glow radius for fire-like effect
+          ),
+        );
       }
     },
     beforeDrawing(ctx) {
@@ -846,14 +985,44 @@ export default {
 
       // update planets orbits
       for (const planet of this.planets) {
+        // Skip hidden planets
+        if (planet.hidden) {
+          continue;
+        }
+
         //TODO: does this ternary slow things down
         const strokeColor = this.dark ? "rgba(255, 255, 255, 0.15)" : "rgba(0, 0, 0, 0.15)";
+
+        // Handle planet orbit stop/resume based on showMissions flag
+        // Only trigger animation if not already animating
+        if (this.showMissions && !planet.orbitStopped && !planet.animating) {
+          planet.stopOrbit();
+        } else if (!this.showMissions && planet.orbitStopped && !planet.animating) {
+          planet.resumeOrbit();
+        }
+
         planet.update(ctx, delta, strokeColor);
       }
     },
     // draw a rect with a hole. to blank out rest of map apart from the previewed system
     // https://stackoverflow.com/questions/6271419/how-to-fill-the-opposite-shape-on-canvas
     afterDrawing(ctx) {
+      // Draw stars on top of everything
+      // get delta for star animation
+      const oldTime = this.time;
+      this.time = new Date();
+      let delta;
+      if (oldTime == null) {
+        delta = 1;
+      } else {
+        delta = (this.time.getTime() - oldTime.getTime()) / 1000;
+      }
+
+      // update and draw stars
+      // for (const star of this.stars) {
+      //   star.update(ctx, delta);
+      // }
+
       if (this.inSystemPreviewView) {
         // console.log("ctx", ctx)
         // Canvas - set fill
@@ -886,16 +1055,34 @@ export default {
         ctx.fill();
       }
 
+      // Draw planet labels only when missions are shown
+      if (this.showMissions) {
+        const labelColor = this.dark ? "#ffffff" : this.$vuetify.theme.themes.light.baseAccent;
+        for (const planet of this.planets) {
+          // Skip hidden planets
+          if (planet.hidden) {
+            continue;
+          }
+
+          // If in system preview view, only show labels for the current topic
+          const visibleTopicId = this.inSystemPreviewView ? this.currentTopicId : undefined;
+          planet.drawLabel(ctx, labelColor, visibleTopicId);
+        }
+      }
+
+      // Draw node labels manually
+      this.drawNodeLabels(ctx);
+
       // Add rectangle selection drawing
       if (this.drag) {
         const [startX, startY] = this.canvasify(this.DOMRect.startX, this.DOMRect.startY);
         const [endX, endY] = this.canvasify(this.DOMRect.endX, this.DOMRect.endY);
 
         ctx.setLineDash([5]);
-        ctx.strokeStyle = 'rgba(78, 146, 237, 0.75)';
+        ctx.strokeStyle = "rgba(78, 146, 237, 0.75)";
         ctx.strokeRect(startX, startY, endX - startX, endY - startY);
         ctx.setLineDash([]);
-        ctx.fillStyle = 'rgba(151, 194, 252, 0.45)';
+        ctx.fillStyle = "rgba(151, 194, 252, 0.45)";
         ctx.fillRect(startX, startY, endX - startX, endY - startY);
       }
     },
@@ -933,8 +1120,8 @@ export default {
       const network = this.$refs.network.network;
       const selectedNodes = this.$refs.network.nodes.reduce((selected, node) => {
         const pos = network.getPositions(node.id)[node.id];
-        return (startX <= pos.x && pos.x <= endX && startY <= pos.y && pos.y <= endY) 
-          ? selected.concat(node.id) 
+        return startX <= pos.x && pos.x <= endX && startY <= pos.y && pos.y <= endY
+          ? selected.concat(node.id)
           : selected;
       }, []);
 
@@ -943,7 +1130,7 @@ export default {
 
     rectangleMousedown(event) {
       if (!this.draggingNodes) return;
-      
+
       // Accept both right click and ctrl+click for selection
       if (event.which === 3 || (event.which === 1 && event.ctrlKey)) {
         event.preventDefault(); // Prevent default context menu
@@ -952,7 +1139,7 @@ export default {
           startX: event.pageX - container.offsetLeft,
           startY: event.pageY - container.offsetTop,
           endX: event.pageX - container.offsetLeft,
-          endY: event.pageY - container.offsetTop
+          endY: event.pageY - container.offsetTop,
         });
         this.drag = true;
       }
@@ -968,7 +1155,7 @@ export default {
         const container = this.$el;
         Object.assign(this.DOMRect, {
           endX: event.pageX - container.offsetLeft,
-          endY: event.pageY - container.offsetTop
+          endY: event.pageY - container.offsetTop,
         });
         this.$refs.network.redraw();
       }
@@ -988,7 +1175,7 @@ export default {
     // New touch event handlers
     rectangleTouchstart(event) {
       if (!this.draggingNodes) return;
-      
+
       // Only respond to two-finger touch
       if (event.touches.length === 2) {
         event.preventDefault(); // Prevent scrolling
@@ -998,7 +1185,7 @@ export default {
           startX: touch.pageX - container.offsetLeft,
           startY: touch.pageY - container.offsetTop,
           endX: touch.pageX - container.offsetLeft,
-          endY: touch.pageY - container.offsetTop
+          endY: touch.pageY - container.offsetTop,
         });
         this.drag = true;
       }
@@ -1006,14 +1193,14 @@ export default {
 
     rectangleTouchmove(event) {
       if (!this.draggingNodes || !this.drag) return;
-      
+
       if (event.touches.length === 2) {
         event.preventDefault();
         const container = this.$el;
         const touch = event.touches[0];
         Object.assign(this.DOMRect, {
           endX: touch.pageX - container.offsetLeft,
-          endY: touch.pageY - container.offsetTop
+          endY: touch.pageY - container.offsetTop,
         });
         this.$refs.network.redraw();
       }
@@ -1021,11 +1208,77 @@ export default {
 
     rectangleTouchend(event) {
       if (!this.draggingNodes) return;
-      
+
       if (this.drag) {
         this.drag = false;
         this.$refs.network.redraw();
         this.selectFromDOMRect();
+      }
+    },
+    focusOnNodeById(nodeId) {
+      const node = this.currentCourseNodes.find((n) => n.id === nodeId);
+      if (node) {
+        // Create a mock click data object to reuse the existing click2 logic
+        const mockClickData = {
+          items: [node.id],
+          nodes: [node.id],
+          edges: [],
+          pointer: { canvas: { x: node.x, y: node.y } },
+        };
+
+        // Temporarily disable edit modes to ensure click2 works properly
+        const wasAddingNode = this.addingNode;
+        const wasAddingEdge = this.addingEdge;
+        const wasDraggingNodes = this.draggingNodes;
+
+        this.addingNode = false;
+        this.addingEdge = false;
+        this.draggingNodes = false;
+
+        this.click2(mockClickData);
+
+        // Restore edit modes
+        this.addingNode = wasAddingNode;
+        this.addingEdge = wasAddingEdge;
+        this.draggingNodes = wasDraggingNodes;
+      }
+    },
+    toggleShowMissions() {
+      this.$emit("toggleShowMissions");
+    },
+    hidePlanetsForOtherTopics(currentTopicId) {
+      // Hide planets that don't belong to the current topic
+      for (const planet of this.planets) {
+        if (planet.topicId !== currentTopicId) {
+          planet.hidden = true;
+        }
+      }
+    },
+    showAllPlanets() {
+      // Show all planets again
+      for (const planet of this.planets) {
+        planet.hidden = false;
+      }
+    },
+    hideOtherTopicNodes(currentTopicId) {
+      // Hide nodes that are not the current topic using DataSet update
+      const nodesToHide = this.currentCourseNodes.filter((node) => node.id !== currentTopicId);
+      for (const node of nodesToHide) {
+        // Update the node in the DataSet to set hidden = true
+        this.$refs.network.visData.nodes.update({
+          id: node.id,
+          hidden: true,
+        });
+      }
+    },
+    showAllTopicNodes() {
+      // Show all nodes again using DataSet update
+      for (const node of this.currentCourseNodes) {
+        // Update the node in the DataSet to set hidden = false
+        this.$refs.network.visData.nodes.update({
+          id: node.id,
+          hidden: false,
+        });
       }
     },
   },

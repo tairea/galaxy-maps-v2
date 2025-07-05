@@ -171,7 +171,7 @@ a {
   padding: 20px;
   border: 1px solid var(--v-missionAccent-base);
   position: relative;
-  overflow-y: scroll;
+  overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   &:hover::-webkit-scrollbar {

@@ -9,7 +9,7 @@
           color="galaxyAccent"
           class="mb-4"
         ></v-progress-circular>
-        <p class="loading-message text-h6">{{ currentLoadingMessage }}</p>
+        <p class="loading-message overline">{{ currentLoadingMessage }}</p>
       </div>
     </div>
 
@@ -22,7 +22,7 @@
             <!-- HEADER -->
             <div class="dialog-header">
               <p class="dialog-title">
-                Create new Galaxy Map with AI
+                Create new Galaxy Map with A.I.
               </p>
               <div class="d-flex align-center">
                 <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
@@ -31,7 +31,7 @@
                     A Galaxy Map is a path of learning... like a course.
                   </p>
                   <p class="dialog-description">
-                    If you would like AI to help create a new Galaxy Map, please describe what you would like to learn.
+                    Please describe the learning you would like the A.I. to map
                   </p>
                 </div>
               </div>
@@ -48,8 +48,9 @@
                 auto-grow
                 clearable
                 v-model="description"
-                label="Galaxy description"
+                label="Describe what the Galaxy Map should cover"
                 :disabled="loading"
+                autofocus
               ></v-textarea>
             </div>
             <!-- ACTION BUTTONS -->
@@ -127,7 +128,7 @@ export default {
       "Mapping distant galaxies of consciousness...",
       "Calculating interstellar alignments...",
       "Assembling galactic sources of creation...",
-      "Searching the starsfor enlightenment...",
+      "Searching the stars for enlightenment...",
       "Gathering cosmic learning resources...",
       "Preparing your journey through the stars...",
       "Creating your learning universe...",
@@ -143,7 +144,7 @@ export default {
     },
     disabled() {
       return this.loading || this.description.length === 0;
-    },  
+    },
   },
   watch: {
     loading(newValue) {
@@ -160,366 +161,8 @@ export default {
       this.description = "";
       this.$emit('update:showDialog', false);
     },
-    // Add this helper function to calculate spiral coordinates
-    getSpiral(index, centerX = 0, centerY = 0, radius = 100) {
-      const angle = index * 0.8;
-      const spiralGrowth = 50;
-      const currentRadius = radius + (index * spiralGrowth);
-      const x = centerX + (currentRadius * Math.cos(angle));
-      const y = centerY + (currentRadius * Math.sin(angle));
-      return { x, y };
-    },
-    async handleSubmit() {
-      let courseDocRef;
-      let previousNodeId = null;
-      console.log('handleSubmit');
-      if (!this.loading) {
-        try {
-          this.loading = true;
-
-          const prompt = `Create a detailed, structured learning path based on this description: "${this.description}"
-          Return only a JSON object with the following structure:
-          {
-            "title": "A clear, concise title for the learning path",
-            "description": "A comprehensive description of what will be learned, including prerequisites and expected outcomes",
-            "objectives": [
-              {
-                "title": "A concise title for the objective with a maximum of 30 characters",
-                "description": "A detailed description of this learning objective, including what skills or knowledge will be gained",
-                "complexity": "basic|intermediate|advanced",
-                "missions": [
-                  {
-                    "title": "Clear, action-oriented title for the task",
-                    "description": "Instructions must be structured in the following format with complete sentences:
-
-                      PREREQUISITES:
-                      - List all required knowledge, tools, or setup needed before starting
-                      - Each prerequisite must be clearly explained
-
-                      CONCEPTS:
-                      - Define and explain all key terms and concepts
-                      - Provide relevant examples for each concept
-                      - Link concepts to practical applications
-
-                      STEP-BY-STEP INSTRUCTIONS:
-                      1. Each step must be a complete sentence with a clear action
-                      2. Complex steps must be broken down into sub-steps
-                      3. Provide validation checks to ensure step completion
-                      4. Include example outputs or results where applicable
-
-                      TROUBLESHOOTING:
-                      - List common errors or issues that might occur
-                      - Provide specific solutions for each problem
-                      - Include verification steps to confirm proper resolution
-
-                      ADDITIONAL RESOURCES:
-                      - List relevant documentation, tutorials, or references
-                      - Specify which parts of the resources are most relevant",
-                    "submissionRequired": false,
-                    "submissionInstructions": "If submissions is false, this fields should be empty quotes. If submission is required, provide detailed instructions for a submission must include:
-                      1. Specific deliverables required
-                      2. Format or template to follow
-                      3. Success criteria for evaluation
-                      4. Common mistakes to avoid
-                      5. Examples of successful submissions",
-                    "color": "#69a1e2"
-                  }
-                ]
-              }
-            ]
-          }
-
-          Important formatting guidelines in mission descriptions only:
-          1. Use HTML tags for all text formatting
-          2. Use <h3> for section headers
-          3. Use <ul> and <li> for unordered lists
-          4. Use <ol> and <li> for ordered lists/steps
-          5. Use <br> for line breaks between sections
-          6. Use <p> for paragraphs of text
-          7. Use <code> for code examples
-          8. Use <strong> for emphasis
-          9. Maintain consistent formatting throughout all descriptions
-          10. Ensure proper nesting of HTML tags
-
-          Content guidelines before:
-          1. Every sentence must be complete and grammatically correct
-          2. All instructions must be specific and actionable
-          3. Use consistent terminology throughout
-          4. Include concrete examples for complex concepts
-          5. Break down complex tasks into smaller, manageable steps
-          6. The first objective must cover setup and prerequisites
-          7. Scale missions per objective based on complexity:
-             - Basic: 2-3 missions
-             - Intermediate: 3-4 missions
-             - Advanced: 4-5 missions
-          8. The final mission of each objective must have submissionRequired: true
-          9. Technical topics must include:
-             - Specific code examples with comments
-             - Expected outputs
-             - Error messages and solutions
-             - Testing/validation steps
-          10. Environment-specific instructions must specify:
-              - Operating system requirements
-              - Version numbers
-              - Configuration settings
-              - Alternative options where applicable
-
-          Review criteria:
-          - Text in the missions descriptions must be properly formatted with HTML tags
-          - No raw newlines (\n) or markdown
-          - Proper nesting of HTML elements
-          - Clear visual hierarchy in the content
-          - No incomplete sentences or fragments
-          - No undefined terminology
-          - No ambiguous instructions
-          - No missing steps between concepts
-          - Clear progression of complexity
-          - Explicit success criteria for each step
-          - Comprehensive error handling
-          - Concrete examples for validation
-          - Provide clear code examlpes for instructions that require it
-
-          Adapt the detail level and technical depth based on the complexity of the subject matter while maintaining completeness, accuracy, and consistent HTML formatting.`;
-
-          const response = await this.$openai.chat.completions.create({
-            model: "gpt-4-turbo-preview",
-            messages: [
-              { 
-                role: 'system', 
-                content: 'You are an expert instructional designer that returns only valid JSON without any markdown formatting or code blocks. Create a detailed course, that breaks down the entire learning journey into objectives, missions and step-by-step instructions for each mission. The number of objectives and missions should be appropriate for the complexity of the course. The step by step instructions should be highly detailed and include all necessary information for someone that is not familiar with the subject.'
-              },
-              { role: 'user', content: prompt }
-            ],
-            temperature: 0.7,
-            max_tokens: 4096
-          });
-
-          let jsonString = response.choices[0].message.content;
-          // Remove any potential markdown code block syntax
-          jsonString = jsonString.replace(/```json\s?|\s?```/g, '');
-          console.log('jsonString', jsonString);
-          const courseData = JSON.parse(jsonString);
-          console.log('courseData', courseData);
-          // 2. Generate image with DALL-E
-          const imagePrompt = `Create a symbolic representation for a learning course about: ${courseData.title}. The image should be minimalist, professional, and educational.`;
-          const generatedImage = await this.$openai.images.generate({
-            model: "dall-e-3",
-            prompt: imagePrompt,
-            n: 1,
-            size: "1024x1024",
-          });
-
-          // 3. Use Cloud Function to handle image download and upload
-          const downloadAndUploadImage = functions.httpsCallable('downloadAndUploadImage');
-          const imageFileName = `course-images/${Date.now()}-${courseData.title.toLowerCase().replace(/\s+/g, '-')}.png`;
-          
-          const result = await downloadAndUploadImage({
-            imageUrl: generatedImage.data[0].url,
-            fileName: imageFileName
-          });
-
-          const downloadURL = result.data.downloadURL;
-
-          const formattedCourse = {
-            title: courseData.title,
-            description: courseData.description,
-            image: {
-              url: downloadURL,
-              name: imageFileName,
-            },
-            mappedBy: {
-              name: "",
-              image: {
-                url: "",
-                name: "",
-              },
-              source: "",
-            },
-            status: "drafting",
-          };
-          
-          const objectives = courseData.objectives;
-
-          formattedCourse.contentBy = {
-            name: this.person.firstName + " " + this.person.lastName,
-            personId: this.person.id,
-          };
-          // add user to mappedBy
-          formattedCourse.mappedBy = {
-            name: this.person.firstName + " " + this.person.lastName,
-            personId: this.person.id,
-          };
-
-          formattedCourse.owner = db.collection("people").doc(this.person.id);
-
-          console.log('formattedCourse', formattedCourse);
-          console.log('objectives', objectives);
-
-          let courseId;
-
-          try {
-            // Add a new document in collection "courses"
-            courseDocRef = await db.collection("courses").add(formattedCourse);
-            courseDocRef.update({ 
-              id: courseDocRef.id,
-              topicTotal: objectives.length // Add total number of objectives
-            });
-            courseId = courseDocRef.id;
-            console.log("1: galaxy created - ", courseId);
-
-            //set courseID to Store state 'state.currentCourseId' (so not relying on router params)
-            this.setCurrentCourseId(courseDocRef.id);
-
-            // Create nodes and topics for each objective
-            for (let i = 0; i < objectives.length; i++) {
-              const objective = objectives[i];
-              const { x, y } = this.getSpiral(i);
-              
-              // Create node
-              const nodeData = {
-                label: objective.title,
-                description: objective.description,
-                color: "#69a1e2",
-                topicCreatedTimestamp: new Date(),
-                x: x,
-                y: y,
-                taskTotal: objective.missions.length,
-                prerequisites: previousNodeId ? [previousNodeId] : []
-              };
-
-              // Only add group for first node
-              if (i === 0) {
-                nodeData.group = "introduction";
-              }
-
-              const mapNodeDocRef = await db
-                .collection("courses")
-                .doc(courseDocRef.id)
-                .collection("map-nodes")
-                .add(nodeData);
-                
-              console.log('adding node '+ i + ': ',  nodeData.label);
-
-              // Update node with its ID
-              await mapNodeDocRef.update({ id: mapNodeDocRef.id });
-              
-              // Create topic
-              await db
-                .collection("courses")
-                .doc(courseDocRef.id)
-                .collection("topics")
-                .doc(mapNodeDocRef.id)
-                .set({
-                  ...nodeData,
-                  id: mapNodeDocRef.id
-                });
-              console.log('- added topic: ', nodeData.label)
-
-              // Create missions for this topic
-              for (let j = 0; j < objective.missions.length; j++) {
-                const mission = objective.missions[j];
-                const missionData = {
-                  title: mission.title,
-                  description: mission.description,
-                  submissionRequired: mission.submissionRequired,
-                  submissionInstructions: mission.submissionInstructions,
-                  color: mission.color,
-                  orderIndex: j,
-                  taskCreatedTimestamp: new Date()
-                };
-
-                await db
-                  .collection("courses")
-                  .doc(courseDocRef.id)
-                  .collection("topics")
-                  .doc(mapNodeDocRef.id)
-                  .collection("tasks")
-                  .add(missionData);
-                console.log('- added mission '+ j + ': ', mission.title)
-              }
-
-              // Create edge if there's a previous node
-              if (previousNodeId) {
-                const edgeDocRef = await db
-                  .collection("courses")
-                  .doc(courseDocRef.id)
-                  .collection("map-edges")
-                  .add({
-                    from: previousNodeId,
-                    to: mapNodeDocRef.id,
-                    dashes: false
-                  });
-
-                await edgeDocRef.update({ id: edgeDocRef.id });
-                console.log('- adding edge')
-              }
-
-              previousNodeId = mapNodeDocRef.id;
-            }
-
-            // send admins an email notification of a new course (email, name, course, courseId)
-            await this.sendCourseCreatedEmail(
-              this.person.email,
-              this.person.firstName + " " + this.person.lastName,
-              formattedCourse.title,
-              courseId,
-            );
-            console.log("5: email sent to author");
-
-            } catch (error) {
-              this.loading = false;
-              console.error("Error creating galaxy: ", error);
-              this.setSnackbar({
-                show: true,
-                text: "Error creating galaxy: " + error.message,
-                color: "pink",
-              });
-            }
-        } catch (error) {
-          console.error('AI Generation Error:', error);
-          this.setSnackbar({
-            show: true,
-            text: "Error generating galaxy: " + error.message,
-            color: "pink",
-          });
-          this.loading = false;
-        } finally {
-          console.log("5: Galaxy map successfully created");
-          this.loading = false;
-          // this.closeDialog();
-          // route to newly created galaxy
-          this.setSnackbar({
-            show: true,
-            text: "Galaxy created",
-            color: "baseAccent",
-          });
-          if (courseDocRef) {
-            this.$router.push({
-              name: "GalaxyView",
-              params: {
-                courseId: courseDocRef.id,
-              },
-            });
-          }
-        }
-      }
-    },
-    sendCourseCreatedEmail(email, name, courseTitle, courseId) {
-      let data = {
-        email: email,
-        name: name,
-        course: courseTitle,
-        courseId: courseId,
-      };
-      console.log("sending new map created email");
-      const sendCourseCreatedEmail = functions.httpsCallable("sendCourseCreatedEmail");
-      return sendCourseCreatedEmail(data);
-    },
     startLoadingMessages() {
-      // Set initial message
       this.currentLoadingMessage = this.loadingMessages[0];
-      
-      // Change message every 3 seconds
       this.loadingMessageInterval = setInterval(() => {
         const currentIndex = this.loadingMessages.indexOf(this.currentLoadingMessage);
         const nextIndex = (currentIndex + 1) % this.loadingMessages.length;
@@ -533,9 +176,295 @@ export default {
       }
       this.currentLoadingMessage = "";
     },
-    // Make sure to clear interval when component is destroyed
-    beforeDestroy() {
-      this.stopLoadingMessages();
+    async handleSubmit() {
+      if (!this.loading && this.description.trim()) {
+        let courseDocRef;
+        let previousNodeId = null;
+        try {
+          this.loading = true;
+
+          const topicResponse = await this.$openai.chat.completions.create({
+            model: "o4-mini",
+            // temperature: 0.4,
+            messages: [
+              {
+                role: "system",
+                content: `
+                
+                You are a master curriculum architect. Given a subject, generate an **exhaustive and logical** sequence of learning topics 
+                that build from beginner to mastery. Each topic should be phrased as a **short, descriptive title**. 
+
+                CRITICAL: You must return ONLY a raw JSON array of strings. 
+                Do not include any markdown formatting, code blocks, or explanations. 
+                The response must be a valid JSON array that can be parsed with JSON.parse().
+
+                Example valid response format (return exactly this format, no markdown, no code blocks):
+                ["Introduction to Basic Concepts", "Core Principles", "Advanced Techniques"]
+
+                Do not include lesson content or tasks.`,
+              },
+              {
+                role: "user",
+                content: `Generate a topic sequence for mastering ${this.description}`
+              }
+            ]
+          });
+
+          console.log("Raw AI Response:", topicResponse.choices[0].message.content);
+          console.log("Response type:", typeof topicResponse.choices[0].message.content);
+          console.log("Response length:", topicResponse.choices[0].message.content.length);
+          console.log("First 100 characters:", topicResponse.choices[0].message.content.substring(0, 100));
+
+          let topicList;
+          try {
+            const response = topicResponse.choices[0].message.content;
+            // Extract JSON array from the response
+            const jsonMatch = response.match(/\[[\s\S]*\]/);
+            if (!jsonMatch) {
+              throw new Error("No JSON array found in response");
+            }
+            const jsonStr = jsonMatch[0];
+            console.log("Extracted JSON string:", jsonStr);
+            topicList = JSON.parse(jsonStr);
+            console.log("Successfully parsed micro JSON:", topicList);
+          } catch (error) {
+            console.error("Error parsing micro response:", error);
+            console.log("Raw micro response:", topicResponse.choices[0].message.content);
+            throw new Error("Failed to parse micro response into valid JSON format");
+          }
+
+          // Generate title and description using AI
+          const titleResponse = await this.$openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+              {
+                role: "system",
+                content: `
+                
+                You are a course title and description generator. Given a user's learning request and a list of topics, 
+                generate a compelling title and concise description for the course.
+
+                CRITICAL: Return ONLY a raw JSON object with "title" and "description" keys. 
+                Do not include any explanatory text, markdown formatting, or code blocks. 
+                The response must be a valid JSON object that can be parsed with JSON.parse().
+
+                Example valid response format:
+                {
+                  "title": "Mastering Vue.js: From Basics to Advanced Patterns",
+                  "description": "A comprehensive journey through Vue.js development, covering everything from fundamental concepts to advanced implementation patterns."
+                }`,
+              },
+              {
+                role: "user",
+                content: `Generate a title and description for a course about: ${this.description}\n\nTopics to be covered:\n${topicList.join('\n')}`
+              }
+            ]
+          });
+
+          let courseMetadata;
+          try {
+            const response = titleResponse.choices[0].message.content;
+            const jsonMatch = response.match(/\{[\s\S]*\}/);
+            if (!jsonMatch) {
+              throw new Error("No JSON object found in response");
+            }
+            const jsonStr = jsonMatch[0];
+            console.log("Extracted metadata JSON:", jsonStr);
+            courseMetadata = JSON.parse(jsonStr);
+            console.log("Successfully parsed metadata:", courseMetadata);
+          } catch (error) {
+            console.error("Error parsing metadata response:", error);
+            console.log("Raw metadata response:", titleResponse.choices[0].message.content);
+            throw new Error("Failed to parse course metadata into valid JSON format");
+          }
+
+          const topicsWithTasks = [];
+          for (let topic of topicList) {
+            const microResponse = await this.$openai.chat.completions.create({
+              model: "gpt-4o-mini",
+              temperature: 0.4,
+              messages: [
+                {
+                  role: "system",
+                  content: `
+                  
+                  You are a learning experience designer. Given a topic, break it down into **bite-sized lessons** 
+                  that take **5 minutes or less** to complete. For each micro-lesson, provide:\n
+                  \n
+                  1. A **short explanation** of the concept\n
+                  2. 1–3 short **actions** a learner should take to master the concept.\n
+                  \n
+                  CRITICAL: Return ONLY a raw JSON array of objects. Each object must have "lesson", "learning", and "actions" keys. 
+                  Do not include any explanatory text, markdown formatting, or code blocks. 
+                  The response must be a valid JSON array that can be parsed with JSON.parse().
+
+                  Example valid response format (return exactly this format, no markdown, no code blocks, no explanatory text):
+                  [
+                    {
+                      "lesson": "Basic Concept",
+                      "learning": "Explanation of the concept",
+                      "actions": ["Action 1", "Action 2"]
+                    }
+                  ]`,
+                },
+                {
+                  role: "user",
+                  content: `Break down the topic: \"${topic}\"`
+                }
+              ]
+            });
+
+            console.log("Raw Micro Response:", microResponse.choices[0].message.content);
+            console.log("Micro Response type:", typeof microResponse.choices[0].message.content);
+            console.log("Micro Response length:", microResponse.choices[0].message.content.length);
+
+            let tasks;
+            try {
+              const response = microResponse.choices[0].message.content;
+              // Extract JSON array from the response
+              const jsonMatch = response.match(/\[[\s\S]*\]/);
+              if (!jsonMatch) {
+                throw new Error("No JSON array found in response");
+              }
+              const jsonStr = jsonMatch[0];
+              console.log("Extracted JSON string:", jsonStr);
+              tasks = JSON.parse(jsonStr);
+              console.log("Successfully parsed micro JSON:", tasks);
+            } catch (error) {
+              console.error("Error parsing micro response:", error);
+              console.log("Raw micro response:", microResponse.choices[0].message.content);
+              throw new Error("Failed to parse micro response into valid JSON format");
+            }
+
+            topicsWithTasks.push({
+              title: topic,
+              description: `Learn about: ${topic}`,
+              missions: tasks.map(t => ({
+                title: t.lesson,
+                description: `<h3>LEARNING</h3><p>${t.learning}</p><h3>ACTIONS</h3><ul>${t.actions.map(a => `<li>${a}</li>`).join('')}</ul>`,
+                submissionRequired: false,
+                submissionInstructions: "",
+                color: "#69a1e2"
+              }))
+            });
+          }
+
+          const courseData = {
+            title: courseMetadata.title,
+            description: courseMetadata.description,
+            topics: topicsWithTasks
+          };
+
+          // DALL-E image generation
+          const imagePrompt = `Create an image that represents: ${courseData.title}`;
+          const generatedImage = await this.$openai.images.generate({
+            model: "dall-e-3",
+            prompt: imagePrompt,
+            n: 1,
+            size: "1024x1024",
+          });
+
+          const downloadAndUploadImage = functions.httpsCallable('downloadAndUploadImage');
+          const imageFileName = `course-images/${Date.now()}-${courseData.title.toLowerCase().replace(/\s+/g, '-')}.png`;
+          const result = await downloadAndUploadImage({
+            imageUrl: generatedImage.data[0].url,
+            fileName: imageFileName
+          });
+          const downloadURL = result.data.downloadURL;
+
+          const formattedCourse = {
+            title: courseData.title,
+            description: courseData.description,
+            image: { url: downloadURL, name: imageFileName },
+            mappedBy: {
+              name: this.person.firstName + " " + this.person.lastName,
+              personId: this.person.id
+            },
+            contentBy: {
+              name: this.person.firstName + " " + this.person.lastName,
+              personId: this.person.id
+            },
+            status: "drafting",
+            owner: db.collection("people").doc(this.person.id)
+          };
+
+          const objectives = courseData.topics;
+
+          courseDocRef = await db.collection("courses").add(formattedCourse);
+          await courseDocRef.update({ id: courseDocRef.id, topicTotal: objectives.length });
+          this.setCurrentCourseId(courseDocRef.id);
+
+          for (let i = 0; i < objectives.length; i++) {
+            const objective = objectives[i];
+            const { x, y } = this.getSpiral(i);
+
+            const nodeData = {
+              label: objective.title,
+              description: objective.description,
+              topicCreatedTimestamp: new Date(),
+              x, y,
+              taskTotal: objective.missions.length,
+              prerequisites: previousNodeId ? [previousNodeId] : []
+            };
+
+            if (i === 0) nodeData.group = "introduction";
+
+            const mapNodeDocRef = await db.collection("courses").doc(courseDocRef.id).collection("map-nodes").add(nodeData);
+            await mapNodeDocRef.update({ id: mapNodeDocRef.id });
+
+            await db.collection("courses").doc(courseDocRef.id).collection("topics").doc(mapNodeDocRef.id).set({ ...nodeData, id: mapNodeDocRef.id });
+
+            for (let j = 0; j < objective.missions.length; j++) {
+              const mission = objective.missions[j];
+              const missionData = {
+                title: mission.title,
+                description: mission.description,
+                submissionRequired: mission.submissionRequired,
+                submissionInstructions: mission.submissionInstructions,
+                color: mission.color,
+                orderIndex: j,
+                taskCreatedTimestamp: new Date()
+              };
+              await db.collection("courses").doc(courseDocRef.id).collection("topics").doc(mapNodeDocRef.id).collection("tasks").add(missionData);
+            }
+
+            if (previousNodeId) {
+              const edgeDocRef = await db.collection("courses").doc(courseDocRef.id).collection("map-edges").add({ from: previousNodeId, to: mapNodeDocRef.id, dashes: false });
+              await edgeDocRef.update({ id: edgeDocRef.id });
+            }
+
+            previousNodeId = mapNodeDocRef.id;
+          }
+
+          await this.sendCourseCreatedEmail(
+            this.person.email,
+            this.person.firstName + " " + this.person.lastName,
+            formattedCourse.title,
+            courseDocRef.id
+          );
+
+          this.setSnackbar({ show: true, text: "Galaxy created", color: "baseAccent" });
+          this.$router.push({ name: "GalaxyView", params: { courseId: courseDocRef.id } });
+
+        } catch (error) {
+          console.error("Error creating galaxy:", error);
+          this.setSnackbar({ show: true, text: "Error creating galaxy: " + error.message, color: "pink" });
+        } finally {
+          this.loading = false;
+        }
+      }
+    },
+    async sendCourseCreatedEmail(email, name, courseTitle, courseId) {
+      const sendCourseCreatedEmail = functions.httpsCallable("sendCourseCreatedEmail");
+      return sendCourseCreatedEmail({ email, name, course: courseTitle, courseId });
+    },
+    getSpiral(index, centerX = 0, centerY = 0, radius = 100) {
+      const angle = index * 0.8;
+      const spiralGrowth = 50;
+      const currentRadius = radius + (index * spiralGrowth);
+      const x = centerX + (currentRadius * Math.cos(angle));
+      const y = centerY + (currentRadius * Math.sin(angle));
+      return { x, y };
     }
   }
 }
