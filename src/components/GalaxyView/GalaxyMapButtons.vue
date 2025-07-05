@@ -27,9 +27,9 @@
             <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
           </div>
           <div class="mapButton-text">
-            <p v-if="!addNodeMode" class="overline ma-0">Add a new node</p>
+            <p v-if="!addNodeMode" class="overline ma-0">Add a new Star</p>
             <p v-else class="ma-0" style="font-size: 0.7rem">
-              Click on the map to place a new node
+              Click on the map to place a new Star
             </p>
           </div>
         </div>
@@ -41,8 +41,8 @@
             <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
           </div>
           <div class="mapButton-text">
-            <p v-if="!addEdgeMode" class="overline ma-0">Connect Nodes</p>
-            <p v-else class="ma-0" style="font-size: 0.7rem">Click and drag to connect two nodes</p>
+            <p v-if="!addEdgeMode" class="overline ma-0">Connect Stars</p>
+            <p v-else class="ma-0" style="font-size: 0.7rem">Click and drag to connect two Stars</p>
           </div>
         </div>
 
@@ -53,12 +53,12 @@
             <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
           </div>
           <div class="mapButton-text">
-            <p v-if="!dragNodeMode" class="overline ma-0">Change node positions</p>
+            <p v-if="!dragNodeMode" class="overline ma-0">Change Star positions</p>
             <p v-else class="ma-0" style="font-size: 0.7rem">
               {{
                 changeInPositions
                   ? "CANCEL or SAVE new positions"
-                  : "Click and drag to reposition node"
+                  : "Click and drag to reposition Star"
               }}
             </p>
           </div>
