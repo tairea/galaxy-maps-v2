@@ -60,6 +60,15 @@ export default {
     draggingNodes: false,
     network: {
       options: {
+        // layout: {
+        //   hierarchical: {
+        //     enabled: true,
+        //     sortMethod: "directed",
+        //     shakeTowards: "leaves",
+        //     direction: "LR",
+        //     nodeSpacing: 100,
+        //   },
+        // },
         physics: {
           enabled: false,
           solver: "repulsion",
@@ -130,7 +139,7 @@ export default {
           // node types
           introduction: {
             shape: "dot",
-            // color: "#00E676",
+            color: "#00E676", // baseAccent
           },
           // tasks: {
           //   // color: { background: "yellow", border: "white" },

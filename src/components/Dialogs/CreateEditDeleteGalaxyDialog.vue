@@ -48,7 +48,6 @@
               :style="course.title ? 'width:50%' : 'width:100%'"
               style="margin-top: 10px"
             >
-                          
               <!-- AdAI Creation Button -->
               <v-tooltip v-if="!edit" bottom>
                 <template v-slot:activator="{ on, attrs }">
@@ -56,7 +55,7 @@
                     v-bind="attrs"
                     v-on="on"
                     outlined
-                    color="baseAccent"
+                    color="galaxyAccent"
                     class="mt-4 mx-5"
                     @click="openAIDialog"
                   >
@@ -453,7 +452,15 @@
 <script>
 import { db, storage, functions } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
-import { mdiPencil, mdiPlus, mdiClose, mdiCheck, mdiDelete, mdiInformationVariant, mdiRobotExcited } from "@mdi/js";
+import {
+  mdiPencil,
+  mdiPlus,
+  mdiClose,
+  mdiCheck,
+  mdiDelete,
+  mdiInformationVariant,
+  mdiRobotExcited,
+} from "@mdi/js";
 import firebase from "firebase/compat/app";
 import clone from "lodash/clone";
 import { mapActions, mapState } from "pinia";
@@ -884,7 +891,7 @@ export default {
     openAIDialog() {
       this.cancel(); // Close current dialog
       this.$nextTick(() => {
-        this.$emit('openAiDialog'); // Emit event to open AI dialog
+        this.$emit("openAiDialog"); // Emit event to open AI dialog
       });
     },
   },
