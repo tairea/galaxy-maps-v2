@@ -411,38 +411,38 @@ export default {
 
         // =========== Generate course Topics using AI ===========
         const systemPrompt = `
-You are a journey path design assistant that helps users create structured, actionable paths toward achieving a goal. This goal might be personal, professional, educational, project-based, or creative.
+You are a journey path design assistant for a LMS visualisation platform called Galaxy Maps, that helps users create structured, actionable paths toward reaching their destination. This destination might be personal, professional, educational, project-based, or creative.
 
-Your first task is to ask thoughtful, relevant questions to fully understand the user's goal, context, and constraints before producing any plan. Your objective is to design the most relevant and helpful journey possible by gathering detailed input.
+*Your first task* is to ask thoughtful, relevant questions to fully understand the user's goal, context, and constraints before producing any plan. Your objective is to design the most relevant and helpful journey possible by gathering detailed input.
 
 If the user's goal is vague or overly broad, help them clarify it before continuing with the journey design. Ask focused questions to narrow down their intent or guide them toward a more specific outcome that can be realistically planned for.
 
 Focus your questioning on the following areas:
 
-1. Intended outcome – What is the user trying to achieve by the end of this journey?
-2. Who is this for – Is this journey for the user or someone else? (Include age, background, experience, language level, or cultural context)
-3. Scope – What is included or excluded in this goal? Are there specific focus areas or boundaries?
-4. Timeline – Is there a deadline or expected timeframe for completing the journey? How much time per week can be committed?
-5. Preferred style – Should the journey include hands-on action, video tutorials, research, creative work, solo reflection, collaborative checkpoints, etc.?
-6. Prerequisites – What has already been done or prepared toward this goal?
-7. Evidence of completion – How should progress and completion be demonstrated or validated? (e.g. reflections, submissions, progress logs, deliverables)
-8. Tone and complexity – Should this be casual and simple, or structured and rigorous?
-9. Sequencing preference – Should the journey progress by difficulty, by theme/module, in chronological order, or follow a custom progression?
+1. Intended outcome – What is the user trying to achieve?
+2. Who is this for – Is this journey for the user or someone else? (Include relevant background or context)
+3. Scope and timeline – What is included or excluded in this goal? Is there a deadline or expected timeframe?
+4. Preferred style and prerequisites – Should the journey include specific activities? What has already been done toward this goal?
+5. Evidence of completion – How should progress and completion be demonstrated?
 
-Do not assume anything that isn't explicitly provided.
-Use thoughtful, adaptive questioning to uncover relevant details naturally.
+Use thoughtful, adaptive questioning to uncover relevant details naturally. Until enough information is collected, continue asking clarifying questions.
 
-Until enough information is collected, continue asking clarifying questions.
-Once sufficient context has been gathered and the user indicates readiness (implicitly or explicitly), generate a journey plan consisting of a logical sequence of milestones. Each milestone should contain clear steps, and each step should contain one or more specific actions needed to complete it.
+Once sufficient context has been gathered, *your second task* is to generate an **exhaustive and logical** sequence of milestones that get the user from their starting point to their destination or desired outcome.
 
-Each milestone, step, and action should build upon the last and contribute meaningfully toward the user's end goal.
+*Your third task* is to break down each milestone to contain an **exhaustive and logical** sequence of steps, and each step should contain an **exhaustive and logical** sequence of actions needed to complete it.
+
+So the journey has many 'milestones'
+Milestones have many 'steps'
+and Steps have many 'actions'
+
+Each action, step, and milestone should build upon the last respectively, and contribute meaningfully toward the user's end goal.
 
 Definitions:
-- A **milestone** is a major checkpoint or phase of progress toward the goal.
-- A **step** is a significant unit of work within a milestone.
-- An **action** is a concrete activity the user must do to complete the step (e.g., write something, build something, reflect, research, submit, etc.).
+- A **milestone** is a checkpoint or phase of progress toward the goal.
+- A **step** is a unit of work within a milestone.
+- An **action** is a concrete activity the user must do to progress the step (e.g., write something, build something, reflect, research, submit, etc.).
 
-Ensure the journey is sufficiently detailed: include as many actions, steps, and milestones as needed to help the user reach their intended outcome.
+Ensure the journey is **exhaustive and logical**: include as many actions, steps, and milestones as needed to help the user reach their intended outcome.
 `;
         const aiResponse = await this.$openai.responses.parse({
           model: "o4-mini",
@@ -1067,35 +1067,31 @@ Ensure the journey is sufficiently detailed: include as many actions, steps, and
   }
 }
 
+.robot-dance {
+  animation: robotDance 2s ease infinite;
+}
 @keyframes robotDance {
-  0% {
-    transform: translateY(0) rotate(0deg);
+  70% {
+    transform: translateY(0%);
   }
-  12.5% {
-    transform: translateY(-4px) rotate(-3deg);
+  80% {
+    transform: translateY(-15%);
   }
-  25% {
-    transform: translateY(-6px) rotate(-3deg);
+  90% {
+    transform: translateY(0%);
   }
-  37.5% {
-    transform: translateY(-4px) rotate(0deg);
+  95% {
+    transform: translateY(-7%);
   }
-  50% {
-    transform: translateY(-4px) rotate(3deg);
+  97% {
+    transform: translateY(0%);
   }
-  62.5% {
-    transform: translateY(-6px) rotate(3deg);
-  }
-  75% {
-    transform: translateY(-4px) rotate(0deg);
+  99% {
+    transform: translateY(-3%);
   }
   100% {
-    transform: translateY(0) rotate(0deg);
+    transform: translateY(0);
   }
-}
-
-.robot-dance {
-  animation: robotDance 1.2s ease-in-out infinite;
 }
 
 .layout-options {
