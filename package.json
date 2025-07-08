@@ -34,7 +34,8 @@
     "vue-tour": "^2.0.0",
     "vue2-editor": "^2.10.3",
     "vuedraggable": "^2.24.3",
-    "vuetify": "^2.7.1"
+    "vuetify": "^2.7.1",
+    "zod": "^3.25.75"
   },
   "devDependencies": {
     "@mdi/js": "^7.0.96",

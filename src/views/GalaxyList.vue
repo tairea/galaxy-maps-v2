@@ -79,7 +79,7 @@
       @close="showDialog = false"
       @openAiDialog="showAiDialog = true"
     />
-    <AICreateGalaxyDialog :showDialog.sync="showAiDialog" @close="showAiDialog = false" />
+    <AICreateGalaxyDialog :showFirstDialog.sync="showAiDialog" @close="showAiDialog = false" />
   </div>
 </template>
 
