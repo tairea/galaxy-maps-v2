@@ -139,7 +139,7 @@ export default {
   }
 
   .galaxy-title {
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: 600;
     text-transform: uppercase;
     margin: 5px 0px 5px 0px;
