@@ -119,7 +119,7 @@ Use thoughtful questioning to uncover relevant details.
 Until you have enough information to build the course outline, respond using the following JSON structure:
 
 {
-"status": "gathering_context",
+"status": "clarification_needed",
 "questions": ["string", "string"]
 }
 
@@ -177,7 +177,7 @@ Use thoughtful questioning to uncover relevant details.
 Until you have enough information to design the path, respond using this JSON structure:
 
 {
-"status": "gathering_context",
+"status": "clarification_needed",
 "questions": ["string", "string"]
 }
 

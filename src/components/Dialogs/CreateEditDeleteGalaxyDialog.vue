@@ -86,7 +86,7 @@
               class="left-side"
               :style="course.title ? 'width:50%' : 'width:100%'"
               style="margin-top: 10px"
-              v-if="creationMode == 'manual'"
+              v-if="edit || creationMode == 'manual'"
             >
               <!-- DIALOG FIELDS -->
               <div class="create-dialog-content">
@@ -210,7 +210,7 @@
 
             <!-- RIGHT SIDE -->
             <div
-              v-if="creationMode == 'manual'"
+              v-if="edit || creationMode == 'manual'"
               class="right-side"
               :style="course.title ? 'width:50%' : 'width:0%'"
             >
@@ -264,7 +264,7 @@
 
             <!-- End of right-side -->
             <!-- ACTION BUTTONS -->
-            <div v-if="creationMode == 'manual'" class="action-buttons">
+            <div v-if="edit || creationMode == 'manual'" class="action-buttons">
               <!-- PUBLISH -->
               <!-- <div
                 style="width: 200px"
@@ -565,6 +565,15 @@ export default {
     showDialog(newVal) {
       this.dialog = newVal;
     },
+    edit: {
+      immediate: true,
+      handler(newVal) {
+        if (newVal) {
+          // When in edit mode, we don't need creation mode selection
+          this.creationMode = "manual";
+        }
+      },
+    },
   },
   mounted() {
     if (this.courseToEdit) {
@@ -575,7 +584,9 @@ export default {
     ...mapActions(useRootStore, ["setCurrentCourseId", "setSnackbar"]),
     cancel() {
       this.dialog = false;
-      this.creationMode = "";
+      if (!this.edit) {
+        this.creationMode = "";
+      }
       this.$emit("close");
       // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
     },
@@ -803,7 +814,7 @@ export default {
       if (this.privateDialog == false && this.peopleInCourse.length) {
         this.privateDialog = true;
       } else {
-        (this.privateDialog = false), (this.dialog = false), (this.dialogConfirm = true);
+        ((this.privateDialog = false), (this.dialog = false), (this.dialogConfirm = true));
       }
     },
     cancelDeleteDialog() {
