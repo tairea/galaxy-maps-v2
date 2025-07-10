@@ -83,7 +83,7 @@ export default {
       const unansweredRequestsFromMyCourses = unansweredRequests.filter(
         (request) => request.contextCourse.mappedBy.personId === this.user.data.id,
       );
-      console.log("unansweredRequestsFromMyCourses: ", unansweredRequestsFromMyCourses);
+      // console.log("unansweredRequestsFromMyCourses: ", unansweredRequestsFromMyCourses);
       return unansweredRequestsFromMyCourses;
     },
     inReviewSubmissionsCount() {
@@ -93,7 +93,7 @@ export default {
       const inReviewSubmissionsFromMyCourses = inReviewSubmissions.filter(
         (submission) => submission.contextCourse.mappedBy.personId === this.user.data.id,
       );
-      console.log("inReviewSubmissionsFromMyCourses: ", inReviewSubmissionsFromMyCourses);
+      // console.log("inReviewSubmissionsFromMyCourses: ", inReviewSubmissionsFromMyCourses);
       return inReviewSubmissionsFromMyCourses.length;
     },
   },

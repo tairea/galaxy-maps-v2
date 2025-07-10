@@ -172,7 +172,7 @@ export default {
   justify-content: flex-start;
   align-items: center;
   flex-direction: column;
-  overflow-y: scroll;
+  overflow-y: auto;
   padding: 50px 0px;
   margin-left: 5%;
 }
@@ -298,7 +298,7 @@ export default {
   padding-top: 50px;
   // margin-right: 35px;
   margin-right: 5%;
-  overflow-y: scroll;
+  overflow-y: auto;
 
   .completed-label {
     font-weight: 500;

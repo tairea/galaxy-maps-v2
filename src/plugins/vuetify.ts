@@ -25,7 +25,7 @@ export default new Vuetify({
         cohortAccent: "#fe5f55",
       },
       dark: {
-        primary: "#212121", //colors.grey.darken4
+        primary: "#f7f7f7", //
         background: "#141E30", //colors.grey.darken3
         subBackground: "#000",
         baseAccent: "#00E676", //colors.green.accent3

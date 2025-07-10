@@ -1,24 +1,37 @@
-/* width */
+/* Hide scrollbars globally */
+html,
+body {
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
 body::-webkit-scrollbar {
   display: none;
 }
 
+html::-webkit-scrollbar {
+  display: none;
+}
+
+/* COMMENTED OUT: Global scrollbar styles that were overriding previous efforts to hide scrollbars
+   These styles were applying scrollbars to ALL elements (* selector) which conflicted with
+   the design intention to hide scrollbars unless specifically needed */
+/*
 *::-webkit-scrollbar {
   width: 10px;
 }
-/* Track */
 *::-webkit-scrollbar-track {
   background: var(--v-background-base);
   // background: var(--v-background-darken1);
 }
-/* Handle */
 *::-webkit-scrollbar-thumb {
   background: var(--v-missionAccent-base);
 }
-/* Handle on hover */
 *::-webkit-scrollbar-thumb:hover {
   background: var(--v-missionAccent-base);
 }
+*/
 
 /* blue */
 .missionAccent {
