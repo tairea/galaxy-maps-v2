@@ -18,31 +18,42 @@ import { z } from "zod";
 export const FirstStepResponseSchema = z
   .object({
     // Optional fields for stars list response
+    status: z.enum(["clarification_needed", "journey_steps_ready"]).nullable(),
+    questions: z.array(z.string()).nullable(),
     title: z.string().nullable(),
     description: z.string().nullable(),
     stars: z.array(z.string()).nullable(),
-
-    // Optional fields for gathering context response
-    status: z.enum(["clarification_needed", "journey_steps_ready"]).nullable(),
-    questions: z.array(z.string()).nullable(),
   })
+  // .refine(
+  //   (data) => {
+  //     // Must have gathering context fields OR journey_steps_ready
+  //     const hasClarificationNeeded =
+  //       data.status === "clarification_needed" && data.questions && data.questions.length > 0;
+  //     const hasJourneyStepsReady =
+  //       data.status === "journey_steps_ready" &&
+  //       data.title &&
+  //       data.description &&
+  //       data.stars &&
+  //       data.stars.length > 0;
+
+  //     return hasClarificationNeeded || hasJourneyStepsReady;
+  //   },
+  //   {
+  //     message:
+  //       "Response must contain either clarification_needed data, or journey_steps_ready data",
+  //   },
+  // );
   .refine(
     (data) => {
-      // Must have gathering context fields OR journey_steps_ready
-      const hasClarificationNeeded =
-        data.status === "clarification_needed" && data.questions && data.questions.length > 0;
-      const hasJourneyStepsReady =
-        data.status === "journey_steps_ready" &&
-        data.title &&
-        data.description &&
-        data.stars &&
-        data.stars.length > 0;
-
-      return hasClarificationNeeded || hasJourneyStepsReady;
+      if (data.status === "clarification_needed") {
+        return data.questions && data.questions.length > 0;
+      } else if (data.status === "journey_steps_ready") {
+        return data.title && data.description && data.stars && data.stars.length > 0;
+      }
+      return false;
     },
     {
-      message:
-        "Response must contain either clarification_needed data, or journey_steps_ready data",
+      message: "Invalid response structure based on status",
     },
   );
 
