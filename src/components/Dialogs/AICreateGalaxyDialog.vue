@@ -4,10 +4,34 @@
     <div v-if="loading" class="loading-overlay">
       <div class="loading-content" style="width: 100%">
         <!-- LOADING INDICATOR -->
-        <v-progress-circular indeterminate size="50" color="galaxyAccent" class="mb-4">
+        <v-progress-circular
+          v-if="!isSavingToDB"
+          indeterminate
+          size="50"
+          color="galaxyAccent"
+          class="mb-4"
+        >
           <v-icon color="galaxyAccent" size="24" class="robot-dance">{{ mdiRobotExcited }}</v-icon>
         </v-progress-circular>
-        <p class="loading-message overline">{{ currentLoadingMessage }}</p>
+
+        <!-- PROGRESS BAR FOR DATABASE SAVING -->
+        <div v-if="isSavingToDB" class="saving-progress-container">
+          <v-progress-linear
+            :value="savingProgress"
+            color="baseAccent"
+            height="8"
+            rounded
+            class="mb-2"
+          ></v-progress-linear>
+          <p class="saving-progress-text">
+            {{ Math.round(savingProgress) }}% Complete ({{ completedPlanets }}/{{ totalPlanets }}
+            planets)
+          </p>
+        </div>
+
+        <p class="loading-message overline" :class="{ 'baseAccent--text': isSavingToDB }">
+          {{ currentLoadingMessage }}
+        </p>
 
         <!-- CREATION STATUS v-treeview of stars > planets > missions -->
         <div v-if="transformedStarDetails.length > 0" class="galaxy-treeview-container">
@@ -314,8 +338,29 @@ export default {
       "Creating your learning universe...",
       "Calibrating educational coordinates...",
     ],
+    savingMessages: [
+      "Beaming data to the cosmic database...",
+      "Transmitting knowledge to the stars...",
+      "Uploading wisdom to the galactic cloud...",
+      "Storing secrets in the nebula network...",
+      "Saving discoveries to the void...",
+      "Archiving adventures in space-time...",
+      "Backing up brilliance to the cosmos...",
+      "Securing stories in the stellar vault...",
+      "Preserving pathways in the quantum realm...",
+      "Caching creativity in the cosmic cache...",
+      "Stashing strategies in the space station...",
+      "Hoarding hopes in the heavenly hard drive...",
+      "Depositing dreams in the deep space drive...",
+      "Storing solutions in the solar system...",
+      "Saving sagas in the stellar sanctuary...",
+    ],
     currentLoadingMessage: "",
     loadingMessageInterval: null,
+    isSavingToDB: false,
+    savingProgress: 0,
+    completedPlanets: 0,
+    totalPlanets: 0,
     aiGeneratedTitle: "",
     aiGeneratedDescription: "",
     aiGeneratedTopics: [],
@@ -410,11 +455,12 @@ export default {
       this.$emit("update:showFirstDialog", false);
     },
     startLoadingMessages() {
-      this.currentLoadingMessage = this.loadingMessages[0];
+      const messages = this.isSavingToDB ? this.savingMessages : this.loadingMessages;
+      this.currentLoadingMessage = messages[0];
       this.loadingMessageInterval = setInterval(() => {
-        const currentIndex = this.loadingMessages.indexOf(this.currentLoadingMessage);
-        const nextIndex = (currentIndex + 1) % this.loadingMessages.length;
-        this.currentLoadingMessage = this.loadingMessages[nextIndex];
+        const currentIndex = messages.indexOf(this.currentLoadingMessage);
+        const nextIndex = (currentIndex + 1) % messages.length;
+        this.currentLoadingMessage = messages[nextIndex];
       }, 3000);
     },
     stopLoadingMessages() {
@@ -948,6 +994,12 @@ export default {
     // =========== Save Galaxy Map to DB ===========
     async saveGalaxyMaptoDB() {
       this.loading = true;
+      this.isSavingToDB = true;
+      this.savingProgress = 0;
+
+      // Restart loading messages with saving messages
+      this.stopLoadingMessages();
+      this.startLoadingMessages();
 
       let courseDocRef;
       let previousNodeId = null;
@@ -955,6 +1007,18 @@ export default {
       // Start timing
       const startTime = Date.now();
       console.log("🚀 Starting Galaxy saving to database process...");
+
+      // Calculate total planets for progress tracking
+      this.totalPlanets = 0;
+      for (let star of this.aiGeneratedGalaxyMap.starDetails) {
+        this.totalPlanets += star.planets.length;
+      }
+
+      this.completedPlanets = 0;
+      const updateProgress = () => {
+        this.completedPlanets++;
+        this.savingProgress = (this.completedPlanets / this.totalPlanets) * 100;
+      };
 
       const courseData = {
         title: this.aiGeneratedGalaxyMap.journeyTitle,
@@ -1106,11 +1170,13 @@ export default {
             await taskDocRef.update({ id: taskDocRef.id });
 
             console.log("saved Planet: " + planetString + " to db");
+            updateProgress(); // Planet creation completed
           } catch (taskError) {
             console.error("Error creating task:", taskError);
             // If the task already exists, we can continue
             if (taskError.code === "already-exists") {
               console.log("Task already exists, continuing...");
+              updateProgress(); // Still count as completed even if already exists
             } else {
               throw taskError;
             }
@@ -1169,6 +1235,12 @@ export default {
         }`,
         color: "baseAccent",
       });
+
+      // Reset saving state
+      this.isSavingToDB = false;
+      this.savingProgress = 0;
+      this.loading = false;
+
       this.$router.push({ name: "GalaxyView", params: { courseId: courseDocRef.id } });
     },
     async sendCourseCreatedEmail(email, name, courseTitle, courseId) {
@@ -1659,5 +1731,22 @@ export default {
   border-radius: 4px;
   font-size: 0.7rem;
   color: var(--v-missionAccent-base);
+}
+
+.saving-progress-container {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.saving-progress-text {
+  color: var(--v-missionAccent-base);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 </style>
