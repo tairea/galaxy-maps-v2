@@ -2,18 +2,54 @@
   <v-container>
     <!-- Loading Overlay -->
     <div v-if="loading" class="loading-overlay">
-      <div class="loading-content">
+      <div class="loading-content" style="width: 100%">
+        <!-- LOADING INDICATOR -->
         <v-progress-circular indeterminate size="50" color="galaxyAccent" class="mb-4">
           <v-icon color="galaxyAccent" size="24" class="robot-dance">{{ mdiRobotExcited }}</v-icon>
         </v-progress-circular>
         <p class="loading-message overline">{{ currentLoadingMessage }}</p>
+
+        <!-- CREATION STATUS v-treeview of stars > planets > missions -->
+        <div v-if="transformedStarDetails.length > 0" class="galaxy-treeview-container">
+          <div class="galaxy-treeview-wrapper">
+            <div
+              v-for="(star, starIndex) in transformedStarDetails"
+              :key="`star-${starIndex}`"
+              class="star-treeview-item"
+            >
+              <h4 class="star-title">{{ star.name }}</h4>
+              <v-treeview
+                :items="[star]"
+                :value="expandedNodes"
+                item-key="id"
+                class="galaxy-treeview"
+                dense
+                @update:value="updateExpandedNodes"
+              >
+                <template v-slot:label="{ item }">
+                  <span class="treeview-label">
+                    <span v-if="item.type === 'star'" class="star-emoji">⭐</span>
+                    <span v-else-if="item.type === 'planet'" class="planet-emoji">🪐</span>
+                    <span v-else-if="item.type === 'mission'" class="mission-emoji">🎯</span>
+                    {{ item.name }}
+                  </span>
+                </template>
+              </v-treeview>
+            </div>
+          </div>
+        </div>
+
+        <!-- TOKEN USAGE -->
         <p class="token-usage overline">Total Tokens: {{ totalTokensUsed.toLocaleString() }}</p>
         <p class="token-breakdown overline">
           Input: {{ totalInputTokens.toLocaleString() }} | Output:
           {{ totalOutputTokens.toLocaleString() }}
         </p>
-        <!-- v-stepper of stars > planets > missions creation status -->
-        <v-stepper dark class="stepper-styles text-center" v-model="stepper"></v-stepper>
+        <p class="token-breakdown overline">
+          Est. cost: ${{
+            (this.totalInputTokens / 1000000) * 0.15 + (this.totalOutputTokens / 1000000) * 0.6
+          }}
+        </p>
       </div>
     </div>
 
@@ -36,10 +72,11 @@
                 <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <div>
                   <p class="dialog-description">
-                    A Galaxy Map is a journey map towards your target destination.
+                    A Galaxy Map is a journey map towards a target destination.
                   </p>
-                  <p class="dialog-description">
-                    This could be a project, a course, a goal, a skill, a life goal, etc.
+                  <p class="dialog-description mt-2">
+                    Like the steps you need to take to complete a project, course, skill, or a life
+                    goal.
                   </p>
                   <p class="dialog-description galaxyAccent--text mt-2">
                     "Tell me where you want to go, and I'll map your path to get there." >
@@ -51,8 +88,8 @@
             <!-- DIALOG CONTENT -->
             <div class="create-dialog-content">
               <v-stepper dark class="stepper-styles text-center" v-model="stepper" alt-labels>
-                <v-stepper-header>
-                  <!-- Header step 1: Describe your desired destination -->
+                <!-- <v-stepper-header>
+              
                   <v-stepper-step :step="1" color="missionAccent">
                     <div class="text-center">Describe the desired destination</div>
                   </v-stepper-step>
@@ -61,12 +98,7 @@
                   <v-stepper-step v-if="showSecondStepperStep" :step="2" color="missionAccent">
                     <div class="text-center">Some more context</div>
                   </v-stepper-step>
-                  <v-divider v-if="showThirdStepperStep"></v-divider>
-
-                  <v-stepper-step v-if="showThirdStepperStep" :step="3" color="missionAccent">
-                    <div class="text-center">Galaxy Map Layout</div>
-                  </v-stepper-step>
-                </v-stepper-header>
+                </v-stepper-header> -->
 
                 <v-stepper-content :step="1">
                   <v-textarea
@@ -78,12 +110,40 @@
                     auto-grow
                     clearable
                     v-model="description"
-                    label="What would you like me to create a Galaxy Maps for?"
+                    label="Describe your desired destination"
                     :disabled="loading"
                     autofocus
                   ></v-textarea>
 
-                  <div class="action-buttons">
+                  <!-- LAYOUT SELECTION -->
+                  <div class="mt-4">
+                    <p class="dialog-description">Select the starting layout</p>
+                    <p class="dialog-description mt-1">
+                      <em>(You can customise your Star positions later)</em>
+                    </p>
+                    <div class="layout-options">
+                      <div
+                        class="layout-option"
+                        :class="{ selected: mapLayout === 'zigzag' }"
+                        @click="mapLayout = 'zigzag'"
+                      >
+                        <div class="layout-icon">
+                          <v-icon>{{ mdiChartLineVariant }}</v-icon>
+                        </div>
+                        <div class="layout-label">Zigzag</div>
+                      </div>
+                      <div
+                        class="layout-option"
+                        :class="{ selected: mapLayout === 'spiral' }"
+                        @click="mapLayout = 'spiral'"
+                      >
+                        <div class="layout-icon">🌀</div>
+                        <div class="layout-label">Spiral</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="action-buttons mt-8">
                     <v-btn
                       outlined
                       color="galaxyAccent"
@@ -95,7 +155,7 @@
                       :light="!dark"
                     >
                       <v-icon left> {{ mdiRobotExcited }} </v-icon>
-                      NEXT
+                      CREATE GALAXY MAP
                     </v-btn>
 
                     <v-btn
@@ -164,93 +224,6 @@
                       :light="!dark"
                     >
                       <v-icon left> {{ mdiRobotExcited }} </v-icon>
-                      NEXT
-                    </v-btn>
-
-                    <v-btn
-                      outlined
-                      :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
-                      class="ml-4"
-                      @click="closeDialog"
-                      :disabled="loading"
-                      :dark="dark"
-                      :light="!dark"
-                    >
-                      <v-icon left> {{ mdiClose }} </v-icon>
-                      Cancel
-                    </v-btn>
-                  </div>
-                  <!-- End action-buttons -->
-                </v-stepper-content>
-
-                <v-stepper-content :step="3">
-                  <div>
-                    <p class="dialog-description">Select the starting layout</p>
-                    <p class="dialog-description mt-1">
-                      <em>(You can customise your Star positions later)</em>
-                    </p>
-                    <div class="layout-options">
-                      <div
-                        class="layout-option"
-                        :class="{ selected: mapLayout === 'zigzag' }"
-                        @click="mapLayout = 'zigzag'"
-                      >
-                        <div class="layout-icon">
-                          <v-icon>{{ mdiChartLineVariant }}</v-icon>
-                        </div>
-                        <div class="layout-label">Zigzag</div>
-                      </div>
-                      <div
-                        class="layout-option"
-                        :class="{ selected: mapLayout === 'spiral' }"
-                        @click="mapLayout = 'spiral'"
-                      >
-                        <div class="layout-icon">🌀</div>
-                        <div class="layout-label">Spiral</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- TOKEN USAGE SUMMARY -->
-                  <div class="token-summary mt-4 mb-4">
-                    <p class="dialog-description">
-                      <v-icon color="galaxyAccent" small>{{ mdiInformationVariant }}</v-icon>
-                      Total AI tokens used so far:
-                      <span class="galaxyAccent--text font-weight-bold">{{
-                        formattedTokenUsage
-                      }}</span>
-                    </p>
-                    <p class="dialog-description" style="font-size: 0.7rem; opacity: 0.8">
-                      Input: {{ totalInputTokens.toLocaleString() }} | Output:
-                      {{ totalOutputTokens.toLocaleString() }}
-                    </p>
-                  </div>
-
-                  <!-- ACTION BUTTONS -->
-                  <div class="action-buttons mt-8">
-                    <v-btn
-                      outlined
-                      :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
-                      class="mr-4"
-                      @click="stepper = 2"
-                      :disabled="loading"
-                      :dark="dark"
-                      :light="!dark"
-                    >
-                      <v-icon left> {{ mdiArrowLeft }} </v-icon>
-                      Back
-                    </v-btn>
-                    <!-- CREATE -->
-                    <v-btn
-                      outlined
-                      color="galaxyAccent"
-                      @click="thirdStep()"
-                      class="mx-2"
-                      :loading="loading"
-                      :dark="dark"
-                      :light="!dark"
-                    >
-                      <v-icon left> {{ mdiRobotExcited }} </v-icon>
                       CREATE GALAXY MAP
                     </v-btn>
 
@@ -299,6 +272,11 @@ import {
   MissionsSchema,
 } from "@/lib/schemas";
 import { zodTextFormat } from "openai/helpers/zod";
+import {
+  StarsSystemPrompt,
+  PlanetsSystemPrompt,
+  MissionsSystemPrompt,
+} from "@/lib/GalaxyMapPrompts";
 export default {
   name: "AICreateGalaxyDialog",
   props: {
@@ -342,7 +320,6 @@ export default {
     aiGeneratedTasks: [],
     aiGeneratedImage: "",
     showSecondStepperStep: false,
-    showThirdStepperStep: false,
     aiGatheringContext: false,
     aiGatheringContextQuestions: [],
     aiGatheringContextAnswers: [],
@@ -353,6 +330,8 @@ export default {
     totalTokensUsed: 0,
     totalInputTokens: 0,
     totalOutputTokens: 0,
+    transformedStarDetails: [], // <-- add this as a data property
+    expandedNodes: [], // <-- add this to track expanded nodes
   }),
   computed: {
     ...mapState(useRootStore, ["person"]),
@@ -386,6 +365,56 @@ export default {
       },
       immediate: true,
     },
+    aiGeneratedGalaxyMap: {
+      handler(newVal, oldVal) {
+        console.log("aiGeneratedGalaxyMap changed:", {
+          newStarsCount: newVal?.starDetails?.length || 0,
+          oldStarsCount: oldVal?.starDetails?.length || 0,
+          newVal: newVal,
+          oldVal: oldVal,
+        });
+        this.updateTransformedStarDetails();
+      },
+      deep: true,
+      immediate: true,
+    },
+    "aiGeneratedGalaxyMap.starDetails": {
+      handler(newVal, oldVal) {
+        console.log("starDetails array changed:", {
+          newLength: newVal?.length || 0,
+          oldLength: oldVal?.length || 0,
+          newVal: newVal,
+          oldVal: oldVal,
+        });
+        this.updateTransformedStarDetails();
+      },
+      deep: true,
+      immediate: true,
+    },
+    transformedStarDetails: {
+      handler(newVal, oldVal) {
+        // Update open nodes when new data is added
+        if (newVal && newVal.length > 0) {
+          this.$nextTick(() => {
+            // Use setTimeout to ensure DOM is fully updated
+            setTimeout(() => {
+              // Get all current node IDs
+              const allNodeIds = this.getAllNodeIds(newVal);
+
+              // Get previously existing node IDs (if oldVal exists)
+              const existingNodeIds = oldVal ? this.getAllNodeIds(oldVal) : [];
+
+              // Find newly added node IDs
+              const newlyAddedNodeIds = allNodeIds.filter((id) => !existingNodeIds.includes(id));
+
+              // Preserve existing expanded state and add newly added nodes
+              this.expandedNodes = [...new Set([...this.expandedNodes, ...newlyAddedNodeIds])];
+            }, 100);
+          });
+        }
+      },
+      deep: true,
+    },
   },
   methods: {
     ...mapActions(useRootStore, ["setCurrentCourseId", "setSnackbar"]),
@@ -394,6 +423,7 @@ export default {
       this.totalTokensUsed = 0; // Reset token counter
       this.totalInputTokens = 0; // Reset input token counter
       this.totalOutputTokens = 0; // Reset output token counter
+      this.aiGeneratedGalaxyMap = {}; // Reset galaxy map
       this.$emit("update:showFirstDialog", false);
     },
     startLoadingMessages() {
@@ -457,7 +487,7 @@ export default {
         // Add a small delay to prevent rapid double-clicks
         await new Promise((resolve) => setTimeout(resolve, 100));
 
-        // =========== Generate course Topics using AI ===========
+        // =========== Generate journey's Stars using AI ===========
         //         const systemPrompt = `
         // You are a journey path design assistant for a LMS visualisation platform called Galaxy Maps, that helps users create structured, actionable paths toward reaching their destination. This destination might be personal, professional, educational, project-based, or creative.
 
@@ -493,36 +523,10 @@ export default {
         // Ensure the journey is **exhaustive and logical**: include as many actions, steps, and milestones as needed to help the user reach their intended outcome.
         // `;
 
-        const systemPrompt = `
-        You are a journey path assistant. Your job is to help users break down a goal into a complete, logical sequence of learning steps (called Stars). Each Star represents a major milestone or stage of progress. The list should be exhaustive—no big jumps—and flow smoothly from start to finish.
-
-        Before generating the Star titles, ask the user for the following if it’s not already clear:
-        1. What is the destination? (What should someone be able to do at the end?)
-        2. Who is this for? (Age, experience level, background, etc.)
-        3. What is the starting point? (What do they already know or can do?)
-
-        Once the above is clear, output only a JSON object with these keys:
-        - title: The journey title
-        - description: A brief paragraph about the journey
-        - stars: An array of Star titles (learning steps), listed in the order they should be completed
-
-        Example output:
-        {
-          "title": "Journey Title",
-          "description": "Brief paragraph about the Journey",
-          "stars": [
-            "1: Title",
-            "2: Title",
-            "3: Title"
-          ]
-        }
-        No explanation or extra commentary. Output only the JSON object.
-        `;
-
         const aiResponse = await this.$openai.responses.parse({
           model: "gpt-4o-mini",
           input: [
-            { role: "system", content: systemPrompt },
+            { role: "system", content: StarsSystemPrompt },
             { role: "user", content: this.description },
           ],
           text: {
@@ -543,10 +547,6 @@ export default {
           this.totalInputTokens += inputTokens;
           this.totalOutputTokens += outputTokens;
           this.totalTokensUsed += totalTokens;
-
-          console.log(
-            `Tokens used in this call: ${totalTokens} (Input: ${inputTokens}, Output: ${outputTokens}), Total tokens: ${this.totalTokensUsed}`,
-          );
         }
 
         // store the response id for the next ai call
@@ -577,10 +577,12 @@ export default {
           this.aiGeneratedGalaxyMap = {
             journeyTitle: parsed.title,
             journeyDescription: parsed.description,
-            milestones: parsed.stars,
+            starDetails: [],
           };
           // Generate Map from Stars List x 2 more layers (Planets > Missions)
+          // Note: generateMapFromStarsList will handle its own loading state
           this.generateMapFromStarsList(parsed);
+          // Don't set loading = false here as generateMapFromStarsList will handle it
         } else if (
           parsed.status === "gathering_context" &&
           parsed.questions &&
@@ -596,6 +598,8 @@ export default {
           console.log(
             `Stopping to ask questions after ${timeString} (${endTime - startTime}ms total)`,
           );
+          // Set loading to false here since we're stopping to ask questions
+          this.loading = false;
         } else {
           console.warn("Unknown response format from AI:", parsed);
           this.setSnackbar({
@@ -603,6 +607,8 @@ export default {
             text: "Unexpected response format from AI. Please try again.",
             color: "warning",
           });
+          // Set loading to false here since we're not proceeding
+          this.loading = false;
         }
 
         // =========== Generate course Tasks (for each Topic) using AI ===========
@@ -699,7 +705,7 @@ export default {
           text: "Error creating galaxy: " + error.message,
           color: "pink",
         });
-      } finally {
+        // Set loading to false on error
         this.loading = false;
       }
     },
@@ -738,10 +744,6 @@ export default {
           this.totalInputTokens += inputTokens;
           this.totalOutputTokens += outputTokens;
           this.totalTokensUsed += totalTokens;
-
-          console.log(
-            `Tokens used in this call: ${totalTokens} (Input: ${inputTokens}, Output: ${outputTokens}), Total tokens: ${this.totalTokensUsed}`,
-          );
         }
 
         this.previousResponseId = aiSecondResponse.id;
@@ -771,10 +773,12 @@ export default {
           this.aiGeneratedGalaxyMap = {
             journeyTitle: parsed.title,
             journeyDescription: parsed.description,
-            stars: parsed.stars,
+            starDetails: [],
           };
           // Generate Map from Stars List x 2 more layers (Planets > Missions)
+          // Note: generateMapFromStarsList will handle its own loading state
           this.generateMapFromStarsList(parsed);
+          // Don't set loading = false here as generateMapFromStarsList will handle it
         } else if (
           parsed.status === "gathering_context" &&
           parsed.questions &&
@@ -786,6 +790,8 @@ export default {
           this.aiGatheringContextAnswers = [];
           this.showSecondStepperStep = true;
           this.stepper = 2;
+          // Set loading to false here since we're stopping to ask questions
+          this.loading = false;
         } else {
           console.warn("Unknown response format from AI:", parsed);
           this.setSnackbar({
@@ -793,6 +799,8 @@ export default {
             text: "Unexpected response format from AI. Please try again.",
             color: "warning",
           });
+          // Set loading to false here since we're not proceeding
+          this.loading = false;
         }
       } catch (error) {
         // Calculate and log execution time even on error
@@ -806,72 +814,33 @@ export default {
           text: "Error creating galaxy: " + error.message,
           color: "pink",
         });
-      } finally {
+        // Set loading to false on error
         this.loading = false;
       }
     },
-    // =========== Save Galaxy Map to DB ===========
-    async thirdStep() {
-      console.log("thirdStep");
-      this.saveGalaxyMaptoDB();
-    },
+
     // =========== Generate Map from Stars List x 2 more layers (Planets > Missions) ===========
     async generateMapFromStarsList(journeyAndStarsList) {
       console.log("generateMapFromStarsList");
-
-      // Prevent multiple simultaneous submissions
-      if (this.loading) {
-        console.log("Already processing, ignoring duplicate submission");
-        return;
-      }
 
       // Start timing
       const startTime = Date.now();
       console.log("🚀 Starting Galaxy map generation process...");
 
       try {
-        this.loading = true;
+        // Note: loading is already true from the calling method (firstStep or secondStep)
 
         // Add a small delay to prevent rapid double-clicks
         await new Promise((resolve) => setTimeout(resolve, 100));
 
         console.log("Generating Map from Stars List", journeyAndStarsList);
 
-        const systemPrompt = `
-      You are a curriculum architect working inside a learning map system.
-
-      You will receive:
-      - A list of Star titles (learning steps) that make up the full journey to a learning destination.
-      - A specific Star from that list to focus on.
-
-      Your task is to:
-      1. Write a description on what this step is about.
-      2. Break this Star down into an exhaustive and logical list of Planets (sub-goals) that represent the essential things a learner must understand or be able to do in order to complete this learning step.
-
-      The Planets should:
-      - Be logical and actionable.
-      - Flow from foundational to advanced (if applicable).
-      - Stay tightly focused on this Star's theme.
-      - Be appropriate for the target audience and level of the overall map.
-
-      Return your output in this format:
-      {
-        "star": "Star Title",
-        "description": "Brief paragraph about the Star",
-        "planets": [
-          "1.1: Planet Title",
-          "1.2: Planet Title",
-          "1.3: Planet Title",
-          ...
-        ]
-      }
-
-      IMPORTANT: The planet numbering should start with the star index + 1 (e.g., if this is star 2, planets should be "2.1:", "2.2:", etc.)
-
-      You may refer to the full list of Star titles for context to help with scope and progression. Do not include extra commentary or explanations.
-      `;
-
-        const starDetails = [];
+        // Initialize the galaxy map with journey metadata
+        this.aiGeneratedGalaxyMap = {
+          journeyTitle: journeyAndStarsList.title,
+          journeyDescription: journeyAndStarsList.description,
+          starDetails: [],
+        };
 
         // Get PLANETS from AI for each Star
         for (let index = 0; index < journeyAndStarsList.stars.length; index++) {
@@ -880,7 +849,7 @@ export default {
           const aiResponse = await this.$openai.responses.parse({
             model: "gpt-4o-mini",
             input: [
-              { role: "system", content: systemPrompt },
+              { role: "system", content: PlanetsSystemPrompt },
               { role: "user", content: journeyAndStarsList.stars.join("\n") },
               { role: "user", content: `Star ${index + 1}: ${star}` },
             ],
@@ -892,35 +861,6 @@ export default {
 
           console.log(`Star ${index + 1} response:`, aiResponse);
 
-          // show some updates
-
-          /* 
-          aiResponse.output_parsed returns:
-
-          description: "This step focuses on enabling users to manually control the solenoid valves through the web dashboard. Understanding how to operate the valves manually can help in troubleshooting and provide a way to intervene in the irrigation process when necessary. It also ensures that users can readily interact with the system, reinforcing the practical aspects of the automated irrigation setup."
-          planetDetails: Array(7)
-          0: {
-            planet: 'Understanding the Dashboard Interface', 
-            description: 'In this Planet, learners will gain a comprehensive…ling them to navigate and utilize it effectively.', 
-            missions: Array(5)}
-          1: {
-            planet: 'Identifying Valve Control Buttons', 
-            description: 'In this Planet, learners will explore and identify…nd interact with the control systems effectively.', 
-            missions: Array(5)}
-          2: {planet: 'Implementing Manual Control Features', description: 'In this Planet, learners will gain hands-on experi…ions without relying solely on automated systems.', missions: Array(5)}
-          3: {planet: 'Testing Manual Operation of Valves', description: 'In this Planet, learners will apply their knowledg… the valves respond correctly to manual commands.', missions: Array(6)}
-          4: {planet: 'Monitoring Valve Status on the Dashboard', description: 'By completing this Planet, learners will understan… ensuring they can track operations in real-time.', missions: Array(6)}
-          5: {planet: 'Safety Protocols for Manual Operation', description: 'Upon completing this Planet, learners will underst…ng safe practices are observed during operations.', missions: Array(7)}
-          6: {planet: 'User Feedback Mechanism for Manual Controls', description: 'In this Planet, learners will understand the impor…ance user interaction and operational efficiency.', missions: Array(7)}
-          7: {planet: 'User Feedback Mechanism for Manual Controls', description: 'In this Planet, learners will understand the impor…ance user interaction and operational efficiency.', missions: Array(7)}
-
-(7) ['12.1: Understanding the Dashboard Interface', '12.2: Identifying Valve Control Buttons', '12.3: Implementing Manual Control Features', '12.4: Testing Manual Operation of Valves', '12.5: Monitoring Valve Status on the Dashboard', '12.6: Safety Protocols for Manual Operation', '12.7: User Feedback Mechanism for Manual Controls']
-star
-: 
-"Manual Operation of the Valves via the Dashboard"
-
-          */
-
           // Track token usage
           if (aiResponse.usage) {
             const inputTokens = aiResponse.usage.input_tokens || 0;
@@ -930,118 +870,172 @@ star
             this.totalInputTokens += inputTokens;
             this.totalOutputTokens += outputTokens;
             this.totalTokensUsed += totalTokens;
-
-            console.log(
-              `Tokens used in Star ${
-                index + 1
-              } call: ${totalTokens} (Input: ${inputTokens}, Output: ${outputTokens}), Total tokens: ${
-                this.totalTokensUsed
-              }`,
-            );
           }
 
           // Process the response and store it
           if (aiResponse.output_parsed) {
-            starDetails.push(aiResponse.output_parsed);
-          }
+            // Check if the AI response already contains planetDetails with missions
+            const hasCompleteData =
+              aiResponse.output_parsed.planetDetails &&
+              aiResponse.output_parsed.planetDetails.length > 0 &&
+              aiResponse.output_parsed.planetDetails.every(
+                (p) => p.missions && p.missions.length > 0,
+              );
 
-          // Get MISSIONS from AI for each Planet
-          const systemPromptMissions = `
-        You are a mission designer for an interactive learning map.
-
-        You will receive:
-        - A list of Planet titles (sub-goals) that belong to a specific Star (learning step).
-        - A specific Planet from that list to focus on.
-        - The planet number (e.g., "1.1", "1.2", "2.1", etc.)
-
-        Your task is to:
-        1. Write a short description of this Planet (1–2 sentences) that explains what the learner should understand or be able to do when this Planet is completed.
-        2. Generate an exhaustive and logical list of Missions that will help the learner complete this Planet.
-
-        The Missions should:
-        - Be concrete and action-based (e.g. "Watch a video and answer reflection questions", "Complete a challenge", "Create something", "Apply a concept", etc.)
-        - Be appropriate to the level and context of the learner.
-        - Support progressive mastery of the Planet's goal.
-        - Be numbered using the format: "planetNumber.missionNumber: Mission instructions" (e.g., "1.1.1: Watch introduction video", "1.1.2: Complete practice exercise")
-
-        Return your output in this format:
-        {
-          "planet": "Planet Title",
-          "description": "Brief paragraph about the Planet",
-          "missions": [
-            "1.1.1: Mission instructions",
-            "1.1.2: Mission instructions",
-            "1.1.3: Mission instructions",
-            ...
-          ]
-        }
-
-        Use the full list of Planets as context to help determine scope and to avoid overlap. Do not include extra commentary or explanations.
-        `;
-
-          const planets = aiResponse.output_parsed.planets;
-          const planetDetails = [];
-          for (let planetIndex = 0; planetIndex < planets.length; planetIndex++) {
-            const planet = planets[planetIndex];
-            // Extract planet number from the planet title (e.g., "1.1: Planet Title" -> "1.1")
-            const planetNumberMatch = planet.match(/^(\d+\.\d+):/);
-            const planetNumber = planetNumberMatch
-              ? planetNumberMatch[1]
-              : `${index + 1}.${planetIndex + 1}`;
-
-            const missionsResponse = await this.$openai.responses.parse({
-              model: "gpt-4o-mini",
-              input: [
-                { role: "system", content: systemPromptMissions },
-                { role: "user", content: `Planet number: ${planetNumber}` },
-                { role: "user", content: planets.join("\n") },
-                { role: "user", content: planet },
-              ],
-              text: {
-                format: zodTextFormat(MissionsSchema, "missions"),
-              },
-              store: true,
+            // Log the mismatch between planets and planetDetails
+            console.log(`🔍 Star ${index + 1} data analysis:`, {
+              planetsCount: aiResponse.output_parsed.planets?.length || 0,
+              planetDetailsCount: aiResponse.output_parsed.planetDetails?.length || 0,
+              planets: aiResponse.output_parsed.planets || [],
+              planetDetailsPlanets:
+                aiResponse.output_parsed.planetDetails?.map((p) => p.planet) || [],
+              hasMismatch:
+                (aiResponse.output_parsed.planets?.length || 0) !==
+                (aiResponse.output_parsed.planetDetails?.length || 0),
             });
 
-            console.log(`Planet ${planetIndex + 1} missions response:`, missionsResponse);
-
-            // Track token usage
-            if (missionsResponse.usage) {
-              const inputTokens = missionsResponse.usage.input_tokens || 0;
-              const outputTokens = missionsResponse.usage.output_tokens || 0;
-              const totalTokens = missionsResponse.usage.total_tokens || 0;
-
-              this.totalInputTokens += inputTokens;
-              this.totalOutputTokens += outputTokens;
-              this.totalTokensUsed += totalTokens;
-
+            if (hasCompleteData && !aiResponse.output_parsed.planetDetails.some((p) => !p.planet)) {
+              // The AI response already contains planetDetails with missions for ALL planets - use it directly!
               console.log(
-                `Tokens used in Planet ${
-                  planetIndex + 1
-                } missions call: ${totalTokens} (Input: ${inputTokens}, Output: ${outputTokens}), Total tokens: ${
-                  this.totalTokensUsed
-                }`,
+                `✅ Star ${index + 1}: Using complete data from AI response (${
+                  aiResponse.output_parsed.planetDetails.length
+                } planets with missions)`,
               );
+              this.$set(this.aiGeneratedGalaxyMap.starDetails, index, aiResponse.output_parsed);
+              console.log("change to aiGeneratedGalaxyMap");
+            } else {
+              // The AI response is incomplete or has mismatched data - we need to generate missions
+              const reason = hasCompleteData ? "mismatched planet data" : "incomplete missions";
+              console.log(
+                `🔄 Star ${index + 1}: AI response ${reason}, generating missions separately`,
+              );
+              this.$set(this.aiGeneratedGalaxyMap.starDetails, index, aiResponse.output_parsed);
+              console.log("change to aiGeneratedGalaxyMap");
+
+              // Generate MISSIONS from AI for each Planet
+
+              const planets = aiResponse.output_parsed.planets;
+              // Initialize planet details array for this star, preserving any existing data
+              if (!this.aiGeneratedGalaxyMap.starDetails[index].planetDetails) {
+                this.$set(this.aiGeneratedGalaxyMap.starDetails[index], "planetDetails", []);
+              }
+
+              // Log what we're working with
+              console.log(
+                `🔄 Star ${index + 1}: Generating missions for ${planets.length} planets`,
+              );
+              if (aiResponse.output_parsed.planetDetails?.length > 0) {
+                console.log(
+                  `📝 Star ${index + 1}: Preserving ${
+                    aiResponse.output_parsed.planetDetails.length
+                  } existing planetDetails`,
+                );
+              }
+
+              for (let planetIndex = 0; planetIndex < planets.length; planetIndex++) {
+                const planet = planets[planetIndex];
+
+                // Check if we already have planetDetails for this planet
+                const existingPlanetDetail = aiResponse.output_parsed.planetDetails?.find(
+                  (pd) => pd.planet === planet || pd.planet === planet.replace(/^\d+\.\d+:\s*/, ""),
+                );
+
+                if (existingPlanetDetail && existingPlanetDetail.missions?.length > 0) {
+                  // We already have this planet with missions - preserve it
+                  console.log(
+                    `📝 Star ${index + 1}: Planet ${
+                      planetIndex + 1
+                    } already has missions, preserving existing data`,
+                  );
+                  this.$set(
+                    this.aiGeneratedGalaxyMap.starDetails[index].planetDetails,
+                    planetIndex,
+                    existingPlanetDetail,
+                  );
+                  console.log("change to aiGeneratedGalaxyMap");
+                  continue; // Skip to next planet
+                }
+
+                // Extract planet number from the planet title (e.g., "1.1: Planet Title" -> "1.1")
+                const planetNumberMatch = planet.match(/^(\d+\.\d+):/);
+                const planetNumber = planetNumberMatch
+                  ? planetNumberMatch[1]
+                  : `${index + 1}.${planetIndex + 1}`;
+
+                console.log(
+                  `🔄 Star ${index + 1}: Generating missions for planet ${
+                    planetIndex + 1
+                  }: ${planet}`,
+                );
+
+                const missionsResponse = await this.$openai.responses.parse({
+                  model: "gpt-4o-mini",
+                  input: [
+                    { role: "system", content: MissionsSystemPrompt },
+                    { role: "user", content: `Planet number: ${planetNumber}` },
+                    { role: "user", content: planets.join("\n") },
+                    { role: "user", content: planet },
+                  ],
+                  text: {
+                    format: zodTextFormat(MissionsSchema, "missions"),
+                  },
+                  store: true,
+                });
+
+                console.log(`Planet ${planetIndex + 1} missions response:`, missionsResponse);
+
+                // Track token usage
+                if (missionsResponse.usage) {
+                  const inputTokens = missionsResponse.usage.input_tokens || 0;
+                  const outputTokens = missionsResponse.usage.output_tokens || 0;
+                  const totalTokens = missionsResponse.usage.total_tokens || 0;
+
+                  this.totalInputTokens += inputTokens;
+                  this.totalOutputTokens += outputTokens;
+                  this.totalTokensUsed += totalTokens;
+                }
+
+                // Process the response and store it
+                if (missionsResponse.output_parsed) {
+                  // Add the planet details to the star immediately for real-time display
+                  this.$set(
+                    this.aiGeneratedGalaxyMap.starDetails[index].planetDetails,
+                    planetIndex,
+                    missionsResponse.output_parsed,
+                  );
+                  console.log("change to aiGeneratedGalaxyMap");
+                }
+              }
             }
 
-            // Process the response and store it
-            if (missionsResponse.output_parsed) {
-              planetDetails.push(missionsResponse.output_parsed);
-            }
+            // Log the structure for debugging
+            console.log(`Star ${index + 1} data structure:`, {
+              star: aiResponse.output_parsed.star,
+              planets: aiResponse.output_parsed.planets?.length || 0,
+              planetDetails:
+                this.aiGeneratedGalaxyMap.starDetails[index].planetDetails?.length || 0,
+              hasMissions:
+                this.aiGeneratedGalaxyMap.starDetails[index].planetDetails?.some(
+                  (p) => p.missions?.length > 0,
+                ) || false,
+              totalMissions:
+                this.aiGeneratedGalaxyMap.starDetails[index].planetDetails?.reduce(
+                  (sum, p) => sum + (p.missions?.length || 0),
+                  0,
+                ) || 0,
+            });
+
+            // Log the current state of the galaxy map
+            console.log(
+              `After Star ${index + 1}, galaxy map has ${
+                this.aiGeneratedGalaxyMap.starDetails.length
+              } stars`,
+            );
           }
-          // Store the planet details in the star details
-          starDetails[index].planetDetails = planetDetails;
         }
 
         // Now you have all the star details to work with
-        console.log("All star details:", starDetails);
-
-        // Store the star details in the galaxy map
-        this.aiGeneratedGalaxyMap.starDetails = starDetails;
-
-        // Show the third stepper step for layout selection
-        this.showThirdStepperStep = true;
-        this.stepper = 3;
+        console.log("All star details:", this.aiGeneratedGalaxyMap.starDetails);
 
         // Calculate and log execution time
         const endTime = Date.now();
@@ -1049,6 +1043,10 @@ star
         console.log(
           `✅ Galaxy map generation completed in ${timeString} (${endTime - startTime}ms total)`,
         );
+
+        // Automatically save the galaxy map to DB since it's complete
+        console.log("🚀 Galaxy map complete, automatically saving to database...");
+        await this.saveGalaxyMaptoDB();
       } catch (error) {
         // Calculate and log execution time even on error
         const endTime = Date.now();
@@ -1063,7 +1061,7 @@ star
           text: "Error generating galaxy map: " + error.message,
           color: "pink",
         });
-      } finally {
+        // Set loading to false on error so user can retry
         this.loading = false;
       }
     },
@@ -1297,15 +1295,15 @@ star
       const sendCourseCreatedEmail = functions.httpsCallable("sendCourseCreatedEmail");
       return sendCourseCreatedEmail({ email, name, course: courseTitle, courseId });
     },
-    getSpiral(index, centerX = 0, centerY = 0, radius = 100) {
+    getSpiral(index, centerX = 0, centerY = 0, radius = 200) {
       const angle = index * 0.8;
-      const spiralGrowth = 50;
+      const spiralGrowth = 100;
       const currentRadius = radius + index * spiralGrowth;
       const x = centerX + currentRadius * Math.cos(angle);
       const y = centerY + currentRadius * Math.sin(angle);
       return { x, y };
     },
-    getZigzag(index, startX = 0, startY = 0, spacing = 200, amplitude = 100) {
+    getZigzag(index, startX = 0, startY = 0, spacing = 400, amplitude = 200) {
       // Calculate horizontal position (moving right)
       const x = startX + index * spacing;
 
@@ -1314,6 +1312,70 @@ star
       const y = startY + (index % 2 === 0 ? amplitude : -amplitude);
 
       return { x, y };
+    },
+    updateTransformedStarDetails() {
+      console.log("updating Transformed Star Details...");
+      if (
+        !this.aiGeneratedGalaxyMap ||
+        !this.aiGeneratedGalaxyMap.starDetails ||
+        !this.aiGeneratedGalaxyMap.starDetails.length
+      ) {
+        this.transformedStarDetails = [];
+        return;
+      }
+      this.transformedStarDetails = this.aiGeneratedGalaxyMap.starDetails.map(
+        (starDetail, starIndex) => {
+          const starNode = {
+            id: `star-${starIndex}`,
+            name: starIndex + 1 + " - " + starDetail.star,
+            type: "star",
+            children: [],
+          };
+          if (starDetail.planets && starDetail.planets.length > 0) {
+            starNode.children = starDetail.planets.map((planet, planetIndex) => {
+              const planetNode = {
+                id: `star-${starIndex}-planet-${planetIndex}`,
+                name: planet,
+                type: "planet",
+                children: [],
+              };
+              if (
+                starDetail.planetDetails &&
+                starDetail.planetDetails[planetIndex] &&
+                starDetail.planetDetails[planetIndex].missions
+              ) {
+                planetNode.children = starDetail.planetDetails[planetIndex].missions.map(
+                  (mission, missionIndex) => ({
+                    id: `star-${starIndex}-planet-${planetIndex}-mission-${missionIndex}`,
+                    name: mission,
+                    type: "mission",
+                  }),
+                );
+              }
+              return planetNode;
+            });
+          }
+          return starNode;
+        },
+      );
+      console.log(this.transformedStarDetails);
+    },
+    getAllNodeIds(items) {
+      const ids = [];
+      const collectIds = (nodes) => {
+        nodes.forEach((node) => {
+          ids.push(node.id);
+          if (node.children && node.children.length > 0) {
+            collectIds(node.children);
+          }
+        });
+      };
+      collectIds(items);
+      return ids;
+    },
+    updateExpandedNodes(newValue) {
+      // Update expanded nodes when user manually expands/collapses
+      this.expandedNodes = newValue;
     },
   },
 };
@@ -1362,12 +1424,12 @@ star
     width: 100%;
     text-align: center;
     flex: none;
-    font-size: 0.8rem;
+    font-size: 1rem;
     color: var(--v-missionAccent-base);
   }
 
   .stepper-styles {
-    // background: none;
+    background: none !important;
     // background-color: var(--v-background-base);
   }
 }
@@ -1551,5 +1613,149 @@ star
 // Ensure smooth scrolling for the entire dialog content
 .create-dialog-content {
   scroll-behavior: smooth;
+}
+
+// Galaxy treeview styles
+.galaxy-treeview-container {
+  width: 90vw;
+  max-width: 90vw;
+  height: 60vh;
+  margin: 1rem auto;
+  padding: 1rem;
+  background-color: rgba(var(--v-background-base), 0.8);
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+
+  // Create a mask that fades out at all edges using radial gradient
+  mask-image: radial-gradient(
+    ellipse at center,
+    black 60%,
+    rgba(0, 0, 0, 0.9) 75%,
+    rgba(0, 0, 0, 0.7) 85%,
+    transparent 95%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse at center,
+    black 60%,
+    rgba(0, 0, 0, 0.9) 75%,
+    rgba(0, 0, 0, 0.7) 85%,
+    transparent 95%
+  );
+}
+
+.galaxy-treeview-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  height: 100%;
+  padding: 10px;
+  overflow-y: auto;
+  overflow-x: auto;
+
+  // Custom scrollbar styling
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(var(--v-missionAccent-base), 0.1);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(var(--v-missionAccent-base), 0.5);
+    border-radius: 4px;
+
+    &:hover {
+      background: rgba(var(--v-missionAccent-base), 0.7);
+    }
+  }
+}
+
+.star-treeview-item {
+  flex: 0 0 auto;
+  width: auto;
+  padding: 15px;
+  background-color: rgba(var(--v-background-base), 0.9);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  height: auto;
+  // REMOVE: max-height, overflow-y, scrollbar styling
+}
+
+.star-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--v-galaxyAccent-base);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  text-align: center;
+  padding: 8px;
+  background-color: rgba(var(--v-galaxyAccent-base), 0.1);
+  border-radius: 4px;
+  border: 1px solid rgba(var(--v-galaxyAccent-base), 0.3);
+}
+
+.galaxy-treeview {
+  width: 100%;
+
+  .v-treeview-node {
+    margin-bottom: 0.25rem;
+  }
+
+  .v-treeview-node__root {
+    padding: 0.25rem 0;
+  }
+
+  .v-treeview-node__children {
+    margin-left: 1rem;
+  }
+
+  // Hide the root star node since we're showing it as a title
+  .v-treeview-node:first-child > .v-treeview-node__root {
+    display: none;
+  }
+
+  // Adjust spacing for better readability
+  .v-treeview-node__content {
+    padding: 0.25rem 0;
+  }
+}
+
+.treeview-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--v-missionAccent-base);
+  font-weight: 500;
+  line-height: 1.3;
+  word-wrap: break-word;
+}
+
+.star-emoji {
+  font-size: 1rem;
+  filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.6));
+}
+
+.planet-emoji {
+  font-size: 0.9rem;
+  filter: drop-shadow(0 0 3px rgba(138, 43, 226, 0.6));
+}
+
+.mission-emoji {
+  font-size: 0.8rem;
+  filter: drop-shadow(0 0 2px rgba(255, 69, 0, 0.6));
+}
+
+.debug-info {
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  font-size: 0.7rem;
+  color: var(--v-missionAccent-base);
 }
 </style>
