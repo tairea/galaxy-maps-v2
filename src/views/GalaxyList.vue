@@ -74,8 +74,12 @@
     </div>
 
     <!-- Create Galaxy DIALOG -->
-    <CreateEditDeleteGalaxyDialog :showDialog="showDialog" @close="showDialog = false" @openAiDialog="showAiDialog = true" />
-    <AICreateGalaxyDialog :showDialog.sync="showAiDialog" @close="showAiDialog = false" />
+    <CreateEditDeleteGalaxyDialog
+      :showDialog="showDialog"
+      @close="showDialog = false"
+      @openAiDialog="showAiDialog = true"
+    />
+    <AICreateGalaxyDialog :showFirstDialog.sync="showAiDialog" @close="showAiDialog = false" />
   </div>
 </template>
 
@@ -89,7 +93,7 @@ import useGalaxyListViewStore from "@/store/galaxyListView";
 import useRootStore from "@/store/index";
 import { mdiPlus } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
-import AICreateGalaxyDialogVue from '@/components/Dialogs/AICreateGalaxyDialog.vue';
+import AICreateGalaxyDialogVue from "@/components/Dialogs/AICreateGalaxyDialog.vue";
 
 export default {
   name: "GalaxyList",
@@ -100,7 +104,7 @@ export default {
     GalaxyListInfoPanel,
     DiscoverGalaxyButton,
     Galaxies,
-    AICreateGalaxyDialogVue
+    AICreateGalaxyDialogVue,
   },
   watch: {
     async user(newUser) {

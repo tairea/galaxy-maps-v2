@@ -64,7 +64,7 @@ export default {
   margin-left: 5%;
   margin-right: auto;
   margin-bottom: 30px;
-  overflow-y: scroll;
+  overflow-y: auto;
   overflow-x: hidden;
 }
 

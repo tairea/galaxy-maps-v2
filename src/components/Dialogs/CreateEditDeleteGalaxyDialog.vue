@@ -33,12 +33,51 @@
                 <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <div>
                   <p class="dialog-description">
-                    A Galaxy Map is a path of learning... like a course.
+                    A Galaxy Map is a journey map towards a target destination.
                   </p>
-                  <p class="dialog-description">
-                    If you would like to map some learning, create a new Galaxy Map.
+                  <p class="dialog-description mt-2">
+                    Like the steps you need to take to complete a project, course, skill, or a life
+                    goal.
                   </p>
                 </div>
+              </div>
+            </div>
+
+            <!-- Choose creation mode buttons -->
+            <div class="creation-mode-options my-12" v-if="!edit && !creationMode">
+              <!-- AI MODE -->
+              <v-tooltip v-if="!edit" bottom>
+                <template v-slot:activator="{ on, attrs }">
+                  <div
+                    v-bind="attrs"
+                    v-on="on"
+                    class="creation-mode-option galaxy-border"
+                    :class="{ selected: creationMode === 'ai' }"
+                    @click="openAIDialog"
+                  >
+                    <div class="creation-mode-icon">
+                      <v-icon color="galaxyAccent">{{ mdiRobotExcited }}</v-icon>
+                    </div>
+                    <div class="creation-mode-label galaxyAccent--text">Create with AI</div>
+                    <!-- <div class="creation-mode-description">
+                      Let AI help you design your galaxy map
+                    </div> -->
+                  </div>
+                </template>
+                <span>Try this new beta feature</span>
+              </v-tooltip>
+
+              <!-- MANUAL MODE -->
+              <div
+                class="creation-mode-option base-border"
+                :class="{ selected: creationMode === 'manual' }"
+                @click="creationMode = 'manual'"
+              >
+                <div class="creation-mode-icon">
+                  <v-icon color="baseAccent">{{ mdiPencil }}</v-icon>
+                </div>
+                <div class="creation-mode-label baseAccent--text">Create Manually</div>
+                <!-- <div class="creation-mode-description">Build your galaxy map step by step</div> -->
               </div>
             </div>
 
@@ -47,25 +86,8 @@
               class="left-side"
               :style="course.title ? 'width:50%' : 'width:100%'"
               style="margin-top: 10px"
+              v-if="edit || creationMode == 'manual'"
             >
-                          
-              <!-- AdAI Creation Button -->
-              <v-tooltip v-if="!edit" bottom>
-                <template v-slot:activator="{ on, attrs }">
-                  <v-btn
-                    v-bind="attrs"
-                    v-on="on"
-                    outlined
-                    color="baseAccent"
-                    class="mt-4 mx-5"
-                    @click="openAIDialog"
-                  >
-                    <v-icon left>{{ mdiRobotExcited }}</v-icon>
-                    Create with AI
-                  </v-btn>
-                </template>
-                <span>Try this new beta feature</span>
-              </v-tooltip>
               <!-- DIALOG FIELDS -->
               <div class="create-dialog-content">
                 <!-- TITLE -->
@@ -187,7 +209,11 @@
             <!-- End of left-side -->
 
             <!-- RIGHT SIDE -->
-            <div class="right-side" :style="course.title ? 'width:50%' : 'width:0%'">
+            <div
+              v-if="edit || creationMode == 'manual'"
+              class="right-side"
+              :style="course.title ? 'width:50%' : 'width:0%'"
+            >
               <!-- Galaxy info panel -->
               <div id="galaxy-info" v-if="course.title" class="mb-2">
                 <h2 class="galaxy-label">Galaxy</h2>
@@ -238,7 +264,7 @@
 
             <!-- End of right-side -->
             <!-- ACTION BUTTONS -->
-            <div class="action-buttons">
+            <div v-if="edit || creationMode == 'manual'" class="action-buttons">
               <!-- PUBLISH -->
               <!-- <div
                 style="width: 200px"
@@ -453,7 +479,15 @@
 <script>
 import { db, storage, functions } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
-import { mdiPencil, mdiPlus, mdiClose, mdiCheck, mdiDelete, mdiInformationVariant, mdiRobotExcited } from "@mdi/js";
+import {
+  mdiPencil,
+  mdiPlus,
+  mdiClose,
+  mdiCheck,
+  mdiDelete,
+  mdiInformationVariant,
+  mdiRobotExcited,
+} from "@mdi/js";
 import firebase from "firebase/compat/app";
 import clone from "lodash/clone";
 import { mapActions, mapState } from "pinia";
@@ -510,6 +544,7 @@ export default {
     disabled: false,
     loading: false,
     deleting: false,
+    creationMode: "",
   }),
   computed: {
     ...mapState(useRootStore, ["person", "peopleInCourse", "currentCourseId", "courseTasks"]),
@@ -530,6 +565,15 @@ export default {
     showDialog(newVal) {
       this.dialog = newVal;
     },
+    edit: {
+      immediate: true,
+      handler(newVal) {
+        if (newVal) {
+          // When in edit mode, we don't need creation mode selection
+          this.creationMode = "manual";
+        }
+      },
+    },
   },
   mounted() {
     if (this.courseToEdit) {
@@ -540,6 +584,9 @@ export default {
     ...mapActions(useRootStore, ["setCurrentCourseId", "setSnackbar"]),
     cancel() {
       this.dialog = false;
+      if (!this.edit) {
+        this.creationMode = "";
+      }
       this.$emit("close");
       // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
     },
@@ -767,7 +814,7 @@ export default {
       if (this.privateDialog == false && this.peopleInCourse.length) {
         this.privateDialog = true;
       } else {
-        (this.privateDialog = false), (this.dialog = false), (this.dialogConfirm = true);
+        ((this.privateDialog = false), (this.dialog = false), (this.dialogConfirm = true));
       }
     },
     cancelDeleteDialog() {
@@ -882,9 +929,10 @@ export default {
       return sendCourseCreatedEmail(data);
     },
     openAIDialog() {
+      this.creationMode = "ai";
       this.cancel(); // Close current dialog
       this.$nextTick(() => {
-        this.$emit('openAiDialog'); // Emit event to open AI dialog
+        this.$emit("openAiDialog"); // Emit event to open AI dialog
       });
     },
   },
@@ -1043,5 +1091,99 @@ export default {
 }
 .in-review {
   color: var(--v-cohortAccent-base);
+}
+
+// Creation mode selection styles
+.creation-mode-selection {
+  width: 100%;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.creation-mode-options {
+  display: flex;
+  justify-content: center;
+  gap: 50px;
+  margin: 20px 0;
+  width: 100%;
+}
+
+.creation-mode-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80px 30px;
+  border: 2px solid var(--v-missionAccent-base);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 150px;
+  background-color: var(--v-background-base);
+  text-align: center;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  &.selected {
+    border-color: var(--v-baseAccent-base);
+    background-color: rgba(var(--v-baseAccent-base), 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(var(--v-baseAccent-base), 0.3);
+  }
+}
+
+.galaxy-border {
+  border: 2px solid var(--v-galaxyAccent-base);
+}
+
+.base-border {
+  border: 2px solid var(--v-baseAccent-base);
+}
+
+.creation-mode-icon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .v-icon {
+    font-size: 2.5rem;
+    color: var(--v-missionAccent-base);
+  }
+}
+
+.creation-mode-label {
+  font-size: 1rem;
+  text-transform: uppercase;
+  color: var(--v-missionAccent-base);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.creation-mode-description {
+  font-size: 0.8rem;
+  color: var(--v-missionAccent-base);
+  opacity: 0.8;
+  line-height: 1.3;
+}
+
+// AI creation mode styles
+.ai-creation-mode {
+  width: 100%;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ai-creation-content {
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
 }
 </style>

@@ -1,6 +1,7 @@
 <template>
   <div id="container" class="bg">
     <LoadingSpinner v-if="loading" text="loading dashboard" />
+    
     <!-- PERSON INFO FRAME -->
     <div id="left-section">
       <UserInfo :person="person" />
@@ -323,7 +324,7 @@ export default {
 
     .course-progression-wrap {
       height: 100%;
-      overflow-y: scroll;
+      overflow-y: auto;
       overflow-x: hidden;
     }
   }
@@ -500,7 +501,7 @@ export default {
 
 .cohort-frame {
   height: 100%;
-  overflow: scroll;
+  overflow: auto;
   margin-bottom: 10px;
 }
 

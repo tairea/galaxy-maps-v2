@@ -38,16 +38,19 @@
         <GalaxyMapButtons
           class="mt-8"
           :class="{ hideButtons: hideLeftPanelsFlag }"
-          v-if="teacher"
+          v-if="!isRestriced"
           :addNodeMode="addNodeMode"
           :addEdgeMode="addEdgeMode"
           :dragNodeMode="dragNodeMode"
           :uiMessage="uiMessage ? uiMessage : ''"
           :changeInPositions="changeInPositions"
           :nodePositionsChangeLoading="nodePositionsChangeLoading"
+          :showMissions="showMissions"
+          :isTeacher="teacher"
           @toggleAddNodeMode="toggleAddNodeMode"
           @toggleAddEdgeMode="toggleAddEdgeMode"
           @toggleDragNodeMode="toggleDragNodeMode"
+          @toggleShowMissions="toggleShowMissions"
           @addNode="showAddDialog"
           @saveNodePositions="saveNodePositions"
         />
@@ -56,7 +59,7 @@
         <GalaxyMap
           ref="vis"
           :course="boundCourse"
-          :panelTopicClicked="panelTopicClicked"
+          :showMissions="showMissions"
           @add-node="showAddDialog"
           @edit-node="showEditDialog"
           @setUiMessage="setUiMessage"
@@ -74,6 +77,7 @@
           @topicClicked="topicClicked($event)"
           @courseTasks="emittedCourseTasks($event)"
           @galaxyCompleted="galaxyCompleted"
+          @toggleShowMissions="toggleShowMissions"
         />
         <!--  @hoverNode="hovered" -->
       </div>
@@ -125,11 +129,7 @@
       :selectedEdge="currentEdge"
       @closeInfoPanel="closeInfoPanel"
     />
-    <SolarSystemListPanel
-      v-if="teacher"
-      :course="boundCourse"
-      @panelTopicClicked="panelTopicClicked = $event"
-    />
+    <SolarSystemListPanel v-if="teacher" :course="boundCourse" @focusOnTopic="handleFocusOnTopic" />
 
     <!-- Galaxy Completed Popup -->
     <GalaxyCompletedDialog :value="galaxyCompletedDialog" @close="galaxyCompletedDialog = false" />
@@ -152,7 +152,7 @@ import GalaxyMapButtons from "@/components/GalaxyView/GalaxyMapButtons.vue";
 import CreateEditDeleteNodeDialog from "@/components/Dialogs/CreateEditDeleteNodeDialog.vue";
 
 import SolarSystemInfoPanel from "@/components/GalaxyView/SolarSystemInfoPanel.vue";
-import EdgeInfoPanel from "@/components/GalaxyView/EdgeInfoPanel.vue";  
+import EdgeInfoPanel from "@/components/GalaxyView/EdgeInfoPanel.vue";
 import SolarSystemListPanel from "@/components/GalaxyView/SolarSystemListPanel.vue";
 
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
@@ -232,7 +232,7 @@ export default {
       cohortsInCourse: [],
       selectedNode: {},
       hideLeftPanelsFlag: false,
-      clickedTopic: {},
+      clickedTopicId: null,
       triggerTopicClicked: false,
       fetchedTopic: null,
       courseTasks: [],
@@ -241,7 +241,7 @@ export default {
       xpPointsForThisGalaxy: 2000,
       galaxyMapForceUpdateKey: 0,
       topicError: null,
-      panelTopicClicked: {},
+      showMissions: false, // Add missions toggle state
     };
   },
   watch: {
@@ -413,9 +413,8 @@ export default {
       this.hideLeftPanelsFlag = hideFlag;
     },
     closeInfoPanel() {
-      this.panelTopicClicked = {};
       this.infoPopupShow = false;
-      this.clickedTopic = {};
+      this.clickedTopicId = null;
       this.fetchedTopic = null;
       this.currentEdge = null;
       this.topicTasks = [];
@@ -424,12 +423,11 @@ export default {
       // this.$refs.listPanel.courseClicked();
     },
     async topicClicked(emittedTopic) {
-      console.log(emittedTopic)
       this.infoPopupShow = true;
       // console.log("topic clicked emitted from GalaxyMap.vue", emittedTopic);
 
       // get topic id
-      this.clickedTopic = emittedTopic;
+      this.clickedTopicId = emittedTopic.id;
 
       // Reset topic tasks and error state
       this.topicTasks = [];
@@ -439,15 +437,15 @@ export default {
         // check if authenticated
         if (this.teacher || this.student) {
           // get topic
-          this.fetchedTopic = await fetchTopicByCourseIdTopicId(this.courseId, this.clickedTopic.id);
+          this.fetchedTopic = await fetchTopicByCourseIdTopicId(this.courseId, this.clickedTopicId);
           console.log("clicked topic:", this.fetchedTopic);
         } else {
           this.fetchedTopic = emittedTopic;
         }
-      
+
         // loop courseTasks for this topic id (= this.topicTasks)
         for (const task of this.courseTasks) {
-          if (task.topicId == this.clickedTopic.id) {
+          if (task.topicId == this.clickedTopicId) {
             this.topicTasks.push(task.task);
           }
         }
@@ -510,7 +508,6 @@ export default {
       this.hoverNode = false;
     },
     selected(selected) {
-      console.log("selected: ", selected)
       this.type = selected.type;
       this.infoPopupPosition.x = selected.DOMx;
       this.infoPopupPosition.y = selected.DOMy;
@@ -523,7 +520,6 @@ export default {
       this.infoPopupShow = true;
     },
     centerFocus(centerFocusNode) {
-      console.log("center focus: ", centerFocusNode)
       if (centerFocusNode.length > 1) return; // this avoids pop up when no specific node selected
       this.centerFocusPosition = true;
       this.type = centerFocusNode.type;
@@ -625,6 +621,12 @@ export default {
       // force reload GalaxpMap component
       this.$router.go();
     },
+    handleFocusOnTopic(node) {
+      this.$refs.vis.focusOnNodeById(node.id);
+    },
+    toggleShowMissions() {
+      this.showMissions = !this.showMissions;
+    },
   },
 };
 </script>
@@ -661,7 +663,7 @@ export default {
   align-items: center;
   flex-direction: column;
   // border: 1px solid yellow;
-  overflow-y: scroll;
+  overflow-y: auto;
   padding: 0px 0px 50px 20px;
   // z-index: 3;
   transition: all 0.3s;
