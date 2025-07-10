@@ -7,6 +7,7 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
+    ActionButtons: typeof import('./src/components/Dialogs/AICreateGalaxyDialog/ActionButtons.vue')['default']
     ActiveMissions: typeof import('./src/components/UserDashboard/StudentCourseProgression/GalaxyProgressionCard/ActiveMissions.vue')['default']
     ActiveMissionsCard: typeof import('./src/components/SolarSystemView/MissionsList/MissionsCard/ActiveMissionsCard.vue')['default']
     ActivityBarChart: typeof import('./src/components/Reused/ActivityBarChart.vue')['default']
@@ -32,6 +33,7 @@ declare module 'vue' {
     CreateEditDeleteNodeDialog: typeof import('./src/components/Dialogs/CreateEditDeleteNodeDialog.vue')['default']
     CreateEditDeleteOrganisationDialog: typeof import('./src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue')['default']
     CreateProfileDialog: typeof import('./src/components/Dialogs/CreateProfileDialog.vue')['default']
+    DialogHeader: typeof import('./src/components/Dialogs/AICreateGalaxyDialog/DialogHeader.vue')['default']
     DiscoverGalaxyButton: typeof import('./src/components/Dialogs/DiscoverGalaxyButton.vue')['default']
     EdgeInfoPanel: typeof import('./src/components/GalaxyView/EdgeInfoPanel.vue')['default']
     EditOrganisationButtonDialog: typeof import('./src/components/Dialogs/EditOrganisationButtonDialog.vue')['default']
@@ -47,7 +49,9 @@ declare module 'vue' {
     GalaxyMapButtons: typeof import('./src/components/GalaxyView/GalaxyMapButtons.vue')['default']
     GalaxyProgressionCard: typeof import('./src/components/UserDashboard/StudentCourseProgression/GalaxyProgressionCard.vue')['default']
     GradientBackground: typeof import('./src/components/GalaxyList/GradientBackground.vue')['default']
+    LayoutSelector: typeof import('./src/components/Dialogs/AICreateGalaxyDialog/LayoutSelector.vue')['default']
     LearnerOverviewDashboard: typeof import('./src/components/Reused/LearnerOverviewDashboard.vue')['default']
+    LoadingOverlay: typeof import('./src/components/Dialogs/AICreateGalaxyDialog/LoadingOverlay.vue')['default']
     LoadingSpinner: typeof import('./src/components/Reused/LoadingSpinner.vue')['default']
     Login: typeof import('./src/components/Landing/Login.vue')['default']
     LoginDialog: typeof import('./src/components/Dialogs/LoginDialog.vue')['default']
@@ -168,6 +172,7 @@ declare module 'vue' {
     VToolbar: typeof import('vuetify/lib')['VToolbar']
     VTooltip: typeof import('vuetify/lib')['VTooltip']
     VTour: typeof import('vue-tour')['VTour']
+    VTreeview: typeof import('vuetify/lib')['VTreeview']
     XpPointsDialog: typeof import('./src/components/Dialogs/XpPointsDialog.vue')['default']
   }
 }

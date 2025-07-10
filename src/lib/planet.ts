@@ -66,7 +66,16 @@ export class Planet {
     if (this.animating) return; // Don't start new animation if already animating
 
     this.savedRadian = this.radian; // Save current position
-    this.targetRadian = Math.PI / 2; // Target: bottom of orbit (π/2 radians = 90 degrees = south)
+
+    // Calculate the nearest bottom position (π/2 radians = 90 degrees = south)
+    // Find the closest multiple of 2π that gets us to the bottom
+    const currentAngle = this.radian;
+    const bottomAngle = Math.PI / 2; // 90 degrees = south
+
+    // Calculate how many full rotations we need to add/subtract to get to the nearest bottom
+    const fullRotations = Math.round((currentAngle - bottomAngle) / (2 * Math.PI));
+    this.targetRadian = bottomAngle + fullRotations * 2 * Math.PI;
+
     this.animating = true;
     this.animationProgress = 0;
     this.animationStartTime = Date.now();

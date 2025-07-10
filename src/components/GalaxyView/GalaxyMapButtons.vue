@@ -1,6 +1,22 @@
 <template>
   <div class="d-flex map-buttons-bottom">
     <div class="d-inline-flex">
+      <!-- SHOW MISSIONS (All Users) -->
+      <div
+        class="mapButton"
+        :class="{ active: showMissions, 'mr-4': isTeacher }"
+        @click="toggleShowMissions"
+      >
+        <div class="mapButton-icon" :class="{ activeIcon: showMissions }">
+          <v-icon v-if="!showMissions" color="missionAccent">{{ mdiEarth }}</v-icon>
+          <v-icon v-else color="baseAccent">{{ mdiEarthOff }}</v-icon>
+        </div>
+        <div class="mapButton-text">
+          <p v-if="!showMissions" class="overline ma-0">Show Missions</p>
+          <p v-else class="overline ma-0" style="font-size: 0.7rem">Hide missions</p>
+        </div>
+      </div>
+
       <!-- ADD/EDIT STARS TOGGLE (Teacher Only) -->
       <div
         v-if="isTeacher"
@@ -71,22 +87,6 @@
           >
             <v-icon color="baseAccent">{{ mdiContentSaveCheck }}</v-icon>
           </div>
-        </div>
-      </div>
-
-      <!-- SHOW MISSIONS (All Users) -->
-      <div
-        class="mapButton"
-        :class="{ active: showMissions, 'ml-4': isTeacher }"
-        @click="toggleShowMissions"
-      >
-        <div class="mapButton-icon" :class="{ activeIcon: showMissions }">
-          <v-icon v-if="!showMissions" color="missionAccent">{{ mdiEarth }}</v-icon>
-          <v-icon v-else color="baseAccent">{{ mdiEarthOff }}</v-icon>
-        </div>
-        <div class="mapButton-text">
-          <p v-if="!showMissions" class="overline ma-0">Show Missions</p>
-          <p v-else class="overline ma-0" style="font-size: 0.7rem">Hide missions</p>
         </div>
       </div>
     </div>

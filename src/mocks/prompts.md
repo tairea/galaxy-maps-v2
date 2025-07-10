@@ -9,6 +9,10 @@ The node-red will also will also send data logs to a database.
 and the node-red will be accessible remotely via ngrok.
 we would also like to have a web dashboard that can show soil moisture readings and manually open and close the valve.
 
+<!-- Emiliana home school -->
+
+a completed semester of learning for my 10 year old daughter homeschooling
+
 <!-- clarifying questions for ^ above IoT Irrigation prompt -->
 
 ## Clarifying question 1 of 10
