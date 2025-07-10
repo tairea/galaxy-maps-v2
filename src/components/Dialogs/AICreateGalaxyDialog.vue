@@ -17,7 +17,7 @@
               :key="`star-${starIndex}`"
               class="star-treeview-item"
             >
-              <h4 class="star-title">{{ star.name }}</h4>
+              <!-- <h4 class="star-title">{{ star.name }}</h4> -->
               <v-treeview
                 :items="[star]"
                 :value="expandedNodes"
@@ -40,12 +40,14 @@
         </div>
 
         <!-- TOKEN USAGE -->
-        <p class="token-usage overline">Total Tokens: {{ totalTokensUsed.toLocaleString() }}</p>
-        <p class="token-breakdown overline">
+        <p class="token-usage overline mt-2">
+          Total Tokens: {{ totalTokensUsed.toLocaleString() }}
+        </p>
+        <p class="token-breakdown overline mt-2">
           Input: {{ totalInputTokens.toLocaleString() }} | Output:
           {{ totalOutputTokens.toLocaleString() }}
         </p>
-        <p class="token-breakdown overline">
+        <p class="token-breakdown overline mt-2">
           Est. cost: ${{
             (this.totalInputTokens / 1000000) * 0.15 + (this.totalOutputTokens / 1000000) * 0.6
           }}
@@ -266,7 +268,7 @@ import { mapState, mapActions } from "pinia";
 import useRootStore from "@/store/index";
 import { db, functions } from "@/store/firestoreConfig";
 import {
-  GalaxyCreationResponseSchema,
+  // GalaxyCreationResponseSchema,
   FirstStepResponseSchema,
   StarsPlanetsSchema,
   MissionsSchema,
@@ -365,27 +367,8 @@ export default {
       },
       immediate: true,
     },
-    aiGeneratedGalaxyMap: {
-      handler(newVal, oldVal) {
-        console.log("aiGeneratedGalaxyMap changed:", {
-          newStarsCount: newVal?.starDetails?.length || 0,
-          oldStarsCount: oldVal?.starDetails?.length || 0,
-          newVal: newVal,
-          oldVal: oldVal,
-        });
-        this.updateTransformedStarDetails();
-      },
-      deep: true,
-      immediate: true,
-    },
     "aiGeneratedGalaxyMap.starDetails": {
       handler(newVal, oldVal) {
-        console.log("starDetails array changed:", {
-          newLength: newVal?.length || 0,
-          oldLength: oldVal?.length || 0,
-          newVal: newVal,
-          oldVal: oldVal,
-        });
         this.updateTransformedStarDetails();
       },
       deep: true,
@@ -536,61 +519,45 @@ export default {
           store: true,
         });
 
-        console.log("Raw AI response:", aiResponse);
+        console.log("1st A.I. call: Stars generated ✅. A.I. Response:", aiResponse);
 
         // Track token usage
-        if (aiResponse.usage) {
-          const inputTokens = aiResponse.usage.input_tokens || 0;
-          const outputTokens = aiResponse.usage.output_tokens || 0;
-          const totalTokens = aiResponse.usage.total_tokens || 0;
-
-          this.totalInputTokens += inputTokens;
-          this.totalOutputTokens += outputTokens;
-          this.totalTokensUsed += totalTokens;
-        }
+        this.trackTokenUsage(aiResponse);
 
         // store the response id for the next ai call
         this.previousResponseId = aiResponse.id;
 
         // Get the parsed response (already validated by zodTextFormat)
-        let parsed;
-        try {
-          parsed = aiResponse.output_parsed;
-          if (!parsed) {
-            throw new Error("No parsed response received from AI");
-          }
-        } catch (error) {
-          console.error("Failed to get parsed response:", error);
-          this.setSnackbar({
-            show: true,
-            text: error.message || "Invalid response format from AI. Please try again.",
-            color: "error",
-          });
-          return;
-        }
+        const parsedResponse = aiResponse.output_parsed;
 
-        // Check if it's gathering context or stars list
-        if (parsed.stars && Array.isArray(parsed.stars) && parsed.title && parsed.description) {
-          // It's a stars list - proceed to next step
-          console.log("Stars list received:", parsed);
+        // Check if it's clarification_needed, journey_steps_ready, or stars list
+        if (
+          parsedResponse.status === "journey_steps_ready" &&
+          parsedResponse.stars &&
+          Array.isArray(parsedResponse.stars) &&
+          parsedResponse.title &&
+          parsedResponse.description
+        ) {
+          // It's a journey_steps_ready response - proceed to next step
+          console.log("Journey steps ready received:", parsedResponse);
           // Store the journey metadata
           this.aiGeneratedGalaxyMap = {
-            journeyTitle: parsed.title,
-            journeyDescription: parsed.description,
+            journeyTitle: parsedResponse.title,
+            journeyDescription: parsedResponse.description,
             starDetails: [],
           };
           // Generate Map from Stars List x 2 more layers (Planets > Missions)
           // Note: generateMapFromStarsList will handle its own loading state
-          this.generateMapFromStarsList(parsed);
+          this.generateMapFromStarsList(parsedResponse);
           // Don't set loading = false here as generateMapFromStarsList will handle it
         } else if (
-          parsed.status === "gathering_context" &&
-          parsed.questions &&
-          Array.isArray(parsed.questions)
+          parsedResponse.status === "clarification_needed" &&
+          parsedResponse.questions &&
+          Array.isArray(parsedResponse.questions)
         ) {
-          // It's gathering context - show questions
-          console.log("Gathering context questions:", parsed.questions);
-          this.aiGatheringContextQuestions = parsed.questions;
+          // It's clarification_needed - show questions
+          console.log("Clarification needed questions:", parsedResponse.questions);
+          this.aiGatheringContextQuestions = parsedResponse.questions;
           this.showSecondStepperStep = true;
           this.stepper = 2;
           const endTime = Date.now();
@@ -601,7 +568,7 @@ export default {
           // Set loading to false here since we're stopping to ask questions
           this.loading = false;
         } else {
-          console.warn("Unknown response format from AI:", parsed);
+          console.warn("Unknown response format from AI:", parsedResponse);
           this.setSnackbar({
             show: true,
             text: "Unexpected response format from AI. Please try again.",
@@ -733,67 +700,54 @@ export default {
           store: true,
         });
 
-        console.log("aiSecondResponse", aiSecondResponse);
+        console.log(
+          "2nd A.I. call: Stars Generation (after clarification): Response:",
+          aiSecondResponse,
+        );
 
         // Track token usage
-        if (aiSecondResponse.usage) {
-          const inputTokens = aiSecondResponse.usage.input_tokens || 0;
-          const outputTokens = aiSecondResponse.usage.output_tokens || 0;
-          const totalTokens = aiSecondResponse.usage.total_tokens || 0;
-
-          this.totalInputTokens += inputTokens;
-          this.totalOutputTokens += outputTokens;
-          this.totalTokensUsed += totalTokens;
-        }
+        this.trackTokenUsage(aiSecondResponse);
 
         this.previousResponseId = aiSecondResponse.id;
 
         // Get the parsed response (already validated by zodTextFormat)
-        let parsed;
-        try {
-          parsed = aiSecondResponse.output_parsed;
-          if (!parsed) {
-            throw new Error("No parsed response received from AI");
-          }
-        } catch (error) {
-          console.error("Failed to get parsed response:", error);
-          this.setSnackbar({
-            show: true,
-            text: error.message || "Invalid response format from AI. Please try again.",
-            color: "error",
-          });
-          return;
-        }
+        const parsedResponse = aiSecondResponse.output_parsed;
 
-        // Check if it's gathering context or stars list
-        if (parsed.stars && Array.isArray(parsed.stars) && parsed.title && parsed.description) {
-          // It's a stars list - proceed to next step
-          console.log("Stars list received:", parsed);
+        // Check if it's clarification_needed, journey_steps_ready, or stars list
+        if (
+          parsedResponse.status === "journey_steps_ready" &&
+          parsedResponse.stars &&
+          Array.isArray(parsedResponse.stars) &&
+          parsedResponse.title &&
+          parsedResponse.description
+        ) {
+          // It's a journey_steps_ready response - proceed to next step
+          console.log("Journey steps ready received:", parsedResponse);
           // Store the journey metadata
           this.aiGeneratedGalaxyMap = {
-            journeyTitle: parsed.title,
-            journeyDescription: parsed.description,
+            journeyTitle: parsedResponse.title,
+            journeyDescription: parsedResponse.description,
             starDetails: [],
           };
           // Generate Map from Stars List x 2 more layers (Planets > Missions)
           // Note: generateMapFromStarsList will handle its own loading state
-          this.generateMapFromStarsList(parsed);
+          this.generateMapFromStarsList(parsedResponse);
           // Don't set loading = false here as generateMapFromStarsList will handle it
         } else if (
-          parsed.status === "gathering_context" &&
-          parsed.questions &&
-          Array.isArray(parsed.questions)
+          parsedResponse.status === "clarification_needed" &&
+          parsedResponse.questions &&
+          Array.isArray(parsedResponse.questions)
         ) {
-          // It's gathering context - show questions
-          console.log("Gathering context questions:", parsed.questions);
-          this.aiGatheringContextQuestions = parsed.questions;
+          // It's clarification_needed - show questions
+          console.log("Clarification needed questions:", parsedResponse.questions);
+          this.aiGatheringContextQuestions = parsedResponse.questions;
           this.aiGatheringContextAnswers = [];
           this.showSecondStepperStep = true;
           this.stepper = 2;
           // Set loading to false here since we're stopping to ask questions
           this.loading = false;
         } else {
-          console.warn("Unknown response format from AI:", parsed);
+          console.warn("Unknown response format from AI:", parsedResponse);
           this.setSnackbar({
             show: true,
             text: "Unexpected response format from AI. Please try again.",
@@ -821,8 +775,6 @@ export default {
 
     // =========== Generate Map from Stars List x 2 more layers (Planets > Missions) ===========
     async generateMapFromStarsList(journeyAndStarsList) {
-      console.log("generateMapFromStarsList");
-
       // Start timing
       const startTime = Date.now();
       console.log("🚀 Starting Galaxy map generation process...");
@@ -833,7 +785,8 @@ export default {
         // Add a small delay to prevent rapid double-clicks
         await new Promise((resolve) => setTimeout(resolve, 100));
 
-        console.log("Generating Map from Stars List", journeyAndStarsList);
+        console.log("Layer 1 finished:", journeyAndStarsList);
+        console.log("Layer 2: Generating Planets from Stars...");
 
         // Initialize the galaxy map with journey metadata
         this.aiGeneratedGalaxyMap = {
@@ -842,7 +795,7 @@ export default {
           starDetails: [],
         };
 
-        // Get PLANETS from AI for each Star
+        // Generate PLANETS from AI for each STAR
         for (let index = 0; index < journeyAndStarsList.stars.length; index++) {
           const star = journeyAndStarsList.stars[index];
 
@@ -859,183 +812,108 @@ export default {
             store: true,
           });
 
-          console.log(`Star ${index + 1} response:`, aiResponse);
-
           // Track token usage
-          if (aiResponse.usage) {
-            const inputTokens = aiResponse.usage.input_tokens || 0;
-            const outputTokens = aiResponse.usage.output_tokens || 0;
-            const totalTokens = aiResponse.usage.total_tokens || 0;
+          this.trackTokenUsage(aiResponse);
 
-            this.totalInputTokens += inputTokens;
-            this.totalOutputTokens += outputTokens;
-            this.totalTokensUsed += totalTokens;
+          console.log(`Star ${index + 1} Planets generated ✅. A.I. response:`, aiResponse);
+
+          const parsedPlanetsResponse = aiResponse.output_parsed;
+
+          console.log("parsedPlanetsResponse:", parsedPlanetsResponse);
+
+          const planets = parsedPlanetsResponse.planets;
+          this.$set(this.aiGeneratedGalaxyMap.starDetails, index, parsedPlanetsResponse);
+
+          // Update existing star object with planets
+          this.$set(this.aiGeneratedGalaxyMap.starDetails[index], "planets", planets);
+          // Initialize planet details array for this star, preserving any existing data
+          if (!this.aiGeneratedGalaxyMap.starDetails[index].planetDetails) {
+            this.$set(this.aiGeneratedGalaxyMap.starDetails[index], "planetDetails", []);
           }
 
-          // Process the response and store it
-          if (aiResponse.output_parsed) {
-            // Check if the AI response already contains planetDetails with missions
-            const hasCompleteData =
-              aiResponse.output_parsed.planetDetails &&
-              aiResponse.output_parsed.planetDetails.length > 0 &&
-              aiResponse.output_parsed.planetDetails.every(
-                (p) => p.missions && p.missions.length > 0,
-              );
+          // Log what we're working with
+          console.log(`🔄 Star ${index + 1}: Generating missions for ${planets.length} planets`);
 
-            // Log the mismatch between planets and planetDetails
-            console.log(`🔍 Star ${index + 1} data analysis:`, {
-              planetsCount: aiResponse.output_parsed.planets?.length || 0,
-              planetDetailsCount: aiResponse.output_parsed.planetDetails?.length || 0,
-              planets: aiResponse.output_parsed.planets || [],
-              planetDetailsPlanets:
-                aiResponse.output_parsed.planetDetails?.map((p) => p.planet) || [],
-              hasMismatch:
-                (aiResponse.output_parsed.planets?.length || 0) !==
-                (aiResponse.output_parsed.planetDetails?.length || 0),
+          // loop all PLANETS in this STAR system
+          for (let planetIndex = 0; planetIndex < planets.length; planetIndex++) {
+            const planet = planets[planetIndex];
+
+            // Extract planet number from the planet title (e.g., "1.1: Planet Title" -> "1.1")
+            const planetNumberMatch = planet.match(/^(\d+\.\d+):/);
+            const planetNumber = planetNumberMatch
+              ? planetNumberMatch[1]
+              : `${index + 1}.${planetIndex + 1}`;
+
+            console.log(
+              `🔄 Star ${index + 1}: Generating Missions for Planet ${planetIndex + 1}:`,
+              planet,
+            );
+
+            // Generate MISSIONS from AI for each PLANET
+            // const missionsResponse = await this.$openai.responses.parse({
+            //   model: "gpt-4o-mini",
+            //   input: [
+            //     { role: "system", content: MissionsSystemPrompt },
+            //     { role: "user", content: `Planet number: ${planetNumber}` },
+            //     { role: "user", content: planets.join("\n") },
+            //     { role: "user", content: planet },
+            //   ],
+            //   text: {
+            //     format: zodTextFormat(MissionsSchema, "missions"),
+            //   },
+            //   store: true,
+            // });
+
+            const missionsResponse = await this.$openai.responses.create({
+              prompt: {
+                id: "pmpt_6868be6c10188190a25b162f4609a8c90e4471babac802c4",
+                version: "5",
+                variables: {
+                  planet_number: planetNumber,
+                  planets_list: planets.join("\n"),
+                  planet: planet,
+                },
+              },
             });
 
-            if (hasCompleteData && !aiResponse.output_parsed.planetDetails.some((p) => !p.planet)) {
-              // The AI response already contains planetDetails with missions for ALL planets - use it directly!
-              console.log(
-                `✅ Star ${index + 1}: Using complete data from AI response (${
-                  aiResponse.output_parsed.planetDetails.length
-                } planets with missions)`,
-              );
-              this.$set(this.aiGeneratedGalaxyMap.starDetails, index, aiResponse.output_parsed);
-              console.log("change to aiGeneratedGalaxyMap");
-            } else {
-              // The AI response is incomplete or has mismatched data - we need to generate missions
-              const reason = hasCompleteData ? "mismatched planet data" : "incomplete missions";
-              console.log(
-                `🔄 Star ${index + 1}: AI response ${reason}, generating missions separately`,
-              );
-              this.$set(this.aiGeneratedGalaxyMap.starDetails, index, aiResponse.output_parsed);
-              console.log("change to aiGeneratedGalaxyMap");
+            // Track token usage
+            this.trackTokenUsage(missionsResponse);
 
-              // Generate MISSIONS from AI for each Planet
+            console.log(
+              `Planet ${index + 1}.${planetIndex + 1} Missions generated ✅. A.I. response:`,
+              missionsResponse,
+            );
 
-              const planets = aiResponse.output_parsed.planets;
-              // Initialize planet details array for this star, preserving any existing data
-              if (!this.aiGeneratedGalaxyMap.starDetails[index].planetDetails) {
-                this.$set(this.aiGeneratedGalaxyMap.starDetails[index], "planetDetails", []);
+            // Parse the output_text JSON string to match the MissionsSchema format
+            let parsedMissionsData;
+            try {
+              const jsonText = missionsResponse.output_text;
+              const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+              if (!jsonMatch) {
+                throw new Error("No JSON object found in response");
               }
-
-              // Log what we're working with
-              console.log(
-                `🔄 Star ${index + 1}: Generating missions for ${planets.length} planets`,
-              );
-              if (aiResponse.output_parsed.planetDetails?.length > 0) {
-                console.log(
-                  `📝 Star ${index + 1}: Preserving ${
-                    aiResponse.output_parsed.planetDetails.length
-                  } existing planetDetails`,
-                );
-              }
-
-              for (let planetIndex = 0; planetIndex < planets.length; planetIndex++) {
-                const planet = planets[planetIndex];
-
-                // Check if we already have planetDetails for this planet
-                const existingPlanetDetail = aiResponse.output_parsed.planetDetails?.find(
-                  (pd) => pd.planet === planet || pd.planet === planet.replace(/^\d+\.\d+:\s*/, ""),
-                );
-
-                if (existingPlanetDetail && existingPlanetDetail.missions?.length > 0) {
-                  // We already have this planet with missions - preserve it
-                  console.log(
-                    `📝 Star ${index + 1}: Planet ${
-                      planetIndex + 1
-                    } already has missions, preserving existing data`,
-                  );
-                  this.$set(
-                    this.aiGeneratedGalaxyMap.starDetails[index].planetDetails,
-                    planetIndex,
-                    existingPlanetDetail,
-                  );
-                  console.log("change to aiGeneratedGalaxyMap");
-                  continue; // Skip to next planet
-                }
-
-                // Extract planet number from the planet title (e.g., "1.1: Planet Title" -> "1.1")
-                const planetNumberMatch = planet.match(/^(\d+\.\d+):/);
-                const planetNumber = planetNumberMatch
-                  ? planetNumberMatch[1]
-                  : `${index + 1}.${planetIndex + 1}`;
-
-                console.log(
-                  `🔄 Star ${index + 1}: Generating missions for planet ${
-                    planetIndex + 1
-                  }: ${planet}`,
-                );
-
-                const missionsResponse = await this.$openai.responses.parse({
-                  model: "gpt-4o-mini",
-                  input: [
-                    { role: "system", content: MissionsSystemPrompt },
-                    { role: "user", content: `Planet number: ${planetNumber}` },
-                    { role: "user", content: planets.join("\n") },
-                    { role: "user", content: planet },
-                  ],
-                  text: {
-                    format: zodTextFormat(MissionsSchema, "missions"),
-                  },
-                  store: true,
-                });
-
-                console.log(`Planet ${planetIndex + 1} missions response:`, missionsResponse);
-
-                // Track token usage
-                if (missionsResponse.usage) {
-                  const inputTokens = missionsResponse.usage.input_tokens || 0;
-                  const outputTokens = missionsResponse.usage.output_tokens || 0;
-                  const totalTokens = missionsResponse.usage.total_tokens || 0;
-
-                  this.totalInputTokens += inputTokens;
-                  this.totalOutputTokens += outputTokens;
-                  this.totalTokensUsed += totalTokens;
-                }
-
-                // Process the response and store it
-                if (missionsResponse.output_parsed) {
-                  // Add the planet details to the star immediately for real-time display
-                  this.$set(
-                    this.aiGeneratedGalaxyMap.starDetails[index].planetDetails,
-                    planetIndex,
-                    missionsResponse.output_parsed,
-                  );
-                  console.log("change to aiGeneratedGalaxyMap");
-                }
-              }
+              const jsonStr = jsonMatch[0];
+              console.log("Extracted JSON string:", jsonStr);
+              parsedMissionsData = JSON.parse(jsonStr);
+              console.log("Successfully parsed missions JSON:", parsedMissionsData);
+            } catch (error) {
+              console.error("Error parsing missions response:", error);
+              console.log("Raw missions response:", missionsResponse.output_text);
+              throw new Error("Failed to parse missions response into valid JSON format");
             }
 
-            // Log the structure for debugging
-            console.log(`Star ${index + 1} data structure:`, {
-              star: aiResponse.output_parsed.star,
-              planets: aiResponse.output_parsed.planets?.length || 0,
-              planetDetails:
-                this.aiGeneratedGalaxyMap.starDetails[index].planetDetails?.length || 0,
-              hasMissions:
-                this.aiGeneratedGalaxyMap.starDetails[index].planetDetails?.some(
-                  (p) => p.missions?.length > 0,
-                ) || false,
-              totalMissions:
-                this.aiGeneratedGalaxyMap.starDetails[index].planetDetails?.reduce(
-                  (sum, p) => sum + (p.missions?.length || 0),
-                  0,
-                ) || 0,
-            });
-
-            // Log the current state of the galaxy map
-            console.log(
-              `After Star ${index + 1}, galaxy map has ${
-                this.aiGeneratedGalaxyMap.starDetails.length
-              } stars`,
+            // Process the response and store it
+            // Add the planet details to the star immediately for real-time display
+            this.$set(
+              this.aiGeneratedGalaxyMap.starDetails[index].planetDetails,
+              planetIndex,
+              parsedMissionsData,
             );
-          }
-        }
+          } // end of for loop for all MISSIONS in this PLANET
+        } // end of for loop for all PLANETS in this STAR system
 
         // Now you have all the star details to work with
-        console.log("All star details:", this.aiGeneratedGalaxyMap.starDetails);
+        console.log("All Stars > Planets > Missions Generated ✅✅✅:", this.aiGeneratedGalaxyMap);
 
         // Calculate and log execution time
         const endTime = Date.now();
@@ -1045,7 +923,9 @@ export default {
         );
 
         // Automatically save the galaxy map to DB since it's complete
-        console.log("🚀 Galaxy map complete, automatically saving to database...");
+        console.log(
+          "🚀 Galaxy map a.i. generation complete, now automatically saving to database...",
+        );
         await this.saveGalaxyMaptoDB();
       } catch (error) {
         // Calculate and log execution time even on error
@@ -1169,7 +1049,7 @@ export default {
               .collection("courses")
               .doc(courseDocRef.id)
               .collection("map-nodes")
-              .where("label", "==", star.title)
+              .where("label", "==", star.star)
               .limit(1)
               .get();
 
@@ -1327,7 +1207,7 @@ export default {
         (starDetail, starIndex) => {
           const starNode = {
             id: `star-${starIndex}`,
-            name: starIndex + 1 + " - " + starDetail.star,
+            name: starIndex + 1 + ": " + starDetail.star,
             type: "star",
             children: [],
           };
@@ -1376,6 +1256,23 @@ export default {
     updateExpandedNodes(newValue) {
       // Update expanded nodes when user manually expands/collapses
       this.expandedNodes = newValue;
+    },
+    // =========== Token Usage Tracking ===========
+    trackTokenUsage(response) {
+      try {
+        if (response.usage) {
+          const inputTokens = response.usage.input_tokens || 0;
+          const outputTokens = response.usage.output_tokens || 0;
+          const totalTokens = response.usage.total_tokens || 0;
+
+          this.totalInputTokens += inputTokens;
+          this.totalOutputTokens += outputTokens;
+          this.totalTokensUsed += totalTokens;
+        }
+      } catch (error) {
+        console.warn("Error tracking token usage:", error);
+        // Continue execution even if token tracking fails
+      }
     },
   },
 };
@@ -1496,6 +1393,8 @@ export default {
   margin-top: 0.5rem;
   font-size: 0.8rem;
   font-weight: 500;
+  line-height: normal !important;
+  margin: 5px !important;
 }
 
 .token-breakdown {
@@ -1503,6 +1402,8 @@ export default {
   margin-top: 0.25rem;
   font-size: 0.7rem;
   opacity: 0.8;
+  line-height: normal !important;
+  margin: 5px !important;
 }
 
 @keyframes fadeInOut {
@@ -1626,6 +1527,8 @@ export default {
   border-radius: 8px;
   overflow: hidden;
   position: relative;
+  margin-top: 0px;
+  padding-top: 0px;
 
   // Create a mask that fades out at all edges using radial gradient
   mask-image: radial-gradient(
@@ -1680,7 +1583,6 @@ export default {
   padding: 15px;
   background-color: rgba(var(--v-background-base), 0.9);
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   height: auto;
   // REMOVE: max-height, overflow-y, scrollbar styling
 }

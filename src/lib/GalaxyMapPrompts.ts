@@ -8,13 +8,14 @@ FIRST: Check if the user's goal is clear enough to proceed. Ask clarifying quest
 
 If you need more information, respond with:
 {
-  "status": "gathering_context",
+  "status": "clarification_needed",
   "questions": ["Clarifying question 1", "Clarifying question 2"]
 }
 (Generate questions specific to the user's input and what is unclear.)
 
 If the goal is clear enough, respond with:
 {
+  "status": "journey_steps_ready",
   "title": "Journey Title",
   "description": "Brief paragraph about the Journey",
   "stars": [
