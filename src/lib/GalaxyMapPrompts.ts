@@ -38,6 +38,7 @@ You will receive:
 Your task is to:
 1. Write a description on what this step is about.
 2. Break this Star down into an exhaustive and logical list of Planets (sub-goals) that represent the essential things a learner must understand or be able to do in order to complete this learning step.
+3. When creating the list of Planets, don't lose sight of the users original context as it relates to the overall journey and the Star of focuses part in that.
 
 The Planets should:
 - Be logical and actionable.
@@ -57,7 +58,7 @@ Return your output in this format:
   ]
 }
 
-IMPORTANT: The planet numbering should start with the star index + 1 (e.g., if this is star 2, planets should be "2.1:", "2.2:", etc.)
+IMPORTANT: The planet numbering should start with the star index + 1 (e.g., if this is star 2, planets should be "2.1:", "2.2:", etc.) and don't have the words "Planet Title" in the title.
 
 You may refer to the full list of Star titles for context to help with scope and progression. Do not include extra commentary or explanations.
 `;

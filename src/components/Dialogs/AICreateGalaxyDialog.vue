@@ -847,6 +847,7 @@ export default {
 
           const aiResponse = await this.$openai.responses.parse({
             model: "gpt-4o-mini",
+            previous_response_id: this.previousResponseId,
             input: [
               { role: "system", content: PlanetsSystemPrompt },
               { role: "user", content: journeyAndStarsList.stars.join("\n") },
@@ -855,7 +856,7 @@ export default {
             text: {
               format: zodTextFormat(StarsPlanetsSchema, "stars_planets"),
             },
-            store: true,
+            // store: true,
           });
 
           // Track token usage
