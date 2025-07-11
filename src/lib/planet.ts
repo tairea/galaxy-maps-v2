@@ -167,12 +167,18 @@ export class Planet {
     // Set text properties
     ctx.font = "12px Arial";
     ctx.fillStyle = labelColor;
-    ctx.textAlign = "left";
-    ctx.textBaseline = "middle";
 
     // Position label to the right of the planet
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
     const labelX = this.x + 15; // 15px offset from planet
     const labelY = this.y;
+
+    // Position label above the planet
+    // ctx.textAlign = "center";
+    // ctx.textBaseline = "bottom";
+    // const labelX = this.x; // Center horizontally on the planet
+    // const labelY = this.y - this.radius - 10; // 10px above the planet's edge
 
     // Draw the task name
     ctx.fillText(this.taskName, labelX, labelY);

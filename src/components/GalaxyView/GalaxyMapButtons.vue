@@ -2,7 +2,7 @@
   <div class="d-flex map-buttons-bottom">
     <div class="d-inline-flex">
       <!-- SHOW MISSIONS (All Users) -->
-      <div
+      <!-- <div
         class="mapButton"
         :class="{ active: showMissions, 'mr-4': isTeacher }"
         @click="toggleShowMissions"
@@ -15,7 +15,7 @@
           <p v-if="!showMissions" class="overline ma-0">Show Missions</p>
           <p v-else class="overline ma-0" style="font-size: 0.7rem">Hide missions</p>
         </div>
-      </div>
+      </div> -->
 
       <!-- ADD/EDIT STARS TOGGLE (Teacher Only) -->
       <div
