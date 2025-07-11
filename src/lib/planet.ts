@@ -12,6 +12,7 @@ export class Planet {
   taskName: string;
   taskIndex: number;
   originalOrbitRadius: number;
+  taskDescription: string; // Add task description property
 
   // Animation properties
   savedRadian: number; // Save the radian position when stopping
@@ -20,6 +21,11 @@ export class Planet {
   animationProgress: number; // Animation progress (0 to 1)
   animationDuration: number; // Animation duration in seconds
   animationStartTime: number; // When animation started
+
+  // Orbit radius animation properties
+  targetOrbitRadius: number;
+  orbitRadiusAnimationStart: number;
+  orbitRadiusAnimationDuration: number;
 
   constructor(
     x: number,
@@ -31,6 +37,7 @@ export class Planet {
     topicId: string,
     taskName?: string,
     taskIndex?: number,
+    taskDescription?: string, // Add taskDescription parameter
   ) {
     // this.ctx = ctx;
     this.x = x;
@@ -49,6 +56,7 @@ export class Planet {
     this.orbitStopped = false;
     this.taskName = taskName || "";
     this.taskIndex = taskIndex || 0;
+    this.taskDescription = taskDescription || ""; // Store task description
 
     // Animation properties
     this.savedRadian = this.radian;
@@ -58,9 +66,56 @@ export class Planet {
     this.animationDuration = 0.5; // 0.5 seconds for smooth animation
     this.animationStartTime = 0;
 
+    // Orbit radius animation
+    this.targetOrbitRadius = orbitRadius;
+    this.orbitRadiusAnimationStart = 0;
+    this.orbitRadiusAnimationDuration = 0.5; // seconds
+
     this.x = this.startingPos.x + Math.cos(this.radian) * this.orbitRadius;
-    // Get the new y based on our new angle and radius
     this.y = this.startingPos.y + Math.sin(this.radian) * this.orbitRadius;
+  }
+
+  setTargetOrbitRadius(newRadius: number) {
+    if (this.targetOrbitRadius !== newRadius) {
+      this.targetOrbitRadius = newRadius;
+      this.orbitRadiusAnimationStart = Date.now();
+    }
+  }
+
+  updateOrbitRadiusAnimation() {
+    if (this.orbitRadius === this.targetOrbitRadius) return;
+    const elapsed = (Date.now() - this.orbitRadiusAnimationStart) / 1000;
+    const duration = this.orbitRadiusAnimationDuration;
+    const start = this.orbitRadius;
+    const end = this.targetOrbitRadius;
+    const progress = Math.min(elapsed / duration, 1);
+    // Smooth ease
+    const eased = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+    this.orbitRadius = start + (end - start) * eased;
+    if (progress >= 1) {
+      this.orbitRadius = this.targetOrbitRadius;
+    }
+  }
+
+  // Method to check if a click is within the label bounds
+  isClickInLabel(clickX: number, clickY: number): boolean {
+    if (!this.taskName) return false;
+
+    // Calculate label position (same as in drawLabel method)
+    const labelX = this.x + 15; // 15px offset from planet
+    const labelY = this.y;
+
+    // Estimate label bounds (approximate text width and height)
+    const labelWidth = this.taskName.length * 7; // Rough estimate: 7px per character
+    const labelHeight = 12; // Font size from drawLabel
+
+    // Check if click is within label bounds
+    return (
+      clickX >= labelX &&
+      clickX <= labelX + labelWidth &&
+      clickY >= labelY - labelHeight / 2 &&
+      clickY <= labelY + labelHeight / 2
+    );
   }
 
   // Method to stop orbit and animate to bottom (south) of orbit
@@ -70,7 +125,7 @@ export class Planet {
     this.savedRadian = this.radian; // Save current position
 
     // Calculate the nearest bottom position (π/2 radians = 90 degrees = south)
-    // Find the closest multiple of 2π that gets us to the bottom
+    // Find the closest multiple of 2π that gets us to the nearest bottom
     const currentAngle = this.radian;
     const bottomAngle = Math.PI / 2; // 90 degrees = south
 
@@ -181,16 +236,17 @@ export class Planet {
   update(ctx: CanvasRenderingContext2D, delta: number, strokeColor: string) {
     this.draw(ctx, strokeColor);
 
+    // Animate orbit radius if needed
+    this.updateOrbitRadiusAnimation();
+
     // Update animation if animating
     if (this.animating) {
       this.updateAnimation(delta);
     } else if (!this.orbitStopped) {
-      // Only update position if orbit is not stopped and not animating
       this.radian += this.velocity * delta; // increase our angle every animation frame
-      // Get the new x based on our new angle and radius
-      this.x = this.startingPos.x + Math.cos(this.radian) * this.orbitRadius;
-      // Get the new y based on our new angle and radius
-      this.y = this.startingPos.y + Math.sin(this.radian) * this.orbitRadius;
     }
+    // Always update position based on current orbitRadius
+    this.x = this.startingPos.x + Math.cos(this.radian) * this.orbitRadius;
+    this.y = this.startingPos.y + Math.sin(this.radian) * this.orbitRadius;
   }
 }

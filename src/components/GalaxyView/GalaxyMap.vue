@@ -24,6 +24,20 @@
       @click="click2"
       @double-click="doubleClick"
     ></network>
+    <!-- MissionPreviewCard overlays for gapped planets -->
+    <div v-for="planet in planets" :key="'preview-' + planet.topicId + '-' + planet.taskIndex">
+      <template
+        v-if="
+          gapPlanetIndices.some(
+            (g) => g.topicId === planet.topicId && g.taskIndex === planet.taskIndex,
+          )
+        "
+      >
+        <div class="mission-preview-overlay" :style="getPreviewCardStyle(planet)">
+          <MissionPreviewCard :task="getTaskForPlanet(planet)" :index="planet.taskIndex" />
+        </div>
+      </template>
+    </div>
     <!-- @hover-node="hoverNode" 
           @select-node="selectNode"
                 @blur-node="blurNode"
@@ -42,6 +56,7 @@ import useRootStore from "@/store/index";
 import Network from "@/vue2vis/Network.vue";
 import "vis-network/styles/vis-network.css";
 import { mapActions, mapState } from "pinia";
+import MissionPreviewCard from "@/components/SolarSystemView/MissionsList/MissionPreviewCard.vue";
 
 export default {
   name: "GalaxyMap",
@@ -50,6 +65,7 @@ export default {
     Network,
     SolarSystem,
     LoadingSpinner,
+    MissionPreviewCard,
   },
   data() {
     return {
@@ -179,6 +195,7 @@ export default {
       DOMRect: {},
       nodeLabelColor: "#ffffff", // Default label color
       previousShowMissionsState: false, // Track previous showMissions state for preview mode
+      gapPlanetIndices: [], // Now array of { topicId, taskIndex }
     };
   },
   watch: {
@@ -191,6 +208,15 @@ export default {
         this.nodeLabelColor = this.$vuetify.theme.themes.dark.missionAccent;
         this.makePlanetsColour("white");
         this.makeStarsColour("#FFD700"); // Gold for dark mode
+      }
+    },
+    inSystemPreviewView(val) {
+      if (!val) {
+        // Reset all gaps when preview closes
+        this.gapPlanetIndices = [];
+        for (const p of this.planets) {
+          p.setTargetOrbitRadius(p.originalOrbitRadius);
+        }
       }
     },
   },
@@ -536,6 +562,45 @@ export default {
       )
         return;
       console.log("click event:", data);
+
+      // Check if click is on a planet label (only when missions are shown)
+      if (this.showMissions && this.inSystemPreviewView) {
+        const clickedPosition = data.pointer.canvas;
+        for (const planet of this.planets) {
+          // Skip hidden planets
+          if (planet.hidden) {
+            continue;
+          }
+
+          // Check if click is within the label bounds
+          if (planet.isClickInLabel(clickedPosition.x, clickedPosition.y)) {
+            console.log("Planet label clicked:", planet.taskName);
+            console.log("Task description:", planet.taskDescription);
+            // Multi-gap logic
+            const gapKey = { topicId: planet.topicId, taskIndex: planet.taskIndex };
+            const idx = this.gapPlanetIndices.findIndex(
+              (g) => g.topicId === gapKey.topicId && g.taskIndex === gapKey.taskIndex,
+            );
+            if (idx !== -1) {
+              this.gapPlanetIndices.splice(idx, 1);
+              console.log("Removed gap for", gapKey);
+            } else {
+              this.gapPlanetIndices.push(gapKey);
+              console.log("Added gap for", gapKey);
+            }
+            // For each planet, count how many gaps are before it (in the same topic)
+            for (const p of this.planets) {
+              const gapsBefore = this.gapPlanetIndices.filter(
+                (g) => g.topicId === p.topicId && p.taskIndex > g.taskIndex,
+              ).length;
+              p.setTargetOrbitRadius(p.originalOrbitRadius + 100 * gapsBefore);
+            }
+            console.log("gapPlanetIndices after click:", this.gapPlanetIndices);
+            return; // Exit early to prevent node click handling
+          }
+        }
+      }
+
       // 0) get closest node
       const closestNode = this.getClosestNodeToClick(data);
       if (closestNode.group == "locked") return;
@@ -625,6 +690,7 @@ export default {
       // if (!data.nodes[0]) return;
       // follow drag coords
       // this.$emit("drag-coords", data.event.center);
+      this.$forceUpdate(); // Force Vue to recalculate overlay positions
     },
     dragEnd(data) {
       if (data.nodes.length < 1) {
@@ -947,6 +1013,7 @@ export default {
               topicId, // for debugging
               task.name || task.title || `Task ${i + 1}`, // task name
               i, // task index
+              task.description || "", // task description
             ),
           );
         }
@@ -1046,15 +1113,15 @@ export default {
         );
         // Canvas - draw arc (circle) the of the numbers of tasks/planet orbits
         // Note: drawing a rectanlge then a circle in the same path makes the circle a whole
-        ctx.arc(
-          this.previewedNode.x,
-          this.previewedNode.y,
-          20 * (this.numberOfTasksForThisTopic + 2), // masked circle is 2 rings out from furtherest ring
-          0,
-          2 * Math.PI,
-          true,
-        );
-        ctx.fill();
+        // ctx.arc(
+        //   this.previewedNode.x,
+        //   this.previewedNode.y,
+        //   20 * (this.numberOfTasksForThisTopic + 2), // masked circle is 2 rings out from furtherest ring
+        //   0,
+        //   2 * Math.PI,
+        //   true,
+        // );
+        // ctx.fill();
       }
 
       // Draw planet labels only when missions are shown
@@ -1087,6 +1154,7 @@ export default {
         ctx.fillStyle = "rgba(151, 194, 252, 0.45)";
         ctx.fillRect(startX, startY, endX - startX, endY - startY);
       }
+      this.$forceUpdate(); // Force Vue to recalculate overlay positions after drawing
     },
     updateFrameTimer() {
       if (this.$refs.network) {
@@ -1283,6 +1351,28 @@ export default {
         });
       }
     },
+    getPreviewCardStyle(planet) {
+      // Convert planet.x, planet.y to DOM coordinates
+      if (!this.$refs.network || !this.$refs.network.canvasToDom) return {};
+      const dom = this.$refs.network.canvasToDom({ x: planet.x, y: planet.y });
+      // Offset below the label (e.g., +30px)
+      return {
+        position: "absolute",
+        left: `${dom.x + 25}px`,
+        top: `${dom.y + 10}px`,
+        pointerEvents: "auto",
+        zIndex: 2000,
+        width: "50%",
+        maxWidth: "90vw",
+        transform: "translate(0, 0)",
+      };
+    },
+    getTaskForPlanet(planet) {
+      // Find the task object for this planet
+      // this.tasks is an array of { topicId, task: {...} }
+      const topicTasks = this.tasks.filter((t) => t.topicId === planet.topicId);
+      return topicTasks[planet.taskIndex]?.task || {};
+    },
   },
 };
 </script>
@@ -1291,5 +1381,13 @@ export default {
 .full-height {
   width: 100%;
   height: 100%;
+}
+.mission-preview-overlay {
+  position: absolute;
+  pointer-events: auto;
+  z-index: 2000;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, 0); /* Center horizontally */
 }
 </style>

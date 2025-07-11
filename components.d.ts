@@ -52,6 +52,7 @@ declare module 'vue' {
     Login: typeof import('./src/components/Landing/Login.vue')['default']
     LoginDialog: typeof import('./src/components/Dialogs/LoginDialog.vue')['default']
     MissionCompletedDialog: typeof import('./src/components/Dialogs/MissionCompletedDialog.vue')['default']
+    MissionPreviewCard: typeof import('./src/components/SolarSystemView/MissionsList/MissionPreviewCard.vue')['default']
     MissionsCard: typeof import('./src/components/SolarSystemView/MissionsList/MissionsCard.vue')['default']
     MissionsList: typeof import('./src/components/SolarSystemView/MissionsList.vue')['default']
     NavBar: typeof import('./src/components/Home/NavBar.vue')['default']
