@@ -541,10 +541,10 @@ export default {
       if (closestNode.group == "locked") return;
 
       // Save current showMissions state and enable it for preview
-      this.previousShowMissionsState = this.showMissions;
-      if (!this.showMissions) {
-        this.toggleShowMissions();
-      }
+      // this.previousShowMissionsState = this.showMissions;
+      // if (!this.showMissions) {
+      //   this.toggleShowMissions();
+      // }
 
       // 1) flag we in preview mode
       this.inSystemPreviewView = true;
@@ -556,7 +556,8 @@ export default {
       let yOffset = (tasksForThisTopic.length - 1) * 10; // 20px per mission, center if only one
 
       // 3) zoom to node with offsets
-      this.zoomToNodeWithOffset(closestNode, xOffset, yOffset);
+      // this.zoomToNodeWithOffset(closestNode, xOffset, yOffset);
+      this.zoomToNode(closestNode);
 
       // 4) hide edges
       var options = { ...this.network.options };
@@ -801,9 +802,9 @@ export default {
       this.setCurrentTopicId(null);
 
       // Restore previous showMissions state if it was different
-      if (this.showMissions !== this.previousShowMissionsState) {
-        this.toggleShowMissions();
-      }
+      // if (this.showMissions !== this.previousShowMissionsState) {
+      //   this.toggleShowMissions();
+      // }
 
       // this.$refs.network.fit();
       this.zoomToNodes(this.$refs.network.nodes);
@@ -871,8 +872,13 @@ export default {
           }
 
           // Position label to the right of the node
-          const labelX = position.x + 15; // 15px offset from node
-          const labelY = position.y;
+          // const labelX = position.x + 15; // 15px offset from node
+          // const labelY = position.y;
+
+          // Position label centered above the node
+          const textMetrics = ctx.measureText(originalNode.label);
+          const labelX = position.x - textMetrics.width / 2; // Center horizontally
+          const labelY = position.y - 20; // 15px above the node
 
           // Draw the node label
           ctx.fillText(originalNode.label, labelX, labelY);
@@ -997,11 +1003,11 @@ export default {
 
         // Handle planet orbit stop/resume based on showMissions flag
         // Only trigger animation if not already animating
-        if (this.showMissions && !planet.orbitStopped && !planet.animating) {
-          planet.stopOrbit();
-        } else if (!this.showMissions && planet.orbitStopped && !planet.animating) {
-          planet.resumeOrbit();
-        }
+        // if (this.showMissions && !planet.orbitStopped && !planet.animating) {
+        //   planet.stopOrbit();
+        // } else if (!this.showMissions && planet.orbitStopped && !planet.animating) {
+        //   planet.resumeOrbit();
+        // }
 
         planet.update(ctx, delta, strokeColor);
       }
@@ -1058,19 +1064,19 @@ export default {
       }
 
       // Draw planet labels only when missions are shown
-      if (this.showMissions) {
-        const labelColor = this.dark ? "#ffffff" : this.$vuetify.theme.themes.light.baseAccent;
-        for (const planet of this.planets) {
-          // Skip hidden planets
-          if (planet.hidden) {
-            continue;
-          }
+      // if (this.showMissions) {
+      //   const labelColor = this.dark ? "#ffffff" : this.$vuetify.theme.themes.light.baseAccent;
+      //   for (const planet of this.planets) {
+      //     // Skip hidden planets
+      //     if (planet.hidden) {
+      //       continue;
+      //     }
 
-          // If in system preview view, only show labels for the current topic
-          const visibleTopicId = this.inSystemPreviewView ? this.currentTopicId : undefined;
-          planet.drawLabel(ctx, labelColor, visibleTopicId);
-        }
-      }
+      //     // If in system preview view, only show labels for the current topic
+      //     const visibleTopicId = this.inSystemPreviewView ? this.currentTopicId : undefined;
+      //     planet.drawLabel(ctx, labelColor, visibleTopicId);
+      //   }
+      // }
 
       // Draw node labels manually
       this.drawNodeLabels(ctx);
@@ -1245,9 +1251,9 @@ export default {
         this.draggingNodes = wasDraggingNodes;
       }
     },
-    toggleShowMissions() {
-      this.$emit("toggleShowMissions");
-    },
+    // toggleShowMissions() {
+    //   this.$emit("toggleShowMissions");
+    // },
     hidePlanetsForOtherTopics(currentTopicId) {
       // Hide planets that don't belong to the current topic
       for (const planet of this.planets) {
