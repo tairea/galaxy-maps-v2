@@ -7,6 +7,9 @@
     :style="galaxyListInfoPanel ? 'backdrop-filter:none;border:none;width:100%' : ''"
     v-if="course"
   >
+  <v-btn text x-small color="missionAccent" class="close-button align-self-end" @click="close">
+    <v-icon>{{ mdiClose }}</v-icon>
+  </v-btn>
     <div class="ss-details">
       <div>
         <p class="info-panel-label mb-2">
@@ -25,9 +28,6 @@
           >
         </p>
       </div>
-      <v-btn text x-small color="missionAccent" class="close-button" @click="close">
-        <v-icon>{{ mdiClose }}</v-icon>
-      </v-btn>
     </div>
 
     <div class="ss-makers">
@@ -368,10 +368,11 @@ export default {
   }
 
   .close-button {
-    position: absolute;
+    position: sticky;
     top: 10px;
-    right: 0px;
+    right: 10px;
     padding: 0px !important;
+    z-index: 10;
   }
 
   .ss-makers {
@@ -422,6 +423,7 @@ export default {
 
   .ss-details {
     padding: 20px;
+    margin-top: -30px;
 
     .course-title {
       color: var(--v-galaxyAccent-base);

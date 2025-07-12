@@ -6,6 +6,7 @@ import CohortView from "@/views/CohortView.vue";
 import CohortListV2 from "@/views/CohortListV2.vue";
 import AllStudentsView from "@/views/AllStudentsView.vue";
 import UserDashboard from "@/views/UserDashboard.vue";
+import AiGalaxyEdit from "@/views/AiGalaxyEdit.vue";
 // import Login from "@/components/Login.vue";
 // import VerifyEmail from "@/views/VerifyEmail.vue";
 // import ResetPassword from "@/views/ResetPassword.vue";
@@ -95,6 +96,15 @@ const routes = [
         path: "galaxy/:courseId/system/:topicId",
         name: "SolarSystemView",
         component: SolarSystemView,
+        meta: {
+          authRequired: true,
+        },
+        props: true,
+      },
+      {
+        path: "galaxy/ai-edit",
+        name: "AiGalaxyEdit",
+        component: AiGalaxyEdit,
         meta: {
           authRequired: true,
         },

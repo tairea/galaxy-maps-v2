@@ -98,11 +98,11 @@
                 <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <div>
                   <p class="dialog-description">
-                    A Galaxy Map is a journey map towards a target destination.
+                    A Galaxy Map breaks down a goal into clear, visual steps,
+                    creating a journey that you can track and monitor progress.
                   </p>
                   <p class="dialog-description mt-2">
-                    Like the steps you need to take to complete a project, course, skill, or a life
-                    goal.
+                    Create a Galaxy Map to complete a project, teach a course, or learn a new skill.
                   </p>
                   <p class="dialog-description galaxyAccent--text mt-2">
                     "Tell me where you want to go, and I'll map your path to get there." >
@@ -136,7 +136,7 @@
                     auto-grow
                     clearable
                     v-model="description"
-                    label="Describe your desired destination"
+                    label="Describe what you want to achieve?"
                     :disabled="loading"
                     autofocus
                   ></v-textarea>
@@ -296,12 +296,13 @@ import {
   FirstStepResponseSchema,
   StarsPlanetsSchema,
   MissionsSchema,
+  StarsAndPlanetsResponseSchema,
 } from "@/lib/schemas";
 import { zodTextFormat } from "openai/helpers/zod";
 import {
-  StarsSystemPrompt,
   PlanetsSystemPrompt,
   MissionsSystemPrompt,
+  StarsAndPlanetsSystemPrompt,
 } from "@/lib/GalaxyMapPrompts";
 export default {
   name: "AICreateGalaxyDialog",
@@ -516,56 +517,21 @@ export default {
         // Add a small delay to prevent rapid double-clicks
         await new Promise((resolve) => setTimeout(resolve, 100));
 
-        // =========== Generate journey's Stars using AI ===========
-        //         const systemPrompt = `
-        // You are a journey path design assistant for a LMS visualisation platform called Galaxy Maps, that helps users create structured, actionable paths toward reaching their destination. This destination might be personal, professional, educational, project-based, or creative.
-
-        // *Your first task* is to ask thoughtful, relevant questions to fully understand the user's goal, context, and constraints before producing any plan. Your objective is to design the most relevant and helpful journey possible by gathering detailed input.
-
-        // If the user's goal is vague or overly broad, help them clarify it before continuing with the journey design. Ask focused questions to narrow down their intent or guide them toward a more specific outcome that can be realistically planned for.
-
-        // Focus your questioning on the following areas:
-
-        // 1. Intended outcome – What is the user trying to achieve?
-        // 2. Who is this for – Is this journey for the user or someone else? (Include relevant background or context)
-        // 3. Scope and timeline – What is included or excluded in this goal? Is there a deadline or expected timeframe?
-        // 4. Preferred style and prerequisites – Should the journey include specific activities? What has already been done toward this goal?
-        // 5. Evidence of completion – How should progress and completion be demonstrated?
-
-        // Use thoughtful, adaptive questioning to uncover relevant details naturally. Until enough information is collected, continue asking clarifying questions.
-
-        // Once sufficient context has been gathered, *your second task* is to generate an **exhaustive and logical** sequence of milestones that get the user from their starting point to their destination or desired outcome.
-
-        // *Your third task* is to break down each milestone to contain an **exhaustive and logical** sequence of steps, and each step should contain an **exhaustive and logical** sequence of actions needed to complete it.
-
-        // So the journey has many 'milestones'
-        // Milestones have many 'steps'
-        // and Steps have many 'actions'
-
-        // Each action, step, and milestone should build upon the last respectively, and contribute meaningfully toward the user's end goal.
-
-        // Definitions:
-        // - A **milestone** is a checkpoint or phase of progress toward the goal.
-        // - A **step** is a unit of work within a milestone.
-        // - An **action** is a concrete activity the user must do to progress the step (e.g., write something, build something, reflect, research, submit, etc.).
-
-        // Ensure the journey is **exhaustive and logical**: include as many actions, steps, and milestones as needed to help the user reach their intended outcome.
-        // `;
-
+        // =========== Generate journey's Stars and Planetsusing AI ===========
         const aiResponse = await this.$openai.responses.parse({
           model: "gpt-4o-mini",
           input: [
-            { role: "system", content: StarsSystemPrompt },
+            { role: "system", content: StarsAndPlanetsSystemPrompt },
             { role: "user", content: this.description },
           ],
           text: {
             // format: zodTextFormat(GalaxyCreationResponseSchema, "galaxy_creation"),
-            format: zodTextFormat(FirstStepResponseSchema, "first_step_response"),
+            format: zodTextFormat(StarsAndPlanetsResponseSchema, "first_step_response"),
           },
-          store: true,
+          store: true
         });
 
-        console.log("1st A.I. call: Stars generated ✅. A.I. Response:", aiResponse);
+        console.log("1st A.I. call: Stars and Planets generated ✅. A.I. Response:", aiResponse);
 
         // Track token usage
         this.trackTokenUsage(aiResponse);
@@ -576,26 +542,19 @@ export default {
         // Get the parsed response (already validated by zodTextFormat)
         const parsedResponse = aiResponse.output_parsed;
 
-        // Check if it's clarification_needed, journey_steps_ready, or stars list
+        // Check if it's clarification_needed, journey_ready, or stars list
         if (
-          parsedResponse.status === "journey_steps_ready" &&
+          parsedResponse.status === "journey_ready" &&
           parsedResponse.stars &&
           Array.isArray(parsedResponse.stars) &&
-          parsedResponse.title &&
-          parsedResponse.description
+          parsedResponse.journeyTitle &&
+          parsedResponse.journeyDescription
         ) {
-          // It's a journey_steps_ready response - proceed to next step
-          console.log("Journey steps ready received:", parsedResponse);
-          // Store the journey metadata
-          this.aiGeneratedGalaxyMap = {
-            journeyTitle: parsedResponse.title,
-            journeyDescription: parsedResponse.description,
-            starDetails: [],
-          };
-          // Generate Map from Stars List x 2 more layers (Planets > Missions)
-          // Note: generateMapFromStarsList will handle its own loading state
-          this.generateMapFromStarsList(parsedResponse);
-          // Don't set loading = false here as generateMapFromStarsList will handle it
+          // It's a journey_ready response - proceed to next step
+          console.log("Journey stars and planets ready received:", parsedResponse);
+          // route to AiGalaxyEdit
+          this.$router.push({ name: "AiGalaxyEdit", params: { parsedResponse: parsedResponse } });
+
         } else if (
           parsedResponse.status === "clarification_needed" &&
           parsedResponse.questions &&
@@ -740,14 +699,13 @@ export default {
           previous_response_id: this.previousResponseId,
           input: [{ role: "user", content: this.prefixedAnswers.join("\n") }],
           text: {
-            // format: zodTextFormat(GalaxyCreationResponseSchema, "galaxy_creation"),
-            format: zodTextFormat(FirstStepResponseSchema, "second_step_response"),
+            format: zodTextFormat(StarsAndPlanetsResponseSchema, "second_step_response"),
           },
-          store: true,
+          store: true
         });
 
         console.log(
-          "2nd A.I. call: Stars Generation (after clarification): Response:",
+          "2nd A.I. call: Stars and Planets Generation (after clarification): Response:",
           aiSecondResponse,
         );
 
@@ -759,26 +717,20 @@ export default {
         // Get the parsed response (already validated by zodTextFormat)
         const parsedResponse = aiSecondResponse.output_parsed;
 
-        // Check if it's clarification_needed, journey_steps_ready, or stars list
+        // Check if it's clarification_needed, journey_ready, or stars list
         if (
-          parsedResponse.status === "journey_steps_ready" &&
+          parsedResponse.status === "journey_ready" &&
           parsedResponse.stars &&
           Array.isArray(parsedResponse.stars) &&
-          parsedResponse.title &&
-          parsedResponse.description
+          parsedResponse.journeyTitle &&
+          parsedResponse.journeyDescription
         ) {
-          // It's a journey_steps_ready response - proceed to next step
+          // It's a journey_ready response - proceed to next step
           console.log("Journey steps ready received:", parsedResponse);
-          // Store the journey metadata
-          this.aiGeneratedGalaxyMap = {
-            journeyTitle: parsedResponse.title,
-            journeyDescription: parsedResponse.description,
-            starDetails: [],
-          };
-          // Generate Map from Stars List x 2 more layers (Planets > Missions)
-          // Note: generateMapFromStarsList will handle its own loading state
-          this.generateMapFromStarsList(parsedResponse);
-          // Don't set loading = false here as generateMapFromStarsList will handle it
+
+          // route to AiGalaxyEdit
+          this.$router.push({ name: "AiGalaxyEdit", params: { parsedResponse: parsedResponse } });
+
         } else if (
           parsedResponse.status === "clarification_needed" &&
           parsedResponse.questions &&

@@ -43,6 +43,8 @@ const getDefaultState = () => {
     startMissionLoading: false,
     unansweredRequests: [] as Record<string, any>[],
     inReviewSubmissions: [] as Record<string, any>[],
+    // AI Galaxy Edit state
+    aiGalaxyEditData: null as Record<string, any> | null,
   };
 };
 
@@ -475,6 +477,13 @@ export default defineStore({
 
     setInReviewSubmissions(submissions: Record<string, any>[]) {
       this.inReviewSubmissions = submissions;
+    },
+    // AI Galaxy Edit actions
+    setAiGalaxyEditData(data: Record<string, any> | null) {
+      this.aiGalaxyEditData = data;
+    },
+    clearAiGalaxyEditData() {
+      this.aiGalaxyEditData = null;
     },
   },
   persist: true,
