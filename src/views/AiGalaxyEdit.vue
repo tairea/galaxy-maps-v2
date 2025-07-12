@@ -866,26 +866,20 @@ export default {
           for (let i = 0; i < star.planets.length; i++) {
             const planet = star.planets[i];
 
-            // Create planets for each mission in this planet
-            if (planet.missions && planet.missions.length > 0) {
-              for (let j = 0; j < planet.missions.length; j++) {
-                const mission = planet.missions[j];
+            this.planets.push(
+              new Planet(
+                starPosition.x,
+                starPosition.y,
+                2, // planet size
+                this.dark ? "white" : this.$vuetify.theme.themes.light.missionAccent, // planet colour
+                6.28 / (10 * (i + 1)), // planet speed
+                20 * (i + 1), // planet orbit size
+                starId, // topicId (using starId)
 
-                this.planets.push(
-                  new Planet(
-                    starPosition.x,
-                    starPosition.y,
-                    2, // planet size
-                    this.dark ? "white" : this.$vuetify.theme.themes.light.missionAccent, // planet colour
-                    6.28 / (10 * (j + 1)), // planet speed
-                    20 * (j + 1), // planet orbit size
-                    starId, // topicId (using starId)
-                    "", // mission name
-                    j, // mission index
-                  ),
-                );
-              }
-            }
+                "", // planet name
+                i, // planet index
+              ),
+            );
           }
         }
       }
