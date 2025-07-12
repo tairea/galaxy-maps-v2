@@ -102,7 +102,7 @@ const routes = [
         props: true,
       },
       {
-        path: "galaxy/ai-edit",
+        path: "ai-galaxy-edit",
         name: "AiGalaxyEdit",
         component: AiGalaxyEdit,
         meta: {

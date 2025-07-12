@@ -209,7 +209,8 @@ export default {
       // show/hide userbar mini version
       if (
         (this.$route.name == "GalaxyView" && this.user.loggedIn) ||
-        this.$route.name == "SolarSystemView"
+        this.$route.name == "SolarSystemView" ||
+        this.$route.name == "AiGalaxyEdit"
       ) {
         this.miniNavMenu = true;
       } else {

@@ -21,7 +21,6 @@ Vue.use(PiniaVuePlugin);
 Vue.use(VueRouter);
 Vue.use(VueTour);
 
-
 Vue.config.productionTip = false;
 
 const pinia = createPinia();

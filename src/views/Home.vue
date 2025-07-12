@@ -1,6 +1,6 @@
 <template>
   <v-app class="bg">
-    <NavBar v-if="!$route.path.includes('/ai-edit')" />
+    <NavBar v-if="!$route.path.includes('/ai-galaxy-edit')" />
     <router-view></router-view>
     <UserBar />
   </v-app>
