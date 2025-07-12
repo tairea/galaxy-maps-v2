@@ -398,7 +398,6 @@ export default {
     },
     aiGeneratedGalaxyMap: {
       handler(newVal, oldVal) {
-        console.log("updating transform");
         this.updateTransformedStarDetails();
         // Set up planets when galaxy map changes
         this.$nextTick(() => {
@@ -452,23 +451,14 @@ export default {
     }
   },
   async mounted() {
-    console.log("ai galaxy edit view mounted with parsedResponse... = ", this.parsedResponse);
-
     // Check if we have parsedResponse from props or need to restore from store (Cursor changed AICreatedGalaxyDialog to pass the paresedResponse through the store instead of router params FYI)
     if (this.parsedResponse) {
       this.aiGeneratedGalaxyMap = this.parsedResponse;
-      console.log("parsedResponse is now aiGeneratedGalaxyMap = ", this.aiGeneratedGalaxyMap);
       // Save to store for persistence
       this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
-      console.log("Saved aiGeneratedGalaxyMap to store as aiGalaxyEditData for persistence");
     } else {
       // Try to restore from store
       this.aiGeneratedGalaxyMap = this.aiGalaxyEditData;
-      if (this.aiGeneratedGalaxyMap) {
-        console.log("Restored parsedResponse from store:", this.aiGeneratedGalaxyMap);
-      } else {
-        console.log("No parsedResponse found in store");
-      }
     }
 
     // Wait for treeview items to render, then set up nodes and edges based on their positions
@@ -516,11 +506,17 @@ export default {
   methods: {
     ...mapActions(useRootStore, ["setAiGalaxyEditData", "clearAiGalaxyEditData"]),
     removeChip(item) {
-      console.log("removing chip = ", item);
       this.activeGalaxyItems = this.activeGalaxyItems.filter((i) => i !== item);
 
-      // Note: We don't update treeviewActiveItems here because it would cause
-      // the infinite loop. The treeview will handle its own visual state.
+      // Also remove from the correct treeview active array to update the visual state
+      const starMatch = item.match(/^star\[(\d+)\]/);
+      if (starMatch) {
+        const starIndex = starMatch[1];
+        if (this.treeviewActiveItems[starIndex]) {
+          const updatedActiveItems = this.treeviewActiveItems[starIndex].filter((i) => i !== item);
+          this.$set(this.treeviewActiveItems, starIndex, updatedActiveItems);
+        }
+      }
     },
     getChipDisplayName(item) {
       // Parse the item ID to extract the actual name from aiGeneratedGalaxyMap
@@ -561,8 +557,6 @@ export default {
 
     // Set up initial network nodes and edges based on treeview positions
     setupInitialNetworkNodes() {
-      console.log("Setting up initial network nodes");
-
       // Use a more robust approach that waits for DOM to be ready
       const waitForTreeview = () => {
         const treeviewItems = document.querySelectorAll(".star-treeview-item");
@@ -570,7 +564,6 @@ export default {
 
         // Check if treeview items are properly rendered with dimensions
         if (treeviewItems.length === 0 || !treeviewWrapper) {
-          console.log("Treeview not ready yet, retrying...");
           setTimeout(waitForTreeview, 100);
           return;
         }
@@ -579,12 +572,10 @@ export default {
         const firstItem = treeviewItems[0];
         const firstItemRect = firstItem.getBoundingClientRect();
         if (firstItemRect.width === 0 || firstItemRect.height === 0) {
-          console.log("Treeview items don't have dimensions yet, retrying...");
           setTimeout(waitForTreeview, 100);
           return;
         }
 
-        console.log("Treeview is ready, setting up nodes");
         this.updateNetworkPositionsFromTreeview();
       };
 
@@ -599,7 +590,6 @@ export default {
       this.$nextTick(() => {
         // Check if network is ready
         if (!this.$refs.network || !this.$refs.network.network) {
-          console.log("Network not ready yet, retrying...");
           setTimeout(() => {
             this.updateNetworkPositionsFromTreeview();
           }, 200);
@@ -610,7 +600,6 @@ export default {
         try {
           this.$refs.network.network.getPositions();
         } catch (error) {
-          console.log("Network not fully initialized yet, retrying...");
           setTimeout(() => {
             this.updateNetworkPositionsFromTreeview();
           }, 200);
@@ -621,7 +610,6 @@ export default {
         const treeviewItems = document.querySelectorAll(".star-treeview-item");
 
         if (treeviewItems.length === 0) {
-          console.log("No treeview items found yet");
           return;
         }
 
@@ -646,12 +634,10 @@ export default {
 
         if (networkGraph) {
           networkGraph.style.width = `${totalWidth + 100}px`;
-          console.log(`Updated network graph width to: ${totalWidth}px`);
         }
 
         if (treeviewWrapper) {
           treeviewWrapper.style.width = `${totalWidth + 100}px`;
-          console.log(`Updated treeview wrapper width to: ${totalWidth}px`);
         }
 
         // Calculate positions for each star using actual treeview item positions
@@ -698,8 +684,6 @@ export default {
             to: `star-${i + 1}`,
           });
         }
-
-        console.log("Updated network positions based on treeview item positions:", updatedNodes);
 
         // Force network to redraw with new positions
         if (this.$refs.network) {
@@ -824,30 +808,24 @@ export default {
 
     // Placeholder for createGalaxy method
     createGalaxy() {
-      console.log("Create Galaxy method called");
       // TODO: Implement galaxy creation logic
     },
     // Clear store data when component is destroyed
     clearStoredData() {
       this.clearAiGalaxyEditData();
-      console.log("Cleared stored parsedResponse from store");
     },
 
     // Planet animation methods
     networkUpdated() {
       // Network is ready, but wait for proper positioning before setting up planets
-      console.log("Network updated - waiting for proper positioning");
     },
 
     async setupPlanets() {
-      console.log("Setting up planets for AI generated galaxy");
-
       // Reset planets
       this.planets = [];
 
       // Get node positions from the network
       if (!this.$refs.network || !this.$refs.network.network) {
-        console.log("Network not ready yet");
         return;
       }
 
@@ -883,8 +861,6 @@ export default {
           }
         }
       }
-
-      console.log(`Created ${this.planets.length} planets at correct positions`);
     },
 
     beforeDrawing(ctx) {
@@ -921,7 +897,6 @@ export default {
 
     startNodeAnimation() {
       // start interval
-      console.log("Starting node animation");
       this.updateFrameVar();
     },
 
@@ -944,7 +919,6 @@ export default {
 
     // Transform aiGeneratedGalaxyMap into treeview format
     updateTransformedStarDetails() {
-      console.log("updating Transformed Star Details from aiGeneratedGalaxyMap...");
       if (
         !this.aiGeneratedGalaxyMap ||
         !this.aiGeneratedGalaxyMap.stars ||
@@ -983,7 +957,6 @@ export default {
         }
         return starNode;
       });
-      console.log("Transformed star details:", this.transformedStarDetails);
 
       // Update network positions after treeview data changes
       this.$nextTick(() => {
@@ -1017,7 +990,7 @@ export default {
       }, 100);
     },
     refineGalaxyMap() {
-      console.log("Refining galaxy map");
+      // TODO: Implement galaxy refinement logic
     },
   },
 };

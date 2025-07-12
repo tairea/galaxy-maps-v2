@@ -207,10 +207,13 @@ export default {
         this.showMenu = true;
       }
       // show/hide userbar mini version
+      console.log("Current route name:", this.$route.name); // Debug log
+      console.log("Current route path:", this.$route.path); // Debug log
       if (
         (this.$route.name == "GalaxyView" && this.user.loggedIn) ||
         this.$route.name == "SolarSystemView" ||
-        this.$route.name == "AiGalaxyEdit"
+        this.$route.name == "AiGalaxyEdit" ||
+        this.$route.path.includes("ai-galaxy-edit")
       ) {
         this.miniNavMenu = true;
       } else {
@@ -237,9 +240,13 @@ export default {
       this.showMenu = true;
     }
 
+    console.log("Mounted - Current route name:", this.$route.name); // Debug log
+    console.log("Mounted - Current route path:", this.$route.path); // Debug log
     if (
       (this.$route.name == "GalaxyView" && this.user.loggedIn) ||
-      this.$route.name == "SolarSystemView"
+      this.$route.name == "SolarSystemView" ||
+      this.$route.name == "AiGalaxyEdit" ||
+      this.$route.path.includes("ai-galaxy-edit")
     ) {
       this.miniNavMenu = true;
     } else {
