@@ -236,7 +236,11 @@
                 <p v-if="course.presentationOnly" class="galaxy-status overline mb-0">
                   <span class="font-weight-black baseAccent--text">Presentation Map</span>
                 </p>
-                <v-img v-if="course.image.url" :src="course.image.url" width="100%"></v-img>
+                <v-img
+                  v-if="course.image && course.image.url"
+                  :src="course.image.url"
+                  width="100%"
+                ></v-img>
                 <p class="galaxy-description">{{ course.description }}</p>
               </div>
 
