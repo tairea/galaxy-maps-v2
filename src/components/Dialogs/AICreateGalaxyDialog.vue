@@ -98,8 +98,8 @@
                 <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <div>
                   <p class="dialog-description">
-                    A Galaxy Map breaks down a goal into clear, visual steps,
-                    creating a journey that you can track and monitor progress.
+                    A Galaxy Map breaks down a goal into clear, visual steps, creating a journey
+                    that you can track and monitor progress.
                   </p>
                   <p class="dialog-description mt-2">
                     Create a Galaxy Map to complete a project, teach a course, or learn a new skill.
@@ -446,7 +446,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["setCurrentCourseId", "setSnackbar"]),
+    ...mapActions(useRootStore, ["setCurrentCourseId", "setSnackbar", "setAiGalaxyEditData"]),
     closeDialog() {
       this.description = "";
       this.totalTokensUsed = 0; // Reset token counter
@@ -528,7 +528,7 @@ export default {
             // format: zodTextFormat(GalaxyCreationResponseSchema, "galaxy_creation"),
             format: zodTextFormat(StarsAndPlanetsResponseSchema, "first_step_response"),
           },
-          store: true
+          store: true,
         });
 
         console.log("1st A.I. call: Stars and Planets generated ✅. A.I. Response:", aiResponse);
@@ -541,20 +541,21 @@ export default {
 
         // Get the parsed response (already validated by zodTextFormat)
         const parsedResponse = aiResponse.output_parsed;
+        parsedResponse.originResponseId = aiResponse.id;
 
         // Check if it's clarification_needed, journey_ready, or stars list
         if (
           parsedResponse.status === "journey_ready" &&
           parsedResponse.stars &&
           Array.isArray(parsedResponse.stars) &&
-          parsedResponse.journeyTitle &&
-          parsedResponse.journeyDescription
+          parsedResponse.title &&
+          parsedResponse.description
         ) {
           // It's a journey_ready response - proceed to next step
           console.log("Journey stars and planets ready received:", parsedResponse);
-          // route to AiGalaxyEdit
-          this.$router.push({ name: "AiGalaxyEdit", params: { parsedResponse: parsedResponse } });
-
+          // Save to store first, then route to AiGalaxyEdit
+          this.setAiGalaxyEditData(parsedResponse);
+          this.$router.push({ name: "AiGalaxyEdit" });
         } else if (
           parsedResponse.status === "clarification_needed" &&
           parsedResponse.questions &&
@@ -701,7 +702,7 @@ export default {
           text: {
             format: zodTextFormat(StarsAndPlanetsResponseSchema, "second_step_response"),
           },
-          store: true
+          store: true,
         });
 
         console.log(
@@ -722,15 +723,15 @@ export default {
           parsedResponse.status === "journey_ready" &&
           parsedResponse.stars &&
           Array.isArray(parsedResponse.stars) &&
-          parsedResponse.journeyTitle &&
-          parsedResponse.journeyDescription
+          parsedResponse.title &&
+          parsedResponse.description
         ) {
           // It's a journey_ready response - proceed to next step
           console.log("Journey steps ready received:", parsedResponse);
 
-          // route to AiGalaxyEdit
-          this.$router.push({ name: "AiGalaxyEdit", params: { parsedResponse: parsedResponse } });
-
+          // Save to store first, then route to AiGalaxyEdit
+          this.setAiGalaxyEditData(parsedResponse);
+          this.$router.push({ name: "AiGalaxyEdit" });
         } else if (
           parsedResponse.status === "clarification_needed" &&
           parsedResponse.questions &&

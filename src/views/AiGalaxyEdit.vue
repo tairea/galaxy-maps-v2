@@ -11,9 +11,7 @@
           color="galaxyAccent"
           class="mb-4"
         >
-          <v-icon color="galaxyAccent" size="24" class="robot-dance">{{
-            mdiRobotExcited
-          }}</v-icon>
+          <v-icon color="galaxyAccent" size="24" class="robot-dance">{{ mdiRobotExcited }}</v-icon>
         </v-progress-circular>
 
         <!-- PROGRESS BAR FOR DATABASE SAVING -->
@@ -26,17 +24,12 @@
             class="mb-2"
           ></v-progress-linear>
           <p class="saving-progress-text">
-            {{ Math.round(savingProgress) }}% Complete ({{
-              completedPlanets
-            }}/{{ totalPlanets }}
+            {{ Math.round(savingProgress) }}% Complete ({{ completedPlanets }}/{{ totalPlanets }}
             planets)
           </p>
         </div>
 
-        <p
-          class="loading-message overline"
-          :class="{ 'baseAccent--text': isSavingToDB }"
-        >
+        <p class="loading-message overline" :class="{ 'baseAccent--text': isSavingToDB }">
           {{ currentLoadingMessage }}
         </p>
 
@@ -50,15 +43,14 @@
         </p>
         <p class="token-breakdown overline mt-2">
           Est. cost: ${{
-            (this.totalInputTokens / 1000000) * 0.15 +
-            (this.totalOutputTokens / 1000000) * 0.6
+            (this.totalInputTokens / 1000000) * 0.15 + (this.totalOutputTokens / 1000000) * 0.6
           }}
         </p>
       </div>
     </div>
 
     <!-- <div class="left-section" :class="{ hide: hideLeftPanelsFlag }"> -->
-    <div class="left-section" data-v-step="1">
+    <div id="left-section" data-v-step="1">
       <GalaxyInfo :course="boundCourse" :teacher="teacher" :draft="draft" />
       <div class="mt-6">
         <!-- <PublishGalaxy v-if="showPublish" :course="boundCourse" :courseTasks="courseTasks" /> -->
@@ -69,48 +61,105 @@
 
     <!--==== Main section ====-->
     <div id="main-section">
-      <!-- Galaxy editing Treeview goes here -->
       <!-- CREATION STATUS v-treeview of stars > planets > missions -->
-      <div
-        v-if="transformedStarDetails.length > 0"
-        class="galaxy-treeview-container"
-      >
-        <div class="galaxy-treeview-wrapper">
-          <div
-            v-for="(star, starIndex) in transformedStarDetails"
-            :key="`star-${starIndex}`"
-            class="star-treeview-item"
-          >
-            <!-- <h4 class="star-title">{{ star.name }}</h4> -->
-            <v-treeview
-              :items="[star]"
-              :value="expandedNodes"
-              item-key="id"
-              class="galaxy-treeview"
-              dense
-              @update:value="updateExpandedNodes"
+      <div v-if="transformedStarDetails.length > 0" class="galaxy-treeview-container">
+        <div class="galaxy-preview-container">
+          <!-- =========== Network Preview =========== -->
+          <network
+            v-if="nodesToDisplay"
+            ref="network"
+            class="network-graph"
+            :nodes="nodesToDisplay"
+            :edges="edgesToDisplay"
+            :options="network.options"
+            @hook:updated="networkUpdated"
+            @before-drawing="beforeDrawing"
+            @after-drawing="afterDrawing"
+          ></network>
+
+          <!-- =========== Treeview =========== -->
+          <div class="galaxy-treeview-wrapper">
+            <div
+              v-for="(star, starIndex) in transformedStarDetails"
+              :key="`star-${starIndex}`"
+              class="star-treeview-item"
             >
-              <template v-slot:label="{ item }">
-                <span class="treeview-label">
-                  <span v-if="item.type === 'star'" class="star-emoji">⭐</span>
-                  <span v-else-if="item.type === 'planet'" class="planet-emoji"
-                    >🪐</span
-                  >
-                  <span
-                    v-else-if="item.type === 'mission'"
-                    class="mission-emoji"
-                    >🎯</span
-                  >
-                  {{ item.name }}
-                </span>
-              </template>
-            </v-treeview>
+              <!-- <h4 class="star-title">{{ star.name }}</h4> -->
+              <v-treeview
+                :items="[star]"
+                :value="expandedNodes"
+                :active="treeviewActiveItems[starIndex] || []"
+                item-key="id"
+                class="galaxy-treeview"
+                dense
+                @update:value="updateExpandedNodes"
+                @update:active="(newValue) => updateActiveGalaxyItems(newValue, starIndex)"
+                hoverable
+                activatable
+                multiple-active
+                open-all
+              >
+                <template v-slot:label="{ item }">
+                  <span class="treeview-label">
+                    <span v-if="item.type === 'star'" class="star-emoji">⭐</span>
+                    <span v-else-if="item.type === 'planet'" class="planet-emoji">🪐</span>
+                    <span v-else-if="item.type === 'mission'" class="mission-emoji">🎯</span>
+                    {{ item.name }}
+                  </span>
+                </template>
+              </v-treeview>
+            </div>
+          </div>
+        </div>
+
+        <!-- =========== Prompt =========== -->
+        <div class="galaxy-prompt-container">
+          <div class="prompt-textarea-container mt-4">
+            <div class="prompt-context-chips pb-2">
+              <v-chip
+                v-for="item in activeGalaxyItems"
+                :key="item"
+                class="mr-2 mb-2"
+                close
+                @click:close="removeChip(item)"
+              >
+                {{ chipDisplayNames[item] }}
+              </v-chip>
+            </div>
+            <v-textarea
+              v-model="galaxyRefinePrompt"
+              :dark="dark"
+              :light="!dark"
+              class="input-field mt-2"
+              outlined
+              color="missionAccent"
+              auto-grow
+              clearable
+              label="What change would you like me to make?"
+              :disabled="loading"
+              autofocus
+            />
+            <div class="action-buttons">
+              <v-btn
+                outlined
+                color="galaxyAccent"
+                @click="refineGalaxyMap()"
+                class="mr-2"
+                :loading="loading"
+                :disabled="disabled"
+                :dark="dark"
+                :light="!dark"
+              >
+                <v-icon left> {{ mdiRobotExcited }} </v-icon>
+                REFINE GALAXY MAP
+              </v-btn>
+            </div>
           </div>
         </div>
       </div>
     </div>
     <!--==== Right section ====-->
-    <div id="right-section"></div>
+    <!-- <div id="right-section"></div> -->
 
     <!-- Prompt Dialog -->
     <!-- <PromptDialog v-if="promptDialog" :context="promptContext" /> -->
@@ -125,6 +174,9 @@ import PublishGalaxy from "@/components/GalaxyView/PublishGalaxy.vue";
 import BackButton from "@/components/Reused/BackButton.vue";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
+import Network from "@/vue2vis/Network.vue";
+import "vis-network/styles/vis-network.css";
+import { Planet } from "@/lib/planet";
 // import PromptDialog from "@/components/Dialogs/PromptDialog.vue";
 
 export default {
@@ -135,11 +187,13 @@ export default {
     BackButton,
     PublishGalaxy,
     // PromptDialog,
+    Network,
   },
   props: ["parsedResponse"],
   data() {
     return {
       loading: false,
+      disabled: false,
       promptDialog: false,
       promptContext: null,
       courseTasks: [],
@@ -160,9 +214,20 @@ export default {
       // Galaxy treeview data
       transformedStarDetails: [],
       expandedNodes: [],
+      activeGalaxyItems: [],
+      treeviewActiveItems: {}, // Track active items for each treeview
+
+      // Network data
+      nodesToDisplay: [],
+      edgesToDisplay: [],
 
       // AI Generated Galaxy Map
       aiGeneratedGalaxyMap: {},
+
+      // Planet animation properties
+      planets: [],
+      time: null,
+      intervalid1: null,
 
       // Loading messages
       loadingMessages: [
@@ -194,6 +259,123 @@ export default {
         "Storing solutions in the solar system...",
         "Saving sagas in the stellar sanctuary...",
       ],
+
+      network: {
+        options: {
+          // layout: {
+          //   hierarchical: {
+          //     enabled: true,
+          //     sortMethod: "directed",
+          //     shakeTowards: "leaves",
+          //     direction: "LR",
+          //     nodeSpacing: 100,
+          //   },
+          // },
+          physics: {
+            enabled: false, // Keep physics disabled to maintain fixed positions
+          },
+          edges: {
+            length: 50, // Longer edges between nodes.
+            smooth: false,
+            color: {
+              inherit: "to",
+            },
+          },
+          nodes: {
+            shape: "dot",
+            size: 7,
+            fixed: {
+              x: true,
+              y: true,
+            },
+            color: {
+              border: "grey",
+              highlight: {
+                border: "black",
+                background: "white",
+              },
+              hover: {
+                border: "orange",
+                background: "grey",
+              },
+            },
+            font: {
+              color: "white",
+              align: "left",
+              face: "Arial",
+              size: 16,
+            },
+            // Disable vis-network labels since we'll draw them manually
+            label: "",
+          },
+          groups: {
+            default: {
+              shape: "dot",
+            },
+            completed: {
+              shape: "dot",
+              color: "#00E676",
+            },
+            locked: {
+              color: "rgba(132,132,132,0.4)", // opaque styling to appear locked
+              shape: "dot",
+              font: {
+                color: "rgba(132,132,132,0.4)", // opaque styling to appear locked
+              },
+              // opacity: 0.1,
+            },
+            // unlocked: {
+            //   shape: "dot",
+            //   color: "#69A1E2",
+            // },
+            // current: { color: "rgb(0,255,140)" },
+            // node status
+            // inreview: {
+            //   shape: "dot",
+            //   color: "#FAF200",
+            // },
+            // node types
+            introduction: {
+              shape: "dot",
+              color: "#00E676", // baseAccent
+            },
+            // tasks: {
+            //   // color: { background: "yellow", border: "white" },
+            //   // shape: "diamond",
+            //   shape: "dot",
+            //   color: "#69A1E2",
+            // },
+            // project: {
+            //   shape: "dot",
+            //   color: "#E269CF",
+            // },
+            inactive: {
+              shape: "dot",
+              color: "#696969",
+              font: {
+                color: "#696969",
+              },
+            },
+          },
+          interaction: {
+            hover: false,
+            hoverConnectedEdges: false,
+            dragNodes: false,
+            dragView: false,
+            multiselect: false,
+            zoomView: false,
+          },
+        },
+      },
+
+      // Galaxy Refine Prompt
+      galaxyRefinePrompt: "",
+
+      // Resize handling
+      resizeTimeout: null,
+
+      // Treeview observer
+      treeviewObserver: null,
     };
   },
   watch: {
@@ -204,10 +386,18 @@ export default {
         this.stopLoadingMessages();
       }
     },
+    dark(newValue) {
+      // Update planet colors when theme changes
+      this.updatePlanetColors();
+    },
     aiGeneratedGalaxyMap: {
       handler(newVal, oldVal) {
         console.log("updating transform");
         this.updateTransformedStarDetails();
+        // Set up planets when galaxy map changes
+        this.$nextTick(() => {
+          this.setupPlanets();
+        });
       },
       deep: true,
       immediate: true,
@@ -226,14 +416,13 @@ export default {
               const existingNodeIds = oldVal ? this.getAllNodeIds(oldVal) : [];
 
               // Find newly added node IDs
-              const newlyAddedNodeIds = allNodeIds.filter(
-                (id) => !existingNodeIds.includes(id)
-              );
+              const newlyAddedNodeIds = allNodeIds.filter((id) => !existingNodeIds.includes(id));
 
               // Preserve existing expanded state and add newly added nodes
-              this.expandedNodes = [
-                ...new Set([...this.expandedNodes, ...newlyAddedNodeIds]),
-              ];
+              this.expandedNodes = [...new Set([...this.expandedNodes, ...newlyAddedNodeIds])];
+
+              // Update network positions based on treeview item widths
+              this.updateNetworkPositionsFromTreeview();
             }, 100);
           });
         }
@@ -242,62 +431,53 @@ export default {
     },
   },
   beforeDestroy() {
-    // Clear stored data when component is destroyed
-    this.clearStoredData();
+    // Stop planet animation
+    this.stopNodeAnimation();
+    // Remove resize listener
+    window.removeEventListener("resize", this.handleResize);
+    // Disconnect mutation observer
+    if (this.treeviewObserver) {
+      this.treeviewObserver.disconnect();
+    }
   },
   async mounted() {
-    console.log(
-      "ai galaxy edit view mounted with parsedResponse... = ",
-      this.parsedResponse
-    );
+    console.log("ai galaxy edit view mounted with parsedResponse... = ", this.parsedResponse);
 
-    // Check if we have parsedResponse from props or need to restore from store
-    let responseData = this.parsedResponse;
-
-    if (!responseData) {
-      // Try to restore from store
-      responseData = this.aiGalaxyEditData;
-      if (responseData) {
-        console.log("Restored parsedResponse from store:", responseData);
-      }
-    } else {
+    // Check if we have parsedResponse from props or need to restore from store (Cursor changed AICreatedGalaxyDialog to pass the paresedResponse through the store instead of router params FYI)
+    if (this.parsedResponse) {
+      this.aiGeneratedGalaxyMap = this.parsedResponse;
+      console.log("parsedResponse is now aiGeneratedGalaxyMap = ", this.aiGeneratedGalaxyMap);
       // Save to store for persistence
-      this.setAiGalaxyEditData(responseData);
-      console.log("Saved parsedResponse to store");
+      this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
+      console.log("Saved aiGeneratedGalaxyMap to store as aiGalaxyEditData for persistence");
+    } else {
+      // Try to restore from store
+      this.aiGeneratedGalaxyMap = this.aiGalaxyEditData;
+      if (this.aiGeneratedGalaxyMap) {
+        console.log("Restored parsedResponse from store:", this.aiGeneratedGalaxyMap);
+      } else {
+        console.log("No parsedResponse found in store");
+      }
     }
 
-    // Convert parsedResponse into aiGeneratedGalaxyMap format
-    if (responseData && responseData.stars) {
-      this.aiGeneratedGalaxyMap = {
-        journeyTitle: responseData.journeyTitle,
-        journeyDescription: responseData.journeyDescription,
-        starDetails: responseData.stars.map((star, index) => ({
-          star: star.title || star, // Handle both object and string formats
-          description: star.description || `Star ${index + 1}: ${star.title || star}`,
-          planets: star.planets || [],
-          planetDetails: star.planetDetails || [],
-        })),
-      };
+    // Wait for treeview items to render, then set up nodes and edges based on their positions
+    this.setupInitialNetworkNodes();
 
-      console.log(
-        "Converted parsedResponse to aiGeneratedGalaxyMap:",
-        this.aiGeneratedGalaxyMap
-      );
-    }
+    // Add resize listener
+    window.addEventListener("resize", this.handleResize);
+
+    // Set up MutationObserver to watch for treeview content changes
+    this.setupTreeviewObserver();
   },
   computed: {
     ...mapState(useRootStore, ["aiGalaxyEditData"]),
     boundCourse() {
       // Get data from props or store
-      let responseData = this.parsedResponse;
-      if (!responseData) {
-        responseData = this.aiGalaxyEditData;
-      }
+      let responseData = this.parsedResponse || this.aiGalaxyEditData;
 
       return {
-        title: responseData?.journeyTitle || "Untitled Galaxy",
-        description:
-          responseData?.journeyDescription || "No description available",
+        title: responseData?.title || "Untitled Galaxy",
+        description: responseData?.description || "No description available",
         status: "draft",
       };
     },
@@ -310,17 +490,279 @@ export default {
     showPublish() {
       return true; // For AI editing, show publish option
     },
+    dark() {
+      return this.$vuetify.theme.isDark;
+    },
+    // Computed property to get chip display names without causing reactivity loops
+    chipDisplayNames() {
+      const names = {};
+      this.activeGalaxyItems.forEach((item) => {
+        names[item] = this.getChipDisplayName(item);
+      });
+      return names;
+    },
   },
   methods: {
-    ...mapActions(useRootStore, [
-      "setAiGalaxyEditData",
-      "clearAiGalaxyEditData",
-    ]),
+    ...mapActions(useRootStore, ["setAiGalaxyEditData", "clearAiGalaxyEditData"]),
+    removeChip(item) {
+      console.log("removing chip = ", item);
+      this.activeGalaxyItems = this.activeGalaxyItems.filter((i) => i !== item);
+      // Also remove from the correct treeview active array
+      // Find which treeview/starIndex this item belongs to using object notation
+      const starMatch = item.match(/^star\[(\d+)\]/);
+      if (starMatch) {
+        const starIndex = starMatch[1];
+        if (this.treeviewActiveItems[starIndex]) {
+          this.treeviewActiveItems[starIndex] = this.treeviewActiveItems[starIndex].filter(
+            (i) => i !== item,
+          );
+        }
+      }
+    },
+    getChipDisplayName(item) {
+      // Parse the item ID to extract the actual name from aiGeneratedGalaxyMap
+      // Handle different item ID patterns using object notation
+      if (item.startsWith("star[")) {
+        // Pattern: star[2] -> get star name
+        const starMatch = item.match(/^star\[(\d+)\]$/);
+        if (starMatch) {
+          const starIndex = parseInt(starMatch[1]);
+          return "⭐" + this.aiGeneratedGalaxyMap.stars[starIndex].title;
+        }
+
+        // Pattern: star[2].planet[0] -> get planet name
+        const planetMatch = item.match(/^star\[(\d+)\]\.planet\[(\d+)\]$/);
+        if (planetMatch) {
+          const starIndex = parseInt(planetMatch[1]);
+          const planetIndex = parseInt(planetMatch[2]);
+          return "🪐" + this.aiGeneratedGalaxyMap.stars[starIndex].planets[planetIndex].title;
+        }
+
+        // Pattern: star[2].planet[0].mission[0] -> get mission name
+        const missionMatch = item.match(/^star\[(\d+)\]\.planet\[(\d+)\]\.mission\[(\d+)\]$/);
+        if (missionMatch) {
+          const starIndex = parseInt(missionMatch[1]);
+          const planetIndex = parseInt(missionMatch[2]);
+          const missionIndex = parseInt(missionMatch[3]);
+          return (
+            "🎯" +
+            this.aiGeneratedGalaxyMap.stars[starIndex].planets[planetIndex].missions[missionIndex]
+              .title
+          );
+        }
+      }
+
+      // Fallback: return the original item if parsing fails
+      return item;
+    },
+
+    // Set up initial network nodes and edges based on treeview positions
+    setupInitialNetworkNodes() {
+      console.log("Setting up initial network nodes");
+
+      // Use a more robust approach that waits for DOM to be ready
+      const waitForTreeview = () => {
+        const treeviewItems = document.querySelectorAll(".star-treeview-item");
+        const treeviewWrapper = document.querySelector(".galaxy-treeview-wrapper");
+
+        // Check if treeview items are properly rendered with dimensions
+        if (treeviewItems.length === 0 || !treeviewWrapper) {
+          console.log("Treeview not ready yet, retrying...");
+          setTimeout(waitForTreeview, 100);
+          return;
+        }
+
+        // Check if items have proper dimensions
+        const firstItem = treeviewItems[0];
+        const firstItemRect = firstItem.getBoundingClientRect();
+        if (firstItemRect.width === 0 || firstItemRect.height === 0) {
+          console.log("Treeview items don't have dimensions yet, retrying...");
+          setTimeout(waitForTreeview, 100);
+          return;
+        }
+
+        console.log("Treeview is ready, setting up nodes");
+        this.updateNetworkPositionsFromTreeview();
+      };
+
+      // Start the waiting process with a longer initial delay to ensure network is ready
+      this.$nextTick(() => {
+        setTimeout(waitForTreeview, 500);
+      });
+    },
+
+    // Calculate treeview item widths and update network positions
+    updateNetworkPositionsFromTreeview() {
+      this.$nextTick(() => {
+        // Check if network is ready
+        if (!this.$refs.network || !this.$refs.network.network) {
+          console.log("Network not ready yet, retrying...");
+          setTimeout(() => {
+            this.updateNetworkPositionsFromTreeview();
+          }, 200);
+          return;
+        }
+
+        // Additional check to ensure network is fully initialized
+        try {
+          this.$refs.network.network.getPositions();
+        } catch (error) {
+          console.log("Network not fully initialized yet, retrying...");
+          setTimeout(() => {
+            this.updateNetworkPositionsFromTreeview();
+          }, 200);
+          return;
+        }
+
+        // Get all star-treeview-item elements
+        const treeviewItems = document.querySelectorAll(".star-treeview-item");
+
+        if (treeviewItems.length === 0) {
+          console.log("No treeview items found yet");
+          return;
+        }
+
+        // Calculate total width of all treeview items plus gaps
+        let totalWidth = 0;
+        const gapSize = 20; // 20px gap from flexbox
+
+        treeviewItems.forEach((item, index) => {
+          const itemRect = item.getBoundingClientRect();
+          const itemWidth = itemRect.width;
+          totalWidth += itemWidth;
+
+          // Add gap between items (except for the last item)
+          if (index < treeviewItems.length - 1) {
+            totalWidth += gapSize;
+          }
+        });
+
+        // Update network graph width to match treeview total width
+        const networkGraph = document.querySelector(".network-graph");
+        const treeviewWrapper = document.querySelector(".galaxy-treeview-wrapper");
+
+        if (networkGraph) {
+          networkGraph.style.width = `${totalWidth + 100}px`;
+          console.log(`Updated network graph width to: ${totalWidth}px`);
+        }
+
+        if (treeviewWrapper) {
+          treeviewWrapper.style.width = `${totalWidth + 100}px`;
+          console.log(`Updated treeview wrapper width to: ${totalWidth}px`);
+        }
+
+        // Calculate positions for each star using actual treeview item positions
+        const updatedNodes = [];
+        const yPosition = 100; // Fixed Y position for all nodes (above treeview items)
+
+        treeviewItems.forEach((item, index) => {
+          const itemRect = item.getBoundingClientRect();
+          const treeviewWrapperRect = treeviewWrapper
+            ? treeviewWrapper.getBoundingClientRect()
+            : null;
+
+          // Calculate position relative to the treeview wrapper
+          let relativeX = 0;
+          if (treeviewWrapperRect) {
+            relativeX = itemRect.left - treeviewWrapperRect.left + itemRect.width / 2;
+          } else {
+            // Fallback to sequential positioning
+            relativeX = index * 300 + 150;
+          }
+
+          // Position nodes in the network's coordinate system
+          // Since the network width matches the treeview width, we can use relative positioning
+          const canvasX = relativeX;
+          const canvasY = yPosition;
+
+          // Update the corresponding network node
+          updatedNodes.push({
+            id: `star-${index}`,
+            label: "", // Do not show star label on the network node
+            x: this.$refs.network.network.DOMtoCanvas({ x: canvasX, y: canvasY }).x,
+            y: this.$refs.network.network.DOMtoCanvas({ x: canvasX, y: canvasY }).y,
+          });
+        });
+
+        // Update the network nodes
+        this.nodesToDisplay = updatedNodes;
+
+        // Update edges to connect the repositioned nodes
+        this.edgesToDisplay = [];
+        for (let i = 0; i < updatedNodes.length - 1; i++) {
+          this.edgesToDisplay.push({
+            from: `star-${i}`,
+            to: `star-${i + 1}`,
+          });
+        }
+
+        console.log("Updated network positions based on treeview item positions:", updatedNodes);
+
+        // Force network to redraw with new positions
+        if (this.$refs.network) {
+          this.$refs.network.redraw();
+
+          // Set zoom level to 1 and center the view
+          if (this.$refs.network.network) {
+            this.$refs.network.network.moveTo({
+              scale: 1,
+              animation: false,
+            });
+          }
+
+          // Set up planets after nodes are positioned correctly
+          this.$nextTick(() => {
+            this.setupPlanets();
+            this.startNodeAnimation();
+          });
+        }
+      });
+    },
+
+    // Handle window resize to recalculate positions
+    handleResize() {
+      // Debounce resize events
+      clearTimeout(this.resizeTimeout);
+      this.resizeTimeout = setTimeout(() => {
+        this.updateNetworkPositionsFromTreeview();
+      }, 250);
+    },
+
+    // Set up MutationObserver to watch for treeview content changes
+    setupTreeviewObserver() {
+      const treeviewWrapper = document.querySelector(".galaxy-treeview-wrapper");
+      if (treeviewWrapper) {
+        this.treeviewObserver = new MutationObserver((mutations) => {
+          // Check if any mutations affect the treeview items
+          const hasRelevantChanges = mutations.some((mutation) => {
+            return (
+              mutation.type === "childList" ||
+              (mutation.type === "attributes" && mutation.attributeName === "style")
+            );
+          });
+
+          if (hasRelevantChanges) {
+            // Debounce the update to avoid excessive recalculations
+            clearTimeout(this.resizeTimeout);
+            this.resizeTimeout = setTimeout(() => {
+              this.updateNetworkPositionsFromTreeview();
+            }, 100);
+          }
+        });
+
+        // Observe changes to child elements and attributes
+        this.treeviewObserver.observe(treeviewWrapper, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          attributeFilter: ["style", "class"],
+        });
+      }
+    },
+
     // Loading message management
     startLoadingMessages() {
-      const messages = this.isSavingToDB
-        ? this.savingMessages
-        : this.loadingMessages;
+      const messages = this.isSavingToDB ? this.savingMessages : this.loadingMessages;
       this.currentLoadingMessage = messages[0];
       this.loadingMessageInterval = setInterval(() => {
         const currentIndex = messages.indexOf(this.currentLoadingMessage);
@@ -339,6 +781,12 @@ export default {
     // Treeview management
     updateExpandedNodes(newValue) {
       this.expandedNodes = newValue;
+      // Recalculate network positions when treeview expands/collapses
+      this.$nextTick(() => {
+        setTimeout(() => {
+          this.updateNetworkPositionsFromTreeview();
+        }, 200);
+      });
     },
     getAllNodeIds(items) {
       const ids = [];
@@ -376,70 +824,197 @@ export default {
       console.log("Create Galaxy method called");
       // TODO: Implement galaxy creation logic
     },
-
     // Clear store data when component is destroyed
     clearStoredData() {
       this.clearAiGalaxyEditData();
       console.log("Cleared stored parsedResponse from store");
     },
 
+    // Planet animation methods
+    networkUpdated() {
+      // Network is ready, but wait for proper positioning before setting up planets
+      console.log("Network updated - waiting for proper positioning");
+    },
+
+    async setupPlanets() {
+      console.log("Setting up planets for AI generated galaxy");
+
+      // Reset planets
+      this.planets = [];
+
+      // Get node positions from the network
+      if (!this.$refs.network || !this.$refs.network.network) {
+        console.log("Network not ready yet");
+        return;
+      }
+
+      // Get the current positions of all nodes
+      const nodeIds = this.nodesToDisplay.map((node) => node.id);
+      const nodePositionMap = this.$refs.network.network.getPositions(nodeIds);
+
+      // Create planets for each star (node)
+      for (const [starId, starPosition] of Object.entries(nodePositionMap)) {
+        // Find the star details for this node
+        const starIndex = parseInt(starId.replace("star-", ""));
+        const star = this.aiGeneratedGalaxyMap.stars[starIndex];
+
+        if (star && star.planets) {
+          // Create planets for each planet in this star
+          for (let i = 0; i < star.planets.length; i++) {
+            const planet = star.planets[i];
+
+            // Create planets for each mission in this planet
+            if (planet.missions && planet.missions.length > 0) {
+              for (let j = 0; j < planet.missions.length; j++) {
+                const mission = planet.missions[j];
+
+                this.planets.push(
+                  new Planet(
+                    starPosition.x,
+                    starPosition.y,
+                    2, // planet size
+                    this.dark ? "white" : this.$vuetify.theme.themes.light.missionAccent, // planet colour
+                    6.28 / (10 * (j + 1)), // planet speed
+                    20 * (j + 1), // planet orbit size
+                    starId, // topicId (using starId)
+                    "", // mission name
+                    j, // mission index
+                  ),
+                );
+              }
+            }
+          }
+        }
+      }
+
+      console.log(`Created ${this.planets.length} planets at correct positions`);
+    },
+
+    beforeDrawing(ctx) {
+      // get delta
+      const oldTime = this.time;
+      this.time = new Date();
+      let delta;
+      if (oldTime == null) {
+        delta = 1;
+      } else {
+        delta = (this.time.getTime() - oldTime.getTime()) / 1000;
+      }
+
+      // update planets orbits
+      for (const planet of this.planets) {
+        const strokeColor = this.dark ? "rgba(255, 255, 255, 0.15)" : "rgba(0, 0, 0, 0.15)";
+        planet.update(ctx, delta, strokeColor);
+      }
+    },
+
+    afterDrawing(ctx) {
+      // Draw planet labels
+      const labelColor = this.dark ? "#ffffff" : this.$vuetify.theme.themes.light.baseAccent;
+      for (const planet of this.planets) {
+        planet.drawLabel(ctx, labelColor);
+      }
+    },
+
+    updateFrameTimer() {
+      if (this.$refs.network) {
+        this.$refs.network.redraw();
+      }
+    },
+
+    startNodeAnimation() {
+      // start interval
+      console.log("Starting node animation");
+      this.updateFrameVar();
+    },
+
+    stopNodeAnimation() {
+      clearInterval(this.intervalid1);
+    },
+
+    updateFrameVar() {
+      this.intervalid1 = setInterval(() => {
+        this.updateFrameTimer();
+      }, 33);
+    },
+
+    updatePlanetColors() {
+      const newColor = this.dark ? "white" : this.$vuetify.theme.themes.light.missionAccent;
+      for (const planet of this.planets) {
+        planet.color = newColor;
+      }
+    },
+
     // Transform aiGeneratedGalaxyMap into treeview format
     updateTransformedStarDetails() {
-      console.log(
-        "updating Transformed Star Details from aiGeneratedGalaxyMap..."
-      );
+      console.log("updating Transformed Star Details from aiGeneratedGalaxyMap...");
       if (
         !this.aiGeneratedGalaxyMap ||
-        !this.aiGeneratedGalaxyMap.starDetails ||
-        !this.aiGeneratedGalaxyMap.starDetails.length
+        !this.aiGeneratedGalaxyMap.stars ||
+        !this.aiGeneratedGalaxyMap.stars.length
       ) {
         this.transformedStarDetails = [];
         return;
       }
 
-      this.transformedStarDetails = this.aiGeneratedGalaxyMap.starDetails.map(
-        (starDetail, starIndex) => {
-          const starNode = {
-            id: `star-${starIndex}`,
-            name: starIndex + 1 + ": " + starDetail.star,
-            type: "star",
-            children: [],
-          };
+      this.transformedStarDetails = this.aiGeneratedGalaxyMap.stars.map((star, starIndex) => {
+        const starNode = {
+          id: `star[${starIndex}]`,
+          name: star.title,
+          type: "star",
+          children: [],
+        };
 
-          if (starDetail.planets && starDetail.planets.length > 0) {
-            starNode.children = starDetail.planets.map(
-              (planet, planetIndex) => {
-                // Handle planet as either string or object
-                const planetName = typeof planet === 'string' ? planet : (planet.title || planet.name || 'Unknown Planet');
-                
-                const planetNode = {
-                  id: `star-${starIndex}-planet-${planetIndex}`,
-                  name: planetName,
-                  type: "planet",
-                  children: [],
-                };
+        if (star.planets && star.planets.length > 0) {
+          starNode.children = star.planets.map((planet, planetIndex) => {
+            const planetNode = {
+              id: `star[${starIndex}].planet[${planetIndex}]`,
+              name: planet.title,
+              type: "planet",
+              children: [],
+            };
 
-                if (
-                  starDetail.planetDetails &&
-                  starDetail.planetDetails[planetIndex] &&
-                  starDetail.planetDetails[planetIndex].missions
-                ) {
-                  planetNode.children = starDetail.planetDetails[
-                    planetIndex
-                  ].missions.map((mission, missionIndex) => ({
-                    id: `star-${starIndex}-planet-${planetIndex}-mission-${missionIndex}`,
-                    name: mission,
-                    type: "mission",
-                  }));
-                }
-                return planetNode;
-              }
-            );
-          }
-          return starNode;
+            if (planet.missions && planet.missions.length > 0) {
+              planetNode.children = planet.missions.map((mission, missionIndex) => ({
+                id: `star[${starIndex}].planet[${planetIndex}].mission[${missionIndex}]`,
+                name: mission.title,
+                type: "mission",
+              }));
+            }
+            return planetNode;
+          });
         }
-      );
+        return starNode;
+      });
       console.log("Transformed star details:", this.transformedStarDetails);
+
+      // Update network positions after treeview data changes
+      this.$nextTick(() => {
+        setTimeout(() => {
+          this.updateNetworkPositionsFromTreeview();
+        }, 300);
+      });
+    },
+    updateActiveGalaxyItems(newValue, treeviewIndex) {
+      // Merge new active items with existing ones instead of overwriting
+      // Remove any items that belong to the current treeview (to avoid duplicates)
+      const currentTreeviewPrefix = `star[${treeviewIndex}]`;
+      const filteredExistingItems = this.activeGalaxyItems.filter(
+        (item) => !item.startsWith(currentTreeviewPrefix),
+      );
+
+      // Add the new active items from this treeview
+      this.activeGalaxyItems = [...filteredExistingItems, ...newValue];
+      // Also update the treeview's active state
+      this.$set(this.treeviewActiveItems, treeviewIndex, newValue);
+
+      console.log(
+        `Updated activeGalaxyItems for treeview ${treeviewIndex}:`,
+        this.activeGalaxyItems,
+      );
+    },
+    refineGalaxyMap() {
+      console.log("Refining galaxy map");
     },
   },
 };
@@ -458,7 +1033,7 @@ export default {
   margin: 0 !important;
 }
 
-.left-section {
+#left-section {
   width: 200px;
   height: 100%;
   display: flex;
@@ -482,14 +1057,158 @@ export default {
 
 #main-section {
   position: absolute;
-  width: 100vw;
-  margin: 0px;
+  width: calc(100vw - 200px);
+  margin: 0px 0px 0px 200px;
   height: 100%;
   display: flex;
   justify-content: flex-start;
   align-items: center;
   flex-direction: column;
   z-index: 1;
+
+  // Galaxy treeview styles
+  .galaxy-treeview-container {
+    width: 100%;
+    height: 100%;
+    margin: 1rem auto;
+    padding: 1rem;
+    overflow: hidden;
+    // border: 1px solid blue;
+    flex-direction: column;
+
+    .galaxy-preview-container {
+      // border: 1px solid red;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      height: auto;
+      overflow-y: auto;
+      margin-bottom: 100px;
+
+      .network-graph {
+        height: 250px;
+        // min-height: 300px;
+        // border: 1px solid yellow;
+      }
+
+      .galaxy-treeview-wrapper {
+        display: flex;
+        flex-direction: row;
+        gap: 20px;
+        min-height: 80%;
+        padding: 10px;
+        overflow-y: auto;
+        overflow-x: auto;
+        margin-top: -100px;
+        // border: 1px solid green;
+
+        .star-treeview-item {
+          flex: 0 0 auto;
+          width: auto;
+          // padding: 15px;
+          background-color: rgba(var(--v-background-base), 0.9);
+          border-radius: 8px;
+          height: auto;
+          // border: 1px solid pink;
+
+          .star-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--v-galaxyAccent-base);
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            text-align: center;
+            padding: 8px;
+            background-color: rgba(var(--v-galaxyAccent-base), 0.1);
+            border-radius: 4px;
+            border: 1px solid rgba(var(--v-galaxyAccent-base), 0.3);
+          }
+
+          .galaxy-treeview {
+            width: 100%;
+
+            .v-treeview-node {
+              margin-bottom: 0.25rem;
+            }
+
+            .v-treeview-node__root {
+              padding: 0.25rem 0;
+            }
+
+            .v-treeview-node__children {
+              margin-left: 1rem;
+            }
+
+            // Hide the root star node since we're showing it as a title
+            .v-treeview-node:first-child > .v-treeview-node__root {
+              display: none;
+            }
+
+            // Adjust spacing for better readability
+            .v-treeview-node__content {
+              padding: 0.25rem 0;
+            }
+          }
+
+          .treeview-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--v-missionAccent-base);
+            font-weight: 500;
+            line-height: 1.3;
+            word-wrap: break-word;
+          }
+
+          .star-emoji {
+            font-size: 1rem;
+            filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.6));
+          }
+
+          .planet-emoji {
+            font-size: 0.9rem;
+            filter: drop-shadow(0 0 3px rgba(138, 43, 226, 0.6));
+          }
+
+          .mission-emoji {
+            font-size: 0.8rem;
+            filter: drop-shadow(0 0 2px rgba(255, 69, 0, 0.6));
+          }
+        }
+      }
+    }
+
+    .galaxy-prompt-container {
+      width: 100%;
+      height: 30%;
+      // border: 1px solid yellow;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+
+      .prompt-textarea-container {
+        width: 50%;
+
+        .input-field {
+          width: 100%;
+          text-align: center;
+          flex: none;
+          font-size: 1rem;
+          color: var(--v-missionAccent-base);
+        }
+
+        .action-buttons {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          width: 100%;
+          margin-top: -10px;
+        }
+      }
+    }
+  }
 }
 
 #right-section {
@@ -498,138 +1217,5 @@ export default {
   z-index: 3;
   margin-left: auto;
   margin-right: 20px;
-}
-
-// Galaxy treeview styles
-.galaxy-treeview-container {
-  width: 100%;
-  height: 100%;
-  margin: 1rem auto;
-  padding: 1rem;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  // Create a mask that fades out at all edges using radial gradient
-  mask-image: radial-gradient(
-    ellipse at center,
-    black 60%,
-    rgba(0, 0, 0, 0.9) 75%,
-    rgba(0, 0, 0, 0.7) 85%,
-    transparent 95%
-  );
-  -webkit-mask-image: radial-gradient(
-    ellipse at center,
-    black 60%,
-    rgba(0, 0, 0, 0.9) 75%,
-    rgba(0, 0, 0, 0.7) 85%,
-    transparent 95%
-  );
-}
-
-.galaxy-treeview-wrapper {
-  display: flex;
-  flex-direction: row;
-  gap: 20px;
-  height: 100%;
-  padding: 10px;
-  overflow-y: auto;
-  overflow-x: auto;
-
-  // Custom scrollbar styling
-  &::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: rgba(var(--v-missionAccent-base), 0.1);
-    border-radius: 4px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: rgba(var(--v-missionAccent-base), 0.5);
-    border-radius: 4px;
-
-    &:hover {
-      background: rgba(var(--v-missionAccent-base), 0.7);
-    }
-  }
-}
-
-.star-treeview-item {
-  flex: 0 0 auto;
-  width: auto;
-  padding: 15px;
-  background-color: rgba(var(--v-background-base), 0.9);
-  border-radius: 8px;
-  height: auto;
-  // REMOVE: max-height, overflow-y, scrollbar styling
-}
-
-.star-title {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--v-galaxyAccent-base);
-  text-transform: uppercase;
-  margin-bottom: 10px;
-  text-align: center;
-  padding: 8px;
-  background-color: rgba(var(--v-galaxyAccent-base), 0.1);
-  border-radius: 4px;
-  border: 1px solid rgba(var(--v-galaxyAccent-base), 0.3);
-}
-
-.galaxy-treeview {
-  width: 100%;
-
-  .v-treeview-node {
-    margin-bottom: 0.25rem;
-  }
-
-  .v-treeview-node__root {
-    padding: 0.25rem 0;
-  }
-
-  .v-treeview-node__children {
-    margin-left: 1rem;
-  }
-
-  // Hide the root star node since we're showing it as a title
-  .v-treeview-node:first-child > .v-treeview-node__root {
-    display: none;
-  }
-
-  // Adjust spacing for better readability
-  .v-treeview-node__content {
-    padding: 0.25rem 0;
-  }
-}
-
-.treeview-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.75rem;
-  color: var(--v-missionAccent-base);
-  font-weight: 500;
-  line-height: 1.3;
-  word-wrap: break-word;
-}
-
-.star-emoji {
-  font-size: 1rem;
-  filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.6));
-}
-
-.planet-emoji {
-  font-size: 0.9rem;
-  filter: drop-shadow(0 0 3px rgba(138, 43, 226, 0.6));
-}
-
-.mission-emoji {
-  font-size: 0.8rem;
-  filter: drop-shadow(0 0 2px rgba(255, 69, 0, 0.6));
 }
 </style>

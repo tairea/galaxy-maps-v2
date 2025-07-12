@@ -13,7 +13,83 @@ we would also like to have a web dashboard that can show soil moisture readings 
 
 a completed semester of learning for my 10 year old daughter homeschooling
 
-<!-- Apii Nikao Science Term 3 -->
+<!-- Apii Nikao Science Term 3 - Option 2 -->
+
+I want to create a science programme for Term 3 of year 7 and 8 students in the Cook Islands.
+
+The focus of the program should be on how Science Meets Traditional Medicine, specifically Investigating **Chemical Change through Traditional Medicines and Natural Processes**
+
+Below is our rought outline, please help us make this into a galaxy map for our students to work through at their own pace.
+
+Week 1
+
+- Focus: What is a Scientific Investigation?
+- Activities:
+  - Fair testing, variables, observing changes
+  - Ice melting or simple mixing tasks
+- Differentiation:
+  - Top Group: Predict outcomes, write method steps
+  - Below Group: Visual steps with teacher guidance
+    Week 2
+- Focus: Chemical Change in Nature
+- Activities:
+  - Explore rusting, rotting, natural dye changes
+  - Discuss observable indicators
+- Differentiation:
+  - Top Group: Keep a science journal
+  - Below Group: Shared class chart with key ideas
+    Week 3
+- Focus: Exploring Traditional Medicines
+- Activities:
+  - Introduction to local medicinal plants
+  - Discuss preparation methods as chemical change
+- Differentiation:
+  - Top Group: Research written reports
+  - Below Group: Research posters with images
+    Week 4
+- Focus: Preparing a Simple Traditional Remedy
+- Activities:
+  - Practical: Create herbal tea or balm
+  - Identify signs of chemical change (mixing, heating)
+- Differentiation:
+  - Top Group: Document process scientifically
+  - Below Group: Sequence cards, simplified report
+    Week 5
+- Focus: Project Week - Traditional Medicines
+- Activities:
+  - Investigate and prepare a remedy for common illness
+  - Consider Cook Islands and other Pacific Islands knowledge
+- Differentiation:
+  - Top Group: Scientific report + cultural reflection
+  - Below Group: Illustrated poster with captions
+    Week 6
+- Focus: Present Remedies & Evaluate
+- Activities:
+  - Present remedies, share scientific observations
+  - Discuss safety and respect for cultural knowledge
+- Differentiation:
+  - Top Group: Oral presentation using scientific terms
+  - Below Group: Supported group presentation
+    Week 7
+- Focus: Other Everyday Chemical Changes
+- Activities:
+  - Cooking, rusting, acid-base reactions
+  - Compare to traditional knowledge
+- Differentiation:
+  - Top Group: Compare processes scientifically
+  - Below Group: Visual comparisons with sentence frames
+    Week 8
+- Focus: Review & Assessment
+- Activities:
+  - Assessment task: Investigate new chemical change (teacher designed)
+  - Reflection on skills and learning
+- Differentiation:
+  - Top Group: Full written report
+  - Below Group: Guided response worksheet
+    Mini Project:
+- Traditional Medicine Creation: Students research, prepare, and evaluate a remedy using Cook Islands knowledge, linking scientific and cultural understanding
+
+<!-- Apii Nikao Science Term 3 - Option 1 -->
 
 a map to assign to our Year 7 and 8 students that covers our Term 3 Science learning.
 For this term we are focusing on "how substances can be changed chemically".

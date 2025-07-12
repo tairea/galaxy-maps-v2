@@ -18,7 +18,7 @@ import { z } from "zod";
 export const FirstStepResponseSchema = z
   .object({
     // Optional fields for stars list response
-    status: z.enum(["clarification_needed", "journey_steps_ready"]).nullable(),
+    status: z.enum(["clarification_needed", "journey_ready"]).nullable(),
     questions: z.array(z.string()).nullable(),
     title: z.string().nullable(),
     description: z.string().nullable(),
@@ -26,11 +26,11 @@ export const FirstStepResponseSchema = z
   })
   // .refine(
   //   (data) => {
-  //     // Must have gathering context fields OR journey_steps_ready
+  //     // Must have gathering context fields OR journey_ready
   //     const hasClarificationNeeded =
   //       data.status === "clarification_needed" && data.questions && data.questions.length > 0;
   //     const hasJourneyStepsReady =
-  //       data.status === "journey_steps_ready" &&
+  //       data.status === "journey_ready" &&
   //       data.title &&
   //       data.description &&
   //       data.stars &&
@@ -40,14 +40,14 @@ export const FirstStepResponseSchema = z
   //   },
   //   {
   //     message:
-  //       "Response must contain either clarification_needed data, or journey_steps_ready data",
+  //       "Response must contain either clarification_needed data, or journey_ready data",
   //   },
   // );
   .refine(
     (data) => {
       if (data.status === "clarification_needed") {
         return data.questions && data.questions.length > 0;
-      } else if (data.status === "journey_steps_ready") {
+      } else if (data.status === "journey_ready") {
         return data.title && data.description && data.stars && data.stars.length > 0;
       }
       return false;
@@ -85,12 +85,18 @@ export const MissionsSchema = z.object({
 //     .min(1),
 // });
 
+// Schema for journey missions
+export const JourneyMissionsSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+});
+
 // Schema for journey planets
 export const JourneyPlanetsSchema = z.object({
   title: z.string(),
-  description: z.string()
+  description: z.string(),
+  missions: z.array(JourneyMissionsSchema).min(1),
 });
-
 
 // Schema for journey stars
 export const JourneyStarsSchema = z.object({
@@ -99,21 +105,13 @@ export const JourneyStarsSchema = z.object({
   planets: z.array(JourneyPlanetsSchema).min(1),
 });
 
-// Schema for complete journey ready response
-// export const JourneyReadySchema = z.object({
-//   status: z.literal("journey_ready"),
-//   journeyTitle: z.string(),
-//   journeyDescription: z.string(),
-//   milestones: z.array(JourneyStarsSchema).min(1),
-// });
-
 // Combined schema for all possible responses (works with zodTextFormat)
 export const StarsAndPlanetsResponseSchema = z
   .object({
     status: z.enum(["clarification_needed", "journey_ready"]),
     questions: z.array(z.string()).nullable(),
-    journeyTitle: z.string().nullable(),
-    journeyDescription: z.string().nullable(),
+    title: z.string().nullable(),
+    description: z.string().nullable(),
     stars: z.array(JourneyStarsSchema).nullable(),
   })
   .refine(
@@ -121,12 +119,7 @@ export const StarsAndPlanetsResponseSchema = z
       if (data.status === "clarification_needed") {
         return data.questions && data.questions.length > 0;
       } else if (data.status === "journey_ready") {
-        return (
-          data.journeyTitle &&
-          data.journeyDescription &&
-          data.stars &&
-          data.stars.length > 0
-        );
+        return data.title && data.description && data.stars && data.stars.length > 0;
       }
       return false;
     },
