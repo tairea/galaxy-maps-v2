@@ -13,6 +13,94 @@ we would also like to have a web dashboard that can show soil moisture readings 
 
 a completed semester of learning for my 10 year old daughter homeschooling
 
+<!-- Apii Nikao Science Term 3 -->
+
+a map to assign to our Year 7 and 8 students that covers our Term 3 Science learning.
+For this term we are focusing on "how substances can be changed chemically".
+We have a rough outline below. Please break the map up by week and create engaging learning experiences around the ones we have suggested.
+
+Material World Level 4 - Term 3, 2025
+Cook Islands Curriculum Aligned Unit Plan
+
+UNIT FOCUS: Investigating How Substances Can Be Changed Chemically
+
+CONTEXT: Everyday Chemistry with Local Context
+
+UNIT TITLE: Chemistry in Our Everyday Lives – Understanding Chemical Change through Local Knowledge
+
+Week 1
+
+- Focus: Introduction to Scientific Investigation
+- Activities:
+  - What is science? How do we investigate?
+  - Teach fair testing, variables, observations
+  - Mini practical: Ice melting or mixing colours
+- Differentiation:
+  - Top Group: Write detailed hypotheses and predict outcomes
+  - Below Group: Sentence starters, discuss ideas verbally before writing
+    Week 2
+- Focus: Observing Everyday Chemical Changes
+- Activities:
+  - Explore chemical changes: Cooking, Rusting, Rotting
+  - Introduce observable signs (colour change, heat, gas)
+- Differentiation:
+  - Top Group: Journal reflections on observations using science terms
+  - Below Group: Scaffolded worksheets, labelled diagrams
+    Week 3
+- Focus: Kitchen Chemistry – Baking & Food Reactions
+- Activities:
+  - Baking soda + vinegar, yeast in bread
+  - Connect to home cooking & cultural recipes
+- Differentiation:
+  - Top Group: Explain reactions scientifically in writing
+  - Below Group: Focus on oral descriptions, sentence scaffolds
+
+Week 4
+
+- Focus: Acid-Base Reactions
+- Activities:
+  - Experiment: Mixing acid & base (lemon juice + baking soda)
+  - Explore neutralisation, everyday cleaning products
+- Differentiation:
+  - Top Group: Design own simple acid-base test
+  - Below Group: Complete guided experiment steps
+    Week 5
+- Focus: Project Week - Traditional Dyes
+- Activities:
+  - Investigate local dye recipes (noni, turmeric)
+  - Plan fair test to compare dyes
+- Differentiation:
+  - Top Group: Create dye recipe book with explanations
+  - Below Group: Visual poster with simple descriptions
+    Week 6
+- Focus: Present Dye Investigations
+- Activities:
+  - Present results, reflect on fair testing & conclusions
+- Differentiation:
+  - Top Group: Oral presentation with scientific explanation
+  - Below Group: Poster presentation with teacher support
+    Week 7
+- Focus: Rotting & Decomposition
+- Activities:
+  - Composting, food rotting
+  - Link to environment and sustainability
+- Differentiation:
+  - Top Group: Explain chemical change process
+  - Below Group: Identify changes through drawings & key words
+    Week 8
+- Focus: Review & Assessment
+- Activities:
+  - Summative practical (identify a chemical change)
+  - Self-assessment of scientific investigation skills
+- Differentiation:
+  - Top Group: Full report write-up
+  - Below Group: Supported checklist and oral explanations
+
+Project:
+
+- Traditional Dyes for Cultural Festival: Students investigate, test, and present traditional
+  dye recipes using noni, turmeric, etc., applying fair testing principles
+
 <!-- clarifying questions for ^ above IoT Irrigation prompt -->
 
 ## Clarifying question 1 of 10
