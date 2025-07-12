@@ -98,6 +98,8 @@
                 activatable
                 multiple-active
                 open-all
+                color="missionAccent"
+                active-color="missionAccent"
               >
                 <template v-slot:label="{ item }">
                   <span class="treeview-label">
@@ -119,7 +121,10 @@
               <v-chip
                 v-for="item in activeGalaxyItems"
                 :key="item"
-                class="mr-2 mb-2"
+                class="mr-2 mb-2 theme-chip"
+                outlined
+                color="missionAccent"
+                text-color="missionAccent"
                 close
                 @click:close="removeChip(item)"
               >
@@ -216,6 +221,7 @@ export default {
       expandedNodes: [],
       activeGalaxyItems: [],
       treeviewActiveItems: {}, // Track active items for each treeview
+      updateTimeout: null, // Debounce updates to prevent rapid toggling
 
       // Network data
       nodesToDisplay: [],
@@ -439,6 +445,11 @@ export default {
     if (this.treeviewObserver) {
       this.treeviewObserver.disconnect();
     }
+    // Clear any pending update timeout
+    if (this.updateTimeout) {
+      clearTimeout(this.updateTimeout);
+      this.updateTimeout = null;
+    }
   },
   async mounted() {
     console.log("ai galaxy edit view mounted with parsedResponse... = ", this.parsedResponse);
@@ -507,17 +518,9 @@ export default {
     removeChip(item) {
       console.log("removing chip = ", item);
       this.activeGalaxyItems = this.activeGalaxyItems.filter((i) => i !== item);
-      // Also remove from the correct treeview active array
-      // Find which treeview/starIndex this item belongs to using object notation
-      const starMatch = item.match(/^star\[(\d+)\]/);
-      if (starMatch) {
-        const starIndex = starMatch[1];
-        if (this.treeviewActiveItems[starIndex]) {
-          this.treeviewActiveItems[starIndex] = this.treeviewActiveItems[starIndex].filter(
-            (i) => i !== item,
-          );
-        }
-      }
+
+      // Note: We don't update treeviewActiveItems here because it would cause
+      // the infinite loop. The treeview will handle its own visual state.
     },
     getChipDisplayName(item) {
       // Parse the item ID to extract the actual name from aiGeneratedGalaxyMap
@@ -996,22 +999,28 @@ export default {
       });
     },
     updateActiveGalaxyItems(newValue, treeviewIndex) {
-      // Merge new active items with existing ones instead of overwriting
-      // Remove any items that belong to the current treeview (to avoid duplicates)
-      const currentTreeviewPrefix = `star[${treeviewIndex}]`;
-      const filteredExistingItems = this.activeGalaxyItems.filter(
-        (item) => !item.startsWith(currentTreeviewPrefix),
-      );
+      // Clear any existing timeout
+      if (this.updateTimeout) {
+        clearTimeout(this.updateTimeout);
+      }
 
-      // Add the new active items from this treeview
-      this.activeGalaxyItems = [...filteredExistingItems, ...newValue];
-      // Also update the treeview's active state
-      this.$set(this.treeviewActiveItems, treeviewIndex, newValue);
+      // Debounce the update to prevent rapid toggling
+      this.updateTimeout = setTimeout(() => {
+        // Update the treeview's active state to match what the user selected
+        this.$set(this.treeviewActiveItems, treeviewIndex, newValue);
 
-      console.log(
-        `Updated activeGalaxyItems for treeview ${treeviewIndex}:`,
-        this.activeGalaxyItems,
-      );
+        // Merge new active items with existing ones instead of overwriting
+        // Remove any items that belong to the current treeview (to avoid duplicates)
+        const currentTreeviewPrefix = `star[${treeviewIndex}]`;
+        const filteredExistingItems = this.activeGalaxyItems.filter(
+          (item) => !item.startsWith(currentTreeviewPrefix),
+        );
+
+        // Add the new active items from this treeview
+        this.activeGalaxyItems = [...filteredExistingItems, ...newValue];
+
+        this.updateTimeout = null;
+      }, 100);
     },
     refineGalaxyMap() {
       console.log("Refining galaxy map");
@@ -1148,6 +1157,7 @@ export default {
             // Adjust spacing for better readability
             .v-treeview-node__content {
               padding: 0.25rem 0;
+              cursor: pointer; // Add pointer cursor to treeview content
             }
           }
 
@@ -1160,6 +1170,7 @@ export default {
             font-weight: 500;
             line-height: 1.3;
             word-wrap: break-word;
+            cursor: pointer; // Add pointer cursor to indicate clickable items
           }
 
           .star-emoji {
@@ -1205,6 +1216,28 @@ export default {
           align-items: center;
           width: 100%;
           margin-top: -10px;
+        }
+
+        .theme-chip {
+          border: 1px solid var(--v-missionAccent-base) !important;
+          color: var(--v-missionAccent-base) !important;
+          background-color: transparent !important;
+          font-weight: 500;
+          transition: all 0.3s ease;
+
+          &:hover {
+            background-color: rgba(var(--v-missionAccent-base), 0.1) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(var(--v-missionAccent-base), 0.3);
+          }
+
+          .v-chip__close {
+            color: var(--v-missionAccent-base) !important;
+
+            &:hover {
+              background-color: rgba(var(--v-missionAccent-base), 0.2) !important;
+            }
+          }
         }
       }
     }
