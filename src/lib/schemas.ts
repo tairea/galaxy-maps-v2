@@ -95,7 +95,7 @@ export const JourneyMissionsSchema = z.object({
 export const JourneyPlanetsSchema = z.object({
   title: z.string(),
   description: z.string(),
-  missions: z.array(JourneyMissionsSchema).min(1),
+  // missions: z.array(JourneyMissionsSchema).min(1),
 });
 
 // Schema for journey stars
