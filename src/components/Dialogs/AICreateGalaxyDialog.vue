@@ -553,6 +553,14 @@ export default {
         ) {
           // It's a journey_ready response - proceed to next step
           console.log("Journey stars and planets ready received:", parsedResponse);
+
+          // end timer
+          const endTime = Date.now();
+          const timeString = this.formatExecutionTime(startTime, endTime);
+          console.log(
+            `✅ Galaxy map generation completed in ${timeString} (${endTime - startTime}ms total)`,
+          );
+
           // Save to store first, then route to AiGalaxyEdit
           this.setAiGalaxyEditData(parsedResponse);
           this.$router.push({ name: "AiGalaxyEdit" });

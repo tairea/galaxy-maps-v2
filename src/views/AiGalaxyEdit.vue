@@ -132,7 +132,7 @@
               </v-chip>
             </div>
             <v-textarea
-              v-model="galaxyRefinePrompt"
+              v-model="galaxyRefineUserInput"
               :dark="dark"
               :light="!dark"
               class="input-field mt-2"
@@ -182,6 +182,8 @@ import { mapActions, mapState } from "pinia";
 import Network from "@/vue2vis/Network.vue";
 import "vis-network/styles/vis-network.css";
 import { Planet } from "@/lib/planet";
+import { zodTextFormat } from "openai/helpers/zod";
+import { StarsAndPlanetsResponseSchema } from "@/lib/schemas";
 // import PromptDialog from "@/components/Dialogs/PromptDialog.vue";
 
 export default {
@@ -375,7 +377,7 @@ export default {
       },
 
       // Galaxy Refine Prompt
-      galaxyRefinePrompt: "",
+      galaxyRefineUserInput: "",
 
       // Resize handling
       resizeTimeout: null,
@@ -989,8 +991,124 @@ export default {
         this.updateTimeout = null;
       }, 100);
     },
-    refineGalaxyMap() {
-      // TODO: Implement galaxy refinement logic
+    async refineGalaxyMap() {
+      this.loading = true;
+
+      // Start timing
+      const startTime = Date.now();
+      console.log("🚀 Starting Galaxy refinement process...");
+
+      const refinementSystemPrompt = `
+      You are a Galaxy Map refiner assistant. Your task is to update specific parts of an existing Galaxy Map JSON object based on the user’s request. The Galaxy Map represents a structured learning journey using Stars → Planets → Missions.
+
+      ### Galaxy Map Format (json):
+
+      {
+        "status": "journey_steps_ready",
+        "title": "Journey Title",
+        "description": "Brief description of the overall journey",
+        "stars": [
+          {
+            "title": "1: Title (Theme Name)",
+            "description": "Brief description of this theme",
+            "planets": [
+              {
+                "title": "1.1: Title (Task Name)",
+                "description": "Brief description of this task",
+                "missions": [
+                  {
+                    "title": "1.1.1: Title (Action Name)",
+                    "description": "Brief description of this action"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+
+      ### Your Responsibilities:
+      1. Understand the user’s request — they may want to change titles, descriptions, content, structure, or sequence of Stars, Planets, or Missions.
+      2. You will be provided:
+      -- The full current Galaxy Map object.
+      -- A list of titles in a field called items_user_wants_changed — each title corresponds to a Star, Planet, or Mission the user wants updated.
+      3. Only modify the items specified in items_user_wants_changed. Match these titles precisely (e.g., "1.2.1: Title (Action Name)") within the structure.
+      4. Preserve everything else in the Galaxy Map exactly as-is.
+      5. Return the entire updated Galaxy Map object, not just the modified parts.
+      6. Always insert the updates into the correct location in the nested structure: stars[] → planets[] → missions[].
+
+      ### 🧾 Input Structure:
+      - galaxy_map: the full Galaxy Map JSON object.
+      - items_user_wants_changed: an array of titles of the specific items to change, e.g.:
+      - user_request: the user's instruction (e.g., creating extra missions, rethinking star and planet order, etc).
+      [
+        "1: Introduction (Getting Started)",
+        "1.2: Research the Topic (Investigation)",
+        "1.2.2: Interview an Expert (Deep Dive)"
+      ]
+
+      ### Output Requirements:
+      - Return the full updated Galaxy Map object.
+
+      - Do not change any parts not referenced in items_user_wants_changed, unless the user explicitly asks you to.
+
+      - Ensure all changes are inserted into the correct nested position.
+      `;
+
+      // 1.refine system prompt
+      const inputMessages = [{ role: "system", content: refinementSystemPrompt }];
+
+      // 2. galaxy map json
+      const galaxyMapJson = JSON.stringify(this.aiGeneratedGalaxyMap);
+      inputMessages.push({ role: "user", content: "galaxy_map: " + galaxyMapJson });
+
+      // 3. selected items
+      const activeItems = this.activeGalaxyItems;
+      const activeItemsString = activeItems.join("\n");
+      if (activeItems.length > 0) {
+        inputMessages.push({
+          role: "user",
+          content: "items_user_wants_changed: " + activeItemsString,
+        });
+      }
+
+      inputMessages.push({ role: "user", content: "user_request: " + this.galaxyRefineUserInput });
+
+      const refineGalaxyWithAiResponse = await this.$openai.responses.parse({
+        model: "gpt-4o-mini",
+        previous_response_id: this.aiGeneratedGalaxyMap.aiResponseId,
+        input: inputMessages,
+        text: {
+          format: zodTextFormat(StarsAndPlanetsResponseSchema, "second_step_response"),
+        },
+        store: true,
+      });
+
+      // Calculate and log execution time even on error
+      const endTime = Date.now();
+      const timeString = this.formatExecutionTime(startTime, endTime);
+      console.log(
+        `🔍 Galaxy refinement process completed after ${timeString} (${endTime - startTime}ms total)`,
+      );
+
+      console.log("🔍 Galaxy refinement response:", refineGalaxyWithAiResponse);
+
+      // Track token usage
+      this.trackTokenUsage(refineGalaxyWithAiResponse);
+
+      // update response id
+      this.aiGeneratedGalaxyMap.aiResponseId = refineGalaxyWithAiResponse.id;
+
+      // update galaxy map data
+      this.aiGeneratedGalaxyMap = refineGalaxyWithAiResponse.output_parsed;
+
+      this.loading = false;
+    },
+    formatExecutionTime(startTime, endTime) {
+      const totalTimeMs = endTime - startTime;
+      const minutes = Math.floor(totalTimeMs / 60000);
+      const seconds = Math.floor((totalTimeMs % 60000) / 1000);
+      return `${minutes}m${seconds}s`;
     },
   },
 };
@@ -1217,5 +1335,114 @@ export default {
   z-index: 3;
   margin-left: auto;
   margin-right: 20px;
+}
+
+// Loading overlay styles
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--v-background-base);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0.95;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem;
+}
+
+.loading-message {
+  color: var(--v-missionAccent-base);
+  margin-top: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  animation: fadeInOut 3s ease-in-out infinite;
+}
+
+.token-usage {
+  color: var(--v-galaxyAccent-base);
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: normal !important;
+  margin: 5px !important;
+}
+
+.token-breakdown {
+  color: var(--v-missionAccent-base);
+  margin-top: 0.25rem;
+  font-size: 0.7rem;
+  opacity: 0.8;
+  line-height: normal !important;
+  margin: 5px !important;
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.robot-dance {
+  animation: robotDance 2s ease infinite;
+}
+@keyframes robotDance {
+  70% {
+    transform: translateY(0%);
+  }
+  80% {
+    transform: translateY(-15%);
+  }
+  90% {
+    transform: translateY(0%);
+  }
+  95% {
+    transform: translateY(-7%);
+  }
+  97% {
+    transform: translateY(0%);
+  }
+  99% {
+    transform: translateY(-3%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.saving-progress-container {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.saving-progress-text {
+  color: var(--v-missionAccent-base);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 </style>
