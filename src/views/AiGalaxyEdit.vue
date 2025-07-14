@@ -1028,10 +1028,15 @@ export default {
       }
 
       ### Your Responsibilities:
-      1. Understand the user’s request — they may want to change titles, descriptions, content, structure, or sequence of Stars, Planets, or Missions.
+      1. Understand the user’s request — they may want to change the content, structure, or sequence of Stars, Planets, or Missions.
       2. You will be provided:
       -- The full current Galaxy Map object.
       -- A list of titles in a field called items_user_wants_changed — each title corresponds to a Star, Planet, or Mission the user wants updated.
+      3. IMPORTANT: Human-readable numbering starts from 1.
+      - For example:
+      -- "3.2: Some Planet" refers to stars[2].planets[1]
+      -- "1.1.3" refers to stars[0].planets[0].missions[2]
+      - You must correctly map title numbers to zero-based array indices.
       3. Only modify the items specified in items_user_wants_changed. Match these titles precisely (e.g., "1.2.1: Title (Action Name)") within the structure.
       4. Preserve everything else in the Galaxy Map exactly as-is.
       5. Return the entire updated Galaxy Map object, not just the modified parts.
@@ -1048,11 +1053,9 @@ export default {
       ]
 
       ### Output Requirements:
-      - Return the full updated Galaxy Map object.
-
-      - Do not change any parts not referenced in items_user_wants_changed, unless the user explicitly asks you to.
-
-      - Ensure all changes are inserted into the correct nested position.
+      - A full Galaxy Map JSON object with only the specified items changed and all others left intact.
+      - Each update must be inserted at the correct location based on the index math noted above.
+      - Do not return partial fragments. Always return the complete updated structure.
       `;
 
       // 1.refine system prompt
@@ -1101,6 +1104,14 @@ export default {
 
       // update galaxy map data
       this.aiGeneratedGalaxyMap = refineGalaxyWithAiResponse.output_parsed;
+
+      // update store
+      this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
+
+      // reset prompt input and selected items
+      this.galaxyRefineUserInput = "";
+      this.activeGalaxyItems = [];
+      this.treeviewActiveItems = {};
 
       this.loading = false;
     },
@@ -1167,6 +1178,7 @@ export default {
     margin: 1rem auto;
     padding: 1rem;
     overflow: hidden;
+    overflow-y: auto;
     // border: 1px solid blue;
     flex-direction: column;
 
@@ -1283,6 +1295,8 @@ export default {
       display: flex;
       justify-content: center;
       align-items: flex-start;
+
+      margin-bottom: 100px;
 
       .prompt-textarea-container {
         width: 50%;

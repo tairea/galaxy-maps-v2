@@ -19,7 +19,7 @@ I want to create a science programme for Term 3 of year 7 and 8 students in the 
 
 The focus of the program should be on how Science Meets Traditional Medicine, specifically Investigating **Chemical Change through Traditional Medicines and Natural Processes**
 
-Below is our rought outline, please help us make this into a galaxy map for our students to work through at their own pace.
+Below is our rough outline, please elaborate and extrapolate on the focus and activities so the students know exactly what to do to learn these concepts.
 
 Week 1
 

@@ -128,11 +128,10 @@ If clarification is needed, respond in this format:
 ### **Step 2: Design the Journey**
 Once the goal is clear, break the journey into a logical sequence of:
 
-Stars → major phases or themes (themes)
+Stars → major phases or themes (themes) needed to successfully complete the journey
 
 Planets → key tasks that must be completed within each Star (tasks)
 
-Missions → necessary, step-by-step actions required to complete each Planet (actions)
 
 Respond in this format:
 
@@ -148,16 +147,6 @@ Respond in this format:
         {
           "title": "1.1: Title (Task Name)",
           "description": "Brief description of this task",
-          "missions": [
-            {
-              "title": "1.1.1: Title (Action Name)",
-              "description": "Brief description of this action"
-            },
-            {
-              "title": "1.1.2: Title (Action Name)",
-              "description": "Brief description of this action"
-            }
-          ]
         },
         ...
       ]
@@ -166,28 +155,28 @@ Respond in this format:
   ]
 }
 ### **Step 3: Follow These Journey Design Instructions**
-- Each Star is a major checkpoint or theme on the journey.
+- Each Star is a major checkpoint or theme required to successfully complete the journey.
 
-- Each Planet under a Star is a key task or milestone that must be fully completed to move forward.
+- Each Planet under a Star is a key task or milestone that must be actioned to completed the Star and to move forward.
 
-- Each Mission must be:
+- Each Planet must be:
 
-  - Concrete: a specific action the learner must take.
+  - Concrete: a specific action the user must take.
 
-  - Essential: contributes directly to completing its Planet.
+  - Essential: contributes directly to completing its Star.
 
   - Sequential: logically follows from the previous step (where applicable).
 
-- Think of Planets as “mini goals” and Missions as “the exact steps needed to reach that mini goal.”
+- Think of Stars as “mini goals” and Planets as “the exact steps needed to reach that mini goal.”
 
-⚠️ Only include Missions that are required to complete the Planet. If a Mission could be skipped without affecting the Planet’s outcome, it should not be included.
+⚠️ Only include Planets that are required to complete the Star. If a Planet could be skipped without affecting the Star's outcome, it should not be included.
 
-✅ Mission Validation Checklist
-Before finalizing each Planet’s Missions, verify:
-- ✅ Are the Missions actionable (can someone do this)?
-- ✅ Are they required to achieve the Planet outcome?
+✅ Planet Validation Checklist
+Before finalizing each Star's Planets, verify:
+- ✅ Are the Planets actionable (can someone do this)?
+- ✅ Are they required to achieve the Star outcome?
 - ✅ Are they logically ordered (progressive or scaffolded)?
-- ✅ Together, do they fully complete the Planet?
+- ✅ Together, do they fully complete the Star?
 
 ### **Step 4: Refine the Journey**
 
@@ -195,6 +184,6 @@ After generating the journey, review it for:
 
 - ✅ Logical progression from one Star to the next.
 - ✅ Logical progression from one Planet to the next.
-- ✅ Clear, actionable Missions that contribute to each Planet.
+- ✅ Clear, actionable Planets that contribute to each Star.
 
 `;
