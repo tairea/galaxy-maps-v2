@@ -291,19 +291,7 @@ import {
 import { mapState, mapActions } from "pinia";
 import useRootStore from "@/store/index";
 import { db, functions } from "@/store/firestoreConfig";
-import {
-  // GalaxyCreationResponseSchema,
-  FirstStepResponseSchema,
-  StarsPlanetsSchema,
-  MissionsSchema,
-  StarsAndPlanetsResponseSchema,
-} from "@/lib/schemas";
-import { zodTextFormat } from "openai/helpers/zod";
-import {
-  PlanetsSystemPrompt,
-  MissionsSystemPrompt,
-  StarsAndPlanetsSystemPrompt,
-} from "@/lib/GalaxyMapPrompts";
+import { generateGalaxyMap } from "@/lib/ff";
 export default {
   name: "AICreateGalaxyDialog",
   props: {
@@ -517,31 +505,22 @@ export default {
         // Add a small delay to prevent rapid double-clicks
         await new Promise((resolve) => setTimeout(resolve, 100));
 
-        // =========== Generate journey's Stars and Planetsusing AI ===========
-        const aiResponse = await this.$openai.responses.parse({
-          model: "gpt-4o-mini",
-          input: [
-            { role: "system", content: StarsAndPlanetsSystemPrompt },
-            { role: "user", content: this.description },
-          ],
-          text: {
-            // format: zodTextFormat(GalaxyCreationResponseSchema, "galaxy_creation"),
-            format: zodTextFormat(StarsAndPlanetsResponseSchema, "first_step_response"),
-          },
-          store: true,
-        });
+        // =========== (1st a.i. api call) Generate journey's Stars and Planets using AI ===========
+        const aiResponse = await generateGalaxyMap(this.description);
 
         console.log("1st A.I. call: Stars and Planets generated ✅. A.I. Response:", aiResponse);
 
         // Track token usage
-        this.trackTokenUsage(aiResponse);
+        this.trackTokenUsage({
+          usage: aiResponse.tokenUsage,
+        });
 
         // store the response id for the next ai call
-        this.previousResponseId = aiResponse.id;
+        this.previousResponseId = aiResponse.responseId;
 
-        // Get the parsed response (already validated by zodTextFormat)
-        const parsedResponse = aiResponse.output_parsed;
-        parsedResponse.originResponseId = aiResponse.id;
+        // Get the parsed response
+        const parsedResponse = aiResponse.galaxyMap;
+        parsedResponse.originResponseId = aiResponse.responseId;
 
         // Check if it's clarification_needed, journey_ready, or stars list
         if (
