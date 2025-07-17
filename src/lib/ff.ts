@@ -594,3 +594,24 @@ export const removePersonFromCourse = async (
   const result = await removeStudentFromCourse(data);
   return result.data.person;
 };
+
+// AI Galaxy Map Generation
+export const generateGalaxyMap = async (
+  description: string,
+): Promise<{
+  success: boolean;
+  galaxyMap: any;
+  tokenUsage: {
+    input_tokens: number;
+    output_tokens: number;
+    total_tokens: number;
+  };
+  responseId: string;
+}> => {
+  const data = {
+    description,
+  };
+  const generateGalaxyMapFunction = functions.httpsCallable("generateGalaxyMap");
+  const result = await generateGalaxyMapFunction(data);
+  return result.data;
+};
