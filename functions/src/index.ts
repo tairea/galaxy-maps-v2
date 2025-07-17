@@ -38,6 +38,7 @@ import {
   updateTaskOrderIndexesByCourseIdTopicIdHttpsEndpoint,
   removeMeFromCourseHttpsEndpoint,
   removeStudentFromCourseHttpsEndpoint,
+  saveGalaxyMapHttpsEndpoint,
 } from "./courseManagement.js";
 import {
   sendCourseDeletedHttpsEndpoint,
@@ -111,6 +112,7 @@ export {
   updateTaskOrderIndexesByCourseIdTopicIdHttpsEndpoint as updateTaskOrderIndexesByCourseIdTopicId,
   removeMeFromCourseHttpsEndpoint as removeMeFromCourse,
   removeStudentFromCourseHttpsEndpoint as removeStudentFromCourse,
+  saveGalaxyMapHttpsEndpoint as saveGalaxyMap,
 };
 
 export {

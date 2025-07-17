@@ -141,34 +141,6 @@
                     autofocus
                   ></v-textarea>
 
-                  <!-- LAYOUT SELECTION -->
-                  <div class="mt-4">
-                    <p class="dialog-description">Select the starting layout</p>
-                    <p class="dialog-description mt-1">
-                      <em>(You can customise your Star positions later)</em>
-                    </p>
-                    <div class="layout-options">
-                      <div
-                        class="layout-option"
-                        :class="{ selected: mapLayout === 'zigzag' }"
-                        @click="mapLayout = 'zigzag'"
-                      >
-                        <div class="layout-icon">
-                          <v-icon>{{ mdiChartLineVariant }}</v-icon>
-                        </div>
-                        <div class="layout-label">Zigzag</div>
-                      </div>
-                      <div
-                        class="layout-option"
-                        :class="{ selected: mapLayout === 'spiral' }"
-                        @click="mapLayout = 'spiral'"
-                      >
-                        <div class="layout-icon">🌀</div>
-                        <div class="layout-label">Spiral</div>
-                      </div>
-                    </div>
-                  </div>
-
                   <div class="action-buttons mt-8">
                     <v-btn
                       outlined
@@ -285,13 +257,11 @@ import {
   mdiRobotExcited,
   mdiInformationVariant,
   mdiArrowLeft,
-  mdiChartLineVariant,
   mdiFamilyTree,
 } from "@mdi/js";
 import { mapState, mapActions } from "pinia";
 import useRootStore from "@/store/index";
-import { db, functions } from "@/store/firestoreConfig";
-import { generateGalaxyMap } from "@/lib/ff";
+import { generateGalaxyMap, saveGalaxyMap } from "@/lib/ff";
 export default {
   name: "AICreateGalaxyDialog",
   props: {
@@ -309,7 +279,6 @@ export default {
     mdiRobotExcited,
     mdiInformationVariant,
     mdiArrowLeft,
-    mdiChartLineVariant,
     mdiFamilyTree,
     rules: {
       required: (v) => !!v || "This field is required",
@@ -361,13 +330,14 @@ export default {
     aiGatheringContextAnswers: [],
     previousResponseId: "",
     stepper: 1,
-    mapLayout: "zigzag",
-    aiGeneratedGalaxyMap: {},
+    aiGeneratedGalaxyMap: {
+      stars: [],
+    },
     totalTokensUsed: 0,
     totalInputTokens: 0,
     totalOutputTokens: 0,
-    transformedStarDetails: [], // <-- add this as a data property
-    expandedNodes: [], // <-- add this to track expanded nodes
+    transformedStarDetails: [],
+    expandedNodes: [],
   }),
   computed: {
     ...mapState(useRootStore, ["person"]),
@@ -401,7 +371,7 @@ export default {
       },
       immediate: true,
     },
-    "aiGeneratedGalaxyMap.starDetails": {
+    "aiGeneratedGalaxyMap.stars": {
       handler(newVal, oldVal) {
         this.updateTransformedStarDetails();
       },
@@ -759,179 +729,6 @@ export default {
       }
     },
 
-    // =========== Generate Map from Stars List x 2 more layers (Planets > Missions) ===========
-    async generateMapFromStarsList(journeyAndStarsList) {
-      // Start timing
-      const startTime = Date.now();
-      console.log("🚀 Starting Galaxy map generation process...");
-
-      try {
-        // Note: loading is already true from the calling method (firstStep or secondStep)
-
-        // Add a small delay to prevent rapid double-clicks
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        console.log("Layer 1 finished:", journeyAndStarsList);
-        console.log("Layer 2: Generating Planets from Stars...");
-
-        // Initialize the galaxy map with journey metadata
-        this.aiGeneratedGalaxyMap = {
-          journeyTitle: journeyAndStarsList.title,
-          journeyDescription: journeyAndStarsList.description,
-          starDetails: [],
-        };
-
-        // Generate PLANETS from AI for each STAR
-        for (let index = 0; index < journeyAndStarsList.stars.length; index++) {
-          const star = journeyAndStarsList.stars[index];
-
-          const aiResponse = await this.$openai.responses.parse({
-            model: "gpt-4o-mini",
-            previous_response_id: this.previousResponseId,
-            input: [
-              { role: "system", content: PlanetsSystemPrompt },
-              { role: "user", content: journeyAndStarsList.stars.join("\n") },
-              { role: "user", content: `Star ${index + 1}: ${star}` },
-            ],
-            text: {
-              format: zodTextFormat(StarsPlanetsSchema, "stars_planets"),
-            },
-            // store: true,
-          });
-
-          // Track token usage
-          this.trackTokenUsage(aiResponse);
-
-          console.log(`Star ${index + 1} Planets generated ✅. A.I. response:`, aiResponse);
-
-          const parsedPlanetsResponse = aiResponse.output_parsed;
-
-          console.log("parsedPlanetsResponse:", parsedPlanetsResponse);
-
-          const planets = parsedPlanetsResponse.planets;
-          this.$set(this.aiGeneratedGalaxyMap.starDetails, index, parsedPlanetsResponse);
-
-          // Update existing star object with planets
-          this.$set(this.aiGeneratedGalaxyMap.starDetails[index], "planets", planets);
-          // Initialize planet details array for this star, preserving any existing data
-          if (!this.aiGeneratedGalaxyMap.starDetails[index].planetDetails) {
-            this.$set(this.aiGeneratedGalaxyMap.starDetails[index], "planetDetails", []);
-          }
-
-          // Log what we're working with
-          console.log(`🔄 Star ${index + 1}: Generating missions for ${planets.length} planets`);
-
-          // loop all PLANETS in this STAR system
-          for (let planetIndex = 0; planetIndex < planets.length; planetIndex++) {
-            const planet = planets[planetIndex];
-
-            // Extract planet number from the planet title (e.g., "1.1: Planet Title" -> "1.1")
-            const planetNumberMatch = planet.match(/^(\d+\.\d+):/);
-            const planetNumber = planetNumberMatch
-              ? planetNumberMatch[1]
-              : `${index + 1}.${planetIndex + 1}`;
-
-            console.log(
-              `🔄 Star ${index + 1}: Generating Missions for Planet ${planetIndex + 1}:`,
-              planet,
-            );
-
-            // Generate MISSIONS from AI for each PLANET
-            // const missionsResponse = await this.$openai.responses.parse({
-            //   model: "gpt-4o-mini",
-            //   input: [
-            //     { role: "system", content: MissionsSystemPrompt },
-            //     { role: "user", content: `Planet number: ${planetNumber}` },
-            //     { role: "user", content: planets.join("\n") },
-            //     { role: "user", content: planet },
-            //   ],
-            //   text: {
-            //     format: zodTextFormat(MissionsSchema, "missions"),
-            //   },
-            //   store: true,
-            // });
-
-            const missionsResponse = await this.$openai.responses.create({
-              prompt: {
-                id: "pmpt_6868be6c10188190a25b162f4609a8c90e4471babac802c4",
-                version: "5",
-                variables: {
-                  planet_number: planetNumber,
-                  planets_list: planets.join("\n"),
-                  planet: planet,
-                },
-              },
-            });
-
-            // Track token usage
-            this.trackTokenUsage(missionsResponse);
-
-            console.log(
-              `Planet ${index + 1}.${planetIndex + 1} Missions generated ✅. A.I. response:`,
-              missionsResponse,
-            );
-
-            // Parse the output_text JSON string to match the MissionsSchema format
-            let parsedMissionsData;
-            try {
-              const jsonText = missionsResponse.output_text;
-              const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
-              if (!jsonMatch) {
-                throw new Error("No JSON object found in response");
-              }
-              const jsonStr = jsonMatch[0];
-              console.log("Extracted JSON string:", jsonStr);
-              parsedMissionsData = JSON.parse(jsonStr);
-              console.log("Successfully parsed missions JSON:", parsedMissionsData);
-            } catch (error) {
-              console.error("Error parsing missions response:", error);
-              console.log("Raw missions response:", missionsResponse.output_text);
-              throw new Error("Failed to parse missions response into valid JSON format");
-            }
-
-            // Process the response and store it
-            // Add the planet details to the star immediately for real-time display
-            this.$set(
-              this.aiGeneratedGalaxyMap.starDetails[index].planetDetails,
-              planetIndex,
-              parsedMissionsData,
-            );
-          } // end of for loop for all MISSIONS in this PLANET
-        } // end of for loop for all PLANETS in this STAR system
-
-        // Now you have all the star details to work with
-        console.log("All Stars > Planets > Missions Generated ✅✅✅:", this.aiGeneratedGalaxyMap);
-
-        // Calculate and log execution time
-        const endTime = Date.now();
-        const timeString = this.formatExecutionTime(startTime, endTime);
-        console.log(
-          `✅ Galaxy map generation completed in ${timeString} (${endTime - startTime}ms total)`,
-        );
-
-        // Automatically save the galaxy map to DB since it's complete
-        console.log(
-          "🚀 Galaxy map a.i. generation complete, now automatically saving to database...",
-        );
-        await this.saveGalaxyMaptoDB();
-      } catch (error) {
-        // Calculate and log execution time even on error
-        const endTime = Date.now();
-        const timeString = this.formatExecutionTime(startTime, endTime);
-        console.log(
-          `❌ Galaxy map generation failed after ${timeString} (${endTime - startTime}ms total)`,
-        );
-
-        console.error("Error generating galaxy map:", error);
-        this.setSnackbar({
-          show: true,
-          text: "Error generating galaxy map: " + error.message,
-          color: "pink",
-        });
-        // Set loading to false on error so user can retry
-        this.loading = false;
-      }
-    },
     // =========== Save Galaxy Map to DB ===========
     async saveGalaxyMaptoDB() {
       this.loading = true;
@@ -942,315 +739,106 @@ export default {
       this.stopLoadingMessages();
       this.startLoadingMessages();
 
-      let courseDocRef;
-      let previousNodeId = null;
-
       // Start timing
       const startTime = Date.now();
       console.log("🚀 Starting Galaxy saving to database process...");
 
-      // Calculate total planets for progress tracking
-      this.totalPlanets = 0;
-      for (let star of this.aiGeneratedGalaxyMap.starDetails) {
-        this.totalPlanets += star.planets.length;
-      }
+      try {
+        // Calculate total planets for progress tracking
+        this.totalPlanets = 0;
+        for (let star of this.aiGeneratedGalaxyMap.stars) {
+          this.totalPlanets += star.planets.length;
+        }
 
-      this.completedPlanets = 0;
-      const updateProgress = () => {
-        this.completedPlanets++;
-        this.savingProgress = (this.completedPlanets / this.totalPlanets) * 100;
-      };
-
-      const courseData = {
-        title: this.aiGeneratedGalaxyMap.journeyTitle,
-        description: this.aiGeneratedGalaxyMap.journeyDescription,
-        topics: this.aiGeneratedGalaxyMap.starDetails,
-      };
-
-      // DALL-E image generation
-      const imagePrompt = `Create an image that represents: ${courseData.description}`;
-      const generatedImage = await this.$openai.images.generate({
-        model: "dall-e-3",
-        prompt: imagePrompt,
-        n: 1,
-        size: "1024x1024",
-      });
-
-      const downloadAndUploadImage = functions.httpsCallable("downloadAndUploadImage");
-      const imageFileName = `course-images/${Date.now()}-${courseData.title
-        .toLowerCase()
-        .replace(/\s+/g, "-")}.png`;
-      const result = await downloadAndUploadImage({
-        imageUrl: generatedImage.data[0].url,
-        fileName: imageFileName,
-      });
-      const downloadURL = result.data.downloadURL;
-
-      const formattedCourse = {
-        title: courseData.title,
-        description: courseData.description,
-        image: { url: downloadURL, name: imageFileName },
-        mappedBy: {
-          name: this.person.firstName + " " + this.person.lastName,
-          personId: this.person.id,
-        },
-        contentBy: {
-          name: this.person.firstName + " " + this.person.lastName,
-          personId: this.person.id,
-        },
-        status: "drafting",
-        owner: db.collection("people").doc(this.person.id),
-      };
-
-      const stars = courseData.topics;
-
-      console.log("saving Course: " + courseData.title + " to db");
-
-      courseDocRef = await db.collection("courses").add(formattedCourse);
-      await courseDocRef.update({ id: courseDocRef.id, topicTotal: stars.length });
-      this.setCurrentCourseId(courseDocRef.id);
-
-      for (let i = 0; i < stars.length; i++) {
-        const star = stars[i];
-
-        const { x, y } = this.mapLayout === "zigzag" ? this.getZigzag(i) : this.getSpiral(i);
-
-        // create star/topic node
-        const nodeData = {
-          label: star.star,
-          description: star.description,
-          topicCreatedTimestamp: new Date(),
-          x,
-          y,
-          taskTotal: star.planets.length,
-          prerequisites: previousNodeId ? [previousNodeId] : [],
+        this.completedPlanets = 0;
+        const updateProgress = () => {
+          this.completedPlanets++;
+          this.savingProgress = (this.completedPlanets / this.totalPlanets) * 100;
         };
 
-        if (i === 0) nodeData.group = "introduction";
+        // Call the Firebase function to save the galaxy map
+        const result = await saveGalaxyMap(this.aiGeneratedGalaxyMap, "zigzag");
 
-        let mapNodeDocRef;
-        try {
-          // create map node
-          mapNodeDocRef = await db
-            .collection("courses")
-            .doc(courseDocRef.id)
-            .collection("map-nodes")
-            .add(nodeData);
-          await mapNodeDocRef.update({ id: mapNodeDocRef.id });
+        // Calculate and log execution time
+        const endTime = Date.now();
+        const timeString = this.formatExecutionTime(startTime, endTime);
+        console.log(
+          `✅ Galaxy saving to DB completed in ${timeString} (${endTime - startTime}ms total)`,
+        );
+        const cost = this.calculateEstimatedCost();
+        console.log(`💰 Total tokens used: ${this.totalTokensUsed.toLocaleString()}`);
+        console.log(
+          `📊 Token breakdown: Input: ${this.totalInputTokens.toLocaleString()}, Output: ${this.totalOutputTokens.toLocaleString()}`,
+        );
+        console.log(
+          `💵 Estimated cost: $${cost.totalCost} (Input: $${cost.inputCost}, Output: $${cost.outputCost})`,
+        );
 
-          // create star
-          await db
-            .collection("courses")
-            .doc(courseDocRef.id)
-            .collection("topics")
-            .doc(mapNodeDocRef.id)
-            .set({ ...nodeData, id: mapNodeDocRef.id });
-        } catch (nodeError) {
-          console.error("Error creating map node:", nodeError);
-          if (nodeError.code === "already-exists") {
-            console.log("Map node already exists, continuing...");
-            // Try to get the existing node reference
-            const existingNodes = await db
-              .collection("courses")
-              .doc(courseDocRef.id)
-              .collection("map-nodes")
-              .where("label", "==", star.star)
-              .limit(1)
-              .get();
+        this.setSnackbar({
+          show: true,
+          text: `Galaxy created! Tokens: ${this.totalTokensUsed.toLocaleString()} | Cost: $${
+            cost.totalCost
+          }`,
+          color: "baseAccent",
+        });
 
-            if (!existingNodes.empty) {
-              mapNodeDocRef = existingNodes.docs[0].ref;
-            } else {
-              throw nodeError;
-            }
-          } else {
-            throw nodeError;
-          }
-        }
+        // Reset saving state
+        this.isSavingToDB = false;
+        this.savingProgress = 0;
+        this.loading = false;
 
-        // create planets
-        for (let j = 0; j < star.planets.length; j++) {
-          const planetString = star.planets[j];
+        this.$router.push({ name: "GalaxyView", params: { courseId: result.courseId } });
+      } catch (error) {
+        // Calculate and log execution time even on error
+        const endTime = Date.now();
+        const timeString = this.formatExecutionTime(startTime, endTime);
+        console.log(`❌ Galaxy saving failed after ${timeString} (${endTime - startTime}ms total)`);
 
-          // Get planet details from planetDetails array
-          const planetDetail = star.planetDetails ? star.planetDetails[j] : null;
+        console.error("Error saving galaxy:", error);
+        this.setSnackbar({
+          show: true,
+          text:
+            "Error saving galaxy: " + (error instanceof Error ? error.message : "Unknown error"),
+          color: "pink",
+        });
 
-          // Format planet description
-          let formattedDescription = `<h3>DESCRIPTION</h3><p>${
-            planetDetail ? planetDetail.description : "Planet description not available"
-          }</p>`;
-
-          if (planetDetail && planetDetail.missions && planetDetail.missions.length > 0) {
-            formattedDescription += "<h3>ACTIONS</h3><ul>";
-            planetDetail.missions.forEach((mission) => {
-              formattedDescription += `<li>${mission}</li>`;
-            });
-            formattedDescription += "</ul>";
-          }
-
-          const planetData = {
-            title: planetString,
-            description: formattedDescription,
-            submissionRequired: false,
-            submissionInstructions: "",
-            color: "#69a1e2",
-            orderIndex: j,
-            taskCreatedTimestamp: new Date(),
-          };
-          try {
-            // save step to db
-            const taskDocRef = await db
-              .collection("courses")
-              .doc(courseDocRef.id)
-              .collection("topics")
-              .doc(mapNodeDocRef.id)
-              .collection("tasks")
-              .add(planetData);
-
-            // Update the document with its ID
-            await taskDocRef.update({ id: taskDocRef.id });
-
-            console.log("saved Planet: " + planetString + " to db");
-            updateProgress(); // Planet creation completed
-          } catch (taskError) {
-            console.error("Error creating task:", taskError);
-            // If the task already exists, we can continue
-            if (taskError.code === "already-exists") {
-              console.log("Task already exists, continuing...");
-              updateProgress(); // Still count as completed even if already exists
-            } else {
-              throw taskError;
-            }
-          }
-        }
-
-        if (previousNodeId) {
-          try {
-            const edgeDocRef = await db
-              .collection("courses")
-              .doc(courseDocRef.id)
-              .collection("map-edges")
-              .add({ from: previousNodeId, to: mapNodeDocRef.id, dashes: false });
-            await edgeDocRef.update({ id: edgeDocRef.id });
-          } catch (edgeError) {
-            console.error("Error creating edge:", edgeError);
-            if (edgeError.code === "already-exists") {
-              console.log("Edge already exists, continuing...");
-            } else {
-              throw edgeError;
-            }
-          }
-        }
-
-        previousNodeId = mapNodeDocRef.id;
-
-        console.log("saved Star: " + star.star + " to db");
+        // Reset saving state on error
+        this.isSavingToDB = false;
+        this.savingProgress = 0;
+        this.loading = false;
       }
-
-      await this.sendCourseCreatedEmail(
-        this.person.email,
-        this.person.firstName + " " + this.person.lastName,
-        formattedCourse.title,
-        courseDocRef.id,
-      );
-
-      // Calculate and log execution time
-      const endTime = Date.now();
-      const timeString = this.formatExecutionTime(startTime, endTime);
-      console.log(
-        `✅ Galaxy saving to DB completed in ${timeString} (${endTime - startTime}ms total)`,
-      );
-      const cost = this.calculateEstimatedCost();
-      console.log(`💰 Total tokens used: ${this.totalTokensUsed.toLocaleString()}`);
-      console.log(
-        `📊 Token breakdown: Input: ${this.totalInputTokens.toLocaleString()}, Output: ${this.totalOutputTokens.toLocaleString()}`,
-      );
-      console.log(
-        `💵 Estimated cost: $${cost.totalCost} (Input: $${cost.inputCost}, Output: $${cost.outputCost})`,
-      );
-
-      this.setSnackbar({
-        show: true,
-        text: `Galaxy created! Tokens: ${this.totalTokensUsed.toLocaleString()} | Cost: $${
-          cost.totalCost
-        }`,
-        color: "baseAccent",
-      });
-
-      // Reset saving state
-      this.isSavingToDB = false;
-      this.savingProgress = 0;
-      this.loading = false;
-
-      this.$router.push({ name: "GalaxyView", params: { courseId: courseDocRef.id } });
     },
-    async sendCourseCreatedEmail(email, name, courseTitle, courseId) {
-      const sendCourseCreatedEmail = functions.httpsCallable("sendCourseCreatedEmail");
-      return sendCourseCreatedEmail({ email, name, course: courseTitle, courseId });
-    },
-    getSpiral(index, centerX = 0, centerY = 0, radius = 200) {
-      const angle = index * 0.8;
-      const spiralGrowth = 100;
-      const currentRadius = radius + index * spiralGrowth;
-      const x = centerX + currentRadius * Math.cos(angle);
-      const y = centerY + currentRadius * Math.sin(angle);
-      return { x, y };
-    },
-    getZigzag(index, startX = 0, startY = 0, spacing = 400, amplitude = 200) {
-      // Calculate horizontal position (moving right)
-      const x = startX + index * spacing;
 
-      // Calculate vertical position (zigzag pattern)
-      // Even indices go up, odd indices go down
-      const y = startY + (index % 2 === 0 ? amplitude : -amplitude);
-
-      return { x, y };
-    },
     updateTransformedStarDetails() {
       console.log("updating Transformed Star Details...");
       if (
         !this.aiGeneratedGalaxyMap ||
-        !this.aiGeneratedGalaxyMap.starDetails ||
-        !this.aiGeneratedGalaxyMap.starDetails.length
+        !this.aiGeneratedGalaxyMap.stars ||
+        !this.aiGeneratedGalaxyMap.stars.length
       ) {
         this.transformedStarDetails = [];
         return;
       }
-      this.transformedStarDetails = this.aiGeneratedGalaxyMap.starDetails.map(
-        (starDetail, starIndex) => {
-          const starNode = {
-            id: `star-${starIndex}`,
-            name: starIndex + 1 + ": " + starDetail.star,
-            type: "star",
-            children: [],
-          };
-          if (starDetail.planets && starDetail.planets.length > 0) {
-            starNode.children = starDetail.planets.map((planet, planetIndex) => {
-              const planetNode = {
-                id: `star-${starIndex}-planet-${planetIndex}`,
-                name: planet,
-                type: "planet",
-                children: [],
-              };
-              if (
-                starDetail.planetDetails &&
-                starDetail.planetDetails[planetIndex] &&
-                starDetail.planetDetails[planetIndex].missions
-              ) {
-                planetNode.children = starDetail.planetDetails[planetIndex].missions.map(
-                  (mission, missionIndex) => ({
-                    id: `star-${starIndex}-planet-${planetIndex}-mission-${missionIndex}`,
-                    name: mission,
-                    type: "mission",
-                  }),
-                );
-              }
-              return planetNode;
-            });
-          }
-          return starNode;
-        },
-      );
+      this.transformedStarDetails = this.aiGeneratedGalaxyMap.stars.map((star, starIndex) => {
+        const starNode = {
+          id: `star-${starIndex}`,
+          name: starIndex + 1 + ": " + star.title,
+          type: "star",
+          children: [],
+        };
+        if (star.planets && star.planets.length > 0) {
+          starNode.children = star.planets.map((planet, planetIndex) => {
+            const planetNode = {
+              id: `star-${starIndex}-planet-${planetIndex}`,
+              name: planet.title,
+              type: "planet",
+              children: [],
+            };
+            return planetNode;
+          });
+        }
+        return starNode;
+      });
       console.log(this.transformedStarDetails);
     },
     getAllNodeIds(items) {
@@ -1459,59 +1047,6 @@ export default {
   100% {
     transform: translateY(0);
   }
-}
-
-.layout-options {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin-top: 20px;
-}
-
-.layout-option {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-  border: 2px solid var(--v-missionAccent-base);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  min-width: 100px;
-  background-color: var(--v-background-base);
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-
-  &.selected {
-    border-color: var(--v-baseAccent-base);
-    background-color: rgba(var(--v-baseAccent-base), 0.1);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(var(--v-baseAccent-base), 0.3);
-  }
-}
-
-.layout-icon {
-  font-size: 2rem;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  .v-icon {
-    font-size: 2rem;
-    color: var(--v-missionAccent-base);
-  }
-}
-
-.layout-label {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  color: var(--v-missionAccent-base);
-  font-weight: 500;
-  text-align: center;
 }
 
 // Fix scrolling issues with textareas
