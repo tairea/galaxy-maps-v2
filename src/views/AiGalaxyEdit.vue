@@ -102,12 +102,17 @@
                 active-color="missionAccent"
               >
                 <template v-slot:label="{ item }">
-                  <span class="treeview-label">
-                    <span v-if="item.type === 'star'" class="star-emoji">⭐</span>
-                    <span v-else-if="item.type === 'planet'" class="planet-emoji">🪐</span>
-                    <span v-else-if="item.type === 'mission'" class="mission-emoji">🎯</span>
-                    {{ item.name }}
-                  </span>
+                  <div class="treeview-content">
+                    <span class="treeview-label">
+                      <span v-if="item.type === 'star'" class="star-emoji">⭐</span>
+                      <span v-else-if="item.type === 'planet'" class="planet-emoji">🪐</span>
+                      <span v-else-if="item.type === 'mission'" class="mission-emoji">🎯</span>
+                      {{ item.name }}
+                    </span>
+                    <div v-if="item.description" class="treeview-description">
+                      {{ item.description }}
+                    </div>
+                  </div>
                 </template>
               </v-treeview>
             </div>
@@ -934,6 +939,7 @@ export default {
         const starNode = {
           id: `star[${starIndex}]`,
           name: star.title,
+          description: star.description,
           type: "star",
           children: [],
         };
@@ -943,6 +949,7 @@ export default {
             const planetNode = {
               id: `star[${starIndex}].planet[${planetIndex}]`,
               name: planet.title,
+              description: planet.description,
               type: "planet",
               children: [],
             };
@@ -951,6 +958,7 @@ export default {
               planetNode.children = planet.missions.map((mission, missionIndex) => ({
                 id: `star[${starIndex}].planet[${planetIndex}].mission[${missionIndex}]`,
                 name: mission.title,
+                description: mission.description,
                 type: "mission",
               }));
             }
@@ -1283,6 +1291,27 @@ export default {
           .mission-emoji {
             font-size: 0.8rem;
             filter: drop-shadow(0 0 2px rgba(255, 69, 0, 0.6));
+          }
+
+          .treeview-content {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+          }
+
+          .treeview-description {
+            font-size: 0.65rem;
+            color: var(--v-missionAccent-base);
+            opacity: 0.7;
+            font-weight: 400;
+            line-height: 1.3;
+            margin-bottom: 5px;
+            margin-left: 1.9rem;
+            word-wrap: break-word;
+            white-space: normal;
+            overflow-wrap: break-word;
+            max-width: 280px;
+            width: 100%;
           }
         }
       }
