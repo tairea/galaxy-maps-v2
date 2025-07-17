@@ -24,7 +24,9 @@
             class="mb-2"
           ></v-progress-linear>
           <p class="saving-progress-text">
-            {{ Math.round(savingProgress) }}% Complete ({{ completedPlanets }}/{{ totalPlanets }}
+            Saving {{ Math.round(savingProgress) }}% Complete ({{ completedPlanets }}/{{
+              totalPlanets
+            }}
             planets)
           </p>
         </div>
@@ -34,14 +36,14 @@
         </p>
 
         <!-- TOKEN USAGE -->
-        <p class="token-usage overline mt-2">
+        <p class="token-usage overline mt-2" v-if="!isSavingToDB">
           Total Tokens: {{ totalTokensUsed.toLocaleString() }}
         </p>
-        <p class="token-breakdown overline mt-2">
+        <p class="token-breakdown overline mt-2" v-if="!isSavingToDB">
           Input: {{ totalInputTokens.toLocaleString() }} | Output:
           {{ totalOutputTokens.toLocaleString() }}
         </p>
-        <p class="token-breakdown overline mt-2">
+        <p class="token-breakdown overline mt-2" v-if="!isSavingToDB">
           Est. cost: ${{
             (this.totalInputTokens / 1000000) * 0.15 + (this.totalOutputTokens / 1000000) * 0.6
           }}
@@ -52,10 +54,6 @@
     <!-- <div class="left-section" :class="{ hide: hideLeftPanelsFlag }"> -->
     <div id="left-section" data-v-step="1">
       <GalaxyInfo :course="boundCourse" :teacher="teacher" :draft="draft" />
-      <div class="mt-6">
-        <!-- <PublishGalaxy v-if="showPublish" :course="boundCourse" :courseTasks="courseTasks" /> -->
-        <v-btn @click="createGalaxy">Create Galaxy</v-btn>
-      </div>
       <BackButton :toPath="'/'" />
     </div>
 
@@ -163,6 +161,8 @@
                 <v-icon left> {{ mdiRobotExcited }} </v-icon>
                 REFINE GALAXY MAP
               </v-btn>
+              <!-- <PublishGalaxy v-if="showPublish" :course="boundCourse" :courseTasks="courseTasks" /> -->
+              <v-btn @click="saveGalaxyToDB" outlined color="baseAccent">Save Galaxy</v-btn>
             </div>
           </div>
         </div>
@@ -170,6 +170,14 @@
     </div>
     <!--==== Right section ====-->
     <!-- <div id="right-section"></div> -->
+
+    <!-- Layout Selection Dialog -->
+    <LayoutSelectionDialog
+      :show-dialog="showLayoutDialog"
+      :loading="loading"
+      @cancel="cancelLayoutSelection"
+      @confirm="confirmLayoutSelection"
+    />
 
     <!-- Prompt Dialog -->
     <!-- <PromptDialog v-if="promptDialog" :context="promptContext" /> -->
@@ -182,6 +190,7 @@ import LoadingSpinner from "@/components/Reused/LoadingSpinner.vue";
 import GalaxyInfo from "@/components/GalaxyView/GalaxyInfo.vue";
 import PublishGalaxy from "@/components/GalaxyView/PublishGalaxy.vue";
 import BackButton from "@/components/Reused/BackButton.vue";
+import LayoutSelectionDialog from "@/components/Dialogs/LayoutSelectionDialog.vue";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
 import Network from "@/vue2vis/Network.vue";
@@ -189,6 +198,7 @@ import "vis-network/styles/vis-network.css";
 import { Planet } from "@/lib/planet";
 import { zodTextFormat } from "openai/helpers/zod";
 import { StarsAndPlanetsResponseSchema } from "@/lib/schemas";
+import { saveGalaxyMap } from "@/lib/ff";
 // import PromptDialog from "@/components/Dialogs/PromptDialog.vue";
 
 export default {
@@ -198,6 +208,7 @@ export default {
     GalaxyInfo,
     BackButton,
     PublishGalaxy,
+    LayoutSelectionDialog,
     // PromptDialog,
     Network,
   },
@@ -389,6 +400,9 @@ export default {
 
       // Treeview observer
       treeviewObserver: null,
+
+      // Layout selection dialog
+      showLayoutDialog: false,
     };
   },
   watch: {
@@ -511,7 +525,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["setAiGalaxyEditData", "clearAiGalaxyEditData"]),
+    ...mapActions(useRootStore, ["setAiGalaxyEditData", "clearAiGalaxyEditData", "setSnackbar"]),
     removeChip(item) {
       this.activeGalaxyItems = this.activeGalaxyItems.filter((i) => i !== item);
 
@@ -1128,6 +1142,86 @@ export default {
       const minutes = Math.floor(totalTimeMs / 60000);
       const seconds = Math.floor((totalTimeMs % 60000) / 1000);
       return `${minutes}m${seconds}s`;
+    },
+    saveGalaxyToDB() {
+      // Show layout selection dialog instead of immediately saving
+      this.showLayoutDialog = true;
+    },
+
+    // Layout dialog methods
+    cancelLayoutSelection() {
+      this.showLayoutDialog = false;
+    },
+
+    async confirmLayoutSelection(selectedLayout) {
+      this.showLayoutDialog = false;
+
+      this.loading = true;
+      this.isSavingToDB = true;
+      this.savingProgress = 0;
+
+      // Restart loading messages with saving messages
+      this.stopLoadingMessages();
+      this.startLoadingMessages();
+
+      // Start timing
+      const startTime = Date.now();
+      console.log("🚀 Starting Galaxy saving to database process...");
+
+      let result = null;
+
+      try {
+        // Calculate total planets for progress tracking
+        this.totalPlanets = 0;
+        for (let star of this.aiGeneratedGalaxyMap.stars) {
+          this.totalPlanets += star.planets.length;
+        }
+
+        this.completedPlanets = 0;
+        const updateProgress = () => {
+          this.completedPlanets++;
+          this.savingProgress = (this.completedPlanets / this.totalPlanets) * 100;
+        };
+
+        // Call the Firebase function to save the galaxy map with selected layout
+        result = await saveGalaxyMap(this.aiGeneratedGalaxyMap, selectedLayout);
+
+        // Calculate and log execution time
+        const endTime = Date.now();
+        const timeString = this.formatExecutionTime(startTime, endTime);
+        console.log(
+          `✅ Galaxy saving to DB completed in ${timeString} (${endTime - startTime}ms total)`,
+        );
+
+        this.setSnackbar({
+          show: true,
+          text: `Galaxy saved successfully! Course ID: ${result.courseId}`,
+          color: "baseAccent",
+        });
+      } catch (error) {
+        // Calculate and log execution time even on error
+        const endTime = Date.now();
+        const timeString = this.formatExecutionTime(startTime, endTime);
+        console.log(`❌ Galaxy saving failed after ${timeString} (${endTime - startTime}ms total)`);
+
+        console.error("Error saving galaxy:", error);
+        this.setSnackbar({
+          show: true,
+          text:
+            "Error saving galaxy: " + (error instanceof Error ? error.message : "Unknown error"),
+          color: "pink",
+        });
+      } finally {
+        // Reset saving state
+        this.isSavingToDB = false;
+        this.savingProgress = 0;
+        this.loading = false;
+
+        // Navigate to the created galaxy if save was successful
+        if (result && result.courseId) {
+          this.$router.push({ name: "GalaxyView", params: { courseId: result.courseId } });
+        }
+      }
     },
   },
 };

@@ -615,3 +615,20 @@ export const generateGalaxyMap = async (
   const result = await generateGalaxyMapFunction(data);
   return result.data;
 };
+
+// Save AI-generated Galaxy Map to Database
+export const saveGalaxyMap = async (
+  galaxyMap: any,
+  mapLayout: string = "zigzag",
+): Promise<{
+  courseId: string;
+  totalPlanets: number;
+}> => {
+  const data = {
+    galaxyMap,
+    mapLayout,
+  };
+  const saveGalaxyMapFunction = functions.httpsCallable("saveGalaxyMap");
+  const result = await saveGalaxyMapFunction(data);
+  return result.data;
+};

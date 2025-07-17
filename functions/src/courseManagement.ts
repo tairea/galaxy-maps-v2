@@ -1741,3 +1741,266 @@ async function removeStudentFromCourse(courseId: string, personId: string) {
     },
   };
 }
+
+/**
+ * Save AI-generated galaxy map to database
+ */
+export const saveGalaxyMapHttpsEndpoint = runWith({
+  timeoutSeconds: 540, // 9 minutes timeout
+  memory: "1GB",
+}).https.onCall(async (data, context) => {
+  requireAuthenticated(context);
+
+  const { galaxyMap, mapLayout } = data;
+  if (!galaxyMap) {
+    throw new HttpsError("invalid-argument", "Missing required field: galaxyMap");
+  }
+
+  const personId = context.auth.uid;
+  const result = await saveGalaxyMap(galaxyMap, mapLayout, personId);
+
+  return result;
+});
+
+/**
+ * Save AI-generated galaxy map to database
+ */
+async function saveGalaxyMap(
+  galaxyMap: Record<string, unknown>,
+  mapLayout: string = "zigzag",
+  personId: string,
+) {
+  // Load person from ID
+  const personDoc = await db.collection("people").doc(personId).get();
+  const person = personDoc.data();
+
+  if (person == null) {
+    throw new HttpsError("not-found", `Person not found: ${personId}`);
+  }
+
+  let previousNodeId = null;
+
+  // Calculate total planets for progress tracking
+  let totalPlanets = 0;
+  for (const star of galaxyMap.stars as Array<{ planets: Array<unknown> }>) {
+    totalPlanets += star.planets.length;
+  }
+
+  const courseData = {
+    title: galaxyMap.title as string,
+    description: galaxyMap.description as string,
+    stars: galaxyMap.stars as Array<Record<string, unknown>>,
+  };
+
+  // Create the course document
+  const formattedCourse = {
+    title: courseData.title,
+    description: courseData.description,
+    image: { url: "", name: "" }, // Will be updated later if needed
+    mappedBy: {
+      name: person.firstName + " " + person.lastName,
+      personId: person.id,
+    },
+    contentBy: {
+      name: person.firstName + " " + person.lastName,
+      personId: person.id,
+    },
+    status: "drafting",
+    owner: db.collection("people").doc(personId),
+  };
+
+  const stars = courseData.stars;
+
+  console.log("saving Course: " + courseData.title + " to db");
+
+  const courseDocRef = await db.collection("courses").add(formattedCourse);
+  await courseDocRef.update({ id: courseDocRef.id, topicTotal: stars.length });
+
+  // Create stars/topics and planets/tasks
+  for (let i = 0; i < stars.length; i++) {
+    const star = stars[i] as {
+      title: string;
+      description: string;
+      planets: Array<Record<string, unknown>>;
+    };
+
+    const { x, y } = mapLayout === "zigzag" ? getZigzag(i) : getSpiral(i);
+
+    // create star/topic node
+    const nodeData: Record<string, unknown> = {
+      label: star.title,
+      description: star.description,
+      topicCreatedTimestamp: new Date(),
+      x,
+      y,
+      taskTotal: star.planets.length,
+      prerequisites: previousNodeId ? [previousNodeId] : [],
+    };
+
+    if (i === 0) nodeData.group = "introduction";
+
+    let mapNodeDocRef;
+    try {
+      // create map node
+      mapNodeDocRef = await db
+        .collection("courses")
+        .doc(courseDocRef.id)
+        .collection("map-nodes")
+        .add(nodeData);
+      await mapNodeDocRef.update({ id: mapNodeDocRef.id });
+
+      // create star
+      await db
+        .collection("courses")
+        .doc(courseDocRef.id)
+        .collection("topics")
+        .doc(mapNodeDocRef.id)
+        .set({ ...nodeData, id: mapNodeDocRef.id });
+    } catch (nodeError: unknown) {
+      console.error("Error creating map node:", nodeError);
+      if ((nodeError as { code?: string }).code === "already-exists") {
+        console.log("Map node already exists, continuing...");
+        // Try to get the existing node reference
+        const existingNodes = await db
+          .collection("courses")
+          .doc(courseDocRef.id)
+          .collection("map-nodes")
+          .where("label", "==", star.title)
+          .limit(1)
+          .get();
+
+        if (!existingNodes.empty) {
+          mapNodeDocRef = existingNodes.docs[0].ref;
+        } else {
+          throw nodeError;
+        }
+      } else {
+        throw nodeError;
+      }
+    }
+
+    // create planets
+    for (let j = 0; j < star.planets.length; j++) {
+      const planet = star.planets[j] as { title: string; description: string };
+
+      const planetData = {
+        title: planet.title,
+        description: planet.description,
+        submissionRequired: false,
+        submissionInstructions: "",
+        color: "#69a1e2",
+        orderIndex: j,
+        taskCreatedTimestamp: new Date(),
+      };
+      try {
+        // save step to db
+        const taskDocRef = await db
+          .collection("courses")
+          .doc(courseDocRef.id)
+          .collection("topics")
+          .doc(mapNodeDocRef.id)
+          .collection("tasks")
+          .add(planetData);
+
+        // Update the document with its ID
+        await taskDocRef.update({ id: taskDocRef.id });
+
+        console.log("saved Planet: " + planet.title + " to db");
+      } catch (taskError: unknown) {
+        console.error("Error creating task:", taskError);
+        // If the task already exists, we can continue
+        if ((taskError as { code?: string }).code === "already-exists") {
+          console.log("Task already exists, continuing...");
+        } else {
+          throw taskError;
+        }
+      }
+    }
+
+    if (previousNodeId) {
+      try {
+        const edgeDocRef = await db
+          .collection("courses")
+          .doc(courseDocRef.id)
+          .collection("map-edges")
+          .add({ from: previousNodeId, to: mapNodeDocRef.id, dashes: false });
+        await edgeDocRef.update({ id: edgeDocRef.id });
+      } catch (edgeError: unknown) {
+        console.error("Error creating edge:", edgeError);
+        if ((edgeError as { code?: string }).code === "already-exists") {
+          console.log("Edge already exists, continuing...");
+        } else {
+          throw edgeError;
+        }
+      }
+    }
+
+    previousNodeId = mapNodeDocRef.id;
+
+    console.log("saved Star: " + star.title + " to db");
+  }
+
+  // Send course created email
+  await sendCourseCreatedEmail(
+    person.email as string,
+    person.firstName + " " + person.lastName,
+    formattedCourse.title,
+    courseDocRef.id,
+  );
+
+  return {
+    courseId: courseDocRef.id,
+    totalPlanets,
+  };
+}
+
+/**
+ * Get zigzag position for map layout
+ */
+function getZigzag(
+  index: number,
+  startX: number = 0,
+  startY: number = 0,
+  spacing: number = 400,
+  amplitude: number = 200,
+) {
+  // Calculate horizontal position (moving right)
+  const x = startX + index * spacing;
+
+  // Calculate vertical position (zigzag pattern)
+  // Even indices go up, odd indices go down
+  const y = startY + (index % 2 === 0 ? amplitude : -amplitude);
+
+  return { x, y };
+}
+
+/**
+ * Get spiral position for map layout
+ */
+function getSpiral(index: number, centerX: number = 0, centerY: number = 0, radius: number = 200) {
+  const angle = index * 0.8;
+  const spiralGrowth = 100;
+  const currentRadius = radius + index * spiralGrowth;
+  const x = centerX + currentRadius * Math.cos(angle);
+  const y = centerY + currentRadius * Math.sin(angle);
+  return { x, y };
+}
+
+/**
+ * Send course created email
+ */
+async function sendCourseCreatedEmail(
+  email: string,
+  name: string,
+  courseTitle: string,
+  courseId: string,
+) {
+  // For now, just log the email details
+  // TODO: Implement proper email sending
+  console.log("Course created email would be sent to:", {
+    email,
+    name,
+    course: courseTitle,
+    courseId,
+  });
+}
