@@ -165,6 +165,7 @@ declare module 'vue' {
     VTabsItems: typeof import('vuetify/lib')['VTabsItems']
     VTextarea: typeof import('vuetify/lib')['VTextarea']
     VTextField: typeof import('vuetify/lib')['VTextField']
+    VTextInput: typeof import('vuetify/lib')['VTextInput']
     VToolbar: typeof import('vuetify/lib')['VToolbar']
     VTooltip: typeof import('vuetify/lib')['VTooltip']
     VTour: typeof import('vue-tour')['VTour']

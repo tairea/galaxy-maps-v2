@@ -100,19 +100,61 @@
                 active-color="missionAccent"
               >
                 <template v-slot:label="{ item }">
-                  <div class="treeview-content">
-                    <span class="treeview-label">
-                      <span v-if="item.type === 'star'" class="star-emoji">⭐</span>
-                      <span v-else-if="item.type === 'planet'" class="planet-emoji">🪐</span>
-                      <span v-else-if="item.type === 'mission'" class="mission-emoji">🎯</span>
-                      {{ item.name }}
+                  <span class="treeview-label">
+                    <span v-if="item.type === 'star'" class="star-emoji">⭐</span>
+                    <span v-else-if="item.type === 'planet'" class="planet-emoji">🪐</span>
+                    <span v-else-if="item.type === 'mission'" class="mission-emoji">🎯</span>
+                    
+                    <!-- Show input when editing, otherwise show name -->
+                    <span v-if="editingItem && editingItem.id === item.id" class="item-name">
+                      <v-text-field
+                        v-model="editingValue"
+                        dense
+                        hide-details
+                        class="edit-input"
+                        @keyup.enter="saveEdit"
+                        @keyup.esc="cancelEdit"
+                        @blur="saveEdit"
+                        ref="editInput"
+                      />
                     </span>
+                    <span v-else class="item-name">{{ item.name }}</span>
                     <div v-if="item.description" class="treeview-description">
                       {{ item.description }}
                     </div>
-                  </div>
+                    
+                    <v-icon
+                      class="edit-icon"
+                      small
+                      color="missionAccent"
+                      @click.stop="editItem(item)"
+                    >
+                      {{ mdiPencil }}
+                    </v-icon>
+                    <v-icon
+                      class="delete-icon"
+                      small
+                      color="error"
+                      @click.stop="deleteItem(item)"
+                    >
+                      {{ mdiDelete }}
+                    </v-icon>
+                  </span>
                 </template>
               </v-treeview>
+              
+              <!-- Add button that appears on hover -->
+              <v-btn
+                class="add-button mt-10"
+                outlined
+                color="missionAccent"
+                small
+                @click="addToStar(starIndex)"
+                title="Add new item to this star"
+              >
+                <v-icon class="pr-2" small>{{ mdiPlus }}</v-icon>
+                add planet
+              </v-btn>
             </div>
           </div>
         </div>
@@ -134,7 +176,7 @@
                 {{ chipDisplayNames[item] }}
               </v-chip>
             </div>
-            <v-textarea
+            <v-text-input
               v-model="galaxyRefineUserInput"
               :dark="dark"
               :light="!dark"
@@ -185,7 +227,7 @@
 </template>
 
 <script>
-import { mdiRobotExcited } from "@mdi/js";
+import { mdiRobotExcited, mdiPencil, mdiPlus, mdiDelete } from "@mdi/js";
 import LoadingSpinner from "@/components/Reused/LoadingSpinner.vue";
 import GalaxyInfo from "@/components/GalaxyView/GalaxyInfo.vue";
 import PublishGalaxy from "@/components/GalaxyView/PublishGalaxy.vue";
@@ -221,6 +263,9 @@ export default {
       promptContext: null,
       courseTasks: [],
       mdiRobotExcited,
+      mdiPencil,
+      mdiPlus,
+      mdiDelete,
       // Loading and progress tracking
       isSavingToDB: false,
       savingProgress: 0,
@@ -240,6 +285,10 @@ export default {
       activeGalaxyItems: [],
       treeviewActiveItems: {}, // Track active items for each treeview
       updateTimeout: null, // Debounce updates to prevent rapid toggling
+      
+      // Inline editing
+      editingItem: null, // Track which item is being edited
+      editingValue: "", // Store the current editing value
 
       // Network data
       nodesToDisplay: [],
@@ -1223,6 +1272,138 @@ export default {
         }
       }
     },
+
+    // Edit an item
+    editItem(item) {
+      console.log("edit", item);
+      this.editingItem = item;
+      this.editingValue = item.name;
+      console.log("editingItem", this.editingItem);
+      
+      // Focus the input field after it's rendered
+      this.$nextTick(() => {
+        if (this.$refs.editInput && this.$refs.editInput[0]) {
+          this.$refs.editInput[0].focus();
+          // Select all text for easy replacement
+          this.$refs.editInput[0].$el.querySelector('input').select();
+        }
+      });
+    },
+    saveEdit() {
+      if (this.editingItem && this.editingValue.trim()) {
+        // Update the item name
+        this.editingItem.name = this.editingValue.trim();
+        
+        // Update the original data structure
+        this.updateOriginalData(this.editingItem);
+        
+        // Exit editing mode
+        this.cancelEdit();
+      }
+    },
+    cancelEdit() {
+      this.editingItem = null;
+      this.editingValue = "";
+    },
+    updateOriginalData(editedItem) {
+      // Parse the item ID to find and update the original data
+      const idMatch = editedItem.id.match(/^star\[(\d+)\]\.planet\[(\d+)\]\.mission\[(\d+)\]$/);
+      if (idMatch) {
+        // Mission
+        const [_, starIndex, planetIndex, missionIndex] = idMatch;
+        this.aiGeneratedGalaxyMap.stars[starIndex].planets[planetIndex].missions[missionIndex].title = editedItem.name;
+      } else {
+        const planetMatch = editedItem.id.match(/^star\[(\d+)\]\.planet\[(\d+)\]$/);
+        if (planetMatch) {
+          // Planet
+          const [_, starIndex, planetIndex] = planetMatch;
+          this.aiGeneratedGalaxyMap.stars[starIndex].planets[planetIndex].title = editedItem.name;
+        } else {
+          const starMatch = editedItem.id.match(/^star\[(\d+)\]$/);
+          if (starMatch) {
+            // Star
+            const [_, starIndex] = starMatch;
+            this.aiGeneratedGalaxyMap.stars[starIndex].title = editedItem.name;
+          }
+        }
+      }
+      
+      // Update the store
+      this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
+    },
+    
+    // Helper method to find an item by ID in the transformed star details
+    findItemById(itemId) {
+      const findInItems = (items) => {
+        for (const item of items) {
+          if (item.id === itemId) {
+            return item;
+          }
+          if (item.children && item.children.length > 0) {
+            const found = findInItems(item.children);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+      
+      return findInItems(this.transformedStarDetails);
+    },
+    
+    // Add new item to a star
+    addToStar(starIndex) {
+      console.log(`Adding new item to star ${starIndex}`);
+      
+      // Add new planet to the star
+      this.aiGeneratedGalaxyMap.stars[starIndex].planets.push({
+        title: "New Planet",
+        description: "New Planet Description",
+        missions: [],
+      });
+      
+      // Get the index of the newly added planet
+      const newPlanetIndex = this.aiGeneratedGalaxyMap.stars[starIndex].planets.length - 1;
+      
+      // Update the transformed star details to reflect the new planet
+      this.updateTransformedStarDetails();
+      
+      // Set the new planet to editing mode
+      this.$nextTick(() => {
+        const newPlanetId = `star[${starIndex}].planet[${newPlanetIndex}]`;
+        const newPlanetItem = this.findItemById(newPlanetId);
+        
+        if (newPlanetItem) {
+          this.editItem(newPlanetItem);
+        }
+      });
+      
+      // Update the store
+      this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
+    },
+    
+    // Delete an item (currently only planets)
+    deleteItem(item) {
+      console.log("delete", item);
+      
+      if (item.type === 'planet') {
+        // Parse the planet ID to get star and planet indices
+        const planetMatch = item.id.match(/^star\[(\d+)\]\.planet\[(\d+)\]$/);
+        if (planetMatch) {
+          const [_, starIndex, planetIndex] = planetMatch;
+          
+          // Remove the planet from the original data structure
+          this.aiGeneratedGalaxyMap.stars[starIndex].planets.splice(planetIndex, 1);
+          
+          // Update the transformed star details to reflect the deletion
+          this.updateTransformedStarDetails();
+          
+          // Update the store
+          this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
+          
+          console.log(`Deleted planet ${planetIndex} from star ${starIndex}`);
+        }
+      }
+    },
   },
 };
 </script>
@@ -1310,15 +1491,17 @@ export default {
         overflow-x: auto;
         margin-top: -100px;
         // border: 1px solid green;
+        // Prevent touchpad two-finger swipe gestures
 
-        .star-treeview-item {
-          flex: 0 0 auto;
-          width: auto;
-          // padding: 15px;
-          background-color: rgba(var(--v-background-base), 0.9);
-          border-radius: 8px;
-          height: auto;
-          // border: 1px solid pink;
+                  .star-treeview-item {
+            flex: 0 0 auto;
+            width: auto;
+            // padding: 15px;
+            background-color: rgba(var(--v-background-base), 0.9);
+            border-radius: 8px;
+            height: auto;
+            // border: 1px solid pink;
+            position: relative;
 
           .star-title {
             font-size: 0.9rem;
@@ -1370,6 +1553,53 @@ export default {
             line-height: 1.3;
             word-wrap: break-word;
             cursor: pointer; // Add pointer cursor to indicate clickable items
+            position: relative;
+            width: 100%;
+            justify-content: space-between;
+          }
+
+          .item-name {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+          }
+
+          .edit-icon,
+          .delete-icon {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            margin-left: 4px;
+            flex-shrink: 0;
+          }
+
+          .treeview-label:hover .edit-icon,
+          .treeview-label:hover .delete-icon {
+            opacity: 1;
+          }
+
+          .edit-input {
+            width: 210px;
+            min-width: 210px;
+            font-size: 0.72rem;
+            
+            .v-input__control {
+              min-height: auto;
+            }
+            
+            .v-input__slot {
+              min-height: auto;
+              padding: 0;
+            }
+            
+            .v-text-field__slot {
+              input {
+                font-size: 0.75rem;
+                color: var(--v-missionAccent-base);
+                font-weight: 500;
+                padding: 2px 8px;
+              }
+            }
           }
 
           .star-emoji {
@@ -1406,6 +1636,29 @@ export default {
             overflow-wrap: break-word;
             max-width: 280px;
             width: 100%;
+          }
+          
+          .add-button {
+            position: relative;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            z-index: 10;
+            text-transform: lowercase;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+
+            &:hover {
+              transform: translateX(-50%) translateY(-2px);
+            }
+          }
+
+          &:hover .add-button {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
           }
         }
       }
