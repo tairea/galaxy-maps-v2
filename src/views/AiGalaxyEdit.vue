@@ -4,15 +4,7 @@
     <div v-if="loading" class="loading-overlay">
       <div class="loading-content" style="width: 100%">
         <!-- LOADING INDICATOR -->
-        <v-progress-circular
-          v-if="!isSavingToDB"
-          indeterminate
-          size="50"
-          color="galaxyAccent"
-          class="mb-4"
-        >
-          <v-icon color="galaxyAccent" size="24" class="robot-dance">{{ mdiRobotExcited }}</v-icon>
-        </v-progress-circular>
+        <RobotLoadingSpinner v-if="!isSavingToDB" />
 
         <!-- PROGRESS BAR FOR DATABASE SAVING -->
         <div v-if="isSavingToDB" class="saving-progress-container">
@@ -82,82 +74,125 @@
               :key="`star-${starIndex}`"
               class="star-treeview-item"
             >
-              <!-- <h4 class="star-title">{{ star.name }}</h4> -->
-              <v-treeview
-                :items="[star]"
-                :value="expandedNodes"
-                :active="treeviewActiveItems[starIndex] || []"
-                item-key="id"
-                class="galaxy-treeview"
-                dense
-                @update:value="updateExpandedNodes"
-                @update:active="(newValue) => updateActiveGalaxyItems(newValue, starIndex)"
-                hoverable
-                activatable
-                multiple-active
-                open-all
-                color="missionAccent"
-                active-color="missionAccent"
-              >
-                <template v-slot:label="{ item }">
-                  <span class="treeview-label">
-                    <span v-if="item.type === 'star'" class="star-emoji">⭐</span>
-                    <span v-else-if="item.type === 'planet'" class="planet-emoji">🪐</span>
-                    <span v-else-if="item.type === 'mission'" class="mission-emoji">🎯</span>
-                    
-                    <!-- Show input when editing, otherwise show name -->
-                    <span v-if="editingItem && editingItem.id === item.id" class="item-name">
-                      <v-text-field
-                        v-model="editingValue"
-                        dense
-                        hide-details
-                        class="edit-input"
-                        @keyup.enter="saveEdit"
-                        @keyup.esc="cancelEdit"
-                        @blur="saveEdit"
-                        ref="editInput"
-                      />
-                    </span>
-                    <span v-else class="item-name">{{ item.name }}</span>
-                    <div v-if="item.description" class="treeview-description">
-                      {{ item.description }}
+              <div>
+                <!-- <h4 class="star-title">{{ star.name }}</h4> -->
+                <v-treeview
+                  :items="[star]"
+                  :value="expandedNodes"
+                  :active="treeviewActiveItems[starIndex] || []"
+                  item-key="id"
+                  class="galaxy-treeview"
+                  dense
+                  @update:value="updateExpandedNodes"
+                  @update:active="(newValue) => updateActiveGalaxyItems(newValue, starIndex)"
+                  hoverable
+                  activatable
+                  multiple-active
+                  open-all
+                  color="missionAccent"
+                  active-color="missionAccent"
+                >
+                  <template v-slot:label="{ item }">
+                    <div class="treeview-label">
+                      <div class="item-header">
+                        <span v-if="item.type === 'star'" class="star-emoji">⭐</span>
+                        <span v-else-if="item.type === 'planet'" class="planet-emoji">🪐</span>
+                        <span v-else-if="item.type === 'mission'" class="mission-emoji">🎯</span>
+
+                        <!-- Show input when editing, otherwise show name -->
+                        <span v-if="editingItem && editingItem.id === item.id" class="item-name">
+                          <v-text-field
+                            v-model="editingValue"
+                            dense
+                            hide-details
+                            class="edit-input"
+                            :placeholder="getEditPlaceholder(item)"
+                            @keyup.enter="saveEdit"
+                            @keyup.esc="cancelEdit"
+                            @blur="saveEdit"
+                            ref="editInput"
+                          />
+                        </span>
+                        <span v-else class="item-name">{{ item.name }}</span>
+
+                        <v-icon
+                          class="edit-icon"
+                          small
+                          :color="
+                            editingItem && editingItem.id === item.id
+                              ? 'baseAccent'
+                              : 'missionAccent'
+                          "
+                          @click.stop="
+                            editingItem && editingItem.id === item.id
+                              ? updateDescriptionWithAI(item)
+                              : editItem(item)
+                          "
+                          :class="{
+                            'updating-description':
+                              updatingDescription &&
+                              updatingDescriptionItem &&
+                              updatingDescriptionItem.id === item.id,
+                          }"
+                        >
+                          {{ editingItem && editingItem.id === item.id ? mdiCheck : mdiPencil }}
+                        </v-icon>
+                        <v-icon
+                          class="delete-icon"
+                          small
+                          color="error"
+                          @click.stop="deleteItem(item)"
+                        >
+                          {{ mdiDelete }}
+                        </v-icon>
+                      </div>
+                      <div
+                        v-if="item.description || isGeneratingDescriptionForItem(item)"
+                        class="treeview-description"
+                      >
+                        <RobotLoadingSpinner
+                          v-if="isGeneratingDescriptionForItem(item)"
+                          size="30"
+                          color="galaxyAccent"
+                          iconSize="15"
+                        />
+                        <span v-else>{{ item.description }}</span>
+                      </div>
                     </div>
-                    
-                    <v-icon
-                      class="edit-icon"
-                      small
-                      color="missionAccent"
-                      @click.stop="editItem(item)"
-                    >
-                      {{ mdiPencil }}
-                    </v-icon>
-                    <v-icon
-                      class="delete-icon"
-                      small
-                      color="error"
-                      @click.stop="deleteItem(item)"
-                    >
-                      {{ mdiDelete }}
-                    </v-icon>
-                  </span>
-                </template>
-              </v-treeview>
-              
-              <!-- Add button that appears on hover -->
-              <v-btn
-                class="add-button mt-10"
-                outlined
-                color="missionAccent"
-                small
-                @click="addToStar(starIndex)"
-                title="Add new item to this star"
-              >
-                <v-icon class="pr-2" small>{{ mdiPlus }}</v-icon>
-                add planet
-              </v-btn>
+                  </template>
+                </v-treeview>
+
+                <!-- Add planet on hover -->
+                <v-btn
+                  class="add-button mt-10"
+                  outlined
+                  color="missionAccent"
+                  small
+                  @click="addPlanetToStar(starIndex)"
+                  title="Add new item to this star"
+                >
+                  <v-icon class="pa-0" small>{{ mdiPlus }}</v-icon>
+                </v-btn>
+              </div>
+
+              <!-- Add star button -->
+              <div class="add-star-button">
+                <v-btn
+                  outlined
+                  color="missionAccent"
+                  small
+                  class="star-button pa-0"
+                  @click="addStar(starIndex)"
+                >
+                  <v-icon class="pa-0" small>{{ mdiPlus }}</v-icon>
+                </v-btn>
+              </div>
             </div>
+            <!-- end of star-treeview-item -->
           </div>
+          <!-- end of galaxy-treeview-container -->
         </div>
+        <!-- end of galaxy-preview-container -->
 
         <!-- =========== Prompt =========== -->
         <div class="galaxy-prompt-container">
@@ -176,7 +211,7 @@
                 {{ chipDisplayNames[item] }}
               </v-chip>
             </div>
-            <v-text-input
+            <v-text-field
               v-model="galaxyRefineUserInput"
               :dark="dark"
               :light="!dark"
@@ -227,8 +262,9 @@
 </template>
 
 <script>
-import { mdiRobotExcited, mdiPencil, mdiPlus, mdiDelete } from "@mdi/js";
+import { mdiPencil, mdiPlus, mdiDelete, mdiCheck, mdiRobotExcited } from "@mdi/js";
 import LoadingSpinner from "@/components/Reused/LoadingSpinner.vue";
+import RobotLoadingSpinner from "@/components/Reused/RobotLoadingSpinner.vue";
 import GalaxyInfo from "@/components/GalaxyView/GalaxyInfo.vue";
 import PublishGalaxy from "@/components/GalaxyView/PublishGalaxy.vue";
 import BackButton from "@/components/Reused/BackButton.vue";
@@ -241,12 +277,14 @@ import { Planet } from "@/lib/planet";
 import { zodTextFormat } from "openai/helpers/zod";
 import { StarsAndPlanetsResponseSchema } from "@/lib/schemas";
 import { saveGalaxyMap } from "@/lib/ff";
+
 // import PromptDialog from "@/components/Dialogs/PromptDialog.vue";
 
 export default {
   name: "AiGalaxyEdit",
   components: {
     LoadingSpinner,
+    RobotLoadingSpinner,
     GalaxyInfo,
     BackButton,
     PublishGalaxy,
@@ -262,10 +300,11 @@ export default {
       promptDialog: false,
       promptContext: null,
       courseTasks: [],
-      mdiRobotExcited,
       mdiPencil,
       mdiPlus,
       mdiDelete,
+      mdiCheck,
+      mdiRobotExcited,
       // Loading and progress tracking
       isSavingToDB: false,
       savingProgress: 0,
@@ -285,7 +324,7 @@ export default {
       activeGalaxyItems: [],
       treeviewActiveItems: {}, // Track active items for each treeview
       updateTimeout: null, // Debounce updates to prevent rapid toggling
-      
+
       // Inline editing
       editingItem: null, // Track which item is being edited
       editingValue: "", // Store the current editing value
@@ -452,6 +491,10 @@ export default {
 
       // Layout selection dialog
       showLayoutDialog: false,
+
+      // AI description update
+      descriptionGenerating: false,
+      itemsGeneratingDescription: new Set(), // Track items currently generating descriptions
     };
   },
   watch: {
@@ -867,9 +910,10 @@ export default {
           const outputTokens = response.usage.output_tokens || 0;
           const totalTokens = response.usage.total_tokens || 0;
 
-          this.totalInputTokens += inputTokens;
-          this.totalOutputTokens += outputTokens;
-          this.totalTokensUsed += totalTokens;
+          this.aiGeneratedGalaxyMap.tokens.totalInputTokens = inputTokens;
+          this.aiGeneratedGalaxyMap.tokens.totalOutputTokens = outputTokens;
+          this.aiGeneratedGalaxyMap.tokens.totalTokensUsed = totalTokens;
+          this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
         }
       } catch (error) {
         console.warn("Error tracking token usage:", error);
@@ -1277,26 +1321,202 @@ export default {
     editItem(item) {
       console.log("edit", item);
       this.editingItem = item;
-      this.editingValue = item.name;
+
+      // Extract the title without numbering for easier editing
+      let titleWithoutNumbering = item.name;
+      if (item.type === "star") {
+        titleWithoutNumbering = item.name.replace(/^0?\d+:\s*/, "");
+      } else if (item.type === "planet") {
+        titleWithoutNumbering = item.name.replace(/^0?\d+\.\d+:\s*/, "");
+      } else if (item.type === "mission") {
+        titleWithoutNumbering = item.name.replace(/^0?\d+\.\d+\.\d+:\s*/, "");
+      }
+
+      this.editingValue = titleWithoutNumbering;
       console.log("editingItem", this.editingItem);
-      
+
       // Focus the input field after it's rendered
       this.$nextTick(() => {
         if (this.$refs.editInput && this.$refs.editInput[0]) {
           this.$refs.editInput[0].focus();
           // Select all text for easy replacement
-          this.$refs.editInput[0].$el.querySelector('input').select();
+          this.$refs.editInput[0].$el.querySelector("input").select();
         }
       });
     },
+
+    // Update description with AI based on new title
+    async updateDescriptionWithAI(item) {
+      if (!this.editingValue.trim()) {
+        this.setSnackbar({
+          show: true,
+          text: "Please enter a title",
+          color: "error",
+        });
+        return;
+      }
+
+      try {
+        // Add item to the set of items currently generating descriptions
+        this.itemsGeneratingDescription.add(item.id);
+
+        // Generate new description using AI
+        const newDescription = await this.generateDescriptionWithAI(item, this.editingValue);
+
+        // Update the description in the original data structure
+        this.updateDescriptionInOriginalData(item, newDescription);
+
+        // Update the store
+        this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
+
+        this.setSnackbar({
+          show: true,
+          text: "Description updated successfully with AI!",
+          color: "baseAccent",
+        });
+      } catch (error) {
+        console.error("Error updating description with AI:", error);
+        this.setSnackbar({
+          show: true,
+          text: "Error updating description: " + (error.message || "Unknown error"),
+          color: "error",
+        });
+      } finally {
+        // Remove item from the set of items currently generating descriptions
+        this.itemsGeneratingDescription.delete(item.id);
+      }
+    },
+
+    // Placeholder method for AI description generation
+    async generateDescriptionWithAI(item, newTitle) {
+      this.descriptionGenerating = true;
+
+      const newDescriptionPrompt = `
+      The user has updated the title for ${item.id} to "${newTitle}".
+      First, consider the context of this item in relation to its parent title and description, as well as where in the sequence in relation to its sibling items titles and descriptions.
+      Then, interpreting what the user is wanting to achieve with this new title, generate an appropriate description.
+      Description should be action focused and only one sentence long.
+      Your response will be used to update the description of the item, so please provide only the description text without any explanations or discussions.
+      `;
+
+      try {
+        const getDescriptionResponse = await this.$openai.responses.create({
+          model: "gpt-4o-mini",
+          previous_response_id: this.aiGeneratedGalaxyMap.aiResponseId,
+          input: newDescriptionPrompt,
+        });
+
+        console.log("getDescriptionResponse", getDescriptionResponse);
+        console.log("getDescriptionResponse.output_text", getDescriptionResponse.output_text);
+
+        // Track token usage
+        console.log("before token usage", this.aiGeneratedGalaxyMap.tokens);
+        this.trackTokenUsage(getDescriptionResponse);
+        console.log("updated token usage", this.aiGeneratedGalaxyMap.tokens);
+
+        this.descriptionGenerating = false;
+        return getDescriptionResponse.output_text;
+      } catch (error) {
+        console.error("Error generating description with AI:", error);
+        this.descriptionGenerating = false;
+        throw error;
+      }
+    },
+
+    // Update description in the original data structure
+    updateDescriptionInOriginalData(item, newDescription) {
+      // Parse the item ID to find and update the original data
+      const idMatch = item.id.match(/^star\[(\d+)\]\.planet\[(\d+)\]\.mission\[(\d+)\]$/);
+      if (idMatch) {
+        // Mission
+        const [_, starIndex, planetIndex, missionIndex] = idMatch;
+        this.aiGeneratedGalaxyMap.stars[starIndex].planets[planetIndex].missions[
+          missionIndex
+        ].description = newDescription;
+      } else {
+        const planetMatch = item.id.match(/^star\[(\d+)\]\.planet\[(\d+)\]$/);
+        if (planetMatch) {
+          // Planet
+          const [_, starIndex, planetIndex] = planetMatch;
+          this.aiGeneratedGalaxyMap.stars[starIndex].planets[planetIndex].description =
+            newDescription;
+        } else {
+          const starMatch = item.id.match(/^star\[(\d+)\]$/);
+          if (starMatch) {
+            // Star
+            const [_, starIndex] = starMatch;
+            this.aiGeneratedGalaxyMap.stars[starIndex].description = newDescription;
+          }
+        }
+      }
+    },
     saveEdit() {
       if (this.editingItem && this.editingValue.trim()) {
-        // Update the item name
-        this.editingItem.name = this.editingValue.trim();
-        
+        // Check if the edited value has numbering, if not add it automatically
+        let finalValue = this.editingValue.trim();
+
+        // Determine the correct numbering based on item type and position
+        if (this.editingItem.type === "star") {
+          const starMatch = this.editingItem.id.match(/^star\[(\d+)\]$/);
+          if (starMatch) {
+            const starIndex = parseInt(starMatch[1]);
+            const starNumber = starIndex + 1;
+
+            // Check if the title already has numbering
+            if (!finalValue.match(/^0?\d+:\s*/)) {
+              finalValue = `${starNumber}: ${finalValue}`;
+            }
+          }
+        } else if (this.editingItem.type === "planet") {
+          const planetMatch = this.editingItem.id.match(/^star\[(\d+)\]\.planet\[(\d+)\]$/);
+          if (planetMatch) {
+            const starIndex = parseInt(planetMatch[1]);
+            const planetIndex = parseInt(planetMatch[2]);
+            const starNumber = starIndex + 1;
+            const planetNumber = planetIndex + 1;
+
+            // Check if the title already has numbering
+            if (!finalValue.match(/^0?\d+\.\d+:\s*/)) {
+              finalValue = `${starNumber}.${planetNumber}: ${finalValue}`;
+            }
+          }
+        } else if (this.editingItem.type === "mission") {
+          const missionMatch = this.editingItem.id.match(
+            /^star\[(\d+)\]\.planet\[(\d+)\]\.mission\[(\d+)\]$/,
+          );
+          if (missionMatch) {
+            const starIndex = parseInt(missionMatch[1]);
+            const planetIndex = parseInt(missionMatch[2]);
+            const missionIndex = parseInt(missionMatch[3]);
+            const starNumber = starIndex + 1;
+            const planetNumber = planetIndex + 1;
+            const missionNumber = missionIndex + 1;
+
+            // Check if the title already has numbering
+            if (!finalValue.match(/^0?\d+\.\d+\.\d+:\s*/)) {
+              finalValue = `${starNumber}.${planetNumber}.${missionNumber}: ${finalValue}`;
+            }
+          }
+        }
+
+        // Update the item name with the final value (with numbering if needed)
+        this.editingItem.name = finalValue;
+
         // Update the original data structure
         this.updateOriginalData(this.editingItem);
-        
+
+        // Only generate description if the user has entered a meaningful title (not placeholder)
+        const isPlaceholderTitle =
+          finalValue.match(/^\d+:\s*New Star$/) ||
+          finalValue.match(/^\d+\.\d+:\s*New Planet$/) ||
+          finalValue.match(/^\d+\.\d+\.\d+:\s*New Mission$/);
+        if (!isPlaceholderTitle) {
+          this.autoGenerateDescription(this.editingItem, finalValue);
+        }
+
+        // Refresh the transformed star details to reflect the changes
+        this.updateTransformedStarDetails();
+
         // Exit editing mode
         this.cancelEdit();
       }
@@ -1311,7 +1531,9 @@ export default {
       if (idMatch) {
         // Mission
         const [_, starIndex, planetIndex, missionIndex] = idMatch;
-        this.aiGeneratedGalaxyMap.stars[starIndex].planets[planetIndex].missions[missionIndex].title = editedItem.name;
+        this.aiGeneratedGalaxyMap.stars[starIndex].planets[planetIndex].missions[
+          missionIndex
+        ].title = editedItem.name;
       } else {
         const planetMatch = editedItem.id.match(/^star\[(\d+)\]\.planet\[(\d+)\]$/);
         if (planetMatch) {
@@ -1327,11 +1549,11 @@ export default {
           }
         }
       }
-      
+
       // Update the store
       this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
     },
-    
+
     // Helper method to find an item by ID in the transformed star details
     findItemById(itemId) {
       const findInItems = (items) => {
@@ -1346,62 +1568,253 @@ export default {
         }
         return null;
       };
-      
+
       return findInItems(this.transformedStarDetails);
     },
-    
+
+    // Get placeholder text for edit input based on item type
+    getEditPlaceholder(item) {
+      if (item.type === "star") {
+        const starMatch = item.id.match(/^star\[(\d+)\]$/);
+        if (starMatch) {
+          const starNumber = parseInt(starMatch[1]) + 1;
+          return `e.g., ${starNumber}: Your Star Title (numbering will be added automatically)`;
+        }
+      } else if (item.type === "planet") {
+        const planetMatch = item.id.match(/^star\[(\d+)\]\.planet\[(\d+)\]$/);
+        if (planetMatch) {
+          const starNumber = parseInt(planetMatch[1]) + 1;
+          const planetNumber = parseInt(planetMatch[2]) + 1;
+          return `e.g., ${starNumber}.${planetNumber}: Your Planet Title (numbering will be added automatically)`;
+        }
+      } else if (item.type === "mission") {
+        const missionMatch = item.id.match(/^star\[(\d+)\]\.planet\[(\d+)\]\.mission\[(\d+)\]$/);
+        if (missionMatch) {
+          const starNumber = parseInt(missionMatch[1]) + 1;
+          const planetNumber = parseInt(missionMatch[2]) + 1;
+          const missionNumber = parseInt(missionMatch[3]) + 1;
+          return `e.g., ${starNumber}.${planetNumber}.${missionNumber}: Your Mission Title (numbering will be added automatically)`;
+        }
+      }
+      return "Enter title (numbering will be added automatically)";
+    },
+
+    // Check if a description is being generated for a specific item
+    isGeneratingDescriptionForItem(item) {
+      return this.itemsGeneratingDescription.has(item.id);
+    },
+
+    // Automatically generate description for an item
+    async autoGenerateDescription(item, title) {
+      try {
+        console.log(`Auto-generating description for ${item.type}: ${title}`);
+
+        // Add item to the set of items currently generating descriptions
+        this.itemsGeneratingDescription.add(item.id);
+
+        // Generate description using AI
+        const newDescription = await this.generateDescriptionWithAI(item, title);
+
+        // Update the description in the original data structure
+        this.updateDescriptionInOriginalData(item, newDescription);
+
+        // Update the store
+        this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
+
+        console.log(`Successfully generated description for ${item.type}: ${title}`);
+      } catch (error) {
+        console.error(`Error auto-generating description for ${item.type}: ${title}`, error);
+        // Don't show error to user for auto-generation, just log it
+      } finally {
+        // Remove item from the set of items currently generating descriptions
+        this.itemsGeneratingDescription.delete(item.id);
+      }
+    },
+
     // Add new item to a star
-    addToStar(starIndex) {
-      console.log(`Adding new item to star ${starIndex}`);
-      
+    addPlanetToStar(starIndex) {
+      console.log(`Adding new planet to Star ${starIndex + 1}`);
+
       // Add new planet to the star
       this.aiGeneratedGalaxyMap.stars[starIndex].planets.push({
-        title: "New Planet",
+        title: "New Planet", // We'll set the proper numbering after adding
         description: "New Planet Description",
         missions: [],
       });
-      
+
+      // Renumber planets in this star to ensure proper numbering
+      this.renumberPlanetsInStar(starIndex);
+
       // Get the index of the newly added planet
       const newPlanetIndex = this.aiGeneratedGalaxyMap.stars[starIndex].planets.length - 1;
-      
+
       // Update the transformed star details to reflect the new planet
       this.updateTransformedStarDetails();
-      
+
       // Set the new planet to editing mode
       this.$nextTick(() => {
         const newPlanetId = `star[${starIndex}].planet[${newPlanetIndex}]`;
         const newPlanetItem = this.findItemById(newPlanetId);
-        
+
         if (newPlanetItem) {
           this.editItem(newPlanetItem);
         }
       });
-      
+
       // Update the store
       this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
     },
-    
-    // Delete an item (currently only planets)
+
+    // Add new star
+    addStar(index) {
+      console.log(`Adding new star after index ${index}`);
+
+      // Add new star after the current star (index + 1)
+      const newStarIndex = index + 1;
+      this.aiGeneratedGalaxyMap.stars.splice(newStarIndex, 0, {
+        title: "New Star", // We'll set the proper numbering after adding
+        description: "New Star Description",
+        planets: [],
+      });
+
+      // Renumber all stars and planets
+      this.renumberStarsAndPlanets();
+
+      // Update the transformed star details to reflect the new star
+      this.updateTransformedStarDetails();
+
+      // Set the new star to editing mode
+      this.$nextTick(() => {
+        const newStarId = `star[${newStarIndex}]`;
+        const newStarItem = this.findItemById(newStarId);
+
+        if (newStarItem) {
+          this.editItem(newStarItem);
+        }
+      });
+
+      // Update the store
+      this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
+    },
+
+    // Delete an item (stars or planets)
     deleteItem(item) {
       console.log("delete", item);
-      
-      if (item.type === 'planet') {
+
+      if (item.type === "star") {
+        // Parse the star ID to get star index
+        const starMatch = item.id.match(/^star\[(\d+)\]$/);
+        if (starMatch) {
+          const [_, starIndex] = starMatch;
+
+          // Remove the star from the original data structure
+          this.aiGeneratedGalaxyMap.stars.splice(starIndex, 1);
+
+          // Renumber all stars and planets
+          this.renumberStarsAndPlanets();
+
+          // Update the transformed star details to reflect the deletion
+          this.updateTransformedStarDetails();
+
+          // Update the store
+          this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
+
+          console.log(`Deleted star ${starIndex}`);
+        }
+      } else if (item.type === "planet") {
         // Parse the planet ID to get star and planet indices
         const planetMatch = item.id.match(/^star\[(\d+)\]\.planet\[(\d+)\]$/);
         if (planetMatch) {
           const [_, starIndex, planetIndex] = planetMatch;
-          
+
           // Remove the planet from the original data structure
           this.aiGeneratedGalaxyMap.stars[starIndex].planets.splice(planetIndex, 1);
-          
+
+          // Renumber planets in this star
+          this.renumberPlanetsInStar(starIndex);
+
           // Update the transformed star details to reflect the deletion
           this.updateTransformedStarDetails();
-          
+
           // Update the store
           this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
-          
+
           console.log(`Deleted planet ${planetIndex} from star ${starIndex}`);
         }
+      }
+    },
+
+    // Renumber all stars and planets after adding/deleting stars
+    renumberStarsAndPlanets() {
+      console.log(
+        `Renumbering all stars and planets, found ${this.aiGeneratedGalaxyMap.stars.length} stars`,
+      );
+      this.aiGeneratedGalaxyMap.stars.forEach((star, starIndex) => {
+        // Renumber star title
+        const starNumber = starIndex + 1;
+        const oldTitle = star.title;
+
+        // Extract the title part after the numbering (handle both "1:" and "01:" formats)
+        const titleMatch = star.title.match(/^0?\d+:\s*(.+)/);
+        if (titleMatch) {
+          star.title = `${starNumber}: ${titleMatch[1]}`;
+        } else {
+          // Fallback if the pattern doesn't match
+          star.title = `${starNumber}: ${star.title.replace(/^0?\d+:\s*/, "")}`;
+        }
+
+        console.log(`Star ${starIndex + 1}: "${oldTitle}" -> "${star.title}"`);
+
+        // Renumber planets in this star
+        this.renumberPlanetsInStar(starIndex);
+      });
+    },
+
+    // Renumber planets in a specific star
+    renumberPlanetsInStar(starIndex) {
+      const star = this.aiGeneratedGalaxyMap.stars[starIndex];
+      if (star && star.planets) {
+        console.log(
+          `Renumbering planets in star ${starIndex + 1}, found ${star.planets.length} planets`,
+        );
+        star.planets.forEach((planet, planetIndex) => {
+          // Renumber planet title
+          const starNumber = starIndex + 1;
+          const planetNumber = planetIndex + 1;
+          const oldTitle = planet.title;
+
+          // Extract the title part after the numbering (handle both "1.1:" and "01.1:" formats)
+          const titleMatch = planet.title.match(/^0?\d+\.\d+:\s*(.+)/);
+          if (titleMatch) {
+            planet.title = `${starNumber}.${planetNumber}: ${titleMatch[1]}`;
+          } else {
+            // Fallback if the pattern doesn't match
+            planet.title = `${starNumber}.${planetNumber}: ${planet.title.replace(/^0?\d+\.\d+:\s*/, "")}`;
+          }
+
+          console.log(`  Planet ${planetIndex + 1}: "${oldTitle}" -> "${planet.title}"`);
+
+          // Renumber missions in this planet
+          if (planet.missions) {
+            planet.missions.forEach((mission, missionIndex) => {
+              const missionNumber = missionIndex + 1;
+              const oldMissionTitle = mission.title;
+
+              // Extract the title part after the numbering (handle both "1.1.1:" and "01.1.1:" formats)
+              const missionTitleMatch = mission.title.match(/^0?\d+\.\d+\.\d+:\s*(.+)/);
+              if (missionTitleMatch) {
+                mission.title = `${starNumber}.${planetNumber}.${missionNumber}: ${missionTitleMatch[1]}`;
+              } else {
+                // Fallback if the pattern doesn't match
+                mission.title = `${starNumber}.${planetNumber}.${missionNumber}: ${mission.title.replace(/^0?\d+\.\d+\.\d+:\s*/, "")}`;
+              }
+
+              console.log(
+                `    Mission ${missionIndex + 1}: "${oldMissionTitle}" -> "${mission.title}"`,
+              );
+            });
+          }
+        });
       }
     },
   },
@@ -1458,8 +1871,8 @@ export default {
   .galaxy-treeview-container {
     width: 100%;
     height: 100%;
-    margin: 1rem auto;
-    padding: 1rem;
+    margin: 0 auto;
+    padding: 0 1rem;
     overflow: hidden;
     overflow-y: auto;
     // border: 1px solid blue;
@@ -1493,15 +1906,16 @@ export default {
         // border: 1px solid green;
         // Prevent touchpad two-finger swipe gestures
 
-                  .star-treeview-item {
-            flex: 0 0 auto;
-            width: auto;
-            // padding: 15px;
-            background-color: rgba(var(--v-background-base), 0.9);
-            border-radius: 8px;
-            height: auto;
-            // border: 1px solid pink;
-            position: relative;
+        .star-treeview-item {
+          flex: 0 0 auto;
+          width: auto;
+          // padding: 15px;
+          background-color: rgba(var(--v-background-base), 0.9);
+          border-radius: 8px;
+          height: auto;
+          // border: 1px solid pink;
+          position: relative;
+          display: flex;
 
           .star-title {
             font-size: 0.9rem;
@@ -1545,15 +1959,23 @@ export default {
 
           .treeview-label {
             display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.75rem;
+            flex-direction: column;
+            gap: 0.25rem;
+            font-size: 0.85rem;
             color: var(--v-missionAccent-base);
             font-weight: 500;
             line-height: 1.3;
             word-wrap: break-word;
             cursor: pointer; // Add pointer cursor to indicate clickable items
             position: relative;
+            width: 100%;
+            padding: 7px 0px;
+          }
+
+          .item-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
             width: 100%;
             justify-content: space-between;
           }
@@ -1582,16 +2004,16 @@ export default {
             width: 210px;
             min-width: 210px;
             font-size: 0.72rem;
-            
+
             .v-input__control {
               min-height: auto;
             }
-            
+
             .v-input__slot {
               min-height: auto;
               padding: 0;
             }
-            
+
             .v-text-field__slot {
               input {
                 font-size: 0.75rem;
@@ -1624,32 +2046,35 @@ export default {
           }
 
           .treeview-description {
-            font-size: 0.65rem;
+            font-size: 0.8rem;
             color: var(--v-missionAccent-base);
             opacity: 0.7;
             font-weight: 400;
             line-height: 1.3;
-            margin-bottom: 5px;
-            margin-left: 1.9rem;
+            margin-left: 50px;
+            margin-top: -3px;
             word-wrap: break-word;
             white-space: normal;
             overflow-wrap: break-word;
             max-width: 280px;
             width: 100%;
           }
-          
+
           .add-button {
             position: relative;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             opacity: 0;
-            transition: opacity 0.3s ease, transform 0.3s ease;
+            transition:
+              opacity 0.3s ease,
+              transform 0.3s ease;
             z-index: 10;
             text-transform: lowercase;
-            font-size: 0.75rem;
+            // font-size: 0.75rem;
             font-weight: 500;
             letter-spacing: 0.5px;
+            width: 70px;
 
             &:hover {
               transform: translateX(-50%) translateY(-2px);
@@ -1659,6 +2084,36 @@ export default {
           &:hover .add-button {
             opacity: 1;
             transform: translateX(-50%) translateY(0);
+          }
+
+          .add-star-button {
+            width: 30px;
+            // border: 1px solid red;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            margin-left: 20px;
+            opacity: 0;
+            transition:
+              opacity 0.3s ease,
+              transform 0.3s ease;
+
+            .star-button {
+              min-width: 30px !important;
+              height: 70px;
+              transition:
+                opacity 0.3s ease,
+                transform 0.3s ease;
+
+              &:hover {
+                transform: translateY(-2px);
+              }
+            }
+          }
+
+          &:hover .add-star-button {
+            opacity: 1;
+            transform: translateY(0);
           }
         }
       }
@@ -1791,33 +2246,6 @@ export default {
   }
 }
 
-.robot-dance {
-  animation: robotDance 2s ease infinite;
-}
-@keyframes robotDance {
-  70% {
-    transform: translateY(0%);
-  }
-  80% {
-    transform: translateY(-15%);
-  }
-  90% {
-    transform: translateY(0%);
-  }
-  95% {
-    transform: translateY(-7%);
-  }
-  97% {
-    transform: translateY(0%);
-  }
-  99% {
-    transform: translateY(-3%);
-  }
-  100% {
-    transform: translateY(0);
-  }
-}
-
 .saving-progress-container {
   width: 100%;
   max-width: 400px;
@@ -1834,5 +2262,18 @@ export default {
   margin-top: 0.25rem;
   text-transform: uppercase;
   letter-spacing: 1px;
+}
+
+.updating-description {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>
