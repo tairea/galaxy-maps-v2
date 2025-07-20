@@ -262,6 +262,8 @@ import {
 import { mapState, mapActions } from "pinia";
 import useRootStore from "@/store/index";
 import { generateGalaxyMap, saveGalaxyMap } from "@/lib/ff";
+import { zodTextFormat } from "openai/helpers/zod";
+import { StarsAndPlanetsResponseSchema } from "@/lib/schemas";
 export default {
   name: "AICreateGalaxyDialog",
   props: {
@@ -510,8 +512,16 @@ export default {
             `✅ Galaxy map generation completed in ${timeString} (${endTime - startTime}ms total)`,
           );
 
+          // add token data to the galaxy map
+          this.aiGeneratedGalaxyMap = parsedResponse;
+          this.aiGeneratedGalaxyMap.tokens = {
+            totalInputTokens: this.totalInputTokens,
+            totalOutputTokens: this.totalOutputTokens,
+            totalTokensUsed: this.totalTokensUsed,
+          };
+
           // Save to store first, then route to AiGalaxyEdit
-          this.setAiGalaxyEditData(parsedResponse);
+          this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
           this.$router.push({ name: "AiGalaxyEdit" });
         } else if (
           parsedResponse.status === "clarification_needed" &&
@@ -644,12 +654,12 @@ export default {
       console.log("secondStep");
       console.log("question answers:", this.prefixedAnswers.join("\n"));
 
+      // Start timing - moved to beginning to ensure it's always defined
+      const startTime = Date.now();
+      console.log("🚀 Starting Galaxy creation process...");
+
       try {
         this.loading = true;
-
-        // Start timing
-        const startTime = Date.now();
-        console.log("🚀 Starting Galaxy creation process...");
 
         // second ai call with structured output
         const aiSecondResponse = await this.$openai.responses.parse({
@@ -686,8 +696,16 @@ export default {
           // It's a journey_ready response - proceed to next step
           console.log("Journey steps ready received:", parsedResponse);
 
+          // add token data to the galaxy map
+          this.aiGeneratedGalaxyMap = parsedResponse;
+          this.aiGeneratedGalaxyMap.tokens = {
+            totalInputTokens: this.totalInputTokens,
+            totalOutputTokens: this.totalOutputTokens,
+            totalTokensUsed: this.totalTokensUsed,
+          };
+
           // Save to store first, then route to AiGalaxyEdit
-          this.setAiGalaxyEditData(parsedResponse);
+          this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
           this.$router.push({ name: "AiGalaxyEdit" });
         } else if (
           parsedResponse.status === "clarification_needed" &&

@@ -1,3 +1,7 @@
+<!-- QGIS -->
+
+i want to learn GIS using the QGIS software for use with my small remote island community
+
 <!-- IoT Irrigation project: User -->
 
 Create a course teaching students how to make an automate irrigation system.
