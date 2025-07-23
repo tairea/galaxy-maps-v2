@@ -520,6 +520,21 @@ export default {
             totalTokensUsed: this.totalTokensUsed,
           };
 
+          // save a copy of the original galaxy map data for the history
+          // Create a deep copy without history to avoid circular reference
+          const galaxyMapCopy = JSON.parse(
+            JSON.stringify({
+              ...this.aiGeneratedGalaxyMap,
+              history: undefined, // Remove history from the copy
+            }),
+          );
+
+          this.aiGeneratedGalaxyMap.history = [
+            {
+              galaxyMapData: galaxyMapCopy,
+            },
+          ];
+
           // Save to store first, then route to AiGalaxyEdit
           this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
           this.$router.push({ name: "AiGalaxyEdit" });
@@ -703,6 +718,21 @@ export default {
             totalOutputTokens: this.totalOutputTokens,
             totalTokensUsed: this.totalTokensUsed,
           };
+
+          // save a copy of the original galaxy map data for the history
+          // Create a deep copy without history to avoid circular reference
+          const galaxyMapCopy = JSON.parse(
+            JSON.stringify({
+              ...this.aiGeneratedGalaxyMap,
+              history: undefined, // Remove history from the copy
+            }),
+          );
+
+          this.aiGeneratedGalaxyMap.history = [
+            {
+              galaxyMapData: galaxyMapCopy,
+            },
+          ];
 
           // Save to store first, then route to AiGalaxyEdit
           this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
