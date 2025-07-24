@@ -1,46 +1,58 @@
 <template>
-  <div id="galaxy-info" :class="draft ? 'draft-border' : 'galaxy-border'" v-if="course">
-    <!-- Label -->
-    <h2 class="galaxy-label"><span v-if="draft">Drafting</span> Galaxy</h2>
-    <!-- Map Name  -->
-    <h1 class="galaxy-title">{{ course.title }}</h1>
-    <!-- Status -->
-    <p v-if="teacher" class="galaxy-status overline mb-0">
-      Status: <span class="font-weight-black">{{ course.status }}</span>
-    </p>
-    <!-- Visibility -->
-    <p v-if="course.status === 'submitted'" class="galaxy-status overline mb-0 in-review">
-      awaiting review
-    </p>
-    <p v-if="teacher" class="galaxy-status overline mb-0">
-      Visibility:
-      <span class="font-weight-black">{{ visibility }}</span>
-    </p>
-    <p v-if="course.presentationOnly" class="galaxy-status overline mb-0">
-      <span class="font-weight-black baseAccent--text">Presentation Map</span>
-    </p>
-    <!-- Map Image -->
-    <v-img v-if="course.image" class="galaxy-image mt-2" :src="course.image.url"></v-img>
-    <p ref="description" class="galaxy-description">
-      <!-- {{ course.description }} -->
-      {{ maybeTruncate(course.description) }}
-      <a style="border-bottom: 1px solid" v-if="readmore" @click="showFullDescription()"
-        >Read more</a
+  <div id="galaxy-info" :class="getBorderClass()" v-if="course">
+    <!-- Clickable Label with Arrow -->
+    <h2 class="galaxy-label" @click="toggleMinimize" :class="{ minimized: isMinimized }">
+      <div v-if="!isMinimized"><span v-if="draft">Drafting</span> Galaxy</div>
+      <div v-else>
+        {{ course.title }}
+      </div>
+      <v-icon class="arrow" color="var(--v-background-base)">{{
+        isMinimized ? mdiMenuDown : mdiMenuUp
+      }}</v-icon>
+    </h2>
+
+    <!-- Collapsible Content -->
+    <div class="galaxy-content mt-2" :class="{ minimized: isMinimized }">
+      <!-- Map Name  -->
+      <h1 class="galaxy-title">{{ course.title }}</h1>
+      <!-- Status -->
+      <p v-if="teacher" class="galaxy-status overline mb-0">
+        Status: <span class="font-weight-black">{{ course.status }}</span>
+      </p>
+      <!-- Visibility -->
+      <p v-if="course.status === 'submitted'" class="galaxy-status overline mb-0 in-review">
+        awaiting review
+      </p>
+      <p v-if="teacher" class="galaxy-status overline mb-0">
+        Visibility:
+        <span class="font-weight-black">{{ visibility }}</span>
+      </p>
+      <p v-if="course.presentationOnly" class="galaxy-status overline mb-0">
+        <span class="font-weight-black baseAccent--text">Presentation Map</span>
+      </p>
+      <!-- Map Image -->
+      <v-img v-if="course.image" class="galaxy-image mt-2" :src="course.image.url"></v-img>
+      <p ref="description" class="galaxy-description">
+        <!-- {{ course.description }} -->
+        {{ maybeTruncate(course.description) }}
+        <a style="border-bottom: 1px solid" v-if="readmore" @click="showFullDescription()"
+          >Read more</a
+        >
+      </p>
+      <v-btn
+        v-if="teacher && course.visibility == 'unlisted'"
+        @click="copyLink"
+        color="baseAccent"
+        outlined
+        small
+        style="width: 100%"
+        class="mb-2"
       >
-    </p>
-    <v-btn
-      v-if="teacher && course.visibility == 'unlisted'"
-      @click="copyLink"
-      color="baseAccent"
-      outlined
-      small
-      style="width: 100%"
-      class="mb-2"
-    >
-      <v-icon left> {{ mdiLink }} </v-icon>
-      Copy link
-    </v-btn>
-    <CreateEditDeleteGalaxyDialog v-if="teacher" :edit="true" :courseToEdit="course" />
+        <v-icon left> {{ mdiLink }} </v-icon>
+        Copy link
+      </v-btn>
+      <CreateEditDeleteGalaxyDialog v-if="teacher" :edit="true" :courseToEdit="course" />
+    </div>
   </div>
 </template>
 
@@ -48,7 +60,7 @@
 import CreateEditDeleteGalaxyDialog from "@/components/Dialogs/CreateEditDeleteGalaxyDialog.vue";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
-import { mdiLink } from "@mdi/js";
+import { mdiLink, mdiMenuUp, mdiMenuDown } from "@mdi/js";
 
 export default {
   name: "GalaxyInfo",
@@ -60,7 +72,10 @@ export default {
   data() {
     return {
       mdiLink,
+      mdiMenuUp,
+      mdiMenuDown,
       readmore: false,
+      isMinimized: false,
     };
   },
   computed: {
@@ -74,6 +89,16 @@ export default {
 
   methods: {
     ...mapActions(useRootStore, ["setSnackbar"]),
+    toggleMinimize() {
+      this.isMinimized = !this.isMinimized;
+      this.$emit("minimised", this.isMinimized);
+    },
+    getBorderClass() {
+      if (this.draft) {
+        return this.isMinimized ? "draft-border-minimized" : "draft-border";
+      }
+      return "galaxy-border";
+    },
     maybeTruncate(value) {
       if (!value) return "";
       if (value.length <= 100) {
@@ -136,6 +161,33 @@ export default {
     background-color: var(--v-galaxyAccent-base);
     padding: 0px 15px 0px 5px;
     clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%);
+    cursor: pointer; /* Add cursor pointer for clickability */
+    display: flex; /* Use flexbox for arrow alignment */
+    align-items: center;
+    gap: 5px; /* Space between text and arrow */
+
+    &.minimized {
+      width: 350px;
+    }
+  }
+
+  .galaxy-label .arrow {
+    font-size: 0.6rem;
+    transition: transform 0.3s ease;
+  }
+
+  .galaxy-content {
+    transition: all 0.3s ease-in-out;
+    overflow: hidden;
+    max-height: 1000px; /* Set a reasonable max height for expanded state */
+  }
+
+  .galaxy-content.minimized {
+    max-height: 0;
+    opacity: 0;
+    margin: 0;
+    padding: 0;
+    width: 150px;
   }
 
   .galaxy-title {
@@ -164,6 +216,10 @@ export default {
 
 .draft-border {
   border: 1px dashed var(--v-galaxyAccent-base);
+}
+
+.draft-border-minimized {
+  border: none;
 }
 
 .galaxy-status {

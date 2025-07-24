@@ -4,15 +4,7 @@
     <div v-if="loading" class="loading-overlay">
       <div class="loading-content" style="width: 100%">
         <!-- LOADING INDICATOR -->
-        <v-progress-circular
-          v-if="!isSavingToDB"
-          indeterminate
-          size="50"
-          color="galaxyAccent"
-          class="mb-4"
-        >
-          <v-icon color="galaxyAccent" size="24" class="robot-dance">{{ mdiRobotExcited }}</v-icon>
-        </v-progress-circular>
+        <RobotLoadingSpinner v-if="!isSavingToDB" size="50" color="galaxyAccent" icon-size="24" />
 
         <!-- PROGRESS BAR FOR DATABASE SAVING -->
         <div v-if="isSavingToDB" class="saving-progress-container">
@@ -264,8 +256,12 @@ import useRootStore from "@/store/index";
 import { generateGalaxyMap, saveGalaxyMap } from "@/lib/ff";
 import { zodTextFormat } from "openai/helpers/zod";
 import { StarsAndPlanetsResponseSchema } from "@/lib/schemas";
+import RobotLoadingSpinner from "@/components/Reused/RobotLoadingSpinner.vue";
 export default {
   name: "AICreateGalaxyDialog",
+  components: {
+    RobotLoadingSpinner,
+  },
   props: {
     showFirstDialog: {
       type: Boolean,
@@ -1067,33 +1063,6 @@ export default {
   }
   100% {
     opacity: 0;
-  }
-}
-
-.robot-dance {
-  animation: robotDance 2s ease infinite;
-}
-@keyframes robotDance {
-  70% {
-    transform: translateY(0%);
-  }
-  80% {
-    transform: translateY(-15%);
-  }
-  90% {
-    transform: translateY(0%);
-  }
-  95% {
-    transform: translateY(-7%);
-  }
-  97% {
-    transform: translateY(0%);
-  }
-  99% {
-    transform: translateY(-3%);
-  }
-  100% {
-    transform: translateY(0);
   }
 }
 
