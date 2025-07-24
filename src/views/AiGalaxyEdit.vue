@@ -64,79 +64,30 @@
     </div>
 
     <!-- <div class="left-section" :class="{ hide: hideLeftPanelsFlag }"> -->
-    <div id="left-section" data-v-step="1">
-      <GalaxyInfo :course="boundCourse" :teacher="teacher" :draft="draft" />
-      <BackButton :toPath="'/'" />
-
-      <div class="legend-and-token-container">
-        <!-- Total Tokens -->
-        <div class="token-container">
-          <p class="token-title ma-0">Tokens Used</p>
-          <table class="token-table">
-            <thead>
-              <tr>
-                <th>Input</th>
-                <th>Output</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>
-                  {{
-                    this.aiGeneratedGalaxyMap.tokens
-                      ? this.aiGeneratedGalaxyMap.tokens.totalInputTokens.toLocaleString()
-                      : "0"
-                  }}
-                </td>
-                <td>
-                  {{
-                    this.aiGeneratedGalaxyMap.tokens
-                      ? this.aiGeneratedGalaxyMap.tokens.totalOutputTokens.toLocaleString()
-                      : "0"
-                  }}
-                </td>
-                <td>
-                  {{
-                    this.aiGeneratedGalaxyMap.tokens
-                      ? this.aiGeneratedGalaxyMap.tokens.totalTokensUsed.toLocaleString()
-                      : "0"
-                  }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <table class="token-table">
-            <tbody>
-              <tr>
-                <th>Est. Cost</th>
-                <td>
-                  ${{
-                    this.aiGeneratedGalaxyMap.tokens
-                      ? (
-                          (this.aiGeneratedGalaxyMap.tokens.totalInputTokens / 1000000) * 0.15 +
-                          (this.aiGeneratedGalaxyMap.tokens.totalOutputTokens / 1000000) * 0.6
-                        ).toFixed(5)
-                      : "0.00000"
-                  }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+    <div id="left-section" data-v-step="1" :class="{ minimized: isGalaxyInfoMinimized }">
+      <div class="galaxy-info-wrapper" :class="{ minimized: isGalaxyInfoMinimized }">
+        <GalaxyInfo
+          ref="galaxyInfo"
+          :course="boundCourse"
+          :teacher="teacher"
+          :draft="draft"
+          @minimised="minimised"
+        />
       </div>
+      <BackButton v-if="!isGalaxyInfoMinimized" :toPath="'/'" />
     </div>
 
     <!--==== Main section ====-->
-    <div id="main-section">
+    <div id="main-section" :class="{ minimized: isGalaxyInfoMinimized }">
       <!-- CREATION STATUS v-treeview of stars > planets > missions -->
       <div v-if="transformedStarDetails.length > 0" class="galaxy-treeview-container">
-        <div class="galaxy-preview-container">
+        <div class="galaxy-preview-container" :class="{ 'task-editing': taskEditing }">
           <!-- =========== Network Preview =========== -->
           <network
             v-if="nodesToDisplay"
             ref="network"
             class="network-graph"
+            :class="{ 'task-editing': taskEditing }"
             :nodes="nodesToDisplay"
             :edges="edgesToDisplay"
             :options="network.options"
@@ -146,10 +97,10 @@
           ></network>
 
           <!-- =========== Treeview =========== -->
-          <div class="galaxy-treeview-wrapper">
+          <div class="galaxy-treeview-wrapper" :class="{ 'task-editing': taskEditing }">
             <div
               v-for="(star, starIndex) in transformedStarDetails"
-              :key="`star-${starIndex}`"
+              :key="`star-${taskEditing ? 'selected' : starIndex}`"
               class="star-treeview-item"
             >
               <div>
@@ -162,16 +113,26 @@
                   class="galaxy-treeview"
                   dense
                   @update:value="updateExpandedNodes"
-                  @update:active="(newValue) => updateActiveGalaxyItems(newValue, starIndex)"
+                  @update:active="(newValue) => itemMadeActive(newValue, starIndex)"
                   hoverable
                   activatable
-                  multiple-active
+                  :multiple-active="!taskEditing"
                   open-all
                   color="missionAccent"
                   active-color="missionAccent"
                 >
                   <template v-slot:label="{ item }">
-                    <div class="treeview-label">
+                    <div
+                      class="treeview-label"
+                      :class="{
+                        'ui-active': uiActiveItemId === item.id,
+                        'ui-dimmed':
+                          taskEditing &&
+                          uiActiveItemId &&
+                          uiActiveItemId !== item.id &&
+                          item.type === 'planet',
+                      }"
+                    >
                       <div class="item-header">
                         <span v-if="item.type === 'star'" class="star-emoji">⭐</span>
                         <span v-else-if="item.type === 'planet'" class="planet-emoji">🪐</span>
@@ -233,6 +194,17 @@
                         />
                         <span v-else>{{ item.description }}</span>
                       </div>
+                      <!-- Generate Tasks button -->
+                      <v-btn
+                        v-if="item.type === 'planet' && !taskEditing"
+                        outlined
+                        color="galaxyAccent"
+                        class="mt-1 mx-16 generate-tasks-btn"
+                        small
+                        @click.stop="generateTasks(item, starIndex)"
+                      >
+                        <v-icon small class="mr-2">{{ mdiRobotExcited }}</v-icon> Generate Tasks
+                      </v-btn>
                     </div>
                   </template>
                 </v-treeview>
@@ -245,6 +217,7 @@
                   small
                   @click="addPlanetToStar(starIndex)"
                   title="Add new item to this star"
+                  v-if="!taskEditing"
                 >
                   <v-icon class="pa-0" small>{{ mdiPlus }}</v-icon>
                 </v-btn>
@@ -258,6 +231,7 @@
                   small
                   class="star-button pa-0"
                   @click="addStar(starIndex)"
+                  v-if="!taskEditing"
                 >
                   <v-icon class="pa-0" small>{{ mdiPlus }}</v-icon>
                 </v-btn>
@@ -270,7 +244,7 @@
         <!-- end of galaxy-preview-container -->
 
         <!-- =========== History =========== -->
-        <div class="history-container">
+        <div class="history-container" v-if="!taskEditing">
           <p
             class="history-title overline missionAccent--text ma-0"
             v-if="aiGeneratedGalaxyMap.history"
@@ -315,7 +289,7 @@
         </div>
 
         <!-- =========== Prompt =========== -->
-        <div class="galaxy-prompt-container">
+        <div class="galaxy-prompt-container" v-if="!taskEditing">
           <div class="prompt-textarea-container mt-4">
             <div class="prompt-context-chips pb-2">
               <v-chip
@@ -376,8 +350,62 @@
         </div>
       </div>
     </div>
+
     <!--==== Right section ====-->
-    <!-- <div id="right-section"></div> -->
+    <div v-if="taskEditing" id="right-section">
+      <div class="right-section-header">
+        <v-btn @click="taskEditing = false" outlined color="missionAccent" small>
+          <v-icon left small>{{ mdiCheck }}</v-icon>
+          Stop Editing
+        </v-btn>
+      </div>
+
+      <div v-if="selectedPlanetData" class="selected-planet-info">
+        <div class="planet-header">
+          <span class="planet-emoji">🪐</span>
+          <h3 class="planet-title">{{ selectedPlanetData.name }}</h3>
+        </div>
+
+        <div v-if="selectedPlanetData.description" class="planet-description">
+          <h4>Description</h4>
+          <p>{{ selectedPlanetData.description }}</p>
+        </div>
+
+        <div
+          v-if="selectedPlanetData.children && selectedPlanetData.children.length > 0"
+          class="planet-missions"
+        >
+          <h4>Missions ({{ selectedPlanetData.children.length }})</h4>
+          <div class="missions-list">
+            <div
+              v-for="mission in selectedPlanetData.children"
+              :key="mission.id"
+              class="mission-item"
+            >
+              <span class="mission-emoji">📍</span>
+              <span class="mission-name">{{ mission.name }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else class="no-planet-selected">
+        <p>Click on a planet to view its details</p>
+      </div>
+    </div>
+
+    <!-- Total Tokens -->
+    <div class="token-container">
+      <p class="ma-0 overline token-title">
+        Tokens Used<br />Input: {{ aiGeneratedGalaxyMap.tokens.totalInputTokens.toLocaleString() }}
+        <br />Output: {{ aiGeneratedGalaxyMap.tokens.totalOutputTokens.toLocaleString() }}
+        <br />Total: {{ aiGeneratedGalaxyMap.tokens.totalTokensUsed.toLocaleString() }} <br />Est.
+        Cost: ${{
+          (aiGeneratedGalaxyMap.tokens.totalInputTokens / 1000000) * 0.15 +
+          (aiGeneratedGalaxyMap.tokens.totalOutputTokens / 1000000) * 0.6
+        }}
+      </p>
+    </div>
 
     <!-- Layout Selection Dialog -->
     <LayoutSelectionDialog
@@ -466,6 +494,15 @@ export default {
 
       // AI Generated Galaxy Map
       aiGeneratedGalaxyMap: {},
+
+      // GalaxyInfo minimized state
+      isGalaxyInfoMinimized: false,
+
+      // Task editing state
+      taskEditing: false,
+      activeTaskItem: null,
+      selectedTasksStarData: null, // Store the selected star data for task editing
+      uiActiveItemId: null, // Track the UI active item for visual highlighting
 
       // Planet animation properties
       planets: [],
@@ -678,6 +715,12 @@ export default {
       },
       deep: true,
     },
+    taskEditing(newValue, oldValue) {
+      // When task editing is turned off, restore the full data
+      if (oldValue === true && newValue === false) {
+        this.restoreFullData();
+      }
+    },
   },
   beforeDestroy() {
     // Stop planet animation
@@ -764,6 +807,19 @@ export default {
         names[item] = this.getChipDisplayName(item);
       });
       return names;
+    },
+    // Computed property to get selected planet data for right section
+    selectedPlanetData() {
+      if (!this.taskEditing || !this.uiActiveItemId || !this.selectedTasksStarData) {
+        return null;
+      }
+
+      // Find the selected planet in the selected star data
+      const planet = this.selectedTasksStarData.children?.find(
+        (child) => child.id === this.uiActiveItemId,
+      );
+
+      return planet || null;
     },
   },
   methods: {
@@ -912,7 +968,7 @@ export default {
 
         // Calculate positions for each star using actual treeview item positions
         const updatedNodes = [];
-        const yPosition = 100; // Fixed Y position for all nodes (above treeview items)
+        const yPosition = this.taskEditing ? 250 : 100; // Fixed Y position for all nodes (above treeview items)
 
         treeviewItems.forEach((item, index) => {
           const itemRect = item.getBoundingClientRect();
@@ -962,7 +1018,8 @@ export default {
           // Set zoom level to 1 and center the view
           if (this.$refs.network.network) {
             this.$refs.network.network.moveTo({
-              scale: 1,
+              // scale: 1,
+              scale: this.taskEditing ? 3 : 1,
               animation: false,
             });
           }
@@ -1116,14 +1173,31 @@ export default {
 
       // Create planets for each star (node)
       for (const [starId, starPosition] of Object.entries(nodePositionMap)) {
-        // Find the star details for this node
-        const starIndex = parseInt(starId.replace("star-", ""));
-        const star = this.aiGeneratedGalaxyMap.stars[starIndex];
+        let star;
 
-        if (star && star.planets) {
+        if (this.taskEditing && this.selectedTasksStarData) {
+          // In task editing mode, use the selected star data
+          star = this.selectedTasksStarData;
+        } else {
+          // In normal mode, use the full galaxy data
+          const starIndex = parseInt(starId.replace("star-", ""));
+          star = this.aiGeneratedGalaxyMap.stars[starIndex];
+        }
+
+        if (star) {
+          let planets = [];
+
+          if (this.taskEditing && this.selectedTasksStarData) {
+            // In task editing mode, use the transformed star data structure
+            planets = star.children ? star.children.filter((child) => child.type === "planet") : [];
+          } else {
+            // In normal mode, use the original galaxy data structure
+            planets = star.planets || [];
+          }
+
           // Create planets for each planet in this star
-          for (let i = 0; i < star.planets.length; i++) {
-            const planet = star.planets[i];
+          for (let i = 0; i < planets.length; i++) {
+            const planet = planets[i];
 
             this.planets.push(
               new Planet(
@@ -2111,6 +2185,170 @@ export default {
         });
       }
     },
+    minimised(minimised) {
+      console.log("minimised", minimised);
+      this.isGalaxyInfoMinimized = minimised;
+    },
+    generateTasks(item, starIndex) {
+      console.log("generateTasks for item: ", item, "starIndex: ", starIndex);
+
+      // Set task editing state
+      this.taskEditing = true;
+      this.activeTaskItem = item;
+      this.uiActiveItemId = item.id; // Set UI active item for visual highlighting
+
+      // minimise galaxy info
+      if (!this.isGalaxyInfoMinimized) {
+        this.$refs.galaxyInfo.toggleMinimize();
+      }
+
+      // Get the width of the starIndex treeview before filtering
+      const treeviewWidth = this.getTreeviewWidth(starIndex);
+      console.log(`Treeview width for starIndex ${starIndex}:`, treeviewWidth);
+
+      // Set the selected star data for task editing
+      this.selectedTasksStarData = this.transformedStarDetails[starIndex];
+
+      // Update the display data to show only the selected star
+      this.updateDisplayDataForTaskEditing(treeviewWidth);
+
+      console.log("making active item.id: ", item.id);
+
+      // Set the clicked planet as the initial active planet in task editing mode
+      this.uiActiveItemId = item.id;
+
+      // Update treeview active items to show the selected planet
+      this.treeviewActiveItems = {
+        0: [item.id],
+      };
+    },
+
+    updateDisplayDataForTaskEditing(treeviewWidth) {
+      if (this.taskEditing && this.selectedTasksStarData) {
+        // Update transformedStarDetails to show only the selected star
+        this.transformedStarDetails = [this.selectedTasksStarData];
+
+        // Update treeview active items to only show the selected star
+        this.treeviewActiveItems = {
+          0: this.treeviewActiveItems[this.getOriginalStarIndex()] || [],
+        };
+
+        // Resize galaxy-preview-container to the treeview width
+        this.resizeContainer(treeviewWidth);
+      }
+    },
+
+    getTreeviewWidth(starIndex) {
+      // Get the treeview item element for the given starIndex
+      const treeviewItems = document.querySelectorAll(".star-treeview-item");
+      if (treeviewItems[starIndex]) {
+        return treeviewItems[starIndex].offsetWidth;
+      }
+      return 300; // Default width if element not found
+    },
+
+    resizeContainer(treeviewWidth) {
+      const galaxyPreviewContainer = document.querySelector(".galaxy-preview-container");
+      if (galaxyPreviewContainer) {
+        // Add some padding to the width for better visual appearance
+        const newWidth = treeviewWidth + 40; // 20px padding on each side
+        galaxyPreviewContainer.style.width = `${newWidth}px`;
+        galaxyPreviewContainer.style.alignItems = "center";
+        galaxyPreviewContainer.style.overflow = "hidden";
+        console.log(`Resized galaxy-preview-container to width: ${newWidth}px`);
+      }
+    },
+
+    getOriginalStarIndex() {
+      if (!this.selectedTasksStarData) return 0;
+
+      // Find the original star index in the full data
+      return this.aiGeneratedGalaxyMap.stars.findIndex(
+        (star) => star.title === this.selectedTasksStarData.name,
+      );
+    },
+
+    updateNetworkDataForSelectedStar() {
+      if (!this.selectedTasksStarData) return;
+
+      // Update nodes and edges to show only the selected star
+      this.$nextTick(() => {
+        // Force a re-render of the network with the new container dimensions
+        this.updateNetworkPositionsFromTreeview();
+
+        // Additional check to ensure network is properly positioned
+        setTimeout(() => {
+          this.ensureNetworkPositioning();
+        }, 200);
+      });
+    },
+
+    ensureNetworkPositioning() {
+      // Double-check that the network is positioned correctly above the treeview
+      if (this.$refs.network && this.$refs.network.network) {
+        const networkElement = document.querySelector(".network-graph");
+        const treeviewWrapper = document.querySelector(".galaxy-treeview-wrapper");
+
+        if (networkElement && treeviewWrapper) {
+          console.log("Network positioning check:", {
+            networkWidth: networkElement.offsetWidth,
+            treeviewWidth: treeviewWrapper.offsetWidth,
+            containerWidth: document.querySelector(".galaxy-preview-container")?.offsetWidth,
+          });
+        }
+      }
+    },
+
+    restoreFullData() {
+      // Restore the full transformed star details
+      this.updateTransformedStarDetails();
+
+      // Clear the selected star data
+      this.selectedTasksStarData = null;
+      this.uiActiveItemId = null; // Clear UI active item
+
+      // Restore treeview active items to their original state
+      // The treeviewActiveItems will be restored when updateTransformedStarDetails is called
+
+      // Reset container width to default
+      this.resetContainerWidth();
+
+      // Update network positions for all stars with proper timing
+      this.$nextTick(() => {
+        // Additional delay to ensure container reset is complete
+        setTimeout(() => {
+          this.updateNetworkPositionsFromTreeview();
+        }, 100);
+      });
+    },
+
+    resetContainerWidth() {
+      const galaxyPreviewContainer = document.querySelector(".galaxy-preview-container");
+      if (galaxyPreviewContainer) {
+        galaxyPreviewContainer.style.width = "";
+        galaxyPreviewContainer.style.alignItems = "";
+        galaxyPreviewContainer.style.overflow = "";
+        console.log("Reset galaxy-preview-container width to default");
+      }
+    },
+    itemMadeActive(newValue, starIndex) {
+      console.log("itemMadeActive", newValue, starIndex);
+
+      // logic if not task editing
+      if (!this.taskEditing) {
+        this.updateActiveGalaxyItems(newValue, starIndex);
+      }
+      // logic if task editing
+      else {
+        // Set the active item ID for UI highlighting
+        this.uiActiveItemId = newValue[0] || null; // Take the first item from the array
+
+        // Update treeview active items to only show the selected item
+        this.treeviewActiveItems = {
+          0: newValue,
+        };
+      }
+    },
   },
 };
 </script>
@@ -2139,7 +2377,7 @@ export default {
   overflow-y: auto;
   padding: 0px 0px 50px 20px;
   // z-index: 3;
-  transition: all 0.3s;
+  // transition: all 0.3s;
   position: absolute;
   left: 0px;
   top: 0px;
@@ -2149,68 +2387,26 @@ export default {
     pointer-events: auto;
   }
 
-  .legend-and-token-container {
-    position: absolute;
-    bottom: 10%;
-    left: 20px;
-    width: calc(100% - 20px);
-    opacity: 0.85;
+  &.minimized {
+    margin-left: 0px;
   }
 
-  .legend-item-text,
-  .token-item-text {
+  .galaxy-info-wrapper {
+    // position: relative;
+    // transition: all 0.3s;
+
+    &.minimized {
+      position: fixed;
+      top: -31px;
+      left: 0;
+      z-index: 10;
+    }
+  }
+
+  .legend-item-text {
     color: #808080;
     font-size: 0.98em;
     opacity: 0.85;
-  }
-
-  .token-container {
-    // position: absolute;
-    // bottom: 25%;
-    // left: 20px;
-    // width: calc(100% - 20px);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-    padding: 12px 10px 8px 10px;
-    //background: rgba(128, 128, 128, 0.07); // very subtle background
-    border-radius: 8px 8px 0 0;
-    color: #808080;
-    font-size: 0.92rem;
-    box-shadow: none;
-    z-index: 2;
-    pointer-events: auto;
-
-    .token-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.95em;
-      color: #808080;
-      margin-top: 2px;
-    }
-    .token-table th,
-    .token-table td {
-      border: none;
-      padding: 2px 8px;
-      text-align: left;
-      font-weight: 400;
-      color: #808080;
-    }
-    .token-table th {
-      font-size: 0.93em;
-      font-weight: 600;
-      opacity: 0.8;
-      padding-bottom: 2px;
-    }
-    .token-table td {
-      font-size: 0.97em;
-      opacity: 0.85;
-    }
-  }
-
-  .token-item-text {
-    margin: 0;
   }
 }
 
@@ -2224,6 +2420,12 @@ export default {
   align-items: center;
   flex-direction: column;
   z-index: 1;
+  transition: all 0.3s;
+
+  &.minimized {
+    width: 100vw;
+    margin: 0px;
+  }
 
   // Galaxy treeview styles
   .galaxy-treeview-container {
@@ -2245,11 +2447,21 @@ export default {
       height: auto;
       overflow-y: auto;
       // margin-bottom: 100px;
+      transition: all 0.3s ease;
+
+      &.task-editing {
+        width: 300px; // Shrink to roughly one treeview column width
+        align-items: center;
+        margin-left: 50px;
+      }
 
       .network-graph {
         height: 250px;
         // min-height: 300px;
         // border: 1px solid yellow;
+        &.task-editing {
+          height: 500px;
+        }
       }
 
       .galaxy-treeview-wrapper {
@@ -2263,6 +2475,13 @@ export default {
         margin-top: -100px;
         // border: 1px solid green;
         // Prevent touchpad two-finger swipe gestures
+        transition: all 0.3s ease;
+        backdrop-filter: blur(2px);
+
+        &.task-editing {
+          justify-content: center;
+          gap: 0;
+        }
 
         .star-treeview-item {
           flex: 0 0 auto;
@@ -2328,6 +2547,22 @@ export default {
             position: relative;
             width: 100%;
             padding: 7px 0px;
+            transition: all 0.3s ease;
+
+            &.ui-active {
+              background-color: rgba(var(--v-galaxyAccent-base), 0.2);
+              border: 1px solid var(--v-missionAccent-base);
+              border-radius: 8px;
+              padding: 5px 8px;
+              // margin: 5px;
+              pointer-events: auto;
+            }
+
+            &.ui-dimmed {
+              opacity: 0.3;
+              filter: grayscale(0.5);
+              pointer-events: auto;
+            }
           }
 
           .item-header {
@@ -2353,9 +2588,19 @@ export default {
             flex-shrink: 0;
           }
 
+          .generate-tasks-btn {
+            display: none;
+            margin-left: 4px;
+            flex-shrink: 0;
+          }
+
           .treeview-label:hover .edit-icon,
           .treeview-label:hover .delete-icon {
             opacity: 1;
+          }
+
+          .treeview-label:hover .generate-tasks-btn {
+            display: inline-flex;
           }
 
           .edit-input {
@@ -2598,6 +2843,30 @@ export default {
   }
 }
 
+.token-container {
+  position: absolute;
+  bottom: 50px;
+  left: 10px;
+  // width: calc(100% - 20px);
+  // display: flex;
+  // flex-direction: column;
+  // align-items: flex-start;
+  // gap: 6px;
+  // padding: 12px 10px 8px 10px;
+  //background: rgba(128, 128, 128, 0.07); // very subtle background
+  // border-radius: 8px 8px 0 0;
+  color: #808080;
+  font-size: 0.6rem !important;
+  box-shadow: none;
+  z-index: 2;
+  // pointer-events: auto;
+
+  .token-title {
+    font-size: 0.6rem !important;
+    line-height: 1.4;
+  }
+}
+
 // History tooltip specific styles
 .history-item-tooltip-container {
   display: flex;
@@ -2622,11 +2891,101 @@ export default {
 }
 
 #right-section {
-  width: 20%;
+  width: 50%;
   height: 100%;
   z-index: 3;
   margin-left: auto;
   margin-right: 20px;
+  border-left: 1px solid var(--v-missionAccent-base);
+  padding: 20px;
+  overflow-y: auto;
+  background-color: var(--v-background-base);
+
+  .right-section-header {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(var(--v-missionAccent-base), 0.2);
+  }
+
+  .selected-planet-info {
+    .planet-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+
+      .planet-emoji {
+        font-size: 1.5rem;
+      }
+
+      .planet-title {
+        margin: 0;
+        color: var(--v-missionAccent-base);
+        font-size: 1.5rem;
+        font-weight: 600;
+      }
+    }
+
+    .planet-description {
+      margin-bottom: 25px;
+
+      h4 {
+        color: var(--v-galaxyAccent-base);
+        margin-bottom: 10px;
+        font-size: 1rem;
+        font-weight: 600;
+      }
+
+      p {
+        color: var(--v-missionAccent-base);
+        line-height: 1.6;
+        margin: 0;
+        font-size: 0.9rem;
+      }
+    }
+
+    .planet-missions {
+      h4 {
+        color: var(--v-galaxyAccent-base);
+        margin-bottom: 15px;
+        font-size: 1rem;
+        font-weight: 600;
+      }
+
+      .missions-list {
+        .mission-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 12px;
+          margin-bottom: 8px;
+          background-color: rgba(var(--v-missionAccent-base), 0.05);
+          border-radius: 6px;
+          border-left: 3px solid var(--v-missionAccent-base);
+
+          .mission-emoji {
+            font-size: 0.9rem;
+          }
+
+          .mission-name {
+            color: var(--v-missionAccent-base);
+            font-size: 0.9rem;
+            font-weight: 500;
+          }
+        }
+      }
+    }
+  }
+
+  .no-planet-selected {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    color: var(--v-missionAccent-base);
+    opacity: 0.7;
+    font-style: italic;
+  }
 }
 
 // Loading overlay styles
