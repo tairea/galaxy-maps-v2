@@ -1793,10 +1793,13 @@ async function saveGalaxyMap(
   };
 
   // Create the course document
+  const imageData = galaxyMap.image as { url: string; name: string };
+  console.log("Using image data for course:", imageData);
+
   const formattedCourse = {
     title: courseData.title,
     description: courseData.description,
-    image: { url: "", name: "" }, // Will be updated later if needed
+    image: imageData, // Use AI-generated image if available
     mappedBy: {
       name: person.firstName + " " + person.lastName,
       personId: person.id,
@@ -1811,11 +1814,13 @@ async function saveGalaxyMap(
 
   const stars = courseData.stars;
 
-  console.log("saving Course: " + courseData.title + " to db");
-
   const courseDocRef = await db.collection("courses").add(formattedCourse);
   await courseDocRef.update({ id: courseDocRef.id, topicTotal: stars.length });
 
+  console.log("saving Course: " + courseData.title + " to db with id: " + courseDocRef.id);
+  console.log("Course data saved:", formattedCourse);
+
+  // TODO: add a check to see if the course already exists. if it does, update it instead of creating a new one
   // Create stars/topics and planets/tasks
   for (let i = 0; i < stars.length; i++) {
     const star = stars[i] as {
@@ -1881,11 +1886,11 @@ async function saveGalaxyMap(
 
     // create planets
     for (let j = 0; j < star.planets.length; j++) {
-      const planet = star.planets[j] as { title: string; description: string };
+      const planet = star.planets[j] as { title: string; instructions?: string };
 
       const planetData = {
         title: planet.title,
-        description: planet.description,
+        description: planet.instructions,
         submissionRequired: false,
         submissionInstructions: "",
         color: "#69a1e2",
@@ -1961,8 +1966,8 @@ function getZigzag(
   index: number,
   startX: number = 0,
   startY: number = 0,
-  spacing: number = 400,
-  amplitude: number = 200,
+  spacing: number = 200,
+  amplitude: number = 100,
 ) {
   // Calculate horizontal position (moving right)
   const x = startX + index * spacing;
@@ -1979,7 +1984,7 @@ function getZigzag(
  */
 function getSpiral(index: number, centerX: number = 0, centerY: number = 0, radius: number = 200) {
   const angle = index * 0.8;
-  const spiralGrowth = 100;
+  const spiralGrowth = 50;
   const currentRadius = radius + index * spiralGrowth;
   const x = centerX + currentRadius * Math.cos(angle);
   const y = centerY + currentRadius * Math.sin(angle);

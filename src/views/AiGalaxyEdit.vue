@@ -4,28 +4,81 @@
     <div v-if="loading" class="loading-overlay">
       <div class="loading-content" style="width: 100%">
         <!-- LOADING INDICATOR -->
-        <RobotLoadingSpinner v-if="!isSavingToDB" />
+        <RobotLoadingSpinner v-if="!isSavingToDB && isGeneratingMissions" />
 
-        <!-- PROGRESS BAR FOR DATABASE SAVING -->
-        <div v-if="isSavingToDB" class="saving-progress-container">
+        <!-- ROBOT LOADING SPINNER FOR DATABASE SAVING -->
+        <RobotLoadingSpinner v-if="isSavingToDB" color="baseAccent" />
+
+        <!-- PROGRESS BAR FOR MISSION GENERATION -->
+        <div v-if="isGeneratingMissions" class="mission-generation-progress-container">
+          <p
+            class="loading-message overline"
+            :class="{
+              'baseAccent--text': isSavingToDB,
+              'missionAccent--text': isGeneratingMissions,
+            }"
+          >
+            {{ currentLoadingMessage }}
+          </p>
+
           <v-progress-linear
-            :value="savingProgress"
-            color="baseAccent"
+            :value="missionGenerationProgress"
+            color="galaxyAccent"
             height="8"
             rounded
             class="mb-2"
           ></v-progress-linear>
-          <p class="saving-progress-text">
-            Saving {{ Math.round(savingProgress) }}% Complete ({{ completedPlanets }}/{{
-              totalPlanets
-            }}
-            planets)
+          <p class="mission-generation-progress-text galaxyAccent--text">
+            Generating {{ completedMissions }}/{{ totalMissions }} missions ({{
+              Math.round(missionGenerationProgress)
+            }}% Complete)
           </p>
         </div>
 
-        <p class="loading-message overline" :class="{ 'baseAccent--text': isSavingToDB }">
-          {{ currentLoadingMessage }}
-        </p>
+        <!-- CREATION STATUS v-treeview of stars > planets > missions -->
+        <div
+          v-if="transformedStarDetails.length > 0 && isGeneratingMissions"
+          class="loading-galaxy-treeview-container"
+        >
+          <div class="loading-galaxy-treeview-wrapper">
+            <div
+              v-for="(star, starIndex) in transformedStarDetails"
+              :key="`star-${starIndex}`"
+              class="loading-star-treeview-item"
+            >
+              <v-treeview
+                :items="[star]"
+                item-key="id"
+                class="loading-galaxy-treeview"
+                dense
+                open-all
+              >
+                <template v-slot:label="{ item }">
+                  <div class="treeview-label">
+                    <div class="item-header">
+                      <span class="loading-treeview-label">
+                        <span v-if="item.type === 'star'" class="star-emoji">⭐</span>
+                        <span v-else-if="item.type === 'planet'" class="planet-emoji">🪐</span>
+                        <!-- <span v-else-if="item.type === 'mission'" class="mission-emoji">🎯</span>-->
+                        <span v-else-if="item.type === 'instructions'" class="instructions-emoji"
+                          >🎯</span
+                        >
+                        {{ item.name }}
+                      </span>
+                    </div>
+                    <div class="loading-treeview-description">
+                      <span
+                        v-if="item.type === 'instructions'"
+                        v-html="renderMarkdown(item)"
+                      ></span>
+                      <span v-else>{{ item.description }}</span>
+                    </div>
+                  </div>
+                </template>
+              </v-treeview>
+            </div>
+          </div>
+        </div>
 
         <!-- TOKEN USAGE -->
         <p class="token-usage overline mt-2" v-if="!isSavingToDB">
@@ -54,8 +107,8 @@
           Est. cost: ${{
             aiGeneratedGalaxyMap.tokens
               ? (
-                  (aiGeneratedGalaxyMap.tokens.totalInputTokens / 1000000) * 0.15 +
-                  (aiGeneratedGalaxyMap.tokens.totalOutputTokens / 1000000) * 0.6
+                  (this.aiGeneratedGalaxyMap.tokens.totalInputTokens / 1000000) * 0.15 +
+                  (this.aiGeneratedGalaxyMap.tokens.totalOutputTokens / 1000000) * 0.6
                 ).toFixed(5)
               : "0.00000"
           }}
@@ -79,7 +132,7 @@
 
     <!--==== Main section ====-->
     <div id="main-section" :class="{ minimized: isGalaxyInfoMinimized }">
-      <!-- CREATION STATUS v-treeview of stars > planets > missions -->
+      <!-- v-treeview of stars > planets > missions -->
       <div v-if="transformedStarDetails.length > 0" class="galaxy-treeview-container">
         <div class="galaxy-preview-container" :class="{ 'task-editing': taskEditing }">
           <!-- =========== Network Preview =========== -->
@@ -137,6 +190,9 @@
                         <span v-if="item.type === 'star'" class="star-emoji">⭐</span>
                         <span v-else-if="item.type === 'planet'" class="planet-emoji">🪐</span>
                         <span v-else-if="item.type === 'mission'" class="mission-emoji">📍</span>
+                        <span v-else-if="item.type === 'instructions'" class="instructions-emoji"
+                          >📍</span
+                        >
 
                         <!-- Show input when editing, otherwise show name -->
                         <span v-if="editingItem && editingItem.id === item.id" class="item-name">
@@ -192,10 +248,13 @@
                           color="galaxyAccent"
                           iconSize="15"
                         />
+                        <div class="treeview-markdown" v-if="item.type === 'instructions'">
+                          <span v-html="renderMarkdown(item)"></span>
+                        </div>
                         <span v-else>{{ item.description }}</span>
                       </div>
-                      <!-- Generate Tasks button -->
-                      <v-btn
+                      <!-- Generate Tasks button ((HIDE FOR NOW. CREATE TASKS IN GALAXY VIEW INSTEAD FOR NOW)) -->
+                      <!-- <v-btn
                         v-if="item.type === 'planet' && !taskEditing"
                         outlined
                         color="galaxyAccent"
@@ -204,7 +263,7 @@
                         @click.stop="generateTasks(item, starIndex)"
                       >
                         <v-icon small class="mr-2">{{ mdiRobotExcited }}</v-icon> Generate Tasks
-                      </v-btn>
+                      </v-btn> -->
                     </div>
                   </template>
                 </v-treeview>
@@ -216,7 +275,7 @@
                   color="missionAccent"
                   small
                   @click="addPlanetToStar(starIndex)"
-                  title="Add new item to this star"
+                  title="Add new Mission to this Star"
                   v-if="!taskEditing"
                 >
                   <v-icon class="pa-0" small>{{ mdiPlus }}</v-icon>
@@ -231,6 +290,7 @@
                   small
                   class="star-button pa-0"
                   @click="addStar(starIndex)"
+                  title="Add new Star"
                   v-if="!taskEditing"
                 >
                   <v-icon class="pa-0" small>{{ mdiPlus }}</v-icon>
@@ -249,7 +309,7 @@
             class="history-title overline missionAccent--text ma-0"
             v-if="aiGeneratedGalaxyMap.history"
           >
-            A.I. History
+            checkpoints
           </p>
           <div class="history-items-container">
             <div
@@ -308,12 +368,12 @@
             <!-- Legend -->
             <div class="legend-container">
               <span class="legend-title ma-0">Legend:</span>
-              <span class="legend-item-icon">⭐</span>
-              <span class="legend-item-text">Zone</span>
-              <span class="legend-item-icon">🪐</span>
-              <span class="legend-item-text">Mission</span>
-              <span class="legend-item-icon">📍</span>
-              <span class="legend-item-text">Task</span>
+              <span class="legend-item-icon ml-3">⭐</span>
+              <span class="legend-item-text">Star/Zone</span>
+              <span class="legend-item-icon ml-3">🪐</span>
+              <span class="legend-item-text">Planet/Mission</span>
+              <!-- <span class="legend-item-icon">📍</span>
+              <span class="legend-item-text">Task</span> -->
             </div>
             <v-text-field
               v-model="galaxyRefineUserInput"
@@ -397,12 +457,31 @@
     <!-- Total Tokens -->
     <div class="token-container">
       <p class="ma-0 overline token-title">
-        Tokens Used<br />Input: {{ aiGeneratedGalaxyMap.tokens.totalInputTokens.toLocaleString() }}
-        <br />Output: {{ aiGeneratedGalaxyMap.tokens.totalOutputTokens.toLocaleString() }}
-        <br />Total: {{ aiGeneratedGalaxyMap.tokens.totalTokensUsed.toLocaleString() }} <br />Est.
-        Cost: ${{
-          (aiGeneratedGalaxyMap.tokens.totalInputTokens / 1000000) * 0.15 +
-          (aiGeneratedGalaxyMap.tokens.totalOutputTokens / 1000000) * 0.6
+        Tokens Used<br />Input:
+        {{
+          aiGeneratedGalaxyMap.tokens
+            ? aiGeneratedGalaxyMap.tokens.totalInputTokens.toLocaleString()
+            : "0"
+        }}
+        <br />Output:
+        {{
+          aiGeneratedGalaxyMap.tokens
+            ? aiGeneratedGalaxyMap.tokens.totalOutputTokens.toLocaleString()
+            : "0"
+        }}
+        <br />Total:
+        {{
+          aiGeneratedGalaxyMap.tokens
+            ? aiGeneratedGalaxyMap.tokens.totalTokensUsed.toLocaleString()
+            : "0"
+        }}
+        <br />Est. Cost: ${{
+          aiGeneratedGalaxyMap.tokens
+            ? (
+                (aiGeneratedGalaxyMap.tokens.totalInputTokens / 1000000) * 0.15 +
+                (aiGeneratedGalaxyMap.tokens.totalOutputTokens / 1000000) * 0.6
+              ).toFixed(5)
+            : "0.00000"
         }}
       </p>
     </div>
@@ -413,6 +492,15 @@
       :loading="loading"
       @cancel="cancelLayoutSelection"
       @confirm="confirmLayoutSelection"
+    />
+
+    <!-- Save Galaxy Dialog -->
+    <SaveGalaxyDialog
+      :show-dialog="showSaveGalaxyDialog"
+      :loading="loading"
+      @generate-tasks-then-save="handleGenerateTasksThenSave"
+      @save-now-generate-later="handleSaveNowGenerateLater"
+      @cancel="cancelSaveGalaxyDialog"
     />
 
     <!-- Prompt Dialog -->
@@ -428,6 +516,7 @@ import GalaxyInfo from "@/components/GalaxyView/GalaxyInfo.vue";
 import PublishGalaxy from "@/components/GalaxyView/PublishGalaxy.vue";
 import BackButton from "@/components/Reused/BackButton.vue";
 import LayoutSelectionDialog from "@/components/Dialogs/LayoutSelectionDialog.vue";
+import SaveGalaxyDialog from "@/components/Dialogs/SaveGalaxyDialog.vue";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
 import Network from "@/vue2vis/Network.vue";
@@ -435,7 +524,9 @@ import "vis-network/styles/vis-network.css";
 import { Planet } from "@/lib/planet";
 import { zodTextFormat } from "openai/helpers/zod";
 import { StarsAndPlanetsResponseSchema } from "@/lib/schemas";
-import { saveGalaxyMap } from "@/lib/ff";
+import { saveGalaxyMap, generateInstructionsForMission } from "@/lib/ff";
+import { markdownToHtml } from "@/lib/utils";
+import * as smd from "streaming-markdown";
 
 // import PromptDialog from "@/components/Dialogs/PromptDialog.vue";
 
@@ -448,6 +539,7 @@ export default {
     BackButton,
     PublishGalaxy,
     LayoutSelectionDialog,
+    SaveGalaxyDialog,
     // PromptDialog,
     Network,
   },
@@ -455,7 +547,6 @@ export default {
   data() {
     return {
       loading: false,
-      disabled: false,
       promptDialog: false,
       promptContext: null,
       courseTasks: [],
@@ -464,13 +555,15 @@ export default {
       mdiDelete,
       mdiCheck,
       mdiRobotExcited,
-      // Loading and progress tracking
+      // Loading tracking
       isSavingToDB: false,
-      savingProgress: 0,
-      completedPlanets: 0,
-      totalPlanets: 0,
+      isGeneratingMissions: false,
       currentLoadingMessage: "",
       loadingMessageInterval: null,
+      missionGenerationProgress: 0,
+      completedMissions: 0,
+      totalMissions: 0,
+      shouldGenerateMissions: false, // Flag to track if we should generate missions after layout selection
 
       // Token usage tracking
       totalTokensUsed: 0,
@@ -538,6 +631,18 @@ export default {
         "Depositing dreams in the deep space drive...",
         "Storing solutions in the solar system...",
         "Saving sagas in the stellar sanctuary...",
+      ],
+      missionGenerationMessages: [
+        "Crafting mission objectives...",
+        "Designing learning pathways...",
+        "Creating step-by-step instructions...",
+        "Defining success criteria...",
+        "Mapping skill progression...",
+        "Building knowledge scaffolds...",
+        "Structuring learning activities...",
+        "Developing assessment strategies...",
+        "Integrating learning resources...",
+        "Finalizing mission parameters...",
       ],
 
       network: {
@@ -660,6 +765,9 @@ export default {
       // Layout selection dialog
       showLayoutDialog: false,
 
+      // Save galaxy dialog
+      showSaveGalaxyDialog: false,
+
       // AI description update
       descriptionGenerating: false,
       itemsGeneratingDescription: new Set(), // Track items currently generating descriptions
@@ -709,6 +817,9 @@ export default {
 
               // Update network positions based on treeview item widths
               this.updateNetworkPositionsFromTreeview();
+
+              // Process markdown for all items with descriptions
+              this.processAllMarkdown(newVal);
             }, 100);
           });
         }
@@ -782,11 +893,20 @@ export default {
       // Get data from props or store
       let responseData = this.parsedResponse || this.aiGalaxyEditData;
 
-      return {
+      const courseData = {
         title: responseData?.title || "Untitled Galaxy",
         description: responseData?.description || "No description available",
         status: "draft",
+        image: responseData?.image || null, // Include image data
       };
+
+      console.log("Bound Course computed property:", {
+        hasImage: !!courseData.image,
+        imageData: courseData.image,
+        title: courseData.title,
+      });
+
+      return courseData;
     },
     teacher() {
       return true; // For AI editing, assume teacher permissions
@@ -799,6 +919,9 @@ export default {
     },
     dark() {
       return this.$vuetify.theme.isDark;
+    },
+    disabled() {
+      return this.loading || !this.galaxyRefineUserInput.trim();
     },
     // Computed property to get chip display names without causing reactivity loops
     chipDisplayNames() {
@@ -821,9 +944,178 @@ export default {
 
       return planet || null;
     },
+
+    /**
+     * Computed property that returns a function to render markdown for any item
+     * This ensures markdown is always rendered consistently using streaming-markdown
+     */
+    renderMarkdown() {
+      return (item) => {
+        if (!item || !item.description) return "";
+
+        try {
+          // If the item already has renderedDescription, use it
+          if (item.renderedDescription) {
+            return item.renderedDescription;
+          }
+
+          // Check if content is HTML or markdown
+          if (this.isHtmlContent(item.description)) {
+            // If it's HTML, return as-is
+            return item.description;
+          } else {
+            // If it's markdown, convert it
+            return this.renderMarkdownWithStreaming(item.description);
+          }
+        } catch (error) {
+          console.error("Error rendering markdown:", error);
+          // Fallback to plain text with HTML escaping
+          return item.description
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+        }
+      };
+    },
   },
   methods: {
-    ...mapActions(useRootStore, ["setAiGalaxyEditData", "clearAiGalaxyEditData", "setSnackbar"]),
+    ...mapActions(useRootStore, [
+      "setAiGalaxyEditData",
+      "clearAiGalaxyEditData",
+      "setSnackbar",
+      "setCurrentCourseId",
+    ]),
+
+    /**
+     * Detects if content is HTML or markdown
+     * @param content - The content to analyze
+     * @returns boolean - true if HTML, false if markdown
+     */
+    isHtmlContent(content) {
+      if (!content) return false;
+
+      // Check for common HTML patterns
+      const htmlPatterns = [
+        /<[^>]+>/g, // HTML tags
+        /&[a-zA-Z]+;/g, // HTML entities like &nbsp;
+        /<iframe/i, // iframe tags specifically
+        /<div/i, // div tags
+        /<p>/i, // p tags
+        /<br/i, // br tags
+        /<img/i, // img tags
+        /<a\s+href/i, // anchor tags with href
+      ];
+
+      // If any HTML patterns are found, consider it HTML
+      for (const pattern of htmlPatterns) {
+        if (pattern.test(content)) {
+          return true;
+        }
+      }
+
+      // Check for markdown patterns
+      const markdownPatterns = [
+        /^#{1,6}\s+/m, // Headers
+        /\*\*[^*]+\*\*/, // Bold
+        /\*[^*]+\*/, // Italic
+        /\[[^\]]+\]\([^)]+\)/, // Links
+        /^[-*+]\s+/m, // Unordered lists
+        /^\d+\.\s+/m, // Ordered lists
+        /`[^`]+`/, // Inline code
+        /```[\s\S]*?```/, // Code blocks
+      ];
+
+      // If markdown patterns are found and no HTML patterns, consider it markdown
+      const hasMarkdown = markdownPatterns.some((pattern) => pattern.test(content));
+      const hasHtml = htmlPatterns.some((pattern) => pattern.test(content));
+
+      // If it has both HTML and markdown, prefer HTML (don't convert)
+      if (hasHtml) return true;
+
+      // If it has markdown and no HTML, convert it
+      return !hasMarkdown;
+    },
+
+    /**
+     * Renders markdown using streaming-markdown library
+     * @param markdown - The markdown text to convert
+     * @returns HTML string
+     */
+    renderMarkdownWithStreaming(markdown) {
+      if (!markdown) return "";
+
+      try {
+        // Create a temporary div element to render into
+        const tempDiv = document.createElement("div");
+
+        // Create renderer and parser
+        const renderer = smd.default_renderer(tempDiv);
+        const parser = smd.parser(renderer);
+
+        // Write the markdown content
+        smd.parser_write(parser, markdown);
+
+        // End the stream
+        smd.parser_end(parser);
+
+        // Get the HTML content
+        const html = tempDiv.innerHTML;
+
+        return html;
+      } catch (error) {
+        console.error("Error rendering markdown with streaming-markdown:", error);
+        return markdown; // Fallback to plain text
+      }
+    },
+
+    /**
+     * Converts markdown description to HTML for rendering (legacy method)
+     * @param description - The markdown description text
+     * @returns HTML string
+     */
+    async renderMarkdownDescription(description) {
+      try {
+        return this.renderMarkdownWithStreaming(description);
+      } catch (error) {
+        console.error("Error converting markdown:", error);
+        return description; // Fallback to plain text
+      }
+    },
+
+    /**
+     * Process markdown for an item and store the rendered HTML (legacy method)
+     * @param item - The item containing markdown description
+     */
+    async processItemMarkdown(item) {
+      if (item.description && !item.renderedDescription) {
+        try {
+          item.renderedDescription = this.renderMarkdownWithStreaming(item.description);
+        } catch (error) {
+          console.error("Error processing markdown for item:", error);
+          item.renderedDescription = item.description; // Fallback to plain text
+        }
+      }
+    },
+
+    /**
+     * Process markdown for all items recursively
+     * @param items - Array of items to process
+     */
+    async processAllMarkdown(items) {
+      if (!items || !Array.isArray(items)) return;
+
+      for (const item of items) {
+        // Process current item
+        await this.processItemMarkdown(item);
+
+        // Process children recursively
+        if (item.children && Array.isArray(item.children)) {
+          await this.processAllMarkdown(item.children);
+        }
+      }
+    },
     removeChip(item) {
       this.activeGalaxyItems = this.activeGalaxyItems.filter((i) => i !== item);
 
@@ -1076,7 +1368,15 @@ export default {
 
     // Loading message management
     startLoadingMessages() {
-      const messages = this.isSavingToDB ? this.savingMessages : this.loadingMessages;
+      let messages;
+      if (this.isSavingToDB) {
+        messages = this.savingMessages;
+      } else if (this.isGeneratingMissions) {
+        messages = this.missionGenerationMessages;
+      } else {
+        messages = this.loadingMessages;
+      }
+
       this.currentLoadingMessage = messages[0];
       this.loadingMessageInterval = setInterval(() => {
         const currentIndex = messages.indexOf(this.currentLoadingMessage);
@@ -1302,13 +1602,26 @@ export default {
               children: [],
             };
 
+            // Add mission instructions as subitems if they exist
+            if (planet.instructions) {
+              planetNode.children.push({
+                id: `star[${starIndex}].planet[${planetIndex}].instructions`,
+                name: "Mission Instructions",
+                description: planet.instructions,
+                type: "instructions",
+              });
+            }
+
+            // Add existing missions if they exist
             if (planet.missions && planet.missions.length > 0) {
-              planetNode.children = planet.missions.map((mission, missionIndex) => ({
-                id: `star[${starIndex}].planet[${planetIndex}].mission[${missionIndex}]`,
-                name: mission.title,
-                description: mission.description,
-                type: "mission",
-              }));
+              planetNode.children.push(
+                ...planet.missions.map((mission, missionIndex) => ({
+                  id: `star[${starIndex}].planet[${planetIndex}].mission[${missionIndex}]`,
+                  name: mission.title,
+                  description: mission.description,
+                  type: "mission",
+                })),
+              );
             }
             return planetNode;
           });
@@ -1355,7 +1668,7 @@ export default {
       console.log("🚀 Starting Galaxy refinement process...");
 
       const refinementSystemPrompt = `
-      You are a Galaxy Map refiner assistant. Your task is to update specific parts of an existing Galaxy Map JSON object based on the user's request. The Galaxy Map represents a structured learning journey using Stars (Zones) → Planets (Missions) → Tasks.
+      You are a Galaxy Map refiner assistant. Your task is to update specific parts of an existing Galaxy Map JSON object based on the user's request. The Galaxy Map represents a structured learning roadmap using a structured hierarchy of Stars (Zones) → Planets (Missions) → Tasks.
 
       ### Galaxy Map Format (json):
 
@@ -1503,8 +1816,8 @@ export default {
       return `${minutes}m${seconds}s`;
     },
     saveGalaxyToDB() {
-      // Show layout selection dialog instead of immediately saving
-      this.showLayoutDialog = true;
+      // Show save galaxy dialog with two options
+      this.showSaveGalaxyDialog = true;
     },
 
     // Layout dialog methods
@@ -1512,12 +1825,137 @@ export default {
       this.showLayoutDialog = false;
     },
 
-    async confirmLayoutSelection(selectedLayout) {
-      this.showLayoutDialog = false;
+    // Save galaxy dialog methods
+    cancelSaveGalaxyDialog() {
+      this.showSaveGalaxyDialog = false;
+    },
 
+    async handleGenerateTasksThenSave() {
+      console.log("Generate all tasks and then save");
+      this.showSaveGalaxyDialog = false;
+
+      // Set flag to generate missions after layout selection
+      this.shouldGenerateMissions = true;
+
+      // Show layout dialog first to get the layout before generating missions
+      this.showLayoutDialog = true;
+    },
+
+    async generateMissionsThenSave(selectedLayout) {
+      // Calculate total missions
+      this.totalMissions = 0;
+      for (const star of this.aiGeneratedGalaxyMap.stars) {
+        this.totalMissions += star.planets.length;
+      }
+
+      // Start mission generation
       this.loading = true;
+      this.isGeneratingMissions = true;
+      this.completedMissions = 0;
+      this.missionGenerationProgress = 0;
+
+      // Start loading messages with mission generation messages
+      this.stopLoadingMessages();
+      this.startLoadingMessages();
+
+      // Start timing
+      const startTime = Date.now();
+      console.log("🚀 Starting mission generation process...");
+
+      try {
+        // generate instructions for each mission
+        for (const [starIndex, star] of this.aiGeneratedGalaxyMap.stars.entries()) {
+          for (const [planetIndex, planet] of star.planets.entries()) {
+            // Create a copy of the galaxy map without history to avoid circular reference
+            const galaxyMapForAI = {
+              ...this.aiGeneratedGalaxyMap,
+              history: undefined, // Remove history for AI processing
+            };
+
+            const missionInstructions = await generateInstructionsForMission(
+              planet.description,
+              galaxyMapForAI,
+              this.aiGeneratedGalaxyMap.originResponseId,
+            );
+            console.log("missionInstructions", missionInstructions);
+            console.log(
+              "missionInstructions.missionInstructions",
+              missionInstructions.missionInstructions,
+            );
+
+            // Update token usage from mission instructions generation
+            if (missionInstructions.tokenUsage) {
+              this.aiGeneratedGalaxyMap.tokens.totalInputTokens +=
+                missionInstructions.tokenUsage.input_tokens || 0;
+              this.aiGeneratedGalaxyMap.tokens.totalOutputTokens +=
+                missionInstructions.tokenUsage.output_tokens || 0;
+              this.aiGeneratedGalaxyMap.tokens.totalTokensUsed +=
+                missionInstructions.tokenUsage.total_tokens || 0;
+            }
+
+            // Update the planet with mission instructions
+            const instructionsText =
+              missionInstructions.missionInstructions || missionInstructions || "";
+            this.aiGeneratedGalaxyMap.stars[starIndex].planets[planetIndex].instructions =
+              instructionsText;
+
+            console.log(
+              "does this.aiGeneratedGalaxyMap.stars[" +
+                starIndex +
+                "].planets[" +
+                planetIndex +
+                "] have instructions: ",
+              this.aiGeneratedGalaxyMap.stars[starIndex].planets[planetIndex],
+            );
+            // Update progress
+            this.completedMissions++;
+            this.missionGenerationProgress = (this.completedMissions / this.totalMissions) * 100;
+
+            // Update treeview to show progress
+            this.updateTransformedStarDetails();
+          }
+        }
+
+        // Calculate and log execution time
+        const endTime = Date.now();
+        const timeString = this.formatExecutionTime(startTime, endTime);
+        console.log(
+          `✅ Mission generation completed in ${timeString} (${endTime - startTime}ms total)`,
+        );
+
+        this.setSnackbar({
+          show: true,
+          text: `Mission instructions generated successfully!`,
+          color: "missionAccent",
+        });
+
+        // Now save to database with the selected layout
+        await this.saveGalaxyMapToDatabase(selectedLayout);
+      } catch (error) {
+        // Calculate and log execution time even on error
+        const endTime = Date.now();
+        const timeString = this.formatExecutionTime(startTime, endTime);
+        console.log(
+          `❌ Mission generation failed after ${timeString} (${endTime - startTime}ms total)`,
+        );
+
+        console.error("Error generating mission instructions:", error);
+        this.setSnackbar({
+          show: true,
+          text:
+            "Error generating mission instructions: " +
+            (error instanceof Error ? error.message : "Unknown error"),
+          color: "pink",
+        });
+      } finally {
+        // Reset mission generation state
+        this.isGeneratingMissions = false;
+        this.loading = false;
+      }
+    },
+
+    async saveGalaxyMapToDatabase(selectedLayout) {
       this.isSavingToDB = true;
-      this.savingProgress = 0;
 
       // Restart loading messages with saving messages
       this.stopLoadingMessages();
@@ -1530,18 +1968,6 @@ export default {
       let result = null;
 
       try {
-        // Calculate total planets for progress tracking
-        this.totalPlanets = 0;
-        for (let star of this.aiGeneratedGalaxyMap.stars) {
-          this.totalPlanets += star.planets.length;
-        }
-
-        this.completedPlanets = 0;
-        const updateProgress = () => {
-          this.completedPlanets++;
-          this.savingProgress = (this.completedPlanets / this.totalPlanets) * 100;
-        };
-
         // Call the Firebase function to save the galaxy map with selected layout
         result = await saveGalaxyMap(this.aiGeneratedGalaxyMap, selectedLayout);
 
@@ -1557,6 +1983,12 @@ export default {
           text: `Galaxy saved successfully! Course ID: ${result.courseId}`,
           color: "baseAccent",
         });
+
+        // Set the currentCourseId in store before navigating to ensure GalaxyMap has access to it
+        this.setCurrentCourseId(result.courseId);
+
+        // Navigate to the created galaxy
+        this.$router.push({ name: "GalaxyView", params: { courseId: result.courseId } });
       } catch (error) {
         // Calculate and log execution time even on error
         const endTime = Date.now();
@@ -1573,13 +2005,29 @@ export default {
       } finally {
         // Reset saving state
         this.isSavingToDB = false;
-        this.savingProgress = 0;
         this.loading = false;
+      }
+    },
 
-        // Navigate to the created galaxy if save was successful
-        if (result && result.courseId) {
-          this.$router.push({ name: "GalaxyView", params: { courseId: result.courseId } });
-        }
+    handleSaveNowGenerateLater() {
+      this.showSaveGalaxyDialog = false;
+
+      // Set flag to save immediately without generating missions
+      this.shouldGenerateMissions = false;
+
+      // Proceed with the original save to DB method
+      this.showLayoutDialog = true;
+    },
+
+    async confirmLayoutSelection(selectedLayout) {
+      this.showLayoutDialog = false;
+
+      if (this.shouldGenerateMissions) {
+        // Generate missions first, then save
+        await this.generateMissionsThenSave(selectedLayout);
+      } else {
+        // Save immediately without generating missions
+        await this.saveGalaxyMapToDatabase(selectedLayout);
       }
     },
 
@@ -2661,6 +3109,13 @@ export default {
             overflow-wrap: break-word;
             max-width: 280px;
             width: 100%;
+
+            .treeview-markdown {
+              font-size: 0.65rem;
+              color: var(--v-missionAccent-base);
+              font-weight: 400;
+              line-height: 1.3;
+            }
           }
 
           .add-button {
@@ -2998,9 +3453,11 @@ export default {
   background-color: var(--v-background-base);
   z-index: 9999;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: flex-start;
+  align-items: flex-start;
   opacity: 0.95;
+  overflow-y: auto;
+  padding: 2rem;
 }
 
 .loading-content {
@@ -3008,12 +3465,15 @@ export default {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 2rem;
+  padding: 0;
+  overflow-y: visible;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .loading-message {
   color: var(--v-missionAccent-base);
-  margin-top: 1rem;
+  margin-top: 0rem;
   text-transform: uppercase;
   letter-spacing: 2px;
   animation: fadeInOut 3s ease-in-out infinite;
@@ -3070,6 +3530,232 @@ export default {
   letter-spacing: 1px;
 }
 
+.mission-generation-progress-container {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mission-generation-progress-text {
+  color: var(--v-missionAccent-base);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.mission-status {
+  margin-left: 8px;
+  color: var(--v-missionAccent-base);
+  font-weight: bold;
+}
+
+// Loading overlay treeview styles (matching main treeview)
+.loading-galaxy-treeview-container {
+  width: 100%;
+  max-height: 65vh;
+  margin: 0 auto;
+  padding: 1rem;
+  overflow-y: auto;
+  flex-direction: column;
+  background-color: rgba(var(--v-background-base), 0.8);
+  border-radius: 8px;
+  position: relative;
+  padding-bottom: 100px;
+}
+
+.loading-galaxy-treeview-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  min-height: auto;
+  padding: 10px;
+  overflow-y: visible;
+  overflow-x: auto;
+  margin-top: 0;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(2px);
+  padding-bottom: 50px;
+  margin-bottom: 50px;
+
+  // Custom scrollbar styling
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(var(--v-missionAccent-base), 0.1);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(var(--v-missionAccent-base), 0.5);
+    border-radius: 4px;
+
+    &:hover {
+      background: rgba(var(--v-missionAccent-base), 0.7);
+    }
+  }
+}
+
+.loading-star-treeview-item {
+  flex: 0 0 auto;
+  width: auto;
+  background-color: rgba(var(--v-background-base), 0.9);
+  border-radius: 8px;
+  height: auto;
+  position: relative;
+  display: flex;
+  overflow-y: visible;
+}
+
+.loading-galaxy-treeview {
+  width: 100%;
+  overflow-y: visible;
+
+  .v-treeview-node {
+    margin-bottom: 0.25rem;
+  }
+
+  .v-treeview-node__root {
+    padding: 0.25rem 0;
+  }
+
+  .v-treeview-node__children {
+    margin-left: 1rem;
+  }
+
+  // Hide the root star node since we're showing it as a title
+  .v-treeview-node:first-child > .v-treeview-node__root {
+    display: none;
+  }
+
+  // Adjust spacing for better readability
+  .v-treeview-node__content {
+    padding: 0.25rem 0;
+  }
+}
+
+.loading-treeview-label {
+  display: flex;
+  flex-direction: row;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--v-missionAccent-base);
+  font-weight: 500;
+  line-height: 1.3;
+  word-wrap: break-word;
+  position: relative;
+  width: 100%;
+  padding: 7px 0px;
+  transition: all 0.3s ease;
+  text-align: left;
+
+  .treeview-description {
+    font-size: 0.8rem;
+    color: var(--v-missionAccent-base);
+    opacity: 0.7;
+    font-weight: 400;
+    line-height: 1.3;
+    margin-left: 50px;
+    margin-top: -3px;
+    word-wrap: break-word;
+    white-space: normal;
+    overflow-wrap: break-word;
+    max-width: 280px;
+    width: 100%;
+
+    .treeview-markdown {
+      font-size: 0.65rem;
+      color: var(--v-missionAccent-base);
+      font-weight: 400;
+      line-height: 1.3;
+    }
+  }
+}
+
+.loading-treeview-description {
+  font-size: 0.8rem;
+  color: var(--v-missionAccent-base);
+  opacity: 0.7;
+  font-weight: 400;
+  line-height: 1.3;
+  margin-left: 50px;
+  margin-top: -3px;
+  word-wrap: break-word;
+  white-space: normal;
+  overflow-wrap: break-word;
+  max-width: 280px;
+  width: 100%;
+  text-align: left;
+
+  .treeview-markdown {
+    font-size: 0.65rem;
+    color: var(--v-missionAccent-base);
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  // Override global markdown styles for loading treeview
+  ::v-deep h1,
+  ::v-deep h2,
+  ::v-deep h3,
+  ::v-deep h4,
+  ::v-deep h5,
+  ::v-deep h6 {
+    margin: 0.25rem 0 0.125rem 0;
+    color: var(--v-missionAccent-base);
+    font-weight: 600;
+  }
+
+  ::v-deep h1 {
+    font-size: 0.9rem;
+  }
+
+  ::v-deep h2 {
+    font-size: 0.85rem;
+  }
+
+  ::v-deep h3 {
+    font-size: 0.8rem;
+  }
+
+  ::v-deep h4 {
+    font-size: 0.75rem;
+  }
+
+  ::v-deep h5 {
+    font-size: 0.7rem;
+  }
+
+  ::v-deep h6 {
+    font-size: 0.65rem;
+  }
+
+  ::v-deep p {
+    margin: 0.125rem 0;
+    line-height: 1.2;
+    font-size: 0.75rem;
+  }
+
+  ::v-deep ul,
+  ::v-deep ol {
+    margin: 0.125rem 0;
+    padding-left: 1rem;
+  }
+
+  ::v-deep li {
+    margin: 0.0625rem 0;
+    line-height: 1.2;
+    font-size: 0.75rem;
+  }
+}
+
 .updating-description {
   animation: spin 1s linear infinite;
 }
@@ -3080,6 +3766,142 @@ export default {
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+// Markdown content styling
+.treeview-description {
+  // Markdown content styles
+  ::v-deep h1,
+  ::v-deep h2,
+  ::v-deep h3,
+  ::v-deep h4,
+  ::v-deep h5,
+  ::v-deep h6 {
+    margin: 0.5rem 0 0.25rem 0;
+    color: var(--v-missionAccent-base);
+    font-weight: 600;
+  }
+
+  ::v-deep h1 {
+    font-size: 1.1rem;
+  }
+
+  ::v-deep h2 {
+    font-size: 1rem;
+  }
+
+  ::v-deep h3 {
+    font-size: 0.9rem;
+  }
+
+  ::v-deep h4 {
+    font-size: 0.85rem;
+  }
+
+  ::v-deep h5 {
+    font-size: 0.8rem;
+  }
+
+  ::v-deep h6 {
+    font-size: 0.75rem;
+  }
+
+  ::v-deep p {
+    margin: 0.25rem 0;
+    line-height: 1.4;
+  }
+
+  ::v-deep hr {
+    border: none;
+    border-top: 1px solid rgba(var(--v-missionAccent-base), 0.3);
+    margin: 0.75rem 0;
+    height: 1px;
+  }
+
+  ::v-deep strong {
+    font-weight: 600;
+    color: var(--v-missionAccent-base);
+  }
+
+  ::v-deep em {
+    font-style: italic;
+  }
+
+  ::v-deep code {
+    background-color: rgba(var(--v-missionAccent-base), 0.1);
+    padding: 0.125rem 0.25rem;
+    border-radius: 3px;
+    font-family: "Courier New", monospace;
+    font-size: 0.85em;
+  }
+
+  ::v-deep pre {
+    background-color: rgba(var(--v-missionAccent-base), 0.05);
+    padding: 0.5rem;
+    border-radius: 4px;
+    margin: 0.5rem 0;
+    overflow-x: auto;
+
+    code {
+      background: none;
+      padding: 0;
+    }
+  }
+
+  ::v-deep ul,
+  ::v-deep ol {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+  }
+
+  ::v-deep li {
+    margin: 0.25rem 0;
+    line-height: 1.4;
+  }
+
+  ::v-deep ol li {
+    list-style-type: decimal;
+  }
+
+  ::v-deep ul li {
+    list-style-type: disc;
+  }
+
+  ::v-deep blockquote {
+    border-left: 3px solid var(--v-missionAccent-base);
+    padding-left: 0.75rem;
+    margin: 0.5rem 0;
+    font-style: italic;
+    color: rgba(var(--v-missionAccent-base), 0.8);
+  }
+
+  ::v-deep a {
+    color: var(--v-missionAccent-base);
+    text-decoration: underline;
+
+    &:hover {
+      text-decoration: none;
+    }
+  }
+
+  // Additional styles for streaming-markdown specific elements
+  ::v-deep table {
+    border-collapse: collapse;
+    margin: 0.5rem 0;
+    width: 100%;
+  }
+
+  ::v-deep th,
+  ::v-deep td {
+    border: 1px solid rgba(var(--v-missionAccent-base), 0.3);
+    padding: 0.25rem 0.5rem;
+    text-align: left;
+  }
+
+  ::v-deep th {
+    background-color: rgba(var(--v-missionAccent-base), 0.1);
+    font-weight: 600;
   }
 }
 </style>

@@ -31,7 +31,7 @@
         <span class="font-weight-black baseAccent--text">Presentation Map</span>
       </p>
       <!-- Map Image -->
-      <v-img v-if="course.image" class="galaxy-image mt-2" :src="course.image.url"></v-img>
+      <img v-if="course.image" class="galaxy-image mt-2" :src="course.image.url" />
       <p ref="description" class="galaxy-description">
         <!-- {{ course.description }} -->
         {{ maybeTruncate(course.description) }}

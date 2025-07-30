@@ -616,6 +616,31 @@ export const generateGalaxyMap = async (
   return result.data;
 };
 
+// Generate mission instructions with AI
+export const generateInstructionsForMission = async (
+  description: string,
+  aiGeneratedGalaxyMap?: any,
+  originResponseId?: string,
+): Promise<{
+  success: boolean;
+  missionInstructions: any;
+  tokenUsage: {
+    input_tokens: number;
+    output_tokens: number;
+    total_tokens: number;
+  };
+  responseId: string;
+}> => {
+  const data = {
+    description,
+    aiGeneratedGalaxyMap,
+    originResponseId,
+  };
+  const generateInstructionsForMissionFunction = functions.httpsCallable("generateInstructionsForMission");
+  const result = await generateInstructionsForMissionFunction(data);
+  return result.data;
+};
+
 // Save AI-generated Galaxy Map to Database
 export const saveGalaxyMap = async (
   galaxyMap: any,
