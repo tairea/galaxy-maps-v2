@@ -1,3 +1,9 @@
+<!-- Wordpress -->
+
+teach someone how to create a wordpress website using BeTheme and hosting it on a domain via cPanel
+
+quick overview focusing on the practical steps to get a website live, spend sometime on customising the website using BeThemes muffin builder
+
 <!-- QGIS -->
 
 i want to learn GIS using the QGIS software for use with my small remote island community
