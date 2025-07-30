@@ -48,7 +48,7 @@
           <!-- DESCRIPTION -->
           <div
             v-if="teacher"
-            v-html="task.description"
+            v-html="renderedTaskDescription"
             class="task-description"
             :style="task.color ? 'color:' + task.color + ' !important' : ''"
           ></div>
@@ -108,8 +108,8 @@
                 task.submissionRequired
                   ? { color: '#FAF200' }
                   : task.color
-                  ? { color: task.color + ' !important' }
-                  : '',
+                    ? { color: task.color + ' !important' }
+                    : '',
               ]"
             >
               {{ task.submissionRequired ? "YES" : "NO" }}
@@ -135,14 +135,14 @@
               completed
                 ? "COMPLETED"
                 : inreview
-                ? "IN REVIEW"
-                : unlocked
-                ? "START MISSION"
-                : active
-                ? "ACTIVE MISSION"
-                : declined
-                ? "RETRY MISSION"
-                : "LOCKED"
+                  ? "IN REVIEW"
+                  : unlocked
+                    ? "START MISSION"
+                    : active
+                      ? "ACTIVE MISSION"
+                      : declined
+                        ? "RETRY MISSION"
+                        : "LOCKED"
             }}
           </p>
 
@@ -217,7 +217,7 @@
               </p>
               <div
                 v-if="task.submissionInstructions"
-                v-html="task.submissionInstructions"
+                v-html="renderedSubmissionInstructions"
                 class="submissions-instructions"
               ></div>
             </div>
@@ -277,6 +277,7 @@ import SelectedMissionsCard from "@/components/SolarSystemView/MissionsList/Miss
 import useRootStore from "@/store/index";
 import { mdiCheck, mdiLockOutline, mdiTarget, mdiAlertOutline } from "@mdi/js";
 import { mapState } from "pinia";
+import * as smd from "streaming-markdown";
 
 export default {
   name: "MissionsCard",
@@ -341,8 +342,144 @@ export default {
           return "";
       }
     },
+
+    /**
+     * Renders markdown for task description using streaming-markdown library
+     */
+    renderedTaskDescription() {
+      if (!this.task || !this.task.description) return "";
+
+      try {
+        // Check if content is HTML or markdown
+        if (this.isHtmlContent(this.task.description)) {
+          // If it's HTML, return as-is
+          return this.task.description;
+        } else {
+          // If it's markdown, convert it
+          return this.renderMarkdownWithStreaming(this.task.description);
+        }
+      } catch (error) {
+        console.error("Error rendering task description markdown:", error);
+        // Fallback to plain text with HTML escaping
+        return this.task.description
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+    },
+
+    /**
+     * Renders markdown for submission instructions using streaming-markdown library
+     */
+    renderedSubmissionInstructions() {
+      if (!this.task || !this.task.submissionInstructions) return "";
+
+      try {
+        // Check if content is HTML or markdown
+        if (this.isHtmlContent(this.task.submissionInstructions)) {
+          // If it's HTML, return as-is
+          return this.task.submissionInstructions;
+        } else {
+          // If it's markdown, convert it
+          return this.renderMarkdownWithStreaming(this.task.submissionInstructions);
+        }
+      } catch (error) {
+        console.error("Error rendering submission instructions markdown:", error);
+        // Fallback to plain text with HTML escaping
+        return this.task.submissionInstructions
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+    },
   },
-  methods: {},
+  methods: {
+    /**
+     * Detects if content is HTML or markdown
+     * @param content - The content to analyze
+     * @returns boolean - true if HTML, false if markdown
+     */
+    isHtmlContent(content) {
+      if (!content) return false;
+
+      // Check for common HTML patterns
+      const htmlPatterns = [
+        /<[^>]+>/g, // HTML tags
+        /&[a-zA-Z]+;/g, // HTML entities like &nbsp;
+        /<iframe/i, // iframe tags specifically
+        /<div/i, // div tags
+        /<p>/i, // p tags
+        /<br/i, // br tags
+        /<img/i, // img tags
+        /<a\s+href/i, // anchor tags with href
+      ];
+
+      // If any HTML patterns are found, consider it HTML
+      for (const pattern of htmlPatterns) {
+        if (pattern.test(content)) {
+          return true;
+        }
+      }
+
+      // Check for markdown patterns
+      const markdownPatterns = [
+        /^#{1,6}\s+/m, // Headers
+        /\*\*[^*]+\*\*/, // Bold
+        /\*[^*]+\*/, // Italic
+        /\[[^\]]+\]\([^)]+\)/, // Links
+        /^[-*+]\s+/m, // Unordered lists
+        /^\d+\.\s+/m, // Ordered lists
+        /`[^`]+`/, // Inline code
+        /```[\s\S]*?```/, // Code blocks
+      ];
+
+      // If markdown patterns are found and no HTML patterns, consider it markdown
+      const hasMarkdown = markdownPatterns.some((pattern) => pattern.test(content));
+      const hasHtml = htmlPatterns.some((pattern) => pattern.test(content));
+
+      // If it has both HTML and markdown, prefer HTML (don't convert)
+      if (hasHtml) return true;
+
+      // If it has markdown and no HTML, convert it
+      return !hasMarkdown;
+    },
+
+    /**
+     * Renders markdown using streaming-markdown library
+     * @param markdown - The markdown text to convert
+     * @returns HTML string
+     */
+    renderMarkdownWithStreaming(markdown) {
+      if (!markdown) return "";
+
+      try {
+        // Create a temporary div element to render into
+        const tempDiv = document.createElement("div");
+
+        // Create renderer and parser
+        const renderer = smd.default_renderer(tempDiv);
+        const parser = smd.parser(renderer);
+
+        // Write the markdown content
+        smd.parser_write(parser, markdown);
+
+        // End the stream
+        smd.parser_end(parser);
+
+        // Get the HTML content
+        const html = tempDiv.innerHTML;
+
+        return html;
+      } catch (error) {
+        console.error("Error rendering markdown with streaming-markdown:", error);
+        return markdown; // Fallback to plain text
+      }
+    },
+  },
 };
 </script>
 

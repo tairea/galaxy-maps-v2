@@ -298,7 +298,7 @@ export default {
     "editing",
     "currentNode",
     "currentEdge",
-    "students"
+    "students",
   ],
   async mounted() {
     // this.sortedObjArr = arr.sort((a, b) =>
@@ -366,19 +366,21 @@ export default {
       return this.$vuetify.theme.isDark;
     },
     sortedTopics() {
-      let sortedTopics = this.currentCourseNodes.filter(node => node.id !== this.currentNode.id).sort((a, b) => {
-        // bruh! sometimes courseNodes have property topicCreatedTimestamp and sometimes they have nodeCreatedTimestamp
-        // code as been fixed to no only save as topicCreatedTimestamp
-        // but this ternary handles old nodeCreatedTimestamp's
-        let aTimestamp = a.hasOwnProperty("topicCreatedTimestamp")
-          ? a.topicCreatedTimestamp.seconds
-          : a.nodeCreatedTimestamp.seconds;
-        let bTimestamp = b.hasOwnProperty("topicCreatedTimestamp")
-          ? b.topicCreatedTimestamp.seconds
-          : b.nodeCreatedTimestamp.seconds;
+      let sortedTopics = this.currentCourseNodes
+        .filter((node) => node.id !== this.currentNode.id)
+        .sort((a, b) => {
+          // bruh! sometimes courseNodes have property topicCreatedTimestamp and sometimes they have nodeCreatedTimestamp
+          // code as been fixed to no only save as topicCreatedTimestamp
+          // but this ternary handles old nodeCreatedTimestamp's
+          let aTimestamp = a.hasOwnProperty("topicCreatedTimestamp")
+            ? a.topicCreatedTimestamp.seconds
+            : a.nodeCreatedTimestamp.seconds;
+          let bTimestamp = b.hasOwnProperty("topicCreatedTimestamp")
+            ? b.topicCreatedTimestamp.seconds
+            : b.nodeCreatedTimestamp.seconds;
 
-        return new Date(bTimestamp) - new Date(aTimestamp);
-      });
+          return new Date(bTimestamp) - new Date(aTimestamp);
+        });
       return sortedTopics;
     },
   },
@@ -443,7 +445,7 @@ export default {
         .doc(node.id)
         .set({ ...node, topicCreatedTimestamp: new Date() });
       await this.saveTopicToStudents(node);
-      
+
       if (!isUpdate) {
         // increment course topicTotals by 1
         await db
@@ -526,13 +528,22 @@ export default {
     async saveTopicToStudents(node) {
       // if no students, return
       if (this.students.empty) {
-        console.log('no students in this galaxy')
+        console.log("no students in this galaxy");
         return;
       }
 
       // for each student
       for (const student of this.students) {
         const personId = student.id;
+
+        // Validate required fields before proceeding
+        if (!personId || !this.course?.id) {
+          console.warn("assignTopicToStudents: Missing required fields", {
+            personId,
+            courseId: this.course?.id,
+          });
+          continue;
+        }
 
         // set reference to this course
         const courseRef = db.collection("people").doc(personId).collection(this.course.id);
@@ -571,15 +582,26 @@ export default {
     },
     async deleteTopicForStudents(node) {
       console.log("node: ", node);
-  
+
       // if no students, return
-      if (this.students.empty) {
+      if (!this.students || this.students.length === 0) {
         return;
       }
 
       await Promise.all(
         this.students.map(async (std) => {
           const personId = std.id;
+
+          // Validate required fields before proceeding
+          if (!personId || !this.course?.id || !node?.id) {
+            console.warn("deleteTopicForStudents: Missing required fields", {
+              personId,
+              courseId: this.course?.id,
+              nodeId: node?.id,
+            });
+            return;
+          }
+
           console.log("deleting ", node.label, "for student: ", personId);
           // delete for student
           return db

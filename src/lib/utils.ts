@@ -2891,3 +2891,33 @@ const errorMessages: ErrorMessages = {
 export const getFriendlyErrorMessage = (errorCode: string): string => {
   return errorMessages[errorCode] || "An unknown error occurred: (" + errorCode + ")";
 };
+
+/**
+ * Converts markdown text to HTML using streaming-markdown library
+ * @param markdown - The markdown text to convert
+ * @returns HTML string
+ */
+export async function markdownToHtml(markdown: string): Promise<string> {
+  if (!markdown) return "";
+
+  // Dynamic import for streaming-markdown library
+  const smd = await import("streaming-markdown");
+
+  // Create a temporary div element to render into
+  const tempDiv = document.createElement("div");
+
+  // Create renderer and parser
+  const renderer = smd.default_renderer(tempDiv);
+  const parser = smd.parser(renderer);
+
+  // Write the markdown content
+  smd.parser_write(parser, markdown);
+
+  // End the stream
+  smd.parser_end(parser);
+
+  // Get the HTML content
+  const html = tempDiv.innerHTML;
+
+  return html;
+}

@@ -71,6 +71,7 @@ import {
 import {
   downloadAndUploadImageHttpsEndpoint,
   generateGalaxyMapHttpsEndpoint,
+  generateInstructionsForMissionHttpsEndpoint,
 } from "./openAIActions.js";
 
 export {
@@ -150,4 +151,5 @@ export {
 export {
   downloadAndUploadImageHttpsEndpoint as downloadAndUploadImage,
   generateGalaxyMapHttpsEndpoint as generateGalaxyMap,
+  generateInstructionsForMissionHttpsEndpoint as generateInstructionsForMission,
 };

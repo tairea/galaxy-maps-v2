@@ -73,6 +73,7 @@ declare module 'vue' {
     RobotLoadingSpinner: typeof import('./src/components/Reused/RobotLoadingSpinner.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SaveGalaxyDialog: typeof import('./src/components/Dialogs/SaveGalaxyDialog.vue')['default']
     SelectedMissionsCard: typeof import('./src/components/SolarSystemView/MissionsList/MissionsCard/SelectedMissionsCard.vue')['default']
     SnackBar: typeof import('./src/components/Reused/SnackBar.vue')['default']
     SolarSystem: typeof import('./src/components/Reused/SolarSystem.vue')['default']

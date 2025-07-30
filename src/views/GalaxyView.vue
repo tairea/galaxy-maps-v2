@@ -129,7 +129,7 @@
       :selectedEdge="currentEdge"
       @closeInfoPanel="closeInfoPanel"
     />
-    <SolarSystemListPanel v-if="teacher" :course="boundCourse" @focusOnTopic="handleFocusOnTopic" />
+    <!-- <SolarSystemListPanel v-if="teacher" :course="boundCourse" @focusOnTopic="handleFocusOnTopic" /> -->
 
     <!-- Galaxy Completed Popup -->
     <GalaxyCompletedDialog :value="galaxyCompletedDialog" @close="galaxyCompletedDialog = false" />
@@ -625,6 +625,7 @@ export default {
       this.$refs.vis.focusOnNodeById(node.id);
     },
     toggleShowMissions() {
+      console.log("toggleShowMissions");
       this.showMissions = !this.showMissions;
     },
   },

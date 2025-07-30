@@ -826,6 +826,9 @@ export default {
           color: "baseAccent",
         });
 
+        // Set the currentCourseId in store before navigating to ensure GalaxyMap has access to it
+        this.setCurrentCourseId(result.courseId);
+
         // Reset saving state
         this.isSavingToDB = false;
         this.savingProgress = 0;
@@ -973,6 +976,11 @@ export default {
   .stepper-styles {
     background: none !important;
     // background-color: var(--v-background-base);
+
+    // Remove box-shadow from v-stepper
+    &.v-sheet.v-stepper:not(.v-sheet--outlined) {
+      box-shadow: none !important;
+    }
   }
 }
 

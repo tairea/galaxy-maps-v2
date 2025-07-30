@@ -186,7 +186,7 @@ export default {
     drag: false,
     DOMRect: {},
     nodeLabelColor: "#ffffff", // Default label color
-    previousShowMissionsState: false, // Track previous showMissions state for preview mode
+    originalShowMissionsState: false, // Track original showMissions state
   }),
   watch: {
     darkMode(dark) {
@@ -200,13 +200,20 @@ export default {
         this.makeStarsColour("#FFD700"); // Gold for dark mode
       }
     },
+    // Watch for currentCourseId changes to refresh data when it becomes available
+    currentCourseId(newCourseId, oldCourseId) {
+      if (newCourseId && newCourseId !== oldCourseId) {
+        console.log("currentCourseId changed, refreshing data:", newCourseId);
+        this.refreshData();
+      }
+    },
     // This is a watch for the topic clicked event from the systemListPanel
     // this is needed because trigging topicClicked from GalaxyView it stuck in a loop
     panelTopicClicked(newTopic) {
       if (!newTopic || !this.$refs.network) return;
-      
+
       // Find the node in the network that matches the clicked topic
-      const node = this.$refs.network.nodes.find(n => n.id === newTopic.id);
+      const node = this.$refs.network.nodes.find((n) => n.id === newTopic.id);
       if (node) {
         this.zoomToNode(node);
         var options = { ...this.network.options };
@@ -215,7 +222,7 @@ export default {
         this.$refs.network.setOptions(options);
         this.$emit("topicClicked", newTopic);
       }
-    }
+    },
   },
   computed: {
     ...mapState(useRootStore, [
@@ -339,7 +346,10 @@ export default {
       ? this.$vuetify.theme.themes.dark.missionAccent
       : this.$vuetify.theme.themes.light.missionAccent;
 
-    this.refreshData();
+    // Only refresh data if currentCourseId is already available
+    if (this.currentCourseId) {
+      this.refreshData();
+    }
 
     // zoom fit on load
     if (this.nodesToDisplay && this.$refs.network.nodes.length > 0) {
@@ -373,6 +383,12 @@ export default {
       "setCurrentTopicId",
     ]),
     async refreshData() {
+      // Validate required fields before proceeding
+      if (!this.currentCourseId) {
+        console.warn("refreshData: Missing currentCourseId");
+        return;
+      }
+
       await this.bindCourseNodes(this.currentCourseId);
       await this.bindCourseEdges(this.currentCourseId);
 
@@ -392,6 +408,12 @@ export default {
 
       // ===== NOTE: Updated logic to bind topics for course creator && "non-signed-in-user" (improving new user experience)
       if (this.student) {
+        // Validate person.id for student
+        if (!this.person?.id) {
+          console.warn("refreshData: Missing person.id for student");
+          return;
+        }
+
         // bind topics for student
         await this.bindThisPersonsCourseTopics({
           personId: this.person.id,
@@ -529,6 +551,15 @@ export default {
         this.$refs.network.deleteSelected();
         return;
       }
+      // Validate required fields before proceeding
+      if (!this.currentCourseId || !newEdgeData?.id) {
+        console.warn("addEdge: Missing required fields", {
+          currentCourseId: this.currentCourseId,
+          edgeId: newEdgeData?.id,
+        });
+        return;
+      }
+
       db.collection("courses")
         .doc(this.currentCourseId)
         .collection("map-edges")
@@ -551,7 +582,7 @@ export default {
       }
     },
     async click2(data) {
-      console.log("click2: ", data)
+      console.log("click2: ", data);
       if (
         this.addingNode ||
         this.addingEdge ||
@@ -559,14 +590,26 @@ export default {
         (data.items.length > 0 && data.nodes.length == 0) // this means its just an edge
       )
         return;
-      console.log("click event:", data);
       // 0) get closest node
       const closestNode = this.getClosestNodeToClick(data);
       if (closestNode.group == "locked") return;
 
-      // Save current showMissions state and enable it for preview
-      this.previousShowMissionsState = this.showMissions;
-      if (!this.showMissions) {
+      // Check if we're already in preview mode and clicking on the same node
+      if (
+        this.inSystemPreviewView &&
+        this.previewedNode &&
+        this.previewedNode.id === closestNode.id
+      ) {
+        // Exit preview mode if clicking on the same node
+        this.exitSolarSystemPreview();
+        return;
+      }
+
+      // Save the original showMissions state before entering preview mode
+      this.originalShowMissionsState = this.showMissions;
+
+      // Disable show missions if it's currently enabled
+      if (this.showMissions) {
         this.toggleShowMissions();
       }
 
@@ -574,13 +617,11 @@ export default {
       this.inSystemPreviewView = true;
       this.previewedNode = closestNode;
 
-      // 2) calculate offsets
+      // 2) get tasks for this topic
       let tasksForThisTopic = this.tasks.filter((taskObj) => taskObj.topicId == closestNode.id);
-      let xOffset = 150; // Hardcoded value for experimentation
-      let yOffset = (tasksForThisTopic.length - 1) * 10; // 20px per mission, center if only one
 
-      // 3) zoom to node with offsets
-      this.zoomToNodeWithOffset(closestNode, xOffset, yOffset);
+      // 3) zoom to node
+      this.zoomToNode(closestNode);
 
       // 4) hide edges
       var options = { ...this.network.options };
@@ -694,9 +735,23 @@ export default {
       const newNodes = this.newNodePositions;
       // spread/or map new positions to nodes
 
+      // Validate required fields before proceeding
+      if (!this.currentCourseId) {
+        console.warn("saveNodePositions: Missing currentCourseId");
+        this.$emit("nodePositionsChangeSaved");
+        return;
+      }
+
       for (const changedNode in newNodes) {
         const changedNodeObj = newNodes[changedNode];
         const node = nodes.find((node) => node.id === changedNodeObj.id);
+
+        // Validate node exists and has required fields
+        if (!node || !node.id) {
+          console.warn("saveNodePositions: Missing node or node.id", { node });
+          continue;
+        }
+
         // TODO: only saves changes once. not the second time
         if (changedNodeObj.x !== node.x || changedNodeObj.y !== node.y) {
           node.x = changedNodeObj.x;
@@ -745,7 +800,7 @@ export default {
         const edgeId = data.edges[0];
         const selectedEdge = this.$refs.network.getEdge(edgeId);
         selectedEdge.type = "edge";
-        (selectedEdge.DOMx = data.pointer.DOM.x), (selectedEdge.DOMy = data.pointer.DOM.y);
+        ((selectedEdge.DOMx = data.pointer.DOM.x), (selectedEdge.DOMy = data.pointer.DOM.y));
         this.$emit("selectedEdge", selectedEdge);
       }
     },
@@ -824,8 +879,8 @@ export default {
       // Clear current topic ID to show all planet labels again
       this.setCurrentTopicId(null);
 
-      // Restore previous showMissions state if it was different
-      if (this.showMissions !== this.previousShowMissionsState) {
+      // Restore original showMissions state
+      if (this.showMissions !== this.originalShowMissionsState) {
         this.toggleShowMissions();
       }
 

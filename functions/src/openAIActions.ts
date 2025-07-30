@@ -18,7 +18,7 @@ const openai = new OpenAI({ apiKey: openaiApiKey });
 
 // System prompt for galaxy map generation
 const StarsAndPlanetsSystemPrompt = `
-  You are a journey path design assistant for a learning visualisation platform called Galaxy Maps, which helps users create structured, actionable paths toward reaching their destination. This destination might be personal, professional, educational, project-based, or creative.
+  You are a learning roadmap design assistant for a learning visualisation platform called Galaxy Maps, which helps users create structured, actionable paths toward reaching their destination. This destination might be personal, professional, educational, project-based, or creative.
 
 You have received a description of what the user wants to achieve.
 
@@ -43,12 +43,12 @@ If clarification is needed, respond in this format:
   "questions": ["Clarifying question 1", "Clarifying question 2"]
 }
 
-### **Step 2: Design the Journey**
+### **Step 2: Design the Roadmap**
 Once the goal is clear, break the journey into a logical sequence of:
 
-Stars → major phases or themes (themes) needed to successfully complete the journey
+Stars → major phases or **themes** needed to successfully complete the journey
 
-Planets → key tasks that must be completed within each Star (tasks)
+Planets → key **tasks** that must be completed within each Star
 
 
 Respond in this format:
@@ -72,7 +72,7 @@ Respond in this format:
     ...
   ]
 }
-### **Step 3: Follow These Journey Design Instructions**
+### **Step 3: Follow These Roadmap Design Instructions**
 - Each Star is a major checkpoint or theme required to successfully complete the journey.
 
 - Each Planet under a Star is a key task or milestone that must be actioned to completed the Star and to move forward.
@@ -104,6 +104,105 @@ After generating the journey, review it for:
 - ✅ Logical progression from one Planet to the next.
 - ✅ Clear, actionable Planets that contribute to each Star.
 `;
+
+// System prompt for mission instructions generation
+const MissionInstructionsSystemPrompt =
+  `
+  You are a mission design assistant for a roadmap visualisation platform called Galaxy Maps. Your role is to create detailed, actionable mission instructions that help users achieve specific learning objectives.
+
+  You will receive:
+  1. A description of what the specific mission should accomplish
+  2. Context about the overall roadmap (called a Galaxy Map) that the mission is part of
+
+  ### **Step 1: Understand the Context**
+  - Review the overall roadmap structure to understand the broader context
+  - Identify where this specific mission fits within the roadmap
+  - Consider how this mission builds upon previous missions and prepares for future ones
+  - Identify where this specific mission fits within the overall roadmap
+  - Do not create instructions that do not pertain to this specific mission
+  - Stay focused on achieving this specific mission only. Do not create instruction that might be covered by future missions.
+
+  ### **Step 2: Create the Mission Instructions**
+  Create comprehensive instructions that include:
+  - **Instructions**: Step-by-step actionable instructions
+  ` +
+  // - **Description**: A brief overview of what the mission accomplishes
+  // - **Learning Objectives**: Specific, measurable outcomes
+  // - **Estimated Duration**: Realistic time estimate
+  // - **Difficulty Level**: beginner, intermediate, or advanced
+  // - **Prerequisites**: Any prior knowledge or skills needed (optional)
+  // - **Resources**: Recommended tools, materials, or references (optional)
+
+  `
+
+  ### **Step 3: Follow These Mission Design Principles**
+  - Each instruction should be specific and actionable
+  - Instructions should build progressively toward the mission
+  - Make instructions engaging and motivating.
+  `;
+// - Include clear Mission success criteria where possible
+// - Consider different learning styles and provide multiple approaches when relevant
+// - Ensure the mission fits naturally within the broader learning journey
+// - Consider the difficulty progression from previous to future missions
+// - Include safety considerations if applicable
+// - Provide context for why each step matters
+// `;
+
+// ### **Step 4: Validate the Mission**
+// Before finalizing, verify:
+// - ✅ Are all instructions actionable and clear?
+// - ✅ Do the learning objectives align with the mission description?
+// - ✅ Does this mission fit well within the broader learning journey?
+// - ✅ Is the difficulty level appropriate for the target audience?
+// - ✅ Is the estimated duration realistic?
+// - ✅ Are prerequisites clearly identified?
+// - ✅ Are necessary resources listed?
+// - ✅ Does this mission build upon previous missions appropriately?
+// `;
+
+/**
+ * Converts a galaxy map object to markdown format for AI context
+ * @param galaxyMap - The galaxy map object containing stars and planets
+ * @returns A markdown string representation of the galaxy map
+ */
+function convertGalaxyMapToMarkdown(galaxyMap: {
+  title?: string;
+  description?: string;
+  stars?: Array<{
+    title: string;
+    description: string;
+    planets?: Array<{
+      title: string;
+      description: string;
+    }>;
+  }>;
+}): string {
+  if (!galaxyMap || !galaxyMap.stars) {
+    return "";
+  }
+
+  let markdown = `# ${galaxyMap.title || "Learning Journey"}\n\n`;
+  markdown += `${galaxyMap.description || ""}\n\n`;
+
+  markdown += "## Learning Journey Structure\n\n";
+
+  for (let i = 0; i < galaxyMap.stars.length; i++) {
+    const star = galaxyMap.stars[i];
+    markdown += `### ${star.title}\n`;
+    markdown += `${star.description}\n\n`;
+
+    if (star.planets && star.planets.length > 0) {
+      markdown += "**Missions in this Star:**\n";
+      for (let j = 0; j < star.planets.length; j++) {
+        const planet = star.planets[j];
+        markdown += `- ${planet.title}: ${planet.description}\n`;
+      }
+      markdown += "\n";
+    }
+  }
+
+  return markdown;
+}
 
 // Generate galaxy map with AI
 export const generateGalaxyMapHttpsEndpoint = runWith({
@@ -142,6 +241,90 @@ export const generateGalaxyMapHttpsEndpoint = runWith({
       throw new HttpsError("internal", "No response content from OpenAI");
     }
 
+    // generate image using parsedResponse.title and parsedResponse.description
+    let imageUrl = null;
+    let fileName = null;
+    if (
+      parsedResponse.status === "journey_ready" &&
+      parsedResponse.title &&
+      parsedResponse.description
+    ) {
+      try {
+        logger.info("Generating image for galaxy map", {
+          title: parsedResponse.title,
+          descriptionLength: parsedResponse.description.length,
+        });
+
+        // Generate image using DALL-E API directly
+        logger.info("Calling DALL-E for image generation");
+        const imageResponse = await openai.images.generate({
+          model: "dall-e-3",
+          prompt: `Generate an image that symbolizes "${parsedResponse.title}": ${parsedResponse.description || ""}.`,
+          n: 1,
+          size: "1024x1024",
+        });
+
+        logger.info("DALL-E image generation response received", {
+          hasData: !!imageResponse.data,
+          dataLength: imageResponse.data?.length,
+          firstImageUrl: imageResponse.data?.[0]?.url,
+        });
+
+        if (imageResponse.data && imageResponse.data.length > 0) {
+          const imageUrlFromDalle = imageResponse.data[0].url;
+          logger.info("Image generated successfully by DALL-E", { imageUrl: imageUrlFromDalle });
+
+          // Download the image from DALL-E URL and upload to Firebase Storage
+          fileName = `galaxy-maps/${Date.now()}-${parsedResponse.title?.replace(/[^a-zA-Z0-9]/g, "-") || "galaxy"}.png`;
+
+          // Download image from DALL-E URL
+          logger.info("Downloading image from DALL-E URL");
+          const imageDownloadResponse = await fetch(imageUrlFromDalle!);
+          const imageBuffer = await imageDownloadResponse.arrayBuffer();
+          const buffer = Buffer.from(imageBuffer);
+          logger.info("Image downloaded and converted to buffer", { size: buffer.length });
+
+          // Upload to Firebase Storage
+          logger.info("Starting upload to Firebase Storage");
+          const file = storage.bucket(STORAGE_BUCKET).file(fileName);
+          await file.save(buffer, {
+            metadata: {
+              contentType: "image/png",
+            },
+          });
+          logger.info("File uploaded successfully", { fileName });
+
+          // Get the public URL
+          logger.info("Generating signed URL");
+          const [downloadURL] = await file.getSignedUrl({
+            action: "read",
+            expires: "03-01-2500",
+          });
+          logger.info("Signed URL generated successfully");
+
+          imageUrl = downloadURL;
+        }
+      } catch (imageError) {
+        logger.error("Error generating or uploading image", imageError);
+        // Don't fail the entire request if image generation fails
+      }
+    }
+
+    // Add image URL to the galaxy map if generated
+    logger.info("Final image generation result", {
+      hasImageUrl: !!imageUrl,
+      hasFileName: !!fileName,
+      imageUrl: imageUrl,
+      fileName: fileName,
+    });
+
+    if (imageUrl && fileName && parsedResponse.status === "journey_ready") {
+      parsedResponse.image = { name: fileName, url: imageUrl };
+      logger.info("Image added to galaxy map", { image: parsedResponse.image });
+    } else {
+      logger.info("No image added to galaxy map - conditions not met");
+    }
+
     // Return the validated response with token usage information
     return {
       success: true,
@@ -155,6 +338,87 @@ export const generateGalaxyMapHttpsEndpoint = runWith({
     };
   } catch (error) {
     logger.error("Error in generateGalaxyMap", error);
+
+    // Handle Zod validation errors specifically
+    if (error instanceof Error && error.name === "ZodError") {
+      throw new HttpsError("internal", `AI response validation failed: ${error.message}`);
+    }
+
+    throw new HttpsError(
+      "internal",
+      error instanceof Error ? error.message : "Unknown error occurred",
+    );
+  }
+});
+
+// Generate mission instructions with AI
+export const generateInstructionsForMissionHttpsEndpoint = runWith({
+  timeoutSeconds: 540, // 9 minutes timeout
+  memory: "1GB",
+}).https.onCall(async (data) => {
+  try {
+    logger.info("Starting generateInstructionsForMission function", {
+      description: data.description?.substring(0, 50) + "...",
+      hasGalaxyMap: !!data.aiGeneratedGalaxyMap,
+      originResponseId: data.originResponseId,
+    });
+
+    const { description, aiGeneratedGalaxyMap } = data;
+    if (!description || !description.trim()) {
+      logger.error("Missing required field: description");
+      throw new HttpsError("invalid-argument", "Missing required field: description");
+    }
+
+    // Convert galaxy map to markdown for context
+    let galaxyMapContext = "";
+    if (aiGeneratedGalaxyMap) {
+      galaxyMapContext = convertGalaxyMapToMarkdown(aiGeneratedGalaxyMap);
+      logger.info("Galaxy map context converted to markdown", {
+        contextLength: galaxyMapContext.length,
+      });
+    }
+
+    // Prepare the user message with context
+    let userMessage = description;
+    if (galaxyMapContext) {
+      userMessage = `## Overall Learning Journey Context\n\n${galaxyMapContext}\n\n## Specific Mission Request\n\n${description}`;
+    }
+
+    // Call OpenAI API
+    logger.info("Calling OpenAI API for mission instructions generation");
+    const aiResponse = await openai.responses.parse({
+      model: "gpt-4o-mini",
+      input: [
+        { role: "system", content: MissionInstructionsSystemPrompt },
+        { role: "user", content: userMessage },
+      ],
+      // text: {
+      //   format: zodTextFormat(MissionInstructionsSchema, "mission_instructions_response"),
+      // },
+      // ...(originResponseId && { previous_response_id: originResponseId }),
+    });
+
+    logger.info("OpenAI API call completed successfully");
+
+    // Get the parsed and validated response (already handled by zodTextFormat)
+    const parsedResponse = aiResponse.output_text;
+    if (!parsedResponse) {
+      throw new HttpsError("internal", "No response content from OpenAI");
+    }
+
+    // Return the validated response with token usage information
+    return {
+      success: true,
+      missionInstructions: parsedResponse,
+      tokenUsage: {
+        input_tokens: aiResponse.usage?.input_tokens || 0,
+        output_tokens: aiResponse.usage?.output_tokens || 0,
+        total_tokens: aiResponse.usage?.total_tokens || 0,
+      },
+      responseId: aiResponse.id,
+    };
+  } catch (error) {
+    logger.error("Error in generateInstructionsForMission", error);
 
     // Handle Zod validation errors specifically
     if (error instanceof Error && error.name === "ZodError") {
