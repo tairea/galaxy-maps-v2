@@ -1956,6 +1956,7 @@ export default {
 
     async saveGalaxyMapToDatabase(selectedLayout) {
       this.isSavingToDB = true;
+      this.loading = true; // Show the loading overlay
 
       // Restart loading messages with saving messages
       this.stopLoadingMessages();
