@@ -59,7 +59,7 @@
           class="ml-2"
         >
           <v-icon left>{{ mdiRobotExcited }}</v-icon>
-          Save Galaxy
+          Generate Galaxy Map
         </v-btn>
       </v-card-actions>
     </v-card>

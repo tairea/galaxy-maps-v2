@@ -8,7 +8,10 @@
 
         <!-- PROGRESS BAR FOR DATABASE SAVING -->
         <div v-if="isSavingToDB" class="saving-progress-container">
-          <v-progress-linear
+          <!-- Saving is a cloud function now so we dont see the individual planets being saved on the frontend for a progress bar -->
+          <!-- So show a spinner instead -->
+          <RobotLoadingSpinner v-if="isSavingToDB" size="50" color="baseAccent" icon-size="24" />
+          <!-- <v-progress-linear
             :value="savingProgress"
             color="baseAccent"
             height="8"
@@ -18,6 +21,23 @@
           <p class="saving-progress-text">
             {{ Math.round(savingProgress) }}% Complete ({{ completedPlanets }}/{{ totalPlanets }}
             planets)
+          </p> -->
+        </div>
+
+        <!-- PROGRESS BAR FOR MISSION GENERATION -->
+        <div v-if="isGeneratingMissions" class="mission-generation-progress-container">
+          <v-progress-linear
+            :value="missionGenerationProgress"
+            color="galaxyAccent"
+            height="8"
+            rounded
+            class="mb-2"
+          ></v-progress-linear>
+          <p class="mission-generation-progress-text">
+            {{ Math.round(missionGenerationProgress) }}% Complete ({{ completedMissions }}/{{
+              totalMissions
+            }}
+            missions)
           </p>
         </div>
 
@@ -41,14 +61,25 @@
                 class="galaxy-treeview"
                 dense
                 @update:value="updateExpandedNodes"
+                open-all
               >
                 <template v-slot:label="{ item }">
-                  <span class="treeview-label">
-                    <span v-if="item.type === 'star'" class="star-emoji">⭐</span>
-                    <span v-else-if="item.type === 'planet'" class="planet-emoji">🪐</span>
-                    <span v-else-if="item.type === 'mission'" class="mission-emoji">🎯</span>
-                    {{ item.name }}
-                  </span>
+                  <div class="treeview-label">
+                    <div class="item-header">
+                      <span class="treeview-label-text">
+                        <span v-if="item.type === 'star'" class="star-emoji">⭐</span>
+                        <span v-else-if="item.type === 'planet'" class="planet-emoji">🪐</span>
+                        <span v-else-if="item.type === 'instructions'" class="instructions-emoji"
+                          >🎯</span
+                        >
+                        {{ item.name }}
+                      </span>
+                    </div>
+                    <div class="treeview-description" v-if="item.description">
+                      <span v-if="item.type === 'instructions'" v-html="renderToHTML(item)"></span>
+                      <span v-else>{{ item.description }}</span>
+                    </div>
+                  </div>
                 </template>
               </v-treeview>
             </div>
@@ -65,7 +96,10 @@
         </p>
         <p class="token-breakdown overline mt-2">
           Est. cost: ${{
-            (this.totalInputTokens / 1000000) * 0.15 + (this.totalOutputTokens / 1000000) * 0.6
+            (
+              (this.totalInputTokens / 1000000) * 0.15 +
+              (this.totalOutputTokens / 1000000) * 0.6
+            ).toFixed(5)
           }}
         </p>
       </div>
@@ -90,8 +124,8 @@
                 <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
                 <div>
                   <p class="dialog-description">
-                    A Galaxy Map breaks down a goal into clear, visual steps, creating a journey
-                    that you can track and monitor progress.
+                    A Galaxy Map lays out your goal as a clear sequence of visual steps, helping you
+                    stay focused and track progress.
                   </p>
                   <p class="dialog-description mt-2">
                     Create a Galaxy Map to complete a project, teach a course, or learn a new skill.
@@ -137,21 +171,19 @@
                     <v-btn
                       outlined
                       color="galaxyAccent"
-                      @click="firstStep()"
-                      class="mr-2"
+                      @click="showCreateOptions"
                       :loading="loading"
                       :disabled="disabled"
                       :dark="dark"
                       :light="!dark"
                     >
                       <v-icon left> {{ mdiRobotExcited }} </v-icon>
-                      CREATE GALAXY MAP
+                      Create Galaxy Map
                     </v-btn>
 
                     <v-btn
                       outlined
                       :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
-                      class="ml-4"
                       @click="closeDialog"
                       :disabled="loading"
                       :dark="dark"
@@ -188,7 +220,7 @@
                   </div>
 
                   <!-- ACTION BUTTONS -->
-                  <div class="action-buttons">
+                  <div class="action-buttons flex-row justify-center">
                     <!-- BACK -->
                     <v-btn
                       outlined
@@ -202,11 +234,11 @@
                       <v-icon left> {{ mdiArrowLeft }} </v-icon>
                       Back
                     </v-btn>
-                    <!-- CREATE -->
+                    <!-- CONTINUE -->
                     <v-btn
                       outlined
-                      color="galaxyAccent"
-                      @click="secondStep()"
+                      :color="selectedFlow === 'no-human-help' ? 'galaxyAccent' : 'baseAccent'"
+                      @click="continueWithSelectedFlow()"
                       class="mx-2"
                       :loading="loading"
                       :disabled="disabled"
@@ -214,13 +246,12 @@
                       :light="!dark"
                     >
                       <v-icon left> {{ mdiRobotExcited }} </v-icon>
-                      CREATE GALAXY MAP
+                      GO!
                     </v-btn>
 
                     <v-btn
                       outlined
                       :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
-                      class="ml-4"
                       @click="closeDialog"
                       :disabled="loading"
                       :dark="dark"
@@ -239,6 +270,23 @@
         </v-dialog>
       </v-col>
     </v-row>
+
+    <!-- Layout Selection Dialog -->
+    <LayoutSelectionDialog
+      :show-dialog="showLayoutDialog"
+      :loading="loading"
+      @cancel="cancelLayoutSelection"
+      @confirm="confirmLayoutSelection"
+    />
+
+    <!-- Create Galaxy Options Dialog -->
+    <CreateGalaxyOptionsDialog
+      :show-dialog="showCreateOptionsDialog"
+      :loading="loading"
+      @human-help="handleHumanHelp"
+      @no-human-help="handleNoHumanHelp"
+      @cancel="handleCancelCreateOptions"
+    />
   </v-container>
 </template>
 
@@ -253,14 +301,24 @@ import {
 } from "@mdi/js";
 import { mapState, mapActions } from "pinia";
 import useRootStore from "@/store/index";
-import { generateGalaxyMap, saveGalaxyMap } from "@/lib/ff";
+import {
+  generateGalaxyMap,
+  generateGalaxyMapWithClarification,
+  generateInstructionsForMission,
+  saveGalaxyMap,
+  downloadAndUploadImage,
+} from "@/lib/ff";
 import { zodTextFormat } from "openai/helpers/zod";
 import { StarsAndPlanetsResponseSchema } from "@/lib/schemas";
 import RobotLoadingSpinner from "@/components/Reused/RobotLoadingSpinner.vue";
+import LayoutSelectionDialog from "@/components/Dialogs/LayoutSelectionDialog.vue";
+import CreateGalaxyOptionsDialog from "@/components/Dialogs/CreateGalaxyOptionsDialog.vue";
 export default {
   name: "AICreateGalaxyDialog",
   components: {
     RobotLoadingSpinner,
+    LayoutSelectionDialog,
+    CreateGalaxyOptionsDialog,
   },
   props: {
     showFirstDialog: {
@@ -314,9 +372,17 @@ export default {
     currentLoadingMessage: "",
     loadingMessageInterval: null,
     isSavingToDB: false,
+    isGeneratingMissions: false,
     savingProgress: 0,
     completedPlanets: 0,
     totalPlanets: 0,
+    missionGenerationProgress: 0,
+    completedMissions: 0,
+    totalMissions: 0,
+    showLayoutDialog: false,
+    showCreateOptionsDialog: false,
+    selectedFlow: null, // Track which flow was selected: 'human-help' or 'no-human-help'
+    selectedLayout: null, // Store the selected layout for the flow
     aiGeneratedTitle: "",
     aiGeneratedDescription: "",
     aiGeneratedTopics: [],
@@ -409,6 +475,9 @@ export default {
       this.totalInputTokens = 0; // Reset input token counter
       this.totalOutputTokens = 0; // Reset output token counter
       this.aiGeneratedGalaxyMap = {}; // Reset galaxy map
+      this.selectedFlow = null; // Reset selected flow
+      this.selectedLayout = null; // Reset selected layout
+      this.showCreateOptionsDialog = false; // Reset create options dialog
       this.$emit("update:showFirstDialog", false);
     },
     startLoadingMessages() {
@@ -446,7 +515,9 @@ export default {
       };
     },
     // =========== Generate Galaxy Map with AI ===========
-    async firstStep() {
+    async firstStep(flow = "human-help") {
+      // Store the selected flow
+      this.selectedFlow = flow;
       console.log("firstStep");
       // Prevent multiple simultaneous submissions
       if (this.loading) {
@@ -531,9 +602,15 @@ export default {
             },
           ];
 
-          // Save to store first, then route to AiGalaxyEdit
-          this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
-          this.$router.push({ name: "AiGalaxyEdit" });
+          // Check the selected flow to determine next step
+          if (this.selectedFlow === "human-help") {
+            // For human-help flow, route to AiGalaxyEdit
+            this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
+            this.$router.push({ name: "AiGalaxyEdit" });
+          } else if (this.selectedFlow === "no-human-help") {
+            // For no-human-help flow, continue with automated generation
+            await this.generateMissionsThenSave(this.selectedLayout);
+          }
         } else if (
           parsedResponse.status === "clarification_needed" &&
           parsedResponse.questions &&
@@ -561,89 +638,6 @@ export default {
           // Set loading to false here since we're not proceeding
           this.loading = false;
         }
-
-        // =========== Generate course Tasks (for each Topic) using AI ===========
-        // const topicsWithTasks = [];
-        // for (let topic of topicList) {
-        //   const microResponse = await this.$openai.responses.create({
-        //     // model: "gpt-4o-mini",
-        //     // temperature: 0.4,
-        //     // messages: [
-        //     //   {
-        //     //     role: "system",
-        //     //     content: `
-
-        //     //     You are a learning experience designer. Given a topic, break it down into **bite-sized lessons**
-        //     //     that take **5 minutes or less** to complete. For each micro-lesson, provide:\n
-        //     //     \n
-        //     //     1. A **short explanation** of the concept\n
-        //     //     2. 1–3 short **actions** a learner should take to master the concept.\n
-        //     //     \n
-        //     //     CRITICAL: Return ONLY a raw JSON array of objects. Each object must have "lesson", "learning", and "actions" keys.
-        //     //     Do not include any explanatory text, markdown formatting, or code blocks.
-        //     //     The response must be a valid JSON array that can be parsed with JSON.parse().
-
-        //     //     Example valid response format (return exactly this format, no markdown, no code blocks, no explanatory text):
-        //     //     [
-        //     //       {
-        //     //         "lesson": "Basic Concept",
-        //     //         "learning": "Explanation of the concept",
-        //     //         "actions": ["Action 1", "Action 2"]
-        //     //       }
-        //     //     ]`,
-        //     //   },
-        //     //   {
-        //     //     role: "user",
-        //     //     content: `Break down the topic: \"${topic}\"`
-        //     //   }
-        //     // ]
-
-        //     // trialing the OpenAI Playground > Prompts: "GM - Mission Builder"
-        //     prompt: {
-        //       id: "pmpt_6868be6c10188190a25b162f4609a8c90e4471babac802c4",
-        //       version: "1",
-        //       variables: {
-        //         topic: topic,
-        //       },
-        //     },
-        //   });
-
-        //   console.log("Raw Micro Response:", microResponse);
-        //   console.log("Micro Response type:", typeof microResponse);
-        //   console.log("Micro Response length:", microResponse.length);
-
-        //   let tasks;
-        //   try {
-        //     const response = microResponse.output_text;
-        //     // Extract JSON array from the response
-        //     const jsonMatch = response.match(/\[[\s\S]*\]/);
-        //     if (!jsonMatch) {
-        //       throw new Error("No JSON array found in response");
-        //     }
-        //     const jsonStr = jsonMatch[0];
-        //     console.log("Extracted JSON string:", jsonStr);
-        //     tasks = JSON.parse(jsonStr);
-        //     console.log("Successfully parsed micro JSON:", tasks);
-        //   } catch (error) {
-        //     console.error("Error parsing micro response:", error);
-        //     console.log("Raw micro response:", microResponse.output_text);
-        //     throw new Error("Failed to parse micro response into valid JSON format");
-        //   }
-
-        //   topicsWithTasks.push({
-        //     title: topic,
-        //     description: `Learn about: ${topic}`,
-        //     missions: tasks.map((t) => ({
-        //       title: t.lesson,
-        //       description: `<h3>LEARNING</h3><p>${t.learning}</p><h3>ACTIONS</h3><ul>${t.actions
-        //         .map((a) => `<li>${a}</li>`)
-        //         .join("")}</ul>`,
-        //       submissionRequired: false,
-        //       submissionInstructions: "",
-        //       color: "#69a1e2",
-        //     })),
-        //   });
-        // }
       } catch (error) {
         // Calculate and log execution time even on error
         const endTime = Date.now();
@@ -672,16 +666,11 @@ export default {
       try {
         this.loading = true;
 
-        // second ai call with structured output
-        const aiSecondResponse = await this.$openai.responses.parse({
-          model: "gpt-4o-mini",
-          previous_response_id: this.previousResponseId,
-          input: [{ role: "user", content: this.prefixedAnswers.join("\n") }],
-          text: {
-            format: zodTextFormat(StarsAndPlanetsResponseSchema, "second_step_response"),
-          },
-          store: true,
-        });
+        // second ai call with structured output using cloud function
+        const aiSecondResponse = await generateGalaxyMapWithClarification(
+          this.prefixedAnswers.join("\n"),
+          this.previousResponseId,
+        );
 
         console.log(
           "2nd A.I. call: Stars and Planets Generation (after clarification): Response:",
@@ -689,12 +678,14 @@ export default {
         );
 
         // Track token usage
-        this.trackTokenUsage(aiSecondResponse);
+        this.trackTokenUsage({
+          usage: aiSecondResponse.tokenUsage,
+        });
 
-        this.previousResponseId = aiSecondResponse.id;
+        this.previousResponseId = aiSecondResponse.responseId;
 
-        // Get the parsed response (already validated by zodTextFormat)
-        const parsedResponse = aiSecondResponse.output_parsed;
+        // Get the parsed response (already validated by cloud function)
+        const parsedResponse = aiSecondResponse.galaxyMap;
 
         // Check if it's clarification_needed, journey_ready, or stars list
         if (
@@ -730,9 +721,15 @@ export default {
             },
           ];
 
-          // Save to store first, then route to AiGalaxyEdit
-          this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
-          this.$router.push({ name: "AiGalaxyEdit" });
+          // Check the selected flow to determine next step
+          if (this.selectedFlow === "human-help") {
+            // For human-help flow, route to AiGalaxyEdit
+            this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
+            this.$router.push({ name: "AiGalaxyEdit" });
+          } else if (this.selectedFlow === "no-human-help") {
+            // For no-human-help flow, continue with automated generation
+            await this.generateMissionsThenSave(this.selectedLayout);
+          }
         } else if (
           parsedResponse.status === "clarification_needed" &&
           parsedResponse.questions &&
@@ -800,8 +797,8 @@ export default {
           this.savingProgress = (this.completedPlanets / this.totalPlanets) * 100;
         };
 
-        // Call the Firebase function to save the galaxy map
-        const result = await saveGalaxyMap(this.aiGeneratedGalaxyMap, "zigzag");
+        // Call the Firebase function to save the galaxy map with selected layout
+        const result = await saveGalaxyMap(this.aiGeneratedGalaxyMap, this.selectedLayout);
 
         // Calculate and log execution time
         const endTime = Date.now();
@@ -878,9 +875,33 @@ export default {
             const planetNode = {
               id: `star-${starIndex}-planet-${planetIndex}`,
               name: planet.title,
+              description: planet.description,
               type: "planet",
               children: [],
             };
+
+            // Add mission instructions as subitems if they exist
+            if (planet.instructions) {
+              console.log("Processing planet instructions:", planet.instructions);
+              planetNode.children.push({
+                id: `star-${starIndex}-planet-${planetIndex}-instructions`,
+                name: "Mission Instructions",
+                description: planet.instructions,
+                type: "instructions",
+              });
+            }
+
+            // Add existing missions if they exist
+            if (planet.missions && planet.missions.length > 0) {
+              planetNode.children.push(
+                ...planet.missions.map((mission, missionIndex) => ({
+                  id: `star-${starIndex}-planet-${planetIndex}-mission-${missionIndex}`,
+                  name: mission.title,
+                  type: "mission",
+                })),
+              );
+            }
+
             return planetNode;
           });
         }
@@ -922,6 +943,366 @@ export default {
         // Continue execution even if token tracking fails
       }
     },
+    showCreateOptions() {
+      this.showCreateOptionsDialog = true;
+    },
+
+    handleHumanHelp() {
+      this.showCreateOptionsDialog = false;
+      this.selectedFlow = "human-help";
+      this.firstStep("human-help");
+    },
+
+    handleNoHumanHelp() {
+      this.showCreateOptionsDialog = false;
+      this.selectedFlow = "no-human-help";
+      // For no-human-help flow, we need to select layout first
+      this.showLayoutDialog = true;
+    },
+
+    handleCancelCreateOptions() {
+      this.showCreateOptionsDialog = false;
+    },
+
+    async createGalaxyMapWithNoHumanHelp(flow = "no-human-help") {
+      // Store the selected flow
+      this.selectedFlow = flow;
+      console.log("createGalaxyMapWithNoHumanHelp");
+      if (this.loading) {
+        console.log("Already processing, ignoring duplicate submission");
+        return;
+      }
+
+      if (!this.description.trim()) {
+        this.setSnackbar({
+          show: true,
+          text: "Please provide a description for the Galaxy Map",
+          color: "warning",
+        });
+        return;
+      }
+
+      // Show layout selection dialog first
+      console.log("Showing layout selection dialog before galaxy generation...");
+      this.showLayoutDialog = true;
+    },
+
+    // Continue with the selected flow after clarification questions
+    async continueWithSelectedFlow() {
+      // Always go to secondStep when clarification is needed, regardless of selected flow
+      await this.secondStep();
+    },
+
+    // Layout dialog methods
+    cancelLayoutSelection() {
+      this.showLayoutDialog = false;
+      this.loading = false;
+    },
+
+    async confirmLayoutSelection(selectedLayout) {
+      this.showLayoutDialog = false;
+      this.selectedLayout = selectedLayout; // Store the selected layout
+
+      // Use firstStep for both flows - the routing logic is now handled within firstStep and secondStep
+      await this.firstStep(this.selectedFlow);
+    },
+
+    async saveGalaxyMapToDatabase(selectedLayout) {
+      this.isSavingToDB = true;
+      this.loading = true; // Show the loading overlay
+
+      // Restart loading messages with saving messages
+      this.stopLoadingMessages();
+      this.startLoadingMessages();
+
+      // Start timing
+      const startTime = Date.now();
+      console.log("🚀 Starting Galaxy saving to database process...");
+
+      let result = null;
+
+      // convert mission instructions to html for db
+      if (this.aiGeneratedGalaxyMap && this.aiGeneratedGalaxyMap.stars) {
+        for (let starIndex = 0; starIndex < this.aiGeneratedGalaxyMap.stars.length; starIndex++) {
+          const star = this.aiGeneratedGalaxyMap.stars[starIndex];
+          if (star.planets) {
+            for (let planetIndex = 0; planetIndex < star.planets.length; planetIndex++) {
+              const planet = star.planets[planetIndex];
+              if (planet.instructions) {
+                // Convert instructions object to HTML format for database storage
+                planet.instructions = this.formatMissionInstructionsToHtml(planet.instructions);
+              }
+            }
+          }
+        }
+      }
+
+      try {
+        // Call the Firebase function to save the galaxy map with selected layout
+        result = await saveGalaxyMap(this.aiGeneratedGalaxyMap, selectedLayout);
+
+        // Calculate and log execution time
+        const endTime = Date.now();
+        const timeString = this.formatExecutionTime(startTime, endTime);
+        console.log(
+          `✅ Galaxy saving to DB completed in ${timeString} (${endTime - startTime}ms total)`,
+        );
+        const cost = this.calculateEstimatedCost();
+        console.log(`💰 Total tokens used: ${this.totalTokensUsed.toLocaleString()}`);
+        console.log(
+          `📊 Token breakdown: Input: ${this.totalInputTokens.toLocaleString()}, Output: ${this.totalOutputTokens.toLocaleString()}`,
+        );
+        console.log(
+          `💵 Estimated cost: $${cost.totalCost} (Input: $${cost.inputCost}, Output: $${cost.outputCost})`,
+        );
+
+        this.setSnackbar({
+          show: true,
+          text: `Galaxy created automatically! Tokens: ${this.totalTokensUsed.toLocaleString()} | Cost: $${
+            cost.totalCost
+          }`,
+          color: "baseAccent",
+        });
+
+        // Set the currentCourseId in store before navigating to ensure GalaxyMap has access to it
+        this.setCurrentCourseId(result.courseId);
+
+        // Navigate to the created galaxy
+        this.$router.push({ name: "GalaxyView", params: { courseId: result.courseId } });
+      } catch (error) {
+        // Calculate and log execution time even on error
+        const endTime = Date.now();
+        const timeString = this.formatExecutionTime(startTime, endTime);
+        console.log(`❌ Galaxy saving failed after ${timeString} (${endTime - startTime}ms total)`);
+
+        console.error("Error saving galaxy:", error);
+        this.setSnackbar({
+          show: true,
+          text:
+            "Error saving galaxy: " + (error instanceof Error ? error.message : "Unknown error"),
+          color: "pink",
+        });
+      } finally {
+        // Reset saving state
+        this.isSavingToDB = false;
+        this.loading = false;
+      }
+    },
+
+    async generateMissionsThenSave(selectedLayout) {
+      // Calculate total missions
+      this.totalMissions = 0;
+      for (const star of this.aiGeneratedGalaxyMap.stars) {
+        this.totalMissions += star.planets.length;
+      }
+
+      // Start mission generation
+      this.loading = true;
+      this.isGeneratingMissions = true;
+      this.completedMissions = 0;
+      this.missionGenerationProgress = 0;
+
+      // Start loading messages with mission generation messages
+      this.stopLoadingMessages();
+      this.startLoadingMessages();
+
+      // Start timing
+      const startTime = Date.now();
+      console.log("🚀 Starting mission generation process...");
+
+      try {
+        // Generate instructions for each mission
+        for (const [starIndex, star] of this.aiGeneratedGalaxyMap.stars.entries()) {
+          for (const [planetIndex, planet] of star.planets.entries()) {
+            // Create a copy of the galaxy map without history to avoid circular reference
+            const galaxyMapForAI = {
+              ...this.aiGeneratedGalaxyMap,
+              history: undefined, // Remove history for AI processing
+            };
+
+            const missionInstructions = await generateInstructionsForMission(
+              planet.description,
+              galaxyMapForAI,
+              this.aiGeneratedGalaxyMap.originResponseId,
+            );
+            console.log("missionInstructions", missionInstructions);
+            console.log(
+              "missionInstructions.missionInstructions",
+              missionInstructions.missionInstructions,
+            );
+
+            // Track token usage from mission instructions generation
+            this.trackTokenUsage({
+              usage: missionInstructions.tokenUsage,
+            });
+
+            // Update the planet with mission instructions
+            // The new format returns structured data, so we store it as-is
+            const instructionsData =
+              missionInstructions.missionInstructions || missionInstructions || "";
+            this.aiGeneratedGalaxyMap.stars[starIndex].planets[planetIndex].instructions =
+              instructionsData;
+
+            console.log(
+              "does this.aiGeneratedGalaxyMap.stars[" +
+                starIndex +
+                "].planets[" +
+                planetIndex +
+                "] have instructions: ",
+              this.aiGeneratedGalaxyMap.stars[starIndex].planets[planetIndex],
+            );
+
+            // Update progress
+            this.completedMissions++;
+            this.missionGenerationProgress = (this.completedMissions / this.totalMissions) * 100;
+
+            // Update treeview to show progress
+            this.updateTransformedStarDetails();
+          }
+        }
+
+        // Mission generation completed
+        this.isGeneratingMissions = false;
+
+        // Calculate and log execution time
+        const endTime = Date.now();
+        const timeString = this.formatExecutionTime(startTime, endTime);
+        console.log(
+          `✅ Mission generation completed in ${timeString} (${endTime - startTime}ms total)`,
+        );
+
+        this.setSnackbar({
+          show: true,
+          text: `Mission instructions generated successfully!`,
+          color: "missionAccent",
+        });
+
+        // Now save to database with the selected layout
+        await this.saveGalaxyMapToDatabase(selectedLayout);
+      } catch (error) {
+        // Calculate and log execution time even on error
+        const endTime = Date.now();
+        const timeString = this.formatExecutionTime(startTime, endTime);
+        console.log(
+          `❌ Mission generation failed after ${timeString} (${endTime - startTime}ms total)`,
+        );
+
+        console.error("Error generating mission instructions:", error);
+        this.setSnackbar({
+          show: true,
+          text:
+            "Error generating mission instructions: " +
+            (error instanceof Error ? error.message : "Unknown error"),
+          color: "pink",
+        });
+      } finally {
+        // Reset mission generation state
+        this.loading = false;
+      }
+    },
+
+    // Helper method to format mission instructions to HTML (copied from AiGalaxyEdit.vue)
+    formatMissionInstructionsToHtml(missionInstructions) {
+      if (!missionInstructions) return "";
+
+      try {
+        // Handle both object and string formats
+        let instructions = missionInstructions;
+        if (typeof missionInstructions === "string") {
+          instructions = JSON.parse(instructions);
+        }
+
+        let html = "";
+
+        // Add description
+        if (instructions.description && !this.isGeneratingMissions) {
+          html += `<p>${instructions.description}</p>`;
+        }
+
+        // Add instructions section
+        if (instructions.instructions && instructions.instructions.length > 0) {
+          if (!this.isGeneratingMissions) {
+            html += `<h2>Instructions</h2>`;
+          }
+
+          // Loop through each instruction step
+          instructions.instructions.forEach((step) => {
+            // Add step title
+            if (step.title) {
+              html += `<h3>${step.title}</h3>`;
+            }
+
+            // Add tasks as unordered list
+            if (step.tasks && step.tasks.length > 0) {
+              html += `<ul>`;
+              step.tasks.forEach((task) => {
+                if (task.taskContent) {
+                  html += `<li>${task.taskContent}</li>`;
+                }
+              });
+              html += `</ul>`;
+            }
+          });
+        }
+
+        console.log("🔄 Formatted mission instructions to HTML:", html);
+        return html;
+      } catch (error) {
+        console.error("❌ Error formatting mission instructions to HTML:", error);
+        return ""; // Fallback to empty string
+      }
+    },
+
+    /**
+     * Check if the content is structured mission instructions (JSON object)
+     */
+    isStructuredMissionInstructions(content) {
+      if (!content) return false;
+
+      try {
+        // If it's already an object, check if it has the expected structure
+        if (typeof content === "object") {
+          return content.instructions && Array.isArray(content.instructions);
+        }
+
+        // If it's a string, try to parse it and check
+        if (typeof content === "string") {
+          const parsed = JSON.parse(content);
+          return parsed.instructions && Array.isArray(parsed.instructions);
+        }
+
+        return false;
+      } catch (error) {
+        return false;
+      }
+    },
+
+    /**
+     * Renders content for any item, handling both structured mission instructions and markdown content
+     */
+    renderToHTML(item) {
+      if (!item || !item.description) return "";
+
+      console.log("🔄 Rendering html for item:", item);
+
+      try {
+        // If the item already has renderedDescription, use it
+        if (item.renderedDescription) {
+          return item.renderedDescription;
+        }
+
+        // Check if content is structured mission instructions (JSON object)
+        if (this.isStructuredMissionInstructions(item.description)) {
+          return this.formatMissionInstructionsToHtml(item.description);
+        }
+
+        // Otherwise, treat as plain text/markdown
+        return item.description;
+      } catch (error) {
+        console.error("❌ Error rendering HTML for item:", error);
+        return item.description || "";
+      }
+    },
   },
 };
 </script>
@@ -946,8 +1327,12 @@ export default {
   }
 
   .action-buttons {
-    width: 100%;
+    width: auto;
     padding: 20px;
+    margin: 0 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
   }
 }
 
@@ -1201,6 +1586,19 @@ export default {
 
 .treeview-label {
   display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 0.5rem;
+}
+
+.item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.treeview-label-text {
+  display: flex;
   align-items: center;
   gap: 0.5rem;
   font-size: 0.75rem;
@@ -1208,6 +1606,49 @@ export default {
   font-weight: 500;
   line-height: 1.3;
   word-wrap: break-word;
+}
+
+.treeview-description {
+  font-size: 0.7rem;
+  color: var(--v-missionAccent-base);
+  opacity: 0.8;
+  line-height: 1.4;
+
+  // margin-left: 50px;
+  // margin-top: -3px;
+  word-wrap: break-word;
+  white-space: normal;
+  overflow-wrap: break-word;
+  max-width: 280px;
+  width: 100%;
+  text-align: left;
+
+  h2 {
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin: 0.5rem 0 0.25rem 0;
+    color: var(--v-galaxyAccent-base);
+  }
+
+  h3 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin: 0.25rem 0 0.125rem 0;
+    color: var(--v-missionAccent-base);
+  }
+
+  p {
+    margin: 0.125rem 0;
+  }
+
+  ul {
+    margin: 0.125rem 0;
+    padding-left: 1rem;
+  }
+
+  li {
+    margin: 0.0625rem 0;
+  }
 }
 
 .star-emoji {
@@ -1223,6 +1664,11 @@ export default {
 .mission-emoji {
   font-size: 0.8rem;
   filter: drop-shadow(0 0 2px rgba(255, 69, 0, 0.6));
+}
+
+.instructions-emoji {
+  font-size: 0.8rem;
+  filter: drop-shadow(0 0 2px rgba(0, 150, 255, 0.6));
 }
 
 .debug-info {
@@ -1244,6 +1690,24 @@ export default {
 }
 .saving-progress-text {
   color: var(--v-missionAccent-base);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.mission-generation-progress-container {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mission-generation-progress-text {
+  color: var(--v-galaxyAccent-base);
   font-size: 0.9rem;
   font-weight: 600;
   margin-top: 0.25rem;

@@ -24,9 +24,10 @@
           <v-progress-linear
             :value="missionGenerationProgress"
             color="galaxyAccent"
-            height="8"
+            height="4"
             rounded
             class="mb-2"
+            width="100px"
           ></v-progress-linear>
           <p class="mission-generation-progress-text galaxyAccent--text">
             Generating {{ completedMissions }}/{{ totalMissions }} missions ({{
@@ -67,10 +68,7 @@
                       </span>
                     </div>
                     <div class="loading-treeview-description">
-                      <span
-                        v-if="item.type === 'instructions'"
-                        v-html="renderMarkdown(item)"
-                      ></span>
+                      <span v-if="item.type === 'instructions'" v-html="renderToHTML(item)"></span>
                       <span v-else>{{ item.description }}</span>
                     </div>
                   </div>
@@ -249,7 +247,7 @@
                           iconSize="15"
                         />
                         <div class="treeview-markdown" v-if="item.type === 'instructions'">
-                          <span v-html="renderMarkdown(item)"></span>
+                          <span v-html="renderToHTML(item)"></span>
                         </div>
                         <span v-else>{{ item.description }}</span>
                       </div>
@@ -404,7 +402,7 @@
                 REFINE GALAXY MAP
               </v-btn>
               <!-- <PublishGalaxy v-if="showPublish" :course="boundCourse" :courseTasks="courseTasks" /> -->
-              <v-btn @click="saveGalaxyToDB" outlined color="baseAccent">Save Galaxy</v-btn>
+              <v-btn @click="saveGalaxyToDB" outlined color="baseAccent">-> Next Step</v-btn>
             </div>
           </div>
         </div>
@@ -525,7 +523,6 @@ import { Planet } from "@/lib/planet";
 import { zodTextFormat } from "openai/helpers/zod";
 import { StarsAndPlanetsResponseSchema } from "@/lib/schemas";
 import { saveGalaxyMap, generateInstructionsForMission } from "@/lib/ff";
-import { markdownToHtml } from "@/lib/utils";
 import * as smd from "streaming-markdown";
 
 // import PromptDialog from "@/components/Dialogs/PromptDialog.vue";
@@ -631,18 +628,6 @@ export default {
         "Depositing dreams in the deep space drive...",
         "Storing solutions in the solar system...",
         "Saving sagas in the stellar sanctuary...",
-      ],
-      missionGenerationMessages: [
-        "Crafting mission objectives...",
-        "Designing learning pathways...",
-        "Creating step-by-step instructions...",
-        "Defining success criteria...",
-        "Mapping skill progression...",
-        "Building knowledge scaffolds...",
-        "Structuring learning activities...",
-        "Developing assessment strategies...",
-        "Integrating learning resources...",
-        "Finalizing mission parameters...",
       ],
 
       network: {
@@ -817,9 +802,6 @@ export default {
 
               // Update network positions based on treeview item widths
               this.updateNetworkPositionsFromTreeview();
-
-              // Process markdown for all items with descriptions
-              this.processAllMarkdown(newVal);
             }, 100);
           });
         }
@@ -946,12 +928,14 @@ export default {
     },
 
     /**
-     * Computed property that returns a function to render markdown for any item
-     * This ensures markdown is always rendered consistently using streaming-markdown
+     * Computed property that returns a function to render content for any item
+     * This handles both structured mission instructions and markdown content
      */
-    renderMarkdown() {
+    renderToHTML() {
       return (item) => {
         if (!item || !item.description) return "";
+
+        console.log("🔄 Rendering html for item:", item);
 
         try {
           // If the item already has renderedDescription, use it
@@ -959,16 +943,15 @@ export default {
             return item.renderedDescription;
           }
 
-          // Check if content is HTML or markdown
-          if (this.isHtmlContent(item.description)) {
-            // If it's HTML, return as-is
-            return item.description;
-          } else {
-            // If it's markdown, convert it
-            return this.renderMarkdownWithStreaming(item.description);
+          // Check if content is structured mission instructions (JSON object)
+          if (this.isStructuredMissionInstructions(item.description)) {
+            return this.formatMissionInstructionsToHtml(item.description);
           }
+
+          // For all other content, return as-is (no markdown parsing)
+          return item.description;
         } catch (error) {
-          console.error("Error rendering markdown:", error);
+          console.error("Error rendering content:", error);
           // Fallback to plain text with HTML escaping
           return item.description
             .replace(/&/g, "&amp;")
@@ -989,53 +972,88 @@ export default {
     ]),
 
     /**
-     * Detects if content is HTML or markdown
+     * Detects if content is structured mission instructions (JSON object)
      * @param content - The content to analyze
-     * @returns boolean - true if HTML, false if markdown
+     * @returns boolean - true if structured mission instructions
      */
-    isHtmlContent(content) {
+    isStructuredMissionInstructions(content) {
       if (!content) return false;
 
-      // Check for common HTML patterns
-      const htmlPatterns = [
-        /<[^>]+>/g, // HTML tags
-        /&[a-zA-Z]+;/g, // HTML entities like &nbsp;
-        /<iframe/i, // iframe tags specifically
-        /<div/i, // div tags
-        /<p>/i, // p tags
-        /<br/i, // br tags
-        /<img/i, // img tags
-        /<a\s+href/i, // anchor tags with href
-      ];
-
-      // If any HTML patterns are found, consider it HTML
-      for (const pattern of htmlPatterns) {
-        if (pattern.test(content)) {
-          return true;
+      try {
+        // Check if it's a JSON object with the expected structure
+        if (typeof content === "object" && content !== null) {
+          return content.title && content.instructions && Array.isArray(content.instructions);
         }
+
+        // Check if it's a JSON string that can be parsed to the expected structure
+        if (typeof content === "string") {
+          const parsed = JSON.parse(content);
+          return parsed.title && parsed.instructions && Array.isArray(parsed.instructions);
+        }
+
+        return false;
+      } catch (error) {
+        // If parsing fails, it's not structured mission instructions
+        return false;
       }
+    },
 
-      // Check for markdown patterns
-      const markdownPatterns = [
-        /^#{1,6}\s+/m, // Headers
-        /\*\*[^*]+\*\*/, // Bold
-        /\*[^*]+\*/, // Italic
-        /\[[^\]]+\]\([^)]+\)/, // Links
-        /^[-*+]\s+/m, // Unordered lists
-        /^\d+\.\s+/m, // Ordered lists
-        /`[^`]+`/, // Inline code
-        /```[\s\S]*?```/, // Code blocks
-      ];
+    /**
+     * Formats structured mission instructions into HTML
+     * @param missionInstructions - The structured mission instructions object
+     * @returns HTML string
+     */
+    formatMissionInstructionsToHtml(missionInstructions) {
+      if (!missionInstructions) return "";
 
-      // If markdown patterns are found and no HTML patterns, consider it markdown
-      const hasMarkdown = markdownPatterns.some((pattern) => pattern.test(content));
-      const hasHtml = htmlPatterns.some((pattern) => pattern.test(content));
+      try {
+        // Handle both object and string formats
+        let instructions = missionInstructions;
+        if (typeof missionInstructions === "string") {
+          instructions = JSON.parse(missionInstructions);
+        }
 
-      // If it has both HTML and markdown, prefer HTML (don't convert)
-      if (hasHtml) return true;
+        let html = "";
 
-      // If it has markdown and no HTML, convert it
-      return !hasMarkdown;
+        // Add description
+        if (instructions.description && !this.isGeneratingMissions) {
+          html += `<p>${instructions.description}</p>`;
+        }
+
+        // Add instructions section
+        if (instructions.instructions && instructions.instructions.length > 0) {
+          if (!this.isGeneratingMissions) {
+            html += `<h2>Instructions</h2>`;
+          }
+
+          // Loop through each instruction step
+          instructions.instructions.forEach((step) => {
+            // Add step title
+            if (step.title) {
+              html += `<h3>${step.title}</h3>`;
+            }
+
+            // Add tasks as unordered list
+            if (step.tasks && step.tasks.length > 0) {
+              html += `<ul>`;
+              step.tasks.forEach((task) => {
+                if (task.taskContent) {
+                  // Parse markdown for task content only
+                  const parsedTaskContent = this.renderMarkdownWithStreaming(task.taskContent);
+                  html += `<li>${parsedTaskContent}</li>`;
+                }
+              });
+              html += `</ul>`;
+            }
+          });
+        }
+
+        console.log("🔄 Formatted mission instructions to HTML:", html);
+        return html;
+      } catch (error) {
+        console.error("❌ Error formatting mission instructions to HTML:", error);
+        return ""; // Fallback to empty string
+      }
     },
 
     /**
@@ -1047,73 +1065,33 @@ export default {
       if (!markdown) return "";
 
       try {
-        // Create a temporary div element to render into
-        const tempDiv = document.createElement("div");
+        // Check if streaming-markdown is available
+        if (typeof smd !== "undefined" && smd.default_renderer && smd.parser) {
+          // Create a temporary div element to render into
+          const tempDiv = document.createElement("div");
 
-        // Create renderer and parser
-        const renderer = smd.default_renderer(tempDiv);
-        const parser = smd.parser(renderer);
+          // Create renderer and parser
+          const renderer = smd.default_renderer(tempDiv);
+          const parser = smd.parser(renderer);
 
-        // Write the markdown content
-        smd.parser_write(parser, markdown);
+          // Write the markdown content
+          smd.parser_write(parser, markdown);
 
-        // End the stream
-        smd.parser_end(parser);
+          // End the stream
+          smd.parser_end(parser);
 
-        // Get the HTML content
-        const html = tempDiv.innerHTML;
+          // Get the HTML content
+          const html = tempDiv.innerHTML;
 
-        return html;
+          return html;
+        } else {
+          // Fallback to plain text if streaming-markdown is not available
+          console.warn("streaming-markdown not available, returning plain text");
+          return markdown;
+        }
       } catch (error) {
-        console.error("Error rendering markdown with streaming-markdown:", error);
+        console.error("Error rendering markdown:", error);
         return markdown; // Fallback to plain text
-      }
-    },
-
-    /**
-     * Converts markdown description to HTML for rendering (legacy method)
-     * @param description - The markdown description text
-     * @returns HTML string
-     */
-    async renderMarkdownDescription(description) {
-      try {
-        return this.renderMarkdownWithStreaming(description);
-      } catch (error) {
-        console.error("Error converting markdown:", error);
-        return description; // Fallback to plain text
-      }
-    },
-
-    /**
-     * Process markdown for an item and store the rendered HTML (legacy method)
-     * @param item - The item containing markdown description
-     */
-    async processItemMarkdown(item) {
-      if (item.description && !item.renderedDescription) {
-        try {
-          item.renderedDescription = this.renderMarkdownWithStreaming(item.description);
-        } catch (error) {
-          console.error("Error processing markdown for item:", error);
-          item.renderedDescription = item.description; // Fallback to plain text
-        }
-      }
-    },
-
-    /**
-     * Process markdown for all items recursively
-     * @param items - Array of items to process
-     */
-    async processAllMarkdown(items) {
-      if (!items || !Array.isArray(items)) return;
-
-      for (const item of items) {
-        // Process current item
-        await this.processItemMarkdown(item);
-
-        // Process children recursively
-        if (item.children && Array.isArray(item.children)) {
-          await this.processAllMarkdown(item.children);
-        }
       }
     },
     removeChip(item) {
@@ -1372,7 +1350,7 @@ export default {
       if (this.isSavingToDB) {
         messages = this.savingMessages;
       } else if (this.isGeneratingMissions) {
-        messages = this.missionGenerationMessages;
+        messages = this.loadingMessages;
       } else {
         messages = this.loadingMessages;
       }
@@ -1673,7 +1651,7 @@ export default {
       ### Galaxy Map Format (json):
 
       {
-        "status": "journey_steps_ready",
+        "status": "journey_ready",
         "title": "Journey Title",
         "description": "Brief description of the overall journey",
         "stars": [
@@ -1894,10 +1872,11 @@ export default {
             }
 
             // Update the planet with mission instructions
-            const instructionsText =
+            // The new format returns structured data, so we store it as-is
+            const instructionsData =
               missionInstructions.missionInstructions || missionInstructions || "";
             this.aiGeneratedGalaxyMap.stars[starIndex].planets[planetIndex].instructions =
-              instructionsText;
+              instructionsData;
 
             console.log(
               "does this.aiGeneratedGalaxyMap.stars[" +
@@ -1929,6 +1908,8 @@ export default {
           color: "missionAccent",
         });
 
+        this.isGeneratingMissions = false;
+
         // Now save to database with the selected layout
         await this.saveGalaxyMapToDatabase(selectedLayout);
       } catch (error) {
@@ -1949,7 +1930,6 @@ export default {
         });
       } finally {
         // Reset mission generation state
-        this.isGeneratingMissions = false;
         this.loading = false;
       }
     },
@@ -1968,6 +1948,22 @@ export default {
 
       let result = null;
 
+      // convert mission instructions to html for db
+      if (this.aiGeneratedGalaxyMap && this.aiGeneratedGalaxyMap.stars) {
+        for (let starIndex = 0; starIndex < this.aiGeneratedGalaxyMap.stars.length; starIndex++) {
+          const star = this.aiGeneratedGalaxyMap.stars[starIndex];
+          if (star.planets) {
+            for (let planetIndex = 0; planetIndex < star.planets.length; planetIndex++) {
+              const planet = star.planets[planetIndex];
+              if (planet.instructions) {
+                // Convert instructions object to HTML format for database storage
+                planet.instructions = this.formatMissionInstructionsToHtml(planet.instructions);
+              }
+            }
+          }
+        }
+      }
+
       try {
         // Call the Firebase function to save the galaxy map with selected layout
         result = await saveGalaxyMap(this.aiGeneratedGalaxyMap, selectedLayout);
@@ -1981,7 +1977,7 @@ export default {
 
         this.setSnackbar({
           show: true,
-          text: `Galaxy saved successfully! Course ID: ${result.courseId}`,
+          text: `Galaxy saved successfully! Map ID: ${result.courseId}`,
           color: "baseAccent",
         });
 
@@ -3542,7 +3538,7 @@ export default {
 
 .mission-generation-progress-text {
   color: var(--v-missionAccent-base);
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   font-weight: 600;
   margin-top: 0.25rem;
   text-transform: uppercase;

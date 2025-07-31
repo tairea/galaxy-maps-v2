@@ -86,7 +86,20 @@ export class Planet {
   resumeOrbit() {
     if (this.animating) return; // Don't start new animation if already animating
 
-    this.targetRadian = this.savedRadian; // Animate back to saved position
+    // Calculate the closest path to the saved position
+    const currentAngle = Math.PI / 2; // We're currently at the bottom
+    const targetAngle = this.savedRadian;
+
+    // Find the shortest path by calculating the difference
+    let angleDiff = targetAngle - currentAngle;
+
+    // Normalize to the shortest path (-π to π)
+    while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+    while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+
+    // Set target to the closest position
+    this.targetRadian = currentAngle + angleDiff;
+
     this.animating = true;
     this.animationProgress = 0;
     this.animationStartTime = Date.now();

@@ -15,7 +15,7 @@ If you need more information, respond with:
 
 If the goal is clear enough, respond with:
 {
-  "status": "journey_steps_ready",
+  "status": "journey_ready",
   "title": "Journey Title",
   "description": "Brief paragraph about the Journey",
   "stars": [
@@ -136,7 +136,7 @@ Planets → key tasks that must be completed within each Star (tasks)
 Respond in this format:
 
 {
-  "status": "journey_steps_ready",
+  "status": "journey_ready",
   "title": "Journey Title",
   "description": "Brief description of the overall journey",
   "stars": [

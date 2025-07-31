@@ -34,6 +34,7 @@ import {
   getTopicByCourseIdTopicIdHttpsEndpoint,
   getStudentSubmissionsByPersonIdHttpsEndpoint,
   getStudentRequestsByPersonIdHttpsEndpoint,
+  getGalaxyMapObjectFromCourseHttpsEndpoint,
   updateTaskByCourseIdTopicIdTaskIdHttpsEndpoint,
   updateTaskOrderIndexesByCourseIdTopicIdHttpsEndpoint,
   removeMeFromCourseHttpsEndpoint,
@@ -71,6 +72,7 @@ import {
 import {
   downloadAndUploadImageHttpsEndpoint,
   generateGalaxyMapHttpsEndpoint,
+  generateGalaxyMapWithClarificationHttpsEndpoint,
   generateInstructionsForMissionHttpsEndpoint,
 } from "./openAIActions.js";
 
@@ -102,6 +104,7 @@ export {
   getStudentCohortsByPersonIdHttpsEndpoint as getStudentCohortsByPersonId,
   getStudentSubmissionsByPersonIdHttpsEndpoint as getStudentSubmissionsByPersonId,
   getStudentRequestsByPersonIdHttpsEndpoint as getStudentRequestsByPersonId,
+  getGalaxyMapObjectFromCourseHttpsEndpoint as getGalaxyMapObjectFromCourse,
   getPeopleByCourseIdHttpsEndpoint as getPeopleByCourseId,
   getPersonTasksByPersonIdCourseIdTopicIdHttpsEndpoint as getPersonTasksByPersonIdCourseIdTopicId,
   getPersonTopicByPersonIdCourseIdTopicIdHttpsEndpoint as getPersonTopicByPersonIdCourseIdTopicId,
@@ -151,5 +154,6 @@ export {
 export {
   downloadAndUploadImageHttpsEndpoint as downloadAndUploadImage,
   generateGalaxyMapHttpsEndpoint as generateGalaxyMap,
+  generateGalaxyMapWithClarificationHttpsEndpoint as generateGalaxyMapWithClarification,
   generateInstructionsForMissionHttpsEndpoint as generateInstructionsForMission,
 };

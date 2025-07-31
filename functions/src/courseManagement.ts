@@ -7,6 +7,7 @@ import {
   startGalaxyXAPIStatement,
   stopGalaxyXAPIStatement,
 } from "./veracityLRS.js";
+import { CourseToGalaxyMapSchema, type CourseToGalaxyMap } from "./schemas.js";
 
 // Get a course by courseId
 export const getCourseByCourseIdHttpsEndpoint = runWith({}).https.onCall(async (data, context) => {
@@ -1843,6 +1844,7 @@ async function saveGalaxyMap(
       },
       status: "drafting",
       owner: db.collection("people").doc(personId),
+      galaxyMapAsObject: galaxyMap,
     };
     console.log("📝 Formatted course data:", formattedCourse);
 
@@ -2092,11 +2094,133 @@ function getZigzag(
  */
 function getSpiral(index: number, centerX: number = 0, centerY: number = 0, radius: number = 200) {
   const angle = index * 0.8;
-  const spiralGrowth = 50;
+  const spiralGrowth = 80;
   const currentRadius = radius + index * spiralGrowth;
   const x = centerX + currentRadius * Math.cos(angle);
   const y = centerY + currentRadius * Math.sin(angle);
   return { x, y };
+}
+
+// Get galaxy map object from course
+export const getGalaxyMapObjectFromCourseHttpsEndpoint = runWith({}).https.onCall(
+  async (data, context) => {
+    requireAuthenticated(context);
+
+    const courseId = data.courseId as string | null;
+    if (courseId == null) {
+      throw new HttpsError("invalid-argument", "missing courseId");
+    }
+
+    // TODO: Add permissions checks to ensure the user has access to this course
+
+    const result = await convertCourseToGalaxyMapObject(courseId);
+    return result;
+  },
+);
+
+/**
+ * Convert a course's topics and tasks into a galaxy map object
+ * that matches the CourseToGalaxyMapSchema (without status/questions)
+ */
+export async function convertCourseToGalaxyMapObject(courseId: string): Promise<CourseToGalaxyMap> {
+  try {
+    console.log("🔄 Converting course to galaxy map for courseId:", courseId);
+
+    // Get the course document
+    const courseDoc = await db.collection("courses").doc(courseId).get();
+    const courseData = courseDoc.data();
+
+    if (!courseData) {
+      throw new HttpsError("not-found", `Course not found: ${courseId}`);
+    }
+
+    console.log("📋 Course data loaded:", {
+      title: courseData.title,
+      description: courseData.description,
+    });
+
+    // Get all topics (stars) for the course, ordered by creation timestamp
+    const topicsCollection = await db
+      .collection("courses")
+      .doc(courseId)
+      .collection("topics")
+      .orderBy("topicCreatedTimestamp")
+      .get();
+
+    console.log("⭐ Found topics:", topicsCollection.docs.length);
+
+    const stars = [];
+
+    // Process each topic (star)
+    for (const topicDoc of topicsCollection.docs) {
+      const topicData = topicDoc.data();
+      console.log("⭐ Processing topic:", topicData.label || topicData.title);
+
+      // Get all tasks (planets) for this topic, ordered by orderIndex
+      const tasksCollection = await db
+        .collection("courses")
+        .doc(courseId)
+        .collection("topics")
+        .doc(topicDoc.id)
+        .collection("tasks")
+        .orderBy("orderIndex")
+        .get();
+
+      console.log("🪐 Found tasks for topic:", tasksCollection.docs.length);
+
+      const planets = [];
+
+      // Process each task (planet)
+      for (const taskDoc of tasksCollection.docs) {
+        const taskData = taskDoc.data();
+        console.log("🪐 Processing task:", taskData.title);
+
+        const planet = {
+          title: taskData.title,
+          description: taskData.description || taskData.submissionInstructions || "",
+        };
+
+        planets.push(planet);
+      }
+
+      // Create star object
+      const star = {
+        title: topicData.label || topicData.title,
+        description: topicData.description || "",
+        planets: planets,
+      };
+
+      stars.push(star);
+    }
+
+    // Create the galaxy map object
+    const galaxyMap: CourseToGalaxyMap = {
+      title: courseData.title,
+      description: courseData.description,
+      stars: stars,
+      image: courseData.image || null,
+    };
+
+    // save the galaxy map object to the course
+    await courseDoc.ref.update({
+      galaxyMapAsObject: galaxyMap,
+    });
+
+    console.log("✅ Galaxy map conversion completed:", {
+      title: galaxyMap.title,
+      starsCount: galaxyMap.stars?.length,
+      totalPlanets: galaxyMap.stars?.reduce((sum, star) => sum + star.planets.length, 0),
+    });
+
+    // Validate the result against the schema
+    const validatedGalaxyMap = CourseToGalaxyMapSchema.parse(galaxyMap);
+    console.log("✅ Galaxy map validation passed");
+
+    return validatedGalaxyMap;
+  } catch (error) {
+    console.error("❌ Error converting course to galaxy map:", error);
+    throw error;
+  }
 }
 
 /**

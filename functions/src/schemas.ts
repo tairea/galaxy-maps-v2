@@ -52,6 +52,23 @@ export const StarsAndPlanetsResponseSchema = z
 // Type exports for TypeScript
 export type StarsAndPlanetsResponse = z.infer<typeof StarsAndPlanetsResponseSchema>;
 
+// Schema for course-to-galaxy conversion (without status/questions)
+export const CourseToGalaxyMapSchema = z.object({
+  title: z.string().nullable(),
+  description: z.string().nullable(),
+  stars: z.array(JourneyStarsSchema).nullable(),
+  image: z
+    .object({
+      name: z.string(),
+      url: z.string(),
+    })
+    .nullable()
+    .optional(),
+});
+
+// Type export for course-to-galaxy conversion
+export type CourseToGalaxyMap = z.infer<typeof CourseToGalaxyMapSchema>;
+
 // Schema for mission instructions
 export const MissionInstructionsSchema = z.object({
   title: z.string(),
@@ -66,3 +83,25 @@ export const MissionInstructionsSchema = z.object({
 
 // Type export for mission instructions
 export type MissionInstructions = z.infer<typeof MissionInstructionsSchema>;
+
+// Schema for mission task content
+export const MissionTaskSchema = z.object({
+  taskContent: z.string(),
+});
+
+// Schema for mission instruction step
+export const MissionInstructionStepSchema = z.object({
+  title: z.string(),
+  tasks: z.array(MissionTaskSchema).min(1),
+});
+
+// Schema for the new mission instructions format
+export const MissionInstructionsV2Schema = z.object({
+  title: z.string(),
+  description: z.string(),
+  instructions: z.array(MissionInstructionStepSchema).min(1),
+  summary: z.string(),
+});
+
+// Type export for the new mission instructions format
+export type MissionInstructionsV2 = z.infer<typeof MissionInstructionsV2Schema>;
