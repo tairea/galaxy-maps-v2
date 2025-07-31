@@ -1,6 +1,9 @@
 <template>
   <div>
-    <v-expansion-panel-header class="py-0">
+    <v-expansion-panel-header
+      class="py-0"
+      @click="teacher && hasLongDescription ? toggleDescription() : null"
+    >
       <div
         class="mission-card"
         :class="{ lockedOpacity: task.taskStatus == 'locked' }"
@@ -48,10 +51,26 @@
           <!-- DESCRIPTION -->
           <div
             v-if="teacher"
-            v-html="renderedTaskDescription"
-            class="task-description"
+            class="task-description-container"
             :style="task.color ? 'color:' + task.color + ' !important' : ''"
-          ></div>
+          >
+            <div
+              v-html="renderedTaskDescription"
+              class="task-description"
+              :class="{ 'task-description-collapsed': !descriptionExpanded }"
+            ></div>
+            <div v-if="hasLongDescription" class="description-toggle">
+              <v-btn
+                text
+                small
+                @click.stop="toggleDescription"
+                :style="task.color ? 'color:' + task.color + ' !important' : ''"
+              >
+                <v-icon small>{{ descriptionExpanded ? mdiChevronUp : mdiChevronDown }}</v-icon>
+                {{ descriptionExpanded ? "Show Less" : "Show More" }}
+              </v-btn>
+            </div>
+          </div>
         </div>
 
         <!-- <div class="mission-section mission-section-overUnder">
@@ -275,7 +294,14 @@ import StartMissionDialogV2 from "@/components/Dialogs/StartMissionDialogV2.vue"
 import ActiveMissionsCard from "@/components/SolarSystemView/MissionsList/MissionsCard/ActiveMissionsCard.vue";
 import SelectedMissionsCard from "@/components/SolarSystemView/MissionsList/MissionsCard/SelectedMissionsCard.vue";
 import useRootStore from "@/store/index";
-import { mdiCheck, mdiLockOutline, mdiTarget, mdiAlertOutline } from "@mdi/js";
+import {
+  mdiCheck,
+  mdiLockOutline,
+  mdiTarget,
+  mdiAlertOutline,
+  mdiChevronUp,
+  mdiChevronDown,
+} from "@mdi/js";
 import { mapState } from "pinia";
 import * as smd from "streaming-markdown";
 
@@ -294,11 +320,14 @@ export default {
       mdiLockOutline,
       mdiTarget,
       mdiAlertOutline,
+      mdiChevronUp,
+      mdiChevronDown,
       editing: false,
       activeTask: false,
       panel: [],
       taskSlides: false,
       taskVideo: false,
+      descriptionExpanded: false,
     };
   },
   watch: {
@@ -341,6 +370,15 @@ export default {
         default:
           return "";
       }
+    },
+
+    /**
+     * Checks if the task description is long enough to warrant collapsing
+     */
+    hasLongDescription() {
+      if (!this.task || !this.task.description) return false;
+      // Consider description long if it has more than 200 characters or contains multiple paragraphs
+      return this.task.description.length > 200 || this.task.description.includes("\n\n");
     },
 
     /**
@@ -479,6 +517,13 @@ export default {
         return markdown; // Fallback to plain text
       }
     },
+
+    /**
+     * Toggles the description expanded/collapsed state
+     */
+    toggleDescription() {
+      this.descriptionExpanded = !this.descriptionExpanded;
+    },
   },
 };
 </script>
@@ -501,11 +546,47 @@ pre {
 .task-description > ul > li {
   line-height: 20px !important;
 }
+.task-description-container {
+  width: 100%;
+  position: relative;
+}
+
 .task-description {
   width: 100%;
+  transition: max-height 0.3s ease-in-out;
+  overflow: hidden;
+}
+
+.task-description-collapsed {
+  max-height: 120px;
+  position: relative;
+}
+
+.task-description-collapsed::after {
+  content: "...";
+  position: absolute;
+  bottom: 0;
+  right: 10px;
+  background: linear-gradient(transparent, var(--v-background-base));
+  padding-left: 20px;
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.description-toggle {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
 }
 .task-description a {
   color: var(--v-galaxyAccent-base) !important;
+}
+
+.task-description > h2 {
+  padding: 20px 0px;
+}
+.task-description > h3 {
+  padding: 10px 0px;
 }
 
 .task-description > p > img {
@@ -519,6 +600,14 @@ iframe.ql-video {
 
 .submissions-instructions > p > img {
   width: 100%;
+}
+
+.theme--dark.v-expansion-panels .v-expansion-panel:not(:first-child)::after {
+  border: none !important;
+}
+
+.v-expansion-panel::before {
+  box-shadow: none !important;
 }
 </style>
 

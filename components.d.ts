@@ -31,6 +31,7 @@ declare module 'vue' {
     CreateEditDeleteMissionDialog: typeof import('./src/components/Dialogs/CreateEditDeleteMissionDialog.vue')['default']
     CreateEditDeleteNodeDialog: typeof import('./src/components/Dialogs/CreateEditDeleteNodeDialog.vue')['default']
     CreateEditDeleteOrganisationDialog: typeof import('./src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue')['default']
+    CreateGalaxyOptionsDialog: typeof import('./src/components/Dialogs/CreateGalaxyOptionsDialog.vue')['default']
     CreateProfileDialog: typeof import('./src/components/Dialogs/CreateProfileDialog.vue')['default']
     DiscoverGalaxyButton: typeof import('./src/components/Dialogs/DiscoverGalaxyButton.vue')['default']
     EdgeInfoPanel: typeof import('./src/components/GalaxyView/EdgeInfoPanel.vue')['default']

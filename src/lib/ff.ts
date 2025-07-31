@@ -616,11 +616,40 @@ export const generateGalaxyMap = async (
   return result.data;
 };
 
+// AI Galaxy Map Generation with Clarification (Second Step)
+export const generateGalaxyMapWithClarification = async (
+  clarificationAnswers: string,
+  previousResponseId: string,
+): Promise<{
+  success: boolean;
+  galaxyMap: any;
+  tokenUsage: {
+    input_tokens: number;
+    output_tokens: number;
+    total_tokens: number;
+  };
+  responseId: string;
+}> => {
+  const data = {
+    clarificationAnswers,
+    previousResponseId,
+  };
+  const generateGalaxyMapWithClarificationFunction = functions.httpsCallable(
+    "generateGalaxyMapWithClarification",
+  );
+  const result = await generateGalaxyMapWithClarificationFunction(data);
+  return result.data;
+};
+
 // Generate mission instructions with AI
 export const generateInstructionsForMission = async (
-  description: string,
+  missionContext: string,
   aiGeneratedGalaxyMap?: any,
   originResponseId?: string,
+  refinement?: {
+    currentInstructions: string;
+    userFeedback: string;
+  },
 ): Promise<{
   success: boolean;
   missionInstructions: any;
@@ -632,11 +661,14 @@ export const generateInstructionsForMission = async (
   responseId: string;
 }> => {
   const data = {
-    description,
+    missionContext,
     aiGeneratedGalaxyMap,
     originResponseId,
+    refinement,
   };
-  const generateInstructionsForMissionFunction = functions.httpsCallable("generateInstructionsForMission");
+  const generateInstructionsForMissionFunction = functions.httpsCallable(
+    "generateInstructionsForMission",
+  );
   const result = await generateInstructionsForMissionFunction(data);
   return result.data;
 };
@@ -655,5 +687,50 @@ export const saveGalaxyMap = async (
   };
   const saveGalaxyMapFunction = functions.httpsCallable("saveGalaxyMap");
   const result = await saveGalaxyMapFunction(data);
+  return result.data;
+};
+
+// Get Galaxy Map Object from Course
+export const getGalaxyMapObjectFromCourse = async (
+  courseId: string,
+): Promise<{
+  title: string | null;
+  description: string | null;
+  stars: Array<{
+    title: string;
+    description: string;
+    planets: Array<{
+      title: string;
+      description: string;
+    }>;
+  }> | null;
+  image: {
+    name: string;
+    url: string;
+  } | null;
+}> => {
+  const data = {
+    courseId,
+  };
+  const getGalaxyMapObjectFromCourseFunction = functions.httpsCallable(
+    "getGalaxyMapObjectFromCourse",
+  );
+  const result = await getGalaxyMapObjectFromCourseFunction(data);
+  return result.data;
+};
+
+// Download and upload image to Firebase Storage
+export const downloadAndUploadImage = async (
+  imageUrl: string,
+  fileName: string,
+): Promise<{
+  downloadURL: string;
+}> => {
+  const data = {
+    imageUrl,
+    fileName,
+  };
+  const downloadAndUploadImageFunction = functions.httpsCallable("downloadAndUploadImage");
+  const result = await downloadAndUploadImageFunction(data);
   return result.data;
 };

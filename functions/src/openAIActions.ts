@@ -5,7 +5,7 @@ import { STORAGE_BUCKET } from "./_constants.js";
 import fetch from "node-fetch";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
-import { StarsAndPlanetsResponseSchema } from "./schemas.js";
+import { StarsAndPlanetsResponseSchema, MissionInstructionsV2Schema } from "./schemas.js";
 import functions from "firebase-functions";
 // import { Latitude } from "@latitude-data/sdk";
 
@@ -54,7 +54,7 @@ Planets → key **tasks** that must be completed within each Star
 Respond in this format:
 
 {
-  "status": "journey_steps_ready",
+  "status": "journey_ready",
   "title": "Journey Title",
   "description": "Brief description of the overall journey",
   "stars": [
@@ -113,6 +113,7 @@ const MissionInstructionsSystemPrompt =
   You will receive:
   1. A description of what the specific mission should accomplish
   2. Context about the overall roadmap (called a Galaxy Map) that the mission is part of
+  3. Optionally, existing mission instructions to refine based on user feedback
 
   ### **Step 1: Understand the Context**
   - Review the overall roadmap structure to understand the broader context
@@ -120,11 +121,20 @@ const MissionInstructionsSystemPrompt =
   - Consider how this mission builds upon previous missions and prepares for future ones
   - Identify where this specific mission fits within the overall roadmap
   - Do not create instructions that do not pertain to this specific mission
-  - Stay focused on achieving this specific mission only. Do not create instruction that might be covered by future missions.
+  - Stay focused on achieving this specific mission only. Do not create instruction that might be covered by future missions
 
-  ### **Step 2: Create the Mission Instructions**
-  Create comprehensive instructions that include:
-  - **Instructions**: Step-by-step actionable instructions
+  ### **Step 2: Create or Refine Mission Instructions**
+  If this is a NEW mission request:
+  - Create comprehensive instructions that include:
+    - **Instructions**: Step-by-step actionable instructions
+    - **Summary**: A brief summary of what was accomplished and next steps (e.g.Congratulations! You have successfully installed WordPress via cPanel and can now begin customizing your site with BeTheme in the next mission.)
+  
+  If this is a REFINEMENT request:
+  - Review the current instructions and user feedback
+  - Make targeted improvements based on the feedback
+  - Preserve the overall structure and intent of the original instructions
+  - Only modify what needs to be changed based on the feedback
+  - Ensure the refined instructions maintain the same level of detail and clarity
   ` +
   // - **Description**: A brief overview of what the mission accomplishes
   // - **Learning Objectives**: Specific, measurable outcomes
@@ -138,7 +148,29 @@ const MissionInstructionsSystemPrompt =
   ### **Step 3: Follow These Mission Design Principles**
   - Each instruction should be specific and actionable
   - Instructions should build progressively toward the mission
-  - Make instructions engaging and motivating.
+  - Make instructions engaging and motivating
+  - When refining, maintain consistency with the original style and tone
+  - Focus on the specific feedback provided rather than rewriting everything
+
+  ### **Step 4: Output Format**
+  - Respond in this format:
+  {
+    "title": "Mission Title",
+    "description": "Brief description of the mission",
+    "instructions": [
+    {
+      "title": "Step 1: (Step Name)",
+      "tasks": [
+        {
+          "taskContent": "(Detailed task instruction in markdown format)",
+        },
+        ...
+      ]
+    },
+    ...
+    ],
+    "summary": "A summary at the end of the mission"
+  }
   `;
 // - Include clear Mission success criteria where possible
 // - Consider different learning styles and provide multiple approaches when relevant
@@ -358,15 +390,16 @@ export const generateInstructionsForMissionHttpsEndpoint = runWith({
 }).https.onCall(async (data) => {
   try {
     logger.info("Starting generateInstructionsForMission function", {
-      description: data.description?.substring(0, 50) + "...",
+      missionContext: data.missionContext?.substring(0, 50) + "...",
       hasGalaxyMap: !!data.aiGeneratedGalaxyMap,
       originResponseId: data.originResponseId,
+      isRefinement: !!data.refinement,
     });
 
-    const { description, aiGeneratedGalaxyMap } = data;
-    if (!description || !description.trim()) {
-      logger.error("Missing required field: description");
-      throw new HttpsError("invalid-argument", "Missing required field: description");
+    const { missionContext, aiGeneratedGalaxyMap, refinement } = data;
+    if (!missionContext || !missionContext.trim()) {
+      logger.error("Missing required field: missionContext");
+      throw new HttpsError("invalid-argument", "Missing required field: missionContext");
     }
 
     // Convert galaxy map to markdown for context
@@ -379,10 +412,30 @@ export const generateInstructionsForMissionHttpsEndpoint = runWith({
     }
 
     // Prepare the user message with context
-    let userMessage = description;
-    if (galaxyMapContext) {
-      userMessage = `## Overall Learning Journey Context\n\n${galaxyMapContext}\n\n## Specific Mission Request\n\n${description}`;
+    let userMessage = missionContext;
+
+    if (refinement && refinement.currentInstructions && refinement.userFeedback) {
+      // Full refinement request with existing instructions
+      userMessage = `
+      ## Overall Learning Journey Context\n\n${galaxyMapContext || "No additional context provided"}\n\n## Current Mission Context\n\n${missionContext}\n\n
+
+      ## Refinement Request\n\nPlease refine the following mission instructions based on the user's feedback:\n\n
+      
+      **Current Instructions:**\n${refinement.currentInstructions}\n\n**User Feedback:**\n${refinement.userFeedback}`;
+    } else if (refinement && refinement.userFeedback) {
+      // Refinement request without existing instructions (new mission with context)
+      userMessage = `
+      ## Overall Learning Journey Context\n\n${galaxyMapContext || "No additional context provided"}\n\n## Current Mission Context\n\n${missionContext}\n\n
+
+      ## Specific Mission Request\n\n${refinement.userFeedback}`;
+    } else if (galaxyMapContext) {
+      // New mission request with galaxy context
+      userMessage = `
+      ## Overall Learning Journey Context\n\n${galaxyMapContext}\n\n
+      
+      ## Specific Mission Request\n\n${missionContext}`;
     }
+    // else: use default userMessage = missionContext (new mission without galaxy context)
 
     // Call OpenAI API
     logger.info("Calling OpenAI API for mission instructions generation");
@@ -392,16 +445,15 @@ export const generateInstructionsForMissionHttpsEndpoint = runWith({
         { role: "system", content: MissionInstructionsSystemPrompt },
         { role: "user", content: userMessage },
       ],
-      // text: {
-      //   format: zodTextFormat(MissionInstructionsSchema, "mission_instructions_response"),
-      // },
-      // ...(originResponseId && { previous_response_id: originResponseId }),
+      text: {
+        format: zodTextFormat(MissionInstructionsV2Schema, "mission_instructions_response"),
+      },
     });
 
     logger.info("OpenAI API call completed successfully");
 
     // Get the parsed and validated response (already handled by zodTextFormat)
-    const parsedResponse = aiResponse.output_text;
+    const parsedResponse = aiResponse.output_parsed;
     if (!parsedResponse) {
       throw new HttpsError("internal", "No response content from OpenAI");
     }
@@ -432,7 +484,153 @@ export const generateInstructionsForMissionHttpsEndpoint = runWith({
   }
 });
 
-// Download and upload image
+// Generate galaxy map with clarification answers (second step)
+export const generateGalaxyMapWithClarificationHttpsEndpoint = runWith({
+  timeoutSeconds: 540, // 9 minutes timeout
+  memory: "1GB",
+}).https.onCall(async (data) => {
+  try {
+    logger.info("Starting generateGalaxyMapWithClarification function", {
+      clarificationAnswers: data.clarificationAnswers?.substring(0, 50) + "...",
+      previousResponseId: data.previousResponseId,
+    });
+
+    const { clarificationAnswers, previousResponseId } = data;
+    if (!clarificationAnswers || !clarificationAnswers.trim()) {
+      logger.error("Missing required field: clarificationAnswers");
+      throw new HttpsError("invalid-argument", "Missing required field: clarificationAnswers");
+    }
+
+    // Call OpenAI API for second step
+    logger.info("Calling OpenAI API for galaxy map generation with clarification");
+    const aiResponse = await openai.responses.parse({
+      model: "gpt-4o-mini",
+      previous_response_id: previousResponseId,
+      input: [{ role: "user", content: clarificationAnswers }],
+      text: {
+        format: zodTextFormat(StarsAndPlanetsResponseSchema, "second_step_response"),
+      },
+    });
+
+    logger.info("OpenAI API call completed successfully");
+
+    // Get the parsed and validated response
+    const parsedResponse = aiResponse.output_parsed;
+    if (!parsedResponse) {
+      throw new HttpsError("internal", "No response content from OpenAI");
+    }
+
+    // Generate image if journey is ready
+    let imageUrl = null;
+    let fileName = null;
+    if (
+      parsedResponse.status === "journey_ready" &&
+      parsedResponse.title &&
+      parsedResponse.description
+    ) {
+      try {
+        logger.info("Generating image for galaxy map", {
+          title: parsedResponse.title,
+          descriptionLength: parsedResponse.description.length,
+        });
+
+        // Generate image using DALL-E API
+        logger.info("Calling DALL-E for image generation");
+        const imageResponse = await openai.images.generate({
+          model: "dall-e-3",
+          prompt: `Generate an image that symbolizes "${parsedResponse.title}": ${parsedResponse.description || ""}.`,
+          n: 1,
+          size: "1024x1024",
+        });
+
+        logger.info("DALL-E image generation response received", {
+          hasData: !!imageResponse.data,
+          dataLength: imageResponse.data?.length,
+          firstImageUrl: imageResponse.data?.[0]?.url,
+        });
+
+        if (imageResponse.data && imageResponse.data.length > 0) {
+          const imageUrlFromDalle = imageResponse.data[0].url;
+          logger.info("Image generated successfully by DALL-E", { imageUrl: imageUrlFromDalle });
+
+          // Download the image from DALL-E URL and upload to Firebase Storage
+          fileName = `galaxy-maps/${Date.now()}-${parsedResponse.title?.replace(/[^a-zA-Z0-9]/g, "-") || "galaxy"}.png`;
+
+          // Download image from DALL-E URL
+          logger.info("Downloading image from DALL-E URL");
+          const imageDownloadResponse = await fetch(imageUrlFromDalle!);
+          const imageBuffer = await imageDownloadResponse.arrayBuffer();
+          const buffer = Buffer.from(imageBuffer);
+          logger.info("Image downloaded and converted to buffer", { size: buffer.length });
+
+          // Upload to Firebase Storage
+          logger.info("Starting upload to Firebase Storage");
+          const file = storage.bucket(STORAGE_BUCKET).file(fileName);
+          await file.save(buffer, {
+            metadata: {
+              contentType: "image/png",
+            },
+          });
+          logger.info("File uploaded successfully", { fileName });
+
+          // Get the public URL
+          logger.info("Generating signed URL");
+          const [downloadURL] = await file.getSignedUrl({
+            action: "read",
+            expires: "03-01-2500",
+          });
+          logger.info("Signed URL generated successfully");
+
+          imageUrl = downloadURL;
+        }
+      } catch (imageError) {
+        logger.error("Error generating or uploading image", imageError);
+        // Don't fail the entire request if image generation fails
+      }
+    }
+
+    // Add image URL to the galaxy map if generated
+    logger.info("Final image generation result", {
+      hasImageUrl: !!imageUrl,
+      hasFileName: !!fileName,
+      imageUrl: imageUrl,
+      fileName: fileName,
+    });
+
+    if (imageUrl && fileName && parsedResponse.status === "journey_ready") {
+      parsedResponse.image = { name: fileName, url: imageUrl };
+      logger.info("Image added to galaxy map", { image: parsedResponse.image });
+    } else {
+      logger.info("No image added to galaxy map - conditions not met");
+    }
+
+    // Return the validated response with token usage information
+    return {
+      success: true,
+      galaxyMap: parsedResponse,
+      tokenUsage: {
+        input_tokens: aiResponse.usage?.input_tokens || 0,
+        output_tokens: aiResponse.usage?.output_tokens || 0,
+        total_tokens: aiResponse.usage?.total_tokens || 0,
+      },
+      responseId: aiResponse.id,
+    };
+  } catch (error) {
+    logger.error("Error in generateGalaxyMapWithClarification", error);
+
+    // Handle Zod validation errors specifically
+    if (error instanceof Error && error.name === "ZodError") {
+      throw new HttpsError("internal", `AI response validation failed: ${error.message}`);
+    }
+
+    throw new HttpsError(
+      "internal",
+      error instanceof Error ? error.message : "Unknown error occurred",
+    );
+  }
+});
+
+// Download and upload image (keeping the original function for backward compatibility)
 export const downloadAndUploadImageHttpsEndpoint = runWith({
   timeoutSeconds: 540, // 9 minutes timeout
   memory: "1GB",

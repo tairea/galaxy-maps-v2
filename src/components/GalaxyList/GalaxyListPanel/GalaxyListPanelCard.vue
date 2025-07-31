@@ -10,7 +10,7 @@
       "
       :class="{ 'selected-galaxy': active, 'draft-galaxy': draft }"
     >
-      <img v-if="course.image.url" class="galaxyCardImage ma-1" :src="course.image.url" />
+      <img v-if="course.image && course.image.url" class="galaxyCardImage ma-1" :src="course.image.url" />
 
       <div v-else class="imagePlaceholder ma-1">
         {{ first3Letters(course.title) }}

@@ -853,7 +853,7 @@ export default {
     },
     async deleteImage() {
       // if no image, dont worry bout it cuz
-      if (!this.course.image.url) return;
+      if (!this.course.image || !this.course.image.url) return;
 
       try {
         // Extract the full path from the URL

@@ -23,6 +23,12 @@ we would also like to have a web dashboard that can show soil moisture readings 
 
 a completed semester of learning for my 10 year old daughter homeschooling
 
+<!-- clarifying questions -->
+
+STEM
+a good foundation in STEM subjects, before implementing that knowledge to complete a major project
+6 month worth of structured learning, make sure there is enough content for that time
+
 <!-- Apii Nikao Science Term 3 - Option 2 -->
 
 I want to create a science programme for Term 3 of year 7 and 8 students in the Cook Islands.
