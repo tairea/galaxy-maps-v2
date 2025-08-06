@@ -641,6 +641,27 @@ export const generateGalaxyMapWithClarification = async (
   return result.data;
 };
 
+// Generate galaxy map again with default prompt
+export const generateGalaxyMapAgain = async (
+  responseId: string,
+): Promise<{
+  success: boolean;
+  galaxyMap: any;
+  tokenUsage: {
+    input_tokens: number;
+    output_tokens: number;
+    total_tokens: number;
+  };
+  responseId: string;
+}> => {
+  const data = {
+    responseId,
+  };
+  const generateGalaxyMapAgainFunction = functions.httpsCallable("generateGalaxyMapAgain");
+  const result = await generateGalaxyMapAgainFunction(data);
+  return result.data;
+};
+
 // Generate mission instructions with AI
 export const generateInstructionsForMission = async (
   missionContext: string,

@@ -256,7 +256,7 @@
 
     <!-- CONFIRM DELETE DIALOG -->
     <v-dialog v-model="dialogConfirm" width="40%" light>
-      <div v-if="cohortToEdit.courseCohort && courseExists" class="create-dialog">
+      <div v-if="cohortToEdit && cohortToEdit.courseCohort && courseExists" class="create-dialog">
         <!-- HEADER -->
         <div class="dialog-header">
           <p class="dialog-title"><strong>Warning!</strong> Delete Squad?</p>
@@ -352,7 +352,20 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "CreateEditDeleteCohortDialog",
-  props: ["edit", "cohortToEdit", "hideText"],
+  props: {
+    edit: {
+      type: Boolean,
+      default: false,
+    },
+    cohortToEdit: {
+      type: Object,
+      default: () => ({}),
+    },
+    hideText: {
+      type: Boolean,
+      default: false,
+    },
+  },
   components: {
     Organisation,
     CreateAccountDialog,
@@ -408,7 +421,7 @@ export default {
   },
   watch: {
     dialog(newVal) {
-      if (newVal && this.edit) {
+      if (newVal && this.edit && this.cohortToEdit && Object.keys(this.cohortToEdit).length > 0) {
         Object.assign(this.cohort, this.cohortToEdit);
       }
     },
@@ -449,6 +462,10 @@ export default {
     remove(item) {
       let index = this.cohort.teachers.findIndex((n) => item.id === n);
       if (index >= 0) this.cohort.teachers.splice(index, 1);
+
+      // Also remove from teachers array for autocomplete display
+      let teacherIndex = this.teachers.findIndex((teacher) => teacher.id === item.id);
+      if (teacherIndex >= 0) this.teachers.splice(teacherIndex, 1);
     },
     close() {
       this.dialog = false;
@@ -546,7 +563,7 @@ export default {
     },
     // delete
     deleteDialog() {
-      (this.dialog = false), (this.dialogConfirm = true);
+      ((this.dialog = false), (this.dialogConfirm = true));
     },
     cancelDeleteDialog() {
       this.dialogConfirm = false;
@@ -604,9 +621,13 @@ export default {
           console.error("Error updating document: ", error);
         });
 
-      if (this.cohort.teachers.length > this.cohortToEdit.teachers) {
+      if (
+        this.cohortToEdit &&
+        this.cohortToEdit.teachers &&
+        this.cohort.teachers.length > this.cohortToEdit.teachers.length
+      ) {
         const newTeachers = this.cohort.teachers.filter(
-          ({ id: id1 }) => !this.cohortToEdit.teachers.some(({ id: id2 }) => id2 === id1),
+          (teacherId) => !this.cohortToEdit.teachers.includes(teacherId),
         );
         if (newTeachers.length) {
           for (const teacher of newTeachers) {
@@ -620,10 +641,15 @@ export default {
     addTeacher(teacher) {
       console.log("adding teacher", teacher);
       this.cohort.teachers.push(teacher.id);
-      // this.teachers.push(teacher);
+      // Add the teacher object to the teachers array so the autocomplete can display it
+      this.teachers.push(teacher);
     },
     async initializeTeachers() {
-      if (this.cohortToEdit.teachers && this.cohortToEdit.teachers.length > 0) {
+      if (
+        this.cohortToEdit &&
+        this.cohortToEdit.teachers &&
+        this.cohortToEdit.teachers.length > 0
+      ) {
         console.log(
           "cohort has teachers, fetching teacher details from db to populate squad captain dropdown",
         );
@@ -652,8 +678,8 @@ export default {
       this.courseExists = await this.cohortCourseStillExists();
     },
     async cohortCourseStillExists() {
-    // Check if course exists when delete dialog opens
-      if (this.cohortToEdit?.courses?.[0]) {
+      // Check if course exists when delete dialog opens
+      if (this.cohortToEdit && this.cohortToEdit.courses && this.cohortToEdit.courses[0]) {
         try {
           const docRef = db.collection("courses").doc(this.cohortToEdit.courses[0]);
           const doc = await docRef.get();
@@ -663,9 +689,9 @@ export default {
         } catch (error) {
           console.error("Error checking if course exists:", error);
         }
-      } 
+      }
       return false;
-    }
+    },
   },
 };
 </script>

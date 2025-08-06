@@ -332,7 +332,9 @@ export default {
         (cohort) => cohort.teachers.includes(this.person.id) && !cohort.courseCohort,
       );
     }
-    this.currentCourse = await fetchCourseByCourseId(this.currentCourseId);
+    if (this.currentCourseId) {
+      this.currentCourse = await fetchCourseByCourseId(this.currentCourseId);
+    }
   },
   watch: {
     dialog(newVal) {

@@ -33,7 +33,7 @@ a good foundation in STEM subjects, before implementing that knowledge to comple
 
 I want to create a science programme for Term 3 of year 7 and 8 students in the Cook Islands.
 
-The focus of the program should be on how Science Meets Traditional Medicine, specifically Investigating **Chemical Change through Traditional Medicines and Natural Processes**
+The focus of the program should be on how Science Meets Traditional Medicine, specifically Investigating Chemical Change through Traditional Medicines and Natural Processes
 
 Below is our rough outline, please elaborate and extrapolate on the focus and activities so the students know exactly what to do to learn these concepts.
 

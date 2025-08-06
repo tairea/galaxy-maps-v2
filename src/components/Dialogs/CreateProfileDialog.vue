@@ -114,12 +114,13 @@
           </div>
           <v-row>
             <v-btn
-              :loading="!valid || updatingAccount"
+              :loading="updatingAccount"
               color="missionAccent"
               class="ma-4"
               @click="update()"
               outlined
               width="30%"
+              :disabled="updatingAccount"
             >
               Update
             </v-btn>
@@ -129,7 +130,7 @@
               @click="cancel()"
               outlined
               width="30%"
-              :disabled="!valid || updatingAccount"
+              :disabled="updatingAccount"
             >
               cancel
             </v-btn>
@@ -215,10 +216,12 @@ export default {
         })
         .then(() => {
           // login and navigate to my cohorts
+          this.updatingAccount = false;
           this.$emit("login");
         })
         .catch((err) => {
           console.error("something went wrong: ", err);
+          this.updatingAccount = false;
         });
     },
     updatePassword() {
@@ -278,7 +281,8 @@ export default {
       );
     },
     updateProfile(data) {
-      db.collection("people")
+      return db
+        .collection("people")
         .doc(this.person.id)
         .update(data)
         .then(() => {
@@ -288,6 +292,7 @@ export default {
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
+          throw error; // Re-throw to be caught by the calling function
         });
     },
   },

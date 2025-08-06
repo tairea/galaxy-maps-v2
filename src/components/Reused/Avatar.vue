@@ -115,20 +115,20 @@ export default {
         try {
           this.profileData = await fetchPersonByPersonId(
             this.personId ? this.personId : this.profile.id,
-            this.cohort.id,
+            this.cohort?.id || null,
           );
         } catch (error) {
           console.log(
             `Error fetching person with ID ${
               this.personId ? this.personId : this.profile.id
-            }: from cohort ${this.cohort.id}`,
+            }: from cohort ${this.cohort?.id || "unknown"}`,
             error,
           );
           // Optionally, set a default or placeholder value for profileData
           this.profileData = {
             firstName: "Unknown",
             lastName: "User",
-            id: this.personId ? this.personId : this.profile.id,
+            id: this.personId ? this.personId : this.profile?.id || "unknown",
           };
           // TODO: if person does not exist in db. we need to delete the user from the db
         }

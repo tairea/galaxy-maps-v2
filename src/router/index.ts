@@ -111,6 +111,15 @@ const routes = [
         props: true,
       },
       {
+        path: "galaxy/:courseId/ai-edit",
+        name: "AiGalaxyEditWithCourse",
+        component: AiGalaxyEdit,
+        meta: {
+          authRequired: true,
+        },
+        props: true,
+      },
+      {
         path: ":slug",
         name: "GalaxyList",
         component: GalaxyList,
