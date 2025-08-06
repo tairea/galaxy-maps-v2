@@ -4,13 +4,13 @@
       <!-- CREATE BUTTON -->
       <template v-slot:activator="{ on, attrs }">
         <v-btn
-          class="cohort-btn"
+          class="cohort-btn ma-4"
           :light="dark"
           :dark="!dark"
-          :text="teacher"
           :color="teacher ? 'baseAccent' : 'missionAccent'"
           v-bind="attrs"
           v-on="on"
+          outlined
         >
           <v-icon left> {{ mdiPlus }} </v-icon>
           {{ teacher ? "Add Captain" : "Add Navigator" }}

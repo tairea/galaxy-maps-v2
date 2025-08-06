@@ -563,6 +563,7 @@ import { zodTextFormat } from "openai/helpers/zod";
 import { StarsAndPlanetsResponseSchema } from "@/lib/schemas";
 import { saveGalaxyMap, generateInstructionsForMission, generateGalaxyMapAgain } from "@/lib/ff";
 import * as smd from "streaming-markdown";
+import { getFriendlyErrorMessage } from "@/lib/utils";
 
 // import PromptDialog from "@/components/Dialogs/PromptDialog.vue";
 
@@ -2088,9 +2089,7 @@ export default {
         console.error("Error generating mission instructions:", error);
         this.setSnackbar({
           show: true,
-          text:
-            "Error generating mission instructions: " +
-            (error instanceof Error ? error.message : "Unknown error"),
+          text: "Error generating mission instructions: " + getFriendlyErrorMessage(error.code),
           color: "pink",
         });
       } finally {
@@ -2160,8 +2159,7 @@ export default {
         console.error("Error saving galaxy:", error);
         this.setSnackbar({
           show: true,
-          text:
-            "Error saving galaxy: " + (error instanceof Error ? error.message : "Unknown error"),
+          text: "Error saving galaxy: " + getFriendlyErrorMessage(error.code),
           color: "pink",
         });
       } finally {

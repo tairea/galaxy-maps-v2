@@ -115,6 +115,7 @@ import useRootStore from "@/store/index";
 import firebase from "firebase/compat/app";
 import { mapActions, mapState } from "pinia";
 import { mdiEye, mdiEyeOff } from "@mdi/js";
+import { getFriendlyErrorMessage } from "@/lib/utils";
 
 export default {
   name: "LoginDialog",
@@ -204,7 +205,7 @@ export default {
           // Invalid or expired action code. Ask user to try to reset the password
           this.setSnackbar({
             show: true,
-            text: "Error verifying code: " + error.message,
+            text: getFriendlyErrorMessage(error.code),
             color: "pink",
           });
         });
@@ -245,7 +246,7 @@ export default {
         .catch((error) => {
           this.setSnackbar({
             show: true,
-            text: "Invalid or expired code: " + error.message,
+            text: getFriendlyErrorMessage(error.code),
             color: "pink",
           });
         });
@@ -268,7 +269,7 @@ export default {
           // Code is invalid or expired. Ask the user to verify their email address
           this.setSnackbar({
             show: true,
-            text: "Invalid or expired code: " + error.message,
+            text: getFriendlyErrorMessage(error.code),
             color: "pink",
           });
         });
@@ -290,7 +291,7 @@ export default {
           console.log("error: ", error);
           this.setSnackbar({
             show: true,
-            text: error.message,
+            text: getFriendlyErrorMessage(error.code),
             color: "pink",
           });
           this.loading = false;
@@ -336,7 +337,7 @@ export default {
         .catch((error) => {
           this.setSnackbar({
             show: true,
-            text: error.message,
+            text: getFriendlyErrorMessage(error.code),
             color: "pink",
           });
         });

@@ -37,9 +37,10 @@ export async function sendTeacherInviteEmail(email: string, displayName: string,
   };
 
   mailOptions.subject = `Account created for ${APP_NAME}!`;
-  mailOptions.text = `Greetings ${displayName || ""}
+  mailOptions.text = `Greetings, ${displayName || ""}
 
 Your Captain account has been created for ${APP_NAME}. 
+
 Please click this link to sign into your account and setup your profile
 
 ${link}

@@ -298,6 +298,7 @@ import {
 import firebase from "firebase/compat/app";
 import { doc, updateDoc } from "firebase/firestore";
 import { mapActions, mapState } from "pinia";
+import { getFriendlyErrorMessage } from "@/lib/utils";
 
 export default {
   name: "AssignCohortDialog",
@@ -409,7 +410,7 @@ export default {
         // snackbar message
         this.setSnackbar({
           show: true,
-          text: error.split("FirebaseError: ")[1],
+          text: getFriendlyErrorMessage(error.code),
           color: "pink",
         });
         this.close();
@@ -453,7 +454,7 @@ export default {
         console.error("Error writing document: ", error);
         this.setSnackbar({
           show: true,
-          text: error,
+          text: getFriendlyErrorMessage(error.code),
           color: "pink",
         });
       }

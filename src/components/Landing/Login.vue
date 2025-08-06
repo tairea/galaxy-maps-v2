@@ -160,7 +160,7 @@ export default {
           // Invalid or expired action code. Ask user to try to reset the password
           this.setSnackbar({
             show: true,
-            text: "Error verifying code: " + error.message,
+            text: getFriendlyErrorMessage(error.code),
             color: "pink",
           });
         });
@@ -193,7 +193,7 @@ export default {
               // Error encountered while sending password reset code.
               this.setSnackbar({
                 show: true,
-                text: "Error sending password reset email: " + error.message,
+                text: getFriendlyErrorMessage(error.code),
                 color: "pink",
               });
             });
@@ -201,7 +201,7 @@ export default {
         .catch((error) => {
           this.setSnackbar({
             show: true,
-            text: "Invalid or expired code. (Error code: " + error.code + ")",
+            text: getFriendlyErrorMessage(error.code),
             color: "pink",
           });
         });
@@ -224,7 +224,7 @@ export default {
           // Code is invalid or expired. Ask the user to verify their email address
           this.setSnackbar({
             show: true,
-            text: "Invalid or expired code. (Error code: " + error.code + ")",
+            text: getFriendlyErrorMessage(error.code),
             color: "pink",
           });
           this.$router.push("/verify");
@@ -306,7 +306,7 @@ export default {
         .catch((error) => {
           this.setSnackbar({
             show: true,
-            text: error.message,
+            text: getFriendlyErrorMessage(error.code),
             color: "pink",
           });
         });

@@ -217,6 +217,7 @@ import useRootStore from "@/store/index";
 import { mdiAccount, mdiCheck, mdiClose, mdiDelete, mdiInformationVariant } from "@mdi/js";
 import moment from "moment";
 import { mapActions, mapState } from "pinia";
+import { getFriendlyErrorMessage } from "@/lib/utils";
 
 export default {
   name: "RequestForHelpResponseDialog",
@@ -301,7 +302,7 @@ export default {
         console.error("Error writing document: ", error);
         this.setSnackbar({
           show: true,
-          text: "Error: " + error,
+          text: getFriendlyErrorMessage(error.code),
           color: "pink",
         });
       } finally {
@@ -349,7 +350,7 @@ export default {
     },
     // delete request for help
     deleteDialog() {
-      (this.dialog = false), (this.dialogConfirm = true);
+      ((this.dialog = false), (this.dialogConfirm = true));
     },
     cancelDeleteDialog() {
       this.dialogConfirm = false;
