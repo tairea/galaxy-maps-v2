@@ -630,6 +630,70 @@ export const generateGalaxyMapWithClarificationHttpsEndpoint = runWith({
   }
 });
 
+// Generate galaxy map again with a default prompt
+export const generateGalaxyMapAgainHttpsEndpoint = runWith({
+  timeoutSeconds: 540, // 9 minutes timeout
+  memory: "1GB",
+}).https.onCall(async (data) => {
+  try {
+    logger.info("Starting generateGalaxyMapAgain function", {
+      responseId: data.responseId,
+    });
+
+    const { responseId } = data;
+    if (!responseId) {
+      logger.error("Missing required field: responseId");
+      throw new HttpsError("invalid-argument", "Missing required field: responseId");
+    }
+
+    // Call OpenAI API with default prompt
+    logger.info("Calling OpenAI API for galaxy map regeneration");
+    const aiResponse = await openai.responses.parse({
+      model: "gpt-4o-mini",
+      previous_response_id: responseId,
+      input: [{ role: "user", content: "i didnt like the result, please try again" }],
+      text: {
+        format: zodTextFormat(StarsAndPlanetsResponseSchema, "regenerate_response"),
+      },
+    });
+
+    logger.info("OpenAI API call completed successfully");
+
+    // Get the parsed and validated response (already handled by zodTextFormat)
+    const parsedResponse = aiResponse.output_parsed;
+    if (!parsedResponse) {
+      throw new HttpsError("internal", "No response content from OpenAI");
+    }
+
+    // remove image from parsedResponse
+    delete parsedResponse.image;
+
+    // Return the validated response with token usage information
+    return {
+      success: true,
+      galaxyMap: parsedResponse,
+      tokenUsage: {
+        input_tokens: aiResponse.usage?.input_tokens || 0,
+        output_tokens: aiResponse.usage?.output_tokens || 0,
+        total_tokens: aiResponse.usage?.total_tokens || 0,
+      },
+      responseId: aiResponse.id,
+    };
+  } catch (error) {
+    logger.error("Error in generateGalaxyMapAgain", error);
+
+    // Handle Zod validation errors specifically
+    if (error instanceof Error && error.name === "ZodError") {
+      throw new HttpsError("internal", `AI response validation failed: ${error.message}`);
+    }
+
+    throw new HttpsError(
+      "internal",
+      error instanceof Error ? error.message : "Unknown error occurred",
+    );
+  }
+});
+
 // Download and upload image (keeping the original function for backward compatibility)
 export const downloadAndUploadImageHttpsEndpoint = runWith({
   timeoutSeconds: 540, // 9 minutes timeout

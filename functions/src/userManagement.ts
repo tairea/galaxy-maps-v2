@@ -40,27 +40,47 @@ export const getPersonByEmailHttpsEndpoint = runWith({}).https.onCall(async (dat
     throw new HttpsError("invalid-argument", "missing email");
   }
 
+  log("getPersonByEmail: searching for email:", email);
+
+  // First check Firestore
   const queryResult = await db.collection("people").where("email", "==", email).limit(1).get();
+  log("getPersonByEmail: Firestore query result docs length:", queryResult.docs.length);
+
   const personDoc = queryResult.docs[0];
 
-  if (personDoc == null) {
-    throw new HttpsError("not-found", `Person not found: ${email}`);
+  if (personDoc != null) {
+    const personData = personDoc.data();
+    if (personData != null) {
+      log("getPersonByEmail: found person in Firestore:", personData);
+      return {
+        person: {
+          ...personData,
+          id: personDoc.id,
+        },
+      };
+    }
   }
 
-  const personData = personDoc.data();
+  // If not found in Firestore, check Firebase Auth
+  log("getPersonByEmail: not found in Firestore, checking Firebase Auth");
 
-  if (personData == null) {
-    throw new HttpsError("not-found", `Person not found: ${email}`);
+  try {
+    const userRecord = await auth.getUserByEmail(email);
+    log("getPersonByEmail: found user in Firebase Auth:", userRecord.uid);
+
+    return {
+      person: {
+        id: userRecord.uid,
+        email: userRecord.email,
+        displayName: userRecord.displayName,
+        photoURL: userRecord.photoURL,
+        emailVerified: userRecord.emailVerified,
+      },
+    };
+  } catch (error) {
+    log("getPersonByEmail: user not found in Firebase Auth either");
+    throw new HttpsError("not-found", "Person not found with this email");
   }
-
-  // TODO: permissions checks
-
-  return {
-    person: {
-      ...personData,
-      id: personDoc.id,
-    },
-  };
 });
 
 // upgrade someones account to admin
@@ -108,10 +128,6 @@ export const createNewUserHttpsEndpoint = runWith({}).https.onCall(async (data, 
       ...profile,
       id: createdUser.uid,
     };
-    if (person.accountType === "teacher") {
-      delete person.nsn;
-      delete person.parentEmail;
-    }
 
     // Generate a magic email link
     // set magic link parameters
@@ -148,6 +164,7 @@ export const createNewUserHttpsEndpoint = runWith({}).https.onCall(async (data, 
     };
   } catch (err) {
     error(err);
+    log("error: ", err);
     throw new HttpsError("internal", `something went wrong ${err}`);
   }
 });

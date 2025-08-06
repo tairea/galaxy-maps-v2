@@ -31,6 +31,7 @@
               :size="40"
               :personId="teacherId"
               :colourBorder="true"
+              :cohort="cohort"
             />
           </div>
         </div>

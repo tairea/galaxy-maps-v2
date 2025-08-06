@@ -44,14 +44,14 @@
         :key="refreshRequests"
         :isTeacher="teacher"
         :courses="courses"
-        :students="cohort.students"
+        :students="students"
       />
       <SubmissionTeacherFrame
         v-if="cohort && teacher"
         :key="refreshSubmissions"
         :isTeacher="teacher"
         :courses="courses"
-        :students="cohort.students"
+        :students="students"
         class="mt-4"
       />
       <!-- Completed Separate -->
@@ -122,9 +122,17 @@ export default {
       return this.cohortId === this.currentCohortId && this.cohort != null;
     },
     courses() {
-      return this.cohort?.courses?.map((course) => {
-        return { id: course };
+      if (!this.cohort?.courses) return [];
+      // Use Set to ensure unique course IDs, then map to objects
+      const uniqueCourseIds = [...new Set(this.cohort.courses)];
+      return uniqueCourseIds.map((courseId) => {
+        return { id: courseId };
       });
+    },
+    students() {
+      if (!this.cohort?.students) return [];
+      // Use Set to ensure unique student IDs
+      return [...new Set(this.cohort.students)];
     },
     teacher() {
       return this.cohort.teachers.includes(this.person.id);
@@ -175,6 +183,8 @@ export default {
   overflow-y: auto;
   padding: 50px 0px;
   margin-left: 5%;
+  // margin-left: 2.5%;
+  padding-right: 20px;
 }
 
 #main-section {

@@ -10,11 +10,23 @@
       ></v-btn>
     </div>
     <div v-else-if="sortedCourseActivitiesByDates.length > 0" :class="statementClass">
-      <div v-for="(year, i) in sortedCourseActivitiesByDates" :key="i" class="ma-0">
-        <div v-for="(date, j) in year.dates" :key="j" class="ma-0">
+      <div
+        v-for="(year, yearIndex) in sortedCourseActivitiesByDates"
+        :key="`year-${yearIndex}-${year.year}`"
+        class="ma-0"
+      >
+        <div
+          v-for="(date, dateIndex) in year.dates"
+          :key="`date-${yearIndex}-${dateIndex}-${date.date}`"
+          class="ma-0"
+        >
           <!-- DAY, DATE, YEAR -->
           <p class="mt-3 mb-1 border-bottom-missionAccent">{{ formatDate(date.date) }}</p>
-          <div v-for="(activity, k) in date.activities" :key="k" class="ma-0">
+          <div
+            v-for="(activity, activityIndex) in date.activities"
+            :key="`activity-${yearIndex}-${dateIndex}-${activityIndex}-${activity.id || activity.timeStamp.time}`"
+            class="ma-0"
+          >
             <!-- TIME -->
             <span>{{ activity.timeStamp.time }} - </span>
             <!-- ACTIVITY -->

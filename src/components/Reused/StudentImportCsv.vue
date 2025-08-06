@@ -1,6 +1,6 @@
 <template>
   <div class="tab-content">
-    <v-row class="pt-2 pl-2 pb-0">
+    <v-row class="pl-2 pb-0 mt-4">
       <v-col cols="6" class="pa-0">
         <v-btn :dark="dark" :light="!dark" text @click="downloadCsv()">
           <v-icon small color="missionAccent">{{ mdiDownload }}</v-icon>
@@ -50,19 +50,19 @@
         </tr>
       </v-simple-table>
     </div>
-    <v-row class="ma-2 mt-4">
+    <v-row class="ma-2 mt-10">
       <v-btn
         v-if="parse_csv.length > 0"
         @click="saveStudents"
         color="missionAccent"
-        depressed
+        outlined
         class="mr-4"
         :loading="loading"
         :disabled="disabled"
         width="40%"
         >{{ buttonLabel }}
       </v-btn>
-      <v-btn @click="close" color="baseAccent" depressed width="40%">cancel </v-btn>
+      <v-btn @click="close" outlined width="40%">cancel </v-btn>
     </v-row>
   </div>
 </template>
@@ -94,14 +94,13 @@ export default {
       sortOrders: {},
       sortKey: "",
       showTable: false,
-      buttonLabel: "Add Students",
+      buttonLabel: "Add Navigators",
       loading: false,
       disabled: false,
       csvColumns: [
-        "Nsn Number",
         "First Name",
         "Last Name",
-        "Student Email",
+        "Email",
         // "Parent Email",
       ],
       cohort: null,
@@ -113,7 +112,7 @@ export default {
     },
   },
   computed: {
-    ...mapState(useRootStore, ["currentCohortId"]),
+    ...mapState(useRootStore, ["currentCohortId", "person"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -132,6 +131,7 @@ export default {
       this.sortOrders = {};
       this.sortKey = "";
       this.showTable = false;
+      this.$emit("close");
     },
     async saveStudents() {
       this.loading = true;
@@ -140,16 +140,13 @@ export default {
       // Add a new document in collection "people"
       await Promise.all(
         this.parse_csv.map(async (student, index) => {
-          console.log("saving student: ", index, ":", student);
-
-          // resctructure data to match db fields
+          // restructure data to match db fields
           const profile = {
             ...student,
-            email: student.studentEmail,
-            nsn: student.nsnNumber,
+            displayName: student.firstName + " " + student.lastName,
+            email: student.email,
+            inviter: this.person.firstName + " " + this.person.lastName,
           };
-          delete profile.nsnNumber;
-          delete profile.studentEmail;
 
           console.log("person: ", profile);
 
@@ -158,6 +155,7 @@ export default {
 
           if (personExists) {
             console.log("personExisits: ", personExists);
+            console.log("adding them to cohort: ", this.cohort.id);
             // add existing person to cohort
             await addPersonToCohort(personExists.id, this.cohort.id);
 
@@ -184,6 +182,7 @@ export default {
       this.showTable = false;
       this.disabled = true;
       this.dialog = false;
+      this.$emit("close");
     },
     sortBy(key) {
       var vm = this;
@@ -264,7 +263,7 @@ export default {
       var hiddenElement = document.createElement("a");
       hiddenElement.href = "data:text/csv;charset=utf-8," + encodeURI(csv);
       hiddenElement.target = "_blank";
-      hiddenElement.download = "students-list.csv";
+      hiddenElement.download = "navigators-list-template.csv";
       hiddenElement.click();
     },
   },

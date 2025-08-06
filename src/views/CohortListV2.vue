@@ -1,10 +1,6 @@
 <template>
   <div class="main-wrap">
-    <LoadingSpinner
-      v-if="orderedCohorts.length == 0"
-      text="loading squads"
-      style="margin-left: -10%"
-    />
+    <LoadingSpinner v-if="isLoading" text="loading squads" style="margin-left: -10%" />
 
     <div class="side-col">
       <!-- COHORTS -->
@@ -56,7 +52,7 @@
           />
         </div> -->
       </div>
-      <div v-if="!cohorts">
+      <div v-if="!cohorts && !isLoading">
         <h3 class="cohort-heading overline baseAccent--text">No Squads Found</h3>
       </div>
 
@@ -120,7 +116,7 @@
           >
             <template v-slot:activator="{ on, attrs }">
               <div v-bind="attrs" v-on="on">
-                <CreateEditDeleteCohortDialog />
+                <CreateEditDeleteCohortDialog :cohortToEdit="{}" />
               </div>
             </template>
             <div class="create-tooltip">
@@ -129,10 +125,9 @@
             </div>
           </v-tooltip>
           <!-- PAY WALL VERSION Create Cohort Button -->
-          <v-tooltip v-else bottom color="subBackground">
+          <!-- <v-tooltip v-else bottom color="subBackground">
             <template v-slot:activator="{ on, attrs }">
               <div v-bind="attrs" v-on="on">
-                <!-- DISABLED -->
                 <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on" disabled>
                   <v-icon class="mb-1 mr-2">{{ mdiPlus }}</v-icon>
                   CREATE SQUAD
@@ -140,7 +135,10 @@
               </div>
             </template>
             <span v-html="paidFeatureMessage"></span>
-          </v-tooltip>
+          </v-tooltip> -->
+
+          <!-- OPEN VERSION -->
+          <CreateEditDeleteCohortDialog :cohortToEdit="{}" />
         </div>
 
         <!-- ADMIN BUTTONS -->
@@ -166,16 +164,15 @@
       </div>
 
       <!-- NO COHORTS YET -->
-      <div v-else class="no-cohort">
+      <div v-else-if="!isLoading" class="no-cohort">
         <p class="overline">You haven't created any Squads yet</p>
         <!-- <p class="overline">start a galaxy to create a cohort</p> -->
 
         <!-- PAY WALL VERSION Create Cohort Button -->
         <div class="button-container">
-          <v-tooltip bottom close-delay="2000" color="subBackground">
+          <!-- <v-tooltip bottom close-delay="2000" color="subBackground">
             <template v-slot:activator="{ on, attrs }">
               <div v-bind="attrs" v-on="on">
-                <!-- DISABLED -->
                 <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on" disabled>
                   <v-icon class="mb-1 mr-2">{{ mdiPlus }}</v-icon>
                   create cohort
@@ -183,17 +180,11 @@
               </div>
             </template>
             <span v-html="paidFeatureMessage"></span>
-          </v-tooltip>
+          </v-tooltip> -->
 
           <!-- FREELY CREATE COHORTS VERSION -->
-          <!-- <v-tooltip right color="subBackground">
-            <template v-slot:activator="{ on, attrs }">
-              <div v-bind="attrs" v-on="on">
-                <CreateEditDeleteCohortDialog />
-              </div>
-            </template>
-            <div class="create-tooltip">CREATE COHORT</div>
-          </v-tooltip> -->
+
+          <CreateEditDeleteCohortDialog :cohortToEdit="{}" />
 
           <!-- ADIMN: CREATE ORG -->
           <v-tooltip right color="subBackground" v-if="this.user.data.admin">
@@ -268,6 +259,7 @@ export default {
     unselectedCohorts: [],
     orderedCohorts: [],
     expand: false,
+    isLoading: true,
     paidFeatureMessage: `<div class="ma-2"><p class="text-center overline">Paid feature.</p><p class="text-center">Contact us to upgrade: <a href="mailto:base@galaxymaps.io">base@galaxymaps.io</a></p></div>`,
   }),
   watch: {
@@ -305,15 +297,25 @@ export default {
       }
     },
     async getCohortsAndOrganisations() {
-      this.cohorts = await fetchCohorts();
-      const organisationIdsSet = new Set(
-        this.cohorts
-          .filter((cohort) => cohort.organisation != null && cohort.organisation !== "")
-          .map((cohort) => cohort.organisation),
-      );
-      this.organisations = await Promise.all(
-        Array.from(organisationIdsSet).map((id) => fetchOrganisationByOrganisationId(id)),
-      );
+      try {
+        this.isLoading = true;
+        this.cohorts = await fetchCohorts();
+        const organisationIdsSet = new Set(
+          this.cohorts
+            .filter((cohort) => cohort.organisation != null && cohort.organisation !== "")
+            .map((cohort) => cohort.organisation),
+        );
+        this.organisations = await Promise.all(
+          Array.from(organisationIdsSet).map((id) => fetchOrganisationByOrganisationId(id)),
+        );
+      } catch (error) {
+        console.error("Error fetching cohorts and organisations:", error);
+        // Set empty arrays if there's an error
+        this.cohorts = [];
+        this.organisations = [];
+      } finally {
+        this.isLoading = false;
+      }
     },
     editOrgDialog(orgId) {
       this.openOrganisationDialog = true;
@@ -526,7 +528,7 @@ hr {
   color: var(--v-missionAccent-base);
   // margin-left: auto;
   // margin-right: auto;
-  width: 70%;
+  width: 80%;
   .button-container {
     margin-top: 50px;
     height: auto;

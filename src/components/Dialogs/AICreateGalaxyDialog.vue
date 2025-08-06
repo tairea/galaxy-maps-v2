@@ -237,7 +237,7 @@
                     <!-- CONTINUE -->
                     <v-btn
                       outlined
-                      :color="selectedFlow === 'no-human-help' ? 'galaxyAccent' : 'baseAccent'"
+                      :color="'galaxyAccent'"
                       @click="continueWithSelectedFlow()"
                       class="mx-2"
                       :loading="loading"
@@ -280,13 +280,13 @@
     />
 
     <!-- Create Galaxy Options Dialog -->
-    <CreateGalaxyOptionsDialog
+    <!-- <CreateGalaxyOptionsDialog
       :show-dialog="showCreateOptionsDialog"
       :loading="loading"
       @human-help="handleHumanHelp"
       @no-human-help="handleNoHumanHelp"
       @cancel="handleCancelCreateOptions"
-    />
+    /> -->
   </v-container>
 </template>
 
@@ -312,13 +312,13 @@ import { zodTextFormat } from "openai/helpers/zod";
 import { StarsAndPlanetsResponseSchema } from "@/lib/schemas";
 import RobotLoadingSpinner from "@/components/Reused/RobotLoadingSpinner.vue";
 import LayoutSelectionDialog from "@/components/Dialogs/LayoutSelectionDialog.vue";
-import CreateGalaxyOptionsDialog from "@/components/Dialogs/CreateGalaxyOptionsDialog.vue";
+// import CreateGalaxyOptionsDialog from "@/components/Dialogs/CreateGalaxyOptionsDialog.vue";
 export default {
   name: "AICreateGalaxyDialog",
   components: {
     RobotLoadingSpinner,
     LayoutSelectionDialog,
-    CreateGalaxyOptionsDialog,
+    // CreateGalaxyOptionsDialog,
   },
   props: {
     showFirstDialog: {
@@ -380,7 +380,7 @@ export default {
     completedMissions: 0,
     totalMissions: 0,
     showLayoutDialog: false,
-    showCreateOptionsDialog: false,
+    // showCreateOptionsDialog: false,
     selectedFlow: null, // Track which flow was selected: 'human-help' or 'no-human-help'
     selectedLayout: null, // Store the selected layout for the flow
     aiGeneratedTitle: "",
@@ -477,7 +477,7 @@ export default {
       this.aiGeneratedGalaxyMap = {}; // Reset galaxy map
       this.selectedFlow = null; // Reset selected flow
       this.selectedLayout = null; // Reset selected layout
-      this.showCreateOptionsDialog = false; // Reset create options dialog
+      // this.showCreateOptionsDialog = false; // Reset create options dialog
       this.$emit("update:showFirstDialog", false);
     },
     startLoadingMessages() {
@@ -607,10 +607,11 @@ export default {
             // For human-help flow, route to AiGalaxyEdit
             this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
             this.$router.push({ name: "AiGalaxyEdit" });
-          } else if (this.selectedFlow === "no-human-help") {
-            // For no-human-help flow, continue with automated generation
-            await this.generateMissionsThenSave(this.selectedLayout);
           }
+          // } else if (this.selectedFlow === "no-human-help") {
+          //   // For no-human-help flow, continue with automated generation
+          //   await this.generateMissionsThenSave(this.selectedLayout);
+          // }
         } else if (
           parsedResponse.status === "clarification_needed" &&
           parsedResponse.questions &&
@@ -726,10 +727,11 @@ export default {
             // For human-help flow, route to AiGalaxyEdit
             this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
             this.$router.push({ name: "AiGalaxyEdit" });
-          } else if (this.selectedFlow === "no-human-help") {
-            // For no-human-help flow, continue with automated generation
-            await this.generateMissionsThenSave(this.selectedLayout);
           }
+          // } else if (this.selectedFlow === "no-human-help") {
+          //   // For no-human-help flow, continue with automated generation
+          //   await this.generateMissionsThenSave(this.selectedLayout);
+          // }
         } else if (
           parsedResponse.status === "clarification_needed" &&
           parsedResponse.questions &&
@@ -944,48 +946,50 @@ export default {
       }
     },
     showCreateOptions() {
-      this.showCreateOptionsDialog = true;
-    },
-
-    handleHumanHelp() {
-      this.showCreateOptionsDialog = false;
+      // Directly start human-help flow instead of showing options dialog
       this.selectedFlow = "human-help";
       this.firstStep("human-help");
     },
 
-    handleNoHumanHelp() {
-      this.showCreateOptionsDialog = false;
-      this.selectedFlow = "no-human-help";
-      // For no-human-help flow, we need to select layout first
-      this.showLayoutDialog = true;
-    },
+    // handleHumanHelp() {
+    //   this.showCreateOptionsDialog = false;
+    //   this.selectedFlow = "human-help";
+    //   this.firstStep("human-help");
+    // },
 
-    handleCancelCreateOptions() {
-      this.showCreateOptionsDialog = false;
-    },
+    // handleNoHumanHelp() {
+    //   this.showCreateOptionsDialog = false;
+    //   this.selectedFlow = "no-human-help";
+    //   // For no-human-help flow, we need to select layout first
+    //   this.showLayoutDialog = true;
+    // },
 
-    async createGalaxyMapWithNoHumanHelp(flow = "no-human-help") {
-      // Store the selected flow
-      this.selectedFlow = flow;
-      console.log("createGalaxyMapWithNoHumanHelp");
-      if (this.loading) {
-        console.log("Already processing, ignoring duplicate submission");
-        return;
-      }
+    // handleCancelCreateOptions() {
+    //   this.showCreateOptionsDialog = false;
+    // },
 
-      if (!this.description.trim()) {
-        this.setSnackbar({
-          show: true,
-          text: "Please provide a description for the Galaxy Map",
-          color: "warning",
-        });
-        return;
-      }
+    // async createGalaxyMapWithNoHumanHelp(flow = "no-human-help") {
+    //   // Store the selected flow
+    //   this.selectedFlow = flow;
+    //   console.log("createGalaxyMapWithNoHumanHelp");
+    //   if (this.loading) {
+    //     console.log("Already processing, ignoring duplicate submission");
+    //     return;
+    //   }
 
-      // Show layout selection dialog first
-      console.log("Showing layout selection dialog before galaxy generation...");
-      this.showLayoutDialog = true;
-    },
+    //   if (!this.description.trim()) {
+    //     this.setSnackbar({
+    //       show: true,
+    //       text: "Please provide a description for the Galaxy Map",
+    //       color: "warning",
+    //     });
+    //     return;
+    //   }
+
+    //   // Show layout selection dialog first
+    //   console.log("Showing layout selection dialog before galaxy generation...");
+    //   this.showLayoutDialog = true;
+    // },
 
     // Continue with the selected flow after clarification questions
     async continueWithSelectedFlow() {
@@ -1588,7 +1592,9 @@ export default {
   display: flex;
   flex-direction: column;
   width: 100%;
-  gap: 0.5rem;
+  // gap: 0.5rem;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 .item-header {
@@ -1613,6 +1619,8 @@ export default {
   color: var(--v-missionAccent-base);
   opacity: 0.8;
   line-height: 1.4;
+  margin-left: 50px;
+  margin-top: -3px;
 
   // margin-left: 50px;
   // margin-top: -3px;

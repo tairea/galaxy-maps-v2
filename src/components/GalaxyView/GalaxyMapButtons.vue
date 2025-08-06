@@ -4,7 +4,11 @@
       <!-- SHOW MISSIONS (All Users) -->
       <div
         class="mapButton"
-        :class="{ active: showMissions, 'mr-4': isTeacher }"
+        :class="{
+          active: showMissions,
+          'mr-4': isTeacher,
+          dimmed: editModeActive,
+        }"
         @click="toggleShowMissions"
       >
         <div class="mapButton-icon" :class="{ activeIcon: showMissions }">
@@ -88,6 +92,16 @@
             <v-icon color="baseAccent">{{ mdiContentSaveCheck }}</v-icon>
           </div>
         </div>
+
+        <!-- EDIT WITH AI -->
+        <div class="mapButtonGalaxyAccent ml-4" @click="openAiGalaxyEdit">
+          <div class="mapButton-icon">
+            <v-icon color="galaxyAccent">{{ mdiRobotExcited }}</v-icon>
+          </div>
+          <div class="mapButton-text">
+            <p class="overline ma-0">Edit with AI</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -103,7 +117,11 @@ import {
   mdiEarth,
   mdiEarthOff,
   mdiStarPlus,
+  mdiRobotExcited,
 } from "@mdi/js";
+import { mapActions, mapState } from "pinia";
+import useRootStore from "@/store/index";
+import { getGalaxyMapObjectFromCourse } from "@/lib/ff";
 
 export default {
   name: "GalaxyMapButtons",
@@ -116,6 +134,7 @@ export default {
     nodePositionsChangeLoading: { default: false },
     showMissions: { default: false },
     isTeacher: { default: false },
+    course: { default: null },
   },
   async mounted() {},
   data() {
@@ -128,15 +147,18 @@ export default {
       mdiEarth,
       mdiEarthOff,
       mdiStarPlus,
+      mdiRobotExcited,
       editModeActive: false,
     };
   },
   computed: {
+    ...mapState(useRootStore, ["boundCourse"]),
     editMode() {
       return this.addNodeMode || this.addEdgeMode;
     },
   },
   methods: {
+    ...mapActions(useRootStore, ["setAiGalaxyEditData"]),
     toggleEditMode() {
       this.editModeActive = !this.editModeActive;
       // If turning off edit mode, also turn off all edit modes
@@ -161,6 +183,28 @@ export default {
     toggleShowMissions() {
       this.$emit("toggleShowMissions");
     },
+    async openAiGalaxyEdit() {
+      this.$emit("toggleLoading", true);
+      console.log("openAiGalaxyEdit for course: ", this.boundCourse?.id);
+
+      if (!this.boundCourse?.galaxyMapAsObject) {
+        // create galaxyMapObject
+        const galaxyMapObject = await getGalaxyMapObjectFromCourse(this.boundCourse?.id);
+        this.setAiGalaxyEditData(galaxyMapObject);
+      }
+
+      console.log("galaxyMapObject: ", this.boundCourse?.galaxyMapAsObject);
+
+      this.$emit("toggleLoading", false);
+
+      // Navigate to the new route with courseId
+      this.$router.push({
+        name: "AiGalaxyEditWithCourse",
+        params: {
+          galaxyMapAsObject: this.boundCourse?.galaxyMapAsObject,
+        },
+      });
+    },
   },
 };
 </script>
@@ -174,10 +218,31 @@ export default {
   cursor: pointer;
   backdrop-filter: blur(2px);
 }
+.mapButtonGalaxyAccent {
+  display: flex;
+  color: var(--v-galaxyAccent-base);
+  border: 1px solid var(--v-galaxyAccent-base);
+  height: 45px;
+  cursor: pointer;
+  backdrop-filter: blur(2px);
+
+  .mapButton-icon {
+    border-left: none;
+  }
+
+  .mapButton-text {
+    border-left: 1px solid var(--v-galaxyAccent-base);
+  }
+}
 
 .active {
   color: var(--v-baseAccent-base);
   border: 1px solid var(--v-baseAccent-base);
+}
+
+.dimmed {
+  opacity: 0.2;
+  pointer-events: none;
 }
 
 .mapButton-icon,
@@ -201,11 +266,16 @@ export default {
 .map-buttons-bottom {
   position: fixed;
   bottom: 0;
-  left: 50%;
+  left: 0;
+  right: 0;
   z-index: 2;
-  width: auto;
-  transform: translate(-50%, 0%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
   margin: 25px 0px;
+  //max-width: 800px; /* Optional: limit maximum width */
+  margin-left: auto;
+  margin-right: auto;
 
   // border: 1px solid blue;
 }
@@ -222,6 +292,8 @@ export default {
 .map-button-bottom {
   margin: 10px;
   background-color: var(--v-background-base);
+  flex: 1; /* Makes buttons take equal width */
+  min-width: 0; /* Allows flex items to shrink */
 }
 
 .map-button {

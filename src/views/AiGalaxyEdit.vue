@@ -4,10 +4,13 @@
     <div v-if="loading" class="loading-overlay">
       <div class="loading-content" style="width: 100%">
         <!-- LOADING INDICATOR -->
-        <RobotLoadingSpinner v-if="!isSavingToDB && isGeneratingMissions" />
+        <RobotLoadingSpinner
+          v-if="(!isSavingToDB && isGeneratingMissions) || (!isSavingToDB && isRefining)"
+        />
 
-        <!-- ROBOT LOADING SPINNER FOR DATABASE SAVING -->
-        <RobotLoadingSpinner v-if="isSavingToDB" color="baseAccent" />
+        <p v-if="isRefining" class="loading-message overline">
+          {{ currentLoadingMessage }}
+        </p>
 
         <!-- PROGRESS BAR FOR MISSION GENERATION -->
         <div v-if="isGeneratingMissions" class="mission-generation-progress-container">
@@ -33,6 +36,14 @@
             Generating {{ completedMissions }}/{{ totalMissions }} missions ({{
               Math.round(missionGenerationProgress)
             }}% Complete)
+          </p>
+        </div>
+
+        <!-- Is saving to DB -->
+        <div v-if="isSavingToDB" class="saving-to-db-container">
+          <RobotLoadingSpinner v-if="isSavingToDB" color="baseAccent" />
+          <p class="loading-message overline baseAccent--text">
+            {{ currentLoadingMessage }}
           </p>
         </div>
 
@@ -79,38 +90,40 @@
         </div>
 
         <!-- TOKEN USAGE -->
-        <p class="token-usage overline mt-2" v-if="!isSavingToDB">
-          Total Tokens:
-          {{
-            aiGeneratedGalaxyMap.tokens
-              ? aiGeneratedGalaxyMap.tokens.totalTokensUsed.toLocaleString()
-              : "0"
-          }}
-        </p>
-        <p class="token-breakdown overline mt-2" v-if="!isSavingToDB">
-          Input:
-          {{
-            aiGeneratedGalaxyMap.tokens
-              ? aiGeneratedGalaxyMap.tokens.totalInputTokens.toLocaleString()
-              : "0"
-          }}
-          | Output:
-          {{
-            aiGeneratedGalaxyMap.tokens
-              ? aiGeneratedGalaxyMap.tokens.totalOutputTokens.toLocaleString()
-              : "0"
-          }}
-        </p>
-        <p class="token-breakdown overline mt-2" v-if="!isSavingToDB">
-          Est. cost: ${{
-            aiGeneratedGalaxyMap.tokens
-              ? (
-                  (this.aiGeneratedGalaxyMap.tokens.totalInputTokens / 1000000) * 0.15 +
-                  (this.aiGeneratedGalaxyMap.tokens.totalOutputTokens / 1000000) * 0.6
-                ).toFixed(5)
-              : "0.00000"
-          }}
-        </p>
+        <div class="token-usage-container pa-6">
+          <p class="token-usage overline mt-2" v-if="!isSavingToDB">
+            Total Tokens:
+            {{
+              aiGeneratedGalaxyMap.tokens
+                ? aiGeneratedGalaxyMap.tokens.totalTokensUsed.toLocaleString()
+                : "0"
+            }}
+          </p>
+          <p class="token-breakdown overline mt-2" v-if="!isSavingToDB">
+            Input:
+            {{
+              aiGeneratedGalaxyMap.tokens
+                ? aiGeneratedGalaxyMap.tokens.totalInputTokens.toLocaleString()
+                : "0"
+            }}
+            | Output:
+            {{
+              aiGeneratedGalaxyMap.tokens
+                ? aiGeneratedGalaxyMap.tokens.totalOutputTokens.toLocaleString()
+                : "0"
+            }}
+          </p>
+          <p class="token-breakdown overline mt-2" v-if="!isSavingToDB">
+            Est. cost: ${{
+              aiGeneratedGalaxyMap.tokens
+                ? (
+                    (this.aiGeneratedGalaxyMap.tokens.totalInputTokens / 1000000) * 0.15 +
+                    (this.aiGeneratedGalaxyMap.tokens.totalOutputTokens / 1000000) * 0.6
+                  ).toFixed(5)
+                : "0.00000"
+            }}
+          </p>
+        </div>
       </div>
     </div>
 
@@ -386,8 +399,23 @@
               :disabled="loading"
               autofocus
               @keyup.enter="refineGalaxyMap"
+              @click:clear="galaxyRefineUserInput = ''"
             />
             <div class="action-buttons">
+              <v-btn
+                outlined
+                color="galaxyAccent"
+                @click="generateGalaxyMapAgain()"
+                class="mr-2"
+                :loading="loading"
+                :dark="dark"
+                :light="!dark"
+                :disabled="!disabled"
+              >
+                <v-icon left> {{ mdiRobotExcited }} </v-icon>
+                GENERATE AGAIN
+              </v-btn>
+
               <v-btn
                 outlined
                 color="galaxyAccent"
@@ -401,8 +429,12 @@
                 <v-icon left> {{ mdiRobotExcited }} </v-icon>
                 REFINE GALAXY MAP
               </v-btn>
+
               <!-- <PublishGalaxy v-if="showPublish" :course="boundCourse" :courseTasks="courseTasks" /> -->
-              <v-btn @click="saveGalaxyToDB" outlined color="baseAccent">-> Next Step</v-btn>
+              <v-btn @click="saveGalaxyToDB" outlined color="baseAccent">
+                <v-icon left> {{ mdiArrowRightBold }} </v-icon>
+                Next Step
+              </v-btn>
             </div>
           </div>
         </div>
@@ -507,7 +539,14 @@
 </template>
 
 <script>
-import { mdiPencil, mdiPlus, mdiDelete, mdiCheck, mdiRobotExcited } from "@mdi/js";
+import {
+  mdiPencil,
+  mdiPlus,
+  mdiDelete,
+  mdiCheck,
+  mdiRobotExcited,
+  mdiArrowRightBold,
+} from "@mdi/js";
 import LoadingSpinner from "@/components/Reused/LoadingSpinner.vue";
 import RobotLoadingSpinner from "@/components/Reused/RobotLoadingSpinner.vue";
 import GalaxyInfo from "@/components/GalaxyView/GalaxyInfo.vue";
@@ -522,7 +561,7 @@ import "vis-network/styles/vis-network.css";
 import { Planet } from "@/lib/planet";
 import { zodTextFormat } from "openai/helpers/zod";
 import { StarsAndPlanetsResponseSchema } from "@/lib/schemas";
-import { saveGalaxyMap, generateInstructionsForMission } from "@/lib/ff";
+import { saveGalaxyMap, generateInstructionsForMission, generateGalaxyMapAgain } from "@/lib/ff";
 import * as smd from "streaming-markdown";
 
 // import PromptDialog from "@/components/Dialogs/PromptDialog.vue";
@@ -540,7 +579,7 @@ export default {
     // PromptDialog,
     Network,
   },
-  props: ["parsedResponse"],
+  props: ["parsedResponse", "courseId"],
   data() {
     return {
       loading: false,
@@ -552,9 +591,11 @@ export default {
       mdiDelete,
       mdiCheck,
       mdiRobotExcited,
+      mdiArrowRightBold,
       // Loading tracking
       isSavingToDB: false,
       isGeneratingMissions: false,
+      isRefining: false,
       currentLoadingMessage: "",
       loadingMessageInterval: null,
       missionGenerationProgress: 0,
@@ -831,8 +872,28 @@ export default {
     }
   },
   async mounted() {
-    // Check if we have parsedResponse from props or need to restore from store (Cursor changed AICreatedGalaxyDialog to pass the paresedResponse through the store instead of router params FYI)
-    if (this.parsedResponse) {
+    // Check if we have courseId from route params
+    if (this.courseId) {
+      // Set the current course ID in the store
+      this.setCurrentCourseId(this.courseId);
+
+      // Load course data from store if available
+      if (this.aiGalaxyEditData) {
+        this.aiGeneratedGalaxyMap = this.aiGalaxyEditData;
+      } else {
+        // If no data in store, initialize with empty structure
+        this.aiGeneratedGalaxyMap = {
+          title: "Untitled Galaxy",
+          description: "No description available",
+          tokens: {
+            totalInputTokens: 0,
+            totalOutputTokens: 0,
+            totalTokensUsed: 0,
+          },
+        };
+      }
+    } else if (this.parsedResponse) {
+      // Check if we have parsedResponse from props or need to restore from store (Cursor changed AICreatedGalaxyDialog to pass the paresedResponse through the store instead of router params FYI)
       this.aiGeneratedGalaxyMap = this.parsedResponse;
       if (!this.aiGeneratedGalaxyMap.tokens) {
         // Try to restore from store if available
@@ -903,7 +964,7 @@ export default {
       return this.$vuetify.theme.isDark;
     },
     disabled() {
-      return this.loading || !this.galaxyRefineUserInput.trim();
+      return this.loading || !(this.galaxyRefineUserInput && this.galaxyRefineUserInput.trim());
     },
     // Computed property to get chip display names without causing reactivity loops
     chipDisplayNames() {
@@ -935,7 +996,7 @@ export default {
       return (item) => {
         if (!item || !item.description) return "";
 
-        console.log("🔄 Rendering html for item:", item);
+        // console.log("🔄 Rendering html for item:", item);
 
         try {
           // If the item already has renderedDescription, use it
@@ -1349,7 +1410,7 @@ export default {
       let messages;
       if (this.isSavingToDB) {
         messages = this.savingMessages;
-      } else if (this.isGeneratingMissions) {
+      } else if (this.isGeneratingMissions || this.isRefining) {
         messages = this.loadingMessages;
       } else {
         messages = this.loadingMessages;
@@ -1640,6 +1701,7 @@ export default {
     },
     async refineGalaxyMap() {
       this.loading = true;
+      this.isRefining = true;
 
       // Start timing
       const startTime = Date.now();
@@ -1678,8 +1740,9 @@ export default {
       -- "4: Some Zone" refers to stars[3]
       -- "3.2: Some Mission" refers to stars[2].planets[1]
       - You must correctly map title numbers to zero-based array indices.
-      3. Only modify the items specified in items_user_wants_changed. Match these titles precisely (e.g., "1.2: Title (Mission Name)") within the structure.
-      4. Preserve everything else in the Galaxy Map exactly as-is.
+      3. If items_user_wants_changed is provided, only modify the items specified. Match these titles precisely (e.g., "1.2: Title (Mission Name)") within the structure.
+      - Preserve everything else in the Galaxy Map exactly as-is.
+      4. If items_user_wants_changed is not provided, the user is asking for a general change to the Galaxy Map, or the entire Galaxy Map. Take your cue from user_request.
       5. Return the entire updated Galaxy Map object, not just the modified parts.
       6. Always insert the updates into the correct location in the nested structure: stars[] → planets[]
       7. Star titles should only have one number (eg. not 1.1:, just 1:)
@@ -1708,8 +1771,12 @@ export default {
         ...this.aiGeneratedGalaxyMap,
         history: undefined, // Remove history for AI processing
       };
+
+      // ----- trying different formarts for the galaxymap object
       const galaxyMapJson = JSON.stringify(galaxyMapForAI);
-      inputMessages.push({ role: "user", content: "galaxy_map: " + galaxyMapJson });
+      // const galaxyMapMarkdown = this.convertGalaxyMapToMarkdown(galaxyMapForAI);
+
+      inputMessages.push({ role: "user", content: "galaxy_map: " + galaxyMapMarkdown });
 
       // 3. selected items
       const activeItems = this.activeGalaxyItems;
@@ -1722,6 +1789,8 @@ export default {
       }
 
       inputMessages.push({ role: "user", content: "user_request: " + this.galaxyRefineUserInput });
+
+      console.log("refine inputMessages", inputMessages);
 
       const refineGalaxyWithAiResponse = await this.$openai.responses.parse({
         model: "gpt-4o-mini",
@@ -1742,23 +1811,21 @@ export default {
 
       console.log("🔍 Galaxy refinement response:", refineGalaxyWithAiResponse);
 
-      // update response id
-      this.aiGeneratedGalaxyMap.aiResponseId = refineGalaxyWithAiResponse.id;
-
-      // Preserve existing history and tokens before overwriting with output_parsed
+      // Preserve existing properties that should not be overwritten
       const existingHistory = this.aiGeneratedGalaxyMap.history || [];
       const existingTokens = this.aiGeneratedGalaxyMap.tokens || {
         totalInputTokens: 0,
         totalOutputTokens: 0,
         totalTokensUsed: 0,
       };
+      const existingAiResponseId = this.aiGeneratedGalaxyMap.aiResponseId;
+      const existingOriginResponseId = this.aiGeneratedGalaxyMap.originResponseId;
 
-      // Update with new AI response
-      this.aiGeneratedGalaxyMap = refineGalaxyWithAiResponse.output_parsed;
-
-      // Restore existing history and tokens to the new galaxy map
-      this.aiGeneratedGalaxyMap.history = existingHistory;
-      this.aiGeneratedGalaxyMap.tokens = existingTokens;
+      // Merge the new AI response with existing properties instead of overwriting
+      this.aiGeneratedGalaxyMap = {
+        ...this.aiGeneratedGalaxyMap, // Keep all existing properties
+        ...refineGalaxyWithAiResponse.output_parsed, // Override with new AI response data
+      };
 
       // Create a deep copy of the NEW galaxy map data without the history property to avoid circular reference
       const newGalaxyMapCopy = JSON.parse(
@@ -1785,7 +1852,103 @@ export default {
       this.activeGalaxyItems = [];
       this.treeviewActiveItems = {};
 
+      this.isRefining = false;
       this.loading = false;
+    },
+    async generateGalaxyMapAgain() {
+      this.loading = true;
+      this.isRefining = true;
+
+      this.stopLoadingMessages();
+      this.startLoadingMessages();
+
+      // Start timing
+      const startTime = Date.now();
+      console.log("🚀 Starting Galaxy regeneration process...");
+
+      try {
+        // Call the Firebase function to generate galaxy map again
+        const result = await generateGalaxyMapAgain(this.aiGeneratedGalaxyMap.originResponseId);
+
+        // Calculate and log execution time
+        const endTime = Date.now();
+        const timeString = this.formatExecutionTime(startTime, endTime);
+        console.log(
+          `🔄 Galaxy regeneration process completed after ${timeString} (${endTime - startTime}ms total)`,
+        );
+
+        console.log("🔄 Galaxy regeneration response:", result);
+
+        if (result.success) {
+          // Preserve existing properties that should not be overwritten
+          // const existingHistory = this.aiGeneratedGalaxyMap.history || [];
+          // const existingTokens = this.aiGeneratedGalaxyMap.tokens || {
+          //   totalInputTokens: 0,
+          //   totalOutputTokens: 0,
+          //   totalTokensUsed: 0,
+          // };
+          // const existingOriginResponseId = this.aiGeneratedGalaxyMap.originResponseId;
+
+          // Merge the new AI response with existing properties instead of overwriting
+          this.aiGeneratedGalaxyMap = {
+            ...this.aiGeneratedGalaxyMap, // Keep all existing properties
+            ...result.galaxyMap, // Override with new AI response data
+            //aiResponseId: result.responseId, // Update with new response ID
+          };
+
+          // Create a deep copy of the NEW galaxy map data without the history property to avoid circular reference
+          const newGalaxyMapCopy = JSON.parse(
+            JSON.stringify({
+              ...this.aiGeneratedGalaxyMap,
+              history: undefined, // Remove history from the copy
+            }),
+          );
+
+          // Add the NEW state to history (this becomes the current state)
+          this.aiGeneratedGalaxyMap.history.push({
+            galaxyMapData: newGalaxyMapCopy,
+            atThisRefineUserPrompt: "generate again",
+          });
+
+          // Track token usage (accumulate with existing tokens)
+          if (result.tokenUsage) {
+            this.trackTokenUsage(result);
+          }
+
+          // update store
+          this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
+
+          // reset prompt input and selected items
+          this.galaxyRefineUserInput = "";
+          this.activeGalaxyItems = [];
+          this.treeviewActiveItems = {};
+
+          this.setSnackbar({
+            show: true,
+            text: "Galaxy map regenerated successfully!",
+            color: "baseAccent",
+          });
+        } else {
+          throw new Error("Failed to regenerate galaxy map");
+        }
+      } catch (error) {
+        // Calculate and log execution time even on error
+        const endTime = Date.now();
+        const timeString = this.formatExecutionTime(startTime, endTime);
+        console.log(
+          `❌ Galaxy regeneration failed after ${timeString} (${endTime - startTime}ms total)`,
+        );
+
+        console.error("Error regenerating galaxy map:", error);
+        this.setSnackbar({
+          show: true,
+          text: "Error regenerating galaxy map: " + (error.message || "Unknown error"),
+          color: "error",
+        });
+      } finally {
+        this.isRefining = false;
+        this.loading = false;
+      }
     },
     formatExecutionTime(startTime, endTime) {
       const totalTimeMs = endTime - startTime;
@@ -1855,11 +2018,11 @@ export default {
               galaxyMapForAI,
               this.aiGeneratedGalaxyMap.originResponseId,
             );
-            console.log("missionInstructions", missionInstructions);
-            console.log(
-              "missionInstructions.missionInstructions",
-              missionInstructions.missionInstructions,
-            );
+            // console.log("missionInstructions", missionInstructions);
+            // console.log(
+            //   "missionInstructions.missionInstructions",
+            //   missionInstructions.missionInstructions,
+            // );
 
             // Update token usage from mission instructions generation
             if (missionInstructions.tokenUsage) {
@@ -1875,6 +2038,8 @@ export default {
             // The new format returns structured data, so we store it as-is
             const instructionsData =
               missionInstructions.missionInstructions || missionInstructions || "";
+
+            // update this.aiGeneratedGalaxyMap with mission instructions
             this.aiGeneratedGalaxyMap.stars[starIndex].planets[planetIndex].instructions =
               instructionsData;
 
@@ -2102,11 +2267,18 @@ export default {
     async generateDescriptionWithAI(item, newTitle) {
       this.descriptionGenerating = true;
 
-      const newDescriptionPrompt = `
-      The user has updated the title for ${item.id} to "${newTitle}".
-      First, consider the context of this item in relation to its parent title and description, as well as where in the sequence in relation to its sibling items titles and descriptions.
-      Then, interpreting what the user is wanting to achieve with this new title, generate an appropriate description.
-      Description should be action focused and only one sentence long.
+      console.log("generateDescriptionWithAI", item, newTitle);
+
+      // convert galaxymap to markdown for ai prompt
+      //const galaxyMapAsMarkdown = this.convertGalaxyMapToMarkdown(this.aiGeneratedGalaxyMap);
+
+      const descriptionSystemPrompt = `
+      You are a helpful assistant that generates descriptions for individual learning step items within learning roadmap called a Galaxy Map.
+      You are given the entire learning journey as a **galaxy-map-object** with a title a description and an array of Stars (aka Topics) with nested Planets (aka Missions).
+      This is to give you context of the wider objective for which them item you are generating a description for should contribute towards.
+      You are also given the **item-id** that helps to indentify the context in which the item sits in relation to the wider galaxy map, and the learning steps that came before and come after it.
+      You are also given the **item-title** that is the title for the description and the best indicator as to what the description should be about, given the wider galaxy map context.
+      The Description should be action focused and only one sentence long.
       Your response will be used to update the description of the item, so please provide only the description text without any explanations or discussions.
       `;
 
@@ -2114,7 +2286,15 @@ export default {
         const getDescriptionResponse = await this.$openai.responses.create({
           model: "gpt-4o-mini",
           previous_response_id: this.aiGeneratedGalaxyMap.aiResponseId,
-          input: newDescriptionPrompt,
+          input: [
+            { role: "system", content: descriptionSystemPrompt },
+            {
+              role: "user",
+              content: "galaxy-map-object:" + JSON.stringify(this.aiGeneratedGalaxyMap),
+            },
+            { role: "user", content: "item-id:" + item.id },
+            { role: "user", content: "item-title:" + newTitle },
+          ],
         });
 
         console.log("getDescriptionResponse", getDescriptionResponse);
@@ -2794,6 +2974,38 @@ export default {
         };
       }
     },
+    convertGalaxyMapToMarkdown(galaxyMap) {
+      if (!galaxyMap || !galaxyMap.stars) {
+        return "";
+      }
+
+      let markdown = `# ${galaxyMap.title || "Learning Journey"}\n\n`;
+      markdown += `${galaxyMap.description || ""}\n\n`;
+
+      markdown += "## Learning Journey Structure\n\n";
+
+      for (let i = 0; i < galaxyMap.stars.length; i++) {
+        const star = galaxyMap.stars[i];
+        markdown += `### ${star.title} (star[${i}])\n`;
+        markdown += `${star.description}\n\n`;
+
+        if (star.planets && star.planets.length > 0) {
+          markdown += "**Missions in this Star:**\n";
+          for (let j = 0; j < star.planets.length; j++) {
+            const planet = star.planets[j];
+            markdown += `- ${planet.title} (planet[${j}]): ${planet.description}\n`;
+
+            // Add mission instructions if they exist
+            // if (planet.instructions) {
+            //   markdown += `  - Instructions: ${planet.instructions}\n`;
+            // }
+          }
+          markdown += "\n";
+        }
+      }
+
+      return markdown;
+    },
   },
 };
 </script>
@@ -3450,11 +3662,9 @@ export default {
   background-color: var(--v-background-base);
   z-index: 9999;
   display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
+  justify-content: center;
+  align-items: center;
   opacity: 0.95;
-  overflow-y: auto;
-  padding: 2rem;
 }
 
 .loading-content {
@@ -3462,15 +3672,23 @@ export default {
   flex-direction: column;
   align-items: center;
   text-align: center;
+  padding: 2rem;
+}
+
+.saving-to-db-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
   padding: 0;
-  overflow-y: visible;
   width: 100%;
-  margin: 0 auto;
+  height: 100%;
 }
 
 .loading-message {
   color: var(--v-missionAccent-base);
-  margin-top: 0rem;
+  margin-top: 1rem;
   text-transform: uppercase;
   letter-spacing: 2px;
   animation: fadeInOut 3s ease-in-out infinite;
@@ -3563,6 +3781,22 @@ export default {
   border-radius: 8px;
   position: relative;
   padding-bottom: 100px;
+
+  // Create a mask that fades out at all edges using radial gradient
+  mask-image: radial-gradient(
+    ellipse at center,
+    black 60%,
+    rgba(0, 0, 0, 0.9) 75%,
+    rgba(0, 0, 0, 0.7) 85%,
+    transparent 95%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse at center,
+    black 60%,
+    rgba(0, 0, 0, 0.9) 75%,
+    rgba(0, 0, 0, 0.7) 85%,
+    transparent 95%
+  );
 }
 
 .loading-galaxy-treeview-wrapper {

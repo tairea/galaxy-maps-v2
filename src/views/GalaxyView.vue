@@ -1,7 +1,7 @@
 <template>
   <div id="container" class="bg">
     <!-- Loading -->
-    <LoadingSpinner v-if="!boundCourse?.status" text="loading galaxy map" />
+    <LoadingSpinner v-if="!boundCourse?.status || loading" text="loading galaxy map" />
 
     <!-- dont show galaxy if...
     
@@ -53,6 +53,7 @@
           @toggleShowMissions="toggleShowMissions"
           @addNode="showAddDialog"
           @saveNodePositions="saveNodePositions"
+          @toggleLoading="toggleLoading"
         />
 
         <!-- ===== Galaxy Map ===== -->
@@ -242,6 +243,7 @@ export default {
       galaxyMapForceUpdateKey: 0,
       topicError: null,
       showMissions: false, // Add missions toggle state
+      loading: false,
     };
   },
   watch: {
@@ -353,6 +355,9 @@ export default {
     },
   },
   methods: {
+    toggleLoading(loading) {
+      this.loading = loading;
+    },
     ...mapActions(useRootStore, [
       "setCurrentCohortId",
       "setCurrentCourseId",

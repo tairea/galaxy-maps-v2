@@ -62,10 +62,10 @@
         style="padding: 50px"
         v-if="cohort.students.length == 0"
       >
-        <v-btn :loading="true" icon color="missionAccent"></v-btn>
+        <p class="label text-center" style="font-weight: 800">NO STUDENT DATA</p>
       </div>
       <div
-        v-else-if="cohort.students.length > 0"
+        v-else-if="studentsWithData.length > 0"
         class="d-flex justify-center align-center flex-wrap py-2"
       >
         <p class="label text-center mt-4 mb-2">
@@ -82,7 +82,6 @@
           @click.native="clickedPerson(person, index)"
         />
       </div>
-      <p v-else class="label text-center" style="font-weight: 800">NO STUDENT DATA</p>
     </div>
   </div>
 </template>

@@ -1858,7 +1858,11 @@ async function saveGalaxyMap(
       console.log("✅ Course document created with ID:", courseDocRef.id);
 
       console.log("🔄 Updating course document with ID and topic total...");
-      await courseDocRef.update({ id: courseDocRef.id, topicTotal: stars.length });
+      await courseDocRef.update({
+        id: courseDocRef.id,
+        topicTotal: stars.length,
+        galaxyMapAsObject: { ...galaxyMap, idInDatabase: courseDocRef.id },
+      });
       console.log("✅ Course document updated successfully");
     } catch (courseError: unknown) {
       console.error("❌ Error creating course document:", courseError);
