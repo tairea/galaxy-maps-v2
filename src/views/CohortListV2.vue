@@ -165,7 +165,7 @@
 
       <!-- NO COHORTS YET -->
       <div v-else-if="!isLoading" class="no-cohort">
-        <p class="overline">You haven't created any Squads yet</p>
+        <p class="overline">You aren't in any Squads yet</p>
         <!-- <p class="overline">start a galaxy to create a cohort</p> -->
 
         <!-- PAY WALL VERSION Create Cohort Button -->

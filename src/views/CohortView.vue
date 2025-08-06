@@ -1,76 +1,89 @@
 <template>
   <div id="container" class="bg">
     <LoadingSpinner v-if="isLoadingCohort" text="loading squad" />
-    <div id="left-section">
-      <CohortInfo v-if="!isLoadingCohort && cohort" :cohort="cohort" />
-      <BackButton v-if="!isLoadingCohort" :toPath="'/squads'" />
-      <AssignedInfo v-if="!isLoadingCohort && cohort" :cohort="cohort" assignCourses="true" />
+
+    <!-- Restricted access message -->
+    <div class="no-cohort" v-if="isRestricted">
+      <v-icon large color="missionAccent">{{ mdiAlertOutline }}</v-icon>
+      <p class="overline missionAccent--text">INVALID OR RESTRICTED SQUAD</p>
+      <p class="caption missionAccent--text" style="opacity: 0.5">
+        Check you have the correct ID,<br />or you may need to be signed-in
+      </p>
+      <BackButton :toPath="'/squads'" />
     </div>
 
-    <div id="main-section">
-      <!-- loading spinner -->
-      <div class="d-flex justify-center align-center" v-if="isLoadingCohort">
-        <v-btn
-          :loading="isLoadingCohort"
-          icon
-          color="missionAccent"
-          class="d-flex justify-center align-center"
-        ></v-btn>
+    <div v-else class="cohort-container">
+      <div id="left-section">
+        <CohortInfo v-if="!isLoadingCohort && cohort" :cohort="cohort" />
+        <BackButton v-if="!isLoadingCohort" :toPath="'/squads'" />
+        <AssignedInfo v-if="!isLoadingCohort && cohort" :cohort="cohort" assignCourses="true" />
       </div>
-      <div v-if="cohort" class="people-frame">
-        <div class="people-border">
-          <div :class="peopleLabel" @click="setStudentsView(true)">
-            <span class="pl-3">NAVIGATORS</span>
-          </div>
+
+      <div id="main-section">
+        <!-- loading spinner -->
+        <div class="d-flex justify-center align-center" v-if="isLoadingCohort">
+          <v-btn
+            :loading="isLoadingCohort"
+            icon
+            color="missionAccent"
+            class="d-flex justify-center align-center"
+          ></v-btn>
         </div>
-        <div class="graph-border">
-          <div :class="graphLabel" class="text-center" @click="setStudentsView(false)">
-            <span class="pl-3">OVERVIEW</span>
+        <div v-if="cohort" class="people-frame">
+          <div class="people-border">
+            <div :class="peopleLabel" @click="setStudentsView(true)">
+              <span class="pl-3">NAVIGATORS</span>
+            </div>
           </div>
+          <div class="graph-border">
+            <div :class="graphLabel" class="text-center" @click="setStudentsView(false)">
+              <span class="pl-3">OVERVIEW</span>
+            </div>
+          </div>
+          <StudentDataIterator
+            v-if="studentsView"
+            class="mt-4"
+            :cohort="cohort"
+            @learnerOverviewDialogClosed="refreshComponents"
+          />
+          <CohortGraphs v-else :cohort="cohort" :cohortsCoursesData="cohortsCoursesData" />
         </div>
-        <StudentDataIterator
-          v-if="studentsView"
-          class="mt-4"
-          :cohort="cohort"
-          @learnerOverviewDialogClosed="refreshComponents"
+      </div>
+
+      <div id="right-section">
+        <RequestForHelpTeacherFrame
+          v-if="cohort"
+          :key="refreshRequests"
+          :isTeacher="teacher"
+          :courses="courses"
+          :students="students"
         />
-        <CohortGraphs v-else :cohort="cohort" :cohortsCoursesData="cohortsCoursesData" />
+        <SubmissionTeacherFrame
+          v-if="cohort && teacher"
+          :key="refreshSubmissions"
+          :isTeacher="teacher"
+          :courses="courses"
+          :students="students"
+          class="mt-4"
+        />
+        <!-- Completed Separate -->
+        <!-- <p class="baseAccent--text completed-label ma-0 py-6">COMPLETED</p>
+        <RequestForHelpTeacherFrame
+          :isTeacher="teacher"
+          :courses="courses"
+          :students="cohort.students"
+          :completedRequestsOnly="true"
+          class="mt-0"
+        />
+        <SubmissionTeacherFrame
+          v-if="teacher"
+          :isTeacher="teacher"
+          :courses="courses"
+          :students="cohort.students"
+          :completedSubmissionsOnly="true"
+          class="mt-4"
+        /> -->
       </div>
-    </div>
-
-    <div id="right-section">
-      <RequestForHelpTeacherFrame
-        v-if="cohort"
-        :key="refreshRequests"
-        :isTeacher="teacher"
-        :courses="courses"
-        :students="students"
-      />
-      <SubmissionTeacherFrame
-        v-if="cohort && teacher"
-        :key="refreshSubmissions"
-        :isTeacher="teacher"
-        :courses="courses"
-        :students="students"
-        class="mt-4"
-      />
-      <!-- Completed Separate -->
-      <!-- <p class="baseAccent--text completed-label ma-0 py-6">COMPLETED</p>
-      <RequestForHelpTeacherFrame
-        :isTeacher="teacher"
-        :courses="courses"
-        :students="cohort.students"
-        :completedRequestsOnly="true"
-        class="mt-0"
-      />
-      <SubmissionTeacherFrame
-        v-if="teacher"
-        :isTeacher="teacher"
-        :courses="courses"
-        :students="cohort.students"
-        :completedSubmissionsOnly="true"
-        class="mt-4"
-      /> -->
     </div>
   </div>
 </template>
@@ -88,6 +101,7 @@ import { fetchCohortCoursesActivityByCohortId } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import useCohortViewStore from "@/store/cohortView";
 import { mapActions, mapState } from "pinia";
+import { mdiAlertOutline } from "@mdi/js";
 
 export default {
   name: "CohortView",
@@ -104,6 +118,7 @@ export default {
   },
   data() {
     return {
+      mdiAlertOutline,
       cohortsCoursesData: [],
       refreshSubmissions: 0, // TODO: Is this needed? is causing duplicate error
       refreshRequests: 0,
@@ -143,6 +158,13 @@ export default {
     graphLabel() {
       return this.studentsView ? "inactive-graph-label" : "graph-label";
     },
+    isRestricted() {
+      // If no cohort is loaded yet, don't show restricted message
+      if (!this.cohort) return false;
+
+      // Check if person is a teacher of this cohort
+      return !this.cohort.teachers.includes(this.person?.id);
+    },
   },
   methods: {
     ...mapActions(useCohortViewStore, ["loadCohort", "setStudentsView"]),
@@ -171,6 +193,23 @@ export default {
   display: flex;
   overflow: hidden;
   margin: 0 !important;
+
+  .no-cohort {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+
+  .cohort-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 }
 
 #left-section {

@@ -44,6 +44,7 @@ import useRootStore from "@/store/index";
 import { mdiKeyboardBackspace } from "@mdi/js";
 import firebase from "firebase/compat/app";
 import { mapActions, mapState } from "pinia";
+import { getFriendlyErrorMessage } from "@/lib/utils";
 
 export default {
   name: "EmailSignIn",
@@ -83,7 +84,7 @@ export default {
           .catch((error) => {
             this.setSnackbar({
               show: true,
-              text: error.message,
+              text: getFriendlyErrorMessage(error.code),
               color: "pink",
             });
             console.error("something went wrong signing in: ", error);

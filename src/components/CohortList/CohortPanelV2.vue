@@ -32,6 +32,7 @@
               :personId="teacherId"
               :colourBorder="true"
               :cohort="cohort"
+              class="mb-2"
             />
           </div>
         </div>

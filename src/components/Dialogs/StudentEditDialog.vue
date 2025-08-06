@@ -156,6 +156,7 @@ import {
 } from "@mdi/js";
 import firebase from "firebase/compat/app";
 import { mapActions, mapState } from "pinia";
+import { getFriendlyErrorMessage } from "@/lib/utils";
 
 export default {
   name: "StudentEditDialog",
@@ -250,7 +251,7 @@ export default {
           console.error("Error writing document: ", error);
           this.setSnackbar({
             show: true,
-            text: error.message,
+            text: getFriendlyErrorMessage(error.code),
             color: "pink",
           });
           this.cancel();
@@ -276,7 +277,7 @@ export default {
         .catch((error) => {
           this.setSnackbar({
             show: true,
-            text: error.message,
+            text: getFriendlyErrorMessage(error.code),
             color: "pink",
           });
           this.cancel();

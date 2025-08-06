@@ -61,6 +61,7 @@ import CreateEditDeleteGalaxyDialog from "@/components/Dialogs/CreateEditDeleteG
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
 import { mdiLink, mdiMenuUp, mdiMenuDown } from "@mdi/js";
+import { getFriendlyErrorMessage } from "@/lib/utils";
 
 export default {
   name: "GalaxyInfo",
@@ -128,7 +129,7 @@ export default {
         .catch((err) => {
           this.setSnackbar({
             show: true,
-            text: err.message,
+            text: getFriendlyErrorMessage(error.code),
             color: "pink",
           });
         });

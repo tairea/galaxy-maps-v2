@@ -454,7 +454,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(useRootStore, ["bindAllPeople"]),
+    ...mapActions(useRootStore, ["bindAllPeople", "setSnackbar"]),
     ...mapActions(useCohortViewStore, ["loadCohort"]),
     toggleTeacherDialog() {
       this.teacherDialog = !this.teacherDialog;
@@ -643,6 +643,12 @@ export default {
       this.cohort.teachers.push(teacher.id);
       // Add the teacher object to the teachers array so the autocomplete can display it
       this.teachers.push(teacher);
+
+      this.setSnackbar({
+        show: true,
+        text: "New Captain added to Squad",
+        color: "baseAccent",
+      });
     },
     async initializeTeachers() {
       if (

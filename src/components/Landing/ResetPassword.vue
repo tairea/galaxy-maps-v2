@@ -48,6 +48,7 @@ import BackButton from "@/components/Reused/BackButton.vue";
 import useRootStore from "@/store/index";
 import firebase from "firebase/compat/app";
 import { mapActions } from "pinia";
+import { getFriendlyErrorMessage } from "@/lib/utils";
 
 export default {
   name: "ResetPassword",
@@ -62,7 +63,7 @@ export default {
       (v) => !!v || "E-mail is required",
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
     ],
-    loading: false
+    loading: false,
   }),
   mounted() {},
   methods: {
@@ -82,7 +83,7 @@ export default {
         .catch((error) => {
           this.setSnackbar({
             show: true,
-            text: error.message,
+            text: getFriendlyErrorMessage(error.code),
             color: "pink",
           });
           console.log("Login error:", error);
@@ -92,7 +93,7 @@ export default {
       this.$refs.form.validate();
     },
     resetPassword() {
-      this.loading=true
+      this.loading = true;
       console.log("sending reset email password");
       firebase
         .auth()
@@ -111,7 +112,7 @@ export default {
         .catch((error) => {
           this.setSnackbar({
             show: true,
-            text: error.message,
+            text: getFriendlyErrorMessage(error.code),
             color: "pink",
           });
         });

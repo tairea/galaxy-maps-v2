@@ -5,7 +5,7 @@
       <div class="create-dialog">
         <!-- HEADER -->
         <div class="dialog-header">
-          <p class="mb-0">Update profile</p>
+          <p class="mb-0">Create profile</p>
         </div>
         <div class="create-dialog-content pt-0">
           <v-form ref="form" v-model="valid" lazy-validation>
@@ -69,47 +69,63 @@
             ></v-text-field>
           </v-form>
           <div>
-            <p class="caption">Upload profile photo</p>
-            <v-progress-circular
-              v-if="uploading"
-              :rotate="360"
-              :size="60"
-              :width="2"
-              :value="uploadPercentage"
-              color="baseAccent"
-            >
-              {{ uploadPercentage + "%" }}
-            </v-progress-circular>
-            <!-- <v-hover v-else v-slot="{ hover }"> -->
-            <v-avatar
-              v-else
-              color="secondary"
-              @mouseenter="onhover = true"
-              @mouseleave="onhover = false"
-              size="60"
-              class="mb-4"
-            >
-              <img
-                v-if="profile.image.url"
-                :src="profile.image.url"
-                :alt="profile.firstName"
-                style="object-fit: cover"
-              />
-              <!-- <v-icon v-if="hover">{{mdiPencil}}</v-icon> -->
-              <v-icon :dark="dark" :light="!dark" v-else>{{ mdiAccount }}</v-icon>
-              <v-fade-transition>
-                <v-overlay v-if="onhover" absolute color="baseAccent">
-                  <v-icon small @click="onButtonClick">{{ mdiPencil }}</v-icon>
-                </v-overlay>
-              </v-fade-transition>
-              <input
-                ref="uploader"
-                class="d-none"
-                type="file"
-                accept="image/*"
-                @change="onFileChanged"
-              />
-            </v-avatar>
+            <p class="caption overline missionAccent--text">Upload profile photo</p>
+            <div class="avatars-container d-flex flex-column">
+              <div class="upload-avatar-container">
+                <v-progress-circular
+                  v-if="uploading"
+                  :rotate="360"
+                  :size="60"
+                  :width="2"
+                  :value="uploadPercentage"
+                  color="baseAccent"
+                >
+                  {{ uploadPercentage + "%" }}
+                </v-progress-circular>
+                <!-- <v-hover v-else v-slot="{ hover }"> -->
+                <v-avatar
+                  v-else
+                  color="secondary"
+                  @mouseenter="onhover = true"
+                  @mouseleave="onhover = false"
+                  size="100"
+                  class="mb-4"
+                >
+                  <img
+                    v-if="profile.image.url"
+                    :src="profile.image.url"
+                    :alt="profile.firstName"
+                    style="object-fit: cover"
+                  />
+                  <!-- <v-icon v-if="hover">{{mdiPencil}}</v-icon> -->
+                  <v-icon :dark="dark" :light="!dark" v-else>{{ mdiAccount }}</v-icon>
+                  <v-fade-transition>
+                    <v-overlay v-if="onhover" absolute color="baseAccent">
+                      <v-icon small @click="onButtonClick">{{ mdiPencil }}</v-icon>
+                    </v-overlay>
+                  </v-fade-transition>
+                  <input
+                    ref="uploader"
+                    class="d-none"
+                    type="file"
+                    accept="image/*"
+                    @change="onFileChanged"
+                  />
+                </v-avatar>
+              </div>
+              <div class="navigators-avatar-container d-flex flex-wrap pl-1">
+                <v-avatar
+                  v-for="image in navigatorImages"
+                  :key="image.name"
+                  size="30"
+                  class="navigators-avatar mr-2 mb-2"
+                  :class="{ 'selected-navigator': profile.image.url === image.url }"
+                  @click="selectNavigator(image)"
+                >
+                  <img :src="image.url" :alt="image.name" style="object-fit: cover" />
+                </v-avatar>
+              </div>
+            </div>
             <!-- </v-hover> -->
           </div>
           <v-row>
@@ -147,6 +163,7 @@ import useRootStore from "@/store/index";
 import { mdiPencil, mdiAccount } from "@mdi/js";
 import firebase from "firebase/compat/app";
 import { mapActions, mapState } from "pinia";
+import { navigatorImages } from "@/lib/utils";
 
 export default {
   name: "CreateProfileDialog",
@@ -154,6 +171,7 @@ export default {
   data: () => ({
     mdiPencil,
     mdiAccount,
+    navigatorImages,
     updatingAccount: false,
     valid: true,
     profile: {
@@ -161,7 +179,10 @@ export default {
       firstName: "",
       lastName: "",
       email: "",
-      image: {},
+      image: {
+        url: "",
+        name: "",
+      },
     },
     password: "",
     confirmPassword: "",
@@ -245,8 +266,8 @@ export default {
       // ceate a storage ref
       var storageRef = storage.ref(
         "avatar-images/" +
-          this.profile.firstname +
-          this.person.lastname +
+          this.profile.firstName +
+          this.profile.lastName +
           "-" +
           this.selectedFile.name,
       );
@@ -295,6 +316,12 @@ export default {
           throw error; // Re-throw to be caught by the calling function
         });
     },
+    selectNavigator(image) {
+      console.log("Selecting navigator:", image);
+      this.profile.image.url = image.url;
+      this.profile.image.name = image.name;
+      console.log("Updated profile.image:", this.profile.image);
+    },
   },
 };
 </script>
@@ -337,5 +364,45 @@ export default {
   font-size: 0.7rem;
   margin: 0;
   font-style: italic;
+}
+
+.caption {
+  text-align: center;
+}
+
+.avatars-container {
+  width: 100%;
+
+  .upload-avatar-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .navigators-avatar-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .navigators-avatar {
+      pointer-events: auto;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+
+      &:hover {
+        transform: scale(1.1);
+      }
+
+      &.selected-navigator {
+        border: 2px solid var(--v-missionAccent-base);
+        transform: scale(1.1);
+      }
+
+      img {
+        pointer-events: none;
+      }
+    }
+  }
 }
 </style>
