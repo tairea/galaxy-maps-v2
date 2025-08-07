@@ -64,7 +64,7 @@
           >
         </div> -->
       </div>
-      <p v-else class="assigned-status">No Galaxies assigned to this Cohort</p>
+      <p v-else class="assigned-status">No Galaxies assigned to this Squad</p>
       <AssignCohortDialog
         v-if="isTeacher && !courseCohort"
         :assignCourses="true"

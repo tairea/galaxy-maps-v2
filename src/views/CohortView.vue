@@ -344,7 +344,7 @@ export default {
 #right-section {
   width: 15%;
   height: 84%;
-  padding-top: 50px;
+  // padding-top: 50px;
   // margin-right: 35px;
   margin-right: 5%;
   overflow-y: auto;

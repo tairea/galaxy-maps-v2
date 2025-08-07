@@ -88,17 +88,18 @@
 
         <!-- TOKEN USAGE -->
         <p class="token-usage overline mt-2">
-          Total Tokens: {{ totalTokensUsed.toLocaleString() }}
+          Total AI Tokens: {{ totalTokensUsed.toLocaleString() }}
         </p>
         <p class="token-breakdown overline mt-2">
           Input: {{ totalInputTokens.toLocaleString() }} | Output:
           {{ totalOutputTokens.toLocaleString() }}
         </p>
+        <!-- gpt-4o-mini: 0.15 | 0.6 | gpt-4.1: 2 | 8 -->
         <p class="token-breakdown overline mt-2">
           Est. cost: ${{
             (
-              (this.totalInputTokens / 1000000) * 0.15 +
-              (this.totalOutputTokens / 1000000) * 0.6
+              (this.totalInputTokens / 1000000) * 2 +
+              (this.totalOutputTokens / 1000000) * 8
             ).toFixed(5)
           }}
         </p>
@@ -1492,20 +1493,14 @@ export default {
   margin-top: 0px;
   padding-top: 0px;
 
-  // Create a mask that fades out at all edges using radial gradient
-  mask-image: radial-gradient(
-    ellipse at center,
-    black 60%,
-    rgba(0, 0, 0, 0.9) 75%,
-    rgba(0, 0, 0, 0.7) 85%,
-    transparent 95%
-  );
-  -webkit-mask-image: radial-gradient(
-    ellipse at center,
-    black 60%,
-    rgba(0, 0, 0, 0.9) 75%,
-    rgba(0, 0, 0, 0.7) 85%,
-    transparent 95%
+  // Create a mask that fades out at left and right edges using linear gradients
+  mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 5%,
+    black 95%,
+    transparent 100%
   );
 }
 

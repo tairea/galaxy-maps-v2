@@ -92,7 +92,7 @@
         <!-- TOKEN USAGE -->
         <div class="token-usage-container pa-6">
           <p class="token-usage overline mt-2" v-if="!isSavingToDB">
-            Total Tokens:
+            Total AI Tokens:
             {{
               aiGeneratedGalaxyMap.tokens
                 ? aiGeneratedGalaxyMap.tokens.totalTokensUsed.toLocaleString()
@@ -117,8 +117,8 @@
             Est. cost: ${{
               aiGeneratedGalaxyMap.tokens
                 ? (
-                    (this.aiGeneratedGalaxyMap.tokens.totalInputTokens / 1000000) * 0.15 +
-                    (this.aiGeneratedGalaxyMap.tokens.totalOutputTokens / 1000000) * 0.6
+                    (this.aiGeneratedGalaxyMap.tokens.totalInputTokens / 1000000) * 2 +
+                    (this.aiGeneratedGalaxyMap.tokens.totalOutputTokens / 1000000) * 8
                   ).toFixed(5)
                 : "0.00000"
             }}
@@ -138,7 +138,7 @@
           @minimised="minimised"
         />
       </div>
-      <BackButton v-if="!isGalaxyInfoMinimized" :toPath="'/'" />
+      <BackButton v-if="!isGalaxyInfoMinimized" :toPath="'/'" :dynamicPath="backButtonPath" />
     </div>
 
     <!--==== Main section ====-->
@@ -314,127 +314,131 @@
         </div>
         <!-- end of galaxy-preview-container -->
 
-        <!-- =========== History =========== -->
-        <div class="history-container" v-if="!taskEditing">
-          <p
-            class="history-title overline missionAccent--text ma-0"
-            v-if="aiGeneratedGalaxyMap.history"
-          >
-            checkpoints
-          </p>
-          <div class="history-items-container">
-            <div
-              class="history-item"
-              v-for="(checkpoint, index) in aiGeneratedGalaxyMap.history"
-              :key="checkpoint.id"
+        <div class="d-flex">
+          <!-- =========== History =========== -->
+          <div class="history-container" v-if="!taskEditing">
+            <p
+              class="history-title overline missionAccent--text ma-0"
+              v-if="aiGeneratedGalaxyMap.history"
             >
-              <v-tooltip right color="var(--v-background-base)" content-class="history-tooltip">
-                <template v-slot:activator="{ on, attrs }">
-                  <v-btn
-                    outlined
-                    class="history-item-button"
-                    color="missionAccent"
-                    small
-                    v-bind="attrs"
-                    v-on="on"
-                    @click="restoreHistory(checkpoint, index)"
-                    >{{ index }}</v-btn
-                  >
-                </template>
-                <div class="history-item-tooltip-container">
-                  <p class="history-item-tooltip" v-if="checkpoint.atThisRefineUserPrompt">
-                    <strong>Checkpoint saved at this prompt:</strong>
-                  </p>
-                  <p
-                    class="history-item-tooltip pt-1"
-                    style="color: white"
-                    v-if="checkpoint.atThisRefineUserPrompt"
-                  >
-                    <em>"{{ checkpoint.atThisRefineUserPrompt }}"</em>
-                  </p>
-                  <p class="history-item-tooltip" v-else>The original A.I. generated Galaxy Map</p>
-                </div>
-              </v-tooltip>
+              checkpoints
+            </p>
+            <div class="history-items-container">
+              <div
+                class="history-item"
+                v-for="(checkpoint, index) in aiGeneratedGalaxyMap.history"
+                :key="checkpoint.id"
+              >
+                <v-tooltip right color="var(--v-background-base)" content-class="history-tooltip">
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-btn
+                      outlined
+                      class="history-item-button"
+                      color="missionAccent"
+                      small
+                      v-bind="attrs"
+                      v-on="on"
+                      @click="restoreHistory(checkpoint, index)"
+                      >{{ index }}</v-btn
+                    >
+                  </template>
+                  <div class="history-item-tooltip-container">
+                    <p class="history-item-tooltip" v-if="checkpoint.atThisRefineUserPrompt">
+                      <strong>Checkpoint saved at this prompt:</strong>
+                    </p>
+                    <p
+                      class="history-item-tooltip pt-1"
+                      style="color: white"
+                      v-if="checkpoint.atThisRefineUserPrompt"
+                    >
+                      <em>"{{ checkpoint.atThisRefineUserPrompt }}"</em>
+                    </p>
+                    <p class="history-item-tooltip" v-else>
+                      The original A.I. generated Galaxy Map
+                    </p>
+                  </div>
+                </v-tooltip>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- =========== Prompt =========== -->
-        <div class="galaxy-prompt-container" v-if="!taskEditing">
-          <div class="prompt-textarea-container mt-4">
-            <div class="prompt-context-chips pb-2">
-              <v-chip
-                v-for="item in activeGalaxyItems"
-                :key="item"
-                class="mr-2 mb-2 theme-chip"
+          <!-- =========== Prompt =========== -->
+          <div class="galaxy-prompt-container" v-if="!taskEditing">
+            <div class="prompt-textarea-container mt-4">
+              <div class="prompt-context-chips pb-2">
+                <v-chip
+                  v-for="item in activeGalaxyItems"
+                  :key="item"
+                  class="mr-2 mb-2 theme-chip"
+                  outlined
+                  color="missionAccent"
+                  text-color="missionAccent"
+                  close
+                  @click:close="removeChip(item)"
+                >
+                  {{ chipDisplayNames[item] }}
+                </v-chip>
+              </div>
+              <!-- Legend -->
+              <div class="legend-container">
+                <span class="legend-title ma-0">Legend:</span>
+                <span class="legend-item-icon ml-3">⭐</span>
+                <span class="legend-item-text">Star/Zone</span>
+                <span class="legend-item-icon ml-3">🪐</span>
+                <span class="legend-item-text">Planet/Mission</span>
+                <!-- <span class="legend-item-icon">📍</span>
+              <span class="legend-item-text">Task</span> -->
+              </div>
+              <v-text-field
+                v-model="galaxyRefineUserInput"
+                :dark="dark"
+                :light="!dark"
+                class="input-field mt-2"
                 outlined
                 color="missionAccent"
-                text-color="missionAccent"
-                close
-                @click:close="removeChip(item)"
-              >
-                {{ chipDisplayNames[item] }}
-              </v-chip>
-            </div>
-            <!-- Legend -->
-            <div class="legend-container">
-              <span class="legend-title ma-0">Legend:</span>
-              <span class="legend-item-icon ml-3">⭐</span>
-              <span class="legend-item-text">Star/Zone</span>
-              <span class="legend-item-icon ml-3">🪐</span>
-              <span class="legend-item-text">Planet/Mission</span>
-              <!-- <span class="legend-item-icon">📍</span>
-              <span class="legend-item-text">Task</span> -->
-            </div>
-            <v-text-field
-              v-model="galaxyRefineUserInput"
-              :dark="dark"
-              :light="!dark"
-              class="input-field mt-2"
-              outlined
-              color="missionAccent"
-              auto-grow
-              clearable
-              label="What change would you like me to make?"
-              :disabled="loading"
-              autofocus
-              @keyup.enter="refineGalaxyMap"
-              @click:clear="galaxyRefineUserInput = ''"
-            />
-            <div class="action-buttons">
-              <v-btn
-                outlined
-                color="galaxyAccent"
-                @click="generateGalaxyMapAgain()"
-                class="mr-2"
-                :loading="loading"
-                :dark="dark"
-                :light="!dark"
-                :disabled="!disabled"
-              >
-                <v-icon left> {{ mdiRobotExcited }} </v-icon>
-                GENERATE AGAIN
-              </v-btn>
+                auto-grow
+                clearable
+                label="What change would you like me to make?"
+                :disabled="loading"
+                autofocus
+                @keyup.enter="refineGalaxyMap"
+                @click:clear="galaxyRefineUserInput = ''"
+              />
+              <div class="action-buttons">
+                <v-btn
+                  outlined
+                  color="galaxyAccent"
+                  @click="generateGalaxyMapAgain()"
+                  class="mr-2"
+                  :loading="loading"
+                  :dark="dark"
+                  :light="!dark"
+                  :disabled="!disabled"
+                >
+                  <v-icon left> {{ mdiRobotExcited }} </v-icon>
+                  GENERATE AGAIN
+                </v-btn>
 
-              <v-btn
-                outlined
-                color="galaxyAccent"
-                @click="refineGalaxyMap()"
-                class="mr-2"
-                :loading="loading"
-                :disabled="disabled"
-                :dark="dark"
-                :light="!dark"
-              >
-                <v-icon left> {{ mdiRobotExcited }} </v-icon>
-                REFINE GALAXY MAP
-              </v-btn>
+                <v-btn
+                  outlined
+                  color="galaxyAccent"
+                  @click="refineGalaxyMap()"
+                  class="mr-2"
+                  :loading="loading"
+                  :disabled="disabled"
+                  :dark="dark"
+                  :light="!dark"
+                >
+                  <v-icon left> {{ mdiRobotExcited }} </v-icon>
+                  REFINE GALAXY MAP
+                </v-btn>
 
-              <!-- <PublishGalaxy v-if="showPublish" :course="boundCourse" :courseTasks="courseTasks" /> -->
-              <v-btn @click="saveGalaxyToDB" outlined color="baseAccent">
-                <v-icon left> {{ mdiArrowRightBold }} </v-icon>
-                Next Step
-              </v-btn>
+                <!-- <PublishGalaxy v-if="showPublish" :course="boundCourse" :courseTasks="courseTasks" /> -->
+                <v-btn @click="saveGalaxyToDB" outlined color="baseAccent">
+                  <v-icon left> {{ mdiArrowRightBold }} </v-icon>
+                  Next Step
+                </v-btn>
+              </div>
             </div>
           </div>
         </div>
@@ -487,7 +491,7 @@
     <!-- Total Tokens -->
     <div class="token-container">
       <p class="ma-0 overline token-title">
-        Tokens Used<br />Input:
+        AI Tokens Used<br />Input:
         {{
           aiGeneratedGalaxyMap.tokens
             ? aiGeneratedGalaxyMap.tokens.totalInputTokens.toLocaleString()
@@ -508,8 +512,8 @@
         <br />Est. Cost: ${{
           aiGeneratedGalaxyMap.tokens
             ? (
-                (aiGeneratedGalaxyMap.tokens.totalInputTokens / 1000000) * 0.15 +
-                (aiGeneratedGalaxyMap.tokens.totalOutputTokens / 1000000) * 0.6
+                (aiGeneratedGalaxyMap.tokens.totalInputTokens / 1000000) * 2 +
+                (aiGeneratedGalaxyMap.tokens.totalOutputTokens / 1000000) * 8
               ).toFixed(5)
             : "0.00000"
         }}
@@ -1024,6 +1028,13 @@ export default {
         }
       };
     },
+    /**
+     * Computed property to determine the back button path
+     * If courseId is available, route back to GalaxyView, otherwise go to home
+     */
+    backButtonPath() {
+      return this.courseId ? `/galaxy/${this.courseId}` : null;
+    },
   },
   methods: {
     ...mapActions(useRootStore, [
@@ -1110,7 +1121,7 @@ export default {
           });
         }
 
-        console.log("🔄 Formatted mission instructions to HTML:", html);
+        // console.log("🔄 Formatted mission instructions to HTML:", html);
         return html;
       } catch (error) {
         console.error("❌ Error formatting mission instructions to HTML:", error);
@@ -1777,7 +1788,7 @@ export default {
       const galaxyMapJson = JSON.stringify(galaxyMapForAI);
       // const galaxyMapMarkdown = this.convertGalaxyMapToMarkdown(galaxyMapForAI);
 
-      inputMessages.push({ role: "user", content: "galaxy_map: " + galaxyMapMarkdown });
+      inputMessages.push({ role: "user", content: "galaxy_map: " + galaxyMapJson });
 
       // 3. selected items
       const activeItems = this.activeGalaxyItems;
@@ -2060,6 +2071,20 @@ export default {
             this.updateTransformedStarDetails();
           }
         }
+
+        // Create a deep copy of the NEW galaxy map data without the history property to avoid circular reference
+        const newGalaxyMapCopy = JSON.parse(
+          JSON.stringify({
+            ...this.aiGeneratedGalaxyMap,
+            history: undefined, // Remove history from the copy
+          }),
+        );
+
+        // Add the NEW state to history (this becomes the current state)
+        this.aiGeneratedGalaxyMap.history.push({
+          galaxyMapData: newGalaxyMapCopy,
+          atThisRefineUserPrompt: "all mission instructions generated",
+        });
 
         // Calculate and log execution time
         const endTime = Date.now();
@@ -3094,7 +3119,6 @@ export default {
     flex-direction: column;
 
     .galaxy-preview-container {
-      // border: 1px solid red;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
@@ -3103,6 +3127,16 @@ export default {
       overflow-y: auto;
       // margin-bottom: 100px;
       transition: all 0.3s ease;
+
+      // Create a mask that fades out at left and right edges using linear gradients
+      mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+      -webkit-mask-image: linear-gradient(
+        to right,
+        transparent 0%,
+        black 5%,
+        black 95%,
+        transparent 100%
+      );
 
       &.task-editing {
         width: 300px; // Shrink to roughly one treeview column width
@@ -3387,10 +3421,13 @@ export default {
     .history-container {
       height: 100px;
       padding-top: 10px;
+      width: 20%;
+      // border: 1px solid red;
 
       .history-items-container {
         display: flex;
         gap: 20px;
+        flex-wrap: wrap;
 
         .history-item {
           display: flex;
@@ -3418,7 +3455,7 @@ export default {
     }
 
     .galaxy-prompt-container {
-      width: 100%;
+      width: 60%;
       height: 30%;
       // border: 1px solid yellow;
       display: flex;
@@ -3428,7 +3465,7 @@ export default {
       margin-bottom: 100px;
 
       .prompt-textarea-container {
-        width: 50%;
+        width: 80%;
 
         .legend-container {
           // position: absolute;

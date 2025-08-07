@@ -214,7 +214,8 @@ export default {
         (this.$route.name == "GalaxyView" && this.user.loggedIn) ||
         this.$route.name == "SolarSystemView" ||
         this.$route.name == "AiGalaxyEdit" ||
-        this.$route.path.includes("ai-galaxy-edit")
+        this.$route.path.includes("ai-galaxy-edit") ||
+        this.$route.name == "AiGalaxyEditWithCourse"
       ) {
         this.miniNavMenu = true;
       } else {
@@ -247,7 +248,8 @@ export default {
       (this.$route.name == "GalaxyView" && this.user.loggedIn) ||
       this.$route.name == "SolarSystemView" ||
       this.$route.name == "AiGalaxyEdit" ||
-      this.$route.path.includes("ai-galaxy-edit")
+      this.$route.path.includes("ai-galaxy-edit") ||
+      this.$route.name == "AiGalaxyEditWithCourse"
     ) {
       this.miniNavMenu = true;
     } else {

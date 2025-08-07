@@ -128,7 +128,7 @@
             </div>
             <!-- </v-hover> -->
           </div>
-          <v-row>
+          <v-row class="d-flex justify-center align-center mt-4">
             <v-btn
               :loading="updatingAccount"
               color="missionAccent"
