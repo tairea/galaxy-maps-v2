@@ -1,6 +1,6 @@
 <template>
   <div class="backButtonDiv">
-    <v-btn :to="toPath" class="backButton" color="baseAccent" text>
+    <v-btn :to="dynamicPath || toPath" class="backButton" color="baseAccent" text>
       <v-icon left> {{ mdiArrowLeft }} </v-icon>
       Back
     </v-btn>
@@ -12,7 +12,16 @@ import { mdiArrowLeft } from "@mdi/js";
 
 export default {
   name: "BackButton",
-  props: ["toPath"],
+  props: {
+    toPath: {
+      type: String,
+      default: "/",
+    },
+    dynamicPath: {
+      type: String,
+      default: null,
+    },
+  },
   computed: {},
   data() {
     return {
