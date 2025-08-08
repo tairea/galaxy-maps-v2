@@ -76,6 +76,7 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     SaveGalaxyDialog: typeof import('./src/components/Dialogs/SaveGalaxyDialog.vue')['default']
     SelectedMissionsCard: typeof import('./src/components/SolarSystemView/MissionsList/MissionsCard/SelectedMissionsCard.vue')['default']
+    SetInitialPasswordDialog: typeof import('./src/components/Dialogs/SetInitialPasswordDialog.vue')['default']
     SnackBar: typeof import('./src/components/Reused/SnackBar.vue')['default']
     SolarSystem: typeof import('./src/components/Reused/SolarSystem.vue')['default']
     SolarSystemInfo: typeof import('./src/components/SolarSystemView/SolarSystemInfo.vue')['default']

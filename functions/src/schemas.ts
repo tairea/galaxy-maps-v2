@@ -105,3 +105,20 @@ export const MissionInstructionsV2Schema = z.object({
 
 // Type export for the new mission instructions format
 export type MissionInstructionsV2 = z.infer<typeof MissionInstructionsV2Schema>;
+
+// Schema for YouTube video search results
+export const YouTubeVideoSchema = z.object({
+  title: z.string(),
+  url: z.string().url(),
+  description: z.string(),
+  relevance: z.string().optional(),
+});
+
+export const YouTubeSearchResultsSchema = z.object({
+  videos: z.array(YouTubeVideoSchema).min(1),
+  searchSummary: z.string().optional(),
+});
+
+// Type exports for YouTube search results
+export type YouTubeVideo = z.infer<typeof YouTubeVideoSchema>;
+export type YouTubeSearchResults = z.infer<typeof YouTubeSearchResultsSchema>;

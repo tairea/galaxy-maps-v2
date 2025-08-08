@@ -602,9 +602,17 @@ export const generateGalaxyMap = async (
   success: boolean;
   galaxyMap: any;
   tokenUsage: {
-    input_tokens: number;
-    output_tokens: number;
-    total_tokens: number;
+    modelsUsed: {
+      model: string;
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    }[];
+    combinedEstimatedCost: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalTokens: number;
   };
   responseId: string;
 }> => {
@@ -624,9 +632,17 @@ export const generateGalaxyMapWithClarification = async (
   success: boolean;
   galaxyMap: any;
   tokenUsage: {
-    input_tokens: number;
-    output_tokens: number;
-    total_tokens: number;
+    modelsUsed: {
+      model: string;
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    }[];
+    combinedEstimatedCost: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalTokens: number;
   };
   responseId: string;
 }> => {
@@ -648,9 +664,17 @@ export const generateGalaxyMapAgain = async (
   success: boolean;
   galaxyMap: any;
   tokenUsage: {
-    input_tokens: number;
-    output_tokens: number;
-    total_tokens: number;
+    modelsUsed: {
+      model: string;
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    }[];
+    combinedEstimatedCost: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalTokens: number;
   };
   responseId: string;
 }> => {
@@ -675,9 +699,17 @@ export const generateInstructionsForMission = async (
   success: boolean;
   missionInstructions: any;
   tokenUsage: {
-    input_tokens: number;
-    output_tokens: number;
-    total_tokens: number;
+    modelsUsed: {
+      model: string;
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    }[];
+    combinedEstimatedCost: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalTokens: number;
   };
   responseId: string;
 }> => {
@@ -753,5 +785,30 @@ export const downloadAndUploadImage = async (
   };
   const downloadAndUploadImageFunction = functions.httpsCallable("downloadAndUploadImage");
   const result = await downloadAndUploadImageFunction(data);
+  return result.data;
+};
+
+export const bulkImportStudents = async (
+  students: Array<Record<string, any>>,
+  cohortId: string,
+  inviter: string,
+): Promise<{
+  results: {
+    success: Array<{ email: string; action: string; personId: string }>;
+    errors: Array<{ email: string; error: string }>;
+  };
+  summary: {
+    total: number;
+    success: number;
+    errors: number;
+  };
+}> => {
+  const data = {
+    students,
+    cohortId,
+    inviter,
+  };
+  const bulkImportStudents = functions.httpsCallable("bulkImportStudents");
+  const result = await bulkImportStudents(data);
   return result.data;
 };

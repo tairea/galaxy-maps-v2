@@ -95,7 +95,7 @@
             Total AI Tokens:
             {{
               aiGeneratedGalaxyMap.tokens
-                ? aiGeneratedGalaxyMap.tokens.totalTokensUsed.toLocaleString()
+                ? aiGeneratedGalaxyMap.tokens.totalTokens.toLocaleString()
                 : "0"
             }}
           </p>
@@ -116,13 +116,35 @@
           <p class="token-breakdown overline mt-2" v-if="!isSavingToDB">
             Est. cost: ${{
               aiGeneratedGalaxyMap.tokens
-                ? (
-                    (this.aiGeneratedGalaxyMap.tokens.totalInputTokens / 1000000) * 2 +
-                    (this.aiGeneratedGalaxyMap.tokens.totalOutputTokens / 1000000) * 8
-                  ).toFixed(5)
+                ? aiGeneratedGalaxyMap.tokens.combinedEstimatedCost
+                  ? aiGeneratedGalaxyMap.tokens.combinedEstimatedCost.toFixed(5)
+                  : (
+                      (this.aiGeneratedGalaxyMap.tokens.totalInputTokens / 1000000) * 2 +
+                      (this.aiGeneratedGalaxyMap.tokens.totalOutputTokens / 1000000) * 8
+                    ).toFixed(5)
                 : "0.00000"
             }}
           </p>
+          <!-- Model breakdown -->
+          <div
+            v-if="
+              aiGeneratedGalaxyMap.tokens &&
+              aiGeneratedGalaxyMap.tokens.modelsUsed &&
+              aiGeneratedGalaxyMap.tokens.modelsUsed.length > 0
+            "
+            class="model-breakdown mt-2"
+          >
+            <p class="model-breakdown-title overline">Models Used:</p>
+            <div
+              v-for="model in aiGeneratedGalaxyMap.tokens.modelsUsed"
+              :key="model.model"
+              class="model-item"
+            >
+              <span class="model-name">{{ model.model }}</span>
+              <span class="model-tokens"> {{ model.totalTokens.toLocaleString() }} tokens </span>
+              <span class="model-cost">${{ model.estimatedCost.toFixed(5) }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -259,10 +281,9 @@
                           color="galaxyAccent"
                           iconSize="15"
                         />
-                        <div class="treeview-markdown" v-if="item.type === 'instructions'">
+                        <div class="treeview-markdown">
                           <span v-html="renderToHTML(item)"></span>
                         </div>
-                        <span v-else>{{ item.description }}</span>
                       </div>
                       <!-- Generate Tasks button ((HIDE FOR NOW. CREATE TASKS IN GALAXY VIEW INSTEAD FOR NOW)) -->
                       <!-- <v-btn
@@ -506,15 +527,17 @@
         <br />Total:
         {{
           aiGeneratedGalaxyMap.tokens
-            ? aiGeneratedGalaxyMap.tokens.totalTokensUsed.toLocaleString()
+            ? aiGeneratedGalaxyMap.tokens.totalTokens.toLocaleString()
             : "0"
         }}
         <br />Est. Cost: ${{
           aiGeneratedGalaxyMap.tokens
-            ? (
-                (aiGeneratedGalaxyMap.tokens.totalInputTokens / 1000000) * 2 +
-                (aiGeneratedGalaxyMap.tokens.totalOutputTokens / 1000000) * 8
-              ).toFixed(5)
+            ? aiGeneratedGalaxyMap.tokens.combinedEstimatedCost
+              ? aiGeneratedGalaxyMap.tokens.combinedEstimatedCost.toFixed(5)
+              : (
+                  (aiGeneratedGalaxyMap.tokens.totalInputTokens / 1000000) * 2 +
+                  (aiGeneratedGalaxyMap.tokens.totalOutputTokens / 1000000) * 8
+                ).toFixed(5)
             : "0.00000"
         }}
       </p>
@@ -609,7 +632,7 @@ export default {
       shouldGenerateMissions: false, // Flag to track if we should generate missions after layout selection
 
       // Token usage tracking
-      totalTokensUsed: 0,
+      totalTokens: 0,
       totalInputTokens: 0,
       totalOutputTokens: 0,
 
@@ -893,7 +916,7 @@ export default {
           tokens: {
             totalInputTokens: 0,
             totalOutputTokens: 0,
-            totalTokensUsed: 0,
+            totalTokens: 0,
           },
         };
       }
@@ -908,7 +931,7 @@ export default {
           this.aiGeneratedGalaxyMap.tokens = {
             totalInputTokens: 0,
             totalOutputTokens: 0,
-            totalTokensUsed: 0,
+            totalTokens: 0,
           };
         }
       }
@@ -921,7 +944,7 @@ export default {
         this.aiGeneratedGalaxyMap.tokens = {
           totalInputTokens: 0,
           totalOutputTokens: 0,
-          totalTokensUsed: 0,
+          totalTokens: 0,
         };
       }
     }
@@ -995,7 +1018,7 @@ export default {
 
     /**
      * Computed property that returns a function to render content for any item
-     * This handles both structured mission instructions and markdown content
+     * This handles structured mission instructions, markdown content, and HTML content
      */
     renderToHTML() {
       return (item) => {
@@ -1014,17 +1037,22 @@ export default {
             return this.formatMissionInstructionsToHtml(item.description);
           }
 
-          // For all other content, return as-is (no markdown parsing)
-          return item.description;
+          // Check if content is already HTML
+          if (this.isHtmlContent(item.description)) {
+            return item.description;
+          }
+
+          // Check if content contains markdown syntax
+          if (this.containsMarkdown(item.description)) {
+            return this.renderMarkdownWithStreaming(item.description);
+          }
+
+          // For plain text content, escape HTML and return
+          return this.escapeHtml(item.description);
         } catch (error) {
           console.error("Error rendering content:", error);
           // Fallback to plain text with HTML escaping
-          return item.description
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#39;");
+          return this.escapeHtml(item.description);
         }
       };
     },
@@ -1470,24 +1498,46 @@ export default {
     // Token usage tracking
     trackTokenUsage(response) {
       try {
-        if (response.usage) {
-          const inputTokens = response.usage.input_tokens || 0;
-          const outputTokens = response.usage.output_tokens || 0;
-          const totalTokens = response.usage.total_tokens || 0;
-
+        if (response.tokenUsage) {
           // Initialize tokens object if it doesn't exist
           if (!this.aiGeneratedGalaxyMap.tokens) {
             this.aiGeneratedGalaxyMap.tokens = {
               totalInputTokens: 0,
               totalOutputTokens: 0,
-              totalTokensUsed: 0,
+              totalTokens: 0,
+              modelsUsed: [],
+              combinedEstimatedCost: 0,
             };
           }
 
-          // Accumulate tokens (add to existing values)
-          this.aiGeneratedGalaxyMap.tokens.totalInputTokens += inputTokens;
-          this.aiGeneratedGalaxyMap.tokens.totalOutputTokens += outputTokens;
-          this.aiGeneratedGalaxyMap.tokens.totalTokensUsed += totalTokens;
+          // Handle new combined token usage structure
+          if (response.tokenUsage.modelsUsed && Array.isArray(response.tokenUsage.modelsUsed)) {
+            // Add new model usages to existing ones
+            if (!this.aiGeneratedGalaxyMap.tokens.modelsUsed) {
+              this.aiGeneratedGalaxyMap.tokens.modelsUsed = [];
+            }
+            this.aiGeneratedGalaxyMap.tokens.modelsUsed.push(...response.tokenUsage.modelsUsed);
+
+            // Recalculate totals
+            this.aiGeneratedGalaxyMap.tokens.totalInputTokens +=
+              response.tokenUsage.totalInputTokens || 0;
+            this.aiGeneratedGalaxyMap.tokens.totalOutputTokens +=
+              response.tokenUsage.totalOutputTokens || 0;
+            this.aiGeneratedGalaxyMap.tokens.totalTokens += response.tokenUsage.totalTokens || 0;
+            this.aiGeneratedGalaxyMap.tokens.combinedEstimatedCost +=
+              response.tokenUsage.combinedEstimatedCost || 0;
+          } else {
+            // Fallback for old structure
+            const inputTokens = response.tokenUsage.input_tokens || 0;
+            const outputTokens = response.tokenUsage.output_tokens || 0;
+            const totalTokens = response.tokenUsage.total_tokens || 0;
+
+            // Accumulate tokens (add to existing values)
+            this.aiGeneratedGalaxyMap.tokens.totalInputTokens += inputTokens;
+            this.aiGeneratedGalaxyMap.tokens.totalOutputTokens += outputTokens;
+            this.aiGeneratedGalaxyMap.tokens.totalTokens += totalTokens;
+          }
+
           this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
         }
       } catch (error) {
@@ -1805,7 +1855,7 @@ export default {
       console.log("refine inputMessages", inputMessages);
 
       const refineGalaxyWithAiResponse = await this.$openai.responses.parse({
-        model: "gpt-4o-mini",
+        model: "gpt-5-mini",
         previous_response_id: this.aiGeneratedGalaxyMap.aiResponseId,
         input: inputMessages,
         text: {
@@ -1828,7 +1878,9 @@ export default {
       const existingTokens = this.aiGeneratedGalaxyMap.tokens || {
         totalInputTokens: 0,
         totalOutputTokens: 0,
-        totalTokensUsed: 0,
+        totalTokens: 0,
+        modelsUsed: [],
+        combinedEstimatedCost: 0,
       };
       const existingAiResponseId = this.aiGeneratedGalaxyMap.aiResponseId;
       const existingOriginResponseId = this.aiGeneratedGalaxyMap.originResponseId;
@@ -2042,7 +2094,7 @@ export default {
                 missionInstructions.tokenUsage.input_tokens || 0;
               this.aiGeneratedGalaxyMap.tokens.totalOutputTokens +=
                 missionInstructions.tokenUsage.output_tokens || 0;
-              this.aiGeneratedGalaxyMap.tokens.totalTokensUsed +=
+              this.aiGeneratedGalaxyMap.tokens.totalTokens +=
                 missionInstructions.tokenUsage.total_tokens || 0;
             }
 
@@ -2765,12 +2817,12 @@ export default {
         this.aiGeneratedGalaxyMap.tokens = {
           totalInputTokens: 0,
           totalOutputTokens: 0,
-          totalTokensUsed: 0,
+          totalTokens: 0,
         };
       }
       this.aiGeneratedGalaxyMap.tokens.totalInputTokens += usage.input_tokens || 0;
       this.aiGeneratedGalaxyMap.tokens.totalOutputTokens += usage.output_tokens || 0;
-      this.aiGeneratedGalaxyMap.tokens.totalTokensUsed += usage.total_tokens || 0;
+      this.aiGeneratedGalaxyMap.tokens.totalTokens += usage.total_tokens || 0;
     },
 
     /**
@@ -3028,6 +3080,63 @@ export default {
       }
 
       return markdown;
+    },
+
+    /**
+     * Detects if content is already HTML
+     * @param {string} content - The content to analyze
+     * @returns {boolean} - true if content contains HTML tags
+     */
+    isHtmlContent(content) {
+      if (!content || typeof content !== "string") return false;
+
+      // Check for common HTML tags
+      const htmlTagRegex = /<[^>]*>/;
+      const isHtml = htmlTagRegex.test(content);
+      return isHtml;
+    },
+
+    /**
+     * Detects if content contains markdown syntax
+     * @param {string} content - The content to analyze
+     * @returns {boolean} - true if content contains markdown syntax
+     */
+    containsMarkdown(content) {
+      if (!content || typeof content !== "string") return false;
+
+      // Check for common markdown patterns
+      const markdownPatterns = [
+        /^#{1,6}\s/, // Headers
+        /\*\*.*?\*\*/, // Bold
+        /\*.*?\*/, // Italic
+        /\[.*?\]\(.*?\)/, // Links
+        /!\[.*?\]\(.*?\)/, // Images
+        /^[-*+]\s/, // Unordered lists
+        /^\d+\.\s/, // Ordered lists
+        /`.*?`/, // Inline code
+        /```[\s\S]*?```/, // Code blocks
+        /^>\s/, // Blockquotes
+        /~~.*?~~/, // Strikethrough
+        /^---$/, // Horizontal rules
+      ];
+
+      return markdownPatterns.some((pattern) => pattern.test(content));
+    },
+
+    /**
+     * Escapes HTML characters to prevent XSS
+     * @param {string} text - The text to escape
+     * @returns {string} - The escaped text
+     */
+    escapeHtml(text) {
+      if (!text || typeof text !== "string") return "";
+
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
     },
   },
 };
@@ -3745,6 +3854,47 @@ export default {
   opacity: 0.8;
   line-height: normal !important;
   margin: 5px !important;
+}
+
+.model-breakdown {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background-color: rgba(var(--v-background-base), 0.1);
+  border-radius: 4px;
+  border: 1px solid rgba(var(--v-missionAccent-base), 0.2);
+}
+
+.model-breakdown-title {
+  color: var(--v-galaxyAccent-base);
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.model-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.125rem 0;
+  font-size: 0.65rem;
+  color: var(--v-missionAccent-base);
+  opacity: 0.9;
+}
+
+.model-name {
+  font-weight: 600;
+  color: var(--v-galaxyAccent-base);
+}
+
+.model-tokens {
+  opacity: 0.7;
+}
+
+.model-cost {
+  font-weight: 600;
+  color: var(--v-missionAccent-base);
 }
 
 @keyframes fadeInOut {

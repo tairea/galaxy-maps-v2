@@ -7,6 +7,7 @@ import CohortListV2 from "@/views/CohortListV2.vue";
 import AllStudentsView from "@/views/AllStudentsView.vue";
 import UserDashboard from "@/views/UserDashboard.vue";
 import AiGalaxyEdit from "@/views/AiGalaxyEdit.vue";
+// import SetInitialPassword from "@/views/SetInitialPassword.vue";
 // import Login from "@/components/Login.vue";
 // import VerifyEmail from "@/views/VerifyEmail.vue";
 // import ResetPassword from "@/views/ResetPassword.vue";

@@ -65,7 +65,7 @@ export default {
   },
   watch: {
     courseSubmissions(newVal, oldVal) {
-      console.log("courseSubmissions changed", newVal);
+      // console.log("courseSubmissions changed", newVal);
       this.$emit("submissionsChanged");
     },
   },
@@ -82,7 +82,7 @@ export default {
         const unsubscribe = await this.getAllSubmittedWorkByCourseId(course.id || course);
         this.unsubscribes.push(unsubscribe);
       }
-      console.log("submissions unsubscribes", this.unsubscribes);
+      // console.log("submissions unsubscribes", this.unsubscribes);
     }
   },
   destroyed() {
