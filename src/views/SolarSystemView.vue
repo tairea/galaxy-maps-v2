@@ -207,7 +207,11 @@ export default {
       return this.course.status === "drafting";
     },
     teacher() {
-      return this.course.mappedBy?.personId === this.person.id || this.user.data.admin;
+      return (
+        this.course.mappedBy?.personId === this.person.id ||
+        this.user.data.admin ||
+        (this.course?.collaboratorIds && this.course.collaboratorIds.includes(this.person.id))
+      );
     },
     sortedTopicTasks() {
       if (this.topicTasks.some((task) => task.orderIndex != null)) {

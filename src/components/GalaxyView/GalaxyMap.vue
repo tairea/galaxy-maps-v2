@@ -241,7 +241,11 @@ export default {
       return this.person.completedCourses?.includes(this.currentCourseId);
     },
     teacher() {
-      return this.course?.mappedBy.personId === this.person?.id || this.user.data?.admin;
+      return (
+        this.course?.mappedBy.personId === this.person?.id ||
+        this.user.data?.admin ||
+        (this.course?.collaboratorIds && this.course.collaboratorIds.includes(this.person?.id))
+      );
     },
     // student aka navigator
     student() {

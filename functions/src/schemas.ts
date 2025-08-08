@@ -117,3 +117,93 @@ export type MissionInstructionsV2 = z.infer<typeof MissionInstructionsV2Schema>;
 
 // Type exports for YouTube search results
 export type YouTubeVideo = z.infer<typeof YouTubeVideoSchema>;
+
+/* ---------------------- Leaf Schemas ---------------------- */
+
+export const UnifiedJourneyTaskSchema = z.object({
+  /** One discrete, actionable task. May include a short “micro-teach” blurb inline. */
+  taskContent: z.string().min(1),
+});
+
+export const UnifiedJourneyStepSchema = z.object({
+  title: z.string().min(1),
+  tasks: z.array(UnifiedJourneyTaskSchema).min(1),
+  /** Motivating progress sentence after this step. */
+  checkpoint: z.string().min(1),
+});
+
+export const UnifiedMissionInstructionsSchema = z.object({
+  /** Motivating intro: what they’ll do, why it matters, how it connects to the journey. */
+  intro: z.string().min(1),
+  steps: z.array(UnifiedJourneyStepSchema).min(1),
+  /** Motivating recap + what’s next. */
+  outro: z.string().min(1),
+});
+
+/* -------------------- Mid-level Schemas ------------------- */
+
+export const UnifiedJourneyMissionsSchema = z.object({
+  /** e.g., "1.1: Mission Title" */
+  title: z.string().min(1),
+  description: z.string().min(1),
+  missionInstructions: UnifiedMissionInstructionsSchema,
+});
+
+export const UnifiedJourneyStarsSchema = z.object({
+  /** e.g., "1: Star Title" */
+  title: z.string().min(1),
+  description: z.string().min(1),
+  missions: z.array(UnifiedJourneyMissionsSchema).min(1),
+});
+
+/* ------------------- Top-level (Unified) ------------------ */
+
+export const UnifiedGalaxyMapResponseSchema = z
+  .object({
+    status: z.enum(["clarification_needed", "journey_ready"]),
+
+    // When status === "clarification_needed"
+    questions: z.array(z.string().min(1)).nullable(),
+
+    // When status === "journey_ready"
+    title: z.string().nullable(),
+    description: z.string().nullable(),
+    stars: z.array(UnifiedJourneyStarsSchema).nullable(),
+
+    // Optional image attachment (kept for parity with your prior schema)
+    image: z
+      .object({
+        name: z.string(),
+        url: z.string(),
+      })
+      .nullable()
+      .optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.status === "clarification_needed") {
+        return Array.isArray(data.questions) && data.questions.length > 0;
+      }
+      if (data.status === "journey_ready") {
+        return Boolean(
+          data.title &&
+            data.title.length > 0 &&
+            data.description &&
+            data.description.length > 0 &&
+            data.stars &&
+            data.stars.length > 0,
+        );
+      }
+      return false;
+    },
+    { message: "Invalid response structure based on status" },
+  );
+
+/* ----------------------- Types ---------------------------- */
+
+export type UnifiedTask = z.infer<typeof UnifiedJourneyTaskSchema>;
+export type UnifiedStep = z.infer<typeof UnifiedJourneyStepSchema>;
+export type UnifiedMissionInstructions = z.infer<typeof UnifiedMissionInstructionsSchema>;
+export type UnifiedMission = z.infer<typeof UnifiedJourneyMissionsSchema>;
+export type UnifiedStar = z.infer<typeof UnifiedJourneyStarsSchema>;
+export type UnifiedGalaxyMapResponse = z.infer<typeof UnifiedGalaxyMapResponseSchema>;

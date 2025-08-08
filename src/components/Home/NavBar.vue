@@ -79,9 +79,12 @@ export default {
     unansweredRequestsForHelp() {
       const store = useRootStore();
       const unansweredRequests = store.getUnansweredRequestsForHelp;
-      // filter unaswered requests that are from courses mapped by me
+      // filter unaswered requests that are from courses mapped by me or where I'm a collaborator
       const unansweredRequestsFromMyCourses = unansweredRequests.filter(
-        (request) => request.contextCourse.mappedBy.personId === this.user.data.id,
+        (request) =>
+          request.contextCourse.mappedBy.personId === this.user.data.id ||
+          (request.contextCourse.collaboratorIds &&
+            request.contextCourse.collaboratorIds.includes(this.user.data.id)),
       );
       // console.log("unansweredRequestsFromMyCourses: ", unansweredRequestsFromMyCourses);
       return unansweredRequestsFromMyCourses;
@@ -89,9 +92,12 @@ export default {
     inReviewSubmissionsCount() {
       const store = useRootStore();
       const inReviewSubmissions = store.getInReviewSubmissions;
-      // filter inreview submissions that are from courses mapped by me
+      // filter inreview submissions that are from courses mapped by me or where I'm a collaborator
       const inReviewSubmissionsFromMyCourses = inReviewSubmissions.filter(
-        (submission) => submission.contextCourse.mappedBy.personId === this.user.data.id,
+        (submission) =>
+          submission.contextCourse.mappedBy.personId === this.user.data.id ||
+          (submission.contextCourse.collaboratorIds &&
+            submission.contextCourse.collaboratorIds.includes(this.user.data.id)),
       );
       // console.log("inReviewSubmissionsFromMyCourses: ", inReviewSubmissionsFromMyCourses);
       return inReviewSubmissionsFromMyCourses.length;

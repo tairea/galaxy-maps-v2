@@ -212,7 +212,11 @@ export default {
       return true;
     },
     teacher() {
-      return this.course?.mappedBy?.personId === this.person?.id || this.user.data?.admin;
+      return (
+        this.course?.mappedBy?.personId === this.person?.id ||
+        this.user.data?.admin ||
+        (this.course?.collaboratorIds && this.course.collaboratorIds.includes(this.person?.id))
+      );
     },
     student() {
       return this.person?.assignedCourses?.some((courseId) => courseId === this.course.id);

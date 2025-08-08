@@ -139,6 +139,63 @@
                   class=""
                 ></v-progress-linear>
 
+                <!-- ===== Collaborators field. This allows adding multiple collaborators to the galaxy map ==== -->
+                <div v-if="edit">
+                  <p class="input-description mt-6">Galaxy Collaborators:</p>
+                  <v-autocomplete
+                    v-model="selectedCollaboratorIds"
+                    :search-input.sync="search"
+                    :items="collaborators"
+                    @change="search = ''"
+                    menu-props="closeOnContentClick"
+                    class="input-field text-lowercase select-color"
+                    color="missionAccent"
+                    outlined
+                    :dark="dark"
+                    :light="!dark"
+                    chips
+                    item-text="email"
+                    item-value="id"
+                    multiple
+                  >
+                    <template v-slot:selection="data">
+                      <v-chip
+                        v-bind="data.attrs"
+                        :input-value="data.selected"
+                        close
+                        @click="data.select"
+                        @click:close="removeCollaborator(data.item)"
+                      >
+                        <template>
+                          <v-avatar v-if="data.item.image && data.item.image.url" left>
+                            <v-img :src="data.item.image.url"></v-img>
+                          </v-avatar>
+                          {{ data.item.email }}
+                        </template>
+                      </v-chip>
+                    </template>
+                    <template v-slot:item="data">
+                      <template>
+                        <v-list-item-avatar v-if="data.item.image && data.item.image.url">
+                          <img :src="data.item.image.url" />
+                        </v-list-item-avatar>
+                        <v-list-item-content>
+                          <v-list-item-title v-html="data.item.firstName"></v-list-item-title>
+                          <v-list-item-subtitle v-html="data.item.email"></v-list-item-subtitle>
+                        </v-list-item-content>
+                      </template>
+                    </template>
+                    <template v-slot:append-item>
+                      <div class="d-flex justify-end">
+                        <CreateAccountDialog accountType="teacher" @addTeacher="addCollaborator" />
+                      </div>
+                    </template>
+                    <template v-slot:no-data>
+                      <p class="ml-4">No Collaborators currently on this Galaxy Map</p>
+                    </template>
+                  </v-autocomplete>
+                </div>
+
                 <!-- ===== Owner field. This is who owns the course e.g. you might be creating the course for an organisation ==== -->
                 <!-- 1. dropdown menu of the organisations that the user is in. -->
 
@@ -497,10 +554,11 @@ import clone from "lodash/clone";
 import { mapActions, mapState } from "pinia";
 import { DocumentReference } from "firebase/firestore";
 import PublishGalaxy from "@/components/GalaxyView/PublishGalaxy.vue";
+import CreateAccountDialog from "@/components/Dialogs/CreateAccountDialog.vue";
 
 export default {
   name: "CreateEditDeleteGalaxyDialog",
-  components: { PublishGalaxy },
+  components: { PublishGalaxy, CreateAccountDialog },
   props: ["showDialog", "edit", "draft", "courseToEdit"],
   data: () => ({
     mdiPencil,
@@ -539,6 +597,7 @@ export default {
         },
         source: "",
       },
+      collaboratorIds: [],
       status: "drafting",
     },
     uploadedImage: {},
@@ -549,6 +608,8 @@ export default {
     loading: false,
     deleting: false,
     creationMode: "",
+    search: "",
+    collaborators: [],
   }),
   computed: {
     ...mapState(useRootStore, ["person", "peopleInCourse", "currentCourseId", "courseTasks"]),
@@ -556,13 +617,30 @@ export default {
     dark() {
       return this.$vuetify.theme.isDark;
     },
+    selectedCollaboratorIds: {
+      get() {
+        const list =
+          this.course && Array.isArray(this.course.collaboratorIds)
+            ? this.course.collaboratorIds
+            : [];
+        return list;
+      },
+      set(newVal) {
+        const ids = Array.isArray(newVal) ? newVal : [];
+        this.$set(this.course, "collaboratorIds", ids);
+      },
+    },
   },
   watch: {
     courseToEdit: {
       immediate: true,
-      handler(newVal) {
+      async handler(newVal) {
         if (newVal) {
           this.course = { ...newVal };
+          await this.initializeCollaborators();
+          if (!Array.isArray(this.course.collaboratorIds)) {
+            this.$set(this.course, "collaboratorIds", []);
+          }
         }
       },
     },
@@ -579,9 +657,13 @@ export default {
       },
     },
   },
-  mounted() {
+  async mounted() {
     if (this.courseToEdit) {
       this.course = { ...this.courseToEdit };
+      await this.initializeCollaborators();
+      if (!Array.isArray(this.course.collaboratorIds)) {
+        this.$set(this.course, "collaboratorIds", []);
+      }
     }
   },
   methods: {
@@ -932,6 +1014,64 @@ export default {
       const sendCourseCreatedEmail = functions.httpsCallable("sendCourseCreatedEmail");
       return sendCourseCreatedEmail(data);
     },
+    removeCollaborator(item) {
+      // Also remove from collaborators array for autocomplete display
+      let collaboratorIndex = this.collaborators.findIndex(
+        (collaborator) => collaborator.id === item.id,
+      );
+      if (collaboratorIndex >= 0) this.collaborators.splice(collaboratorIndex, 1);
+
+      // keep collaboratorIds in sync
+      if (Array.isArray(this.course.collaboratorIds)) {
+        const idIndex = this.course.collaboratorIds.indexOf(item.id);
+        if (idIndex >= 0) this.course.collaboratorIds.splice(idIndex, 1);
+      }
+    },
+    addCollaborator(collaborator) {
+      console.log("adding collaborator", collaborator);
+      // Add to local list for autocomplete display
+      this.collaborators.push(collaborator);
+
+      // keep collaboratorIds in sync
+      if (!Array.isArray(this.course.collaboratorIds))
+        this.$set(this.course, "collaboratorIds", []);
+      if (!this.course.collaboratorIds.includes(collaborator.id))
+        this.course.collaboratorIds.push(collaborator.id);
+
+      this.setSnackbar({
+        show: true,
+        text: "New collaborator added to Galaxy",
+        color: "baseAccent",
+      });
+    },
+    async initializeCollaborators() {
+      if (
+        this.courseToEdit &&
+        this.courseToEdit.collaboratorIds &&
+        this.courseToEdit.collaboratorIds.length > 0
+      ) {
+        console.log(
+          "course has collaborators, fetching collaborator details from db to populate dropdown",
+        );
+        // Fetch collaborator details from Firebase using collaboratorIds
+        const collaboratorPromises = this.courseToEdit.collaboratorIds.map((personId) =>
+          db.collection("people").doc(personId).get(),
+        );
+
+        const collaboratorSnapshots = await Promise.all(collaboratorPromises);
+
+        this.collaborators = collaboratorSnapshots.map((snapshot) => {
+          const data = snapshot.data();
+          return {
+            id: snapshot.id,
+            ...data,
+          };
+        });
+      } else {
+        console.log("course has no collaborators, starting with empty list");
+        this.collaborators = [];
+      }
+    },
     openAIDialog() {
       this.creationMode = "ai";
       this.cancel(); // Close current dialog
@@ -1174,6 +1314,14 @@ export default {
   color: var(--v-missionAccent-base);
   opacity: 0.8;
   line-height: 1.3;
+}
+
+.input-description {
+  color: var(--v-missionAccent-base);
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  margin: 0;
+  font-style: italic;
 }
 
 // AI creation mode styles

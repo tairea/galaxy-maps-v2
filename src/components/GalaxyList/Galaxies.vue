@@ -716,7 +716,10 @@ export default {
 
         // get the course status for glow colour
         let status;
-        if (courses[i].mappedBy.personId == this.person.id) {
+        if (
+          courses[i].mappedBy.personId == this.person.id ||
+          (courses[i].collaboratorIds && courses[i].collaboratorIds.includes(this.person.id))
+        ) {
           if (courses[i].status == "drafting") status = "drafting";
           else if (courses[i].status == "published" && courses[i].public == true) status = "public";
           else if (courses[i].status == "published" && courses[i].public == false)

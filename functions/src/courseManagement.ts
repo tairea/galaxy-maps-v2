@@ -428,6 +428,30 @@ export const getCoursesHttpsEndpoint = runWith({}).https.onCall(async (data, con
     });
   }
 
+  // Include courses where the authenticated user is a collaborator
+  try {
+    const collaboratorCoursesQuery = await db
+      .collection("courses")
+      .where(
+        Filter.and(
+          Filter.where("collaboratorIds", "array-contains", context.auth.uid),
+          ...(ownerRef != null ? [Filter.where("owner", "==", ownerRef)] : []),
+        ),
+      )
+      .get();
+
+    for (const doc of collaboratorCoursesQuery.docs) {
+      const course = doc.data();
+      courseMap.set(doc.id, {
+        ...course,
+        owner: course.owner instanceof DocumentReference ? course.owner.path : course.owner,
+        id: doc.id,
+      });
+    }
+  } catch (e) {
+    // If field does not exist yet on some documents, ignore
+  }
+
   return { courses: Array.from(courseMap.values()) };
 });
 

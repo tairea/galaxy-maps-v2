@@ -13,7 +13,7 @@
           outlined
         >
           <v-icon left> {{ mdiPlus }} </v-icon>
-          {{ teacher ? "Add Captain" : "Add Navigator" }}
+          {{ teacher ? "Add another Captain" : "Add a Navigator" }}
         </v-btn>
       </template>
 

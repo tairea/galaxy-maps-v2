@@ -266,7 +266,11 @@ export default {
     },
     async setAccountType() {
       this.teacher = false;
-      if (this.course.mappedBy?.personId === this.person.id || this.user.data?.admin) {
+      if (
+        this.course.mappedBy?.personId === this.person.id ||
+        this.user.data?.admin ||
+        (this.course?.collaboratorIds && this.course.collaboratorIds.includes(this.person.id))
+      ) {
         this.teacher = true;
       } else if (this.user.loggedIn) {
         // We can used the assignedCourses array to quickly check if the user is enrolled in this course

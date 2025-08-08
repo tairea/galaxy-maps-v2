@@ -181,7 +181,10 @@ export default defineComponent({
     // TEACHERING GALAXIES
     getSubmittedCourses() {
       return this.courses.filter(
-        (course) => course.mappedBy.personId == this.person.id && course.status == "submitted",
+        (course) =>
+          (course.mappedBy.personId == this.person.id ||
+            (course.collaboratorIds && course.collaboratorIds.includes(this.person.id))) &&
+          course.status == "submitted",
       );
     },
     // ADMIN NEEDS TO REVIEW
@@ -200,7 +203,8 @@ export default defineComponent({
       return this.courses.filter(
         (course) =>
           this.user.loggedIn &&
-          course.mappedBy.personId == this.person.id &&
+          (course.mappedBy.personId == this.person.id ||
+            (course.collaboratorIds && course.collaboratorIds.includes(this.person.id))) &&
           course.status != "submitted",
       );
     },
