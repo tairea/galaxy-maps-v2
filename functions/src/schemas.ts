@@ -89,6 +89,14 @@ export const MissionTaskSchema = z.object({
   taskContent: z.string(),
 });
 
+// Schema for YouTube video search results
+export const YouTubeVideoSchema = z.object({
+  title: z.string(),
+  url: z.string().url(),
+  description: z.string(),
+  relevance: z.string().optional(),
+});
+
 // Schema for mission instruction step
 export const MissionInstructionStepSchema = z.object({
   title: z.string(),
@@ -100,25 +108,12 @@ export const MissionInstructionsV2Schema = z.object({
   title: z.string(),
   description: z.string(),
   instructions: z.array(MissionInstructionStepSchema).min(1),
+  // youtubeVideos: z.array(YouTubeVideoSchema).optional(),
   summary: z.string(),
 });
 
 // Type export for the new mission instructions format
 export type MissionInstructionsV2 = z.infer<typeof MissionInstructionsV2Schema>;
 
-// Schema for YouTube video search results
-export const YouTubeVideoSchema = z.object({
-  title: z.string(),
-  url: z.string().url(),
-  description: z.string(),
-  relevance: z.string().optional(),
-});
-
-export const YouTubeSearchResultsSchema = z.object({
-  videos: z.array(YouTubeVideoSchema).min(1),
-  searchSummary: z.string().optional(),
-});
-
 // Type exports for YouTube search results
 export type YouTubeVideo = z.infer<typeof YouTubeVideoSchema>;
-export type YouTubeSearchResults = z.infer<typeof YouTubeSearchResultsSchema>;

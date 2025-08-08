@@ -619,7 +619,9 @@ export const generateGalaxyMap = async (
   const data = {
     description,
   };
-  const generateGalaxyMapFunction = functions.httpsCallable("generateGalaxyMap");
+  const generateGalaxyMapFunction = functions.httpsCallable("generateGalaxyMap", {
+    timeout: 180000,
+  }); // 180s timeout
   const result = await generateGalaxyMapFunction(data);
   return result.data;
 };
@@ -652,6 +654,7 @@ export const generateGalaxyMapWithClarification = async (
   };
   const generateGalaxyMapWithClarificationFunction = functions.httpsCallable(
     "generateGalaxyMapWithClarification",
+    { timeout: 180000 }, // 180s (3 minutes) timeout to match cloud function
   );
   const result = await generateGalaxyMapWithClarificationFunction(data);
   return result.data;
@@ -681,7 +684,9 @@ export const generateGalaxyMapAgain = async (
   const data = {
     responseId,
   };
-  const generateGalaxyMapAgainFunction = functions.httpsCallable("generateGalaxyMapAgain");
+  const generateGalaxyMapAgainFunction = functions.httpsCallable("generateGalaxyMapAgain", {
+    timeout: 180000,
+  }); // 180s timeout
   const result = await generateGalaxyMapAgainFunction(data);
   return result.data;
 };
@@ -721,6 +726,7 @@ export const generateInstructionsForMission = async (
   };
   const generateInstructionsForMissionFunction = functions.httpsCallable(
     "generateInstructionsForMission",
+    { timeout: 180000 }, // 180s timeout
   );
   const result = await generateInstructionsForMissionFunction(data);
   return result.data;
