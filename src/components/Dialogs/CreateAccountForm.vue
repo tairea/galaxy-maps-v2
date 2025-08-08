@@ -257,7 +257,7 @@ export default {
           ...personExists,
           inviter: this.person.firstName + " " + this.person.lastName,
         };
-        // accountType === "teacher" is propped in from CreateEditDeleteCohortDialog.vue
+        // accountType === "teacher" is manually propped in from CreateEditDeleteCohortDialog.vue
         if (this.teacher) {
           this.$emit("addTeacher", profile);
           this.addingAccount = false;

@@ -314,7 +314,12 @@ export default {
       return this.boundCourse?.status === "submitted";
     },
     teacher() {
-      return this.boundCourse?.mappedBy.personId === this.person?.id || this.user.data?.admin;
+      return (
+        this.boundCourse?.mappedBy.personId === this.person?.id ||
+        this.user.data?.admin ||
+        (this.boundCourse?.collaboratorIds &&
+          this.boundCourse.collaboratorIds.includes(this.person?.id))
+      );
     },
     student() {
       return this.person?.assignedCourses?.some((courseId) => courseId === this.courseId);
