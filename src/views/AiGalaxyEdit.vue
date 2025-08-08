@@ -126,7 +126,7 @@
             }}
           </p>
           <!-- Model breakdown -->
-          <div
+          <!-- <div
             v-if="
               aiGeneratedGalaxyMap.tokens &&
               aiGeneratedGalaxyMap.tokens.modelsUsed &&
@@ -144,7 +144,7 @@
               <span class="model-tokens"> {{ model.totalTokens.toLocaleString() }} tokens </span>
               <span class="model-cost">${{ model.estimatedCost.toFixed(5) }}</span>
             </div>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>
@@ -1495,49 +1495,66 @@ export default {
       return ids;
     },
 
+    // Helper method to accumulate tokens from multiple API calls
+    accumulateTokens(newTokenUsage) {
+      if (!newTokenUsage) return this.aiGeneratedGalaxyMap.tokens || {};
+
+      const currentTokens = this.aiGeneratedGalaxyMap.tokens || {};
+
+      // Initialize accumulated tokens structure
+      const accumulatedTokens = {
+        totalTokens: (currentTokens.totalTokens || 0) + (newTokenUsage.totalTokens || 0),
+        totalInputTokens:
+          (currentTokens.totalInputTokens || 0) + (newTokenUsage.totalInputTokens || 0),
+        totalOutputTokens:
+          (currentTokens.totalOutputTokens || 0) + (newTokenUsage.totalOutputTokens || 0),
+        combinedEstimatedCost:
+          (currentTokens.combinedEstimatedCost || 0) + (newTokenUsage.combinedEstimatedCost || 0),
+        modelsUsed: [],
+      };
+
+      // Merge models used from both current and new token usage
+      const allModels = new Map();
+
+      // Add current models
+      if (currentTokens.modelsUsed) {
+        currentTokens.modelsUsed.forEach((model) => {
+          allModels.set(model.model, {
+            model: model.model,
+            totalTokens: model.totalTokens || 0,
+            estimatedCost: model.estimatedCost || 0,
+          });
+        });
+      }
+
+      // Add new models (accumulate if same model exists)
+      if (newTokenUsage.modelsUsed) {
+        newTokenUsage.modelsUsed.forEach((model) => {
+          const existing = allModels.get(model.model);
+          if (existing) {
+            existing.totalTokens += model.totalTokens || 0;
+            existing.estimatedCost += model.estimatedCost || 0;
+          } else {
+            allModels.set(model.model, {
+              model: model.model,
+              totalTokens: model.totalTokens || 0,
+              estimatedCost: model.estimatedCost || 0,
+            });
+          }
+        });
+      }
+
+      accumulatedTokens.modelsUsed = Array.from(allModels.values());
+
+      return accumulatedTokens;
+    },
+
     // Token usage tracking
     trackTokenUsage(response) {
       try {
         if (response.tokenUsage) {
-          // Initialize tokens object if it doesn't exist
-          if (!this.aiGeneratedGalaxyMap.tokens) {
-            this.aiGeneratedGalaxyMap.tokens = {
-              totalInputTokens: 0,
-              totalOutputTokens: 0,
-              totalTokens: 0,
-              modelsUsed: [],
-              combinedEstimatedCost: 0,
-            };
-          }
-
-          // Handle new combined token usage structure
-          if (response.tokenUsage.modelsUsed && Array.isArray(response.tokenUsage.modelsUsed)) {
-            // Add new model usages to existing ones
-            if (!this.aiGeneratedGalaxyMap.tokens.modelsUsed) {
-              this.aiGeneratedGalaxyMap.tokens.modelsUsed = [];
-            }
-            this.aiGeneratedGalaxyMap.tokens.modelsUsed.push(...response.tokenUsage.modelsUsed);
-
-            // Recalculate totals
-            this.aiGeneratedGalaxyMap.tokens.totalInputTokens +=
-              response.tokenUsage.totalInputTokens || 0;
-            this.aiGeneratedGalaxyMap.tokens.totalOutputTokens +=
-              response.tokenUsage.totalOutputTokens || 0;
-            this.aiGeneratedGalaxyMap.tokens.totalTokens += response.tokenUsage.totalTokens || 0;
-            this.aiGeneratedGalaxyMap.tokens.combinedEstimatedCost +=
-              response.tokenUsage.combinedEstimatedCost || 0;
-          } else {
-            // Fallback for old structure
-            const inputTokens = response.tokenUsage.input_tokens || 0;
-            const outputTokens = response.tokenUsage.output_tokens || 0;
-            const totalTokens = response.tokenUsage.total_tokens || 0;
-
-            // Accumulate tokens (add to existing values)
-            this.aiGeneratedGalaxyMap.tokens.totalInputTokens += inputTokens;
-            this.aiGeneratedGalaxyMap.tokens.totalOutputTokens += outputTokens;
-            this.aiGeneratedGalaxyMap.tokens.totalTokens += totalTokens;
-          }
-
+          // Use the accumulateTokens method for consistent token accumulation
+          this.aiGeneratedGalaxyMap.tokens = this.accumulateTokens(response.tokenUsage);
           this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
         }
       } catch (error) {
@@ -2090,12 +2107,9 @@ export default {
 
             // Update token usage from mission instructions generation
             if (missionInstructions.tokenUsage) {
-              this.aiGeneratedGalaxyMap.tokens.totalInputTokens +=
-                missionInstructions.tokenUsage.input_tokens || 0;
-              this.aiGeneratedGalaxyMap.tokens.totalOutputTokens +=
-                missionInstructions.tokenUsage.output_tokens || 0;
-              this.aiGeneratedGalaxyMap.tokens.totalTokens +=
-                missionInstructions.tokenUsage.total_tokens || 0;
+              this.aiGeneratedGalaxyMap.tokens = this.accumulateTokens(
+                missionInstructions.tokenUsage,
+              );
             }
 
             // Update the planet with mission instructions
@@ -2813,16 +2827,18 @@ export default {
      */
     updateTokensFromUsage(usage) {
       if (!usage) return;
-      if (!this.aiGeneratedGalaxyMap.tokens) {
-        this.aiGeneratedGalaxyMap.tokens = {
-          totalInputTokens: 0,
-          totalOutputTokens: 0,
-          totalTokens: 0,
-        };
-      }
-      this.aiGeneratedGalaxyMap.tokens.totalInputTokens += usage.input_tokens || 0;
-      this.aiGeneratedGalaxyMap.tokens.totalOutputTokens += usage.output_tokens || 0;
-      this.aiGeneratedGalaxyMap.tokens.totalTokens += usage.total_tokens || 0;
+
+      // Convert old format to new format for consistency
+      const newTokenUsage = {
+        totalInputTokens: usage.input_tokens || 0,
+        totalOutputTokens: usage.output_tokens || 0,
+        totalTokens: usage.total_tokens || 0,
+        combinedEstimatedCost: 0, // Not available in old format
+        modelsUsed: [], // Not available in old format
+      };
+
+      // Use the accumulateTokens method for consistent token accumulation
+      this.aiGeneratedGalaxyMap.tokens = this.accumulateTokens(newTokenUsage);
     },
 
     /**

@@ -7,7 +7,7 @@ import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { StarsAndPlanetsResponseSchema, MissionInstructionsV2Schema } from "./schemas.js";
 import functions from "firebase-functions";
-import { createModelTokenUsage, createCombinedTokenUsage, type OpenAIModel } from "./lib/utils.js";
+import { createModelTokenUsage, createCombinedTokenUsage } from "./lib/utils.js";
 // import { Latitude } from "@latitude-data/sdk";
 
 // Initialize OpenAI client
@@ -127,7 +127,10 @@ const MissionInstructionsSystemPrompt =
   -- tasks[]: Each task is one clear, discrete action (e.g., “Open the Arduino IDE” rather than “Install and configure the Arduino IDE and set up your first sketch”).
   - Keep tasks sequential and build toward the mission outcome.
   - Make instructions engaging and written for the target audience’s skill level.
-  - Include any resources, tools, or prerequisites needed.
+  - When a new concept, term, or tool is introduced for the first time in this Galaxy Map, provide a short, clear teaching snippet (1–3 sentences) directly in the relevant step before the learner takes action.
+  - Keep the teaching lightweight and practical — enough for the learner to understand what it is and why it matters right now.
+  - Avoid deep theory unless required for success in this mission — give just enough to proceed confidently.
+  - If the learner has seen the concept in a previous mission, do not re-teach it — instead, briefly remind them they’ve encountered it before.
   - **Summary**: A brief summary of what was accomplished and next steps (e.g.Congratulations! You have successfully installed WordPress via cPanel and can now begin customizing your site with BeTheme in the next mission.)
     ` +
   // - **Web Search**: Use web search tool to find YouTube videos that are relevant to the Instructions.
@@ -148,7 +151,6 @@ If this is a REFINEMENT request:
   `
   ### **Step 3: Follow These Mission Design Principles**
   - Keep each mission **small and focused** — a single, motivating win.
-  - Ensure instructions are **specific, actionable, and sequential**.
   - Avoid grouping unrelated actions in one task — split them where needed.
   - Use **checkpoints** where learners can confirm they’re on track.
   - Use a **supportive and encouraging tone** that reinforces progress.
@@ -179,8 +181,147 @@ Before finalizing, verify:
 - ✅ All instructions are actionable, clear, and completable in one sitting.
 - ✅ No unrelated or premature topics are introduced.
 - ✅ The difficulty is appropriate for the audience.
-- ✅ Prerequisites and resources are listed.
 - ✅ The mission builds logically from the previous one and sets up the next without overlapping.
+`;
+
+const StarsAndPlanetsAndInstructionsSystemPrompt = `
+You are a learning journey designer for a platform called Galaxy Maps, where a learner’s path is visualised as:
+
+Stars → major milestones / skill phases
+
+Missions → small, focused wins within a Star (each Mission is completable in 15–60 min)
+
+Mission Instructions → step-by-step guidance for completing a Mission
+
+Your job is to design the whole journey in one go — from Stars down to Mission Instructions — so the learner experiences constant momentum, motivation, and small wins while also learning just enough concepts to proceed confidently.
+
+Step 1: Clarify the Goal
+Before designing the journey, make sure you clearly understand:
+
+Audience – Who is this for? (Self / others, age, skill level, background)
+
+Intended Outcome – What should the learner be able to do by the end?
+
+Starting Point – What do they already know or have?
+
+Journey Depth – Is this a deep dive or a fast track?
+
+If unclear, ask specific follow-up questions and stop until clarified.
+Respond in this format:
+
+json
+Copy
+Edit
+{
+  "status": "clarification_needed",
+  "questions": ["Clarifying question 1", "Clarifying question 2"]
+}
+Step 2: Break the Journey into Stars
+Each Star = one milestone only (no mixing unrelated topics).
+
+Order Stars logically so they build on each other.
+
+Scope each Star so it can be completed in days, not weeks.
+
+Step 3: Break Stars into Missions
+For each Star:
+
+Split it into Missions = atomic wins achievable in 15–60 min.
+
+If a step feels too big, add more Missions to keep them small.
+
+Every Mission must be required to complete its Star.
+
+Step 4: Write Mission Instructions
+For each Mission, include:
+
+Intro – Motivating setup:
+
+Explain what they’re about to do and why it matters.
+
+Show how it connects to the Star’s bigger goal and the overall journey.
+
+Steps – Sequential guidance:
+
+Each Step = a logical stage toward the Mission goal.
+
+Each Step contains tasks[] = one discrete, actionable action (no multi-action tasks).
+
+If the Step introduces a new concept, term, or tool for the first time in this Galaxy Map:
+
+Include a micro-teach (1–3 sentences) before the action:
+
+What is it?
+
+Why are we using it right now?
+
+Keep explanations short, clear, and directly tied to the action.
+
+If the concept was already taught earlier in the journey, only give a brief reminder.
+
+Each Step ends with a checkpoint: a short, motivating progress sentence (“Now your broker is live, ready to link devices for the first time.”).
+
+Outro – Motivating recap:
+
+Celebrate what was achieved.
+
+Highlight what this unlocks for the next Mission.
+
+Step 5: Motivation & Flow Rules
+Missions are tight and scope-matched — no content from future Missions.
+
+Learners should feel a win every few minutes.
+
+Keep tone clear, supportive, and confidence-building.
+
+Teach only what’s needed now to succeed — no deep theory unless essential.
+
+If you find a Mission is too big, split it now and adjust the Star structure before output.
+
+Step 6: Output Format
+json
+Copy
+Edit
+{
+  "status": "journey_ready",
+  "title": "Journey Title",
+  "description": "Brief description of the overall journey",
+  "stars": [
+    {
+      "title": "1: Star Title",
+      "description": "Brief description of this milestone",
+      "missions": [
+        {
+          "title": "1.1: Mission Title",
+          "description": "Brief description of this win",
+          "missionInstructions": {
+            "intro": "Motivating intro explaining what they’ll do, why it matters, and how it contributes to the overall journey",
+            "steps": [
+              {
+                "title": "Step 1: (Step Name)",
+                "tasks": [
+                  { "taskContent": "(One discrete, actionable task in markdown format. Include micro-teach here if a new concept is introduced.)" }
+                ],
+                "checkpoint": "Motivating progress statement after this step"
+              }
+            ],
+            "outro": "Motivating recap of what was achieved and what’s next"
+          }
+        }
+      ]
+    }
+  ]
+}
+Step 7: Validation Before Output
+✅ Each Star = one milestone only
+
+✅ Each Mission = atomic 15–60 min win
+
+✅ Mission Instructions contain intro, steps with tasks, and outro
+
+✅ Micro-teach is included for first-time concepts
+
+✅ No overload — split if needed before finalising
 `;
 
 /**
@@ -232,44 +373,44 @@ function convertGalaxyMapToMarkdown(galaxyMap: {
  * @param missionInstructions - The mission instructions object
  * @returns A markdown string representation of the mission instructions
  */
-function convertMissionInstructionsToMarkdown(missionInstructions: {
-  title: string;
-  description: string;
-  instructions: Array<{
-    title: string;
-    tasks: Array<{
-      taskContent: string;
-    }>;
-  }>;
-  summary: string;
-}): string {
-  if (!missionInstructions || !missionInstructions.instructions) {
-    return "";
-  }
+// function convertMissionInstructionsToMarkdown(missionInstructions: {
+//   title: string;
+//   description: string;
+//   instructions: Array<{
+//     title: string;
+//     tasks: Array<{
+//       taskContent: string;
+//     }>;
+//   }>;
+//   summary: string;
+// }): string {
+//   if (!missionInstructions || !missionInstructions.instructions) {
+//     return "";
+//   }
 
-  let markdown = `# ${missionInstructions.title}\n\n`;
-  markdown += `${missionInstructions.description}\n\n`;
+//   let markdown = `# ${missionInstructions.title}\n\n`;
+//   markdown += `${missionInstructions.description}\n\n`;
 
-  markdown += "## Mission Instructions\n\n";
+//   markdown += "## Mission Instructions\n\n";
 
-  for (let i = 0; i < missionInstructions.instructions.length; i++) {
-    const instruction = missionInstructions.instructions[i];
-    markdown += `### ${instruction.title}\n\n`;
+//   for (let i = 0; i < missionInstructions.instructions.length; i++) {
+//     const instruction = missionInstructions.instructions[i];
+//     markdown += `### ${instruction.title}\n\n`;
 
-    if (instruction.tasks && instruction.tasks.length > 0) {
-      for (let j = 0; j < instruction.tasks.length; j++) {
-        const task = instruction.tasks[j];
-        markdown += `${j + 1}. ${task.taskContent}\n`;
-      }
-      markdown += "\n";
-    }
-  }
+//     if (instruction.tasks && instruction.tasks.length > 0) {
+//       for (let j = 0; j < instruction.tasks.length; j++) {
+//         const task = instruction.tasks[j];
+//         markdown += `${j + 1}. ${task.taskContent}\n`;
+//       }
+//       markdown += "\n";
+//     }
+//   }
 
-  markdown += "## Summary\n\n";
-  markdown += `${missionInstructions.summary}\n\n`;
+//   markdown += "## Summary\n\n";
+//   markdown += `${missionInstructions.summary}\n\n`;
 
-  return markdown;
-}
+//   return markdown;
+// }
 
 // Generate galaxy map with AI
 export const generateGalaxyMapHttpsEndpoint = runWith({
@@ -480,97 +621,99 @@ export const generateInstructionsForMissionHttpsEndpoint = runWith({
         { role: "system", content: MissionInstructionsSystemPrompt },
         { role: "user", content: userMessage },
       ],
-      tools: [
-        {
-          type: "web_search_preview",
-        },
-      ],
+      // tools: [
+      //   {
+      //     type: "web_search_preview",
+      //   },
+      // ],
       text: {
         format: zodTextFormat(MissionInstructionsV2Schema, "mission_instructions_response"),
       },
     });
 
-    logger.info("OpenAI API call completed successfully");
+    logger.info("OpenAI API call completed successfully", {
+      response: aiResponse,
+    });
 
     // Get the parsed and validated response (already handled by zodTextFormat)
     const parsedResponse = aiResponse.output_parsed;
 
     // call youtube video web search tool
-    let youtubeSearchResults = null;
-    let youtubeModelUsage: any = null;
+    // let youtubeSearchResults = null;
+    // let youtubeModelUsage: any = null;
 
-    if (parsedResponse) {
-      try {
-        logger.info("Calling YouTube video search");
-        const markdownInstructions = convertMissionInstructionsToMarkdown(parsedResponse);
+    // if (parsedResponse) {
+    //   try {
+    //     logger.info("Calling YouTube video search");
+    //     const markdownInstructions = convertMissionInstructionsToMarkdown(parsedResponse);
 
-        // Call OpenAI API with web search tool for YouTube videos
-        const youtubeSearchResponse = await openai.responses.parse({
-          model: "gpt-5-mini" as OpenAIModel,
-          input: [
-            {
-              role: "user",
-              content: `Search for relevant YouTube videos that would help with this mission: ${markdownInstructions}. 
-              
-              Please find educational, tutorial, or instructional videos that are directly related to the mission content. 
-              Focus on high-quality videos with the most views and recent uploads that would be most helpful for learning.
-              
-              For each video, provide:
-              - A clear, descriptive title
-              - The full YouTube URL
-              - A brief description explaining why this video is relevant to the mission
-              - Optional relevance note explaining the connection to the mission content
-              
-              Return the results in a structured format with an array of videos and an optional search summary.`,
-            },
-          ],
-          tools: [
-            {
-              type: "web_search_preview",
-            },
-          ],
-        });
+    //     // Call OpenAI API with web search tool for YouTube videos
+    //     const youtubeSearchResponse = await openai.responses.parse({
+    //       model: "gpt-5-mini" as OpenAIModel,
+    //       input: [
+    //         {
+    //           role: "user",
+    //           content: `Search for relevant YouTube videos that would help with this mission: ${markdownInstructions}.
 
-        // Store YouTube model usage
-        youtubeModelUsage = createModelTokenUsage("gpt-5-mini", youtubeSearchResponse?.usage || {});
+    //           Please find educational, tutorial, or instructional videos that are directly related to the mission content.
+    //           Focus on high-quality videos with the most views and recent uploads that would be most helpful for learning.
 
-        logger.info("YouTube search completed successfully", {
-          youtubeSearchResponse,
-        });
+    //           For each video, provide:
+    //           - A clear, descriptive title
+    //           - The full YouTube URL
+    //           - A brief description explaining why this video is relevant to the mission
+    //           - Optional relevance note explaining the connection to the mission content
 
-        // Parse the output_text to extract JSON object
-        if (youtubeSearchResponse.output_text) {
-          try {
-            // Look for JSON array in the text
-            const jsonMatch = youtubeSearchResponse.output_text.match(
-              /```json\s*(\[[\s\S]*?\])\s*```/,
-            );
-            if (jsonMatch && jsonMatch[1]) {
-              const videosData = JSON.parse(jsonMatch[1]);
-              youtubeSearchResults = {
-                videos: videosData.map((video: any) => ({
-                  title: video.title || "",
-                  url: video.url || "",
-                  description: video.description || "",
-                  relevance: video.relevance || undefined,
-                })),
-                searchSummary: undefined,
-              };
-              logger.info("Successfully parsed YouTube videos from JSON", {
-                videosCount: youtubeSearchResults.videos.length,
-              });
-            } else {
-              logger.warn("No JSON array found in YouTube search response");
-            }
-          } catch (parseError) {
-            logger.error("Error parsing YouTube search JSON", parseError);
-          }
-        }
-      } catch (youtubeError) {
-        logger.error("Error in YouTube video search", youtubeError);
-        // Don't fail the entire request if YouTube search fails
-      }
-    }
+    //           Return the results in a structured format with an array of videos and an optional search summary.`,
+    //         },
+    //       ],
+    //       tools: [
+    //         {
+    //           type: "web_search_preview",
+    //         },
+    //       ],
+    //     });
+
+    //     // Store YouTube model usage
+    //     youtubeModelUsage = createModelTokenUsage("gpt-5-mini", youtubeSearchResponse?.usage || {});
+
+    //     logger.info("YouTube search completed successfully", {
+    //       youtubeSearchResponse,
+    //     });
+
+    //     // Parse the output_text to extract JSON object
+    //     if (youtubeSearchResponse.output_text) {
+    //       try {
+    //         // Look for JSON array in the text
+    //         const jsonMatch = youtubeSearchResponse.output_text.match(
+    //           /```json\s*(\[[\s\S]*?\])\s*```/,
+    //         );
+    //         if (jsonMatch && jsonMatch[1]) {
+    //           const videosData = JSON.parse(jsonMatch[1]);
+    //           youtubeSearchResults = {
+    //             videos: videosData.map((video: any) => ({
+    //               title: video.title || "",
+    //               url: video.url || "",
+    //               description: video.description || "",
+    //               relevance: video.relevance || undefined,
+    //             })),
+    //             searchSummary: undefined,
+    //           };
+    //           logger.info("Successfully parsed YouTube videos from JSON", {
+    //             videosCount: youtubeSearchResults.videos.length,
+    //           });
+    //         } else {
+    //           logger.warn("No JSON array found in YouTube search response");
+    //         }
+    //       } catch (parseError) {
+    //         logger.error("Error parsing YouTube search JSON", parseError);
+    //       }
+    //     }
+    //   } catch (youtubeError) {
+    //     logger.error("Error in YouTube video search", youtubeError);
+    //     // Don't fail the entire request if YouTube search fails
+    //   }
+    // }
 
     if (!parsedResponse) {
       throw new HttpsError("internal", "No response content from OpenAI");
@@ -579,16 +722,16 @@ export const generateInstructionsForMissionHttpsEndpoint = runWith({
     // Add YouTube search results to the response
     const responseWithVideos = {
       ...parsedResponse,
-      youtubeVideos: youtubeSearchResults,
+      // youtubeVideos: youtubeSearchResults,
     };
 
     // Calculate combined token usage from both API calls
     const missionModelUsage = createModelTokenUsage("gpt-5-mini", aiResponse.usage || {});
 
     const modelUsages = [missionModelUsage];
-    if (youtubeModelUsage) {
-      modelUsages.push(youtubeModelUsage);
-    }
+    // if (youtubeModelUsage) {
+    //   modelUsages.push(youtubeModelUsage);
+    // }
 
     const combinedTokenUsage = createCombinedTokenUsage(modelUsages);
 

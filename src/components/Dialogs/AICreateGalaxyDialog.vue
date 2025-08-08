@@ -116,7 +116,7 @@
           }}
         </p>
         <!-- Model breakdown -->
-        <div
+        <!-- <div
           v-if="
             aiGeneratedGalaxyMap.tokens &&
             aiGeneratedGalaxyMap.tokens.modelsUsed &&
@@ -134,7 +134,7 @@
             <span class="model-tokens"> {{ model.totalTokens.toLocaleString() }} tokens </span>
             <span class="model-cost">${{ model.estimatedCost.toFixed(5) }}</span>
           </div>
-        </div>
+        </div> -->
       </div>
     </div>
 
@@ -557,6 +557,60 @@ export default {
         totalCost: totalCost.toFixed(4),
       };
     },
+    // Helper method to accumulate tokens from multiple API calls
+    accumulateTokens(newTokenUsage) {
+      if (!newTokenUsage) return this.aiGeneratedGalaxyMap.tokens || {};
+
+      const currentTokens = this.aiGeneratedGalaxyMap.tokens || {};
+
+      // Initialize accumulated tokens structure
+      const accumulatedTokens = {
+        totalTokens: (currentTokens.totalTokens || 0) + (newTokenUsage.totalTokens || 0),
+        totalInputTokens:
+          (currentTokens.totalInputTokens || 0) + (newTokenUsage.totalInputTokens || 0),
+        totalOutputTokens:
+          (currentTokens.totalOutputTokens || 0) + (newTokenUsage.totalOutputTokens || 0),
+        combinedEstimatedCost:
+          (currentTokens.combinedEstimatedCost || 0) + (newTokenUsage.combinedEstimatedCost || 0),
+        modelsUsed: [],
+      };
+
+      // Merge models used from both current and new token usage
+      const allModels = new Map();
+
+      // Add current models
+      if (currentTokens.modelsUsed) {
+        currentTokens.modelsUsed.forEach((model) => {
+          allModels.set(model.model, {
+            model: model.model,
+            totalTokens: model.totalTokens || 0,
+            estimatedCost: model.estimatedCost || 0,
+          });
+        });
+      }
+
+      // Add new models (accumulate if same model exists)
+      if (newTokenUsage.modelsUsed) {
+        newTokenUsage.modelsUsed.forEach((model) => {
+          const existing = allModels.get(model.model);
+          if (existing) {
+            existing.totalTokens += model.totalTokens || 0;
+            existing.estimatedCost += model.estimatedCost || 0;
+          } else {
+            allModels.set(model.model, {
+              model: model.model,
+              totalTokens: model.totalTokens || 0,
+              estimatedCost: model.estimatedCost || 0,
+            });
+          }
+        });
+      }
+
+      accumulatedTokens.modelsUsed = Array.from(allModels.values());
+
+      return accumulatedTokens;
+    },
+
     // =========== Generate Galaxy Map with AI ===========
     async firstStep(flow = "human-help") {
       // Store the selected flow
@@ -619,7 +673,7 @@ export default {
 
           // add token data to the galaxy map
           this.aiGeneratedGalaxyMap = parsedResponse;
-          this.aiGeneratedGalaxyMap.tokens = aiResponse.tokenUsage;
+          this.aiGeneratedGalaxyMap.tokens = this.accumulateTokens(aiResponse.tokenUsage);
 
           // save a copy of the original galaxy map data for the history
           // Create a deep copy without history to avoid circular reference
@@ -654,6 +708,14 @@ export default {
           // It's clarification_needed - show questions
           console.log("Clarification needed questions:", parsedResponse.questions);
           this.aiGatheringContextQuestions = parsedResponse.questions;
+
+          // Store the token usage from the first API call even when clarification is needed
+          this.aiGeneratedGalaxyMap = {
+            status: "clarification_needed",
+            questions: parsedResponse.questions,
+          };
+          this.aiGeneratedGalaxyMap.tokens = this.accumulateTokens(aiResponse.tokenUsage);
+
           this.showSecondStepperStep = true;
           this.stepper = 2;
           const endTime = Date.now();
@@ -730,7 +792,7 @@ export default {
 
           // add token data to the galaxy map
           this.aiGeneratedGalaxyMap = parsedResponse;
-          this.aiGeneratedGalaxyMap.tokens = aiSecondResponse.tokenUsage;
+          this.aiGeneratedGalaxyMap.tokens = this.accumulateTokens(aiSecondResponse.tokenUsage);
 
           // save a copy of the original galaxy map data for the history
           // Create a deep copy without history to avoid circular reference
@@ -766,6 +828,10 @@ export default {
           console.log("Clarification needed questions:", parsedResponse.questions);
           this.aiGatheringContextQuestions = parsedResponse.questions;
           this.aiGatheringContextAnswers = [];
+
+          // Accumulate tokens from the second API call
+          this.aiGeneratedGalaxyMap.tokens = this.accumulateTokens(aiSecondResponse.tokenUsage);
+
           this.showSecondStepperStep = true;
           this.stepper = 2;
           // Set loading to false here since we're stopping to ask questions
@@ -1163,6 +1229,13 @@ export default {
               "missionInstructions.missionInstructions",
               missionInstructions.missionInstructions,
             );
+
+            // Accumulate tokens from mission generation
+            if (missionInstructions.tokenUsage) {
+              this.aiGeneratedGalaxyMap.tokens = this.accumulateTokens(
+                missionInstructions.tokenUsage,
+              );
+            }
 
             // Update the planet with mission instructions
             // The new format returns structured data, so we store it as-is
