@@ -41,9 +41,7 @@ export async function sendTeacherInviteEmail(email: string, displayName: string,
 
 Your Captain account has been created for ${APP_NAME}. 
 
-Please click this link to sign into your account and setup your profile
-
-${link}
+Please click this link to set your password and complete your account setup: ${link}
 
 If you have any issues please contact base@${DOMAIN}
 
@@ -67,13 +65,12 @@ export async function sendStudentInviteEmail(
   };
 
   mailOptions.subject = `Account created for ${APP_NAME}!`;
-  mailOptions.text = `Greetings, ${displayName || ""}.
+  // mailOptions.text = `Greetings, ${displayName || ""}.
+  mailOptions.text = `Greetings, Navigator
 
-Captain ${inviter}, has created you an account for ${APP_NAME}. 
+Captain ${inviter}, has created you a ${APP_NAME} account. 
 
-Please click this link to sign into your account and setup your profile
-
-${link}
+Please click this link to set your password and complete your account setup: ${link}
 
 If you have any issues please contact base@${DOMAIN}
 

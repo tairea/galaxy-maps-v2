@@ -764,9 +764,25 @@ export default {
             .doc(this.currentCourseId)
             .collection("map-nodes")
             .doc(node.id)
-            .set(node)
+            .update({
+              x: node.x,
+              y: node.y,
+            })
             .catch((error) => {
               console.error("Error writing node positions: ", error);
+            });
+
+          await db
+            .collection("courses")
+            .doc(this.currentCourseId)
+            .collection("topics")
+            .doc(node.id)
+            .update({
+              x: node.x,
+              y: node.y,
+            })
+            .catch((error) => {
+              console.error("Error writing node positions to topics: ", error);
             });
         } else {
           this.$emit("nodePositionsChangeSaved");

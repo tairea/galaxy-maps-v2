@@ -64,10 +64,13 @@ import {
 import { onUserStatusChangedOnUpdateTrigger } from "./presence.js";
 import {
   addAdminRoleHttpsEndpoint,
+  bulkImportStudentsHttpsEndpoint,
   createNewUserHttpsEndpoint,
   getPersonByEmailHttpsEndpoint,
   getPersonByPersonIdHttpsEndpoint,
   updatePersonByPersonIdHttpsEndpoint,
+  updateUserPasswordHttpsEndpoint,
+  resendInitialSetupLinkHttpsEndpoint,
 } from "./userManagement.js";
 import {
   downloadAndUploadImageHttpsEndpoint,
@@ -146,10 +149,13 @@ export { onUserStatusChangedOnUpdateTrigger as onUserStatusChanged };
 
 export {
   addAdminRoleHttpsEndpoint as addAdminRole,
+  bulkImportStudentsHttpsEndpoint as bulkImportStudents,
   createNewUserHttpsEndpoint as createNewUser,
   getPersonByEmailHttpsEndpoint as getPersonByEmail,
   getPersonByPersonIdHttpsEndpoint as getPersonByPersonId,
   updatePersonByPersonIdHttpsEndpoint as updatePersonByPersonId,
+  updateUserPasswordHttpsEndpoint as updateUserPassword,
+  resendInitialSetupLinkHttpsEndpoint as resendInitialSetupLink,
 };
 
 export {

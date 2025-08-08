@@ -94,6 +94,17 @@
           >
             Sign-in
           </v-btn>
+          <v-btn
+            color="baseAccent"
+            class="mr-4 mt-6"
+            @click="googleSignIn"
+            outlined
+            width="100%"
+            :loading="loadingGoogle"
+          >
+            <v-icon left class="mr-2">{{ mdiGoogle }}</v-icon>
+            Sign in with Google
+          </v-btn>
         </v-form>
 
         <router-link to="/register" class="overline mt-4" color="baseAccent--text"
@@ -114,8 +125,9 @@ import EmailSignIn from "@/components/Reused/EmailSignIn.vue";
 import useRootStore from "@/store/index";
 import firebase from "firebase/compat/app";
 import { mapActions, mapState } from "pinia";
-import { mdiEye, mdiEyeOff } from "@mdi/js";
+import { mdiEye, mdiEyeOff, mdiGoogle } from "@mdi/js";
 import { getFriendlyErrorMessage } from "@/lib/utils";
+import "firebase/compat/auth";
 
 export default {
   name: "LoginDialog",
@@ -134,6 +146,7 @@ export default {
   data: () => ({
     mdiEye,
     mdiEyeOff,
+    mdiGoogle,
     valid: true,
     email: "",
     password: "",
@@ -142,6 +155,7 @@ export default {
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
     ],
     loading: false,
+    loadingGoogle: false,
     isResetPassword: false,
     accountEmail: "",
     actionCode: "",
@@ -187,6 +201,28 @@ export default {
   },
   methods: {
     ...mapActions(useRootStore, ["setSnackbar"]),
+    async googleSignIn() {
+      try {
+        this.loadingGoogle = true;
+        const provider = new firebase.auth.GoogleAuthProvider();
+        await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        await firebase.auth().signInWithPopup(provider);
+        this.proceed();
+      } catch (error) {
+        if (error && error.code === "auth/popup-blocked") {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await firebase.auth().signInWithRedirect(provider);
+          return;
+        }
+        this.setSnackbar({
+          show: true,
+          text: getFriendlyErrorMessage(error.message || error.code),
+          color: "pink",
+        });
+      } finally {
+        this.loadingGoogle = false;
+      }
+    },
     redirect() {
       this.isVerifyEmail = false;
       firebase.auth().signOut();

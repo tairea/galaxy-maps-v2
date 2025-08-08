@@ -15,12 +15,48 @@
 
               <!-- TOKEN USAGE (if available) -->
               <p v-if="tokenUsage" class="token-usage overline mt-2">
-                Total Tokens: {{ tokenUsage.total_tokens?.toLocaleString() || "0" }}
+                Total Tokens:
+                {{
+                  tokenUsage.totalTokens
+                    ? tokenUsage.totalTokens.toLocaleString()
+                    : tokenUsage.total_tokens?.toLocaleString() || "0"
+                }}
               </p>
               <p v-if="tokenUsage" class="token-breakdown overline mt-2">
-                Input: {{ tokenUsage.input_tokens?.toLocaleString() || "0" }} | Output:
-                {{ tokenUsage.output_tokens?.toLocaleString() || "0" }}
+                Input:
+                {{
+                  tokenUsage.totalInputTokens
+                    ? tokenUsage.totalInputTokens.toLocaleString()
+                    : tokenUsage.input_tokens?.toLocaleString() || "0"
+                }}
+                | Output:
+                {{
+                  tokenUsage.totalOutputTokens
+                    ? tokenUsage.totalOutputTokens.toLocaleString()
+                    : tokenUsage.output_tokens?.toLocaleString() || "0"
+                }}
               </p>
+              <p v-if="tokenUsage" class="token-breakdown overline mt-2">
+                Est. cost: ${{
+                  tokenUsage.combinedEstimatedCost
+                    ? tokenUsage.combinedEstimatedCost.toFixed(5)
+                    : "0.00000"
+                }}
+              </p>
+              <!-- Model breakdown -->
+              <div
+                v-if="tokenUsage && tokenUsage.modelsUsed && tokenUsage.modelsUsed.length > 0"
+                class="model-breakdown mt-2"
+              >
+                <p class="model-breakdown-title overline">Models Used:</p>
+                <div v-for="model in tokenUsage.modelsUsed" :key="model.model" class="model-item">
+                  <span class="model-name">{{ model.model }}</span>
+                  <span class="model-tokens">
+                    {{ model.totalTokens.toLocaleString() }} tokens
+                  </span>
+                  <span class="model-cost">${{ model.estimatedCost.toFixed(5) }}</span>
+                </div>
+              </div>
             </div>
           </div>
           <!-- CREATE BUTTON -->
@@ -1270,6 +1306,47 @@ export default {
   opacity: 0.8;
   line-height: normal !important;
   margin: 5px !important;
+}
+
+.model-breakdown {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background-color: rgba(var(--v-background-base), 0.1);
+  border-radius: 4px;
+  border: 1px solid rgba(var(--v-missionAccent-base), 0.2);
+}
+
+.model-breakdown-title {
+  color: var(--v-galaxyAccent-base);
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.model-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.125rem 0;
+  font-size: 0.65rem;
+  color: var(--v-missionAccent-base);
+  opacity: 0.9;
+}
+
+.model-name {
+  font-weight: 600;
+  color: var(--v-galaxyAccent-base);
+}
+
+.model-tokens {
+  opacity: 0.7;
+}
+
+.model-cost {
+  font-weight: 600;
+  color: var(--v-missionAccent-base);
 }
 
 @keyframes fadeInOut {

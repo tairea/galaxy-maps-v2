@@ -1,6 +1,15 @@
 <template>
   <div class="login">
     <p class="gm-title">GALAXY MAPS</p>
+    <SetInitialPasswordDialog
+      ref="initialPassDialog"
+      v-if="showInitialPasswordDialog"
+      :dialog="showInitialPasswordDialog"
+      :userEmail="initialEmail"
+      :userId="initialUserId"
+      :token="initialSetupToken"
+      @passwordSet="onInitialPasswordSet"
+    />
     <EmailSignIn v-if="showEmailSignin" />
     <NewPassword
       v-else-if="isResetPassword"
@@ -59,6 +68,17 @@
         >
           Sign-in
         </v-btn>
+        <v-btn
+          color="baseAccent"
+          class="mr-4 mt-6"
+          @click="googleSignIn"
+          outlined
+          width="100%"
+          :loading="loadingGoogle"
+        >
+          <v-icon left class="mr-2">{{ mdiGoogle }}</v-icon>
+          Sign in with Google
+        </v-btn>
       </v-form>
 
       <router-link to="/register" class="overline mt-4" color="baseAccent--text"
@@ -75,10 +95,12 @@
 <script>
 import NewPassword from "@/components/Reused/NewPassword.vue";
 import EmailSignIn from "@/components/Reused/EmailSignIn.vue";
+import SetInitialPasswordDialog from "@/components/Dialogs/SetInitialPasswordDialog.vue";
 import useRootStore from "@/store/index";
 import firebase from "firebase/compat/app";
+import "firebase/compat/auth";
 import { mapActions, mapState } from "pinia";
-import { mdiEye, mdiEyeOff } from "@mdi/js";
+import { mdiEye, mdiEyeOff, mdiGoogle } from "@mdi/js";
 import { getFriendlyErrorMessage } from "@/lib/utils";
 
 export default {
@@ -86,10 +108,12 @@ export default {
   components: {
     NewPassword,
     EmailSignIn,
+    SetInitialPasswordDialog,
   },
   data: () => ({
     mdiEye,
     mdiEyeOff,
+    mdiGoogle,
     valid: true,
     email: "",
     password: "",
@@ -98,57 +122,118 @@ export default {
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
     ],
     loading: false,
+    loadingGoogle: false,
     isResetPassword: false,
     accountEmail: "",
     actionCode: "",
     isVerifyEmail: false,
     showEmailSignin: false,
+    showInitialPasswordDialog: false,
+    initialEmail: "",
+    initialUserId: "",
+    initialSetupToken: "",
     hide: String,
   }),
   mounted() {
-    // Get the email action to complete.
-    var mode = this.$route.query.mode || null;
-    var actionCode = this.$route.query.oobCode;
-    var auth = firebase.auth();
-    console.log("route: ", this.$route);
-
-    console.log("mode: ", mode);
-    // Handle the user management action.
-    switch (mode) {
-      case "resetPassword":
-        // Display reset password handler and UI.
-        this.handleResetPassword(auth, actionCode);
-        break;
-      case "recoverEmail":
-        // Display email recovery handler and UI.
-        this.handleRecoverEmail(auth, actionCode);
-        break;
-      case "verifyEmail":
-        // Display email verification handler and UI.
-        this.handleVerifyEmail(auth, actionCode);
-        break;
-      case "signIn":
-        if (this.$route.fullPath.includes("email_signin")) {
-          console.log("show me the signin component");
-          this.showEmailSignin = true;
-        }
-        break;
-      default:
-      // Error: invalid mode.
-    }
+    this.initFromQuery();
+  },
+  watch: {
+    "$route.query.mode"() {
+      this.initFromQuery();
+    },
   },
   computed: {
     ...mapState(useRootStore, ["person", "user"]),
   },
   methods: {
     ...mapActions(useRootStore, ["setSnackbar"]),
+    initFromQuery() {
+      const mode = this.$route.query.mode || null;
+      const actionCode = this.$route.query.oobCode;
+      const auth = firebase.auth();
+      // console logs for debugging
+      console.log("Login initFromQuery mode:", mode);
+
+      switch (mode) {
+        case "resetPassword":
+          this.handleResetPassword(auth, actionCode);
+          break;
+        case "recoverEmail":
+          this.handleRecoverEmail(auth, actionCode);
+          break;
+        case "verifyEmail":
+          this.handleVerifyEmail(auth, actionCode);
+          break;
+        case "signIn":
+          if (this.$route.fullPath.includes("email_signin")) {
+            this.showEmailSignin = true;
+          }
+          break;
+        case "initialPassword":
+          this.initialEmail = this.$route.query.email || "";
+          this.initialUserId = this.$route.query.userId || "";
+          this.initialSetupToken = this.$route.query.token || "";
+          this.showInitialPasswordDialog = Boolean(this.initialEmail && this.initialUserId);
+          this.$nextTick(() => {
+            // force-open fallback
+            const ref = this.$refs.initialPassDialog;
+            if (ref && this.showInitialPasswordDialog) {
+              try {
+                // if child guards prop, it may still open since v-dialog binds to prop
+                // this is a fallback if needed
+                // eslint-disable-next-line no-prototype-builtins
+                if (
+                  ref &&
+                  ref.$props &&
+                  ref.$props.hasOwnProperty("dialog") &&
+                  !ref.$props.dialog
+                ) {
+                  ref.$props.dialog = true; // best-effort
+                }
+              } catch (e) {}
+            }
+          });
+          break;
+        default:
+          break;
+      }
+    },
+    onInitialPasswordSet() {
+      this.showInitialPasswordDialog = false;
+      this.setSnackbar({
+        show: true,
+        text: "Password set successfully! You can now log in.",
+        color: "baseAccent",
+      });
+    },
+    async googleSignIn() {
+      try {
+        this.loadingGoogle = true;
+        const provider = new firebase.auth.GoogleAuthProvider();
+        await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        await firebase.auth().signInWithPopup(provider);
+        this.proceed();
+      } catch (error) {
+        if (error && error.code === "auth/popup-blocked") {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await firebase.auth().signInWithRedirect(provider);
+          return;
+        }
+        this.setSnackbar({
+          show: true,
+          text: getFriendlyErrorMessage(error.code || "auth/error"),
+          color: "pink",
+        });
+      } finally {
+        this.loadingGoogle = false;
+      }
+    },
     redirect() {
       this.isVerifyEmail = false;
       firebase.auth().signOut();
       this.$router.push("login");
     },
     handleResetPassword(auth, actionCode) {
-      // Verify the password reset code is valid.
       auth
         .verifyPasswordResetCode(actionCode)
         .then((email) => {
@@ -157,7 +242,6 @@ export default {
           this.actionCode = actionCode;
         })
         .catch((error) => {
-          // Invalid or expired action code. Ask user to try to reset the password
           this.setSnackbar({
             show: true,
             text: getFriendlyErrorMessage(error.code),
@@ -168,18 +252,13 @@ export default {
     handleRecoverEmail(auth, actionCode) {
       console.log("handle recover email");
       var restoredEmail = null;
-      // Confirm the action code is valid.
       auth
         .checkActionCode(actionCode)
         .then((info) => {
-          // Get the restored email address.
           restoredEmail = info["data"]["email"];
-
-          // Revert to the old email.
           return auth.applyActionCode(actionCode);
         })
         .then(() => {
-          // Account email reverted to restoredEmail
           auth
             .sendPasswordResetEmail(restoredEmail)
             .then(() => {
@@ -190,10 +269,9 @@ export default {
               });
             })
             .catch((error) => {
-              // Error encountered while sending password reset code.
               this.setSnackbar({
                 show: true,
-                text: getFriendlyErrorMessage(error.code),
+                text: getFriendlyErrorMessage(error.message || error.code),
                 color: "pink",
               });
             });
@@ -209,11 +287,9 @@ export default {
     handleVerifyEmail(auth, actionCode) {
       console.log("handle verify email");
       this.isVerifyEmail = true;
-      // Try to apply the email verification code.
       auth
         .applyActionCode(actionCode)
         .then((resp) => {
-          // Email address has been verified.
           this.setSnackbar({
             show: true,
             text: "Email successfully verified",
@@ -221,7 +297,6 @@ export default {
           });
         })
         .catch((error) => {
-          // Code is invalid or expired. Ask the user to verify their email address
           this.setSnackbar({
             show: true,
             text: getFriendlyErrorMessage(error.code),
@@ -237,18 +312,12 @@ export default {
         .auth()
         .setPersistence(firebase.auth.Auth.Persistence.LOCAL)
         .then(() => {
-          // New sign-in will be persisted with session persistence.
           return firebase.auth().signInWithEmailAndPassword(this.email, this.password);
         })
         .then(() => {
           this.proceed();
         })
         .catch((error) => {
-          console.log("error: ", error);
-          console.log("error message: ", error.message);
-          console.log("error code: ", error.code);
-
-          // improved user friendly error handling
           this.setSnackbar({
             show: true,
             text: getFriendlyErrorMessage(error.code),
@@ -259,22 +328,16 @@ export default {
     },
     proceed() {
       if (!this.user?.data?.id || !this.person?.id) {
-        console.log("Login: proceeding =============== timeout");
         return setTimeout(() => {
           this.proceed();
         }, 500);
       }
 
       if (!this.user.data.verified) {
-        console.log("Login: proceeding =============== not verified");
         var actionCodeSettings = {
-          // TODO: Update to galaxymaps.io on deployment
-          // url: "https://galaxymaps.io/login",
           url: window.location.origin + "/login",
           handleCodeInApp: true,
         };
-
-        // send email verification link
         firebase.auth().currentUser.sendEmailVerification(actionCodeSettings);
         this.loading = false;
         this.setSnackbar({
@@ -284,7 +347,6 @@ export default {
         });
         throw new Error("Please check your emails to verify your account");
       } else {
-        console.log("Login: proceeding =============== else push '/'");
         this.$router.push("/");
       }
     },
@@ -292,7 +354,6 @@ export default {
       this.$refs.form.validate();
     },
     resetPassword() {
-      console.log("sending reset email password");
       firebase
         .auth()
         .sendPasswordResetEmail(this.email)
@@ -311,7 +372,6 @@ export default {
           });
         });
     },
-    // hack delay to wait for person to load before routing
     delay(ms) {
       return new Promise((res) => setTimeout(res, ms));
     },

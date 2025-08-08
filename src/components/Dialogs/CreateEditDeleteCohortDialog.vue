@@ -505,8 +505,8 @@ export default {
       if (this.cohort.teachers.length) {
         for (const teacher of this.cohort.teachers) {
           const profile = this.people.find((person) => teacher === person.id);
-          this.sendNewCohortEmail(profile);
           console.log("email send to:", profile.email, " about new cohort");
+          this.sendNewCohortEmail(profile);
         }
       }
     },

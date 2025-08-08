@@ -7,6 +7,7 @@ import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { StarsAndPlanetsResponseSchema, MissionInstructionsV2Schema } from "./schemas.js";
 import functions from "firebase-functions";
+import { createModelTokenUsage, createCombinedTokenUsage, type OpenAIModel } from "./lib/utils.js";
 // import { Latitude } from "@latitude-data/sdk";
 
 // Initialize OpenAI client
@@ -44,12 +45,11 @@ If clarification is needed, respond in this format:
 }
 
 ### **Step 2: Design the Roadmap**
-Once the goal is clear, break the journey into a logical sequence of:
+Once the goal is clear, break the journey into:
 
-Stars → major phases or **themes** needed to successfully complete the journey
+Stars → major milestones or capabilities (one per Star)
 
-Planets → key **tasks** that must be completed within each Star
-
+Planets → small, actionable tasks needed to complete that Star
 
 Respond in this format:
 
@@ -59,11 +59,11 @@ Respond in this format:
   "description": "Brief description of the overall journey",
   "stars": [
     {
-      "title": "1: Title (Theme Name)",
-      "description": "Brief description of this theme",
+      "title": "1: Title (Milestone Name)",
+      "description": "Brief description of this milestone",
       "planets": [
         {
-          "title": "1.1: Title (Task Name)",
+          "title": "1.1: Title (Small win task)",
           "description": "Brief description of this task",
         },
         ...
@@ -72,69 +72,71 @@ Respond in this format:
     ...
   ]
 }
-### **Step 3: Follow These Roadmap Design Instructions**
-- Each Star is a major checkpoint or theme required to successfully complete the journey.
+### **Step 3: Roadmap Design Rules**
 
-- Each Planet under a Star is a key task or milestone that must be actioned to completed the Star and to move forward.
+**Stars (Milestones)**
+- One clear milestone only — do not group multiple unrelated tools, environments, or skills in the same Star.
+- Should be completable within a reasonable motivating timeframe (e.g., 1–2 days for an average learner).
+- End with a clear, visible outcome (something tangible the learner can say they’ve completed).
+- If a Star contains more than one unrelated capability, split it into separate Stars.
 
-- Each Planet must be:
+**Planets (Small Wins)**
+- Atomic actions — completable in 15–60 minutes.
+- Each Planet describes one clear, concrete action. If it requires multiple unrelated actions, split it into multiple Planets.
+- Must directly contribute to completing its Star — skip anything optional.
+- Written as clear, actionable to-dos, not topics.
+- Should create a sense of progress and momentum.
 
-  - Concrete: a specific action the user must take.
+**✅ Planet Validation Checklist**
+For each Planet, verify:
+- Can it be done in one short sitting?
+- Is it essential for the Star outcome?
+- Is it logically ordered after the previous Planet?
+- Does it clearly move the learner toward completing the Star?
 
-  - Essential: contributes directly to completing its Star.
-
-  - Sequential: logically follows from the previous step (where applicable).
-
-- Think of Stars as "mini goals" and Planets as "the exact steps needed to reach that mini goal."
-
-⚠️ Only include Planets that are required to complete the Star. If a Planet could be skipped without affecting the Star's outcome, it should not be included.
-
-✅ Planet Validation Checklist
-Before finalizing each Star's Planets, verify:
-- ✅ Are the Planets actionable (can someone do this)?
-- ✅ Are they required to achieve the Star outcome?
-- ✅ Are they logically ordered (progressive or scaffolded)?
-- ✅ Together, do they fully complete the Star?
-
-### **Step 4: Refine the Journey**
-
-After generating the journey, review it for:
-
-- ✅ Logical progression from one Star to the next.
-- ✅ Logical progression from one Planet to the next.
-- ✅ Clear, actionable Planets that contribute to each Star.
+### **Step 4: Refine**
+After generating the journey:
+- Break apart any Star that mixes more than one major skill or tool.
+- Break apart any Planet that contains more than one distinct action.
+- Prefer more but smaller steps over fewer, larger steps.
+- Maintain logical flow from one Star to the next and from one Planet to the next.
 `;
 
 // System prompt for mission instructions generation
 const MissionInstructionsSystemPrompt =
   `
-  You are a mission design assistant for a roadmap visualisation platform called Galaxy Maps. Your role is to create detailed, actionable mission instructions that help users achieve specific learning objectives.
+  You are a mission design assistant for a learning visualisation platform called Galaxy Maps. Your role is to create detailed, actionable mission instructions that help users achieve a specific, small Planet task within a larger learning journey.
 
   You will receive:
-  1. A description of what the specific mission should accomplish
-  2. Context about the overall roadmap (called a Galaxy Map) that the mission is part of
+  1. A description of what the specific mission (Planet) should accomplish
+  2. Context about the overall roadmap (Galaxy Map) that the mission is part of
   3. Optionally, existing mission instructions to refine based on user feedback
 
   ### **Step 1: Understand the Context**
-  - Review the overall roadmap structure to understand the broader context
-  - Identify where this specific mission fits within the roadmap
-  - Consider how this mission builds upon previous missions and prepares for future ones
-  - Identify where this specific mission fits within the overall roadmap
-  - Do not create instructions that do not pertain to this specific mission
-  - Stay focused on achieving this specific mission only. Do not create instruction that might be covered by future missions
+  - Review the roadmap to see where this mission fits.
+  - **Match the mission’s scope to the Planet’s size** — it should be a small, clear win that is completable in one sitting (15–60 minutes).
+  - Do **not** expand the mission beyond its Planet description.
+  - Only include steps essential for this mission — no sneak previews or partial completion of future missions.
+  - Consider how this mission builds on the one before it and prepares for the one after it, but keep content limited to the current scope.
 
   ### **Step 2: Create or Refine Mission Instructions**
   If this is a NEW mission request:
-  - Create comprehensive instructions that include:
-    - **Instructions**: Step-by-step actionable instructions
-    - **Summary**: A brief summary of what was accomplished and next steps (e.g.Congratulations! You have successfully installed WordPress via cPanel and can now begin customizing your site with BeTheme in the next mission.)
-  
-  If this is a REFINEMENT request:
-  - Review the current instructions and user feedback
-  - Make targeted improvements based on the feedback
-  - Preserve the overall structure and intent of the original instructions
-  - Only modify what needs to be changed based on the feedback
-  - Ensure the refined instructions maintain the same level of detail and clarity
+  - Provide a clear **title** and **description** matching the Planet.
+  - Create **instructions** that are structured as:
+  -- Step: A logical grouping of actions toward the mission goal.
+  -- tasks[]: Each task is one clear, discrete action (e.g., “Open the Arduino IDE” rather than “Install and configure the Arduino IDE and set up your first sketch”).
+  - Keep tasks sequential and build toward the mission outcome.
+  - Make instructions engaging and written for the target audience’s skill level.
+  - Include any resources, tools, or prerequisites needed.
+  - **Summary**: A brief summary of what was accomplished and next steps (e.g.Congratulations! You have successfully installed WordPress via cPanel and can now begin customizing your site with BeTheme in the next mission.)
+    ` +
+  // - **Web Search**: Use web search tool to find YouTube videos that are relevant to the Instructions.
+  `
+If this is a REFINEMENT request:
+  - Review the current instructions and user feedback.
+  - Improve only what needs to be changed.
+  - Maintain the original intent, tone, and detail level.
+  - Ensure the scope still matches the Planet.
   ` +
   // - **Description**: A brief overview of what the mission accomplishes
   // - **Learning Objectives**: Specific, measurable outcomes
@@ -144,13 +146,12 @@ const MissionInstructionsSystemPrompt =
   // - **Resources**: Recommended tools, materials, or references (optional)
 
   `
-
   ### **Step 3: Follow These Mission Design Principles**
-  - Each instruction should be specific and actionable
-  - Instructions should build progressively toward the mission
-  - Make instructions engaging and motivating
-  - When refining, maintain consistency with the original style and tone
-  - Focus on the specific feedback provided rather than rewriting everything
+  - Keep each mission **small and focused** — a single, motivating win.
+  - Ensure instructions are **specific, actionable, and sequential**.
+  - Avoid grouping unrelated actions in one task — split them where needed.
+  - Use **checkpoints** where learners can confirm they’re on track.
+  - Use a **supportive and encouraging tone** that reinforces progress.
 
   ### **Step 4: Output Format**
   - Respond in this format:
@@ -169,28 +170,18 @@ const MissionInstructionsSystemPrompt =
     },
     ...
     ],
-    "summary": "A summary at the end of the mission"
+    "summary": "Brief summary of what was accomplished and a motivating handover to the next mission"
   }
-  `;
-// - Include clear Mission success criteria where possible
-// - Consider different learning styles and provide multiple approaches when relevant
-// - Ensure the mission fits naturally within the broader learning journey
-// - Consider the difficulty progression from previous to future missions
-// - Include safety considerations if applicable
-// - Provide context for why each step matters
-// `;
 
-// ### **Step 4: Validate the Mission**
-// Before finalizing, verify:
-// - ✅ Are all instructions actionable and clear?
-// - ✅ Do the learning objectives align with the mission description?
-// - ✅ Does this mission fit well within the broader learning journey?
-// - ✅ Is the difficulty level appropriate for the target audience?
-// - ✅ Is the estimated duration realistic?
-// - ✅ Are prerequisites clearly identified?
-// - ✅ Are necessary resources listed?
-// - ✅ Does this mission build upon previous missions appropriately?
-// `;
+### **Step 5: Validate the Mission**
+Before finalizing, verify:
+- ✅ Every step directly matches the Planet’s title and description.
+- ✅ All instructions are actionable, clear, and completable in one sitting.
+- ✅ No unrelated or premature topics are introduced.
+- ✅ The difficulty is appropriate for the audience.
+- ✅ Prerequisites and resources are listed.
+- ✅ The mission builds logically from the previous one and sets up the next without overlapping.
+`;
 
 /**
  * Converts a galaxy map object to markdown format for AI context
@@ -236,6 +227,50 @@ function convertGalaxyMapToMarkdown(galaxyMap: {
   return markdown;
 }
 
+/**
+ * Converts mission instructions to a markdown string representation
+ * @param missionInstructions - The mission instructions object
+ * @returns A markdown string representation of the mission instructions
+ */
+function convertMissionInstructionsToMarkdown(missionInstructions: {
+  title: string;
+  description: string;
+  instructions: Array<{
+    title: string;
+    tasks: Array<{
+      taskContent: string;
+    }>;
+  }>;
+  summary: string;
+}): string {
+  if (!missionInstructions || !missionInstructions.instructions) {
+    return "";
+  }
+
+  let markdown = `# ${missionInstructions.title}\n\n`;
+  markdown += `${missionInstructions.description}\n\n`;
+
+  markdown += "## Mission Instructions\n\n";
+
+  for (let i = 0; i < missionInstructions.instructions.length; i++) {
+    const instruction = missionInstructions.instructions[i];
+    markdown += `### ${instruction.title}\n\n`;
+
+    if (instruction.tasks && instruction.tasks.length > 0) {
+      for (let j = 0; j < instruction.tasks.length; j++) {
+        const task = instruction.tasks[j];
+        markdown += `${j + 1}. ${task.taskContent}\n`;
+      }
+      markdown += "\n";
+    }
+  }
+
+  markdown += "## Summary\n\n";
+  markdown += `${missionInstructions.summary}\n\n`;
+
+  return markdown;
+}
+
 // Generate galaxy map with AI
 export const generateGalaxyMapHttpsEndpoint = runWith({
   timeoutSeconds: 540, // 9 minutes timeout
@@ -255,7 +290,7 @@ export const generateGalaxyMapHttpsEndpoint = runWith({
     // Call OpenAI API
     logger.info("Calling OpenAI API for galaxy map generation");
     const aiResponse = await openai.responses.parse({
-      model: "gpt-4o-mini",
+      model: "gpt-5-mini",
       input: [
         { role: "system", content: StarsAndPlanetsSystemPrompt },
         { role: "user", content: description },
@@ -357,15 +392,15 @@ export const generateGalaxyMapHttpsEndpoint = runWith({
       logger.info("No image added to galaxy map - conditions not met");
     }
 
+    // Calculate combined token usage from all API calls
+    const missionModelUsage = createModelTokenUsage("gpt-5-mini", aiResponse.usage || {});
+    const combinedTokenUsage = createCombinedTokenUsage([missionModelUsage]);
+
     // Return the validated response with token usage information
     return {
       success: true,
       galaxyMap: parsedResponse,
-      tokenUsage: {
-        input_tokens: aiResponse.usage?.input_tokens || 0,
-        output_tokens: aiResponse.usage?.output_tokens || 0,
-        total_tokens: aiResponse.usage?.total_tokens || 0,
-      },
+      tokenUsage: combinedTokenUsage,
       responseId: aiResponse.id,
     };
   } catch (error) {
@@ -440,10 +475,15 @@ export const generateInstructionsForMissionHttpsEndpoint = runWith({
     // Call OpenAI API
     logger.info("Calling OpenAI API for mission instructions generation");
     const aiResponse = await openai.responses.parse({
-      model: "gpt-4o-mini",
+      model: "gpt-5-mini",
       input: [
         { role: "system", content: MissionInstructionsSystemPrompt },
         { role: "user", content: userMessage },
+      ],
+      tools: [
+        {
+          type: "web_search_preview",
+        },
       ],
       text: {
         format: zodTextFormat(MissionInstructionsV2Schema, "mission_instructions_response"),
@@ -454,19 +494,109 @@ export const generateInstructionsForMissionHttpsEndpoint = runWith({
 
     // Get the parsed and validated response (already handled by zodTextFormat)
     const parsedResponse = aiResponse.output_parsed;
+
+    // call youtube video web search tool
+    let youtubeSearchResults = null;
+    let youtubeModelUsage: any = null;
+
+    if (parsedResponse) {
+      try {
+        logger.info("Calling YouTube video search");
+        const markdownInstructions = convertMissionInstructionsToMarkdown(parsedResponse);
+
+        // Call OpenAI API with web search tool for YouTube videos
+        const youtubeSearchResponse = await openai.responses.parse({
+          model: "gpt-5-mini" as OpenAIModel,
+          input: [
+            {
+              role: "user",
+              content: `Search for relevant YouTube videos that would help with this mission: ${markdownInstructions}. 
+              
+              Please find educational, tutorial, or instructional videos that are directly related to the mission content. 
+              Focus on high-quality videos with the most views and recent uploads that would be most helpful for learning.
+              
+              For each video, provide:
+              - A clear, descriptive title
+              - The full YouTube URL
+              - A brief description explaining why this video is relevant to the mission
+              - Optional relevance note explaining the connection to the mission content
+              
+              Return the results in a structured format with an array of videos and an optional search summary.`,
+            },
+          ],
+          tools: [
+            {
+              type: "web_search_preview",
+            },
+          ],
+        });
+
+        // Store YouTube model usage
+        youtubeModelUsage = createModelTokenUsage("gpt-5-mini", youtubeSearchResponse?.usage || {});
+
+        logger.info("YouTube search completed successfully", {
+          youtubeSearchResponse,
+        });
+
+        // Parse the output_text to extract JSON object
+        if (youtubeSearchResponse.output_text) {
+          try {
+            // Look for JSON array in the text
+            const jsonMatch = youtubeSearchResponse.output_text.match(
+              /```json\s*(\[[\s\S]*?\])\s*```/,
+            );
+            if (jsonMatch && jsonMatch[1]) {
+              const videosData = JSON.parse(jsonMatch[1]);
+              youtubeSearchResults = {
+                videos: videosData.map((video: any) => ({
+                  title: video.title || "",
+                  url: video.url || "",
+                  description: video.description || "",
+                  relevance: video.relevance || undefined,
+                })),
+                searchSummary: undefined,
+              };
+              logger.info("Successfully parsed YouTube videos from JSON", {
+                videosCount: youtubeSearchResults.videos.length,
+              });
+            } else {
+              logger.warn("No JSON array found in YouTube search response");
+            }
+          } catch (parseError) {
+            logger.error("Error parsing YouTube search JSON", parseError);
+          }
+        }
+      } catch (youtubeError) {
+        logger.error("Error in YouTube video search", youtubeError);
+        // Don't fail the entire request if YouTube search fails
+      }
+    }
+
     if (!parsedResponse) {
       throw new HttpsError("internal", "No response content from OpenAI");
     }
 
-    // Return the validated response with token usage information
+    // Add YouTube search results to the response
+    const responseWithVideos = {
+      ...parsedResponse,
+      youtubeVideos: youtubeSearchResults,
+    };
+
+    // Calculate combined token usage from both API calls
+    const missionModelUsage = createModelTokenUsage("gpt-5-mini", aiResponse.usage || {});
+
+    const modelUsages = [missionModelUsage];
+    if (youtubeModelUsage) {
+      modelUsages.push(youtubeModelUsage);
+    }
+
+    const combinedTokenUsage = createCombinedTokenUsage(modelUsages);
+
+    // Return the validated response with combined token usage information
     return {
       success: true,
-      missionInstructions: parsedResponse,
-      tokenUsage: {
-        input_tokens: aiResponse.usage?.input_tokens || 0,
-        output_tokens: aiResponse.usage?.output_tokens || 0,
-        total_tokens: aiResponse.usage?.total_tokens || 0,
-      },
+      missionInstructions: responseWithVideos,
+      tokenUsage: combinedTokenUsage,
       responseId: aiResponse.id,
     };
   } catch (error) {
@@ -504,7 +634,7 @@ export const generateGalaxyMapWithClarificationHttpsEndpoint = runWith({
     // Call OpenAI API for second step
     logger.info("Calling OpenAI API for galaxy map generation with clarification");
     const aiResponse = await openai.responses.parse({
-      model: "gpt-4o-mini",
+      model: "gpt-5-mini",
       previous_response_id: previousResponseId,
       input: [{ role: "user", content: clarificationAnswers }],
       text: {
@@ -604,15 +734,15 @@ export const generateGalaxyMapWithClarificationHttpsEndpoint = runWith({
       logger.info("No image added to galaxy map - conditions not met");
     }
 
+    // Calculate combined token usage from all API calls
+    const missionModelUsage = createModelTokenUsage("gpt-5-mini", aiResponse.usage || {});
+    const combinedTokenUsage = createCombinedTokenUsage([missionModelUsage]);
+
     // Return the validated response with token usage information
     return {
       success: true,
       galaxyMap: parsedResponse,
-      tokenUsage: {
-        input_tokens: aiResponse.usage?.input_tokens || 0,
-        output_tokens: aiResponse.usage?.output_tokens || 0,
-        total_tokens: aiResponse.usage?.total_tokens || 0,
-      },
+      tokenUsage: combinedTokenUsage,
       responseId: aiResponse.id,
     };
   } catch (error) {
@@ -649,7 +779,7 @@ export const generateGalaxyMapAgainHttpsEndpoint = runWith({
     // Call OpenAI API with default prompt
     logger.info("Calling OpenAI API for galaxy map regeneration");
     const aiResponse = await openai.responses.parse({
-      model: "gpt-4o-mini",
+      model: "gpt-5-mini",
       previous_response_id: responseId,
       input: [{ role: "user", content: "i didnt like the result, please try again" }],
       text: {
@@ -668,15 +798,15 @@ export const generateGalaxyMapAgainHttpsEndpoint = runWith({
     // remove image from parsedResponse
     delete parsedResponse.image;
 
+    // Calculate combined token usage from all API calls
+    const missionModelUsage = createModelTokenUsage("gpt-5-mini", aiResponse.usage || {});
+    const combinedTokenUsage = createCombinedTokenUsage([missionModelUsage]);
+
     // Return the validated response with token usage information
     return {
       success: true,
       galaxyMap: parsedResponse,
-      tokenUsage: {
-        input_tokens: aiResponse.usage?.input_tokens || 0,
-        output_tokens: aiResponse.usage?.output_tokens || 0,
-        total_tokens: aiResponse.usage?.total_tokens || 0,
-      },
+      tokenUsage: combinedTokenUsage,
       responseId: aiResponse.id,
     };
   } catch (error) {

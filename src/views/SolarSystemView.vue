@@ -36,7 +36,7 @@
     <!--==== Main section ====-->
     <div id="main-section">
       <!-- loading spinner -->
-      <LoadingSpinner v-if="loading" text="loading solar system" />
+      <LoadingSpinner v-if="loading" text="loading star system" />
       <MissionsList
         v-if="!loading"
         :course="course"

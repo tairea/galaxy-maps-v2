@@ -76,8 +76,7 @@
                       </span>
                     </div>
                     <div class="treeview-description" v-if="item.description">
-                      <span v-if="item.type === 'instructions'" v-html="renderToHTML(item)"></span>
-                      <span v-else>{{ item.description }}</span>
+                      <span v-html="renderToHTML(item)"></span>
                     </div>
                   </div>
                 </template>
@@ -88,21 +87,54 @@
 
         <!-- TOKEN USAGE -->
         <p class="token-usage overline mt-2">
-          Total AI Tokens: {{ totalTokensUsed.toLocaleString() }}
-        </p>
-        <p class="token-breakdown overline mt-2">
-          Input: {{ totalInputTokens.toLocaleString() }} | Output:
-          {{ totalOutputTokens.toLocaleString() }}
-        </p>
-        <!-- gpt-4o-mini: 0.15 | 0.6 | gpt-4.1: 2 | 8 -->
-        <p class="token-breakdown overline mt-2">
-          Est. cost: ${{
-            (
-              (this.totalInputTokens / 1000000) * 2 +
-              (this.totalOutputTokens / 1000000) * 8
-            ).toFixed(5)
+          Total AI Tokens:
+          {{
+            aiGeneratedGalaxyMap.tokens
+              ? aiGeneratedGalaxyMap.tokens.totalTokens.toLocaleString()
+              : "0"
           }}
         </p>
+        <p class="token-breakdown overline mt-2">
+          Input:
+          {{
+            aiGeneratedGalaxyMap.tokens
+              ? aiGeneratedGalaxyMap.tokens.totalInputTokens.toLocaleString()
+              : "0"
+          }}
+          | Output:
+          {{
+            aiGeneratedGalaxyMap.tokens
+              ? aiGeneratedGalaxyMap.tokens.totalOutputTokens.toLocaleString()
+              : "0"
+          }}
+        </p>
+        <p class="token-breakdown overline mt-2">
+          Est. cost: ${{
+            aiGeneratedGalaxyMap.tokens
+              ? aiGeneratedGalaxyMap.tokens.combinedEstimatedCost.toFixed(5)
+              : "0.00000"
+          }}
+        </p>
+        <!-- Model breakdown -->
+        <div
+          v-if="
+            aiGeneratedGalaxyMap.tokens &&
+            aiGeneratedGalaxyMap.tokens.modelsUsed &&
+            aiGeneratedGalaxyMap.tokens.modelsUsed.length > 0
+          "
+          class="model-breakdown mt-2"
+        >
+          <p class="model-breakdown-title overline">Models Used:</p>
+          <div
+            v-for="model in aiGeneratedGalaxyMap.tokens.modelsUsed"
+            :key="model.model"
+            class="model-item"
+          >
+            <span class="model-name">{{ model.model }}</span>
+            <span class="model-tokens"> {{ model.totalTokens.toLocaleString() }} tokens </span>
+            <span class="model-cost">${{ model.estimatedCost.toFixed(5) }}</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -398,9 +430,6 @@ export default {
     aiGeneratedGalaxyMap: {
       stars: [],
     },
-    totalTokensUsed: 0,
-    totalInputTokens: 0,
-    totalOutputTokens: 0,
     transformedStarDetails: [],
     expandedNodes: [],
   }),
@@ -414,9 +443,6 @@ export default {
     },
     prefixedAnswers() {
       return this.aiGatheringContextAnswers.map((answer, index) => `${index + 1}) ${answer}`);
-    },
-    formattedTokenUsage() {
-      return this.totalTokensUsed.toLocaleString();
     },
   },
   watch: {
@@ -472,9 +498,6 @@ export default {
     ...mapActions(useRootStore, ["setCurrentCourseId", "setSnackbar", "setAiGalaxyEditData"]),
     closeDialog() {
       this.description = "";
-      this.totalTokensUsed = 0; // Reset token counter
-      this.totalInputTokens = 0; // Reset input token counter
-      this.totalOutputTokens = 0; // Reset output token counter
       this.aiGeneratedGalaxyMap = {}; // Reset galaxy map
       this.selectedFlow = null; // Reset selected flow
       this.selectedLayout = null; // Reset selected layout
@@ -504,9 +527,28 @@ export default {
       return `${minutes}m${seconds}s`;
     },
     calculateEstimatedCost() {
+      // Use the token usage from aiGeneratedGalaxyMap if available
+      if (
+        this.aiGeneratedGalaxyMap.tokens &&
+        this.aiGeneratedGalaxyMap.tokens.combinedEstimatedCost > 0
+      ) {
+        return {
+          inputCost: "0.0000", // Not calculated separately in new structure
+          outputCost: "0.0000", // Not calculated separately in new structure
+          totalCost: this.aiGeneratedGalaxyMap.tokens.combinedEstimatedCost.toFixed(4),
+        };
+      }
+
+      // Fallback for legacy structure
       // GPT-4o-mini pricing: $0.15 per 1M input tokens, $0.60 per 1M output tokens
-      const inputCost = (this.totalInputTokens / 1000000) * 0.15;
-      const outputCost = (this.totalOutputTokens / 1000000) * 0.6;
+      const inputTokens = this.aiGeneratedGalaxyMap.tokens
+        ? this.aiGeneratedGalaxyMap.tokens.totalInputTokens
+        : 0;
+      const outputTokens = this.aiGeneratedGalaxyMap.tokens
+        ? this.aiGeneratedGalaxyMap.tokens.totalOutputTokens
+        : 0;
+      const inputCost = (inputTokens / 1000000) * 0.15;
+      const outputCost = (outputTokens / 1000000) * 0.6;
       const totalCost = inputCost + outputCost;
 
       return {
@@ -550,11 +592,6 @@ export default {
 
         console.log("1st A.I. call: Stars and Planets generated ✅. A.I. Response:", aiResponse);
 
-        // Track token usage
-        this.trackTokenUsage({
-          usage: aiResponse.tokenUsage,
-        });
-
         // store the response id for the next ai call
         this.previousResponseId = aiResponse.responseId;
 
@@ -582,11 +619,7 @@ export default {
 
           // add token data to the galaxy map
           this.aiGeneratedGalaxyMap = parsedResponse;
-          this.aiGeneratedGalaxyMap.tokens = {
-            totalInputTokens: this.totalInputTokens,
-            totalOutputTokens: this.totalOutputTokens,
-            totalTokensUsed: this.totalTokensUsed,
-          };
+          this.aiGeneratedGalaxyMap.tokens = aiResponse.tokenUsage;
 
           // save a copy of the original galaxy map data for the history
           // Create a deep copy without history to avoid circular reference
@@ -679,11 +712,6 @@ export default {
           aiSecondResponse,
         );
 
-        // Track token usage
-        this.trackTokenUsage({
-          usage: aiSecondResponse.tokenUsage,
-        });
-
         this.previousResponseId = aiSecondResponse.responseId;
 
         // Get the parsed response (already validated by cloud function)
@@ -702,11 +730,7 @@ export default {
 
           // add token data to the galaxy map
           this.aiGeneratedGalaxyMap = parsedResponse;
-          this.aiGeneratedGalaxyMap.tokens = {
-            totalInputTokens: this.totalInputTokens,
-            totalOutputTokens: this.totalOutputTokens,
-            totalTokensUsed: this.totalTokensUsed,
-          };
+          this.aiGeneratedGalaxyMap.tokens = aiSecondResponse.tokenUsage;
 
           // save a copy of the original galaxy map data for the history
           // Create a deep copy without history to avoid circular reference
@@ -810,9 +834,19 @@ export default {
           `✅ Galaxy saving to DB completed in ${timeString} (${endTime - startTime}ms total)`,
         );
         const cost = this.calculateEstimatedCost();
-        console.log(`💰 Total tokens used: ${this.totalTokensUsed.toLocaleString()}`);
+        const totalTokens = this.aiGeneratedGalaxyMap.tokens
+          ? this.aiGeneratedGalaxyMap.tokens.totalTokens
+          : 0;
+        const totalInputTokens = this.aiGeneratedGalaxyMap.tokens
+          ? this.aiGeneratedGalaxyMap.tokens.totalInputTokens
+          : 0;
+        const totalOutputTokens = this.aiGeneratedGalaxyMap.tokens
+          ? this.aiGeneratedGalaxyMap.tokens.totalOutputTokens
+          : 0;
+
+        console.log(`💰 Total tokens used: ${totalTokens.toLocaleString()}`);
         console.log(
-          `📊 Token breakdown: Input: ${this.totalInputTokens.toLocaleString()}, Output: ${this.totalOutputTokens.toLocaleString()}`,
+          `📊 Token breakdown: Input: ${totalInputTokens.toLocaleString()}, Output: ${totalOutputTokens.toLocaleString()}`,
         );
         console.log(
           `💵 Estimated cost: $${cost.totalCost} (Input: $${cost.inputCost}, Output: $${cost.outputCost})`,
@@ -820,7 +854,7 @@ export default {
 
         this.setSnackbar({
           show: true,
-          text: `Galaxy created! Tokens: ${this.totalTokensUsed.toLocaleString()} | Cost: $${
+          text: `Galaxy created! Tokens: ${totalTokens.toLocaleString()} | Cost: $${
             cost.totalCost
           }`,
           color: "baseAccent",
@@ -929,23 +963,7 @@ export default {
       // Update expanded nodes when user manually expands/collapses
       this.expandedNodes = newValue;
     },
-    // =========== Token Usage Tracking ===========
-    trackTokenUsage(response) {
-      try {
-        if (response.usage) {
-          const inputTokens = response.usage.input_tokens || 0;
-          const outputTokens = response.usage.output_tokens || 0;
-          const totalTokens = response.usage.total_tokens || 0;
 
-          this.totalInputTokens += inputTokens;
-          this.totalOutputTokens += outputTokens;
-          this.totalTokensUsed += totalTokens;
-        }
-      } catch (error) {
-        console.warn("Error tracking token usage:", error);
-        // Continue execution even if token tracking fails
-      }
-    },
     showCreateOptions() {
       // Directly start human-help flow instead of showing options dialog
       this.selectedFlow = "human-help";
@@ -1053,9 +1071,19 @@ export default {
           `✅ Galaxy saving to DB completed in ${timeString} (${endTime - startTime}ms total)`,
         );
         const cost = this.calculateEstimatedCost();
-        console.log(`💰 Total tokens used: ${this.totalTokensUsed.toLocaleString()}`);
+        const totalTokens = this.aiGeneratedGalaxyMap.tokens
+          ? this.aiGeneratedGalaxyMap.tokens.totalTokens
+          : 0;
+        const totalInputTokens = this.aiGeneratedGalaxyMap.tokens
+          ? this.aiGeneratedGalaxyMap.tokens.totalInputTokens
+          : 0;
+        const totalOutputTokens = this.aiGeneratedGalaxyMap.tokens
+          ? this.aiGeneratedGalaxyMap.tokens.totalOutputTokens
+          : 0;
+
+        console.log(`💰 Total tokens used: ${totalTokens.toLocaleString()}`);
         console.log(
-          `📊 Token breakdown: Input: ${this.totalInputTokens.toLocaleString()}, Output: ${this.totalOutputTokens.toLocaleString()}`,
+          `📊 Token breakdown: Input: ${totalInputTokens.toLocaleString()}, Output: ${totalOutputTokens.toLocaleString()}`,
         );
         console.log(
           `💵 Estimated cost: $${cost.totalCost} (Input: $${cost.inputCost}, Output: $${cost.outputCost})`,
@@ -1063,7 +1091,7 @@ export default {
 
         this.setSnackbar({
           show: true,
-          text: `Galaxy created automatically! Tokens: ${this.totalTokensUsed.toLocaleString()} | Cost: $${
+          text: `Galaxy created automatically! Tokens: ${totalTokens.toLocaleString()} | Cost: $${
             cost.totalCost
           }`,
           color: "baseAccent",
@@ -1135,11 +1163,6 @@ export default {
               "missionInstructions.missionInstructions",
               missionInstructions.missionInstructions,
             );
-
-            // Track token usage from mission instructions generation
-            this.trackTokenUsage({
-              usage: missionInstructions.tokenUsage,
-            });
 
             // Update the planet with mission instructions
             // The new format returns structured data, so we store it as-is
@@ -1259,6 +1282,45 @@ export default {
     },
 
     /**
+     * Renders markdown using streaming-markdown library
+     * @param markdown - The markdown text to convert
+     * @returns HTML string
+     */
+    renderMarkdownWithStreaming(markdown) {
+      if (!markdown) return "";
+
+      try {
+        // Check if streaming-markdown is available
+        if (typeof smd !== "undefined" && smd.default_renderer && smd.parser) {
+          // Create a temporary div element to render into
+          const tempDiv = document.createElement("div");
+
+          // Create renderer and parser
+          const renderer = smd.default_renderer(tempDiv);
+          const parser = smd.parser(renderer);
+
+          // Write the markdown content
+          smd.parser_write(parser, markdown);
+
+          // End the stream
+          smd.parser_end(parser);
+
+          // Get the HTML content
+          const html = tempDiv.innerHTML;
+
+          return html;
+        } else {
+          // Fallback to plain text if streaming-markdown is not available
+          console.warn("streaming-markdown not available, returning plain text");
+          return markdown;
+        }
+      } catch (error) {
+        console.error("Error rendering markdown:", error);
+        return markdown; // Fallback to plain text
+      }
+    },
+
+    /**
      * Check if the content is structured mission instructions (JSON object)
      */
     isStructuredMissionInstructions(content) {
@@ -1283,7 +1345,7 @@ export default {
     },
 
     /**
-     * Renders content for any item, handling both structured mission instructions and markdown content
+     * Renders content for any item, handling structured mission instructions, markdown content, and HTML content
      */
     renderToHTML(item) {
       if (!item || !item.description) return "";
@@ -1301,12 +1363,78 @@ export default {
           return this.formatMissionInstructionsToHtml(item.description);
         }
 
-        // Otherwise, treat as plain text/markdown
-        return item.description;
+        // Check if content is already HTML
+        if (this.isHtmlContent(item.description)) {
+          return item.description;
+        }
+
+        // Check if content contains markdown syntax
+        if (this.containsMarkdown(item.description)) {
+          return this.renderMarkdownWithStreaming(item.description);
+        }
+
+        // For plain text content, escape HTML and return
+        return this.escapeHtml(item.description);
       } catch (error) {
         console.error("❌ Error rendering HTML for item:", error);
-        return item.description || "";
+        return this.escapeHtml(item.description || "");
       }
+    },
+
+    /**
+     * Detects if content is already HTML
+     * @param {string} content - The content to analyze
+     * @returns {boolean} - true if content contains HTML tags
+     */
+    isHtmlContent(content) {
+      if (!content || typeof content !== "string") return false;
+
+      // Check for common HTML tags
+      const htmlTagRegex = /<[^>]*>/;
+      return htmlTagRegex.test(content);
+    },
+
+    /**
+     * Detects if content contains markdown syntax
+     * @param {string} content - The content to analyze
+     * @returns {boolean} - true if content contains markdown syntax
+     */
+    containsMarkdown(content) {
+      if (!content || typeof content !== "string") return false;
+
+      // Check for common markdown patterns
+      const markdownPatterns = [
+        /^#{1,6}\s/, // Headers
+        /\*\*.*?\*\*/, // Bold
+        /\*.*?\*/, // Italic
+        /\[.*?\]\(.*?\)/, // Links
+        /!\[.*?\]\(.*?\)/, // Images
+        /^[-*+]\s/, // Unordered lists
+        /^\d+\.\s/, // Ordered lists
+        /`.*?`/, // Inline code
+        /```[\s\S]*?```/, // Code blocks
+        /^>\s/, // Blockquotes
+        /~~.*?~~/, // Strikethrough
+        /^---$/, // Horizontal rules
+      ];
+
+      return markdownPatterns.some((pattern) => pattern.test(content));
+    },
+
+    /**
+     * Escapes HTML characters to prevent XSS
+     * @param {string} text - The text to escape
+     * @returns {string} - The escaped text
+     */
+    escapeHtml(text) {
+      if (!text || typeof text !== "string") return "";
+
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
     },
   },
 };
@@ -1447,6 +1575,47 @@ export default {
   opacity: 0.8;
   line-height: normal !important;
   margin: 5px !important;
+}
+
+.model-breakdown {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background-color: rgba(var(--v-background-base), 0.1);
+  border-radius: 4px;
+  border: 1px solid rgba(var(--v-missionAccent-base), 0.2);
+}
+
+.model-breakdown-title {
+  color: var(--v-galaxyAccent-base);
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.model-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.125rem 0;
+  font-size: 0.65rem;
+  color: var(--v-missionAccent-base);
+  opacity: 0.9;
+}
+
+.model-name {
+  font-weight: 600;
+  color: var(--v-galaxyAccent-base);
+}
+
+.model-tokens {
+  opacity: 0.7;
+}
+
+.model-cost {
+  font-weight: 600;
+  color: var(--v-missionAccent-base);
 }
 
 @keyframes fadeInOut {

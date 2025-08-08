@@ -7,7 +7,7 @@ import {
   startGalaxyXAPIStatement,
   stopGalaxyXAPIStatement,
 } from "./veracityLRS.js";
-import { CourseToGalaxyMapSchema, type CourseToGalaxyMap } from "./schemas.js";
+import { type CourseToGalaxyMap } from "./schemas.js";
 
 // Get a course by courseId
 export const getCourseByCourseIdHttpsEndpoint = runWith({}).https.onCall(async (data, context) => {
@@ -2017,7 +2017,7 @@ async function saveGalaxyMap(
             .collection("courses")
             .doc(courseDocRef.id)
             .collection("map-edges")
-            .add({ from: previousNodeId, to: mapNodeDocRef.id, dashes: false });
+            .add({ from: previousNodeId, to: mapNodeDocRef.id, dashes: false, color: "#69a1e2" });
           console.log("✅ Edge document created with ID:", edgeDocRef.id);
 
           console.log("🔄 Updating edge document with ID...");
@@ -2217,10 +2217,11 @@ export async function convertCourseToGalaxyMapObject(courseId: string): Promise<
     });
 
     // Validate the result against the schema
-    const validatedGalaxyMap = CourseToGalaxyMapSchema.parse(galaxyMap);
-    console.log("✅ Galaxy map validation passed");
+    // const validatedGalaxyMap = CourseToGalaxyMapSchema.parse(galaxyMap);
+    // console.log("✅ Galaxy map validation passed");
+    // return validatedGalaxyMap;
 
-    return validatedGalaxyMap;
+    return galaxyMap;
   } catch (error) {
     console.error("❌ Error converting course to galaxy map:", error);
     throw error;

@@ -74,6 +74,7 @@ import {
   createPerson,
   addPersonToCohort,
   assignCourseToPerson,
+  bulkImportStudents,
 } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mdiDownload } from "@mdi/js";
@@ -137,44 +138,29 @@ export default {
       this.loading = true;
       console.log("saving students");
 
-      // Add a new document in collection "people"
-      await Promise.all(
-        this.parse_csv.map(async (student, index) => {
-          // restructure data to match db fields
-          const profile = {
-            ...student,
-            displayName: student.firstName + " " + student.lastName,
-            email: student.email,
-            inviter: this.person.firstName + " " + this.person.lastName,
-          };
+      try {
+        // Use the bulk import cloud function for better performance and reliability
+        const result = await bulkImportStudents(
+          this.parse_csv,
+          this.currentCohortId,
+          this.person.firstName + " " + this.person.lastName,
+        );
 
-          console.log("person: ", profile);
+        console.log("Bulk import completed:", result);
 
-          // check if student exisits
-          const personExists = await fetchPersonByEmail(profile.email);
+        // Show results to user
+        if (result.summary.errors > 0) {
+          console.warn(`Import completed with ${result.summary.errors} errors`);
+          // You could show a more detailed error report here
+        }
 
-          if (personExists) {
-            console.log("personExisits: ", personExists);
-            console.log("adding them to cohort: ", this.cohort.id);
-            // add existing person to cohort
-            await addPersonToCohort(personExists.id, this.cohort.id);
-
-            if (this.cohort.courses.length) {
-              for (const courseId of this.cohort.courses) {
-                await assignCourseToPerson(personExists.id, courseId);
-              }
-            }
-
-            console.log("exisitng person successfully added");
-          } else {
-            console.log("creating new student: ", index, ":", profile);
-            // create user and then add them to cohort
-            const person = await createPerson(profile);
-            await addPersonToCohort(person.id, this.currentCohortId);
-            console.log("new student successfully added");
-          }
-        }),
-      );
+        console.log(
+          `Successfully processed ${result.summary.success}/${result.summary.total} students`,
+        );
+      } catch (error) {
+        console.error("Error during bulk import:", error);
+        // You could show an error message to the user here
+      }
 
       console.log("All students written to database");
       // this.$refs.csvFile.value = null;
@@ -184,6 +170,7 @@ export default {
       this.dialog = false;
       this.$emit("close");
     },
+
     sortBy(key) {
       var vm = this;
       vm.sortKey = key;
@@ -213,7 +200,14 @@ export default {
 
         headers.map((header, indexHeader) => {
           // camelize headers
-          obj[this.camelize(header)] = currentline[indexHeader];
+          let value = currentline[indexHeader];
+
+          // Clean email addresses - remove carriage returns, line breaks, and trim whitespace
+          if (this.camelize(header) === "email") {
+            value = value.replace(/[\r\n]/g, "").trim();
+          }
+
+          obj[this.camelize(header)] = value;
         });
 
         result.push(obj);

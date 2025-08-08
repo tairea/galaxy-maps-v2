@@ -194,6 +194,7 @@ export default {
       }
 
       console.log("galaxyMapObject: ", this.boundCourse?.galaxyMapAsObject);
+      this.setAiGalaxyEditData(this.boundCourse?.galaxyMapAsObject);
 
       this.$emit("toggleLoading", false);
 

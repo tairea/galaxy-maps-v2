@@ -1,13 +1,27 @@
 <template>
   <div>
-    <v-dialog v-model="dialog" width="30%" light>
-      <!-- CREATE BUTTON -->
+    <v-dialog v-model="dialog" width="30%" light persistent>
       <div class="create-dialog">
         <!-- HEADER -->
         <div class="dialog-header">
-          <p class="mb-0">Create profile</p>
+          <p class="mb-0">Create your account</p>
         </div>
         <div class="create-dialog-content pt-0">
+          <div v-if="tokenError" class="mb-4">
+            <p class="overline" :class="tokenErrorClass" style="text-align: center">
+              {{ tokenErrorMessage }}
+            </p>
+            <v-btn
+              color="baseAccent"
+              outlined
+              width="100%"
+              :loading="resending"
+              @click="resendLink"
+            >
+              Email me a new link
+            </v-btn>
+            <v-divider class="my-6"></v-divider>
+          </div>
           <v-form ref="form" v-model="valid" lazy-validation>
             <v-text-field
               :dark="dark"
@@ -46,26 +60,30 @@
             <v-text-field
               :dark="dark"
               :light="!dark"
-              type="password"
+              :type="hidePassword ? 'password' : 'text'"
               v-model="password"
-              label="Password"
+              label="Create new password"
               :rules="passwordRules"
               required
               color="missionAccent"
               outlined
               class="custom-input"
+              :append-icon="hidePassword ? mdiEye : mdiEyeOff"
+              @click:append="() => (hidePassword = !hidePassword)"
             ></v-text-field>
             <v-text-field
               :dark="dark"
               :light="!dark"
-              type="password"
+              :type="hideConfirmPassword ? 'password' : 'text'"
               v-model="confirmPassword"
-              label="Confirm password"
+              label="Confirm new password"
               :rules="confirmPasswordRules"
               required
               color="missionAccent"
               outlined
               class="custom-input"
+              :append-icon="hideConfirmPassword ? mdiEye : mdiEyeOff"
+              @click:append="() => (hideConfirmPassword = !hideConfirmPassword)"
             ></v-text-field>
           </v-form>
           <div>
@@ -82,7 +100,6 @@
                 >
                   {{ uploadPercentage + "%" }}
                 </v-progress-circular>
-                <!-- <v-hover v-else v-slot="{ hover }"> -->
                 <v-avatar
                   v-else
                   color="secondary"
@@ -97,7 +114,6 @@
                     :alt="profile.firstName"
                     style="object-fit: cover"
                   />
-                  <!-- <v-icon v-if="hover">{{mdiPencil}}</v-icon> -->
                   <v-icon :dark="dark" :light="!dark" v-else>{{ mdiAccount }}</v-icon>
                   <v-fade-transition>
                     <v-overlay v-if="onhover" absolute color="baseAccent">
@@ -126,30 +142,29 @@
                 </v-avatar>
               </div>
             </div>
-            <!-- </v-hover> -->
           </div>
           <v-row class="d-flex justify-center align-center mt-4">
             <v-btn
-              :loading="updatingAccount"
+              :loading="settingPassword"
               color="missionAccent"
               class="ma-4"
-              @click="update()"
+              @click="setPassword()"
               outlined
               width="30%"
-              :disabled="updatingAccount"
+              :disabled="settingPassword"
             >
-              Update
+              Create Account
             </v-btn>
-            <v-btn
+            <!-- <v-btn
               :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
               class="ma-4"
               @click="cancel()"
               outlined
               width="30%"
-              :disabled="updatingAccount"
+              :disabled="settingPassword"
             >
-              cancel
-            </v-btn>
+              Cancel
+            </v-btn> -->
           </v-row>
         </div>
       </div>
@@ -160,19 +175,25 @@
 <script>
 import { db, storage } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
-import { mdiPencil, mdiAccount } from "@mdi/js";
+import { mdiPencil, mdiAccount, mdiEye, mdiEyeOff } from "@mdi/js";
 import firebase from "firebase/compat/app";
+import "firebase/compat/functions";
 import { mapActions, mapState } from "pinia";
 import { navigatorImages } from "@/lib/utils";
 
 export default {
-  name: "CreateProfileDialog",
-  props: ["dialog"],
+  name: "SetInitialPasswordDialog",
+  props: ["dialog", "userEmail", "userId", "token"],
   data: () => ({
     mdiPencil,
     mdiAccount,
+    mdiEye,
+    mdiEyeOff,
     navigatorImages,
-    updatingAccount: false,
+    settingPassword: false,
+    resending: false,
+    tokenError: false,
+    tokenErrorMessage: "",
     valid: true,
     profile: {
       id: "",
@@ -186,6 +207,8 @@ export default {
     },
     password: "",
     confirmPassword: "",
+    hidePassword: true,
+    hideConfirmPassword: true,
     selectedFile: {},
     uploading: false,
     uploadPercentage: 0,
@@ -196,12 +219,27 @@ export default {
     ],
     passwordRules: [
       (v) => !!v || "Password is required",
-      (v) => (v && v.length >= 6) || "Password must have a minimum of 8 characters",
+      (v) => (v && v.length >= 8) || "Password must have a minimum of 8 characters",
     ],
   }),
+  mounted() {
+    if (this.userEmail) this.profile.email = this.userEmail;
+    if (this.userId) this.profile.id = this.userId;
+    this.prefillFromBackend();
+  },
   watch: {
-    person() {
-      Object.assign(this.profile, this.person);
+    dialog(newVal) {
+      if (newVal) {
+        if (this.userEmail) this.profile.email = this.userEmail;
+        if (this.userId) this.profile.id = this.userId;
+        this.prefillFromBackend();
+      }
+    },
+    userEmail(newVal) {
+      if (newVal) this.profile.email = newVal;
+    },
+    userId(newVal) {
+      if (newVal) this.profile.id = newVal;
     },
   },
   computed: {
@@ -215,44 +253,123 @@ export default {
     dark() {
       return this.$vuetify.theme.isDark;
     },
+    tokenErrorClass() {
+      return this.$vuetify.theme.isDark ? "pink--text" : "error--text";
+    },
   },
   methods: {
-    ...mapActions(useRootStore, ["getPersonById"]),
+    ...mapActions(useRootStore, ["getPersonById", "setSnackbar"]),
+    async prefillFromBackend() {
+      if (!this.userId) return;
+      try {
+        const doc = await db.collection("people").doc(this.userId).get();
+        const data = doc.data() || {};
+        this.profile.firstName = data.firstName || this.profile.firstName || "";
+        this.profile.lastName = data.lastName || this.profile.lastName || "";
+        this.profile.email = data.email || this.profile.email || this.userEmail || "";
+        if (data.image && data.image.url) {
+          this.profile.image = { ...this.profile.image, ...data.image };
+        }
+      } catch (e) {
+        console.warn("Failed to prefill profile from Firestore", e);
+      }
+    },
     cancel() {
       this.dialog = false;
       this.$refs.form.reset();
-      this.person.id = "";
-      this.displayName = "";
+      this.profile = {
+        id: "",
+        firstName: "",
+        lastName: "",
+        email: "",
+        image: {
+          url: "",
+          name: "",
+        },
+      };
+      this.password = "";
+      this.confirmPassword = "";
     },
-    update() {
+    async setPassword() {
       this.$refs.form.validate();
-      if (!this.profile.email || !this.confirmPassword) return;
-      this.updatingAccount = true;
+      if (
+        !this.profile.email ||
+        !this.confirmPassword ||
+        !this.profile.firstName ||
+        !this.profile.lastName
+      ) {
+        this.setSnackbar({
+          show: true,
+          text: "Please fill in all required fields",
+          color: "pink",
+        });
+        return;
+      }
 
-      // update user password
-      this.updatePassword()
-        .then(() => {
-          // update profile with user names
-          this.updateProfile(this.profile);
-        })
-        .then(() => {
-          // login and navigate to my cohorts
-          this.updatingAccount = false;
-          this.$emit("login");
-        })
-        .catch((err) => {
-          console.error("something went wrong: ", err);
-          this.updatingAccount = false;
+      this.settingPassword = true;
+      this.tokenError = false;
+
+      try {
+        if (this.token) {
+          await firebase.auth().signInWithCustomToken(this.token);
+        } else {
+          await firebase.auth().signInAnonymously();
+        }
+        await this.updateUserPassword();
+        await this.updateProfile(this.profile);
+        await firebase.auth().signOut();
+        this.settingPassword = false;
+        this.setSnackbar({
+          show: true,
+          text: "Password set successfully! You can now log in.",
+          color: "baseAccent",
         });
+        this.$emit("passwordSet");
+        this.cancel();
+      } catch (err) {
+        console.error("Error setting password:", err);
+        this.settingPassword = false;
+        const code = err?.code || "auth/error";
+        if (
+          code === "auth/argument-error" ||
+          code === "auth/invalid-custom-token" ||
+          code === "auth/custom-token-mismatch"
+        ) {
+          this.tokenError = true;
+          this.tokenErrorMessage = "Create account link expired. Request a new link.";
+        } else {
+          this.setSnackbar({
+            show: true,
+            text: "Error setting password. Please try again.",
+            color: "pink",
+          });
+        }
+      }
     },
-    updatePassword() {
-      const user = firebase.auth().currentUser;
-      return user
-        .updatePassword(this.confirmPassword)
-        .then(() => {})
-        .catch((error) => {
-          console.error("something went wrong updating password: ", error);
-        });
+    async resendLink() {
+      if (!this.userId || !this.profile.email) return;
+      this.resending = true;
+      try {
+        const functionsCompat = firebase.functions();
+        const resend = functionsCompat.httpsCallable("resendInitialSetupLink");
+        await resend({ personId: this.userId, email: this.profile.email });
+        this.setSnackbar({ show: true, text: "A new link has been emailed.", color: "baseAccent" });
+      } catch (e) {
+        this.setSnackbar({ show: true, text: "Unable to send new link.", color: "pink" });
+      } finally {
+        this.resending = false;
+      }
+    },
+    async updateUserPassword() {
+      const functionsCompat = firebase.functions();
+      const updateUserPassword = functionsCompat.httpsCallable("updateUserPassword");
+      return updateUserPassword({
+        userId: this.userId,
+        password: this.confirmPassword,
+        firstName: this.profile.firstName,
+        lastName: this.profile.lastName,
+        email: this.profile.email,
+      });
     },
     onButtonClick() {
       this.$refs.uploader?.click();
@@ -263,7 +380,6 @@ export default {
     },
     storeImage() {
       this.uploading = true;
-      // ceate a storage ref
       var storageRef = storage.ref(
         "avatar-images/" +
           this.profile.firstName +
@@ -271,32 +387,22 @@ export default {
           "-" +
           this.selectedFile.name,
       );
-
-      // upload a file
       var uploadTask = storageRef.put(this.selectedFile);
-
-      // update progress bar
       uploadTask.on(
         "state_changed",
         (snapshot) => {
-          // show progress on uploader bar
           this.uploadPercentage = Math.floor(
             (snapshot.bytesTransferred / snapshot.totalBytes) * 100,
           );
         },
-        // upload error
         (err) => {
           console.log(err);
         },
-        // upload complete
         () => {
-          // get image url
           uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
-            // add image url to course obj
             this.uploading = false;
             this.profile.image.url = downloadURL;
             this.profile.image.name = this.selectedFile.name;
-            this.updateProfile(this.profile);
           });
         },
       );
@@ -304,23 +410,20 @@ export default {
     updateProfile(data) {
       return db
         .collection("people")
-        .doc(this.person.id)
+        .doc(this.userId)
         .update(data)
         .then(() => {
-          // TODO: Use firebase reactive functions to make person reactive
-          this.getPersonById(this.person.id);
+          this.getPersonById(this.userId);
           this.onhover = false;
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
-          throw error; // Re-throw to be caught by the calling function
+          throw error;
         });
     },
     selectNavigator(image) {
-      console.log("Selecting navigator:", image);
       this.profile.image.url = image.url;
       this.profile.image.name = image.name;
-      console.log("Updated profile.image:", this.profile.image);
     },
   },
 };
