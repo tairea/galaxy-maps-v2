@@ -119,7 +119,6 @@ export default {
   },
   methods: {
     formatStudentsChartData(courseData) {
-      // console.log("courseData", courseData);
       const datasets = [];
       const labels = [];
 
@@ -170,7 +169,6 @@ export default {
         datasets,
       };
 
-      // console.log("progress line chart datasets: ", datasetsObj);
       return datasetsObj;
     },
     stringToColour(str) {

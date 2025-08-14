@@ -242,9 +242,6 @@ export default {
     lowestActivityTimestamp: null,
   }),
   async mounted() {
-    console.log("STUDENT COURSES ACTIVITY: ", this.studentCoursesActivity);
-    console.log("STUDENT TIME DATA: ", this.studentTimeData);
-
     this.lowestActivityTimestamp = this.studentCoursesActivity.reduce((lowest, course) => {
       const courseLowestTimestamp = course.activities.reduce((lowest, activity) => {
         // return lowest activity timestamp
@@ -258,13 +255,11 @@ export default {
 
     // ==== get submission data
     this.submissions = await fetchStudentSubmissionsByPersonId(this.student.id);
-    console.log("SUBMISSIONS from learner overview dash: ", this.submissions);
 
     this.loadingSubmissions = false;
 
     // ==== get request data
     this.requests = await fetchStudentRequestsByPersonId(this.student.id);
-    console.log("REQUESTS from learner overview dash: ", this.requests);
 
     this.loadingRequests = false;
   },
@@ -303,14 +298,12 @@ export default {
       this.$emit("cancel");
     },
     async submissionsChanged() {
-      console.log("submissions changed flag triggered");
       this.loadingSubmissions = true;
       // ==== get submission data
       // this.submissions = await fetchStudentSubmissionsByPersonId(this.student.id);
       this.loadingSubmissions = false;
     },
     async requestsChanged() {
-      console.log("requests changed flag triggered");
       this.loadingRequests = true;
       // ==== get submission data
       // this.requests = await fetchStudentRequestsByPersonId(this.student.id);

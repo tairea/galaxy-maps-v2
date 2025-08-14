@@ -78,7 +78,6 @@ export default {
           .auth()
           .signInWithEmailLink(this.email, window.location.href)
           .then((result) => {
-            console.log("successfully signed in");
             this.proceed();
           })
           .catch((error) => {
@@ -89,7 +88,7 @@ export default {
             });
             console.error("something went wrong signing in: ", error);
           });
-      } else console.log("not a sign in link");
+      }
     },
     validate() {
       this.$refs.form.validate();
@@ -104,7 +103,6 @@ export default {
       this.dialog = true;
     },
     login() {
-      console.log("login");
       this.dialog = false;
       this.$refs.form.reset();
       this.$router.push({ path: "/" });

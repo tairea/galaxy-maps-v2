@@ -22,8 +22,16 @@ export const getCourseByCourseIdHttpsEndpoint = runWith({}).https.onCall(async (
   if (courseData == null) {
     throw new HttpsError("not-found", `Course not found: ${courseId}`);
   }
-  const courseOwner =
-    courseData.owner instanceof DocumentReference ? courseData.owner.path : courseData.owner;
+
+  // Handle both owner and mappedBy.personId fields for backward compatibility
+  let courseOwner = null;
+  if (courseData.owner) {
+    courseOwner =
+      courseData.owner instanceof DocumentReference ? courseData.owner.path : courseData.owner;
+  } else if (courseData.mappedBy?.personId) {
+    // Fallback to mappedBy.personId if owner field is missing
+    courseOwner = db.collection("people").doc(courseData.mappedBy.personId).path;
+  }
 
   // if the course is public and published then always return it
   // if not and the context is unauthenticated then throw not found
@@ -51,8 +59,8 @@ export const getCourseByCourseIdHttpsEndpoint = runWith({}).https.onCall(async (
   }
 
   // if the context is authenticated, they are not admin, and they are
-  // the course owner, return course
-  if (courseOwner === db.collection("people").doc(context.auth.uid).path) {
+  // the course owner (either via owner field or mappedBy.personId), return course
+  if (courseOwner && courseOwner === db.collection("people").doc(context.auth.uid).path) {
     return {
       course: {
         ...courseData,
@@ -60,6 +68,37 @@ export const getCourseByCourseIdHttpsEndpoint = runWith({}).https.onCall(async (
         id: courseDoc.id,
       },
     };
+  }
+
+  // if the context is authenticated and they are not admin, check if they are a collaborator
+  if (courseData.collaboratorIds && courseData.collaboratorIds.length > 0) {
+    const currentUserId = context.auth.uid;
+    const isCollaborator = courseData.collaboratorIds.some((collaboratorId: unknown) => {
+      // Handle both UID strings and document references
+      if (typeof collaboratorId === "string") {
+        // If it's a document reference path like "people/uid", extract the UID
+        if (collaboratorId.startsWith("people/")) {
+          return collaboratorId === `people/${currentUserId}`;
+        }
+        // If it's just a UID string
+        return collaboratorId === currentUserId;
+      }
+      // If it's a DocumentReference object
+      if (collaboratorId instanceof DocumentReference) {
+        return collaboratorId.path === `people/${currentUserId}`;
+      }
+      return false;
+    });
+
+    if (isCollaborator) {
+      return {
+        course: {
+          ...courseData,
+          owner: courseOwner,
+          id: courseDoc.id,
+        },
+      };
+    }
   }
 
   // if the context is authenticated and they are not admin, check that they
@@ -128,8 +167,16 @@ export const getCourseMapEdgesAndNodesByCourseIdHttpsEndpoint = runWith({}).http
     if (courseData == null) {
       throw new HttpsError("not-found", `Course not found: ${courseId}`);
     }
-    const courseOwner =
-      courseData.owner instanceof DocumentReference ? courseData.owner.path : courseData.owner;
+
+    // Handle both owner and mappedBy.personId fields for backward compatibility
+    let courseOwner = null;
+    if (courseData.owner) {
+      courseOwner =
+        courseData.owner instanceof DocumentReference ? courseData.owner.path : courseData.owner;
+    } else if (courseData.mappedBy?.personId) {
+      // Fallback to mappedBy.personId if owner field is missing
+      courseOwner = db.collection("people").doc(courseData.mappedBy.personId).path;
+    }
 
     // if the course is public and published then return the map-edges and map-nodes
     // if not and the context is unauthenticated then throw not found
@@ -171,10 +218,10 @@ export const getCourseMapEdgesAndNodesByCourseIdHttpsEndpoint = runWith({}).http
     }
 
     // if the context is authenticated, and they are admin or they are
-    // the course owner, return the map-edges and map-nodes
+    // the course owner (either via owner field or mappedBy.personId), return the map-edges and map-nodes
     if (
       context.auth.token.admin === true ||
-      courseOwner === db.collection("people").doc(context.auth.uid).path
+      (courseOwner && courseOwner === db.collection("people").doc(context.auth.uid).path)
     ) {
       const mapEdgeCollection = await db
         .collection("courses")
@@ -208,6 +255,62 @@ export const getCourseMapEdgesAndNodesByCourseIdHttpsEndpoint = runWith({}).http
         mapEdges,
         mapNodes,
       };
+    }
+
+    // if the context is authenticated and they are not admin, check if they are a collaborator
+    if (courseData.collaboratorIds && courseData.collaboratorIds.length > 0) {
+      const currentUserId = context.auth.uid;
+      const isCollaborator = courseData.collaboratorIds.some((collaboratorId: unknown) => {
+        // Handle both UID strings and document references
+        if (typeof collaboratorId === "string") {
+          // If it's a document reference path like "people/uid", extract the UID
+          if (collaboratorId.startsWith("people/")) {
+            return collaboratorId === `people/${currentUserId}`;
+          }
+          // If it's just a UID string
+          return collaboratorId === currentUserId;
+        }
+        // If it's a DocumentReference object
+        if (collaboratorId instanceof DocumentReference) {
+          return collaboratorId.path === `people/${currentUserId}`;
+        }
+        return false;
+      });
+
+      if (isCollaborator) {
+        const mapEdgeCollection = await db
+          .collection("courses")
+          .doc(courseId)
+          .collection("map-edges")
+          .get();
+
+        const mapNodeCollection = await db
+          .collection("courses")
+          .doc(courseId)
+          .collection("map-nodes")
+          .get();
+
+        const mapEdges = [];
+        for (const doc of mapEdgeCollection.docs) {
+          mapEdges.push({
+            ...doc.data(),
+            id: doc.id,
+          });
+        }
+
+        const mapNodes = [];
+        for (const doc of mapNodeCollection.docs) {
+          mapNodes.push({
+            ...doc.data(),
+            id: doc.id,
+          });
+        }
+
+        return {
+          mapEdges,
+          mapNodes,
+        };
+      }
     }
 
     // if the context is authenticated and they are not admin, check that they
@@ -1849,55 +1952,95 @@ async function saveGalaxyMap(
       starsCount: courseData.stars.length,
     });
 
-    // Create the course document
+    // Create or update the course document
     const imageData = galaxyMap.image as { url: string; name: string } | undefined;
     console.log("🖼️ Using image data for course:", imageData);
-
-    console.log("🏗️ Preparing formatted course data...");
-    const formattedCourse = {
-      title: courseData.title,
-      description: courseData.description,
-      image: imageData || null, // Use AI-generated image if available, or null if undefined
-      mappedBy: {
-        name: person.firstName + " " + person.lastName,
-        personId: person.id,
-      },
-      contentBy: {
-        name: person.firstName + " " + person.lastName,
-        personId: person.id,
-      },
-      status: "drafting",
-      owner: db.collection("people").doc(personId),
-      galaxyMapAsObject: galaxyMap,
-    };
-    console.log("📝 Formatted course data:", formattedCourse);
 
     const stars = courseData.stars;
     console.log("⭐ Stars to process:", stars.length);
 
-    console.log("💾 Creating course document in database...");
-    let courseDocRef;
-    try {
-      courseDocRef = await db.collection("courses").add(formattedCourse);
-      console.log("✅ Course document created with ID:", courseDocRef.id);
+    // If an idInDatabase exists, update that course; otherwise create a new one
+    const existingCourseId = (galaxyMap as { idInDatabase?: string }).idInDatabase;
+    let courseDocRef: FirebaseFirestore.DocumentReference;
 
-      console.log("🔄 Updating course document with ID and topic total...");
+    if (existingCourseId) {
+      console.log("✏️ Updating existing course:", existingCourseId);
+      courseDocRef = db.collection("courses").doc(existingCourseId);
+
+      // Update top-level course fields
       await courseDocRef.update({
-        id: courseDocRef.id,
+        title: courseData.title,
+        description: courseData.description,
+        image: imageData || null,
+        galaxyMapAsObject: { ...galaxyMap, idInDatabase: existingCourseId },
         topicTotal: stars.length,
-        galaxyMapAsObject: { ...galaxyMap, idInDatabase: courseDocRef.id },
       });
-      console.log("✅ Course document updated successfully");
-    } catch (courseError: unknown) {
-      console.error("❌ Error creating course document:", courseError);
-      throw new HttpsError("internal", "Failed to create course document");
+
+      // Delete and recreate subcollections: map-edges, map-nodes, topics (and tasks)
+      console.log("🧹 Clearing existing subcollections before re-creating");
+      // Delete edges
+      const edgesSnap = await courseDocRef.collection("map-edges").get();
+      for (const doc of edgesSnap.docs) {
+        await doc.ref.delete();
+      }
+      // Delete map-nodes
+      const nodesSnap = await courseDocRef.collection("map-nodes").get();
+      for (const doc of nodesSnap.docs) {
+        await doc.ref.delete();
+      }
+      // Delete topics and their tasks
+      const topicsSnap = await courseDocRef.collection("topics").get();
+      for (const topicDoc of topicsSnap.docs) {
+        const tasksSnap = await topicDoc.ref.collection("tasks").get();
+        for (const taskDoc of tasksSnap.docs) {
+          await taskDoc.ref.delete();
+        }
+        await topicDoc.ref.delete();
+      }
+    } else {
+      console.log("🏗️ Preparing formatted course data for creation...");
+      const formattedCourse = {
+        title: courseData.title,
+        description: courseData.description,
+        image: imageData || null, // Use AI-generated image if available, or null if undefined
+        mappedBy: {
+          name: person.firstName + " " + person.lastName,
+          personId: person.id,
+        },
+        contentBy: {
+          name: person.firstName + " " + person.lastName,
+          personId: person.id,
+        },
+        status: "drafting",
+        owner: db.collection("people").doc(personId),
+        galaxyMapAsObject: galaxyMap,
+      };
+      console.log("📝 Formatted course data:", formattedCourse);
+
+      console.log("💾 Creating course document in database...");
+      try {
+        courseDocRef = await db.collection("courses").add(formattedCourse);
+        console.log("✅ Course document created with ID:", courseDocRef.id);
+
+        console.log("🔄 Updating course document with ID and topic total...");
+        await courseDocRef.update({
+          id: courseDocRef.id,
+          topicTotal: stars.length,
+          galaxyMapAsObject: { ...galaxyMap, idInDatabase: courseDocRef.id },
+        });
+        console.log("✅ Course document updated successfully");
+      } catch (courseError: unknown) {
+        console.error("❌ Error creating course document:", courseError);
+        throw new HttpsError("internal", "Failed to create course document");
+      }
+      console.log("🎯 Course saved: " + courseData.title + " to db with id: " + courseDocRef.id);
     }
 
-    console.log("🎯 Course saved: " + courseData.title + " to db with id: " + courseDocRef.id);
-
-    // TODO: add a check to see if the course already exists. if it does, update it instead of creating a new one
     // Create stars/topics and planets/tasks
     console.log("🌟 Starting to process stars and planets...");
+    /* =============================
+          Looping Stars
+    ============================= */
     for (let i = 0; i < stars.length; i++) {
       console.log(`⭐ Processing star ${i + 1}/${stars.length}...`);
       const star = stars[i] as {
@@ -1983,18 +2126,47 @@ async function saveGalaxyMap(
 
       // create planets
       console.log(`🪐 Creating ${star.planets.length} planets for star: ${star.title}`);
+      /* =============================
+            Looping Planets
+      ============================= */
       for (let j = 0; j < star.planets.length; j++) {
         console.log(`🪐 Processing planet ${j + 1}/${star.planets.length}...`);
-        const planet = star.planets[j] as { title: string; instructions?: string };
+        const planet = star.planets[j] as {
+          title: string;
+          instructions?: unknown;
+          missionInstructions?: unknown;
+        };
+
+        // Prefer unified missionInstructions (expected to be pre-formatted HTML string by the client).
+        // Fallback to legacy instructions string if present.
+        let missionDescription: string | null = null;
+        if (typeof (planet as any).missionInstructions === "string") {
+          missionDescription = (planet as any).missionInstructions as string;
+        } else if (typeof (planet as any).instructions === "string") {
+          missionDescription = (planet as any).instructions as string;
+        } else {
+          // As a safety net, if missionInstructions is an object with steps, stringify it (minimal fallback)
+          const mi = (planet as any).missionInstructions;
+          if (mi && typeof mi === "object") {
+            try {
+              missionDescription = JSON.stringify(mi);
+            } catch {
+              missionDescription = null;
+            }
+          }
+        }
+
         console.log("📝 Planet data:", {
-          title: planet.title,
-          hasInstructions: !!planet.instructions,
+          title: (planet as any).title,
+          hasMissionInstructions: typeof (planet as any).missionInstructions !== "undefined",
+          hasLegacyInstructions: typeof (planet as any).instructions !== "undefined",
+          descriptionLength: missionDescription ? missionDescription.length : 0,
         });
 
         console.log("🏗️ Preparing planet data...");
         const planetData = {
-          title: planet.title,
-          description: planet.instructions || null, // Convert undefined to null
+          title: (planet as any).title,
+          description: missionDescription, // already HTML string if provided by client
           submissionRequired: false,
           submissionInstructions: "",
           color: "#69a1e2",
@@ -2074,7 +2246,7 @@ async function saveGalaxyMap(
       await sendCourseCreatedEmail(
         person.email as string,
         person.firstName + " " + person.lastName,
-        formattedCourse.title,
+        courseData.title,
         courseDocRef.id,
       );
       console.log("✅ Course created email sent successfully");
@@ -2270,3 +2442,535 @@ async function sendCourseCreatedEmail(
     courseId,
   });
 }
+
+/**
+ * Remove prerequisites from topics collection and return list of affected topics
+ * This function handles the cleanup when a node is deleted from a course
+ */
+export const removePrerequisitesFromTopicsHttpsEndpoint = runWith({}).https.onCall(
+  async (data, context) => {
+    try {
+      // Require authentication
+      requireAuthenticated(context);
+      const { uid } = context.auth;
+      console.log("🔐 User authenticated:", uid);
+
+      const { courseId, nodeId } = data;
+
+      // Validate required parameters
+      if (!courseId || !nodeId) {
+        throw new HttpsError(
+          "invalid-argument",
+          "Missing required parameters: courseId and nodeId",
+        );
+      }
+
+      console.log("🗑️ Removing prerequisites for node:", { courseId, nodeId });
+
+      // Get all topics in the course
+      const topicsSnapshot = await db
+        .collection("courses")
+        .doc(courseId)
+        .collection("topics")
+        .get();
+
+      const batch = db.batch();
+      const affectedTopics: Array<{
+        topicId: string;
+        oldPrerequisites: string[];
+        newPrerequisites: string[];
+      }> = [];
+
+      // Check each topic for prerequisites that reference the deleted node
+      topicsSnapshot.forEach((doc) => {
+        const topicData = doc.data();
+        if (topicData.prerequisites && Array.isArray(topicData.prerequisites)) {
+          const nodeIdIndex = topicData.prerequisites.indexOf(nodeId);
+          if (nodeIdIndex !== -1) {
+            // Remove the deleted node ID from the prerequisites array
+            const updatedPrerequisites = topicData.prerequisites.filter(
+              (prereqId: string) => prereqId !== nodeId,
+            );
+
+            // Update the topic document with the new prerequisites array
+            const topicRef = db
+              .collection("courses")
+              .doc(courseId)
+              .collection("topics")
+              .doc(doc.id);
+
+            batch.update(topicRef, { prerequisites: updatedPrerequisites });
+
+            affectedTopics.push({
+              topicId: doc.id,
+              oldPrerequisites: topicData.prerequisites,
+              newPrerequisites: updatedPrerequisites,
+            });
+
+            console.log("📝 Updated prerequisites for topic:", doc.id, {
+              old: topicData.prerequisites,
+              new: updatedPrerequisites,
+            });
+          }
+        }
+      });
+
+      // Execute all updates in a single batch
+      if (affectedTopics.length > 0) {
+        await batch.commit();
+        console.log("✅ Successfully removed prerequisites from", affectedTopics.length, "topics");
+      } else {
+        console.log("ℹ️ No prerequisites found to remove");
+      }
+
+      return {
+        success: true,
+        affectedTopicsCount: affectedTopics.length,
+        affectedTopics,
+      };
+    } catch (error) {
+      console.error("❌ Error removing prerequisites:", error);
+      throw new HttpsError("internal", "Failed to remove prerequisites");
+    }
+  },
+);
+
+/**
+ * Update prerequisites for a specific student's topics
+ * This function syncs prerequisite changes from the main course to individual student collections
+ */
+export const updateStudentTopicPrerequisitesHttpsEndpoint = runWith({}).https.onCall(
+  async (data, context) => {
+    try {
+      // Require authentication
+      requireAuthenticated(context);
+      const { uid } = context.auth;
+      console.log("🔐 User authenticated:", uid);
+
+      const { courseId, personId, affectedTopics } = data;
+
+      // Validate required parameters
+      if (!courseId || !personId || !affectedTopics || !Array.isArray(affectedTopics)) {
+        throw new HttpsError(
+          "invalid-argument",
+          "Missing required parameters: courseId, personId, and affectedTopics array",
+        );
+      }
+
+      console.log("👤 Updating prerequisites for student:", {
+        courseId,
+        personId,
+        affectedTopicsCount: affectedTopics.length,
+      });
+
+      const batch = db.batch();
+      let updatedCount = 0;
+
+      // Process each affected topic for the student
+      for (const affectedTopic of affectedTopics) {
+        if (!affectedTopic.topicId || !affectedTopic.newPrerequisites) {
+          console.warn("⚠️ Skipping invalid affected topic:", affectedTopic);
+          continue;
+        }
+
+        const studentTopicRef = db
+          .collection("people")
+          .doc(personId)
+          .collection(courseId)
+          .doc(affectedTopic.topicId);
+
+        // Check if the student has this topic
+        const studentTopicDoc = await studentTopicRef.get();
+        if (studentTopicDoc.exists) {
+          batch.update(studentTopicRef, {
+            prerequisites: affectedTopic.newPrerequisites,
+          });
+          updatedCount++;
+
+          console.log("📝 Updated prerequisites for student topic:", {
+            topicId: affectedTopic.topicId,
+            newPrerequisites: affectedTopic.newPrerequisites,
+          });
+        } else {
+          console.log("ℹ️ Student doesn't have topic:", affectedTopic.topicId);
+        }
+      }
+
+      // Execute all updates in a single batch
+      if (updatedCount > 0) {
+        await batch.commit();
+        console.log(
+          "✅ Successfully updated prerequisites for",
+          updatedCount,
+          "topics for student",
+          personId,
+        );
+      } else {
+        console.log("ℹ️ No student topics were updated");
+      }
+
+      return {
+        success: true,
+        updatedTopicsCount: updatedCount,
+        personId,
+      };
+    } catch (error) {
+      console.error("❌ Error updating student topic prerequisites:", error);
+      throw new HttpsError("internal", "Failed to update student topic prerequisites");
+    }
+  },
+);
+
+/**
+ * Save a topic to all students in a course
+ * This function handles creating/updating topic documents for each student
+ * and sets appropriate topic status based on prerequisites
+ */
+export const saveTopicToStudentsHttpsEndpoint = runWith({}).https.onCall(async (data, context) => {
+  try {
+    // Require authentication
+    requireAuthenticated(context);
+    const { uid } = context.auth;
+    console.log("🔐 User authenticated:", uid);
+
+    const { courseId, node, students } = data;
+
+    // Validate required parameters
+    if (!courseId || !node || !students || !Array.isArray(students)) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Missing required parameters: courseId, node, and students array",
+      );
+    }
+
+    console.log("👥 Saving topic to students:", {
+      courseId,
+      nodeId: node.id,
+      studentsCount: students.length,
+    });
+
+    // if no students, return early
+    if (students.length === 0) {
+      console.log("ℹ️ No students in this course");
+      return {
+        success: true,
+        studentsProcessed: 0,
+        topicsCreated: 0,
+        message: "No students to process",
+      };
+    }
+
+    const batch = db.batch();
+    let studentsProcessed = 0;
+    let topicsCreated = 0;
+
+    // Process each student
+    for (const student of students) {
+      const personId = student.id;
+
+      // Validate required fields before proceeding
+      if (!personId) {
+        console.warn("⚠️ Skipping student with missing personId:", student);
+        continue;
+      }
+
+      // Set reference to this course for the student
+      const courseRef = db.collection("people").doc(personId).collection(courseId);
+
+      // Check if the student has already started the course
+      const studentHasStartedCourse = await courseRef
+        .get()
+        .then((subQuery) => subQuery.docs.length > 0);
+
+      if (studentHasStartedCourse) {
+        // Determine topic status based on prerequisites
+        let topicStatus = "unlocked"; // default
+
+        if (node.prerequisites && node.prerequisites.length > 0) {
+          try {
+            // Get the prerequisite topic for this student
+            const prerequisiteTopicRef = courseRef.doc(node.prerequisites[0]);
+            const prerequisiteTopicDoc = await prerequisiteTopicRef.get();
+
+            if (prerequisiteTopicDoc.exists) {
+              const prerequisiteTopic = prerequisiteTopicDoc.data();
+              if (prerequisiteTopic?.topicStatus) {
+                // If prerequisite is completed, set topic as unlocked, else locked
+                topicStatus = prerequisiteTopic.topicStatus === "completed" ? "unlocked" : "locked";
+              }
+            }
+          } catch (error) {
+            console.warn("⚠️ Error checking prerequisite for student:", personId, error);
+            // Default to locked if we can't determine prerequisite status
+            topicStatus = "locked";
+          }
+        }
+
+        console.log(
+          `📝 Student ${personId} has started course. Setting new topic as ${topicStatus}`,
+        );
+
+        // Create the topic document for the student
+        const studentTopicRef = courseRef.doc(node.id);
+        batch.set(studentTopicRef, {
+          ...node,
+          topicStatus,
+        });
+
+        topicsCreated++;
+      } else {
+        console.log(
+          `ℹ️ Student ${personId} hasn't started the course yet - topic will be assigned when they start`,
+        );
+      }
+
+      studentsProcessed++;
+    }
+
+    // Execute all updates in a single batch
+    if (topicsCreated > 0) {
+      await batch.commit();
+      console.log(`✅ Successfully created ${topicsCreated} topics for students`);
+    }
+
+    return {
+      success: true,
+      studentsProcessed,
+      topicsCreated,
+      message: `Processed ${studentsProcessed} students, created ${topicsCreated} topics`,
+    };
+  } catch (error) {
+    console.error("❌ Error saving topic to students:", error);
+    throw new HttpsError("internal", "Failed to save topic to students");
+  }
+});
+
+/**
+ * Delete a topic from all students in a course
+ * This function handles removing topic documents for each student
+ * and updates prerequisites for affected topics
+ */
+export const deleteTopicForStudentsHttpsEndpoint = runWith({}).https.onCall(
+  async (data, context) => {
+    try {
+      // Require authentication
+      requireAuthenticated(context);
+      const { uid } = context.auth;
+      console.log("🔐 User authenticated:", uid);
+
+      const { courseId, node, students, affectedTopics = [] } = data;
+
+      // Validate required parameters
+      if (!courseId || !node || !students || !Array.isArray(students)) {
+        throw new HttpsError(
+          "invalid-argument",
+          "Missing required parameters: courseId, node, and students array",
+        );
+      }
+
+      console.log("🗑️ Deleting topic from students:", {
+        courseId,
+        nodeId: node.id,
+        nodeLabel: node.label,
+        studentsCount: students.length,
+        affectedTopicsCount: affectedTopics.length,
+      });
+
+      // if no students, return early
+      if (students.length === 0) {
+        console.log("ℹ️ No students in this course");
+        return {
+          success: true,
+          studentsProcessed: 0,
+          topicsDeleted: 0,
+          message: "No students to process",
+        };
+      }
+
+      const batch = db.batch();
+      let studentsProcessed = 0;
+      let topicsDeleted = 0;
+
+      // Process each student
+      for (const student of students) {
+        const personId = student.id;
+
+        // Validate required fields before proceeding
+        if (!personId || !node?.id) {
+          console.warn("⚠️ Skipping student with missing fields:", {
+            personId,
+            nodeId: node?.id,
+          });
+          continue;
+        }
+
+        console.log(`🗑️ Deleting ${node.label} for student: ${personId}`);
+
+        // Delete the main topic document for the student
+        const studentTopicRef = db
+          .collection("people")
+          .doc(personId)
+          .collection(courseId)
+          .doc(node.id);
+
+        batch.delete(studentTopicRef);
+        topicsDeleted++;
+        studentsProcessed++;
+      }
+
+      // Execute all deletions in a single batch
+      if (topicsDeleted > 0) {
+        await batch.commit();
+        console.log(`✅ Successfully deleted ${topicsDeleted} topics from students`);
+      }
+
+      // Update prerequisites for affected topics in student collections
+      if (affectedTopics.length > 0) {
+        console.log(
+          `🔄 Updating prerequisites for ${affectedTopics.length} affected topics across all students`,
+        );
+
+        // Process each student for prerequisite updates
+        for (const student of students) {
+          const personId = student.id;
+          if (personId) {
+            try {
+              // Update prerequisites for this student's affected topics
+              const studentCourseRef = db.collection("people").doc(personId).collection(courseId);
+
+              for (const affectedTopic of affectedTopics) {
+                if (affectedTopic.topicId && affectedTopic.newPrerequisites) {
+                  const studentTopicRef = studentCourseRef.doc(affectedTopic.topicId);
+
+                  // Check if the student has this topic
+                  const studentTopicDoc = await studentTopicRef.get();
+                  if (studentTopicDoc.exists) {
+                    batch.update(studentTopicRef, {
+                      prerequisites: affectedTopic.newPrerequisites,
+                    });
+                    console.log(
+                      `📝 Updated prerequisites for student topic: ${affectedTopic.topicId}`,
+                    );
+                  }
+                }
+              }
+            } catch (error) {
+              console.warn(`⚠️ Failed to update prerequisites for student ${personId}:`, error);
+              // Continue with other students even if one fails
+            }
+          }
+        }
+
+        // Commit prerequisite updates along with deletions
+        if (topicsDeleted > 0 || affectedTopics.length > 0) {
+          await batch.commit();
+          console.log("✅ Successfully processed all operations in batch");
+        }
+      } else if (topicsDeleted > 0) {
+        // Only commit if we have deletions but no prerequisite updates
+        await batch.commit();
+        console.log(`✅ Successfully deleted ${topicsDeleted} topics from students`);
+      }
+
+      return {
+        success: true,
+        studentsProcessed,
+        topicsDeleted,
+        affectedTopicsUpdated: affectedTopics.length > 0,
+        message: `Processed ${studentsProcessed} students, deleted ${topicsDeleted} topics, updated ${affectedTopics.length} affected topics`,
+      };
+    } catch (error) {
+      console.error("❌ Error deleting topic from students:", error);
+      throw new HttpsError("internal", "Failed to delete topic from students");
+    }
+  },
+);
+
+/**
+ * Save a node to the course map
+ * This function handles saving nodes to map-nodes, creating edges, saving topics,
+ * and updating course totals
+ */
+export const saveNodeHttpsEndpoint = runWith({}).https.onCall(async (data, context) => {
+  try {
+    // Require authentication
+    requireAuthenticated(context);
+    const { uid } = context.auth;
+    console.log("🔐 User authenticated:", uid);
+
+    const { courseId, node, isUpdate = false } = data;
+
+    // Validate required parameters
+    if (!courseId || !node) {
+      throw new HttpsError("invalid-argument", "Missing required parameters: courseId and node");
+    }
+
+    console.log("💾 Saving node:", {
+      courseId,
+      nodeId: node.id,
+      nodeLabel: node.label,
+      isUpdate,
+    });
+
+    // Prepare node data
+    const nodeData = {
+      ...node,
+      connectedEdge: node.connectedEdge || "",
+      color: node.color?.hex || node.color,
+      nodeCreatedTimestamp: new Date(),
+    };
+
+    // Save topic node info to map-nodes
+    await db.collection("courses").doc(courseId).collection("map-nodes").doc(node.id).set(nodeData);
+    console.log("✅ Node successfully written to map-nodes!");
+
+    // Create edges for prerequisites
+    if (node.prerequisites && node.prerequisites.length > 0) {
+      console.log(`🔗 Creating ${node.prerequisites.length} prerequisite edges`);
+
+      for (const prereq of node.prerequisites) {
+        const from = prereq;
+        const to = node.id;
+
+        const edgeDocRef = await db
+          .collection("courses")
+          .doc(courseId)
+          .collection("map-edges")
+          .add({
+            from: from,
+            to: to,
+            dashes: false,
+          });
+
+        await edgeDocRef.update({ id: edgeDocRef.id });
+        console.log(`✅ Created edge from ${from} to ${to}`);
+      }
+    }
+
+    // Save topic info to topics collection
+    const topicData = {
+      ...node,
+      topicCreatedTimestamp: new Date(),
+    };
+
+    await db.collection("courses").doc(courseId).collection("topics").doc(node.id).set(topicData);
+    console.log("✅ Topic successfully written to topics!");
+
+    // Update course topic totals if this is a new node
+    if (!isUpdate) {
+      await db.collection("courses").doc(courseId).update("topicTotal", FieldValue.increment(1));
+      console.log("✅ Course topic total increased by 1");
+    }
+
+    return {
+      success: true,
+      nodeId: node.id,
+      edgesCreated: node.prerequisites?.length || 0,
+      topicTotalUpdated: !isUpdate,
+      message: `Node ${node.label} saved successfully`,
+    };
+  } catch (error) {
+    console.error("❌ Error saving node:", error);
+    throw new HttpsError("internal", "Failed to save node");
+  }
+});

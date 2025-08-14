@@ -2,7 +2,7 @@
   <v-container>
     <v-row class="text-center" align="center">
       <v-col cols="12" class="pa-0">
-        <v-dialog v-model="dialog" width="50%" light>
+        <v-dialog v-model="dialog" width="50%" max-width="800px" light>
           <!-- CREATE BUTTON -->
           <template v-if="edit" v-slot:activator="{ on, attrs }">
             <v-btn
@@ -43,8 +43,17 @@
               </div>
             </div>
 
+            <!-- Person data loading indicator -->
+            <div v-if="!isPersonLoaded" class="text-center my-12">
+              <v-progress-circular indeterminate color="missionAccent"></v-progress-circular>
+              <p class="mt-4">Loading user data...</p>
+            </div>
+
             <!-- Choose creation mode buttons -->
-            <div class="creation-mode-options my-12" v-if="!edit && !creationMode">
+            <div
+              class="creation-mode-options my-12"
+              v-if="!edit && !creationMode && isPersonLoaded"
+            >
               <!-- AI MODE -->
               <v-tooltip v-if="!edit" bottom>
                 <template v-slot:activator="{ on, attrs }">
@@ -71,7 +80,7 @@
               <div
                 class="creation-mode-option base-border"
                 :class="{ selected: creationMode === 'manual' }"
-                @click="creationMode = 'manual'"
+                @click="selectManualMode"
               >
                 <div class="creation-mode-icon">
                   <v-icon color="baseAccent">{{ mdiPencil }}</v-icon>
@@ -86,7 +95,7 @@
               class="left-side"
               :style="course.title ? 'width:50%' : 'width:100%'"
               style="margin-top: 10px"
-              v-if="edit || creationMode == 'manual'"
+              v-if="shouldShowForm"
             >
               <!-- DIALOG FIELDS -->
               <div class="create-dialog-content">
@@ -100,6 +109,8 @@
                   color="missionAccent"
                   v-model="course.title"
                   label="Galaxy name"
+                  @input="validateCourseTitle"
+                  :rules="[(v) => !!v || 'Galaxy name is required']"
                 ></v-text-field>
 
                 <!-- DESCRIPTION -->
@@ -267,7 +278,7 @@
 
             <!-- RIGHT SIDE -->
             <div
-              v-if="edit || creationMode == 'manual'"
+              v-if="shouldShowForm"
               class="right-side"
               :style="course.title ? 'width:50%' : 'width:0%'"
             >
@@ -325,7 +336,7 @@
 
             <!-- End of right-side -->
             <!-- ACTION BUTTONS -->
-            <div v-if="edit || creationMode == 'manual'" class="action-buttons">
+            <div v-if="shouldShowForm" class="action-buttons">
               <!-- PUBLISH -->
               <!-- <div
                 style="width: 200px"
@@ -344,7 +355,7 @@
                 v-else-if="edit"
                 outlined
                 color="baseAccent"
-                @click="updateCourse(course)"
+                @click="handleUpdateGalaxy"
                 class="mx-2"
                 :loading="loading"
                 :disabled="disabled"
@@ -360,10 +371,10 @@
                 v-else
                 outlined
                 color="baseAccent"
-                @click="saveCourse(course)"
+                @click="handleCreateGalaxy"
                 class="mr-2"
                 :loading="loading"
-                :disabled="disabled"
+                :disabled="disabled || !isFormValid"
                 :dark="dark"
                 :light="!dark"
               >
@@ -538,6 +549,24 @@
 </template>
 
 <script>
+/**
+ * CreateEditDeleteGalaxyDialog Component
+ *
+ * This component handles the creation, editing, and deletion of galaxy maps.
+ *
+ * Recent fixes implemented:
+ * - Added comprehensive validation for person data and course title
+ * - Added debugging logs to track data flow
+ * - Fixed cloud function parameter validation
+ * - Added form validation before submission
+ * - Ensured course data is properly initialized at all lifecycle stages
+ * - Added proper error handling for missing or invalid data
+ *
+ * The component now validates:
+ * 1. Person data is available (id, email, firstName)
+ * 2. Course title is not empty or just whitespace
+ * 3. All required parameters are present before sending email
+ */
 import { db, storage, functions } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import {
@@ -552,7 +581,6 @@ import {
 import firebase from "firebase/compat/app";
 import clone from "lodash/clone";
 import { mapActions, mapState } from "pinia";
-import { DocumentReference } from "firebase/firestore";
 import PublishGalaxy from "@/components/GalaxyView/PublishGalaxy.vue";
 import CreateAccountDialog from "@/components/Dialogs/CreateAccountDialog.vue";
 
@@ -630,6 +658,23 @@ export default {
         this.$set(this.course, "collaboratorIds", ids);
       },
     },
+    isFormValid() {
+      return (
+        this.course.title &&
+        this.course.title.trim() &&
+        this.course.title.trim().length > 0 &&
+        this.person &&
+        this.person.id &&
+        this.person.email &&
+        this.person.firstName
+      );
+    },
+    isPersonLoaded() {
+      return this.person && this.person.id && this.person.email && this.person.firstName;
+    },
+    shouldShowForm() {
+      return this.isPersonLoaded && (this.edit || this.creationMode === "manual");
+    },
   },
   watch: {
     courseToEdit: {
@@ -646,6 +691,10 @@ export default {
     },
     showDialog(newVal) {
       this.dialog = newVal;
+      if (newVal && !this.edit) {
+        // Reset course data when opening creation dialog
+        this.resetCourseData();
+      }
     },
     edit: {
       immediate: true,
@@ -656,7 +705,24 @@ export default {
         }
       },
     },
+    person: {
+      immediate: true,
+      handler(newVal) {
+        // console.log("Person data changed:", newVal);
+        if (newVal && newVal.id && newVal.email && newVal.firstName) {
+          // console.log("Person data is now complete:", newVal);
+        }
+      },
+    },
   },
+  created() {
+    // Initialize course data only once when component is created
+    // Only initialize if not already set
+    if (!this.course.title) {
+      this.initializeCourseData();
+    }
+  },
+
   async mounted() {
     if (this.courseToEdit) {
       this.course = { ...this.courseToEdit };
@@ -672,12 +738,24 @@ export default {
       this.dialog = false;
       if (!this.edit) {
         this.creationMode = "";
+        // Reset course data when canceling creation
+        this.resetCourseData();
       }
       this.$emit("close");
       // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
     },
     async saveCourse(course) {
       this.loading = true;
+
+      // Validate form before proceeding
+      if (!this.validateForm()) {
+        this.loading = false;
+        return;
+      }
+
+      // Trim the course title to remove any whitespace
+      course.title = course.title.trim();
+
       // not notAuthor means user is the author
       if (!this.notAuthor) {
         // TODO: add users photo to contentBy
@@ -761,6 +839,28 @@ export default {
           });
 
         // send admins an email notification of a new course (email, name, course, courseId)
+        // console.log("Person data:", this.person);
+        // console.log("Course data:", course);
+        // console.log("CourseId:", courseId);
+
+        // Final validation before sending email
+        if (!this.person || !this.person.email || !this.person.firstName) {
+          // console.error("Person data is incomplete:", this.person);
+          throw new Error("Person data is incomplete");
+        }
+
+        if (!course.title || !course.title.trim()) {
+          // console.error("Course title is missing or empty:", course.title);
+          throw new Error("Course title is missing or empty");
+        }
+
+        // console.log("Sending email with data:", {
+        //   email: this.person.email,
+        //   name: this.person.firstName + " " + this.person.lastName,
+        //   course: course.title,
+        //   courseId: courseId,
+        // });
+
         await this.sendCourseCreatedEmail(
           this.person.email,
           this.person.firstName + " " + this.person.lastName,
@@ -786,7 +886,30 @@ export default {
       this.course = {};
     },
     async updateCourse(course) {
+      // If there is no course id yet, we're in pre-save mode (AI edit before DB save)
+      if (!course || !course.id) {
+        this.$emit("preSaveUpdate", {
+          title: course?.title,
+          description: course?.description,
+          image: course?.image,
+        });
+        this.setSnackbar({
+          show: true,
+          text: "Galaxy details updated (pending save)",
+          color: "baseAccent",
+        });
+        this.dialog = false;
+        this.loading = false;
+        return;
+      }
+
       this.loading = true;
+
+      // Validate form before proceeding
+      if (!this.validateForm()) {
+        this.loading = false;
+        return;
+      }
       if (course.public !== this.courseToEdit.public) {
         course.status = "drafting";
       }
@@ -796,43 +919,64 @@ export default {
         course.public = false;
       }
 
-      console.log("course.status", course.status);
+      try {
+        // Retrieve the latest course document
+        const courseDoc = await db.collection("courses").doc(course.id).get();
+        const courseDocData = courseDoc.data() || {};
 
-      // make ower a reference to the person (because owner is bound it is an object when it needs to be a Firestore DocumentReference)
-      // Retrieve the course document
-      const courseDoc = await db.collection("courses").doc(course.id).get();
-      const courseDocData = courseDoc.data();
-      const ownerRefString = courseDocData.owner.path;
+        // Resolve owner as a Firestore DocumentReference in a safe, backward-compatible way
+        const ownerSource = courseDocData.owner || course.owner || this.person?.id || null;
+        let ownerRef;
 
-      // Ensure the owner field is a DocumentReference
-      const ownerRef =
-        courseDocData.owner instanceof DocumentReference
-          ? courseDocData.owner
-          : db.doc(ownerRefString);
+        if (
+          ownerSource &&
+          typeof ownerSource === "object" &&
+          typeof ownerSource.path === "string"
+        ) {
+          // Looks like a Firestore DocumentReference-like object
+          ownerRef = db.doc(ownerSource.path);
+        } else if (typeof ownerSource === "string") {
+          // Owner stored as a person id string
+          ownerRef = db.collection("people").doc(ownerSource);
+        } else {
+          // Fallback to current user
+          ownerRef = db.collection("people").doc(this.person.id);
+        }
 
-      const courseData = {
-        ...course,
-        owner: ownerRef,
-      };
+        const courseData = {
+          ...course,
+          owner: ownerRef,
+        };
 
-      await db.collection("courses").doc(course.id).update(courseData);
+        await db.collection("courses").doc(course.id).update(courseData);
 
-      this.setSnackbar({
-        show: true,
-        text: "Galaxy updated",
-        color: "baseAccent",
-      });
-      this.dialog = false;
-      this.loading = false;
-      //get doc id from firestore (aka course id)
-      //set courseID to Store state 'state.currentCourseId' (so not relying on router params)
-      this.setCurrentCourseId(course.id);
+        this.setSnackbar({
+          show: true,
+          text: "Galaxy updated",
+          color: "baseAccent",
+        });
+      } catch (err) {
+        console.error("Failed to update course:", err);
+        this.setSnackbar({
+          show: true,
+          text: "Failed to update galaxy",
+          color: "error",
+        });
+      } finally {
+        this.dialog = false;
+        this.loading = false;
+        // set courseID to Store state 'state.currentCourseId' (so not relying on router params)
+        this.setCurrentCourseId(course.id);
+      }
     },
     storeImage() {
       this.disabled = true;
       // ceate a storage ref
+      const courseOrTemp =
+        this.currentCourseId || (this.person && this.person.id ? `temp-${this.person.id}` : "temp");
+      const unique = Date.now();
       var storageRef = storage.ref(
-        "course-images/" + this.currentCourseId + "-" + this.uploadedImage.name,
+        "course-images/" + courseOrTemp + "-" + unique + "-" + this.uploadedImage.name,
       );
 
       // upload a file
@@ -1004,13 +1148,28 @@ export default {
       return options[Math.floor(Math.random() * options.length)];
     },
     sendCourseCreatedEmail(email, name, courseTitle, courseId) {
+      // console.log("sendCourseCreatedEmail called with:", { email, name, courseTitle, courseId });
+
+      // Final validation before sending to cloud function
+      if (!email || !name || !courseTitle || !courseId) {
+        console.error("Missing required parameters:", { email, name, courseTitle, courseId });
+        throw new Error("Missing required parameters for course created email");
+      }
+
+      // Ensure course title is not empty
+      if (!courseTitle.trim()) {
+        console.error("Course title is empty:", courseTitle);
+        throw new Error("Course title cannot be empty");
+      }
+
       let data = {
         email: email,
         name: name,
-        course: courseTitle,
+        course: courseTitle.trim(),
         courseId: courseId,
       };
-      console.log("sending new map created email");
+      // console.log("Data object being sent to cloud function:", data);
+
       const sendCourseCreatedEmail = functions.httpsCallable("sendCourseCreatedEmail");
       return sendCourseCreatedEmail(data);
     },
@@ -1037,6 +1196,15 @@ export default {
         this.$set(this.course, "collaboratorIds", []);
       if (!this.course.collaboratorIds.includes(collaborator.id))
         this.course.collaboratorIds.push(collaborator.id);
+
+      // Send notification email to the new collaborator
+      this.sendCollaboratorAddedEmail(
+        collaborator.email,
+        collaborator.firstName + " " + collaborator.lastName,
+        this.course.title || "Untitled Galaxy",
+        this.person.firstName + " " + this.person.lastName,
+        this.course.id || "new",
+      );
 
       this.setSnackbar({
         show: true,
@@ -1068,7 +1236,6 @@ export default {
           };
         });
       } else {
-        console.log("course has no collaborators, starting with empty list");
         this.collaborators = [];
       }
     },
@@ -1078,6 +1245,127 @@ export default {
       this.$nextTick(() => {
         this.$emit("openAiDialog"); // Emit event to open AI dialog
       });
+    },
+    sendCollaboratorAddedEmail(email, name, courseTitle, inviterName, courseId) {
+      let data = {
+        collaboratorEmail: email,
+        collaboratorName: name,
+        galaxyTitle: courseTitle,
+        inviterName: inviterName,
+        galaxyId: courseId,
+      };
+      console.log("sending added collaborator an email");
+      const sendCollaboratorAddedEmail = functions.httpsCallable("sendCollaboratorAddedEmail");
+      return sendCollaboratorAddedEmail(data);
+    },
+    validateCourseTitle() {
+      if (this.course.title) {
+        this.course.title = this.course.title.trim();
+      }
+    },
+    validateForm() {
+      // Ensure course title is properly set
+      if (!this.course.title || !this.course.title.trim()) {
+        this.setSnackbar({
+          show: true,
+          text: "Please enter a galaxy name",
+          color: "error",
+        });
+        return false;
+      }
+
+      // Ensure person data is available
+      if (!this.person || !this.person.id || !this.person.email || !this.person.firstName) {
+        this.setSnackbar({
+          show: true,
+          text: "User data not available. Please refresh and try again.",
+          color: "error",
+        });
+        return false;
+      }
+
+      // Log the validation
+      console.log("Form validation passed:", {
+        courseTitle: this.course.title,
+        personData: this.person,
+      });
+
+      return true;
+    },
+    handleCreateGalaxy() {
+      // Ensure course title is properly set before submission
+      if (this.course.title) {
+        this.course.title = this.course.title.trim();
+      }
+
+      // Log the submission
+      //console.log("Creating galaxy with data:", this.course);
+      //console.log("Person data:", this.person);
+
+      // Call the save method
+      this.saveCourse(this.course);
+    },
+    handleUpdateGalaxy() {
+      // Ensure course title is properly set before submission
+      if (this.course.title) {
+        this.course.title = this.course.title.trim();
+      }
+
+      // Log the submission
+      //console.log("Updating galaxy with data:", this.course);
+      //console.log("Person data:", this.person);
+
+      // Call the update method
+      this.updateCourse(this.course);
+    },
+    selectManualMode() {
+      this.creationMode = "manual";
+
+      // Log the current state
+      //console.log("Manual mode selected, course data:", this.course);
+      //console.log("Person data:", this.person);
+    },
+    initializeCourseData() {
+      // Ensure course data is properly initialized
+      if (!this.course.title) {
+        this.course.title = "";
+      }
+      if (!this.course.description) {
+        this.course.description = "";
+      }
+      if (!this.course.image) {
+        this.course.image = { url: "", name: "" };
+      }
+      if (!this.course.mappedBy) {
+        this.course.mappedBy = { name: "", image: { url: "", name: "" }, source: "" };
+      }
+      if (!this.course.collaboratorIds) {
+        this.course.collaboratorIds = [];
+      }
+      if (!this.course.status) {
+        this.course.status = "drafting";
+      }
+    },
+    resetCourseData() {
+      // Reset course data to initial state
+      this.course = {
+        title: "",
+        description: "",
+        image: {
+          url: "",
+          name: "",
+        },
+        mappedBy: {
+          name: "",
+          image: {
+            url: "",
+            name: "",
+          },
+          source: "",
+        },
+        collaboratorIds: [],
+        status: "drafting",
+      };
     },
   },
 };

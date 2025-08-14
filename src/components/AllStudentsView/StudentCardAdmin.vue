@@ -234,14 +234,12 @@ export default {
     },
     removeCourseFromPerson(course) {
       this.courseForDialog = course;
-      console.log("get course and remove it", course.id);
       // trigger delete confirm dialog
       this.dialogConfirm = true;
     },
     async confirmDeleteCourseFromPerson() {
       this.disabled = true;
       this.deleting = true;
-      console.log("deleting course from person", this.courseForDialog);
 
       await removePersonFromCourse(this.student.id, this.courseForDialog.id);
       this.dialogConfirm = false;
@@ -279,7 +277,6 @@ export default {
         this.timeframe.max.toISOString(),
       );
       this.studentTimeDataLoading = false;
-      // console.log("course HOURS for " + this.student.firstName + ": ", courseHours);
       return courseHours;
     },
   },

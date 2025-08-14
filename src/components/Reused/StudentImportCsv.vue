@@ -136,7 +136,6 @@ export default {
     },
     async saveStudents() {
       this.loading = true;
-      console.log("saving students");
 
       try {
         // Use the bulk import cloud function for better performance and reliability
@@ -146,23 +145,16 @@ export default {
           this.person.firstName + " " + this.person.lastName,
         );
 
-        console.log("Bulk import completed:", result);
-
         // Show results to user
         if (result.summary.errors > 0) {
           console.warn(`Import completed with ${result.summary.errors} errors`);
           // You could show a more detailed error report here
         }
-
-        console.log(
-          `Successfully processed ${result.summary.success}/${result.summary.total} students`,
-        );
       } catch (error) {
         console.error("Error during bulk import:", error);
         // You could show an error message to the user here
       }
 
-      console.log("All students written to database");
       // this.$refs.csvFile.value = null;
       this.loading = false;
       this.showTable = false;
@@ -181,7 +173,6 @@ export default {
       var lines = csv.split("\n");
       var result = [];
       var headers = lines[0].split(",");
-      console.log("headers", headers);
       vm.parse_header = lines[0].split(",");
       // camelize headers
       vm.parse_header = vm.parse_header.map((header) => {
@@ -230,7 +221,6 @@ export default {
           event.target.result;
           var csv = event.target.result;
           vm.parse_csv = vm.csvJSON(csv);
-          console.log("csv = ", vm.parse_csv);
         };
         reader.onerror = function (evt) {
           if (evt.target.error.name == "NotReadableError") {
@@ -240,7 +230,6 @@ export default {
       } else {
         alert("FileReader are not supported in this browser.");
       }
-      console.log("this.parse_csv", this.parse_csv);
     },
     camelize(str) {
       return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {

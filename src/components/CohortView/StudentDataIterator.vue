@@ -198,7 +198,6 @@ export default {
       deep: true,
       async handler(newCohort, oldCohort) {
         if (oldCohort.students?.length !== newCohort.students?.length) {
-          console.log("watch cohort. student lenght changed");
           if (oldCohort.students?.length > newCohort.students?.length) this.removeStudentProfiles();
           else await this.getStudentProfiles();
         }
@@ -217,7 +216,7 @@ export default {
       return this.cohort.teachers?.includes(this.person.id);
     },
     sortedStudents() {
-      if (this.sortBy !== 'lastActive') {
+      if (this.sortBy !== "lastActive") {
         return this.students;
       }
 
@@ -225,13 +224,13 @@ export default {
         // Always put undefined values at the bottom regardless of sort direction
         if (a.lastActive === undefined) return 1;
         if (b.lastActive === undefined) return -1;
-        
+
         // For defined values, sort normally
-        return this.sortDesc 
-          ? a.lastActive - b.lastActive  // Descending: oldest first
+        return this.sortDesc
+          ? a.lastActive - b.lastActive // Descending: oldest first
           : b.lastActive - a.lastActive; // Ascending: most recent first
       });
-    }
+    },
   },
   methods: {
     // show/hide student details

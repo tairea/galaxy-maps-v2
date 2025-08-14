@@ -51,7 +51,12 @@
         <v-icon left> {{ mdiLink }} </v-icon>
         Copy link
       </v-btn>
-      <CreateEditDeleteGalaxyDialog v-if="teacher" :edit="true" :courseToEdit="course" />
+      <CreateEditDeleteGalaxyDialog
+        v-if="teacher"
+        :edit="true"
+        :courseToEdit="course"
+        @preSaveUpdate="forwardPreSaveUpdate"
+      />
     </div>
   </div>
 </template>
@@ -90,6 +95,9 @@ export default {
 
   methods: {
     ...mapActions(useRootStore, ["setSnackbar"]),
+    forwardPreSaveUpdate(payload) {
+      this.$emit("preSaveUpdate", payload);
+    },
     toggleMinimize() {
       this.isMinimized = !this.isMinimized;
       this.$emit("minimised", this.isMinimized);

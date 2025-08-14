@@ -343,8 +343,6 @@ export default {
     },
   },
   async mounted() {
-    console.log("mounted");
-
     // Set initial label color
     this.nodeLabelColor = this.$vuetify.theme.isDark
       ? this.$vuetify.theme.themes.dark.missionAccent
@@ -454,7 +452,6 @@ export default {
       }
     },
     async drawSolarSystems() {
-      console.log("drawing planets");
       // set up solar system planets
       await this.setupSolarSystemPlanets();
       // this.setupStars();             // <--- experimenting with drawing a Sun on nodes
@@ -630,6 +627,17 @@ export default {
       // 4) hide edges
       var options = { ...this.network.options };
       options.edges.hidden = true; // hide edges
+      // Enable vis-network labels just for the previewed node
+      try {
+        // set the previewed node's label to the original label, positioned below the node
+        this.$refs.network.visData.nodes.update({
+          id: closestNode.id,
+          label: this.currentCourseNodes.find((n) => n.id === closestNode.id)?.label || "",
+          font: { size: 10, align: "center", vadjust: 14 },
+        });
+      } catch (e) {
+        console.warn("Failed to enable vis label for preview node", e);
+      }
       this.$refs.network.setOptions(options);
       // 5) minimise left panels & buttons
       this.$emit("hideLeftPanels", true);
@@ -889,6 +897,15 @@ export default {
       var options = { ...this.network.options };
       options.edges.hidden = false;
       this.$refs.network.setOptions(options);
+      // Disable vis-network labels for all nodes again
+      try {
+        // Reset label property for all nodes back to empty, we draw labels manually
+        const ids = this.$refs.network.visData.nodes.getIds();
+        const updates = ids.map((id) => ({ id, label: "" }));
+        this.$refs.network.visData.nodes.update(updates);
+      } catch (e) {
+        console.warn("Failed to disable vis labels after preview", e);
+      }
       this.previewedNode = null;
       this.inSystemPreviewView = false;
       this.numberOfTasksForThisTopic = 0;
@@ -949,11 +966,19 @@ export default {
       }
     },
     drawNodeLabels(ctx) {
-      // Set text properties
-      ctx.font = "12px Arial";
-      ctx.fillStyle = this.nodeLabelColor;
-      ctx.textAlign = "left";
-      ctx.textBaseline = "middle";
+      // If we're in preview, let vis-network render the label for the previewed node
+      if (this.inSystemPreviewView) {
+        return;
+      }
+      // Draw node labels with mode-aware sizing/positioning
+      ctx.save();
+      const scale = this.$refs.network.getScale();
+      const nodeRadius = this.network?.options?.nodes?.size ?? 7;
+      const previewScreenFontPx = 10; // desired on-screen font size when previewing
+      const defaultFontPx = 12;
+      const labelColor = this.nodeLabelColor;
+      // Configure base style; will be overridden per-mode below
+      ctx.fillStyle = labelColor;
 
       // Get all node positions
       const nodeIds = this.$refs.network.nodes.map(({ id }) => id);
@@ -969,14 +994,16 @@ export default {
             continue;
           }
 
-          // Position label to the right of the node
-          const labelX = position.x + 15; // 15px offset from node
+          // Default mode: draw label to the right with standard sizing
+          ctx.font = `${defaultFontPx}px Arial`;
+          ctx.textAlign = "left";
+          ctx.textBaseline = "middle";
+          const labelX = position.x + 15; // offset to the right of node
           const labelY = position.y;
-
-          // Draw the node label
           ctx.fillText(originalNode.label, labelX, labelY);
         }
       }
+      ctx.restore();
     },
     async setupSolarSystemPlanets() {
       // Wait for tasks to be loaded if they're not already
@@ -1003,7 +1030,7 @@ export default {
       this.$emit("courseTasks", this.tasks);
 
       // if our solar systems are loading, disable spinner
-      console.log("planets and animation done. loading - false");
+
       this.loading = false;
 
       // get node ids
@@ -1124,37 +1151,37 @@ export default {
       //   star.update(ctx, delta);
       // }
 
-      if (this.inSystemPreviewView) {
-        // console.log("ctx", ctx)
-        // Canvas - set fill
-        ctx.fillStyle = this.dark
-          ? this.$vuetify.theme.themes.dark.background
-          : this.$vuetify.theme.themes.light.background;
-        // ctx.fillStyle = "pink";
-        // Canvas - start path
-        ctx.beginPath();
-        // Canvas - draw rectangle the size of the screen
-        const cavasSizeBuffer = 10000;
-        ctx.rect(
-          // 0 - ctx.canvas.offsetWidth,
-          // 0 - ctx.canvas.offsetHeight,
-          0 - (ctx.canvas.width + cavasSizeBuffer / 2),
-          0 - (ctx.canvas.height + cavasSizeBuffer / 2),
-          ctx.canvas.width + cavasSizeBuffer,
-          ctx.canvas.height + cavasSizeBuffer,
-        );
-        // Canvas - draw arc (circle) the of the numbers of tasks/planet orbits
-        // Note: drawing a rectanlge then a circle in the same path makes the circle a whole
-        ctx.arc(
-          this.previewedNode.x,
-          this.previewedNode.y,
-          20 * (this.numberOfTasksForThisTopic + 2), // masked circle is 2 rings out from furtherest ring
-          0,
-          2 * Math.PI,
-          true,
-        );
-        ctx.fill();
-      }
+      // if (this.inSystemPreviewView) {
+      //   // console.log("ctx", ctx)
+      //   // Canvas - set fill
+      //   ctx.fillStyle = this.dark
+      //     ? this.$vuetify.theme.themes.dark.background
+      //     : this.$vuetify.theme.themes.light.background;
+      //   // ctx.fillStyle = "pink";
+      //   // Canvas - start path
+      //   ctx.beginPath();
+      //   // Canvas - draw rectangle the size of the screen
+      //   const cavasSizeBuffer = 10000;
+      //   ctx.rect(
+      //     // 0 - ctx.canvas.offsetWidth,
+      //     // 0 - ctx.canvas.offsetHeight,
+      //     0 - (ctx.canvas.width + cavasSizeBuffer / 2),
+      //     0 - (ctx.canvas.height + cavasSizeBuffer / 2),
+      //     ctx.canvas.width + cavasSizeBuffer,
+      //     ctx.canvas.height + cavasSizeBuffer,
+      //   );
+      //   // Canvas - draw arc (circle) the of the numbers of tasks/planet orbits
+      //   // Note: drawing a rectanlge then a circle in the same path makes the circle a whole
+      //   ctx.arc(
+      //     this.previewedNode.x,
+      //     this.previewedNode.y,
+      //     20 * (this.numberOfTasksForThisTopic + 2), // masked circle is 2 rings out from furtherest ring
+      //     0,
+      //     2 * Math.PI,
+      //     true,
+      //   );
+      //   ctx.fill();
+      // }
 
       // Draw planet labels only when missions are shown
       if (this.showMissions) {

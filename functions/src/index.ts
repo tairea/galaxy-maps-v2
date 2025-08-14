@@ -40,6 +40,11 @@ import {
   removeMeFromCourseHttpsEndpoint,
   removeStudentFromCourseHttpsEndpoint,
   saveGalaxyMapHttpsEndpoint,
+  saveTopicToStudentsHttpsEndpoint,
+  deleteTopicForStudentsHttpsEndpoint,
+  saveNodeHttpsEndpoint,
+  removePrerequisitesFromTopicsHttpsEndpoint,
+  updateStudentTopicPrerequisitesHttpsEndpoint,
 } from "./courseManagement.js";
 import {
   sendCourseDeletedHttpsEndpoint,
@@ -52,6 +57,7 @@ import {
   sendResponseToHelpHttpsEndpoint,
   sendResponseToSubmissionHttpsEndpoint,
   sendTaskSubmissionHttpsEndpoint,
+  sendCollaboratorAddedEmailHttpsEndpoint,
 } from "./emails.js";
 import {
   getOrganisationByOrganisationIdHttpsEndpoint,
@@ -78,8 +84,10 @@ import {
   generateGalaxyMapWithClarificationHttpsEndpoint,
   generateGalaxyMapAgainHttpsEndpoint,
   generateInstructionsForMissionHttpsEndpoint,
+  generateUnifiedGalaxyMapHttpsEndpoint,
 } from "./openAIActions.js";
 
+// activity
 export {
   getCohortCoursesActivityByCohortIdHttpsEndpoint as getCohortCoursesActivityByCohortId,
   getCohortStudentsActivityTimeByCohortIdHttpsEndpoint as getCohortStudentsActivityTimeByCohortId,
@@ -89,8 +97,10 @@ export {
   getStudentCoursesTimeDataByPersonIdStartAtEndAtHttpsEndpoint as getStudentCoursesTimeDataByPersonIdStartAtEndAt,
 };
 
+// scheduled functions
 export { checkInactivitySchedule as scheduledFunction };
 
+// course management
 export {
   addMeToCohortHttpsEndpoint as addMeToCohort,
   addStudentToCohortHttpsEndpoint as addStudentToCohort,
@@ -121,8 +131,14 @@ export {
   removeMeFromCourseHttpsEndpoint as removeMeFromCourse,
   removeStudentFromCourseHttpsEndpoint as removeStudentFromCourse,
   saveGalaxyMapHttpsEndpoint as saveGalaxyMap,
+  saveTopicToStudentsHttpsEndpoint as saveTopicToStudents,
+  deleteTopicForStudentsHttpsEndpoint as deleteTopicForStudents,
+  saveNodeHttpsEndpoint as saveNode,
+  removePrerequisitesFromTopicsHttpsEndpoint as removePrerequisitesFromTopics,
+  updateStudentTopicPrerequisitesHttpsEndpoint as updateStudentTopicPrerequisites,
 };
 
+// emails
 export {
   sendCourseDeletedHttpsEndpoint as sendCourseDeleted,
   sendCoursePublishedEmailHttpsEndpoint as sendCoursePublishedEmail,
@@ -134,8 +150,10 @@ export {
   sendResponseToHelpHttpsEndpoint as sendResponseToHelp,
   sendResponseToSubmissionHttpsEndpoint as sendResponseToSubmission,
   sendTaskSubmissionHttpsEndpoint as sendTaskSubmission,
+  sendCollaboratorAddedEmailHttpsEndpoint as sendCollaboratorAddedEmail,
 };
 
+// organisation
 export {
   getOrganisationByOrganisationIdHttpsEndpoint as getOrganisationByOrganisationId,
   getPeopleByOrganisationIdHttpsEndpoint as getPeopleByOrganisationId,
@@ -145,8 +163,10 @@ export {
   deleteOrganisationByOrganisationIdHttpsEndpoint as deleteOrganisationByOrganisationId,
 };
 
+// presence
 export { onUserStatusChangedOnUpdateTrigger as onUserStatusChanged };
 
+// user
 export {
   addAdminRoleHttpsEndpoint as addAdminRole,
   bulkImportStudentsHttpsEndpoint as bulkImportStudents,
@@ -158,10 +178,12 @@ export {
   resendInitialSetupLinkHttpsEndpoint as resendInitialSetupLink,
 };
 
+// openai
 export {
   downloadAndUploadImageHttpsEndpoint as downloadAndUploadImage,
   generateGalaxyMapHttpsEndpoint as generateGalaxyMap,
   generateGalaxyMapWithClarificationHttpsEndpoint as generateGalaxyMapWithClarification,
   generateGalaxyMapAgainHttpsEndpoint as generateGalaxyMapAgain,
   generateInstructionsForMissionHttpsEndpoint as generateInstructionsForMission,
+  generateUnifiedGalaxyMapHttpsEndpoint as generateUnifiedGalaxyMap,
 };

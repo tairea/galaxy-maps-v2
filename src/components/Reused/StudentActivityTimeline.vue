@@ -187,7 +187,6 @@ export default {
     },
     sanitiseStudentsActivityLog() {
       const filtered = this.studentsActivityLog.filter((activity) => activity.course);
-      // console.log("filtered", filtered);
       const sanitised = filtered.map((statement, index) => {
         let [action, title] = statement.description.split(": ");
         let [status, type] = action.split(" ");

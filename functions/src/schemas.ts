@@ -142,8 +142,8 @@ export const UnifiedMissionInstructionsSchema = z.object({
 
 /* -------------------- Mid-level Schemas ------------------- */
 
-export const UnifiedJourneyMissionsSchema = z.object({
-  /** e.g., "1.1: Mission Title" */
+export const UnifiedJourneyPlanetsSchema = z.object({
+  /** e.g., "1.1: Planet Title" (small, focused win) */
   title: z.string().min(1),
   description: z.string().min(1),
   missionInstructions: UnifiedMissionInstructionsSchema,
@@ -153,7 +153,7 @@ export const UnifiedJourneyStarsSchema = z.object({
   /** e.g., "1: Star Title" */
   title: z.string().min(1),
   description: z.string().min(1),
-  missions: z.array(UnifiedJourneyMissionsSchema).min(1),
+  planets: z.array(UnifiedJourneyPlanetsSchema).min(1),
 });
 
 /* ------------------- Top-level (Unified) ------------------ */
@@ -204,6 +204,6 @@ export const UnifiedGalaxyMapResponseSchema = z
 export type UnifiedTask = z.infer<typeof UnifiedJourneyTaskSchema>;
 export type UnifiedStep = z.infer<typeof UnifiedJourneyStepSchema>;
 export type UnifiedMissionInstructions = z.infer<typeof UnifiedMissionInstructionsSchema>;
-export type UnifiedMission = z.infer<typeof UnifiedJourneyMissionsSchema>;
+export type UnifiedPlanet = z.infer<typeof UnifiedJourneyPlanetsSchema>;
 export type UnifiedStar = z.infer<typeof UnifiedJourneyStarsSchema>;
 export type UnifiedGalaxyMapResponse = z.infer<typeof UnifiedGalaxyMapResponseSchema>;

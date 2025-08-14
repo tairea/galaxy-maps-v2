@@ -58,7 +58,6 @@ export const fetchStudentRequestsByPersonId = async (
   const data = {
     personId,
   };
-  console.log("fetchStudentRequestsByPersonId -> data:", data);
   const getStudentRequestsByPersonId = functions.httpsCallable("getStudentRequestsByPersonId");
   const result = await getStudentRequestsByPersonId(data);
   return result.data.requests;
@@ -626,6 +625,35 @@ export const generateGalaxyMap = async (
   return result.data;
 };
 
+// Unified AI Galaxy Map Generation (Stars + Missions + Mission Instructions)
+export const generateUnifiedGalaxyMap = async (
+  description: string,
+): Promise<{
+  success: boolean;
+  galaxyMap: any;
+  tokenUsage: {
+    modelsUsed: {
+      model: string;
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    }[];
+    combinedEstimatedCost: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalTokens: number;
+  };
+  responseId: string;
+}> => {
+  const data = { description };
+  const generateUnifiedGalaxyMapFunction = functions.httpsCallable("generateUnifiedGalaxyMap", {
+    timeout: 180000,
+  });
+  const result = await generateUnifiedGalaxyMapFunction(data);
+  return result.data;
+};
+
 // AI Galaxy Map Generation with Clarification (Second Step)
 export const generateGalaxyMapWithClarification = async (
   clarificationAnswers: string,
@@ -688,6 +716,34 @@ export const generateGalaxyMapAgain = async (
     timeout: 180000,
   }); // 180s timeout
   const result = await generateGalaxyMapAgainFunction(data);
+  return result.data;
+};
+
+// Unified AI Galaxy Map Generation with Clarification (Second Step)
+export const generateUnifiedGalaxyMapWithClarification = async (
+  clarificationAnswers: string,
+  previousResponseId: string,
+): Promise<{
+  success: boolean;
+  galaxyMap: any;
+  tokenUsage: {
+    modelsUsed: {
+      model: string;
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    }[];
+    combinedEstimatedCost: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalTokens: number;
+  };
+  responseId: string;
+}> => {
+  const data = { clarificationAnswers, previousResponseId };
+  const fn = functions.httpsCallable("generateUnifiedGalaxyMap", { timeout: 180000 });
+  const result = await fn(data);
   return result.data;
 };
 
@@ -816,5 +872,124 @@ export const bulkImportStudents = async (
   };
   const bulkImportStudents = functions.httpsCallable("bulkImportStudents");
   const result = await bulkImportStudents(data);
+  return result.data;
+};
+
+// Remove prerequisites from topics when a node is deleted
+export const removePrerequisitesFromTopics = async (
+  courseId: string,
+  nodeId: string,
+): Promise<{
+  success: boolean;
+  affectedTopicsCount: number;
+  affectedTopics: Array<{
+    topicId: string;
+    oldPrerequisites: string[];
+    newPrerequisites: string[];
+  }>;
+}> => {
+  const data = {
+    courseId,
+    nodeId,
+  };
+  const removePrerequisitesFromTopicsFunction = functions.httpsCallable(
+    "removePrerequisitesFromTopics",
+  );
+  const result = await removePrerequisitesFromTopicsFunction(data);
+  return result.data;
+};
+
+// Update prerequisites for a specific student's topics
+export const updateStudentTopicPrerequisites = async (
+  courseId: string,
+  personId: string,
+  affectedTopics: Array<{
+    topicId: string;
+    newPrerequisites: string[];
+  }>,
+): Promise<{
+  success: boolean;
+  updatedTopicsCount: number;
+  personId: string;
+}> => {
+  const data = {
+    courseId,
+    personId,
+    affectedTopics,
+  };
+  const updateStudentTopicPrerequisitesFunction = functions.httpsCallable(
+    "updateStudentTopicPrerequisites",
+  );
+  const result = await updateStudentTopicPrerequisitesFunction(data);
+  return result.data;
+};
+
+// Save a topic to all students in a course
+export const saveTopicToStudents = async (
+  courseId: string,
+  node: any,
+  students: Array<{ id: string; [key: string]: any }>,
+): Promise<{
+  success: boolean;
+  studentsProcessed: number;
+  topicsCreated: number;
+  message: string;
+}> => {
+  const data = {
+    courseId,
+    node,
+    students,
+  };
+  const saveTopicToStudentsFunction = functions.httpsCallable("saveTopicToStudents");
+  const result = await saveTopicToStudentsFunction(data);
+  return result.data;
+};
+
+// Delete a topic from all students in a course
+export const deleteTopicForStudents = async (
+  courseId: string,
+  node: any,
+  students: Array<{ id: string; [key: string]: any }>,
+  affectedTopics: Array<{
+    topicId: string;
+    newPrerequisites: string[];
+  }> = [],
+): Promise<{
+  success: boolean;
+  studentsProcessed: number;
+  topicsDeleted: number;
+  affectedTopicsUpdated: boolean;
+  message: string;
+}> => {
+  const data = {
+    courseId,
+    node,
+    students,
+    affectedTopics,
+  };
+  const deleteTopicForStudentsFunction = functions.httpsCallable("deleteTopicForStudents");
+  const result = await deleteTopicForStudentsFunction(data);
+  return result.data;
+};
+
+// Save a node to the course map
+export const saveNode = async (
+  courseId: string,
+  node: any,
+  isUpdate: boolean = false,
+): Promise<{
+  success: boolean;
+  nodeId: string;
+  edgesCreated: number;
+  topicTotalUpdated: boolean;
+  message: string;
+}> => {
+  const data = {
+    courseId,
+    node,
+    isUpdate,
+  };
+  const saveNodeFunction = functions.httpsCallable("saveNode");
+  const result = await saveNodeFunction(data);
   return result.data;
 };

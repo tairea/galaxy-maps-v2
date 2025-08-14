@@ -1,3 +1,33 @@
+<!-- ai character generation -->
+
+create a mini course on how to generate lip-sycned videos of ai characters talking.
+the workflow is this:
+
+- generate an image of a character using chatgpt and download
+- generate a voice with eleven labs and download
+- convert the downloaded eleven labs .mp3 file to .wav using audacity (explain how to download audacity)
+- use hunyuan to generate the lip-sync video by uploading the .wav audio and image and then generate.
+  -- its important to use this link (https://hunyuan.tencent.com/modelSquare/home/play?modelId=126) to get to the right model and ui.
+  -- the website is in chinese so in chrome the have to click the translate icon at the end of the url bar to change the language to English
+  -- the first ui they are presented with is the login method (WeChat, QQ, Email), have them select Email
+  -- they will need to enter their email address, then click the "Get verification code" link, then click the blue agree button to accept service agreements, then go to their email and copy the code from the email that was sent (the email might be in Spam folder), coming back to the sign in screen, and pasting the code into the field below the email address, and then click log in
+  -- once logged in they will need to change the language back to english, select the "Upload Audio" option (instead of the default "Text reading" option)
+  -- now they can upload the audio file, and upload the image, and once those two files are uploaded the can click Generate Now
+  -- It will take a few minutes to generate, then can then click on the video to watch it, and click the 3 dots (bottom right corner), and Download, to download their generated lip-sync video from ai generated image and ai generated audio
+
+clarifying response
+
+['Who is the target learner (age, technical skill level, experience with web apps/audio tools)?', 'Which operating system(s) should the Audacity down…→WAV steps cover (Windows, macOS, Linux, or all)?', 'Do you want the guide to include account sign-up s…sume learners already have accounts and an email?', 'When you say “generate an image of a character usi…rred visual style (cartoon, stylized, photoreal).', 'Do you want detailed Eleven Labs guidance (choosin…e) or just a simple ‘generate and download’ flow?', 'Should I include short legal/ethics/use guidance (…l use/licensing) for generated voices and images?', 'How long/compact should this mini-course be (e.g.,…3–5 planets, or a slightly deeper 2–3 hour path)?']
+
+question answers:
+
+1. school aged kids, i want to test it with my 10 year old niece
+2. windows
+3. please step them through creating the accounts, and stepping through the ui steps to do some of the generations (eg. for eleven labs -> creative platform -> create a voice -> Voice Design -> Prompt & Text to preview -> Generate voice)
+4. assume the already have a chatgpt account and access to the chatgpt prompt box where they can directly prompt an image. maybe give them some guidance by providing some examples and first but then stepping them through how to make their own. once they have an image of a character they are happy with then proceed to download it and continue the rest of the workflow
+5. generate and download flow. dont want to get bogged down in the details
+6. nar not within this scope
+7. as many planets as is required to get them comfortable with each step in the workflow
 <!-- Wordpress -->
 
 teach someone how to create a wordpress website using BeTheme and hosting it on a domain via cPanel

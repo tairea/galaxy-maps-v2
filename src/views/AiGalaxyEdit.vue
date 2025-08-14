@@ -158,6 +158,7 @@
           :teacher="teacher"
           :draft="draft"
           @minimised="minimised"
+          @preSaveUpdate="applyPreSaveUpdate"
         />
       </div>
       <BackButton v-if="!isGalaxyInfoMinimized" :toPath="'/'" :dynamicPath="backButtonPath" />
@@ -202,6 +203,7 @@
                   @update:active="(newValue) => itemMadeActive(newValue, starIndex)"
                   hoverable
                   activatable
+                  :item-disabled="'disabled'"
                   :multiple-active="!taskEditing"
                   open-all
                   color="missionAccent"
@@ -244,6 +246,7 @@
                         <span v-else class="item-name">{{ item.name }}</span>
 
                         <v-icon
+                          v-if="item.type !== 'instructions'"
                           class="edit-icon"
                           small
                           :color="
@@ -263,6 +266,7 @@
                           {{ editingItem && editingItem.id === item.id ? mdiCheck : mdiPencil }}
                         </v-icon>
                         <v-icon
+                          v-if="item.type !== 'instructions'"
                           class="delete-icon"
                           small
                           color="error"
@@ -455,9 +459,19 @@
                 </v-btn>
 
                 <!-- <PublishGalaxy v-if="showPublish" :course="boundCourse" :courseTasks="courseTasks" /> -->
-                <v-btn @click="saveGalaxyToDB" outlined color="baseAccent">
+                <v-btn v-if="!courseId" @click="saveGalaxyToDB" outlined color="baseAccent">
                   <v-icon left> {{ mdiArrowRightBold }} </v-icon>
                   Next Step
+                </v-btn>
+                <v-btn
+                  v-else
+                  outlined
+                  color="baseAccent"
+                  :disabled="!hasUnsavedChanges || loading"
+                  @click="showLayoutDialog = true"
+                >
+                  <v-icon left> {{ mdiContentSave }} </v-icon>
+                  Save Galaxy Changes
                 </v-btn>
               </div>
             </div>
@@ -551,7 +565,8 @@
       @confirm="confirmLayoutSelection"
     />
 
-    <!-- Save Galaxy Dialog -->
+    <!-- Save Galaxy Dialog (disabled for unified flow) -->
+    <!--
     <SaveGalaxyDialog
       :show-dialog="showSaveGalaxyDialog"
       :loading="loading"
@@ -559,6 +574,7 @@
       @save-now-generate-later="handleSaveNowGenerateLater"
       @cancel="cancelSaveGalaxyDialog"
     />
+    -->
 
     <!-- Prompt Dialog -->
     <!-- <PromptDialog v-if="promptDialog" :context="promptContext" /> -->
@@ -573,6 +589,8 @@ import {
   mdiCheck,
   mdiRobotExcited,
   mdiArrowRightBold,
+  mdiArrowLeftBold,
+  mdiContentSave,
 } from "@mdi/js";
 import LoadingSpinner from "@/components/Reused/LoadingSpinner.vue";
 import RobotLoadingSpinner from "@/components/Reused/RobotLoadingSpinner.vue";
@@ -587,10 +605,16 @@ import Network from "@/vue2vis/Network.vue";
 import "vis-network/styles/vis-network.css";
 import { Planet } from "@/lib/planet";
 import { zodTextFormat } from "openai/helpers/zod";
-import { StarsAndPlanetsResponseSchema } from "@/lib/schemas";
-import { saveGalaxyMap, generateInstructionsForMission, generateGalaxyMapAgain } from "@/lib/ff";
+import { StarsAndPlanetsResponseSchema, UnifiedGalaxyMapResponseSchema } from "@/lib/schemas";
+import {
+  saveGalaxyMap,
+  generateInstructionsForMission,
+  generateGalaxyMapAgain,
+  getGalaxyMapObjectFromCourse,
+} from "@/lib/ff";
 import * as smd from "streaming-markdown";
 import { getFriendlyErrorMessage } from "@/lib/utils";
+import { db } from "@/store/firestoreConfig";
 
 // import PromptDialog from "@/components/Dialogs/PromptDialog.vue";
 
@@ -620,6 +644,8 @@ export default {
       mdiCheck,
       mdiRobotExcited,
       mdiArrowRightBold,
+      mdiArrowLeftBold,
+      mdiContentSave,
       // Loading tracking
       isSavingToDB: false,
       isGeneratingMissions: false,
@@ -653,6 +679,7 @@ export default {
 
       // AI Generated Galaxy Map
       aiGeneratedGalaxyMap: {},
+      originalGalaxyMapSnapshot: null,
 
       // GalaxyInfo minimized state
       isGalaxyInfoMinimized: false,
@@ -828,6 +855,15 @@ export default {
     };
   },
   watch: {
+    courseId: {
+      immediate: true,
+      async handler(newVal) {
+        if (newVal) {
+          await this.bindCourseByCourseId(newVal);
+          this.setCurrentCourseId(newVal);
+        }
+      },
+    },
     loading(newValue) {
       if (newValue) {
         this.startLoadingMessages();
@@ -904,6 +940,8 @@ export default {
     if (this.courseId) {
       // Set the current course ID in the store
       this.setCurrentCourseId(this.courseId);
+      // Bind to store-managed course (reactive like GalaxyView)
+      await this.bindCourseByCourseId(this.courseId);
 
       // Load course data from store if available
       if (this.aiGalaxyEditData) {
@@ -957,27 +995,28 @@ export default {
 
     // Set up MutationObserver to watch for treeview content changes
     this.setupTreeviewObserver();
+
+    // Capture initial snapshot for change detection
+    this.originalGalaxyMapSnapshot = this.getSanitizedGalaxyMap(this.aiGeneratedGalaxyMap);
   },
   computed: {
-    ...mapState(useRootStore, ["aiGalaxyEditData"]),
+    ...mapState(useRootStore, {
+      aiGalaxyEditData: "aiGalaxyEditData",
+      storeBoundCourse: "boundCourse",
+    }),
     boundCourse() {
-      // Get data from props or store
-      let responseData = this.parsedResponse || this.aiGalaxyEditData;
+      // When routed with an id, prefer the store-bound course (same behavior as GalaxyView)
+      if (this.courseId && this.storeBoundCourse) return this.storeBoundCourse;
 
-      const courseData = {
-        title: responseData?.title || "Untitled Galaxy",
-        description: responseData?.description || "No description available",
-        status: "draft",
-        image: responseData?.image || null, // Include image data
+      // Fallback to AI-generated data prior to save
+      const responseData = this.parsedResponse || this.aiGalaxyEditData || {};
+      return {
+        id: this.courseId || responseData.idInDatabase || responseData.id || null,
+        title: responseData.title || "Untitled Galaxy",
+        description: responseData.description || "No description available",
+        status: "drafting",
+        image: responseData.image || null,
       };
-
-      console.log("Bound Course computed property:", {
-        hasImage: !!courseData.image,
-        imageData: courseData.image,
-        title: courseData.title,
-      });
-
-      return courseData;
     },
     teacher() {
       return true; // For AI editing, assume teacher permissions
@@ -1063,13 +1102,136 @@ export default {
     backButtonPath() {
       return this.courseId ? `/galaxy/${this.courseId}` : null;
     },
+    hasUnsavedChanges() {
+      try {
+        const current = this.getSanitizedGalaxyMap(this.aiGeneratedGalaxyMap);
+        const baseline = this.originalGalaxyMapSnapshot;
+        if (!baseline) return false;
+        return JSON.stringify(current) !== JSON.stringify(baseline);
+      } catch (e) {
+        return false;
+      }
+    },
   },
   methods: {
+    getSanitizedGalaxyMap(map) {
+      if (!map) return null;
+      const clone = JSON.parse(JSON.stringify(map));
+      delete clone.history;
+      delete clone.tokens;
+      return clone;
+    },
+
+    async saveChangesToExistingGalaxy() {
+      try {
+        if (!this.courseId && !this.aiGeneratedGalaxyMap.idInDatabase) {
+          this.setSnackbar({ show: true, text: "Missing course ID to save.", color: "error" });
+          return;
+        }
+
+        this.isSavingToDB = true;
+        this.loading = true;
+        this.stopLoadingMessages();
+        this.startLoadingMessages();
+
+        const courseId = this.aiGeneratedGalaxyMap.idInDatabase || this.courseId;
+        this.aiGeneratedGalaxyMap.idInDatabase = courseId;
+
+        // Merge existing DB mission instructions first to prevent loss
+        if (courseId) {
+          try {
+            const dbMap = await getGalaxyMapObjectFromCourse(courseId);
+            if (dbMap && dbMap.stars && this.aiGeneratedGalaxyMap?.stars) {
+              for (let si = 0; si < this.aiGeneratedGalaxyMap.stars.length; si++) {
+                const star = this.aiGeneratedGalaxyMap.stars[si];
+                const dbStar = dbMap.stars[si];
+                if (!star?.planets || !dbStar?.planets) continue;
+                for (let pi = 0; pi < star.planets.length; pi++) {
+                  const planet = star.planets[pi];
+                  const dbPlanet = dbStar.planets[pi];
+                  // If AI map lacks missionInstructions/instructions but DB has description, carry it over
+                  const hasLegacyInstructions = planet && planet.instructions;
+                  if (
+                    planet &&
+                    !planet.missionInstructions &&
+                    !hasLegacyInstructions &&
+                    dbPlanet &&
+                    typeof dbPlanet.description === "string" &&
+                    dbPlanet.description.trim()
+                  ) {
+                    planet.missionInstructions = dbPlanet.description;
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            console.warn("Failed to merge DB mission instructions; proceeding without merge", e);
+          }
+        }
+
+        // Convert mission instructions only if they are structured (object/JSON), keep plain HTML strings as-is
+        if (this.aiGeneratedGalaxyMap && this.aiGeneratedGalaxyMap.stars) {
+          for (let starIndex = 0; starIndex < this.aiGeneratedGalaxyMap.stars.length; starIndex++) {
+            const star = this.aiGeneratedGalaxyMap.stars[starIndex];
+            if (star.planets) {
+              for (let planetIndex = 0; planetIndex < star.planets.length; planetIndex++) {
+                const planet = star.planets[planetIndex];
+                if (planet && planet.missionInstructions) {
+                  const mi = planet.missionInstructions;
+                  const shouldConvert =
+                    typeof mi === "object" ||
+                    (typeof mi === "string" && this.isStructuredMissionInstructions(mi));
+                  if (shouldConvert) {
+                    planet.missionInstructions = this.formatMissionInstructionsToHtml(mi);
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        // Merge top-level fields from bound DB course to avoid overwriting recent UI edits
+        let payloadGalaxyMap = { ...this.aiGeneratedGalaxyMap, idInDatabase: courseId };
+        if (this.courseId && this.boundCourse) {
+          payloadGalaxyMap.title = this.boundCourse.title ?? payloadGalaxyMap.title;
+          payloadGalaxyMap.description =
+            this.boundCourse.description ?? payloadGalaxyMap.description;
+          if (this.boundCourse.image) {
+            payloadGalaxyMap.image = { ...this.boundCourse.image };
+          }
+        }
+
+        // Call backend save function; it will update existing course if idInDatabase is set
+        await saveGalaxyMap(
+          payloadGalaxyMap,
+          // layout value is irrelevant for updates but must be passed; reuse zigzag
+          "zigzag",
+        );
+
+        this.originalGalaxyMapSnapshot = this.getSanitizedGalaxyMap(this.aiGeneratedGalaxyMap);
+
+        this.setSnackbar({ show: true, text: "Galaxy changes saved.", color: "baseAccent" });
+
+        // route back to galaxy view
+        this.$router.push({ name: "GalaxyView", params: { courseId: courseId } });
+      } catch (error) {
+        console.error("Error saving galaxy changes:", error);
+        this.setSnackbar({
+          show: true,
+          text: "Error saving changes: " + (error.message || "Unknown error"),
+          color: "error",
+        });
+      } finally {
+        this.isSavingToDB = false;
+        this.loading = false;
+      }
+    },
     ...mapActions(useRootStore, [
       "setAiGalaxyEditData",
       "clearAiGalaxyEditData",
       "setSnackbar",
       "setCurrentCourseId",
+      "bindCourseByCourseId",
     ]),
 
     /**
@@ -1083,13 +1245,19 @@ export default {
       try {
         // Check if it's a JSON object with the expected structure
         if (typeof content === "object" && content !== null) {
-          return content.title && content.instructions && Array.isArray(content.instructions);
+          return (
+            (content.instructions && Array.isArray(content.instructions)) ||
+            (content.steps && Array.isArray(content.steps))
+          );
         }
 
         // Check if it's a JSON string that can be parsed to the expected structure
         if (typeof content === "string") {
           const parsed = JSON.parse(content);
-          return parsed.title && parsed.instructions && Array.isArray(parsed.instructions);
+          return (
+            (parsed.instructions && Array.isArray(parsed.instructions)) ||
+            (parsed.steps && Array.isArray(parsed.steps))
+          );
         }
 
         return false;
@@ -1121,32 +1289,60 @@ export default {
           html += `<p>${instructions.description}</p>`;
         }
 
-        // Add instructions section
-        if (instructions.instructions && instructions.instructions.length > 0) {
+        if (instructions.intro) {
+          html += `<p class="intro-outro">${instructions.intro}</p>`;
+        }
+
+        // Add instructions section (supports unified "steps" or legacy "instructions")
+        const stepsArray = instructions.instructions || instructions.steps || [];
+        if (stepsArray.length > 0) {
           if (!this.isGeneratingMissions) {
             html += `<h2>Instructions</h2>`;
           }
 
-          // Loop through each instruction step
-          instructions.instructions.forEach((step) => {
-            // Add step title
+          // Loop through each step
+          stepsArray.forEach((step) => {
             if (step.title) {
               html += `<h3>${step.title}</h3>`;
             }
 
-            // Add tasks as unordered list
+            // Add tasks, avoiding nested <ul><li> when task content already contains lists
             if (step.tasks && step.tasks.length > 0) {
-              html += `<ul>`;
+              let listOpen = false;
               step.tasks.forEach((task) => {
-                if (task.taskContent) {
-                  // Parse markdown for task content only
-                  const parsedTaskContent = this.renderMarkdownWithStreaming(task.taskContent);
+                if (!task || !task.taskContent) return;
+                const parsedTaskContent = this.renderMarkdownWithStreaming(task.taskContent);
+                const hasOwnList =
+                  /<(ul|ol)[\s>]/i.test(parsedTaskContent) || /<li[\s>]/i.test(parsedTaskContent);
+                if (hasOwnList) {
+                  if (listOpen) {
+                    html += `</ul>`;
+                    listOpen = false;
+                  }
+                  html += parsedTaskContent;
+                } else {
+                  if (!listOpen) {
+                    html += `<ul>`;
+                    listOpen = true;
+                  }
                   html += `<li>${parsedTaskContent}</li>`;
                 }
               });
-              html += `</ul>`;
+              if (listOpen) {
+                html += `</ul>`;
+                listOpen = false;
+              }
+            }
+
+            // Optional checkpoint
+            if (step.checkpoint) {
+              html += `<p><em>Checkpoint: ${step.checkpoint}</em></p>`;
             }
           });
+        }
+
+        if (instructions.outro) {
+          html += `<p class="intro-outro">${instructions.outro}</p>`;
         }
 
         // console.log("🔄 Formatted mission instructions to HTML:", html);
@@ -1707,6 +1903,7 @@ export default {
           name: star.title,
           description: star.description,
           type: "star",
+          // star nodes are activatable
           children: [],
         };
 
@@ -1720,15 +1917,26 @@ export default {
               children: [],
             };
 
-            // Add mission instructions as subitems if they exist
-            if (planet.instructions) {
+            // Unified: missionInstructions
+            if (planet.missionInstructions) {
               planetNode.children.push({
                 id: `star[${starIndex}].planet[${planetIndex}].instructions`,
                 name: "Mission Instructions",
-                description: planet.instructions,
+                description: planet.missionInstructions,
                 type: "instructions",
+                disabled: true, // instructions should not be activatable
               });
             }
+
+            // Legacy (commented out but kept for quick revert)
+            // if (planet.instructions) {
+            //   planetNode.children.push({
+            //     id: `star[${starIndex}].planet[${planetIndex}].instructions`,
+            //     name: "Mission Instructions",
+            //     description: planet.instructions,
+            //     type: "instructions",
+            //   });
+            // }
 
             // Add existing missions if they exist
             if (planet.missions && planet.missions.length > 0) {
@@ -1738,6 +1946,7 @@ export default {
                   name: mission.title,
                   description: mission.description,
                   type: "mission",
+                  disabled: true, // missions should not be activatable per requirement
                 })),
               );
             }
@@ -1787,60 +1996,88 @@ export default {
       console.log("🚀 Starting Galaxy refinement process...");
 
       const refinementSystemPrompt = `
-      You are a Galaxy Map refiner assistant. Your task is to update specific parts of an existing Galaxy Map JSON object based on the user's request. The Galaxy Map represents a structured learning roadmap using a structured hierarchy of Stars (Zones) → Planets (Missions) → Tasks.
 
-      ### Galaxy Map Format (json):
+      You are a Galaxy Map refiner assistant. Your task is to update specific parts of an existing Galaxy Map JSON object based on the user's request.
 
-      {
-        "status": "journey_ready",
-        "title": "Journey Title",
-        "description": "Brief description of the overall journey",
-        "stars": [
-          {
-            "title": "1: Title (Zone Name)",
-            "description": "Brief description of this zone",
-            "planets": [
+The Galaxy Map is a structured learning roadmap with the hierarchy:
+- **Stars** → major milestones
+- **Planets** → small, focused wins (15–60 min) within a Star
+- **Mission Instructions** → intro, steps (with tasks and checkpoints), outro; include just-in-time micro-teach when new concepts appear.
+
+### Galaxy Map Format (JSON):
+{
+  "status": "journey_ready",
+  "title": "Journey Title",
+  "description": "Brief description of the overall journey",
+  "stars": [
+    {
+      "title": "1: Title (Star Name)",
+      "description": "Brief description of this star",
+      "planets": [
+        {
+          "title": "1.1: Title (Planet Name)",
+          "description": "Brief description of this win",
+          "missionInstructions": {
+            "intro": "Motivating intro explaining what they will do, why it matters, and how it connects to the journey",
+            "steps": [
               {
-                "title": "1.1: Title (Mission Name)",
-                "description": "Brief description of this mission",
+                "title": "Step 1: Step Name",
+                "tasks": [
+                  { "taskContent": "Detailed task instruction in markdown (may include short concept teaching if introducing a new idea)" }
+                ],
+                "checkpoint": "Motivating progress sentence after this step"
               }
-            ]
+            ],
+            "outro": "Motivating recap of what was achieved and what's next"
           }
-        ]
-      }
-
-      ### Your Responsibilities:
-      1. Understand the user's request — they may want to change the content, structure, or sequence of Zones, Missions, Tasks.
-      2. You will be provided:
-      -- The full current Galaxy Map object.
-      -- A list of titles in a field called items_user_wants_changed — each title corresponds to a Star (Zone), Planet (Mission).
-      3. IMPORTANT: Human-readable numbering starts from 1.
-      - For example:
-      -- "4: Some Zone" refers to stars[3]
-      -- "3.2: Some Mission" refers to stars[2].planets[1]
-      - You must correctly map title numbers to zero-based array indices.
-      3. If items_user_wants_changed is provided, only modify the items specified. Match these titles precisely (e.g., "1.2: Title (Mission Name)") within the structure.
-      - Preserve everything else in the Galaxy Map exactly as-is.
-      4. If items_user_wants_changed is not provided, the user is asking for a general change to the Galaxy Map, or the entire Galaxy Map. Take your cue from user_request.
-      5. Return the entire updated Galaxy Map object, not just the modified parts.
-      6. Always insert the updates into the correct location in the nested structure: stars[] → planets[]
-      7. Star titles should only have one number (eg. not 1.1:, just 1:)
-      8. Planet titles should always have two numbers (eg. 1.1:)
-
-      ### 🧾 Input Structure:
-      - galaxy_map: the full Galaxy Map JSON object.
-      - items_user_wants_changed: an array of titles of the specific items to change, e.g.:
-      - user_request: the user's instruction (e.g., creating extra missions, rethinking star and planet order, etc).
-      [
-        "1: Introduction (Getting Started)",
-        "1.2: Research the Topic (Investigation)",
+        }
       ]
+    }
+  ]
+}
 
-      ### Output Requirements:
-      - A full Galaxy Map JSON object with only the specified items changed and all others left intact.
-      - Each update must be inserted at the correct location based on the index math noted above.
-      - Do not return partial fragments. Always return the complete updated structure.
-      `;
+### Your Responsibilities:
+1. Understand the user's request — they may want to change the content, structure, or sequence of Stars, Missions, Mission Instructions, Steps, or Tasks.
+2. You will be provided:
+   - **galaxy_map**: the full current Galaxy Map object.
+   - **items_user_wants_changed**: an array of **zero-indexed paths** to the exact elements in the Galaxy Map that should be modified.
+     - Example paths:
+       - "star[0]" → stars[0]
+       - "star[0].planet[1]" → stars[0].planets[1]
+3. Only modify the items at the specified paths. Preserve everything else in the Galaxy Map exactly as-is.
+4. Always insert the updates into the correct location in the nested structure.
+5. After making changes, maintain correct numbering in titles (Stars are 1-indexed like "1:", Missions are "1.1:").
+6. Return the **entire** updated Galaxy Map object, not just the modified parts.
+
+**Planet scope + motivation rules (must enforce)**
+   - Each Planet is an **atomic win (15–60 min)**. If a planet is overloaded, **split it into additional planets** (in the same Star) and **renumber that Star’s planets** accordingly.
+   - Mission Instructions must include:
+     - **Intro** (what/why/how it connects),
+     - **Steps** with **tasks** (each task is one discrete action),
+     - **Checkpoint** after each step,
+     - **Outro** (celebrate win + what’s next).
+   - **Micro-teach**: When a new concept/term/tool appears for the first time in the journey, add a 1–3 sentence explanation *in the task where it’s first used*. Keep it practical and just-in-time. If it was taught earlier, only add a brief reminder.
+
+ **Quality constraints**
+   - Keep changes **minimal and surgical** unless the user asks for broader restructuring.
+   - Ensure every edited Mission remains scope-matched (15–60 min), motivating, and necessary for its Star.
+   - If the user’s request would cause scope creep, **split missions** rather than bloating instructions.
+   - Prefer clear, concise phrasing and remove redundancy.
+
+### 🧾 Input Structure:
+{
+  "galaxy_map": { ... },
+  "items_user_wants_changed": ["star[0]", "star[0].planet[1]"],
+  "user_request": "User's instruction for the changes"
+}
+
+### Output Requirements:
+- A complete Galaxy Map JSON object with only the targeted items changed.
+- Preserve the rest of the map exactly.
+- Updates must be consistent with the Galaxy Map format above.
+
+
+`;
 
       // 1.refine system prompt
       const inputMessages = [{ role: "system", content: refinementSystemPrompt }];
@@ -1876,7 +2113,7 @@ export default {
         previous_response_id: this.aiGeneratedGalaxyMap.aiResponseId,
         input: inputMessages,
         text: {
-          format: zodTextFormat(StarsAndPlanetsResponseSchema, "refine_galaxy_response"),
+          format: zodTextFormat(UnifiedGalaxyMapResponseSchema, "refine_galaxy_response"),
         },
         store: true,
       });
@@ -2038,8 +2275,9 @@ export default {
       return `${minutes}m${seconds}s`;
     },
     saveGalaxyToDB() {
-      // Show save galaxy dialog with two options
-      this.showSaveGalaxyDialog = true;
+      // Unified flow: skip SaveGalaxyDialog and go straight to layout selection
+      // this.showSaveGalaxyDialog = true;
+      this.showLayoutDialog = true;
     },
 
     // Layout dialog methods
@@ -2047,21 +2285,19 @@ export default {
       this.showLayoutDialog = false;
     },
 
-    // Save galaxy dialog methods
-    cancelSaveGalaxyDialog() {
-      this.showSaveGalaxyDialog = false;
-    },
+    // Save galaxy dialog methods (unused in unified flow)
+    // cancelSaveGalaxyDialog() {
+    //   this.showSaveGalaxyDialog = false;
+    // },
 
-    async handleGenerateTasksThenSave() {
-      console.log("Generate all tasks and then save");
-      this.showSaveGalaxyDialog = false;
-
-      // Set flag to generate missions after layout selection
-      this.shouldGenerateMissions = true;
-
-      // Show layout dialog first to get the layout before generating missions
-      this.showLayoutDialog = true;
-    },
+    // async handleGenerateTasksThenSave() {
+    //   console.log("Generate all tasks and then save");
+    //   this.showSaveGalaxyDialog = false;
+    //   // Set flag to generate missions after layout selection
+    //   this.shouldGenerateMissions = true;
+    //   // Show layout dialog first to get the layout before generating missions
+    //   this.showLayoutDialog = true;
+    // },
 
     async generateMissionsThenSave(selectedLayout) {
       // Calculate total missions
@@ -2210,10 +2446,16 @@ export default {
           if (star.planets) {
             for (let planetIndex = 0; planetIndex < star.planets.length; planetIndex++) {
               const planet = star.planets[planetIndex];
-              if (planet.instructions) {
-                // Convert instructions object to HTML format for database storage
-                planet.instructions = this.formatMissionInstructionsToHtml(planet.instructions);
+              // Unified: planet.missionInstructions
+              if (planet.missionInstructions) {
+                planet.missionInstructions = this.formatMissionInstructionsToHtml(
+                  planet.missionInstructions,
+                );
               }
+              // Legacy fallback (commented out)
+              // else if (planet.instructions) {
+              //   planet.instructions = this.formatMissionInstructionsToHtml(planet.instructions);
+              // }
             }
           }
         }
@@ -2221,6 +2463,12 @@ export default {
 
       try {
         // Call the Firebase function to save the galaxy map with selected layout
+        // If editing an existing galaxy, first preserve existing mission instructions and top level fields
+        if (this.courseId) {
+          await this.saveChangesToExistingGalaxyWithLayout(selectedLayout);
+          return;
+        }
+
         result = await saveGalaxyMap(this.aiGeneratedGalaxyMap, selectedLayout);
 
         // Calculate and log execution time
@@ -2260,25 +2508,123 @@ export default {
       }
     },
 
-    handleSaveNowGenerateLater() {
-      this.showSaveGalaxyDialog = false;
-
-      // Set flag to save immediately without generating missions
-      this.shouldGenerateMissions = false;
-
-      // Proceed with the original save to DB method
-      this.showLayoutDialog = true;
-    },
+    // handleSaveNowGenerateLater() {
+    //   this.showSaveGalaxyDialog = false;
+    //   // Set flag to save immediately without generating missions
+    //   this.shouldGenerateMissions = false;
+    //   // Proceed with the original save to DB method
+    //   this.showLayoutDialog = true;
+    // },
 
     async confirmLayoutSelection(selectedLayout) {
       this.showLayoutDialog = false;
 
-      if (this.shouldGenerateMissions) {
-        // Generate missions first, then save
-        await this.generateMissionsThenSave(selectedLayout);
-      } else {
-        // Save immediately without generating missions
-        await this.saveGalaxyMapToDatabase(selectedLayout);
+      // Unified flow
+      await this.saveGalaxyMapToDatabase(selectedLayout);
+    },
+
+    // Update top-level fields pre-save when GalaxyInfo emits changes without a DB id yet
+    applyPreSaveUpdate({ title, description, image }) {
+      if (!this.aiGeneratedGalaxyMap) this.aiGeneratedGalaxyMap = {};
+      if (typeof title === "string") this.aiGeneratedGalaxyMap.title = title;
+      if (typeof description === "string") this.aiGeneratedGalaxyMap.description = description;
+      if (image) this.aiGeneratedGalaxyMap.image = image;
+      this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
+    },
+
+    // Existing-galaxy save with chosen layout preserved
+    async saveChangesToExistingGalaxyWithLayout(selectedLayout) {
+      // Ensure id
+      if (!this.courseId && !this.aiGeneratedGalaxyMap.idInDatabase) {
+        this.setSnackbar({ show: true, text: "Missing course ID to save.", color: "error" });
+        return;
+      }
+      // Reuse the mission-instructions preservation and top-level merge, but pass through
+      // the chosen layout by delegating to saveGalaxyMap (backend uses layout for node positions)
+      try {
+        this.isSavingToDB = true;
+        this.loading = true;
+        this.stopLoadingMessages();
+        this.startLoadingMessages();
+
+        const courseId = this.aiGeneratedGalaxyMap.idInDatabase || this.courseId;
+        this.aiGeneratedGalaxyMap.idInDatabase = courseId;
+
+        // Merge DB mission instructions to avoid loss
+        if (courseId) {
+          try {
+            const dbMap = await getGalaxyMapObjectFromCourse(courseId);
+            if (dbMap && dbMap.stars && this.aiGeneratedGalaxyMap?.stars) {
+              for (let si = 0; si < this.aiGeneratedGalaxyMap.stars.length; si++) {
+                const star = this.aiGeneratedGalaxyMap.stars[si];
+                const dbStar = dbMap.stars[si];
+                if (!star?.planets || !dbStar?.planets) continue;
+                for (let pi = 0; pi < star.planets.length; pi++) {
+                  const planet = star.planets[pi];
+                  const dbPlanet = dbStar.planets[pi];
+                  const hasLegacyInstructions = planet && planet.instructions;
+                  if (
+                    planet &&
+                    !planet.missionInstructions &&
+                    !hasLegacyInstructions &&
+                    dbPlanet &&
+                    typeof dbPlanet.description === "string" &&
+                    dbPlanet.description.trim()
+                  ) {
+                    planet.missionInstructions = dbPlanet.description;
+                  }
+                }
+              }
+            }
+          } catch (_) {}
+        }
+
+        // Convert structured mission instructions only
+        if (this.aiGeneratedGalaxyMap && this.aiGeneratedGalaxyMap.stars) {
+          for (let starIndex = 0; starIndex < this.aiGeneratedGalaxyMap.stars.length; starIndex++) {
+            const star = this.aiGeneratedGalaxyMap.stars[starIndex];
+            if (star.planets) {
+              for (let planetIndex = 0; planetIndex < star.planets.length; planetIndex++) {
+                const planet = star.planets[planetIndex];
+                if (planet && planet.missionInstructions) {
+                  const mi = planet.missionInstructions;
+                  const shouldConvert =
+                    typeof mi === "object" ||
+                    (typeof mi === "string" && this.isStructuredMissionInstructions(mi));
+                  if (shouldConvert) {
+                    planet.missionInstructions = this.formatMissionInstructionsToHtml(mi);
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        let payloadGalaxyMap = { ...this.aiGeneratedGalaxyMap, idInDatabase: courseId };
+        if (this.courseId && this.boundCourse) {
+          payloadGalaxyMap.title = this.boundCourse.title ?? payloadGalaxyMap.title;
+          payloadGalaxyMap.description =
+            this.boundCourse.description ?? payloadGalaxyMap.description;
+          if (this.boundCourse.image) {
+            payloadGalaxyMap.image = { ...this.boundCourse.image };
+          }
+        }
+
+        await saveGalaxyMap(payloadGalaxyMap, selectedLayout);
+
+        this.originalGalaxyMapSnapshot = this.getSanitizedGalaxyMap(this.aiGeneratedGalaxyMap);
+        this.setSnackbar({ show: true, text: "Galaxy changes saved.", color: "baseAccent" });
+        this.$router.push({ name: "GalaxyView", params: { courseId: courseId } });
+      } catch (error) {
+        console.error("Error saving galaxy changes (layout)", error);
+        this.setSnackbar({
+          show: true,
+          text: "Error saving changes: " + (error.message || "Unknown error"),
+          color: "error",
+        });
+      } finally {
+        this.isSavingToDB = false;
+        this.loading = false;
       }
     },
 
@@ -3052,16 +3398,26 @@ export default {
 
       // logic if not task editing
       if (!this.taskEditing) {
-        this.updateActiveGalaxyItems(newValue, starIndex);
+        // Filter to only allow star and planet types to be made active
+        const filtered = (newValue || []).filter((id) => {
+          // Quick type deduction from id pattern
+          if (/^star\[\d+\]$/.test(id)) return true; // star
+          if (/^star\[\d+\]\.planet\[\d+\]$/.test(id)) return true; // planet
+          return false; // missions/instructions not activatable
+        });
+
+        this.updateActiveGalaxyItems(filtered, starIndex);
       }
       // logic if task editing
       else {
         // Set the active item ID for UI highlighting
-        this.uiActiveItemId = newValue[0] || null; // Take the first item from the array
+        // In task editing, also ensure only planet becomes active
+        const firstValid = (newValue || []).find((id) => /^star\[\d+\]\.planet\[\d+\]$/.test(id));
+        this.uiActiveItemId = firstValid || null; // Take the first valid planet id
 
         // Update treeview active items to only show the selected item
         this.treeviewActiveItems = {
-          0: newValue,
+          0: firstValid ? [firstValid] : [],
         };
       }
     },
@@ -4242,6 +4598,11 @@ export default {
   ::v-deep p {
     margin: 0.25rem 0;
     line-height: 1.4;
+  }
+
+  ::v-deep p.intro-outro {
+    font-size: 0.7rem;
+    font-weight: 500;
   }
 
   ::v-deep hr {
