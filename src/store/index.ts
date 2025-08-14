@@ -170,7 +170,6 @@ export default defineStore({
       this.topicCompleted = topic;
     },
     setNextTopicUnlocked(flag: boolean) {
-      console.log("next topic unlocked - flag triggered: ", flag);
       this.nextTopicUnlockedFlag = flag;
     },
     // ===== Firestore - BIND ALL
@@ -277,7 +276,6 @@ export default defineStore({
       );
 
       const tasksArr = tasksPerTopic.flat();
-      // console.log("tasksArr", tasksArr)
       this.personsCourseTasks = tasksArr;
     },
     async getCourseTasks(courseId: string) {
@@ -312,7 +310,6 @@ export default defineStore({
       );
 
       const tasksArr = tasksPerTopic.flat();
-      // console.log("tasksArr", tasksArr)
       this.courseTasks = tasksArr;
     },
 
@@ -323,7 +320,6 @@ export default defineStore({
           .collection("people")
           .doc(id)
           .onSnapshot((doc) => {
-            // console.log("person updated");
             const person = {
               ...doc.data(),
               id,
@@ -482,13 +478,9 @@ export default defineStore({
             (a, b) => b.requestSubmittedTimestamp.seconds - a.requestSubmittedTimestamp.seconds,
           );
 
-          // console.log("ALL REQUESTS FOR HELP:", allRequestsForHelp);
-
           this.teachersRequestsForHelp = allRequestsForHelp
             // there is a bug that dupliactes requests (these duplicates dont have id's)
             .filter((req) => req.id);
-
-          // console.log("this.teachersRequestsForHelp:", this.teachersRequestsForHelp);
         });
 
       return unsubscribe;

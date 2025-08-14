@@ -621,7 +621,9 @@ export default {
         // If there's existing HTML content, set it in the Quill editor
         if (this.task.description && this.task.description.trim()) {
           this.$nextTick(() => {
-            this.setQuillContent(this.task.description);
+            // Clean the HTML before setting it to prevent empty paragraphs
+            const cleanedHtml = this.sanitizeHtmlEdges(this.task.description);
+            this.setQuillContent(cleanedHtml);
           });
         }
       }
@@ -642,9 +644,44 @@ export default {
   },
   methods: {
     ...mapActions(useRootStore, ["getCourseTasks"]),
+    /**
+     * Build a safe payload for Firestore (strip undefined fields)
+     */
+    buildTaskPayload(task) {
+      const allowedKeys = [
+        "title",
+        "description",
+        "duration",
+        "video",
+        "slides",
+        "submissionRequired",
+        "submissionInstructions",
+        "color",
+        "orderIndex",
+      ];
+      const payload = {};
+      allowedKeys.forEach((key) => {
+        // only copy keys that are not undefined (Firestore rejects undefined)
+        if (typeof task[key] !== "undefined") {
+          payload[key] = task[key];
+        }
+      });
+      return payload;
+    },
     async saveTask(task) {
       this.loading = true;
       this.disabled = true;
+
+      // Pull fresh HTML directly from Quill, upload embedded images, and sanitize it
+      try {
+        let htmlFromEditor = this.getQuillHtml();
+        htmlFromEditor = await this.replaceBase64ImagesWithStorageUrls(htmlFromEditor);
+        const sanitizedHtml = this.sanitizeHtmlEdges(htmlFromEditor);
+        task.description = sanitizedHtml;
+        this.task.description = sanitizedHtml;
+      } catch (e) {
+        // ignore and keep current description
+      }
 
       // format video & slides url with "http://"
       if (task.video) {
@@ -658,7 +695,12 @@ export default {
         }
       }
       task.orderIndex = this.tasks.length ? this.tasks.length++ : 0;
-      const createdTask = await createTaskWithCourseIdTopicId(this.course.id, this.topic.id, task);
+      const safeTask = this.buildTaskPayload(task);
+      const createdTask = await createTaskWithCourseIdTopicId(
+        this.course.id,
+        this.topic.id,
+        safeTask,
+      );
 
       this.$emit("taskCreated", createdTask);
       console.log("createdTask", createdTask);
@@ -682,6 +724,17 @@ export default {
       this.loading = true;
       this.disabled = true;
 
+      // Pull fresh HTML directly from Quill, upload embedded images, and sanitize it
+      try {
+        let htmlFromEditor = this.getQuillHtml();
+        htmlFromEditor = await this.replaceBase64ImagesWithStorageUrls(htmlFromEditor);
+        const sanitizedHtml = this.sanitizeHtmlEdges(htmlFromEditor);
+        task.description = sanitizedHtml;
+        this.task.description = sanitizedHtml;
+      } catch (e) {
+        // ignore and keep current description
+      }
+
       // format video & slides url with "http://"
       if (task.video) {
         if (!/^https?:\/\//i.test(task.video)) {
@@ -697,11 +750,12 @@ export default {
       // remove taskCreatedTimestamp so it does not update original (there was a change in format when this was happening)
       delete task.taskCreatedTimestamp;
 
+      const safeTask = this.buildTaskPayload(task);
       const updatedTask = await updateTaskByCourseIdTopicIdTaskId(
         this.course.id,
         this.topic.id,
         this.taskId,
-        task,
+        safeTask,
       );
 
       this.$emit("taskUpdated", updatedTask);
@@ -863,31 +917,107 @@ export default {
       this.$nextTick(() => {
         const quillEditor = this.$refs.quillEditor;
         if (quillEditor && quillEditor.quill) {
-          // Clear the editor first
-          quillEditor.quill.setText("");
-
           try {
-            // Use Quill's clipboard to properly handle complex HTML
-            const delta = quillEditor.quill.clipboard.convert(htmlContent);
-            quillEditor.quill.setContents(delta);
-
-            console.log("🔄 Quill content set successfully");
+            // Replace content atomically without pre-clearing to avoid stray <p>
+            const quill = quillEditor.quill;
+            const delta = quill.clipboard.convert(htmlContent || "");
+            quill.setContents(delta, "silent");
+            // Sync v-model with rendered HTML and ensure no empty paragraphs
+            const renderedHtml = quill.root.innerHTML;
+            this.task.description = this.sanitizeHtmlEdges(renderedHtml);
+            console.log("🔄 Quill content set successfully (atomic replace)");
           } catch (error) {
             console.error("❌ Error setting Quill content:", error);
-            // Fallback: try pasteHTML method
+            // Fallback: dangerouslyPasteHTML
             try {
-              quillEditor.quill.pasteHTML(htmlContent);
-              console.log("🔄 Quill content set using pasteHTML fallback");
+              quillEditor.quill.clipboard.dangerouslyPasteHTML(0, htmlContent || "", "silent");
+              const renderedHtml = quillEditor.quill.root.innerHTML;
+              this.task.description = this.sanitizeHtmlEdges(renderedHtml);
+              console.log("🔄 Quill content set using dangerouslyPasteHTML fallback");
             } catch (fallbackError) {
               console.error("❌ Fallback also failed:", fallbackError);
               // Last resort: set as plain text
-              quillEditor.quill.setText(htmlContent);
+              quillEditor.quill.setText(htmlContent || "");
+              const renderedHtml = quillEditor.quill.root.innerHTML;
+              this.task.description = this.sanitizeHtmlEdges(renderedHtml);
             }
           }
         } else {
           console.warn("⚠️ Quill editor not found");
         }
       });
+    },
+
+    /**
+     * Returns current HTML from the Quill editor
+     */
+    getQuillHtml() {
+      const quill = this.$refs.quillEditor && this.$refs.quillEditor.quill;
+      return quill ? quill.root.innerHTML : this.task.description || "";
+    },
+
+    /**
+     * Removes leading/trailing empty paragraphs and any completely empty content
+     */
+    sanitizeHtmlEdges(html) {
+      if (!html) return "";
+      let sanitized = html;
+
+      // Remove completely empty content
+      if (sanitized.trim() === "" || sanitized === "<p><br></p>" || sanitized === "<p></p>") {
+        return "";
+      }
+
+      // Trim leading empty paragraphs
+      sanitized = sanitized.replace(/^(\s*<p>(?:\s|&nbsp;|<br\s*\/?\s*>)*<\/p>\s*)+/i, "");
+      // Trim trailing empty paragraphs
+      sanitized = sanitized.replace(/(\s*<p>(?:\s|&nbsp;|<br\s*\/?\s*>)*<\/p>\s*)+$/i, "");
+
+      // Remove any remaining standalone empty paragraphs
+      sanitized = sanitized.replace(/<p>\s*<\/p>/gi, "");
+      sanitized = sanitized.replace(/<p><br><\/p>/gi, "");
+
+      return sanitized;
+    },
+
+    /**
+     * Replace embedded base64 <img> sources with Firebase Storage URLs
+     */
+    async replaceBase64ImagesWithStorageUrls(originalHtml) {
+      let html = originalHtml || "";
+      const imgTagRegex =
+        /<img[^>]+src=["'](data:image\/[a-zA-Z0-9+.-]+;base64,[^"']+)["'][^>]*>/gi;
+      const dataUrls = new Set();
+
+      let match;
+      while ((match = imgTagRegex.exec(html)) !== null) {
+        const dataUrl = match[1];
+        if (dataUrl && dataUrl.startsWith("data:image/")) {
+          dataUrls.add(dataUrl);
+        }
+      }
+
+      if (dataUrls.size === 0) return html;
+
+      let index = 0;
+      for (const dataUrl of dataUrls) {
+        try {
+          const extMatch = /^data:image\/(\w+);/i.exec(dataUrl);
+          const ext = (extMatch && extMatch[1]) || "png";
+          const storagePath = `missionDescription-images/teacher-${this.person.id}-task-${
+            this.taskId || "new"
+          }-${Date.now()}-${index}.${ext}`;
+          const ref = storage.ref(storagePath);
+          const snapshot = await ref.putString(dataUrl, "data_url");
+          const downloadURL = await snapshot.ref.getDownloadURL();
+          html = html.split(dataUrl).join(downloadURL);
+          index++;
+        } catch (e) {
+          console.error("❌ Failed to upload embedded image:", e);
+        }
+      }
+
+      return html;
     },
 
     // AI functionality methods

@@ -242,8 +242,6 @@ export default {
       this.showMenu = true;
     }
 
-    console.log("Mounted - Current route name:", this.$route.name); // Debug log
-    console.log("Mounted - Current route path:", this.$route.path); // Debug log
     if (
       (this.$route.name == "GalaxyView" && this.user.loggedIn) ||
       this.$route.name == "SolarSystemView" ||

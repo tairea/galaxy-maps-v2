@@ -5,7 +5,11 @@ import { STORAGE_BUCKET } from "./_constants.js";
 import fetch from "node-fetch";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
-import { StarsAndPlanetsResponseSchema, MissionInstructionsV2Schema } from "./schemas.js";
+import {
+  StarsAndPlanetsResponseSchema,
+  MissionInstructionsV2Schema,
+  UnifiedGalaxyMapResponseSchema,
+} from "./schemas.js";
 import functions from "firebase-functions";
 import { createModelTokenUsage, createCombinedTokenUsage } from "./lib/utils.js";
 // import { Latitude } from "@latitude-data/sdk";
@@ -190,8 +194,8 @@ const StarsAndPlanetsAndInstructionsSystemPrompt = `
 You are a **learning journey designer** for a platform called **Galaxy Maps**, where a learner’s path is visualised as:
 
 - **Stars** → major milestones / skill phases  
-- **Missions** → small, focused wins within a Star (each Mission is completable in 15–60 min)  
-- **Mission Instructions** → step-by-step guidance for completing a Mission  
+- **Planets** → small, focused wins within a Star (each Planet is completable in 15–60 min)  
+- **Mission Instructions** → step-by-step guidance for completing a Planet  
 
 Your job is to **design the whole journey in one go** — from Stars down to Mission Instructions — so the learner experiences **constant momentum, motivation, and small wins** while also learning **just enough concepts** to proceed confidently.
 
@@ -222,23 +226,23 @@ Respond in this format:
 
 ---
 
-### Step 3: Break Stars into Missions
+### Step 3: Break Stars into Planets
 For each Star:
-- Split it into **Missions** = atomic wins achievable in 15–60 min.  
-- If a step feels too big, **add more Missions** to keep them small.  
-- Every Mission must be required to complete its Star.
+- Split it into **Planets** = atomic wins achievable in 15–60 min.  
+- If a step feels too big, **add more Planets** to keep them small.  
+- Every Planet must be required to complete its Star.
 
 ---
 
 ### Step 4: Write Mission Instructions
-For each Mission, include:
+For each Planet, include:
 
 1. **Intro** – Motivating setup:  
    - Explain what they’re about to do and why it matters.  
    - Show how it connects to the Star’s bigger goal and the overall journey.  
 
 2. **Steps** – Sequential guidance:  
-   - Each **Step** = a logical stage toward the Mission goal.  
+   - Each **Step** = a logical stage toward the Planet goal.  
    - Each Step contains **tasks[]** = one discrete, actionable action (no multi-action tasks).  
    - If the Step introduces a **new concept, term, or tool** for the first time in this Galaxy Map:  
      - Include a **micro-teach** (1–3 sentences) before the action:  
@@ -250,16 +254,16 @@ For each Mission, include:
 
 3. **Outro** – Motivating recap:  
    - Celebrate what was achieved.  
-   - Highlight what this unlocks for the next Mission.
+   - Highlight what this unlocks for the next Planet.
 
 ---
 
 ### Step 5: Motivation & Flow Rules
-- Missions are **tight and scope-matched** — no content from future Missions.  
+- Planets are **tight and scope-matched** — no content from future Planets.  
 - Learners should feel a **win every few minutes**.  
 - Keep tone clear, supportive, and confidence-building.  
 - Teach **only what’s needed now** to succeed — no deep theory unless essential.  
-- If you find a Mission is too big, **split it now** and adjust the Star structure before output.
+- If you find a Planet is too big, **split it now** and adjust the Star structure before output.
 
 ---
 
@@ -273,10 +277,10 @@ For each Mission, include:
     {
       "title": "1: Star Title",
       "description": "Brief description of this milestone",
-      "missions": [
+      "planets": [
         {
-          "title": "1.1: Mission Title",
-          "description": "Brief description of this win",
+          "title": "1.1: Planet Title",
+          "description": "Brief description of this small win",
           "missionInstructions": {
             "intro": "Motivating intro explaining what they’ll do, why it matters, and how it contributes to the overall journey",
             "steps": [
@@ -300,7 +304,7 @@ For each Mission, include:
 
 ### Step 7: Validation Before Output
 - ✅ Each Star = one milestone only  
-- ✅ Each Mission = atomic 15–60 min win  
+- ✅ Each Planet = atomic 15–60 min win  
 - ✅ Mission Instructions contain intro, steps with tasks, and outro  
 - ✅ Micro-teach is included for first-time concepts  
 - ✅ No overload — split if needed before finalising
@@ -529,6 +533,172 @@ export const generateGalaxyMapHttpsEndpoint = runWith({
     };
   } catch (error) {
     logger.error("Error in generateGalaxyMap", error);
+
+    // Handle Zod validation errors specifically
+    if (error instanceof Error && error.name === "ZodError") {
+      throw new HttpsError("internal", `AI response validation failed: ${error.message}`);
+    }
+
+    throw new HttpsError(
+      "internal",
+      error instanceof Error ? error.message : "Unknown error occurred",
+    );
+  }
+});
+
+// Generate unified galaxy map (Stars + Missions + Mission Instructions) with AI
+export const generateUnifiedGalaxyMapHttpsEndpoint = runWith({
+  timeoutSeconds: 540, // 9 minutes timeout
+  memory: "1GB",
+}).https.onCall(async (data) => {
+  try {
+    const { description, clarificationAnswers, previousResponseId } = data;
+    logger.info("Starting generateUnifiedGalaxyMap function", {
+      description: description?.substring(0, 50) + "...",
+      hasClarification: !!clarificationAnswers,
+      previousResponseId,
+    });
+
+    let aiResponse;
+    if (clarificationAnswers && clarificationAnswers.trim()) {
+      // Follow-up with clarification
+      logger.info("Calling OpenAI API for unified map generation with clarification");
+      aiResponse = await openai.responses.parse({
+        model: "gpt-5-mini",
+        previous_response_id: previousResponseId,
+        input: [{ role: "user", content: clarificationAnswers }],
+        text: {
+          format: zodTextFormat(UnifiedGalaxyMapResponseSchema, "unified_second_step_response"),
+        },
+      });
+    } else {
+      if (!description || !description.trim()) {
+        logger.error("Missing required field: description");
+        throw new HttpsError("invalid-argument", "Missing required field: description");
+      }
+      // Initial call with description
+      logger.info("Calling OpenAI API for unified galaxy map generation");
+      aiResponse = await openai.responses.parse({
+        model: "gpt-5-mini",
+        input: [
+          { role: "system", content: StarsAndPlanetsAndInstructionsSystemPrompt },
+          { role: "user", content: description },
+        ],
+        text: {
+          format: zodTextFormat(UnifiedGalaxyMapResponseSchema, "unified_first_step_response"),
+        },
+      });
+    }
+
+    logger.info("OpenAI API call completed successfully");
+
+    // Get the parsed and validated response
+    const parsedResponse = aiResponse.output_parsed;
+    if (!parsedResponse) {
+      throw new HttpsError("internal", "No response content from OpenAI");
+    }
+
+    // generate image using parsedResponse.title and parsedResponse.description
+    let imageUrl: string | null = null;
+    let fileName: string | null = null;
+    if (
+      parsedResponse.status === "journey_ready" &&
+      parsedResponse.title &&
+      parsedResponse.description
+    ) {
+      try {
+        logger.info("Generating image for unified galaxy map", {
+          title: parsedResponse.title,
+          descriptionLength: parsedResponse.description.length,
+        });
+
+        // Generate image using DALL-E API directly
+        logger.info("Calling DALL-E for image generation");
+        const imageResponse = await openai.images.generate({
+          model: "dall-e-3",
+          prompt: `Generate an image that symbolizes "${parsedResponse.title}": ${
+            parsedResponse.description || ""
+          }.`,
+          n: 1,
+          size: "1024x1024",
+        });
+
+        logger.info("DALL-E image generation response received", {
+          hasData: !!imageResponse.data,
+          dataLength: imageResponse.data?.length,
+          firstImageUrl: imageResponse.data?.[0]?.url,
+        });
+
+        if (imageResponse.data && imageResponse.data.length > 0) {
+          const imageUrlFromDalle = imageResponse.data[0].url;
+          logger.info("Image generated successfully by DALL-E", { imageUrl: imageUrlFromDalle });
+
+          // Download the image from DALL-E URL and upload to Firebase Storage
+          fileName = `galaxy-maps/${Date.now()}-${
+            parsedResponse.title?.replace(/[^a-zA-Z0-9]/g, "-") || "galaxy"
+          }.png`;
+
+          // Download image from DALL-E URL
+          logger.info("Downloading image from DALL-E URL");
+          const imageDownloadResponse = await fetch(imageUrlFromDalle!);
+          const imageBuffer = await imageDownloadResponse.arrayBuffer();
+          const buffer = Buffer.from(imageBuffer);
+          logger.info("Image downloaded and converted to buffer", { size: buffer.length });
+
+          // Upload to Firebase Storage
+          logger.info("Starting upload to Firebase Storage");
+          const file = storage.bucket(STORAGE_BUCKET).file(fileName);
+          await file.save(buffer, {
+            metadata: {
+              contentType: "image/png",
+            },
+          });
+          logger.info("File uploaded successfully", { fileName });
+
+          // Get the public URL
+          logger.info("Generating signed URL");
+          const [downloadURL] = await file.getSignedUrl({
+            action: "read",
+            expires: "03-01-2500",
+          });
+          logger.info("Signed URL generated successfully");
+
+          imageUrl = downloadURL;
+        }
+      } catch (imageError) {
+        logger.error("Error generating or uploading image (unified)", imageError);
+        // Don't fail the entire request if image generation fails
+      }
+    }
+
+    // Add image URL to the galaxy map if generated
+    logger.info("Final image generation result (unified)", {
+      hasImageUrl: !!imageUrl,
+      hasFileName: !!fileName,
+      imageUrl: imageUrl,
+      fileName: fileName,
+    });
+
+    if (imageUrl && fileName && parsedResponse.status === "journey_ready") {
+      parsedResponse.image = { name: fileName, url: imageUrl };
+      logger.info("Image added to unified galaxy map", { image: parsedResponse.image });
+    } else {
+      logger.info("No image added to unified galaxy map - conditions not met");
+    }
+
+    // Calculate combined token usage from the API call
+    const modelUsage = createModelTokenUsage("gpt-5-mini", aiResponse.usage || {});
+    const combinedTokenUsage = createCombinedTokenUsage([modelUsage]);
+
+    // Return the validated response with token usage information
+    return {
+      success: true,
+      galaxyMap: parsedResponse,
+      tokenUsage: combinedTokenUsage,
+      responseId: aiResponse.id,
+    };
+  } catch (error) {
+    logger.error("Error in generateUnifiedGalaxyMap", error);
 
     // Handle Zod validation errors specifically
     if (error instanceof Error && error.name === "ZodError") {

@@ -175,10 +175,32 @@ Galaxy Maps Team`;
 }
 
 // ======COURSE PUBLISHED NOTIFICATION==================
-export const sendCourseCreatedEmailHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
-  const { email, name, course, courseId } = data;
-  sendCourseCreatedEmail(email, name, course, courseId);
-});
+/**
+ * Cloud function endpoint for sending course created email notifications
+ *
+ * Recent fixes implemented:
+ * - Added parameter validation to prevent undefined/null values
+ * - Added proper error logging for debugging
+ * - Added async/await handling for proper error propagation
+ *
+ * This function validates that all required parameters are present
+ * before calling the email sending function.
+ */
+export const sendCourseCreatedEmailHttpsEndpoint = runWith({}).https.onCall(
+  async (data, _context) => {
+    const { email, name, course, courseId } = data;
+
+    // Validate required parameters
+    if (!email || !name || !course || !courseId) {
+      log(
+        `Missing required parameters: email=${email}, name=${name}, course=${course}, courseId=${courseId}`,
+      );
+      throw new Error("Missing required parameters for course created email");
+    }
+
+    await sendCourseCreatedEmail(email, name, course, courseId);
+  },
+);
 /**
  * Sends a course published notification.
  */
@@ -746,3 +768,51 @@ Galaxy Maps Team`;
   await mailTransport.sendMail(mailOptions);
   log("Galaxy deleted email sent to ", email);
 }
+
+/**
+ * Sends a notification email when someone is added as a collaborator to a galaxy map.
+ */
+export async function sendCollaboratorAddedEmail(
+  collaboratorEmail: string,
+  collaboratorName: string,
+  galaxyTitle: string,
+  inviterName: string,
+  galaxyId: string,
+) {
+  const mailOptions: Record<string, string> = {
+    from: `${APP_NAME} <noreply@${DOMAIN}>`,
+    to: collaboratorEmail,
+  };
+
+  mailOptions.subject = `You've been added as a collaborator on Galaxy Map: "${galaxyTitle}"`;
+  mailOptions.text = `Greetings, Captain ${collaboratorName}!
+
+Captain ${inviterName} has added you as a collaborator on the Galaxy Map: "${galaxyTitle}".
+
+As a collaborator, you can now:
+- View and edit the Galaxy Map
+- Add and modify Stars and Missions
+
+Jump into this Galaxy Map now by click this link and signing into your account: https://${DOMAIN}/galaxy/${galaxyId}
+
+If you have any questions, please contact ${inviterName} or reach out to base@${DOMAIN}
+
+Welcome to the team!
+
+Galaxy Maps Team`;
+  await mailTransport.sendMail(mailOptions);
+  log("Collaborator notification email sent to: ", collaboratorEmail);
+}
+
+export const sendCollaboratorAddedEmailHttpsEndpoint = runWith({}).https.onCall(
+  (data, _context) => {
+    const { collaboratorEmail, collaboratorName, galaxyTitle, inviterName, galaxyId } = data;
+    return sendCollaboratorAddedEmail(
+      collaboratorEmail,
+      collaboratorName,
+      galaxyTitle,
+      inviterName,
+      galaxyId,
+    );
+  },
+);

@@ -59,7 +59,6 @@ export default {
   watch: {
     "$route.name": {
       handler: function (route) {
-        console.log("route watch:", route);
         switch (route) {
           case "Login":
             this.componentView = "login";

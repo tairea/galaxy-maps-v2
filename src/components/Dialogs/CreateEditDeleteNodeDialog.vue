@@ -195,7 +195,7 @@
               v-if="!editing"
               outlined
               color="baseAccent"
-              @click="saveNode(currentNode)"
+              @click="saveNodeHandler(currentNode)"
               class="mr-2"
               :loading="loading"
             >
@@ -206,7 +206,7 @@
               v-else
               outlined
               color="baseAccent"
-              @click="saveNode(currentNode, true)"
+              @click="saveNodeHandler(currentNode, true)"
               class="mr-2"
               :loading="loading"
             >
@@ -281,8 +281,15 @@
 </template>
 
 <script>
-import { db, storage } from "@/store/firestoreConfig";
-import { fetchPersonsTopicByPersonIdCourseIdTopicId } from "@/lib/ff";
+import { storage } from "@/store/firestoreConfig";
+import {
+  fetchPersonsTopicByPersonIdCourseIdTopicId,
+  removePrerequisitesFromTopics,
+  updateStudentTopicPrerequisites,
+  saveTopicToStudents,
+  deleteTopicForStudents,
+  saveNode,
+} from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mdiPencil, mdiPlus, mdiClose, mdiCheck, mdiDelete, mdiInformationVariant } from "@mdi/js";
 import firebase from "firebase/compat/app";
@@ -403,61 +410,31 @@ export default {
       // remove 'new' node on cancel with var nodes = this.$refs.network.nodes.pop() ???
     },
 
-    async saveNode(node, isUpdate = false) {
+    async saveNodeHandler(node, isUpdate = false) {
       console.log("isUpdate: ", isUpdate);
       this.loading = true;
-      node.connectedEdge = node.connectedEdge ? node.connectedEdge : "";
 
-      // save topic node info to map-nodes
-      console.log("save", node);
-      await db
-        .collection("courses")
-        .doc(this.course.id)
-        .collection("map-nodes")
-        .doc(node.id)
-        .set({ ...node, nodeCreatedTimestamp: new Date() });
-      console.log("Node successfully written!");
+      try {
+        // Call cloud function to save the node
+        const result = await saveNode(this.course.id, node, isUpdate);
+        console.log("✅ Node saved successfully:", result);
 
-      // check if prerequisite
-      if (this.currentNode.prerequisites) {
-        for (const prereq of this.currentNode.prerequisites) {
-          const from = prereq;
-          const to = this.currentNode.id;
-          const edgeDocRef = await db
-            .collection("courses")
-            .doc(this.course.id)
-            .collection("map-edges")
-            .add({
-              from: from,
-              to: to,
-              dashes: false,
-            });
-
-          await edgeDocRef.update({ id: edgeDocRef.id });
+        // save topic to students
+        try {
+          const studentResult = await saveTopicToStudents(this.course.id, node, this.students);
+          console.log("✅ Topic saved to students:", studentResult);
+        } catch (error) {
+          console.error("❌ Error saving topic to students:", error);
+          // Continue with the operation even if student assignment fails
         }
+
+        this.loading = false;
+        this.close();
+      } catch (error) {
+        console.error("❌ Error saving node:", error);
+        this.loading = false;
+        // Don't close on error, let user see the error
       }
-
-      // save topic info to topics
-      await db
-        .collection("courses")
-        .doc(this.course.id)
-        .collection("topics")
-        .doc(node.id)
-        .set({ ...node, topicCreatedTimestamp: new Date() });
-      await this.saveTopicToStudents(node);
-
-      if (!isUpdate) {
-        // increment course topicTotals by 1
-        await db
-          .collection("courses")
-          .doc(this.course.id)
-          .update("topicTotal", firebase.firestore.FieldValue.increment(1));
-        console.log("Topic total increased by 1");
-      }
-
-      // get to and from and save to map edges
-      this.loading = false;
-      this.close();
     },
     deleteDialog() {
       this.dialogConfirm = true;
@@ -488,6 +465,11 @@ export default {
         .delete();
       console.log("Node successfully deleted from topics!");
 
+      // delete prerequisites
+      // - we need to check all nodes in collection("topics") and see if this.currentNode.id is in any of their prerequisites array
+      const affectedTopics = await this.removePrerequisitesFromTopics(this.currentNode.id);
+      console.log(`Prerequisites removed from ${affectedTopics.length} topics`);
+
       // delete conneceted edge (if there is one)
       if (this.currentNode.connectedEdge) {
         await db
@@ -508,7 +490,19 @@ export default {
       this.deleting = false;
       this.infoPopupShow = false;
 
-      this.deleteTopicForStudents(this.currentNode);
+      // Pass affectedTopics to avoid recalculating prerequisites
+      try {
+        const result = await deleteTopicForStudents(
+          this.course.id,
+          this.currentNode,
+          this.students,
+          affectedTopics,
+        );
+        console.log("✅ Topic deleted from students:", result);
+      } catch (error) {
+        console.error("❌ Error deleting topic from students:", error);
+        // Continue with the operation even if student deletion fails
+      }
       // close
       this.close();
     },
@@ -525,94 +519,70 @@ export default {
       this.deleting = false;
       this.infoPopupShow = false;
     },
-    async saveTopicToStudents(node) {
-      // if no students, return
-      if (this.students.empty) {
-        console.log("no students in this galaxy");
-        return;
+
+    /**
+     * Remove prerequisites from topics collection and return list of affected topics
+     * @param {string} nodeId - The ID of the node being deleted
+     * @returns {Array} Array of topic IDs that had prerequisites updated
+     */
+    async removePrerequisitesFromTopics(nodeId) {
+      try {
+        console.log("🗑️ Calling cloud function to remove prerequisites for node:", nodeId);
+
+        const result = await removePrerequisitesFromTopics({
+          courseId: this.course.id,
+          nodeId: nodeId,
+        });
+
+        console.log("✅ Cloud function result:", result.data);
+
+        if (result.data.success) {
+          return result.data.affectedTopics;
+        } else {
+          console.error("❌ Cloud function failed:", result.data);
+          return [];
+        }
+      } catch (error) {
+        console.error("❌ Error calling cloud function:", error);
+        return [];
       }
+    },
 
-      // for each student
-      for (const student of this.students) {
-        const personId = student.id;
+    /**
+     * Update prerequisites for a specific student's topics
+     * @param {string} personId - The student's person ID
+     * @param {Array} affectedTopics - Array of topics that had prerequisites updated
+     */
+    async updateStudentTopicPrerequisites(personId, affectedTopics) {
+      try {
+        console.log("👤 Calling cloud function to update student prerequisites:", {
+          personId,
+          affectedTopicsCount: affectedTopics.length,
+        });
 
-        // Validate required fields before proceeding
-        if (!personId || !this.course?.id) {
-          console.warn("assignTopicToStudents: Missing required fields", {
+        const result = await updateStudentTopicPrerequisites({
+          courseId: this.course.id,
+          personId: personId,
+          affectedTopics: affectedTopics,
+        });
+
+        console.log("✅ Cloud function result:", result.data);
+
+        if (result.data.success) {
+          console.log(
+            "✅ Successfully updated prerequisites for",
+            result.data.updatedTopicsCount,
+            "topics for student",
             personId,
-            courseId: this.course?.id,
-          });
-          continue;
+          );
+        } else {
+          console.error("❌ Cloud function failed:", result.data);
         }
-
-        // set reference to this course
-        const courseRef = db.collection("people").doc(personId).collection(this.course.id);
-
-        // check if the student has already started the course. If not they will be assigned this topic when they start the course
-        const studentHasStartedCourse = await courseRef
-          .get()
-          .then((subQuery) => subQuery.docs.length > 0);
-
-        if (studentHasStartedCourse) {
-          // if the new node has set prerequisites
-          if (node.prerequisites?.length) {
-            // get the prerequisite topic
-            const topic = await fetchPersonsTopicByPersonIdCourseIdTopicId(
-              personId,
-              this.course.id,
-              node.prerequisites[0],
-            );
-            console.log("topic: ", topic);
-            if (topic.topicStatus) {
-              console.log("student has been assigned the topic");
-              // if that topic is completed, set the topic as unlocked, else set is as locked and it will be unlocked when the student completed the prerequisite
-              if (topic.topicStatus && topic.topicStatus == "completed") {
-                node.topicStatus = "unlocked";
-              } else node.topicStatus = "locked";
-            }
-          } else {
-            // if there are no prerequisites than set is as unlocked
-            node.topicStatus = "unlocked";
-          }
-          console.log(personId, " has started course. Setting new topic as ", node.topicStatus);
-          // assign the topic to each student
-          await courseRef.doc(node.id).set(node);
-        }
+      } catch (error) {
+        console.error("❌ Error calling cloud function:", error);
       }
     },
-    async deleteTopicForStudents(node) {
-      console.log("node: ", node);
 
-      // if no students, return
-      if (!this.students || this.students.length === 0) {
-        return;
-      }
-
-      await Promise.all(
-        this.students.map(async (std) => {
-          const personId = std.id;
-
-          // Validate required fields before proceeding
-          if (!personId || !this.course?.id || !node?.id) {
-            console.warn("deleteTopicForStudents: Missing required fields", {
-              personId,
-              courseId: this.course?.id,
-              nodeId: node?.id,
-            });
-            return;
-          }
-
-          console.log("deleting ", node.label, "for student: ", personId);
-          // delete for student
-          return db
-            .collection("people")
-            .doc(personId)
-            .collection(this.course.id)
-            .doc(node.id)
-            .delete();
-        }),
-      );
-    },
     storeImage() {
       this.disabled = true;
       // ceate a storage ref

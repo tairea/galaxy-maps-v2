@@ -257,15 +257,12 @@ export default {
     },
   },
   async mounted() {
-    console.log("galaxy view mounted... courseId = ", this.courseId);
     this.setCurrentCourseId(this.courseId);
 
     // this.course = await fetchCourseByCourseId(this.courseId);
 
     // bind course instead of fetch (above) so to make course reactive (eg in GalaxyInfo.vue)
     await this.bindCourseByCourseId(this.courseId);
-    console.log("is course? : ", this.boundCourse);
-    console.log("is teacher? : ", this.teacher);
 
     // bind assigned people in this course
     if (this.teacher) {
@@ -470,7 +467,6 @@ export default {
       }
     },
     emittedCourseTasks(emittedPayload) {
-      console.log("course tasks emitted from GalaxyMap.vue", emittedPayload);
       this.courseTasks = emittedPayload;
     },
     showAddDialog(node) {

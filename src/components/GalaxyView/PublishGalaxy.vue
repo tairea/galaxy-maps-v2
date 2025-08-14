@@ -473,7 +473,7 @@ export default {
       };
 
       await db.collection("courses").doc(course.id).update(courseData);
-      console.log("Document successfully updated!");
+
       this.setCurrentCourseId(course.id);
       this.setSnackbar({
         show: true,

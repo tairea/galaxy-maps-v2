@@ -25,7 +25,7 @@
         </div>
 
         <!-- PROGRESS BAR FOR MISSION GENERATION -->
-        <div v-if="isGeneratingMissions" class="mission-generation-progress-container">
+        <!-- <div v-if="isGeneratingMissions" class="mission-generation-progress-container">
           <v-progress-linear
             :value="missionGenerationProgress"
             color="galaxyAccent"
@@ -39,7 +39,7 @@
             }}
             missions)
           </p>
-        </div>
+        </div> -->
 
         <p class="loading-message overline" :class="{ 'baseAccent--text': isSavingToDB }">
           {{ currentLoadingMessage }}
@@ -340,6 +340,8 @@ import {
   generateInstructionsForMission,
   saveGalaxyMap,
   downloadAndUploadImage,
+  generateUnifiedGalaxyMap,
+  generateUnifiedGalaxyMapWithClarification,
 } from "@/lib/ff";
 import { zodTextFormat } from "openai/helpers/zod";
 import { StarsAndPlanetsResponseSchema } from "@/lib/schemas";
@@ -637,14 +639,17 @@ export default {
 
       try {
         this.loading = true;
+        this.isGeneratingMissions = true;
 
         // Add a small delay to prevent rapid double-clicks
         await new Promise((resolve) => setTimeout(resolve, 100));
 
-        // =========== (1st a.i. api call) Generate journey's Stars and Planets using AI ===========
-        const aiResponse = await generateGalaxyMap(this.description);
+        // =========== (unified a.i. api call) Generate Stars + Missions + Mission Instructions ==========
+        // const aiResponse = await generateGalaxyMap(this.description);
+        const aiResponse = await generateUnifiedGalaxyMap(this.description);
 
-        console.log("1st A.I. call: Stars and Planets generated ✅. A.I. Response:", aiResponse);
+        // console.log("1st A.I. call: Stars and Planets generated ✅. A.I. Response:", aiResponse);
+        console.log("Unified A.I. call: Stars + Missions + Instructions generated ✅:", aiResponse);
 
         // store the response id for the next ai call
         this.previousResponseId = aiResponse.responseId;
@@ -653,7 +658,7 @@ export default {
         const parsedResponse = aiResponse.galaxyMap;
         parsedResponse.originResponseId = aiResponse.responseId;
 
-        // Check if it's clarification_needed, journey_ready, or stars list
+        // Check if it's clarification_needed, journey_ready
         if (
           parsedResponse.status === "journey_ready" &&
           parsedResponse.stars &&
@@ -662,7 +667,7 @@ export default {
           parsedResponse.description
         ) {
           // It's a journey_ready response - proceed to next step
-          console.log("Journey stars and planets ready received:", parsedResponse);
+          console.log("Journey (unified) ready received:", parsedResponse);
 
           // end timer
           const endTime = Date.now();
@@ -694,6 +699,12 @@ export default {
           if (this.selectedFlow === "human-help") {
             // For human-help flow, route to AiGalaxyEdit
             this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
+            // Calculate and log execution time before navigating away
+            const endTime = Date.now();
+            const timeString = this.formatExecutionTime(startTime, endTime);
+            console.log(
+              `✅ Second step completed in ${timeString} (${endTime - startTime}ms total)`,
+            );
             this.$router.push({ name: "AiGalaxyEdit" });
           }
           // } else if (this.selectedFlow === "no-human-help") {
@@ -706,7 +717,7 @@ export default {
           Array.isArray(parsedResponse.questions)
         ) {
           // It's clarification_needed - show questions
-          console.log("Clarification needed questions:", parsedResponse.questions);
+          console.log("Clarification needed questions (unified):", parsedResponse.questions);
           this.aiGatheringContextQuestions = parsedResponse.questions;
 
           // Store the token usage from the first API call even when clarification is needed
@@ -734,6 +745,7 @@ export default {
           });
           // Set loading to false here since we're not proceeding
           this.loading = false;
+          this.isGeneratingMissions = false;
         }
       } catch (error) {
         // Calculate and log execution time even on error
@@ -749,6 +761,7 @@ export default {
         });
         // Set loading to false on error
         this.loading = false;
+        this.isGeneratingMissions = false;
       }
     },
     // =========== Generate course Tasks (for each Topic) using AI ===========
@@ -762,17 +775,19 @@ export default {
 
       try {
         this.loading = true;
+        this.isGeneratingMissions = true;
 
-        // second ai call with structured output using cloud function
-        const aiSecondResponse = await generateGalaxyMapWithClarification(
+        // unified second ai call with structured output using cloud function
+        // const aiSecondResponse = await generateGalaxyMapWithClarification(
+        //   this.prefixedAnswers.join("\n"),
+        //   this.previousResponseId,
+        // );
+        const aiSecondResponse = await generateUnifiedGalaxyMapWithClarification(
           this.prefixedAnswers.join("\n"),
           this.previousResponseId,
         );
 
-        console.log(
-          "2nd A.I. call: Stars and Planets Generation (after clarification): Response:",
-          aiSecondResponse,
-        );
+        console.log("Unified 2nd A.I. call response:", aiSecondResponse);
 
         this.previousResponseId = aiSecondResponse.responseId;
 
@@ -788,7 +803,7 @@ export default {
           parsedResponse.description
         ) {
           // It's a journey_ready response - proceed to next step
-          console.log("Journey steps ready received:", parsedResponse);
+          console.log("Journey (unified) ready after clarification:", parsedResponse);
 
           // add token data to the galaxy map
           this.aiGeneratedGalaxyMap = parsedResponse;
@@ -834,6 +849,12 @@ export default {
 
           this.showSecondStepperStep = true;
           this.stepper = 2;
+          // Calculate and log execution time when stopping for clarification
+          const endTime = Date.now();
+          const timeString = this.formatExecutionTime(startTime, endTime);
+          console.log(
+            `⏸️ Stopping to ask follow-up questions after ${timeString} (${endTime - startTime}ms total)`,
+          );
           // Set loading to false here since we're stopping to ask questions
           this.loading = false;
         } else {
@@ -845,6 +866,13 @@ export default {
           });
           // Set loading to false here since we're not proceeding
           this.loading = false;
+          this.isGeneratingMissions = false;
+          // Calculate and log execution time for unexpected format
+          const endTime = Date.now();
+          const timeString = this.formatExecutionTime(startTime, endTime);
+          console.log(
+            `⚠️ Second step ended with unexpected response after ${timeString} (${endTime - startTime}ms total)`,
+          );
         }
       } catch (error) {
         // Calculate and log execution time even on error
@@ -860,6 +888,7 @@ export default {
         });
         // Set loading to false on error
         this.loading = false;
+        this.isGeneratingMissions = false;
       }
     },
 
@@ -974,6 +1003,7 @@ export default {
           children: [],
         };
         if (star.planets && star.planets.length > 0) {
+          // Unified/new format: planets under a star
           starNode.children = star.planets.map((planet, planetIndex) => {
             const planetNode = {
               id: `star-${starIndex}-planet-${planetIndex}`,
@@ -983,9 +1013,15 @@ export default {
               children: [],
             };
 
-            // Add mission instructions as subitems if they exist
-            if (planet.instructions) {
-              console.log("Processing planet instructions:", planet.instructions);
+            // Prefer unified missionInstructions if present
+            if (planet.missionInstructions) {
+              planetNode.children.push({
+                id: `star-${starIndex}-planet-${planetIndex}-instructions`,
+                name: "Mission Instructions",
+                description: planet.missionInstructions,
+                type: "instructions",
+              });
+            } else if (planet.instructions) {
               planetNode.children.push({
                 id: `star-${starIndex}-planet-${planetIndex}-instructions`,
                 name: "Mission Instructions",
@@ -994,7 +1030,6 @@ export default {
               });
             }
 
-            // Add existing missions if they exist
             if (planet.missions && planet.missions.length > 0) {
               planetNode.children.push(
                 ...planet.missions.map((mission, missionIndex) => ({
@@ -1006,6 +1041,28 @@ export default {
             }
 
             return planetNode;
+          });
+        } else if (star.missions && star.missions.length > 0) {
+          // Backward-compat fallback if an older unified interim used missions under star
+          starNode.children = star.missions.map((mission, missionIndex) => {
+            const missionNode = {
+              id: `star-${starIndex}-mission-${missionIndex}`,
+              name: mission.title,
+              description: mission.description,
+              type: "planet",
+              children: [],
+            };
+
+            if (mission.missionInstructions) {
+              missionNode.children.push({
+                id: `star-${starIndex}-mission-${missionIndex}-instructions`,
+                name: "Mission Instructions",
+                description: mission.missionInstructions,
+                type: "instructions",
+              });
+            }
+
+            return missionNode;
           });
         }
         return starNode;
@@ -1320,20 +1377,23 @@ export default {
           html += `<p>${instructions.description}</p>`;
         }
 
-        // Add instructions section
-        if (instructions.instructions && instructions.instructions.length > 0) {
+        if (instructions.intro) {
+          html += `<p><em>${instructions.intro}</em></p>`;
+        }
+
+        // Add instructions section (supports unified "steps" or legacy "instructions")
+        const stepsArray = instructions.instructions || instructions.steps || [];
+        if (stepsArray.length > 0) {
           if (!this.isGeneratingMissions) {
             html += `<h2>Instructions</h2>`;
           }
 
-          // Loop through each instruction step
-          instructions.instructions.forEach((step) => {
-            // Add step title
+          // Loop through each step
+          stepsArray.forEach((step) => {
             if (step.title) {
               html += `<h3>${step.title}</h3>`;
             }
 
-            // Add tasks as unordered list
             if (step.tasks && step.tasks.length > 0) {
               html += `<ul>`;
               step.tasks.forEach((task) => {
@@ -1343,10 +1403,18 @@ export default {
               });
               html += `</ul>`;
             }
+
+            if (step.checkpoint) {
+              html += `<p><em>Checkpoint: ${step.checkpoint}</em></p>`;
+            }
           });
         }
 
-        console.log("🔄 Formatted mission instructions to HTML:", html);
+        if (instructions.outro) {
+          html += `<p><em>${instructions.outro}</em></p>`;
+        }
+
+        // console.log("🔄 Formatted mission instructions to HTML:", html);
         return html;
       } catch (error) {
         console.error("❌ Error formatting mission instructions to HTML:", error);
@@ -1402,13 +1470,19 @@ export default {
       try {
         // If it's already an object, check if it has the expected structure
         if (typeof content === "object") {
-          return content.instructions && Array.isArray(content.instructions);
+          return (
+            (content.instructions && Array.isArray(content.instructions)) ||
+            (content.steps && Array.isArray(content.steps))
+          );
         }
 
         // If it's a string, try to parse it and check
         if (typeof content === "string") {
           const parsed = JSON.parse(content);
-          return parsed.instructions && Array.isArray(parsed.instructions);
+          return (
+            (parsed.instructions && Array.isArray(parsed.instructions)) ||
+            (parsed.steps && Array.isArray(parsed.steps))
+          );
         }
 
         return false;
@@ -1423,7 +1497,7 @@ export default {
     renderToHTML(item) {
       if (!item || !item.description) return "";
 
-      console.log("🔄 Rendering html for item:", item);
+      // console.log("🔄 Rendering html for item:", item);
 
       try {
         // If the item already has renderedDescription, use it

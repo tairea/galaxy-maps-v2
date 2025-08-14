@@ -38,6 +38,22 @@
         </div>
       </div>
 
+      <!-- EDIT WITH AI (Teacher Only) -->
+      <div
+        v-if="isTeacher"
+        class="mapButtonGalaxyAccent ml-4"
+        :class="{ dimmed: editModeActive }"
+        :style="editModeActive ? { order: 99 } : {}"
+        @click="openAiGalaxyEdit"
+      >
+        <div class="mapButton-icon">
+          <v-icon color="galaxyAccent">{{ mdiRobotExcited }}</v-icon>
+        </div>
+        <div class="mapButton-text">
+          <p class="overline ma-0">Edit with AI</p>
+        </div>
+      </div>
+
       <!-- EDIT BUTTONS CONTAINER (Teacher Only) -->
       <div v-if="isTeacher && editModeActive" class="d-inline-flex ml-4">
         <!-- ADD NODE -->
@@ -90,16 +106,6 @@
             @click="saveNodePositions"
           >
             <v-icon color="baseAccent">{{ mdiContentSaveCheck }}</v-icon>
-          </div>
-        </div>
-
-        <!-- EDIT WITH AI -->
-        <div class="mapButtonGalaxyAccent ml-4" @click="openAiGalaxyEdit">
-          <div class="mapButton-icon">
-            <v-icon color="galaxyAccent">{{ mdiRobotExcited }}</v-icon>
-          </div>
-          <div class="mapButton-text">
-            <p class="overline ma-0">Edit with AI</p>
           </div>
         </div>
       </div>

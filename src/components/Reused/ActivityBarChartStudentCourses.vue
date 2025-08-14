@@ -120,7 +120,6 @@ export default {
       );
       this.timeData = courseHours;
       this.studentTimeDataLoading = false;
-      // console.log("course HOURS for ", this.student.firstName + ": ", this.timeData);
 
       this.formatStudentsChartData(courseHours);
     },
@@ -136,8 +135,6 @@ export default {
         data.push(courseAndHoursObj.hours);
         labels.push(label);
       }
-
-      console.log("LABELS: ", labels);
 
       // // ==== test 30 students ===
       // for (var x = 0; x < 50; x++) {

@@ -128,6 +128,71 @@ export const StarsAndPlanetsResponseSchema = z
     },
   );
 
+// ================= Unified (Stars -> Planets -> missionInstructions) =================
+
+export const UnifiedJourneyTaskSchema = z.object({
+  taskContent: z.string().min(1),
+});
+
+export const UnifiedJourneyStepSchema = z.object({
+  title: z.string().min(1),
+  tasks: z.array(UnifiedJourneyTaskSchema).min(1),
+  checkpoint: z.string().min(1),
+});
+
+export const UnifiedMissionInstructionsSchema = z.object({
+  intro: z.string().min(1),
+  steps: z.array(UnifiedJourneyStepSchema).min(1),
+  outro: z.string().min(1),
+});
+
+export const UnifiedJourneyPlanetsSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().min(1),
+  missionInstructions: UnifiedMissionInstructionsSchema,
+});
+
+export const UnifiedJourneyStarsSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().min(1),
+  planets: z.array(UnifiedJourneyPlanetsSchema).min(1),
+});
+
+export const UnifiedGalaxyMapResponseSchema = z
+  .object({
+    status: z.enum(["clarification_needed", "journey_ready"]),
+    questions: z.array(z.string().min(1)).nullable(),
+    title: z.string().nullable(),
+    description: z.string().nullable(),
+    stars: z.array(UnifiedJourneyStarsSchema).nullable(),
+    image: z
+      .object({
+        name: z.string(),
+        url: z.string(),
+      })
+      .nullable()
+      .optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.status === "clarification_needed") {
+        return Array.isArray(data.questions) && data.questions.length > 0;
+      }
+      if (data.status === "journey_ready") {
+        return Boolean(
+          data.title &&
+            data.title.length > 0 &&
+            data.description &&
+            data.description.length > 0 &&
+            data.stars &&
+            data.stars.length > 0,
+        );
+      }
+      return false;
+    },
+    { message: "Invalid response structure based on status" },
+  );
+
 // Type exports for TypeScript
 // export type StarsListResponse = z.infer<typeof StarsListSchema>;
 // export type GatheringContextResponse = z.infer<typeof GatheringContextSchema>;
