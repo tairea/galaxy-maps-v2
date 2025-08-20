@@ -4,15 +4,16 @@
     :cols="cols"
     @click="routeToCourse(course)"
   >
-    <v-tooltip v-if="course" bottom color="subBackground">
+    <v-tooltip v-if="tooltip" bottom color="subBackground">
       <template v-slot:activator="{ on, attrs }">
         <div class="d-flex justify-center align-center" v-bind="attrs" v-on="on">
           <v-avatar size="40">
             <img
-              v-if="course.image && course.image.url"
+              v-if="hasValidImage"
               :src="course.image.url"
               :alt="course.title"
               style="object-fit: cover"
+              @error="handleImageError"
             />
             <div v-else class="imagePlaceholder">
               {{ first3Letters(course.title) }}
@@ -26,15 +27,18 @@
         </p>
       </div>
     </v-tooltip>
-    <!-- <v-img
-      v-if="course.image"
-      :src="course.image.url"
-      max-width="60px"
-      max-height="60px"
-      class="course-image"
-    ></v-img>
-    <div v-else class="imagePlaceholder">{{ first3Letters(course.title) }}</div>
-    <p class="title text-center pt-2 mb-0">{{ course.title }}</p> -->
+    <div v-else>
+      <v-img
+        v-if="hasValidImage"
+        :src="course.image.url"
+        max-width="60px"
+        max-height="60px"
+        class="course-image"
+        @error="handleImageError"
+      ></v-img>
+      <div v-else class="imagePlaceholder">{{ first3Letters(course.title) }}</div>
+      <p class="title text-center pt-2 mb-0">{{ course.title }}</p>
+    </div>
   </v-col>
 </template>
 
@@ -44,16 +48,30 @@ import { mapActions } from "pinia";
 
 export default {
   name: "Course",
-  props: ["course", "cols"],
+  props: ["course", "cols", "tooltip"],
   data() {
-    return {};
+    return {
+      imageLoadError: false,
+    };
   },
   mounted() {},
-  computed: {},
+  computed: {
+    hasValidImage() {
+      return (
+        this.course.image &&
+        this.course.image.url &&
+        this.course.image.url.trim() !== "" &&
+        !this.imageLoadError
+      );
+    },
+  },
   methods: {
     ...mapActions(useRootStore, ["setCurrentCourseId"]),
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
+    },
+    handleImageError() {
+      this.imageLoadError = true;
     },
     routeToCourse(course) {
       // on clicking course, set its courseID to Store state (so not relying on router params)

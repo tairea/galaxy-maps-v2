@@ -25,6 +25,9 @@
           :colourBorder="true"
         />
       </v-row>
+      <p class="overline ma-0" style="color: var(--v-cohortAccent-base)">
+        Monitoring {{ cohort.students.length }} navigators
+      </p>
     </div>
     <CreateEditDeleteCohortDialog v-if="isTeacher" :edit="true" :cohortToEdit="cohort" />
   </div>

@@ -38,7 +38,7 @@
         <!-- HEADER -->
         <div class="dialog-header">
           <p class="dialog-title">
-            {{ edit ? "Edit Cohort " + cohort.name : dialogTitle }}
+            {{ edit ? "Edit Cohort " + safeCohort.name : dialogTitle }}
           </p>
           <div class="d-flex align-center">
             <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
@@ -47,7 +47,7 @@
         </div>
 
         <!-- LEFT SIDE -->
-        <div class="left-side" :style="cohort.name ? 'width:50%' : 'width:100%'">
+        <div class="left-side" :style="safeCohort.name ? 'width:50%' : 'width:100%'">
           <div class="create-dialog-content mt-8">
             <!-- NAME -->
             <!-- TITLE -->
@@ -169,13 +169,17 @@
         <!-- End of left-side -->
 
         <!-- RIGHT SIDE -->
-        <div class="right-side" :style="cohort.name ? 'width:50%' : 'width:0%'">
+        <div class="right-side" :style="safeCohort.name ? 'width:50%' : 'width:0%'">
           <!-- Cohort Preview -->
-          <div id="cohort-info" v-if="cohort.name">
+          <div id="cohort-info" v-if="safeCohort.name">
             <h2 class="cohort-label">Squad</h2>
-            <h1 class="cohort-title">{{ cohort.name }}</h1>
-            <v-img v-if="cohort.image" :src="cohort.image.url" width="100%"></v-img>
-            <p class="cohort-description">{{ cohort.description }}</p>
+            <h1 class="cohort-title">{{ safeCohort.name }}</h1>
+            <v-img
+              v-if="safeCohort.image && safeCohort.image.url"
+              :src="safeCohort.image.url"
+              width="100%"
+            ></v-img>
+            <p class="cohort-description">{{ safeCohort.description }}</p>
             <!-- Organisation -->
             <!-- <div class="d-flex justify-center align-center">
               <Organisation
@@ -193,7 +197,7 @@
             v-if="edit"
             outlined
             color="baseAccent"
-            @click="updateCohort(cohort)"
+            @click="updateCohort(safeCohort)"
             class="mx-2"
             :loading="loading"
             :disabled="disabled"
@@ -208,7 +212,7 @@
             v-else
             outlined
             color="baseAccent"
-            @click="saveCohort(cohort)"
+            @click="saveCohort(safeCohort)"
             class="mx-2"
             :loading="loading"
             :disabled="disabled"
@@ -264,7 +268,7 @@
             <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
             <p class="dialog-description">
               This Squad is linked to the
-              <span style="color: var(--v-galaxyAccent-base)">{{ cohort.name }}</span>
+              <span style="color: var(--v-galaxyAccent-base)">{{ safeCohort.name }}</span>
               Galaxy Map. <br /><br />
               To delete this squad, please navigate to the galaxy map and delete it.
               <br /><br />
@@ -295,7 +299,7 @@
             <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
             <p class="dialog-description">
               Are you sure you want to <strong>DELETE</strong> this
-              <span class="cohort-text">{{ cohort.name }} Squad</span>?
+              <span class="cohort-text">{{ safeCohort.name }} Squad</span>?
               <br />
               <br />
               Deleting is permanent!!!
@@ -313,7 +317,7 @@
           <v-btn
             outlined
             color="error"
-            @click="confirmDeleteCohort(cohort)"
+            @click="confirmDeleteCohort(safeCohort)"
             class="ml-2"
             :loading="deleting"
           >
@@ -406,7 +410,11 @@ export default {
     courseExists: null,
   }),
   mounted() {
-    if (this.user.data.admin) this.bindAllPeople();
+    // Only bind people data if user is admin (for other admin functions)
+    if (this.user.data.admin) {
+      this.bindAllPeople();
+    }
+
     if (this.$vuetify.theme.isDark) {
       this.$vuetify.theme.themes.dark.primary = "#ffffff"; // white
     } else {
@@ -422,6 +430,13 @@ export default {
   watch: {
     dialog(newVal) {
       if (newVal && this.edit && this.cohortToEdit && Object.keys(this.cohortToEdit).length > 0) {
+        // Ensure the image property exists before assigning
+        if (!this.cohortToEdit.image) {
+          this.cohortToEdit.image = {
+            name: "",
+            url: "",
+          };
+        }
         Object.assign(this.cohort, this.cohortToEdit);
       }
     },
@@ -430,6 +445,35 @@ export default {
     ...mapState(useRootStore, ["person", "getOrganisationById", "user", "people", "organisations"]),
     dark() {
       return this.$vuetify.theme.isDark;
+    },
+    // Ensure cohort object always has proper structure
+    safeCohort() {
+      if (!this.cohort) {
+        return {
+          name: "",
+          description: "",
+          organisation: "",
+          students: [],
+          courses: [],
+          image: {
+            name: "",
+            url: "",
+          },
+          teachers: [],
+        };
+      }
+
+      // Ensure all required properties exist
+      return {
+        name: this.cohort.name || "",
+        description: this.cohort.description || "",
+        organisation: this.cohort.organisation || "",
+        students: this.cohort.students || [],
+        courses: this.cohort.courses || [],
+        image: this.cohort.image || { name: "", url: "" },
+        teachers: this.cohort.teachers || [],
+        ...this.cohort, // Keep any additional properties
+      };
     },
     // teachers() {
     // const teachers = this.people.filter(
@@ -460,6 +504,11 @@ export default {
       this.teacherDialog = !this.teacherDialog;
     },
     remove(item) {
+      // Safety check: ensure cohort.teachers exists
+      if (!this.cohort.teachers) {
+        this.cohort.teachers = [];
+      }
+
       let index = this.cohort.teachers.findIndex((n) => item.id === n);
       if (index >= 0) this.cohort.teachers.splice(index, 1);
 
@@ -472,49 +521,137 @@ export default {
       this.loading = false;
       if (!this.edit) {
         this.cohort = {
-          cohort: {
+          name: "",
+          description: "",
+          organisation: "",
+          students: [],
+          courses: [],
+          image: {
             name: "",
-            description: "",
-            organisation: "",
-            students: [],
-            courses: [],
-            image: {
-              name: "",
-              url: "",
-            },
-            teachers: [],
+            url: "",
           },
+          teachers: [],
         };
         this.uploadedImage = null;
       }
     },
+    /**
+     * Saves a new cohort to the database and routes to the cohort view.
+     * Teacher email notifications are sent asynchronously and won't block the creation process.
+     * @param {Object} cohort - The cohort object to save
+     */
     saveCohort(cohort) {
+      // Safety check: ensure cohort is valid
+      if (!cohort || !cohort.name) {
+        console.error("Cannot save cohort: missing cohort name");
+        this.setSnackbar({
+          show: true,
+          text: "Please enter a squad name before saving",
+          color: "error",
+        });
+        return;
+      }
+
       this.loading = true;
       if (cohort.teacher) delete cohort.teacher;
+
       // Add a new document in collection "cohorts"
       db.collection("cohorts")
         .add(cohort)
         .then((docRef) => {
+          console.log("Cohort created successfully with ID:", docRef.id);
+
+          // Reset loading state
+          this.loading = false;
+
+          // Close the dialog first
           this.close();
+
+          // Add a small delay to ensure dialog is fully closed before routing
+          setTimeout(() => {
+            try {
+              // Route to the new cohort view
+              this.$router.push({
+                name: "CohortView",
+                params: {
+                  cohortId: docRef.id,
+                  cohortName: cohort.name,
+                },
+              });
+            } catch (error) {
+              console.error("Error routing to cohort view:", error);
+              // Fallback: route to cohorts list
+              this.$router.push({ name: "CohortsList" });
+            }
+          }, 100);
+
+          // Show success message
+          this.setSnackbar({
+            show: true,
+            text: `Squad "${cohort.name}" created successfully!`,
+            color: "success",
+          });
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
+          this.loading = false;
+          this.setSnackbar({
+            show: true,
+            text: "Error creating squad. Please try again.",
+            color: "error",
+          });
         });
 
-      // notify teachers of new cohort assignment
-      if (this.cohort.teachers.length) {
-        for (const teacher of this.cohort.teachers) {
-          const profile = this.people.find((person) => teacher === person.id);
-          console.log("email send to:", profile.email, " about new cohort");
-          this.sendNewCohortEmail(profile);
-        }
+      // notify teachers of new cohort assignment (non-blocking)
+      // Note: Email sending is optional and won't block the cohort creation process
+      // Security: Only fetches minimal data for specific people by ID, not entire people collection
+      if (cohort.teachers && cohort.teachers.length) {
+        // Store cohort name for email sending
+        const cohortName = cohort.name;
+
+        console.log("Attempting to notify teachers:", cohort.teachers);
+
+        // Use setTimeout to make this non-blocking
+        setTimeout(async () => {
+          try {
+            // Fetch only the specific people we need for email notifications
+            const teacherProfiles = await this.fetchPeopleByIds(cohort.teachers);
+            console.log("Fetched teacher profiles:", teacherProfiles.length);
+
+            for (const profile of teacherProfiles) {
+              if (profile && profile.email) {
+                console.log("email send to:", profile.email, " about new cohort");
+                try {
+                  await this.sendNewCohortEmail(profile, cohortName);
+                } catch (error) {
+                  console.error("Error sending email to teacher:", error);
+                }
+              } else {
+                console.warn("Cannot send email to teacher: missing profile or email", profile?.id);
+                // Don't let this prevent the cohort creation from completing
+              }
+            }
+          } catch (error) {
+            console.error("Error in teacher notification process:", error);
+            // Don't let this prevent the cohort creation from completing
+          }
+        }, 100);
       }
     },
-    sendNewCohortEmail(profile) {
+    sendNewCohortEmail(profile, cohortName) {
+      // Safety check: ensure profile is valid
+      if (!profile || !profile.email) {
+        console.error("Cannot send email: missing profile or email");
+        return;
+      }
+
       const person = {
-        ...profile,
-        cohort: this.cohort.name,
+        email: profile.email,
+        displayName: profile.displayName || profile.firstName || profile.lastName || "",
+        firstName: profile.firstName || "",
+        lastName: profile.lastName || "",
         inviter: this.inviter || "Galaxy Maps Admin",
+        cohort: cohortName,
       };
       const sendNewCohortEmail = functions.httpsCallable("sendNewCohortEmail");
       return sendNewCohortEmail(person);
@@ -526,6 +663,17 @@ export default {
       });
     },
     storeImage() {
+      // Safety check: ensure cohort object and name exist
+      if (!this.cohort || !this.cohort.name || !this.cohort.name.trim() || !this.uploadedImage) {
+        console.error("Cannot upload image: missing cohort name or uploaded image");
+        this.setSnackbar({
+          show: true,
+          text: "Please enter a squad name before uploading an image",
+          color: "error",
+        });
+        return;
+      }
+
       this.disabled = true;
       // ceate a storage ref
       var storageRef = storage.ref(
@@ -551,6 +699,13 @@ export default {
           // get image url
           uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
             console.log("image url is: " + downloadURL);
+            // Ensure cohort.image exists before setting properties
+            if (!this.cohort.image) {
+              this.cohort.image = {
+                name: "",
+                url: "",
+              };
+            }
             // add image url to cohort obj
             this.cohort.image.url = downloadURL;
             this.cohort.image.name = this.cohort.name + "-" + this.uploadedImage.name;
@@ -570,6 +725,17 @@ export default {
       this.dialog = true;
     },
     confirmDeleteCohort(cohort) {
+      // Safety check: ensure cohort has an id
+      if (!cohort || !cohort.id) {
+        console.error("Cannot delete cohort: missing cohort id");
+        this.setSnackbar({
+          show: true,
+          text: "Cannot delete cohort: missing cohort information",
+          color: "error",
+        });
+        return;
+      }
+
       this.loadingDelete = true;
       // delete document in collection "courses"
       db.collection("cohorts")
@@ -590,7 +756,7 @@ export default {
     },
     deleteImage() {
       // if no image, dont worry bout it cuz
-      if (this.cohort.image.name == "") return;
+      if (!this.cohort.image || this.cohort.image.name == "") return;
       console.log("deleting image...");
       // Create a reference to the file to delete
       var storageRef = storage.ref("cohort-images/" + this.cohort.image.name);
@@ -604,7 +770,18 @@ export default {
           console.log("Uh-oh, an error occurred!", error);
         });
     },
-    updateCohort(cohort) {
+    async updateCohort(cohort) {
+      // Safety check: ensure cohort is valid
+      if (!cohort || !cohort.id || !cohort.name) {
+        console.error("Cannot update cohort: missing cohort id or name");
+        this.setSnackbar({
+          show: true,
+          text: "Cannot update cohort: missing cohort information",
+          color: "error",
+        });
+        return;
+      }
+
       console.log("update cohort: ", cohort);
       this.loading = true;
 
@@ -621,25 +798,42 @@ export default {
           console.error("Error updating document: ", error);
         });
 
+      // Notify new teachers added to the cohort (non-blocking)
+      // Security: Only fetches minimal data for specific new teachers by ID
       if (
         this.cohortToEdit &&
         this.cohortToEdit.teachers &&
-        this.cohort.teachers.length > this.cohortToEdit.teachers.length
+        cohort.teachers &&
+        cohort.teachers.length > this.cohortToEdit.teachers.length
       ) {
-        const newTeachers = this.cohort.teachers.filter(
+        const newTeachers = cohort.teachers.filter(
           (teacherId) => !this.cohortToEdit.teachers.includes(teacherId),
         );
         if (newTeachers.length) {
-          for (const teacher of newTeachers) {
-            const profile = this.people.find((person) => teacher === person.id);
-            console.log(profile);
-            this.sendNewCohortEmail(profile);
+          // Fetch only the new teachers we need to notify
+          const newTeacherProfiles = await this.fetchPeopleByIds(newTeachers);
+
+          for (const profile of newTeacherProfiles) {
+            if (profile && profile.email) {
+              console.log("Sending email to new teacher:", profile);
+              try {
+                await this.sendNewCohortEmail(profile, cohort.name);
+              } catch (error) {
+                console.error("Error sending email to new teacher:", error);
+              }
+            } else {
+              console.warn("Cannot send email to teacher: missing profile or email", profile?.id);
+            }
           }
         }
       }
     },
     addTeacher(teacher) {
       console.log("adding teacher", teacher);
+      // Safety check: ensure cohort.teachers exists
+      if (!this.cohort.teachers) {
+        this.cohort.teachers = [];
+      }
       this.cohort.teachers.push(teacher.id);
       // Add the teacher object to the teachers array so the autocomplete can display it
       this.teachers.push(teacher);
@@ -677,7 +871,8 @@ export default {
         console.log("cohort has no teachers, adding current user as default teacher");
         // Add current user as default teacher
         this.teachers = [this.person];
-        //this.cohort.teachers = [this.person.id];
+        // Automatically select the first teacher by default
+        this.cohort.teachers = [this.person.id];
       }
     },
     async initializeCourseExists() {
@@ -697,6 +892,58 @@ export default {
         }
       }
       return false;
+    },
+    /**
+     * Fetches specific people by their IDs for email notifications
+     * Only fetches minimal data needed: id, email, firstName, lastName, displayName
+     * @param {string[]} personIds - Array of person IDs to fetch
+     * @returns {Promise<Array>} Array of person objects with minimal data
+     */
+    async fetchPeopleByIds(personIds) {
+      if (!personIds || personIds.length === 0) {
+        return [];
+      }
+
+      // Security check: ensure we're not trying to fetch too many people at once
+      if (personIds.length > 50) {
+        console.warn("Too many people requested, limiting to 50");
+        personIds = personIds.slice(0, 50);
+      }
+
+      try {
+        const peoplePromises = personIds.map(async (personId) => {
+          try {
+            // Additional security: validate personId format
+            if (!personId || typeof personId !== "string" || personId.length < 3) {
+              console.warn("Invalid person ID format:", personId);
+              return null;
+            }
+
+            const doc = await db.collection("people").doc(personId).get();
+            if (doc.exists) {
+              const data = doc.data();
+              // Only return the minimal data needed for email notifications
+              return {
+                id: doc.id,
+                email: data.email,
+                firstName: data.firstName,
+                lastName: data.lastName,
+                displayName: data.displayName,
+              };
+            }
+            return null;
+          } catch (error) {
+            console.error(`Error fetching person ${personId}:`, error);
+            return null;
+          }
+        });
+
+        const people = await Promise.all(peoplePromises);
+        return people.filter((person) => person !== null);
+      } catch (error) {
+        console.error("Error fetching people by IDs:", error);
+        return [];
+      }
     },
   },
 };
