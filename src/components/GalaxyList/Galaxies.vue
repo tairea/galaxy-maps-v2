@@ -1,6 +1,6 @@
 <template>
   <div class="full-height justify-center align-center">
-    <LoadingSpinner v-if="loading" text="loading learning universe" />
+    <LoadingSpinner v-if="isLoadingCourses || loading" text="loading learning universe" />
     <div v-if="allNodesForDisplay.length == 0">
       <p class="overline noGalaxies">NO GALAXIES TO DISPLAY</p>
       <div class="d-flex justify-center mb-4">
@@ -187,15 +187,32 @@ export default {
           break;
         }
       }
-      this.refreshAllNodesAndEdgesToDisplay(needsCentering);
+
+      // Only proceed if we have all required data
+      if (newCourses && this.courseNodesMap && this.courseEdgesMap) {
+        this.refreshAllNodesAndEdgesToDisplay(needsCentering);
+      }
     },
   },
   mounted() {
-    this.refreshAllNodesAndEdgesToDisplay(true);
+    // Only proceed if we have the required data
+    if (this.courses && this.courseNodesMap && this.courseEdgesMap) {
+      this.refreshAllNodesAndEdgesToDisplay(true);
+    }
   },
   methods: {
     ...mapActions(useRootStore, []),
     refreshAllNodesAndEdgesToDisplay(needsCentering) {
+      // Safety check: ensure we have the required data before proceeding
+      if (!this.courses || !this.courseNodesMap || !this.courseEdgesMap) {
+        console.warn("Missing required data for refreshAllNodesAndEdgesToDisplay");
+        this.allNodesForDisplay = [];
+        this.allEdgesForDisplay = [];
+        this.loading = false;
+        this.needsCentering = needsCentering;
+        return;
+      }
+
       const repositionedNodes = this.repositionCoursesBasedOnBoundariesV2();
 
       // log a node with this course.id
@@ -635,6 +652,12 @@ export default {
     },
     calcCourseCanvasBoundaries() {
       const courses = this.courses;
+
+      // Safety check: ensure courses is defined and is an array
+      if (!courses || !Array.isArray(courses) || courses.length === 0) {
+        return [];
+      }
+
       let courseCanvasBoundaries = [];
       // per course/galaxy, determine boundaries ie. highest y, highest x, lowest y, lowest x (this is a boundary we want to hover)
       for (let i = 0; i < courses.length; i++) {
@@ -660,8 +683,8 @@ export default {
         const nodes = this.courseNodesMap.get(courses[i].id);
 
         // If we don't have any nodes for this galaxy then don't include it in the final result
-        if (nodes.length === 0) {
-          console.warn("no nodes for course: ", courses[i].id);
+        if (!nodes || nodes.length === 0) {
+          //console.warn("no nodes for course: ", courses[i].id);
           continue;
         }
 
@@ -747,6 +770,11 @@ export default {
     repositionCoursesBasedOnBoundariesV2() {
       const courseCanvasBoundaries = this.calcCourseCanvasBoundaries();
 
+      // Safety check: ensure we have the required data
+      if (!this.courses || !this.courseNodesMap) {
+        return [];
+      }
+
       let newAllNodes = [];
       let newRelativeGalaxyBoundaries = [];
 
@@ -784,6 +812,11 @@ export default {
 
         // get nodes in course
         const nodes = this.courseNodesMap.get(courseCanvasBoundaries[i].id);
+
+        // Safety check: ensure nodes exist
+        if (!nodes || nodes.length === 0) {
+          continue;
+        }
 
         for (const node of nodes) {
           let newNode = {

@@ -55,10 +55,11 @@ import { mdiMenu, mdiClose } from "@mdi/js";
 import { mapState, storeToRefs } from "pinia";
 import useGalaxyListViewStore from "@/store/galaxyListView";
 
-const TAB_GALAXIES = { id: 1, name: "GALAXIES", route: `/`, exactPath: true };
-const TAB_COHORTS = { id: 2, name: "SQUADS", route: `/squads`, exactPath: false };
-const TAB_DASHBOARD = { id: 3, name: "DASHBOARD", route: `/dashboard`, exactPath: false };
-const TAB_ADMIN = { id: 4, name: "ADMIN", route: `/students` };
+const TAB_MY_GALAXIES = { id: 1, name: "MY GALAXIES", route: `/my-galaxies`, exactPath: false };
+const TAB_PUBLIC_GALAXIES = { id: 2, name: "PUBLIC GALAXIES", route: `/`, exactPath: true };
+const TAB_COHORTS = { id: 3, name: "SQUADS", route: `/squads`, exactPath: false };
+const TAB_DASHBOARD = { id: 4, name: "DASHBOARD", route: `/dashboard`, exactPath: false };
+const TAB_ADMIN = { id: 5, name: "ADMIN", route: `/students` };
 
 export default {
   name: "NavBar",
@@ -68,7 +69,7 @@ export default {
       mdiMenu,
       mdiClose,
       activeTab: null,
-      tabs: [TAB_GALAXIES],
+      tabs: [TAB_PUBLIC_GALAXIES],
       showNavMenu: true,
       showHamburgerMenu: false,
     };
@@ -126,11 +127,11 @@ export default {
     },
     user(to, from) {
       if (this.user?.data?.admin) {
-        this.tabs = [TAB_GALAXIES, TAB_COHORTS, TAB_DASHBOARD, TAB_ADMIN];
+        this.tabs = [TAB_MY_GALAXIES, TAB_PUBLIC_GALAXIES, TAB_COHORTS, TAB_DASHBOARD, TAB_ADMIN];
       } else if (to.loggedIn) {
-        this.tabs = [TAB_GALAXIES, TAB_COHORTS, TAB_DASHBOARD];
+        this.tabs = [TAB_MY_GALAXIES, TAB_PUBLIC_GALAXIES, TAB_COHORTS, TAB_DASHBOARD];
       } else {
-        this.tabs = [TAB_GALAXIES];
+        this.tabs = [TAB_PUBLIC_GALAXIES];
       }
     },
     courses: {
@@ -151,11 +152,11 @@ export default {
   },
   async mounted() {
     if (this.user?.data?.admin) {
-      this.tabs = [TAB_GALAXIES, TAB_COHORTS, TAB_DASHBOARD, TAB_ADMIN];
+      this.tabs = [TAB_MY_GALAXIES, TAB_PUBLIC_GALAXIES, TAB_COHORTS, TAB_DASHBOARD, TAB_ADMIN];
     } else if (this.user.loggedIn) {
-      this.tabs = [TAB_GALAXIES, TAB_COHORTS, TAB_DASHBOARD];
+      this.tabs = [TAB_MY_GALAXIES, TAB_PUBLIC_GALAXIES, TAB_COHORTS, TAB_DASHBOARD];
     } else {
-      this.tabs = [TAB_GALAXIES];
+      this.tabs = [TAB_PUBLIC_GALAXIES];
     }
 
     if (

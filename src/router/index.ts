@@ -1,5 +1,7 @@
 import Home from "@/views/Home.vue";
 import GalaxyList from "@/views/GalaxyList.vue";
+import AllPublicGalaxiesList from "@/views/AllPublicGalaxiesList.vue";
+import MyGalaxiesList from "@/views/MyGalaxiesList.vue";
 import GalaxyView from "@/views/GalaxyView.vue";
 import SolarSystemView from "@/views/SolarSystemView.vue";
 import CohortView from "@/views/CohortView.vue";
@@ -22,14 +24,22 @@ import VueRouter from "vue-router";
 const routes = [
   {
     path: "/",
-    name: "Home",
     component: Home,
     children: [
       {
         path: "",
-        name: "GalaxyList",
-        component: GalaxyList,
+        name: "AllPublicGalaxiesList",
+        component: AllPublicGalaxiesList,
         props: true,
+      },
+      {
+        path: "my-galaxies",
+        name: "MyGalaxiesList",
+        component: MyGalaxiesList,
+        props: true,
+        meta: {
+          authRequired: true,
+        },
       },
       {
         path: "login",
