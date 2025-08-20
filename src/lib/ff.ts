@@ -107,6 +107,24 @@ export const fetchCourses = async (slug?: string | null): Promise<ICourse[]> => 
   return result.data.courses;
 };
 
+export const fetchPublicCourses = async (slug?: string | null): Promise<ICourse[]> => {
+  const data = {
+    slug: slug ?? null,
+  };
+  const getPublicCourses = functions.httpsCallable("getPublicCourses");
+  const result = await getPublicCourses(data);
+  return result.data.courses;
+};
+
+export const fetchMyCourses = async (slug?: string | null): Promise<ICourse[]> => {
+  const data = {
+    slug: slug ?? null,
+  };
+  const getMyCourses = functions.httpsCallable("getMyCourses");
+  const result = await getMyCourses(data);
+  return result.data.courses;
+};
+
 export const fetchCourseByCourseId = async (courseId: string): Promise<ICourse> => {
   const data = {
     courseId,

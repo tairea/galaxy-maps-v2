@@ -21,6 +21,8 @@ import {
   getCourseByCourseIdHttpsEndpoint,
   getCourseMapEdgesAndNodesByCourseIdHttpsEndpoint,
   getCoursesHttpsEndpoint,
+  getPublicCoursesHttpsEndpoint,
+  getMyCoursesHttpsEndpoint,
   getCohortByCohortIdHttpsEndpoint,
   getCohortsHttpsEndpoint,
   getCohortsByCourseIdHttpsEndpoint,
@@ -85,7 +87,6 @@ import {
   generateGalaxyMapAgainHttpsEndpoint,
   generateInstructionsForMissionHttpsEndpoint,
   generateUnifiedGalaxyMapHttpsEndpoint,
-  generateUnifiedGalaxyMapStreamingHttpsEndpoint,
 } from "./openAIActions.js";
 
 // activity
@@ -113,6 +114,8 @@ export {
   getCourseByCourseIdHttpsEndpoint as getCourseByCourseId,
   getCourseMapEdgesAndNodesByCourseIdHttpsEndpoint as getCourseMapEdgesAndNodesByCourseId,
   getCoursesHttpsEndpoint as getCourses,
+  getPublicCoursesHttpsEndpoint as getPublicCourses,
+  getMyCoursesHttpsEndpoint as getMyCourses,
   getCohortByCohortIdHttpsEndpoint as getCohortByCohortId,
   getCohortsHttpsEndpoint as getCohorts,
   getCohortsByCourseIdHttpsEndpoint as getCohortsByCourseId,
@@ -187,5 +190,4 @@ export {
   generateGalaxyMapAgainHttpsEndpoint as generateGalaxyMapAgain,
   generateInstructionsForMissionHttpsEndpoint as generateInstructionsForMission,
   generateUnifiedGalaxyMapHttpsEndpoint as generateUnifiedGalaxyMap,
-  generateUnifiedGalaxyMapStreamingHttpsEndpoint as generateUnifiedGalaxyMapStreaming,
 };

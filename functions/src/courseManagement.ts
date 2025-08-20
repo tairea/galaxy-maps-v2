@@ -558,6 +558,186 @@ export const getCoursesHttpsEndpoint = runWith({}).https.onCall(async (data, con
   return { courses: Array.from(courseMap.values()) };
 });
 
+// Get only public and published courses (no authentication required)
+export const getPublicCoursesHttpsEndpoint = runWith({}).https.onCall(async (data, context) => {
+  const slug = data.slug as string | null;
+  let ownerRef: DocumentReference | null = null;
+
+  if (slug != null) {
+    const slugDoc = await db.collection("slugs").doc(slug).get();
+    const slugData = slugDoc.data();
+    if (slugData == null) {
+      throw new HttpsError("invalid-argument", `Unknown slug: ${slug}`);
+    }
+    ownerRef = slugData.owner;
+  }
+
+  // Only fetch public courses that are published
+  const courseCollection = await db
+    .collection("courses")
+    .where(
+      Filter.and(
+        Filter.or(Filter.where("public", "==", true), Filter.where("visibility", "==", "public")),
+        Filter.where("status", "==", "published"),
+        ...(ownerRef != null ? [Filter.where("owner", "==", ownerRef)] : []),
+      ),
+    )
+    .get();
+
+  const courses = [];
+  for (const doc of courseCollection.docs) {
+    const course = doc.data();
+    courses.push({
+      ...course,
+      owner: course.owner instanceof DocumentReference ? course.owner.path : course.owner,
+      id: doc.id,
+    });
+  }
+
+  return { courses };
+});
+
+// Get only courses where the authenticated user has a direct relationship
+export const getMyCoursesHttpsEndpoint = runWith({}).https.onCall(async (data, context) => {
+  requireAuthenticated(context);
+
+  const slug = data.slug as string | null;
+  let ownerRef: DocumentReference | null = null;
+
+  if (slug != null) {
+    const slugDoc = await db.collection("slugs").doc(slug).get();
+    const slugData = slugDoc.data();
+    if (slugData == null) {
+      throw new HttpsError("invalid-argument", `Unknown slug: ${slug}`);
+    }
+    ownerRef = slugData.owner;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const courseMap = new Map();
+
+  // if they are admin, return all courses (or filtered by ownerRef if slug provided)
+  if (context.auth.token.admin === true) {
+    const courseCollection =
+      ownerRef != null
+        ? await db.collection("courses").where("owner", "==", ownerRef).get()
+        : await db.collection("courses").get();
+
+    for (const doc of courseCollection.docs) {
+      const course = doc.data();
+      courseMap.set(doc.id, {
+        ...course,
+        owner: course.owner instanceof DocumentReference ? course.owner.path : course.owner,
+        id: doc.id,
+      });
+    }
+    return { courses: Array.from(courseMap.values()) };
+  }
+
+  // if they are not admin, return only courses where they have a direct relationship
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const teacherCohorts: Record<string, any>[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const studentCohorts: Record<string, any>[] = [];
+
+  const studentCohortCollection = await db
+    .collection("cohorts")
+    .where("students", "array-contains", context.auth.uid)
+    .get();
+  const teacherCohortCollection = await db
+    .collection("cohorts")
+    .where("teachers", "array-contains", context.auth.uid)
+    .get();
+
+  for (const cohort of studentCohortCollection.docs) {
+    studentCohorts.push({
+      ...cohort.data(),
+      id: cohort.id,
+    });
+  }
+  for (const cohort of teacherCohortCollection.docs) {
+    teacherCohorts.push({
+      ...cohort.data(),
+      id: cohort.id,
+    });
+  }
+
+  const courseIds = Array.from(
+    new Set([
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...studentCohorts.flatMap((x: Record<string, any>): string[] => x.courses),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...teacherCohorts.flatMap((x: Record<string, any>): string[] => x.courses),
+    ]),
+  );
+
+  const courseDocs = await Promise.all(courseIds.map((x) => db.collection("courses").doc(x).get()));
+
+  for (const doc of courseDocs) {
+    const course = doc.data();
+    if (course == null) {
+      continue;
+    }
+
+    // If ownerRef is not null, filter by owner
+    if (ownerRef != null && course.owner.path !== ownerRef.path) {
+      continue;
+    }
+
+    courseMap.set(doc.id, {
+      ...course,
+      owner: course.owner instanceof DocumentReference ? course.owner.path : course.owner,
+      id: doc.id,
+    });
+  }
+
+  // Get courses owned by the user
+  const ownedCourseCollection = await db
+    .collection("courses")
+    .where(
+      Filter.and(
+        Filter.where("owner", "==", db.collection("people").doc(context.auth.uid)),
+        ...(ownerRef != null ? [Filter.where("owner", "==", ownerRef)] : []),
+      ),
+    )
+    .get();
+
+  for (const doc of ownedCourseCollection.docs) {
+    const course = doc.data();
+    courseMap.set(doc.id, {
+      ...course,
+      owner: course.owner instanceof DocumentReference ? course.owner.path : course.owner,
+      id: doc.id,
+    });
+  }
+
+  // Include courses where the authenticated user is a collaborator
+  try {
+    const collaboratorCoursesQuery = await db
+      .collection("courses")
+      .where(
+        Filter.and(
+          Filter.where("collaboratorIds", "array-contains", context.auth.uid),
+          ...(ownerRef != null ? [Filter.where("owner", "==", ownerRef)] : []),
+        ),
+      )
+      .get();
+
+    for (const doc of collaboratorCoursesQuery.docs) {
+      const course = doc.data();
+      courseMap.set(doc.id, {
+        ...course,
+        owner: course.owner instanceof DocumentReference ? course.owner.path : course.owner,
+        id: doc.id,
+      });
+    }
+  } catch (e) {
+    // If field does not exist yet on some documents, ignore
+  }
+
+  return { courses: Array.from(courseMap.values()) };
+});
+
 // Get cohort by cohortId
 export const getCohortByCohortIdHttpsEndpoint = runWith({}).https.onCall(async (data, context) => {
   requireAuthenticated(context);
