@@ -41,8 +41,14 @@
           </p>
         </div> -->
 
-        <p class="loading-message overline" :class="{ 'baseAccent--text': isSavingToDB }">
-          {{ currentLoadingMessage }}
+        <p
+          class="loading-message overline"
+          :class="{
+            'baseAccent--text': isSavingToDB,
+            'streaming-text': streamingText,
+          }"
+        >
+          {{ streamingText || currentLoadingMessage }}
         </p>
 
         <!-- CREATION STATUS v-treeview of stars > planets > missions -->
@@ -342,6 +348,8 @@ import {
   downloadAndUploadImage,
   generateUnifiedGalaxyMap,
   generateUnifiedGalaxyMapWithClarification,
+  generateUnifiedGalaxyMapStreaming,
+  generateUnifiedGalaxyMapWithClarificationStreaming,
 } from "@/lib/ff";
 import { zodTextFormat } from "openai/helpers/zod";
 import { StarsAndPlanetsResponseSchema } from "@/lib/schemas";
@@ -405,6 +413,7 @@ export default {
       "Saving sagas in the stellar sanctuary...",
     ],
     currentLoadingMessage: "",
+    streamingText: "", // New property for real-time streaming updates
     loadingMessageInterval: null,
     isSavingToDB: false,
     isGeneratingMissions: false,
@@ -503,10 +512,14 @@ export default {
       this.aiGeneratedGalaxyMap = {}; // Reset galaxy map
       this.selectedFlow = null; // Reset selected flow
       this.selectedLayout = null; // Reset selected layout
+      this.streamingText = ""; // Reset streaming text
       // this.showCreateOptionsDialog = false; // Reset create options dialog
       this.$emit("update:showFirstDialog", false);
     },
     startLoadingMessages() {
+      // Clear streaming text when starting new loading messages
+      this.streamingText = "";
+
       const messages = this.isSavingToDB ? this.savingMessages : this.loadingMessages;
       this.currentLoadingMessage = messages[0];
       this.loadingMessageInterval = setInterval(() => {
@@ -646,7 +659,21 @@ export default {
 
         // =========== (unified a.i. api call) Generate Stars + Missions + Mission Instructions ==========
         // const aiResponse = await generateGalaxyMap(this.description);
-        const aiResponse = await generateUnifiedGalaxyMap(this.description);
+        // const aiResponse = await generateUnifiedGalaxyMap(this.description);
+
+        // Use streaming version for real-time updates
+        const aiResponse = await generateUnifiedGalaxyMapStreaming(this.description, (update) => {
+          // Handle streaming updates
+          if (update.type === "reasoning_summary_part" && update.text) {
+            this.streamingText = update.text;
+          } else if (update.type === "reasoning_summary_text" && update.delta) {
+            this.streamingText += update.delta;
+          } else if (update.type === "content_part" && update.text) {
+            this.streamingText = update.text;
+          } else if (update.type === "content_text" && update.delta) {
+            this.streamingText += update.delta;
+          }
+        });
 
         // console.log("1st A.I. call: Stars and Planets generated ✅. A.I. Response:", aiResponse);
         console.log("Unified A.I. call: Stars + Missions + Instructions generated ✅:", aiResponse);
@@ -782,9 +809,21 @@ export default {
         //   this.prefixedAnswers.join("\n"),
         //   this.previousResponseId,
         // );
-        const aiSecondResponse = await generateUnifiedGalaxyMapWithClarification(
+        const aiSecondResponse = await generateUnifiedGalaxyMapWithClarificationStreaming(
           this.prefixedAnswers.join("\n"),
           this.previousResponseId,
+          (update) => {
+            // Handle streaming updates
+            if (update.type === "reasoning_summary_part" && update.text) {
+              this.streamingText = update.text;
+            } else if (update.type === "reasoning_summary_text" && update.delta) {
+              this.streamingText += update.delta;
+            } else if (update.type === "content_part" && update.text) {
+              this.streamingText = update.text;
+            } else if (update.type === "content_text" && update.delta) {
+              this.streamingText += update.delta;
+            }
+          },
         );
 
         console.log("Unified 2nd A.I. call response:", aiSecondResponse);
@@ -827,6 +866,13 @@ export default {
           // Check the selected flow to determine next step
           if (this.selectedFlow === "human-help") {
             // For human-help flow, route to AiGalaxyEdit
+            // Calculate and log execution time when second step completes successfully
+            const endTime = Date.now();
+            const timeString = this.formatExecutionTime(startTime, endTime);
+            console.log(
+              `✅ Second step completed successfully in ${timeString} (${endTime - startTime}ms total) - routing to AiGalaxyEdit`,
+            );
+
             this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
             this.$router.push({ name: "AiGalaxyEdit" });
           }
@@ -1704,6 +1750,14 @@ export default {
   text-transform: uppercase;
   letter-spacing: 2px;
   animation: fadeInOut 3s ease-in-out infinite;
+}
+
+.streaming-text {
+  color: var(--v-galaxyAccent-base);
+  font-weight: 600;
+  animation: none; /* Disable fade animation for streaming text */
+  text-transform: none; /* Keep original text formatting */
+  letter-spacing: normal;
 }
 
 .token-usage {

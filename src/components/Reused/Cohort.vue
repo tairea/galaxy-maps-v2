@@ -114,9 +114,10 @@ export default {
 
 .cohort-name {
   text-align: center;
-  font-size: 0.65rem !important;
+  font-size: 0.5rem !important;
   line-height: 1rem;
   padding-top: 10px;
+  width: 100%;
 }
 
 .avatar {

@@ -7,9 +7,9 @@
     :style="galaxyListInfoPanel ? 'backdrop-filter:none;border:none;width:100%' : ''"
     v-if="course"
   >
-  <v-btn text x-small color="missionAccent" class="close-button align-self-end" @click="close">
-    <v-icon>{{ mdiClose }}</v-icon>
-  </v-btn>
+    <v-btn text x-small color="missionAccent" class="close-button align-self-end" @click="close">
+      <v-icon>{{ mdiClose }}</v-icon>
+    </v-btn>
     <div class="ss-details">
       <div>
         <p class="info-panel-label mb-2">
@@ -19,7 +19,15 @@
           <br />
           <span class="course-title">{{ course.title }}</span>
         </p>
-        <v-img v-if="course.image" class="galaxy-image" :src="course.image.url"></v-img>
+        <v-img
+          v-if="hasValidImage"
+          class="galaxy-image"
+          :src="course.image.url"
+          @error="handleImageError"
+        ></v-img>
+        <div v-else class="image-placeholder">
+          {{ first3Letters(course.title) }}
+        </div>
         <p ref="description" class="mt-2 galaxy-description">
           <!-- {{ course.description }} -->
           {{ maybeTruncate(course.description) }}
@@ -99,8 +107,8 @@
             View Galaxy
           </v-btn>
         </div> -->
-        <!-- Signin Dialog -->
-        <!-- <LoginDialog /> -->
+      <!-- Signin Dialog -->
+      <!-- <LoginDialog /> -->
       <!-- </div> -->
 
       <!-- ==== NOTE: Other buttons commented out as we test taking non-signed user guard down one level -->
@@ -148,9 +156,9 @@
         >
           Resume Galaxy
         </v-btn> -->
-        <!-- starting galaxy status-->
+      <!-- starting galaxy status-->
 
-        <!-- <v-btn
+      <!-- <v-btn
           v-else
           class="view-ss-button pa-5"
           dark
@@ -167,7 +175,6 @@
         <div v-if="loading" style="width: 100%">
           <p class="starting-status ma-0">{{ startingGalaxyStatus }}</p>
         </div> -->
-      </div>
     </div>
   </div>
 </template>
@@ -218,6 +225,14 @@ export default {
       else if (this.course.visibility == "private") return "Private";
       else if (this.course.visibility == "unlisted") return "Unlisted";
       else if (this.course.public == true) return "Public";
+    },
+    hasValidImage() {
+      return (
+        this.course &&
+        this.course.image &&
+        this.course.image.url &&
+        this.course.image.url.trim() !== ""
+      );
     },
   },
   watch: {
@@ -299,7 +314,7 @@ export default {
     },
     routeToGalaxyAnalytics() {
       // TODO: this could go to a dashbaord that shows all cohorts with this galaxy
-      
+
       console.log("route to galaxy analytics", this.currentCourseId);
 
       // save current course to store
@@ -337,6 +352,14 @@ export default {
     async getPersonsImage(personId) {
       const person = await fetchPersonByPersonId(personId);
       return person.image?.url;
+    },
+    handleImageError(event) {
+      // Remove the placeholder image fallback - just rely on the first 3 letters
+      console.log("Image failed to load for course:", this.course.title);
+    },
+    first3Letters(title) {
+      if (!title) return "";
+      return title.substring(0, 3).toUpperCase();
     },
   },
 };
@@ -439,6 +462,20 @@ export default {
       font-size: 0.8rem;
       font-style: italic;
       margin-bottom: 0px;
+    }
+
+    .image-placeholder {
+      width: 150px;
+      height: 150px;
+      background-color: rgba(200, 200, 200, 0.3);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--v-galaxyAccent-base);
+      border: 1px solid var(--v-galaxyAccent-base);
+      border-radius: 8px;
     }
   }
 

@@ -888,7 +888,12 @@ export default {
               html += `<ul>`;
               step.tasks.forEach((task) => {
                 if (task.taskContent) {
-                  html += `<li>${task.taskContent}</li>`;
+                  // Convert **bold text** to <strong>bold text</strong>
+                  const formattedContent = task.taskContent.replace(
+                    /\*\*(.*?)\*\*/g,
+                    "<strong>$1</strong>",
+                  );
+                  html += `<li>${formattedContent}</li>`;
                 }
               });
               html += `</ul>`;

@@ -2,7 +2,7 @@
   <v-container>
     <v-row class="text-center" align="center">
       <v-col cols="12">
-        <v-dialog v-model="dialog" width="40%" light>
+        <v-dialog v-model="dialog" width="40%" light persistent>
           <!-- CREATE BUTTON -->
           <template v-slot:activator="{ on, attrs }">
             <!-- ASSIGN COHORT -->
@@ -178,17 +178,22 @@
                   </v-select>
                 </div>
                 <!-- ACTION BUTTONS -->
-                <div class="action-buttons">
-                  <v-btn
-                    v-if="assignCohorts"
-                    outlined
-                    color="baseAccent"
-                    @click="assignCourseToCohort(cohort)"
-                    :loading="loading"
-                  >
-                    <v-icon left> {{ mdiCheck }} </v-icon>
-                    ASSIGN SQUAD
-                  </v-btn>
+                <div class="action-buttons d-flex">
+                  <div class="d-flex flex-column">
+                    <v-btn
+                      v-if="assignCohorts"
+                      outlined
+                      color="baseAccent"
+                      @click="assignCourseToCohort(cohort)"
+                      :loading="loading"
+                    >
+                      <v-icon left> {{ mdiCheck }} </v-icon>
+                      ASSIGN SQUAD
+                    </v-btn>
+                    <span v-if="loading && statusMessage" class="status-message baseAccent--text">
+                      {{ statusMessage }}
+                    </span>
+                  </div>
 
                   <v-btn
                     outlined
@@ -244,17 +249,22 @@
             </div>
 
             <!-- ACTION BUTTONS -->
-            <div class="action-buttons">
-              <v-btn
-                v-if="assignCourses"
-                outlined
-                color="baseAccent"
-                @click="assignCourseToCohort(null, course)"
-                :loading="loading"
-              >
-                <v-icon left> {{ mdiCheck }} </v-icon>
-                ASSIGN GALAXY MAP
-              </v-btn>
+            <div class="action-buttons d-flex">
+              <div class="d-flex flex-column">
+                <v-btn
+                  v-if="assignCourses"
+                  outlined
+                  color="baseAccent"
+                  @click="assignCourseToCohort(null, course)"
+                  :loading="loading"
+                >
+                  <v-icon left> {{ mdiCheck }} </v-icon>
+                  ASSIGN GALAXY MAP
+                </v-btn>
+                <span v-if="loading && statusMessage" class="status-message baseAccent--text">
+                  {{ statusMessage }}
+                </span>
+              </div>
 
               <v-btn
                 outlined
@@ -276,9 +286,12 @@
 </template>
 
 <script>
+import { mapActions, mapState } from "pinia";
+import { getFriendlyErrorMessage } from "@/lib/utils";
 import {
-  fetchCourses,
+  fetchPersonByPersonId,
   fetchCohortByCohortId,
+  fetchCourses,
   fetchCourseByCourseId,
   fetchPersonByEmail,
   createPerson,
@@ -297,8 +310,6 @@ import {
 } from "@mdi/js";
 import firebase from "firebase/compat/app";
 import { doc, updateDoc } from "firebase/firestore";
-import { mapActions, mapState } from "pinia";
-import { getFriendlyErrorMessage } from "@/lib/utils";
 
 export default {
   name: "AssignCohortDialog",
@@ -314,6 +325,7 @@ export default {
     tab: null,
     dialog: false,
     loading: false,
+    statusMessage: "", // Add status message for tracking assignment progress
 
     profile: {
       id: "",
@@ -356,6 +368,7 @@ export default {
     close() {
       this.dialog = false;
       this.loading = false;
+      this.statusMessage = "";
       this.profile = {
         id: "",
         email: "",
@@ -431,6 +444,7 @@ export default {
       }
       if (!course) course = this.currentCourse;
       this.loading = true;
+      this.statusMessage = "";
 
       try {
         // Add a course to a cohort
@@ -439,7 +453,15 @@ export default {
         });
         // add courses as assignedCourse to each student in the cohort
         if (cohort.students?.length) {
-          for (const studentId of cohort.students) {
+          for (let i = 0; i < cohort.students.length; i++) {
+            const studentId = cohort.students[i];
+            // Fetch student details to show in status message
+            const student = await fetchPersonByPersonId(studentId, cohort.id);
+            if (student) {
+              this.statusMessage = `Assigning ${course.title} to ${student.firstName || "Unknown"} ${student.lastName || "Student"} (${i + 1}/${cohort.students.length})`;
+            } else {
+              this.statusMessage = `Assigning ${course.title} to student ${i + 1}/${cohort.students.length}`;
+            }
             await assignCourseToPerson(studentId, course.id);
           }
         }
@@ -457,6 +479,9 @@ export default {
           text: getFriendlyErrorMessage(error.code),
           color: "pink",
         });
+      } finally {
+        this.loading = false;
+        this.statusMessage = "";
       }
     },
   },
@@ -581,5 +606,15 @@ export default {
 
 .assignButton {
   max-width: 100%;
+}
+
+.status-message {
+  color: var(--v-missionAccent-base);
+  font-size: 0.8rem;
+  font-style: italic;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

@@ -279,7 +279,14 @@
           SUBMIT FOR REVIEW
         </v-btn>
 
-        <v-btn v-else outlined color="baseAccent" @click="publishCourse()" :loading="loading">
+        <v-btn
+          v-else
+          outlined
+          color="baseAccent"
+          @click="publishCourse()"
+          :loading="loading"
+          class="mb-2"
+        >
           <v-icon left> {{ mdiCheck }} </v-icon>
           PUBLISH
         </v-btn>

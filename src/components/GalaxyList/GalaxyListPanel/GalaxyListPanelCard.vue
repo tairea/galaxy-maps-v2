@@ -10,7 +10,13 @@
       "
       :class="{ 'selected-galaxy': active, 'draft-galaxy': draft }"
     >
-      <img v-if="course.image && course.image.url" class="galaxyCardImage ma-1" :src="course.image.url" />
+      <img
+        v-if="hasValidImage"
+        class="galaxyCardImage ma-1"
+        :src="course.image.url"
+        :alt="course.title"
+        @error="handleImageError"
+      />
 
       <div v-else class="imagePlaceholder ma-1">
         {{ first3Letters(course.title) }}
@@ -28,17 +34,30 @@ export default {
   props: ["course", "active", "admin"],
   components: {},
   data() {
-    return {};
+    return {
+      imageLoadError: false,
+    };
   },
   async mounted() {},
   computed: {
     draft() {
       return this.course.status === "drafting";
     },
+    hasValidImage() {
+      return (
+        this.course.image &&
+        this.course.image.url &&
+        this.course.image.url.trim() !== "" &&
+        !this.imageLoadError
+      );
+    },
   },
   methods: {
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
+    },
+    handleImageError() {
+      this.imageLoadError = true;
     },
   },
 };

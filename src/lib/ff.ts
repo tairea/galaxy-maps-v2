@@ -654,6 +654,42 @@ export const generateUnifiedGalaxyMap = async (
   return result.data;
 };
 
+// Unified AI Galaxy Map Generation with Streaming (Stars + Missions + Mission Instructions)
+export const generateUnifiedGalaxyMapStreaming = async (
+  description: string,
+  onStreamUpdate?: (update: { type: string; text?: string; delta?: string }) => void,
+): Promise<{
+  success: boolean;
+  galaxyMap: any;
+  tokenUsage: {
+    modelsUsed: {
+      model: string;
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    }[];
+    combinedEstimatedCost: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalTokens: number;
+  };
+  responseId: string;
+}> => {
+  const data = { description };
+  const generateUnifiedGalaxyMapStreamingFunction = functions.httpsCallable(
+    "generateUnifiedGalaxyMapStreaming",
+    {
+      timeout: 540000, // 9 minutes to match cloud function
+    },
+  );
+
+  // For now, we'll just call the function normally
+  // In the future, this could be enhanced to handle real-time streaming updates
+  const result = await generateUnifiedGalaxyMapStreamingFunction(data);
+  return result.data;
+};
+
 // AI Galaxy Map Generation with Clarification (Second Step)
 export const generateGalaxyMapWithClarification = async (
   clarificationAnswers: string,
@@ -743,6 +779,35 @@ export const generateUnifiedGalaxyMapWithClarification = async (
 }> => {
   const data = { clarificationAnswers, previousResponseId };
   const fn = functions.httpsCallable("generateUnifiedGalaxyMap", { timeout: 180000 });
+  const result = await fn(data);
+  return result.data;
+};
+
+// Unified AI Galaxy Map Generation with Clarification and Streaming (Second Step)
+export const generateUnifiedGalaxyMapWithClarificationStreaming = async (
+  clarificationAnswers: string,
+  previousResponseId: string,
+  onStreamUpdate?: (update: { type: string; text?: string; delta?: string }) => void,
+): Promise<{
+  success: boolean;
+  galaxyMap: any;
+  tokenUsage: {
+    modelsUsed: {
+      model: string;
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    }[];
+    combinedEstimatedCost: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalTokens: number;
+  };
+  responseId: string;
+}> => {
+  const data = { clarificationAnswers, previousResponseId };
+  const fn = functions.httpsCallable("generateUnifiedGalaxyMapStreaming", { timeout: 540000 }); // 9 minutes to match cloud function
   const result = await fn(data);
   return result.data;
 };
