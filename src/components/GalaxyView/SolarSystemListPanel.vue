@@ -123,8 +123,8 @@ export default defineComponent({
   },
   methods: {
     handleTopicClick(topic) {
-      this.$emit('panelTopicClicked', topic);
-    }
+      this.$emit("panelTopicClicked", topic);
+    },
   },
 });
 </script>

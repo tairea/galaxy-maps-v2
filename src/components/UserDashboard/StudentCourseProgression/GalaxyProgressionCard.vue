@@ -152,7 +152,7 @@ export default {
         };
       });
 
-      let studentData = {
+      const studentData = {
         type: "line",
         backgroundColor: courseColour,
         borderColor: courseColour,
@@ -173,7 +173,7 @@ export default {
     },
     hashCode(str) {
       let hash = 0;
-      for (var i = 0; i < str.length; i++) {
+      for (let i = 0; i < str.length; i++) {
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
       }
       return hash;
@@ -181,7 +181,7 @@ export default {
     calcTaskCompletedPercentage(data) {
       // console.log("data.taskCompletedCount:", data.taskCompletedCount);
       // console.log("data.course.taskTotal:", data.course.taskTotal);
-      let percentage = (data.taskCompletedCount / data.course.taskTotal) * 100;
+      const percentage = (data.taskCompletedCount / data.course.taskTotal) * 100;
       return Math.round(percentage) + "%";
     },
   },

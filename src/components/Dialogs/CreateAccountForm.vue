@@ -232,7 +232,7 @@ export default {
     async update() {
       this.updatingAccount = true;
       // remove empty fields
-      let obj = Object.fromEntries(Object.entries(this.account).filter(([_, v]) => v.length));
+      const obj = Object.fromEntries(Object.entries(this.account).filter(([_, v]) => v.length));
 
       await db.collection("people").doc(obj.id).update(obj);
 

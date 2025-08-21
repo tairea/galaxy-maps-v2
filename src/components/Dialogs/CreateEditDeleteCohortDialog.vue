@@ -509,11 +509,11 @@ export default {
         this.cohort.teachers = [];
       }
 
-      let index = this.cohort.teachers.findIndex((n) => item.id === n);
+      const index = this.cohort.teachers.findIndex((n) => item.id === n);
       if (index >= 0) this.cohort.teachers.splice(index, 1);
 
       // Also remove from teachers array for autocomplete display
-      let teacherIndex = this.teachers.findIndex((teacher) => teacher.id === item.id);
+      const teacherIndex = this.teachers.findIndex((teacher) => teacher.id === item.id);
       if (teacherIndex >= 0) this.teachers.splice(teacherIndex, 1);
     },
     close() {
@@ -676,12 +676,12 @@ export default {
 
       this.disabled = true;
       // ceate a storage ref
-      var storageRef = storage.ref(
+      const storageRef = storage.ref(
         "cohort-images/" + this.cohort.name + "-" + this.uploadedImage.name,
       );
 
       // upload a file
-      var uploadTask = storageRef.put(this.uploadedImage);
+      const uploadTask = storageRef.put(this.uploadedImage);
 
       // update progress bar
       uploadTask.on(
@@ -759,7 +759,7 @@ export default {
       if (!this.cohort.image || this.cohort.image.name == "") return;
       console.log("deleting image...");
       // Create a reference to the file to delete
-      var storageRef = storage.ref("cohort-images/" + this.cohort.image.name);
+      const storageRef = storage.ref("cohort-images/" + this.cohort.image.name);
       // Delete the file
       storageRef
         .delete()

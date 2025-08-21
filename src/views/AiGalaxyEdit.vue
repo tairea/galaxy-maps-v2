@@ -1191,7 +1191,7 @@ export default {
         }
 
         // Merge top-level fields from bound DB course to avoid overwriting recent UI edits
-        let payloadGalaxyMap = { ...this.aiGeneratedGalaxyMap, idInDatabase: courseId };
+        const payloadGalaxyMap = { ...this.aiGeneratedGalaxyMap, idInDatabase: courseId };
         if (this.courseId && this.boundCourse) {
           payloadGalaxyMap.title = this.boundCourse.title ?? payloadGalaxyMap.title;
           payloadGalaxyMap.description =
@@ -2600,7 +2600,7 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
           }
         }
 
-        let payloadGalaxyMap = { ...this.aiGeneratedGalaxyMap, idInDatabase: courseId };
+        const payloadGalaxyMap = { ...this.aiGeneratedGalaxyMap, idInDatabase: courseId };
         if (this.courseId && this.boundCourse) {
           payloadGalaxyMap.title = this.boundCourse.title ?? payloadGalaxyMap.title;
           payloadGalaxyMap.description =

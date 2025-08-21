@@ -178,12 +178,12 @@ export default {
     reImage() {
       his.disabled = true;
       // ceate a storage ref
-      var storageRef = storage.ref(
+      const storageRef = storage.ref(
         "organisation-images/" + this.organisation.name + "-" + this.uploadedImage.name,
       );
 
       // upload a file
-      var uploadTask = storageRef.put(this.uploadedImage);
+      const uploadTask = storageRef.put(this.uploadedImage);
 
       // update progress bar
       uploadTask.on(
@@ -210,7 +210,7 @@ export default {
       );
     },
     deleteDialog() {
-      (this.dialog = false), (this.dialogConfirm = true);
+      ((this.dialog = false), (this.dialogConfirm = true));
     },
     cancelDeleteDialog() {
       this.dialogConfirm = false;
@@ -258,7 +258,7 @@ export default {
       if (this.organisation.image.name == "") return;
       console.log("deleting image...");
       // Create a reference to the file to delete
-      var storageRef = storage.ref("organisation-images/" + this.organisation.image.name);
+      const storageRef = storage.ref("organisation-images/" + this.organisation.image.name);
       // Delete the file
       storageRef
         .delete()

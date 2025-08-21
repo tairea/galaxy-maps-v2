@@ -34,7 +34,7 @@ export default {
   methods: {
     sendVerificationEmail() {
       this.loading = true;
-      var actionCodeSettings = {
+      const actionCodeSettings = {
         url: window.location.origin + "/login",
         handleCodeInApp: true,
       };

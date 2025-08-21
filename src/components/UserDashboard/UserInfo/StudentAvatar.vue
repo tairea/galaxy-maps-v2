@@ -96,7 +96,7 @@ export default {
       this.uploading = true;
       console.log("selectedfile: ", this.selectedFile);
       // ceate a storage ref
-      var storageRef = storage.ref(
+      const storageRef = storage.ref(
         "avatar-images/" +
           this.person.firstname +
           this.person.lastname +
@@ -105,7 +105,7 @@ export default {
       );
 
       // upload a file
-      var uploadTask = storageRef.put(this.selectedFile);
+      const uploadTask = storageRef.put(this.selectedFile);
 
       // update progress bar
       uploadTask.on(

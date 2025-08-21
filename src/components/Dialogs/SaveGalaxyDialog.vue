@@ -16,12 +16,13 @@
               Choose how you'd like to proceed with saving your galaxy map:
             </p>
             <p class="dialog-description mt-2">
-              You can either generate all misions tasks and then save, or save first and generate them later.
+              You can either generate all misions tasks and then save, or save first and generate
+              them later.
             </p>
           </div>
         </div>
       </div>
-      
+
       <!-- DIALOG CONTENT -->
       <div class="create-dialog-content">
         <!-- SAVE OPTIONS -->
@@ -33,11 +34,19 @@
             :class="{ disabled: loading }"
           >
             <div class="save-option-icon">
-              <v-icon color="galaxyAccent" :class="{ 'loading-spin': loading }">{{ mdiRobotExcited }}</v-icon>
-              <v-icon color="galaxyAccent" :class="{ 'loading-spin': loading }">{{ mdiArrowRight }}</v-icon>
-              <v-icon color="galaxyAccent" :class="{ 'loading-spin': loading }">{{ mdiContentSave }}</v-icon>
+              <v-icon color="galaxyAccent" :class="{ 'loading-spin': loading }">{{
+                mdiRobotExcited
+              }}</v-icon>
+              <v-icon color="galaxyAccent" :class="{ 'loading-spin': loading }">{{
+                mdiArrowRight
+              }}</v-icon>
+              <v-icon color="galaxyAccent" :class="{ 'loading-spin': loading }">{{
+                mdiContentSave
+              }}</v-icon>
             </div>
-            <div class="save-option-label galaxyAccent--text">Generate all MISSION INSTRUCTIONS and then SAVE</div>
+            <div class="save-option-label galaxyAccent--text">
+              Generate all MISSION INSTRUCTIONS and then SAVE
+            </div>
           </div>
 
           <!-- I'll create tasks manually -->
@@ -51,7 +60,9 @@
               <v-icon color="baseAccent">{{ mdiArrowRight }}</v-icon>
               <v-icon color="baseAccent">{{ mdiRobotExcited }}</v-icon>
             </div>
-            <div class="save-option-label baseAccent--text">Save now, generate mission instructions individually later</div>
+            <div class="save-option-label baseAccent--text">
+              Save now, generate mission instructions individually later
+            </div>
           </div>
         </div>
 
@@ -78,7 +89,14 @@
 </template>
 
 <script>
-import { mdiRobotExcited, mdiPencil, mdiClose, mdiInformationVariant,mdiContentSave,mdiArrowRight } from "@mdi/js";
+import {
+  mdiRobotExcited,
+  mdiPencil,
+  mdiClose,
+  mdiInformationVariant,
+  mdiContentSave,
+  mdiArrowRight,
+} from "@mdi/js";
 
 export default {
   name: "SaveGalaxyDialog",
@@ -225,7 +243,7 @@ export default {
     opacity: 0.6;
     cursor: not-allowed;
     transform: none;
-    
+
     &:hover {
       transform: none;
       box-shadow: none;
@@ -275,4 +293,4 @@ export default {
     transform: rotate(360deg);
   }
 }
-</style> 
+</style>

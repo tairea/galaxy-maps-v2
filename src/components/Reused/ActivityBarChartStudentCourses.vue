@@ -125,7 +125,7 @@ export default {
     },
     formatStudentsChartData(studentData) {
       const data = [];
-      let labels = [];
+      const labels = [];
 
       // more than one student in a cohort so loop
       for (const courseAndHoursObj of studentData) {
@@ -178,7 +178,7 @@ export default {
     },
     hashCode(str) {
       let hash = 0;
-      for (var i = 0; i < str.length; i++) {
+      for (let i = 0; i < str.length; i++) {
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
       }
       return hash;

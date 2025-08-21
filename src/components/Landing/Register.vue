@@ -208,7 +208,7 @@ export default {
     storeImage() {
       this.uploading = true;
       // create a storage ref
-      var storageRef = storage.ref(
+      const storageRef = storage.ref(
         "avatar-images/" +
           this.person.firstName +
           this.person.lastName +
@@ -217,7 +217,7 @@ export default {
       );
 
       // upload a file
-      var uploadTask = storageRef.put(this.selectedFile);
+      const uploadTask = storageRef.put(this.selectedFile);
 
       // update progress bar
       uploadTask.on(
@@ -269,7 +269,7 @@ export default {
             });
         })
         .then(() => {
-          var actionCodeSettings = {
+          const actionCodeSettings = {
             // TODO: Update to galaxymaps.io on deployment
             url: window.location.origin + "/login",
             handleCodeInApp: true,

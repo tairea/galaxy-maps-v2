@@ -101,7 +101,7 @@ export default {
     },
   },
   mounted() {
-    let { chartType, chartData, chartOptions } = this;
+    const { chartType, chartData, chartOptions } = this;
     if (this.toolTipEnable) {
       chartOptions.plugins["tooltip"] = {
         enabled: false,

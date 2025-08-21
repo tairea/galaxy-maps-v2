@@ -4,8 +4,20 @@
       ref="listPanel"
       @courseClicked="courseClicked($event)"
       @createGalaxy="showDialog = true"
+      class="hidden-sm-and-down"
     />
-    <GalaxyListInfoPanel :selectedCourse="selectedCourse" @closeInfoPanel="closeInfoPanel" />
+    <!-- Desktop info panel -->
+    <GalaxyListInfoPanel
+      :selectedCourse="selectedCourse"
+      @closeInfoPanel="closeInfoPanel"
+      class="hidden-sm-and-down"
+    />
+    <!-- Mobile info panel -->
+    <MobileGalaxyInfoPanel
+      :selectedCourse="selectedCourse"
+      @closeInfoPanel="closeInfoPanel"
+      class="hidden-md-and-up"
+    />
     <div class="flexContainer">
       <Galaxies
         v-if="validSlug && courses && courses.length > 0"
@@ -88,6 +100,7 @@
 import CreateEditDeleteGalaxyDialog from "@/components/Dialogs/CreateEditDeleteGalaxyDialog.vue";
 import GalaxyListPanel from "@/components/GalaxyList/GalaxyListPanel.vue";
 import GalaxyListInfoPanel from "@/components/GalaxyList/GalaxyListInfoPanel.vue";
+import MobileGalaxyInfoPanel from "@/components/GalaxyList/MobileGalaxyInfoPanel.vue";
 import Galaxies from "@/components/GalaxyList/Galaxies.vue";
 import useGalaxyListViewStore from "@/store/galaxyListView";
 import useRootStore from "@/store/index";
@@ -102,6 +115,7 @@ export default {
     CreateEditDeleteGalaxyDialog,
     GalaxyListPanel,
     GalaxyListInfoPanel,
+    MobileGalaxyInfoPanel,
     Galaxies,
     AICreateGalaxyDialogVue,
   },

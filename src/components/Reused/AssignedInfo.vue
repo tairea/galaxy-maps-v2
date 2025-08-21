@@ -132,7 +132,7 @@ export default {
   methods: {
     async getCohortCourses() {
       if (this.assignCourses) {
-        let courses = await Promise.all(
+        const courses = await Promise.all(
           this.cohort?.courses.map((courseId) => {
             return fetchCourseByCourseId(courseId);
           }),

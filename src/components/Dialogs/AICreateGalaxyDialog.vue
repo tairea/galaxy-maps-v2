@@ -1,8 +1,15 @@
 <template>
   <v-container>
     <!-- Loading Overlay -->
-    <div v-if="loading" class="loading-overlay">
-      <div class="loading-content" style="width: 100%">
+    <div
+      v-if="loading"
+      class="loading-overlay"
+      :class="{ 'mobile-layout': $vuetify.breakpoint.smAndDown }"
+    >
+      <div
+        class="loading-content"
+        :style="$vuetify.breakpoint.smAndDown ? 'width: 95vw' : 'width: 100%'"
+      >
         <!-- LOADING INDICATOR -->
         <RobotLoadingSpinner v-if="!isSavingToDB" size="50" color="galaxyAccent" icon-size="24" />
 
@@ -52,7 +59,11 @@
         </p>
 
         <!-- CREATION STATUS v-treeview of stars > planets > missions -->
-        <div v-if="transformedStarDetails.length > 0" class="galaxy-treeview-container">
+        <div
+          v-if="transformedStarDetails.length > 0"
+          class="galaxy-treeview-container"
+          :class="{ 'mobile-layout': $vuetify.breakpoint.smAndDown }"
+        >
           <div class="galaxy-treeview-wrapper">
             <div
               v-for="(star, starIndex) in transformedStarDetails"
@@ -147,10 +158,15 @@
     <v-row class="text-center" align="center">
       <v-col cols="12" class="pa-0">
         <!-- ========== FIRST COURSE PROMPT DIALOG ========== -->
-        <v-dialog v-model="showFirstDialog" width="50%" light>
+        <v-dialog
+          v-model="showFirstDialog"
+          :width="$vuetify.breakpoint.mdAndUp ? '50%' : '95%'"
+          :max-width="$vuetify.breakpoint.mdAndUp ? '800px' : '95vw'"
+          light
+        >
           <!-- CREATE BUTTON -->
 
-          <div class="create-dialog">
+          <div class="create-dialog" :class="{ 'mobile-layout': $vuetify.breakpoint.smAndDown }">
             <!-- HEADER -->
             <div class="dialog-header">
               <p class="dialog-title">
@@ -177,7 +193,10 @@
               </div>
             </div>
             <!-- DIALOG CONTENT -->
-            <div class="create-dialog-content">
+            <div
+              class="create-dialog-content"
+              :class="{ 'mobile-layout': $vuetify.breakpoint.smAndDown }"
+            >
               <v-stepper dark class="stepper-styles text-center" v-model="stepper" alt-labels>
                 <!-- <v-stepper-header>
               
@@ -200,13 +219,18 @@
                     color="missionAccent"
                     auto-grow
                     clearable
+                    :rows="$vuetify.breakpoint.smAndDown ? 6 : 1"
                     v-model="description"
                     label="Describe what you want to achieve?"
                     :disabled="loading"
                     autofocus
+                    :dense="$vuetify.breakpoint.smAndDown"
                   ></v-textarea>
 
-                  <div class="action-buttons mt-8">
+                  <div
+                    class="action-buttons mt-6"
+                    :class="{ 'mobile-layout': $vuetify.breakpoint.smAndDown }"
+                  >
                     <v-btn
                       outlined
                       color="galaxyAccent"
@@ -252,14 +276,19 @@
                       color="missionAccent"
                       auto-grow
                       clearable
+                      :rows="$vuetify.breakpoint.smAndDown ? 5 : 1"
                       v-model="aiGatheringContextAnswers[index]"
                       :disabled="loading"
                       :autofocus="index === 0"
+                      :dense="$vuetify.breakpoint.smAndDown"
                     ></v-textarea>
                   </div>
 
                   <!-- ACTION BUTTONS -->
-                  <div class="action-buttons flex-row justify-center">
+                  <div
+                    class="action-buttons flex-row justify-center"
+                    :class="{ 'mobile-layout': $vuetify.breakpoint.smAndDown }"
+                  >
                     <!-- BACK -->
                     <v-btn
                       outlined
@@ -955,7 +984,7 @@ export default {
       try {
         // Calculate total planets for progress tracking
         this.totalPlanets = 0;
-        for (let star of this.aiGeneratedGalaxyMap.stars) {
+        for (const star of this.aiGeneratedGalaxyMap.stars) {
           this.totalPlanets += star.planets.length;
         }
 
@@ -2086,5 +2115,277 @@ export default {
   margin-top: 0.25rem;
   text-transform: uppercase;
   letter-spacing: 1px;
+}
+
+// Mobile-specific improvements
+.mobile-layout {
+  width: 100% !important;
+}
+
+@media (max-width: 768px) {
+  .create-dialog {
+    flex-direction: column;
+    min-height: auto;
+    padding: 0;
+
+    .dialog-header {
+      padding: 15px;
+
+      .dialog-title {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+      }
+
+      .dialog-description {
+        font-size: 0.65rem;
+        line-height: 1.4;
+      }
+    }
+
+    .create-dialog-content {
+      padding: 15px;
+      min-height: auto;
+
+      .input-field {
+        font-size: 0.9rem;
+        margin-bottom: 15px;
+      }
+
+      .stepper-styles {
+        .v-stepper__content {
+          padding: 0;
+        }
+      }
+    }
+
+    .action-buttons {
+      padding: 15px;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      align-items: center;
+      width: 100%;
+
+      .v-btn {
+        width: 100%;
+        max-width: 280px;
+        margin: 0 !important;
+      }
+    }
+  }
+
+  .loading-overlay {
+    padding: 1rem;
+
+    .loading-content {
+      padding: 1rem;
+      width: 95vw;
+
+      .loading-message {
+        font-size: 0.8rem;
+        letter-spacing: 1px;
+      }
+
+      .streaming-text {
+        font-size: 0.85rem;
+        line-height: 1.4;
+      }
+    }
+  }
+
+  .galaxy-treeview-container {
+    width: 95vw;
+    max-width: 95vw;
+    height: 50vh;
+    margin: 0.5rem auto;
+    padding: 0.5rem;
+
+    .galaxy-treeview-wrapper {
+      gap: 15px;
+      padding: 8px;
+    }
+
+    .star-treeview-item {
+      padding: 10px;
+      min-width: 250px;
+    }
+  }
+
+  .token-usage,
+  .token-breakdown {
+    font-size: 0.7rem;
+    margin: 3px !important;
+  }
+
+  .saving-progress-container,
+  .mission-generation-progress-container {
+    width: 90%;
+    max-width: 90%;
+
+    .saving-progress-text,
+    .mission-generation-progress-text {
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+    }
+  }
+}
+
+// Extra small mobile devices
+@media (max-width: 480px) {
+  .create-dialog {
+    .dialog-header {
+      padding: 12px;
+
+      .dialog-title {
+        font-size: 1rem;
+      }
+
+      .dialog-description {
+        font-size: 0.6rem;
+      }
+    }
+
+    .create-dialog-content {
+      padding: 12px;
+    }
+
+    .action-buttons {
+      padding: 12px;
+      margin: 0;
+      align-items: center;
+      width: 100%;
+
+      .v-btn {
+        max-width: 260px;
+      }
+    }
+  }
+
+  .loading-overlay {
+    .loading-content {
+      padding: 0.8rem;
+      width: 98vw;
+
+      .loading-message {
+        font-size: 0.75rem;
+      }
+
+      .streaming-text {
+        font-size: 0.8rem;
+      }
+    }
+  }
+
+  .galaxy-treeview-container {
+    width: 98vw;
+    max-width: 98vw;
+    height: 45vh;
+    margin: 0.3rem auto;
+    padding: 0.3rem;
+
+    .star-treeview-item {
+      padding: 8px;
+      min-width: 220px;
+    }
+  }
+
+  .token-usage,
+  .token-breakdown {
+    font-size: 0.65rem;
+    margin: 2px !important;
+  }
+
+  .saving-progress-container,
+  .mission-generation-progress-container {
+    width: 95%;
+    max-width: 95%;
+
+    .saving-progress-text,
+    .mission-generation-progress-text {
+      font-size: 0.75rem;
+    }
+  }
+}
+
+// Touch-friendly improvements for mobile
+@media (max-width: 768px) {
+  .action-buttons {
+    &.flex-row {
+      flex-direction: column !important;
+      gap: 15px;
+
+      .v-btn {
+        margin: 0 !important;
+        width: 100%;
+        max-width: 280px;
+      }
+    }
+  }
+  .input-field {
+    .v-input__control {
+      min-height: 44px; // Minimum touch target size
+    }
+  }
+
+  .v-btn {
+    min-height: 44px; // Minimum touch target size
+    font-size: 0.9rem;
+  }
+
+  .stepper-styles {
+    .v-stepper__step {
+      min-height: 44px;
+    }
+  }
+
+  .treeview-label {
+    .treeview-label-text {
+      font-size: 0.7rem;
+      line-height: 1.2;
+    }
+
+    .treeview-description {
+      font-size: 0.65rem;
+      line-height: 1.3;
+      margin-left: 30px;
+      max-width: 240px;
+
+      h2 {
+        font-size: 0.75rem;
+        margin: 0.4rem 0 0.2rem 0;
+      }
+
+      h3 {
+        font-size: 0.7rem;
+        margin: 0.2rem 0 0.1rem 0;
+      }
+
+      p {
+        margin: 0.1rem 0;
+      }
+
+      ul {
+        margin: 0.1rem 0;
+        padding-left: 0.8rem;
+      }
+
+      li {
+        margin: 0.05rem 0;
+      }
+    }
+  }
+
+  .star-emoji {
+    font-size: 0.9rem;
+  }
+
+  .planet-emoji {
+    font-size: 0.8rem;
+  }
+
+  .instructions-emoji {
+    font-size: 0.7rem;
+  }
 }
 </style>

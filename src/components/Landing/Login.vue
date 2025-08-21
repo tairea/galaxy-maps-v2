@@ -251,7 +251,7 @@ export default {
     },
     handleRecoverEmail(auth, actionCode) {
       console.log("handle recover email");
-      var restoredEmail = null;
+      let restoredEmail = null;
       auth
         .checkActionCode(actionCode)
         .then((info) => {
@@ -334,7 +334,7 @@ export default {
       }
 
       if (!this.user.data.verified) {
-        var actionCodeSettings = {
+        const actionCodeSettings = {
           url: window.location.origin + "/login",
           handleCodeInApp: true,
         };

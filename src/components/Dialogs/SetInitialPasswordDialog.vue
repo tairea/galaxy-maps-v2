@@ -380,14 +380,14 @@ export default {
     },
     storeImage() {
       this.uploading = true;
-      var storageRef = storage.ref(
+      const storageRef = storage.ref(
         "avatar-images/" +
           this.profile.firstName +
           this.profile.lastName +
           "-" +
           this.selectedFile.name,
       );
-      var uploadTask = storageRef.put(this.selectedFile);
+      const uploadTask = storageRef.put(this.selectedFile);
       uploadTask.on(
         "state_changed",
         (snapshot) => {

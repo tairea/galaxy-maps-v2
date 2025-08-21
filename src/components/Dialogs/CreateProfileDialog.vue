@@ -264,7 +264,7 @@ export default {
     storeImage() {
       this.uploading = true;
       // ceate a storage ref
-      var storageRef = storage.ref(
+      const storageRef = storage.ref(
         "avatar-images/" +
           this.profile.firstName +
           this.profile.lastName +
@@ -273,7 +273,7 @@ export default {
       );
 
       // upload a file
-      var uploadTask = storageRef.put(this.selectedFile);
+      const uploadTask = storageRef.put(this.selectedFile);
 
       // update progress bar
       uploadTask.on(

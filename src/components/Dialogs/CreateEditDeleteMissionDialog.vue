@@ -792,12 +792,12 @@ export default {
     handleDescriptionImageAdded(file, Editor, cursorLocation) {
       console.log("image file", file);
       // ceate a storage ref
-      var storageRef = storage.ref(
+      const storageRef = storage.ref(
         "missionDescription-images/teacher-" + this.person.id + this.task.id + "-" + file.name,
       );
 
       // upload a file
-      var uploadTask = storageRef.put(file);
+      const uploadTask = storageRef.put(file);
 
       // update progress bar
       uploadTask.on(
@@ -823,7 +823,7 @@ export default {
     handleSubmissionImageAdded(file, Editor, cursorLocation) {
       console.log("image file", file);
       // ceate a storage ref
-      var storageRef = storage.ref(
+      const storageRef = storage.ref(
         "missionSubmission-images/teacher-" +
           this.person.id +
           "-task-" +
@@ -833,7 +833,7 @@ export default {
       );
 
       // upload a file
-      var uploadTask = storageRef.put(file);
+      const uploadTask = storageRef.put(file);
 
       // update progress bar
       uploadTask.on(

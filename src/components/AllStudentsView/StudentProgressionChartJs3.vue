@@ -243,7 +243,7 @@ export default {
   },
   methods: {
     async formatStudentsChartData(studentObj) {
-      let datasets = [];
+      const datasets = [];
 
       // loops the students courses
       for (const course of studentObj.studentCoursesData) {
@@ -254,7 +254,7 @@ export default {
 
         const courseColour = this.stringToColour(courseContext.title);
 
-        let courseTaskData = [];
+        const courseTaskData = [];
         let taskCount = 0;
 
         // push task data into array
@@ -275,7 +275,7 @@ export default {
 
         // console.log("courseTaskData:", courseTaskData);
 
-        let studentCourseData = {
+        const studentCourseData = {
           type: "line",
           backgroundColor: courseColour,
           borderColor: courseColour,
@@ -340,7 +340,7 @@ export default {
       }
     },
     hexToRgb(hex) {
-      var c;
+      let c;
       if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
         c = hex.substring(1).split("");
         if (c.length == 3) {
@@ -376,7 +376,7 @@ export default {
     },
     hashCode(str) {
       let hash = 0;
-      for (var i = 0; i < str.length; i++) {
+      for (let i = 0; i < str.length; i++) {
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
       }
       return hash;

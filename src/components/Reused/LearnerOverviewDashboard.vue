@@ -281,8 +281,8 @@ export default {
     sendMail() {
       // var subject = document.getElementById("selectList").value;
       // var yourMessage = document.getElementById("message").value;
-      var subject = "GalaxyMaps Comms";
-      var yourMessage = "Hey " + this.student.firstName + ", ";
+      const subject = "GalaxyMaps Comms";
+      const yourMessage = "Hey " + this.student.firstName + ", ";
       document.location.href =
         "mailto:" +
         this.student.email +

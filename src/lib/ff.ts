@@ -874,7 +874,7 @@ export const generateInstructionsForMission = async (
 // Save AI-generated Galaxy Map to Database
 export const saveGalaxyMap = async (
   galaxyMap: any,
-  mapLayout: string = "zigzag",
+  mapLayout = "zigzag",
 ): Promise<{
   courseId: string;
   totalPlanets: number;
@@ -1059,7 +1059,7 @@ export const deleteTopicForStudents = async (
 export const saveNode = async (
   courseId: string,
   node: any,
-  isUpdate: boolean = false,
+  isUpdate = false,
 ): Promise<{
   success: boolean;
   nodeId: string;
