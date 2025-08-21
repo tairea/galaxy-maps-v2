@@ -174,15 +174,21 @@ export default {
     display: flex; /* Use flexbox for arrow alignment */
     align-items: center;
     gap: 5px; /* Space between text and arrow */
+    width: fit-content; /* Dynamic width based on content */
+    min-width: 120px; /* Minimum width to ensure readability */
+    box-sizing: border-box; /* Include padding in width calculation */
 
     &.minimized {
-      width: 350px;
+      width: fit-content; /* Keep dynamic width when minimized */
+      border: none; /* Remove any borders when minimized */
+      box-shadow: none; /* Remove any shadows when minimized */
     }
   }
 
   .galaxy-label .arrow {
     font-size: 0.6rem;
     transition: transform 0.3s ease;
+    flex-shrink: 0; /* Prevent arrow from shrinking */
   }
 
   .galaxy-content {
