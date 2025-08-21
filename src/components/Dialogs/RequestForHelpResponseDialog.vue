@@ -371,7 +371,7 @@ export default {
       this.dialogConfirm = false;
     },
     generateUrl(request) {
-      return `/galaxy/${request.contextCourse.id}/system/${request.contextTopic.id}`;
+      return `/galaxy/${request.contextCourse.id}/star/${request.contextTopic.id}`;
     },
   },
 };

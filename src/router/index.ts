@@ -9,6 +9,7 @@ import CohortListV2 from "@/views/CohortListV2.vue";
 import AllStudentsView from "@/views/AllStudentsView.vue";
 import UserDashboard from "@/views/UserDashboard.vue";
 import AiGalaxyEdit from "@/views/AiGalaxyEdit.vue";
+import MapDebug from "@/views/MapDebug.vue";
 // import SetInitialPassword from "@/views/SetInitialPassword.vue";
 // import Login from "@/components/Login.vue";
 // import VerifyEmail from "@/views/VerifyEmail.vue";
@@ -104,7 +105,7 @@ const routes = [
         props: true,
       },
       {
-        path: "galaxy/:courseId/system/:topicId",
+        path: "galaxy/:courseId/star/:topicId",
         name: "SolarSystemView",
         component: SolarSystemView,
         meta: {
@@ -129,6 +130,15 @@ const routes = [
           authRequired: true,
         },
         props: true,
+      },
+      {
+        path: "map-debug",
+        name: "MapDebug",
+        component: MapDebug,
+        meta: {
+          authRequired: true,
+          adminRequired: true,
+        },
       },
       {
         path: ":slug",
@@ -177,7 +187,19 @@ router.beforeEach(async (to, from, next) => {
 
   if (to.matched.some((record) => record.meta.authRequired)) {
     if (rootStore.user.loggedIn && rootStore.user.data?.verified === true) {
-      next();
+      // Check if admin access is required
+      if (to.matched.some((record) => record.meta.adminRequired)) {
+        if (rootStore.user.data?.admin === true) {
+          next();
+        } else {
+          alert("You must be an admin to access this page");
+          next({
+            path: "/dashboard",
+          });
+        }
+      } else {
+        next();
+      }
     } else {
       alert("You must be logged in to see this page");
       next({

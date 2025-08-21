@@ -437,7 +437,7 @@ export default {
         // set next topic as current topic
         this.setCurrentTopicId(nextTopic.id);
 
-        console.log("router pushing to: /galaxy/" + this.courseId + "/system/" + nextTopic.id);
+        console.log("router pushing to: /galaxy/" + this.courseId + "/star/" + nextTopic.id);
 
         // route to page with topicId
         this.$router.push({
