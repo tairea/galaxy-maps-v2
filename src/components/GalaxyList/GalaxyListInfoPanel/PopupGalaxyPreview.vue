@@ -89,99 +89,11 @@
         </div>
       </div> -->
     </div>
-
-    <div>
-      <!-- Not logged in -->
-      <!-- <div v-if="!user.loggedIn" class="ss-actions py-4">
-        <div class="not-allowed">
-          <v-btn
-            class="view-ss-button pa-5"
-            dark
-            small
-            color="galaxyAccent"
-            outlined
-            tile
-            title="View Galaxy"
-            @click="routeToGalaxyEdit"
-          >
-            View Galaxy
-          </v-btn>
-        </div> -->
-      <!-- Signin Dialog -->
-      <!-- <LoginDialog /> -->
-      <!-- </div> -->
-
-      <!-- ==== NOTE: Other buttons commented out as we test taking non-signed user guard down one level -->
-      <div class="ss-actions py-4">
-        <v-btn
-          class="view-ss-button pa-5"
-          dark
-          small
-          color="galaxyAccent"
-          outlined
-          tile
-          title="View Galaxy"
-          @click="routeToGalaxyEdit"
-        >
-          View Galaxy
-        </v-btn>
-
-        <!-- <v-btn
-          class="view-ss-button pa-5"
-          :dark="dark"
-          :light="!dark"
-          small
-          color="missionAccent"
-          outlined
-          tile
-          title="View Analytics"
-          @click="routeToGalaxyAnalytics"
-          disabled
-        >
-          View Analytics
-        </v-btn> -->
-      </div>
-      <!-- Student Galaxy Actions -->
-      <!-- <div v-else class="ss-actions py-4">
-        <v-btn
-          v-if="enrolled"
-          class="view-ss-button pa-5"
-          dark
-          small
-          color="galaxyAccent"
-          outlined
-          tile
-          title="View Galaxy"
-          @click="routeToGalaxyEdit"
-        >
-          Resume Galaxy
-        </v-btn> -->
-      <!-- starting galaxy status-->
-
-      <!-- <v-btn
-          v-else
-          class="view-ss-button pa-5"
-          dark
-          small
-          color="galaxyAccent"
-          outlined
-          tile
-          title="View Galaxy"
-          @click="startThisGalaxy"
-          :loading="loading"
-        >
-          Start Galaxy
-        </v-btn>
-        <div v-if="loading" style="width: 100%">
-          <p class="starting-status ma-0">{{ startingGalaxyStatus }}</p>
-        </div> -->
-    </div>
   </div>
 </template>
 
 <script>
 import Avatar from "@/components/Reused/Avatar.vue";
-import LoginDialog from "@/components/Dialogs/LoginDialog.vue";
 import { db } from "@/store/firestoreConfig";
 import {
   // fetchCohortByCohortId,
@@ -191,11 +103,11 @@ import {
 } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mdiClose } from "@mdi/js";
-import { mapActions, mapState } from "pinia";
+import { mapState } from "pinia";
 
 export default {
   name: "PopupGalaxyPreview",
-  components: { Avatar, LoginDialog },
+  components: { Avatar },
   props: ["course", "galaxyListInfoPanel"],
   data() {
     return {
@@ -249,7 +161,6 @@ export default {
     await this.setCourseOwner();
   },
   methods: {
-    ...mapActions(useRootStore, ["setCurrentCourseId"]),
     maybeTruncate(value) {
       if (!value) return "";
       if (value.length <= 100) {
@@ -300,55 +211,6 @@ export default {
       }
       this.$emit("togglePopup", false);
     },
-    routeToGalaxyEdit() {
-      console.log("route to galaxy", this.course.id);
-      // save current course to store
-      this.setCurrentCourseId(this.course.id);
-      // route to topic/solar system
-      this.$router.push({
-        name: "GalaxyView",
-        params: {
-          courseId: this.course.id,
-        },
-      });
-    },
-    routeToGalaxyAnalytics() {
-      // TODO: this could go to a dashbaord that shows all cohorts with this galaxy
-
-      console.log("route to galaxy analytics", this.currentCourseId);
-
-      // save current course to store
-      this.setCurrentCourseId(this.course.id);
-
-      // this.$router.push({
-      //   name: "GalaxyView",
-      //   params: {
-      //     topicId: this.currentCourseId,
-      //   },
-      // });
-    },
-    // async startThisGalaxy() {
-    //   this.loading = true;
-    //   // add this galaxy metadata (eg. topics) to this persons course database
-
-    //   // save current course to store
-    //   this.setCurrentCourseId(this.course.id);
-
-    //   // 5) assign student to cohort and course
-    //   const cohort = await fetchCohortByCohortId(this.course.cohort);
-    //   await addMeToCohort(cohort.id);
-    //   await assignCourseToMe(this.course.id);
-
-    //   this.loading = false;
-    //   this.$router.push({
-    //     name: "GalaxyView",
-    //     params: {
-    //       courseId: this.course.id,
-    //       role: "student",
-    //     },
-    //   });
-    // },
-
     async getPersonsImage(personId) {
       const person = await fetchPersonByPersonId(personId);
       return person.image?.url;
@@ -427,27 +289,6 @@ export default {
     }
   }
 
-  .ss-actions {
-    border-top: 1px solid var(--v-missionAccent-base);
-    // min-width: 20vw;
-    // min-height: 10vh;
-    // position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    overflow: hidden;
-
-    .view-ss-button {
-      width: 80%;
-      margin: 5px;
-      // position: absolute;
-      // bottom: 20px; // matches 20px padding of ss-details
-      background-color: var(--v-background-base);
-      z-index: 3;
-    }
-  }
-
   .ss-details {
     padding: 20px;
     margin-top: -30px;
@@ -478,18 +319,12 @@ export default {
       border-radius: 8px;
     }
   }
-
-  .not-allowed {
-    cursor: not-allowed !important;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-  }
 }
 
 .mapped-details {
   width: 100%;
   padding: 10px 20px;
+  margin-bottom: 10px;
 
   .mappedByTitle {
     color: var(--v-galaxyAccent-base);
@@ -514,15 +349,6 @@ export default {
 .galaxyColour {
   color: var(--v-galaxyAccent-base);
   font-weight: 800;
-}
-
-.starting-status {
-  color: var(--v-galaxyAccent-base);
-  font-style: italic;
-  font-size: 0.7rem;
-  text-align: left;
-  padding: 10px;
-  // text-transform: uppercase;
 }
 
 .draft-border {

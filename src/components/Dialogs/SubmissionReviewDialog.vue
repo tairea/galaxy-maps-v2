@@ -229,10 +229,7 @@
                   outlined
                   color="baseAccent"
                   :to="
-                    '/galaxy/' +
-                    submission.contextCourse.id +
-                    '/system/' +
-                    submission.contextTopic.id
+                    '/galaxy/' + submission.contextCourse.id + '/star/' + submission.contextTopic.id
                   "
                   class="mr-4"
                 >

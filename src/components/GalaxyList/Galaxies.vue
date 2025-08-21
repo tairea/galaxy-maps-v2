@@ -423,8 +423,8 @@ export default {
       const courseActivity = this.coursesActivity.find((x) => x.course.id === course.id);
 
       canvasContext.fillStyle = "rgba(255, 255, 255, 1)";
-      canvasContext.textAlign = "left";
-      canvasContext.textBaseline = "top";
+      canvasContext.textAlign = "center";
+      canvasContext.textBaseline = "middle";
 
       // Give at least 500px width for the title
       const maxWidth = Math.max(courseBoundary.width, 500);
@@ -434,20 +434,34 @@ export default {
         ? this.$vuetify.theme.themes.dark.galaxyAccent
         : this.$vuetify.theme.themes.light.galaxyAccent;
 
-      const courseTitleBlockInfo = layoutBlock(canvasContext, course.title.toUpperCase(), {
-        maxWidth: maxWidth,
-      });
+      // Split long titles into multiple lines
+      const title = course.title.toUpperCase();
+      const words = title.split(" ");
+      const lines = [];
+      let currentLine = "";
+
+      for (const word of words) {
+        const testLine = currentLine ? currentLine + " " + word : word;
+        const testWidth = canvasContext.measureText(testLine).width;
+
+        if (testWidth > maxWidth && currentLine) {
+          lines.push(currentLine);
+          currentLine = word;
+        } else {
+          currentLine = testLine;
+        }
+      }
+
+      if (currentLine) {
+        lines.push(currentLine);
+      }
 
       const courseBoundaryXCenter = courseBoundary.left.x + courseBoundary.width / 2;
       const courseBoundaryYCenter = courseBoundary.top.y + courseBoundary.height / 2;
 
-      const contentWidth = courseTitleBlockInfo.width + 20 + 50; // 20 for spacing and 50 for progress circle
-      const contentHeight = courseTitleBlockInfo.height; // 20 for spacing and 50 for progress circle
-
-      // const courseTitleX = courseBoundaryXCenter - contentWidth / 2; // middle
-      // const courseTitleY = courseBoundary.top.y - 40 - courseTitleBlockInfo.height; // 40 for spacing away from nodes
-      const courseTitleX = courseBoundary.left.x - contentWidth;
-      const courseTitleY = courseBoundaryYCenter - contentHeight / 2; // 40 for spacing away from nodes
+      // Position title centered horizontally and slightly below center
+      const courseTitleX = courseBoundaryXCenter; // Center horizontally
+      const courseTitleY = courseBoundaryYCenter + 150; // Slightly below center
 
       // === Box border around title
       // canvasContext.beginPath();
@@ -466,16 +480,28 @@ export default {
       // --- Box background fill
       // canvasContext.fillStyle = this.$vuetify.theme.isDark
       //   ? this.$vuetify.theme.themes.dark.background
-      //   : this.$vuetify.theme.themes.light.background;
+      //   : this.$vuetify.theme.themes.light.galaxyAccent;
       // canvasContext.fill();
       // canvasContext.stroke();
       // canvasContext.closePath();
 
+      // Use the updated font size
+      canvasContext.font = 'bold 40px "Arial"';
+
+      // Use native canvas text rendering instead of drawBlock for better centering control
+      // Reset text properties for native rendering
+      canvasContext.textAlign = "center";
+      canvasContext.textBaseline = "middle";
       canvasContext.font = 'bold 50px "Arial"';
 
-      drawBlock(canvasContext, courseTitleBlockInfo, {
-        x: courseTitleX,
-        y: courseTitleY,
+      // Draw multiple lines of text
+      const lineHeight = 60; // Height between lines
+      const totalHeight = lines.length * lineHeight;
+      const startY = courseTitleY - (totalHeight - lineHeight) / 2; // Center the entire text block
+
+      lines.forEach((line, index) => {
+        const y = startY + index * lineHeight;
+        canvasContext.fillText(line, courseTitleX, y);
       });
     },
     drawCourseProgressionCircle(canvasContext, course, fontSize) {
@@ -700,7 +726,6 @@ export default {
             isNaN(node.x) ||
             isNaN(node.y)
           ) {
-            console.log("Invalid node: /courses/" + courses[i].id + "/map-nodes/" + node.id);
             // Update the node with default x and y values
             // return { ...node, x: 0, y: 0 };
           }
@@ -768,6 +793,8 @@ export default {
       return courseCanvasBoundaries;
     },
     repositionCoursesBasedOnBoundariesV2() {
+      const startTime = performance.now();
+
       const courseCanvasBoundaries = this.calcCourseCanvasBoundaries();
 
       // Safety check: ensure we have the required data
@@ -984,13 +1011,32 @@ export default {
       // this.largestRowWidth += this.largestRowWidth / this.numberOfGalaxiesPerRow / 2;
       // this.$refs.network.storePositions();
       // console.log("newAllNodes", newAllNodes);
+
+      const endTime = performance.now();
+      const duration = endTime - startTime;
+
+      // Log any courses that took longer than expected
+      if (duration > 500) {
+        console.warn(`⚠️ Slow repositioning detected (${duration.toFixed(2)}ms)`);
+        courseCanvasBoundaries.forEach((boundary) => {
+          const nodeCount = this.courseNodesMap.get(boundary.id)?.length || 0;
+          if (nodeCount > 50) {
+            console.warn(`🐌 Course ${boundary.id} (${boundary.title}) has ${nodeCount} nodes`);
+          }
+        });
+      }
+
       return newAllNodes;
     },
     // this controls the fit zoom animation
     zoomToNodes(nodes, fast = false) {
-      // console.log("zoom to nodes called");
+      const startTime = performance.now();
+
       // get node ids
       const nodeIds = nodes.map((x) => x.id);
+
+      // Log course IDs for debugging
+      const courseIds = [...new Set(nodes.map((n) => n.courseId))];
 
       // fit
       this.$refs.network.fit({
@@ -998,10 +1044,28 @@ export default {
         // scale: 0.5,
         // animation: true,
         animation: {
-          duration: fast ? 800 : 2000,
+          // duration: fast ? 800 : 2000,
+          duration: 800,
           easingFunction: "easeInOutQuad",
         },
       });
+
+      // Monitor animation performance
+      setTimeout(() => {
+        const endTime = performance.now();
+        const duration = endTime - startTime;
+
+        // Check if any specific course might be causing issues
+        if (duration > 1000) {
+          console.warn(`⚠️ Slow zoom detected (${duration.toFixed(2)}ms). Course IDs:`, courseIds);
+
+          // Analyze node distribution
+          const courseNodeCounts = {};
+          nodes.forEach((node) => {
+            courseNodeCounts[node.courseId] = (courseNodeCounts[node.courseId] || 0) + 1;
+          });
+        }
+      }, 850); // Slightly after animation duration
     },
     zoomOut() {
       this.$refs.network.moveTo({

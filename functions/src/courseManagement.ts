@@ -104,6 +104,8 @@ export const getCourseByCourseIdHttpsEndpoint = runWith({}).https.onCall(async (
   // if the context is authenticated and they are not admin, check that they
   // belong to a cohort for the course as a teacher or student
 
+  console.log("🔍 Checking cohort access for user:", context.auth.uid);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const teacherCohorts: Record<string, any>[] = [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -117,6 +119,9 @@ export const getCourseByCourseIdHttpsEndpoint = runWith({}).https.onCall(async (
     .collection("cohorts")
     .where("teachers", "array-contains", context.auth.uid)
     .get();
+
+  console.log("🔍 Student cohorts found:", studentQuerySnapShot.docs.length);
+  console.log("🔍 Teacher cohorts found:", teacherQuerySnapShot.docs.length);
 
   for (const cohort of studentQuerySnapShot.docs) {
     studentCohorts.push({
@@ -140,9 +145,16 @@ export const getCourseByCourseIdHttpsEndpoint = runWith({}).https.onCall(async (
     ]),
   );
 
+  console.log("🔍 Course IDs from cohorts:", courseIds);
+  console.log("🔍 Current course ID:", courseDoc.id);
+  console.log("🔍 Is course in user's cohorts?", courseIds.includes(courseDoc.id));
+
   if (!courseIds.includes(courseDoc.id)) {
+    console.log("❌ Course not found in user's cohorts, throwing 404");
     throw new HttpsError("not-found", `Course not found: ${courseId}`);
   }
+
+  console.log("✅ User has cohort access to course, returning map data");
 
   return {
     course: {
@@ -258,59 +270,39 @@ export const getCourseMapEdgesAndNodesByCourseIdHttpsEndpoint = runWith({}).http
     }
 
     // if the context is authenticated and they are not admin, check if they are a collaborator
-    if (courseData.collaboratorIds && courseData.collaboratorIds.length > 0) {
-      const currentUserId = context.auth.uid;
-      const isCollaborator = courseData.collaboratorIds.some((collaboratorId: unknown) => {
-        // Handle both UID strings and document references
-        if (typeof collaboratorId === "string") {
-          // If it's a document reference path like "people/uid", extract the UID
-          if (collaboratorId.startsWith("people/")) {
-            return collaboratorId === `people/${currentUserId}`;
-          }
-          // If it's just a UID string
-          return collaboratorId === currentUserId;
-        }
-        // If it's a DocumentReference object
-        if (collaboratorId instanceof DocumentReference) {
-          return collaboratorId.path === `people/${currentUserId}`;
-        }
-        return false;
-      });
+    if (courseData.collaboratorIds && courseData.collaboratorIds.includes(context.auth.uid)) {
+      const mapEdgeCollection = await db
+        .collection("courses")
+        .doc(courseId)
+        .collection("map-edges")
+        .get();
 
-      if (isCollaborator) {
-        const mapEdgeCollection = await db
-          .collection("courses")
-          .doc(courseId)
-          .collection("map-edges")
-          .get();
+      const mapNodeCollection = await db
+        .collection("courses")
+        .doc(courseId)
+        .collection("map-nodes")
+        .get();
 
-        const mapNodeCollection = await db
-          .collection("courses")
-          .doc(courseId)
-          .collection("map-nodes")
-          .get();
-
-        const mapEdges = [];
-        for (const doc of mapEdgeCollection.docs) {
-          mapEdges.push({
-            ...doc.data(),
-            id: doc.id,
-          });
-        }
-
-        const mapNodes = [];
-        for (const doc of mapNodeCollection.docs) {
-          mapNodes.push({
-            ...doc.data(),
-            id: doc.id,
-          });
-        }
-
-        return {
-          mapEdges,
-          mapNodes,
-        };
+      const mapEdges = [];
+      for (const doc of mapEdgeCollection.docs) {
+        mapEdges.push({
+          ...doc.data(),
+          id: doc.id,
+        });
       }
+
+      const mapNodes = [];
+      for (const doc of mapNodeCollection.docs) {
+        mapNodes.push({
+          ...doc.data(),
+          id: doc.id,
+        });
+      }
+
+      return {
+        mapEdges,
+        mapNodes,
+      };
     }
 
     // if the context is authenticated and they are not admin, check that they

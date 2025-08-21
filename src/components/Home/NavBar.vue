@@ -60,6 +60,7 @@ const TAB_PUBLIC_GALAXIES = { id: 2, name: "PUBLIC GALAXIES", route: `/`, exactP
 const TAB_COHORTS = { id: 3, name: "SQUADS", route: `/squads`, exactPath: false };
 const TAB_DASHBOARD = { id: 4, name: "DASHBOARD", route: `/dashboard`, exactPath: false };
 const TAB_ADMIN = { id: 5, name: "ADMIN", route: `/students` };
+const TAB_DEBUG = { id: 6, name: "MAP DEBUG", route: `/map-debug`, exactPath: false };
 
 export default {
   name: "NavBar",
@@ -127,7 +128,14 @@ export default {
     },
     user(to, from) {
       if (this.user?.data?.admin) {
-        this.tabs = [TAB_MY_GALAXIES, TAB_PUBLIC_GALAXIES, TAB_COHORTS, TAB_DASHBOARD, TAB_ADMIN];
+        this.tabs = [
+          TAB_MY_GALAXIES,
+          TAB_PUBLIC_GALAXIES,
+          TAB_COHORTS,
+          TAB_DASHBOARD,
+          TAB_ADMIN,
+          TAB_DEBUG,
+        ];
       } else if (to.loggedIn) {
         this.tabs = [TAB_MY_GALAXIES, TAB_PUBLIC_GALAXIES, TAB_COHORTS, TAB_DASHBOARD];
       } else {
@@ -152,7 +160,14 @@ export default {
   },
   async mounted() {
     if (this.user?.data?.admin) {
-      this.tabs = [TAB_MY_GALAXIES, TAB_PUBLIC_GALAXIES, TAB_COHORTS, TAB_DASHBOARD, TAB_ADMIN];
+      this.tabs = [
+        TAB_MY_GALAXIES,
+        TAB_PUBLIC_GALAXIES,
+        TAB_COHORTS,
+        TAB_DASHBOARD,
+        TAB_ADMIN,
+        TAB_DEBUG,
+      ];
     } else if (this.user.loggedIn) {
       this.tabs = [TAB_MY_GALAXIES, TAB_PUBLIC_GALAXIES, TAB_COHORTS, TAB_DASHBOARD];
     } else {
@@ -263,6 +278,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 4px;
+  font-size: 0.7rem;
 }
 
 .notification-badge {

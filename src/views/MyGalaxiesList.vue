@@ -22,26 +22,42 @@
       <div v-if="!validSlug">
         <p class="overline missionAccent--text">Error. destination doesn't exist</p>
       </div>
-      <!-- <div v-else-if="isLoadingCourses" class="text-center">
-        <v-progress-circular indeterminate color="baseAccent"></v-progress-circular>
-        <p class="overline mt-2">Loading your galaxies...</p>
-      </div> -->
       <div v-else-if="!courses || courses.length === 0" class="text-center">
-        <p class="overline">No galaxies found</p>
+        <p class="overline missionAccent--text">You aren't navigating any galaxies yet</p>
+        <v-row class="text-center pt-12" align="center">
+          <v-col cols="12" class="d-flex flex-column">
+            <!-- Explore Public Galaxies -->
+            <v-btn outlined color="baseAccent" @click="$router.push('/')" class="createButton">
+              <v-icon left>
+                {{ mdiRocketLaunch }}
+              </v-icon>
+              EXPLORE PUBLIC GALAXIES
+            </v-btn>
+
+            <!-- Create Galaxy -->
+            <v-btn
+              outlined
+              color="galaxyAccent"
+              @click="showDialog = true"
+              class="createButton"
+              :style="selectedCourseId ? 'opacity:0' : 'opacity:1'"
+            >
+              <v-icon left>
+                {{ mdiPlus }}
+              </v-icon>
+              CREATE NEW GALAXY
+            </v-btn>
+          </v-col>
+        </v-row>
       </div>
     </div>
 
-    <div class="buttons">
+    <div v-if="courses && courses.length > 0" class="buttons">
       <!-- Create button - always show for authenticated users -->
       <v-row class="text-center" align="center">
         <v-col cols="12">
-          <v-btn
-            outlined
-            color="baseAccent"
-            @click="showDialog = true"
-            class="createButton"
-            :style="selectedCourseId ? 'opacity:0' : 'opacity:1'"
-          >
+          <div class="divider"></div>
+          <v-btn outlined color="baseAccent" @click="showDialog = true" class="createButton">
             <v-icon left>
               {{ mdiPlus }}
             </v-icon>
@@ -68,7 +84,7 @@ import GalaxyListInfoPanel from "@/components/GalaxyList/GalaxyListInfoPanel.vue
 import Galaxies from "@/components/GalaxyList/Galaxies.vue";
 import useGalaxyListViewStore from "@/store/galaxyListView";
 import useRootStore from "@/store/index";
-import { mdiPlus } from "@mdi/js";
+import { mdiPlus, mdiRocketLaunch } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
 import AICreateGalaxyDialogVue from "@/components/Dialogs/AICreateGalaxyDialog.vue";
 
@@ -132,6 +148,7 @@ export default {
   data() {
     return {
       mdiPlus,
+      mdiRocketLaunch,
       showDialog: false,
       validSlug: true,
       showAiDialog: false,
@@ -204,10 +221,11 @@ export default {
   left: 50%;
   transform: translate(-50%, 0%);
   display: flex;
+}
 
-  .createButton {
-    transition: all 0.3s;
-  }
+.createButton {
+  transition: all 0.3s;
+  margin-bottom: 20px;
 }
 
 .button-row {
