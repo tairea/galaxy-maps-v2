@@ -1,7 +1,6 @@
 <template>
-  <div v-if="selectedCourse">
-    <!-- Mobile panel that slides up from bottom -->
-    <div class="mobile-panel" :class="{ 'mobile-panel-open': selectedCourse }">
+  <transition name="slide-up" appear>
+    <div v-if="selectedCourse" class="mobile-panel">
       <div class="mobile-panel-container">
         <!-- Close button positioned at top right -->
         <v-btn text x-small color="missionAccent" class="close-button" @click="close">
@@ -70,7 +69,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </transition>
 </template>
 
 <script>
@@ -150,21 +149,48 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+// Slide-up transition animations (Vue 2 class names)
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition:
+    transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+    opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+// initial state when entering
+.slide-up-enter {
+  transform: translateY(100%);
+  opacity: 0;
+}
+
+// end state when entering
+.slide-up-enter-to {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+// initial state when leaving
+.slide-up-leave {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+// end state when leaving
+.slide-up-leave-to {
+  transform: translateY(100%);
+  opacity: 0;
+}
+
 // Mobile panel container
 .mobile-panel {
   position: fixed;
-  bottom: -100vh;
+  bottom: 0;
   left: 0;
   right: 0;
   background: var(--v-background-darken1);
   z-index: 400;
-  transition: bottom 0.3s ease-out;
   max-height: 80vh;
   overflow: hidden;
-
-  &.mobile-panel-open {
-    bottom: 0;
-  }
 
   .mobile-panel-container {
     border: 1px solid var(--v-missionAccent-base);

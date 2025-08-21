@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-hover :disabled="!user.loggedIn || isMobile" v-model="hover" v-if="showMenu">
+    <v-hover :disabled="!user.loggedIn || isMobile" v-model="hover" v-if="showMenu || isMobile">
       <div
         ref="userBar"
         class="userMenu"
@@ -10,11 +10,15 @@
           notSignedInMenu: !user.loggedIn,
         }"
         @click="isMobile && user.loggedIn ? openMobileDialog() : null"
+        style="display: block"
       >
         <!-- USER MENU TOP (BLACK) BAR -->
         <div v-if="!user.loggedIn" class="blackBar">
           <div class="d-flex justify-center align-center" style="width: 80%">
-            <LoginDialog buttonMsg="SIGN IN or CREATE AN ACCOUNT" />
+            <LoginDialog
+              :buttonMsg="isMobile ? 'SIGN\nIN' : 'SIGN IN or CREATE AN ACCOUNT'"
+              class="mobile-login-btn"
+            />
           </div>
         </div>
         <div v-else class="blackBar">
@@ -453,19 +457,40 @@ export default {
 // Mobile-specific styles
 @media (max-width: 959px) {
   .miniMenu {
+    position: fixed !important;
     width: 70px;
     height: 0px;
     cursor: pointer;
-    bottom: 0px !important; // Force the mini menu to be visible on mobile
+    bottom: 0px !important;
+    right: 0px !important;
+    z-index: 300;
+    background: var(--v-subBackground-base) !important;
 
     .blackBar {
       height: 70px;
       padding: 5px;
+      bottom: 0px !important;
+      z-index: 300;
+      background: var(--v-subBackground-base) !important;
 
       .username {
         display: none;
       }
     }
+  }
+
+  .mobile-login-btn {
+    .v-btn__content {
+      // white-space: normal !important;
+      // line-height: 1.2 !important;
+      // text-align: center !important;
+    }
+
+    // .v-btn {
+    //   height: auto !important;
+    //   min-height: 48px !important;
+    //   padding: 8px 12px !important;
+    // }
   }
 
   .userMenuHidden {
