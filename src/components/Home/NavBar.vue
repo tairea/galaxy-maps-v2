@@ -42,18 +42,28 @@
         title="Toggle Navigation"
         @click="toggleMenu"
       >
-        <v-icon v-if="!showNavMenu">{{ mdiMenu }}</v-icon>
-        <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
+        <v-icon v-if="!showNavMenu && !isMobile">{{ mdiMenu }}</v-icon>
+        <v-icon v-else-if="!isMobile" color="baseAccent">{{ mdiClose }}</v-icon>
+        <v-icon v-else>{{ mdiMenu }}</v-icon>
       </v-btn>
     </div>
+
+    <!-- Mobile Navigation Dialog -->
+    <MobileNavDialog
+      v-model="mobileNavDialog"
+      :tabs="tabs"
+      :unanswered-requests-for-help="unansweredRequestsForHelp"
+      :in-review-submissions-count="inReviewSubmissionsCount"
+    />
   </div>
 </template>
 
 <script>
 import useRootStore from "@/store/index";
 import { mdiMenu, mdiClose } from "@mdi/js";
-import { mapState, storeToRefs } from "pinia";
+import { mapState } from "pinia";
 import useGalaxyListViewStore from "@/store/galaxyListView";
+import MobileNavDialog from "./MobileNavDialog.vue";
 
 const TAB_MY_GALAXIES = { id: 1, name: "MY GALAXIES", route: `/my-galaxies`, exactPath: false };
 const TAB_PUBLIC_GALAXIES = { id: 2, name: "PUBLIC GALAXIES", route: `/`, exactPath: true };
@@ -64,6 +74,9 @@ const TAB_DEBUG = { id: 6, name: "MAP DEBUG", route: `/map-debug`, exactPath: fa
 
 export default {
   name: "NavBar",
+  components: {
+    MobileNavDialog,
+  },
   props: [""],
   data() {
     return {
@@ -73,11 +86,15 @@ export default {
       tabs: [TAB_PUBLIC_GALAXIES],
       showNavMenu: true,
       showHamburgerMenu: false,
+      mobileNavDialog: false,
     };
   },
   computed: {
     ...mapState(useRootStore, ["user"]),
     ...mapState(useGalaxyListViewStore, ["courses"]),
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
+    },
     unansweredRequestsForHelp() {
       const store = useRootStore();
       const unansweredRequests = store.getUnansweredRequestsForHelp;
@@ -106,27 +123,13 @@ export default {
     },
   },
   watch: {
-    $route(to, from) {
-      if (
-        this.$route.name == "GalaxyView" ||
-        this.$route.name == "SolarSystemView" ||
-        this.$route.name == "AiGalaxyEditWithCourse"
-      ) {
-        this.showNavMenu = false;
-        this.showHamburgerMenu = true;
-      } else if (
-        this.$route.name == "Login" ||
-        this.$route.name == "Verify" ||
-        this.$route.name == "Reset" ||
-        this.$route.name == "Register"
-      ) {
-        this.showNavMenu = false;
-      } else {
-        this.showNavMenu = true;
-        this.showHamburgerMenu = false;
-      }
+    $route() {
+      this.updateNavVisibility();
     },
-    user(to, from) {
+    isMobile() {
+      this.updateNavVisibility();
+    },
+    user(to) {
       if (this.user?.data?.admin) {
         this.tabs = [
           TAB_MY_GALAXIES,
@@ -174,28 +177,38 @@ export default {
       this.tabs = [TAB_PUBLIC_GALAXIES];
     }
 
-    if (
-      this.$route.name == "GalaxyView" ||
-      this.$route.name == "SolarSystemView" ||
-      this.$route.name == "AiGalaxyEditWithCourse"
-    ) {
-      this.showNavMenu = false;
-      this.showHamburgerMenu = true;
-    } else if (
-      this.$route.name == "Login" ||
-      this.$route.name == "Verify" ||
-      this.$route.name == "Reset" ||
-      this.$route.name == "Register"
-    ) {
-      this.showNavMenu = false;
-    } else {
-      this.showNavMenu = true;
-      this.showHamburgerMenu = false;
-    }
+    this.updateNavVisibility();
   },
   methods: {
+    updateNavVisibility() {
+      const isSpecialRoute =
+        this.$route.name === "GalaxyView" ||
+        this.$route.name === "SolarSystemView" ||
+        this.$route.name === "AiGalaxyEditWithCourse";
+
+      const isAuthRoute =
+        this.$route.name === "Login" ||
+        this.$route.name === "Verify" ||
+        this.$route.name === "Reset" ||
+        this.$route.name === "Register";
+
+      if (isSpecialRoute) {
+        this.showNavMenu = this.isMobile ? false : !this.showNavMenu;
+        this.showHamburgerMenu = true;
+      } else if (isAuthRoute) {
+        this.showNavMenu = false;
+        this.showHamburgerMenu = false;
+      } else {
+        this.showNavMenu = this.isMobile ? false : true;
+        this.showHamburgerMenu = this.isMobile;
+      }
+    },
     toggleMenu() {
-      this.showNavMenu = !this.showNavMenu;
+      if (this.isMobile) {
+        this.mobileNavDialog = true;
+      } else {
+        this.showNavMenu = !this.showNavMenu;
+      }
     },
   },
 };

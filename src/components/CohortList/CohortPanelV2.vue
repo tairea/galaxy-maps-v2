@@ -225,7 +225,7 @@ export default {
       // get all avatar elements
       const avatarEls = this.$refs.avatar;
       // loop avatar els
-      for (var i = 0; i < avatarEls.length; i++) {
+      for (let i = 0; i < avatarEls.length; i++) {
         // add index to selected if not already. else remove
         if (i == index && !this.selectedIndexs.includes(index)) {
           this.selectedIndexs.push(index);
@@ -247,11 +247,11 @@ export default {
         );
 
         // add dim to all avatar els
-        for (var y = 0; y < avatarEls.length; y++) {
+        for (let y = 0; y < avatarEls.length; y++) {
           avatarEls[y].$el.classList.add("dim");
         }
         //remove dim for selected avatar els
-        for (var x = 0; x < this.selectedIndexs.length; x++) {
+        for (let x = 0; x < this.selectedIndexs.length; x++) {
           avatarEls[this.selectedIndexs[x]].$el.classList.remove("dim");
         }
       }

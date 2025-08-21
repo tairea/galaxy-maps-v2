@@ -46,6 +46,6 @@ export interface IPerson {
   [key: string]: any;
 }
 
-export interface IPersonTask extends ITask {}
+export type IPersonTask = ITask;
 
-export interface IPersonTopic extends ITopic {}
+export type IPersonTopic = ITopic;

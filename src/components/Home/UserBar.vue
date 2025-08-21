@@ -1,86 +1,92 @@
 <template>
-  <v-hover :disabled="!user.loggedIn" v-model="hover" v-if="showMenu">
-    <div
-      ref="userBar"
-      class="userMenu"
-      :class="{ showMenu: hover, miniMenu: miniNavMenu, notSignedInMenu: !user.loggedIn }"
-    >
-      <!-- USER MENU TOP (BLACK) BAR -->
-      <div v-if="!user.loggedIn" class="blackBar">
-        <div class="d-flex justify-center align-center" style="width: 80%">
-          <LoginDialog buttonMsg="SIGN IN or CREATE AN ACCOUNT" />
+  <div>
+    <v-hover :disabled="!user.loggedIn || isMobile" v-model="hover" v-if="showMenu">
+      <div
+        ref="userBar"
+        class="userMenu"
+        :class="{
+          showMenu: hover && !isMobile,
+          miniMenu: miniNavMenu,
+          notSignedInMenu: !user.loggedIn,
+        }"
+        @click="isMobile && user.loggedIn ? openMobileDialog() : null"
+      >
+        <!-- USER MENU TOP (BLACK) BAR -->
+        <div v-if="!user.loggedIn" class="blackBar">
+          <div class="d-flex justify-center align-center" style="width: 80%">
+            <LoginDialog buttonMsg="SIGN IN or CREATE AN ACCOUNT" />
+          </div>
         </div>
-      </div>
-      <div v-else class="blackBar">
-        <div class="d-flex justify-center align-center">
-          <v-progress-circular
-            v-if="uploading"
-            :rotate="360"
-            :size="50"
-            :width="2"
-            :value="uploadPercentage"
-            color="baseAccent"
-          >
-            {{ uploadPercentage + "%" }}
-          </v-progress-circular>
-          <v-avatar
-            v-else
-            color="secondary"
-            @mouseenter="onhover = true"
-            @mouseleave="onhover = false"
-          >
-            <img
-              v-if="person.image?.url"
-              :src="person.image.url"
-              :alt="person.firstName"
-              style="object-fit: cover"
-            />
-            <v-icon v-else>{{ mdiAccount }}</v-icon>
-            <v-fade-transition>
-              <v-overlay v-if="onhover" absolute color="baseAccent">
-                <v-icon small @click="onButtonClick">{{ mdiPencil }}</v-icon>
-              </v-overlay>
-            </v-fade-transition>
-            <input
-              ref="uploader"
-              class="d-none"
-              type="file"
-              accept="image/*"
-              @change="onFileChanged"
-            />
-          </v-avatar>
+        <div v-else class="blackBar">
+          <div class="d-flex justify-center align-center">
+            <v-progress-circular
+              v-if="uploading"
+              :rotate="360"
+              :size="50"
+              :width="2"
+              :value="uploadPercentage"
+              color="baseAccent"
+            >
+              {{ uploadPercentage + "%" }}
+            </v-progress-circular>
+            <v-avatar
+              v-else
+              color="secondary"
+              @mouseenter="onhover = true"
+              @mouseleave="onhover = false"
+            >
+              <img
+                v-if="person.image?.url"
+                :src="person.image.url"
+                :alt="person.firstName"
+                style="object-fit: cover"
+              />
+              <v-icon v-else>{{ mdiAccount }}</v-icon>
+              <v-fade-transition>
+                <v-overlay v-if="onhover" absolute color="baseAccent">
+                  <v-icon small @click="onButtonClick">{{ mdiPencil }}</v-icon>
+                </v-overlay>
+              </v-fade-transition>
+              <input
+                ref="uploader"
+                class="d-none"
+                type="file"
+                accept="image/*"
+                @change="onFileChanged"
+              />
+            </v-avatar>
+          </div>
+          <div v-if="!miniNavMenu || hover" class="username mx-4" style="">
+            <p class="ma-0">{{ person.firstName }} {{ person.lastName }}</p>
+            <!-- <span style="font-size: 0.8rem; color: #777">ID: {{ person.id }}</span> -->
+          </div>
         </div>
-        <div v-if="!miniNavMenu || hover" class="username mx-4" style="">
-          <p class="ma-0">{{ person.firstName }} {{ person.lastName }}</p>
-          <!-- <span style="font-size: 0.8rem; color: #777">ID: {{ person.id }}</span> -->
-        </div>
-      </div>
-      <!-- USER MENU HIDDEN-->
-      <div class="userMenuHidden">
-        <v-row>
-          <v-col class="d-flex" style="border-bottom: 1px solid var(--v-missionAccent-base)">
-            <p class="settings overline ma-0">Settings</p>
-          </v-col>
-        </v-row>
-        <v-row class="pt-3">
-          <v-col class="pa-0 d-flex justify-center">
-            <p class="text-overline missionAccent--text ma-0">Colour Theme</p>
-          </v-col>
-          <!-- LIGHT/DARK MODE SWITCH -->
-          <v-col class="pa-0 d-flex justify-center">
-            <v-switch
-              v-model="darkSwitch"
-              :label="`${darkSwitch ? 'Dark' : 'Light'}`"
-              @change="changeTheme()"
-              color="missionAccent"
-              class="ma-0"
-            ></v-switch>
-          </v-col>
-        </v-row>
+        <!-- USER MENU HIDDEN-->
+        <div class="userMenuHidden">
+          <v-row>
+            <v-col class="d-flex" style="border-bottom: 1px solid var(--v-missionAccent-base)">
+              <p class="settings overline ma-0">Settings</p>
+            </v-col>
+          </v-row>
+          <v-row class="pt-3">
+            <v-col class="pa-0 d-flex justify-center">
+              <p class="text-overline missionAccent--text ma-0">Colour Theme</p>
+            </v-col>
+            <!-- LIGHT/DARK MODE SWITCH -->
+            <v-col class="pa-0 d-flex justify-center">
+              <v-switch
+                v-model="darkSwitch"
+                :label="`${darkSwitch ? 'Dark' : 'Light'}`"
+                @change="changeTheme()"
+                color="missionAccent"
+                class="ma-0"
+              ></v-switch>
+            </v-col>
+          </v-row>
 
-        <div class="d-flex flex-column mt-5">
-          <!-- <ThemeColourPicker/> -->
-          <!-- <v-btn
+          <div class="d-flex flex-column mt-5">
+            <!-- <ThemeColourPicker/> -->
+            <!-- <v-btn
             color="baseAccent"
             class="ma-4"
             outlined
@@ -92,39 +98,39 @@
             edit account
           </v-btn> -->
 
-          <!-- Edit Account button -->
-          <StudentEditDialog @close="close" />
+            <!-- Edit Account button -->
+            <StudentEditDialog @close="close" />
 
-          <!-- Feedback button -->
-          <v-btn
-            href="https://docs.google.com/forms/d/e/1FAIpQLSfJgXGWOeosZfJY7H0tvFzANoX8p95fmgVKom97HMDiNywSnA/viewform?usp=sf_link"
-            target="_blank"
-            color="galaxyAccent"
-            class="ma-3"
-            outlined
-            :dark="dark"
-            :light="!dark"
-          >
-            <v-icon class="pr-2">{{ mdiSend }}</v-icon>
-            Feedback & Bugs
-          </v-btn>
+            <!-- Feedback button -->
+            <v-btn
+              href="https://docs.google.com/forms/d/e/1FAIpQLSfJgXGWOeosZfJY7H0tvFzANoX8p95fmgVKom97HMDiNywSnA/viewform?usp=sf_link"
+              target="_blank"
+              color="galaxyAccent"
+              class="ma-3"
+              outlined
+              :dark="dark"
+              :light="!dark"
+            >
+              <v-icon class="pr-2">{{ mdiSend }}</v-icon>
+              Feedback & Bugs
+            </v-btn>
 
-          <!-- Discord button -->
-          <v-btn
-            href="https://discord.gg/f2hPbqV22S"
-            target="_blank"
-            color="indigo lighten-1"
-            class="ma-3"
-            outlined
-            :dark="dark"
-            :light="!dark"
-          >
-            <v-icon class="pr-2">{{ mdiMessage }}</v-icon>
-            Chat on Discord
-          </v-btn>
+            <!-- Discord button -->
+            <v-btn
+              href="https://discord.gg/f2hPbqV22S"
+              target="_blank"
+              color="indigo lighten-1"
+              class="ma-3"
+              outlined
+              :dark="dark"
+              :light="!dark"
+            >
+              <v-icon class="pr-2">{{ mdiMessage }}</v-icon>
+              Chat on Discord
+            </v-btn>
 
-          <!-- Github button -->
-          <!-- <v-btn
+            <!-- Github button -->
+            <!-- <v-btn
             href="https://github.com/tairea/galaxy-maps-v2"
             target="_blank"
             color="blue-grey lighten-3"
@@ -137,28 +143,33 @@
             Help code this
           </v-btn> -->
 
-          <!-- Logout button -->
-          <v-btn
-            class="ma-3"
-            @click="logout"
-            color="missionAccent"
-            outlined
-            :dark="dark"
-            :light="!dark"
-          >
-            <v-icon class="pr-2">{{ mdiDoorClosed }}</v-icon>
-            Logout
-          </v-btn>
+            <!-- Logout button -->
+            <v-btn
+              class="ma-3"
+              @click="logout"
+              color="missionAccent"
+              outlined
+              :dark="dark"
+              :light="!dark"
+            >
+              <v-icon class="pr-2">{{ mdiDoorClosed }}</v-icon>
+              Logout
+            </v-btn>
+          </div>
         </div>
       </div>
-    </div>
-  </v-hover>
+    </v-hover>
+
+    <!-- Mobile User Dialog -->
+    <MobileUserDialog v-model="mobileUserDialog" />
+  </div>
 </template>
 
 <script>
 // import ThemeColourPicker from "@/components/Home/UserBar/ThemeColourPicker.vue";
 import LoginDialog from "@/components/Dialogs/LoginDialog.vue";
 import StudentEditDialog from "@/components/Dialogs/StudentEditDialog.vue";
+import MobileUserDialog from "./MobileUserDialog.vue";
 import { db, storage } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mdiAccount, mdiPencil, mdiSend, mdiDoorClosed, mdiMessage, mdiGithub } from "@mdi/js";
@@ -172,6 +183,7 @@ export default {
     // ThemeColourPicker,
     StudentEditDialog,
     LoginDialog,
+    MobileUserDialog,
   },
   data() {
     return {
@@ -192,35 +204,15 @@ export default {
       showMenu: true,
       miniNavMenu: false,
       notSignedInMenu: false,
+      mobileUserDialog: false,
     };
   },
   watch: {
-    $route(to, from) {
-      // show/hide userbar completely
-      if (
-        this.$route.name == "Login" ||
-        this.$route.name == "Verify" ||
-        this.$route.name == "Reset" ||
-        this.$route.name == "Register"
-      ) {
-        this.showMenu = false;
-      } else {
-        this.showMenu = true;
-      }
-      // show/hide userbar mini version
-      console.log("Current route name:", this.$route.name); // Debug log
-      console.log("Current route path:", this.$route.path); // Debug log
-      if (
-        (this.$route.name == "GalaxyView" && this.user.loggedIn) ||
-        this.$route.name == "SolarSystemView" ||
-        this.$route.name == "AiGalaxyEdit" ||
-        this.$route.path.includes("ai-galaxy-edit") ||
-        this.$route.name == "AiGalaxyEditWithCourse"
-      ) {
-        this.miniNavMenu = true;
-      } else {
-        this.miniNavMenu = false;
-      }
+    $route() {
+      this.updateUserBarVisibility();
+    },
+    isMobile() {
+      this.updateUserBarVisibility();
     },
   },
   async mounted() {
@@ -231,33 +223,15 @@ export default {
       await this.bindCoursesByPersonId(this.person.id);
     }
 
-    if (
-      this.$route.name == "Login" ||
-      this.$route.name == "Verify" ||
-      this.$route.name == "Reset" ||
-      this.$route.name == "Register"
-    ) {
-      this.showMenu = false;
-    } else {
-      this.showMenu = true;
-    }
-
-    if (
-      (this.$route.name == "GalaxyView" && this.user.loggedIn) ||
-      this.$route.name == "SolarSystemView" ||
-      this.$route.name == "AiGalaxyEdit" ||
-      this.$route.path.includes("ai-galaxy-edit") ||
-      this.$route.name == "AiGalaxyEditWithCourse"
-    ) {
-      this.miniNavMenu = true;
-    } else {
-      this.miniNavMenu = false;
-    }
+    this.updateUserBarVisibility();
   },
   computed: {
     ...mapState(useRootStore, ["person", "user"]),
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
+    },
     dark() {
-      return this.$vuetify.theme.isDark;
+      return this.$vuetify.theme.dark;
     },
   },
   methods: {
@@ -267,9 +241,38 @@ export default {
       "setDarkMode",
       "setSnackbar",
     ]),
+    updateUserBarVisibility() {
+      const isAuthRoute =
+        this.$route.name === "Login" ||
+        this.$route.name === "Verify" ||
+        this.$route.name === "Reset" ||
+        this.$route.name === "Register";
+
+      const isMiniRoute =
+        (this.$route.name === "GalaxyView" && this.user.loggedIn) ||
+        this.$route.name === "SolarSystemView" ||
+        this.$route.name === "AiGalaxyEdit" ||
+        this.$route.path.includes("ai-galaxy-edit") ||
+        this.$route.name === "AiGalaxyEditWithCourse";
+
+      if (isAuthRoute) {
+        this.showMenu = false;
+      } else {
+        this.showMenu = true;
+      }
+
+      if (isMiniRoute || this.isMobile) {
+        this.miniNavMenu = true;
+      } else {
+        this.miniNavMenu = false;
+      }
+    },
+    openMobileDialog() {
+      this.mobileUserDialog = true;
+    },
     changeTheme() {
       this.$vuetify.theme.dark = this.darkSwitch;
-      this.setDarkMode(this.$vuetify.theme.isDark);
+      this.setDarkMode(this.$vuetify.theme.dark);
     },
     logout() {
       this.hover = false;
@@ -306,16 +309,16 @@ export default {
     onButtonClick() {
       this.$refs.uploader?.click();
     },
-    async onFileChanged(e) {
+    onFileChanged(e) {
       console.log("e: ", e);
       this.selectedFile = e.target.files[0];
-      await this.storeImage();
+      this.storeImage();
     },
     storeImage() {
       this.uploading = true;
       console.log("selectedfile: ", this.selectedFile);
       // ceate a storage ref
-      var storageRef = storage.ref(
+      const storageRef = storage.ref(
         "avatar-images/" +
           this.person.firstname +
           this.person.lastname +
@@ -324,7 +327,7 @@ export default {
       );
 
       // upload a file
-      var uploadTask = storageRef.put(this.selectedFile);
+      const uploadTask = storageRef.put(this.selectedFile);
 
       // update progress bar
       uploadTask.on(
@@ -445,5 +448,28 @@ export default {
   transition:
     width 0.3s ease-out,
     bottom 0.3s ease-out 0.3s;
+}
+
+// Mobile-specific styles
+@media (max-width: 959px) {
+  .miniMenu {
+    width: 70px;
+    height: 0px;
+    cursor: pointer;
+    bottom: 0px !important; // Force the mini menu to be visible on mobile
+
+    .blackBar {
+      height: 70px;
+      padding: 5px;
+
+      .username {
+        display: none;
+      }
+    }
+  }
+
+  .userMenuHidden {
+    display: none;
+  }
 }
 </style>

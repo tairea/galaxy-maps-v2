@@ -829,12 +829,12 @@ export default {
       // ceate a storage ref
       console.log("image added", file);
 
-      var storageRef = storage.ref(
+      const storageRef = storage.ref(
         "submission-images/student-" + this.person.id + "-task-" + this.task.id + "-" + file.name,
       );
 
       // upload a file
-      var uploadTask = storageRef.put(file);
+      const uploadTask = storageRef.put(file);
 
       // update progress bar
       uploadTask.on(

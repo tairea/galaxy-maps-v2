@@ -43,7 +43,7 @@ export default {
   name: "SolarSystem",
   props: ["courseId", "topic", "tasks", "size", "height", "coords"],
   data() {
-    let durationRanges = [
+    const durationRanges = [
       [0, 0],
       [9.6, 12.4],
       [12.4, 21.6],
@@ -77,7 +77,7 @@ export default {
     // string to colour, thanks to: https://stackoverflow.com/questions/3426404/create-a-hexadecimal-colour-based-on-a-string-with-javascript
     hashCode(str) {
       let hash = 0;
-      for (var i = 0; i < str.length; i++) {
+      for (let i = 0; i < str.length; i++) {
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
       }
       return hash;

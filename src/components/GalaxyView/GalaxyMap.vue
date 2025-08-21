@@ -216,7 +216,7 @@ export default {
       const node = this.$refs.network.nodes.find((n) => n.id === newTopic.id);
       if (node) {
         this.zoomToNode(node);
-        var options = { ...this.network.options };
+        const options = { ...this.network.options };
         options.edges.hidden = true; // hide edges
         options.nodes.font.size = 5; // hide labels
         this.$refs.network.setOptions(options);
@@ -269,7 +269,7 @@ export default {
       return this.student ? this.currentCourseEdgesWithStatusStyles : this.currentCourseEdges;
     },
     inActiveNodes() {
-      let inActiveNodes = [];
+      const inActiveNodes = [];
       for (const node of this.currentCourseNodes) {
         inActiveNodes.push({
           ...node,
@@ -282,7 +282,7 @@ export default {
       return inActiveNodes;
     },
     makeActiveNodes() {
-      let makeActiveNodes = [];
+      const makeActiveNodes = [];
       for (const node of this.currentCourseNodes) {
         makeActiveNodes.push({
           ...node,
@@ -361,7 +361,7 @@ export default {
     await this.drawSolarSystems();
 
     // ==== check if all topics completed. if so GALAXY MAP COMPLETE!!! ====
-    let isGalaxyMapComplete = this.personsTopics.every(
+    const isGalaxyMapComplete = this.personsTopics.every(
       (topic) => topic.topicStatus === "completed",
     );
     if (!this.galaxyCompleted && this.personsTopics.length && isGalaxyMapComplete) {
@@ -433,7 +433,7 @@ export default {
       await this.drawSolarSystems();
 
       // ==== check if all topics completed. if so GALAXY MAP COMPLETE!!! ====
-      let isGalaxyMapComplete = this.personsTopics.every(
+      const isGalaxyMapComplete = this.personsTopics.every(
         (topic) => topic.topicStatus === "completed",
       );
       if (!this.galaxyCompleted && this.personsTopics.length && isGalaxyMapComplete) {
@@ -466,7 +466,7 @@ export default {
     },
 
     getDomCoords(node) {
-      let domCoords = this.$refs.network.canvasToDom({ x: node.x, y: node.y });
+      const domCoords = this.$refs.network.canvasToDom({ x: node.x, y: node.y });
       return domCoords;
     },
     doubleClick() {
@@ -619,13 +619,13 @@ export default {
       this.previewedNode = closestNode;
 
       // 2) get tasks for this topic
-      let tasksForThisTopic = this.tasks.filter((taskObj) => taskObj.topicId == closestNode.id);
+      const tasksForThisTopic = this.tasks.filter((taskObj) => taskObj.topicId == closestNode.id);
 
       // 3) zoom to node
       this.zoomToNode(closestNode);
 
       // 4) hide edges
-      var options = { ...this.network.options };
+      const options = { ...this.network.options };
       options.edges.hidden = true; // hide edges
       // Enable vis-network labels just for the previewed node
       try {
@@ -669,7 +669,7 @@ export default {
       // get click location
       const clickedPosition = clickData.pointer.canvas;
       // get all node locations (returns an object)
-      let allNodePositions = this.$refs.network.getPositions();
+      const allNodePositions = this.$refs.network.getPositions();
       // convert object of positions to array of positions
       const allNodePositionsArray = [];
       for (const node in allNodePositions) {
@@ -682,7 +682,7 @@ export default {
       let closest = null;
       let shortestDistance = Number.MAX_SAFE_INTEGER;
       for (let i = 0; i < allNodePositionsArray.length; i++) {
-        var d = this.distSquared(clickedPosition, allNodePositionsArray[i]);
+        const d = this.distSquared(clickedPosition, allNodePositionsArray[i]);
         if (d < shortestDistance) {
           closest = allNodePositionsArray[i];
           shortestDistance = d;
@@ -691,8 +691,8 @@ export default {
       return this.$refs.network.getNode(closest.id);
     },
     distSquared(pt1, pt2) {
-      var diffX = pt1.x - pt2.x;
-      var diffY = pt1.y - pt2.y;
+      const diffX = pt1.x - pt2.x;
+      const diffY = pt1.y - pt2.y;
       return diffX * diffX + diffY * diffY;
     },
     dragStart(data) {
@@ -870,7 +870,7 @@ export default {
     // },
     hashCode(str) {
       let hash = 0;
-      for (var i = 0; i < str.length; i++) {
+      for (let i = 0; i < str.length; i++) {
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
       }
       return hash;
@@ -894,7 +894,7 @@ export default {
     },
     exitSolarSystemPreview() {
       // bring edges back
-      var options = { ...this.network.options };
+      const options = { ...this.network.options };
       options.edges.hidden = false;
       this.$refs.network.setOptions(options);
       // Disable vis-network labels for all nodes again
@@ -928,7 +928,7 @@ export default {
     zoomToNodes(nodes) {
       // nodes to zoom to
       // get node ids
-      var nodeIds = nodes.map((x) => x.id);
+      const nodeIds = nodes.map((x) => x.id);
       this.$refs.network.fit({
         nodes: nodeIds,
         animation: {

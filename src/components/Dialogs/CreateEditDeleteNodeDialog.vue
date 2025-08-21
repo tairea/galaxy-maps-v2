@@ -373,16 +373,16 @@ export default {
       return this.$vuetify.theme.isDark;
     },
     sortedTopics() {
-      let sortedTopics = this.currentCourseNodes
+      const sortedTopics = this.currentCourseNodes
         .filter((node) => node.id !== this.currentNode.id)
         .sort((a, b) => {
           // bruh! sometimes courseNodes have property topicCreatedTimestamp and sometimes they have nodeCreatedTimestamp
           // code as been fixed to no only save as topicCreatedTimestamp
           // but this ternary handles old nodeCreatedTimestamp's
-          let aTimestamp = a.hasOwnProperty("topicCreatedTimestamp")
+          const aTimestamp = a.hasOwnProperty("topicCreatedTimestamp")
             ? a.topicCreatedTimestamp.seconds
             : a.nodeCreatedTimestamp.seconds;
-          let bTimestamp = b.hasOwnProperty("topicCreatedTimestamp")
+          const bTimestamp = b.hasOwnProperty("topicCreatedTimestamp")
             ? b.topicCreatedTimestamp.seconds
             : b.nodeCreatedTimestamp.seconds;
 
@@ -586,12 +586,12 @@ export default {
     storeImage() {
       this.disabled = true;
       // ceate a storage ref
-      var storageRef = storage.ref(
+      const storageRef = storage.ref(
         "node-images/course-" + this.course.id + "-node-" + this.currentNode.id,
       );
 
       // upload a file
-      var uploadTask = storageRef.put(this.uploadedImage);
+      const uploadTask = storageRef.put(this.uploadedImage);
 
       // update progress bar
       uploadTask.on(

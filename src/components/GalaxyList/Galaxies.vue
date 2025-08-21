@@ -150,6 +150,9 @@ export default {
     isDark() {
       return this.$vuetify.theme.isDark;
     },
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
+    },
   },
   watch: {
     darkMode(dark) {
@@ -168,6 +171,32 @@ export default {
       if (coursesTopicNodes.length > 0) {
         // zoom to specific galaxy nodes
         this.zoomToNodes(coursesTopicNodes);
+
+        // offset the network to the top of the screen with moveTo
+        // On mobile, offset the center point upward to make room for the info panel
+        if (this.isMobile) {
+          // Wait for the fit animation to complete, then adjust position
+          setTimeout(() => {
+            const currentView = this.$refs.network.getViewPosition();
+            const currentScale = this.$refs.network.getScale();
+
+            // Calculate offset: move view up by approximately 20% of viewport height
+            // This accounts for the mobile info panel that takes up ~80vh
+            const offsetY = window.innerHeight * 0.25;
+
+            this.$refs.network.moveTo({
+              position: {
+                x: currentView.x,
+                y: currentView.y + offsetY,
+              },
+              scale: currentScale,
+              animation: {
+                duration: 300,
+                easingFunction: "easeOutQuad",
+              },
+            });
+          }, 850); // Wait for fit animation to complete
+        }
       } else {
         // zoom out to fit all nodes
         this.zoomToNodes(this.allNodesForDisplay, true);
@@ -598,7 +627,7 @@ export default {
       }
     },
     hexToRGBA(hex, opacity) {
-      let r = parseInt(hex.slice(1, 3), 16),
+      const r = parseInt(hex.slice(1, 3), 16),
         g = parseInt(hex.slice(3, 5), 16),
         b = parseInt(hex.slice(5, 7), 16);
 
@@ -654,7 +683,7 @@ export default {
       let closest = null;
       let shortestDistance = 400; // limit the furthest distance
       for (let i = 0; i < allNodePositionsArray.length; i++) {
-        var d = this.pointDistance(clickedPosition, allNodePositionsArray[i]);
+        const d = this.pointDistance(clickedPosition, allNodePositionsArray[i]);
         if (d < shortestDistance) {
           closest = allNodePositionsArray[i];
           shortestDistance = d;
@@ -672,8 +701,8 @@ export default {
       // hide canvas title
     },
     pointDistance(pt1, pt2) {
-      var diffX = pt1.x - pt2.x;
-      var diffY = pt1.y - pt2.y;
+      const diffX = pt1.x - pt2.x;
+      const diffY = pt1.y - pt2.y;
       return Math.sqrt(diffX ** 2 + diffY ** 2);
     },
     calcCourseCanvasBoundaries() {
@@ -684,10 +713,10 @@ export default {
         return [];
       }
 
-      let courseCanvasBoundaries = [];
+      const courseCanvasBoundaries = [];
       // per course/galaxy, determine boundaries ie. highest y, highest x, lowest y, lowest x (this is a boundary we want to hover)
       for (let i = 0; i < courses.length; i++) {
-        let boundary = {
+        const boundary = {
           heightOffset: 0,
           maxWidthOffset: 0,
           top: { x: 0, y: 0 },
@@ -697,7 +726,7 @@ export default {
           centerY: 0,
           centerX: 0,
         };
-        let courseNodes = [];
+        const courseNodes = [];
         // let DOMboundary = {
         //   top: 0,
         //   bottom: 0,
@@ -802,12 +831,12 @@ export default {
         return [];
       }
 
-      let newAllNodes = [];
-      let newRelativeGalaxyBoundaries = [];
+      const newAllNodes = [];
+      const newRelativeGalaxyBoundaries = [];
 
       // canvas / 3
       let galaxyColsCount = 0;
-      const numberOfGalaxiesPerRow = Math.ceil(Math.sqrt(this.courses.length)); // hardcoded num of galaxies in a row
+      const numberOfGalaxiesPerRow = this.isMobile ? 3 : Math.ceil(Math.sqrt(this.courses.length)); // hardcoded num of galaxies in a row
 
       // SCALE calc num of galaxy rows
       // const canvasRowHeight = this.canvasHeight / maxHeight;
@@ -818,7 +847,7 @@ export default {
 
       // loop nodes and add x y offsets
       for (let i = 0; i < courseCanvasBoundaries.length; i++) {
-        let newCourseNodes = [];
+        const newCourseNodes = [];
 
         // console.log(
         //   "positioning course: ==============",
@@ -846,7 +875,7 @@ export default {
         }
 
         for (const node of nodes) {
-          let newNode = {
+          const newNode = {
             ...node,
             courseId: courseCanvasBoundaries[i].id,
             x: currentColWidth + node.x - courseCanvasBoundaries[i].centerX,
@@ -913,16 +942,16 @@ export default {
         // get center point of galaxy
         // thanks to: https://www.quora.com/Geometry-How-do-I-calculate-the-center-of-four-X-Y-coordinates
         // 1) calc centroid triangle 1
-        let centroidTri1X = (relativeTop.x + relativeRight.x + relativeBottom.x) / 3;
-        let centroidTri1Y = (relativeTop.y + relativeRight.y + relativeBottom.y) / 3;
+        const centroidTri1X = (relativeTop.x + relativeRight.x + relativeBottom.x) / 3;
+        const centroidTri1Y = (relativeTop.y + relativeRight.y + relativeBottom.y) / 3;
 
         // 2) calc centroid triangle 2
-        let centroidTri2X = (relativeBottom.x + relativeLeft.x + relativeTop.x) / 3;
-        let centroidTri2Y = (relativeBottom.y + relativeLeft.y + relativeTop.y) / 3;
+        const centroidTri2X = (relativeBottom.x + relativeLeft.x + relativeTop.x) / 3;
+        const centroidTri2Y = (relativeBottom.y + relativeLeft.y + relativeTop.y) / 3;
 
         // 3) mid point of line between centroids
-        let centroidX = (centroidTri1X + centroidTri2X) / 2;
-        let centroidY = (centroidTri1Y + centroidTri2Y) / 2;
+        const centroidX = (centroidTri1X + centroidTri2X) / 2;
+        const centroidY = (centroidTri1Y + centroidTri2Y) / 2;
 
         // debugging NaN on x y for problematic course id
         // if (courseCanvasBoundaries[i].id == "S1NkzgahYdG8IUoptXNF") {
@@ -942,7 +971,7 @@ export default {
         // }
 
         // relative galaxy centers
-        let relativeCenter = {
+        const relativeCenter = {
           course: courseCanvasBoundaries[i].title,
           id: courseCanvasBoundaries[i].id,
           centroidX: centroidX,
@@ -1085,7 +1114,7 @@ export default {
       this.zoomToNodes(this.allNodesForDisplay);
     },
     makeGalaxyLabelsColour(colour) {
-      var options = { ...this.network.options };
+      const options = { ...this.network.options };
       options.nodes.font.color = colour;
       options.nodes.fixed = true;
       this.$refs.network.setOptions(options);

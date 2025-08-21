@@ -272,7 +272,7 @@ export default {
     } else if (this.student) {
       // show navigator other squads on this map
       const cohorts = await fetchCohorts();
-      let cohort = cohorts.find((cohort) =>
+      const cohort = cohorts.find((cohort) =>
         cohort.courses.some((courseId) => courseId === this.courseId),
       );
       this.cohortsInCourse.push(cohort);
@@ -561,17 +561,17 @@ export default {
 
       this.galaxyCompletedDialog = true;
       // confetti fireworks
-      var duration = 30 * 1000;
-      var animationEnd = Date.now() + duration;
-      var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+      const duration = 30 * 1000;
+      const animationEnd = Date.now() + duration;
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
       var interval = setInterval(() => {
-        var timeLeft = animationEnd - Date.now();
+        const timeLeft = animationEnd - Date.now();
 
         if (timeLeft <= 0) {
           return clearInterval(interval);
         }
 
-        var particleCount = 50 * (timeLeft / duration);
+        const particleCount = 50 * (timeLeft / duration);
         // since particles fall down, start a bit higher than random
         confetti({
           ...defaults,

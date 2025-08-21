@@ -58,19 +58,19 @@ export default {
   },
   methods: {
     timePassed(now) {
-      var date = Math.round(now / 1000);
-      var delta = date - this.status?.last_changed?.seconds;
+      const date = Math.round(now / 1000);
+      const delta = date - this.status?.last_changed?.seconds;
 
       this.$emit("emitUpLastActive", delta ? delta : 0);
 
       // calculate (and subtract) whole days
-      var days = Math.floor(delta / 86400);
+      const days = Math.floor(delta / 86400);
 
       // calculate (and subtract) whole hours
-      var hours = Math.floor(delta / 3600);
+      const hours = Math.floor(delta / 3600);
 
       // calculate (and subtract) whole minutes
-      var minutes = Math.floor(delta / 60);
+      const minutes = Math.floor(delta / 60);
 
       if (minutes < 1) return `just now`;
       if (minutes < 60) return `${minutes} mins ago`;

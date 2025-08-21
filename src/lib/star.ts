@@ -5,7 +5,7 @@ export class Star {
   color: string;
   glowRadius: number;
 
-  constructor(x: number, y: number, radius: number, color: string, glowRadius: number = 8) {
+  constructor(x: number, y: number, radius: number, color: string, glowRadius = 8) {
     this.x = x;
     this.y = y;
     this.radius = radius;

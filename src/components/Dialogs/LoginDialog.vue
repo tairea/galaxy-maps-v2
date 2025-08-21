@@ -166,9 +166,9 @@ export default {
   }),
   mounted() {
     // Get the email action to complete.
-    var mode = this.$route.query.mode || null;
-    var actionCode = this.$route.query.oobCode;
-    var auth = firebase.auth();
+    const mode = this.$route.query.mode || null;
+    const actionCode = this.$route.query.oobCode;
+    const auth = firebase.auth();
     console.log("route: ", this.$route);
 
     console.log("mode: ", mode);
@@ -248,7 +248,7 @@ export default {
     },
     handleRecoverEmail(auth, actionCode) {
       console.log("handle recover email");
-      var restoredEmail = null;
+      let restoredEmail = null;
       // Confirm the action code is valid.
       auth
         .checkActionCode(actionCode)
@@ -341,7 +341,7 @@ export default {
         }, 500);
       }
       if (!this.user.data.verified) {
-        var actionCodeSettings = {
+        const actionCodeSettings = {
           // TODO: Update to galaxymaps.io on deployment
           url: window.location.origin + "/login",
           handleCodeInApp: true,

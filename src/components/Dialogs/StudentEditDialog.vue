@@ -1,6 +1,12 @@
 <template>
   <!-- Edit dialog -->
-  <v-dialog v-model="dialog" width="30%" light>
+  <v-dialog
+    v-model="dialog"
+    :width="isMobile ? undefined : '30%'"
+    :fullscreen="isMobile"
+    :transition="isMobile ? 'dialog-bottom-transition' : undefined"
+    light
+  >
     <!-- CREATE BUTTON -->
     <template v-slot:activator="{ on, attrs }">
       <!-- <v-btn
@@ -25,14 +31,23 @@
       >
         <v-icon small> {{ mdiPencil }} </v-icon>
       </v-btn>
-      <v-btn v-else v-bind="attrs" v-on="on" color="baseAccent" class="ma-3" outlined>
+      <v-btn
+        v-else
+        v-bind="attrs"
+        v-on="on"
+        :color="buttonColor"
+        :class="buttonClass || 'ma-3'"
+        :outlined="buttonOutlined"
+        :block="buttonBlock"
+        :large="buttonLarge"
+      >
         <v-icon class="pr-2">{{ mdiPencil }}</v-icon>
-        edit account
+        Edit Account
       </v-btn>
     </template>
 
     <!-- DIALOG (TODO: make as a component)-->
-    <div class="create-dialog">
+    <div class="create-dialog" :class="{ 'mobile-dialog': isMobile }">
       <!-- HEADER -->
       <div class="dialog-header">
         <div class="d-flex justify-space-between mb-4">
@@ -273,6 +288,26 @@ export default {
       type: Object,
       default: () => ({}),
     },
+    buttonBlock: {
+      type: Boolean,
+      default: false,
+    },
+    buttonLarge: {
+      type: Boolean,
+      default: false,
+    },
+    buttonOutlined: {
+      type: Boolean,
+      default: true,
+    },
+    buttonColor: {
+      type: String,
+      default: "baseAccent",
+    },
+    buttonClass: {
+      type: String,
+      default: "",
+    },
   },
   components: {},
   mounted() {
@@ -284,6 +319,9 @@ export default {
   },
   computed: {
     ...mapState(useRootStore, ["person"]),
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
+    },
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -422,7 +460,7 @@ export default {
         .auth()
         .currentUser.updateEmail(this.profile.email)
         .then(() => {
-          var actionCodeSettings = {
+          const actionCodeSettings = {
             url: window.location.origin + "/login",
             handleCodeInApp: true,
           };
@@ -566,6 +604,23 @@ export default {
         }
       }
     }
+  }
+}
+
+// Mobile-specific styles
+.mobile-dialog {
+  height: 100vh;
+  overflow-y: auto;
+
+  .dialog-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: var(--v-background-base);
+  }
+
+  .create-dialog-content {
+    padding-bottom: 80px; // Extra space for mobile scrolling
   }
 }
 </style>

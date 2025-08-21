@@ -189,7 +189,7 @@ export default {
       }
     },
     sortedStudents() {
-      if (this.sortBy !== 'lastActive') {
+      if (this.sortBy !== "lastActive") {
         return this.students;
       }
 
@@ -197,13 +197,13 @@ export default {
         // Always put undefined values at the bottom regardless of sort direction
         if (a.lastActive === undefined) return 1;
         if (b.lastActive === undefined) return -1;
-        
+
         // For defined values, sort normally
-        return this.sortDesc 
-          ? a.lastActive - b.lastActive  // Descending: oldest first
+        return this.sortDesc
+          ? a.lastActive - b.lastActive // Descending: oldest first
           : b.lastActive - a.lastActive; // Ascending: most recent first
       });
-    }
+    },
   },
   methods: {
     // show/hide student details

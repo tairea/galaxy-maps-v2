@@ -189,7 +189,7 @@ a {
   &::-webkit-scrollbar-thumb {
     border-radius: 4px;
     background-color: var(--v-missionAccent-base);
-    -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+    -webkit-box-shadow: 0 0 1px rgba(255, 255, 255, 0.5);
   }
   -webkit-overlay-scrollbars: touch;
   overlay: auto;

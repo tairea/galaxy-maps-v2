@@ -363,12 +363,12 @@ export default {
     ...mapActions(useRootStore, ["setCurrentCourseId", "setSnackbar"]),
     getTopicsWithoutTasks() {
       // copy nodes
-      let splicedNodes = [...this.currentCourseNodes];
+      const splicedNodes = [...this.currentCourseNodes];
 
       // loop tasks
       for (const task of this.courseTasks) {
         // get index of nodes that have tasks
-        var index = splicedNodes.findIndex(function (node) {
+        const index = splicedNodes.findIndex(function (node) {
           return node.id === task.topicId;
         });
         // remove topics that have tasks
@@ -398,7 +398,7 @@ export default {
     // Public course getting submitted for review (by moderators)
     async submitCourse() {
       this.loading = true;
-      let course = {
+      const course = {
         ...this.course,
         visibility: this.visibility,
       };
@@ -436,7 +436,7 @@ export default {
       // if no cohort, create a default cohort (and "presentation" maps should not have cohorts)
       if (!course.cohort && !this.presentationOnly) {
         // this creates a default cohort and sends an email to publisher
-        let cohort = {
+        const cohort = {
           name: course.title + " Squad",
           description: "This is the default Squad for " + course.title,
           organisation: "",
@@ -519,7 +519,7 @@ export default {
     },
 
     sendNewSubmissionEmail(course) {
-      let data = {
+      const data = {
         author: course.mappedBy.name,
         title: course.title,
         id: course.id,
@@ -530,7 +530,7 @@ export default {
 
     sendCoursePublishedEmail(person, course) {
       console.log("sendCoursePublishedEmail person: ", person, " course: ", course);
-      let data = {
+      const data = {
         email: person.email,
         name: person.firstName + " " + person.lastName,
         course: course.title ? course.title : course.name, //  course.title is used in the case of a course & course.name is used in the case of a cohort
@@ -541,10 +541,12 @@ export default {
 
     sortNodes() {
       // this mounted block orders currentCourseNodes by timestamp. this is for easier selecting of an intro node
-      let timeCreatedArrs = [];
+      const timeCreatedArrs = [];
 
-      for (let index in this.currentCourseNodes) {
-        let timeCreatedNode = this.currentCourseNodes[index].hasOwnProperty("topicCreatedTimestamp")
+      for (const index in this.currentCourseNodes) {
+        const timeCreatedNode = this.currentCourseNodes[index].hasOwnProperty(
+          "topicCreatedTimestamp",
+        )
           ? this.currentCourseNodes[index].topicCreatedTimestamp.seconds
           : this.currentCourseNodes[index].nodeCreatedTimestamp.seconds;
 
@@ -559,15 +561,15 @@ export default {
       // NOTE: the last int in the arr is the largest
       // console.log("sorted arr", timeCreatedArrs);
 
-      for (let a in timeCreatedArrs) {
+      for (const a in timeCreatedArrs) {
         // loop over the ordered time array
-        let arrTime = timeCreatedArrs[a];
-        for (let b in timeCreatedArrs) {
-          let timeStamp = this.currentCourseNodes[b].hasOwnProperty("topicCreatedTimestamp")
+        const arrTime = timeCreatedArrs[a];
+        for (const b in timeCreatedArrs) {
+          const timeStamp = this.currentCourseNodes[b].hasOwnProperty("topicCreatedTimestamp")
             ? this.currentCourseNodes[b].topicCreatedTimestamp.seconds
             : this.currentCourseNodes[b].nodeCreatedTimestamp.seconds;
           if (arrTime == timeStamp) {
-            let node = this.currentCourseNodes[b];
+            const node = this.currentCourseNodes[b];
             this.sortedObjArr.push(node);
           }
         }

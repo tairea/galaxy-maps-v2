@@ -200,15 +200,15 @@ export default {
     },
 
     sortBy(key) {
-      var vm = this;
+      const vm = this;
       vm.sortKey = key;
       vm.sortOrders[key] = vm.sortOrders[key] * -1;
     },
     csvJSON(csv) {
-      var vm = this;
-      var lines = csv.split("\n");
-      var result = [];
-      var headers = lines[0].split(",");
+      const vm = this;
+      const lines = csv.split("\n");
+      const result = [];
+      const headers = lines[0].split(",");
       vm.parse_header = lines[0].split(",");
       // camelize headers
       vm.parse_header = vm.parse_header.map((header) => {
@@ -221,8 +221,8 @@ export default {
       lines.map((line, indexLine) => {
         if (indexLine < 1) return; // Jump header line
 
-        var obj = {};
-        var currentline = line.split(",");
+        const obj = {};
+        const currentline = line.split(",");
         // currentline[currentline.length - 1] = currentline[currentline.length - 1].trim()
 
         headers.map((header, indexHeader) => {
@@ -240,7 +240,7 @@ export default {
         result.push(obj);
       });
 
-      var students = result.filter((student) => student.firstName);
+      const students = result.filter((student) => student.firstName);
 
       return students; // JavaScript object
     },
@@ -249,14 +249,14 @@ export default {
       this.showTable = true;
       this.statusMessage = "Processing CSV file...";
       console.log("loaded", e);
-      var vm = this;
+      const vm = this;
       if (window.FileReader) {
-        var reader = new FileReader();
+        const reader = new FileReader();
         reader.readAsText(e);
         // Handle errors load
         reader.onload = function (event) {
           event.target.result;
-          var csv = event.target.result;
+          const csv = event.target.result;
           vm.parse_csv = vm.csvJSON(csv);
           vm.statusMessage = `CSV processed: ${vm.parse_csv.length} students ready for import`;
           // Clear status message after a moment
@@ -287,8 +287,8 @@ export default {
       this.statusMessage = "";
     },
     downloadCsv() {
-      var csv = this.csvColumns.join(",") + "\n";
-      var hiddenElement = document.createElement("a");
+      const csv = this.csvColumns.join(",") + "\n";
+      const hiddenElement = document.createElement("a");
       hiddenElement.href = "data:text/csv;charset=utf-8," + encodeURI(csv);
       hiddenElement.target = "_blank";
       hiddenElement.download = "navigators-list-template.csv";

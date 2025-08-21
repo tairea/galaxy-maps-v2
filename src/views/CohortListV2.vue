@@ -431,7 +431,7 @@ export default {
         this.unselectedCohorts = this.diffTwoArraysOfObjects(this.cohorts, this.selectedCohorts);
 
         // add dim to all cohort els
-        for (var y = 0; y < cohortEls.length; y++) {
+        for (let y = 0; y < cohortEls.length; y++) {
           cohortEls[y].$el.classList.add("dim");
         }
         //remove dim for selected cohort els

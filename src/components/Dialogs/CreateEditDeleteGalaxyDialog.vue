@@ -2,7 +2,15 @@
   <v-container>
     <v-row class="text-center" align="center">
       <v-col cols="12" class="pa-0">
-        <v-dialog v-model="dialog" width="50%" max-width="800px" light>
+        <v-dialog
+          v-model="dialog"
+          :width="$vuetify.breakpoint.mdAndUp ? '50%' : '95%'"
+          :max-width="$vuetify.breakpoint.mdAndUp ? '800px' : '95vw'"
+          :min-height="$vuetify.breakpoint.mdAndUp ? '400px' : 'auto'"
+          light
+          @click:outside="handleDialogClose"
+          @input="handleDialogInput"
+        >
           <!-- CREATE BUTTON -->
           <template v-if="edit" v-slot:activator="{ on, attrs }">
             <v-btn
@@ -17,7 +25,13 @@
               <v-icon class="pr-2" small> {{ mdiPencil }} </v-icon>
               edit galaxy
             </v-btn>
-            <v-btn v-else outlined color="baseAccent" v-bind="attrs" v-on="on">
+            <v-btn
+              v-else
+              outlined
+              color="baseAccent"
+              v-bind="attrs"
+              @click="handleCreateButtonClick"
+            >
               <v-icon left> {{ mdiPlus }} </v-icon>
               CREATE GALAXY
             </v-btn>
@@ -52,10 +66,11 @@
             <!-- Choose creation mode buttons -->
             <div
               class="creation-mode-options my-12"
+              :class="{ 'mobile-layout': $vuetify.breakpoint.smAndDown }"
               v-if="!edit && !creationMode && isPersonLoaded"
             >
               <!-- AI MODE -->
-              <v-tooltip v-if="!edit" bottom>
+              <v-tooltip v-if="!edit && $vuetify.breakpoint.mdAndUp" bottom>
                 <template v-slot:activator="{ on, attrs }">
                   <div
                     v-bind="attrs"
@@ -76,6 +91,22 @@
                 <span>Try this new beta feature</span>
               </v-tooltip>
 
+              <!-- AI MODE (Mobile - No Tooltip) -->
+              <div
+                v-if="!edit && $vuetify.breakpoint.smAndDown"
+                class="creation-mode-option galaxy-border"
+                :class="{ selected: creationMode === 'ai' }"
+                @click="openAIDialog"
+              >
+                <div class="creation-mode-icon">
+                  <v-icon color="galaxyAccent">{{ mdiRobotExcited }}</v-icon>
+                </div>
+                <div class="creation-mode-label galaxyAccent--text">Create with AI</div>
+                <!-- <div class="creation-mode-description">
+                  Let AI help you design your galaxy map
+                </div> -->
+              </div>
+
               <!-- MANUAL MODE -->
               <div
                 class="creation-mode-option base-border"
@@ -93,7 +124,8 @@
             <!-- LEFT SIDE -->
             <div
               class="left-side"
-              :style="course.title ? 'width:50%' : 'width:100%'"
+              :class="{ 'mobile-layout': $vuetify.breakpoint.smAndDown }"
+              :style="course.title && $vuetify.breakpoint.mdAndUp ? 'width:50%' : 'width:100%'"
               style="margin-top: 10px"
               v-if="shouldShowForm"
             >
@@ -111,6 +143,7 @@
                   label="Galaxy name"
                   @input="validateCourseTitle"
                   :rules="[(v) => !!v || 'Galaxy name is required']"
+                  :dense="$vuetify.breakpoint.smAndDown"
                 ></v-text-field>
 
                 <!-- DESCRIPTION -->
@@ -123,9 +156,10 @@
                   color="missionAccent"
                   auto-grow
                   clearable
-                  rows="1"
+                  :rows="$vuetify.breakpoint.smAndDown ? 4 : 1"
                   v-model="course.description"
                   label="Galaxy description"
+                  :dense="$vuetify.breakpoint.smAndDown"
                 ></v-textarea>
 
                 <!-- IMAGE UPLOAD -->
@@ -143,11 +177,13 @@
                   @change="storeImage()"
                   prepend-icon=""
                   hide-details
+                  :dense="$vuetify.breakpoint.smAndDown"
+                  :class="{ 'mb-6': $vuetify.breakpoint.smAndDown }"
                 ></v-file-input>
                 <v-progress-linear
                   color="missionAccent"
                   :value="percentageGalaxy"
-                  class=""
+                  :class="{ 'mb-4': $vuetify.breakpoint.smAndDown }"
                 ></v-progress-linear>
 
                 <!-- ===== Collaborators field. This allows adding multiple collaborators to the galaxy map ==== -->
@@ -280,7 +316,8 @@
             <div
               v-if="shouldShowForm"
               class="right-side"
-              :style="course.title ? 'width:50%' : 'width:0%'"
+              :class="{ 'mobile-layout': $vuetify.breakpoint.smAndDown }"
+              :style="course.title && $vuetify.breakpoint.mdAndUp ? 'width:50%' : 'width:100%'"
             >
               <!-- Galaxy info panel -->
               <div id="galaxy-info" v-if="course.title" class="mb-2">
@@ -336,7 +373,11 @@
 
             <!-- End of right-side -->
             <!-- ACTION BUTTONS -->
-            <div v-if="shouldShowForm" class="action-buttons">
+            <div
+              v-if="shouldShowForm"
+              class="action-buttons"
+              :class="{ 'mobile-layout': $vuetify.breakpoint.smAndDown }"
+            >
               <!-- PUBLISH -->
               <!-- <div
                 style="width: 200px"
@@ -975,12 +1016,12 @@ export default {
       const courseOrTemp =
         this.currentCourseId || (this.person && this.person.id ? `temp-${this.person.id}` : "temp");
       const unique = Date.now();
-      var storageRef = storage.ref(
+      const storageRef = storage.ref(
         "course-images/" + courseOrTemp + "-" + unique + "-" + this.uploadedImage.name,
       );
 
       // upload a file
-      var uploadTask = storageRef.put(this.uploadedImage);
+      const uploadTask = storageRef.put(this.uploadedImage);
 
       // update progress bar
       uploadTask.on(
@@ -1008,12 +1049,12 @@ export default {
     storeAuthorImage() {
       this.disabled = true;
       // ceate a storage ref
-      var storageRef = storage.ref(
+      const storageRef = storage.ref(
         "author-images/" + this.course.author + "-" + this.authorImage.name,
       );
 
       // upload a file
-      var uploadTask = storageRef.put(this.authorImage);
+      const uploadTask = storageRef.put(this.authorImage);
 
       // update progress bar
       uploadTask.on(
@@ -1087,7 +1128,7 @@ export default {
         const pathFromUrl = decodeURIComponent(imageUrl.pathname.split("/o/")[1].split("?")[0]);
 
         // Create a reference using the full path
-        var storageRef = storage.ref(pathFromUrl);
+        const storageRef = storage.ref(pathFromUrl);
 
         // Delete the file
         await storageRef.delete();
@@ -1162,7 +1203,7 @@ export default {
         throw new Error("Course title cannot be empty");
       }
 
-      let data = {
+      const data = {
         email: email,
         name: name,
         course: courseTitle.trim(),
@@ -1175,7 +1216,7 @@ export default {
     },
     removeCollaborator(item) {
       // Also remove from collaborators array for autocomplete display
-      let collaboratorIndex = this.collaborators.findIndex(
+      const collaboratorIndex = this.collaborators.findIndex(
         (collaborator) => collaborator.id === item.id,
       );
       if (collaboratorIndex >= 0) this.collaborators.splice(collaboratorIndex, 1);
@@ -1247,7 +1288,7 @@ export default {
       });
     },
     sendCollaboratorAddedEmail(email, name, courseTitle, inviterName, courseId) {
-      let data = {
+      const data = {
         collaboratorEmail: email,
         collaboratorName: name,
         galaxyTitle: courseTitle,
@@ -1367,6 +1408,44 @@ export default {
         status: "drafting",
       };
     },
+    handleCreateButtonClick() {
+      // Toggle dialog state
+      this.dialog = !this.dialog;
+
+      // If opening dialog, reset creation mode and course data
+      if (this.dialog) {
+        this.creationMode = "";
+        this.resetCourseData();
+      }
+
+      console.log("Dialog toggled to:", this.dialog);
+    },
+
+    handleDialogClose() {
+      // This method is called when clicking outside the dialog
+      this.dialog = false;
+
+      // Sync with parent component
+      this.$emit("close");
+
+      // Reset creation mode when closing
+      this.creationMode = "";
+
+      console.log("Dialog closed by outside click");
+    },
+
+    handleDialogInput(value) {
+      // This method is called whenever the dialog's v-model changes
+      console.log("Dialog input event:", value);
+
+      // Sync with parent component
+      this.$emit("close");
+
+      // If closing dialog, reset creation mode
+      if (!value) {
+        this.creationMode = "";
+      }
+    },
   },
 };
 </script>
@@ -1386,6 +1465,7 @@ export default {
   // flex-direction: column;
   flex-wrap: wrap;
   overflow-x: hidden;
+  min-height: 400px;
 
   .dialog-header {
     width: 100%;
@@ -1625,5 +1705,187 @@ export default {
   width: 100%;
   max-width: 500px;
   text-align: center;
+}
+
+// Mobile-specific improvements
+.mobile-layout {
+  width: 100% !important;
+}
+
+@media (max-width: 768px) {
+  .create-dialog {
+    flex-direction: column;
+    min-height: auto;
+    padding: 0;
+
+    .dialog-header {
+      padding: 15px;
+
+      .dialog-title {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+      }
+
+      .dialog-description {
+        font-size: 0.65rem;
+        line-height: 1.4;
+      }
+    }
+
+    .left-side {
+      width: 100% !important;
+      margin-top: 0 !important;
+
+      .create-dialog-content {
+        padding: 15px;
+        min-height: auto;
+
+        .input-field {
+          font-size: 0.9rem;
+          margin-bottom: 15px;
+        }
+      }
+    }
+
+    .right-side {
+      width: 100% !important;
+      margin-top: 0;
+
+      #galaxy-info {
+        width: 100%;
+        margin: 15px 0;
+        padding: 15px;
+
+        .galaxy-title {
+          font-size: 1.1rem;
+          margin: 15px 0 5px 0;
+        }
+
+        .galaxy-description {
+          font-size: 0.85rem;
+        }
+      }
+    }
+
+    .action-buttons {
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+
+      .v-btn {
+        width: 100%;
+        max-width: 300px;
+        margin: 0 !important;
+      }
+    }
+  }
+
+  .creation-mode-options {
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+    margin: 15px 0;
+
+    .creation-mode-option {
+      width: 200px;
+      padding: 40px 20px;
+
+      .creation-mode-icon {
+        font-size: 2rem;
+        margin-bottom: 10px;
+
+        .v-icon {
+          font-size: 2rem;
+        }
+      }
+
+      .creation-mode-label {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .create-dialog-content {
+    .input-field {
+      margin-bottom: 15px;
+    }
+  }
+}
+
+// Extra small mobile devices
+@media (max-width: 480px) {
+  .create-dialog {
+    .dialog-header {
+      padding: 12px;
+
+      .dialog-title {
+        font-size: 1rem;
+      }
+
+      .dialog-description {
+        font-size: 0.6rem;
+      }
+    }
+
+    .left-side .create-dialog-content {
+      padding: 12px;
+    }
+
+    .right-side #galaxy-info {
+      padding: 12px;
+      margin: 12px 0;
+    }
+
+    .action-buttons {
+      padding: 12px;
+      align-items: center;
+
+      .v-btn {
+        max-width: 280px;
+      }
+    }
+  }
+
+  .creation-mode-options .creation-mode-option {
+    width: 180px;
+    padding: 30px 15px;
+
+    .creation-mode-icon {
+      font-size: 1.8rem;
+
+      .v-icon {
+        font-size: 1.8rem;
+      }
+    }
+
+    .creation-mode-label {
+      font-size: 0.8rem;
+    }
+  }
+}
+
+// Touch-friendly improvements for mobile
+@media (max-width: 768px) {
+  .input-field {
+    .v-input__control {
+      min-height: 44px; // Minimum touch target size
+    }
+  }
+
+  .v-btn {
+    min-height: 44px; // Minimum touch target size
+    font-size: 0.9rem;
+  }
+
+  .creation-mode-option {
+    min-height: 120px; // Ensure touch targets are large enough
+    cursor: pointer;
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
 }
 </style>
