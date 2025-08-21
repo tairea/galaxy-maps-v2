@@ -19,8 +19,15 @@
 
     <div v-else class="d-flex">
       <!-- <div class="left-section" :class="{ hide: hideLeftPanelsFlag }"> -->
-      <div class="left-section" data-v-step="1">
-        <GalaxyInfo :course="boundCourse" :teacher="teacher" :draft="draft" />
+      <div class="left-section" :class="{ minimized: isGalaxyInfoMinimized }" data-v-step="1">
+        <div class="galaxy-info-wrapper" :class="{ minimized: isGalaxyInfoMinimized }">
+          <GalaxyInfo
+            :course="boundCourse"
+            :teacher="teacher"
+            :draft="draft"
+            @minimised="handleMinimized"
+          />
+        </div>
         <div class="mt-6">
           <PublishGalaxy v-if="showPublish" :course="boundCourse" :courseTasks="courseTasks" />
         </div>
@@ -33,7 +40,7 @@
           :teacher="teacher"
         />
       </div>
-      <div id="main-section">
+      <div id="main-section" :class="{ minimized: isGalaxyInfoMinimized }">
         <!-- Map Buttons -->
         <GalaxyMapButtons
           class="mt-8"
@@ -244,6 +251,7 @@ export default {
       topicError: null,
       showMissions: false, // Add missions toggle state
       loading: false,
+      isGalaxyInfoMinimized: false,
     };
   },
   watch: {
@@ -634,6 +642,9 @@ export default {
       console.log("toggleShowMissions");
       this.showMissions = !this.showMissions;
     },
+    handleMinimized(minimized) {
+      this.isGalaxyInfoMinimized = minimized;
+    },
   },
 };
 </script>
@@ -682,6 +693,40 @@ export default {
   > * {
     pointer-events: auto;
   }
+
+  &.minimized {
+    width: 200px; // Keep width for the minimized ribbon
+    padding: 0px 0px 50px 0px; // Remove left padding when minimized
+
+    .galaxy-info-wrapper {
+      position: fixed;
+      top: -31px; // Move above viewport to show only ribbon
+      left: 0;
+      z-index: 10;
+      width: 200px;
+
+      // Ensure no borders or backgrounds are visible when minimized
+      ::v-deep .galaxy-border,
+      ::v-deep .draft-border {
+        border: none !important;
+        background: transparent !important;
+      }
+    }
+  }
+}
+
+.galaxy-info-wrapper {
+  width: 100%;
+  transition: all 0.3s ease-in-out;
+  position: relative;
+
+  &.minimized {
+    position: fixed;
+    top: -31px;
+    left: 0;
+    z-index: 10;
+    width: 200px;
+  }
 }
 
 .hide {
@@ -696,15 +741,22 @@ export default {
 
 #main-section {
   position: absolute;
-  width: 100vw;
-  margin: 0px;
+  width: calc(100vw - 200px); // Adjust for left section
+  margin: 0px 0px 0px 200px; // Left margin for left section
   height: 100%;
   display: flex;
   justify-content: flex-start;
   align-items: center;
   flex-direction: column;
   z-index: 1;
+  transition: all 0.3s; // Add smooth transition
   // border: 1px solid pink;
+
+  // Add minimized state styles
+  &.minimized {
+    width: 100vw; // Full viewport width
+    margin: 0px; // No left margin
+  }
 
   .ui-message-wrap {
     // border: 1px solid var(--v-missionAccent-base);
