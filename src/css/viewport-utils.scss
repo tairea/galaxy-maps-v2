@@ -1,0 +1,48 @@
+// Viewport height utilities using the --vh custom property
+// These classes automatically work with the viewport plugin
+
+.vh-100 {
+  height: 100vh; /* Fallback */
+  height: calc(var(--vh, 1vh) * 100);
+}
+
+.vh-90 {
+  height: 90vh; /* Fallback */
+  height: calc(var(--vh, 1vh) * 90);
+}
+
+.vh-80 {
+  height: 80vh; /* Fallback */
+  height: calc(var(--vh, 1vh) * 80);
+}
+
+.vh-75 {
+  height: 75vh; /* Fallback */
+  height: calc(var(--vh, 1vh) * 75);
+}
+
+.vh-50 {
+  height: 50vh; /* Fallback */
+  height: calc(var(--vh, 1vh) * 50);
+}
+
+.vh-25 {
+  height: 25vh; /* Fallback */
+  height: calc(var(--vh, 1vh) * 25);
+}
+
+// Min height utilities
+.min-vh-100 {
+  min-height: 100vh; /* Fallback */
+  min-height: calc(var(--vh, 1vh) * 100);
+}
+
+.min-vh-75 {
+  min-height: 75vh; /* Fallback */
+  min-height: calc(var(--vh, 1vh) * 75);
+}
+
+.min-vh-50 {
+  min-height: 50vh; /* Fallback */
+  min-height: calc(var(--vh, 1vh) * 50);
+}

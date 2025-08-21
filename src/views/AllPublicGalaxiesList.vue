@@ -20,9 +20,9 @@
     />
     <div class="flexContainer">
       <Galaxies
-        v-if="validSlug && courses && courses.length > 0"
+        v-if="validSlug"
         ref="galaxyMap"
-        :courses="courses"
+        :courses="courses || []"
         :courseEdgesMap="courseEdgesMap"
         :courseNodesMap="courseNodesMap"
         :coursesActivity="coursesActivity"
@@ -33,9 +33,6 @@
       />
       <div v-if="!validSlug">
         <p class="overline missionAccent--text">Error. destination doesn't exist</p>
-      </div>
-      <div v-else-if="!courses || courses.length === 0" class="text-center">
-        <p class="overline">No public galaxies found</p>
       </div>
     </div>
 
@@ -166,6 +163,7 @@ export default {
       this.loadCoursesActivity(this.user.data.id);
     }
   },
+
   data() {
     return {
       mdiPlus,
@@ -222,7 +220,8 @@ export default {
 
 <style lang="scss" scoped>
 .fullHeight {
-  height: 100vh;
+  height: 100vh; /* Fallback */
+  height: calc(var(--vh, 1vh) * 100);
   overflow: hidden;
 }
 
@@ -236,11 +235,17 @@ export default {
 }
 
 .buttons {
-  position: absolute;
+  position: fixed;
   bottom: 30px;
   left: 50%;
   transform: translate(-50%, 0%);
   display: flex;
+  z-index: 300;
+
+  // Mobile-specific bottom positioning
+  @media (max-width: 959px) {
+    bottom: 10vh;
+  }
 
   .createButton {
     transition: all 0.3s;

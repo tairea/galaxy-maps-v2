@@ -16,10 +16,12 @@ import "vue-tour/dist/vue-tour.css";
 import useGalaxyListViewStore from "./store/galaxyListView";
 
 import { createOpenAIPlugin } from "./plugins/openai";
+import viewportPlugin from "./plugins/viewport";
 
 Vue.use(PiniaVuePlugin);
 Vue.use(VueRouter);
 Vue.use(VueTour);
+Vue.use(viewportPlugin);
 
 Vue.config.productionTip = false;
 

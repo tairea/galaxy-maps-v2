@@ -1,6 +1,6 @@
 <template>
   <div class="login">
-    <p class="gm-title">GALAXY MAPS</p>
+    <p class="gm-title" :style="{ fontSize: isMobile ? '10vw' : '5vw' }">GALAXY MAPS</p>
     <SetInitialPasswordDialog
       ref="initialPassDialog"
       v-if="showInitialPasswordDialog"
@@ -144,6 +144,9 @@ export default {
   },
   computed: {
     ...mapState(useRootStore, ["person", "user"]),
+    isMobile() {
+      return this.$vuetify.breakpoint.mobile;
+    },
   },
   methods: {
     ...mapActions(useRootStore, ["setSnackbar"]),
@@ -384,7 +387,7 @@ export default {
 
 .gm-title {
   font-family: "Genos", sans-serif;
-  font-size: 5vw;
+  // font-size: 5vw; inline on isMobile condition
   color: var(--v-baseAccent-base);
   letter-spacing: 15px;
   z-index: 1;
