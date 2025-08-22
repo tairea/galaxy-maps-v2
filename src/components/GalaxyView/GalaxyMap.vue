@@ -54,6 +54,7 @@ export default {
   data() {
     return {
       loading: true,
+      initialDataLoading: true, // Add flag to track initial data loading
       needsCentering: false,
       active: false,
       addingNode: false,
@@ -192,6 +193,16 @@ export default {
         this.makePlanetsColour("white");
         this.makeStarsColour("#FFD700"); // Gold for dark mode
       }
+    },
+    currentCourseId: {
+      handler(newCourseId, oldCourseId) {
+        // Reset initial data loading flag when switching courses
+        if (newCourseId && newCourseId !== oldCourseId) {
+          this.initialDataLoading = true;
+          console.log(`Course changed from ${oldCourseId} to ${newCourseId}, initialDataLoading reset to true`);
+        }
+      },
+      immediate: false
     },
   },
   computed: {
@@ -394,6 +405,15 @@ export default {
         console.log("Galaxy Map Complete. Well done!");
         this.$emit("galaxyCompleted");
       }
+
+      // Mark initial data loading as complete
+      this.initialDataLoading = false;
+      console.log("Initial data loading completed, initialDataLoading set to false");
+    },
+    resetInitialDataLoading() {
+      // Method to manually reset the initial data loading flag
+      this.initialDataLoading = true;
+      console.log("Initial data loading flag reset to true");
     },
     networkUpdated() {
       if (this.needsCentering === true) {
@@ -483,6 +503,18 @@ export default {
       this.drag = false;
     },
     addNode(data) {
+      // Skip if this is during initial data loading
+      if (this.initialDataLoading) {
+        console.log("Skipping addNode during initial data loading");
+        return;
+      }
+
+      // Skip if not in node adding mode
+      if (!this.addingNode) {
+        console.log("Skipping addNode - not in node adding mode");
+        return;
+      }
+
       // if (!this.active) return;
       const newNodeId = data.properties.items[0];
       const selected = this.$refs.network.getSelection();
@@ -498,6 +530,19 @@ export default {
       this.addingNode = false;
     },
     addEdge(data) {
+      // Skip if this is during initial data loading
+      if (this.initialDataLoading) {
+        console.log("Skipping addEdge during initial data loading");
+        return;
+      }
+
+      // Skip if not in edge adding mode
+      if (!this.addingEdge) {
+        console.log("Skipping addEdge - not in edge adding mode");
+        return;
+      }
+
+      console.log("adding edge")
       this.$emit("setUiMessage", "");
       const newEdgeData = this.$refs.network.getEdge(data.properties.items[0]);
       if (newEdgeData.from === newEdgeData.to) {
@@ -890,6 +935,7 @@ export default {
       if (this.student && this.personsCourseTasks.length === 0) {
         await this.getPersonsCourseTasks();
       } else if (!this.student && this.courseTasks.length === 0) {
+        console.log("getting course tasks");
         await this.getCourseTasks(this.currentCourseId);
       }
 

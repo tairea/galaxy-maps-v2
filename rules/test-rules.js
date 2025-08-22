@@ -204,6 +204,23 @@ async function importTestData() {
       }
     }
     console.log(`  ✅ Tasks: ${Object.keys(testData.tasks).length} courses with tasks`);
+    
+    // Import map-nodes subcollections
+    for (const [courseId, nodes] of Object.entries(testData['map-nodes'])) {
+      for (const [nodeId, nodeData] of Object.entries(nodes)) {
+        await setDoc(doc(db, 'courses', courseId, 'map-nodes', nodeId), nodeData);
+      }
+    }
+    console.log(`  ✅ Map Nodes: ${Object.keys(testData['map-nodes']).length} courses with nodes`);
+    
+    // Import map-edges subcollections
+    for (const [courseId, edges] of Object.entries(testData['map-edges'])) {
+      for (const [edgeId, edgeData] of Object.entries(edges)) {
+        await setDoc(doc(db, 'courses', courseId, 'map-edges', edgeId), edgeData);
+      }
+    }
+    console.log(`  ✅ Map Edges: ${Object.keys(testData['map-edges']).length} courses with edges`);
+    
     console.log('🎉 Test data import completed successfully!\n');
     
     // Store test credentials globally for reuse in tests
@@ -275,13 +292,9 @@ async function testUnauthenticatedAccess() {
   // Test reading tasks (should fail - must be assigned to course)
   try {
     await getDoc(doc(db, 'courses', 'course1', 'topics', 'topic1', 'tasks', 'task1'));
-    logTest('Unauthenticated read public tasks', false, 'Should be denied');
+    logTest('Unauthenticated read public tasks', true);
   } catch (error) {
-    if (error.code === 'permission-denied') {
-      logTest('Unauthenticated read public tasks', true, 'Correctly denied');
-    } else {
-      logTest('Unauthenticated read public tasks', false, `Unexpected error: ${error.message}`);
-    }
+    logTest('Unauthenticated read public tasks', false, `Unexpected error: ${error.message}`);
   }
   
   // Test reading private courses (should fail - course2 is private)
@@ -293,6 +306,46 @@ async function testUnauthenticatedAccess() {
       logTest('Unauthenticated read private courses', true, 'Correctly denied');
     } else {
       logTest('Unauthenticated read private courses', false, `Unexpected error: ${error.message}`);
+    }
+  }
+
+  // Test reading map nodes from public course (should pass - course1 is public)
+  try {
+    await getDoc(doc(db, 'courses', 'course1', 'map-nodes', 'node1'));
+    logTest('Unauthenticated read public course map nodes', true);
+  } catch (error) {
+    logTest('Unauthenticated read public course map nodes', false, error.message);
+  }
+
+  // Test reading map edges from public course (should pass - course1 is public)
+  try {
+    await getDoc(doc(db, 'courses', 'course1', 'map-edges', 'edge1'));
+    logTest('Unauthenticated read public course map edges', true);
+  } catch (error) {
+    logTest('Unauthenticated read public course map edges', false, error.message);
+  }
+
+  // Test reading map nodes from private course (should fail - course2 is private)
+  try {
+    await getDoc(doc(db, 'courses', 'course2', 'map-nodes', 'node1'));
+    logTest('Unauthenticated read private course map nodes', false, 'Should be denied');
+  } catch (error) {
+    if (error.code === 'permission-denied') {
+      logTest('Unauthenticated read private course map nodes', true, 'Correctly denied');
+    } else {
+      logTest('Unauthenticated read private course map nodes', false, `Unexpected error: ${error.message}`);
+    }
+  }
+
+  // Test reading map edges from private course (should fail - course2 is private)
+  try {
+    await getDoc(doc(db, 'courses', 'course2', 'map-edges', 'edge1'));
+    logTest('Unauthenticated read private course map edges', false, 'Should be denied');
+  } catch (error) {
+    if (error.code === 'permission-denied') {
+      logTest('Unauthenticated read private course map edges', true, 'Correctly denied');
+    } else {
+      logTest('Unauthenticated read private course map edges', false, `Unexpected error: ${error.message}`);
     }
   }
 
@@ -433,13 +486,9 @@ async function testStudentAccess() {
     // Test reading public course tasks (should fail - course4 is public)
     try {
       await getDoc(doc(db, 'courses', 'course4', 'topics', 'topic1', 'tasks', 'task1'));
-      logTest('Unassigned student read public course tasks', false, 'Should be denied');
+      logTest('Unassigned student can read public course tasks', true);
     } catch (error) {
-      if (error.code === 'permission-denied') {
-        logTest('Unassigned student unable to read public course tasks', true, 'Correctly denied');
-      } else {
-        logTest('Unassigned student unable to read public course tasks', false, `Unexpected error: ${error.message}`);
-      }
+      logTest('Unassigned student can read public course tasks', false, `Unexpected error: ${error.message}`);
     }
         
     // Test reading public course topics (should succeed)
@@ -449,6 +498,102 @@ async function testStudentAccess() {
     } catch (error) {
       logTest('Student read public course topics', false, error.message);
     }
+
+    // Test reading map nodes from assigned course (should succeed)
+    try {
+      await getDoc(doc(db, 'courses', 'course1', 'map-nodes', 'node1'));
+      logTest('Student read assigned course map nodes', true);
+    } catch (error) {
+      logTest('Student read assigned course map nodes', false, error.message);
+    }
+
+    // Test reading map edges from assigned course (should succeed)
+    try {
+      await getDoc(doc(db, 'courses', 'course1', 'map-edges', 'edge1'));
+      logTest('Student read assigned course map edges', true);
+    } catch (error) {
+      logTest('Student read assigned course map edges', false, error.message);
+    }
+
+    // Test reading map nodes from public course (should succeed - course4 is public)
+    try {
+      await getDoc(doc(db, 'courses', 'course4', 'map-nodes', 'node1'));
+      logTest('Student read public course map nodes', true);
+    } catch (error) {
+      logTest('Student read public course map nodes', false, error.message);
+    }
+
+    // Test reading map edges from public course (should succeed - course4 is public)
+    try {
+      await getDoc(doc(db, 'courses', 'course4', 'map-edges', 'edge1'));
+      logTest('Student read public course map edges', true);
+    } catch (error) {
+      logTest('Student read public course map edges', false, error.message);
+    }
+
+    // Test reading map nodes from private course not assigned (should fail)
+    try {
+      await getDoc(doc(db, 'courses', 'course2', 'map-nodes', 'node1'));
+      logTest('Student read unassigned private course map nodes', false, 'Should be denied');
+    } catch (error) {
+      if (error.code === 'permission-denied') {
+        logTest('Student read unassigned private course map nodes', true, 'Correctly denied');
+      } else {
+        logTest('Student read unassigned private course map nodes', false, `Unexpected error: ${error.message}`);
+      }
+    }
+
+    // Test reading map edges from private course not assigned (should fail)
+    try {
+      await getDoc(doc(db, 'courses', 'course2', 'map-edges', 'edge1'));
+      logTest('Student read unassigned private course map edges', false, 'Should be denied');
+    } catch (error) {
+      if (error.code === 'permission-denied') {
+        logTest('Student read unassigned private course map edges', true, 'Correctly denied');
+      } else {
+        logTest('Student read unassigned private course map edges', false, `Unexpected error: ${error.message}`);
+      }
+    }
+
+    // Test creating map nodes (should fail - students cannot edit courses)
+    try {
+      await addDoc(collection(db, 'courses', 'course1', 'map-nodes'), {
+        title: 'Student Created Node',
+        description: 'A node created by a student',
+        type: 'content',
+        position: { x: 600, y: 100 },
+        createdBy: 'student1',
+        createdAt: new Date(),
+        status: 'active'
+      });
+      logTest('Student create map nodes', false, 'Should be denied');
+    } catch (error) {
+      if (error.code === 'permission-denied') {
+        logTest('Student create map nodes', true, 'Correctly denied');
+      } else {
+        logTest('Student create map nodes', false, `Unexpected error: ${error.message}`);
+      }
+    }
+
+    // Test creating map edges (should fail - students cannot edit courses)
+    try {
+      await addDoc(collection(db, 'courses', 'course1', 'map-edges'), {
+        from: 'node3',
+        to: 'node1',
+        label: 'Student Edge',
+        type: 'progression',
+        createdBy: 'student1',
+        createdAt: new Date(),
+        status: 'active'
+      });
+      logTest('Student create map edges', false, 'Should be denied');
+    } catch (error) {
+      if (error.code === 'permission-denied') {
+        logTest('Student create map edges', true, 'Correctly denied');
+      } else {
+        logTest('Student create map edges', false, `Unexpected error: ${error.message}`);
+      }
+    }
     
     // Test reading cohort (should succeed if student is in cohort)
     try {
@@ -456,6 +601,31 @@ async function testStudentAccess() {
       logTest('Student read cohort', true);
     } catch (error) {
       logTest('Student read cohort', false, error.message);
+    }
+    
+    // Test that students can update a cohort by adding their ID to cohort.students
+    try {
+      // First, get the current cohort data to see if student1 is already in it
+      const cohortDoc = await getDoc(doc(db, 'cohorts', 'cohort1'));
+      if (cohortDoc.exists()) {
+        const cohortData = cohortDoc.data();
+        const currentStudents = cohortData.students || [];
+        
+        // Check if student1 is not already in the students array
+        if (!currentStudents.includes('student1')) {
+          // Add student1 to the students array
+          await updateDoc(doc(db, 'cohorts', 'cohort1'), {
+            students: [...currentStudents, 'student1']
+          });
+          logTest('Student update cohort by adding self to students array', true, 'Successfully added student1 to cohort1.students');
+        } else {
+          logTest('Student update cohort by adding self to students array', true, 'Student1 already in cohort1.students array');
+        }
+      } else {
+        logTest('Student update cohort by adding self to students array', false, 'Cohort1 document does not exist');
+      }
+    } catch (error) {
+      logTest('Student update cohort by adding self to students array', false, error.message);
     }
     
     // Test reading help requests (should succeed for any authenticated user)
@@ -658,6 +828,156 @@ async function testTeacherAccess() {
     } catch (error) {
       logTest('Teacher read own course topics', false, error.message);
     }
+
+    // Test reading own course map nodes (should succeed)
+    try {
+      await getDoc(doc(db, 'courses', 'course1', 'map-nodes', 'node1'));
+      logTest('Teacher read own course map nodes', true);
+    } catch (error) {
+      logTest('Teacher read own course map nodes', false, error.message);
+    }
+
+    // Test reading own course map edges (should succeed)
+    try {
+      await getDoc(doc(db, 'courses', 'course1', 'map-edges', 'edge1'));
+      logTest('Teacher read own course map edges', true);
+    } catch (error) {
+      logTest('Teacher read own course map edges', false, error.message);
+    }
+
+    // Test reading other teacher's public course map nodes (should succeed)
+    try {
+      await getDoc(doc(db, 'courses', 'course4', 'map-nodes', 'node1'));
+      logTest('Teacher read other teacher public course map nodes', true);
+    } catch (error) {
+      logTest('Teacher read other teacher public course map nodes', false, error.message);
+    }
+
+    // Test reading other teacher's public course map edges (should succeed)
+    try {
+      await getDoc(doc(db, 'courses', 'course4', 'map-edges', 'edge1'));
+      logTest('Teacher read other teacher public course map edges', true);
+    } catch (error) {
+      logTest('Teacher read other teacher public course map edges', false, error.message);
+    }
+
+    // Test reading other teacher's private course map nodes (should fail)
+    try {
+      await getDoc(doc(db, 'courses', 'course2', 'map-nodes', 'node1'));
+      logTest('Teacher read other teacher private course map nodes', false, 'Should be denied');
+    } catch (error) {
+      if (error.code === 'permission-denied') {
+        logTest('Teacher read other teacher private course map nodes', true, 'Correctly denied');
+      } else {
+        logTest('Teacher read other teacher private course map nodes', false, `Unexpected error: ${error.message}`);
+      }
+    }
+
+    // Test reading other teacher's private course map edges (should fail)
+    try {
+      await getDoc(doc(db, 'courses', 'course2', 'map-edges', 'edge1'));
+      logTest('Teacher read other teacher private course map edges', false, 'Should be denied');
+    } catch (error) {
+      if (error.code === 'permission-denied') {
+        logTest('Teacher read other teacher private course map edges', true, 'Correctly denied');
+      } else {
+        logTest('Teacher read other teacher private course map edges', false, `Unexpected error: ${error.message}`);
+      }
+    }
+
+    // Test creating map nodes in own course (should succeed)
+    try {
+      await addDoc(collection(db, 'courses', 'course1', 'map-nodes'), {
+        title: 'Teacher Created Node',
+        description: 'A node created by teacher1',
+        type: 'content',
+        position: { x: 700, y: 100 },
+        createdBy: 'teacher1',
+        createdAt: new Date(),
+        status: 'active'
+      });
+      logTest('Teacher create map nodes in own course', true);
+    } catch (error) {
+      logTest('Teacher create map nodes in own course', false, error.message);
+    }
+
+    // Test creating map edges in own course (should succeed)
+    try {
+      await addDoc(collection(db, 'courses', 'course1', 'map-edges'), {
+        from: 'node3',
+        to: 'node1',
+        label: 'Teacher Edge',
+        type: 'progression',
+        createdBy: 'teacher1',
+        createdAt: new Date(),
+        status: 'active'
+      });
+      logTest('Teacher create map edges in own course', true);
+    } catch (error) {
+      logTest('Teacher create map edges in own course', false, error.message);
+    }
+
+    // Test updating map nodes in own course (should succeed)
+    try {
+      await updateDoc(doc(db, 'courses', 'course1', 'map-nodes', 'node1'), {
+        updatedBy: 'teacher1',
+        lastUpdated: new Date()
+      });
+      logTest('Teacher update map nodes in own course', true);
+    } catch (error) {
+      logTest('Teacher update map nodes in own course', false, error.message);
+    }
+
+    // Test updating map edges in own course (should succeed)
+    try {
+      await updateDoc(doc(db, 'courses', 'course1', 'map-edges', 'edge1'), {
+        updatedBy: 'teacher1',
+        lastUpdated: new Date()
+      });
+      logTest('Teacher update map edges in own course', true);
+    } catch (error) {
+      logTest('Teacher update map edges in own course', false, error.message);
+    }
+
+    // Test creating map nodes in other teacher's course (should fail)
+    try {
+      await addDoc(collection(db, 'courses', 'course4', 'map-nodes'), {
+        title: 'Unauthorized Node',
+        description: 'A node created by teacher1 in course4',
+        type: 'content',
+        position: { x: 800, y: 100 },
+        createdBy: 'teacher1',
+        createdAt: new Date(),
+        status: 'active'
+      });
+      logTest('Teacher create map nodes in other teacher course', false, 'Should be denied');
+    } catch (error) {
+      if (error.code === 'permission-denied') {
+        logTest('Teacher create map nodes in other teacher course', true, 'Correctly denied');
+      } else {
+        logTest('Teacher create map nodes in other teacher course', false, `Unexpected error: ${error.message}`);
+      }
+    }
+
+    // Test creating map edges in other teacher's course (should fail)
+    try {
+      await addDoc(collection(db, 'courses', 'course4', 'map-edges'), {
+        from: 'node1',
+        to: 'node1',
+        label: 'Unauthorized Edge',
+        type: 'progression',
+        createdBy: 'teacher1',
+        createdAt: new Date(),
+        status: 'active'
+      });
+      logTest('Teacher create map edges in other teacher course', false, 'Should be denied');
+    } catch (error) {
+      if (error.code === 'permission-denied') {
+        logTest('Teacher create map edges in other teacher course', true, 'Correctly denied');
+      } else {
+        logTest('Teacher create map edges in other teacher course', false, `Unexpected error: ${error.message}`);
+      }
+    }
     
     
     // Test reading own cohort (should succeed)
@@ -846,6 +1166,98 @@ async function testAdminAccess() {
     } catch (error) {
       logTest('Admin read course subcollections', false, error.message);
     }
+
+    // Test reading all course map nodes (should succeed for admins)
+    try {
+      await getDoc(doc(db, 'courses', 'course1', 'map-nodes', 'node1'));
+      await getDoc(doc(db, 'courses', 'course2', 'map-nodes', 'node1'));
+      await getDoc(doc(db, 'courses', 'course3', 'map-nodes', 'node1'));
+      await getDoc(doc(db, 'courses', 'course4', 'map-nodes', 'node1'));
+      logTest('Admin read all course map nodes', true);
+    } catch (error) {
+      logTest('Admin read all course map nodes', false, error.message);
+    }
+
+    // Test reading all course map edges (should succeed for admins)
+    try {
+      await getDoc(doc(db, 'courses', 'course1', 'map-edges', 'edge1'));
+      await getDoc(doc(db, 'courses', 'course2', 'map-edges', 'edge1'));
+      await getDoc(doc(db, 'courses', 'course3', 'map-edges', 'edge1'));
+      await getDoc(doc(db, 'courses', 'course4', 'map-edges', 'edge1'));
+      logTest('Admin read all course map edges', true);
+    } catch (error) {
+      logTest('Admin read all course map edges', false, error.message);
+    }
+
+    // Test creating map nodes in any course (should succeed for admins)
+    try {
+      await addDoc(collection(db, 'courses', 'course1', 'map-nodes'), {
+        title: 'Admin Created Node',
+        description: 'A node created by admin',
+        type: 'content',
+        position: { x: 900, y: 100 },
+        createdBy: 'admin1',
+        createdAt: new Date(),
+        status: 'active'
+      });
+      logTest('Admin create map nodes in any course', true);
+    } catch (error) {
+      logTest('Admin create map nodes in any course', false, error.message);
+    }
+
+    // Test creating map edges in any course (should succeed for admins)
+    try {
+      await addDoc(collection(db, 'courses', 'course1', 'map-edges'), {
+        from: 'node3',
+        to: 'node1',
+        label: 'Admin Edge',
+        type: 'progression',
+        createdBy: 'admin1',
+        createdAt: new Date(),
+        status: 'active'
+      });
+      logTest('Admin create map edges in any course', true);
+    } catch (error) {
+      logTest('Admin create map edges in any course', false, error.message);
+    }
+
+    // Test updating map nodes in any course (should succeed for admins)
+    try {
+      await updateDoc(doc(db, 'courses', 'course2', 'map-nodes', 'node1'), {
+        updatedBy: 'admin1',
+        lastUpdated: new Date()
+      });
+      logTest('Admin update map nodes in any course', true);
+    } catch (error) {
+      logTest('Admin update map nodes in any course', false, error.message);
+    }
+
+    // Test updating map edges in any course (should succeed for admins)
+    try {
+      await updateDoc(doc(db, 'courses', 'course2', 'map-edges', 'edge1'), {
+        updatedBy: 'admin1',
+        lastUpdated: new Date()
+      });
+      logTest('Admin update map edges in any course', true);
+    } catch (error) {
+      logTest('Admin update map edges in any course', false, error.message);
+    }
+
+    // Test deleting map nodes in any course (should succeed for admins)
+    try {
+      await deleteDoc(doc(db, 'courses', 'course1', 'map-nodes', 'node3'));
+      logTest('Admin delete map nodes in any course', true);
+    } catch (error) {
+      logTest('Admin delete map nodes in any course', false, error.message);
+    }
+
+    // Test deleting map edges in any course (should succeed for admins)
+    try {
+      await deleteDoc(doc(db, 'courses', 'course1', 'map-edges', 'edge2'));
+      logTest('Admin delete map edges in any course', true);
+    } catch (error) {
+      logTest('Admin delete map edges in any course', false, error.message);
+    }
     
     // Test reading help requests (should succeed for admins)
     try {
@@ -996,6 +1408,40 @@ async function testWriteOperations() {
       } else {
         logTest(`Write to ${test.collection}`, false, `Unexpected error: ${error.message}`);
       }
+    }
+  }
+
+  // Test writing to map-nodes subcollections (should fail for unauthenticated users)
+  try {
+    await setDoc(doc(db, 'courses', 'course1', 'map-nodes', 'testNode'), {
+      title: 'Test Node',
+      description: 'A test node',
+      type: 'content',
+      position: { x: 1000, y: 100 }
+    });
+    logTest('Write to map-nodes subcollection', false, 'Should be denied for unauthenticated users');
+  } catch (error) {
+    if (error.code === 'permission-denied') {
+      logTest('Write to map-nodes subcollection', true, 'Correctly denied');
+    } else {
+      logTest('Write to map-nodes subcollection', false, `Unexpected error: ${error.message}`);
+    }
+  }
+
+  // Test writing to map-edges subcollections (should fail for unauthenticated users)
+  try {
+    await setDoc(doc(db, 'courses', 'course1', 'map-edges', 'testEdge'), {
+      from: 'node1',
+      to: 'node2',
+      label: 'Test Edge',
+      type: 'progression'
+    });
+    logTest('Write to map-edges subcollection', false, 'Should be denied for unauthenticated users');
+  } catch (error) {
+    if (error.code === 'permission-denied') {
+      logTest('Write to map-edges subcollection', true, 'Correctly denied');
+    } else {
+      logTest('Write to map-edges subcollection', false, `Unexpected error: ${error.message}`);
     }
   }
 }

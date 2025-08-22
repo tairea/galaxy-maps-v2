@@ -26,7 +26,7 @@
         </div>
         <BackButton :toPath="'/'" />
         <AssignedInfo
-          v-if="!draft && cohortsInCourse.length && teacher"
+          v-if="!user?.data && !draft && cohortsInCourse.length && teacher"
           :assignCohorts="true"
           :people="peopleInCourse"
           :cohorts="cohortsInCourse"
