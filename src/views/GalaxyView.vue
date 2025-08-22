@@ -481,6 +481,9 @@ export default {
     },
     async topicClicked(emittedTopic) {
       this.infoPopupShow = true;
+
+      // get the viewport height of <MobileSolarSystemInfoPanel>
+
       // console.log("topic clicked emitted from GalaxyMap.vue", emittedTopic);
 
       // get topic id

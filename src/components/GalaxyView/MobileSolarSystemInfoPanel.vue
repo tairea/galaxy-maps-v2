@@ -323,7 +323,7 @@ export default {
   left: 0;
   right: 0;
   background: var(--v-background-darken1);
-  z-index: 400;
+  z-index: 1500; // Higher than back button (1000)
   max-height: 80vh;
   overflow: hidden;
 
@@ -492,7 +492,7 @@ export default {
 // Content section
 .mobile-panel-content {
   padding: 20px;
-  overflow-y: auto;
+  //   overflow-y: auto;
   max-height: 60vh;
   border-top: 1px solid var(--v-missionAccent-base);
 

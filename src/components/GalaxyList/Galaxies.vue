@@ -180,9 +180,12 @@ export default {
             const currentView = this.$refs.network.getViewPosition();
             const currentScale = this.$refs.network.getScale();
 
-            // Calculate offset: move view up by approximately 20% of viewport height
-            // This accounts for the mobile info panel that takes up ~80vh
-            const offsetY = window.innerHeight * 0.25;
+            // const offsetY = window.innerHeight * 0.25;
+
+            // Calculate offset using the same logic as GalaxyMap.vue
+            const topHalfCenter = (window.innerHeight - 320) / 2;
+            const fullHeightCenter = window.innerHeight / 2;
+            const offsetY = (fullHeightCenter - topHalfCenter) / 2;
 
             this.$refs.network.moveTo({
               position: {
@@ -1071,6 +1074,8 @@ export default {
       this.$refs.network.fit({
         nodes: nodeIds,
         // scale: 0.5,
+        // minZoomLevel: 0.05,
+        // maxZoomLevel: 0.5,
         // animation: true,
         animation: {
           // duration: fast ? 800 : 2000,
