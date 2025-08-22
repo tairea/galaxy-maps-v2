@@ -25,13 +25,21 @@
             :course="boundCourse"
             :teacher="teacher"
             :draft="draft"
+            :minimized="isGalaxyInfoMinimized"
             @minimised="handleMinimized"
           />
         </div>
         <div class="mt-6">
           <PublishGalaxy v-if="showPublish" :course="boundCourse" :courseTasks="courseTasks" />
         </div>
-        <BackButton :toPath="'/'" />
+        <!-- Desktop back button (inside left-section) -->
+        <BackButton
+          v-if="!isMobile"
+          :toPath="'/'"
+          :mobile="false"
+          :showText="true"
+          class="back-button"
+        />
         <AssignedInfo
           v-if="!draft && cohortsInCourse.length && teacher"
           :assignCohorts="true"
@@ -104,6 +112,15 @@
         />
       </div>
     </div>
+
+    <!-- Mobile back button (outside left-section, fixed position) -->
+    <BackButton
+      v-if="isMobile"
+      :toPath="'/'"
+      :mobile="true"
+      :showText="false"
+      class="back-button-mobile"
+    />
     <!-- Edit -->
     <CreateEditDeleteNodeDialog
       v-if="dialog"
@@ -120,7 +137,22 @@
     />
 
     <!-- POPUP OUT PANEL (for system preview)-->
+    <!-- Desktop version -->
     <SolarSystemInfoPanel
+      v-if="!isMobile"
+      :show="infoPopupShow"
+      :course="boundCourse"
+      :selectedTopic="fetchedTopic"
+      :tasks="topicTasks"
+      :topicError="topicError"
+      @closeInfoPanel="closeInfoPanel"
+      @editNode="showEditDialog"
+      @enrolledInCourse="enrolledInCourse"
+    />
+
+    <!-- Mobile version -->
+    <MobileSolarSystemInfoPanel
+      v-if="isMobile"
       :show="infoPopupShow"
       :course="boundCourse"
       :selectedTopic="fetchedTopic"
@@ -160,6 +192,7 @@ import GalaxyMapButtons from "@/components/GalaxyView/GalaxyMapButtons.vue";
 import CreateEditDeleteNodeDialog from "@/components/Dialogs/CreateEditDeleteNodeDialog.vue";
 
 import SolarSystemInfoPanel from "@/components/GalaxyView/SolarSystemInfoPanel.vue";
+import MobileSolarSystemInfoPanel from "@/components/GalaxyView/MobileSolarSystemInfoPanel.vue";
 import EdgeInfoPanel from "@/components/GalaxyView/EdgeInfoPanel.vue";
 import SolarSystemListPanel from "@/components/GalaxyView/SolarSystemListPanel.vue";
 
@@ -197,6 +230,7 @@ export default {
     RequestForHelpTeacherFrame,
     SubmissionTeacherFrame,
     SolarSystemInfoPanel,
+    MobileSolarSystemInfoPanel,
     EdgeInfoPanel,
     GalaxyCompletedDialog,
     SolarSystemListPanel,
@@ -266,6 +300,11 @@ export default {
   },
   async mounted() {
     this.setCurrentCourseId(this.courseId);
+
+    // Set default minimized state for mobile
+    if (this.isMobile) {
+      this.isGalaxyInfoMinimized = true;
+    }
 
     // this.course = await fetchCourseByCourseId(this.courseId);
 
@@ -363,6 +402,9 @@ export default {
         return true;
       }
     },
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
+    },
   },
   methods: {
     toggleLoading(loading) {
@@ -455,6 +497,7 @@ export default {
           this.fetchedTopic = await fetchTopicByCourseIdTopicId(this.courseId, this.clickedTopicId);
           console.log("clicked topic:", this.fetchedTopic);
         } else {
+          console.log("Using emittedTopic (not teacher/student):", emittedTopic);
           this.fetchedTopic = emittedTopic;
         }
 
@@ -655,12 +698,21 @@ export default {
 }
 
 #container {
-  height: 100vh;
+  height: auto; // Remove fixed height
   width: 100%;
   display: flex;
   overflow: hidden;
   margin: 0 !important;
-  // border: 1px solid red;
+
+  // Mobile height
+  @media (max-width: 960px) {
+    height: calc(var(--vh, 1vh) * 100);
+  }
+
+  // Desktop height
+  @media (min-width: 961px) {
+    height: 100vh;
+  }
 
   .no-galaxy {
     width: 100%;
@@ -689,6 +741,7 @@ export default {
   left: 0px;
   top: 0px;
   pointer-events: none;
+  background: transparent;
 
   > * {
     pointer-events: auto;
@@ -711,6 +764,16 @@ export default {
         border: none !important;
         background: transparent !important;
       }
+
+      // Hide all content when minimized, only show the ribbon label
+      ::v-deep .galaxy-content {
+        display: none !important;
+      }
+    }
+
+    // Hide other elements when minimized on mobile
+    > *:not(.galaxy-info-wrapper) {
+      display: none !important;
     }
   }
 }
@@ -741,8 +804,7 @@ export default {
 
 #main-section {
   position: absolute;
-  width: calc(100vw - 200px); // Adjust for left section
-  margin: 0px 0px 0px 200px; // Left margin for left section
+  width: 100vw;
   height: 100%;
   display: flex;
   justify-content: flex-start;
@@ -750,7 +812,6 @@ export default {
   flex-direction: column;
   z-index: 1;
   transition: all 0.3s; // Add smooth transition
-  // border: 1px solid pink;
 
   // Add minimized state styles
   &.minimized {
@@ -797,6 +858,20 @@ export default {
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
   background: var(--v-background-base);
+}
+
+.back-button {
+  // Desktop back button styles remain unchanged
+}
+
+.back-button-mobile {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1000;
+  @media (min-width: 960px) {
+    display: none;
+  }
 }
 
 .bounce {

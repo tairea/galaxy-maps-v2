@@ -31,6 +31,15 @@
         <!-- Panel header -->
         <div class="topOfPanel">
           <div class="topicTitleContainer">
+            <!-- Debug info (remove in production) -->
+            <div
+              v-if="false"
+              class="debug-info"
+              style="font-size: 0.6rem; color: red; margin-bottom: 10px"
+            >
+              Debug: {{ JSON.stringify(selectedTopic) }}
+            </div>
+
             <!-- Node image (as requested by Dion) -->
             <div
               v-if="selectedTopic.image"
@@ -48,7 +57,7 @@
                     : 'color:var(--v-missionAccent-base)'
                 "
               >
-                {{ selectedTopic.label }}
+                {{ selectedTopic.label || selectedTopic.title || "Untitled Topic" }}
               </p>
               <!-- <p
                 v-if="selectedTopic.description"
@@ -200,6 +209,22 @@ export default {
   async mounted() {
     // this.currentCourse = await fetchCourseByCourseId(this.currentCourseId);
     // console.log("selected topic is:", this.selectedTopic);
+  },
+  watch: {
+    selectedTopic: {
+      handler(newTopic) {
+        if (newTopic) {
+          console.log("SolarSystemInfoPanel - selectedTopic changed:", {
+            id: newTopic.id,
+            label: newTopic.label,
+            title: newTopic.title,
+            color: newTopic.color,
+            image: newTopic.image,
+          });
+        }
+      },
+      immediate: true,
+    },
   },
   computed: {
     ...mapState(useRootStore, ["person", "user"]),

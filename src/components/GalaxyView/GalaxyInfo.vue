@@ -70,7 +70,7 @@ import { getFriendlyErrorMessage } from "@/lib/utils";
 
 export default {
   name: "GalaxyInfo",
-  props: ["course", "teacher", "draft"],
+  props: ["course", "teacher", "draft", "minimized"],
   components: {
     CreateEditDeleteGalaxyDialog,
   },
@@ -83,6 +83,14 @@ export default {
       readmore: false,
       isMinimized: false,
     };
+  },
+  watch: {
+    minimized: {
+      immediate: true,
+      handler(newVal) {
+        this.isMinimized = newVal;
+      },
+    },
   },
   computed: {
     ...mapState(useRootStore, ["person"]),
