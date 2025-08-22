@@ -59,6 +59,7 @@ declare module 'vue' {
     MissionsList: typeof import('./src/components/SolarSystemView/MissionsList.vue')['default']
     MobileGalaxyInfoPanel: typeof import('./src/components/GalaxyList/MobileGalaxyInfoPanel.vue')['default']
     MobileNavDialog: typeof import('./src/components/Home/MobileNavDialog.vue')['default']
+    MobileSolarSystemInfoPanel: typeof import('./src/components/GalaxyView/MobileSolarSystemInfoPanel.vue')['default']
     MobileUserDialog: typeof import('./src/components/Home/MobileUserDialog.vue')['default']
     NavBar: typeof import('./src/components/Home/NavBar.vue')['default']
     NewPassword: typeof import('./src/components/Reused/NewPassword.vue')['default']

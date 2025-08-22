@@ -57,6 +57,7 @@ export default {
     active: false,
     addingNode: false,
     addingEdge: false,
+    processingEdge: false, // Add this flag to prevent recursive edge creation
     draggingNodes: false,
     network: {
       options: {
@@ -561,19 +562,29 @@ export default {
         return;
       }
 
+      // Prevent multiple edge creations while processing
+      if (this.processingEdge) {
+        console.warn("Edge creation already in progress, skipping");
+        return;
+      }
+      this.processingEdge = true;
+
       db.collection("courses")
         .doc(this.currentCourseId)
         .collection("map-edges")
         .doc(newEdgeData.id)
         .set(newEdgeData)
         .then(() => {
+          // Only emit once to toggle edge mode off, then back on to stay in edit mode
           this.$emit("toggleAddEdgeMode");
           this.addingEdge = false;
-          // toggle edge mode again so to stay in edit edge mode (this is so you can continuously add edges)
+          this.processingEdge = false;
+          // Toggle edge mode again to stay in edit edge mode for continuous edge creation
           this.$emit("toggleAddEdgeMode");
         })
         .catch((error) => {
-          console.error("Error writing node: ", error);
+          console.error("Error writing edge: ", error);
+          this.processingEdge = false;
         });
     },
     click(data) {
@@ -650,8 +661,12 @@ export default {
       // 9) hide other topic nodes
       this.hideOtherTopicNodes(closestNode.id);
       // 10) emit topic clicked
+      const clickedNode = this.nodesToDisplay.find((node) => node.id == this.currentTopicId);
+      // Find the original node data to preserve the label field
+      const originalNode = this.currentCourseNodes.find((node) => node.id == this.currentTopicId);
       this.$emit("topicClicked", {
-        ...this.nodesToDisplay.find((node) => node.id == this.currentTopicId),
+        ...clickedNode,
+        label: originalNode?.label || "", // Preserve the original label
         tasks: tasksForThisTopic,
       });
     },
@@ -1417,5 +1432,11 @@ export default {
 .full-height {
   width: 100%;
   height: 100%;
+
+  // Mobile height
+  @media (max-width: 960px) {
+    // height: 100vh;
+    height: calc(var(--vh, 1vh) * 100);
+  }
 }
 </style>

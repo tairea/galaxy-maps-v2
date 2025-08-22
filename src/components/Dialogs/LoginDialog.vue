@@ -29,7 +29,7 @@
           Sign in
         </v-btn>
         to <br />
-        view this Solar System
+        view this Star System
       </p>
     </template>
 
@@ -198,6 +198,9 @@ export default {
   },
   computed: {
     ...mapState(useRootStore, ["person", "user"]),
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
+    },
   },
   methods: {
     ...mapActions(useRootStore, ["setSnackbar"]),
@@ -397,6 +400,10 @@ export default {
   width: 100%;
   padding: 20px;
   padding-top: 0px;
+
+  @media (max-width: 960px) {
+    padding: 0px;
+  }
 }
 .galaxy-text {
   color: var(--v-galaxyAccent-base);
