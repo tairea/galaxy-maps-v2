@@ -342,6 +342,9 @@ export default {
     dark() {
       return this.$vuetify.theme.isDark;
     },
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
+    },
   },
   async mounted() {
     // Set initial label color
@@ -954,9 +957,17 @@ export default {
     },
     zoomToNode(node) {
       console.log("zooming to node", node);
+
+      const topHalfCenter = (window.innerHeight - 320) / 2;
+      const fullHeightCenter = window.innerHeight / 2;
+      const offsetY = (fullHeightCenter - topHalfCenter) / 2;
+
       this.$refs.network.moveTo({
-        position: { x: node.x, y: node.y },
-        scale: 3,
+        position: {
+          x: node.x,
+          y: node.y + (this.isMobile ? +offsetY : 0),
+        },
+        scale: 2,
         animation: {
           duration: 2000,
           easingFunction: "easeInOutQuad",

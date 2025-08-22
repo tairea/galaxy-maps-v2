@@ -404,7 +404,6 @@ export default {
   background-color: #393e46;
   background-size: cover;
   box-shadow: inset 0 0 0 2000px rgba(20, 30, 48, 0.9);
-  // z-index: 202;
 
   .title {
     color: var(--v-baseAccent-base);
