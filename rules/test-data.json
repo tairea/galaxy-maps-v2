@@ -302,5 +302,145 @@
       "owner": "teacher2",
       "active": false
     }
+  },
+  "map-nodes": {
+    "course1": {
+      "node1": {
+        "id": "node1",
+        "title": "Introduction Node",
+        "description": "Starting point for the course",
+        "type": "start",
+        "position": { "x": 100, "y": 100 },
+        "createdBy": "teacher1",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "status": "active"
+      },
+      "node2": {
+        "id": "node2",
+        "title": "Basic Concepts",
+        "description": "Fundamental navigation concepts",
+        "type": "content",
+        "position": { "x": 300, "y": 100 },
+        "createdBy": "teacher1",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "status": "active"
+      },
+      "node3": {
+        "id": "node3",
+        "title": "Practice Exercise",
+        "description": "Hands-on navigation practice",
+        "type": "exercise",
+        "position": { "x": 500, "y": 100 },
+        "createdBy": "teacher1",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "status": "active"
+      }
+    },
+    "course2": {
+      "node1": {
+        "id": "node1",
+        "title": "Advanced Start",
+        "description": "Advanced course starting point",
+        "type": "start",
+        "position": { "x": 100, "y": 100 },
+        "createdBy": "teacher2",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "status": "active"
+      },
+      "node2": {
+        "id": "node2",
+        "title": "Complex Navigation",
+        "description": "Advanced navigation techniques",
+        "type": "content",
+        "position": { "x": 300, "y": 100 },
+        "createdBy": "teacher2",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "status": "active"
+      }
+    },
+    "course3": {
+      "node1": {
+        "id": "node1",
+        "title": "Master Start",
+        "description": "Master level starting point",
+        "type": "start",
+        "position": { "x": 100, "y": 100 },
+        "createdBy": "teacher2",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "status": "draft"
+      }
+    },
+    "course4": {
+      "node1": {
+        "id": "node1",
+        "title": "Public Course Node",
+        "description": "A node in a public course",
+        "type": "start",
+        "position": { "x": 100, "y": 100 },
+        "createdBy": "teacher3",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "status": "active"
+      }
+    }
+  },
+  "map-edges": {
+    "course1": {
+      "edge1": {
+        "id": "edge1",
+        "from": "node1",
+        "to": "node2",
+        "label": "Next",
+        "type": "progression",
+        "createdBy": "teacher1",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "status": "active"
+      },
+      "edge2": {
+        "id": "edge2",
+        "from": "node2",
+        "to": "node3",
+        "label": "Continue",
+        "type": "progression",
+        "createdBy": "teacher1",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "status": "active"
+      }
+    },
+    "course2": {
+      "edge1": {
+        "id": "edge1",
+        "from": "node1",
+        "to": "node2",
+        "label": "Advanced Path",
+        "type": "progression",
+        "createdBy": "teacher2",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "status": "active"
+      }
+    },
+    "course3": {
+      "edge1": {
+        "id": "edge1",
+        "from": "node1",
+        "to": "node1",
+        "label": "Self Loop",
+        "type": "review",
+        "createdBy": "teacher2",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "status": "draft"
+      }
+    },
+    "course4": {
+      "edge1": {
+        "id": "edge1",
+        "from": "node1",
+        "to": "node1",
+        "label": "Public Edge",
+        "type": "progression",
+        "createdBy": "teacher3",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "status": "active"
+      }
+    }
   }
 }
