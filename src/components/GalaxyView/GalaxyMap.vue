@@ -219,7 +219,7 @@ export default {
       "courseTasks",
     ]),
     galaxyCompleted() {
-      return this.person.completedCourses.includes(this.currentCourseId);
+      return this.person.completedCourses?.includes(this.currentCourseId);
     },
     teacher() {
       return this.course?.mappedBy.personId === this.person?.id || this.user.data?.admin;
@@ -327,14 +327,20 @@ export default {
       ? this.$vuetify.theme.themes.dark.missionAccent
       : this.$vuetify.theme.themes.light.missionAccent;
 
+    // Wait for next tick to ensure DOM is ready
+    await this.$nextTick();
+
     this.refreshData();
 
     // zoom fit on load
-    if (this.nodesToDisplay && this.$refs.network.nodes.length > 0) {
+    if (this.nodesToDisplay && this.$refs.network && this.$refs.network.nodes.length > 0) {
       this.needsCentering = true;
     }
 
-    await this.drawSolarSystems();
+    // Only draw solar systems if network is available
+    if (this.$refs.network) {
+      await this.drawSolarSystems();
+    }
 
     // ==== check if all topics completed. if so GALAXY MAP COMPLETE!!! ====
     let isGalaxyMapComplete = this.personsTopics.every(
@@ -360,6 +366,14 @@ export default {
       "getPersonsCourseTasks",
       "setCurrentTopicId",
     ]),
+    // Helper method to safely access network ref
+    getNetworkRef() {
+      if (!this.$refs.network) {
+        console.warn("Network ref not available yet");
+        return null;
+      }
+      return this.$refs.network;
+    },
     async refreshData() {
       await this.bindCourseNodes(this.currentCourseId);
       await this.bindCourseEdges(this.currentCourseId);
@@ -394,7 +408,10 @@ export default {
 
       this.needsCentering = true;
 
-      await this.drawSolarSystems();
+      // Only draw solar systems if network is available
+      if (this.$refs.network) {
+        await this.drawSolarSystems();
+      }
 
       // ==== check if all topics completed. if so GALAXY MAP COMPLETE!!! ====
       let isGalaxyMapComplete = this.personsTopics.every(
@@ -410,12 +427,12 @@ export default {
       this.initialDataLoading = false;
       console.log("Initial data loading completed, initialDataLoading set to false");
     },
-    resetInitialDataLoading() {
-      // Method to manually reset the initial data loading flag
-      this.initialDataLoading = true;
-      console.log("Initial data loading flag reset to true");
-    },
     networkUpdated() {
+      if (!this.$refs.network) {
+        console.warn("Network ref not available yet, skipping network update");
+        return;
+      }
+      
       if (this.needsCentering === true) {
         this.zoomToNodes(this.$refs.network.nodes);
         // set label colours to missionAccent
@@ -856,10 +873,13 @@ export default {
     },
     // this controls the fit zoom animation
     zoomToNodes(nodes) {
+      const network = this.getNetworkRef();
+      if (!network) return;
+      
       // nodes to zoom to
       // get node ids
       var nodeIds = nodes.map((x) => x.id);
-      this.$refs.network.fit({
+      network.fit({
         nodes: nodeIds,
         animation: {
           duration: 2000,
@@ -868,8 +888,11 @@ export default {
       });
     },
     zoomToNode(node) {
+      const network = this.getNetworkRef();
+      if (!network) return;
+      
       // console.log("zooming to node", node);
-      this.$refs.network.moveTo({
+      network.moveTo({
         position: { x: node.x, y: node.y },
         scale: 3,
         animation: {
@@ -879,11 +902,14 @@ export default {
       });
     },
     makeGalaxyLabelsColour(colour) {
+      const network = this.getNetworkRef();
+      if (!network) return;
+      
       // Store the label color for manual drawing
       this.nodeLabelColor = colour;
       // Trigger a redraw to update the manually drawn labels
-      this.$refs.network.redraw();
-      this.$refs.network.fit();
+      network.redraw();
+      network.fit();
     },
     makePlanetsColour(colour) {
       for (const planet of this.planets) {
@@ -896,6 +922,9 @@ export default {
       }
     },
     drawNodeLabels(ctx) {
+      const network = this.getNetworkRef();
+      if (!network) return;
+      
       // Set text properties
       ctx.font = "12px Arial";
       ctx.fillStyle = this.nodeLabelColor;
@@ -903,8 +932,8 @@ export default {
       ctx.textBaseline = "middle";
 
       // Get all node positions
-      const nodeIds = this.$refs.network.nodes.map(({ id }) => id);
-      const nodePositionMap = this.$refs.network.getPositions(nodeIds);
+      const nodeIds = network.nodes.map(({ id }) => id);
+      const nodePositionMap = network.getPositions(nodeIds);
 
       // Draw labels for each node
       for (const [nodeId, position] of Object.entries(nodePositionMap)) {
@@ -962,6 +991,11 @@ export default {
       // get node ids
       // TODO: This is triggering an error when first creating a galaxy
       // Cannot read properties of undefined (reading 'nodes'
+      if (!this.$refs.network) {
+        console.warn("Network ref not available yet, skipping planet setup");
+        return;
+      }
+      
       const nodeIds = this.$refs.network.nodes.map(({ id }) => id);
       // get node xy positions
       const nodePositionMap = this.$refs.network.getPositions(nodeIds);
@@ -1006,6 +1040,11 @@ export default {
     },
     setupStars() {
       // get node ids
+      if (!this.$refs.network) {
+        console.warn("Network ref not available yet, skipping star setup");
+        return;
+      }
+      
       const nodeIds = this.$refs.network.nodes.map(({ id }) => id);
       // get node xy positions
       const nodePositionMap = this.$refs.network.getPositions(nodeIds);

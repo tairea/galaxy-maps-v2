@@ -125,7 +125,7 @@
     <!-- POPUP OUT PANEL (for system preview)-->
     <EdgeInfoPanel
       v-if="teacher"
-      :courseId="courseId"
+      :courseId="effectiveCourseId"
       :selectedEdge="currentEdge"
       @closeInfoPanel="closeInfoPanel"
     />
@@ -190,7 +190,15 @@ export default {
     EdgeInfoPanel,
     GalaxyCompletedDialog,
   },
-  props: ["courseId"],
+  props: {
+    courseId: {
+      type: String,
+      required: true,
+      validator: function(value) {
+        return value && value.trim() !== '';
+      }
+    }
+  },
   data() {
     return {
       mdiAlertOutline,
@@ -241,37 +249,83 @@ export default {
       showMissions: false, // Add missions toggle state
     };
   },
+  created() {
+    console.log("GalaxyView created - courseId:", this.courseId);
+    console.log("Route params in created:", this.$route.params);
+    console.log("Route path in created:", this.$route.path);
+    console.log("User state in created:", this.user);
+    console.log("Person state in created:", this.person);
+  },
   watch: {
-    async courseId(newCourseId) {
+    async effectiveCourseId(newCourseId) {
+      // Guard against empty courseId
+      if (!newCourseId) {
+        console.error("effectiveCourseId watcher: newCourseId is empty or undefined, cannot proceed");
+        return;
+      }
+      
       await this.bindCourseByCourseId(newCourseId);
-      // this.course = await fetchCourseByCourseId(this.courseId);
       this.setCurrentCourseId(newCourseId);
     },
     async boundCourse(newVal, oldVal) {
-      this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
+      this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.effectiveCourseId);
     },
   },
   async mounted() {
     console.log("galaxy view mounted... courseId = ", this.courseId);
-    this.setCurrentCourseId(this.courseId);
+    console.log("route params:", this.$route.params);
+    console.log("route path:", this.$route.path);
+    console.log("effectiveCourseId:", this.effectiveCourseId);
+    console.log("user logged in:", this.user?.loggedIn);
+    console.log("person:", this.person);
+    
+    // Guard against empty courseId
+    if (!this.effectiveCourseId) {
+      console.error("effectiveCourseId is empty or undefined, cannot proceed");
+      console.error("Route params:", this.$route.params);
+      console.error("Route path:", this.$route.path);
+      return;
+    }
+    
+    // Wait for user authentication to be ready
+    if (this.user && !this.user.loggedIn) {
+      console.log("Waiting for user authentication...");
+      // Wait a bit for auth to resolve
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
+    // Wait for route to be fully resolved
+    if (!this.$route.params.courseId && !this.courseId) {
+      console.log("Waiting for route params to be resolved...");
+      // Wait a bit for route to resolve
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    
+    this.setCurrentCourseId(this.effectiveCourseId);
 
     // this.course = await fetchCourseByCourseId(this.courseId);
 
     // bind course instead of fetch (above) so to make course reactive (eg in GalaxyInfo.vue)
-    await this.bindCourseByCourseId(this.courseId);
+    await this.bindCourseByCourseId(this.effectiveCourseId);
     console.log("is course? : ", this.boundCourse);
     console.log("is teacher? : ", this.teacher);
+    
+    // Wait for boundCourse to be available
+    if (!this.boundCourse) {
+      console.error("boundCourse is not available, cannot proceed");
+      return;
+    }
 
     // bind assigned people in this course
     if (this.teacher) {
-      this.peopleInCourse = await fetchAllPeopleInCourseByCourseId(this.courseId);
+      this.peopleInCourse = await fetchAllPeopleInCourseByCourseId(this.effectiveCourseId);
       this.setPeopleInCourse(this.peopleInCourse);
-      this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
+      this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.effectiveCourseId);
     } else if (this.student) {
       // show navigator other squads on this map
       const cohorts = await fetchCohorts();
       let cohort = cohorts.find((cohort) =>
-        cohort.courses.some((courseId) => courseId === this.courseId),
+        cohort.courses.some((courseId) => courseId === this.effectiveCourseId),
       );
       this.cohortsInCourse.push(cohort);
       // if (this.cohortsInCourse.length) {
@@ -288,7 +342,7 @@ export default {
     // this.$tours["myTour"].start(); // Disabled for now
 
     // LRS statement recording a student has logged in to this course
-    if (this.boundCourse && !this.teacher) {
+    if (this.boundCourse && !this.teacher && this.person?.id) {
       await loggedIntoGalaxyXAPIStatement({
         actor: {
           email: this.person.email,
@@ -296,12 +350,16 @@ export default {
           lastName: this.person.lastName,
           id: this.person.id,
         },
-        galaxyId: this.courseId,
+        galaxyId: this.effectiveCourseId,
       });
     }
   },
   computed: {
     ...mapState(useRootStore, ["person", "user", "boundCourse"]),
+    // Fallback to route params if prop is not available
+    effectiveCourseId() {
+      return this.courseId || this.$route.params.courseId;
+    },
     draft() {
       return this.boundCourse?.status === "drafting";
     },
@@ -312,7 +370,7 @@ export default {
       return this.boundCourse?.mappedBy.personId === this.person?.id || this.user.data?.admin;
     },
     student() {
-      return this.person?.assignedCourses?.some((courseId) => courseId === this.courseId);
+      return this.person?.assignedCourses?.some((courseId) => courseId === this.effectiveCourseId);
     },
     showPublish() {
       return (this.user.data?.admin && this.boundCourse?.status === "submitted") || this.draft;
@@ -434,7 +492,7 @@ export default {
         // check if authenticated
         if (this.teacher || this.student) {
           // get topic
-          this.fetchedTopic = await fetchTopicByCourseIdTopicId(this.courseId, this.clickedTopicId);
+          this.fetchedTopic = await fetchTopicByCourseIdTopicId(this.effectiveCourseId, this.clickedTopicId);
           console.log("clicked topic:", this.fetchedTopic);
         } else {
           this.fetchedTopic = emittedTopic;
@@ -591,7 +649,7 @@ export default {
         .doc(this.person.id)
         .update({
           xpPointsTotal: firebase.firestore.FieldValue.increment(this.xpPointsForThisGalaxy),
-          completedCourses: firebase.firestore.FieldValue.arrayUnion(this.courseId), // track completed courses so points arent re-awarded
+          completedCourses: firebase.firestore.FieldValue.arrayUnion(this.effectiveCourseId), // track completed courses so points arent re-awarded
         });
     },
     randomInRange(min, max) {

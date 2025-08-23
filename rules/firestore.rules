@@ -46,7 +46,7 @@ service cloud.firestore {
     
     // Cohorts collection with recursive wildcard for all subcollections
     match /cohorts/{cohortId} {
-      allow read: if isStudent(cohortId) || isTeacherInCohort(cohortId) || isAdmin();
+      allow read: if isAuthenticated();
       allow write: if isTeacherInCohort(cohortId) || isAdmin();
       allow create, update: if isAuthenticated();
     }
@@ -60,44 +60,44 @@ service cloud.firestore {
     
     // Courses documents
     match /courses/{courseId} {
-      allow read: if coursePublicAccess(courseId) || canEditCourse(courseId) || isAdmin();
+      allow read: if coursePublicAccess(courseId) || canEditCourse(courseId) || isAssignedToCourse(courseId) || isAdmin();
       // Anyone signed in can create a course
       allow create: if isAuthenticated();
       // Only owner, contentBy, or mappedBy can edit
       allow update, delete: if canEditCourse(courseId) || isAdmin();
     }
     
-    // Topics subcollection under courses
-    match /courses/{courseId}/topics/{topicId} {
-      allow read: if coursePublicAccess(courseId) || canEditCourse(courseId) || isAdmin();
-      allow write: if canEditCourse(courseId) || isAdmin();
-    }
 
-    // Topics/Tasks subcollection under courses
-    match /courses/{courseId}/topics/{topicId}/tasks/{taskId} {
-      allow read: if coursePublicAccess(courseId) || canEditCourse(courseId) || isAdmin();
-      allow write: if canEditCourse(courseId) || isAdmin();
-    }
-    // Map nodes subcollection under courses
-    match /courses/{courseId}/map-nodes/{nodeId} {
-      allow read: if coursePublicAccess(courseId) || canEditCourse(courseId) || isAdmin();
-      allow write: if canEditCourse(courseId) || isAdmin();
-    }
-
-    // Map edges subcollection under courses  
-    match /courses/{courseId}/map-edges/{edgeId} {
-      allow read: if coursePublicAccess(courseId) || canEditCourse(courseId) || isAdmin();
-      allow write: if canEditCourse(courseId) || isAdmin();
-    } 
 
     // Specific rule for requestsForHelp subcollection
+    // This must come BEFORE the wildcard rule below
     match /courses/{courseId}/requestsForHelp/{requestId} {
       allow read, write: if isAuthenticated();
     }
     
     // Specific rule for submissionsForReview subcollection
+    // This must come BEFORE the wildcard rule below
     match /courses/{courseId}/submissionsForReview/{submissionId} {
       allow read, write: if isAuthenticated();
+    }
+
+    // Course subcollections wildcard rule (covers all other subcollections)
+    // Note: This rule comes AFTER the specific rules above to avoid conflicts
+    match /courses/{courseId}/{document=**} {
+      allow read: if coursePublicAccess(courseId) || canEditCourse(courseId) || isAssignedToCourse(courseId) || isAdmin();
+      allow write: if canEditCourse(courseId) || isAdmin();
+    }
+    
+    // Status collection (for user presence/status)
+    match /status/{statusId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+    
+    // Organisations collection
+    match /organisations/{organisationId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
     }
     
     // Slugs collection (course identifiers)
@@ -135,17 +135,25 @@ service cloud.firestore {
       );
     }
     
+    // Helper function: Check if user is assigned to a course
+    function isAssignedToCourse(courseId) {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/people/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/people/$(request.auth.uid)).data.assignedCourses != null &&
+        get(/databases/$(database)/documents/people/$(request.auth.uid)).data.assignedCourses.hasAny([courseId]);
+    }
+    
     // Helper function: Determine write access to course and subcollections
-    // Only owner, contentBy, or mappedBy can edit (TODO: add collaboratorIds includes request.uth.uid)
+    // Only owner, contentBy.personId, or mappedBy.personId can edit (TODO: add collaboratorIds includes request.auth.uid)
     function canEditCourse(courseId) {
       return isAuthenticated() && 
         exists(/databases/$(database)/documents/courses/$(courseId)) && (
           (get(/databases/$(database)/documents/courses/$(courseId)).data.owner != null && 
            request.auth.uid == get(/databases/$(database)/documents/courses/$(courseId)).data.owner) ||
           (get(/databases/$(database)/documents/courses/$(courseId)).data.contentBy != null && 
-           request.auth.uid == get(/databases/$(database)/documents/courses/$(courseId)).data.contentBy) ||
+           request.auth.uid == get(/databases/$(database)/documents/courses/$(courseId)).data.contentBy.personId) ||
           (get(/databases/$(database)/documents/courses/$(courseId)).data.mappedBy != null && 
-           request.auth.uid == get(/databases/$(database)/documents/courses/$(courseId)).data.mappedBy)
+           request.auth.uid == get(/databases/$(database)/documents/courses/$(courseId)).data.mappedBy.personId)
         );
     }
 

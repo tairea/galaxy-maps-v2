@@ -283,6 +283,7 @@ export default {
     },
     routeToGalaxyEdit() {
       console.log("route to galaxy", this.course.id);
+      console.log("Navigating to GalaxyView with courseId:", this.course.id);
       // save current course to store
       this.setCurrentCourseId(this.course.id);
       // route to topic/solar system

@@ -49,11 +49,11 @@ const adminApp = admin.initializeApp({
 const adminAuth = adminApp.auth();
 
 // Connect to both emulators
-connectFirestoreEmulator(db, 'localhost', 8080);
-connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+connectFirestoreEmulator(db, '127.0.0.1', 8080);
+connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
 
 // Set admin emulator host
-process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
+process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9099';
 
 // Test results tracking
 let testResults = {
@@ -465,13 +465,65 @@ async function testStudentAccess() {
 
     // Test reading private courses - not assigned to student (should fail)
     try {
-      await getDoc(doc(db, 'courses', 'course2'));
-      logTest('Student read other courses', false, 'Should be denied');
+      await getDoc(doc(db, 'courses', 'course3'));
+      logTest('Student read unassigned private courses', false, 'Should be denied');
     } catch (error) {
       if (error.code === 'permission-denied') {
-        logTest('Student read other courses', true);
+        logTest('Student read unassigned private courses', true, 'Correctly denied');
       } else {
-        logTest('Student read other courses', false, `Unexpected error: ${error.message}`);
+        logTest('Student read unassigned private courses', false, `Unexpected error: ${error.message}`);
+      }
+    }
+
+    // Test reading private courses - assigned to student (should succeed)
+    try {
+      await getDoc(doc(db, 'courses', 'course2'));
+      logTest('Student read assigned private course', true);
+    } catch (error) {
+      logTest('Student read assigned private course', false, error.message);
+    }
+
+    // Test reading assigned private course topics (should succeed)
+    try {
+      await getDoc(doc(db, 'courses', 'course2', 'topics', 'topic1'));
+      logTest('Student read assigned private course topics', true);
+    } catch (error) {
+      logTest('Student read assigned private course topics', false, error.message);
+    }
+
+    // Test reading assigned private course tasks (should succeed)
+    try {
+      await getDoc(doc(db, 'courses', 'course2', 'topics', 'topic1', 'tasks', 'task1'));
+      logTest('Student read assigned private course tasks', true);
+    } catch (error) {
+      logTest('Student read assigned private course tasks', false, error.message);
+    }
+
+    // Test reading assigned private course map nodes (should succeed)
+    try {
+      await getDoc(doc(db, 'courses', 'course2', 'map-nodes', 'node1'));
+      logTest('Student read assigned private course map nodes', true);
+    } catch (error) {
+      logTest('Student read assigned private course map nodes', false, error.message);
+    }
+
+    // Test reading assigned private course map edges (should succeed)
+    try {
+      await getDoc(doc(db, 'courses', 'course2', 'map-edges', 'edge1'));
+      logTest('Student read assigned private course map edges', true);
+    } catch (error) {
+      logTest('Student read assigned private course map edges', false, error.message);
+    }
+
+    // Test that student1 (not assigned to course3) cannot read course3 (should fail)
+    try {
+      await getDoc(doc(db, 'courses', 'course3'));
+      logTest('Unassigned student read private course', false, 'Should be denied');
+    } catch (error) {
+      if (error.code === 'permission-denied') {
+        logTest('Unassigned student read private course', true, 'Correctly denied');
+      } else {
+        logTest('Unassigned student read private course', false, `Unexpected error: ${error.message}`);
       }
     }
 
@@ -498,6 +550,8 @@ async function testStudentAccess() {
     } catch (error) {
       logTest('Student read public course topics', false, error.message);
     }
+
+    
 
     // Test reading map nodes from assigned course (should succeed)
     try {
@@ -533,7 +587,7 @@ async function testStudentAccess() {
 
     // Test reading map nodes from private course not assigned (should fail)
     try {
-      await getDoc(doc(db, 'courses', 'course2', 'map-nodes', 'node1'));
+      await getDoc(doc(db, 'courses', 'course3', 'map-nodes', 'node1'));
       logTest('Student read unassigned private course map nodes', false, 'Should be denied');
     } catch (error) {
       if (error.code === 'permission-denied') {
@@ -545,7 +599,7 @@ async function testStudentAccess() {
 
     // Test reading map edges from private course not assigned (should fail)
     try {
-      await getDoc(doc(db, 'courses', 'course2', 'map-edges', 'edge1'));
+      await getDoc(doc(db, 'courses', 'course3', 'map-edges', 'edge1'));
       logTest('Student read unassigned private course map edges', false, 'Should be denied');
     } catch (error) {
       if (error.code === 'permission-denied') {
@@ -595,7 +649,7 @@ async function testStudentAccess() {
       }
     }
     
-    // Test reading cohort (should succeed if student is in cohort)
+    // Test reading cohort (should succeed if signed in)
     try {
       await getDoc(doc(db, 'cohorts', 'cohort1'));
       logTest('Student read cohort', true);
@@ -606,23 +660,17 @@ async function testStudentAccess() {
     // Test that students can update a cohort by adding their ID to cohort.students
     try {
       // First, get the current cohort data to see if student1 is already in it
-      const cohortDoc = await getDoc(doc(db, 'cohorts', 'cohort1'));
+      const cohortDoc = await getDoc(doc(db, 'cohorts', 'cohort2'));
       if (cohortDoc.exists()) {
         const cohortData = cohortDoc.data();
         const currentStudents = cohortData.students || [];
-        
-        // Check if student1 is not already in the students array
-        if (!currentStudents.includes('student1')) {
-          // Add student1 to the students array
-          await updateDoc(doc(db, 'cohorts', 'cohort1'), {
-            students: [...currentStudents, 'student1']
-          });
-          logTest('Student update cohort by adding self to students array', true, 'Successfully added student1 to cohort1.students');
-        } else {
-          logTest('Student update cohort by adding self to students array', true, 'Student1 already in cohort1.students array');
-        }
+        // Add student1 to the students array
+        await updateDoc(doc(db, 'cohorts', 'cohort2'), {
+          students: [...currentStudents, 'student1']
+        });
+        logTest('Student update cohort by adding self to students array', true, 'Successfully added student1 to cohort2.students');
       } else {
-        logTest('Student update cohort by adding self to students array', false, 'Cohort1 document does not exist');
+        logTest('Student update cohort by adding self to students array', false, 'Cohort2 document does not exist');
       }
     } catch (error) {
       logTest('Student update cohort by adding self to students array', false, error.message);
@@ -1008,16 +1056,12 @@ async function testTeacherAccess() {
       logTest('Teacher1 update own cohort', false, error.message);
     }
 
-    // Test reading other cohort (should fail - not a teacher in that cohort)
+    // Test reading other cohort (should succeed)
     try {
       await getDoc(doc(db, 'cohorts', 'cohort2'));
-      logTest('Teacher1 read other cohort', false, 'Should be denied - not a teacher in that cohort');
+      logTest('Teacher1 read other cohort', true);
     } catch (error) {
-      if (error.code === 'permission-denied') {
-        logTest('Teacher1 read other cohort', true, 'Correctly denied');
-      } else {
-        logTest('Teacher1 read other cohort', false, `Unexpected error: ${error.message}`);
-      }
+      logTest('Teacher1 read other cohort', false, error.message);
     }
 
 
