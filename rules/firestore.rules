@@ -149,14 +149,14 @@ service cloud.firestore {
       return isAuthenticated() && 
         exists(/databases/$(database)/documents/courses/$(courseId)) && (
           (get(/databases/$(database)/documents/courses/$(courseId)).data.owner != null && 
-           request.auth.uid == get(/databases/$(database)/documents/courses/$(courseId)).data.owner) ||
+           (request.auth.uid == get(/databases/$(database)/documents/courses/$(courseId)).data.owner || 
+            request.auth.uid == get(/databases/$(database)/documents/courses/$(courseId)).data.owner.path.split('/').get(-1))) ||
           (get(/databases/$(database)/documents/courses/$(courseId)).data.contentBy != null && 
            request.auth.uid == get(/databases/$(database)/documents/courses/$(courseId)).data.contentBy.personId) ||
           (get(/databases/$(database)/documents/courses/$(courseId)).data.mappedBy != null && 
            request.auth.uid == get(/databases/$(database)/documents/courses/$(courseId)).data.mappedBy.personId)
         );
     }
-
 
     
     // Default rule - deny all other access
