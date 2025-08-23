@@ -7,7 +7,7 @@
       "email": "aroha@example.com",
       "xpPointsTotal": 1200,
       "status": "active",
-      "assignedCourses": ["course1"],
+      "assignedCourses": ["course1", "course2"],
       "completedCourses": [],
       "registered": true,
       "role": "student",
@@ -85,6 +85,17 @@
       "admin": true,
       "assignedCourses": [],
       "completedCourses": []
+    },
+    "teacher3": {
+      "firstName": "Nootai",
+      "lastName": "Tairea",
+      "displayName": "nootai.tairea",
+      "email": "nootai@example.com",
+      "status": "active",
+      "registered": true,
+      "role": "teacher",
+      "admin": false,
+      "assignedCourses": ["course4"]
     }
   },
   "cohorts": {
@@ -107,9 +118,15 @@
     "course1": {
       "name": "Intro to Navigation",
       "description": "A course on navigating the Galaxy Maps LMS.",
-      "owner": "teacher1",
-      "contentBy": "teacher1",
-      "mappedBy": "teacher1",
+      "owner": "/people/teacher1",
+      "contentBy": {
+        "name": "Moana Tawhiri",
+        "personId": "teacher1"
+      },
+      "mappedBy": {
+        "name": "Moana Tawhiri",
+        "personId": "teacher1"
+      },
       "status": "published",
       "public": true,
       "presentationOnly": false
@@ -117,9 +134,15 @@
     "course2": {
       "name": "Advanced Navigation",
       "description": "Advanced navigation techniques and strategies.",
-      "owner": "teacher2",
-      "contentBy": "teacher2",
-      "mappedBy": "teacher2",
+      "owner": "/people/teacher2",
+      "contentBy": {
+        "name": "Koro Mana",
+        "personId": "teacher2"
+      },
+      "mappedBy": {
+        "name": "Koro Mana",
+        "personId": "teacher2"
+      },
       "status": "published",
       "public": false,
       "presentationOnly": false
@@ -127,9 +150,15 @@
     "course3": {
       "name": "Navigation Mastery",
       "description": "Master-level navigation skills and techniques.",
-      "owner": "teacher2",
-      "contentBy": "teacher2",
-      "mappedBy": "teacher2",
+      "owner": "/people/teacher2",
+      "contentBy": {
+        "name": "Koro Mana",
+        "personId": "teacher2"
+      },
+      "mappedBy": {
+        "name": "Koro Mana",
+        "personId": "teacher2"
+      },
       "status": "draft",
       "public": false,
       "presentationOnly": false
@@ -137,9 +166,15 @@
     "course4": {
       "name": "Public Course",
       "description": "A public course for testing.",
-      "owner": "teacher3",
-      "contentBy": "teacher3",
-      "mappedBy": "teacher3",
+      "owner": "/people/teacher3",
+      "contentBy": {
+        "name": "Nootai Tairea",
+        "personId": "teacher3"
+      },
+      "mappedBy": {
+        "name": "Nootai Tairea",
+        "personId": "teacher3"
+      },
       "status": "published",
       "public": true,
       "presentationOnly": false
@@ -154,9 +189,15 @@
         "status": "published",
         "public": true,
         "presentationOnly": false,
-        "owner": "teacher1",
-        "contentBy": "teacher1",
-        "mappedBy": "teacher1"
+        "owner": "/people/teacher1",
+        "contentBy": {
+          "name": "Moana Tawhiri",
+          "personId": "teacher1"
+        },
+        "mappedBy": {
+          "name": "Moana Tawhiri",
+          "personId": "teacher1"
+        }
       }
     },
     "course2": {
@@ -167,9 +208,15 @@
         "status": "published",
         "public": true,
         "presentationOnly": false,
-        "owner": "teacher2",
-        "contentBy": "teacher2",
-        "mappedBy": "teacher2"
+        "owner": "/people/teacher2",
+        "contentBy": {
+          "name": "Koro Mana",
+          "personId": "teacher2"
+        },
+        "mappedBy": {
+          "name": "Koro Mana",
+          "personId": "teacher2"
+        }
       }
     },
     "course3": {
@@ -180,9 +227,15 @@
         "status": "draft",
         "public": false,
         "presentationOnly": false,
-        "owner": "teacher2",
-        "contentBy": "teacher2",
-        "mappedBy": "teacher2"
+        "owner": "/people/teacher2",
+        "contentBy": {
+          "name": "Koro Mana",
+          "personId": "teacher2"
+        },
+        "mappedBy": {
+          "name": "Koro Mana",
+          "personId": "teacher2"
+        }
       }
     },
     "course4": {
@@ -193,9 +246,15 @@
         "status": "published",
         "public": true,
         "presentationOnly": false,
-        "owner": "teacher3",
-        "contentBy": "teacher3",
-        "mappedBy": "teacher3"
+        "owner": "/people/teacher3",
+        "contentBy": {
+          "name": "Nootai Tairea",
+          "personId": "teacher3"
+        },
+        "mappedBy": {
+          "name": "Nootai Tairea",
+          "personId": "teacher3"
+        }
       }
     }
   },
@@ -230,9 +289,15 @@
         "status": "published",
         "public": true,
         "presentationOnly": false,
-        "owner": "teacher1",
-        "contentBy": "teacher1",
-        "mappedBy": "teacher1"
+        "owner": "/people/teacher1",
+        "contentBy": {
+          "name": "Moana Tawhiri",
+          "personId": "teacher1"
+        },
+        "mappedBy": {
+          "name": "Moana Tawhiri",
+          "personId": "teacher1"
+        }
       }
     },
     "course2": {
@@ -245,9 +310,15 @@
         "status": "published",
         "public": true,
         "presentationOnly": false,
-        "owner": "teacher2",
-        "contentBy": "teacher2",
-        "mappedBy": "teacher2"
+        "owner": "/people/teacher2",
+        "contentBy": {
+          "name": "Koro Mana",
+          "personId": "teacher2"
+        },
+        "mappedBy": {
+          "name": "Koro Mana",
+          "personId": "teacher2"
+        }
       }
     }
   },
@@ -262,9 +333,15 @@
         "status": "submitted",
         "public": true,
         "presentationOnly": false,
-        "owner": "teacher1",
-        "contentBy": "teacher1",
-        "mappedBy": "teacher1"
+        "owner": "/people/teacher1",
+        "contentBy": {
+          "name": "Moana Tawhiri",
+          "personId": "teacher1"
+        },
+        "mappedBy": {
+          "name": "Moana Tawhiri",
+          "personId": "teacher1"
+        }
       }
     },
     "course2": {
@@ -277,9 +354,15 @@
         "status": "submitted",
         "public": true,
         "presentationOnly": false,
-        "owner": "teacher2",
-        "contentBy": "teacher2",
-        "mappedBy": "teacher2"
+        "owner": "/people/teacher2",
+        "contentBy": {
+          "name": "Koro Mana",
+          "personId": "teacher2"
+        },
+        "mappedBy": {
+          "name": "Koro Mana",
+          "personId": "teacher2"
+        }
       }
     }
   },
@@ -287,19 +370,19 @@
     "intro-navigation": {
       "name": "intro-navigation",
       "courseId": "course1",
-      "owner": "teacher1",
+      "owner": "/people/teacher1",
       "active": true
     },
     "advanced-navigation": {
       "name": "advanced-navigation",
       "courseId": "course2",
-      "owner": "teacher2",
+      "owner": "/people/teacher2",
       "active": true
     },
     "navigation-mastery": {
       "name": "navigation-mastery",
       "courseId": "course3",
-      "owner": "teacher2",
+      "owner": "/people/teacher2",
       "active": false
     }
   },

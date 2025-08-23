@@ -200,6 +200,13 @@ export default defineStore({
       );
     }),
     bindCourseByCourseId: firestoreAction(({ bindFirestoreRef }, courseId: string) => {
+      // Guard against empty courseId
+      if (!courseId || courseId.trim() === '') {
+        console.error("bindCourseByCourseId: courseId is empty or undefined, cannot proceed");
+        console.error("courseId value:", courseId);
+        console.error("courseId type:", typeof courseId);
+        throw new Error(`courseId cannot be empty. Received: "${courseId}" (type: ${typeof courseId})`);
+      }
       return bindFirestoreRef("boundCourse", db.collection("courses").doc(courseId));
     }),
     bindThisPersonsCourseTopics: firestoreAction(
