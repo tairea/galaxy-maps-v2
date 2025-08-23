@@ -759,11 +759,15 @@ export default {
       this.deleting = true;
       console.log("course: ", course);
 
-      // delete courseCohort
-      await db.collection("cohorts").doc(this.course.cohort).delete();
+      if (this.course.cohort) {
+        // delete courseCohort
+        await db.collection("cohorts").doc(this.course.cohort).delete();
+      }
 
-      // delete for any students in course
-      await this.deleteCourseForStudents();
+      if (this.peopleInCourse.length > 0) {
+        // delete for any students in course
+        await this.deleteCourseForStudents();
+      }
 
       // delete image
       await this.deleteImage();

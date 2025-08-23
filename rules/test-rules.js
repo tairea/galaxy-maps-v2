@@ -800,8 +800,14 @@ async function testTeacherAccess() {
         public: false,
         presentationOnly: false,
         owner: 'teacher1',
-        contentBy: 'teacher1',
-        mappedBy: 'teacher1'
+        contentBy: {
+          name: 'Moana Tawhiri',
+          personId: 'teacher1'
+        },
+        mappedBy: {
+          name: 'Moana Tawhiri',
+          personId: 'teacher1'
+        }
       });
       logTest('Teacher1 create new course', true);
     } catch (error) {
@@ -867,6 +873,14 @@ async function testTeacherAccess() {
       } else {
         logTest('Teacher1 delete other teacher course', false, `Unexpected error: ${error.message}`);
       }
+    }
+
+    // Test deleting own course (should succeed)
+    try {
+      await deleteDoc(doc(db, 'courses', 'teacherNewCourse'));
+      logTest('Teacher1 delete own course', true, 'Successfully deleted own course');
+    } catch (error) {
+      logTest('Teacher1 delete own course', false, error.message);
     }
     
     // Test reading course subcollections
@@ -1054,6 +1068,14 @@ async function testTeacherAccess() {
       logTest('Teacher1 update own cohort', true);
     } catch (error) {
       logTest('Teacher1 update own cohort', false, error.message);
+    }
+
+    // Test that users can delete their own cohort (should succeed)
+    try {
+      await deleteDoc(doc(db, 'cohorts', 'cohort6'));
+      logTest('Teacher1 delete own cohort', true, 'Successfully deleted own cohort');
+    } catch (error) {
+      logTest('Teacher1 delete own cohort', false, error.message);
     }
 
     // Test reading other cohort (should succeed)
