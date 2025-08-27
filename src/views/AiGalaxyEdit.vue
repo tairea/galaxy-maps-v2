@@ -51,6 +51,7 @@
         <div
           v-if="transformedStarDetails.length > 0 && isGeneratingMissions"
           class="loading-galaxy-treeview-container"
+          :class="{ mobile: isMobile }"
         >
           <div class="loading-galaxy-treeview-wrapper">
             <div
@@ -90,8 +91,8 @@
         </div>
 
         <!-- TOKEN USAGE -->
-        <div class="token-usage-container pa-6">
-          <p class="token-usage overline mt-2" v-if="!isSavingToDB">
+        <div class="token-usage-container pa-6" v-if="!isSavingToDB">
+          <p class="token-usage overline mt-2">
             Total AI Tokens:
             {{
               aiGeneratedGalaxyMap.tokens
@@ -113,7 +114,7 @@
                 : "0"
             }}
           </p>
-          <p class="token-breakdown overline mt-2" v-if="!isSavingToDB">
+          <!-- <p class="token-breakdown overline mt-2" v-if="!isSavingToDB">
             Est. cost: ${{
               aiGeneratedGalaxyMap.tokens
                 ? aiGeneratedGalaxyMap.tokens.combinedEstimatedCost
@@ -124,7 +125,7 @@
                     ).toFixed(5)
                 : "0.00000"
             }}
-          </p>
+          </p> -->
           <!-- Model breakdown -->
           <!-- <div
             v-if="
@@ -146,12 +147,30 @@
             </div>
           </div> -->
         </div>
+
+        <!-- LONG LOADING TIME MESSAGE -->
+        <div class="mt-4" v-if="!isSavingToDB">
+          <p class="long-loading-time-message">
+            <em
+              >It typically takes around 3-5 minutes for the AI to generate a Galaxy Map.<br />
+              Grab a drink or some fresh air and check back shortly.</em
+            >
+          </p>
+        </div>
       </div>
     </div>
 
     <!-- <div class="left-section" :class="{ hide: hideLeftPanelsFlag }"> -->
-    <div id="left-section" data-v-step="1" :class="{ minimized: isGalaxyInfoMinimized }">
-      <div class="galaxy-info-wrapper" :class="{ minimized: isGalaxyInfoMinimized }">
+    <div
+      id="left-section"
+      data-v-step="1"
+      :class="{ minimized: isGalaxyInfoMinimized, mobile: isMobile }"
+    >
+      <!-- Galaxy Info -->
+      <div
+        class="galaxy-info-wrapper"
+        :class="{ minimized: isGalaxyInfoMinimized, mobile: isMobile }"
+      >
         <GalaxyInfo
           ref="galaxyInfo"
           :course="boundCourse"
@@ -161,14 +180,46 @@
           @preSaveUpdate="applyPreSaveUpdate"
         />
       </div>
+
+      <!-- Back button -->
       <BackButton v-if="!isGalaxyInfoMinimized" :toPath="'/'" :dynamicPath="backButtonPath" />
+
+      <!-- feature buttons -->
+      <div class="ai-edit-feature-buttons d-flex flex-column justify-end">
+        <!-- Planets collapse button -->
+        <v-btn outlined color="missionAccent" small @click="togglePlanetsCollapse" class="mb-2">
+          <v-icon small class="mr-1">{{
+            isPlanetsCollapsed ? mdiChevronDown : mdiChevronUp
+          }}</v-icon>
+          {{ isPlanetsCollapsed ? "Expand Planets" : "Collapse Planets" }}
+        </v-btn>
+        <!-- Print draft button -->
+        <PdfDownloader
+          :ai-generated-galaxy-map="aiGeneratedGalaxyMap"
+          :bound-course="boundCourse"
+          :is-galaxy-info-minimized="isGalaxyInfoMinimized"
+          :expand-all-planets="expandAllPlanets"
+          :get-star-index="getStarIndex"
+          :transformed-star-details="transformedStarDetails"
+          :network-ref="$refs.network"
+          @toggle-minimize="$refs.galaxyInfo.toggleMinimize()"
+        />
+      </div>
     </div>
 
     <!--==== Main section ====-->
     <div id="main-section" :class="{ minimized: isGalaxyInfoMinimized }">
       <!-- v-treeview of stars > planets > missions -->
-      <div v-if="transformedStarDetails.length > 0" class="galaxy-treeview-container">
-        <div class="galaxy-preview-container" :class="{ 'task-editing': taskEditing }">
+      <div
+        v-if="transformedStarDetails.length > 0"
+        class="galaxy-treeview-container"
+        :class="{ mobile: isMobile }"
+      >
+        <!-- =========== Generated Map Preview Container =========== -->
+        <div
+          class="galaxy-preview-container"
+          :class="{ 'task-editing': taskEditing, mobile: isMobile }"
+        >
           <!-- =========== Network Preview =========== -->
           <network
             v-if="nodesToDisplay"
@@ -195,6 +246,7 @@
                 <v-treeview
                   :items="[star]"
                   :value="expandedNodes"
+                  :open="expandedNodes"
                   :active="treeviewActiveItems[starIndex] || []"
                   item-key="id"
                   class="galaxy-treeview"
@@ -285,7 +337,7 @@
                           color="galaxyAccent"
                           iconSize="15"
                         />
-                        <div class="treeview-markdown">
+                        <div v-else class="treeview-markdown">
                           <span v-html="renderToHTML(item)"></span>
                         </div>
                       </div>
@@ -414,19 +466,19 @@
                 <!-- <span class="legend-item-icon">📍</span>
               <span class="legend-item-text">Task</span> -->
               </div>
-              <v-text-field
+              <v-textarea
                 v-model="galaxyRefineUserInput"
                 :dark="dark"
                 :light="!dark"
                 class="input-field mt-2"
                 outlined
                 color="missionAccent"
+                rows="5"
                 auto-grow
                 clearable
                 label="What change would you like me to make?"
                 :disabled="loading"
                 autofocus
-                @keyup.enter="refineGalaxyMap"
                 @click:clear="galaxyRefineUserInput = ''"
               />
               <div class="action-buttons">
@@ -460,8 +512,8 @@
 
                 <!-- <PublishGalaxy v-if="showPublish" :course="boundCourse" :courseTasks="courseTasks" /> -->
                 <v-btn v-if="!courseId" @click="saveGalaxyToDB" outlined color="baseAccent">
-                  <v-icon left> {{ mdiArrowRightBold }} </v-icon>
-                  Next Step
+                  <v-icon left> {{ mdiContentSave }} </v-icon>
+                  Save Galaxy Map
                 </v-btn>
                 <v-btn
                   v-else
@@ -544,7 +596,7 @@
             ? aiGeneratedGalaxyMap.tokens.totalTokens.toLocaleString()
             : "0"
         }}
-        <br />Est. Cost: ${{
+        <!-- <br />Est. Cost: ${{
           aiGeneratedGalaxyMap.tokens
             ? aiGeneratedGalaxyMap.tokens.combinedEstimatedCost
               ? aiGeneratedGalaxyMap.tokens.combinedEstimatedCost.toFixed(5)
@@ -553,7 +605,7 @@
                   (aiGeneratedGalaxyMap.tokens.totalOutputTokens / 1000000) * 8
                 ).toFixed(5)
             : "0.00000"
-        }}
+        }} -->
       </p>
     </div>
 
@@ -578,10 +630,123 @@
 
     <!-- Prompt Dialog -->
     <!-- <PromptDialog v-if="promptDialog" :context="promptContext" /> -->
+
+    <!-- Clarification Dialog for Galaxy Refinement -->
+    <v-dialog
+      v-model="showClarificationDialog"
+      :width="$vuetify.breakpoint.mdAndUp ? '50%' : '95%'"
+      :max-width="$vuetify.breakpoint.mdAndUp ? '800px' : '95vw'"
+      light
+      style="z-index: 1000"
+    >
+      <div class="create-dialog" :class="{ 'mobile-layout': $vuetify.breakpoint.smAndDown }">
+        <!-- HEADER -->
+        <div class="dialog-header">
+          <p class="dialog-title">
+            Galaxy Refinement Clarification
+            <span class="galaxyAccent--text"
+              >with A.I. <v-icon color="galaxyAccent" small>{{ mdiRobotExcited }}</v-icon></span
+            >
+          </p>
+          <div class="d-flex align-center">
+            <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
+            <div>
+              <p class="dialog-description">
+                I need a bit more information to refine your Galaxy Map exactly as you want.
+              </p>
+              <p class="dialog-description mt-2">
+                Please answer the following questions to help me understand your requirements
+                better.
+              </p>
+            </div>
+          </div>
+        </div>
+        <!-- DIALOG CONTENT -->
+        <div
+          class="create-dialog-content"
+          :class="{ 'mobile-layout': $vuetify.breakpoint.smAndDown }"
+        >
+          <div v-for="(question, index) in clarificationQuestions" :key="question">
+            <p class="dialog-description">
+              Clarifying question {{ index + 1 }} of {{ clarificationQuestions.length }}
+            </p>
+            <p class="dialog-description galaxyAccent--text mt-2">
+              "{{ question }}" >
+              <v-icon color="galaxyAccent" x-small>{{ mdiRobotExcited }}</v-icon>
+            </p>
+            <v-textarea
+              :dark="dark"
+              :light="!dark"
+              class="input-field mt-2"
+              outlined
+              color="missionAccent"
+              auto-grow
+              clearable
+              rows="5"
+              v-model="clarificationAnswers[index]"
+              :disabled="loading"
+              :autofocus="index === 0"
+              :dense="$vuetify.breakpoint.smAndDown"
+              hide-details
+            ></v-textarea>
+          </div>
+
+          <!-- ACTION BUTTONS -->
+          <div
+            class="action-buttons flex-row justify-center"
+            :class="{ 'mobile-layout': $vuetify.breakpoint.smAndDown }"
+          >
+            <!-- CONTINUE -->
+            <v-btn
+              outlined
+              :color="'galaxyAccent'"
+              @click="continueWithClarification()"
+              class="mx-2"
+              :loading="loading"
+              :disabled="disabled"
+              :dark="dark"
+              :light="!dark"
+            >
+              <v-icon left> {{ mdiRobotExcited }} </v-icon>
+              Continue Refinement
+            </v-btn>
+
+            <v-btn
+              outlined
+              :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
+              @click="cancelClarification"
+              :disabled="loading"
+              :dark="dark"
+              :light="!dark"
+            >
+              <v-icon left> {{ mdiClose }} </v-icon>
+              Cancel
+            </v-btn>
+          </div>
+        </div>
+      </div>
+    </v-dialog>
   </div>
 </template>
 
 <script>
+/**
+ * IMPORTANT: Response ID Management
+ *
+ * This component maintains two critical response IDs for tracking AI call history:
+ *
+ * 1. originResponseId: The response ID from the very first AI call that created the galaxy map
+ *    - Set in AICreateGalaxyDialog.vue when the galaxy is first created
+ *    - Must be preserved throughout all subsequent AI operations (refinement, regeneration)
+ *    - Used for tracking the original creation context
+ *
+ * 2. aiResponseId: The response ID from the most recent AI call
+ *    - Updated with each new AI operation (refinement, regeneration, etc.)
+ *    - Used for continuing conversations and maintaining context
+ *
+ * CRITICAL: Both IDs must be preserved when merging new AI responses to maintain
+ * the complete history and context chain.
+ */
 import {
   mdiPencil,
   mdiPlus,
@@ -591,6 +756,10 @@ import {
   mdiArrowRightBold,
   mdiArrowLeftBold,
   mdiContentSave,
+  mdiInformationVariant,
+  mdiClose,
+  mdiChevronUp,
+  mdiChevronDown,
 } from "@mdi/js";
 import LoadingSpinner from "@/components/Reused/LoadingSpinner.vue";
 import RobotLoadingSpinner from "@/components/Reused/RobotLoadingSpinner.vue";
@@ -599,6 +768,7 @@ import PublishGalaxy from "@/components/GalaxyView/PublishGalaxy.vue";
 import BackButton from "@/components/Reused/BackButton.vue";
 import LayoutSelectionDialog from "@/components/Dialogs/LayoutSelectionDialog.vue";
 import SaveGalaxyDialog from "@/components/Dialogs/SaveGalaxyDialog.vue";
+import PdfDownloader from "@/components/Reused/PdfDownloader.vue";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
 import Network from "@/vue2vis/Network.vue";
@@ -611,6 +781,8 @@ import {
   generateInstructionsForMission,
   generateGalaxyMapAgain,
   getGalaxyMapObjectFromCourse,
+  refineGalaxyMap,
+  refineGalaxyMapWithClarification,
 } from "@/lib/ff";
 import * as smd from "streaming-markdown";
 import { getFriendlyErrorMessage } from "@/lib/utils";
@@ -628,6 +800,7 @@ export default {
     PublishGalaxy,
     LayoutSelectionDialog,
     SaveGalaxyDialog,
+    PdfDownloader,
     // PromptDialog,
     Network,
   },
@@ -646,6 +819,11 @@ export default {
       mdiArrowRightBold,
       mdiArrowLeftBold,
       mdiContentSave,
+      mdiInformationVariant,
+      mdiClose,
+      mdiChevronUp,
+      mdiChevronDown,
+
       // Loading tracking
       isSavingToDB: false,
       isGeneratingMissions: false,
@@ -668,6 +846,7 @@ export default {
       activeGalaxyItems: [],
       treeviewActiveItems: {}, // Track active items for each treeview
       updateTimeout: null, // Debounce updates to prevent rapid toggling
+      isPlanetsCollapsed: false, // Track if planets are collapsed
 
       // Inline editing
       editingItem: null, // Track which item is being edited
@@ -852,6 +1031,22 @@ export default {
       // AI description update
       descriptionGenerating: false,
       itemsGeneratingDescription: new Set(), // Track items currently generating descriptions
+
+      showClarificationDialog: false,
+      clarificationQuestions: [
+        "What specific areas of the Galaxy Map do you want to change?",
+        "Are there any specific mission instructions you want to update?",
+        "Do you want to add any new missions or modify existing ones?",
+        "Are there any specific goals or milestones you want to achieve?",
+        "Do you want to add any new stars or modify existing ones?",
+        "Are there any specific themes or concepts you want to highlight?",
+        "Do you want to add any new planets or modify existing ones?",
+        "Are there any specific tasks or activities you want to include?",
+        "Do you want to add any new mission instructions or modify existing ones?",
+        "Are there any specific checkpoints or milestones you want to set?",
+      ],
+      clarificationAnswers: [],
+      previousRefinementResponseId: null,
     };
   },
   watch: {
@@ -902,8 +1097,14 @@ export default {
               // Find newly added node IDs
               const newlyAddedNodeIds = allNodeIds.filter((id) => !existingNodeIds.includes(id));
 
-              // Preserve existing expanded state and add newly added nodes
-              this.expandedNodes = [...new Set([...this.expandedNodes, ...newlyAddedNodeIds])];
+              // If planets are collapsed, only expand stars and newly added nodes
+              if (this.isPlanetsCollapsed) {
+                const starNodeIds = this.getStarNodeIds(newVal);
+                this.expandedNodes = [...new Set([...starNodeIds, ...newlyAddedNodeIds])];
+              } else {
+                // Preserve existing expanded state and add newly added nodes
+                this.expandedNodes = [...new Set([...this.expandedNodes, ...newlyAddedNodeIds])];
+              }
 
               // Update network positions based on treeview item widths
               this.updateNetworkPositionsFromTreeview();
@@ -989,6 +1190,13 @@ export default {
 
     // Wait for treeview items to render, then set up nodes and edges based on their positions
     this.setupInitialNetworkNodes();
+
+    // Initialize expandedNodes to show all nodes by default
+    this.$nextTick(() => {
+      if (this.transformedStarDetails.length > 0) {
+        this.expandedNodes = this.getAllNodeIds(this.transformedStarDetails);
+      }
+    });
 
     // Add resize listener
     window.addEventListener("resize", this.handleResize);
@@ -1112,8 +1320,59 @@ export default {
         return false;
       }
     },
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
+    },
   },
   methods: {
+    // Estimate content height based on text length and structure
+    estimateContentHeight(content) {
+      if (!content) return 0;
+
+      // Ensure content is a string
+      let contentStr = "";
+      if (typeof content === "string") {
+        contentStr = content;
+      } else if (typeof content === "object" && content !== null) {
+        // If it's an object, try to extract text from common properties
+        if (content.intro) contentStr += content.intro + " ";
+        if (content.description) contentStr += content.description + " ";
+        if (content.title) contentStr += content.title + " ";
+        // Convert to string if it's still an object
+        if (typeof contentStr === "object") {
+          contentStr = JSON.stringify(contentStr);
+        }
+      } else {
+        // For any other type, convert to string
+        contentStr = String(content);
+      }
+
+      // Convert HTML to plain text for length calculation
+      const plainText = contentStr.replace(/<[^>]*>/g, "").trim();
+
+      // Base height for title/header
+      let height = 40;
+
+      // Add height for text content
+      if (plainText) {
+        // Rough estimate: ~50 characters per line at 13px font size
+        const charsPerLine = 50;
+        const lines = Math.ceil(plainText.length / charsPerLine);
+        height += lines * 18; // 18px per line
+      }
+
+      // Add height for HTML elements (headings, lists, etc.)
+      const headingCount = (contentStr.match(/<h[1-6][^>]*>/g) || []).length;
+      const listCount = (contentStr.match(/<[uo]l[^>]*>/g) || []).length;
+      const paragraphCount = (contentStr.match(/<p[^>]*>/g) || []).length;
+
+      height += headingCount * 25; // 25px per heading
+      height += listCount * 15; // 15px per list
+      height += paragraphCount * 10; // 10px per paragraph
+
+      return Math.max(height, 80); // Minimum height
+    },
+
     getSanitizedGalaxyMap(map) {
       if (!map) return null;
       const clone = JSON.parse(JSON.stringify(map));
@@ -1290,7 +1549,7 @@ export default {
         }
 
         if (instructions.intro) {
-          html += `<p class="intro-outro">${instructions.intro}</p>`;
+          html += `<p class="intro">${instructions.intro}</p>`;
         }
 
         // Add instructions section (supports unified "steps" or legacy "instructions")
@@ -1342,7 +1601,7 @@ export default {
         }
 
         if (instructions.outro) {
-          html += `<p class="intro-outro">${instructions.outro}</p>`;
+          html += `<p class="outro">${instructions.outro}</p>`;
         }
 
         // console.log("🔄 Formatted mission instructions to HTML:", html);
@@ -1691,6 +1950,40 @@ export default {
       return ids;
     },
 
+    // Get only star node IDs (top level)
+    getStarNodeIds(items) {
+      const ids = [];
+      items.forEach((node) => {
+        if (node.type === "star") {
+          ids.push(node.id);
+        }
+      });
+      return ids;
+    },
+
+    // Toggle between collapsed (stars only) and expanded (all nodes) states
+    togglePlanetsCollapse() {
+      if (this.isPlanetsCollapsed) {
+        // Expand all - show everything
+        this.expandAllPlanets();
+      } else {
+        // Collapse planets - show only stars
+        this.collapsePlanets();
+      }
+    },
+
+    // Collapse planets - show only stars
+    collapsePlanets() {
+      this.isPlanetsCollapsed = true;
+      this.expandedNodes = this.getStarNodeIds(this.transformedStarDetails);
+    },
+
+    // Expand all planets - show everything
+    expandAllPlanets() {
+      this.isPlanetsCollapsed = false;
+      this.expandedNodes = this.getAllNodeIds(this.transformedStarDetails);
+    },
+
     // Helper method to accumulate tokens from multiple API calls
     accumulateTokens(newTokenUsage) {
       if (!newTokenUsage) return this.aiGeneratedGalaxyMap.tokens || {};
@@ -1886,6 +2179,99 @@ export default {
       }
     },
 
+    // Get the star index from the treeview item
+    getStarIndex(item) {
+      const starItems = this.$el.querySelectorAll(".star-treeview-item");
+      for (let i = 0; i < starItems.length; i++) {
+        if (starItems[i] === item) {
+          return i;
+        }
+      }
+      return 0;
+    },
+
+    // Format mission instructions to HTML (following the same pattern as AICreateGalaxyDialog)
+    formatMissionInstructionsToHtml(missionInstructions) {
+      if (!missionInstructions) return "";
+
+      try {
+        // Handle both object and string formats
+        let instructions = missionInstructions;
+        if (typeof missionInstructions === "string") {
+          instructions = JSON.parse(instructions);
+        }
+
+        let html = "";
+
+        // Add description
+        if (instructions.description && !this.isGeneratingMissions) {
+          html += `<p>${instructions.description}</p>`;
+        }
+
+        if (instructions.intro) {
+          html += `<p class="intro">${instructions.intro}</p>`;
+        }
+
+        // Add instructions section (supports unified "steps" or legacy "instructions")
+        const stepsArray = instructions.instructions || instructions.steps || [];
+        if (stepsArray.length > 0) {
+          if (!this.isGeneratingMissions) {
+            html += `<h2>Instructions</h2>`;
+          }
+
+          // Loop through each step
+          stepsArray.forEach((step) => {
+            if (step.title) {
+              html += `<h3>${step.title}</h3>`;
+            }
+
+            // Add tasks, avoiding nested <ul><li> when task content already contains lists
+            if (step.tasks && step.tasks.length > 0) {
+              let listOpen = false;
+              step.tasks.forEach((task) => {
+                if (!task || !task.taskContent) return;
+                const parsedTaskContent = this.renderMarkdownWithStreaming(task.taskContent);
+                const hasOwnList =
+                  /<(ul|ol)[\s>]/i.test(parsedTaskContent) || /<li[\s>]/i.test(parsedTaskContent);
+                if (hasOwnList) {
+                  if (listOpen) {
+                    html += `</ul>`;
+                    listOpen = false;
+                  }
+                  html += parsedTaskContent;
+                } else {
+                  if (!listOpen) {
+                    html += `<ul>`;
+                    listOpen = true;
+                  }
+                  html += `<li>${parsedTaskContent}</li>`;
+                }
+              });
+              if (listOpen) {
+                html += `</ul>`;
+                listOpen = false;
+              }
+            }
+
+            // Optional checkpoint
+            if (step.checkpoint) {
+              html += `<p><em>Checkpoint: ${step.checkpoint}</em></p>`;
+            }
+          });
+        }
+
+        if (instructions.outro) {
+          html += `<p class="outro">${instructions.outro}</p>`;
+        }
+
+        // console.log("🔄 Formatted mission instructions to HTML:", html);
+        return html;
+      } catch (error) {
+        console.error("❌ Error formatting mission instructions to HTML:", error);
+        return ""; // Fallback to empty string
+      }
+    },
+
     // Transform aiGeneratedGalaxyMap into treeview format
     updateTransformedStarDetails() {
       if (
@@ -2050,18 +2436,18 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
 6. Return the **entire** updated Galaxy Map object, not just the modified parts.
 
 **Planet scope + motivation rules (must enforce)**
-   - Each Planet is an **atomic win (15–60 min)**. If a planet is overloaded, **split it into additional planets** (in the same Star) and **renumber that Star’s planets** accordingly.
+   - Each Planet is an **atomic win (15–60 min)**. If a planet is overloaded, **split it into additional planets** (in the same Star) and **renumber that Star's planets** accordingly.
    - Mission Instructions must include:
      - **Intro** (what/why/how it connects),
      - **Steps** with **tasks** (each task is one discrete action),
      - **Checkpoint** after each step,
-     - **Outro** (celebrate win + what’s next).
-   - **Micro-teach**: When a new concept/term/tool appears for the first time in the journey, add a 1–3 sentence explanation *in the task where it’s first used*. Keep it practical and just-in-time. If it was taught earlier, only add a brief reminder.
+     - **Outro** (celebrate win + what's next).
+   - **Micro-teach**: When a new concept/term/tool appears for the first time in the journey, add a 1–3 sentence explanation *in the task where it's first used*. Keep it practical and just-in-time. If it was taught earlier, only add a brief reminder.
 
  **Quality constraints**
    - Keep changes **minimal and surgical** unless the user asks for broader restructuring.
    - Ensure every edited Mission remains scope-matched (15–60 min), motivating, and necessary for its Star.
-   - If the user’s request would cause scope creep, **split missions** rather than bloating instructions.
+   - If the user's request would cause scope creep, **split missions** rather than bloating instructions.
    - Prefer clear, concise phrasing and remove redundancy.
 
 ### 🧾 Input Structure:
@@ -2108,15 +2494,13 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
 
       console.log("refine inputMessages", inputMessages);
 
-      const refineGalaxyWithAiResponse = await this.$openai.responses.parse({
-        model: "gpt-5-mini",
-        previous_response_id: this.aiGeneratedGalaxyMap.aiResponseId,
-        input: inputMessages,
-        text: {
-          format: zodTextFormat(UnifiedGalaxyMapResponseSchema, "refine_galaxy_response"),
-        },
-        store: true,
-      });
+      // Call the cloud function for galaxy refinement
+      const refineGalaxyWithAiResponse = await refineGalaxyMap(
+        galaxyMapForAI,
+        activeItems,
+        this.galaxyRefineUserInput,
+        this.aiGeneratedGalaxyMap.aiResponseId,
+      );
 
       // Calculate and log execution time even on error
       const endTime = Date.now();
@@ -2126,6 +2510,28 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
       );
 
       console.log("🔍 Galaxy refinement response:", refineGalaxyWithAiResponse);
+
+      // Check if clarification is needed
+      if (refineGalaxyWithAiResponse.galaxyMap.status === "clarification_needed") {
+        console.log("Clarification needed, showing questions UI");
+
+        // Store the clarification questions and response ID for the follow-up call
+        this.clarificationQuestions = refineGalaxyWithAiResponse.galaxyMap.questions || [];
+        this.clarificationAnswers = new Array(this.clarificationQuestions.length).fill("");
+        this.previousRefinementResponseId = refineGalaxyWithAiResponse.responseId;
+
+        // Show the clarification dialog
+        this.showClarificationDialog = true;
+
+        // Reset loading state since we're waiting for user input
+        this.isRefining = false;
+        this.loading = false;
+
+        // Track token usage from this clarification request
+        this.trackTokenUsage(refineGalaxyWithAiResponse);
+
+        return; // Exit early, don't proceed with normal refinement flow
+      }
 
       // Preserve existing properties that should not be overwritten
       const existingHistory = this.aiGeneratedGalaxyMap.history || [];
@@ -2139,11 +2545,27 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
       const existingAiResponseId = this.aiGeneratedGalaxyMap.aiResponseId;
       const existingOriginResponseId = this.aiGeneratedGalaxyMap.originResponseId;
 
+      // CRITICAL: Preserve both response IDs for tracking AI call history
+      // - originResponseId: tracks the very first AI call that created the galaxy map
+      // - aiResponseId: tracks the most recent AI call (refinement, regeneration, etc.)
+      console.log("🔍 Preserving response IDs:", {
+        existingOriginResponseId,
+        existingAiResponseId,
+        newResponseId: refineGalaxyWithAiResponse.responseId,
+      });
+
       // Merge the new AI response with existing properties instead of overwriting
       this.aiGeneratedGalaxyMap = {
-        ...this.aiGeneratedGalaxyMap, // Keep all existing properties
-        ...refineGalaxyWithAiResponse.output_parsed, // Override with new AI response data
+        ...this.aiGeneratedGalaxyMap, // Keep all existing properties (including originResponseId)
+        ...refineGalaxyWithAiResponse.galaxyMap, // Override with new AI response data
+        aiResponseId: refineGalaxyWithAiResponse.responseId, // Update with new response ID
       };
+
+      // Verify both IDs are preserved
+      console.log("✅ After refinement, response IDs:", {
+        originResponseId: this.aiGeneratedGalaxyMap.originResponseId,
+        aiResponseId: this.aiGeneratedGalaxyMap.aiResponseId,
+      });
 
       // Create a deep copy of the NEW galaxy map data without the history property to avoid circular reference
       const newGalaxyMapCopy = JSON.parse(
@@ -2199,20 +2621,30 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
 
         if (result.success) {
           // Preserve existing properties that should not be overwritten
-          // const existingHistory = this.aiGeneratedGalaxyMap.history || [];
-          // const existingTokens = this.aiGeneratedGalaxyMap.tokens || {
-          //   totalInputTokens: 0,
-          //   totalOutputTokens: 0,
-          //   totalTokensUsed: 0,
-          // };
-          // const existingOriginResponseId = this.aiGeneratedGalaxyMap.originResponseId;
+          const existingOriginResponseId = this.aiGeneratedGalaxyMap.originResponseId;
+          const existingAiResponseId = this.aiGeneratedGalaxyMap.aiResponseId;
+
+          // CRITICAL: Preserve both response IDs for tracking AI call history
+          // - originResponseId: tracks the very first AI call that created the galaxy map
+          // - aiResponseId: tracks the most recent AI call (refinement, regeneration, etc.)
+          console.log("🔄 Preserving response IDs for regeneration:", {
+            existingOriginResponseId,
+            existingAiResponseId,
+            newResponseId: result.responseId,
+          });
 
           // Merge the new AI response with existing properties instead of overwriting
           this.aiGeneratedGalaxyMap = {
-            ...this.aiGeneratedGalaxyMap, // Keep all existing properties
+            ...this.aiGeneratedGalaxyMap, // Keep all existing properties (including originResponseId)
             ...result.galaxyMap, // Override with new AI response data
-            //aiResponseId: result.responseId, // Update with new response ID
+            aiResponseId: result.responseId, // Update with new response ID
           };
+
+          // Verify both IDs are preserved
+          console.log("✅ After regeneration, response IDs:", {
+            originResponseId: this.aiGeneratedGalaxyMap.originResponseId,
+            aiResponseId: this.aiGeneratedGalaxyMap.aiResponseId,
+          });
 
           // Create a deep copy of the NEW galaxy map data without the history property to avoid circular reference
           const newGalaxyMapCopy = JSON.parse(
@@ -2903,14 +3335,14 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
         const starMatch = item.id.match(/^star\[(\d+)\]$/);
         if (starMatch) {
           const starNumber = parseInt(starMatch[1]) + 1;
-          return `e.g., ${starNumber}: Your Star Title (numbering will be added automatically)`;
+          return `e.g., ${starNumber}: Your New Star Title`;
         }
       } else if (item.type === "planet") {
         const planetMatch = item.id.match(/^star\[(\d+)\]\.planet\[(\d+)\]$/);
         if (planetMatch) {
           const starNumber = parseInt(planetMatch[1]) + 1;
           const planetNumber = parseInt(planetMatch[2]) + 1;
-          return `e.g., ${starNumber}.${planetNumber}: Your Planet Title (numbering will be added automatically)`;
+          return `e.g., ${starNumber}.${planetNumber}: Your New Planet Title`;
         }
       } else if (item.type === "mission") {
         const missionMatch = item.id.match(/^star\[(\d+)\]\.planet\[(\d+)\]\.mission\[(\d+)\]$/);
@@ -2918,10 +3350,10 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
           const starNumber = parseInt(missionMatch[1]) + 1;
           const planetNumber = parseInt(missionMatch[2]) + 1;
           const missionNumber = parseInt(missionMatch[3]) + 1;
-          return `e.g., ${starNumber}.${planetNumber}.${missionNumber}: Your Mission Title (numbering will be added automatically)`;
+          return `e.g., ${starNumber}.${planetNumber}.${missionNumber}: Your New Mission Title`;
         }
       }
-      return "Enter title (numbering will be added automatically)";
+      return "Enter title";
     },
 
     // Check if a description is being generated for a specific item
@@ -3510,6 +3942,127 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
     },
+
+    async continueWithClarification() {
+      this.showClarificationDialog = false;
+      this.loading = true;
+      this.isRefining = true;
+
+      console.log("Clarification answered, proceeding with refinement");
+
+      try {
+        // Start timing
+        const startTime = Date.now();
+        console.log("🚀 Starting Galaxy refinement with clarification...");
+
+        // Format answers similar to AICreateGalaxyDialog
+        const prefixedAnswers = this.clarificationAnswers.map(
+          (answer, index) => `${index + 1}) ${answer}`,
+        );
+        const clarificationAnswersString = prefixedAnswers.join("\n");
+
+        // Call the clarification refinement function
+        const clarificationResponse = await refineGalaxyMapWithClarification(
+          clarificationAnswersString,
+          this.previousRefinementResponseId,
+        );
+
+        console.log("Clarification refinement response:", clarificationResponse);
+
+        // Check if we still need clarification
+        if (clarificationResponse.galaxyMap.status === "clarification_needed") {
+          console.log("Still need clarification, showing new questions");
+
+          // Update questions and show dialog again
+          this.clarificationQuestions = clarificationResponse.galaxyMap.questions || [];
+          this.clarificationAnswers = new Array(this.clarificationQuestions.length).fill("");
+          this.previousRefinementResponseId = clarificationResponse.responseId;
+
+          this.showClarificationDialog = true;
+          this.isRefining = false;
+          this.loading = false;
+
+          // Track token usage
+          this.trackTokenUsage(clarificationResponse);
+
+          return;
+        }
+
+        // If we have a journey_ready response, proceed with normal refinement flow
+        if (clarificationResponse.galaxyMap.status === "journey_ready") {
+          console.log("Journey ready after clarification, updating galaxy map");
+
+          // Preserve existing properties that should not be overwritten
+          const existingHistory = this.aiGeneratedGalaxyMap.history || [];
+          const existingTokens = this.aiGeneratedGalaxyMap.tokens || {
+            totalInputTokens: 0,
+            totalOutputTokens: 0,
+            totalTokens: 0,
+            modelsUsed: [],
+            combinedEstimatedCost: 0,
+          };
+          const existingAiResponseId = this.aiGeneratedGalaxyMap.aiResponseId;
+          const existingOriginResponseId = this.aiGeneratedGalaxyMap.originResponseId;
+
+          // Merge the new AI response with existing properties
+          this.aiGeneratedGalaxyMap = {
+            ...this.aiGeneratedGalaxyMap,
+            ...clarificationResponse.galaxyMap,
+          };
+
+          // Create a deep copy for history
+          const newGalaxyMapCopy = JSON.parse(
+            JSON.stringify({
+              ...this.aiGeneratedGalaxyMap,
+              history: undefined,
+            }),
+          );
+
+          // Add to history
+          this.aiGeneratedGalaxyMap.history.push({
+            galaxyMapData: newGalaxyMapCopy,
+            atThisRefineUserPrompt: this.galaxyRefineUserInput,
+          });
+
+          // Track token usage
+          this.trackTokenUsage(clarificationResponse);
+
+          // Update store
+          this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
+
+          // Reset form
+          this.galaxyRefineUserInput = "";
+          this.activeGalaxyItems = [];
+          this.treeviewActiveItems = {};
+
+          // Calculate and log execution time
+          const endTime = Date.now();
+          const timeString = this.formatExecutionTime(startTime, endTime);
+          console.log(
+            `✅ Galaxy refinement with clarification completed in ${timeString} (${endTime - startTime}ms total)`,
+          );
+        }
+      } catch (error) {
+        console.error("Error during clarification refinement:", error);
+        this.setSnackbar({
+          show: true,
+          text: "Error during refinement: " + error.message,
+          color: "pink",
+        });
+      } finally {
+        // Reset state
+        this.isRefining = false;
+        this.loading = false;
+        this.clarificationAnswers = [];
+        this.previousRefinementResponseId = null;
+      }
+    },
+
+    cancelClarification() {
+      this.showClarificationDialog = false;
+      // Add any additional logic you want to execute when clarification is canceled
+      console.log("Clarification canceled");
+    },
   },
 };
 </script>
@@ -3552,16 +4105,30 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
     margin-left: 0px;
   }
 
-  .galaxy-info-wrapper {
-    // position: relative;
-    // transition: all 0.3s;
+  &.mobile {
+    padding: 0px;
+    margin: 10px;
+  }
 
+  .galaxy-info-wrapper {
     &.minimized {
       position: fixed;
       top: -31px;
       left: 0;
       z-index: 10;
+      width: 100%;
+
+      &.mobile {
+        width: 50%;
+      }
     }
+  }
+
+  .ai-edit-feature-buttons {
+    position: absolute;
+    bottom: 150px;
+    left: 20px;
+    z-index: 10;
   }
 
   .legend-item-text {
@@ -3574,7 +4141,7 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
 #main-section {
   position: absolute;
   width: calc(100vw - 200px);
-  margin: 0px 0px 0px 200px;
+  margin: 0px 0px 0px 210px;
   height: 100%;
   display: flex;
   justify-content: flex-start;
@@ -3585,6 +4152,7 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
 
   &.minimized {
     width: 100vw;
+    padding-top: 30px;
     margin: 0px;
   }
 
@@ -3599,6 +4167,10 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
     // border: 1px solid blue;
     flex-direction: column;
 
+    &.mobile {
+      padding: 0px;
+    }
+
     .galaxy-preview-container {
       display: flex;
       flex-direction: column;
@@ -3609,6 +4181,8 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
       // margin-bottom: 100px;
       transition: all 0.3s ease;
 
+      // border: 1px dashed var(--v-missionAccent-base);
+
       // Create a mask that fades out at left and right edges using linear gradients
       mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
       -webkit-mask-image: linear-gradient(
@@ -3618,6 +4192,13 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
         black 95%,
         transparent 100%
       );
+
+      // Remove mask on mobile devices
+      &.mobile {
+        mask-image: none;
+        -webkit-mask-image: none;
+        margin-top: 20px;
+      }
 
       &.task-editing {
         width: 300px; // Shrink to roughly one treeview column width
@@ -3739,7 +4320,9 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            width: 100%;
+            max-width: calc(
+              300px + 50px
+            ); // 280px is the max-width of the treeview-description + 5px for the treeview-description margin-left
             justify-content: space-between;
           }
 
@@ -3748,6 +4331,11 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            white-space: normal;
+            width: 100%;
+            text-indent: -2.5em; /* Negative indent to pull wrapped lines left */
+            padding-left: 2.5em; /* Positive padding to push content right */
+            box-sizing: border-box;
           }
 
           .edit-icon,
@@ -4191,6 +4779,13 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
   padding: 2rem;
 }
 
+.long-loading-time-message {
+  font-size: 0.8rem;
+  color: var(--v-missionAccent-base);
+  opacity: 0.8;
+  line-height: 1.4;
+}
+
 .saving-to-db-container {
   display: flex;
   flex-direction: column;
@@ -4354,6 +4949,12 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
     rgba(0, 0, 0, 0.7) 85%,
     transparent 95%
   );
+
+  // Remove mask on mobile devices
+  &.mobile {
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
 }
 
 .loading-galaxy-treeview-wrapper {
@@ -4600,9 +5201,17 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
     line-height: 1.4;
   }
 
-  ::v-deep p.intro-outro {
+  ::v-deep p.intro {
     font-size: 0.7rem;
     font-weight: 500;
+    border-bottom: 1px solid var(--v-missionAccent-base);
+    padding-bottom: 5px;
+  }
+  ::v-deep p.outro {
+    font-size: 0.7rem;
+    font-weight: 500;
+    border-top: 1px solid var(--v-missionAccent-base);
+    padding-top: 5px;
   }
 
   ::v-deep hr {
@@ -4695,6 +5304,201 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
   ::v-deep th {
     background-color: rgba(var(--v-missionAccent-base), 0.1);
     font-weight: 600;
+  }
+}
+
+// new dialog ui
+.create-dialog {
+  color: var(--v-missionAccent-base);
+  background-color: var(--v-background-base);
+  border: 1px solid var(--v-missionAccent-base);
+  // background: lightGrey;
+  display: flex;
+  // flex-direction: column;
+  flex-wrap: wrap;
+  overflow-x: hidden;
+
+  .dialog-header {
+    width: 100%;
+    padding: 20px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--v-missionAccent-base);
+  }
+
+  .action-buttons {
+    width: auto;
+    padding: 20px;
+    margin: 0 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+}
+
+.create-dialog-content {
+  display: flex;
+  justify-content: space-around;
+  align-items: space-around;
+  flex-direction: column;
+  color: var(--v-missionAccent-base);
+  padding: 20px;
+  width: 100%;
+
+  .dialog-title {
+    color: var(--v-missionAccent-base);
+    text-transform: uppercase;
+  }
+
+  .input-field {
+    width: 100%;
+    text-align: center;
+    flex: none;
+    font-size: 1rem;
+    color: var(--v-missionAccent-base);
+  }
+}
+
+.dialog-description {
+  color: var(--v-missionAccent-base);
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  margin: 0;
+
+  .galaxy-text {
+    color: var(--v-galaxyAccent-base);
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+
+  .mission-text {
+    color: var(--v-missionAccent-base);
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+}
+
+.v-btn:not(.v-btn--round).v-size--default {
+  background-color: var(--v-background-base) !important;
+}
+
+.mobile-layout {
+  .create-dialog {
+    flex-direction: column;
+    min-height: auto;
+    padding: 0;
+
+    .dialog-header {
+      padding: 15px;
+
+      .dialog-title {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+      }
+
+      .dialog-description {
+        font-size: 0.65rem;
+        line-height: 1.4;
+      }
+    }
+
+    .create-dialog-content {
+      padding: 15px;
+      min-height: auto;
+
+      .input-field {
+        font-size: 0.9rem;
+        margin-bottom: 15px;
+      }
+    }
+
+    .action-buttons {
+      padding: 15px;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      align-items: center;
+      width: 100%;
+
+      .v-btn {
+        width: 100%;
+        max-width: 280px;
+        margin: 0 !important;
+      }
+    }
+  }
+}
+
+// Fix scrolling issues with textareas
+.input-field {
+  .v-text-field__slot {
+    textarea {
+      scroll-behavior: smooth;
+      overflow-y: auto;
+    }
+  }
+}
+
+// Ensure smooth scrolling for the entire dialog content
+.create-dialog-content {
+  scroll-behavior: smooth;
+}
+
+// Touch-friendly improvements for mobile
+@media (max-width: 768px) {
+  .action-buttons {
+    &.flex-row {
+      flex-direction: column !important;
+      gap: 15px;
+
+      .v-btn {
+        margin: 0 !important;
+        width: 100%;
+        max-width: 280px;
+      }
+    }
+  }
+  .input-field {
+    .v-input__control {
+      min-height: 44px; // Minimum touch target size
+    }
+  }
+
+  .v-btn {
+    min-height: 44px; // Minimum touch target size
+    font-size: 0.9rem;
+  }
+}
+
+// Extra small mobile devices
+@media (max-width: 480px) {
+  .create-dialog {
+    .dialog-header {
+      padding: 12px;
+
+      .dialog-title {
+        font-size: 1rem;
+      }
+
+      .dialog-description {
+        font-size: 0.6rem;
+      }
+    }
+
+    .create-dialog-content {
+      padding: 12px;
+    }
+
+    .action-buttons {
+      padding: 12px;
+      margin: 0;
+      align-items: center;
+      width: 100%;
+
+      .v-btn {
+        max-width: 260px;
+      }
+    }
   }
 }
 </style>

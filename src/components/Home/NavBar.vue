@@ -66,7 +66,12 @@ import useGalaxyListViewStore from "@/store/galaxyListView";
 import MobileNavDialog from "./MobileNavDialog.vue";
 
 const TAB_MY_GALAXIES = { id: 1, name: "MY GALAXIES", route: `/my-galaxies`, exactPath: false };
-const TAB_PUBLIC_GALAXIES = { id: 2, name: "PUBLIC GALAXIES", route: `/`, exactPath: true };
+const TAB_PUBLIC_GALAXIES = {
+  id: 2,
+  name: "PUBLIC GALAXIES",
+  route: `/public-galaxies`,
+  exactPath: true,
+};
 const TAB_COHORTS = { id: 3, name: "SQUADS", route: `/squads`, exactPath: false };
 const TAB_DASHBOARD = { id: 4, name: "DASHBOARD", route: `/dashboard`, exactPath: false };
 const TAB_ADMIN = { id: 5, name: "ADMIN", route: `/students` };

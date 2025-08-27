@@ -125,13 +125,13 @@
               : "0"
           }}
         </p>
-        <p class="token-breakdown overline mt-2">
+        <!-- <p class="token-breakdown overline mt-2">
           Est. cost: ${{
             aiGeneratedGalaxyMap.tokens
               ? aiGeneratedGalaxyMap.tokens.combinedEstimatedCost.toFixed(5)
               : "0.00000"
           }}
-        </p>
+        </p> -->
         <!-- Model breakdown -->
         <!-- <div
           v-if="
@@ -152,6 +152,14 @@
             <span class="model-cost">${{ model.estimatedCost.toFixed(5) }}</span>
           </div>
         </div> -->
+        <div class="mt-4">
+          <p class="long-loading-time-message">
+            <em
+              >It typically takes around 3-5 minutes for the AI to generate a Galaxy Map.<br />
+              Grab a drink or some fresh air and check back shortly.</em
+            >
+          </p>
+        </div>
       </div>
     </div>
 
@@ -163,6 +171,7 @@
           :width="$vuetify.breakpoint.mdAndUp ? '50%' : '95%'"
           :max-width="$vuetify.breakpoint.mdAndUp ? '800px' : '95vw'"
           light
+          style="z-index: 1000"
         >
           <!-- CREATE BUTTON -->
 
@@ -219,16 +228,17 @@
                     color="missionAccent"
                     auto-grow
                     clearable
-                    :rows="$vuetify.breakpoint.smAndDown ? 6 : 1"
+                    rows="6"
                     v-model="description"
-                    label="Describe what you want to achieve?"
+                    label="Describe what you would like me to map for you?"
                     :disabled="loading"
                     autofocus
                     :dense="$vuetify.breakpoint.smAndDown"
+                    hide-details
                   ></v-textarea>
 
                   <div
-                    class="action-buttons mt-6"
+                    class="action-buttons mt-4"
                     :class="{ 'mobile-layout': $vuetify.breakpoint.smAndDown }"
                   >
                     <v-btn
@@ -276,11 +286,12 @@
                       color="missionAccent"
                       auto-grow
                       clearable
-                      :rows="$vuetify.breakpoint.smAndDown ? 5 : 1"
+                      rows="5"
                       v-model="aiGatheringContextAnswers[index]"
                       :disabled="loading"
                       :autofocus="index === 0"
                       :dense="$vuetify.breakpoint.smAndDown"
+                      hide-details
                     ></v-textarea>
                   </div>
 
@@ -377,8 +388,8 @@ import {
   downloadAndUploadImage,
   generateUnifiedGalaxyMap,
   generateUnifiedGalaxyMapWithClarification,
-  generateUnifiedGalaxyMapStreaming,
-  generateUnifiedGalaxyMapWithClarificationStreaming,
+  // generateUnifiedGalaxyMapStreaming,
+  // generateUnifiedGalaxyMapWithClarificationStreaming,
 } from "@/lib/ff";
 import { zodTextFormat } from "openai/helpers/zod";
 import { StarsAndPlanetsResponseSchema } from "@/lib/schemas";
@@ -688,21 +699,21 @@ export default {
 
         // =========== (unified a.i. api call) Generate Stars + Missions + Mission Instructions ==========
         // const aiResponse = await generateGalaxyMap(this.description);
-        // const aiResponse = await generateUnifiedGalaxyMap(this.description);
+        const aiResponse = await generateUnifiedGalaxyMap(this.description);
 
         // Use streaming version for real-time updates
-        const aiResponse = await generateUnifiedGalaxyMapStreaming(this.description, (update) => {
-          // Handle streaming updates
-          if (update.type === "reasoning_summary_part" && update.text) {
-            this.streamingText = update.text;
-          } else if (update.type === "reasoning_summary_text" && update.delta) {
-            this.streamingText += update.delta;
-          } else if (update.type === "content_part" && update.text) {
-            this.streamingText = update.text;
-          } else if (update.type === "content_text" && update.delta) {
-            this.streamingText += update.delta;
-          }
-        });
+        // const aiResponse = await generateUnifiedGalaxyMapStreaming(this.description, (update) => {
+        //   // Handle streaming updates
+        //   if (update.type === "reasoning_summary_part" && update.text) {
+        //     this.streamingText = update.text;
+        //   } else if (update.type === "reasoning_summary_text" && update.delta) {
+        //     this.streamingText += update.delta;
+        //   } else if (update.type === "content_part" && update.text) {
+        //     this.streamingText = update.text;
+        //   } else if (update.type === "content_text" && update.delta) {
+        //     this.streamingText += update.delta;
+        //   }
+        // });
 
         // console.log("1st A.I. call: Stars and Planets generated ✅. A.I. Response:", aiResponse);
         console.log("Unified A.I. call: Stars + Missions + Instructions generated ✅:", aiResponse);
@@ -712,6 +723,9 @@ export default {
 
         // Get the parsed response
         const parsedResponse = aiResponse.galaxyMap;
+
+        // CRITICAL: Set the originResponseId to track the very first AI call
+        // This ID must be preserved throughout all subsequent AI operations
         parsedResponse.originResponseId = aiResponse.responseId;
 
         // Check if it's clarification_needed, journey_ready
@@ -834,26 +848,26 @@ export default {
         this.isGeneratingMissions = true;
 
         // unified second ai call with structured output using cloud function
-        // const aiSecondResponse = await generateGalaxyMapWithClarification(
-        //   this.prefixedAnswers.join("\n"),
-        //   this.previousResponseId,
-        // );
-        const aiSecondResponse = await generateUnifiedGalaxyMapWithClarificationStreaming(
+        const aiSecondResponse = await generateUnifiedGalaxyMapWithClarification(
           this.prefixedAnswers.join("\n"),
           this.previousResponseId,
-          (update) => {
-            // Handle streaming updates
-            if (update.type === "reasoning_summary_part" && update.text) {
-              this.streamingText = update.text;
-            } else if (update.type === "reasoning_summary_text" && update.delta) {
-              this.streamingText += update.delta;
-            } else if (update.type === "content_part" && update.text) {
-              this.streamingText = update.text;
-            } else if (update.type === "content_text" && update.delta) {
-              this.streamingText += update.delta;
-            }
-          },
         );
+        // const aiSecondResponse = await generateUnifiedGalaxyMapWithClarificationStreaming(
+        //   this.prefixedAnswers.join("\n"),
+        //   this.previousResponseId,
+        //   (update) => {
+        //     // Handle streaming updates
+        //     if (update.type === "reasoning_summary_part" && update.text) {
+        //       this.streamingText = update.text;
+        //     } else if (update.type === "reasoning_summary_text" && update.delta) {
+        //       this.streamingText += update.delta;
+        //     } else if (update.type === "content_part" && update.text) {
+        //       this.streamingText = update.text;
+        //     } else if (update.type === "content_text" && update.delta) {
+        //       this.streamingText += update.delta;
+        //     }
+        //   },
+        // );
 
         console.log("Unified 2nd A.I. call response:", aiSecondResponse);
 
@@ -861,6 +875,9 @@ export default {
 
         // Get the parsed response (already validated by cloud function)
         const parsedResponse = aiSecondResponse.galaxyMap;
+
+        // Note: originResponseId is already set from the first step
+        // and will be preserved when setting aiGeneratedGalaxyMap
 
         // Check if it's clarification_needed, journey_ready, or stars list
         if (
@@ -2115,6 +2132,13 @@ export default {
   margin-top: 0.25rem;
   text-transform: uppercase;
   letter-spacing: 1px;
+}
+
+.long-loading-time-message {
+  font-size: 0.8rem;
+  color: var(--v-missionAccent-base);
+  opacity: 0.8;
+  line-height: 1.4;
 }
 
 // Mobile-specific improvements

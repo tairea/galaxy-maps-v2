@@ -1,3 +1,25 @@
+<!-- ultrasonic water tank -->
+
+i want to create an iot system that uses a HC-SR04 ultrasonic sensor connected to a ESP8266 NODEMCUv1 wifi board to measure the height of the water level in a water tank, then send that to node-red on an android phone that the nodemcu is connected to via wifi hotspot, then node-red will send a whatsapp message to a person every morning with the water tank level in %. we will also save data to firebase and make the node-red dashboard accessible remotely using free ngrok. the system will be powered by 4 x 18650 batties in a parallel battery holder and a 20w solar panel and a tp4056
+
+<!--  refine -->
+
+i dont like the sequence.
+we should do sensor to board on usb power first.
+then to node red
+then firebase
+then node red dashoard
+then solar battery
+the whatsapp daily notification
+
+<!-- physics for resilince -->
+
+middle school physics, biology, and chemistry for remote island resilience.
+Targeted at school aged students.
+12 week long course. 4 lessons per week.
+Project based.
+Basic understanding, all beginners.
+
 <!-- ai character generation -->
 
 create a mini course on how to generate lip-sycned videos of ai characters talking.

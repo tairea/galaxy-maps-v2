@@ -8,6 +8,7 @@
           :max-width="$vuetify.breakpoint.mdAndUp ? '800px' : '95vw'"
           :min-height="$vuetify.breakpoint.mdAndUp ? '400px' : 'auto'"
           light
+          style="z-index: 1000"
           @click:outside="handleDialogClose"
           @input="handleDialogInput"
         >
@@ -21,6 +22,7 @@
               :color="draft ? 'cohortAccent' : 'galaxyAccent'"
               small
               class="pa-o"
+              style="z-index: 100"
             >
               <v-icon class="pr-2" small> {{ mdiPencil }} </v-icon>
               edit galaxy
@@ -31,6 +33,8 @@
               color="baseAccent"
               v-bind="attrs"
               @click="handleCreateButtonClick"
+              style="z-index: 100"
+              class="create-galaxy-button"
             >
               <v-icon left> {{ mdiPlus }} </v-icon>
               CREATE GALAXY
@@ -455,7 +459,7 @@
           <!-- End create-dialog -->
         </v-dialog>
 
-        <v-dialog v-model="privateDialog" width="40%" light>
+        <v-dialog v-model="privateDialog" width="40%" light style="z-index: 1000">
           <div v-if="peopleInCourse.length" class="create-dialog">
             <!-- HEADER -->
             <div class="dialog-header py-10">
@@ -519,7 +523,7 @@
         </v-dialog>
 
         <!-- CONFIRM DELETE DIALOG -->
-        <v-dialog v-model="dialogConfirm" width="40%" light>
+        <v-dialog v-model="dialogConfirm" width="40%" light style="z-index: 1000">
           <div class="create-dialog">
             <!-- HEADER -->
             <div class="dialog-header py-10">

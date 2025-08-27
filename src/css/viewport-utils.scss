@@ -31,6 +31,37 @@
   height: calc(var(--vh, 1vh) * 25);
 }
 
+// Viewport width utilities using the --vw custom property
+.vw-100 {
+  width: 100vw; /* Fallback */
+  width: calc(var(--vw, 1vw) * 100);
+}
+
+.vw-90 {
+  width: 90vw; /* Fallback */
+  width: calc(var(--vw, 1vw) * 90);
+}
+
+.vw-80 {
+  width: 80vw; /* Fallback */
+  width: calc(var(--vw, 1vw) * 80);
+}
+
+.vw-75 {
+  width: 75vw; /* Fallback */
+  width: calc(var(--vw, 1vw) * 75);
+}
+
+.vw-50 {
+  width: 50vw; /* Fallback */
+  width: calc(var(--vw, 1vw) * 50);
+}
+
+.vw-25 {
+  width: 25vw; /* Fallback */
+  width: calc(var(--vw, 1vw) * 25);
+}
+
 // Min height utilities
 .min-vh-100 {
   min-height: 100vh; /* Fallback */
@@ -45,4 +76,20 @@
 .min-vh-50 {
   min-height: 50vh; /* Fallback */
   min-height: calc(var(--vh, 1vh) * 50);
+}
+
+// Min width utilities
+.min-vw-100 {
+  min-width: 100vw; /* Fallback */
+  min-width: calc(var(--vw, 1vw) * 100);
+}
+
+.min-vw-75 {
+  min-width: 75vw; /* Fallback */
+  min-width: calc(var(--vw, 1vw) * 75);
+}
+
+.min-vw-50 {
+  min-width: 50vw; /* Fallback */
+  min-width: calc(var(--vw, 1vw) * 50);
 }

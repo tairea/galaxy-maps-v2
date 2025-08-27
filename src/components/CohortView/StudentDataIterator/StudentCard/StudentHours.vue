@@ -81,7 +81,7 @@ export default {
 
       // Format the result to display the minutes correctly (e.g. 1.75 returns 1.45 aka 1 hour 45 minutes)
       const formattedMinutes = remainderMinutes < 10 ? `0${remainderMinutes}` : remainderMinutes;
-      const formattedHours = `${wholeHours}.${formattedMinutes}`;
+      const formattedHours = `${wholeHours}H ${formattedMinutes}M`;
 
       return formattedHours;
     },
@@ -93,7 +93,7 @@ export default {
 
       // Format the result to display the minutes correctly (e.g. 1.75 returns 1.45 aka 1 hour 45 minutes)
       const formattedMinutes = remainderMinutes < 10 ? `0${remainderMinutes}` : remainderMinutes;
-      const formattedHours = `${wholeHours}.${formattedMinutes}`;
+      const formattedHours = `${wholeHours}H ${formattedMinutes}M`;
 
       // emitup for sort by hours
       this.$emit("emitUpHours", formattedHours);
@@ -114,7 +114,7 @@ export default {
 }
 
 .label-value {
-  font-size: 1.3rem;
+  font-size: 0.9rem;
   margin: 0px;
   color: var(--v-baseAccent-base);
 }

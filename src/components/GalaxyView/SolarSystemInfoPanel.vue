@@ -161,7 +161,7 @@
           >
             <p class="ma-3 background--text">
               Start <br />
-              {{ course.title }} <br />
+              This <br />
               Galaxy
             </p>
           </v-btn>
@@ -233,7 +233,7 @@ export default {
     // },
     enableClick() {
       console.log("click");
-      if (this.course.presentationOnly && !this.teacher) return false;
+      if (this.course.presentationOnly && !this.teacher && !user.loggedIn) return false;
       return true;
     },
     teacher() {

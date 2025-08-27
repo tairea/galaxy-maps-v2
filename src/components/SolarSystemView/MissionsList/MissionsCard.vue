@@ -377,8 +377,29 @@ export default {
      */
     hasLongDescription() {
       if (!this.task || !this.task.description) return false;
-      // Consider description long if it has more than 200 characters or contains multiple paragraphs
-      return this.task.description.length > 200 || this.task.description.includes("\n\n");
+
+      // Check for HTML content that would make it visually long
+      if (this.isHtmlContent(this.task.description)) {
+        // For HTML content, check for multiple elements or media
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = this.task.description;
+
+        // Count various elements that contribute to visual length
+        const hasMultipleParagraphs = tempDiv.querySelectorAll("p").length > 1;
+        const hasImages = tempDiv.querySelectorAll("img").length > 0;
+        const hasVideos = tempDiv.querySelectorAll("video, iframe").length > 0;
+        const hasLists = tempDiv.querySelectorAll("ul, ol").length > 0;
+        const hasCodeBlocks = tempDiv.querySelectorAll("pre, code").length > 0;
+        const hasHeaders = tempDiv.querySelectorAll("h1, h2, h3, h4, h5, h6").length > 0;
+
+        // Consider it long if it has multiple content types or multiple paragraphs
+        return (
+          hasMultipleParagraphs || hasImages || hasVideos || hasLists || hasCodeBlocks || hasHeaders
+        );
+      } else {
+        // For plain text/markdown, use the existing logic
+        return this.task.description.length > 200 || this.task.description.includes("\n\n");
+      }
     },
 
     /**

@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="showDialog" width="500px" persistent>
+  <v-dialog v-model="showDialog" width="500px" persistent style="z-index: 1000">
     <v-card class="layout-selection-dialog">
       <v-card-title class="dialog-title">
         Choose Galaxy Layout

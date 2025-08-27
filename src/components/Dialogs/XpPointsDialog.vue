@@ -223,7 +223,7 @@ export default {
   // left: 40%;
   // margin-bottom: -50px;
   .plain-label-value {
-    font-size: 1.3rem;
+    font-size: 0.9rem;
     margin: 0px;
     color: var(--v-baseAccent-base);
   }

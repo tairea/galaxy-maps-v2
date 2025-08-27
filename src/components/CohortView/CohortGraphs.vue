@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="timeframe-chips">
+    <div class="timeframe-chips mt-6">
       <TimeframeFilters @timeframe="timeframe = $event" />
     </div>
     <!-- Progression Line Charts -->
@@ -13,7 +13,7 @@
       >
         <v-btn :loading="cohortsCoursesDataLoading" icon color="missionAccent"></v-btn>
       </div>
-      <div v-else-if="cohortsCoursesData.length > 0" style="padding: 20px">
+      <div v-else-if="cohortsCoursesData.length > 0" style="padding: 0px 20px">
         <ProgressionLineChart
           v-for="courseData in cohortsCoursesData"
           :key="courseData.id"
@@ -21,6 +21,7 @@
           :timeframe="timeframe"
           :selectedPersons="selectedPersons"
           :unselectedPersons="unselectedPersons"
+          class="mb-6"
         />
       </div>
       <div v-else class="d-flex justify-center align-center" style="padding: 50px 0px">

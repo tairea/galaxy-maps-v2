@@ -1,12 +1,14 @@
 <template>
-  <v-dialog v-model="dialogVisible" fullscreen transition="dialog-bottom-transition">
+  <v-dialog
+    v-model="dialogVisible"
+    fullscreen
+    transition="dialog-bottom-transition"
+    style="z-index: 9999"
+  >
     <v-card color="var(--v-background-darken1)">
-      <v-toolbar dark color="var(--v-background-darken1)" flat>
-        <v-spacer></v-spacer>
-        <v-btn icon @click="closeDialog" class="close-btn">
-          <v-icon color="baseAccent">{{ mdiClose }}</v-icon>
-        </v-btn>
-      </v-toolbar>
+      <v-btn icon @click="closeDialog" class="close-btn">
+        <v-icon color="baseAccent">{{ mdiClose }}</v-icon>
+      </v-btn>
 
       <v-card-text class="pa-0 menu-container">
         <v-list color="transparent" class="menu-list">
@@ -126,7 +128,7 @@ export default {
   align-items: center;
   justify-content: center;
   width: 100%;
-  
+
   .v-list-item__content {
     display: flex;
     align-items: center;

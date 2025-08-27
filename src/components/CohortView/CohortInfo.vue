@@ -25,7 +25,7 @@
           :colourBorder="true"
         />
       </v-row>
-      <p class="overline ma-0" style="color: var(--v-cohortAccent-base)">
+      <p class="overline ma-0 pt-2" style="color: var(--v-cohortAccent-base); line-height: 1.2rem">
         Monitoring {{ cohort.students.length }} navigators
       </p>
     </div>

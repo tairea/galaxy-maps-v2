@@ -29,6 +29,12 @@ const routes = [
     children: [
       {
         path: "",
+        name: "Root",
+        component: AllPublicGalaxiesList,
+        props: true,
+      },
+      {
+        path: "public-galaxies",
         name: "AllPublicGalaxiesList",
         component: AllPublicGalaxiesList,
         props: true,
@@ -79,7 +85,7 @@ const routes = [
         },
       },
       {
-        path: "cohort/:cohortId/:cohortName",
+        path: "squad/:cohortId/:cohortName",
         name: "CohortView",
         component: CohortView,
         meta: {
@@ -173,6 +179,12 @@ router.beforeEach(async (to, from, next) => {
   const rootStore = useRootStore();
   await initialAuth;
   if (from.path !== "/") rootStore.set_from(from.path);
+
+  // Handle conditional routing for root path
+  if (to.path === "/" && rootStore.user.loggedIn && rootStore.user.data?.verified === true) {
+    next({ path: "/my-galaxies" });
+    return;
+  }
 
   if (
     !["/verify", "/login", "/reset", "/register"].includes(to.path) &&

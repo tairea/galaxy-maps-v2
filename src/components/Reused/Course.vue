@@ -27,7 +27,7 @@
         </p>
       </div>
     </v-tooltip>
-    <div v-else>
+    <div v-else class="d-flex flex-column justify-center align-center">
       <v-img
         v-if="hasValidImage"
         :src="course.image.url"
@@ -37,7 +37,7 @@
         @error="handleImageError"
       ></v-img>
       <div v-else class="imagePlaceholder">{{ first3Letters(course.title) }}</div>
-      <p class="title text-center pt-2 mb-0">{{ course.title }}</p>
+      <p class="title text-center pt-2 mb-0">{{ formattedTitle }}</p>
     </div>
   </v-col>
 </template>
@@ -63,6 +63,63 @@ export default {
         this.course.image.url.trim() !== "" &&
         !this.imageLoadError
       );
+    },
+    formattedTitle() {
+      const title = this.course.title;
+      if (!title) return "";
+
+      // Create a temporary span to measure text width
+      const span = document.createElement("span");
+      span.style.visibility = "hidden";
+      span.style.position = "absolute";
+      span.style.whiteSpace = "nowrap";
+      span.style.fontSize = "0.65rem";
+      span.style.fontWeight = "500";
+      span.style.fontFamily = "Roboto, sans-serif";
+      span.textContent = title;
+
+      document.body.appendChild(span);
+      const textWidth = span.offsetWidth;
+      document.body.removeChild(span);
+
+      // If text is longer than 100px, add line breaks
+      if (textWidth > 100) {
+        // Split into words and create lines that fit within 100px
+        const words = title.split(" ");
+        const lines = [];
+        let currentLine = "";
+
+        for (let i = 0; i < words.length; i++) {
+          const testLine = currentLine + (currentLine ? " " : "") + words[i];
+          const testSpan = document.createElement("span");
+          testSpan.style.visibility = "hidden";
+          testSpan.style.position = "absolute";
+          testSpan.style.whiteSpace = "nowrap";
+          testSpan.style.fontSize = "0.65rem";
+          testSpan.style.fontWeight = "500";
+          testSpan.style.fontFamily = "Roboto, sans-serif";
+          testSpan.textContent = testLine;
+
+          document.body.appendChild(testSpan);
+          const testWidth = testSpan.offsetWidth;
+          document.body.removeChild(testSpan);
+
+          if (testWidth > 100 && currentLine) {
+            lines.push(currentLine);
+            currentLine = words[i];
+          } else {
+            currentLine = testLine;
+          }
+        }
+
+        if (currentLine) {
+          lines.push(currentLine);
+        }
+
+        return lines.join("\n");
+      }
+
+      return title;
     },
   },
   methods: {
@@ -95,9 +152,12 @@ export default {
   .title {
     font-size: 0.65rem !important;
     font-weight: 500;
-    line-height: 1rem;
+    line-height: 1.2rem;
     text-transform: uppercase;
     font-family: "Roboto", sans-serif !important;
+    white-space: pre-line;
+    word-wrap: break-word;
+    max-width: 100px;
   }
 
   .course-image {
