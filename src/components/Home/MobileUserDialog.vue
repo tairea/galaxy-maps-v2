@@ -1,5 +1,10 @@
 <template>
-  <v-dialog v-model="dialogVisible" fullscreen transition="dialog-bottom-transition">
+  <v-dialog
+    v-model="dialogVisible"
+    fullscreen
+    transition="dialog-bottom-transition"
+    style="z-index: 9999"
+  >
     <v-card color="var(--v-background-darken1)">
       <v-toolbar dark color="var(--v-background-darken1)" flat>
         <v-spacer></v-spacer>
@@ -73,7 +78,7 @@
         <!-- Action Buttons -->
         <div class="action-buttons">
           <!-- Edit Account -->
-          <StudentEditDialog 
+          <StudentEditDialog
             :button-block="true"
             :button-large="true"
             :button-outlined="true"

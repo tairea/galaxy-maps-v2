@@ -223,6 +223,7 @@ export default {
   height: 100vh; /* Fallback */
   height: calc(var(--vh, 1vh) * 100);
   overflow: hidden;
+  width: 100%;
 }
 
 .flexContainer {

@@ -4,7 +4,7 @@
     <h2 class="galaxy-label" @click="toggleMinimize" :class="{ minimized: isMinimized }">
       <div v-if="!isMinimized"><span v-if="draft">Drafting</span> Galaxy</div>
       <div v-else>
-        {{ course.title }}
+        {{ truncateTitle(course.title) }}
       </div>
       <v-icon class="arrow" color="var(--v-background-base)">{{
         isMinimized ? mdiMenuDown : mdiMenuUp
@@ -99,6 +99,9 @@ export default {
       else if (this.course.visibility) return this.course.visibility;
       else return "private";
     },
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
+    },
   },
 
   methods: {
@@ -126,6 +129,13 @@ export default {
         // limit to 100 characters
         return value.substring(0, 100) + "...";
       }
+    },
+    truncateTitle(title) {
+      if (!title) return "";
+      if (this.isMobile && title.length > 15) {
+        return title.substring(0, 15) + "...";
+      }
+      return title;
     },
     showFullDescription() {
       this.$refs.description.innerHTML = this.course.description;
@@ -177,7 +187,7 @@ export default {
     color: var(--v-background-base);
     background-color: var(--v-galaxyAccent-base);
     padding: 0px 15px 0px 5px;
-    clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%);
+    clip-path: polygon(0 0, 100% 0, 90% 100%, 0% 100%);
     cursor: pointer; /* Add cursor pointer for clickability */
     display: flex; /* Use flexbox for arrow alignment */
     align-items: center;

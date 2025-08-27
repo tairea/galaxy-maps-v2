@@ -36,13 +36,13 @@
                     : tokenUsage.output_tokens?.toLocaleString() || "0"
                 }}
               </p>
-              <p v-if="tokenUsage" class="token-breakdown overline mt-2">
+              <!-- <p v-if="tokenUsage" class="token-breakdown overline mt-2">
                 Est. cost: ${{
                   tokenUsage.combinedEstimatedCost
                     ? tokenUsage.combinedEstimatedCost.toFixed(5)
                     : "0.00000"
                 }}
-              </p>
+              </p> -->
               <!-- Model breakdown -->
               <div
                 v-if="tokenUsage && tokenUsage.modelsUsed && tokenUsage.modelsUsed.length > 0"

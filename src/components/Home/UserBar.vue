@@ -395,7 +395,7 @@ export default {
   right: 0;
   transition: all 0.3s;
 
-  z-index: 200;
+  z-index: 100;
 
   .blackBar {
     position: absolute;
@@ -463,14 +463,14 @@ export default {
     cursor: pointer;
     bottom: 0px !important;
     right: 0px !important;
-    z-index: 300;
+    z-index: 100;
     background: var(--v-subBackground-base) !important;
 
     .blackBar {
       height: 70px;
       padding: 5px;
       bottom: 0px !important;
-      z-index: 300;
+      z-index: 100;
       background: var(--v-subBackground-base) !important;
 
       .username {

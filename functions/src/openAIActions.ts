@@ -245,11 +245,11 @@ For each Planet, include:
    - Each **Step** = a logical stage toward the Planet goal.  
    - Each Step contains **tasks[]** = one discrete, actionable action (no multi-action tasks).  
    - If the Step introduces a **new concept, term, or tool** for the first time in this Galaxy Map:  
-     - Include a **micro-teach** (1–3 sentences) before the action:  
-       - *What is it?*  
-       - *Why are we using it right now?*  
-     - Keep explanations short, clear, and directly tied to the action.  
-     - If the concept was already taught earlier in the journey, only give a brief reminder.  
+     -- Include a **micro-teach** (1–3 sentences) before the action:  
+       --- *What is it?*  
+       ---- *Why are we using it right now?*  
+     -- Keep explanations short, clear, and directly tied to the action.  
+     -- If the concept was already taught earlier in the journey, only give a brief reminder.  
    - Each Step ends with a **checkpoint**: a short, motivating progress sentence (“Now your broker is live, ready to link devices for the first time.”).
 
 3. **Outro** – Motivating recap:  
@@ -271,7 +271,7 @@ For each Planet, include:
 
 {
   "status": "journey_ready",
-  "title": "Journey Title",
+  "title": "Journey Title (A short, catchy title)",
   "description": "Brief description of the overall journey",
   "stars": [
     {
@@ -308,6 +308,25 @@ For each Planet, include:
 - ✅ Mission Instructions contain intro, steps with tasks, and outro  
 - ✅ Micro-teach is included for first-time concepts  
 - ✅ No overload — split if needed before finalising
+
+`;
+
+const GalaxyMapImagePrompt = `
+Create a mission patch emblem in the style of NASA mission patches. The design should be circular or shield-shaped with bold outlines, clean geometry, and a balanced composition.
+
+Incorporate visual symbols, icons, or motifs that directly reflect the given Galaxy Map title (e.g., if the title is “Journey of Leadership,” include abstract icons of guidance, stars, or pathways; if the title is “Coding Foundations,” use symbolic representations of logic, brackets, or circuits).
+
+Avoid rockets, astronauts, or generic space exploration symbols unless directly relevant to the title. Instead, use abstract, thematic elements that represent the essence of the map's subject.
+
+The style should feature:
+- A strong central icon or motif
+- A surrounding border with accent details
+- Bold, high-contrast colors that make the patch easily identifiable
+- Optional symbolic stars, rays, or geometric framing for balance
+- Metalic in look to fit the futuristic theme of the platform.
+
+The overall look should feel official, iconic, and collectible — like a real mission patch but uniquely tailored to the title's theme.
+
 
 `;
 
@@ -454,7 +473,7 @@ export const generateGalaxyMapHttpsEndpoint = runWith({
         logger.info("Calling DALL-E for image generation");
         const imageResponse = await openai.images.generate({
           model: "dall-e-3",
-          prompt: `Generate an image that symbolizes "${parsedResponse.title}": ${parsedResponse.description || ""}.`,
+          prompt: GalaxyMapImagePrompt + `Galaxy Map title: "${parsedResponse.title}"`,
           n: 1,
           size: "1024x1024",
         });
@@ -596,6 +615,8 @@ export const generateUnifiedGalaxyMapHttpsEndpoint = runWith({
     const parsedResponse = aiResponse.output_parsed;
     if (!parsedResponse) {
       throw new HttpsError("internal", "No response content from OpenAI");
+    } else {
+      logger.log("Parsed response", parsedResponse);
     }
 
     // generate image using parsedResponse.title and parsedResponse.description
@@ -615,10 +636,10 @@ export const generateUnifiedGalaxyMapHttpsEndpoint = runWith({
         // Generate image using DALL-E API directly
         logger.info("Calling DALL-E for image generation");
         const imageResponse = await openai.images.generate({
-          model: "dall-e-3",
-          prompt: `Generate an image that symbolizes "${parsedResponse.title}": ${
-            parsedResponse.description || ""
-          }.`,
+          model: "gpt-image-1",
+          prompt: GalaxyMapImagePrompt + `Galaxy Map title: "${parsedResponse.title}"`,
+          output_format: "png",
+          background: "transparent",
           n: 1,
           size: "1024x1024",
         });
@@ -630,40 +651,79 @@ export const generateUnifiedGalaxyMapHttpsEndpoint = runWith({
         });
 
         if (imageResponse.data && imageResponse.data.length > 0) {
-          const imageUrlFromDalle = imageResponse.data[0].url;
-          logger.info("Image generated successfully by DALL-E", { imageUrl: imageUrlFromDalle });
+          const imageData = imageResponse.data[0];
 
-          // Download the image from DALL-E URL and upload to Firebase Storage
-          fileName = `galaxy-maps/${Date.now()}-${
-            parsedResponse.title?.replace(/[^a-zA-Z0-9]/g, "-") || "galaxy"
-          }.png`;
+          if (imageData.b64_json) {
+            // For gpt-image-1, use base64 data directly
+            logger.info("Image generated successfully by gpt-image-1", {
+              hasBase64Data: !!imageData.b64_json,
+            });
 
-          // Download image from DALL-E URL
-          logger.info("Downloading image from DALL-E URL");
-          const imageDownloadResponse = await fetch(imageUrlFromDalle!);
-          const imageBuffer = await imageDownloadResponse.arrayBuffer();
-          const buffer = Buffer.from(imageBuffer);
-          logger.info("Image downloaded and converted to buffer", { size: buffer.length });
+            // Convert base64 to buffer
+            const imageBuffer = Buffer.from(imageData.b64_json, "base64");
+            logger.info("Base64 image converted to buffer", { size: imageBuffer.length });
 
-          // Upload to Firebase Storage
-          logger.info("Starting upload to Firebase Storage");
-          const file = storage.bucket(STORAGE_BUCKET).file(fileName);
-          await file.save(buffer, {
-            metadata: {
-              contentType: "image/png",
-            },
-          });
-          logger.info("File uploaded successfully", { fileName });
+            // Generate filename
+            fileName = `galaxy-maps/${Date.now()}-${
+              parsedResponse.title?.replace(/[^a-zA-Z0-9]/g, "-") || "galaxy"
+            }.png`;
 
-          // Get the public URL
-          logger.info("Generating signed URL");
-          const [downloadURL] = await file.getSignedUrl({
-            action: "read",
-            expires: "03-01-2500",
-          });
-          logger.info("Signed URL generated successfully");
+            // Upload to Firebase Storage
+            logger.info("Starting upload to Firebase Storage");
+            const file = storage.bucket(STORAGE_BUCKET).file(fileName);
+            await file.save(imageBuffer, {
+              metadata: {
+                contentType: "image/png",
+              },
+            });
+            logger.info("File uploaded successfully", { fileName });
 
-          imageUrl = downloadURL;
+            // Get the public URL
+            logger.info("Generating signed URL");
+            const [downloadURL] = await file.getSignedUrl({
+              action: "read",
+              expires: "03-01-2500",
+            });
+            logger.info("Signed URL generated successfully");
+
+            imageUrl = downloadURL;
+          } else if (imageData.url) {
+            // For dall-e-2/dall-e-3, use URL download method
+            const imageUrlFromDalle = imageData.url;
+            logger.info("Image generated successfully by DALL-E", { imageUrl: imageUrlFromDalle });
+
+            // Download the image from DALL-E URL and upload to Firebase Storage
+            fileName = `galaxy-maps/${Date.now()}-${
+              parsedResponse.title?.replace(/[^a-zA-Z0-9]/g, "-") || "galaxy"
+            }.png`;
+
+            // Download image from DALL-E URL
+            logger.info("Downloading image from DALL-E URL");
+            const imageDownloadResponse = await fetch(imageUrlFromDalle);
+            const imageBuffer = await imageDownloadResponse.arrayBuffer();
+            const buffer = Buffer.from(imageBuffer);
+            logger.info("Image downloaded and converted to buffer", { size: buffer.length });
+
+            // Upload to Firebase Storage
+            logger.info("Starting upload to Firebase Storage");
+            const file = storage.bucket(STORAGE_BUCKET).file(fileName);
+            await file.save(buffer, {
+              metadata: {
+                contentType: "image/png",
+              },
+            });
+            logger.info("File uploaded successfully", { fileName });
+
+            // Get the public URL
+            logger.info("Generating signed URL");
+            const [downloadURL] = await file.getSignedUrl({
+              action: "read",
+              expires: "03-01-2500",
+            });
+            logger.info("Signed URL generated successfully");
+
+            imageUrl = downloadURL;
+          }
         }
       } catch (imageError) {
         logger.error("Error generating or uploading image (unified)", imageError);
@@ -964,7 +1024,9 @@ export const generateGalaxyMapWithClarificationHttpsEndpoint = runWith({
         logger.info("Calling DALL-E for image generation");
         const imageResponse = await openai.images.generate({
           model: "dall-e-3",
-          prompt: `Generate an image that symbolizes "${parsedResponse.title}": ${parsedResponse.description || ""}.`,
+          prompt: GalaxyMapImagePrompt + `Galaxy Map title: "${parsedResponse.title}"`,
+          output_format: "png",
+          background: "transparent",
           n: 1,
           size: "1024x1024",
         });
@@ -1107,6 +1169,215 @@ export const generateGalaxyMapAgainHttpsEndpoint = runWith({
     };
   } catch (error) {
     logger.error("Error in generateGalaxyMapAgain", error);
+
+    // Handle Zod validation errors specifically
+    if (error instanceof Error && error.name === "ZodError") {
+      throw new HttpsError("internal", `AI response validation failed: ${error.message}`);
+    }
+
+    throw new HttpsError(
+      "internal",
+      error instanceof Error ? error.message : "Unknown error occurred",
+    );
+  }
+});
+
+// Refine galaxy map (initial refinement or with clarification answers)
+export const refineGalaxyMapHttpsEndpoint = runWith({
+  timeoutSeconds: 540, // 9 minutes timeout
+  memory: "1GB",
+}).https.onCall(async (data) => {
+  try {
+    logger.info("Starting refineGalaxyMap function", {
+      hasClarificationAnswers: !!data.clarificationAnswers,
+      hasGalaxyMap: !!data.galaxyMap,
+      previousResponseId: data.previousResponseId,
+    });
+
+    // Check if this is a clarification follow-up or initial refinement
+    if (data.clarificationAnswers && data.clarificationAnswers.trim()) {
+      // Clarification follow-up case
+      const { clarificationAnswers, previousResponseId } = data;
+      if (!previousResponseId) {
+        logger.error("Missing required field: previousResponseId");
+        throw new HttpsError("invalid-argument", "Missing required field: previousResponseId");
+      }
+
+      // Call OpenAI API for refinement with clarification
+      logger.info("Calling OpenAI API for galaxy map refinement with clarification");
+      const aiResponse = await openai.responses.parse({
+        model: "gpt-5-mini",
+        previous_response_id: previousResponseId,
+        input: [{ role: "user", content: clarificationAnswers }],
+        text: {
+          format: zodTextFormat(UnifiedGalaxyMapResponseSchema, "refine_galaxy_response"),
+        },
+        store: true,
+      });
+
+      logger.info("OpenAI API call completed successfully");
+
+      // Get the parsed and validated response
+      const parsedResponse = aiResponse.output_parsed;
+      if (!parsedResponse) {
+        throw new HttpsError("internal", "No response content from OpenAI");
+      }
+
+      // Calculate token usage
+      const modelUsage = createModelTokenUsage("gpt-5-mini", aiResponse.usage || {});
+      const combinedTokenUsage = createCombinedTokenUsage([modelUsage]);
+
+      // Return the validated response with token usage information
+      return {
+        success: true,
+        galaxyMap: parsedResponse,
+        tokenUsage: combinedTokenUsage,
+        responseId: aiResponse.id,
+      };
+    } else {
+      // Initial refinement case
+      const { galaxyMap, activeItems, userRequest, previousResponseId } = data;
+      if (!galaxyMap || !userRequest || !userRequest.trim()) {
+        logger.error("Missing required fields for initial refinement");
+        throw new HttpsError(
+          "invalid-argument",
+          "Missing required fields: galaxyMap or userRequest",
+        );
+      }
+
+      // Create the system prompt for initial refinement
+      const refinementSystemPrompt = `
+You are a Galaxy Map refiner assistant. Your task is to update specific parts of an existing Galaxy Map JSON object based on the user's request.
+
+The Galaxy Map is a structured learning roadmap with the hierarchy:
+- **Stars** → major milestones
+- **Planets** → small, focused wins (15–60 min) within a Star
+- **Mission Instructions** → intro, steps (with tasks and checkpoints), outro; include just-in-time micro-teach when new concepts appear.
+
+### Galaxy Map Format (JSON):
+{
+  "status": "journey_ready",
+  "title": "Journey Title",
+  "description": "Brief description of the overall journey",
+  "stars": [
+    {
+      "title": "1: Title (Star Name)",
+      "description": "Brief description of this star",
+      "planets": [
+        {
+          "title": "1.1: Title (Planet Name)",
+          "description": "Brief description of this win",
+          "missionInstructions": {
+            "intro": "Motivating intro explaining what they will do, why it matters, and how it connects to the journey",
+            "steps": [
+              {
+                "title": "Step 1: Step Name",
+                "tasks": [
+                  { "taskContent": "Detailed task instruction in markdown (may include short concept teaching if introducing a new idea)" }
+                ],
+                "checkpoint": "Motivating progress sentence after this step"
+              }
+            ],
+            "outro": "Motivating recap of what was achieved and what's next"
+          }
+        }
+      ]
+    }
+  ]
+}
+
+### Your Responsibilities:
+1. Understand the user's request — they may want to change the content, structure, or sequence of Stars, Missions, Mission Instructions, Steps, or Tasks.
+2. You will be provided:
+   - **galaxy_map**: the full current Galaxy Map object.
+   - **items_user_wants_changed**: an array of **zero-indexed paths** to the exact elements in the Galaxy Map that should be modified.
+     - Example paths:
+       - "star[0]" → stars[0]
+       - "star[0].planet[1]" → stars[0].planets[1]
+3. Only modify the items at the specified paths. Preserve everything else in the Galaxy Map exactly as-is.
+4. Always insert the updates into the correct location in the nested structure.
+5. After making changes, maintain correct numbering in titles (Stars are 1-indexed like "1:", Missions are "1.1:").
+6. Return the **entire** updated Galaxy Map object, not just the modified parts.
+
+**Planet scope + motivation rules (must enforce)**
+   - Each Planet is an **atomic win (15–60 min)**. If a planet is overloaded, **split it into additional planets** (in the same Star) and **renumber that Star's planets** accordingly.
+   - Mission Instructions must include:
+     - **Intro** (what/why/how it connects),
+     - **Steps** with **tasks** (each task is one discrete action),
+     - **Checkpoint** after each step,
+     - **Outro** (celebrate win + what's next).
+   - **Micro-teach**: When a new concept/term/tool appears for the first time in the journey, add a 1–3 sentence explanation *in the task where it's first used*. Keep it practical and just-in-time. If it was taught earlier, only add a brief reminder.
+
+ **Quality constraints**
+   - Keep changes **minimal and surgical** unless the user asks for broader restructuring.
+   - Ensure every edited Mission remains scope-matched (15–60 min), motivating, and necessary for its Star.
+   - If the user's request would cause scope creep, **split missions** rather than bloating instructions.
+   - Prefer clear, concise phrasing and remove redundancy.
+
+### 🧾 Input Structure:
+{
+  "galaxy_map": { ... },
+  "items_user_wants_changed": ["star[0]", "star[0].planet[1]"],
+  "user_request": "User's instruction for the changes"
+}
+
+### Output Requirements:
+- A complete Galaxy Map JSON object with only the targeted items changed.
+- Preserve the rest of the map exactly.
+- Updates must be consistent with the Galaxy Map format above.
+`;
+
+      // Create input messages for initial refinement
+      const inputMessages = [
+        { role: "system", content: refinementSystemPrompt },
+        { role: "user", content: "galaxy_map: " + JSON.stringify(galaxyMap) },
+      ];
+
+      // Add selected items if provided
+      if (activeItems && activeItems.length > 0) {
+        const activeItemsString = activeItems.join("\n");
+        inputMessages.push({
+          role: "user",
+          content: "items_user_wants_changed: " + activeItemsString,
+        });
+      }
+
+      inputMessages.push({ role: "user", content: "user_request: " + userRequest });
+
+      // Call OpenAI API for initial refinement
+      logger.info("Calling OpenAI API for initial galaxy map refinement");
+      const aiResponse = await openai.responses.parse({
+        model: "gpt-5-mini",
+        previous_response_id: previousResponseId,
+        input: inputMessages as any,
+        text: {
+          format: zodTextFormat(UnifiedGalaxyMapResponseSchema, "refine_galaxy_response"),
+        },
+        store: true,
+      });
+
+      logger.info("OpenAI API call completed successfully");
+
+      // Get the parsed and validated response
+      const parsedResponse = aiResponse.output_parsed;
+      if (!parsedResponse) {
+        throw new HttpsError("internal", "No response content from OpenAI");
+      }
+
+      // Calculate token usage
+      const modelUsage = createModelTokenUsage("gpt-5-mini", aiResponse.usage || {});
+      const combinedTokenUsage = createCombinedTokenUsage([modelUsage]);
+
+      // Return the validated response with token usage information
+      return {
+        success: true,
+        galaxyMap: parsedResponse,
+        tokenUsage: combinedTokenUsage,
+        responseId: aiResponse.id,
+      };
+    }
+  } catch (error) {
+    logger.error("Error in refineGalaxyMap", error);
 
     // Handle Zod validation errors specifically
     if (error instanceof Error && error.name === "ZodError") {
