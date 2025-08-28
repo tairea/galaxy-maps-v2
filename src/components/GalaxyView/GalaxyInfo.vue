@@ -57,22 +57,62 @@
         :courseToEdit="course"
         @preSaveUpdate="forwardPreSaveUpdate"
       />
+
+      <!-- Planets collapse button -->
+      <v-btn
+        outlined
+        color="missionAccent"
+        x-small
+        @click="togglePlanetsCollapse"
+        class="mb-2 mt-8"
+        width="100%"
+      >
+        <v-icon x-small class="mr-1">{{
+          isPlanetsCollapsed ? mdiChevronDown : mdiChevronUp
+        }}</v-icon>
+        {{ isPlanetsCollapsed ? "Expand Planets" : "Collapse Planets" }}
+      </v-btn>
+
+      <!-- Print draft button -->
+      <PdfDownloader
+        :ai-generated-galaxy-map="aiGeneratedGalaxyMap"
+        :bound-course="course"
+        :is-galaxy-info-minimized="isMinimized"
+        :expand-all-planets="expandAllPlanets"
+        :get-star-index="getStarIndex"
+        :transformed-star-details="transformedStarDetails"
+        :network-ref="networkRef"
+        @toggle-minimize="toggleMinimize"
+      />
     </div>
   </div>
 </template>
 
 <script>
 import CreateEditDeleteGalaxyDialog from "@/components/Dialogs/CreateEditDeleteGalaxyDialog.vue";
+import PdfDownloader from "@/components/Reused/PdfDownloader.vue";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
-import { mdiLink, mdiMenuUp, mdiMenuDown } from "@mdi/js";
+import { mdiLink, mdiMenuUp, mdiMenuDown, mdiChevronDown, mdiChevronUp } from "@mdi/js";
 import { getFriendlyErrorMessage } from "@/lib/utils";
 
 export default {
   name: "GalaxyInfo",
-  props: ["course", "teacher", "draft", "minimized"],
+  props: [
+    "course",
+    "teacher",
+    "draft",
+    "minimized",
+    "isPlanetsCollapsed",
+    "aiGeneratedGalaxyMap",
+    "expandAllPlanets",
+    "getStarIndex",
+    "transformedStarDetails",
+    "networkRef",
+  ],
   components: {
     CreateEditDeleteGalaxyDialog,
+    PdfDownloader,
   },
   mounted() {},
   data() {
@@ -80,6 +120,8 @@ export default {
       mdiLink,
       mdiMenuUp,
       mdiMenuDown,
+      mdiChevronDown,
+      mdiChevronUp,
       readmore: false,
       isMinimized: false,
     };
@@ -155,10 +197,13 @@ export default {
         .catch((err) => {
           this.setSnackbar({
             show: true,
-            text: getFriendlyErrorMessage(error.code),
+            text: getFriendlyErrorMessage(err.code),
             color: "pink",
           });
         });
+    },
+    togglePlanetsCollapse() {
+      this.$emit("togglePlanetsCollapse");
     },
   },
 };
@@ -169,7 +214,7 @@ export default {
   width: 100%;
   // height: 400px;
   margin-top: 30px;
-  padding: 20px;
+  padding: 15px;
   // background: var(--v-baseAccent-base);
   position: relative;
   backdrop-filter: blur(2px);

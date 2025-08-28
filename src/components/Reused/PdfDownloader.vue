@@ -7,8 +7,15 @@
     </div>
 
     <!-- Download PDF Button -->
-    <v-btn outlined color="missionAccent" small @click="onDownloadDraft" class="mb-2" width="100%">
-      <v-icon small class="mr-1">{{ mdiFileDownload }}</v-icon>
+    <v-btn
+      outlined
+      color="missionAccent"
+      x-small
+      @click="onDownloadDraft"
+      class="mb-2"
+      width="100%"
+    >
+      <v-icon x-small class="mr-1">{{ mdiFileDownload }}</v-icon>
       Download PDF
     </v-btn>
   </div>
@@ -67,14 +74,67 @@ export default {
           return;
         }
 
-        // Find treeview items in parent component
-        const parentEl = this.$parent.$el;
-        const treeviewItems = parentEl.querySelectorAll(".star-treeview-item");
-        console.log("Treeview items found:", treeviewItems.length);
+        // Find treeview items in the main component (AiGalaxyEdit)
+        // Since PdfDownloader might be nested in GalaxyInfo, we need to traverse up to find the main component
+        let currentParent = this.$parent;
+        let treeviewItems = null;
+        let debugInfo = [];
 
-        if (treeviewItems.length === 0) {
-          console.error("No treeview items found in DOM.");
-          return;
+        // Look for treeview items in parent components
+        while (currentParent && !treeviewItems) {
+          const parentEl = currentParent.$el;
+          if (parentEl) {
+            debugInfo.push(
+              `Parent: ${currentParent.$options.name || "Unknown"}, Element: ${parentEl.tagName}`,
+            );
+
+            // Try multiple selectors to find treeview items
+            treeviewItems = parentEl.querySelectorAll(".star-treeview-item");
+            if (treeviewItems.length === 0) {
+              // Try alternative selectors
+              treeviewItems = parentEl.querySelectorAll("[class*='star-treeview']");
+            }
+            if (treeviewItems.length === 0) {
+              // Try looking for any treeview items
+              treeviewItems = parentEl.querySelectorAll(".v-treeview-item");
+            }
+            if (treeviewItems.length === 0) {
+              // Try looking for the galaxy treeview container
+              const galaxyContainer = parentEl.querySelector(".galaxy-treeview-container");
+              if (galaxyContainer) {
+                treeviewItems = galaxyContainer.querySelectorAll(".star-treeview-item");
+              }
+            }
+
+            if (treeviewItems.length > 0) {
+              break;
+            }
+          }
+          currentParent = currentParent.$parent;
+        }
+
+        console.log("Debug info:", debugInfo);
+        console.log("Treeview items found:", treeviewItems ? treeviewItems.length : 0);
+
+        if (!treeviewItems || treeviewItems.length === 0) {
+          // Last resort: try to find treeview items directly in the document
+          console.log("Trying to find treeview items directly in document...");
+          treeviewItems = document.querySelectorAll(".star-treeview-item");
+
+          if (treeviewItems.length === 0) {
+            console.error("No treeview items found in DOM.");
+            console.error(
+              "Available elements in document:",
+              document.querySelectorAll("[class*='treeview']").length,
+            );
+            console.error(
+              "Transformed star details length:",
+              this.transformedStarDetails ? this.transformedStarDetails.length : 0,
+            );
+            return;
+          } else {
+            console.log("Found treeview items directly in document:", treeviewItems.length);
+          }
         }
 
         // 6) ensure network graph renders planet strokes

@@ -13,7 +13,7 @@
       class="hidden-sm-and-down"
     />
     <!-- Mobile info panel -->
-    <MobileGalaxyInfoPanel
+    <MobileGalaxyListInfoPanel
       :selectedCourse="selectedCourse"
       @closeInfoPanel="closeInfoPanel"
       class="hidden-md-and-up"
@@ -93,7 +93,7 @@
 import CreateEditDeleteGalaxyDialog from "@/components/Dialogs/CreateEditDeleteGalaxyDialog.vue";
 import GalaxyListPanel from "@/components/GalaxyList/GalaxyListPanel.vue";
 import GalaxyListInfoPanel from "@/components/GalaxyList/GalaxyListInfoPanel.vue";
-import MobileGalaxyInfoPanel from "@/components/GalaxyList/MobileGalaxyInfoPanel.vue";
+import MobileGalaxyListInfoPanel from "@/components/GalaxyList/MobileGalaxyListInfoPanel.vue";
 import Galaxies from "@/components/GalaxyList/Galaxies.vue";
 import useGalaxyListViewStore from "@/store/galaxyListView";
 import useRootStore from "@/store/index";
@@ -108,7 +108,7 @@ export default {
     CreateEditDeleteGalaxyDialog,
     GalaxyListPanel,
     GalaxyListInfoPanel,
-    MobileGalaxyInfoPanel,
+    MobileGalaxyListInfoPanel,
     Galaxies,
     AICreateGalaxyDialogVue,
   },

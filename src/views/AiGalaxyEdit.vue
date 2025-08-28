@@ -162,6 +162,7 @@
 
     <!-- <div class="left-section" :class="{ hide: hideLeftPanelsFlag }"> -->
     <div
+      v-if="!isMobile"
       id="left-section"
       data-v-step="1"
       :class="{ minimized: isGalaxyInfoMinimized, mobile: isMobile }"
@@ -171,44 +172,51 @@
         class="galaxy-info-wrapper"
         :class="{ minimized: isGalaxyInfoMinimized, mobile: isMobile }"
       >
+        <!-- Desktop Galaxy Info -->
         <GalaxyInfo
+          v-if="!isMobile"
           ref="galaxyInfo"
           :course="boundCourse"
           :teacher="teacher"
           :draft="draft"
+          :is-planets-collapsed="isPlanetsCollapsed"
+          :ai-generated-galaxy-map="aiGeneratedGalaxyMap"
+          :expand-all-planets="expandAllPlanets"
+          :get-star-index="getStarIndex"
+          :transformed-star-details="transformedStarDetails"
+          :network-ref="$refs.network"
           @minimised="minimised"
           @preSaveUpdate="applyPreSaveUpdate"
+          @togglePlanetsCollapse="togglePlanetsCollapse"
         />
       </div>
 
       <!-- Back button -->
       <BackButton v-if="!isGalaxyInfoMinimized" :toPath="'/'" :dynamicPath="backButtonPath" />
-
-      <!-- feature buttons -->
-      <div class="ai-edit-feature-buttons d-flex flex-column justify-end">
-        <!-- Planets collapse button -->
-        <v-btn outlined color="missionAccent" small @click="togglePlanetsCollapse" class="mb-2">
-          <v-icon small class="mr-1">{{
-            isPlanetsCollapsed ? mdiChevronDown : mdiChevronUp
-          }}</v-icon>
-          {{ isPlanetsCollapsed ? "Expand Planets" : "Collapse Planets" }}
-        </v-btn>
-        <!-- Print draft button -->
-        <PdfDownloader
-          :ai-generated-galaxy-map="aiGeneratedGalaxyMap"
-          :bound-course="boundCourse"
-          :is-galaxy-info-minimized="isGalaxyInfoMinimized"
-          :expand-all-planets="expandAllPlanets"
-          :get-star-index="getStarIndex"
-          :transformed-star-details="transformedStarDetails"
-          :network-ref="$refs.network"
-          @toggle-minimize="$refs.galaxyInfo.toggleMinimize()"
-        />
-      </div>
     </div>
 
     <!--==== Main section ====-->
-    <div id="main-section" :class="{ minimized: isGalaxyInfoMinimized }">
+    <div id="main-section" :class="{ minimized: isGalaxyInfoMinimized, mobile: isMobile }">
+      <!-- Mobile Galaxy Info Panel -->
+      <MobileGalaxyInfoPanel
+        v-if="isMobile"
+        :course="boundCourse"
+        :teacher="teacher"
+        :draft="draft"
+        :minimized="isGalaxyInfoMinimized"
+        :is-planets-collapsed="isPlanetsCollapsed"
+        :ai-generated-galaxy-map="aiGeneratedGalaxyMap"
+        :bound-course="boundCourse"
+        :is-galaxy-info-minimized="isGalaxyInfoMinimized"
+        :expand-all-planets="expandAllPlanets"
+        :get-star-index="getStarIndex"
+        :transformed-star-details="transformedStarDetails"
+        :network-ref="$refs.network"
+        @preSaveUpdate="applyPreSaveUpdate"
+        @minimised="minimised"
+        @togglePlanetsCollapse="togglePlanetsCollapse"
+      />
+
       <!-- v-treeview of stars > planets > missions -->
       <div
         v-if="transformedStarDetails.length > 0"
@@ -391,16 +399,16 @@
         </div>
         <!-- end of galaxy-preview-container -->
 
-        <div class="d-flex">
+        <div class="lower-main-section" :class="{ mobile: isMobile }">
           <!-- =========== History =========== -->
-          <div class="history-container" v-if="!taskEditing">
+          <div class="history-container" v-if="!taskEditing" :class="{ mobile: isMobile }">
             <p
               class="history-title overline missionAccent--text ma-0"
               v-if="aiGeneratedGalaxyMap.history"
             >
               checkpoints
             </p>
-            <div class="history-items-container">
+            <div class="history-items-container" :class="{ mobile: isMobile }">
               <div
                 class="history-item"
                 v-for="(checkpoint, index) in aiGeneratedGalaxyMap.history"
@@ -440,7 +448,7 @@
           </div>
 
           <!-- =========== Prompt =========== -->
-          <div class="galaxy-prompt-container" v-if="!taskEditing">
+          <div class="galaxy-prompt-container" v-if="!taskEditing" :class="{ mobile: isMobile }">
             <div class="prompt-textarea-container mt-4">
               <div class="prompt-context-chips pb-2">
                 <v-chip
@@ -481,12 +489,11 @@
                 autofocus
                 @click:clear="galaxyRefineUserInput = ''"
               />
-              <div class="action-buttons">
+              <div class="action-buttons" :class="{ mobile: isMobile }">
                 <v-btn
                   outlined
                   color="galaxyAccent"
                   @click="generateGalaxyMapAgain()"
-                  class="mr-2"
                   :loading="loading"
                   :dark="dark"
                   :light="!dark"
@@ -500,7 +507,6 @@
                   outlined
                   color="galaxyAccent"
                   @click="refineGalaxyMap()"
-                  class="mr-2"
                   :loading="loading"
                   :disabled="disabled"
                   :dark="dark"
@@ -576,7 +582,7 @@
     </div>
 
     <!-- Total Tokens -->
-    <div class="token-container">
+    <div class="token-container" v-if="!isMobile">
       <p class="ma-0 overline token-title">
         AI Tokens Used<br />Input:
         {{
@@ -730,23 +736,6 @@
 </template>
 
 <script>
-/**
- * IMPORTANT: Response ID Management
- *
- * This component maintains two critical response IDs for tracking AI call history:
- *
- * 1. originResponseId: The response ID from the very first AI call that created the galaxy map
- *    - Set in AICreateGalaxyDialog.vue when the galaxy is first created
- *    - Must be preserved throughout all subsequent AI operations (refinement, regeneration)
- *    - Used for tracking the original creation context
- *
- * 2. aiResponseId: The response ID from the most recent AI call
- *    - Updated with each new AI operation (refinement, regeneration, etc.)
- *    - Used for continuing conversations and maintaining context
- *
- * CRITICAL: Both IDs must be preserved when merging new AI responses to maintain
- * the complete history and context chain.
- */
 import {
   mdiPencil,
   mdiPlus,
@@ -764,6 +753,7 @@ import {
 import LoadingSpinner from "@/components/Reused/LoadingSpinner.vue";
 import RobotLoadingSpinner from "@/components/Reused/RobotLoadingSpinner.vue";
 import GalaxyInfo from "@/components/GalaxyView/GalaxyInfo.vue";
+import MobileGalaxyInfoPanel from "@/components/GalaxyView/MobileGalaxyInfoPanel.vue";
 import PublishGalaxy from "@/components/GalaxyView/PublishGalaxy.vue";
 import BackButton from "@/components/Reused/BackButton.vue";
 import LayoutSelectionDialog from "@/components/Dialogs/LayoutSelectionDialog.vue";
@@ -796,6 +786,7 @@ export default {
     LoadingSpinner,
     RobotLoadingSpinner,
     GalaxyInfo,
+    MobileGalaxyInfoPanel,
     BackButton,
     PublishGalaxy,
     LayoutSelectionDialog,
@@ -1230,7 +1221,7 @@ export default {
       return true; // For AI editing, assume teacher permissions
     },
     draft() {
-      return true; // For AI editing, assume draft mode
+      return this.boundCourse.status === "drafting";
     },
     showPublish() {
       return true; // For AI editing, show publish option
@@ -3683,6 +3674,11 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
       console.log("minimised", minimised);
       this.isGalaxyInfoMinimized = minimised;
     },
+    handleMobilePanelClose() {
+      // Handle mobile panel close event
+      // For now, we can just log it or implement any specific behavior needed
+      console.log("Mobile panel closed");
+    },
     generateTasks(item, starIndex) {
       console.log("generateTasks for item: ", item, "starIndex: ", starIndex);
 
@@ -3691,8 +3687,8 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
       this.activeTaskItem = item;
       this.uiActiveItemId = item.id; // Set UI active item for visual highlighting
 
-      // minimise galaxy info
-      if (!this.isGalaxyInfoMinimized) {
+      // minimise galaxy info (only on desktop)
+      if (!this.isGalaxyInfoMinimized && !this.isMobile && this.$refs.galaxyInfo) {
         this.$refs.galaxyInfo.toggleMinimize();
       }
 
@@ -4078,6 +4074,11 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
   display: flex;
   overflow: hidden;
   margin: 0 !important;
+
+  // Mobile height
+  @media (max-width: 960px) {
+    height: calc(var(--vh, 1vh) * 100);
+  }
 }
 
 #left-section {
@@ -4152,8 +4153,12 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
 
   &.minimized {
     width: 100vw;
-    padding-top: 30px;
     margin: 0px;
+  }
+
+  &.mobile {
+    width: 100vw !important;
+    margin: 0px !important;
   }
 
   // Galaxy treeview styles
@@ -4197,7 +4202,6 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
       &.mobile {
         mask-image: none;
         -webkit-mask-image: none;
-        margin-top: 20px;
       }
 
       &.task-editing {
@@ -4487,122 +4491,156 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
       }
     }
 
-    .history-container {
-      height: 100px;
-      padding-top: 10px;
-      width: 20%;
-      // border: 1px solid red;
+    .lower-main-section {
+      display: flex;
 
-      .history-items-container {
-        display: flex;
-        gap: 20px;
-        flex-wrap: wrap;
+      &.mobile {
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        gap: 10px;
+      }
 
-        .history-item {
+      .history-container {
+        height: 100px;
+        padding-top: 10px;
+        width: 20%;
+        // border: 1px solid red;
+
+        &.mobile {
+          width: 80%;
+          margin: 0px 10px;
+        }
+
+        .history-items-container {
           display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          // border: 1px solid var(--v-missionAccent-base);
-          border-radius: 4px;
-          padding: 5px;
-          color: var(--v-missionAccent-base);
-          font-size: 0.8rem;
-          font-weight: 400;
-          width: 50px;
-          height: 50px;
+          gap: 20px;
+          flex-wrap: wrap;
 
-          .history-item-button {
+          .history-item {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            // border: 1px solid var(--v-missionAccent-base);
+            border-radius: 4px;
+            padding: 5px;
+            color: var(--v-missionAccent-base);
+            font-size: 0.8rem;
+            font-weight: 400;
             width: 50px;
             height: 50px;
-            border-radius: 4px;
-            color: var(--v-missionAccent-base);
-            padding: 0px;
+
+            .history-item-button {
+              width: 50px;
+              height: 50px;
+              border-radius: 4px;
+              color: var(--v-missionAccent-base);
+              padding: 0px;
+            }
           }
         }
       }
-    }
 
-    .galaxy-prompt-container {
-      width: 60%;
-      height: 30%;
-      // border: 1px solid yellow;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
+      .galaxy-prompt-container {
+        width: 60%;
+        height: 30%;
+        // border: 1px solid yellow;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
 
-      margin-bottom: 100px;
+        margin-bottom: 100px;
 
-      .prompt-textarea-container {
-        width: 80%;
-
-        .legend-container {
-          // position: absolute;
-          // bottom: 10%;
-          // left: 20px;
-          // width: calc(100% - 20px);
-          display: flex;
-          flex-direction: row;
-          align-items: flex-start;
-          gap: 6px;
-          //background: rgba(128, 128, 128, 0.07); // very subtle background
-          border-radius: 8px 8px 0 0;
-          color: #808080;
-          font-size: 0.92rem;
-          box-shadow: none;
-          z-index: 2;
-          pointer-events: auto;
-        }
-        .legend-item {
-          display: flex;
-          align-items: center;
-          gap: 7px;
-          color: #808080;
-          font-size: 0.95em;
-          font-weight: 400;
-          letter-spacing: 0.01em;
-          opacity: 0.85;
-        }
-        .legend-item-icon {
-          font-size: 1.1em;
-          margin-right: 2px;
-          opacity: 0.7;
-        }
-
-        .input-field {
+        &.mobile {
           width: 100%;
-          text-align: center;
-          flex: none;
-          font-size: 1rem;
-          color: var(--v-missionAccent-base);
         }
 
-        .action-buttons {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          width: 100%;
-          margin-top: -10px;
-        }
+        .prompt-textarea-container {
+          width: 80%;
 
-        .theme-chip {
-          border: 1px solid var(--v-missionAccent-base) !important;
-          color: var(--v-missionAccent-base) !important;
-          background-color: transparent !important;
-          font-weight: 500;
-          transition: all 0.3s ease;
-
-          &:hover {
-            background-color: rgba(var(--v-missionAccent-base), 0.1) !important;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(var(--v-missionAccent-base), 0.3);
+          &.mobile {
+            width: 100%;
           }
 
-          .v-chip__close {
+          .legend-container {
+            // position: absolute;
+            // bottom: 10%;
+            // left: 20px;
+            // width: calc(100% - 20px);
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 6px;
+            //background: rgba(128, 128, 128, 0.07); // very subtle background
+            border-radius: 8px 8px 0 0;
+            color: #808080;
+            font-size: 0.92rem;
+            box-shadow: none;
+            z-index: 2;
+            pointer-events: auto;
+          }
+          .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: #808080;
+            font-size: 0.95em;
+            font-weight: 400;
+            letter-spacing: 0.01em;
+            opacity: 0.85;
+          }
+          .legend-item-icon {
+            font-size: 1.1em;
+            margin-right: 2px;
+            opacity: 0.7;
+          }
+
+          .input-field {
+            width: 100%;
+            text-align: center;
+            flex: none;
+            font-size: 1rem;
+            color: var(--v-missionAccent-base);
+          }
+
+          .action-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            margin-top: -10px;
+
+            &.mobile {
+              flex-direction: column;
+              gap: 10px;
+
+              .v-btn {
+                width: 100%;
+              }
+            }
+          }
+
+          .theme-chip {
+            border: 1px solid var(--v-missionAccent-base) !important;
             color: var(--v-missionAccent-base) !important;
+            background-color: transparent !important;
+            font-weight: 500;
+            transition: all 0.3s ease;
 
             &:hover {
-              background-color: rgba(var(--v-missionAccent-base), 0.2) !important;
+              background-color: rgba(var(--v-missionAccent-base), 0.1) !important;
+              transform: translateY(-1px);
+              box-shadow: 0 2px 8px rgba(var(--v-missionAccent-base), 0.3);
+            }
+
+            .v-chip__close {
+              color: var(--v-missionAccent-base) !important;
+
+              &:hover {
+                background-color: rgba(var(--v-missionAccent-base), 0.2) !important;
+              }
             }
           }
         }

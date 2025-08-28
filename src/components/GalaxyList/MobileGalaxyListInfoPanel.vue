@@ -79,7 +79,7 @@ import { mapActions } from "pinia";
 import { mdiClose } from "@mdi/js";
 
 export default {
-  name: "MobileGalaxyInfoPanel",
+  name: "MobileGalaxyListInfoPanel",
   props: ["selectedCourse"],
   components: {
     Avatar,
