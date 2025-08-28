@@ -1,6 +1,6 @@
 <template>
-  <div class="mission-container">
-    <h2 class="missions-label">Missions</h2>
+  <div class="mission-container" :class="{ mobile: isMobile }">
+    <h2 class="missions-label" v-if="!isMobile">Missions</h2>
 
     <div style="width: 100%">
       <!-- loading spinner -->
@@ -13,7 +13,7 @@
             v-model="sortableMissionList"
             style="width: 100%"
             ghost-class="ghost"
-            :disabled="!teacher"
+            :disabled="!teacher || isMobile"
           >
             <transition-group name="fade">
               <v-expansion-panel
@@ -23,6 +23,7 @@
                 @click="missionClicked(task)"
                 :readonly="task.taskStatus == 'locked' || task.taskStatus == 'unlocked' || teacher"
                 :value="task.taskStatus == 'active'"
+                :class="{ mobile: isMobile }"
               >
                 <MissionsCard
                   :course="course"
@@ -115,6 +116,9 @@ export default {
         this.$emit("taskOrderChanged", value);
       },
     },
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
+    },
   },
   methods: {
     missionClicked(task) {
@@ -193,6 +197,13 @@ a {
   }
   -webkit-overlay-scrollbars: touch;
   overlay: auto;
+
+  &.mobile {
+    width: 100%;
+    border: none;
+    padding: 0px;
+    margin: 0px;
+  }
 }
 
 .missions-label {
@@ -220,6 +231,9 @@ a {
 
 .mission-expansions {
   background-color: transparent !important;
+
+  &.mobile {
+  }
 }
 
 .v-expansion-panel-header__icon {

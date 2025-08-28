@@ -15,7 +15,7 @@
           <v-icon v-if="!showMissions" color="missionAccent">{{ mdiEarth }}</v-icon>
           <v-icon v-else color="baseAccent">{{ mdiEarthOff }}</v-icon>
         </div>
-        <div class="mapButton-text">
+        <div v-if="!isMobile" class="mapButton-text">
           <p v-if="!showMissions" class="overline ma-0">Show Missions</p>
           <p v-else class="overline ma-0" style="font-size: 0.7rem">Hide missions</p>
         </div>
@@ -32,7 +32,7 @@
           <v-icon v-if="!editModeActive" color="missionAccent">{{ mdiStarPlus }}</v-icon>
           <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
         </div>
-        <div class="mapButton-text">
+        <div v-if="!isMobile" class="mapButton-text">
           <p v-if="!editModeActive" class="overline ma-0">Add/Edit Stars</p>
           <p v-else class="ma-0" style="font-size: 0.7rem">Click to hide edit options</p>
         </div>
@@ -49,7 +49,7 @@
         <div class="mapButton-icon">
           <v-icon color="galaxyAccent">{{ mdiRobotExcited }}</v-icon>
         </div>
-        <div class="mapButton-text">
+        <div v-if="!isMobile" class="mapButton-text">
           <p class="overline ma-0">Edit with AI</p>
         </div>
       </div>
@@ -62,7 +62,7 @@
             <v-icon v-if="!addNodeMode" color="missionAccent">{{ mdiDotsHexagon }}</v-icon>
             <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
           </div>
-          <div class="mapButton-text">
+          <div v-if="!isMobile" class="mapButton-text">
             <p v-if="!addNodeMode" class="overline ma-0">Add a new Star</p>
             <p v-else class="ma-0" style="font-size: 0.7rem">
               Click on the map to place a new Star
@@ -76,7 +76,7 @@
             <v-icon v-if="!addEdgeMode" color="missionAccent">{{ mdiChartTimelineVariant }}</v-icon>
             <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
           </div>
-          <div class="mapButton-text">
+          <div v-if="!isMobile" class="mapButton-text">
             <p v-if="!addEdgeMode" class="overline ma-0">Connect Stars</p>
             <p v-else class="ma-0" style="font-size: 0.7rem">Click and drag to connect two Stars</p>
           </div>
@@ -88,7 +88,7 @@
             <v-icon v-if="!dragNodeMode" color="missionAccent">{{ mdiArrowExpandAll }}</v-icon>
             <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
           </div>
-          <div class="mapButton-text">
+          <div v-if="!isMobile" class="mapButton-text">
             <p v-if="!dragNodeMode" class="overline ma-0">Change Star positions</p>
             <p v-else class="ma-0" style="font-size: 0.7rem">
               {{
@@ -161,6 +161,9 @@ export default {
     ...mapState(useRootStore, ["boundCourse"]),
     editMode() {
       return this.addNodeMode || this.addEdgeMode;
+    },
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
     },
   },
   methods: {

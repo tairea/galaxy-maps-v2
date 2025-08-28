@@ -44,7 +44,7 @@ export default {
 .backButtonDiv {
   margin-top: 20px;
   width: calc(100% - 30px);
-  z-index: 190;
+  z-index: 50;
 
   &.mobile {
     margin-top: 0;

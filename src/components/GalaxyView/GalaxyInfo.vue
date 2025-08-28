@@ -60,6 +60,7 @@
 
       <!-- Planets collapse button -->
       <v-btn
+        v-if="shouldShowEditButtons"
         outlined
         color="missionAccent"
         x-small
@@ -75,6 +76,7 @@
 
       <!-- Print draft button -->
       <PdfDownloader
+        v-if="shouldShowEditButtons"
         :ai-generated-galaxy-map="aiGeneratedGalaxyMap"
         :bound-course="course"
         :is-galaxy-info-minimized="isMinimized"
@@ -143,6 +145,10 @@ export default {
     },
     isMobile() {
       return this.$vuetify.breakpoint.smAndDown;
+    },
+    shouldShowEditButtons() {
+      const currentRouteName = this.$route.name;
+      return currentRouteName === "AiGalaxyEdit" || currentRouteName === "AiGalaxyEditWithCourse";
     },
   },
 

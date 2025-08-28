@@ -26,16 +26,16 @@
             <!-- Image and title row -->
             <div class="mobile-content-row">
               <!-- <div class="mobile-image-section">
-                <v-img
-                  v-if="selectedTopic.image"
-                  class="mobile-topic-image"
-                  :src="selectedTopic.image"
-                  @error="handleImageError"
-                ></v-img>
-                <div v-else class="mobile-image-placeholder">
-                  {{ first3Letters(selectedTopic.label || selectedTopic.title) }}
-                </div>
-              </div> -->
+                  <v-img
+                    v-if="selectedTopic.image"
+                    class="mobile-topic-image"
+                    :src="selectedTopic.image"
+                    @error="handleImageError"
+                  ></v-img>
+                  <div v-else class="mobile-image-placeholder">
+                    {{ first3Letters(selectedTopic.label || selectedTopic.title) }}
+                  </div>
+                </div> -->
               <div class="mobile-panel-title">
                 <span class="mobile-status-label">STAR SYSTEM</span>
                 <h2 class="mobile-topic-title">
@@ -323,7 +323,7 @@ export default {
   left: 0;
   right: 0;
   background: var(--v-background-darken1);
-  z-index: 1500; // Higher than back button (1000)
+  z-index: 200; // Higher than back button (1000)
   max-height: 80vh;
   overflow: hidden;
 
@@ -477,7 +477,7 @@ export default {
     gap: 5px;
 
     .mobile-edit-btn {
-      background: var(--v-missionAccent-base);
+      // background: var(--v-missionAccent-base);
     }
 
     .mobile-edit-label {

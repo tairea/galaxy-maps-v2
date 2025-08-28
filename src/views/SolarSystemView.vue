@@ -1,7 +1,7 @@
 <template>
-  <div id="container" class="bg">
+  <div id="container" class="bg" :class="{ mobile: isMobile }">
     <!--==== Left section ====-->
-    <div id="left-section">
+    <div id="left-section" v-if="!isMobile">
       <SolarSystemInfo
         v-if="!loading"
         :topic="topic"
@@ -34,9 +34,19 @@
     </div>
 
     <!--==== Main section ====-->
-    <div id="main-section">
+    <div id="main-section" :class="{ mobile: isMobile }">
       <!-- loading spinner -->
       <LoadingSpinner v-if="loading" text="loading star system" />
+
+      <!-- Mobile solar system info panel -->
+      <MobileSolarSystemInfo
+        v-if="isMobile && !loading"
+        :course="course"
+        :topic="topic"
+        :tasks="teacher ? sortedTopicTasks : sortedPersonTasks"
+        :teacher="teacher"
+      />
+
       <MissionsList
         v-if="!loading"
         :course="course"
@@ -57,7 +67,7 @@
     </div>
 
     <!--==== Right section ====-->
-    <div id="right-section">
+    <div id="right-section" v-if="!isMobile">
       <RequestForHelpTeacherFrame
         v-if="!loading"
         :courses="[course]"
@@ -109,6 +119,7 @@ import MissionsList from "@/components/SolarSystemView/MissionsList.vue";
 import BackButton from "@/components/Reused/BackButton.vue";
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
+import MobileSolarSystemInfo from "@/components/SolarSystemView/MobileSolarSystemInfo.vue";
 import {
   fetchAllPeopleInCourseByCourseId,
   fetchPersonsTopicByPersonIdCourseIdTopicId,
@@ -130,6 +141,7 @@ export default {
     BackButton,
     RequestForHelpTeacherFrame,
     SubmissionTeacherFrame,
+    MobileSolarSystemInfo,
   },
   props: ["courseId", "topicId"],
   data() {
@@ -246,6 +258,9 @@ export default {
           }
         });
       }
+    },
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
     },
   },
   methods: {
@@ -470,6 +485,11 @@ export default {
   overflow: hidden;
   margin: 0 !important;
   padding: 30px 20px 0px;
+
+  &.mobile {
+    padding: 0px;
+    height: calc(var(--vh, 1vh) * 100) !important;
+  }
 }
 
 #left-section {
@@ -490,6 +510,9 @@ export default {
   align-items: center;
   flex-direction: column;
   // border: 1px solid pink;
+  &.mobile {
+    width: 100%;
+  }
 }
 #right-section {
   width: 20%;
