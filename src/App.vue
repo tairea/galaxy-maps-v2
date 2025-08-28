@@ -3,7 +3,7 @@
     <v-main>
       <router-view />
       <SnackBar />
-      <VersionStatus />
+      <VersionStatus v-if="shouldShowVersionStatus" />
     </v-main>
   </v-app>
 </template>
@@ -17,6 +17,20 @@ export default {
   components: {
     SnackBar,
     Alpha,
+  },
+  computed: {
+    shouldShowVersionStatus(): boolean {
+      const routeName = this.$route.name;
+      return (
+        routeName === "AllPublicGalaxiesList" ||
+        routeName === "MyGalaxiesList" ||
+        routeName === "Login" ||
+        routeName === "Verify" ||
+        routeName === "Reset" ||
+        routeName === "Register" ||
+        routeName === "Root"
+      );
+    },
   },
 };
 </script>

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-dialog v-model="dialog" width="40%" light>
+    <v-dialog v-model="dialog" :width="isMobile ? '90%' : '40%'" light>
       <!-- Start create-dialog -->
       <div class="create-dialog">
         <div class="create-dialog-content">
@@ -190,7 +190,7 @@
           </div>
 
           <!-- Action buttons -->
-          <div class="action-buttons">
+          <div class="action-buttons" :class="{ mobile: isMobile }">
             <v-btn
               v-if="!editing"
               outlined
@@ -219,7 +219,7 @@
               DELETE
             </v-btn>
 
-            <v-btn outlined :color="dark ? 'yellow' : '#577399'" class="ml-2" @click="close">
+            <v-btn outlined :dark="dark" :light="!dark" @click="close">
               <v-icon left> {{ mdiClose }} </v-icon>
               Cancel
             </v-btn>
@@ -263,12 +263,7 @@
             DELETE
           </v-btn>
 
-          <v-btn
-            outlined
-            :color="dark ? 'yellow' : '#577399'"
-            class="ml-2"
-            @click="cancelDeleteDialog()"
-          >
+          <v-btn outlined :dark="dark" :light="!dark" class="ml-2" @click="cancelDeleteDialog()">
             <v-icon left> {{ mdiClose }} </v-icon>
             Cancel
           </v-btn>
@@ -389,6 +384,9 @@ export default {
           return new Date(bTimestamp) - new Date(aTimestamp);
         });
       return sortedTopics;
+    },
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
     },
   },
   methods: {
@@ -767,6 +765,17 @@ export default {
 .action-buttons {
   width: 100%;
   padding: 10px;
+
+  &.mobile {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    .v-btn {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+  }
 }
 
 .color-picker {

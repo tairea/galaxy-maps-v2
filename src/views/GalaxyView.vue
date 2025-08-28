@@ -192,9 +192,9 @@ import GalaxyMapButtons from "@/components/GalaxyView/GalaxyMapButtons.vue";
 import CreateEditDeleteNodeDialog from "@/components/Dialogs/CreateEditDeleteNodeDialog.vue";
 
 import SolarSystemInfoPanel from "@/components/GalaxyView/SolarSystemInfoPanel.vue";
-import MobileSolarSystemInfoPanel from "@/components/GalaxyView/MobileSolarSystemInfoPanel.vue";
 import EdgeInfoPanel from "@/components/GalaxyView/EdgeInfoPanel.vue";
 import SolarSystemListPanel from "@/components/GalaxyView/SolarSystemListPanel.vue";
+import MobileSolarSystemInfoPanel from "@/components/GalaxyView/MobileSolarSystemInfoPanel.vue";
 
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
@@ -871,7 +871,6 @@ export default {
   position: fixed;
   bottom: 20px;
   left: 20px;
-  z-index: 1000;
   @media (min-width: 960px) {
     display: none;
   }

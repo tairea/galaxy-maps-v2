@@ -3,13 +3,14 @@
     <v-expansion-panel-header
       class="py-0"
       @click="teacher && hasLongDescription ? toggleDescription() : null"
+      :class="{ mobile: isMobile }"
     >
       <div
         class="mission-card"
-        :class="{ lockedOpacity: task.taskStatus == 'locked' }"
+        :class="{ lockedOpacity: task.taskStatus == 'locked', mobile: isMobile }"
         :style="task.color ? 'border: 1px dashed ' + task.color + ' !important' : '#69a1e2'"
       >
-        <div class="mission-section mission-number-section">
+        <div class="mission-section mission-number-section" :class="{ mobile: isMobile }">
           <p
             class="text-overline text-uppercase"
             :style="task.color ? 'color:' + task.color + ' !important' : '#69a1e2'"
@@ -37,6 +38,8 @@
             />
           </div>
         </div>
+
+        <!-- MISSION MIDDLE SECTION -->
         <div
           class="mission-middle-section mission-main-section"
           :style="task.color ? 'border-left: 1px dashed ' + task.color + ' !important' : ''"
@@ -114,7 +117,11 @@
               {{ task.duration }} MINS
             </p>
           </div>
-          <div class="section-overUnder d-flex justify-center flex-column" style="line-height: 2">
+          <div
+            v-if="task.submissionRequired"
+            class="section-overUnder d-flex justify-center flex-column"
+            style="line-height: 2"
+          >
             <p
               class="text-overline text-uppercase text-center"
               :style="task.color ? 'color:' + task.color + ' !important' : ''"
@@ -195,7 +202,7 @@
 
         <!-- TEACHER VIEW (for type teacher) -->
         <div
-          v-else
+          v-else-if="task.submissionRequired"
           class="three-vertical-section"
           :style="task.color ? 'border-left: 1px dashed ' + task.color + ' !important' : ''"
         >
@@ -455,6 +462,9 @@ export default {
           .replace(/'/g, "&#39;");
       }
     },
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
+    },
   },
   methods: {
     /**
@@ -561,6 +571,14 @@ li,
 pre {
   margin-bottom: 16px;
 }
+.v-expansion-panel-header {
+  &.mobile {
+    padding: 0px;
+    margin: 0px;
+    border: none;
+    // width: calc(var(--vw, 1vw) * 100);
+  }
+}
 
 .task-description > p,
 .task-description > ol > li,
@@ -647,6 +665,13 @@ p {
   display: flex;
   height: auto;
 
+  &.mobile {
+    border: none;
+    margin: 10px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
   .mission-section {
     margin: 0px;
     color: var(--v-missionAccent-base);
@@ -670,6 +695,10 @@ p {
 
   .mission-number-section {
     border-left: none;
+
+    &.mobile {
+      padding: 10px;
+    }
 
     .mission-number {
       font-size: 50px;

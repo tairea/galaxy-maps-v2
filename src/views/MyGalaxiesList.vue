@@ -20,7 +20,7 @@
     />
     <div class="flexContainer">
       <Galaxies
-        v-if="validSlug && courses && courses.length > 0"
+        v-if="validSlug && (isLoadingCourses || (courses && courses.length > 0))"
         ref="galaxyMap"
         :courses="courses"
         :courseEdgesMap="courseEdgesMap"
@@ -34,7 +34,7 @@
       <div v-if="!validSlug">
         <p class="overline missionAccent--text">Error. destination doesn't exist</p>
       </div>
-      <div v-else-if="!courses || courses.length === 0" class="text-center">
+      <div v-else-if="!isLoadingCourses && (!courses || courses.length === 0)" class="text-center">
         <p class="overline missionAccent--text">You aren't navigating any galaxies yet</p>
         <v-row class="text-center pt-12" align="center">
           <v-col cols="12" class="d-flex flex-column">
@@ -64,7 +64,7 @@
       </div>
     </div>
 
-    <div v-if="courses && courses.length > 0" class="buttons">
+    <div v-if="courses && courses.length > 0" class="buttons" :class="{ mobile: isMobile }">
       <!-- Create button - always show for authenticated users -->
       <v-row class="text-center" align="center">
         <v-col cols="12">
@@ -182,6 +182,9 @@ export default {
     selectedCourse() {
       return this.courses.find((course) => course.id === this.selectedCourseId);
     },
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
+    },
   },
   methods: {
     ...mapActions(useRootStore, ["setCurrentCourseId"]),
@@ -216,7 +219,8 @@ export default {
 
 <style lang="scss" scoped>
 .fullHeight {
-  height: 100vh;
+  height: 100vh; /* Fallback */
+  height: calc(var(--vh, 1vh) * 100);
   overflow: hidden;
 }
 
@@ -235,11 +239,16 @@ export default {
   left: 50%;
   transform: translate(-50%, 0%);
   display: flex;
+  &.mobile {
+    position: fixed;
+    bottom: 50px;
+  }
 }
 
 .createButton {
   transition: all 0.3s;
   margin-bottom: 20px;
+  backdrop-filter: blur(2px);
 }
 
 .button-row {

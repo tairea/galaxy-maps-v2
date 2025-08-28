@@ -1,13 +1,36 @@
-import { initializeApp } from "firebase-admin/app";
+import { initializeApp, getApps } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { type CallableContext, HttpsError } from "firebase-functions/v1/https";
 
-export const app = initializeApp();
+// Initialize Firebase Admin SDK with proper configuration
+export const app =
+  getApps().length === 0
+    ? initializeApp({
+        // Use default credentials when running in Firebase Functions
+        // This will automatically use the service account associated with the project
+      })
+    : getApps()[0];
+
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+
+/**
+ * Generate a signed URL for a file in Firebase Storage
+ * @param file - The file reference
+ * @param expiresInYears - Number of years until expiration (default: 100)
+ * @returns Promise<string> - The signed URL
+ */
+export async function generateSignedUrl(file: any, expiresInYears: number = 100): Promise<string> {
+  const [downloadURL] = await file.getSignedUrl({
+    action: "read",
+    expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365 * expiresInYears),
+    version: "v4",
+  });
+  return downloadURL;
+}
 
 /**
  * Requires the context to be authenticated.

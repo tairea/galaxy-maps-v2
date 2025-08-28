@@ -395,7 +395,7 @@ export default {
   right: 0;
   transition: all 0.3s;
 
-  z-index: 100;
+  z-index: 50;
 
   .blackBar {
     position: absolute;
@@ -463,7 +463,7 @@ export default {
     cursor: pointer;
     bottom: 0px !important;
     right: 0px !important;
-    z-index: 100;
+    z-index: 50;
     background: var(--v-subBackground-base) !important;
 
     .blackBar {

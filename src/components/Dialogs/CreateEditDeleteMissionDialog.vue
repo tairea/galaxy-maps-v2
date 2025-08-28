@@ -2,7 +2,7 @@
   <v-container class="pa-0">
     <v-row class="text-center" align="center">
       <v-col cols="12">
-        <v-dialog v-model="dialog" width="50%" light persistent>
+        <v-dialog v-model="dialog" :width="isMobile ? '100%' : '50%'" light persistent>
           <!-- Loading Overlay -->
           <div v-if="aiGenerating" class="loading-overlay">
             <div class="loading-content">
@@ -368,13 +368,12 @@
               </div>
 
               <!-- ACTION BUTTONS -->
-              <div class="action-buttons">
+              <div class="action-buttons" :class="{ mobile: isMobile }">
                 <v-btn
                   v-if="edit"
                   outlined
                   color="baseAccent"
                   @click="updateTask(task, index)"
-                  class="mr-2"
                   :loading="loading"
                   v-bind="attrs"
                   v-on="on"
@@ -388,7 +387,6 @@
                   outlined
                   color="baseAccent"
                   @click="saveTask(task)"
-                  class="mr-2"
                   :loading="loading"
                   v-bind="attrs"
                   v-on="on"
@@ -405,7 +403,6 @@
                   :disabled="disabled || loading"
                   color="error"
                   @click="deleteDialog()"
-                  class="ml-2"
                 >
                   <v-icon left> {{ mdiDelete }} </v-icon>
                   DELETE
@@ -414,7 +411,6 @@
                 <v-btn
                   outlined
                   :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
-                  class="ml-2"
                   @click="cancel"
                   :disabled="disabled || loading"
                 >
@@ -640,6 +636,9 @@ export default {
     ...mapState(useRootStore, ["person"]),
     dark() {
       return this.$vuetify.theme.isDark;
+    },
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
     },
   },
   methods: {
@@ -1147,6 +1146,10 @@ export default {
   overflow-y: auto;
   position: relative;
 
+  &.mobile {
+    width: 100%;
+  }
+
   .dialog-header {
     width: 100%;
     padding: 20px;
@@ -1223,6 +1226,22 @@ export default {
   .action-buttons {
     width: 100%;
     padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+
+    &.mobile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+
+      .v-btn {
+        width: 100%;
+      }
+    }
   }
 }
 

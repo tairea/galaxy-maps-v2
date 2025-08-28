@@ -1,6 +1,6 @@
 import { runWith, logger } from "firebase-functions/v1";
 import { HttpsError } from "firebase-functions/v1/https";
-import { storage } from "./_shared.js";
+import { storage, generateSignedUrl } from "./_shared.js";
 import { STORAGE_BUCKET } from "./_constants.js";
 import fetch from "node-fetch";
 import OpenAI from "openai";
@@ -510,10 +510,7 @@ export const generateGalaxyMapHttpsEndpoint = runWith({
 
           // Get the public URL
           logger.info("Generating signed URL");
-          const [downloadURL] = await file.getSignedUrl({
-            action: "read",
-            expires: "03-01-2500",
-          });
+          const downloadURL = await generateSignedUrl(file);
           logger.info("Signed URL generated successfully");
 
           imageUrl = downloadURL;
@@ -1063,10 +1060,7 @@ export const generateGalaxyMapWithClarificationHttpsEndpoint = runWith({
 
           // Get the public URL
           logger.info("Generating signed URL");
-          const [downloadURL] = await file.getSignedUrl({
-            action: "read",
-            expires: "03-01-2500",
-          });
+          const downloadURL = await generateSignedUrl(file);
           logger.info("Signed URL generated successfully");
 
           imageUrl = downloadURL;
@@ -1430,10 +1424,7 @@ export const downloadAndUploadImageHttpsEndpoint = runWith({
 
     // Get the public URL
     logger.info("Generating signed URL");
-    const [downloadURL] = await file.getSignedUrl({
-      action: "read",
-      expires: "03-01-2500",
-    });
+    const downloadURL = await generateSignedUrl(file);
     logger.info("Signed URL generated successfully");
 
     return { downloadURL };
