@@ -2135,7 +2135,7 @@ export default {
 }
 
 .long-loading-time-message {
-  font-size: 0.8rem;
+  font-size: 0.65rem;
   color: var(--v-missionAccent-base);
   opacity: 0.8;
   line-height: 1.4;
