@@ -1,11 +1,11 @@
 <template>
-  <div id="mobile-solar-system-info" v-if="topic">
+  <div id="mobile-solar-system-info" v-if="topic" :class="{ student: isStudent }">
     <div class="mobile-panel-container">
       <!-- Header section with minimize toggle -->
       <div class="mobile-panel-header">
         <!-- Clickable Label with Arrow for minimize -->
-        <div class="mobile-system-label" @click="toggleMinimize">
-          <div v-if="!isMinimized">System</div>
+        <div class="mobile-system-label" @click="toggleMinimize" @touchstart="toggleMinimize">
+          <div v-if="!isMinimized">Star System</div>
           <div v-else>
             {{ truncateTitle(topic.label) }}
           </div>
@@ -43,6 +43,7 @@
             :toPath="'/'"
             :mobile="true"
             :showText="false"
+            :color="'missionAccent'"
             class="back-button-mobile"
           />
         </div>
@@ -55,6 +56,8 @@
 import SolarSystem from "@/components/Reused/SolarSystem.vue";
 import BackButton from "@/components/Reused/BackButton.vue";
 import { mdiMenuUp, mdiMenuDown } from "@mdi/js";
+import useRootStore from "@/store/index";
+import { mapActions } from "pinia";
 
 export default {
   name: "MobileSolarSystemInfo",
@@ -74,11 +77,20 @@ export default {
     isMobile() {
       return this.$vuetify.breakpoint.smAndDown;
     },
+    isStudent() {
+      return !this.teacher;
+    },
   },
-  mounted() {},
+  mounted() {
+    // Initialize the store state with the current minimized state
+    this.setMobileInfoMinimized(this.isMinimized);
+  },
   methods: {
+    ...mapActions(useRootStore, ["setMobileInfoMinimized"]),
     toggleMinimize() {
       this.isMinimized = !this.isMinimized;
+      this.setMobileInfoMinimized(this.isMinimized);
+      this.$emit("infoMinimised", this.isMinimized);
     },
     truncateTitle(title) {
       if (!title) return "";
@@ -100,9 +112,13 @@ export default {
   width: 100%;
   position: relative;
   backdrop-filter: blur(2px);
-  z-index: 3;
   color: var(--v-missionAccent-base);
   border: 1px solid var(--v-missionAccent-base);
+  z-index: 1;
+
+  &.student {
+    border: none;
+  }
 
   .mobile-panel-container {
     position: relative;
@@ -133,12 +149,15 @@ export default {
     width: fit-content;
     min-width: 120px;
     box-sizing: border-box;
-    z-index: 5;
+    z-index: 10;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 
     &.minimized {
       width: fit-content;
       border: none;
       box-shadow: none;
+      z-index: 15;
     }
 
     .arrow {

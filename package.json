@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@cprecioso/canvas-text-layout": "^2.0.0",
+    "@openai/agents": "^0.1.0",
     "@posva/vuefire-core": "^2.3.4",
     "canvas-confetti": "^1.9.2",
     "chart.js": "^4.4.0",
@@ -38,7 +39,7 @@
     "vue2-editor": "^2.10.3",
     "vuedraggable": "^2.24.3",
     "vuetify": "^2.7.1",
-    "zod": "^3.25.75"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@mdi/js": "^7.0.96",

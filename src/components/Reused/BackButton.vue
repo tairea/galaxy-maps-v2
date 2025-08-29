@@ -1,6 +1,6 @@
 <template>
   <div class="backButtonDiv" :class="{ mobile: mobile }">
-    <v-btn :to="dynamicPath || toPath" class="backButton" color="baseAccent" text>
+    <v-btn :to="dynamicPath || toPath" class="backButton" :color="color" text>
       <v-icon left> {{ mdiArrowLeft }} </v-icon>
       <span v-if="showText">Back</span>
     </v-btn>
@@ -28,6 +28,10 @@ export default {
     showText: {
       type: Boolean,
       default: true,
+    },
+    color: {
+      type: String,
+      default: "baseAccent",
     },
   },
   computed: {},

@@ -45,6 +45,7 @@
         :topic="topic"
         :tasks="teacher ? sortedTopicTasks : sortedPersonTasks"
         :teacher="teacher"
+        @infoMinimised="infoIsMinimised = $event"
       />
 
       <MissionsList
@@ -54,6 +55,7 @@
         :tasks="teacher ? sortedTopicTasks : sortedPersonTasks"
         :teacher="teacher"
         :disableCreateMission="orderChanged"
+        :infoIsMinimised="infoIsMinimised"
         @task="taskForHelpInfo($event)"
         @missionActivated="missionActivated"
         @missionStarted="missionStarted"
@@ -82,6 +84,23 @@
         class="mt-4"
       />
     </div>
+
+    <!-- Mobile AI Assistant Ribbon Button -->
+    <div v-if="isMobile && !loading" class="ai-assistant-ribbon" @click="openAIAssistant">
+      <div class="ribbon-content">
+        <v-icon color="background" size="24" id="ai-assistant-icon">{{
+          mdiRobotExcitedOutline
+        }}</v-icon>
+      </div>
+    </div>
+
+    <!-- AI Conversation Panel -->
+    <AiConversationPanel
+      v-if="isMobile && !loading"
+      :isOpen="aiPanelOpen"
+      @close="closeAIAssistant"
+      @pause-toggle="onPauseToggle"
+    />
 
     <!-- Topic completed dialog -->
     <v-dialog v-model="topicCompletedDialog" transition="dialog-bottom-transition" max-width="600">
@@ -120,6 +139,7 @@ import BackButton from "@/components/Reused/BackButton.vue";
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import MobileSolarSystemInfo from "@/components/SolarSystemView/MobileSolarSystemInfo.vue";
+import AiConversationPanel from "@/components/Reused/AiConversationPanel.vue";
 import {
   fetchAllPeopleInCourseByCourseId,
   fetchPersonsTopicByPersonIdCourseIdTopicId,
@@ -128,7 +148,7 @@ import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import useSolarSystemViewStore from "@/store/solarSystemView";
 import { mapActions, mapState } from "pinia";
-import { mdiContentSave } from "@mdi/js";
+import { mdiContentSave, mdiRobotExcited, mdiRobotExcitedOutline } from "@mdi/js";
 import confetti from "canvas-confetti";
 
 export default {
@@ -142,11 +162,14 @@ export default {
     RequestForHelpTeacherFrame,
     SubmissionTeacherFrame,
     MobileSolarSystemInfo,
+    AiConversationPanel,
   },
   props: ["courseId", "topicId"],
   data() {
     return {
       mdiContentSave,
+      mdiRobotExcited,
+      mdiRobotExcitedOutline,
       activeMission: null,
       task: null,
       unsubscribes: [],
@@ -160,6 +183,8 @@ export default {
       topicCompletedDialog: false,
       unlockingNextTopic: true, // default to loading
       showNextSystemButton: true,
+      infoIsMinimised: false,
+      aiPanelOpen: false,
     };
   },
   async mounted() {
@@ -470,6 +495,18 @@ export default {
         this.peopleInTopic.push(this.person);
       }
     },
+    openAIAssistant() {
+      this.aiPanelOpen = true;
+      console.log("AI Assistant panel opened");
+    },
+    closeAIAssistant() {
+      this.aiPanelOpen = false;
+      console.log("AI Assistant panel closed");
+    },
+    onPauseToggle(isPaused) {
+      console.log("AI Assistant paused:", isPaused);
+      // TODO: Implement pause/resume functionality
+    },
   },
 };
 </script>
@@ -489,6 +526,9 @@ export default {
   &.mobile {
     padding: 0px;
     height: calc(var(--vh, 1vh) * 100) !important;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 }
 
@@ -512,6 +552,9 @@ export default {
   // border: 1px solid pink;
   &.mobile {
     width: 100%;
+    height: auto;
+    min-height: auto;
+    flex: 1;
   }
 }
 #right-section {
@@ -558,5 +601,41 @@ export default {
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
   background: var(--v-background-base);
+}
+
+/* AI Assistant Ribbon Button */
+.ai-assistant-ribbon {
+  position: fixed;
+  bottom: 0px;
+  right: 0px;
+  width: 60px;
+  height: 60px;
+  background-color: var(--v-galaxyAccent-base);
+  clip-path: polygon(20% 0, 100% 0, 100% 100%, 0% 100%);
+  cursor: pointer;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: var(--v-galaxyAccent-lighten1);
+    transform: scale(1.05);
+  }
+
+  .ribbon-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  #ai-assistant-icon {
+    margin-right: -10px;
+    color: var(--v-background-base) !important;
+    fill: var(--v-background-base) !important;
+  }
 }
 </style>
