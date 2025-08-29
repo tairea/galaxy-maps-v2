@@ -2,7 +2,7 @@
   <v-container class="pa-0">
     <v-row class="text-center" align="center">
       <v-col cols="12">
-        <v-dialog v-model="dialog" width="40%" light>
+        <v-dialog v-model="dialog" :width="isMobile ? '90%' : '40%'" light>
           <!-- REQUEST HELP BUTTON -->
           <template v-slot:activator="{ on, attrs }">
             <v-btn color="missionAccent ma-2" v-bind="attrs" v-on="on" x-large>
@@ -38,17 +38,17 @@
                 v-model="requestForHelp"
                 label="Enter your question"
                 color="missionAccent"
+                hide-details
               ></v-textarea>
             </div>
 
             <!-- ACTION BUTTONS -->
-            <div class="action-buttons">
+            <div class="action-buttons" :class="{ mobile: isMobile }">
               <!-- SUBMIT REQUEST FOR HELP -->
               <v-btn
                 outlined
-                color="baseAccent"
+                color="galaxyAccent"
                 @click="submitRequestForHelp(requestForHelp)"
-                class="mr-2"
                 :loading="loading"
                 v-bind="attrs"
                 v-on="on"
@@ -63,7 +63,6 @@
               <v-btn
                 outlined
                 :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
-                class="ml-2"
                 @click="cancel"
                 :dark="dark"
                 :light="!dark"
@@ -130,6 +129,9 @@ export default {
     },
     currentCohort() {
       return this.cohorts.find((cohort) => cohort.id === this.currentCohortId);
+    },
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
     },
   },
   methods: {
@@ -308,5 +310,13 @@ export default {
 .action-buttons {
   width: 100%;
   padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  &.mobile {
+    flex-direction: column;
+  }
 }
 </style>

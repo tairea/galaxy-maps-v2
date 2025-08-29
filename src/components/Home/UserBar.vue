@@ -1,6 +1,10 @@
 <template>
   <div>
-    <v-hover :disabled="!user.loggedIn || isMobile" v-model="hover" v-if="showMenu || isMobile">
+    <v-hover
+      :disabled="!user.loggedIn || isMobile"
+      v-model="hover"
+      v-if="(showMenu || isMobile) && !shouldHideMiniUserBar"
+    >
       <div
         ref="userBar"
         class="userMenu"
@@ -236,6 +240,9 @@ export default {
     },
     dark() {
       return this.$vuetify.theme.dark;
+    },
+    shouldHideMiniUserBar() {
+      return this.isMobile && this.$route.name === "SolarSystemView";
     },
   },
   methods: {

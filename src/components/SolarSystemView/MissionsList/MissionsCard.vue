@@ -1,16 +1,25 @@
 <template>
   <div>
+    <!-- ===== EXPANSION HEADER ===== -->
     <v-expansion-panel-header
       class="py-0"
       @click="teacher && hasLongDescription ? toggleDescription() : null"
-      :class="{ mobile: isMobile }"
+      :class="{ mobile: isMobile, student: isStudent }"
     >
+      <!-- Active ribbon -->
+      <div v-if="active" class="active-mission-ribbon">
+        <!-- <v-icon color="background" small>{{ mdiTarget }}</v-icon> -->
+        Active Mission
+      </div>
+      <!-- ===== MISSION CARD ===== -->
       <div
         class="mission-card"
         :class="{ lockedOpacity: task.taskStatus == 'locked', mobile: isMobile }"
         :style="task.color ? 'border: 1px dashed ' + task.color + ' !important' : '#69a1e2'"
       >
+        <!-- ===== MISSION NUMBER SECTION ===== -->
         <div class="mission-section mission-number-section" :class="{ mobile: isMobile }">
+          <!-- Mission number -->
           <p
             class="text-overline text-uppercase"
             :style="task.color ? 'color:' + task.color + ' !important' : '#69a1e2'"
@@ -39,7 +48,7 @@
           </div>
         </div>
 
-        <!-- MISSION MIDDLE SECTION -->
+        <!-- ===== MISSION TITLE & DESCRIPTION SECTION ===== -->
         <div
           class="mission-middle-section mission-main-section"
           :style="task.color ? 'border-left: 1px dashed ' + task.color + ' !important' : ''"
@@ -105,9 +114,18 @@
       </div>
     </div> -->
 
+        <!-- ===== MISSION DURATION & SUBMISSION SECTION ===== -->
         <div v-if="!teacher" class="mission-section mission-section-overUnder">
+          <!--  DURATION -->
           <div v-if="task.duration" class="section-overUnder d-flex justify-center flex-column">
+            <v-tooltip v-if="isMobile" bottom>
+              <template v-slot:activator="{ on, attrs }">
+                <v-icon v-if="isMobile" color="missionAccent" small>{{ mdiTimer }}</v-icon>
+              </template>
+              <span>This mission is estimated to take {{ task.duration }} minutes</span>
+            </v-tooltip>
             <p
+              v-else
               class="text-overline text-uppercase text-center"
               :style="task.color ? 'color:' + task.color + ' !important' : ''"
             >
@@ -117,12 +135,20 @@
               {{ task.duration }} MINS
             </p>
           </div>
+          <!--  SUBMISSION REQUIRED -->
           <div
             v-if="task.submissionRequired"
             class="section-overUnder d-flex justify-center flex-column"
             style="line-height: 2"
           >
+            <v-tooltip v-if="isMobile" bottom>
+              <template v-slot:activator="{ on, attrs }">
+                <v-icon color="missionAccent" small v-bind="attrs" v-on="on">{{ mdiFlag }}</v-icon>
+              </template>
+              <span>This mission requires you to submit some evidence</span>
+            </v-tooltip>
             <p
+              v-else
               class="text-overline text-uppercase text-center"
               :style="task.color ? 'color:' + task.color + ' !important' : ''"
               style="line-height: 2"
@@ -143,9 +169,9 @@
           </div>
         </div>
 
-        <!-- MISSION STATUS -->
+        <!-- ===== MISSION STATUS SECTION ===== -->
         <div
-          v-if="!teacher"
+          v-if="!teacher && !isMobile"
           class="mission-section d-flex justify-center align-center flex-column"
           style="width: 20%"
           :class="{
@@ -200,9 +226,9 @@
           </div>
         </div>
 
-        <!-- TEACHER VIEW (for type teacher) -->
+        <!-- ===== TEACHER VIEW (for type teacher) ===== -->
         <div
-          v-else-if="task.submissionRequired"
+          v-else-if="task.submissionRequired && teacher"
           class="three-vertical-section"
           :style="task.color ? 'border-left: 1px dashed ' + task.color + ' !important' : ''"
         >
@@ -232,7 +258,16 @@
               class="d-flex justify-center flex-column three-vertical pa-4 submission"
               :class="taskColorClass"
             >
+              <v-tooltip v-if="isMobile" bottom>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon color="missionAccent" small v-bind="attrs" v-on="on">{{
+                    mdiFlag
+                  }}</v-icon>
+                </template>
+                <span>This mission requires you to submit some evidence</span>
+              </v-tooltip>
               <p
+                v-else
                 class="text-overline text-uppercase text-center"
                 :style="task.color ? 'color:' + task.color + ' !important' : ''"
               >
@@ -278,7 +313,9 @@
         </div>
       </div>
     </v-expansion-panel-header>
-    <v-expansion-panel-content>
+
+    <!-- ===== ACTIVE MISSION CONTENT ===== -->
+    <v-expansion-panel-content :class="{ mobile: isMobile }">
       <!-- expansion content -->
       <ActiveMissionsCard
         v-if="active || declined"
@@ -308,6 +345,8 @@ import {
   mdiAlertOutline,
   mdiChevronUp,
   mdiChevronDown,
+  mdiTimer,
+  mdiFlag,
 } from "@mdi/js";
 import { mapState } from "pinia";
 import * as smd from "streaming-markdown";
@@ -329,6 +368,8 @@ export default {
       mdiAlertOutline,
       mdiChevronUp,
       mdiChevronDown,
+      mdiTimer,
+      mdiFlag,
       editing: false,
       activeTask: false,
       panel: [],
@@ -465,6 +506,9 @@ export default {
     isMobile() {
       return this.$vuetify.breakpoint.smAndDown;
     },
+    isStudent() {
+      return !this.teacher;
+    },
   },
   methods: {
     /**
@@ -577,7 +621,17 @@ pre {
     margin: 0px;
     border: none;
     // width: calc(var(--vw, 1vw) * 100);
+
+    &.student {
+      border: 1px solid var(--v-missionAccent-base);
+    }
   }
+}
+
+.v-expansion-panel-content__wrap {
+  padding: 0px !important;
+  margin: 0px;
+  border: none;
 }
 
 .task-description > p,
@@ -659,6 +713,22 @@ p {
   opacity: 0.4;
 }
 
+.active-mission-ribbon {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  background-color: var(--v-galaxyAccent-base);
+  color: var(--v-background-base);
+  padding: 4px 12px 4px 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  clip-path: polygon(0 0, 100% 0, 90% 100%, 0% 100%);
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
 .mission-card {
   border: 1px dashed var(--v-missionAccent-base);
   margin: 20px 10px;
@@ -695,6 +765,7 @@ p {
 
   .mission-number-section {
     border-left: none;
+    position: relative;
 
     &.mobile {
       padding: 10px;
@@ -803,10 +874,6 @@ p {
       width: 100%;
       height: 100%;
       padding: 10px;
-    }
-
-    .section-overUnder:first-child {
-      // border-bottom: 1px dashed var(--v-missionAccent-base);
     }
   }
 

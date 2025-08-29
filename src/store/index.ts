@@ -45,6 +45,8 @@ const getDefaultState = () => {
     inReviewSubmissions: [] as Record<string, any>[],
     // AI Galaxy Edit state
     aiGalaxyEditData: null as Record<string, any> | null,
+    // Mobile UI state
+    mobileInfoMinimized: false,
   };
 };
 
@@ -551,6 +553,10 @@ export default defineStore({
     },
     clearAiGalaxyEditData() {
       this.aiGalaxyEditData = null;
+    },
+    // Mobile UI actions
+    setMobileInfoMinimized(minimized: boolean) {
+      this.mobileInfoMinimized = minimized;
     },
   },
   persist: true,

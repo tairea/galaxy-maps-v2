@@ -7,7 +7,11 @@
       <div class="d-flex justify-center align-center" style="padding: 50px" v-if="missionsLoading">
         <v-btn :loading="missionsLoading" icon color="missionAccent"></v-btn>
       </div>
-      <div v-else-if="tasks.length > 0" style="width: 100%">
+      <div
+        v-else-if="tasks.length > 0"
+        style="width: 100%"
+        :style="{ paddingTop: infoIsMinimised ? '40px' : '0px' }"
+      >
         <v-expansion-panels flat :multiple="false" v-model="indexOfActiveTask">
           <draggable
             v-model="sortableMissionList"
@@ -75,7 +79,15 @@ export default {
     CreateEditDeleteMissionDialog,
     draggable,
   },
-  props: ["course", "topic", "tasks", "teacher", "disableCreateMission", "loading"],
+  props: [
+    "course",
+    "topic",
+    "tasks",
+    "teacher",
+    "disableCreateMission",
+    "loading",
+    "infoIsMinimised",
+  ],
   data() {
     return {
       activeMission: false,
@@ -203,6 +215,10 @@ a {
     border: none;
     padding: 0px;
     margin: 0px;
+    height: auto;
+    min-height: auto;
+    overflow: visible;
+    flex: 1;
   }
 }
 
@@ -231,9 +247,6 @@ a {
 
 .mission-expansions {
   background-color: transparent !important;
-
-  &.mobile {
-  }
 }
 
 .v-expansion-panel-header__icon {

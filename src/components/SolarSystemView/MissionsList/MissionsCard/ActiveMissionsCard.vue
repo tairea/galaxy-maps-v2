@@ -1,10 +1,10 @@
 <template>
-  <div class="active-mission-card">
+  <div class="active-mission-card" :class="{ mobile: isMobile }">
     <div v-html="renderedTaskDescription" class="task-description"></div>
     <v-row class="pb-8">
-      <div v-if="task.video || task.slides" class="supporting-materials">
+      <!-- Supporting Materials (video and slides no longer used, but might bring in supporting materials later) -->
+      <!-- <div v-if="task.video || task.slides" class="supporting-materials">
         <p class="text-overline missionAccent--text">Supporting Materials</p>
-        <!-- VIDEO -->
         <a
           v-if="task.video"
           :href="task.video"
@@ -12,7 +12,6 @@
           class="resource-button text-overline"
           >Video</a
         >
-        <!-- SLIDES -->
         <a
           v-if="task.slides"
           :href="task.slides"
@@ -20,7 +19,7 @@
           class="resource-button text-overline"
           >Slides</a
         >
-      </div>
+      </div> -->
 
       <!-- REQUEST HELP -->
       <div class="mission-actions">
@@ -40,6 +39,7 @@
           >
             {{ getSubmitTitle }}
           </p>
+
           <!-- <SubmissionReviewDialog
             v-if="declined"
             :submission="declinedSubmission"
@@ -145,6 +145,9 @@ export default {
           .replace(/"/g, "&quot;")
           .replace(/'/g, "&#39;");
       }
+    },
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
     },
   },
   methods: {
@@ -252,6 +255,10 @@ a {
   // min-height: 300px;
   z-index: 200;
   background-color: var(--v-background-base);
+
+  &.mobile {
+    margin: 0px;
+  }
 
   .task-description {
     color: var(--v-missionAccent-base);

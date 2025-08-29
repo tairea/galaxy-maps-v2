@@ -31,7 +31,7 @@
       </div>
     </div>
     <!-- hamburger menu -->
-    <div v-if="showHamburgerMenu" class="hamburger">
+    <div v-if="showHamburgerMenu && !(isMobile && mobileInfoMinimized)" class="hamburger">
       <v-btn
         class="map-button"
         color="baseAccent"
@@ -54,7 +54,11 @@
       :tabs="tabs"
       :unanswered-requests-for-help="unansweredRequestsForHelp"
       :in-review-submissions-count="inReviewSubmissionsCount"
+      @openUserDialog="openUserDialog"
     />
+
+    <!-- Mobile User Dialog -->
+    <MobileUserDialog v-model="mobileUserDialog" />
   </div>
 </template>
 
@@ -64,6 +68,7 @@ import { mdiMenu, mdiClose } from "@mdi/js";
 import { mapState } from "pinia";
 import useGalaxyListViewStore from "@/store/galaxyListView";
 import MobileNavDialog from "./MobileNavDialog.vue";
+import MobileUserDialog from "./MobileUserDialog.vue";
 
 const TAB_MY_GALAXIES = { id: 1, name: "MY GALAXIES", route: `/my-galaxies`, exactPath: false };
 const TAB_PUBLIC_GALAXIES = {
@@ -81,6 +86,7 @@ export default {
   name: "NavBar",
   components: {
     MobileNavDialog,
+    MobileUserDialog,
   },
   props: [""],
   data() {
@@ -92,10 +98,11 @@ export default {
       showNavMenu: true,
       showHamburgerMenu: false,
       mobileNavDialog: false,
+      mobileUserDialog: false,
     };
   },
   computed: {
-    ...mapState(useRootStore, ["user"]),
+    ...mapState(useRootStore, ["user", "mobileInfoMinimized"]),
     ...mapState(useGalaxyListViewStore, ["courses"]),
     isMobile() {
       return this.$vuetify.breakpoint.smAndDown;
@@ -214,6 +221,10 @@ export default {
       } else {
         this.showNavMenu = !this.showNavMenu;
       }
+    },
+    openUserDialog() {
+      this.mobileNavDialog = false;
+      this.mobileUserDialog = true;
     },
   },
 };

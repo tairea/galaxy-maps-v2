@@ -46,6 +46,21 @@
               </v-list-item-title>
             </v-list-item-content>
           </v-list-item>
+
+          <!-- User Avatar as list item -->
+          <v-list-item v-if="user.loggedIn" @click="openUserDialog">
+            <v-list-item-content class="text-center">
+              <v-avatar size="50" color="secondary" class="user-avatar">
+                <img
+                  v-if="person.image?.url"
+                  :src="person.image.url"
+                  :alt="person.firstName"
+                  style="object-fit: cover"
+                />
+                <v-icon v-else size="25">{{ mdiAccount }}</v-icon>
+              </v-avatar>
+            </v-list-item-content>
+          </v-list-item>
         </v-list>
       </v-card-text>
     </v-card>
@@ -53,7 +68,9 @@
 </template>
 
 <script>
-import { mdiClose, mdiChevronRight } from "@mdi/js";
+import { mdiClose, mdiChevronRight, mdiAccount } from "@mdi/js";
+import useRootStore from "@/store/index";
+import { mapState } from "pinia";
 
 export default {
   name: "MobileNavDialog",
@@ -79,9 +96,11 @@ export default {
     return {
       mdiClose,
       mdiChevronRight,
+      mdiAccount,
     };
   },
   computed: {
+    ...mapState(useRootStore, ["user", "person"]),
     dialogVisible: {
       get() {
         return this.value;
@@ -94,6 +113,9 @@ export default {
   methods: {
     closeDialog() {
       this.$emit("input", false);
+    },
+    openUserDialog() {
+      this.$emit("openUserDialog");
     },
   },
 };
@@ -147,5 +169,23 @@ export default {
 
 .v-chip {
   height: 24px;
+}
+
+.user-avatar-item {
+  // border-top: 1px solid rgba(255, 255, 255, 0.1);
+  // margin-top: 10px;
+  // padding-top: 20px;
+  background: none;
+}
+
+.user-avatar {
+  transition: transform 0.2s ease;
+  border: none;
+  background: none;
+  // border: 2px solid var(--v-baseAccent-base);
+
+  &:hover {
+    transform: scale(1.1);
+  }
 }
 </style>

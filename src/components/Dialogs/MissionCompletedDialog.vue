@@ -2,7 +2,7 @@
   <v-container class="pa-0">
     <v-row class="text-center" align="center">
       <v-col cols="12">
-        <v-dialog v-model="dialog" width="40%" light>
+        <v-dialog v-model="dialog" :width="isMobile ? '90%' : '40%'" light>
           <!-- COMPLETED BUTTON (looks like checkbox) -->
           <template v-slot:activator="{ on, attrs }">
             <!-- IF ACTIVE -->
@@ -167,7 +167,7 @@
               </div>
 
               <!-- ACTION BUTTONS -->
-              <div :class="isScreenSmall ? 'action-buttons-over-under' : 'action-buttons'">
+              <div :class="isMobile ? 'action-buttons-over-under' : 'action-buttons'">
                 <!-- SUBMIT WORK FOR REVIEW -->
                 <v-btn
                   v-if="active && task.submissionRequired"
@@ -361,8 +361,8 @@ export default {
       );
       return submissions.find((submission) => submission.contextTask.id == this.task.id);
     },
-    isScreenSmall() {
-      return window.innerWidth < 1300;
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
     },
   },
   methods: {
@@ -927,7 +927,7 @@ export default {
     justify-content: space-around;
     align-items: space-around;
     flex-direction: column;
-    padding: 20px;
+    padding: 20px 20px 0px 20px;
     width: 100%;
     // font-size: 0.6rem;
     border-top: 1px solid var(--v-missionAccent-base);
@@ -1078,11 +1078,11 @@ export default {
 .action-buttons-over-under {
   width: 100%;
   height: 150px;
-  padding: 20px;
+  padding: 0px 20px 20px 20px;
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
   align-items: center;
+  gap: 20px;
 }
 
 .instructor-image {
