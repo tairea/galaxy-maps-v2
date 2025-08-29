@@ -89,6 +89,7 @@ import {
   generateUnifiedGalaxyMapHttpsEndpoint,
   refineGalaxyMapHttpsEndpoint,
 } from "./openAIActions.js";
+import { generateRealtimeTokenHttpsEndpoint } from "./realtimeToken.js";
 
 // activity
 export {
@@ -192,4 +193,5 @@ export {
   generateInstructionsForMissionHttpsEndpoint as generateInstructionsForMission,
   generateUnifiedGalaxyMapHttpsEndpoint as generateUnifiedGalaxyMap,
   refineGalaxyMapHttpsEndpoint as refineGalaxyMap,
+  generateRealtimeTokenHttpsEndpoint as generateRealtimeToken,
 };

@@ -97,9 +97,12 @@
     <!-- AI Conversation Panel -->
     <AiConversationPanel
       v-if="isMobile && !loading"
+      ref="aiConversationPanel"
+      :course="course"
+      :task="task"
       :isOpen="aiPanelOpen"
       @close="closeAIAssistant"
-      @pause-toggle="onPauseToggle"
+      @stop-toggle="onStopToggle"
     />
 
     <!-- Topic completed dialog -->
@@ -495,17 +498,25 @@ export default {
         this.peopleInTopic.push(this.person);
       }
     },
-    openAIAssistant() {
+    async openAIAssistant() {
       this.aiPanelOpen = true;
       console.log("AI Assistant panel opened");
+
+      // Wait for the component to be rendered, then initialize
+      await this.$nextTick();
+      if (this.$refs.aiConversationPanel) {
+        await this.$refs.aiConversationPanel.openPanel();
+      }
     },
-    closeAIAssistant() {
+    async closeAIAssistant() {
+      // The child component already handles disconnection via closePanel()
+      // when the close button is clicked, so we just need to update the UI state
       this.aiPanelOpen = false;
       console.log("AI Assistant panel closed");
     },
-    onPauseToggle(isPaused) {
-      console.log("AI Assistant paused:", isPaused);
-      // TODO: Implement pause/resume functionality
+    onStopToggle(isStopped) {
+      console.log("AI Assistant stopped:", isStopped);
+      // TODO: Implement stop/start functionality
     },
   },
 };

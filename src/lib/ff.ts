@@ -1134,3 +1134,13 @@ export const saveNode = async (
   const result = await saveNodeFunction(data);
   return result.data;
 };
+
+// Generate ephemeral client token for OpenAI Realtime API
+export const generateRealtimeToken = async (): Promise<{
+  clientSecret: string;
+}> => {
+  const data = {};
+  const generateRealtimeTokenFunction = functions.httpsCallable("generateRealtimeToken");
+  const result = await generateRealtimeTokenFunction(data);
+  return result.data;
+};
