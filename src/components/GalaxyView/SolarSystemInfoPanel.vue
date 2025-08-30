@@ -8,7 +8,7 @@
         style="padding: 50px"
       >
         <v-btn :loading="!selectedTopic" icon color="missionAccent"></v-btn>
-        <p class="overline missionAccent--text">Loading system</p>
+        <p class="overline missionAccent--text">Loading Star System</p>
       </div>
 
       <!-- Error message -->
@@ -89,9 +89,9 @@
         <!-- Panel Content (mission cards) -->
         <div class="card-container">
           <div v-if="tasks.length == 0" class="noMissionWarningContainer">
-            <p class="noMissionWarning">This system has no missions.</p>
+            <p class="noMissionWarning">This Star System has no Missions.</p>
             <p class="noMissionWarning mt-6">
-              <strong>Systems must have at least one mission</strong>
+              <strong>Star Systems must have at least one Mission</strong>
             </p>
           </div>
           <!-- list of Mission cards -->

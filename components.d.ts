@@ -12,6 +12,7 @@ declare module 'vue' {
     ActivityBarChart: typeof import('./src/components/Reused/ActivityBarChart.vue')['default']
     ActivityBarChartStudentCourses: typeof import('./src/components/Reused/ActivityBarChartStudentCourses.vue')['default']
     AiConversationPanel: typeof import('./src/components/Reused/AiConversationPanel.vue')['default']
+    AiConversationPanelDesktop: typeof import('./src/components/Reused/AiConversationPanelDesktop.vue')['default']
     AICreateGalaxyDialog: typeof import('./src/components/Dialogs/AICreateGalaxyDialog.vue')['default']
     AssignCohortDialog: typeof import('./src/components/Dialogs/AssignCohortDialog.vue')['default']
     AssignedInfo: typeof import('./src/components/Reused/AssignedInfo.vue')['default']

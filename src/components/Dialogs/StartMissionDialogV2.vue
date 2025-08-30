@@ -20,9 +20,7 @@
 </template>
 
 <script>
-import { fetchCourseByCourseId, fetchTopicByCourseIdTopicId } from "@/lib/ff";
-import { startTaskXAPIStatement, startTopicXAPIStatement } from "@/lib/veracityLRS";
-import { db } from "@/store/firestoreConfig";
+import { startMission } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mdiPlay, mdiInformationVariant, mdiCheck, mdiClose } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
@@ -52,40 +50,10 @@ export default {
         // set as current/active task
         this.setCurrentTaskId(this.task.id);
 
-        const topic = db
-          .collection("people")
-          .doc(this.person.id)
-          .collection(this.course.id)
-          .doc(this.topic.id);
+        // Call the cloud function to start the mission
+        await startMission(this.course.id, this.topic.id, this.task.id, this.topicActive);
 
-        // update taskStatus to active
-        await topic.collection("tasks").doc(this.task.id).update({
-          taskStatus: "active",
-          taskStartedTimestamp: new Date(),
-        });
-
-        if (!this.topicActive) {
-          await topic.update({
-            topicStatus: "active",
-            topicStartedTimeStamp: new Date(),
-          });
-        }
-
-        console.log("Topic status successfully written as Active!");
-        if (!this.topicActive) {
-          await startTopicXAPIStatement(this.person, {
-            galaxy: this.course,
-            system: this.topic,
-          });
-        }
-
-        console.log("Task status successfully written as Active!");
-        await startTaskXAPIStatement(this.person, this.task.id, {
-          galaxy: this.course,
-          system: this.topic,
-          mission: this.task,
-        });
-
+        console.log("Mission started successfully!");
         this.$emit("missionStarted");
       } catch (error) {
         console.error("Error starting mission:", error);

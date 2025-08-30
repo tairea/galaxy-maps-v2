@@ -222,6 +222,136 @@ export const stopGalaxyXAPIStatement = (
   }).catch((error) => console.error(error.message));
 };
 
+// ========== Start Topic
+export const startTopicXAPIStatement = (
+  actor: { id: string; firstName: string; lastName: string; email: string },
+  context: { galaxy: { id: string; title: string }; system: { id: string; label: string } },
+) => {
+  console.log("sending student xAPI statement... topic started...");
+  const statement = {
+    actor: {
+      name: actor.firstName + " " + actor.lastName,
+      mbox: "mailto:" + actor.email,
+    },
+    verb: {
+      id: "https://w3id.org/xapi/dod-isd/verbs/started",
+      display: { "en-nz": "started" },
+    },
+    object: {
+      id: "https://www.galaxymaps.io/topic/" + context.system.id,
+      definition: {
+        name: {
+          "en-nz": "Course: " + context.galaxy.title + " > Topic: " + context.system.label,
+        },
+        description: {
+          "en-nz": "Started Topic: " + context.system.label,
+        },
+        extensions: {
+          "https://www.galaxymaps.io/course/id/": context.galaxy.id,
+          "https://www.galaxymaps.io/topic/id/": context.system.id,
+          "https://www.galaxymaps.io/person/id/": actor.id,
+        },
+      },
+    },
+    context: {
+      contextActivities: {
+        parent: [
+          {
+            id: "https://www.galaxymaps.io/topic/" + context.system.id,
+            objectType: "Activity",
+          },
+        ],
+        grouping: [
+          {
+            id: "https://www.galaxymaps.io/course/" + context.galaxy.id,
+            objectType: "Activity",
+          },
+        ],
+      },
+    },
+  };
+
+  fetch("https://galaxymaps.lrs.io/xapi/statements", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: generateAuthHeader(),
+    },
+    body: JSON.stringify(statement),
+  }).catch((error) => console.error(error.message));
+};
+
+// ========== Start Task
+export const startTaskXAPIStatement = (
+  actor: { id: string; firstName: string; lastName: string; email: string },
+  taskId: string,
+  context: {
+    galaxy: { id: string; title: string };
+    system: { id: string; label: string };
+    mission: { id: string; title: string };
+  },
+) => {
+  console.log("sending student xAPI statement... task started...");
+  const statement = {
+    actor: {
+      name: actor.firstName + " " + actor.lastName,
+      mbox: "mailto:" + actor.email,
+    },
+    verb: {
+      id: "https://w3id.org/xapi/dod-isd/verbs/started",
+      display: { "en-nz": "started" },
+    },
+    object: {
+      id: "https://www.galaxymaps.io/task/" + taskId,
+      definition: {
+        name: {
+          "en-nz":
+            "Course: " +
+            context.galaxy.title +
+            " > Topic: " +
+            context.system.label +
+            " > Task: " +
+            context.mission.title,
+        },
+        description: {
+          "en-nz": "Started Task: " + context.mission.title,
+        },
+        extensions: {
+          "https://www.galaxymaps.io/course/id/": context.galaxy.id,
+          "https://www.galaxymaps.io/topic/id/": context.system.id,
+          "https://www.galaxymaps.io/task/id/": context.mission.id,
+          "https://www.galaxymaps.io/person/id/": actor.id,
+        },
+      },
+    },
+    context: {
+      contextActivities: {
+        parent: [
+          {
+            id: "https://www.galaxymaps.io/topic/" + context.system.id,
+            objectType: "Activity",
+          },
+        ],
+        grouping: [
+          {
+            id: "https://www.galaxymaps.io/course/" + context.galaxy.id,
+            objectType: "Activity",
+          },
+        ],
+      },
+    },
+  };
+
+  fetch("https://galaxymaps.lrs.io/xapi/statements", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: generateAuthHeader(),
+    },
+    body: JSON.stringify(statement),
+  }).catch((error) => console.error(error.message));
+};
+
 /* ----------------------
   QUERY xAPI STATEMENTS
 ------------------------- */

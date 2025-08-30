@@ -115,7 +115,7 @@
     </div> -->
 
         <!-- ===== MISSION DURATION & SUBMISSION SECTION ===== -->
-        <div v-if="!teacher" class="mission-section mission-section-overUnder">
+        <div v-if="!teacher && !isMobile" class="mission-section mission-section-overUnder">
           <!--  DURATION -->
           <div v-if="task.duration" class="section-overUnder d-flex justify-center flex-column">
             <v-tooltip v-if="isMobile" bottom>
@@ -171,7 +171,7 @@
 
         <!-- ===== MISSION STATUS SECTION ===== -->
         <div
-          v-if="!teacher && !isMobile"
+          v-if="!teacher"
           class="mission-section d-flex justify-center align-center flex-column"
           style="width: 20%"
           :class="{
@@ -313,6 +313,16 @@
         </div>
       </div>
     </v-expansion-panel-header>
+
+    <!-- Mobible Start Mission button -->
+    <!-- <StartMissionDialogV2
+      v-if="unlocked && isMobile"
+      :course="course"
+      :topic="topic"
+      :task="task"
+      :topicActive="topicActive"
+      @missionStarted="$emit('missionStarted', task.id)"
+    /> -->
 
     <!-- ===== ACTIVE MISSION CONTENT ===== -->
     <v-expansion-panel-content :class="{ mobile: isMobile }">
@@ -618,7 +628,7 @@ pre {
 .v-expansion-panel-header {
   &.mobile {
     padding: 0px;
-    margin: 0px;
+    margin: 15px 0px;
     border: none;
     // width: calc(var(--vw, 1vw) * 100);
 
@@ -628,10 +638,15 @@ pre {
   }
 }
 
-.v-expansion-panel-content__wrap {
-  padding: 0px !important;
-  margin: 0px;
-  border: none;
+.v-expansion-panel-content {
+  &.mobile {
+    margin-top: -15px;
+    .v-expansion-panel-content__wrap {
+      padding: 0px !important;
+      margin: 0px;
+      border: none;
+    }
+  }
 }
 
 .task-description > p,
@@ -737,7 +752,7 @@ p {
 
   &.mobile {
     border: none;
-    margin: 10px;
+    margin: 0px;
     width: 100%;
     box-sizing: border-box;
   }

@@ -1144,3 +1144,27 @@ export const generateRealtimeToken = async (): Promise<{
   const result = await generateRealtimeTokenFunction(data);
   return result.data;
 };
+
+// Start Mission - Sets task and topic as active and sends XAPI statements
+export const startMission = async (
+  courseId: string,
+  topicId: string,
+  taskId: string,
+  topicActive: boolean,
+): Promise<{
+  success: boolean;
+  message: string;
+  taskId: string;
+  topicId: string;
+  courseId: string;
+}> => {
+  const data = {
+    courseId,
+    topicId,
+    taskId,
+    topicActive,
+  };
+  const startMissionFunction = functions.httpsCallable("startMission");
+  const result = await startMissionFunction(data);
+  return result.data;
+};

@@ -214,9 +214,9 @@ router.beforeEach(async (to, from, next) => {
       }
     } else {
       alert("You must be logged in to see this page");
-      // next({
-      //   path: "/login",
-      // });
+      next({
+        path: "/login",
+      });
     }
   } else {
     next();
