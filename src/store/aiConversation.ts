@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { generateRealtimeToken } from "@/lib/ff";
 
-interface TokenCache {
+export interface TokenCache {
   token: string;
   expiresAt: number;
 }

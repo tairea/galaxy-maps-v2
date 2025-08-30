@@ -3,15 +3,10 @@ import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { type CallableContext, HttpsError } from "firebase-functions/v1/https";
+import type { File } from "@google-cloud/storage";
 
 // Initialize Firebase Admin SDK with proper configuration
-export const app =
-  getApps().length === 0
-    ? initializeApp({
-        // Use default credentials when running in Firebase Functions
-        // This will automatically use the service account associated with the project
-      })
-    : getApps()[0];
+export const app = getApps().length === 0 ? initializeApp({}) : getApps()[0];
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
@@ -23,7 +18,7 @@ export const storage = getStorage(app);
  * @param expiresInYears - Number of years until expiration (default: 100)
  * @returns Promise<string> - The signed URL
  */
-export async function generateSignedUrl(file: any, expiresInYears: number = 100): Promise<string> {
+export async function generateSignedUrl(file: File, expiresInYears: number = 100): Promise<string> {
   const [downloadURL] = await file.getSignedUrl({
     action: "read",
     expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365 * expiresInYears),

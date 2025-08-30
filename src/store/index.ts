@@ -43,6 +43,8 @@ const getDefaultState = () => {
     startMissionLoading: false,
     unansweredRequests: [] as Record<string, any>[],
     inReviewSubmissions: [] as Record<string, any>[],
+    // AI Assistant trigger (used to open AI panels from anywhere)
+    aiAssistantTrigger: null as { requested: boolean; ts: number; source?: string } | null,
     // AI Galaxy Edit state
     aiGalaxyEditData: null as Record<string, any> | null,
     // Mobile UI state
@@ -145,6 +147,13 @@ export default defineStore({
     },
     setPeopleInCourse(people: Record<string, any>[]) {
       this.peopleInCourse = people;
+    },
+    // === AI Assistant triggers ===
+    triggerAiAssistant(source?: string) {
+      this.aiAssistantTrigger = { requested: true, ts: Date.now(), source };
+    },
+    clearAiAssistantTrigger() {
+      this.aiAssistantTrigger = null;
     },
     setUserStatus(userStatus: Record<string, any>) {
       this.userStatus = userStatus;

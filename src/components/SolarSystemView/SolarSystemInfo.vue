@@ -1,6 +1,6 @@
 <template>
   <div id="ss-info" v-if="course">
-    <h2 class="ss-label">System</h2>
+    <h2 class="ss-label">Star System</h2>
     <h1 class="ss-title">{{ topic.label }}</h1>
     <SolarSystem
       :courseId="course.id"

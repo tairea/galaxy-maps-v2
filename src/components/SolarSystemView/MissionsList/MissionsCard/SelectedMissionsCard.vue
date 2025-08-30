@@ -1,6 +1,6 @@
 <template>
-  <div class="selected-mission-card">
-    <div v-html="renderedTaskDescription" class="task-description pa-2"></div>
+  <div class="selected-mission-card" :class="{ mobile: isMobile }">
+    <div v-html="renderedTaskDescription" class="task-description py-2"></div>
     <v-row class="pb-8">
       <div v-if="task.video || task.slides" class="supporting-materials">
         <p class="text-overline missionAccent--text">Supporting Materials</p>
@@ -44,7 +44,12 @@
             <br />
             <span class="galaxyAccent--text">"{{ task.taskReviewedFeedback }}"</span>
           </p>
-          <p v-else class="text-overline text-uppercase">With No feedback</p>
+          <p
+            v-else-if="task.submissionRequired && !task.taskReviewedFeedback"
+            class="text-overline text-uppercase"
+          >
+            With No feedback
+          </p>
         </div>
       </div>
     </v-row>
@@ -96,6 +101,9 @@ export default {
           .replace(/"/g, "&quot;")
           .replace(/'/g, "&#39;");
       }
+    },
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
     },
   },
   methods: {
@@ -207,9 +215,18 @@ a {
   z-index: 200;
   background-color: var(--v-background-base);
 
+  &.mobile {
+    margin: 0px;
+
+    // mobile - task description
+    .task-description {
+      margin: 0px;
+    }
+  }
+
   .task-description {
     color: var(--v-missionAccent-base);
-    margin: 20px;
+    padding: 40px 20px;
   }
 
   .supporting-materials {

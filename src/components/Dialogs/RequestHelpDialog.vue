@@ -2,14 +2,110 @@
   <v-container class="pa-0">
     <v-row class="text-center" align="center">
       <v-col cols="12">
-        <v-dialog v-model="dialog" :width="isMobile ? '90%' : '40%'" light>
-          <!-- REQUEST HELP BUTTON -->
+        <!-- OPTIONS DIALOG (opens first) -->
+        <v-dialog
+          v-model="optionsDialog"
+          :width="isMobile ? '90%' : '40%'"
+          light
+          persistent
+          style="z-index: 3000"
+        >
+          <!-- REQUEST HELP BUTTON (activator) -->
           <template v-slot:activator="{ on, attrs }">
             <v-btn color="missionAccent ma-2" v-bind="attrs" v-on="on" x-large>
               <v-icon color="background">{{ mdiHandFrontLeftOutline }}</v-icon>
             </v-btn>
           </template>
 
+          <div class="create-dialog">
+            <!-- HEADER -->
+            <div class="dialog-header">
+              <p class="dialog-title">
+                Need help with
+                <strong
+                  ><i>{{ task.title }}</i></strong
+                >?
+              </p>
+              <div class="d-flex align-center">
+                <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
+                <p class="dialog-description">Choose who you'd like to get help from</p>
+              </div>
+            </div>
+
+            <!-- OPTIONS CONTENT -->
+            <div class="create-dialog-content">
+              <div class="creation-options my-12">
+                <!-- Ask the AI -->
+                <div
+                  class="creation-option galaxy-border"
+                  @click.stop.prevent="handleAskAI"
+                  :class="{ disabled: loading }"
+                >
+                  <div class="creation-option-icon">
+                    <v-icon color="galaxyAccent" :class="{ 'loading-spin': loading }">{{
+                      mdiHandFrontLeftOutline
+                    }}</v-icon>
+                    <v-icon color="galaxyAccent" :class="{ 'loading-spin': loading }">{{
+                      mdiArrowRight
+                    }}</v-icon>
+                    <v-icon color="galaxyAccent" :class="{ 'loading-spin': loading }">{{
+                      mdiRobotExcited
+                    }}</v-icon>
+                  </div>
+                  <div class="creation-option-label galaxyAccent--text">Ask the AI</div>
+                </div>
+
+                <!-- Ask the Captain -->
+                <div
+                  class="creation-option base-border"
+                  @click.stop.prevent="handleAskCaptain"
+                  :class="{ disabled: loading }"
+                >
+                  <div class="creation-option-icon">
+                    <v-icon color="baseAccent" :class="{ 'loading-spin': loading }">{{
+                      mdiHandFrontLeftOutline
+                    }}</v-icon>
+                    <v-icon color="baseAccent" :class="{ 'loading-spin': loading }">{{
+                      mdiArrowRight
+                    }}</v-icon>
+                    <v-avatar v-if="captain && captain.image && captain.image.url" size="40">
+                      <v-img :src="captain.image.url"></v-img>
+                    </v-avatar>
+                    <p v-else>🧑‍✈️</p>
+                  </div>
+                  <div class="creation-option-label baseAccent--text">Ask the Captain</div>
+                </div>
+              </div>
+
+              <!-- CANCEL BUTTON -->
+              <div class="action-buttons">
+                <div class="d-flex align-center justify-center">
+                  <v-btn
+                    outlined
+                    :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
+                    @click="cancelOptions"
+                    class="ma-4"
+                    :disabled="loading"
+                    :dark="dark"
+                    :light="!dark"
+                  >
+                    <v-icon left>{{ mdiClose }}</v-icon>
+                    Cancel
+                  </v-btn>
+                </div>
+              </div>
+            </div>
+          </div>
+        </v-dialog>
+
+        <!-- EXISTING REQUEST-FOR-HELP DIALOG (opens when choosing Captain) -->
+        <v-dialog
+          v-model="dialog"
+          :width="isMobile ? '90%' : '40%'"
+          light
+          persistent
+          style="z-index: 3000"
+        >
           <div class="create-dialog">
             <!-- DIALOG HEADER -->
             <div class="dialog-header">
@@ -28,8 +124,6 @@
 
             <!-- REQUEST INPUT FIELDS -->
             <div class="create-dialog-content">
-              <!-- TITLE -->
-              <!-- <p class="dialog-description">Enter your question:</p> -->
               <v-textarea
                 class="input-field mt-6"
                 outlined
@@ -44,7 +138,6 @@
 
             <!-- ACTION BUTTONS -->
             <div class="action-buttons" :class="{ mobile: isMobile }">
-              <!-- SUBMIT REQUEST FOR HELP -->
               <v-btn
                 outlined
                 color="galaxyAccent"
@@ -59,7 +152,6 @@
                 SUBMIT REQUEST FOR HELP
               </v-btn>
 
-              <!-- CANCEL -->
               <v-btn
                 outlined
                 :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
@@ -71,15 +163,11 @@
                 <v-icon left> {{ mdiClose }} </v-icon>
                 Cancel
               </v-btn>
-              <!-- End action-buttons -->
             </div>
-            <!-- End submission-create-dialog-content -->
-
-            <!-- End submission-create-dialog -->
           </div>
-
-          <!-- End create-dialog -->
         </v-dialog>
+
+        <!-- AI Conversation Panels removed: panels are controlled by SolarSystemView -->
       </v-col>
     </v-row>
   </v-container>
@@ -96,17 +184,29 @@ import {
 import { studentRequestForHelpXAPIStatement } from "@/lib/veracityLRS";
 import { db, functions } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
-import { mdiHandFrontLeftOutline, mdiInformationVariant, mdiCheck, mdiClose } from "@mdi/js";
+import {
+  mdiHandFrontLeftOutline,
+  mdiInformationVariant,
+  mdiCheck,
+  mdiClose,
+  mdiRobotExcited,
+  mdiArrowRight,
+} from "@mdi/js";
 import { mapActions, mapState } from "pinia";
+// Panels are mounted in SolarSystemView and controlled via store triggers
 
 export default {
   name: "RequestHelpDialog",
+  components: {},
   props: ["course", "topic", "task", "on", "attrs"],
   data: () => ({
     mdiHandFrontLeftOutline,
     mdiInformationVariant,
     mdiCheck,
     mdiClose,
+    mdiRobotExcited,
+    mdiArrowRight,
+    optionsDialog: false,
     dialog: false,
     dialogDescription:
       "Write what you need help with, then submit, and your Captain will be notified to leave you a response.",
@@ -114,6 +214,8 @@ export default {
     loading: false,
     deleting: false,
     cohort: null,
+    captain: null,
+    aiPanelOpen: false,
   }),
   async mounted() {
     // FIXME: this won't work if they load the solar system view directly without going
@@ -121,6 +223,29 @@ export default {
     if (this.currentCohortId) {
       this.cohort = await fetchCohortByCohortId(this.currentCohortId);
     }
+
+    // Fetch captain (mappedBy.personId) for avatar display if available
+    try {
+      if (this.course && this.course.mappedBy && this.course.mappedBy.personId) {
+        this.captain = await fetchPersonByPersonId(this.course.mappedBy.personId);
+      }
+    } catch (e) {
+      console.warn("Failed to fetch captain details:", e);
+    }
+  },
+  watch: {
+    course: {
+      handler: async function (newVal) {
+        try {
+          if (newVal && newVal.mappedBy && newVal.mappedBy.personId) {
+            this.captain = await fetchPersonByPersonId(newVal.mappedBy.personId);
+          }
+        } catch (e) {
+          console.warn("Failed to fetch captain details on course change:", e);
+        }
+      },
+      deep: true,
+    },
   },
   computed: {
     ...mapState(useRootStore, ["currentCohortId", "person", "cohorts"]),
@@ -135,7 +260,19 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["setSnackbar", "getCohortsByPersonId"]),
+    ...mapActions(useRootStore, ["setSnackbar", "getCohortsByPersonId", "triggerAiAssistant"]),
+    handleAskAI() {
+      this.optionsDialog = false;
+      // Trigger AI assistant via store; SolarSystemView will open the correct panel
+      this.triggerAiAssistant("RequestHelpDialog");
+    },
+    handleAskCaptain() {
+      this.optionsDialog = false;
+      this.dialog = true;
+    },
+    cancelOptions() {
+      this.optionsDialog = false;
+    },
     async submitRequestForHelp(requestForHelp) {
       this.loading = true;
       try {
@@ -317,6 +454,88 @@ export default {
 
   &.mobile {
     flex-direction: column;
+  }
+}
+
+// Creation options styling (inspired by CreateGalaxyOptionsDialog)
+.creation-options {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  margin: 20px 0;
+  width: 100%;
+}
+
+.creation-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 30px;
+  border: 2px solid var(--v-missionAccent-base);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 180px;
+  background-color: var(--v-background-base);
+  text-align: center;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  &.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+
+    &:hover {
+      transform: none;
+      box-shadow: none;
+    }
+  }
+}
+
+.galaxy-border {
+  border: 2px solid var(--v-galaxyAccent-base);
+}
+
+.base-border {
+  border: 2px solid var(--v-baseAccent-base);
+}
+
+.creation-option-icon {
+  font-size: 2.2rem;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .v-icon {
+    font-size: 2.2rem;
+    color: var(--v-missionAccent-base);
+  }
+}
+
+.creation-option-label {
+  font-size: 1rem;
+  text-transform: uppercase;
+  color: var(--v-missionAccent-base);
+  font-weight: 600;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.loading-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 </style>

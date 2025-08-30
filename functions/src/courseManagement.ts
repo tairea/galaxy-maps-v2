@@ -1,11 +1,13 @@
 import { DocumentReference, FieldValue, Filter } from "firebase-admin/firestore";
 import { runWith } from "firebase-functions/v1";
-import { HttpsError } from "firebase-functions/v1/https";
+import { HttpsError, type CallableContext } from "firebase-functions/v1/https";
 import { db, requireAuthenticated } from "./_shared.js";
 import {
   VERACITY_LRS_SECRET,
   startGalaxyXAPIStatement,
   stopGalaxyXAPIStatement,
+  startTopicXAPIStatement,
+  startTaskXAPIStatement,
 } from "./veracityLRS.js";
 import { type CourseToGalaxyMap } from "./schemas.js";
 
@@ -3146,3 +3148,123 @@ export const saveNodeHttpsEndpoint = runWith({}).https.onCall(async (data, conte
     throw new HttpsError("internal", "Failed to save node");
   }
 });
+
+/**
+ * Start Mission - Sets task and topic as active and sends XAPI statements
+ */
+export const startMissionHttpsEndpoint = runWith({ secrets: [VERACITY_LRS_SECRET] }).https.onCall(
+  async (
+    data: {
+      courseId: string;
+      topicId: string;
+      taskId: string;
+      topicActive: boolean;
+    },
+    context: CallableContext,
+  ) => {
+    if (!context.auth) {
+      throw new HttpsError("unauthenticated", "The function must be called while authenticated.");
+    }
+
+    const { courseId, topicId, taskId, topicActive } = data;
+    const personId = context.auth.uid;
+
+    try {
+      console.log("🚀 Starting mission:", { courseId, topicId, taskId, personId, topicActive });
+
+      // Get person data
+      const personDoc = await db.collection("people").doc(personId).get();
+      if (!personDoc.exists) {
+        throw new HttpsError("not-found", "Person not found");
+      }
+      const person = { ...personDoc.data(), id: personDoc.id } as {
+        id: string;
+        firstName: string;
+        lastName: string;
+        email: string;
+      } & Record<string, unknown>;
+
+      // Get course data
+      const courseDoc = await db.collection("courses").doc(courseId).get();
+      if (!courseDoc.exists) {
+        throw new HttpsError("not-found", "Course not found");
+      }
+      const course = { ...courseDoc.data(), id: courseDoc.id };
+
+      // Get topic data
+      const topicDoc = await db
+        .collection("courses")
+        .doc(courseId)
+        .collection("topics")
+        .doc(topicId)
+        .get();
+      if (!topicDoc.exists) {
+        throw new HttpsError("not-found", "Topic not found");
+      }
+      const topic = { ...topicDoc.data(), id: topicDoc.id };
+
+      // Get task data
+      const taskDoc = await db
+        .collection("courses")
+        .doc(courseId)
+        .collection("topics")
+        .doc(topicId)
+        .collection("tasks")
+        .doc(taskId)
+        .get();
+      if (!taskDoc.exists) {
+        throw new HttpsError("not-found", "Task not found");
+      }
+      const task = { ...taskDoc.data(), id: taskDoc.id };
+
+      // Reference to person's topic document
+      const personTopicRef = db
+        .collection("people")
+        .doc(personId)
+        .collection(courseId)
+        .doc(topicId);
+
+      // Update task status to active
+      await personTopicRef.collection("tasks").doc(taskId).update({
+        taskStatus: "active",
+        taskStartedTimestamp: new Date(),
+      });
+      console.log("✅ Task status updated to active");
+
+      // Update topic status to active if not already active
+      if (!topicActive) {
+        await personTopicRef.update({
+          topicStatus: "active",
+          topicStartedTimeStamp: new Date(),
+        });
+        console.log("✅ Topic status updated to active");
+
+        // Send topic started XAPI statement
+        await startTopicXAPIStatement(person, {
+          galaxy: { id: course.id, title: (course as any).title || "Unknown Course" },
+          system: { id: topic.id, label: (topic as any).label || "Unknown Topic" },
+        });
+        console.log("✅ Topic started XAPI statement sent");
+      }
+
+      // Send task started XAPI statement
+      await startTaskXAPIStatement(person, taskId, {
+        galaxy: { id: course.id, title: (course as any).title || "Unknown Course" },
+        system: { id: topic.id, label: (topic as any).label || "Unknown Topic" },
+        mission: { id: task.id, title: (task as any).title || "Unknown Task" },
+      });
+      console.log("✅ Task started XAPI statement sent");
+
+      return {
+        success: true,
+        message: "Mission started successfully",
+        taskId,
+        topicId,
+        courseId,
+      };
+    } catch (error) {
+      console.error("❌ Error starting mission:", error);
+      throw new HttpsError("internal", "Failed to start mission");
+    }
+  },
+);

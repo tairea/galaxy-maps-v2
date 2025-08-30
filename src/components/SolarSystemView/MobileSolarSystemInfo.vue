@@ -4,7 +4,7 @@
       <!-- Header section with minimize toggle -->
       <div class="mobile-panel-header">
         <!-- Clickable Label with Arrow for minimize -->
-        <div class="mobile-system-label" @click="toggleMinimize" @touchstart="toggleMinimize">
+        <div class="mobile-system-label" @click="toggleMinimize">
           <div v-if="!isMinimized">Star System</div>
           <div v-else>
             {{ truncateTitle(topic.label) }}

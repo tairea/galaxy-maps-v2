@@ -47,6 +47,7 @@ import {
   saveNodeHttpsEndpoint,
   removePrerequisitesFromTopicsHttpsEndpoint,
   updateStudentTopicPrerequisitesHttpsEndpoint,
+  startMissionHttpsEndpoint,
 } from "./courseManagement.js";
 import {
   sendCourseDeletedHttpsEndpoint,
@@ -142,6 +143,7 @@ export {
   saveNodeHttpsEndpoint as saveNode,
   removePrerequisitesFromTopicsHttpsEndpoint as removePrerequisitesFromTopics,
   updateStudentTopicPrerequisitesHttpsEndpoint as updateStudentTopicPrerequisites,
+  startMissionHttpsEndpoint as startMission,
 };
 
 // emails
