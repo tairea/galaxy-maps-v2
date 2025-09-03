@@ -31,6 +31,15 @@
         :people="peopleInTopic"
         :teacher="teacher"
       />
+      <div v-if="!loading && !draft && loadingPeople" class="pa-4 text-center">
+        <v-progress-circular
+          indeterminate
+          size="20"
+          color="missionAccent"
+          class="mr-2"
+        ></v-progress-circular>
+        <p class="overline missionAccent--text">Loading other Navigators in this Star System...</p>
+      </div>
     </div>
 
     <!--==== Main section ====-->
@@ -66,6 +75,10 @@
         @taskDeleted="taskDeleted"
         @taskOrderChanged="taskOrderChanged"
       />
+
+      <v-btn v-if="topicJustCompleted" small text @click="nextTopic" style="bottom: 50px"
+        >next system -></v-btn
+      >
     </div>
 
     <!--==== Right section ====-->
@@ -75,12 +88,14 @@
         :courses="[course]"
         :isTeacher="teacher"
         :students="peopleInTopic"
+        :loadingStudents="loadingPeople"
       />
       <SubmissionTeacherFrame
         v-if="!loading && teacher"
         :isTeacher="teacher"
         :courses="[course]"
         :students="peopleInTopic"
+        :loadingStudents="loadingPeople"
         class="mt-4"
       />
       <AiConversationPanelDesktop
@@ -180,12 +195,14 @@ export default {
       unsubscribes: [],
       peopleInTopic: [],
       loading: true,
+      loadingPeople: true,
       orderChanged: false,
       newMissionOrder: [],
       savingNewMissionOrder: false,
       updateViaKey: 0,
       currentTask: null,
       topicCompletedDialog: false,
+      topicJustCompleted: false,
       unlockingNextTopic: true, // default to loading
       showNextSystemButton: true,
       infoIsMinimised: false,
@@ -193,24 +210,43 @@ export default {
     };
   },
   async mounted() {
+    const startTime = performance.now();
+    console.log("🚀 SolarSystemView mounted() started");
+
+    const step1Start = performance.now();
     this.setCurrentCourseId(this.courseId);
     this.setCurrentTopicId(this.topicId);
+    console.log(
+      `⏱️ Step 1 (setCurrentCourseId/TopicId): ${((performance.now() - step1Start) / 1000).toFixed(3)}s`,
+    );
 
     // load Topic & course data
+    const step2Start = performance.now();
     await this.loadTopic(this.courseId, this.topicId);
+    console.log(`⏱️ Step 2 (loadTopic): ${((performance.now() - step2Start) / 1000).toFixed(3)}s`);
 
+    const step3Start = performance.now();
     if (this.teacher) {
       await this.refreshTasks();
     } else {
       await this.refreshPersonTopicsAndTasks(this.person.id);
     }
-
-    await this.getPeopleInTopic();
+    console.log(
+      `⏱️ Step 3 (refreshTasks/refreshPersonTopicsAndTasks): ${((performance.now() - step3Start) / 1000).toFixed(3)}s`,
+    );
 
     // set active task
+    const step4Start = performance.now();
     this.task = this.getActiveMission();
+    console.log(
+      `⏱️ Step 4 (getActiveMission): ${((performance.now() - step4Start) / 1000).toFixed(3)}s`,
+    );
 
     this.loading = false;
+    console.log(`🎯 Total mounted() time: ${((performance.now() - startTime) / 1000).toFixed(3)}s`);
+
+    // Load people in topic asynchronously after UI is shown (non-blocking)
+    this.getPeopleInTopic();
 
     // Watch for AI assistant trigger to open appropriate panel
     this.$watch(
@@ -234,6 +270,13 @@ export default {
     );
   },
   watch: {
+    personTasks: {
+      handler(newTasks) {
+        // Update the task when personTasks change (e.g., when a mission is started)
+        this.task = this.getActiveMission();
+      },
+      deep: true,
+    },
     topicCompleted(topic) {
       console.log("topic completed (from watch)", topic);
       if (topic.topicId == this.topicId && topic.completed == true) {
@@ -271,19 +314,28 @@ export default {
       return this.course.status === "drafting";
     },
     teacher() {
-      return (
+      const startTime = performance.now();
+      const result =
         this.course.mappedBy?.personId === this.person.id ||
         this.user.data.admin ||
-        (this.course?.collaboratorIds && this.course.collaboratorIds.includes(this.person.id))
+        (this.course?.collaboratorIds && this.course.collaboratorIds.includes(this.person.id));
+      console.log(
+        `⏱️ teacher computed: ${((performance.now() - startTime) / 1000).toFixed(3)}s (result: ${result})`,
       );
+      return result;
     },
     sortedTopicTasks() {
+      const startTime = performance.now();
       if (this.topicTasks.some((task) => task.orderIndex != null)) {
         console.log("tasks have orderIndex, sorting by orderIndex");
-        return this.topicTasks.sort((a, b) => a.orderIndex - b.orderIndex);
+        const result = this.topicTasks.sort((a, b) => a.orderIndex - b.orderIndex);
+        console.log(
+          `⏱️ sortedTopicTasks (by orderIndex): ${((performance.now() - startTime) / 1000).toFixed(3)}s`,
+        );
+        return result;
       } else {
         console.log("tasks do not have orderIndex, sorting by timestamp:");
-        return this.topicTasks.sort((a, b) => {
+        const result = this.topicTasks.sort((a, b) => {
           if (a.taskCreatedTimestamp._seconds) {
             return a.taskCreatedTimestamp._seconds - b.taskCreatedTimestamp._seconds;
           } else if (a.taskCreatedTimestamp.seconds) {
@@ -292,15 +344,24 @@ export default {
             return a.taskCreatedTimestamp - b.taskCreatedTimestamp;
           }
         });
+        console.log(
+          `⏱️ sortedTopicTasks (by timestamp): ${((performance.now() - startTime) / 1000).toFixed(3)}s`,
+        );
+        return result;
       }
     },
     sortedPersonTasks() {
+      const startTime = performance.now();
       if (this.personTasks.some((task) => task.orderIndex != null)) {
         console.log("tasks have orderIndex, sorting by orderIndex");
-        return this.personTasks.sort((a, b) => a.orderIndex - b.orderIndex);
+        const result = this.personTasks.sort((a, b) => a.orderIndex - b.orderIndex);
+        console.log(
+          `⏱️ sortedPersonTasks (by orderIndex): ${((performance.now() - startTime) / 1000).toFixed(3)}s`,
+        );
+        return result;
       } else {
         console.log("tasks do not have orderIndex, sorting by timestamp");
-        return this.personTasks.sort((a, b) => {
+        const result = this.personTasks.sort((a, b) => {
           if (a.taskCreatedTimestamp._seconds) {
             return a.taskCreatedTimestamp._seconds - b.taskCreatedTimestamp._seconds;
           } else if (a.taskCreatedTimestamp.seconds) {
@@ -309,6 +370,10 @@ export default {
             return a.taskCreatedTimestamp - b.taskCreatedTimestamp;
           }
         });
+        console.log(
+          `⏱️ sortedPersonTasks (by timestamp): ${((performance.now() - startTime) / 1000).toFixed(3)}s`,
+        );
+        return result;
       }
     },
     isMobile() {
@@ -335,7 +400,10 @@ export default {
       this.task = task;
     },
     getActiveMission() {
+      const startTime = performance.now();
+      console.log("🔍 getActiveMission called, personTasks:", this.personTasks);
       const activeMissionObj = this.personTasks.find((taskObj) => {
+        console.log("🔍 Checking task:", taskObj.id, "status:", taskObj.taskStatus);
         return taskObj.taskStatus == "active" || taskObj.taskStatus == "declined";
       });
       if (activeMissionObj) {
@@ -343,16 +411,29 @@ export default {
         // set as current/active task (if not already?)
         this.setCurrentTaskId(activeMissionObj.id);
         this.currentTask = activeMissionObj;
+        console.log("✅ Found active mission:", activeMissionObj);
       } else {
-        return;
+        console.log("❌ No active mission found");
+        this.activeMission = false;
+        return null;
       }
-      // console.log("active mission:", activeMissionObj);
+      console.log(
+        `⏱️ getActiveMission time: ${((performance.now() - startTime) / 1000).toFixed(3)}s`,
+      );
       return activeMissionObj;
     },
     async getPeopleInTopic() {
+      const startTime = performance.now();
       console.log("5, getting people in topic");
       const people = [];
+
+      const step1Start = performance.now();
       const peopleInCourse = await fetchAllPeopleInCourseByCourseId(this.courseId);
+      console.log(
+        `⏱️ getPeopleInTopic - fetchAllPeopleInCourseByCourseId: ${((performance.now() - step1Start) / 1000).toFixed(3)}s (found ${peopleInCourse.length} people)`,
+      );
+
+      const step2Start = performance.now();
       await Promise.all(
         peopleInCourse.map(async (person) => {
           const personsTopic = await fetchPersonsTopicByPersonIdCourseIdTopicId(
@@ -365,23 +446,44 @@ export default {
           }
         }),
       );
+      console.log(
+        `⏱️ getPeopleInTopic - fetchPersonsTopicByPersonIdCourseIdTopicId (${peopleInCourse.length} calls): ${((performance.now() - step2Start) / 1000).toFixed(3)}s`,
+      );
+
       this.peopleInTopic = people;
+      this.loadingPeople = false;
+      console.log(
+        `🎯 getPeopleInTopic total time: ${((performance.now() - startTime) / 1000).toFixed(3)}s (found ${people.length} active people)`,
+      );
     },
     async missionStarted(taskId) {
-      console.log("mission started", taskId);
+      console.log("🚀 missionStarted called with taskId:", taskId);
       await this.refreshTopic();
       await this.refreshPersonTopicsAndTasks(this.person.id);
+
+      // Add a small delay to ensure database changes are reflected
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Update the task to reflect the new active mission
+      console.log("🔄 Updating task after mission start...");
+      this.task = this.getActiveMission();
+      console.log("📋 Updated task:", this.task);
+
       // change startMissionLoading to false (for use in StartMissionDialogV.vue)
       this.setStartMissionLoading(false);
     },
     async missionSubmittedForReview(taskId) {
       console.log("mission submitted for review", taskId);
       await this.refreshPersonTopicsAndTasks(this.person.id);
+      // Update the task to reflect any changes
+      this.task = this.getActiveMission();
     },
     async missionCompleted(taskId) {
       console.log("mission completed", taskId);
       await this.refreshTopic();
       await this.refreshPersonTopicsAndTasks(this.person.id);
+      // Update the task to reflect any changes
+      this.task = this.getActiveMission();
     },
     async taskCreated(task) {
       console.log("task created", task);
@@ -429,6 +531,7 @@ export default {
 
     setTopicCompleted() {
       console.log("topic completed");
+      this.topicJustCompleted = true;
       this.getPeopleInTopic();
       this.topicCompletedDialog = true;
       // === Basic Cannon
@@ -437,32 +540,33 @@ export default {
       //   spread: 70,
       //   origin: { y: 0.6 },
       // });
+
       // === Fireworks
-      const duration = 15 * 1000;
-      const animationEnd = Date.now() + duration;
-      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
-      var interval = setInterval(() => {
-        const timeLeft = animationEnd - Date.now();
+      // const duration = 15 * 1000;
+      // const animationEnd = Date.now() + duration;
+      // const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+      // var interval = setInterval(() => {
+      //   const timeLeft = animationEnd - Date.now();
 
-        if (timeLeft <= 0) {
-          return clearInterval(interval);
-        }
+      //   if (timeLeft <= 0) {
+      //     return clearInterval(interval);
+      //   }
 
-        const particleCount = 50 * (timeLeft / duration);
-        // since particles fall down, start a bit higher than random
-        confetti({
-          ...defaults,
-          particleCount,
-          origin: { x: this.randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
-          colors: this.getGMColours(),
-        });
-        confetti({
-          ...defaults,
-          particleCount,
-          origin: { x: this.randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
-          colors: this.getGMColours(),
-        });
-      }, 250);
+      //   const particleCount = 50 * (timeLeft / duration);
+      //   // since particles fall down, start a bit higher than random
+      //   confetti({
+      //     ...defaults,
+      //     particleCount,
+      //     origin: { x: this.randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+      //     colors: this.getGMColours(),
+      //   });
+      //   confetti({
+      //     ...defaults,
+      //     particleCount,
+      //     origin: { x: this.randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+      //     colors: this.getGMColours(),
+      //   });
+      // }, 250);
     },
     randomInRange(min, max) {
       return Math.random() * (max - min) + min;

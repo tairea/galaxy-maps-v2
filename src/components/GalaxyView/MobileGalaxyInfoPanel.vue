@@ -1,5 +1,10 @@
 <template>
-  <div id="mobile-galaxy-info" :class="getBorderClass()" v-if="course">
+  <div
+    id="mobile-galaxy-info"
+    :class="getBorderClass()"
+    :style="{ border: isMinimized ? 'none' : '1px solid var(--v-galaxyAccent-base)' }"
+    v-if="course"
+  >
     <div class="mobile-panel-container">
       <!-- Header section with minimize toggle -->
       <div class="mobile-panel-header">
@@ -81,32 +86,39 @@
               @preSaveUpdate="forwardPreSaveUpdate"
             />
 
-            <!-- Planets collapse button -->
-            <div class="mobile-planets-section">
-              <v-btn
-                outlined
-                color="missionAccent"
-                x-small
-                @click="togglePlanetsCollapse"
-                width="95%"
-              >
-                <v-icon small>{{ isPlanetsCollapsed ? mdiChevronDown : mdiChevronUp }}</v-icon>
-                {{ isPlanetsCollapsed ? "Expand Planets" : "Collapse Planets" }}
-              </v-btn>
+            <!-- Publish galaxy under edit button (always for teacher on mobile when allowed) -->
+            <div class="mobile-publish-section" v-if="showPublish">
+              <PublishGalaxy :course="course" :courseTasks="courseTasks || []" />
             </div>
 
-            <!-- Print draft button -->
+            <div v-if="shouldShowEditButtons">
+              <!-- Planets collapse button -->
+              <div class="mobile-planets-section">
+                <v-btn
+                  outlined
+                  color="missionAccent"
+                  x-small
+                  @click="togglePlanetsCollapse"
+                  width="95%"
+                >
+                  <v-icon small>{{ isPlanetsCollapsed ? mdiChevronDown : mdiChevronUp }}</v-icon>
+                  {{ isPlanetsCollapsed ? "Expand Planets" : "Collapse Planets" }}
+                </v-btn>
+              </div>
 
-            <PdfDownloader
-              :ai-generated-galaxy-map="aiGeneratedGalaxyMap"
-              :bound-course="boundCourse"
-              :is-galaxy-info-minimized="isGalaxyInfoMinimized"
-              :expand-all-planets="expandAllPlanets"
-              :get-star-index="getStarIndex"
-              :transformed-star-details="transformedStarDetails"
-              :network-ref="networkRef"
-              @toggle-minimize="toggleMinimize"
-            />
+              <!-- Print draft button -->
+
+              <PdfDownloader
+                :ai-generated-galaxy-map="aiGeneratedGalaxyMap"
+                :bound-course="boundCourse"
+                :is-galaxy-info-minimized="isGalaxyInfoMinimized"
+                :expand-all-planets="expandAllPlanets"
+                :get-star-index="getStarIndex"
+                :transformed-star-details="transformedStarDetails"
+                :network-ref="networkRef"
+                @toggle-minimize="toggleMinimize"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -121,6 +133,7 @@ import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
 import { mdiLink, mdiMenuUp, mdiMenuDown, mdiChevronDown, mdiChevronUp } from "@mdi/js";
 import { getFriendlyErrorMessage } from "@/lib/utils";
+import PublishGalaxy from "@/components/GalaxyView/PublishGalaxy.vue";
 
 export default {
   name: "MobileGalaxyInfoPanel",
@@ -137,10 +150,13 @@ export default {
     "getStarIndex",
     "transformedStarDetails",
     "networkRef",
+    "courseTasks",
+    "showPublish",
   ],
   components: {
     CreateEditDeleteGalaxyDialog,
     PdfDownloader,
+    PublishGalaxy,
   },
   data() {
     return {
@@ -176,6 +192,10 @@ export default {
         if (!title) return "";
         return title.substring(0, 3).toUpperCase();
       };
+    },
+    shouldShowEditButtons() {
+      const currentRouteName = this.$route.name;
+      return currentRouteName === "AiGalaxyEdit" || currentRouteName === "AiGalaxyEditWithCourse";
     },
   },
   methods: {
@@ -254,6 +274,9 @@ export default {
   backdrop-filter: blur(2px);
   z-index: 3;
   color: var(--v-galaxyAccent-base);
+  &.minimized {
+    border: none;
+  }
 
   .mobile-panel-container {
     position: relative;
@@ -400,7 +423,8 @@ export default {
   .mobile-actions-section,
   .mobile-edit-section,
   .mobile-planets-section,
-  .mobile-print-section {
+  .mobile-print-section,
+  .mobile-publish-section {
     margin: 15px;
   }
 
@@ -418,6 +442,9 @@ export default {
 
 .galaxy-border {
   border: 1px solid var(--v-galaxyAccent-base);
+  &.minimized {
+    border: none;
+  }
 }
 
 .draft-border {

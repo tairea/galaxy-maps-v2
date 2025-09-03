@@ -1,5 +1,5 @@
 <template>
-  <div class="course-frame">
+  <div class="course-frame" :class="{ minimized: isMinimized }">
     <div class="d-flex justify-space-between pa-0">
       <div class="d-flex">
         <img
@@ -18,18 +18,26 @@
         >
           {{ first3Letters(courseData.course.title) }}
         </div>
-        <h1 class="galaxy-title pt-2 pl-2">
+        <h1 class="galaxy-title pt-2 pl-2 d-flex align-center">
           {{ courseData.course.title }}
+          <v-icon
+            class="ml-2 toggle-icon"
+            @click="toggleMinimize"
+            :class="{ 'rotate-180': isMinimized }"
+            color="var(--v-galaxyAccent-base)"
+          >
+            {{ mdiChevronUp }}
+          </v-icon>
         </h1>
       </div>
-      <h1 class="galaxy-title pt-2 pl-2">
-        student progress
+      <h1 class="galaxy-title pt-2 pl-2" v-if="!isMinimized">
+        Navigator progress
         <span style="font-weight: 400; text-transform: none; font-style: italic"
           >(Number of Missions Completed)</span
         >
       </h1>
     </div>
-    <v-row>
+    <v-row v-if="!isMinimized">
       <v-col cols="12" class="center-col pa-0">
         <Chart
           ref="chart"
@@ -58,6 +66,7 @@
 
 <script>
 import Chart from "@/components/Reused/Chart.vue";
+import { mdiChevronUp } from "@mdi/js";
 
 export default {
   name: "ProgressionLineChart",
@@ -68,9 +77,11 @@ export default {
 
   data() {
     return {
+      mdiChevronUp,
       value: 80,
       previousTickTitle: "",
       chartType: "line",
+      isMinimized: false,
       chartOptions: {
         layout: {
           padding: {
@@ -118,6 +129,9 @@ export default {
     // ...mapState(useRootStore, ["person"]),
   },
   methods: {
+    toggleMinimize() {
+      this.isMinimized = !this.isMinimized;
+    },
     formatStudentsChartData(courseData) {
       const datasets = [];
       const labels = [];
@@ -196,7 +210,13 @@ export default {
   margin-right: auto;
   padding: 10px;
   border-radius: 5px;
+  transition: height 0.3s ease;
   // margin-bottom: 20px;
+
+  &.minimized {
+    height: 60px;
+    overflow: hidden;
+  }
 
   .left-col {
     padding: 20px;
@@ -248,5 +268,14 @@ export default {
   justify-content: center;
   align-items: center;
   font-size: 0.6rem;
+}
+
+.toggle-icon {
+  cursor: pointer;
+  transition: transform 0.3s ease;
+
+  &.rotate-180 {
+    transform: rotate(180deg);
+  }
 }
 </style>

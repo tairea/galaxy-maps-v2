@@ -22,6 +22,9 @@ export default {
     divClass() {
       return this.length ? "flex-div" : "in-div";
     },
+    divClass() {
+      return this.length ? "flex-div" : "in-div";
+    },
   },
 };
 </script>

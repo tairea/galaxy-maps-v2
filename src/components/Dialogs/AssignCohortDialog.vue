@@ -2,7 +2,7 @@
   <v-container>
     <v-row class="text-center" align="center">
       <v-col cols="12">
-        <v-dialog v-model="dialog" width="40%" light persistent>
+        <v-dialog v-model="dialog" :width="isMobile ? '90%' : '40%'" light persistent>
           <!-- CREATE BUTTON -->
           <template v-slot:activator="{ on, attrs }">
             <!-- ASSIGN COHORT -->
@@ -43,8 +43,8 @@
               <v-tab>
                 <p class="baseAccent--text tab">Individual</p>
               </v-tab>
-              <v-tab v-if="teacherCohorts.length">
-                <p class="baseAccent--text tab">Cohort</p>
+              <v-tab v-if="teachersCohorts.length">
+                <p class="baseAccent--text tab">Squads</p>
               </v-tab>
               <!-- <v-tab><p class="baseAccent--text tab">Organisation</p></v-tab> -->
             </v-tabs>
@@ -88,7 +88,7 @@
                       :items="cohortOptions"
                       outlined
                       single-line
-                      :disabled="!teacherCohorts.length"
+                      :disabled="!teachersCohorts.length"
                       class="cohort-select"
                     >
                       <template v-slot:selection="{ item }">
@@ -117,7 +117,8 @@
                 <!-- ACTION BUTTONS -->
                 <div class="action-buttons">
                   <v-btn
-                    v-if="assignCohorts && profile.email"
+                    v-if="assignCohorts"
+                    :disabled="!profile.email"
                     outlined
                     color="baseAccent"
                     @click="assignCourseToPerson(profile)"
@@ -156,7 +157,7 @@
                 <div class="create-dialog-content">
                   <!-- TITLE -->
                   <p class="dialog-description">Squads:</p>
-                  <v-select v-if="assignCohorts" v-model="cohort" :items="cohorts">
+                  <v-select v-if="assignCohorts" v-model="selectedCohort" :items="teachersCohorts">
                     <template v-slot:selection="{ item }">
                       <v-list-item-avatar tile>
                         <img v-if="item.image && item.image.url" :src="item.image.url" />
@@ -184,15 +185,12 @@
                       v-if="assignCohorts"
                       outlined
                       color="baseAccent"
-                      @click="assignCourseToCohort(cohort)"
+                      @click="assignCourseToCohort(selectedCohort)"
                       :loading="loading"
                     >
                       <v-icon left> {{ mdiCheck }} </v-icon>
-                      ASSIGN SQUAD
+                      ASSIGN TO SQUAD
                     </v-btn>
-                    <span v-if="loading && statusMessage" class="status-message baseAccent--text">
-                      {{ statusMessage }}
-                    </span>
                   </div>
 
                   <v-btn
@@ -206,6 +204,9 @@
                     Cancel
                   </v-btn>
                 </div>
+                <span v-if="loading && statusMessage" class="status-message baseAccent--text ma-2">
+                  {{ statusMessage }}
+                </span>
                 <!-- End action-buttons -->
               </v-tab-item>
             </v-tabs-items>
@@ -313,7 +314,7 @@ import { doc, updateDoc } from "firebase/firestore";
 
 export default {
   name: "AssignCohortDialog",
-  props: ["assignCohorts", "assignCourses", "cohorts", "inThisCohort"],
+  props: ["assignCohorts", "assignCourses", "teachersCohorts", "inThisCohort"],
   data: () => ({
     //icons
     mdiClose,
@@ -334,17 +335,14 @@ export default {
     cohort: null,
     course: null,
     courses: [],
-    teacherCohorts: [],
     currentCourse: null,
+    selectedCohort: null,
   }),
   async mounted() {
     if (this.assignCourses) {
       this.courses = await fetchCourses();
-    } else if (this.assignCohorts) {
-      this.teacherCohorts = this.cohorts.filter(
-        (cohort) => cohort.teachers.includes(this.person.id) && !cohort.courseCohort,
-      );
     }
+
     if (this.currentCourseId) {
       this.currentCourse = await fetchCourseByCourseId(this.currentCourseId);
     }
@@ -352,15 +350,18 @@ export default {
   watch: {
     dialog(newVal) {
       if (newVal && !this.cohort)
-        this.cohort = this.cohorts?.find((cohort) => cohort.id == this.currentCohortId);
+        this.cohort = this.teacherCohorts?.find((cohort) => cohort.id == this.currentCohortId);
     },
   },
   computed: {
     ...mapState(useRootStore, ["currentCourseId", "currentCohortId", "person"]),
     cohortOptions() {
       // teacherCohorts && the courseCohort
-      this.cohort = this.cohorts.find((cohort) => cohort.id === this.currentCourse.cohort);
-      return [this.cohort, ...this.teacherCohorts];
+      this.cohort = this.teachersCohorts.find((cohort) => cohort.id === this.currentCourse.cohort);
+      return [this.cohort, ...this.teachersCohorts];
+    },
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
     },
   },
   methods: {
@@ -446,6 +447,8 @@ export default {
       this.loading = true;
       this.statusMessage = "";
 
+      console.log("assigning course to cohort", cohort, course);
+
       try {
         // Add a course to a cohort
         await updateDoc(doc(db, "cohorts", cohort.id), {
@@ -458,9 +461,9 @@ export default {
             // Fetch student details to show in status message
             const student = await fetchPersonByPersonId(studentId, cohort.id);
             if (student) {
-              this.statusMessage = `Assigning ${course.title} to ${student.firstName || "Unknown"} ${student.lastName || "Student"} (${i + 1}/${cohort.students.length})`;
+              this.statusMessage = `Assigning Galaxy Map to Navigator ${student.firstName || "Unknown"} ${student.lastName || "Navigator"} (${i + 1}/${cohort.students.length})`;
             } else {
-              this.statusMessage = `Assigning ${course.title} to student ${i + 1}/${cohort.students.length}`;
+              this.statusMessage = `Assigning Galaxy Map to Navigator ${i + 1}/${cohort.students.length}`;
             }
             await assignCourseToPerson(studentId, course.id);
           }

@@ -1,14 +1,16 @@
 <template>
   <div id="assigned-info">
-    <h2 class="assigned-label">{{ isMissionView ? "active on this system" : "Assigned to" }}:</h2>
+    <h2 class="assigned-label">
+      {{ isMissionView ? "active in this star system" : "Assigned to" }}:
+    </h2>
     <!-- ASSIGNED COHORTS INFO -->
     <div v-if="assignCohorts">
       <!-- Assigned COHORTS -->
-      <div v-if="cohorts && cohorts.length > 0">
+      <div v-if="cohortsInCourse && cohortsInCourse.length > 0">
         <p class="overline assignedToLabel ma-0">Squads</p>
         <v-row class="my-1 flex-wrap">
           <Cohort
-            v-for="cohort in cohorts"
+            v-for="cohort in cohortsInCourse"
             :cohort="cohort"
             :key="cohort.id"
             :tooltip="isTeacher"
@@ -34,14 +36,17 @@
         </v-row>
       </div>
 
-      <p v-if="cohorts && cohorts.length == 0 && people.length == 0" class="assigned-status">
+      <p
+        v-if="cohortsInCourse && cohortsInCourse.length == 0 && people.length == 0"
+        class="assigned-status"
+      >
         Nobody is assigned to this Galaxy
       </p>
       <AssignCohortDialog
-        v-if="isTeacher && cohorts"
+        v-if="isTeacher && assignCohorts"
         :assignCohorts="true"
         @newAssignment="addToPeople($event)"
-        :cohorts="cohorts"
+        :teachersCohorts="teachersCohorts"
       />
     </div>
 
@@ -96,7 +101,8 @@ export default {
   props: [
     "assignCohorts",
     "assignCourses",
-    "cohorts",
+    "cohortsInCourse",
+    "teachersCohorts",
     "organisations",
     "people",
     "teacher",

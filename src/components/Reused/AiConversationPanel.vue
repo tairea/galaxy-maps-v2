@@ -1,11 +1,7 @@
 <template>
   <div>
     <!-- Mobile AI Assistant Ribbon Button -->
-    <div
-      v-if="isMobile && !loading && !isOpen && task && task.taskStatus === 'active'"
-      class="ai-assistant-ribbon"
-      @click="handleRibbonClick"
-    >
+    <div v-if="shouldShowRibbon" class="ai-assistant-ribbon" @click="handleRibbonClick">
       <div class="ribbon-content">
         <v-icon color="background" size="24" id="ai-assistant-icon">{{
           mdiRobotExcitedOutline
@@ -202,9 +198,38 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
     combinedInstructions() {
       return this.GmMissionsAssistantInstructions + "\n\n" + this.activeMissionInstructions;
     },
+
+    shouldShowRibbon() {
+      const shouldShow =
+        this.isMobile &&
+        !this.loading &&
+        !this.isOpen &&
+        this.task &&
+        this.task.taskStatus === "active";
+      console.log("🎯 Ribbon visibility check:", {
+        isMobile: this.isMobile,
+        loading: this.loading,
+        isOpen: this.isOpen,
+        hasTask: !!this.task,
+        taskStatus: this.task?.taskStatus,
+        shouldShow,
+      });
+      return shouldShow;
+    },
   },
 
   watch: {
+    task: {
+      handler(newTask, oldTask) {
+        console.log("🎯 AiConversationPanel task changed:", {
+          old: oldTask ? { id: oldTask.id, status: oldTask.taskStatus } : null,
+          new: newTask ? { id: newTask.id, status: newTask.taskStatus } : null,
+          isActive: newTask && newTask.taskStatus === "active",
+        });
+      },
+      deep: true,
+      immediate: true,
+    },
     isTalking(newVal, oldVal) {
       console.log(`👁️ isTalking changed: ${oldVal} → ${newVal}`);
     },

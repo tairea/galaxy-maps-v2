@@ -59,7 +59,7 @@ export default {
         console.error("Error starting mission:", error);
       } finally {
         this.loading = false;
-        this.setStartMissionLoading(false);
+        // this.setStartMissionLoading(false);
         this.dialog = false;
       }
     },

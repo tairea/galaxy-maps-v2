@@ -87,6 +87,7 @@ export default {
         taskId: this.task.id,
       });
     }
+    this.setStartMissionLoading(false);
   },
   props: ["course", "topic", "task", "active", "declined", "inreview", "completed"],
   computed: {
@@ -151,7 +152,10 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["getSubmissionByCourseIdPersonIdTaskId"]),
+    ...mapActions(useRootStore, [
+      "getSubmissionByCourseIdPersonIdTaskId",
+      "setStartMissionLoading",
+    ]),
 
     /**
      * Detects if content is HTML or markdown
