@@ -1,3 +1,7 @@
+<!-- ocean waves -->
+
+map the science of how ocean waves reach our shores, cover energy transfer, starting from the sun, to pressure systems, to wind, to waves. tailor it to 11 and 12 year old students in the cook islands.
+
 <!-- ultrasonic water tank -->
 
 i want to create an iot system that uses a HC-SR04 ultrasonic sensor connected to a ESP8266 NODEMCUv1 wifi board to measure the height of the water level in a water tank, then send that to node-red on an android phone that the nodemcu is connected to via wifi hotspot, then node-red will send a whatsapp message to a person every morning with the water tank level in %. we will also save data to firebase and make the node-red dashboard accessible remotely using free ngrok. the system will be powered by 4 x 18650 batties in a parallel battery holder and a 20w solar panel and a tp4056

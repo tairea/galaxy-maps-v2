@@ -19,9 +19,15 @@
 
     <div v-else class="d-flex">
       <!-- <div class="left-section" :class="{ hide: hideLeftPanelsFlag }"> -->
-      <div class="left-section" :class="{ minimized: isGalaxyInfoMinimized }" data-v-step="1">
+      <div
+        class="left-section"
+        :class="{ minimized: isGalaxyInfoMinimized, mobile: isMobile }"
+        data-v-step="1"
+      >
         <div class="galaxy-info-wrapper" :class="{ minimized: isGalaxyInfoMinimized }">
+          <!-- Desktop Galaxy Info -->
           <GalaxyInfo
+            v-if="!isMobile"
             :course="boundCourse"
             :teacher="teacher"
             :draft="draft"
@@ -29,7 +35,7 @@
             @minimised="handleMinimized"
           />
         </div>
-        <div class="mt-6">
+        <div class="mt-6" v-if="!isMobile">
           <PublishGalaxy v-if="showPublish" :course="boundCourse" :courseTasks="courseTasks" />
         </div>
         <!-- Desktop back button (inside left-section) -->
@@ -41,14 +47,36 @@
           class="back-button"
         />
         <AssignedInfo
-          v-if="!draft && cohortsInCourse.length && teacher"
+          v-if="!draft && cohortsInCourse.length && teacher && !isMobile"
           :assignCohorts="true"
           :people="peopleInCourse"
-          :cohorts="cohortsInCourse"
+          :cohortsInCourse="cohortsInCourse"
+          :teachersCohorts="teachersCohorts"
           :teacher="teacher"
         />
       </div>
       <div id="main-section" :class="{ minimized: isGalaxyInfoMinimized }">
+        <!-- Mobile Galaxy Info Panel (overlay, does not push layout) -->
+        <div v-if="isMobile" class="mobile-galaxy-overlay">
+          <MobileGalaxyInfoPanel
+            :course="boundCourse"
+            :teacher="teacher"
+            :draft="draft"
+            :minimized="isGalaxyInfoMinimized"
+            :showPublish="showPublish"
+            :courseTasks="courseTasks"
+            @minimised="handleMinimized"
+            @preSaveUpdate="() => {}"
+          />
+          <AssignedInfo
+            v-if="!draft && cohortsInCourse.length && teacher && !isGalaxyInfoMinimized"
+            :assignCohorts="true"
+            :people="peopleInCourse"
+            :cohorts="cohortsInCourse"
+            :teacher="teacher"
+            class="mt-0"
+          />
+        </div>
         <!-- Map Buttons -->
         <GalaxyMapButtons
           class="mt-8"
@@ -215,12 +243,14 @@ import { mapActions, mapState } from "pinia";
 import { loggedIntoGalaxyXAPIStatement } from "@/lib/veracityLRS";
 import { mdiAlertOutline } from "@mdi/js";
 import GalaxyCompletedDialog from "@/components/GalaxyView/GalaxyCompletedDialog.vue";
+import MobileGalaxyInfoPanel from "@/components/GalaxyView/MobileGalaxyInfoPanel.vue";
 
 export default {
   name: "GalaxyView",
   components: {
     LoadingSpinner,
     GalaxyInfo,
+    MobileGalaxyInfoPanel,
     AssignedInfo,
     GalaxyMap,
     BackButton,
@@ -272,6 +302,7 @@ export default {
       moveNodes: false,
       peopleInCourse: [],
       cohortsInCourse: [],
+      teachersCohorts: [],
       selectedNode: {},
       hideLeftPanelsFlag: false,
       clickedTopicId: null,
@@ -311,14 +342,21 @@ export default {
     // bind course instead of fetch (above) so to make course reactive (eg in GalaxyInfo.vue)
     await this.bindCourseByCourseId(this.courseId);
 
+    const cohorts = await fetchCohorts();
+
     // bind assigned people in this course
     if (this.teacher) {
+      const cohortsTeacherIsIn = cohorts.filter((cohort) =>
+        cohort.teachers.includes(this.person.id),
+      );
+      // filter out cohortsTeacherIsIn where courseCohort == true
+      this.teachersCohorts = cohortsTeacherIsIn.filter((cohort) => cohort.courseCohort == null);
       this.peopleInCourse = await fetchAllPeopleInCourseByCourseId(this.courseId);
       this.setPeopleInCourse(this.peopleInCourse);
       this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
     } else if (this.student) {
       // show navigator other squads on this map
-      const cohorts = await fetchCohorts();
+
       const cohort = cohorts.find((cohort) =>
         cohort.courses.some((courseId) => courseId === this.courseId),
       );
@@ -779,6 +817,17 @@ export default {
       display: none !important;
     }
   }
+
+  &.mobile {
+    padding: 0px;
+    margin: 10px;
+    width: calc(100vw - 20px);
+    position: relative;
+    left: auto;
+    top: auto;
+    height: auto;
+    pointer-events: auto;
+  }
 }
 
 .galaxy-info-wrapper {
@@ -820,6 +869,20 @@ export default {
   &.minimized {
     width: 100vw; // Full viewport width
     margin: 0px; // No left margin
+  }
+
+  .mobile-galaxy-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    z-index: 10;
+    pointer-events: none; // allow interactions below except within panel
+
+    // allow interactions inside the panel
+    > * {
+      pointer-events: auto;
+    }
   }
 
   .ui-message-wrap {

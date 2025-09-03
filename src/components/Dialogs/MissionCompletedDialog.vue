@@ -180,7 +180,8 @@
               </div>
 
               <!-- ACTION BUTTONS -->
-              <div :class="isMobile ? 'action-buttons-over-under' : 'action-buttons'">
+              <!-- <div :class="isMobile ? 'action-buttons-over-under' : 'action-buttons'"> -->
+              <div class="action-buttons-over-under">
                 <!-- SUBMIT WORK FOR REVIEW -->
                 <v-btn
                   v-if="active && task.submissionRequired"

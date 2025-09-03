@@ -353,26 +353,69 @@
                 <p class="galaxy-description">{{ course.description }}</p>
               </div>
 
-              <v-select
-                v-if="edit"
-                class="input-field mt-4"
-                outlined
-                :dark="dark"
-                :light="!dark"
-                color="missionAccent"
-                v-model="course.visibility"
-                :items="[
-                  { text: 'Private (only people added can see)', value: 'private' },
-                  { text: 'Unlisted (publicly available, but hidden)', value: 'unlisted' },
-                  // Presentations cannot be public as they are not proper maps navigators can progress through
-                  ...(course.presentationOnly == false || course.presentationOnly == null
-                    ? [{ text: 'Public (all users can see)', value: 'public' }]
-                    : []),
-                ]"
-                label="Galaxy Visibility"
-                style="width: calc(100% - 25px)"
-              >
-              </v-select>
+              <div class="d-flex">
+                <div style="width: 50%" class="mr-2">
+                  <v-tooltip v-if="edit && course.status !== 'published'" right>
+                    <template v-slot:activator="{ on, attrs }">
+                      <div v-bind="attrs" v-on="on">
+                        <v-select
+                          :disabled="course.status !== 'published'"
+                          class="input-field mt-4"
+                          outlined
+                          :dark="dark"
+                          :light="!dark"
+                          color="missionAccent"
+                          v-model="course.visibility"
+                          :items="[
+                            { text: 'Private (only people added can see)', value: 'private' },
+                            {
+                              text: 'Unlisted (publicly available, but hidden)',
+                              value: 'unlisted',
+                            },
+                            // Presentations cannot be public as they are not proper maps navigators can progress through
+                            ...(course.presentationOnly == false || course.presentationOnly == null
+                              ? [{ text: 'Public (all users can see)', value: 'public' }]
+                              : []),
+                          ]"
+                          label="Galaxy Visibility"
+                          style="width: 100%"
+                        >
+                        </v-select>
+                      </div>
+                    </template>
+                    <span>galaxy map must be published before changing visibility</span>
+                  </v-tooltip>
+                  <v-select
+                    v-else-if="edit"
+                    :disabled="course.status !== 'published'"
+                    class="input-field mt-4"
+                    outlined
+                    :dark="dark"
+                    :light="!dark"
+                    color="missionAccent"
+                    v-model="course.visibility"
+                    :items="[
+                      { text: 'Private (only people added can see)', value: 'private' },
+                      { text: 'Unlisted (publicly available, but hidden)', value: 'unlisted' },
+                      // Presentations cannot be public as they are not proper maps navigators can progress through
+                      ...(course.presentationOnly == false || course.presentationOnly == null
+                        ? [{ text: 'Public (all users can see)', value: 'public' }]
+                        : []),
+                    ]"
+                    label="Galaxy Visibility"
+                    style="width: calc(100% - 25px)"
+                  >
+                  </v-select>
+                </div>
+                <div style="width: 50%" class="d-flex justify-center align-center">
+                  <PublishGalaxy
+                    v-if="edit && course.status !== 'published'"
+                    :course="course"
+                    :courseTasks="courseTasks"
+                    :publicOnly="true"
+                  />
+                </div>
+              </div>
             </div>
 
             <!-- End of right-side -->
@@ -382,22 +425,9 @@
               class="action-buttons"
               :class="{ 'mobile-layout': $vuetify.breakpoint.smAndDown }"
             >
-              <!-- PUBLISH -->
-              <!-- <div
-                style="width: 200px"
-                v-if="edit && courseToEdit.visibility != 'public' && course.visibility == 'public'"
-              > -->
-              <PublishGalaxy
-                v-if="edit && courseToEdit.visibility != 'public' && course.visibility == 'public'"
-                :course="course"
-                :courseTasks="courseTasks"
-                :publicOnly="true"
-              />
-              <!-- </div> -->
-
               <!-- UPDATE -->
               <v-btn
-                v-else-if="edit"
+                v-if="edit"
                 outlined
                 color="baseAccent"
                 @click="handleUpdateGalaxy"
@@ -426,6 +456,14 @@
                 <v-icon left> {{ mdiCheck }} </v-icon>
                 CREATE GALAXY
               </v-btn>
+
+              <!-- PUBLISH -->
+              <!-- <div
+                style="width: 200px"
+                v-if="edit && courseToEdit.visibility != 'public' && course.visibility == 'public'"
+              > -->
+
+              <!-- </div> -->
 
               <!-- DELETE -->
               <v-btn
@@ -1847,7 +1885,7 @@ export default {
       align-items: center;
 
       .v-btn {
-        max-width: 280px;
+        // max-width: 280px;
       }
     }
   }

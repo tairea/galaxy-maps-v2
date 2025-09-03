@@ -14,7 +14,7 @@
           :id="'noOrgcohort' + cohortIndex"
           :cohort="cohort"
           :key="cohort.id"
-          :size="60"
+          :size="50"
           :hideNames="false"
           :tooltip="false"
           :studentView="true"

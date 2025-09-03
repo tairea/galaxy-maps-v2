@@ -151,7 +151,7 @@
             >
               <p class="mobile-start-text">
                 Start <br />
-                {{ course.title }} <br />
+                This <br />
                 Galaxy
               </p>
             </v-btn>

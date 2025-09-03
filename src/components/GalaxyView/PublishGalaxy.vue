@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="dialog" width="40%" light>
+  <v-dialog v-model="dialog" :width="isMobile ? '90%' : '40%'" light>
     <!-- CREATE BUTTON -->
     <template v-slot:activator="{ on, attrs }">
       <!-- ASSIGN COHORT -->
@@ -7,6 +7,7 @@
       <!-- publish button colour -->
       <v-btn
         outlined
+        block
         :color="
           admin &&
           course.status == 'submitted' &&
@@ -16,9 +17,11 @@
         "
         v-bind="attrs"
         v-on="on"
-        class="publishButton d-inline-flex text-truncate"
+        class="publishButton text-truncate"
         @click="getTopicsWithoutTasks"
+        small
       >
+        <v-icon left> {{ mdiPublish }} </v-icon>
         publish galaxy
       </v-btn>
       <!-- ASSIGN GALAXY -->
@@ -279,14 +282,7 @@
           SUBMIT FOR REVIEW
         </v-btn>
 
-        <v-btn
-          v-else
-          outlined
-          color="baseAccent"
-          @click="publishCourse()"
-          :loading="loading"
-          class="mb-2"
-        >
+        <v-btn v-else outlined color="baseAccent" @click="publishCourse()" :loading="loading">
           <v-icon left> {{ mdiCheck }} </v-icon>
           PUBLISH
         </v-btn>
@@ -318,6 +314,7 @@ import {
   mdiCheck,
   mdiSend,
   mdiPresentation,
+  mdiPublish,
 } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
 
@@ -332,6 +329,7 @@ export default {
     mdiCheck,
     mdiSend,
     mdiPresentation,
+    mdiPublish,
     dialog: false,
     loading: false,
     visibility: null,
@@ -348,6 +346,9 @@ export default {
     },
     admin() {
       return this.user.data.admin;
+    },
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
     },
   },
   watch: {
@@ -703,9 +704,9 @@ export default {
 }
 
 .publishButton {
-  // width: 100%;
+  width: 100%;
   z-index: 3;
-  // margin-top: 20px;
+  // margin-top: 10px;
 }
 
 .label-text::v-deep label {

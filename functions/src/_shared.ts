@@ -4,6 +4,7 @@ import { getFirestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { type CallableContext, HttpsError } from "firebase-functions/v1/https";
 import type { File } from "@google-cloud/storage";
+import { randomUUID } from "crypto";
 
 // Initialize Firebase Admin SDK with proper configuration
 export const app = getApps().length === 0 ? initializeApp({}) : getApps()[0];
@@ -13,18 +14,34 @@ export const db = getFirestore(app);
 export const storage = getStorage(app);
 
 /**
- * Generate a signed URL for a file in Firebase Storage
- * @param file - The file reference
- * @param expiresInYears - Number of years until expiration (default: 100)
- * @returns Promise<string> - The signed URL
+ * Generate a Firebase Storage download URL that uses a persistent download token
+ * (matches getDownloadURL behavior from client SDK; no signed URLs).
+ * If the file has no token yet, one will be created and saved in custom metadata.
  */
-export async function generateSignedUrl(file: File, expiresInYears: number = 100): Promise<string> {
-  const [downloadURL] = await file.getSignedUrl({
-    action: "read",
-    expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365 * expiresInYears),
-    version: "v4",
-  });
-  return downloadURL;
+export async function generateSignedUrl(file: File): Promise<string> {
+  // Read current metadata to check for an existing token
+  const [currentMetadata] = await file.getMetadata();
+
+  const existingTokens = currentMetadata.metadata?.firebaseStorageDownloadTokens as
+    | string
+    | undefined;
+
+  let token: string | undefined = existingTokens?.split(",").filter(Boolean)[0];
+
+  if (!token) {
+    token = randomUUID();
+    // Preserve existing custom metadata while adding the token
+    await file.setMetadata({
+      metadata: {
+        ...(currentMetadata.metadata || {}),
+        firebaseStorageDownloadTokens: token,
+      },
+    });
+  }
+
+  const bucketName = file.bucket.name;
+  const objectPath = encodeURIComponent(file.name);
+  return `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${objectPath}?alt=media&token=${token}`;
 }
 
 /**

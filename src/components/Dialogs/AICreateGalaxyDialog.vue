@@ -269,7 +269,27 @@
                 </v-stepper-content>
 
                 <v-stepper-content :step="2">
-                  <div v-for="(question, index) in aiGatheringContextQuestions" :key="question">
+                  <!-- Decide for me button -->
+                  <v-btn
+                    outlined
+                    :color="'galaxyAccent'"
+                    @click="decideForMe()"
+                    class="mb-12"
+                    :loading="loading"
+                    :disabled="disabled"
+                    :dark="dark"
+                    :light="!dark"
+                    small
+                  >
+                    <v-icon left> {{ mdiRobotExcited }} </v-icon>
+                    Decide for me
+                  </v-btn>
+
+                  <div
+                    v-for="(question, index) in aiGatheringContextQuestions"
+                    :key="question"
+                    class="mb-6"
+                  >
                     <p class="dialog-description">
                       Clarifying question {{ index + 1 }} of
                       {{ aiGatheringContextQuestions.length }}
@@ -1228,6 +1248,12 @@ export default {
     // Continue with the selected flow after clarification questions
     async continueWithSelectedFlow() {
       // Always go to secondStep when clarification is needed, regardless of selected flow
+      await this.secondStep();
+    },
+
+    // Decide for me button
+    async decideForMe() {
+      this.aiGatheringContextAnswers[0] = "Decide for me";
       await this.secondStep();
     },
 

@@ -4611,6 +4611,7 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
             align-items: center;
             width: 100%;
             margin-top: -10px;
+            gap: 20px;
 
             &.mobile {
               flex-direction: column;

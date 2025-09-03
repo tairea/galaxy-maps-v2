@@ -1,5 +1,5 @@
 <template>
-  <div class="d-flex map-buttons-bottom">
+  <div class="d-flex map-buttons-bottom" :class="{ mobile: isMobile }">
     <div class="d-inline-flex">
       <!-- SHOW MISSIONS (All Users) -->
       <div
@@ -59,7 +59,7 @@
         <!-- ADD NODE -->
         <div class="mapButton" :class="{ active: addNodeMode }" @click="toggleAddNodeMode">
           <div class="mapButton-icon" :class="{ activeIcon: addNodeMode }">
-            <v-icon v-if="!addNodeMode" color="missionAccent">{{ mdiDotsHexagon }}</v-icon>
+            <v-icon v-if="!addNodeMode" color="missionAccent">{{ mdiMapMarkerPlusOutline }}</v-icon>
             <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
           </div>
           <div v-if="!isMobile" class="mapButton-text">
@@ -73,7 +73,7 @@
         <!-- ADD EDGE -->
         <div class="mapButton ml-4" :class="{ active: addEdgeMode }" @click="toggleAddEdgeMode">
           <div class="mapButton-icon" :class="{ activeIcon: addEdgeMode }">
-            <v-icon v-if="!addEdgeMode" color="missionAccent">{{ mdiChartTimelineVariant }}</v-icon>
+            <v-icon v-if="!addEdgeMode" color="missionAccent">{{ mdiVectorPolylinePlus }}</v-icon>
             <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
           </div>
           <div v-if="!isMobile" class="mapButton-text">
@@ -85,7 +85,7 @@
         <!-- EDIT NODE POSITIONS -->
         <div class="mapButton ml-4" :class="{ active: dragNodeMode }" @click="toggleDragNodeMode">
           <div class="mapButton-icon" :class="{ activeIcon: dragNodeMode }">
-            <v-icon v-if="!dragNodeMode" color="missionAccent">{{ mdiArrowExpandAll }}</v-icon>
+            <v-icon v-if="!dragNodeMode" color="missionAccent">{{ mdiCursorMove }}</v-icon>
             <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
           </div>
           <div v-if="!isMobile" class="mapButton-text">
@@ -115,10 +115,10 @@
 
 <script>
 import {
-  mdiDotsHexagon,
+  mdiMapMarkerPlusOutline,
   mdiClose,
-  mdiChartTimelineVariant,
-  mdiArrowExpandAll,
+  mdiVectorPolylinePlus,
+  mdiCursorMove,
   mdiContentSaveCheck,
   mdiEarth,
   mdiEarthOff,
@@ -145,10 +145,10 @@ export default {
   async mounted() {},
   data() {
     return {
-      mdiDotsHexagon,
+      mdiMapMarkerPlusOutline,
       mdiClose,
-      mdiChartTimelineVariant,
-      mdiArrowExpandAll,
+      mdiVectorPolylinePlus,
+      mdiCursorMove,
       mdiContentSaveCheck,
       mdiEarth,
       mdiEarthOff,
@@ -286,6 +286,12 @@ export default {
   //max-width: 800px; /* Optional: limit maximum width */
   margin-left: auto;
   margin-right: auto;
+
+  &.mobile {
+    .mapButton-icon {
+      border-left: none !important;
+    }
+  }
 
   // border: 1px solid blue;
 }
