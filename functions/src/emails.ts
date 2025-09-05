@@ -816,3 +816,43 @@ export const sendCollaboratorAddedEmailHttpsEndpoint = runWith({}).https.onCall(
     );
   },
 );
+
+// ======GENERIC EMAIL FUNCTION==================
+export const sendGenericEmailHttpsEndpoint = runWith({}).https.onCall(async (data, _context) => {
+  const { to, subject, body, isHtml = false } = data;
+
+  // Validate required parameters
+  if (!to || !subject || !body) {
+    log(`Missing required parameters: to=${to}, subject=${subject}, body=${body}`);
+    throw new Error("Missing required parameters for generic email");
+  }
+
+  await sendGenericEmail(to, subject, body, isHtml);
+});
+
+/**
+ * Sends a generic email with customizable content.
+ * Perfect for AI agent responses and general notifications.
+ */
+export async function sendGenericEmail(
+  to: string,
+  subject: string,
+  body: string,
+  isHtml: boolean = false,
+) {
+  const mailOptions: Record<string, string> = {
+    from: `${APP_NAME} <noreply@${DOMAIN}>`,
+    to: to,
+  };
+
+  mailOptions.subject = subject;
+
+  if (isHtml) {
+    mailOptions.html = body;
+  } else {
+    mailOptions.text = body;
+  }
+
+  await mailTransport.sendMail(mailOptions);
+  log(`Generic email sent to: ${to} with subject: ${subject}`);
+}

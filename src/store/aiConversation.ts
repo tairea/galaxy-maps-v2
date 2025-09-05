@@ -33,7 +33,10 @@ export const useAiConversationStore = defineStore("aiConversation", {
       console.log("🆕 Generating new realtime token...");
       try {
         const response = await generateRealtimeToken();
-        const { clientSecret, expires_at } = response;
+        const { clientSecret, expires_at } = response as {
+          clientSecret: string;
+          expires_at: number;
+        };
 
         // Cache the token with the actual expiration time from the API
         this.tokenCache = {

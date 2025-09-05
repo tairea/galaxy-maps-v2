@@ -204,7 +204,7 @@ export default {
 #help-panel {
   width: 100%;
   border: 1px solid var(--v-galaxyAccent-base);
-  margin-top: 30px;
+  // margin-top: 30px;
   padding: 20px 15px 20px 20px;
   position: relative;
   backdrop-filter: blur(2px);

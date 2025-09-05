@@ -39,6 +39,15 @@ export const fetchStudentCohortsByPersonId = async (personId: string): Promise<I
   return result.data.cohorts;
 };
 
+export const fetchTeachersCohortsByPersonId = async (personId: string): Promise<ICohort[]> => {
+  const data = {
+    personId,
+  };
+  const getTeachersCohortsByPersonId = functions.httpsCallable("getTeachersCohortsByPersonId");
+  const result = await getTeachersCohortsByPersonId(data);
+  return result.data.cohorts;
+};
+
 export const fetchStudentSubmissionsByPersonId = async (
   personId: string,
 ): Promise<Array<{ id: string } & Record<string, any>>> => {
@@ -1138,10 +1147,40 @@ export const saveNode = async (
 // Generate ephemeral client token for OpenAI Realtime API
 export const generateRealtimeToken = async (): Promise<{
   clientSecret: string;
+  expires_at: number;
 }> => {
   const data = {};
   const generateRealtimeTokenFunction = functions.httpsCallable("generateRealtimeToken");
   const result = await generateRealtimeTokenFunction(data);
+  return result.data;
+};
+
+// Generate Squad Report from AI (using gpt-5-mini)
+export const generateSquadReport = async (
+  squadPacket: any,
+  cohortId?: string,
+  statusReportId?: string,
+): Promise<{
+  success: boolean;
+  report: any;
+  tokenUsage: {
+    modelsUsed: {
+      model: string;
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    }[];
+    combinedEstimatedCost: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalTokens: number;
+  };
+  responseId: string;
+}> => {
+  const data = { squadPacket, cohortId, statusReportId } as Record<string, any>;
+  const fn = functions.httpsCallable("generateSquadReport", { timeout: 540000 });
+  const result = await fn(data);
   return result.data;
 };
 
@@ -1166,5 +1205,23 @@ export const startMission = async (
   };
   const startMissionFunction = functions.httpsCallable("startMission");
   const result = await startMissionFunction(data);
+  return result.data;
+};
+
+// Send generic email - perfect for AI agent responses
+export const sendGenericEmail = async (
+  to: string,
+  subject: string,
+  body: string,
+  isHtml: boolean = false,
+): Promise<{ success: boolean; message: string }> => {
+  const data = {
+    to,
+    subject,
+    body,
+    isHtml,
+  };
+  const sendGenericEmailFunction = functions.httpsCallable("sendGenericEmail");
+  const result = await sendGenericEmailFunction(data);
   return result.data;
 };

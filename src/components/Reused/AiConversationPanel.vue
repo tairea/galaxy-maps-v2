@@ -392,7 +392,7 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
         // Log current voice configuration
         console.log("🎤 SESSION: Session ready with voice configuration");
 
-        // Send mission context to start the conversation
+        //  ================= Conversation Starter =================
         setTimeout(() => {
           this.sendMissionContext();
         }, 1000); // Wait 1 second to ensure session is fully ready
@@ -625,7 +625,7 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
                 this.isListening = true;
                 this.isTalking = false;
 
-                // Send mission context to start the conversation
+                // ================= Conversation Starter =================
                 setTimeout(() => {
                   console.log("🎯 TRANSPORT: Sending mission context after session created");
                   this.sendMissionContext();

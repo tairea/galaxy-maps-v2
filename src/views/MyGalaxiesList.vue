@@ -75,6 +75,7 @@
             </v-icon>
             CREATE GALAXY
           </v-btn>
+          <AiGalaxyMapAgent />
         </v-col>
       </v-row>
     </div>
@@ -100,6 +101,7 @@ import useRootStore from "@/store/index";
 import { mdiPlus, mdiRocketLaunch } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
 import AICreateGalaxyDialogVue from "@/components/Dialogs/AICreateGalaxyDialog.vue";
+import AiGalaxyMapAgent from "@/components/Reused/AiGalaxyMapAgent.vue";
 
 export default {
   name: "MyGalaxiesList",
@@ -111,6 +113,7 @@ export default {
     MobileGalaxyListInfoPanel,
     Galaxies,
     AICreateGalaxyDialogVue,
+    AiGalaxyMapAgent,
   },
   watch: {
     async user(newUser) {

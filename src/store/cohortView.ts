@@ -6,12 +6,20 @@ export const useCohortViewStore = defineStore({
   id: "cohortView",
   state: () => ({
     studentsView: true,
+    activeTab: "navigators" as "status" | "navigators" | "overview",
     isLoadingCohort: false,
     cohort: null as ICohort | null,
   }),
   actions: {
     setStudentsView(view: boolean) {
       this.studentsView = view;
+      this.activeTab = view ? "navigators" : "overview";
+    },
+    setActiveTab(tab: "status" | "navigators" | "overview") {
+      this.activeTab = tab;
+      // keep legacy boolean in sync for existing views
+      if (tab === "navigators") this.studentsView = true;
+      if (tab === "overview") this.studentsView = false;
     },
     async loadCohort(cohortId: string) {
       this.isLoadingCohort = true;

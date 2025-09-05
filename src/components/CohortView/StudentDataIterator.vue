@@ -151,8 +151,8 @@ export default {
       mdiMagnify,
       mdiSortAlphabeticalVariant,
       search: "",
-      sortDesc: false,
-      sortBy: "firstName",
+      sortDesc: true,
+      sortBy: "lastActive",
       keys: [
         "firstName",
         "lastName",
