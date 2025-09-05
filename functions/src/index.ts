@@ -27,6 +27,7 @@ import {
   getCohortsHttpsEndpoint,
   getCohortsByCourseIdHttpsEndpoint,
   getStudentCohortsByPersonIdHttpsEndpoint,
+  getTeachersCohortsByPersonIdHttpsEndpoint,
   getPeopleByCourseIdHttpsEndpoint,
   getPersonTasksByPersonIdCourseIdTopicIdHttpsEndpoint,
   getPersonTopicByPersonIdCourseIdTopicIdHttpsEndpoint,
@@ -61,6 +62,7 @@ import {
   sendResponseToSubmissionHttpsEndpoint,
   sendTaskSubmissionHttpsEndpoint,
   sendCollaboratorAddedEmailHttpsEndpoint,
+  sendGenericEmailHttpsEndpoint,
 } from "./emails.js";
 import {
   getOrganisationByOrganisationIdHttpsEndpoint,
@@ -89,6 +91,7 @@ import {
   generateInstructionsForMissionHttpsEndpoint,
   generateUnifiedGalaxyMapHttpsEndpoint,
   refineGalaxyMapHttpsEndpoint,
+  generateSquadReportHttpsEndpoint,
 } from "./openAIActions.js";
 import { generateRealtimeTokenHttpsEndpoint } from "./realtimeToken.js";
 
@@ -123,6 +126,7 @@ export {
   getCohortsHttpsEndpoint as getCohorts,
   getCohortsByCourseIdHttpsEndpoint as getCohortsByCourseId,
   getStudentCohortsByPersonIdHttpsEndpoint as getStudentCohortsByPersonId,
+  getTeachersCohortsByPersonIdHttpsEndpoint as getTeachersCohortsByPersonId,
   getStudentSubmissionsByPersonIdHttpsEndpoint as getStudentSubmissionsByPersonId,
   getStudentRequestsByPersonIdHttpsEndpoint as getStudentRequestsByPersonId,
   getGalaxyMapObjectFromCourseHttpsEndpoint as getGalaxyMapObjectFromCourse,
@@ -159,6 +163,7 @@ export {
   sendResponseToSubmissionHttpsEndpoint as sendResponseToSubmission,
   sendTaskSubmissionHttpsEndpoint as sendTaskSubmission,
   sendCollaboratorAddedEmailHttpsEndpoint as sendCollaboratorAddedEmail,
+  sendGenericEmailHttpsEndpoint as sendGenericEmail,
 };
 
 // organisation
@@ -195,5 +200,6 @@ export {
   generateInstructionsForMissionHttpsEndpoint as generateInstructionsForMission,
   generateUnifiedGalaxyMapHttpsEndpoint as generateUnifiedGalaxyMap,
   refineGalaxyMapHttpsEndpoint as refineGalaxyMap,
+  generateSquadReportHttpsEndpoint as generateSquadReport,
   generateRealtimeTokenHttpsEndpoint as generateRealtimeToken,
 };

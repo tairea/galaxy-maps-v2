@@ -166,6 +166,12 @@ const router = new VueRouter({
   mode: "history",
   base: import.meta.env.BASE_URL,
   routes,
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition;
+    }
+    return { x: 0, y: 0 };
+  },
 });
 
 const initialAuth = new Promise<firebase.User | null>((resolve, reject) => {

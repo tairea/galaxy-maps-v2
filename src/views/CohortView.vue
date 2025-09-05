@@ -31,21 +31,39 @@
         </div>
         <div v-if="cohort" class="people-frame">
           <div class="people-border">
-            <div :class="peopleLabel" @click="setStudentsView(true)">
+            <div :class="peopleLabel" @click="setActiveTab('navigators')">
               <span class="pl-3">NAVIGATORS</span>
             </div>
           </div>
           <div class="graph-border">
-            <div :class="graphLabel" class="text-center" @click="setStudentsView(false)">
+            <div :class="graphLabel" class="text-center" @click="setActiveTab('overview')">
               <span class="pl-3">OVERVIEW</span>
             </div>
           </div>
-          <StudentDataIterator
-            v-if="studentsView"
+          <div class="report-border">
+            <div :class="reportLabel" @click="setActiveTab('status')">
+              <span class="pl-3">STATUS REPORT</span>
+            </div>
+          </div>
+
+          <!-- Status Report -->
+          <StatusReportPanel
+            v-if="activeTab === 'status'"
             class="mt-4"
             :cohort="cohort"
+            :cohortsCoursesData="cohortsCoursesData"
+          />
+
+          <!-- Navigators -->
+          <StudentDataIterator
+            v-else-if="studentsView"
+            class="mt-4"
+            :cohort="cohort"
+            :cohortsCoursesData="cohortsCoursesData"
             @learnerOverviewDialogClosed="refreshComponents"
           />
+
+          <!-- Overview -->
           <CohortGraphs v-else :cohort="cohort" :cohortsCoursesData="cohortsCoursesData" />
         </div>
       </div>
@@ -97,6 +115,7 @@ import BackButton from "@/components/Reused/BackButton.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 import CohortGraphs from "@/components/CohortView/CohortGraphs.vue";
+import StatusReportPanel from "@/components/CohortView/StatusReportPanel.vue";
 import { fetchCohortCoursesActivityByCohortId } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import useCohortViewStore from "@/store/cohortView";
@@ -115,6 +134,7 @@ export default {
     RequestForHelpTeacherFrame,
     SubmissionTeacherFrame,
     CohortGraphs,
+    StatusReportPanel,
   },
   data() {
     return {
@@ -129,10 +149,11 @@ export default {
 
     // ==== get cohort course data from LRS
     this.cohortsCoursesData = await fetchCohortCoursesActivityByCohortId(this.cohort.id);
+    console.log("cohortsCoursesData", this.cohortsCoursesData);
   },
   computed: {
     ...mapState(useRootStore, ["currentCohortId", "person", "userStatus"]),
-    ...mapState(useCohortViewStore, ["studentsView", "isLoadingCohort", "cohort"]),
+    ...mapState(useCohortViewStore, ["studentsView", "isLoadingCohort", "cohort", "activeTab"]),
     ready() {
       return this.cohortId === this.currentCohortId && this.cohort != null;
     },
@@ -152,11 +173,14 @@ export default {
     teacher() {
       return this.cohort.teachers.includes(this.person.id);
     },
+    reportLabel() {
+      return this.activeTab === "status" ? "report-label" : "inactive-report-label";
+    },
     peopleLabel() {
-      return this.studentsView ? "people-label" : "inactive-people-label";
+      return this.activeTab === "navigators" ? "people-label" : "inactive-people-label";
     },
     graphLabel() {
-      return this.studentsView ? "inactive-graph-label" : "graph-label";
+      return this.activeTab === "overview" ? "graph-label" : "inactive-graph-label";
     },
     isRestricted() {
       // If no cohort is loaded yet, don't show restricted message
@@ -167,7 +191,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useCohortViewStore, ["loadCohort", "setStudentsView"]),
+    ...mapActions(useCohortViewStore, ["loadCohort", "setStudentsView", "setActiveTab"]),
     // hack to update TeacherFrames. (this is because LearnerOveriewDashboard uses the same
     // components and when you close the dialog, the cohortview teacher frames are empty. issue#121)
     refreshComponents() {
@@ -336,6 +360,49 @@ export default {
       clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
       cursor: pointer;
       width: 116px;
+      height: 20px;
+    }
+
+    .report-border {
+      position: absolute;
+      top: -1px;
+      left: 240px;
+      background-color: var(--v-missionAccent-base);
+      color: var(--v-background-base);
+      padding: 0px 30px 0px 5px;
+      clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
+      cursor: pointer;
+      width: 150px;
+      height: 22px;
+    }
+    .report-label {
+      font-size: 0.8rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      position: relative;
+      top: 1px;
+      left: -3px;
+      background-color: var(--v-missionAccent-base);
+      color: var(--v-background-base);
+      padding: 0px 30px 0px 5px;
+      clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
+      cursor: pointer;
+      width: 150px;
+      height: 20px;
+    }
+    .inactive-report-label {
+      font-size: 0.8rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      position: relative;
+      top: 1px;
+      left: -3px;
+      background-color: var(--v-background-base);
+      color: var(--v-missionAccent-base);
+      padding: 0px 30px 0px 5px;
+      clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
+      cursor: pointer;
+      width: 146px;
       height: 20px;
     }
   }

@@ -207,3 +207,65 @@ export type UnifiedMissionInstructions = z.infer<typeof UnifiedMissionInstructio
 export type UnifiedPlanet = z.infer<typeof UnifiedJourneyPlanetsSchema>;
 export type UnifiedStar = z.infer<typeof UnifiedJourneyStarsSchema>;
 export type UnifiedGalaxyMapResponse = z.infer<typeof UnifiedGalaxyMapResponseSchema>;
+
+/** 0–100 percentage (integer or float). Keep the model output in this scale. */
+const Pct100 = z.number().min(0).max(100);
+
+/** Up to 3 short bullets is ideal for readability. */
+const ShortBullets = z.array(z.string().min(1)).max(3);
+
+/** Student status categories for triage. */
+export const StudentStatus = z.enum(["on-track", "watch", "at-risk"]);
+
+/** Per-course progress line for a student (kept compact for UI). */
+export const ProgressItemSchema = z
+  .object({
+    course: z.string().min(1), // e.g., "WEB DEV 1"
+    courseId: z.string().min(1),
+    pct: Pct100, // e.g., 54
+    done: z.string().min(1), // e.g., "23/43 tasks, 6/13 topics"
+  })
+  .strict();
+
+/** Top summary for coaches/captains. */
+export const SquadSummarySchema = z
+  .object({
+    headline: z.string().min(1),
+    overallProgressPct: Pct100, // overall 0–100
+    activeVsInactive: z
+      .object({
+        active: z.number().int().nonnegative(),
+        inactive: z.number().int().nonnegative(),
+      })
+      .strict(),
+    trends: ShortBullets, // 0–3 bullets
+    risks: ShortBullets, // 0–3 bullets
+    recommendedActions: ShortBullets, // 0–3 bullets
+  })
+  .strict();
+
+/** One student’s status block. */
+export const StudentReportSchema = z
+  .object({
+    id: z.string().min(1),
+    name: z.string().min(1),
+    status: StudentStatus,
+    lastActive: z.string().datetime(), // ISO 8601
+    progress: z.array(ProgressItemSchema).min(1),
+    reasons: z.array(z.string().min(1)).max(5),
+    suggestedInterventions: z.array(z.string().min(1)).max(3),
+  })
+  .strict();
+
+/** Full AI response. */
+export const SquadReportSchema = z
+  .object({
+    squadSummary: SquadSummarySchema,
+    students: z.array(StudentReportSchema).min(1),
+  })
+  .strict();
+
+/** Inferred TypeScript types */
+export type SquadReport = z.infer<typeof SquadReportSchema>;
+export type StudentReport = z.infer<typeof StudentReportSchema>;
+export type ProgressItem = z.infer<typeof ProgressItemSchema>;

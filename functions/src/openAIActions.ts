@@ -1,6 +1,6 @@
 import { runWith, logger } from "firebase-functions/v1";
 import { HttpsError } from "firebase-functions/v1/https";
-import { storage, generateSignedUrl } from "./_shared.js";
+import { storage, generateSignedUrl, db } from "./_shared.js";
 import { STORAGE_BUCKET } from "./_constants.js";
 import fetch from "node-fetch";
 import OpenAI from "openai";
@@ -9,6 +9,7 @@ import {
   StarsAndPlanetsResponseSchema,
   MissionInstructionsV2Schema,
   UnifiedGalaxyMapResponseSchema,
+  SquadReportSchema,
 } from "./schemas.js";
 import functions from "firebase-functions";
 import { createModelTokenUsage, createCombinedTokenUsage } from "./lib/utils.js";
@@ -327,6 +328,94 @@ The style should feature:
 
 The overall look should feel official, iconic, and collectible — like a real mission patch but uniquely tailored to the title's theme.
 
+
+`;
+
+// System prompt for squad status report generation
+const SquadAnalystSystemPrompt = `
+# Galaxy Maps — Squad Analyst (SYSTEM PROMPT)
+
+You are **Galaxy Maps’ Squad Analyst**. Your job: transform a compact activity snapshot (**SquadStatusPacket**) into a **leader-ready status report** with risks and concrete next steps.
+
+---
+
+## Ground rules
+- **Treat input JSON as ground truth.** If data is missing, say so briefly; **do not invent** items or numbers.  
+- Be **specific**: reference **course titles** and **item titles** when suggesting actions.  
+- Keep the report **concise** and **action-oriented**—for a busy teacher (“Captain”) to scan in <60 seconds.  
+- Use dates as **Pacific/Rarotonga** context (already encoded in the packet).  
+- Percentages in your output are **0–100** integers/floats.  
+- Prefer **plain language**; no motivational fluff.  
+
+---
+
+## What to analyze (from the packet)
+For each student and course:
+- **Progress**: 'topicsDone/tasksDone vs totals, and \`pct\`/\`pct100\`.  
+- **Momentum**: \`velocity.events\`, \`completed\`, \`started\`, \`daysActive\`, \`streakDaysCurrent\`, \`streakDaysAtLastActive\`, \`lastActive\`.  
+- **Blockers**: items with \`status:"Started"\` and **no later Completed**; use \`ageDays\` to prioritize.  
+- **Recency**: favor events within the report window.  
+
+For the cohort:
+- **Active vs inactive** (based on \`lastActiveOverall\` presence).  
+- **Average progress** (use provided per-student \`avgPct\`/\`avgPct100\` if present; otherwise mean of per-course pcts).  
+- **Risks**: inactivity, aging blockers, low progress outliers.  
+
+---
+
+## Triage rubric (guideline, not a straitjacket)
+- **on-track**: lastActive ≤ 7 days, progress ≥ cohort median, no blocker > 7 days.  
+- **watch**: lastActive 8–21 days **or** progress < median **or** blocker 8–21 days.  
+- **at-risk**: lastActive > 21 days **or** blocker > 21 days **or** progress in bottom 20%.  
+
+---
+
+## Interventions (≤3 per student)
+- **Micro-mission** to complete a specific blocker (name it).  
+- **Time-boxed focus** (e.g., “20-min clinic on ‘Colour App’”).  
+- **Nudge & streaks** (e.g., “48-hour nudge to convert one ‘Started’ → ‘Completed’”).  
+- **Scaffold** (assign an easier precursor task or worked example).  
+- **Pairing** (peer assist on the named item).  
+
+Be concrete: reference **course** and **item title**.  
+
+---
+
+## Output format (STRICT)
+Return **only** valid JSON matching this schema:
+
+\`\`\`json
+{
+  "squadSummary": {
+    "headline": "string",
+    "overallProgressPct": 0,
+    "activeVsInactive": { "active": 0, "inactive": 0 },
+    "trends": ["string"],
+    "risks": ["string"],
+    "recommendedActions": ["string"]
+  },
+  "students": [
+    {
+      "id": "string",
+      "name": "string",
+      "status": "on-track" | "watch" | "at-risk",
+      "lastActive": "YYYY-MM-DDThh:mm:ss.sssZ",
+      "progress": [
+        { "course": "string", "courseId": "string", "pct": 0, "done": "string" }
+      ],
+      "reasons": ["string"],
+      "suggestedInterventions": ["string"]
+    }
+  ]
+}
+\`\`\`
+
+---
+
+## Constraints
+- Max **3 bullets** for \`trends\`, \`risks\`, \`recommendedActions\`, and \`suggestedInterventions\`.  
+- In \`progress[].done\`, summarize like: \`"23/43 tasks, 6/13 topics"\`.  
+- If a field is unknown, **omit the claim** rather than guessing.  
 
 `;
 
@@ -1430,6 +1519,174 @@ export const downloadAndUploadImageHttpsEndpoint = runWith({
     return { downloadURL };
   } catch (error) {
     logger.error("Error in downloadAndUploadImage", error);
+    throw new HttpsError(
+      "internal",
+      error instanceof Error ? error.message : "Unknown error occurred",
+    );
+  }
+});
+
+// Generate squad status report from squad packet
+export const generateSquadReportHttpsEndpoint = runWith({
+  timeoutSeconds: 540, // 9 minutes timeout
+  memory: "1GB",
+}).https.onCall(async (data) => {
+  const { squadPacket, cohortId, statusReportId } = data || {};
+  try {
+    logger.info("Starting generateSquadReport function", {
+      hasPacket: !!data?.squadPacket,
+      hasCohortId: !!data?.cohortId,
+    });
+
+    if (!squadPacket) {
+      logger.error("Missing required field: squadPacket");
+      throw new HttpsError("invalid-argument", "Missing required field: squadPacket");
+    }
+
+    // Mark as processing on provided doc or best-effort fallback to latest processing doc
+    if (cohortId) {
+      try {
+        let targetDocRef: FirebaseFirestore.DocumentReference | null = null;
+        if (statusReportId) {
+          targetDocRef = db
+            .collection("cohorts")
+            .doc(cohortId)
+            .collection("statusReports")
+            .doc(statusReportId);
+        } else {
+          const snap = await db
+            .collection("cohorts")
+            .doc(cohortId)
+            .collection("statusReports")
+            .where("status", "==", "processing")
+            .orderBy("createdAt", "desc")
+            .limit(1)
+            .get();
+          if (!snap.empty) {
+            targetDocRef = snap.docs[0].ref;
+            logger.info("Using fallback processing statusReport doc", { id: targetDocRef.id });
+          }
+        }
+        if (targetDocRef) {
+          await targetDocRef.set({ status: "processing", updatedAt: new Date() }, { merge: true });
+        }
+      } catch (e) {
+        logger.error("Failed to set processing state on status report", e);
+      }
+    }
+
+    const userMessage =
+      "Here is the squad activity packet JSON. Use it as ground truth to produce a concise leader-ready status report as per rules.\n\n" +
+      "```json\n" +
+      JSON.stringify(squadPacket) +
+      "\n```";
+
+    logger.info("Calling OpenAI API for squad report generation");
+    const aiResponse = await openai.responses.parse({
+      model: "gpt-5-mini",
+      input: [
+        { role: "system", content: SquadAnalystSystemPrompt },
+        { role: "user", content: userMessage },
+      ],
+      text: {
+        format: zodTextFormat(SquadReportSchema, "squad_report_response"),
+      },
+    });
+
+    logger.info("OpenAI API call completed successfully (squad report)");
+
+    const parsedResponse = aiResponse.output_parsed;
+    if (!parsedResponse) {
+      throw new HttpsError("internal", "No response content from OpenAI");
+    }
+
+    const modelUsage = createModelTokenUsage("gpt-5-mini", aiResponse.usage || {});
+    const combinedTokenUsage = createCombinedTokenUsage([modelUsage]);
+
+    // If cohortId provided, persist status report under cohort
+    if (cohortId) {
+      try {
+        const payload = {
+          report: parsedResponse,
+          tokenUsage: combinedTokenUsage,
+          responseId: aiResponse.id,
+          status: "completed",
+          updatedAt: new Date(),
+        } as Record<string, unknown>;
+
+        // Prefer updating the provided statusReportId; otherwise, try to find the latest processing doc
+        let updatedExisting = false;
+        if (statusReportId) {
+          await db
+            .collection("cohorts")
+            .doc(cohortId)
+            .collection("statusReports")
+            .doc(statusReportId)
+            .set(payload, { merge: true });
+          updatedExisting = true;
+          logger.info("Updated existing status report", { cohortId, statusReportId });
+        } else {
+          const snap = await db
+            .collection("cohorts")
+            .doc(cohortId)
+            .collection("statusReports")
+            .where("status", "==", "processing")
+            .orderBy("createdAt", "desc")
+            .limit(1)
+            .get();
+          if (!snap.empty) {
+            await snap.docs[0].ref.set(payload, { merge: true });
+            updatedExisting = true;
+            logger.info("Updated fallback processing status report", { id: snap.docs[0].id });
+          }
+        }
+
+        if (!updatedExisting) {
+          await db
+            .collection("cohorts")
+            .doc(cohortId)
+            .collection("statusReports")
+            .add({ ...payload, createdAt: new Date() });
+          logger.info("Saved new status report to cohort (no existing doc)", { cohortId });
+        }
+      } catch (persistError) {
+        logger.error("Failed to persist status report", persistError);
+        // Do not fail the entire function if saving fails; return the report anyway
+      }
+    }
+
+    return {
+      success: true,
+      report: parsedResponse,
+      tokenUsage: combinedTokenUsage,
+      responseId: aiResponse.id,
+    };
+  } catch (error) {
+    logger.error("Error in generateSquadReport", error);
+    // Best-effort: mark status as error if identifiers provided
+    if (cohortId && statusReportId) {
+      try {
+        await db
+          .collection("cohorts")
+          .doc(cohortId)
+          .collection("statusReports")
+          .doc(statusReportId)
+          .set(
+            {
+              status: "error",
+              updatedAt: new Date(),
+              errorMessage:
+                error instanceof Error ? error.message : "Unknown error generating report",
+            },
+            { merge: true },
+          );
+      } catch (persistErr) {
+        logger.error("Failed to update status report with error state", persistErr);
+      }
+    }
+    if (error instanceof Error && error.name === "ZodError") {
+      throw new HttpsError("internal", `AI response validation failed: ${error.message}`);
+    }
     throw new HttpsError(
       "internal",
       error instanceof Error ? error.message : "Unknown error occurred",

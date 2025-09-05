@@ -852,6 +852,8 @@ p {
     justify-content: flex-start;
     align-items: flex-start;
     flex-direction: column;
+    /* Allow flex item to shrink so long titles don't force card to grow */
+    min-width: 0;
 
     .mission-edit-button {
       // position: absolute;
@@ -867,6 +869,10 @@ p {
     font-weight: 600;
     text-transform: uppercase;
     margin: 5px 0px;
+    /* Ensure long titles wrap within the card */
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
   }
 
   .mission-number-section {

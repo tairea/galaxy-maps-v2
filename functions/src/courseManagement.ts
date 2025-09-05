@@ -835,6 +835,36 @@ export const getStudentCohortsByPersonIdHttpsEndpoint = runWith({}).https.onCall
   },
 );
 
+// Get teacher cohorts by personId
+export const getTeachersCohortsByPersonIdHttpsEndpoint = runWith({}).https.onCall(
+  async (data, context) => {
+    requireAuthenticated(context);
+
+    const personId = data.personId as string | null;
+    if (personId == null) {
+      throw new HttpsError("invalid-argument", "missing personId");
+    }
+
+    // TODO: permissions checks
+
+    const cohortCollection = await db
+      .collection("cohorts")
+      .where("teachers", "array-contains", personId)
+      .get();
+
+    const cohorts = [];
+    for (const doc of cohortCollection.docs) {
+      const cohort = doc.data();
+      cohorts.push({
+        ...cohort,
+        id: doc.id,
+      });
+    }
+
+    return { cohorts };
+  },
+);
+
 // get student submissions by personId
 export const getStudentSubmissionsByPersonIdHttpsEndpoint = runWith({}).https.onCall(
   async (data, context) => {
@@ -2148,6 +2178,7 @@ async function saveGalaxyMap(
         image: imageData || null,
         galaxyMapAsObject: { ...galaxyMap, idInDatabase: existingCourseId },
         topicTotal: stars.length,
+        taskTotal: totalPlanets,
       });
 
       // Delete and recreate subcollections: map-edges, map-nodes, topics (and tasks)
@@ -2200,6 +2231,7 @@ async function saveGalaxyMap(
         await courseDocRef.update({
           id: courseDocRef.id,
           topicTotal: stars.length,
+          taskTotal: totalPlanets,
           galaxyMapAsObject: { ...galaxyMap, idInDatabase: courseDocRef.id },
         });
         console.log("✅ Course document updated successfully");

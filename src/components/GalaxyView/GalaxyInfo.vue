@@ -1,5 +1,5 @@
 <template>
-  <div id="galaxy-info" :class="getBorderClass()" v-if="course">
+  <div id="galaxy-info" :class="[getBorderClass(), { minimized: isMinimized }]" v-if="course">
     <!-- Clickable Label with Arrow -->
     <h2 class="galaxy-label" @click="toggleMinimize" :class="{ minimized: isMinimized }">
       <div v-if="!isMinimized"><span v-if="draft">Drafting</span> Galaxy</div>
@@ -226,6 +226,10 @@ export default {
   backdrop-filter: blur(2px);
   z-index: 3;
   color: var(--v-galaxyAccent-base);
+
+  &.minimized {
+    padding: 0px;
+  }
 
   .galaxy-label {
     font-size: 0.8rem;

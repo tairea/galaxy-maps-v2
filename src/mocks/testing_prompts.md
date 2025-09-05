@@ -1,3 +1,7 @@
+<!-- basic html and css -->
+
+an introduction course to web development covering the three codes that make up the web, html, css and js. in it students will learn the basics, using glitch.com (so it can host their sites live). and the mini web app they will build is a fishing of the cook islands database, where the home page is are image buttons of each fish and when you click on a fish it takes you to a page about that fish. students will learn basic html, css and navigation
+
 <!-- ocean waves -->
 
 map the science of how ocean waves reach our shores, cover energy transfer, starting from the sun, to pressure systems, to wind, to waves. tailor it to 11 and 12 year old students in the cook islands.

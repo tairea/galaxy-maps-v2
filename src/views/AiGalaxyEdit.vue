@@ -268,9 +268,11 @@
                   open-all
                   color="missionAccent"
                   active-color="missionAccent"
+                  :expand-icon="taskEditing ? '' : '$treeview.expand'"
                 >
                   <template v-slot:label="{ item }">
                     <div
+                      v-if="!(taskEditing && item.type === 'instructions')"
                       class="treeview-label"
                       :class="{
                         'ui-active': uiActiveItemId === item.id,
@@ -279,6 +281,7 @@
                           uiActiveItemId &&
                           uiActiveItemId !== item.id &&
                           item.type === 'planet',
+                        'star-item-editing': taskEditing && item.type === 'star',
                       }"
                     >
                       <div class="item-header">
@@ -345,18 +348,25 @@
                           color="galaxyAccent"
                           iconSize="15"
                         />
-                        <div v-else class="treeview-markdown">
+                        <div
+                          v-else
+                          class="treeview-markdown"
+                          @click.stop="ViewMissionPanel(item, starIndex)"
+                        >
                           <span v-html="renderToHTML(item)"></span>
                         </div>
                       </div>
-                      <!-- Generate Tasks button ((HIDE FOR NOW. CREATE TASKS IN GALAXY VIEW INSTEAD FOR NOW)) -->
+
+                      <!-- ========================================
+                       Generate Tasks button ((HIDE FOR NOW. CREATE TASKS IN GALAXY VIEW INSTEAD FOR NOW))
+                        ======================================== -->
                       <!-- <v-btn
                         v-if="item.type === 'planet' && !taskEditing"
                         outlined
                         color="galaxyAccent"
                         class="mt-1 mx-16 generate-tasks-btn"
                         small
-                        @click.stop="generateTasks(item, starIndex)"
+                        @click.stop="ViewMissionPanel(item, starIndex)"
                       >
                         <v-icon small class="mr-2">{{ mdiRobotExcited }}</v-icon> Generate Tasks
                       </v-btn> -->
@@ -486,7 +496,7 @@
                 clearable
                 label="What change would you like me to make?"
                 :disabled="loading"
-                autofocus
+                :autofocus="!isMobile"
                 @click:clear="galaxyRefineUserInput = ''"
               />
               <div class="action-buttons" :class="{ mobile: isMobile }">
@@ -539,40 +549,67 @@
     </div>
 
     <!--==== Right section ====-->
-    <div v-if="taskEditing" id="right-section">
+    <div v-if="taskEditing" id="right-section" :class="{ mobile: isMobile }">
       <div class="right-section-header">
         <v-btn @click="taskEditing = false" outlined color="missionAccent" small>
-          <v-icon left small>{{ mdiCheck }}</v-icon>
-          Stop Editing
+          <v-icon left small>{{ mdiArrowLeftBold }}</v-icon>
+          Back to Overview
         </v-btn>
       </div>
 
       <div v-if="selectedPlanetData" class="selected-planet-info">
+        <p class="missionAccent--text text-h2">Mission:</p>
+
+        <!-- Title -->
         <div class="planet-header">
           <span class="planet-emoji">🪐</span>
-          <h3 class="planet-title">{{ selectedPlanetData.name }}</h3>
+          <div>
+            <h3 class="planet-title baseAccent--text">{{ selectedPlanetData.name }}</h3>
+            <p class="planet-description">{{ selectedPlanetData.description }}</p>
+          </div>
         </div>
 
-        <div v-if="selectedPlanetData.description" class="planet-description">
-          <h4>Description</h4>
-          <p>{{ selectedPlanetData.description }}</p>
-        </div>
-
+        <!-- Intro -->
         <div
           v-if="selectedPlanetData.children && selectedPlanetData.children.length > 0"
-          class="planet-missions"
+          class="section-card intro-card"
         >
-          <h4>Missions ({{ selectedPlanetData.children.length }})</h4>
-          <div class="missions-list">
-            <div
-              v-for="mission in selectedPlanetData.children"
-              :key="mission.id"
-              class="mission-item"
-            >
-              <span class="mission-emoji">📍</span>
-              <span class="mission-name">{{ mission.name }}</span>
+          <h4 class="section-title text-h5">Intro</h4>
+          <p class="section-text">{{ selectedPlanetData.children[0].description.intro }}</p>
+        </div>
+
+        <!-- Steps -->
+        <div
+          v-for="step in selectedPlanetData.children[0].description.steps"
+          :key="step.id"
+          class="step-card"
+        >
+          <div class="step-header">
+            <h4 class="step-title text-h5">{{ step.title }}</h4>
+          </div>
+
+          <div class="task-list">
+            <div v-for="task in step.tasks" :key="task.id" class="task-item">
+              <span class="task-bullet" aria-hidden="true"></span>
+              <p class="task-text">{{ task.taskContent }}</p>
             </div>
           </div>
+
+          <div v-if="step.checkpoint" class="checkpoint-row">
+            <span class="checkpoint-flag">🏁</span>
+            <p class="checkpoint-text">
+              <em>Checkpoint: {{ step.checkpoint }}</em>
+            </p>
+          </div>
+        </div>
+
+        <!-- Outro -->
+        <div
+          v-if="selectedPlanetData.children[0].description.outro"
+          class="section-card outro-card"
+        >
+          <h4 class="section-title text-h5">Outro</h4>
+          <p class="section-text">{{ selectedPlanetData.children[0].description.outro }}</p>
         </div>
       </div>
 
@@ -691,7 +728,7 @@
               rows="5"
               v-model="clarificationAnswers[index]"
               :disabled="loading"
-              :autofocus="index === 0"
+              :autofocus="index === 0 && !isMobile"
               :dense="$vuetify.breakpoint.smAndDown"
               hide-details
             ></v-textarea>
@@ -864,6 +901,10 @@ export default {
       planets: [],
       time: null,
       intervalid1: null,
+
+      // Planet highlight state
+      highlightedPlanetTopicId: null,
+      highlightedPlanetIndex: null,
 
       // Loading messages
       loadingMessages: [
@@ -1109,6 +1150,9 @@ export default {
       // When task editing is turned off, restore the full data
       if (oldValue === true && newValue === false) {
         this.restoreFullData();
+        // Clear any planet highlight and reset colors
+        this.clearPlanetHighlight();
+        this.updatePlanetColors();
       }
     },
   },
@@ -2128,8 +2172,38 @@ export default {
       }
 
       // update planets orbits
+      // Detect whether we're effectively in a single-star view (all planets share one topicId)
+      const uniqueTopicIds = Array.from(new Set(this.planets.map((p) => p.topicId)));
+      const isSingleStarView = uniqueTopicIds.length === 1;
+
       for (const planet of this.planets) {
-        const strokeColor = this.dark ? "rgba(255, 255, 255, 0.15)" : "rgba(0, 0, 0, 0.15)";
+        const hasHighlightedIndex = this.highlightedPlanetIndex != null;
+        let isHighlighted = false;
+        if (isSingleStarView) {
+          // In mission view, topicId may be normalized; match by planet index only
+          isHighlighted = hasHighlightedIndex && planet.taskIndex === this.highlightedPlanetIndex;
+        } else {
+          isHighlighted =
+            this.highlightedPlanetTopicId != null &&
+            hasHighlightedIndex &&
+            planet.topicId === this.highlightedPlanetTopicId &&
+            planet.taskIndex === this.highlightedPlanetIndex;
+        }
+
+        const defaultStroke = this.dark ? "rgba(255, 255, 255, 0.15)" : "rgba(0, 0, 0, 0.15)";
+        const highlightStroke = this.dark
+          ? this.$vuetify.theme.themes.dark.baseAccent
+          : this.$vuetify.theme.themes.light.baseAccent;
+
+        const strokeColor = isHighlighted ? highlightStroke : defaultStroke;
+
+        // Keep fill color in sync with highlight state so initial frame shows correctly
+        const defaultFill = this.dark ? "grey" : this.$vuetify.theme.themes.light.missionAccent;
+        const highlightFill = this.dark
+          ? this.$vuetify.theme.themes.dark.baseAccent
+          : this.$vuetify.theme.themes.light.baseAccent;
+        planet.color = isHighlighted ? highlightFill : defaultFill;
+
         planet.update(ctx, delta, strokeColor);
       }
     },
@@ -2167,6 +2241,46 @@ export default {
       const newColor = this.dark ? "white" : this.$vuetify.theme.themes.light.missionAccent;
       for (const planet of this.planets) {
         planet.color = newColor;
+      }
+    },
+
+    clearPlanetHighlight() {
+      this.highlightedPlanetTopicId = null;
+      this.highlightedPlanetIndex = null;
+    },
+
+    setPlanetHighlightByIds(topicId, planetIndex) {
+      this.highlightedPlanetTopicId = topicId;
+      this.highlightedPlanetIndex = planetIndex;
+
+      const highlightFill = this.dark
+        ? this.$vuetify.theme.themes.dark.baseAccent
+        : this.$vuetify.theme.themes.light.baseAccent;
+
+      console.log("Looking for planet with topicId:", topicId, "planetIndex:", planetIndex);
+      console.log(
+        "Available planets:",
+        this.planets.map((p) => ({ topicId: p.topicId, taskIndex: p.taskIndex })),
+      );
+
+      // Reset all planet colors first
+      this.updatePlanetColors();
+
+      // Then apply highlight color to the selected planet
+      const target = this.planets.find(
+        (p) =>
+          p.topicId === this.highlightedPlanetTopicId &&
+          p.taskIndex === this.highlightedPlanetIndex,
+      );
+      if (target) {
+        console.log("Found target planet, setting color to:", highlightFill);
+        target.color = highlightFill;
+        // Force a redraw to show the color change
+        this.$nextTick(() => {
+          this.updateFrameTimer();
+        });
+      } else {
+        console.log("No target planet found!");
       }
     },
 
@@ -3679,8 +3793,8 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
       // For now, we can just log it or implement any specific behavior needed
       console.log("Mobile panel closed");
     },
-    generateTasks(item, starIndex) {
-      console.log("generateTasks for item: ", item, "starIndex: ", starIndex);
+    ViewMissionPanel(item, starIndex) {
+      console.log("ViewMissionPanel for item: ", item, "starIndex: ", starIndex);
 
       // Set task editing state
       this.taskEditing = true;
@@ -3702,15 +3816,20 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
       // Update the display data to show only the selected star
       this.updateDisplayDataForTaskEditing(treeviewWidth);
 
-      console.log("making active item.id: ", item.id);
-
       // Set the clicked planet as the initial active planet in task editing mode
-      this.uiActiveItemId = item.id;
+      const planetId = this.normalizeToPlanetId(item.id) || item.id;
+      this.uiActiveItemId = planetId;
 
       // Update treeview active items to show the selected planet
       this.treeviewActiveItems = {
-        0: [item.id],
+        0: [planetId],
       };
+
+      // Highlight the planet after all data updates are complete
+      this.$nextTick(() => {
+        console.log("making active item.id: ", item.id);
+        this.highlightPlanetAndOrbitRing(planetId);
+      });
     },
 
     updateDisplayDataForTaskEditing(treeviewWidth) {
@@ -3822,15 +3941,17 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
       }
     },
     itemMadeActive(newValue, starIndex) {
-      console.log("itemMadeActive", newValue, starIndex);
+      const firstId = newValue && newValue[0];
+      const planetId = this.normalizeToPlanetId(firstId) || firstId;
+      this.highlightPlanetAndOrbitRing(planetId);
 
       // logic if not task editing
       if (!this.taskEditing) {
         // Filter to only allow star and planet types to be made active
         const filtered = (newValue || []).filter((id) => {
           // Quick type deduction from id pattern
-          if (/^star\[\d+\]$/.test(id)) return true; // star
-          if (/^star\[\d+\]\.planet\[\d+\]$/.test(id)) return true; // planet
+          if (/^star\[\d+\]/.test(id)) return true; // star (allow trailing segments)
+          if (/^star\[\d+\]\.planet\[\d+\]/.test(id)) return true; // planet (allow trailing)
           return false; // missions/instructions not activatable
         });
 
@@ -3840,13 +3961,66 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
       else {
         // Set the active item ID for UI highlighting
         // In task editing, also ensure only planet becomes active
-        const firstValid = (newValue || []).find((id) => /^star\[\d+\]\.planet\[\d+\]$/.test(id));
+        const firstValidRaw = (newValue || []).find((id) => /^star\[\d+\]\.planet\[\d+\]/.test(id));
+        const firstValid = this.normalizeToPlanetId(firstValidRaw) || firstValidRaw;
         this.uiActiveItemId = firstValid || null; // Take the first valid planet id
 
         // Update treeview active items to only show the selected item
         this.treeviewActiveItems = {
           0: firstValid ? [firstValid] : [],
         };
+      }
+    },
+    normalizeToPlanetId(id) {
+      if (!id || typeof id !== "string") return null;
+      const match = id.match(/^(star\[\d+\]\.planet\[\d+\])/);
+      return match ? match[1] : null;
+    },
+    highlightPlanetAndOrbitRing(itemId) {
+      console.log("highlightPlanetAndOrbitRing", itemId);
+      // Allow trailing segments like .instructions
+      const starMatch = itemId && itemId.match(/star\[(\d+)\]/);
+      const starIndex = starMatch ? parseInt(starMatch[1]) : null;
+      console.log("starIndex", starIndex);
+      const planetMatch = itemId && itemId.match(/planet\[(\d+)\]/);
+      const planetIndex = planetMatch ? parseInt(planetMatch[1]) : null;
+      console.log("planetIndex", planetIndex);
+
+      // Clear any previous highlight first
+      this.clearPlanetHighlight();
+
+      // If a planet is selected, highlight it (fill and orbit stroke)
+      if (planetIndex != null) {
+        // Resolve topicId. In taskEditing view, starIndex is 0 while topicIds come from the original nodes.
+        // Prefer matching by current planets list to get the right topicId for this planet index.
+        let topicId = null;
+        // Try exact match by current starIndex and planetIndex first
+        const candidate = this.planets.find(
+          (p) =>
+            p.taskIndex === planetIndex &&
+            (starIndex == null || p.topicId.endsWith(`-${starIndex}`)),
+        );
+        if (candidate) {
+          topicId = candidate.topicId;
+        } else {
+          // Fallback: if multiple stars reduced to one (taskEditing), pick the sole star's topicId
+          const uniqueTopicIds = Array.from(new Set(this.planets.map((p) => p.topicId)));
+          topicId =
+            uniqueTopicIds.length === 1
+              ? uniqueTopicIds[0]
+              : starIndex != null
+                ? `star-${starIndex}`
+                : null;
+        }
+
+        if (topicId) {
+          this.setPlanetHighlightByIds(topicId, planetIndex);
+        } else {
+          this.updatePlanetColors();
+        }
+      } else {
+        // No planet selected -> reset colors
+        this.updatePlanetColors();
       }
     },
     convertGalaxyMapToMarkdown(galaxyMap) {
@@ -4236,6 +4410,10 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
         &.task-editing {
           justify-content: center;
           gap: 0;
+
+          .v-treeview-node__root {
+            display: none !important;
+          }
         }
 
         .star-treeview-item {
@@ -4317,6 +4495,10 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
               opacity: 0.3;
               filter: grayscale(0.5);
               pointer-events: auto;
+            }
+
+            &.star-item-editing {
+              margin-bottom: 25px;
             }
           }
 
@@ -4650,6 +4832,12 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
   }
 }
 
+.task-editing {
+  ::v-deep .v-treeview-node__root {
+    // display: none !important;
+  }
+}
+
 .token-container {
   position: absolute;
   bottom: 50px;
@@ -4708,6 +4896,12 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
   overflow-y: auto;
   background-color: var(--v-background-base);
 
+  &.mobile {
+    width: 100%;
+    border-left: none;
+    padding: 0;
+  }
+
   .right-section-header {
     margin-bottom: 20px;
     padding-bottom: 15px;
@@ -4715,11 +4909,14 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
   }
 
   .selected-planet-info {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+
     .planet-header {
       display: flex;
-      align-items: center;
+      align-items: start;
       gap: 10px;
-      margin-bottom: 20px;
 
       .planet-emoji {
         font-size: 1.5rem;
@@ -4733,22 +4930,31 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
       }
     }
 
-    .planet-description {
-      margin-bottom: 25px;
+    .section-card {
+      background: linear-gradient(
+        180deg,
+        rgba(var(--v-missionAccent-base), 0.06),
+        rgba(var(--v-missionAccent-base), 0.02)
+      );
+      border: 1px solid rgba(var(--v-missionAccent-base), 0.25);
+      border-radius: 10px;
+      padding: 14px 16px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    }
 
-      h4 {
-        color: var(--v-galaxyAccent-base);
-        margin-bottom: 10px;
-        font-size: 1rem;
-        font-weight: 600;
-      }
+    .section-title {
+      color: var(--v-missionAccent-base);
+      margin: 0 0 8px 20px;
+      // font-size: 1rem;
+      // font-weight: 700;
+      // letter-spacing: 0.2px;
+    }
 
-      p {
-        color: var(--v-missionAccent-base);
-        line-height: 1.6;
-        margin: 0;
-        font-size: 0.9rem;
-      }
+    .section-text {
+      // color: var(--v-missionAccent-base);
+      line-height: 1.65;
+      margin: 0 0 0 20px;
+      font-size: 0.92rem;
     }
 
     .planet-missions {
@@ -4781,6 +4987,92 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
           }
         }
       }
+    }
+
+    .step-card {
+      position: relative;
+      // border-radius: 12px;
+      margin: 0 0 0 20px;
+      padding: 14px 16px 12px 16px;
+      // border: 1px dashed rgba(var(--v-galaxyAccent-base), 0.35);
+      border: 1px solid var(--v-missionAccent-base);
+      background: linear-gradient(
+        180deg,
+        rgba(var(--v-galaxyAccent-base), 0.06),
+        rgba(var(--v-galaxyAccent-base), 0.02)
+      );
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .step-title {
+      margin: 0;
+      // font-size: 0.98rem;
+      // font-weight: 700;
+      color: var(--v-missionAccent-base);
+    }
+
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .task-item {
+      display: grid;
+      grid-template-columns: 14px 1fr;
+      align-items: start;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background-color: rgba(var(--v-missionAccent-base), 0.05);
+      // border-left: 3px solid var(--v-missionAccent-base);
+    }
+
+    .task-bullet {
+      width: 8px;
+      height: 8px;
+      margin-top: 6px;
+      border-radius: 50%;
+      background: var(--v-missionAccent-base);
+      display: inline-block;
+    }
+
+    .task-text {
+      margin: 0;
+      font-size: 0.92rem;
+      line-height: 1.6;
+      // color: var(--v-missionAccent-base);
+    }
+
+    .checkpoint-row {
+      display: grid;
+      grid-template-columns: 18px 1fr;
+      align-items: start;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      margin-top: 10px;
+      background: rgba(var(--v-galaxyAccent-base), 0.06);
+      border: 1px solid rgba(var(--v-galaxyAccent-base), 0.25);
+    }
+
+    .checkpoint-flag {
+      font-size: 0.95rem;
+      margin-top: 2px;
+    }
+
+    .checkpoint-text {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--v-missionAccent-base);
+      line-height: 1.6;
+      // font-weight: 600;
     }
   }
 
