@@ -4,8 +4,8 @@
 
 <script>
 import { defineComponent } from "vue";
-import { DataSet, DataView } from "vis-data/esnext";
-import { Graph2d } from "vis-timeline/esnext";
+import { DataSet, DataView } from "vis-data";
+import { Graph2d } from "vis-timeline";
 import { mountVisData, translateEvent } from "./utils";
 
 export default defineComponent({

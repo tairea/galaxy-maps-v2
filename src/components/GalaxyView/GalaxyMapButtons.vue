@@ -3,6 +3,7 @@
     <div class="d-inline-flex">
       <!-- SHOW MISSIONS (All Users) -->
       <div
+        v-if="!hideShowMissions"
         class="mapButton"
         :class="{
           active: showMissions,
@@ -139,6 +140,7 @@ export default {
     changeInPositions: { default: false },
     nodePositionsChangeLoading: { default: false },
     showMissions: { default: false },
+    hideShowMissions: { default: false },
     isTeacher: { default: false },
     course: { default: null },
   },

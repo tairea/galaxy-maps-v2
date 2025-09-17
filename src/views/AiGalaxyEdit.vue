@@ -471,15 +471,12 @@
             :loading="loading"
             :disabled="disabled"
             :active-galaxy-items="activeGalaxyItems"
-            :active-mission-items="activeMissionItems"
             :chip-display-names="chipDisplayNames"
-            :mission-chip-display-names="missionChipDisplayNames"
             :course-id="courseId"
             :has-unsaved-changes="hasUnsavedChanges"
             :value="galaxyRefineUserInput"
             @input="galaxyRefineUserInput = $event"
             @remove-chip="removeChip"
-            @remove-mission-chip="removeMissionChip"
             @generate-again="generateGalaxyMapAgain()"
             @refine="refineGalaxyMap()"
             @save-new="saveGalaxyToDB"
@@ -490,41 +487,17 @@
     </div>
 
     <!--==== Right section ====-->
-    <transition name="slide-right-panel">
-      <MissionOverviewEdit
-        :show="missionOverviewEditShow"
-        :selected-planet-data="selectedPlanetData"
-        :mission-path="activeMissionPath"
-        :is-mobile="isMobile"
-        @close="handleMissionPanelClose"
-        @cancel-edit="handleMissionEditCanceled"
-        @mission-editing-state-change="missionEditingStateChanged"
-        @update-mission="handleMissionUpdate"
-      >
-        <template #right-panel>
-          <RefineWithAiPrompter
-            :is-mobile="isMobile"
-            :dark="dark"
-            :loading="loading"
-            :disabled="disabled"
-            :active-galaxy-items="activeGalaxyItems"
-            :active-mission-items="activeMissionItems"
-            :chip-display-names="chipDisplayNames"
-            :mission-chip-display-names="missionChipDisplayNames"
-            :course-id="courseId"
-            :has-unsaved-changes="hasUnsavedChanges"
-            :value="galaxyRefineUserInput"
-            @input="galaxyRefineUserInput = $event"
-            @remove-chip="removeChip"
-            @remove-mission-chip="removeMissionChip"
-            @generate-again="generateGalaxyMapAgain()"
-            @refine="refineGalaxyMap()"
-            @save-new="saveGalaxyToDB"
-            @open-layout-dialog="showLayoutDialog = true"
-          />
-        </template>
-      </MissionOverviewEdit>
-    </transition>
+    <MissionOverviewEdit
+      :show="missionOverviewEditShow"
+      :selected-planet-data="selectedPlanetData"
+      :mission-path="activeMissionPath"
+      :is-mobile="isMobile"
+      @close="handleMissionPanelClose"
+      @cancel-edit="handleMissionEditCanceled"
+      @mission-editing-state-change="missionEditingStateChanged"
+      @update-mission="handleMissionUpdate"
+      @refine-mission="handleRefineMissionFromEditor"
+    />
 
     <!-- Total Tokens -->
     <div class="token-container" v-if="!isMobile">
@@ -783,7 +756,6 @@ export default {
       transformedStarDetails: [],
       expandedNodes: [],
       activeGalaxyItems: [],
-      activeMissionItems: [],
       treeviewActiveItems: {}, // Track active items for each treeview
       updateTimeout: null, // Debounce updates to prevent rapid toggling
       isPlanetsCollapsed: false, // Track if planets are collapsed
@@ -1069,7 +1041,6 @@ export default {
         // Clear any planet highlight and reset colors
         this.clearPlanetHighlight();
         this.updatePlanetColors();
-        this.activeMissionItems = [];
         this.activeMissionPath = null;
         this.taskEditingStarIndex = null;
         this.taskEditingPlanetIndex = null;
@@ -1204,13 +1175,6 @@ export default {
       });
       return names;
     },
-    missionChipDisplayNames() {
-      const names = {};
-      this.activeMissionItems.forEach((item) => {
-        names[item] = this.getMissionChipDisplayName(item);
-      });
-      return names;
-    },
     // Computed property to get selected planet data for right section
     selectedPlanetData() {
       if (!this.taskEditing || !this.activeMissionPath) {
@@ -1299,6 +1263,20 @@ export default {
     },
   },
   methods: {
+    handleRefineMissionFromEditor({ prompt, context, missionPath }) {
+      // Use existing refine flow with mission-targeted items
+      this.galaxyRefineUserInput = prompt || this.galaxyRefineUserInput;
+      // Merge with any existing galaxy selections
+      const activeItems = [...new Set([...(this.activeGalaxyItems || []), ...items])];
+
+      // Trigger refine with targeted items by temporarily overriding selections
+      const original = this.activeGalaxyItems;
+      this.activeGalaxyItems = activeItems;
+      this.refineGalaxyMap().finally(() => {
+        // restore to avoid unintended UI state
+        this.activeGalaxyItems = original;
+      });
+    },
     // Estimate content height based on text length and structure
     estimateContentHeight(content) {
       if (!content) return 0;
@@ -1636,27 +1614,6 @@ export default {
           this.$set(this.treeviewActiveItems, starIndex, updatedActiveItems);
         }
       }
-    },
-    addActiveMissionItem(item) {
-      if (!item) return;
-      if (!this.activeMissionItems.includes(item)) {
-        this.activeMissionItems = [...this.activeMissionItems, item];
-      }
-    },
-    removeMissionChip(item) {
-      this.activeMissionItems = this.activeMissionItems.filter((i) => i !== item);
-    },
-    getMissionChipDisplayName(item) {
-      const { starIndex, planetIndex } = this.parseGalaxyPath(item);
-      const star = this.aiGeneratedGalaxyMap?.stars?.[starIndex];
-      const planet = star?.planets?.[planetIndex];
-      if (planet && star) {
-        return `🎯 ${star.title} › ${planet.title}`;
-      }
-      if (planet) {
-        return `🎯 ${planet.title}`;
-      }
-      return item;
     },
     parseGalaxyPath(path) {
       if (!path || typeof path !== "string") {
@@ -2447,6 +2404,7 @@ export default {
 
         // Add the new active items from this treeview
         this.activeGalaxyItems = [...filteredExistingItems, ...newValue];
+        console.log("activeGalaxyItems: ", this.activeGalaxyItems);
 
         this.updateTimeout = null;
       }, 100);
@@ -2461,86 +2419,78 @@ export default {
 
       const refinementSystemPrompt = `
 
-      You are a Galaxy Map refiner assistant. Your task is to update specific parts of an existing Galaxy Map JSON object based on the user's request.
+     You are a Galaxy Map Refiner Assistant. Your role is to update specific portions of an existing Galaxy Map JSON object based on user requests.
+Begin with a concise checklist (3-7 bullets) of what you will do; keep items conceptual, not implementation-level.
+The Galaxy Map is a hierarchical, structured learning roadmap, with this structure:
+- **Stars**: Major milestones
+- **Planets**: Atomic, mission-focused wins (15–60 minutes each) within a star
+- **Mission Instructions**: Detailed action guides for each planet, including:
+- **Intro**: Why this mission matters and its context in the journey.
+- **Steps**: Each step includes discrete **tasks** (actionable), optional just-in-time micro-teach for new concepts, and a **checkpoint** for motivation.
+- **Outro**: Recap the win and preview what's next.
+### Galaxy Map JSON Format Example
 
-The Galaxy Map is a structured learning roadmap with the hierarchy:
-- **Stars** → major milestones
-- **Planets** → small, focused wins (15–60 min) within a Star
-- **Mission Instructions** → intro, steps (with tasks and checkpoints), outro; include just-in-time micro-teach when new concepts appear.
-
-### Galaxy Map Format (JSON):
 {
-  "status": "journey_ready",
-  "title": "Journey Title",
-  "description": "Brief description of the overall journey",
-  "stars": [
-    {
-      "title": "1: Title (Star Name)",
-      "description": "Brief description of this star",
-      "planets": [
-        {
-          "title": "1.1: Title (Planet Name)",
-          "description": "Brief description of this win",
-          "missionInstructions": {
-            "intro": "Motivating intro explaining what they will do, why it matters, and how it connects to the journey",
-            "steps": [
-              {
-                "title": "Step 1: Step Name",
-                "tasks": [
-                  { "taskContent": "Detailed task instruction in markdown (may include short concept teaching if introducing a new idea)" }
-                ],
-                "checkpoint": "Motivating progress sentence after this step"
-              }
-            ],
-            "outro": "Motivating recap of what was achieved and what's next"
-          }
-        }
-      ]
-    }
-  ]
+"status": "journey_ready",
+"title": "Journey Title",
+"description": "Brief description of the overall journey",
+"stars": [
+{
+"title": "1: Title (Star Name)",
+"description": "Description of this star",
+"planets": [
+{
+"title": "1.1: Title (Planet Name)",
+"description": "Brief description of this win",
+"missionInstructions": {
+"intro": "Motivation and context",
+"steps": [
+{
+"title": "Step 1: Step Name",
+"tasks": [
+{ "taskContent": "Markdown instruction (with micro-teach where needed)" }
+],
+"checkpoint": "Progress checkpoint message"
+}
+],
+"outro": "Recap and transition message"
+}
+}
+]
+}
+]
 }
 
-### Your Responsibilities:
-1. Understand the user's request — they may want to change the content, structure, or sequence of Stars, Missions, Mission Instructions, Steps, or Tasks.
-2. You will be provided:
-   - **galaxy_map**: the full current Galaxy Map object.
-   - **items_user_wants_changed**: an array of **zero-indexed paths** to the exact elements in the Galaxy Map that should be modified.
-     - Example paths:
-       - "star[0]" → stars[0]
-       - "star[0].planet[1]" → stars[0].planets[1]
-3. Only modify the items at the specified paths. Preserve everything else in the Galaxy Map exactly as-is.
-4. Always insert the updates into the correct location in the nested structure.
-5. After making changes, maintain correct numbering in titles (Stars are 1-indexed like "1:", Missions are "1.1:").
-6. Return the **entire** updated Galaxy Map object, not just the modified parts.
+### Responsibilities
+1. Analyze the user's request (add, modify, or reorder stars, planets, or mission instructions).
+2. Receive an input object with:
+- **galaxy_map**: The current full Galaxy Map JSON.
+- **items_user_wants_changed**: List of zero-indexed object paths (e.g., "stars[0]", "stars[1].planets[2]") targeted for modification.
+- **user_request**: Instructions detailing the intended changes.
+3. Retrieve the content at each specified path for modification.
+4. Update the target content based on the user request, ensuring the Galaxy Map’s structure and goals are maintained.
+5. Return only the modified parts, each paired with its zero-indexed path, to enable merging back into the main Galaxy Map.
+6. If you add or remove items (such as splitting/merging/renumbering arrays), return all affected arrays with their new contents and correct paths.
+7. If any user-specified path doesn’t exist, return an error detailing which paths are invalid.
 
-**Planet scope + motivation rules (must enforce)**
-   - Each Planet is an **atomic win (15–60 min)**. If a planet is overloaded, **split it into additional planets** (in the same Star) and **renumber that Star's planets** accordingly.
-   - Mission Instructions must include:
-     - **Intro** (what/why/how it connects),
-     - **Steps** with **tasks** (each task is one discrete action),
-     - **Checkpoint** after each step,
-     - **Outro** (celebrate win + what's next).
-   - **Micro-teach**: When a new concept/term/tool appears for the first time in the journey, add a 1–3 sentence explanation *in the task where it's first used*. Keep it practical and just-in-time. If it was taught earlier, only add a brief reminder.
+After each edit or structural change, briefly validate the update’s success by summarizing the change in 1–2 lines. If the validation fails (e.g., constraints or user intent are not satisfied), self-correct before proceeding.
 
- **Quality constraints**
-   - Keep changes **minimal and surgical** unless the user asks for broader restructuring.
-   - Ensure every edited Mission remains scope-matched (15–60 min), motivating, and necessary for its Star.
-   - If the user's request would cause scope creep, **split missions** rather than bloating instructions.
-   - Prefer clear, concise phrasing and remove redundancy.
+#### Planet Scope & Motivation Rules
+- Each Planet must be an atomic win that fits in 15–60 minutes. If a planet is overloaded, split it into additional planets within the same star, renumbering as needed.
+- Mission Instructions must always include: Intro, Steps (with Tasks and Checkpoints), and Outro.
+- **Micro-teach**: Explain any new concept/term/tool at its first appearance (1–3 sentences, practical); if already taught, use a brief reminder.
 
-### 🧾 Input Structure:
+#### Quality Constraints
+- Make minimal, surgical edits unless the user asks for broad changes.
+- Avoid scope creep: split content if needed rather than expanding instructions excessively.
+- Keep language motivating, clear, and concise. Remove redundancy.
+
+### Input Structure
 {
-  "galaxy_map": { ... },
-  "items_user_wants_changed": ["star[0]", "star[0].planet[1]"],
-  "user_request": "User's instruction for the changes"
+"galaxy_map": { ... },
+"items_user_wants_changed": [ "stars[0]", "stars[0].planets[1]" ],
+"user_request": "User's instructions"
 }
-
-### Output Requirements:
-- A complete Galaxy Map JSON object with only the targeted items changed.
-- Preserve the rest of the map exactly.
-- Updates must be consistent with the Galaxy Map format above.
-
-
 `;
 
       // 1.refine system prompt
@@ -2559,7 +2509,7 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
       inputMessages.push({ role: "user", content: "galaxy_map: " + galaxyMapJson });
 
       // 3. selected items
-      const activeItems = [...new Set([...this.activeGalaxyItems, ...this.activeMissionItems])];
+      const activeItems = [...new Set([...this.activeGalaxyItems])];
       const activeItemsString = activeItems.join("\n");
       if (activeItems.length > 0) {
         inputMessages.push({
@@ -3769,7 +3719,6 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
     handleMissionPanelClose() {
       this.missionOverviewEditShow = false;
       this.taskEditing = false;
-      this.activeMissionItems = [];
       this.activeMissionPath = null;
       this.taskEditingStarIndex = null;
       this.taskEditingPlanetIndex = null;
@@ -3893,7 +3842,6 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
             : null;
       this.taskEditingPlanetIndex = parsedPlanetIndex != null ? parsedPlanetIndex : null;
       this.activeMissionPath = planetId;
-      this.addActiveMissionItem(planetId);
 
       // Update treeview active items to show the selected planet
       this.treeviewActiveItems = {
@@ -4045,7 +3993,6 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
           this.taskEditingStarIndex = starIndex;
           this.taskEditingPlanetIndex = planetIndex;
           this.activeMissionPath = firstValid;
-          this.addActiveMissionItem(firstValid);
         } else {
           this.activeMissionPath = null;
         }
@@ -4917,11 +4864,11 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
   }
 }
 
-.task-editing {
-  ::v-deep .v-treeview-node__root {
-    // display: none !important;
-  }
-}
+// .task-editing {
+//   ::v-deep .v-treeview-node__root {
+//     display: none !important;
+//   }
+// }
 
 .token-container {
   position: absolute;
@@ -4971,6 +4918,7 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
 }
 
 #right-section {
+  position: relative; // placeholder to avoid empty ruleset warning
   // width: 50%;
   // height: 100%;
   // z-index: 3;
@@ -5950,16 +5898,5 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
       }
     }
   }
-}
-#app .slide-right-panel-enter-active,
-#app .slide-right-panel-leave-active {
-  transition:
-    transform 0.25s ease,
-    opacity 0.25s ease;
-}
-#app .slide-right-panel-enter,
-#app .slide-right-panel-leave-to {
-  transform: translateX(100%);
-  opacity: 0;
 }
 </style>

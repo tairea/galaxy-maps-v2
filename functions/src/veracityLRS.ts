@@ -690,6 +690,7 @@ export const getStudentCoursesDataXAPIQuery = async (personId: string) => {
   return sanitisedCourses;
 };
 
+// only gets "started" and "completed" statements
 export const getCohortCoursesDataXAPIQuery = async (cohortId: string) => {
   const cohortDoc = await db.collection("cohorts").doc(cohortId).get();
   const cohortData = cohortDoc.data();

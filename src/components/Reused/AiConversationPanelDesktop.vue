@@ -232,7 +232,16 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
           voice: "coral",
         });
         this.transport = new OpenAIRealtimeWebRTC();
-        const sessionConfig = { model: "gpt-realtime", transport: this.transport };
+        const sessionConfig = {
+          model: "gpt-realtime",
+          transport: this.transport,
+          turnDetection: {
+            type: "semantic_vad",
+            eagerness: "low",
+            createResponse: true,
+            interruptResponse: false,
+          },
+        };
         this.session = new RealtimeSession(this.agent, sessionConfig);
         this.setupEventListeners();
         await this.connect();

@@ -10,6 +10,7 @@ import AllStudentsView from "@/views/AllStudentsView.vue";
 import UserDashboard from "@/views/UserDashboard.vue";
 import AiGalaxyEdit from "@/views/AiGalaxyEdit.vue";
 import MapDebug from "@/views/MapDebug.vue";
+import CohortViewV2 from "@/views/CohortViewV2.vue";
 // import SetInitialPassword from "@/views/SetInitialPassword.vue";
 // import Login from "@/components/Login.vue";
 // import VerifyEmail from "@/views/VerifyEmail.vue";
@@ -87,7 +88,7 @@ const routes = [
       {
         path: "squad/:cohortId/:cohortName",
         name: "CohortView",
-        component: CohortView,
+        component: CohortViewV2, // CohortView
         meta: {
           authRequired: true,
         },

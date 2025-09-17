@@ -20,8 +20,8 @@ const firebaseApp = firebase.initializeApp(firebaseConfig);
 export const db = firebaseApp.firestore();
 // Initialize Firestore Storage
 export const storage = firebaseApp.storage();
-// Intialize Firebase Cloud Functions
-export const functions = firebaseApp.functions();
+// Intialize Firebase Cloud Functions and set region explicitly to avoid CORS/redirects
+export const functions = firebaseApp.functions("us-central1");
 
 // Get a reference to the database service
 export const database = firebase.database();

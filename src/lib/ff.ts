@@ -655,6 +655,7 @@ export const generateGalaxyMap = async (
 // Unified AI Galaxy Map Generation (Stars + Missions + Mission Instructions)
 export const generateUnifiedGalaxyMap = async (
   description: string,
+  attachedFiles?: Array<{ name: string; mimeType: string; base64: string }>,
 ): Promise<{
   success: boolean;
   galaxyMap: any;
@@ -673,11 +674,25 @@ export const generateUnifiedGalaxyMap = async (
   };
   responseId: string;
 }> => {
-  const data = { description };
+  const data = { description, attachedFiles } as Record<string, any>;
   const generateUnifiedGalaxyMapFunction = functions.httpsCallable("generateUnifiedGalaxyMap", {
     timeout: 540000,
   });
   const result = await generateUnifiedGalaxyMapFunction(data);
+  return result.data;
+};
+
+// Generate image for a Galaxy Map (separate lightweight call)
+export const generateGalaxyImage = async (
+  title: string,
+  description: string,
+): Promise<{
+  success: boolean;
+  image: { name: string; url: string };
+}> => {
+  const data = { title, description };
+  const fn = functions.httpsCallable("generateGalaxyImage", { timeout: 300000 });
+  const result = await fn(data);
   return result.data;
 };
 

@@ -222,6 +222,14 @@ export default {
     isMobile() {
       this.updateUserBarVisibility();
     },
+    mobileInfoMinimized(min) {
+      // Force mini state when cohort info is minimized; restore defaults when expanded
+      if (min) {
+        this.miniNavMenu = true;
+      } else {
+        this.updateUserBarVisibility();
+      }
+    },
   },
   async mounted() {
     // === BINDS UESFUL FOR ALL COMPONENTS
@@ -234,7 +242,7 @@ export default {
     this.updateUserBarVisibility();
   },
   computed: {
-    ...mapState(useRootStore, ["person", "user"]),
+    ...mapState(useRootStore, ["person", "user", "mobileInfoMinimized"]),
     isMobile() {
       return this.$vuetify.breakpoint.smAndDown;
     },
@@ -272,11 +280,10 @@ export default {
         this.showMenu = true;
       }
 
-      if (isMiniRoute || this.isMobile) {
-        this.miniNavMenu = true;
-      } else {
-        this.miniNavMenu = false;
-      }
+      // Default mini state based on route/device
+      const defaultMini = isMiniRoute || this.isMobile;
+      // If cohort info is minimized, force mini state on
+      this.miniNavMenu = this.mobileInfoMinimized || defaultMini;
     },
     openMobileDialog() {
       this.mobileUserDialog = true;
@@ -329,13 +336,10 @@ export default {
       this.uploading = true;
       console.log("selectedfile: ", this.selectedFile);
       // ceate a storage ref
-      const storageRef = storage.ref(
-        "avatar-images/" +
-          this.person.firstname +
-          this.person.lastname +
-          "-" +
-          this.selectedFile.name,
-      );
+      const namePart = (this.person.firstName || "") + (this.person.lastName || "");
+      const fallback = this.person?.id ? `${this.person.id}-${Date.now()}` : `${Date.now()}`;
+      const safePrefix = namePart || fallback;
+      const storageRef = storage.ref(`avatar-images/${safePrefix}-${this.selectedFile.name}`);
 
       // upload a file
       const uploadTask = storageRef.put(this.selectedFile);

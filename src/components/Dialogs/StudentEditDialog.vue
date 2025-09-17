@@ -379,13 +379,11 @@ export default {
     },
     storeImage() {
       this.uploading = true;
-      const storageRef = storage.ref(
-        "avatar-images/" +
-          this.profile.firstName +
-          this.profile.lastName +
-          "-" +
-          this.selectedFile.name,
-      );
+      const namePart = (this.profile.firstName || "") + (this.profile.lastName || "");
+      const fallbackId = this.person?.id || this.profile?.id;
+      const fallback = fallbackId ? `${fallbackId}-${Date.now()}` : `${Date.now()}`;
+      const safePrefix = namePart || fallback;
+      const storageRef = storage.ref(`avatar-images/${safePrefix}-${this.selectedFile.name}`);
 
       const uploadTask = storageRef.put(this.selectedFile);
 

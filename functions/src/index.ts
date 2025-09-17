@@ -90,6 +90,7 @@ import {
   generateGalaxyMapAgainHttpsEndpoint,
   generateInstructionsForMissionHttpsEndpoint,
   generateUnifiedGalaxyMapHttpsEndpoint,
+  generateGalaxyImageHttpsEndpoint,
   refineGalaxyMapHttpsEndpoint,
   generateSquadReportHttpsEndpoint,
 } from "./openAIActions.js";
@@ -199,6 +200,7 @@ export {
   generateGalaxyMapAgainHttpsEndpoint as generateGalaxyMapAgain,
   generateInstructionsForMissionHttpsEndpoint as generateInstructionsForMission,
   generateUnifiedGalaxyMapHttpsEndpoint as generateUnifiedGalaxyMap,
+  generateGalaxyImageHttpsEndpoint as generateGalaxyImage,
   refineGalaxyMapHttpsEndpoint as refineGalaxyMap,
   generateSquadReportHttpsEndpoint as generateSquadReport,
   generateRealtimeTokenHttpsEndpoint as generateRealtimeToken,

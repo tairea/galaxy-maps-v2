@@ -9,16 +9,17 @@
       </div>
 
       <div v-if="selectedPlanetData" class="selected-planet-info">
-        <template v-if="!isEditing">
-          <p class="missionAccent--text text-h2">Mission:</p>
+        <template>
+          <p class="missionAccent--text text-h2 mission-title" @click="selectAllMissionItems">
+            Mission:
+          </p>
 
           <div
             class="planet-header mission-section"
+            :class="{ 'active-item': isActiveMissionItem('title & description') }"
             tabindex="0"
             role="button"
-            @click="startEditing('planet')"
-            @keyup.enter.prevent="startEditing('planet')"
-            @keyup.space.prevent="startEditing('planet')"
+            @click="startEditing('title & description')"
           >
             <span class="planet-emoji">🪐</span>
             <div>
@@ -30,11 +31,10 @@
           <div
             v-if="selectedPlanetData.missionInstructions"
             class="section-card intro-card mission-section"
+            :class="{ 'active-item': isActiveMissionItem('intro') }"
             tabindex="0"
             role="button"
             @click="startEditing('intro')"
-            @keyup.enter.prevent="startEditing('intro')"
-            @keyup.space.prevent="startEditing('intro')"
           >
             <h4 class="section-title text-h5">Intro</h4>
             <p class="section-text">{{ selectedPlanetData.missionInstructions.intro }}</p>
@@ -44,11 +44,10 @@
             v-for="(step, index) in selectedPlanetData.missionInstructions.steps || []"
             :key="`step-${index}`"
             class="step-card mission-section"
+            :class="{ 'active-item': isActiveMissionItem('steps[' + index + ']') }"
             tabindex="0"
             role="button"
-            @click="startEditing({ type: 'step', index })"
-            @keyup.enter.prevent="startEditing({ type: 'step', index })"
-            @keyup.space.prevent="startEditing({ type: 'step', index })"
+            @click="startEditing('steps[' + index + ']')"
           >
             <div class="step-header">
               <h4 class="step-title text-h5">{{ step.title }}</h4>
@@ -78,129 +77,13 @@
               selectedPlanetData.missionInstructions && selectedPlanetData.missionInstructions.outro
             "
             class="section-card outro-card mission-section"
+            :class="{ 'active-item': isActiveMissionItem('outro') }"
             tabindex="0"
             role="button"
             @click="startEditing('outro')"
-            @keyup.enter.prevent="startEditing('outro')"
-            @keyup.space.prevent="startEditing('outro')"
           >
             <h4 class="section-title text-h5">Outro</h4>
             <p class="section-text">{{ selectedPlanetData.missionInstructions.outro }}</p>
-          </div>
-        </template>
-
-        <template v-else>
-          <div class="edit-form">
-            <p class="missionAccent--text text-h4 mb-4">Edit Mission Content</p>
-
-            <v-text-field
-              ref="planetTitle"
-              v-model="formState.title"
-              outlined
-              dense
-              label="Mission title"
-              color="missionAccent"
-            />
-
-            <v-textarea
-              v-model="formState.description"
-              outlined
-              auto-grow
-              rows="2"
-              label="Mission description"
-              color="missionAccent"
-            />
-
-            <v-textarea
-              ref="introField"
-              v-model="formState.missionInstructions.intro"
-              outlined
-              auto-grow
-              rows="3"
-              label="Intro"
-              color="missionAccent"
-            />
-
-            <div class="steps-editor">
-              <div
-                v-for="(step, index) in formState.missionInstructions.steps"
-                :key="`edit-step-${index}`"
-                class="step-editor-card"
-              >
-                <div class="step-editor-header">
-                  <v-text-field
-                    :ref="`stepTitle-${index}`"
-                    v-model="step.title"
-                    outlined
-                    dense
-                    label="Step title"
-                    color="missionAccent"
-                  />
-                  <v-btn icon small color="error" @click="removeStep(index)">
-                    <v-icon small>{{ mdiDelete }}</v-icon>
-                  </v-btn>
-                </div>
-
-                <div class="tasks-editor">
-                  <div
-                    v-for="(task, taskIndex) in step.tasks"
-                    :key="`edit-task-${index}-${taskIndex}`"
-                    class="task-editor"
-                  >
-                    <v-textarea
-                      v-model="task.taskContent"
-                      outlined
-                      auto-grow
-                      rows="2"
-                      :label="`Task ${taskIndex + 1}`"
-                      color="missionAccent"
-                    />
-                    <v-btn icon x-small color="error" @click="removeTaskFromStep(index, taskIndex)">
-                      <v-icon small>{{ mdiDelete }}</v-icon>
-                    </v-btn>
-                  </div>
-                  <v-btn
-                    outlined
-                    small
-                    color="galaxyAccent"
-                    class="mt-2"
-                    @click="addTaskToStep(index)"
-                  >
-                    <v-icon left small>{{ mdiPlus }}</v-icon>
-                    Add Task
-                  </v-btn>
-                </div>
-
-                <v-textarea
-                  v-model="step.checkpoint"
-                  outlined
-                  auto-grow
-                  rows="2"
-                  label="Checkpoint"
-                  color="missionAccent"
-                />
-              </div>
-
-              <v-btn outlined small color="galaxyAccent" class="mt-4" @click="addStep">
-                <v-icon left small>{{ mdiPlus }}</v-icon>
-                Add Step
-              </v-btn>
-            </div>
-
-            <v-textarea
-              ref="outroField"
-              v-model="formState.missionInstructions.outro"
-              outlined
-              auto-grow
-              rows="3"
-              label="Outro"
-              color="missionAccent"
-            />
-
-            <div class="form-actions">
-              <v-btn outlined color="error" @click="cancelEdit">Cancel</v-btn>
-              <v-btn color="missionAccent" dark @click="submitEdit">Update Mission</v-btn>
-            </div>
           </div>
         </template>
       </div>
@@ -211,16 +94,38 @@
     </div>
 
     <div class="right-side-container" :class="{ expanded: isEditing }">
-      <slot name="right-panel"></slot>
+      <slot name="right-panel">
+        <RefineWithAiPrompter
+          v-if="isEditing"
+          v-model="refinePrompt"
+          :is-mobile="isMobile"
+          :dark="dark"
+          :loading="false"
+          :disabled="!activeMissionItems.length"
+          :active-galaxy-items="activeMissionItems"
+          :chip-display-names="chipDisplayNames"
+          :mission-edit-mode="true"
+          :show-chips="true"
+          :show-legend="true"
+          :show-generate-again="false"
+          :show-refine="false"
+          :show-save-buttons="false"
+          @remove-chip="removeActiveMissionItem"
+          @refine-mission="emitRefineMission"
+          @cancel-edit="handleCancelEdit"
+        />
+      </slot>
     </div>
   </div>
 </template>
 
 <script>
-import { mdiArrowLeftBold, mdiPlus, mdiDelete } from "@mdi/js";
+import { mdiArrowLeftBold } from "@mdi/js";
+import RefineWithAiPrompter from "@/components/Reused/RefineWithAiPrompter.vue";
 
 export default {
   name: "MissionOverviewEdit",
+  components: { RefineWithAiPrompter },
   props: {
     selectedPlanetData: {
       type: Object,
@@ -240,20 +145,57 @@ export default {
       default: false,
     },
   },
-  emits: ["close", "update-mission", "cancel-edit", "mission-editing-state-change"],
+  emits: [
+    "close",
+    "update-mission",
+    "cancel-edit",
+    "mission-editing-state-change",
+    "refine-mission",
+  ],
   data() {
     return {
       mdiArrowLeftBold,
-      mdiPlus,
-      mdiDelete,
       isEditingInternal: false,
       editTarget: null,
-      formState: null,
+      refinePrompt: "",
+      activeMissionItems: [],
     };
   },
   computed: {
     isEditing() {
       return this.isEditingInternal;
+    },
+    chipDisplayNames() {
+      const names = {};
+      this.activeMissionItems.forEach((item) => {
+        if (item.includes(".missionInstructions.")) {
+          const target = item.split(".missionInstructions.")[1];
+          if (target === "intro") {
+            names[item] = "Mission Intro";
+          } else if (target === "outro") {
+            names[item] = "Mission Outro";
+          } else if (target === "title") {
+            names[item] = "Mission Title";
+          } else if (target === "description") {
+            names[item] = "Mission Description";
+          } else if (target.startsWith("steps[")) {
+            const stepIndex = target.match(/steps\[(\d+)\]/)?.[1];
+            if (stepIndex !== undefined) {
+              const step =
+                this.selectedPlanetData?.missionInstructions?.steps?.[parseInt(stepIndex)];
+              // Use just the step title if it exists, otherwise show "Step X"
+              names[item] = step?.title || `Step ${parseInt(stepIndex) + 1}`;
+            }
+          }
+        } else {
+          // This is the planet path (title & description)
+          names[item] = "Title & Description";
+        }
+      });
+      return names;
+    },
+    dark() {
+      return this.$vuetify.theme.isDark;
     },
   },
   watch: {
@@ -262,17 +204,12 @@ export default {
       handler(newVal) {
         if (!newVal) {
           this.isEditingInternal = false;
-          this.formState = null;
           return;
         }
-        this.formState = this.createFormState(newVal);
       },
     },
     isEditing(newValue) {
       this.$emit("mission-editing-state-change", newValue);
-      if (!newValue && this.selectedPlanetData) {
-        this.formState = this.createFormState(this.selectedPlanetData);
-      }
     },
   },
   methods: {
@@ -287,103 +224,99 @@ export default {
         this.isEditingInternal = true;
       }
       this.editTarget = target;
-      if (!this.formState) {
-        this.formState = this.createFormState(this.selectedPlanetData);
-      }
-      this.$nextTick(() => {
-        const refName = this.getRefNameForTarget(target);
-        const element = refName && this.$refs[refName];
-        if (element && element.focus) {
-          element.focus();
-        }
-      });
+      console.log("startEditing target: ", target);
+      this.trackActiveMissionItem(target);
     },
-    getRefNameForTarget(target) {
-      if (!target) return null;
-      if (target === "planet") return "planetTitle";
-      if (target === "intro") return "introField";
-      if (target === "outro") return "outroField";
-      if (typeof target === "object" && target.type === "step") {
-        return `stepTitle-${target.index}`;
-      }
-      return null;
-    },
-    cancelEdit() {
-      this.isEditingInternal = false;
-      this.editTarget = null;
-      this.formState = this.createFormState(this.selectedPlanetData);
-      this.$emit("cancel-edit");
-    },
-    submitEdit() {
-      if (!this.formState || !this.missionPath) return;
-      const sanitizedSteps = this.formState.missionInstructions.steps.map((step) => ({
-        title: step.title || "",
-        checkpoint: step.checkpoint || "",
-        tasks: (step.tasks || []).map((task) => ({
-          taskContent: task.taskContent || "",
-        })),
-      }));
+    trackActiveMissionItem(target) {
+      if (!target) return;
+      // Build full object notation path: star[x].planet[y].missionInstructions.target
+      const basePath = this.selectedPlanetData?.id || this.missionPath;
+      if (!basePath) return;
 
-      const payload = {
-        missionPath: this.missionPath,
-        planet: {
-          title: this.formState.title || "",
-          description: this.formState.description || "",
-          missionInstructions: {
-            intro: this.formState.missionInstructions.intro || "",
-            outro: this.formState.missionInstructions.outro || "",
-            steps: sanitizedSteps,
-          },
-        },
-      };
-
-      this.$emit("update-mission", payload);
-      this.isEditingInternal = false;
-      this.editTarget = null;
-    },
-    createFormState(planet) {
-      if (!planet) return null;
-      const mission = planet.missionInstructions || {};
-      return {
-        title: planet.title || "",
-        description: planet.description || "",
-        missionInstructions: {
-          intro: mission.intro || "",
-          outro: mission.outro || "",
-          steps: (mission.steps || []).map((step) => ({
-            title: step.title || "",
-            checkpoint: step.checkpoint || "",
-            tasks: (step.tasks || []).map((task) => ({
-              taskContent: task.taskContent || "",
-            })),
-          })),
-        },
-      };
-    },
-    addStep() {
-      if (!this.formState) return;
-      this.formState.missionInstructions.steps.push({
-        title: "",
-        checkpoint: "",
-        tasks: [{ taskContent: "" }],
-      });
-    },
-    removeStep(index) {
-      if (!this.formState) return;
-      this.formState.missionInstructions.steps.splice(index, 1);
-    },
-    addTaskToStep(index) {
-      if (!this.formState) return;
-      this.formState.missionInstructions.steps[index].tasks.push({ taskContent: "" });
-    },
-    removeTaskFromStep(stepIndex, taskIndex) {
-      if (!this.formState) return;
-      const tasks = this.formState.missionInstructions.steps[stepIndex].tasks;
-      if (tasks.length > 1) {
-        tasks.splice(taskIndex, 1);
+      let keys = [];
+      if (target === "title & description") {
+        // Add both title and description as separate items
+        keys = [
+          `${basePath}.missionInstructions.title`,
+          `${basePath}.missionInstructions.description`,
+        ];
       } else {
-        tasks[0].taskContent = "";
+        keys = [`${basePath}.missionInstructions.${target}`];
       }
+
+      keys.forEach((key) => {
+        if (!this.activeMissionItems.includes(key)) this.activeMissionItems.push(key);
+      });
+      console.log("activeMissionItems: ", this.activeMissionItems);
+    },
+    removeActiveMissionItem(key) {
+      this.activeMissionItems = this.activeMissionItems.filter((k) => k !== key);
+      console.log("activeMissionItems: ", this.activeMissionItems);
+    },
+    isActiveMissionItem(target) {
+      if (!target) return false;
+      const basePath = this.selectedPlanetData?.id || this.missionPath;
+      if (!basePath) return false;
+
+      if (target === "title & description") {
+        // Check if either title or description is active
+        return (
+          this.activeMissionItems.includes(`${basePath}.missionInstructions.title`) ||
+          this.activeMissionItems.includes(`${basePath}.missionInstructions.description`)
+        );
+      } else {
+        return this.activeMissionItems.includes(`${basePath}.missionInstructions.${target}`);
+      }
+    },
+    selectAllMissionItems() {
+      if (!this.selectedPlanetData) return;
+      const basePath = this.selectedPlanetData?.id || this.missionPath;
+      if (!basePath) return;
+
+      // Enable expanded mode
+      this.isEditingInternal = true;
+      this.editTarget = "all";
+
+      // Clear existing selections
+      this.activeMissionItems = [];
+
+      // Add all mission items
+      const allItems = [
+        `${basePath}.missionInstructions.title`,
+        `${basePath}.missionInstructions.description`,
+        `${basePath}.missionInstructions.intro`,
+        `${basePath}.missionInstructions.outro`,
+      ];
+
+      // Add all steps
+      const steps = this.selectedPlanetData?.missionInstructions?.steps || [];
+      steps.forEach((_, index) => {
+        allItems.push(`${basePath}.missionInstructions.steps[${index}]`);
+      });
+
+      this.activeMissionItems = allItems;
+      console.log("Selected all mission items: ", this.activeMissionItems);
+    },
+    handleCancelEdit() {
+      // Clear all active mission items
+      this.activeMissionItems = [];
+
+      // Disable expanded state
+      this.isEditingInternal = false;
+      this.editTarget = null;
+
+      // Clear the refine prompt
+      this.refinePrompt = "";
+
+      console.log("Cancelled edit - cleared all selections");
+    },
+    emitRefineMission() {
+      const context = this.activeMissionItems;
+      this.$emit("refine-mission", {
+        prompt: this.refinePrompt,
+        context,
+        missionPath: this.missionPath,
+      });
     },
   },
 };
@@ -396,15 +329,14 @@ export default {
   z-index: 51;
   margin-left: auto;
   border-left: 1px solid var(--v-missionAccent-base);
-  padding: 20px;
+  padding: 0px 5px 0px 35px;
   overflow-y: auto;
   background-color: var(--v-background-base);
   display: flex;
   gap: 24px;
-  transition: width 0.3s ease;
   position: fixed;
   right: -50%;
-  transition: right 0.3s ease;
+  transition: all 0.3s ease;
 
   &.open {
     right: 0;
@@ -445,8 +377,12 @@ export default {
       max-width: 50%;
       display: flex;
       justify-content: center;
-      align-items: flex-start;
+      align-items: center;
       padding-right: 20px;
+      position: sticky;
+      top: 50%;
+      transform: translateY(-50%);
+      height: fit-content;
     }
   }
 
@@ -454,6 +390,16 @@ export default {
     margin-bottom: 20px;
     padding-bottom: 15px;
     border-bottom: 1px solid rgba(var(--v-missionAccent-base), 0.2);
+  }
+
+  .mission-title {
+    cursor: pointer;
+    user-select: none;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+      opacity: 0.8;
+    }
   }
 
   .selected-planet-info {
@@ -468,6 +414,10 @@ export default {
       box-shadow: 0 4px 14px color-mix(in srgb, var(--v-missionAccent-base) 80%, transparent);
       cursor: pointer;
       outline: none;
+
+      &.active-item {
+        box-shadow: 0 4px 14px color-mix(in srgb, var(--v-galaxyAccent-base) 80%, transparent);
+      }
     }
 
     .mission-section:hover,
@@ -480,15 +430,18 @@ export default {
 
     .mission-section:hover::after,
     .mission-section:focus-visible::after {
-      content: "EDIT";
+      content: "E\A D\A I\A T";
+      white-space: pre;
       position: absolute;
-      right: 12px;
+      right: 5px;
       top: 50%;
       transform: translateY(-50%);
       color: var(--v-galaxyAccent-base);
       font-weight: bold;
       font-size: 0.7rem;
-      letter-spacing: 0.35em;
+      letter-spacing: 0.1em;
+      line-height: 1.2;
+      text-align: center;
     }
 
     .planet-header {
@@ -515,53 +468,6 @@ export default {
     .section-text {
       line-height: 1.65;
       font-size: 0.92rem;
-    }
-  }
-
-  .edit-form {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-
-    .steps-editor {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .step-editor-card {
-      border: 1px solid rgba(var(--v-missionAccent-base), 0.25);
-      border-radius: 10px;
-      padding: 16px;
-      background: rgba(var(--v-missionAccent-base), 0.05);
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .step-editor-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .tasks-editor {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .task-editor {
-      display: flex;
-      gap: 8px;
-      align-items: flex-start;
-    }
-
-    .form-actions {
-      display: flex;
-      gap: 12px;
-      justify-content: flex-end;
-      margin-top: 8px;
     }
   }
 

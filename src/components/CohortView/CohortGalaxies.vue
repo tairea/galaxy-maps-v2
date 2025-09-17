@@ -56,15 +56,22 @@
             top: dot.top + 'px',
             width: dot.size + 'px',
             height: dot.size + 'px',
-            backgroundImage: "url('/avatar_placeholder.png')",
+            backgroundImage: `url('/avatar_placeholder.png')`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             border: dot.online ? '2px solid #00E676' : '1px solid rgba(0,0,0,0.4)',
           }"
           :title="dot.name || ''"
-        />
+        ></div>
       </template>
-      <!-- In-canvas tooltip replaces DOM tooltip; keep element for potential future use -->
+      <!-- DOM tooltip sits above avatars for readability -->
+      <div
+        v-if="hoveredAvatar && hoveredAvatar.name"
+        class="avatar-tooltip"
+        :style="avatarTooltipStyle"
+      >
+        {{ hoveredAvatar.name }}
+      </div>
     </div>
   </div>
 </template>
@@ -95,6 +102,7 @@ export default {
     showCourseTitles: { type: Boolean, default: true },
     activeMissionsByTopicKey: { type: Map, default: () => new Map() },
     showGlow: { type: Boolean, default: false },
+    paused: { type: Boolean, default: false },
   },
   components: {
     Network,
@@ -169,7 +177,32 @@ export default {
       return this.$vuetify.breakpoint.smAndDown;
     },
     avatarTooltipStyle() {
-      return {};
+      try {
+        if (!this.hoveredAvatar) return { display: "none" };
+        const scale = this.$refs.network?.getScale?.() || 1;
+        const baseSize = 18;
+        const size = Math.max(8, Math.min(56, Math.round(baseSize * scale)));
+        // Scale the tooltip text and padding proportionally with zoom
+        const baseFont = 12;
+        const fontSize = Math.max(10, Math.min(28, Math.round(baseFont * scale)));
+        const padY = Math.max(2, Math.round(4 * scale));
+        const padX = Math.max(4, Math.round(8 * scale));
+        const radius = Math.max(3, Math.round(4 * scale));
+        const x = this.hoveredAvatar.canvasX ?? this.hoveredAvatar.basePlanet?.x ?? 0;
+        const y = this.hoveredAvatar.canvasY ?? this.hoveredAvatar.basePlanet?.y ?? 0;
+        const dom = this.$refs.network?.canvasToDom?.({ x, y }) || { x: 0, y: 0 };
+        // Position above the avatar circle
+        const top = dom.y - size / 2 - Math.max(6, Math.round(8 * scale));
+        return {
+          left: dom.x + "px",
+          top: top + "px",
+          fontSize: fontSize + "px",
+          padding: `${padY}px ${padX}px`,
+          borderRadius: radius + "px",
+        };
+      } catch (e) {
+        return {};
+      }
     },
   },
   watch: {
@@ -182,21 +215,8 @@ export default {
         (node) => node.courseId === newCourseId,
       );
       if (coursesTopicNodes.length > 0) {
-        this.zoomToNodes(coursesTopicNodes);
-        if (this.isMobile) {
-          setTimeout(() => {
-            const currentView = this.$refs.network.getViewPosition();
-            const currentScale = this.$refs.network.getScale();
-            const topHalfCenter = (window.innerHeight - 320) / 2;
-            const fullHeightCenter = window.innerHeight / 2;
-            const offsetY = (fullHeightCenter - topHalfCenter) / 2;
-            this.$refs.network.moveTo({
-              position: { x: currentView.x, y: currentView.y + offsetY },
-              scale: currentScale,
-              animation: { duration: 300, easingFunction: "easeOutQuad" },
-            });
-          }, 850);
-        }
+        // Fit after DOM updates so canvas size reflects any bottom panel height
+        this.$nextTick(() => this.zoomToNodes(coursesTopicNodes));
       } else {
         this.zoomToNodes(this.allNodesForDisplay, true);
       }
@@ -225,11 +245,15 @@ export default {
         this.buildPlanetsForAllNodes();
       }
     },
+    paused(newVal) {
+      if (newVal) this.stopNodeAnimation();
+      else this.startNodeAnimation();
+    },
   },
   mounted() {
     if (this.courses && this.courseNodesMap && this.courseEdgesMap)
       this.refreshAllNodesAndEdgesToDisplay(true);
-    this.startNodeAnimation();
+    if (!this.paused) this.startNodeAnimation();
     // Passive global mouse move for in-canvas tooltips that doesn't block wheel
     window.addEventListener("mousemove", this.onGlobalMouseMove, { passive: true });
   },
@@ -387,12 +411,13 @@ export default {
       if (currentScale < 0.7) {
         for (const course of this.courses) {
           if (this.showCourseTitles) this.drawCourseTitle(canvasContext, course);
-          this.drawCourseProgressionCircle(canvasContext, course, "50");
+          // this.drawCourseProgressionCircle(canvasContext, course, "50");
         }
-      } else if (currentScale > 0.7) {
-        for (const course of this.courses)
-          this.drawCourseProgressionCircle(canvasContext, course, "20");
       }
+      // else if (currentScale > 0.7) {
+      //   for (const course of this.courses)
+      //     this.drawCourseProgressionCircle(canvasContext, course, "20");
+      // }
       if (this.needsCentering === true) this.centerAfterReposition();
       if (this.loading === true) this.loading = false;
       if (this.showMissions) {
@@ -402,43 +427,7 @@ export default {
         for (const planets of this.planetsByNode.values())
           for (const planet of planets) planet.drawLabel(canvasContext, labelColor);
       }
-      // In-canvas tooltip for hovered avatar
-      try {
-        if (this.hoveredAvatar && this.hoveredAvatar.name) {
-          const ctx = canvasContext;
-          const { name } = this.hoveredAvatar;
-          ctx.save();
-          ctx.font = "12px Arial";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "bottom";
-          const paddingX = 6,
-            paddingY = 4;
-          const textWidth = ctx.measureText(name).width;
-          const boxWidth = textWidth + paddingX * 2;
-          const boxHeight = 18;
-          const x = this.hoveredAvatar.canvasX ?? this.hoveredAvatar.basePlanet?.x ?? 0;
-          const y = (this.hoveredAvatar.canvasY ?? this.hoveredAvatar.basePlanet?.y ?? 0) - 22;
-          // online border indicator around avatar (green if online)
-          if (this.hoveredAvatar.personId) {
-            const status = this.userStatus?.[this.hoveredAvatar.personId]?.status;
-            if (status === "online") {
-              ctx.beginPath();
-              ctx.arc(x, y + 22, 12, 0, Math.PI * 2);
-              ctx.strokeStyle = "#00E676";
-              ctx.lineWidth = 2;
-              ctx.stroke();
-            }
-          }
-          ctx.fillStyle = "rgba(0,0,0,0.8)";
-          ctx.beginPath();
-          if (ctx.roundRect) ctx.roundRect(x - boxWidth / 2, y - boxHeight, boxWidth, boxHeight, 4);
-          else ctx.rect(x - boxWidth / 2, y - boxHeight, boxWidth, boxHeight);
-          ctx.fill();
-          ctx.fillStyle = "#fff";
-          ctx.fillText(name, x, y - 4);
-          ctx.restore();
-        }
-      } catch (e) {}
+      // Tooltip now rendered in DOM overlay above avatars
       // Draw custom topic labels (hide default vis labels)
       try {
         const ctx = canvasContext;
@@ -461,7 +450,11 @@ export default {
       } catch (e) {}
       try {
         const dots = [];
-        const avatarSize = 18;
+        // Scale avatar size proportionally with current zoom level
+        const scale = this.$refs.network?.getScale?.() || 1;
+        const baseSize = 18;
+        // Keep avatars readable with a light clamp; tweak if needed
+        const avatarSize = Math.max(8, Math.min(56, Math.round(baseSize * scale)));
         for (const [topicId, planets] of this.planetsByNode.entries()) {
           const courseId = this.findCourseIdForTopic(topicId);
           const key = courseId + ":" + topicId;
@@ -866,9 +859,13 @@ export default {
       const startTime = performance.now();
       const nodeIds = nodes.map((x) => x.id);
       const courseIds = [...new Set(nodes.map((n) => n.courseId))];
+      console.log("zooming to fit");
       this.$refs.network.fit({
         nodes: nodeIds,
         animation: { duration: 800, easingFunction: "easeInOutQuad" },
+        // scale: 0.05,
+        maxZoomLevel: 0.8,
+        // minZoomLevel: 0.4,
       });
       setTimeout(() => {
         const endTime = performance.now();
@@ -1002,7 +999,8 @@ export default {
 .full-height {
   width: 100%;
   height: 100%;
-  height: calc(var(--vh, 1vh) * 100);
+  /* Shrink canvas height by bottom panel height so fit() centers in visible area */
+  height: calc((var(--vh, 1vh) * 100) - var(--activity-panel-height, 0px));
   display: flex;
   flex-direction: column;
   position: absolute;
@@ -1036,6 +1034,7 @@ export default {
   /* Make avatars non-interactive; we track hover via global mousemove */
   pointer-events: none;
   cursor: pointer;
+  z-index: 1;
 }
 .avatar-dot.placeholder {
   background-color: rgba(200, 200, 200, 0.3);
@@ -1050,5 +1049,6 @@ export default {
   font-size: 11px;
   pointer-events: none;
   white-space: nowrap;
+  z-index: 2; /* above avatar dots */
 }
 </style>

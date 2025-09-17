@@ -1,10 +1,27 @@
 <template>
   <div class="cohort-activity-panel" @mouseenter="emitFocus(true)" @mouseleave="emitFocus(false)">
     <div class="panel-header">
-      <span class="overline">Squad Timeline</span>
-      <!-- <span class="hint">(vis-timeline)</span> -->
+      <span class="overline header-title">Squad Timeline</span>
+      <div v-if="coursesForFilter.length" class="course-chips-inline">
+        <v-chip
+          v-for="c in coursesForFilter"
+          :key="c.id"
+          x-small
+          :outlined="isCourseHidden(c.id)"
+          color="missionAccent"
+          class="mr-2 course-chip"
+          :class="{ dimmed: isCourseHidden(c.id) }"
+          @click="toggleCourse(c.id)"
+          clickable
+        >
+          <v-avatar left>
+            <img :src="c.image || '/avatar_placeholder.png'" alt="" />
+          </v-avatar>
+          <span class="overline chip-label">{{ c.title }}</span>
+        </v-chip>
+      </div>
       <v-spacer></v-spacer>
-      <v-btn
+      <!-- <v-btn
         v-if="selectedCourseId"
         small
         outlined
@@ -13,22 +30,9 @@
         @click="$emit('clearCourseFilter')"
       >
         Show all courses
-      </v-btn>
-    </div>
-    <!-- Course filter bar -->
-    <div class="course-filter-bar" v-if="coursesForFilter.length">
-      <v-btn
-        v-for="c in coursesForFilter"
-        :key="c.id"
-        small
-        outlined
-        color="missionAccent"
-        class="mr-2 mb-2 course-chip"
-        :class="{ dimmed: isCourseHidden(c.id) }"
-        @click="toggleCourse(c.id)"
-      >
-        <img class="course-chip-avatar" :src="c.image || '/avatar_placeholder.png'" alt="" />
-        <span class="overline">{{ c.title }}</span>
+      </v-btn> -->
+      <v-btn icon small color="missionAccent" class="ml-2" @click="$emit('close')">
+        <v-icon small>{{ mdiClose }}</v-icon>
       </v-btn>
     </div>
     <div ref="timeline" class="timeline-container"></div>
@@ -39,6 +43,7 @@
 import { DataSet } from "vis-data";
 import { Timeline } from "vis-timeline";
 import "vis-timeline/styles/vis-timeline-graph2d.min.css";
+import { mdiClose } from "@mdi/js";
 
 export default {
   name: "CohortActivityTimelinePanel",
@@ -49,6 +54,7 @@ export default {
   },
   data() {
     return {
+      mdiClose,
       timeline: null,
       items: null,
       groups: null,
@@ -92,12 +98,13 @@ export default {
             day: "D - ddd",
             weekday: "D - ddd",
             hour: "HH:mm",
-            month: "MMM yyyy",
+            month: "MMM", // show 3-letter month only
           },
+          // suppress major labels (year) to keep axis compact
           majorLabels: {
-            day: "MMMM yyyy",
-            month: "MMMM yyyy",
-            year: "yyyy",
+            day: "",
+            month: "",
+            year: "",
           },
         },
         // subgroup stacking uses lexicographic order of subgroup keys;
@@ -529,7 +536,9 @@ export default {
 <style lang="scss" scoped>
 .cohort-activity-panel {
   border-top: 1px solid var(--v-missionAccent-base);
-  background: var(--v-background-darken1);
+  border-bottom: none;
+
+  background: var(--v-background-base);
   // backdrop-filter: blur(3px);
   width: 100%;
   height: 100%;
@@ -542,6 +551,19 @@ export default {
   align-items: baseline;
   gap: 8px;
   color: var(--v-missionAccent-base);
+}
+
+.panel-header .header-title {
+  flex: 0 0 auto;
+}
+
+.course-chips-inline {
+  flex: 0 1 auto;
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
 }
 
 .panel-header .hint {
@@ -559,6 +581,7 @@ export default {
   display: inline-flex;
   align-items: center;
   border-color: var(--v-missionAccent-base) !important;
+  font-size: 0.7rem;
 }
 .course-chip.dimmed {
   opacity: 0.25;
@@ -569,6 +592,14 @@ export default {
   border-radius: 50%;
   object-fit: cover;
   margin-right: 6px;
+}
+
+.chip-label {
+  display: inline-block;
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .timeline-container {
@@ -609,6 +640,7 @@ export default {
 /* Axis/grid and borders: subtle grey/opaque white */
 ::v-deep .vis-time-axis .vis-text {
   color: var(--v-missionAccent-base);
+  font-size: 0.8rem !important;
 }
 ::v-deep .vis-time-axis .vis-grid,
 ::v-deep .vis-panel {
@@ -677,16 +709,6 @@ export default {
 /* Show item content also when selected (click) */
 ::v-deep .vis-item.vis-selected .vis-item-content {
   opacity: 1;
-}
-
-/* Remove forced vertical scroll on panels */
-::v-deep .vis-panel.vis-left,
-::v-deep .vis-panel.vis-center {
-  // overflow-y: visible !important;
-}
-
-::v-deep .vis-group {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
 
 /* Reduce level-1 indentation and remove label backgrounds */

@@ -203,9 +203,10 @@ export default {
     },
     storeImage() {
       this.uploading = true;
-      const storageRef = storage.ref(
-        `avatar-images/${this.person.firstName}${this.person.lastName}-${this.selectedFile.name}`,
-      );
+      const namePart = (this.person.firstName || "") + (this.person.lastName || "");
+      const fallback = this.person?.id ? `${this.person.id}-${Date.now()}` : `${Date.now()}`;
+      const safePrefix = namePart || fallback;
+      const storageRef = storage.ref(`avatar-images/${safePrefix}-${this.selectedFile.name}`);
 
       const uploadTask = storageRef.put(this.selectedFile);
 
