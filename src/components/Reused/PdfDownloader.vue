@@ -152,10 +152,34 @@ export default {
       }
     },
 
+    async getSafeImageSrc(url) {
+      try {
+        if (!url) return null;
+        // Attempt to fetch and inline as a data URL for reliable rendering
+        const resp = await fetch(url, { mode: "cors", credentials: "omit" });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const blob = await resp.blob();
+        const reader = new FileReader();
+        const dataUrl = await new Promise((resolve, reject) => {
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+        return dataUrl;
+      } catch (e) {
+        // Fall back to original URL; html2canvas may still load if CORS allows
+        console.warn("Falling back to direct image URL for PDF:", e?.message || e);
+        return url || null;
+      }
+    },
+
     async generatePdf(treeviewItems) {
       try {
+        // Prefetch course image as a data URL when possible (improves CORS reliability)
+        const courseImageSrc = await this.getSafeImageSrc(this.boundCourse?.image?.url);
+
         // Create a complete HTML document with inline styles for html2pdf.js
-        const htmlContent = this.createCompleteHtmlDocument();
+        const htmlContent = this.createCompleteHtmlDocument(courseImageSrc);
 
         // Use html2pdf.js directly on the HTML string
         await this.buildPdfFromHtml(htmlContent);
@@ -169,25 +193,30 @@ export default {
       console.log("Starting PDF generation with direct HTML approach...");
 
       const options = {
-        margin: [10, 10, 20, 10], // [top, left, bottom, right] in mm - extra bottom margin for footer
+        // Use pixels and fixed A4 size to avoid unit drift between pages
+        margin: [38, 38, 76, 38], // px (~10mm,10mm,20mm,10mm)
         filename: `galaxy-map-draft - ${this.aiGeneratedGalaxyMap.title}.pdf`,
         image: { type: "jpeg", quality: 0.98 },
         html2canvas: {
-          scale: 1, // Remove scaling to prevent truncation
+          scale: 1,
           useCORS: true,
           logging: false,
-          letterRendering: true,
+          letterRendering: false,
+          scrollX: 0,
+          scrollY: 0,
+          windowWidth: 794, // A4 width in px at ~96DPI
+          imageTimeout: 15000,
           allowTaint: true,
         },
         jsPDF: {
-          unit: "mm",
-          format: "a4",
+          unit: "px",
+          format: [794, 1123], // A4 in px at ~96DPI
           orientation: "portrait",
           putOnlyUsedFonts: true,
           floatPrecision: 16,
         },
         pagebreak: {
-          mode: ["css", "legacy"],
+          mode: ["css"],
           before: ".page-break-before",
           after: ".page-break-after",
           avoid: ".avoid-break",
@@ -203,11 +232,15 @@ export default {
         const totalPages = pdfObj.internal.getNumberOfPages();
 
         // Add footer to each page
+        const pageWidth = pdfObj.internal.pageSize.getWidth();
+        const pageHeight = pdfObj.internal.pageSize.getHeight();
         for (let i = 1; i <= totalPages; i++) {
           pdfObj.setPage(i);
-          pdfObj.setFontSize(8);
+          pdfObj.setFontSize(10);
           pdfObj.setTextColor(136, 136, 136); // Gray color
-          pdfObj.text("Built with GalaxyMaps.io", 190, 287, { align: "right" }); // Adjusted positioning
+          pdfObj.text("Built with GalaxyMaps.io", pageWidth - 38, pageHeight - 16, {
+            align: "right",
+          });
         }
 
         // Save the PDF
@@ -219,7 +252,7 @@ export default {
       }
     },
 
-    createCompleteHtmlDocument() {
+    createCompleteHtmlDocument(courseImageSrc) {
       console.log("Creating complete HTML document for PDF generation...");
 
       if (!this.transformedStarDetails || this.transformedStarDetails.length === 0) {
@@ -253,7 +286,7 @@ export default {
         
         .page-container {
             width: 100%;
-            max-width: 800px;
+            max-width: 720px; /* Align with content area width (A4 px width minus margins) */
             margin: 0 auto;
             padding: 20px;
             background: white;
@@ -300,6 +333,8 @@ export default {
             object-fit: cover;
             border-radius: 8px;
             flex-shrink: 0;
+            display: block;
+            background: #eee;
         }
         
         .galaxy-placeholder {
@@ -384,7 +419,9 @@ export default {
             border: 1px solid #e0e0e0;
             border-radius: 8px;
             gap: 20px;
-            page-break-inside: auto;
+            /* Prevent cards from being split across pages */
+            page-break-inside: avoid;
+            break-inside: avoid;
             padding: 10px;
         }
         
@@ -492,7 +529,7 @@ export default {
 </head>
 <body>
     <div class="page-container">
-        ${this.createTitleSectionHtml()}
+        ${this.createTitleSectionHtml(courseImageSrc)}
         ${this.createStarsContentHtml()}
     </div>
 </body>
@@ -501,16 +538,30 @@ export default {
       return htmlContent;
     },
 
-    createTitleSectionHtml() {
+    createTitleSectionHtml(courseImageSrc) {
       return `
         <div class="title-section avoid-break">
             <div class="title-content">
                 <div>
-                    ${
-                      this.boundCourse?.image?.url
-                        ? `<img src="${this.boundCourse.image.url}" alt="Galaxy Image" class="galaxy-image" />`
-                        : `<div class="galaxy-placeholder">${this.boundCourse?.title ? this.boundCourse.title.substring(0, 3).toUpperCase() : "GAL"}</div>`
-                    }
+                    ${(() => {
+                      const initials = this.boundCourse?.title
+                        ? this.boundCourse.title.substring(0, 3).toUpperCase()
+                        : "GAL";
+                      const src = courseImageSrc || this.boundCourse?.image?.url || "";
+                      // Render both the img and a fallback placeholder; toggle via onload/onerror
+                      return `
+                        <img src="${src}"
+                             alt="Galaxy Image"
+                             class="galaxy-image"
+                             crossorigin="anonymous"
+                             referrerpolicy="no-referrer"
+                             loading="eager"
+                             decoding="sync"
+                             onload="this.style.display='block'; if(this.nextElementSibling){this.nextElementSibling.style.display='none';}"
+                             onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
+                        <div class="galaxy-placeholder" style="display:${src ? "none" : "flex"}">${initials}</div>
+                      `;
+                    })()}
                 </div>
                 <div class="title-info">
                     <div class="galaxy-status">${this.boundCourse?.status || "UNLISTED"} GALAXY</div>
@@ -530,7 +581,7 @@ export default {
         if (index > 0) {
           // Add explicit page break wrapper with margin reset
           starsHtml += `
-            <div style="page-break-before: always; break-before: page; margin: 0; padding: 0; height: 1px; width: 100%;"></div>
+            <div style="page-break-before: always; break-before: page; margin: 0; padding: 0; height: 0; width: 100%;"></div>
           `;
         }
 
@@ -572,7 +623,7 @@ export default {
             const instructions = planet.children?.find((child) => child.type === "instructions");
 
             planetsHtml += `
-              <div class="planet-container">
+              <div class="planet-container avoid-break">
                   <div class="planet-left">
                       <h3 class="planet-title avoid-break">🪐 ${planet.name}</h3>
                       <div class="planet-description">

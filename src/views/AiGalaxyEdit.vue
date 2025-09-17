@@ -348,12 +348,18 @@
                           color="galaxyAccent"
                           iconSize="15"
                         />
-                        <div
-                          v-else
-                          class="treeview-markdown"
-                          @click.stop="ViewMissionPanel(item, starIndex)"
-                        >
-                          <span v-html="renderToHTML(item)"></span>
+                        <div v-else>
+                          <!-- Only allow clicking instructions to open the panel; stars/planets clicks should activate chips -->
+                          <div
+                            v-if="item.type === 'instructions'"
+                            class="treeview-markdown"
+                            @click.stop="ViewMissionPanel(item, starIndex)"
+                          >
+                            <span v-html="renderToHTML(item)"></span>
+                          </div>
+                          <div v-else class="treeview-markdown">
+                            <span v-html="renderToHTML(item)"></span>
+                          </div>
                         </div>
                       </div>
 
@@ -458,165 +464,67 @@
           </div>
 
           <!-- =========== Prompt =========== -->
-          <div class="galaxy-prompt-container" v-if="!taskEditing" :class="{ mobile: isMobile }">
-            <div class="prompt-textarea-container mt-4">
-              <div class="prompt-context-chips pb-2">
-                <v-chip
-                  v-for="item in activeGalaxyItems"
-                  :key="item"
-                  class="mr-2 mb-2 theme-chip"
-                  outlined
-                  color="missionAccent"
-                  text-color="missionAccent"
-                  close
-                  @click:close="removeChip(item)"
-                >
-                  {{ chipDisplayNames[item] }}
-                </v-chip>
-              </div>
-              <!-- Legend -->
-              <div class="legend-container">
-                <span class="legend-title ma-0">Legend:</span>
-                <span class="legend-item-icon ml-3">⭐</span>
-                <span class="legend-item-text">Star/Zone</span>
-                <span class="legend-item-icon ml-3">🪐</span>
-                <span class="legend-item-text">Planet/Mission</span>
-                <!-- <span class="legend-item-icon">📍</span>
-              <span class="legend-item-text">Task</span> -->
-              </div>
-              <v-textarea
-                v-model="galaxyRefineUserInput"
-                :dark="dark"
-                :light="!dark"
-                class="input-field mt-2"
-                outlined
-                color="missionAccent"
-                rows="5"
-                auto-grow
-                clearable
-                label="What change would you like me to make?"
-                :disabled="loading"
-                :autofocus="!isMobile"
-                @click:clear="galaxyRefineUserInput = ''"
-              />
-              <div class="action-buttons" :class="{ mobile: isMobile }">
-                <v-btn
-                  outlined
-                  color="galaxyAccent"
-                  @click="generateGalaxyMapAgain()"
-                  :loading="loading"
-                  :dark="dark"
-                  :light="!dark"
-                  :disabled="!disabled"
-                >
-                  <v-icon left> {{ mdiRobotExcited }} </v-icon>
-                  GENERATE AGAIN
-                </v-btn>
-
-                <v-btn
-                  outlined
-                  color="galaxyAccent"
-                  @click="refineGalaxyMap()"
-                  :loading="loading"
-                  :disabled="disabled"
-                  :dark="dark"
-                  :light="!dark"
-                >
-                  <v-icon left> {{ mdiRobotExcited }} </v-icon>
-                  REFINE GALAXY MAP
-                </v-btn>
-
-                <!-- <PublishGalaxy v-if="showPublish" :course="boundCourse" :courseTasks="courseTasks" /> -->
-                <v-btn v-if="!courseId" @click="saveGalaxyToDB" outlined color="baseAccent">
-                  <v-icon left> {{ mdiContentSave }} </v-icon>
-                  Save Galaxy Map
-                </v-btn>
-                <v-btn
-                  v-else
-                  outlined
-                  color="baseAccent"
-                  :disabled="!hasUnsavedChanges || loading"
-                  @click="showLayoutDialog = true"
-                >
-                  <v-icon left> {{ mdiContentSave }} </v-icon>
-                  Save Galaxy Changes
-                </v-btn>
-              </div>
-            </div>
-          </div>
+          <RefineWithAiPrompter
+            v-if="!taskEditing"
+            :is-mobile="isMobile"
+            :dark="dark"
+            :loading="loading"
+            :disabled="disabled"
+            :active-galaxy-items="activeGalaxyItems"
+            :active-mission-items="activeMissionItems"
+            :chip-display-names="chipDisplayNames"
+            :mission-chip-display-names="missionChipDisplayNames"
+            :course-id="courseId"
+            :has-unsaved-changes="hasUnsavedChanges"
+            :value="galaxyRefineUserInput"
+            @input="galaxyRefineUserInput = $event"
+            @remove-chip="removeChip"
+            @remove-mission-chip="removeMissionChip"
+            @generate-again="generateGalaxyMapAgain()"
+            @refine="refineGalaxyMap()"
+            @save-new="saveGalaxyToDB"
+            @open-layout-dialog="showLayoutDialog = true"
+          />
         </div>
       </div>
     </div>
 
     <!--==== Right section ====-->
-    <div v-if="taskEditing" id="right-section" :class="{ mobile: isMobile }">
-      <div class="right-section-header">
-        <v-btn @click="taskEditing = false" outlined color="missionAccent" small>
-          <v-icon left small>{{ mdiArrowLeftBold }}</v-icon>
-          Back to Overview
-        </v-btn>
-      </div>
-
-      <div v-if="selectedPlanetData" class="selected-planet-info">
-        <p class="missionAccent--text text-h2">Mission:</p>
-
-        <!-- Title -->
-        <div class="planet-header">
-          <span class="planet-emoji">🪐</span>
-          <div>
-            <h3 class="planet-title baseAccent--text">{{ selectedPlanetData.name }}</h3>
-            <p class="planet-description">{{ selectedPlanetData.description }}</p>
-          </div>
-        </div>
-
-        <!-- Intro -->
-        <div
-          v-if="selectedPlanetData.children && selectedPlanetData.children.length > 0"
-          class="section-card intro-card"
-        >
-          <h4 class="section-title text-h5">Intro</h4>
-          <p class="section-text">{{ selectedPlanetData.children[0].description.intro }}</p>
-        </div>
-
-        <!-- Steps -->
-        <div
-          v-for="step in selectedPlanetData.children[0].description.steps"
-          :key="step.id"
-          class="step-card"
-        >
-          <div class="step-header">
-            <h4 class="step-title text-h5">{{ step.title }}</h4>
-          </div>
-
-          <div class="task-list">
-            <div v-for="task in step.tasks" :key="task.id" class="task-item">
-              <span class="task-bullet" aria-hidden="true"></span>
-              <p class="task-text">{{ task.taskContent }}</p>
-            </div>
-          </div>
-
-          <div v-if="step.checkpoint" class="checkpoint-row">
-            <span class="checkpoint-flag">🏁</span>
-            <p class="checkpoint-text">
-              <em>Checkpoint: {{ step.checkpoint }}</em>
-            </p>
-          </div>
-        </div>
-
-        <!-- Outro -->
-        <div
-          v-if="selectedPlanetData.children[0].description.outro"
-          class="section-card outro-card"
-        >
-          <h4 class="section-title text-h5">Outro</h4>
-          <p class="section-text">{{ selectedPlanetData.children[0].description.outro }}</p>
-        </div>
-      </div>
-
-      <div v-else class="no-planet-selected">
-        <p>Click on a planet to view its details</p>
-      </div>
-    </div>
+    <transition name="slide-right-panel">
+      <MissionOverviewEdit
+        :show="missionOverviewEditShow"
+        :selected-planet-data="selectedPlanetData"
+        :mission-path="activeMissionPath"
+        :is-mobile="isMobile"
+        @close="handleMissionPanelClose"
+        @cancel-edit="handleMissionEditCanceled"
+        @mission-editing-state-change="missionEditingStateChanged"
+        @update-mission="handleMissionUpdate"
+      >
+        <template #right-panel>
+          <RefineWithAiPrompter
+            :is-mobile="isMobile"
+            :dark="dark"
+            :loading="loading"
+            :disabled="disabled"
+            :active-galaxy-items="activeGalaxyItems"
+            :active-mission-items="activeMissionItems"
+            :chip-display-names="chipDisplayNames"
+            :mission-chip-display-names="missionChipDisplayNames"
+            :course-id="courseId"
+            :has-unsaved-changes="hasUnsavedChanges"
+            :value="galaxyRefineUserInput"
+            @input="galaxyRefineUserInput = $event"
+            @remove-chip="removeChip"
+            @remove-mission-chip="removeMissionChip"
+            @generate-again="generateGalaxyMapAgain()"
+            @refine="refineGalaxyMap()"
+            @save-new="saveGalaxyToDB"
+            @open-layout-dialog="showLayoutDialog = true"
+          />
+        </template>
+      </MissionOverviewEdit>
+    </transition>
 
     <!-- Total Tokens -->
     <div class="token-container" v-if="!isMobile">
@@ -796,6 +704,7 @@ import BackButton from "@/components/Reused/BackButton.vue";
 import LayoutSelectionDialog from "@/components/Dialogs/LayoutSelectionDialog.vue";
 import SaveGalaxyDialog from "@/components/Dialogs/SaveGalaxyDialog.vue";
 import PdfDownloader from "@/components/Reused/PdfDownloader.vue";
+import MissionOverviewEdit from "@/components/Reused/MissionOverviewEdit.vue";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
 import Network from "@/vue2vis/Network.vue";
@@ -830,7 +739,9 @@ export default {
     SaveGalaxyDialog,
     PdfDownloader,
     // PromptDialog,
+    RefineWithAiPrompter: () => import("@/components/Reused/RefineWithAiPrompter.vue"),
     Network,
+    MissionOverviewEdit,
   },
   props: ["parsedResponse", "courseId"],
   data() {
@@ -872,6 +783,7 @@ export default {
       transformedStarDetails: [],
       expandedNodes: [],
       activeGalaxyItems: [],
+      activeMissionItems: [],
       treeviewActiveItems: {}, // Track active items for each treeview
       updateTimeout: null, // Debounce updates to prevent rapid toggling
       isPlanetsCollapsed: false, // Track if planets are collapsed
@@ -892,10 +804,14 @@ export default {
       isGalaxyInfoMinimized: false,
 
       // Task editing state
+      missionOverviewEditShow: false,
       taskEditing: false,
       activeTaskItem: null,
       selectedTasksStarData: null, // Store the selected star data for task editing
       uiActiveItemId: null, // Track the UI active item for visual highlighting
+      activeMissionPath: null, // Track the mission currently being edited
+      taskEditingStarIndex: null,
+      taskEditingPlanetIndex: null,
 
       // Planet animation properties
       planets: [],
@@ -1153,6 +1069,10 @@ export default {
         // Clear any planet highlight and reset colors
         this.clearPlanetHighlight();
         this.updatePlanetColors();
+        this.activeMissionItems = [];
+        this.activeMissionPath = null;
+        this.taskEditingStarIndex = null;
+        this.taskEditingPlanetIndex = null;
       }
     },
   },
@@ -1284,18 +1204,37 @@ export default {
       });
       return names;
     },
+    missionChipDisplayNames() {
+      const names = {};
+      this.activeMissionItems.forEach((item) => {
+        names[item] = this.getMissionChipDisplayName(item);
+      });
+      return names;
+    },
     // Computed property to get selected planet data for right section
     selectedPlanetData() {
-      if (!this.taskEditing || !this.uiActiveItemId || !this.selectedTasksStarData) {
+      if (!this.taskEditing || !this.activeMissionPath) {
         return null;
       }
 
-      // Find the selected planet in the selected star data
-      const planet = this.selectedTasksStarData.children?.find(
-        (child) => child.id === this.uiActiveItemId,
-      );
+      const { starIndex, planetIndex } = this.parseGalaxyPath(this.activeMissionPath);
+      if (starIndex == null || planetIndex == null) return null;
 
-      return planet || null;
+      const star = this.aiGeneratedGalaxyMap?.stars?.[starIndex];
+      const planet = star?.planets?.[planetIndex];
+      if (!planet) return null;
+
+      return {
+        id: `star[${starIndex}].planet[${planetIndex}]`,
+        title: planet.title,
+        description: planet.description,
+        missionInstructions: planet.missionInstructions || {
+          intro: "",
+          outro: "",
+          steps: [],
+        },
+        starTitle: star?.title || "",
+      };
     },
 
     /**
@@ -1697,6 +1636,40 @@ export default {
           this.$set(this.treeviewActiveItems, starIndex, updatedActiveItems);
         }
       }
+    },
+    addActiveMissionItem(item) {
+      if (!item) return;
+      if (!this.activeMissionItems.includes(item)) {
+        this.activeMissionItems = [...this.activeMissionItems, item];
+      }
+    },
+    removeMissionChip(item) {
+      this.activeMissionItems = this.activeMissionItems.filter((i) => i !== item);
+    },
+    getMissionChipDisplayName(item) {
+      const { starIndex, planetIndex } = this.parseGalaxyPath(item);
+      const star = this.aiGeneratedGalaxyMap?.stars?.[starIndex];
+      const planet = star?.planets?.[planetIndex];
+      if (planet && star) {
+        return `🎯 ${star.title} › ${planet.title}`;
+      }
+      if (planet) {
+        return `🎯 ${planet.title}`;
+      }
+      return item;
+    },
+    parseGalaxyPath(path) {
+      if (!path || typeof path !== "string") {
+        return { starIndex: null, planetIndex: null, missionIndex: null };
+      }
+      const starMatch = path.match(/star\[(\d+)\]/);
+      const planetMatch = path.match(/planet\[(\d+)\]/);
+      const missionMatch = path.match(/mission\[(\d+)\]/);
+      return {
+        starIndex: starMatch ? parseInt(starMatch[1], 10) : null,
+        planetIndex: planetMatch ? parseInt(planetMatch[1], 10) : null,
+        missionIndex: missionMatch ? parseInt(missionMatch[1], 10) : null,
+      };
     },
     getChipDisplayName(item) {
       // Parse the item ID to extract the actual name from aiGeneratedGalaxyMap
@@ -2586,7 +2559,7 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
       inputMessages.push({ role: "user", content: "galaxy_map: " + galaxyMapJson });
 
       // 3. selected items
-      const activeItems = this.activeGalaxyItems;
+      const activeItems = [...new Set([...this.activeGalaxyItems, ...this.activeMissionItems])];
       const activeItemsString = activeItems.join("\n");
       if (activeItems.length > 0) {
         inputMessages.push({
@@ -3793,10 +3766,101 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
       // For now, we can just log it or implement any specific behavior needed
       console.log("Mobile panel closed");
     },
+    handleMissionPanelClose() {
+      this.missionOverviewEditShow = false;
+      this.taskEditing = false;
+      this.activeMissionItems = [];
+      this.activeMissionPath = null;
+      this.taskEditingStarIndex = null;
+      this.taskEditingPlanetIndex = null;
+    },
+    handleMissionEditCanceled() {
+      // MissionOverviewEdit collapses itself; we keep the chip and context intact
+    },
+    missionEditingStateChanged(isEditing) {
+      // Reserved for future layout tweaks when mission edit panel expands/collapses
+      void isEditing;
+    },
+    handleMissionUpdate({ missionPath, planet }) {
+      if (!missionPath || !planet) return;
+
+      const { starIndex, planetIndex } = this.parseGalaxyPath(missionPath);
+      if (starIndex == null || planetIndex == null) return;
+
+      const stars = this.aiGeneratedGalaxyMap?.stars;
+      if (!stars || !stars[starIndex] || !Array.isArray(stars[starIndex].planets)) return;
+
+      const existingPlanet = stars[starIndex].planets[planetIndex] || {};
+      const updatedPlanet = {
+        ...existingPlanet,
+        title: planet.title,
+        description: planet.description,
+        missionInstructions: {
+          intro: planet.missionInstructions?.intro || "",
+          outro: planet.missionInstructions?.outro || "",
+          steps: (planet.missionInstructions?.steps || []).map((step) => ({
+            title: step.title || "",
+            checkpoint: step.checkpoint || "",
+            tasks: (step.tasks || []).map((task) => ({
+              taskContent: task.taskContent || "",
+            })),
+          })),
+        },
+      };
+
+      this.$set(this.aiGeneratedGalaxyMap.stars[starIndex].planets, planetIndex, updatedPlanet);
+
+      // Keep the store copy in sync so other consumers reflect the update immediately
+      this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
+
+      // Refresh the treeview data so the updated mission content is visible
+      this.updateTransformedStarDetails();
+      this.$nextTick(() => {
+        this.restoreTaskEditingView();
+      });
+
+      this.setSnackbar({
+        show: true,
+        text: "Mission updated",
+        color: "baseAccent",
+      });
+    },
+    restoreTaskEditingView() {
+      if (!this.taskEditing) return;
+      if (this.taskEditingStarIndex == null) return;
+
+      const starNode = this.transformedStarDetails[this.taskEditingStarIndex];
+      if (!starNode) return;
+
+      this.selectedTasksStarData = starNode;
+      this.transformedStarDetails = [starNode];
+
+      const missionPath = this.activeMissionPath;
+      if (!missionPath) return;
+
+      const planetNode = starNode.children?.find(
+        (child) => this.normalizeToPlanetId(child.id) === missionPath,
+      );
+      const planetId = planetNode
+        ? this.normalizeToPlanetId(planetNode.id) || planetNode.id
+        : missionPath;
+
+      this.uiActiveItemId = planetId || null;
+      this.treeviewActiveItems = {
+        0: planetId ? [planetId] : [],
+      };
+
+      if (planetId) {
+        this.$nextTick(() => {
+          this.highlightPlanetAndOrbitRing(planetId);
+        });
+      }
+    },
     ViewMissionPanel(item, starIndex) {
       console.log("ViewMissionPanel for item: ", item, "starIndex: ", starIndex);
 
       // Set task editing state
+      this.missionOverviewEditShow = true;
       this.taskEditing = true;
       this.activeTaskItem = item;
       this.uiActiveItemId = item.id; // Set UI active item for visual highlighting
@@ -3819,6 +3883,17 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
       // Set the clicked planet as the initial active planet in task editing mode
       const planetId = this.normalizeToPlanetId(item.id) || item.id;
       this.uiActiveItemId = planetId;
+      const { starIndex: parsedStarIndex, planetIndex: parsedPlanetIndex } =
+        this.parseGalaxyPath(planetId);
+      this.taskEditingStarIndex =
+        parsedStarIndex != null
+          ? parsedStarIndex
+          : typeof starIndex === "number"
+            ? starIndex
+            : null;
+      this.taskEditingPlanetIndex = parsedPlanetIndex != null ? parsedPlanetIndex : null;
+      this.activeMissionPath = planetId;
+      this.addActiveMissionItem(planetId);
 
       // Update treeview active items to show the selected planet
       this.treeviewActiveItems = {
@@ -3964,6 +4039,16 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
         const firstValidRaw = (newValue || []).find((id) => /^star\[\d+\]\.planet\[\d+\]/.test(id));
         const firstValid = this.normalizeToPlanetId(firstValidRaw) || firstValidRaw;
         this.uiActiveItemId = firstValid || null; // Take the first valid planet id
+
+        if (firstValid) {
+          const { starIndex, planetIndex } = this.parseGalaxyPath(firstValid);
+          this.taskEditingStarIndex = starIndex;
+          this.taskEditingPlanetIndex = planetIndex;
+          this.activeMissionPath = firstValid;
+          this.addActiveMissionItem(firstValid);
+        } else {
+          this.activeMissionPath = null;
+        }
 
         // Update treeview active items to only show the selected item
         this.treeviewActiveItems = {
@@ -4886,205 +4971,239 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
 }
 
 #right-section {
-  width: 50%;
-  height: 100%;
-  z-index: 3;
-  margin-left: auto;
-  margin-right: 20px;
-  border-left: 1px solid var(--v-missionAccent-base);
-  padding: 20px;
-  overflow-y: auto;
-  background-color: var(--v-background-base);
+  // width: 50%;
+  // height: 100%;
+  // z-index: 3;
+  // margin-left: auto;
+  // margin-right: 20px;
+  // border-left: 1px solid var(--v-missionAccent-base);
+  // padding: 20px;
+  // overflow-y: auto;
+  // background-color: var(--v-background-base);
+  // display: flex;
 
-  &.mobile {
-    width: 100%;
-    border-left: none;
-    padding: 0;
-  }
+  // &.mobile {
+  //   width: 100%;
+  //   border-left: none;
+  //   padding: 0;
+  // }
 
-  .right-section-header {
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid rgba(var(--v-missionAccent-base), 0.2);
-  }
+  // .right-section-header {
+  //   margin-bottom: 20px;
+  //   padding-bottom: 15px;
+  //   border-bottom: 1px solid rgba(var(--v-missionAccent-base), 0.2);
+  // }
 
-  .selected-planet-info {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
+  // .selected-planet-info {
+  //   display: flex;
+  //   flex-direction: column;
+  //   gap: 14px;
 
-    .planet-header {
-      display: flex;
-      align-items: start;
-      gap: 10px;
+  //   .mission-section {
+  //     // border: 1px solid var(--v-missionAccent-base);
+  //     border-radius: 10px;
+  //     // padding: 14px 16px;
+  //     padding: 25px;
+  //     margin: 10px 10px;
+  //     // box-shadow: 0 4px 14px var(--v-missionAccent-base);
+  //     box-shadow: 0 4px 14px color-mix(in srgb, var(--v-missionAccent-base) 80%, transparent);
+  //   }
 
-      .planet-emoji {
-        font-size: 1.5rem;
-      }
+  //   .mission-section:hover {
+  //     transform: scale(1.02);
+  //     transition: transform 0.2s ease;
+  //     border-right: 10px solid var(--v-galaxyAccent-base);
+  //     position: relative;
+  //   }
 
-      .planet-title {
-        margin: 0;
-        color: var(--v-missionAccent-base);
-        font-size: 1.5rem;
-        font-weight: 600;
-      }
-    }
+  //   .mission-section:hover::after {
+  //     content: "E\A D\A I\A T";
+  //     white-space: pre;
+  //     position: absolute;
+  //     right: 5px;
+  //     top: 50%;
+  //     transform: translateY(-50%);
+  //     color: var(--v-galaxyAccent-base);
+  //     font-weight: bold;
+  //     font-size: 0.8rem;
+  //     line-height: 1.2;
+  //     text-align: center;
+  //     // writing-mode: vertical-rl;
+  //     text-orientation: mixed;
+  //   }
 
-    .section-card {
-      background: linear-gradient(
-        180deg,
-        rgba(var(--v-missionAccent-base), 0.06),
-        rgba(var(--v-missionAccent-base), 0.02)
-      );
-      border: 1px solid rgba(var(--v-missionAccent-base), 0.25);
-      border-radius: 10px;
-      padding: 14px 16px;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-    }
+  //   .planet-header {
+  //     display: flex;
+  //     align-items: start;
+  //     gap: 10px;
 
-    .section-title {
-      color: var(--v-missionAccent-base);
-      margin: 0 0 8px 20px;
-      // font-size: 1rem;
-      // font-weight: 700;
-      // letter-spacing: 0.2px;
-    }
+  //     .planet-emoji {
+  //       font-size: 1.5rem;
+  //     }
 
-    .section-text {
-      // color: var(--v-missionAccent-base);
-      line-height: 1.65;
-      margin: 0 0 0 20px;
-      font-size: 0.92rem;
-    }
+  //     .planet-title {
+  //       margin: 0;
+  //       color: var(--v-missionAccent-base);
+  //       font-size: 1.5rem;
+  //       font-weight: 600;
+  //     }
+  //   }
 
-    .planet-missions {
-      h4 {
-        color: var(--v-galaxyAccent-base);
-        margin-bottom: 15px;
-        font-size: 1rem;
-        font-weight: 600;
-      }
+  //   .section-card {
+  //     // background: linear-gradient(
+  //     //   180deg,
+  //     //   rgba(var(--v-missionAccent-base), 0.6),
+  //     //   rgba(var(--v-missionAccent-base), 0.2)
+  //     // );
+  //     // border: 1px solid rgba(var(--v-missionAccent-base), 0.25);
+  //     // border-radius: 10px;
+  //     // padding: 14px 16px;
+  //     // box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  //   }
 
-      .missions-list {
-        .mission-item {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 12px;
-          margin-bottom: 8px;
-          background-color: rgba(var(--v-missionAccent-base), 0.05);
-          border-radius: 6px;
-          border-left: 3px solid var(--v-missionAccent-base);
+  //   .section-title {
+  //     color: var(--v-missionAccent-base);
+  //     // margin: 0 0 8px 20px;
+  //     // font-size: 1rem;
+  //     // font-weight: 700;
+  //     // letter-spacing: 0.2px;
+  //   }
 
-          .mission-emoji {
-            font-size: 0.9rem;
-          }
+  //   .section-text {
+  //     // color: var(--v-missionAccent-base);
+  //     line-height: 1.65;
+  //     // margin: 0 0 0 20px;
+  //     font-size: 0.92rem;
+  //   }
 
-          .mission-name {
-            color: var(--v-missionAccent-base);
-            font-size: 0.9rem;
-            font-weight: 500;
-          }
-        }
-      }
-    }
+  //   .planet-missions {
+  //     h4 {
+  //       color: var(--v-galaxyAccent-base);
+  //       margin-bottom: 15px;
+  //       font-size: 1rem;
+  //       font-weight: 600;
+  //     }
 
-    .step-card {
-      position: relative;
-      // border-radius: 12px;
-      margin: 0 0 0 20px;
-      padding: 14px 16px 12px 16px;
-      // border: 1px dashed rgba(var(--v-galaxyAccent-base), 0.35);
-      border: 1px solid var(--v-missionAccent-base);
-      background: linear-gradient(
-        180deg,
-        rgba(var(--v-galaxyAccent-base), 0.06),
-        rgba(var(--v-galaxyAccent-base), 0.02)
-      );
-    }
+  //     .missions-list {
+  //       .mission-item {
+  //         display: flex;
+  //         align-items: center;
+  //         gap: 8px;
+  //         padding: 8px 12px;
+  //         margin-bottom: 8px;
+  //         background-color: rgba(var(--v-missionAccent-base), 0.05);
+  //         border-radius: 6px;
+  //         border-left: 3px solid var(--v-missionAccent-base);
 
-    .step-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
+  //         .mission-emoji {
+  //           font-size: 0.9rem;
+  //         }
 
-    .step-title {
-      margin: 0;
-      // font-size: 0.98rem;
-      // font-weight: 700;
-      color: var(--v-missionAccent-base);
-    }
+  //         .mission-name {
+  //           color: var(--v-missionAccent-base);
+  //           font-size: 0.9rem;
+  //           font-weight: 500;
+  //         }
+  //       }
+  //     }
+  //   }
 
-    .task-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+  //   .step-card {
+  //     // position: relative;
+  //     // // border-radius: 12px;
+  //     // margin: 0 0 0 20px;
+  //     // padding: 14px 16px 12px 16px;
+  //     // // border: 1px dashed rgba(var(--v-galaxyAccent-base), 0.35);
+  //     // border: 1px solid var(--v-missionAccent-base);
+  //     // background: linear-gradient(
+  //     //   180deg,
+  //     //   rgba(var(--v-galaxyAccent-base), 0.06),
+  //     //   rgba(var(--v-galaxyAccent-base), 0.02)
+  //     // );
+  //   }
 
-    .task-item {
-      display: grid;
-      grid-template-columns: 14px 1fr;
-      align-items: start;
-      gap: 10px;
-      padding: 8px 10px;
-      border-radius: 8px;
-      background-color: rgba(var(--v-missionAccent-base), 0.05);
-      // border-left: 3px solid var(--v-missionAccent-base);
-    }
+  //   .step-header {
+  //     display: flex;
+  //     align-items: center;
+  //     gap: 8px;
+  //     margin-bottom: 8px;
+  //   }
 
-    .task-bullet {
-      width: 8px;
-      height: 8px;
-      margin-top: 6px;
-      border-radius: 50%;
-      background: var(--v-missionAccent-base);
-      display: inline-block;
-    }
+  //   .step-title {
+  //     margin: 0;
+  //     // font-size: 0.98rem;
+  //     // font-weight: 700;
+  //     color: var(--v-missionAccent-base);
+  //   }
 
-    .task-text {
-      margin: 0;
-      font-size: 0.92rem;
-      line-height: 1.6;
-      // color: var(--v-missionAccent-base);
-    }
+  //   .task-list {
+  //     display: flex;
+  //     flex-direction: column;
+  //     gap: 8px;
+  //   }
 
-    .checkpoint-row {
-      display: grid;
-      grid-template-columns: 18px 1fr;
-      align-items: start;
-      gap: 10px;
-      padding: 10px 12px;
-      border-radius: 10px;
-      margin-top: 10px;
-      background: rgba(var(--v-galaxyAccent-base), 0.06);
-      border: 1px solid rgba(var(--v-galaxyAccent-base), 0.25);
-    }
+  //   .task-item {
+  //     display: grid;
+  //     grid-template-columns: 14px 1fr;
+  //     align-items: start;
+  //     gap: 10px;
+  //     padding: 8px 10px;
+  //     border-radius: 8px;
+  //     background-color: rgba(var(--v-missionAccent-base), 0.05);
+  //     // border-left: 3px solid var(--v-missionAccent-base);
+  //   }
 
-    .checkpoint-flag {
-      font-size: 0.95rem;
-      margin-top: 2px;
-    }
+  //   .task-bullet {
+  //     width: 8px;
+  //     height: 8px;
+  //     margin-top: 6px;
+  //     border-radius: 50%;
+  //     background: var(--v-missionAccent-base);
+  //     display: inline-block;
+  //   }
 
-    .checkpoint-text {
-      margin: 0;
-      font-size: 0.9rem;
-      color: var(--v-missionAccent-base);
-      line-height: 1.6;
-      // font-weight: 600;
-    }
-  }
+  //   .task-text {
+  //     margin: 0;
+  //     font-size: 0.92rem;
+  //     line-height: 1.6;
+  //     // color: var(--v-missionAccent-base);
+  //   }
 
-  .no-planet-selected {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 200px;
-    color: var(--v-missionAccent-base);
-    opacity: 0.7;
-    font-style: italic;
-  }
+  //   .checkpoint-row {
+  //     display: grid;
+  //     grid-template-columns: 18px 1fr;
+  //     align-items: start;
+  //     gap: 10px;
+  //     padding: 10px 12px;
+  //     border-radius: 10px;
+  //     margin-top: 10px;
+  //     background: rgba(var(--v-galaxyAccent-base), 0.06);
+  //     border: 1px solid rgba(var(--v-galaxyAccent-base), 0.25);
+  //   }
+
+  //   .checkpoint-flag {
+  //     font-size: 0.95rem;
+  //     margin-top: 2px;
+  //   }
+
+  //   .checkpoint-text {
+  //     margin: 0;
+  //     font-size: 0.9rem;
+  //     color: var(--v-missionAccent-base);
+  //     line-height: 1.6;
+  //     // font-weight: 600;
+  //   }
+  // }
+
+  // .no-planet-selected {
+  //   display: flex;
+  //   justify-content: center;
+  //   align-items: center;
+  //   height: 200px;
+  //   color: var(--v-missionAccent-base);
+  //   opacity: 0.7;
+  //   font-style: italic;
+  // }
 }
 
 // Loading overlay styles
@@ -5831,5 +5950,16 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
       }
     }
   }
+}
+#app .slide-right-panel-enter-active,
+#app .slide-right-panel-leave-active {
+  transition:
+    transform 0.25s ease,
+    opacity 0.25s ease;
+}
+#app .slide-right-panel-enter,
+#app .slide-right-panel-leave-to {
+  transform: translateX(100%);
+  opacity: 0;
 }
 </style>
