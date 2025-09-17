@@ -1,0 +1,441 @@
+/workspace/src/components/GalaxyView/PublishGalaxy.vue:435:          organisation: "",
+/workspace/src/components/CohortView/CohortInfo.vue:15:      <Organisation v-if="organisation" :organisation="organisation" :size="40" />
+/workspace/src/components/CohortView/CohortInfo.vue:34:import Organisation from "@/components/Reused/Organisation.vue";
+/workspace/src/components/CohortView/CohortInfo.vue:37:import { fetchOrganisationByOrganisationId, fetchPersonByPersonId } from "@/lib/ff";
+/workspace/src/components/CohortView/CohortInfo.vue:46:    Organisation,
+/workspace/src/components/CohortView/CohortInfo.vue:53:      organisation: null,
+/workspace/src/components/CohortView/CohortInfo.vue:58:    await this.getOrganisation();
+/workspace/src/components/CohortView/CohortInfo.vue:68:        if (oldCohort.organisation !== newCohort.organisation) {
+/workspace/src/components/CohortView/CohortInfo.vue:69:          await this.getOrganisation();
+/workspace/src/components/CohortView/CohortInfo.vue:75:    ...mapState(useRootStore, ["getOrganisationById", "person", "user"]),
+/workspace/src/components/CohortView/CohortInfo.vue:94:    async getOrganisation() {
+/workspace/src/components/CohortView/CohortInfo.vue:95:      if (this.cohort.organisation != null && this.cohort.organisation !== "") {
+/workspace/src/components/CohortView/CohortInfo.vue:96:        this.organisation = await fetchOrganisationByOrganisationId(this.cohort.organisation);
+/workspace/src/components/CohortView/CohortInfo.vue:98:        this.organisation = null;
+/workspace/src/components/AllStudentsView/StudentDataIteratorAdmin.vue:188:        // need to figure out how we provide teacher admin access to only students in their school (TODO: maybe revisit organinsations ie: teacher as admin of organisation)
+/workspace/src/components/Reused/Organisation.vue:4:      >Organisation</span
+/workspace/src/components/Reused/Organisation.vue:12:        v-if="organisation.image"
+/workspace/src/components/Reused/Organisation.vue:13:        :src="organisation.image.url"
+/workspace/src/components/Reused/Organisation.vue:16:        class="organisation-image"
+/workspace/src/components/Reused/Organisation.vue:18:      <div v-else-if="organisation.name" class="imagePlaceholder">
+/workspace/src/components/Reused/Organisation.vue:19:        {{ first3Letters(organisation.name) }}
+/workspace/src/components/Reused/Organisation.vue:22:        <span v-if="!hideName" class="overline">{{ organisation.name }}</span>
+/workspace/src/components/Reused/Organisation.vue:30:  name: "Organisation",
+/workspace/src/components/Reused/Organisation.vue:31:  props: ["organisation", "hideName", "size"],
+/workspace/src/components/Reused/Organisation.vue:43:      this.$emit("editOrg", this.organisation.id);
+/workspace/src/components/Reused/Organisation.vue:61:.organisation-image {
+/workspace/src/components/Reused/AssignedInfo.vue:78:import Organisation from "@/components/Reused/Organisation.vue";
+/workspace/src/components/Reused/AssignedInfo.vue:91:    Organisation,
+/workspace/src/components/Reused/AssignedInfo.vue:100:    "organisations",
+/workspace/src/components/Reused/Avatar.vue:53:    <v-tooltip v-if="organisationData" bottom color="subBackground">
+/workspace/src/components/Reused/Avatar.vue:58:              v-if="organisationData.image?.url"
+/workspace/src/components/Reused/Avatar.vue:59:              :src="organisationData.image.url"
+/workspace/src/components/Reused/Avatar.vue:60:              :alt="organisationData.name"
+/workspace/src/components/Reused/Avatar.vue:65:              {{ first3Letters(organisationData.name) }}
+/workspace/src/components/Reused/Avatar.vue:72:          {{ organisationData.name }}
+/workspace/src/components/Reused/Avatar.vue:93:    "organisationData",
+/workspace/src/components/Reused/Avatar.vue:109:        if (this.owner.path.startsWith("organisations")) {
+/workspace/src/components/Reused/Avatar.vue:110:          this.organisationData = doc;
+/workspace/src/components/Reused/Avatar.vue:170:      else if (this.organisationData) str = this.organisationData.name;
+/workspace/src/components/GalaxyList/GalaxyListInfoPanel/PopupGalaxyPreview.vue:73:            v-if="isCourseOwnerOrganisation"
+/workspace/src/components/GalaxyList/GalaxyListInfoPanel/PopupGalaxyPreview.vue:74:            :organisationData="courseOwner"
+/workspace/src/components/GalaxyList/GalaxyListInfoPanel/PopupGalaxyPreview.vue:79:          <span v-if="isCourseOwnerOrganisation" class="mt-2">{{ courseOwner.name }}</span>
+/workspace/src/components/GalaxyList/GalaxyListInfoPanel/PopupGalaxyPreview.vue:204:      isCourseOwnerOrganisation: false,
+/workspace/src/components/GalaxyList/GalaxyListInfoPanel/PopupGalaxyPreview.vue:259:      this.isCourseOwnerOrganisation = db.doc(this.course.owner).path.startsWith("organisations");
+/workspace/src/components/CohortList/CohortPanelV2.vue:130:import Organisation from "@/components/Reused/Organisation.vue";
+/workspace/src/components/CohortList/CohortPanelV2.vue:146:    Organisation,
+/workspace/src/components/CohortList/CohortPanelV2.vue:199:    ...mapState(useRootStore, ["getOrganisationById", "currentCohort", "person"]),
+/workspace/src/components/Dialogs/DiscoverGalaxyButton.vue:32:                  Enter an <strong>Organisation's name</strong> or <strong>Galaxy Map ID</strong>
+/workspace/src/components/Dialogs/DiscoverGalaxyButton.vue:98:      "Discover an unlisted Galaxy. Enter an <strong>Organisations name</strong> or a Galaxy Map ID",
+/workspace/src/components/Dialogs/CreateEditDeleteCohortDialog.vue:97:              <!-- ORGANISATION -->
+/workspace/src/components/Dialogs/CreateEditDeleteCohortDialog.vue:98:              <!-- <p class="input-description">Organisation:</p>
+/workspace/src/components/Dialogs/CreateEditDeleteCohortDialog.vue:105:                v-model="cohort.organisation"
+/workspace/src/components/Dialogs/CreateEditDeleteCohortDialog.vue:106:                :items="organisationsToSelect"
+/workspace/src/components/Dialogs/CreateEditDeleteCohortDialog.vue:179:            <!-- Organisation -->
+/workspace/src/components/Dialogs/CreateEditDeleteCohortDialog.vue:181:              <Organisation
+/workspace/src/components/Dialogs/CreateEditDeleteCohortDialog.vue:182:                v-if="cohort.organisation"
+/workspace/src/components/Dialogs/CreateEditDeleteCohortDialog.vue:183:                :organisation="getOrganisationById(cohort.organisation)"
+/workspace/src/components/Dialogs/CreateEditDeleteCohortDialog.vue:343:import Organisation from "@/components/Reused/Organisation.vue";
+/workspace/src/components/Dialogs/CreateEditDeleteCohortDialog.vue:357:    Organisation,
+/workspace/src/components/Dialogs/CreateEditDeleteCohortDialog.vue:380:      organisation: "",
+/workspace/src/components/Dialogs/CreateEditDeleteCohortDialog.vue:417:    ...mapState(useRootStore, ["person", "getOrganisationById", "user", "people", "organisations"]),
+/workspace/src/components/Dialogs/CreateEditDeleteCohortDialog.vue:430:    organisationsToSelect() {
+/workspace/src/components/Dialogs/CreateEditDeleteCohortDialog.vue:431:      return [{ name: "none", id: 0 }, ...this.organisations];
+/workspace/src/components/Dialogs/CreateEditDeleteCohortDialog.vue:461:            organisation: "",
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:8:          CREATE ORGANISATION
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:35:        <div class="organisation-details">
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:37:          <div class="left-side" :style="organisation.name ? 'width:50%' : 'width:100%'">
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:47:                v-model="organisation.name"
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:48:                label="Organisation name"
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:61:                v-model="organisation.description"
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:62:                label="Organisation description"
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:74:                label="Organisation image upload"
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:90:          <div class="right-side" :style="organisation.name ? 'width:50%' : 'width:0%'">
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:91:            <div v-if="organisation.name">
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:94:                  v-if="organisation.image?.url"
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:95:                  :src="organisation.image?.url"
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:98:                  class="organisation-image"
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:101:                  {{ first3Letters(organisation.name) }}
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:103:                <h3 class="overline mt-4">{{ organisation.name }}</h3>
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:104:                <p class="organisation-description mt-4">
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:105:                  {{ organisation.description }}
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:113:        <!-- ORGANISATIONS PEOPLE -->
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:114:        <div class="organisation-people">
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:115:          <p class="org-people-description">People in this Organisation</p>
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:121:              @click:close="removePersonFromOrganisation(person.id)"
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:152:                @click="addPersonToOrganisation(personsEmail)"
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:170:            @click="saveOrganisation(organisation)"
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:182:            @click="updateOrganisation(organisation)"
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:218:          <p class="dialog-title"><strong>Warning!</strong> Delete Organisation?</p>
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:223:              <span class="organisation-text">{{ organisation.name }} ORGANISATION</span>?
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:231:              <strong>ORGANISATION</strong>
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:242:            @click="confirmDeleteOrganisation(organisation)"
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:272:  createOrganisation,
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:273:  updateOrganisationByOrganisationId,
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:274:  addPersonToOrganisationByOrganisationIdAndPersonId,
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:275:  removePersonFromOrganisationByOrganisationIdAndPersonId,
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:276:  deleteOrganisationByOrganisationId,
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:277:  fetchPeopleByOrganisationId,
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:282:  name: "CreateEditDeleteOrganisationDialog",
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:283:  props: ["edit", "organisationToEdit", "hideText"],
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:292:    dialogTitle: "Create a new Organisation",
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:293:    dialogDescription: "An Organisation is typically a school, business or... an organisation",
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:298:    organisation: {
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:311:    if (this.organisationToEdit) {
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:312:      this.organisation = { ...this.organisationToEdit };
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:313:      this.people = await fetchPeopleByOrganisationId(this.organisation.id);
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:317:    async organisationToEdit(n, o) {
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:318:      this.organisation = { ...n };
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:319:      this.people = await fetchPeopleByOrganisationId(this.organisation.id);
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:342:      this.$emit("closeOrganisationEditDialog");
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:344:    async saveOrganisation(organisation) {
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:348:        const _createdOrg = await createOrganisation(organisation);
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:358:      this.organisation = {};
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:361:    async updateOrganisation(organisation) {
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:365:        const _updatedOrg = await updateOrganisationByOrganisationId(organisation.id, organisation);
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:367:        console.log("Organisation successfully updated!");
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:375:      this.organisation = {};
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:377:    async addPersonToOrganisation(email) {
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:387:        const updatedOrg = await addPersonToOrganisationByOrganisationIdAndPersonId(
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:388:          this.organisation.id,
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:391:        const updatedPeople = await fetchPeopleByOrganisationId(this.organisation.id);
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:393:        this.organisation = updatedOrg;
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:395:        console.log("Person successfully added to organisation!");
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:404:    async removePersonFromOrganisation(personId) {
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:406:        const updatedOrg = await removePersonFromOrganisationByOrganisationIdAndPersonId(
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:407:          this.organisation.id,
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:410:        const updatedPeople = await fetchPeopleByOrganisationId(this.organisation.id);
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:412:        this.organisation = updatedOrg;
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:414:        console.log("Person successfully removed to organisation!");
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:425:        "organisation-images/" + this.organisation.name + "-" + this.uploadedImage.name,
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:441:        console.log("this.organisation: " + this.organisation);
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:443:        // add image url to organisation obj
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:446:          name: this.organisation.name + "-" + this.uploadedImage.name,
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:448:        this.organisation.image = image;
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:467:    async confirmDeleteOrganisation(organisation) {
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:471:        const _deletedOrg = await deleteOrganisationByOrganisationId(organisation.id);
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:473:        console.log("Organisation successfully deleted!");
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:505:  .organisation-details {
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:536:      .organisation-image {
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:543:      .organisation-description {
+/workspace/src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue:550:  .organisation-people {
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:12:              UPDATE ORGANISATION
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:17:          <div class="createOrganisationDialog">
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:20:              <v-text-field label="ORGANISATION TITLE" :value="organisation.name"></v-text-field>
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:29:                label="ORGANISATION DESCRIPTION"
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:30:                :value="organisation.description"
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:34:            <!-- UPLOAD ORGANISATION IMAGE -->
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:44:                    label="UPLOAD ORGANISATION IMAGE"
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:49:                <v-row v-if="organisation.image.url" class="d-flex justify-center">
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:50:                  <v-img :src="organisation.image.url" max-height="150px" max-width="150px"></v-img>
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:61:                @click="updateOrganisation(combinePropAndLocalOrganisation)"
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:66:                UPDATE ORGANISATION
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:71:                DELETE ORGANISATION
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:84:              <span class="organisation-text">{{ organisation.name }} FLEET</span>?
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:106:                @click="confirmDeleteOrganisation(organisation)"
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:112:                CONFIRM DELETE ORGANISATION
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:128:  name: "EditOrganisationButtonDialog",
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:130:  props: ["open", "organisation"],
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:133:    combinePropAndLocalOrganisation() {
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:134:      return { ...this.organisation, ...this.localOrganisation };
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:147:    // organisation: null,
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:150:    localOrganisation: {},
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:154:      this.$emit("closeOrganisationEditDialog");
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:156:    updateOrganisation(organisation) {
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:159:      db.collection("organisations")
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:160:        .doc(organisation.id)
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:161:        .update(organisation)
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:163:          console.log("Organisation successfully updated!");
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:170:      this.organisation = {};
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:182:        "organisation-images/" + this.organisation.name + "-" + this.uploadedImage.name,
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:204:            // add image url to organisation obj
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:205:            this.organisation.image.url = downloadURL;
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:206:            this.organisation.image.name = this.uploadedImage.name;
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:219:    confirmDeleteOrganisation(organisation) {
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:221:      // delete document in collection "organisations"
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:222:      db.collection("organisations")
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:223:        .doc(organisation.id)
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:226:          console.log("Organisation successfully deleted!");
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:235:      // TODO:  search cohorts.organisations for "organisation.id" and delete/or set as empty
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:237:        .where("organisation", "==", organisation.id)
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:241:            // where id matches organisations in cohort, set emmpty org (removing org from cohort)
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:244:              .update({ organisation: "" })
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:246:                console.log("Organisation removed from Cohort.");
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:258:      if (this.organisation.image.name == "") return;
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:261:      var storageRef = storage.ref("organisation-images/" + this.organisation.image.name);
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:278:.createOrganisationDialog {
+/workspace/src/components/Dialogs/EditOrganisationButtonDialog.vue:307:.organisation-text {
+/workspace/src/components/Dialogs/AssignCohortDialog.vue:49:              <!-- <v-tab><p class="baseAccent--text tab">Organisation</p></v-tab> -->
+/workspace/src/components/Dialogs/CreateEditDeleteGalaxyDialog.vue:102:                <!-- ===== Owner field. This is who owns the course e.g. you might be creating the course for an organisation ==== -->
+/workspace/src/components/Dialogs/CreateEditDeleteGalaxyDialog.vue:103:                <!-- 1. dropdown menu of the organisations that the user is in. -->
+/workspace/src/lib/ff.ts:6:  IOrganisation,
+/workspace/src/lib/ff.ts:259:// organisation
+/workspace/src/lib/ff.ts:260:export const fetchOrganisations = async (): Promise<IOrganisation[]> => {
+/workspace/src/lib/ff.ts:262:  const getOrganisations = functions.httpsCallable("getOrganisations");
+/workspace/src/lib/ff.ts:263:  const result = await getOrganisations(data);
+/workspace/src/lib/ff.ts:264:  return result.data.organisations;
+/workspace/src/lib/ff.ts:267:export const fetchOrganisationByOrganisationId = async (
+/workspace/src/lib/ff.ts:268:  organisationId: string,
+/workspace/src/lib/ff.ts:269:): Promise<IOrganisation> => {
+/workspace/src/lib/ff.ts:271:    organisationId,
+/workspace/src/lib/ff.ts:273:  const getOrganisationByOrganisationId = functions.httpsCallable(
+/workspace/src/lib/ff.ts:274:    "getOrganisationByOrganisationId",
+/workspace/src/lib/ff.ts:276:  const result = await getOrganisationByOrganisationId(data);
+/workspace/src/lib/ff.ts:277:  return result.data.organisation;
+/workspace/src/lib/ff.ts:280:export const fetchPeopleByOrganisationId = async (organisationId: string): Promise<IPerson[]> => {
+/workspace/src/lib/ff.ts:282:    organisationId,
+/workspace/src/lib/ff.ts:284:  const getPeopleByOrganisationId = functions.httpsCallable("getPeopleByOrganisationId");
+/workspace/src/lib/ff.ts:285:  const result = await getPeopleByOrganisationId(data);
+/workspace/src/lib/ff.ts:289:export const createOrganisation = async (organisation: object): Promise<IOrganisation> => {
+/workspace/src/lib/ff.ts:291:    organisation,
+/workspace/src/lib/ff.ts:293:  const createOrganisation = functions.httpsCallable("createOrganisation");
+/workspace/src/lib/ff.ts:294:  const result = await createOrganisation(data);
+/workspace/src/lib/ff.ts:295:  return result.data.organisation;
+/workspace/src/lib/ff.ts:298:export const updateOrganisationByOrganisationId = async (
+/workspace/src/lib/ff.ts:299:  organisationId: string,
+/workspace/src/lib/ff.ts:300:  organisation: object,
+/workspace/src/lib/ff.ts:301:): Promise<IOrganisation> => {
+/workspace/src/lib/ff.ts:303:    organisationId,
+/workspace/src/lib/ff.ts:304:    organisation,
+/workspace/src/lib/ff.ts:306:  const updateOrganisationByOrganisationId = functions.httpsCallable(
+/workspace/src/lib/ff.ts:307:    "updateOrganisationByOrganisationId",
+/workspace/src/lib/ff.ts:309:  const result = await updateOrganisationByOrganisationId(data);
+/workspace/src/lib/ff.ts:310:  return result.data.organisation;
+/workspace/src/lib/ff.ts:313:export const addPersonToOrganisationByOrganisationIdAndPersonId = async (
+/workspace/src/lib/ff.ts:314:  organisationId: string,
+/workspace/src/lib/ff.ts:316:): Promise<IOrganisation> => {
+/workspace/src/lib/ff.ts:318:    organisationId,
+/workspace/src/lib/ff.ts:321:  const addPersonToOrganisationByOrganisationIdAndPersonId = functions.httpsCallable(
+/workspace/src/lib/ff.ts:322:    "addPersonToOrganisationByOrganisationIdAndPersonId",
+/workspace/src/lib/ff.ts:324:  const result = await addPersonToOrganisationByOrganisationIdAndPersonId(data);
+/workspace/src/lib/ff.ts:325:  return result.data.organisation;
+/workspace/src/lib/ff.ts:328:export const removePersonFromOrganisationByOrganisationIdAndPersonId = async (
+/workspace/src/lib/ff.ts:329:  organisationId: string,
+/workspace/src/lib/ff.ts:331:): Promise<IOrganisation> => {
+/workspace/src/lib/ff.ts:333:    organisationId,
+/workspace/src/lib/ff.ts:336:  const removePersonFromOrganisationByOrganisationIdAndPersonId = functions.httpsCallable(
+/workspace/src/lib/ff.ts:337:    "removePersonFromOrganisationByOrganisationIdAndPersonId",
+/workspace/src/lib/ff.ts:339:  const result = await removePersonFromOrganisationByOrganisationIdAndPersonId(data);
+/workspace/src/lib/ff.ts:340:  return result.data.organisation;
+/workspace/src/lib/ff.ts:343:export const deleteOrganisationByOrganisationId = async (
+/workspace/src/lib/ff.ts:344:  organisationId: string,
+/workspace/src/lib/ff.ts:345:): Promise<IOrganisation> => {
+/workspace/src/lib/ff.ts:347:    organisationId,
+/workspace/src/lib/ff.ts:349:  const deleteOrganisationByOrganisationId = functions.httpsCallable(
+/workspace/src/lib/ff.ts:350:    "deleteOrganisationByOrganisationId",
+/workspace/src/lib/ff.ts:352:  const result = await deleteOrganisationByOrganisationId(data);
+/workspace/src/lib/ff.ts:353:  return result.data.organisation;
+/workspace/src/views/CohortListV2.vue:26:      <!-- ORGANISATIONS -->
+/workspace/src/views/CohortListV2.vue:28:        v-for="(organisation, orgIndex) in getOrganisationsThatPersonIsTeacherIn"
+/workspace/src/views/CohortListV2.vue:29:        :key="organisation.id"
+/workspace/src/views/CohortListV2.vue:32:        <div class="organisation-banner d-flex flex-column justify-center align-center">
+/workspace/src/views/CohortListV2.vue:33:          <Organisation
+/workspace/src/views/CohortListV2.vue:35:            :organisation="organisation"
+/workspace/src/views/CohortListV2.vue:40:        <!-- COHORTS BY GROUPED BY ORGANISATION -->
+/workspace/src/views/CohortListV2.vue:42:        <!-- will become useful when a teacher is selling their maps to multiple organisations and cohorts -->
+/workspace/src/views/CohortListV2.vue:45:            v-for="(cohort, cohortIndex) in getCohortsByOrganisationId(organisation.id)"
+/workspace/src/views/CohortListV2.vue:76:              <CreateEditDeleteOrganisationDialog
+/workspace/src/views/CohortListV2.vue:77:                ref="organisationDialog"
+/workspace/src/views/CohortListV2.vue:78:                :edit="openOrganisationDialog"
+/workspace/src/views/CohortListV2.vue:79:                :organisationToEdit="editingOrgansation"
+/workspace/src/views/CohortListV2.vue:84:          <div class="create-tooltip">CREATE ORGANISATION</div>
+/workspace/src/views/CohortListV2.vue:148:          <!-- CREATE ORGANISATION -->
+/workspace/src/views/CohortListV2.vue:152:                <CreateEditDeleteOrganisationDialog
+/workspace/src/views/CohortListV2.vue:153:                  ref="organisationDialog"
+/workspace/src/views/CohortListV2.vue:154:                  :edit="openOrganisationDialog"
+/workspace/src/views/CohortListV2.vue:155:                  :organisationToEdit="editingOrgansation"
+/workspace/src/views/CohortListV2.vue:159:            <div class="create-tooltip">CREATE ORGANISATION</div>
+/workspace/src/views/CohortListV2.vue:202:                <CreateEditDeleteOrganisationDialog
+/workspace/src/views/CohortListV2.vue:203:                  ref="organisationDialog"
+/workspace/src/views/CohortListV2.vue:204:                  :edit="openOrganisationDialog"
+/workspace/src/views/CohortListV2.vue:205:                  :organisationToEdit="editingOrgansation"
+/workspace/src/views/CohortListV2.vue:210:            <div class="create-tooltip">CREATE ORGANISATION</div>
+/workspace/src/views/CohortListV2.vue:223:  <!-- <EditOrganisationButtonDialog v-if="editingOrgansation" :open="openOrganisationDialog" :organisation="editingOrgansation" @closeOrganisationEditDialog="openOrganisationDialog = false"/> -->
+/workspace/src/views/CohortListV2.vue:230:import CreateEditDeleteOrganisationDialog from "@/components/Dialogs/CreateEditDeleteOrganisationDialog.vue";
+/workspace/src/views/CohortListV2.vue:232:import EditOrganisationButtonDialog from "@/components/Dialogs/EditOrganisationButtonDialog.vue";
+/workspace/src/views/CohortListV2.vue:236:import Organisation from "@/components/Reused/Organisation.vue";
+/workspace/src/views/CohortListV2.vue:237:import { fetchCohorts, fetchOrganisationByOrganisationId } from "@/lib/ff";
+/workspace/src/views/CohortListV2.vue:247:    CreateEditDeleteOrganisationDialog,
+/workspace/src/views/CohortListV2.vue:249:    Organisation,
+/workspace/src/views/CohortListV2.vue:250:    EditOrganisationButtonDialog,
+/workspace/src/views/CohortListV2.vue:258:    openOrganisationDialog: false,
+/workspace/src/views/CohortListV2.vue:265:    organisations: [],
+/workspace/src/views/CohortListV2.vue:279:    // trigger VuexFire bindCohorts & bindOrganisations in Store
+/workspace/src/views/CohortListV2.vue:280:    await this.getCohortsAndOrganisations();
+/workspace/src/views/CohortListV2.vue:295:    getOrganisationsThatPersonIsTeacherIn() {
+/workspace/src/views/CohortListV2.vue:296:      return this.organisations.filter((organisation) =>
+/workspace/src/views/CohortListV2.vue:297:        organisation.people.includes(this.person.id),
+/workspace/src/views/CohortListV2.vue:300:    getCohortsByOrganisationId(id) {
+/workspace/src/views/CohortListV2.vue:302:        return this.cohorts.filter((cohort) => cohort.organisation === id);
+/workspace/src/views/CohortListV2.vue:304:        return this.cohorts.filter((cohort) => cohort.organisation === "");
+/workspace/src/views/CohortListV2.vue:307:    async getCohortsAndOrganisations() {
+/workspace/src/views/CohortListV2.vue:309:      const organisationIdsSet = new Set(
+/workspace/src/views/CohortListV2.vue:311:          .filter((cohort) => cohort.organisation != null && cohort.organisation !== "")
+/workspace/src/views/CohortListV2.vue:312:          .map((cohort) => cohort.organisation),
+/workspace/src/views/CohortListV2.vue:314:      this.organisations = await Promise.all(
+/workspace/src/views/CohortListV2.vue:315:        Array.from(organisationIdsSet).map((id) => fetchOrganisationByOrganisationId(id)),
+/workspace/src/views/CohortListV2.vue:319:      this.openOrganisationDialog = true;
+/workspace/src/views/CohortListV2.vue:320:      this.editingOrgansation = this.organisations.find((org) => org.id === orgId);
+/workspace/src/views/CohortListV2.vue:321:      this.$refs.organisationDialog.openDialog();
+/workspace/src/views/CohortListV2.vue:329:      const numOrgs = this.organisations.length;
+/workspace/src/views/CohortListV2.vue:471:  .organisation-banner {
+/workspace/src/store/_types.ts:1:export interface IOrganisation {
+/workspace/src/store/index.ts:15:    organisations: [] as Record<string, any>[],
+/workspace/src/store/index.ts:57:    getOrganisationById: (state) => (id: string) => {
+/workspace/src/store/index.ts:58:      return state.organisations.find((organisation) => organisation.id === id);
+/workspace/src/store/index.ts:124:    setOrganisations(orgs: Record<string, any>[]) {
+/workspace/src/store/index.ts:125:      this.organisations = orgs;
+/workspace/src/store/index.ts:362:        await this.getOrganisationsByCohorts(cohorts);
+/workspace/src/store/index.ts:368:    async getOrganisationsByCohorts(cohorts: any) {
+/workspace/src/store/index.ts:371:        .collection("organisations")
+/workspace/src/store/index.ts:385:      this.setOrganisations(orgs);
+/workspace/rules/firestore.rules:97:    // Organisations collection
+/workspace/rules/firestore.rules:98:    match /organisations/{organisationId} {
+/workspace/functions/src/index.ts:55:  getOrganisationByOrganisationIdHttpsEndpoint,
+/workspace/functions/src/index.ts:56:  getPeopleByOrganisationIdHttpsEndpoint,
+/workspace/functions/src/index.ts:57:  getOrganisationsHttpsEndpoint,
+/workspace/functions/src/index.ts:58:  createOrganisationHttpsEndpoint,
+/workspace/functions/src/index.ts:59:  updateOrganisationByOrganisationIdHttpsEndpoint,
+/workspace/functions/src/index.ts:60:  deleteOrganisationByOrganisationIdHttpsEndpoint,
+/workspace/functions/src/index.ts:61:} from "./organisationManagement.js";
+/workspace/functions/src/index.ts:126:  getOrganisationByOrganisationIdHttpsEndpoint as getOrganisationByOrganisationId,
+/workspace/functions/src/index.ts:127:  getPeopleByOrganisationIdHttpsEndpoint as getPeopleByOrganisationId,
+/workspace/functions/src/index.ts:128:  getOrganisationsHttpsEndpoint as getOrganisations,
+/workspace/functions/src/index.ts:129:  createOrganisationHttpsEndpoint as createOrganisation,
+/workspace/functions/src/index.ts:130:  updateOrganisationByOrganisationIdHttpsEndpoint as updateOrganisationByOrganisationId,
+/workspace/functions/src/index.ts:131:  deleteOrganisationByOrganisationIdHttpsEndpoint as deleteOrganisationByOrganisationId,
+/workspace/functions/src/organisationManagement.ts:7:// Get organisation by organisationId
+/workspace/functions/src/organisationManagement.ts:8:export const getOrganisationByOrganisationIdHttpsEndpoint = runWith({}).https.onCall(
+/workspace/functions/src/organisationManagement.ts:12:    const organisationId = data.organisationId as string | null;
+/workspace/functions/src/organisationManagement.ts:13:    if (organisationId == null) {
+/workspace/functions/src/organisationManagement.ts:14:      throw new HttpsError("invalid-argument", "missing organisationId");
+/workspace/functions/src/organisationManagement.ts:17:    const organisationDoc = await db.collection("organisations").doc(organisationId).get();
+/workspace/functions/src/organisationManagement.ts:18:    const organisationData = organisationDoc.data();
+/workspace/functions/src/organisationManagement.ts:20:    if (organisationData == null) {
+/workspace/functions/src/organisationManagement.ts:21:      throw new HttpsError("not-found", `Organisation not found: ${organisationId}`);
+/workspace/functions/src/organisationManagement.ts:27:      organisation: {
+/workspace/functions/src/organisationManagement.ts:28:        ...organisationData,
+/workspace/functions/src/organisationManagement.ts:29:        id: organisationDoc.id,
+/workspace/functions/src/organisationManagement.ts:35:// Get people by organisationId
+/workspace/functions/src/organisationManagement.ts:36:export const getPeopleByOrganisationIdHttpsEndpoint = runWith({}).https.onCall(
+/workspace/functions/src/organisationManagement.ts:40:    const organisationId = data.organisationId as string | null;
+/workspace/functions/src/organisationManagement.ts:41:    if (organisationId == null) {
+/workspace/functions/src/organisationManagement.ts:42:      throw new HttpsError("invalid-argument", "missing organisationId");
+/workspace/functions/src/organisationManagement.ts:45:    const organisationDoc = await db.collection("organisations").doc(organisationId).get();
+/workspace/functions/src/organisationManagement.ts:46:    const organisationData = organisationDoc.data();
+/workspace/functions/src/organisationManagement.ts:48:    if (organisationData == null) {
+/workspace/functions/src/organisationManagement.ts:49:      throw new HttpsError("not-found", `Organisation not found: ${organisationId}`);
+/workspace/functions/src/organisationManagement.ts:54:    const peopleRefs = organisationData.people as DocumentReference[];
+/workspace/functions/src/organisationManagement.ts:68:// Get organisations
+/workspace/functions/src/organisationManagement.ts:69:export const getOrganisationsHttpsEndpoint = runWith({}).https.onCall(async (_data, context) => {
+/workspace/functions/src/organisationManagement.ts:74:  const organisationCollection = await db.collection("organisations").get();
+/workspace/functions/src/organisationManagement.ts:76:  const organisationMap = new Map();
+/workspace/functions/src/organisationManagement.ts:77:  for (const doc of organisationCollection.docs) {
+/workspace/functions/src/organisationManagement.ts:78:    const organisation = doc.data();
+/workspace/functions/src/organisationManagement.ts:79:    organisationMap.set(doc.id, {
+/workspace/functions/src/organisationManagement.ts:80:      ...organisation,
+/workspace/functions/src/organisationManagement.ts:84:  return { organisations: Array.from(organisationMap.values()) };
+/workspace/functions/src/organisationManagement.ts:87:// Create organisation
+/workspace/functions/src/organisationManagement.ts:88:export const createOrganisationHttpsEndpoint = runWith({}).https.onCall(async (data, context) => {
+/workspace/functions/src/organisationManagement.ts:91:  const organisation = data.organisation as ({ name: string } & Record<string, unknown>) | null;
+/workspace/functions/src/organisationManagement.ts:92:  if (organisation == null) {
+/workspace/functions/src/organisationManagement.ts:93:    throw new HttpsError("invalid-argument", "missing organisation");
+/workspace/functions/src/organisationManagement.ts:98:  if (organisation.people != null) {
+/workspace/functions/src/organisationManagement.ts:99:    if (!Array.isArray(organisation.people)) {
+/workspace/functions/src/organisationManagement.ts:103:    organisation.people = organisation.people.map((personRefOrId: string) =>
+/workspace/functions/src/organisationManagement.ts:109:    organisation.people = [];
+/workspace/functions/src/organisationManagement.ts:112:  const organisationDoc = await db.collection("organisations").add(organisation);
+/workspace/functions/src/organisationManagement.ts:115:    organisation: {
+/workspace/functions/src/organisationManagement.ts:116:      ...organisation,
+/workspace/functions/src/organisationManagement.ts:117:      id: organisationDoc.id,
+/workspace/functions/src/organisationManagement.ts:122:// Update organisation by organisationId
+/workspace/functions/src/organisationManagement.ts:123:export const updateOrganisationByOrganisationIdHttpsEndpoint = runWith({}).https.onCall(
+/workspace/functions/src/organisationManagement.ts:127:    const organisationId = data.organisationId as string | null;
+/workspace/functions/src/organisationManagement.ts:128:    const organisation = data.organisation as { name: string } | null;
+/workspace/functions/src/organisationManagement.ts:129:    if (organisationId == null) {
+/workspace/functions/src/organisationManagement.ts:130:      throw new HttpsError("invalid-argument", "missing organisationId");
+/workspace/functions/src/organisationManagement.ts:132:    if (organisation == null) {
+/workspace/functions/src/organisationManagement.ts:133:      throw new HttpsError("invalid-argument", "missing organisation");
+/workspace/functions/src/organisationManagement.ts:136:    const organisationDoc = await db.collection("organisations").doc(organisationId).get();
+/workspace/functions/src/organisationManagement.ts:137:    const organisationData = organisationDoc.data();
+/workspace/functions/src/organisationManagement.ts:139:    if (organisationData == null) {
+/workspace/functions/src/organisationManagement.ts:140:      throw new HttpsError("not-found", `Organisation not found: ${organisationId}`);
+/workspace/functions/src/organisationManagement.ts:145:    await organisationDoc.ref.update(organisation);
+/workspace/functions/src/organisationManagement.ts:147:    const updatedOrganisationDoc = await organisationDoc.ref.get();
+/workspace/functions/src/organisationManagement.ts:148:    const updatedOrganisationData = updatedOrganisationDoc.data();
+/workspace/functions/src/organisationManagement.ts:151:      organisation: {
+/workspace/functions/src/organisationManagement.ts:152:        ...updatedOrganisationData,
+/workspace/functions/src/organisationManagement.ts:153:        people: updatedOrganisationData!.people.map((personRef: DocumentReference) => personRef.id),
+/workspace/functions/src/organisationManagement.ts:154:        id: updatedOrganisationDoc.id,
+/workspace/functions/src/organisationManagement.ts:160:// Add person to organisation by organisationId and personId
+/workspace/functions/src/organisationManagement.ts:161:export const addPersonToOrganisationByOrganisationIdAndPersonIdHttpsEndpoint = runWith(
+/workspace/functions/src/organisationManagement.ts:166:  const organisationId = data.organisationId as string | null;
+/workspace/functions/src/organisationManagement.ts:168:  if (organisationId == null) {
+/workspace/functions/src/organisationManagement.ts:169:    throw new HttpsError("invalid-argument", "missing organisationId");
+/workspace/functions/src/organisationManagement.ts:175:  const organisationDoc = await db.collection("organisations").doc(organisationId).get();
+/workspace/functions/src/organisationManagement.ts:176:  const organisationData = organisationDoc.data();
+/workspace/functions/src/organisationManagement.ts:178:  if (organisationData == null) {
+/workspace/functions/src/organisationManagement.ts:179:    throw new HttpsError("not-found", `Organisation not found: ${organisationId}`);
+/workspace/functions/src/organisationManagement.ts:191:  await organisationDoc.ref.update({
+/workspace/functions/src/organisationManagement.ts:195:  const updatedOrganisationDoc = await organisationDoc.ref.get();
+/workspace/functions/src/organisationManagement.ts:196:  const updatedOrganisationData = updatedOrganisationDoc.data();
+/workspace/functions/src/organisationManagement.ts:199:    organisation: {
+/workspace/functions/src/organisationManagement.ts:200:      ...updatedOrganisationData,
+/workspace/functions/src/organisationManagement.ts:201:      people: updatedOrganisationData!.people.map((personRef: DocumentReference) => personRef.id),
+/workspace/functions/src/organisationManagement.ts:202:      id: updatedOrganisationDoc.id,
+/workspace/functions/src/organisationManagement.ts:207:// Remove person from organisation by organisationId and personId
+/workspace/functions/src/organisationManagement.ts:208:export const removePersonFromOrganisationByOrganisationIdAndPersonIdHttpsEndpoint = runWith(
+/workspace/functions/src/organisationManagement.ts:213:  const organisationId = data.organisationId as string | null;
+/workspace/functions/src/organisationManagement.ts:215:  if (organisationId == null) {
+/workspace/functions/src/organisationManagement.ts:216:    throw new HttpsError("invalid-argument", "missing organisationId");
+/workspace/functions/src/organisationManagement.ts:222:  const organisationDoc = await db.collection("organisations").doc(organisationId).get();
+/workspace/functions/src/organisationManagement.ts:223:  const organisationData = organisationDoc.data();
+/workspace/functions/src/organisationManagement.ts:225:  if (organisationData == null) {
+/workspace/functions/src/organisationManagement.ts:226:    throw new HttpsError("not-found", `Organisation not found: ${organisationId}`);
+/workspace/functions/src/organisationManagement.ts:238:  await organisationDoc.ref.update({
+/workspace/functions/src/organisationManagement.ts:242:  const updatedOrganisationDoc = await organisationDoc.ref.get();
+/workspace/functions/src/organisationManagement.ts:243:  const updatedOrganisationData = updatedOrganisationDoc.data();
+/workspace/functions/src/organisationManagement.ts:246:    organisation: {
+/workspace/functions/src/organisationManagement.ts:247:      ...updatedOrganisationData,
+/workspace/functions/src/organisationManagement.ts:248:      people: updatedOrganisationData!.people.map((personRef: DocumentReference) => personRef.id),
+/workspace/functions/src/organisationManagement.ts:249:      id: updatedOrganisationDoc.id,
+/workspace/functions/src/organisationManagement.ts:254:// Delete organisation by organisationId
+/workspace/functions/src/organisationManagement.ts:255:export const deleteOrganisationByOrganisationIdHttpsEndpoint = runWith({}).https.onCall(
+/workspace/functions/src/organisationManagement.ts:259:    const organisationId = data.organisationId as string | null;
+/workspace/functions/src/organisationManagement.ts:260:    if (organisationId == null) {
+/workspace/functions/src/organisationManagement.ts:261:      throw new HttpsError("invalid-argument", "missing organisationId");
+/workspace/functions/src/organisationManagement.ts:264:    const organisationDoc = await db.collection("organisations").doc(organisationId).get();
+/workspace/functions/src/organisationManagement.ts:265:    const organisationData = organisationDoc.data();
+/workspace/functions/src/organisationManagement.ts:267:    if (organisationData == null) {
+/workspace/functions/src/organisationManagement.ts:268:      throw new HttpsError("not-found", `Organisation not found: ${organisationId}`);
+/workspace/functions/src/organisationManagement.ts:273:    await organisationDoc.ref.delete();
+/workspace/functions/src/organisationManagement.ts:277:      .where("organisation", "==", organisationDoc.id)
+/workspace/functions/src/organisationManagement.ts:280:    await Promise.all(cohortCollection.docs.map((doc) => doc.ref.update({ organisation: "" })));
+/workspace/functions/src/organisationManagement.ts:282:    if (organisationData.image?.name != null && organisationData.image.name !== "") {
+/workspace/functions/src/organisationManagement.ts:288:        .file("organisation-images/" + organisationData.image.name);
+/workspace/functions/src/organisationManagement.ts:300:      organisation: {
+/workspace/functions/src/organisationManagement.ts:301:        ...organisationData,
+/workspace/functions/src/organisationManagement.ts:302:        id: organisationDoc.id,
+/workspace/components.d.ts:32:    CreateEditDeleteOrganisationDialog: typeof import('./src/components/Dialogs/CreateEditDeleteOrganisationDialog.vue')['default']
+/workspace/components.d.ts:36:    EditOrganisationButtonDialog: typeof import('./src/components/Dialogs/EditOrganisationButtonDialog.vue')['default']
+/workspace/components.d.ts:58:    Organisation: typeof import('./src/components/Reused/Organisation.vue')['default']
