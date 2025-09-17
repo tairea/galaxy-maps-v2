@@ -2,6 +2,7 @@
   <div class="main-wrap">
     <LoadingSpinner v-if="isLoading" text="loading squads" style="margin-left: -10%" />
 
+    <!-- SIDE COLUMN -->
     <div class="side-col">
       <!-- COHORTS -->
       <!-- only if you made them (eg. are the teacher AKA in cohort.teachers[]) -->
@@ -108,6 +109,8 @@
         </div>
       </div> -->
     </div>
+
+    <!-- MAIN COLUMN -->
     <v-expand-transition>
       <div v-if="orderedCohorts.length" class="main-col" v-show="expand">
         <!-- Middle chip row -->
@@ -470,10 +473,11 @@ hr {
 
 .main-wrap {
   height: 100vh;
-  width: 80%;
+  width: 90%;
   display: flex;
   margin: auto;
   overflow: hidden;
+  // border: 1px solid red;
 
   .side-col {
     width: 10%;
@@ -517,7 +521,7 @@ hr {
 
   .main-col {
     margin-top: 70px;
-    width: 80%;
+    width: 90%;
     overflow: scroll;
     overflow-x: hidden;
     // border: 1px solid yellow;
@@ -572,8 +576,8 @@ hr {
 }
 
 .cohort-panel {
-  //width: calc(50% - 40px); // two panels per row
-  width: 100%; // one panel per row
+  width: calc(50% - 40px); // two panels per row
+  // width: 100%; // one panel per row
 }
 
 .no-cohort {

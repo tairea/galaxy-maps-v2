@@ -1074,8 +1074,7 @@ export default {
       this.$refs.network.fit({
         nodes: nodeIds,
         // scale: 0.5,
-        // minZoomLevel: 0.05,
-        // maxZoomLevel: 0.5,
+        // maxZoomLevel: 0.8,
         // animation: true,
         animation: {
           // duration: fast ? 800 : 2000,

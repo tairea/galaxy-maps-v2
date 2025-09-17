@@ -4,6 +4,7 @@ import { storage, generateSignedUrl, db } from "./_shared.js";
 import { STORAGE_BUCKET } from "./_constants.js";
 import fetch from "node-fetch";
 import OpenAI from "openai";
+import { toFile } from "openai/uploads";
 import { zodTextFormat } from "openai/helpers/zod";
 import {
   StarsAndPlanetsResponseSchema,
@@ -657,19 +658,23 @@ export const generateUnifiedGalaxyMapHttpsEndpoint = runWith({
   memory: "1GB",
 }).https.onCall(async (data) => {
   try {
-    const { description, clarificationAnswers, previousResponseId } = data;
+    const { description, clarificationAnswers, previousResponseId, attachedFiles, generateImage } =
+      data;
     logger.info("Starting generateUnifiedGalaxyMap function", {
       description: description?.substring(0, 50) + "...",
       hasClarification: !!clarificationAnswers,
       previousResponseId,
+      attachedFilesCount: Array.isArray(attachedFiles) ? attachedFiles.length : 0,
     });
 
     let aiResponse;
+
     if (clarificationAnswers && clarificationAnswers.trim()) {
       // Follow-up with clarification
       logger.info("Calling OpenAI API for unified map generation with clarification");
       aiResponse = await openai.responses.parse({
-        model: "gpt-5-mini",
+        model: "gpt-5",
+        reasoning: { effort: "medium", summary: "detailed" },
         previous_response_id: previousResponseId,
         input: [{ role: "user", content: clarificationAnswers }],
         text: {
@@ -681,13 +686,48 @@ export const generateUnifiedGalaxyMapHttpsEndpoint = runWith({
         logger.error("Missing required field: description");
         throw new HttpsError("invalid-argument", "Missing required field: description");
       }
-      // Initial call with description
+      // Initial call with description (+ optional file)
       logger.info("Calling OpenAI API for unified galaxy map generation");
+      let userContent: any = description;
+      if (Array.isArray(attachedFiles) && attachedFiles.length) {
+        const filesToProcess = attachedFiles.slice(0, 5);
+        const uploadPromises = filesToProcess.map(async (f) => {
+          try {
+            const mime = f.mimeType || "application/octet-stream";
+            if (mime.startsWith("image/")) {
+              const imageBuffer = Buffer.from(f.base64, "base64");
+              const safeName = f.name.replace(/[^a-zA-Z0-9.-]/g, "-");
+              const fileName = `uploads/${Date.now()}-${safeName}`;
+              const file = storage.bucket(STORAGE_BUCKET).file(fileName);
+              await file.save(imageBuffer, { metadata: { contentType: mime } });
+              const [signedUrl] = await file.getSignedUrl({
+                action: "read",
+                expires: "03-01-2500",
+              });
+              return { type: "input_image", image_url: signedUrl } as const;
+            } else if (mime === "application/pdf") {
+              const buffer = Buffer.from(f.base64, "base64");
+              const upload = await openai.files.create({
+                file: await toFile(buffer, f.name, { type: mime }),
+                purpose: "assistants",
+              });
+              return { type: "input_file", file_id: upload.id } as const;
+            }
+          } catch (err) {
+            logger.error("Failed to upload attachment; skipping", { name: f.name, err });
+          }
+          return null;
+        });
+        const parts = (await Promise.all(uploadPromises)).filter(Boolean) as any[];
+        userContent = [{ type: "input_text", text: description }, ...parts];
+      }
+
       aiResponse = await openai.responses.parse({
-        model: "gpt-5-mini",
+        model: "gpt-5",
+        reasoning: { effort: "medium", summary: "detailed" },
         input: [
           { role: "system", content: StarsAndPlanetsAndInstructionsSystemPrompt },
-          { role: "user", content: description },
+          { role: "user", content: userContent },
         ],
         text: {
           format: zodTextFormat(UnifiedGalaxyMapResponseSchema, "unified_first_step_response"),
@@ -697,6 +737,8 @@ export const generateUnifiedGalaxyMapHttpsEndpoint = runWith({
 
     logger.info("OpenAI API call completed successfully");
 
+    logger.info("aiResponse", aiResponse);
+
     // Get the parsed and validated response
     const parsedResponse = aiResponse.output_parsed;
     if (!parsedResponse) {
@@ -705,10 +747,11 @@ export const generateUnifiedGalaxyMapHttpsEndpoint = runWith({
       logger.log("Parsed response", parsedResponse);
     }
 
-    // generate image using parsedResponse.title and parsedResponse.description
+    // Optionally generate an image (skipped by default to avoid timeouts)
     let imageUrl: string | null = null;
     let fileName: string | null = null;
     if (
+      generateImage === true &&
       parsedResponse.status === "journey_ready" &&
       parsedResponse.title &&
       parsedResponse.description
@@ -720,7 +763,7 @@ export const generateUnifiedGalaxyMapHttpsEndpoint = runWith({
         });
 
         // Generate image using DALL-E API directly
-        logger.info("Calling DALL-E for image generation");
+        logger.info("Calling gpt-image-1 for image generation");
         const imageResponse = await openai.images.generate({
           model: "gpt-image-1",
           prompt: GalaxyMapImagePrompt + `Galaxy Map title: "${parsedResponse.title}"`,
@@ -833,7 +876,7 @@ export const generateUnifiedGalaxyMapHttpsEndpoint = runWith({
     }
 
     // Calculate combined token usage from the API call
-    const modelUsage = createModelTokenUsage("gpt-5-mini", aiResponse.usage || {});
+    const modelUsage = createModelTokenUsage("gpt-5", aiResponse.usage || {});
     const combinedTokenUsage = createCombinedTokenUsage([modelUsage]);
 
     // Return the validated response with token usage information
@@ -854,6 +897,72 @@ export const generateUnifiedGalaxyMapHttpsEndpoint = runWith({
     throw new HttpsError(
       "internal",
       error instanceof Error ? error.message : "Unknown error occurred",
+    );
+  }
+});
+
+// Generate a Galaxy Map image (mission patch) only
+export const generateGalaxyImageHttpsEndpoint = runWith({
+  timeoutSeconds: 300,
+  memory: "1GB",
+}).https.onCall(async (data) => {
+  const { title, description } = data || {};
+  if (!title || !description) {
+    throw new HttpsError("invalid-argument", "Missing required fields: title, description");
+  }
+
+  try {
+    // Call DALL·E to generate image
+    const imageResponse = await openai.images.generate({
+      model: "gpt-image-1",
+      prompt: GalaxyMapImagePrompt + `Galaxy Map title: "${title}"`,
+      output_format: "png",
+      background: "transparent",
+      n: 1,
+      size: "1024x1024",
+    });
+
+    if (!imageResponse.data || !imageResponse.data.length) {
+      throw new HttpsError("internal", "Image generation returned no data");
+    }
+
+    const imageData = imageResponse.data[0];
+    let imageUrl: string | null = null;
+    let fileName: string | null = null;
+
+    if (imageData.b64_json) {
+      const imageBuffer = Buffer.from(imageData.b64_json, "base64");
+      fileName = `galaxy-maps/${Date.now()}-${title.replace(/[^a-zA-Z0-9]/g, "-")}.png`;
+      const file = storage.bucket(STORAGE_BUCKET).file(fileName);
+      await file.save(imageBuffer, { metadata: { contentType: "image/png" } });
+      const [downloadURL] = await file.getSignedUrl({ action: "read", expires: "03-01-2500" });
+      imageUrl = downloadURL;
+    } else if (imageData.url) {
+      // Fallback for URL outputs
+      const imageUrlFromDalle = imageData.url;
+      const res = await fetch(imageUrlFromDalle);
+      const arrayBuf = await res.arrayBuffer();
+      const buffer = Buffer.from(arrayBuf);
+      fileName = `galaxy-maps/${Date.now()}-${title.replace(/[^a-zA-Z0-9]/g, "-")}.png`;
+      const file = storage.bucket(STORAGE_BUCKET).file(fileName);
+      await file.save(buffer, { metadata: { contentType: "image/png" } });
+      const [downloadURL] = await file.getSignedUrl({ action: "read", expires: "03-01-2500" });
+      imageUrl = downloadURL;
+    }
+
+    if (!imageUrl || !fileName) {
+      throw new HttpsError("internal", "Failed to produce image URL");
+    }
+
+    return {
+      success: true,
+      image: { name: fileName, url: imageUrl },
+    };
+  } catch (err) {
+    logger.error("Error generating galaxy image", err);
+    throw new HttpsError(
+      "internal",
+      err instanceof Error ? err.message : "Unknown error generating image",
     );
   }
 });
@@ -915,7 +1024,7 @@ export const generateInstructionsForMissionHttpsEndpoint = runWith({
     // Call OpenAI API
     logger.info("Calling OpenAI API for mission instructions generation");
     const aiResponse = await openai.responses.parse({
-      model: "gpt-5-mini",
+      model: "gpt-5",
       input: [
         { role: "system", content: MissionInstructionsSystemPrompt },
         { role: "user", content: userMessage },
@@ -1025,7 +1134,7 @@ export const generateInstructionsForMissionHttpsEndpoint = runWith({
     };
 
     // Calculate combined token usage from both API calls
-    const missionModelUsage = createModelTokenUsage("gpt-5-mini", aiResponse.usage || {});
+    const missionModelUsage = createModelTokenUsage("gpt-5", aiResponse.usage || {});
 
     const modelUsages = [missionModelUsage];
     // if (youtubeModelUsage) {
@@ -1076,7 +1185,7 @@ export const generateGalaxyMapWithClarificationHttpsEndpoint = runWith({
     // Call OpenAI API for second step
     logger.info("Calling OpenAI API for galaxy map generation with clarification");
     const aiResponse = await openai.responses.parse({
-      model: "gpt-5-mini",
+      model: "gpt-5",
       previous_response_id: previousResponseId,
       input: [{ role: "user", content: clarificationAnswers }],
       text: {
@@ -1176,7 +1285,7 @@ export const generateGalaxyMapWithClarificationHttpsEndpoint = runWith({
     }
 
     // Calculate combined token usage from all API calls
-    const missionModelUsage = createModelTokenUsage("gpt-5-mini", aiResponse.usage || {});
+    const missionModelUsage = createModelTokenUsage("gpt-5", aiResponse.usage || {});
     const combinedTokenUsage = createCombinedTokenUsage([missionModelUsage]);
 
     // Return the validated response with token usage information
@@ -1220,7 +1329,7 @@ export const generateGalaxyMapAgainHttpsEndpoint = runWith({
     // Call OpenAI API with default prompt
     logger.info("Calling OpenAI API for galaxy map regeneration");
     const aiResponse = await openai.responses.parse({
-      model: "gpt-5-mini",
+      model: "gpt-5",
       previous_response_id: responseId,
       input: [{ role: "user", content: "i didnt like the result, please try again" }],
       text: {
@@ -1240,7 +1349,7 @@ export const generateGalaxyMapAgainHttpsEndpoint = runWith({
     delete parsedResponse.image;
 
     // Calculate combined token usage from all API calls
-    const missionModelUsage = createModelTokenUsage("gpt-5-mini", aiResponse.usage || {});
+    const missionModelUsage = createModelTokenUsage("gpt-5", aiResponse.usage || {});
     const combinedTokenUsage = createCombinedTokenUsage([missionModelUsage]);
 
     // Return the validated response with token usage information
@@ -1299,6 +1408,7 @@ export const refineGalaxyMapHttpsEndpoint = runWith({
       });
 
       logger.info("OpenAI API call completed successfully");
+      logger.info("aiResponse", aiResponse);
 
       // Get the parsed and validated response
       const parsedResponse = aiResponse.output_parsed;
@@ -1430,7 +1540,7 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
       // Call OpenAI API for initial refinement
       logger.info("Calling OpenAI API for initial galaxy map refinement");
       const aiResponse = await openai.responses.parse({
-        model: "gpt-5-mini",
+        model: "gpt-5",
         previous_response_id: previousResponseId,
         input: inputMessages as any,
         text: {
@@ -1448,7 +1558,7 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
       }
 
       // Calculate token usage
-      const modelUsage = createModelTokenUsage("gpt-5-mini", aiResponse.usage || {});
+      const modelUsage = createModelTokenUsage("gpt-5", aiResponse.usage || {});
       const combinedTokenUsage = createCombinedTokenUsage([modelUsage]);
 
       // Return the validated response with token usage information

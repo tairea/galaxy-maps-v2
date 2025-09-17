@@ -263,14 +263,11 @@ export default {
     },
     storeImage() {
       this.uploading = true;
-      // ceate a storage ref
-      const storageRef = storage.ref(
-        "avatar-images/" +
-          this.profile.firstName +
-          this.profile.lastName +
-          "-" +
-          this.selectedFile.name,
-      );
+      // create a storage ref with safe fallback
+      const namePart = (this.profile.firstName || "") + (this.profile.lastName || "");
+      const fallback = this.person?.id ? `${this.person.id}-${Date.now()}` : `${Date.now()}`;
+      const safePrefix = namePart || fallback;
+      const storageRef = storage.ref(`avatar-images/${safePrefix}-${this.selectedFile.name}`);
 
       // upload a file
       const uploadTask = storageRef.put(this.selectedFile);

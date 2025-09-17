@@ -44,7 +44,7 @@
             class="d-flex justify-center align-center flex-wrap py-2"
           >
             <!-- v-show not working to hide tooltip, so using v-if v-else  -->
-            <v-tooltip v-if="isCohortTeacher" v-show="isCohortTeacher" top color="subBackground">
+            <!-- <v-tooltip v-if="isCohortTeacher" v-show="isCohortTeacher" top color="subBackground">
               <template v-slot:activator="{ on, attrs }">
                 <p class="label text-center mt-4 mb-2" v-bind="attrs" v-on="on">Navigators:</p>
               </template>
@@ -64,7 +64,13 @@
               @click.native="clickedPerson($event, person, index)"
               :hideTooltips="!isCohortTeacher"
               :cohort="cohort"
-            />
+            /> -->
+            <p class="label text-center mt-4 mb-2" v-bind="attrs" v-on="on">Navigators:</p>
+            <!-- active navigators in this timeframe -->
+            <p class="label text-center mt-2 mb-1">{{ activeInactive.active }}<br />Active</p>
+
+            <!-- inactive navigators in this timeframe -->
+            <p class="label text-center mt-0">{{ activeInactive.inactive }}<br />Inactive</p>
           </div>
           <p v-else class="label text-center pa-4" style="font-weight: 800">NO NAVIGATOR DATA</p>
         </div>
@@ -130,6 +136,7 @@ import Avatar from "@/components/Reused/Avatar.vue";
 import ProgressionLineChart from "@/components/Reused/ProgressionLineChart.vue";
 import ActivityBarChart from "@/components/Reused/ActivityBarChart.vue";
 import Organisation from "@/components/Reused/Organisation.vue";
+import { DateTime } from "luxon";
 import {
   fetchCohortCoursesActivityByCohortId,
   fetchCohortStudentsActivityTimeByCohortId,
@@ -173,6 +180,8 @@ export default {
     this.cohortsCoursesData = await fetchCohortCoursesActivityByCohortId(this.cohort.id);
     // console.log("this.cohortsCoursesData", this.cohortsCoursesData);
 
+    console.log("this.cohortsCoursesData", this.cohortsCoursesData);
+
     // add students with data
     const studentsArr = [];
     if (this.cohortsCoursesData) {
@@ -212,6 +221,58 @@ export default {
     },
     captainLabel() {
       return this.cohort.teachers.length > 1 ? "Captains:" : "Captain:";
+    },
+    activeInactive() {
+      // Count students who completed at least one mission (task) within the timeframe
+      if (!this.studentsWithData || this.studentsWithData.length === 0) {
+        return { active: 0, inactive: 0 };
+      }
+
+      const activeSet = new Set();
+      const timeframeType = this.timeframe?.type;
+      const min = this.timeframe?.min ? DateTime.fromJSDate(this.timeframe.min) : null;
+      const max = this.timeframe?.max ? DateTime.fromJSDate(this.timeframe.max) : null;
+
+      for (const student of this.studentsWithData) {
+        let hasCompletedInWindow = false;
+
+        for (const course of this.cohortsCoursesData || []) {
+          const studentEntry = (course.students || []).find(
+            (s) => s.person && s.person.id === student.id,
+          );
+          if (!studentEntry || !studentEntry.activities) continue;
+
+          const activities = studentEntry.activities;
+          const found = activities.some((activity) => {
+            if (!activity?.timeStamp) return false;
+            if (activity.status !== "Completed" || activity.type !== "Task") return false;
+
+            const ts = DateTime.fromISO(activity.timeStamp);
+
+            if (timeframeType === "day") {
+              // Match exact day against timeframe max day
+              const targetDay = DateTime.fromJSDate(this.timeframe.max).toISODate();
+              return ts.toISODate() === targetDay;
+            }
+
+            if (!min || !max) return false;
+            // Inclusive window similar to other charts (use strict bounds like ActivityBarChart)
+            return ts > min && ts < max;
+          });
+
+          if (found) {
+            hasCompletedInWindow = true;
+            break;
+          }
+        }
+
+        if (hasCompletedInWindow) activeSet.add(student.id);
+      }
+
+      const active = activeSet.size;
+      const total = this.studentsWithData.length;
+      const inactive = total - active;
+      return { active, inactive };
     },
   },
   methods: {

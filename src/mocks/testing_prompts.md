@@ -75,9 +75,26 @@ The hardware we are using is an andriod phone running node-red via termux, and w
 The 1st ESP8266 is connected to a RS485 4-20mA Soil Temperature Humidity Moisture Conductivity EC Sensor (CWT-SOIL-THC-S: https://store.comwintop.com/products/rs485-4-20ma-soil-temperature-humidity-moisture-conductivity-ec-ph-sensor?variant=42250573480163)
 The 2nd ESP8266 is connected to a 12v normally closed solenoid water valve connected to a water supply.
 The idea being when the soil moisture sensor reading drops below a certain threshold for a specified duration of time, it will tell the water valve to open until the soil moisture sensor reasons a new threshold to then close the valve.
-The node-red will also will also send data logs to a database.
-and the node-red will be accessible remotely via ngrok.
+The node-red will also will also send data logs to firebase database.
+and the node-red will be accessible remotely via a free ngrok account.
 we would also like to have a web dashboard that can show soil moisture readings and manually open and close the valve.
+Here is a list of all the components we have for the project:
+
+- USB to RS485
+- RS485 to serial UART (MAX485)
+- 3/4" solenoid valve 12v
+- logic level shift 3.3v to 5v
+- THC-S soil sensor
+- MT3608 boost converter
+- 1N5819 diode to prevent solar reverse current
+- MP2307 buck converter
+- ESP8266
+- usb to type c cable
+- 20w solar panel
+- 5v relay (with octocoupler)
+- Adroid phone (OPPO A40)
+- 18650 battery x4
+- TP4056 solar module
 
 <!-- Emiliana home school -->
 

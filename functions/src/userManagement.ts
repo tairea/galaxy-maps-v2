@@ -196,7 +196,7 @@ export const updatePersonByPersonIdHttpsEndpoint = runWith({}).https.onCall(
     await personDoc.ref.update(person);
 
     const updatedPersonDoc = await personDoc.ref.get();
-    const updatedPersonData = personDoc.data();
+    const updatedPersonData = updatedPersonDoc.data();
 
     return {
       person: {

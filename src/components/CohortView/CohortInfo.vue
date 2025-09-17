@@ -1,35 +1,47 @@
 <template>
-  <div id="cohort-info" v-if="cohort">
-    <h2 class="cohort-label">Squad</h2>
-    <h1 class="cohort-title">{{ cohort.name }}</h1>
-    <div v-if="cohortImage">
-      <v-img class="cohort-image" width="auto" :src="cohort.image.url"></v-img>
-    </div>
-    <p ref="description" class="cohort-description">
-      {{ maybeTruncate(cohort.description) }}
-      <a style="border-bottom: 1px solid" v-if="readmore" @click="showFullDescription()"
-        >Read more</a
-      >
-    </p>
-    <div class="d-flex justify-center align-center">
-      <Organisation v-if="organisation" :organisation="organisation" :size="40" />
-    </div>
-    <div v-if="teachers.length > 0">
-      <p class="overline ma-0" style="color: var(--v-cohortAccent-base)">Squad Captains:</p>
-      <v-row class="my-1 mx-1">
-        <Avatar
-          v-for="person in teachers"
-          :profile="person"
-          :key="person.id"
-          :size="40"
-          :colourBorder="true"
-        />
-      </v-row>
-      <p class="overline ma-0 pt-2" style="color: var(--v-cohortAccent-base); line-height: 1.2rem">
-        Monitoring {{ cohort.students.length }} navigators
+  <div id="cohort-info" :class="{ minimized: isMinimized }" v-if="cohort">
+    <h2 class="cohort-label" @click="toggleMinimize" :class="{ minimized: isMinimized }">
+      <div v-if="!isMinimized">Squad</div>
+      <div v-else>{{ truncateTitle(cohort.name) }}</div>
+      <v-icon class="arrow" color="var(--v-background-base)">{{
+        isMinimized ? mdiMenuDown : mdiMenuUp
+      }}</v-icon>
+    </h2>
+
+    <div class="cohort-content mt-2" :class="{ minimized: isMinimized }">
+      <h1 class="cohort-title">{{ cohort.name }}</h1>
+      <div v-if="cohortImage">
+        <v-img class="cohort-image" width="auto" :src="cohort.image.url"></v-img>
+      </div>
+      <p ref="description" class="cohort-description">
+        {{ maybeTruncate(cohort.description) }}
+        <a style="border-bottom: 1px solid" v-if="readmore" @click="showFullDescription()"
+          >Read more</a
+        >
       </p>
+      <div class="d-flex justify-center align-center">
+        <Organisation v-if="organisation" :organisation="organisation" :size="40" />
+      </div>
+      <div v-if="teachers.length > 0">
+        <p class="overline ma-0" style="color: var(--v-cohortAccent-base)">Squad Captains:</p>
+        <v-row class="my-1 mx-1">
+          <Avatar
+            v-for="person in teachers"
+            :profile="person"
+            :key="person.id"
+            :size="40"
+            :colourBorder="true"
+          />
+        </v-row>
+        <p
+          class="overline ma-0 pt-2"
+          style="color: var(--v-cohortAccent-base); line-height: 1.2rem"
+        >
+          Monitoring {{ cohort.students.length }} navigators
+        </p>
+      </div>
+      <CreateEditDeleteCohortDialog v-if="isTeacher" :edit="true" :cohortToEdit="cohort" />
     </div>
-    <CreateEditDeleteCohortDialog v-if="isTeacher" :edit="true" :cohortToEdit="cohort" />
   </div>
 </template>
 
@@ -40,10 +52,11 @@ import Avatar from "@/components/Reused/Avatar.vue";
 import { fetchOrganisationByOrganisationId, fetchPersonByPersonId } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mapState } from "pinia";
+import { mdiMenuUp, mdiMenuDown } from "@mdi/js";
 
 export default {
   name: "CohortInfo",
-  props: ["cohort"],
+  props: ["cohort", "minimized"],
   components: {
     Avatar,
     Organisation,
@@ -51,9 +64,12 @@ export default {
   },
   data() {
     return {
+      mdiMenuUp,
+      mdiMenuDown,
       teachers: [],
       readmore: false,
       organisation: null,
+      isMinimized: false,
     };
   },
   async mounted() {
@@ -61,6 +77,12 @@ export default {
     await this.getOrganisation();
   },
   watch: {
+    minimized: {
+      immediate: true,
+      handler(newVal) {
+        this.isMinimized = newVal === true;
+      },
+    },
     cohort: {
       deep: true,
       async handler(newCohort, oldCohort) {
@@ -84,6 +106,10 @@ export default {
     },
   },
   methods: {
+    toggleMinimize() {
+      this.isMinimized = !this.isMinimized;
+      this.$emit("minimised", this.isMinimized);
+    },
     async getTeacherProfiles() {
       if (this.cohort.teachers?.length) {
         const teachersArr = this.cohort.teachers.filter((a) => {
@@ -100,6 +126,13 @@ export default {
       } else {
         this.organisation = null;
       }
+    },
+    truncateTitle(title) {
+      if (!title) return "";
+      if (this.$vuetify?.breakpoint?.smAndDown && title.length > 15) {
+        return title.substring(0, 15) + "...";
+      }
+      return title;
     },
     maybeTruncate(value) {
       if (!value) return "";
@@ -126,6 +159,14 @@ export default {
   margin-top: 30px;
   padding: 20px;
   position: relative;
+  backdrop-filter: blur(2px);
+  z-index: 3;
+
+  &.minimized {
+    border: none;
+    margin-top: 0;
+    padding: 0;
+  }
 
   .cohort-label {
     font-size: 0.8rem;
@@ -139,6 +180,36 @@ export default {
     color: var(--v-background-base);
     padding: 0px 15px 0px 5px;
     clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    width: fit-content;
+
+    &.minimized {
+      border: none;
+      box-shadow: none;
+    }
+
+    .arrow {
+      font-size: 0.6rem;
+      transition: transform 0.3s ease;
+      flex-shrink: 0;
+    }
+  }
+
+  .cohort-content {
+    transition: all 0.3s ease-in-out;
+    overflow: hidden;
+    max-height: 1000px;
+  }
+
+  .cohort-content.minimized {
+    max-height: 0;
+    opacity: 0;
+    margin: 0;
+    padding: 0;
+    width: 150px;
   }
 
   .cohort-title {

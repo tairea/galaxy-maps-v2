@@ -274,6 +274,12 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
         const sessionConfig = {
           model: "gpt-realtime",
           transport: this.transport,
+          turnDetection: {
+            type: "semantic_vad",
+            eagerness: "low",
+            createResponse: true,
+            interruptResponse: false,
+          },
           //voice: "verse", // setting voice here doesnt work. only seems to work on RealtimeAgent
         };
 

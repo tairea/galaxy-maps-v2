@@ -197,9 +197,16 @@ export default {
                   `;
                 }
               } else {
+                const rawValue =
+                  typeof dataPoint.raw === "number"
+                    ? dataPoint.raw
+                    : typeof dataPoint.parsed === "number"
+                      ? dataPoint.parsed
+                      : parseFloat(dataPoint.formattedValue);
+                const hm = this.formatDecimalHours(rawValue);
                 divMiddleRow.innerHTML = `
                 <tr>
-                      <td><p style="color:var(--v-baseAccent-base);margin:0; font-size: 3rem; font-weight:800 "> ${dataPoint.formattedValue}</p></td>
+                      <td><p style="color:var(--v-baseAccent-base);margin:0; font-size: 1.8rem; font-weight:800 "> ${hm}</p></td>
                     </tr>
                     <tr>
                       <td><p style="font-style: italic;color:white;font-weight: 400;">HOURS</p>
@@ -282,6 +289,20 @@ export default {
     this.chart.update();
   },
   methods: {
+    formatDecimalHours(value) {
+      if (value == null || isNaN(value)) return "0H 0M";
+      const abs = Math.abs(value);
+      const hours = Math.floor(abs);
+      let minutes = Math.round((abs - hours) * 60);
+      // Handle rounding pushing minutes to 60
+      let adjHours = hours;
+      if (minutes === 60) {
+        adjHours += 1;
+        minutes = 0;
+      }
+      const sign = value < 0 ? "-" : "";
+      return `${sign}${adjHours}H ${minutes}M`;
+    },
     chartConstructor(chartType, chartData, chartOptions) {
       const chartElement = this.$refs.canvas;
       this.chart = new Chart(chartElement, {

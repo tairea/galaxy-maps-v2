@@ -237,6 +237,51 @@
                     hide-details
                   ></v-textarea>
 
+                  <!-- File Attach Row -->
+                  <div class="d-flex align-center mt-3">
+                    <input
+                      ref="fileInput"
+                      type="file"
+                      multiple
+                      accept="application/pdf,.pdf,image/*"
+                      style="display: none"
+                      @change="onFileSelected"
+                    />
+                    <v-btn
+                      outlined
+                      color="galaxyAccent"
+                      :disabled="loading"
+                      :dark="dark"
+                      :light="!dark"
+                      small
+                      class="mr-3"
+                      @click="triggerFilePicker"
+                    >
+                      <v-icon left color="galaxyAccent"> {{ mdiPaperclip }} </v-icon>
+                      Add File
+                    </v-btn>
+                    <div v-if="attachedFiles && attachedFiles.length" class="text-left" style="font-size: 0.7rem; font-style: italic">
+                      <span class="mr-2">Attached:</span>
+                      <span>
+                        <v-chip
+                          v-for="(f, idx) in attachedFiles"
+                          :key="f.name + '-' + idx"
+                          small
+                          class="ma-1"
+                          color="galaxyAccent"
+                          text-color="white"
+                          close
+                          @click:close="removeAttachedFile(idx)"
+                        >
+                          {{ f.name }}
+                        </v-chip>
+                      </span>
+                    </div>
+                    <div v-if="attachedFileError" class="overline red--text ml-2">
+                      {{ attachedFileError }}
+                    </div>
+                  </div>
+
                   <div
                     class="action-buttons mt-4"
                     :class="{ 'mobile-layout': $vuetify.breakpoint.smAndDown }"
@@ -397,6 +442,7 @@ import {
   mdiInformationVariant,
   mdiArrowLeft,
   mdiFamilyTree,
+  mdiPaperclip,
 } from "@mdi/js";
 import { mapState, mapActions } from "pinia";
 import useRootStore from "@/store/index";
@@ -408,6 +454,7 @@ import {
   downloadAndUploadImage,
   generateUnifiedGalaxyMap,
   generateUnifiedGalaxyMapWithClarification,
+  generateGalaxyImage,
   // generateUnifiedGalaxyMapStreaming,
   // generateUnifiedGalaxyMapWithClarificationStreaming,
 } from "@/lib/ff";
@@ -439,6 +486,7 @@ export default {
     mdiInformationVariant,
     mdiArrowLeft,
     mdiFamilyTree,
+    mdiPaperclip,
     rules: {
       required: (v) => !!v || "This field is required",
     },
@@ -503,6 +551,9 @@ export default {
     },
     transformedStarDetails: [],
     expandedNodes: [],
+    // File attachment state (multi-file)
+    attachedFiles: [], // Array<{ name: string, mimeType: string, base64: string }>
+    attachedFileError: "",
   }),
   computed: {
     ...mapState(useRootStore, ["person"]),
@@ -567,12 +618,80 @@ export default {
   },
   methods: {
     ...mapActions(useRootStore, ["setCurrentCourseId", "setSnackbar", "setAiGalaxyEditData"]),
+    // File helpers
+    triggerFilePicker() {
+      this.attachedFileError = "";
+      const el = this.$refs.fileInput;
+      if (el && el.click) el.click();
+    },
+    removeAttachedFile(idx) {
+      if (typeof idx === "number") {
+        this.attachedFiles.splice(idx, 1);
+      } else {
+        this.attachedFiles = [];
+      }
+      const el = this.$refs.fileInput;
+      if (el && typeof el.value !== "undefined") {
+        el.value = "";
+      }
+    },
+    onFileSelected(e) {
+      this.attachedFileError = "";
+      const fileList = e && e.target && e.target.files ? Array.from(e.target.files) : [];
+      if (!fileList.length) return;
+      const MAX_FILES = 5;
+      const MAX_BYTES = 7 * 1024 * 1024; // ~7MB per file
+      const remaining = Math.max(0, MAX_FILES - (this.attachedFiles ? this.attachedFiles.length : 0));
+      const toProcess = fileList.slice(0, remaining);
+      if (fileList.length > remaining) {
+        this.attachedFileError = `Only ${MAX_FILES} files allowed. Extra files were ignored.`;
+      }
+
+      const readFile = (file) =>
+        new Promise((resolve, reject) => {
+          if (file.size > MAX_BYTES) return reject(new Error("too_large"));
+          const mime = file.type || "";
+          const isPdf = mime === "application/pdf";
+          const isImage = mime.indexOf("image/") === 0;
+          if (!isPdf && !isImage) return reject(new Error("unsupported"));
+          const reader = new FileReader();
+          reader.onload = () => {
+            const result = typeof reader.result === "string" ? reader.result : "";
+            const base64 = result.indexOf(",") >= 0 ? result.split(",")[1] : result;
+            resolve({ name: file.name, mimeType: mime || (isPdf ? "application/pdf" : "application/octet-stream"), base64 });
+          };
+          reader.onerror = () => reject(new Error("read_fail"));
+          reader.readAsDataURL(file);
+        });
+
+      Promise.allSettled(toProcess.map(readFile)).then((results) => {
+        const newItems = [];
+        results.forEach((r) => {
+          if (r.status === "fulfilled") {
+            const exists = (this.attachedFiles || []).some(
+              (f) => f.name === r.value.name && f.base64.length === r.value.base64.length,
+            );
+            if (!exists) newItems.push(r.value);
+          } else {
+            if (r.reason && r.reason.message === "too_large")
+              this.attachedFileError = "One or more files exceed 7MB and were ignored.";
+            else if (r.reason && r.reason.message === "unsupported")
+              this.attachedFileError = "Unsupported file type. Only PDF or images are allowed.";
+            else this.attachedFileError = "Failed to read one or more files.";
+          }
+        });
+        this.attachedFiles = [...(this.attachedFiles || []), ...newItems];
+        const el = this.$refs.fileInput;
+        if (el && typeof el.value !== "undefined") el.value = "";
+      });
+    },
     closeDialog() {
       this.description = "";
       this.aiGeneratedGalaxyMap = {}; // Reset galaxy map
       this.selectedFlow = null; // Reset selected flow
       this.selectedLayout = null; // Reset selected layout
       this.streamingText = ""; // Reset streaming text
+      this.attachedFiles = [];
       // this.showCreateOptionsDialog = false; // Reset create options dialog
       this.$emit("update:showFirstDialog", false);
     },
@@ -719,7 +838,10 @@ export default {
 
         // =========== (unified a.i. api call) Generate Stars + Missions + Mission Instructions ==========
         // const aiResponse = await generateGalaxyMap(this.description);
-        const aiResponse = await generateUnifiedGalaxyMap(this.description);
+        const aiResponse = await generateUnifiedGalaxyMap(
+          this.description,
+          (this.attachedFiles && this.attachedFiles.length) ? this.attachedFiles : undefined,
+        );
 
         // Use streaming version for real-time updates
         // const aiResponse = await generateUnifiedGalaxyMapStreaming(this.description, (update) => {
@@ -769,6 +891,19 @@ export default {
           // add token data to the galaxy map
           this.aiGeneratedGalaxyMap = parsedResponse;
           this.aiGeneratedGalaxyMap.tokens = this.accumulateTokens(aiResponse.tokenUsage);
+
+          // Immediately generate the patch image (separate lightweight call)
+          try {
+            const img = await generateGalaxyImage(
+              this.aiGeneratedGalaxyMap.title,
+              this.aiGeneratedGalaxyMap.description,
+            );
+            if (img && img.success && img.image) {
+              this.aiGeneratedGalaxyMap.image = img.image;
+            }
+          } catch (e) {
+            console.warn("Image generation failed; continuing without image", e);
+          }
 
           // save a copy of the original galaxy map data for the history
           // Create a deep copy without history to avoid circular reference
@@ -913,6 +1048,19 @@ export default {
           // add token data to the galaxy map
           this.aiGeneratedGalaxyMap = parsedResponse;
           this.aiGeneratedGalaxyMap.tokens = this.accumulateTokens(aiSecondResponse.tokenUsage);
+
+          // Immediately generate the patch image (separate lightweight call)
+          try {
+            const img = await generateGalaxyImage(
+              this.aiGeneratedGalaxyMap.title,
+              this.aiGeneratedGalaxyMap.description,
+            );
+            if (img && img.success && img.image) {
+              this.aiGeneratedGalaxyMap.image = img.image;
+            }
+          } catch (e) {
+            console.warn("Image generation failed; continuing without image", e);
+          }
 
           // save a copy of the original galaxy map data for the history
           // Create a deep copy without history to avoid circular reference

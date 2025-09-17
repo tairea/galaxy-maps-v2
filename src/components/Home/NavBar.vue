@@ -31,7 +31,7 @@
       </div>
     </div>
     <!-- hamburger menu -->
-    <div v-if="showHamburgerMenu && !(isMobile && mobileInfoMinimized)" class="hamburger">
+    <div v-if="showHamburgerMenu || mobileInfoMinimized" class="hamburger">
       <v-btn
         class="map-button"
         color="baseAccent"
@@ -141,6 +141,16 @@ export default {
     isMobile() {
       this.updateNavVisibility();
     },
+    mobileInfoMinimized(min) {
+      // When cohort info is minimized, collapse the navbar.
+      if (min) {
+        this.showNavMenu = false;
+        this.showHamburgerMenu = true;
+      } else {
+        // restore default behavior based on route/device
+        this.updateNavVisibility();
+      }
+    },
     user(to) {
       if (this.user?.data?.admin) {
         this.tabs = [
@@ -213,6 +223,12 @@ export default {
       } else {
         this.showNavMenu = this.isMobile ? false : true;
         this.showHamburgerMenu = this.isMobile;
+      }
+
+      // If cohort info minimized, always keep navbar collapsed
+      if (this.mobileInfoMinimized) {
+        this.showNavMenu = false;
+        this.showHamburgerMenu = true;
       }
     },
     toggleMenu() {

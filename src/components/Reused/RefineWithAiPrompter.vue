@@ -1,5 +1,8 @@
 <template>
-  <div class="galaxy-prompt-container" :class="{ mobile: isMobile }">
+  <div
+    class="galaxy-prompt-container"
+    :class="{ mobile: isMobile, missionEditMode: missionEditMode }"
+  >
     <div class="prompt-textarea-container mt-4">
       <div class="prompt-context-chips pb-2" v-if="showChips">
         <v-chip
@@ -17,7 +20,7 @@
       </div>
 
       <!-- Legend -->
-      <div class="legend-container" v-if="showLegend">
+      <div class="legend-container" v-if="showLegend && !missionEditMode">
         <span class="legend-title ma-0">Legend:</span>
         <span class="legend-item-icon ml-3">⭐</span>
         <span class="legend-item-text">Star/Zone</span>
@@ -43,7 +46,34 @@
 
       <div class="action-buttons" :class="{ mobile: isMobile }">
         <v-btn
-          v-if="showGenerateAgain"
+          v-if="missionEditMode"
+          outlined
+          @click="$emit('cancel-edit')"
+          :loading="loading"
+          :disabled="loading"
+          :dark="dark"
+          :light="!dark"
+        >
+          <v-icon left> {{ mdiRobotExcited }} </v-icon>
+          CANCEL
+        </v-btn>
+
+        <v-btn
+          v-if="missionEditMode"
+          outlined
+          color="galaxyAccent"
+          @click="$emit('refine-mission')"
+          :loading="loading"
+          :disabled="disabled"
+          :dark="dark"
+          :light="!dark"
+        >
+          <v-icon left> {{ mdiRobotExcited }} </v-icon>
+          REFINE MISSION
+        </v-btn>
+
+        <v-btn
+          v-if="!missionEditMode && showGenerateAgain"
           outlined
           color="galaxyAccent"
           @click="$emit('generate-again')"
@@ -57,7 +87,7 @@
         </v-btn>
 
         <v-btn
-          v-if="showRefine"
+          v-if="!missionEditMode && showRefine"
           outlined
           color="galaxyAccent"
           @click="$emit('refine')"
@@ -71,7 +101,7 @@
         </v-btn>
 
         <v-btn
-          v-if="showSaveButtons && !courseId"
+          v-if="!missionEditMode && showSaveButtons && !courseId"
           @click="$emit('save-new')"
           outlined
           color="baseAccent"
@@ -80,7 +110,7 @@
           Save Galaxy Map
         </v-btn>
         <v-btn
-          v-if="showSaveButtons && courseId"
+          v-if="!missionEditMode && showSaveButtons && courseId"
           outlined
           color="baseAccent"
           :disabled="!hasUnsavedChanges || loading"
@@ -109,6 +139,7 @@ export default {
     chipDisplayNames: { type: Object, default: () => ({}) },
     courseId: { type: [String, Number, null], default: null },
     hasUnsavedChanges: { type: Boolean, default: false },
+    missionEditMode: { type: Boolean, default: false },
     // UI toggles
     showChips: { type: Boolean, default: true },
     showLegend: { type: Boolean, default: true },
@@ -147,6 +178,11 @@ export default {
   justify-content: center;
   align-items: flex-start;
   margin-bottom: 100px;
+
+  &.missionEditMode {
+    width: 100%;
+    justify-content: center;
+  }
 
   &.mobile {
     width: 100%;

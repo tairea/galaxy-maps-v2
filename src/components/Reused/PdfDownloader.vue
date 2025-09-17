@@ -334,7 +334,6 @@ export default {
             border-radius: 8px;
             flex-shrink: 0;
             display: block;
-            background: #eee;
         }
         
         .galaxy-placeholder {

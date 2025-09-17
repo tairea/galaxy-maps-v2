@@ -75,7 +75,9 @@
             </v-icon>
             CREATE GALAXY
           </v-btn>
-          <AiGalaxyMapAgent />
+
+          <!-- NEW AI TEST FEATURE -->
+          <!-- <AiGalaxyMapAgent /> -->
         </v-col>
       </v-row>
     </div>
