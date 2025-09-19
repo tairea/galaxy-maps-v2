@@ -73,6 +73,7 @@ declare module 'vue' {
     NavBar: typeof import('./src/components/Home/NavBar.vue')['default']
     NewPassword: typeof import('./src/components/Reused/NewPassword.vue')['default']
     Organisation: typeof import('./src/components/Reused/Organisation.vue')['default']
+    PaywallSnackbar: typeof import('./src/components/Reused/PaywallSnackbar.vue')['default']
     PdfDownloader: typeof import('./src/components/Reused/PdfDownloader.vue')['default']
     PopupGalaxyPreview: typeof import('./src/components/GalaxyList/GalaxyListInfoPanel/PopupGalaxyPreview.vue')['default']
     PopupStudentProgress: typeof import('./src/components/CohortView/StudentDataIterator/StudentCard/PopupStudentProgress.vue')['default']

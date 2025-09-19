@@ -44,6 +44,8 @@ firebase.auth().onAuthStateChanged(async (user) => {
     user?.getIdTokenResult().then((idTokenResult) => {
       Object.assign(user, { admin: idTokenResult.claims.admin });
       rootStore.setUser(user);
+      void rootStore.getUserSubscriptions(user.uid);
+      void rootStore.watchSubscriptionChanges(user.uid);
       return rootStore.getPersonById(user.uid);
     });
     if (user.emailVerified) {
