@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@cprecioso/canvas-text-layout": "^2.0.0",
+    "@invertase/firestore-stripe-payments": "^0.0.8",
     "@posva/vuefire-core": "^2.3.4",
     "canvas-confetti": "^1.9.2",
     "chart.js": "^4.4.0",
