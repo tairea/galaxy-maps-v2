@@ -3,7 +3,15 @@
     <v-dialog v-model="dialog" width="45%" :light="dark" :dark="!dark">
       <!-- CREATE BUTTON -->
       <template v-slot:activator="{ on, attrs }">
-        <v-btn class="cohort-btn" color="missionAccent" v-bind="attrs" v-on="on" outlined>
+        <v-btn
+          class="cohort-btn"
+          color="missionAccent"
+          v-bind="attrs"
+          v-on="activatorListeners(on)"
+          outlined
+          :loading="isSubscriptionCheckPending"
+          :disabled="isSubscriptionCheckPending"
+        >
           <v-icon left> {{ mdiAccountPlus }} </v-icon>
           Add/remove Navigators
         </v-btn>
@@ -105,9 +113,10 @@ import StudentImportCsv from "@/components/Reused/StudentImportCsv.vue";
 import ConfirmDeleteStudentDialog from "@/components/Dialogs/ConfirmDeleteStudentDialog.vue";
 import EditStudentDialog from "@/components/Dialogs/EditStudentDialog.vue";
 import useCohortViewStore from "@/store/cohortView";
+import useRootStore from "@/store/index";
 
 import { mdiAccountGroup, mdiAccountEdit, mdiPencil, mdiDelete, mdiAccountPlus } from "@mdi/js";
-import { mapActions } from "pinia";
+import { mapActions, mapState } from "pinia";
 
 export default {
   name: "StudentAccountsDialog",
@@ -133,12 +142,82 @@ export default {
     };
   },
   computed: {
+    ...mapState(useRootStore, ["user"]),
     dark() {
       return this.$vuetify.theme.isDark;
+    },
+    subscriptionChecked() {
+      return Boolean(this.user?.data?.subscriptionChecked);
+    },
+    isStripeCustomer() {
+      return Boolean(this.user?.data?.isCustomer);
+    },
+    hasActiveSubscription() {
+      return Boolean(this.user?.data?.hasActiveSubscription);
+    },
+    requiresSubscription() {
+      // Managing navigator accounts is a paid feature
+      return true;
+    },
+    isSubscriptionCheckPending() {
+      return this.requiresSubscription && !this.subscriptionChecked;
+    },
+    canOpenPaidDialog() {
+      if (!this.requiresSubscription) return true;
+      if (!this.subscriptionChecked) return false;
+      return this.isStripeCustomer && this.hasActiveSubscription;
     },
   },
   methods: {
     ...mapActions(useCohortViewStore, ["refreshCohort"]),
+    ...mapActions(useRootStore, ["setSnackbar", "setPaywall"]),
+    activatorListeners(on = {}) {
+      return {
+        ...on,
+        click: (event) => this.handleActivatorEvent(event, on?.click),
+        keydown: (event) => this.handleActivatorEvent(event, on?.keydown),
+      };
+    },
+    handleActivatorEvent(event, originalHandler) {
+      if (this.canOpenPaidDialog) {
+        if (typeof originalHandler === "function") {
+          originalHandler(event);
+        } else {
+          this.dialog = true;
+        }
+        return;
+      }
+
+      if (event?.preventDefault) event.preventDefault();
+      if (event?.stopPropagation) event.stopPropagation();
+
+      this.handleSubscriptionBlocked();
+    },
+    handleSubscriptionBlocked() {
+      if (this.isSubscriptionCheckPending) {
+        this.setSnackbar({
+          show: true,
+          text: "Hang tight — checking your subscription status.",
+          color: "baseAccent",
+        });
+        return;
+      }
+
+      if (!this.isStripeCustomer) {
+        this.setPaywall({
+          show: true,
+          text: "A paid Galaxy Maps plan is required to manage navigators.",
+        });
+        return;
+      }
+
+      if (!this.hasActiveSubscription) {
+        this.setPaywall({
+          show: true,
+          text: "Your subscription is inactive. Update billing to continue.",
+        });
+      }
+    },
     close() {
       this.refreshCohort();
       this.dialog = false;

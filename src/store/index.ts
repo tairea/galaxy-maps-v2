@@ -177,6 +177,7 @@ export default defineStore({
     },
     async getUserSubscriptions(uid: string | null) {
       if (!uid || !this.user.loggedIn) return;
+      console.log("getUserSubscriptions");
 
       // Reset flags before fetching the latest subscription information via the Stripe extension SDK.
       this.setUserSubscriptionStatus({
@@ -215,12 +216,13 @@ export default defineStore({
       if (!uid || !this.user.loggedIn) return;
       onCurrentUserSubscriptionUpdate(payments, (snapshot) => {
         for (const change of snapshot.changes) {
+          console.log("watch subscription change", change);
           if (change.type === "added") {
             console.log(
               `New subscription added with ID: ${change.subscription.id}`
             );
-            void this.getUserSubscriptions(uid);
           }
+          void this.getUserSubscriptions(uid);
         }
       });
     },
