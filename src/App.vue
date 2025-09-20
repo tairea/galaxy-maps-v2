@@ -17,11 +17,7 @@ import VersionStatus from "@/components/GalaxyList/VersionStatus.vue";
 
 export default Vue.extend({
   name: "App",
-  components: {
-    SnackBar,
-    PaywallSnackbar,
-    VersionStatus,
-  },
+  components: { SnackBar, PaywallSnackbar, VersionStatus },
   computed: {
     shouldShowVersionStatus(): boolean {
       const routeName = (this as any).$route.name;

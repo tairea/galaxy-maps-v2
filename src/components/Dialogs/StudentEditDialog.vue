@@ -215,6 +215,30 @@
           </div>
         </div>
 
+        <!-- Manage Subscription -->
+        <v-row>
+          <v-col cols="12" class="mb-4">
+            <v-btn
+              v-if="user?.data?.hasActiveSubscription"
+              outlined
+              color="galaxyAccent"
+              @click="openBillingPortal"
+              :loading="loadingPortal"
+            >
+              Manage subscription
+            </v-btn>
+            <v-btn
+              v-else
+              outlined
+              color="missionAccent"
+              @click="upgradeAccount"
+              :loading="loadingPortal"
+            >
+              Upgrade account
+            </v-btn>
+          </v-col>
+        </v-row>
+
         <!-- ACTION BUTTONS -->
         <div class="action-buttons">
           <v-btn
@@ -262,52 +286,31 @@ import {
   mdiAccount,
 } from "@mdi/js";
 import firebase from "firebase/compat/app";
+import "firebase/compat/functions";
 import { mapActions, mapState } from "pinia";
 import { navigatorImages, getFriendlyErrorMessage } from "@/lib/utils";
+import { createCheckoutSession, getStripePayments } from "@invertase/firestore-stripe-payments";
+import { getApp } from "firebase/app";
+
+const app = getApp();
+const payments = getStripePayments(app, {
+  productsCollection: "products",
+  customersCollection: "customers",
+});
 
 export default {
   name: "StudentEditDialog",
   props: {
-    on: {
-      type: Boolean,
-      default: false,
-    },
-    attrs: {
-      type: Object,
-      default: () => ({}),
-    },
-    isDashboardView: {
-      type: Boolean,
-      default: false,
-    },
-    isStudentPopupView: {
-      type: Boolean,
-      default: false,
-    },
-    student: {
-      type: Object,
-      default: () => ({}),
-    },
-    buttonBlock: {
-      type: Boolean,
-      default: false,
-    },
-    buttonLarge: {
-      type: Boolean,
-      default: false,
-    },
-    buttonOutlined: {
-      type: Boolean,
-      default: true,
-    },
-    buttonColor: {
-      type: String,
-      default: "baseAccent",
-    },
-    buttonClass: {
-      type: String,
-      default: "",
-    },
+    on: { type: Boolean, default: false },
+    attrs: { type: Object, default: () => ({}) },
+    isDashboardView: { type: Boolean, default: false },
+    isStudentPopupView: { type: Boolean, default: false },
+    student: { type: Object, default: () => ({}) },
+    buttonBlock: { type: Boolean, default: false },
+    buttonLarge: { type: Boolean, default: false },
+    buttonOutlined: { type: Boolean, default: true },
+    buttonColor: { type: String, default: "baseAccent" },
+    buttonClass: { type: String, default: "" },
   },
   components: {},
   mounted() {
@@ -318,7 +321,7 @@ export default {
     }
   },
   computed: {
-    ...mapState(useRootStore, ["person"]),
+    ...mapState(useRootStore, ["person", "user"]),
     isMobile() {
       return this.$vuetify.breakpoint.smAndDown;
     },
@@ -342,6 +345,7 @@ export default {
       navigatorImages,
       dialog: false,
       loading: false,
+      loadingPortal: false,
       editEmail: false,
       editPassword: false,
       hidePassword: true,
@@ -350,15 +354,7 @@ export default {
       onhover: false,
       selectedFile: {},
       newPassword: "",
-      profile: {
-        firstName: "",
-        lastName: "",
-        email: "",
-        image: {
-          url: "",
-          name: "",
-        },
-      },
+      profile: { firstName: "", lastName: "", email: "", image: { url: "", name: "" } },
     };
   },
   watch: {
@@ -497,6 +493,43 @@ export default {
             color: "pink",
           });
         });
+    },
+    async openBillingPortal() {
+      try {
+        this.loadingPortal = true;
+        const createPortalLink = firebase
+          .functions()
+          .httpsCallable("ext-firestore-stripe-payments-createPortalLink");
+        const returnUrl = window.location.href;
+        console.log("returnUrl", returnUrl);
+        const res = await createPortalLink({ returnUrl });
+        const url = res?.data?.url || res?.data?.billingPortalUrl || res?.data;
+        if (!url) throw new Error("Failed to create billing portal session");
+        window.location.assign(url);
+      } catch (error) {
+        console.error("Failed to open billing portal", error);
+        this.setSnackbar({
+          show: true,
+          text: (error && error.message) || "Failed to open billing portal",
+          color: "pink",
+        });
+      } finally {
+        this.loadingPortal = false;
+      }
+    },
+    async upgradeAccount() {
+      this.loadingPortal = true;
+      const priceId = await this.fetchProPriceId();
+      if (!priceId) throw new Error("Missing proPriceId");
+      const session = await createCheckoutSession(payments, { price: priceId });
+      window.location.assign(session.url);
+      this.loadingPortal = false;
+    },
+    async fetchProPriceId() {
+      const pricingDoc = await db.collection("appconfig").doc("pricing").get();
+      if (!pricingDoc.data()) throw new Error("Missing pricing data");
+      const pricingData = pricingDoc.data();
+      return pricingData?.proPriceId ?? null;
     },
     cancel() {
       this.dialog = false;
