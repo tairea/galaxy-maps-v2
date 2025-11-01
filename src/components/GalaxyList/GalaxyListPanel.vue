@@ -12,7 +12,7 @@
               hide-details
               outlined
               :prepend-inner-icon="mdiMagnify"
-              color="galaxyAccent"
+              color="missionAccent"
               placeholder="Search Galaxy Maps"
               class="searchInput"
             />
@@ -371,8 +371,8 @@ export default defineComponent({
     }
 
     .searchInput ::v-deep input {
-      color: var(--v-galaxyAccent-base) !important;
-      font-size: 0.7rem;
+      color: var(--v-primary-base) !important;
+      font-size: 1rem;
       letter-spacing: 0.5px;
     }
   }

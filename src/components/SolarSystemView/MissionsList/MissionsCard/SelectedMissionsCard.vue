@@ -64,6 +64,11 @@ export default {
   name: "SelectedMissionsCard",
   props: ["task", "inreview", "completed"],
   computed: {
+    taskMissionInstructionsHtml() {
+      if (!this.task) return "";
+      return this.task.missionInstructionsHtmlString || this.task.description || "";
+    },
+
     getStatusAndTimestamp() {
       if (this.completed && this.task.submissionRequired) {
         return "MARKED COMPLETED: " + this.humanDate(this.task.taskReviewedAndCompletedTimestamp);
@@ -80,21 +85,21 @@ export default {
      * Renders markdown for task description using streaming-markdown library
      */
     renderedTaskDescription() {
-      if (!this.task || !this.task.description) return "";
+      if (!this.task || !this.taskMissionInstructionsHtml) return "";
 
       try {
         // Check if content is HTML or markdown
-        if (this.isHtmlContent(this.task.description)) {
+        if (this.isHtmlContent(this.taskMissionInstructionsHtml)) {
           // If it's HTML, return as-is
-          return this.task.description;
+          return this.taskMissionInstructionsHtml;
         } else {
           // If it's markdown, convert it
-          return this.renderMarkdownWithStreaming(this.task.description);
+          return this.renderMarkdownWithStreaming(this.taskMissionInstructionsHtml);
         }
       } catch (error) {
         console.error("Error rendering task description markdown:", error);
         // Fallback to plain text with HTML escaping
-        return this.task.description
+        return this.taskMissionInstructionsHtml
           .replace(/&/g, "&amp;")
           .replace(/</g, "&lt;")
           .replace(/>/g, "&gt;")

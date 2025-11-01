@@ -1,20 +1,11 @@
 <template>
   <div class="full-height justify-center align-center">
-    <LoadingSpinner v-if="isLoadingCourses || loading" text="loading learning universe" />
+    <LoadingSpinner
+      v-if="isLoadingCourses || isLoadingActiveMissions || loading"
+      text="loading squad locations"
+    />
     <div v-if="allNodesForDisplay.length == 0">
-      <p class="overline noGalaxies">NO GALAXIES TO DISPLAY</p>
-      <div class="d-flex justify-center mb-4">
-        <v-btn
-          x-small
-          color="baseAccent"
-          @click="$emit('createGalaxy')"
-          outlined
-          class="py-6 px-12"
-        >
-          <v-icon x-small class="pr-2">{{ mdiPlus }}</v-icon>
-          MAP NEW GALAXY
-        </v-btn>
-      </div>
+      <p class="overline noGalaxies">NO MAPS TO DISPLAY</p>
     </div>
     <network
       v-if="allNodesForDisplay.length != 0"
@@ -103,6 +94,7 @@ export default {
     activeMissionsByTopicKey: { type: Map, default: () => new Map() },
     showGlow: { type: Boolean, default: false },
     paused: { type: Boolean, default: false },
+    isLoadingActiveMissions: { type: Boolean, default: false },
   },
   components: {
     Network,
@@ -222,28 +214,35 @@ export default {
       }
     },
     async courses(newCourses, oldCourses) {
-      this.loading = true;
-      let needsCentering = true;
-      if (newCourses?.length === oldCourses?.length) {
-        needsCentering = false;
-        for (let i = 0; i < newCourses.length; i++) {
-          if (newCourses[i].id !== oldCourses[i].id) {
-            needsCentering = true;
-            break;
+      // Unified watcher: refresh positions, then ensure tasks->planets
+      try {
+        this.loading = true;
+        let needsCentering = true;
+        if (newCourses?.length === oldCourses?.length) {
+          needsCentering = false;
+          for (let i = 0; i < newCourses.length; i++) {
+            if (newCourses[i].id !== oldCourses[i].id) {
+              needsCentering = true;
+              break;
+            }
           }
         }
+        if (
+          Array.isArray(newCourses) &&
+          newCourses.length > 0 &&
+          this.courseNodesMap &&
+          this.courseEdgesMap
+        ) {
+          this.refreshAllNodesAndEdgesToDisplay(needsCentering);
+          await this.loadCohortTasks();
+          this.buildPlanetsForAllNodes();
+        }
+      } finally {
+        // loading flag cleared in afterDrawing after first render; keep here safe
       }
-      if (newCourses && this.courseNodesMap && this.courseEdgesMap)
-        this.refreshAllNodesAndEdgesToDisplay(needsCentering);
     },
     allNodesForDisplay() {
       this.buildPlanetsForAllNodes();
-    },
-    async courses(newVal) {
-      if (Array.isArray(newVal) && newVal.length > 0) {
-        await this.loadCohortTasks();
-        this.buildPlanetsForAllNodes();
-      }
     },
     paused(newVal) {
       if (newVal) this.stopNodeAnimation();
@@ -290,8 +289,14 @@ export default {
           if (this.hoveredAvatar) this.hideAvatarTooltip();
           return;
         }
-        const x = evt.clientX;
-        const y = evt.clientY;
+        // Translate viewport coords to overlay-local coords so hit-testing matches dot positions
+        const overlay = this.$el.querySelector(".avatar-overlay");
+        const rect =
+          overlay && typeof overlay.getBoundingClientRect === "function"
+            ? overlay.getBoundingClientRect()
+            : null;
+        const x = rect ? evt.clientX - rect.left : evt.clientX;
+        const y = rect ? evt.clientY - rect.top : evt.clientY;
         let hovered = null;
         for (const dot of this.avatarDots) {
           if (
@@ -321,8 +326,11 @@ export default {
             }).y,
             topicId: hovered._topicId || null,
           };
+          // Redraw so DOM tooltip updates immediately on hover
+          this.$refs.network?.redraw();
         } else if (this.hoveredAvatar) {
           this.hoveredAvatar = null;
+          this.$refs.network?.redraw();
         }
       } catch (e) {}
     },
@@ -407,6 +415,8 @@ export default {
       }
     },
     afterDrawing(canvasContext) {
+      // Guard when component not ready
+      if (!this.$refs.network) return;
       const currentScale = this.$refs.network.getScale();
       if (currentScale < 0.7) {
         for (const course of this.courses) {
@@ -456,6 +466,7 @@ export default {
         // Keep avatars readable with a light clamp; tweak if needed
         const avatarSize = Math.max(8, Math.min(56, Math.round(baseSize * scale)));
         for (const [topicId, planets] of this.planetsByNode.entries()) {
+          if (!Array.isArray(planets) || planets.length === 0) continue;
           const courseId = this.findCourseIdForTopic(topicId);
           const key = courseId + ":" + topicId;
           const activeList = this.activeMissionsByTopicKey?.get(key) || [];

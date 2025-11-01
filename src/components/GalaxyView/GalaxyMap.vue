@@ -931,6 +931,8 @@ export default {
       this.showAllPlanets();
       // Show all topic nodes again
       this.showAllTopicNodes();
+      // Re-assert image node properties to ensure images render after preview
+      this.restoreImageNodes();
       // Clear current topic ID to show all planet labels again
       this.setCurrentTopicId(null);
 
@@ -941,6 +943,29 @@ export default {
 
       // this.$refs.network.fit();
       this.zoomToNodes(this.$refs.network.nodes);
+    },
+    restoreImageNodes() {
+      try {
+        const imageNodes = this.currentCourseNodes.filter(
+          (n) => n && (n.shape === "image" || n.image),
+        );
+        if (!imageNodes.length) return;
+
+        const updates = imageNodes.map((n) => ({
+          id: n.id,
+          shape: "image",
+          image: n.image,
+          // Common properties we set on image nodes when created/edited
+          borderWidth: n.borderWidth != null ? n.borderWidth : 0,
+          color: n.color != null ? n.color : "rgba(0,0,0,0)",
+          size: n.size != null ? n.size : this.network?.options?.nodes?.size || 7,
+          label: "", // we draw labels manually
+        }));
+
+        this.$refs.network.visData.nodes.update(updates);
+      } catch (e) {
+        console.warn("Failed to restore image nodes after preview", e);
+      }
     },
     // this controls the fit zoom animation
     zoomToNodes(nodes) {

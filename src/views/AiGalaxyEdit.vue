@@ -56,7 +56,7 @@
           <div class="loading-galaxy-treeview-wrapper">
             <div
               v-for="(star, starIndex) in transformedStarDetails"
-              :key="`star-${starIndex}`"
+              :key="`loading-star-${star.id || starIndex}`"
               class="loading-star-treeview-item"
             >
               <v-treeview
@@ -95,23 +95,35 @@
           <p class="token-usage overline mt-2">
             Total AI Tokens:
             {{
-              aiGeneratedGalaxyMap.tokens
-                ? aiGeneratedGalaxyMap.tokens.totalTokens.toLocaleString()
-                : "0"
+              Number(
+                aiGeneratedGalaxyMap &&
+                  aiGeneratedGalaxyMap.tokens &&
+                  aiGeneratedGalaxyMap.tokens.totalTokens !== undefined
+                  ? aiGeneratedGalaxyMap.tokens.totalTokens
+                  : 0,
+              ).toLocaleString()
             }}
           </p>
           <p class="token-breakdown overline mt-2" v-if="!isSavingToDB">
             Input:
             {{
-              aiGeneratedGalaxyMap.tokens
-                ? aiGeneratedGalaxyMap.tokens.totalInputTokens.toLocaleString()
-                : "0"
+              Number(
+                aiGeneratedGalaxyMap &&
+                  aiGeneratedGalaxyMap.tokens &&
+                  aiGeneratedGalaxyMap.tokens.totalInputTokens !== undefined
+                  ? aiGeneratedGalaxyMap.tokens.totalInputTokens
+                  : 0,
+              ).toLocaleString()
             }}
             | Output:
             {{
-              aiGeneratedGalaxyMap.tokens
-                ? aiGeneratedGalaxyMap.tokens.totalOutputTokens.toLocaleString()
-                : "0"
+              Number(
+                aiGeneratedGalaxyMap &&
+                  aiGeneratedGalaxyMap.tokens &&
+                  aiGeneratedGalaxyMap.tokens.totalOutputTokens !== undefined
+                  ? aiGeneratedGalaxyMap.tokens.totalOutputTokens
+                  : 0,
+              ).toLocaleString()
             }}
           </p>
           <!-- <p class="token-breakdown overline mt-2" v-if="!isSavingToDB">
@@ -218,7 +230,7 @@
       />
 
       <!-- v-treeview of stars > planets > missions -->
-      <div
+      <section
         v-if="transformedStarDetails.length > 0"
         class="galaxy-treeview-container"
         :class="{ mobile: isMobile }"
@@ -246,7 +258,7 @@
           <div class="galaxy-treeview-wrapper" :class="{ 'task-editing': taskEditing }">
             <div
               v-for="(star, starIndex) in transformedStarDetails"
-              :key="`star-${taskEditing ? 'selected' : starIndex}`"
+              :key="`star-${star.id || starIndex}-${taskEditing ? 'editing' : 'normal'}`"
               class="star-treeview-item"
             >
               <div>
@@ -475,15 +487,17 @@
             :course-id="courseId"
             :has-unsaved-changes="hasUnsavedChanges"
             :value="galaxyRefineUserInput"
+            :show-structure-refine="true"
             @input="galaxyRefineUserInput = $event"
             @remove-chip="removeChip"
             @generate-again="generateGalaxyMapAgain()"
-            @refine="refineGalaxyMap()"
+            @refine-structure="refineStructureOnly()"
+            @refine-galaxy-map="refineGalaxyMap()"
             @save-new="saveGalaxyToDB"
-            @open-layout-dialog="showLayoutDialog = true"
+            @update-galaxy="saveChangesToExistingGalaxy"
           />
         </div>
-      </div>
+      </section>
     </div>
 
     <!--==== Right section ====-->
@@ -496,7 +510,7 @@
       @cancel-edit="handleMissionEditCanceled"
       @mission-editing-state-change="missionEditingStateChanged"
       @update-mission="handleMissionUpdate"
-      @refine-mission="handleRefineMissionFromEditor"
+      @refine-mission=""
     />
 
     <!-- Total Tokens -->
@@ -504,21 +518,33 @@
       <p class="ma-0 overline token-title">
         AI Tokens Used<br />Input:
         {{
-          aiGeneratedGalaxyMap.tokens
-            ? aiGeneratedGalaxyMap.tokens.totalInputTokens.toLocaleString()
-            : "0"
+          Number(
+            aiGeneratedGalaxyMap &&
+              aiGeneratedGalaxyMap.tokens &&
+              aiGeneratedGalaxyMap.tokens.totalInputTokens !== undefined
+              ? aiGeneratedGalaxyMap.tokens.totalInputTokens
+              : 0,
+          ).toLocaleString()
         }}
         <br />Output:
         {{
-          aiGeneratedGalaxyMap.tokens
-            ? aiGeneratedGalaxyMap.tokens.totalOutputTokens.toLocaleString()
-            : "0"
+          Number(
+            aiGeneratedGalaxyMap &&
+              aiGeneratedGalaxyMap.tokens &&
+              aiGeneratedGalaxyMap.tokens.totalOutputTokens !== undefined
+              ? aiGeneratedGalaxyMap.tokens.totalOutputTokens
+              : 0,
+          ).toLocaleString()
         }}
         <br />Total:
         {{
-          aiGeneratedGalaxyMap.tokens
-            ? aiGeneratedGalaxyMap.tokens.totalTokens.toLocaleString()
-            : "0"
+          Number(
+            aiGeneratedGalaxyMap &&
+              aiGeneratedGalaxyMap.tokens &&
+              aiGeneratedGalaxyMap.tokens.totalTokens !== undefined
+              ? aiGeneratedGalaxyMap.tokens.totalTokens
+              : 0,
+          ).toLocaleString()
         }}
         <!-- <br />Est. Cost: ${{
           aiGeneratedGalaxyMap.tokens
@@ -692,10 +718,12 @@ import {
   getGalaxyMapObjectFromCourse,
   refineGalaxyMap,
   refineGalaxyMapWithClarification,
+  refineStructure,
 } from "@/lib/ff";
 import * as smd from "streaming-markdown";
 import { getFriendlyErrorMessage } from "@/lib/utils";
 import { db } from "@/store/firestoreConfig";
+import { applyStructureOps } from "@/refiners/apply-structure-ops";
 
 // import PromptDialog from "@/components/Dialogs/PromptDialog.vue";
 
@@ -967,6 +995,8 @@ export default {
       ],
       clarificationAnswers: [],
       previousRefinementResponseId: null,
+      clarificationFlow: null,
+      structureAutoSelectedTargets: null,
     };
   },
   watch: {
@@ -1085,31 +1115,41 @@ export default {
           },
         };
       }
+      // Ensure tokens have required numeric defaults even if object exists but is partial
+      this.aiGeneratedGalaxyMap.tokens = {
+        totalInputTokens: 0,
+        totalOutputTokens: 0,
+        totalTokens: 0,
+        ...(this.aiGeneratedGalaxyMap.tokens || {}),
+      };
     } else if (this.parsedResponse) {
       // Check if we have parsedResponse from props or need to restore from store (Cursor changed AICreatedGalaxyDialog to pass the paresedResponse through the store instead of router params FYI)
       this.aiGeneratedGalaxyMap = this.parsedResponse;
-      if (!this.aiGeneratedGalaxyMap.tokens) {
-        // Try to restore from store if available
-        if (this.aiGalaxyEditData && this.aiGalaxyEditData.tokens) {
-          this.aiGeneratedGalaxyMap.tokens = { ...this.aiGalaxyEditData.tokens };
-        } else {
-          this.aiGeneratedGalaxyMap.tokens = {
-            totalInputTokens: 0,
-            totalOutputTokens: 0,
-            totalTokens: 0,
-          };
-        }
+      // Normalize tokens whether present or missing
+      if (
+        !this.aiGeneratedGalaxyMap.tokens &&
+        this.aiGalaxyEditData &&
+        this.aiGalaxyEditData.tokens
+      ) {
+        this.aiGeneratedGalaxyMap.tokens = { ...this.aiGalaxyEditData.tokens };
       }
+      this.aiGeneratedGalaxyMap.tokens = {
+        totalInputTokens: 0,
+        totalOutputTokens: 0,
+        totalTokens: 0,
+        ...(this.aiGeneratedGalaxyMap.tokens || {}),
+      };
       // Save to store for persistence
       this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
     } else {
       // Try to restore from store
       this.aiGeneratedGalaxyMap = this.aiGalaxyEditData;
-      if (this.aiGeneratedGalaxyMap && !this.aiGeneratedGalaxyMap.tokens) {
+      if (this.aiGeneratedGalaxyMap) {
         this.aiGeneratedGalaxyMap.tokens = {
           totalInputTokens: 0,
           totalOutputTokens: 0,
           totalTokens: 0,
+          ...(this.aiGeneratedGalaxyMap.tokens || {}),
         };
       }
     }
@@ -1188,15 +1228,21 @@ export default {
       const planet = star?.planets?.[planetIndex];
       if (!planet) return null;
 
+      const missionInstructionsHtmlString = this.getMissionInstructionsHtml(planet);
+
+      const missionInstructionsObject =
+        planet.missionInstructionsObject && typeof planet.missionInstructionsObject === "object"
+          ? planet.missionInstructionsObject
+          : typeof planet.missionInstructions === "object"
+            ? planet.missionInstructions
+            : null;
+
       return {
         id: `star[${starIndex}].planet[${planetIndex}]`,
         title: planet.title,
-        description: planet.description,
-        missionInstructions: planet.missionInstructions || {
-          intro: "",
-          outro: "",
-          steps: [],
-        },
+        description: typeof planet.description === "string" ? planet.description : "",
+        missionInstructionsHtmlString,
+        missionInstructionsObject,
         starTitle: star?.title || "",
       };
     },
@@ -1263,20 +1309,6 @@ export default {
     },
   },
   methods: {
-    handleRefineMissionFromEditor({ prompt, context, missionPath }) {
-      // Use existing refine flow with mission-targeted items
-      this.galaxyRefineUserInput = prompt || this.galaxyRefineUserInput;
-      // Merge with any existing galaxy selections
-      const activeItems = [...new Set([...(this.activeGalaxyItems || []), ...items])];
-
-      // Trigger refine with targeted items by temporarily overriding selections
-      const original = this.activeGalaxyItems;
-      this.activeGalaxyItems = activeItems;
-      this.refineGalaxyMap().finally(() => {
-        // restore to avoid unintended UI state
-        this.activeGalaxyItems = original;
-      });
-    },
     // Estimate content height based on text length and structure
     estimateContentHeight(content) {
       if (!content) return 0;
@@ -1380,26 +1412,7 @@ export default {
           }
         }
 
-        // Convert mission instructions only if they are structured (object/JSON), keep plain HTML strings as-is
-        if (this.aiGeneratedGalaxyMap && this.aiGeneratedGalaxyMap.stars) {
-          for (let starIndex = 0; starIndex < this.aiGeneratedGalaxyMap.stars.length; starIndex++) {
-            const star = this.aiGeneratedGalaxyMap.stars[starIndex];
-            if (star.planets) {
-              for (let planetIndex = 0; planetIndex < star.planets.length; planetIndex++) {
-                const planet = star.planets[planetIndex];
-                if (planet && planet.missionInstructions) {
-                  const mi = planet.missionInstructions;
-                  const shouldConvert =
-                    typeof mi === "object" ||
-                    (typeof mi === "string" && this.isStructuredMissionInstructions(mi));
-                  if (shouldConvert) {
-                    planet.missionInstructions = this.formatMissionInstructionsToHtml(mi);
-                  }
-                }
-              }
-            }
-          }
-        }
+        this.normalizeMissionInstructionsForMap(this.aiGeneratedGalaxyMap);
 
         // Merge top-level fields from bound DB course to avoid overwriting recent UI edits
         const payloadGalaxyMap = { ...this.aiGeneratedGalaxyMap, idInDatabase: courseId };
@@ -1476,6 +1489,96 @@ export default {
         // If parsing fails, it's not structured mission instructions
         return false;
       }
+    },
+
+    normalizeMissionInstructionsForMap(map) {
+      if (!map?.stars) return;
+
+      map.stars.forEach((star) => {
+        if (!star?.planets) return;
+
+        star.planets.forEach((planet) => {
+          if (!planet) return;
+
+          const missionInstructions = planet.missionInstructions;
+          const legacyInstructions = planet.instructions;
+
+          let missionInstructionsObject = null;
+
+          if (missionInstructions && typeof missionInstructions === "object") {
+            missionInstructionsObject = missionInstructions;
+          } else if (
+            typeof missionInstructions === "string" &&
+            this.isStructuredMissionInstructions(missionInstructions)
+          ) {
+            try {
+              missionInstructionsObject = JSON.parse(missionInstructions);
+            } catch (error) {
+              console.warn("Failed to parse mission instructions string", error);
+            }
+          } else if (legacyInstructions && typeof legacyInstructions === "object") {
+            missionInstructionsObject = legacyInstructions;
+          }
+
+          const missionInstructionsHtmlString = this.getMissionInstructionsHtml({
+            ...planet,
+            missionInstructionsObject,
+          });
+
+          planet.missionInstructionsObject = missionInstructionsObject || null;
+          planet.missionInstructionsHtmlString = missionInstructionsHtmlString || "";
+        });
+      });
+    },
+
+    getMissionInstructionsHtml(planet) {
+      if (!planet) return "";
+
+      if (
+        typeof planet.missionInstructionsHtmlString === "string" &&
+        planet.missionInstructionsHtmlString.trim()
+      ) {
+        return planet.missionInstructionsHtmlString;
+      }
+
+      if (
+        planet.missionInstructionsObject &&
+        typeof planet.missionInstructionsObject === "object"
+      ) {
+        return this.formatMissionInstructionsToHtml(planet.missionInstructionsObject);
+      }
+
+      const missionInstructions = planet.missionInstructions;
+      if (missionInstructions) {
+        if (typeof missionInstructions === "string") {
+          if (this.isStructuredMissionInstructions(missionInstructions)) {
+            try {
+              const parsed = JSON.parse(missionInstructions);
+              return this.formatMissionInstructionsToHtml(parsed);
+            } catch (error) {
+              console.warn("Failed to parse structured mission instructions string", error);
+              return missionInstructions;
+            }
+          }
+          return missionInstructions;
+        }
+
+        if (typeof missionInstructions === "object") {
+          return this.formatMissionInstructionsToHtml(missionInstructions);
+        }
+      }
+
+      const legacyInstructions = planet.instructions;
+      if (legacyInstructions) {
+        if (typeof legacyInstructions === "string") {
+          return legacyInstructions;
+        }
+        if (typeof legacyInstructions === "object") {
+          return this.formatMissionInstructionsToHtml(legacyInstructions);
+        }
+      }
+
+      return "";
     },
 
     /**
@@ -2339,11 +2442,13 @@ export default {
             };
 
             // Unified: missionInstructions
-            if (planet.missionInstructions) {
+            const missionInstructionsHtmlString = this.getMissionInstructionsHtml(planet);
+
+            if (missionInstructionsHtmlString) {
               planetNode.children.push({
                 id: `star[${starIndex}].planet[${planetIndex}].instructions`,
                 name: "Mission Instructions",
-                description: planet.missionInstructions,
+                description: missionInstructionsHtmlString,
                 type: "instructions",
                 disabled: true, // instructions should not be activatable
               });
@@ -2392,237 +2497,436 @@ export default {
 
       // Debounce the update to prevent rapid toggling
       this.updateTimeout = setTimeout(() => {
-        // Update the treeview's active state to match what the user selected
-        this.$set(this.treeviewActiveItems, treeviewIndex, newValue);
+        // 1) Sanitize with preference to the user's last click
+        const unique = Array.from(new Set(newValue || []));
+        const current = this.treeviewActiveItems[treeviewIndex] || [];
 
-        // Merge new active items with existing ones instead of overwriting
-        // Remove any items that belong to the current treeview (to avoid duplicates)
+        // Identify indices for planets and bare stars
+        const getStarIndexFromId = (id) => {
+          if (typeof id !== "string") return null;
+          const m1 = id.match(/^star\[(\d+)\]$/);
+          if (m1) return m1[1];
+          const m2 = id.match(/^star\[(\d+)\]\.planet\[/);
+          if (m2) return m2[1];
+          return null;
+        };
+
+        const planetStarIndices = new Set(
+          unique
+            .map((id) => {
+              const m = typeof id === "string" && id.match(/^star\[(\d+)\]\.planet\[/);
+              return m ? m[1] : null;
+            })
+            .filter((v) => v != null),
+        );
+        const bareStarIndices = new Set(
+          unique
+            .map((id) => {
+              const m = typeof id === "string" && id.match(/^star\[(\d+)\]$/);
+              return m ? m[1] : null;
+            })
+            .filter((v) => v != null),
+        );
+
+        // Detect the last clicked item (added item compared to current)
+        const added = unique.filter((id) => !current.includes(id));
+        const lastClicked = added.length > 0 ? added[0] : null;
+        const lastClickedStar = lastClicked ? getStarIndexFromId(lastClicked) : null;
+        const lastClickedIsBareStar =
+          typeof lastClicked === "string" && /^star\[(\d+)\]$/.test(lastClicked);
+
+        const sanitized = unique.filter((id) => {
+          if (typeof id !== "string") return false;
+          const isBareStar = /^star\[(\d+)\]$/.test(id);
+          const idx = getStarIndexFromId(id);
+          const hasConflict = idx != null && bareStarIndices.has(idx) && planetStarIndices.has(idx);
+
+          if (!hasConflict) return true;
+
+          // If there is a conflict (both star[idx] and some planet of idx are selected),
+          // prefer the user's last click for that star index.
+          if (lastClickedStar === idx) {
+            return lastClickedIsBareStar ? isBareStar : !isBareStar;
+          }
+
+          // Fallback: prefer planets (maintains existing, user-approved behavior)
+          return !isBareStar;
+        });
+
+        // 2) Avoid feedback loop: only write if the active set actually changes
+        const same = this._arraysHaveSameMembers(current, sanitized);
+        if (!same) {
+          this.$set(this.treeviewActiveItems, treeviewIndex, sanitized);
+        }
+
+        // 3) Merge new active items with existing ones for request payloads
         const currentTreeviewPrefix = `star[${treeviewIndex}]`;
         const filteredExistingItems = this.activeGalaxyItems.filter(
           (item) => !item.startsWith(currentTreeviewPrefix),
         );
-
-        // Add the new active items from this treeview
-        this.activeGalaxyItems = [...filteredExistingItems, ...newValue];
+        this.activeGalaxyItems = [...filteredExistingItems, ...sanitized];
         console.log("activeGalaxyItems: ", this.activeGalaxyItems);
 
         this.updateTimeout = null;
       }, 100);
     },
-    async refineGalaxyMap() {
-      this.loading = true;
-      this.isRefining = true;
+    buildStructureCandidates(stars) {
+      const starCandidates = [];
+      const planetCandidates = [];
 
-      // Start timing
-      const startTime = Date.now();
-      console.log("🚀 Starting Galaxy refinement process...");
+      stars.forEach((star, starIndex) => {
+        if (star && star.id) {
+          starCandidates.push({
+            id: star.id,
+            title: star.title || "",
+            description: star.description || "",
+            order:
+              typeof star.order === "number" && Number.isFinite(star.order)
+                ? star.order
+                : starIndex,
+          });
 
-      const refinementSystemPrompt = `
-
-     You are a Galaxy Map Refiner Assistant. Your role is to update specific portions of an existing Galaxy Map JSON object based on user requests.
-Begin with a concise checklist (3-7 bullets) of what you will do; keep items conceptual, not implementation-level.
-The Galaxy Map is a hierarchical, structured learning roadmap, with this structure:
-- **Stars**: Major milestones
-- **Planets**: Atomic, mission-focused wins (15–60 minutes each) within a star
-- **Mission Instructions**: Detailed action guides for each planet, including:
-- **Intro**: Why this mission matters and its context in the journey.
-- **Steps**: Each step includes discrete **tasks** (actionable), optional just-in-time micro-teach for new concepts, and a **checkpoint** for motivation.
-- **Outro**: Recap the win and preview what's next.
-### Galaxy Map JSON Format Example
-
-{
-"status": "journey_ready",
-"title": "Journey Title",
-"description": "Brief description of the overall journey",
-"stars": [
-{
-"title": "1: Title (Star Name)",
-"description": "Description of this star",
-"planets": [
-{
-"title": "1.1: Title (Planet Name)",
-"description": "Brief description of this win",
-"missionInstructions": {
-"intro": "Motivation and context",
-"steps": [
-{
-"title": "Step 1: Step Name",
-"tasks": [
-{ "taskContent": "Markdown instruction (with micro-teach where needed)" }
-],
-"checkpoint": "Progress checkpoint message"
-}
-],
-"outro": "Recap and transition message"
-}
-}
-]
-}
-]
-}
-
-### Responsibilities
-1. Analyze the user's request (add, modify, or reorder stars, planets, or mission instructions).
-2. Receive an input object with:
-- **galaxy_map**: The current full Galaxy Map JSON.
-- **items_user_wants_changed**: List of zero-indexed object paths (e.g., "stars[0]", "stars[1].planets[2]") targeted for modification.
-- **user_request**: Instructions detailing the intended changes.
-3. Retrieve the content at each specified path for modification.
-4. Update the target content based on the user request, ensuring the Galaxy Map’s structure and goals are maintained.
-5. Return only the modified parts, each paired with its zero-indexed path, to enable merging back into the main Galaxy Map.
-6. If you add or remove items (such as splitting/merging/renumbering arrays), return all affected arrays with their new contents and correct paths.
-7. If any user-specified path doesn’t exist, return an error detailing which paths are invalid.
-
-After each edit or structural change, briefly validate the update’s success by summarizing the change in 1–2 lines. If the validation fails (e.g., constraints or user intent are not satisfied), self-correct before proceeding.
-
-#### Planet Scope & Motivation Rules
-- Each Planet must be an atomic win that fits in 15–60 minutes. If a planet is overloaded, split it into additional planets within the same star, renumbering as needed.
-- Mission Instructions must always include: Intro, Steps (with Tasks and Checkpoints), and Outro.
-- **Micro-teach**: Explain any new concept/term/tool at its first appearance (1–3 sentences, practical); if already taught, use a brief reminder.
-
-#### Quality Constraints
-- Make minimal, surgical edits unless the user asks for broad changes.
-- Avoid scope creep: split content if needed rather than expanding instructions excessively.
-- Keep language motivating, clear, and concise. Remove redundancy.
-
-### Input Structure
-{
-"galaxy_map": { ... },
-"items_user_wants_changed": [ "stars[0]", "stars[0].planets[1]" ],
-"user_request": "User's instructions"
-}
-`;
-
-      // 1.refine system prompt
-      const inputMessages = [{ role: "system", content: refinementSystemPrompt }];
-
-      // 2. galaxy map json - create a copy without history to avoid circular reference
-      const galaxyMapForAI = {
-        ...this.aiGeneratedGalaxyMap,
-        history: undefined, // Remove history for AI processing
-      };
-
-      // ----- trying different formarts for the galaxymap object
-      const galaxyMapJson = JSON.stringify(galaxyMapForAI);
-      // const galaxyMapMarkdown = this.convertGalaxyMapToMarkdown(galaxyMapForAI);
-
-      inputMessages.push({ role: "user", content: "galaxy_map: " + galaxyMapJson });
-
-      // 3. selected items
-      const activeItems = [...new Set([...this.activeGalaxyItems])];
-      const activeItemsString = activeItems.join("\n");
-      if (activeItems.length > 0) {
-        inputMessages.push({
-          role: "user",
-          content: "items_user_wants_changed: " + activeItemsString,
-        });
-      }
-
-      inputMessages.push({ role: "user", content: "user_request: " + this.galaxyRefineUserInput });
-
-      console.log("refine inputMessages", inputMessages);
-
-      // Call the cloud function for galaxy refinement
-      const refineGalaxyWithAiResponse = await refineGalaxyMap(
-        galaxyMapForAI,
-        activeItems,
-        this.galaxyRefineUserInput,
-        this.aiGeneratedGalaxyMap.aiResponseId,
-      );
-
-      // Calculate and log execution time even on error
-      const endTime = Date.now();
-      const timeString = this.formatExecutionTime(startTime, endTime);
-      console.log(
-        `🔍 Galaxy refinement process completed after ${timeString} (${endTime - startTime}ms total)`,
-      );
-
-      console.log("🔍 Galaxy refinement response:", refineGalaxyWithAiResponse);
-
-      // Check if clarification is needed
-      if (refineGalaxyWithAiResponse.galaxyMap.status === "clarification_needed") {
-        console.log("Clarification needed, showing questions UI");
-
-        // Store the clarification questions and response ID for the follow-up call
-        this.clarificationQuestions = refineGalaxyWithAiResponse.galaxyMap.questions || [];
-        this.clarificationAnswers = new Array(this.clarificationQuestions.length).fill("");
-        this.previousRefinementResponseId = refineGalaxyWithAiResponse.responseId;
-
-        // Show the clarification dialog
-        this.showClarificationDialog = true;
-
-        // Reset loading state since we're waiting for user input
-        this.isRefining = false;
-        this.loading = false;
-
-        // Track token usage from this clarification request
-        this.trackTokenUsage(refineGalaxyWithAiResponse);
-
-        return; // Exit early, don't proceed with normal refinement flow
-      }
-
-      // Preserve existing properties that should not be overwritten
-      const existingHistory = this.aiGeneratedGalaxyMap.history || [];
-      const existingTokens = this.aiGeneratedGalaxyMap.tokens || {
-        totalInputTokens: 0,
-        totalOutputTokens: 0,
-        totalTokens: 0,
-        modelsUsed: [],
-        combinedEstimatedCost: 0,
-      };
-      const existingAiResponseId = this.aiGeneratedGalaxyMap.aiResponseId;
-      const existingOriginResponseId = this.aiGeneratedGalaxyMap.originResponseId;
-
-      // CRITICAL: Preserve both response IDs for tracking AI call history
-      // - originResponseId: tracks the very first AI call that created the galaxy map
-      // - aiResponseId: tracks the most recent AI call (refinement, regeneration, etc.)
-      console.log("🔍 Preserving response IDs:", {
-        existingOriginResponseId,
-        existingAiResponseId,
-        newResponseId: refineGalaxyWithAiResponse.responseId,
+          if (Array.isArray(star.planets)) {
+            star.planets.forEach((planet, planetIndex) => {
+              if (planet && planet.id) {
+                planetCandidates.push({
+                  id: planet.id,
+                  starId: star.id,
+                  title: planet.title || "",
+                  description: planet.description || "",
+                  order:
+                    typeof planet.order === "number" && Number.isFinite(planet.order)
+                      ? planet.order
+                      : planetIndex,
+                });
+              }
+            });
+          }
+        }
       });
 
-      // Merge the new AI response with existing properties instead of overwriting
-      this.aiGeneratedGalaxyMap = {
-        ...this.aiGeneratedGalaxyMap, // Keep all existing properties (including originResponseId)
-        ...refineGalaxyWithAiResponse.galaxyMap, // Override with new AI response data
-        aiResponseId: refineGalaxyWithAiResponse.responseId, // Update with new response ID
-      };
+      const candidates = {};
+      if (starCandidates.length > 0) {
+        candidates.stars = starCandidates.slice(0, 12);
+      }
+      if (planetCandidates.length > 0) {
+        candidates.planets = planetCandidates.slice(0, 20);
+      }
+      return candidates;
+    },
+    buildStructureRefinePayload() {
+      const galaxy = this.aiGeneratedGalaxyMap || {};
+      const stars = Array.isArray(galaxy.stars) ? galaxy.stars : [];
+      if (stars.length === 0) {
+        throw new Error("Galaxy map has no stars to refine.");
+      }
 
-      // Verify both IDs are preserved
-      console.log("✅ After refinement, response IDs:", {
-        originResponseId: this.aiGeneratedGalaxyMap.originResponseId,
-        aiResponseId: this.aiGeneratedGalaxyMap.aiResponseId,
+      const starPattern = /^star\[(\d+)\]$/;
+      // Accept both legacy "planets" and current "planet" paths from tree item ids
+      const planetPattern = /^star\[(\d+)\]\.(?:planet|planets)\[(\d+)\]$/;
+
+      const activeItems = Array.from(new Set(this.activeGalaxyItems || []));
+      const starIdSet = new Set();
+      const planetIdSet = new Set();
+      const starSummaries = new Map();
+      const planetSummaries = new Map();
+      const neighbors = {};
+      const missingSelections = [];
+
+      const toStarSummary = (star, index) => ({
+        id: star.id,
+        order: typeof star.order === "number" && Number.isFinite(star.order) ? star.order : index,
+        title: star.title || "",
+        description: star.description || "",
+        planets: Array.isArray(star.planets)
+          ? star.planets.map((planet, planetIndex) => ({
+              id: planet.id,
+              order:
+                typeof planet.order === "number" && Number.isFinite(planet.order)
+                  ? planet.order
+                  : planetIndex,
+              title: planet.title || "",
+              description: planet.description || "",
+            }))
+          : [],
       });
 
-      // Create a deep copy of the NEW galaxy map data without the history property to avoid circular reference
-      const newGalaxyMapCopy = JSON.parse(
-        JSON.stringify({
-          ...this.aiGeneratedGalaxyMap,
-          history: undefined, // Remove history from the copy
-        }),
-      );
+      const toPlanetSummary = (planet, star, planetIndex) => ({
+        id: planet.id,
+        starId: star.id,
+        title: planet.title || "",
+        description: planet.description || "",
+        order:
+          typeof planet.order === "number" && Number.isFinite(planet.order)
+            ? planet.order
+            : planetIndex,
+      });
 
-      // Add the NEW state to history (this becomes the current state)
-      this.aiGeneratedGalaxyMap.history.push({
-        galaxyMapData: newGalaxyMapCopy,
+      activeItems.forEach((item) => {
+        console.log("active item in buildStructureRefinePayload:", item);
+        if (typeof item !== "string") return;
+
+        const starMatch = starPattern.exec(item);
+        if (starMatch) {
+          console.log("starMatch for active item:", item, starMatch);
+          const starIndex = Number(starMatch[1]);
+          const star = stars[starIndex];
+          if (!star || !star.id) {
+            missingSelections.push(item);
+            return;
+          }
+
+          if (!starSummaries.has(star.id)) {
+            starSummaries.set(star.id, toStarSummary(star, starIndex));
+          }
+          starIdSet.add(star.id);
+          return;
+        }
+
+        const planetMatch = planetPattern.exec(item);
+        if (planetMatch) {
+          console.log("planetMatch for active item:", item, planetMatch);
+          const starIndex = Number(planetMatch[1]);
+          const planetIndex = Number(planetMatch[2]);
+          const star = stars[starIndex];
+          if (!star || !star.id || !Array.isArray(star.planets)) {
+            missingSelections.push(item);
+            return;
+          }
+
+          const planet = star.planets[planetIndex];
+          if (!planet || !planet.id) {
+            missingSelections.push(item);
+            return;
+          }
+
+          if (!starSummaries.has(star.id)) {
+            starSummaries.set(star.id, toStarSummary(star, starIndex));
+          }
+          starIdSet.add(star.id);
+
+          if (!planetSummaries.has(planet.id)) {
+            planetSummaries.set(planet.id, toPlanetSummary(planet, star, planetIndex));
+          }
+          planetIdSet.add(planet.id);
+
+          const neighborInfo = {};
+          if (planetIndex > 0 && star.planets[planetIndex - 1]) {
+            neighborInfo.prevTitle = star.planets[planetIndex - 1].title || "";
+          }
+          if (planetIndex + 1 < star.planets.length && star.planets[planetIndex + 1]) {
+            neighborInfo.nextTitle = star.planets[planetIndex + 1].title || "";
+          }
+          if (Object.keys(neighborInfo).length > 0) {
+            neighbors[planet.id] = neighborInfo;
+          }
+        }
+      });
+
+      if (missingSelections.length > 0) {
+        throw new Error(
+          `Some selected items are missing required IDs: ${missingSelections.join(", ")}`,
+        );
+      }
+
+      const targets = {};
+      if (starIdSet.size > 0) targets.starIds = Array.from(starIdSet);
+      if (planetIdSet.size > 0) targets.planetIds = Array.from(planetIdSet);
+      const hasTargets = Boolean(starIdSet.size || planetIdSet.size);
+
+      const starSubtrees = Array.from(starSummaries.values());
+      const planetList = Array.from(planetSummaries.values());
+      const neighborPayload = Object.keys(neighbors).length > 0 ? neighbors : undefined;
+      const candidates = this.buildStructureCandidates(stars);
+
+      return {
+        hasTargets,
+        targets: hasTargets ? targets : undefined,
+        starSubtrees,
+        planetSummaries: planetList,
+        neighbors: neighborPayload,
+        candidates,
+      };
+    },
+    applyStructurePatchOps(ops, responseId, selectedTargets) {
+      console.log("applying structure patch ops:", ops);
+      const updatedMap = applyStructureOps(this.aiGeneratedGalaxyMap, ops);
+      console.log("updatedMap:", updatedMap);
+      if (!updatedMap || !Array.isArray(updatedMap.stars)) {
+        throw new Error("Failed to apply structure operations to the galaxy map.");
+      }
+
+      if (!updatedMap.history) {
+        updatedMap.history = [];
+      }
+
+      const historySnapshot = JSON.parse(JSON.stringify({ ...updatedMap, history: undefined }));
+      updatedMap.history.push({
+        galaxyMapData: historySnapshot,
         atThisRefineUserPrompt: this.galaxyRefineUserInput,
       });
 
-      // Track token usage (accumulate with existing tokens)
-      this.trackTokenUsage(refineGalaxyWithAiResponse);
+      updatedMap.aiResponseId = responseId;
+      if (!updatedMap.originResponseId && this.aiGeneratedGalaxyMap.originResponseId) {
+        updatedMap.originResponseId = this.aiGeneratedGalaxyMap.originResponseId;
+      }
 
-      // update store
-      this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
-
-      // reset prompt input and selected items
-      this.galaxyRefineUserInput = "";
+      this.aiGeneratedGalaxyMap = updatedMap;
+      this.structureAutoSelectedTargets = selectedTargets || null;
       this.activeGalaxyItems = [];
       this.treeviewActiveItems = {};
-
-      this.isRefining = false;
-      this.loading = false;
+      this.galaxyRefineUserInput = "";
+      this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
     },
+    resolveStructureTargetNames(targets) {
+      const stars = Array.isArray(this.aiGeneratedGalaxyMap?.stars)
+        ? this.aiGeneratedGalaxyMap.stars
+        : [];
+      const starNameMap = new Map();
+      const planetNameMap = new Map();
+
+      stars.forEach((star) => {
+        if (star && star.id) {
+          starNameMap.set(star.id, star.title || star.id);
+          if (Array.isArray(star.planets)) {
+            star.planets.forEach((planet) => {
+              if (planet && planet.id) {
+                planetNameMap.set(planet.id, {
+                  title: planet.title || planet.id,
+                  starTitle: star.title || "",
+                });
+              }
+            });
+          }
+        }
+      });
+
+      const starNames = (targets?.starIds || []).map((id) => starNameMap.get(id) || id);
+      const planetNames = (targets?.planetIds || []).map((id) => {
+        const info = planetNameMap.get(id);
+        if (!info) return id;
+        return info.starTitle ? `${info.title} (${info.starTitle})` : info.title;
+      });
+
+      return { starNames, planetNames };
+    },
+    notifyAutoSelectedTargets(targets) {
+      if (!targets) return;
+      const { starNames, planetNames } = this.resolveStructureTargetNames(targets);
+      const segments = [];
+      if (starNames.length > 0) {
+        segments.push(`Stars: ${starNames.join(", ")}`);
+      }
+      if (planetNames.length > 0) {
+        segments.push(`Planets: ${planetNames.join(", ")}`);
+      }
+      if (segments.length === 0) return;
+      this.setSnackbar({
+        show: true,
+        color: "galaxyAccent",
+        text: `AI selected ${segments.join("; ")}`,
+      });
+    },
+    async refineStructureOnly() {
+      const userRequest = (this.galaxyRefineUserInput || "").trim();
+      if (!userRequest) {
+        this.setSnackbar({
+          show: true,
+          color: "pink",
+          text: "Please describe what you would like to refine.",
+        });
+        return;
+      }
+
+      let awaitingClarification = false;
+
+      try {
+        this.loading = true;
+        this.isRefining = true;
+
+        const startTime = Date.now();
+        const context = this.buildStructureRefinePayload();
+        console.log("context:", context);
+        const payload = {
+          userRequest,
+          previousResponseId: this.aiGeneratedGalaxyMap?.aiResponseId || undefined,
+          stars: context.starSubtrees,
+          planets: context.planetSummaries,
+        };
+        console.log("refining structure with payload:", payload);
+
+        if (context.targets) {
+          payload.targets = context.targets;
+          console.log("refining structure with payload.targets:", payload.targets);
+        } else if (context.candidates && (context.candidates.stars || context.candidates.planets)) {
+          payload.candidates = context.candidates;
+          console.log("refining structure with payload.candidates:", payload.candidates);
+        } else {
+          throw new Error(
+            "No structure targets or candidates available. Select specific stars or planets first.",
+          );
+        }
+
+        if (context.neighbors) {
+          payload.neighbors = context.neighbors;
+        }
+
+        const response = await refineStructure(payload);
+
+        if (response.status === "clarification_needed") {
+          awaitingClarification = true;
+          this.clarificationQuestions = response.questions || [];
+          this.clarificationAnswers = new Array(this.clarificationQuestions.length).fill("");
+          this.previousRefinementResponseId = response.responseId;
+          this.clarificationFlow = "structure";
+          this.showClarificationDialog = true;
+          this.structureAutoSelectedTargets =
+            response.suggestedTargets || response.selectedTargets || null;
+          this.trackTokenUsage(response);
+          return;
+        }
+
+        if (!Array.isArray(response.ops) || response.ops.length === 0) {
+          throw new Error("Structure refiner returned no operations.");
+        }
+
+        this.applyStructurePatchOps(
+          response.ops,
+          response.responseId,
+          response.selectedTargets || context.targets,
+        );
+        this.trackTokenUsage(response);
+
+        if (response.selectedTargets && !context.hasTargets) {
+          this.notifyAutoSelectedTargets(response.selectedTargets);
+        }
+
+        const endTime = Date.now();
+        const timeString = this.formatExecutionTime(startTime, endTime);
+        this.setSnackbar({
+          show: true,
+          color: "galaxyAccent",
+          text: `Structure refined in ${timeString}`,
+        });
+      } catch (error) {
+        console.error("Error during structure refinement:", error);
+        const message = error && error.message ? error.message : "Unknown error";
+        this.setSnackbar({
+          show: true,
+          color: "pink",
+          text: `Structure refinement failed: ${message}`,
+        });
+      } finally {
+        this.isRefining = false;
+        this.loading = false;
+        if (!awaitingClarification) {
+          this.clarificationFlow = null;
+          this.clarificationAnswers = [];
+          this.previousRefinementResponseId = null;
+        }
+      }
+    },
+
     async generateGalaxyMapAgain() {
       this.loading = true;
       this.isRefining = true;
@@ -2899,27 +3203,7 @@ After each edit or structural change, briefly validate the update’s success by
 
       let result = null;
 
-      // convert mission instructions to html for db
-      if (this.aiGeneratedGalaxyMap && this.aiGeneratedGalaxyMap.stars) {
-        for (let starIndex = 0; starIndex < this.aiGeneratedGalaxyMap.stars.length; starIndex++) {
-          const star = this.aiGeneratedGalaxyMap.stars[starIndex];
-          if (star.planets) {
-            for (let planetIndex = 0; planetIndex < star.planets.length; planetIndex++) {
-              const planet = star.planets[planetIndex];
-              // Unified: planet.missionInstructions
-              if (planet.missionInstructions) {
-                planet.missionInstructions = this.formatMissionInstructionsToHtml(
-                  planet.missionInstructions,
-                );
-              }
-              // Legacy fallback (commented out)
-              // else if (planet.instructions) {
-              //   planet.instructions = this.formatMissionInstructionsToHtml(planet.instructions);
-              // }
-            }
-          }
-        }
-      }
+      this.normalizeMissionInstructionsForMap(this.aiGeneratedGalaxyMap);
 
       try {
         // Call the Firebase function to save the galaxy map with selected layout
@@ -3039,26 +3323,7 @@ After each edit or structural change, briefly validate the update’s success by
           } catch (_) {}
         }
 
-        // Convert structured mission instructions only
-        if (this.aiGeneratedGalaxyMap && this.aiGeneratedGalaxyMap.stars) {
-          for (let starIndex = 0; starIndex < this.aiGeneratedGalaxyMap.stars.length; starIndex++) {
-            const star = this.aiGeneratedGalaxyMap.stars[starIndex];
-            if (star.planets) {
-              for (let planetIndex = 0; planetIndex < star.planets.length; planetIndex++) {
-                const planet = star.planets[planetIndex];
-                if (planet && planet.missionInstructions) {
-                  const mi = planet.missionInstructions;
-                  const shouldConvert =
-                    typeof mi === "object" ||
-                    (typeof mi === "string" && this.isStructuredMissionInstructions(mi));
-                  if (shouldConvert) {
-                    planet.missionInstructions = this.formatMissionInstructionsToHtml(mi);
-                  }
-                }
-              }
-            }
-          }
-        }
+        this.normalizeMissionInstructionsForMap(this.aiGeneratedGalaxyMap);
 
         const payloadGalaxyMap = { ...this.aiGeneratedGalaxyMap, idInDatabase: courseId };
         if (this.courseId && this.boundCourse) {
@@ -3731,6 +3996,7 @@ After each edit or structural change, briefly validate the update’s success by
       void isEditing;
     },
     handleMissionUpdate({ missionPath, planet }) {
+      console.log("handleMissionUpdate", missionPath, planet);
       if (!missionPath || !planet) return;
 
       const { starIndex, planetIndex } = this.parseGalaxyPath(missionPath);
@@ -3740,21 +4006,30 @@ After each edit or structural change, briefly validate the update’s success by
       if (!stars || !stars[starIndex] || !Array.isArray(stars[starIndex].planets)) return;
 
       const existingPlanet = stars[starIndex].planets[planetIndex] || {};
+      const missionInstructions = {
+        intro: planet.missionInstructions?.intro || "",
+        outro: planet.missionInstructions?.outro || "",
+        steps: (planet.missionInstructions?.steps || []).map((step) => ({
+          title: step.title || "",
+          checkpoint: step.checkpoint || "",
+          tasks: (step.tasks || []).map((task) => ({
+            taskContent: task.taskContent || "",
+          })),
+        })),
+      };
+
+      const missionInstructionsObject = missionInstructions;
+      const missionInstructionsHtmlString = this.getMissionInstructionsHtml({
+        missionInstructionsObject,
+      });
+
       const updatedPlanet = {
         ...existingPlanet,
         title: planet.title,
-        description: planet.description,
-        missionInstructions: {
-          intro: planet.missionInstructions?.intro || "",
-          outro: planet.missionInstructions?.outro || "",
-          steps: (planet.missionInstructions?.steps || []).map((step) => ({
-            title: step.title || "",
-            checkpoint: step.checkpoint || "",
-            tasks: (step.tasks || []).map((task) => ({
-              taskContent: task.taskContent || "",
-            })),
-          })),
-        },
+        description: planet.description || "",
+        missionInstructions,
+        missionInstructionsObject,
+        missionInstructionsHtmlString,
       };
 
       this.$set(this.aiGeneratedGalaxyMap.stars[starIndex].planets, planetIndex, updatedPlanet);
@@ -3964,6 +4239,7 @@ After each edit or structural change, briefly validate the update’s success by
       }
     },
     itemMadeActive(newValue, starIndex) {
+      console.log("itemMadeActive", newValue);
       const firstId = newValue && newValue[0];
       const planetId = this.normalizeToPlanetId(firstId) || firstId;
       this.highlightPlanetAndOrbitRing(planetId);
@@ -4007,6 +4283,18 @@ After each edit or structural change, briefly validate the update’s success by
       if (!id || typeof id !== "string") return null;
       const match = id.match(/^(star\[\d+\]\.planet\[\d+\])/);
       return match ? match[1] : null;
+    },
+    _arraysHaveSameMembers(a, b) {
+      if (a === b) return true;
+      if (!Array.isArray(a) || !Array.isArray(b)) return false;
+      if (a.length !== b.length) return false;
+      const setA = new Set(a);
+      const setB = new Set(b);
+      if (setA.size !== setB.size) return false;
+      for (const v of setA) {
+        if (!setB.has(v)) return false;
+      }
+      return true;
     },
     highlightPlanetAndOrbitRing(itemId) {
       console.log("highlightPlanetAndOrbitRing", itemId);
@@ -4150,69 +4438,88 @@ After each edit or structural change, briefly validate the update’s success by
       this.loading = true;
       this.isRefining = true;
 
-      console.log("Clarification answered, proceeding with refinement");
+      let awaitingAnotherRound = false;
 
       try {
-        // Start timing
         const startTime = Date.now();
-        console.log("🚀 Starting Galaxy refinement with clarification...");
+        console.log("🚀 Starting refinement with clarification...");
 
-        // Format answers similar to AICreateGalaxyDialog
         const prefixedAnswers = this.clarificationAnswers.map(
           (answer, index) => `${index + 1}) ${answer}`,
         );
         const clarificationAnswersString = prefixedAnswers.join("\n");
 
-        // Call the clarification refinement function
-        const clarificationResponse = await refineGalaxyMapWithClarification(
-          clarificationAnswersString,
-          this.previousRefinementResponseId,
-        );
-
-        console.log("Clarification refinement response:", clarificationResponse);
-
-        // Check if we still need clarification
-        if (clarificationResponse.galaxyMap.status === "clarification_needed") {
-          console.log("Still need clarification, showing new questions");
-
-          // Update questions and show dialog again
-          this.clarificationQuestions = clarificationResponse.galaxyMap.questions || [];
-          this.clarificationAnswers = new Array(this.clarificationQuestions.length).fill("");
-          this.previousRefinementResponseId = clarificationResponse.responseId;
-
-          this.showClarificationDialog = true;
-          this.isRefining = false;
-          this.loading = false;
-
-          // Track token usage
-          this.trackTokenUsage(clarificationResponse);
-
-          return;
+        if (!this.previousRefinementResponseId) {
+          throw new Error("Missing previous response ID for clarification.");
         }
 
-        // If we have a journey_ready response, proceed with normal refinement flow
-        if (clarificationResponse.galaxyMap.status === "journey_ready") {
-          console.log("Journey ready after clarification, updating galaxy map");
+        if (this.clarificationFlow === "structure") {
+          const response = await refineStructure({
+            clarificationAnswers: clarificationAnswersString,
+            previousResponseId: this.previousRefinementResponseId,
+          });
 
-          // Preserve existing properties that should not be overwritten
-          const existingHistory = this.aiGeneratedGalaxyMap.history || [];
-          const existingTokens = this.aiGeneratedGalaxyMap.tokens || {
-            totalInputTokens: 0,
-            totalOutputTokens: 0,
-            totalTokens: 0,
-            modelsUsed: [],
-            combinedEstimatedCost: 0,
-          };
-          const existingAiResponseId = this.aiGeneratedGalaxyMap.aiResponseId;
-          const existingOriginResponseId = this.aiGeneratedGalaxyMap.originResponseId;
+          if (response.status === "clarification_needed") {
+            awaitingAnotherRound = true;
+            this.clarificationQuestions = response.questions || [];
+            this.clarificationAnswers = new Array(this.clarificationQuestions.length).fill("");
+            this.previousRefinementResponseId = response.responseId;
+            this.clarificationFlow = "structure";
+            this.showClarificationDialog = true;
+            this.structureAutoSelectedTargets =
+              response.suggestedTargets || response.selectedTargets || null;
+            this.trackTokenUsage(response);
+            return;
+          }
 
-          // Merge the new AI response with existing properties
+          if (!Array.isArray(response.ops) || response.ops.length === 0) {
+            throw new Error("Structure refiner returned no operations.");
+          }
+
+          this.applyStructurePatchOps(
+            response.ops,
+            response.responseId,
+            response.selectedTargets || null,
+          );
+          this.trackTokenUsage(response);
+
+          if (response.selectedTargets) {
+            this.notifyAutoSelectedTargets(response.selectedTargets);
+          }
+
+          const endTime = Date.now();
+          const timeString = this.formatExecutionTime(startTime, endTime);
+          console.log(
+            `✅ Structure refinement with clarification completed in ${timeString} (${endTime - startTime}ms total)`,
+          );
+        } else {
+          const clarificationResponse = await refineGalaxyMapWithClarification(
+            clarificationAnswersString,
+            this.previousRefinementResponseId,
+          );
+
+          console.log("Clarification refinement response:", clarificationResponse);
+
+          if (clarificationResponse.galaxyMap.status === "clarification_needed") {
+            awaitingAnotherRound = true;
+            this.clarificationQuestions = clarificationResponse.galaxyMap.questions || [];
+            this.clarificationAnswers = new Array(this.clarificationQuestions.length).fill("");
+            this.previousRefinementResponseId = clarificationResponse.responseId;
+            this.clarificationFlow = "general";
+            this.showClarificationDialog = true;
+            this.trackTokenUsage(clarificationResponse);
+            return;
+          }
+
+          if (clarificationResponse.galaxyMap.status !== "journey_ready") {
+            throw new Error("Unexpected clarification response status.");
+          }
+
           this.aiGeneratedGalaxyMap = {
             ...this.aiGeneratedGalaxyMap,
             ...clarificationResponse.galaxyMap,
           };
 
-          // Create a deep copy for history
           const newGalaxyMapCopy = JSON.parse(
             JSON.stringify({
               ...this.aiGeneratedGalaxyMap,
@@ -4220,24 +4527,22 @@ After each edit or structural change, briefly validate the update’s success by
             }),
           );
 
-          // Add to history
+          if (!this.aiGeneratedGalaxyMap.history) {
+            this.aiGeneratedGalaxyMap.history = [];
+          }
+
           this.aiGeneratedGalaxyMap.history.push({
             galaxyMapData: newGalaxyMapCopy,
             atThisRefineUserPrompt: this.galaxyRefineUserInput,
           });
 
-          // Track token usage
           this.trackTokenUsage(clarificationResponse);
-
-          // Update store
           this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
 
-          // Reset form
           this.galaxyRefineUserInput = "";
           this.activeGalaxyItems = [];
           this.treeviewActiveItems = {};
 
-          // Calculate and log execution time
           const endTime = Date.now();
           const timeString = this.formatExecutionTime(startTime, endTime);
           console.log(
@@ -4246,24 +4551,244 @@ After each edit or structural change, briefly validate the update’s success by
         }
       } catch (error) {
         console.error("Error during clarification refinement:", error);
+        const message = error && error.message ? error.message : "Unknown error";
         this.setSnackbar({
           show: true,
-          text: "Error during refinement: " + error.message,
+          text: "Error during refinement: " + message,
           color: "pink",
         });
       } finally {
-        // Reset state
         this.isRefining = false;
         this.loading = false;
-        this.clarificationAnswers = [];
-        this.previousRefinementResponseId = null;
+
+        if (!awaitingAnotherRound) {
+          this.clarificationAnswers = [];
+          this.previousRefinementResponseId = null;
+          this.clarificationFlow = null;
+        }
       }
     },
 
     cancelClarification() {
       this.showClarificationDialog = false;
-      // Add any additional logic you want to execute when clarification is canceled
+      this.clarificationFlow = null;
+      this.clarificationAnswers = [];
+      this.previousRefinementResponseId = null;
       console.log("Clarification canceled");
+    },
+    async refineGalaxyMap() {
+      this.loading = true;
+      this.isRefining = true;
+
+      // Start timing
+      const startTime = Date.now();
+      console.log("🚀 Starting Galaxy refinement process...");
+
+      const refinementSystemPrompt = `
+
+     You are a Galaxy Map Refiner Assistant. Your role is to update specific portions of an existing Galaxy Map JSON object based on user requests.
+Begin with a concise checklist (3-7 bullets) of what you will do; keep items conceptual, not implementation-level.
+The Galaxy Map is a hierarchical, structured learning roadmap, with this structure:
+- **Stars**: Major milestones
+- **Planets**: Atomic, mission-focused wins (15–60 minutes each) within a star
+- **Mission Instructions**: Detailed action guides for each planet, including:
+- **Intro**: Why this mission matters and its context in the journey.
+- **Steps**: Each step includes discrete **tasks** (actionable), optional just-in-time micro-teach for new concepts, and a **checkpoint** for motivation.
+- **Outro**: Recap the win and preview what's next.
+### Galaxy Map JSON Format Example
+
+{
+"status": "journey_ready",
+"title": "Journey Title",
+"description": "Brief description of the overall journey",
+"stars": [
+{
+"title": "1: Title (Star Name)",
+"description": "Description of this star",
+"planets": [
+{
+"title": "1.1: Title (Planet Name)",
+"description": "Brief description of this win",
+"missionInstructions": {
+"intro": "Motivation and context",
+"steps": [
+{
+"title": "Step 1: Step Name",
+"tasks": [
+{ "taskContent": "Markdown instruction (with micro-teach where needed)" }
+],
+"checkpoint": "Progress checkpoint message"
+}
+],
+"outro": "Recap and transition message"
+}
+}
+]
+}
+]
+}
+
+### Responsibilities
+1. Analyze the user's request (add, modify, or reorder stars, planets, or mission instructions).
+2. Receive an input object with:
+- **galaxy_map**: The current full Galaxy Map JSON.
+- **items_user_wants_changed**: List of zero-indexed object paths (e.g., "stars[0]", "stars[1].planets[2]") targeted for modification.
+- **user_request**: Instructions detailing the intended changes.
+3. Retrieve the content at each specified path for modification.
+4. Update the target content based on the user request, ensuring the Galaxy Map’s structure and goals are maintained.
+5. Return only the modified parts, each paired with its zero-indexed path, to enable merging back into the main Galaxy Map.
+6. If you add or remove items (such as splitting/merging/renumbering arrays), return all affected arrays with their new contents and correct paths.
+7. If any user-specified path doesn’t exist, return an error detailing which paths are invalid.
+
+After each edit or structural change, briefly validate the update’s success by summarizing the change in 1–2 lines. If the validation fails (e.g., constraints or user intent are not satisfied), self-correct before proceeding.
+
+#### Planet Scope & Motivation Rules
+- Each Planet must be an atomic win that fits in 15–60 minutes. If a planet is overloaded, split it into additional planets within the same star, renumbering as needed.
+- Mission Instructions must always include: Intro, Steps (with Tasks and Checkpoints), and Outro.
+- **Micro-teach**: Explain any new concept/term/tool at its first appearance (1–3 sentences, practical); if already taught, use a brief reminder.
+
+#### Quality Constraints
+- Make minimal, surgical edits unless the user asks for broad changes.
+- Avoid scope creep: split content if needed rather than expanding instructions excessively.
+- Keep language motivating, clear, and concise. Remove redundancy.
+
+### Input Structure
+{
+"galaxy_map": { ... },
+"items_user_wants_changed": [ "stars[0]", "stars[0].planets[1]" ],
+"user_request": "User's instructions"
+}
+`;
+
+      // 1.refine system prompt
+      const inputMessages = [{ role: "system", content: refinementSystemPrompt }];
+
+      // 2. galaxy map json - create a copy without history to avoid circular reference
+      const galaxyMapForAI = {
+        ...this.aiGeneratedGalaxyMap,
+        history: undefined, // Remove history for AI processing
+      };
+
+      // ----- trying different formarts for the galaxymap object
+      const galaxyMapJson = JSON.stringify(galaxyMapForAI);
+      // const galaxyMapMarkdown = this.convertGalaxyMapToMarkdown(galaxyMapForAI);
+
+      inputMessages.push({ role: "user", content: "galaxy_map: " + galaxyMapJson });
+
+      // 3. selected items
+      const activeItems = [...new Set([...this.activeGalaxyItems])];
+      const activeItemsString = activeItems.join("\n");
+      if (activeItems.length > 0) {
+        inputMessages.push({
+          role: "user",
+          content: "items_user_wants_changed: " + activeItemsString,
+        });
+      }
+
+      inputMessages.push({ role: "user", content: "user_request: " + this.galaxyRefineUserInput });
+
+      console.log("refine inputMessages", inputMessages);
+
+      // Call the cloud function for galaxy refinement
+      const refineGalaxyWithAiResponse = await refineGalaxyMap(
+        galaxyMapForAI,
+        activeItems,
+        this.galaxyRefineUserInput,
+        this.aiGeneratedGalaxyMap.aiResponseId,
+      );
+
+      // Calculate and log execution time even on error
+      const endTime = Date.now();
+      const timeString = this.formatExecutionTime(startTime, endTime);
+      console.log(
+        `🔍 Galaxy refinement process completed after ${timeString} (${endTime - startTime}ms total)`,
+      );
+
+      console.log("🔍 Galaxy refinement response:", refineGalaxyWithAiResponse);
+
+      // Check if clarification is needed
+      if (refineGalaxyWithAiResponse.galaxyMap.status === "clarification_needed") {
+        console.log("Clarification needed, showing questions UI");
+
+        // Store the clarification questions and response ID for the follow-up call
+        this.clarificationQuestions = refineGalaxyWithAiResponse.galaxyMap.questions || [];
+        this.clarificationAnswers = new Array(this.clarificationQuestions.length).fill("");
+        this.previousRefinementResponseId = refineGalaxyWithAiResponse.responseId;
+
+        // Show the clarification dialog
+        this.showClarificationDialog = true;
+
+        // Reset loading state since we're waiting for user input
+        this.isRefining = false;
+        this.loading = false;
+
+        // Track token usage from this clarification request
+        this.trackTokenUsage(refineGalaxyWithAiResponse);
+
+        return; // Exit early, don't proceed with normal refinement flow
+      }
+
+      // Preserve existing properties that should not be overwritten
+      const existingHistory = this.aiGeneratedGalaxyMap.history || [];
+      const existingTokens = this.aiGeneratedGalaxyMap.tokens || {
+        totalInputTokens: 0,
+        totalOutputTokens: 0,
+        totalTokens: 0,
+        modelsUsed: [],
+        combinedEstimatedCost: 0,
+      };
+      const existingAiResponseId = this.aiGeneratedGalaxyMap.aiResponseId;
+      const existingOriginResponseId = this.aiGeneratedGalaxyMap.originResponseId;
+
+      // CRITICAL: Preserve both response IDs for tracking AI call history
+      // - originResponseId: tracks the very first AI call that created the galaxy map
+      // - aiResponseId: tracks the most recent AI call (refinement, regeneration, etc.)
+      console.log("🔍 Preserving response IDs:", {
+        existingOriginResponseId,
+        existingAiResponseId,
+        newResponseId: refineGalaxyWithAiResponse.responseId,
+      });
+
+      // Merge the new AI response with existing properties instead of overwriting
+      this.aiGeneratedGalaxyMap = {
+        ...this.aiGeneratedGalaxyMap, // Keep all existing properties (including originResponseId)
+        ...refineGalaxyWithAiResponse.galaxyMap, // Override with new AI response data
+        aiResponseId: refineGalaxyWithAiResponse.responseId, // Update with new response ID
+      };
+
+      // Verify both IDs are preserved
+      console.log("✅ After refinement, response IDs:", {
+        originResponseId: this.aiGeneratedGalaxyMap.originResponseId,
+        aiResponseId: this.aiGeneratedGalaxyMap.aiResponseId,
+      });
+
+      // Create a deep copy of the NEW galaxy map data without the history property to avoid circular reference
+      const newGalaxyMapCopy = JSON.parse(
+        JSON.stringify({
+          ...this.aiGeneratedGalaxyMap,
+          history: undefined, // Remove history from the copy
+        }),
+      );
+
+      // Add the NEW state to history (this becomes the current state)
+      this.aiGeneratedGalaxyMap.history.push({
+        galaxyMapData: newGalaxyMapCopy,
+        atThisRefineUserPrompt: this.galaxyRefineUserInput,
+      });
+
+      // Track token usage (accumulate with existing tokens)
+      this.trackTokenUsage(refineGalaxyWithAiResponse);
+
+      // update store
+      this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
+
+      // reset prompt input and selected items
+      this.galaxyRefineUserInput = "";
+      this.activeGalaxyItems = [];
+      this.treeviewActiveItems = {};
+
+      this.isRefining = false;
+      this.loading = false;
     },
   },
 };

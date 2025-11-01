@@ -51,9 +51,11 @@
       :activityData="filteredCoursesActivity"
       :selectedCourseId="selectedCourseId"
       :height="activityPanelHeightPx"
+      :isFullscreen="isTimelineFullscreen"
       :style="activityPanelInlineStyle"
       @panelFocus="onTimelineFocus"
       @clearCourseFilter="resetAllView"
+      @toggleFullscreen="toggleTimelineFullscreen"
       @close="closeTimelinePanel"
     />
   </div>
@@ -103,8 +105,10 @@ export default {
       personAvatarById: new Map(),
       personNameById: new Map(),
       activityPanelHeightPx: 260,
+      defaultActivityPanelHeightPx: 260,
       activityPanelOpen: false,
       timelineInteracting: false,
+      isTimelineFullscreen: false,
     };
   },
   async mounted() {
@@ -112,6 +116,10 @@ export default {
     await this.loadCohortCoursesAndMaps();
     await this.loadCohortCoursesActivity();
     await this.loadActiveMissions();
+    window.addEventListener("resize", this.onWindowResize, { passive: true });
+  },
+  beforeDestroy() {
+    window.removeEventListener("resize", this.onWindowResize);
   },
   beforeRouteLeave(to, from, next) {
     // Reset global minimized state when navigating away from the Cohort view
@@ -246,10 +254,33 @@ export default {
     closeTimelinePanel() {
       // Close panel and reset view/zoom
       this.activityPanelOpen = false;
+      // Exit fullscreen and restore default height
+      this.isTimelineFullscreen = false;
+      this.activityPanelHeightPx = this.defaultActivityPanelHeightPx;
       this.resetAllView();
     },
     toggleShowMissions() {
       this.showMissions = !this.showMissions;
+    },
+    toggleTimelineFullscreen() {
+      this.activityPanelOpen = true;
+      this.isTimelineFullscreen = !this.isTimelineFullscreen;
+      if (this.isTimelineFullscreen) {
+        this.activityPanelHeightPx = this.computeFullscreenHeight();
+        // Minimize side info to give maximum space
+        this.onInfoMinimized(true);
+      } else {
+        this.activityPanelHeightPx = this.defaultActivityPanelHeightPx;
+      }
+    },
+    onWindowResize() {
+      if (this.isTimelineFullscreen) {
+        this.activityPanelHeightPx = this.computeFullscreenHeight();
+      }
+    },
+    computeFullscreenHeight() {
+      const vh = window.innerHeight || document.documentElement.clientHeight || 800;
+      return Math.max(vh, this.defaultActivityPanelHeightPx);
     },
     async loadActiveMissions() {
       try {

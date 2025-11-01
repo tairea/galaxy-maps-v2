@@ -430,17 +430,22 @@ export default {
       }
     },
 
+    taskMissionInstructionsHtml() {
+      if (!this.task) return "";
+      return this.task.missionInstructionsHtmlString || this.task.description || "";
+    },
+
     /**
      * Checks if the task description is long enough to warrant collapsing
      */
     hasLongDescription() {
-      if (!this.task || !this.task.description) return false;
+      if (!this.task || !this.taskMissionInstructionsHtml) return false;
 
       // Check for HTML content that would make it visually long
-      if (this.isHtmlContent(this.task.description)) {
+      if (this.isHtmlContent(this.taskMissionInstructionsHtml)) {
         // For HTML content, check for multiple elements or media
         const tempDiv = document.createElement("div");
-        tempDiv.innerHTML = this.task.description;
+        tempDiv.innerHTML = this.taskMissionInstructionsHtml;
 
         // Count various elements that contribute to visual length
         const hasMultipleParagraphs = tempDiv.querySelectorAll("p").length > 1;
@@ -456,7 +461,10 @@ export default {
         );
       } else {
         // For plain text/markdown, use the existing logic
-        return this.task.description.length > 200 || this.task.description.includes("\n\n");
+        return (
+          this.taskMissionInstructionsHtml.length > 200 ||
+          this.taskMissionInstructionsHtml.includes("\n\n")
+        );
       }
     },
 
@@ -464,21 +472,21 @@ export default {
      * Renders markdown for task description using streaming-markdown library
      */
     renderedTaskDescription() {
-      if (!this.task || !this.task.description) return "";
+      if (!this.task || !this.taskMissionInstructionsHtml) return "";
 
       try {
         // Check if content is HTML or markdown
-        if (this.isHtmlContent(this.task.description)) {
+        if (this.isHtmlContent(this.taskMissionInstructionsHtml)) {
           // If it's HTML, return as-is
-          return this.task.description;
+          return this.taskMissionInstructionsHtml;
         } else {
           // If it's markdown, convert it
-          return this.renderMarkdownWithStreaming(this.task.description);
+          return this.renderMarkdownWithStreaming(this.taskMissionInstructionsHtml);
         }
       } catch (error) {
         console.error("Error rendering task description markdown:", error);
         // Fallback to plain text with HTML escaping
-        return this.task.description
+        return this.taskMissionInstructionsHtml
           .replace(/&/g, "&amp;")
           .replace(/</g, "&lt;")
           .replace(/>/g, "&gt;")

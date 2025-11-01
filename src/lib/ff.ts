@@ -13,6 +13,12 @@ import type {
 } from "@/store/_types";
 import { functions } from "@/store/firestoreConfig";
 import { FirebaseError } from "firebase/app";
+import {
+  StructureRefineResponseSchema,
+  type StructureCandidates,
+  type StructureRefineResponse,
+  type StructureTargets,
+} from "@/refiners/structure-refine-schemas";
 
 export const fetchCohorts = async (): Promise<ICohort[]> => {
   const data = {};
@@ -655,7 +661,10 @@ export const generateGalaxyMap = async (
 // Unified AI Galaxy Map Generation (Stars + Missions + Mission Instructions)
 export const generateUnifiedGalaxyMap = async (
   description: string,
-  attachedFiles?: Array<{ name: string; mimeType: string; base64: string }>,
+  attachedFiles?: Array<
+    | { name: string; mimeType?: string; base64: string }
+    | { name: string; mimeType?: string; storagePath: string }
+  >,
 ): Promise<{
   success: boolean;
   galaxyMap: any;
@@ -881,6 +890,84 @@ export const refineGalaxyMap = async (
   const fn = functions.httpsCallable("refineGalaxyMap", { timeout: 540000 });
   const result = await fn(data);
   return result.data;
+};
+
+type StructureCallableInput =
+  | ({
+      userRequest: string;
+      previousResponseId?: string;
+      targets?: StructureTargets;
+      candidates?: StructureCandidates;
+      stars?: Array<Record<string, any>>;
+      planets?: Array<Record<string, any>>;
+      neighbors?: Record<string, { prevTitle?: string; nextTitle?: string }>;
+      styleGuide?: string[];
+    } & Record<string, unknown>)
+  | {
+      clarificationAnswers: string;
+      previousResponseId: string;
+    };
+
+export type StructureRefineCallableResult = {
+  success: boolean;
+  status: StructureRefineResponse["status"];
+  questions: string[] | null;
+  suggestedTargets: StructureTargets | null;
+  selectedTargets: StructureTargets | null;
+  ops: StructureRefineResponse["ops"] | null;
+  tokenUsage: {
+    modelsUsed: {
+      model: string;
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    }[];
+    combinedEstimatedCost: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalTokens: number;
+  };
+  responseId: string;
+};
+
+export const refineStructure = async (
+  payload: StructureCallableInput,
+): Promise<StructureRefineCallableResult> => {
+  const fn = functions.httpsCallable("refineStructure", { timeout: 540000 });
+  const result = await fn(payload as Record<string, unknown>);
+  const data = result.data as Record<string, any>;
+
+  if (!data?.success) {
+    throw new Error(data?.message || "Structure refinement failed");
+  }
+
+  const parsed = StructureRefineResponseSchema.parse({
+    status: data.status,
+    questions: data.questions ?? undefined,
+    suggestedTargets: data.suggestedTargets ?? undefined,
+    selectedTargets: data.selectedTargets ?? undefined,
+    ops: data.ops ?? undefined,
+  });
+
+  const tokenUsage = data.tokenUsage ?? {
+    modelsUsed: [],
+    combinedEstimatedCost: 0,
+    totalInputTokens: 0,
+    totalOutputTokens: 0,
+    totalTokens: 0,
+  };
+
+  return {
+    success: true,
+    status: parsed.status,
+    questions: parsed.questions ?? null,
+    suggestedTargets: parsed.suggestedTargets ?? null,
+    selectedTargets: parsed.selectedTargets ?? null,
+    ops: parsed.ops ?? null,
+    tokenUsage,
+    responseId: data.responseId,
+  };
 };
 
 // Unified AI Galaxy Map Generation with Clarification and Streaming (Second Step)

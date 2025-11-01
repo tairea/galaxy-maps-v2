@@ -1,14 +1,14 @@
 <template>
   <div id="container" class="bg">
     <!-- Loading -->
-    <LoadingSpinner v-if="!boundCourse?.status || loading" text="loading galaxy map" />
+    <LoadingSpinner v-if="isLoading" text="loading galaxy map" />
 
     <!-- dont show galaxy if...
     
     NSIU - and not published
     
     -->
-    <div class="no-galaxy" v-if="isRestriced">
+    <div class="no-galaxy" v-if="isRestricted">
       <v-icon large color="missionAccent">{{ mdiAlertOutline }}</v-icon>
       <p class="overline missionAccent--text">INVALID OR RESTRICTED GALAXY</p>
       <p class="caption missionAccent--text" style="opacity: 0.5">
@@ -81,7 +81,7 @@
         <GalaxyMapButtons
           class="mt-8"
           :class="{ hideButtons: hideLeftPanelsFlag }"
-          v-if="!isRestriced"
+          v-if="!isRestricted"
           :addNodeMode="addNodeMode"
           :addEdgeMode="addEdgeMode"
           :dragNodeMode="dragNodeMode"
@@ -316,16 +316,48 @@ export default {
       topicError: null,
       showMissions: false, // Add missions toggle state
       loading: false,
+      mountedLoading: true, // Add loading state for mounted lifecycle
       isGalaxyInfoMinimized: false,
+      courseLoadTimeout: null, // Timeout for course loading
     };
   },
   watch: {
     async courseId(newCourseId) {
+      this.mountedLoading = true;
+
+      // Clear any existing timeout
+      if (this.courseLoadTimeout) {
+        clearTimeout(this.courseLoadTimeout);
+      }
+
+      // Set a timeout to detect if course fails to load due to permissions
+      this.courseLoadTimeout = setTimeout(() => {
+        if (!this.boundCourse && this.mountedLoading) {
+          console.log("Course load timeout - likely permission denied");
+          this.mountedLoading = false;
+        }
+      }, 5000); // 5 second timeout
+
       await this.bindCourseByCourseId(newCourseId);
       // this.course = await fetchCourseByCourseId(this.courseId);
       this.setCurrentCourseId(newCourseId);
+
+      // Clear timeout if course loads successfully
+      if (this.courseLoadTimeout) {
+        clearTimeout(this.courseLoadTimeout);
+        this.courseLoadTimeout = null;
+      }
+
+      this.mountedLoading = false;
     },
     async boundCourse(newVal, oldVal) {
+      // Clear timeout when course loads successfully
+      if (newVal && this.courseLoadTimeout) {
+        clearTimeout(this.courseLoadTimeout);
+        this.courseLoadTimeout = null;
+        this.mountedLoading = false;
+      }
+
       this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
     },
   },
@@ -337,10 +369,29 @@ export default {
       this.isGalaxyInfoMinimized = true;
     }
 
+    // Clear any existing timeout
+    if (this.courseLoadTimeout) {
+      clearTimeout(this.courseLoadTimeout);
+    }
+
+    // Set a timeout to detect if course fails to load due to permissions
+    this.courseLoadTimeout = setTimeout(() => {
+      if (!this.boundCourse && this.mountedLoading) {
+        console.log("Course load timeout - likely permission denied");
+        this.mountedLoading = false;
+      }
+    }, 5000); // 5 second timeout
+
     // this.course = await fetchCourseByCourseId(this.courseId);
 
     // bind course instead of fetch (above) so to make course reactive (eg in GalaxyInfo.vue)
     await this.bindCourseByCourseId(this.courseId);
+
+    // Clear timeout if course loads successfully
+    if (this.courseLoadTimeout) {
+      clearTimeout(this.courseLoadTimeout);
+      this.courseLoadTimeout = null;
+    }
 
     const cohorts = await fetchCohorts();
 
@@ -386,6 +437,16 @@ export default {
         galaxyId: this.courseId,
       });
     }
+
+    // Set mounted loading to false after all initialization is complete
+    this.mountedLoading = false;
+  },
+  beforeDestroy() {
+    // Clean up timeout when component is destroyed
+    if (this.courseLoadTimeout) {
+      clearTimeout(this.courseLoadTimeout);
+      this.courseLoadTimeout = null;
+    }
   },
   computed: {
     ...mapState(useRootStore, ["person", "user", "boundCourse"]),
@@ -396,11 +457,15 @@ export default {
       return this.boundCourse?.status === "submitted";
     },
     teacher() {
+      // Check if user is authenticated first
+      if (!this.person?.id || !this.boundCourse) {
+        return false;
+      }
       return (
-        this.boundCourse?.mappedBy.personId === this.person?.id ||
+        this.boundCourse?.mappedBy?.personId === this.person.id ||
         this.user.data?.admin ||
-        (this.boundCourse?.collaboratorIds &&
-          this.boundCourse.collaboratorIds.includes(this.person?.id))
+        (Array.isArray(this.boundCourse?.collaboratorIds) &&
+          this.boundCourse.collaboratorIds.includes(this.person.id))
       );
     },
     student() {
@@ -409,36 +474,54 @@ export default {
     showPublish() {
       return (this.user.data?.admin && this.boundCourse?.status === "submitted") || this.draft;
     },
-    isRestriced() {
+    isRestricted() {
+      // If no course data loaded yet, show restricted (will show loading or error)
+      if (!this.boundCourse) return true;
+
       // teacher or student is allowed
       if (this.teacher || this.student) {
         return false;
       }
-      if (!this.boundCourse) return false;
+
       // public and published is allowed
-      else if (
+      if (
         (this.boundCourse.visibility == "public" || this.boundCourse.public == true) &&
         this.boundCourse.status == "published"
       ) {
         console.log("allowed because public and published");
         return false;
       }
+
       // not published so restricted
-      else if (this.boundCourse.status != "published") {
-        console.log("Restriced because status:", this.boundCourse.status);
+      if (this.boundCourse.status != "published") {
+        console.log("Restricted because status:", this.boundCourse.status);
         return true;
       }
+
       // published and unlisted is allowed
-      else if (
-        this.boundCourse.status == "published" &&
-        this.boundCourse.visibility == "unlisted"
-      ) {
+      if (this.boundCourse.status == "published" && this.boundCourse.visibility == "unlisted") {
         console.log("allowed because published and unlisted");
         return false;
-      } else {
-        console.log("else restricted");
-        return true;
       }
+
+      console.log("else restricted");
+      return true;
+    },
+    isLoading() {
+      // Show loading if we're in a loading state AND we don't have a properly loaded course
+      if (this.loading || this.mountedLoading) {
+        // If we have a course but it's not properly loaded (no status), don't show loading
+        if (this.boundCourse && !this.boundCourse.status) {
+          return false;
+        }
+        // If we don't have a course at all, show loading
+        if (!this.boundCourse) {
+          return true;
+        }
+        // If we have a course with status, don't show loading
+        return false;
+      }
+      return false;
     },
     isMobile() {
       return this.$vuetify.breakpoint.smAndDown;

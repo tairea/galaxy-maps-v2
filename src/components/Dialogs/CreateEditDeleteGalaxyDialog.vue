@@ -747,13 +747,11 @@ export default {
         this.course.title.trim() &&
         this.course.title.trim().length > 0 &&
         this.person &&
-        this.person.id &&
-        this.person.email &&
-        this.person.firstName
+        this.person.id
       );
     },
     isPersonLoaded() {
-      return this.person && this.person.id && this.person.email && this.person.firstName;
+      return this.person && this.person.id;
     },
     shouldShowForm() {
       return this.isPersonLoaded && (this.edit || this.creationMode === "manual");
@@ -765,6 +763,8 @@ export default {
       async handler(newVal) {
         if (newVal) {
           this.course = { ...newVal };
+          // Ensure required nested objects exist when editing existing course
+          this.initializeCourseData();
           await this.initializeCollaborators();
           if (!Array.isArray(this.course.collaboratorIds)) {
             this.$set(this.course, "collaboratorIds", []);
@@ -792,8 +792,14 @@ export default {
       immediate: true,
       handler(newVal) {
         // console.log("Person data changed:", newVal);
-        if (newVal && newVal.id && newVal.email && newVal.firstName) {
-          // console.log("Person data is now complete:", newVal);
+        if (newVal && newVal.id && (!newVal.firstName || !newVal.email)) {
+          console.warn(
+            "Profile incomplete for person id",
+            newVal.id,
+            "— missing",
+            !newVal.firstName ? "firstName" : "",
+            !newVal.email ? "email" : "",
+          );
         }
       },
     },
@@ -809,6 +815,8 @@ export default {
   async mounted() {
     if (this.courseToEdit) {
       this.course = { ...this.courseToEdit };
+      // Ensure required nested objects exist when editing existing course
+      this.initializeCourseData();
       await this.initializeCollaborators();
       if (!Array.isArray(this.course.collaboratorIds)) {
         this.$set(this.course, "collaboratorIds", []);
@@ -819,6 +827,8 @@ export default {
     ...mapActions(useRootStore, ["setCurrentCourseId", "setSnackbar"]),
     cancel() {
       this.dialog = false;
+      // Always reset disabled state when canceling
+      this.disabled = false;
       if (!this.edit) {
         this.creationMode = "";
         // Reset course data when canceling creation
@@ -944,12 +954,16 @@ export default {
         //   courseId: courseId,
         // });
 
-        await this.sendCourseCreatedEmail(
-          this.person.email,
-          this.person.firstName + " " + this.person.lastName,
-          course.title,
-          courseId,
-        );
+        try {
+          await this.sendCourseCreatedEmail(
+            this.person.email,
+            this.person.firstName + " " + this.person.lastName,
+            course.title,
+            courseId,
+          );
+        } catch (emailError) {
+          console.warn("Failed to send 'course created' email. Proceeding anyway.", emailError);
+        }
 
         console.log("5");
         // route to newly created galaxy
@@ -1075,12 +1089,22 @@ export default {
         // upload error
         (err) => {
           console.log(err);
+          this.disabled = false;
+          this.setSnackbar({
+            show: true,
+            text: "Image upload failed. Please try again.",
+            color: "error",
+          });
         },
         // upload complete
         () => {
           // get image url
           uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
             // add image url to course obj
+            if (!this.course) this.course = {};
+            if (!this.course.image || typeof this.course.image !== "object") {
+              this.$set(this.course, "image", { url: "", name: "" });
+            }
             this.course.image.url = downloadURL;
             this.course.image.name = this.uploadedImage.name;
             this.disabled = false;
@@ -1108,6 +1132,12 @@ export default {
         // upload error
         (err) => {
           console.log(err);
+          this.disabled = false;
+          this.setSnackbar({
+            show: true,
+            text: "Author image upload failed. Please try again.",
+            color: "error",
+          });
         },
         // upload complete
         () => {
@@ -1115,6 +1145,19 @@ export default {
           uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
             console.log("author image url is: " + downloadURL);
             // add image url to course obj
+            if (!this.course) this.course = {};
+            if (!this.course.contentBy || typeof this.course.contentBy !== "object") {
+              this.$set(this.course, "contentBy", {
+                name: "",
+                image: { url: "", name: "" },
+                source: "",
+              });
+            } else if (
+              !this.course.contentBy.image ||
+              typeof this.course.contentBy.image !== "object"
+            ) {
+              this.$set(this.course.contentBy, "image", { url: "", name: "" });
+            }
             this.course.contentBy.image.url = downloadURL;
             this.course.contentBy.image.name = this.uploadedImage.name;
             this.disabled = false;
@@ -1449,6 +1492,12 @@ export default {
         collaboratorIds: [],
         status: "drafting",
       };
+      // Reset UI state
+      this.disabled = false;
+      this.percentageGalaxy = 0;
+      this.percentageAuthor = 0;
+      this.uploadedImage = {};
+      this.authorImage = {};
     },
     handleCreateButtonClick() {
       // Toggle dialog state
@@ -1467,6 +1516,9 @@ export default {
       // This method is called when clicking outside the dialog
       this.dialog = false;
 
+      // Reset disabled state when closing
+      this.disabled = false;
+
       // Sync with parent component
       this.$emit("close");
 
@@ -1483,9 +1535,10 @@ export default {
       // Sync with parent component
       this.$emit("close");
 
-      // If closing dialog, reset creation mode
+      // If closing dialog, reset creation mode and disabled state
       if (!value) {
         this.creationMode = "";
+        this.disabled = false;
       }
     },
   },
@@ -1883,10 +1936,6 @@ export default {
     .action-buttons {
       padding: 12px;
       align-items: center;
-
-      .v-btn {
-        // max-width: 280px;
-      }
     }
   }
 

@@ -8,7 +8,7 @@
     <div class="left-col">
       <p class="label text-center mt-4 mb-0">Squad:</p>
       <div class="d-flex flex-column justify-start align-center pa-2">
-        <v-avatar v-if="cohort.image.url" size="80">
+        <v-avatar v-if="cohort.image.url" class="cohort-image">
           <v-img :src="cohort.image.url"></v-img>
         </v-avatar>
         <div v-else class="imagePlaceholder">
@@ -384,7 +384,8 @@ export default {
     // border-right: 1px solid var(--v-missionAccent-base);
 
     .cohort-image {
-      width: 80px;
+      width: auto;
+      max-width: 80px;
       border-radius: 50%;
       object-fit: cover;
     }

@@ -183,13 +183,16 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
         return "";
       }
 
+      const missionInstructionsHtml =
+        this.task.missionInstructionsHtmlString || this.task.description || "";
+
       return `
         #CURRENT ACTIVE MISSION
         ##Mission Title: 
         ${this.task.title}
 
         ##Mission Instructions:
-        ${this.task.description}
+        ${missionInstructionsHtml}
 
         This mission is part of an overarching Galaxy Map called "${this.course.title}" focused on ${this.course.description}.
               `;

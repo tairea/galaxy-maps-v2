@@ -102,7 +102,7 @@
         ref="aiConversationDesktop"
         :course="course"
         :topic="topic"
-        :topicTasks="personTasks"
+        :topicTasks="teacher ? sortedTopicTasks : sortedPersonTasks"
         :loading="loading"
       />
     </div>

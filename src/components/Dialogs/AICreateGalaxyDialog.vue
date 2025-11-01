@@ -243,7 +243,7 @@
                       ref="fileInput"
                       type="file"
                       multiple
-                      accept="application/pdf,.pdf,image/*"
+                      accept="application/pdf,.pdf,image/*,application/json,.json"
                       style="display: none"
                       @change="onFileSelected"
                     />
@@ -260,7 +260,11 @@
                       <v-icon left color="galaxyAccent"> {{ mdiPaperclip }} </v-icon>
                       Add File
                     </v-btn>
-                    <div v-if="attachedFiles && attachedFiles.length" class="text-left" style="font-size: 0.7rem; font-style: italic">
+                    <div
+                      v-if="attachedFiles && attachedFiles.length"
+                      class="text-left"
+                      style="font-size: 0.7rem; font-style: italic"
+                    >
                       <span class="mr-2">Attached:</span>
                       <span>
                         <v-chip
@@ -463,6 +467,7 @@ import { StarsAndPlanetsResponseSchema } from "@/lib/schemas";
 import RobotLoadingSpinner from "@/components/Reused/RobotLoadingSpinner.vue";
 import LayoutSelectionDialog from "@/components/Dialogs/LayoutSelectionDialog.vue";
 // import CreateGalaxyOptionsDialog from "@/components/Dialogs/CreateGalaxyOptionsDialog.vue";
+import { storage } from "@/store/firestoreConfig";
 export default {
   name: "AICreateGalaxyDialog",
   components: {
@@ -640,8 +645,12 @@ export default {
       const fileList = e && e.target && e.target.files ? Array.from(e.target.files) : [];
       if (!fileList.length) return;
       const MAX_FILES = 5;
-      const MAX_BYTES = 7 * 1024 * 1024; // ~7MB per file
-      const remaining = Math.max(0, MAX_FILES - (this.attachedFiles ? this.attachedFiles.length : 0));
+      const MAX_BYTES = 512 * 1024 * 1024; // ~512MB per file
+      const INLINE_MAX_BYTES = 8 * 1024 * 1024; // Use base64 inline only up to ~8MB
+      const remaining = Math.max(
+        0,
+        MAX_FILES - (this.attachedFiles ? this.attachedFiles.length : 0),
+      );
       const toProcess = fileList.slice(0, remaining);
       if (fileList.length > remaining) {
         this.attachedFileError = `Only ${MAX_FILES} files allowed. Extra files were ignored.`;
@@ -651,32 +660,88 @@ export default {
         new Promise((resolve, reject) => {
           if (file.size > MAX_BYTES) return reject(new Error("too_large"));
           const mime = file.type || "";
-          const isPdf = mime === "application/pdf";
-          const isImage = mime.indexOf("image/") === 0;
-          if (!isPdf && !isImage) return reject(new Error("unsupported"));
+          const lowerName = (file.name || "").toLowerCase();
+          const isPdf = mime === "application/pdf" || lowerName.endsWith(".pdf");
+          const isImage =
+            mime.indexOf("image/") === 0 || /\.(png|jpe?g|gif|bmp|webp|svg)$/i.test(lowerName);
+          const isJson =
+            mime === "application/json" || mime === "text/json" || lowerName.endsWith(".json");
+          if (!isPdf && !isImage && !isJson) return reject(new Error("unsupported"));
           const reader = new FileReader();
           reader.onload = () => {
             const result = typeof reader.result === "string" ? reader.result : "";
             const base64 = result.indexOf(",") >= 0 ? result.split(",")[1] : result;
-            resolve({ name: file.name, mimeType: mime || (isPdf ? "application/pdf" : "application/octet-stream"), base64 });
+            const derivedMime =
+              mime ||
+              (isPdf
+                ? "application/pdf"
+                : isJson
+                  ? "application/json"
+                  : "application/octet-stream");
+            resolve({ name: file.name, mimeType: derivedMime, base64 });
           };
           reader.onerror = () => reject(new Error("read_fail"));
           reader.readAsDataURL(file);
         });
 
-      Promise.allSettled(toProcess.map(readFile)).then((results) => {
+      const uploadFileToStorage = (file) =>
+        new Promise((resolve, reject) => {
+          if (file.size > MAX_BYTES) return reject(new Error("too_large"));
+          const mime = file.type || "";
+          const lowerName = (file.name || "").toLowerCase();
+          const isPdf = mime === "application/pdf" || lowerName.endsWith(".pdf");
+          const isImage =
+            mime.indexOf("image/") === 0 || /\.(png|jpe?g|gif|bmp|webp|svg)$/i.test(lowerName);
+          const isJson =
+            mime === "application/json" || mime === "text/json" || lowerName.endsWith(".json");
+          if (!isPdf && !isImage && !isJson) return reject(new Error("unsupported"));
+
+          try {
+            const safeName = (file.name || "file").replace(/[^a-zA-Z0-9.-]/g, "-");
+            const path = `uploads/${Date.now()}-${safeName}`;
+            const ref = storage.ref().child(path);
+            const metadata = mime ? { contentType: mime } : undefined;
+            ref
+              .put(file, metadata)
+              .then(() => {
+                const derivedMime =
+                  mime ||
+                  (isPdf
+                    ? "application/pdf"
+                    : isJson
+                      ? "application/json"
+                      : "application/octet-stream");
+                resolve({ name: file.name, mimeType: derivedMime, storagePath: path });
+              })
+              .catch(() => reject(new Error("upload_fail")));
+          } catch (err) {
+            reject(new Error("upload_fail"));
+          }
+        });
+
+      const processors = toProcess.map((file) =>
+        file.size > INLINE_MAX_BYTES ? uploadFileToStorage(file) : readFile(file),
+      );
+
+      Promise.allSettled(processors).then((results) => {
         const newItems = [];
         results.forEach((r) => {
           if (r.status === "fulfilled") {
             const exists = (this.attachedFiles || []).some(
-              (f) => f.name === r.value.name && f.base64.length === r.value.base64.length,
+              (f) =>
+                f.name === r.value.name &&
+                ((f.base64 && r.value.base64 && f.base64.length === r.value.base64.length) ||
+                  (f.storagePath && r.value.storagePath && f.storagePath === r.value.storagePath)),
             );
             if (!exists) newItems.push(r.value);
           } else {
             if (r.reason && r.reason.message === "too_large")
-              this.attachedFileError = "One or more files exceed 7MB and were ignored.";
+              this.attachedFileError = "One or more files exceed 512MB and were ignored.";
             else if (r.reason && r.reason.message === "unsupported")
-              this.attachedFileError = "Unsupported file type. Only PDF or images are allowed.";
+              this.attachedFileError =
+                "Unsupported file type. Only PDF, images, or JSON files are allowed.";
+            else if (r.reason && r.reason.message === "upload_fail")
+              this.attachedFileError = "Failed to upload one or more files to storage.";
             else this.attachedFileError = "Failed to read one or more files.";
           }
         });
@@ -840,7 +905,7 @@ export default {
         // const aiResponse = await generateGalaxyMap(this.description);
         const aiResponse = await generateUnifiedGalaxyMap(
           this.description,
-          (this.attachedFiles && this.attachedFiles.length) ? this.attachedFiles : undefined,
+          this.attachedFiles && this.attachedFiles.length ? this.attachedFiles : undefined,
         );
 
         // Use streaming version for real-time updates
@@ -1273,12 +1338,22 @@ export default {
               children: [],
             };
 
+            const missionInstructionsHtmlString =
+              planet.missionInstructionsHtmlString ||
+              (typeof planet.missionInstructions === "string"
+                ? planet.missionInstructions
+                : this.isStructuredMissionInstructions(planet.missionInstructions)
+                  ? this.formatMissionInstructionsToHtml(planet.missionInstructions)
+                  : typeof planet.instructions === "string"
+                    ? planet.instructions
+                    : "");
+
             // Prefer unified missionInstructions if present
-            if (planet.missionInstructions) {
+            if (missionInstructionsHtmlString) {
               planetNode.children.push({
                 id: `star-${starIndex}-planet-${planetIndex}-instructions`,
                 name: "Mission Instructions",
-                description: planet.missionInstructions,
+                description: missionInstructionsHtmlString,
                 type: "instructions",
               });
             } else if (planet.instructions) {
@@ -2309,7 +2384,7 @@ export default {
 }
 
 .long-loading-time-message {
-  font-size: 0.65rem;
+  font-size: 0.8rem;
   color: var(--v-missionAccent-base);
   opacity: 0.8;
   line-height: 1.4;

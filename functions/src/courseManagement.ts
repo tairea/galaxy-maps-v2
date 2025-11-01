@@ -2339,40 +2339,70 @@ async function saveGalaxyMap(
         console.log(`🪐 Processing planet ${j + 1}/${star.planets.length}...`);
         const planet = star.planets[j] as {
           title: string;
+          description?: string;
           instructions?: unknown;
           missionInstructions?: unknown;
+          missionInstructionsHtmlString?: string;
+          missionInstructionsObject?: unknown;
         };
 
-        // Prefer unified missionInstructions (expected to be pre-formatted HTML string by the client).
-        // Fallback to legacy instructions string if present.
-        let missionDescription: string | null = null;
-        if (typeof (planet as any).missionInstructions === "string") {
-          missionDescription = (planet as any).missionInstructions as string;
-        } else if (typeof (planet as any).instructions === "string") {
-          missionDescription = (planet as any).instructions as string;
-        } else {
-          // As a safety net, if missionInstructions is an object with steps, stringify it (minimal fallback)
-          const mi = (planet as any).missionInstructions;
-          if (mi && typeof mi === "object") {
-            try {
-              missionDescription = JSON.stringify(mi);
-            } catch {
-              missionDescription = null;
-            }
+        // Prefer explicit fields sent by the client, but maintain legacy fallbacks.
+        let missionInstructionsHtmlString: string | null = null;
+        if (typeof planet.missionInstructionsHtmlString === "string") {
+          missionInstructionsHtmlString = planet.missionInstructionsHtmlString;
+        } else if (typeof planet.missionInstructions === "string") {
+          missionInstructionsHtmlString = planet.missionInstructions;
+        } else if (typeof planet.instructions === "string") {
+          missionInstructionsHtmlString = planet.instructions as string;
+        }
+
+        let missionInstructionsObject: unknown = null;
+        if (
+          planet.missionInstructionsObject &&
+          typeof planet.missionInstructionsObject === "object"
+        ) {
+          missionInstructionsObject = planet.missionInstructionsObject;
+        } else if (planet.missionInstructions && typeof planet.missionInstructions === "object") {
+          missionInstructionsObject = planet.missionInstructions;
+        } else if (typeof planet.missionInstructions === "string") {
+          try {
+            missionInstructionsObject = JSON.parse(planet.missionInstructions);
+          } catch (error) {
+            console.warn("Failed to parse missionInstructions string on backend", error);
+          }
+        } else if (planet.instructions && typeof planet.instructions === "object") {
+          missionInstructionsObject = planet.instructions;
+        }
+
+        if (!missionInstructionsHtmlString && missionInstructionsObject) {
+          try {
+            missionInstructionsHtmlString = JSON.stringify(missionInstructionsObject);
+          } catch (error) {
+            console.warn("Failed to stringify mission instructions object", error);
           }
         }
 
         console.log("📝 Planet data:", {
-          title: (planet as any).title,
-          hasMissionInstructions: typeof (planet as any).missionInstructions !== "undefined",
-          hasLegacyInstructions: typeof (planet as any).instructions !== "undefined",
-          descriptionLength: missionDescription ? missionDescription.length : 0,
+          title: planet.title,
+          hasMissionInstructions: typeof planet.missionInstructions !== "undefined",
+          hasMissionInstructionsHtmlString:
+            typeof planet.missionInstructionsHtmlString === "string",
+          hasLegacyInstructions: typeof planet.instructions !== "undefined",
+          htmlLength: missionInstructionsHtmlString ? missionInstructionsHtmlString.length : 0,
+          hasMissionInstructionsObject: Boolean(missionInstructionsObject),
         });
 
         console.log("🏗️ Preparing planet data...");
+        const planetDescription =
+          typeof planet.description === "string" && planet.description.trim().length > 0
+            ? planet.description
+            : null;
+
         const planetData = {
-          title: (planet as any).title,
-          description: missionDescription, // already HTML string if provided by client
+          title: planet.title,
+          description: planetDescription, // keep legacy field as high-level description only
+          missionInstructionsHtmlString: missionInstructionsHtmlString ?? null,
+          missionInstructionsObject: missionInstructionsObject ?? null,
           submissionRequired: false,
           submissionInstructions: "",
           color: "#69a1e2",

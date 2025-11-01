@@ -2,10 +2,10 @@
   <div class="version">
     <v-tooltip top>
       <template v-slot:activator="{ on, attrs }">
-        <p class="version-text overline" v-bind="attrs" v-on="on">Alpha Release</p>
+        <p class="version-text overline" v-bind="attrs" v-on="on">Beta Release</p>
       </template>
       <p class="ma-1">
-        This is an early Alpha preview release. <br /><span
+        This is an early Beta preview release. <br /><span
           class="overline ma-0"
           style="font-size: 0.7rem !important"
           >Version: {{ versionNumber }}</span
@@ -20,7 +20,7 @@ export default {
   name: "VersionStatus",
   data() {
     return {
-      versionNumber: "0.2508.04", // [version.yearMonth.patch]
+      versionNumber: "0.2510.01", // [version.yearMonth.patch]
     };
   },
   methods: {},

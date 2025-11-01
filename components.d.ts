@@ -26,6 +26,7 @@ declare module 'vue' {
     CohortGraphs: typeof import('./src/components/CohortView/CohortGraphs.vue')['default']
     CohortInfo: typeof import('./src/components/CohortView/CohortInfo.vue')['default']
     CohortPanelV2: typeof import('./src/components/CohortList/CohortPanelV2.vue')['default']
+    ConfirmDeleteCourseDialog: typeof import('./src/components/Dialogs/ConfirmDeleteCourseDialog.vue')['default']
     ConfirmDeleteStudentDialog: typeof import('./src/components/Dialogs/ConfirmDeleteStudentDialog.vue')['default']
     Course: typeof import('./src/components/Reused/Course.vue')['default']
     CoursePerformanceDebugger: typeof import('./src/components/GalaxyList/CoursePerformanceDebugger.vue')['default']
