@@ -102,8 +102,9 @@ export default {
   .galaxyListPanelContent {
     color: var(--v-galaxyAccent-base);
     position: relative;
-    font-size: 0.6rem;
+    font-size: 0.8rem;
     letter-spacing: 1px;
+    width: calc(100% - 30px);
   }
 }
 

@@ -327,16 +327,27 @@ export default defineStore({
     // ===== Firestore - BIND by USER
     async getPersonById(id: string) {
       if (id) {
-        await db
-          .collection("people")
-          .doc(id)
-          .onSnapshot((doc) => {
-            const person = {
-              ...doc.data(),
-              id,
-            };
-            this.SET_PERSON(person);
-          });
+        try {
+          db.collection("people")
+            .doc(id)
+            .onSnapshot(
+              (doc) => {
+                if (!doc.exists) {
+                  this.SET_PERSON({ id });
+                  return;
+                }
+                const data = doc.data() || {};
+                this.SET_PERSON({ ...data, id });
+              },
+              (error) => {
+                console.error("getPersonById onSnapshot error:", error);
+                this.SET_PERSON({ id });
+              },
+            );
+        } catch (error) {
+          console.error("getPersonById setup error:", error);
+          this.SET_PERSON({ id });
+        }
       } else {
         console.warn("getPersonById: Missing personId");
         this.SET_PERSON({});

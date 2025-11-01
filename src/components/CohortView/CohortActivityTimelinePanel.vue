@@ -21,6 +21,16 @@
         </v-chip>
       </div>
       <v-spacer></v-spacer>
+      <v-btn
+        icon
+        small
+        color="missionAccent"
+        class="ml-2"
+        @click="$emit('toggleFullscreen')"
+        :title="isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'"
+      >
+        <v-icon small>{{ isFullscreen ? mdiFullscreenExit : mdiFullscreen }}</v-icon>
+      </v-btn>
       <!-- <v-btn
         v-if="selectedCourseId"
         small
@@ -31,9 +41,10 @@
       >
         Show all courses
       </v-btn> -->
-      <v-btn icon small color="missionAccent" class="ml-2" @click="$emit('close')">
+      <!-- Close button commented out by request -->
+      <!-- <v-btn icon small color="missionAccent" class="ml-2" @click="$emit('close')">
         <v-icon small>{{ mdiClose }}</v-icon>
-      </v-btn>
+      </v-btn> -->
     </div>
     <div ref="timeline" class="timeline-container"></div>
   </div>
@@ -43,7 +54,7 @@
 import { DataSet } from "vis-data";
 import { Timeline } from "vis-timeline";
 import "vis-timeline/styles/vis-timeline-graph2d.min.css";
-import { mdiClose } from "@mdi/js";
+import { mdiClose, mdiFullscreen, mdiFullscreenExit } from "@mdi/js";
 
 export default {
   name: "CohortActivityTimelinePanel",
@@ -51,10 +62,13 @@ export default {
     activityData: { type: Array, default: () => [] },
     height: { type: Number, default: 260 },
     selectedCourseId: { type: String, default: null },
+    isFullscreen: { type: Boolean, default: false },
   },
   data() {
     return {
       mdiClose,
+      mdiFullscreen,
+      mdiFullscreenExit,
       timeline: null,
       items: null,
       groups: null,
@@ -535,7 +549,7 @@ export default {
 
 <style lang="scss" scoped>
 .cohort-activity-panel {
-  border-top: 1px solid var(--v-missionAccent-base);
+  // border-top: 1px solid var(--v-missionAccent-base);
   border-bottom: none;
 
   background: var(--v-background-base);
@@ -653,6 +667,7 @@ export default {
 ::v-deep .vis-timeline {
   background: transparent;
   border: none;
+  height: 100% !important; /* ensure timeline body stretches */
 }
 
 ::v-deep .vis-label {

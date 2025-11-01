@@ -39,7 +39,12 @@
         <v-row class="text-center pt-12" align="center">
           <v-col cols="12" class="d-flex flex-column">
             <!-- Explore Public Galaxies -->
-            <v-btn outlined color="baseAccent" @click="$router.push('/')" class="createButton">
+            <v-btn
+              outlined
+              color="baseAccent"
+              @click="$router.push({ name: 'AllPublicGalaxiesList' })"
+              class="createButton"
+            >
               <v-icon left>
                 {{ mdiRocketLaunch }}
               </v-icon>

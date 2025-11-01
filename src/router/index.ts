@@ -88,7 +88,8 @@ const routes = [
       {
         path: "squad/:cohortId/:cohortName",
         name: "CohortView",
-        component: CohortViewV2, // CohortView
+        // component: CohortViewV2, // CohortView
+        component: CohortView, // CohortView
         meta: {
           authRequired: true,
         },

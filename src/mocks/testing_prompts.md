@@ -1,3 +1,18 @@
+<!-- refine star test -->
+can you split these missions into three standalone stars (each with their own missions). currently it feels like you are cramming too much into one star.
+
+<!-- refine mission test -->
+
+can you split this mission into three standalone missions each with their own descriptive steps. currently it feels like you are cramming too much into one mission and the steps arent descriptive enough
+
+<!-- podcast -->
+
+create a course that teaches year 7-8 (aged 10-13) students in the Cook Islands to create a podcast interviewing an elder. we will also get them to video record the podcast. we want to teach the students effective communication, critial literacy and persuasive storytelling. the course should cover 12 weeks, 4 days per week, 3 hours per day. Attached is a json of a past iteration that we liked but it didnt cover video recording and editing.
+
+<!-- refine -->
+
+refine the whole galaxy to be more descriptive. the intros, outros and steps are not descriptive enough. remember this is the learning material, we want to impart as much knowledge as possible
+
 <!-- basic html and css -->
 
 an introduction course to web development covering the three codes that make up the web, html, css and js. in it students will learn the basics, using glitch.com (so it can host their sites live). and the mini web app they will build is a fishing of the cook islands database, where the home page is are image buttons of each fish and when you click on a fish it takes you to a page about that fish. students will learn basic html, css and navigation

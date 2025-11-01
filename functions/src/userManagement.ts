@@ -133,22 +133,29 @@ export const createNewUserHttpsEndpoint = runWith({}).https.onCall(async (data, 
     // Create a short-lived custom token so the user can sign in and set a password
     const setupToken = await auth.createCustomToken(person.id as string, { initialSetup: true });
 
-    // Send invite email with login instructions (no magic link needed)
-    if (person.accountType == "teacher") {
-      log("3. send email to teacher: ", person.email);
-      await sendTeacherInviteEmail(
-        person.email as string,
-        person.displayName as string,
-        `https://${DOMAIN}/login?mode=initialPassword&email=${encodeURIComponent(person.email as string)}&userId=${person.id}&token=${encodeURIComponent(setupToken)}`,
-      );
-    } else {
-      log("3. send email to student: ", person.email);
-      await sendStudentInviteEmail(
-        person.email as string,
-        person.displayName as string,
-        `https://${DOMAIN}/login?mode=initialPassword&email=${encodeURIComponent(person.email as string)}&userId=${person.id}&token=${encodeURIComponent(setupToken)}`,
-        person.inviter as string,
-      );
+    // Attempt to send invite email with login instructions (non-blocking)
+    let emailSent = false;
+    try {
+      if (person.accountType == "teacher") {
+        log("3. send email to teacher: ", person.email);
+        await sendTeacherInviteEmail(
+          person.email as string,
+          person.displayName as string,
+          `https://${DOMAIN}/login?mode=initialPassword&email=${encodeURIComponent(person.email as string)}&userId=${person.id}&token=${encodeURIComponent(setupToken)}`,
+        );
+      } else {
+        log("3. send email to student: ", person.email);
+        await sendStudentInviteEmail(
+          person.email as string,
+          person.displayName as string,
+          `https://${DOMAIN}/login?mode=initialPassword&email=${encodeURIComponent(person.email as string)}&userId=${person.id}&token=${encodeURIComponent(setupToken)}`,
+          person.inviter as string,
+        );
+      }
+      emailSent = true;
+    } catch (inviteErr) {
+      // Do not fail user creation if email sending fails
+      log("3.a invite email failed (continuing without failing request)", inviteErr as any);
     }
 
     log("4. add person to people collection: ", person);
@@ -162,6 +169,7 @@ export const createNewUserHttpsEndpoint = runWith({}).https.onCall(async (data, 
         ...personDoc.data(),
         id: personDoc.id,
       },
+      emailSent,
     };
   } catch (err) {
     error(err);

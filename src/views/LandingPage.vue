@@ -149,4 +149,10 @@ export default {
   bottom: 0;
   z-index: 0;
 }
+
+@media (max-width: 960px) {
+  #background-video {
+    display: none;
+  }
+}
 </style>

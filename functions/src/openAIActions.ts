@@ -3,7 +3,6 @@ import { HttpsError } from "firebase-functions/v1/https";
 import { storage, generateSignedUrl, db } from "./_shared.js";
 import { STORAGE_BUCKET } from "./_constants.js";
 import fetch from "node-fetch";
-import OpenAI from "openai";
 import { toFile } from "openai/uploads";
 import { zodTextFormat } from "openai/helpers/zod";
 import {
@@ -12,13 +11,9 @@ import {
   UnifiedGalaxyMapResponseSchema,
   SquadReportSchema,
 } from "./schemas.js";
-import functions from "firebase-functions";
 import { createModelTokenUsage, createCombinedTokenUsage } from "./lib/utils.js";
+import openai from "./openaiClient.js";
 // import { Latitude } from "@latitude-data/sdk";
-
-// Initialize OpenAI client
-const openaiApiKey = functions.config().openai.key;
-const openai = new OpenAI({ apiKey: openaiApiKey });
 
 // Initialize Latitude client
 // const latitude = new Latitude(process.env.LATITUDE_API_KEY, { projectId: 19789 });
@@ -693,7 +688,72 @@ export const generateUnifiedGalaxyMapHttpsEndpoint = runWith({
         const filesToProcess = attachedFiles.slice(0, 5);
         const uploadPromises = filesToProcess.map(async (f) => {
           try {
-            const mime = f.mimeType || "application/octet-stream";
+            const mimeHint = f.mimeType || "";
+            const lowerName = (f.name || "").toLowerCase();
+            const isJsonHint =
+              mimeHint === "application/json" ||
+              mimeHint === "text/json" ||
+              (!mimeHint && lowerName.endsWith(".json"));
+
+            // If the client provided a Firebase Storage path (large files), handle from storage
+            if (f.storagePath) {
+              const fileRef = storage.bucket(STORAGE_BUCKET).file(f.storagePath);
+              let contentType = mimeHint;
+              try {
+                const [metadata] = await fileRef.getMetadata();
+                if (!contentType && metadata && metadata.contentType) {
+                  contentType = metadata.contentType;
+                }
+              } catch (metaErr) {
+                logger.warn("Could not fetch metadata for storage file", {
+                  path: f.storagePath,
+                  err: metaErr instanceof Error ? metaErr.message : metaErr,
+                });
+              }
+
+              const ct = (contentType || "application/octet-stream").toLowerCase();
+              const isImage = ct.startsWith("image/");
+              const isPdf = ct === "application/pdf" || lowerName.endsWith(".pdf");
+              const isJson = isJsonHint || ct === "application/json" || ct === "text/json";
+
+              if (isImage) {
+                const [signedUrl] = await fileRef.getSignedUrl({
+                  action: "read",
+                  expires: "03-01-2500",
+                });
+                return { type: "input_image", image_url: signedUrl } as const;
+              } else if (isPdf) {
+                const [buffer] = await fileRef.download();
+                const upload = await openai.files.create({
+                  file: await toFile(buffer, f.name || "attachment.pdf", { type: ct }),
+                  purpose: "assistants",
+                });
+                return { type: "input_file", file_id: upload.id } as const;
+              } else if (isJson) {
+                const [buffer] = await fileRef.download();
+                const textContent = buffer.toString("utf-8");
+                let formattedContent = textContent;
+                try {
+                  const parsedJson = JSON.parse(textContent);
+                  formattedContent = JSON.stringify(parsedJson, null, 2);
+                } catch (jsonError) {
+                  logger.warn("JSON attachment from storage could not be parsed; using raw text", {
+                    name: f.name,
+                    path: f.storagePath,
+                    error: jsonError instanceof Error ? jsonError.message : jsonError,
+                  });
+                }
+                const label = f.name || "attachment.json";
+                const prefix = `Attached JSON file (${label}) contents:\n`;
+                return { type: "input_text", text: `${prefix}${formattedContent}` } as const;
+              }
+              // Unknown/unsupported content type from storage: skip
+              return null;
+            }
+
+            // Fallback: handle inline base64 attachments (small files)
+            const mime = mimeHint || "application/octet-stream";
+            const isJson = isJsonHint;
             if (mime.startsWith("image/")) {
               const imageBuffer = Buffer.from(f.base64, "base64");
               const safeName = f.name.replace(/[^a-zA-Z0-9.-]/g, "-");
@@ -712,6 +772,22 @@ export const generateUnifiedGalaxyMapHttpsEndpoint = runWith({
                 purpose: "assistants",
               });
               return { type: "input_file", file_id: upload.id } as const;
+            } else if (isJson) {
+              const buffer = Buffer.from(f.base64, "base64");
+              const textContent = buffer.toString("utf-8");
+              let formattedContent = textContent;
+              try {
+                const parsedJson = JSON.parse(textContent);
+                formattedContent = JSON.stringify(parsedJson, null, 2);
+              } catch (jsonError) {
+                logger.warn("JSON attachment could not be parsed; using raw text", {
+                  name: f.name,
+                  error: jsonError instanceof Error ? jsonError.message : jsonError,
+                });
+              }
+              const label = f.name || "attachment.json";
+              const prefix = `Attached JSON file (${label}) contents:\n`;
+              return { type: "input_text", text: `${prefix}${formattedContent}` } as const;
             }
           } catch (err) {
             logger.error("Failed to upload attachment; skipping", { name: f.name, err });
@@ -1573,6 +1649,64 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
     logger.error("Error in refineGalaxyMap", error);
 
     // Handle Zod validation errors specifically
+    if (error instanceof Error && error.name === "ZodError") {
+      throw new HttpsError("internal", `AI response validation failed: ${error.message}`);
+    }
+
+    throw new HttpsError(
+      "internal",
+      error instanceof Error ? error.message : "Unknown error occurred",
+    );
+  }
+});
+
+export const refinePartOfGalaxyMapHttpsEndpoint = runWith({
+  timeoutSeconds: 540,
+  memory: "1GB",
+}).https.onCall(async (data) => {
+  try {
+    const { inputMessages, userRequest, previousResponseId } = data || {};
+
+    if (!Array.isArray(inputMessages) || inputMessages.length === 0) {
+      logger.error("Missing required field: inputMessages");
+      throw new HttpsError("invalid-argument", "Missing required field: inputMessages");
+    }
+
+    if (!userRequest || !String(userRequest).trim()) {
+      logger.error("Missing required field: userRequest");
+      throw new HttpsError("invalid-argument", "Missing required field: userRequest");
+    }
+
+    logger.info("Calling OpenAI for partial galaxy refinement", {
+      previousResponseId,
+      messageCount: inputMessages.length,
+    });
+
+    const aiResponse = await openai.responses.parse({
+      model: "gpt-5",
+      previous_response_id: typeof previousResponseId === "string" ? previousResponseId : undefined,
+      input: inputMessages as any,
+      text: { format: zodTextFormat(UnifiedGalaxyMapResponseSchema, "refine_galaxy_response") },
+      store: true,
+    });
+
+    const parsedResponse = aiResponse.output_parsed;
+    if (!parsedResponse) {
+      throw new HttpsError("internal", "No response content from OpenAI");
+    }
+
+    const modelUsage = createModelTokenUsage("gpt-5", aiResponse.usage || {});
+    const combinedTokenUsage = createCombinedTokenUsage([modelUsage]);
+
+    return {
+      success: true,
+      galaxyMap: parsedResponse,
+      tokenUsage: combinedTokenUsage,
+      responseId: aiResponse.id,
+    };
+  } catch (error) {
+    logger.error("Error in refinePartOfGalaxyMap", error);
+
     if (error instanceof Error && error.name === "ZodError") {
       throw new HttpsError("internal", `AI response validation failed: ${error.message}`);
     }

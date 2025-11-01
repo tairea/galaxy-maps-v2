@@ -3,6 +3,8 @@
     class="d-flex flex-column justify-start align-center course"
     :cols="cols"
     @click="routeToCourse(course)"
+    @mouseenter="showDeleteIcon = true"
+    @mouseleave="showDeleteIcon = false"
   >
     <v-tooltip v-if="tooltip" bottom color="subBackground">
       <template v-slot:activator="{ on, attrs }">
@@ -27,31 +29,63 @@
         </p>
       </div>
     </v-tooltip>
-    <div v-else class="d-flex flex-column justify-center align-center">
-      <v-img
-        v-if="hasValidImage"
-        :src="course.image.url"
-        max-width="60px"
-        max-height="60px"
-        class="course-image"
-        @error="handleImageError"
-      ></v-img>
-      <div v-else class="imagePlaceholder">{{ first3Letters(course.title) }}</div>
+    <div v-else class="d-flex flex-column justify-center align-center course-content">
+      <div class="course-image-container">
+        <v-img
+          v-if="hasValidImage"
+          :src="course.image.url"
+          max-width="60px"
+          max-height="60px"
+          class="course-image"
+          @error="handleImageError"
+        ></v-img>
+        <div v-else class="imagePlaceholder">{{ first3Letters(course.title) }}</div>
+
+        <!-- Delete icon overlay -->
+        <v-btn
+          v-if="showDeleteIcon && showDeleteButton"
+          icon
+          x-small
+          color="error"
+          class="delete-icon"
+          @click.stop="showDeleteDialog"
+        >
+          <v-icon>{{ mdiDelete }}</v-icon>
+        </v-btn>
+      </div>
       <p class="title text-center pt-2 mb-0">{{ formattedTitle }}</p>
     </div>
+
+    <!-- Delete Confirmation Dialog -->
+    <ConfirmDeleteCourseDialog
+      :dialog="deleteDialog"
+      :course="course"
+      :cohortId="cohortId"
+      @close="deleteDialog = false"
+      @cancel="deleteDialog = false"
+      @courseDeleted="onCourseDeleted"
+    />
   </v-col>
 </template>
 
 <script>
 import useRootStore from "@/store/index";
 import { mapActions } from "pinia";
+import { mdiDelete } from "@mdi/js";
+import ConfirmDeleteCourseDialog from "@/components/Dialogs/ConfirmDeleteCourseDialog.vue";
 
 export default {
   name: "Course",
-  props: ["course", "cols", "tooltip"],
+  props: ["course", "cols", "tooltip", "cohortId", "showDeleteButton"],
+  components: {
+    ConfirmDeleteCourseDialog,
+  },
   data() {
     return {
       imageLoadError: false,
+      showDeleteIcon: false,
+      deleteDialog: false,
+      mdiDelete,
     };
   },
   mounted() {},
@@ -141,6 +175,12 @@ export default {
         },
       });
     },
+    showDeleteDialog() {
+      this.deleteDialog = true;
+    },
+    onCourseDeleted(courseId) {
+      this.$emit("courseDeleted", courseId);
+    },
   },
 };
 </script>
@@ -148,6 +188,25 @@ export default {
 <style lang="scss" scoped>
 .course {
   cursor: pointer;
+  position: relative;
+
+  .course-content {
+    position: relative;
+  }
+
+  .course-image-container {
+    position: relative;
+    display: inline-block;
+  }
+
+  .delete-icon {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    z-index: 10;
+    background-color: white !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
 
   .title {
     font-size: 0.65rem !important;

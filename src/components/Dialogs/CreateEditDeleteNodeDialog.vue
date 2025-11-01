@@ -276,7 +276,7 @@
 </template>
 
 <script>
-import { storage } from "@/store/firestoreConfig";
+import { storage, db } from "@/store/firestoreConfig";
 import {
   fetchPersonsTopicByPersonIdCourseIdTopicId,
   removePrerequisitesFromTopics,

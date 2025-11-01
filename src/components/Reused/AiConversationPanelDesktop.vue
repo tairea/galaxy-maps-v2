@@ -97,6 +97,12 @@ export default {
       agent: null,
       session: null,
       transport: null,
+      youtubeAgent: null,
+
+      // MCP (Model Context Protocol) integrations
+      youtubeMcpServer: null,
+      youtubeMcpServerInitPromise: null,
+      youtubeMcpServerError: null,
 
       // Instructions
       GmMissionsAssistantInstructions: `
@@ -129,6 +135,10 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
 **Restrictions:**  
 - Stay focused only on the Mission and its learning context.  
 
+**Mission Resources:**  
+- When a mission references external content (videos, articles, docs), quietly gather the relevant details first so your guidance stays precise and timely.  
+- Distill only the actionable insights and weave them into the next coaching step so the Navigator experiences a seamless flow.  
+
 ---
 
 ⚡ **Example Voice Style:**  
@@ -142,23 +152,50 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
       //   if (!this.course || !this.topic || !this.topicTasks) return "";
 
       const activeMission = this.topicTasks.find((task) => task.taskStatus === "active");
-      console.log("active mission", activeMission);
+      if (activeMission) {
+        console.log("active mission", activeMission);
+      } else {
+        console.log("no active mission");
+      }
 
-      return `
-      The overarching Galaxy Map this Navigator is currently on is called "${this.course.title}" its focus is on ${this.course.description}.
+      // Format topicTasks into readable string format for AI
+      const formattedTasks = this.topicTasks
+        .map((task, index) => {
+          const status = task.taskStatus || "unknown";
+          const title = task.title || "Untitled Mission";
+          const description = task.missionInstructionsHtmlString
+            ? task.missionInstructionsHtmlString
+            : task.description || "No description";
+          return `Mission ${index + 1}: "${title}" (Status: ${status}) - ${description}`;
+        })
+        .join("\n      ");
+
+      let contextMsg = `The overarching Galaxy Map this Navigator is currently on is called "${this.course.title}" this map covers: ${this.course.description}.
       
       The Star System (within the Galaxy Map) they are currently in is called "${this.topic.label}" 
 
-      There are ${this.topicTasks.length} missions in this Star System. For context they are: ${this.topicTasks} 
+      There are ${this.topicTasks.length} missions in this Star System. For context they are:
+      ${formattedTasks}`;
 
-      #CURRENT ACTIVE MISSION\n\n
-      
-      ##Mission Title:\n${activeMission.title}\n\n
-      
-      ##Mission Instructions:\n${activeMission.description}\n\n
+      if (activeMission) {
+        contextMsg += `\n\n#CURRENT ACTIVE MISSION is: "${activeMission.title}" and its instructions are: ${activeMission?.missionInstructionsHtmlString || activeMission?.description || ""}
+        \n\n
+        Please focus on helping the navigator complete the missions in this Star System, so they can progress on to the next Star System and complete the entire Galaxy Map.`;
+      }
 
-      Please focus on helping the navigator complete the missions in this Star System, so they can progress on to the next Star System and complete the entire Galaxy Map.
-      `;
+      const youtubeReferences = this.getYoutubeReferences();
+      if (youtubeReferences.length) {
+        const formattedYoutube = youtubeReferences
+          .map((ref, index) => {
+            const urlDetail = ref.url ? `, url: ${ref.url}` : "";
+            return `YouTube ${index + 1}: videoId ${ref.videoId} (mission: "${ref.missionTitle}"${urlDetail})`;
+          })
+          .join("\n      ");
+        contextMsg += `\n\nMission materials include the following videos:\n      ${formattedYoutube}\n      Review any useful insights from these before guiding the Navigator through video-dependent steps.`;
+      }
+
+      console.log("giving ai agent context with msg: ", contextMsg);
+      return contextMsg;
     },
     combinedInstructions() {
       return this.GmMissionsAssistantInstructions + "\n\n" + this.contextInstructions;
@@ -222,15 +259,45 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
       this.isStopped = true;
       this.connectionError = null;
       this.isOpen = false;
+      this.youtubeAgent = null;
+      await this.teardownYoutubeMcpServer();
       this.aiConversationStore.clearTokenCache();
     },
     async initializeRealtimeAgent() {
       try {
-        this.agent = new RealtimeAgent({
+        this.youtubeAgent = null;
+        const youtubeServer = await this.ensureYoutubeMcpServer();
+        if (youtubeServer) {
+          console.log("[AI Panel][Agents] Creating YouTube Transcript Specialist handoff agent");
+          this.youtubeAgent = new RealtimeAgent({
+            name: "YouTube Transcript Specialist",
+            handoffDescription:
+              "Fetches YouTube transcripts, captions, and related metadata before summarising key learning steps.",
+            instructions:
+              "You specialise in retrieving and summarising YouTube video transcripts. When asked, identify the video ID, call the YouTube MCP tools to obtain the transcript, and respond with a concise teaching-ready summary plus any critical timestamps. If a transcript cannot be retrieved, explain the issue and suggest alternatives.",
+            mcpServers: [youtubeServer],
+          });
+          console.log("[AI Panel][Agents] YouTube Transcript Specialist ready");
+        } else {
+          console.log(
+            "[AI Panel][Agents] YouTube MCP server unavailable; specialist handoff will be skipped",
+          );
+        }
+
+        const agentConfig = {
           name: "GM Missions Assistant",
           instructions: this.GmMissionsAssistantInstructions,
           voice: "coral",
-        });
+        };
+
+        if (this.youtubeAgent) {
+          console.log("[AI Panel][Agents] Adding YouTube specialist as handoff agent");
+          agentConfig.handoffs = [this.youtubeAgent];
+        }
+
+        console.log("[AI Panel][Agents] Creating main GM Missions Assistant agent");
+        this.agent = new RealtimeAgent(agentConfig);
+        console.log("[AI Panel][Agents] Main agent ready");
         this.transport = new OpenAIRealtimeWebRTC();
         const sessionConfig = {
           model: "gpt-realtime",
@@ -243,6 +310,9 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
           },
         };
         this.session = new RealtimeSession(this.agent, sessionConfig);
+        console.log("[AI Panel][Session] Realtime session created", {
+          hasHandoff: !!this.youtubeAgent,
+        });
         this.setupEventListeners();
         await this.connect();
       } catch (error) {
@@ -252,6 +322,7 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
     setupEventListeners() {
       if (!this.session) return;
       const s = this.session;
+      console.log("[AI Panel][Session] Setting up event listeners");
 
       // connection lifecycle
       s.on &&
@@ -267,6 +338,14 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
           this.isConnected = false;
           this.isListening = false;
           this.isTalking = false;
+        });
+
+      s.on &&
+        s.on("agent_handoff", (_context, previousAgent, nextAgent) => {
+          console.log("[AI Panel][Agents] Handoff triggered", {
+            from: previousAgent?.name,
+            to: nextAgent?.name,
+          });
         });
 
       // user speaking
@@ -355,12 +434,36 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
           this.isListening = false;
           this.isTalking = false;
         });
+
+        t.on("mcp_tools_listed", (event) => {
+          console.log("[AI Panel][MCP] Tools listed", event);
+        });
+
+        t.on("mcp_tool_call_completed", (toolCall) => {
+          console.log("[AI Panel][MCP] Tool call completed", {
+            tool: toolCall?.name,
+            status: toolCall?.status,
+            argsPreview: toolCall?.arguments?.slice?.(0, 160),
+            outputPreview: toolCall?.output?.slice?.(0, 160),
+          });
+        });
+
+        t.on("function_call", (event) => {
+          console.log("[AI Panel][Transport] Function call event", {
+            name: event?.name,
+            callId: event?.callId,
+            argumentsPreview: event?.arguments?.slice?.(0, 160),
+          });
+        });
       }
     },
     async connect() {
       try {
         const clientSecret = await this.aiConversationStore.getRealtimeToken();
         const connectOptions = { apiKey: clientSecret };
+        console.log("[AI Panel][Session] Connecting with realtime token", {
+          tokenPreview: clientSecret?.slice?.(0, 8),
+        });
         await this.session.connect(connectOptions);
         // Fallback in case event is delayed
         setTimeout(() => {
@@ -368,14 +471,20 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
             this.isConnected = true;
             this.connectionError = null;
             this.isListening = true;
+            console.log("[AI Panel][Session] Connection fallback triggered");
           }
         }, 2000);
       } catch (error) {
+        console.error("[AI Panel][Session] Failed to connect", error);
         this.connectionError = error?.message || "Failed to connect";
       }
     },
     async disconnect() {
       if (!this.session && !this.transport) return;
+      console.log("[AI Panel][Session] Disconnect invoked", {
+        hadSession: !!this.session,
+        hadTransport: !!this.transport,
+      });
       try {
         if (this.session) {
           if (typeof this.session.disconnect === "function") await this.session.disconnect();
@@ -386,12 +495,15 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
       this.session = null;
       this.agent = null;
       this.transport = null;
+      this.youtubeAgent = null;
       this.isConnected = false;
       this.isListening = false;
       this.isTalking = false;
       this.connectionError = null;
       this.isStopped = false;
+      console.log("[AI Panel][Session] Session references cleared");
       this.aiConversationStore.clearTokenCache();
+      await this.teardownYoutubeMcpServer();
     },
     async toggleStop() {
       if (!this.session || !this.transport) return;
@@ -417,9 +529,204 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
     async sendMissionContext() {
       if (!this.session || !this.isConnected) return;
       const missionMessage = `Here's the current mission context:\n\n${this.contextInstructions}\n\nLet me know when you're ready to help me with this mission.`;
+      console.log("[AI Panel][Session] Sending mission context", {
+        preview: missionMessage.slice(0, 200),
+      });
       try {
         this.session.sendMessage(missionMessage);
       } catch {}
+    },
+
+    async ensureYoutubeMcpServer() {
+      console.log("[AI Panel][MCP] ensureYoutubeMcpServer invoked", {
+        hasServer: !!this.youtubeMcpServer,
+        inflight: !!this.youtubeMcpServerInitPromise,
+      });
+      if (this.youtubeMcpServer) {
+        console.log("[AI Panel][MCP] Reusing existing YouTube MCP server instance");
+        return this.youtubeMcpServer;
+      }
+      if (this.youtubeMcpServerInitPromise) {
+        console.log("[AI Panel][MCP] Awaiting in-flight YouTube MCP server initialisation");
+        return this.youtubeMcpServerInitPromise;
+      }
+
+      const serverUrl = this.getYoutubeMcpServerUrl();
+      const apiKey = this.getYoutubeApiKey();
+
+      if (!serverUrl && !apiKey) {
+        console.warn(
+          "[AI Panel][MCP] No YouTube MCP server configured (missing VITE_YOUTUBE_MCP_SERVER_URL or YOUTUBE_API_KEY)",
+        );
+        return null;
+      }
+
+      if (!serverUrl && !this.hasNodeForMcp()) {
+        console.warn(
+          "[AI Panel][MCP] Cannot spawn stdio YouTube MCP server: Node environment unavailable (requires Electron/desktop)",
+        );
+        return null;
+      }
+
+      const initPromise = (async () => {
+        try {
+          console.log("[AI Panel][MCP] Loading @openai/agents for MCP server wiring");
+          const agentsModule = await import("@openai/agents");
+          const { MCPServerStdio, MCPServerStreamableHttp } = agentsModule;
+
+          if (serverUrl && MCPServerStreamableHttp) {
+            console.log("[AI Panel][MCP] Connecting to remote Streamable HTTP MCP server", {
+              serverUrl,
+            });
+            const server = new MCPServerStreamableHttp({
+              url: serverUrl,
+              name: "youtube-mcp-server",
+              cacheToolsList: true,
+            });
+            await server.connect();
+            this.youtubeMcpServer = server;
+            this.youtubeMcpServerError = null;
+            console.log("[AI Panel][MCP] Remote MCP server connected successfully");
+            return server;
+          }
+
+          if (!MCPServerStdio) {
+            throw new Error("MCPServerStdio is unavailable in @openai/agents import");
+          }
+
+          if (!apiKey) {
+            throw new Error("YOUTUBE_API_KEY is required to start the youtube MCP stdio server");
+          }
+
+          const command = this.getYoutubeMcpCommand();
+          const env = this.buildYoutubeMcpEnv(apiKey);
+          console.log("[AI Panel][MCP] Launching stdio YouTube MCP server", {
+            command,
+            envHasKey: !!env.YOUTUBE_API_KEY,
+            transcriptLang: env.YOUTUBE_TRANSCRIPT_LANG || "default",
+          });
+          const server = new MCPServerStdio({
+            name: "youtube-mcp-server",
+            fullCommand: command,
+            env,
+            cacheToolsList: true,
+          });
+          await server.connect();
+          this.youtubeMcpServer = server;
+          this.youtubeMcpServerError = null;
+          console.log("[AI Panel][MCP] stdio YouTube MCP server launched successfully");
+          return server;
+        } catch (error) {
+          console.error("[AI Panel][MCP] Failed to initialize YouTube MCP server", error);
+          this.youtubeMcpServer = null;
+          this.youtubeMcpServerError = error;
+          return null;
+        } finally {
+          this.youtubeMcpServerInitPromise = null;
+        }
+      })();
+
+      this.youtubeMcpServerInitPromise = initPromise;
+      const server = await initPromise;
+      return server;
+    },
+
+    async teardownYoutubeMcpServer() {
+      if (!this.youtubeMcpServer) return;
+      console.log("[AI Panel][MCP] Tearing down YouTube MCP server");
+      try {
+        if (typeof this.youtubeMcpServer.close === "function") {
+          await this.youtubeMcpServer.close();
+        }
+      } catch (error) {
+        console.warn("[AI Panel][MCP] Failed to close YouTube MCP server", error);
+      }
+      this.youtubeMcpServer = null;
+      this.youtubeMcpServerError = null;
+      console.log("[AI Panel][MCP] YouTube MCP server torn down");
+    },
+
+    getYoutubeReferences() {
+      if (!Array.isArray(this.topicTasks)) return [];
+      const regex =
+        /https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/gi;
+      const deduped = new Map();
+
+      this.topicTasks.forEach((task) => {
+        const missionTitle = task?.title || "Untitled Mission";
+        const sources = [task?.missionInstructionsHtmlString, task?.description];
+        sources.forEach((source) => {
+          if (!source || typeof source !== "string") return;
+          let match;
+          while ((match = regex.exec(source))) {
+            const videoId = match[1];
+            const url = match[0];
+            if (!videoId) continue;
+            if (!deduped.has(videoId)) {
+              deduped.set(videoId, { videoId, url, missionTitle });
+            } else {
+              const existing = deduped.get(videoId);
+              if (!existing.url && url) existing.url = url;
+              if (
+                existing.missionTitle === "Untitled Mission" &&
+                missionTitle !== "Untitled Mission"
+              ) {
+                existing.missionTitle = missionTitle;
+              }
+            }
+          }
+        });
+      });
+
+      return Array.from(deduped.values());
+    },
+
+    // Resolve the API key for the youtube-mcp-server from either Vite client env or Node env.
+    getYoutubeApiKey() {
+      const viteValue = import.meta?.env?.VITE_YOUTUBE_API_KEY;
+      const nodeValue = typeof process !== "undefined" ? process.env?.YOUTUBE_API_KEY : undefined;
+      const apiKey = (viteValue || nodeValue || "").trim();
+      return apiKey || null;
+    },
+
+    // Optional: allow pointing to a remotely hosted Streamable HTTP MCP server.
+    getYoutubeMcpServerUrl() {
+      const viteValue = import.meta?.env?.VITE_YOUTUBE_MCP_SERVER_URL;
+      const nodeValue =
+        typeof process !== "undefined" ? process.env?.YOUTUBE_MCP_SERVER_URL : undefined;
+      const url = (viteValue || nodeValue || "").trim();
+      return url || null;
+    },
+
+    // Optional: override the CLI command used to spawn the stdio-based MCP server locally.
+    getYoutubeMcpCommand() {
+      const viteValue = import.meta?.env?.VITE_YOUTUBE_MCP_COMMAND;
+      const nodeValue =
+        typeof process !== "undefined" ? process.env?.YOUTUBE_MCP_COMMAND : undefined;
+      return (viteValue || nodeValue || "npx -y zubeid-youtube-mcp-server").trim();
+    },
+
+    buildYoutubeMcpEnv(apiKey) {
+      const env = { YOUTUBE_API_KEY: apiKey };
+      const transcriptLang = this.getYoutubeTranscriptLang();
+      if (transcriptLang) env.YOUTUBE_TRANSCRIPT_LANG = transcriptLang;
+      return env;
+    },
+
+    getYoutubeTranscriptLang() {
+      const viteValue = import.meta?.env?.VITE_YOUTUBE_TRANSCRIPT_LANG;
+      const nodeValue =
+        typeof process !== "undefined" ? process.env?.YOUTUBE_TRANSCRIPT_LANG : undefined;
+      const lang = (viteValue || nodeValue || "").trim();
+      return lang || null;
+    },
+
+    hasNodeForMcp() {
+      return (
+        typeof process !== "undefined" &&
+        !!process.versions &&
+        typeof process.versions.node !== "undefined"
+      );
     },
   },
 };

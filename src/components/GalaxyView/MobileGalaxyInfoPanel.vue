@@ -118,6 +118,11 @@
                 :network-ref="networkRef"
                 @toggle-minimize="toggleMinimize"
               />
+
+              <v-btn color="missionAccent" outlined x-small width="95%" @click="downloadGalaxyJson">
+                <v-icon x-small class="mr-1">{{ mdiDownload }}</v-icon>
+                Download JSON
+              </v-btn>
             </div>
           </div>
         </div>
@@ -131,7 +136,14 @@ import CreateEditDeleteGalaxyDialog from "@/components/Dialogs/CreateEditDeleteG
 import PdfDownloader from "@/components/Reused/PdfDownloader.vue";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
-import { mdiLink, mdiMenuUp, mdiMenuDown, mdiChevronDown, mdiChevronUp } from "@mdi/js";
+import {
+  mdiLink,
+  mdiMenuUp,
+  mdiMenuDown,
+  mdiChevronDown,
+  mdiChevronUp,
+  mdiDownload,
+} from "@mdi/js";
 import { getFriendlyErrorMessage } from "@/lib/utils";
 import PublishGalaxy from "@/components/GalaxyView/PublishGalaxy.vue";
 
@@ -165,6 +177,7 @@ export default {
       mdiMenuDown,
       mdiChevronDown,
       mdiChevronUp,
+      mdiDownload,
       readmore: false,
       isMinimized: false,
     };
@@ -249,6 +262,45 @@ export default {
           });
         });
     },
+    downloadGalaxyJson() {
+      if (!this.aiGeneratedGalaxyMap) {
+        this.setSnackbar({
+          show: true,
+          text: "No galaxy map available to download",
+          color: "pink",
+        });
+        return;
+      }
+
+      const sanitizedMap = this.getSanitizedGalaxyMap();
+      const jsonString = JSON.stringify(sanitizedMap, null, 2);
+      const blob = new Blob([jsonString], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const fileName = `${this.getDownloadFileName()}-galaxy-map.json`;
+
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    },
+    getSanitizedGalaxyMap() {
+      const source = this.aiGeneratedGalaxyMap || {};
+      const clone = JSON.parse(JSON.stringify(source));
+      const { history, idInDatabase, questions, status, tokens, ...rest } = clone;
+      return rest;
+    },
+    getDownloadFileName() {
+      const baseTitle = this.course && this.course.title ? this.course.title : "galaxy-map";
+      const normalized = baseTitle
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+      return normalized || "galaxy-map";
+    },
+
     handleImageError() {
       // Handle image loading error
     },

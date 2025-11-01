@@ -54,7 +54,14 @@
     <div v-else-if="assignCourses">
       <p class="overline assignedToLabel ma-0">Galaxy Maps</p>
       <div v-if="courses.length > 0" class="d-flex justify-space-around flex-wrap">
-        <Course v-for="course in courses" :course="course" :key="course.id" />
+        <Course
+          v-for="course in courses"
+          :course="course"
+          :key="course.id"
+          :cohortId="cohort.id"
+          :showDeleteButton="isTeacher"
+          @courseDeleted="onCourseDeleted"
+        />
         <!-- Jump to galaxy button -->
         <!-- <div v-if="courses.length == 1" class="d-flex justify-center align-center mb-2">
           <v-btn
@@ -150,6 +157,15 @@ export default {
     },
     addToPeople(person) {
       return this.people.push(person);
+    },
+    async onCourseDeleted(courseId) {
+      // Refresh the cohort data to get updated courses list
+      if (this.cohort?.id) {
+        const updatedCohort = await fetchCohortByCohortId(this.cohort.id);
+        this.cohort = updatedCohort;
+        // Refresh the courses list
+        await this.getCohortCourses();
+      }
     },
   },
 };

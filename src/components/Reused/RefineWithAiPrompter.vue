@@ -59,20 +59,6 @@
         </v-btn>
 
         <v-btn
-          v-if="missionEditMode"
-          outlined
-          color="galaxyAccent"
-          @click="$emit('refine-mission')"
-          :loading="loading"
-          :disabled="disabled"
-          :dark="dark"
-          :light="!dark"
-        >
-          <v-icon left> {{ mdiRobotExcited }} </v-icon>
-          REFINE MISSION
-        </v-btn>
-
-        <v-btn
           v-if="!missionEditMode && showGenerateAgain"
           outlined
           color="galaxyAccent"
@@ -90,7 +76,7 @@
           v-if="!missionEditMode && showRefine"
           outlined
           color="galaxyAccent"
-          @click="$emit('refine')"
+          @click="$emit('refine-galaxy-map')"
           :loading="loading"
           :disabled="disabled"
           :dark="dark"
@@ -99,6 +85,20 @@
           <v-icon left> {{ mdiRobotExcited }} </v-icon>
           REFINE GALAXY MAP
         </v-btn>
+
+        <!-- <v-btn
+          v-if="!missionEditMode && showStructureRefine"
+          outlined
+          color="galaxyAccent"
+          @click="$emit('refine-structure')"
+          :loading="loading"
+          :disabled="disabled"
+          :dark="dark"
+          :light="!dark"
+        >
+          <v-icon left> {{ mdiRobotExcited }} </v-icon>
+          REFINE STRUCTURE
+        </v-btn> -->
 
         <v-btn
           v-if="!missionEditMode && showSaveButtons && !courseId"
@@ -114,7 +114,7 @@
           outlined
           color="baseAccent"
           :disabled="!hasUnsavedChanges || loading"
-          @click="$emit('open-layout-dialog')"
+          @click="$emit('update-galaxy')"
         >
           <v-icon left> {{ mdiContentSave }} </v-icon>
           Save Galaxy Changes
@@ -145,6 +145,7 @@ export default {
     showLegend: { type: Boolean, default: true },
     showGenerateAgain: { type: Boolean, default: true },
     showRefine: { type: Boolean, default: true },
+    showStructureRefine: { type: Boolean, default: false },
     showSaveButtons: { type: Boolean, default: true },
   },
   data() {

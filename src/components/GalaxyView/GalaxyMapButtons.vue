@@ -213,7 +213,8 @@ export default {
       this.$router.push({
         name: "AiGalaxyEditWithCourse",
         params: {
-          galaxyMapAsObject: this.boundCourse?.galaxyMapAsObject,
+          // galaxyMapAsObject: this.boundCourse?.galaxyMapAsObject,
+          courseId: this.boundCourse?.id,
         },
       });
     },

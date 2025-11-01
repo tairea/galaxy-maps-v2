@@ -95,6 +95,7 @@ import {
   generateSquadReportHttpsEndpoint,
 } from "./openAIActions.js";
 import { generateRealtimeTokenHttpsEndpoint } from "./realtimeToken.js";
+import { refineStructureHttpsEndpoint } from "./refiners/refine-structure.js";
 
 // activity
 export {
@@ -202,6 +203,7 @@ export {
   generateUnifiedGalaxyMapHttpsEndpoint as generateUnifiedGalaxyMap,
   generateGalaxyImageHttpsEndpoint as generateGalaxyImage,
   refineGalaxyMapHttpsEndpoint as refineGalaxyMap,
+  refineStructureHttpsEndpoint as refineStructure,
   generateSquadReportHttpsEndpoint as generateSquadReport,
   generateRealtimeTokenHttpsEndpoint as generateRealtimeToken,
 };
