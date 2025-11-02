@@ -12,15 +12,59 @@ const DEFAULT_FUNCTIONS_PORT = 5001;
 const DEFAULT_STORAGE_PORT = 9199;
 const DEFAULT_DATABASE_PORT = 9000;
 
+/**
+ * Validates that all required Firebase configuration environment variables are present
+ * @throws Error if any required environment variable is missing
+ */
+const validateFirebaseConfig = () => {
+  const requiredVars = {
+    VITE_FIREBASE_API_KEY: import.meta.env.VITE_FIREBASE_API_KEY,
+    VITE_FIREBASE_AUTH_DOMAIN: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    VITE_FIREBASE_DATABASE_URL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+    VITE_FIREBASE_PROJECT_ID: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    VITE_FIREBASE_STORAGE_BUCKET: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    VITE_FIREBASE_MESSAGING_SENDER_ID: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    VITE_FIREBASE_APP_ID: import.meta.env.VITE_FIREBASE_APP_ID,
+  };
+
+  const missingVars = Object.entries(requiredVars)
+    .filter(([, value]) => !value || value.includes("your-") || value.includes("here"))
+    .map(([key]) => key);
+
+  if (missingVars.length > 0) {
+    const errorMessage = `
+❌ Firebase Configuration Error
+
+Missing or invalid required environment variables:
+${missingVars.map((v) => `  - ${v}`).join("\n")}
+
+To fix this:
+1. Copy .env.example to .env: cp .env.example .env
+2. Get your Firebase config from https://console.firebase.google.com/
+3. Go to Project Settings → General → Your apps
+4. Copy the config values to your .env file
+5. Make sure to replace all placeholder values (e.g., "your-api-key-here")
+
+See README_PROJECT.md for detailed setup instructions.
+    `.trim();
+
+    throw new Error(errorMessage);
+  }
+};
+
+// Validate Firebase configuration before initializing
+validateFirebaseConfig();
+
+// Build Firebase configuration from environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyBSOVegvIYfI49DykugprcD-yJFLf-WgNs",
-  authDomain: "galaxy-maps-ac367.firebaseapp.com",
-  databaseURL: "https://galaxy-maps-ac367-default-rtdb.firebaseio.com",
-  projectId: "galaxy-maps-ac367",
-  storageBucket: "galaxy-maps-ac367.appspot.com",
-  messagingSenderId: "527578025987",
-  appId: "1:527578025987:web:3fa9411ad04559cf223e36",
-  measurementId: "G-EHZLKWQG14",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID, // Optional
 };
 
 const firebaseApp = firebase.initializeApp(firebaseConfig);
@@ -62,7 +106,7 @@ export const connectToEmulators = () => {
 
   emulatorsConnected = true;
 
-  console.log('🔧 Connecting to Firebase emulators...');
+  console.log("🔧 Connecting to Firebase emulators...");
 
   const firestore = parseHostPort(
     import.meta.env.VITE_FIRESTORE_EMULATOR_HOST as string | undefined,
@@ -93,7 +137,7 @@ export const connectToEmulators = () => {
   storage.useEmulator(storageHost.host, storageHost.port);
   database.useEmulator(databaseHost.host, databaseHost.port);
 
-  console.log('✅ Connected to Firebase emulators');
+  console.log("✅ Connected to Firebase emulators");
   console.log(`📊 Firestore: ${firestore.host}:${firestore.port}`);
   console.log(`🔐 Auth: ${auth.host}:${auth.port}`);
   console.log(`⚡ Functions: ${functionsHost.host}:${functionsHost.port}`);
@@ -103,12 +147,12 @@ export const connectToEmulators = () => {
 
 // Function to disconnect from emulators (connect to production)
 export const connectToProduction = () => {
-  console.log('🚀 Connecting to Firebase production...');
+  console.log("🚀 Connecting to Firebase production...");
   // Note: Once connected to emulator, you need to refresh the page to reconnect to production
-  console.log('ℹ️ Refresh the page to reconnect to production');
+  console.log("ℹ️ Refresh the page to reconnect to production");
 };
 
 // Auto-connect to emulators only when using dev:emulator script
-if (import.meta.env.VITE_USE_EMULATOR === 'true') {
+if (import.meta.env.VITE_USE_EMULATOR === "true") {
   connectToEmulators();
 }

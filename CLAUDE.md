@@ -108,10 +108,25 @@ npm run logs
 - `organisations` - Institution management
 
 ### Firebase Configuration
+
+**Environment-Based Configuration:**
+- All Firebase configuration is stored in environment variables (`.env` file)
+- Configuration is read from `import.meta.env.VITE_FIREBASE_*` variables
+- See `.env.example` for a complete template with all required variables
+- The `src/store/firestoreConfig.ts` file validates environment variables on startup
+- Never hardcode Firebase credentials in source files
+
+**Firebase Services:**
 - Authentication with email verification required
 - Firestore security rules control data access
 - Cloud Functions handle server-side logic and integrations
 - Real-time presence system for collaborative features
+
+**For New Developers:**
+1. Copy `.env.example` to `.env`
+2. Get Firebase config from Firebase Console → Project Settings
+3. Fill in all `VITE_FIREBASE_*` variables in `.env`
+4. The app will validate configuration and provide helpful error messages if setup is incomplete
 
 ## Testing Guidelines
 

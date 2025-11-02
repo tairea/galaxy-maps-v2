@@ -39,21 +39,48 @@ npm install
 
 ### 3. Configure Environment Variables
 
-Copy and update the `.env.example` file:
+Copy the `.env.example` file to create your local `.env`:
 
 ```bash
 cp .env.example .env
 ```
 
-Then add your credentials:
+#### Get Your Firebase Configuration
 
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Create a new project or select an existing one
+3. Enable the following services:
+   - **Authentication** (enable Email/Password provider)
+   - **Firestore Database**
+   - **Realtime Database**
+   - **Cloud Storage**
+   - **Cloud Functions**
+4. Go to **Project Settings** → **General**
+5. Scroll to **Your apps** section
+6. Click on the web app icon (or add a new web app if none exists)
+7. Copy the Firebase configuration object
+
+#### Update Your .env File
+
+Add all your Firebase configuration values to `.env`:
+
+```env
+# Firebase Configuration
+VITE_FIREBASE_API_KEY=AIzaSy...your-actual-api-key
+VITE_FIREBASE_AUTH_DOMAIN=your-project-id.firebaseapp.com
+VITE_FIREBASE_DATABASE_URL=https://your-project-id-default-rtdb.firebaseio.com
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
+VITE_FIREBASE_APP_ID=1:123456789:web:abcdef
+VITE_FIREBASE_MEASUREMENT_ID=G-ABCDEF123
+
+# Third-Party API Keys
+VITE_VERACITY_LRS_SECRET=your-lrs-username:your-lrs-password
+VITE_OPENAI_API_KEY=sk-your-openai-api-key
 ```
-VITE_FIREBASE_API_KEY=your_firebase_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_VERACITY_LRS_SECRET=your_veracity_key
-VITE_OPENAI_API_KEY=your_openai_api_key
-```
+
+See `.env.example` for detailed comments and instructions.
 
 ---
 
@@ -246,20 +273,32 @@ All backend operations use Firebase Cloud Functions (callable from `src/lib/ff.t
 
 ## Troubleshooting
 
-**App won’t start:**
+**App won't start:**
 
 - Check Node version: `node --version` (must be ≥18)
 - Confirm `.env` file exists and API keys are correct
+- Make sure you copied `.env.example` to `.env` and filled in all values
 
-**Firebase errors:**
+**Firebase Configuration Error:**
 
-- Run `firebase login`
-- Verify your Firebase project ID in `.env` matches `firebase.json`
+If you see an error about missing Firebase environment variables:
+1. Verify `.env` file exists in the project root
+2. Check that all `VITE_FIREBASE_*` variables are set
+3. Make sure you replaced placeholder values (e.g., "your-api-key-here")
+4. Restart the dev server after updating `.env`
+
+**Firebase Connection Errors:**
+
+- Run `firebase login` to authenticate with Firebase CLI
+- Verify your Firebase project ID in `.env` matches your actual project
+- Check that all required Firebase services are enabled in your project
+- Ensure Firebase Security Rules allow your operations
 
 **OpenAI API issues:**
 
-- Ensure your API key is active
+- Ensure your API key is active and has available credits
 - Check network connectivity and quotas
+- Verify the key starts with `sk-` and is properly formatted
 
 ---
 
