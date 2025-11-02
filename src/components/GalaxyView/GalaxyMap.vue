@@ -115,15 +115,48 @@ export default {
           default: {
             shape: "dot",
           },
-          completed: {
+          nodes: {
             shape: "dot",
-            color: "#00E676",
-          },
-          locked: {
-            color: "rgba(132,132,132,0.4)", // opaque styling to appear locked
-            shape: "dot",
+            size: 7,
+            fixed: {
+              x: true,
+              y: true,
+            },
+            color: {
+              border: "grey",
+              highlight: {
+                border: "black",
+                background: "white",
+              },
+              hover: {
+                border: "orange",
+                background: "grey",
+              },
+            },
             font: {
+              color: "white",
+              align: "left",
+              face: "Arial",
+              size: 12,
+            },
+            // Disable vis-network labels since we'll draw them manually
+            label: "",
+          },
+          groups: {
+            default: {
+              shape: "dot",
+            },
+            completed: {
+              shape: "dot",
+              color: "#00E676",
+            },
+            locked: {
               color: "rgba(132,132,132,0.4)", // opaque styling to appear locked
+              shape: "dot",
+              font: {
+                color: "rgba(132,132,132,0.4)", // opaque styling to appear locked
+              },
+              // opacity: 0.1,
             },
             // opacity: 0.1,
           },
@@ -157,6 +190,9 @@ export default {
             color: "#696969",
             font: {
               color: "#696969",
+              font: {
+                color: "#696969",
+              },
             },
           },
         },
@@ -223,6 +259,18 @@ export default {
         this.$refs.network.setOptions(options);
         this.$emit("topicClicked", newTopic);
       }
+    },
+    currentCourseId: {
+      handler(newCourseId, oldCourseId) {
+        // Reset initial data loading flag when switching courses
+        if (newCourseId && newCourseId !== oldCourseId) {
+          this.initialDataLoading = true;
+          console.log(
+            `Course changed from ${oldCourseId} to ${newCourseId}, initialDataLoading reset to true`,
+          );
+        }
+      },
+      immediate: false,
     },
   },
   computed: {
@@ -358,7 +406,7 @@ export default {
     }
 
     // zoom fit on load
-    if (this.nodesToDisplay && this.$refs.network.nodes.length > 0) {
+    if (this.nodesToDisplay && this.$refs.network && this.$refs.network.nodes.length > 0) {
       this.needsCentering = true;
     }
 
@@ -388,6 +436,14 @@ export default {
       "getPersonsCourseTasks",
       "setCurrentTopicId",
     ]),
+    // Helper method to safely access network ref
+    getNetworkRef() {
+      if (!this.$refs.network) {
+        console.warn("Network ref not available yet");
+        return null;
+      }
+      return this.$refs.network;
+    },
     async refreshData() {
       // Validate required fields before proceeding
       if (!this.currentCourseId) {
@@ -445,8 +501,17 @@ export default {
         console.log("Galaxy Map Complete. Well done!");
         this.$emit("galaxyCompleted");
       }
+
+      // Mark initial data loading as complete
+      this.initialDataLoading = false;
+      console.log("Initial data loading completed, initialDataLoading set to false");
     },
     networkUpdated() {
+      if (!this.$refs.network) {
+        console.warn("Network ref not available yet, skipping network update");
+        return;
+      }
+
       if (this.needsCentering === true) {
         this.zoomToNodes(this.$refs.network.nodes);
         // set label colours to missionAccent
@@ -533,6 +598,18 @@ export default {
       this.drag = false;
     },
     addNode(data) {
+      // Skip if this is during initial data loading
+      if (this.initialDataLoading) {
+        console.log("Skipping addNode during initial data loading");
+        return;
+      }
+
+      // Skip if not in node adding mode
+      if (!this.addingNode) {
+        console.log("Skipping addNode - not in node adding mode");
+        return;
+      }
+
       // if (!this.active) return;
       const newNodeId = data.properties.items[0];
       const selected = this.$refs.network.getSelection();
@@ -548,6 +625,19 @@ export default {
       this.addingNode = false;
     },
     addEdge(data) {
+      // Skip if this is during initial data loading
+      if (this.initialDataLoading) {
+        console.log("Skipping addEdge during initial data loading");
+        return;
+      }
+
+      // Skip if not in edge adding mode
+      if (!this.addingEdge) {
+        console.log("Skipping addEdge - not in edge adding mode");
+        return;
+      }
+
+      console.log("adding edge");
       this.$emit("setUiMessage", "");
       const newEdgeData = this.$refs.network.getEdge(data.properties.items[0]);
       if (newEdgeData.from === newEdgeData.to) {
@@ -846,7 +936,7 @@ export default {
         const edgeId = data.edges[0];
         const selectedEdge = this.$refs.network.getEdge(edgeId);
         selectedEdge.type = "edge";
-        ((selectedEdge.DOMx = data.pointer.DOM.x), (selectedEdge.DOMy = data.pointer.DOM.y));
+        (selectedEdge.DOMx = data.pointer.DOM.x), (selectedEdge.DOMy = data.pointer.DOM.y);
         this.$emit("selectedEdge", selectedEdge);
       }
     },
@@ -969,6 +1059,9 @@ export default {
     },
     // this controls the fit zoom animation
     zoomToNodes(nodes) {
+      const network = this.getNetworkRef();
+      if (!network) return;
+
       // nodes to zoom to
       // get node ids
       const nodeIds = nodes.map((x) => x.id);
@@ -1087,6 +1180,11 @@ export default {
       // get node ids
       // TODO: This is triggering an error when first creating a galaxy
       // Cannot read properties of undefined (reading 'nodes'
+      if (!this.$refs.network) {
+        console.warn("Network ref not available yet, skipping planet setup");
+        return;
+      }
+
       const nodeIds = this.$refs.network.nodes.map(({ id }) => id);
       // get node xy positions
       const nodePositionMap = this.$refs.network.getPositions(nodeIds);

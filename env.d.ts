@@ -44,3 +44,17 @@ declare module "vue" {
     pinia?: Pinia;
   }
 }
+
+interface ImportMetaEnv {
+  readonly BASE_URL: string;
+  readonly VITE_USE_EMULATOR?: string;
+  readonly VITE_FIREBASE_AUTH_EMULATOR?: string;
+  readonly VITE_FIRESTORE_EMULATOR_HOST?: string;
+  readonly VITE_FUNCTIONS_EMULATOR_HOST?: string;
+  readonly VITE_STORAGE_EMULATOR_HOST?: string;
+  readonly VITE_DATABASE_EMULATOR_HOST?: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}

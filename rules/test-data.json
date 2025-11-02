@@ -1,0 +1,529 @@
+{
+  "people": {
+    "student1": {
+      "firstName": "Aroha",
+      "lastName": "Ngata",
+      "displayName": "aroha.nz",
+      "email": "aroha@example.com",
+      "xpPointsTotal": 1200,
+      "status": "active",
+      "assignedCourses": ["course1", "course2"],
+      "completedCourses": [],
+      "registered": true,
+      "role": "student",
+      "admin": false
+    },
+    "student2": {
+      "firstName": "Matiu",
+      "lastName": "Te Awa",
+      "displayName": "mat.teawa",
+      "email": "matiu@example.com",
+      "xpPointsTotal": 850,
+      "status": "active",
+      "assignedCourses": ["course1"],
+      "completedCourses": [],
+      "registered": true,
+      "role": "student",
+      "admin": false
+    },
+    "student3": {
+      "firstName": "Hana",
+      "lastName": "Kai",
+      "displayName": "hana.kai",
+      "email": "hana@example.com",
+      "xpPointsTotal": 950,
+      "status": "active",
+      "assignedCourses": ["course2", "course3"],
+      "completedCourses": [],
+      "registered": true,
+      "role": "student",
+      "admin": false
+    },
+    "student4": {
+      "firstName": "Tama",
+      "lastName": "Wai",
+      "displayName": "tama.wai",
+      "email": "tama@example.com",
+      "xpPointsTotal": 1100,
+      "status": "active",
+      "assignedCourses": ["course2"],
+      "completedCourses": [],
+      "registered": true,
+      "role": "student",
+      "admin": false
+    },
+    "teacher1": {
+      "firstName": "Moana",
+      "lastName": "Tawhiri",
+      "displayName": "moana.t",
+      "email": "moana@example.com",
+      "status": "active",
+      "registered": true,
+      "role": "teacher",
+      "admin": false,
+      "assignedCourses": ["course1"]
+    },
+    "teacher2": {
+      "firstName": "Koro",
+      "lastName": "Mana",
+      "displayName": "koro.mana",
+      "email": "koro@example.com",
+      "status": "active",
+      "registered": true,
+      "role": "teacher",
+      "admin": false,
+      "assignedCourses": ["course2", "course3"]
+    },
+    "admin1": {
+      "firstName": "Admin",
+      "lastName": "User",
+      "displayName": "admin",
+      "email": "admin@example.com",
+      "status": "admin",
+      "registered": true,
+      "role": "admin",
+      "admin": true,
+      "assignedCourses": [],
+      "completedCourses": []
+    },
+    "teacher3": {
+      "firstName": "Nootai",
+      "lastName": "Tairea",
+      "displayName": "nootai.tairea",
+      "email": "nootai@example.com",
+      "status": "active",
+      "registered": true,
+      "role": "teacher",
+      "admin": false,
+      "assignedCourses": ["course4"]
+    }
+  },
+  "cohorts": {
+    "cohort1": {
+      "name": "Kauri Cohort",
+      "description": "A group of students for the Kauri digital learning stream.",
+      "students": ["student1", "student2"],
+      "teachers": ["teacher1"],
+      "courses": ["course1"]
+    },
+    "cohort2": {
+      "name": "Rimu Cohort",
+      "description": "Advanced students for the Rimu learning stream.",
+      "students": ["student3", "student4"],
+      "teachers": ["teacher2"],
+      "courses": ["course2", "course3"]
+    }
+  },
+  "courses": {
+    "course1": {
+      "name": "Intro to Navigation",
+      "description": "A course on navigating the Galaxy Maps LMS.",
+      "owner": "/people/teacher1",
+      "contentBy": {
+        "name": "Moana Tawhiri",
+        "personId": "teacher1"
+      },
+      "mappedBy": {
+        "name": "Moana Tawhiri",
+        "personId": "teacher1"
+      },
+      "status": "published",
+      "public": true,
+      "presentationOnly": false
+    },
+    "course2": {
+      "name": "Advanced Navigation",
+      "description": "Advanced navigation techniques and strategies.",
+      "owner": "/people/teacher2",
+      "contentBy": {
+        "name": "Koro Mana",
+        "personId": "teacher2"
+      },
+      "mappedBy": {
+        "name": "Koro Mana",
+        "personId": "teacher2"
+      },
+      "status": "published",
+      "public": false,
+      "presentationOnly": false
+    },
+    "course3": {
+      "name": "Navigation Mastery",
+      "description": "Master-level navigation skills and techniques.",
+      "owner": "/people/teacher2",
+      "contentBy": {
+        "name": "Koro Mana",
+        "personId": "teacher2"
+      },
+      "mappedBy": {
+        "name": "Koro Mana",
+        "personId": "teacher2"
+      },
+      "status": "draft",
+      "public": false,
+      "presentationOnly": false
+    },
+    "course4": {
+      "name": "Public Course",
+      "description": "A public course for testing.",
+      "owner": "/people/teacher3",
+      "contentBy": {
+        "name": "Nootai Tairea",
+        "personId": "teacher3"
+      },
+      "mappedBy": {
+        "name": "Nootai Tairea",
+        "personId": "teacher3"
+      },
+      "status": "published",
+      "public": true,
+      "presentationOnly": false
+    }
+  },
+  "topics": {
+    "course1": {
+      "topic1": {
+        "title": "What is a Galaxy Map?",
+        "content": "An overview of the learning map system.",
+        "createdBy": "teacher1",
+        "status": "published",
+        "public": true,
+        "presentationOnly": false,
+        "owner": "/people/teacher1",
+        "contentBy": {
+          "name": "Moana Tawhiri",
+          "personId": "teacher1"
+        },
+        "mappedBy": {
+          "name": "Moana Tawhiri",
+          "personId": "teacher1"
+        }
+      }
+    },
+    "course2": {
+      "topic1": {
+        "title": "Advanced Mapping Techniques",
+        "content": "Complex navigation and mapping strategies.",
+        "createdBy": "teacher2",
+        "status": "published",
+        "public": true,
+        "presentationOnly": false,
+        "owner": "/people/teacher2",
+        "contentBy": {
+          "name": "Koro Mana",
+          "personId": "teacher2"
+        },
+        "mappedBy": {
+          "name": "Koro Mana",
+          "personId": "teacher2"
+        }
+      }
+    },
+    "course3": {
+      "topic1": {
+        "title": "Master Navigation",
+        "content": "Expert-level navigation concepts.",
+        "createdBy": "teacher2",
+        "status": "draft",
+        "public": false,
+        "presentationOnly": false,
+        "owner": "/people/teacher2",
+        "contentBy": {
+          "name": "Koro Mana",
+          "personId": "teacher2"
+        },
+        "mappedBy": {
+          "name": "Koro Mana",
+          "personId": "teacher2"
+        }
+      }
+    },
+    "course4": {
+      "topic1": {
+        "title": "Public Topic",
+        "content": "A public topic for testing.",
+        "createdBy": "teacher3",
+        "status": "published",
+        "public": true,
+        "presentationOnly": false,
+        "owner": "/people/teacher3",
+        "contentBy": {
+          "name": "Nootai Tairea",
+          "personId": "teacher3"
+        },
+        "mappedBy": {
+          "name": "Nootai Tairea",
+          "personId": "teacher3"
+        }
+      }
+    }
+  },
+  "tasks": {
+    "course1": {
+      "topic1": {
+        "task1": {
+          "description": "What is a Galaxy Map?",
+          "duration": "60",
+          "id": "task1"
+        }
+      }
+    },
+    "course2": {
+      "topic1": {
+        "task1": {
+          "description": "What is a Galaxy Map?",
+          "duration": "60",
+          "id": "task1"
+        }
+      }
+    }
+  },
+  "requestsForHelp": {
+    "course1": {
+      "request1": {
+        "contextCourse": {
+          "cohort": "cohort1"
+        },
+        "personId": "student1",
+        "message": "I'm stuck on the map intro task.",
+        "status": "published",
+        "public": true,
+        "presentationOnly": false,
+        "owner": "/people/teacher1",
+        "contentBy": {
+          "name": "Moana Tawhiri",
+          "personId": "teacher1"
+        },
+        "mappedBy": {
+          "name": "Moana Tawhiri",
+          "personId": "teacher1"
+        }
+      }
+    },
+    "course2": {
+      "request1": {
+        "contextCourse": {
+          "cohort": "cohort2"
+        },
+        "personId": "student3",
+        "message": "Need help with advanced mapping.",
+        "status": "published",
+        "public": true,
+        "presentationOnly": false,
+        "owner": "/people/teacher2",
+        "contentBy": {
+          "name": "Koro Mana",
+          "personId": "teacher2"
+        },
+        "mappedBy": {
+          "name": "Koro Mana",
+          "personId": "teacher2"
+        }
+      }
+    }
+  },
+  "submissionsForReview": {
+    "course1": {
+      "submission1": {
+        "contextCourse": {
+          "cohort": "cohort1"
+        },
+        "personId": "student2",
+        "taskId": "task123",
+        "status": "submitted",
+        "public": true,
+        "presentationOnly": false,
+        "owner": "/people/teacher1",
+        "contentBy": {
+          "name": "Moana Tawhiri",
+          "personId": "teacher1"
+        },
+        "mappedBy": {
+          "name": "Moana Tawhiri",
+          "personId": "teacher1"
+        }
+      }
+    },
+    "course2": {
+      "submission1": {
+        "contextCourse": {
+          "cohort": "cohort2"
+        },
+        "personId": "student4",
+        "taskId": "task456",
+        "status": "submitted",
+        "public": true,
+        "presentationOnly": false,
+        "owner": "/people/teacher2",
+        "contentBy": {
+          "name": "Koro Mana",
+          "personId": "teacher2"
+        },
+        "mappedBy": {
+          "name": "Koro Mana",
+          "personId": "teacher2"
+        }
+      }
+    }
+  },
+  "slugs": {
+    "intro-navigation": {
+      "name": "intro-navigation",
+      "courseId": "course1",
+      "owner": "/people/teacher1",
+      "active": true
+    },
+    "advanced-navigation": {
+      "name": "advanced-navigation",
+      "courseId": "course2",
+      "owner": "/people/teacher2",
+      "active": true
+    },
+    "navigation-mastery": {
+      "name": "navigation-mastery",
+      "courseId": "course3",
+      "owner": "/people/teacher2",
+      "active": false
+    }
+  },
+  "map-nodes": {
+    "course1": {
+      "node1": {
+        "id": "node1",
+        "title": "Introduction Node",
+        "description": "Starting point for the course",
+        "type": "start",
+        "position": { "x": 100, "y": 100 },
+        "createdBy": "teacher1",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "status": "active"
+      },
+      "node2": {
+        "id": "node2",
+        "title": "Basic Concepts",
+        "description": "Fundamental navigation concepts",
+        "type": "content",
+        "position": { "x": 300, "y": 100 },
+        "createdBy": "teacher1",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "status": "active"
+      },
+      "node3": {
+        "id": "node3",
+        "title": "Practice Exercise",
+        "description": "Hands-on navigation practice",
+        "type": "exercise",
+        "position": { "x": 500, "y": 100 },
+        "createdBy": "teacher1",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "status": "active"
+      }
+    },
+    "course2": {
+      "node1": {
+        "id": "node1",
+        "title": "Advanced Start",
+        "description": "Advanced course starting point",
+        "type": "start",
+        "position": { "x": 100, "y": 100 },
+        "createdBy": "teacher2",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "status": "active"
+      },
+      "node2": {
+        "id": "node2",
+        "title": "Complex Navigation",
+        "description": "Advanced navigation techniques",
+        "type": "content",
+        "position": { "x": 300, "y": 100 },
+        "createdBy": "teacher2",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "status": "active"
+      }
+    },
+    "course3": {
+      "node1": {
+        "id": "node1",
+        "title": "Master Start",
+        "description": "Master level starting point",
+        "type": "start",
+        "position": { "x": 100, "y": 100 },
+        "createdBy": "teacher2",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "status": "draft"
+      }
+    },
+    "course4": {
+      "node1": {
+        "id": "node1",
+        "title": "Public Course Node",
+        "description": "A node in a public course",
+        "type": "start",
+        "position": { "x": 100, "y": 100 },
+        "createdBy": "teacher3",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "status": "active"
+      }
+    }
+  },
+  "map-edges": {
+    "course1": {
+      "edge1": {
+        "id": "edge1",
+        "from": "node1",
+        "to": "node2",
+        "label": "Next",
+        "type": "progression",
+        "createdBy": "teacher1",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "status": "active"
+      },
+      "edge2": {
+        "id": "edge2",
+        "from": "node2",
+        "to": "node3",
+        "label": "Continue",
+        "type": "progression",
+        "createdBy": "teacher1",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "status": "active"
+      }
+    },
+    "course2": {
+      "edge1": {
+        "id": "edge1",
+        "from": "node1",
+        "to": "node2",
+        "label": "Advanced Path",
+        "type": "progression",
+        "createdBy": "teacher2",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "status": "active"
+      }
+    },
+    "course3": {
+      "edge1": {
+        "id": "edge1",
+        "from": "node1",
+        "to": "node1",
+        "label": "Self Loop",
+        "type": "review",
+        "createdBy": "teacher2",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "status": "draft"
+      }
+    },
+    "course4": {
+      "edge1": {
+        "id": "edge1",
+        "from": "node1",
+        "to": "node1",
+        "label": "Public Edge",
+        "type": "progression",
+        "createdBy": "teacher3",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "status": "active"
+      }
+    }
+  }
+}
