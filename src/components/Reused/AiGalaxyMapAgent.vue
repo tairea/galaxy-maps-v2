@@ -265,7 +265,9 @@ Success means Captains feel supported.
                 .filter(Boolean)
                 .slice(0, 10);
               throw new Error(
-                `Could not find squad named "${squadName}". Available include: ${available.join(", ")}`,
+                `Could not find squad named "${squadName}". Available include: ${available.join(
+                  ", ",
+                )}`,
               );
               console.error("Error finding squad:", squadName, squads);
             }

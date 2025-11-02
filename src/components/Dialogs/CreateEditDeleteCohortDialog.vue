@@ -718,7 +718,7 @@ export default {
     },
     // delete
     deleteDialog() {
-      ((this.dialog = false), (this.dialogConfirm = true));
+      (this.dialog = false), (this.dialogConfirm = true);
     },
     cancelDeleteDialog() {
       this.dialogConfirm = false;

@@ -160,8 +160,8 @@
                 task.submissionRequired
                   ? { color: '#FAF200' }
                   : task.color
-                    ? { color: task.color + ' !important' }
-                    : '',
+                  ? { color: task.color + ' !important' }
+                  : '',
               ]"
             >
               {{ task.submissionRequired ? "YES" : "NO" }}
@@ -187,14 +187,14 @@
               completed
                 ? "COMPLETED"
                 : inreview
-                  ? "IN REVIEW"
-                  : unlocked
-                    ? "START MISSION"
-                    : active
-                      ? "ACTIVE MISSION"
-                      : declined
-                        ? "RETRY MISSION"
-                        : "LOCKED"
+                ? "IN REVIEW"
+                : unlocked
+                ? "START MISSION"
+                : active
+                ? "ACTIVE MISSION"
+                : declined
+                ? "RETRY MISSION"
+                : "LOCKED"
             }}
           </p>
 

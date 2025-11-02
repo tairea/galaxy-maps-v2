@@ -9,8 +9,8 @@
           loading
             ? "Generating…"
             : aiReport
-              ? "Generate New Status Report"
-              : "Generate Status Report"
+            ? "Generate New Status Report"
+            : "Generate Status Report"
         }}
       </v-btn>
       <div class="error" v-if="error">{{ error }}</div>
@@ -500,7 +500,7 @@ export default {
     },
     stringToColour(name) {
       // profile or owner
-      let str = name;
+      const str = name;
       return `hsl(${this.hashCode(str) % 360}, 100%, 35%)`;
     },
     hashCode(str) {

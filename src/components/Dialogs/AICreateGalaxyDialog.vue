@@ -676,8 +676,8 @@ export default {
               (isPdf
                 ? "application/pdf"
                 : isJson
-                  ? "application/json"
-                  : "application/octet-stream");
+                ? "application/json"
+                : "application/octet-stream");
             resolve({ name: file.name, mimeType: derivedMime, base64 });
           };
           reader.onerror = () => reject(new Error("read_fail"));
@@ -709,8 +709,8 @@ export default {
                   (isPdf
                     ? "application/pdf"
                     : isJson
-                      ? "application/json"
-                      : "application/octet-stream");
+                    ? "application/json"
+                    : "application/octet-stream");
                 resolve({ name: file.name, mimeType: derivedMime, storagePath: path });
               })
               .catch(() => reject(new Error("upload_fail")));
@@ -1149,7 +1149,9 @@ export default {
             const endTime = Date.now();
             const timeString = this.formatExecutionTime(startTime, endTime);
             console.log(
-              `✅ Second step completed successfully in ${timeString} (${endTime - startTime}ms total) - routing to AiGalaxyEdit`,
+              `✅ Second step completed successfully in ${timeString} (${
+                endTime - startTime
+              }ms total) - routing to AiGalaxyEdit`,
             );
 
             this.setAiGalaxyEditData(this.aiGeneratedGalaxyMap);
@@ -1178,7 +1180,9 @@ export default {
           const endTime = Date.now();
           const timeString = this.formatExecutionTime(startTime, endTime);
           console.log(
-            `⏸️ Stopping to ask follow-up questions after ${timeString} (${endTime - startTime}ms total)`,
+            `⏸️ Stopping to ask follow-up questions after ${timeString} (${
+              endTime - startTime
+            }ms total)`,
           );
           // Set loading to false here since we're stopping to ask questions
           this.loading = false;
@@ -1196,7 +1200,9 @@ export default {
           const endTime = Date.now();
           const timeString = this.formatExecutionTime(startTime, endTime);
           console.log(
-            `⚠️ Second step ended with unexpected response after ${timeString} (${endTime - startTime}ms total)`,
+            `⚠️ Second step ended with unexpected response after ${timeString} (${
+              endTime - startTime
+            }ms total)`,
           );
         }
       } catch (error) {
@@ -1343,10 +1349,10 @@ export default {
               (typeof planet.missionInstructions === "string"
                 ? planet.missionInstructions
                 : this.isStructuredMissionInstructions(planet.missionInstructions)
-                  ? this.formatMissionInstructionsToHtml(planet.missionInstructions)
-                  : typeof planet.instructions === "string"
-                    ? planet.instructions
-                    : "");
+                ? this.formatMissionInstructionsToHtml(planet.missionInstructions)
+                : typeof planet.instructions === "string"
+                ? planet.instructions
+                : "");
 
             // Prefer unified missionInstructions if present
             if (missionInstructionsHtmlString) {

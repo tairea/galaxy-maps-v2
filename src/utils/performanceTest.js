@@ -167,7 +167,9 @@ function calculatePerformanceIndicators(nodes, edges, boundaries) {
   if (boundaries.width > 2000 || boundaries.height > 2000) {
     indicators.largeCoordinateRange = {
       level: "warning",
-      message: `Large coordinate range (${boundaries.width.toFixed(0)} x ${boundaries.height.toFixed(0)}) may cause zoom issues`,
+      message: `Large coordinate range (${boundaries.width.toFixed(
+        0,
+      )} x ${boundaries.height.toFixed(0)}) may cause zoom issues`,
     };
   }
 
@@ -177,7 +179,9 @@ function calculatePerformanceIndicators(nodes, edges, boundaries) {
     if (density > 0.05) {
       indicators.highNodeDensity = {
         level: "warning",
-        message: `High node density (${density.toFixed(4)}) may cause overlapping and performance issues`,
+        message: `High node density (${density.toFixed(
+          4,
+        )}) may cause overlapping and performance issues`,
       };
     }
   }

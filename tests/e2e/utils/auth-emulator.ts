@@ -58,9 +58,9 @@ export const fetchLatestEmailVerificationLink = async (
     if (match?.oobCode) {
       const oobLink =
         match.oobLink ??
-        `${baseUrl}/emulator/action?mode=verifyEmail&oobCode=${match.oobCode}&apiKey=${encodeURIComponent(
-          "dummy-api-key",
-        )}`;
+        `${baseUrl}/emulator/action?mode=verifyEmail&oobCode=${
+          match.oobCode
+        }&apiKey=${encodeURIComponent("dummy-api-key")}`;
 
       return {
         email: match.email ?? email,

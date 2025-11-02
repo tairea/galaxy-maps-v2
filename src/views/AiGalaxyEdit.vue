@@ -1234,8 +1234,8 @@ export default {
         planet.missionInstructionsObject && typeof planet.missionInstructionsObject === "object"
           ? planet.missionInstructionsObject
           : typeof planet.missionInstructions === "object"
-            ? planet.missionInstructions
-            : null;
+          ? planet.missionInstructions
+          : null;
 
       return {
         id: `star[${starIndex}].planet[${planetIndex}]`,
@@ -2946,7 +2946,9 @@ export default {
         const endTime = Date.now();
         const timeString = this.formatExecutionTime(startTime, endTime);
         console.log(
-          `🔄 Galaxy regeneration process completed after ${timeString} (${endTime - startTime}ms total)`,
+          `🔄 Galaxy regeneration process completed after ${timeString} (${
+            endTime - startTime
+          }ms total)`,
         );
 
         console.log("🔄 Galaxy regeneration response:", result);
@@ -4113,8 +4115,8 @@ export default {
         parsedStarIndex != null
           ? parsedStarIndex
           : typeof starIndex === "number"
-            ? starIndex
-            : null;
+          ? starIndex
+          : null;
       this.taskEditingPlanetIndex = parsedPlanetIndex != null ? parsedPlanetIndex : null;
       this.activeMissionPath = planetId;
 
@@ -4329,8 +4331,8 @@ export default {
             uniqueTopicIds.length === 1
               ? uniqueTopicIds[0]
               : starIndex != null
-                ? `star-${starIndex}`
-                : null;
+              ? `star-${starIndex}`
+              : null;
         }
 
         if (topicId) {
@@ -4490,7 +4492,9 @@ export default {
           const endTime = Date.now();
           const timeString = this.formatExecutionTime(startTime, endTime);
           console.log(
-            `✅ Structure refinement with clarification completed in ${timeString} (${endTime - startTime}ms total)`,
+            `✅ Structure refinement with clarification completed in ${timeString} (${
+              endTime - startTime
+            }ms total)`,
           );
         } else {
           const clarificationResponse = await refineGalaxyMapWithClarification(
@@ -4546,7 +4550,9 @@ export default {
           const endTime = Date.now();
           const timeString = this.formatExecutionTime(startTime, endTime);
           console.log(
-            `✅ Galaxy refinement with clarification completed in ${timeString} (${endTime - startTime}ms total)`,
+            `✅ Galaxy refinement with clarification completed in ${timeString} (${
+              endTime - startTime
+            }ms total)`,
           );
         }
       } catch (error) {
@@ -4701,7 +4707,9 @@ After each edit or structural change, briefly validate the update’s success by
       const endTime = Date.now();
       const timeString = this.formatExecutionTime(startTime, endTime);
       console.log(
-        `🔍 Galaxy refinement process completed after ${timeString} (${endTime - startTime}ms total)`,
+        `🔍 Galaxy refinement process completed after ${timeString} (${
+          endTime - startTime
+        }ms total)`,
       );
 
       console.log("🔍 Galaxy refinement response:", refineGalaxyWithAiResponse);

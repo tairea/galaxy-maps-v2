@@ -400,7 +400,7 @@ export default {
     beforeDrawing(ctx) {
       const oldTime = this.time;
       this.time = new Date();
-      let delta = oldTime == null ? 1 : (this.time.getTime() - oldTime.getTime()) / 1000;
+      const delta = oldTime == null ? 1 : (this.time.getTime() - oldTime.getTime()) / 1000;
       const strokeColor = this.$vuetify.theme.isDark
         ? "rgba(255, 255, 255, 0.15)"
         : "rgba(0, 0, 0, 0.15)";
@@ -758,8 +758,8 @@ export default {
       const numberOfGalaxiesPerRow = this.onePerRow
         ? 1
         : this.isMobile
-          ? 3
-          : Math.ceil(Math.sqrt(this.courses.length));
+        ? 3
+        : Math.ceil(Math.sqrt(this.courses.length));
 
       let currentColWidth = 0;
       let currrentRowHeight = 0;

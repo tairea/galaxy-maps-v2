@@ -24,7 +24,9 @@
           <p class="mt-3 mb-1 border-bottom-missionAccent">{{ formatDate(date.date) }}</p>
           <div
             v-for="(activity, activityIndex) in date.activities"
-            :key="`activity-${yearIndex}-${dateIndex}-${activityIndex}-${activity.id || activity.timeStamp.time}`"
+            :key="`activity-${yearIndex}-${dateIndex}-${activityIndex}-${
+              activity.id || activity.timeStamp.time
+            }`"
             class="ma-0"
           >
             <!-- TIME -->
