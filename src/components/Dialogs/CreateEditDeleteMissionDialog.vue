@@ -615,10 +615,12 @@ export default {
       if (newVal && this.taskToEdit) {
         Object.assign(this.task, this.taskToEdit);
         // If there's existing HTML content, set it in the Quill editor
-        if (this.task.description && this.task.description.trim()) {
+        // Prioritize missionInstructionsHtmlString over description for consistency with other components
+        const contentToDisplay = this.task.missionInstructionsHtmlString || this.task.description;
+        if (contentToDisplay && contentToDisplay.trim()) {
           this.$nextTick(() => {
             // Clean the HTML before setting it to prevent empty paragraphs
-            const cleanedHtml = this.sanitizeHtmlEdges(this.task.description);
+            const cleanedHtml = this.sanitizeHtmlEdges(contentToDisplay);
             this.setQuillContent(cleanedHtml);
           });
         }
