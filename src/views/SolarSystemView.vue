@@ -217,7 +217,9 @@ export default {
     this.setCurrentCourseId(this.courseId);
     this.setCurrentTopicId(this.topicId);
     console.log(
-      `⏱️ Step 1 (setCurrentCourseId/TopicId): ${((performance.now() - step1Start) / 1000).toFixed(3)}s`,
+      `⏱️ Step 1 (setCurrentCourseId/TopicId): ${((performance.now() - step1Start) / 1000).toFixed(
+        3,
+      )}s`,
     );
 
     // load Topic & course data
@@ -232,7 +234,10 @@ export default {
       await this.refreshPersonTopicsAndTasks(this.person.id);
     }
     console.log(
-      `⏱️ Step 3 (refreshTasks/refreshPersonTopicsAndTasks): ${((performance.now() - step3Start) / 1000).toFixed(3)}s`,
+      `⏱️ Step 3 (refreshTasks/refreshPersonTopicsAndTasks): ${(
+        (performance.now() - step3Start) /
+        1000
+      ).toFixed(3)}s`,
     );
 
     // set active task
@@ -320,7 +325,9 @@ export default {
         this.user.data.admin ||
         (this.course?.collaboratorIds && this.course.collaboratorIds.includes(this.person.id));
       console.log(
-        `⏱️ teacher computed: ${((performance.now() - startTime) / 1000).toFixed(3)}s (result: ${result})`,
+        `⏱️ teacher computed: ${((performance.now() - startTime) / 1000).toFixed(
+          3,
+        )}s (result: ${result})`,
       );
       return result;
     },
@@ -330,7 +337,9 @@ export default {
         console.log("tasks have orderIndex, sorting by orderIndex");
         const result = this.topicTasks.sort((a, b) => a.orderIndex - b.orderIndex);
         console.log(
-          `⏱️ sortedTopicTasks (by orderIndex): ${((performance.now() - startTime) / 1000).toFixed(3)}s`,
+          `⏱️ sortedTopicTasks (by orderIndex): ${((performance.now() - startTime) / 1000).toFixed(
+            3,
+          )}s`,
         );
         return result;
       } else {
@@ -345,7 +354,9 @@ export default {
           }
         });
         console.log(
-          `⏱️ sortedTopicTasks (by timestamp): ${((performance.now() - startTime) / 1000).toFixed(3)}s`,
+          `⏱️ sortedTopicTasks (by timestamp): ${((performance.now() - startTime) / 1000).toFixed(
+            3,
+          )}s`,
         );
         return result;
       }
@@ -356,7 +367,9 @@ export default {
         console.log("tasks have orderIndex, sorting by orderIndex");
         const result = this.personTasks.sort((a, b) => a.orderIndex - b.orderIndex);
         console.log(
-          `⏱️ sortedPersonTasks (by orderIndex): ${((performance.now() - startTime) / 1000).toFixed(3)}s`,
+          `⏱️ sortedPersonTasks (by orderIndex): ${((performance.now() - startTime) / 1000).toFixed(
+            3,
+          )}s`,
         );
         return result;
       } else {
@@ -371,7 +384,9 @@ export default {
           }
         });
         console.log(
-          `⏱️ sortedPersonTasks (by timestamp): ${((performance.now() - startTime) / 1000).toFixed(3)}s`,
+          `⏱️ sortedPersonTasks (by timestamp): ${((performance.now() - startTime) / 1000).toFixed(
+            3,
+          )}s`,
         );
         return result;
       }
@@ -430,7 +445,10 @@ export default {
       const step1Start = performance.now();
       const peopleInCourse = await fetchAllPeopleInCourseByCourseId(this.courseId);
       console.log(
-        `⏱️ getPeopleInTopic - fetchAllPeopleInCourseByCourseId: ${((performance.now() - step1Start) / 1000).toFixed(3)}s (found ${peopleInCourse.length} people)`,
+        `⏱️ getPeopleInTopic - fetchAllPeopleInCourseByCourseId: ${(
+          (performance.now() - step1Start) /
+          1000
+        ).toFixed(3)}s (found ${peopleInCourse.length} people)`,
       );
 
       const step2Start = performance.now();
@@ -447,13 +465,17 @@ export default {
         }),
       );
       console.log(
-        `⏱️ getPeopleInTopic - fetchPersonsTopicByPersonIdCourseIdTopicId (${peopleInCourse.length} calls): ${((performance.now() - step2Start) / 1000).toFixed(3)}s`,
+        `⏱️ getPeopleInTopic - fetchPersonsTopicByPersonIdCourseIdTopicId (${
+          peopleInCourse.length
+        } calls): ${((performance.now() - step2Start) / 1000).toFixed(3)}s`,
       );
 
       this.peopleInTopic = people;
       this.loadingPeople = false;
       console.log(
-        `🎯 getPeopleInTopic total time: ${((performance.now() - startTime) / 1000).toFixed(3)}s (found ${people.length} active people)`,
+        `🎯 getPeopleInTopic total time: ${((performance.now() - startTime) / 1000).toFixed(
+          3,
+        )}s (found ${people.length} active people)`,
       );
     },
     async missionStarted(taskId) {
@@ -698,6 +720,7 @@ export default {
   }
 }
 #right-section {
+  margin-top: 30px;
   width: 20%;
   height: 100%;
   display: flex;

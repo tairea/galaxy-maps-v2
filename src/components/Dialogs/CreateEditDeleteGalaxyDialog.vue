@@ -1170,7 +1170,7 @@ export default {
       if (this.privateDialog == false && this.peopleInCourse.length) {
         this.privateDialog = true;
       } else {
-        ((this.privateDialog = false), (this.dialog = false), (this.dialogConfirm = true));
+        (this.privateDialog = false), (this.dialog = false), (this.dialogConfirm = true);
       }
     },
     cancelDeleteDialog() {

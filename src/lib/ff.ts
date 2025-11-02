@@ -1315,7 +1315,7 @@ export const sendGenericEmail = async (
   to: string,
   subject: string,
   body: string,
-  isHtml: boolean = false,
+  isHtml = false,
 ): Promise<{ success: boolean; message: string }> => {
   const data = {
     to,

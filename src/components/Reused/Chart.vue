@@ -201,8 +201,8 @@ export default {
                   typeof dataPoint.raw === "number"
                     ? dataPoint.raw
                     : typeof dataPoint.parsed === "number"
-                      ? dataPoint.parsed
-                      : parseFloat(dataPoint.formattedValue);
+                    ? dataPoint.parsed
+                    : parseFloat(dataPoint.formattedValue);
                 const hm = this.formatDecimalHours(rawValue);
                 divMiddleRow.innerHTML = `
                 <tr>

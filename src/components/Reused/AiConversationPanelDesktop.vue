@@ -178,7 +178,11 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
       ${formattedTasks}`;
 
       if (activeMission) {
-        contextMsg += `\n\n#CURRENT ACTIVE MISSION is: "${activeMission.title}" and its instructions are: ${activeMission?.missionInstructionsHtmlString || activeMission?.description || ""}
+        contextMsg += `\n\n#CURRENT ACTIVE MISSION is: "${
+          activeMission.title
+        }" and its instructions are: ${
+          activeMission?.missionInstructionsHtmlString || activeMission?.description || ""
+        }
         \n\n
         Please focus on helping the navigator complete the missions in this Star System, so they can progress on to the next Star System and complete the entire Galaxy Map.`;
       }
@@ -188,7 +192,9 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
         const formattedYoutube = youtubeReferences
           .map((ref, index) => {
             const urlDetail = ref.url ? `, url: ${ref.url}` : "";
-            return `YouTube ${index + 1}: videoId ${ref.videoId} (mission: "${ref.missionTitle}"${urlDetail})`;
+            return `YouTube ${index + 1}: videoId ${ref.videoId} (mission: "${
+              ref.missionTitle
+            }"${urlDetail})`;
           })
           .join("\n      ");
         contextMsg += `\n\nMission materials include the following videos:\n      ${formattedYoutube}\n      Review any useful insights from these before guiding the Navigator through video-dependent steps.`;

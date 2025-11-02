@@ -416,13 +416,17 @@ export default {
       if (courseData.totalArea > 1000000) {
         issues.push({
           type: "Large Boundary",
-          description: `Course has a very large boundary area (${courseData.totalArea.toFixed(0)}), which may slow down zoom animations.`,
+          description: `Course has a very large boundary area (${courseData.totalArea.toFixed(
+            0,
+          )}), which may slow down zoom animations.`,
           severity: "high",
         });
       } else if (courseData.totalArea > 500000) {
         issues.push({
           type: "Moderate Boundary",
-          description: `Course has a large boundary area (${courseData.totalArea.toFixed(0)}), monitor zoom performance.`,
+          description: `Course has a large boundary area (${courseData.totalArea.toFixed(
+            0,
+          )}), monitor zoom performance.`,
           severity: "medium",
         });
       }
@@ -431,13 +435,17 @@ export default {
       if (courseData.complexityScore > 50) {
         issues.push({
           type: "High Complexity",
-          description: `Course has a very high complexity score (${courseData.complexityScore.toFixed(1)}), indicating potential performance issues.`,
+          description: `Course has a very high complexity score (${courseData.complexityScore.toFixed(
+            1,
+          )}), indicating potential performance issues.`,
           severity: "high",
         });
       } else if (courseData.complexityScore > 25) {
         issues.push({
           type: "Moderate Complexity",
-          description: `Course has a high complexity score (${courseData.complexityScore.toFixed(1)}), monitor performance.`,
+          description: `Course has a high complexity score (${courseData.complexityScore.toFixed(
+            1,
+          )}), monitor performance.`,
           severity: "medium",
         });
       }
@@ -447,7 +455,9 @@ export default {
       if (edgeDensity > 3) {
         issues.push({
           type: "High Edge Density",
-          description: `Course has high edge density (${edgeDensity.toFixed(2)}), which may cause network layout issues.`,
+          description: `Course has high edge density (${edgeDensity.toFixed(
+            2,
+          )}), which may cause network layout issues.`,
           severity: "medium",
         });
       }

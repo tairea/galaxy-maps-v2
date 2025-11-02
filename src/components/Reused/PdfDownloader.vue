@@ -78,7 +78,7 @@ export default {
         // Since PdfDownloader might be nested in GalaxyInfo, we need to traverse up to find the main component
         let currentParent = this.$parent;
         let treeviewItems = null;
-        let debugInfo = [];
+        const debugInfo = [];
 
         // Look for treeview items in parent components
         while (currentParent && !treeviewItems) {
@@ -260,7 +260,7 @@ export default {
         return "";
       }
 
-      let htmlContent = `
+      const htmlContent = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -558,14 +558,20 @@ export default {
                              decoding="sync"
                              onload="this.style.display='block'; if(this.nextElementSibling){this.nextElementSibling.style.display='none';}"
                              onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
-                        <div class="galaxy-placeholder" style="display:${src ? "none" : "flex"}">${initials}</div>
+                        <div class="galaxy-placeholder" style="display:${
+                          src ? "none" : "flex"
+                        }">${initials}</div>
                       `;
                     })()}
                 </div>
                 <div class="title-info">
-                    <div class="galaxy-status">${this.boundCourse?.status || "UNLISTED"} GALAXY</div>
+                    <div class="galaxy-status">${
+                      this.boundCourse?.status || "UNLISTED"
+                    } GALAXY</div>
                     <h1 class="galaxy-title">${this.boundCourse?.title || "Untitled Galaxy"}</h1>
-                    <div class="galaxy-description">${this.boundCourse?.description || "No description available"}</div>
+                    <div class="galaxy-description">${
+                      this.boundCourse?.description || "No description available"
+                    }</div>
                 </div>
             </div>
         </div>
@@ -595,7 +601,9 @@ export default {
                           ${starData.children
                             .map(
                               (planet, planetIndex) =>
-                                `${planetIndex === starData.children.length - 1 ? "└─" : "├─"} 🪐 ${planet.name}`,
+                                `${planetIndex === starData.children.length - 1 ? "└─" : "├─"} 🪐 ${
+                                  planet.name
+                                }`,
                             )
                             .join("<br>")}
                       </div>
@@ -626,7 +634,11 @@ export default {
                   <div class="planet-left">
                       <h3 class="planet-title avoid-break">🪐 ${planet.name}</h3>
                       <div class="planet-description">
-                          ${planet.children?.[0]?.description?.intro || planet.description || "No description available"}
+                          ${
+                            planet.children?.[0]?.description?.intro ||
+                            planet.description ||
+                            "No description available"
+                          }
                       </div>
                       <div class="notes-section">
                           <div class="notes-title">Notes:</div>

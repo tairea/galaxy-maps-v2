@@ -461,9 +461,13 @@ export default {
             // Fetch student details to show in status message
             const student = await fetchPersonByPersonId(studentId, cohort.id);
             if (student) {
-              this.statusMessage = `Assigning Galaxy Map to Navigator ${student.firstName || "Unknown"} ${student.lastName || "Navigator"} (${i + 1}/${cohort.students.length})`;
+              this.statusMessage = `Assigning Galaxy Map to Navigator ${
+                student.firstName || "Unknown"
+              } ${student.lastName || "Navigator"} (${i + 1}/${cohort.students.length})`;
             } else {
-              this.statusMessage = `Assigning Galaxy Map to Navigator ${i + 1}/${cohort.students.length}`;
+              this.statusMessage = `Assigning Galaxy Map to Navigator ${i + 1}/${
+                cohort.students.length
+              }`;
             }
             await assignCourseToPerson(studentId, course.id);
           }

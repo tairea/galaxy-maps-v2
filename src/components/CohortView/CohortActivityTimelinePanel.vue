@@ -520,7 +520,9 @@ export default {
               id: `${course.id}-${person.id || personName}-${act.index || when.getTime()}`,
               content: `<span class="tl-item ${status.toLowerCase()} ${type.toLowerCase()}"><b>${this.escapeHtml(
                 personName,
-              )}</b> ${this.escapeHtml(status)} ${this.escapeHtml(type)}: ${this.escapeHtml(title)}</span>`,
+              )}</b> ${this.escapeHtml(status)} ${this.escapeHtml(type)}: ${this.escapeHtml(
+                title,
+              )}</span>`,
               start: when,
               group: course.id,
               title: `${personName} ${status} ${type}: ${title}`,

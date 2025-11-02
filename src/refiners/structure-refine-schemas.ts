@@ -127,13 +127,12 @@ const InsertStarAfterOp = z.object({
     description: z.string().min(1),
     planets: z
       .array(
-        z
-          .object({
-            title: z.string().min(1),
-            description: z.string().min(1),
-            missionInstructions: MinimalMission.optional(),
-            missionInstructionsHtmlString: z.string().min(1).optional(),
-          }),
+        z.object({
+          title: z.string().min(1),
+          description: z.string().min(1),
+          missionInstructions: MinimalMission.optional(),
+          missionInstructionsHtmlString: z.string().min(1).optional(),
+        }),
       )
       .min(1),
   }),
@@ -172,13 +171,12 @@ const ReplaceStarFieldsOp = z.object({
 const InsertPlanetAfterOp = z.object({
   op: z.literal("insert_planet_after"),
   target: TargetPlanet,
-  newPlanet: z
-    .object({
-      title: z.string().min(1),
-      description: z.string().min(1),
-      missionInstructions: MinimalMission.optional(),
-      missionInstructionsHtmlString: z.string().min(1).optional(),
-    }),
+  newPlanet: z.object({
+    title: z.string().min(1),
+    description: z.string().min(1),
+    missionInstructions: MinimalMission.optional(),
+    missionInstructionsHtmlString: z.string().min(1).optional(),
+  }),
 });
 
 const DeletePlanetOp = z.object({

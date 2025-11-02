@@ -163,9 +163,7 @@ function buildNewPlanet(op: Extract<StructurePatchOp, { op: "insert_planet_after
   } satisfies PlanetNode;
 }
 
-function buildSplitPlanets(
-  op: Extract<StructurePatchOp, { op: "split_planet" }>,
-): PlanetNode[] {
+function buildSplitPlanets(op: Extract<StructurePatchOp, { op: "split_planet" }>): PlanetNode[] {
   return op.newPlanets.map((planet, index) => ({
     id: createId("planet"),
     order: index,
