@@ -11,6 +11,7 @@ export class Planet {
   orbitStopped: boolean;
   taskName: string;
   taskIndex: number;
+  originalOrbitRadius: number;
 
   // Animation properties
   savedRadian: number; // Save the radian position when stopping
@@ -43,6 +44,7 @@ export class Planet {
     this.color = color;
     this.velocity = velocity;
     this.orbitRadius = orbitRadius;
+    this.originalOrbitRadius = orbitRadius;
     this.topicId = topicId;
     this.orbitStopped = false;
     this.taskName = taskName || "";
