@@ -7,7 +7,7 @@ An AI-powered learning and knowledge platform that visualizes journeys of knowle
 ## Features
 
 - 🪐 **Visual Learning Journeys** — Explore personalized “Galaxies” of knowledge mapped as Stars (learning milestone), and Planets (Missions with actionable tasks).
-- 🤖 **AI-Generated Maps** — Galaxy Maps can be created manually or dynamically generated using OpenAI’s GPT models.
+- 🤖 **AI-Generated Maps** — Galaxy Maps can be created manually or dynamically generated using AI models via API.
 - 📈 **Progress Tracking** — Each mission start/completion triggers an xApi call that stores an xApi record in the LRS (Learning Record Store). This data allows Captains (map creators) to be able to track Navigators (users) progression through maps.
 - 🔐 **Firebase Auth & Firestore** — Secure user accounts, real-time database syncing, and scalable data storage.
 - ⚡ **Modern Frontend** — Built with Vue 2 & Vuetify 2 + Vite for speed and a seamless user experience.
@@ -183,83 +183,83 @@ All backend operations use Firebase Cloud Functions (callable from `src/lib/ff.t
 
 ### 📚 Cohort Management
 
-| Function                                      | Description                             |
-| --------------------------------------------- | --------------------------------------- |
-| `getCohorts`                                  | Fetch all cohorts                       |
-| `getCohortByCohortId`                         | Get cohort details by ID                |
-| `getStudentCohortsByPersonId`                 | Get cohorts for a specific student      |
-| `getCohortsByCourseId`                        | Get all cohorts in a course             |
-| `getCohortCoursesActivityByCohortId`          | Fetch cohort activity data              |
-| `getCohortStudentsActivityTimeByCohortId`     | Track student time in cohort            |
-| `addMeToCohort`                               | Join a cohort (self-enrollment)         |
-| `addStudentToCohort`                          | Assign student to cohort                |
+| Function                                  | Description                        |
+| ----------------------------------------- | ---------------------------------- |
+| `getCohorts`                              | Fetch all cohorts                  |
+| `getCohortByCohortId`                     | Get cohort details by ID           |
+| `getStudentCohortsByPersonId`             | Get cohorts for a specific student |
+| `getCohortsByCourseId`                    | Get all cohorts in a course        |
+| `getCohortCoursesActivityByCohortId`      | Fetch cohort activity data         |
+| `getCohortStudentsActivityTimeByCohortId` | Track student time in cohort       |
+| `addMeToCohort`                           | Join a cohort (self-enrollment)    |
+| `addStudentToCohort`                      | Assign student to cohort           |
 
 ### 🌌 Course/Galaxy Management
 
-| Function                                      | Description                             |
-| --------------------------------------------- | --------------------------------------- |
-| `getCourses`                                  | Fetch all courses/galaxies              |
-| `getCourseByCourseId`                         | Get course details by ID                |
-| `getCourseMapEdgesAndNodesByCourseId`         | Fetch galaxy map nodes and edges        |
-| `getPeopleByCourseId`                         | Get all students in a course            |
-| `assignCourseToMe`                            | Self-assign a course                    |
-| `assignCourseToStudent`                       | Assign course to student                |
-| `removeMeFromCourse`                          | Unenroll from course                    |
-| `removeStudentFromCourse`                     | Remove student from course              |
+| Function                              | Description                      |
+| ------------------------------------- | -------------------------------- |
+| `getCourses`                          | Fetch all courses/galaxies       |
+| `getCourseByCourseId`                 | Get course details by ID         |
+| `getCourseMapEdgesAndNodesByCourseId` | Fetch galaxy map nodes and edges |
+| `getPeopleByCourseId`                 | Get all students in a course     |
+| `assignCourseToMe`                    | Self-assign a course             |
+| `assignCourseToStudent`               | Assign course to student         |
+| `removeMeFromCourse`                  | Unenroll from course             |
+| `removeStudentFromCourse`             | Remove student from course       |
 
 ### ⭐ Topic (Star) & Task (Mission) Management
 
-| Function                                      | Description                             |
-| --------------------------------------------- | --------------------------------------- |
-| `getTopicByCourseIdTopicId`                   | Get topic/star details                  |
-| `getTasksByCourseIdTopicId`                   | Fetch all tasks for a topic             |
-| `getTaskByCourseIdTopicIdTaskId`              | Get specific task details               |
-| `createTaskWithCourseIdTopicId`               | Create new mission                      |
-| `updateTaskByCourseIdTopicIdTaskId`           | Update mission                          |
-| `deleteTaskByCourseIdTopicIdTaskId`           | Delete mission                          |
-| `updateTaskOrderIndexesByCourseIdTopicId`     | Reorder missions                        |
+| Function                                  | Description                 |
+| ----------------------------------------- | --------------------------- |
+| `getTopicByCourseIdTopicId`               | Get topic/star details      |
+| `getTasksByCourseIdTopicId`               | Fetch all tasks for a topic |
+| `getTaskByCourseIdTopicIdTaskId`          | Get specific task details   |
+| `createTaskWithCourseIdTopicId`           | Create new mission          |
+| `updateTaskByCourseIdTopicIdTaskId`       | Update mission              |
+| `deleteTaskByCourseIdTopicIdTaskId`       | Delete mission              |
+| `updateTaskOrderIndexesByCourseIdTopicId` | Reorder missions            |
 
 ### 🏢 Organization Management
 
-| Function                                              | Description                     |
-| ----------------------------------------------------- | ------------------------------- |
-| `getOrganisations`                                    | Fetch all organizations         |
-| `getOrganisationByOrganisationId`                     | Get organization details        |
-| `getPeopleByOrganisationId`                           | Get members of organization     |
-| `createOrganisation`                                  | Create new organization         |
-| `updateOrganisationByOrganisationId`                  | Update organization             |
-| `addPersonToOrganisationByOrganisationIdAndPersonId`  | Add member to organization      |
+| Function                                                  | Description                     |
+| --------------------------------------------------------- | ------------------------------- |
+| `getOrganisations`                                        | Fetch all organizations         |
+| `getOrganisationByOrganisationId`                         | Get organization details        |
+| `getPeopleByOrganisationId`                               | Get members of organization     |
+| `createOrganisation`                                      | Create new organization         |
+| `updateOrganisationByOrganisationId`                      | Update organization             |
+| `addPersonToOrganisationByOrganisationIdAndPersonId`      | Add member to organization      |
 | `removePersonFromOrganisationByOrganisationIdAndPersonId` | Remove member from organization |
-| `deleteOrganisationByOrganisationId`                  | Delete organization             |
+| `deleteOrganisationByOrganisationId`                      | Delete organization             |
 
 ### 👤 User/Person Management
 
-| Function                  | Description                 |
-| ------------------------- | --------------------------- |
-| `getPersonByPersonId`     | Get user profile by ID      |
-| `getPersonByEmail`        | Find user by email          |
-| `createNewUser`           | Create new user account     |
-| `updatePersonByPersonId`  | Update user profile         |
+| Function                 | Description             |
+| ------------------------ | ----------------------- |
+| `getPersonByPersonId`    | Get user profile by ID  |
+| `getPersonByEmail`       | Find user by email      |
+| `createNewUser`          | Create new user account |
+| `updatePersonByPersonId` | Update user profile     |
 
 ### 📊 Progress & Activity Tracking
 
-| Function                                              | Description                             |
-| ----------------------------------------------------- | --------------------------------------- |
-| `getPersonTopicsByPersonIdCourseId`                   | Get student's topics progress           |
-| `getPersonTopicByPersonIdCourseIdTopicId`             | Get specific topic progress             |
-| `getPersonTasksByPersonIdCourseIdTopicId`             | Get student's task progress             |
-| `getStudentActivityLogByPersonId`                     | Fetch activity timeline                 |
-| `getStudentCoursesActivityByPersonId`                 | Overview of all course activities       |
-| `getStudentCoursesTimeDataByPersonId`                 | Time tracking across courses            |
-| `getStudentCoursesTimeDataByPersonIdStartAtEndAt`     | Time data with date range               |
-| `getStudentSubmissionsByPersonId`                     | Get student submissions                 |
-| `getStudentRequestsByPersonId`                        | Get help requests                       |
+| Function                                          | Description                       |
+| ------------------------------------------------- | --------------------------------- |
+| `getPersonTopicsByPersonIdCourseId`               | Get student's topics progress     |
+| `getPersonTopicByPersonIdCourseIdTopicId`         | Get specific topic progress       |
+| `getPersonTasksByPersonIdCourseIdTopicId`         | Get student's task progress       |
+| `getStudentActivityLogByPersonId`                 | Fetch activity timeline           |
+| `getStudentCoursesActivityByPersonId`             | Overview of all course activities |
+| `getStudentCoursesTimeDataByPersonId`             | Time tracking across courses      |
+| `getStudentCoursesTimeDataByPersonIdStartAtEndAt` | Time data with date range         |
+| `getStudentSubmissionsByPersonId`                 | Get student submissions           |
+| `getStudentRequestsByPersonId`                    | Get help requests                 |
 
 ### 🆘 Request Management
 
-| Function                              | Description            |
-| ------------------------------------- | ---------------------- |
-| `deleteRequestByCourseIdRequestId`    | Delete help request    |
+| Function                           | Description         |
+| ---------------------------------- | ------------------- |
+| `deleteRequestByCourseIdRequestId` | Delete help request |
 
 ---
 
@@ -282,6 +282,7 @@ All backend operations use Firebase Cloud Functions (callable from `src/lib/ff.t
 **Firebase Configuration Error:**
 
 If you see an error about missing Firebase environment variables:
+
 1. Verify `.env` file exists in the project root
 2. Check that all `VITE_FIREBASE_*` variables are set
 3. Make sure you replaced placeholder values (e.g., "your-api-key-here")

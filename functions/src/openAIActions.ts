@@ -841,7 +841,7 @@ export const generateUnifiedGalaxyMapHttpsEndpoint = runWith({
         // Generate image using DALL-E API directly
         logger.info("Calling gpt-image-1 for image generation");
         const imageResponse = await openai.images.generate({
-          model: "gpt-image-1",
+          model: "gpt-image-1-mini",
           prompt: GalaxyMapImagePrompt + `Galaxy Map title: "${parsedResponse.title}"`,
           output_format: "png",
           background: "transparent",
@@ -990,7 +990,7 @@ export const generateGalaxyImageHttpsEndpoint = runWith({
   try {
     // Call DALL·E to generate image
     const imageResponse = await openai.images.generate({
-      model: "gpt-image-1",
+      model: "gpt-image-1-mini",
       prompt: GalaxyMapImagePrompt + `Galaxy Map title: "${title}"`,
       output_format: "png",
       background: "transparent",

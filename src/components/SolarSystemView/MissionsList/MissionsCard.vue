@@ -115,7 +115,10 @@
     </div> -->
 
         <!-- ===== MISSION DURATION & SUBMISSION SECTION ===== -->
-        <div v-if="!teacher && !isMobile" class="mission-section mission-section-overUnder">
+        <div
+          v-if="!teacher && !isMobile && (task.duration || task.submissionRequired)"
+          class="mission-section mission-section-overUnder"
+        >
           <!--  DURATION -->
           <div v-if="task.duration" class="section-overUnder d-flex justify-center flex-column">
             <v-tooltip v-if="isMobile" bottom>
@@ -160,8 +163,8 @@
                 task.submissionRequired
                   ? { color: '#FAF200' }
                   : task.color
-                  ? { color: task.color + ' !important' }
-                  : '',
+                    ? { color: task.color + ' !important' }
+                    : '',
               ]"
             >
               {{ task.submissionRequired ? "YES" : "NO" }}
@@ -187,14 +190,14 @@
               completed
                 ? "COMPLETED"
                 : inreview
-                ? "IN REVIEW"
-                : unlocked
-                ? "START MISSION"
-                : active
-                ? "ACTIVE MISSION"
-                : declined
-                ? "RETRY MISSION"
-                : "LOCKED"
+                  ? "IN REVIEW"
+                  : unlocked
+                    ? "START MISSION"
+                    : active
+                      ? "ACTIVE MISSION"
+                      : declined
+                        ? "RETRY MISSION"
+                        : "LOCKED"
             }}
           </p>
 

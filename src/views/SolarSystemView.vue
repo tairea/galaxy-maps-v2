@@ -128,20 +128,25 @@
           <v-toolbar color="baseAccent overline" light>Great work, Navigator!</v-toolbar>
           <v-card-text class="pa-0">
             <div class="overline text-center pa-12 baseAccent--text">
-              You have completed this System
+              You have completed this Star System
             </div>
           </v-card-text>
-          <v-card-actions class="justify-end">
-            <v-btn small text :to="'/galaxy/' + courseId">&lt;- back to galaxy</v-btn>
+          <v-card-actions class="justify-end pb-6">
+            <v-btn small text color="primary" :to="'/galaxy/' + courseId"
+              >&lt;- back to galaxy</v-btn
+            >
             <v-btn
               v-if="showNextSystemButton"
               small
               text
+              color="missionAccent"
               :loading="unlockingNextTopic"
               @click="nextTopic"
-              >next system -></v-btn
+              >next Star System -></v-btn
             >
-            <v-btn v-else small text :to="'/galaxy/' + courseId">No other unlocked Systems</v-btn>
+            <v-btn v-else small text :to="'/galaxy/' + courseId"
+              >No other unlocked Star Systems</v-btn
+            >
           </v-card-actions>
         </v-card>
       </template>

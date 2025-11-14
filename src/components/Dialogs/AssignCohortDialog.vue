@@ -349,16 +349,20 @@ export default {
   },
   watch: {
     dialog(newVal) {
-      if (newVal && !this.cohort)
-        this.cohort = this.teacherCohorts?.find((cohort) => cohort.id == this.currentCohortId);
+      if (newVal && !this.cohort && this.teachersCohorts)
+        this.cohort = this.teachersCohorts.find((cohort) => cohort.id == this.currentCohortId);
     },
   },
   computed: {
     ...mapState(useRootStore, ["currentCourseId", "currentCohortId", "person"]),
     cohortOptions() {
       // teacherCohorts && the courseCohort
-      this.cohort = this.teachersCohorts.find((cohort) => cohort.id === this.currentCourse.cohort);
-      return [this.cohort, ...this.teachersCohorts];
+      if (this.currentCourse && this.currentCourse.cohort && this.teachersCohorts) {
+        this.cohort = this.teachersCohorts.find(
+          (cohort) => cohort.id === this.currentCourse.cohort,
+        );
+      }
+      return this.cohort ? [this.cohort, ...this.teachersCohorts] : this.teachersCohorts || [];
     },
     isMobile() {
       return this.$vuetify.breakpoint.smAndDown;
@@ -380,6 +384,17 @@ export default {
     async assignCourseToPerson(profile) {
       this.loading = true;
 
+      // Validate that currentCourse exists
+      if (!this.currentCourse) {
+        this.setSnackbar({
+          show: true,
+          text: "No Galaxy Map selected",
+          color: "pink",
+        });
+        this.loading = false;
+        return;
+      }
+
       // If we dont already have the students Id, check if they already have an account using their email
       const personExists = await fetchPersonByEmail(profile.email);
       const inviter = this.person.firstName + " " + this.person.lastName;
@@ -398,11 +413,27 @@ export default {
     async handleAssignment(person, course) {
       console.log({ person });
       try {
+        // Validate course exists
+        if (!course || !course.id) {
+          throw new Error("No Galaxy Map selected.");
+        }
+
+        // Use selected cohort or default to course.cohort
+        let cohortToUse = this.cohort;
+        if (!cohortToUse && course.cohort) {
+          // Fetch the default cohort if not already loaded
+          cohortToUse = await fetchCohortByCohortId(course.cohort);
+        }
+
+        if (!cohortToUse || !cohortToUse.id) {
+          throw new Error("No Squad available for assignment.");
+        }
+
         await assignCourseToPerson(person.id, course.id);
-        await addPersonToCohort(person.id, this.cohort.id);
-        if (this.cohort.courses.length) {
+        await addPersonToCohort(person.id, cohortToUse.id);
+        if (cohortToUse.courses && cohortToUse.courses.length) {
           // Possible optimize to make this concurrent instead of sequential
-          for (const courseId of this.cohort.courses) {
+          for (const courseId of cohortToUse.courses) {
             // dont need to assign current course again
             if (courseId === course.id) continue;
             await assignCourseToPerson(person.id, courseId);

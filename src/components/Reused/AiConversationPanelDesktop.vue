@@ -62,6 +62,11 @@ import { mdiRobotExcited, mdiRobotExcitedOutline, mdiClose, mdiMicrophone, mdiSt
 import aiTalkingImage from "@/assets/robotTalking.gif";
 import { RealtimeAgent, RealtimeSession, OpenAIRealtimeWebRTC } from "@openai/agents-realtime";
 import { useAiConversationStore } from "@/store/aiConversation";
+import { aiConversationCompletedXAPIStatement } from "@/lib/veracityLRS";
+import useRootStore from "@/store/index";
+import { mapState } from "pinia";
+import { db } from "@/store/firestoreConfig";
+import firebase from "firebase/compat/app";
 
 export default {
   name: "AiConversationPanelDesktop",
@@ -74,6 +79,9 @@ export default {
   setup() {
     const aiConversationStore = useAiConversationStore();
     return { aiConversationStore };
+  },
+  computed: {
+    ...mapState(useRootStore, ["person"]),
   },
   data() {
     return {
@@ -103,6 +111,10 @@ export default {
       youtubeMcpServer: null,
       youtubeMcpServerInitPromise: null,
       youtubeMcpServerError: null,
+
+      // Conversation tracking for xAPI
+      conversationStartTime: null,
+      conversationModel: "gpt-realtime-mini",
 
       // Instructions
       GmMissionsAssistantInstructions: `
@@ -243,6 +255,10 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
       }
     },
     async closePanel() {
+      // Record xAPI statement before closing
+      console.log("🚪 [xAPI] Panel closing - attempting to record conversation completion");
+      this.recordConversationCompletion();
+
       // fully disconnect and reset UI
       if (this.session && this.transport) {
         try {
@@ -268,6 +284,8 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
       this.youtubeAgent = null;
       await this.teardownYoutubeMcpServer();
       this.aiConversationStore.clearTokenCache();
+      // Reset conversation tracking
+      this.conversationStartTime = null;
     },
     async initializeRealtimeAgent() {
       try {
@@ -306,7 +324,7 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
         console.log("[AI Panel][Agents] Main agent ready");
         this.transport = new OpenAIRealtimeWebRTC();
         const sessionConfig = {
-          model: "gpt-realtime",
+          model: this.conversationModel,
           transport: this.transport,
           turnDetection: {
             type: "semantic_vad",
@@ -337,6 +355,16 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
           this.connectionError = null;
           this.isListening = true;
           this.isTalking = false;
+          // Track conversation start time
+          this.conversationStartTime = new Date().toISOString();
+          console.log("🎬 [xAPI] AI Conversation STARTED", {
+            timestamp: this.conversationStartTime,
+            model: this.conversationModel,
+            personId: this.person?.id,
+            personName: this.person ? `${this.person.firstName} ${this.person.lastName}` : "N/A",
+            courseId: this.course?.id || "N/A",
+            topicId: this.topic?.id || "N/A",
+          });
           setTimeout(() => this.sendMissionContext(), 800);
         });
       s.on &&
@@ -344,6 +372,11 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
           this.isConnected = false;
           this.isListening = false;
           this.isTalking = false;
+          // Record xAPI statement when conversation ends
+          console.log(
+            "🔌 [xAPI] Session disconnected - attempting to record conversation completion",
+          );
+          this.recordConversationCompletion();
         });
 
       s.on &&
@@ -401,6 +434,15 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
           this.connectionError = null;
           this.isListening = true;
           this.isTalking = false;
+          // Track conversation start time
+          if (!this.conversationStartTime) {
+            this.conversationStartTime = new Date().toISOString();
+            console.log("🎬 [xAPI] AI Conversation STARTED (transport level)", {
+              timestamp: this.conversationStartTime,
+              model: this.conversationModel,
+              personId: this.person?.id,
+            });
+          }
           setTimeout(() => {
             this.sendMissionContext();
           }, 1000);
@@ -409,6 +451,11 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
           this.isConnected = false;
           this.isListening = false;
           this.isTalking = false;
+          // Record xAPI statement when conversation ends
+          console.log(
+            "🔌 [xAPI] Transport disconnected - attempting to record conversation completion",
+          );
+          this.recordConversationCompletion();
         });
 
         // user speaking
@@ -733,6 +780,162 @@ You are a personalised tutor AI inside *Galaxy Maps*, a platform that visualises
         !!process.versions &&
         typeof process.versions.node !== "undefined"
       );
+    },
+    recordConversationCompletion() {
+      // Try to get person from store directly if not available via computed
+      const rootStore = useRootStore();
+      const person = this.person?.id ? this.person : rootStore.person;
+
+      console.log("📝 [xAPI] recordConversationCompletion called", {
+        hasStartTime: !!this.conversationStartTime,
+        startTime: this.conversationStartTime,
+        hasPerson: !!person,
+        personId: person?.id,
+        personFromComputed: !!this.person?.id,
+        personFromStore: !!rootStore.person?.id,
+        hasCourse: !!this.course,
+        hasTopic: !!this.topic,
+        topicTasksLength: this.topicTasks?.length || 0,
+      });
+
+      // Calculate duration even if we can't record, so user can see it
+      const endedTimestamp = new Date().toISOString();
+      let durationSeconds = 0;
+      if (this.conversationStartTime) {
+        const startTime = new Date(this.conversationStartTime);
+        const endTime = new Date(endedTimestamp);
+        durationSeconds = Math.max(0, Math.floor((endTime - startTime) / 1000));
+      }
+
+      console.log("⏱️ [xAPI] Conversation duration calculated", {
+        started: this.conversationStartTime || "N/A",
+        ended: endedTimestamp,
+        durationSeconds: durationSeconds,
+        durationFormatted: `${Math.floor(durationSeconds / 60)}m ${durationSeconds % 60}s`,
+      });
+
+      // Only record if conversation was started
+      if (!this.conversationStartTime) {
+        console.warn("⚠️ [xAPI] Cannot record - no conversation start time");
+        return;
+      }
+      if (!person || !person.id) {
+        console.warn("⚠️ [xAPI] Cannot record - no person data", {
+          hasPerson: !!person,
+          personId: person?.id,
+          personObject: person,
+        });
+        return;
+      }
+
+      // Get active mission
+      const activeMission = this.topicTasks.find((task) => task.taskStatus === "active");
+      console.log("🎯 [xAPI] Active mission lookup", {
+        topicTasksLength: this.topicTasks?.length || 0,
+        activeMissionFound: !!activeMission,
+        activeMissionId: activeMission?.id || activeMission?.missionId || "N/A",
+        activeMissionTitle: activeMission?.title || "N/A",
+      });
+
+      // Prepare context for xAPI statement
+      const context = {
+        galaxy: this.course
+          ? {
+              id: this.course.id,
+              title: this.course.title,
+            }
+          : null,
+        system: this.topic
+          ? {
+              id: this.topic.id,
+              label: this.topic.label,
+            }
+          : null,
+        activeMission: activeMission
+          ? {
+              id: activeMission.id || activeMission.missionId,
+              missionId: activeMission.missionId || activeMission.id,
+              title: activeMission.title,
+            }
+          : null,
+        startedTimestamp: this.conversationStartTime,
+        endedTimestamp: endedTimestamp,
+        durationSeconds: durationSeconds,
+        model: this.conversationModel,
+      };
+
+      console.log("📤 [xAPI] Sending xAPI statement with context:", {
+        student: `${person.firstName} ${person.lastName}`,
+        course: context.galaxy?.title || "N/A",
+        topic: context.system?.label || "N/A",
+        task: context.activeMission?.title || "N/A",
+        duration: durationSeconds,
+        model: this.conversationModel,
+      });
+
+      // Send xAPI statement
+      aiConversationCompletedXAPIStatement(person, context);
+
+      // Save conversation transcript to Firestore
+      this.saveConversationTranscript(context, person);
+
+      // Reset conversation start time
+      this.conversationStartTime = null;
+      console.log("✅ [xAPI] Conversation completion recorded and start time reset");
+    },
+
+    async saveConversationTranscript(context, person) {
+      // Only save if we have a course ID
+      if (!context.galaxy?.id) {
+        console.warn("⚠️ [Firestore] Cannot save transcript - no course ID");
+        return;
+      }
+
+      // Get the conversation transcript from session history
+      let transcript = null;
+      if (this.session && this.session.history) {
+        transcript = this.session.history;
+        console.log("📝 [Firestore] Retrieved conversation transcript:", {
+          transcriptLength: Array.isArray(transcript) ? transcript.length : "not an array",
+          transcriptType: typeof transcript,
+        });
+      } else {
+        console.warn("⚠️ [Firestore] No session history available for transcript");
+      }
+
+      // Prepare the document data with context and transcript
+      const conversationData = {
+        ...context,
+        person: person
+          ? {
+              id: person.id,
+              firstName: person.firstName,
+              lastName: person.lastName,
+              email: person.email,
+            }
+          : null,
+        transcript: transcript,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      };
+
+      try {
+        // Save to Firestore: courses/{courseId}/ai-conversations/{conversationId}
+        const conversationRef = db
+          .collection("courses")
+          .doc(context.galaxy.id)
+          .collection("aiConversations")
+          .doc();
+
+        await conversationRef.set(conversationData);
+
+        console.log("✅ [Firestore] Conversation transcript saved successfully", {
+          courseId: context.galaxy.id,
+          conversationId: conversationRef.id,
+          hasTranscript: !!transcript,
+        });
+      } catch (error) {
+        console.error("💥 [Firestore] Failed to save conversation transcript:", error);
+      }
     },
   },
 };
