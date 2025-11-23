@@ -322,7 +322,12 @@ export default {
     };
   },
   watch: {
-    async courseId(newCourseId) {
+    async courseId(newCourseId, oldCourseId) {
+      // If courseId actually changed, clear the old course first
+      if (oldCourseId && oldCourseId !== newCourseId) {
+        await this.unbindCourse();
+      }
+
       this.mountedLoading = true;
 
       // Clear any existing timeout
@@ -383,6 +388,9 @@ export default {
     }, 5000); // 5 second timeout
 
     // this.course = await fetchCourseByCourseId(this.courseId);
+
+    // Clear any existing bound course first to avoid showing stale data
+    await this.unbindCourse();
 
     // bind course instead of fetch (above) so to make course reactive (eg in GalaxyInfo.vue)
     await this.bindCourseByCourseId(this.courseId);
@@ -476,7 +484,16 @@ export default {
     },
     isRestricted() {
       // If no course data loaded yet, show restricted (will show loading or error)
-      if (!this.boundCourse) return true;
+      if (!this.boundCourse || !this.boundCourse.id) return true;
+
+      // Check if boundCourse.id matches current courseId - if not, we're showing a stale course
+      if (this.boundCourse.id !== this.courseId) {
+        console.log("Restricted because boundCourse.id doesn't match courseId", {
+          boundCourseId: this.boundCourse.id,
+          courseId: this.courseId,
+        });
+        return true;
+      }
 
       // teacher or student is allowed
       if (this.teacher || this.student) {
@@ -536,6 +553,7 @@ export default {
       "setCurrentCourseId",
       "setPeopleInCourse",
       "bindCourseByCourseId",
+      "unbindCourse",
     ]),
     setUiMessage(message) {
       this.uiMessage = message;
@@ -1007,10 +1025,6 @@ export default {
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
   background: var(--v-background-base);
-}
-
-.back-button {
-  // Desktop back button styles remain unchanged
 }
 
 .back-button-mobile {

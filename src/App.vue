@@ -9,18 +9,19 @@
 </template>
 
 <script lang="ts">
+import Vue from "vue";
 import SnackBar from "@/components/Reused/SnackBar.vue";
-import Alpha from "@/components/GalaxyList/VersionStatus.vue";
+import VersionStatus from "@/components/GalaxyList/VersionStatus.vue";
 
-export default {
+export default Vue.extend({
   name: "App",
   components: {
     SnackBar,
-    Alpha,
+    VersionStatus,
   },
   computed: {
     shouldShowVersionStatus(): boolean {
-      const routeName = this.$route.name;
+      const routeName = (this as any).$route.name;
       return (
         routeName === "AllPublicGalaxiesList" ||
         routeName === "MyGalaxiesList" ||
@@ -32,7 +33,7 @@ export default {
       );
     },
   },
-};
+});
 </script>
 
 <style>

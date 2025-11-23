@@ -238,6 +238,9 @@ export default defineStore({
 
       return bindFirestoreRef("boundCourse", db.collection("courses").doc(courseId));
     }),
+    unbindCourse: firestoreAction(({ unbindFirestoreRef }) => {
+      unbindFirestoreRef("boundCourse", true); // reset: true clears the boundCourse
+    }),
     bindThisPersonsCourseTopics: firestoreAction(
       ({ bindFirestoreRef }, payload: { personId: string; courseId: string }) => {
         // Validate required fields before proceeding

@@ -1,0 +1,210 @@
+{
+  "people": {
+    "personId": {
+      "assignedCourses": ["string"],
+      "completedCourses": ["string"],
+      "discord": "string",
+      "displayName": "string",
+      "email": "string",
+      "firstName": "string",
+      "id": "string",
+      "image": {
+        "name": "string",
+        "url": "string"
+      },
+      "inviter": "string",
+      "lastName": "string",
+      "nsn": "string",
+      "parentEmail": "string",
+      "registered": {
+        "_nanoseconds": "number",
+        "_seconds": "number"
+      },
+      "xpPointsTotal": "number",
+      "courseId": {
+        "topicId": {
+          "color": "string",
+          "group": "string",
+          "id": "string",
+          "label": "string",
+          "taskTotal": "number",
+          "topicCreatedTimestamp": "timestamp",
+          "topicStartedTimestamp": "timestamp",
+          "topicStatus": "string",
+          "x": "number",
+          "y": "number",
+          "tasks": {
+            "taskId": {
+              "color": "string",
+              "description": "string",
+              "duration": "string",
+              "orderIndex": "number",
+              "slides": "string",
+              "submissionInstructions": "string",
+              "submissionRequired": "boolean",
+              "taskCreatedTimestamp": "timestamp",
+              "taskStartedTimestamp": "timestamp",
+              "taskStatus": "string",
+              "title": "string",
+              "video": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "courses": {
+    "courseId": {
+      "contentBy": {
+        "name": "string",
+        "personId": "string"
+      },
+      "description": "string",
+      "id": "string",
+      "image": {
+        "name": "string",
+        "url": "string"
+      },
+      "mappedBy": {
+        "name": "string",
+        "personId": "string"
+      },
+      "owner": "reference",
+      "status": "string",
+      "title": "string",
+      "topicTotal": "number",
+      "map-edges": {
+        "edgeId": {
+          "dashes": "boolean",
+          "from": "string",
+          "id": "string",
+          "to": "string"
+        }
+      },
+      "map-nodes": {
+        "nodeId": {
+          "color": "string",
+          "connectedEdge": "string",
+          "id": "string",
+          "label": "string",
+          "nodeCreatedTimestamp": "timestamp",
+          "prerequisites": ["string"],
+          "x": "number",
+          "y": "number"
+        }
+      },
+      "topics": {
+        "topicId": {
+          "color": "string",
+          "connectedEdge": "string",
+          "id": "string",
+          "label": "string",
+          "prerequisites": ["string"],
+          "taskTotal": "number",
+          "topicCreatedTimestamp": "timestamp",
+          "x": "number",
+          "y": "number"
+        }
+      },
+      "requestsForHelp": {
+        "requestId": {
+          "contextCourse": {
+            "cohort": "string",
+            "contentBy": {
+              "name": "string",
+              "personId": "string"
+            },
+            "description": "string",
+            "id": "string",
+            "image": {
+              "name": "string",
+              "url": "string"
+            },
+            "mappedBy": {
+              "name": "string",
+              "personId": "string"
+            },
+            "owner": "string",
+            "public": "boolean",
+            "status": "string",
+            "taskTotal": "number",
+            "title": "string",
+            "topicTotal": "number"
+          },
+          "contextTask": {
+            "description": "string",
+            "duration": "string",
+            "id": "string",
+            "taskCreatedTimestamp": {
+              "_nanoseconds": "number",
+              "_seconds": "number"
+            },
+            "taskStartedTimestamp": {
+              "_nanoseconds": "number",
+              "_seconds": "number"
+            },
+            "taskStatus": "string",
+            "title": "string"
+          },
+          "contextTopic": {
+            "color": "string",
+            "connectedEdge": "string",
+            "id": "string",
+            "label": "string",
+            "prerequisites": ["string"],
+            "taskTotal": "number",
+            "topicCreatedTimestamp": {
+              "_nanoseconds": "number",
+              "_seconds": "number"
+            },
+            "x": "number",
+            "y": "number"
+          },
+          "id": "string",
+          "personId": "string",
+          "requestForHelpMessage": "string",
+          "requestForHelpStatus": "string",
+          "requestSubmittedTimestamp": "timestamp",
+          "responderPersonId": "string",
+          "responseMessage": "string",
+          "responseSubmittedTimestamp": "timestamp"
+        }
+      },
+      "submissionsForReview": {
+        "submissionId": {
+          "contextCourse": "object",
+          "contextTask": "object",
+          "contextTopic": "object",
+          "responseMessage": "string",
+          "responseSubmittedTimestamp": "timestamp",
+          "studentId": "string",
+          "submissionLink": "string",
+          "taskSubmissionStatus": "string",
+          "taskSubmittedForReviewTimestamp": "timestamp",
+          "teacherId": "string"
+        }
+      }
+    }
+  },
+  "cohorts": {
+    "cohortId": {
+      "courseCohort": "boolean",
+      "courses": ["string"],
+      "description": "string",
+      "image": {
+        "name": "string",
+        "url": "string"
+      },
+      "name": "string",
+      "organisation": "string",
+      "students": ["string"],
+      "teachers": ["string"]
+    }
+  },
+  "status": {
+    "personId": {
+      "last_changed": "timestamp",
+      "state": "string"
+    }
+  }
+}

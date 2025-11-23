@@ -1,13 +1,10 @@
 /// <reference types="vite/client" />
-import Vue from "vue";
-import VueRouter, { Route, NavigationGuard } from "vue-router";
 
-declare module "vue" {
+declare module "vue/types/vue" {
+  import type { Framework } from "vuetify";
+  import type { Pinia, Store } from "pinia";
+
   interface Vue {
-    // vue-router
-    $router: VueRouter;
-    $route: Route;
-
     // vuetify
     $vuetify: Framework;
 
@@ -25,14 +22,13 @@ declare module "vue" {
      */
     _pStores?: Record<string, Store>;
   }
+}
+
+declare module "vue/types/options" {
+  import type Vuetify from "vuetify/types/services/vuetify";
+  import type { Pinia } from "pinia";
 
   interface ComponentOptions<V extends Vue> {
-    // vue-router
-    router?: VueRouter;
-    beforeRouteEnter?: NavigationGuard<V>;
-    beforeRouteLeave?: NavigationGuard<V>;
-    beforeRouteUpdate?: NavigationGuard<V>;
-
     // vuetify
     vuetify?: Vuetify;
 

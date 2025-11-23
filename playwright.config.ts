@@ -1,4 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
+import { config } from "dotenv";
+import { resolve } from "path";
+
+// Load environment variables from .env.test file for E2E tests
+config({ path: resolve(__dirname, ".env.test") });
 
 const BASE_URL = process.env.BASE_URL ?? "http://127.0.0.1:5173";
 

@@ -53,5 +53,5 @@ new Vue({
   router,
   vuetify,
   pinia,
-  render: (h) => h(App),
-}).$mount("#app");
+  render: (h: any) => h(App),
+} as any).$mount("#app");
