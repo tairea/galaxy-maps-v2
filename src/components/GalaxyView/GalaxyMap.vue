@@ -352,19 +352,61 @@ export default {
 
         // console.log("matching node:", matchingNode);
 
-        // if node is status completed or locked. remove color property
-        let color = node.color;
-        if (matchingNode?.topicStatus === "locked" || matchingNode?.topicStatus === "completed") {
+        const topicStatus = matchingNode?.topicStatus ?? "locked";
+        const nodeGroup = node.group; // preserve original node group (e.g., "introduction")
+
+        // Determine color and group based on status
+        let color;
+        let group;
+
+        if (topicStatus === "locked") {
+          // For locked nodes, explicitly set dimmed color
+          color = "rgba(132,132,132,0.4)"; // Same dimmed color as locked edges
+          group = "locked";
+        } else if (topicStatus === "completed") {
+          // For completed nodes, use baseAccent (green)
+          color = this.$vuetify.theme.isDark
+            ? this.$vuetify.theme.themes.dark.baseAccent
+            : this.$vuetify.theme.themes.light.baseAccent;
+          group = "completed";
+        } else if (topicStatus === "unlocked") {
+          // For unlocked nodes, set color based on whether it's an introduction node
+          if (nodeGroup === "introduction") {
+            // Use baseAccent (green) for introduction nodes
+            color = this.$vuetify.theme.isDark
+              ? this.$vuetify.theme.themes.dark.baseAccent
+              : this.$vuetify.theme.themes.light.baseAccent;
+            group = "introduction";
+          } else {
+            // Use missionAccent for unlocked non-introduction nodes
+            color = this.$vuetify.theme.isDark
+              ? this.$vuetify.theme.themes.dark.missionAccent
+              : this.$vuetify.theme.themes.light.missionAccent;
+            // Keep original group if it exists, otherwise use default
+            group = nodeGroup || "default";
+          }
+        } else {
+          // Fallback for any other status
           color = undefined;
+          group = topicStatus;
         }
 
         // push node with status
-        nodesWithStatus.push({
+        const nodeData = {
           ...node,
-          color,
-          group: matchingNode?.topicStatus ?? "locked", // assign group property based on topicStatus from matchingNode (aka this.personsTopics)
+          group,
           label: "", // Remove vis-network labels since we draw them manually
-        });
+        };
+
+        // Set color if it's defined
+        if (color !== undefined) {
+          nodeData.color = color;
+        } else {
+          // Explicitly remove color property so group color is used
+          delete nodeData.color;
+        }
+
+        nodesWithStatus.push(nodeData);
       }
 
       // return nodes with status to network map
@@ -374,15 +416,48 @@ export default {
       const edgesWithStatusStyles = [];
 
       for (const edge of this.currentCourseEdges) {
-        // find the topic node with status
-        const matchingEdge = this.personsTopics.find((x) => x.id === edge.to);
+        // find the topic nodes with status for both from and to nodes
+        const matchingToNode = this.personsTopics.find((x) => x.id === edge.to);
+        const matchingFromNode = this.personsTopics.find((x) => x.id === edge.from);
+
+        const toStatus = matchingToNode?.topicStatus ?? "locked";
+        const fromStatus = matchingFromNode?.topicStatus ?? "locked";
+
+        const toIsLocked = toStatus === "locked";
+        const fromIsLocked = fromStatus === "locked";
+        const toIsCompleted = toStatus === "completed";
+        const fromIsCompleted = fromStatus === "completed";
+
+        const isLocked = toIsLocked || fromIsLocked;
+        // Only consider completed if neither endpoint is locked
+        const isCompleted = !isLocked && (toIsCompleted || fromIsCompleted);
 
         // push node with status
-        edgesWithStatusStyles.push({
+        const edgeData = {
           ...edge,
           // add dashes to the edge (if topic is locked)
-          dashes: matchingEdge == null || matchingEdge.topicStatus === "locked" ? true : false,
-        });
+          dashes: isLocked ? true : false,
+        };
+
+        // Set edge color based on status (locked takes precedence over completed)
+        if (isLocked) {
+          // Dim edges that connect to or from locked nodes
+          edgeData.color = {
+            color: "rgba(132,132,132,0.4)", // Same dimmed color as locked nodes
+            inherit: false, // Don't inherit from node, use explicit color
+          };
+        } else if (isCompleted) {
+          // Use baseAccent for completed edges (when not locked)
+          const baseAccentColor = this.$vuetify.theme.isDark
+            ? this.$vuetify.theme.themes.dark.baseAccent
+            : this.$vuetify.theme.themes.light.baseAccent;
+          edgeData.color = {
+            color: baseAccentColor,
+            inherit: false, // Don't inherit from node, use explicit color
+          };
+        }
+
+        edgesWithStatusStyles.push(edgeData);
       }
       // return nodes with status to network map
       return edgesWithStatusStyles;
@@ -421,6 +496,9 @@ export default {
       console.log("Galaxy Map Complete. Well done!");
       this.$emit("galaxyCompleted");
     }
+
+    console.log("this.$refs.network.nodes: ", this.$refs.network.nodes);
+    console.log("this.$refs.network.edges: ", this.$refs.network.edges);
   },
   beforeDestroy() {
     this.stopNodeAnimation();
@@ -936,7 +1014,7 @@ export default {
         const edgeId = data.edges[0];
         const selectedEdge = this.$refs.network.getEdge(edgeId);
         selectedEdge.type = "edge";
-        (selectedEdge.DOMx = data.pointer.DOM.x), (selectedEdge.DOMy = data.pointer.DOM.y);
+        ((selectedEdge.DOMx = data.pointer.DOM.x), (selectedEdge.DOMy = data.pointer.DOM.y));
         this.$emit("selectedEdge", selectedEdge);
       }
     },
@@ -1138,10 +1216,22 @@ export default {
             continue;
           }
 
+          // Check if node is locked to dim the label (only for students)
+          let nodeLabelColor = labelColor;
+          if (this.student) {
+            const matchingNode = this.personsTopics.find((x) => x.id === nodeId);
+            const topicStatus = matchingNode?.topicStatus ?? "locked";
+            const isLocked = topicStatus === "locked";
+
+            // Use dimmed color for locked nodes, otherwise use default label color
+            nodeLabelColor = isLocked ? "rgba(132,132,132,0.4)" : labelColor;
+          }
+
           // Default mode: draw label to the right with standard sizing
           ctx.font = `${defaultFontPx}px Arial`;
           ctx.textAlign = "left";
           ctx.textBaseline = "middle";
+          ctx.fillStyle = nodeLabelColor;
           const labelX = position.x + 15; // offset to the right of node
           const labelY = position.y;
           ctx.fillText(originalNode.label, labelX, labelY);

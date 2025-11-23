@@ -10,7 +10,7 @@ Read more at: https://tairea.io/2021/09/03/galaxy-maps/
 
 ## Stack
 
-- Vuejs (v2)
+- Vue.js (v2)
 - Vuetify
 - Firestore
 

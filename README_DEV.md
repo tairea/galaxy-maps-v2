@@ -79,6 +79,25 @@ This document orients new contributors to the codebase. It outlines the runtime 
 - **Callable Functions:** Handle errors from `lib/ff.ts` with user-friendly messaging—`FirebaseError` instances bubble up to the UI.
 - **xAPI Integration:** Presence and mission events call the Veracity LRS; confirm secrets are configured before deploying to shared environments.
 
+## AI-Powered Features
+
+Galaxy Maps uses OpenAI's API to automate learning roadmap creation and refinement. The AI system can:
+
+- **Generate Complete Galaxy Maps**: From natural language descriptions to fully-structured learning journeys with Stars, Planets, and detailed Mission Instructions
+- **Refine Structures**: Add, delete, move, split, or reorder Stars and Planets using operation-based refinement
+- **Update Content**: Refine mission instructions while maintaining consistency
+- **Voice Interaction**: Real-time voice-powered AI agent for hands-free map creation and squad management
+
+**Key Components**:
+- Generation UI: `src/components/Dialogs/AICreateGalaxyDialog.vue`
+- Editing Interface: `src/views/AiGalaxyEdit.vue`
+- Voice Agent: `src/components/Reused/AiGalaxyMapAgent.vue`
+- Backend Functions: `functions/src/openAIActions.ts`, `functions/src/refiners/refine-structure.ts`
+
+**Models Used**: GPT-5 (generation/reasoning), GPT-5-mini (clarifications), gpt-image-1-mini (images), gpt-realtime (voice)
+
+For detailed documentation on AI features, architecture, and usage, see **[README_AI.md](./README_AI.md)**.
+
 ## Testing & Quality
 - `npm run test:unit` – Vitest suite (JSdom). Create tests alongside components or utilities.
 - `npm run lint` / `npm run format` – ESLint (Vue + TypeScript) and Prettier for the front end.
