@@ -1,115 +1,126 @@
 <template>
-  <div class="d-flex map-buttons-bottom" :class="{ mobile: isMobile }">
-    <div class="d-inline-flex">
-      <!-- SHOW MISSIONS (All Users) -->
-      <div
-        v-if="!hideShowMissions"
-        class="mapButton"
-        :class="{
-          active: showMissions,
-          'mr-4': isTeacher,
-          dimmed: editModeActive,
-        }"
-        @click="toggleShowMissions"
-      >
-        <div class="mapButton-icon" :class="{ activeIcon: showMissions }">
-          <v-icon v-if="!showMissions" color="missionAccent">{{ mdiEarth }}</v-icon>
-          <v-icon v-else color="baseAccent">{{ mdiEarthOff }}</v-icon>
+  <div>
+    <div class="d-flex map-buttons-bottom" :class="{ mobile: isMobile, hidden: buttonsHidden }">
+      <div class="d-inline-flex">
+        <!-- SHOW MISSIONS (All Users) -->
+        <div
+          v-if="!hideShowMissions"
+          class="mapButton"
+          :class="{
+            active: showMissions,
+            'mr-4': isTeacher,
+            dimmed: editModeActive,
+          }"
+          @click="toggleShowMissions"
+        >
+          <div class="mapButton-icon" :class="{ activeIcon: showMissions }">
+            <v-icon v-if="!showMissions" color="missionAccent">{{ mdiEarth }}</v-icon>
+            <v-icon v-else color="baseAccent">{{ mdiEarthOff }}</v-icon>
+          </div>
+          <div v-if="!isMobile" class="mapButton-text">
+            <p v-if="!showMissions" class="overline ma-0">Show Missions</p>
+            <p v-else class="overline ma-0" style="font-size: 0.7rem">Hide missions</p>
+          </div>
         </div>
-        <div v-if="!isMobile" class="mapButton-text">
-          <p v-if="!showMissions" class="overline ma-0">Show Missions</p>
-          <p v-else class="overline ma-0" style="font-size: 0.7rem">Hide missions</p>
-        </div>
-      </div>
 
-      <!-- ADD/EDIT STARS TOGGLE (Teacher Only) -->
-      <div
-        v-if="isTeacher"
-        class="mapButton"
-        :class="{ active: editModeActive }"
-        @click="toggleEditMode"
-      >
-        <div class="mapButton-icon" :class="{ activeIcon: editModeActive }">
-          <v-icon v-if="!editModeActive" color="missionAccent">{{ mdiStarPlus }}</v-icon>
-          <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
-        </div>
-        <div v-if="!isMobile" class="mapButton-text">
-          <p v-if="!editModeActive" class="overline ma-0">Add/Edit Stars</p>
-          <p v-else class="ma-0" style="font-size: 0.7rem">Click to hide edit options</p>
-        </div>
-      </div>
-
-      <!-- EDIT WITH AI (Teacher Only) -->
-      <div
-        v-if="isTeacher"
-        class="mapButtonGalaxyAccent ml-4"
-        :class="{ dimmed: editModeActive }"
-        :style="editModeActive ? { order: 99 } : {}"
-        @click="openAiGalaxyEdit"
-      >
-        <div class="mapButton-icon">
-          <v-icon color="galaxyAccent">{{ mdiRobotExcited }}</v-icon>
-        </div>
-        <div v-if="!isMobile" class="mapButton-text">
-          <p class="overline ma-0">Edit with AI</p>
-        </div>
-      </div>
-
-      <!-- EDIT BUTTONS CONTAINER (Teacher Only) -->
-      <div v-if="isTeacher && editModeActive" class="d-inline-flex ml-4">
-        <!-- ADD NODE -->
-        <div class="mapButton" :class="{ active: addNodeMode }" @click="toggleAddNodeMode">
-          <div class="mapButton-icon" :class="{ activeIcon: addNodeMode }">
-            <v-icon v-if="!addNodeMode" color="missionAccent">{{ mdiMapMarkerPlusOutline }}</v-icon>
+        <!-- ADD/EDIT STARS TOGGLE (Teacher Only) -->
+        <div
+          v-if="isTeacher"
+          class="mapButton"
+          :class="{ active: editModeActive }"
+          @click="toggleEditMode"
+        >
+          <div class="mapButton-icon" :class="{ activeIcon: editModeActive }">
+            <v-icon v-if="!editModeActive" color="missionAccent">{{ mdiStarPlus }}</v-icon>
             <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
           </div>
           <div v-if="!isMobile" class="mapButton-text">
-            <p v-if="!addNodeMode" class="overline ma-0">Add a new Star</p>
-            <p v-else class="ma-0" style="font-size: 0.7rem">
-              Click on the map to place a new Star
-            </p>
+            <p v-if="!editModeActive" class="overline ma-0">Add/Edit Stars</p>
+            <p v-else class="ma-0" style="font-size: 0.7rem">Click to hide edit options</p>
           </div>
         </div>
 
-        <!-- ADD EDGE -->
-        <div class="mapButton ml-4" :class="{ active: addEdgeMode }" @click="toggleAddEdgeMode">
-          <div class="mapButton-icon" :class="{ activeIcon: addEdgeMode }">
-            <v-icon v-if="!addEdgeMode" color="missionAccent">{{ mdiVectorPolylinePlus }}</v-icon>
-            <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
+        <!-- EDIT WITH AI (Teacher Only) -->
+        <div
+          v-if="isTeacher"
+          class="mapButtonGalaxyAccent ml-4"
+          :class="{ dimmed: editModeActive }"
+          :style="editModeActive ? { order: 99 } : {}"
+          @click="openAiGalaxyEdit"
+        >
+          <div class="mapButton-icon">
+            <v-icon color="galaxyAccent">{{ mdiRobotExcited }}</v-icon>
           </div>
           <div v-if="!isMobile" class="mapButton-text">
-            <p v-if="!addEdgeMode" class="overline ma-0">Connect Stars</p>
-            <p v-else class="ma-0" style="font-size: 0.7rem">Click and drag to connect two Stars</p>
+            <p class="overline ma-0">Edit with AI</p>
           </div>
         </div>
 
-        <!-- EDIT NODE POSITIONS -->
-        <div class="mapButton ml-4" :class="{ active: dragNodeMode }" @click="toggleDragNodeMode">
-          <div class="mapButton-icon" :class="{ activeIcon: dragNodeMode }">
-            <v-icon v-if="!dragNodeMode" color="missionAccent">{{ mdiCursorMove }}</v-icon>
-            <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
+        <!-- EDIT BUTTONS CONTAINER (Teacher Only) -->
+        <div v-if="isTeacher && editModeActive" class="d-inline-flex ml-4">
+          <!-- ADD NODE -->
+          <div class="mapButton" :class="{ active: addNodeMode }" @click="toggleAddNodeMode">
+            <div class="mapButton-icon" :class="{ activeIcon: addNodeMode }">
+              <v-icon v-if="!addNodeMode" color="missionAccent">{{
+                mdiMapMarkerPlusOutline
+              }}</v-icon>
+              <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
+            </div>
+            <div v-if="!isMobile" class="mapButton-text">
+              <p v-if="!addNodeMode" class="overline ma-0">Add a new Star</p>
+              <p v-else class="ma-0" style="font-size: 0.7rem">
+                Click on the map to place a new Star
+              </p>
+            </div>
           </div>
-          <div v-if="!isMobile" class="mapButton-text">
-            <p v-if="!dragNodeMode" class="overline ma-0">Change Star positions</p>
-            <p v-else class="ma-0" style="font-size: 0.7rem">
-              {{
-                changeInPositions
-                  ? "CANCEL or SAVE new positions"
-                  : "Click and drag to reposition Star"
-              }}
-            </p>
+
+          <!-- ADD EDGE -->
+          <div class="mapButton ml-4" :class="{ active: addEdgeMode }" @click="toggleAddEdgeMode">
+            <div class="mapButton-icon" :class="{ activeIcon: addEdgeMode }">
+              <v-icon v-if="!addEdgeMode" color="missionAccent">{{ mdiVectorPolylinePlus }}</v-icon>
+              <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
+            </div>
+            <div v-if="!isMobile" class="mapButton-text">
+              <p v-if="!addEdgeMode" class="overline ma-0">Connect Stars</p>
+              <p v-else class="ma-0" style="font-size: 0.7rem">
+                Click and drag to connect two Stars
+              </p>
+            </div>
           </div>
-          <!-- SAVE NODE POSITIONS -->
-          <div
-            class="mapButton-icon"
-            v-if="changeInPositions"
-            :class="{ activeIcon: dragNodeMode }"
-            @click="saveNodePositions"
-          >
-            <v-icon color="baseAccent">{{ mdiContentSaveCheck }}</v-icon>
+
+          <!-- EDIT NODE POSITIONS -->
+          <div class="mapButton ml-4" :class="{ active: dragNodeMode }" @click="toggleDragNodeMode">
+            <div class="mapButton-icon" :class="{ activeIcon: dragNodeMode }">
+              <v-icon v-if="!dragNodeMode" color="missionAccent">{{ mdiCursorMove }}</v-icon>
+              <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
+            </div>
+            <div v-if="!isMobile" class="mapButton-text">
+              <p v-if="!dragNodeMode" class="overline ma-0">Change Star positions</p>
+              <p v-else class="ma-0" style="font-size: 0.7rem">
+                {{
+                  changeInPositions
+                    ? "CANCEL or SAVE new positions"
+                    : "Click and drag to reposition Star"
+                }}
+              </p>
+            </div>
+            <!-- SAVE NODE POSITIONS -->
+            <div
+              class="mapButton-icon"
+              v-if="changeInPositions"
+              :class="{ activeIcon: dragNodeMode }"
+              @click="saveNodePositions"
+            >
+              <v-icon color="baseAccent">{{ mdiContentSaveCheck }}</v-icon>
+            </div>
           </div>
         </div>
       </div>
+    </div>
+    <div class="chevron-toggle" @click="toggleButtonsVisibility">
+      <v-icon :color="buttonsHidden ? 'missionAccent' : 'missionAccent'" class="chevron-icon">
+        {{ buttonsHidden ? mdiChevronUp : mdiChevronDown }}
+      </v-icon>
     </div>
   </div>
 </template>
@@ -125,6 +136,8 @@ import {
   mdiEarthOff,
   mdiStarPlus,
   mdiRobotExcited,
+  mdiChevronDown,
+  mdiChevronUp,
 } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
 import useRootStore from "@/store/index";
@@ -156,7 +169,10 @@ export default {
       mdiEarthOff,
       mdiStarPlus,
       mdiRobotExcited,
+      mdiChevronDown,
+      mdiChevronUp,
       editModeActive: false,
+      buttonsHidden: false,
     };
   },
   computed: {
@@ -193,6 +209,9 @@ export default {
     },
     toggleShowMissions() {
       this.$emit("toggleShowMissions");
+    },
+    toggleButtonsVisibility() {
+      this.buttonsHidden = !this.buttonsHidden;
     },
     async openAiGalaxyEdit() {
       this.$emit("toggleLoading", true);
@@ -286,9 +305,14 @@ export default {
   justify-content: center;
   align-items: center;
   margin: 25px 0px;
-  //max-width: 800px; /* Optional: limit maximum width */
   margin-left: auto;
   margin-right: auto;
+  transition: transform 0.3s ease-in-out;
+  transform: translateY(0);
+
+  &.hidden {
+    transform: translateY(calc(100% + 25px));
+  }
 
   &.mobile {
     .mapButton-icon {
@@ -297,6 +321,29 @@ export default {
   }
 
   // border: 1px solid blue;
+}
+
+.chevron-toggle {
+  position: fixed;
+  bottom: 0px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  // padding: 8px;
+  opacity: 0.5;
+  transition: opacity 0.2s ease-in-out;
+
+  &:hover {
+    opacity: 0.6;
+  }
+
+  .chevron-icon {
+    transition: transform 0.3s ease-in-out;
+  }
 }
 
 .map-buttons-left {

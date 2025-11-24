@@ -363,6 +363,9 @@ export default {
         this.mountedLoading = false;
       }
 
+      // Update document title when course loads
+      this.updateDocumentTitle();
+
       this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
     },
   },
@@ -448,6 +451,9 @@ export default {
 
     // Set mounted loading to false after all initialization is complete
     this.mountedLoading = false;
+
+    // Update document title if course is already loaded
+    this.updateDocumentTitle();
   },
   beforeDestroy() {
     // Clean up timeout when component is destroyed
@@ -455,6 +461,8 @@ export default {
       clearTimeout(this.courseLoadTimeout);
       this.courseLoadTimeout = null;
     }
+    // Reset document title when leaving the view
+    document.title = "Galaxy Maps";
   },
   computed: {
     ...mapState(useRootStore, ["person", "user", "boundCourse"]),
@@ -829,6 +837,13 @@ export default {
     },
     handleMinimized(minimized) {
       this.isGalaxyInfoMinimized = minimized;
+    },
+    updateDocumentTitle() {
+      if (this.boundCourse && this.boundCourse.title) {
+        document.title = "[" + this.boundCourse.title + "] - Galaxy Maps";
+      } else {
+        document.title = "Galaxy Maps";
+      }
     },
   },
 };
