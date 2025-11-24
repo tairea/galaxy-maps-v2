@@ -1,17 +1,19 @@
 <template>
   <div class="bg">
-    <div class="verify">
-      <p class="overline gm-title">Please verify your email</p>
-      <p class="overline" style="font-size: 0.65rem !important">
-        An email has been sent to the email address that you entered
+    <div class="verify text-center">
+      <p class="overline gm-title">
+        Please check your email </br>&</br> click on the verify link we just sent you.
+      </p>
+      <!-- <p class="overline" style="font-size: 0.65rem !important">
+        An email has just been sent to the email address you provided.
       </p>
       <p class="overline" style="font-size: 0.65rem !important">
-        Please check your emails and click on the link to verify your email.
-      </p>
+        Open it and click on the verify link to verify your email.
+      </p> -->
       <v-row class="mt-8">
-        <v-btn outlined class="mr-4" color="baseAccent" :to="{ path: 'login' }">
+        <!-- <v-btn outlined class="mr-4" color="baseAccent" :to="{ path: 'login' }">
           Back to login
-        </v-btn>
+        </v-btn> -->
         <v-btn :loading="loading" outlined color="missionAccent" @click="sendVerificationEmail">
           resend email
         </v-btn>

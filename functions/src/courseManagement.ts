@@ -1279,6 +1279,156 @@ export const getPeopleByCourseIdHttpsEndpoint = runWith({}).https.onCall(async (
   return { people };
 });
 
+// Get courses created by a person (where personId matches mappedBy.personId)
+export const getCoursesCreatedByPersonIdHttpsEndpoint = runWith({}).https.onCall(
+  async (data, context) => {
+    console.log("🔵 getCoursesCreatedByPersonIdHttpsEndpoint ENTRY - Function called", {
+      hasData: !!data,
+      hasContext: !!context,
+      hasAuth: !!context?.auth,
+      personId: data?.personId,
+    });
+    try {
+      requireAuthenticated(context);
+      console.log("✅ Authentication check passed");
+
+      const personId = data.personId as string | null;
+      if (personId == null) {
+        console.error("❌ Missing personId in request data");
+        throw new HttpsError("invalid-argument", "missing personId");
+      }
+
+      console.log(`🔍 getCoursesCreatedByPersonId called for personId: ${personId}`);
+
+      // Query courses where mappedBy.personId matches
+      let mappedByQuerySnapshot;
+      try {
+        mappedByQuerySnapshot = await db
+          .collection("courses")
+          .where("mappedBy.personId", "==", personId)
+          .get();
+        console.log(`Found ${mappedByQuerySnapshot.docs.length} courses for personId: ${personId}`);
+      } catch (queryError) {
+        console.error("Error querying courses:", queryError);
+        // If it's a missing index error, return empty array instead of failing
+        if (
+          queryError instanceof Error &&
+          queryError.message.includes("index") &&
+          queryError.message.includes("required")
+        ) {
+          console.warn("Firestore index missing, returning empty array");
+          return { courses: [] };
+        }
+        throw queryError;
+      }
+
+      const courses = [];
+      for (const doc of mappedByQuerySnapshot.docs) {
+        try {
+          const course = doc.data();
+          courses.push({
+            ...course,
+            owner: course.owner instanceof DocumentReference ? course.owner.path : course.owner,
+            id: doc.id,
+          });
+        } catch (docError) {
+          console.error(`Error processing course ${doc.id}:`, docError);
+          // Continue processing other courses
+        }
+      }
+
+      console.log(`Returning ${courses.length} courses for personId: ${personId}`);
+      return { courses };
+    } catch (err) {
+      // Log the error for debugging
+      console.error("getCoursesCreatedByPersonId error:", err);
+      // Re-throw HttpsError as-is
+      if (err instanceof HttpsError) {
+        throw err;
+      }
+      // Wrap other errors
+      throw new HttpsError(
+        "internal",
+        `Failed to get courses created by person: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
+  },
+);
+
+// Get all courses grouped by creator (mappedBy.personId)
+// This is more efficient than querying for each person individually
+export const getAllCoursesGroupedByCreatorHttpsEndpoint = runWith({}).https.onCall(
+  async (data, context) => {
+    console.log("🔵 getAllCoursesGroupedByCreatorHttpsEndpoint ENTRY - Function called");
+    try {
+      requireAuthenticated(context);
+      console.log("✅ Authentication check passed");
+
+      // TODO: permissions checks - ensure user has permission to view all courses
+
+      // Fetch all courses from Firestore (single query)
+      let coursesSnapshot;
+      try {
+        coursesSnapshot = await db.collection("courses").get();
+        console.log(`Found ${coursesSnapshot.docs.length} total courses`);
+      } catch (queryError) {
+        console.error("Error querying all courses:", queryError);
+        throw queryError;
+      }
+
+      // Group courses by mappedBy.personId
+      const coursesByCreator: { [personId: string]: unknown[] } = {};
+
+      for (const doc of coursesSnapshot.docs) {
+        try {
+          const course = doc.data();
+          const personId = course.mappedBy?.personId;
+
+          // Skip courses without mappedBy.personId (shouldn't happen per user, but handle gracefully)
+          if (!personId) {
+            console.warn(`Course ${doc.id} has no mappedBy.personId, skipping`);
+            continue;
+          }
+
+          // Initialize array for this personId if it doesn't exist
+          if (!coursesByCreator[personId]) {
+            coursesByCreator[personId] = [];
+          }
+
+          // Add course to the appropriate person's array
+          coursesByCreator[personId].push({
+            ...course,
+            owner: course.owner instanceof DocumentReference ? course.owner.path : course.owner,
+            id: doc.id,
+          });
+        } catch (docError) {
+          console.error(`Error processing course ${doc.id}:`, docError);
+          // Continue processing other courses
+        }
+      }
+
+      console.log(`Returning courses grouped by ${Object.keys(coursesByCreator).length} creators`);
+      return { coursesByCreator };
+    } catch (err) {
+      // Log the error for debugging
+      console.error("getAllCoursesGroupedByCreator error:", err);
+      // Re-throw HttpsError as-is
+      if (err instanceof HttpsError) {
+        throw err;
+      }
+      // Wrap other errors
+      throw new HttpsError(
+        "internal",
+        `Failed to get all courses grouped by creator: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
+  },
+);
+
 // Create task with courseId and topicId
 export const createTaskWithCourseIdTopicIdHttpsEndpoint = runWith({}).https.onCall(
   async (data, context) => {

@@ -133,13 +133,27 @@ export default {
     initialUserId: "",
     initialSetupToken: "",
     hide: String,
+    // Track verification state to prevent duplicate calls
+    verificationInProgress: false,
+    processedActionCodes: new Set(),
   }),
   mounted() {
     this.initFromQuery();
   },
   watch: {
-    "$route.query.mode"() {
-      this.initFromQuery();
+    "$route.query.mode"(newMode, oldMode) {
+      // Only re-init if mode actually changed and we have an action code
+      if (newMode !== oldMode && this.$route.query.oobCode) {
+        console.log("Route query mode changed:", oldMode, "->", newMode);
+        this.initFromQuery();
+      }
+    },
+    "$route.query.oobCode"(newCode, oldCode) {
+      // Re-init if action code changed
+      if (newCode !== oldCode && this.$route.query.mode === "verifyEmail") {
+        console.log("Route query oobCode changed");
+        this.initFromQuery();
+      }
     },
   },
   computed: {
@@ -155,7 +169,21 @@ export default {
       const actionCode = this.$route.query.oobCode;
       const auth = firebase.auth();
       // console logs for debugging
-      console.log("Login initFromQuery mode:", mode);
+      console.log(
+        "Login initFromQuery mode:",
+        mode,
+        "actionCode:",
+        actionCode ? "present" : "missing",
+      );
+
+      // Prevent processing the same action code multiple times
+      if (actionCode && this.processedActionCodes.has(actionCode)) {
+        console.log(
+          "Action code already processed, skipping:",
+          actionCode.substring(0, 20) + "...",
+        );
+        return;
+      }
 
       switch (mode) {
         case "resetPassword":
@@ -165,6 +193,9 @@ export default {
           this.handleRecoverEmail(auth, actionCode);
           break;
         case "verifyEmail":
+          if (actionCode) {
+            this.processedActionCodes.add(actionCode);
+          }
           this.handleVerifyEmail(auth, actionCode);
           break;
         case "signIn":
@@ -287,26 +318,131 @@ export default {
           });
         });
     },
-    handleVerifyEmail(auth, actionCode) {
-      console.log("handle verify email");
+    /**
+     * Handles email verification with improved error handling and duplicate call prevention.
+     *
+     * Debugging approach:
+     * 1. Check browser console for detailed logs at each step
+     * 2. Look for "handle verify email", "Checking action code validity", "Applying action code" messages
+     * 3. If error occurs, check "Error in handleVerifyEmail" log for error code and message
+     * 4. Check "After error, checked user emailVerified status" to see if verification actually succeeded
+     * 5. Use debugVerificationState() method from browser console to inspect current state
+     *
+     * Common issues:
+     * - "invalid-action-code": Code already used or invalid (single-use codes)
+     * - "expired-action-code": Code expired (usually after 3 days)
+     * - Race condition: Multiple calls prevented by verificationInProgress flag and processedActionCodes Set
+     */
+    async handleVerifyEmail(auth, actionCode) {
+      // Prevent duplicate calls
+      if (this.verificationInProgress) {
+        console.log("Verification already in progress, skipping duplicate call");
+        return;
+      }
+
+      if (!actionCode) {
+        console.error("handleVerifyEmail called without actionCode");
+        this.setSnackbar({
+          show: true,
+          text: "Invalid verification link. Please request a new verification email.",
+          color: "pink",
+        });
+        this.$router.push("/verify");
+        return;
+      }
+
+      console.log("handle verify email - actionCode:", actionCode.substring(0, 20) + "...");
+      this.verificationInProgress = true;
       this.isVerifyEmail = true;
-      auth
-        .applyActionCode(actionCode)
-        .then((resp) => {
+
+      try {
+        // First, check if the action code is valid and get email info
+        console.log("Checking action code validity...");
+        const actionCodeInfo = await auth.checkActionCode(actionCode);
+        const email = actionCodeInfo.data.email;
+        console.log("Action code is valid for email:", email);
+
+        // Check if user is already verified
+        const currentUser = auth.currentUser;
+        if (currentUser && currentUser.email === email && currentUser.emailVerified) {
+          console.log("Email is already verified");
+          this.setSnackbar({
+            show: true,
+            text: "Your email is already verified. You can now log in.",
+            color: "baseAccent",
+          });
+          this.verificationInProgress = false;
+          return;
+        }
+
+        // Apply the action code
+        console.log("Applying action code...");
+        await auth.applyActionCode(actionCode);
+        console.log("Action code applied successfully");
+
+        // Reload user to get updated verification status
+        if (currentUser) {
+          await currentUser.reload();
+          console.log("User reloaded, emailVerified:", currentUser.emailVerified);
+        }
+
+        this.setSnackbar({
+          show: true,
+          text: "Email successfully verified",
+          color: "baseAccent",
+        });
+      } catch (error) {
+        console.error("Error in handleVerifyEmail:", {
+          code: error.code,
+          message: error.message,
+          actionCode: actionCode.substring(0, 20) + "...",
+        });
+
+        // Check if email is actually verified despite the error
+        // This handles the case where verification succeeded but we got an error
+        const currentUser = auth.currentUser;
+        let emailActuallyVerified = false;
+
+        if (currentUser) {
+          try {
+            await currentUser.reload();
+            emailActuallyVerified = currentUser.emailVerified;
+            console.log("After error, checked user emailVerified status:", emailActuallyVerified);
+          } catch (reloadError) {
+            console.error("Error reloading user:", reloadError);
+          }
+        }
+
+        // If email is verified, show success message even if there was an error
+        if (emailActuallyVerified) {
+          console.log("Email is verified despite error - showing success message");
           this.setSnackbar({
             show: true,
             text: "Email successfully verified",
             color: "baseAccent",
           });
-        })
-        .catch((error) => {
+        } else {
+          // Handle specific error cases
+          let errorMessage = getFriendlyErrorMessage(error.code);
+
+          if (error.code === "auth/invalid-action-code") {
+            errorMessage =
+              "This verification link has already been used or is invalid. Please request a new verification email.";
+          } else if (error.code === "auth/expired-action-code") {
+            errorMessage =
+              "This verification link has expired. Please request a new verification email.";
+          }
+
           this.setSnackbar({
             show: true,
-            text: getFriendlyErrorMessage(error.code),
+            text: errorMessage,
             color: "pink",
           });
           this.$router.push("/verify");
-        });
+        }
+      } finally {
+        this.verificationInProgress = false;
+      }
     },
     login() {
       console.log("loggin in");
@@ -377,6 +513,29 @@ export default {
     },
     delay(ms) {
       return new Promise((res) => setTimeout(res, ms));
+    },
+    // Debug helper method - can be called from browser console
+    // Usage: this.$refs.loginComponent?.debugVerificationState() or window.$loginDebug()
+    debugVerificationState() {
+      const currentUser = firebase.auth().currentUser;
+      return {
+        verificationInProgress: this.verificationInProgress,
+        isVerifyEmail: this.isVerifyEmail,
+        processedActionCodes: Array.from(this.processedActionCodes),
+        currentRoute: {
+          mode: this.$route.query.mode,
+          oobCode: this.$route.query.oobCode
+            ? this.$route.query.oobCode.substring(0, 20) + "..."
+            : null,
+        },
+        user: currentUser
+          ? {
+              email: currentUser.email,
+              emailVerified: currentUser.emailVerified,
+              uid: currentUser.uid,
+            }
+          : null,
+      };
     },
   },
 };

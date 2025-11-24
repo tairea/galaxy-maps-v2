@@ -3,8 +3,14 @@ import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { type CallableContext, HttpsError } from "firebase-functions/v1/https";
-import type { File } from "@google-cloud/storage";
 import { randomUUID } from "crypto";
+
+// Type from firebase-admin's storage to match the File type returned by bucket.file()
+type File = ReturnType<ReturnType<typeof getStorage>["bucket"]>["file"] extends (
+  name: string,
+) => infer R
+  ? R
+  : never;
 
 // Initialize Firebase Admin SDK with proper configuration
 export const app = getApps().length === 0 ? initializeApp({}) : getApps()[0];

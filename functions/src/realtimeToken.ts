@@ -1,9 +1,8 @@
-import { runWith } from "firebase-functions/v1";
-import functions from "firebase-functions";
+import { runWith, https } from "firebase-functions/v1";
 import fetch from "node-fetch";
 
 // Get OpenAI API key for Realtime API
-const openaiApiKey = functions.config().openai.navigatorkey;
+const openaiApiKey = process.env.OPENAI_NAVIGATOR_KEY;
 
 export const generateRealtimeTokenHttpsEndpoint = runWith({}).https.onCall(
   async (data, context) => {
@@ -70,7 +69,7 @@ export const generateRealtimeTokenHttpsEndpoint = runWith({}).https.onCall(
       };
     } catch (error) {
       console.error("Error generating realtime token:", error);
-      throw new functions.https.HttpsError(
+      throw new https.HttpsError(
         "internal",
         "Failed to generate realtime token",
         error instanceof Error ? error.message : "Unknown error",

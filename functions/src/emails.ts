@@ -1,5 +1,5 @@
 import { log } from "firebase-functions/logger";
-import { config, runWith } from "firebase-functions/v1";
+import { runWith } from "firebase-functions/v1";
 import { createTransport } from "nodemailer";
 import { APP_NAME, DOMAIN } from "./_constants.js";
 
@@ -10,15 +10,14 @@ import { APP_NAME, DOMAIN } from "./_constants.js";
 // 2. https://accounts.google.com/DisplayUnlockCaptcha
 // For other types of transports such as Sendgrid see https://nodemailer.com/transports/
 
-// TODO: Configure the `gmail.email` and `gmail.password` Google Cloud environment variables.
-// Set the gmail.email and gmail.password Google Cloud environment variables to match the email and
-// password of the Gmail account used to send emails (or the app password if your account has
-// 2-step verification enabled).
+// TODO: Configure the GMAIL_EMAIL and GMAIL_PASSWORD environment variables.
+// Set these environment variables in your Firebase project configuration
 // For this use:
-// firebase functions:config:set gmail.email="myusername@gmail.com" gmail.password="secretpassword"
+// firebase functions:secrets:set GMAIL_EMAIL
+// firebase functions:secrets:set GMAIL_PASSWORD
 
-const gmailEmail = config().gmail.email;
-const gmailPassword = config().gmail.password;
+const gmailEmail = process.env.GMAIL_EMAIL;
+const gmailPassword = process.env.GMAIL_PASSWORD;
 const mailTransport = createTransport({
   service: "gmail",
   auth: {

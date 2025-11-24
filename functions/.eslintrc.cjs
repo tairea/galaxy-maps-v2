@@ -20,6 +20,7 @@ module.exports = {
   },
   ignorePatterns: [
     "/lib/**/*", // Ignore built files.
+    "/query-scripts/**/*", // Ignore query scripts.
   ],
   plugins: ["@typescript-eslint", "import"],
   rules: {

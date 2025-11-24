@@ -8,28 +8,42 @@ import { FieldValue } from "firebase-admin/firestore";
 
 // Get a person by personId
 export const getPersonByPersonIdHttpsEndpoint = runWith({}).https.onCall(async (data, context) => {
-  requireAuthenticated(context);
+  try {
+    requireAuthenticated(context);
 
-  const personId = data.personId as string | null;
-  if (personId == null) {
-    throw new HttpsError("invalid-argument", "missing personId");
+    const personId = data.personId as string | null;
+    if (personId == null) {
+      throw new HttpsError("invalid-argument", "missing personId");
+    }
+
+    const personDoc = await db.collection("people").doc(personId).get();
+    const personData = personDoc.data();
+
+    if (personData == null) {
+      throw new HttpsError("not-found", `Person not found: ${personId}`);
+    }
+
+    // TODO: permissions checks
+
+    return {
+      person: {
+        ...personData,
+        id: personDoc.id,
+      },
+    };
+  } catch (err) {
+    // Log the error for debugging
+    error("getPersonByPersonId error:", err);
+    // Re-throw HttpsError as-is
+    if (err instanceof HttpsError) {
+      throw err;
+    }
+    // Wrap other errors
+    throw new HttpsError(
+      "internal",
+      `Failed to get person: ${err instanceof Error ? err.message : String(err)}`,
+    );
   }
-
-  const personDoc = await db.collection("people").doc(personId).get();
-  const personData = personDoc.data();
-
-  if (personData == null) {
-    throw new HttpsError("not-found", `Person not found: ${personId}`);
-  }
-
-  // TODO: permissions checks
-
-  return {
-    person: {
-      ...personData,
-      id: personDoc.id,
-    },
-  };
 });
 
 // Get a person by email
@@ -141,14 +155,18 @@ export const createNewUserHttpsEndpoint = runWith({}).https.onCall(async (data, 
         await sendTeacherInviteEmail(
           person.email as string,
           person.displayName as string,
-          `https://${DOMAIN}/login?mode=initialPassword&email=${encodeURIComponent(person.email as string)}&userId=${person.id}&token=${encodeURIComponent(setupToken)}`,
+          `https://${DOMAIN}/login?mode=initialPassword&email=${encodeURIComponent(
+            person.email as string,
+          )}&userId=${person.id}&token=${encodeURIComponent(setupToken)}`,
         );
       } else {
         log("3. send email to student: ", person.email);
         await sendStudentInviteEmail(
           person.email as string,
           person.displayName as string,
-          `https://${DOMAIN}/login?mode=initialPassword&email=${encodeURIComponent(person.email as string)}&userId=${person.id}&token=${encodeURIComponent(setupToken)}`,
+          `https://${DOMAIN}/login?mode=initialPassword&email=${encodeURIComponent(
+            person.email as string,
+          )}&userId=${person.id}&token=${encodeURIComponent(setupToken)}`,
           person.inviter as string,
         );
       }
@@ -387,7 +405,9 @@ export const bulkImportStudentsHttpsEndpoint = runWith({
         await sendStudentInviteEmail(
           email,
           person.displayName as string,
-          `https://${DOMAIN}/login?mode=initialPassword&email=${encodeURIComponent(email)}&userId=${person.id}&token=${encodeURIComponent(setupToken)}`,
+          `https://${DOMAIN}/login?mode=initialPassword&email=${encodeURIComponent(email)}&userId=${
+            person.id
+          }&token=${encodeURIComponent(setupToken)}`,
           inviter,
         );
 
@@ -470,7 +490,9 @@ export const resendInitialSetupLinkHttpsEndpoint = runWith({}).https.onCall(
 
     // Create new custom token
     const setupToken = await auth.createCustomToken(personId, { initialSetup: true });
-    const link = `https://${DOMAIN}/login?mode=initialPassword&email=${encodeURIComponent(email)}&userId=${personId}&token=${encodeURIComponent(setupToken)}`;
+    const link = `https://${DOMAIN}/login?mode=initialPassword&email=${encodeURIComponent(
+      email,
+    )}&userId=${personId}&token=${encodeURIComponent(setupToken)}`;
 
     // Send appropriate email
     if (personData.accountType === "teacher") {

@@ -19,6 +19,11 @@ import {
   type StructureRefineResponse,
   type StructureTargets,
 } from "@/refiners/structure-refine-schemas";
+import {
+  personFetchThrottle,
+  studentActivityThrottle,
+  courseFetchThrottle,
+} from "@/lib/requestThrottle";
 
 export const fetchCohorts = async (): Promise<ICohort[]> => {
   const data = {};
@@ -147,6 +152,41 @@ export const fetchCourseByCourseId = async (courseId: string): Promise<ICourse> 
   const getCourseByCourseId = functions.httpsCallable("getCourseByCourseId");
   const result = await getCourseByCourseId(data);
   return result.data.course;
+};
+
+export const fetchCoursesCreatedByPersonId = async (personId: string): Promise<ICourse[]> => {
+  console.log(`🟢 Frontend: fetchCoursesCreatedByPersonId called for personId: ${personId}`);
+  // Use courseFetchThrottle instead of studentActivityThrottle to avoid conflicts
+  const result = await courseFetchThrottle.throttle(async () => {
+    console.log(`🟡 Frontend: Throttle executing for personId: ${personId}`);
+    const data = {
+      personId,
+    };
+    const getCoursesCreatedByPersonId = functions.httpsCallable("getCoursesCreatedByPersonId");
+    console.log(`🟠 Frontend: About to call Firebase function for personId: ${personId}`);
+    try {
+      const response = await getCoursesCreatedByPersonId(data);
+      console.log(`✅ Frontend: Successfully received response for personId: ${personId}`, response);
+      return response;
+    } catch (error) {
+      console.error(`❌ Frontend: Error calling function for personId: ${personId}`, error);
+      throw error;
+    }
+  });
+  console.log(`🟢 Frontend: Returning courses for personId: ${personId}`, result.data.courses);
+  return result.data.courses;
+};
+
+export const fetchAllCoursesGroupedByCreator = async (): Promise<{
+  [personId: string]: ICourse[];
+}> => {
+  console.log("🟢 Frontend: fetchAllCoursesGroupedByCreator called");
+  const getAllCoursesGroupedByCreator = functions.httpsCallable("getAllCoursesGroupedByCreator");
+  const result = await getAllCoursesGroupedByCreator({});
+  console.log(
+    `✅ Frontend: Successfully received grouped courses for ${Object.keys(result.data.coursesByCreator || {}).length} creators`,
+  );
+  return result.data.coursesByCreator || {};
 };
 
 export const fetchCourseMapEdgesAndNodesByCourseId = async (
@@ -394,11 +434,23 @@ export const fetchPersonByPersonId = async (
     cohortId,
   };
   try {
-    const getPersonByPersonId = functions.httpsCallable("getPersonByPersonId");
-    const result = await getPersonByPersonId(data);
+    // Throttle the request to avoid overwhelming Firebase with concurrent requests
+    const result = await personFetchThrottle.throttle(async () => {
+      const getPersonByPersonId = functions.httpsCallable("getPersonByPersonId");
+      return await getPersonByPersonId(data);
+    });
     return result.data.person;
   } catch (error) {
-    console.error(`Error fetching person with ID ${id} from COHORT ${cohortId}:`, error);
+    // Only log if it's not a resource exhaustion error (those are expected when throttled)
+    const errorCode = error?.code;
+    const errorMessage = error?.message || "";
+    if (
+      errorCode !== "internal" ||
+      (!errorMessage.includes("ERR_INSUFFICIENT_RESOURCES") &&
+        !errorMessage.includes("ERR_CONNECTION_CLOSED"))
+    ) {
+      console.error(`Error fetching person with ID ${id} from COHORT ${cohortId}:`, error);
+    }
     return null;
   }
 };

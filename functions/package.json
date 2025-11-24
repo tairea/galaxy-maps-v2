@@ -8,7 +8,9 @@
     "serve": "npm run build && firebase emulators:start --only functions",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
+    "predeploy": "npm run lint && npm run build",
     "deploy": "firebase deploy --only functions",
+    "deploy:safe": "npm run predeploy && npm run deploy",
     "logs": "firebase functions:log"
   },
   "engines": {
@@ -16,10 +18,11 @@
   },
   "main": "lib/index.js",
   "dependencies": {
+    "@google-cloud/storage": "^7.17.3",
     "@latitude-data/sdk": "^4.1.12",
     "dotenv": "^16.3.1",
-    "firebase-admin": "^11.11.0",
-    "firebase-functions": "^6.4.0",
+    "firebase-admin": "^13.6.0",
+    "firebase-functions": "^7.0.0",
     "luxon": "^3.4.3",
     "node-fetch": "^3.3.2",
     "nodemailer": "^6.9.7",

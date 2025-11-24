@@ -1,9 +1,9 @@
 <template>
   <div class="bg">
     <Login v-if="componentView == 'login'" />
-    <v-btn v-if="componentView == 'login'" :to="{ path: '/' }">
+    <v-btn text v-if="componentView == 'login'" :to="{ path: '/' }">
       <p
-        class="overline baseAccent--text landing-content mb-16"
+        class="overline baseAccent--text landing-content pb-16"
         v-text="Object.keys($route.query).length === 0 ? 'Continue without signing in ->' : ''"
       ></p>
     </v-btn>

@@ -2,11 +2,12 @@
   <v-container class="student-data-iterator" fluid>
     <v-data-iterator
       :items="sortedStudents"
-      :items-per-page="-1"
+      :items-per-page="itemsPerPage"
+      :footer-props="footerProps"
+      :page="page"
       :search="search"
       :sort-by="sortBy !== 'lastActive' ? sortBy : null"
       :sort-desc="sortDesc"
-      hide-default-footer
     >
       <!-- HEADER -->
       <template v-slot:header>
@@ -77,6 +78,7 @@
           :student="student"
           :timeframe="timeframe"
           :date="date"
+          :cachedCreatedCourses="createdCoursesCache[student.id]"
           @updateStudentsWithHours="updateStudentsWithHours($event)"
           @updateStudentsWithTasks="updateStudentsWithTasks($event)"
           @showStudent="showStudent"
@@ -87,14 +89,42 @@
       <template v-slot:no-data>
         <p class="ma-10 noStudents">No Students in this Cohort</p>
       </template>
+      <!-- <template v-slot:footer>
+        <v-row class="mt-2" align="center" justify="center">
+          <v-col cols="12" sm="6" md="4">
+            <div class="d-flex align-center">
+              <span class="mr-4">Page {{ page }} of {{ numberOfPages }}</span>
+              <v-btn
+                small
+                outlined
+                color="missionAccent"
+                :disabled="page === 1"
+                @click="page = page - 1"
+              >
+                <v-icon small left>{{ mdiChevronLeft }}</v-icon>
+                Previous
+              </v-btn>
+              <v-btn
+                small
+                outlined
+                color="missionAccent"
+                :disabled="page >= numberOfPages"
+                @click="page = page + 1"
+                class="ml-2"
+              >
+                Next
+                <v-icon small right>{{ mdiChevronRight }}</v-icon>
+              </v-btn>
+            </div>
+          </v-col>
+        </v-row>
+      </template> -->
     </v-data-iterator>
     <!-- Student Dialog -->
     <LearnerOverviewDashboard
       v-if="showStudentFlag && isTeacher"
       :dialog="showStudentFlag"
       :student="student"
-      :studentCoursesActivity="studentCoursesActivity"
-      :studentTimeData="studentTimeData"
       @cancel="cancelShowStudent"
       @edit="showEdit($event)"
     />
@@ -117,9 +147,16 @@ import StudentAccountsDialog from "@/components/Dialogs/StudentAccountsDialog.vu
 import StudentCardAdmin from "@/components/AllStudentsView/StudentCardAdmin.vue";
 import TimeframeFilters from "@/components/Reused/TimeframeFilters.vue";
 
-import { fetchPersonByPersonId } from "@/lib/ff";
+import { fetchPersonByPersonId, fetchAllCoursesGroupedByCreator } from "@/lib/ff";
 import { mapState } from "pinia";
-import { mdiArrowUp, mdiArrowDown, mdiMagnify, mdiSortAlphabeticalVariant } from "@mdi/js";
+import {
+  mdiArrowUp,
+  mdiArrowDown,
+  mdiMagnify,
+  mdiSortAlphabeticalVariant,
+  mdiChevronLeft,
+  mdiChevronRight,
+} from "@mdi/js";
 import useRootStore from "@/store/index";
 
 export default {
@@ -141,10 +178,15 @@ export default {
       mdiArrowDown,
       mdiMagnify,
       mdiSortAlphabeticalVariant,
+      mdiChevronLeft,
+      mdiChevronRight,
       search: "",
       sortDesc: false,
       sortBy: "lastActive",
       keys: ["firstName", "lastName", "nsnNumber", "studentEmail", "lastActive"],
+      page: 1,
+      itemsPerPage: 50,
+      itemsPerPageOptions: [50, 100, 200, 500, -1],
       timeframe: {
         min: new Date(-8640000000000000),
         max: new Date(),
@@ -155,8 +197,7 @@ export default {
       editStudentFlag: false,
       students: [],
       student: [],
-      studentCoursesActivity: [],
-      studentTimeData: [],
+      createdCoursesCache: {}, // Cache for created courses by student ID
     };
   },
   created() {
@@ -171,10 +212,33 @@ export default {
   destroyed() {
     clearInterval(this.counterInterval);
   },
-  mounted() {
+  async mounted() {
     this.students = this.people;
+    // Fetch all courses once and populate cache
+    try {
+      const coursesByCreator = await fetchAllCoursesGroupedByCreator();
+      // Populate cache with grouped courses
+      this.createdCoursesCache = coursesByCreator;
+    } catch (error) {
+      console.error("Failed to fetch all courses grouped by creator:", error);
+      // Set empty cache on error to prevent retries
+      this.createdCoursesCache = {};
+    }
   },
-  watch: {},
+  watch: {
+    search() {
+      // Reset to page 1 when search changes
+      this.page = 1;
+    },
+    sortBy() {
+      // Reset to page 1 when sort changes
+      this.page = 1;
+    },
+    itemsPerPage() {
+      // Reset to page 1 when items per page changes
+      this.page = 1;
+    },
+  },
   computed: {
     ...mapState(useRootStore, ["user", "people"]),
     filteredKeys() {
@@ -189,20 +253,69 @@ export default {
       }
     },
     sortedStudents() {
-      if (this.sortBy !== "lastActive") {
-        return this.students;
+      let sorted = this.students;
+      if (this.sortBy === "lastActive") {
+        sorted = [...this.students].sort((a, b) => {
+          // Always put undefined values at the bottom regardless of sort direction
+          if (a.lastActive === undefined) return 1;
+          if (b.lastActive === undefined) return -1;
+
+          // For defined values, sort normally
+          return this.sortDesc
+            ? a.lastActive - b.lastActive // Descending: oldest first
+            : b.lastActive - a.lastActive; // Ascending: most recent first
+        });
+      } else if (this.sortBy === "firstName") {
+        sorted = [...this.students].sort((a, b) => {
+          const aName = (a.firstName || "").toLowerCase();
+          const bName = (b.firstName || "").toLowerCase();
+          if (aName === bName) return 0;
+          return this.sortDesc ? bName.localeCompare(aName) : aName.localeCompare(bName);
+        });
+      } else if (this.sortBy === "lastName") {
+        sorted = [...this.students].sort((a, b) => {
+          const aName = (a.lastName || "").toLowerCase();
+          const bName = (b.lastName || "").toLowerCase();
+          if (aName === bName) return 0;
+          return this.sortDesc ? bName.localeCompare(aName) : aName.localeCompare(bName);
+        });
+      } else if (this.sortBy === "studentEmail") {
+        sorted = [...this.students].sort((a, b) => {
+          const aEmail = (a.studentEmail || "").toLowerCase();
+          const bEmail = (b.studentEmail || "").toLowerCase();
+          if (aEmail === bEmail) return 0;
+          return this.sortDesc ? bEmail.localeCompare(aEmail) : aEmail.localeCompare(bEmail);
+        });
+      } else if (this.sortBy === "nsnNumber") {
+        sorted = [...this.students].sort((a, b) => {
+          const aNsn = (a.nsnNumber || "").toLowerCase();
+          const bNsn = (b.nsnNumber || "").toLowerCase();
+          if (aNsn === bNsn) return 0;
+          return this.sortDesc ? bNsn.localeCompare(aNsn) : aNsn.localeCompare(bNsn);
+        });
       }
-
-      return [...this.students].sort((a, b) => {
-        // Always put undefined values at the bottom regardless of sort direction
-        if (a.lastActive === undefined) return 1;
-        if (b.lastActive === undefined) return -1;
-
-        // For defined values, sort normally
-        return this.sortDesc
-          ? a.lastActive - b.lastActive // Descending: oldest first
-          : b.lastActive - a.lastActive; // Ascending: most recent first
+      return sorted;
+    },
+    numberOfPages() {
+      const filtered = this.sortedStudents.filter((student) => {
+        if (!this.search) return true;
+        const searchLower = this.search.toLowerCase();
+        return (
+          student.firstName?.toLowerCase().includes(searchLower) ||
+          student.lastName?.toLowerCase().includes(searchLower) ||
+          student.studentEmail?.toLowerCase().includes(searchLower) ||
+          student.nsnNumber?.toLowerCase().includes(searchLower)
+        );
       });
+      if (this.itemsPerPage === -1) return 1;
+      return Math.ceil(filtered.length / this.itemsPerPage) || 1;
+    },
+    footerProps() {
+      return {
+        "items-per-page-options": this.itemsPerPageOptions,
+        "items-per-page-text": "Items per page",
+        "items-per-page-all-text": "All",
+      };
     },
   },
   methods: {
@@ -210,8 +323,6 @@ export default {
     showStudent(payload) {
       this.showStudentFlag = false;
       this.student = payload.student;
-      this.studentCoursesActivity = payload.coursesActivity;
-      this.studentTimeData = payload.timeData;
       this.showStudentFlag = true;
     },
     cancelShowStudent() {
