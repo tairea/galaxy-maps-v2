@@ -21,10 +21,15 @@ import {
   getCourseByCourseIdHttpsEndpoint,
   getCourseMapEdgesAndNodesByCourseIdHttpsEndpoint,
   getCoursesHttpsEndpoint,
+  getPublicCoursesHttpsEndpoint,
+  getMyCoursesHttpsEndpoint,
+  getCoursesCreatedByPersonIdHttpsEndpoint,
+  getAllCoursesGroupedByCreatorHttpsEndpoint,
   getCohortByCohortIdHttpsEndpoint,
   getCohortsHttpsEndpoint,
   getCohortsByCourseIdHttpsEndpoint,
   getStudentCohortsByPersonIdHttpsEndpoint,
+  getTeachersCohortsByPersonIdHttpsEndpoint,
   getPeopleByCourseIdHttpsEndpoint,
   getPersonTasksByPersonIdCourseIdTopicIdHttpsEndpoint,
   getPersonTopicByPersonIdCourseIdTopicIdHttpsEndpoint,
@@ -34,10 +39,18 @@ import {
   getTopicByCourseIdTopicIdHttpsEndpoint,
   getStudentSubmissionsByPersonIdHttpsEndpoint,
   getStudentRequestsByPersonIdHttpsEndpoint,
+  getGalaxyMapObjectFromCourseHttpsEndpoint,
   updateTaskByCourseIdTopicIdTaskIdHttpsEndpoint,
   updateTaskOrderIndexesByCourseIdTopicIdHttpsEndpoint,
   removeMeFromCourseHttpsEndpoint,
   removeStudentFromCourseHttpsEndpoint,
+  saveGalaxyMapHttpsEndpoint,
+  saveTopicToStudentsHttpsEndpoint,
+  deleteTopicForStudentsHttpsEndpoint,
+  saveNodeHttpsEndpoint,
+  removePrerequisitesFromTopicsHttpsEndpoint,
+  updateStudentTopicPrerequisitesHttpsEndpoint,
+  startMissionHttpsEndpoint,
 } from "./courseManagement.js";
 import {
   sendCourseDeletedHttpsEndpoint,
@@ -50,6 +63,10 @@ import {
   sendResponseToHelpHttpsEndpoint,
   sendResponseToSubmissionHttpsEndpoint,
   sendTaskSubmissionHttpsEndpoint,
+  sendCollaboratorAddedEmailHttpsEndpoint,
+  sendGenericEmailHttpsEndpoint,
+  scheduleGalaxyFeedbackEmailHttpsEndpoint,
+  sendGalaxyFeedbackEmailTask,
 } from "./emails.js";
 import {
   getOrganisationByOrganisationIdHttpsEndpoint,
@@ -62,12 +79,29 @@ import {
 import { onUserStatusChangedOnUpdateTrigger } from "./presence.js";
 import {
   addAdminRoleHttpsEndpoint,
+  bulkImportStudentsHttpsEndpoint,
   createNewUserHttpsEndpoint,
   getPersonByEmailHttpsEndpoint,
   getPersonByPersonIdHttpsEndpoint,
   updatePersonByPersonIdHttpsEndpoint,
+  updateUserPasswordHttpsEndpoint,
+  resendInitialSetupLinkHttpsEndpoint,
 } from "./userManagement.js";
+import {
+  downloadAndUploadImageHttpsEndpoint,
+  generateGalaxyMapHttpsEndpoint,
+  generateGalaxyMapWithClarificationHttpsEndpoint,
+  generateGalaxyMapAgainHttpsEndpoint,
+  generateInstructionsForMissionHttpsEndpoint,
+  generateUnifiedGalaxyMapHttpsEndpoint,
+  generateGalaxyImageHttpsEndpoint,
+  refineGalaxyMapHttpsEndpoint,
+  generateSquadReportHttpsEndpoint,
+} from "./openAIActions.js";
+import { generateRealtimeTokenHttpsEndpoint } from "./realtimeToken.js";
+import { refineStructureHttpsEndpoint } from "./refiners/refine-structure.js";
 
+// activity
 export {
   getCohortCoursesActivityByCohortIdHttpsEndpoint as getCohortCoursesActivityByCohortId,
   getCohortStudentsActivityTimeByCohortIdHttpsEndpoint as getCohortStudentsActivityTimeByCohortId,
@@ -77,8 +111,10 @@ export {
   getStudentCoursesTimeDataByPersonIdStartAtEndAtHttpsEndpoint as getStudentCoursesTimeDataByPersonIdStartAtEndAt,
 };
 
+// scheduled functions
 export { checkInactivitySchedule as scheduledFunction };
 
+// course management
 export {
   addMeToCohortHttpsEndpoint as addMeToCohort,
   addStudentToCohortHttpsEndpoint as addStudentToCohort,
@@ -90,12 +126,18 @@ export {
   getCourseByCourseIdHttpsEndpoint as getCourseByCourseId,
   getCourseMapEdgesAndNodesByCourseIdHttpsEndpoint as getCourseMapEdgesAndNodesByCourseId,
   getCoursesHttpsEndpoint as getCourses,
+  getPublicCoursesHttpsEndpoint as getPublicCourses,
+  getMyCoursesHttpsEndpoint as getMyCourses,
+  getCoursesCreatedByPersonIdHttpsEndpoint as getCoursesCreatedByPersonId,
+  getAllCoursesGroupedByCreatorHttpsEndpoint as getAllCoursesGroupedByCreator,
   getCohortByCohortIdHttpsEndpoint as getCohortByCohortId,
   getCohortsHttpsEndpoint as getCohorts,
   getCohortsByCourseIdHttpsEndpoint as getCohortsByCourseId,
   getStudentCohortsByPersonIdHttpsEndpoint as getStudentCohortsByPersonId,
+  getTeachersCohortsByPersonIdHttpsEndpoint as getTeachersCohortsByPersonId,
   getStudentSubmissionsByPersonIdHttpsEndpoint as getStudentSubmissionsByPersonId,
   getStudentRequestsByPersonIdHttpsEndpoint as getStudentRequestsByPersonId,
+  getGalaxyMapObjectFromCourseHttpsEndpoint as getGalaxyMapObjectFromCourse,
   getPeopleByCourseIdHttpsEndpoint as getPeopleByCourseId,
   getPersonTasksByPersonIdCourseIdTopicIdHttpsEndpoint as getPersonTasksByPersonIdCourseIdTopicId,
   getPersonTopicByPersonIdCourseIdTopicIdHttpsEndpoint as getPersonTopicByPersonIdCourseIdTopicId,
@@ -107,8 +149,16 @@ export {
   updateTaskOrderIndexesByCourseIdTopicIdHttpsEndpoint as updateTaskOrderIndexesByCourseIdTopicId,
   removeMeFromCourseHttpsEndpoint as removeMeFromCourse,
   removeStudentFromCourseHttpsEndpoint as removeStudentFromCourse,
+  saveGalaxyMapHttpsEndpoint as saveGalaxyMap,
+  saveTopicToStudentsHttpsEndpoint as saveTopicToStudents,
+  deleteTopicForStudentsHttpsEndpoint as deleteTopicForStudents,
+  saveNodeHttpsEndpoint as saveNode,
+  removePrerequisitesFromTopicsHttpsEndpoint as removePrerequisitesFromTopics,
+  updateStudentTopicPrerequisitesHttpsEndpoint as updateStudentTopicPrerequisites,
+  startMissionHttpsEndpoint as startMission,
 };
 
+// emails
 export {
   sendCourseDeletedHttpsEndpoint as sendCourseDeleted,
   sendCoursePublishedEmailHttpsEndpoint as sendCoursePublishedEmail,
@@ -120,8 +170,13 @@ export {
   sendResponseToHelpHttpsEndpoint as sendResponseToHelp,
   sendResponseToSubmissionHttpsEndpoint as sendResponseToSubmission,
   sendTaskSubmissionHttpsEndpoint as sendTaskSubmission,
+  sendCollaboratorAddedEmailHttpsEndpoint as sendCollaboratorAddedEmail,
+  sendGenericEmailHttpsEndpoint as sendGenericEmail,
+  scheduleGalaxyFeedbackEmailHttpsEndpoint as scheduleGalaxyFeedbackEmail,
+  sendGalaxyFeedbackEmailTask,
 };
 
+// organisation
 export {
   getOrganisationByOrganisationIdHttpsEndpoint as getOrganisationByOrganisationId,
   getPeopleByOrganisationIdHttpsEndpoint as getPeopleByOrganisationId,
@@ -131,12 +186,32 @@ export {
   deleteOrganisationByOrganisationIdHttpsEndpoint as deleteOrganisationByOrganisationId,
 };
 
+// presence
 export { onUserStatusChangedOnUpdateTrigger as onUserStatusChanged };
 
+// user
 export {
   addAdminRoleHttpsEndpoint as addAdminRole,
+  bulkImportStudentsHttpsEndpoint as bulkImportStudents,
   createNewUserHttpsEndpoint as createNewUser,
   getPersonByEmailHttpsEndpoint as getPersonByEmail,
   getPersonByPersonIdHttpsEndpoint as getPersonByPersonId,
   updatePersonByPersonIdHttpsEndpoint as updatePersonByPersonId,
+  updateUserPasswordHttpsEndpoint as updateUserPassword,
+  resendInitialSetupLinkHttpsEndpoint as resendInitialSetupLink,
+};
+
+// openai
+export {
+  downloadAndUploadImageHttpsEndpoint as downloadAndUploadImage,
+  generateGalaxyMapHttpsEndpoint as generateGalaxyMap,
+  generateGalaxyMapWithClarificationHttpsEndpoint as generateGalaxyMapWithClarification,
+  generateGalaxyMapAgainHttpsEndpoint as generateGalaxyMapAgain,
+  generateInstructionsForMissionHttpsEndpoint as generateInstructionsForMission,
+  generateUnifiedGalaxyMapHttpsEndpoint as generateUnifiedGalaxyMap,
+  generateGalaxyImageHttpsEndpoint as generateGalaxyImage,
+  refineGalaxyMapHttpsEndpoint as refineGalaxyMap,
+  refineStructureHttpsEndpoint as refineStructure,
+  generateSquadReportHttpsEndpoint as generateSquadReport,
+  generateRealtimeTokenHttpsEndpoint as generateRealtimeToken,
 };

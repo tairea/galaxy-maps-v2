@@ -120,13 +120,12 @@ export default {
       );
       this.timeData = courseHours;
       this.studentTimeDataLoading = false;
-      // console.log("course HOURS for ", this.student.firstName + ": ", this.timeData);
 
       this.formatStudentsChartData(courseHours);
     },
     formatStudentsChartData(studentData) {
       const data = [];
-      let labels = [];
+      const labels = [];
 
       // more than one student in a cohort so loop
       for (const courseAndHoursObj of studentData) {
@@ -136,8 +135,6 @@ export default {
         data.push(courseAndHoursObj.hours);
         labels.push(label);
       }
-
-      console.log("LABELS: ", labels);
 
       // // ==== test 30 students ===
       // for (var x = 0; x < 50; x++) {
@@ -181,7 +178,7 @@ export default {
     },
     hashCode(str) {
       let hash = 0;
-      for (var i = 0; i < str.length; i++) {
+      for (let i = 0; i < str.length; i++) {
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
       }
       return hash;

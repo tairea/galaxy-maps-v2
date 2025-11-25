@@ -1,6 +1,6 @@
 <template>
-  <div class="selected-mission-card">
-    <div v-html="task.description" class="task-description pa-2"></div>
+  <div class="selected-mission-card" :class="{ mobile: isMobile }">
+    <div v-html="renderedTaskDescription" class="task-description py-2"></div>
     <v-row class="pb-8">
       <div v-if="task.video || task.slides" class="supporting-materials">
         <p class="text-overline missionAccent--text">Supporting Materials</p>
@@ -44,7 +44,12 @@
             <br />
             <span class="galaxyAccent--text">"{{ task.taskReviewedFeedback }}"</span>
           </p>
-          <p v-else class="text-overline text-uppercase">With No feedback</p>
+          <p
+            v-else-if="task.submissionRequired && !task.taskReviewedFeedback"
+            class="text-overline text-uppercase"
+          >
+            With No feedback
+          </p>
         </div>
       </div>
     </v-row>
@@ -53,11 +58,17 @@
 
 <script>
 import { DateTime } from "luxon";
+import * as smd from "streaming-markdown";
 
 export default {
   name: "SelectedMissionsCard",
   props: ["task", "inreview", "completed"],
   computed: {
+    taskMissionInstructionsHtml() {
+      if (!this.task) return "";
+      return this.task.missionInstructionsHtmlString || this.task.description || "";
+    },
+
     getStatusAndTimestamp() {
       if (this.completed && this.task.submissionRequired) {
         return "MARKED COMPLETED: " + this.humanDate(this.task.taskReviewedAndCompletedTimestamp);
@@ -69,12 +80,124 @@ export default {
         return "LOCKED";
       }
     },
+
+    /**
+     * Renders markdown for task description using streaming-markdown library
+     */
+    renderedTaskDescription() {
+      if (!this.task || !this.taskMissionInstructionsHtml) return "";
+
+      try {
+        // Check if content is HTML or markdown
+        if (this.isHtmlContent(this.taskMissionInstructionsHtml)) {
+          // If it's HTML, return as-is
+          return this.taskMissionInstructionsHtml;
+        } else {
+          // If it's markdown, convert it
+          return this.renderMarkdownWithStreaming(this.taskMissionInstructionsHtml);
+        }
+      } catch (error) {
+        console.error("Error rendering task description markdown:", error);
+        // Fallback to plain text with HTML escaping
+        return this.taskMissionInstructionsHtml
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+    },
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
+    },
   },
   methods: {
     humanDate(timestamp) {
       return DateTime.fromSeconds(
         timestamp.seconds ? timestamp.seconds : timestamp._seconds,
       ).toFormat("HH:mm ccc dd LLL yyyy");
+    },
+
+    /**
+     * Detects if content is HTML or markdown
+     * @param content - The content to analyze
+     * @returns boolean - true if HTML, false if markdown
+     */
+    isHtmlContent(content) {
+      if (!content) return false;
+
+      // Check for common HTML patterns
+      const htmlPatterns = [
+        /<[^>]+>/g, // HTML tags
+        /&[a-zA-Z]+;/g, // HTML entities like &nbsp;
+        /<iframe/i, // iframe tags specifically
+        /<div/i, // div tags
+        /<p>/i, // p tags
+        /<br/i, // br tags
+        /<img/i, // img tags
+        /<a\s+href/i, // anchor tags with href
+      ];
+
+      // If any HTML patterns are found, consider it HTML
+      for (const pattern of htmlPatterns) {
+        if (pattern.test(content)) {
+          return true;
+        }
+      }
+
+      // Check for markdown patterns
+      const markdownPatterns = [
+        /^#{1,6}\s+/m, // Headers
+        /\*\*[^*]+\*\*/, // Bold
+        /\*[^*]+\*/, // Italic
+        /\[[^\]]+\]\([^)]+\)/, // Links
+        /^[-*+]\s+/m, // Unordered lists
+        /^\d+\.\s+/m, // Ordered lists
+        /`[^`]+`/, // Inline code
+        /```[\s\S]*?```/, // Code blocks
+      ];
+
+      // If markdown patterns are found and no HTML patterns, consider it markdown
+      const hasMarkdown = markdownPatterns.some((pattern) => pattern.test(content));
+      const hasHtml = htmlPatterns.some((pattern) => pattern.test(content));
+
+      // If it has both HTML and markdown, prefer HTML (don't convert)
+      if (hasHtml) return true;
+
+      // If it has markdown and no HTML, convert it
+      return !hasMarkdown;
+    },
+
+    /**
+     * Renders markdown using streaming-markdown library
+     * @param markdown - The markdown text to convert
+     * @returns HTML string
+     */
+    renderMarkdownWithStreaming(markdown) {
+      if (!markdown) return "";
+
+      try {
+        // Create a temporary div element to render into
+        const tempDiv = document.createElement("div");
+
+        // Create renderer and parser
+        const renderer = smd.default_renderer(tempDiv);
+        const parser = smd.parser(renderer);
+
+        // Write the markdown content
+        smd.parser_write(parser, markdown);
+
+        // End the stream
+        smd.parser_end(parser);
+
+        // Get the HTML content
+        const html = tempDiv.innerHTML;
+
+        return html;
+      } catch (error) {
+        console.error("Error rendering markdown with streaming-markdown:", error);
+        return markdown; // Fallback to plain text
+      }
     },
   },
 };
@@ -97,9 +220,18 @@ a {
   z-index: 200;
   background-color: var(--v-background-base);
 
+  &.mobile {
+    margin: 0px;
+
+    // mobile - task description
+    .task-description {
+      margin: 0px;
+    }
+  }
+
   .task-description {
     color: var(--v-missionAccent-base);
-    margin: 20px;
+    padding: 40px 20px;
   }
 
   .supporting-materials {

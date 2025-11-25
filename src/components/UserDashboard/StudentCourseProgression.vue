@@ -45,7 +45,7 @@ export default {
     );
 
     // Precompute the most recent activity timestamp for each course
-    let coursesWithMaxTimestamp = this.studentCourses.map((course) => ({
+    const coursesWithMaxTimestamp = this.studentCourses.map((course) => ({
       ...course,
       mostRecentTimestamp: Math.max(
         ...course.activities.map((activity) => new Date(activity.timeStamp).getTime()),

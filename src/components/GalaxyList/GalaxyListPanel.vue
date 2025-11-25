@@ -1,11 +1,23 @@
 <template>
   <div class="galaxyListPanel">
-    <!-- USER MENU TOPBAR -->
-
-    <!-- USER MENU HIDDEN-->
-
     <div class="panelContent">
       <div class="panelContentInner">
+        <!-- SEARCH and FILTER BAR -->
+        <div class="subPanel searchPanel">
+          <div class="mx-2 my-2">
+            <v-text-field
+              v-model="searchQuery"
+              dense
+              clearable
+              hide-details
+              outlined
+              :prepend-inner-icon="mdiMagnify"
+              color="missionAccent"
+              placeholder="Search Galaxy Maps"
+              class="searchInput"
+            />
+          </div>
+        </div>
         <!-- ADMIN NEEDING TO REVIEW -->
         <div
           class="subPanel"
@@ -21,7 +33,7 @@
           <div>
             <!-- COURSE CARD -->
             <GalaxyListPanelCard
-              v-for="(course, index) in getAllSubmittedCourses"
+              v-for="(course, index) in filteredAllSubmittedCourses"
               :key="course.id"
               :course="course"
               :admin="user.data && user.data.admin"
@@ -34,10 +46,10 @@
         <!-- LEARNING -->
         <div v-if="user.loggedIn" class="subPanel">
           <p class="galaxyListPanelLabel overline mx-4">EXPLORING</p>
-          <div v-if="getLearningCourses.length">
+          <div v-if="filteredLearningCourses.length">
             <!-- COURSE CARD -->
             <GalaxyListPanelCard
-              v-for="(course, index) in getLearningCourses"
+              v-for="(course, index) in filteredLearningCourses"
               :key="course.id"
               :course="course"
               :active="index === activeLearning"
@@ -66,10 +78,10 @@
             </v-btn>
           </div>
 
-          <div v-if="getTeachingCourses.length">
+          <div v-if="filteredTeachingCourses.length">
             <!-- COURSE CARD -->
             <GalaxyListPanelCard
-              v-for="(course, index) in getTeachingCourses"
+              v-for="(course, index) in filteredTeachingCourses"
               :key="course.id"
               :course="course"
               :active="index === activeTeaching"
@@ -84,7 +96,7 @@
           <div>
             <!-- COURSE CARD -->
             <GalaxyListPanelCard
-              v-for="(course, index) in getSubmittedCourses"
+              v-for="(course, index) in filteredSubmittedCourses"
               :key="course.id"
               :course="course"
               :active="index === activeSubmitted"
@@ -96,10 +108,10 @@
         <!-- ALL -->
         <div class="subPanel">
           <p class="galaxyListPanelLabel overline mx-4">PUBLIC GALAXIES</p>
-          <div v-if="getPublicCourses.length">
+          <div v-if="filteredPublicCourses.length">
             <!-- COURSE CARD -->
             <GalaxyListPanelCard
-              v-for="(course, index) in getPublicCourses"
+              v-for="(course, index) in filteredPublicCourses"
               :key="course.id"
               :course="course"
               :active="index === activePublic"
@@ -124,7 +136,7 @@
 import GalaxyListPanelCard from "@/components/GalaxyList/GalaxyListPanel/GalaxyListPanelCard.vue";
 import useRootStore from "@/store/index";
 import useGalaxyListViewStore from "@/store/galaxyListView";
-import { mdiPlus } from "@mdi/js";
+import { mdiPlus, mdiMagnify } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
 import { defineComponent } from "vue";
 
@@ -136,12 +148,14 @@ export default defineComponent({
   data() {
     return {
       mdiPlus,
+      mdiMagnify,
       allCourses: [],
       selectedGalaxy: false,
       activeLearning: null,
       activeTeaching: null,
       activeSubmitted: null,
       activePublic: null,
+      searchQuery: "",
     };
   },
   async mounted() {
@@ -151,6 +165,11 @@ export default defineComponent({
   computed: {
     ...mapState(useRootStore, ["person", "cohorts", "user"]),
     ...mapState(useGalaxyListViewStore, ["courses"]),
+
+    // SEARCH
+    normalizedSearch() {
+      return (this.searchQuery || "").toString().trim().toLowerCase();
+    },
 
     // LEARNING GALAXIES
     getLearningCourses() {
@@ -181,7 +200,10 @@ export default defineComponent({
     // TEACHERING GALAXIES
     getSubmittedCourses() {
       return this.courses.filter(
-        (course) => course.mappedBy.personId == this.person.id && course.status == "submitted",
+        (course) =>
+          (course.mappedBy.personId == this.person.id ||
+            (course.collaboratorIds && course.collaboratorIds.includes(this.person.id))) &&
+          course.status == "submitted",
       );
     },
     // ADMIN NEEDS TO REVIEW
@@ -200,7 +222,8 @@ export default defineComponent({
       return this.courses.filter(
         (course) =>
           this.user.loggedIn &&
-          course.mappedBy.personId == this.person.id &&
+          (course.mappedBy.personId == this.person.id ||
+            (course.collaboratorIds && course.collaboratorIds.includes(this.person.id))) &&
           course.status != "submitted",
       );
     },
@@ -214,11 +237,33 @@ export default defineComponent({
           !(this.user.loggedIn && this.getLearningCourses.includes(course)),
       );
     },
+    // FILTERED LISTS (apply search to the visible lists only)
+    filteredLearningCourses() {
+      return this.getLearningCourses.filter(this.matchesSearch);
+    },
+    filteredTeachingCourses() {
+      return this.getTeachingCourses.filter(this.matchesSearch);
+    },
+    filteredSubmittedCourses() {
+      return this.getSubmittedCourses.filter(this.matchesSearch);
+    },
+    filteredAllSubmittedCourses() {
+      if (!this.getAllSubmittedCourses) return false;
+      return this.getAllSubmittedCourses.filter(this.matchesSearch);
+    },
+    filteredPublicCourses() {
+      return this.getPublicCourses.filter(this.matchesSearch);
+    },
   },
   methods: {
     ...mapActions(useRootStore, ["getCohortsByPersonId"]),
     first3Letters(name) {
       return name.substring(0, 3).toUpperCase();
+    },
+    matchesSearch(course) {
+      if (!this.normalizedSearch) return true;
+      const title = (course.title || "").toString().toLowerCase();
+      return title.includes(this.normalizedSearch);
     },
     courseClicked(courseId, index, type) {
       this.selectedGalaxy = !this.selectedGalaxy;
@@ -305,6 +350,11 @@ export default defineComponent({
         margin: 10px;
         margin-top: 20px;
       }
+
+      .searchPanel {
+        border: 1px dashed var(--v-galaxyAccent-base);
+        margin-top: 10px;
+      }
     }
 
     .galaxyListPanelLabel {
@@ -318,6 +368,12 @@ export default defineComponent({
       position: relative;
       font-size: 0.6rem;
       letter-spacing: 1px;
+    }
+
+    .searchInput ::v-deep input {
+      color: var(--v-primary-base) !important;
+      font-size: 1rem;
+      letter-spacing: 0.5px;
     }
   }
 

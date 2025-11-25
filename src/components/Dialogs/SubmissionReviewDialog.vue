@@ -2,10 +2,10 @@
   <v-container class="pa-2">
     <v-row class="text-center" align="center">
       <v-col cols="12">
-        <v-dialog 
-          v-model="dialog" 
-          width="40%" 
-          light 
+        <v-dialog
+          v-model="dialog"
+          width="40%"
+          light
           persistent
           :retain-focus="markingSubmission || decliningSubmission"
           @click:outside="close"
@@ -27,10 +27,10 @@
                 size="64"
               ></v-progress-circular>
               <p class="loading-text">
-                {{ markingSubmission ? 'Processing submission...' : 'Declining submission...' }}
+                {{ markingSubmission ? "Processing submission..." : "Declining submission..." }}
               </p>
             </div>
-            
+
             <!-- DIALOG HEADER -->
             <div class="dialog-header">
               <p v-if="reviewed" class="dialog-title mb-0">
@@ -229,10 +229,7 @@
                   outlined
                   color="baseAccent"
                   :to="
-                    '/galaxy/' +
-                    submission.contextCourse.id +
-                    '/system/' +
-                    submission.contextTopic.id
+                    '/galaxy/' + submission.contextCourse.id + '/star/' + submission.contextTopic.id
                   "
                   class="mr-4"
                 >
@@ -276,6 +273,7 @@ import {
   teacherRespondedSubmissionDeclinedXAPIStatement,
   topicCompletedXAPIStatement,
 } from "@/lib/veracityLRS";
+import { getFriendlyErrorMessage } from "@/lib/utils";
 
 import useRootStore from "@/store/index";
 
@@ -738,7 +736,7 @@ export default {
       } catch (error) {
         this.setSnackbar({
           show: true,
-          text: "Error: " + error,
+          text: getFriendlyErrorMessage(error.code),
           color: "pink",
         });
         throw error;

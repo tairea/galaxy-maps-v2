@@ -1,0 +1,332 @@
+{
+  "image": {
+    "url": "https://storage.googleapis.com/galaxy-maps-ac367.appspot.com/galaxy-maps/1757554177294-Island-Voices--A-Young-Podcasters--Guide-to-Interviewing-Elders.png?GoogleAccessId=galaxy-maps-ac367%40appspot.gserviceaccount.com&Expires=16730323200&Signature=tG9060It4ReRaF%2Fh6uEjL5b7DV7H7FR%2BtMa0joS%2BHVfrDuU%2B7fYw0D8Eaj2ykRIIrbSTt%2FAo8yW4LLh1FD8972xnhOWp475FYcDYdMeL6%2FJeE7qsYf17%2Flkl1QjBjU7HJawe8v0bwPW%2ByYNYeFiLfcbNrq2qT8fJR7m17uO0tlC03yW0a5PVnUA2vQ27OG%2B%2B1HPBZgL8uA93aOJAQzmT%2F%2F9vF2gkMfFYmS1sDWrP8xuuqO5UTIcdrlzFxm5bG3d2B%2Bnp228%2BAj1Ddbg79DcqFnpYuxcJrxzUwGdUTEbHTLycaX43Tj1E1xpttDLjeiuVJBL1OtIbko6Fq697VMKRhA%3D%3D",
+    "name": "galaxy-maps/1757554177294-Island-Voices--A-Young-Podcasters--Guide-to-Interviewing-Elders.png"
+  },
+  "stars": [
+    {
+      "planets": [
+        {
+          "description": "Understand the course outcome and why elders’ stories matter.",
+          "missionInstructions": "<p class=\"intro\">You’ll learn what the course will build together: a short interview podcast made by your team with an elder. This matters because it helps keep local stories alive and teaches listening, questioning and sharing skills.</p><h2>Instructions</h2><h3>Step 1: Course overview</h3><ul><li>Read the course goal together and circle one thing you’re excited to learn.</li></ul><p><em>Checkpoint: Now everyone knows the course goal and one personal reason to care.</em></p><h3>Step 2: What is a podcast?</h3><ul><li>Listen to a 2–3 minute sample interview podcast (teacher plays it).</li></ul><p><em>Checkpoint: You can name one thing a podcast does (tell a story, share a voice).</em></p><h3>Step 3: Team formation</h3><ul><li>Form teams of 2–4 and pick a team name.</li></ul><p><em>Checkpoint: Your team has a name and members.</em></p><p class=\"outro\">You’ve seen the project and formed your team. Next, you'll practice listening to real voices to learn what makes a good interview.</p>",
+          "title": "1.1: Meet the Project"
+        },
+        {
+          "missionInstructions": "<p class=\"intro\">Before interviewing, we learn how to show respect and follow community protocols. This helps keep relationships strong and builds trust for better stories.</p><h2>Instructions</h2><h3>Step 1: What respect looks like</h3><ul><li>In your team, list 5 things to do when meeting an elder (e.g., greet, listen, ask politely).</li></ul><p><em>Checkpoint: You have a short list of respectful behaviours to follow.</em></p><h3>Step 2: Talking about consent</h3><ul><li>Teacher explains consent: what it is and why we ask permission before recording.</li></ul><p><em>Checkpoint: You can say why we ask permission before recording someone.</em></p><h3>Step 3: Role-play a respectful meeting</h3><ul><li>With a partner, role-play greeting an elder and asking to record for the podcast.</li></ul><p><em>Checkpoint: You practiced a respectful, clear way to ask for permission.</em></p><p class=\"outro\">You now understand respect and consent—essential for working with elders. Next, you’ll start thinking about who to interview.</p>",
+          "title": "1.2: Values & Respect for Elders",
+          "description": "Learn respectful behaviour, cultural protocols, and basic consent ideas for working with elders."
+        },
+        {
+          "title": "1.3: Pick an Elder & Story Focus",
+          "description": "Choose an elder to invite and decide what story angle your team will explore.",
+          "missionInstructions": "<p class=\"intro\">Picking the right elder and a clear focus helps your interview be meaningful. A focus is a short idea about what you want to learn from them.</p><h2>Instructions</h2><h3>Step 1: Brainstorm elders</h3><ul><li>Each team lists 6 elders they could invite and one reason each elder’s story matters.</li></ul><p><em>Checkpoint: Your team has 6 possible elders and reasons why they matter.</em></p><h3>Step 2: Choose a story focus</h3><ul><li>Pick one focus (example: childhood games, food traditions, or a life change) and write it in one sentence.</li></ul><p><em>Checkpoint: You have a one-sentence focus that will guide your questions.</em></p><h3>Step 3: Get teacher approval & note next steps</h3><ul><li>Tell the teacher your chosen elder and focus so they can help with permission and scheduling.</li></ul><p><em>Checkpoint: Teacher knows your team’s plan and will help contact the elder.</em></p><p class=\"outro\">You’re set with a chosen elder and a clear focus. Next week we learn how to listen like a journalist.</p>"
+        },
+        {
+          "missionInstructions": "<p class=\"intro\">Teams work best when roles are clear. Today you’ll name roles and make a short plan so everyone knows what to do each week.</p><h2>Instructions</h2><h3>Step 1: Role explanation</h3><ul><li>Teacher explains common roles: interviewer, co-interviewer/listener, recorder/tech, note-taker, editor.</li></ul><p><em>Checkpoint: You know what each role does.</em></p><h3>Step 2: Assign roles</h3><ul><li>Team members pick their roles for at least the first two weeks.</li></ul><p><em>Checkpoint: Roles are assigned and written down.</em></p><h3>Step 3: Build a simple timeline</h3><ul><li>Create a one-page schedule for the next four weeks with who will do which tasks each day.</li></ul><p><em>Checkpoint: You have a clear mini-plan to follow for the next month.</em></p><p class=\"outro\">Team roles and a timeline are set. You’re organised and ready to practice listening and questioning next week.</p>",
+          "description": "Assign team roles (e.g., interviewer, recorder, note-taker, editor) and make a simple timeline.",
+          "title": "1.4: Personal roles & simple schedule"
+        }
+      ],
+      "title": "Week 1: Getting Grounded — Purpose, Teams & Respect",
+      "description": "Form teams, learn course goals, and build a respectful approach to interviewing elders and community stories."
+    },
+    {
+      "description": "Train ears by listening to local stories and short interviews. Learn to spot good story moments and what makes a question work.",
+      "title": "Week 2: Listen & Learn — Critical Listening Skills",
+      "planets": [
+        {
+          "title": "2.1: Active Listening Practice",
+          "description": "Practice really listening and summarising short audio clips.",
+          "missionInstructions": "<p class=\"intro\">Active listening helps you notice details and follow-up ideas during an interview. We’ll practice with short clips and group sharing.</p><h2>Instructions</h2><h3>Step 1: Micro-teach — Active listening</h3><ul><li>Teacher: Active listening means giving attention, not interrupting, and noticing details we can ask more about.</li></ul><p><em>Checkpoint: You know what active listening looks like.</em></p><h3>Step 2: Listen to a clip</h3><ul><li>Listen to a 1–2 minute local story or interview excerpt.</li></ul><p><em>Checkpoint: You heard the clip and are ready to talk about it.</em></p><h3>Step 3: Summarise</h3><ul><li>In your team, write a one-sentence summary of the main idea and one surprising detail.</li></ul><p><em>Checkpoint: You can summarise and find details to explore.</em></p><p class=\"outro\">Active listening will help you ask better follow-ups during your interview. Next day we practise different question types.</p>"
+        },
+        {
+          "title": "2.2: Question Types — Open, Closed, Probes",
+          "missionInstructions": "<p class=\"intro\">Good interviews use open questions and probes to invite longer answers and memories. You’ll learn the difference and write your own examples.</p><h2>Instructions</h2><h3>Step 1: Micro-teach — Question types</h3><ul><li>Teacher: An open question invites a story (e.g., \"What was it like?\"). A closed question gets a short fact (e.g., \"Did that happen in 1990?\"). Probes are short follow-ups (e.g., \"Can you tell me more?\").</li></ul><p><em>Checkpoint: You can name three kinds of questions and when to use them.</em></p><h3>Step 2: Transform closed to open</h3><ul><li>Convert 5 closed questions into open versions in your team.</li></ul><p><em>Checkpoint: You made closed questions into open invites for story.</em></p><h3>Step 3: Practice probe questions</h3><ul><li>With partners, role-play an answer and practise using 3 different probe questions.</li></ul><p><em>Checkpoint: You can ask follow-up probes that encourage more detail.</em></p><p class=\"outro\">You now know how to ask open questions and probes — essential tools for your interviews.</p>",
+          "description": "Learn and practise open vs closed questions and probe questions that invite stories."
+        },
+        {
+          "description": "Learn to spot story ‘moments’ (details, emotions, turning points) to shape your final episode.",
+          "missionInstructions": "<p class=\"intro\">A story has moments that matter. Today you’ll identify moments in short clips and decide which moments your team wants to capture in the elder interview.</p><h2>Instructions</h2><h3>Step 1: Micro-teach — Story moment</h3><ul><li>Teacher: A story moment is a small scene or detail that reveals something important (a memory, a surprising fact, or strong feeling).</li></ul><p><em>Checkpoint: You know what a story moment is.</em></p><h3>Step 2: Mark moments</h3><ul><li>Listen to a clip and write down 3 moments (one sentence each) you could use in a podcast.</li></ul><p><em>Checkpoint: You found moments that could become part of a story.</em></p><h3>Step 3: Team selection</h3><ul><li>Choose the top 2 moments your team wants to try to capture in your elder’s interview.</li></ul><p><em>Checkpoint: Your team has two target moments to look for in the elder’s story.</em></p><p class=\"outro\">You can now hear and pick story moments — this will guide your questions and editing choices later.</p>",
+          "title": "2.3: Story Moments & Beats"
+        },
+        {
+          "description": "Begin a listening log where students note interesting phrasing, details, and questions for their elder.",
+          "title": "2.4: Listening Log",
+          "missionInstructions": "<p class=\"intro\">A listening log captures things you notice and ideas to ask an elder about. Keep it short and useful for later.</p><h2>Instructions</h2><h3>Step 1: Set up the log</h3><ul><li>Create a 1-page listening log template with columns: clip, moment, words to remember, follow-up question.</li></ul><p><em>Checkpoint: You have a listening log template ready.</em></p><h3>Step 2: Add three entries</h3><ul><li>Add 3 entries from clips you heard this week (one sentence each).</li></ul><p><em>Checkpoint: Your log has 3 useful entries to inspire questions.</em></p><h3>Step 3: Share one entry</h3><ul><li>Share one entry with another team and get one quick suggestion to improve it.</li></ul><p><em>Checkpoint: You improved one entry using feedback.</em></p><p class=\"outro\">Your listening log will grow throughout the course and help you build questions and edits later.</p>"
+        }
+      ]
+    },
+    {
+      "planets": [
+        {
+          "title": "3.1: Build an Interview Map",
+          "description": "Create a loose roadmap of topics and sequence for your interview (opening, middle, closing).",
+          "missionInstructions": "<p class=\"intro\">An interview map helps the conversation flow. Think of it as a road with stops: warm-up, main memories, and wrap-up.</p><h2>Instructions</h2><h3>Step 1: Micro-teach — Interview map</h3><ul><li>Teacher: An interview map lists topics in order so you can guide the elder naturally from easy questions to deeper stories.</li></ul><p><em>Checkpoint: You know what an interview map does.</em></p><h3>Step 2: Create your map</h3><ul><li>Write your team’s interview map: 1–2 opening questions, 4–6 main topic points, 2 closing questions.</li></ul><p><em>Checkpoint: Your team has a clear roadmap for the conversation.</em></p><h3>Step 3: Quick check</h3><ul><li>Swap maps with another team and give one suggestion for improvement.</li></ul><p><em>Checkpoint: Your map is tightened after peer feedback.</em></p><p class=\"outro\">With an interview map you’ll be able to guide the conversation confidently and capture story moments.</p>"
+        },
+        {
+          "title": "3.2: Crafting Opening Questions",
+          "missionInstructions": "<p class=\"intro\">Openers should be simple, respectful, and invite a safe memory. We’ll write and test short openings.</p><h2>Instructions</h2><h3>Step 1: Micro-teach — Good openers</h3><ul><li>Teacher: A good opener is short, friendly, and connected to your focus (e.g., \"Can you tell us about the place you grew up?\").</li></ul><p><em>Checkpoint: You know the qualities of a good opening question.</em></p><h3>Step 2: Write three openers</h3><ul><li>Draft three different opening questions in your team.</li></ul><p><em>Checkpoint: You have three opening questions to choose from.</em></p><h3>Step 3: Peer test</h3><ul><li>Role-play your opening with another team and note which version felt easiest to answer.</li></ul><p><em>Checkpoint: You selected an opening that feels natural to answer.</em></p><p class=\"outro\">You have polished opening questions to help the elder relax and start telling their story.</p>",
+          "description": "Write opening questions that build trust and ease the elder into the interview."
+        },
+        {
+          "title": "3.3: Writing Story Questions",
+          "description": "Create main questions that invite specific memories, images, and emotions.",
+          "missionInstructions": "<p class=\"intro\">Main questions get into details and feelings. Use sensory prompts (what, where, who, how did you feel) to help elders describe moments.</p><h2>Instructions</h2><h3>Step 1: Micro-teach — Sensory and specific prompts</h3><ul><li>Teacher: Ask 'what did you see/hear/smell?' or 'who was there?' to get vivid answers.</li></ul><p><em>Checkpoint: You can name sensory prompts that evoke detail.</em></p><h3>Step 2: Write 6 main questions</h3><ul><li>Draft 6 main story questions using sensory prompts tied to your focus.</li></ul><p><em>Checkpoint: Your team has 6 strong questions to guide deep answers.</em></p><h3>Step 3: Sequence your questions</h3><ul><li>Order the 6 questions on your interview map so they flow from easy to deep.</li></ul><p><em>Checkpoint: Your questions are in a natural order for conversation.</em></p><p class=\"outro\">You’re ready to practise asking these questions naturally in short interviews.</p>"
+        },
+        {
+          "missionInstructions": "<p class=\"intro\">Closings wrap up the interview respectfully and give the elder a chance to add anything else. Practice a short closing that thanks them and invites a last thought.</p><h2>Instructions</h2><h3>Step 1: Micro-teach — Closing purpose</h3><ul><li>Teacher: A closing gives gratitude and a final moment to share any message the elder would like listeners to hear.</li></ul><p><em>Checkpoint: You know why closings matter.</em></p><h3>Step 2: Draft closers</h3><ul><li>Write two closing questions or comments (e.g., \"Is there anything you’d like young people to know?\").</li></ul><p><em>Checkpoint: You have closing lines ready for the interview.</em></p><h3>Step 3: Practice a smooth exit</h3><ul><li>Role-play a closing and the moment you stop recording, practicing thanks and next steps.</li></ul><p><em>Checkpoint: You can close an interview politely and clearly.</em></p><p class=\"outro\">Closings will help your interviews end on a kind and meaningful note when you meet elders for real.</p>",
+          "title": "3.4: Closing Questions & Safe Exits",
+          "description": "Prepare respectful closing questions and a way to end the conversation positively."
+        }
+      ],
+      "title": "Week 3: Question Design & Interview Planning",
+      "description": "Craft a clear interview plan, write strong questions, and practise short interviews."
+    },
+    {
+      "description": "Learn local interview protocols, language options, and how to incorporate Cook Islands Māori respectfully.",
+      "title": "Week 4: Cultural Protocols & Language Choices",
+      "planets": [
+        {
+          "description": "Discuss local norms, introductions, family permissions, and any required cultural practices when visiting elders.",
+          "missionInstructions": "<p class=\"intro\">Local protocols differ by island and family. Today we list the respectful steps to follow when visiting an elder at home or on land.</p><h2>Instructions</h2><h3>Step 1: Group discussion</h3><ul><li>In a circle, each student shares one local protocol they know about visiting elders.</li></ul><p><em>Checkpoint: The class has a combined list of local protocols.</em></p><h3>Step 2: Compile best practices</h3><ul><li>As a class, create a short ‘visiting checklist’ (greeting, small gift or offering, ask permission to record, thank-you).</li></ul><p><em>Checkpoint: You have a visiting checklist to use before each interview.</em></p><h3>Step 3: Teacher adds safety and consent notes</h3><ul><li>Teacher explains where to record permission (written/recorded) and any school or community consent steps.</li></ul><p><em>Checkpoint: You know basic consent steps and who to tell at school if needed.</em></p><p class=\"outro\">You now have a respectful checklist for meeting elders. Next we choose language options for your episode.</p>",
+          "title": "4.1: Community Protocols"
+        },
+        {
+          "title": "4.2: Language Choice & Mixing Languages",
+          "description": "Decide if your interview will use English, Cook Islands Māori, or both and how to handle translations or code-switching.",
+          "missionInstructions": "<p class=\"intro\">Language choice affects who can listen and how meaning carries. Teams should plan if they will interview in one language, mix both, or record bilingual segments.</p><h2>Instructions</h2><h3>Step 1: Micro-teach — Language options</h3><ul><li>Teacher: You can record in Cook Islands Māori, English, or both. If mixing, plan short translations or notes to help listeners.</li></ul><p><em>Checkpoint: You understand the language options and their effects.</em></p><h3>Step 2: Team decision</h3><ul><li>Decide as a team which language(s) you will use and why (audience, elder comfort).</li></ul><p><em>Checkpoint: Your team has chosen your language approach.</em></p><h3>Step 3: Plan for translations</h3><ul><li>If using multiple languages, plan how you’ll translate or add short English summaries for key lines.</li></ul><p><em>Checkpoint: You have a simple plan for translations or summaries if needed.</em></p><p class=\"outro\">Language choices are set. Next we’ll practice respectful introductions in your chosen language(s).</p>"
+        },
+        {
+          "missionInstructions": "<p class=\"intro\">A clear, warm introduction helps elders understand who you are and why you’re there. Practice in the language you plan to use.</p><h2>Instructions</h2><h3>Step 1: Draft introduction</h3><ul><li>Write a 20–30 second introduction (team name, why you’re recording, how the elder can stop anytime).</li></ul><p><em>Checkpoint: You have a draft introduction ready.</em></p><h3>Step 2: Translate if needed</h3><ul><li>Translate the introduction into the elder’s language or prepare a short bilingual intro.</li></ul><p><em>Checkpoint: You have an introduction in the chosen language(s).</em></p><h3>Step 3: Rehearse aloud</h3><ul><li>Practice the intro with your team until it sounds natural and respectful.</li></ul><p><em>Checkpoint: Your team can deliver the introduction naturally.</em></p><p class=\"outro\">You’re ready to use a respectful introduction when contacting or meeting your elder.</p>",
+          "title": "4.3: Practise Introductions in Chosen Language(s)",
+          "description": "Write and rehearse a short introduction and greeting to use with the elder in the agreed language(s)."
+        },
+        {
+          "description": "Create a short consent script and a plan for written or recorded permission suitable for elders and families.",
+          "missionInstructions": "<p class=\"intro\">Consent can be verbal (recorded) or written. Today you’ll make a short, clear consent script to use before recording and practice getting permission.</p><h2>Instructions</h2><h3>Step 1: Draft consent script</h3><ul><li>Write a clear one-paragraph consent script explaining the project, how the audio will be used, and that they can stop anytime.</li></ul><p><em>Checkpoint: You have a consent script that explains the project simply.</em></p><h3>Step 2: Teacher reviews for child-safety</h3><ul><li>Give the script to the teacher for review to ensure it meets school / community safety rules.</li></ul><p><em>Checkpoint: Your consent script is checked and approved by the teacher.</em></p><h3>Step 3: Practice recording consent</h3><ul><li>Role-play asking for consent and recording the elder saying yes, and practise what to do if they say no.</li></ul><p><em>Checkpoint: Your team can confidently request and record consent respectfully.</em></p><p class=\"outro\">You now have a consent script and practice for asking permission. Next week you’ll learn smartphone recording basics.</p>",
+          "title": "4.4: Consent in Practice"
+        }
+      ]
+    },
+    {
+      "planets": [
+        {
+          "missionInstructions": "<p class=\"intro\">You’ll become comfortable with the phone used for recording — how to start/stop, name files, and where recordings are saved.</p><h2>Instructions</h2><h3>Step 1: App tour</h3><ul><li>Open the phone’s recorder app and show where to start, stop, and save a file.</li></ul><p><em>Checkpoint: You can start and stop recordings and find saved files on the phone.</em></p><h3>Step 2: Naming files</h3><ul><li>Record a short test clip and name it with your team name and date.</li></ul><p><em>Checkpoint: Your test file is saved with a clear name you can find.</em></p><h3>Step 3: Quality check</h3><ul><li>Teacher explains basic quality choices (use highest quality available) and students select the setting.</li></ul><p><em>Checkpoint: Your app is set to a good quality setting for interviews.</em></p><p class=\"outro\">You can use the recorder app and save files properly. Next we learn how to get the best sound using simple techniques.</p>",
+          "title": "5.1: Phone Recorder App & Settings",
+          "description": "Open the phone’s recorder app and learn basic settings (file names, sample quality if available)."
+        },
+        {
+          "missionInstructions": "<p class=\"intro\">Where the mic is matters. Small moves change how voices sound. You’ll practise holding the phone and using a small stand or soft cushion.</p><h2>Instructions</h2><h3>Step 1: Micro-teach — Mic distance</h3><ul><li>Teacher: For clear voice recording, hold the mic 15–30 cm from the speaker’s mouth and slightly off-axis (not directly in front) to reduce breath pops.</li></ul><p><em>Checkpoint: You know the recommended mic distance and angle.</em></p><h3>Step 2: Practise positions</h3><ul><li>In pairs, practise holding the phone 15–30 cm from a speaker while recording a short sentence.</li></ul><p><em>Checkpoint: You can position the phone to capture a clear voice without handling noise.</em></p><h3>Step 3: Test and listen</h3><ul><li>Play back your test recording and note any handling sounds; try again to fix them.</li></ul><p><em>Checkpoint: Your team can record with minimal handling noise and clear voice.</em></p><p class=\"outro\">You can now position the phone to get good sound. Next, we learn how to find quiet locations and control background noise.</p>",
+          "title": "5.2: Mic Position & Handling",
+          "description": "Learn where to hold the phone or external mic for clear sound and how to avoid handling noise."
+        },
+        {
+          "description": "Learn how to pick a quiet place and how ambient sound can help a story when used intentionally.",
+          "missionInstructions": "<p class=\"intro\">Background noise can hurt clarity but sometimes small ambient sounds add feeling. Today you’ll identify good places and practise capturing ambient sound for transitions.</p><h2>Instructions</h2><h3>Step 1: Micro-teach — Ambient vs noise</h3><ul><li>Teacher: Ambient sound gives context (waves, birds). Noise distracts (traffic, loud talking). Use ambient sound sparsely as a storytelling tool.</li></ul><p><em>Checkpoint: You can tell the difference between useful ambient sound and distracting noise.</em></p><h3>Step 2: Scout and list</h3><ul><li>Walk around school and pick two quiet spots and one spot with useful ambient sound; write notes about why each is good or bad.</li></ul><p><em>Checkpoint: You have three candidate recording spots and reasons for each.</em></p><h3>Step 3: Capture ambient</h3><ul><li>Record a 15–30 second ambient clip from the useful spot to use later as a transition.</li></ul><p><em>Checkpoint: You captured an ambient sound clip that adds place and feeling.</em></p><p class=\"outro\">You can find quiet places and capture helpful ambient sound. Next, practise levels and monitoring audio quality while recording.</p>",
+          "title": "5.3: Finding Quiet Locations & Ambient Sound"
+        },
+        {
+          "missionInstructions": "<p class=\"intro\">If audio is too loud it clips and becomes unusable. You’ll practise keeping levels safe by moving the phone and checking recordings.</p><h2>Instructions</h2><h3>Step 1: Micro-teach — Clipping</h3><ul><li>Teacher: Clipping happens when sound is too loud and turns distorted. Avoid loud bursts; listen for crackling.</li></ul><p><em>Checkpoint: You know what clipping sounds like and why to avoid it.</em></p><h3>Step 2: Test loudness</h3><ul><li>Record a student saying a normal sentence and a loud sentence; listen for distortion.</li></ul><p><em>Checkpoint: You can hear if a recording is distorted.</em></p><h3>Step 3: Adjust distance</h3><ul><li>If the loud test distorted, move the mic further away and record again until both normal and loud lines sound clear.</li></ul><p><em>Checkpoint: You can adjust mic distance to prevent clipping while keeping clear sound.</em></p><p class=\"outro\">You can manage basic recording levels. Next week you’ll begin mock interviews using these techniques.</p>",
+          "description": "Learn to watch levels (peaks and clipping) and do simple checks to avoid distorted recordings.",
+          "title": "5.4: Audio Levels & Monitoring"
+        }
+      ],
+      "title": "Week 5: Smartphone Recording Basics",
+      "description": "Learn how to use a smartphone to record clear audio: mic handling, quiet spaces, levels, and simple accessories."
+    },
+    {
+      "title": "Week 6: Interview Practice — Mock Interviews",
+      "planets": [
+        {
+          "missionInstructions": "<p class=\"intro\">A short practice interview helps you apply opening questions and mic skills under low pressure. Treat your partner like an elder for practice.</p><h2>Instructions</h2><h3>Step 1: Prepare gear</h3><ul><li>Set up your phone in record mode and check file name and location.</li></ul><p><em>Checkpoint: Your recorder is ready to capture the practice interview.</em></p><h3>Step 2: Conduct the 5-minute interview</h3><ul><li>Run a 5-minute interview using your opening and 1–2 main questions while the rest of the team observes.</li></ul><p><em>Checkpoint: You completed a short recorded interview practicing roles.</em></p><h3>Step 3: Playback & feedback</h3><ul><li>Listen to the recording together and note one strong moment and one improvement.</li></ul><p><em>Checkpoint: You identified one success and one improvement from the practice clip.</em></p><p class=\"outro\">You’ve done a short interview and heard it back. Next practice will focus on follow-up and listening.</p>",
+          "description": "Record a 5-minute in-class interview using your opening questions and phone techniques.",
+          "title": "6.1: Mini Interview 1 — Warm-up"
+        },
+        {
+          "description": "Practice using probe questions to follow-up on interesting moments during a 7–10 minute interview.",
+          "missionInstructions": "<p class=\"intro\">Good interviews follow where the story leads. Today we practise hearing a detail and asking a probe that opens the memory deeper.</p><h2>Instructions</h2><h3>Step 1: Plan probes</h3><ul><li>Pick three likely probe questions from your listening log that match your main questions.</li></ul><p><em>Checkpoint: You have three probe questions ready to use.</em></p><h3>Step 2: Conduct a 7–10 minute interview</h3><ul><li>Run a 7–10 minute interview and deliberately use at least two probes after an interesting detail.</li></ul><p><em>Checkpoint: You practiced using probes to deepen a response.</em></p><h3>Step 3: Review moments</h3><ul><li>Pick one moment from the recording that improved because of a probe and explain why.</li></ul><p><em>Checkpoint: You can see how probes changed the interview’s depth.</em></p><p class=\"outro\">You practiced following the story. Next you'll practise technical set-up and problem handling.</p>",
+          "title": "6.2: Mini Interview 2 — Probing & Follow-ups"
+        },
+        {
+          "title": "6.3: Troubleshooting & On-the-spot Fixes",
+          "description": "Learn quick fixes for common problems: phone battery, ambient noise, interruptions.",
+          "missionInstructions": "<p class=\"intro\">Problems can happen during real recordings. Learn fast fixes so you can stay calm if something goes wrong with an elder present.</p><h2>Instructions</h2><h3>Step 1: List common issues</h3><ul><li>In your team, list the top 5 problems that might happen during an interview (battery, calls, noise).</li></ul><p><em>Checkpoint: You can name five likely issues and why they matter.</em></p><h3>Step 2: Create quick solutions</h3><ul><li>For each problem, write one quick action you can take right away (e.g., airplane mode to avoid calls).</li></ul><p><em>Checkpoint: You have immediate fixes for the five problems.</em></p><h3>Step 3: Role-play a problem</h3><ul><li>Role-play a short interruption (dog barking, phone call) and practise your team’s response.</li></ul><p><em>Checkpoint: You know how to stay calm and fix a problem during recording.</em></p><p class=\"outro\">You’re better prepared for real interviews and can handle small issues without panicking. Next week you’ll do a supervised short field interview if possible.</p>"
+        },
+        {
+          "missionInstructions": "<p class=\"intro\">Feedback helps you improve quickly. Use a short rubric focused on clarity, respect, and story moments to give feedback after each practice.</p><h2>Instructions</h2><h3>Step 1: Introduce a simple rubric</h3><ul><li>Teacher shares a 3-point rubric: (1) Respect &amp; protocol, (2) Questioning &amp; listening, (3) Audio quality.</li></ul><p><em>Checkpoint: You understand the 3-point rubric categories.</em></p><h3>Step 2: Give feedback</h3><ul><li>After each practice interview, teams give one positive and one suggestion using the rubric.</li></ul><p><em>Checkpoint: You’ve provided and received constructive feedback with the rubric.</em></p><h3>Step 3: Note improvements</h3><ul><li>Update your team notes with one action you will change for the next recording.</li></ul><p><em>Checkpoint: You have a concrete improvement plan for your next interview.</em></p><p class=\"outro\">Feedback cycles will keep your interviews improving. Next weeks build towards a short community practice interview.</p>",
+          "description": "Give and receive feedback using a simple rubric to improve interviewing and technical skills.",
+          "title": "6.4: Peer Feedback Cycle"
+        }
+      ],
+      "description": "Practice short interviews with classmates, focusing on question flow, listening, and recording technique."
+    },
+    {
+      "title": "Week 7: Short Field Interviews — Putting Skills into Practice",
+      "description": "Conduct short (10–15 min) supervised interviews with an elder or community member to capture real material and practice etiquette.",
+      "planets": [
+        {
+          "title": "7.1: Final Prep for Field Visit",
+          "description": "Confirm roles, charge phones, print consent, and rehearse introductions before leaving school.",
+          "missionInstructions": "<p class=\"intro\">Preparation reduces stress during a field visit. Today check gear and practise your full introduction and consent process.</p><h2>Instructions</h2><h3>Step 1: Gear checklist</h3><ul><li>Check phone battery, recorder app, spare battery/charger, and your consent script printed or ready on a phone.</li></ul><p><em>Checkpoint: All essential gear is checked and ready.</em></p><h3>Step 2: Rehearse the whole start</h3><ul><li>Rehearse your introduction, consent script, and first question as a team.</li></ul><p><em>Checkpoint: Your team can deliver the introduction and consent calmly.</em></p><h3>Step 3: Teacher sign-off</h3><ul><li>Teacher reviews your plan and gives permission to go on the short field visit.</li></ul><p><em>Checkpoint: You have teacher approval to visit the elder (supervised as required).</em></p><p class=\"outro\">You’re prepared to visit an elder for a short supervised interview. Remember respect and consent at all times.</p>"
+        },
+        {
+          "missionInstructions": "<p class=\"intro\">This is your chance to use everything you’ve practised: introductions, mic skills, active listening, and probes. Aim to capture at least one vivid moment for your final podcast.</p><h2>Instructions</h2><h3>Step 1: Set up and greet</h3><ul><li>Greet the elder using your visiting checklist and deliver your prepared introduction.</li></ul><p><em>Checkpoint: The elder knows who you are and why you are recording.</em></p><h3>Step 2: Get consent recorded</h3><ul><li>Ask for permission on record and have the elder say yes if they agree; note any wishes (e.g., sections they don’t want shared).</li></ul><p><em>Checkpoint: You have recorded the elder’s consent and any restrictions.</em></p><h3>Step 3: Conduct 10–15 min interview</h3><ul><li>Conduct the interview focusing on one or two of your planned moments and using probes when interesting details appear.</li></ul><p><em>Checkpoint: You recorded a 10–15 minute interview with at least one strong moment captured.</em></p><p class=\"outro\">You completed a real interview! Back at school you’ll review the audio and pick the best clips to shape a story.</p>",
+          "title": "7.2: Field Interview — Short Recording",
+          "description": "Conduct a 10–15 minute interview with an elder (supervised). Focus on comfort, clarity and capturing one strong story moment."
+        },
+        {
+          "title": "7.3: Immediate Review & Backup",
+          "missionInstructions": "<p class=\"intro\">Right after an interview, it’s important to check the recording and back it up to avoid losing the material.</p><h2>Instructions</h2><h3>Step 1: Quick listen</h3><ul><li>Listen to the first minute and one strong moment to check clarity and that consent was captured.</li></ul><p><em>Checkpoint: You confirmed the recording has clear audio and consent was captured.</em></p><h3>Step 2: Take notes</h3><ul><li>Note timestamps of the best moments and any parts the elder asked to keep private.</li></ul><p><em>Checkpoint: You have time-stamped notes identifying strong clips and restrictions.</em></p><h3>Step 3: Backup the file</h3><ul><li>Copy the audio file to a teacher-approved backup location (school drive or another phone) and confirm it opened there.</li></ul><p><em>Checkpoint: Your recording is safely backed up and accessible.</em></p><p class=\"outro\">Your interview is secure and logged. Next week you will learn to edit and select story clips.</p>",
+          "description": "Listen back to the recording, make quick notes, and make a backup copy of the file."
+        },
+        {
+          "description": "Send a thank-you and plan any follow-up with the elder or family as appropriate.",
+          "title": "7.4: Reflection & Respectful Follow-up",
+          "missionInstructions": "<p class=\"intro\">After the visit, being grateful and clear about next steps keeps trust strong. Plan a short thank-you and how you’ll share the finished podcast outcome.</p><h2>Instructions</h2><h3>Step 1: Write a short thank-you</h3><ul><li>Draft a 1–2 sentence thank-you message your team will send or say to the elder within 48 hours.</li></ul><p><em>Checkpoint: You have a polite thank-you message ready.</em></p><h3>Step 2: Plan follow-up</h3><ul><li>Note any promises made (e.g., send final clip) and assign who will handle each promise.</li></ul><p><em>Checkpoint: Your team has a clear follow-up plan with names and tasks.</em></p><h3>Step 3: Teacher check-in</h3><ul><li>Tell the teacher how the interview went and confirm next steps for editing and release.</li></ul><p><em>Checkpoint: Teacher knows the outcome and next editing timeline.</em></p><p class=\"outro\">You’ve closed the interview respectfully and planned next steps for editing and sharing the story.</p>"
+        }
+      ]
+    },
+    {
+      "description": "Learn basic mobile editing: trimming clips, arranging story order, and saving edits. Build a rough story from field audio.",
+      "title": "Week 8: Intro to Editing on Smartphones",
+      "planets": [
+        {
+          "description": "Open and explore a simple phone editing app available (teacher suggests and installs one).",
+          "title": "8.1: Choose an Editing App & Tour",
+          "missionInstructions": "<p class=\"intro\">Editing turns recorded pieces into a story. Today you’ll meet a phone editor and learn where to trim and move clips.</p><h2>Instructions</h2><h3>Step 1: App micro-teach</h3><ul><li>Teacher introduces the chosen mobile editor and explains trim, cut, and save functions in 1–2 sentences.</li></ul><p><em>Checkpoint: You know which app you’ll use and its basic tools.</em></p><h3>Step 2: Open your field file</h3><ul><li>Import your team’s interview file into the app.</li></ul><p><em>Checkpoint: Your recording is loaded into the editor.</em></p><h3>Step 3: Try a simple trim</h3><ul><li>Trim the start and end of the interview to remove silence and save the trimmed clip as a new file.</li></ul><p><em>Checkpoint: You saved a trimmed version of your interview.</em></p><p class=\"outro\">You can open and trim your audio on a phone. Next you’ll find and extract the best story moments.</p>"
+        },
+        {
+          "title": "8.2: Marking & Extracting Story Clips",
+          "missionInstructions": "<p class=\"intro\">Editing is choosing which moments tell your story. You’ll mark the best clips and export them as short pieces to arrange later.</p><h2>Instructions</h2><h3>Step 1: Micro-teach — Clip selection</h3><ul><li>Teacher: Choose clips that show vivid details and fit your focus — aim for 3–6 clips, each 10–40 seconds.</li></ul><p><em>Checkpoint: You know how many and what length clips to aim for.</em></p><h3>Step 2: Mark timestamps</h3><ul><li>Use your listening notes to mark timestamps of 3–6 candidate clips in the editor.</li></ul><p><em>Checkpoint: You’ve marked 3–6 candidate clips with timestamps.</em></p><h3>Step 3: Export clips</h3><ul><li>Cut and export each chosen clip as its own small file, labelled with the clip purpose (e.g., 'childhood memory 01').</li></ul><p><em>Checkpoint: You have separate clip files for the top story moments.</em></p><p class=\"outro\">You now have a library of short clips to assemble into your episode structure.</p>",
+          "description": "Identify and cut out the best moments from your interview to use in a story edit."
+        },
+        {
+          "missionInstructions": "<p class=\"intro\">A storyboard arranges your clips to create a beginning, middle and end. You’ll try a few orders to find the strongest flow.</p><h2>Instructions</h2><h3>Step 1: Micro-teach — Story arc</h3><ul><li>Teacher: A short arc: set the scene (intro), show the main memory(s) (body), and end with a reflection or message (closer).</li></ul><p><em>Checkpoint: You understand the simple three-part story arc for a short episode.</em></p><h3>Step 2: Drag clips into order</h3><ul><li>In the editor, drag your exported clips into an order that follows the arc.</li></ul><p><em>Checkpoint: You built a first rough order of clips in the editor.</em></p><h3>Step 3: Add short transitions</h3><ul><li>Insert your ambient sounds or short team voiceovers where needed to connect clips.</li></ul><p><em>Checkpoint: Your rough storyboard plays as a short, connected sequence.</em></p><p class=\"outro\">You have a rough story order. Next week you’ll polish timing, add music, and learn to balance volume.</p>",
+          "title": "8.3: Arrange a Rough Storyboard",
+          "description": "Place clips into a rough order (intro, body, closer) to see how the story flows."
+        },
+        {
+          "description": "Learn to save project versions so you can return to earlier edits without losing work.",
+          "missionInstructions": "<p class=\"intro\">Saving versions prevents accidental loss of changes. Today you’ll create named versions (drafts) of your edit and back them up.</p><h2>Instructions</h2><h3>Step 1: Micro-teach — Versioning</h3><ul><li>Teacher: Versioning means saving copies labeled 'draft 1', 'draft 2' so you can return to earlier edits if needed.</li></ul><p><em>Checkpoint: You know why versioning keeps your work safe.</em></p><h3>Step 2: Save draft 1</h3><ul><li>Save your current project as 'draft 1' and export a backup copy to the teacher-approved drive.</li></ul><p><em>Checkpoint: You created a saved draft and a backup export.</em></p><h3>Step 3: Note changes</h3><ul><li>Write one sentence describing what you will change in ‘draft 2’.</li></ul><p><em>Checkpoint: You have a clear plan to improve the next draft.</em></p><p class=\"outro\">Your editing work is safe with versioned backups. Next week you’ll refine clips and learn mixing basics.</p>",
+          "title": "8.4: Save Versions & Backups"
+        }
+      ]
+    },
+    {
+      "title": "Week 9: Polishing — Mixing, Music & Rights",
+      "planets": [
+        {
+          "missionInstructions": "<p class=\"intro\">Balancing makes sure all voices sound like they belong together. Today you’ll adjust volume of clips so listeners don’t have to change their volume.</p><h2>Instructions</h2><h3>Step 1: Micro-teach — Normalising & gain</h3><ul><li>Teacher: Normalising raises clip volume to a safe level. Gain adjusts volume; do small changes and listen.</li></ul><p><em>Checkpoint: You know what normalising and gain do in simple terms.</em></p><h3>Step 2: Listen for dips and peaks</h3><ul><li>Play your sequence and note which clips sound quieter or louder than others.</li></ul><p><em>Checkpoint: You can identify uneven clips by ear.</em></p><h3>Step 3: Adjust volumes</h3><ul><li>Use the editor’s volume tool to bring voice clips to a similar loudness and save as a new draft.</li></ul><p><em>Checkpoint: Your voices now sound more even in the draft.</em></p><p class=\"outro\">Your audio levels are balanced. Next you’ll carefully add music or ambient beds while respecting rights and elder wishes.</p>",
+          "description": "Learn simple mixing: adjust clip volumes so voices are even and easy to hear.",
+          "title": "9.1: Balance & Levels in the Editor"
+        },
+        {
+          "description": "Choose music (royalty-free or teacher-provided) and learn how to add subtle music beneath voices, lowering it when someone speaks.",
+          "title": "9.2: Music & Ambient Beds — Use Carefully",
+          "missionInstructions": "<p class=\"intro\">Music adds feeling but should not cover a speaker’s voice. You’ll pick short music and learn how to duck it under spoken clips.</p><h2>Instructions</h2><h3>Step 1: Micro-teach — Music rights</h3><ul><li>Teacher: Only use music you have the right to use — teacher will provide approved music or use free/creative commons tracks.</li></ul><p><em>Checkpoint: You understand to only use teacher-approved or free music.</em></p><h3>Step 2: Pick a short bed</h3><ul><li>Choose one short music bed from teacher-approved options that matches your story mood.</li></ul><p><em>Checkpoint: You selected a suitable, approved music clip.</em></p><h3>Step 3: Add and duck</h3><ul><li>Place the music under an intro or transition and lower (duck) its volume during spoken clips so voices are clear.</li></ul><p><em>Checkpoint: Music plays where intended and never covers voices.</em></p><p class=\"outro\">Music enhances your story without overpowering voices. Next we add short titles, credits, and protective metadata about permissions.</p>"
+        },
+        {
+          "missionInstructions": "<p class=\"intro\">Titles and credits tell listeners where the story came from and who helped. Metadata helps your teacher manage consent and rights.</p><h2>Instructions</h2><h3>Step 1: Draft a title</h3><ul><li>Brainstorm three short episode titles that reflect your focus and pick one.</li></ul><p><em>Checkpoint: You have a clear episode title.</em></p><h3>Step 2: Write a short description</h3><ul><li>Write a 1–2 sentence description of the episode and the language(s) used.</li></ul><p><em>Checkpoint: You have a description ready to share with listeners.</em></p><h3>Step 3: Compile credits & permissions</h3><ul><li>In one short list, note the elder’s name (as they want credited), translator (if used), music source, and confirmation of consent.</li></ul><p><em>Checkpoint: You have a credit list and consent note to keep with the file.</em></p><p class=\"outro\">Your episode has a title, description, and credits. Next week you’ll record your final interview with the elder (longer and polished).</p>",
+          "title": "9.3: Titles, Credits & Metadata",
+          "description": "Create an episode title, short description, and add credits (who was interviewed, translators, music source, and teacher supervision)."
+        },
+        {
+          "missionInstructions": "<p class=\"intro\">A quick review can catch things you missed. Use the rubric to get specific feedback about story clarity, respect, and audio quality.</p><h2>Instructions</h2><h3>Step 1: Export a listenable draft</h3><ul><li>Export a low-size MP3 or similar file labelled 'near-final' and upload to the teacher area for review.</li></ul><p><em>Checkpoint: Your draft is exported and accessible to teacher and peers.</em></p><h3>Step 2: Peer listening</h3><ul><li>Swap drafts with one other team and use the 3-point rubric to give one strength and one suggestion.</li></ul><p><em>Checkpoint: You received peer feedback with a clear improvement suggestion.</em></p><h3>Step 3: Teacher feedback</h3><ul><li>Meet with the teacher for a 5-minute check to confirm consent, language decisions, and any content notes.</li></ul><p><em>Checkpoint: Teacher confirmed your draft’s readiness for final recording or named areas to fix.</em></p><p class=\"outro\">You’ve had a feedback round and know final edits needed before the long interview next week.</p>",
+          "description": "Share your near-final draft with the teacher and another team for feedback using the classroom rubric.",
+          "title": "9.4: Review with Teacher & Peer Check"
+        }
+      ],
+      "description": "Refine clip timing, balance volumes, add short music or ambient beds, and understand basic rights for music and elder permissions."
+    },
+    {
+      "description": "Conduct the main long interview (20–40 minutes) with the elder, capturing material for the final 8–12 minute podcast episode.",
+      "title": "Week 10: Final Interview — The Long Recording",
+      "planets": [
+        {
+          "description": "Confirm logistics, roles, and do a final rehearsal including the full introduction and consent recording.",
+          "missionInstructions": "<p class=\"intro\">A longer interview needs more preparation. Confirm schedule, travel, who leads which sections, and do a full rehearsal -- including consent and battery checks.</p><h2>Instructions</h2><h3>Step 1: Confirm schedule</h3><ul><li>Confirm the appointment time with the elder (teacher helped coordinate) and confirm who will go from the team.</li></ul><p><em>Checkpoint: You have a confirmed time and people assigned for the interview.</em></p><h3>Step 2: Full run-through</h3><ul><li>Rehearse the entire start: greeting, intro, consent script, and the first 3 questions aloud.</li></ul><p><em>Checkpoint: Your team delivered the start smoothly in rehearsal.</em></p><h3>Step 3: Final gear check</h3><ul><li>Charge phones, bring backups, printed consent, and any translator if needed.</li></ul><p><em>Checkpoint: All gear and supports are ready for the long interview.</em></p><p class=\"outro\">You are ready for the long interview. Stay calm, respectful, and listen closely for story moments.</p>",
+          "title": "10.1: Final Prep & Rehearsal"
+        },
+        {
+          "description": "Conduct and record the full interview (aim 20–40 minutes), capturing a range of memories and reflections.",
+          "title": "10.2: Record the Long Interview",
+          "missionInstructions": "<p class=\"intro\">This is the main recording for your episode. Use your map but be ready to follow interesting threads and ask respectful probes.</p><h2>Instructions</h2><h3>Step 1: Greeting and consent</h3><ul><li>Greet the elder with your visiting checklist, deliver the introduction, and record verbal consent on the phone.</li></ul><p><em>Checkpoint: Consent is recorded and everyone is ready to start.</em></p><h3>Step 2: Conduct the interview</h3><ul><li>Conduct the interview using your planned questions, ask probes when interesting details appear, and keep an ear for moments to timestamp.</li></ul><p><em>Checkpoint: You captured a long interview with multiple moments to choose from.</em></p><h3>Step 3: Wrap up respectfully</h3><ul><li>Close the interview with your planned closing, thank the elder, and confirm any agreed follow-up.</li></ul><p><em>Checkpoint: You ended the interview respectfully and clearly.</em></p><p class=\"outro\">You recorded the main interview! Back at school you'll mark the best moments and start final editing.</p>"
+        },
+        {
+          "description": "Listen for key moments, timestamp them, and back up all files safely.",
+          "title": "10.3: Immediate Backup & Logging",
+          "missionInstructions": "<p class=\"intro\">Immediately after a long interview, create a safety copy and a timestamped log of promising moments for editing.</p><h2>Instructions</h2><h3>Step 1: Quick listen for quality</h3><ul><li>Play the first minute and a few sections to ensure the file is clear and consent is present.</li></ul><p><em>Checkpoint: You confirmed audio clarity and that consent is recorded.</em></p><h3>Step 2: Timestamp top 8 moments</h3><ul><li>Note timestamps for up to 8 interesting moments with a one-line note about why each matters.</li></ul><p><em>Checkpoint: You have a timestamped list of candidate clips for the final episode.</em></p><h3>Step 3: Back up the master file</h3><ul><li>Back up the full interview to the teacher-approved drive and mark the backup location in your team notes.</li></ul><p><em>Checkpoint: The master interview file is safely backed up and noted.</em></p><p class=\"outro\">You secured the master recording and found many moments to use. Next week you’ll finalize the edit into the finished episode.</p>"
+        },
+        {
+          "missionInstructions": "<p class=\"intro\">Keeping the elder informed and thanked strengthens community relations. Today you’ll prepare a finished thank-you and tell them how they’ll be included in the final event.</p><h2>Instructions</h2><h3>Step 1: Prepare a thank-you note</h3><ul><li>Write a respectful thank-you note (short) to give to the elder or their family, including when they can hear the final episode.</li></ul><p><em>Checkpoint: You have a clear thank-you note to share.</em></p><h3>Step 2: Confirm permissions for sharing</h3><ul><li>Confirm with the elder if they are happy for the episode to be shared at a school event or online, following their wishes.</li></ul><p><em>Checkpoint: You have clear permission for how the episode may be shared.</em></p><h3>Step 3: Schedule a courtesy playback</h3><ul><li>Offer a date for a private or public playback and note it in your team plan.</li></ul><p><em>Checkpoint: A courtesy playback date is scheduled or planned.</em></p><p class=\"outro\">You have thanked the elder and clarified sharing wishes. Next week you’ll finish editing and prepare the final episode for the community.</p>",
+          "description": "Send a formal thank-you and note how and when the elder will hear or see the final episode.",
+          "title": "10.4: Thank-you & Community Notice"
+        }
+      ]
+    },
+    {
+      "title": "Week 11: Final Post-Production & Show Notes",
+      "planets": [
+        {
+          "missionInstructions": "<p class=\"intro\">Now you pick the best clips that fit your narrative and add short team-led voice links that help the story flow from one clip to another.</p><h2>Instructions</h2><h3>Step 1: Pick clips for 8–12 min target</h3><ul><li>From your timestamp list, choose clips that together will result in an 8–12 minute episode.</li></ul><p><em>Checkpoint: You selected clips to match the target episode length and focus.</em></p><h3>Step 2: Write short linking lines</h3><ul><li>Draft 3–4 short team voice lines (10–20 seconds each) to introduce or connect clips.</li></ul><p><em>Checkpoint: You have bridging lines that make the story clearer.</em></p><h3>Step 3: Record the team voiceovers</h3><ul><li>Record your linking lines using the same mic technique and add them to the edit in the right places.</li></ul><p><em>Checkpoint: Your linking lines are recorded and placed into the edit.</em></p><p class=\"outro\">You have a finished story shape with bridging narration. Next you’ll do a polishing pass and make final exports.</p>",
+          "description": "Choose the final clips from your timestamp list and tighten the episode’s spoken flow with short team voiceovers if needed.",
+          "title": "11.1: Select Final Clips & Tighten Script"
+        },
+        {
+          "title": "11.2: Final Polish — Fades, EQ, and Clean-up",
+          "description": "Do small edits: fade music, remove obvious breaths or clicks, and make the episode smooth to listen to.",
+          "missionInstructions": "<p class=\"intro\">A careful polish fixes small things that distract. Today we remove pops, add fades between clips and ensure the episode flows smoothly.</p><h2>Instructions</h2><h3>Step 1: Micro-teach — Fade & clean</h3><ul><li>Teacher: Fades smooth the start and end of clips. Small removals of breaths or clicks make listening easier.</li></ul><p><em>Checkpoint: You know how fades and small clean-ups improve the listening experience.</em></p><h3>Step 2: Do a clean pass</h3><ul><li>Go through the edit and add fades and remove loud breaths or clicks where they distract.</li></ul><p><em>Checkpoint: You completed a clean-up pass on your edit.</em></p><h3>Step 3: Final listen</h3><ul><li>Play the whole episode and ask two other teams to listen and give one small polishing suggestion.</li></ul><p><em>Checkpoint: You have final suggestions to make one last tiny improvement.</em></p><p class=\"outro\">Your episode is polished. Next, add show notes, the final credits, and export the final file.</p>"
+        },
+        {
+          "title": "11.3: Show Notes, Title Art & Export",
+          "missionInstructions": "<p class=\"intro\">Show notes tell people what the episode is about and who is in it. Proper exports ensure your teacher and event organisers can play the file easily.</p><h2>Instructions</h2><h3>Step 1: Write show notes</h3><ul><li>Write a 2–3 sentence show note describing the episode and language(s) used.</li></ul><p><em>Checkpoint: You have clear show notes for the episode.</em></p><h3>Step 2: Prepare title art or simple thumbnail</h3><ul><li>Make a simple title card or thumbnail (photo + episode title) using a phone photo app or paper scan.</li></ul><p><em>Checkpoint: You have a simple visual to represent the episode.</em></p><h3>Step 3: Export final file and metadata</h3><ul><li>Export the final episode as an MP3 named with team and episode title, and include a small text file with credits and consent details.</li></ul><p><em>Checkpoint: Your final episode and metadata are exported and saved to the teacher area.</em></p><p class=\"outro\">The episode file and show notes are ready. Next week you’ll present the episode and reflect on what you learned.</p>",
+          "description": "Create show notes, a short description, final credits and export the final audio file with the correct name and metadata."
+        },
+        {
+          "description": "Use the course rubric to self-assess and prepare the rubric submission for teacher grading.",
+          "missionInstructions": "<p class=\"intro\">Before handing the episode to the teacher for final grading, use your rubric to honestly score your team on the main criteria.</p><h2>Instructions</h2><h3>Step 1: Micro-teach — Using the rubric</h3><ul><li>Teacher: A rubric helps assess respect &amp; consent, interviewing skills, story clarity, and technical quality.</li></ul><p><em>Checkpoint: You know what the rubric measures.</em></p><h3>Step 2: Self-score</h3><ul><li>Use the rubric to score your team on each category and write one example to support each score.</li></ul><p><em>Checkpoint: You completed a self-assessment with evidence for each score.</em></p><h3>Step 3: Submit notes to teacher</h3><ul><li>Upload your rubric, final file, show notes, and credits to the teacher area for grading.</li></ul><p><em>Checkpoint: Your materials are submitted and ready for teacher review.</em></p><p class=\"outro\">You completed a self-review and submitted materials. Next week you’ll share your episode with the community and reflect.</p>",
+          "title": "11.4: Rubric Self-Check"
+        }
+      ],
+      "description": "Final edits, polish, show notes, episode art/title, and prepare materials for the listening event and rubric submission."
+    },
+    {
+      "title": "Week 12: Share, Reflect & Celebrate",
+      "planets": [
+        {
+          "description": "Organise a short listening event plan: location, invitations, playback setup, and who will introduce each team’s episode.",
+          "title": "12.1: Plan the Listening Event",
+          "missionInstructions": "<p class=\"intro\">A listening event honours elders and shares the students’ work. Plan a simple program and test equipment for playback.</p><h2>Instructions</h2><h3>Step 1: Event micro-teach</h3><ul><li>Teacher: A good event has short introductions, clear playback, and time to thank guests.</li></ul><p><em>Checkpoint: You know the basic parts of a respectful listening event.</em></p><h3>Step 2: Assign event roles</h3><ul><li>Assign who will introduce the episode, press play, and thank the elder afterward.</li></ul><p><em>Checkpoint: Event roles are assigned for each team.</em></p><h3>Step 3: Technical test</h3><ul><li>Test playback of your MP3 on the event equipment and confirm sound levels.</li></ul><p><em>Checkpoint: Your episode plays correctly and levels are set for the room.</em></p><p class=\"outro\">The event plan is ready and tested. Next you’ll rehearse your brief introduction for the audience.</p>"
+        },
+        {
+          "missionInstructions": "<p class=\"intro\">A short introduction tells the audience what they’re about to hear and credits the elder in a respectful way.</p><h2>Instructions</h2><h3>Step 1: Draft intro</h3><ul><li>Write a 30–60 second introduction that includes the team name, episode title, and one sentence about the elder.</li></ul><p><em>Checkpoint: You have a clear short introduction written.</em></p><h3>Step 2: Practice delivery</h3><ul><li>Rehearse the introduction aloud with your team and time it to keep it under 60 seconds.</li></ul><p><em>Checkpoint: Your introduction is polished and under time.</em></p><h3>Step 3: Prepare thank-you note</h3><ul><li>Prepare a short thank-you to the elder that you will say after playback.</li></ul><p><em>Checkpoint: You have a sincere thank-you prepared for the event.</em></p><p class=\"outro\">Your introductions and thanks are ready for the event. Now present your episode with pride.</p>",
+          "description": "Prepare and practise a 30–60 second introduction for your episode and a thank-you to the elder.",
+          "title": "12.2: Rehearse Introductions & Thanks"
+        },
+        {
+          "title": "12.3: Host the Listening Event",
+          "description": "Play each team’s episode, introduce it, and give the elder (and audience) space to respond if they wish.",
+          "missionInstructions": "<p class=\"intro\">Today you share your work with elders, families and classmates. Be respectful, listen quietly, and celebrate others after playback.</p><h2>Instructions</h2><h3>Step 1: Team intro</h3><ul><li>Deliver your 30–60 second introduction to the audience.</li></ul><p><em>Checkpoint: Your team introduced the episode clearly and respectfully.</em></p><h3>Step 2: Play episode</h3><ul><li>Play your final exported episode on the tested equipment at a comfortable volume.</li></ul><p><em>Checkpoint: Your episode played smoothly for the audience.</em></p><h3>Step 3: Thank and invite brief response</h3><ul><li>Thank the elder and invite a short reaction if they wish; respect if they prefer not to speak.</li></ul><p><em>Checkpoint: You thanked the elder and allowed for a response if desired.</em></p><p class=\"outro\">You shared your episode publicly and honoured the elder. Celebrate with your classmates and enjoy the achievements.</p>"
+        },
+        {
+          "missionInstructions": "<p class=\"intro\">Finish the course by reflecting on what you learned, submitting final rubrics, and deciding on community sharing steps that respect elders’ wishes.</p><h2>Instructions</h2><h3>Step 1: Final rubric and teacher feedback</h3><ul><li>Complete the final rubric with your team and meet the teacher for a short feedback session.</li></ul><p><em>Checkpoint: You finished the rubric and got teacher feedback on your project.</em></p><h3>Step 2: Team reflection</h3><ul><li>In your team, list three skills you improved and one thing you’d do differently next time.</li></ul><p><em>Checkpoint: Your team reflected honestly on achievements and next steps.</em></p><h3>Step 3: Archive and sharing plan</h3><ul><li>Confirm where the final files will be archived and whether the elder agreed to further sharing; note any restrictions.</li></ul><p><em>Checkpoint: You have a plan to store the episode and know whether it can be shared beyond the event.</em></p><p class=\"outro\">You completed the course, shared an elder’s story respectfully, and learned podcasting skills you can use again. Celebrate your work!</p>",
+          "title": "12.4: Final Reflection & Next Steps",
+          "description": "Complete final rubric, reflect on learning, and plan how to archive or share episodes more widely only with elder permission."
+        }
+      ],
+      "description": "Host a listening event, reflect on learning, and celebrate the elders and student teams. Collect final rubrics and plan how to share episodes with the wider community if approved."
+    }
+  ],
+  "questions": null,
+  "title": "Island Voices: A Young Podcasters’ Guide to Interviewing Elders",
+  "idInDatabase": "o0ESon1964OwvNSVwj5y",
+  "tokens": {
+    "combinedEstimatedCost": 0.0353255,
+    "modelsUsed": [{ "model": "gpt-5-mini", "estimatedCost": 0.0353255, "totalTokens": 19222 }],
+    "totalTokens": 19222,
+    "totalInputTokens": 1782,
+    "totalOutputTokens": 17440
+  },
+  "description": "A 12-week, 4-days-per-week (3 hours/day) hands-on course for 10–13 year olds in the Cook Islands. Teams of 2–4 use smartphones to plan, record, edit, and share one respectful interview podcast with an elder. Focus: critical listening, asking strong questions, active listening, storytelling, and sharing Cook Islands voices in English and/or Cook Islands Māori.",
+  "status": "journey_ready"
+}

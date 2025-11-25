@@ -8,7 +8,7 @@
     <div class="left-col">
       <p class="label text-center mt-4 mb-0">Squad:</p>
       <div class="d-flex flex-column justify-start align-center pa-2">
-        <v-avatar v-if="cohort.image.url" size="80">
+        <v-avatar v-if="cohort.image.url" class="cohort-image">
           <v-img :src="cohort.image.url"></v-img>
         </v-avatar>
         <div v-else class="imagePlaceholder">
@@ -31,6 +31,8 @@
               :size="40"
               :personId="teacherId"
               :colourBorder="true"
+              :cohort="cohort"
+              class="mb-2"
             />
           </div>
         </div>
@@ -42,7 +44,7 @@
             class="d-flex justify-center align-center flex-wrap py-2"
           >
             <!-- v-show not working to hide tooltip, so using v-if v-else  -->
-            <v-tooltip v-if="isCohortTeacher" v-show="isCohortTeacher" top color="subBackground">
+            <!-- <v-tooltip v-if="isCohortTeacher" v-show="isCohortTeacher" top color="subBackground">
               <template v-slot:activator="{ on, attrs }">
                 <p class="label text-center mt-4 mb-2" v-bind="attrs" v-on="on">Navigators:</p>
               </template>
@@ -62,7 +64,13 @@
               @click.native="clickedPerson($event, person, index)"
               :hideTooltips="!isCohortTeacher"
               :cohort="cohort"
-            />
+            /> -->
+            <p class="label text-center mt-4 mb-2" v-bind="attrs" v-on="on">Navigators:</p>
+            <!-- active navigators in this timeframe -->
+            <p class="label text-center mt-2 mb-1">{{ activeInactive.active }}<br />Active</p>
+
+            <!-- inactive navigators in this timeframe -->
+            <p class="label text-center mt-0">{{ activeInactive.inactive }}<br />Inactive</p>
           </div>
           <p v-else class="label text-center pa-4" style="font-weight: 800">NO NAVIGATOR DATA</p>
         </div>
@@ -128,6 +136,7 @@ import Avatar from "@/components/Reused/Avatar.vue";
 import ProgressionLineChart from "@/components/Reused/ProgressionLineChart.vue";
 import ActivityBarChart from "@/components/Reused/ActivityBarChart.vue";
 import Organisation from "@/components/Reused/Organisation.vue";
+import { DateTime } from "luxon";
 import {
   fetchCohortCoursesActivityByCohortId,
   fetchCohortStudentsActivityTimeByCohortId,
@@ -171,6 +180,8 @@ export default {
     this.cohortsCoursesData = await fetchCohortCoursesActivityByCohortId(this.cohort.id);
     // console.log("this.cohortsCoursesData", this.cohortsCoursesData);
 
+    console.log("this.cohortsCoursesData", this.cohortsCoursesData);
+
     // add students with data
     const studentsArr = [];
     if (this.cohortsCoursesData) {
@@ -211,6 +222,58 @@ export default {
     captainLabel() {
       return this.cohort.teachers.length > 1 ? "Captains:" : "Captain:";
     },
+    activeInactive() {
+      // Count students who completed at least one mission (task) within the timeframe
+      if (!this.studentsWithData || this.studentsWithData.length === 0) {
+        return { active: 0, inactive: 0 };
+      }
+
+      const activeSet = new Set();
+      const timeframeType = this.timeframe?.type;
+      const min = this.timeframe?.min ? DateTime.fromJSDate(this.timeframe.min) : null;
+      const max = this.timeframe?.max ? DateTime.fromJSDate(this.timeframe.max) : null;
+
+      for (const student of this.studentsWithData) {
+        let hasCompletedInWindow = false;
+
+        for (const course of this.cohortsCoursesData || []) {
+          const studentEntry = (course.students || []).find(
+            (s) => s.person && s.person.id === student.id,
+          );
+          if (!studentEntry || !studentEntry.activities) continue;
+
+          const activities = studentEntry.activities;
+          const found = activities.some((activity) => {
+            if (!activity?.timeStamp) return false;
+            if (activity.status !== "Completed" || activity.type !== "Task") return false;
+
+            const ts = DateTime.fromISO(activity.timeStamp);
+
+            if (timeframeType === "day") {
+              // Match exact day against timeframe max day
+              const targetDay = DateTime.fromJSDate(this.timeframe.max).toISODate();
+              return ts.toISODate() === targetDay;
+            }
+
+            if (!min || !max) return false;
+            // Inclusive window similar to other charts (use strict bounds like ActivityBarChart)
+            return ts > min && ts < max;
+          });
+
+          if (found) {
+            hasCompletedInWindow = true;
+            break;
+          }
+        }
+
+        if (hasCompletedInWindow) activeSet.add(student.id);
+      }
+
+      const active = activeSet.size;
+      const total = this.studentsWithData.length;
+      const inactive = total - active;
+      return { active, inactive };
+    },
   },
   methods: {
     ...mapActions(useRootStore, ["setCurrentCohortId"]),
@@ -223,7 +286,7 @@ export default {
       // get all avatar elements
       const avatarEls = this.$refs.avatar;
       // loop avatar els
-      for (var i = 0; i < avatarEls.length; i++) {
+      for (let i = 0; i < avatarEls.length; i++) {
         // add index to selected if not already. else remove
         if (i == index && !this.selectedIndexs.includes(index)) {
           this.selectedIndexs.push(index);
@@ -245,11 +308,11 @@ export default {
         );
 
         // add dim to all avatar els
-        for (var y = 0; y < avatarEls.length; y++) {
+        for (let y = 0; y < avatarEls.length; y++) {
           avatarEls[y].$el.classList.add("dim");
         }
         //remove dim for selected avatar els
-        for (var x = 0; x < this.selectedIndexs.length; x++) {
+        for (let x = 0; x < this.selectedIndexs.length; x++) {
           avatarEls[this.selectedIndexs[x]].$el.classList.remove("dim");
         }
       }
@@ -321,7 +384,8 @@ export default {
     // border-right: 1px solid var(--v-missionAccent-base);
 
     .cohort-image {
-      width: 80px;
+      width: auto;
+      max-width: 80px;
       border-radius: 50%;
       object-fit: cover;
     }

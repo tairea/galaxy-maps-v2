@@ -10,11 +10,25 @@
       ></v-btn>
     </div>
     <div v-else-if="sortedCourseActivitiesByDates.length > 0" :class="statementClass">
-      <div v-for="(year, i) in sortedCourseActivitiesByDates" :key="i" class="ma-0">
-        <div v-for="(date, j) in year.dates" :key="j" class="ma-0">
+      <div
+        v-for="(year, yearIndex) in sortedCourseActivitiesByDates"
+        :key="`year-${yearIndex}-${year.year}`"
+        class="ma-0"
+      >
+        <div
+          v-for="(date, dateIndex) in year.dates"
+          :key="`date-${yearIndex}-${dateIndex}-${date.date}`"
+          class="ma-0"
+        >
           <!-- DAY, DATE, YEAR -->
           <p class="mt-3 mb-1 border-bottom-missionAccent">{{ formatDate(date.date) }}</p>
-          <div v-for="(activity, k) in date.activities" :key="k" class="ma-0">
+          <div
+            v-for="(activity, activityIndex) in date.activities"
+            :key="`activity-${yearIndex}-${dateIndex}-${activityIndex}-${
+              activity.id || activity.timeStamp.time
+            }`"
+            class="ma-0"
+          >
             <!-- TIME -->
             <span>{{ activity.timeStamp.time }} - </span>
             <!-- ACTIVITY -->
@@ -69,7 +83,7 @@ export default {
     },
 
     sortedCourseActivitiesByDates() {
-      let groupedByYear = {};
+      const groupedByYear = {};
 
       // Step 1: Group activities by year
       this.courseActivities.forEach((activity) => {
@@ -90,7 +104,7 @@ export default {
       });
 
       // Step 3: Group by date within each year, already in descending order
-      let finalGrouping = {};
+      const finalGrouping = {};
       Object.keys(groupedByYear).forEach((year) => {
         finalGrouping[year] = groupedByYear[year].reduce((acc, curr) => {
           const dateKey = curr.dateYear; // Use YYYY-MM-DD format for consistent sorting
@@ -103,7 +117,7 @@ export default {
       });
 
       // Step 4: Convert finalGrouping object into the desired array structure with years and dates in descending order
-      let finalArray = Object.keys(finalGrouping)
+      const finalArray = Object.keys(finalGrouping)
         .sort((a, b) => b.localeCompare(a))
         .map((year) => ({
           year,
@@ -175,19 +189,18 @@ export default {
     },
     sanitiseStudentsActivityLog() {
       const filtered = this.studentsActivityLog.filter((activity) => activity.course);
-      // console.log("filtered", filtered);
       const sanitised = filtered.map((statement, index) => {
-        let [action, title] = statement.description.split(": ");
-        let [status, type] = action.split(" ");
-        let id = statement.task;
+        const [action, title] = statement.description.split(": ");
+        const [status, type] = action.split(" ");
+        const id = statement.task;
 
-        let isoTime = this.formatTime(statement.timestamp);
+        const isoTime = this.formatTime(statement.timestamp);
 
-        let parts = isoTime.split(" "); // Assuming format is now ["Fri", "04", "Nov", "2023", "12:12"]
-        let day = parts[0]; // "Fri"
-        let date = parts.slice(1, 3).join(" "); // "04 Nov"
-        let year = parts[3]; // "2023"
-        let time = parts[4]; // "12:12"
+        const parts = isoTime.split(" "); // Assuming format is now ["Fri", "04", "Nov", "2023", "12:12"]
+        const day = parts[0]; // "Fri"
+        const date = parts.slice(1, 3).join(" "); // "04 Nov"
+        const year = parts[3]; // "2023"
+        const time = parts[4]; // "12:12"
 
         const newStatement = {
           timeStamp: { year, day, date, time },

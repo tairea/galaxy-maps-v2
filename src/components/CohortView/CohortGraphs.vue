@@ -1,8 +1,43 @@
 <template>
   <div>
-    <div class="timeframe-chips">
+    <!-- Toggle student data -->
+    <!-- Toggle student data -->
+    <div class="student-row">
+      <!-- loading spinner -->
+      <div
+        class="d-flex justify-center align-center"
+        style="padding: 50px"
+        v-if="cohort.students.length == 0"
+      >
+        <p class="label text-center" style="font-weight: 800">NO NAVIGATOR DATA</p>
+      </div>
+      <div
+        v-else-if="studentsWithData.length > 0"
+        class="d-flex justify-center align-center flex-wrap py-2"
+      >
+        <p class="label text-center mt-4 mb-2">
+          Navigators: <br /><i style="font-size: 0.6rem"
+            >(Select a Navigator to only show their data)</i
+          >
+        </p>
+        <Avatar
+          v-for="(person, index) in studentsWithData"
+          ref="avatar"
+          :key="person.id"
+          :size="50"
+          :personId="person.id"
+          class="my-2 mx-1 avatar"
+          :colourBorder="true"
+          @click.native="clickedPerson(person, index)"
+        />
+      </div>
+    </div>
+
+    <!-- Timeframe Filters -->
+    <div class="timeframe-chips mt-6">
       <TimeframeFilters @timeframe="timeframe = $event" />
     </div>
+
     <!-- Progression Line Charts -->
     <div>
       <!-- loading spinner -->
@@ -13,7 +48,7 @@
       >
         <v-btn :loading="cohortsCoursesDataLoading" icon color="missionAccent"></v-btn>
       </div>
-      <div v-else-if="cohortsCoursesData.length > 0" style="padding: 20px">
+      <div v-else-if="cohortsCoursesData.length > 0" style="padding: 0px 20px">
         <ProgressionLineChart
           v-for="courseData in cohortsCoursesData"
           :key="courseData.id"
@@ -21,6 +56,7 @@
           :timeframe="timeframe"
           :selectedPersons="selectedPersons"
           :unselectedPersons="unselectedPersons"
+          class="mb-6"
         />
       </div>
       <div v-else class="d-flex justify-center align-center" style="padding: 50px 0px">
@@ -52,37 +88,6 @@
       <div v-else class="d-flex justify-center align-center" style="padding: 50px 0px">
         <p class="label text-center" style="font-weight: 800">NO ACTIVITY DATA</p>
       </div>
-    </div>
-
-    <!-- Toggle student data -->
-    <div class="student-row">
-      <!-- loading spinner -->
-      <div
-        class="d-flex justify-center align-center"
-        style="padding: 50px"
-        v-if="cohort.students.length == 0"
-      >
-        <v-btn :loading="true" icon color="missionAccent"></v-btn>
-      </div>
-      <div
-        v-else-if="cohort.students.length > 0"
-        class="d-flex justify-center align-center flex-wrap py-2"
-      >
-        <p class="label text-center mt-4 mb-2">
-          Students: <i>(Selected students to only show their data)</i>
-        </p>
-        <Avatar
-          v-for="(person, index) in studentsWithData"
-          ref="avatar"
-          :key="person.id"
-          :size="50"
-          :personId="person.id"
-          class="my-2 mx-1 avatar"
-          :colourBorder="true"
-          @click.native="clickedPerson(person, index)"
-        />
-      </div>
-      <p v-else class="label text-center" style="font-weight: 800">NO STUDENT DATA</p>
     </div>
   </div>
 </template>
@@ -146,7 +151,7 @@ export default {
       // get all avatar elements
       const avatarEls = this.$refs.avatar;
       // loop avatar els
-      for (var i = 0; i < avatarEls.length; i++) {
+      for (let i = 0; i < avatarEls.length; i++) {
         // add index to selected if not already. else remove
         if (i == index && !this.selectedIndexs.includes(index)) {
           this.selectedIndexs.push(index);
@@ -168,11 +173,11 @@ export default {
         );
 
         // add dim to all avatar els
-        for (var y = 0; y < avatarEls.length; y++) {
+        for (let y = 0; y < avatarEls.length; y++) {
           avatarEls[y].$el.classList.add("dim");
         }
         //remove dim for selected avatar els
-        for (var x = 0; x < this.selectedIndexs.length; x++) {
+        for (let x = 0; x < this.selectedIndexs.length; x++) {
           avatarEls[this.selectedIndexs[x]].$el.classList.remove("dim");
         }
       }

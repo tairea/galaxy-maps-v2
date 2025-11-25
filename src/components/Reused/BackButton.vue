@@ -1,8 +1,8 @@
 <template>
-  <div class="backButtonDiv">
-    <v-btn :to="toPath" class="backButton" color="baseAccent" text>
+  <div class="backButtonDiv" :class="{ mobile: mobile }">
+    <v-btn :to="dynamicPath || toPath" class="backButton" :color="color" text>
       <v-icon left> {{ mdiArrowLeft }} </v-icon>
-      Back
+      <span v-if="showText">Back</span>
     </v-btn>
   </div>
 </template>
@@ -12,7 +12,28 @@ import { mdiArrowLeft } from "@mdi/js";
 
 export default {
   name: "BackButton",
-  props: ["toPath"],
+  props: {
+    toPath: {
+      type: String,
+      default: "/",
+    },
+    dynamicPath: {
+      type: String,
+      default: null,
+    },
+    mobile: {
+      type: Boolean,
+      default: false,
+    },
+    showText: {
+      type: Boolean,
+      default: true,
+    },
+    color: {
+      type: String,
+      default: "baseAccent",
+    },
+  },
   computed: {},
   data() {
     return {
@@ -27,7 +48,20 @@ export default {
 .backButtonDiv {
   margin-top: 20px;
   width: calc(100% - 30px);
-  z-index: 200;
+  z-index: 50;
+
+  &.mobile {
+    margin-top: 0;
+    width: auto;
+
+    .backButton {
+      width: auto;
+      min-width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+  }
 }
 
 .backButton {

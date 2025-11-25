@@ -138,7 +138,8 @@ export default {
       }, 100);
     },
     calcTopicsCompletedPercentage() {
-      let percentage = (this.activity.topicCompletedCount / this.activity.course.topicTotal) * 100;
+      const percentage =
+        (this.activity.topicCompletedCount / this.activity.course.topicTotal) * 100;
       this.topicsCompletedPercentage = Math.round(percentage) || 1;
     },
     async calcTasksCompletedPercentage() {
@@ -153,11 +154,12 @@ export default {
           if (task.taskStatus === "completed") this.completedTasksInTopic++;
         });
         if (this.tasksInCurrentTopic) {
-          let percentage = (this.completedTasksInTopic / this.tasksInCurrentTopic.length) * 100;
+          const percentage = (this.completedTasksInTopic / this.tasksInCurrentTopic.length) * 100;
           this.tasksCompletedPercentage = Math.round(percentage) || 1;
         }
       } else {
-        let percentage = (this.activity.tasksCompletedCount / this.activity.course.taskTotal) * 100;
+        const percentage =
+          (this.activity.tasksCompletedCount / this.activity.course.taskTotal) * 100;
         this.tasksCompletedPercentage = Math.round(percentage) || 1;
       }
     },

@@ -1,9 +1,9 @@
 <template>
   <div class="bg">
     <Login v-if="componentView == 'login'" />
-    <v-btn v-if="componentView == 'login'" :to="{ path: '/' }">
+    <v-btn text v-if="componentView == 'login'" :to="{ path: '/' }">
       <p
-        class="overline baseAccent--text landing-content"
+        class="overline baseAccent--text landing-content pb-16"
         v-text="Object.keys($route.query).length === 0 ? 'Continue without signing in ->' : ''"
       ></p>
     </v-btn>
@@ -59,7 +59,6 @@ export default {
   watch: {
     "$route.name": {
       handler: function (route) {
-        console.log("route watch:", route);
         switch (route) {
           case "Login":
             this.componentView = "login";
@@ -122,6 +121,13 @@ export default {
   height: 100vh;
   width: 100vw;
   overflow: hidden;
+  overflow-y: auto;
+
+  z-index: 301;
+
+  @media (max-width: 960px) {
+    height: calc(var(--vh, 1vh) * 100);
+  }
 
   .landing-content {
     display: flex;
@@ -142,5 +148,11 @@ export default {
   top: 0;
   bottom: 0;
   z-index: 0;
+}
+
+@media (max-width: 960px) {
+  #background-video {
+    display: none;
+  }
 }
 </style>

@@ -1,76 +1,215 @@
 <template>
   <div id="container" class="bg">
     <LoadingSpinner v-if="isLoadingCohort" text="loading squad" />
-    <div id="left-section">
-      <CohortInfo v-if="!isLoadingCohort && cohort" :cohort="cohort" />
-      <BackButton v-if="!isLoadingCohort" :toPath="'/squads'" />
-      <AssignedInfo v-if="!isLoadingCohort && cohort" :cohort="cohort" assignCourses="true" />
+
+    <!-- Restricted access message -->
+    <div class="no-cohort" v-if="isRestricted">
+      <v-icon large color="missionAccent">{{ mdiAlertOutline }}</v-icon>
+      <p class="overline missionAccent--text">INVALID OR RESTRICTED SQUAD</p>
+      <p class="caption missionAccent--text" style="opacity: 0.5">
+        Check you have the correct ID,<br />or you may need to be signed-in
+      </p>
+      <BackButton :toPath="'/squads'" />
     </div>
 
-    <div id="main-section">
-      <!-- loading spinner -->
-      <div class="d-flex justify-center align-center" v-if="isLoadingCohort">
-        <v-btn
-          :loading="isLoadingCohort"
-          icon
-          color="missionAccent"
-          class="d-flex justify-center align-center"
-        ></v-btn>
-      </div>
-      <div v-if="cohort" class="people-frame">
-        <div class="people-border">
-          <div :class="peopleLabel" @click="setStudentsView(true)">
-            <span class="pl-3">NAVIGATORS</span>
-          </div>
+    <div v-else class="cohort-container">
+      <div id="left-section" :class="{ minimized: infoMinimized }">
+        <div class="cohort-info-wrapper" :class="{ minimized: infoMinimized }">
+          <CohortInfo
+            v-if="!isLoadingCohort && cohort"
+            :cohort="cohort"
+            :minimized="infoMinimized"
+            @minimised="onInfoMinimized"
+          />
         </div>
-        <div class="graph-border">
-          <div :class="graphLabel" class="text-center" @click="setStudentsView(false)">
-            <span class="pl-3">OVERVIEW</span>
-          </div>
-        </div>
-        <StudentDataIterator
-          v-if="studentsView"
-          class="mt-4"
-          :cohort="cohort"
-          @learnerOverviewDialogClosed="refreshComponents"
+        <BackButton
+          v-if="!isLoadingCohort"
+          :toPath="'/squads'"
+          :class="infoMinimized ? 'back-button-fixed' : 'mt-2'"
         />
-        <CohortGraphs v-else :cohort="cohort" :cohortsCoursesData="cohortsCoursesData" />
+        <AssignedInfo
+          v-if="!isLoadingCohort && cohort"
+          v-show="!infoMinimized"
+          :cohort="cohort"
+          assignCourses="true"
+        />
       </div>
-    </div>
 
-    <div id="right-section">
-      <RequestForHelpTeacherFrame
-        v-if="cohort"
-        :key="refreshRequests"
-        :isTeacher="teacher"
-        :courses="courses"
-        :students="cohort.students"
-      />
-      <SubmissionTeacherFrame
-        v-if="cohort && teacher"
-        :key="refreshSubmissions"
-        :isTeacher="teacher"
-        :courses="courses"
-        :students="cohort.students"
-        class="mt-4"
-      />
-      <!-- Completed Separate -->
-      <!-- <p class="baseAccent--text completed-label ma-0 py-6">COMPLETED</p>
-      <RequestForHelpTeacherFrame
-        :isTeacher="teacher"
-        :courses="courses"
-        :students="cohort.students"
-        :completedRequestsOnly="true"
-        class="mt-0"
-      />
-      <SubmissionTeacherFrame
-        v-if="teacher"
-        :isTeacher="teacher"
-        :courses="courses"
-        :students="cohort.students"
-        :completedSubmissionsOnly="true"
-        class="mt-4"
-      /> -->
+      <div id="main-section">
+        <!-- loading spinner -->
+        <div class="d-flex justify-center align-center" v-if="isLoadingCohort">
+          <v-btn
+            :loading="isLoadingCohort"
+            icon
+            color="missionAccent"
+            class="d-flex justify-center align-center"
+          ></v-btn>
+        </div>
+
+        <!-- SQUAD FRAME -->
+        <div v-if="cohort" class="people-frame">
+          <!-- Navigators TAB -->
+          <div class="people-border">
+            <div :class="peopleLabel" @click="setActiveTab('navigators')">
+              <span class="pl-3">NAVIGATORS</span>
+            </div>
+          </div>
+
+          <!-- Overview TAB (commented out) -->
+          <!--
+          <div class="graph-border">
+            <div :class="graphLabel" class="text-center" @click="setActiveTab('overview')">
+              <span class="pl-3">OVERVIEW</span>
+            </div>
+          </div>
+          -->
+
+          <!-- Status Report TAB (commented out) -->
+          <!--
+          <div class="report-border">
+            <div :class="reportLabel" @click="setActiveTab('status')">
+              <span class="pl-3">STATUS REPORT</span>
+            </div>
+          </div>
+          -->
+
+          <!-- Maps TAB -->
+          <div class="maps-border">
+            <div :class="mapsLabel" class="text-center" @click="setActiveTab('maps')">
+              <span class="pl-3">MAPS</span>
+            </div>
+          </div>
+
+          <!-- Timeline TAB -->
+          <div class="timeline-border">
+            <div :class="timelineLabel" @click="setActiveTab('timeline')">
+              <span class="pl-3">TIMELINE</span>
+            </div>
+          </div>
+
+          <!-- Status Report (commented out) -->
+          <!--
+          <StatusReportPanel
+            v-if="activeTab === 'status'"
+            class="mt-4"
+            :cohort="cohort"
+            :cohortsCoursesData="cohortsCoursesData"
+          />
+          -->
+
+          <!-- Navigators -->
+          <StudentDataIterator
+            v-show="activeTab === 'navigators'"
+            class="mt-4"
+            :cohort="cohort"
+            :cohortsCoursesData="cohortsCoursesData"
+            @learnerOverviewDialogClosed="refreshComponents"
+          />
+
+          <!-- Maps View -->
+          <div
+            v-show="activeTab === 'maps'"
+            class="galaxies-container"
+            :class="{ fullscreen: isGalaxiesFullscreen }"
+          >
+            <v-btn
+              icon
+              small
+              class="fullscreen-toggle"
+              style="right: 44px"
+              color="missionAccent"
+              @click="togglePlanetsAnimation"
+              :title="showMissions ? 'Hide missions' : 'Show missions'"
+            >
+              <v-icon small>{{ showMissions ? mdiEarthOff : mdiEarth }}</v-icon>
+            </v-btn>
+            <v-btn
+              icon
+              small
+              class="fullscreen-toggle"
+              color="missionAccent"
+              @click="toggleGalaxiesFullscreen"
+            >
+              <v-icon small>{{ isGalaxiesFullscreen ? mdiFullscreenExit : mdiFullscreen }}</v-icon>
+            </v-btn>
+
+            <CohortGalaxies
+              ref="galaxyMap"
+              class="mt-4"
+              :courses="coursesFull"
+              :courseEdgesMap="courseEdgesMap"
+              :courseNodesMap="courseNodesMap"
+              :coursesActivity="cohortsCoursesData"
+              :highlightCourse="selectedCourseId"
+              :isLoadingCourses="isLoadingCourses"
+              :onePerRow="true"
+              :showMissions="showMissions"
+              :paused="false"
+              :showCourseTitles="false"
+              :showGlow="false"
+              :activeMissionsByTopicKey="activeMissionsByTopicKey"
+              :isLoadingActiveMissions="isLoadingActiveMissions"
+              @courseClicked="onCourseClicked"
+            />
+          </div>
+
+          <!-- Timeline View -->
+          <div
+            v-show="activeTab === 'timeline'"
+            class="timeline-container-wrap"
+            :class="{ fullscreen: isTimelineFullscreen }"
+          >
+            <CohortActivityTimelinePanel
+              class="mt-4"
+              :activityData="cohortsCoursesData"
+              :selectedCourseId="selectedCourseId"
+              :isFullscreen="isTimelineFullscreen"
+              @toggleFullscreen="isTimelineFullscreen = !isTimelineFullscreen"
+              @close="/* close hidden per request */ null"
+            />
+          </div>
+
+          <!-- Overview (commented out) -->
+          <!--
+          <CohortGraphs v-else :cohort="cohort" :cohortsCoursesData="cohortsCoursesData" />
+          -->
+        </div>
+      </div>
+
+      <div id="right-section">
+        <RequestForHelpTeacherFrame
+          v-if="cohort"
+          :key="refreshRequests"
+          :isTeacher="teacher"
+          :courses="courses"
+          :students="students"
+        />
+        <SubmissionTeacherFrame
+          v-if="cohort && teacher"
+          :key="refreshSubmissions"
+          :isTeacher="teacher"
+          :courses="courses"
+          :students="students"
+          class="mt-4"
+        />
+        <!-- Completed Separate -->
+        <!-- <p class="baseAccent--text completed-label ma-0 py-6">COMPLETED</p>
+        <RequestForHelpTeacherFrame
+          :isTeacher="teacher"
+          :courses="courses"
+          :students="cohort.students"
+          :completedRequestsOnly="true"
+          class="mt-0"
+        />
+        <SubmissionTeacherFrame
+          v-if="teacher"
+          :isTeacher="teacher"
+          :courses="courses"
+          :students="cohort.students"
+          :completedSubmissionsOnly="true"
+          class="mt-4"
+        /> -->
+      </div>
     </div>
   </div>
 </template>
@@ -84,10 +223,19 @@ import BackButton from "@/components/Reused/BackButton.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import SubmissionTeacherFrame from "@/components/Reused/SubmissionTeacherFrame.vue";
 import CohortGraphs from "@/components/CohortView/CohortGraphs.vue";
-import { fetchCohortCoursesActivityByCohortId } from "@/lib/ff";
+import StatusReportPanel from "@/components/CohortView/StatusReportPanel.vue";
+import CohortGalaxies from "@/components/CohortView/CohortGalaxies.vue";
+import CohortActivityTimelinePanel from "@/components/CohortView/CohortActivityTimelinePanel.vue";
+import {
+  fetchCohortCoursesActivityByCohortId,
+  fetchCourseByCourseId,
+  fetchCourseMapEdgesAndNodesByCourseId,
+} from "@/lib/ff";
+import { db } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import useCohortViewStore from "@/store/cohortView";
 import { mapActions, mapState } from "pinia";
+import { mdiAlertOutline, mdiFullscreen, mdiFullscreenExit, mdiEarth, mdiEarthOff } from "@mdi/js";
 
 export default {
   name: "CohortView",
@@ -101,12 +249,35 @@ export default {
     RequestForHelpTeacherFrame,
     SubmissionTeacherFrame,
     CohortGraphs,
+    StatusReportPanel,
+    CohortGalaxies,
+    CohortActivityTimelinePanel,
   },
   data() {
     return {
+      mdiAlertOutline,
+      mdiFullscreen,
+      mdiFullscreenExit,
+      mdiEarth,
+      mdiEarthOff,
       cohortsCoursesData: [],
       refreshSubmissions: 0, // TODO: Is this needed? is causing duplicate error
       refreshRequests: 0,
+      infoMinimized: false,
+      // Maps data
+      isLoadingCourses: false,
+      coursesFull: [],
+      courseNodesMap: new Map(),
+      courseEdgesMap: new Map(),
+      selectedCourseId: null,
+      showMissions: true,
+      pausedPlanets: false,
+      activeMissionsByTopicKey: new Map(),
+      personAvatarById: new Map(),
+      personNameById: new Map(),
+      isGalaxiesFullscreen: false,
+      isTimelineFullscreen: false,
+      isLoadingActiveMissions: false,
     };
   },
   async mounted() {
@@ -114,35 +285,275 @@ export default {
 
     // ==== get cohort course data from LRS
     this.cohortsCoursesData = await fetchCohortCoursesActivityByCohortId(this.cohort.id);
+    console.log("cohortsCoursesData", this.cohortsCoursesData);
+    // Load maps data for new Maps tab
+    // Only fetch maps if not already cached
+    if (
+      !this.coursesFull?.length ||
+      this.courseNodesMap.size === 0 ||
+      this.courseEdgesMap.size === 0
+    )
+      await this.loadCohortCoursesAndMaps();
+    // Load active missions for avatars next to planets
+    await this.loadActiveMissions();
+    // Force CohortGalaxies to rebuild planets and redraw after data loads
+    this.$nextTick(() => {
+      try {
+        const g = this.$refs.galaxyMap;
+        // Ensure tasks are loaded before building planets
+        if (g && typeof g.loadCohortTasks === "function") {
+          g.loadCohortTasks().then(() => {
+            if (typeof g.buildPlanetsForAllNodes === "function") g.buildPlanetsForAllNodes();
+            if (g.$refs && g.$refs.network && typeof g.$refs.network.redraw === "function")
+              g.$refs.network.redraw();
+          });
+        } else if (g && typeof g.buildPlanetsForAllNodes === "function") {
+          g.buildPlanetsForAllNodes();
+          if (g.$refs && g.$refs.network && typeof g.$refs.network.redraw === "function")
+            g.$refs.network.redraw();
+        }
+      } catch (_) {}
+    });
   },
   computed: {
     ...mapState(useRootStore, ["currentCohortId", "person", "userStatus"]),
-    ...mapState(useCohortViewStore, ["studentsView", "isLoadingCohort", "cohort"]),
+    ...mapState(useCohortViewStore, ["studentsView", "isLoadingCohort", "cohort", "activeTab"]),
     ready() {
       return this.cohortId === this.currentCohortId && this.cohort != null;
     },
     courses() {
-      return this.cohort?.courses?.map((course) => {
-        return { id: course };
+      if (!this.cohort?.courses) return [];
+      // Use Set to ensure unique course IDs, then map to objects
+      const uniqueCourseIds = [...new Set(this.cohort.courses)];
+      return uniqueCourseIds.map((courseId) => {
+        return { id: courseId };
       });
+    },
+    students() {
+      if (!this.cohort?.students) return [];
+      // Use Set to ensure unique student IDs
+      return [...new Set(this.cohort.students)];
     },
     teacher() {
       return this.cohort.teachers.includes(this.person.id);
     },
+    reportLabel() {
+      return this.activeTab === "status" ? "report-label" : "inactive-report-label";
+    },
     peopleLabel() {
-      return this.studentsView ? "people-label" : "inactive-people-label";
+      return this.activeTab === "navigators" ? "people-label" : "inactive-people-label";
     },
     graphLabel() {
-      return this.studentsView ? "inactive-graph-label" : "graph-label";
+      return this.activeTab === "overview" ? "graph-label" : "inactive-graph-label";
+    },
+    mapsLabel() {
+      return this.activeTab === "maps" ? "maps-label" : "inactive-maps-label";
+    },
+    timelineLabel() {
+      return this.activeTab === "timeline" ? "timeline-label" : "inactive-timeline-label";
+    },
+    isRestricted() {
+      // If no cohort is loaded yet, don't show restricted message
+      if (!this.cohort) return false;
+
+      // Check if person is a teacher of this cohort
+      return !this.cohort.teachers.includes(this.person?.id);
     },
   },
   methods: {
-    ...mapActions(useCohortViewStore, ["loadCohort", "setStudentsView"]),
+    ...mapActions(useCohortViewStore, ["loadCohort", "setStudentsView", "setActiveTab"]),
+    ...mapActions(useRootStore, ["setMobileInfoMinimized"]),
     // hack to update TeacherFrames. (this is because LearnerOveriewDashboard uses the same
     // components and when you close the dialog, the cohortview teacher frames are empty. issue#121)
     refreshComponents() {
       this.refreshSubmissions++;
       this.refreshRequests++;
+    },
+    onInfoMinimized(minimized) {
+      this.infoMinimized = minimized;
+      // Only propagate minimized=true to global state; avoid expanding Navbar/Userbar on expand
+      if (minimized) this.setMobileInfoMinimized(true);
+    },
+    async loadCohortCoursesAndMaps() {
+      try {
+        if (!this.cohort || !Array.isArray(this.cohort.courses)) {
+          this.coursesFull = [];
+          this.courseNodesMap = new Map();
+          this.courseEdgesMap = new Map();
+          return;
+        }
+        if (this.coursesFull?.length && this.courseNodesMap.size && this.courseEdgesMap.size) {
+          // already cached
+          return;
+        }
+        this.isLoadingCourses = true;
+        const uniqueCourseIds = [...new Set(this.cohort.courses)];
+        // Fetch full course objects
+        const fetchedCourses = await Promise.all(
+          uniqueCourseIds.map((courseId) => fetchCourseByCourseId(courseId)),
+        );
+        // Fetch edges and nodes for each course
+        const edgesAndNodes = await Promise.all(
+          uniqueCourseIds.map((courseId) =>
+            fetchCourseMapEdgesAndNodesByCourseId(courseId).then((res) => ({ courseId, ...res })),
+          ),
+        );
+        const nodesMap = new Map();
+        const edgesMap = new Map();
+        for (const { courseId, nodes, edges } of edgesAndNodes) {
+          nodesMap.set(courseId, nodes);
+          edgesMap.set(courseId, edges);
+        }
+        this.coursesFull = fetchedCourses;
+        this.courseNodesMap = nodesMap;
+        this.courseEdgesMap = edgesMap;
+        // Ensure planets are built once maps are ready
+        this.$nextTick(() => {
+          try {
+            const g = this.$refs.galaxyMap;
+            if (g && typeof g.refreshAllNodesAndEdgesToDisplay === "function")
+              g.refreshAllNodesAndEdgesToDisplay(true);
+            if (g && typeof g.loadCohortTasks === "function") {
+              g.loadCohortTasks().then(() => {
+                if (typeof g.buildPlanetsForAllNodes === "function") g.buildPlanetsForAllNodes();
+                if (g.$refs && g.$refs.network && typeof g.$refs.network.redraw === "function")
+                  g.$refs.network.redraw();
+              });
+            } else {
+              if (g && typeof g.buildPlanetsForAllNodes === "function") g.buildPlanetsForAllNodes();
+              if (g && g.$refs && g.$refs.network && typeof g.$refs.network.redraw === "function")
+                g.$refs.network.redraw();
+            }
+          } catch (_) {}
+        });
+      } catch (e) {
+        console.error("Error loading cohort courses/maps:", e);
+        this.coursesFull = [];
+        this.courseNodesMap = new Map();
+        this.courseEdgesMap = new Map();
+      } finally {
+        this.isLoadingCourses = false;
+      }
+    },
+    onCourseClicked(payload) {
+      this.selectedCourseId = payload?.courseId ?? null;
+      this.showMissions = true;
+      // rebuild on-demand when returning to maps
+      this.$nextTick(() => {
+        try {
+          const g = this.$refs.galaxyMap;
+          if (!g) return;
+          if (typeof g.loadCohortTasks === "function") {
+            g.loadCohortTasks().then(() => {
+              if (typeof g.buildPlanetsForAllNodes === "function") g.buildPlanetsForAllNodes();
+              if (g.$refs && g.$refs.network && typeof g.$refs.network.redraw === "function")
+                g.$refs.network.redraw();
+            });
+          }
+        } catch (_) {}
+      });
+    },
+    toggleGalaxiesFullscreen() {
+      this.isGalaxiesFullscreen = !this.isGalaxiesFullscreen;
+      this.$nextTick(() => {
+        try {
+          const g = this.$refs.galaxyMap;
+          if (g && g.$refs && g.$refs.network && typeof g.$refs.network.redraw === "function")
+            g.$refs.network.redraw();
+        } catch (_) {}
+      });
+    },
+    togglePlanetsAnimation() {
+      this.showMissions = !this.showMissions;
+      this.$nextTick(() => {
+        try {
+          const g = this.$refs.galaxyMap;
+          if (!g) return;
+          // Ensure animation loop is running so orbits can update after toggle
+          if (typeof g.startNodeAnimation === "function") g.startNodeAnimation();
+          if (g.$refs && g.$refs.network && typeof g.$refs.network.redraw === "function")
+            g.$refs.network.redraw();
+        } catch (_) {}
+      });
+    },
+    async loadActiveMissions() {
+      try {
+        this.isLoadingActiveMissions = true;
+        this.activeMissionsByTopicKey = new Map();
+        if (
+          !this.cohort ||
+          !Array.isArray(this.cohort.students) ||
+          this.cohort.students.length === 0
+        )
+          return;
+        const uniqueCourseIds = [...new Set(this.cohort.courses || [])];
+        if (uniqueCourseIds.length === 0) return;
+
+        // Fetch avatars for cohort students
+        const personDocs = await Promise.all(
+          this.cohort.students.map((personId) => db.collection("people").doc(personId).get()),
+        );
+        for (const snap of personDocs) {
+          if (snap.exists) {
+            const data = snap.data();
+            this.personAvatarById.set(snap.id, data?.image?.url || null);
+            const nameField =
+              data?.displayName ||
+              data?.name ||
+              [data?.firstName, data?.lastName].filter(Boolean).join(" ") ||
+              null;
+            this.personNameById.set(snap.id, nameField);
+          }
+        }
+
+        // Build fetch jobs for active tasks per student/topic
+        const jobs = [];
+        for (const courseId of uniqueCourseIds) {
+          const nodes = this.courseNodesMap.get(courseId) || [];
+          for (const node of nodes) {
+            const topicId = node?.id;
+            if (!topicId) continue;
+            for (const personId of this.cohort.students) {
+              jobs.push(
+                db
+                  .collection("people")
+                  .doc(personId)
+                  .collection(courseId)
+                  .doc(topicId)
+                  .collection("tasks")
+                  .where("taskStatus", "==", "active")
+                  .limit(1)
+                  .get()
+                  .then((q) => ({ personId, courseId, topicId, docs: q.docs }))
+                  .catch(() => ({ personId, courseId, topicId, docs: [] })),
+              );
+            }
+          }
+        }
+
+        const results = await Promise.all(jobs);
+        for (const res of results) {
+          const { personId, courseId, topicId, docs } = res;
+          if (!docs || docs.length === 0) continue;
+          const taskData = docs[0].data();
+          const taskName = taskData?.name || taskData?.title || null;
+          const orderIndex = taskData?.orderIndex ?? null;
+          const avatarUrl = this.personAvatarById.get(personId) || null;
+          const name = this.personNameById.get(personId) || null;
+          const key = `${courseId}:${topicId}`;
+          const arr = this.activeMissionsByTopicKey.get(key) || [];
+          // Deduplicate by personId for this course/topic
+          const existingIndex = arr.findIndex((x) => x.personId === personId);
+          const payload = { personId, avatarUrl, name, taskName, orderIndex };
+          if (existingIndex >= 0) arr[existingIndex] = payload;
+          else arr.push(payload);
+          this.activeMissionsByTopicKey.set(key, arr);
+        }
+      } catch (e) {
+        console.error("Error loading active missions:", e);
+      } finally {
+        this.isLoadingActiveMissions = false;
+      }
     },
   },
 };
@@ -163,6 +574,23 @@ export default {
   display: flex;
   overflow: hidden;
   margin: 0 !important;
+
+  .no-cohort {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+
+  .cohort-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 }
 
 #left-section {
@@ -175,6 +603,18 @@ export default {
   overflow-y: auto;
   padding: 50px 0px;
   margin-left: 5%;
+  // margin-left: 2.5%;
+  padding-right: 20px;
+
+  &.minimized {
+    /* Keep container interactive so specific children can be clickable */
+    pointer-events: auto;
+
+    /* Disable pointer events for children by default, except the ribbon wrapper */
+    > *:not(.cohort-info-wrapper) {
+      pointer-events: none;
+    }
+  }
 }
 
 #main-section {
@@ -208,6 +648,7 @@ export default {
       cursor: pointer;
       width: 120px;
       height: 22px;
+      z-index: 310;
     }
 
     .people-label {
@@ -255,6 +696,7 @@ export default {
       cursor: pointer;
       width: 120px;
       height: 22px;
+      z-index: 310;
     }
     .graph-label {
       font-size: 0.8rem;
@@ -289,13 +731,225 @@ export default {
       width: 116px;
       height: 20px;
     }
+
+    .report-border {
+      position: absolute;
+      top: -1px;
+      left: 240px;
+      background-color: var(--v-missionAccent-base);
+      color: var(--v-background-base);
+      padding: 0px 30px 0px 5px;
+      clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
+      cursor: pointer;
+      width: 150px;
+      height: 22px;
+      z-index: 310;
+    }
+    .report-label {
+      font-size: 0.8rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      position: relative;
+      top: 1px;
+      left: -3px;
+      background-color: var(--v-missionAccent-base);
+      color: var(--v-background-base);
+      padding: 0px 30px 0px 5px;
+      clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
+      cursor: pointer;
+      width: 150px;
+      height: 20px;
+    }
+    .inactive-report-label {
+      font-size: 0.8rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      position: relative;
+      top: 1px;
+      left: -3px;
+      background-color: var(--v-background-base);
+      color: var(--v-missionAccent-base);
+      padding: 0px 30px 0px 5px;
+      clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
+      cursor: pointer;
+      width: 146px;
+      height: 20px;
+    }
+
+    /* Maps tab styling (mirrors Overview) */
+    .maps-border {
+      position: absolute;
+      top: -1px;
+      left: 120px;
+      background-color: var(--v-missionAccent-base);
+      color: var(--v-background-base);
+      padding: 0px 30px 0px 5px;
+      clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
+      cursor: pointer;
+      width: 120px;
+      height: 22px;
+      z-index: 310;
+    }
+    .maps-label {
+      font-size: 0.8rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      position: relative;
+      top: 1px;
+      left: -3px;
+      background-color: var(--v-missionAccent-base);
+      color: var(--v-background-base);
+      padding: 0px 30px 0px 5px;
+      clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
+      cursor: pointer;
+      width: 120px;
+      height: 22px;
+    }
+    .inactive-maps-label {
+      font-size: 0.8rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      position: relative;
+      top: 1px;
+      left: -3px;
+      background-color: var(--v-background-base);
+      color: var(--v-missionAccent-base);
+      padding: 0px 30px 0px 5px;
+      clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
+      cursor: pointer;
+      width: 116px;
+      height: 20px;
+    }
+
+    /* Timeline tab styling (mirrors Status Report) */
+    .timeline-border {
+      position: absolute;
+      top: -1px;
+      left: 240px;
+      background-color: var(--v-missionAccent-base);
+      color: var(--v-background-base);
+      padding: 0px 30px 0px 5px;
+      clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
+      cursor: pointer;
+      width: 150px;
+      height: 22px;
+      z-index: 310;
+    }
+    .timeline-label {
+      font-size: 0.8rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      position: relative;
+      top: 1px;
+      left: -3px;
+      background-color: var(--v-missionAccent-base);
+      color: var(--v-background-base);
+      padding: 0px 30px 0px 5px;
+      clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
+      cursor: pointer;
+      width: 150px;
+      height: 20px;
+    }
+    .inactive-timeline-label {
+      font-size: 0.8rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      position: relative;
+      top: 1px;
+      left: -3px;
+      background-color: var(--v-background-base);
+      color: var(--v-missionAccent-base);
+      padding: 0px 30px 0px 5px;
+      clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
+      cursor: pointer;
+      width: 146px;
+      height: 20px;
+    }
   }
+}
+
+.galaxies-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+
+  &.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 400; /* above tab ribbons */
+    background: var(--v-background-base);
+    padding: 0;
+    margin: 0;
+  }
+
+  .fullscreen-toggle {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 320; /* above ribbons and canvas */
+  }
+}
+
+.timeline-container-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+
+  &.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 400; /* above tab ribbons to fully cover */
+    background: var(--v-background-base);
+    padding: 0;
+    margin: 0;
+    /* Remove outer margins and ensure inner panel fills viewport */
+    .mt-4 {
+      margin-top: 0 !important;
+    }
+    .cohort-activity-panel {
+      height: 100vh !important;
+    }
+  }
+}
+
+.cohort-info-wrapper {
+  width: 100%;
+  transition: all 0.3s ease-in-out;
+  position: relative;
+
+  &.minimized {
+    position: fixed;
+    top: -10px; // show just the ribbon peeking from top
+    left: 0;
+    z-index: 200; // ensure above galaxies canvas
+    /* Re-enable pointer events so the ribbon is clickable */
+    pointer-events: auto;
+    width: 200px; // keep a sensible width for ribbon click area
+  }
+}
+
+.back-button-fixed {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 10;
+  width: auto;
 }
 
 #right-section {
   width: 15%;
   height: 84%;
-  padding-top: 50px;
+  // padding-top: 50px;
   // margin-right: 35px;
   margin-right: 5%;
   overflow-y: auto;

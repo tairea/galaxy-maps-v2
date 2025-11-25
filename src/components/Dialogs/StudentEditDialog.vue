@@ -1,6 +1,12 @@
 <template>
   <!-- Edit dialog -->
-  <v-dialog v-model="dialog" width="40%" light>
+  <v-dialog
+    v-model="dialog"
+    :width="isMobile ? undefined : '30%'"
+    :fullscreen="isMobile"
+    :transition="isMobile ? 'dialog-bottom-transition' : undefined"
+    light
+  >
     <!-- CREATE BUTTON -->
     <template v-slot:activator="{ on, attrs }">
       <!-- <v-btn
@@ -25,14 +31,23 @@
       >
         <v-icon small> {{ mdiPencil }} </v-icon>
       </v-btn>
-      <v-btn v-else v-bind="attrs" v-on="on" color="baseAccent" class="ma-3" outlined>
+      <v-btn
+        v-else
+        v-bind="attrs"
+        v-on="on"
+        :color="buttonColor"
+        :class="buttonClass || 'ma-3'"
+        :outlined="buttonOutlined"
+        :block="buttonBlock"
+        :large="buttonLarge"
+      >
         <v-icon class="pr-2">{{ mdiPencil }}</v-icon>
-        edit account
+        Edit Account
       </v-btn>
     </template>
 
     <!-- DIALOG (TODO: make as a component)-->
-    <div class="create-dialog">
+    <div class="create-dialog" :class="{ 'mobile-dialog': isMobile }">
       <!-- HEADER -->
       <div class="dialog-header">
         <div class="d-flex justify-space-between mb-4">
@@ -70,7 +85,7 @@
         ></v-text-field>
         <!-- EMAIL -->
         <v-row>
-          <v-col cols="10">
+          <v-col cols="10" class="pt-3 pb-0">
             <v-text-field
               class="input-field"
               outlined
@@ -84,7 +99,7 @@
               clear-icon="mdi-close-circle"
             ></v-text-field>
           </v-col>
-          <v-col>
+          <v-col cols="2">
             <v-icon
               class="mt-2"
               large
@@ -99,6 +114,38 @@
             }}</v-icon>
           </v-col>
         </v-row>
+        <!-- PASSWORD -->
+        <v-row>
+          <v-col cols="10" class="py-0">
+            <v-text-field
+              class="input-field"
+              outlined
+              :disabled="!editPassword"
+              :dark="dark"
+              :light="!dark"
+              color="missionAccent"
+              v-model="newPassword"
+              :append-icon="hidePassword ? mdiEye : mdiEyeOff"
+              @click:append="() => (hidePassword = !hidePassword)"
+              :type="hidePassword ? 'password' : 'text'"
+              label="Change Password"
+            ></v-text-field>
+          </v-col>
+          <v-col cols="2">
+            <v-icon
+              class="mt-2"
+              large
+              color="missionAccent"
+              v-if="!editPassword"
+              @click="editPassword = true"
+            >
+              {{ mdiPencilBox }}
+            </v-icon>
+            <v-icon class="mt-2" large color="missionAccent" v-else @click="cancelPassword">{{
+              mdiClose
+            }}</v-icon>
+          </v-col>
+        </v-row>
         <!-- Discord handle -->
         <!-- <v-text-field
           class="input-field"
@@ -109,6 +156,64 @@
           v-model="profile.discord"
           label="Discord handle (optional)"
         ></v-text-field> -->
+        <!-- Photo -->
+        <div>
+          <p class="caption overline missionAccent--text text-center">Upload profile photo</p>
+          <div class="avatars-container d-flex flex-column pb-6">
+            <div class="upload-avatar-container">
+              <v-progress-circular
+                v-if="uploading"
+                :rotate="360"
+                :size="60"
+                :width="2"
+                :value="uploadPercentage"
+                color="baseAccent"
+              >
+                {{ uploadPercentage + "%" }}
+              </v-progress-circular>
+              <v-avatar
+                v-else
+                color="secondary"
+                @mouseenter="onhover = true"
+                @mouseleave="onhover = false"
+                size="100"
+                class="mb-4"
+              >
+                <img
+                  v-if="profile.image && profile.image.url"
+                  :src="profile.image.url"
+                  :alt="profile.firstName"
+                  style="object-fit: cover"
+                />
+                <v-icon :dark="dark" :light="!dark" v-else>{{ mdiAccount }}</v-icon>
+                <v-fade-transition>
+                  <v-overlay v-if="onhover" absolute color="baseAccent">
+                    <v-icon small @click="onButtonClick">{{ mdiPencil }}</v-icon>
+                  </v-overlay>
+                </v-fade-transition>
+                <input
+                  ref="uploader"
+                  class="d-none"
+                  type="file"
+                  accept="image/*"
+                  @change="onFileChanged"
+                />
+              </v-avatar>
+            </div>
+            <div class="navigators-avatar-container d-flex flex-wrap pl-1">
+              <v-avatar
+                v-for="image in navigatorImages"
+                :key="image.name"
+                size="30"
+                class="navigators-avatar mr-2 mb-2"
+                :class="{ 'selected-navigator': profile.image && profile.image.url === image.url }"
+                @click="selectNavigator(image)"
+              >
+                <img :src="image.url" :alt="image.name" style="object-fit: cover" />
+              </v-avatar>
+            </div>
+          </div>
+        </div>
 
         <!-- ACTION BUTTONS -->
         <div class="action-buttons">
@@ -144,18 +249,21 @@
 </template>
 
 <script>
-import { db } from "@/store/firestoreConfig";
+import { db, storage } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import {
   mdiPencil,
   mdiInformationVariant,
   mdiPencilBox,
-  mdiContentSave,
   mdiCheck,
   mdiClose,
+  mdiEye,
+  mdiEyeOff,
+  mdiAccount,
 } from "@mdi/js";
 import firebase from "firebase/compat/app";
 import { mapActions, mapState } from "pinia";
+import { navigatorImages, getFriendlyErrorMessage } from "@/lib/utils";
 
 export default {
   name: "StudentEditDialog",
@@ -180,6 +288,26 @@ export default {
       type: Object,
       default: () => ({}),
     },
+    buttonBlock: {
+      type: Boolean,
+      default: false,
+    },
+    buttonLarge: {
+      type: Boolean,
+      default: false,
+    },
+    buttonOutlined: {
+      type: Boolean,
+      default: true,
+    },
+    buttonColor: {
+      type: String,
+      default: "baseAccent",
+    },
+    buttonClass: {
+      type: String,
+      default: "",
+    },
   },
   components: {},
   mounted() {
@@ -191,6 +319,9 @@ export default {
   },
   computed: {
     ...mapState(useRootStore, ["person"]),
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
+    },
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -203,16 +334,30 @@ export default {
       mdiPencil,
       mdiInformationVariant,
       mdiPencilBox,
-      mdiContentSave,
       mdiCheck,
       mdiClose,
+      mdiEye,
+      mdiEyeOff,
+      mdiAccount,
+      navigatorImages,
       dialog: false,
       loading: false,
       editEmail: false,
+      editPassword: false,
+      hidePassword: true,
+      uploading: false,
+      uploadPercentage: 0,
+      onhover: false,
+      selectedFile: {},
+      newPassword: "",
       profile: {
         firstName: "",
         lastName: "",
         email: "",
+        image: {
+          url: "",
+          name: "",
+        },
       },
     };
   },
@@ -225,14 +370,65 @@ export default {
   },
   methods: {
     ...mapActions(useRootStore, ["setSnackbar"]),
+    onButtonClick() {
+      this.$refs.uploader?.click();
+    },
+    async onFileChanged(e) {
+      this.selectedFile = e.target.files[0];
+      await this.storeImage();
+    },
+    storeImage() {
+      this.uploading = true;
+      const namePart = (this.profile.firstName || "") + (this.profile.lastName || "");
+      const fallbackId = this.person?.id || this.profile?.id;
+      const fallback = fallbackId ? `${fallbackId}-${Date.now()}` : `${Date.now()}`;
+      const safePrefix = namePart || fallback;
+      const storageRef = storage.ref(`avatar-images/${safePrefix}-${this.selectedFile.name}`);
+
+      const uploadTask = storageRef.put(this.selectedFile);
+
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          this.uploadPercentage = Math.floor(
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100,
+          );
+        },
+        (err) => {
+          console.log(err);
+          this.uploading = false;
+        },
+        () => {
+          uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+            this.uploading = false;
+            if (!this.profile.image) this.profile.image = { url: "", name: "" };
+            this.profile.image.url = downloadURL;
+            this.profile.image.name = this.selectedFile.name;
+          });
+        },
+      );
+    },
+    selectNavigator(image) {
+      if (!this.profile.image) this.profile.image = { url: "", name: "" };
+      this.profile.image.url = image.url;
+      this.profile.image.name = image.name;
+    },
     cancelEmail() {
       this.profile.email = this.person.email;
       this.editEmail = false;
+    },
+    cancelPassword() {
+      this.newPassword = "";
+      this.hidePassword = true;
+      this.editPassword = false;
     },
     updatePerson(profile) {
       this.loading = true;
       if (profile.email != this.originalProfile.email) {
         this.saveEmail();
+      }
+      if (this.editPassword && this.newPassword) {
+        this.savePassword();
       }
       db.collection("people")
         .doc(profile.id)
@@ -250,7 +446,7 @@ export default {
           console.error("Error writing document: ", error);
           this.setSnackbar({
             show: true,
-            text: error.message,
+            text: getFriendlyErrorMessage(error.code),
             color: "pink",
           });
           this.cancel();
@@ -262,7 +458,7 @@ export default {
         .auth()
         .currentUser.updateEmail(this.profile.email)
         .then(() => {
-          var actionCodeSettings = {
+          const actionCodeSettings = {
             url: window.location.origin + "/login",
             handleCodeInApp: true,
           };
@@ -276,17 +472,37 @@ export default {
         .catch((error) => {
           this.setSnackbar({
             show: true,
-            text: error.message,
+            text: getFriendlyErrorMessage(error.code),
             color: "pink",
           });
-          this.cancel();
         });
       this.editEmail = false;
+    },
+    savePassword() {
+      firebase
+        .auth()
+        .currentUser.updatePassword(this.newPassword)
+        .then(() => {
+          this.setSnackbar({
+            show: true,
+            text: "Password successfully updated",
+            color: "baseAccent",
+          });
+          this.cancelPassword();
+        })
+        .catch((error) => {
+          this.setSnackbar({
+            show: true,
+            text: getFriendlyErrorMessage(error.code),
+            color: "pink",
+          });
+        });
     },
     cancel() {
       this.dialog = false;
       this.loading = false;
       this.editEmail = false;
+      this.cancelPassword();
       this.$emit("close");
     },
   },
@@ -349,6 +565,60 @@ export default {
       font-size: 0.8rem;
       color: var(--v-missionAccent-base);
     }
+
+    .avatars-container {
+      width: 100%;
+
+      .upload-avatar-container {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .navigators-avatar-container {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        .navigators-avatar {
+          pointer-events: auto;
+          cursor: pointer;
+          transition: transform 0.2s ease;
+
+          &:hover {
+            transform: scale(1.1);
+          }
+
+          &.selected-navigator {
+            border: 2px solid var(--v-missionAccent-base);
+            transform: scale(1.1);
+          }
+
+          img {
+            pointer-events: none;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Mobile-specific styles
+.mobile-dialog {
+  height: 100vh;
+  overflow-y: auto;
+
+  .dialog-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: var(--v-background-base);
+  }
+
+  .create-dialog-content {
+    padding-bottom: 80px; // Extra space for mobile scrolling
   }
 }
 </style>

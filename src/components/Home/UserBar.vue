@@ -1,86 +1,100 @@
 <template>
-  <v-hover :disabled="!user.loggedIn" v-model="hover" v-if="showMenu">
-    <div
-      ref="userBar"
-      class="userMenu"
-      :class="{ showMenu: hover, miniMenu: miniNavMenu, notSignedInMenu: !user.loggedIn }"
+  <div>
+    <v-hover
+      :disabled="!user.loggedIn || isMobile"
+      v-model="hover"
+      v-if="(showMenu || isMobile) && !shouldHideMiniUserBar"
     >
-      <!-- USER MENU TOP (BLACK) BAR -->
-      <div v-if="!user.loggedIn" class="blackBar">
-        <div class="d-flex justify-center align-center" style="width: 80%">
-          <LoginDialog buttonMsg="SIGN IN or CREATE AN ACCOUNT" />
-        </div>
-      </div>
-      <div v-else class="blackBar">
-        <div class="d-flex justify-center align-center">
-          <v-progress-circular
-            v-if="uploading"
-            :rotate="360"
-            :size="50"
-            :width="2"
-            :value="uploadPercentage"
-            color="baseAccent"
-          >
-            {{ uploadPercentage + "%" }}
-          </v-progress-circular>
-          <v-avatar
-            v-else
-            color="secondary"
-            @mouseenter="onhover = true"
-            @mouseleave="onhover = false"
-          >
-            <img
-              v-if="person.image?.url"
-              :src="person.image.url"
-              :alt="person.firstName"
-              style="object-fit: cover"
+      <div
+        ref="userBar"
+        class="userMenu"
+        :class="{
+          showMenu: hover && !isMobile,
+          miniMenu: miniNavMenu,
+          notSignedInMenu: !user.loggedIn,
+        }"
+        @click="isMobile && user.loggedIn ? openMobileDialog() : null"
+        style="display: block"
+      >
+        <!-- USER MENU TOP (BLACK) BAR -->
+        <div v-if="!user.loggedIn" class="blackBar">
+          <div class="d-flex justify-center align-center" style="width: 80%">
+            <LoginDialog
+              :buttonMsg="isMobile ? 'SIGN\nIN' : 'SIGN IN or CREATE AN ACCOUNT'"
+              class="mobile-login-btn"
             />
-            <v-icon v-else>{{ mdiAccount }}</v-icon>
-            <v-fade-transition>
-              <v-overlay v-if="onhover" absolute color="baseAccent">
-                <v-icon small @click="onButtonClick">{{ mdiPencil }}</v-icon>
-              </v-overlay>
-            </v-fade-transition>
-            <input
-              ref="uploader"
-              class="d-none"
-              type="file"
-              accept="image/*"
-              @change="onFileChanged"
-            />
-          </v-avatar>
+          </div>
         </div>
-        <div v-if="!miniNavMenu || hover" class="username mx-4" style="">
-          <p class="ma-0">{{ person.firstName }} {{ person.lastName }}</p>
-          <!-- <span style="font-size: 0.8rem; color: #777">ID: {{ person.id }}</span> -->
+        <div v-else class="blackBar">
+          <div class="d-flex justify-center align-center">
+            <v-progress-circular
+              v-if="uploading"
+              :rotate="360"
+              :size="50"
+              :width="2"
+              :value="uploadPercentage"
+              color="baseAccent"
+            >
+              {{ uploadPercentage + "%" }}
+            </v-progress-circular>
+            <v-avatar
+              v-else
+              color="secondary"
+              @mouseenter="onhover = true"
+              @mouseleave="onhover = false"
+            >
+              <img
+                v-if="person.image?.url"
+                :src="person.image.url"
+                :alt="person.firstName"
+                style="object-fit: cover"
+              />
+              <v-icon v-else>{{ mdiAccount }}</v-icon>
+              <v-fade-transition>
+                <v-overlay v-if="onhover" absolute color="baseAccent">
+                  <v-icon small @click="onButtonClick">{{ mdiPencil }}</v-icon>
+                </v-overlay>
+              </v-fade-transition>
+              <input
+                ref="uploader"
+                class="d-none"
+                type="file"
+                accept="image/*"
+                @change="onFileChanged"
+              />
+            </v-avatar>
+          </div>
+          <div v-if="!miniNavMenu || hover" class="username mx-4" style="">
+            <p class="ma-0">{{ person.firstName }} {{ person.lastName }}</p>
+            <!-- <span style="font-size: 0.8rem; color: #777">ID: {{ person.id }}</span> -->
+          </div>
         </div>
-      </div>
-      <!-- USER MENU HIDDEN-->
-      <div class="userMenuHidden">
-        <v-row>
-          <v-col class="d-flex" style="border-bottom: 1px solid var(--v-missionAccent-base)">
-            <p class="settings overline ma-0">Settings</p>
-          </v-col>
-        </v-row>
-        <v-row class="pt-3">
-          <v-col class="pa-0 d-flex justify-center">
-            <p class="text-overline missionAccent--text ma-0">Colour Theme</p>
-          </v-col>
-          <!-- LIGHT/DARK MODE SWITCH -->
-          <v-col class="pa-0 d-flex justify-center">
-            <v-switch
-              v-model="darkSwitch"
-              :label="`${darkSwitch ? 'Dark' : 'Light'}`"
-              @change="changeTheme()"
-              color="missionAccent"
-              class="ma-0"
-            ></v-switch>
-          </v-col>
-        </v-row>
+        <!-- USER MENU HIDDEN-->
+        <div class="userMenuHidden">
+          <v-row>
+            <v-col class="d-flex" style="border-bottom: 1px solid var(--v-missionAccent-base)">
+              <p class="settings overline ma-0">Settings</p>
+            </v-col>
+          </v-row>
+          <v-row class="pt-3">
+            <v-col class="pa-0 d-flex justify-center">
+              <p class="text-overline missionAccent--text ma-0">Colour Theme</p>
+            </v-col>
+            <!-- LIGHT/DARK MODE SWITCH -->
+            <v-col class="pa-0 d-flex justify-center">
+              <v-switch
+                v-model="darkSwitch"
+                :label="`${darkSwitch ? 'Dark' : 'Light'}`"
+                @change="changeTheme()"
+                color="missionAccent"
+                class="ma-0"
+              ></v-switch>
+            </v-col>
+          </v-row>
 
-        <div class="d-flex flex-column mt-5">
-          <!-- <ThemeColourPicker/> -->
-          <!-- <v-btn
+          <div class="d-flex flex-column mt-5">
+            <!-- <ThemeColourPicker/> -->
+            <!-- <v-btn
             color="baseAccent"
             class="ma-4"
             outlined
@@ -92,39 +106,39 @@
             edit account
           </v-btn> -->
 
-          <!-- Edit Account button -->
-          <StudentEditDialog @close="close" />
+            <!-- Edit Account button -->
+            <StudentEditDialog @close="close" />
 
-          <!-- Feedback button -->
-          <v-btn
-            href="https://docs.google.com/forms/d/e/1FAIpQLSfJgXGWOeosZfJY7H0tvFzANoX8p95fmgVKom97HMDiNywSnA/viewform?usp=sf_link"
-            target="_blank"
-            color="galaxyAccent"
-            class="ma-3"
-            outlined
-            :dark="dark"
-            :light="!dark"
-          >
-            <v-icon class="pr-2">{{ mdiSend }}</v-icon>
-            Feedback & Bugs
-          </v-btn>
+            <!-- Feedback button -->
+            <v-btn
+              href="https://docs.google.com/forms/d/e/1FAIpQLSfJgXGWOeosZfJY7H0tvFzANoX8p95fmgVKom97HMDiNywSnA/viewform?usp=sf_link"
+              target="_blank"
+              color="galaxyAccent"
+              class="ma-3"
+              outlined
+              :dark="dark"
+              :light="!dark"
+            >
+              <v-icon class="pr-2">{{ mdiSend }}</v-icon>
+              Feedback & Bugs
+            </v-btn>
 
-          <!-- Discord button -->
-          <v-btn
-            href="https://discord.gg/f2hPbqV22S"
-            target="_blank"
-            color="indigo lighten-1"
-            class="ma-3"
-            outlined
-            :dark="dark"
-            :light="!dark"
-          >
-            <v-icon class="pr-2">{{ mdiMessage }}</v-icon>
-            Chat on Discord
-          </v-btn>
+            <!-- Discord button -->
+            <v-btn
+              href="https://discord.gg/f2hPbqV22S"
+              target="_blank"
+              color="indigo lighten-1"
+              class="ma-3"
+              outlined
+              :dark="dark"
+              :light="!dark"
+            >
+              <v-icon class="pr-2">{{ mdiMessage }}</v-icon>
+              Chat on Discord
+            </v-btn>
 
-          <!-- Github button -->
-          <!-- <v-btn
+            <!-- Github button -->
+            <!-- <v-btn
             href="https://github.com/tairea/galaxy-maps-v2"
             target="_blank"
             color="blue-grey lighten-3"
@@ -137,33 +151,39 @@
             Help code this
           </v-btn> -->
 
-          <!-- Logout button -->
-          <v-btn
-            class="ma-3"
-            @click="logout"
-            color="missionAccent"
-            outlined
-            :dark="dark"
-            :light="!dark"
-          >
-            <v-icon class="pr-2">{{ mdiDoorClosed }}</v-icon>
-            Logout
-          </v-btn>
+            <!-- Logout button -->
+            <v-btn
+              class="ma-3"
+              @click="logout"
+              color="missionAccent"
+              outlined
+              :dark="dark"
+              :light="!dark"
+            >
+              <v-icon class="pr-2">{{ mdiDoorClosed }}</v-icon>
+              Logout
+            </v-btn>
+          </div>
         </div>
       </div>
-    </div>
-  </v-hover>
+    </v-hover>
+
+    <!-- Mobile User Dialog -->
+    <MobileUserDialog v-model="mobileUserDialog" />
+  </div>
 </template>
 
 <script>
 // import ThemeColourPicker from "@/components/Home/UserBar/ThemeColourPicker.vue";
 import LoginDialog from "@/components/Dialogs/LoginDialog.vue";
 import StudentEditDialog from "@/components/Dialogs/StudentEditDialog.vue";
+import MobileUserDialog from "./MobileUserDialog.vue";
 import { db, storage } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import { mdiAccount, mdiPencil, mdiSend, mdiDoorClosed, mdiMessage, mdiGithub } from "@mdi/js";
 import firebase from "firebase/compat/app";
 import { mapActions, mapState } from "pinia";
+import { getFriendlyErrorMessage } from "@/lib/utils";
 
 export default {
   name: "UserBar",
@@ -171,6 +191,7 @@ export default {
     // ThemeColourPicker,
     StudentEditDialog,
     LoginDialog,
+    MobileUserDialog,
   },
   data() {
     return {
@@ -191,29 +212,22 @@ export default {
       showMenu: true,
       miniNavMenu: false,
       notSignedInMenu: false,
+      mobileUserDialog: false,
     };
   },
   watch: {
-    $route(to, from) {
-      // show/hide userbar completely
-      if (
-        this.$route.name == "Login" ||
-        this.$route.name == "Verify" ||
-        this.$route.name == "Reset" ||
-        this.$route.name == "Register"
-      ) {
-        this.showMenu = false;
-      } else {
-        this.showMenu = true;
-      }
-      // show/hide userbar mini version
-      if (
-        (this.$route.name == "GalaxyView" && this.user.loggedIn) ||
-        this.$route.name == "SolarSystemView"
-      ) {
+    $route() {
+      this.updateUserBarVisibility();
+    },
+    isMobile() {
+      this.updateUserBarVisibility();
+    },
+    mobileInfoMinimized(min) {
+      // Force mini state when cohort info is minimized; restore defaults when expanded
+      if (min) {
         this.miniNavMenu = true;
       } else {
-        this.miniNavMenu = false;
+        this.updateUserBarVisibility();
       }
     },
   },
@@ -225,30 +239,18 @@ export default {
       await this.bindCoursesByPersonId(this.person.id);
     }
 
-    if (
-      this.$route.name == "Login" ||
-      this.$route.name == "Verify" ||
-      this.$route.name == "Reset" ||
-      this.$route.name == "Register"
-    ) {
-      this.showMenu = false;
-    } else {
-      this.showMenu = true;
-    }
-
-    if (
-      (this.$route.name == "GalaxyView" && this.user.loggedIn) ||
-      this.$route.name == "SolarSystemView"
-    ) {
-      this.miniNavMenu = true;
-    } else {
-      this.miniNavMenu = false;
-    }
+    this.updateUserBarVisibility();
   },
   computed: {
-    ...mapState(useRootStore, ["person", "user"]),
+    ...mapState(useRootStore, ["person", "user", "mobileInfoMinimized"]),
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
+    },
     dark() {
-      return this.$vuetify.theme.isDark;
+      return this.$vuetify.theme.dark;
+    },
+    shouldHideMiniUserBar() {
+      return this.isMobile && this.$route.name === "SolarSystemView";
     },
   },
   methods: {
@@ -258,9 +260,37 @@ export default {
       "setDarkMode",
       "setSnackbar",
     ]),
+    updateUserBarVisibility() {
+      const isAuthRoute =
+        this.$route.name === "Login" ||
+        this.$route.name === "Verify" ||
+        this.$route.name === "Reset" ||
+        this.$route.name === "Register";
+
+      const isMiniRoute =
+        (this.$route.name === "GalaxyView" && this.user.loggedIn) ||
+        this.$route.name === "SolarSystemView" ||
+        this.$route.name === "AiGalaxyEdit" ||
+        this.$route.path.includes("ai-galaxy-edit") ||
+        this.$route.name === "AiGalaxyEditWithCourse";
+
+      if (isAuthRoute) {
+        this.showMenu = false;
+      } else {
+        this.showMenu = true;
+      }
+
+      // Default mini state based on route/device
+      const defaultMini = isMiniRoute || this.isMobile;
+      // If cohort info is minimized, force mini state on
+      this.miniNavMenu = this.mobileInfoMinimized || defaultMini;
+    },
+    openMobileDialog() {
+      this.mobileUserDialog = true;
+    },
     changeTheme() {
       this.$vuetify.theme.dark = this.darkSwitch;
-      this.setDarkMode(this.$vuetify.theme.isDark);
+      this.setDarkMode(this.$vuetify.theme.dark);
     },
     logout() {
       this.hover = false;
@@ -288,7 +318,7 @@ export default {
           alert(error.message);
           this.setSnackbar({
             show: true,
-            text: error.message,
+            text: getFriendlyErrorMessage(error.code),
             color: "pink",
           });
           this.$router.push("/");
@@ -297,25 +327,22 @@ export default {
     onButtonClick() {
       this.$refs.uploader?.click();
     },
-    async onFileChanged(e) {
+    onFileChanged(e) {
       console.log("e: ", e);
       this.selectedFile = e.target.files[0];
-      await this.storeImage();
+      this.storeImage();
     },
     storeImage() {
       this.uploading = true;
       console.log("selectedfile: ", this.selectedFile);
       // ceate a storage ref
-      var storageRef = storage.ref(
-        "avatar-images/" +
-          this.person.firstname +
-          this.person.lastname +
-          "-" +
-          this.selectedFile.name,
-      );
+      const namePart = (this.person.firstName || "") + (this.person.lastName || "");
+      const fallback = this.person?.id ? `${this.person.id}-${Date.now()}` : `${Date.now()}`;
+      const safePrefix = namePart || fallback;
+      const storageRef = storage.ref(`avatar-images/${safePrefix}-${this.selectedFile.name}`);
 
       // upload a file
-      var uploadTask = storageRef.put(this.selectedFile);
+      const uploadTask = storageRef.put(this.selectedFile);
 
       // update progress bar
       uploadTask.on(
@@ -379,7 +406,7 @@ export default {
   right: 0;
   transition: all 0.3s;
 
-  z-index: 200;
+  z-index: 50;
 
   .blackBar {
     position: absolute;
@@ -436,5 +463,49 @@ export default {
   transition:
     width 0.3s ease-out,
     bottom 0.3s ease-out 0.3s;
+}
+
+// Mobile-specific styles
+@media (max-width: 959px) {
+  .miniMenu {
+    position: fixed !important;
+    width: 70px;
+    height: 0px;
+    cursor: pointer;
+    bottom: 0px !important;
+    right: 0px !important;
+    z-index: 50;
+    background: var(--v-subBackground-base) !important;
+
+    .blackBar {
+      height: 70px;
+      padding: 5px;
+      bottom: 0px !important;
+      z-index: 100;
+      background: var(--v-subBackground-base) !important;
+
+      .username {
+        display: none;
+      }
+    }
+  }
+
+  .mobile-login-btn {
+    .v-btn__content {
+      // white-space: normal !important;
+      // line-height: 1.2 !important;
+      // text-align: center !important;
+    }
+
+    // .v-btn {
+    //   height: auto !important;
+    //   min-height: 48px !important;
+    //   padding: 8px 12px !important;
+    // }
+  }
+
+  .userMenuHidden {
+    display: none;
+  }
 }
 </style>

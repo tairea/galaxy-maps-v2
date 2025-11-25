@@ -3,8 +3,8 @@
 </template>
 
 <script>
-import { DataSet, DataView } from "vis-data/esnext";
-import { Network } from "vis-network/esnext";
+import { DataSet, DataView } from "vis-data";
+import { Network } from "vis-network";
 import { mountVisData, translateEvent } from "./utils";
 
 export default {
@@ -117,13 +117,13 @@ export default {
       this.network.setOptions(options);
     },
     on(event, callback) {
-      this.network.moveTo(event, callback);
+      this.network.on(event, callback);
     },
     off(event, callback) {
-      this.network.moveTo(event, callback);
+      this.network.off(event, callback);
     },
     once(event, callback) {
-      this.network.moveTo(event, callback);
+      this.network.once(event, callback);
     },
     canvasToDom(p) {
       return this.network.canvasToDOM(p);

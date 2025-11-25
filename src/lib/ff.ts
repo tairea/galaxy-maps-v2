@@ -13,6 +13,17 @@ import type {
 } from "@/store/_types";
 import { functions } from "@/store/firestoreConfig";
 import { FirebaseError } from "firebase/app";
+import {
+  StructureRefineResponseSchema,
+  type StructureCandidates,
+  type StructureRefineResponse,
+  type StructureTargets,
+} from "@/refiners/structure-refine-schemas";
+import {
+  personFetchThrottle,
+  studentActivityThrottle,
+  courseFetchThrottle,
+} from "@/lib/requestThrottle";
 
 export const fetchCohorts = async (): Promise<ICohort[]> => {
   const data = {};
@@ -39,6 +50,15 @@ export const fetchStudentCohortsByPersonId = async (personId: string): Promise<I
   return result.data.cohorts;
 };
 
+export const fetchTeachersCohortsByPersonId = async (personId: string): Promise<ICohort[]> => {
+  const data = {
+    personId,
+  };
+  const getTeachersCohortsByPersonId = functions.httpsCallable("getTeachersCohortsByPersonId");
+  const result = await getTeachersCohortsByPersonId(data);
+  return result.data.cohorts;
+};
+
 export const fetchStudentSubmissionsByPersonId = async (
   personId: string,
 ): Promise<Array<{ id: string } & Record<string, any>>> => {
@@ -58,7 +78,6 @@ export const fetchStudentRequestsByPersonId = async (
   const data = {
     personId,
   };
-  console.log("fetchStudentRequestsByPersonId -> data:", data);
   const getStudentRequestsByPersonId = functions.httpsCallable("getStudentRequestsByPersonId");
   const result = await getStudentRequestsByPersonId(data);
   return result.data.requests;
@@ -108,6 +127,24 @@ export const fetchCourses = async (slug?: string | null): Promise<ICourse[]> => 
   return result.data.courses;
 };
 
+export const fetchPublicCourses = async (slug?: string | null): Promise<ICourse[]> => {
+  const data = {
+    slug: slug ?? null,
+  };
+  const getPublicCourses = functions.httpsCallable("getPublicCourses");
+  const result = await getPublicCourses(data);
+  return result.data.courses;
+};
+
+export const fetchMyCourses = async (slug?: string | null): Promise<ICourse[]> => {
+  const data = {
+    slug: slug ?? null,
+  };
+  const getMyCourses = functions.httpsCallable("getMyCourses");
+  const result = await getMyCourses(data);
+  return result.data.courses;
+};
+
 export const fetchCourseByCourseId = async (courseId: string): Promise<ICourse> => {
   const data = {
     courseId,
@@ -115,6 +152,41 @@ export const fetchCourseByCourseId = async (courseId: string): Promise<ICourse> 
   const getCourseByCourseId = functions.httpsCallable("getCourseByCourseId");
   const result = await getCourseByCourseId(data);
   return result.data.course;
+};
+
+export const fetchCoursesCreatedByPersonId = async (personId: string): Promise<ICourse[]> => {
+  console.log(`🟢 Frontend: fetchCoursesCreatedByPersonId called for personId: ${personId}`);
+  // Use courseFetchThrottle instead of studentActivityThrottle to avoid conflicts
+  const result = await courseFetchThrottle.throttle(async () => {
+    console.log(`🟡 Frontend: Throttle executing for personId: ${personId}`);
+    const data = {
+      personId,
+    };
+    const getCoursesCreatedByPersonId = functions.httpsCallable("getCoursesCreatedByPersonId");
+    console.log(`🟠 Frontend: About to call Firebase function for personId: ${personId}`);
+    try {
+      const response = await getCoursesCreatedByPersonId(data);
+      console.log(`✅ Frontend: Successfully received response for personId: ${personId}`, response);
+      return response;
+    } catch (error) {
+      console.error(`❌ Frontend: Error calling function for personId: ${personId}`, error);
+      throw error;
+    }
+  });
+  console.log(`🟢 Frontend: Returning courses for personId: ${personId}`, result.data.courses);
+  return result.data.courses;
+};
+
+export const fetchAllCoursesGroupedByCreator = async (): Promise<{
+  [personId: string]: ICourse[];
+}> => {
+  console.log("🟢 Frontend: fetchAllCoursesGroupedByCreator called");
+  const getAllCoursesGroupedByCreator = functions.httpsCallable("getAllCoursesGroupedByCreator");
+  const result = await getAllCoursesGroupedByCreator({});
+  console.log(
+    `✅ Frontend: Successfully received grouped courses for ${Object.keys(result.data.coursesByCreator || {}).length} creators`,
+  );
+  return result.data.coursesByCreator || {};
 };
 
 export const fetchCourseMapEdgesAndNodesByCourseId = async (
@@ -362,11 +434,23 @@ export const fetchPersonByPersonId = async (
     cohortId,
   };
   try {
-    const getPersonByPersonId = functions.httpsCallable("getPersonByPersonId");
-    const result = await getPersonByPersonId(data);
+    // Throttle the request to avoid overwhelming Firebase with concurrent requests
+    const result = await personFetchThrottle.throttle(async () => {
+      const getPersonByPersonId = functions.httpsCallable("getPersonByPersonId");
+      return await getPersonByPersonId(data);
+    });
     return result.data.person;
-  } catch (error) {
-    console.error(`Error fetching person with ID ${id} from COHORT ${cohortId}:`, error);
+  } catch (error: any) {
+    // Only log if it's not a resource exhaustion error (those are expected when throttled)
+    const errorCode = error?.code;
+    const errorMessage = error?.message || "";
+    if (
+      errorCode !== "internal" ||
+      (!errorMessage.includes("ERR_INSUFFICIENT_RESOURCES") &&
+        !errorMessage.includes("ERR_CONNECTION_CLOSED"))
+    ) {
+      console.error(`Error fetching person with ID ${id} from COHORT ${cohortId}:`, error);
+    }
     return null;
   }
 };
@@ -593,4 +677,705 @@ export const removePersonFromCourse = async (
   const removeStudentFromCourse = functions.httpsCallable("removeStudentFromCourse");
   const result = await removeStudentFromCourse(data);
   return result.data.person;
+};
+
+// AI Galaxy Map Generation
+export const generateGalaxyMap = async (
+  description: string,
+): Promise<{
+  success: boolean;
+  galaxyMap: any;
+  tokenUsage: {
+    modelsUsed: {
+      model: string;
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    }[];
+    combinedEstimatedCost: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalTokens: number;
+  };
+  responseId: string;
+}> => {
+  const data = {
+    description,
+  };
+  const generateGalaxyMapFunction = functions.httpsCallable("generateGalaxyMap", {
+    timeout: 540000,
+  }); // 180s timeout
+  const result = await generateGalaxyMapFunction(data);
+  return result.data;
+};
+
+// Unified AI Galaxy Map Generation (Stars + Missions + Mission Instructions)
+export const generateUnifiedGalaxyMap = async (
+  description: string,
+  attachedFiles?: Array<
+    | { name: string; mimeType?: string; base64: string }
+    | { name: string; mimeType?: string; storagePath: string }
+  >,
+): Promise<{
+  success: boolean;
+  galaxyMap: any;
+  tokenUsage: {
+    modelsUsed: {
+      model: string;
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    }[];
+    combinedEstimatedCost: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalTokens: number;
+  };
+  responseId: string;
+}> => {
+  const data = { description, attachedFiles } as Record<string, any>;
+  const generateUnifiedGalaxyMapFunction = functions.httpsCallable("generateUnifiedGalaxyMap", {
+    timeout: 540000,
+  });
+  const result = await generateUnifiedGalaxyMapFunction(data);
+  return result.data;
+};
+
+// Generate image for a Galaxy Map (separate lightweight call)
+export const generateGalaxyImage = async (
+  title: string,
+  description: string,
+): Promise<{
+  success: boolean;
+  image: { name: string; url: string };
+}> => {
+  const data = { title, description };
+  const fn = functions.httpsCallable("generateGalaxyImage", { timeout: 300000 });
+  const result = await fn(data);
+  return result.data;
+};
+
+// Unified AI Galaxy Map Generation with Streaming (Stars + Missions + Mission Instructions)
+export const generateUnifiedGalaxyMapStreaming = async (
+  description: string,
+  onStreamUpdate?: (update: { type: string; text?: string; delta?: string }) => void,
+): Promise<{
+  success: boolean;
+  galaxyMap: any;
+  tokenUsage: {
+    modelsUsed: {
+      model: string;
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    }[];
+    combinedEstimatedCost: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalTokens: number;
+  };
+  responseId: string;
+}> => {
+  const data = { description };
+  const generateUnifiedGalaxyMapStreamingFunction = functions.httpsCallable(
+    "generateUnifiedGalaxyMapStreaming",
+    {
+      timeout: 540000, // 9 minutes to match cloud function
+    },
+  );
+
+  // For now, we'll just call the function normally
+  // In the future, this could be enhanced to handle real-time streaming updates
+  const result = await generateUnifiedGalaxyMapStreamingFunction(data);
+  return result.data;
+};
+
+// AI Galaxy Map Generation with Clarification (Second Step)
+export const generateGalaxyMapWithClarification = async (
+  clarificationAnswers: string,
+  previousResponseId: string,
+): Promise<{
+  success: boolean;
+  galaxyMap: any;
+  tokenUsage: {
+    modelsUsed: {
+      model: string;
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    }[];
+    combinedEstimatedCost: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalTokens: number;
+  };
+  responseId: string;
+}> => {
+  const data = {
+    clarificationAnswers,
+    previousResponseId,
+  };
+  const generateGalaxyMapWithClarificationFunction = functions.httpsCallable(
+    "generateGalaxyMapWithClarification",
+    { timeout: 540000 }, // 180s (3 minutes) timeout to match cloud function
+  );
+  const result = await generateGalaxyMapWithClarificationFunction(data);
+  return result.data;
+};
+
+// Generate galaxy map again with default prompt
+export const generateGalaxyMapAgain = async (
+  responseId: string,
+): Promise<{
+  success: boolean;
+  galaxyMap: any;
+  tokenUsage: {
+    modelsUsed: {
+      model: string;
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    }[];
+    combinedEstimatedCost: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalTokens: number;
+  };
+  responseId: string;
+}> => {
+  const data = {
+    responseId,
+  };
+  const generateGalaxyMapAgainFunction = functions.httpsCallable("generateGalaxyMapAgain", {
+    timeout: 540000,
+  }); // 180s timeout
+  const result = await generateGalaxyMapAgainFunction(data);
+  return result.data;
+};
+
+// Unified AI Galaxy Map Generation with Clarification (Second Step)
+export const generateUnifiedGalaxyMapWithClarification = async (
+  clarificationAnswers: string,
+  previousResponseId: string,
+): Promise<{
+  success: boolean;
+  galaxyMap: any;
+  tokenUsage: {
+    modelsUsed: {
+      model: string;
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    }[];
+    combinedEstimatedCost: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalTokens: number;
+  };
+  responseId: string;
+}> => {
+  const data = { clarificationAnswers, previousResponseId };
+  const fn = functions.httpsCallable("generateUnifiedGalaxyMap", { timeout: 540000 });
+  const result = await fn(data);
+  return result.data;
+};
+
+// Galaxy Map Refinement with Clarification
+export const refineGalaxyMapWithClarification = async (
+  clarificationAnswers: string,
+  previousResponseId: string,
+): Promise<{
+  success: boolean;
+  galaxyMap: any;
+  tokenUsage: {
+    modelsUsed: {
+      model: string;
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    }[];
+    combinedEstimatedCost: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalTokens: number;
+  };
+  responseId: string;
+}> => {
+  const data = { clarificationAnswers, previousResponseId };
+  const fn = functions.httpsCallable("refineGalaxyMap", { timeout: 540000 });
+  const result = await fn(data);
+  return result.data;
+};
+
+// Initial Galaxy Map Refinement
+export const refineGalaxyMap = async (
+  galaxyMap: any,
+  activeItems: string[],
+  userRequest: string,
+  previousResponseId: string,
+): Promise<{
+  success: boolean;
+  galaxyMap: any;
+  tokenUsage: {
+    modelsUsed: {
+      model: string;
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    }[];
+    combinedEstimatedCost: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalTokens: number;
+  };
+  responseId: string;
+}> => {
+  const data = { galaxyMap, activeItems, userRequest, previousResponseId };
+  const fn = functions.httpsCallable("refineGalaxyMap", { timeout: 540000 });
+  const result = await fn(data);
+  return result.data;
+};
+
+type StructureCallableInput =
+  | ({
+      userRequest: string;
+      previousResponseId?: string;
+      targets?: StructureTargets;
+      candidates?: StructureCandidates;
+      stars?: Array<Record<string, any>>;
+      planets?: Array<Record<string, any>>;
+      neighbors?: Record<string, { prevTitle?: string; nextTitle?: string }>;
+      styleGuide?: string[];
+    } & Record<string, unknown>)
+  | {
+      clarificationAnswers: string;
+      previousResponseId: string;
+    };
+
+export type StructureRefineCallableResult = {
+  success: boolean;
+  status: StructureRefineResponse["status"];
+  questions: string[] | null;
+  suggestedTargets: StructureTargets | null;
+  selectedTargets: StructureTargets | null;
+  ops: StructureRefineResponse["ops"] | null;
+  tokenUsage: {
+    modelsUsed: {
+      model: string;
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    }[];
+    combinedEstimatedCost: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalTokens: number;
+  };
+  responseId: string;
+};
+
+export const refineStructure = async (
+  payload: StructureCallableInput,
+): Promise<StructureRefineCallableResult> => {
+  const fn = functions.httpsCallable("refineStructure", { timeout: 540000 });
+  const result = await fn(payload as Record<string, unknown>);
+  const data = result.data as Record<string, any>;
+
+  if (!data?.success) {
+    throw new Error(data?.message || "Structure refinement failed");
+  }
+
+  const parsed = StructureRefineResponseSchema.parse({
+    status: data.status,
+    questions: data.questions ?? undefined,
+    suggestedTargets: data.suggestedTargets ?? undefined,
+    selectedTargets: data.selectedTargets ?? undefined,
+    ops: data.ops ?? undefined,
+  });
+
+  const tokenUsage = data.tokenUsage ?? {
+    modelsUsed: [],
+    combinedEstimatedCost: 0,
+    totalInputTokens: 0,
+    totalOutputTokens: 0,
+    totalTokens: 0,
+  };
+
+  return {
+    success: true,
+    status: parsed.status,
+    questions: parsed.questions ?? null,
+    suggestedTargets: parsed.suggestedTargets ?? null,
+    selectedTargets: parsed.selectedTargets ?? null,
+    ops: parsed.ops ?? null,
+    tokenUsage,
+    responseId: data.responseId,
+  };
+};
+
+// Unified AI Galaxy Map Generation with Clarification and Streaming (Second Step)
+export const generateUnifiedGalaxyMapWithClarificationStreaming = async (
+  clarificationAnswers: string,
+  previousResponseId: string,
+  onStreamUpdate?: (update: { type: string; text?: string; delta?: string }) => void,
+): Promise<{
+  success: boolean;
+  galaxyMap: any;
+  tokenUsage: {
+    modelsUsed: {
+      model: string;
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    }[];
+    combinedEstimatedCost: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalTokens: number;
+  };
+  responseId: string;
+}> => {
+  const data = { clarificationAnswers, previousResponseId };
+  const fn = functions.httpsCallable("generateUnifiedGalaxyMapStreaming", { timeout: 540000 }); // 9 minutes to match cloud function
+  const result = await fn(data);
+  return result.data;
+};
+
+// Generate mission instructions with AI
+export const generateInstructionsForMission = async (
+  missionContext: string,
+  aiGeneratedGalaxyMap?: any,
+  originResponseId?: string,
+  refinement?: {
+    currentInstructions: string;
+    userFeedback: string;
+  },
+): Promise<{
+  success: boolean;
+  missionInstructions: any;
+  tokenUsage: {
+    modelsUsed: {
+      model: string;
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    }[];
+    combinedEstimatedCost: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalTokens: number;
+  };
+  responseId: string;
+}> => {
+  const data = {
+    missionContext,
+    aiGeneratedGalaxyMap,
+    originResponseId,
+    refinement,
+  };
+  const generateInstructionsForMissionFunction = functions.httpsCallable(
+    "generateInstructionsForMission",
+    { timeout: 540000 }, // 180s timeout
+  );
+  const result = await generateInstructionsForMissionFunction(data);
+  return result.data;
+};
+
+// Save AI-generated Galaxy Map to Database
+export const saveGalaxyMap = async (
+  galaxyMap: any,
+  mapLayout = "zigzag",
+): Promise<{
+  courseId: string;
+  totalPlanets: number;
+}> => {
+  const data = {
+    galaxyMap,
+    mapLayout,
+  };
+  const saveGalaxyMapFunction = functions.httpsCallable("saveGalaxyMap");
+  const result = await saveGalaxyMapFunction(data);
+  return result.data;
+};
+
+// Get Galaxy Map Object from Course
+export const getGalaxyMapObjectFromCourse = async (
+  courseId: string,
+): Promise<{
+  title: string | null;
+  description: string | null;
+  stars: Array<{
+    title: string;
+    description: string;
+    planets: Array<{
+      title: string;
+      description: string;
+    }>;
+  }> | null;
+  image: {
+    name: string;
+    url: string;
+  } | null;
+}> => {
+  const data = {
+    courseId,
+  };
+  const getGalaxyMapObjectFromCourseFunction = functions.httpsCallable(
+    "getGalaxyMapObjectFromCourse",
+  );
+  const result = await getGalaxyMapObjectFromCourseFunction(data);
+  return result.data;
+};
+
+// Download and upload image to Firebase Storage
+export const downloadAndUploadImage = async (
+  imageUrl: string,
+  fileName: string,
+): Promise<{
+  downloadURL: string;
+}> => {
+  const data = {
+    imageUrl,
+    fileName,
+  };
+  const downloadAndUploadImageFunction = functions.httpsCallable("downloadAndUploadImage");
+  const result = await downloadAndUploadImageFunction(data);
+  return result.data;
+};
+
+export const bulkImportStudents = async (
+  students: Array<Record<string, any>>,
+  cohortId: string,
+  inviter: string,
+): Promise<{
+  results: {
+    success: Array<{ email: string; action: string; personId: string }>;
+    errors: Array<{ email: string; error: string }>;
+  };
+  summary: {
+    total: number;
+    success: number;
+    errors: number;
+  };
+}> => {
+  const data = {
+    students,
+    cohortId,
+    inviter,
+  };
+  const bulkImportStudents = functions.httpsCallable("bulkImportStudents");
+  const result = await bulkImportStudents(data);
+  return result.data;
+};
+
+// Remove prerequisites from topics when a node is deleted
+export const removePrerequisitesFromTopics = async (
+  courseId: string,
+  nodeId: string,
+): Promise<{
+  success: boolean;
+  affectedTopicsCount: number;
+  affectedTopics: Array<{
+    topicId: string;
+    oldPrerequisites: string[];
+    newPrerequisites: string[];
+  }>;
+}> => {
+  const data = {
+    courseId,
+    nodeId,
+  };
+  const removePrerequisitesFromTopicsFunction = functions.httpsCallable(
+    "removePrerequisitesFromTopics",
+  );
+  const result = await removePrerequisitesFromTopicsFunction(data);
+  return result.data;
+};
+
+// Update prerequisites for a specific student's topics
+export const updateStudentTopicPrerequisites = async (
+  courseId: string,
+  personId: string,
+  affectedTopics: Array<{
+    topicId: string;
+    newPrerequisites: string[];
+  }>,
+): Promise<{
+  success: boolean;
+  updatedTopicsCount: number;
+  personId: string;
+}> => {
+  const data = {
+    courseId,
+    personId,
+    affectedTopics,
+  };
+  const updateStudentTopicPrerequisitesFunction = functions.httpsCallable(
+    "updateStudentTopicPrerequisites",
+  );
+  const result = await updateStudentTopicPrerequisitesFunction(data);
+  return result.data;
+};
+
+// Save a topic to all students in a course
+export const saveTopicToStudents = async (
+  courseId: string,
+  node: any,
+  students: Array<{ id: string; [key: string]: any }>,
+): Promise<{
+  success: boolean;
+  studentsProcessed: number;
+  topicsCreated: number;
+  message: string;
+}> => {
+  const data = {
+    courseId,
+    node,
+    students,
+  };
+  const saveTopicToStudentsFunction = functions.httpsCallable("saveTopicToStudents");
+  const result = await saveTopicToStudentsFunction(data);
+  return result.data;
+};
+
+// Delete a topic from all students in a course
+export const deleteTopicForStudents = async (
+  courseId: string,
+  node: any,
+  students: Array<{ id: string; [key: string]: any }>,
+  affectedTopics: Array<{
+    topicId: string;
+    newPrerequisites: string[];
+  }> = [],
+): Promise<{
+  success: boolean;
+  studentsProcessed: number;
+  topicsDeleted: number;
+  affectedTopicsUpdated: boolean;
+  message: string;
+}> => {
+  const data = {
+    courseId,
+    node,
+    students,
+    affectedTopics,
+  };
+  const deleteTopicForStudentsFunction = functions.httpsCallable("deleteTopicForStudents");
+  const result = await deleteTopicForStudentsFunction(data);
+  return result.data;
+};
+
+// Save a node to the course map
+export const saveNode = async (
+  courseId: string,
+  node: any,
+  isUpdate = false,
+): Promise<{
+  success: boolean;
+  nodeId: string;
+  edgesCreated: number;
+  topicTotalUpdated: boolean;
+  message: string;
+}> => {
+  const data = {
+    courseId,
+    node,
+    isUpdate,
+  };
+  const saveNodeFunction = functions.httpsCallable("saveNode");
+  const result = await saveNodeFunction(data);
+  return result.data;
+};
+
+// Generate ephemeral client token for OpenAI Realtime API
+export const generateRealtimeToken = async (): Promise<{
+  clientSecret: string;
+  expires_at: number;
+}> => {
+  const data = {};
+  const generateRealtimeTokenFunction = functions.httpsCallable("generateRealtimeToken");
+  const result = await generateRealtimeTokenFunction(data);
+  return result.data;
+};
+
+// Generate Squad Report from AI (using gpt-5-mini)
+export const generateSquadReport = async (
+  squadPacket: any,
+  cohortId?: string,
+  statusReportId?: string,
+): Promise<{
+  success: boolean;
+  report: any;
+  tokenUsage: {
+    modelsUsed: {
+      model: string;
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    }[];
+    combinedEstimatedCost: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalTokens: number;
+  };
+  responseId: string;
+}> => {
+  const data = { squadPacket, cohortId, statusReportId } as Record<string, any>;
+  const fn = functions.httpsCallable("generateSquadReport", { timeout: 540000 });
+  const result = await fn(data);
+  return result.data;
+};
+
+// Start Mission - Sets task and topic as active and sends XAPI statements
+export const startMission = async (
+  courseId: string,
+  topicId: string,
+  taskId: string,
+  topicActive: boolean,
+): Promise<{
+  success: boolean;
+  message: string;
+  taskId: string;
+  topicId: string;
+  courseId: string;
+}> => {
+  const data = {
+    courseId,
+    topicId,
+    taskId,
+    topicActive,
+  };
+  const startMissionFunction = functions.httpsCallable("startMission");
+  const result = await startMissionFunction(data);
+  return result.data;
+};
+
+// Send generic email - perfect for AI agent responses
+export const sendGenericEmail = async (
+  to: string,
+  subject: string,
+  body: string,
+  isHtml = false,
+): Promise<{ success: boolean; message: string }> => {
+  const data = {
+    to,
+    subject,
+    body,
+    isHtml,
+  };
+  const sendGenericEmailFunction = functions.httpsCallable("sendGenericEmail");
+  const result = await sendGenericEmailFunction(data);
+  return result.data;
 };

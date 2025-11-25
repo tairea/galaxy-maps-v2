@@ -96,16 +96,13 @@ export default {
       this.uploading = true;
       console.log("selectedfile: ", this.selectedFile);
       // ceate a storage ref
-      var storageRef = storage.ref(
-        "avatar-images/" +
-          this.person.firstname +
-          this.person.lastname +
-          "-" +
-          this.selectedFile.name,
-      );
+      const namePart = (this.person.firstName || "") + (this.person.lastName || "");
+      const fallback = this.person?.id ? `${this.person.id}-${Date.now()}` : `${Date.now()}`;
+      const safePrefix = namePart || fallback;
+      const storageRef = storage.ref(`avatar-images/${safePrefix}-${this.selectedFile.name}`);
 
       // upload a file
-      var uploadTask = storageRef.put(this.selectedFile);
+      const uploadTask = storageRef.put(this.selectedFile);
 
       // update progress bar
       uploadTask.on(

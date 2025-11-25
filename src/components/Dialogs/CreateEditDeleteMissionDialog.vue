@@ -2,7 +2,63 @@
   <v-container class="pa-0">
     <v-row class="text-center" align="center">
       <v-col cols="12">
-        <v-dialog v-model="dialog" width="50%" light persistent>
+        <v-dialog v-model="dialog" :width="isMobile ? '100%' : '50%'" light persistent>
+          <!-- Loading Overlay -->
+          <div v-if="aiGenerating" class="loading-overlay">
+            <div class="loading-content">
+              <!-- LOADING INDICATOR -->
+              <RobotLoadingSpinner size="50" color="galaxyAccent" icon-size="24" />
+
+              <p class="loading-message overline">
+                {{ currentLoadingMessage }}
+              </p>
+
+              <!-- TOKEN USAGE (if available) -->
+              <p v-if="tokenUsage" class="token-usage overline mt-2">
+                Total Tokens:
+                {{
+                  tokenUsage.totalTokens
+                    ? tokenUsage.totalTokens.toLocaleString()
+                    : tokenUsage.total_tokens?.toLocaleString() || "0"
+                }}
+              </p>
+              <p v-if="tokenUsage" class="token-breakdown overline mt-2">
+                Input:
+                {{
+                  tokenUsage.totalInputTokens
+                    ? tokenUsage.totalInputTokens.toLocaleString()
+                    : tokenUsage.input_tokens?.toLocaleString() || "0"
+                }}
+                | Output:
+                {{
+                  tokenUsage.totalOutputTokens
+                    ? tokenUsage.totalOutputTokens.toLocaleString()
+                    : tokenUsage.output_tokens?.toLocaleString() || "0"
+                }}
+              </p>
+              <!-- <p v-if="tokenUsage" class="token-breakdown overline mt-2">
+                Est. cost: ${{
+                  tokenUsage.combinedEstimatedCost
+                    ? tokenUsage.combinedEstimatedCost.toFixed(5)
+                    : "0.00000"
+                }}
+              </p> -->
+              <!-- Model breakdown -->
+              <div
+                v-if="tokenUsage && tokenUsage.modelsUsed && tokenUsage.modelsUsed.length > 0"
+                class="model-breakdown mt-2"
+              >
+                <p class="model-breakdown-title overline">Models Used:</p>
+                <div v-for="model in tokenUsage.modelsUsed" :key="model.model" class="model-item">
+                  <span class="model-name">{{ model.model }}</span>
+                  <span class="model-tokens">
+                    {{ model.totalTokens.toLocaleString() }} tokens
+                  </span>
+                  <span class="model-cost">${{ model.estimatedCost.toFixed(5) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
           <!-- CREATE BUTTON -->
           <template v-slot:activator="{ on, attrs }">
             <v-btn
@@ -70,6 +126,7 @@
               ></v-textarea> -->
               <div>
                 <vue-editor
+                  ref="quillEditor"
                   id="editor1"
                   v-model="task.description"
                   useCustomImageHandler
@@ -81,6 +138,72 @@
                   @blur="quillFocused = false"
                   style="color: white"
                 />
+              </div>
+
+              <!-- ========== Generate with A.i. Button ========== -->
+              <div class="d-flex justify-end" style="margin-top: -20px">
+                <div class="d-flex flex-column justify-end align-end" style="width: 50%">
+                  <!-- close button -->
+                  <v-btn
+                    v-if="aiInput"
+                    icon
+                    color="galaxyAccent"
+                    @click="toggleAiInput()"
+                    class="mb-4"
+                    x-small
+                    dense
+                  >
+                    <v-icon> {{ mdiClose }} </v-icon>
+                  </v-btn>
+                  <v-text-field
+                    v-if="aiInput"
+                    v-model="aiGenerateMissionAssistInput"
+                    :dark="dark"
+                    :light="!dark"
+                    class="input-field"
+                    style="margin-top: -10px"
+                    outlined
+                    color="galaxyAccent"
+                    auto-grow
+                    clearable
+                    :label="
+                      task.description && task.description.trim()
+                        ? 'What would you like to refine?'
+                        : 'How can I help?'
+                    "
+                    :disabled="aiGenerating"
+                    autofocus
+                    @keyup.enter="aiGenerateMissionAssist"
+                  />
+                  <!-- A.I. Assist button -->
+                  <v-btn
+                    v-if="!aiInput"
+                    outlined
+                    color="galaxyAccent"
+                    @click="toggleAiInput()"
+                    class="mb-4"
+                    :dark="dark"
+                    :light="!dark"
+                  >
+                    <v-icon left> {{ mdiRobotExcited }} </v-icon>
+                    A.I. Assist
+                  </v-btn>
+
+                  <v-btn
+                    v-if="aiInput"
+                    outlined
+                    color="galaxyAccent"
+                    @click="aiGenerateMissionAssist()"
+                    class="mb-4"
+                    :loading="aiGenerating"
+                    :disabled="aiGenerating"
+                    style="margin-top: -10px"
+                    ><v-icon left> {{ mdiRobotExcited }} </v-icon>
+                    {{
+                      task.description && task.description.trim() ? "A.I. Refine" : "A.I. Generate"
+                    }}
+                  </v-btn>
+                </div>
               </div>
 
               <!-- COLOUR PICKER -->
@@ -245,13 +368,12 @@
               </div>
 
               <!-- ACTION BUTTONS -->
-              <div class="action-buttons">
+              <div class="action-buttons" :class="{ mobile: isMobile }">
                 <v-btn
                   v-if="edit"
                   outlined
                   color="baseAccent"
                   @click="updateTask(task, index)"
-                  class="mr-2"
                   :loading="loading"
                   v-bind="attrs"
                   v-on="on"
@@ -265,7 +387,6 @@
                   outlined
                   color="baseAccent"
                   @click="saveTask(task)"
-                  class="mr-2"
                   :loading="loading"
                   v-bind="attrs"
                   v-on="on"
@@ -282,7 +403,6 @@
                   :disabled="disabled || loading"
                   color="error"
                   @click="deleteDialog()"
-                  class="ml-2"
                 >
                   <v-icon left> {{ mdiDelete }} </v-icon>
                   DELETE
@@ -291,7 +411,6 @@
                 <v-btn
                   outlined
                   :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
-                  class="ml-2"
                   @click="cancel"
                   :disabled="disabled || loading"
                 >
@@ -383,8 +502,9 @@ import {
   createTaskWithCourseIdTopicId,
   deleteTaskByCourseIdTopicIdTaskId,
   updateTaskByCourseIdTopicIdTaskId,
+  generateInstructionsForMission,
 } from "@/lib/ff";
-import { db, storage } from "@/store/firestoreConfig";
+import { db, storage, functions } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import {
   mdiPencil,
@@ -394,9 +514,12 @@ import {
   mdiDelete,
   mdiInformationVariant,
   mdiConsoleNetworkOutline,
+  mdiRobotExcited,
 } from "@mdi/js";
 import { VueEditor } from "vue2-editor";
 import { mapActions, mapState } from "pinia";
+import RobotLoadingSpinner from "@/components/Reused/RobotLoadingSpinner.vue";
+import { getGalaxyMapObjectFromCourse } from "@/lib/ff";
 
 export default {
   name: "CreateEditDeleteMissionDialog",
@@ -414,6 +537,7 @@ export default {
   ],
   components: {
     VueEditor,
+    RobotLoadingSpinner,
   },
   data: () => ({
     mdiPencil,
@@ -422,6 +546,7 @@ export default {
     mdiDelete,
     mdiCheck,
     mdiInformationVariant,
+    mdiRobotExcited,
     dialog: false,
     dialogConfirm: false,
     dialogTitle: "Create a new Mission",
@@ -441,6 +566,38 @@ export default {
     deleting: false,
     quillFocused: false,
     submissionQuillFocused: false,
+    // AI functionality variables
+    aiInput: false,
+    aiGenerateMissionAssistInput: "",
+    aiGenerating: false,
+    tokenUsage: null,
+    currentLoadingMessage: "",
+    loadingMessageInterval: null,
+    // Quirky loading messages
+    loadingMessages: [
+      "Exploring the cosmos for knowledge...",
+      "Charting new learning pathways...",
+      "Mapping distant galaxies of consciousness...",
+      "Calculating interstellar alignments...",
+      "Assembling galactic sources of creation...",
+      "Searching the stars for enlightenment...",
+      "Gathering cosmic learning resources...",
+      "Preparing your journey through the stars...",
+      "Creating your learning universe...",
+      "Calibrating educational coordinates...",
+    ],
+    // missionGenerationMessages: [
+    //   "Crafting mission objectives...",
+    //   "Designing learning pathways...",
+    //   "Creating step-by-step instructions...",
+    //   "Defining success criteria...",
+    //   "Mapping skill progression...",
+    //   "Building knowledge scaffolds...",
+    //   "Structuring learning activities...",
+    //   "Developing assessment strategies...",
+    //   "Integrating learning resources...",
+    //   "Finalizing mission parameters...",
+    // ],
     customToolbar: [
       [{ header: [false, 3, 4, 5] }],
       ["bold", "italic", "underline", "strike"], // toggled buttons
@@ -457,6 +614,16 @@ export default {
     dialog(newVal) {
       if (newVal && this.taskToEdit) {
         Object.assign(this.task, this.taskToEdit);
+        // If there's existing HTML content, set it in the Quill editor
+        // Prioritize missionInstructionsHtmlString over description for consistency with other components
+        const contentToDisplay = this.task.missionInstructionsHtmlString || this.task.description;
+        if (contentToDisplay && contentToDisplay.trim()) {
+          this.$nextTick(() => {
+            // Clean the HTML before setting it to prevent empty paragraphs
+            const cleanedHtml = this.sanitizeHtmlEdges(contentToDisplay);
+            this.setQuillContent(cleanedHtml);
+          });
+        }
       }
     },
   },
@@ -472,12 +639,50 @@ export default {
     dark() {
       return this.$vuetify.theme.isDark;
     },
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
+    },
   },
   methods: {
     ...mapActions(useRootStore, ["getCourseTasks"]),
+    /**
+     * Build a safe payload for Firestore (strip undefined fields)
+     */
+    buildTaskPayload(task) {
+      const allowedKeys = [
+        "title",
+        "description",
+        "duration",
+        "video",
+        "slides",
+        "submissionRequired",
+        "submissionInstructions",
+        "color",
+        "orderIndex",
+      ];
+      const payload = {};
+      allowedKeys.forEach((key) => {
+        // only copy keys that are not undefined (Firestore rejects undefined)
+        if (typeof task[key] !== "undefined") {
+          payload[key] = task[key];
+        }
+      });
+      return payload;
+    },
     async saveTask(task) {
       this.loading = true;
       this.disabled = true;
+
+      // Pull fresh HTML directly from Quill, upload embedded images, and sanitize it
+      try {
+        let htmlFromEditor = this.getQuillHtml();
+        htmlFromEditor = await this.replaceBase64ImagesWithStorageUrls(htmlFromEditor);
+        const sanitizedHtml = this.sanitizeHtmlEdges(htmlFromEditor);
+        task.description = sanitizedHtml;
+        this.task.description = sanitizedHtml;
+      } catch (e) {
+        // ignore and keep current description
+      }
 
       // format video & slides url with "http://"
       if (task.video) {
@@ -491,7 +696,12 @@ export default {
         }
       }
       task.orderIndex = this.tasks.length ? this.tasks.length++ : 0;
-      const createdTask = await createTaskWithCourseIdTopicId(this.course.id, this.topic.id, task);
+      const safeTask = this.buildTaskPayload(task);
+      const createdTask = await createTaskWithCourseIdTopicId(
+        this.course.id,
+        this.topic.id,
+        safeTask,
+      );
 
       this.$emit("taskCreated", createdTask);
       console.log("createdTask", createdTask);
@@ -515,6 +725,17 @@ export default {
       this.loading = true;
       this.disabled = true;
 
+      // Pull fresh HTML directly from Quill, upload embedded images, and sanitize it
+      try {
+        let htmlFromEditor = this.getQuillHtml();
+        htmlFromEditor = await this.replaceBase64ImagesWithStorageUrls(htmlFromEditor);
+        const sanitizedHtml = this.sanitizeHtmlEdges(htmlFromEditor);
+        task.description = sanitizedHtml;
+        this.task.description = sanitizedHtml;
+      } catch (e) {
+        // ignore and keep current description
+      }
+
       // format video & slides url with "http://"
       if (task.video) {
         if (!/^https?:\/\//i.test(task.video)) {
@@ -530,11 +751,12 @@ export default {
       // remove taskCreatedTimestamp so it does not update original (there was a change in format when this was happening)
       delete task.taskCreatedTimestamp;
 
+      const safeTask = this.buildTaskPayload(task);
       const updatedTask = await updateTaskByCourseIdTopicIdTaskId(
         this.course.id,
         this.topic.id,
         this.taskId,
-        task,
+        safeTask,
       );
 
       this.$emit("taskUpdated", updatedTask);
@@ -571,12 +793,12 @@ export default {
     handleDescriptionImageAdded(file, Editor, cursorLocation) {
       console.log("image file", file);
       // ceate a storage ref
-      var storageRef = storage.ref(
+      const storageRef = storage.ref(
         "missionDescription-images/teacher-" + this.person.id + this.task.id + "-" + file.name,
       );
 
       // upload a file
-      var uploadTask = storageRef.put(file);
+      const uploadTask = storageRef.put(file);
 
       // update progress bar
       uploadTask.on(
@@ -602,7 +824,7 @@ export default {
     handleSubmissionImageAdded(file, Editor, cursorLocation) {
       console.log("image file", file);
       // ceate a storage ref
-      var storageRef = storage.ref(
+      const storageRef = storage.ref(
         "missionSubmission-images/teacher-" +
           this.person.id +
           "-task-" +
@@ -612,7 +834,7 @@ export default {
       );
 
       // upload a file
-      var uploadTask = storageRef.put(file);
+      const uploadTask = storageRef.put(file);
 
       // update progress bar
       uploadTask.on(
@@ -635,6 +857,278 @@ export default {
         },
       );
     },
+    /**
+     * Formats structured mission instructions into HTML
+     * @param missionInstructions - The structured mission instructions object
+     * @returns HTML string
+     */
+    formatMissionInstructionsToHtml(missionInstructions) {
+      if (!missionInstructions) return "";
+
+      try {
+        let html = "";
+
+        // Add description
+        if (missionInstructions.description) {
+          html += `<p>${missionInstructions.description}</p>`;
+        }
+
+        // Add instructions section
+        if (missionInstructions.instructions && missionInstructions.instructions.length > 0) {
+          html += `<h2>Instructions</h2>`;
+
+          // Loop through each instruction step
+          missionInstructions.instructions.forEach((step) => {
+            // Add step title
+            if (step.title) {
+              html += `<h3>${step.title}</h3>`;
+            }
+
+            // Add tasks as unordered list
+            if (step.tasks && step.tasks.length > 0) {
+              html += `<ul>`;
+              step.tasks.forEach((task) => {
+                if (task.taskContent) {
+                  // Convert **bold text** to <strong>bold text</strong>
+                  const formattedContent = task.taskContent.replace(
+                    /\*\*(.*?)\*\*/g,
+                    "<strong>$1</strong>",
+                  );
+                  html += `<li>${formattedContent}</li>`;
+                }
+              });
+              html += `</ul>`;
+            }
+          });
+        }
+
+        // Add summary
+        if (missionInstructions.summary) {
+          html += `<p>${missionInstructions.summary}</p>`;
+        }
+
+        console.log("🔄 Formatted mission instructions to HTML:", html);
+        return html;
+      } catch (error) {
+        console.error("❌ Error formatting mission instructions to HTML:", error);
+        return ""; // Fallback to empty string
+      }
+    },
+
+    /**
+     * Properly sets HTML content in the Quill editor
+     * @param htmlContent - The HTML content to set
+     */
+    setQuillContent(htmlContent) {
+      this.$nextTick(() => {
+        const quillEditor = this.$refs.quillEditor;
+        if (quillEditor && quillEditor.quill) {
+          try {
+            // Replace content atomically without pre-clearing to avoid stray <p>
+            const quill = quillEditor.quill;
+            const delta = quill.clipboard.convert(htmlContent || "");
+            quill.setContents(delta, "silent");
+            // Sync v-model with rendered HTML and ensure no empty paragraphs
+            const renderedHtml = quill.root.innerHTML;
+            this.task.description = this.sanitizeHtmlEdges(renderedHtml);
+            console.log("🔄 Quill content set successfully (atomic replace)");
+          } catch (error) {
+            console.error("❌ Error setting Quill content:", error);
+            // Fallback: dangerouslyPasteHTML
+            try {
+              quillEditor.quill.clipboard.dangerouslyPasteHTML(0, htmlContent || "", "silent");
+              const renderedHtml = quillEditor.quill.root.innerHTML;
+              this.task.description = this.sanitizeHtmlEdges(renderedHtml);
+              console.log("🔄 Quill content set using dangerouslyPasteHTML fallback");
+            } catch (fallbackError) {
+              console.error("❌ Fallback also failed:", fallbackError);
+              // Last resort: set as plain text
+              quillEditor.quill.setText(htmlContent || "");
+              const renderedHtml = quillEditor.quill.root.innerHTML;
+              this.task.description = this.sanitizeHtmlEdges(renderedHtml);
+            }
+          }
+        } else {
+          console.warn("⚠️ Quill editor not found");
+        }
+      });
+    },
+
+    /**
+     * Returns current HTML from the Quill editor
+     */
+    getQuillHtml() {
+      const quill = this.$refs.quillEditor && this.$refs.quillEditor.quill;
+      return quill ? quill.root.innerHTML : this.task.description || "";
+    },
+
+    /**
+     * Removes leading/trailing empty paragraphs and any completely empty content
+     */
+    sanitizeHtmlEdges(html) {
+      if (!html) return "";
+      let sanitized = html;
+
+      // Remove completely empty content
+      if (sanitized.trim() === "" || sanitized === "<p><br></p>" || sanitized === "<p></p>") {
+        return "";
+      }
+
+      // Trim leading empty paragraphs
+      sanitized = sanitized.replace(/^(\s*<p>(?:\s|&nbsp;|<br\s*\/?\s*>)*<\/p>\s*)+/i, "");
+      // Trim trailing empty paragraphs
+      sanitized = sanitized.replace(/(\s*<p>(?:\s|&nbsp;|<br\s*\/?\s*>)*<\/p>\s*)+$/i, "");
+
+      // Remove any remaining standalone empty paragraphs
+      sanitized = sanitized.replace(/<p>\s*<\/p>/gi, "");
+      sanitized = sanitized.replace(/<p><br><\/p>/gi, "");
+
+      return sanitized;
+    },
+
+    /**
+     * Replace embedded base64 <img> sources with Firebase Storage URLs
+     */
+    async replaceBase64ImagesWithStorageUrls(originalHtml) {
+      let html = originalHtml || "";
+      const imgTagRegex =
+        /<img[^>]+src=["'](data:image\/[a-zA-Z0-9+.-]+;base64,[^"']+)["'][^>]*>/gi;
+      const dataUrls = new Set();
+
+      let match;
+      while ((match = imgTagRegex.exec(html)) !== null) {
+        const dataUrl = match[1];
+        if (dataUrl && dataUrl.startsWith("data:image/")) {
+          dataUrls.add(dataUrl);
+        }
+      }
+
+      if (dataUrls.size === 0) return html;
+
+      let index = 0;
+      for (const dataUrl of dataUrls) {
+        try {
+          const extMatch = /^data:image\/(\w+);/i.exec(dataUrl);
+          const ext = (extMatch && extMatch[1]) || "png";
+          const storagePath = `missionDescription-images/teacher-${this.person.id}-task-${
+            this.taskId || "new"
+          }-${Date.now()}-${index}.${ext}`;
+          const ref = storage.ref(storagePath);
+          const snapshot = await ref.putString(dataUrl, "data_url");
+          const downloadURL = await snapshot.ref.getDownloadURL();
+          html = html.split(dataUrl).join(downloadURL);
+          index++;
+        } catch (e) {
+          console.error("❌ Failed to upload embedded image:", e);
+        }
+      }
+
+      return html;
+    },
+
+    // AI functionality methods
+    toggleAiInput() {
+      this.aiInput = !this.aiInput;
+      if (!this.aiInput) {
+        this.aiGenerateMissionAssistInput = "";
+      }
+    },
+    async aiGenerateMissionAssist() {
+      this.aiGenerating = true;
+      this.loading = true;
+      this.startLoadingMessages();
+
+      try {
+        console.log("🚀 Starting AI mission instructions generation...");
+
+        // check if we have a galaxy map object on the course already
+        if (this.course.galaxyMapAsObject) {
+          this.galaxyMapContext = this.course.galaxyMapAsObject;
+          console.log("🔄 Galaxy map object found on course. Continuing with a galaxyMapContet");
+        } else {
+          console.log("🔄 No galaxy map object found on course, fetching from server...");
+          const galaxyMapObject = await getGalaxyMapObjectFromCourse(this.course.id);
+          console.log("🔄 Galaxy map object generated from server:", galaxyMapObject);
+          this.galaxyMapContext = galaxyMapObject;
+        }
+
+        // Call the imported function to generate mission instructions
+        const response = await generateInstructionsForMission(
+          this.task.title, // missionContext (title)
+          this.galaxyMapContext, // galaxyMapContext
+          undefined, // originResponseId
+          // refinement
+          {
+            currentInstructions:
+              this.task.description && this.task.description.trim()
+                ? this.task.description
+                : undefined,
+            userFeedback:
+              this.aiGenerateMissionAssistInput && this.aiGenerateMissionAssistInput.trim()
+                ? this.aiGenerateMissionAssistInput
+                : undefined,
+          },
+        );
+
+        if (response.success && response.missionInstructions) {
+          console.log(
+            "🔄 AI mission instructions generated successfully",
+            response.missionInstructions,
+          );
+
+          // Format the structured mission instructions to HTML
+          const formattedHtml = this.formatMissionInstructionsToHtml(response.missionInstructions);
+
+          // Update the task description with the formatted HTML content
+          this.task.description = formattedHtml;
+
+          // Use the new method to properly set content in Quill
+          this.setQuillContent(formattedHtml);
+
+          // Store token usage for display
+          this.tokenUsage = response.tokenUsage;
+
+          console.log("✅ AI mission instructions generated and parsed successfully");
+          console.log("Token usage:", response.tokenUsage);
+
+          // Clear the input and close AI panel
+          this.aiGenerateMissionAssistInput = "";
+          this.aiInput = false;
+        } else {
+          throw new Error("Failed to generate mission instructions");
+        }
+      } catch (error) {
+        console.error("❌ Error generating mission instructions:", error);
+
+        // Show error message to user
+        this.$emit("error", {
+          message: "Failed to generate mission instructions. Please try again.",
+          error: error.message,
+        });
+      } finally {
+        this.aiGenerating = false;
+        this.loading = false;
+        this.stopLoadingMessages();
+      }
+    },
+
+    // Loading message management
+    startLoadingMessages() {
+      const messages = this.loadingMessages;
+      this.currentLoadingMessage = messages[0];
+      this.loadingMessageInterval = setInterval(() => {
+        const currentIndex = messages.indexOf(this.currentLoadingMessage);
+        const nextIndex = (currentIndex + 1) % messages.length;
+        this.currentLoadingMessage = messages[nextIndex];
+      }, 3000);
+    },
+    stopLoadingMessages() {
+      if (this.loadingMessageInterval) {
+        clearInterval(this.loadingMessageInterval);
+        this.loadingMessageInterval = null;
+      }
+      this.currentLoadingMessage = "";
+    },
   },
 };
 </script>
@@ -652,6 +1146,11 @@ export default {
   flex-wrap: wrap;
   overflow-x: hidden;
   overflow-y: auto;
+  position: relative;
+
+  &.mobile {
+    width: 100%;
+  }
 
   .dialog-header {
     width: 100%;
@@ -729,6 +1228,22 @@ export default {
   .action-buttons {
     width: 100%;
     padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+
+    &.mobile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+
+      .v-btn {
+        width: 100%;
+      }
+    }
   }
 }
 
@@ -793,10 +1308,90 @@ export default {
 
 .quill ::v-deep .ql-container {
   border: 1px solid #ffffff45;
-}
 
-.quill ::v-deep .ql-editor {
-  font-size: 0.9rem;
+  .ql-editor {
+    font-size: 0.9rem;
+    color: white;
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      margin: 0.5em 0;
+      font-weight: bold;
+      color: white;
+    }
+
+    h1 {
+      font-size: 1.5em;
+    }
+    h2 {
+      font-size: 1.3em;
+    }
+    h3 {
+      font-size: 1.1em;
+    }
+    h4 {
+      font-size: 1em;
+    }
+
+    p {
+      margin: 0.5em 0;
+      color: white;
+    }
+
+    ul,
+    ol {
+      margin: 0.5em 0;
+      padding-left: 1.5em;
+      color: white;
+
+      li {
+        margin: 0.25em 0;
+        color: white;
+
+        ul,
+        ol {
+          margin: 0.25em 0;
+          padding-left: 1.5em;
+        }
+      }
+    }
+
+    strong {
+      font-weight: bold;
+      color: white;
+    }
+
+    em {
+      font-style: italic;
+      color: white;
+    }
+
+    code {
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+      font-family: monospace;
+      color: white;
+    }
+
+    pre {
+      background-color: rgba(255, 255, 255, 0.05);
+      padding: 1em;
+      border-radius: 5px;
+      overflow-x: auto;
+      color: white;
+    }
+
+    pre code {
+      background-color: transparent;
+      padding: 0;
+      color: white;
+    }
+  }
 }
 
 .active-quill ::v-deep .ql-toolbar {
@@ -813,5 +1408,115 @@ export default {
 
 .active-submission-quill ::v-deep .ql-container {
   border: 1px solid var(--v-cohortAccent-base);
+}
+
+// Loading overlay styles
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--v-background-base);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0.95;
+  overflow-y: auto;
+  padding: 2rem;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0;
+  overflow-y: visible;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.loading-message {
+  color: var(--v-missionAccent-base);
+  margin-top: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  animation: fadeInOut 3s ease-in-out infinite;
+}
+
+.token-usage {
+  color: var(--v-galaxyAccent-base);
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: normal !important;
+  margin: 5px !important;
+}
+
+.token-breakdown {
+  color: var(--v-missionAccent-base);
+  margin-top: 0.25rem;
+  font-size: 0.7rem;
+  opacity: 0.8;
+  line-height: normal !important;
+  margin: 5px !important;
+}
+
+.model-breakdown {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background-color: rgba(var(--v-background-base), 0.1);
+  border-radius: 4px;
+  border: 1px solid rgba(var(--v-missionAccent-base), 0.2);
+}
+
+.model-breakdown-title {
+  color: var(--v-galaxyAccent-base);
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.model-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.125rem 0;
+  font-size: 0.65rem;
+  color: var(--v-missionAccent-base);
+  opacity: 0.9;
+}
+
+.model-name {
+  font-weight: 600;
+  color: var(--v-galaxyAccent-base);
+}
+
+.model-tokens {
+  opacity: 0.7;
+}
+
+.model-cost {
+  font-weight: 600;
+  color: var(--v-missionAccent-base);
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 </style>

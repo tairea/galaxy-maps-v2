@@ -143,8 +143,8 @@ export default {
   },
   computed: {
     date() {
-      let min = this.timeframe.min.toString().split(" ").slice(1, 3).join(" ");
-      let max = this.timeframe.max.toString().split(" ").slice(1, 3).join(" ");
+      const min = this.timeframe.min.toString().split(" ").slice(1, 3).join(" ");
+      const max = this.timeframe.max.toString().split(" ").slice(1, 3).join(" ");
 
       switch (this.timeframe.type) {
         case "day":

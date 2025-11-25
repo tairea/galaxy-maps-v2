@@ -1,14 +1,16 @@
 <template>
   <div id="assigned-info">
-    <h2 class="assigned-label">{{ isMissionView ? "active on this system" : "Assigned to" }}:</h2>
+    <h2 class="assigned-label">
+      {{ isMissionView ? "active in this star system" : "Assigned to" }}:
+    </h2>
     <!-- ASSIGNED COHORTS INFO -->
     <div v-if="assignCohorts">
       <!-- Assigned COHORTS -->
-      <div v-if="cohorts && cohorts.length > 0">
+      <div v-if="cohortsInCourse && cohortsInCourse.length > 0">
         <p class="overline assignedToLabel ma-0">Squads</p>
         <v-row class="my-1 flex-wrap">
           <Cohort
-            v-for="cohort in cohorts"
+            v-for="cohort in cohortsInCourse"
             :cohort="cohort"
             :key="cohort.id"
             :tooltip="isTeacher"
@@ -34,14 +36,17 @@
         </v-row>
       </div>
 
-      <p v-if="cohorts && cohorts.length == 0 && people.length == 0" class="assigned-status">
+      <p
+        v-if="cohortsInCourse && cohortsInCourse.length == 0 && people.length == 0"
+        class="assigned-status"
+      >
         Nobody is assigned to this Galaxy
       </p>
       <AssignCohortDialog
-        v-if="isTeacher && cohorts"
+        v-if="isTeacher && assignCohorts"
         :assignCohorts="true"
         @newAssignment="addToPeople($event)"
-        :cohorts="cohorts"
+        :teachersCohorts="teachersCohorts"
       />
     </div>
 
@@ -49,7 +54,14 @@
     <div v-else-if="assignCourses">
       <p class="overline assignedToLabel ma-0">Galaxy Maps</p>
       <div v-if="courses.length > 0" class="d-flex justify-space-around flex-wrap">
-        <Course v-for="(course, i) in courses" :course="course" :key="i" />
+        <Course
+          v-for="course in courses"
+          :course="course"
+          :key="course.id"
+          :cohortId="cohort.id"
+          :showDeleteButton="isTeacher"
+          @courseDeleted="onCourseDeleted"
+        />
         <!-- Jump to galaxy button -->
         <!-- <div v-if="courses.length == 1" class="d-flex justify-center align-center mb-2">
           <v-btn
@@ -64,7 +76,7 @@
           >
         </div> -->
       </div>
-      <p v-else class="assigned-status">No Galaxies assigned to this Cohort</p>
+      <p v-else class="assigned-status">No Galaxies assigned to this Squad</p>
       <AssignCohortDialog
         v-if="isTeacher && !courseCohort"
         :assignCourses="true"
@@ -96,7 +108,8 @@ export default {
   props: [
     "assignCohorts",
     "assignCourses",
-    "cohorts",
+    "cohortsInCourse",
+    "teachersCohorts",
     "organisations",
     "people",
     "teacher",
@@ -132,7 +145,7 @@ export default {
   methods: {
     async getCohortCourses() {
       if (this.assignCourses) {
-        let courses = await Promise.all(
+        const courses = await Promise.all(
           this.cohort?.courses.map((courseId) => {
             return fetchCourseByCourseId(courseId);
           }),
@@ -144,6 +157,15 @@ export default {
     },
     addToPeople(person) {
       return this.people.push(person);
+    },
+    async onCourseDeleted(courseId) {
+      // Refresh the cohort data to get updated courses list
+      if (this.cohort?.id) {
+        const updatedCohort = await fetchCohortByCohortId(this.cohort.id);
+        this.cohort = updatedCohort;
+        // Refresh the courses list
+        await this.getCohortCourses();
+      }
     },
   },
 };

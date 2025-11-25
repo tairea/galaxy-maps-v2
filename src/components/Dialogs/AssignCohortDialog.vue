@@ -2,7 +2,7 @@
   <v-container>
     <v-row class="text-center" align="center">
       <v-col cols="12">
-        <v-dialog v-model="dialog" width="40%" light>
+        <v-dialog v-model="dialog" :width="isMobile ? '90%' : '40%'" light persistent>
           <!-- CREATE BUTTON -->
           <template v-slot:activator="{ on, attrs }">
             <!-- ASSIGN COHORT -->
@@ -43,8 +43,8 @@
               <v-tab>
                 <p class="baseAccent--text tab">Individual</p>
               </v-tab>
-              <v-tab v-if="teacherCohorts.length">
-                <p class="baseAccent--text tab">Cohort</p>
+              <v-tab v-if="teachersCohorts.length">
+                <p class="baseAccent--text tab">Squads</p>
               </v-tab>
               <!-- <v-tab><p class="baseAccent--text tab">Organisation</p></v-tab> -->
             </v-tabs>
@@ -88,7 +88,7 @@
                       :items="cohortOptions"
                       outlined
                       single-line
-                      :disabled="!teacherCohorts.length"
+                      :disabled="!teachersCohorts.length"
                       class="cohort-select"
                     >
                       <template v-slot:selection="{ item }">
@@ -117,7 +117,8 @@
                 <!-- ACTION BUTTONS -->
                 <div class="action-buttons">
                   <v-btn
-                    v-if="assignCohorts && profile.email"
+                    v-if="assignCohorts"
+                    :disabled="!profile.email"
                     outlined
                     color="baseAccent"
                     @click="assignCourseToPerson(profile)"
@@ -156,7 +157,7 @@
                 <div class="create-dialog-content">
                   <!-- TITLE -->
                   <p class="dialog-description">Squads:</p>
-                  <v-select v-if="assignCohorts" v-model="cohort" :items="cohorts">
+                  <v-select v-if="assignCohorts" v-model="selectedCohort" :items="teachersCohorts">
                     <template v-slot:selection="{ item }">
                       <v-list-item-avatar tile>
                         <img v-if="item.image && item.image.url" :src="item.image.url" />
@@ -178,17 +179,19 @@
                   </v-select>
                 </div>
                 <!-- ACTION BUTTONS -->
-                <div class="action-buttons">
-                  <v-btn
-                    v-if="assignCohorts"
-                    outlined
-                    color="baseAccent"
-                    @click="assignCourseToCohort(cohort)"
-                    :loading="loading"
-                  >
-                    <v-icon left> {{ mdiCheck }} </v-icon>
-                    ASSIGN SQUAD
-                  </v-btn>
+                <div class="action-buttons d-flex">
+                  <div class="d-flex flex-column">
+                    <v-btn
+                      v-if="assignCohorts"
+                      outlined
+                      color="baseAccent"
+                      @click="assignCourseToCohort(selectedCohort)"
+                      :loading="loading"
+                    >
+                      <v-icon left> {{ mdiCheck }} </v-icon>
+                      ASSIGN TO SQUAD
+                    </v-btn>
+                  </div>
 
                   <v-btn
                     outlined
@@ -201,6 +204,9 @@
                     Cancel
                   </v-btn>
                 </div>
+                <span v-if="loading && statusMessage" class="status-message baseAccent--text ma-2">
+                  {{ statusMessage }}
+                </span>
                 <!-- End action-buttons -->
               </v-tab-item>
             </v-tabs-items>
@@ -244,17 +250,22 @@
             </div>
 
             <!-- ACTION BUTTONS -->
-            <div class="action-buttons">
-              <v-btn
-                v-if="assignCourses"
-                outlined
-                color="baseAccent"
-                @click="assignCourseToCohort(null, course)"
-                :loading="loading"
-              >
-                <v-icon left> {{ mdiCheck }} </v-icon>
-                ASSIGN GALAXY MAP
-              </v-btn>
+            <div class="action-buttons d-flex">
+              <div class="d-flex flex-column">
+                <v-btn
+                  v-if="assignCourses"
+                  outlined
+                  color="baseAccent"
+                  @click="assignCourseToCohort(null, course)"
+                  :loading="loading"
+                >
+                  <v-icon left> {{ mdiCheck }} </v-icon>
+                  ASSIGN GALAXY MAP
+                </v-btn>
+                <span v-if="loading && statusMessage" class="status-message baseAccent--text">
+                  {{ statusMessage }}
+                </span>
+              </div>
 
               <v-btn
                 outlined
@@ -276,9 +287,12 @@
 </template>
 
 <script>
+import { mapActions, mapState } from "pinia";
+import { getFriendlyErrorMessage } from "@/lib/utils";
 import {
-  fetchCourses,
+  fetchPersonByPersonId,
   fetchCohortByCohortId,
+  fetchCourses,
   fetchCourseByCourseId,
   fetchPersonByEmail,
   createPerson,
@@ -297,11 +311,10 @@ import {
 } from "@mdi/js";
 import firebase from "firebase/compat/app";
 import { doc, updateDoc } from "firebase/firestore";
-import { mapActions, mapState } from "pinia";
 
 export default {
   name: "AssignCohortDialog",
-  props: ["assignCohorts", "assignCourses", "cohorts", "inThisCohort"],
+  props: ["assignCohorts", "assignCourses", "teachersCohorts", "inThisCohort"],
   data: () => ({
     //icons
     mdiClose,
@@ -313,6 +326,7 @@ export default {
     tab: null,
     dialog: false,
     loading: false,
+    statusMessage: "", // Add status message for tracking assignment progress
 
     profile: {
       id: "",
@@ -321,31 +335,37 @@ export default {
     cohort: null,
     course: null,
     courses: [],
-    teacherCohorts: [],
     currentCourse: null,
+    selectedCohort: null,
   }),
   async mounted() {
     if (this.assignCourses) {
       this.courses = await fetchCourses();
-    } else if (this.assignCohorts) {
-      this.teacherCohorts = this.cohorts.filter(
-        (cohort) => cohort.teachers.includes(this.person.id) && !cohort.courseCohort,
-      );
     }
-    this.currentCourse = await fetchCourseByCourseId(this.currentCourseId);
+
+    if (this.currentCourseId) {
+      this.currentCourse = await fetchCourseByCourseId(this.currentCourseId);
+    }
   },
   watch: {
     dialog(newVal) {
-      if (newVal && !this.cohort)
-        this.cohort = this.cohorts?.find((cohort) => cohort.id == this.currentCohortId);
+      if (newVal && !this.cohort && this.teachersCohorts)
+        this.cohort = this.teachersCohorts.find((cohort) => cohort.id == this.currentCohortId);
     },
   },
   computed: {
     ...mapState(useRootStore, ["currentCourseId", "currentCohortId", "person"]),
     cohortOptions() {
       // teacherCohorts && the courseCohort
-      this.cohort = this.cohorts.find((cohort) => cohort.id === this.currentCourse.cohort);
-      return [this.cohort, ...this.teacherCohorts];
+      if (this.currentCourse && this.currentCourse.cohort && this.teachersCohorts) {
+        this.cohort = this.teachersCohorts.find(
+          (cohort) => cohort.id === this.currentCourse.cohort,
+        );
+      }
+      return this.cohort ? [this.cohort, ...this.teachersCohorts] : this.teachersCohorts || [];
+    },
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
     },
   },
   methods: {
@@ -353,6 +373,7 @@ export default {
     close() {
       this.dialog = false;
       this.loading = false;
+      this.statusMessage = "";
       this.profile = {
         id: "",
         email: "",
@@ -362,6 +383,17 @@ export default {
     },
     async assignCourseToPerson(profile) {
       this.loading = true;
+
+      // Validate that currentCourse exists
+      if (!this.currentCourse) {
+        this.setSnackbar({
+          show: true,
+          text: "No Galaxy Map selected",
+          color: "pink",
+        });
+        this.loading = false;
+        return;
+      }
 
       // If we dont already have the students Id, check if they already have an account using their email
       const personExists = await fetchPersonByEmail(profile.email);
@@ -381,11 +413,27 @@ export default {
     async handleAssignment(person, course) {
       console.log({ person });
       try {
+        // Validate course exists
+        if (!course || !course.id) {
+          throw new Error("No Galaxy Map selected.");
+        }
+
+        // Use selected cohort or default to course.cohort
+        let cohortToUse = this.cohort;
+        if (!cohortToUse && course.cohort) {
+          // Fetch the default cohort if not already loaded
+          cohortToUse = await fetchCohortByCohortId(course.cohort);
+        }
+
+        if (!cohortToUse || !cohortToUse.id) {
+          throw new Error("No Squad available for assignment.");
+        }
+
         await assignCourseToPerson(person.id, course.id);
-        await addPersonToCohort(person.id, this.cohort.id);
-        if (this.cohort.courses.length) {
+        await addPersonToCohort(person.id, cohortToUse.id);
+        if (cohortToUse.courses && cohortToUse.courses.length) {
           // Possible optimize to make this concurrent instead of sequential
-          for (const courseId of this.cohort.courses) {
+          for (const courseId of cohortToUse.courses) {
             // dont need to assign current course again
             if (courseId === course.id) continue;
             await assignCourseToPerson(person.id, courseId);
@@ -407,7 +455,7 @@ export default {
         // snackbar message
         this.setSnackbar({
           show: true,
-          text: error.split("FirebaseError: ")[1],
+          text: getFriendlyErrorMessage(error.code),
           color: "pink",
         });
         this.close();
@@ -428,6 +476,9 @@ export default {
       }
       if (!course) course = this.currentCourse;
       this.loading = true;
+      this.statusMessage = "";
+
+      console.log("assigning course to cohort", cohort, course);
 
       try {
         // Add a course to a cohort
@@ -436,7 +487,19 @@ export default {
         });
         // add courses as assignedCourse to each student in the cohort
         if (cohort.students?.length) {
-          for (const studentId of cohort.students) {
+          for (let i = 0; i < cohort.students.length; i++) {
+            const studentId = cohort.students[i];
+            // Fetch student details to show in status message
+            const student = await fetchPersonByPersonId(studentId, cohort.id);
+            if (student) {
+              this.statusMessage = `Assigning Galaxy Map to Navigator ${
+                student.firstName || "Unknown"
+              } ${student.lastName || "Navigator"} (${i + 1}/${cohort.students.length})`;
+            } else {
+              this.statusMessage = `Assigning Galaxy Map to Navigator ${i + 1}/${
+                cohort.students.length
+              }`;
+            }
             await assignCourseToPerson(studentId, course.id);
           }
         }
@@ -451,9 +514,12 @@ export default {
         console.error("Error writing document: ", error);
         this.setSnackbar({
           show: true,
-          text: error,
+          text: getFriendlyErrorMessage(error.code),
           color: "pink",
         });
+      } finally {
+        this.loading = false;
+        this.statusMessage = "";
       }
     },
   },
@@ -578,5 +644,15 @@ export default {
 
 .assignButton {
   max-width: 100%;
+}
+
+.status-message {
+  color: var(--v-missionAccent-base);
+  font-size: 0.8rem;
+  font-style: italic;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

@@ -114,6 +114,107 @@ export const useGalaxyListViewStore = defineStore({
       }
       this.selectedCourseId = courseId;
     },
+    SET_COURSES(courses: ICourse[]) {
+      this.courses = courses;
+    },
+    SET_COURSE_EDGES_MAP(courseEdgesMap: SerializableMap<string, IMapEdge[]>) {
+      this.courseEdgesMap = courseEdgesMap;
+    },
+    SET_COURSE_NODES_MAP(courseNodesMap: SerializableMap<string, IMapNode[]>) {
+      this.courseNodesMap = courseNodesMap;
+    },
+    async loadPublicCourses(slug: string | null = null) {
+      this.isLoadingCourses = true;
+      try {
+        const { fetchPublicCourses } = await import("@/lib/ff");
+        const courses = await fetchPublicCourses(slug);
+
+        // Safety check: ensure courses is an array
+        if (!Array.isArray(courses)) {
+          console.warn("fetchPublicCourses returned non-array:", courses);
+          this.courses = [];
+          return;
+        }
+
+        const courseMapEdgesAndNodes = await Promise.all(
+          courses.map((course) =>
+            fetchCourseMapEdgesAndNodesByCourseId(course.id).then((res) => ({
+              courseId: course.id,
+              ...res,
+            })),
+          ),
+        );
+        const courseNodesMap = new SerializableMap<string, IMapNode[]>();
+        const courseEdgesMap = new SerializableMap<string, IMapEdge[]>();
+        for (const { courseId, nodes, edges } of courseMapEdgesAndNodes) {
+          courseNodesMap.set(courseId, nodes);
+          courseEdgesMap.set(courseId, edges);
+        }
+        this.slug = slug;
+        this.courses = courses;
+        this.courseEdgesMap = courseEdgesMap;
+        this.courseNodesMap = courseNodesMap;
+
+        const course = this.courses.find((c) => c.id === this.selectedCourseId) ?? null;
+        if (course == null) {
+          this.selectedCourseId = null;
+        }
+      } catch (error) {
+        console.error("Error loading public courses:", error);
+        // Set empty arrays on error
+        this.courses = [];
+        this.courseEdgesMap = new SerializableMap();
+        this.courseNodesMap = new SerializableMap();
+      } finally {
+        this.isLoadingCourses = false;
+      }
+    },
+    async loadMyCourses(slug: string | null = null) {
+      this.isLoadingCourses = true;
+      try {
+        const { fetchMyCourses } = await import("@/lib/ff");
+        const courses = await fetchMyCourses(slug);
+
+        // Safety check: ensure courses is an array
+        if (!Array.isArray(courses)) {
+          console.warn("fetchMyCourses returned non-array:", courses);
+          this.courses = [];
+          return;
+        }
+
+        const courseMapEdgesAndNodes = await Promise.all(
+          courses.map((course) =>
+            fetchCourseMapEdgesAndNodesByCourseId(course.id).then((res) => ({
+              courseId: course.id,
+              ...res,
+            })),
+          ),
+        );
+        const courseNodesMap = new SerializableMap<string, IMapNode[]>();
+        const courseEdgesMap = new SerializableMap<string, IMapEdge[]>();
+        for (const { courseId, nodes, edges } of courseMapEdgesAndNodes) {
+          courseNodesMap.set(courseId, nodes);
+          courseEdgesMap.set(courseId, edges);
+        }
+        this.slug = slug;
+        this.courses = courses;
+        this.courseEdgesMap = courseEdgesMap;
+        this.courseNodesMap = courseNodesMap;
+
+        const course = this.courses.find((c) => c.id === this.selectedCourseId) ?? null;
+        if (course == null) {
+          this.selectedCourseId = null;
+        }
+      } catch (error) {
+        console.error("Error loading my courses:", error);
+        // Set empty arrays on error
+        this.courses = [];
+        this.courseEdgesMap = new SerializableMap();
+        this.courseNodesMap = new SerializableMap();
+      } finally {
+        this.isLoadingCourses = false;
+      }
+    },
   },
   persist: {
     afterRestore: (ctx) => {

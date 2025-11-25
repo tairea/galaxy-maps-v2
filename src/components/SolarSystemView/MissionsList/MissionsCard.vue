@@ -1,12 +1,25 @@
 <template>
   <div>
-    <v-expansion-panel-header class="py-0">
+    <!-- ===== EXPANSION HEADER ===== -->
+    <v-expansion-panel-header
+      class="py-0"
+      @click="teacher && hasLongDescription ? toggleDescription() : null"
+      :class="{ mobile: isMobile, student: isStudent }"
+    >
+      <!-- Active ribbon -->
+      <div v-if="active" class="active-mission-ribbon">
+        <!-- <v-icon color="background" small>{{ mdiTarget }}</v-icon> -->
+        Active Mission
+      </div>
+      <!-- ===== MISSION CARD ===== -->
       <div
         class="mission-card"
-        :class="{ lockedOpacity: task.taskStatus == 'locked' }"
+        :class="{ lockedOpacity: task.taskStatus == 'locked', mobile: isMobile }"
         :style="task.color ? 'border: 1px dashed ' + task.color + ' !important' : '#69a1e2'"
       >
-        <div class="mission-section mission-number-section">
+        <!-- ===== MISSION NUMBER SECTION ===== -->
+        <div class="mission-section mission-number-section" :class="{ mobile: isMobile }">
+          <!-- Mission number -->
           <p
             class="text-overline text-uppercase"
             :style="task.color ? 'color:' + task.color + ' !important' : '#69a1e2'"
@@ -34,6 +47,8 @@
             />
           </div>
         </div>
+
+        <!-- ===== MISSION TITLE & DESCRIPTION SECTION ===== -->
         <div
           class="mission-middle-section mission-main-section"
           :style="task.color ? 'border-left: 1px dashed ' + task.color + ' !important' : ''"
@@ -48,10 +63,26 @@
           <!-- DESCRIPTION -->
           <div
             v-if="teacher"
-            v-html="task.description"
-            class="task-description"
+            class="task-description-container"
             :style="task.color ? 'color:' + task.color + ' !important' : ''"
-          ></div>
+          >
+            <div
+              v-html="renderedTaskDescription"
+              class="task-description"
+              :class="{ 'task-description-collapsed': !descriptionExpanded }"
+            ></div>
+            <div v-if="hasLongDescription" class="description-toggle">
+              <v-btn
+                text
+                small
+                @click.stop="toggleDescription"
+                :style="task.color ? 'color:' + task.color + ' !important' : ''"
+              >
+                <v-icon small>{{ descriptionExpanded ? mdiChevronUp : mdiChevronDown }}</v-icon>
+                {{ descriptionExpanded ? "Show Less" : "Show More" }}
+              </v-btn>
+            </div>
+          </div>
         </div>
 
         <!-- <div class="mission-section mission-section-overUnder">
@@ -83,9 +114,21 @@
       </div>
     </div> -->
 
-        <div v-if="!teacher" class="mission-section mission-section-overUnder">
+        <!-- ===== MISSION DURATION & SUBMISSION SECTION ===== -->
+        <div
+          v-if="!teacher && !isMobile && (task.duration || task.submissionRequired)"
+          class="mission-section mission-section-overUnder"
+        >
+          <!--  DURATION -->
           <div v-if="task.duration" class="section-overUnder d-flex justify-center flex-column">
+            <v-tooltip v-if="isMobile" bottom>
+              <template v-slot:activator="{ on, attrs }">
+                <v-icon v-if="isMobile" color="missionAccent" small>{{ mdiTimer }}</v-icon>
+              </template>
+              <span>This mission is estimated to take {{ task.duration }} minutes</span>
+            </v-tooltip>
             <p
+              v-else
               class="text-overline text-uppercase text-center"
               :style="task.color ? 'color:' + task.color + ' !important' : ''"
             >
@@ -95,8 +138,20 @@
               {{ task.duration }} MINS
             </p>
           </div>
-          <div class="section-overUnder d-flex justify-center flex-column" style="line-height: 2">
+          <!--  SUBMISSION REQUIRED -->
+          <div
+            v-if="task.submissionRequired"
+            class="section-overUnder d-flex justify-center flex-column"
+            style="line-height: 2"
+          >
+            <v-tooltip v-if="isMobile" bottom>
+              <template v-slot:activator="{ on, attrs }">
+                <v-icon color="missionAccent" small v-bind="attrs" v-on="on">{{ mdiFlag }}</v-icon>
+              </template>
+              <span>This mission requires you to submit some evidence</span>
+            </v-tooltip>
             <p
+              v-else
               class="text-overline text-uppercase text-center"
               :style="task.color ? 'color:' + task.color + ' !important' : ''"
               style="line-height: 2"
@@ -108,8 +163,8 @@
                 task.submissionRequired
                   ? { color: '#FAF200' }
                   : task.color
-                  ? { color: task.color + ' !important' }
-                  : '',
+                    ? { color: task.color + ' !important' }
+                    : '',
               ]"
             >
               {{ task.submissionRequired ? "YES" : "NO" }}
@@ -117,7 +172,7 @@
           </div>
         </div>
 
-        <!-- MISSION STATUS -->
+        <!-- ===== MISSION STATUS SECTION ===== -->
         <div
           v-if="!teacher"
           class="mission-section d-flex justify-center align-center flex-column"
@@ -135,14 +190,14 @@
               completed
                 ? "COMPLETED"
                 : inreview
-                ? "IN REVIEW"
-                : unlocked
-                ? "START MISSION"
-                : active
-                ? "ACTIVE MISSION"
-                : declined
-                ? "RETRY MISSION"
-                : "LOCKED"
+                  ? "IN REVIEW"
+                  : unlocked
+                    ? "START MISSION"
+                    : active
+                      ? "ACTIVE MISSION"
+                      : declined
+                        ? "RETRY MISSION"
+                        : "LOCKED"
             }}
           </p>
 
@@ -174,9 +229,9 @@
           </div>
         </div>
 
-        <!-- TEACHER VIEW (for type teacher) -->
+        <!-- ===== TEACHER VIEW (for type teacher) ===== -->
         <div
-          v-else
+          v-else-if="task.submissionRequired && teacher"
           class="three-vertical-section"
           :style="task.color ? 'border-left: 1px dashed ' + task.color + ' !important' : ''"
         >
@@ -206,7 +261,16 @@
               class="d-flex justify-center flex-column three-vertical pa-4 submission"
               :class="taskColorClass"
             >
+              <v-tooltip v-if="isMobile" bottom>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-icon color="missionAccent" small v-bind="attrs" v-on="on">{{
+                    mdiFlag
+                  }}</v-icon>
+                </template>
+                <span>This mission requires you to submit some evidence</span>
+              </v-tooltip>
               <p
+                v-else
                 class="text-overline text-uppercase text-center"
                 :style="task.color ? 'color:' + task.color + ' !important' : ''"
               >
@@ -217,7 +281,7 @@
               </p>
               <div
                 v-if="task.submissionInstructions"
-                v-html="task.submissionInstructions"
+                v-html="renderedSubmissionInstructions"
                 class="submissions-instructions"
               ></div>
             </div>
@@ -252,7 +316,19 @@
         </div>
       </div>
     </v-expansion-panel-header>
-    <v-expansion-panel-content>
+
+    <!-- Mobible Start Mission button -->
+    <!-- <StartMissionDialogV2
+      v-if="unlocked && isMobile"
+      :course="course"
+      :topic="topic"
+      :task="task"
+      :topicActive="topicActive"
+      @missionStarted="$emit('missionStarted', task.id)"
+    /> -->
+
+    <!-- ===== ACTIVE MISSION CONTENT ===== -->
+    <v-expansion-panel-content :class="{ mobile: isMobile }">
       <!-- expansion content -->
       <ActiveMissionsCard
         v-if="active || declined"
@@ -275,8 +351,18 @@ import StartMissionDialogV2 from "@/components/Dialogs/StartMissionDialogV2.vue"
 import ActiveMissionsCard from "@/components/SolarSystemView/MissionsList/MissionsCard/ActiveMissionsCard.vue";
 import SelectedMissionsCard from "@/components/SolarSystemView/MissionsList/MissionsCard/SelectedMissionsCard.vue";
 import useRootStore from "@/store/index";
-import { mdiCheck, mdiLockOutline, mdiTarget, mdiAlertOutline } from "@mdi/js";
+import {
+  mdiCheck,
+  mdiLockOutline,
+  mdiTarget,
+  mdiAlertOutline,
+  mdiChevronUp,
+  mdiChevronDown,
+  mdiTimer,
+  mdiFlag,
+} from "@mdi/js";
 import { mapState } from "pinia";
+import * as smd from "streaming-markdown";
 
 export default {
   name: "MissionsCard",
@@ -293,11 +379,16 @@ export default {
       mdiLockOutline,
       mdiTarget,
       mdiAlertOutline,
+      mdiChevronUp,
+      mdiChevronDown,
+      mdiTimer,
+      mdiFlag,
       editing: false,
       activeTask: false,
       panel: [],
       taskSlides: false,
       taskVideo: false,
+      descriptionExpanded: false,
     };
   },
   watch: {
@@ -341,8 +432,195 @@ export default {
           return "";
       }
     },
+
+    taskMissionInstructionsHtml() {
+      if (!this.task) return "";
+      return this.task.missionInstructionsHtmlString || this.task.description || "";
+    },
+
+    /**
+     * Checks if the task description is long enough to warrant collapsing
+     */
+    hasLongDescription() {
+      if (!this.task || !this.taskMissionInstructionsHtml) return false;
+
+      // Check for HTML content that would make it visually long
+      if (this.isHtmlContent(this.taskMissionInstructionsHtml)) {
+        // For HTML content, check for multiple elements or media
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = this.taskMissionInstructionsHtml;
+
+        // Count various elements that contribute to visual length
+        const hasMultipleParagraphs = tempDiv.querySelectorAll("p").length > 1;
+        const hasImages = tempDiv.querySelectorAll("img").length > 0;
+        const hasVideos = tempDiv.querySelectorAll("video, iframe").length > 0;
+        const hasLists = tempDiv.querySelectorAll("ul, ol").length > 0;
+        const hasCodeBlocks = tempDiv.querySelectorAll("pre, code").length > 0;
+        const hasHeaders = tempDiv.querySelectorAll("h1, h2, h3, h4, h5, h6").length > 0;
+
+        // Consider it long if it has multiple content types or multiple paragraphs
+        return (
+          hasMultipleParagraphs || hasImages || hasVideos || hasLists || hasCodeBlocks || hasHeaders
+        );
+      } else {
+        // For plain text/markdown, use the existing logic
+        return (
+          this.taskMissionInstructionsHtml.length > 200 ||
+          this.taskMissionInstructionsHtml.includes("\n\n")
+        );
+      }
+    },
+
+    /**
+     * Renders markdown for task description using streaming-markdown library
+     */
+    renderedTaskDescription() {
+      if (!this.task || !this.taskMissionInstructionsHtml) return "";
+
+      try {
+        // Check if content is HTML or markdown
+        if (this.isHtmlContent(this.taskMissionInstructionsHtml)) {
+          // If it's HTML, return as-is
+          return this.taskMissionInstructionsHtml;
+        } else {
+          // If it's markdown, convert it
+          return this.renderMarkdownWithStreaming(this.taskMissionInstructionsHtml);
+        }
+      } catch (error) {
+        console.error("Error rendering task description markdown:", error);
+        // Fallback to plain text with HTML escaping
+        return this.taskMissionInstructionsHtml
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+    },
+
+    /**
+     * Renders markdown for submission instructions using streaming-markdown library
+     */
+    renderedSubmissionInstructions() {
+      if (!this.task || !this.task.submissionInstructions) return "";
+
+      try {
+        // Check if content is HTML or markdown
+        if (this.isHtmlContent(this.task.submissionInstructions)) {
+          // If it's HTML, return as-is
+          return this.task.submissionInstructions;
+        } else {
+          // If it's markdown, convert it
+          return this.renderMarkdownWithStreaming(this.task.submissionInstructions);
+        }
+      } catch (error) {
+        console.error("Error rendering submission instructions markdown:", error);
+        // Fallback to plain text with HTML escaping
+        return this.task.submissionInstructions
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+    },
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
+    },
+    isStudent() {
+      return !this.teacher;
+    },
   },
-  methods: {},
+  methods: {
+    /**
+     * Detects if content is HTML or markdown
+     * @param content - The content to analyze
+     * @returns boolean - true if HTML, false if markdown
+     */
+    isHtmlContent(content) {
+      if (!content) return false;
+
+      // Check for common HTML patterns
+      const htmlPatterns = [
+        /<[^>]+>/g, // HTML tags
+        /&[a-zA-Z]+;/g, // HTML entities like &nbsp;
+        /<iframe/i, // iframe tags specifically
+        /<div/i, // div tags
+        /<p>/i, // p tags
+        /<br/i, // br tags
+        /<img/i, // img tags
+        /<a\s+href/i, // anchor tags with href
+      ];
+
+      // If any HTML patterns are found, consider it HTML
+      for (const pattern of htmlPatterns) {
+        if (pattern.test(content)) {
+          return true;
+        }
+      }
+
+      // Check for markdown patterns
+      const markdownPatterns = [
+        /^#{1,6}\s+/m, // Headers
+        /\*\*[^*]+\*\*/, // Bold
+        /\*[^*]+\*/, // Italic
+        /\[[^\]]+\]\([^)]+\)/, // Links
+        /^[-*+]\s+/m, // Unordered lists
+        /^\d+\.\s+/m, // Ordered lists
+        /`[^`]+`/, // Inline code
+        /```[\s\S]*?```/, // Code blocks
+      ];
+
+      // If markdown patterns are found and no HTML patterns, consider it markdown
+      const hasMarkdown = markdownPatterns.some((pattern) => pattern.test(content));
+      const hasHtml = htmlPatterns.some((pattern) => pattern.test(content));
+
+      // If it has both HTML and markdown, prefer HTML (don't convert)
+      if (hasHtml) return true;
+
+      // If it has markdown and no HTML, convert it
+      return !hasMarkdown;
+    },
+
+    /**
+     * Renders markdown using streaming-markdown library
+     * @param markdown - The markdown text to convert
+     * @returns HTML string
+     */
+    renderMarkdownWithStreaming(markdown) {
+      if (!markdown) return "";
+
+      try {
+        // Create a temporary div element to render into
+        const tempDiv = document.createElement("div");
+
+        // Create renderer and parser
+        const renderer = smd.default_renderer(tempDiv);
+        const parser = smd.parser(renderer);
+
+        // Write the markdown content
+        smd.parser_write(parser, markdown);
+
+        // End the stream
+        smd.parser_end(parser);
+
+        // Get the HTML content
+        const html = tempDiv.innerHTML;
+
+        return html;
+      } catch (error) {
+        console.error("Error rendering markdown with streaming-markdown:", error);
+        return markdown; // Fallback to plain text
+      }
+    },
+
+    /**
+     * Toggles the description expanded/collapsed state
+     */
+    toggleDescription() {
+      this.descriptionExpanded = !this.descriptionExpanded;
+    },
+  },
 };
 </script>
 
@@ -358,17 +636,76 @@ li,
 pre {
   margin-bottom: 16px;
 }
+.v-expansion-panel-header {
+  &.mobile {
+    padding: 0px;
+    margin: 15px 0px;
+    border: none;
+    // width: calc(var(--vw, 1vw) * 100);
+
+    &.student {
+      border: 1px solid var(--v-missionAccent-base);
+    }
+  }
+}
+
+.v-expansion-panel-content {
+  &.mobile {
+    margin-top: -15px;
+    .v-expansion-panel-content__wrap {
+      padding: 0px !important;
+      margin: 0px;
+      border: none;
+    }
+  }
+}
 
 .task-description > p,
 .task-description > ol > li,
 .task-description > ul > li {
   line-height: 20px !important;
 }
+.task-description-container {
+  width: 100%;
+  position: relative;
+}
+
 .task-description {
   width: 100%;
+  transition: max-height 0.3s ease-in-out;
+  overflow: hidden;
+}
+
+.task-description-collapsed {
+  max-height: 120px;
+  position: relative;
+}
+
+.task-description-collapsed::after {
+  content: "...";
+  position: absolute;
+  bottom: 0;
+  right: 10px;
+  background: linear-gradient(transparent, var(--v-background-base));
+  padding-left: 20px;
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.description-toggle {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
 }
 .task-description a {
   color: var(--v-galaxyAccent-base) !important;
+}
+
+.task-description > h2 {
+  padding: 20px 0px;
+}
+.task-description > h3 {
+  padding: 10px 0px;
 }
 
 .task-description > p > img {
@@ -383,6 +720,14 @@ iframe.ql-video {
 .submissions-instructions > p > img {
   width: 100%;
 }
+
+.theme--dark.v-expansion-panels .v-expansion-panel:not(:first-child)::after {
+  border: none !important;
+}
+
+.v-expansion-panel::before {
+  box-shadow: none !important;
+}
 </style>
 
 <style lang="scss" scoped>
@@ -394,11 +739,34 @@ p {
   opacity: 0.4;
 }
 
+.active-mission-ribbon {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  background-color: var(--v-galaxyAccent-base);
+  color: var(--v-background-base);
+  padding: 4px 12px 4px 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  clip-path: polygon(0 0, 100% 0, 90% 100%, 0% 100%);
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
 .mission-card {
   border: 1px dashed var(--v-missionAccent-base);
   margin: 20px 10px;
   display: flex;
   height: auto;
+
+  &.mobile {
+    border: none;
+    margin: 0px;
+    width: 100%;
+    box-sizing: border-box;
+  }
 
   .mission-section {
     margin: 0px;
@@ -423,6 +791,11 @@ p {
 
   .mission-number-section {
     border-left: none;
+    position: relative;
+
+    &.mobile {
+      padding: 10px;
+    }
 
     .mission-number {
       font-size: 50px;
@@ -490,6 +863,8 @@ p {
     justify-content: flex-start;
     align-items: flex-start;
     flex-direction: column;
+    /* Allow flex item to shrink so long titles don't force card to grow */
+    min-width: 0;
 
     .mission-edit-button {
       // position: absolute;
@@ -505,6 +880,10 @@ p {
     font-weight: 600;
     text-transform: uppercase;
     margin: 5px 0px;
+    /* Ensure long titles wrap within the card */
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
   }
 
   .mission-number-section {
@@ -527,10 +906,6 @@ p {
       width: 100%;
       height: 100%;
       padding: 10px;
-    }
-
-    .section-overUnder:first-child {
-      // border-bottom: 1px dashed var(--v-missionAccent-base);
     }
   }
 

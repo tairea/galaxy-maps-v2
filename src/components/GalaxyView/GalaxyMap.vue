@@ -51,30 +51,69 @@ export default {
     SolarSystem,
     LoadingSpinner,
   },
-  data() {
-    return {
-      loading: true,
-      initialDataLoading: true, // Add flag to track initial data loading
-      needsCentering: false,
-      active: false,
-      addingNode: false,
-      addingEdge: false,
-      draggingNodes: false,
-      network: {
-        options: {
-          physics: {
-            enabled: false,
-            solver: "repulsion",
-            repulsion: {
-              nodeDistance: 200, // Put more distance between the nodes.
+  data: () => ({
+    loading: true,
+    needsCentering: false,
+    active: false,
+    addingNode: false,
+    addingEdge: false,
+    processingEdge: false, // Add this flag to prevent recursive edge creation
+    draggingNodes: false,
+    network: {
+      options: {
+        // layout: {
+        //   hierarchical: {
+        //     enabled: true,
+        //     sortMethod: "directed",
+        //     shakeTowards: "leaves",
+        //     direction: "LR",
+        //     nodeSpacing: 100,
+        //   },
+        // },
+        physics: {
+          enabled: false,
+          solver: "repulsion",
+          repulsion: {
+            nodeDistance: 200, // Put more distance between the nodes.
+          },
+        },
+        edges: {
+          length: 50, // Longer edges between nodes.
+          smooth: false,
+          color: {
+            inherit: "to",
+          },
+        },
+        nodes: {
+          shape: "dot",
+          size: 7,
+          fixed: {
+            x: true,
+            y: true,
+          },
+          color: {
+            border: "grey",
+            highlight: {
+              border: "black",
+              background: "white",
+            },
+            hover: {
+              border: "orange",
+              background: "grey",
             },
           },
-          edges: {
-            length: 50, // Longer edges between nodes.
-            smooth: false,
-            color: {
-              inherit: "to",
-            },
+          font: {
+            color: "white",
+            align: "left",
+            face: "Arial",
+            size: 12,
+          },
+          // Disable vis-network labels since we'll draw them manually
+          label: "",
+        },
+        groups: {
+          default: {
+            shape: "dot",
           },
           nodes: {
             shape: "dot",
@@ -119,69 +158,73 @@ export default {
               },
               // opacity: 0.1,
             },
-            // unlocked: {
-            //   shape: "dot",
-            //   color: "#69A1E2",
-            // },
-            // current: { color: "rgb(0,255,140)" },
-            // node status
-            // inreview: {
-            //   shape: "dot",
-            //   color: "#FAF200",
-            // },
-            // node types
-            introduction: {
-              shape: "dot",
-              // color: "#00E676",
-            },
-            // tasks: {
-            //   // color: { background: "yellow", border: "white" },
-            //   // shape: "diamond",
-            //   shape: "dot",
-            //   color: "#69A1E2",
-            // },
-            // project: {
-            //   shape: "dot",
-            //   color: "#E269CF",
-            // },
-            inactive: {
-              shape: "dot",
+            // opacity: 0.1,
+          },
+          // unlocked: {
+          //   shape: "dot",
+          //   color: "#69A1E2",
+          // },
+          // current: { color: "rgb(0,255,140)" },
+          // node status
+          // inreview: {
+          //   shape: "dot",
+          //   color: "#FAF200",
+          // },
+          // node types
+          introduction: {
+            shape: "dot",
+            color: "#00E676", // baseAccent
+          },
+          // tasks: {
+          //   // color: { background: "yellow", border: "white" },
+          //   // shape: "diamond",
+          //   shape: "dot",
+          //   color: "#69A1E2",
+          // },
+          // project: {
+          //   shape: "dot",
+          //   color: "#E269CF",
+          // },
+          inactive: {
+            shape: "dot",
+            color: "#696969",
+            font: {
               color: "#696969",
               font: {
                 color: "#696969",
               },
             },
           },
-          interaction: {
-            hover: true,
-            hoverConnectedEdges: false,
-            dragNodes: false,
-            multiselect: true,
-          },
+        },
+        interaction: {
+          hover: true,
+          hoverConnectedEdges: false,
+          dragNodes: false,
+          multiselect: true,
         },
       },
-      // functions to animate:
-      currentRadius: 0,
-      animateRadius: true, // can disable or enable animation
-      updateFrameVar() {
-        this.intervalid1 = setInterval(() => {
-          this.updateFrameTimer();
-        }, 33);
-      },
-      newNodePositions: {},
-      planets: [],
-      stars: [],
-      time: null,
-      inSystemPreviewView: false,
-      previewedNode: null,
-      numberOfTasksForThisTopic: 0,
-      tasks: [],
-      drag: false,
-      DOMRect: {},
-      nodeLabelColor: "#ffffff", // Default label color
-      previousShowMissionsState: false, // Track previous showMissions state for preview mode
-    };
-  },
+    },
+    // functions to animate:
+    currentRadius: 0,
+    animateRadius: true, // can disable or enable animation
+    updateFrameVar() {
+      this.intervalid1 = setInterval(() => {
+        this.updateFrameTimer();
+      }, 33);
+    },
+    newNodePositions: {},
+    planets: [],
+    stars: [],
+    time: null,
+    inSystemPreviewView: false,
+    previewedNode: null,
+    numberOfTasksForThisTopic: 0,
+    tasks: [],
+    drag: false,
+    DOMRect: {},
+    nodeLabelColor: "#ffffff", // Default label color
+    originalShowMissionsState: false, // Track original showMissions state
+  }),
   watch: {
     darkMode(dark) {
       if (dark == false) {
@@ -194,15 +237,40 @@ export default {
         this.makeStarsColour("#FFD700"); // Gold for dark mode
       }
     },
+    // Watch for currentCourseId changes to refresh data when it becomes available
+    currentCourseId(newCourseId, oldCourseId) {
+      if (newCourseId && newCourseId !== oldCourseId) {
+        console.log("currentCourseId changed, refreshing data:", newCourseId);
+        this.refreshData();
+      }
+    },
+    // This is a watch for the topic clicked event from the systemListPanel
+    // this is needed because trigging topicClicked from GalaxyView it stuck in a loop
+    panelTopicClicked(newTopic) {
+      if (!newTopic || !this.$refs.network) return;
+
+      // Find the node in the network that matches the clicked topic
+      const node = this.$refs.network.nodes.find((n) => n.id === newTopic.id);
+      if (node) {
+        this.zoomToNode(node);
+        const options = { ...this.network.options };
+        options.edges.hidden = true; // hide edges
+        options.nodes.font.size = 5; // hide labels
+        this.$refs.network.setOptions(options);
+        this.$emit("topicClicked", newTopic);
+      }
+    },
     currentCourseId: {
       handler(newCourseId, oldCourseId) {
         // Reset initial data loading flag when switching courses
         if (newCourseId && newCourseId !== oldCourseId) {
           this.initialDataLoading = true;
-          console.log(`Course changed from ${oldCourseId} to ${newCourseId}, initialDataLoading reset to true`);
+          console.log(
+            `Course changed from ${oldCourseId} to ${newCourseId}, initialDataLoading reset to true`,
+          );
         }
       },
-      immediate: false
+      immediate: false,
     },
   },
   computed: {
@@ -222,7 +290,11 @@ export default {
       return this.person.completedCourses?.includes(this.currentCourseId);
     },
     teacher() {
-      return this.course?.mappedBy.personId === this.person?.id || this.user.data?.admin;
+      return (
+        this.course?.mappedBy.personId === this.person?.id ||
+        this.user.data?.admin ||
+        (this.course?.collaboratorIds && this.course.collaboratorIds.includes(this.person?.id))
+      );
     },
     // student aka navigator
     student() {
@@ -246,7 +318,7 @@ export default {
       return this.student ? this.currentCourseEdgesWithStatusStyles : this.currentCourseEdges;
     },
     inActiveNodes() {
-      let inActiveNodes = [];
+      const inActiveNodes = [];
       for (const node of this.currentCourseNodes) {
         inActiveNodes.push({
           ...node,
@@ -259,7 +331,7 @@ export default {
       return inActiveNodes;
     },
     makeActiveNodes() {
-      let makeActiveNodes = [];
+      const makeActiveNodes = [];
       for (const node of this.currentCourseNodes) {
         makeActiveNodes.push({
           ...node,
@@ -280,19 +352,61 @@ export default {
 
         // console.log("matching node:", matchingNode);
 
-        // if node is status completed or locked. remove color property
-        let color = node.color;
-        if (matchingNode?.topicStatus === "locked" || matchingNode?.topicStatus === "completed") {
+        const topicStatus = matchingNode?.topicStatus ?? "locked";
+        const nodeGroup = node.group; // preserve original node group (e.g., "introduction")
+
+        // Determine color and group based on status
+        let color;
+        let group;
+
+        if (topicStatus === "locked") {
+          // For locked nodes, explicitly set dimmed color
+          color = "rgba(132,132,132,0.4)"; // Same dimmed color as locked edges
+          group = "locked";
+        } else if (topicStatus === "completed") {
+          // For completed nodes, use baseAccent (green)
+          color = this.$vuetify.theme.isDark
+            ? this.$vuetify.theme.themes.dark.baseAccent
+            : this.$vuetify.theme.themes.light.baseAccent;
+          group = "completed";
+        } else if (topicStatus === "unlocked") {
+          // For unlocked nodes, set color based on whether it's an introduction node
+          if (nodeGroup === "introduction") {
+            // Use baseAccent (green) for introduction nodes
+            color = this.$vuetify.theme.isDark
+              ? this.$vuetify.theme.themes.dark.baseAccent
+              : this.$vuetify.theme.themes.light.baseAccent;
+            group = "introduction";
+          } else {
+            // Use missionAccent for unlocked non-introduction nodes
+            color = this.$vuetify.theme.isDark
+              ? this.$vuetify.theme.themes.dark.missionAccent
+              : this.$vuetify.theme.themes.light.missionAccent;
+            // Keep original group if it exists, otherwise use default
+            group = nodeGroup || "default";
+          }
+        } else {
+          // Fallback for any other status
           color = undefined;
+          group = topicStatus;
         }
 
         // push node with status
-        nodesWithStatus.push({
+        const nodeData = {
           ...node,
-          color,
-          group: matchingNode?.topicStatus ?? "locked", // assign group property based on topicStatus from matchingNode (aka this.personsTopics)
+          group,
           label: "", // Remove vis-network labels since we draw them manually
-        });
+        };
+
+        // Set color if it's defined
+        if (color !== undefined) {
+          nodeData.color = color;
+        } else {
+          // Explicitly remove color property so group color is used
+          delete nodeData.color;
+        }
+
+        nodesWithStatus.push(nodeData);
       }
 
       // return nodes with status to network map
@@ -302,15 +416,48 @@ export default {
       const edgesWithStatusStyles = [];
 
       for (const edge of this.currentCourseEdges) {
-        // find the topic node with status
-        const matchingEdge = this.personsTopics.find((x) => x.id === edge.to);
+        // find the topic nodes with status for both from and to nodes
+        const matchingToNode = this.personsTopics.find((x) => x.id === edge.to);
+        const matchingFromNode = this.personsTopics.find((x) => x.id === edge.from);
+
+        const toStatus = matchingToNode?.topicStatus ?? "locked";
+        const fromStatus = matchingFromNode?.topicStatus ?? "locked";
+
+        const toIsLocked = toStatus === "locked";
+        const fromIsLocked = fromStatus === "locked";
+        const toIsCompleted = toStatus === "completed";
+        const fromIsCompleted = fromStatus === "completed";
+
+        const isLocked = toIsLocked || fromIsLocked;
+        // Only consider completed if neither endpoint is locked
+        const isCompleted = !isLocked && (toIsCompleted || fromIsCompleted);
 
         // push node with status
-        edgesWithStatusStyles.push({
+        const edgeData = {
           ...edge,
           // add dashes to the edge (if topic is locked)
-          dashes: matchingEdge == null || matchingEdge.topicStatus === "locked" ? true : false,
-        });
+          dashes: isLocked ? true : false,
+        };
+
+        // Set edge color based on status (locked takes precedence over completed)
+        if (isLocked) {
+          // Dim edges that connect to or from locked nodes
+          edgeData.color = {
+            color: "rgba(132,132,132,0.4)", // Same dimmed color as locked nodes
+            inherit: false, // Don't inherit from node, use explicit color
+          };
+        } else if (isCompleted) {
+          // Use baseAccent for completed edges (when not locked)
+          const baseAccentColor = this.$vuetify.theme.isDark
+            ? this.$vuetify.theme.themes.dark.baseAccent
+            : this.$vuetify.theme.themes.light.baseAccent;
+          edgeData.color = {
+            color: baseAccentColor,
+            inherit: false, // Don't inherit from node, use explicit color
+          };
+        }
+
+        edgesWithStatusStyles.push(edgeData);
       }
       // return nodes with status to network map
       return edgesWithStatusStyles;
@@ -318,32 +465,30 @@ export default {
     dark() {
       return this.$vuetify.theme.isDark;
     },
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
+    },
   },
   async mounted() {
-    console.log("mounted");
-
     // Set initial label color
     this.nodeLabelColor = this.$vuetify.theme.isDark
       ? this.$vuetify.theme.themes.dark.missionAccent
       : this.$vuetify.theme.themes.light.missionAccent;
 
-    // Wait for next tick to ensure DOM is ready
-    await this.$nextTick();
-
-    this.refreshData();
+    // Only refresh data if currentCourseId is already available
+    if (this.currentCourseId) {
+      this.refreshData();
+    }
 
     // zoom fit on load
     if (this.nodesToDisplay && this.$refs.network && this.$refs.network.nodes.length > 0) {
       this.needsCentering = true;
     }
 
-    // Only draw solar systems if network is available
-    if (this.$refs.network) {
-      await this.drawSolarSystems();
-    }
+    await this.drawSolarSystems();
 
     // ==== check if all topics completed. if so GALAXY MAP COMPLETE!!! ====
-    let isGalaxyMapComplete = this.personsTopics.every(
+    const isGalaxyMapComplete = this.personsTopics.every(
       (topic) => topic.topicStatus === "completed",
     );
     if (!this.galaxyCompleted && this.personsTopics.length && isGalaxyMapComplete) {
@@ -351,6 +496,9 @@ export default {
       console.log("Galaxy Map Complete. Well done!");
       this.$emit("galaxyCompleted");
     }
+
+    console.log("this.$refs.network.nodes: ", this.$refs.network.nodes);
+    console.log("this.$refs.network.edges: ", this.$refs.network.edges);
   },
   beforeDestroy() {
     this.stopNodeAnimation();
@@ -375,6 +523,12 @@ export default {
       return this.$refs.network;
     },
     async refreshData() {
+      // Validate required fields before proceeding
+      if (!this.currentCourseId) {
+        console.warn("refreshData: Missing currentCourseId");
+        return;
+      }
+
       await this.bindCourseNodes(this.currentCourseId);
       await this.bindCourseEdges(this.currentCourseId);
 
@@ -394,6 +548,12 @@ export default {
 
       // ===== NOTE: Updated logic to bind topics for course creator && "non-signed-in-user" (improving new user experience)
       if (this.student) {
+        // Validate person.id for student
+        if (!this.person?.id) {
+          console.warn("refreshData: Missing person.id for student");
+          return;
+        }
+
         // bind topics for student
         await this.bindThisPersonsCourseTopics({
           personId: this.person.id,
@@ -408,13 +568,10 @@ export default {
 
       this.needsCentering = true;
 
-      // Only draw solar systems if network is available
-      if (this.$refs.network) {
-        await this.drawSolarSystems();
-      }
+      await this.drawSolarSystems();
 
       // ==== check if all topics completed. if so GALAXY MAP COMPLETE!!! ====
-      let isGalaxyMapComplete = this.personsTopics.every(
+      const isGalaxyMapComplete = this.personsTopics.every(
         (topic) => topic.topicStatus === "completed",
       );
       if (!this.galaxyCompleted && this.personsTopics.length && isGalaxyMapComplete) {
@@ -432,7 +589,7 @@ export default {
         console.warn("Network ref not available yet, skipping network update");
         return;
       }
-      
+
       if (this.needsCentering === true) {
         this.zoomToNodes(this.$refs.network.nodes);
         // set label colours to missionAccent
@@ -442,7 +599,6 @@ export default {
       }
     },
     async drawSolarSystems() {
-      console.log("drawing planets");
       // set up solar system planets
       await this.setupSolarSystemPlanets();
       // this.setupStars();             // <--- experimenting with drawing a Sun on nodes
@@ -457,7 +613,7 @@ export default {
     },
 
     getDomCoords(node) {
-      let domCoords = this.$refs.network.canvasToDom({ x: node.x, y: node.y });
+      const domCoords = this.$refs.network.canvasToDom({ x: node.x, y: node.y });
       return domCoords;
     },
     doubleClick() {
@@ -559,7 +715,7 @@ export default {
         return;
       }
 
-      console.log("adding edge")
+      console.log("adding edge");
       this.$emit("setUiMessage", "");
       const newEdgeData = this.$refs.network.getEdge(data.properties.items[0]);
       if (newEdgeData.from === newEdgeData.to) {
@@ -568,19 +724,38 @@ export default {
         this.$refs.network.deleteSelected();
         return;
       }
+      // Validate required fields before proceeding
+      if (!this.currentCourseId || !newEdgeData?.id) {
+        console.warn("addEdge: Missing required fields", {
+          currentCourseId: this.currentCourseId,
+          edgeId: newEdgeData?.id,
+        });
+        return;
+      }
+
+      // Prevent multiple edge creations while processing
+      if (this.processingEdge) {
+        console.warn("Edge creation already in progress, skipping");
+        return;
+      }
+      this.processingEdge = true;
+
       db.collection("courses")
         .doc(this.currentCourseId)
         .collection("map-edges")
         .doc(newEdgeData.id)
         .set(newEdgeData)
         .then(() => {
+          // Only emit once to toggle edge mode off, then back on to stay in edit mode
           this.$emit("toggleAddEdgeMode");
           this.addingEdge = false;
-          // toggle edge mode again so to stay in edit edge mode (this is so you can continuously add edges)
+          this.processingEdge = false;
+          // Toggle edge mode again to stay in edit edge mode for continuous edge creation
           this.$emit("toggleAddEdgeMode");
         })
         .catch((error) => {
-          console.error("Error writing node: ", error);
+          console.error("Error writing edge: ", error);
+          this.processingEdge = false;
         });
     },
     click(data) {
@@ -590,6 +765,7 @@ export default {
       }
     },
     async click2(data) {
+      console.log("click2: ", data);
       if (
         this.addingNode ||
         this.addingEdge ||
@@ -597,33 +773,53 @@ export default {
         (data.items.length > 0 && data.nodes.length == 0) // this means its just an edge
       )
         return;
-      console.log("click event:", data);
       // 0) get closest node
       const closestNode = this.getClosestNodeToClick(data);
       if (closestNode.group == "locked") return;
 
-      // Save current showMissions state and enable it for preview
-      // this.previousShowMissionsState = this.showMissions;
-      // if (!this.showMissions) {
-      //   this.toggleShowMissions();
-      // }
+      // Check if we're already in preview mode and clicking on the same node
+      if (
+        this.inSystemPreviewView &&
+        this.previewedNode &&
+        this.previewedNode.id === closestNode.id
+      ) {
+        // Exit preview mode if clicking on the same node
+        this.exitSolarSystemPreview();
+        return;
+      }
+
+      // Save the original showMissions state before entering preview mode
+      this.originalShowMissionsState = this.showMissions;
+
+      // Disable show missions if it's currently enabled
+      if (this.showMissions) {
+        this.toggleShowMissions();
+      }
 
       // 1) flag we in preview mode
       this.inSystemPreviewView = true;
       this.previewedNode = closestNode;
 
-      // 2) calculate offsets
-      let tasksForThisTopic = this.tasks.filter((taskObj) => taskObj.topicId == closestNode.id);
-      let xOffset = 150; // Hardcoded value for experimentation
-      let yOffset = (tasksForThisTopic.length - 1) * 10; // 20px per mission, center if only one
+      // 2) get tasks for this topic
+      const tasksForThisTopic = this.tasks.filter((taskObj) => taskObj.topicId == closestNode.id);
 
-      // 3) zoom to node with offsets
-      // this.zoomToNodeWithOffset(closestNode, xOffset, yOffset);
+      // 3) zoom to node
       this.zoomToNode(closestNode);
 
       // 4) hide edges
-      var options = { ...this.network.options };
+      const options = { ...this.network.options };
       options.edges.hidden = true; // hide edges
+      // Enable vis-network labels just for the previewed node
+      try {
+        // set the previewed node's label to the original label, positioned below the node
+        this.$refs.network.visData.nodes.update({
+          id: closestNode.id,
+          label: this.currentCourseNodes.find((n) => n.id === closestNode.id)?.label || "",
+          font: { size: 10, align: "center", vadjust: 14 },
+        });
+      } catch (e) {
+        console.warn("Failed to enable vis label for preview node", e);
+      }
       this.$refs.network.setOptions(options);
       // 5) minimise left panels & buttons
       this.$emit("hideLeftPanels", true);
@@ -636,8 +832,12 @@ export default {
       // 9) hide other topic nodes
       this.hideOtherTopicNodes(closestNode.id);
       // 10) emit topic clicked
+      const clickedNode = this.nodesToDisplay.find((node) => node.id == this.currentTopicId);
+      // Find the original node data to preserve the label field
+      const originalNode = this.currentCourseNodes.find((node) => node.id == this.currentTopicId);
       this.$emit("topicClicked", {
-        ...this.nodesToDisplay.find((node) => node.id == this.currentTopicId),
+        ...clickedNode,
+        label: originalNode?.label || "", // Preserve the original label
         tasks: tasksForThisTopic,
       });
     },
@@ -655,7 +855,7 @@ export default {
       // get click location
       const clickedPosition = clickData.pointer.canvas;
       // get all node locations (returns an object)
-      let allNodePositions = this.$refs.network.getPositions();
+      const allNodePositions = this.$refs.network.getPositions();
       // convert object of positions to array of positions
       const allNodePositionsArray = [];
       for (const node in allNodePositions) {
@@ -668,7 +868,7 @@ export default {
       let closest = null;
       let shortestDistance = Number.MAX_SAFE_INTEGER;
       for (let i = 0; i < allNodePositionsArray.length; i++) {
-        var d = this.distSquared(clickedPosition, allNodePositionsArray[i]);
+        const d = this.distSquared(clickedPosition, allNodePositionsArray[i]);
         if (d < shortestDistance) {
           closest = allNodePositionsArray[i];
           shortestDistance = d;
@@ -677,8 +877,8 @@ export default {
       return this.$refs.network.getNode(closest.id);
     },
     distSquared(pt1, pt2) {
-      var diffX = pt1.x - pt2.x;
-      var diffY = pt1.y - pt2.y;
+      const diffX = pt1.x - pt2.x;
+      const diffY = pt1.y - pt2.y;
       return diffX * diffX + diffY * diffY;
     },
     dragStart(data) {
@@ -733,9 +933,23 @@ export default {
       const newNodes = this.newNodePositions;
       // spread/or map new positions to nodes
 
+      // Validate required fields before proceeding
+      if (!this.currentCourseId) {
+        console.warn("saveNodePositions: Missing currentCourseId");
+        this.$emit("nodePositionsChangeSaved");
+        return;
+      }
+
       for (const changedNode in newNodes) {
         const changedNodeObj = newNodes[changedNode];
         const node = nodes.find((node) => node.id === changedNodeObj.id);
+
+        // Validate node exists and has required fields
+        if (!node || !node.id) {
+          console.warn("saveNodePositions: Missing node or node.id", { node });
+          continue;
+        }
+
         // TODO: only saves changes once. not the second time
         if (changedNodeObj.x !== node.x || changedNodeObj.y !== node.y) {
           node.x = changedNodeObj.x;
@@ -748,9 +962,25 @@ export default {
             .doc(this.currentCourseId)
             .collection("map-nodes")
             .doc(node.id)
-            .set(node)
+            .update({
+              x: node.x,
+              y: node.y,
+            })
             .catch((error) => {
               console.error("Error writing node positions: ", error);
+            });
+
+          await db
+            .collection("courses")
+            .doc(this.currentCourseId)
+            .collection("topics")
+            .doc(node.id)
+            .update({
+              x: node.x,
+              y: node.y,
+            })
+            .catch((error) => {
+              console.error("Error writing node positions to topics: ", error);
             });
         } else {
           this.$emit("nodePositionsChangeSaved");
@@ -826,7 +1056,7 @@ export default {
     // },
     hashCode(str) {
       let hash = 0;
-      for (var i = 0; i < str.length; i++) {
+      for (let i = 0; i < str.length; i++) {
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
       }
       return hash;
@@ -850,9 +1080,18 @@ export default {
     },
     exitSolarSystemPreview() {
       // bring edges back
-      var options = { ...this.network.options };
+      const options = { ...this.network.options };
       options.edges.hidden = false;
       this.$refs.network.setOptions(options);
+      // Disable vis-network labels for all nodes again
+      try {
+        // Reset label property for all nodes back to empty, we draw labels manually
+        const ids = this.$refs.network.visData.nodes.getIds();
+        const updates = ids.map((id) => ({ id, label: "" }));
+        this.$refs.network.visData.nodes.update(updates);
+      } catch (e) {
+        console.warn("Failed to disable vis labels after preview", e);
+      }
       this.previewedNode = null;
       this.inSystemPreviewView = false;
       this.numberOfTasksForThisTopic = 0;
@@ -860,26 +1099,51 @@ export default {
       this.showAllPlanets();
       // Show all topic nodes again
       this.showAllTopicNodes();
+      // Re-assert image node properties to ensure images render after preview
+      this.restoreImageNodes();
       // Clear current topic ID to show all planet labels again
       this.setCurrentTopicId(null);
 
-      // Restore previous showMissions state if it was different
-      // if (this.showMissions !== this.previousShowMissionsState) {
-      //   this.toggleShowMissions();
-      // }
+      // Restore original showMissions state
+      if (this.showMissions !== this.originalShowMissionsState) {
+        this.toggleShowMissions();
+      }
 
       // this.$refs.network.fit();
       this.zoomToNodes(this.$refs.network.nodes);
+    },
+    restoreImageNodes() {
+      try {
+        const imageNodes = this.currentCourseNodes.filter(
+          (n) => n && (n.shape === "image" || n.image),
+        );
+        if (!imageNodes.length) return;
+
+        const updates = imageNodes.map((n) => ({
+          id: n.id,
+          shape: "image",
+          image: n.image,
+          // Common properties we set on image nodes when created/edited
+          borderWidth: n.borderWidth != null ? n.borderWidth : 0,
+          color: n.color != null ? n.color : "rgba(0,0,0,0)",
+          size: n.size != null ? n.size : this.network?.options?.nodes?.size || 7,
+          label: "", // we draw labels manually
+        }));
+
+        this.$refs.network.visData.nodes.update(updates);
+      } catch (e) {
+        console.warn("Failed to restore image nodes after preview", e);
+      }
     },
     // this controls the fit zoom animation
     zoomToNodes(nodes) {
       const network = this.getNetworkRef();
       if (!network) return;
-      
+
       // nodes to zoom to
       // get node ids
-      var nodeIds = nodes.map((x) => x.id);
-      network.fit({
+      const nodeIds = nodes.map((x) => x.id);
+      this.$refs.network.fit({
         nodes: nodeIds,
         animation: {
           duration: 2000,
@@ -888,13 +1152,18 @@ export default {
       });
     },
     zoomToNode(node) {
-      const network = this.getNetworkRef();
-      if (!network) return;
-      
-      // console.log("zooming to node", node);
-      network.moveTo({
-        position: { x: node.x, y: node.y },
-        scale: 3,
+      console.log("zooming to node", node);
+
+      const topHalfCenter = (window.innerHeight - 320) / 2;
+      const fullHeightCenter = window.innerHeight / 2;
+      const offsetY = (fullHeightCenter - topHalfCenter) / 2;
+
+      this.$refs.network.moveTo({
+        position: {
+          x: node.x,
+          y: node.y + (this.isMobile ? +offsetY : 0),
+        },
+        scale: 2,
         animation: {
           duration: 2000,
           easingFunction: "easeInOutQuad",
@@ -902,14 +1171,11 @@ export default {
       });
     },
     makeGalaxyLabelsColour(colour) {
-      const network = this.getNetworkRef();
-      if (!network) return;
-      
       // Store the label color for manual drawing
       this.nodeLabelColor = colour;
       // Trigger a redraw to update the manually drawn labels
-      network.redraw();
-      network.fit();
+      this.$refs.network.redraw();
+      this.$refs.network.fit();
     },
     makePlanetsColour(colour) {
       for (const planet of this.planets) {
@@ -922,18 +1188,23 @@ export default {
       }
     },
     drawNodeLabels(ctx) {
-      const network = this.getNetworkRef();
-      if (!network) return;
-      
-      // Set text properties
-      ctx.font = "12px Arial";
-      ctx.fillStyle = this.nodeLabelColor;
-      ctx.textAlign = "left";
-      ctx.textBaseline = "middle";
+      // If we're in preview, let vis-network render the label for the previewed node
+      if (this.inSystemPreviewView) {
+        return;
+      }
+      // Draw node labels with mode-aware sizing/positioning
+      ctx.save();
+      const scale = this.$refs.network.getScale();
+      const nodeRadius = this.network?.options?.nodes?.size ?? 7;
+      const previewScreenFontPx = 10; // desired on-screen font size when previewing
+      const defaultFontPx = 12;
+      const labelColor = this.nodeLabelColor;
+      // Configure base style; will be overridden per-mode below
+      ctx.fillStyle = labelColor;
 
       // Get all node positions
-      const nodeIds = network.nodes.map(({ id }) => id);
-      const nodePositionMap = network.getPositions(nodeIds);
+      const nodeIds = this.$refs.network.nodes.map(({ id }) => id);
+      const nodePositionMap = this.$refs.network.getPositions(nodeIds);
 
       // Draw labels for each node
       for (const [nodeId, position] of Object.entries(nodePositionMap)) {
@@ -945,26 +1216,34 @@ export default {
             continue;
           }
 
-          // Position label to the right of the node
-          // const labelX = position.x + 15; // 15px offset from node
-          // const labelY = position.y;
+          // Check if node is locked to dim the label (only for students)
+          let nodeLabelColor = labelColor;
+          if (this.student) {
+            const matchingNode = this.personsTopics.find((x) => x.id === nodeId);
+            const topicStatus = matchingNode?.topicStatus ?? "locked";
+            const isLocked = topicStatus === "locked";
 
-          // Position label centered above the node
-          const textMetrics = ctx.measureText(originalNode.label);
-          const labelX = position.x - textMetrics.width / 2; // Center horizontally
-          const labelY = position.y - 20; // 15px above the node
+            // Use dimmed color for locked nodes, otherwise use default label color
+            nodeLabelColor = isLocked ? "rgba(132,132,132,0.4)" : labelColor;
+          }
 
-          // Draw the node label
+          // Default mode: draw label to the right with standard sizing
+          ctx.font = `${defaultFontPx}px Arial`;
+          ctx.textAlign = "left";
+          ctx.textBaseline = "middle";
+          ctx.fillStyle = nodeLabelColor;
+          const labelX = position.x + 15; // offset to the right of node
+          const labelY = position.y;
           ctx.fillText(originalNode.label, labelX, labelY);
         }
       }
+      ctx.restore();
     },
     async setupSolarSystemPlanets() {
       // Wait for tasks to be loaded if they're not already
       if (this.student && this.personsCourseTasks.length === 0) {
         await this.getPersonsCourseTasks();
       } else if (!this.student && this.courseTasks.length === 0) {
-        console.log("getting course tasks");
         await this.getCourseTasks(this.currentCourseId);
       }
 
@@ -985,7 +1264,7 @@ export default {
       this.$emit("courseTasks", this.tasks);
 
       // if our solar systems are loading, disable spinner
-      console.log("planets and animation done. loading - false");
+
       this.loading = false;
 
       // get node ids
@@ -995,7 +1274,7 @@ export default {
         console.warn("Network ref not available yet, skipping planet setup");
         return;
       }
-      
+
       const nodeIds = this.$refs.network.nodes.map(({ id }) => id);
       // get node xy positions
       const nodePositionMap = this.$refs.network.getPositions(nodeIds);
@@ -1040,11 +1319,6 @@ export default {
     },
     setupStars() {
       // get node ids
-      if (!this.$refs.network) {
-        console.warn("Network ref not available yet, skipping star setup");
-        return;
-      }
-      
       const nodeIds = this.$refs.network.nodes.map(({ id }) => id);
       // get node xy positions
       const nodePositionMap = this.$refs.network.getPositions(nodeIds);
@@ -1088,11 +1362,11 @@ export default {
 
         // Handle planet orbit stop/resume based on showMissions flag
         // Only trigger animation if not already animating
-        // if (this.showMissions && !planet.orbitStopped && !planet.animating) {
-        //   planet.stopOrbit();
-        // } else if (!this.showMissions && planet.orbitStopped && !planet.animating) {
-        //   planet.resumeOrbit();
-        // }
+        if (this.showMissions && !planet.orbitStopped && !planet.animating) {
+          planet.stopOrbit();
+        } else if (!this.showMissions && planet.orbitStopped && !planet.animating) {
+          planet.resumeOrbit();
+        }
 
         planet.update(ctx, delta, strokeColor);
       }
@@ -1116,52 +1390,52 @@ export default {
       //   star.update(ctx, delta);
       // }
 
-      if (this.inSystemPreviewView) {
-        // console.log("ctx", ctx)
-        // Canvas - set fill
-        ctx.fillStyle = this.dark
-          ? this.$vuetify.theme.themes.dark.background
-          : this.$vuetify.theme.themes.light.background;
-        // ctx.fillStyle = "pink";
-        // Canvas - start path
-        ctx.beginPath();
-        // Canvas - draw rectangle the size of the screen
-        const cavasSizeBuffer = 10000;
-        ctx.rect(
-          // 0 - ctx.canvas.offsetWidth,
-          // 0 - ctx.canvas.offsetHeight,
-          0 - (ctx.canvas.width + cavasSizeBuffer / 2),
-          0 - (ctx.canvas.height + cavasSizeBuffer / 2),
-          ctx.canvas.width + cavasSizeBuffer,
-          ctx.canvas.height + cavasSizeBuffer,
-        );
-        // Canvas - draw arc (circle) the of the numbers of tasks/planet orbits
-        // Note: drawing a rectanlge then a circle in the same path makes the circle a whole
-        ctx.arc(
-          this.previewedNode.x,
-          this.previewedNode.y,
-          20 * (this.numberOfTasksForThisTopic + 2), // masked circle is 2 rings out from furtherest ring
-          0,
-          2 * Math.PI,
-          true,
-        );
-        ctx.fill();
-      }
+      // if (this.inSystemPreviewView) {
+      //   // console.log("ctx", ctx)
+      //   // Canvas - set fill
+      //   ctx.fillStyle = this.dark
+      //     ? this.$vuetify.theme.themes.dark.background
+      //     : this.$vuetify.theme.themes.light.background;
+      //   // ctx.fillStyle = "pink";
+      //   // Canvas - start path
+      //   ctx.beginPath();
+      //   // Canvas - draw rectangle the size of the screen
+      //   const cavasSizeBuffer = 10000;
+      //   ctx.rect(
+      //     // 0 - ctx.canvas.offsetWidth,
+      //     // 0 - ctx.canvas.offsetHeight,
+      //     0 - (ctx.canvas.width + cavasSizeBuffer / 2),
+      //     0 - (ctx.canvas.height + cavasSizeBuffer / 2),
+      //     ctx.canvas.width + cavasSizeBuffer,
+      //     ctx.canvas.height + cavasSizeBuffer,
+      //   );
+      //   // Canvas - draw arc (circle) the of the numbers of tasks/planet orbits
+      //   // Note: drawing a rectanlge then a circle in the same path makes the circle a whole
+      //   ctx.arc(
+      //     this.previewedNode.x,
+      //     this.previewedNode.y,
+      //     20 * (this.numberOfTasksForThisTopic + 2), // masked circle is 2 rings out from furtherest ring
+      //     0,
+      //     2 * Math.PI,
+      //     true,
+      //   );
+      //   ctx.fill();
+      // }
 
       // Draw planet labels only when missions are shown
-      // if (this.showMissions) {
-      //   const labelColor = this.dark ? "#ffffff" : this.$vuetify.theme.themes.light.baseAccent;
-      //   for (const planet of this.planets) {
-      //     // Skip hidden planets
-      //     if (planet.hidden) {
-      //       continue;
-      //     }
+      if (this.showMissions) {
+        const labelColor = this.dark ? "#ffffff" : this.$vuetify.theme.themes.light.baseAccent;
+        for (const planet of this.planets) {
+          // Skip hidden planets
+          if (planet.hidden) {
+            continue;
+          }
 
-      //     // If in system preview view, only show labels for the current topic
-      //     const visibleTopicId = this.inSystemPreviewView ? this.currentTopicId : undefined;
-      //     planet.drawLabel(ctx, labelColor, visibleTopicId);
-      //   }
-      // }
+          // If in system preview view, only show labels for the current topic
+          const visibleTopicId = this.inSystemPreviewView ? this.currentTopicId : undefined;
+          planet.drawLabel(ctx, labelColor, visibleTopicId);
+        }
+      }
 
       // Draw node labels manually
       this.drawNodeLabels(ctx);
@@ -1336,9 +1610,9 @@ export default {
         this.draggingNodes = wasDraggingNodes;
       }
     },
-    // toggleShowMissions() {
-    //   this.$emit("toggleShowMissions");
-    // },
+    toggleShowMissions() {
+      this.$emit("toggleShowMissions");
+    },
     hidePlanetsForOtherTopics(currentTopicId) {
       // Hide planets that don't belong to the current topic
       for (const planet of this.planets) {
@@ -1382,5 +1656,11 @@ export default {
 .full-height {
   width: 100%;
   height: 100%;
+
+  // Mobile height
+  @media (max-width: 960px) {
+    // height: 100vh;
+    height: calc(var(--vh, 1vh) * 100);
+  }
 }
 </style>

@@ -8,7 +8,7 @@
         style="padding: 50px"
       >
         <v-btn :loading="!selectedTopic" icon color="missionAccent"></v-btn>
-        <p class="overline missionAccent--text">Loading system</p>
+        <p class="overline missionAccent--text">Loading Star System</p>
       </div>
 
       <!-- Error message -->
@@ -31,6 +31,15 @@
         <!-- Panel header -->
         <div class="topOfPanel">
           <div class="topicTitleContainer">
+            <!-- Debug info (remove in production) -->
+            <div
+              v-if="false"
+              class="debug-info"
+              style="font-size: 0.6rem; color: red; margin-bottom: 10px"
+            >
+              Debug: {{ JSON.stringify(selectedTopic) }}
+            </div>
+
             <!-- Node image (as requested by Dion) -->
             <div
               v-if="selectedTopic.image"
@@ -48,7 +57,7 @@
                     : 'color:var(--v-missionAccent-base)'
                 "
               >
-                {{ selectedTopic.label }}
+                {{ selectedTopic.label || selectedTopic.title || "Untitled Topic" }}
               </p>
               <!-- <p
                 v-if="selectedTopic.description"
@@ -68,7 +77,7 @@
               icon
               x-small
               color="missionAccent"
-              class="ml-2 mt-4"
+              class="ml-2 mt-3"
               alt="Edit Topic"
               @click="editNode"
             >
@@ -80,9 +89,9 @@
         <!-- Panel Content (mission cards) -->
         <div class="card-container">
           <div v-if="tasks.length == 0" class="noMissionWarningContainer">
-            <p class="noMissionWarning">This system has no missions.</p>
+            <p class="noMissionWarning">This Star System has no Missions.</p>
             <p class="noMissionWarning mt-6">
-              <strong>Systems must have at least one mission</strong>
+              <strong>Star Systems must have at least one Mission</strong>
             </p>
           </div>
           <!-- list of Mission cards -->
@@ -152,7 +161,7 @@
           >
             <p class="ma-3 background--text">
               Start <br />
-              {{ course.title }} <br />
+              This <br />
               Galaxy
             </p>
           </v-btn>
@@ -201,6 +210,22 @@ export default {
     // this.currentCourse = await fetchCourseByCourseId(this.currentCourseId);
     // console.log("selected topic is:", this.selectedTopic);
   },
+  watch: {
+    selectedTopic: {
+      handler(newTopic) {
+        if (newTopic) {
+          console.log("SolarSystemInfoPanel - selectedTopic changed:", {
+            id: newTopic.id,
+            label: newTopic.label,
+            title: newTopic.title,
+            color: newTopic.color,
+            image: newTopic.image,
+          });
+        }
+      },
+      immediate: true,
+    },
+  },
   computed: {
     ...mapState(useRootStore, ["person", "user"]),
     // filteredTasks() {
@@ -208,11 +233,15 @@ export default {
     // },
     enableClick() {
       console.log("click");
-      if (this.course.presentationOnly && !this.teacher) return false;
+      if (this.course.presentationOnly && !this.teacher && !user.loggedIn) return false;
       return true;
     },
     teacher() {
-      return this.course?.mappedBy?.personId === this.person?.id || this.user.data?.admin;
+      return (
+        this.course?.mappedBy?.personId === this.person?.id ||
+        this.user.data?.admin ||
+        (this.course?.collaboratorIds && this.course.collaboratorIds.includes(this.person?.id))
+      );
     },
     student() {
       return this.person?.assignedCourses?.some((courseId) => courseId === this.course.id);

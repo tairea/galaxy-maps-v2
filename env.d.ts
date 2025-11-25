@@ -1,8 +1,12 @@
 /// <reference types="vite/client" />
+
 import Vue from "vue";
 import VueRouter, { Route, NavigationGuard } from "vue-router";
+import type { Framework } from "vuetify";
+import type { Pinia, Store } from "pinia";
+import type Vuetify from "vuetify/types/services/vuetify";
 
-declare module "vue" {
+declare module "vue/types/vue" {
   interface Vue {
     // vue-router
     $router: VueRouter;
@@ -25,7 +29,9 @@ declare module "vue" {
      */
     _pStores?: Record<string, Store>;
   }
+}
 
+declare module "vue/types/options" {
   interface ComponentOptions<V extends Vue> {
     // vue-router
     router?: VueRouter;
@@ -43,4 +49,18 @@ declare module "vue" {
      */
     pinia?: Pinia;
   }
+}
+
+interface ImportMetaEnv {
+  readonly BASE_URL: string;
+  readonly VITE_USE_EMULATOR?: string;
+  readonly VITE_FIREBASE_AUTH_EMULATOR?: string;
+  readonly VITE_FIRESTORE_EMULATOR_HOST?: string;
+  readonly VITE_FUNCTIONS_EMULATOR_HOST?: string;
+  readonly VITE_STORAGE_EMULATOR_HOST?: string;
+  readonly VITE_DATABASE_EMULATOR_HOST?: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
 }

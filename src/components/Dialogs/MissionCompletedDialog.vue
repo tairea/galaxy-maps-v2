@@ -2,7 +2,13 @@
   <v-container class="pa-0">
     <v-row class="text-center" align="center">
       <v-col cols="12">
-        <v-dialog v-model="dialog" width="40%" light>
+        <v-dialog
+          v-model="dialog"
+          :width="isMobile ? '90%' : '40%'"
+          light
+          no-click-animation
+          @click:outside="preventClickThrough"
+        >
           <!-- COMPLETED BUTTON (looks like checkbox) -->
           <template v-slot:activator="{ on, attrs }">
             <!-- IF ACTIVE -->
@@ -22,7 +28,14 @@
           </template>
 
           <!-- DIALOG (TODO: make as a component)-->
-          <div v-if="active || declined" class="create-dialog">
+          <div
+            v-if="active || declined"
+            class="create-dialog"
+            @touchstart.stop
+            @touchmove.stop
+            @touchend.stop
+            @click.stop
+          >
             <!-- HEADER (Submission) -->
             <div v-if="task.submissionRequired" class="dialog-header">
               <p class="dialog-title">
@@ -167,17 +180,17 @@
               </div>
 
               <!-- ACTION BUTTONS -->
-              <div :class="isScreenSmall ? 'action-buttons-over-under' : 'action-buttons'">
+              <!-- <div :class="isMobile ? 'action-buttons-over-under' : 'action-buttons'"> -->
+              <div class="action-buttons-over-under">
                 <!-- SUBMIT WORK FOR REVIEW -->
                 <v-btn
                   v-if="active && task.submissionRequired"
                   outlined
                   color="baseAccent"
-                  @click="submitWorkForReview()"
+                  @click.stop="submitWorkForReview()"
+                  @touchend.stop="submitWorkForReview()"
                   class="mr-2"
                   :loading="loading"
-                  v-bind="attrs"
-                  v-on="on"
                 >
                   <v-icon left> {{ mdiCloudUploadOutline }} </v-icon>
                   SUBMIT WORK FOR REVIEW
@@ -188,11 +201,10 @@
                   v-else-if="declined && task.submissionRequired"
                   outlined
                   color="baseAccent"
-                  @click="reSubmitWorkForReview()"
+                  @click.stop="reSubmitWorkForReview()"
+                  @touchend.stop="reSubmitWorkForReview()"
                   class="mr-2"
                   :loading="loading"
-                  v-bind="attrs"
-                  v-on="on"
                 >
                   <v-icon left> {{ mdiCheck }} </v-icon>
                   RE-SUBMIT WORK FOR REVIEW
@@ -203,11 +215,10 @@
                   v-else
                   outlined
                   color="baseAccent"
-                  @click="markAsCompleted()"
+                  @click.stop="markAsCompleted()"
+                  @touchend.stop="markAsCompleted()"
                   class="mr-2"
                   :loading="loading"
-                  v-bind="attrs"
-                  v-on="on"
                   :dark="dark"
                 >
                   <v-icon left> {{ mdiCheck }} </v-icon>
@@ -219,7 +230,8 @@
                   outlined
                   :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
                   class="ml-2"
-                  @click="cancel"
+                  @click.stop="cancel"
+                  @touchend.stop="cancel"
                   :disabled="disabled || loading"
                 >
                   <v-icon left> {{ mdiClose }} </v-icon>
@@ -230,7 +242,14 @@
           </div>
 
           <!-- DIALOG CONTENT IF ALREADY SUBMITTED -->
-          <div v-else class="create-dialog">
+          <div
+            v-else
+            class="create-dialog"
+            @touchstart.stop
+            @touchmove.stop
+            @touchend.stop
+            @click.stop
+          >
             <!-- HEADER -->
             <div class="dialog-header">
               <p class="dialog-title">SUBMISSION COMPLETED</p>
@@ -250,7 +269,8 @@
                   outlined
                   :color="$vuetify.theme.dark ? 'white' : 'f7f7ff'"
                   class="ml-2"
-                  @click="cancel"
+                  @click.stop="cancel"
+                  @touchend.stop="cancel"
                   :disabled="disabled || loading"
                 >
                   <v-icon left> {{ mdiClose }} </v-icon>
@@ -361,8 +381,8 @@ export default {
       );
       return submissions.find((submission) => submission.contextTask.id == this.task.id);
     },
-    isScreenSmall() {
-      return window.innerWidth < 1300;
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
     },
   },
   methods: {
@@ -829,12 +849,12 @@ export default {
       // ceate a storage ref
       console.log("image added", file);
 
-      var storageRef = storage.ref(
+      const storageRef = storage.ref(
         "submission-images/student-" + this.person.id + "-task-" + this.task.id + "-" + file.name,
       );
 
       // upload a file
-      var uploadTask = storageRef.put(file);
+      const uploadTask = storageRef.put(file);
 
       // update progress bar
       uploadTask.on(
@@ -860,6 +880,13 @@ export default {
     getHumanDate(ts) {
       if (!ts) return;
       return moment((ts.seconds ? ts.seconds : ts._seconds) * 1000).format("llll"); //format = Mon, Jun 9 2014 9:32 PM
+    },
+    preventClickThrough(event) {
+      // Prevent any click events from going through to background elements
+      event.stopPropagation();
+      event.preventDefault();
+      // Close the dialog when clicking outside
+      this.dialog = false;
     },
   },
 };
@@ -927,7 +954,7 @@ export default {
     justify-content: space-around;
     align-items: space-around;
     flex-direction: column;
-    padding: 20px;
+    padding: 20px 20px 0px 20px;
     width: 100%;
     // font-size: 0.6rem;
     border-top: 1px solid var(--v-missionAccent-base);
@@ -1078,11 +1105,11 @@ export default {
 .action-buttons-over-under {
   width: 100%;
   height: 150px;
-  padding: 20px;
+  padding: 20px 20px 20px 20px;
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
   align-items: center;
+  gap: 20px;
 }
 
 .instructor-image {

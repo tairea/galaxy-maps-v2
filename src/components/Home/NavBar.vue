@@ -31,7 +31,7 @@
       </div>
     </div>
     <!-- hamburger menu -->
-    <div v-if="showHamburgerMenu" class="hamburger">
+    <div v-if="showHamburgerMenu || mobileInfoMinimized" class="hamburger">
       <v-btn
         class="map-button"
         color="baseAccent"
@@ -42,46 +42,80 @@
         title="Toggle Navigation"
         @click="toggleMenu"
       >
-        <v-icon v-if="!showNavMenu">{{ mdiMenu }}</v-icon>
-        <v-icon v-else color="baseAccent">{{ mdiClose }}</v-icon>
+        <v-icon v-if="!showNavMenu && !isMobile">{{ mdiMenu }}</v-icon>
+        <v-icon v-else-if="!isMobile" color="baseAccent">{{ mdiClose }}</v-icon>
+        <v-icon v-else>{{ mdiMenu }}</v-icon>
       </v-btn>
     </div>
+
+    <!-- Mobile Navigation Dialog -->
+    <MobileNavDialog
+      v-model="mobileNavDialog"
+      :tabs="tabs"
+      :unanswered-requests-for-help="unansweredRequestsForHelp"
+      :in-review-submissions-count="inReviewSubmissionsCount"
+      @openUserDialog="openUserDialog"
+    />
+
+    <!-- Mobile User Dialog -->
+    <MobileUserDialog v-model="mobileUserDialog" />
   </div>
 </template>
 
 <script>
 import useRootStore from "@/store/index";
 import { mdiMenu, mdiClose } from "@mdi/js";
-import { mapState, storeToRefs } from "pinia";
+import { mapState } from "pinia";
 import useGalaxyListViewStore from "@/store/galaxyListView";
+import MobileNavDialog from "./MobileNavDialog.vue";
+import MobileUserDialog from "./MobileUserDialog.vue";
 
-const TAB_GALAXIES = { id: 1, name: "GALAXIES", route: `/`, exactPath: true };
-const TAB_COHORTS = { id: 2, name: "SQUADS", route: `/squads`, exactPath: false };
-const TAB_DASHBOARD = { id: 3, name: "DASHBOARD", route: `/dashboard`, exactPath: false };
-const TAB_ADMIN = { id: 4, name: "ADMIN", route: `/students` };
+const TAB_MY_GALAXIES = { id: 1, name: "MY GALAXIES", route: `/my-galaxies`, exactPath: false };
+const TAB_PUBLIC_GALAXIES = {
+  id: 2,
+  name: "PUBLIC GALAXIES",
+  route: `/public-galaxies`,
+  exactPath: true,
+};
+const TAB_COHORTS = { id: 3, name: "SQUADS", route: `/squads`, exactPath: false };
+const TAB_DASHBOARD = { id: 4, name: "DASHBOARD", route: `/dashboard`, exactPath: false };
+const TAB_ADMIN = { id: 5, name: "ADMIN", route: `/students` };
+const TAB_DEBUG = { id: 6, name: "MAP DEBUG", route: `/map-debug`, exactPath: false };
 
 export default {
   name: "NavBar",
+  components: {
+    MobileNavDialog,
+    MobileUserDialog,
+  },
   props: [""],
   data() {
     return {
       mdiMenu,
       mdiClose,
       activeTab: null,
-      tabs: [TAB_GALAXIES],
+      tabs: [TAB_PUBLIC_GALAXIES],
       showNavMenu: true,
       showHamburgerMenu: false,
+      mobileNavDialog: false,
+      mobileUserDialog: false,
     };
   },
   computed: {
-    ...mapState(useRootStore, ["user"]),
+    ...mapState(useRootStore, ["user", "mobileInfoMinimized"]),
     ...mapState(useGalaxyListViewStore, ["courses"]),
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
+    },
     unansweredRequestsForHelp() {
       const store = useRootStore();
       const unansweredRequests = store.getUnansweredRequestsForHelp;
-      // filter unaswered requests that are from courses mapped by me
+      // filter unaswered requests that are from courses mapped by me or where I'm a collaborator
       const unansweredRequestsFromMyCourses = unansweredRequests.filter(
-        (request) => request.contextCourse.mappedBy.personId === this.user.data.id,
+        (request) =>
+          request.contextCourse.mappedBy.personId === this.user.data.id ||
+          (request.contextCourse.collaboratorIds &&
+            request.contextCourse.collaboratorIds.includes(this.user.data.id)),
       );
       // console.log("unansweredRequestsFromMyCourses: ", unansweredRequestsFromMyCourses);
       return unansweredRequestsFromMyCourses;
@@ -89,38 +123,48 @@ export default {
     inReviewSubmissionsCount() {
       const store = useRootStore();
       const inReviewSubmissions = store.getInReviewSubmissions;
-      // filter inreview submissions that are from courses mapped by me
+      // filter inreview submissions that are from courses mapped by me or where I'm a collaborator
       const inReviewSubmissionsFromMyCourses = inReviewSubmissions.filter(
-        (submission) => submission.contextCourse.mappedBy.personId === this.user.data.id,
+        (submission) =>
+          submission.contextCourse.mappedBy.personId === this.user.data.id ||
+          (submission.contextCourse.collaboratorIds &&
+            submission.contextCourse.collaboratorIds.includes(this.user.data.id)),
       );
       // console.log("inReviewSubmissionsFromMyCourses: ", inReviewSubmissionsFromMyCourses);
       return inReviewSubmissionsFromMyCourses.length;
     },
   },
   watch: {
-    $route(to, from) {
-      if (this.$route.name == "GalaxyView" || this.$route.name == "SolarSystemView") {
+    $route() {
+      this.updateNavVisibility();
+    },
+    isMobile() {
+      this.updateNavVisibility();
+    },
+    mobileInfoMinimized(min) {
+      // When cohort info is minimized, collapse the navbar.
+      if (min) {
         this.showNavMenu = false;
         this.showHamburgerMenu = true;
-      } else if (
-        this.$route.name == "Login" ||
-        this.$route.name == "Verify" ||
-        this.$route.name == "Reset" ||
-        this.$route.name == "Register"
-      ) {
-        this.showNavMenu = false;
       } else {
-        this.showNavMenu = true;
-        this.showHamburgerMenu = false;
+        // restore default behavior based on route/device
+        this.updateNavVisibility();
       }
     },
-    user(to, from) {
+    user(to) {
       if (this.user?.data?.admin) {
-        this.tabs = [TAB_GALAXIES, TAB_COHORTS, TAB_DASHBOARD, TAB_ADMIN];
+        this.tabs = [
+          TAB_MY_GALAXIES,
+          TAB_PUBLIC_GALAXIES,
+          TAB_COHORTS,
+          TAB_DASHBOARD,
+          TAB_ADMIN,
+          TAB_DEBUG,
+        ];
       } else if (to.loggedIn) {
-        this.tabs = [TAB_GALAXIES, TAB_COHORTS, TAB_DASHBOARD];
+        this.tabs = [TAB_MY_GALAXIES, TAB_PUBLIC_GALAXIES, TAB_COHORTS, TAB_DASHBOARD];
       } else {
-        this.tabs = [TAB_GALAXIES];
+        this.tabs = [TAB_PUBLIC_GALAXIES];
       }
     },
     courses: {
@@ -141,31 +185,62 @@ export default {
   },
   async mounted() {
     if (this.user?.data?.admin) {
-      this.tabs = [TAB_GALAXIES, TAB_COHORTS, TAB_DASHBOARD, TAB_ADMIN];
+      this.tabs = [
+        TAB_MY_GALAXIES,
+        TAB_PUBLIC_GALAXIES,
+        TAB_COHORTS,
+        TAB_DASHBOARD,
+        TAB_ADMIN,
+        TAB_DEBUG,
+      ];
     } else if (this.user.loggedIn) {
-      this.tabs = [TAB_GALAXIES, TAB_COHORTS, TAB_DASHBOARD];
+      this.tabs = [TAB_MY_GALAXIES, TAB_PUBLIC_GALAXIES, TAB_COHORTS, TAB_DASHBOARD];
     } else {
-      this.tabs = [TAB_GALAXIES];
+      this.tabs = [TAB_PUBLIC_GALAXIES];
     }
 
-    if (this.$route.name == "GalaxyView" || this.$route.name == "SolarSystemView") {
-      this.showNavMenu = false;
-      this.showHamburgerMenu = true;
-    } else if (
-      this.$route.name == "Login" ||
-      this.$route.name == "Verify" ||
-      this.$route.name == "Reset" ||
-      this.$route.name == "Register"
-    ) {
-      this.showNavMenu = false;
-    } else {
-      this.showNavMenu = true;
-      this.showHamburgerMenu = false;
-    }
+    this.updateNavVisibility();
   },
   methods: {
+    updateNavVisibility() {
+      const isSpecialRoute =
+        this.$route.name === "GalaxyView" ||
+        this.$route.name === "SolarSystemView" ||
+        this.$route.name === "AiGalaxyEditWithCourse";
+
+      const isAuthRoute =
+        this.$route.name === "Login" ||
+        this.$route.name === "Verify" ||
+        this.$route.name === "Reset" ||
+        this.$route.name === "Register";
+
+      if (isSpecialRoute) {
+        this.showNavMenu = this.isMobile ? false : !this.showNavMenu;
+        this.showHamburgerMenu = true;
+      } else if (isAuthRoute) {
+        this.showNavMenu = false;
+        this.showHamburgerMenu = false;
+      } else {
+        this.showNavMenu = this.isMobile ? false : true;
+        this.showHamburgerMenu = this.isMobile;
+      }
+
+      // If cohort info minimized, always keep navbar collapsed
+      if (this.mobileInfoMinimized) {
+        this.showNavMenu = false;
+        this.showHamburgerMenu = true;
+      }
+    },
     toggleMenu() {
-      this.showNavMenu = !this.showNavMenu;
+      if (this.isMobile) {
+        this.mobileNavDialog = true;
+      } else {
+        this.showNavMenu = !this.showNavMenu;
+      }
+    },
+    openUserDialog() {
+      this.mobileNavDialog = false;
+      this.mobileUserDialog = true;
     },
   },
 };
@@ -248,6 +323,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 4px;
+  font-size: 0.7rem;
 }
 
 .notification-badge {

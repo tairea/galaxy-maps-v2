@@ -23,6 +23,7 @@ export default new Vuetify({
         galaxyAccent: "#fe5f55",
         missionAccent: "#577399",
         cohortAccent: "#fe5f55",
+        warningAccent: "#f39237",
       },
       dark: {
         primary: "#f7f7f7", //
@@ -32,6 +33,7 @@ export default new Vuetify({
         galaxyAccent: "#E269CF",
         missionAccent: "#69A1E2",
         cohortAccent: "#FAF200",
+        warningAccent: "#f39237",
       },
     },
   },

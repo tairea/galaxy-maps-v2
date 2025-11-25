@@ -10,12 +10,30 @@
           @closeInfoPanel="closeInfoPanel"
         />
       </div>
+      <div class="ss-actions-container">
+        <div class="ss-actions py-4">
+          <v-btn
+            class="view-ss-button pa-5"
+            dark
+            small
+            color="galaxyAccent"
+            outlined
+            tile
+            title="View Galaxy"
+            @click="routeToGalaxyEdit"
+          >
+            View Galaxy
+          </v-btn>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 import PopupGalaxyPreview from "@/components/GalaxyList/GalaxyListInfoPanel/PopupGalaxyPreview.vue";
+import useRootStore from "@/store/index";
+import { mapActions } from "pinia";
 
 export default {
   name: "GalaxyListInfoPanel",
@@ -28,8 +46,21 @@ export default {
   },
   computed: {},
   methods: {
+    ...mapActions(useRootStore, ["setCurrentCourseId"]),
     closeInfoPanel() {
       this.$emit("closeInfoPanel");
+    },
+    routeToGalaxyEdit() {
+      console.log("route to galaxy", this.selectedCourse.id);
+      // save current course to store
+      this.setCurrentCourseId(this.selectedCourse.id);
+      // route to topic/solar system
+      this.$router.push({
+        name: "GalaxyView",
+        params: {
+          courseId: this.selectedCourse.id,
+        },
+      });
     },
   },
 };
@@ -57,10 +88,46 @@ export default {
 
     .panelContentInner {
       position: relative;
-      height: 99%;
+      height: 85%;
       width: 99.5%;
       overflow-y: auto;
       overflow-x: hidden;
+
+      mask-image: linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%);
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent 0%,
+        black 5%,
+        black 95%,
+        transparent 100%
+      );
+    }
+
+    .ss-actions-container {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+
+      .ss-actions {
+        border-top: 1px solid var(--v-missionAccent-base);
+        // min-width: 20vw;
+        // min-height: 10vh;
+        // position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        overflow: hidden;
+
+        .view-ss-button {
+          width: 80%;
+          margin: 5px;
+          // position: absolute;
+          // bottom: 20px; // matches 20px padding of ss-details
+          background-color: var(--v-background-base);
+          z-index: 3;
+        }
+      }
     }
 
     .galaxyListPanelLabel {

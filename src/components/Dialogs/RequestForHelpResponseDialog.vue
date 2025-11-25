@@ -217,6 +217,7 @@ import useRootStore from "@/store/index";
 import { mdiAccount, mdiCheck, mdiClose, mdiDelete, mdiInformationVariant } from "@mdi/js";
 import moment from "moment";
 import { mapActions, mapState } from "pinia";
+import { getFriendlyErrorMessage } from "@/lib/utils";
 
 export default {
   name: "RequestForHelpResponseDialog",
@@ -301,7 +302,7 @@ export default {
         console.error("Error writing document: ", error);
         this.setSnackbar({
           show: true,
-          text: "Error: " + error,
+          text: getFriendlyErrorMessage(error.code),
           color: "pink",
         });
       } finally {
@@ -370,7 +371,7 @@ export default {
       this.dialogConfirm = false;
     },
     generateUrl(request) {
-      return `/galaxy/${request.contextCourse.id}/system/${request.contextTopic.id}`;
+      return `/galaxy/${request.contextCourse.id}/star/${request.contextTopic.id}`;
     },
   },
 };

@@ -34,7 +34,7 @@
               <CreateAccountForm @close="close" />
             </v-tab-item>
             <v-tab-item>
-              <StudentImportCsv />
+              <StudentImportCsv @close="close" />
             </v-tab-item>
             <v-tab-item>
               <div>

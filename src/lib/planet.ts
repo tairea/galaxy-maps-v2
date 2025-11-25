@@ -88,7 +88,20 @@ export class Planet {
   resumeOrbit() {
     if (this.animating) return; // Don't start new animation if already animating
 
-    this.targetRadian = this.savedRadian; // Animate back to saved position
+    // Calculate the closest path to the saved position
+    const currentAngle = Math.PI / 2; // We're currently at the bottom
+    const targetAngle = this.savedRadian;
+
+    // Find the shortest path by calculating the difference
+    let angleDiff = targetAngle - currentAngle;
+
+    // Normalize to the shortest path (-π to π)
+    while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+    while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+
+    // Set target to the closest position
+    this.targetRadian = currentAngle + angleDiff;
+
     this.animating = true;
     this.animationProgress = 0;
     this.animationStartTime = Date.now();
@@ -167,18 +180,12 @@ export class Planet {
     // Set text properties
     ctx.font = "12px Arial";
     ctx.fillStyle = labelColor;
-
-    // Position label to the right of the planet
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
+
+    // Position label to the right of the planet
     const labelX = this.x + 15; // 15px offset from planet
     const labelY = this.y;
-
-    // Position label above the planet
-    // ctx.textAlign = "center";
-    // ctx.textBaseline = "bottom";
-    // const labelX = this.x; // Center horizontally on the planet
-    // const labelY = this.y - this.radius - 10; // 10px above the planet's edge
 
     // Draw the task name
     ctx.fillText(this.taskName, labelX, labelY);

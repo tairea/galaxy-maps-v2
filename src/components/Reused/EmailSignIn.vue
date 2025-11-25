@@ -44,6 +44,7 @@ import useRootStore from "@/store/index";
 import { mdiKeyboardBackspace } from "@mdi/js";
 import firebase from "firebase/compat/app";
 import { mapActions, mapState } from "pinia";
+import { getFriendlyErrorMessage } from "@/lib/utils";
 
 export default {
   name: "EmailSignIn",
@@ -77,18 +78,17 @@ export default {
           .auth()
           .signInWithEmailLink(this.email, window.location.href)
           .then((result) => {
-            console.log("successfully signed in");
             this.proceed();
           })
           .catch((error) => {
             this.setSnackbar({
               show: true,
-              text: error.message,
+              text: getFriendlyErrorMessage(error.code),
               color: "pink",
             });
             console.error("something went wrong signing in: ", error);
           });
-      } else console.log("not a sign in link");
+      }
     },
     validate() {
       this.$refs.form.validate();
@@ -103,7 +103,6 @@ export default {
       this.dialog = true;
     },
     login() {
-      console.log("login");
       this.dialog = false;
       this.$refs.form.reset();
       this.$router.push({ path: "/" });

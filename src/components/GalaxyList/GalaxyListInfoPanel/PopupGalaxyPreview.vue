@@ -7,6 +7,9 @@
     :style="galaxyListInfoPanel ? 'backdrop-filter:none;border:none;width:100%' : ''"
     v-if="course"
   >
+    <v-btn text x-small color="missionAccent" class="close-button align-self-end" @click="close">
+      <v-icon>{{ mdiClose }}</v-icon>
+    </v-btn>
     <div class="ss-details">
       <div>
         <p class="info-panel-label mb-2">
@@ -16,7 +19,15 @@
           <br />
           <span class="course-title">{{ course.title }}</span>
         </p>
-        <v-img v-if="course.image" class="galaxy-image" :src="course.image.url"></v-img>
+        <v-img
+          v-if="hasValidImage"
+          class="galaxy-image"
+          :src="course.image.url"
+          @error="handleImageError"
+        ></v-img>
+        <div v-else class="image-placeholder">
+          {{ first3Letters(course.title) }}
+        </div>
         <p ref="description" class="mt-2 galaxy-description">
           <!-- {{ course.description }} -->
           {{ maybeTruncate(course.description) }}
@@ -25,9 +36,6 @@
           >
         </p>
       </div>
-      <v-btn text x-small color="missionAccent" class="close-button" @click="close">
-        <v-icon>{{ mdiClose }}</v-icon>
-      </v-btn>
     </div>
 
     <div class="ss-makers">
@@ -81,100 +89,11 @@
         </div>
       </div> -->
     </div>
-
-    <div>
-      <!-- Not logged in -->
-      <!-- <div v-if="!user.loggedIn" class="ss-actions py-4">
-        <div class="not-allowed">
-          <v-btn
-            class="view-ss-button pa-5"
-            dark
-            small
-            color="galaxyAccent"
-            outlined
-            tile
-            title="View Galaxy"
-            @click="routeToGalaxyEdit"
-          >
-            View Galaxy
-          </v-btn>
-        </div> -->
-        <!-- Signin Dialog -->
-        <!-- <LoginDialog /> -->
-      <!-- </div> -->
-
-      <!-- ==== NOTE: Other buttons commented out as we test taking non-signed user guard down one level -->
-      <div class="ss-actions py-4">
-        <v-btn
-          class="view-ss-button pa-5"
-          dark
-          small
-          color="galaxyAccent"
-          outlined
-          tile
-          title="View Galaxy"
-          @click="routeToGalaxyEdit"
-        >
-          View Galaxy
-        </v-btn>
-
-        <!-- <v-btn
-          class="view-ss-button pa-5"
-          :dark="dark"
-          :light="!dark"
-          small
-          color="missionAccent"
-          outlined
-          tile
-          title="View Analytics"
-          @click="routeToGalaxyAnalytics"
-          disabled
-        >
-          View Analytics
-        </v-btn> -->
-      </div>
-      <!-- Student Galaxy Actions -->
-      <!-- <div v-else class="ss-actions py-4">
-        <v-btn
-          v-if="enrolled"
-          class="view-ss-button pa-5"
-          dark
-          small
-          color="galaxyAccent"
-          outlined
-          tile
-          title="View Galaxy"
-          @click="routeToGalaxyEdit"
-        >
-          Resume Galaxy
-        </v-btn> -->
-        <!-- starting galaxy status-->
-
-        <!-- <v-btn
-          v-else
-          class="view-ss-button pa-5"
-          dark
-          small
-          color="galaxyAccent"
-          outlined
-          tile
-          title="View Galaxy"
-          @click="startThisGalaxy"
-          :loading="loading"
-        >
-          Start Galaxy
-        </v-btn>
-        <div v-if="loading" style="width: 100%">
-          <p class="starting-status ma-0">{{ startingGalaxyStatus }}</p>
-        </div> -->
-      </div>
-    </div>
   </div>
 </template>
 
 <script>
 import Avatar from "@/components/Reused/Avatar.vue";
-import LoginDialog from "@/components/Dialogs/LoginDialog.vue";
 import { db } from "@/store/firestoreConfig";
 import {
   // fetchCohortByCohortId,
@@ -184,11 +103,11 @@ import {
 } from "@/lib/ff";
 import useRootStore from "@/store/index";
 import { mdiClose } from "@mdi/js";
-import { mapActions, mapState } from "pinia";
+import { mapState } from "pinia";
 
 export default {
   name: "PopupGalaxyPreview",
-  components: { Avatar, LoginDialog },
+  components: { Avatar },
   props: ["course", "galaxyListInfoPanel"],
   data() {
     return {
@@ -219,6 +138,14 @@ export default {
       else if (this.course.visibility == "unlisted") return "Unlisted";
       else if (this.course.public == true) return "Public";
     },
+    hasValidImage() {
+      return (
+        this.course &&
+        this.course.image &&
+        this.course.image.url &&
+        this.course.image.url.trim() !== ""
+      );
+    },
   },
   watch: {
     async course() {
@@ -234,7 +161,6 @@ export default {
     await this.setCourseOwner();
   },
   methods: {
-    ...mapActions(useRootStore, ["setCurrentCourseId"]),
     maybeTruncate(value) {
       if (!value) return "";
       if (value.length <= 100) {
@@ -266,7 +192,11 @@ export default {
     },
     async setAccountType() {
       this.teacher = false;
-      if (this.course.mappedBy?.personId === this.person.id || this.user.data?.admin) {
+      if (
+        this.course.mappedBy?.personId === this.person.id ||
+        this.user.data?.admin ||
+        (this.course?.collaboratorIds && this.course.collaboratorIds.includes(this.person.id))
+      ) {
         this.teacher = true;
       } else if (this.user.loggedIn) {
         // We can used the assignedCourses array to quickly check if the user is enrolled in this course
@@ -281,59 +211,17 @@ export default {
       }
       this.$emit("togglePopup", false);
     },
-    routeToGalaxyEdit() {
-      console.log("route to galaxy", this.course.id);
-      console.log("Navigating to GalaxyView with courseId:", this.course.id);
-      // save current course to store
-      this.setCurrentCourseId(this.course.id);
-      // route to topic/solar system
-      this.$router.push({
-        name: "GalaxyView",
-        params: {
-          courseId: this.course.id,
-        },
-      });
-    },
-    routeToGalaxyAnalytics() {
-      // TODO: this could go to a dashbaord that shows all cohorts with this galaxy
-      
-      console.log("route to galaxy analytics", this.currentCourseId);
-
-      // save current course to store
-      this.setCurrentCourseId(this.course.id);
-
-      // this.$router.push({
-      //   name: "GalaxyView",
-      //   params: {
-      //     topicId: this.currentCourseId,
-      //   },
-      // });
-    },
-    // async startThisGalaxy() {
-    //   this.loading = true;
-    //   // add this galaxy metadata (eg. topics) to this persons course database
-
-    //   // save current course to store
-    //   this.setCurrentCourseId(this.course.id);
-
-    //   // 5) assign student to cohort and course
-    //   const cohort = await fetchCohortByCohortId(this.course.cohort);
-    //   await addMeToCohort(cohort.id);
-    //   await assignCourseToMe(this.course.id);
-
-    //   this.loading = false;
-    //   this.$router.push({
-    //     name: "GalaxyView",
-    //     params: {
-    //       courseId: this.course.id,
-    //       role: "student",
-    //     },
-    //   });
-    // },
-
     async getPersonsImage(personId) {
       const person = await fetchPersonByPersonId(personId);
       return person.image?.url;
+    },
+    handleImageError(event) {
+      // Remove the placeholder image fallback - just rely on the first 3 letters
+      console.log("Image failed to load for course:", this.course.title);
+    },
+    first3Letters(title) {
+      if (!title) return "";
+      return title.substring(0, 3).toUpperCase();
     },
   },
 };
@@ -369,10 +257,11 @@ export default {
   }
 
   .close-button {
-    position: absolute;
+    position: sticky;
     top: 10px;
-    right: 0px;
+    right: 10px;
     padding: 0px !important;
+    z-index: 10;
   }
 
   .ss-makers {
@@ -400,29 +289,9 @@ export default {
     }
   }
 
-  .ss-actions {
-    border-top: 1px solid var(--v-missionAccent-base);
-    // min-width: 20vw;
-    // min-height: 10vh;
-    // position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    overflow: hidden;
-
-    .view-ss-button {
-      width: 80%;
-      margin: 5px;
-      // position: absolute;
-      // bottom: 20px; // matches 20px padding of ss-details
-      background-color: var(--v-background-base);
-      z-index: 3;
-    }
-  }
-
   .ss-details {
     padding: 20px;
+    margin-top: -30px;
 
     .course-title {
       color: var(--v-galaxyAccent-base);
@@ -435,19 +304,27 @@ export default {
       font-style: italic;
       margin-bottom: 0px;
     }
-  }
 
-  .not-allowed {
-    cursor: not-allowed !important;
-    width: 100%;
-    display: flex;
-    justify-content: center;
+    .image-placeholder {
+      width: 150px;
+      height: 150px;
+      background-color: rgba(200, 200, 200, 0.3);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--v-galaxyAccent-base);
+      border: 1px solid var(--v-galaxyAccent-base);
+      border-radius: 8px;
+    }
   }
 }
 
 .mapped-details {
   width: 100%;
   padding: 10px 20px;
+  margin-bottom: 10px;
 
   .mappedByTitle {
     color: var(--v-galaxyAccent-base);
@@ -472,15 +349,6 @@ export default {
 .galaxyColour {
   color: var(--v-galaxyAccent-base);
   font-weight: 800;
-}
-
-.starting-status {
-  color: var(--v-galaxyAccent-base);
-  font-style: italic;
-  font-size: 0.7rem;
-  text-align: left;
-  padding: 10px;
-  // text-transform: uppercase;
 }
 
 .draft-border {

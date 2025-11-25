@@ -43,6 +43,12 @@ const getDefaultState = () => {
     startMissionLoading: false,
     unansweredRequests: [] as Record<string, any>[],
     inReviewSubmissions: [] as Record<string, any>[],
+    // AI Assistant trigger (used to open AI panels from anywhere)
+    aiAssistantTrigger: null as { requested: boolean; ts: number; source?: string } | null,
+    // AI Galaxy Edit state
+    aiGalaxyEditData: null as Record<string, any> | null,
+    // Mobile UI state
+    mobileInfoMinimized: false,
   };
 };
 
@@ -142,6 +148,13 @@ export default defineStore({
     setPeopleInCourse(people: Record<string, any>[]) {
       this.peopleInCourse = people;
     },
+    // === AI Assistant triggers ===
+    triggerAiAssistant(source?: string) {
+      this.aiAssistantTrigger = { requested: true, ts: Date.now(), source };
+    },
+    clearAiAssistantTrigger() {
+      this.aiAssistantTrigger = null;
+    },
     setUserStatus(userStatus: Record<string, any>) {
       this.userStatus = userStatus;
     },
@@ -168,7 +181,6 @@ export default defineStore({
       this.topicCompleted = topic;
     },
     setNextTopicUnlocked(flag: boolean) {
-      console.log("next topic unlocked - flag triggered: ", flag);
       this.nextTopicUnlockedFlag = flag;
     },
     // ===== Firestore - BIND ALL
@@ -176,6 +188,12 @@ export default defineStore({
       return bindFirestoreRef("people", db.collection("people"));
     }),
     bindCourseNodes: firestoreAction(({ bindFirestoreRef }, id: string) => {
+      // Validate required fields before proceeding
+      if (!id) {
+        console.warn("bindCourseNodes: Missing courseId");
+        return Promise.resolve();
+      }
+
       return bindFirestoreRef(
         "currentCourseNodes",
         db.collection("courses").doc(id).collection("map-nodes"),
@@ -185,6 +203,12 @@ export default defineStore({
       );
     }),
     bindCourseEdges: firestoreAction(({ bindFirestoreRef }, id: string) => {
+      // Validate required fields before proceeding
+      if (!id) {
+        console.warn("bindCourseEdges: Missing courseId");
+        return Promise.resolve();
+      }
+
       return bindFirestoreRef(
         "currentCourseEdges",
         db.collection("courses").doc(id).collection("map-edges"),
@@ -194,23 +218,37 @@ export default defineStore({
       );
     }),
     bindCoursesByPersonId: firestoreAction(({ bindFirestoreRef }, personId: string) => {
+      // Validate required fields before proceeding
+      if (!personId) {
+        console.warn("bindCoursesByPersonId: Missing personId");
+        return Promise.resolve();
+      }
+
       return bindFirestoreRef(
         "personsCourses",
         db.collection("courses").where("mappedBy.personId", "==", personId),
       );
     }),
     bindCourseByCourseId: firestoreAction(({ bindFirestoreRef }, courseId: string) => {
-      // Guard against empty courseId
-      if (!courseId || courseId.trim() === '') {
-        console.error("bindCourseByCourseId: courseId is empty or undefined, cannot proceed");
-        console.error("courseId value:", courseId);
-        console.error("courseId type:", typeof courseId);
-        throw new Error(`courseId cannot be empty. Received: "${courseId}" (type: ${typeof courseId})`);
+      // Validate required fields before proceeding
+      if (!courseId) {
+        console.warn("bindCourseByCourseId: Missing courseId");
+        return Promise.resolve();
       }
+
       return bindFirestoreRef("boundCourse", db.collection("courses").doc(courseId));
+    }),
+    unbindCourse: firestoreAction(({ unbindFirestoreRef }) => {
+      unbindFirestoreRef("boundCourse", true); // reset: true clears the boundCourse
     }),
     bindThisPersonsCourseTopics: firestoreAction(
       ({ bindFirestoreRef }, payload: { personId: string; courseId: string }) => {
+        // Validate required fields before proceeding
+        if (!payload.personId || !payload.courseId) {
+          console.warn("bindThisPersonsCourseTopics: Missing required fields", payload);
+          return Promise.resolve();
+        }
+
         return bindFirestoreRef(
           "personsTopics",
           db.collection("people").doc(payload.personId).collection(payload.courseId),
@@ -218,65 +256,103 @@ export default defineStore({
       },
     ),
     async getPersonsCourseTasks() {
+      // Validate required fields before proceeding
+      if (!this.person?.id || !this.currentCourseId) {
+        console.warn("getPersonsCourseTasks: Missing required fields", {
+          personId: this.person?.id,
+          currentCourseId: this.currentCourseId,
+        });
+        this.personsCourseTasks = [];
+        return;
+      }
+
       const tasksPerTopic = await Promise.all(
         this.personsTopics
-          .filter((topic: Record<string, any>) => topic.topicStatus !== "locked")
+          .filter((topic: Record<string, any>) => topic.topicStatus !== "locked" && topic.id)
           .map(async (topic: Record<string, any>) => {
-            const tasks = await db
-              .collection("people")
-              .doc(this.person.id)
-              .collection(this.currentCourseId)
-              .doc(topic.id)
-              .collection("tasks")
-              .get();
-            return tasks.docs.map((task) => ({
-              topicId: topic.id,
-              task: task.data(),
-            }));
+            try {
+              const tasks = await db
+                .collection("people")
+                .doc(this.person.id)
+                .collection(this.currentCourseId)
+                .doc(topic.id)
+                .collection("tasks")
+                .get();
+              return tasks.docs.map((task) => ({
+                topicId: topic.id,
+                task: task.data(),
+              }));
+            } catch (error) {
+              console.error("Error fetching tasks for topic:", topic.id, error);
+              return [];
+            }
           }),
       );
 
       const tasksArr = tasksPerTopic.flat();
-      // console.log("tasksArr", tasksArr)
       this.personsCourseTasks = tasksArr;
     },
     async getCourseTasks(courseId: string) {
+      // Validate required fields before proceeding
+      if (!courseId) {
+        console.warn("getCourseTasks: Missing courseId");
+        this.courseTasks = [];
+        return;
+      }
+
       const tasksPerTopic = await Promise.all(
-        this.currentCourseNodes.map(async (topic: Record<string, any>) => {
-          const tasks = await db
-            .collection("courses")
-            .doc(courseId)
-            .collection("topics")
-            .doc(topic.id)
-            .collection("tasks")
-            .get();
-          return tasks.docs.map((task) => ({
-            topicId: topic.id,
-            task: task.data(),
-          }));
-        }),
+        this.currentCourseNodes
+          .filter((topic: Record<string, any>) => topic.id)
+          .map(async (topic: Record<string, any>) => {
+            try {
+              const tasks = await db
+                .collection("courses")
+                .doc(courseId)
+                .collection("topics")
+                .doc(topic.id)
+                .collection("tasks")
+                .get();
+              return tasks.docs.map((task) => ({
+                topicId: topic.id,
+                task: task.data(),
+              }));
+            } catch (error) {
+              console.error("Error fetching tasks for topic:", topic.id, error);
+              return [];
+            }
+          }),
       );
 
       const tasksArr = tasksPerTopic.flat();
-      // console.log("tasksArr", tasksArr)
       this.courseTasks = tasksArr;
     },
 
     // ===== Firestore - BIND by USER
     async getPersonById(id: string) {
       if (id) {
-        await db
-          .collection("people")
-          .doc(id)
-          .onSnapshot((doc) => {
-            // console.log("person updated");
-            const person = {
-              ...doc.data(),
-              id,
-            };
-            this.SET_PERSON(person);
-          });
+        try {
+          db.collection("people")
+            .doc(id)
+            .onSnapshot(
+              (doc) => {
+                if (!doc.exists) {
+                  this.SET_PERSON({ id });
+                  return;
+                }
+                const data = doc.data() || {};
+                this.SET_PERSON({ ...data, id });
+              },
+              (error) => {
+                console.error("getPersonById onSnapshot error:", error);
+                this.SET_PERSON({ id });
+              },
+            );
+        } catch (error) {
+          console.error("getPersonById setup error:", error);
+          this.SET_PERSON({ id });
+        }
       } else {
+        console.warn("getPersonById: Missing personId");
         this.SET_PERSON({});
       }
     },
@@ -427,13 +503,9 @@ export default defineStore({
             (a, b) => b.requestSubmittedTimestamp.seconds - a.requestSubmittedTimestamp.seconds,
           );
 
-          // console.log("ALL REQUESTS FOR HELP:", allRequestsForHelp);
-
           this.teachersRequestsForHelp = allRequestsForHelp
             // there is a bug that dupliactes requests (these duplicates dont have id's)
             .filter((req) => req.id);
-
-          // console.log("this.teachersRequestsForHelp:", this.teachersRequestsForHelp);
         });
 
       return unsubscribe;
@@ -468,20 +540,46 @@ export default defineStore({
       personId: string;
       taskId: string;
     }) {
-      const submission = await db
-        .collection("courses")
-        .doc(courseId)
-        .collection("submissionsForReview")
-        .where("studentId", "==", personId)
-        .where("contextTask.id", "==", taskId)
-        .get();
+      // Validate required fields before proceeding
+      if (!courseId || !personId || !taskId) {
+        console.warn("getSubmissionByCourseIdPersonIdTaskId: Missing required fields", {
+          courseId,
+          personId,
+          taskId,
+        });
+        return null;
+      }
 
-      // will only return one doc
-      return submission.docs[0].data();
+      try {
+        const submission = await db
+          .collection("courses")
+          .doc(courseId)
+          .collection("submissionsForReview")
+          .where("studentId", "==", personId)
+          .where("contextTask.id", "==", taskId)
+          .get();
+
+        // will only return one doc
+        return submission.docs[0]?.data() || null;
+      } catch (error) {
+        console.error("Error fetching submission:", error);
+        return null;
+      }
     },
 
     setInReviewSubmissions(submissions: Record<string, any>[]) {
       this.inReviewSubmissions = submissions;
+    },
+    // AI Galaxy Edit actions
+    setAiGalaxyEditData(data: Record<string, any> | null) {
+      this.aiGalaxyEditData = data;
+    },
+    clearAiGalaxyEditData() {
+      this.aiGalaxyEditData = null;
+    },
+    // Mobile UI actions
+    setMobileInfoMinimized(minimized: boolean) {
+      this.mobileInfoMinimized = minimized;
     },
   },
   persist: true,

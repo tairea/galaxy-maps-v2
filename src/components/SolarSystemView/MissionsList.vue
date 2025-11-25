@@ -1,19 +1,23 @@
 <template>
-  <div class="mission-container">
-    <h2 class="missions-label">Missions</h2>
+  <div class="mission-container" :class="{ mobile: isMobile }">
+    <h2 class="missions-label" v-if="!isMobile">Missions</h2>
 
     <div style="width: 100%">
       <!-- loading spinner -->
       <div class="d-flex justify-center align-center" style="padding: 50px" v-if="missionsLoading">
         <v-btn :loading="missionsLoading" icon color="missionAccent"></v-btn>
       </div>
-      <div v-else-if="tasks.length > 0" style="width: 100%">
+      <div
+        v-else-if="tasks.length > 0"
+        style="width: 100%"
+        :style="{ paddingTop: infoIsMinimised ? '40px' : '0px' }"
+      >
         <v-expansion-panels flat :multiple="false" v-model="indexOfActiveTask">
           <draggable
             v-model="sortableMissionList"
             style="width: 100%"
             ghost-class="ghost"
-            :disabled="!teacher"
+            :disabled="!teacher || isMobile"
           >
             <transition-group name="fade">
               <v-expansion-panel
@@ -23,6 +27,7 @@
                 @click="missionClicked(task)"
                 :readonly="task.taskStatus == 'locked' || task.taskStatus == 'unlocked' || teacher"
                 :value="task.taskStatus == 'active'"
+                :class="{ mobile: isMobile }"
               >
                 <MissionsCard
                   :course="course"
@@ -74,7 +79,15 @@ export default {
     CreateEditDeleteMissionDialog,
     draggable,
   },
-  props: ["course", "topic", "tasks", "teacher", "disableCreateMission", "loading"],
+  props: [
+    "course",
+    "topic",
+    "tasks",
+    "teacher",
+    "disableCreateMission",
+    "loading",
+    "infoIsMinimised",
+  ],
   data() {
     return {
       activeMission: false,
@@ -114,6 +127,9 @@ export default {
         this.topicsTasks = value;
         this.$emit("taskOrderChanged", value);
       },
+    },
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
     },
   },
   methods: {
@@ -189,10 +205,21 @@ a {
   &::-webkit-scrollbar-thumb {
     border-radius: 4px;
     background-color: var(--v-missionAccent-base);
-    -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+    -webkit-box-shadow: 0 0 1px rgba(255, 255, 255, 0.5);
   }
   -webkit-overlay-scrollbars: touch;
   overlay: auto;
+
+  &.mobile {
+    width: 100%;
+    border: none;
+    padding: 0px;
+    margin: 0px;
+    height: auto;
+    min-height: auto;
+    overflow: visible;
+    flex: 1;
+  }
 }
 
 .missions-label {

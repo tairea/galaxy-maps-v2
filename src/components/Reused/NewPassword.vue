@@ -53,6 +53,7 @@
 <script>
 import firebase from "firebase/compat/app";
 import useRootStore from "@/store/index";
+import { getFriendlyErrorMessage } from "@/lib/utils";
 
 import { mapActions, mapState } from "pinia";
 import { mdiEye, mdiEyeOff } from "@mdi/js";
@@ -116,7 +117,7 @@ export default {
           // Error occurred during confirmation. The code might have expired or the
           this.setSnackbar({
             show: true,
-            text: "Something went wrong please try to reset your password again",
+            text: getFriendlyErrorMessage(error.code),
             color: "pink",
           });
         });

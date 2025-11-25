@@ -24,6 +24,28 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
+      "@openai/agents-realtime": fileURLToPath(
+        new URL(
+          "./node_modules/@openai/agents-realtime/dist/bundle/openai-realtime-agents.umd.js",
+          import.meta.url,
+        ),
+      ),
     },
+  },
+
+  build: {
+    commonjsOptions: {
+      include: [/node_modules/],
+    },
+    rollupOptions: {
+      external: (id) => {
+        // Don't externalize @openai/agents-realtime, we want to bundle it
+        return false;
+      },
+    },
+  },
+
+  server: {
+    hmr: true, // Enable HMR for hot reloading
   },
 });

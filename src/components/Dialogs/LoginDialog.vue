@@ -29,7 +29,7 @@
           Sign in
         </v-btn>
         to <br />
-        view this Solar System
+        view this Star System
       </p>
     </template>
 
@@ -94,6 +94,17 @@
           >
             Sign-in
           </v-btn>
+          <v-btn
+            color="baseAccent"
+            class="mr-4 mt-6"
+            @click="googleSignIn"
+            outlined
+            width="100%"
+            :loading="loadingGoogle"
+          >
+            <v-icon left class="mr-2">{{ mdiGoogle }}</v-icon>
+            Sign in with Google
+          </v-btn>
         </v-form>
 
         <router-link to="/register" class="overline mt-4" color="baseAccent--text"
@@ -114,7 +125,10 @@ import EmailSignIn from "@/components/Reused/EmailSignIn.vue";
 import useRootStore from "@/store/index";
 import firebase from "firebase/compat/app";
 import { mapActions, mapState } from "pinia";
-import { mdiEye, mdiEyeOff } from "@mdi/js";
+import { mdiEye, mdiEyeOff, mdiGoogle } from "@mdi/js";
+import { getFriendlyErrorMessage, ensureGooglePersonDocument } from "@/lib/utils";
+import { db } from "@/store/firestoreConfig";
+import "firebase/compat/auth";
 
 export default {
   name: "LoginDialog",
@@ -133,6 +147,7 @@ export default {
   data: () => ({
     mdiEye,
     mdiEyeOff,
+    mdiGoogle,
     valid: true,
     email: "",
     password: "",
@@ -141,6 +156,7 @@ export default {
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
     ],
     loading: false,
+    loadingGoogle: false,
     isResetPassword: false,
     accountEmail: "",
     actionCode: "",
@@ -151,9 +167,9 @@ export default {
   }),
   mounted() {
     // Get the email action to complete.
-    var mode = this.$route.query.mode || null;
-    var actionCode = this.$route.query.oobCode;
-    var auth = firebase.auth();
+    const mode = this.$route.query.mode || null;
+    const actionCode = this.$route.query.oobCode;
+    const auth = firebase.auth();
     console.log("route: ", this.$route);
 
     console.log("mode: ", mode);
@@ -183,9 +199,41 @@ export default {
   },
   computed: {
     ...mapState(useRootStore, ["person", "user"]),
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
+    },
   },
   methods: {
     ...mapActions(useRootStore, ["setSnackbar"]),
+    async googleSignIn() {
+      try {
+        this.loadingGoogle = true;
+        const provider = new firebase.auth.GoogleAuthProvider();
+        await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        const result = await firebase.auth().signInWithPopup(provider);
+        const user = result.user;
+
+        // Ensure person document exists for Google user
+        if (user) {
+          await ensureGooglePersonDocument(user, db);
+        }
+
+        this.proceed();
+      } catch (error) {
+        if (error && error.code === "auth/popup-blocked") {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await firebase.auth().signInWithRedirect(provider);
+          return;
+        }
+        this.setSnackbar({
+          show: true,
+          text: getFriendlyErrorMessage(error.message || error.code),
+          color: "pink",
+        });
+      } finally {
+        this.loadingGoogle = false;
+      }
+    },
     redirect() {
       this.isVerifyEmail = false;
       firebase.auth().signOut();
@@ -204,14 +252,14 @@ export default {
           // Invalid or expired action code. Ask user to try to reset the password
           this.setSnackbar({
             show: true,
-            text: "Error verifying code: " + error.message,
+            text: getFriendlyErrorMessage(error.code),
             color: "pink",
           });
         });
     },
     handleRecoverEmail(auth, actionCode) {
       console.log("handle recover email");
-      var restoredEmail = null;
+      let restoredEmail = null;
       // Confirm the action code is valid.
       auth
         .checkActionCode(actionCode)
@@ -245,7 +293,7 @@ export default {
         .catch((error) => {
           this.setSnackbar({
             show: true,
-            text: "Invalid or expired code: " + error.message,
+            text: getFriendlyErrorMessage(error.code),
             color: "pink",
           });
         });
@@ -268,7 +316,7 @@ export default {
           // Code is invalid or expired. Ask the user to verify their email address
           this.setSnackbar({
             show: true,
-            text: "Invalid or expired code: " + error.message,
+            text: getFriendlyErrorMessage(error.code),
             color: "pink",
           });
         });
@@ -290,7 +338,7 @@ export default {
           console.log("error: ", error);
           this.setSnackbar({
             show: true,
-            text: error.message,
+            text: getFriendlyErrorMessage(error.code),
             color: "pink",
           });
           this.loading = false;
@@ -304,7 +352,7 @@ export default {
         }, 500);
       }
       if (!this.user.data.verified) {
-        var actionCodeSettings = {
+        const actionCodeSettings = {
           // TODO: Update to galaxymaps.io on deployment
           url: window.location.origin + "/login",
           handleCodeInApp: true,
@@ -336,7 +384,7 @@ export default {
         .catch((error) => {
           this.setSnackbar({
             show: true,
-            text: error.message,
+            text: getFriendlyErrorMessage(error.code),
             color: "pink",
           });
         });
@@ -360,6 +408,10 @@ export default {
   width: 100%;
   padding: 20px;
   padding-top: 0px;
+
+  @media (max-width: 960px) {
+    padding: 0px;
+  }
 }
 .galaxy-text {
   color: var(--v-galaxyAccent-base);

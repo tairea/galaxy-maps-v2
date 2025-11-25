@@ -1,11 +1,17 @@
 import Home from "@/views/Home.vue";
 import GalaxyList from "@/views/GalaxyList.vue";
+import AllPublicGalaxiesList from "@/views/AllPublicGalaxiesList.vue";
+import MyGalaxiesList from "@/views/MyGalaxiesList.vue";
 import GalaxyView from "@/views/GalaxyView.vue";
 import SolarSystemView from "@/views/SolarSystemView.vue";
 import CohortView from "@/views/CohortView.vue";
 import CohortListV2 from "@/views/CohortListV2.vue";
 import AllStudentsView from "@/views/AllStudentsView.vue";
 import UserDashboard from "@/views/UserDashboard.vue";
+import AiGalaxyEdit from "@/views/AiGalaxyEdit.vue";
+import MapDebug from "@/views/MapDebug.vue";
+import CohortViewV2 from "@/views/CohortViewV2.vue";
+// import SetInitialPassword from "@/views/SetInitialPassword.vue";
 // import Login from "@/components/Login.vue";
 // import VerifyEmail from "@/views/VerifyEmail.vue";
 // import ResetPassword from "@/views/ResetPassword.vue";
@@ -20,14 +26,28 @@ import VueRouter from "vue-router";
 const routes = [
   {
     path: "/",
-    name: "Home",
     component: Home,
     children: [
       {
         path: "",
-        name: "GalaxyList",
-        component: GalaxyList,
+        name: "Root",
+        component: AllPublicGalaxiesList,
         props: true,
+      },
+      {
+        path: "public-galaxies",
+        name: "AllPublicGalaxiesList",
+        component: AllPublicGalaxiesList,
+        props: true,
+      },
+      {
+        path: "my-galaxies",
+        name: "MyGalaxiesList",
+        component: MyGalaxiesList,
+        props: true,
+        meta: {
+          authRequired: true,
+        },
       },
       {
         path: "login",
@@ -66,9 +86,10 @@ const routes = [
         },
       },
       {
-        path: "cohort/:cohortId/:cohortName",
+        path: "squad/:cohortId/:cohortName",
         name: "CohortView",
-        component: CohortView,
+        // component: CohortViewV2, // CohortView
+        component: CohortView, // CohortView
         meta: {
           authRequired: true,
         },
@@ -92,13 +113,40 @@ const routes = [
         props: true,
       },
       {
-        path: "galaxy/:courseId/system/:topicId",
+        path: "galaxy/:courseId/star/:topicId",
         name: "SolarSystemView",
         component: SolarSystemView,
         meta: {
           authRequired: true,
         },
         props: true,
+      },
+      {
+        path: "ai-galaxy-edit",
+        name: "AiGalaxyEdit",
+        component: AiGalaxyEdit,
+        meta: {
+          authRequired: true,
+        },
+        props: true,
+      },
+      {
+        path: "galaxy/:courseId/ai-edit",
+        name: "AiGalaxyEditWithCourse",
+        component: AiGalaxyEdit,
+        meta: {
+          authRequired: true,
+        },
+        props: true,
+      },
+      {
+        path: "map-debug",
+        name: "MapDebug",
+        component: MapDebug,
+        meta: {
+          authRequired: true,
+          adminRequired: true,
+        },
       },
       {
         path: ":slug",
@@ -120,6 +168,12 @@ const router = new VueRouter({
   mode: "history",
   base: import.meta.env.BASE_URL,
   routes,
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition;
+    }
+    return { x: 0, y: 0 };
+  },
 });
 
 const initialAuth = new Promise<firebase.User | null>((resolve, reject) => {
@@ -134,6 +188,12 @@ router.beforeEach(async (to, from, next) => {
   await initialAuth;
   if (from.path !== "/") rootStore.set_from(from.path);
 
+  // Handle conditional routing for root path
+  if (to.path === "/" && rootStore.user.loggedIn && rootStore.user.data?.verified === true) {
+    next({ path: "/my-galaxies" });
+    return;
+  }
+
   if (
     !["/verify", "/login", "/reset", "/register"].includes(to.path) &&
     rootStore.user.loggedIn &&
@@ -147,7 +207,19 @@ router.beforeEach(async (to, from, next) => {
 
   if (to.matched.some((record) => record.meta.authRequired)) {
     if (rootStore.user.loggedIn && rootStore.user.data?.verified === true) {
-      next();
+      // Check if admin access is required
+      if (to.matched.some((record) => record.meta.adminRequired)) {
+        if (rootStore.user.data?.admin === true) {
+          next();
+        } else {
+          alert("You must be an admin to access this page");
+          next({
+            path: "/dashboard",
+          });
+        }
+      } else {
+        next();
+      }
     } else {
       alert("You must be logged in to see this page");
       next({

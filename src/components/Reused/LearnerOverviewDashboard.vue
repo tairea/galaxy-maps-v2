@@ -54,6 +54,16 @@
                 <p class="label">Navigator ID:</p>
                 <p class="value text-caption" style="color: gray">{{ student.id }}</p>
               </div>
+              <div v-if="student.registered" class="field ml-8">
+                <p class="label">Registered:</p>
+                <p class="value text-caption" style="color: gray">
+                  {{ formatRegistrationDate(student.registered) }}
+                </p>
+              </div>
+              <div v-if="student.role" class="field">
+                <p class="label">Role:</p>
+                <p class="value text-caption" style="color: gray">{{ student.role }}</p>
+              </div>
               <!-- edit button -->
             </div>
             <div class="edit-button ml-6">
@@ -200,7 +210,13 @@
 </template>
 
 <script>
-import { fetchStudentSubmissionsByPersonId, fetchStudentRequestsByPersonId } from "@/lib/ff";
+import {
+  fetchStudentSubmissionsByPersonId,
+  fetchStudentRequestsByPersonId,
+  fetchStudentCoursesActivityByPersonId,
+  fetchStudentCoursesTimeDataByPersonIdStartAtEndAt,
+} from "@/lib/ff";
+import { studentActivityThrottle } from "@/lib/requestThrottle";
 import ProgressionLineChartStudentCourses from "@/components/Reused/ProgressionLineChartStudentCourses.vue";
 import RequestForHelpTeacherFrame from "@/components/Reused/RequestForHelpTeacherFrame.vue";
 import StudentActivityTimeline from "@/components/Reused/StudentActivityTimeline.vue";
@@ -218,8 +234,6 @@ export default {
   props: {
     dialog: { type: Boolean },
     student: { type: Object },
-    studentCoursesActivity: { type: Array },
-    studentTimeData: { type: Array }, // TODO: get locally too as timeframe changes here too
   },
   components: {
     ProgressionLineChartStudentCourses,
@@ -238,35 +252,36 @@ export default {
     requests: null,
     loadingSubmissions: true,
     loadingRequests: true,
-    timeframe: {},
+    timeframe: {
+      min: new Date(-8640000000000000),
+      max: new Date(),
+    },
     lowestActivityTimestamp: null,
+    studentCoursesActivity: [],
+    studentTimeData: [],
+    loadingCoursesActivity: false,
   }),
+  watch: {
+    dialog(newVal) {
+      if (newVal && this.student?.id) {
+        // Dialog opened - fetch data
+        this.fetchStudentData();
+      }
+    },
+    timeframe: {
+      handler() {
+        // When timeframe changes, refetch time data
+        if (this.dialog && this.student?.id) {
+          this.fetchStudentTimeData();
+        }
+      },
+      deep: true,
+    },
+  },
   async mounted() {
-    console.log("STUDENT COURSES ACTIVITY: ", this.studentCoursesActivity);
-    console.log("STUDENT TIME DATA: ", this.studentTimeData);
-
-    this.lowestActivityTimestamp = this.studentCoursesActivity.reduce((lowest, course) => {
-      const courseLowestTimestamp = course.activities.reduce((lowest, activity) => {
-        // return lowest activity timestamp
-        return new Date(activity.timeStamp) < lowest ? new Date(activity.timeStamp) : lowest;
-      }, Infinity);
-      // return lowest course timestamp
-      return courseLowestTimestamp < lowest ? courseLowestTimestamp : lowest;
-    }, Infinity);
-
-    this.students.push(this.student);
-
-    // ==== get submission data
-    this.submissions = await fetchStudentSubmissionsByPersonId(this.student.id);
-    console.log("SUBMISSIONS from learner overview dash: ", this.submissions);
-
-    this.loadingSubmissions = false;
-
-    // ==== get request data
-    this.requests = await fetchStudentRequestsByPersonId(this.student.id);
-    console.log("REQUESTS from learner overview dash: ", this.requests);
-
-    this.loadingRequests = false;
+    if (this.dialog && this.student?.id) {
+      await this.fetchStudentData();
+    }
   },
   computed: {
     ...mapState(useRootStore, ["userStatus", "person"]),
@@ -283,11 +298,40 @@ export default {
     },
   },
   methods: {
+    formatRegistrationDate(registered) {
+      const date = new Date(registered.seconds * 1000);
+      const day = date.getDate();
+      const monthNames = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ];
+      const month = monthNames[date.getMonth()];
+      const year = date.getFullYear();
+
+      let hours = date.getHours();
+      const minutes = date.getMinutes();
+      const ampm = hours >= 12 ? "pm" : "am";
+      hours = hours % 12;
+      hours = hours ? hours : 12; // the hour '0' should be '12'
+      const minutesStr = minutes < 10 ? "0" + minutes : minutes;
+
+      return `${day} ${month} ${year} at ${hours}:${minutesStr}${ampm}`;
+    },
     sendMail() {
       // var subject = document.getElementById("selectList").value;
       // var yourMessage = document.getElementById("message").value;
-      var subject = "GalaxyMaps Comms";
-      var yourMessage = "Hey " + this.student.firstName + ", ";
+      const subject = "GalaxyMaps Comms";
+      const yourMessage = "Hey " + this.student.firstName + ", ";
       document.location.href =
         "mailto:" +
         this.student.email +
@@ -303,18 +347,77 @@ export default {
       this.$emit("cancel");
     },
     async submissionsChanged() {
-      console.log("submissions changed flag triggered");
       this.loadingSubmissions = true;
       // ==== get submission data
       // this.submissions = await fetchStudentSubmissionsByPersonId(this.student.id);
       this.loadingSubmissions = false;
     },
     async requestsChanged() {
-      console.log("requests changed flag triggered");
       this.loadingRequests = true;
       // ==== get submission data
       // this.requests = await fetchStudentRequestsByPersonId(this.student.id);
       this.loadingRequests = false;
+    },
+    async fetchStudentData() {
+      // Reset students array and add current student
+      this.students = [this.student];
+
+      // ==== get submission data
+      this.submissions = await fetchStudentSubmissionsByPersonId(this.student.id);
+      this.loadingSubmissions = false;
+
+      // ==== get request data
+      this.requests = await fetchStudentRequestsByPersonId(this.student.id);
+      this.loadingRequests = false;
+
+      // ==== get course activity data (from LRS.io)
+      await this.fetchStudentCoursesActivity();
+
+      // ==== get student time data
+      await this.fetchStudentTimeData();
+    },
+    async fetchStudentCoursesActivity() {
+      this.loadingCoursesActivity = true;
+      try {
+        this.studentCoursesActivity = await studentActivityThrottle.throttle(() =>
+          fetchStudentCoursesActivityByPersonId(this.student.id),
+        );
+        // Calculate lowest activity timestamp
+        if (this.studentCoursesActivity?.length > 0) {
+          this.lowestActivityTimestamp = this.studentCoursesActivity.reduce((lowest, course) => {
+            if (!course.activities || course.activities.length === 0) return lowest;
+            const courseLowestTimestamp = course.activities.reduce((lowest, activity) => {
+              // return lowest activity timestamp
+              return new Date(activity.timeStamp) < lowest ? new Date(activity.timeStamp) : lowest;
+            }, Infinity);
+            // return lowest course timestamp
+            return courseLowestTimestamp < lowest ? courseLowestTimestamp : lowest;
+          }, Infinity);
+        } else {
+          this.lowestActivityTimestamp = null;
+        }
+      } catch (error) {
+        console.error(`Failed to fetch student courses activity for ${this.student.id}:`, error);
+        this.studentCoursesActivity = [];
+        this.lowestActivityTimestamp = null;
+      } finally {
+        this.loadingCoursesActivity = false;
+      }
+    },
+    async fetchStudentTimeData() {
+      try {
+        // Throttle the request to avoid overwhelming Firebase
+        this.studentTimeData = await studentActivityThrottle.throttle(() =>
+          fetchStudentCoursesTimeDataByPersonIdStartAtEndAt(
+            this.student.id,
+            this.timeframe.min.toISOString(),
+            this.timeframe.max.toISOString(),
+          ),
+        );
+      } catch (error) {
+        console.error(`Failed to fetch student time data for ${this.student.id}:`, error);
+        this.studentTimeData = [];
+      }
     },
   },
 };

@@ -1,6 +1,6 @@
 <template>
   <div class="full-height justify-center align-center">
-    <LoadingSpinner v-if="loading" text="loading learning universe" />
+    <LoadingSpinner v-if="isLoadingCourses || loading" text="loading learning universe" />
     <div v-if="allNodesForDisplay.length == 0">
       <p class="overline noGalaxies">NO GALAXIES TO DISPLAY</p>
       <div class="d-flex justify-center mb-4">
@@ -150,6 +150,9 @@ export default {
     isDark() {
       return this.$vuetify.theme.isDark;
     },
+    isMobile() {
+      return this.$vuetify.breakpoint.smAndDown;
+    },
   },
   watch: {
     darkMode(dark) {
@@ -168,6 +171,35 @@ export default {
       if (coursesTopicNodes.length > 0) {
         // zoom to specific galaxy nodes
         this.zoomToNodes(coursesTopicNodes);
+
+        // offset the network to the top of the screen with moveTo
+        // On mobile, offset the center point upward to make room for the info panel
+        if (this.isMobile) {
+          // Wait for the fit animation to complete, then adjust position
+          setTimeout(() => {
+            const currentView = this.$refs.network.getViewPosition();
+            const currentScale = this.$refs.network.getScale();
+
+            // const offsetY = window.innerHeight * 0.25;
+
+            // Calculate offset using the same logic as GalaxyMap.vue
+            const topHalfCenter = (window.innerHeight - 320) / 2;
+            const fullHeightCenter = window.innerHeight / 2;
+            const offsetY = (fullHeightCenter - topHalfCenter) / 2;
+
+            this.$refs.network.moveTo({
+              position: {
+                x: currentView.x,
+                y: currentView.y + offsetY,
+              },
+              scale: currentScale,
+              animation: {
+                duration: 300,
+                easingFunction: "easeOutQuad",
+              },
+            });
+          }, 850); // Wait for fit animation to complete
+        }
       } else {
         // zoom out to fit all nodes
         this.zoomToNodes(this.allNodesForDisplay, true);
@@ -187,15 +219,32 @@ export default {
           break;
         }
       }
-      this.refreshAllNodesAndEdgesToDisplay(needsCentering);
+
+      // Only proceed if we have all required data
+      if (newCourses && this.courseNodesMap && this.courseEdgesMap) {
+        this.refreshAllNodesAndEdgesToDisplay(needsCentering);
+      }
     },
   },
   mounted() {
-    this.refreshAllNodesAndEdgesToDisplay(true);
+    // Only proceed if we have the required data
+    if (this.courses && this.courseNodesMap && this.courseEdgesMap) {
+      this.refreshAllNodesAndEdgesToDisplay(true);
+    }
   },
   methods: {
     ...mapActions(useRootStore, []),
     refreshAllNodesAndEdgesToDisplay(needsCentering) {
+      // Safety check: ensure we have the required data before proceeding
+      if (!this.courses || !this.courseNodesMap || !this.courseEdgesMap) {
+        console.warn("Missing required data for refreshAllNodesAndEdgesToDisplay");
+        this.allNodesForDisplay = [];
+        this.allEdgesForDisplay = [];
+        this.loading = false;
+        this.needsCentering = needsCentering;
+        return;
+      }
+
       const repositionedNodes = this.repositionCoursesBasedOnBoundariesV2();
 
       // log a node with this course.id
@@ -406,8 +455,8 @@ export default {
       const courseActivity = this.coursesActivity.find((x) => x.course.id === course.id);
 
       canvasContext.fillStyle = "rgba(255, 255, 255, 1)";
-      canvasContext.textAlign = "left";
-      canvasContext.textBaseline = "top";
+      canvasContext.textAlign = "center";
+      canvasContext.textBaseline = "middle";
 
       // Give at least 500px width for the title
       const maxWidth = Math.max(courseBoundary.width, 500);
@@ -417,20 +466,34 @@ export default {
         ? this.$vuetify.theme.themes.dark.galaxyAccent
         : this.$vuetify.theme.themes.light.galaxyAccent;
 
-      const courseTitleBlockInfo = layoutBlock(canvasContext, course.title.toUpperCase(), {
-        maxWidth: maxWidth,
-      });
+      // Split long titles into multiple lines
+      const title = course.title.toUpperCase();
+      const words = title.split(" ");
+      const lines = [];
+      let currentLine = "";
+
+      for (const word of words) {
+        const testLine = currentLine ? currentLine + " " + word : word;
+        const testWidth = canvasContext.measureText(testLine).width;
+
+        if (testWidth > maxWidth && currentLine) {
+          lines.push(currentLine);
+          currentLine = word;
+        } else {
+          currentLine = testLine;
+        }
+      }
+
+      if (currentLine) {
+        lines.push(currentLine);
+      }
 
       const courseBoundaryXCenter = courseBoundary.left.x + courseBoundary.width / 2;
       const courseBoundaryYCenter = courseBoundary.top.y + courseBoundary.height / 2;
 
-      const contentWidth = courseTitleBlockInfo.width + 20 + 50; // 20 for spacing and 50 for progress circle
-      const contentHeight = courseTitleBlockInfo.height; // 20 for spacing and 50 for progress circle
-
-      // const courseTitleX = courseBoundaryXCenter - contentWidth / 2; // middle
-      // const courseTitleY = courseBoundary.top.y - 40 - courseTitleBlockInfo.height; // 40 for spacing away from nodes
-      const courseTitleX = courseBoundary.left.x - contentWidth;
-      const courseTitleY = courseBoundaryYCenter - contentHeight / 2; // 40 for spacing away from nodes
+      // Position title centered horizontally and slightly below center
+      const courseTitleX = courseBoundaryXCenter; // Center horizontally
+      const courseTitleY = courseBoundaryYCenter + 150; // Slightly below center
 
       // === Box border around title
       // canvasContext.beginPath();
@@ -449,16 +512,28 @@ export default {
       // --- Box background fill
       // canvasContext.fillStyle = this.$vuetify.theme.isDark
       //   ? this.$vuetify.theme.themes.dark.background
-      //   : this.$vuetify.theme.themes.light.background;
+      //   : this.$vuetify.theme.themes.light.galaxyAccent;
       // canvasContext.fill();
       // canvasContext.stroke();
       // canvasContext.closePath();
 
+      // Use the updated font size
+      canvasContext.font = 'bold 40px "Arial"';
+
+      // Use native canvas text rendering instead of drawBlock for better centering control
+      // Reset text properties for native rendering
+      canvasContext.textAlign = "center";
+      canvasContext.textBaseline = "middle";
       canvasContext.font = 'bold 50px "Arial"';
 
-      drawBlock(canvasContext, courseTitleBlockInfo, {
-        x: courseTitleX,
-        y: courseTitleY,
+      // Draw multiple lines of text
+      const lineHeight = 60; // Height between lines
+      const totalHeight = lines.length * lineHeight;
+      const startY = courseTitleY - (totalHeight - lineHeight) / 2; // Center the entire text block
+
+      lines.forEach((line, index) => {
+        const y = startY + index * lineHeight;
+        canvasContext.fillText(line, courseTitleX, y);
       });
     },
     drawCourseProgressionCircle(canvasContext, course, fontSize) {
@@ -555,7 +630,7 @@ export default {
       }
     },
     hexToRGBA(hex, opacity) {
-      let r = parseInt(hex.slice(1, 3), 16),
+      const r = parseInt(hex.slice(1, 3), 16),
         g = parseInt(hex.slice(3, 5), 16),
         b = parseInt(hex.slice(5, 7), 16);
 
@@ -611,7 +686,7 @@ export default {
       let closest = null;
       let shortestDistance = 400; // limit the furthest distance
       for (let i = 0; i < allNodePositionsArray.length; i++) {
-        var d = this.pointDistance(clickedPosition, allNodePositionsArray[i]);
+        const d = this.pointDistance(clickedPosition, allNodePositionsArray[i]);
         if (d < shortestDistance) {
           closest = allNodePositionsArray[i];
           shortestDistance = d;
@@ -629,16 +704,22 @@ export default {
       // hide canvas title
     },
     pointDistance(pt1, pt2) {
-      var diffX = pt1.x - pt2.x;
-      var diffY = pt1.y - pt2.y;
+      const diffX = pt1.x - pt2.x;
+      const diffY = pt1.y - pt2.y;
       return Math.sqrt(diffX ** 2 + diffY ** 2);
     },
     calcCourseCanvasBoundaries() {
       const courses = this.courses;
-      let courseCanvasBoundaries = [];
+
+      // Safety check: ensure courses is defined and is an array
+      if (!courses || !Array.isArray(courses) || courses.length === 0) {
+        return [];
+      }
+
+      const courseCanvasBoundaries = [];
       // per course/galaxy, determine boundaries ie. highest y, highest x, lowest y, lowest x (this is a boundary we want to hover)
       for (let i = 0; i < courses.length; i++) {
-        let boundary = {
+        const boundary = {
           heightOffset: 0,
           maxWidthOffset: 0,
           top: { x: 0, y: 0 },
@@ -648,7 +729,7 @@ export default {
           centerY: 0,
           centerX: 0,
         };
-        let courseNodes = [];
+        const courseNodes = [];
         // let DOMboundary = {
         //   top: 0,
         //   bottom: 0,
@@ -660,8 +741,8 @@ export default {
         const nodes = this.courseNodesMap.get(courses[i].id);
 
         // If we don't have any nodes for this galaxy then don't include it in the final result
-        if (nodes.length === 0) {
-          console.warn("no nodes for course: ", courses[i].id);
+        if (!nodes || nodes.length === 0) {
+          //console.warn("no nodes for course: ", courses[i].id);
           continue;
         }
 
@@ -677,7 +758,6 @@ export default {
             isNaN(node.x) ||
             isNaN(node.y)
           ) {
-            console.log("Invalid node: /courses/" + courses[i].id + "/map-nodes/" + node.id);
             // Update the node with default x and y values
             // return { ...node, x: 0, y: 0 };
           }
@@ -716,7 +796,10 @@ export default {
 
         // get the course status for glow colour
         let status;
-        if (courses[i].mappedBy.personId == this.person.id) {
+        if (
+          courses[i].mappedBy.personId == this.person.id ||
+          (courses[i].collaboratorIds && courses[i].collaboratorIds.includes(this.person.id))
+        ) {
           if (courses[i].status == "drafting") status = "drafting";
           else if (courses[i].status == "published" && courses[i].public == true) status = "public";
           else if (courses[i].status == "published" && courses[i].public == false)
@@ -742,14 +825,21 @@ export default {
       return courseCanvasBoundaries;
     },
     repositionCoursesBasedOnBoundariesV2() {
+      const startTime = performance.now();
+
       const courseCanvasBoundaries = this.calcCourseCanvasBoundaries();
 
-      let newAllNodes = [];
-      let newRelativeGalaxyBoundaries = [];
+      // Safety check: ensure we have the required data
+      if (!this.courses || !this.courseNodesMap) {
+        return [];
+      }
+
+      const newAllNodes = [];
+      const newRelativeGalaxyBoundaries = [];
 
       // canvas / 3
       let galaxyColsCount = 0;
-      const numberOfGalaxiesPerRow = Math.ceil(Math.sqrt(this.courses.length)); // hardcoded num of galaxies in a row
+      const numberOfGalaxiesPerRow = this.isMobile ? 3 : Math.ceil(Math.sqrt(this.courses.length)); // hardcoded num of galaxies in a row
 
       // SCALE calc num of galaxy rows
       // const canvasRowHeight = this.canvasHeight / maxHeight;
@@ -760,7 +850,7 @@ export default {
 
       // loop nodes and add x y offsets
       for (let i = 0; i < courseCanvasBoundaries.length; i++) {
-        let newCourseNodes = [];
+        const newCourseNodes = [];
 
         // console.log(
         //   "positioning course: ==============",
@@ -782,8 +872,13 @@ export default {
         // get nodes in course
         const nodes = this.courseNodesMap.get(courseCanvasBoundaries[i].id);
 
+        // Safety check: ensure nodes exist
+        if (!nodes || nodes.length === 0) {
+          continue;
+        }
+
         for (const node of nodes) {
-          let newNode = {
+          const newNode = {
             ...node,
             courseId: courseCanvasBoundaries[i].id,
             x: currentColWidth + node.x - courseCanvasBoundaries[i].centerX,
@@ -850,16 +945,16 @@ export default {
         // get center point of galaxy
         // thanks to: https://www.quora.com/Geometry-How-do-I-calculate-the-center-of-four-X-Y-coordinates
         // 1) calc centroid triangle 1
-        let centroidTri1X = (relativeTop.x + relativeRight.x + relativeBottom.x) / 3;
-        let centroidTri1Y = (relativeTop.y + relativeRight.y + relativeBottom.y) / 3;
+        const centroidTri1X = (relativeTop.x + relativeRight.x + relativeBottom.x) / 3;
+        const centroidTri1Y = (relativeTop.y + relativeRight.y + relativeBottom.y) / 3;
 
         // 2) calc centroid triangle 2
-        let centroidTri2X = (relativeBottom.x + relativeLeft.x + relativeTop.x) / 3;
-        let centroidTri2Y = (relativeBottom.y + relativeLeft.y + relativeTop.y) / 3;
+        const centroidTri2X = (relativeBottom.x + relativeLeft.x + relativeTop.x) / 3;
+        const centroidTri2Y = (relativeBottom.y + relativeLeft.y + relativeTop.y) / 3;
 
         // 3) mid point of line between centroids
-        let centroidX = (centroidTri1X + centroidTri2X) / 2;
-        let centroidY = (centroidTri1Y + centroidTri2Y) / 2;
+        const centroidX = (centroidTri1X + centroidTri2X) / 2;
+        const centroidY = (centroidTri1Y + centroidTri2Y) / 2;
 
         // debugging NaN on x y for problematic course id
         // if (courseCanvasBoundaries[i].id == "S1NkzgahYdG8IUoptXNF") {
@@ -879,7 +974,7 @@ export default {
         // }
 
         // relative galaxy centers
-        let relativeCenter = {
+        const relativeCenter = {
           course: courseCanvasBoundaries[i].title,
           id: courseCanvasBoundaries[i].id,
           centroidX: centroidX,
@@ -948,24 +1043,62 @@ export default {
       // this.largestRowWidth += this.largestRowWidth / this.numberOfGalaxiesPerRow / 2;
       // this.$refs.network.storePositions();
       // console.log("newAllNodes", newAllNodes);
+
+      const endTime = performance.now();
+      const duration = endTime - startTime;
+
+      // Log any courses that took longer than expected
+      if (duration > 500) {
+        console.warn(`⚠️ Slow repositioning detected (${duration.toFixed(2)}ms)`);
+        courseCanvasBoundaries.forEach((boundary) => {
+          const nodeCount = this.courseNodesMap.get(boundary.id)?.length || 0;
+          if (nodeCount > 50) {
+            console.warn(`🐌 Course ${boundary.id} (${boundary.title}) has ${nodeCount} nodes`);
+          }
+        });
+      }
+
       return newAllNodes;
     },
     // this controls the fit zoom animation
     zoomToNodes(nodes, fast = false) {
-      // console.log("zoom to nodes called");
+      const startTime = performance.now();
+
       // get node ids
       const nodeIds = nodes.map((x) => x.id);
+
+      // Log course IDs for debugging
+      const courseIds = [...new Set(nodes.map((n) => n.courseId))];
 
       // fit
       this.$refs.network.fit({
         nodes: nodeIds,
         // scale: 0.5,
+        // maxZoomLevel: 0.8,
         // animation: true,
         animation: {
-          duration: fast ? 800 : 2000,
+          // duration: fast ? 800 : 2000,
+          duration: 800,
           easingFunction: "easeInOutQuad",
         },
       });
+
+      // Monitor animation performance
+      setTimeout(() => {
+        const endTime = performance.now();
+        const duration = endTime - startTime;
+
+        // Check if any specific course might be causing issues
+        if (duration > 1000) {
+          console.warn(`⚠️ Slow zoom detected (${duration.toFixed(2)}ms). Course IDs:`, courseIds);
+
+          // Analyze node distribution
+          const courseNodeCounts = {};
+          nodes.forEach((node) => {
+            courseNodeCounts[node.courseId] = (courseNodeCounts[node.courseId] || 0) + 1;
+          });
+        }
+      }, 850); // Slightly after animation duration
     },
     zoomOut() {
       this.$refs.network.moveTo({
@@ -985,7 +1118,7 @@ export default {
       this.zoomToNodes(this.allNodesForDisplay);
     },
     makeGalaxyLabelsColour(colour) {
-      var options = { ...this.network.options };
+      const options = { ...this.network.options };
       options.nodes.font.color = colour;
       options.nodes.fixed = true;
       this.$refs.network.setOptions(options);
@@ -998,9 +1131,15 @@ export default {
 .full-height {
   width: 100%;
   height: 100%;
+  height: calc(var(--vh, 1vh) * 100);
   display: flex;
   flex-direction: column;
   // margin-top: 20px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 .noGalaxies {

@@ -1,27 +1,48 @@
 <template>
   <div class="main-wrap">
-    <LoadingSpinner
-      v-if="orderedCohorts.length == 0"
-      text="loading squads"
-      style="margin-left: -10%"
-    />
+    <LoadingSpinner v-if="isLoading" text="loading squads" style="margin-left: -10%" />
 
+    <!-- SIDE COLUMN -->
     <div class="side-col">
       <!-- COHORTS -->
       <!-- only if you made them (eg. are the teacher AKA in cohort.teachers[]) -->
-      <div v-if="cohorts" class="cohorts mt-12">
+      <h3 class="map-squads-title overline missionAccent--text mt-12">Squads</h3>
+      <div v-if="cohorts" class="cohorts">
+        <!-- Regular cohorts (courseCohort doesn't exist or is false) -->
         <Cohort
           ref="cohort"
-          v-for="(cohort, cohortIndex) in getCohortsThatPersonIsTeacherIn()"
+          v-for="(cohort, cohortIndex) in getRegularCohorts()"
           :id="'noOrgcohort' + cohortIndex"
           :cohort="cohort"
           :key="cohort.id"
-          :size="60"
-          :hideNames="true"
-          :tooltip="true"
+          :size="50"
+          :hideNames="false"
+          :tooltip="false"
           :studentView="true"
           @click.native="clickedCohort(cohort, 'noOrg', cohortIndex)"
+          style="width: 50%"
         />
+
+        <!-- Divider and Map Squads section -->
+        <div v-if="getMapSquadCohorts().length > 0" class="map-squads-section mt-6">
+          <hr class="divider" />
+          <h3 class="map-squads-title overline missionAccent--text">Map Squads</h3>
+          <div class="d-flex flex-wrap">
+            <Cohort
+              ref="cohort"
+              v-for="(cohort, cohortIndex) in getMapSquadCohorts()"
+              :id="'mapSquadcohort' + cohortIndex"
+              :cohort="cohort"
+              :key="cohort.id"
+              :size="50"
+              :hideNames="false"
+              :tooltip="false"
+              :studentView="true"
+              @click.native="clickedCohort(cohort, 'mapSquad', cohortIndex)"
+              style="width: 50%"
+            />
+          </div>
+        </div>
       </div>
       <!-- ORGANISATIONS -->
       <div
@@ -56,7 +77,7 @@
           />
         </div> -->
       </div>
-      <div v-if="!cohorts">
+      <div v-if="!cohorts && !isLoading">
         <h3 class="cohort-heading overline baseAccent--text">No Squads Found</h3>
       </div>
 
@@ -88,6 +109,8 @@
         </div>
       </div> -->
     </div>
+
+    <!-- MAIN COLUMN -->
     <v-expand-transition>
       <div v-if="orderedCohorts.length" class="main-col" v-show="expand">
         <!-- Middle chip row -->
@@ -120,7 +143,7 @@
           >
             <template v-slot:activator="{ on, attrs }">
               <div v-bind="attrs" v-on="on">
-                <CreateEditDeleteCohortDialog />
+                <CreateEditDeleteCohortDialog :cohortToEdit="{}" />
               </div>
             </template>
             <div class="create-tooltip">
@@ -129,10 +152,9 @@
             </div>
           </v-tooltip>
           <!-- PAY WALL VERSION Create Cohort Button -->
-          <v-tooltip v-else bottom color="subBackground">
+          <!-- <v-tooltip v-else bottom color="subBackground">
             <template v-slot:activator="{ on, attrs }">
               <div v-bind="attrs" v-on="on">
-                <!-- DISABLED -->
                 <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on" disabled>
                   <v-icon class="mb-1 mr-2">{{ mdiPlus }}</v-icon>
                   CREATE SQUAD
@@ -140,7 +162,7 @@
               </div>
             </template>
             <span v-html="paidFeatureMessage"></span>
-          </v-tooltip>
+          </v-tooltip> -->
         </div>
 
         <!-- ADMIN BUTTONS -->
@@ -166,16 +188,15 @@
       </div>
 
       <!-- NO COHORTS YET -->
-      <div v-else class="no-cohort">
-        <p class="overline">You haven't created any Squads yet</p>
+      <div v-else-if="!isLoading && cohorts.length == 0" class="no-cohort">
+        <p class="overline">You aren't in any Squads yet</p>
         <!-- <p class="overline">start a galaxy to create a cohort</p> -->
 
         <!-- PAY WALL VERSION Create Cohort Button -->
         <div class="button-container">
-          <v-tooltip bottom close-delay="2000" color="subBackground">
+          <!-- <v-tooltip bottom close-delay="2000" color="subBackground">
             <template v-slot:activator="{ on, attrs }">
               <div v-bind="attrs" v-on="on">
-                <!-- DISABLED -->
                 <v-btn outlined color="baseAccent" v-bind="attrs" v-on="on" disabled>
                   <v-icon class="mb-1 mr-2">{{ mdiPlus }}</v-icon>
                   create cohort
@@ -183,17 +204,11 @@
               </div>
             </template>
             <span v-html="paidFeatureMessage"></span>
-          </v-tooltip>
+          </v-tooltip> -->
 
           <!-- FREELY CREATE COHORTS VERSION -->
-          <!-- <v-tooltip right color="subBackground">
-            <template v-slot:activator="{ on, attrs }">
-              <div v-bind="attrs" v-on="on">
-                <CreateEditDeleteCohortDialog />
-              </div>
-            </template>
-            <div class="create-tooltip">CREATE COHORT</div>
-          </v-tooltip> -->
+
+          <CreateEditDeleteCohortDialog :cohortToEdit="{}" />
 
           <!-- ADIMN: CREATE ORG -->
           <v-tooltip right color="subBackground" v-if="this.user.data.admin">
@@ -268,6 +283,7 @@ export default {
     unselectedCohorts: [],
     orderedCohorts: [],
     expand: false,
+    isLoading: true,
     paidFeatureMessage: `<div class="ma-2"><p class="text-center overline">Paid feature.</p><p class="text-center">Contact us to upgrade: <a href="mailto:base@galaxymaps.io">base@galaxymaps.io</a></p></div>`,
   }),
   watch: {
@@ -292,6 +308,18 @@ export default {
     getCohortsThatPersonIsTeacherIn() {
       return this.cohorts.filter((cohort) => cohort.teachers.includes(this.person.id));
     },
+    getRegularCohorts() {
+      return this.cohorts.filter(
+        (cohort) =>
+          cohort.teachers.includes(this.person.id) &&
+          (!cohort.courseCohort || cohort.courseCohort === false),
+      );
+    },
+    getMapSquadCohorts() {
+      return this.cohorts.filter(
+        (cohort) => cohort.teachers.includes(this.person.id) && cohort.courseCohort === true,
+      );
+    },
     getOrganisationsThatPersonIsTeacherIn() {
       return this.organisations.filter((organisation) =>
         organisation.people.includes(this.person.id),
@@ -305,15 +333,25 @@ export default {
       }
     },
     async getCohortsAndOrganisations() {
-      this.cohorts = await fetchCohorts();
-      const organisationIdsSet = new Set(
-        this.cohorts
-          .filter((cohort) => cohort.organisation != null && cohort.organisation !== "")
-          .map((cohort) => cohort.organisation),
-      );
-      this.organisations = await Promise.all(
-        Array.from(organisationIdsSet).map((id) => fetchOrganisationByOrganisationId(id)),
-      );
+      try {
+        this.isLoading = true;
+        this.cohorts = await fetchCohorts();
+        const organisationIdsSet = new Set(
+          this.cohorts
+            .filter((cohort) => cohort.organisation != null && cohort.organisation !== "")
+            .map((cohort) => cohort.organisation),
+        );
+        this.organisations = await Promise.all(
+          Array.from(organisationIdsSet).map((id) => fetchOrganisationByOrganisationId(id)),
+        );
+      } catch (error) {
+        console.error("Error fetching cohorts and organisations:", error);
+        // Set empty arrays if there's an error
+        this.cohorts = [];
+        this.organisations = [];
+      } finally {
+        this.isLoading = false;
+      }
     },
     editOrgDialog(orgId) {
       this.openOrganisationDialog = true;
@@ -330,10 +368,13 @@ export default {
       // save num of orgs and cohorts to this multi-dimensional array
       const orgsCohortsArr = [];
 
-      // cohorts without orgs
+      // cohorts without orgs (regular cohorts)
       // this querys all id's with noOrg (eg. id="noOrg...")
       // important no orgs pushes first as no org cohorts render first
       orgsCohortsArr.push(document.querySelectorAll("[id^=noOrg]").length);
+
+      // map squad cohorts
+      orgsCohortsArr.push(document.querySelectorAll("[id^=mapSquad]").length);
 
       // orgs with cohorts
       for (var i = 0; i < numOrgs; i++) {
@@ -347,16 +388,22 @@ export default {
       let mappedIndex = 0;
       if (orgIndex == "noOrg") {
         mappedIndex = cohortIndex;
+      } else if (orgIndex == "mapSquad") {
+        let sum = 0;
+        sum += orgsCohortsArr[0]; // sum noOrg cohorts first
+        mappedIndex = sum + cohortIndex;
       } else if (orgIndex == 0) {
         let sum = 0;
-        sum += orgsCohortsArr[0];
+        sum += orgsCohortsArr[0]; // sum noOrg cohorts first
+        sum += orgsCohortsArr[1]; // sum mapSquad cohorts
         mappedIndex = sum + cohortIndex;
       } else {
         //test cases: org1cohort2 , org3cohort2
         let sum = 0;
         sum += orgsCohortsArr[0]; // sum noOrg cohorts first
+        sum += orgsCohortsArr[1]; // sum mapSquad cohorts
         for (var x = 0; x < orgIndex; x++) {
-          sum += orgsCohortsArr[x + 1]; // plus 1 because noOrgs is first index
+          sum += orgsCohortsArr[x + 2]; // plus 2 because noOrgs and mapSquad are first two indices
         }
         mappedIndex = sum + cohortIndex;
       }
@@ -387,7 +434,7 @@ export default {
         this.unselectedCohorts = this.diffTwoArraysOfObjects(this.cohorts, this.selectedCohorts);
 
         // add dim to all cohort els
-        for (var y = 0; y < cohortEls.length; y++) {
+        for (let y = 0; y < cohortEls.length; y++) {
           cohortEls[y].$el.classList.add("dim");
         }
         //remove dim for selected cohort els
@@ -426,26 +473,44 @@ hr {
 
 .main-wrap {
   height: 100vh;
-  width: 80%;
+  width: 90%;
   display: flex;
   margin: auto;
   overflow: hidden;
+  // border: 1px solid red;
 
   .side-col {
     width: 10%;
     display: flex;
-    flex-direction: column;
-    justify-content: start;
+    flex-direction: row;
+    justify-content: center;
     align-items: center;
+    flex-wrap: wrap;
     overflow-y: scroll;
     overflow-x: hidden;
     // border: 1px solid blue;
 
     .cohorts {
-      width: 50%;
+      width: 100%;
       display: flex;
       flex-wrap: wrap;
       // border: 1px solid yellow;
+    }
+
+    .map-squads-section {
+      width: 100%;
+
+      .divider {
+        margin: 20px 0;
+        border: 1px solid rgba(200, 200, 200, 0.3);
+      }
+
+      .map-squads-title {
+        text-align: center;
+        margin-bottom: 15px;
+        font-size: 0.8rem;
+        letter-spacing: 1px;
+      }
     }
     .mission-border {
       border: 1px solid var(--v-subBackground-base);
@@ -456,7 +521,7 @@ hr {
 
   .main-col {
     margin-top: 70px;
-    width: 80%;
+    width: 90%;
     overflow: scroll;
     overflow-x: hidden;
     // border: 1px solid yellow;
@@ -511,8 +576,8 @@ hr {
 }
 
 .cohort-panel {
-  //width: calc(50% - 40px); // two panels per row
-  width: 100%; // one panel per row
+  width: calc(50% - 40px); // two panels per row
+  // width: 100%; // one panel per row
 }
 
 .no-cohort {
@@ -526,7 +591,7 @@ hr {
   color: var(--v-missionAccent-base);
   // margin-left: auto;
   // margin-right: auto;
-  width: 70%;
+  width: 80%;
   .button-container {
     margin-top: 50px;
     height: auto;

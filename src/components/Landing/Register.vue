@@ -57,10 +57,71 @@
           @click:append="() => (hide = !hide)"
           :type="hide ? 'password' : 'text'"
         ></v-text-field>
+        <!-- Photo -->
+        <div>
+          <p class="caption overline missionAccent--text">Upload profile photo</p>
+          <div class="avatars-container d-flex flex-column">
+            <div class="upload-avatar-container">
+              <v-progress-circular
+                v-if="uploading"
+                :rotate="360"
+                :size="60"
+                :width="2"
+                :value="uploadPercentage"
+                color="baseAccent"
+              >
+                {{ uploadPercentage + "%" }}
+              </v-progress-circular>
+              <!-- <v-hover v-else v-slot="{ hover }"> -->
+              <v-avatar
+                v-else
+                color="secondary"
+                @mouseenter="onhover = true"
+                @mouseleave="onhover = false"
+                size="100"
+                class="mb-4"
+              >
+                <img
+                  v-if="person.image.url"
+                  :src="person.image.url"
+                  :alt="person.firstName"
+                  style="object-fit: cover"
+                />
+                <!-- <v-icon v-if="hover">{{mdiPencil}}</v-icon> -->
+                <v-icon :dark="dark" :light="!dark" v-else>{{ mdiAccount }}</v-icon>
+                <v-fade-transition>
+                  <v-overlay v-if="onhover" absolute color="baseAccent">
+                    <v-icon small @click="onButtonClick">{{ mdiPencil }}</v-icon>
+                  </v-overlay>
+                </v-fade-transition>
+                <input
+                  ref="uploader"
+                  class="d-none"
+                  type="file"
+                  accept="image/*"
+                  @change="onFileChanged"
+                />
+              </v-avatar>
+            </div>
+            <div class="navigators-avatar-container d-flex flex-wrap pl-1">
+              <v-avatar
+                v-for="image in navigatorImages"
+                :key="image.name"
+                size="30"
+                class="navigators-avatar mr-2 mb-2"
+                :class="{ 'selected-navigator': person.image.url === image.url }"
+                @click="selectNavigator(image)"
+              >
+                <img :src="image.url" :alt="image.name" style="object-fit: cover" />
+              </v-avatar>
+            </div>
+          </div>
+          <!-- </v-hover> -->
+        </div>
         <v-btn
           :disabled="!valid"
           color="missionAccent"
-          class="mr-4"
+          class="mt-4"
           @click="register"
           outlined
           width="100%"
@@ -79,11 +140,12 @@
 
 <script>
 import BackButton from "@/components/Reused/BackButton.vue";
-import { db } from "@/store/firestoreConfig";
+import { db, storage } from "@/store/firestoreConfig";
 import useRootStore from "@/store/index";
 import firebase from "firebase/compat/app";
 import { mapActions } from "pinia";
-import { mdiEye, mdiEyeOff } from "@mdi/js";
+import { mdiEye, mdiEyeOff, mdiPencil, mdiAccount } from "@mdi/js";
+import { navigatorImages, getFriendlyErrorMessage } from "@/lib/utils";
 
 export default {
   name: "Register",
@@ -93,6 +155,9 @@ export default {
   data: () => ({
     mdiEye,
     mdiEyeOff,
+    mdiPencil,
+    mdiAccount,
+    navigatorImages,
     closed: false,
     valid: true,
     person: {
@@ -102,7 +167,15 @@ export default {
       email: "",
       password: "",
       id: "",
+      image: {
+        url: "",
+        name: "",
+      },
     },
+    selectedFile: {},
+    uploading: false,
+    uploadPercentage: 0,
+    onhover: false,
     emailRules: [
       (v) => !!v || "E-mail is required",
       (v) => /.+@.+\..+/.test(v) || "E-mail must be valid",
@@ -110,6 +183,11 @@ export default {
     loading: false,
     hide: String,
   }),
+  computed: {
+    dark() {
+      return this.$vuetify.theme.isDark;
+    },
+  },
   mounted() {
     // hack to make active select white
     if (this.$vuetify.theme.isDark) {
@@ -120,6 +198,49 @@ export default {
   },
   methods: {
     ...mapActions(useRootStore, ["setSnackbar"]),
+    onButtonClick() {
+      this.$refs.uploader?.click();
+    },
+    async onFileChanged(e) {
+      this.selectedFile = e.target.files[0];
+      await this.storeImage();
+    },
+    storeImage() {
+      this.uploading = true;
+      // create a storage ref with safe fallback (id may not exist yet during register)
+      const namePart = (this.person.firstName || "") + (this.person.lastName || "");
+      const fallback = this.person?.id ? `${this.person.id}-${Date.now()}` : `${Date.now()}`;
+      const safePrefix = namePart || fallback;
+      const storageRef = storage.ref(`avatar-images/${safePrefix}-${this.selectedFile.name}`);
+
+      // upload a file
+      const uploadTask = storageRef.put(this.selectedFile);
+
+      // update progress bar
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          // show progress on uploader bar
+          this.uploadPercentage = Math.floor(
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100,
+          );
+        },
+        // upload error
+        (err) => {
+          console.log(err);
+        },
+        // upload complete
+        () => {
+          // get image url
+          uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+            // add image url to person obj
+            this.uploading = false;
+            this.person.image.url = downloadURL;
+            this.person.image.name = this.selectedFile.name;
+          });
+        },
+      );
+    },
     register() {
       this.loading = true;
       // add user the auth
@@ -135,6 +256,7 @@ export default {
           delete this.person.password;
           // add time registered
           this.person["registered"] = new Date();
+          // profile image is already in person object if uploaded
           // add user to people database
           db.collection("people")
             .doc(this.person.id)
@@ -144,7 +266,7 @@ export default {
             });
         })
         .then(() => {
-          var actionCodeSettings = {
+          const actionCodeSettings = {
             // TODO: Update to galaxymaps.io on deployment
             url: window.location.origin + "/login",
             handleCodeInApp: true,
@@ -160,7 +282,7 @@ export default {
         .catch((error) => {
           this.setSnackbar({
             show: true,
-            text: error.message,
+            text: getFriendlyErrorMessage(error.code),
             color: "pink",
           });
           this.person = {};
@@ -169,6 +291,12 @@ export default {
     validate() {
       this.$refs.form.validate();
     },
+    selectNavigator(image) {
+      console.log("Selecting navigator:", image);
+      this.person.image.url = image.url;
+      this.person.image.name = image.name;
+      console.log("Updated person.image:", this.person.image);
+    },
   },
 };
 </script>
@@ -176,14 +304,17 @@ export default {
 <style lang="scss" scoped>
 .register {
   width: 100vw;
-  height: 100vh;
+  height: 100%;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   flex-direction: column;
   background-color: #393e46;
   background-size: cover;
   box-shadow: inset 0 0 0 2000px rgba(20, 30, 48, 0.9);
+  // padding-top: 50px;
+  padding-bottom: 50px;
+  overflow-y: auto;
 
   p {
     font-size: 0.9rem;
@@ -235,6 +366,46 @@ export default {
       margin-top: 10px;
       color: var(--v-missionAccent-base);
       // font-size: 0.9rem;
+    }
+
+    .caption {
+      text-align: center;
+    }
+
+    .avatars-container {
+      width: 100%;
+
+      .upload-avatar-container {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .navigators-avatar-container {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        .navigators-avatar {
+          pointer-events: auto;
+          cursor: pointer;
+          transition: transform 0.2s ease;
+
+          &:hover {
+            transform: scale(1.1);
+          }
+
+          &.selected-navigator {
+            border: 2px solid var(--v-missionAccent-base);
+            transform: scale(1.1);
+          }
+
+          img {
+            pointer-events: none;
+          }
+        }
+      }
     }
   }
 

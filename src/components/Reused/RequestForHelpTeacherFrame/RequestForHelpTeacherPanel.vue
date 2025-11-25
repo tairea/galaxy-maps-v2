@@ -4,7 +4,7 @@
       <v-expansion-panel
         @change="panelChange()"
         v-for="(sub, i) in [request]"
-        :key="i"
+        :key="request.id"
         class="panel"
       >
         <v-expansion-panel-header class="pa-0" ref="panel">

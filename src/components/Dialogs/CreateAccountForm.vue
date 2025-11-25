@@ -56,7 +56,38 @@
         outlined
         color="missionAccent"
       ></v-text-field>
-      <v-text-field
+
+      <!-- Squad Captain Dropdown -->
+      <div v-if="!teacher && cohort && cohort.teachers && cohort.teachers.length > 0">
+        <!-- <p class="input-description mt-6">Added by:</p> -->
+        <v-select
+          v-model="selectedTeacher"
+          :items="cohortTeachers"
+          item-text="displayName"
+          item-value="id"
+          @change="onTeacherSelected"
+          class="input-field select-color"
+          color="missionAccent"
+          outlined
+          :dark="dark"
+          :light="!dark"
+          label="Added by"
+        >
+          <template v-slot:item="data">
+            <template>
+              <v-list-item-avatar v-if="data.item.image && data.item.image.url">
+                <img :src="data.item.image.url" />
+              </v-list-item-avatar>
+              <v-list-item-content>
+                <v-list-item-title v-html="data.item.firstName"></v-list-item-title>
+                <v-list-item-subtitle v-html="data.item.email"></v-list-item-subtitle>
+              </v-list-item-content>
+            </template>
+          </template>
+        </v-select>
+      </div>
+
+      <!-- <v-text-field
         v-if="!teacher"
         :dark="dark"
         :light="!dark"
@@ -66,8 +97,7 @@
         required
         outlined
         color="missionAccent"
-        :value="person.firstName + ' ' + person.lastName"
-      ></v-text-field>
+      ></v-text-field> -->
     </v-form>
     <v-row>
       <v-btn
@@ -142,6 +172,12 @@ export default {
       console.log("edit student: ", this.account);
     } else {
       this.cohort = await fetchCohortByCohortId(this.currentCohortId);
+      // Set default inviter
+      this.account.inviter = `${this.person.firstName} ${this.person.lastName}`;
+      // Fetch cohort teachers if cohort exists
+      if (this.cohort && this.cohort.teachers && this.cohort.teachers.length > 0) {
+        await this.initializeCohortTeachers();
+      }
     }
   },
   data: () => ({
@@ -149,6 +185,8 @@ export default {
     cohort: null,
     addingAccount: false,
     valid: true,
+    selectedTeacher: null,
+    cohortTeachers: [],
     account: {
       id: "",
       firstName: "",
@@ -194,7 +232,7 @@ export default {
     async update() {
       this.updatingAccount = true;
       // remove empty fields
-      let obj = Object.fromEntries(Object.entries(this.account).filter(([_, v]) => v.length));
+      const obj = Object.fromEntries(Object.entries(this.account).filter(([_, v]) => v.length));
 
       await db.collection("people").doc(obj.id).update(obj);
 
@@ -211,25 +249,26 @@ export default {
       this.$refs.form.validate();
       if (!this.account.email) return;
       this.addingAccount = true;
-      const studentExists = await fetchPersonByEmail(this.account.email);
-      console.log("person exists:", studentExists);
-      if (studentExists) {
+      const personExists = await fetchPersonByEmail(this.account.email);
+      console.log("person exists:", personExists);
+      if (personExists) {
         const profile = {
           ...this.account,
-          ...studentExists,
+          ...personExists,
           inviter: this.person.firstName + " " + this.person.lastName,
         };
-        // if teacher, emit teacher?
+        // accountType === "teacher" is manually propped in from CreateEditDeleteCohortDialog.vue
         if (this.teacher) {
           this.$emit("addTeacher", profile);
           this.addingAccount = false;
           this.close();
         } else {
+          // student logic
           try {
             await updatePerson(profile.id, profile); // updates /people/:id profile
             await addPersonToCohort(profile.id, this.cohort.id); // adds student to /cohorts/:id/students
 
-            console.log("existing person added to cohort");
+            console.log("existing person added to cohort as a student");
 
             if (this.cohort.courses.length) {
               await this.assignStudentToCourses(profile); // adds course to /people/:id/assignedCourses
@@ -251,34 +290,35 @@ export default {
           }
         }
       } else {
+        // logic for person does not exists in database
         const profile = {
           ...this.account,
           displayName: this.account.firstName + " " + this.account.lastName,
+          inviter: this.person.firstName + " " + this.person.lastName,
+          accountType: this.accountType,
         };
         console.log("person does not exist in db. creating them now...", profile);
+        // create person in database
         try {
-          const person = await createPerson(profile);
+          const newPerson = await createPerson(profile);
           this.setSnackbar({
             show: true,
             text: "New Account Created",
             color: "baseAccent",
           });
           if (!this.teacher) {
-            await addPersonToCohort(person.id, this.currentCohortId);
+            await addPersonToCohort(newPerson.id, this.currentCohortId);
             this.setSnackbar({
               show: true,
               text: "Navigator added to Squad",
               color: "baseAccent",
             });
             if (this.cohort.courses.length) {
-              await this.assignStudentToCourses(person); // adds course to /people/:id/assignedCourses
+              await this.assignStudentToCourses(newPerson); // adds course to /people/:id/assignedCourses
             }
           } else {
-            this.setSnackbar({
-              show: true,
-              text: "New Captain added to Galaxy Map",
-              color: "baseAccent",
-            });
+            // adds teacher to cohort in CreateEditDeleteCohortDialog.vue via emits
+            this.$emit("addTeacher", newPerson);
           }
           this.addingAccount = false;
           this.close();
@@ -299,6 +339,34 @@ export default {
       };
       const sendNewCohortEmail = functions.httpsCallable("sendNewCohortEmail");
       return sendNewCohortEmail(person);
+    },
+    async initializeCohortTeachers() {
+      if (this.cohort && this.cohort.teachers && this.cohort.teachers.length > 0) {
+        console.log("Fetching cohort teachers for dropdown");
+        // Fetch teacher details from Firebase
+        const teacherPromises = this.cohort.teachers.map((teacherId) =>
+          db.collection("people").doc(teacherId).get(),
+        );
+
+        const teacherSnapshots = await Promise.all(teacherPromises);
+
+        this.cohortTeachers = teacherSnapshots.map((snapshot) => {
+          const data = snapshot.data();
+          return {
+            id: snapshot.id,
+            ...data,
+            displayName: `${data.firstName} ${data.lastName}`,
+          };
+        });
+      }
+    },
+    onTeacherSelected(teacherId) {
+      if (teacherId) {
+        const selectedTeacher = this.cohortTeachers.find((teacher) => teacher.id === teacherId);
+        if (selectedTeacher) {
+          this.account.inviter = `${selectedTeacher.firstName} ${selectedTeacher.lastName}`;
+        }
+      }
     },
   },
 };
@@ -339,5 +407,17 @@ export default {
 
 .cohort-btn {
   font-weight: 400;
+}
+
+.input-description {
+  color: var(--v-missionAccent-base);
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  margin: 0;
+  font-style: italic;
+}
+
+.select-color {
+  color: var(--v-missionAccent-base);
 }
 </style>

@@ -3,7 +3,7 @@
     <v-expansion-panels flat v-model="showCard">
       <v-expansion-panel
         v-for="(sub, i) in [submission]"
-        :key="i"
+        :key="submission.id"
         class="panel"
         @change="panelChange()"
       >

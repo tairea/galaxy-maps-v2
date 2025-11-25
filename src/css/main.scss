@@ -1,9 +1,41 @@
-/* Hide scrollbars globally */
-html,
+/* Import viewport utilities */
+@import "./viewport-utils.scss";
+
+/* Prevent mobile viewport changes and ensure stable layout */
+html {
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  /* Prevent mobile keyboard from changing viewport */
+  height: 100%;
+  width: 100%;
+  /* Disable text size adjustment on mobile */
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Set background color to prevent white background showing */
+  background: var(--v-background-base) !important;
+}
+
 body {
   overflow: hidden;
   margin: 0;
   padding: 0;
+  /* Ensure body takes full viewport */
+  height: 100%;
+  width: 100%;
+  /* Prevent mobile keyboard zoom */
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Prevent viewport changes on mobile */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* Set background color to prevent white background showing */
+  background: var(--v-background-base) !important;
 }
 
 body::-webkit-scrollbar {
@@ -12,6 +44,11 @@ body::-webkit-scrollbar {
 
 html::-webkit-scrollbar {
   display: none;
+}
+
+/* Ensure body background is set even before CSS variables are loaded */
+body {
+  background: #141e30 !important; /* Fallback dark background */
 }
 
 /* COMMENTED OUT: Global scrollbar styles that were overriding previous efforts to hide scrollbars

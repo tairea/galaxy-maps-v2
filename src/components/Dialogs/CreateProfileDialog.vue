@@ -5,7 +5,7 @@
       <div class="create-dialog">
         <!-- HEADER -->
         <div class="dialog-header">
-          <p class="mb-0">Update profile</p>
+          <p class="mb-0">Create profile</p>
         </div>
         <div class="create-dialog-content pt-0">
           <v-form ref="form" v-model="valid" lazy-validation>
@@ -69,57 +69,74 @@
             ></v-text-field>
           </v-form>
           <div>
-            <p class="caption">Upload profile photo</p>
-            <v-progress-circular
-              v-if="uploading"
-              :rotate="360"
-              :size="60"
-              :width="2"
-              :value="uploadPercentage"
-              color="baseAccent"
-            >
-              {{ uploadPercentage + "%" }}
-            </v-progress-circular>
-            <!-- <v-hover v-else v-slot="{ hover }"> -->
-            <v-avatar
-              v-else
-              color="secondary"
-              @mouseenter="onhover = true"
-              @mouseleave="onhover = false"
-              size="60"
-              class="mb-4"
-            >
-              <img
-                v-if="profile.image.url"
-                :src="profile.image.url"
-                :alt="profile.firstName"
-                style="object-fit: cover"
-              />
-              <!-- <v-icon v-if="hover">{{mdiPencil}}</v-icon> -->
-              <v-icon :dark="dark" :light="!dark" v-else>{{ mdiAccount }}</v-icon>
-              <v-fade-transition>
-                <v-overlay v-if="onhover" absolute color="baseAccent">
-                  <v-icon small @click="onButtonClick">{{ mdiPencil }}</v-icon>
-                </v-overlay>
-              </v-fade-transition>
-              <input
-                ref="uploader"
-                class="d-none"
-                type="file"
-                accept="image/*"
-                @change="onFileChanged"
-              />
-            </v-avatar>
+            <p class="caption overline missionAccent--text">Upload profile photo</p>
+            <div class="avatars-container d-flex flex-column">
+              <div class="upload-avatar-container">
+                <v-progress-circular
+                  v-if="uploading"
+                  :rotate="360"
+                  :size="60"
+                  :width="2"
+                  :value="uploadPercentage"
+                  color="baseAccent"
+                >
+                  {{ uploadPercentage + "%" }}
+                </v-progress-circular>
+                <!-- <v-hover v-else v-slot="{ hover }"> -->
+                <v-avatar
+                  v-else
+                  color="secondary"
+                  @mouseenter="onhover = true"
+                  @mouseleave="onhover = false"
+                  size="100"
+                  class="mb-4"
+                >
+                  <img
+                    v-if="profile.image.url"
+                    :src="profile.image.url"
+                    :alt="profile.firstName"
+                    style="object-fit: cover"
+                  />
+                  <!-- <v-icon v-if="hover">{{mdiPencil}}</v-icon> -->
+                  <v-icon :dark="dark" :light="!dark" v-else>{{ mdiAccount }}</v-icon>
+                  <v-fade-transition>
+                    <v-overlay v-if="onhover" absolute color="baseAccent">
+                      <v-icon small @click="onButtonClick">{{ mdiPencil }}</v-icon>
+                    </v-overlay>
+                  </v-fade-transition>
+                  <input
+                    ref="uploader"
+                    class="d-none"
+                    type="file"
+                    accept="image/*"
+                    @change="onFileChanged"
+                  />
+                </v-avatar>
+              </div>
+              <div class="navigators-avatar-container d-flex flex-wrap pl-1">
+                <v-avatar
+                  v-for="image in navigatorImages"
+                  :key="image.name"
+                  size="30"
+                  class="navigators-avatar mr-2 mb-2"
+                  :class="{ 'selected-navigator': profile.image.url === image.url }"
+                  @click="selectNavigator(image)"
+                >
+                  <img :src="image.url" :alt="image.name" style="object-fit: cover" />
+                </v-avatar>
+              </div>
+            </div>
             <!-- </v-hover> -->
           </div>
-          <v-row>
+          <v-row class="d-flex justify-center align-center mt-4">
             <v-btn
-              :loading="!valid || updatingAccount"
+              :loading="updatingAccount"
               color="missionAccent"
               class="ma-4"
               @click="update()"
               outlined
               width="30%"
+              :disabled="updatingAccount"
             >
               Update
             </v-btn>
@@ -129,7 +146,7 @@
               @click="cancel()"
               outlined
               width="30%"
-              :disabled="!valid || updatingAccount"
+              :disabled="updatingAccount"
             >
               cancel
             </v-btn>
@@ -146,6 +163,7 @@ import useRootStore from "@/store/index";
 import { mdiPencil, mdiAccount } from "@mdi/js";
 import firebase from "firebase/compat/app";
 import { mapActions, mapState } from "pinia";
+import { navigatorImages } from "@/lib/utils";
 
 export default {
   name: "CreateProfileDialog",
@@ -153,6 +171,7 @@ export default {
   data: () => ({
     mdiPencil,
     mdiAccount,
+    navigatorImages,
     updatingAccount: false,
     valid: true,
     profile: {
@@ -160,7 +179,10 @@ export default {
       firstName: "",
       lastName: "",
       email: "",
-      image: {},
+      image: {
+        url: "",
+        name: "",
+      },
     },
     password: "",
     confirmPassword: "",
@@ -174,7 +196,7 @@ export default {
     ],
     passwordRules: [
       (v) => !!v || "Password is required",
-      (v) => (v && v.length >= 8) || "Password must have a minimum of 8 characters",
+      (v) => (v && v.length >= 6) || "Password must have a minimum of 8 characters",
     ],
   }),
   watch: {
@@ -215,10 +237,12 @@ export default {
         })
         .then(() => {
           // login and navigate to my cohorts
+          this.updatingAccount = false;
           this.$emit("login");
         })
         .catch((err) => {
           console.error("something went wrong: ", err);
+          this.updatingAccount = false;
         });
     },
     updatePassword() {
@@ -239,17 +263,14 @@ export default {
     },
     storeImage() {
       this.uploading = true;
-      // ceate a storage ref
-      var storageRef = storage.ref(
-        "avatar-images/" +
-          this.profile.firstname +
-          this.person.lastname +
-          "-" +
-          this.selectedFile.name,
-      );
+      // create a storage ref with safe fallback
+      const namePart = (this.profile.firstName || "") + (this.profile.lastName || "");
+      const fallback = this.person?.id ? `${this.person.id}-${Date.now()}` : `${Date.now()}`;
+      const safePrefix = namePart || fallback;
+      const storageRef = storage.ref(`avatar-images/${safePrefix}-${this.selectedFile.name}`);
 
       // upload a file
-      var uploadTask = storageRef.put(this.selectedFile);
+      const uploadTask = storageRef.put(this.selectedFile);
 
       // update progress bar
       uploadTask.on(
@@ -278,7 +299,8 @@ export default {
       );
     },
     updateProfile(data) {
-      db.collection("people")
+      return db
+        .collection("people")
         .doc(this.person.id)
         .update(data)
         .then(() => {
@@ -288,7 +310,14 @@ export default {
         })
         .catch((error) => {
           console.error("Error writing document: ", error);
+          throw error; // Re-throw to be caught by the calling function
         });
+    },
+    selectNavigator(image) {
+      console.log("Selecting navigator:", image);
+      this.profile.image.url = image.url;
+      this.profile.image.name = image.name;
+      console.log("Updated profile.image:", this.profile.image);
     },
   },
 };
@@ -332,5 +361,45 @@ export default {
   font-size: 0.7rem;
   margin: 0;
   font-style: italic;
+}
+
+.caption {
+  text-align: center;
+}
+
+.avatars-container {
+  width: 100%;
+
+  .upload-avatar-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .navigators-avatar-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .navigators-avatar {
+      pointer-events: auto;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+
+      &:hover {
+        transform: scale(1.1);
+      }
+
+      &.selected-navigator {
+        border: 2px solid var(--v-missionAccent-base);
+        transform: scale(1.1);
+      }
+
+      img {
+        pointer-events: none;
+      }
+    }
+  }
 }
 </style>
