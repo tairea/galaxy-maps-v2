@@ -3,6 +3,7 @@ import router from "@/router";
 import vuetify from "@/plugins/vuetify";
 import { startPresenceSystem } from "@/presence/index";
 import useRootStore from "@/store/index";
+import { db } from "@/store/firestoreConfig";
 import firebase from "firebase/compat/app";
 import { createPinia, PiniaVuePlugin } from "pinia";
 import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
@@ -17,6 +18,7 @@ import useGalaxyListViewStore from "./store/galaxyListView";
 
 import { createOpenAIPlugin } from "./plugins/openai";
 import viewportPlugin from "./plugins/viewport";
+import { ensureGooglePersonDocument } from "./lib/utils";
 
 Vue.use(PiniaVuePlugin);
 Vue.use(VueRouter);
@@ -28,7 +30,7 @@ Vue.config.productionTip = false;
 const pinia = createPinia();
 pinia.use(piniaPluginPersistedstate);
 
-firebase.auth().onAuthStateChanged((user) => {
+firebase.auth().onAuthStateChanged(async (user) => {
   const rootStore = useRootStore();
   const galaxyListViewStore = useGalaxyListViewStore();
   if (rootStore.user.loggedIn !== (user != null)) {
@@ -36,6 +38,9 @@ firebase.auth().onAuthStateChanged((user) => {
     galaxyListViewStore.$reset();
   }
   if (user) {
+    // Ensure person document exists for Google users (handles redirect case)
+    await ensureGooglePersonDocument(user, db);
+    
     user?.getIdTokenResult().then((idTokenResult) => {
       Object.assign(user, { admin: idTokenResult.claims.admin });
       rootStore.setUser(user);

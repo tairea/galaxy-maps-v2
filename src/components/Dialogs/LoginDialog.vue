@@ -126,7 +126,8 @@ import useRootStore from "@/store/index";
 import firebase from "firebase/compat/app";
 import { mapActions, mapState } from "pinia";
 import { mdiEye, mdiEyeOff, mdiGoogle } from "@mdi/js";
-import { getFriendlyErrorMessage } from "@/lib/utils";
+import { getFriendlyErrorMessage, ensureGooglePersonDocument } from "@/lib/utils";
+import { db } from "@/store/firestoreConfig";
 import "firebase/compat/auth";
 
 export default {
@@ -209,7 +210,14 @@ export default {
         this.loadingGoogle = true;
         const provider = new firebase.auth.GoogleAuthProvider();
         await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-        await firebase.auth().signInWithPopup(provider);
+        const result = await firebase.auth().signInWithPopup(provider);
+        const user = result.user;
+
+        // Ensure person document exists for Google user
+        if (user) {
+          await ensureGooglePersonDocument(user, db);
+        }
+
         this.proceed();
       } catch (error) {
         if (error && error.code === "auth/popup-blocked") {

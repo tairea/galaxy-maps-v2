@@ -1,3 +1,5 @@
+import firebase from "firebase/compat/app";
+
 export const colours = [
   "#fcff5d",
   "#7dfc00",
@@ -289,6 +291,58 @@ const errorMessages: ErrorMessages = {
   "auth/invalid-recaptcha-version": "The reCAPTCHA version is invalid.",
   "auth/invalid-req-type": "The request type is invalid.",
 };
+
+/**
+ * Creates a person document in Firestore for a Google-authenticated user if it doesn't exist.
+ * Splits the displayName into firstName and lastName.
+ * @param user - Firebase Auth user object
+ * @param db - Firestore database instance
+ * @returns Promise that resolves when the person document is created or already exists
+ */
+export async function ensureGooglePersonDocument(
+  user: firebase.User,
+  db: firebase.firestore.Firestore,
+): Promise<void> {
+  if (!user) return;
+
+  // Check if user is from Google provider
+  const isGoogleProvider = user.providerData.some(
+    (provider) => provider?.providerId === "google.com",
+  );
+
+  if (!isGoogleProvider) return;
+
+  // Check if person document already exists
+  const personDoc = await db.collection("people").doc(user.uid).get();
+  if (personDoc.exists) {
+    return; // Person document already exists
+  }
+
+  // Split displayName into firstName and lastName
+  const displayName = user.displayName || "";
+  const nameParts = displayName.trim().split(/\s+/);
+  const firstName = nameParts[0] || "";
+  const lastName = nameParts.slice(1).join(" ") || "";
+
+  // Create person document
+  const personData = {
+    id: user.uid,
+    email: user.email || "",
+    displayName: displayName,
+    firstName: firstName,
+    lastName: lastName,
+    photoURL: user.photoURL || "",
+    emailVerified: user.emailVerified || false,
+    registered: new Date(),
+    image: {
+      url: user.photoURL || "",
+      name: "",
+    },
+  };
+
+  await db.collection("people").doc(user.uid).set(personData);
+  console.log("Created person document for Google user:", user.uid);
+}
 
 export const getFriendlyErrorMessage = (errorCode: string): string => {
   return errorMessages[errorCode] || "An unknown error occurred: (" + errorCode + ")";

@@ -440,7 +440,7 @@ export const fetchPersonByPersonId = async (
       return await getPersonByPersonId(data);
     });
     return result.data.person;
-  } catch (error) {
+  } catch (error: any) {
     // Only log if it's not a resource exhaustion error (those are expected when throttled)
     const errorCode = error?.code;
     const errorMessage = error?.message || "";
