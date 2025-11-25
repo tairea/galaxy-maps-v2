@@ -1,4 +1,4 @@
-# Predploy & Deploy cloud functions
+# Predeploy & Deploy cloud functions
 
 ## Run (This will automatically run lint + build before deploying)
 
