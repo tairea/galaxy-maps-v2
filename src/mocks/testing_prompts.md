@@ -1,4 +1,9 @@
+<!-- history of south america timeline -->
+
+create a timeline for the history of south america, where each star is a key time period, with its mission being key events in that period. make the timeline from discovery to modern time. i want to it to be a way for me to learn the history of south america
+
 <!-- refine star test -->
+
 can you split these missions into three standalone stars (each with their own missions). currently it feels like you are cramming too much into one star.
 
 <!-- refine mission test -->

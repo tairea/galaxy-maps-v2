@@ -1,5 +1,9 @@
 # Cloud Functions Architecture & Development Guide
 
+> **Quick Reference:** For fast lookups and common patterns while coding, see **[README_CLOUD_FUNCTIONS_QUICK_REFERENCE.md](./README_CLOUD_FUNCTIONS_QUICK_REFERENCE.md)**
+>
+> **Developer Guide:** For overall project architecture and setup, see **[README_DEV.md](./README_DEV.md)**
+
 ## Overview
 
 This document outlines the architecture, patterns, and development workflow for Firebase Cloud Functions in the Galaxy Maps project. We've established a clean, maintainable pattern that separates client-side UI concerns from server-side business logic.
@@ -340,13 +344,139 @@ export default {
 7. **🛠️ Maintainability**: Business logic in one place
 8. **📊 Monitoring**: Built-in Firebase monitoring and analytics
 
+## Advanced Patterns: Scheduled & Background Tasks
+
+### Cloud Tasks for Delayed Operations
+
+Galaxy Maps uses **Google Cloud Tasks** for scheduling operations that need to run at a specific time in the future. This is more reliable than setTimeout or scheduled functions for precise timing.
+
+**Current Implementation:**
+- **Delayed Feedback Emails**: Users receive a feedback email 3 hours after creating a galaxy map
+- Location: `functions/src/emails.ts` (lines 860-1050)
+- See [functions/DELAYED_EMAIL_SETUP.md](./functions/DELAYED_EMAIL_SETUP.md) for complete setup guide
+
+**How It Works:**
+```typescript
+// 1. User triggers action (e.g., creates galaxy)
+// 2. Cloud Function creates a Cloud Task scheduled for future
+const task = {
+  httpRequest: {
+    url: 'https://[region]-[project].cloudfunctions.net/taskHandler',
+    body: Buffer.from(JSON.stringify(data)).toString('base64'),
+  },
+  scheduleTime: {
+    seconds: Math.floor(futureTime.getTime() / 1000),
+  },
+};
+await cloudTasksClient.createTask({ parent, task });
+
+// 3. Task executes at scheduled time and calls the HTTP endpoint
+// 4. HTTP endpoint performs the delayed action (sends email, etc.)
+```
+
+**Use Cases for Cloud Tasks:**
+- ✅ Delayed feedback emails (implemented)
+- 📅 Reminder emails (7-day check-in, 30-day engagement)
+- ⏰ Scheduled notifications (course deadlines, inactive user prompts)
+- 🔄 Retry logic for failed operations
+- 📊 Periodic data aggregation tasks
+- 🗑️ Cleanup operations (delete old data after X days)
+
+**Benefits:**
+- Precise timing (down to the second)
+- Automatic retries with exponential backoff
+- Scalable (handles millions of tasks)
+- Cost-effective (1M operations free/month)
+- Decoupled from main function execution
+
+**Pattern:**
+```typescript
+// In emails.ts or similar module
+export const scheduleTaskHttpsEndpoint = runWith({}).https.onCall(async (data, context) => {
+  const { uid } = await requireAuthenticated(context);
+
+  // Create Cloud Task
+  const client = new CloudTasksClient();
+  const task = {
+    httpRequest: {
+      url: `https://[region]-[project].cloudfunctions.net/taskHandler`,
+      body: Buffer.from(JSON.stringify(data)).toString('base64'),
+    },
+    scheduleTime: { seconds: Math.floor(scheduledTime.getTime() / 1000) },
+  };
+
+  await client.createTask({ parent: queuePath, task });
+});
+
+export const taskHandlerHttpsEndpoint = runWith({}).https.onRequest(async (req, res) => {
+  const data = req.body;
+
+  // Perform the scheduled action
+  await performScheduledAction(data);
+
+  res.status(200).send({ success: true });
+});
+```
+
+**Setup Requirements:**
+1. Enable Cloud Tasks API
+2. Create task queue: `gcloud tasks queues create [queue-name] --location=[region]`
+3. Grant permissions to Cloud Tasks service account
+4. Deploy both the scheduling function and task handler
+
+### Future Platform Automation Opportunities
+
+**Engagement & Retention:**
+- 7-day check-in email after galaxy creation
+- 30-day milestone celebrations (X students enrolled, Y missions completed)
+- Re-engagement campaigns for inactive users
+- Weekly/monthly progress summaries for teachers
+
+**Educational Features:**
+- Scheduled release of locked content (time-based missions)
+- Deadline reminders for mission submissions
+- Auto-archive old submissions after review period
+- Periodic cohort performance reports
+
+**Platform Operations:**
+- Daily/weekly analytics aggregation
+- Monthly usage reports to admins
+- Cleanup of orphaned data (unclaimed invites, test accounts)
+- Cache warming for frequently accessed galaxies
+- Backup verification tasks
+
+**Implementation Example:**
+```typescript
+// Schedule 7-day check-in email
+await scheduleEngagementEmail(userId, galaxyId, {
+  delay: 7 * 24 * 60 * 60 * 1000, // 7 days
+  templateType: 'weekly-checkin',
+});
+
+// Schedule deadline reminder
+await scheduleDeadlineReminder(studentId, missionId, {
+  dueDate: mission.dueDate,
+  reminderOffset: 24 * 60 * 60 * 1000, // 1 day before
+});
+```
+
+See the delayed email implementation in `functions/src/emails.ts` as a template for adding new scheduled tasks.
+
 ## Future Considerations
 
 - **Rate Limiting**: Implement if needed for high-traffic functions
 - **Caching**: Add Redis or similar for frequently accessed data
-- **Background Jobs**: Use Cloud Tasks for long-running operations
 - **Webhooks**: Implement for external service integrations
 - **Analytics**: Add custom metrics for business insights
+- **Queue Management**: Monitor Cloud Tasks queues and set up alerts for failures
+
+---
+
+## Related Documentation
+
+- **[README_CLOUD_FUNCTIONS_QUICK_REFERENCE.md](./README_CLOUD_FUNCTIONS_QUICK_REFERENCE.md)** - Quick reference for common patterns and daily development
+- **[README_DEV.md](./README_DEV.md)** - Overall developer guide and project architecture
+- **[functions/DELAYED_EMAIL_SETUP.md](./functions/DELAYED_EMAIL_SETUP.md)** - Real-world example: Scheduled emails using Cloud Tasks
 
 ---
 

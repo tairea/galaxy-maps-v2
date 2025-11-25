@@ -65,6 +65,8 @@ import {
   sendTaskSubmissionHttpsEndpoint,
   sendCollaboratorAddedEmailHttpsEndpoint,
   sendGenericEmailHttpsEndpoint,
+  scheduleGalaxyFeedbackEmailHttpsEndpoint,
+  sendGalaxyFeedbackEmailTask,
 } from "./emails.js";
 import {
   getOrganisationByOrganisationIdHttpsEndpoint,
@@ -170,6 +172,8 @@ export {
   sendTaskSubmissionHttpsEndpoint as sendTaskSubmission,
   sendCollaboratorAddedEmailHttpsEndpoint as sendCollaboratorAddedEmail,
   sendGenericEmailHttpsEndpoint as sendGenericEmail,
+  scheduleGalaxyFeedbackEmailHttpsEndpoint as scheduleGalaxyFeedbackEmail,
+  sendGalaxyFeedbackEmailTask,
 };
 
 // organisation

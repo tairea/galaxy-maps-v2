@@ -4,10 +4,12 @@
       <template v-slot:activator="{ on, attrs }">
         <p class="version-text overline" v-bind="attrs" v-on="on">Beta Release</p>
       </template>
-      <p class="ma-1">
-        This is an early Beta preview release. <br /><span
-          class="overline ma-0"
-          style="font-size: 0.7rem !important"
+      <p class="ma-1 overline" style="font-size: 0.6rem !important">
+        This is an early Beta preview release. <br />
+        We are building out in the open, so you may experience some bugs, but we are actively
+        working on them.<br />
+        Let us know if you find any bugs or have any feedback. <br />
+        <span class="overline ma-0" style="font-size: 0.7rem !important"
           >Version: {{ versionNumber }}</span
         >
       </p>
@@ -20,7 +22,7 @@ export default {
   name: "VersionStatus",
   data() {
     return {
-      versionNumber: "0.2511.02", // [version.yearMonth.patch]
+      versionNumber: "0.2511.03", // [version.yearMonth.patch]
     };
   },
   methods: {},

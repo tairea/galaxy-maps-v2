@@ -53,15 +53,30 @@ This document orients new contributors to the codebase. It outlines the runtime 
 ## Firebase Back End
 
 ### Cloud Functions
+
+Galaxy Maps uses Firebase Cloud Functions for server-side business logic following a clean architecture pattern.
+
+**Key Resources:**
+- 📚 **[Cloud Functions Architecture Guide](./README_CLOUD_FUNCTIONS_ARCHITECTURE.md)** - Deep dive into patterns, migration workflows, and best practices
+- ⚡ **[Cloud Functions Quick Reference](./README_CLOUD_FUNCTIONS_QUICK_REFERENCE.md)** - Quick lookup for common tasks and patterns
+
+**Architecture Pattern:**
+```
+Vue Component → ff.ts (client abstraction) → Cloud Function → Firestore
+```
+
+**Key Modules:**
 - Entry point `functions/src/index.ts` aggregates HTTP callable endpoints and triggers grouped by concern:
   - `courseManagement.ts` – galaxy CRUD, map node/edge operations, cohort enrolment, task ordering, and xAPI statements for mission lifecycle events.
   - `activity.ts` – learner activity analytics and reporting endpoints.
   - `organisationManagement.ts` – organisation CRUD, membership queries.
   - `userManagement.ts` – admin utilities, person profile reads/updates, elevated role assignment.
-  - `emails.ts` – transaction email senders (course publish, submissions, help requests) via Nodemailer.
+  - `emails.ts` – transaction email senders (course publish, submissions, help requests) via Nodemailer. Also includes delayed/scheduled emails using Cloud Tasks.
   - `presence.ts` – Realtime Database triggers that sync online/offline status into Firestore and emit xAPI statements (`veracityLRS.ts`).
   - `checkInactivity.ts` – scheduled function that monitors inactive learners.
 - Functions run on Node 20, TypeScript compiled to `lib/`. Secrets (e.g. LRS credentials) are injected via `defineSecret` and `.env` loading (`functions/src/_dotenv.ts`).
+
+For detailed documentation on creating, testing, and deploying functions, see the Architecture Guide and Quick Reference above.
 
 ### Firestore & Realtime Database
 - Core collections observed in the stores/functions include: `people`, `courses`, `courses/{courseId}/map-nodes`, `courses/{courseId}/map-edges`, `courses/{courseId}/requestsForHelp`, `courses/{courseId}/submissionsForReview`, `cohorts`, `organisations`, `status`, plus derived analytics documents.
@@ -103,6 +118,24 @@ For detailed documentation on AI features, architecture, and usage, see **[READM
 - `npm run lint` / `npm run format` – ESLint (Vue + TypeScript) and Prettier for the front end.
 - `npm run test:rules` – Executes Firestore rule tests inside emulators.
 - Functions lint/build: `npm run lint --workspace functions`, `npm run build --workspace functions`.
+
+## Documentation Index
+
+### Project Guides
+- **[README_PROJECT.md](./README_PROJECT.md)** - Project overview, features, and technology stack
+- **[README_DEV.md](./README_DEV.md)** - This file: Developer onboarding and architecture overview
+- **[README_AI.md](./README_AI.md)** - AI-powered features, voice agent, and OpenAI integration
+- **[README_STYLE_GUIDE.md](./README_STYLE_GUIDE.md)** - UI/UX style guide, Vuetify theming, and design patterns
+- **[CLAUDE.md](./CLAUDE.md)** - Instructions for Claude Code AI assistant
+
+### Cloud Functions
+- **[README_CLOUD_FUNCTIONS_ARCHITECTURE.md](./README_CLOUD_FUNCTIONS_ARCHITECTURE.md)** - Architecture patterns, migration workflows, and best practices
+- **[README_CLOUD_FUNCTIONS_QUICK_REFERENCE.md](./README_CLOUD_FUNCTIONS_QUICK_REFERENCE.md)** - Quick reference for common tasks and patterns
+
+### Deployment & Operations
+- **[DEPLOYMENT_COMPLETE.md](./DEPLOYMENT_COMPLETE.md)** - Delayed email system deployment summary
+- **[functions/DELAYED_EMAIL_SETUP.md](./functions/DELAYED_EMAIL_SETUP.md)** - Setup guide for scheduled emails with Cloud Tasks
+- **[SETUP_DELAYED_EMAIL.sh](./SETUP_DELAYED_EMAIL.sh)** - Automated setup script for delayed email infrastructure
 
 ## Key References
 - Front-end bootstrap: `src/main.ts`

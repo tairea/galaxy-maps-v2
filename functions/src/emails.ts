@@ -1,6 +1,7 @@
 import { log } from "firebase-functions/logger";
 import { runWith } from "firebase-functions/v1";
 import { createTransport } from "nodemailer";
+import { CloudTasksClient } from "@google-cloud/tasks";
 import { APP_NAME, DOMAIN } from "./_constants.js";
 
 // CUSTOM INVITE EMAIL
@@ -854,4 +855,193 @@ export async function sendGenericEmail(
 
   await mailTransport.sendMail(mailOptions);
   log(`Generic email sent to: ${to} with subject: ${subject}`);
+}
+
+// ============================================================================
+// DELAYED/SCHEDULED EMAILS
+// ============================================================================
+// The functions below use Google Cloud Tasks to schedule emails to be sent
+// at a specific time in the future (e.g., 3 hours after an event).
+// This differs from the above functions which send emails immediately.
+// ============================================================================
+
+// ======GALAXY FEEDBACK EMAIL (SCHEDULED 3 HOURS AFTER CREATION)==================
+
+/**
+ * Cloud Function callable endpoint to schedule a feedback email.
+ * This is called from the frontend when a new galaxy is created.
+ *
+ * Unlike other email functions which send immediately, this function:
+ * 1. Creates a Cloud Task scheduled to run 3 hours in the future
+ * 2. The task will call sendGalaxyFeedbackEmailTask at the scheduled time
+ * 3. That task handler then sends the actual email
+ *
+ * Requirements:
+ * - Cloud Tasks API must be enabled in GCP
+ * - Queue 'galaxy-feedback-emails' must be created (see setup instructions)
+ */
+export const scheduleGalaxyFeedbackEmailHttpsEndpoint = runWith({}).https.onCall(
+  async (data, _context) => {
+    const { email, name, galaxyTitle, galaxyId, createdAt } = data;
+
+    // Validate required parameters
+    if (!email || !name || !galaxyTitle || !galaxyId) {
+      log(
+        `Missing required parameters: email=${email}, name=${name}, galaxyTitle=${galaxyTitle}, galaxyId=${galaxyId}`,
+      );
+      throw new Error("Missing required parameters for scheduling feedback email");
+    }
+
+    await scheduleGalaxyFeedbackEmail(email, name, galaxyTitle, galaxyId, new Date(createdAt));
+  },
+);
+
+/**
+ * Internal function that creates a Cloud Task to send email 3 hours later.
+ *
+ * How it works:
+ * - Uses Google Cloud Tasks to schedule an HTTP request
+ * - The HTTP request targets sendGalaxyFeedbackEmailTask function
+ * - Task is scheduled for exactly 3 hours after galaxy creation
+ *
+ * Note: If scheduling fails, it logs the error but doesn't throw
+ * to avoid blocking galaxy creation.
+ */
+async function scheduleGalaxyFeedbackEmail(
+  email: string,
+  name: string,
+  galaxyTitle: string,
+  galaxyId: string,
+  createdAt: Date,
+): Promise<void> {
+  const client = new CloudTasksClient();
+
+  // Get project ID from environment
+  const project = process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT;
+  if (!project) {
+    log("Warning: No project ID found, cannot schedule task");
+    // Don't throw - we don't want to block galaxy creation
+    return;
+  }
+
+  // Configure task location and queue
+  // NOTE: Change 'us-central1' if your Firebase project is in a different region
+  const location = "us-central1";
+  const queue = "galaxy-feedback-emails";
+
+  const parent = client.queuePath(project, location, queue);
+
+  // Task should run 3 hours from now
+  const scheduleTime = new Date(createdAt.getTime() + 3 * 60 * 60 * 1000);
+
+  // Construct the Cloud Task
+  const task = {
+    httpRequest: {
+      httpMethod: "POST" as const,
+      url: `https://${location}-${project}.cloudfunctions.net/sendGalaxyFeedbackEmailTask`,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: Buffer.from(
+        JSON.stringify({
+          email,
+          name,
+          galaxyTitle,
+          galaxyId,
+        }),
+      ).toString("base64"),
+    },
+    scheduleTime: {
+      seconds: Math.floor(scheduleTime.getTime() / 1000),
+    },
+  };
+
+  try {
+    const [response] = await client.createTask({ parent, task });
+    log(`Scheduled feedback email task for ${email} at ${scheduleTime}`, response.name);
+  } catch (error) {
+    log("Error scheduling feedback email:", error);
+    // Don't throw - we don't want to block galaxy creation if scheduling fails
+    log("Continuing despite scheduling error - user will not receive feedback email");
+  }
+}
+
+/**
+ * Cloud Function HTTP handler called by Cloud Tasks (not by users directly).
+ * This runs 3 hours after galaxy creation and sends the actual feedback email.
+ *
+ * Security Note: This endpoint is called by Cloud Tasks, not directly by users.
+ * In production, you should verify the request comes from Cloud Tasks.
+ */
+export const sendGalaxyFeedbackEmailTask = runWith({}).https.onRequest(async (req, res) => {
+  try {
+    const { email, name, galaxyTitle, galaxyId } = req.body;
+
+    log(`Processing feedback email task for ${email}`);
+
+    await sendGalaxyFeedbackEmail(email, name, galaxyTitle, galaxyId);
+
+    res.status(200).send({ success: true });
+  } catch (error) {
+    log("Error in sendGalaxyFeedbackEmailTask:", error);
+    res.status(500).send({ error: "Failed to send feedback email" });
+  }
+});
+
+/**
+ * Sends the actual feedback request email to galaxy creator.
+ * This is called by sendGalaxyFeedbackEmailTask after the 3-hour delay.
+ */
+async function sendGalaxyFeedbackEmail(
+  email: string,
+  name: string,
+  galaxyTitle: string,
+  galaxyId: string,
+) {
+  const mailOptions: Record<string, string> = {
+    from: `${APP_NAME} <noreply@${DOMAIN}>`,
+    to: email,
+  };
+
+  mailOptions.subject = `How's your Galaxy Map [${galaxyTitle.toUpperCase()}] coming along?`;
+
+  mailOptions.text = `Greetings Captain ${name},
+
+My name is Ian, I'm the ceo and lead developer of Galaxy Maps, and captain of the TaiCollective fleet.
+
+Our system shows you recently created a Galaxy Map called "${galaxyTitle}", that's awesome!
+
+Since we are currently in a beta testing stage I'd love to hear about your experience:
+
+• How are you finding the Galaxy Maps platform?
+• What are you using it for?
+• How could we improve it?
+
+I hope to hear from you.
+
+Clear skies,
+Ian & the Galaxy Maps Team`;
+
+  mailOptions.html = `<p>Greetings Captain <strong>${name}</strong>,</p>
+<br/>
+<p>My name is Ian, I'm the ceo and lead developer of Galaxy Maps, and captain of the TaiCollective fleet.</p>
+<br/>
+<p>Our system shows you recently created a Galaxy Map called <strong>"${galaxyTitle}"</strong>, that's awesome!</p>
+<br/>
+<p>Since we are currently in a beta testing stage I'd love to hear about your experience:</p>
+<ul>
+  <li>How are you finding the Galaxy Maps platform?</li>
+  <li>What are you using it for?</li>
+  <li>How could we improve it?</li>
+</ul>
+<br/>
+<p>I hope to hear from you.</p>
+<br/>
+<ul>
+<p>FYI you can resume your Galaxy creation here: <a href="https://${DOMAIN}/galaxy/${galaxyId}" style="color: #69A1E2; text-decoration: none; border: 1px solid #69A1E2; padding: 10px 20px; display: inline-block;">View Your Galaxy Map →</a></p>
+<br/>
+<p style="font-size: 0.75rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #69A1E2;">Clear skies,<br/>Ian & the Galaxy Maps Team</p>`;
+
+  await mailTransport.sendMail(mailOptions);
+  log("Galaxy feedback email sent to:", email);
 }

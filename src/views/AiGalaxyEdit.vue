@@ -613,12 +613,29 @@
         </div>
         <!-- DIALOG CONTENT -->
         <div
-          class="create-dialog-content"
+          class="create-dialog-content text-center"
           :class="{ 'mobile-layout': $vuetify.breakpoint.smAndDown }"
         >
-          <div v-for="(question, index) in clarificationQuestions" :key="question">
+          <!-- Decide for me button -->
+          <v-btn
+            outlined
+            :color="'galaxyAccent'"
+            @click="decideForMe()"
+            class="mb-12"
+            :loading="loading"
+            :disabled="disabled"
+            :dark="dark"
+            :light="!dark"
+            small
+          >
+            <v-icon left> {{ mdiRobotExcited }} </v-icon>
+            Decide for me
+          </v-btn>
+
+          <div v-for="(question, index) in clarificationQuestions" :key="question" class="mb-6">
             <p class="dialog-description">
-              Clarifying question {{ index + 1 }} of {{ clarificationQuestions.length }}
+              Clarifying question {{ index + 1 }} of
+              {{ clarificationQuestions.length }}
             </p>
             <p class="dialog-description galaxyAccent--text mt-2">
               "{{ question }}" >
@@ -635,7 +652,7 @@
               rows="5"
               v-model="clarificationAnswers[index]"
               :disabled="loading"
-              :autofocus="index === 0 && !isMobile"
+              :autofocus="index === 0"
               :dense="$vuetify.breakpoint.smAndDown"
               hide-details
             ></v-textarea>
@@ -4435,6 +4452,12 @@ export default {
         .replace(/'/g, "&#39;");
     },
 
+    // Decide for me button
+    async decideForMe() {
+      this.clarificationAnswers[0] = "Decide for me";
+      await this.continueWithClarification();
+    },
+
     async continueWithClarification() {
       this.showClarificationDialog = false;
       this.loading = true;
@@ -4762,6 +4785,7 @@ After each edit or structural change, briefly validate the update’s success by
         ...this.aiGeneratedGalaxyMap, // Keep all existing properties (including originResponseId)
         ...refineGalaxyWithAiResponse.galaxyMap, // Override with new AI response data
         aiResponseId: refineGalaxyWithAiResponse.responseId, // Update with new response ID
+        history: existingHistory, // Restore the preserved history (don't let the merge overwrite it)
       };
 
       // Verify both IDs are preserved
@@ -4769,6 +4793,11 @@ After each edit or structural change, briefly validate the update’s success by
         originResponseId: this.aiGeneratedGalaxyMap.originResponseId,
         aiResponseId: this.aiGeneratedGalaxyMap.aiResponseId,
       });
+
+      // Ensure history is initialized as an array
+      if (!this.aiGeneratedGalaxyMap.history) {
+        this.aiGeneratedGalaxyMap.history = [];
+      }
 
       // Create a deep copy of the NEW galaxy map data without the history property to avoid circular reference
       const newGalaxyMapCopy = JSON.parse(

@@ -1,5 +1,9 @@
 # Cloud Functions Quick Reference
 
+> **New to Cloud Functions?** Start with **[README_CLOUD_FUNCTIONS_ARCHITECTURE.md](./README_CLOUD_FUNCTIONS_ARCHITECTURE.md)** to understand the architecture, patterns, and philosophy first.
+>
+> **Developer Guide:** For overall project setup and onboarding, see **[README_DEV.md](./README_DEV.md)**
+
 ## 🚀 Quick Start
 
 ### 1. Create New Cloud Function
@@ -157,4 +161,8 @@ Always return:
 
 ---
 
-_For detailed documentation, see `CLOUD_FUNCTIONS_ARCHITECTURE.md`_
+## Related Documentation
+
+- **[README_CLOUD_FUNCTIONS_ARCHITECTURE.md](./README_CLOUD_FUNCTIONS_ARCHITECTURE.md)** - In-depth architecture guide, migration workflows, and best practices
+- **[README_DEV.md](./README_DEV.md)** - Overall developer guide and project architecture
+- **[functions/DELAYED_EMAIL_SETUP.md](./functions/DELAYED_EMAIL_SETUP.md)** - Example of advanced Cloud Functions feature (scheduled emails with Cloud Tasks)

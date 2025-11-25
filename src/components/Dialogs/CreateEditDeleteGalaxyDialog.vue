@@ -955,14 +955,23 @@ export default {
         // });
 
         try {
+          // Send immediate notification to admin
           await this.sendCourseCreatedEmail(
             this.person.email,
             this.person.firstName + " " + this.person.lastName,
             course.title,
             courseId,
           );
+
+          // Schedule feedback email to be sent 3 hours later
+          await this.scheduleGalaxyFeedbackEmail(
+            this.person.email,
+            this.person.firstName + " " + this.person.lastName,
+            course.title,
+            courseId,
+          );
         } catch (emailError) {
-          console.warn("Failed to send 'course created' email. Proceeding anyway.", emailError);
+          console.warn("Failed to send email notifications. Proceeding anyway.", emailError);
         }
 
         console.log("5");
@@ -1302,6 +1311,24 @@ export default {
 
       const sendCourseCreatedEmail = functions.httpsCallable("sendCourseCreatedEmail");
       return sendCourseCreatedEmail(data);
+    },
+    scheduleGalaxyFeedbackEmail(email, name, courseTitle, courseId) {
+      // Validate parameters
+      if (!email || !name || !courseTitle || !courseId) {
+        console.error("Missing required parameters:", { email, name, courseTitle, courseId });
+        throw new Error("Missing required parameters for scheduling feedback email");
+      }
+
+      const data = {
+        email: email,
+        name: name,
+        galaxyTitle: courseTitle.trim(),
+        galaxyId: courseId,
+        createdAt: new Date().toISOString(),
+      };
+
+      const scheduleGalaxyFeedbackEmail = functions.httpsCallable("scheduleGalaxyFeedbackEmail");
+      return scheduleGalaxyFeedbackEmail(data);
     },
     removeCollaborator(item) {
       // Also remove from collaborators array for autocomplete display
