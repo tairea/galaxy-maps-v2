@@ -1,8 +1,8 @@
 # Galaxy Maps 🌌
 
-An AI-powered learning and knowledge platform that visualizes journeys of knowledge as constellations of Stars, Planets, and Missions. Built with Firebase, Vue.js, and OpenAI.
+Galaxy Maps is an AI-powered knowledge platform that visualizes journeys of learning as constellations of Stars, Planets, and Missions. Built with Vue.js, Firebase and A.I.
 
-Galaxy Maps is an online learning platform that enables people to map learning paths into a "Galaxy Map". Learners can then navigate learning paths in an individualized, self-paced, gamified way.
+With Galaxy Maps educators can generate curriuclar instantly for learners to then explore, and learn from in an individualized, self-paced, gamified way.
 
 Like our ancestors that used the stars to navigate the seas, using these Galaxy Maps we can navigate our learning.
 
