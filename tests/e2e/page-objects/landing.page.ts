@@ -46,7 +46,7 @@ export class LandingPage extends BasePage {
     this.registerButton = page.getByRole('button', { name: /^register$/i });
 
     // Messages
-    this.verifyEmailMessage = page.getByText(/please verify your email/i);
+    this.verifyEmailMessage = page.getByText(/please check your email/i);
     this.emailVerifiedHeading = page.getByRole('heading', { name: /email verified/i });
     this.continueToLoginButton = page.getByRole('button', { name: /continue to login/i });
   }

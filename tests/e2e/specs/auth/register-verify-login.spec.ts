@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { fetchLatestEmailVerificationLink } from "./utils/auth-emulator";
+import { fetchLatestEmailVerificationLink } from "../../utils/auth-emulator";
 
 const TEST_FIRST_NAME = "E2E";
 const TEST_LAST_NAME = "Explorer";
@@ -35,7 +35,7 @@ test.describe("Register → Verify Email → Login", () => {
 
     await page.getByRole("button", { name: /^register$/i }).click();
 
-    await expect(page.getByText(/please verify your email/i)).toBeVisible();
+    await expect(page.getByText(/please check your email/i)).toBeVisible();
 
     const { oobCode } = await fetchLatestEmailVerificationLink(email, {
       projectId,
