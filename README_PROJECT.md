@@ -322,4 +322,37 @@ If you see an error about missing Firebase environment variables:
 
 ## License
 
-MIT © 2025 Galaxy Maps
+Galaxy Maps uses a **dual-license model** to balance openness, community contribution, and long-term platform protection:
+
+- **Core Platform**: Licensed under [AGPL-3.0](./LICENSE) - Ensures all improvements remain open-source and the platform stays community-owned
+- **Extensions & SDKs**: Licensed under [Apache 2.0](./LICENSE-APACHE-2.0) - Enables flexible integration and commercial use of developer tools
+
+### What this means for you:
+
+- ✅ **Schools & Educators**: Use Galaxy Maps freely. Modify it for your needs.
+- ✅ **Self-Hosting**: Deploy on your infrastructure. Share improvements if you run it as a web service.
+- ✅ **Developers**: Build extensions and integrations using Apache 2.0 licensed tools.
+- ✅ **Contributors**: Join our community of educators and developers building open learning infrastructure.
+
+📖 **Read the full licensing strategy:** [LICENSING.md](./LICENSING.md)
+
+### Quick License Summary
+
+```
+Galaxy Maps - Open-source learning platform
+Copyright (c) 2020-2025 Galaxy Maps Contributors
+
+Core Platform: AGPL-3.0-or-later
+Extensions & SDKs: Apache-2.0
+
+This ensures improvements stay open while enabling maximum flexibility
+for integrations and community growth.
+```
+
+**Why AGPL-3.0?** The AGPL-3.0 includes network copyleft provisions that require anyone running a modified version of Galaxy Maps as a web service to make their source code available. This protects the platform from being captured by proprietary forks while ensuring the community benefits from all improvements.
+
+**Questions about licensing?** See [LICENSING.md](./LICENSING.md) or open an issue on GitHub.
+
+---
+
+Copyright (c) 2020-2025 Galaxy Maps Contributors
