@@ -14,7 +14,7 @@
     <!-- Collapsible Content -->
     <div class="galaxy-content mt-2" :class="{ minimized: isMinimized }">
       <!-- Map Name  -->
-      <h1 class="galaxy-title">{{ course.title }}</h1>
+      <h1 class="galaxy-title" data-testid="galaxy-title">{{ course.title }}</h1>
       <!-- Status -->
       <p v-if="teacher" class="galaxy-status overline mb-0">
         Status: <span class="font-weight-black">{{ course.status }}</span>
@@ -32,7 +32,7 @@
       </p>
       <!-- Map Image -->
       <img v-if="course.image" class="galaxy-image mt-2" :src="course.image.url" />
-      <p ref="description" class="galaxy-description">
+      <p ref="description" class="galaxy-description" data-testid="galaxy-description">
         <!-- {{ course.description }} -->
         {{ maybeTruncate(course.description) }}
         <a style="border-bottom: 1px solid" v-if="readmore" @click="showFullDescription()"

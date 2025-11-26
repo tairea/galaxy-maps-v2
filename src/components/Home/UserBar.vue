@@ -15,6 +15,7 @@
         }"
         @click="isMobile && user.loggedIn ? openMobileDialog() : null"
         style="display: block"
+        data-testid="user-menu"
       >
         <!-- USER MENU TOP (BLACK) BAR -->
         <div v-if="!user.loggedIn" class="blackBar">
@@ -64,7 +65,7 @@
               />
             </v-avatar>
           </div>
-          <div v-if="!miniNavMenu || hover" class="username mx-4" style="">
+          <div v-if="!miniNavMenu || hover" class="username mx-4" style="" data-testid="user-name">
             <p class="ma-0">{{ person.firstName }} {{ person.lastName }}</p>
             <!-- <span style="font-size: 0.8rem; color: #777">ID: {{ person.id }}</span> -->
           </div>

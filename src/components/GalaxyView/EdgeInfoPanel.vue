@@ -1,5 +1,5 @@
 <template>
-  <div class="edgeInfoPanel" :style="selectedEdge ? 'right: 0px' : ''">
+  <div class="edgeInfoPanel" :style="selectedEdge ? 'right: 0px' : ''" data-testid="edge-info-panel">
     <div class="panelContent">
       <div class="panelContentInner" v-if="selectedEdge">
         <!-- <v-btn
@@ -26,6 +26,7 @@
               tile
               @click="deleteEdge"
               :loading="deleting"
+              data-testid="delete-edge-button"
             >
               Delete Edge
             </v-btn>

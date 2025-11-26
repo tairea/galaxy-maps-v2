@@ -63,7 +63,11 @@
 
             <!-- Person data loading indicator -->
             <div v-if="!isPersonLoaded" class="text-center my-12">
-              <v-progress-circular indeterminate color="missionAccent"></v-progress-circular>
+              <v-progress-circular
+                indeterminate
+                color="missionAccent"
+                data-testid="loading-spinner"
+              ></v-progress-circular>
               <p class="mt-4">Loading user data...</p>
             </div>
 
@@ -82,6 +86,7 @@
                     class="creation-mode-option galaxy-border"
                     :class="{ selected: creationMode === 'ai' }"
                     @click="openAIDialog"
+                    data-testid="create-with-ai-button"
                   >
                     <div class="creation-mode-icon">
                       <v-icon color="galaxyAccent">{{ mdiRobotExcited }}</v-icon>
@@ -101,6 +106,7 @@
                 class="creation-mode-option galaxy-border"
                 :class="{ selected: creationMode === 'ai' }"
                 @click="openAIDialog"
+                data-testid="create-with-ai-button"
               >
                 <div class="creation-mode-icon">
                   <v-icon color="galaxyAccent">{{ mdiRobotExcited }}</v-icon>
@@ -116,6 +122,7 @@
                 class="creation-mode-option base-border"
                 :class="{ selected: creationMode === 'manual' }"
                 @click="selectManualMode"
+                data-testid="create-manually-button"
               >
                 <div class="creation-mode-icon">
                   <v-icon color="baseAccent">{{ mdiPencil }}</v-icon>
@@ -138,21 +145,23 @@
                 <!-- TITLE -->
                 <!-- <p class="dialog-description">Galaxy Name:</p> -->
                 <v-text-field
+                  v-model="course.title"
                   :dark="dark"
                   :light="!dark"
                   class="input-field"
                   outlined
                   color="missionAccent"
-                  v-model="course.title"
                   label="Galaxy name"
                   @input="validateCourseTitle"
                   :rules="[(v) => !!v || 'Galaxy name is required']"
                   :dense="$vuetify.breakpoint.smAndDown"
+                  data-testid="galaxy-title-input"
                 ></v-text-field>
 
                 <!-- DESCRIPTION -->
                 <!-- <p class="dialog-description">Galaxy Description:</p> -->
                 <v-textarea
+                  v-model="course.description"
                   :dark="dark"
                   :light="!dark"
                   class="input-field"
@@ -161,28 +170,29 @@
                   auto-grow
                   clearable
                   :rows="$vuetify.breakpoint.smAndDown ? 4 : 1"
-                  v-model="course.description"
                   label="Galaxy description"
                   :dense="$vuetify.breakpoint.smAndDown"
+                  data-testid="galaxy-description-input"
                 ></v-textarea>
 
                 <!-- IMAGE UPLOAD -->
                 <!-- <p class="dialog-description">Galaxy Image:</p> -->
 
                 <v-file-input
+                  v-model="uploadedImage"
                   class="input-field"
                   outlined
                   :dark="dark"
                   :light="!dark"
                   color="missionAccent"
                   accept="image/*"
-                  v-model="uploadedImage"
                   label="Upload Galaxy Image"
                   @change="storeImage()"
                   prepend-icon=""
                   hide-details
                   :dense="$vuetify.breakpoint.smAndDown"
                   :class="{ 'mb-6': $vuetify.breakpoint.smAndDown }"
+                  data-testid="galaxy-image-upload"
                 ></v-file-input>
                 <v-progress-linear
                   color="missionAccent"
@@ -452,6 +462,7 @@
                 :disabled="disabled || !isFormValid"
                 :dark="dark"
                 :light="!dark"
+                data-testid="create-galaxy-button"
               >
                 <v-icon left> {{ mdiCheck }} </v-icon>
                 CREATE GALAXY
@@ -474,6 +485,7 @@
                 class="ml-2"
                 :dark="dark"
                 :light="!dark"
+                data-testid="delete-galaxy-button"
               >
                 <v-icon left> {{ mdiDelete }} </v-icon>
                 DELETE

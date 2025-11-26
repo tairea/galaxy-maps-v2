@@ -499,6 +499,11 @@ export default {
 
     console.log("this.$refs.network.nodes: ", this.$refs.network.nodes);
     console.log("this.$refs.network.edges: ", this.$refs.network.edges);
+
+    // Expose vis-network for E2E tests
+    if (import.meta.env.MODE === 'test' || import.meta.env.VITE_USE_EMULATOR) {
+      window.__visNetwork__ = this.$refs.network;
+    }
   },
   beforeDestroy() {
     this.stopNodeAnimation();

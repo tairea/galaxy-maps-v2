@@ -1,5 +1,11 @@
 <template>
-  <v-progress-circular indeterminate :size="size" :color="color" class="mb-4">
+  <v-progress-circular
+    indeterminate
+    :size="size"
+    :color="color"
+    class="mb-4"
+    data-testid="loading-spinner"
+  >
     <v-icon :color="color" :size="iconSize" class="robot-dance">{{ mdiRobotExcited }}</v-icon>
   </v-progress-circular>
 </template>

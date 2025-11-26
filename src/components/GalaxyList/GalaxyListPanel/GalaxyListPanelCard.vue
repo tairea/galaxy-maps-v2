@@ -9,6 +9,7 @@
           : { border: '1px solid var(--v-galaxyAccent-base)' }
       "
       :class="{ 'selected-galaxy': active, 'draft-galaxy': draft }"
+      data-testid="galaxy-card"
     >
       <img
         v-if="hasValidImage"
@@ -21,7 +22,11 @@
       <div v-else class="imagePlaceholder ma-1">
         {{ first3Letters(course.title) }}
       </div>
-      <p class="galaxyListPanelContent text-left ma-1" :class="{ 'selected-galaxy': active }">
+      <p
+        class="galaxyListPanelContent text-left ma-1"
+        :class="{ 'selected-galaxy': active }"
+        data-testid="galaxy-title"
+      >
         {{ course.title }}
       </p>
     </div>

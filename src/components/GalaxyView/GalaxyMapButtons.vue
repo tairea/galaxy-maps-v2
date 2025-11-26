@@ -68,7 +68,7 @@
             </div>
             <div v-if="!isMobile" class="mapButton-text">
               <p v-if="!addNodeMode" class="overline ma-0">Add a new Star</p>
-              <p v-else class="ma-0" style="font-size: 0.7rem">
+              <p v-else class="ma-0" style="font-size: 0.7rem" data-testid="add-node-instruction">
                 Click on the map to place a new Star
               </p>
             </div>
@@ -82,7 +82,7 @@
             </div>
             <div v-if="!isMobile" class="mapButton-text">
               <p v-if="!addEdgeMode" class="overline ma-0">Connect Stars</p>
-              <p v-else class="ma-0" style="font-size: 0.7rem">
+              <p v-else class="ma-0" style="font-size: 0.7rem" data-testid="connect-stars-instruction">
                 Click and drag to connect two Stars
               </p>
             </div>
@@ -96,7 +96,7 @@
             </div>
             <div v-if="!isMobile" class="mapButton-text">
               <p v-if="!dragNodeMode" class="overline ma-0">Change Star positions</p>
-              <p v-else class="ma-0" style="font-size: 0.7rem">
+              <p v-else class="ma-0" style="font-size: 0.7rem" data-testid="drag-instruction">
                 {{
                   changeInPositions
                     ? "CANCEL or SAVE new positions"
@@ -110,6 +110,7 @@
               v-if="changeInPositions"
               :class="{ activeIcon: dragNodeMode }"
               @click="saveNodePositions"
+              data-testid="save-positions-button"
             >
               <v-icon color="baseAccent">{{ mdiContentSaveCheck }}</v-icon>
             </div>

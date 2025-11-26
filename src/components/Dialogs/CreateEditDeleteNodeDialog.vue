@@ -30,6 +30,7 @@
               :autofocus="!editing"
               label="Node title"
               placeholder="Enter name of this node"
+              data-testid="node-title-input"
             ></v-text-field>
 
             <!-- side by side div 50/50 -->
@@ -54,6 +55,7 @@
                   prepend-icon=""
                   hide-details
                   accept="image/*"
+                  data-testid="node-image-upload"
                 ></v-file-input>
                 <v-progress-linear
                   color="missionAccent"
@@ -75,6 +77,7 @@
                   placeholder="20"
                   type="number"
                   hide-details
+                  data-testid="node-size-input"
                 ></v-text-field>
               </div>
             </div>
@@ -163,6 +166,7 @@
               color="blue"
               :dark="dark"
               :light="!dark"
+              data-testid="prerequisites-checkbox"
             >
               <template v-slot:label>
                 <span class="dialog-description"
@@ -186,6 +190,7 @@
               :menu-props="{
                 closeOnContentClick: true,
               }"
+              data-testid="prerequisites-select"
             ></v-select>
           </div>
 
@@ -198,6 +203,7 @@
               @click="saveNodeHandler(currentNode)"
               class="mr-2"
               :loading="loading"
+              data-testid="save-node-button"
             >
               <v-icon left> {{ mdiCheck }} </v-icon>
               SAVE
@@ -209,12 +215,20 @@
               @click="saveNodeHandler(currentNode, true)"
               class="mr-2"
               :loading="loading"
+              data-testid="update-node-button"
             >
               <v-icon left> {{ mdiCheck }} </v-icon>
               UPDATE
             </v-btn>
 
-            <v-btn v-if="editing" outlined color="error" @click="deleteDialog()" class="mr-2">
+            <v-btn
+              v-if="editing"
+              outlined
+              color="error"
+              @click="deleteDialog()"
+              class="mr-2"
+              data-testid="delete-node-button"
+            >
               <v-icon left> {{ mdiDelete }} </v-icon>
               DELETE
             </v-btn>
