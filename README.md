@@ -191,6 +191,85 @@ firebase emulators:start  # Run local emulators for testing
 
 ---
 
+## Testing
+
+Galaxy Maps uses a comprehensive testing strategy with E2E tests (Playwright), unit tests (Vitest), and Firestore security rules tests.
+
+### Quick Start
+
+Run E2E tests with automatic emulator and dev server startup:
+
+```bash
+# Run all E2E tests (headless)
+npm run e2e:run-local
+
+# Run with visible browser (headed mode)
+npm run e2e:run-local:headed
+```
+
+### Test Commands
+
+```bash
+# E2E Tests (Playwright)
+npm run test:e2e              # Run all E2E tests
+npm run test:e2e:headed       # Run with visible browser
+npm run test:e2e:ui           # Run with interactive UI mode
+npm run test:e2e -- file.spec.ts  # Run specific test file
+
+# Unit Tests (Vitest)
+npm run test:unit             # Run all unit tests
+npm run test:unit -- --watch  # Run in watch mode
+npm run test:unit -- --coverage  # Run with coverage
+
+# Firestore Rules Tests
+npm run test:rules            # Run security rules tests
+```
+
+### Test Architecture
+
+Our tests use the **Page Object Model** pattern with reusable fixtures:
+
+```typescript
+// Example: Using fixtures for authenticated tests
+import { test, expect } from '../fixtures/galaxy.fixture';
+import { GalaxyViewPage } from '../page-objects/galaxy-view.page';
+
+test('should add node to galaxy', async ({ page, emptyGalaxy }) => {
+  const galaxyPage = new GalaxyViewPage(page);
+  await galaxyPage.goto(emptyGalaxy.galaxyId);
+
+  await galaxyPage.addNode({
+    title: 'Test Node',
+    position: { x: 300, y: 300 },
+  });
+
+  const nodeExists = await galaxyPage.verifyNodeExists('Test Node');
+  expect(nodeExists).toBeTruthy();
+});
+```
+
+### Test Structure
+
+```
+tests/
+├── e2e/
+│   ├── fixtures/          # Reusable test setup (auth, galaxies)
+│   ├── page-objects/      # Page Object Model classes
+│   ├── utils/             # Test utilities (Firestore, data generation)
+│   └── specs/             # Test specifications
+│       ├── auth/          # Authentication tests
+│       ├── galaxy/        # Galaxy management tests
+│       └── smoke/         # Smoke tests
+```
+
+### Documentation
+
+For detailed testing instructions, best practices, and troubleshooting:
+
+📖 **[TESTING.md](./TESTING.md)** - Complete testing guide with examples and best practices
+
+---
+
 ## Project Structure
 
 ```
