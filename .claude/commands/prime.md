@@ -8,6 +8,6 @@ git ls-files
 
 ## Read
 
-README_PROJECT.md
+README.md
 README_DEV.md
 README_AI.md
