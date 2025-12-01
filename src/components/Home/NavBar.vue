@@ -108,28 +108,42 @@ export default {
       return this.$vuetify.breakpoint.smAndDown;
     },
     unansweredRequestsForHelp() {
+      // Return empty array if no user logged in
+      if (!this.user?.data?.id) return [];
+
       const store = useRootStore();
       const unansweredRequests = store.getUnansweredRequestsForHelp;
       // filter unaswered requests that are from courses mapped by me or where I'm a collaborator
-      const unansweredRequestsFromMyCourses = unansweredRequests.filter(
-        (request) =>
+      const unansweredRequestsFromMyCourses = unansweredRequests.filter((request) => {
+        // Skip requests with null contextCourse
+        if (!request.contextCourse?.mappedBy?.personId) return false;
+
+        return (
           request.contextCourse.mappedBy.personId === this.user.data.id ||
           (request.contextCourse.collaboratorIds &&
-            request.contextCourse.collaboratorIds.includes(this.user.data.id)),
-      );
+            request.contextCourse.collaboratorIds.includes(this.user.data.id))
+        );
+      });
       // console.log("unansweredRequestsFromMyCourses: ", unansweredRequestsFromMyCourses);
       return unansweredRequestsFromMyCourses;
     },
     inReviewSubmissionsCount() {
+      // Return 0 if no user logged in
+      if (!this.user?.data?.id) return 0;
+
       const store = useRootStore();
       const inReviewSubmissions = store.getInReviewSubmissions;
       // filter inreview submissions that are from courses mapped by me or where I'm a collaborator
-      const inReviewSubmissionsFromMyCourses = inReviewSubmissions.filter(
-        (submission) =>
+      const inReviewSubmissionsFromMyCourses = inReviewSubmissions.filter((submission) => {
+        // Skip submissions with null contextCourse
+        if (!submission.contextCourse?.mappedBy?.personId) return false;
+
+        return (
           submission.contextCourse.mappedBy.personId === this.user.data.id ||
           (submission.contextCourse.collaboratorIds &&
-            submission.contextCourse.collaboratorIds.includes(this.user.data.id)),
-      );
+            submission.contextCourse.collaboratorIds.includes(this.user.data.id))
+        );
+      });
       // console.log("inReviewSubmissionsFromMyCourses: ", inReviewSubmissionsFromMyCourses);
       return inReviewSubmissionsFromMyCourses.length;
     },

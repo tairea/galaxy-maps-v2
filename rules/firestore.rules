@@ -20,6 +20,37 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
     
+    match /appconfig/pricing {
+      allow read: if request.auth != null;
+    }
+    
+    // Stripe payment extension default rules
+    match /customers/{uid} {
+      allow read: if request.auth.uid == uid;
+
+      match /checkout_sessions/{id} {
+        allow read, write: if request.auth.uid == uid;
+      }
+      match /subscriptions/{id} {
+        allow read: if request.auth.uid == uid;
+      }
+      match /payments/{id} {
+        allow read: if request.auth.uid == uid;
+      }
+    }
+
+    match /products/{id} {
+      allow read: if true;
+
+      match /prices/{id} {
+        allow read: if true;
+      }
+
+      match /tax_rates/{id} {
+        allow read: if true;
+      }
+    }
+    
     // People collection - main user profiles
     match /people/{userId} {
       // Users can always read/write their own profile (including initial creation)
@@ -80,6 +111,12 @@ service cloud.firestore {
     match /courses/{courseId}/submissionsForReview/{submissionId} {
       allow read, write: if isAuthenticated();
     }
+    
+    // Specific rule for ai conversations subcollection
+    // This must come BEFORE the wildcard rule below
+    match /courses/{courseId}/aiConversations/{aiConversationId} {
+      allow read, write: if isAuthenticated();
+    }
 
     // Course subcollections wildcard rule (covers all other subcollections)
     // Note: This rule comes AFTER the specific rules above to avoid conflicts
@@ -128,9 +165,10 @@ service cloud.firestore {
     // Helper function: Determine read access to Public course and its subcollections
     function coursePublicAccess(courseId) {
       return exists(/databases/$(database)/documents/courses/$(courseId)) && (
-        (get(/databases/$(database)/documents/courses/$(courseId)).data.status != null && 
+        (get(/databases/$(database)/documents/courses/$(courseId)).data.status != null &&
          get(/databases/$(database)/documents/courses/$(courseId)).data.status == "published") &&
-        (get(/databases/$(database)/documents/courses/$(courseId)).data.public == true || 
+        (get(/databases/$(database)/documents/courses/$(courseId)).data.public == true ||
+         get(/databases/$(database)/documents/courses/$(courseId)).data.visibility == "public" ||
          get(/databases/$(database)/documents/courses/$(courseId)).data.presentationOnly == true)
       );
     }
@@ -145,18 +183,44 @@ service cloud.firestore {
     
     // Helper function: Determine write access to course and subcollections
     // Only owner, contentBy.personId, or mappedBy.personId can edit (TODO: add collaboratorIds includes request.auth.uid)
+    // function canEditCourse(courseId) {
+    //   return isAuthenticated() && 
+    //     exists(/databases/$(database)/documents/courses/$(courseId)) && (
+    //       (get(/databases/$(database)/documents/courses/$(courseId)).data.owner != null && 
+    //        request.auth.uid == get(/databases/$(database)/documents/courses/$(courseId)).data.owner) ||
+    //       (get(/databases/$(database)/documents/courses/$(courseId)).data.contentBy != null && 
+    //        request.auth.uid == get(/databases/$(database)/documents/courses/$(courseId)).data.contentBy.personId) ||
+    //       (get(/databases/$(database)/documents/courses/$(courseId)).data.mappedBy != null && 
+    //        request.auth.uid == get(/databases/$(database)/documents/courses/$(courseId)).data.mappedBy.personId)
+    //     );
+    // }
+		
+    // Helper function: Determine write access to course and subcollections
+    // Owner, contentBy.personId, mappedBy.personId, or collaboratorIds can edit
     function canEditCourse(courseId) {
-      return isAuthenticated() && 
-        exists(/databases/$(database)/documents/courses/$(courseId)) && (
-          (get(/databases/$(database)/documents/courses/$(courseId)).data.owner != null && 
-           (request.auth.uid == get(/databases/$(database)/documents/courses/$(courseId)).data.owner || 
-            request.auth.uid == get(/databases/$(database)/documents/courses/$(courseId)).data.owner.path.split('/').get(-1))) ||
-          (get(/databases/$(database)/documents/courses/$(courseId)).data.contentBy != null && 
-           request.auth.uid == get(/databases/$(database)/documents/courses/$(courseId)).data.contentBy.personId) ||
-          (get(/databases/$(database)/documents/courses/$(courseId)).data.mappedBy != null && 
-           request.auth.uid == get(/databases/$(database)/documents/courses/$(courseId)).data.mappedBy.personId)
+      let coursePath = /databases/$(database)/documents/courses/$(courseId);
+      let course = get(coursePath).data;
+
+      return isAuthenticated() &&
+        exists(coursePath) && (
+          // Owner
+          (course.owner != null &&
+           request.auth.uid == course.owner) ||
+
+          // Content author
+          (course.contentBy != null &&
+           request.auth.uid == course.contentBy.personId) ||
+
+          // Map author
+          (course.mappedBy != null &&
+           request.auth.uid == course.mappedBy.personId) ||
+
+          // Collaborators (array of user UIDs)
+          (course.collaboratorIds != null &&
+           course.collaboratorIds.hasAny([request.auth.uid]))
         );
     }
+
 
     
     // Default rule - deny all other access

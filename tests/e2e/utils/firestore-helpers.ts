@@ -1,44 +1,34 @@
-import { initializeApp, FirebaseApp } from 'firebase/app';
-import {
-  getFirestore,
-  connectFirestoreEmulator,
-  collection,
-  doc,
-  setDoc,
-  getDoc,
-  getDocs,
-  deleteDoc,
-  query,
-  where,
-  Firestore,
-  Timestamp
-} from 'firebase/firestore';
+import { initializeApp as initializeAdminApp, cert, getApps, App } from 'firebase-admin/app';
+import { getFirestore as getAdminFirestore, Firestore as AdminFirestore, Timestamp } from 'firebase-admin/firestore';
 
-let db: Firestore | null = null;
-let app: FirebaseApp | null = null;
+let db: AdminFirestore | null = null;
+let app: App | null = null;
 
 /**
- * Initialize Firestore connection for tests
+ * Initialize Firestore connection for tests using Admin SDK
+ * This bypasses security rules, which is appropriate for test data setup
  */
-export function initializeTestFirestore(): Firestore {
+export function initializeTestFirestore(): AdminFirestore {
   if (db) return db;
 
   const projectId = process.env.FIREBASE_PROJECT_ID ?? 'galaxy-maps-test';
 
-  app = initializeApp({
-    projectId,
-    apiKey: 'test-api-key',
-    authDomain: `${projectId}.firebaseapp.com`,
-  });
-
-  db = getFirestore(app);
-
-  // Connect to emulator
+  // Set emulator host BEFORE initializing the admin SDK
   const emulatorHost = process.env.FIREBASE_FIRESTORE_EMULATOR_HOST ?? 'localhost:8080';
-  const [host, portStr] = emulatorHost.split(':');
-  const port = parseInt(portStr, 10);
+  process.env.FIRESTORE_EMULATOR_HOST = emulatorHost;
 
-  connectFirestoreEmulator(db, host, port);
+  // Check if admin app already exists
+  const existingApps = getApps();
+  if (existingApps.length > 0) {
+    app = existingApps[0];
+  } else {
+    // Initialize with minimal config for emulator
+    app = initializeAdminApp({
+      projectId,
+    });
+  }
+
+  db = getAdminFirestore(app);
 
   return db;
 }
@@ -50,39 +40,35 @@ export async function cleanupTestData(userId: string): Promise<void> {
   const db = initializeTestFirestore();
 
   // Delete user's galaxies
-  const coursesQuery = query(
-    collection(db, 'courses'),
-    where('creator', '==', userId)
-  );
-
-  const coursesSnapshot = await getDocs(coursesQuery);
+  const coursesQuery = db.collection('courses').where('creator', '==', userId);
+  const coursesSnapshot = await coursesQuery.get();
 
   for (const courseDoc of coursesSnapshot.docs) {
     // Delete subcollections
-    const nodesDocs = await getDocs(collection(db, `courses/${courseDoc.id}/map-nodes`));
+    const nodesDocs = await db.collection(`courses/${courseDoc.id}/map-nodes`).get();
     for (const nodeDoc of nodesDocs.docs) {
-      await deleteDoc(nodeDoc.ref);
+      await nodeDoc.ref.delete();
     }
 
-    const edgesDocs = await getDocs(collection(db, `courses/${courseDoc.id}/map-edges`));
+    const edgesDocs = await db.collection(`courses/${courseDoc.id}/map-edges`).get();
     for (const edgeDoc of edgesDocs.docs) {
-      await deleteDoc(edgeDoc.ref);
+      await edgeDoc.ref.delete();
     }
 
-    const topicsDocs = await getDocs(collection(db, `courses/${courseDoc.id}/topics`));
+    const topicsDocs = await db.collection(`courses/${courseDoc.id}/topics`).get();
     for (const topicDoc of topicsDocs.docs) {
-      await deleteDoc(topicDoc.ref);
+      await topicDoc.ref.delete();
     }
 
     // Delete course
-    await deleteDoc(courseDoc.ref);
+    await courseDoc.ref.delete();
   }
 
   // Delete user profile
-  const userDocRef = doc(db, 'people', userId);
-  const userDoc = await getDoc(userDocRef);
-  if (userDoc.exists()) {
-    await deleteDoc(userDocRef);
+  const userDocRef = db.collection('people').doc(userId);
+  const userDoc = await userDocRef.get();
+  if (userDoc.exists) {
+    await userDocRef.delete();
   }
 }
 
@@ -105,6 +91,11 @@ export async function createTestGalaxy(options: {
     title: options.title,
     description: options.description ?? '',
     creator: options.userId,
+    owner: options.userId, // String UID for security rules (matches production)
+    mappedBy: {
+      personId: options.userId,
+      name: 'Test User',
+    },
     status: options.status ?? 'drafting',
     topics: 0,
     dateCreated: Timestamp.now(),
@@ -113,7 +104,36 @@ export async function createTestGalaxy(options: {
     public: false,
   };
 
-  await setDoc(doc(db, 'courses', galaxyId), galaxyData);
+  await db.collection('courses').doc(galaxyId).set(galaxyData);
+
+  // Create intro node automatically (matches production behavior)
+  const introNodeId = `intro-${Date.now()}`;
+  const introLabel = options.title ? `${options.title} Intro` : 'Map intro';
+
+  // Create map-node
+  await db.collection(`courses/${galaxyId}/map-nodes`).doc(introNodeId).set({
+    id: introNodeId,
+    label: introLabel,
+    group: 'introduction',
+    color: '#00E676',
+    topicCreatedTimestamp: Timestamp.now(),
+    x: 0,
+    y: 0,
+    topicTotal: 1,
+    taskTotal: 0,
+  });
+
+  // Create corresponding topic
+  await db.collection(`courses/${galaxyId}/topics`).doc(introNodeId).set({
+    id: introNodeId,
+    label: introLabel,
+    group: 'introduction',
+    color: '#00E676',
+    topicCreatedTimestamp: Timestamp.now(),
+    taskTotal: 0,
+    x: 0,
+    y: 0,
+  });
 
   return galaxyId;
 }
@@ -148,19 +168,13 @@ export async function createTestNode(options: {
     borderWidth: 2,
   };
 
-  await setDoc(
-    doc(db, `courses/${options.galaxyId}/map-nodes`, options.nodeId),
-    nodeData
-  );
+  await db.collection(`courses/${options.galaxyId}/map-nodes`).doc(options.nodeId).set(nodeData);
 
   // Also create in topics collection
-  await setDoc(
-    doc(db, `courses/${options.galaxyId}/topics`, options.nodeId),
-    {
-      ...nodeData,
-      topicId: options.nodeId,
-    }
-  );
+  await db.collection(`courses/${options.galaxyId}/topics`).doc(options.nodeId).set({
+    ...nodeData,
+    topicId: options.nodeId,
+  });
 
   return nodeData;
 }
@@ -182,10 +196,7 @@ export async function createTestEdge(options: {
     to: options.to,
   };
 
-  await setDoc(
-    doc(db, `courses/${options.galaxyId}/map-edges`, edgeId),
-    edgeData
-  );
+  await db.collection(`courses/${options.galaxyId}/map-edges`).doc(edgeId).set(edgeData);
 
   return edgeData;
 }
@@ -195,9 +206,9 @@ export async function createTestEdge(options: {
  */
 export async function getNodePrerequisites(galaxyId: string, nodeId: string): Promise<string[]> {
   const db = initializeTestFirestore();
-  const nodeDoc = await getDoc(doc(db, `courses/${galaxyId}/map-nodes`, nodeId));
+  const nodeDoc = await db.collection(`courses/${galaxyId}/map-nodes`).doc(nodeId).get();
 
-  if (!nodeDoc.exists()) {
+  if (!nodeDoc.exists) {
     throw new Error(`Node ${nodeId} not found in galaxy ${galaxyId}`);
   }
 
@@ -209,8 +220,8 @@ export async function getNodePrerequisites(galaxyId: string, nodeId: string): Pr
  */
 export async function nodeExists(galaxyId: string, nodeId: string): Promise<boolean> {
   const db = initializeTestFirestore();
-  const nodeDoc = await getDoc(doc(db, `courses/${galaxyId}/map-nodes`, nodeId));
-  return nodeDoc.exists();
+  const nodeDoc = await db.collection(`courses/${galaxyId}/map-nodes`).doc(nodeId).get();
+  return nodeDoc.exists;
 }
 
 /**
@@ -218,8 +229,8 @@ export async function nodeExists(galaxyId: string, nodeId: string): Promise<bool
  */
 export async function edgeExists(galaxyId: string, edgeId: string): Promise<boolean> {
   const db = initializeTestFirestore();
-  const edgeDoc = await getDoc(doc(db, `courses/${galaxyId}/map-edges`, edgeId));
-  return edgeDoc.exists();
+  const edgeDoc = await db.collection(`courses/${galaxyId}/map-edges`).doc(edgeId).get();
+  return edgeDoc.exists;
 }
 
 /**
@@ -227,9 +238,9 @@ export async function edgeExists(galaxyId: string, edgeId: string): Promise<bool
  */
 export async function getGalaxy(galaxyId: string): Promise<any> {
   const db = initializeTestFirestore();
-  const galaxyDoc = await getDoc(doc(db, 'courses', galaxyId));
+  const galaxyDoc = await db.collection('courses').doc(galaxyId).get();
 
-  if (!galaxyDoc.exists()) {
+  if (!galaxyDoc.exists) {
     throw new Error(`Galaxy ${galaxyId} not found`);
   }
 
@@ -241,7 +252,7 @@ export async function getGalaxy(galaxyId: string): Promise<any> {
  */
 export async function getAllNodes(galaxyId: string): Promise<any[]> {
   const db = initializeTestFirestore();
-  const nodesSnapshot = await getDocs(collection(db, `courses/${galaxyId}/map-nodes`));
+  const nodesSnapshot = await db.collection(`courses/${galaxyId}/map-nodes`).get();
 
   return nodesSnapshot.docs.map(doc => doc.data());
 }
@@ -251,7 +262,7 @@ export async function getAllNodes(galaxyId: string): Promise<any[]> {
  */
 export async function getAllEdges(galaxyId: string): Promise<any[]> {
   const db = initializeTestFirestore();
-  const edgesSnapshot = await getDocs(collection(db, `courses/${galaxyId}/map-edges`));
+  const edgesSnapshot = await db.collection(`courses/${galaxyId}/map-edges`).get();
 
   return edgesSnapshot.docs.map(doc => doc.data());
 }
@@ -261,8 +272,7 @@ export async function getAllEdges(galaxyId: string): Promise<any[]> {
  */
 export async function updateGalaxyStatus(galaxyId: string, status: 'drafting' | 'published'): Promise<void> {
   const db = initializeTestFirestore();
-  await setDoc(
-    doc(db, 'courses', galaxyId),
+  await db.collection('courses').doc(galaxyId).set(
     { status, published: status === 'published' },
     { merge: true }
   );
@@ -275,21 +285,21 @@ export async function deleteGalaxy(galaxyId: string): Promise<void> {
   const db = initializeTestFirestore();
 
   // Delete subcollections
-  const nodesDocs = await getDocs(collection(db, `courses/${galaxyId}/map-nodes`));
+  const nodesDocs = await db.collection(`courses/${galaxyId}/map-nodes`).get();
   for (const nodeDoc of nodesDocs.docs) {
-    await deleteDoc(nodeDoc.ref);
+    await nodeDoc.ref.delete();
   }
 
-  const edgesDocs = await getDocs(collection(db, `courses/${galaxyId}/map-edges`));
+  const edgesDocs = await db.collection(`courses/${galaxyId}/map-edges`).get();
   for (const edgeDoc of edgesDocs.docs) {
-    await deleteDoc(edgeDoc.ref);
+    await edgeDoc.ref.delete();
   }
 
-  const topicsDocs = await getDocs(collection(db, `courses/${galaxyId}/topics`));
+  const topicsDocs = await db.collection(`courses/${galaxyId}/topics`).get();
   for (const topicDoc of topicsDocs.docs) {
-    await deleteDoc(topicDoc.ref);
+    await topicDoc.ref.delete();
   }
 
   // Delete course
-  await deleteDoc(doc(db, 'courses', galaxyId));
+  await db.collection('courses').doc(galaxyId).delete();
 }

@@ -134,8 +134,10 @@ export async function captureGalaxyMap(
 ): Promise<string> {
   // Wait for vis-network to stabilize
   await page.waitForTimeout(1000);
+  // Wait for canvas to be visible
+  await page.waitForSelector('.vis-network canvas', { state: 'visible', timeout: 10000 });
 
-  return await takeElementScreenshot(page, 'canvas.vis-network', `galaxy-map-${name}`);
+  return await takeElementScreenshot(page, '.vis-network canvas', `galaxy-map-${name}`);
 }
 
 /**

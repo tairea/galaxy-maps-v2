@@ -1,4 +1,4 @@
-import { Page, Locator, expect } from '@playwright/test';
+import { Page, Locator, expect } from "@playwright/test";
 
 /**
  * Base Page Object class providing common functionality for all page objects
@@ -21,7 +21,7 @@ export class BasePage {
    * Wait for navigation to complete
    */
   async waitForNavigation() {
-    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForLoadState("networkidle");
   }
 
   /**
@@ -29,8 +29,8 @@ export class BasePage {
    */
   async waitForSelector(selector: string, timeout = 10000) {
     await this.page.waitForSelector(selector, {
-      state: 'visible',
-      timeout
+      state: "visible",
+      timeout,
     });
   }
 
@@ -39,8 +39,8 @@ export class BasePage {
    */
   async waitForSelectorToDisappear(selector: string, timeout = 10000) {
     await this.page.waitForSelector(selector, {
-      state: 'detached',
-      timeout
+      state: "detached",
+      timeout,
     });
   }
 
@@ -62,7 +62,7 @@ export class BasePage {
    * Get text content from an element
    */
   async getText(locator: Locator): Promise<string> {
-    return await locator.textContent() ?? '';
+    return (await locator.textContent()) ?? "";
   }
 
   /**
@@ -76,9 +76,21 @@ export class BasePage {
    * Wait for loading spinner to disappear
    */
   async waitForLoading(timeout = 30000) {
-    const spinner = this.page.locator('[data-testid="loading-spinner"]');
-    if (await spinner.isVisible().catch(() => false)) {
-      await spinner.waitFor({ state: 'detached', timeout });
+    // Check for both testid and class-based spinners
+    const spinner = this.page.locator(
+      '[data-testid="loading-spinner"], .loading-spinner, .wrap:has(.v-progress-linear)',
+    );
+
+    // Give spinner a moment to appear
+    await this.page.waitForTimeout(500);
+
+    if (
+      await spinner
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
+      await spinner.first().waitFor({ state: "hidden", timeout });
     }
   }
 
@@ -86,8 +98,8 @@ export class BasePage {
    * Wait for a snackbar/toast message
    */
   async waitForSnackbar(message?: string, timeout = 5000) {
-    const snackbar = this.page.locator('.v-snackbar--active');
-    await snackbar.waitFor({ state: 'visible', timeout });
+    const snackbar = this.page.locator(".v-snackbar--active");
+    await snackbar.waitFor({ state: "visible", timeout });
 
     if (message) {
       await expect(snackbar).toContainText(message);
@@ -98,11 +110,11 @@ export class BasePage {
    * Dismiss any open dialogs
    */
   async dismissDialogs() {
-    const dialogs = this.page.locator('.v-dialog--active');
+    const dialogs = this.page.locator(".v-dialog--active");
     const count = await dialogs.count();
 
     for (let i = 0; i < count; i++) {
-      await this.page.keyboard.press('Escape');
+      await this.page.keyboard.press("Escape");
       await this.page.waitForTimeout(300);
     }
   }
@@ -125,7 +137,7 @@ export class BasePage {
    * Wait for URL to contain a specific string
    */
   async waitForUrlContains(urlPart: string, timeout = 10000) {
-    await this.page.waitForURL(url => url.toString().includes(urlPart), { timeout });
+    await this.page.waitForURL((url) => url.toString().includes(urlPart), { timeout });
   }
 
   /**

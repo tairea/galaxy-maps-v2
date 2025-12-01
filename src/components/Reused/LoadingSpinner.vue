@@ -1,5 +1,5 @@
 <template>
-  <div class="wrap">
+  <div class="wrap" data-testid="loading-spinner">
     <div class="mt-n12">
       <v-row>
         <p class="overline" style="color: var(--v-missionAccent-base)">

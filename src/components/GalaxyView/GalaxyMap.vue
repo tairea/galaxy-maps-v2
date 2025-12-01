@@ -224,6 +224,7 @@ export default {
     DOMRect: {},
     nodeLabelColor: "#ffffff", // Default label color
     originalShowMissionsState: false, // Track original showMissions state
+    initialDataLoading: false, // Flag to prevent node/edge creation during initial data load
   }),
   watch: {
     darkMode(dark) {
@@ -239,9 +240,12 @@ export default {
     },
     // Watch for currentCourseId changes to refresh data when it becomes available
     currentCourseId(newCourseId, oldCourseId) {
-      if (newCourseId && newCourseId !== oldCourseId) {
-        console.log("currentCourseId changed, refreshing data:", newCourseId);
-        this.refreshData();
+      // Only refresh task data when switching courses, not on initial load
+      // On initial load: oldCourseId is undefined, newCourseId is set by GalaxyView
+      // On course switch: oldCourseId exists and differs from newCourseId
+      if (newCourseId && oldCourseId && newCourseId !== oldCourseId) {
+        console.log("currentCourseId changed, refreshing task data:", newCourseId);
+        this.refreshTaskData();
       }
     },
     // This is a watch for the topic clicked event from the systemListPanel
@@ -250,7 +254,7 @@ export default {
       if (!newTopic || !this.$refs.network) return;
 
       // Find the node in the network that matches the clicked topic
-      const node = this.$refs.network.nodes.find((n) => n.id === newTopic.id);
+      const node = this.$refs.network.nodesArray.find((n) => n.id === newTopic.id);
       if (node) {
         this.zoomToNode(node);
         const options = { ...this.network.options };
@@ -268,6 +272,33 @@ export default {
           console.log(
             `Course changed from ${oldCourseId} to ${newCourseId}, initialDataLoading reset to true`,
           );
+        }
+      },
+      immediate: false,
+    },
+    // Watch for nodes loading and expose network for E2E tests
+    currentCourseNodes: {
+      handler(newNodes) {
+        if (newNodes && newNodes.length > 0) {
+          // Reset initial data loading flag once nodes are loaded
+          this.initialDataLoading = false;
+
+          // Expose vis-network and component state for E2E tests once nodes are loaded
+          if (import.meta.env.MODE === "test" || import.meta.env.VITE_USE_EMULATOR === "true") {
+            // Use nextTick to ensure network ref is available after nodes trigger render
+            this.$nextTick(() => {
+              if (this.$refs.network) {
+                console.log("[GalaxyMap] Exposing __visNetwork__ with", newNodes.length, "nodes");
+                window.__visNetwork__ = this.$refs.network;
+                // Expose component state
+                window.__galaxyMapState__ = {
+                  addingNode: this.addingNode,
+                  addingEdge: this.addingEdge,
+                  draggingNodes: this.draggingNodes,
+                };
+              }
+            });
+          }
         }
       },
       immediate: false,
@@ -475,13 +506,10 @@ export default {
       ? this.$vuetify.theme.themes.dark.missionAccent
       : this.$vuetify.theme.themes.light.missionAccent;
 
-    // Only refresh data if currentCourseId is already available
-    if (this.currentCourseId) {
-      this.refreshData();
-    }
+    // Data binding is now handled by GalaxyView.mounted(), no need to refresh here
 
     // zoom fit on load
-    if (this.nodesToDisplay && this.$refs.network && this.$refs.network.nodes.length > 0) {
+    if (this.nodesToDisplay && this.$refs.network && this.$refs.network.nodesArray.length > 0) {
       this.needsCentering = true;
     }
 
@@ -497,12 +525,23 @@ export default {
       this.$emit("galaxyCompleted");
     }
 
-    console.log("this.$refs.network.nodes: ", this.$refs.network.nodes);
-    console.log("this.$refs.network.edges: ", this.$refs.network.edges);
+    if (this.$refs.network) {
+      console.log("this.$refs.network.nodesArray: ", this.$refs.network.nodesArray);
+      console.log("this.$refs.network.edgesArray: ", this.$refs.network.edgesArray);
 
-    // Expose vis-network for E2E tests
-    if (import.meta.env.MODE === 'test' || import.meta.env.VITE_USE_EMULATOR) {
-      window.__visNetwork__ = this.$refs.network;
+      // Expose vis-network and component state for E2E tests
+      if (import.meta.env.MODE === "test" || import.meta.env.VITE_USE_EMULATOR === "true") {
+        console.log("[GalaxyMap] Exposing __visNetwork__ in mounted()");
+        window.__visNetwork__ = this.$refs.network;
+        // Expose component state
+        window.__galaxyMapState__ = {
+          addingNode: this.addingNode,
+          addingEdge: this.addingEdge,
+          draggingNodes: this.draggingNodes,
+        };
+      }
+    } else {
+      console.log("Network ref not available yet in mounted(), will be exposed when nodes load");
     }
   },
   beforeDestroy() {
@@ -527,35 +566,15 @@ export default {
       }
       return this.$refs.network;
     },
-    async refreshData() {
-      // Validate required fields before proceeding
-      if (!this.currentCourseId) {
-        console.warn("refreshData: Missing currentCourseId");
-        return;
-      }
-
-      await this.bindCourseNodes(this.currentCourseId);
-      await this.bindCourseEdges(this.currentCourseId);
-
-      // bind topics for course creator
-      // if (this.teacher) {
-      //   // bind. state.courseTasks
-      //   await this.getCourseTasks(this.currentCourseId);
-      // } else {
-      // bind topics for student
-      // await this.bindThisPersonsCourseTopics({
-      //   personId: this.person.id,
-      //   courseId: this.currentCourseId,
-      // });
-      // bind state.personsCourseTasks
-      //   await this.getPersonsCourseTasks();
-      // }
+    async refreshTaskData() {
+      // Only refresh task-related data on course switches
+      // Nodes and edges are handled by GalaxyView
 
       // ===== NOTE: Updated logic to bind topics for course creator && "non-signed-in-user" (improving new user experience)
       if (this.student) {
         // Validate person.id for student
         if (!this.person?.id) {
-          console.warn("refreshData: Missing person.id for student");
+          console.warn("refreshTaskData: Missing person.id for student");
           return;
         }
 
@@ -574,20 +593,6 @@ export default {
       this.needsCentering = true;
 
       await this.drawSolarSystems();
-
-      // ==== check if all topics completed. if so GALAXY MAP COMPLETE!!! ====
-      const isGalaxyMapComplete = this.personsTopics.every(
-        (topic) => topic.topicStatus === "completed",
-      );
-      if (!this.galaxyCompleted && this.personsTopics.length && isGalaxyMapComplete) {
-        // TODO: better complete congrats
-        console.log("Galaxy Map Complete. Well done!");
-        this.$emit("galaxyCompleted");
-      }
-
-      // Mark initial data loading as complete
-      this.initialDataLoading = false;
-      console.log("Initial data loading completed, initialDataLoading set to false");
     },
     networkUpdated() {
       if (!this.$refs.network) {
@@ -595,8 +600,27 @@ export default {
         return;
       }
 
+      // Reset initial data loading flag when network is updated with nodes
+      if (this.$refs.network.nodesArray && this.$refs.network.nodesArray.length > 0) {
+        this.initialDataLoading = false;
+      }
+
+      // Expose vis-network and component state for E2E tests when network is updated
+      if (import.meta.env.MODE === "test" || import.meta.env.VITE_USE_EMULATOR === "true") {
+        if (!window.__visNetwork__ && this.$refs.network) {
+          console.log("[GalaxyMap] Exposing __visNetwork__ on network update");
+          window.__visNetwork__ = this.$refs.network;
+        }
+        // Expose component state for E2E tests
+        window.__galaxyMapState__ = {
+          addingNode: this.addingNode,
+          addingEdge: this.addingEdge,
+          draggingNodes: this.draggingNodes,
+        };
+      }
+
       if (this.needsCentering === true) {
-        this.zoomToNodes(this.$refs.network.nodes);
+        this.zoomToNodes(this.$refs.network.nodesArray);
         // set label colours to missionAccent
         this.nodeLabelColor = this.$vuetify.theme.isDark
           ? this.$vuetify.theme.themes.dark.missionAccent
@@ -615,6 +639,14 @@ export default {
       this.addingNode = false;
       this.addingEdge = false;
       this.active = false;
+
+      // Update exposed state for E2E tests
+      if (import.meta.env.MODE === "test" || import.meta.env.VITE_USE_EMULATOR === "true") {
+        if (window.__galaxyMapState__) {
+          window.__galaxyMapState__.addingNode = false;
+          window.__galaxyMapState__.addingEdge = false;
+        }
+      }
     },
 
     getDomCoords(node) {
@@ -632,6 +664,13 @@ export default {
       this.addingNode = true;
       // this.$emit("setUiMessage", "Click on the map to add a node");
       this.$refs.network.addNodeMode();
+
+      // Update exposed state for E2E tests
+      if (import.meta.env.MODE === "test" || import.meta.env.VITE_USE_EMULATOR === "true") {
+        if (window.__galaxyMapState__) {
+          window.__galaxyMapState__.addingNode = true;
+        }
+      }
     },
     addEdgeMode() {
       this.active = true;
@@ -905,7 +944,7 @@ export default {
 
       // Get new positions for all selected nodes
       const newPositions = this.$refs.network.network.getPositions(selectedNodes);
-      const nodes = this.$refs.network.nodes;
+      const nodes = this.$refs.network.nodesArray;
 
       // Check if any node positions changed
       let positionsChanged = false;
@@ -934,7 +973,7 @@ export default {
     },
     async saveNodePositions() {
       this.$emit("nodePositionsChangeLoading");
-      const nodes = this.$refs.network.nodes;
+      const nodes = this.$refs.network.nodesArray;
       const newNodes = this.newNodePositions;
       // spread/or map new positions to nodes
 
@@ -1019,7 +1058,7 @@ export default {
         const edgeId = data.edges[0];
         const selectedEdge = this.$refs.network.getEdge(edgeId);
         selectedEdge.type = "edge";
-        ((selectedEdge.DOMx = data.pointer.DOM.x), (selectedEdge.DOMy = data.pointer.DOM.y));
+        (selectedEdge.DOMx = data.pointer.DOM.x), (selectedEdge.DOMy = data.pointer.DOM.y);
         this.$emit("selectedEdge", selectedEdge);
       }
     },
@@ -1115,7 +1154,7 @@ export default {
       }
 
       // this.$refs.network.fit();
-      this.zoomToNodes(this.$refs.network.nodes);
+      this.zoomToNodes(this.$refs.network.nodesArray);
     },
     restoreImageNodes() {
       try {
@@ -1208,7 +1247,7 @@ export default {
       ctx.fillStyle = labelColor;
 
       // Get all node positions
-      const nodeIds = this.$refs.network.nodes.map(({ id }) => id);
+      const nodeIds = this.$refs.network.nodesArray.map(({ id }) => id);
       const nodePositionMap = this.$refs.network.getPositions(nodeIds);
 
       // Draw labels for each node
@@ -1248,7 +1287,7 @@ export default {
       // Wait for tasks to be loaded if they're not already
       if (this.student && this.personsCourseTasks.length === 0) {
         await this.getPersonsCourseTasks();
-      } else if (!this.student && this.courseTasks.length === 0) {
+      } else if (!this.student && this.courseTasks.length === 0 && this.currentCourseId) {
         await this.getCourseTasks(this.currentCourseId);
       }
 
@@ -1280,7 +1319,7 @@ export default {
         return;
       }
 
-      const nodeIds = this.$refs.network.nodes.map(({ id }) => id);
+      const nodeIds = this.$refs.network.nodesArray.map(({ id }) => id);
       // get node xy positions
       const nodePositionMap = this.$refs.network.getPositions(nodeIds);
 
@@ -1324,7 +1363,7 @@ export default {
     },
     setupStars() {
       // get node ids
-      const nodeIds = this.$refs.network.nodes.map(({ id }) => id);
+      const nodeIds = this.$refs.network.nodesArray.map(({ id }) => id);
       // get node xy positions
       const nodePositionMap = this.$refs.network.getPositions(nodeIds);
 
@@ -1490,7 +1529,7 @@ export default {
 
       // Fix: Access network instance directly from $refs.network
       const network = this.$refs.network.network;
-      const selectedNodes = this.$refs.network.nodes.reduce((selected, node) => {
+      const selectedNodes = this.$refs.network.nodesArray.reduce((selected, node) => {
         const pos = network.getPositions(node.id)[node.id];
         return startX <= pos.x && pos.x <= endX && startY <= pos.y && pos.y <= endY
           ? selected.concat(node.id)

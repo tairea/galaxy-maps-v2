@@ -65,6 +65,26 @@ export default {
       edges: [],
     },
   }),
+  computed: {
+    // Expose nodes as an array for easier access in tests and parent components
+    nodesArray() {
+      if (!this.visData.nodes) return [];
+      // DataSet has get() method that returns all items as array
+      if (typeof this.visData.nodes.get === "function") {
+        return this.visData.nodes.get();
+      }
+      return Array.isArray(this.visData.nodes) ? this.visData.nodes : [];
+    },
+    // Expose edges as an array for easier access in tests and parent components
+    edgesArray() {
+      if (!this.visData.edges) return [];
+      // DataSet has get() method that returns all items as array
+      if (typeof this.visData.edges.get === "function") {
+        return this.visData.edges.get();
+      }
+      return Array.isArray(this.visData.edges) ? this.visData.edges : [];
+    },
+  },
   watch: {
     options: {
       deep: true,

@@ -62,8 +62,8 @@ export class CreateNodeDialog {
   /**
    * Wait for dialog to open
    */
-  async waitForOpen() {
-    await this.dialog.waitFor({ state: 'visible', timeout: 5000 });
+  async waitForOpen(timeout = 10000) {
+    await this.dialog.waitFor({ state: 'visible', timeout });
   }
 
   /**

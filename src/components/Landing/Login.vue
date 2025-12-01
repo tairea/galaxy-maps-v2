@@ -370,9 +370,9 @@ export default {
         const email = actionCodeInfo.data.email;
         console.log("Action code is valid for email:", email);
 
-        // Check if user is already verified
-        const currentUser = auth.currentUser;
-        if (currentUser && currentUser.email === email && currentUser.emailVerified) {
+        // Check if user is already verified (only if signed in)
+        const currentUserBefore = auth.currentUser;
+        if (currentUserBefore && currentUserBefore.email === email && currentUserBefore.emailVerified) {
           console.log("Email is already verified");
           this.setSnackbar({
             show: true,
@@ -383,17 +383,29 @@ export default {
           return;
         }
 
-        // Apply the action code
+        // Apply the action code (works even if user is not signed in)
         console.log("Applying action code...");
         await auth.applyActionCode(actionCode);
         console.log("Action code applied successfully");
 
-        // Reload user to get updated verification status
-        if (currentUser) {
-          await currentUser.reload();
-          console.log("User reloaded, emailVerified:", currentUser.emailVerified);
+        // After applying the code, check if user is now signed in
+        // (applyActionCode doesn't sign the user in, but they might have been signed in before)
+        const currentUserAfter = auth.currentUser;
+        
+        // Reload user to get updated verification status (only if signed in)
+        if (currentUserAfter) {
+          try {
+            await currentUserAfter.reload();
+            console.log("User reloaded, emailVerified:", currentUserAfter.emailVerified);
+          } catch (reloadError) {
+            console.warn("Could not reload user after verification (user may not be signed in):", reloadError);
+            // This is okay - the email is still verified in the backend
+          }
+        } else {
+          console.log("User is not signed in, but email verification succeeded in backend");
         }
 
+        // Show success message - email is verified regardless of sign-in status
         this.setSnackbar({
           show: true,
           text: "Email successfully verified",
@@ -446,7 +458,11 @@ export default {
             text: errorMessage,
             color: "pink",
           });
-          this.$router.push("/verify");
+          // Don't redirect to /verify if we're already showing the verification UI
+          // Only redirect if we're not already on the login page with verifyEmail mode
+          if (this.$route.path !== "/login" || this.$route.query.mode !== "verifyEmail") {
+            this.$router.push("/verify");
+          }
         }
       } finally {
         this.verificationInProgress = false;

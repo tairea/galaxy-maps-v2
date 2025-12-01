@@ -5,7 +5,8 @@ import "firebase/compat/firestore";
 import "firebase/compat/functions";
 import "firebase/compat/storage";
 
-const DEFAULT_EMULATOR_HOST = "127.0.0.1";
+// Use localhost instead of 127.0.0.1 to avoid CORS issues when frontend runs on localhost
+const DEFAULT_EMULATOR_HOST = "localhost";
 const DEFAULT_AUTH_PORT = 9099;
 const DEFAULT_FIRESTORE_PORT = 8080;
 const DEFAULT_FUNCTIONS_PORT = 5001;
@@ -73,8 +74,11 @@ const firebaseApp = firebase.initializeApp(firebaseConfig);
 export const db = firebaseApp.firestore();
 // Initialize Firestore Storage
 export const storage = firebaseApp.storage();
-// Intialize Firebase Cloud Functions and set region explicitly to avoid CORS/redirects
-export const functions = firebaseApp.functions("us-central1");
+// Initialize Firebase Cloud Functions
+// Note: Region is NOT specified here to allow emulator connection to work properly.
+// The emulator ignores region settings. Production functions in us-central1 will still work
+// because the SDK defaults to us-central1 when no region is specified.
+export const functions = firebaseApp.functions();
 
 // Get a reference to the database service
 export const database = firebase.database();

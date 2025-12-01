@@ -66,7 +66,17 @@
           <span class="mappedByTitle">MAPPED BY</span>
         </p>
         <div class="mappedByContainer">
-          <Avatar :personId="course.mappedBy.personId" :size="50" :colourBorder="true" />
+          <v-avatar size="50">
+            <img
+              v-if="course.mappedBy.avatarUrl"
+              :src="course.mappedBy.avatarUrl"
+              alt="Creator avatar"
+              style="object-fit: cover"
+            />
+            <div v-else class="avatar-placeholder">
+              {{ creatorInitial }}
+            </div>
+          </v-avatar>
           <!-- <p class="ma-0">Mapped By:</p> -->
           <span class="mt-2">{{ course.mappedBy.name }}</span>
         </div>
@@ -93,7 +103,6 @@
 </template>
 
 <script>
-import Avatar from "@/components/Reused/Avatar.vue";
 import { db } from "@/store/firestoreConfig";
 import {
   // fetchCohortByCohortId,
@@ -107,7 +116,6 @@ import { mapState } from "pinia";
 
 export default {
   name: "PopupGalaxyPreview",
-  components: { Avatar },
   props: ["course", "galaxyListInfoPanel"],
   data() {
     return {
@@ -145,6 +153,10 @@ export default {
         this.course.image.url &&
         this.course.image.url.trim() !== ""
       );
+    },
+    creatorInitial() {
+      if (!this.course?.mappedBy?.name) return "";
+      return this.course.mappedBy.name.charAt(0).toUpperCase();
     },
   },
   watch: {
@@ -339,6 +351,19 @@ export default {
     justify-content: center;
     align-items: center;
   }
+}
+
+.avatar-placeholder {
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: var(--v-galaxyAccent-base);
+  background-color: rgba(200, 200, 200, 0.3);
+  width: 100%;
+  height: 100%;
 }
 
 .centeredFocus {

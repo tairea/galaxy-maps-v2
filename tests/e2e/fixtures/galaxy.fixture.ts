@@ -48,10 +48,38 @@ export const test = authTest.extend<GalaxyFixtures>({
    * Empty galaxy fixture (only the auto-created intro node)
    */
   emptyGalaxy: async ({ authenticatedUser }, use) => {
+    console.log('[emptyGalaxy] Creating galaxy for user:', authenticatedUser.uid);
+
     const galaxyId = await createTestGalaxy({
       userId: authenticatedUser.uid,
       title: 'Empty Test Galaxy',
-      description: 'A test galaxy with no nodes',
+      description: 'A test galaxy with only the intro node',
+    });
+
+    console.log('[emptyGalaxy] Galaxy created with ID:', galaxyId);
+
+    // Verify the galaxy was created correctly
+    const { initializeTestFirestore } = await import('../utils/firestore-helpers');
+    const db = initializeTestFirestore();
+    const galaxyDoc = await db.collection('courses').doc(galaxyId).get();
+
+    if (galaxyDoc.exists) {
+      const data = galaxyDoc.data();
+      console.log('[emptyGalaxy] Galaxy data:', {
+        id: data?.id,
+        owner: data?.owner,
+        creator: data?.creator,
+        title: data?.title,
+      });
+    } else {
+      console.error('[emptyGalaxy] Galaxy document not found!');
+    }
+
+    // Verify intro node was created
+    const nodesSnapshot = await db.collection(`courses/${galaxyId}/map-nodes`).get();
+    console.log('[emptyGalaxy] Nodes count:', nodesSnapshot.size);
+    nodesSnapshot.forEach(doc => {
+      console.log('[emptyGalaxy] Node:', doc.id, '-', doc.data().label);
     });
 
     const emptyGalaxy: EmptyGalaxy = {
@@ -59,6 +87,9 @@ export const test = authTest.extend<GalaxyFixtures>({
       title: 'Empty Test Galaxy',
       userId: authenticatedUser.uid,
     };
+
+    // Wait a moment for Firestore to propagate the data to the browser client
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     await use(emptyGalaxy);
 

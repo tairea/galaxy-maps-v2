@@ -883,6 +883,11 @@ export default {
             courseId: courseCanvasBoundaries[i].id,
             x: currentColWidth + node.x - courseCanvasBoundaries[i].centerX,
             y: currrentRowHeight + node.y - courseCanvasBoundaries[i].centerY,
+            // Ensure vis-network required properties
+            shape: node.shape || "dot",
+            label: node.label || node.title || node.id,
+            color: node.color || "#97C2FC",
+            size: node.size || 10,
           };
 
           // check if a boundary node, so can capture the new relative boundaries

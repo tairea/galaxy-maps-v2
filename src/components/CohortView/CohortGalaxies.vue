@@ -448,7 +448,7 @@ export default {
         ctx.font = "12px Arial";
         ctx.textAlign = "left";
         ctx.textBaseline = "middle";
-        const nodeIds = this.$refs.network.nodes.map(({ id }) => id);
+        const nodeIds = this.$refs.network.nodesArray.map(({ id }) => id);
         const nodePositionMap = this.$refs.network.getPositions(nodeIds);
         for (const [nodeId, position] of Object.entries(nodePositionMap)) {
           const originalNode = this.allNodesForDisplay.find((n) => n.id === nodeId);

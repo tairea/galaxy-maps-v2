@@ -37,7 +37,10 @@ export const getCourseByCourseIdHttpsEndpoint = runWith({}).https.onCall(async (
 
   // if the course is public and published then always return it
   // if not and the context is unauthenticated then throw not found
-  if (courseData.public === true && courseData.status === "published") {
+  if (
+    (courseData.public === true || courseData.visibility === "public") &&
+    courseData.status === "published"
+  ) {
     return {
       course: {
         ...courseData,
@@ -194,7 +197,10 @@ export const getCourseMapEdgesAndNodesByCourseIdHttpsEndpoint = runWith({}).http
 
     // if the course is public and published then return the map-edges and map-nodes
     // if not and the context is unauthenticated then throw not found
-    if (courseData.public === true && courseData.status === "published") {
+    if (
+      (courseData.public === true || courseData.visibility === "public") &&
+      courseData.status === "published"
+    ) {
       const mapEdgeCollection = await db
         .collection("courses")
         .doc(courseId)
@@ -2361,6 +2367,7 @@ async function saveGalaxyMap(
         mappedBy: {
           name: person.firstName + " " + person.lastName,
           personId: person.id,
+          avatarUrl: person.image?.url || null,
         },
         contentBy: {
           name: person.firstName + " " + person.lastName,

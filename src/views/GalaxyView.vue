@@ -366,7 +366,10 @@ export default {
       // Update document title when course loads
       this.updateDocumentTitle();
 
-      this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
+      // Only fetch cohorts for published courses (not needed for draft courses)
+      if (newVal && newVal.status === "published") {
+        this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
+      }
     },
   },
   async mounted() {
@@ -397,6 +400,21 @@ export default {
 
     // bind course instead of fetch (above) so to make course reactive (eg in GalaxyInfo.vue)
     await this.bindCourseByCourseId(this.courseId);
+    await this.bindCourseNodes(this.courseId);
+    await this.bindCourseEdges(this.courseId);
+
+    // Bind task data based on user role
+    if (this.student) {
+      // For students: bind personal topic progress and task progress
+      await this.bindThisPersonsCourseTopics({
+        personId: this.person.id,
+        courseId: this.courseId,
+      });
+      await this.getPersonsCourseTasks();
+    } else {
+      // For teachers: bind course task definitions
+      await this.getCourseTasks(this.courseId);
+    }
 
     // Clear timeout if course loads successfully
     if (this.courseLoadTimeout) {
@@ -404,33 +422,36 @@ export default {
       this.courseLoadTimeout = null;
     }
 
-    const cohorts = await fetchCohorts();
+    // Only fetch cohorts for published courses (not needed for draft courses)
+    if (this.boundCourse && this.boundCourse.status === "published") {
+      const cohorts = await fetchCohorts();
 
-    // bind assigned people in this course
-    if (this.teacher) {
-      const cohortsTeacherIsIn = cohorts.filter((cohort) =>
-        cohort.teachers.includes(this.person.id),
-      );
-      // filter out cohortsTeacherIsIn where courseCohort == true
-      this.teachersCohorts = cohortsTeacherIsIn.filter((cohort) => cohort.courseCohort == null);
-      this.peopleInCourse = await fetchAllPeopleInCourseByCourseId(this.courseId);
-      this.setPeopleInCourse(this.peopleInCourse);
-      this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
-    } else if (this.student) {
-      // show navigator other squads on this map
+      // bind assigned people in this course
+      if (this.teacher) {
+        const cohortsTeacherIsIn = cohorts.filter((cohort) =>
+          cohort.teachers.includes(this.person.id),
+        );
+        // filter out cohortsTeacherIsIn where courseCohort == true
+        this.teachersCohorts = cohortsTeacherIsIn.filter((cohort) => cohort.courseCohort == null);
+        this.peopleInCourse = await fetchAllPeopleInCourseByCourseId(this.courseId);
+        this.setPeopleInCourse(this.peopleInCourse);
+        this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
+      } else if (this.student) {
+        // show navigator other squads on this map
 
-      const cohort = cohorts.find((cohort) =>
-        cohort.courses.some((courseId) => courseId === this.courseId),
-      );
-      this.cohortsInCourse.push(cohort);
-      // if (this.cohortsInCourse.length) {
-      //   this.setCurrentCohortId(this.cohortsInCourse[0]?.id);
-      //   const students = await Promise.all(
-      //     this.cohortsInCourse[0].students?.map((student) => fetchPersonByPersonId(student)),
-      //   );
-      //   this.peopleInCourse = students;
-      //   this.setPeopleInCourse(students);
-      // }
+        const cohort = cohorts.find((cohort) =>
+          cohort.courses.some((courseId) => courseId === this.courseId),
+        );
+        this.cohortsInCourse.push(cohort);
+        // if (this.cohortsInCourse.length) {
+        //   this.setCurrentCohortId(this.cohortsInCourse[0]?.id);
+        //   const students = await Promise.all(
+        //     this.cohortsInCourse[0].students?.map((student) => fetchPersonByPersonId(student)),
+        //   );
+        //   this.peopleInCourse = students;
+        //   this.setPeopleInCourse(students);
+        // }
+      }
     }
 
     // Start Vue Tour
@@ -478,6 +499,7 @@ export default {
         return false;
       }
       return (
+        this.boundCourse?.owner === this.person.id ||
         this.boundCourse?.mappedBy?.personId === this.person.id ||
         this.user.data?.admin ||
         (Array.isArray(this.boundCourse?.collaboratorIds) &&
@@ -491,8 +513,9 @@ export default {
       return (this.user.data?.admin && this.boundCourse?.status === "submitted") || this.draft;
     },
     isRestricted() {
-      // If no course data loaded yet, show restricted (will show loading or error)
-      if (!this.boundCourse || !this.boundCourse.id) return true;
+      // If no course data loaded yet, DON'T show restricted - let loading state handle it
+      // This prevents showing "INVALID OR RESTRICTED" while data is still loading
+      if (!this.boundCourse || !this.boundCourse.id) return false;
 
       // Check if boundCourse.id matches current courseId - if not, we're showing a stale course
       if (this.boundCourse.id !== this.courseId) {
@@ -561,6 +584,11 @@ export default {
       "setCurrentCourseId",
       "setPeopleInCourse",
       "bindCourseByCourseId",
+      "bindCourseNodes",
+      "bindCourseEdges",
+      "bindThisPersonsCourseTopics",
+      "getPersonsCourseTasks",
+      "getCourseTasks",
       "unbindCourse",
     ]),
     setUiMessage(message) {

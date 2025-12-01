@@ -76,11 +76,17 @@ export class LandingPage extends BasePage {
    * Sign in with email and password
    */
   async signIn(email: string, password: string) {
-    await this.openSignIn();
+    // Check if login form is already visible, if not, open it
+    const isFormVisible = await this.emailInput.isVisible().catch(() => false);
+    if (!isFormVisible) {
+      await this.openSignIn();
+    }
+
     await this.emailInput.fill(email);
     await this.passwordInput.fill(password);
     await this.signInSubmitButton.click();
-    await this.waitForNavigation();
+    // Don't wait for navigation here - the caller should handle waiting for the expected URL
+    // since the app may have ongoing network requests that prevent networkidle
   }
 
   /**
@@ -119,8 +125,11 @@ export class LandingPage extends BasePage {
    * Navigate to verification URL with oobCode
    */
   async verifyEmail(oobCode: string) {
-    await this.goto(`/login?mode=verifyEmail&oobCode=${encodeURIComponent(oobCode)}`);
-    await this.emailVerifiedHeading.waitFor({ state: 'visible' });
+    // Use page.goto directly to avoid the overridden goto() method which always navigates to '/'
+    await this.page.goto(`/login?mode=verifyEmail&oobCode=${encodeURIComponent(oobCode)}`);
+    // Wait for verification to complete - the heading should appear after verification succeeds
+    // Use a longer timeout to account for async verification process
+    await this.emailVerifiedHeading.waitFor({ state: 'visible', timeout: 15000 });
   }
 
   /**

@@ -83,8 +83,8 @@ export const test = base.extend<AuthFixtures>({
     // Sign in
     await landingPage.signIn(user.email, user.password);
 
-    // Wait for successful login (redirect to home)
-    await page.waitForURL(/\/$/, { timeout: 10000 });
+    // Wait for successful login (redirect to my-galaxies or home)
+    await page.waitForURL(/\/(my-galaxies|)$/, { timeout: 10000 });
 
     // Verify user is logged in
     const isLoggedIn = await landingPage.isLoggedIn(fullName);
@@ -92,9 +92,29 @@ export const test = base.extend<AuthFixtures>({
       throw new Error('User login failed');
     }
 
-    // Get user ID from auth state (mock for now)
-    // In a real implementation, you would extract this from Firebase Auth
-    const uid = `user-${Date.now()}`;
+    // Get the real Firebase Auth UID by querying Firestore for the person document
+    // The registration process creates a person document with the auth UID
+    const { initializeTestFirestore } = await import('../utils/firestore-helpers');
+    const db = initializeTestFirestore();
+
+    // Query for the person document by email
+    const peopleQuery = db.collection('people').where('email', '==', user.email);
+    const peopleSnapshot = await peopleQuery.get();
+
+    if (peopleSnapshot.empty) {
+      throw new Error(`Person document not found for email: ${user.email}`);
+    }
+
+    const personDoc = peopleSnapshot.docs[0];
+    const uid = personDoc.id;  // The document ID is the Firebase Auth UID
+
+    console.log('[authenticatedUser] Retrieved UID from Firestore:', uid);
+    console.log('[authenticatedUser] Person document data:', {
+      id: personDoc.data().id,
+      email: personDoc.data().email,
+      firstName: personDoc.data().firstName,
+      lastName: personDoc.data().lastName,
+    });
 
     const authenticatedUser: AuthenticatedUser = {
       ...user,

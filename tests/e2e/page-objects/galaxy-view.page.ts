@@ -1,8 +1,8 @@
-import { Page, Locator } from '@playwright/test';
-import { BasePage } from './base.page';
-import { GalaxyMapComponent } from './components/galaxy-map.component';
-import { CreateNodeDialog } from './dialogs/create-node.dialog';
-import { EdgeInfoPanel } from './components/edge-panel.component';
+import { Page, Locator } from "@playwright/test";
+import { BasePage } from "./base.page";
+import { GalaxyMapComponent } from "./components/galaxy-map.component";
+import { CreateNodeDialog } from "./dialogs/create-node.dialog";
+import { EdgeInfoPanel } from "./components/edge-panel.component";
 
 /**
  * Galaxy View page object for editing galaxy maps
@@ -14,6 +14,7 @@ export class GalaxyViewPage extends BasePage {
   readonly edgePanel: EdgeInfoPanel;
 
   // Buttons
+  readonly editStarsToggle: Locator;
   readonly addNodeButton: Locator;
   readonly connectStarsButton: Locator;
   readonly dragNodeButton: Locator;
@@ -39,12 +40,14 @@ export class GalaxyViewPage extends BasePage {
     this.edgePanel = new EdgeInfoPanel(page);
 
     // Initialize locators
-    this.addNodeButton = page.getByRole('button', { name: /add a new star/i });
-    this.connectStarsButton = page.getByRole('button', { name: /connect stars/i });
-    this.dragNodeButton = page.getByRole('button', { name: /change star positions/i });
+    // Note: These are div elements with click handlers, not semantic buttons
+    this.editStarsToggle = page.getByText(/add\/edit stars/i); // Top panel toggle
+    this.addNodeButton = page.getByText(/add a new star/i); // Bottom toolbar
+    this.connectStarsButton = page.getByText(/connect stars/i);
+    this.dragNodeButton = page.getByText(/change star positions/i);
     this.savePositionsButton = page.locator('[data-testid="save-positions"]');
     this.cancelPositionsButton = page.locator('[data-testid="cancel-positions"]');
-    this.publishButton = page.getByRole('button', { name: /publish/i });
+    this.publishButton = page.getByRole("button", { name: /publish/i });
 
     this.galaxyTitle = page.locator('[data-testid="galaxy-title"]');
     this.galaxyDescription = page.locator('[data-testid="galaxy-description"]');
@@ -59,6 +62,32 @@ export class GalaxyViewPage extends BasePage {
    * Navigate to galaxy view by ID
    */
   async goto(galaxyId: string) {
+    // Listen to console logs and errors
+    this.page.on("console", (msg) => {
+      const text = msg.text();
+      const type = msg.type();
+
+      // Log all warnings and errors
+      if (type === "warning" || type === "error") {
+        console.log(`[Browser ${type.toUpperCase()}] ${text}`);
+      }
+
+      // Log debug messages
+      if (
+        text.includes("[E2E Debug]") ||
+        text.includes("currentCourseId") ||
+        text.includes("refreshData") ||
+        text.includes("bindCourseNodes")
+      ) {
+        console.log(`[Browser Console] ${text}`);
+      }
+    });
+
+    // Listen to page errors
+    this.page.on("pageerror", (error) => {
+      console.log(`[Browser Page Error] ${error.message}`);
+    });
+
     await super.goto(`/galaxy/${galaxyId}`);
     await this.waitForGalaxyToLoad();
   }
@@ -67,21 +96,116 @@ export class GalaxyViewPage extends BasePage {
    * Wait for galaxy map to fully load
    */
   async waitForGalaxyToLoad(timeout = 30000) {
-    // Wait for vis-network to initialize
-    await this.page.waitForSelector('.vis-network', { state: 'visible', timeout });
-
-    // Wait for loading spinner to disappear
+    // Wait for loading spinner to disappear first
     await this.waitForLoading(timeout);
+
+    // Debug: Log current state periodically while waiting
+    const debugInterval = setInterval(async () => {
+      try {
+        await this.page.evaluate(() => {
+          console.log("[E2E Debug] Checking galaxy load state");
+          console.log("[E2E Debug] __visNetwork__ exists:", !!(window as any).__visNetwork__);
+          const network = (window as any).__visNetwork__;
+          if (network) {
+            console.log("[E2E Debug] network.nodes length:", network.nodes?.length ?? 0);
+            console.log(
+              "[E2E Debug] network.visData.nodes length:",
+              network.visData?.nodes?.length ?? 0,
+            );
+          }
+        });
+      } catch {
+        // Page might be navigating, ignore errors
+      }
+    }, 2000);
+
+    try {
+      // Wait for vis-network to initialize
+      // The network component exposes visData.nodes which is the DataSet
+      console.log("[GalaxyViewPage] Waiting for vis-network to initialize...");
+      await this.page.waitForFunction(
+        () => {
+          const network = (window as any).__visNetwork__;
+          console.log("[GalaxyViewPage] Checking network:", {
+            exists: !!network,
+            type: typeof network,
+            keys: network ? Object.keys(network) : [],
+          });
+
+          if (!network) {
+            console.log("[GalaxyViewPage] __visNetwork__ not found yet");
+            return false;
+          }
+
+          // Check visData.nodes (DataSet) which has getIds() method
+          const nodes = network.visData?.nodes;
+          console.log("[GalaxyViewPage] Checking nodes:", {
+            hasVisData: !!network.visData,
+            hasNodes: !!nodes,
+            nodesType: typeof nodes,
+            hasGetIds: nodes && typeof nodes.getIds === "function",
+          });
+
+          if (nodes && typeof nodes.getIds === "function") {
+            const nodeCount = nodes.getIds().length;
+            console.log("[E2E Debug] DataSet node count:", nodeCount);
+            if (nodeCount > 0) {
+              console.log("[GalaxyViewPage] Network ready with", nodeCount, "nodes!");
+            }
+            return nodeCount > 0;
+          }
+
+          // Fallback: check nodes array directly
+          if (network.nodes && network.nodes.length > 0) {
+            console.log(
+              "[GalaxyViewPage] Network ready with",
+              network.nodes.length,
+              "nodes (array)!",
+            );
+            return true;
+          }
+
+          console.log("[GalaxyViewPage] Network exists but no nodes yet");
+          return false;
+        },
+        { timeout, polling: 500 },
+      );
+
+      // Wait for canvas to be visible
+      console.log("[GalaxyViewPage] Waiting for .vis-network container...");
+      await this.page.waitForSelector(".vis-network", { state: "visible", timeout: 5000 });
+      console.log("[GalaxyViewPage] .vis-network container is visible!");
+
+      // Verify __visNetwork__ is still available after waiting
+      const networkStillAvailable = await this.page.evaluate(() => {
+        const network = (window as any).__visNetwork__;
+        return {
+          available: !!network,
+          hasNetwork: !!network?.network,
+          hasVisData: !!network?.visData,
+        };
+      });
+      console.log("[GalaxyViewPage] Final network check:", networkStillAvailable);
+    } finally {
+      clearInterval(debugInterval);
+    }
   }
 
   /**
    * Enable Add Node mode
    */
   async enableAddNodeMode() {
+    // First ensure edit toolbar is visible
+    const isEditToolbarVisible = await this.addNodeButton.isVisible().catch(() => false);
+    if (!isEditToolbarVisible) {
+      await this.editStarsToggle.click();
+      await this.page.waitForTimeout(300);
+    }
+
+    // Then click "Add a new Star" button in the bottom toolbar
     await this.addNodeButton.click();
 
     // Verify mode is active
-    // The instruction might not always have a data-testid, so use flexible selector
     await this.page.waitForTimeout(500);
   }
 
@@ -139,13 +263,65 @@ export class GalaxyViewPage extends BasePage {
     // Enable add node mode
     await this.enableAddNodeMode();
 
-    // Click on canvas to add node
-    await this.galaxyMap.clickAtPosition(
-      options.position?.x ?? 300,
-      options.position?.y ?? 300
+    // Small delay to ensure state propagates and addNodeMode is activated
+    await this.page.waitForTimeout(500);
+
+    // Verify addNodeMode is active by checking Vue component's addingNode flag
+    // This is more reliable than checking vis-network's internal editMode property
+    await this.page.waitForFunction(
+      () => {
+        const network = (window as any).__visNetwork__;
+        const state = (window as any).__galaxyMapState__;
+
+        console.log("[GalaxyViewPage] Checking addNodeMode state:", {
+          hasNetwork: !!network,
+          hasNetworkNetwork: !!network?.network,
+          hasState: !!state,
+          stateValue: state,
+          stateKeys: state ? Object.keys(state) : [],
+          addingNode: state?.addingNode,
+          addingEdge: state?.addingEdge,
+          draggingNodes: state?.draggingNodes,
+        });
+
+        if (!network || !network.network) {
+          console.log("[GalaxyViewPage] Network not available");
+          return false;
+        }
+
+        // Check Vue component's addingNode flag (most reliable)
+        // If state isn't available yet, wait a bit more
+        if (!state) {
+          console.log("[GalaxyViewPage] State not available yet");
+          return false;
+        }
+
+        const addingNode = state.addingNode === true;
+
+        // Also verify canvas is ready
+        const visNetwork = network.network;
+        const hasCanvas = !!visNetwork.canvas?.frame?.canvas;
+
+        console.log("[GalaxyViewPage] Final check:", {
+          addingNode,
+          hasCanvas,
+          isReady: addingNode && hasCanvas,
+        });
+
+        return addingNode && hasCanvas;
+      },
+      { timeout: 5000, polling: 200 },
     );
 
-    // Wait for dialog to open
+    // Click on canvas to add node
+    // Set third parameter to true to pause and manually click for debugging
+    await this.galaxyMap.clickAtPosition(
+      options.position?.x ?? 300,
+      options.position?.y ?? 300,
+      true, // Set to true to pause and manually click to capture events
+    );
+
+    // Wait for dialog to open (increase timeout since click might take time to process)
     await this.createNodeDialog.waitForOpen();
 
     // Fill in node details
@@ -177,7 +353,7 @@ export class GalaxyViewPage extends BasePage {
       size: number;
       color: string;
       prerequisites: string[];
-    }>
+    }>,
   ) {
     // Click on node to select
     await this.galaxyMap.clickNode(nodeTitle);
@@ -327,7 +503,7 @@ export class GalaxyViewPage extends BasePage {
     await this.publishButton.click();
 
     // Wait for confirmation dialog
-    const confirmButton = this.page.getByRole('button', { name: /confirm|publish/i });
+    const confirmButton = this.page.getByRole("button", { name: /confirm|publish/i });
     await confirmButton.click();
 
     // Wait for success message
