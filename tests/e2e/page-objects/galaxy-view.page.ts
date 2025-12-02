@@ -338,9 +338,6 @@ export class GalaxyViewPage extends BasePage {
 
     // Wait for node to appear on map
     await this.galaxyMap.waitForNode(options.title);
-
-    // Disable add node mode
-    await this.disableAddNodeMode();
   }
 
   /**

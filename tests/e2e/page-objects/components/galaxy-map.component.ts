@@ -197,27 +197,29 @@ export class GalaxyMapComponent {
       const network = (window as any).__visNetwork__;
       if (!network) throw new Error("vis-network instance not exposed to window");
 
-      // Get nodes from visData.nodes (DataSet) - the correct API
-      let nodes: any[] = [];
-      if (network.visData?.nodes && typeof network.visData.nodes.get === "function") {
-        nodes = network.visData.nodes.get();
-      } else if (network.nodesArray && Array.isArray(network.nodesArray)) {
-        nodes = network.nodesArray;
-      } else {
-        throw new Error("Cannot access nodes from vis-network");
+      // Find node by title in currentCourseNodes (has labels intact)
+      const currentCourseNodes = (window as any).__currentCourseNodes__;
+      let nodeId: string | null = null;
+
+      if (currentCourseNodes && Array.isArray(currentCourseNodes)) {
+        const nodeWithTitle = currentCourseNodes.find((n: any) => n.label === title);
+        if (nodeWithTitle && nodeWithTitle.id) {
+          nodeId = nodeWithTitle.id;
+        }
       }
 
-      const node = nodes.find((n: any) => n.label === title);
-      if (!node) throw new Error(`Node "${title}" not found`);
+      if (!nodeId) {
+        throw new Error(`Node "${title}" not found in currentCourseNodes`);
+      }
 
       // Get node position - use network.network if available (raw vis-network instance)
       const visNetwork = network.network || network;
-      const position = visNetwork.getPosition(node.id);
+      const position = visNetwork.getPosition(nodeId);
 
       // Simulate click on node
-      visNetwork.selectNodes([node.id]);
+      visNetwork.selectNodes([nodeId]);
       visNetwork.emit("click", {
-        nodes: [node.id],
+        nodes: [nodeId],
         edges: [],
         pointer: {
           DOM: position,
@@ -239,20 +241,19 @@ export class GalaxyMapComponent {
         const network = (window as any).__visNetwork__;
         if (!network) throw new Error("vis-network instance not exposed");
 
-        // Get nodes from visData.nodes (DataSet) - the correct API
-        let nodes: any[] = [];
-        if (network.visData?.nodes && typeof network.visData.nodes.get === "function") {
-          nodes = network.visData.nodes.get();
-        } else if (network.nodesArray && Array.isArray(network.nodesArray)) {
-          nodes = network.nodesArray;
-        } else {
-          throw new Error("Cannot access nodes from vis-network");
+        // Find nodes by title in currentCourseNodes (has labels intact)
+        const currentCourseNodes = (window as any).__currentCourseNodes__;
+        let fromNodeId: string | null = null;
+        let toNodeId: string | null = null;
+
+        if (currentCourseNodes && Array.isArray(currentCourseNodes)) {
+          const fromNode = currentCourseNodes.find((n: any) => n.label === from);
+          const toNode = currentCourseNodes.find((n: any) => n.label === to);
+          if (fromNode && fromNode.id) fromNodeId = fromNode.id;
+          if (toNode && toNode.id) toNodeId = toNode.id;
         }
 
-        const fromNode = nodes.find((n: any) => n.label === from);
-        const toNode = nodes.find((n: any) => n.label === to);
-
-        if (!fromNode || !toNode) {
+        if (!fromNodeId || !toNodeId) {
           throw new Error(`Nodes not found: ${from}, ${to}`);
         }
 
@@ -261,15 +262,15 @@ export class GalaxyMapComponent {
 
         // Simulate edge creation
         // Note: This is a simplified approach; actual implementation may vary
-        visNetwork.selectNodes([fromNode.id]);
+        visNetwork.selectNodes([fromNodeId]);
         visNetwork.emit("dragStart", {
-          nodes: [fromNode.id],
-          pointer: visNetwork.getPosition(fromNode.id),
+          nodes: [fromNodeId],
+          pointer: visNetwork.getPosition(fromNodeId),
         });
 
         visNetwork.emit("dragEnd", {
-          nodes: [toNode.id],
-          pointer: visNetwork.getPosition(toNode.id),
+          nodes: [toNodeId],
+          pointer: visNetwork.getPosition(toNodeId),
         });
 
         // If network is in addEdgeMode, this should create an edge
@@ -291,18 +292,24 @@ export class GalaxyMapComponent {
         const network = (window as any).__visNetwork__;
         if (!network) throw new Error("vis-network instance not exposed");
 
-        // Get nodes and edges from visData (DataSet) - the correct API
-        let nodes: any[] = [];
-        let edges: any[] = [];
+        // Find nodes by title in currentCourseNodes (has labels intact)
+        const currentCourseNodes = (window as any).__currentCourseNodes__;
+        let fromNodeId: string | null = null;
+        let toNodeId: string | null = null;
 
-        if (network.visData?.nodes && typeof network.visData.nodes.get === "function") {
-          nodes = network.visData.nodes.get();
-        } else if (network.nodesArray && Array.isArray(network.nodesArray)) {
-          nodes = network.nodesArray;
-        } else {
-          throw new Error("Cannot access nodes from vis-network");
+        if (currentCourseNodes && Array.isArray(currentCourseNodes)) {
+          const fromNode = currentCourseNodes.find((n: any) => n.label === from);
+          const toNode = currentCourseNodes.find((n: any) => n.label === to);
+          if (fromNode && fromNode.id) fromNodeId = fromNode.id;
+          if (toNode && toNode.id) toNodeId = toNode.id;
         }
 
+        if (!fromNodeId || !toNodeId) {
+          throw new Error(`Nodes not found: ${from}, ${to}`);
+        }
+
+        // Get edges from visData (DataSet)
+        let edges: any[] = [];
         if (network.visData?.edges && typeof network.visData.edges.get === "function") {
           edges = network.visData.edges.get();
         } else if (network.edgesArray && Array.isArray(network.edgesArray)) {
@@ -311,14 +318,7 @@ export class GalaxyMapComponent {
           throw new Error("Cannot access edges from vis-network");
         }
 
-        const fromNode = nodes.find((n: any) => n.label === from);
-        const toNode = nodes.find((n: any) => n.label === to);
-
-        if (!fromNode || !toNode) {
-          throw new Error(`Nodes not found: ${from}, ${to}`);
-        }
-
-        const edge = edges.find((e: any) => e.from === fromNode.id && e.to === toNode.id);
+        const edge = edges.find((e: any) => e.from === fromNodeId && e.to === toNodeId);
 
         if (!edge) throw new Error(`Edge not found: ${from} -> ${to}`);
 
@@ -345,18 +345,31 @@ export class GalaxyMapComponent {
   async waitForNode(title: string, timeout = 5000) {
     await this.page.waitForFunction(
       (title) => {
+        // Check currentCourseNodes first (has labels intact, unlike network nodes which have label: "")
+        const currentCourseNodes = (window as any).__currentCourseNodes__;
+        if (currentCourseNodes && Array.isArray(currentCourseNodes)) {
+          const found = currentCourseNodes.some((n: any) => n.label === title);
+          if (found) return true;
+        }
+
+        // Fallback: check network nodes by ID if we can find the node ID from currentCourseNodes
         const network = (window as any).__visNetwork__;
         if (!network) return false;
 
-        // Use visData.nodes (DataSet) - the correct API
-        if (network.visData?.nodes && typeof network.visData.nodes.get === "function") {
-          const nodes = network.visData.nodes.get();
-          return Array.isArray(nodes) && nodes.some((n: any) => n.label === title);
-        }
-
-        // Fallback: check nodesArray if available (Vue component computed property)
-        if (network.nodesArray && Array.isArray(network.nodesArray)) {
-          return network.nodesArray.some((n: any) => n.label === title);
+        // Try to find node by ID in currentCourseNodes, then verify it exists in network
+        if (currentCourseNodes && Array.isArray(currentCourseNodes)) {
+          const nodeWithTitle = currentCourseNodes.find((n: any) => n.label === title);
+          if (nodeWithTitle && nodeWithTitle.id) {
+            // Check if node exists in network by ID
+            if (network.visData?.nodes && typeof network.visData.nodes.get === "function") {
+              const networkNode = network.visData.nodes.get(nodeWithTitle.id);
+              if (networkNode) return true;
+            }
+            // Check nodesArray
+            if (network.nodesArray && Array.isArray(network.nodesArray)) {
+              return network.nodesArray.some((n: any) => n.id === nodeWithTitle.id);
+            }
+          }
         }
 
         return false;
@@ -372,18 +385,31 @@ export class GalaxyMapComponent {
   async waitForNodeToDisappear(title: string, timeout = 5000) {
     await this.page.waitForFunction(
       (title) => {
+        // Check currentCourseNodes first (has labels intact, unlike network nodes which have label: "")
+        const currentCourseNodes = (window as any).__currentCourseNodes__;
+        if (currentCourseNodes && Array.isArray(currentCourseNodes)) {
+          const found = currentCourseNodes.some((n: any) => n.label === title);
+          if (!found) return true; // Node not found in currentCourseNodes, so it's disappeared
+        }
+
+        // Fallback: check network nodes by ID if we can find the node ID from currentCourseNodes
         const network = (window as any).__visNetwork__;
         if (!network) return true;
 
-        // Use visData.nodes (DataSet) - the correct API
-        if (network.visData?.nodes && typeof network.visData.nodes.get === "function") {
-          const nodes = network.visData.nodes.get();
-          return !Array.isArray(nodes) || !nodes.some((n: any) => n.label === title);
-        }
-
-        // Fallback: check nodesArray if available
-        if (network.nodesArray && Array.isArray(network.nodesArray)) {
-          return !network.nodesArray.some((n: any) => n.label === title);
+        // If node exists in currentCourseNodes, verify it's gone from network
+        if (currentCourseNodes && Array.isArray(currentCourseNodes)) {
+          const nodeWithTitle = currentCourseNodes.find((n: any) => n.label === title);
+          if (nodeWithTitle && nodeWithTitle.id) {
+            // Check if node still exists in network by ID
+            if (network.visData?.nodes && typeof network.visData.nodes.get === "function") {
+              const networkNode = network.visData.nodes.get(nodeWithTitle.id);
+              return !networkNode; // Return true if node doesn't exist in network
+            }
+            // Check nodesArray
+            if (network.nodesArray && Array.isArray(network.nodesArray)) {
+              return !network.nodesArray.some((n: any) => n.id === nodeWithTitle.id);
+            }
+          }
         }
 
         return true;
@@ -398,18 +424,31 @@ export class GalaxyMapComponent {
    */
   async nodeExists(title: string): Promise<boolean> {
     return await this.page.evaluate((title) => {
+      // Check currentCourseNodes first (has labels intact, unlike network nodes which have label: "")
+      const currentCourseNodes = (window as any).__currentCourseNodes__;
+      if (currentCourseNodes && Array.isArray(currentCourseNodes)) {
+        const found = currentCourseNodes.some((n: any) => n.label === title);
+        if (found) return true;
+      }
+
+      // Fallback: check network nodes by ID if we can find the node ID from currentCourseNodes
       const network = (window as any).__visNetwork__;
       if (!network) return false;
 
-      // Use visData.nodes (DataSet) - the correct API
-      if (network.visData?.nodes && typeof network.visData.nodes.get === "function") {
-        const nodes = network.visData.nodes.get();
-        return Array.isArray(nodes) && nodes.some((n: any) => n.label === title);
-      }
-
-      // Fallback: check nodesArray if available
-      if (network.nodesArray && Array.isArray(network.nodesArray)) {
-        return network.nodesArray.some((n: any) => n.label === title);
+      // Try to find node by ID in currentCourseNodes, then verify it exists in network
+      if (currentCourseNodes && Array.isArray(currentCourseNodes)) {
+        const nodeWithTitle = currentCourseNodes.find((n: any) => n.label === title);
+        if (nodeWithTitle && nodeWithTitle.id) {
+          // Check if node exists in network by ID
+          if (network.visData?.nodes && typeof network.visData.nodes.get === "function") {
+            const networkNode = network.visData.nodes.get(nodeWithTitle.id);
+            if (networkNode) return true;
+          }
+          // Check nodesArray
+          if (network.nodesArray && Array.isArray(network.nodesArray)) {
+            return network.nodesArray.some((n: any) => n.id === nodeWithTitle.id);
+          }
+        }
       }
 
       return false;
@@ -425,18 +464,22 @@ export class GalaxyMapComponent {
         const network = (window as any).__visNetwork__;
         if (!network) return false;
 
-        // Get nodes and edges from visData (DataSet) - the correct API
-        let nodes: any[] = [];
-        let edges: any[] = [];
+        // Find nodes by title in currentCourseNodes (has labels intact)
+        const currentCourseNodes = (window as any).__currentCourseNodes__;
+        let fromNodeId: string | null = null;
+        let toNodeId: string | null = null;
 
-        if (network.visData?.nodes && typeof network.visData.nodes.get === "function") {
-          nodes = network.visData.nodes.get();
-        } else if (network.nodesArray && Array.isArray(network.nodesArray)) {
-          nodes = network.nodesArray;
-        } else {
-          return false;
+        if (currentCourseNodes && Array.isArray(currentCourseNodes)) {
+          const fromNode = currentCourseNodes.find((n: any) => n.label === from);
+          const toNode = currentCourseNodes.find((n: any) => n.label === to);
+          if (fromNode && fromNode.id) fromNodeId = fromNode.id;
+          if (toNode && toNode.id) toNodeId = toNode.id;
         }
 
+        if (!fromNodeId || !toNodeId) return false;
+
+        // Get edges from visData (DataSet)
+        let edges: any[] = [];
         if (network.visData?.edges && typeof network.visData.edges.get === "function") {
           edges = network.visData.edges.get();
         } else if (network.edgesArray && Array.isArray(network.edgesArray)) {
@@ -445,12 +488,7 @@ export class GalaxyMapComponent {
           return false;
         }
 
-        const fromNode = nodes.find((n: any) => n.label === from);
-        const toNode = nodes.find((n: any) => n.label === to);
-
-        if (!fromNode || !toNode) return false;
-
-        return edges.some((e: any) => e.from === fromNode.id && e.to === toNode.id);
+        return edges.some((e: any) => e.from === fromNodeId && e.to === toNodeId);
       },
       { from: fromTitle, to: toTitle },
     );
@@ -519,24 +557,26 @@ export class GalaxyMapComponent {
         const network = (window as any).__visNetwork__;
         if (!network) throw new Error("vis-network instance not exposed");
 
-        // Get nodes from visData.nodes (DataSet) - the correct API
-        let nodes: any[] = [];
-        if (network.visData?.nodes && typeof network.visData.nodes.get === "function") {
-          nodes = network.visData.nodes.get();
-        } else if (network.nodesArray && Array.isArray(network.nodesArray)) {
-          nodes = network.nodesArray;
-        } else {
-          throw new Error("Cannot access nodes from vis-network");
+        // Find node by title in currentCourseNodes (has labels intact)
+        const currentCourseNodes = (window as any).__currentCourseNodes__;
+        let nodeId: string | null = null;
+
+        if (currentCourseNodes && Array.isArray(currentCourseNodes)) {
+          const nodeWithTitle = currentCourseNodes.find((n: any) => n.label === title);
+          if (nodeWithTitle && nodeWithTitle.id) {
+            nodeId = nodeWithTitle.id;
+          }
         }
 
-        const node = nodes.find((n: any) => n.label === title);
-        if (!node) throw new Error(`Node "${title}" not found`);
+        if (!nodeId) {
+          throw new Error(`Node "${title}" not found in currentCourseNodes`);
+        }
 
         // Get raw vis-network instance
         const visNetwork = network.network || network;
 
         // Update node position
-        visNetwork.moveNode(node.id, pos.x, pos.y);
+        visNetwork.moveNode(nodeId, pos.x, pos.y);
       },
       { title: nodeTitle, pos: position },
     );
@@ -553,18 +593,22 @@ export class GalaxyMapComponent {
         const network = (window as any).__visNetwork__;
         if (!network) return true;
 
-        // Get nodes and edges from visData (DataSet) - the correct API
-        let nodes: any[] = [];
-        let edges: any[] = [];
+        // Find nodes by title in currentCourseNodes (has labels intact)
+        const currentCourseNodes = (window as any).__currentCourseNodes__;
+        let fromNodeId: string | null = null;
+        let toNodeId: string | null = null;
 
-        if (network.visData?.nodes && typeof network.visData.nodes.get === "function") {
-          nodes = network.visData.nodes.get();
-        } else if (network.nodesArray && Array.isArray(network.nodesArray)) {
-          nodes = network.nodesArray;
-        } else {
-          return true;
+        if (currentCourseNodes && Array.isArray(currentCourseNodes)) {
+          const fromNode = currentCourseNodes.find((n: any) => n.label === from);
+          const toNode = currentCourseNodes.find((n: any) => n.label === to);
+          if (fromNode && fromNode.id) fromNodeId = fromNode.id;
+          if (toNode && toNode.id) toNodeId = toNode.id;
         }
 
+        if (!fromNodeId || !toNodeId) return true;
+
+        // Get edges from visData (DataSet)
+        let edges: any[] = [];
         if (network.visData?.edges && typeof network.visData.edges.get === "function") {
           edges = network.visData.edges.get();
         } else if (network.edgesArray && Array.isArray(network.edgesArray)) {
@@ -573,12 +617,7 @@ export class GalaxyMapComponent {
           return true;
         }
 
-        const fromNode = nodes.find((n: any) => n.label === from);
-        const toNode = nodes.find((n: any) => n.label === to);
-
-        if (!fromNode || !toNode) return true;
-
-        return !edges.some((e: any) => e.from === fromNode.id && e.to === toNode.id);
+        return !edges.some((e: any) => e.from === fromNodeId && e.to === toNodeId);
       },
       { from: fromTitle, to: toTitle },
       { timeout },
@@ -593,23 +632,25 @@ export class GalaxyMapComponent {
       const network = (window as any).__visNetwork__;
       if (!network) throw new Error("vis-network instance not exposed");
 
-      // Get nodes from visData.nodes (DataSet) - the correct API
-      let nodes: any[] = [];
-      if (network.visData?.nodes && typeof network.visData.nodes.get === "function") {
-        nodes = network.visData.nodes.get();
-      } else if (network.nodesArray && Array.isArray(network.nodesArray)) {
-        nodes = network.nodesArray;
-      } else {
-        throw new Error("Cannot access nodes from vis-network");
+      // Find node by title in currentCourseNodes (has labels intact)
+      const currentCourseNodes = (window as any).__currentCourseNodes__;
+      let nodeId: string | null = null;
+
+      if (currentCourseNodes && Array.isArray(currentCourseNodes)) {
+        const nodeWithTitle = currentCourseNodes.find((n: any) => n.label === title);
+        if (nodeWithTitle && nodeWithTitle.id) {
+          nodeId = nodeWithTitle.id;
+        }
       }
 
-      const node = nodes.find((n: any) => n.label === title);
-      if (!node) throw new Error(`Node "${title}" not found`);
+      if (!nodeId) {
+        throw new Error(`Node "${title}" not found in currentCourseNodes`);
+      }
 
       // Get raw vis-network instance
       const visNetwork = network.network || network;
 
-      return visNetwork.getPosition(node.id);
+      return visNetwork.getPosition(nodeId);
     }, nodeTitle);
   }
 
@@ -618,18 +659,10 @@ export class GalaxyMapComponent {
    */
   async getAllNodeTitles(): Promise<string[]> {
     return await this.page.evaluate(() => {
-      const network = (window as any).__visNetwork__;
-      if (!network) return [];
-
-      // Use visData.nodes (DataSet) - the correct API
-      if (network.visData?.nodes && typeof network.visData.nodes.get === "function") {
-        const nodes = network.visData.nodes.get();
-        return Array.isArray(nodes) ? nodes.map((n: any) => n.label || "").filter(Boolean) : [];
-      }
-
-      // Fallback: check nodesArray if available
-      if (network.nodesArray && Array.isArray(network.nodesArray)) {
-        return network.nodesArray.map((n: any) => n.label || "").filter(Boolean);
+      // Use currentCourseNodes (has labels intact, unlike network nodes which have label: "")
+      const currentCourseNodes = (window as any).__currentCourseNodes__;
+      if (currentCourseNodes && Array.isArray(currentCourseNodes)) {
+        return currentCourseNodes.map((n: any) => n.label || "").filter(Boolean);
       }
 
       return [];

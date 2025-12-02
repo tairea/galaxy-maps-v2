@@ -279,34 +279,21 @@ export default {
     // Watch for nodes loading and expose network for E2E tests
     currentCourseNodes: {
       handler(newNodes, oldNodes) {
-        if (newNodes && newNodes.length > 0) {
+        // Only process if we have valid nodes
+        if (newNodes && Array.isArray(newNodes) && newNodes.length > 0) {
           // Reset initial data loading flag once nodes are loaded
           this.initialDataLoading = false;
-
-          // Trigger redraw when nodes are added or updated to ensure labels show immediately
-          // This fixes the issue where new node labels don't appear until page refresh
-          // Check if a new node was added by comparing lengths or checking for new IDs
-          const newNodeAdded =
-            !oldNodes ||
-            newNodes.length > oldNodes.length ||
-            newNodes.some(
-              (newNode) => !oldNodes.find((oldNode) => String(oldNode.id) === String(newNode.id)),
-            );
-
-          if (newNodeAdded && this.$refs.network) {
-            // Use nextTick to ensure the network has processed the node update
-            this.$nextTick(() => {
-              // Force a redraw to update labels for newly added nodes
-              this.$refs.network.redraw();
-            });
-          }
 
           // Expose vis-network and component state for E2E tests once nodes are loaded
           if (import.meta.env.MODE === "test" || import.meta.env.VITE_USE_EMULATOR === "true") {
             // Use nextTick to ensure network ref is available after nodes trigger render
             this.$nextTick(() => {
               if (this.$refs.network) {
-                console.log("[GalaxyMap] Exposing __visNetwork__ with", newNodes.length, "nodes");
+                // Only log if node count actually changed to avoid spam
+                const nodeCountChanged = !oldNodes || newNodes.length !== oldNodes.length;
+                if (nodeCountChanged) {
+                  console.log("[GalaxyMap] Exposing __visNetwork__ with", newNodes.length, "nodes");
+                }
                 window.__visNetwork__ = this.$refs.network;
                 // Expose component state
                 window.__galaxyMapState__ = {
@@ -314,6 +301,9 @@ export default {
                   addingEdge: this.addingEdge,
                   draggingNodes: this.draggingNodes,
                 };
+                // Expose currentCourseNodes for E2E tests (has labels intact, unlike network nodes)
+                // Always update this so tests can access the latest node data
+                window.__currentCourseNodes__ = this.currentCourseNodes;
               }
             });
           }
@@ -1265,14 +1255,14 @@ export default {
       ctx.fillStyle = labelColor;
 
       // Get all node positions
-      const nodeIds = this.$refs.network.nodesArray.map(({ id }) => id);
+      // Use .nodes (the prop) instead of .nodesArray for better reactivity with newly added nodes
+      const nodeIds = this.$refs.network.nodes.map(({ id }) => id);
       const nodePositionMap = this.$refs.network.getPositions(nodeIds);
 
       // Draw labels for each node
       for (const [nodeId, position] of Object.entries(nodePositionMap)) {
         // Get the original node data from currentCourseNodes since we cleared the label in display nodes
-        // Use String() to ensure type consistency for ID comparison (handles number/string mismatches)
-        const originalNode = this.currentCourseNodes.find((n) => String(n.id) === String(nodeId));
+        const originalNode = this.currentCourseNodes.find((n) => n.id === nodeId);
         const nodeLabel = originalNode?.label;
 
         if (nodeLabel) {
@@ -1284,7 +1274,7 @@ export default {
           // Check if node is locked to dim the label (only for students)
           let nodeLabelColor = labelColor;
           if (this.student) {
-            const matchingNode = this.personsTopics.find((x) => String(x.id) === String(nodeId));
+            const matchingNode = this.personsTopics.find((x) => x.id === nodeId);
             const topicStatus = matchingNode?.topicStatus ?? "locked";
             const isLocked = topicStatus === "locked";
 
