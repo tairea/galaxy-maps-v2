@@ -338,6 +338,14 @@ export class GalaxyViewPage extends BasePage {
 
     // Wait for node to appear on map
     await this.galaxyMap.waitForNode(options.title);
+
+    // Ensure dialog is fully closed before returning (allows animations to complete)
+    await this.createNodeDialog.waitForClose().catch(() => {
+      // Dialog might already be closed, continue
+    });
+
+    // Small delay to ensure any animations complete and canvas is ready for next interaction
+    await this.page.waitForTimeout(300);
   }
 
   /**

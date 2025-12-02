@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import { Page, Locator } from "@playwright/test";
 
 /**
  * Create/Edit Node Dialog page object
@@ -31,46 +31,53 @@ export class CreateNodeDialog {
     this.page = page;
 
     // Form fields
-    this.titleInput = page.locator('[data-testid="node-title-input"]')
+    this.titleInput = page
+      .locator('[data-testid="node-title-input"]')
       .or(page.getByLabel(/node title/i));
-    this.imageUpload = page.locator('[data-testid="node-image-upload"]')
+    this.imageUpload = page
+      .locator('[data-testid="node-image-upload"]')
       .or(page.getByLabel(/node image/i));
-    this.sizeInput = page.locator('[data-testid="node-size-input"]')
+    this.sizeInput = page
+      .locator('[data-testid="node-size-input"]')
       .or(page.getByLabel(/node size/i));
-    this.colorPicker = page.locator('.v-color-picker');
-    this.prerequisitesCheckbox = page.locator('[data-testid="prerequisites-checkbox"]')
+    this.colorPicker = page.locator(".v-color-picker");
+    this.prerequisitesCheckbox = page
+      .locator('[data-testid="prerequisites-checkbox"]')
       .or(page.getByLabel(/does another node/i));
     this.prerequisitesSelect = page.locator('[data-testid="prerequisites-select"]');
 
     // Actions
-    this.saveButton = page.locator('[data-testid="save-node-button"]')
-      .or(page.getByRole('button', { name: /^save$/i }));
-    this.updateButton = page.locator('[data-testid="update-node-button"]')
-      .or(page.getByRole('button', { name: /^update$/i }));
-    this.deleteButton = page.locator('[data-testid="delete-node-button"]')
-      .or(page.getByRole('button', { name: /^delete$/i }));
-    this.cancelButton = page.getByRole('button', { name: /cancel/i });
+    this.saveButton = page
+      .locator('[data-testid="save-node-button"]')
+      .or(page.getByRole("button", { name: /^save$/i }));
+    this.updateButton = page
+      .locator('[data-testid="update-node-button"]')
+      .or(page.getByRole("button", { name: /^update$/i }));
+    this.deleteButton = page
+      .locator('[data-testid="delete-node-button"]')
+      .or(page.getByRole("button", { name: /^delete$/i }));
+    this.cancelButton = page.getByRole("button", { name: /cancel/i });
 
     // Confirmation dialog
     this.confirmDeleteInput = page.getByPlaceholder(/destroy/i);
-    this.confirmDeleteButton = page.getByRole('button', { name: /delete/i }).last();
+    this.confirmDeleteButton = page.getByRole("button", { name: /delete/i }).last();
 
     // Dialog
-    this.dialog = page.locator('.v-dialog--active');
+    this.dialog = page.locator(".v-dialog--active");
   }
 
   /**
    * Wait for dialog to open
    */
   async waitForOpen(timeout = 10000) {
-    await this.dialog.waitFor({ state: 'visible', timeout });
+    await this.dialog.waitFor({ state: "visible", timeout });
   }
 
   /**
    * Wait for dialog to close
    */
   async waitForClose() {
-    await this.dialog.waitFor({ state: 'detached', timeout: 5000 });
+    await this.dialog.waitFor({ state: "detached", timeout: 5000 });
   }
 
   /**
@@ -106,19 +113,21 @@ export class CreateNodeDialog {
       // Enable prerequisites checkbox
       const isChecked = await this.prerequisitesCheckbox.isChecked();
       if (!isChecked) {
-        await this.prerequisitesCheckbox.click();
+        // Use force: true to bypass ripple overlay that intercepts pointer events
+        await this.prerequisitesCheckbox.click({ force: true });
       }
 
       // Select prerequisites
-      await this.prerequisitesSelect.click();
-
       for (const prereq of options.prerequisites) {
-        const option = this.page.locator('.v-list-item').filter({ hasText: prereq });
-        await option.click();
-      }
+        // Reopen dropdown for each selection (it closes automatically after each option is selected)
+        await this.prerequisitesSelect.click();
 
-      // Close dropdown
-      await this.page.keyboard.press('Escape');
+        // Use getByRole with exact: true to match exact text, not substring
+        // This prevents "A" from matching "Empty Test Galaxy Intro"
+        const option = this.page.getByRole("option", { name: prereq, exact: true });
+        await option.click();
+        // Note: Dropdown closes automatically after each selection
+      }
     }
   }
 
@@ -150,10 +159,10 @@ export class CreateNodeDialog {
    */
   async confirmDelete() {
     // Wait for confirmation dialog
-    await this.confirmDeleteInput.waitFor({ state: 'visible' });
+    await this.confirmDeleteInput.waitFor({ state: "visible" });
 
     // Type "DESTROY"
-    await this.confirmDeleteInput.fill('DESTROY');
+    await this.confirmDeleteInput.fill("DESTROY");
 
     // Click confirm delete
     await this.confirmDeleteButton.click();

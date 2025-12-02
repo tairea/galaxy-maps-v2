@@ -173,6 +173,13 @@ export class GalaxyMapComponent {
       return;
     }
 
+    // Wait for any dialogs to be closed before clicking canvas
+    // This prevents clicks from being blocked by dialog overlays or animations
+    const dialog = this.page.locator('[role="dialog"], .v-dialog');
+    await dialog.waitFor({ state: "hidden", timeout: 2000 }).catch(() => {
+      // Dialog might not exist, continue
+    });
+
     // Use Playwright's native click on canvas element
     // This generates trusted events (isTrusted: true) that vis-network's manipulation
     // system requires to detect clicks and trigger the nodes-add event.
