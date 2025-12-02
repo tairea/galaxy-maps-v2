@@ -90,28 +90,29 @@ export class GalaxyMapComponent {
       await this.page.evaluate(() => {
         (window as any).__capturedClicks = [];
 
-        const captureClick = (e: MouseEvent) => {
-          const target = e.target as HTMLElement;
+        const captureClick = (e: Event) => {
+          const mouseEvent = e as MouseEvent;
+          const target = mouseEvent.target as HTMLElement;
           const data = {
-            type: e.type,
-            clientX: e.clientX,
-            clientY: e.clientY,
-            pageX: e.pageX,
-            pageY: e.pageY,
-            offsetX: (e as any).offsetX,
-            offsetY: (e as any).offsetY,
+            type: mouseEvent.type,
+            clientX: mouseEvent.clientX,
+            clientY: mouseEvent.clientY,
+            pageX: mouseEvent.pageX,
+            pageY: mouseEvent.pageY,
+            offsetX: (mouseEvent as any).offsetX,
+            offsetY: (mouseEvent as any).offsetY,
             target: {
               tagName: target?.tagName,
               className: target?.className,
               id: target?.id,
             },
             currentTarget: {
-              tagName: (e.currentTarget as HTMLElement)?.tagName,
-              className: (e.currentTarget as HTMLElement)?.className,
+              tagName: (mouseEvent.currentTarget as HTMLElement)?.tagName,
+              className: (mouseEvent.currentTarget as HTMLElement)?.className,
             },
-            bubbles: e.bubbles,
-            cancelable: e.cancelable,
-            defaultPrevented: e.defaultPrevented,
+            bubbles: mouseEvent.bubbles,
+            cancelable: mouseEvent.cancelable,
+            defaultPrevented: mouseEvent.defaultPrevented,
           };
           (window as any).__capturedClicks.push(data);
           console.log("[Captured Click]", data);

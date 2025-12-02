@@ -1,7 +1,7 @@
-import { test, expect } from '../../fixtures/auth.fixture';
-import { GalaxyListPage } from '../../page-objects/galaxy-list.page';
-import { CreateGalaxyDialog } from '../../page-objects/dialogs/create-galaxy.dialog';
-import { GalaxyViewPage } from '../../page-objects/galaxy-view.page';
+import { test, expect } from "../../fixtures/auth.fixture";
+import { GalaxyListPage } from "../../page-objects/galaxy-list.page";
+import { CreateGalaxyDialog } from "../../page-objects/dialogs/create-galaxy.dialog";
+import { GalaxyViewPage } from "../../page-objects/galaxy-view.page";
 
 /**
  * TC001: Create manual galaxy with title, description, and image
@@ -15,8 +15,8 @@ import { GalaxyViewPage } from '../../page-objects/galaxy-view.page';
  * 6. Verify redirect to galaxy view
  * 7. Verify galaxy loads with intro node
  */
-test.describe('Manual Galaxy Creation', () => {
-  test('TC001: should create manual galaxy with title, description, and image', async ({
+test.describe("Manual Galaxy Creation", () => {
+  test("TC001: should create manual galaxy with title, description, and image", async ({
     page,
     authenticatedUser,
   }) => {
@@ -33,8 +33,8 @@ test.describe('Manual Galaxy Creation', () => {
 
     // Fill in galaxy details
     await createGalaxyDialog.createManualGalaxy({
-      title: 'Test Galaxy - Manual Creation',
-      description: 'A test galaxy created manually for automated testing',
+      title: "Test Galaxy - Manual Creation",
+      description: "A test galaxy created manually for automated testing",
       // Note: Image upload would require a test image file
       // image: 'tests/e2e/fixtures/assets/test-galaxy-image.png',
     });
@@ -47,7 +47,7 @@ test.describe('Manual Galaxy Creation', () => {
 
     // Verify galaxy title and description are displayed
     const galaxyTitle = await galaxyViewPage.getGalaxyTitle();
-    expect(galaxyTitle).toContain('Test Galaxy - Manual Creation');
+    expect(galaxyTitle).toContain("Test Galaxy - Manual Creation");
 
     // Verify intro node exists (auto-created)
     // Note: The intro node is automatically created by the backend
@@ -56,11 +56,11 @@ test.describe('Manual Galaxy Creation', () => {
 
     // Verify galaxy appears in list when we navigate back
     await galaxyListPage.gotoMyGalaxies();
-    const galaxyExists = await galaxyListPage.galaxyExists('Test Galaxy - Manual Creation');
+    const galaxyExists = await galaxyListPage.galaxyExists("Test Galaxy - Manual Creation");
     expect(galaxyExists).toBeTruthy();
   });
 
-  test('TC001b: should validate required fields when creating galaxy', async ({
+  test("TC001b: should validate required fields when creating galaxy", async ({
     page,
     authenticatedUser,
   }) => {
@@ -84,7 +84,7 @@ test.describe('Manual Galaxy Creation', () => {
 
     // Fill title and create successfully
     await createGalaxyDialog.fillGalaxyDetails({
-      title: 'Valid Galaxy Title',
+      title: "Valid Galaxy Title",
     });
     await createGalaxyDialog.createButton.click();
 
@@ -92,7 +92,7 @@ test.describe('Manual Galaxy Creation', () => {
     await page.waitForURL(/\/galaxy\/.*/, { timeout: 10000 });
   });
 
-  test('TC001c: should create galaxy and verify status is "drafting"', async ({
+  test("TC001c: should create galaxy and verify status is 'drafting'", async ({
     page,
     authenticatedUser,
   }) => {
@@ -106,8 +106,8 @@ test.describe('Manual Galaxy Creation', () => {
     await createGalaxyDialog.waitForOpen();
 
     await createGalaxyDialog.createManualGalaxy({
-      title: 'Draft Status Test Galaxy',
-      description: 'Testing draft status',
+      title: "Draft Status Test Galaxy",
+      description: "Testing draft status",
     });
 
     // Wait for redirect
@@ -116,7 +116,7 @@ test.describe('Manual Galaxy Creation', () => {
 
     // Extract galaxy ID from URL
     const url = await page.url();
-    const galaxyId = url.split('/galaxy/')[1]?.split('?')[0];
+    const galaxyId = url.split("/galaxy/")[1]?.split("?")[0];
     expect(galaxyId).toBeTruthy();
 
     // Verify galaxy status in Firestore

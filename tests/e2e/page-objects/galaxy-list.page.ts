@@ -1,5 +1,5 @@
-import { Page, Locator } from '@playwright/test';
-import { BasePage } from './base.page';
+import { Page, Locator } from "@playwright/test";
+import { BasePage } from "./base.page";
 
 /**
  * Galaxy List page object for galaxy discovery and management
@@ -17,9 +17,9 @@ export class GalaxyListPage extends BasePage {
     super(page);
 
     // Navigation
-    this.myGalaxiesLink = page.getByRole('link', { name: /my galaxies/i });
-    this.publicGalaxiesLink = page.getByRole('link', { name: /public galaxies/i });
-    this.createGalaxyButton = page.getByRole('button', { name: /create.*galaxy/i });
+    this.myGalaxiesLink = page.getByRole("link", { name: /my galaxies/i });
+    this.publicGalaxiesLink = page.getByRole("link", { name: /public galaxies/i });
+    this.createGalaxyButton = page.getByRole("button", { name: /create.*galaxy/i });
 
     // Galaxy cards - will need to be more specific based on actual implementation
     this.galaxyCards = page.locator('[data-testid="galaxy-card"]');
@@ -29,7 +29,7 @@ export class GalaxyListPage extends BasePage {
    * Navigate to My Galaxies page
    */
   async gotoMyGalaxies() {
-    await super.goto('/my-galaxies');
+    await super.goto("/my-galaxies");
     await this.waitForLoading();
   }
 
@@ -37,7 +37,7 @@ export class GalaxyListPage extends BasePage {
    * Navigate to Public Galaxies page
    */
   async gotoPublicGalaxies() {
-    await super.goto('/public-galaxies');
+    await super.goto("/public-galaxies");
     await this.waitForLoading();
   }
 
@@ -46,7 +46,7 @@ export class GalaxyListPage extends BasePage {
    */
   async openCreateGalaxyDialog() {
     await this.createGalaxyButton.click();
-    await this.page.waitForSelector('.v-dialog--active', { state: 'visible' });
+    await this.page.waitForSelector(".v-dialog--active", { state: "visible" });
   }
 
   /**
@@ -84,7 +84,7 @@ export class GalaxyListPage extends BasePage {
    * Search for galaxy by title
    */
   async searchGalaxy(searchTerm: string) {
-    const searchInput = this.page.getByRole('textbox', { name: /search/i });
+    const searchInput = this.page.getByRole("textbox", { name: /search/i });
     await searchInput.fill(searchTerm);
     await this.page.waitForTimeout(500); // Wait for search to filter
   }
@@ -118,10 +118,10 @@ export class GalaxyListPage extends BasePage {
     await deleteButton.click();
 
     // Confirm deletion
-    const confirmButton = this.page.getByRole('button', { name: /delete/i }).last();
+    const confirmButton = this.page.getByRole("button", { name: /delete/i }).last();
     await confirmButton.click();
 
     // Wait for card to disappear
-    await card.waitFor({ state: 'detached' });
+    await card.waitFor({ state: "detached" });
   }
 }

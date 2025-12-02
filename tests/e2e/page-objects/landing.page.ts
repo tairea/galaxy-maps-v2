@@ -1,5 +1,5 @@
-import { Page, Locator } from '@playwright/test';
-import { BasePage } from './base.page';
+import { Page, Locator } from "@playwright/test";
+import { BasePage } from "./base.page";
 
 /**
  * Landing Page object for authentication flows
@@ -30,32 +30,32 @@ export class LandingPage extends BasePage {
     super(page);
 
     // Initialize locators
-    this.signInButton = page.getByRole('button', { name: /sign in or create an account/i });
-    this.createAccountLink = page.getByRole('link', { name: /create an account/i });
+    this.signInButton = page.getByRole("button", { name: /sign in or create an account/i });
+    this.createAccountLink = page.getByRole("link", { name: /create an account/i });
 
     // Login form
     this.emailInput = page.getByLabel(/e-mail/i);
-    this.passwordInput = page.getByRole('textbox', { name: /password/i });
-    this.signInSubmitButton = page.getByRole('button', { name: /sign-in/i });
+    this.passwordInput = page.getByRole("textbox", { name: /password/i });
+    this.signInSubmitButton = page.getByRole("button", { name: /sign-in/i });
 
     // Registration form
     this.firstNameInput = page.getByLabel(/first name/i);
     this.lastNameInput = page.getByLabel(/last name/i);
     this.registerEmailInput = page.getByLabel(/e-mail/i);
-    this.registerPasswordInput = page.getByRole('textbox', { name: /password/i });
-    this.registerButton = page.getByRole('button', { name: /^register$/i });
+    this.registerPasswordInput = page.getByRole("textbox", { name: /password/i });
+    this.registerButton = page.getByRole("button", { name: /^register$/i });
 
     // Messages
     this.verifyEmailMessage = page.getByText(/please check your email/i);
-    this.emailVerifiedHeading = page.getByRole('heading', { name: /email verified/i });
-    this.continueToLoginButton = page.getByRole('button', { name: /continue to login/i });
+    this.emailVerifiedHeading = page.getByRole("heading", { name: /email verified/i });
+    this.continueToLoginButton = page.getByRole("button", { name: /continue to login/i });
   }
 
   /**
    * Navigate to landing page
    */
   async goto() {
-    await super.goto('/');
+    await super.goto("/");
   }
 
   /**
@@ -67,7 +67,7 @@ export class LandingPage extends BasePage {
     if (buttonCount > 0) {
       await this.signInButton.first().click();
     } else {
-      const linkButton = this.page.getByRole('link', { name: /sign in or create an account/i });
+      const linkButton = this.page.getByRole("link", { name: /sign in or create an account/i });
       await linkButton.click();
     }
   }
@@ -100,12 +100,7 @@ export class LandingPage extends BasePage {
   /**
    * Register a new account
    */
-  async register(options: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    password: string;
-  }) {
+  async register(options: { firstName: string; lastName: string; email: string; password: string }) {
     await this.openRegistration();
     await this.firstNameInput.fill(options.firstName);
     await this.lastNameInput.fill(options.lastName);
@@ -118,7 +113,7 @@ export class LandingPage extends BasePage {
    * Wait for email verification message
    */
   async waitForVerificationMessage() {
-    await this.verifyEmailMessage.waitFor({ state: 'visible' });
+    await this.verifyEmailMessage.waitFor({ state: "visible" });
   }
 
   /**
@@ -129,7 +124,7 @@ export class LandingPage extends BasePage {
     await this.page.goto(`/login?mode=verifyEmail&oobCode=${encodeURIComponent(oobCode)}`);
     // Wait for verification to complete - the heading should appear after verification succeeds
     // Use a longer timeout to account for async verification process
-    await this.emailVerifiedHeading.waitFor({ state: 'visible', timeout: 15000 });
+    await this.emailVerifiedHeading.waitFor({ state: "visible", timeout: 15000 });
   }
 
   /**
@@ -169,7 +164,7 @@ export class LandingPage extends BasePage {
       firstName: options.firstName,
       lastName: options.lastName,
       email: options.email,
-      password: options.password
+      password: options.password,
     });
 
     // Wait for verification message
@@ -185,6 +180,6 @@ export class LandingPage extends BasePage {
     await this.signIn(options.email, options.password);
 
     // Wait for redirect to home
-    await this.waitForUrlContains('/');
+    await this.waitForUrlContains("/");
   }
 }

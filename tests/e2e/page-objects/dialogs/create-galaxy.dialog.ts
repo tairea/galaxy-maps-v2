@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import { Page, Locator } from "@playwright/test";
 
 /**
  * Create/Edit Galaxy Dialog page object
@@ -28,42 +28,48 @@ export class CreateGalaxyDialog {
     this.page = page;
 
     // Mode selection
-    this.createManuallyButton = page.locator('[data-testid="create-manually-button"]')
-      .or(page.getByRole('button', { name: /create manually/i }));
-    this.createWithAIButton = page.locator('[data-testid="create-with-ai-button"]')
-      .or(page.getByRole('button', { name: /create with ai/i }));
+    this.createManuallyButton = page
+      .locator('[data-testid="create-manually-button"]')
+      .or(page.getByRole("button", { name: /create manually/i }));
+    this.createWithAIButton = page
+      .locator('[data-testid="create-with-ai-button"]')
+      .or(page.getByRole("button", { name: /create with ai/i }));
 
     // Form fields
-    this.titleInput = page.locator('[data-testid="galaxy-title-input"]')
+    this.titleInput = page
+      .locator('[data-testid="galaxy-title-input"]')
       .or(page.getByLabel(/galaxy name/i));
-    this.descriptionInput = page.locator('[data-testid="galaxy-description-input"]')
+    this.descriptionInput = page
+      .locator('[data-testid="galaxy-description-input"]')
       .or(page.getByLabel(/galaxy description/i));
-    this.imageUpload = page.locator('[data-testid="galaxy-image-upload"]')
+    this.imageUpload = page
+      .locator('[data-testid="galaxy-image-upload"]')
       .or(page.getByLabel(/upload galaxy image/i));
 
     // Actions
-    this.createButton = page.locator('[data-testid="create-galaxy-button"]')
-      .or(page.getByRole('button', { name: /create galaxy/i }));
-    this.updateButton = page.getByRole('button', { name: /update/i });
-    this.cancelButton = page.getByRole('button', { name: /cancel/i });
-    this.deleteButton = page.getByRole('button', { name: /delete/i });
+    this.createButton = page
+      .locator('[data-testid="create-galaxy-button"]')
+      .or(page.getByRole("button", { name: /create galaxy/i }));
+    this.updateButton = page.getByRole("button", { name: /update/i });
+    this.cancelButton = page.getByRole("button", { name: /cancel/i });
+    this.deleteButton = page.getByRole("button", { name: /delete/i });
 
     // Dialog
-    this.dialog = page.locator('.v-dialog--active');
+    this.dialog = page.locator(".v-dialog--active");
   }
 
   /**
    * Wait for dialog to open
    */
-  async waitForOpen() {
-    await this.dialog.waitFor({ state: 'visible', timeout: 5000 });
+  async waitForOpen(timeout = 5000) {
+    await this.dialog.waitFor({ state: "visible", timeout });
   }
 
   /**
    * Wait for dialog to close
    */
-  async waitForClose() {
-    await this.dialog.waitFor({ state: 'detached', timeout: 5000 });
+  async waitForClose(timeout = 5000) {
+    await this.dialog.waitFor({ state: "detached", timeout });
   }
 
   /**
@@ -83,11 +89,7 @@ export class CreateGalaxyDialog {
   /**
    * Fill galaxy details
    */
-  async fillGalaxyDetails(options: {
-    title?: string;
-    description?: string;
-    image?: string;
-  }) {
+  async fillGalaxyDetails(options: { title?: string; description?: string; image?: string }) {
     if (options.title) {
       await this.titleInput.fill(options.title);
     }
@@ -104,11 +106,7 @@ export class CreateGalaxyDialog {
   /**
    * Create galaxy (manual mode)
    */
-  async createManualGalaxy(options: {
-    title: string;
-    description?: string;
-    image?: string;
-  }) {
+  async createManualGalaxy(options: { title: string; description?: string; image?: string }) {
     await this.selectManualMode();
     await this.fillGalaxyDetails(options);
     await this.createButton.click();
@@ -126,12 +124,12 @@ export class CreateGalaxyDialog {
     await aiPromptInput.fill(prompt);
 
     // Click generate
-    const generateButton = this.page.getByRole('button', { name: /generate/i });
+    const generateButton = this.page.getByRole("button", { name: /generate/i });
     await generateButton.click();
 
     // Wait for generation to complete (this can take a while)
     await this.page.waitForSelector('[data-testid="generation-complete"]', {
-      timeout: 180000 // 3 minutes
+      timeout: 180000, // 3 minutes
     });
 
     // Save generated galaxy
@@ -142,11 +140,7 @@ export class CreateGalaxyDialog {
   /**
    * Update galaxy
    */
-  async updateGalaxy(options: {
-    title?: string;
-    description?: string;
-    image?: string;
-  }) {
+  async updateGalaxy(options: { title?: string; description?: string; image?: string }) {
     await this.fillGalaxyDetails(options);
     await this.updateButton.click();
     await this.waitForClose();
@@ -167,7 +161,7 @@ export class CreateGalaxyDialog {
     await this.deleteButton.click();
 
     // Confirm deletion in confirmation dialog
-    const confirmButton = this.page.getByRole('button', { name: /delete/i }).last();
+    const confirmButton = this.page.getByRole("button", { name: /delete/i }).last();
     await confirmButton.click();
     await this.waitForClose();
   }

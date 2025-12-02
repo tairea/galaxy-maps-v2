@@ -1,0 +1,110 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - main [ref=e4]:
+    - generic [ref=e7]:
+      - generic:
+        - tablist [ref=e11]:
+          - generic [ref=e13]:
+            - tab "MY GALAXIES" [ref=e16] [cursor=pointer]:
+              - generic [ref=e17]: MY GALAXIES
+            - tab "PUBLIC GALAXIES" [selected] [ref=e18] [cursor=pointer]:
+              - generic [ref=e19]: PUBLIC GALAXIES
+            - tab "SQUADS" [ref=e20] [cursor=pointer]:
+              - generic [ref=e21]: SQUADS
+            - tab "DASHBOARD" [ref=e22] [cursor=pointer]:
+              - generic [ref=e23]: DASHBOARD
+        - button "Toggle Navigation" [ref=e25] [cursor=pointer]:
+          - img [ref=e28]
+      - generic [ref=e30]:
+        - generic:
+          - generic:
+            - generic [ref=e32]:
+              - heading "Drafting Galaxy" [level=2] [ref=e33] [cursor=pointer]:
+                - generic [ref=e34]: Drafting Galaxy
+                - img [ref=e36]
+              - generic [ref=e38]:
+                - heading "Empty Test Galaxy" [level=1] [ref=e39]
+                - paragraph [ref=e40]: "Status: drafting"
+                - paragraph [ref=e41]: "Visibility: private"
+                - paragraph [ref=e42]: A test galaxy with only the intro node
+                - button "edit galaxy" [ref=e46] [cursor=pointer]:
+                  - generic [ref=e47]:
+                    - img [ref=e49]
+                    - text: edit galaxy
+            - button "publish galaxy" [ref=e52] [cursor=pointer]:
+              - generic [ref=e53]:
+                - img [ref=e55]
+                - text: publish galaxy
+            - link "Back" [ref=e58] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e59]:
+                - img [ref=e61]
+                - generic [ref=e63]: Back
+          - generic [ref=e64]:
+            - generic:
+              - generic [ref=e66]:
+                - generic:
+                  - generic:
+                    - generic:
+                      - img
+                  - generic:
+                    - paragraph: Show Missions
+                - generic [ref=e67] [cursor=pointer]:
+                  - img [ref=e70]
+                  - paragraph [ref=e73]: Click to hide edit options
+                - generic:
+                  - generic:
+                    - generic:
+                      - img
+                  - generic:
+                    - paragraph: Edit with AI
+                - generic [ref=e74]:
+                  - generic [ref=e75] [cursor=pointer]:
+                    - img [ref=e78]
+                    - paragraph [ref=e81]: Add a new Star
+                  - generic [ref=e82] [cursor=pointer]:
+                    - img [ref=e85]
+                    - paragraph [ref=e88]: Connect Stars
+                  - generic [ref=e89] [cursor=pointer]:
+                    - img [ref=e92]
+                    - paragraph [ref=e95]: Change Star positions
+              - img [ref=e98] [cursor=pointer]
+        - generic [ref=e106]:
+          - button:
+            - generic:
+              - progressbar:
+                - img
+          - paragraph [ref=e107]: Loading Star System
+      - generic [ref=e110]:
+        - img [ref=e115]
+        - generic [ref=e117]:
+          - generic [ref=e119]:
+            - paragraph: Settings
+          - generic [ref=e120]:
+            - paragraph [ref=e122]: Colour Theme
+            - generic [ref=e126] [cursor=pointer]:
+              - switch "Dark" [checked] [ref=e128]
+              - generic [ref=e130]: Dark
+          - generic:
+            - button "Edit Account" [ref=e132] [cursor=pointer]:
+              - generic [ref=e133]:
+                - img [ref=e135]
+                - text: Edit Account
+            - link "Feedback & Bugs" [ref=e137] [cursor=pointer]:
+              - /url: https://docs.google.com/forms/d/e/1FAIpQLSfJgXGWOeosZfJY7H0tvFzANoX8p95fmgVKom97HMDiNywSnA/viewform?usp=sf_link
+              - generic [ref=e138]:
+                - img [ref=e140]
+                - text: Feedback & Bugs
+            - link "Chat on Discord" [ref=e142] [cursor=pointer]:
+              - /url: https://discord.gg/f2hPbqV22S
+              - generic [ref=e143]:
+                - img [ref=e145]
+                - text: Chat on Discord
+            - button "Logout" [ref=e147] [cursor=pointer]:
+              - generic [ref=e148]:
+                - img [ref=e150]
+                - text: Logout
+  - paragraph [ref=e152]: Running in emulator mode. Do not use with production credentials.
+```

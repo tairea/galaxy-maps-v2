@@ -221,8 +221,27 @@ export class GalaxyViewPage extends BasePage {
    * Enable Connect Stars mode
    */
   async enableConnectStarsMode() {
+    // First ensure edit toolbar is visible
+    const isEditToolbarVisible = await this.connectStarsButton.isVisible().catch(() => false);
+    if (!isEditToolbarVisible) {
+      await this.editStarsToggle.click();
+      await this.page.waitForTimeout(300);
+    }
+
+    // Click the "Connect Stars" button
     await this.connectStarsButton.click();
-    await this.page.waitForTimeout(500);
+
+    // Wait for addEdgeMode to be active
+    await this.page.waitForFunction(
+      () => {
+        const state = (window as any).__galaxyMapState__;
+        if (!state) return false;
+        return state.addingEdge === true;
+      },
+      { timeout: 5000, polling: 200 },
+    );
+
+    await this.page.waitForTimeout(300);
   }
 
   /**
@@ -230,15 +249,45 @@ export class GalaxyViewPage extends BasePage {
    */
   async disableConnectStarsMode() {
     await this.connectStarsButton.click();
-    await this.page.waitForTimeout(300);
+
+    // Wait for addEdgeMode to be inactive
+    await this.page.waitForFunction(
+      () => {
+        const state = (window as any).__galaxyMapState__;
+        if (!state) return true; // If state doesn't exist, consider it disabled
+        return state.addingEdge !== true;
+      },
+      { timeout: 5000, polling: 200 },
+    );
+
+    await this.page.waitForTimeout(200);
   }
 
   /**
    * Enable Drag mode
    */
   async enableDragMode() {
+    // First ensure edit toolbar is visible
+    const isEditToolbarVisible = await this.dragNodeButton.isVisible().catch(() => false);
+    if (!isEditToolbarVisible) {
+      await this.editStarsToggle.click();
+      await this.page.waitForTimeout(300);
+    }
+
+    // Click the "Change Star Positions" button
     await this.dragNodeButton.click();
-    await this.page.waitForTimeout(500);
+
+    // Wait for draggingNodes to be active
+    await this.page.waitForFunction(
+      () => {
+        const state = (window as any).__galaxyMapState__;
+        if (!state) return false;
+        return state.draggingNodes === true;
+      },
+      { timeout: 5000, polling: 200 },
+    );
+
+    await this.page.waitForTimeout(300);
   }
 
   /**
@@ -246,7 +295,18 @@ export class GalaxyViewPage extends BasePage {
    */
   async disableDragMode() {
     await this.dragNodeButton.click();
-    await this.page.waitForTimeout(300);
+
+    // Wait for draggingNodes to be inactive
+    await this.page.waitForFunction(
+      () => {
+        const state = (window as any).__galaxyMapState__;
+        if (!state) return true; // If state doesn't exist, consider it disabled
+        return state.draggingNodes !== true;
+      },
+      { timeout: 5000, polling: 200 },
+    );
+
+    await this.page.waitForTimeout(200);
   }
 
   /**

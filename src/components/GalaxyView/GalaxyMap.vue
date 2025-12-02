@@ -686,6 +686,13 @@ export default {
       this.$refs.network.addEdgeMode();
       // disable node hover
       this.addingEdge = true;
+
+      // Update exposed state for E2E tests
+      if (import.meta.env.MODE === "test" || import.meta.env.VITE_USE_EMULATOR === "true") {
+        if (window.__galaxyMapState__) {
+          window.__galaxyMapState__.addingEdge = true;
+        }
+      }
     },
     dragNodeMode() {
       this.draggingNodes = true;
@@ -709,12 +716,27 @@ export default {
       document.addEventListener("touchstart", this.rectangleTouchstart);
       document.addEventListener("touchmove", this.rectangleTouchmove);
       document.addEventListener("touchend", this.rectangleTouchend);
+
+      // Update exposed state for E2E tests
+      if (import.meta.env.MODE === "test" || import.meta.env.VITE_USE_EMULATOR === "true") {
+        if (window.__galaxyMapState__) {
+          window.__galaxyMapState__.draggingNodes = true;
+        }
+      }
     },
     disableDragMode() {
       this.draggingNodes = false;
       this.network.options.interaction.dragNodes = false;
       this.planets = [];
       this.stars = [];
+
+      // Update exposed state for E2E tests
+      if (import.meta.env.MODE === "test" || import.meta.env.VITE_USE_EMULATOR === "true") {
+        if (window.__galaxyMapState__) {
+          window.__galaxyMapState__.draggingNodes = false;
+        }
+      }
+
       // Remove both mouse and touch event listeners
       document.removeEventListener("mousedown", this.rectangleMousedown);
       document.removeEventListener("mousemove", this.rectangleMousedrag);
