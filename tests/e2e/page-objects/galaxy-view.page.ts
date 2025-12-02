@@ -316,9 +316,9 @@ export class GalaxyViewPage extends BasePage {
     // Click on canvas to add node
     // Set third parameter to true to pause and manually click for debugging
     await this.galaxyMap.clickAtPosition(
-      options.position?.x ?? 300,
-      options.position?.y ?? 300,
-      true, // Set to true to pause and manually click to capture events
+      options.position?.x ?? 450,
+      options.position?.y ?? 450,
+      false, // Set to true to pause and manually click to capture events
     );
 
     // Wait for dialog to open (increase timeout since click might take time to process)

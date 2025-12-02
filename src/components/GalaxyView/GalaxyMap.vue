@@ -278,10 +278,28 @@ export default {
     },
     // Watch for nodes loading and expose network for E2E tests
     currentCourseNodes: {
-      handler(newNodes) {
+      handler(newNodes, oldNodes) {
         if (newNodes && newNodes.length > 0) {
           // Reset initial data loading flag once nodes are loaded
           this.initialDataLoading = false;
+
+          // Trigger redraw when nodes are added or updated to ensure labels show immediately
+          // This fixes the issue where new node labels don't appear until page refresh
+          // Check if a new node was added by comparing lengths or checking for new IDs
+          const newNodeAdded =
+            !oldNodes ||
+            newNodes.length > oldNodes.length ||
+            newNodes.some(
+              (newNode) => !oldNodes.find((oldNode) => String(oldNode.id) === String(newNode.id)),
+            );
+
+          if (newNodeAdded && this.$refs.network) {
+            // Use nextTick to ensure the network has processed the node update
+            this.$nextTick(() => {
+              // Force a redraw to update labels for newly added nodes
+              this.$refs.network.redraw();
+            });
+          }
 
           // Expose vis-network and component state for E2E tests once nodes are loaded
           if (import.meta.env.MODE === "test" || import.meta.env.VITE_USE_EMULATOR === "true") {
@@ -1253,8 +1271,11 @@ export default {
       // Draw labels for each node
       for (const [nodeId, position] of Object.entries(nodePositionMap)) {
         // Get the original node data from currentCourseNodes since we cleared the label in display nodes
-        const originalNode = this.currentCourseNodes.find((n) => n.id === nodeId);
-        if (originalNode && originalNode.label) {
+        // Use String() to ensure type consistency for ID comparison (handles number/string mismatches)
+        const originalNode = this.currentCourseNodes.find((n) => String(n.id) === String(nodeId));
+        const nodeLabel = originalNode?.label;
+
+        if (nodeLabel) {
           // If in system preview view, only show label for the current topic
           if (this.inSystemPreviewView && nodeId !== this.currentTopicId) {
             continue;
@@ -1263,7 +1284,7 @@ export default {
           // Check if node is locked to dim the label (only for students)
           let nodeLabelColor = labelColor;
           if (this.student) {
-            const matchingNode = this.personsTopics.find((x) => x.id === nodeId);
+            const matchingNode = this.personsTopics.find((x) => String(x.id) === String(nodeId));
             const topicStatus = matchingNode?.topicStatus ?? "locked";
             const isLocked = topicStatus === "locked";
 
@@ -1278,7 +1299,7 @@ export default {
           ctx.fillStyle = nodeLabelColor;
           const labelX = position.x + 15; // offset to the right of node
           const labelY = position.y;
-          ctx.fillText(originalNode.label, labelX, labelY);
+          ctx.fillText(nodeLabel, labelX, labelY);
         }
       }
       ctx.restore();

@@ -6,47 +6,47 @@
  * Sample galaxy titles
  */
 export const SAMPLE_GALAXY_TITLES = {
-  webDevelopment: 'Web Development Journey',
-  datascience: 'Data Science Learning Path',
-  cloudEngineering: 'Cloud Engineering Bootcamp',
-  mobileApp: 'Mobile App Development',
-  aiMachineLearning: 'AI & Machine Learning Course',
+  webDevelopment: "Web Development Journey",
+  datascience: "Data Science Learning Path",
+  cloudEngineering: "Cloud Engineering Bootcamp",
+  mobileApp: "Mobile App Development",
+  aiMachineLearning: "AI & Machine Learning Course",
 };
 
 /**
  * Sample galaxy descriptions
  */
 export const SAMPLE_GALAXY_DESCRIPTIONS = {
-  webDevelopment: 'Learn full-stack web development from HTML basics to advanced React',
-  dataScience: 'Master data analysis, visualization, and machine learning',
-  cloudEngineering: 'Build and deploy scalable cloud applications',
-  mobileApp: 'Create native mobile apps for iOS and Android',
-  aiMachineLearning: 'Explore AI concepts and implement ML models',
+  webDevelopment: "Learn full-stack web development from HTML basics to advanced React",
+  dataScience: "Master data analysis, visualization, and machine learning",
+  cloudEngineering: "Build and deploy scalable cloud applications",
+  mobileApp: "Create native mobile apps for iOS and Android",
+  aiMachineLearning: "Explore AI concepts and implement ML models",
 };
 
 /**
  * Sample node titles
  */
 export const SAMPLE_NODE_TITLES = {
-  intro: 'Introduction',
-  basics: 'Basics',
-  intermediate: 'Intermediate',
-  advanced: 'Advanced',
-  project: 'Final Project',
-  assessment: 'Assessment',
+  intro: "Introduction",
+  basics: "Basics",
+  intermediate: "Intermediate",
+  advanced: "Advanced",
+  project: "Final Project",
+  assessment: "Assessment",
 };
 
 /**
  * Sample node colors (Vuetify default palette)
  */
 export const SAMPLE_NODE_COLORS = {
-  primary: '#5C6BC0',
-  secondary: '#7E57C2',
-  accent: '#FF4081',
-  success: '#4CAF50',
-  warning: '#FF9800',
-  error: '#F44336',
-  info: '#2196F3',
+  primary: "#5C6BC0",
+  secondary: "#7E57C2",
+  accent: "#FF4081",
+  success: "#4CAF50",
+  warning: "#FF9800",
+  error: "#F44336",
+  info: "#2196F3",
 };
 
 /**
@@ -63,13 +63,13 @@ export const NODE_SIZES = {
  * Canvas positions for common layouts
  */
 export const CANVAS_POSITIONS = {
-  topLeft: { x: 150, y: 150 },
+  topLeft: { x: 450, y: 150 }, // Changed from 150 to 450 to avoid left-section overlay (~300px wide)
   topCenter: { x: 400, y: 150 },
   topRight: { x: 650, y: 150 },
-  midLeft: { x: 150, y: 300 },
+  midLeft: { x: 450, y: 300 }, // Changed from 150 to 450 to avoid left-section overlay (~300px wide)
   center: { x: 400, y: 300 },
   midRight: { x: 650, y: 300 },
-  bottomLeft: { x: 150, y: 450 },
+  bottomLeft: { x: 450, y: 450 }, // Changed from 150 to 450 to avoid left-section overlay (~300px wide)
   bottomCenter: { x: 400, y: 450 },
   bottomRight: { x: 650, y: 450 },
 };
@@ -79,66 +79,66 @@ export const CANVAS_POSITIONS = {
  */
 export const TEST_SCENARIOS = {
   linearPath: {
-    description: 'Linear learning path: A -> B -> C -> D',
+    description: "Linear learning path: A -> B -> C -> D",
     nodes: [
-      { id: 'node-a', label: 'A', ...CANVAS_POSITIONS.topLeft },
-      { id: 'node-b', label: 'B', ...CANVAS_POSITIONS.topCenter },
-      { id: 'node-c', label: 'C', ...CANVAS_POSITIONS.topRight },
-      { id: 'node-d', label: 'D', ...CANVAS_POSITIONS.midRight },
+      { id: "node-a", label: "A", ...CANVAS_POSITIONS.topLeft },
+      { id: "node-b", label: "B", ...CANVAS_POSITIONS.topCenter },
+      { id: "node-c", label: "C", ...CANVAS_POSITIONS.topRight },
+      { id: "node-d", label: "D", ...CANVAS_POSITIONS.midRight },
     ],
     edges: [
-      { from: 'node-a', to: 'node-b' },
-      { from: 'node-b', to: 'node-c' },
-      { from: 'node-c', to: 'node-d' },
+      { from: "node-a", to: "node-b" },
+      { from: "node-b", to: "node-c" },
+      { from: "node-c", to: "node-d" },
     ],
   },
 
   branchingPath: {
-    description: 'Branching path: A splits into B, C, D',
+    description: "Branching path: A splits into B, C, D",
     nodes: [
-      { id: 'node-a', label: 'A', ...CANVAS_POSITIONS.topCenter },
-      { id: 'node-b', label: 'B', ...CANVAS_POSITIONS.midLeft },
-      { id: 'node-c', label: 'C', ...CANVAS_POSITIONS.center },
-      { id: 'node-d', label: 'D', ...CANVAS_POSITIONS.midRight },
+      { id: "node-a", label: "A", ...CANVAS_POSITIONS.topCenter },
+      { id: "node-b", label: "B", ...CANVAS_POSITIONS.midLeft },
+      { id: "node-c", label: "C", ...CANVAS_POSITIONS.center },
+      { id: "node-d", label: "D", ...CANVAS_POSITIONS.midRight },
     ],
     edges: [
-      { from: 'node-a', to: 'node-b' },
-      { from: 'node-a', to: 'node-c' },
-      { from: 'node-a', to: 'node-d' },
+      { from: "node-a", to: "node-b" },
+      { from: "node-a", to: "node-c" },
+      { from: "node-a", to: "node-d" },
     ],
   },
 
   convergingPath: {
-    description: 'Converging path: A, B, C all lead to D',
+    description: "Converging path: A, B, C all lead to D",
     nodes: [
-      { id: 'node-a', label: 'A', ...CANVAS_POSITIONS.topLeft },
-      { id: 'node-b', label: 'B', ...CANVAS_POSITIONS.topCenter },
-      { id: 'node-c', label: 'C', ...CANVAS_POSITIONS.topRight },
-      { id: 'node-d', label: 'D', ...CANVAS_POSITIONS.bottomCenter },
+      { id: "node-a", label: "A", ...CANVAS_POSITIONS.topLeft },
+      { id: "node-b", label: "B", ...CANVAS_POSITIONS.topCenter },
+      { id: "node-c", label: "C", ...CANVAS_POSITIONS.topRight },
+      { id: "node-d", label: "D", ...CANVAS_POSITIONS.bottomCenter },
     ],
     edges: [
-      { from: 'node-a', to: 'node-d' },
-      { from: 'node-b', to: 'node-d' },
-      { from: 'node-c', to: 'node-d' },
+      { from: "node-a", to: "node-d" },
+      { from: "node-b", to: "node-d" },
+      { from: "node-c", to: "node-d" },
     ],
   },
 
   complexPath: {
-    description: 'Complex path with branching and converging',
+    description: "Complex path with branching and converging",
     nodes: [
-      { id: 'node-start', label: 'Start', ...CANVAS_POSITIONS.topCenter },
-      { id: 'node-a', label: 'A', ...CANVAS_POSITIONS.midLeft },
-      { id: 'node-b', label: 'B', ...CANVAS_POSITIONS.center },
-      { id: 'node-c', label: 'C', ...CANVAS_POSITIONS.midRight },
-      { id: 'node-merge', label: 'Merge', ...CANVAS_POSITIONS.bottomCenter },
+      { id: "node-start", label: "Start", ...CANVAS_POSITIONS.topCenter },
+      { id: "node-a", label: "A", ...CANVAS_POSITIONS.midLeft },
+      { id: "node-b", label: "B", ...CANVAS_POSITIONS.center },
+      { id: "node-c", label: "C", ...CANVAS_POSITIONS.midRight },
+      { id: "node-merge", label: "Merge", ...CANVAS_POSITIONS.bottomCenter },
     ],
     edges: [
-      { from: 'node-start', to: 'node-a' },
-      { from: 'node-start', to: 'node-b' },
-      { from: 'node-start', to: 'node-c' },
-      { from: 'node-a', to: 'node-merge' },
-      { from: 'node-b', to: 'node-merge' },
-      { from: 'node-c', to: 'node-merge' },
+      { from: "node-start", to: "node-a" },
+      { from: "node-start", to: "node-b" },
+      { from: "node-start", to: "node-c" },
+      { from: "node-a", to: "node-merge" },
+      { from: "node-b", to: "node-merge" },
+      { from: "node-c", to: "node-merge" },
     ],
   },
 };
@@ -148,16 +148,16 @@ export const TEST_SCENARIOS = {
  */
 export const MANUAL_TEST_CREDENTIALS = {
   teacher: {
-    email: 'teacher@example.test',
-    password: 'TeacherPass123!',
+    email: "teacher@example.test",
+    password: "TeacherPass123!",
   },
   student: {
-    email: 'student@example.test',
-    password: 'StudentPass123!',
+    email: "student@example.test",
+    password: "StudentPass123!",
   },
   admin: {
-    email: 'admin@example.test',
-    password: 'AdminPass123!',
+    email: "admin@example.test",
+    password: "AdminPass123!",
   },
 };
 
@@ -175,15 +175,15 @@ export const TEST_TIMEOUTS = {
  * Firestore emulator settings
  */
 export const EMULATOR_CONFIG = {
-  projectId: process.env.FIREBASE_PROJECT_ID ?? 'galaxy-maps-test',
+  projectId: process.env.FIREBASE_PROJECT_ID ?? "galaxy-maps-test",
   auth: {
-    host: process.env.FIREBASE_AUTH_EMULATOR ?? 'localhost:9099',
+    host: process.env.FIREBASE_AUTH_EMULATOR ?? "localhost:9099",
   },
   firestore: {
-    host: process.env.FIREBASE_FIRESTORE_EMULATOR_HOST ?? 'localhost:8080',
+    host: process.env.FIREBASE_FIRESTORE_EMULATOR_HOST ?? "localhost:8080",
   },
   functions: {
-    host: process.env.FIREBASE_FUNCTIONS_EMULATOR_HOST ?? 'localhost:5001',
+    host: process.env.FIREBASE_FUNCTIONS_EMULATOR_HOST ?? "localhost:5001",
   },
 };
 
@@ -192,13 +192,13 @@ export const EMULATOR_CONFIG = {
  */
 export const TEST_ASSETS = {
   images: {
-    small: 'tests/e2e/fixtures/assets/test-image-small.png',
-    medium: 'tests/e2e/fixtures/assets/test-image-medium.png',
-    large: 'tests/e2e/fixtures/assets/test-image-large.png',
+    small: "tests/e2e/fixtures/assets/test-image-small.png",
+    medium: "tests/e2e/fixtures/assets/test-image-medium.png",
+    large: "tests/e2e/fixtures/assets/test-image-large.png",
   },
   documents: {
-    pdf: 'tests/e2e/fixtures/assets/test-document.pdf',
-    syllabus: 'tests/e2e/fixtures/assets/test-syllabus.pdf',
+    pdf: "tests/e2e/fixtures/assets/test-document.pdf",
+    syllabus: "tests/e2e/fixtures/assets/test-syllabus.pdf",
   },
 };
 

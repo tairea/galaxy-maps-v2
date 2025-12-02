@@ -24,10 +24,22 @@ export default defineConfig({
     locale: "en-US",
     permissions: ["clipboard-read", "clipboard-write"],
   },
+  // Keep browser open on failure
+  globalSetup: undefined,
+  globalTeardown: undefined,
+  // Add this to prevent auto-closing
+  workers: 1, // Ensure single worker for debugging
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        // Disable web security (CORS) for E2E tests to work around
+        // Firebase Functions emulator CORS limitations with callable functions
+        launchOptions: {
+          args: ["--disable-web-security", "--disable-features=IsolateOrigins,site-per-process"],
+        },
+      },
     },
   ],
 });

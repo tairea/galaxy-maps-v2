@@ -166,7 +166,10 @@ export const fetchCoursesCreatedByPersonId = async (personId: string): Promise<I
     console.log(`🟠 Frontend: About to call Firebase function for personId: ${personId}`);
     try {
       const response = await getCoursesCreatedByPersonId(data);
-      console.log(`✅ Frontend: Successfully received response for personId: ${personId}`, response);
+      console.log(
+        `✅ Frontend: Successfully received response for personId: ${personId}`,
+        response,
+      );
       return response;
     } catch (error) {
       console.error(`❌ Frontend: Error calling function for personId: ${personId}`, error);
@@ -184,7 +187,9 @@ export const fetchAllCoursesGroupedByCreator = async (): Promise<{
   const getAllCoursesGroupedByCreator = functions.httpsCallable("getAllCoursesGroupedByCreator");
   const result = await getAllCoursesGroupedByCreator({});
   console.log(
-    `✅ Frontend: Successfully received grouped courses for ${Object.keys(result.data.coursesByCreator || {}).length} creators`,
+    `✅ Frontend: Successfully received grouped courses for ${
+      Object.keys(result.data.coursesByCreator || {}).length
+    } creators`,
   );
   return result.data.coursesByCreator || {};
 };
@@ -1293,9 +1298,23 @@ export const saveNode = async (
     node,
     isUpdate,
   };
+  console.log("[ff] saveNode data", data);
   const saveNodeFunction = functions.httpsCallable("saveNode");
-  const result = await saveNodeFunction(data);
-  return result.data;
+  try {
+    const result = await saveNodeFunction(data);
+    if (!result || !result.data) {
+      throw new Error("Invalid response from saveNode function");
+    }
+    return result.data;
+  } catch (error) {
+    console.error("❌ Error calling saveNode function:", error);
+    if (error instanceof FirebaseError) {
+      throw error;
+    }
+    throw new Error(
+      `Failed to save node: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
 };
 
 // Generate ephemeral client token for OpenAI Realtime API

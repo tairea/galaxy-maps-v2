@@ -5,8 +5,9 @@ import "firebase/compat/firestore";
 import "firebase/compat/functions";
 import "firebase/compat/storage";
 
-// Use localhost instead of 127.0.0.1 to avoid CORS issues when frontend runs on localhost
-const DEFAULT_EMULATOR_HOST = "localhost";
+// Default to 127.0.0.1 to match E2E test configuration (BASE_URL uses 127.0.0.1)
+// Environment variables in .env.test override this default
+const DEFAULT_EMULATOR_HOST = "127.0.0.1";
 const DEFAULT_AUTH_PORT = 9099;
 const DEFAULT_FIRESTORE_PORT = 8080;
 const DEFAULT_FUNCTIONS_PORT = 5001;
