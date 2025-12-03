@@ -449,7 +449,12 @@ export const fetchPersonByPersonId = async (
       (!errorMessage.includes("ERR_INSUFFICIENT_RESOURCES") &&
         !errorMessage.includes("ERR_CONNECTION_CLOSED"))
     ) {
-      console.error(`Error fetching person with ID ${id} from COHORT ${cohortId}:`, error);
+      console.error(
+        `Error in fetchPersonByPersonId with ID ${id} ${
+          cohortId ? `from COHORT ${cohortId}` : ""
+        }:`,
+        error,
+      );
     }
     return null;
   }

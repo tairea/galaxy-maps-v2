@@ -1838,6 +1838,46 @@ export default {
   width: 100% !important;
 }
 
+// Medium screens (768px - 960px)
+@media (min-width: 769px) and (max-width: 960px) {
+  .create-dialog {
+    .action-buttons {
+      margin: 0 auto;
+      padding: 20px;
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 600px;
+
+      // Column layout
+      &:not(.flex-row):not(.d-flex) {
+        flex-direction: column;
+        max-width: 400px;
+
+        .v-btn {
+          width: 100%;
+          max-width: 300px;
+        }
+      }
+
+      // Row layout
+      &.flex-row,
+      &.d-flex {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+
+        .v-btn {
+          flex: 0 0 auto;
+          min-width: 120px;
+        }
+      }
+    }
+  }
+}
+
 @media (max-width: 768px) {
   .create-dialog {
     flex-direction: column;

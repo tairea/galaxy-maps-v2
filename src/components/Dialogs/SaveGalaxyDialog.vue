@@ -293,4 +293,31 @@ export default {
     transform: rotate(360deg);
   }
 }
+
+// Medium screens (768px - 960px)
+@media (min-width: 769px) and (max-width: 960px) {
+  .create-dialog {
+    .action-buttons {
+      margin: 0 auto;
+      padding: 20px;
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 600px;
+
+      // The buttons are wrapped in d-flex justify-center, so ensure proper centering
+      .d-flex {
+        justify-content: center;
+        width: 100%;
+      }
+
+      .v-btn {
+        flex: 0 0 auto;
+        min-width: 120px;
+      }
+    }
+  }
+}
 </style>

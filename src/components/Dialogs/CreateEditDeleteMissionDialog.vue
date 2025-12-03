@@ -1519,4 +1519,32 @@ export default {
     opacity: 0;
   }
 }
+
+// Medium screens (768px - 960px)
+@media (min-width: 769px) and (max-width: 960px) {
+  .create-dialog {
+    .action-buttons {
+      margin: 0 auto;
+      padding: 20px;
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 600px;
+
+      // Row layout
+      &:not(.mobile) {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+
+        .v-btn {
+          flex: 0 0 auto;
+          min-width: 120px;
+        }
+      }
+    }
+  }
+}
 </style>

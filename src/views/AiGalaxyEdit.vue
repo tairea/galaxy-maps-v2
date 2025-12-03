@@ -231,6 +231,7 @@
 
       <!-- v-treeview of stars > planets > missions -->
       <section
+        ref="galaxyTreeviewContainer"
         v-if="transformedStarDetails.length > 0"
         class="galaxy-treeview-container"
         :class="{ mobile: isMobile }"
@@ -477,6 +478,7 @@
 
           <!-- =========== Prompt =========== -->
           <RefineWithAiPrompter
+            ref="refineWithAiPrompter"
             v-if="!taskEditing"
             :is-mobile="isMobile"
             :dark="dark"
@@ -2584,8 +2586,49 @@ export default {
         this.activeGalaxyItems = [...filteredExistingItems, ...sanitized];
         console.log("activeGalaxyItems: ", this.activeGalaxyItems);
 
+        // 4) Scroll to RefineWithAiPrompter if a planet or star was added
+        const planetAdded = added.some((id) => /^star\[\d+\]\.planet\[\d+\]/.test(id));
+        const starAdded = added.some((id) => /^star\[\d+\]$/.test(id));
+        if (planetAdded || starAdded) {
+          this.$nextTick(() => {
+            this.scrollToRefineWithAiPrompter();
+          });
+        }
+
         this.updateTimeout = null;
       }, 100);
+    },
+    scrollToRefineWithAiPrompter() {
+      const container = this.$refs.galaxyTreeviewContainer;
+      const targetElement = this.$refs.refineWithAiPrompter?.$el || this.$refs.refineWithAiPrompter;
+
+      if (!container || !targetElement) return;
+
+      // Get container and target positions
+      const containerRect = container.getBoundingClientRect();
+      const targetRect = targetElement.getBoundingClientRect();
+
+      // Calculate the current scroll position of the container
+      const containerScrollTop = container.scrollTop;
+
+      // Calculate target position relative to container's scroll position
+      // We need to account for the element's position within the scrollable content
+      const targetOffsetTop = targetRect.top - containerRect.top + containerScrollTop;
+
+      // Calculate desired scroll position (centered in viewport)
+      const containerHeight = container.clientHeight;
+      const targetHeight = targetRect.height;
+      const desiredScrollTop = targetOffsetTop - containerHeight / 2 + targetHeight / 2;
+
+      // Ensure we don't scroll past the container's boundaries
+      const maxScrollTop = container.scrollHeight - containerHeight;
+      const finalScrollTop = Math.max(0, Math.min(desiredScrollTop, maxScrollTop));
+
+      // Smooth scroll within the container
+      container.scrollTo({
+        top: finalScrollTop,
+        behavior: "smooth",
+      });
     },
     buildStructureCandidates(stars) {
       const starCandidates = [];
@@ -4865,6 +4908,7 @@ After each edit or structural change, briefly validate the update’s success by
   left: 0px;
   top: 0px;
   pointer-events: none;
+  box-sizing: border-box;
 
   > * {
     pointer-events: auto;
@@ -4880,6 +4924,9 @@ After each edit or structural change, briefly validate the update’s success by
   }
 
   .galaxy-info-wrapper {
+    width: 100%;
+    padding-right: 10px; // Add padding to ensure right border is visible
+
     &.minimized {
       position: fixed;
       top: -31px;
@@ -4909,8 +4956,10 @@ After each edit or structural change, briefly validate the update’s success by
 
 #main-section {
   position: absolute;
-  width: calc(100vw - 200px);
-  margin: 0px 0px 0px 210px;
+  width: calc(
+    100vw - 220px
+  ); // Increased from 200px to 220px to account for left section width + padding
+  margin: 0px 0px 0px 220px; // Increased from 210px to 220px to ensure gap and not overlap galaxy-info border
   height: 100%;
   display: flex;
   justify-content: flex-start;
