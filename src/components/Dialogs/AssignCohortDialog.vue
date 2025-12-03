@@ -587,6 +587,34 @@ export default {
   }
 }
 
+// Medium screens (768px - 960px)
+@media (min-width: 769px) and (max-width: 960px) {
+  .create-dialog {
+    .action-buttons {
+      margin: 0 auto;
+      padding: 20px;
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 600px;
+
+      // Row layout (when using d-flex)
+      &.d-flex {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+
+        .v-btn {
+          flex: 0 0 auto;
+          min-width: 120px;
+        }
+      }
+    }
+  }
+}
+
 .create-dialog-content {
   background-color: var(--v-background-base);
   // width: 33.33%;

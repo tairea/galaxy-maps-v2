@@ -834,6 +834,11 @@ export default {
     width: 100%;
     border-left: none;
     padding: 0;
+
+    // When closed on mobile, ensure it's fully hidden
+    &:not(.open) {
+      right: -100%;
+    }
   }
 
   .left-side-container,
@@ -1097,6 +1102,26 @@ export default {
     color: var(--v-missionAccent-base);
     opacity: 0.7;
     font-style: italic;
+  }
+}
+
+// Medium screens (768px - 960px) - ensure right section is fully hidden when closed
+@media (min-width: 769px) and (max-width: 960px) {
+  #right-section {
+    // When closed on medium screens, ensure it's fully hidden
+    &:not(.open) {
+      right: -100%;
+    }
+  }
+}
+
+// Mobile screens (≤768px) - ensure right section is fully hidden when closed
+@media (max-width: 768px) {
+  #right-section {
+    // When closed on mobile, ensure it's fully hidden
+    &:not(.open) {
+      right: -100%;
+    }
   }
 }
 </style>

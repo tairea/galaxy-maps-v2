@@ -890,6 +890,25 @@ export default {
   padding: 20px;
 }
 
+// Medium screens (768px - 960px)
+@media (min-width: 769px) and (max-width: 960px) {
+  .action-buttons {
+    margin: 0 auto;
+    padding: 20px;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 600px;
+
+    .v-btn {
+      flex: 0 0 auto;
+      min-width: 120px;
+    }
+  }
+}
+
 .requester-info {
   position: relative;
   top: 25px;

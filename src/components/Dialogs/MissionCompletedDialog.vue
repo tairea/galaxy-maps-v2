@@ -1145,4 +1145,28 @@ export default {
 .active-quill ::v-deep .ql-container {
   border: 1px solid var(--v-cohortAccent-base);
 }
+
+// Medium screens (768px - 960px)
+@media (min-width: 769px) and (max-width: 960px) {
+  .action-buttons {
+    margin: 0 auto;
+    padding: 20px;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 600px;
+
+    .v-btn {
+      flex: 0 0 auto;
+      min-width: 120px;
+    }
+  }
+
+  .action-buttons-over-under {
+    margin: 0 auto;
+    max-width: 600px;
+  }
+}
 </style>
