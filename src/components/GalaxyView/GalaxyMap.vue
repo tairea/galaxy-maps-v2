@@ -272,6 +272,75 @@ export default {
       },
       immediate: false,
     },
+    // Watch for nodes loading to trigger planet setup
+    currentCourseNodes: {
+      handler(newNodes, oldNodes) {
+        // Only process if we have valid nodes
+        if (newNodes && Array.isArray(newNodes) && newNodes.length > 0) {
+          // Reset initial data loading flag once nodes are loaded
+          this.initialDataLoading = false;
+
+          // Trigger planet setup when nodes become available and we have tasks
+          // This handles the case where tasks load before nodes, or nodes load before tasks
+          this.$nextTick(() => {
+            if (this.$refs.network && this.currentCourseNodes.length > 0) {
+              const hasTasks = this.student
+                ? this.personsCourseTasks.length > 0
+                : this.courseTasks.length > 0;
+              if (hasTasks && this.planets.length === 0) {
+                console.log("[GalaxyMap] Nodes loaded, triggering planet setup from nodes watcher");
+                this.drawSolarSystems();
+              }
+            }
+          });
+        }
+      },
+      immediate: false,
+    },
+    // Watch for courseTasks changes to trigger planet setup when tasks become available
+    // This handles the case where tasks load after nodes (common on first route from save)
+    courseTasks: {
+      handler(newTasks, oldTasks) {
+        // Only trigger if tasks transition from empty to having items
+        const wasEmpty = !oldTasks || oldTasks.length === 0;
+        const nowHasTasks = newTasks && newTasks.length > 0;
+        const isTeacher = !this.student;
+
+        if (wasEmpty && nowHasTasks && isTeacher && this.currentCourseNodes.length > 0) {
+          this.$nextTick(() => {
+            if (this.$refs.network && this.planets.length === 0) {
+              console.log(
+                "[GalaxyMap] Tasks loaded, triggering planet setup from courseTasks watcher",
+              );
+              this.drawSolarSystems();
+            }
+          });
+        }
+      },
+      immediate: false,
+    },
+    // Watch for personsCourseTasks changes to trigger planet setup when tasks become available
+    // This handles the case where student tasks load after nodes
+    personsCourseTasks: {
+      handler(newTasks, oldTasks) {
+        // Only trigger if tasks transition from empty to having items
+        const wasEmpty = !oldTasks || oldTasks.length === 0;
+        const nowHasTasks = newTasks && newTasks.length > 0;
+        const isStudent = this.student;
+
+        if (wasEmpty && nowHasTasks && isStudent && this.currentCourseNodes.length > 0) {
+          this.$nextTick(() => {
+            if (this.$refs.network && this.planets.length === 0) {
+              console.log(
+                "[GalaxyMap] Student tasks loaded, triggering planet setup from personsCourseTasks watcher",
+              );
+              this.drawSolarSystems();
+            }
+          });
+        }
+      },
+      immediate: false,
+    },
   },
   computed: {
     ...mapState(useRootStore, [
