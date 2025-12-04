@@ -977,14 +977,31 @@ export default {
       // Update positions for all selected nodes
       selectedNodes.forEach((nodeId) => {
         const node = nodes.find((n) => n.id === nodeId);
+        const newPosition = newPositions[nodeId];
+
+        // Skip if node or newPosition is not found
+        if (!node || !newPosition) {
+          console.warn(`dragEnd: Node or position not found for nodeId ${nodeId}`, {
+            node,
+            newPosition,
+          });
+          return;
+        }
+
+        // Check if node has valid x/y coordinates
+        if (node.x === undefined || node.y === undefined) {
+          console.warn(`dragEnd: Node missing x/y coordinates for nodeId ${nodeId}`, node);
+          return;
+        }
+
         // check if coords changed
-        if (newPositions[nodeId].x !== node.x || newPositions[nodeId].y !== node.y) {
+        if (newPosition.x !== node.x || newPosition.y !== node.y) {
           positionsChanged = true;
           // commit new positions to newNodePositions
           const newPositionObj = {
             id: nodeId,
-            x: newPositions[nodeId].x,
-            y: newPositions[nodeId].y,
+            x: newPosition.x,
+            y: newPosition.y,
           };
           this.newNodePositions[nodeId] = newPositionObj;
         }
