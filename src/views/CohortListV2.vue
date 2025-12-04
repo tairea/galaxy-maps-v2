@@ -6,7 +6,12 @@
     <div class="side-col">
       <!-- COHORTS -->
       <!-- only if you made them (eg. are the teacher AKA in cohort.teachers[]) -->
-      <h3 class="map-squads-title overline missionAccent--text mt-12">Squads</h3>
+      <h3
+        v-if="getRegularCohorts().length > 0"
+        class="map-squads-title overline missionAccent--text mt-12"
+      >
+        Squads
+      </h3>
       <div v-if="cohorts" class="cohorts">
         <!-- Regular cohorts (courseCohort doesn't exist or is false) -->
         <Cohort

@@ -572,7 +572,10 @@ export default {
       ? this.$vuetify.theme.themes.dark.missionAccent
       : this.$vuetify.theme.themes.light.missionAccent;
 
-    // Data binding is now handled by GalaxyView.mounted(), no need to refresh here
+    // Only refresh data if currentCourseId is already available
+    if (this.currentCourseId) {
+      this.refreshData();
+    }
 
     // zoom fit on load
     if (this.nodesToDisplay && this.$refs.network && this.$refs.network.nodesArray.length > 0) {
@@ -632,9 +635,57 @@ export default {
       }
       return this.$refs.network;
     },
+    async refreshData() {
+      // Validate required fields before proceeding
+      if (!this.currentCourseId) {
+        console.warn("refreshData: Missing currentCourseId");
+        return;
+      }
+
+      await this.bindCourseNodes(this.currentCourseId);
+      await this.bindCourseEdges(this.currentCourseId);
+
+      // ===== NOTE: Updated logic to bind topics for course creator && "non-signed-in-user" (improving new user experience)
+      if (this.student) {
+        // Validate person.id for student
+        if (!this.person?.id) {
+          console.warn("refreshData: Missing person.id for student");
+          return;
+        }
+
+        // bind topics for student
+        await this.bindThisPersonsCourseTopics({
+          personId: this.person.id,
+          courseId: this.currentCourseId,
+        });
+        // bind state.personsCourseTasks
+        await this.getPersonsCourseTasks();
+      } else {
+        // bind. state.courseTasks
+        await this.getCourseTasks(this.currentCourseId);
+      }
+
+      this.needsCentering = true;
+
+      await this.drawSolarSystems();
+
+      // ==== check if all topics completed. if so GALAXY MAP COMPLETE!!! ====
+      const isGalaxyMapComplete = this.personsTopics.every(
+        (topic) => topic.topicStatus === "completed",
+      );
+      if (!this.galaxyCompleted && this.personsTopics.length && isGalaxyMapComplete) {
+        // TODO: better complete congrats
+        console.log("Galaxy Map Complete. Well done!");
+        this.$emit("galaxyCompleted");
+      }
+
+      // Mark initial data loading as complete
+      this.initialDataLoading = false;
+      console.log("Initial data loading completed, initialDataLoading set to false");
+    },
     async refreshTaskData() {
       // Only refresh task-related data on course switches
-      // Nodes and edges are handled by GalaxyView
+      // This is called from currentCourseId watcher when switching courses
 
       // ===== NOTE: Updated logic to bind topics for course creator && "non-signed-in-user" (improving new user experience)
       if (this.student) {

@@ -156,7 +156,7 @@ export default {
     },
     creatorInitial() {
       if (!this.course?.mappedBy?.name) return "";
-      return this.course.mappedBy.name.charAt(0).toUpperCase();
+      return this.course.mappedBy.name.substring(0, 3).toUpperCase();
     },
   },
   watch: {
@@ -197,6 +197,12 @@ export default {
       this.isCourseOwnerOrganisation = db.doc(this.course.owner).path.startsWith("organisations");
     },
     async setImages() {
+      // Skip fetching person images for unauthenticated users
+      // These fetched images are no longer used in the template (commented out)
+      // The template now uses course.mappedBy.avatarUrl and first3letters fallback
+      if (!this.user) {
+        return;
+      }
       this.mappedAuthorImage = await this.getPersonsImage(this.course.mappedBy.personId);
       if (this.course.contentBy.personId) {
         this.contentAuthorImage = await this.getPersonsImage(this.course.contentBy.personId);

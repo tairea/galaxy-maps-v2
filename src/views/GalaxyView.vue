@@ -79,7 +79,6 @@
         </div>
         <!-- Map Buttons -->
         <GalaxyMapButtons
-          class="mt-8"
           :class="{ hideButtons: hideLeftPanelsFlag }"
           v-if="!isRestricted"
           :addNodeMode="addNodeMode"
@@ -366,9 +365,13 @@ export default {
       // Update document title when course loads
       this.updateDocumentTitle();
 
-      // Only fetch cohorts for published courses (not needed for draft courses)
-      if (newVal && newVal.status === "published") {
-        this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
+      // Only fetch cohorts for published courses AND authenticated users
+      if (newVal && newVal.status === "published" && this.user) {
+        try {
+          this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
+        } catch (error) {
+          console.warn("Failed to fetch cohorts (requires authentication):", error.message);
+        }
       }
     },
   },
@@ -400,21 +403,6 @@ export default {
 
     // bind course instead of fetch (above) so to make course reactive (eg in GalaxyInfo.vue)
     await this.bindCourseByCourseId(this.courseId);
-    await this.bindCourseNodes(this.courseId);
-    await this.bindCourseEdges(this.courseId);
-
-    // Bind task data based on user role
-    if (this.student) {
-      // For students: bind personal topic progress and task progress
-      await this.bindThisPersonsCourseTopics({
-        personId: this.person.id,
-        courseId: this.courseId,
-      });
-      await this.getPersonsCourseTasks();
-    } else {
-      // For teachers: bind course task definitions
-      await this.getCourseTasks(this.courseId);
-    }
 
     // Clear timeout if course loads successfully
     if (this.courseLoadTimeout) {
@@ -422,35 +410,40 @@ export default {
       this.courseLoadTimeout = null;
     }
 
-    // Only fetch cohorts for published courses (not needed for draft courses)
-    if (this.boundCourse && this.boundCourse.status === "published") {
-      const cohorts = await fetchCohorts();
+    // Only fetch cohorts for authenticated users on published courses
+    // Cohort data requires authentication and is not needed for public viewing
+    if (this.user && this.boundCourse && this.boundCourse.status === "published") {
+      try {
+        const cohorts = await fetchCohorts();
 
-      // bind assigned people in this course
-      if (this.teacher) {
-        const cohortsTeacherIsIn = cohorts.filter((cohort) =>
-          cohort.teachers.includes(this.person.id),
-        );
-        // filter out cohortsTeacherIsIn where courseCohort == true
-        this.teachersCohorts = cohortsTeacherIsIn.filter((cohort) => cohort.courseCohort == null);
-        this.peopleInCourse = await fetchAllPeopleInCourseByCourseId(this.courseId);
-        this.setPeopleInCourse(this.peopleInCourse);
-        this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
-      } else if (this.student) {
-        // show navigator other squads on this map
+        // bind assigned people in this course
+        if (this.teacher) {
+          const cohortsTeacherIsIn = cohorts.filter((cohort) =>
+            cohort.teachers.includes(this.person.id),
+          );
+          // filter out cohortsTeacherIsIn where courseCohort == true
+          this.teachersCohorts = cohortsTeacherIsIn.filter((cohort) => cohort.courseCohort == null);
+          this.peopleInCourse = await fetchAllPeopleInCourseByCourseId(this.courseId);
+          this.setPeopleInCourse(this.peopleInCourse);
+          this.cohortsInCourse = await fetchAllCohortsInCourseByCourseId(this.courseId);
+        } else if (this.student) {
+          // show navigator other squads on this map
 
-        const cohort = cohorts.find((cohort) =>
-          cohort.courses.some((courseId) => courseId === this.courseId),
-        );
-        this.cohortsInCourse.push(cohort);
-        // if (this.cohortsInCourse.length) {
-        //   this.setCurrentCohortId(this.cohortsInCourse[0]?.id);
-        //   const students = await Promise.all(
-        //     this.cohortsInCourse[0].students?.map((student) => fetchPersonByPersonId(student)),
-        //   );
-        //   this.peopleInCourse = students;
-        //   this.setPeopleInCourse(students);
-        // }
+          const cohort = cohorts.find((cohort) =>
+            cohort.courses.some((courseId) => courseId === this.courseId),
+          );
+          this.cohortsInCourse.push(cohort);
+          // if (this.cohortsInCourse.length) {
+          //   this.setCurrentCohortId(this.cohortsInCourse[0]?.id);
+          //   const students = await Promise.all(
+          //     this.cohortsInCourse[0].students?.map((student) => fetchPersonByPersonId(student)),
+          //   );
+          //   this.peopleInCourse = students;
+          //   this.setPeopleInCourse(students);
+          // }
+        }
+      } catch (error) {
+        console.warn("Failed to fetch cohort data (requires authentication):", error.message);
       }
     }
 
@@ -584,11 +577,6 @@ export default {
       "setCurrentCourseId",
       "setPeopleInCourse",
       "bindCourseByCourseId",
-      "bindCourseNodes",
-      "bindCourseEdges",
-      "bindThisPersonsCourseTopics",
-      "getPersonsCourseTasks",
-      "getCourseTasks",
       "unbindCourse",
     ]),
     setUiMessage(message) {
