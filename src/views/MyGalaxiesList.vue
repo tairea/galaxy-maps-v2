@@ -3,7 +3,7 @@
     <GalaxyListPanel
       ref="listPanel"
       @courseClicked="courseClicked($event)"
-      @createGalaxy="showDialog = true"
+      @createGalaxy="onCreateGalaxyClick"
       class="hidden-sm-and-down"
     />
     <!-- Desktop info panel -->
@@ -29,7 +29,7 @@
         :highlightCourse="selectedCourseId"
         :isLoadingCourses="isLoadingCourses"
         @courseClicked="courseClicked($event)"
-        @createGalaxy="showDialog = true"
+        @createGalaxy="onCreateGalaxyClick"
       />
       <div v-if="!validSlug">
         <p class="overline missionAccent--text">Error. destination doesn't exist</p>
@@ -55,7 +55,7 @@
             <v-btn
               outlined
               color="galaxyAccent"
-              @click="showDialog = true"
+              @click="onCreateGalaxyClick"
               class="createButton"
               :style="selectedCourseId ? 'opacity:0' : 'opacity:1'"
             >
@@ -74,7 +74,7 @@
       <v-row class="text-center" align="center">
         <v-col cols="12">
           <div class="divider"></div>
-          <v-btn outlined color="baseAccent" @click="showDialog = true" class="createButton">
+          <v-btn outlined color="baseAccent" @click="onCreateGalaxyClick" class="createButton">
             <v-icon left>
               {{ mdiPlus }}
             </v-icon>
@@ -108,6 +108,7 @@ import useRootStore from "@/store/index";
 import { mdiPlus, mdiRocketLaunch } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
 import AICreateGalaxyDialogVue from "@/components/Dialogs/AICreateGalaxyDialog.vue";
+import { guardCreateGalaxyOrPaywall } from "@/utils/paywallGuard";
 import AiGalaxyMapAgent from "@/components/Reused/AiGalaxyMapAgent.vue";
 
 export default {
@@ -203,6 +204,13 @@ export default {
       "resetCoursesActivity",
       "setSelectedCourseId",
     ]),
+    async onCreateGalaxyClick() {
+      const allowed = await guardCreateGalaxyOrPaywall({
+        maxFree: 3,
+        message: "Free plan includes 3 galaxies. Upgrade to create more.",
+      });
+      if (allowed) this.showDialog = true;
+    },
     async loadMyCourses() {
       // Use the store method to load my courses
       const store = useGalaxyListViewStore();

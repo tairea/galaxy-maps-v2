@@ -3,7 +3,7 @@
     <GalaxyListPanel
       ref="listPanel"
       @courseClicked="courseClicked($event)"
-      @createGalaxy="showDialog = true"
+      @createGalaxy="onCreateGalaxyClick"
     />
     <GalaxyListInfoPanel :selectedCourse="selectedCourse" @closeInfoPanel="closeInfoPanel" />
     <div class="flexContainer">
@@ -17,7 +17,7 @@
         :highlightCourse="selectedCourseId"
         :isLoadingCourses="isLoadingCourses"
         @courseClicked="courseClicked($event)"
-        @createGalaxy="showDialog = true"
+        @createGalaxy="onCreateGalaxyClick"
       />
       <div v-if="!validSlug">
         <p class="overline missionAccent--text">Error. destination doesn't exist</p>
@@ -33,7 +33,7 @@
               <v-btn
                 outlined
                 color="baseAccent"
-                @click="showDialog = true"
+                @click="onCreateGalaxyClick"
                 :disabled="!user.loggedIn"
                 class="createButton"
                 :style="selectedCourseId ? 'opacity:0' : 'opacity:1'"
@@ -57,7 +57,7 @@
           <v-btn
             outlined
             color="baseAccent"
-            @click="showDialog = true"
+            @click="onCreateGalaxyClick"
             :disabled="!user.loggedIn"
             class="createButton"
             :style="selectedCourseId ? 'opacity:0' : 'opacity:1'"
@@ -94,6 +94,7 @@ import useRootStore from "@/store/index";
 import { mdiPlus } from "@mdi/js";
 import { mapActions, mapState } from "pinia";
 import AICreateGalaxyDialogVue from "@/components/Dialogs/AICreateGalaxyDialog.vue";
+import { guardCreateGalaxyOrPaywall } from "@/utils/paywallGuard";
 
 export default {
   name: "GalaxyList",
@@ -185,6 +186,14 @@ export default {
       "resetCoursesActivity",
       "setSelectedCourseId",
     ]),
+    async onCreateGalaxyClick() {
+      console.log("onCreateGalaxyClick");
+      const allowed = await guardCreateGalaxyOrPaywall({
+        maxFree: 3,
+        message: "Free plan includes 3 galaxies. Upgrade to create more.",
+      });
+      if (allowed) this.showDialog = true;
+    },
     courseClicked(emittedPayload) {
       this.$router.replace({
         query: {
