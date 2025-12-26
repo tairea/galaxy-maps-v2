@@ -25,8 +25,8 @@
         <!-- Stripe pricing table -->
         <stripe-pricing-table
           v-if="stripeScriptLoaded"
-          pricing-table-id="prctbl_1SifNj1FDuHOI0Uqq6oBXZmH"
-          publishable-key="pk_live_51S8Ryu1FDuHOI0Uqm71LnxKcw50rb7K3pj5wxomtozrdCUXnGNxxpMgaMpQq3tRHaMGjiQfdriFdQHI1efZeXWNM005sI8u4Fs"
+          :pricing-table-id="stripePricingTableId"
+          :publishable-key="stripePublishableKey"
         >
         </stripe-pricing-table>
       </div>
@@ -61,6 +61,12 @@ export default {
     },
     isTablet(): boolean {
       return (this as any).$vuetify.breakpoint.md;
+    },
+    stripePricingTableId(): string {
+      return import.meta.env.VITE_STRIPE_PRICING_TABLE_ID || "";
+    },
+    stripePublishableKey(): string {
+      return import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "";
     },
   },
   data: () => ({ loading: false, mdiClose, mdiInformationVariant, stripeScriptLoaded: false }),
