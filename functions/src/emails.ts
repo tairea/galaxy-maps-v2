@@ -573,8 +573,8 @@ export async function sendResponseToSubmission(
     lastName
       ? lastName.charAt(0).toUpperCase() + lastName.slice(1)
       : firstName
-        ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
-        : ""
+      ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
+      : ""
   }
 
 Captain ${teacher} has reviewed your submission for ${task}.
@@ -597,8 +597,8 @@ Galaxy Maps Team`;
     lastName
       ? lastName.charAt(0).toUpperCase() + lastName.slice(1)
       : firstName
-        ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
-        : ""
+      ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
+      : ""
   }</p>
   </br> 
 <p>Captain ${teacher} has reviewed your submission for ${task}.</p>
@@ -655,7 +655,7 @@ export async function sendStudentInActive(student: string, studentEmail: string,
 
   // The user subscribed to the newsletter.
   /* eslint-disable max-len */
-  mailOptions.subject = "Student Activity Alert";
+  mailOptions.subject = "Activity Alert";
   mailOptions.text = `Greetings Navigator ${student}, 
 
 It has been ${duration} since you last signed into Galaxy Maps. 
@@ -697,7 +697,7 @@ export async function sendTeacherStudentInActive(
   };
 
   /* eslint-disable max-len */
-  mailOptions.subject = "Student Activity Alert";
+  mailOptions.subject = "Activity Alert";
   mailOptions.text = `Greetings Captain ${teacher}, 
   
 It has been ${duration} since Navigator: ${student} from Squad: ${cohort} last signed into Galaxy Maps. 
@@ -1003,44 +1003,40 @@ async function sendGalaxyFeedbackEmail(
     to: email,
   };
 
-  mailOptions.subject = `How's your Galaxy Map [${galaxyTitle.toUpperCase()}] coming along?`;
+  mailOptions.subject = `Debrief Request: [${galaxyTitle.toUpperCase()} GALAXY]`;
 
   mailOptions.text = `Greetings Captain ${name},
 
-My name is Ian, I'm the ceo and lead developer of Galaxy Maps, and captain of the TaiCollective fleet.
+My name is Ian, part of engineering for Galaxy Maps, and Captain of the TaiCollective fleet.
 
-Our system shows you recently created a Galaxy Map called "${galaxyTitle}", that's awesome!
+Our systems show you recently created a Galaxy Map called "${galaxyTitle}". Great start!
 
-Since we are currently in a beta testing stage I'd love to hear about your experience:
+As we are currently in a beta testing stage, we'd love to hear about your experience:
 
-• How are you finding the Galaxy Maps platform?
-• What are you using it for?
-• How could we improve it?
+• How are you finding the Galaxy Maps platform so far?
+• What are you currently using it for?
+• How could we improve the platform?
 
-I hope to hear from you.
+Any feedback is greatly appreciated. 
+We hope to hear from you.
 
-Clear skies,
-Ian & the Galaxy Maps Team`;
+See You Among the Stars,
+The Galaxy Maps Team`;
 
   mailOptions.html = `<p>Greetings Captain <strong>${name}</strong>,</p>
-<br/>
-<p>My name is Ian, I'm the ceo and lead developer of Galaxy Maps, and captain of the TaiCollective fleet.</p>
-<br/>
-<p>Our system shows you recently created a Galaxy Map called <strong>"${galaxyTitle}"</strong>, that's awesome!</p>
-<br/>
-<p>Since we are currently in a beta testing stage I'd love to hear about your experience:</p>
+<p>My name is Ian, part of engineering for Galaxy Maps, and Captain of the TaiCollective fleet.</p>
+<p>Our system shows you recently created a Galaxy Map called <strong>"${galaxyTitle}"</strong>. Great start!</p>
+<p>As we are currently in a beta testing stage, we'd love to hear about your experience:</p>
 <ul>
-  <li>How are you finding the Galaxy Maps platform?</li>
-  <li>What are you using it for?</li>
-  <li>How could we improve it?</li>
+  <li>How are you finding the Galaxy Maps platform so far?</li>
+  <li>What are you currently using it for?</li>
+  <li>How could we improve the platform?</li>
 </ul>
-<br/>
-<p>I hope to hear from you.</p>
-<br/>
+<p>Any feedback is greatly appreciated. We hope to hear from you.</p>
 <ul>
 <p>FYI you can resume your Galaxy creation here: <a href="https://${DOMAIN}/galaxy/${galaxyId}" style="color: #69A1E2; text-decoration: none; border: 1px solid #69A1E2; padding: 10px 20px; display: inline-block;">View Your Galaxy Map →</a></p>
 <br/>
-<p style="font-size: 0.75rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #69A1E2;">Clear skies,<br/>Ian & the Galaxy Maps Team</p>`;
+<p style="font-size: 0.75rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #69A1E2;">See You Among the Stars,<br/>The Galaxy Maps Team</p>`;
 
   await mailTransport.sendMail(mailOptions);
   log("Galaxy feedback email sent to:", email);

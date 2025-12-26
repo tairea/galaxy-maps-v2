@@ -41,6 +41,7 @@
           <BackButton
             v-if="isMobile"
             :toPath="'/'"
+            :dynamicPath="galaxyViewPath"
             :mobile="true"
             :showText="false"
             :color="'missionAccent'"
@@ -79,6 +80,9 @@ export default {
     },
     isStudent() {
       return !this.teacher;
+    },
+    galaxyViewPath() {
+      return this.course?.id ? `/galaxy/${this.course.id}` : null;
     },
   },
   mounted() {
