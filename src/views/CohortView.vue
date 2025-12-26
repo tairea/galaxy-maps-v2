@@ -109,7 +109,7 @@
           -->
 
           <!-- Navigators -->
-          <div class="premium-feature-wrapper">
+          <div v-if="isPremiumFeatureRestricted" class="premium-feature-wrapper">
             <StudentDataIterator
               v-show="activeTab === 'navigators'"
               class="mt-4 premium-content"
@@ -119,6 +119,14 @@
               @learnerOverviewDialogClosed="refreshComponents"
             />
           </div>
+          <StudentDataIterator
+            v-else
+            v-show="activeTab === 'navigators'"
+            class="mt-4"
+            :cohort="cohort"
+            :cohortsCoursesData="cohortsCoursesData"
+            @learnerOverviewDialogClosed="refreshComponents"
+          />
           <!-- Overlay positioned relative to people-frame, not wrapper -->
           <div
             v-if="isPremiumFeatureRestricted && activeTab === 'navigators' && !paywall.show"
@@ -312,6 +320,12 @@ export default {
   },
   async mounted() {
     await this.loadCohort(this.cohortId);
+
+    // Skip student activity fetching if premium is restricted
+    if (this.isPremiumFeatureRestricted) {
+      this.cohortsCoursesData = [];
+      return;
+    }
 
     // ==== get cohort course data from LRS
     this.cohortsCoursesData = await fetchCohortCoursesActivityByCohortId(this.cohort.id);
@@ -515,6 +529,12 @@ export default {
     },
     async loadActiveMissions() {
       try {
+        // Skip if premium is restricted
+        if (this.isPremiumFeatureRestricted) {
+          this.activeMissionsByTopicKey = new Map();
+          return;
+        }
+
         this.isLoadingActiveMissions = true;
         this.activeMissionsByTopicKey = new Map();
         if (

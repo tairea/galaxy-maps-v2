@@ -197,6 +197,12 @@ export default {
     cohort: {
       deep: true,
       async handler(newCohort, oldCohort) {
+        // Skip if premium is restricted
+        if (this.isPremiumFeatureRestricted) {
+          this.students = [];
+          return;
+        }
+
         if (oldCohort.students?.length !== newCohort.students?.length) {
           if (oldCohort.students?.length > newCohort.students?.length) this.removeStudentProfiles();
           else await this.getStudentProfiles();
@@ -208,7 +214,13 @@ export default {
     },
   },
   computed: {
-    ...mapState(useRootStore, ["person"]),
+    ...mapState(useRootStore, ["person", "user"]),
+    hasActiveSubscription() {
+      return Boolean(this.user?.data?.hasActiveSubscription);
+    },
+    isPremiumFeatureRestricted() {
+      return !this.hasActiveSubscription;
+    },
     filteredKeys() {
       return this.keys.filter((key) => key !== "Name");
     },
@@ -265,6 +277,13 @@ export default {
       this.date = Date.now();
     },
     async getStudentProfiles() {
+      // Skip if premium is restricted
+      if (this.isPremiumFeatureRestricted) {
+        this.students = [];
+        this.searchingStudents = false;
+        return;
+      }
+
       this.searchingStudents = true;
       if (this.cohort?.students?.length) {
         const studentsArr = this.cohort.students.filter(

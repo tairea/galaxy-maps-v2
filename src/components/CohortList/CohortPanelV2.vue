@@ -77,9 +77,9 @@
       </div>
     </div>
 
-    <div class="main-col">
+    <div class="main-col" :class="{ 'premium-restricted': isPremiumFeatureRestricted }">
       <!-- Progression Line Charts -->
-      <div>
+      <div :class="{ 'premium-content-blurred': isPremiumFeatureRestricted }">
         <!-- loading spinner -->
         <div
           class="d-flex justify-center align-center"
@@ -104,7 +104,7 @@
         </div>
       </div>
       <!-- Activity Bar Chart -->
-      <div>
+      <div :class="{ 'premium-content-blurred': isPremiumFeatureRestricted }">
         <!-- loading spinner -->
         <div class="d-flex justify-center align-center" v-if="cohortActivityDataLoading">
           <v-btn
@@ -125,6 +125,18 @@
         </div>
         <div v-else class="d-flex justify-center align-center" style="padding: 50px 0px">
           <p class="label text-center" style="font-weight: 800">NO ACTIVITY DATA</p>
+        </div>
+      </div>
+
+      <!-- Premium overlay -->
+      <div v-if="isPremiumFeatureRestricted && !paywall.show" class="premium-overlay">
+        <div class="premium-message overline">
+          <p class="mb-2">Premium feature</p>
+          <p class="mb-0">
+            Please
+            <a href="#" @click.prevent="handleUpgradeClick" class="upgrade-link">upgrade</a>
+            to access this feature
+          </p>
         </div>
       </div>
     </div>
@@ -148,12 +160,7 @@ import { mapActions, mapState } from "pinia";
 export default {
   name: "CohortPanelV2",
   props: ["cohort", "cols", "tooltip", "studentView", "timeframe"],
-  components: {
-    Avatar,
-    ProgressionLineChart,
-    ActivityBarChart,
-    Organisation,
-  },
+  components: { Avatar, ProgressionLineChart, ActivityBarChart, Organisation },
 
   data() {
     return {
@@ -173,6 +180,15 @@ export default {
   async mounted() {
     // checkIfCohortTeacher
     this.checkIfCohortTeacher();
+
+    // Skip data fetching if premium is restricted
+    if (this.isPremiumFeatureRestricted) {
+      this.cohortsCoursesData = [];
+      this.cohortActivityData = [];
+      this.cohortsCoursesDataLoading = false;
+      this.cohortActivityDataLoading = false;
+      return;
+    }
 
     this.cohortsCoursesDataLoading = true;
     this.cohortActivityDataLoading = true;
@@ -207,7 +223,19 @@ export default {
     // const VQL = await VQLXAPIQuery();
   },
   computed: {
-    ...mapState(useRootStore, ["getOrganisationById", "currentCohort", "person"]),
+    ...mapState(useRootStore, [
+      "getOrganisationById",
+      "currentCohort",
+      "person",
+      "user",
+      "paywall",
+    ]),
+    hasActiveSubscription() {
+      return Boolean(this.user?.data?.hasActiveSubscription);
+    },
+    isPremiumFeatureRestricted() {
+      return !this.hasActiveSubscription;
+    },
     isDashboardView() {
       return this.$route.name === "Dashboard";
     },
@@ -276,7 +304,13 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["setCurrentCohortId"]),
+    ...mapActions(useRootStore, ["setCurrentCohortId", "setPaywall"]),
+    handleUpgradeClick() {
+      this.setPaywall({
+        show: true,
+        text: "A Galaxy Maps subscription is required to see Squad data.",
+      });
+    },
     clickedPerson(e, person, index) {
       if (!this.isCohortTeacher) {
         return;
@@ -340,10 +374,7 @@ export default {
       await this.setCurrentCohortId(this.cohort.id);
       this.$router.push({
         name: "CohortView",
-        params: {
-          cohortName: this.camelize(this.cohort.name),
-          cohortId: this.cohort.id,
-        },
+        params: { cohortName: this.camelize(this.cohort.name), cohortId: this.cohort.id },
       });
     },
     camelize(str) {
@@ -442,5 +473,67 @@ export default {
 
 .dim {
   filter: opacity(30%);
+}
+
+/* Premium restriction styles */
+.main-col {
+  position: relative;
+
+  &.premium-restricted {
+    /* Keep border visible */
+  }
+
+  .premium-content-blurred {
+    filter: blur(4px);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* Premium overlay */
+  .premium-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.3);
+    z-index: 150;
+    pointer-events: auto;
+  }
+
+  .premium-message {
+    background-color: var(--v-background-base);
+    padding: 15px 10px;
+    text-align: center;
+    color: var(--v-missionAccent-base);
+    text-transform: uppercase;
+    font-size: 0.65rem !important; /* Override overline font-size */
+    line-height: 1.4 !important; /* Override overline line-height for better readability */
+    letter-spacing: 1px;
+
+    p {
+      margin: 0;
+      font-size: inherit !important;
+      line-height: inherit !important;
+    }
+
+    .upgrade-link {
+      color: var(--v-missionAccent-base);
+      text-decoration: underline;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: inherit !important;
+      line-height: inherit !important;
+
+      &:hover {
+        opacity: 0.8;
+      }
+    }
+  }
 }
 </style>
