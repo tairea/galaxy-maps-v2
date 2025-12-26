@@ -6,6 +6,7 @@
     :fullscreen="isMobile"
     :transition="isMobile ? 'dialog-bottom-transition' : undefined"
     light
+    style="z-index: 1000"
   >
     <!-- CREATE BUTTON -->
     <template v-slot:activator="{ on, attrs }">
@@ -227,13 +228,7 @@
             >
               Manage subscription
             </v-btn>
-            <v-btn
-              v-else
-              outlined
-              color="missionAccent"
-              @click="upgradeAccount"
-              :loading="loadingPortal"
-            >
+            <v-btn v-else outlined color="missionAccent" @click="upgradeAccount">
               Upgrade account
             </v-btn>
           </v-col>
@@ -365,7 +360,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["setSnackbar"]),
+    ...mapActions(useRootStore, ["setSnackbar", "setPaywall"]),
     onButtonClick() {
       this.$refs.uploader?.click();
     },
@@ -518,12 +513,7 @@ export default {
       }
     },
     async upgradeAccount() {
-      this.loadingPortal = true;
-      const priceId = await this.fetchProPriceId();
-      if (!priceId) throw new Error("Missing proPriceId");
-      const session = await createCheckoutSession(payments, { price: priceId });
-      window.location.assign(session.url);
-      this.loadingPortal = false;
+      this.setPaywall({ show: true, text: "Upgrade your account" });
     },
     async fetchProPriceId() {
       const pricingDoc = await db.collection("appconfig").doc("pricing").get();
@@ -549,16 +539,18 @@ export default {
   border: 1px solid var(--v-missionAccent-base);
   // background: lightGrey;
   display: flex;
-  // flex-direction: column;
-  flex-wrap: wrap;
-  overflow-x: hidden;
-  overflow-y: auto;
+  flex-direction: column;
+  position: relative;
+  box-sizing: border-box;
+  max-height: 90vh;
+  overflow: hidden; // Prevent outer container from scrolling, border stays visible
 
   .dialog-header {
     width: 100%;
     padding: 20px;
     text-transform: uppercase;
     border-bottom: 1px solid var(--v-missionAccent-base);
+    flex-shrink: 0; // Prevent header from shrinking
   }
 
   .dialog-title {
@@ -579,15 +571,18 @@ export default {
 
   .create-dialog-content {
     // width: 33.33%;
-    min-height: 400px;
     display: flex;
-    justify-content: space-around;
-    align-items: space-around;
+    justify-content: flex-start;
+    align-items: stretch;
     flex-direction: column;
     color: var(--v-missionAccent-base);
     padding: 20px;
     text-transform: uppercase;
     width: 100%;
+    overflow-y: auto; // Only the content area scrolls
+    overflow-x: hidden;
+    flex: 1 1 auto; // Take remaining space and allow shrinking
+    min-height: 0; // Important for flex children to allow scrolling
     // font-size: 0.6rem;
     // border: 1px solid var(--v-missionAccent-base);
 

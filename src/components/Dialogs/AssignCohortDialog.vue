@@ -332,10 +332,7 @@ export default {
     loading: false,
     statusMessage: "", // Add status message for tracking assignment progress
 
-    profile: {
-      id: "",
-      email: "",
-    },
+    profile: { id: "", email: "" },
     cohort: null,
     course: null,
     courses: [],
@@ -358,12 +355,7 @@ export default {
     },
   },
   computed: {
-    ...mapState(useRootStore, [
-      "currentCourseId",
-      "currentCohortId",
-      "person",
-      "user",
-    ]),
+    ...mapState(useRootStore, ["currentCourseId", "currentCohortId", "person", "user"]),
     subscriptionChecked() {
       return Boolean(this.user?.data?.subscriptionChecked);
     },
@@ -438,7 +430,7 @@ export default {
       if (!this.isStripeCustomer) {
         this.setPaywall({
           show: true,
-          text: "A paid Galaxy Maps plan is required to assign squads.",
+          text: "A Galaxy Maps subscription is required to assign to Squads.",
         });
         return;
       }
@@ -454,10 +446,7 @@ export default {
       this.dialog = false;
       this.loading = false;
       this.statusMessage = "";
-      this.profile = {
-        id: "",
-        email: "",
-      };
+      this.profile = { id: "", email: "" };
       // this.cohort = null;
       this.course = null;
     },
@@ -466,11 +455,7 @@ export default {
 
       // Validate that currentCourse exists
       if (!this.currentCourse) {
-        this.setSnackbar({
-          show: true,
-          text: "No Galaxy Map selected",
-          color: "pink",
-        });
+        this.setSnackbar({ show: true, text: "No Galaxy Map selected", color: "pink" });
         this.loading = false;
         return;
       }
@@ -533,11 +518,7 @@ export default {
       } catch (error) {
         console.error("Error writing document: ", error);
         // snackbar message
-        this.setSnackbar({
-          show: true,
-          text: getFriendlyErrorMessage(error.code),
-          color: "pink",
-        });
+        this.setSnackbar({ show: true, text: getFriendlyErrorMessage(error.code), color: "pink" });
         this.close();
       }
     },
@@ -592,11 +573,7 @@ export default {
         this.close();
       } catch (error) {
         console.error("Error writing document: ", error);
-        this.setSnackbar({
-          show: true,
-          text: getFriendlyErrorMessage(error.code),
-          color: "pink",
-        });
+        this.setSnackbar({ show: true, text: getFriendlyErrorMessage(error.code), color: "pink" });
       } finally {
         this.loading = false;
         this.statusMessage = "";

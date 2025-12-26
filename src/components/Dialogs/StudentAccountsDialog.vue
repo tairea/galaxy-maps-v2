@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-dialog v-model="dialog" width="45%" :light="dark" :dark="!dark">
+    <v-dialog v-model="dialog" width="45%" :light="dark" :dark="!dark" style="z-index: 1000">
       <!-- CREATE BUTTON -->
       <template v-slot:activator="{ on, attrs }">
         <v-btn
@@ -206,7 +206,7 @@ export default {
       if (!this.isStripeCustomer) {
         this.setPaywall({
           show: true,
-          text: "A paid Galaxy Maps plan is required to manage navigators.",
+          text: "A Galaxy Maps subscription is required to manage Navigators.",
         });
         return;
       }
@@ -254,14 +254,18 @@ export default {
   background-color: var(--v-background-base);
   border: 1px solid var(--v-missionAccent-base);
   display: flex;
-  flex-wrap: wrap;
-  overflow-x: hidden;
+  flex-direction: column;
+  position: relative;
+  box-sizing: border-box;
+  max-height: 90vh;
+  overflow: hidden; // Prevent outer container from scrolling, border stays visible
 
   .dialog-header {
     width: 100%;
     padding: 20px;
     text-transform: uppercase;
     border-bottom: 1px solid var(--v-missionAccent-base);
+    flex-shrink: 0; // Prevent header from shrinking
   }
 }
 
@@ -273,6 +277,10 @@ export default {
   color: var(--v-missionAccent-base);
   padding: 20px;
   width: 100%;
+  overflow-y: auto; // Only the content area scrolls
+  overflow-x: hidden;
+  flex: 1 1 auto; // Take remaining space and allow shrinking
+  min-height: 0; // Important for flex children to allow scrolling
 
   .custom-input {
     color: var(--v-missionAccent-base);
