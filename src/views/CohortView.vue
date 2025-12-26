@@ -47,7 +47,11 @@
         </div>
 
         <!-- SQUAD FRAME -->
-        <div v-if="cohort" class="people-frame">
+        <div
+          v-if="cohort"
+          class="people-frame"
+          :class="{ 'premium-locked': isPremiumFeatureRestricted && activeTab === 'navigators' }"
+        >
           <!-- Navigators TAB -->
           <div class="people-border">
             <div :class="peopleLabel" @click="setActiveTab('navigators')">
@@ -74,15 +78,22 @@
           -->
 
           <!-- Maps TAB -->
-          <div class="maps-border">
-            <div :class="mapsLabel" class="text-center" @click="setActiveTab('maps')">
+          <div class="maps-border" :class="{ 'premium-disabled': isPremiumFeatureRestricted }">
+            <div
+              :class="mapsLabel"
+              class="text-center"
+              @click="!isPremiumFeatureRestricted && setActiveTab('maps')"
+            >
               <span class="pl-3">MAPS</span>
             </div>
           </div>
 
           <!-- Timeline TAB -->
-          <div class="timeline-border">
-            <div :class="timelineLabel" @click="setActiveTab('timeline')">
+          <div class="timeline-border" :class="{ 'premium-disabled': isPremiumFeatureRestricted }">
+            <div
+              :class="timelineLabel"
+              @click="!isPremiumFeatureRestricted && setActiveTab('timeline')"
+            >
               <span class="pl-3">TIMELINE</span>
             </div>
           </div>
@@ -98,13 +109,30 @@
           -->
 
           <!-- Navigators -->
-          <StudentDataIterator
-            v-show="activeTab === 'navigators'"
-            class="mt-4"
-            :cohort="cohort"
-            :cohortsCoursesData="cohortsCoursesData"
-            @learnerOverviewDialogClosed="refreshComponents"
-          />
+          <div class="premium-feature-wrapper">
+            <StudentDataIterator
+              v-show="activeTab === 'navigators'"
+              class="mt-4 premium-content"
+              :class="{ 'premium-blurred': isPremiumFeatureRestricted }"
+              :cohort="cohort"
+              :cohortsCoursesData="cohortsCoursesData"
+              @learnerOverviewDialogClosed="refreshComponents"
+            />
+          </div>
+          <!-- Overlay positioned relative to people-frame, not wrapper -->
+          <div
+            v-if="isPremiumFeatureRestricted && activeTab === 'navigators' && !paywall.show"
+            class="premium-overlay"
+          >
+            <div class="premium-message overline">
+              <p class="mb-2">Premium feature</p>
+              <p class="mb-0">
+                Please
+                <a href="#" @click.prevent="handleUpgradeClick" class="upgrade-link">upgrade</a>
+                to access this feature
+              </p>
+            </div>
+          </div>
 
           <!-- Maps View -->
           <div
@@ -183,6 +211,7 @@
           :isTeacher="teacher"
           :courses="courses"
           :students="students"
+          :isPremiumRestricted="isPremiumFeatureRestricted"
         />
         <SubmissionTeacherFrame
           v-if="cohort && teacher"
@@ -191,6 +220,7 @@
           :courses="courses"
           :students="students"
           class="mt-4"
+          :isPremiumRestricted="isPremiumFeatureRestricted"
         />
         <!-- Completed Separate -->
         <!-- <p class="baseAccent--text completed-label ma-0 py-6">COMPLETED</p>
@@ -316,7 +346,7 @@ export default {
     });
   },
   computed: {
-    ...mapState(useRootStore, ["currentCohortId", "person", "userStatus"]),
+    ...mapState(useRootStore, ["currentCohortId", "person", "userStatus", "user", "paywall"]),
     ...mapState(useCohortViewStore, ["studentsView", "isLoadingCohort", "cohort", "activeTab"]),
     ready() {
       return this.cohortId === this.currentCohortId && this.cohort != null;
@@ -359,10 +389,17 @@ export default {
       // Check if person is a teacher of this cohort
       return !this.cohort.teachers.includes(this.person?.id);
     },
+    hasActiveSubscription() {
+      return Boolean(this.user?.data?.hasActiveSubscription);
+    },
+    isPremiumFeatureRestricted() {
+      // Show paywall if user doesn't have active subscription
+      return !this.hasActiveSubscription;
+    },
   },
   methods: {
     ...mapActions(useCohortViewStore, ["loadCohort", "setStudentsView", "setActiveTab"]),
-    ...mapActions(useRootStore, ["setMobileInfoMinimized"]),
+    ...mapActions(useRootStore, ["setMobileInfoMinimized", "setPaywall"]),
     // hack to update TeacherFrames. (this is because LearnerOveriewDashboard uses the same
     // components and when you close the dialog, the cohortview teacher frames are empty. issue#121)
     refreshComponents() {
@@ -555,6 +592,12 @@ export default {
         this.isLoadingActiveMissions = false;
       }
     },
+    handleUpgradeClick() {
+      this.setPaywall({
+        show: true,
+        text: "A Galaxy Maps subscription is required to access premium features.",
+      });
+    },
   },
 };
 </script>
@@ -636,6 +679,11 @@ export default {
     // margin: 30px 20px;
     border: 1px solid var(--v-missionAccent-base);
     overflow: auto;
+
+    /* Disable scroll when premium is restricted */
+    &.premium-locked {
+      overflow: hidden;
+    }
 
     .people-border {
       // ribbon label
@@ -865,6 +913,22 @@ export default {
       width: 146px;
       height: 20px;
     }
+
+    /* Disabled state for premium-restricted tabs */
+    .premium-disabled {
+      opacity: 0.5;
+      cursor: not-allowed !important;
+      pointer-events: none;
+
+      .maps-label,
+      .inactive-maps-label,
+      .timeline-label,
+      .inactive-timeline-label {
+        cursor: not-allowed !important;
+        pointer-events: none;
+        opacity: 0.5;
+      }
+    }
   }
 }
 
@@ -980,5 +1044,119 @@ export default {
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
   background: var(--v-background-base);
+}
+
+/* Premium feature paywall styles */
+.premium-feature-wrapper {
+  position: relative;
+  width: 100%;
+  /* Ensure wrapper takes up space but overlay can cover it */
+  min-height: 400px;
+
+  .premium-content {
+    transition: filter 0.3s ease-in-out;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+
+    &.premium-blurred {
+      filter: blur(4px);
+      pointer-events: none;
+      user-select: none;
+    }
+  }
+}
+
+/* Overlay scoped to people-frame container only */
+.people-frame .premium-overlay {
+  position: absolute; /* Relative to people-frame container */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center; /* Vertically centered */
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 150; /* Lower than v-dialog (typically 200+) but above content */
+  pointer-events: auto;
+}
+
+/* Frame-specific styles - keep borders and labels visible */
+.premium-frame-wrapper {
+  position: relative;
+
+  /* Apply blur to component */
+  ::v-deep .premium-blurred {
+    filter: blur(4px);
+    -webkit-filter: blur(4px);
+    pointer-events: none;
+    user-select: none;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Keep labels visible - use high z-index and try to escape blur */
+  ::v-deep .premium-blurred h2.help-label,
+  ::v-deep .premium-blurred h2.submission-label {
+    filter: blur(0) !important;
+    -webkit-filter: blur(0) !important;
+    pointer-events: auto;
+    z-index: 1001; /* Above overlay */
+    position: absolute;
+    /* Try to escape blur context */
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  /* Overlay positioning for frames - includes border recreation */
+  .premium-frame-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.3);
+    z-index: 1000; /* Above blurred content */
+    pointer-events: auto;
+    /* Recreate border on overlay for visibility */
+    box-shadow: inset 0 0 0 1px var(--v-galaxyAccent-base);
+  }
+
+  /* Submission frame overlay border color */
+  &:nth-child(2) .premium-frame-overlay {
+    box-shadow: inset 0 0 0 1px var(--v-cohortAccent-base);
+  }
+}
+
+.premium-message {
+  background-color: var(--v-background-base);
+  // border: 1px solid var(--v-missionAccent-base);
+  padding: 30px 40px;
+  text-align: center;
+  color: var(--v-missionAccent-base);
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+
+  p {
+    margin: 0;
+  }
+
+  .upgrade-link {
+    color: var(--v-missionAccent-base);
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: 600;
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
 }
 </style>
