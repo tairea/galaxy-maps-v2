@@ -59,7 +59,12 @@ export default {
       min-width: 48px;
       height: 48px;
       border-radius: 50%;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      // box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      background-color: transparent;
+
+      &::before {
+        background-color: transparent !important;
+      }
     }
   }
 }
