@@ -595,7 +595,7 @@ export default {
     handleUpgradeClick() {
       this.setPaywall({
         show: true,
-        text: "A Galaxy Maps subscription is required to access premium features.",
+        text: "A Galaxy Maps subscription is required to see Squad data.",
       });
     },
   },

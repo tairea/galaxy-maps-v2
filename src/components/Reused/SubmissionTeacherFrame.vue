@@ -81,10 +81,7 @@ export default {
     "yours",
     "isPremiumRestricted",
   ],
-  components: {
-    SubmissionTeacherPanel,
-    SubmissionTeacherPanelDense,
-  },
+  components: { SubmissionTeacherPanel, SubmissionTeacherPanelDense },
   watch: {
     courseSubmissions(newVal, oldVal) {
       // console.log("courseSubmissions changed", newVal);
@@ -92,10 +89,7 @@ export default {
     },
   },
   data() {
-    return {
-      allSubmissions: [],
-      unsubscribes: [],
-    };
+    return { allSubmissions: [], unsubscribes: [] };
   },
   async mounted() {
     if (this.courses) {
@@ -182,11 +176,7 @@ export default {
       // ================== Sort Submissions ==================
       filteredSubmissions = filteredSubmissions.slice().sort((a, b) => {
         // Define the order of taskSubmissionStatus
-        const statusOrder = {
-          inreview: 1,
-          declined: 2,
-          completed: 3,
-        };
+        const statusOrder = { inreview: 1, declined: 2, completed: 3 };
 
         // First, compare by taskSubmissionStatus using the defined order
         if (statusOrder[a.taskSubmissionStatus] < statusOrder[b.taskSubmissionStatus]) return -1;
@@ -220,7 +210,7 @@ export default {
     handleUpgradeClick() {
       this.setPaywall({
         show: true,
-        text: "A Galaxy Maps subscription is required to access premium features.",
+        text: "A Galaxy Maps subscription is required to see Submissions.",
       });
     },
   },
