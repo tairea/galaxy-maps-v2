@@ -141,34 +141,6 @@ export default {
       };
       document.head.appendChild(script);
     },
-    async onUpgradeNow() {
-      try {
-        this.loading = true;
-        const priceId = await this.fetchProPriceId();
-        console.log("priceId", priceId);
-        if (!priceId) throw new Error("Missing proPriceId");
-        const session = await createCheckoutSession(payments, { price: priceId });
-        console.log("checkoutSession", session);
-        window.location.assign(session.url);
-      } catch (e) {
-        console.error("Failed to start checkout", e);
-      } finally {
-        this.loading = false;
-      }
-    },
-    async fetchProPriceId(): Promise<string | null> {
-      console.log("fetchProPriceId");
-      try {
-        const pricingDoc = await db.collection("appconfig").doc("pricing").get();
-        if (!pricingDoc.data()) throw new Error("Missing pricing data");
-        const pricingData = pricingDoc.data();
-        console.log("pricingDoc", pricingData);
-        return pricingData?.proPriceId ?? null;
-      } catch (e) {
-        console.error("Failed to load proPriceId", e);
-        return null;
-      }
-    },
   },
 };
 </script>
