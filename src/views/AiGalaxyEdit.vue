@@ -91,7 +91,7 @@
         </div>
 
         <!-- TOKEN USAGE -->
-        <div class="token-usage-container pa-6" v-if="!isSavingToDB">
+        <!-- <div class="token-usage-container pa-6" v-if="!isSavingToDB">
           <p class="token-usage overline mt-2">
             Total AI Tokens:
             {{
@@ -125,8 +125,8 @@
                   : 0,
               ).toLocaleString()
             }}
-          </p>
-          <!-- <p class="token-breakdown overline mt-2" v-if="!isSavingToDB">
+          </p> -->
+        <!-- <p class="token-breakdown overline mt-2" v-if="!isSavingToDB">
             Est. cost: ${{
               aiGeneratedGalaxyMap.tokens
                 ? aiGeneratedGalaxyMap.tokens.combinedEstimatedCost
@@ -138,8 +138,8 @@
                 : "0.00000"
             }}
           </p> -->
-          <!-- Model breakdown -->
-          <!-- <div
+        <!-- Model breakdown -->
+        <!-- <div
             v-if="
               aiGeneratedGalaxyMap.tokens &&
               aiGeneratedGalaxyMap.tokens.modelsUsed &&
@@ -157,8 +157,8 @@
               <span class="model-tokens"> {{ model.totalTokens.toLocaleString() }} tokens </span>
               <span class="model-cost">${{ model.estimatedCost.toFixed(5) }}</span>
             </div>
-          </div> -->
-        </div>
+          </div> 
+        </div> -->
 
         <!-- LONG LOADING TIME MESSAGE -->
         <div class="mt-4" v-if="!isSavingToDB">
@@ -334,9 +334,7 @@
                               ? updateDescriptionWithAI(item)
                               : editItem(item)
                           "
-                          :class="{
-                            'updating-description': isGeneratingDescriptionForItem(item),
-                          }"
+                          :class="{ 'updating-description': isGeneratingDescriptionForItem(item) }"
                         >
                           {{ editingItem && editingItem.id === item.id ? mdiCheck : mdiPencil }}
                         </v-icon>
@@ -514,7 +512,7 @@
     />
 
     <!-- Total Tokens -->
-    <div class="token-container" v-if="!isMobile">
+    <!-- <div class="token-container" v-if="!isMobile">
       <p class="ma-0 overline token-title">
         AI Tokens Used<br />Input:
         {{
@@ -546,18 +544,8 @@
               : 0,
           ).toLocaleString()
         }}
-        <!-- <br />Est. Cost: ${{
-          aiGeneratedGalaxyMap.tokens
-            ? aiGeneratedGalaxyMap.tokens.combinedEstimatedCost
-              ? aiGeneratedGalaxyMap.tokens.combinedEstimatedCost.toFixed(5)
-              : (
-                  (aiGeneratedGalaxyMap.tokens.totalInputTokens / 1000000) * 2 +
-                  (aiGeneratedGalaxyMap.tokens.totalOutputTokens / 1000000) * 8
-                ).toFixed(5)
-            : "0.00000"
-        }} -->
       </p>
-    </div>
+    </div> -->
 
     <!-- Layout Selection Dialog -->
     <LayoutSelectionDialog
@@ -737,6 +725,7 @@ import {
   refineGalaxyMap,
   refineGalaxyMapWithClarification,
   refineStructure,
+  generateItemDescription,
 } from "@/lib/ff";
 import * as smd from "streaming-markdown";
 import { getFriendlyErrorMessage } from "@/lib/utils";
@@ -888,45 +877,24 @@ export default {
           edges: {
             length: 50, // Longer edges between nodes.
             smooth: false,
-            color: {
-              inherit: "to",
-            },
+            color: { inherit: "to" },
           },
           nodes: {
             shape: "dot",
             size: 7,
-            fixed: {
-              x: true,
-              y: true,
-            },
+            fixed: { x: true, y: true },
             color: {
               border: "grey",
-              highlight: {
-                border: "black",
-                background: "white",
-              },
-              hover: {
-                border: "orange",
-                background: "grey",
-              },
+              highlight: { border: "black", background: "white" },
+              hover: { border: "orange", background: "grey" },
             },
-            font: {
-              color: "white",
-              align: "left",
-              face: "Arial",
-              size: 16,
-            },
+            font: { color: "white", align: "left", face: "Arial", size: 16 },
             // Disable vis-network labels since we'll draw them manually
             label: "",
           },
           groups: {
-            default: {
-              shape: "dot",
-            },
-            completed: {
-              shape: "dot",
-              color: "#00E676",
-            },
+            default: { shape: "dot" },
+            completed: { shape: "dot", color: "#00E676" },
             locked: {
               color: "rgba(132,132,132,0.4)", // opaque styling to appear locked
               shape: "dot",
@@ -960,13 +928,7 @@ export default {
             //   shape: "dot",
             //   color: "#E269CF",
             // },
-            inactive: {
-              shape: "dot",
-              color: "#696969",
-              font: {
-                color: "#696969",
-              },
-            },
+            inactive: { shape: "dot", color: "#696969", font: { color: "#696969" } },
           },
           interaction: {
             hover: false,
@@ -1126,11 +1088,7 @@ export default {
         this.aiGeneratedGalaxyMap = {
           title: "Untitled Galaxy",
           description: "No description available",
-          tokens: {
-            totalInputTokens: 0,
-            totalOutputTokens: 0,
-            totalTokens: 0,
-          },
+          tokens: { totalInputTokens: 0, totalOutputTokens: 0, totalTokens: 0 },
         };
       }
       // Ensure tokens have required numeric defaults even if object exists but is partial
@@ -1253,8 +1211,8 @@ export default {
         planet.missionInstructionsObject && typeof planet.missionInstructionsObject === "object"
           ? planet.missionInstructionsObject
           : typeof planet.missionInstructions === "object"
-          ? planet.missionInstructions
-          : null;
+            ? planet.missionInstructions
+            : null;
 
       return {
         id: `star[${starIndex}].planet[${planetIndex}]`,
@@ -1930,10 +1888,7 @@ export default {
         // Update edges to connect the repositioned nodes
         this.edgesToDisplay = [];
         for (let i = 0; i < updatedNodes.length - 1; i++) {
-          this.edgesToDisplay.push({
-            from: `star-${i}`,
-            to: `star-${i + 1}`,
-          });
+          this.edgesToDisplay.push({ from: `star-${i}`, to: `star-${i + 1}` });
         }
 
         // Force network to redraw with new positions
@@ -3451,11 +3406,7 @@ export default {
     // Update description with AI based on new title
     async updateDescriptionWithAI(item) {
       if (!this.editingValue.trim()) {
-        this.setSnackbar({
-          show: true,
-          text: "Please enter a title",
-          color: "error",
-        });
+        this.setSnackbar({ show: true, text: "Please enter a title", color: "error" });
         return;
       }
 
@@ -3490,49 +3441,36 @@ export default {
       }
     },
 
-    // Placeholder method for AI description generation
+    // Generate description for a galaxy map item using Cloud Function
     async generateDescriptionWithAI(item, newTitle) {
       this.descriptionGenerating = true;
 
       console.log("generateDescriptionWithAI", item, newTitle);
 
-      // convert galaxymap to markdown for ai prompt
-      //const galaxyMapAsMarkdown = this.convertGalaxyMapToMarkdown(this.aiGeneratedGalaxyMap);
-
-      const descriptionSystemPrompt = `
-      You are a helpful assistant that generates descriptions for individual learning step items within learning roadmap called a Galaxy Map.
-      You are given the entire learning journey as a **galaxy-map-object** with a title a description and an array of Stars (aka Topics) with nested Planets (aka Missions).
-      This is to give you context of the wider objective for which them item you are generating a description for should contribute towards.
-      You are also given the **item-id** that helps to indentify the context in which the item sits in relation to the wider galaxy map, and the learning steps that came before and come after it.
-      You are also given the **item-title** that is the title for the description and the best indicator as to what the description should be about, given the wider galaxy map context.
-      The Description should be action focused and only one sentence long.
-      Your response will be used to update the description of the item, so please provide only the description text without any explanations or discussions.
-      `;
-
       try {
-        const getDescriptionResponse = await this.$openai.responses.create({
-          model: "gpt-4o-mini",
-          previous_response_id: this.aiGeneratedGalaxyMap.aiResponseId,
-          input: [
-            { role: "system", content: descriptionSystemPrompt },
-            {
-              role: "user",
-              content: "galaxy-map-object:" + JSON.stringify(this.aiGeneratedGalaxyMap),
-            },
-            { role: "user", content: "item-id:" + item.id },
-            { role: "user", content: "item-title:" + newTitle },
-          ],
-        });
+        const response = await generateItemDescription(
+          this.aiGeneratedGalaxyMap,
+          item.id,
+          newTitle,
+          this.aiGeneratedGalaxyMap.aiResponseId,
+        );
 
-        console.log("getDescriptionResponse", getDescriptionResponse);
-        console.log("getDescriptionResponse.output_text", getDescriptionResponse.output_text);
+        console.log("generateItemDescription response", response);
 
         // Track token usage
-        this.updateTokensFromUsage(getDescriptionResponse.usage);
-        console.log("updated token usage", this.aiGeneratedGalaxyMap.tokens);
+        if (response.tokenUsage) {
+          // Convert the tokenUsage format to match what updateTokensFromUsage expects
+          const usage = {
+            prompt_tokens: response.tokenUsage.totalInputTokens,
+            completion_tokens: response.tokenUsage.totalOutputTokens,
+            total_tokens: response.tokenUsage.totalTokens,
+          };
+          this.updateTokensFromUsage(usage);
+          console.log("updated token usage", this.aiGeneratedGalaxyMap.tokens);
+        }
 
         this.descriptionGenerating = false;
-        return getDescriptionResponse.output_text;
+        return response.description;
       } catch (error) {
         console.error("Error generating description with AI:", error);
         this.descriptionGenerating = false;
@@ -4079,9 +4017,7 @@ export default {
         steps: (planet.missionInstructions?.steps || []).map((step) => ({
           title: step.title || "",
           checkpoint: step.checkpoint || "",
-          tasks: (step.tasks || []).map((task) => ({
-            taskContent: task.taskContent || "",
-          })),
+          tasks: (step.tasks || []).map((task) => ({ taskContent: task.taskContent || "" })),
         })),
       };
 
@@ -4110,11 +4046,7 @@ export default {
         this.restoreTaskEditingView();
       });
 
-      this.setSnackbar({
-        show: true,
-        text: "Mission updated",
-        color: "baseAccent",
-      });
+      this.setSnackbar({ show: true, text: "Mission updated", color: "baseAccent" });
     },
     restoreTaskEditingView() {
       if (!this.taskEditing) return;
@@ -4137,9 +4069,7 @@ export default {
         : missionPath;
 
       this.uiActiveItemId = planetId || null;
-      this.treeviewActiveItems = {
-        0: planetId ? [planetId] : [],
-      };
+      this.treeviewActiveItems = { 0: planetId ? [planetId] : [] };
 
       if (planetId) {
         this.$nextTick(() => {
@@ -4180,15 +4110,13 @@ export default {
         parsedStarIndex != null
           ? parsedStarIndex
           : typeof starIndex === "number"
-          ? starIndex
-          : null;
+            ? starIndex
+            : null;
       this.taskEditingPlanetIndex = parsedPlanetIndex != null ? parsedPlanetIndex : null;
       this.activeMissionPath = planetId;
 
       // Update treeview active items to show the selected planet
-      this.treeviewActiveItems = {
-        0: [planetId],
-      };
+      this.treeviewActiveItems = { 0: [planetId] };
 
       // Highlight the planet after all data updates are complete
       this.$nextTick(() => {
@@ -4341,9 +4269,7 @@ export default {
         }
 
         // Update treeview active items to only show the selected item
-        this.treeviewActiveItems = {
-          0: firstValid ? [firstValid] : [],
-        };
+        this.treeviewActiveItems = { 0: firstValid ? [firstValid] : [] };
       }
     },
     normalizeToPlanetId(id) {
@@ -4396,8 +4322,8 @@ export default {
             uniqueTopicIds.length === 1
               ? uniqueTopicIds[0]
               : starIndex != null
-              ? `star-${starIndex}`
-              : null;
+                ? `star-${starIndex}`
+                : null;
         }
 
         if (topicId) {
@@ -4596,10 +4522,7 @@ export default {
           };
 
           const newGalaxyMapCopy = JSON.parse(
-            JSON.stringify({
-              ...this.aiGeneratedGalaxyMap,
-              history: undefined,
-            }),
+            JSON.stringify({ ...this.aiGeneratedGalaxyMap, history: undefined }),
           );
 
           if (!this.aiGeneratedGalaxyMap.history) {

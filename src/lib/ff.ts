@@ -914,6 +914,38 @@ export const refineGalaxyMapWithClarification = async (
   return result.data;
 };
 
+// Generate description for a galaxy map item
+export const generateItemDescription = async (
+  galaxyMap: any,
+  itemId: string,
+  itemTitle: string,
+  previousResponseId?: string,
+): Promise<{
+  success: boolean;
+  description: string;
+  tokenUsage: {
+    modelsUsed: {
+      model: string;
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+      estimatedCost: number;
+    }[];
+    combinedEstimatedCost: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalTokens: number;
+  };
+  responseId: string;
+  creditsDeducted: number;
+  newCreditBalance: number | null;
+}> => {
+  const data = { galaxyMap, itemId, itemTitle, previousResponseId };
+  const fn = functions.httpsCallable("generateItemDescription", { timeout: 60000 });
+  const result = await fn(data);
+  return result.data;
+};
+
 // Initial Galaxy Map Refinement
 export const refineGalaxyMap = async (
   galaxyMap: any,

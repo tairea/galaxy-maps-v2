@@ -13,7 +13,7 @@ import {
 } from "./schemas.js";
 import { createModelTokenUsage, createCombinedTokenUsage } from "./lib/utils.js";
 import { deductCredits } from "./creditManagement.js";
-import openai from "./openaiClient.js";
+import { OPENAI_API_KEY, getOpenAIClient } from "./openaiClient.js";
 // import { Latitude } from "@latitude-data/sdk";
 
 // Initialize Latitude client
@@ -427,10 +427,7 @@ function convertGalaxyMapToMarkdown(galaxyMap: {
   stars?: Array<{
     title: string;
     description: string;
-    planets?: Array<{
-      title: string;
-      description: string;
-    }>;
+    planets?: Array<{ title: string; description: string }>;
   }>;
 }): string {
   if (!galaxyMap || !galaxyMap.stars) {
@@ -508,8 +505,11 @@ function convertGalaxyMapToMarkdown(galaxyMap: {
 export const generateGalaxyMapHttpsEndpoint = runWith({
   timeoutSeconds: 540, // 9 minutes timeout
   memory: "1GB",
+  secrets: [OPENAI_API_KEY],
 }).https.onCall(async (data) => {
   try {
+    const openai = getOpenAIClient();
+
     logger.info("Starting generateGalaxyMap function", {
       description: data.description?.substring(0, 50) + "...",
     });
@@ -528,9 +528,7 @@ export const generateGalaxyMapHttpsEndpoint = runWith({
         { role: "system", content: StarsAndPlanetsSystemPrompt },
         { role: "user", content: description },
       ],
-      text: {
-        format: zodTextFormat(StarsAndPlanetsResponseSchema, "first_step_response"),
-      },
+      text: { format: zodTextFormat(StarsAndPlanetsResponseSchema, "first_step_response") },
     });
 
     logger.info("OpenAI API call completed successfully");
@@ -587,11 +585,7 @@ export const generateGalaxyMapHttpsEndpoint = runWith({
           // Upload to Firebase Storage
           logger.info("Starting upload to Firebase Storage");
           const file = storage.bucket(STORAGE_BUCKET).file(fileName);
-          await file.save(buffer, {
-            metadata: {
-              contentType: "image/png",
-            },
-          });
+          await file.save(buffer, { metadata: { contentType: "image/png" } });
           logger.info("File uploaded successfully", { fileName });
 
           // Get the public URL
@@ -652,8 +646,11 @@ export const generateGalaxyMapHttpsEndpoint = runWith({
 export const generateUnifiedGalaxyMapHttpsEndpoint = runWith({
   timeoutSeconds: 540, // 9 minutes timeout
   memory: "1GB",
+  secrets: [OPENAI_API_KEY],
 }).https.onCall(async (data, context) => {
   try {
+    const openai = getOpenAIClient();
+
     const { description, clarificationAnswers, previousResponseId, attachedFiles, generateImage } =
       data;
     logger.info("Starting generateUnifiedGalaxyMap function", {
@@ -877,11 +874,7 @@ export const generateUnifiedGalaxyMapHttpsEndpoint = runWith({
             // Upload to Firebase Storage
             logger.info("Starting upload to Firebase Storage");
             const file = storage.bucket(STORAGE_BUCKET).file(fileName);
-            await file.save(imageBuffer, {
-              metadata: {
-                contentType: "image/png",
-              },
-            });
+            await file.save(imageBuffer, { metadata: { contentType: "image/png" } });
             logger.info("File uploaded successfully", { fileName });
 
             // Get the public URL
@@ -913,11 +906,7 @@ export const generateUnifiedGalaxyMapHttpsEndpoint = runWith({
             // Upload to Firebase Storage
             logger.info("Starting upload to Firebase Storage");
             const file = storage.bucket(STORAGE_BUCKET).file(fileName);
-            await file.save(buffer, {
-              metadata: {
-                contentType: "image/png",
-              },
-            });
+            await file.save(buffer, { metadata: { contentType: "image/png" } });
             logger.info("File uploaded successfully", { fileName });
 
             // Get the public URL
@@ -1001,6 +990,7 @@ export const generateUnifiedGalaxyMapHttpsEndpoint = runWith({
 export const generateGalaxyImageHttpsEndpoint = runWith({
   timeoutSeconds: 300,
   memory: "1GB",
+  secrets: [OPENAI_API_KEY],
 }).https.onCall(async (data) => {
   const { title, description } = data || {};
   if (!title || !description) {
@@ -1008,6 +998,8 @@ export const generateGalaxyImageHttpsEndpoint = runWith({
   }
 
   try {
+    const openai = getOpenAIClient();
+
     // Call DALL·E to generate image
     const imageResponse = await openai.images.generate({
       model: "gpt-image-1-mini",
@@ -1050,10 +1042,7 @@ export const generateGalaxyImageHttpsEndpoint = runWith({
       throw new HttpsError("internal", "Failed to produce image URL");
     }
 
-    return {
-      success: true,
-      image: { name: fileName, url: imageUrl },
-    };
+    return { success: true, image: { name: fileName, url: imageUrl } };
   } catch (err) {
     logger.error("Error generating galaxy image", err);
     throw new HttpsError(
@@ -1067,8 +1056,11 @@ export const generateGalaxyImageHttpsEndpoint = runWith({
 export const generateInstructionsForMissionHttpsEndpoint = runWith({
   timeoutSeconds: 540, // 9 minutes timeout
   memory: "1GB",
+  secrets: [OPENAI_API_KEY],
 }).https.onCall(async (data, context) => {
   try {
+    const openai = getOpenAIClient();
+
     logger.info("Starting generateInstructionsForMission function", {
       missionContext: data.missionContext?.substring(0, 50) + "...",
       hasGalaxyMap: !!data.aiGeneratedGalaxyMap,
@@ -1130,14 +1122,10 @@ export const generateInstructionsForMissionHttpsEndpoint = runWith({
       //     type: "web_search_preview",
       //   },
       // ],
-      text: {
-        format: zodTextFormat(MissionInstructionsV2Schema, "mission_instructions_response"),
-      },
+      text: { format: zodTextFormat(MissionInstructionsV2Schema, "mission_instructions_response") },
     });
 
-    logger.info("OpenAI API call completed successfully", {
-      response: aiResponse,
-    });
+    logger.info("OpenAI API call completed successfully", { response: aiResponse });
 
     // Get the parsed and validated response (already handled by zodTextFormat)
     const parsedResponse = aiResponse.output_parsed;
@@ -1283,8 +1271,11 @@ export const generateInstructionsForMissionHttpsEndpoint = runWith({
 export const generateGalaxyMapWithClarificationHttpsEndpoint = runWith({
   timeoutSeconds: 540, // 9 minutes timeout
   memory: "1GB",
+  secrets: [OPENAI_API_KEY],
 }).https.onCall(async (data) => {
   try {
+    const openai = getOpenAIClient();
+
     logger.info("Starting generateGalaxyMapWithClarification function", {
       clarificationAnswers: data.clarificationAnswers?.substring(0, 50) + "...",
       previousResponseId: data.previousResponseId,
@@ -1302,9 +1293,7 @@ export const generateGalaxyMapWithClarificationHttpsEndpoint = runWith({
       model: "gpt-5",
       previous_response_id: previousResponseId,
       input: [{ role: "user", content: clarificationAnswers }],
-      text: {
-        format: zodTextFormat(StarsAndPlanetsResponseSchema, "second_step_response"),
-      },
+      text: { format: zodTextFormat(StarsAndPlanetsResponseSchema, "second_step_response") },
     });
 
     logger.info("OpenAI API call completed successfully");
@@ -1363,11 +1352,7 @@ export const generateGalaxyMapWithClarificationHttpsEndpoint = runWith({
           // Upload to Firebase Storage
           logger.info("Starting upload to Firebase Storage");
           const file = storage.bucket(STORAGE_BUCKET).file(fileName);
-          await file.save(buffer, {
-            metadata: {
-              contentType: "image/png",
-            },
-          });
+          await file.save(buffer, { metadata: { contentType: "image/png" } });
           logger.info("File uploaded successfully", { fileName });
 
           // Get the public URL
@@ -1428,11 +1413,12 @@ export const generateGalaxyMapWithClarificationHttpsEndpoint = runWith({
 export const generateGalaxyMapAgainHttpsEndpoint = runWith({
   timeoutSeconds: 540, // 9 minutes timeout
   memory: "1GB",
+  secrets: [OPENAI_API_KEY],
 }).https.onCall(async (data) => {
   try {
-    logger.info("Starting generateGalaxyMapAgain function", {
-      responseId: data.responseId,
-    });
+    const openai = getOpenAIClient();
+
+    logger.info("Starting generateGalaxyMapAgain function", { responseId: data.responseId });
 
     const { responseId } = data;
     if (!responseId) {
@@ -1446,9 +1432,7 @@ export const generateGalaxyMapAgainHttpsEndpoint = runWith({
       model: "gpt-5",
       previous_response_id: responseId,
       input: [{ role: "user", content: "i didnt like the result, please try again" }],
-      text: {
-        format: zodTextFormat(StarsAndPlanetsResponseSchema, "regenerate_response"),
-      },
+      text: { format: zodTextFormat(StarsAndPlanetsResponseSchema, "regenerate_response") },
     });
 
     logger.info("OpenAI API call completed successfully");
@@ -1492,8 +1476,11 @@ export const generateGalaxyMapAgainHttpsEndpoint = runWith({
 export const refineGalaxyMapHttpsEndpoint = runWith({
   timeoutSeconds: 540, // 9 minutes timeout
   memory: "1GB",
+  secrets: [OPENAI_API_KEY],
 }).https.onCall(async (data) => {
   try {
+    const openai = getOpenAIClient();
+
     logger.info("Starting refineGalaxyMap function", {
       hasClarificationAnswers: !!data.clarificationAnswers,
       hasGalaxyMap: !!data.galaxyMap,
@@ -1515,9 +1502,7 @@ export const refineGalaxyMapHttpsEndpoint = runWith({
         model: "gpt-5-mini",
         previous_response_id: previousResponseId,
         input: [{ role: "user", content: clarificationAnswers }],
-        text: {
-          format: zodTextFormat(UnifiedGalaxyMapResponseSchema, "refine_galaxy_response"),
-        },
+        text: { format: zodTextFormat(UnifiedGalaxyMapResponseSchema, "refine_galaxy_response") },
         store: true,
       });
 
@@ -1657,9 +1642,7 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
         model: "gpt-5",
         previous_response_id: previousResponseId,
         input: inputMessages as any,
-        text: {
-          format: zodTextFormat(UnifiedGalaxyMapResponseSchema, "refine_galaxy_response"),
-        },
+        text: { format: zodTextFormat(UnifiedGalaxyMapResponseSchema, "refine_galaxy_response") },
         store: true,
       });
 
@@ -1701,8 +1684,11 @@ The Galaxy Map is a structured learning roadmap with the hierarchy:
 export const refinePartOfGalaxyMapHttpsEndpoint = runWith({
   timeoutSeconds: 540,
   memory: "1GB",
+  secrets: [OPENAI_API_KEY],
 }).https.onCall(async (data) => {
   try {
+    const openai = getOpenAIClient();
+
     const { inputMessages, userRequest, previousResponseId } = data || {};
 
     if (!Array.isArray(inputMessages) || inputMessages.length === 0) {
@@ -1769,10 +1755,7 @@ export const downloadAndUploadImageHttpsEndpoint = runWith({
 
     const { imageUrl, fileName } = data;
     if (!imageUrl || !fileName) {
-      logger.error("Missing required fields", {
-        imageUrl: !!imageUrl,
-        fileName: !!fileName,
-      });
+      logger.error("Missing required fields", { imageUrl: !!imageUrl, fileName: !!fileName });
       throw new HttpsError("invalid-argument", "Missing required fields: imageUrl or fileName");
     }
 
@@ -1786,11 +1769,7 @@ export const downloadAndUploadImageHttpsEndpoint = runWith({
     // Upload to Firebase Storage
     logger.info("Starting upload to Firebase Storage");
     const file = storage.bucket(STORAGE_BUCKET).file(fileName);
-    await file.save(buffer, {
-      metadata: {
-        contentType: "image/png",
-      },
-    });
+    await file.save(buffer, { metadata: { contentType: "image/png" } });
     logger.info("File uploaded successfully", { fileName });
 
     // Get the public URL
@@ -1812,9 +1791,12 @@ export const downloadAndUploadImageHttpsEndpoint = runWith({
 export const generateSquadReportHttpsEndpoint = runWith({
   timeoutSeconds: 540, // 9 minutes timeout
   memory: "1GB",
+  secrets: [OPENAI_API_KEY],
 }).https.onCall(async (data, context) => {
   const { squadPacket, cohortId, statusReportId } = data || {};
   try {
+    const openai = getOpenAIClient();
+
     logger.info("Starting generateSquadReport function", {
       hasPacket: !!data?.squadPacket,
       hasCohortId: !!data?.cohortId,
@@ -1870,9 +1852,7 @@ export const generateSquadReportHttpsEndpoint = runWith({
         { role: "system", content: SquadAnalystSystemPrompt },
         { role: "user", content: userMessage },
       ],
-      text: {
-        format: zodTextFormat(SquadReportSchema, "squad_report_response"),
-      },
+      text: { format: zodTextFormat(SquadReportSchema, "squad_report_response") },
     });
 
     logger.info("OpenAI API call completed successfully (squad report)");
@@ -1987,6 +1967,108 @@ export const generateSquadReportHttpsEndpoint = runWith({
     if (error instanceof Error && error.name === "ZodError") {
       throw new HttpsError("internal", `AI response validation failed: ${error.message}`);
     }
+    throw new HttpsError(
+      "internal",
+      error instanceof Error ? error.message : "Unknown error occurred",
+    );
+  }
+});
+
+// Generate description for a galaxy map item (star, planet, or mission)
+export const generateItemDescriptionHttpsEndpoint = runWith({
+  timeoutSeconds: 60,
+  memory: "512MB",
+  secrets: [OPENAI_API_KEY],
+}).https.onCall(async (data, context) => {
+  try {
+    const openai = getOpenAIClient();
+
+    const { galaxyMap, itemId, itemTitle, previousResponseId } = data || {};
+
+    if (!galaxyMap || !itemId || !itemTitle) {
+      logger.error("Missing required fields", {
+        galaxyMap: !!galaxyMap,
+        itemId: !!itemId,
+        itemTitle: !!itemTitle,
+      });
+      throw new HttpsError(
+        "invalid-argument",
+        "Missing required fields: galaxyMap, itemId, or itemTitle",
+      );
+    }
+
+    const descriptionSystemPrompt = `
+      You are a helpful assistant that generates descriptions for individual learning step items within learning roadmap called a Galaxy Map.
+      You are given the entire learning journey as a **galaxy-map-object** with a title a description and an array of Stars (aka Topics) with nested Planets (aka Missions).
+      This is to give you context of the wider objective for which them item you are generating a description for should contribute towards.
+      You are also given the **item-id** that helps to indentify the context in which the item sits in relation to the wider galaxy map, and the learning steps that came before and come after it.
+      You are also given the **item-title** that is the title for the description and the best indicator as to what the description should be about, given the wider galaxy map context.
+      The Description should be action focused and only one sentence long.
+      Your response will be used to update the description of the item, so please provide only the description text without any explanations or discussions.
+    `;
+
+    logger.info("Calling OpenAI API for item description generation", {
+      itemId,
+      itemTitle: itemTitle.substring(0, 50),
+      hasPreviousResponseId: !!previousResponseId,
+    });
+
+    const requestOptions: any = {
+      model: "gpt-4o-mini",
+      input: [
+        { role: "system", content: descriptionSystemPrompt },
+        { role: "user", content: "galaxy-map-object:" + JSON.stringify(galaxyMap) },
+        { role: "user", content: "item-id:" + itemId },
+        { role: "user", content: "item-title:" + itemTitle },
+      ],
+    };
+
+    if (previousResponseId) {
+      requestOptions.previous_response_id = previousResponseId;
+    }
+
+    const aiResponse = await openai.responses.create(requestOptions);
+
+    logger.info("OpenAI API call completed successfully");
+
+    if (!aiResponse.output_text) {
+      throw new HttpsError("internal", "No response content from OpenAI");
+    }
+
+    const modelUsage = createModelTokenUsage("gpt-4o-mini", aiResponse.usage || {});
+    const combinedTokenUsage = createCombinedTokenUsage([modelUsage]);
+
+    // Deduct credits from user's balance
+    let creditsDeducted = 0;
+    let newCreditBalance: number | null = null;
+
+    if (context.auth?.uid && combinedTokenUsage.totalTokens) {
+      try {
+        const creditResult = await deductCredits(context.auth.uid, combinedTokenUsage.totalTokens);
+        creditsDeducted = creditResult.creditsDeducted;
+        newCreditBalance = creditResult.newBalance;
+      } catch (error) {
+        logger.error("Error deducting credits, but allowing AI response to succeed:", error);
+      }
+    } else {
+      logger.warn("No authenticated user ID found for credit deduction");
+    }
+
+    return {
+      success: true,
+      description: aiResponse.output_text,
+      tokenUsage: combinedTokenUsage,
+      responseId: aiResponse.id,
+      creditsDeducted,
+      newCreditBalance,
+    };
+  } catch (error) {
+    logger.error("Error in generateItemDescription", error);
+
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+
     throw new HttpsError(
       "internal",
       error instanceof Error ? error.message : "Unknown error occurred",

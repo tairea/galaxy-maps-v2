@@ -50,10 +50,7 @@
 
         <p
           class="loading-message overline"
-          :class="{
-            'baseAccent--text': isSavingToDB,
-            'streaming-text': streamingText,
-          }"
+          :class="{ 'baseAccent--text': isSavingToDB, 'streaming-text': streamingText }"
         >
           {{ streamingText || currentLoadingMessage }}
         </p>
@@ -103,7 +100,7 @@
         </div>
 
         <!-- TOKEN USAGE -->
-        <p class="token-usage overline mt-2">
+        <!-- <p class="token-usage overline mt-2">
           Total AI Tokens:
           {{
             aiGeneratedGalaxyMap.tokens
@@ -124,7 +121,7 @@
               ? aiGeneratedGalaxyMap.tokens.totalOutputTokens.toLocaleString()
               : "0"
           }}
-        </p>
+        </p> -->
         <!-- <p class="token-breakdown overline mt-2">
           Est. cost: ${{
             aiGeneratedGalaxyMap.tokens
@@ -287,13 +284,7 @@
                   </div>
 
                   <!-- AI Credit Balance Display -->
-                  <v-alert
-                    dense
-                    text
-                    :color="creditColor"
-                    icon="mdi-information"
-                    class="mb-4 mt-4"
-                  >
+                  <v-alert dense text :color="creditColor" icon="mdi-information" class="mb-4 mt-4">
                     <span class="text-caption">
                       You have <strong>{{ userCredits }} credits</strong> remaining
                       <span class="text-caption grey--text"> (1 credit = 100 tokens)</span>
@@ -490,13 +481,7 @@ export default {
     LayoutSelectionDialog,
     // CreateGalaxyOptionsDialog,
   },
-  props: {
-    showFirstDialog: {
-      type: Boolean,
-      required: true,
-      default: false,
-    },
-  },
+  props: { showFirstDialog: { type: Boolean, required: true, default: false } },
   data: () => ({
     valid: false,
     description: "",
@@ -507,9 +492,7 @@ export default {
     mdiArrowLeft,
     mdiFamilyTree,
     mdiPaperclip,
-    rules: {
-      required: (v) => !!v || "This field is required",
-    },
+    rules: { required: (v) => !!v || "This field is required" },
     loading: false,
     loadingMessages: [
       "Exploring the cosmos for knowledge...",
@@ -566,9 +549,7 @@ export default {
     aiGatheringContextAnswers: [],
     previousResponseId: "",
     stepper: 1,
-    aiGeneratedGalaxyMap: {
-      stars: [],
-    },
+    aiGeneratedGalaxyMap: { stars: [] },
     transformedStarDetails: [],
     expandedNodes: [],
     // File attachment state (multi-file)
@@ -707,8 +688,8 @@ export default {
               (isPdf
                 ? "application/pdf"
                 : isJson
-                ? "application/json"
-                : "application/octet-stream");
+                  ? "application/json"
+                  : "application/octet-stream");
             resolve({ name: file.name, mimeType: derivedMime, base64 });
           };
           reader.onerror = () => reject(new Error("read_fail"));
@@ -740,8 +721,8 @@ export default {
                   (isPdf
                     ? "application/pdf"
                     : isJson
-                    ? "application/json"
-                    : "application/octet-stream");
+                      ? "application/json"
+                      : "application/octet-stream");
                 resolve({ name: file.name, mimeType: derivedMime, storagePath: path });
               })
               .catch(() => reject(new Error("upload_fail")));
@@ -1027,11 +1008,7 @@ export default {
             }),
           );
 
-          this.aiGeneratedGalaxyMap.history = [
-            {
-              galaxyMapData: galaxyMapCopy,
-            },
-          ];
+          this.aiGeneratedGalaxyMap.history = [{ galaxyMapData: galaxyMapCopy }];
 
           // Check the selected flow to determine next step
           if (this.selectedFlow === "human-help") {
@@ -1201,11 +1178,7 @@ export default {
             }),
           );
 
-          this.aiGeneratedGalaxyMap.history = [
-            {
-              galaxyMapData: galaxyMapCopy,
-            },
-          ];
+          this.aiGeneratedGalaxyMap.history = [{ galaxyMapData: galaxyMapCopy }];
 
           // Check the selected flow to determine next step
           if (this.selectedFlow === "human-help") {
@@ -1414,10 +1387,10 @@ export default {
               (typeof planet.missionInstructions === "string"
                 ? planet.missionInstructions
                 : this.isStructuredMissionInstructions(planet.missionInstructions)
-                ? this.formatMissionInstructionsToHtml(planet.missionInstructions)
-                : typeof planet.instructions === "string"
-                ? planet.instructions
-                : "");
+                  ? this.formatMissionInstructionsToHtml(planet.missionInstructions)
+                  : typeof planet.instructions === "string"
+                    ? planet.instructions
+                    : "");
 
             // Prefer unified missionInstructions if present
             if (missionInstructionsHtmlString) {

@@ -93,25 +93,20 @@
           </v-row>
 
           <!-- AI Credit Balance Display -->
-          <v-row class="pt-3">
+          <v-row class="pt-1 pb-3">
             <v-col class="pa-0 d-flex justify-center">
               <p class="text-overline missionAccent--text ma-0">AI Credits</p>
             </v-col>
-            <v-col class="pa-0 d-flex justify-center align-center">
-              <v-chip
-                small
-                :color="creditColor"
-                text-color="white"
+            <v-col class="pa-0 d-flex justify-center flex-column align-center">
+              <span class="ma-0 mb-1"
+                >{{ userCredits }}{{ userCredits === "..." ? "" : " credits" }}</span
               >
-                {{ userCredits }}{{ userCredits === '...' ? '' : ' credits' }}
-              </v-chip>
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col class="pa-0 px-4">
-              <p class="caption text-center ma-0" style="font-size: 0.7rem !important; color: var(--v-missionAccent-base);">
-                Resets {{ hasActiveSubscription ? 'monthly' : 'daily' }} • {{ timeUntilReset }}
-              </p>
+              <!-- <p
+                class="caption ma-0"
+                style="font-size: 0.7rem !important; color: var(--v-missionAccent-base)"
+              >
+                Resets {{ hasActiveSubscription ? "monthly" : "daily" }} • {{ timeUntilReset }}
+              </p> -->
             </v-col>
           </v-row>
 
@@ -276,7 +271,7 @@ export default {
       return this.isMobile && this.$route.name === "SolarSystemView";
     },
     userCredits() {
-      if (!this.user?.data?.creditsChecked) return '...';
+      if (!this.user?.data?.creditsChecked) return "...";
       return this.user?.data?.credits ?? 0;
     },
     hasActiveSubscription() {
@@ -284,31 +279,31 @@ export default {
     },
     creditColor() {
       const credits = this.userCredits;
-      if (credits === '...') return 'grey';
-      if (credits <= 0) return 'error';
-      if (credits < 50) return 'warning';
-      return 'success';
+      if (credits === "...") return "grey";
+      if (credits <= 0) return "error";
+      if (credits < 50) return "warning";
+      return "success";
     },
     timeUntilReset() {
       const lastReset = this.user?.data?.lastCreditReset;
-      if (!lastReset) return 'Soon';
+      if (!lastReset) return "Soon";
 
       const resetPeriodMs = this.hasActiveSubscription
-        ? 30 * 24 * 60 * 60 * 1000  // 30 days
-        : 24 * 60 * 60 * 1000;      // 24 hours
+        ? 30 * 24 * 60 * 60 * 1000 // 30 days
+        : 24 * 60 * 60 * 1000; // 24 hours
 
       const lastResetTime = lastReset.toMillis ? lastReset.toMillis() : lastReset;
       const nextReset = lastResetTime + resetPeriodMs;
       const msUntilReset = nextReset - Date.now();
 
-      if (msUntilReset <= 0) return 'On next login';
+      if (msUntilReset <= 0) return "On next login";
 
       const hours = Math.floor(msUntilReset / (60 * 60 * 1000));
       const minutes = Math.floor((msUntilReset % (60 * 60 * 1000)) / (60 * 1000));
 
       if (hours >= 24) {
         const days = Math.floor(hours / 24);
-        return `${days} day${days > 1 ? 's' : ''}`;
+        return `${days} day${days > 1 ? "s" : ""}`;
       }
 
       return `${hours}h ${minutes}m`;
@@ -358,21 +353,14 @@ export default {
       firebase
         .database()
         .ref("/status/" + this.person.id)
-        .set({
-          state: "offline",
-          last_changed: firebase.database.ServerValue.TIMESTAMP,
-        });
+        .set({ state: "offline", last_changed: firebase.database.ServerValue.TIMESTAMP });
 
       firebase
         .auth()
         .signOut()
         .then(() => {
           // alert("Successfully signed out");
-          this.setSnackbar({
-            show: true,
-            text: "Successfully signed out",
-            color: "baseAccent",
-          });
+          this.setSnackbar({ show: true, text: "Successfully signed out", color: "baseAccent" });
           this.$router.push("/login");
         })
         .catch((error) => {
@@ -436,9 +424,7 @@ export default {
     updateProfile() {
       db.collection("people")
         .doc(this.person.id)
-        .update({
-          image: this.image,
-        })
+        .update({ image: this.image })
         .then(() => {
           // TODO: Use firebase reactive functions to make person reactive
           console.log("Image successfully updated!");

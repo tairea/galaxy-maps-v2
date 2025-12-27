@@ -17,7 +17,6 @@ interface ImportMetaEnv {
 
   // Third-Party API Keys
   readonly VITE_VERACITY_LRS_SECRET: string;
-  readonly VITE_OPENAI_API_KEY: string;
 
   // Firebase Emulator Configuration (Optional)
   readonly VITE_USE_EMULATOR?: string;

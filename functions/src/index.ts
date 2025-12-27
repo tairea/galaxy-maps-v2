@@ -97,9 +97,11 @@ import {
   generateGalaxyImageHttpsEndpoint,
   refineGalaxyMapHttpsEndpoint,
   generateSquadReportHttpsEndpoint,
+  generateItemDescriptionHttpsEndpoint,
 } from "./openAIActions.js";
 import { generateRealtimeTokenHttpsEndpoint } from "./realtimeToken.js";
 import { refineStructureHttpsEndpoint } from "./refiners/refine-structure.js";
+import { refreshCreditsOnSubscriptionChangeHttpsEndpoint } from "./creditManagement.js";
 
 // activity
 export {
@@ -201,6 +203,9 @@ export {
   resendInitialSetupLinkHttpsEndpoint as resendInitialSetupLink,
 };
 
+// credits
+export { refreshCreditsOnSubscriptionChangeHttpsEndpoint as refreshCreditsOnSubscriptionChange };
+
 // openai
 export {
   downloadAndUploadImageHttpsEndpoint as downloadAndUploadImage,
@@ -214,4 +219,5 @@ export {
   refineStructureHttpsEndpoint as refineStructure,
   generateSquadReportHttpsEndpoint as generateSquadReport,
   generateRealtimeTokenHttpsEndpoint as generateRealtimeToken,
+  generateItemDescriptionHttpsEndpoint as generateItemDescription,
 };

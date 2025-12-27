@@ -1,6 +1,7 @@
-import { db } from "./_shared.js";
+import { db, requireAuthenticated } from "./_shared.js";
 import * as functions from "firebase-functions";
 import { FieldValue } from "firebase-admin/firestore";
+import { runWith } from "firebase-functions/v1";
 
 // Credit conversion constants
 export const TOKENS_PER_CREDIT = 100;
@@ -8,6 +9,31 @@ export const FREE_TIER_CREDITS = 300;
 export const PREMIUM_TIER_CREDITS = 10000;
 export const FREE_RESET_HOURS = 24;
 export const PREMIUM_RESET_DAYS = 30;
+
+/**
+ * Check if user has an active Stripe subscription
+ * Queries the customers/{userId}/subscriptions collection directly
+ */
+async function hasActiveStripeSubscription(userId: string): Promise<boolean> {
+  try {
+    const subscriptionsRef = db.collection("customers").doc(userId).collection("subscriptions");
+    const subscriptionsSnapshot = await subscriptionsRef.get();
+
+    // Check if any subscription has active or trialing status
+    for (const subscriptionDoc of subscriptionsSnapshot.docs) {
+      const subscription = subscriptionDoc.data();
+      if (subscription.status === "active" || subscription.status === "trialing") {
+        return true;
+      }
+    }
+
+    return false;
+  } catch (error) {
+    console.error(`Error checking subscription status for ${userId}:`, error);
+    // Default to false (free tier) if we can't determine subscription status
+    return false;
+  }
+}
 
 /**
  * Get user's current credit balance from Firestore
@@ -35,14 +61,17 @@ export async function getUserCredits(userId: string): Promise<number> {
 export async function initializeUserCredits(userId: string, isPremium: boolean): Promise<void> {
   const initialCredits = isPremium ? PREMIUM_TIER_CREDITS : FREE_TIER_CREDITS;
 
-  await db.collection("people").doc(userId).set(
-    {
-      credits: initialCredits,
-      lastCreditReset: FieldValue.serverTimestamp(),
-      creditsLifetimeUsed: 0,
-    },
-    { merge: true },
-  );
+  await db
+    .collection("people")
+    .doc(userId)
+    .set(
+      {
+        credits: initialCredits,
+        lastCreditReset: FieldValue.serverTimestamp(),
+        creditsLifetimeUsed: 0,
+      },
+      { merge: true },
+    );
 
   console.log(`Initialized ${userId} with ${initialCredits} credits (premium: ${isPremium})`);
 }
@@ -53,6 +82,10 @@ export async function initializeUserCredits(userId: string, isPremium: boolean):
  */
 export async function checkAndResetCredits(userId: string): Promise<void> {
   try {
+    // Query subscription status outside transaction to avoid transaction timeout
+    // This is safe because subscription status doesn't change frequently
+    const hasActiveSubscription = await hasActiveStripeSubscription(userId);
+
     await db.runTransaction(async (transaction) => {
       const userRef = db.collection("people").doc(userId);
       const userDoc = await transaction.get(userRef);
@@ -64,21 +97,57 @@ export async function checkAndResetCredits(userId: string): Promise<void> {
 
       const userData = userDoc.data();
       const lastReset = userData?.lastCreditReset?.toDate();
-      const hasActiveSubscription = userData?.hasActiveSubscription || false;
+      const currentCredits = userData?.credits ?? 0;
 
-      // If no lastReset, initialize credits
+      // If no lastReset, initialize credits based on actual subscription status
       if (!lastReset) {
+        const initialCredits = hasActiveSubscription ? PREMIUM_TIER_CREDITS : FREE_TIER_CREDITS;
         transaction.set(
           userRef,
           {
-            credits: hasActiveSubscription ? PREMIUM_TIER_CREDITS : FREE_TIER_CREDITS,
+            credits: initialCredits,
             lastCreditReset: FieldValue.serverTimestamp(),
             creditsLifetimeUsed: userData?.creditsLifetimeUsed || 0,
           },
           { merge: true },
         );
-        console.log(`Initialized credits for ${userId} (premium: ${hasActiveSubscription})`);
+        console.log(
+          `Initialized credits for ${userId} with ${initialCredits} credits (premium: ${hasActiveSubscription})`,
+        );
         return;
+      }
+
+      // Handle subscription status changes (upgrades and downgrades)
+
+      // UPGRADE: Free → Paid
+      // If user has active subscription but credits are in free tier range, upgrade them
+      // This handles both initialization bugs and mid-period upgrades
+      if (hasActiveSubscription && currentCredits <= FREE_TIER_CREDITS) {
+        // User upgraded to premium - give them premium credits immediately
+        transaction.update(userRef, {
+          credits: PREMIUM_TIER_CREDITS,
+          lastCreditReset: FieldValue.serverTimestamp(), // Reset the timer for their premium period
+        });
+        console.log(
+          `Upgraded ${userId} from ${currentCredits} to ${PREMIUM_TIER_CREDITS} credits (premium subscription detected)`,
+        );
+        return;
+      }
+
+      // DOWNGRADE: Paid → Free
+      // If user no longer has active subscription but has premium credits, downgrade them
+      // This handles subscription cancellations
+      if (!hasActiveSubscription && currentCredits > FREE_TIER_CREDITS) {
+        // User downgraded from premium - set to free tier credits and reset timer
+        // This ensures they get the free tier reset schedule (24 hours) going forward
+        transaction.update(userRef, {
+          credits: FREE_TIER_CREDITS,
+          lastCreditReset: FieldValue.serverTimestamp(), // Reset timer for free tier schedule
+        });
+        console.log(
+          `Downgraded ${userId} from ${currentCredits} to ${FREE_TIER_CREDITS} credits (subscription cancelled, reset timer)`,
+        );
+        return; // Exit early since we've handled the downgrade
       }
 
       // Calculate time since last reset
@@ -175,3 +244,26 @@ export async function hasEnoughCredits(userId: string, _estimatedTokens: number)
   // Allow operation if balance > 0 (can go negative during operation)
   return currentCredits > 0;
 }
+
+/**
+ * Callable function to refresh credits when subscription status changes
+ * Can be called from frontend when subscription is upgraded/downgraded
+ */
+export const refreshCreditsOnSubscriptionChangeHttpsEndpoint = runWith({}).https.onCall(
+  async (_data, context) => {
+    requireAuthenticated(context);
+    const userId = context.auth.uid;
+
+    try {
+      await checkAndResetCredits(userId);
+      const newCredits = await getUserCredits(userId);
+      return { success: true, credits: newCredits };
+    } catch (error) {
+      console.error(`Error refreshing credits for ${userId}:`, error);
+      throw new functions.https.HttpsError(
+        "internal",
+        `Failed to refresh credits: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  },
+);

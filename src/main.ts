@@ -16,7 +16,6 @@ import "@/css/main.scss";
 import "vue-tour/dist/vue-tour.css";
 import useGalaxyListViewStore from "./store/galaxyListView";
 
-import { createOpenAIPlugin } from "./plugins/openai";
 import viewportPlugin from "./plugins/viewport";
 import { ensureGooglePersonDocument } from "./lib/utils";
 
@@ -40,7 +39,7 @@ firebase.auth().onAuthStateChanged(async (user) => {
   if (user) {
     // Ensure person document exists for Google users (handles redirect case)
     await ensureGooglePersonDocument(user, db);
-    
+
     user?.getIdTokenResult().then((idTokenResult) => {
       Object.assign(user, { admin: idTokenResult.claims.admin });
       rootStore.setUser(user);
@@ -56,11 +55,4 @@ firebase.auth().onAuthStateChanged(async (user) => {
   }
 });
 
-Vue.use(createOpenAIPlugin());
-
-new Vue({
-  router,
-  vuetify,
-  pinia,
-  render: (h: any) => h(App),
-} as any).$mount("#app");
+new Vue({ router, vuetify, pinia, render: (h: any) => h(App) } as any).$mount("#app");

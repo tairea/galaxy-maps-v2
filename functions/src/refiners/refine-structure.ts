@@ -1,7 +1,7 @@
 import { runWith, logger } from "firebase-functions/v1";
 import { HttpsError } from "firebase-functions/v1/https";
 // import { zodTextFormat } from "openai/helpers/zod";
-import openai from "../openaiClient.js";
+import { OPENAI_API_KEY, getOpenAIClient } from "../openaiClient.js";
 import { STRUCTURE_SYSTEM_PROMPT } from "./structure-constants.js";
 import {
   StructureTargetsSchema,
@@ -149,10 +149,7 @@ const STRUCTURE_REFINE_TEXT_FORMAT = {
                 position: {
                   type: "object",
                   additionalProperties: false,
-                  properties: {
-                    beforeStarId: { type: "string" },
-                    afterStarId: { type: "string" },
-                  },
+                  properties: { beforeStarId: { type: "string" }, afterStarId: { type: "string" } },
                   required: ["beforeStarId", "afterStarId"],
                 },
               },
@@ -457,10 +454,7 @@ function buildStructureRefinePayload(data: Record<string, unknown>) {
 function formatStructureResponse(
   aiResponse: any,
   model: OpenAIModel,
-): {
-  result: StructureRefineResponse;
-  usage: ReturnType<typeof createCombinedTokenUsage>;
-} {
+): { result: StructureRefineResponse; usage: ReturnType<typeof createCombinedTokenUsage> } {
   const parsedRaw = aiResponse.output_parsed as unknown;
   let parsed: StructureRefineResponse;
   if (parsedRaw == null) {
@@ -488,8 +482,11 @@ function formatStructureResponse(
 export const refineStructureHttpsEndpoint = runWith({
   timeoutSeconds: 540,
   memory: "1GB",
+  secrets: [OPENAI_API_KEY],
 }).https.onCall(async (data: Record<string, unknown>, context) => {
   try {
+    const openai = getOpenAIClient();
+
     logger.info("Starting refineStructure function", {
       hasClarificationAnswers: !!data?.clarificationAnswers,
       previousResponseId: data?.previousResponseId,
