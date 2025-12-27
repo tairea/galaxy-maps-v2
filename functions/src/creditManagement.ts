@@ -32,23 +32,17 @@ export async function getUserCredits(userId: string): Promise<number> {
 /**
  * Initialize credits for a new user or user without credit fields
  */
-export async function initializeUserCredits(
-  userId: string,
-  isPremium: boolean,
-): Promise<void> {
+export async function initializeUserCredits(userId: string, isPremium: boolean): Promise<void> {
   const initialCredits = isPremium ? PREMIUM_TIER_CREDITS : FREE_TIER_CREDITS;
 
-  await db
-    .collection("people")
-    .doc(userId)
-    .set(
-      {
-        credits: initialCredits,
-        lastCreditReset: FieldValue.serverTimestamp(),
-        creditsLifetimeUsed: 0,
-      },
-      { merge: true },
-    );
+  await db.collection("people").doc(userId).set(
+    {
+      credits: initialCredits,
+      lastCreditReset: FieldValue.serverTimestamp(),
+      creditsLifetimeUsed: 0,
+    },
+    { merge: true },
+  );
 
   console.log(`Initialized ${userId} with ${initialCredits} credits (premium: ${isPremium})`);
 }
@@ -83,9 +77,7 @@ export async function checkAndResetCredits(userId: string): Promise<void> {
           },
           { merge: true },
         );
-        console.log(
-          `Initialized credits for ${userId} (premium: ${hasActiveSubscription})`,
-        );
+        console.log(`Initialized credits for ${userId} (premium: ${hasActiveSubscription})`);
         return;
       }
 
@@ -106,9 +98,7 @@ export async function checkAndResetCredits(userId: string): Promise<void> {
       }
 
       if (shouldReset) {
-        const newCredits = hasActiveSubscription
-          ? PREMIUM_TIER_CREDITS
-          : FREE_TIER_CREDITS;
+        const newCredits = hasActiveSubscription ? PREMIUM_TIER_CREDITS : FREE_TIER_CREDITS;
 
         transaction.update(userRef, {
           credits: newCredits,
@@ -143,10 +133,7 @@ export async function deductCredits(
       const userDoc = await transaction.get(userRef);
 
       if (!userDoc.exists) {
-        throw new functions.https.HttpsError(
-          "not-found",
-          `User ${userId} not found`,
-        );
+        throw new functions.https.HttpsError("not-found", `User ${userId} not found`);
       }
 
       const userData = userDoc.data();
@@ -183,10 +170,7 @@ export async function deductCredits(
  * Check if user has sufficient credits for an operation
  * This is a helper for backend validation
  */
-export async function hasEnoughCredits(
-  userId: string,
-  estimatedTokens: number,
-): Promise<boolean> {
+export async function hasEnoughCredits(userId: string, _estimatedTokens: number): Promise<boolean> {
   const currentCredits = await getUserCredits(userId);
   // Allow operation if balance > 0 (can go negative during operation)
   return currentCredits > 0;

@@ -962,10 +962,7 @@ export const generateUnifiedGalaxyMapHttpsEndpoint = runWith({
 
     if (context.auth?.uid) {
       try {
-        const creditResult = await deductCredits(
-          context.auth.uid,
-          combinedTokenUsage.totalTokens,
-        );
+        const creditResult = await deductCredits(context.auth.uid, combinedTokenUsage.totalTokens);
         creditsDeducted = creditResult.creditsDeducted;
         newCreditBalance = creditResult.newBalance;
       } catch (error) {
@@ -1248,10 +1245,7 @@ export const generateInstructionsForMissionHttpsEndpoint = runWith({
 
     if (context.auth?.uid) {
       try {
-        const creditResult = await deductCredits(
-          context.auth.uid,
-          combinedTokenUsage.totalTokens,
-        );
+        const creditResult = await deductCredits(context.auth.uid, combinedTokenUsage.totalTokens);
         creditsDeducted = creditResult.creditsDeducted;
         newCreditBalance = creditResult.newBalance;
       } catch (error) {
@@ -1897,10 +1891,7 @@ export const generateSquadReportHttpsEndpoint = runWith({
 
     if (context.auth?.uid) {
       try {
-        const creditResult = await deductCredits(
-          context.auth.uid,
-          combinedTokenUsage.totalTokens,
-        );
+        const creditResult = await deductCredits(context.auth.uid, combinedTokenUsage.totalTokens);
         creditsDeducted = creditResult.creditsDeducted;
         newCreditBalance = creditResult.newBalance;
       } catch (error) {
