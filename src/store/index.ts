@@ -1,6 +1,18 @@
 import { db } from "@/store/firestoreConfig";
 import { defineStore } from "pinia";
 import { piniafireMutations, firestoreAction } from "@/piniafire/index";
+import { getApp } from "firebase/app";
+import { 
+  getStripePayments, 
+  onCurrentUserSubscriptionUpdate,
+  getCurrentUserSubscriptions 
+} from "@invertase/firestore-stripe-payments";
+
+const app = getApp();
+const payments = getStripePayments(app, {
+  productsCollection: "products",
+  customersCollection: "customers",
+});
 
 const getDefaultState = () => {
   return {
@@ -30,6 +42,7 @@ const getDefaultState = () => {
     darkMode: true,
     studentCourseDataFromLRS: [] as Record<string, any>[],
     snackbar: {} as Record<string, any>,
+    paywall: { show: false, text: "" } as { show: boolean; text: string },
     userStatus: {} as Record<string, any>,
     studentsActiveTasks: [] as Record<string, any>[],
     studentsActivityLog: [] as Record<string, any>[],
@@ -145,6 +158,9 @@ export default defineStore({
     setSnackbar(snackbar: { show: boolean; text: string; color?: string }) {
       this.snackbar = snackbar;
     },
+    setPaywall(paywall: { show: boolean; text: string }) {
+      this.paywall = paywall;
+    },
     setPeopleInCourse(people: Record<string, any>[]) {
       this.peopleInCourse = people;
     },
@@ -158,6 +174,113 @@ export default defineStore({
     setUserStatus(userStatus: Record<string, any>) {
       this.userStatus = userStatus;
     },
+    setUserSubscriptionStatus(status: {
+      isCustomer: boolean;
+      hasActiveSubscription: boolean;
+      activeSubscription: Record<string, any> | null;
+      subscriptionChecked: boolean;
+    }) {
+      if (!this.user.data) return;
+      this.user.data = {
+        ...this.user.data,
+        ...status,
+      };
+    },
+    async getUserSubscriptions(uid: string | null) {
+      if (!uid || !this.user.loggedIn) return;
+      console.log("getUserSubscriptions");
+
+      // Reset flags before fetching the latest subscription information via the Stripe extension SDK.
+      this.setUserSubscriptionStatus({
+        isCustomer: false,
+        hasActiveSubscription: false,
+        activeSubscription: null,
+        subscriptionChecked: false,
+      });
+
+      try {
+        const subscriptions = await getCurrentUserSubscriptions(payments);
+
+        const activeSubscription =
+          subscriptions.find((subscription) =>
+            ["trialing", "active"].includes(subscription.status),
+          ) ?? null;
+
+        this.setUserSubscriptionStatus({
+          isCustomer: subscriptions.length > 0,
+          hasActiveSubscription: Boolean(activeSubscription),
+          activeSubscription,
+          subscriptionChecked: true,
+        });
+      } catch (error) {
+        console.error("Failed to load Stripe subscription", error);
+        this.setUserSubscriptionStatus({
+          isCustomer: false,
+          hasActiveSubscription: false,
+          activeSubscription: null,
+          subscriptionChecked: true,
+        });
+      }
+    },
+
+    async watchSubscriptionChanges(uid: string | null) {
+      if (!uid || !this.user.loggedIn) return;
+      onCurrentUserSubscriptionUpdate(payments, (snapshot) => {
+        for (const change of snapshot.changes) {
+          console.log("watch subscription change", change);
+          if (change.type === "added") {
+            console.log(
+              `New subscription added with ID: ${change.subscription.id}`
+            );
+          }
+          void this.getUserSubscriptions(uid);
+        }
+      });
+    },
+
+    setUserCredits(credits: number) {
+      if (!this.user.data) return;
+      this.user.data.credits = credits;
+    },
+
+    async getUserCredits(uid: string | null) {
+      if (!uid || !this.user.loggedIn) return;
+      console.log("getUserCredits");
+
+      try {
+        const personDoc = await db.collection("people").doc(uid).get();
+        const data = personDoc.data();
+
+        if (!this.user.data) return;
+
+        this.user.data.credits = data?.credits ?? 300; // Default to free tier
+        this.user.data.lastCreditReset = data?.lastCreditReset ?? null;
+        this.user.data.creditsLifetimeUsed = data?.creditsLifetimeUsed ?? 0;
+        this.user.data.creditsChecked = true;
+      } catch (error) {
+        console.error("Failed to load user credits", error);
+        if (this.user.data) {
+          this.user.data.creditsChecked = true;
+        }
+      }
+    },
+
+    watchCreditChanges(uid: string | null) {
+      if (!uid || !this.user.loggedIn) return;
+
+      db.collection("people")
+        .doc(uid)
+        .onSnapshot((doc) => {
+          const data = doc.data();
+          if (!this.user.data) return;
+
+          this.user.data.credits = data?.credits ?? 300;
+          this.user.data.lastCreditReset = data?.lastCreditReset ?? null;
+          this.user.data.creditsLifetimeUsed = data?.creditsLifetimeUsed ?? 0;
+          console.log("Credit balance updated:", this.user.data.credits);
+        });
+    },
+
     setUser(user: Record<string, any>) {
       if (user) {
         this.SET_USER({
@@ -168,6 +291,14 @@ export default defineStore({
             email: user.email,
             verified: user.emailVerified,
             id: user.uid,
+            isCustomer: false,
+            hasActiveSubscription: false,
+            activeSubscription: null as Record<string, any> | null,
+            subscriptionChecked: false,
+            credits: null as number | null,
+            lastCreditReset: null as any,
+            creditsChecked: false,
+            creditsLifetimeUsed: 0,
           },
         });
       } else {

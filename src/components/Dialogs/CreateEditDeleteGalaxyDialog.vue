@@ -666,6 +666,7 @@ import clone from "lodash/clone";
 import { mapActions, mapState } from "pinia";
 import PublishGalaxy from "@/components/GalaxyView/PublishGalaxy.vue";
 import CreateAccountDialog from "@/components/Dialogs/CreateAccountDialog.vue";
+import { guardCreateGalaxyOrPaywall } from "@/utils/paywallGuard";
 
 export default {
   name: "CreateEditDeleteGalaxyDialog",
@@ -1530,7 +1531,13 @@ export default {
       this.uploadedImage = {};
       this.authorImage = {};
     },
-    handleCreateButtonClick() {
+    async handleCreateButtonClick() {
+      const allowed = await guardCreateGalaxyOrPaywall({
+        maxFree: 3,
+        message: "Free plan includes 3 galaxies. Upgrade to create more.",
+      });
+      if (!allowed) return;
+
       // Toggle dialog state
       this.dialog = !this.dialog;
 

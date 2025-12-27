@@ -30,4 +30,4 @@ dist-ssr
 *.sw?
 
 docs
-docs/**
+docs/**functions/.env

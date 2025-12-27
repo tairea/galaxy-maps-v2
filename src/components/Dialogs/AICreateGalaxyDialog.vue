@@ -50,10 +50,7 @@
 
         <p
           class="loading-message overline"
-          :class="{
-            'baseAccent--text': isSavingToDB,
-            'streaming-text': streamingText,
-          }"
+          :class="{ 'baseAccent--text': isSavingToDB, 'streaming-text': streamingText }"
         >
           {{ streamingText || currentLoadingMessage }}
         </p>
@@ -103,7 +100,7 @@
         </div>
 
         <!-- TOKEN USAGE -->
-        <p class="token-usage overline mt-2">
+        <!-- <p class="token-usage overline mt-2">
           Total AI Tokens:
           {{
             aiGeneratedGalaxyMap.tokens
@@ -124,7 +121,7 @@
               ? aiGeneratedGalaxyMap.tokens.totalOutputTokens.toLocaleString()
               : "0"
           }}
-        </p>
+        </p> -->
         <!-- <p class="token-breakdown overline mt-2">
           Est. cost: ${{
             aiGeneratedGalaxyMap.tokens
@@ -285,6 +282,14 @@
                       {{ attachedFileError }}
                     </div>
                   </div>
+
+                  <!-- AI Credit Balance Display -->
+                  <v-alert dense text :color="creditColor" icon="mdi-information" class="mb-4 mt-4">
+                    <span class="text-caption">
+                      You have <strong>{{ userCredits }} credits</strong> remaining
+                      <span class="text-caption grey--text"> (1 credit = 100 tokens)</span>
+                    </span>
+                  </v-alert>
 
                   <div
                     class="action-buttons mt-4"
@@ -450,6 +455,7 @@ import {
 } from "@mdi/js";
 import { mapState, mapActions } from "pinia";
 import useRootStore from "@/store/index";
+import { guardAIActionOrPaywall } from "@/utils/creditGuard";
 import {
   generateGalaxyMap,
   generateGalaxyMapWithClarification,
@@ -475,13 +481,7 @@ export default {
     LayoutSelectionDialog,
     // CreateGalaxyOptionsDialog,
   },
-  props: {
-    showFirstDialog: {
-      type: Boolean,
-      required: true,
-      default: false,
-    },
-  },
+  props: { showFirstDialog: { type: Boolean, required: true, default: false } },
   data: () => ({
     valid: false,
     description: "",
@@ -492,9 +492,7 @@ export default {
     mdiArrowLeft,
     mdiFamilyTree,
     mdiPaperclip,
-    rules: {
-      required: (v) => !!v || "This field is required",
-    },
+    rules: { required: (v) => !!v || "This field is required" },
     loading: false,
     loadingMessages: [
       "Exploring the cosmos for knowledge...",
@@ -551,9 +549,7 @@ export default {
     aiGatheringContextAnswers: [],
     previousResponseId: "",
     stepper: 1,
-    aiGeneratedGalaxyMap: {
-      stars: [],
-    },
+    aiGeneratedGalaxyMap: { stars: [] },
     transformedStarDetails: [],
     expandedNodes: [],
     // File attachment state (multi-file)
@@ -561,7 +557,7 @@ export default {
     attachedFileError: "",
   }),
   computed: {
-    ...mapState(useRootStore, ["person"]),
+    ...mapState(useRootStore, ["person", "user"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -570,6 +566,16 @@ export default {
     },
     prefixedAnswers() {
       return this.aiGatheringContextAnswers.map((answer, index) => `${index + 1}) ${answer}`);
+    },
+    userCredits() {
+      if (!this.user?.data?.creditsChecked) return "...";
+      return this.user?.data?.credits ?? 0;
+    },
+    creditColor() {
+      if (this.userCredits === "...") return "grey";
+      if (this.userCredits <= 0) return "error";
+      if (this.userCredits < 50) return "warning";
+      return "info";
     },
   },
   watch: {
@@ -622,7 +628,13 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["setCurrentCourseId", "setSnackbar", "setAiGalaxyEditData"]),
+    ...mapActions(useRootStore, [
+      "setCurrentCourseId",
+      "setSnackbar",
+      "setAiGalaxyEditData",
+      "setUserCredits",
+      "setPaywall",
+    ]),
     // File helpers
     triggerFilePicker() {
       this.attachedFileError = "";
@@ -676,8 +688,8 @@ export default {
               (isPdf
                 ? "application/pdf"
                 : isJson
-                ? "application/json"
-                : "application/octet-stream");
+                  ? "application/json"
+                  : "application/octet-stream");
             resolve({ name: file.name, mimeType: derivedMime, base64 });
           };
           reader.onerror = () => reject(new Error("read_fail"));
@@ -709,8 +721,8 @@ export default {
                   (isPdf
                     ? "application/pdf"
                     : isJson
-                    ? "application/json"
-                    : "application/octet-stream");
+                      ? "application/json"
+                      : "application/octet-stream");
                 resolve({ name: file.name, mimeType: derivedMime, storagePath: path });
               })
               .catch(() => reject(new Error("upload_fail")));
@@ -890,6 +902,10 @@ export default {
         return;
       }
 
+      // Check credits before proceeding
+      const allowed = await guardAIActionOrPaywall();
+      if (!allowed) return;
+
       // Start timing
       const startTime = Date.now();
       console.log("🚀 Starting Galaxy creation process...");
@@ -957,6 +973,19 @@ export default {
           this.aiGeneratedGalaxyMap = parsedResponse;
           this.aiGeneratedGalaxyMap.tokens = this.accumulateTokens(aiResponse.tokenUsage);
 
+          // Update credits from backend response
+          if (aiResponse.newCreditBalance !== undefined) {
+            this.setUserCredits(aiResponse.newCreditBalance);
+
+            // If depleted after call, show paywall
+            if (aiResponse.newCreditBalance <= 0) {
+              this.setPaywall({
+                show: true,
+                text: "You've used all your AI credits. Upgrade to premium for 10,000 monthly credits or wait for your daily reset.",
+              });
+            }
+          }
+
           // Immediately generate the patch image (separate lightweight call)
           try {
             const img = await generateGalaxyImage(
@@ -979,11 +1008,7 @@ export default {
             }),
           );
 
-          this.aiGeneratedGalaxyMap.history = [
-            {
-              galaxyMapData: galaxyMapCopy,
-            },
-          ];
+          this.aiGeneratedGalaxyMap.history = [{ galaxyMapData: galaxyMapCopy }];
 
           // Check the selected flow to determine next step
           if (this.selectedFlow === "human-help") {
@@ -1059,6 +1084,10 @@ export default {
       console.log("secondStep");
       console.log("question answers:", this.prefixedAnswers.join("\n"));
 
+      // Check credits before proceeding
+      const allowed = await guardAIActionOrPaywall();
+      if (!allowed) return;
+
       // Start timing - moved to beginning to ensure it's always defined
       const startTime = Date.now();
       console.log("🚀 Starting Galaxy creation process...");
@@ -1114,6 +1143,19 @@ export default {
           this.aiGeneratedGalaxyMap = parsedResponse;
           this.aiGeneratedGalaxyMap.tokens = this.accumulateTokens(aiSecondResponse.tokenUsage);
 
+          // Update credits from backend response
+          if (aiSecondResponse.newCreditBalance !== undefined) {
+            this.setUserCredits(aiSecondResponse.newCreditBalance);
+
+            // If depleted after call, show paywall
+            if (aiSecondResponse.newCreditBalance <= 0) {
+              this.setPaywall({
+                show: true,
+                text: "You've used all your AI credits. Upgrade to premium for 10,000 monthly credits or wait for your daily reset.",
+              });
+            }
+          }
+
           // Immediately generate the patch image (separate lightweight call)
           try {
             const img = await generateGalaxyImage(
@@ -1136,11 +1178,7 @@ export default {
             }),
           );
 
-          this.aiGeneratedGalaxyMap.history = [
-            {
-              galaxyMapData: galaxyMapCopy,
-            },
-          ];
+          this.aiGeneratedGalaxyMap.history = [{ galaxyMapData: galaxyMapCopy }];
 
           // Check the selected flow to determine next step
           if (this.selectedFlow === "human-help") {
@@ -1349,10 +1387,10 @@ export default {
               (typeof planet.missionInstructions === "string"
                 ? planet.missionInstructions
                 : this.isStructuredMissionInstructions(planet.missionInstructions)
-                ? this.formatMissionInstructionsToHtml(planet.missionInstructions)
-                : typeof planet.instructions === "string"
-                ? planet.instructions
-                : "");
+                  ? this.formatMissionInstructionsToHtml(planet.missionInstructions)
+                  : typeof planet.instructions === "string"
+                    ? planet.instructions
+                    : "");
 
             // Prefer unified missionInstructions if present
             if (missionInstructionsHtmlString) {

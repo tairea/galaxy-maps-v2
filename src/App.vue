@@ -3,6 +3,7 @@
     <v-main>
       <router-view />
       <SnackBar />
+      <PaywallSnackbar />
       <VersionStatus v-if="shouldShowVersionStatus" />
     </v-main>
   </v-app>
@@ -11,14 +12,12 @@
 <script lang="ts">
 import Vue from "vue";
 import SnackBar from "@/components/Reused/SnackBar.vue";
+import PaywallSnackbar from "@/components/Reused/PaywallSnackbar.vue";
 import VersionStatus from "@/components/GalaxyList/VersionStatus.vue";
 
 export default Vue.extend({
   name: "App",
-  components: {
-    SnackBar,
-    VersionStatus,
-  },
+  components: { SnackBar, PaywallSnackbar, VersionStatus },
   computed: {
     shouldShowVersionStatus(): boolean {
       const routeName = (this as any).$route.name;

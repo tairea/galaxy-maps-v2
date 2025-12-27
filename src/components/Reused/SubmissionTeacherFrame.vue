@@ -1,9 +1,12 @@
 <template>
-  <div :id="studentOverview ? 'studentOverview' : 'submission-panel'">
+  <div
+    :id="studentOverview ? 'studentOverview' : 'submission-panel'"
+    :class="{ 'premium-restricted': isPremiumRestricted }"
+  >
     <h2 v-if="!studentOverview" class="submission-label">
       {{ formatLabel }}
     </h2>
-    <div v-if="submissions.length > 0">
+    <div v-if="submissions.length > 0" :class="{ 'premium-content-blurred': isPremiumRestricted }">
       <div v-if="dense">
         <SubmissionTeacherPanelDense
           v-for="submission in submissions"
@@ -27,14 +30,32 @@
         />
       </div>
     </div>
-    <div v-if="!loading && submissions.length == 0">
+    <div
+      v-if="!loading && submissions.length == 0"
+      :class="{ 'premium-content-blurred': isPremiumRestricted }"
+    >
       <p class="overline pt-4 text-center" style="color: var(--v-cohortAccent-base)">
         NO {{ completedSubmissionsOnly ? "COMPLETED SUBMISSIONS" : "SUBMISSIONS TO REVIEW" }}
       </p>
     </div>
     <!-- loading spinner -->
-    <div class="d-flex justify-center align-center mt-4">
+    <div
+      class="d-flex justify-center align-center mt-4"
+      :class="{ 'premium-content-blurred': isPremiumRestricted }"
+    >
       <v-btn v-if="loading" :loading="loading" icon color="cohortAccent"></v-btn>
+    </div>
+
+    <!-- Premium overlay -->
+    <div v-if="isPremiumRestricted && !paywall.show" class="premium-overlay">
+      <div class="premium-message overline">
+        <p class="mb-2">Premium feature</p>
+        <p class="mb-0">
+          Please
+          <a href="#" @click.prevent="handleUpgradeClick" class="upgrade-link">upgrade</a>
+          to access this feature
+        </p>
+      </div>
     </div>
   </div>
 </template>
@@ -58,11 +79,9 @@ export default {
     "showCourseImage",
     "dense",
     "yours",
+    "isPremiumRestricted",
   ],
-  components: {
-    SubmissionTeacherPanel,
-    SubmissionTeacherPanelDense,
-  },
+  components: { SubmissionTeacherPanel, SubmissionTeacherPanelDense },
   watch: {
     courseSubmissions(newVal, oldVal) {
       // console.log("courseSubmissions changed", newVal);
@@ -70,10 +89,7 @@ export default {
     },
   },
   data() {
-    return {
-      allSubmissions: [],
-      unsubscribes: [],
-    };
+    return { allSubmissions: [], unsubscribes: [] };
   },
   async mounted() {
     if (this.courses) {
@@ -92,7 +108,7 @@ export default {
     }
   },
   computed: {
-    ...mapState(useRootStore, ["courseSubmissions", "person", "currentTopicId"]),
+    ...mapState(useRootStore, ["courseSubmissions", "person", "currentTopicId", "paywall"]),
     isCohortView() {
       return this.$route.name === "CohortView";
     },
@@ -160,11 +176,7 @@ export default {
       // ================== Sort Submissions ==================
       filteredSubmissions = filteredSubmissions.slice().sort((a, b) => {
         // Define the order of taskSubmissionStatus
-        const statusOrder = {
-          inreview: 1,
-          declined: 2,
-          completed: 3,
-        };
+        const statusOrder = { inreview: 1, declined: 2, completed: 3 };
 
         // First, compare by taskSubmissionStatus using the defined order
         if (statusOrder[a.taskSubmissionStatus] < statusOrder[b.taskSubmissionStatus]) return -1;
@@ -190,7 +202,17 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["getAllSubmittedWorkByCourseId", "resetTeachersSubmissions"]),
+    ...mapActions(useRootStore, [
+      "getAllSubmittedWorkByCourseId",
+      "resetTeachersSubmissions",
+      "setPaywall",
+    ]),
+    handleUpgradeClick() {
+      this.setPaywall({
+        show: true,
+        text: "A Galaxy Maps subscription is required to see Submissions.",
+      });
+    },
   },
 };
 </script>
@@ -205,6 +227,11 @@ export default {
   overflow-y: auto;
   max-height: 40%;
   transition: all 0.2s ease-in-out;
+
+  /* Disable scroll when premium restricted */
+  .premium-restricted & {
+    overflow: hidden;
+  }
 }
 
 .studentOverview {
@@ -227,6 +254,61 @@ export default {
   color: var(--v-background-base);
   padding: 0px 20px 0px 5px;
   clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
+  z-index: 151; /* Above overlay */
+}
+
+/* Blur only content, keep border and label visible */
+.premium-content-blurred {
+  filter: blur(4px);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Premium overlay */
+.premium-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 150;
+  pointer-events: auto;
+}
+
+.premium-message {
+  background-color: var(--v-background-base);
+  padding: 15px 10px;
+  text-align: center;
+  color: var(--v-missionAccent-base);
+  text-transform: uppercase;
+  font-size: 0.65rem !important; /* Override overline font-size */
+  line-height: 1.4 !important; /* Override overline line-height for better readability */
+  letter-spacing: 1px;
+
+  p {
+    margin: 0;
+    font-size: inherit !important;
+    line-height: inherit !important;
+  }
+
+  .upgrade-link {
+    color: var(--v-missionAccent-base);
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: inherit !important;
+    line-height: inherit !important;
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
 }
 
 /* Handle */

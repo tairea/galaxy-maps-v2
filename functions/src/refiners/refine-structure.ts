@@ -1,7 +1,7 @@
 import { runWith, logger } from "firebase-functions/v1";
 import { HttpsError } from "firebase-functions/v1/https";
 // import { zodTextFormat } from "openai/helpers/zod";
-import openai from "../openaiClient.js";
+import { OPENAI_API_KEY, getOpenAIClient } from "../openaiClient.js";
 import { STRUCTURE_SYSTEM_PROMPT } from "./structure-constants.js";
 import {
   StructureTargetsSchema,
@@ -10,6 +10,7 @@ import {
   StructureRefineResponseSchema,
 } from "../schemas.js";
 import { createModelTokenUsage, createCombinedTokenUsage, type OpenAIModel } from "../lib/utils.js";
+import { deductCredits } from "../creditManagement.js";
 
 const CLARIFICATION_MODEL: OpenAIModel = "gpt-5-mini";
 const INITIAL_MODEL: OpenAIModel = "gpt-5";
@@ -148,10 +149,7 @@ const STRUCTURE_REFINE_TEXT_FORMAT = {
                 position: {
                   type: "object",
                   additionalProperties: false,
-                  properties: {
-                    beforeStarId: { type: "string" },
-                    afterStarId: { type: "string" },
-                  },
+                  properties: { beforeStarId: { type: "string" }, afterStarId: { type: "string" } },
                   required: ["beforeStarId", "afterStarId"],
                 },
               },
@@ -456,10 +454,7 @@ function buildStructureRefinePayload(data: Record<string, unknown>) {
 function formatStructureResponse(
   aiResponse: any,
   model: OpenAIModel,
-): {
-  result: StructureRefineResponse;
-  usage: ReturnType<typeof createCombinedTokenUsage>;
-} {
+): { result: StructureRefineResponse; usage: ReturnType<typeof createCombinedTokenUsage> } {
   const parsedRaw = aiResponse.output_parsed as unknown;
   let parsed: StructureRefineResponse;
   if (parsedRaw == null) {
@@ -487,8 +482,11 @@ function formatStructureResponse(
 export const refineStructureHttpsEndpoint = runWith({
   timeoutSeconds: 540,
   memory: "1GB",
-}).https.onCall(async (data: Record<string, unknown>) => {
+  secrets: [OPENAI_API_KEY],
+}).https.onCall(async (data: Record<string, unknown>, context) => {
   try {
+    const openai = getOpenAIClient();
+
     logger.info("Starting refineStructure function", {
       hasClarificationAnswers: !!data?.clarificationAnswers,
       previousResponseId: data?.previousResponseId,
@@ -567,6 +565,22 @@ export const refineStructureHttpsEndpoint = runWith({
 
     const { result, usage } = formatStructureResponse(aiResponse, INITIAL_MODEL);
 
+    // Deduct credits from user's balance
+    let creditsDeducted = 0;
+    let newCreditBalance: number | null = null;
+
+    if (context.auth?.uid && usage.totalTokens) {
+      try {
+        const creditResult = await deductCredits(context.auth.uid, usage.totalTokens);
+        creditsDeducted = creditResult.creditsDeducted;
+        newCreditBalance = creditResult.newBalance;
+      } catch (error) {
+        logger.error("Error deducting credits, but allowing AI response to succeed:", error);
+      }
+    } else {
+      logger.warn("No authenticated user ID found for credit deduction");
+    }
+
     const responseForClient = {
       success: true,
       status: result.status,
@@ -576,6 +590,8 @@ export const refineStructureHttpsEndpoint = runWith({
       ops: null as unknown[] | null,
       tokenUsage: usage,
       responseId: aiResponse.id,
+      creditsDeducted,
+      newCreditBalance,
     };
 
     if (result.status === "clarification_needed") {

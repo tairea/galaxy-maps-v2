@@ -25,6 +25,7 @@
   "dependencies": {
     "@cprecioso/canvas-text-layout": "^2.0.0",
     "@egjs/hammerjs": "^2.0.17",
+    "@invertase/firestore-stripe-payments": "^0.0.8",
     "@openai/agents": "^0.1.0",
     "@openai/agents-realtime": "^0.1.0",
     "@posva/vuefire-core": "^2.3.4",

@@ -11,8 +11,10 @@
               outlined
               color="baseAccent"
               v-bind="attrs"
-              v-on="on"
+              v-on="activatorListeners(on)"
               class="assignButton d-inline-flex text-truncate"
+              :loading="isSubscriptionCheckPending"
+              :disabled="loading || isSubscriptionCheckPending"
             >
               <v-icon small> {{ mdiAccountMultiplePlus }} </v-icon>
             </v-btn>
@@ -22,8 +24,10 @@
               outlined
               color="baseAccent"
               v-bind="attrs"
-              v-on="on"
+              v-on="activatorListeners(on)"
               class="assignButton d-inline-flex text-truncate"
+              :loading="isSubscriptionCheckPending"
+              :disabled="loading || isSubscriptionCheckPending"
             >
               <v-icon left> {{ mdiChartTimelineVariantShimmer }} </v-icon>
               ASSIGN GALAXY
@@ -328,10 +332,7 @@ export default {
     loading: false,
     statusMessage: "", // Add status message for tracking assignment progress
 
-    profile: {
-      id: "",
-      email: "",
-    },
+    profile: { id: "", email: "" },
     cohort: null,
     course: null,
     courses: [],
@@ -354,7 +355,27 @@ export default {
     },
   },
   computed: {
-    ...mapState(useRootStore, ["currentCourseId", "currentCohortId", "person"]),
+    ...mapState(useRootStore, ["currentCourseId", "currentCohortId", "person", "user"]),
+    subscriptionChecked() {
+      return Boolean(this.user?.data?.subscriptionChecked);
+    },
+    isStripeCustomer() {
+      return Boolean(this.user?.data?.isCustomer);
+    },
+    hasActiveSubscription() {
+      return Boolean(this.user?.data?.hasActiveSubscription);
+    },
+    requiresSubscription() {
+      return this.assignCohorts || this.assignCourses;
+    },
+    isSubscriptionCheckPending() {
+      return this.requiresSubscription && !this.subscriptionChecked;
+    },
+    canOpenPaidDialog() {
+      if (!this.requiresSubscription) return true;
+      if (!this.subscriptionChecked) return false;
+      return this.isStripeCustomer && this.hasActiveSubscription;
+    },
     cohortOptions() {
       // teacherCohorts && the courseCohort
       if (this.currentCourse && this.currentCourse.cohort && this.teachersCohorts) {
@@ -369,15 +390,63 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["setSnackbar"]),
+    ...mapActions(useRootStore, ["setSnackbar", "setPaywall"]),
+    activatorListeners(on = {}) {
+      return {
+        ...on,
+        click: (event) => this.handleActivatorEvent(event, on?.click),
+        keydown: (event) => this.handleActivatorEvent(event, on?.keydown),
+      };
+    },
+    handleActivatorEvent(event, originalHandler) {
+      if (this.canOpenPaidDialog) {
+        if (typeof originalHandler === "function") {
+          originalHandler(event);
+        } else {
+          this.dialog = true;
+        }
+        return;
+      }
+
+      if (event?.preventDefault) {
+        event.preventDefault();
+      }
+      if (event?.stopPropagation) {
+        event.stopPropagation();
+      }
+
+      this.handleSubscriptionBlocked();
+    },
+    handleSubscriptionBlocked() {
+      if (this.isSubscriptionCheckPending) {
+        this.setSnackbar({
+          show: true,
+          text: "Hang tight — checking your subscription status.",
+          color: "baseAccent",
+        });
+        return;
+      }
+
+      if (!this.isStripeCustomer) {
+        this.setPaywall({
+          show: true,
+          text: "A Galaxy Maps subscription is required to assign to Squads.",
+        });
+        return;
+      }
+
+      if (!this.hasActiveSubscription) {
+        this.setPaywall({
+          show: true,
+          text: "Your subscription is inactive. Update billing to continue.",
+        });
+      }
+    },
     close() {
       this.dialog = false;
       this.loading = false;
       this.statusMessage = "";
-      this.profile = {
-        id: "",
-        email: "",
-      };
+      this.profile = { id: "", email: "" };
       // this.cohort = null;
       this.course = null;
     },
@@ -386,11 +455,7 @@ export default {
 
       // Validate that currentCourse exists
       if (!this.currentCourse) {
-        this.setSnackbar({
-          show: true,
-          text: "No Galaxy Map selected",
-          color: "pink",
-        });
+        this.setSnackbar({ show: true, text: "No Galaxy Map selected", color: "pink" });
         this.loading = false;
         return;
       }
@@ -453,11 +518,7 @@ export default {
       } catch (error) {
         console.error("Error writing document: ", error);
         // snackbar message
-        this.setSnackbar({
-          show: true,
-          text: getFriendlyErrorMessage(error.code),
-          color: "pink",
-        });
+        this.setSnackbar({ show: true, text: getFriendlyErrorMessage(error.code), color: "pink" });
         this.close();
       }
     },
@@ -512,11 +573,7 @@ export default {
         this.close();
       } catch (error) {
         console.error("Error writing document: ", error);
-        this.setSnackbar({
-          show: true,
-          text: getFriendlyErrorMessage(error.code),
-          color: "pink",
-        });
+        this.setSnackbar({ show: true, text: getFriendlyErrorMessage(error.code), color: "pink" });
       } finally {
         this.loading = false;
         this.statusMessage = "";

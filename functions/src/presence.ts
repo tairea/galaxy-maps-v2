@@ -6,6 +6,7 @@ import {
   studentOnlineXAPIStatement,
   studentOfflineXAPIStatement,
 } from "./veracityLRS.js";
+import { checkAndResetCredits } from "./creditManagement.js";
 
 //  ============ PRESENCE SYSTEM SYNC ============
 // Watch realtime DB for changes and trigger function on change
@@ -46,6 +47,14 @@ export const onUserStatusChangedOnUpdateTrigger = runWith({ secrets: [VERACITY_L
         lastName: person.lastName as string,
         email: person.email as string,
       });
+
+      // Check and reset credits if needed when user comes online
+      try {
+        await checkAndResetCredits(context.params.uid);
+      } catch (error) {
+        log("Error checking/resetting credits:", error);
+        // Don't fail the presence update if credit reset fails
+      }
     }
     if (eventStatus.state === "offline") {
       studentOfflineXAPIStatement({
