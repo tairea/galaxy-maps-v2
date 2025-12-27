@@ -286,6 +286,20 @@
                     </div>
                   </div>
 
+                  <!-- AI Credit Balance Display -->
+                  <v-alert
+                    dense
+                    text
+                    :color="creditColor"
+                    icon="mdi-information"
+                    class="mb-4 mt-4"
+                  >
+                    <span class="text-caption">
+                      You have <strong>{{ userCredits }} credits</strong> remaining
+                      <span class="text-caption grey--text"> (1 credit = 100 tokens)</span>
+                    </span>
+                  </v-alert>
+
                   <div
                     class="action-buttons mt-4"
                     :class="{ 'mobile-layout': $vuetify.breakpoint.smAndDown }"
@@ -450,6 +464,7 @@ import {
 } from "@mdi/js";
 import { mapState, mapActions } from "pinia";
 import useRootStore from "@/store/index";
+import { guardAIActionOrPaywall } from "@/utils/creditGuard";
 import {
   generateGalaxyMap,
   generateGalaxyMapWithClarification,
@@ -561,7 +576,7 @@ export default {
     attachedFileError: "",
   }),
   computed: {
-    ...mapState(useRootStore, ["person"]),
+    ...mapState(useRootStore, ["person", "user"]),
     dark() {
       return this.$vuetify.theme.isDark;
     },
@@ -570,6 +585,16 @@ export default {
     },
     prefixedAnswers() {
       return this.aiGatheringContextAnswers.map((answer, index) => `${index + 1}) ${answer}`);
+    },
+    userCredits() {
+      if (!this.user?.data?.creditsChecked) return "...";
+      return this.user?.data?.credits ?? 0;
+    },
+    creditColor() {
+      if (this.userCredits === "...") return "grey";
+      if (this.userCredits <= 0) return "error";
+      if (this.userCredits < 50) return "warning";
+      return "info";
     },
   },
   watch: {
@@ -622,7 +647,13 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useRootStore, ["setCurrentCourseId", "setSnackbar", "setAiGalaxyEditData"]),
+    ...mapActions(useRootStore, [
+      "setCurrentCourseId",
+      "setSnackbar",
+      "setAiGalaxyEditData",
+      "setUserCredits",
+      "setPaywall",
+    ]),
     // File helpers
     triggerFilePicker() {
       this.attachedFileError = "";
@@ -890,6 +921,10 @@ export default {
         return;
       }
 
+      // Check credits before proceeding
+      const allowed = await guardAIActionOrPaywall();
+      if (!allowed) return;
+
       // Start timing
       const startTime = Date.now();
       console.log("🚀 Starting Galaxy creation process...");
@@ -956,6 +991,19 @@ export default {
           // add token data to the galaxy map
           this.aiGeneratedGalaxyMap = parsedResponse;
           this.aiGeneratedGalaxyMap.tokens = this.accumulateTokens(aiResponse.tokenUsage);
+
+          // Update credits from backend response
+          if (aiResponse.newCreditBalance !== undefined) {
+            this.setUserCredits(aiResponse.newCreditBalance);
+
+            // If depleted after call, show paywall
+            if (aiResponse.newCreditBalance <= 0) {
+              this.setPaywall({
+                show: true,
+                text: "You've used all your AI credits. Upgrade to premium for 10,000 monthly credits or wait for your daily reset.",
+              });
+            }
+          }
 
           // Immediately generate the patch image (separate lightweight call)
           try {
@@ -1059,6 +1107,10 @@ export default {
       console.log("secondStep");
       console.log("question answers:", this.prefixedAnswers.join("\n"));
 
+      // Check credits before proceeding
+      const allowed = await guardAIActionOrPaywall();
+      if (!allowed) return;
+
       // Start timing - moved to beginning to ensure it's always defined
       const startTime = Date.now();
       console.log("🚀 Starting Galaxy creation process...");
@@ -1113,6 +1165,19 @@ export default {
           // add token data to the galaxy map
           this.aiGeneratedGalaxyMap = parsedResponse;
           this.aiGeneratedGalaxyMap.tokens = this.accumulateTokens(aiSecondResponse.tokenUsage);
+
+          // Update credits from backend response
+          if (aiSecondResponse.newCreditBalance !== undefined) {
+            this.setUserCredits(aiSecondResponse.newCreditBalance);
+
+            // If depleted after call, show paywall
+            if (aiSecondResponse.newCreditBalance <= 0) {
+              this.setPaywall({
+                show: true,
+                text: "You've used all your AI credits. Upgrade to premium for 10,000 monthly credits or wait for your daily reset.",
+              });
+            }
+          }
 
           // Immediately generate the patch image (separate lightweight call)
           try {

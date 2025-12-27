@@ -22,12 +22,18 @@ service cloud.firestore {
     
     // People collection - main user profiles
     match /people/{userId} {
-      // Users can always read/write their own profile (including initial creation)
-      allow read, write: if isOwnProfile(userId);
-      
+      // Users can read their own profile
+      allow read: if isOwnProfile(userId);
+
+      // Users can write their own profile, but NOT credit fields
+      // Only Cloud Functions can modify credits, lastCreditReset, and creditsLifetimeUsed
+      allow write: if isOwnProfile(userId) &&
+        !request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(['credits', 'lastCreditReset', 'creditsLifetimeUsed']);
+
       // Admins can manage all users
       allow read, write: if isAdmin();
-      
+
       // Any authenticated user can read any profile (but not write)
       allow read, create: if isAuthenticated();
     }

@@ -724,6 +724,7 @@ import MissionOverviewEdit from "@/components/Reused/MissionOverviewEdit.vue";
 import useRootStore from "@/store/index";
 import { mapActions, mapState } from "pinia";
 import Network from "@/vue2vis/Network.vue";
+import { guardAIActionOrPaywall } from "@/utils/creditGuard";
 import "vis-network/styles/vis-network.css";
 import { Planet } from "@/lib/planet";
 import { zodTextFormat } from "openai/helpers/zod";
@@ -1194,6 +1195,7 @@ export default {
     ...mapState(useRootStore, {
       aiGalaxyEditData: "aiGalaxyEditData",
       storeBoundCourse: "boundCourse",
+      user: "user",
     }),
     boundCourse() {
       // When routed with an id, prefer the store-bound course (same behavior as GalaxyView)
@@ -1323,6 +1325,16 @@ export default {
     },
     isMobile() {
       return this.$vuetify.breakpoint.smAndDown;
+    },
+    userCredits() {
+      if (!this.user?.data?.creditsChecked) return "...";
+      return this.user?.data?.credits ?? 0;
+    },
+    creditColor() {
+      if (this.userCredits === "...") return "grey";
+      if (this.userCredits <= 0) return "error";
+      if (this.userCredits < 50) return "warning";
+      return "info";
     },
   },
   methods: {
@@ -1473,6 +1485,8 @@ export default {
       "setSnackbar",
       "setCurrentCourseId",
       "bindCourseByCourseId",
+      "setUserCredits",
+      "setPaywall",
     ]),
 
     /**
@@ -2855,6 +2869,10 @@ export default {
         return;
       }
 
+      // Check credits before proceeding
+      const allowed = await guardAIActionOrPaywall();
+      if (!allowed) return;
+
       let awaitingClarification = false;
 
       try {
@@ -2913,6 +2931,19 @@ export default {
           response.selectedTargets || context.targets,
         );
         this.trackTokenUsage(response);
+
+        // Update credits from backend response
+        if (response.newCreditBalance !== undefined) {
+          this.setUserCredits(response.newCreditBalance);
+
+          // If depleted after call, show paywall
+          if (response.newCreditBalance <= 0) {
+            this.setPaywall({
+              show: true,
+              text: "You've used all your AI credits. Upgrade to premium for 10,000 monthly credits or wait for your daily reset.",
+            });
+          }
+        }
 
         if (response.selectedTargets && !context.hasTargets) {
           this.notifyAutoSelectedTargets(response.selectedTargets);
@@ -3083,6 +3114,10 @@ export default {
     // },
 
     async generateMissionsThenSave(selectedLayout) {
+      // Check credits before proceeding
+      const allowed = await guardAIActionOrPaywall();
+      if (!allowed) return;
+
       // Calculate total missions
       this.totalMissions = 0;
       for (const star of this.aiGeneratedGalaxyMap.stars) {
@@ -3129,6 +3164,19 @@ export default {
               this.aiGeneratedGalaxyMap.tokens = this.accumulateTokens(
                 missionInstructions.tokenUsage,
               );
+            }
+
+            // Update credits from backend response
+            if (missionInstructions.newCreditBalance !== undefined) {
+              this.setUserCredits(missionInstructions.newCreditBalance);
+
+              // If depleted after call, show paywall but let remaining missions complete
+              if (missionInstructions.newCreditBalance <= 0) {
+                this.setPaywall({
+                  show: true,
+                  text: "You've used all your AI credits. Upgrade to premium for 10,000 monthly credits or wait for your daily reset.",
+                });
+              }
             }
 
             // Update the planet with mission instructions

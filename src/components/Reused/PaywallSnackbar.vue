@@ -9,14 +9,26 @@
     <div class="create-dialog" :class="{ 'mobile-dialog': isMobile }">
       <!-- HEADER -->
       <div class="dialog-header">
-        <div class="d-flex justify-space-between align-center">
-          <div class="d-flex align-center">
-            <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
-            <p class="dialog-title ma-0 overline">{{ paywall.text }}</p>
+        <div class="d-flex flex-column">
+          <div class="d-flex justify-space-between align-center">
+            <div class="d-flex align-center">
+              <v-icon left color="missionAccent">{{ mdiInformationVariant }}</v-icon>
+              <p class="dialog-title ma-0 overline">{{ paywall.text }}</p>
+            </div>
+            <v-btn icon @click="setPaywall({ show: false, text: '' })">
+              <v-icon color="missionAccent">{{ mdiClose }}</v-icon>
+            </v-btn>
           </div>
-          <v-btn icon @click="setPaywall({ show: false, text: '' })">
-            <v-icon color="missionAccent">{{ mdiClose }}</v-icon>
-          </v-btn>
+
+          <!-- Credit information -->
+          <p
+            v-if="showCreditInfo"
+            class="caption ma-0 mt-2 ml-8"
+            style="color: var(--v-missionAccent-base)"
+          >
+            Current balance: <strong>{{ userCredits }} credits</strong>
+            <span v-if="!hasActiveSubscription"> • Resets in {{ timeUntilReset }}</span>
+          </p>
         </div>
       </div>
 
@@ -67,6 +79,41 @@ export default {
     },
     stripePublishableKey(): string {
       return import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "";
+    },
+    userCredits(): number {
+      return (this.user?.data?.credits as number) ?? 0;
+    },
+    hasActiveSubscription(): boolean {
+      return Boolean(this.user?.data?.hasActiveSubscription);
+    },
+    showCreditInfo(): boolean {
+      // Show credit info if paywall triggered by credit depletion
+      return this.paywall.text?.toLowerCase().includes("credit");
+    },
+    timeUntilReset(): string {
+      const lastReset = this.user?.data?.lastCreditReset;
+      if (!lastReset) return "soon";
+
+      const resetPeriodMs = this.hasActiveSubscription
+        ? 30 * 24 * 60 * 60 * 1000 // 30 days
+        : 24 * 60 * 60 * 1000; // 24 hours
+
+      const lastResetTime =
+        typeof lastReset.toMillis === "function" ? lastReset.toMillis() : lastReset;
+      const nextReset = lastResetTime + resetPeriodMs;
+      const msUntilReset = nextReset - Date.now();
+
+      if (msUntilReset <= 0) return "on next login";
+
+      const hours = Math.floor(msUntilReset / (60 * 60 * 1000));
+      const minutes = Math.floor((msUntilReset % (60 * 60 * 1000)) / (60 * 1000));
+
+      if (hours >= 24) {
+        const days = Math.floor(hours / 24);
+        return `${days} day${days > 1 ? "s" : ""}`;
+      }
+
+      return `${hours}h ${minutes}m`;
     },
   },
   data: () => ({ loading: false, mdiClose, mdiInformationVariant, stripeScriptLoaded: false }),
