@@ -12,6 +12,7 @@ import {
   SquadReportSchema,
 } from "./schemas.js";
 import { createModelTokenUsage, createCombinedTokenUsage } from "./lib/utils.js";
+import { deductCredits } from "./creditManagement.js";
 import openai from "./openaiClient.js";
 // import { Latitude } from "@latitude-data/sdk";
 
@@ -651,7 +652,7 @@ export const generateGalaxyMapHttpsEndpoint = runWith({
 export const generateUnifiedGalaxyMapHttpsEndpoint = runWith({
   timeoutSeconds: 540, // 9 minutes timeout
   memory: "1GB",
-}).https.onCall(async (data) => {
+}).https.onCall(async (data, context) => {
   try {
     const { description, clarificationAnswers, previousResponseId, attachedFiles, generateImage } =
       data;
@@ -955,12 +956,34 @@ export const generateUnifiedGalaxyMapHttpsEndpoint = runWith({
     const modelUsage = createModelTokenUsage("gpt-5", aiResponse.usage || {});
     const combinedTokenUsage = createCombinedTokenUsage([modelUsage]);
 
-    // Return the validated response with token usage information
+    // Deduct credits from user's balance
+    let creditsDeducted = 0;
+    let newCreditBalance: number | null = null;
+
+    if (context.auth?.uid) {
+      try {
+        const creditResult = await deductCredits(
+          context.auth.uid,
+          combinedTokenUsage.totalTokens,
+        );
+        creditsDeducted = creditResult.creditsDeducted;
+        newCreditBalance = creditResult.newBalance;
+      } catch (error) {
+        logger.error("Error deducting credits, but allowing AI response to succeed:", error);
+        // Don't fail the AI response if credit deduction fails
+      }
+    } else {
+      logger.warn("No authenticated user ID found for credit deduction");
+    }
+
+    // Return the validated response with token usage and credit information
     return {
       success: true,
       galaxyMap: parsedResponse,
       tokenUsage: combinedTokenUsage,
       responseId: aiResponse.id,
+      creditsDeducted,
+      newCreditBalance,
     };
   } catch (error) {
     logger.error("Error in generateUnifiedGalaxyMap", error);
@@ -1047,7 +1070,7 @@ export const generateGalaxyImageHttpsEndpoint = runWith({
 export const generateInstructionsForMissionHttpsEndpoint = runWith({
   timeoutSeconds: 540, // 9 minutes timeout
   memory: "1GB",
-}).https.onCall(async (data) => {
+}).https.onCall(async (data, context) => {
   try {
     logger.info("Starting generateInstructionsForMission function", {
       missionContext: data.missionContext?.substring(0, 50) + "...",
@@ -1219,12 +1242,33 @@ export const generateInstructionsForMissionHttpsEndpoint = runWith({
 
     const combinedTokenUsage = createCombinedTokenUsage(modelUsages);
 
-    // Return the validated response with combined token usage information
+    // Deduct credits from user's balance
+    let creditsDeducted = 0;
+    let newCreditBalance: number | null = null;
+
+    if (context.auth?.uid) {
+      try {
+        const creditResult = await deductCredits(
+          context.auth.uid,
+          combinedTokenUsage.totalTokens,
+        );
+        creditsDeducted = creditResult.creditsDeducted;
+        newCreditBalance = creditResult.newBalance;
+      } catch (error) {
+        logger.error("Error deducting credits, but allowing AI response to succeed:", error);
+      }
+    } else {
+      logger.warn("No authenticated user ID found for credit deduction");
+    }
+
+    // Return the validated response with combined token usage and credit information
     return {
       success: true,
       missionInstructions: responseWithVideos,
       tokenUsage: combinedTokenUsage,
       responseId: aiResponse.id,
+      creditsDeducted,
+      newCreditBalance,
     };
   } catch (error) {
     logger.error("Error in generateInstructionsForMission", error);
@@ -1774,7 +1818,7 @@ export const downloadAndUploadImageHttpsEndpoint = runWith({
 export const generateSquadReportHttpsEndpoint = runWith({
   timeoutSeconds: 540, // 9 minutes timeout
   memory: "1GB",
-}).https.onCall(async (data) => {
+}).https.onCall(async (data, context) => {
   const { squadPacket, cohortId, statusReportId } = data || {};
   try {
     logger.info("Starting generateSquadReport function", {
@@ -1847,6 +1891,25 @@ export const generateSquadReportHttpsEndpoint = runWith({
     const modelUsage = createModelTokenUsage("gpt-5-mini", aiResponse.usage || {});
     const combinedTokenUsage = createCombinedTokenUsage([modelUsage]);
 
+    // Deduct credits from user's balance
+    let creditsDeducted = 0;
+    let newCreditBalance: number | null = null;
+
+    if (context.auth?.uid) {
+      try {
+        const creditResult = await deductCredits(
+          context.auth.uid,
+          combinedTokenUsage.totalTokens,
+        );
+        creditsDeducted = creditResult.creditsDeducted;
+        newCreditBalance = creditResult.newBalance;
+      } catch (error) {
+        logger.error("Error deducting credits, but allowing AI response to succeed:", error);
+      }
+    } else {
+      logger.warn("No authenticated user ID found for credit deduction");
+    }
+
     // If cohortId provided, persist status report under cohort
     if (cohortId) {
       try {
@@ -1904,6 +1967,8 @@ export const generateSquadReportHttpsEndpoint = runWith({
       report: parsedResponse,
       tokenUsage: combinedTokenUsage,
       responseId: aiResponse.id,
+      creditsDeducted,
+      newCreditBalance,
     };
   } catch (error) {
     logger.error("Error in generateSquadReport", error);

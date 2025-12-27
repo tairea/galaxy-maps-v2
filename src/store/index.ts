@@ -238,6 +238,49 @@ export default defineStore({
       });
     },
 
+    setUserCredits(credits: number) {
+      if (!this.user.data) return;
+      this.user.data.credits = credits;
+    },
+
+    async getUserCredits(uid: string | null) {
+      if (!uid || !this.user.loggedIn) return;
+      console.log("getUserCredits");
+
+      try {
+        const personDoc = await db.collection("people").doc(uid).get();
+        const data = personDoc.data();
+
+        if (!this.user.data) return;
+
+        this.user.data.credits = data?.credits ?? 300; // Default to free tier
+        this.user.data.lastCreditReset = data?.lastCreditReset ?? null;
+        this.user.data.creditsLifetimeUsed = data?.creditsLifetimeUsed ?? 0;
+        this.user.data.creditsChecked = true;
+      } catch (error) {
+        console.error("Failed to load user credits", error);
+        if (this.user.data) {
+          this.user.data.creditsChecked = true;
+        }
+      }
+    },
+
+    watchCreditChanges(uid: string | null) {
+      if (!uid || !this.user.loggedIn) return;
+
+      db.collection("people")
+        .doc(uid)
+        .onSnapshot((doc) => {
+          const data = doc.data();
+          if (!this.user.data) return;
+
+          this.user.data.credits = data?.credits ?? 300;
+          this.user.data.lastCreditReset = data?.lastCreditReset ?? null;
+          this.user.data.creditsLifetimeUsed = data?.creditsLifetimeUsed ?? 0;
+          console.log("Credit balance updated:", this.user.data.credits);
+        });
+    },
+
     setUser(user: Record<string, any>) {
       if (user) {
         this.SET_USER({
@@ -252,6 +295,10 @@ export default defineStore({
             hasActiveSubscription: false,
             activeSubscription: null as Record<string, any> | null,
             subscriptionChecked: false,
+            credits: null as number | null,
+            lastCreditReset: null as any,
+            creditsChecked: false,
+            creditsLifetimeUsed: 0,
           },
         });
       } else {

@@ -10,6 +10,7 @@ import {
   StructureRefineResponseSchema,
 } from "../schemas.js";
 import { createModelTokenUsage, createCombinedTokenUsage, type OpenAIModel } from "../lib/utils.js";
+import { deductCredits } from "../creditManagement.js";
 
 const CLARIFICATION_MODEL: OpenAIModel = "gpt-5-mini";
 const INITIAL_MODEL: OpenAIModel = "gpt-5";
@@ -487,7 +488,7 @@ function formatStructureResponse(
 export const refineStructureHttpsEndpoint = runWith({
   timeoutSeconds: 540,
   memory: "1GB",
-}).https.onCall(async (data: Record<string, unknown>) => {
+}).https.onCall(async (data: Record<string, unknown>, context) => {
   try {
     logger.info("Starting refineStructure function", {
       hasClarificationAnswers: !!data?.clarificationAnswers,
@@ -567,6 +568,22 @@ export const refineStructureHttpsEndpoint = runWith({
 
     const { result, usage } = formatStructureResponse(aiResponse, INITIAL_MODEL);
 
+    // Deduct credits from user's balance
+    let creditsDeducted = 0;
+    let newCreditBalance: number | null = null;
+
+    if (context.auth?.uid && usage.totalTokens) {
+      try {
+        const creditResult = await deductCredits(context.auth.uid, usage.totalTokens);
+        creditsDeducted = creditResult.creditsDeducted;
+        newCreditBalance = creditResult.newBalance;
+      } catch (error) {
+        logger.error("Error deducting credits, but allowing AI response to succeed:", error);
+      }
+    } else {
+      logger.warn("No authenticated user ID found for credit deduction");
+    }
+
     const responseForClient = {
       success: true,
       status: result.status,
@@ -576,6 +593,8 @@ export const refineStructureHttpsEndpoint = runWith({
       ops: null as unknown[] | null,
       tokenUsage: usage,
       responseId: aiResponse.id,
+      creditsDeducted,
+      newCreditBalance,
     };
 
     if (result.status === "clarification_needed") {

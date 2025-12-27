@@ -46,6 +46,8 @@ firebase.auth().onAuthStateChanged(async (user) => {
       rootStore.setUser(user);
       void rootStore.getUserSubscriptions(user.uid);
       void rootStore.watchSubscriptionChanges(user.uid);
+      void rootStore.getUserCredits(user.uid);
+      void rootStore.watchCreditChanges(user.uid);
       return rootStore.getPersonById(user.uid);
     });
     if (user.emailVerified) {
