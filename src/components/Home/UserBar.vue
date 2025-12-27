@@ -99,7 +99,7 @@
             </v-col>
             <v-col class="pa-0 d-flex justify-center flex-column align-center">
               <span class="ma-0 mb-1"
-                >{{ userCredits }}{{ userCredits === "..." ? "" : " credits" }}</span
+                >{{ formattedCredits }}{{ userCredits === "..." ? "" : " credits" }}</span
               >
               <!-- <p
                 class="caption ma-0"
@@ -273,6 +273,12 @@ export default {
     userCredits() {
       if (!this.user?.data?.creditsChecked) return "...";
       return this.user?.data?.credits ?? 0;
+    },
+    formattedCredits() {
+      if (this.userCredits === "...") return "...";
+      return typeof this.userCredits === "number"
+        ? this.userCredits.toLocaleString()
+        : this.userCredits;
     },
     hasActiveSubscription() {
       return Boolean(this.user?.data?.hasActiveSubscription);
