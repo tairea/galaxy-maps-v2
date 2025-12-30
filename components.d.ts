@@ -60,6 +60,7 @@ declare module 'vue' {
     LoadingSpinner: typeof import('./src/components/Reused/LoadingSpinner.vue')['default']
     Login: typeof import('./src/components/Landing/Login.vue')['default']
     LoginDialog: typeof import('./src/components/Dialogs/LoginDialog.vue')['default']
+    MarkdownGalaxyInput: typeof import('./src/components/MarkdownEditor/MarkdownGalaxyInput.vue')['default']
     MissionCompletedDialog: typeof import('./src/components/Dialogs/MissionCompletedDialog.vue')['default']
     MissionOverviewEdit: typeof import('./src/components/Reused/MissionOverviewEdit.vue')['default']
     MissionsCard: typeof import('./src/components/SolarSystemView/MissionsList/MissionsCard.vue')['default']

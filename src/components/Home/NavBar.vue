@@ -206,7 +206,8 @@ export default {
       const isSpecialRoute =
         this.$route.name === "GalaxyView" ||
         this.$route.name === "SolarSystemView" ||
-        this.$route.name === "AiGalaxyEditWithCourse";
+        this.$route.name === "AiGalaxyEditWithCourse" ||
+        this.$route.name === "MarkdownGalaxyEditor";
 
       const isAuthRoute =
         this.$route.name === "Login" ||

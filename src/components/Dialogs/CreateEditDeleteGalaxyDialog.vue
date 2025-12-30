@@ -111,6 +111,18 @@
                 </div> -->
               </div>
 
+              <!-- MARKDOWN MODE -->
+              <div
+                class="creation-mode-option cohort-border"
+                :class="{ selected: creationMode === 'markdown' }"
+                @click="openMarkdownEditor"
+              >
+                <div class="creation-mode-icon">
+                  <v-icon color="cohortAccent">{{ mdiCodeTags }}</v-icon>
+                </div>
+                <div class="creation-mode-label cohortAccent--text">Create with .MD</div>
+              </div>
+
               <!-- MANUAL MODE -->
               <div
                 class="creation-mode-option base-border"
@@ -660,6 +672,7 @@ import {
   mdiDelete,
   mdiInformationVariant,
   mdiRobotExcited,
+  mdiCodeTags,
 } from "@mdi/js";
 import firebase from "firebase/compat/app";
 import clone from "lodash/clone";
@@ -674,6 +687,7 @@ export default {
   data: () => ({
     mdiPencil,
     mdiPlus,
+    mdiCodeTags,
     mdiClose,
     mdiDelete,
     mdiCheck,
@@ -1376,6 +1390,11 @@ export default {
         this.$emit("openAiDialog"); // Emit event to open AI dialog
       });
     },
+    openMarkdownEditor() {
+      this.creationMode = "markdown";
+      this.cancel(); // Close current dialog
+      this.$router.push({ name: "MarkdownGalaxyEditor" });
+    },
     sendCollaboratorAddedEmail(email, name, courseTitle, inviterName, courseId) {
       const data = {
         collaboratorEmail: email,
@@ -1753,6 +1772,10 @@ export default {
 
 .base-border {
   border: 2px solid var(--v-baseAccent-base);
+}
+
+.cohort-border {
+  border: 2px solid var(--v-cohortAccent-base);
 }
 
 .creation-mode-icon {

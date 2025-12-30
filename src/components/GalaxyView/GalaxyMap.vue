@@ -45,7 +45,33 @@ import { mapActions, mapState } from "pinia";
 
 export default {
   name: "GalaxyMap",
-  props: ["course", "showMissions"],
+  props: {
+    course: {
+      type: Object,
+      required: true,
+    },
+    showMissions: {
+      type: Boolean,
+      default: false,
+    },
+    // Preview mode props (for markdown editor)
+    previewNodes: {
+      type: Array,
+      default: null,
+    },
+    previewEdges: {
+      type: Array,
+      default: null,
+    },
+    previewPlanets: {
+      type: Array,
+      default: null,
+    },
+    enablePhysics: {
+      type: Boolean,
+      default: false,
+    },
+  },
   components: {
     Network,
     SolarSystem,
@@ -260,6 +286,82 @@ export default {
         this.$emit("topicClicked", newTopic);
       }
     },
+    // Watch for preview nodes to enable physics (only if enablePhysics prop is true)
+    previewNodes: {
+      handler(newNodes) {
+        if (!newNodes || newNodes.length === 0) return;
+        if (!this.enablePhysics) return;
+
+        // Use nextTick to ensure network ref is available
+        this.$nextTick(() => {
+          if (!this.$refs.network || !this.$refs.network.network) {
+            console.warn("Network ref not available for physics setup");
+            return;
+          }
+
+          // Enable physics for initial layout
+          this.$refs.network.network.setOptions({
+            physics: {
+              enabled: true,
+              solver: "forceAtlas2Based",
+              forceAtlas2Based: {
+                gravitationalConstant: -50,
+                centralGravity: 0.01,
+                springLength: 100,
+                springConstant: 0.08,
+              },
+              stabilization: {
+                enabled: true,
+                iterations: 1000,
+                updateInterval: 25,
+              },
+            },
+            nodes: {
+              fixed: {
+                x: false,
+                y: false,
+              },
+            },
+          });
+
+          // Listen for stabilization (only once)
+          this.$refs.network.network.once("stabilizationIterationsDone", () => {
+            this.$emit("stabilized");
+          });
+        });
+      },
+      immediate: false,
+    },
+    // Watch enablePhysics prop to toggle physics
+    enablePhysics: {
+      handler(enabled) {
+        if (!this.$refs.network || !this.$refs.network.network) return;
+
+        this.$refs.network.network.setOptions({
+          physics: {
+            enabled: enabled,
+          },
+          nodes: {
+            fixed: {
+              x: !enabled,
+              y: !enabled,
+            },
+          },
+        });
+      },
+      immediate: false,
+    },
+    // Watch previewPlanets to update planets when they change
+    previewPlanets: {
+      handler(newPlanets) {
+        if (newPlanets && newPlanets.length > 0) {
+          this.$nextTick(() => {
+            this.drawSolarSystems();
+          });
+        }
+      },
+      immediate: false,
+    },
     currentCourseId: {
       handler(newCourseId, oldCourseId) {
         // Reset initial data loading flag when switching courses
@@ -301,6 +403,26 @@ export default {
       return this.person?.assignedCourses?.some((courseId) => courseId === this.currentCourseId);
     },
     nodesToDisplay() {
+      // Preview mode: use previewNodes prop if available
+      if (this.previewNodes && this.previewNodes.length > 0) {
+        return this.previewNodes.map((node) => {
+          const displayNode = {
+            ...node,
+            group: node.group || "default",
+            label: "", // Remove vis-network labels since we draw them manually
+            // Keep the original label for manual drawing
+            originalLabel: node.label,
+          };
+          // Remove x,y positions if physics is enabled (let physics position them organically)
+          if (this.enablePhysics) {
+            delete displayNode.x;
+            delete displayNode.y;
+          }
+          return displayNode;
+        });
+      }
+
+      // Normal mode: use store data
       if (this.currentCourseNodes.length && this.currentCourseNodes[0]?.id) {
         if (this.addingNode || this.addingEdge) {
           // grey out nodes for edit modes
@@ -315,6 +437,12 @@ export default {
       return false;
     },
     edgesToDisplay() {
+      // Preview mode: use previewEdges prop if available
+      if (this.previewEdges && this.previewEdges.length > 0) {
+        return this.previewEdges;
+      }
+
+      // Normal mode: use store data
       return this.student ? this.currentCourseEdgesWithStatusStyles : this.currentCourseEdges;
     },
     inActiveNodes() {
@@ -475,8 +603,11 @@ export default {
       ? this.$vuetify.theme.themes.dark.missionAccent
       : this.$vuetify.theme.themes.light.missionAccent;
 
-    // Only refresh data if currentCourseId is already available
-    if (this.currentCourseId) {
+    // Preview mode check - skip Firestore data loading in preview mode
+    const isPreviewMode = this.previewNodes !== null && this.previewNodes !== undefined;
+
+    // Only refresh data if currentCourseId is already available and NOT in preview mode
+    if (this.currentCourseId && !isPreviewMode) {
       this.refreshData();
     }
 
@@ -1014,7 +1145,7 @@ export default {
         const edgeId = data.edges[0];
         const selectedEdge = this.$refs.network.getEdge(edgeId);
         selectedEdge.type = "edge";
-        ((selectedEdge.DOMx = data.pointer.DOM.x), (selectedEdge.DOMy = data.pointer.DOM.y));
+        (selectedEdge.DOMx = data.pointer.DOM.x), (selectedEdge.DOMy = data.pointer.DOM.y);
         this.$emit("selectedEdge", selectedEdge);
       }
     },
@@ -1208,8 +1339,19 @@ export default {
 
       // Draw labels for each node
       for (const [nodeId, position] of Object.entries(nodePositionMap)) {
-        // Get the original node data from currentCourseNodes since we cleared the label in display nodes
-        const originalNode = this.currentCourseNodes.find((n) => n.id === nodeId);
+        // Get the original node data - check previewNodes first, then currentCourseNodes
+        let originalNode = null;
+        if (this.previewNodes && this.previewNodes.length > 0) {
+          // Preview mode: get from previewNodes
+          const previewNode = this.previewNodes.find((n) => n.id === nodeId);
+          if (previewNode) {
+            originalNode = { label: previewNode.label };
+          }
+        } else {
+          // Normal mode: get from currentCourseNodes
+          originalNode = this.currentCourseNodes.find((n) => n.id === nodeId);
+        }
+
         if (originalNode && originalNode.label) {
           // If in system preview view, only show label for the current topic
           if (this.inSystemPreviewView && nodeId !== this.currentTopicId) {
@@ -1240,6 +1382,62 @@ export default {
       ctx.restore();
     },
     async setupSolarSystemPlanets() {
+      // Preview mode: use previewPlanets if available
+      if (this.previewPlanets && this.previewPlanets.length > 0) {
+        this.loading = false;
+
+        if (!this.$refs.network) {
+          console.warn("Network ref not available yet, skipping planet setup");
+          return;
+        }
+
+        const nodeIds = this.$refs.network.nodes.map(({ id }) => id);
+        const nodePositionMap = this.$refs.network.getPositions(nodeIds);
+
+        // reset planets
+        this.planets = [];
+
+        // Group planets by topicId
+        const planetsByTopic = {};
+        this.previewPlanets.forEach((planet) => {
+          if (!planetsByTopic[planet.topicId]) {
+            planetsByTopic[planet.topicId] = [];
+          }
+          planetsByTopic[planet.topicId].push(planet);
+        });
+
+        // Create planets for each topic
+        for (const [topicId, planets] of Object.entries(planetsByTopic)) {
+          const topicPosition = nodePositionMap[topicId];
+          if (!topicPosition) {
+            console.warn(`Node position not found for topicId: ${topicId}`);
+            continue;
+          }
+
+          // Sort planets by order
+          const sortedPlanets = planets.sort((a, b) => a.order - b.order);
+
+          for (let i = 0; i < sortedPlanets.length; i++) {
+            const planet = sortedPlanets[i];
+            this.planets.push(
+              new Planet(
+                topicPosition.x,
+                topicPosition.y,
+                2, // planet size
+                this.dark ? "white" : this.$vuetify.theme.themes.light.missionAccent, // planet colour
+                6.28 / (10 * (i + 1)), // planet speed
+                20 * (i + 1), // planet orbit size
+                topicId, // for tracking parent node
+                planet.name || `Planet ${i + 1}`, // planet name
+                i, // planet index
+              ),
+            );
+          }
+        }
+        return;
+      }
+
+      // Normal mode: use Firestore tasks
       // Wait for tasks to be loaded if they're not already
       if (this.student && this.personsCourseTasks.length === 0) {
         await this.getPersonsCourseTasks();
@@ -1254,22 +1452,12 @@ export default {
         this.tasks = this.courseTasks;
       }
 
-      // no tasks means no planets
-      // if (this.tasks.length == 0) {
-      //   this.loading = false;
-      //   return;
-      // }
-
       // give tasks to GalaxyView (courseTasks)
       this.$emit("courseTasks", this.tasks);
-
-      // if our solar systems are loading, disable spinner
 
       this.loading = false;
 
       // get node ids
-      // TODO: This is triggering an error when first creating a galaxy
-      // Cannot read properties of undefined (reading 'nodes'
       if (!this.$refs.network) {
         console.warn("Network ref not available yet, skipping planet setup");
         return;
@@ -1348,6 +1536,21 @@ export default {
         delta = 1;
       } else {
         delta = (this.time.getTime() - oldTime.getTime()) / 1000;
+      }
+
+      // If physics is enabled, update planet starting positions to track moving nodes
+      if (this.enablePhysics && this.$refs.network && this.planets.length > 0) {
+        const nodeIds = this.$refs.network.nodes.map(({ id }) => id);
+        const nodePositionMap = this.$refs.network.getPositions(nodeIds);
+
+        for (const planet of this.planets) {
+          const parentPosition = nodePositionMap[planet.topicId];
+          if (parentPosition) {
+            // Update the starting position (center of orbit) to track the parent node
+            planet.startingPos.x = parentPosition.x;
+            planet.startingPos.y = parentPosition.y;
+          }
+        }
       }
 
       // update planets orbits

@@ -9,6 +9,7 @@ import CohortListV2 from "@/views/CohortListV2.vue";
 import AllStudentsView from "@/views/AllStudentsView.vue";
 import UserDashboard from "@/views/UserDashboard.vue";
 import AiGalaxyEdit from "@/views/AiGalaxyEdit.vue";
+import MarkdownGalaxyEditor from "@/views/MarkdownGalaxyEditor.vue";
 import MapDebug from "@/views/MapDebug.vue";
 import CohortViewV2 from "@/views/CohortViewV2.vue";
 // import SetInitialPassword from "@/views/SetInitialPassword.vue";
@@ -138,6 +139,14 @@ const routes = [
           authRequired: true,
         },
         props: true,
+      },
+      {
+        path: "md-editor",
+        name: "MarkdownGalaxyEditor",
+        component: MarkdownGalaxyEditor,
+        meta: {
+          authRequired: true,
+        },
       },
       {
         path: "map-debug",

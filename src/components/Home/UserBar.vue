@@ -272,7 +272,8 @@ export default {
         this.$route.name === "SolarSystemView" ||
         this.$route.name === "AiGalaxyEdit" ||
         this.$route.path.includes("ai-galaxy-edit") ||
-        this.$route.name === "AiGalaxyEditWithCourse";
+        this.$route.name === "AiGalaxyEditWithCourse" ||
+        this.$route.name === "MarkdownGalaxyEditor";
 
       if (isAuthRoute) {
         this.showMenu = false;
