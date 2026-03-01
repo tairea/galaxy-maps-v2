@@ -38,6 +38,14 @@ export const useAiConversationStore = defineStore("aiConversation", {
           expires_at: number;
         };
 
+        if (!clientSecret) {
+          throw new Error("Received empty client secret from server");
+        }
+
+        if (!expires_at) {
+          throw new Error("Received empty expiration time from server");
+        }
+
         // Cache the token with the actual expiration time from the API
         this.tokenCache = {
           token: clientSecret,
@@ -64,9 +72,30 @@ export const useAiConversationStore = defineStore("aiConversation", {
         console.log(`⏱️ Token expires in: ${minutesLeft}m ${secondsLeft}s`);
 
         return clientSecret;
-      } catch (error) {
-        console.error("💥 Failed to generate realtime token:", error);
-        throw error;
+      } catch (error: any) {
+        // Extract error message from Firebase error
+        let errorMessage = "Failed to generate realtime token";
+        if (error?.code === "functions/unauthenticated") {
+          errorMessage = "Authentication required. Please log in and try again.";
+        } else if (error?.code === "functions/failed-precondition") {
+          errorMessage = "Server configuration error. Please contact support.";
+        } else if (error?.message) {
+          errorMessage = error.message;
+        } else if (typeof error === "string") {
+          errorMessage = error;
+        }
+
+        console.error("💥 Failed to generate realtime token:", {
+          error,
+          code: error?.code,
+          message: errorMessage,
+          details: error?.details,
+        });
+
+        // Clear cache on error to force retry
+        this.clearTokenCache();
+
+        throw new Error(errorMessage);
       }
     },
 

@@ -573,8 +573,8 @@ export async function sendResponseToSubmission(
     lastName
       ? lastName.charAt(0).toUpperCase() + lastName.slice(1)
       : firstName
-      ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
-      : ""
+        ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
+        : ""
   }
 
 Captain ${teacher} has reviewed your submission for ${task}.
@@ -597,8 +597,8 @@ Galaxy Maps Team`;
     lastName
       ? lastName.charAt(0).toUpperCase() + lastName.slice(1)
       : firstName
-      ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
-      : ""
+        ? firstName.charAt(0).toUpperCase() + firstName.slice(1)
+        : ""
   }</p>
   </br> 
 <p>Captain ${teacher} has reviewed your submission for ${task}.</p>

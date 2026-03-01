@@ -28,6 +28,11 @@ if (!apiKey && !isEmulator && !isDeploymentAnalysis) {
   throw new Error("Missing OpenAI API key. Set OPENAI_API_KEY environment variable.");
 }
 
-export const openai = new OpenAI({ apiKey });
+// Use a placeholder key during deployment analysis to allow code analysis to complete
+// The actual key will be injected at runtime from Secret Manager
+const effectiveApiKey =
+  apiKey || (isDeploymentAnalysis || isEmulator ? "placeholder-key" : undefined);
+
+export const openai = new OpenAI({ apiKey: effectiveApiKey });
 
 export default openai;
