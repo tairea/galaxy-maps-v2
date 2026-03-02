@@ -17,15 +17,16 @@ import { APP_NAME, DOMAIN } from "./_constants.js";
 // firebase functions:secrets:set GMAIL_EMAIL
 // firebase functions:secrets:set GMAIL_PASSWORD
 
-const gmailEmail = process.env.GMAIL_EMAIL;
-const gmailPassword = process.env.GMAIL_PASSWORD;
-const mailTransport = createTransport({
-  service: "gmail",
-  auth: {
-    user: gmailEmail,
-    pass: gmailPassword,
-  },
-});
+/** Creates a new nodemailer transport using runtime secrets. */
+function getMailTransport() {
+  return createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.GMAIL_EMAIL,
+      pass: process.env.GMAIL_PASSWORD,
+    },
+  });
+}
 
 /**
  * Sends an invite email to a new teacher.
@@ -46,7 +47,7 @@ Please click this link to set your password and complete your account setup: ${l
 If you have any issues please contact base@${DOMAIN}
 
 Galaxy Maps Team`;
-  await mailTransport.sendMail(mailOptions);
+  await getMailTransport().sendMail(mailOptions);
   log("New teacher invite email sent to: ", email);
 }
 
@@ -75,12 +76,14 @@ Please click this link to set your password and complete your account setup: ${l
 If you have any issues please contact base@${DOMAIN}
 
 Galaxy Maps Team`;
-  await mailTransport.sendMail(mailOptions);
+  await getMailTransport().sendMail(mailOptions);
   log("New student invite email sent to: ", email);
 }
 
 // ======COHORT REGISTRATION NOTIFICATION==================
-export const sendNewCohortEmailHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
+export const sendNewCohortEmailHttpsEndpoint = runWith({
+  secrets: ["GMAIL_EMAIL", "GMAIL_PASSWORD"],
+}).https.onCall((data, _context) => {
   const { email, displayName, firstName, lastName, inviter, cohort } = data;
   return sendNewCohortEmail(email, displayName, firstName, lastName, inviter, cohort);
 });
@@ -113,12 +116,14 @@ https://${DOMAIN}/login
 If you have any issues please contact base@${DOMAIN}
   
 Galaxy Maps Team`;
-  await mailTransport.sendMail(mailOptions);
+  await getMailTransport().sendMail(mailOptions);
   log("New cohort invite email sent to: ", email);
 }
 
 // ======COURSE REGISTRATION NOTIFICATION==================
-export const sendNewGalaxyEmailHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
+export const sendNewGalaxyEmailHttpsEndpoint = runWith({
+  secrets: ["GMAIL_EMAIL", "GMAIL_PASSWORD"],
+}).https.onCall((data, _context) => {
   const { email, inviter, course } = data;
   return sendNewGalaxyEmail(email, inviter, course);
 });
@@ -143,12 +148,14 @@ https://${DOMAIN}
 If you have any issues please contact base@${DOMAIN}
   
 Galaxy Maps Team`;
-  await mailTransport.sendMail(mailOptions);
+  await getMailTransport().sendMail(mailOptions);
   log("New assignment email sent to: ", email);
 }
 
 // ======COURSE SUBMISSION NOTIFICATION==================
-export const sendNewSubmissionEmailHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
+export const sendNewSubmissionEmailHttpsEndpoint = runWith({
+  secrets: ["GMAIL_EMAIL", "GMAIL_PASSWORD"],
+}).https.onCall((data, _context) => {
   const { author, title, id } = data;
   sendNewSubmissionEmail(author, title, id);
 });
@@ -170,7 +177,7 @@ ${author} has submitted a new Galaxy Map called ${title} to be reviewed for PUBL
 Navigate to https://${DOMAIN}/galaxy/${id} from your ADMIN account to approve this map to be made public.
   
 Galaxy Maps Team`;
-  await mailTransport.sendMail(mailOptions);
+  await getMailTransport().sendMail(mailOptions);
   log("New course submission email sent to admin");
 }
 
@@ -186,21 +193,21 @@ Galaxy Maps Team`;
  * This function validates that all required parameters are present
  * before calling the email sending function.
  */
-export const sendCourseCreatedEmailHttpsEndpoint = runWith({}).https.onCall(
-  async (data, _context) => {
-    const { email, name, course, courseId } = data;
+export const sendCourseCreatedEmailHttpsEndpoint = runWith({
+  secrets: ["GMAIL_EMAIL", "GMAIL_PASSWORD"],
+}).https.onCall(async (data, _context) => {
+  const { email, name, course, courseId } = data;
 
-    // Validate required parameters
-    if (!email || !name || !course || !courseId) {
-      log(
-        `Missing required parameters: email=${email}, name=${name}, course=${course}, courseId=${courseId}`,
-      );
-      throw new Error("Missing required parameters for course created email");
-    }
+  // Validate required parameters
+  if (!email || !name || !course || !courseId) {
+    log(
+      `Missing required parameters: email=${email}, name=${name}, course=${course}, courseId=${courseId}`,
+    );
+    throw new Error("Missing required parameters for course created email");
+  }
 
-    await sendCourseCreatedEmail(email, name, course, courseId);
-  },
-);
+  await sendCourseCreatedEmail(email, name, course, courseId);
+});
 /**
  * Sends a course published notification.
  */
@@ -223,11 +230,13 @@ export async function sendCourseCreatedEmail(
   Navigate to https://${DOMAIN}/galaxy/${courseId} to take a look.
   
 Galaxy Maps Bot`;
-  await mailTransport.sendMail(mailOptions);
+  await getMailTransport().sendMail(mailOptions);
   log("Course created email sent to admin");
 }
 // ======COURSE PUBLISHED NOTIFICATION==================
-export const sendCoursePublishedEmailHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
+export const sendCoursePublishedEmailHttpsEndpoint = runWith({
+  secrets: ["GMAIL_EMAIL", "GMAIL_PASSWORD"],
+}).https.onCall((data, _context) => {
   const { email, name, course } = data;
   sendCoursePublishedEmail(email, name, course);
 });
@@ -249,12 +258,14 @@ Your galaxy map ${course} has been successfully published and a default Squad ha
 Go to https://${DOMAIN} to manage your Galaxy and the ${course} Squad.
   
 Galaxy Maps Team`;
-  await mailTransport.sendMail(mailOptions);
+  await getMailTransport().sendMail(mailOptions);
   log("Course published email sent to ", email);
 }
 
 // ======REQUEST FOR HELP SENT ==================
-export const sendRequestForHelpHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
+export const sendRequestForHelpHttpsEndpoint = runWith({
+  secrets: ["GMAIL_EMAIL", "GMAIL_PASSWORD"],
+}).https.onCall((data, _context) => {
   const { email, teacher, course, task, student, request, topic, studentEmail } = data;
   sendRequestForHelp(email, teacher, course, task, student, request, topic, studentEmail);
 });
@@ -323,12 +334,14 @@ please login to <a href="https://${DOMAIN}/dashboard" target="_blank"
 <p style="font-size: 0.75rem !important;font-weight: 500;letter-spacing: 0.1666666667em !important;line-height: 2rem;text-transform: uppercase;font-family: "Roboto", sans-serif !important;">Galaxy Maps Team</p>`;
   /* eslint-enable max-len */
 
-  await mailTransport.sendMail(mailOptions);
+  await getMailTransport().sendMail(mailOptions);
   log("Request notification email sent to ", email);
 }
 
 // ====== RESPONSE TO REQUEST ==================
-export const sendResponseToHelpHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
+export const sendResponseToHelpHttpsEndpoint = runWith({
+  secrets: ["GMAIL_EMAIL", "GMAIL_PASSWORD"],
+}).https.onCall((data, _context) => {
   const { email, teacher, course, task, student, response, topic, request, teacherEmail } = data;
   sendResponseToHelp(email, teacher, course, task, student, response, topic, request, teacherEmail);
 });
@@ -403,12 +416,14 @@ Galaxy Maps Team`;
 <p style="font-size: 0.75rem !important;font-weight: 500;letter-spacing: 0.1666666667em !important;line-height: 2rem;text-transform: uppercase;font-family: "Roboto", sans-serif !important;">Galaxy Maps Team</p>`;
   /* eslint-enable max-len */
 
-  await mailTransport.sendMail(mailOptions);
+  await getMailTransport().sendMail(mailOptions);
   log("Instructor response sent to ", email);
 }
 
 // ======SUBMISSION FOR TASK SENT ==================
-export const sendTaskSubmissionHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
+export const sendTaskSubmissionHttpsEndpoint = runWith({
+  secrets: ["GMAIL_EMAIL", "GMAIL_PASSWORD"],
+}).https.onCall((data, _context) => {
   const {
     email,
     teacher,
@@ -508,12 +523,14 @@ please login to <a href="https://${DOMAIN}/dashboard" target="_blank"
 <p style="font-size: 0.75rem !important;font-weight: 500;letter-spacing: 0.1666666667em !important;line-height: 2rem;text-transform: uppercase;font-family: "Roboto", sans-serif !important;">Galaxy Maps Team</p>`;
   /* eslint-enable max-len */
 
-  await mailTransport.sendMail(mailOptions);
+  await getMailTransport().sendMail(mailOptions);
   log("Task submission notification email sent to ", email);
 }
 
 // ====== RESPONSE TO REQUEST ==================
-export const sendResponseToSubmissionHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
+export const sendResponseToSubmissionHttpsEndpoint = runWith({
+  secrets: ["GMAIL_EMAIL", "GMAIL_PASSWORD"],
+}).https.onCall((data, _context) => {
   const {
     email,
     teacher,
@@ -639,7 +656,7 @@ Galaxy Maps Team`;
 <p style="font-size: 0.75rem !important;font-weight: 500;letter-spacing: 0.1666666667em !important;line-height: 2rem;text-transform: uppercase;font-family: "Roboto", sans-serif !important;">Galaxy Maps Team</p>`;
   /* eslint-enable max-len */
 
-  await mailTransport.sendMail(mailOptions);
+  await getMailTransport().sendMail(mailOptions);
   log("Submission outcome sent to ", email);
 }
 
@@ -674,7 +691,7 @@ Galaxy Maps Team`;
 <p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
   /* eslint-enable max-len */
 
-  await mailTransport.sendMail(mailOptions);
+  await getMailTransport().sendMail(mailOptions);
   log("student low activity alert sent", studentEmail);
 }
 
@@ -719,12 +736,14 @@ Galaxy Maps Team`;
     text-transform: uppercase;
     font-family:  sans-serif !important;margin-left:2px">ALAXY MAPS</p></div>`;
 
-  await mailTransport.sendMail(mailOptions);
+  await getMailTransport().sendMail(mailOptions);
   log("student low activity alert sent to teacher", email);
 }
 
 // ====== ACTIVE COURSE DELETED ==================
-export const sendCourseDeletedHttpsEndpoint = runWith({}).https.onCall((data, _context) => {
+export const sendCourseDeletedHttpsEndpoint = runWith({
+  secrets: ["GMAIL_EMAIL", "GMAIL_PASSWORD"],
+}).https.onCall((data, _context) => {
   const { email, teacher, course, student, teacherEmail } = data;
   sendCourseDeleted(email, teacher, course, student, teacherEmail);
 });
@@ -765,7 +784,7 @@ Galaxy Maps Team`;
 <p style="color: #69a1e2; font-family: 'Genos', sans-serif; font-size: 20px; letter-spacing: 5px;">Galaxy Maps Team</p>`;
   /* eslint-enable max-len */
 
-  await mailTransport.sendMail(mailOptions);
+  await getMailTransport().sendMail(mailOptions);
   log("Galaxy deleted email sent to ", email);
 }
 
@@ -800,25 +819,27 @@ If you have any questions, please contact ${inviterName} or reach out to base@${
 Welcome to the team!
 
 Galaxy Maps Team`;
-  await mailTransport.sendMail(mailOptions);
+  await getMailTransport().sendMail(mailOptions);
   log("Collaborator notification email sent to: ", collaboratorEmail);
 }
 
-export const sendCollaboratorAddedEmailHttpsEndpoint = runWith({}).https.onCall(
-  (data, _context) => {
-    const { collaboratorEmail, collaboratorName, galaxyTitle, inviterName, galaxyId } = data;
-    return sendCollaboratorAddedEmail(
-      collaboratorEmail,
-      collaboratorName,
-      galaxyTitle,
-      inviterName,
-      galaxyId,
-    );
-  },
-);
+export const sendCollaboratorAddedEmailHttpsEndpoint = runWith({
+  secrets: ["GMAIL_EMAIL", "GMAIL_PASSWORD"],
+}).https.onCall((data, _context) => {
+  const { collaboratorEmail, collaboratorName, galaxyTitle, inviterName, galaxyId } = data;
+  return sendCollaboratorAddedEmail(
+    collaboratorEmail,
+    collaboratorName,
+    galaxyTitle,
+    inviterName,
+    galaxyId,
+  );
+});
 
 // ======GENERIC EMAIL FUNCTION==================
-export const sendGenericEmailHttpsEndpoint = runWith({}).https.onCall(async (data, _context) => {
+export const sendGenericEmailHttpsEndpoint = runWith({
+  secrets: ["GMAIL_EMAIL", "GMAIL_PASSWORD"],
+}).https.onCall(async (data, _context) => {
   const { to, subject, body, isHtml = false } = data;
 
   // Validate required parameters
@@ -853,7 +874,7 @@ export async function sendGenericEmail(
     mailOptions.text = body;
   }
 
-  await mailTransport.sendMail(mailOptions);
+  await getMailTransport().sendMail(mailOptions);
   log(`Generic email sent to: ${to} with subject: ${subject}`);
 }
 
@@ -880,21 +901,21 @@ export async function sendGenericEmail(
  * - Cloud Tasks API must be enabled in GCP
  * - Queue 'galaxy-feedback-emails' must be created (see setup instructions)
  */
-export const scheduleGalaxyFeedbackEmailHttpsEndpoint = runWith({}).https.onCall(
-  async (data, _context) => {
-    const { email, name, galaxyTitle, galaxyId, createdAt } = data;
+export const scheduleGalaxyFeedbackEmailHttpsEndpoint = runWith({
+  secrets: ["GMAIL_EMAIL", "GMAIL_PASSWORD"],
+}).https.onCall(async (data, _context) => {
+  const { email, name, galaxyTitle, galaxyId, createdAt } = data;
 
-    // Validate required parameters
-    if (!email || !name || !galaxyTitle || !galaxyId) {
-      log(
-        `Missing required parameters: email=${email}, name=${name}, galaxyTitle=${galaxyTitle}, galaxyId=${galaxyId}`,
-      );
-      throw new Error("Missing required parameters for scheduling feedback email");
-    }
+  // Validate required parameters
+  if (!email || !name || !galaxyTitle || !galaxyId) {
+    log(
+      `Missing required parameters: email=${email}, name=${name}, galaxyTitle=${galaxyTitle}, galaxyId=${galaxyId}`,
+    );
+    throw new Error("Missing required parameters for scheduling feedback email");
+  }
 
-    await scheduleGalaxyFeedbackEmail(email, name, galaxyTitle, galaxyId, new Date(createdAt));
-  },
-);
+  await scheduleGalaxyFeedbackEmail(email, name, galaxyTitle, galaxyId, new Date(createdAt));
+});
 
 /**
  * Internal function that creates a Cloud Task to send email 3 hours later.
@@ -973,7 +994,9 @@ async function scheduleGalaxyFeedbackEmail(
  * Security Note: This endpoint is called by Cloud Tasks, not directly by users.
  * In production, you should verify the request comes from Cloud Tasks.
  */
-export const sendGalaxyFeedbackEmailTask = runWith({}).https.onRequest(async (req, res) => {
+export const sendGalaxyFeedbackEmailTask = runWith({
+  secrets: ["GMAIL_EMAIL", "GMAIL_PASSWORD"],
+}).https.onRequest(async (req, res) => {
   try {
     const { email, name, galaxyTitle, galaxyId } = req.body;
 
@@ -1038,6 +1061,6 @@ The Galaxy Maps Team`;
 <br/>
 <p style="font-size: 0.75rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #69A1E2;">See You Among the Stars,<br/>The Galaxy Maps Team</p>`;
 
-  await mailTransport.sendMail(mailOptions);
+  await getMailTransport().sendMail(mailOptions);
   log("Galaxy feedback email sent to:", email);
 }

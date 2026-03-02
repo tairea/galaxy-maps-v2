@@ -124,7 +124,9 @@ export const addAdminRoleHttpsEndpoint = runWith({}).https.onCall(async (uid: st
   }
 });
 
-export const createNewUserHttpsEndpoint = runWith({}).https.onCall(async (data, context) => {
+export const createNewUserHttpsEndpoint = runWith({
+  secrets: ["GMAIL_EMAIL", "GMAIL_PASSWORD"],
+}).https.onCall(async (data, context) => {
   requireAuthenticated(context);
   log("1. createNewUserHttpsEndpoint");
   // TODO: this should be split and permissions checks ensured but that requires a major refactor
@@ -290,6 +292,7 @@ export const updateUserPasswordHttpsEndpoint = runWith({}).https.onCall(async (d
 export const bulkImportStudentsHttpsEndpoint = runWith({
   timeoutSeconds: 540, // 9 minutes timeout
   memory: "1GB",
+  secrets: ["GMAIL_EMAIL", "GMAIL_PASSWORD"],
 }).https.onCall(async (data, context) => {
   requireAuthenticated(context);
   log("bulkImportStudents: starting bulk import");
@@ -468,44 +471,44 @@ export const bulkImportStudentsHttpsEndpoint = runWith({
   };
 });
 
-export const resendInitialSetupLinkHttpsEndpoint = runWith({}).https.onCall(
-  async (data, _context) => {
-    const personId = (data?.personId as string) ?? null;
-    const email = (data?.email as string) ?? null;
+export const resendInitialSetupLinkHttpsEndpoint = runWith({
+  secrets: ["GMAIL_EMAIL", "GMAIL_PASSWORD"],
+}).https.onCall(async (data, _context) => {
+  const personId = (data?.personId as string) ?? null;
+  const email = (data?.email as string) ?? null;
 
-    if (personId == null || email == null) {
-      throw new HttpsError("invalid-argument", "missing required fields: personId or email");
-    }
+  if (personId == null || email == null) {
+    throw new HttpsError("invalid-argument", "missing required fields: personId or email");
+  }
 
-    // Look up person
-    const personDoc = await db.collection("people").doc(personId).get();
-    const personData = personDoc.data();
-    if (personData == null) {
-      throw new HttpsError("not-found", `Person not found: ${personId}`);
-    }
+  // Look up person
+  const personDoc = await db.collection("people").doc(personId).get();
+  const personData = personDoc.data();
+  if (personData == null) {
+    throw new HttpsError("not-found", `Person not found: ${personId}`);
+  }
 
-    if ((personData.email as string)?.toLowerCase() !== email.toLowerCase()) {
-      throw new HttpsError("permission-denied", "Email does not match record for this person");
-    }
+  if ((personData.email as string)?.toLowerCase() !== email.toLowerCase()) {
+    throw new HttpsError("permission-denied", "Email does not match record for this person");
+  }
 
-    // Create new custom token
-    const setupToken = await auth.createCustomToken(personId, { initialSetup: true });
-    const link = `https://${DOMAIN}/login?mode=initialPassword&email=${encodeURIComponent(
+  // Create new custom token
+  const setupToken = await auth.createCustomToken(personId, { initialSetup: true });
+  const link = `https://${DOMAIN}/login?mode=initialPassword&email=${encodeURIComponent(
+    email,
+  )}&userId=${personId}&token=${encodeURIComponent(setupToken)}`;
+
+  // Send appropriate email
+  if (personData.accountType === "teacher") {
+    await sendTeacherInviteEmail(email, (personData.displayName as string) ?? "", link);
+  } else {
+    await sendStudentInviteEmail(
       email,
-    )}&userId=${personId}&token=${encodeURIComponent(setupToken)}`;
+      (personData.displayName as string) ?? "",
+      link,
+      (personData.inviter as string) ?? "",
+    );
+  }
 
-    // Send appropriate email
-    if (personData.accountType === "teacher") {
-      await sendTeacherInviteEmail(email, (personData.displayName as string) ?? "", link);
-    } else {
-      await sendStudentInviteEmail(
-        email,
-        (personData.displayName as string) ?? "",
-        link,
-        (personData.inviter as string) ?? "",
-      );
-    }
-
-    return { success: true };
-  },
-);
+  return { success: true };
+});
