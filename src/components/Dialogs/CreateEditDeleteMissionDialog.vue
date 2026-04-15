@@ -652,6 +652,7 @@ export default {
       const allowedKeys = [
         "title",
         "description",
+        "missionInstructionsHtmlString",
         "duration",
         "video",
         "slides",
@@ -679,7 +680,9 @@ export default {
         htmlFromEditor = await this.replaceBase64ImagesWithStorageUrls(htmlFromEditor);
         const sanitizedHtml = this.sanitizeHtmlEdges(htmlFromEditor);
         task.description = sanitizedHtml;
+        task.missionInstructionsHtmlString = sanitizedHtml;
         this.task.description = sanitizedHtml;
+        this.task.missionInstructionsHtmlString = sanitizedHtml;
       } catch (e) {
         // ignore and keep current description
       }
@@ -731,7 +734,9 @@ export default {
         htmlFromEditor = await this.replaceBase64ImagesWithStorageUrls(htmlFromEditor);
         const sanitizedHtml = this.sanitizeHtmlEdges(htmlFromEditor);
         task.description = sanitizedHtml;
+        task.missionInstructionsHtmlString = sanitizedHtml;
         this.task.description = sanitizedHtml;
+        this.task.missionInstructionsHtmlString = sanitizedHtml;
       } catch (e) {
         // ignore and keep current description
       }
